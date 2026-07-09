@@ -89,10 +89,10 @@ export default function HomePage() {
 
         <section className="mb-24 bg-white/50 border border-[var(--pi-line)] p-8 md:p-12 shadow-sm rounded-2xl">
           <div className="mx-auto max-w-4xl text-center">
-            <h2 className="mb-6 font-serif text-3xl text-[var(--pi-ink)]">A Unified Training, Inference and Evaluation Framework</h2>
+            <h2 className="mb-6 font-serif text-3xl text-[var(--pi-ink)]">A Unified Inference and Evaluation Infrastructure</h2>
             <div className="text-left text-base leading-relaxed text-[var(--pi-muted)] space-y-4 indent-8">
               <p>
-                Contemporary systems span a broad landscape, yet the infrastructure used to study them remains fragmented. WorldFoundry provides a shared abstraction spanning model development, deployment, and assessment. It serves as a full-stack open-source framework covering data construction, training, unified inference across multimodal observations, and interactive visual analytics.
+                Contemporary systems span a broad landscape, yet the infrastructure used to study them remains fragmented. WorldFoundry provides a shared abstraction for model deployment and assessment. It focuses on unified inference across multimodal observations, benchmark evaluation, and interactive visual analytics—training is intentionally out of scope for the current release.
               </p>
               <p>
                 Through Artifact and Representation Contracts, WorldFoundry standardizes how heterogeneous models expose their predictions and world-state estimates, enabling cross-family comparison without collapsing systems into an undifferentiated benchmark wrapper.
@@ -134,10 +134,10 @@ export default function HomePage() {
 
         <section className="mx-auto max-w-3xl text-center">
           <p className="pi-note">
-            The framework is designed for contributors who need repeatable inference demos,
+            The infrastructure is designed for contributors who need repeatable inference demos,
             reviewable metrics, and simple extension points. Start with the{' '}
             <Link href="/docs/quickstart">quickstart</Link>, validate inference outputs, then run
-            evaluation or training only when the selected model family supports it.
+            evaluation when the selected model family and benchmark support it.
           </p>
         </section>
       </div>

@@ -28,6 +28,7 @@ from worldfoundry.core.attention.backends import normalize_attention_backend, re
 from worldfoundry.core.attention.multimodal_sequence import parallel_attention
 from worldfoundry.core.distributed.sequence_mesh_state import get_parallel_state
 from worldfoundry.core.distributed.sequence_parallel_runtime import all_gather
+from worldfoundry.core.kernels import layer_norm_scale_shift, residual_gate_add
 from worldfoundry.core.model_loading.model_configuration import NativeConfigMixin, register_to_config
 from worldfoundry.core.nn import (
     ConcatenatedLinear as LinearWarpforSingle,
@@ -41,7 +42,6 @@ from worldfoundry.core.nn import (
 )
 from worldfoundry.core.nn import (
     MLPEmbedder,
-    apply_gate,
 )
 from worldfoundry.core.nn import SinusoidalTimestepEmbedder as TimestepEmbedder
 from worldfoundry.core.nn import (
@@ -49,9 +49,6 @@ from worldfoundry.core.nn import (
 )
 from worldfoundry.core.nn import (
     activation_layer as get_activation_layer,
-)
-from worldfoundry.core.nn import (
-    modulate_sequence as modulate,
 )
 from worldfoundry.core.nn import (
     normalization_layer as get_norm_layer,
@@ -194,8 +191,9 @@ class MMDoubleStreamBlock(nn.Module):
             txt_mod2_gate,
         ) = self.txt_mod(vec).chunk(6, dim=-1)
 
-        img_modulated = self.img_norm1(img)
-        img_modulated = modulate(img_modulated, shift=img_mod1_shift, scale=img_mod1_scale)
+        img_modulated = layer_norm_scale_shift(
+            img, img_mod1_scale.unsqueeze(1), img_mod1_shift.unsqueeze(1), eps=self.img_norm1.eps
+        )
 
         img_q = self.img_attn_q(img_modulated)
         img_k = self.img_attn_k(img_modulated)
@@ -213,8 +211,9 @@ class MMDoubleStreamBlock(nn.Module):
             ), f"img_kk: {img_qq.shape}, img_q: {img_q.shape}, img_kk: {img_kk.shape}, img_k: {img_k.shape}"
             img_q, img_k = img_qq, img_kk
 
-        txt_modulated = self.txt_norm1(txt)
-        txt_modulated = modulate(txt_modulated, shift=txt_mod1_shift, scale=txt_mod1_scale)
+        txt_modulated = layer_norm_scale_shift(
+            txt, txt_mod1_scale.unsqueeze(1), txt_mod1_shift.unsqueeze(1), eps=self.txt_norm1.eps
+        )
         txt_q = self.txt_attn_q(txt_modulated)
         txt_k = self.txt_attn_k(txt_modulated)
         txt_v = self.txt_attn_v(txt_modulated)
@@ -239,18 +238,26 @@ class MMDoubleStreamBlock(nn.Module):
 
         img_attn, txt_attn = attn[:, :img_q.shape[1]].contiguous(), attn[:, img_q.shape[1]:].contiguous()
 
-        img = img + apply_gate(self.img_attn_proj(img_attn), gate=img_mod1_gate)
-        img = img + apply_gate(
+        img = residual_gate_add(img, self.img_attn_proj(img_attn), img_mod1_gate.unsqueeze(1))
+        img = residual_gate_add(
+            img,
             self.img_mlp(
-                modulate(self.img_norm2(img), shift=img_mod2_shift, scale=img_mod2_scale)
+                layer_norm_scale_shift(
+                    img, img_mod2_scale.unsqueeze(1), img_mod2_shift.unsqueeze(1), eps=self.img_norm2.eps
+                )
             ),
-            gate=img_mod2_gate,
+            img_mod2_gate.unsqueeze(1),
         )
 
-        txt = txt + apply_gate(self.txt_attn_proj(txt_attn), gate=txt_mod1_gate)
-        txt = txt + apply_gate(
-            self.txt_mlp(modulate(self.txt_norm2(txt), shift=txt_mod2_shift, scale=txt_mod2_scale)),
-            gate=txt_mod2_gate,
+        txt = residual_gate_add(txt, self.txt_attn_proj(txt_attn), txt_mod1_gate.unsqueeze(1))
+        txt = residual_gate_add(
+            txt,
+            self.txt_mlp(
+                layer_norm_scale_shift(
+                    txt, txt_mod2_scale.unsqueeze(1), txt_mod2_shift.unsqueeze(1), eps=self.txt_norm2.eps
+                )
+            ),
+            txt_mod2_gate.unsqueeze(1),
         )
 
         return img, txt
@@ -338,7 +345,9 @@ class MMSingleStreamBlock(nn.Module):
     ) -> torch.Tensor:
         """Forward pass for the single stream block."""
         mod_shift, mod_scale, mod_gate = self.modulation(vec).chunk(3, dim=-1)
-        x_mod = modulate(self.pre_norm(x), shift=mod_shift, scale=mod_scale)
+        x_mod = layer_norm_scale_shift(
+            x, mod_scale.unsqueeze(1), mod_shift.unsqueeze(1), eps=self.pre_norm.eps
+        )
 
         q = self.linear1_q(x_mod)
         k = self.linear1_k(x_mod)
@@ -378,8 +387,8 @@ class MMSingleStreamBlock(nn.Module):
             attn_param=attn_param,
         )
         output = self.linear2(attn, self.mlp_act(mlp))
-        
-        return x + apply_gate(output, gate=mod_gate)
+
+        return residual_gate_add(x, output, mod_gate.unsqueeze(1))
 
 class HunyuanVideo_1_5_DiffusionTransformer(nn.Module, NativeConfigMixin):
     """

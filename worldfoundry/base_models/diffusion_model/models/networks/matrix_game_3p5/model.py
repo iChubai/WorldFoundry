@@ -12,8 +12,8 @@ from worldfoundry.core.attention import (
     flattened_multihead_attention,
 )
 from worldfoundry.core.attention.projective_rope import prope_dot_product_attention
+from worldfoundry.core.kernels import layer_norm_scale_shift
 from worldfoundry.core.nn import RMSNorm, sinusoidal_embedding_1d
-from worldfoundry.core.nn import scale_shift as modulate
 
 from ..wan.adapter import SimpleAdapter
 from ..wan.model import (
@@ -192,7 +192,7 @@ class DiTBlock(nn.Module):
                 scale_mlp.squeeze(2),
                 gate_mlp.squeeze(2),
             )
-        input_x = modulate(self.norm1(x), shift_msa, scale_msa)
+        input_x = layer_norm_scale_shift(x, scale_msa, shift_msa, eps=self.norm1.eps)
         camera_info = camera_info if self.use_prope else None
         x = self.gate(
             x,
@@ -203,7 +203,7 @@ class DiTBlock(nn.Module):
         if cross_attn_keep_mask is not None:
             ca = ca * cross_attn_keep_mask.to(device=ca.device, dtype=ca.dtype).view(1, -1, 1)
         x = x + ca
-        input_x = modulate(self.norm2(x), shift_mlp, scale_mlp)
+        input_x = layer_norm_scale_shift(x, scale_mlp, shift_mlp, eps=self.norm2.eps)
         x = self.gate(x, gate_mlp, self.ffn(input_x))
         return x
 

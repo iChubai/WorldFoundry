@@ -188,7 +188,7 @@ def test_non_dance_stage_rejects_a_behavioral_update_mask() -> None:
 def test_dance_recipe_dispatches_to_native_engine_session_and_constant_diffusion() -> None:
     root = Path(__file__).resolve().parents[6]
     recipe = PostTrainingRecipe.from_file(
-        root / "configs/post_training/wan_1p3b_dance_grpo.yaml"
+        root / "worldfoundry/data/models/runtime/configs/post_training/wan_1p3b_dance_grpo.yaml"
     )
     stack = build_native_flow_policy_training_stack(
         recipe,

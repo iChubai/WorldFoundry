@@ -10,8 +10,8 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 from worldfoundry.core.attention import packed_sequence_attention
+from worldfoundry.core.kernels import layer_norm_scale_shift
 from worldfoundry.core.nn import RMSNorm
-from worldfoundry.core.nn import scale_shift as modulate
 
 from ..wan.model import DiTBlock
 from .architecture import EchoCheckpointArchitecture
@@ -281,11 +281,11 @@ class EchoWanAttentionBlock(DiTBlock):
         original_x = x
         x = self._inject_actions(x, memory_context)
         x = self._action_attention(x, original_x, memory_context)
-        y = self.self_attn(modulate(self.norm1(x), shift_msa, scale_msa), freqs)
+        y = self.self_attn(layer_norm_scale_shift(x, scale_msa, shift_msa, eps=self.norm1.eps), freqs)
         x = self.gate(x, gate_msa, y)
         x = self._apply_temporal_memory(x, memory_context)
         x = x + self.cross_attn(self.norm3(x), context)
-        y = self.ffn(modulate(self.norm2(x), shift_mlp, scale_mlp))
+        y = self.ffn(layer_norm_scale_shift(x, scale_mlp, shift_mlp, eps=self.norm2.eps))
         x = self.gate(x, gate_mlp, y)
         return x
 

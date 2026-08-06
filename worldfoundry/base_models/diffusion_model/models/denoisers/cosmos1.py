@@ -11,6 +11,7 @@ from ...components import ComponentBuildContext
 from ...contracts import DenoiserInput, DenoiserOutput
 from ...loaders import ModuleLoadSpec, NativeModuleLoader
 from ..networks.cosmos1 import Cosmos1Transformer3DModel
+from .graph_wrapped import GraphWrappedDenoiserMixin, resolve_cuda_graph_option
 
 COSMOS1_GEN3C_7B_CONFIG = {
     "in_channels": 81,
@@ -78,10 +79,19 @@ def convert_cosmos1_state_dict(state_dict: Mapping[str, object]) -> Mapping[str,
     return converted
 
 
-class Cosmos1Gen3CDenoiser:
-    def __init__(self, model: Cosmos1Transformer3DModel, *, sigma_data: float = 0.5) -> None:
+class Cosmos1Gen3CDenoiser(GraphWrappedDenoiserMixin):
+    def __init__(
+        self,
+        model: Cosmos1Transformer3DModel,
+        *,
+        sigma_data: float = 0.5,
+        enable_cuda_graph: bool = False,
+    ) -> None:
         self.model = model
         self.sigma_data = float(sigma_data)
+        # EDM preconditioning wraps one stable-shape DiT call; the sigma<=0 and
+        # isfinite guards run outside the wrapped region, so it is graph-safe.
+        self._init_graph_runner(model, enabled=enable_cuda_graph, extra_key="cosmos1-gen3c-dit")
 
     def __call__(self, model_input: DenoiserInput) -> DenoiserOutput:
         values = model_input.conditioning
@@ -118,7 +128,7 @@ class Cosmos1Gen3CDenoiser:
         branch_pose = torch.zeros_like(pose) if model_input.branch == "negative" else pose
         network_input = torch.cat((model_latents, input_mask, branch_pose), dim=1)
         padding_mask = values.get("padding_mask")
-        prediction = self.model(
+        prediction = self._run_network(
             network_input,
             c_noise,
             context,
@@ -167,6 +177,7 @@ def build_cosmos1_gen3c_denoiser(context: ComponentBuildContext) -> Cosmos1Gen3C
     return Cosmos1Gen3CDenoiser(
         model,
         sigma_data=float(context.component_options.get("sigma_data", 0.5)),
+        enable_cuda_graph=resolve_cuda_graph_option(context),
     )
 
 

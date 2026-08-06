@@ -9,6 +9,7 @@ import torch
 from ...components import ComponentBuildContext
 from ...contracts import DenoiserInput, DenoiserOutput
 from ...loaders import ModuleLoadSpec, NativeModuleLoader
+from .graph_wrapped import GraphWrappedDenoiserMixin, resolve_cuda_graph_option
 from ..networks.cosmos2p5.model import Cosmos25Transformer3DModel
 from .cosmos2p5 import convert_cosmos25_state_dict
 
@@ -32,12 +33,22 @@ COSMOS2_14B_CONFIG = {
 }
 
 
-class Cosmos2Denoiser:
+class Cosmos2Denoiser(GraphWrappedDenoiserMixin):
     """Rectified-flow preconditioning around the shared Predict2 DiT math."""
 
-    def __init__(self, model: Cosmos25Transformer3DModel, *, sigma_conditional: float = 0.0001) -> None:
+    def __init__(
+        self,
+        model: Cosmos25Transformer3DModel,
+        *,
+        sigma_conditional: float = 0.0001,
+        enable_cuda_graph: bool = False,
+    ) -> None:
         self.model = model
         self.sigma_conditional = float(sigma_conditional)
+        # The inner DiT call has stable shapes across denoise steps and no
+        # data-dependent control flow, so a CUDA Graph can capture the whole
+        # transformer stack and replay it launch-free (opt-in).
+        self._init_graph_runner(model, enabled=enable_cuda_graph, extra_key="cosmos2-dit")
 
     def __call__(self, model_input: DenoiserInput) -> DenoiserOutput:
         values = model_input.conditioning
@@ -70,7 +81,7 @@ class Cosmos2Denoiser:
         timestep = condition_indicator[:, 0, :, 0, 0] * condition_timestep
         timestep = timestep + (1.0 - condition_indicator[:, 0, :, 0, 0]) * noise_timestep[:, 0, 0, 0, 0, None]
         padding_mask = values.get("padding_mask")
-        prediction = self.model(
+        prediction = self._run_network(
             network_input,
             timestep,
             context,
@@ -106,6 +117,7 @@ def _build(context: ComponentBuildContext, config: Mapping[str, object]) -> Cosm
     return Cosmos2Denoiser(
         model,
         sigma_conditional=float(context.component_options.get("sigma_conditional", 0.0001)),
+        enable_cuda_graph=resolve_cuda_graph_option(context),
     )
 
 

@@ -179,7 +179,7 @@ def test_mixgrpo_session_trains_from_component_advantages_not_scalarized_rewards
 def test_mixgrpo_recipe_dispatches_to_windowed_native_runtime() -> None:
     root = Path(__file__).resolve().parents[6]
     recipe = PostTrainingRecipe.from_file(
-        root / "configs/post_training/wan_1p3b_mix_grpo.yaml"
+        root / "worldfoundry/data/models/runtime/configs/post_training/wan_1p3b_mix_grpo.yaml"
     )
     stack = build_native_flow_policy_training_stack(
         recipe,

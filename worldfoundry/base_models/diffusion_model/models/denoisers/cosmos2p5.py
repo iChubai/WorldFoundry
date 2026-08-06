@@ -10,6 +10,7 @@ from ...components import ComponentBuildContext
 from ...contracts import DenoiserInput, DenoiserOutput
 from ...loaders import ModuleLoadSpec, NativeModuleLoader
 from ..networks.cosmos2p5.model import Cosmos25Transfer3DModel, Cosmos25Transformer3DModel
+from .graph_wrapped import GraphWrappedDenoiserMixin, resolve_cuda_graph_option
 
 _KEY_REPLACEMENTS = {
     "adaln_modulation_self_attn.1": "norm1.linear_1",
@@ -91,9 +92,10 @@ COSMOS25_TRANSFER_2B_CONFIG = {
 }
 
 
-class Cosmos25Denoiser:
-    def __init__(self, model: Cosmos25Transformer3DModel) -> None:
+class Cosmos25Denoiser(GraphWrappedDenoiserMixin):
+    def __init__(self, model: Cosmos25Transformer3DModel, *, enable_cuda_graph: bool = False) -> None:
         self.model = model
+        self._init_graph_runner(model, enabled=enable_cuda_graph, extra_key="cosmos25-dit")
 
     def __call__(self, model_input: DenoiserInput) -> DenoiserOutput:
         values = model_input.conditioning
@@ -120,7 +122,7 @@ class Cosmos25Denoiser:
         timestep = condition_indicator[:, 0, :, 0, 0] * conditional_timestep
         timestep = timestep + (1 - condition_indicator[:, 0, :, 0, 0]) * sigma
         padding_mask = values.get("padding_mask")
-        prediction = self.model(
+        prediction = self._run_network(
             model_latents,
             timestep,
             context,
@@ -135,8 +137,9 @@ class Cosmos25Denoiser:
 
 
 class Cosmos25TransferDenoiser(Cosmos25Denoiser):
-    def __init__(self, model: Cosmos25Transfer3DModel) -> None:
+    def __init__(self, model: Cosmos25Transfer3DModel, *, enable_cuda_graph: bool = False) -> None:
         self.model = model
+        self._init_graph_runner(model, enabled=enable_cuda_graph, extra_key="cosmos25-transfer-dit")
 
     def __call__(self, model_input: DenoiserInput) -> DenoiserOutput:
         values = model_input.conditioning
@@ -161,7 +164,7 @@ class Cosmos25TransferDenoiser(Cosmos25Denoiser):
         timestep = condition_indicator[:, 0, :, 0, 0] * conditional_timestep
         timestep = timestep + (1 - condition_indicator[:, 0, :, 0, 0]) * sigma
         padding_mask = values.get("padding_mask")
-        prediction = self.model(
+        prediction = self._run_network(
             model_latents,
             timestep,
             context,
@@ -196,7 +199,7 @@ def _build(context: ComponentBuildContext, config: Mapping[str, object]) -> Cosm
     )
     if not isinstance(model, Cosmos25Transformer3DModel):
         raise TypeError(f"expected Cosmos25Transformer3DModel, got {type(model).__name__}")
-    return Cosmos25Denoiser(model)
+    return Cosmos25Denoiser(model, enable_cuda_graph=resolve_cuda_graph_option(context))
 
 
 def build_cosmos25_2b_denoiser(context: ComponentBuildContext) -> Cosmos25Denoiser:
@@ -227,7 +230,7 @@ def build_cosmos25_transfer_2b_denoiser(context: ComponentBuildContext) -> Cosmo
     )
     if not isinstance(model, Cosmos25Transfer3DModel):
         raise TypeError(f"expected Cosmos25Transfer3DModel, got {type(model).__name__}")
-    return Cosmos25TransferDenoiser(model)
+    return Cosmos25TransferDenoiser(model, enable_cuda_graph=resolve_cuda_graph_option(context))
 
 
 __all__ = [

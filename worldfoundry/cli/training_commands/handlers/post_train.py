@@ -8,6 +8,28 @@ from pathlib import Path
 
 from ..common import checkpoint_overrides, training_base_dir, training_family
 
+# Families whose native DMD materialization strategy (role loader + cache
+# contract + run container) is implemented.  New families gain an entry here
+# once their DMD precompute cache and strategy exist; the flow-velocity
+# training adapter alone is not sufficient for a cache-backed DMD run.
+_DMD_STRATEGY_FACTORIES = {
+    "wan": ("worldfoundry.training.engine.wan.dmd", "WanDMDStrategy"),
+}
+
+
+def _resolve_dmd_strategy(family: str) -> object:
+    entry = _DMD_STRATEGY_FACTORIES.get(family)
+    if entry is None:
+        supported = ", ".join(sorted(_DMD_STRATEGY_FACTORIES))
+        raise ValueError(
+            f"DMD materialization has no strategy for family {family!r}; supported families: {supported}"
+        )
+    from importlib import import_module
+
+    module_name, attribute = entry
+    strategy_class = getattr(import_module(module_name), attribute)
+    return strategy_class()
+
 
 def _handle_post_train(args: argparse.Namespace) -> int:
     from dataclasses import asdict
@@ -76,14 +98,14 @@ def _handle_post_train(args: argparse.Namespace) -> int:
             initialization_seed=args.seed,
         )
     elif isinstance(recipe.algorithm, DMDAlgorithmSpec):
-        if family != "wan":
-            raise ValueError("DMD materialization requires a Wan recipe")
-        from worldfoundry.training.engine.wan.dmd import (
-            materialize_wan_dmd_training_run,
+        strategy = _resolve_dmd_strategy(family)
+        from worldfoundry.training.engine.dmd.materialize import (
+            materialize_dmd_training_run,
         )
 
-        run = materialize_wan_dmd_training_run(
+        run = materialize_dmd_training_run(
             recipe,
+            strategy=strategy,
             base_dir=base_dir,
             device=args.device,
             output_dir=args.output_dir,

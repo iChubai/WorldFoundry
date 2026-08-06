@@ -10643,3 +10643,171 @@ a.wf-catalog-entry:hover .wf-catalog-entry-arrow {
     transition-duration: 0s !important;
   }
 }
+
+/* ---- Per-model editorial + facts (minimal, prose-first) ---- */
+.wf-recipe-editorial {
+  margin: 24px 0 8px;
+}
+
+.wf-recipe-overview p {
+  color: var(--pi-ink);
+  font-size: 16px;
+  line-height: 1.75;
+  margin: 0 0 16px;
+  max-width: 46rem;
+}
+
+.wf-recipe-overview p:last-child {
+  margin-bottom: 0;
+}
+
+.wf-recipe-highlights {
+  margin-top: 22px;
+}
+
+.wf-recipe-highlights-label {
+  color: var(--pi-muted);
+  display: block;
+  font-size: 12px;
+  font-weight: 660;
+  letter-spacing: 0.05em;
+  margin-bottom: 10px;
+  text-transform: uppercase;
+}
+
+.wf-recipe-highlights ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 22px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.wf-recipe-highlights li {
+  color: var(--pi-ink);
+  font-size: 14px;
+  line-height: 1.5;
+  padding-left: 16px;
+  position: relative;
+}
+
+.wf-recipe-highlights li::before {
+  color: var(--pi-brand-accent);
+  content: "—";
+  left: 0;
+  position: absolute;
+}
+
+.wf-recipe-fit {
+  display: grid;
+  gap: 20px 40px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  margin: 20px 0 4px;
+  max-width: 46rem;
+}
+
+.wf-recipe-fit span {
+  color: var(--pi-muted);
+  display: block;
+  font-size: 12px;
+  font-weight: 660;
+  letter-spacing: 0.04em;
+  margin-bottom: 6px;
+  text-transform: uppercase;
+}
+
+.wf-recipe-fit p {
+  color: var(--pi-ink);
+  font-size: 14.5px;
+  line-height: 1.62;
+  margin: 0;
+}
+
+.wf-recipe-facts-grid {
+  display: grid;
+  gap: 2px 40px;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  margin: 4px 0 0;
+}
+
+.wf-recipe-facts-grid > div {
+  border-top: 1px solid var(--pi-line);
+  padding: 12px 0;
+}
+
+.wf-recipe-facts-grid dt {
+  color: var(--pi-muted);
+  font-size: 12px;
+  margin-bottom: 4px;
+}
+
+.wf-recipe-facts-grid dd {
+  color: var(--pi-ink);
+  font-size: 15px;
+  font-weight: 600;
+  margin: 0;
+}
+
+.wf-recipe-facts-block {
+  margin-top: 24px;
+}
+
+.wf-recipe-facts-block h3 {
+  color: var(--pi-muted);
+  font-size: 12px;
+  font-weight: 660;
+  letter-spacing: 0.05em;
+  margin: 0 0 12px;
+  text-transform: uppercase;
+}
+
+.wf-recipe-spec-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 36px;
+}
+
+.wf-recipe-spec-chips > span {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.wf-recipe-spec-chips small {
+  color: var(--pi-muted);
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.wf-recipe-spec-chips strong {
+  color: var(--pi-ink);
+  font-size: 18px;
+  font-weight: 640;
+}
+
+.wf-recipe-component-chips {
+  color: var(--pi-ink);
+  display: flex;
+  flex-wrap: wrap;
+  font-size: 13.5px;
+  gap: 6px 10px;
+}
+
+.wf-recipe-component-chips code {
+  color: var(--pi-ink);
+  font-size: 13px;
+}
+
+.wf-recipe-component-chips code:not(:last-child)::after {
+  color: var(--pi-muted);
+  content: "·";
+  margin-left: 10px;
+}
+
+@media (max-width: 900px) {
+  .wf-recipe-fit {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

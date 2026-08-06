@@ -8,6 +8,7 @@ from ...components import ComponentBuildContext
 from ...contracts import DenoiserInput, DenoiserOutput
 from ...loaders import ModuleLoadSpec, NativeModuleLoader
 from ..networks.vchitect import VchitectXLTransformerModel
+from .graph_wrapped import GraphWrappedDenoiserMixin, resolve_cuda_graph_option
 
 
 VCHITECT_2B_CONFIG = {
@@ -25,9 +26,10 @@ VCHITECT_2B_CONFIG = {
 }
 
 
-class VchitectDenoiser:
-    def __init__(self, model: VchitectXLTransformerModel) -> None:
+class VchitectDenoiser(GraphWrappedDenoiserMixin):
+    def __init__(self, model: VchitectXLTransformerModel, *, enable_cuda_graph: bool = False) -> None:
         self.model = model
+        self._init_graph_runner(model, enabled=enable_cuda_graph, extra_key="vchitect-dit")
 
     def __call__(self, model_input: DenoiserInput) -> DenoiserOutput:
         prompt = model_input.conditioning.get("prompt_embeds")
@@ -37,7 +39,7 @@ class VchitectDenoiser:
         timestep = model_input.timestep.to(device=model_input.latents.device).reshape(-1)
         if timestep.numel() == 1:
             timestep = timestep.expand(model_input.latents.shape[0])
-        sample = self.model(
+        sample = self._run_network(
             model_input.latents,
             encoder_hidden_states=prompt.to(device=model_input.latents.device, dtype=model_input.latents.dtype),
             pooled_projections=pooled.to(device=model_input.latents.device, dtype=model_input.latents.dtype),
@@ -58,7 +60,7 @@ def build_vchitect_denoiser(context: ComponentBuildContext) -> VchitectDenoiser:
     )
     if not isinstance(model, VchitectXLTransformerModel):
         raise TypeError(f"expected VchitectXLTransformerModel, got {type(model).__name__}")
-    return VchitectDenoiser(model)
+    return VchitectDenoiser(model, enable_cuda_graph=resolve_cuda_graph_option(context))
 
 
 __all__ = ["VCHITECT_2B_CONFIG", "VchitectDenoiser", "build_vchitect_denoiser"]

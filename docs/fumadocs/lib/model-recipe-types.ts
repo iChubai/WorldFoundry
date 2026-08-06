@@ -147,6 +147,39 @@ export type ModelRecipeRuntime = ModelRecipeRuntimeSummary & {
   notes: string[];
 };
 
+export type ModelRecipeOutputSpec = {
+  label: string;
+  detail: string;
+};
+
+// Manifest-derived facts that the generator now surfaces explicitly instead of
+// leaving buried in the raw YAML. Every field is optional: missing stays
+// missing rather than being inferred into a stronger claim.
+export type ModelRecipeFacts = {
+  minVramGb: number | null;
+  family: string | null;
+  developer: string | null;
+  releaseType: string | null;
+  modalities: string[];
+  architectureComponents: string[];
+  checkpointKeyValidation: Record<string, number>;
+  outputSpecs: ModelRecipeOutputSpec[];
+};
+
+export type LocalizedText = { en: string; zh: string };
+export type LocalizedList = { en: string[]; zh: string[] };
+
+// Hand-authored editorial layer, merged in from lib/model-editorial/<id>.json.
+// The generator only reads and merges these files; it never rewrites them, so
+// re-running api:generate preserves the prose.
+export type ModelRecipeEditorial = {
+  tagline?: LocalizedText;
+  overview?: LocalizedList;
+  whenToUse?: LocalizedText;
+  notFor?: LocalizedText;
+  highlights?: LocalizedList;
+};
+
 export type ModelRecipe = Omit<ModelRecipeIndexEntry, 'runtime' | 'checkpoint'> & {
   runtime: ModelRecipeRuntime;
   sources: ModelRecipeSource[];
@@ -156,6 +189,8 @@ export type ModelRecipe = Omit<ModelRecipeIndexEntry, 'runtime' | 'checkpoint'> 
   inputContract: ModelRecipeContractField[];
   artifacts: ModelRecipeArtifact[];
   notes: string[];
+  facts: ModelRecipeFacts;
+  editorial?: ModelRecipeEditorial;
   commands: {
     prepare: string;
     install: string;

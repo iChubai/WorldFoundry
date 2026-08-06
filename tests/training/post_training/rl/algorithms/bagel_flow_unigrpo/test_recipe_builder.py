@@ -195,7 +195,7 @@ def test_flow_policy_builder_dispatches_bagel_runtime_and_reference_role() -> No
 def test_checked_in_bagel_config_and_public_exports_are_canonical() -> None:
     pytest.importorskip("yaml")
     root = Path(__file__).resolve().parents[6]
-    recipe = PostTrainingRecipe.from_file(root / "configs/post_training/wan_1p3b_bagel_flow_unigrpo.yaml")
+    recipe = PostTrainingRecipe.from_file(root / "worldfoundry/data/models/runtime/configs/post_training/wan_1p3b_bagel_flow_unigrpo.yaml")
 
     assert isinstance(recipe.algorithm, BagelFlowUniGRPOAlgorithmSpec)
     assert recipe.algorithm.reference_checkpoint == "default"

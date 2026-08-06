@@ -9,6 +9,7 @@ from ...contracts import DenoiserInput, DenoiserOutput
 from ...loaders import ModuleLoadSpec, NativeModuleLoader
 from ..networks.wan.model import RMSNorm
 from ..networks.wan.vace import VaceWanModel
+from .graph_wrapped import GraphWrappedDenoiserMixin, resolve_cuda_graph_option
 
 
 WAN21_VACE_14B_CONFIG = {
@@ -27,11 +28,12 @@ WAN21_VACE_14B_CONFIG = {
 }
 
 
-class WanVaceDenoiser:
+class WanVaceDenoiser(GraphWrappedDenoiserMixin):
     """Expose the VACE transformer through the shared denoiser contract."""
 
-    def __init__(self, model: VaceWanModel) -> None:
+    def __init__(self, model: VaceWanModel, *, enable_cuda_graph: bool = False) -> None:
         self.model = model
+        self._init_graph_runner(model, enabled=enable_cuda_graph, extra_key="wan-vace-dit")
 
     def __call__(self, model_input: DenoiserInput) -> DenoiserOutput:
         context = model_input.conditioning.get("context")
@@ -41,7 +43,7 @@ class WanVaceDenoiser:
         if not isinstance(vace_context, torch.Tensor):
             raise TypeError("Wan VACE denoising requires tensor vace_context")
         latents = model_input.latents
-        sample = self.model(
+        sample = self._run_network(
             x=latents,
             timestep=model_input.timestep.to(device=latents.device, dtype=latents.dtype),
             context=context,
@@ -73,7 +75,7 @@ def build_wan21_vace_14b_denoiser(context: ComponentBuildContext) -> WanVaceDeno
     )
     if not isinstance(model, VaceWanModel):
         raise TypeError(f"expected VaceWanModel, got {type(model).__name__}")
-    return WanVaceDenoiser(model)
+    return WanVaceDenoiser(model, enable_cuda_graph=resolve_cuda_graph_option(context))
 
 
 __all__ = [

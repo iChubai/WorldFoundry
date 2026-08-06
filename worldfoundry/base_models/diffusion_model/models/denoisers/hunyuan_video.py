@@ -14,6 +14,7 @@ from ...optimizations import AttentionBackend
 from ..networks.hunyuan_video.h15.hunyuanvideo_1_5_transformer import HunyuanVideo_1_5_DiffusionTransformer
 from ..networks.hunyuan_video.i2v.model import HUNYUAN_VIDEO_CONFIG, HYVideoDiffusionTransformer
 from ..networks.hunyuan_video.original import HunyuanVideoDiT
+from .graph_wrapped import GraphWrappedDenoiserMixin, resolve_cuda_graph_option
 from .hunyuan_video_converter import HunyuanVideoDiTStateDictConverter
 
 
@@ -46,12 +47,13 @@ def _embedded_guidance(model_input: DenoiserInput, *, multiply: float = 1.0) -> 
     )
 
 
-class HunyuanVideoDenoiser:
+class HunyuanVideoDenoiser(GraphWrappedDenoiserMixin):
     """Original HunyuanVideo T2V denoiser with embedded guidance."""
 
-    def __init__(self, model: HunyuanVideoDiT) -> None:
+    def __init__(self, model: HunyuanVideoDiT, *, enable_cuda_graph: bool = False) -> None:
         self.model = model
         self._rope: dict[tuple[int, ...], tuple[torch.Tensor, torch.Tensor]] = {}
+        self._init_graph_runner(model, enabled=enable_cuda_graph, extra_key="hunyuan-video-dit")
 
     def __call__(self, model_input: DenoiserInput) -> DenoiserOutput:
         key = tuple(model_input.latents.shape[2:])
@@ -66,7 +68,7 @@ class HunyuanVideoDenoiser:
             dtype=compute_dtype,
             enabled=compute_dtype in {torch.float16, torch.bfloat16},
         ):
-            sample = self.model(
+            sample = self._run_network(
                 x=model_input.latents,
                 t=_batch_timestep(model_input.timestep, model_input.latents),
                 prompt_emb=_required_tensor(model_input.conditioning, "text_states"),
@@ -79,13 +81,16 @@ class HunyuanVideoDenoiser:
         return DenoiserOutput(sample=sample)
 
 
-class HunyuanVideoI2VDenoiser:
+class HunyuanVideoI2VDenoiser(GraphWrappedDenoiserMixin):
     """Original token-replacement I2V denoiser with a frozen first latent frame."""
 
-    def __init__(self, model: HYVideoDiffusionTransformer, *, rope_theta: float = 256.0) -> None:
+    def __init__(
+        self, model: HYVideoDiffusionTransformer, *, rope_theta: float = 256.0, enable_cuda_graph: bool = False
+    ) -> None:
         self.model = model
         self.rope_theta = float(rope_theta)
         self._rope: dict[tuple[int, ...], tuple[torch.Tensor, torch.Tensor]] = {}
+        self._init_graph_runner(model, enabled=enable_cuda_graph, extra_key="hunyuan-video-i2v-dit")
 
     def _freqs(self, latents: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
         key = tuple(latents.shape[2:])
@@ -112,7 +117,7 @@ class HunyuanVideoI2VDenoiser:
             dtype=compute_dtype,
             enabled=compute_dtype in {torch.float16, torch.bfloat16},
         ):
-            output = self.model(
+            output = self._run_network(
                 x=model_input.latents,
                 t=_batch_timestep(model_input.timestep, model_input.latents),
                 text_states=_required_tensor(model_input.conditioning, "text_states"),
@@ -194,7 +199,7 @@ def build_hunyuan_video_denoiser(context: ComponentBuildContext) -> HunyuanVideo
     )
     if not isinstance(model, HunyuanVideoDiT):
         raise TypeError(f"expected HunyuanVideoDiT, got {type(model).__name__}")
-    return HunyuanVideoDenoiser(model)
+    return HunyuanVideoDenoiser(model, enable_cuda_graph=resolve_cuda_graph_option(context))
 
 
 def build_hunyuan_video_i2v_denoiser(context: ComponentBuildContext) -> HunyuanVideoI2VDenoiser:
@@ -218,7 +223,7 @@ def build_hunyuan_video_i2v_denoiser(context: ComponentBuildContext) -> HunyuanV
     )
     if not isinstance(model, HYVideoDiffusionTransformer):
         raise TypeError(f"expected HYVideoDiffusionTransformer, got {type(model).__name__}")
-    return HunyuanVideoI2VDenoiser(model)
+    return HunyuanVideoI2VDenoiser(model, enable_cuda_graph=resolve_cuda_graph_option(context))
 
 
 def _h15_config(checkpoint, relative_path: str, attention: AttentionBackend) -> Mapping[str, object]:

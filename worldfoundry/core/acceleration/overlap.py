@@ -55,9 +55,16 @@ class SynchronousOverlap:
 class HostThreadOverlap:
     """Execute at most one deferred callback on a daemon host thread."""
 
-    def __init__(self, *, name: str = "host-overlap", daemon: bool = True) -> None:
+    def __init__(
+        self,
+        *,
+        name: str = "host-overlap",
+        daemon: bool = True,
+        reraise_worker_errors: bool = True,
+    ) -> None:
         self.name = name
         self._daemon = daemon
+        self._reraise_worker_errors = reraise_worker_errors
         self._done = threading.Event()
         self._done.set()
         self._lock = threading.Lock()
@@ -105,6 +112,8 @@ class HostThreadOverlap:
             del result
         except BaseException as exc:
             self._error = exc
+            if self._reraise_worker_errors:
+                raise
         finally:
             self._done.set()
 

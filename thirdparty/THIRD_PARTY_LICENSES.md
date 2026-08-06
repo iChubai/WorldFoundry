@@ -51,3 +51,23 @@ It is not a substitute for the full upstream license text retained in each compo
 - license_file: `thirdparty/gsplat/gsplat/cuda/csrc/third_party/glm/copying.txt`
 - commercial_restrictions: none stated in the MIT license; Happy Bunny License includes a non-binding military-use note.
 - purpose: C++ mathematics header dependency used by the CUDA extension.
+
+- component: `fastvideo-kernel`
+- local_path: `thirdparty/fastvideo-kernel`
+- upstream_url: `https://github.com/hao-ai-lab/FastVideo.git`
+- license: Apache-2.0
+- license_file: `thirdparty/fastvideo-kernel/LICENSE`
+- commercial_restrictions: none stated in the Apache-2.0 license.
+- purpose: Hopper sm_90a sparse attention (Sliding Tile Attention, Video Sparse Attention).
+
+- component: `cutlass` (submodule of fastvideo-kernel)
+- local_path: `thirdparty/fastvideo-kernel/include/cutlass`
+- upstream_url: `https://github.com/NVIDIA/cutlass.git`
+- license: BSD-3-Clause
+- purpose: NVIDIA CUDA templates for GEMM/attention primitives used by the kernels.
+
+- component: `ThunderKittens` (submodule of fastvideo-kernel)
+- local_path: `thirdparty/fastvideo-kernel/include/tk`
+- upstream_url: `https://github.com/HazyResearch/ThunderKittens.git`
+- license: MIT
+- purpose: Hopper tile primitives (wgmma/TMA) underlying the STA/VSA kernels.

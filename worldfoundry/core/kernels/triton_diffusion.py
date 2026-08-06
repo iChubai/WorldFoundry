@@ -149,6 +149,74 @@ def _layer_norm_scale_shift_kernel(
 
 
 @triton.jit
+def _fused_residual_gate_layer_norm_scale_shift_kernel(
+    x_ptr,
+    residual_ptr,
+    gate_ptr,
+    scale_ptr,
+    shift_ptr,
+    residual_out_ptr,
+    out_ptr,
+    rows,
+    eps,
+    features: tl.constexpr,
+    d0: tl.constexpr,
+    d1: tl.constexpr,
+    d2: tl.constexpr,
+    d3: tl.constexpr,
+    gs0: tl.constexpr,
+    gs1: tl.constexpr,
+    gs2: tl.constexpr,
+    gs3: tl.constexpr,
+    gs4: tl.constexpr,
+    ss0: tl.constexpr,
+    ss1: tl.constexpr,
+    ss2: tl.constexpr,
+    ss3: tl.constexpr,
+    ss4: tl.constexpr,
+    hs0: tl.constexpr,
+    hs1: tl.constexpr,
+    hs2: tl.constexpr,
+    hs3: tl.constexpr,
+    hs4: tl.constexpr,
+    round_modulation: tl.constexpr,
+    block: tl.constexpr,
+):
+    row = tl.program_id(0)
+    cols = tl.arange(0, block)
+    mask = (row < rows) & (cols < features)
+    offsets = row * features + cols
+    gate_base = _broadcast_row_offset(row, d0, d1, d2, d3, gs0, gs1, gs2, gs3)
+
+    residual = tl.load(residual_ptr + offsets, mask=mask, other=0.0).to(tl.float32)
+    update = tl.load(x_ptr + offsets, mask=mask, other=0.0).to(tl.float32)
+    gate = tl.load(gate_ptr + gate_base + cols * gs4, mask=mask, other=0.0).to(tl.float32)
+    # Round the gated residual to its storage dtype before both the store and
+    # the LayerNorm statistics so the fused result matches the two-kernel path
+    # (residual_gate_add stores this tensor to HBM, then layer_norm_scale_shift
+    # reloads it at that dtype). The rounded row stays in registers afterward.
+    residual_out = (residual + update * gate).to(residual_out_ptr.dtype.element_ty)
+    tl.store(residual_out_ptr + offsets, residual_out, mask=mask)
+
+    x = residual_out.to(tl.float32)
+    mean = tl.sum(x, axis=0) / features
+    centered = tl.where(mask, x - mean, 0.0)
+    variance = tl.sum(centered * centered, axis=0) / features
+    normed = (centered * tl.rsqrt(variance + eps)).to(residual_out_ptr.dtype.element_ty)
+
+    scale_base = _broadcast_row_offset(row, d0, d1, d2, d3, ss0, ss1, ss2, ss3)
+    shift_base = _broadcast_row_offset(row, d0, d1, d2, d3, hs0, hs1, hs2, hs3)
+    scale_input = tl.load(scale_ptr + scale_base + cols * ss4, mask=mask, other=0.0)
+    shift_input = tl.load(shift_ptr + shift_base + cols * hs4, mask=mask, other=0.0)
+    scale_factor = (1.0 + scale_input.to(tl.float32)).to(scale_input.dtype)
+    modulated = normed.to(tl.float32) * scale_factor.to(tl.float32)
+    if round_modulation:
+        modulated = modulated.to(residual_out_ptr.dtype.element_ty)
+    output = modulated.to(tl.float32) + shift_input.to(tl.float32)
+    tl.store(out_ptr + offsets, output, mask=mask)
+
+
+@triton.jit
 def _rms_norm_scale_shift_kernel(
     x_ptr,
     weight_ptr,
@@ -397,6 +465,19 @@ def _num_warps(block: int) -> int:
     return 8
 
 
+def _fused_adaln_num_warps(block: int) -> int:
+    """Warp count for the fused residual-gate + AdaLN kernel.
+
+    This kernel does a single-pass reduction over the feature row plus two
+    broadcast affines. Measured on H100 across Wan/Sana feature widths, 4 warps
+    beats 8 at every width (8 over-subscribes the row reduction and hurts
+    occupancy for the extra residual/output stores), so it is pinned rather than
+    scaled with the block like the generic ``_num_warps``.
+    """
+
+    return 4
+
+
 def silu_mul(gate: torch.Tensor, value: torch.Tensor) -> torch.Tensor:
     """Compute ``silu(gate) * value`` in one regular pointwise launch."""
 
@@ -500,6 +581,62 @@ def layer_norm_scale_shift(
         num_warps=_num_warps(block),
     )
     return output
+
+
+def fused_residual_gate_layer_norm_scale_shift(
+    x: torch.Tensor,
+    residual: torch.Tensor,
+    gate: torch.Tensor,
+    scale: torch.Tensor,
+    shift: torch.Tensor,
+    eps: float,
+) -> tuple[torch.Tensor, torch.Tensor]:
+    rows = x.numel() // x.shape[-1]
+    features = int(x.shape[-1])
+    dims, gate_strides = _padded_outer_shape_and_strides(x, gate)
+    _, scale_strides = _padded_outer_shape_and_strides(x, scale)
+    _, shift_strides = _padded_outer_shape_and_strides(x, shift)
+    block = triton.next_power_of_2(features)
+    residual_dtype = torch.promote_types(residual.dtype, torch.promote_types(x.dtype, gate.dtype))
+    modulation_dtype = torch.promote_types(residual_dtype, scale.dtype)
+    output_dtype = torch.promote_types(residual_dtype, torch.promote_types(scale.dtype, shift.dtype))
+    residual_out = torch.empty_like(x, dtype=residual_dtype)
+    output = torch.empty_like(x, dtype=output_dtype)
+    _fused_residual_gate_layer_norm_scale_shift_kernel[(rows,)](
+        x,
+        residual,
+        gate,
+        scale,
+        shift,
+        residual_out,
+        output,
+        rows,
+        float(eps),
+        features=features,
+        d0=dims[0],
+        d1=dims[1],
+        d2=dims[2],
+        d3=dims[3],
+        gs0=gate_strides[0],
+        gs1=gate_strides[1],
+        gs2=gate_strides[2],
+        gs3=gate_strides[3],
+        gs4=gate_strides[4],
+        ss0=scale_strides[0],
+        ss1=scale_strides[1],
+        ss2=scale_strides[2],
+        ss3=scale_strides[3],
+        ss4=scale_strides[4],
+        hs0=shift_strides[0],
+        hs1=shift_strides[1],
+        hs2=shift_strides[2],
+        hs3=shift_strides[3],
+        hs4=shift_strides[4],
+        round_modulation=modulation_dtype in {torch.float16, torch.bfloat16},
+        block=block,
+        num_warps=_fused_adaln_num_warps(block),
+    )
+    return residual_out, output
 
 
 def rms_norm_scale_shift(
@@ -644,6 +781,7 @@ def hidden_qk_rmsnorm_rope_3d(
 
 
 __all__ = [
+    "fused_residual_gate_layer_norm_scale_shift",
     "hidden_qk_rmsnorm_rope_3d",
     "layer_norm_scale_shift",
     "qk_rmsnorm_rope",

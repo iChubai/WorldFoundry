@@ -12,6 +12,7 @@ from worldfoundry.core.attention import (
 )
 from worldfoundry.core.attention.hybrid import attention, parallel_attention
 from worldfoundry.core.gradient import gradient_checkpoint_forward
+from worldfoundry.core.kernels import layer_norm_scale_shift, residual_gate_add
 from worldfoundry.core.nn import ConditioningProjection as TextProjection
 from worldfoundry.core.nn import (
     DiTFinalLayer as FinalLayer,
@@ -202,10 +203,9 @@ class MMDoubleStreamBlock(nn.Module):
         ) = self.txt_mod(vec).chunk(6, dim=-1)
 
         # Prepare image for attention.
-        img_modulated = self.img_norm1(img)
         if condition_type == "token_replace":
             img_modulated = modulate(
-                img_modulated,
+                self.img_norm1(img),
                 shift=img_mod1_shift,
                 scale=img_mod1_scale,
                 prefix_shift=tr_img_mod1_shift,
@@ -213,8 +213,8 @@ class MMDoubleStreamBlock(nn.Module):
                 prefix_length=frist_frame_token_num,
             )
         else:
-            img_modulated = modulate(
-                img_modulated, shift=img_mod1_shift, scale=img_mod1_scale
+            img_modulated = layer_norm_scale_shift(
+                img, img_mod1_scale.unsqueeze(1), img_mod1_shift.unsqueeze(1), eps=self.img_norm1.eps
             )
         img_qkv = self.img_attn_qkv(img_modulated)
         img_q, img_k, img_v = rearrange(
@@ -233,9 +233,8 @@ class MMDoubleStreamBlock(nn.Module):
             img_q, img_k = img_qq, img_kk
 
         # Prepare txt for attention.
-        txt_modulated = self.txt_norm1(txt)
-        txt_modulated = modulate(
-            txt_modulated, shift=txt_mod1_shift, scale=txt_mod1_scale
+        txt_modulated = layer_norm_scale_shift(
+            txt, txt_mod1_scale.unsqueeze(1), txt_mod1_shift.unsqueeze(1), eps=self.txt_norm1.eps
         )
         txt_qkv = self.txt_attn_qkv(txt_modulated)
         txt_q, txt_k, txt_v = rearrange(
@@ -305,25 +304,27 @@ class MMDoubleStreamBlock(nn.Module):
                 prefix_length=frist_frame_token_num,
             )
         else:
-            img = img + apply_gate(self.img_attn_proj(img_attn), gate=img_mod1_gate)
-            img = img + apply_gate(
+            img = residual_gate_add(img, self.img_attn_proj(img_attn), img_mod1_gate.unsqueeze(1))
+            img = residual_gate_add(
+                img,
                 self.img_mlp(
-                    modulate(
-                        self.img_norm2(img), shift=img_mod2_shift, scale=img_mod2_scale
+                    layer_norm_scale_shift(
+                        img, img_mod2_scale.unsqueeze(1), img_mod2_shift.unsqueeze(1), eps=self.img_norm2.eps
                     )
                 ),
-                gate=img_mod2_gate,
+                img_mod2_gate.unsqueeze(1),
             )
 
         # Calculate the txt bloks.
-        txt = txt + apply_gate(self.txt_attn_proj(txt_attn), gate=txt_mod1_gate)
-        txt = txt + apply_gate(
+        txt = residual_gate_add(txt, self.txt_attn_proj(txt_attn), txt_mod1_gate.unsqueeze(1))
+        txt = residual_gate_add(
+            txt,
             self.txt_mlp(
-                modulate(
-                    self.txt_norm2(txt), shift=txt_mod2_shift, scale=txt_mod2_scale
+                layer_norm_scale_shift(
+                    txt, txt_mod2_scale.unsqueeze(1), txt_mod2_shift.unsqueeze(1), eps=self.txt_norm2.eps
                 )
             ),
-            gate=txt_mod2_gate,
+            txt_mod2_gate.unsqueeze(1),
         )
 
         return img, txt
@@ -434,7 +435,9 @@ class MMSingleStreamBlock(nn.Module):
                 prefix_length=frist_frame_token_num,
             )
         else:
-            x_mod = modulate(self.pre_norm(x), shift=mod_shift, scale=mod_scale)
+            x_mod = layer_norm_scale_shift(
+                x, mod_scale.unsqueeze(1), mod_shift.unsqueeze(1), eps=self.pre_norm.eps
+            )
         qkv, mlp = torch.split(
             self.linear1(x_mod), [3 * self.hidden_size, self.mlp_hidden_dim], dim=-1
         )
@@ -499,7 +502,7 @@ class MMSingleStreamBlock(nn.Module):
             )
             return output
         else:
-            return x + apply_gate(output, gate=mod_gate)
+            return residual_gate_add(x, output, mod_gate.unsqueeze(1))
 
 
 class HYVideoDiffusionTransformer(nn.Module):

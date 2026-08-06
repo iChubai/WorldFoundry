@@ -29,7 +29,7 @@ from worldfoundry.training.recipes import PostTrainingRecipe  # noqa: E402
 
 def _recipe() -> PostTrainingRecipe:
     root = Path(__file__).resolve().parents[2]
-    return PostTrainingRecipe.from_file(root / "configs/post_training/wan_1p3b_diffusion_nft.yaml")
+    return PostTrainingRecipe.from_file(root / "worldfoundry/data/models/runtime/configs/post_training/wan_1p3b_diffusion_nft.yaml")
 
 
 def test_wan_diffusion_nft_recipe_resolves_single_device_data_plane() -> None:

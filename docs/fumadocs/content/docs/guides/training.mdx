@@ -25,14 +25,14 @@ execution_owner: worldfoundry-native
 
 Any other value and any legacy external execution field are rejected by strict recipe parsing. Representative checked-in native recipes are:
 
-- `configs/training/sana_600m_flow_lora_single_device.yaml`
-- `configs/training/sana_600m_flow_lora.yaml`
-- `configs/training/wan_1p3b_flow_lora_single_device.yaml`
-- `configs/training/wan_1p3b_flow_lora.yaml`
-- `configs/post_training/sana_sprint_600m_sid.yaml`
-- `configs/post_training/sana_sprint_600m_scm_ladd.yaml`
-- `configs/post_training/wan_1p3b_dmd.yaml`
-- `configs/post_training/wan_1p3b_flow_grpo.yaml`
+- `worldfoundry/data/models/runtime/configs/training/sana_600m_flow_lora_single_device.yaml`
+- `worldfoundry/data/models/runtime/configs/training/sana_600m_flow_lora.yaml`
+- `worldfoundry/data/models/runtime/configs/training/wan_1p3b_flow_lora_single_device.yaml`
+- `worldfoundry/data/models/runtime/configs/training/wan_1p3b_flow_lora.yaml`
+- `worldfoundry/data/models/runtime/configs/post_training/sana_sprint_600m_sid.yaml`
+- `worldfoundry/data/models/runtime/configs/post_training/sana_sprint_600m_scm_ladd.yaml`
+- `worldfoundry/data/models/runtime/configs/post_training/wan_1p3b_dmd.yaml`
+- `worldfoundry/data/models/runtime/configs/post_training/wan_1p3b_flow_grpo.yaml`
 
 ## Correctness gates
 
@@ -59,7 +59,7 @@ Then build model features. Wan separates UMT5 and VAE residency phases; formal t
 
 ```bash
 worldfoundry-eval train-cache \
-  --recipe configs/training/wan_1p3b_flow_lora_single_device.yaml \
+  --recipe worldfoundry/data/models/runtime/configs/training/wan_1p3b_flow_lora_single_device.yaml \
   --base-dir . \
   --prompt-audits data/wan_train.prompt-audits.json
 ```
@@ -72,7 +72,7 @@ Run a single-device Wan job:
 
 ```bash
 worldfoundry-eval train \
-  --recipe configs/training/wan_1p3b_flow_lora_single_device.yaml \
+  --recipe worldfoundry/data/models/runtime/configs/training/wan_1p3b_flow_lora_single_device.yaml \
   --base-dir . \
   --steps 1000 \
   --checkpoint-override dit=/models/Wan2.1-T2V-1.3B
@@ -82,7 +82,7 @@ A correctness pilot can freeze the batch and corruption stream and require a mea
 
 ```bash
 worldfoundry-eval train \
-  --recipe configs/training/wan_1p3b_flow_lora_single_device.yaml \
+  --recipe worldfoundry/data/models/runtime/configs/training/wan_1p3b_flow_lora_single_device.yaml \
   --base-dir . \
   --steps 20 \
   --one-batch-overfit \
@@ -101,7 +101,7 @@ GPU_COUNT="${GPU_COUNT:?set GPU_COUNT from the scheduler allocation}"
 
 torchrun --standalone --nproc-per-node="${GPU_COUNT}" \
   -m worldfoundry.cli train \
-  --recipe configs/training/wan_1p3b_flow_lora.yaml \
+  --recipe worldfoundry/data/models/runtime/configs/training/wan_1p3b_flow_lora.yaml \
   --base-dir . \
   --steps 1000 \
   --checkpoint-override dit=/models/Wan2.1-T2V-1.3B
@@ -125,7 +125,7 @@ Build the immutable cache for SANA SiD from the same audited manifest, then poin
 
 ```bash
 worldfoundry-eval train-cache \
-  --recipe configs/post_training/sana_sprint_600m_sid.yaml \
+  --recipe worldfoundry/data/models/runtime/configs/post_training/sana_sprint_600m_sid.yaml \
   --base-dir . \
   --prompt-audits data/post_training/sana-sprint-600m/prompt-audits.json
 
@@ -134,7 +134,7 @@ SANA_DIR="${SANA_DIR:?set a local Diffusers SANA-Sprint directory}"
 
 torchrun --standalone --nproc-per-node="${GPU_COUNT}" \
   -m worldfoundry.cli post-train \
-  --recipe configs/post_training/sana_sprint_600m_sid.yaml \
+  --recipe worldfoundry/data/models/runtime/configs/post_training/sana_sprint_600m_sid.yaml \
   --base-dir . \
   --steps 50 \
   --checkpoint-override student="${SANA_DIR}" \

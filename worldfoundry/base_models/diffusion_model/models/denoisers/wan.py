@@ -14,6 +14,7 @@ from worldfoundry.core.model_loading import hash_state_dict_keys
 from ...components import BuildPurpose, ComponentBuildContext
 from ...contracts import DenoiserInput, DenoiserOutput
 from ...loaders import CheckpointSpec, ModuleLoadSpec, NativeModuleLoader
+from .graph_wrapped import GraphWrappedDenoiserMixin, resolve_cuda_graph_option
 from ..networks.wan.model import RMSNorm, WanModel
 
 WAN21_T2V_1P3B_CONFIG = {
@@ -408,7 +409,7 @@ class WanModelStateDictConverter:
         return filtered, dict(config)
 
 
-class WanDenoiser:
+class WanDenoiser(GraphWrappedDenoiserMixin):
     """Expose a checkpoint-compatible Wan DiT through ``Denoiser``."""
 
     def __init__(
@@ -418,6 +419,7 @@ class WanDenoiser:
         compute_dtype: torch.dtype = torch.bfloat16,
         reference_condition_key: str | None = None,
         manage_autocast: bool = True,
+        enable_cuda_graph: bool = False,
     ) -> None:
         if not isinstance(manage_autocast, bool):
             raise TypeError("Wan manage_autocast must be a bool")
@@ -425,6 +427,10 @@ class WanDenoiser:
         self.compute_dtype = compute_dtype
         self.reference_condition_key = reference_condition_key
         self.manage_autocast = manage_autocast
+        # The inner DiT call has stable shapes across denoise steps and no
+        # data-dependent control flow, so a CUDA Graph can capture the whole
+        # transformer stack and replay it launch-free (opt-in).
+        self._init_graph_runner(self.model, enabled=enable_cuda_graph, extra_key="wan-dit")
 
     def __call__(self, model_input: DenoiserInput) -> DenoiserOutput:
         try:
@@ -514,7 +520,7 @@ class WanDenoiser:
             dtype=self.compute_dtype,
             enabled=self.manage_autocast and autocast_enabled,
         ):
-            sample = self.model(
+            sample = self._run_network(
                 x=model_latents,
                 timestep=timestep,
                 context=context,
@@ -632,6 +638,7 @@ def _build_wan_denoiser(
         compute_dtype=context.policy.dtype,
         reference_condition_key=reference_condition_key,
         manage_autocast=context.purpose is not BuildPurpose.TRAINING,
+        enable_cuda_graph=resolve_cuda_graph_option(context),
     )
 
 

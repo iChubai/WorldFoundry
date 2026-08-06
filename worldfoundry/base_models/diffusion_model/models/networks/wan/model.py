@@ -17,6 +17,7 @@ from worldfoundry.core.attention import (
     packed_sequence_attention as flash_attention,
 )
 from worldfoundry.core.gradient import gradient_checkpoint_forward
+from worldfoundry.core.kernels import layer_norm_scale_shift, residual_gate_add
 from worldfoundry.core.nn import RMSNorm, sinusoidal_embedding_1d
 from worldfoundry.core.nn import scale_shift as modulate
 
@@ -54,6 +55,32 @@ class AttentionModule(nn.Module):
         return x
 
 
+class SelfAttentionProcessor:
+    """Default Wan self-attention policy, replaceable by research adapters.
+
+    Mirrors :class:`CrossAttentionProcessor`: the default numerical path lives
+    here so an opt-in processor (e.g. an approximate sparse-attention lane) can
+    replace it via :meth:`SelfAttention.set_processor` without touching the
+    module's default (bitwise-unchanged) behaviour.
+    """
+
+    def __call__(
+        self,
+        attention: "SelfAttention",
+        x: torch.Tensor,
+        freqs: torch.Tensor,
+        **kwargs: Any,
+    ) -> torch.Tensor:
+        del kwargs
+        q = attention.norm_q(attention.q(x))
+        k = attention.norm_k(attention.k(x))
+        v = attention.v(x)
+        q = rope_apply(q, freqs, attention.num_heads)
+        k = rope_apply(k, freqs, attention.num_heads)
+        x = attention.attn(q, k, v)
+        return attention.o(x)
+
+
 class SelfAttention(nn.Module):
     """Self attention implementation."""
 
@@ -78,21 +105,24 @@ class SelfAttention(nn.Module):
         self.norm_k = RMSNorm(dim, eps=eps)
 
         self.attn = AttentionModule(self.num_heads)
+        self.processor: Any = SelfAttentionProcessor()
 
-    def forward(self, x, freqs):
+    def set_processor(self, processor: Any) -> None:
+        """Install a model-specific self-attention policy."""
+
+        self.processor = processor
+
+    def get_processor(self) -> Any:
+        return self.processor
+
+    def forward(self, x, freqs, **kwargs):
         """Forward.
 
         Args:
             x: The x.
             freqs: The freqs.
         """
-        q = self.norm_q(self.q(x))
-        k = self.norm_k(self.k(x))
-        v = self.v(x)
-        q = rope_apply(q, freqs, self.num_heads)
-        k = rope_apply(k, freqs, self.num_heads)
-        x = self.attn(q, k, v)
-        return self.o(x)
+        return self.processor(self, x, freqs, **kwargs)
 
 
 class CrossAttentionProcessor:
@@ -194,7 +224,7 @@ class GateModule(nn.Module):
             gate: The gate.
             residual: The residual.
         """
-        return x + gate * residual
+        return residual_gate_add(x, residual, gate)
 
 
 class DiTBlock(nn.Module):
@@ -248,7 +278,7 @@ class DiTBlock(nn.Module):
             if modifiers is None:
                 raise ValueError("Wan block modifiers are required for run_remaining")
             shift_mlp, scale_mlp, gate_mlp = modifiers
-            input_x = modulate(self.norm2(x), shift_mlp, scale_mlp)
+            input_x = layer_norm_scale_shift(x, scale_mlp, shift_mlp, eps=self.norm2.eps)
             return self.gate(x, gate_mlp, self.ffn(input_x))
 
         has_seq = len(t_mod.shape) == 4
@@ -266,7 +296,7 @@ class DiTBlock(nn.Module):
                 scale_mlp.squeeze(2),
                 gate_mlp.squeeze(2),
             )
-        input_x = modulate(self.norm1(x), shift_msa, scale_msa)
+        input_x = layer_norm_scale_shift(x, scale_msa, shift_msa, eps=self.norm1.eps)
         x = self.gate(x, gate_msa, self.self_attn(input_x, freqs))
         x = x + self.cross_attn(self.norm3(x), context, **kwargs)
         if return_partial:
@@ -474,6 +504,12 @@ class WanModel(torch.nn.Module):
         self.head = Head(dim, out_dim, patch_size, eps)
         head_dim = dim // num_heads
         self.freqs = precompute_freqs_cis_3d(head_dim)
+        # Per-request memo of assembled 3D RoPE frequencies. The grid size is
+        # fixed by the latent resolution and therefore constant across the
+        # denoise steps of one request, so the cat/expand/reshape/to-device
+        # assembly can be computed once and reused. Keyed by (grid, device) and
+        # kept tiny (a handful of resolutions per process).
+        self._rope_freq_cache: dict[tuple[Any, str], torch.Tensor] = {}
 
         if has_image_input:
             self.img_emb = MLP(1280, dim, has_pos_emb=has_image_pos_emb)  # clip_feature_dim = 1280
@@ -598,10 +634,23 @@ class WanModel(torch.nn.Module):
         *,
         device: torch.device,
     ) -> torch.Tensor:
-        """Build canonical 3D rotary frequencies for one patch grid."""
+        """Build canonical 3D rotary frequencies for one patch grid.
+
+        The assembled result depends only on ``grid_size`` and the target
+        device (``self.freqs`` is a fixed buffer), and the grid is constant
+        across a request's denoise steps, so it is memoized and reused. Cache
+        misses fall through to a fresh build; the cache is bounded so unusual
+        multi-resolution runs cannot grow it without limit.
+        """
 
         f, h, w = grid_size
-        return (
+        cache = getattr(self, "_rope_freq_cache", None)
+        key = (grid_size, str(device))
+        if cache is not None:
+            hit = cache.get(key)
+            if hit is not None:
+                return hit
+        freqs = (
             torch.cat(
                 [
                     self.freqs[0][:f].view(f, 1, 1, -1).expand(f, h, w, -1),
@@ -613,6 +662,11 @@ class WanModel(torch.nn.Module):
             .reshape(f * h * w, 1, -1)
             .to(device)
         )
+        if cache is not None:
+            if len(cache) >= 8:
+                cache.clear()
+            cache[key] = freqs
+        return freqs
 
     def prepare_token_sequence(
         self,

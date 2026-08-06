@@ -90,7 +90,7 @@ def test_checked_in_sana_recipe_parses() -> None:
     pytest.importorskip("yaml")
     root = Path(__file__).resolve().parents[2]
 
-    recipe = TrainingRecipe.from_file(root / "configs/training/sana_600m_flow_lora.yaml")
+    recipe = TrainingRecipe.from_file(root / "worldfoundry/data/models/runtime/configs/training/sana_600m_flow_lora.yaml")
 
     assert recipe.schema == TRAINING_RECIPE_SCHEMA
     assert recipe.model.recipe == "sana-600m-512px"
@@ -111,7 +111,7 @@ def test_checked_in_wan_recipes_bind_video_cache_and_training_math(
     pytest.importorskip("yaml")
     root = Path(__file__).resolve().parents[2]
 
-    recipe = TrainingRecipe.from_file(root / "configs/training" / filename)
+    recipe = TrainingRecipe.from_file(root / "worldfoundry/data/models/runtime/configs/training" / filename)
 
     assert recipe.model.recipe == "wan2.1-t2v-1.3b"
     assert recipe.tuning.preset == "wan-attention"

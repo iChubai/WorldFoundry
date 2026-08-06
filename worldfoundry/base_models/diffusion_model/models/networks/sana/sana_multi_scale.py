@@ -21,6 +21,7 @@ import os
 
 import torch
 import torch.nn as nn
+from worldfoundry.core.kernels import layer_norm_scale_shift, residual_gate_add
 from worldfoundry.core.nn.layers import DropPath
 
 from worldfoundry.base_models.diffusion_model.models.networks.sana.basic_modules import DWMlp, GLUMBConv, Mlp
@@ -181,11 +182,25 @@ class SanaMSBlock(nn.Module):
         shift_msa, scale_msa, gate_msa, shift_mlp, scale_mlp, gate_mlp = (
             self.scale_shift_table[None] + t.reshape(B, 6, -1)
         ).chunk(6, dim=1)
-        x = x + self.drop_path(
-            gate_msa * self.attn(t2i_modulate(self.norm1(x), shift_msa, scale_msa), HW=HW, rotary_emb=image_rotary_emb)
+        fuse_gate = isinstance(self.drop_path, nn.Identity)
+
+        attn_out = self.attn(
+            layer_norm_scale_shift(x, scale_msa, shift_msa, eps=self.norm1.eps),
+            HW=HW,
+            rotary_emb=image_rotary_emb,
         )
+        if fuse_gate:
+            x = residual_gate_add(x, attn_out, gate_msa)
+        else:
+            x = x + self.drop_path(gate_msa * attn_out)
+
         x = x + self.cross_attn(x, y, mask)
-        x = x + self.drop_path(gate_mlp * self.mlp(t2i_modulate(self.norm2(x), shift_mlp, scale_mlp), HW=HW))
+
+        mlp_out = self.mlp(layer_norm_scale_shift(x, scale_mlp, shift_mlp, eps=self.norm2.eps), HW=HW)
+        if fuse_gate:
+            x = residual_gate_add(x, mlp_out, gate_mlp)
+        else:
+            x = x + self.drop_path(gate_mlp * mlp_out)
 
         return x
 

@@ -10,6 +10,7 @@ from worldfoundry.base_models.diffusion_model.models.networks.ltx.feed_forward i
 from worldfoundry.base_models.diffusion_model.models.networks.ltx.rope import LTXRopeType
 from worldfoundry.base_models.diffusion_model.models.networks.ltx.transformer_args import TransformerArgs
 from worldfoundry.core.attention.model_backends import AttentionCallable
+from worldfoundry.core.kernels import residual_gate_add, rms_norm_scale_shift
 from worldfoundry.core.nn import TransformerOpsConfig, rms_norm
 
 
@@ -219,7 +220,7 @@ class BasicAVTransformerBlock(torch.nn.Module):
                 perturbation_mask=video.self_attn_perturbation_mask,
                 all_perturbed=video.self_attn_all_perturbed,
             )
-            vx = vx + vx_msa_out * vgate_msa
+            vx = residual_gate_add(vx, vx_msa_out, vgate_msa)
             del vgate_msa, norm_vx, vx_msa_out
             vx = vx + self._apply_text_cross_attention(
                 vx,
@@ -247,7 +248,7 @@ class BasicAVTransformerBlock(torch.nn.Module):
                 perturbation_mask=audio.self_attn_perturbation_mask,
                 all_perturbed=audio.self_attn_all_perturbed,
             )
-            ax = ax + ax_msa_out * agate_msa
+            ax = residual_gate_add(ax, ax_msa_out, agate_msa)
             del agate_msa, norm_ax, ax_msa_out
             ax = ax + self._apply_text_cross_attention(
                 ax,
@@ -336,7 +337,7 @@ class BasicAVTransformerBlock(torch.nn.Module):
                 self.scale_shift_table, vx.shape[0], video.timesteps, slice(3, 6)
             )
             vx_scaled = self.ada_zero_function(vx, self.norm_eps, vscale_mlp, vshift_mlp)
-            vx = vx + self.ff(vx_scaled) * vgate_mlp
+            vx = residual_gate_add(vx, self.ff(vx_scaled), vgate_mlp)
 
             del vshift_mlp, vscale_mlp, vgate_mlp, vx_scaled
 
@@ -345,7 +346,7 @@ class BasicAVTransformerBlock(torch.nn.Module):
                 self.audio_scale_shift_table, ax.shape[0], audio.timesteps, slice(3, 6)
             )
             ax_scaled = self.ada_zero_function(ax, self.norm_eps, ascale_mlp, ashift_mlp)
-            ax = ax + self.audio_ff(ax_scaled) * agate_mlp
+            ax = residual_gate_add(ax, self.audio_ff(ax_scaled), agate_mlp)
 
             del ashift_mlp, ascale_mlp, agate_mlp, ax_scaled
 
@@ -369,6 +370,6 @@ def apply_cross_attention_adaln(
         prompt_scale_shift_table[None, None].to(device=x.device, dtype=x.dtype)
         + prompt_timestep.reshape(batch_size, prompt_timestep.shape[1], 2, -1)
     ).unbind(dim=2)
-    attn_input = rms_norm(x, eps=norm_eps) * (1 + q_scale) + q_shift
+    attn_input = rms_norm_scale_shift(x, q_scale, q_shift, eps=norm_eps)
     encoder_hidden_states = context * (1 + scale_kv) + shift_kv
     return attn(attn_input, context=encoder_hidden_states, mask=context_mask) * q_gate

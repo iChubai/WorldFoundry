@@ -91,6 +91,21 @@ class NativeVisualDiffusionPipeline(PipelineABC):
         options.update(kwargs)
         return options
 
+    # Load-time optimization knobs the module loader reads from
+    # RuntimePolicy.options. Whitelisted so arbitrary user kwargs never leak
+    # into the frozen policy. Each is opt-in; absence leaves the default path.
+    RUNTIME_OPTION_KEYS = (
+        "approximate_attention",
+        "sequence_parallel",
+        "fuse_qkv",
+        "static_cross_kv",
+    )
+
+    @classmethod
+    def _runtime_options(cls, options: Mapping[str, Any]) -> dict[str, Any]:
+        """Extract the whitelisted load-time optimization options for the policy."""
+        return {key: options[key] for key in cls.RUNTIME_OPTION_KEYS if key in options}
+
     @classmethod
     def _checkpoint_overrides(
         cls,
@@ -196,6 +211,7 @@ class NativeVisualDiffusionPipeline(PipelineABC):
                     allow_disk=False,
                     owner=cls.OWNER,
                 ),
+                options=cls._runtime_options(options),
             ),
             checkpoint_overrides=cls._checkpoint_overrides(model_path, options),
             component_options=cls._component_options(options),

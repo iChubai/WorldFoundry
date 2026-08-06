@@ -5,6 +5,8 @@ from __future__ import annotations
 import torch
 from torch import nn
 
+from worldfoundry.core.kernels import layer_norm_scale_shift, residual_gate_add
+
 from .attention import Attention
 
 
@@ -39,7 +41,9 @@ class AdaLayerNormZero(nn.Module):
         shift_msa, scale_msa, gate_msa, shift_mlp, scale_mlp, gate_mlp = self.linear(
             self.silu(embedding)
         ).chunk(6, dim=1)
-        normalized = self.norm(hidden_states) * (1 + scale_msa[:, None]) + shift_msa[:, None]
+        normalized = layer_norm_scale_shift(
+            hidden_states, scale_msa[:, None], shift_msa[:, None], eps=self.norm.eps
+        )
         return normalized, gate_msa, shift_mlp, scale_mlp, gate_mlp
 
 
@@ -52,7 +56,9 @@ class AdaLayerNormContinuous(nn.Module):
 
     def forward(self, hidden_states: torch.Tensor, embedding: torch.Tensor) -> torch.Tensor:
         scale, shift = self.linear(self.silu(embedding)).chunk(2, dim=1)
-        return self.norm(hidden_states) * (1 + scale[:, None]) + shift[:, None]
+        return layer_norm_scale_shift(
+            hidden_states, scale[:, None], shift[:, None], eps=self.norm.eps
+        )
 
 
 class JointTransformerBlock(nn.Module):
@@ -90,15 +96,22 @@ class JointTransformerBlock(nn.Module):
             frequencies=frequencies,
             frames=frames,
         )
-        hidden_states = hidden_states + gate_msa[:, None] * attention
-        normalized = self.norm2(hidden_states) * (1 + scale_mlp[:, None]) + shift_mlp[:, None]
-        hidden_states = hidden_states + gate_mlp[:, None] * self.ff(normalized)
+        hidden_states = residual_gate_add(hidden_states, attention, gate_msa[:, None])
+        normalized = layer_norm_scale_shift(
+            hidden_states, scale_mlp[:, None], shift_mlp[:, None], eps=self.norm2.eps
+        )
+        hidden_states = residual_gate_add(hidden_states, self.ff(normalized), gate_mlp[:, None])
         if self.context_pre_only:
             return None, hidden_states
-        encoder_hidden_states = encoder_hidden_states + c_gate_msa[:, None] * context_attention
-        normalized_context = self.norm2_context(encoder_hidden_states)
-        normalized_context = normalized_context * (1 + c_scale_mlp[:, None]) + c_shift_mlp[:, None]
-        encoder_hidden_states = encoder_hidden_states + c_gate_mlp[:, None] * self.ff_context(normalized_context)
+        encoder_hidden_states = residual_gate_add(
+            encoder_hidden_states, context_attention, c_gate_msa[:, None]
+        )
+        normalized_context = layer_norm_scale_shift(
+            encoder_hidden_states, c_scale_mlp[:, None], c_shift_mlp[:, None], eps=self.norm2_context.eps
+        )
+        encoder_hidden_states = residual_gate_add(
+            encoder_hidden_states, self.ff_context(normalized_context), c_gate_mlp[:, None]
+        )
         return encoder_hidden_states, hidden_states
 
 

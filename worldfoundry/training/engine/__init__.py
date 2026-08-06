@@ -23,6 +23,8 @@ _EXPORTS = {
     "SingleDeviceTrainEngine": ".single_device",
     "build_adamw": ".single_device",
     "trainable_parameters": ".single_device",
+    "DMDFamilyStrategy": ".dmd.strategy",
+    "materialize_dmd_training_run": ".dmd.materialize",
     "build_wan_fsdp2_session": ".wan.sft",
     "build_wan_single_device_session": ".wan.sft",
     "materialize_wan_cached_training_session": ".wan.sft",

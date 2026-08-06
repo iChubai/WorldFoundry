@@ -11,6 +11,7 @@ from ...components import ComponentBuildContext
 from ...contracts import DenoiserInput, DenoiserOutput
 from ...loaders import ModuleLoadSpec, NativeCheckpointResolver, NativeModuleLoader
 from ..networks.lvdm.unet3d import UNetModel
+from .graph_wrapped import GraphWrappedDenoiserMixin, resolve_cuda_graph_option
 
 
 T2V_TURBO_UNET_CONFIG = {
@@ -63,9 +64,10 @@ def _unet_state_dict(state_dict: Mapping[str, object]) -> Mapping[str, object]:
     return converted
 
 
-class T2VTurboDenoiser:
-    def __init__(self, model: UNetModel) -> None:
+class T2VTurboDenoiser(GraphWrappedDenoiserMixin):
+    def __init__(self, model: UNetModel, *, enable_cuda_graph: bool = False) -> None:
         self.model = model
+        self._init_graph_runner(model, enabled=enable_cuda_graph, extra_key="t2v-turbo-unet")
 
     def __call__(self, model_input: DenoiserInput) -> DenoiserOutput:
         context = model_input.conditioning.get("context")
@@ -76,7 +78,7 @@ class T2VTurboDenoiser:
         if timestep.numel() == 1:
             timestep = timestep.expand(model_input.latents.shape[0])
         fps = int(model_input.conditioning.get("fps", 16))
-        sample = self.model(
+        sample = self._run_network(
             model_input.latents,
             timestep,
             context=context.to(device=model_input.latents.device, dtype=model_input.latents.dtype),
@@ -112,7 +114,7 @@ def build_t2v_turbo_denoiser(context: ComponentBuildContext) -> T2VTurboDenoiser
     )
     if not isinstance(model, UNetModel):
         raise TypeError(f"expected UNetModel, got {type(model).__name__}")
-    return T2VTurboDenoiser(model)
+    return T2VTurboDenoiser(model, enable_cuda_graph=resolve_cuda_graph_option(context))
 
 
 __all__ = [

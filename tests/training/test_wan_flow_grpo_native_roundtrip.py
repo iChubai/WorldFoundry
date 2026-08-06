@@ -46,7 +46,7 @@ from worldfoundry.training.recipes.post_training.rewards.videoalign import (  # 
 def _recipe() -> PostTrainingRecipe:
     root = Path(__file__).resolve().parents[2]
     payload = PostTrainingRecipe.from_file(
-        root / "configs/post_training/wan_1p3b_flow_grpo.yaml"
+        root / "worldfoundry/data/models/runtime/configs/post_training/wan_1p3b_flow_grpo.yaml"
     ).to_dict()
     payload["run"] = {"id": "tiny-wan-flow-grpo", "output_dir": "unused"}
     payload["tuning"] = {"mode": "full"}

@@ -10,6 +10,7 @@ import torch.nn.functional as functional
 from einops import rearrange, repeat
 
 from worldfoundry.core.attention import apply_rotary_embedding, scaled_dot_product_attention
+from worldfoundry.core.kernels import layer_norm_scale_shift, residual_gate_add
 from worldfoundry.core.nn.timestep import Timesteps
 
 
@@ -65,7 +66,7 @@ class Cosmos25AdaLayerNormZero(nn.Module):
     ) -> tuple[torch.Tensor, torch.Tensor]:
         modulation = self.linear_2(self.linear_1(self.activation(embedded_timestep))) + temb
         shift, scale, gate = modulation.chunk(3, dim=-1)
-        return self.norm(hidden_states) * (1 + scale) + shift, gate
+        return layer_norm_scale_shift(hidden_states, scale, shift, eps=self.norm.eps), gate
 
 
 class Cosmos25AdaLayerNorm(nn.Module):
@@ -81,7 +82,7 @@ class Cosmos25AdaLayerNorm(nn.Module):
         modulation = self.linear_2(self.linear_1(self.activation(embedded_timestep)))
         modulation = modulation + temb[..., : self.embedding_dim * 2]
         shift, scale = modulation.chunk(2, dim=-1)
-        return self.norm(value) * (1 + scale) + shift
+        return layer_norm_scale_shift(value, scale, shift, eps=self.norm.eps)
 
 
 class Cosmos25Attention(nn.Module):
@@ -172,15 +173,19 @@ class Cosmos25TransformerBlock(nn.Module):
         attention_mask: torch.Tensor | None,
     ) -> torch.Tensor:
         normalized, gate = self.norm1(hidden_states, embedded_timestep, temb)
-        hidden_states = hidden_states + gate * self.attn1(normalized, rotary_emb=rotary_emb)
+        hidden_states = residual_gate_add(hidden_states, self.attn1(normalized, rotary_emb=rotary_emb), gate)
         normalized, gate = self.norm2(hidden_states, embedded_timestep, temb)
-        hidden_states = hidden_states + gate * self.attn2(
-            normalized,
-            encoder_hidden_states=encoder_hidden_states,
-            attention_mask=attention_mask,
+        hidden_states = residual_gate_add(
+            hidden_states,
+            self.attn2(
+                normalized,
+                encoder_hidden_states=encoder_hidden_states,
+                attention_mask=attention_mask,
+            ),
+            gate,
         )
         normalized, gate = self.norm3(hidden_states, embedded_timestep, temb)
-        return hidden_states + gate * self.ff(normalized)
+        return residual_gate_add(hidden_states, self.ff(normalized), gate)
 
 
 class Cosmos25RotaryPosEmbed(nn.Module):

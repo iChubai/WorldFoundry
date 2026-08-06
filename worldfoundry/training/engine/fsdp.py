@@ -6,7 +6,13 @@ from collections.abc import Mapping, Sequence
 
 import torch
 import torch.distributed as dist
-from torch.distributed.fsdp import FSDPModule
+
+try:
+    # torch >= 2.6 re-exports the FSDP2 module type from the public package.
+    from torch.distributed.fsdp import FSDPModule
+except ImportError:
+    # torch 2.4/2.5 expose it under the composable namespace.
+    from torch.distributed._composable.fsdp import FSDPModule
 from torch.distributed.tensor import DTensor
 
 from worldfoundry.core.gradient import clip_grad_norm_

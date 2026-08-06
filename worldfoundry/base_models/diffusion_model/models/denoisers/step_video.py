@@ -8,6 +8,7 @@ from ...components import ComponentBuildContext
 from ...contracts import DenoiserInput, DenoiserOutput
 from ...loaders import ModuleLoadSpec, NativeModuleLoader
 from ..networks.step_video import StepVideoModel
+from .graph_wrapped import GraphWrappedDenoiserMixin, resolve_cuda_graph_option
 
 
 STEP_VIDEO_CONFIG = {
@@ -27,9 +28,10 @@ STEP_VIDEO_CONFIG = {
 }
 
 
-class StepVideoDenoiser:
-    def __init__(self, model: StepVideoModel) -> None:
+class StepVideoDenoiser(GraphWrappedDenoiserMixin):
+    def __init__(self, model: StepVideoModel, *, enable_cuda_graph: bool = False) -> None:
         self.model = model
+        self._init_graph_runner(model, enabled=enable_cuda_graph, extra_key="step-video-dit")
 
     def __call__(self, model_input: DenoiserInput) -> DenoiserOutput:
         prompt = model_input.conditioning.get("prompt_embeds")
@@ -40,7 +42,7 @@ class StepVideoDenoiser:
         timestep = model_input.timestep.to(model_input.latents).reshape(-1)
         if timestep.numel() == 1:
             timestep = timestep.expand(model_input.latents.shape[0])
-        sample = self.model(
+        sample = self._run_network(
             model_input.latents,
             encoder_hidden_states=prompt.to(model_input.latents),
             encoder_hidden_states_2=clip.to(model_input.latents),
@@ -64,7 +66,7 @@ def build_step_video_denoiser(context: ComponentBuildContext) -> StepVideoDenois
     )
     if not isinstance(model, StepVideoModel):
         raise TypeError(f"expected StepVideoModel, got {type(model).__name__}")
-    return StepVideoDenoiser(model)
+    return StepVideoDenoiser(model, enable_cuda_graph=resolve_cuda_graph_option(context))
 
 
 __all__ = ["STEP_VIDEO_CONFIG", "StepVideoDenoiser", "build_step_video_denoiser"]

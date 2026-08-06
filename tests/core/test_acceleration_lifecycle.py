@@ -177,7 +177,7 @@ def test_one_shot_encoder_release_runs_when_stage_fails() -> None:
 def test_host_overlap_bounds_work_and_propagates_worker_errors() -> None:
     started = threading.Event()
     release = threading.Event()
-    runner = HostThreadOverlap(name="test-overlap")
+    runner = HostThreadOverlap(name="test-overlap", reraise_worker_errors=False)
 
     def work() -> None:
         started.set()
@@ -196,6 +196,39 @@ def test_host_overlap_bounds_work_and_propagates_worker_errors() -> None:
     with pytest.raises(ValueError, match="worker failed"):
         runner.wait(timeout_s=1.0, raise_error=True)
     runner.close()
+
+
+def test_host_overlap_can_suppress_worker_error_reraise() -> None:
+    hook_errors: list[BaseException | None] = []
+    original_hook = threading.excepthook
+    threading.excepthook = lambda args: hook_errors.append(args.exc_value)
+    try:
+        runner = HostThreadOverlap(name="quiet-overlap", reraise_worker_errors=False)
+        runner.submit(lambda: (_ for _ in ()).throw(ValueError("worker failed")))
+        assert runner.wait(timeout_s=1.0) is True
+        assert isinstance(runner.last_error, ValueError)
+        runner.close()
+    finally:
+        threading.excepthook = original_hook
+
+    assert hook_errors == []
+
+
+def test_host_overlap_reraises_worker_error_to_excepthook_by_default() -> None:
+    hook_errors: list[BaseException | None] = []
+    original_hook = threading.excepthook
+    threading.excepthook = lambda args: hook_errors.append(args.exc_value)
+    try:
+        runner = HostThreadOverlap(name="loud-overlap")
+        runner.submit(lambda: (_ for _ in ()).throw(ValueError("worker failed")))
+        assert runner.wait(timeout_s=1.0) is True
+        assert isinstance(runner.last_error, ValueError)
+        runner.close()
+    finally:
+        threading.excepthook = original_hook
+
+    assert len(hook_errors) == 1
+    assert isinstance(hook_errors[0], ValueError)
 
 
 def test_cuda_graph_dispatch_separates_branches_and_fill_from_replay() -> None:

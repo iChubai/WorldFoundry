@@ -10,12 +10,31 @@ if TYPE_CHECKING:
     from worldfoundry.training.recipes import PostTrainingRecipe, TrainingRecipe
 
 
+# Canonical family tokens keyed by normalized native-recipe id or alias.  Only
+# the recipe ids that a native training path can materialize are listed; the
+# per-algorithm CLI handler still validates that the family matches the recipe.
+_FAMILY_BY_RECIPE_ID = {
+    "wan2.1-t2v-1.3b": "wan",
+    "wan2.1-vace": "wan_vace",
+    "wan-vace": "wan_vace",
+    "wan2.1-vace-14b": "wan_vace",
+    "step-video-t2v": "step_video",
+    "stepvideo": "step_video",
+    "step-video": "step_video",
+    "stepvideo-t2v": "step_video",
+    "vchitect-2-t2v": "vchitect",
+    "vchitect": "vchitect",
+    "vchitect-2": "vchitect",
+}
+
+
 def training_family(model_recipe: str) -> str:
     model_id = str(model_recipe).strip().lower().replace("_", "-")
     if model_id.startswith("sana-"):
         return "sana"
-    if model_id == "wan2.1-t2v-1.3b":
-        return "wan"
+    family = _FAMILY_BY_RECIPE_ID.get(model_id)
+    if family is not None:
+        return family
     raise ValueError(f"native training does not support model recipe {model_recipe!r}")
 
 

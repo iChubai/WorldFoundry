@@ -23,6 +23,7 @@ ROOT = Path(__file__).resolve().parents[3]
 DOCS_ROOT = Path(__file__).resolve().parents[1]
 OUT = DOCS_ROOT / "lib" / "model-recipes-data.json"
 INDEX_OUT = DOCS_ROOT / "lib" / "model-recipes-index.json"
+EDITORIAL_ROOT = DOCS_ROOT / "lib" / "model-editorial"
 
 sys.path.insert(0, str(ROOT))
 from worldfoundry.core.inference import get_model_inference_spec  # noqa: E402
@@ -629,10 +630,53 @@ def artifact_data(item: dict[str, Any], profile: dict[str, Any] | None) -> list[
     return output
 
 
+_WORKSPACE_ROOT = str(ROOT.parent)
+# Machine-local absolute paths that are NOT inside the repo — a sibling
+# ``…/arena/ckpt/diamond`` or a ``$HOME/.cache/worldfoundry/…`` cache path — get
+# their internal prefix collapsed to a portable ``<local>`` token. Covers both
+# ``/mnt/…`` mounts and ``/home/…`` home dirs (each leaks the internal username).
+_LOCAL_PATH_RE = re.compile(r"(?:/[^\s\"']*)?/(?:mnt|home)/[^\s\"']*")
+# Tails after these anchors are portable and worth keeping after ``<local>``.
+_PORTABLE_ANCHORS = (".cache/worldfoundry", str(ROOT.parent.name) + "/")
+
+
+def sanitize_paths(value: Any) -> Any:
+    """Strip machine-local absolute paths from published docs data.
+
+    Inference-spec field defaults can carry absolute paths to example inputs
+    (condition images, pose files, local checkpoints, cache dirs). Those must
+    never leak into the public docs, so: paths inside the repo become
+    repo-relative, and any other machine-local (``/mnt/…`` or ``/home/…``) path
+    has its internal prefix replaced with a ``<local>`` token, keeping a portable
+    tail when one is recognizable. The structure is walked recursively.
+    """
+
+    root_str = str(ROOT)
+    if isinstance(value, str):
+        result = value
+        if root_str in result:
+            result = result.replace(root_str + "/", "").replace(root_str, "")
+
+        def _scrub(match: re.Match) -> str:
+            path = match.group(0)
+            for anchor in _PORTABLE_ANCHORS:
+                if anchor in path:
+                    tail = path.split(anchor, 1)[1].lstrip("/")
+                    return f"<local>/{tail}" if tail else "<local>"
+            return "<local>"
+
+        return _LOCAL_PATH_RE.sub(_scrub, result)
+    if isinstance(value, dict):
+        return {k: sanitize_paths(v) for k, v in value.items()}
+    if isinstance(value, (list, tuple)):
+        return type(value)(sanitize_paths(v) for v in value)
+    return value
+
+
 def task_field_detail(field: Any) -> str:
     required = "Required" if getattr(field, "required", False) else "Optional"
     pieces = [required]
-    default = getattr(field, "default", None)
+    default = sanitize_paths(getattr(field, "default", None))
     if default is not None:
         if isinstance(default, (dict, list, tuple)):
             rendered = json.dumps(default, ensure_ascii=False, sort_keys=True)
@@ -657,7 +701,7 @@ def core_inference_task_data(spec: Any, variant_ids: list[str]) -> list[dict[str
                     "kind": field.kind,
                     "target": field.target,
                     "required": bool(field.required),
-                    "default": field.default,
+                    "default": sanitize_paths(field.default),
                     "choices": list(field.choices),
                     "description": field.description,
                 }
@@ -781,6 +825,116 @@ def recipe_notes(item: dict[str, Any], profile: dict[str, Any] | None) -> list[s
         ],
         limit=18,
     )
+
+
+def load_editorial() -> dict[str, dict[str, Any]]:
+    """Read the hand-authored editorial layer (lib/model-editorial/<id>.json).
+
+    The generator only reads and merges these files; it never rewrites them, so
+    re-running the generator preserves the prose.
+    """
+    output: dict[str, dict[str, Any]] = {}
+    if not EDITORIAL_ROOT.is_dir():
+        return output
+    for path in sorted(EDITORIAL_ROOT.glob("*.json")):
+        try:
+            data = json.loads(path.read_text())
+        except json.JSONDecodeError as error:
+            print(f"skipping malformed editorial file {path.name}: {error}", file=sys.stderr)
+            continue
+        if not isinstance(data, dict):
+            continue
+        model_id = text(data.get("id")) or path.stem
+        entry = {key: value for key, value in data.items() if key != "id"}
+        if entry:
+            output[model_id] = entry
+    return output
+
+
+def _video_probe_specs(probe: dict[str, Any]) -> list[dict[str, str]]:
+    specs: list[dict[str, str]] = []
+    width = probe.get("expected_width")
+    height = probe.get("expected_height")
+    if width and height:
+        specs.append({"label": "Resolution", "detail": f"{width}×{height}"})
+    frames = probe.get("expected_frames")
+    if frames:
+        specs.append({"label": "Frames", "detail": str(frames)})
+    fps = probe.get("expected_fps")
+    if fps:
+        specs.append({"label": "FPS", "detail": str(fps)})
+    duration = probe.get("expected_duration_seconds")
+    if duration:
+        specs.append({"label": "Duration", "detail": f"{duration}s"})
+    return specs
+
+
+def output_specs_for(item: dict[str, Any]) -> list[dict[str, str]]:
+    """Precise output specs recorded by demo/runner parity video probes."""
+    seen: set[tuple[str, str]] = set()
+    specs: list[dict[str, str]] = []
+
+    def collect(area: Any) -> None:
+        if not isinstance(area, dict):
+            return
+        for artifact in as_list(area.get("expected_artifacts")):
+            if not isinstance(artifact, dict):
+                continue
+            probe = artifact.get("video_probe")
+            if isinstance(probe, dict):
+                for spec in _video_probe_specs(probe):
+                    key = (spec["label"], spec["detail"])
+                    if key in seen:
+                        continue
+                    seen.add(key)
+                    specs.append(spec)
+
+    collect(item.get("demo_parity"))
+    collect(item.get("runner_parity"))
+    for variant in as_list(item.get("variants")):
+        if isinstance(variant, dict):
+            collect(variant.get("demo_parity"))
+            collect(variant.get("runner_parity"))
+    return specs
+
+
+def facts_for(item: dict[str, Any]) -> dict[str, Any]:
+    """Surface manifest facts the older pipeline left buried in raw YAML.
+
+    Every field is optional: missing stays missing rather than being inferred
+    into a stronger claim.
+    """
+    native = item.get("native_diffusion")
+    if not isinstance(native, dict):
+        # A family manifest may carry native_diffusion on its first variant.
+        for variant in as_list(item.get("variants")):
+            if isinstance(variant, dict) and isinstance(variant.get("native_diffusion"), dict):
+                native = variant["native_diffusion"]
+                break
+    native = native if isinstance(native, dict) else {}
+
+    components = unique_strings(as_list(native.get("components")))
+    key_validation: dict[str, int] = {}
+    raw_keys = native.get("checkpoint_key_validation")
+    if isinstance(raw_keys, dict):
+        for key, value in raw_keys.items():
+            if isinstance(value, int):
+                key_validation[str(key)] = value
+
+    min_vram = item.get("min_vram_gb")
+    if not isinstance(min_vram, (int, float)):
+        min_vram = None
+
+    return {
+        "minVramGb": min_vram,
+        "family": text(item.get("family")),
+        "developer": text(item.get("developer")),
+        "releaseType": text(item.get("release_type")),
+        "modalities": unique_strings(as_list(item.get("modalities"))),
+        "architectureComponents": components,
+        "checkpointKeyValidation": key_validation,
+        "outputSpecs": output_specs_for(item),
+    }
 
 
 def summary_for(item: dict[str, Any], tasks: list[str], notes: list[str]) -> str:
@@ -908,6 +1062,7 @@ def main() -> None:
                     "inputContract": input_contract(profile),
                     "artifacts": artifact_data(item, profile),
                     "notes": notes,
+                    "facts": facts_for(item),
                     "commands": command_data(model_id, runtime_model_id, inference_tasks[0]),
                     "catalogPath": str(path.relative_to(ROOT)),
                 }
@@ -915,6 +1070,18 @@ def main() -> None:
                     continue
                 recipes.append(recipe)
                 category_counts[category_id] += 1
+
+    editorial = load_editorial()
+    for recipe in recipes:
+        entry = editorial.get(recipe["id"])
+        if not entry:
+            continue
+        recipe["editorial"] = entry
+        tagline = entry.get("tagline")
+        if isinstance(tagline, dict):
+            english = compact_text(tagline.get("en"), 240)
+            if english:
+                recipe["summary"] = english
 
     recipes.sort(
         key=lambda recipe: (
@@ -935,6 +1102,10 @@ def main() -> None:
         ],
         "recipes": recipes,
     }
+    # Final choke point: strip any machine-local absolute paths from the whole
+    # payload regardless of which code path produced a field, so the published
+    # docs data is portable and leaks no internal filesystem layout.
+    payload = sanitize_paths(payload)
     OUT.write_text(json.dumps(payload, ensure_ascii=False, indent=2) + "\n")
     index_payload = {
         "total": payload["total"],

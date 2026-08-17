@@ -13,6 +13,7 @@ from einops import rearrange
 from worldfoundry.core.attention.backends import (
     attention_backend_from_env,
     gpu_supports_flash_attention,
+    gpu_supports_flash_attention_3,
     probe_attention_backends,
     resolve_attention_backend,
 )
@@ -343,15 +344,34 @@ def _device_compute_capability(device: torch.device | str | None = None) -> tupl
 
 
 def _auto_attention_backends(device: torch.device | str | None) -> tuple[str, ...]:
-    """Use the in-tree exact PyTorch provider for automatic dispatch.
+    """Return the exact-equivalent provider priority for automatic dispatch.
 
-    External FlashAttention/xFormers packages and approximate SageAttention
-    remain explicit opt-ins. PyTorch SDPA already dispatches to its bundled
-    Flash/cuDNN kernels and preserves WorldFoundry's no-external-repo contract.
+    FlashAttention-3 is a numerically-equivalent exact provider on Hopper
+    (SM90): it is only added to the automatic priority when the device is
+    architecturally SM90 and the ``flash_attn_interface`` package probes as
+    usable. Every returned candidate still passes per-signature shape
+    eligibility, and PyTorch SDPA remains the guaranteed exact fallback that
+    :func:`_select_attention_backends_cached` always appends. Approximate
+    providers (SageAttention/SageAttention3) and other external packages stay
+    explicit opt-ins and never enter the automatic path.
+
+    Disable with ``WORLDFOUNDRY_ATTENTION_DISABLE_AUTO_FLASH3=1`` to force the
+    in-tree SDPA path (for example when isolating a regression).
     """
 
-    del device
-    return ()
+    if os.getenv("WORLDFOUNDRY_ATTENTION_DISABLE_AUTO_FLASH3", "").strip().casefold() in {
+        "1",
+        "true",
+        "yes",
+        "on",
+    }:
+        return ()
+    if not gpu_supports_flash_attention_3(device):
+        return ()
+    capability = probe_attention_backends(device).get("flash_attention_3")
+    if capability is None or not capability.usable:
+        return ()
+    return ("flash_attention_3",)
 
 
 def _tensor_layout_shape(tensor: torch.Tensor, pattern: str, dims: dict | None) -> tuple[int, int, int] | None:

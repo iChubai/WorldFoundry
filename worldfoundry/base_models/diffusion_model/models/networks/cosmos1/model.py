@@ -13,6 +13,8 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as functional
 
+from worldfoundry.core.acceleration import run_transformer_blocks_cached
+
 from ..cosmos2p5.model import (
     Cosmos25AdaLayerNorm,
     Cosmos25PatchEmbed,
@@ -146,6 +148,9 @@ class Cosmos1Transformer3DModel(nn.Module):
         attention_mask: torch.Tensor | None = None,
         fps: float | None = None,
         padding_mask: torch.Tensor | None = None,
+        feature_cache=None,
+        feature_cache_step: int = 0,
+        feature_cache_total_steps: int | None = None,
     ) -> torch.Tensor:
         if attention_mask is not None:
             attention_mask = attention_mask[:, None, None].to(dtype=torch.bool)
@@ -155,16 +160,30 @@ class Cosmos1Transformer3DModel(nn.Module):
         projected, temb = self.time_embed(hidden_states, timestep)
         projected = self.time_norm(projected)
         extra_position = self.extra_position(grid, batch).type_as(hidden_states)
-        for block in self.transformer_blocks:
-            hidden_states = hidden_states + extra_position
-            hidden_states = block(
-                hidden_states,
-                encoder_hidden_states,
-                projected,
-                temb,
-                rotary_emb,
-                attention_mask,
-            )
+
+        def _run_blocks(hidden: torch.Tensor) -> torch.Tensor:
+            for block in self.transformer_blocks:
+                hidden = hidden + extra_position
+                hidden = block(
+                    hidden,
+                    encoder_hidden_states,
+                    projected,
+                    temb,
+                    rotary_emb,
+                    attention_mask,
+                )
+            return hidden
+
+        # Cross-step feature cache (TeaCache family): signal is the timestep
+        # embedding temb; cache=None runs the dense stack unwrapped (bitwise same).
+        hidden_states = run_transformer_blocks_cached(
+            hidden_states,
+            _run_blocks,
+            cache=feature_cache,
+            step=feature_cache_step,
+            total_steps=feature_cache_total_steps,
+            signal=temb,
+        )
         hidden_states = self.proj_out(self.norm_out(hidden_states, projected, temb))
         return self._unpatchify(hidden_states, grid)
 

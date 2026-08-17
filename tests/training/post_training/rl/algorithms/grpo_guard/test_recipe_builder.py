@@ -151,7 +151,7 @@ def test_flow_policy_builder_dispatches_grpo_guard_runtime() -> None:
 def test_checked_in_grpo_guard_config_and_public_exports_are_canonical() -> None:
     pytest.importorskip("yaml")
     root = Path(__file__).resolve().parents[6]
-    recipe = PostTrainingRecipe.from_file(root / "configs/post_training/wan_1p3b_grpo_guard.yaml")
+    recipe = PostTrainingRecipe.from_file(root / "worldfoundry/data/models/runtime/configs/post_training/wan_1p3b_grpo_guard.yaml")
 
     assert isinstance(recipe.algorithm, GRPOGuardAlgorithmSpec)
     assert recipe.algorithm.updates_per_trajectory == 2

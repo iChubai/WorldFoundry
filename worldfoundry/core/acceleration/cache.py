@@ -255,4 +255,55 @@ class AdaptiveResidualCache:
         return residual
 
 
-__all__ = ["AdaptiveResidualCache", "CacheEvent", "FixedStepCache"]
+def run_transformer_blocks_cached(
+    hidden: T,
+    run_blocks: Callable[[T], T],
+    *,
+    cache: "AdaptiveResidualCache | None",
+    step: int,
+    total_steps: int | None,
+    signal: torch.Tensor,
+) -> T:
+    """Apply a cross-step feature cache around a transformer-block stack.
+
+    The reuse target is the block-stack *residual* ``run_blocks(x) - x`` applied
+    to the CURRENT ``x`` (so a cache hit still tracks the live latent), keyed on
+    a stable per-step ``signal`` (the timestep-modulation embedding, not the raw
+    latent). ``cache=None`` runs the dense stack unwrapped, so a model that wires
+    this in keeps a bitwise-identical shipped path when caching is off.
+
+    This is the shared implementation behind every DiT backbone's optional
+    TeaCache-family wiring; each ``forward`` only has to pass its block loop as
+    ``run_blocks`` and its modulation tensor as ``signal``.
+
+    On a *dense* step the freshly computed block output is returned as-is, not
+    reconstructed via ``x + (blocks(x) - x)``: the round-trip is not bitwise
+    identity in low precision, so returning it directly keeps a dense step's
+    output exactly equal to the uncached path. The residual reconstruction is
+    used only on genuine cache *hits*, where reusing a stored residual on the
+    current ``x`` is the whole point.
+    """
+
+    if cache is None:
+        return run_blocks(hidden)
+    fresh: dict[str, T] = {}
+
+    def _compute_residual() -> T:
+        out = run_blocks(hidden)
+        fresh["out"] = out
+        return _tree_sub(out, hidden)
+
+    residual = cache.run(int(step), signal, _compute_residual, total_steps=total_steps)
+    # A dense step populated ``fresh`` — return that exact output (no round-trip).
+    if "out" in fresh:
+        return fresh["out"]
+    # A genuine hit: reuse the stored residual on the current hidden state.
+    return _tree_add_scaled(hidden, residual, 1.0)
+
+
+__all__ = [
+    "AdaptiveResidualCache",
+    "CacheEvent",
+    "FixedStepCache",
+    "run_transformer_blocks_cached",
+]

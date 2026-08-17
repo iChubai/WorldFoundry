@@ -116,6 +116,19 @@ const copy = {
     catalogManifest: 'Catalog manifest',
     related: 'Related recipes',
     details: 'Open recipe',
+    highlights: 'Highlights',
+    whenToUseLabel: 'When to use',
+    notForLabel: 'Not for',
+    architecture: 'Architecture & specs',
+    architectureIntro: 'Manifest-recorded model composition, hardware floor, and output specification.',
+    minVram: 'Minimum VRAM',
+    family: 'Family',
+    developer: 'Developer',
+    releaseType: 'Release type',
+    modalities: 'Modalities',
+    components: 'Pipeline components',
+    keyValidation: 'Checkpoint key validation',
+    outputSpec: 'Output specification',
   },
   zh: {
     docs: '文档',
@@ -206,6 +219,19 @@ const copy = {
     catalogManifest: 'Catalog manifest',
     related: '相关配方',
     details: '打开配方',
+    highlights: '亮点',
+    whenToUseLabel: '适用场景',
+    notForLabel: '不适用于',
+    architecture: '架构与规格',
+    architectureIntro: 'Manifest 记录的模型组成、硬件门槛与输出规格。',
+    minVram: '最低显存',
+    family: '家族',
+    developer: '开发方',
+    releaseType: '发布类型',
+    modalities: '模态',
+    components: 'Pipeline 组件',
+    keyValidation: 'Checkpoint 键校验',
+    outputSpec: '输出规格',
   },
 } as const;
 
@@ -267,6 +293,24 @@ export function ModelRecipePage({ recipe, locale }: { recipe: ModelRecipe; local
   const t = copy[locale];
   const basePath = modelBasePath(locale);
   const related = getRelatedModelRecipes(recipe, 4);
+  const editorial = recipe.editorial;
+  const overview = editorial?.overview?.[locale] ?? [];
+  const highlights = editorial?.highlights?.[locale] ?? [];
+  const whenToUse = editorial?.whenToUse?.[locale];
+  const notFor = editorial?.notFor?.[locale];
+  const facts = recipe.facts;
+  const hasFacts = Boolean(
+    facts && (
+      facts.minVramGb != null
+      || facts.family
+      || facts.developer
+      || facts.releaseType
+      || facts.modalities.length > 0
+      || facts.architectureComponents.length > 0
+      || Object.keys(facts.checkpointKeyValidation).length > 0
+      || facts.outputSpecs.length > 0
+    ),
+  );
   const taskLabel = recipe.tasks.length > 0 ? recipe.tasks.join(' · ') : t.notRecorded;
   const environmentKind =
     recipe.runtime.environmentKind === 'dedicated'
@@ -312,6 +356,7 @@ export function ModelRecipePage({ recipe, locale }: { recipe: ModelRecipe; local
     ['overview', t.overview],
     ['use', t.use],
     ['what-is', t.whatIs],
+    ...(hasFacts ? [['architecture', t.architecture]] : []),
     ['launch', t.launch],
     ['install', t.install],
     ['assets', t.assets],
@@ -428,6 +473,44 @@ export function ModelRecipePage({ recipe, locale }: { recipe: ModelRecipe; local
                 ) : null}
               </header>
 
+              {overview.length > 0 || highlights.length > 0 ? (
+                <section className="wf-recipe-editorial" aria-label={t.whatIs}>
+                  {overview.length > 0 ? (
+                    <div className="wf-recipe-overview">
+                      {overview.map((paragraph, index) => (
+                        <p key={index}>{paragraph}</p>
+                      ))}
+                    </div>
+                  ) : null}
+                  {highlights.length > 0 ? (
+                    <div className="wf-recipe-highlights">
+                      <span className="wf-recipe-highlights-label">{t.highlights}</span>
+                      <ul>
+                        {highlights.map((item, index) => (
+                          <li key={index}>{item}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  ) : null}
+                  {whenToUse || notFor ? (
+                    <div className="wf-recipe-fit">
+                      {whenToUse ? (
+                        <div className="wf-recipe-fit-use">
+                          <span>{t.whenToUseLabel}</span>
+                          <p>{whenToUse}</p>
+                        </div>
+                      ) : null}
+                      {notFor ? (
+                        <div className="wf-recipe-fit-not">
+                          <span>{t.notForLabel}</span>
+                          <p>{notFor}</p>
+                        </div>
+                      ) : null}
+                    </div>
+                  ) : null}
+                </section>
+              ) : null}
+
               <div className={`wf-recipe-runbar is-${usageState}`} id="use">
                 <div className="wf-recipe-runbar-head">
                   <ShieldCheck aria-hidden="true" size={15} />
@@ -541,6 +624,58 @@ export function ModelRecipePage({ recipe, locale }: { recipe: ModelRecipe; local
                   </div>
                 </div>
               </section>
+
+              {hasFacts ? (
+                <section className="wf-recipe-section wf-recipe-architecture" id="architecture">
+                  <header>
+                    <span>01</span>
+                    <div>
+                      <h2>{t.architecture}</h2>
+                      <p>{t.architectureIntro}</p>
+                    </div>
+                  </header>
+                  <dl className="wf-recipe-facts-grid">
+                    {facts.minVramGb != null ? <DefinitionRow label={t.minVram} value={`${facts.minVramGb} GB`} /> : null}
+                    {facts.family ? <DefinitionRow label={t.family} value={facts.family} /> : null}
+                    {facts.developer ? <DefinitionRow label={t.developer} value={facts.developer} /> : null}
+                    {facts.releaseType ? <DefinitionRow label={t.releaseType} value={formatStatus(facts.releaseType, t.notRecorded)} /> : null}
+                    {facts.modalities.length > 0 ? <DefinitionRow label={t.modalities} value={facts.modalities.join(' · ')} /> : null}
+                  </dl>
+                  {facts.outputSpecs.length > 0 ? (
+                    <div className="wf-recipe-facts-block">
+                      <h3>{t.outputSpec}</h3>
+                      <div className="wf-recipe-spec-chips">
+                        {facts.outputSpecs.map((spec) => (
+                          <span key={spec.label}>
+                            <small>{spec.label}</small>
+                            <strong>{spec.detail}</strong>
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  ) : null}
+                  {facts.architectureComponents.length > 0 ? (
+                    <div className="wf-recipe-facts-block">
+                      <h3>{t.components}</h3>
+                      <div className="wf-recipe-component-chips">
+                        {facts.architectureComponents.map((component) => (
+                          <code key={component}>{component}</code>
+                        ))}
+                      </div>
+                    </div>
+                  ) : null}
+                  {Object.keys(facts.checkpointKeyValidation).length > 0 ? (
+                    <div className="wf-recipe-facts-block">
+                      <h3>{t.keyValidation}</h3>
+                      <dl className="wf-recipe-facts-grid">
+                        {Object.entries(facts.checkpointKeyValidation).map(([key, value]) => (
+                          <DefinitionRow key={key} label={key} value={String(value)} />
+                        ))}
+                      </dl>
+                    </div>
+                  ) : null}
+                </section>
+              ) : null}
 
               <section className="wf-recipe-section" id="launch">
                 <header>

@@ -9,7 +9,9 @@ import torch.nn as nn
 import torch.nn.functional as functional
 from einops import rearrange, repeat
 
+from worldfoundry.core.acceleration import run_transformer_blocks_cached
 from worldfoundry.core.attention import apply_rotary_embedding, scaled_dot_product_attention
+from worldfoundry.core.kernels import layer_norm_scale_shift, residual_gate_add
 from worldfoundry.core.nn.timestep import Timesteps
 
 
@@ -65,7 +67,7 @@ class Cosmos25AdaLayerNormZero(nn.Module):
     ) -> tuple[torch.Tensor, torch.Tensor]:
         modulation = self.linear_2(self.linear_1(self.activation(embedded_timestep))) + temb
         shift, scale, gate = modulation.chunk(3, dim=-1)
-        return self.norm(hidden_states) * (1 + scale) + shift, gate
+        return layer_norm_scale_shift(hidden_states, scale, shift, eps=self.norm.eps), gate
 
 
 class Cosmos25AdaLayerNorm(nn.Module):
@@ -81,7 +83,7 @@ class Cosmos25AdaLayerNorm(nn.Module):
         modulation = self.linear_2(self.linear_1(self.activation(embedded_timestep)))
         modulation = modulation + temb[..., : self.embedding_dim * 2]
         shift, scale = modulation.chunk(2, dim=-1)
-        return self.norm(value) * (1 + scale) + shift
+        return layer_norm_scale_shift(value, scale, shift, eps=self.norm.eps)
 
 
 class Cosmos25Attention(nn.Module):
@@ -172,15 +174,19 @@ class Cosmos25TransformerBlock(nn.Module):
         attention_mask: torch.Tensor | None,
     ) -> torch.Tensor:
         normalized, gate = self.norm1(hidden_states, embedded_timestep, temb)
-        hidden_states = hidden_states + gate * self.attn1(normalized, rotary_emb=rotary_emb)
+        hidden_states = residual_gate_add(hidden_states, self.attn1(normalized, rotary_emb=rotary_emb), gate)
         normalized, gate = self.norm2(hidden_states, embedded_timestep, temb)
-        hidden_states = hidden_states + gate * self.attn2(
-            normalized,
-            encoder_hidden_states=encoder_hidden_states,
-            attention_mask=attention_mask,
+        hidden_states = residual_gate_add(
+            hidden_states,
+            self.attn2(
+                normalized,
+                encoder_hidden_states=encoder_hidden_states,
+                attention_mask=attention_mask,
+            ),
+            gate,
         )
         normalized, gate = self.norm3(hidden_states, embedded_timestep, temb)
-        return hidden_states + gate * self.ff(normalized)
+        return residual_gate_add(hidden_states, self.ff(normalized), gate)
 
 
 class Cosmos25RotaryPosEmbed(nn.Module):
@@ -348,6 +354,9 @@ class Cosmos25Transformer3DModel(nn.Module):
         condition_mask: torch.Tensor | None = None,
         padding_mask: torch.Tensor | None = None,
         control_hidden_states: dict[str, torch.Tensor] | None = None,
+        feature_cache=None,
+        feature_cache_step: int = 0,
+        feature_cache_total_steps: int | None = None,
     ) -> torch.Tensor:
         if attention_mask is not None:
             attention_mask = attention_mask[:, None, None].to(dtype=torch.bool)
@@ -364,10 +373,28 @@ class Cosmos25Transformer3DModel(nn.Module):
             encoder_hidden_states,
             grid,
         )
-        for index, block in enumerate(self.transformer_blocks):
-            hidden_states = block(hidden_states, encoder_hidden_states, projected, temb, rotary_emb, attention_mask)
-            if control_hidden_states is not None and str(index) in control_hidden_states:
-                hidden_states = hidden_states + control_hidden_states[str(index)]
+
+        def _run_blocks(hidden: torch.Tensor) -> torch.Tensor:
+            for index, block in enumerate(self.transformer_blocks):
+                hidden = block(hidden, encoder_hidden_states, projected, temb, rotary_emb, attention_mask)
+                if control_hidden_states is not None and str(index) in control_hidden_states:
+                    hidden = hidden + control_hidden_states[str(index)]
+            return hidden
+
+        # Cross-step feature cache (TeaCache family): signal is temb. VACE control
+        # injects per-block, so only enable caching when there is no control input
+        # (a cache hit would skip the injection). cache=None → dense, bitwise same.
+        if control_hidden_states is None:
+            hidden_states = run_transformer_blocks_cached(
+                hidden_states,
+                _run_blocks,
+                cache=feature_cache,
+                step=feature_cache_step,
+                total_steps=feature_cache_total_steps,
+                signal=temb,
+            )
+        else:
+            hidden_states = _run_blocks(hidden_states)
         hidden_states = self.proj_out(self.norm_out(hidden_states, projected, temb))
         return self._unpatchify(hidden_states, grid)
 

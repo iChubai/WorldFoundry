@@ -1,3 +1,9 @@
 [submodule "thirdparty/flash-attention"]
 	path = thirdparty/flash-attention
 	url = https://github.com/Dao-AILab/flash-attention.git
+[submodule "thirdparty/fastvideo-kernel/include/cutlass"]
+	path = thirdparty/fastvideo-kernel/include/cutlass
+	url = https://github.com/NVIDIA/cutlass.git
+[submodule "thirdparty/fastvideo-kernel/include/tk"]
+	path = thirdparty/fastvideo-kernel/include/tk
+	url = https://github.com/HazyResearch/ThunderKittens.git

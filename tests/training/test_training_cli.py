@@ -201,7 +201,7 @@ def test_training_cli_exposes_wan_cache_and_attention_gate() -> None:
 def test_train_cache_loads_the_native_post_training_recipe() -> None:
     root = Path(__file__).resolve().parents[2]
 
-    recipe = load_cache_recipe(root / "configs/post_training/wan_1p3b_dmd.yaml")
+    recipe = load_cache_recipe(root / "worldfoundry/data/models/runtime/configs/post_training/wan_1p3b_dmd.yaml")
 
     assert type(recipe).__name__ == "PostTrainingRecipe"
     assert recipe.execution_owner == "worldfoundry-native"
@@ -213,7 +213,7 @@ def test_sana_cache_accepts_the_native_sid_post_training_recipe() -> None:
 
     root = Path(__file__).resolve().parents[2]
     recipe = load_cache_recipe(
-        root / "configs/post_training/sana_sprint_600m_sid.yaml"
+        root / "worldfoundry/data/models/runtime/configs/post_training/sana_sprint_600m_sid.yaml"
     )
 
     assert _validate_sana_cache_recipe(recipe) is recipe
@@ -256,7 +256,7 @@ def test_post_train_materializes_sana_sid_and_exports_student(
         [
             "post-train",
             "--recipe",
-            str(root / "configs/post_training/sana_sprint_600m_sid.yaml"),
+            str(root / "worldfoundry/data/models/runtime/configs/post_training/sana_sprint_600m_sid.yaml"),
             "--base-dir",
             str(tmp_path),
             "--output-dir",
@@ -342,7 +342,7 @@ def test_post_train_rejects_sid_role_overrides_for_other_algorithms(tmp_path) ->
         [
             "post-train",
             "--recipe",
-            str(root / "configs/post_training/wan_1p3b_dmd.yaml"),
+            str(root / "worldfoundry/data/models/runtime/configs/post_training/wan_1p3b_dmd.yaml"),
             "--base-dir",
             str(tmp_path),
             "--steps",
@@ -370,7 +370,7 @@ def test_train_cache_routes_diffusion_nft_to_rollout_conditioning(
         [
             "train-cache",
             "--recipe",
-            str(root / "configs/post_training/wan_1p3b_diffusion_nft.yaml"),
+            str(root / "worldfoundry/data/models/runtime/configs/post_training/wan_1p3b_diffusion_nft.yaml"),
             "--base-dir",
             str(root),
             "--manifest",

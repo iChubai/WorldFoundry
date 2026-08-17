@@ -49,11 +49,14 @@ class NativeModuleLoader:
                 raise ValueError(f"static and checkpoint-derived module config overlap: {overlap}")
             config.update(resolved_config)
 
-        if policy.quantization.mode is not QuantizationMode.NONE:
-            raise NotImplementedError(
-                "quantized module construction requires a registered core "
-                f"quantization pass; requested {policy.quantization.mode.value}"
-            )
+        from worldfoundry.core.model_loading.optimize import AppliedOptimizations
+
+        applied = AppliedOptimizations()
+        quantize = policy.quantization.mode is not QuantizationMode.NONE
+        if quantize and policy.offload.mode is OffloadMode.DISK:
+            # Disk offload replaces weights with placeholders before this loader
+            # returns; an in-place weight transform would see no real tensors.
+            raise NotImplementedError("quantization is not supported together with disk offload")
 
         # Lazy imports keep the canonical package importable without optional
         # Transformers/VRAM dependencies until a real module is constructed.
@@ -114,6 +117,69 @@ class NativeModuleLoader:
             # corrupts shape-based traversal and fails during the merge.
             if spec.post_load_hook is not None:
                 spec.post_load_hook(module)
+            # Approximate (LOSSY) self-attention: opt-in STA/VSA sparse kernels.
+            # OFF by default and never auto-selected; the user picks the kind +
+            # params via ``options["approximate_attention"]``. Wrapping the
+            # self-attention processors is numerically lossy on the sparse steps,
+            # so engaging it marks the audit quality_tier "approximate". The
+            # processor falls back to exact attention when no kernel is present.
+            # Installed BEFORE fusion: fusion skips blocks whose processor is
+            # non-default, so an approximate block keeps its separate q/k/v and
+            # its processor is not bypassed by the fused fast-path forward.
+            approx_opt = policy.options.get("approximate_attention")
+            if approx_opt:
+                from ..optimizations.approximate_attention import (
+                    install_approximate_attention,
+                    parse_approximate_attention,
+                )
+
+                approx_config = parse_approximate_attention(approx_opt)
+                approx_state = install_approximate_attention(module, approx_config)
+                applied.record_approximate_attention(
+                    requested=True,
+                    kind=approx_config.kind,
+                    wrapped_blocks=approx_state.wrapped_blocks,
+                    effective_kernel=approx_state.effective_kernel,
+                )
+                try:
+                    module._worldfoundry_approximate_attention = approx_state
+                except (AttributeError, TypeError):
+                    pass
+            # Merged-QKV fusion runs before quantization so the fused
+            # ``qkv`` projection (a single [dim, 3*dim] Linear) is what gets
+            # quantized: it is a larger GEMM than the separate q/k/v layers and
+            # therefore more likely to clear the FP8 work-size gate. Opt-in via
+            # ``options["fuse_qkv"]``; it is a no-op on already-merged models and
+            # skips blocks running an approximate (non-default) processor.
+            fuse_requested = bool(policy.options.get("fuse_qkv", False))
+            if fuse_requested:
+                from ..optimizations.qkv_fusion import fuse_qkv_projections
+
+                applied.record_fusion(requested=True, fused_blocks=fuse_qkv_projections(module))
+            # Static cross-attention K/V cache: conditioning-derived K/V do not
+            # change across denoise steps, so wrapping the cross-attention
+            # processors lets a runner reuse them. Runner must call the attached
+            # cache's invalidate() per request. Numerically identical (same
+            # projection reused); opt-in via ``options["static_cross_kv"]``.
+            if bool(policy.options.get("static_cross_kv", False)):
+                from ..optimizations.static_cross_kv import install_static_cross_kv_cache
+
+                cross_cache = install_static_cross_kv_cache(module)
+                applied.record_cross_kv(requested=True, wrapped_blocks=cross_cache.wrapped_blocks)
+                try:
+                    module._worldfoundry_static_cross_kv = cross_cache
+                except (AttributeError, TypeError):
+                    pass
+            # Quantization runs after the dense checkpoint is materialized (and
+            # after any post-load fusion) but BEFORE offload hooks, per
+            # inference_operator_optimization_plan.md §4.1: layerwise offload
+            # swaps parameters for placeholders, so an in-place weight transform
+            # must precede it. FP8 replaces eligible Linear layers in place and
+            # keeps a dense fallback; unsupported modes are reported as skipped.
+            if quantize:
+                from worldfoundry.core.model_loading.optimize import apply_quantization_policy
+
+                applied.record_quantization(apply_quantization_policy(module, policy.quantization))
             if policy.offload.mode is OffloadMode.BLOCK and module_map is None:
                 from worldfoundry.core.vram import enable_layerwise_cpu_offload
 
@@ -127,9 +193,35 @@ class NativeModuleLoader:
                 raise ValueError("component offload requires ModuleLoadSpec.vram_module_map")
 
         if policy.compile:
-            module = torch.compile(module)
+            # Route through the persistent compile cache instead of a bare
+            # torch.compile: this reuses the process-wide Inductor/Triton disk
+            # cache (keyed by device/CUDA/Triton fingerprint) and an
+            # instance-level variant cache, so a reload or a second module with
+            # the same options does not recompile from scratch. Lazy import
+            # keeps CPU-only / doc import paths free of the compile runtime.
+            from worldfoundry.runtime.compile_cache import CompilePolicy, compile_module_cached
+
+            module = compile_module_cached(
+                module,
+                policy=CompilePolicy(enabled=True),
+                namespace="diffusion-modules",
+                options=dict(policy.options) or None,
+            )
+            # compile_module_cached swallows tracing failures (strict=False) and
+            # returns the original module. _orig_mod is the torch.compile wrapper
+            # marker, so its presence is the ground truth of whether the island
+            # actually compiled rather than silently falling back to eager.
+            applied.record_compile(requested=True, compiled=hasattr(module, "_orig_mod"))
+        else:
+            applied.record_compile(requested=False)
         if not isinstance(module, torch.nn.Module):
             raise TypeError(f"module loader returned {type(module).__name__}, expected torch.nn.Module")
+        # Attach the auditable optimization record so a caller can fold it into
+        # a PerformanceManifest without changing this method's return type.
+        try:
+            module._worldfoundry_applied_optimizations = applied
+        except (AttributeError, TypeError):
+            pass
         return module
 
 

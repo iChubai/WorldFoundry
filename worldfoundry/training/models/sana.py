@@ -23,36 +23,16 @@ from worldfoundry.base_models.diffusion_model.contracts import (
     SamplingConfig,
 )
 from worldfoundry.training.api.contracts import ObjectiveBatch, PreparedBatch, TrainingBatch
+from worldfoundry.training.models._common import (
+    component_module as _component_module,
+    freeze as _freeze,
+    merge_without_overwrite as _common_merge,
+    module_device_dtype as _module_device_dtype,
+    normalize_effective_sigmas as _normalize_effective_sigmas,
+)
 
 SANA_DEFAULT_TRAIN_TIMESTEPS = 1000
 SANA_600M_512_TRAIN_FLOW_SHIFT = 3.0
-
-
-def _component_module(component: object, *names: str) -> nn.Module | None:
-    if isinstance(component, nn.Module):
-        return component
-    for name in names:
-        value = getattr(component, name, None)
-        if isinstance(value, nn.Module):
-            return value
-    return None
-
-
-def _module_device_dtype(module: nn.Module) -> tuple[torch.device, torch.dtype]:
-    reference = next(module.parameters(), None)
-    if reference is None:
-        reference = next(module.buffers(), None)
-    if reference is None:
-        return torch.device("cpu"), torch.float32
-    dtype = reference.dtype if reference.is_floating_point() else torch.float32
-    return reference.device, dtype
-
-
-def _freeze(module: nn.Module | None) -> None:
-    if module is None:
-        return
-    module.requires_grad_(False)
-    module.eval()
 
 
 def _merge_without_overwrite(
@@ -61,10 +41,7 @@ def _merge_without_overwrite(
     *,
     source_name: str,
 ) -> None:
-    overlap = sorted(set(destination) & set(source))
-    if overlap:
-        raise ValueError(f"{source_name} collides with encoded SANA conditioning keys: {overlap}")
-    destination.update(source)
+    _common_merge(destination, source, source_name=source_name, family="SANA")
 
 
 class SanaTrainAdapter:
@@ -434,17 +411,12 @@ class SanaTrainAdapter:
         prediction_type = batch.metadata.get("prediction_type")
         if prediction_type is not None and prediction_type != self.prediction_type:
             raise ValueError(f"SANA adapter predicts {self.prediction_type!r}, got objective {prediction_type!r}")
-        if not isinstance(batch.sigmas, torch.Tensor):
-            raise TypeError("SANA objective sigmas must be a torch.Tensor")
-        sigmas = batch.sigmas.to(device=latents.device, dtype=torch.float32)
-        if sigmas.ndim == 0:
-            sigmas = sigmas.expand(latents.shape[0])
-        elif sigmas.numel() == latents.shape[0]:
-            sigmas = sigmas.reshape(latents.shape[0])
-        else:
-            raise ValueError("SANA requires one effective sigma per sample")
-        if not bool(torch.isfinite(sigmas).all()) or not bool(((0 <= sigmas) & (sigmas <= 1)).all()):
-            raise ValueError("SANA effective sigmas must be finite values in [0, 1]")
+        sigmas = _normalize_effective_sigmas(
+            batch.sigmas,
+            batch_size=int(latents.shape[0]),
+            device=latents.device,
+            family="SANA",
+        )
 
         self.trainable_module.train(training)
         self._keep_frozen_modules_in_eval()

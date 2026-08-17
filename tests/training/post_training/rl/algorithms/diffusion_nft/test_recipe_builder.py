@@ -261,7 +261,7 @@ def test_diffusion_nft_builder_rejects_reward_contract_and_reference_mismatch() 
 def test_checked_in_diffusion_nft_recipe_parses_and_public_exports_are_canonical() -> None:
     pytest.importorskip("yaml")
     root = Path(__file__).resolve().parents[6]
-    recipe = PostTrainingRecipe.from_file(root / "configs/post_training/wan_1p3b_diffusion_nft.yaml")
+    recipe = PostTrainingRecipe.from_file(root / "worldfoundry/data/models/runtime/configs/post_training/wan_1p3b_diffusion_nft.yaml")
 
     assert isinstance(recipe.algorithm, DiffusionNFTAlgorithmSpec)
     assert recipe.algorithm.collection.group_size == 4

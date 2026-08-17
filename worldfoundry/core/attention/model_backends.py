@@ -17,16 +17,31 @@ from worldfoundry.core.attention.piecewise import piecewise_attention
 logger = logging.getLogger(__name__)
 
 
+# torch's default SDPA dispatch order, used when the private introspection API
+# below is unavailable (it was added in a later torch than some supported envs).
+# Matches ``torch._C._get_sdp_priority_order()`` on torch>=2.7: flash first, then
+# the memory-efficient kernel, then the always-correct math fallback, then cuDNN.
+_DEFAULT_SDPA_PRIORITY: tuple[SDPBackend, ...] = (
+    SDPBackend.FLASH_ATTENTION,
+    SDPBackend.EFFICIENT_ATTENTION,
+    SDPBackend.MATH,
+    SDPBackend.CUDNN_ATTENTION,
+)
+
+
 def _torch_default_sdpa_priority() -> list[SDPBackend]:
     """Fetch torch's current default SDPA priority order at runtime.
     Used as the default for ``PytorchAttention`` so the wrapper-always
     code path matches torch's native dispatch order without hard-coding it
     (which would drift if torch updates the default).
-    ``torch._C._get_sdp_priority_order`` is a private API; we accept that
-    risk because the project pins ``torch`` in the lockfile, so any
-    rename/removal surfaces on a controlled torch bump rather than silently.
+    ``torch._C._get_sdp_priority_order`` is a private API added in a later torch
+    release; when it is absent (older pinned torch, e.g. 2.5) we fall back to the
+    documented default order rather than failing import.
     """
-    return [SDPBackend(p) for p in torch._C._get_sdp_priority_order()]
+    getter = getattr(torch._C, "_get_sdp_priority_order", None)
+    if getter is None:
+        return list(_DEFAULT_SDPA_PRIORITY)
+    return [SDPBackend(p) for p in getter()]
 
 
 def _module_available(name: str) -> bool:

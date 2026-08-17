@@ -4,7 +4,11 @@ These utilities operate above individual kernels. They intentionally expose
 the approximation policy so callers can validate quality for each model.
 """
 
-from worldfoundry.core.acceleration.cache import AdaptiveResidualCache, FixedStepCache
+from worldfoundry.core.acceleration.cache import (
+    AdaptiveResidualCache,
+    FixedStepCache,
+    run_transformer_blocks_cached,
+)
 from worldfoundry.core.acceleration.cuda_graph_dispatch import (
     CUDAGraphDispatch,
     cuda_graph_capture_ar_index,
@@ -93,6 +97,7 @@ __all__ = [
     "replace_linear_with_nvfp4",
     "release_one_shot_encoder_references",
     "restore_tokens",
+    "run_transformer_blocks_cached",
     "run_async_prewarm_sequence",
     "run_one_shot_encoder_stage",
     "run_prewarm_sequence",

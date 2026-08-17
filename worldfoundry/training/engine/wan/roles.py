@@ -6,9 +6,9 @@ import random
 from dataclasses import dataclass
 
 import torch
-from torch import nn
 
 from worldfoundry.training.distributed.fsdp import FSDP2Application
+from worldfoundry.training.engine.dmd.strategy import DMDTrainableRoles
 from worldfoundry.training.models.wan import WanTrainAdapter
 from worldfoundry.training.post_training.shared.role_checkpoints import (
     ResolvedRoleCheckpoint,
@@ -163,19 +163,6 @@ def fsdp_identity(
         "digest": application.digest,
         "parameter_mode": application.parameter_mode,
     }
-
-
-class DMDTrainableRoles(nn.Module):
-    """One DCP model tree containing only mutable DMD roles."""
-
-    def __init__(self, student: nn.Module, fake_score: nn.Module) -> None:
-        super().__init__()
-        if not isinstance(student, nn.Module) or not isinstance(fake_score, nn.Module):
-            raise TypeError("DMD trainable roles must be nn.Module values")
-        if student is fake_score:
-            raise ValueError("DMD student and fake-score modules must be distinct")
-        self.student = student
-        self.fake_score = fake_score
 
 
 @dataclass(frozen=True, slots=True)

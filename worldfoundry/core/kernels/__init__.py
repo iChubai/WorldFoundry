@@ -3,6 +3,7 @@
 from worldfoundry.core.kernels.capabilities import KernelDeviceProfile, kernel_device_profile
 from worldfoundry.core.kernels.diffusion import (
     clear_kernel_dispatch_cache,
+    fused_residual_gate_layer_norm_scale_shift,
     group_norm_silu,
     hidden_qk_rmsnorm_rope_3d,
     kernel_dispatch_report,
@@ -21,10 +22,15 @@ def __getattr__(name: str):
         from worldfoundry.core.kernels.triton_moe import routed_swiglu_moe_triton
 
         return routed_swiglu_moe_triton
+    if name in ("indexed_scale_shift_bf16_", "indexed_gate_bf16_"):
+        from worldfoundry.core.kernels import triton_minimax_h3_modulation as _mod
+
+        return getattr(_mod, name)
     raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
 
 __all__ = [
     "clear_kernel_dispatch_cache",
+    "fused_residual_gate_layer_norm_scale_shift",
     "group_norm_silu",
     "hidden_qk_rmsnorm_rope_3d",
     "KernelDeviceProfile",

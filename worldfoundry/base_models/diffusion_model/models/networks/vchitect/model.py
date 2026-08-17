@@ -8,6 +8,8 @@ import torch
 from einops import rearrange
 from torch import nn
 
+from worldfoundry.core.acceleration import run_transformer_blocks_cached
+
 from .blocks import AdaLayerNormContinuous, JointTransformerBlock
 
 
@@ -154,6 +156,9 @@ class VchitectXLTransformerModel(nn.Module):
         encoder_hidden_states: torch.Tensor,
         pooled_projections: torch.Tensor,
         timestep: torch.Tensor,
+        feature_cache=None,
+        feature_cache_step: int = 0,
+        feature_cache_total_steps: int | None = None,
     ) -> torch.Tensor:
         if hidden_states.ndim != 5:
             raise ValueError("Vchitect expects latents in [B,F,C,H,W] layout")
@@ -170,14 +175,32 @@ class VchitectXLTransformerModel(nn.Module):
             context = context.expand(batch, -1, -1)
         context = context.repeat_interleave(frames, dim=0)
         frequencies = self._frequencies(frames, patches.device)
-        for block in self.transformer_blocks:
-            context, patches = block(
-                patches,
-                context,
-                embedding_frames,
-                frequencies=frequencies,
-                frames=frames,
-            )
+
+        def _run_blocks(hidden: torch.Tensor) -> torch.Tensor:
+            # context co-evolves with patches through the joint blocks; a cache
+            # hit skips this whole loop, so the stale context is reused together
+            # with the stale patch residual — consistent with TeaCache semantics.
+            ctx = context
+            for block in self.transformer_blocks:
+                ctx, hidden = block(
+                    hidden,
+                    ctx,
+                    embedding_frames,
+                    frequencies=frequencies,
+                    frames=frames,
+                )
+            return hidden
+
+        # Cross-step feature cache (TeaCache family): signal is embedding_frames
+        # (timestep+pooled projection); cache=None → dense, bitwise unchanged.
+        patches = run_transformer_blocks_cached(
+            patches,
+            _run_blocks,
+            cache=feature_cache,
+            step=feature_cache_step,
+            total_steps=feature_cache_total_steps,
+            signal=embedding_frames,
+        )
         patches = self.proj_out(self.norm_out(patches, embedding_frames))
         patch = self.patch_size
         latent_height, latent_width = height // patch, width // patch

@@ -361,3 +361,23 @@ worldfoundry/synthesis/visual_generation/wonderworld/wonderworld_runtime/sky_img
 worldfoundry/cli/assets/*.png
 worldfoundry/studio/assets/*.png
 worldfoundry/studio/assets/vendor/
+
+# Local development notes (internal integration memos, not part of the release).
+memory/
+
+# Runtime tmp artifacts accidentally committed inside the package (random-suffix
+# pipeline configs carry machine-local paths; they are regenerated at runtime).
+worldfoundry/**/*_runtime/tmp/
+**/pipeline_config_??????.yaml
+
+# Files carrying machine-local paths / usernames — kept out of the public release.
+plan/training_rl_post_training_plan.md
+scripts/dev/project_codex_env.sh
+
+# Benchmark artifacts: generated figures are reproducible from plot_results.py.
+benchmarks/figures/
+
+# Local-only benchmark drivers and their tests (kept out of the public release).
+benchmarks/inference/wan21_i2v_teacache.py
+benchmarks/inference/wan_dit_sit.py
+tests/base_models/diffusion_model/models/denoisers/test_wan_feature_cache.py

@@ -48,3 +48,20 @@ Entries are based only on files present in this repository.
 - nested_third_party:
   - `gsplat/cuda/csrc/third_party/glm`: listed in upstream `.gitmodules` as `https://github.com/g-truc/glm.git`.
 - license_summary: see `thirdparty/THIRD_PARTY_LICENSES.md`.
+
+## `fastvideo-kernel` (vendored core; headers as submodules)
+
+- upstream_url: `https://github.com/hao-ai-lab/FastVideo.git`
+- upstream_path: `fastvideo-kernel/`
+- local_path: `thirdparty/fastvideo-kernel`
+- source_commit: `1b2b2a0161bc6b3b80158d1fa6380a051c6530c7`
+- fork_status: **modified** — see `thirdparty/fastvideo-kernel/MODIFICATIONS.md`.
+- modifications: torch 2.5 `custom_op` schema fix (`typing.Tuple[...]` -> builtin
+  `tuple[...]` in `block_sparse_attn.py`); bundled CUTLASS/ThunderKittens headers
+  de-vendored to git submodules to keep the repo small.
+- purpose: Hopper (sm_90a) sparse attention (STA / VSA) for the opt-in
+  approximate self-attention lane; falls back to exact attention when absent.
+- nested_third_party (git submodules, pinned):
+  - `include/cutlass`: `https://github.com/NVIDIA/cutlass.git` @ `e67e63c331d6e4b729047c95cf6b92c8454cba89` (v4.3.0)
+  - `include/tk`: `https://github.com/HazyResearch/ThunderKittens.git` @ `6c27e28c8115d1839d9eeeb530913c184a75fc87`
+- license_summary: see `thirdparty/THIRD_PARTY_LICENSES.md`.

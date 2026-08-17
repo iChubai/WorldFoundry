@@ -8,7 +8,13 @@ import torch
 import torch.distributed as dist
 from torch import nn
 from torch.distributed.device_mesh import DeviceMesh
-from torch.distributed.fsdp import MixedPrecisionPolicy, fully_shard
+
+try:
+    # torch >= 2.6 re-exports the FSDP2 API from the public package.
+    from torch.distributed.fsdp import MixedPrecisionPolicy, fully_shard
+except ImportError:
+    # torch 2.4/2.5 expose the same FSDP2 API under the composable namespace.
+    from torch.distributed._composable.fsdp import MixedPrecisionPolicy, fully_shard
 from torch.distributed.tensor import DTensor
 
 from worldfoundry.core.io.integrity import canonical_sha256

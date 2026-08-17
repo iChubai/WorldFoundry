@@ -19,6 +19,7 @@ from einops import rearrange
 from .attention import Attention
 from .normalization import RMSNorm
 from .rope import RoPE3D
+from worldfoundry.core.kernels import residual_gate_add
 
 
 class SelfAttention(Attention):
@@ -384,8 +385,8 @@ class StepVideoTransformerBlock(nn.Module):
             rope_positions=rope_positions
         )
 
-        q = gate(attn_q, gate_msa) + q
-        
+        q = residual_gate_add(q, attn_q, gate_msa)
+
         attn_q = self.attn2(
                 q,
                 kv,
@@ -398,8 +399,8 @@ class StepVideoTransformerBlock(nn.Module):
 
         ff_output = self.ff(scale_shift_q)
         
-        q = gate(ff_output, gate_mlp) + q
-        
+        q = residual_gate_add(q, ff_output, gate_mlp)
+
         return q
     
     

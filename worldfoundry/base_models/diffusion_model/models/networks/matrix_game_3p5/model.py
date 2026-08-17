@@ -11,9 +11,10 @@ from worldfoundry.core.attention import (
     complex_rotary_frequencies,
     flattened_multihead_attention,
 )
+from worldfoundry.core.acceleration import run_transformer_blocks_cached
 from worldfoundry.core.attention.projective_rope import prope_dot_product_attention
+from worldfoundry.core.kernels import layer_norm_scale_shift
 from worldfoundry.core.nn import RMSNorm, sinusoidal_embedding_1d
-from worldfoundry.core.nn import scale_shift as modulate
 
 from ..wan.adapter import SimpleAdapter
 from ..wan.model import (
@@ -192,7 +193,7 @@ class DiTBlock(nn.Module):
                 scale_mlp.squeeze(2),
                 gate_mlp.squeeze(2),
             )
-        input_x = modulate(self.norm1(x), shift_msa, scale_msa)
+        input_x = layer_norm_scale_shift(x, scale_msa, shift_msa, eps=self.norm1.eps)
         camera_info = camera_info if self.use_prope else None
         x = self.gate(
             x,
@@ -203,7 +204,7 @@ class DiTBlock(nn.Module):
         if cross_attn_keep_mask is not None:
             ca = ca * cross_attn_keep_mask.to(device=ca.device, dtype=ca.dtype).view(1, -1, 1)
         x = x + ca
-        input_x = modulate(self.norm2(x), shift_mlp, scale_mlp)
+        input_x = layer_norm_scale_shift(x, scale_mlp, shift_mlp, eps=self.norm2.eps)
         x = self.gate(x, gate_mlp, self.ffn(input_x))
         return x
 
@@ -367,6 +368,9 @@ class WanModel(torch.nn.Module):
         y: Optional[torch.Tensor] = None,
         **kwargs,
     ):
+        feature_cache = kwargs.pop("feature_cache", None)
+        feature_cache_step = int(kwargs.pop("feature_cache_step", 0))
+        feature_cache_total_steps = kwargs.pop("feature_cache_total_steps", None)
         t = self.time_embedding(sinusoidal_embedding_1d(self.freq_dim, timestep).to(x.dtype))
         t_mod = self.time_projection(t).unflatten(1, (6, self.dim))
         context = self.text_embedding(context)
@@ -393,8 +397,21 @@ class WanModel(torch.nn.Module):
             .to(x.device)
         )
 
-        for block in self.blocks:
-            x = block(x, context, t_mod, freqs)
+        def _run_blocks(hidden: torch.Tensor) -> torch.Tensor:
+            for block in self.blocks:
+                hidden = block(hidden, context, t_mod, freqs)
+            return hidden
+
+        # Cross-step feature cache (TeaCache family): signal t_mod; cache=None →
+        # dense stack, bitwise unchanged.
+        x = run_transformer_blocks_cached(
+            x,
+            _run_blocks,
+            cache=feature_cache,
+            step=feature_cache_step,
+            total_steps=feature_cache_total_steps,
+            signal=t_mod,
+        )
 
         x = self.head(x, t)
         x = self.unpatchify(x, (f, h, w))

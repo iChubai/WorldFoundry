@@ -8,6 +8,12 @@ from ...components import ComponentBuildContext
 from ...contracts import DenoiserInput, DenoiserOutput
 from ...loaders import ModuleLoadSpec, NativeModuleLoader
 from ..networks.vchitect import VchitectXLTransformerModel
+from .graph_wrapped import (
+    FeatureCacheDenoiserMixin,
+    GraphWrappedDenoiserMixin,
+    resolve_cuda_graph_option,
+    resolve_teacache_threshold,
+)
 
 
 VCHITECT_2B_CONFIG = {
@@ -25,9 +31,18 @@ VCHITECT_2B_CONFIG = {
 }
 
 
-class VchitectDenoiser:
-    def __init__(self, model: VchitectXLTransformerModel) -> None:
+class VchitectDenoiser(GraphWrappedDenoiserMixin, FeatureCacheDenoiserMixin):
+    def __init__(
+        self,
+        model: VchitectXLTransformerModel,
+        *,
+        enable_cuda_graph: bool = False,
+        teacache_threshold: float | None = None,
+    ) -> None:
         self.model = model
+        self._init_graph_runner(model, enabled=enable_cuda_graph, extra_key="vchitect-dit")
+        self._teacache_threshold = teacache_threshold
+        self._feature_caches = {}
 
     def __call__(self, model_input: DenoiserInput) -> DenoiserOutput:
         prompt = model_input.conditioning.get("prompt_embeds")
@@ -37,11 +52,12 @@ class VchitectDenoiser:
         timestep = model_input.timestep.to(device=model_input.latents.device).reshape(-1)
         if timestep.numel() == 1:
             timestep = timestep.expand(model_input.latents.shape[0])
-        sample = self.model(
+        sample = self._run_network(
             model_input.latents,
             encoder_hidden_states=prompt.to(device=model_input.latents.device, dtype=model_input.latents.dtype),
             pooled_projections=pooled.to(device=model_input.latents.device, dtype=model_input.latents.dtype),
             timestep=timestep,
+            **self.feature_cache_kwargs(model_input),
         )
         return DenoiserOutput(sample=sample)
 
@@ -58,7 +74,11 @@ def build_vchitect_denoiser(context: ComponentBuildContext) -> VchitectDenoiser:
     )
     if not isinstance(model, VchitectXLTransformerModel):
         raise TypeError(f"expected VchitectXLTransformerModel, got {type(model).__name__}")
-    return VchitectDenoiser(model)
+    return VchitectDenoiser(
+        model,
+        enable_cuda_graph=resolve_cuda_graph_option(context),
+        teacache_threshold=resolve_teacache_threshold(context),
+    )
 
 
 __all__ = ["VCHITECT_2B_CONFIG", "VchitectDenoiser", "build_vchitect_denoiser"]

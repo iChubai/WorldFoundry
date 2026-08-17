@@ -12,7 +12,12 @@ from typing import Callable, Mapping, Protocol, runtime_checkable
 
 from ..components import ComponentKey
 from ..contracts import DiffusionOutput, DiffusionRequest
-from ..extensions import DiffusionExtension, FrozenContextSuffixExtension, FrozenLatentMaskExtension
+from ..extensions import (
+    ApproximateAttentionStepExtension,
+    DiffusionExtension,
+    FrozenContextSuffixExtension,
+    FrozenLatentMaskExtension,
+)
 from ..optimizations import RuntimePolicy
 from ..recipes.spec import NativeDiffusionRecipe
 from .autoregressive import AutoregressiveWindowRunner
@@ -106,6 +111,13 @@ def build_standard_strategy(context: ExecutionBuildContext) -> NativeDiffusionRu
             f"required={sorted(required_bindings)}; got={sorted(actual_bindings)}"
         )
     bound = {role: context.components[key] for role, key in context.recipe.execution.bindings.items()}
+    # Drive the approximate-attention dense-boundary schedule when the user opted
+    # into sparse attention. The extension is a no-op unless the denoiser's model
+    # carries the installed state, so injecting it unconditionally is safe and
+    # keeps the default (no-option) path behaviourally unchanged.
+    extensions = context.extensions
+    if not any(item.extension_id == "approximate-attention-step" for item in extensions):
+        extensions = (*extensions, ApproximateAttentionStepExtension())
     return NativeDiffusionRunner(
         model_id=context.recipe.model_id,
         components=RunnerComponents(
@@ -118,7 +130,7 @@ def build_standard_strategy(context: ExecutionBuildContext) -> NativeDiffusionRu
         ),
         device=context.policy.device,
         dtype=context.policy.dtype,
-        extensions=context.extensions,
+        extensions=extensions,
         guidance_mode=str(context.recipe.execution.options.get("guidance_mode", "standard")),
     )
 

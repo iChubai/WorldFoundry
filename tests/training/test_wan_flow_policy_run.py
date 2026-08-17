@@ -16,7 +16,7 @@ from worldfoundry.training.recipes import PostTrainingRecipe
 
 def _recipe(filename: str = "wan_1p3b_flow_grpo.yaml") -> PostTrainingRecipe:
     root = Path(__file__).resolve().parents[2]
-    return PostTrainingRecipe.from_file(root / "configs/post_training" / filename)
+    return PostTrainingRecipe.from_file(root / "worldfoundry/data/models/runtime/configs/post_training" / filename)
 
 
 def test_wan_flow_policy_recipes_resolve_dynamic_world_sizes() -> None:
@@ -70,7 +70,7 @@ def test_distributed_rollout_rejects_rank_uneven_chunked_collectives() -> None:
 
 def test_source_profile_keeps_semantics_without_fixing_world_size() -> None:
     root = Path(__file__).resolve().parents[2]
-    recipe = PostTrainingRecipe.from_file(root / "configs/post_training/wan_1p3b_videoalign_flow_grpo.yaml")
+    recipe = PostTrainingRecipe.from_file(root / "worldfoundry/data/models/runtime/configs/post_training/wan_1p3b_videoalign_flow_grpo.yaml")
     algorithm, data_plan = validate_wan_flow_policy_recipe(recipe)
 
     assert algorithm.sigmas == flow_match_sigma_schedule(16, shift=3.0)

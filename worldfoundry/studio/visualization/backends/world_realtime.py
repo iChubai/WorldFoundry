@@ -2624,11 +2624,45 @@ class RealtimePeerManager:
         channel.send(json.dumps(dict(payload), ensure_ascii=False, separators=(",", ":")))
 
 
+def _try_build_nvenc_track(
+    *,
+    frames: LatestFrameBuffer,
+    fps: int,
+) -> Any | None:
+    """Build a GPU (NVENC) H.264 track, or return ``None`` to fall back.
+
+    Opt-in via ``WORLDFOUNDRY_REALTIME_NVENC=1``. Frames reach the track as CPU
+    numpy arrays, so this moves only the H.264 encode off the CPU (not the
+    GPU->CPU copy). Any probe or construction failure falls back to the
+    software path with a logged reason rather than breaking the stream.
+    """
+    try:
+        from worldfoundry.studio.serving.realtime.nvenc import (
+            build_nvenc_track,
+            nvenc_h264_supported,
+        )
+
+        supported, reason = nvenc_h264_supported()
+        if not supported:
+            logger.warning("NVENC realtime track unavailable (%s); using software encode.", reason)
+            return None
+        logger.info("NVENC realtime track enabled: GPU H.264 encode at %d fps.", fps)
+        return build_nvenc_track(frames=frames, fps=fps)
+    except Exception:
+        logger.exception("NVENC realtime track construction failed; using software encode.")
+        return None
+
+
 def _build_video_track(
     *,
     frames: LatestFrameBuffer,
     fps: int,
 ) -> Any:
+    if _env_bool("WORLDFOUNDRY_REALTIME_NVENC", False):
+        track = _try_build_nvenc_track(frames=frames, fps=fps)
+        if track is not None:
+            return track
+
     from aiortc import MediaStreamTrack
     from aiortc.mediastreams import MediaStreamError
     from av import VideoFrame

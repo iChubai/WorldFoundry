@@ -27,6 +27,7 @@ from worldfoundry.base_models.diffusion_model.recipes.registry import (
 )
 from worldfoundry.core.io.file_utils import file_sha256
 from worldfoundry.core.io.integrity import canonical_json
+from worldfoundry.core.io.paths import resolve_data_path
 from worldfoundry.training.data import (
     RolloutPromptDataset,
     RolloutPromptRecord,
@@ -194,9 +195,8 @@ def _recipe(
     cache_path: Path,
     work_dir: Path,
 ) -> PostTrainingRecipe:
-    root = Path(__file__).resolve().parents[2]
     payload = PostTrainingRecipe.from_file(
-        root / "configs/post_training/wan_1p3b_flow_grpo.yaml"
+        resolve_data_path("models", "runtime", "configs", "post_training", "wan_1p3b_flow_grpo.yaml")
     ).to_dict()
     payload["run"] = {
         "id": "wan-flow-grpo-real-roundtrip-gate",

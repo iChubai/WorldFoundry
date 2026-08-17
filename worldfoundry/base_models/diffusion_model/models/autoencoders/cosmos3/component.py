@@ -42,7 +42,38 @@ def load_cosmos3_video_vae_checkpoint(
     )
     if not isinstance(module, WanVideoVAE38):
         raise TypeError(f"expected WanVideoVAE38, got {type(module).__name__}")
+    module.decode_autocast_dtype = _resolve_vae_decode_autocast(policy)
     return module
+
+
+_VAE_DECODE_AUTOCAST_DTYPES = {
+    "fp16": torch.float16,
+    "float16": torch.float16,
+    "half": torch.float16,
+    "bf16": torch.bfloat16,
+    "bfloat16": torch.bfloat16,
+}
+
+
+def _resolve_vae_decode_autocast(policy: RuntimePolicy) -> torch.dtype | None:
+    """Map policy option ``vae_decode_autocast`` to a decode autocast dtype.
+
+    Opt-in mixed-precision decode: routes conv+matmul (76.8% of decode CUDA time)
+    through the Hopper HMMA path while autocast keeps RMS_norm/normalize in FP32
+    (~1.3x decode, cos~0.9999 vs FP32; measured 0.99989 on random weights).
+    Absent/None/"" keeps FP32.
+    """
+    raw = policy.options.get("vae_decode_autocast")
+    if raw is None or raw is False or raw == "":
+        return None
+    if isinstance(raw, torch.dtype):
+        return raw
+    key = str(raw).lower()
+    if key not in _VAE_DECODE_AUTOCAST_DTYPES:
+        raise ValueError(
+            f"vae_decode_autocast must be one of {sorted(_VAE_DECODE_AUTOCAST_DTYPES)} or a torch.dtype, got {raw!r}"
+        )
+    return _VAE_DECODE_AUTOCAST_DTYPES[key]
 
 
 def load_cosmos3_video_vae(context: ComponentBuildContext) -> WanVideoVAE38:

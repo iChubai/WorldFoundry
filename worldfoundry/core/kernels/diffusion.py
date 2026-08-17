@@ -580,6 +580,111 @@ def layer_norm_scale_shift(
     )
 
 
+def _fused_residual_gate_layer_norm_scale_shift_torch(
+    x: torch.Tensor,
+    residual: torch.Tensor,
+    gate: torch.Tensor,
+    scale: torch.Tensor,
+    shift: torch.Tensor,
+    eps: float,
+    upcast: bool,
+) -> tuple[torch.Tensor, torch.Tensor]:
+    residual_out = _residual_gate_torch(residual, x, gate)
+    output = _layer_norm_scale_shift_torch(residual_out, scale, shift, eps, upcast)
+    return residual_out, output
+
+
+def _eligible_fused_residual_gate_layer_norm_scale_shift(
+    x: torch.Tensor,
+    residual: torch.Tensor,
+    gate: torch.Tensor,
+    scale: torch.Tensor,
+    shift: torch.Tensor,
+    eps: float,
+    upcast: bool,
+) -> bool:
+    del eps, upcast
+    return (
+        _inference_only(x, residual, gate, scale, shift)
+        and _same_cuda_device(x, residual, gate, scale, shift)
+        and all(_triton_device_supported(tensor) for tensor in (x, residual, gate, scale, shift))
+        and x.dtype in _FLOAT_DTYPES
+        and residual.dtype in _FLOAT_DTYPES
+        and gate.dtype in _FLOAT_DTYPES
+        and scale.dtype in _FLOAT_DTYPES
+        and shift.dtype in _FLOAT_DTYPES
+        and 2 <= x.ndim <= 5
+        and x.numel() > 0
+        and residual.shape == x.shape
+        and 0 < x.shape[-1] <= 8192
+        and _regular_contiguous(x)
+        and _regular_contiguous(residual)
+        and _broadcastable_to(gate, x)
+        and _broadcastable_to(scale, x)
+        and _broadcastable_to(shift, x)
+    )
+
+
+def _fused_residual_gate_layer_norm_scale_shift_triton(
+    x: torch.Tensor,
+    residual: torch.Tensor,
+    gate: torch.Tensor,
+    scale: torch.Tensor,
+    shift: torch.Tensor,
+    eps: float,
+    upcast: bool,
+) -> tuple[torch.Tensor, torch.Tensor]:
+    del upcast
+    from worldfoundry.core.kernels.triton_diffusion import (
+        fused_residual_gate_layer_norm_scale_shift as implementation,
+    )
+
+    return implementation(x, residual, gate, scale, shift, eps)
+
+
+def fused_residual_gate_layer_norm_scale_shift(
+    x: torch.Tensor,
+    residual: torch.Tensor,
+    gate: torch.Tensor,
+    scale: torch.Tensor,
+    shift: torch.Tensor,
+    eps: float = 1e-6,
+    *,
+    upcast: bool = False,
+) -> tuple[torch.Tensor, torch.Tensor]:
+    """Fuse the gated residual and the following AdaLN into one launch.
+
+    Returns ``(residual_out, output)`` where ``residual_out = residual + gate *
+    x`` and ``output = layer_norm(residual_out) * (1 + scale) + shift``. The
+    single kernel keeps ``residual_out`` in registers for the LayerNorm
+    statistics instead of the extra HBM round trip the two-kernel path pays.
+    """
+
+    requested = _requested_kernel_backend()
+    if (
+        torch.compiler.is_compiling()
+        or requested in _TORCH_BACKENDS
+        or (
+            requested == "auto"
+            and not kernel_autotune_enabled()
+            and x.numel() < _kernel_threshold(x, "layer_norm_scale_shift")
+        )
+    ):
+        return _fused_residual_gate_layer_norm_scale_shift_torch(x, residual, gate, scale, shift, eps, upcast)
+    return KERNEL_REGISTRY.dispatch(
+        "fused_residual_gate_layer_norm_scale_shift",
+        _fused_residual_gate_layer_norm_scale_shift_torch,
+        x,
+        residual,
+        gate,
+        scale,
+        shift,
+        eps,
+        upcast,
+        signature=_workload_signature(x, residual, gate, scale, shift, extra=(float(eps), bool(upcast))),
+    )
+
+
 def _rms_norm_scale_shift_torch(
     x: torch.Tensor,
     weight: torch.Tensor | None,
@@ -1087,6 +1192,15 @@ def _register_kernels() -> None:
         predicate=_eligible_layer_norm_scale_shift,
     )
     KERNEL_REGISTRY.register(
+        "fused_residual_gate_layer_norm_scale_shift",
+        backend="triton",
+        name="triton_fused_residual_gate_layer_norm_scale_shift",
+        priority=100,
+        autotune=True,
+        implementation=_fused_residual_gate_layer_norm_scale_shift_triton,
+        predicate=_eligible_fused_residual_gate_layer_norm_scale_shift,
+    )
+    KERNEL_REGISTRY.register(
         "rms_norm_scale_shift",
         backend="triton",
         name="triton_rms_norm_scale_shift",
@@ -1117,6 +1231,7 @@ _register_kernels()
 
 __all__ = [
     "clear_kernel_dispatch_cache",
+    "fused_residual_gate_layer_norm_scale_shift",
     "group_norm_silu",
     "hidden_qk_rmsnorm_rope_3d",
     "kernel_dispatch_report",

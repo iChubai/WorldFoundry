@@ -17,6 +17,7 @@ from pathlib import Path
 import torch
 
 from worldfoundry.core.io.integrity import replace_json_atomic
+from worldfoundry.core.io.paths import resolve_data_path
 from worldfoundry.training.engine.sana.sid import materialize_sana_sid_training_run
 from worldfoundry.training.models.sana_sid import build_local_diffusers_sana_sid_adapter
 from worldfoundry.training.recipes import PostTrainingRecipe
@@ -30,7 +31,7 @@ def _arguments() -> argparse.Namespace:
     parser.add_argument(
         "--recipe",
         type=Path,
-        default=Path("configs/post_training/sana_sprint_600m_sid.yaml"),
+        default=resolve_data_path("models", "runtime", "configs", "post_training", "sana_sprint_600m_sid.yaml"),
     )
     parser.add_argument("--model-root", type=Path, required=True)
     parser.add_argument("--manifest", type=Path, required=True)

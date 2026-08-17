@@ -8,8 +8,38 @@ from typing import Any
 
 import torch
 
-from worldfoundry.core.attention.backends import probe_attention_backends
+from worldfoundry.core.attention.backends import (
+    gpu_supports_flash_attention_3,
+    probe_attention_backends,
+)
 from worldfoundry.core.attention.native import native_sdpa_priority, scaled_dot_product_attention
+
+
+def _dense_fa3_eligible(q: torch.Tensor, head_dim: int) -> bool:
+    """Whether the packed dense path may use FlashAttention-3 on this input.
+
+    FA3 is a numerically-equivalent exact provider on Hopper. It is used for the
+    unpadded dense case only when the device is SM90, the ``flash_attn_interface``
+    package probes usable, and the head dimension is within FA3's supported range
+    (multiple of 8, <= 256). Disable with
+    ``WORLDFOUNDRY_ATTENTION_DISABLE_AUTO_FLASH3=1``.
+    """
+
+    if os.getenv("WORLDFOUNDRY_ATTENTION_DISABLE_AUTO_FLASH3", "").strip().casefold() in {
+        "1",
+        "true",
+        "yes",
+        "on",
+    }:
+        return False
+    if q.device.type != "cuda" or q.dtype not in (torch.float16, torch.bfloat16):
+        return False
+    if head_dim <= 0 or head_dim > 256 or head_dim % 8:
+        return False
+    if not gpu_supports_flash_attention_3(q.device):
+        return False
+    capability = probe_attention_backends(q.device).get("flash_attention_3")
+    return capability is not None and capability.usable
 
 try:
     from torch.nn.attention.bias import causal_lower_right as _causal_lower_right
@@ -72,6 +102,37 @@ def flash_attention(
         compute_fp32 = dense_q.device.type == "cpu" and dense_q.dtype in half_dtypes
         if compute_fp32:
             dense_q, dense_k, dense_v = dense_q.float(), dense_k.float(), dense_v.float()
+        # Prefer FlashAttention-3 on Hopper for the maskless dense case. FA3
+        # consumes the [B, S, H, D] tensors directly (no transpose) and applies
+        # causal through its own flag, so it composes with the packed layout
+        # while staying numerically equivalent. Any FA3 import/kernel problem
+        # falls through to the in-tree SDPA path below.
+        if (
+            attn_mask is None
+            and not compute_fp32
+            and not torch.compiler.is_compiling()
+            and _dense_fa3_eligible(dense_v, dense_v.shape[-1])
+        ):
+            try:
+                import flash_attn_interface
+
+                # FA3 wants [B, S, H, D]; reuse the same dtype/scale normalization
+                # as the SDPA path but without the [B, H, S, D] transpose.
+                fa3_q = half(q).to(dense_v.dtype)
+                if q_scale is not None:
+                    fa3_q = fa3_q * q_scale
+                fa3_out = flash_attn_interface.flash_attn_func(
+                    fa3_q,
+                    half(k).to(dense_v.dtype),
+                    half(v),
+                    softmax_scale=softmax_scale,
+                    causal=use_causal_flag,
+                )
+                if isinstance(fa3_out, tuple):
+                    fa3_out = fa3_out[0]
+                return fa3_out.to(out_dtype)
+            except (ImportError, OSError, RuntimeError):
+                pass
         selected_backends = (
             ()
             if torch.compiler.is_compiling()

@@ -14,6 +14,12 @@ from worldfoundry.core.model_loading import hash_state_dict_keys
 from ...components import BuildPurpose, ComponentBuildContext
 from ...contracts import DenoiserInput, DenoiserOutput
 from ...loaders import CheckpointSpec, ModuleLoadSpec, NativeModuleLoader
+from .graph_wrapped import (
+    FeatureCacheDenoiserMixin,
+    GraphWrappedDenoiserMixin,
+    resolve_cuda_graph_option,
+    resolve_teacache_threshold,
+)
 from ..networks.wan.model import RMSNorm, WanModel
 
 WAN21_T2V_1P3B_CONFIG = {
@@ -81,7 +87,9 @@ WAN22_TI2V_5B_CONFIG = {
     "per_token_timestep": True,
 }
 
-_WAN_DENOISER_OPTION_KEYS = frozenset({"peft_adapter_path", "weight_dtype"})
+_WAN_DENOISER_OPTION_KEYS = frozenset(
+    {"peft_adapter_path", "weight_dtype", "teacache", "teacache_thresh"}
+)
 _ROLE_CHECKPOINT_FIELDS = frozenset(
     {
         "sources",
@@ -408,7 +416,7 @@ class WanModelStateDictConverter:
         return filtered, dict(config)
 
 
-class WanDenoiser:
+class WanDenoiser(GraphWrappedDenoiserMixin, FeatureCacheDenoiserMixin):
     """Expose a checkpoint-compatible Wan DiT through ``Denoiser``."""
 
     def __init__(
@@ -418,6 +426,8 @@ class WanDenoiser:
         compute_dtype: torch.dtype = torch.bfloat16,
         reference_condition_key: str | None = None,
         manage_autocast: bool = True,
+        enable_cuda_graph: bool = False,
+        teacache_threshold: float | None = None,
     ) -> None:
         if not isinstance(manage_autocast, bool):
             raise TypeError("Wan manage_autocast must be a bool")
@@ -425,6 +435,14 @@ class WanDenoiser:
         self.compute_dtype = compute_dtype
         self.reference_condition_key = reference_condition_key
         self.manage_autocast = manage_autocast
+        # The inner DiT call has stable shapes across denoise steps and no
+        # data-dependent control flow, so a CUDA Graph can capture the whole
+        # transformer stack and replay it launch-free (opt-in).
+        self._init_graph_runner(self.model, enabled=enable_cuda_graph, extra_key="wan-dit")
+        # Opt-in cross-step feature cache (TeaCache family) applied inside the DiT
+        # block stack; per-CFG-branch state is owned by FeatureCacheDenoiserMixin.
+        self._teacache_threshold = teacache_threshold
+        self._feature_caches = {}
 
     def __call__(self, model_input: DenoiserInput) -> DenoiserOutput:
         try:
@@ -508,13 +526,20 @@ class WanDenoiser:
                 clip_feature=clip_feature.to(device=latents.device, dtype=latents.dtype),
             )
 
+        # Cross-step feature cache (TeaCache family) runs INSIDE the DiT around
+        # the transformer-block stack (correct reuse target is the block residual
+        # on the CURRENT x, keyed on the timestep-modulation signal). The mixin
+        # owns per-CFG-branch state; empty kwargs when disabled → shipped path
+        # unchanged. WanModel.forward applies it via run_transformer_blocks_cached.
+        model_kwargs.update(self.feature_cache_kwargs(model_input))
+
         autocast_enabled = self.compute_dtype in {torch.float16, torch.bfloat16}
         with torch.autocast(
             device_type=latents.device.type,
             dtype=self.compute_dtype,
             enabled=self.manage_autocast and autocast_enabled,
         ):
-            sample = self.model(
+            sample = self._run_network(
                 x=model_latents,
                 timestep=timestep,
                 context=context,
@@ -632,6 +657,8 @@ def _build_wan_denoiser(
         compute_dtype=context.policy.dtype,
         reference_condition_key=reference_condition_key,
         manage_autocast=context.purpose is not BuildPurpose.TRAINING,
+        enable_cuda_graph=resolve_cuda_graph_option(context),
+        teacache_threshold=resolve_teacache_threshold(context),
     )
 
 

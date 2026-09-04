@@ -1,0 +1,41 @@
+{
+  "id": "infinite-world",
+  "tagline": {
+    "en": "MeiGen-AI's long-horizon world model — navigate a scene from a single image and generate extended, memory-consistent video.",
+    "zh": "MeiGen-AI 的长时程世界模型——从单张图片出发在场景中导航,生成带记忆一致性的长视频。"
+  },
+  "overview": {
+    "en": [
+      "Infinite-World, from MeiGen-AI, is an interactive world model built for long-horizon generation. From a single conditioning image it lets you navigate a scene and keeps generating video well beyond a short clip.",
+      "Its design emphasizes memory, so the world stays consistent as the sequence extends over a long horizon. It works as an image-to-video model with interactive navigation, released as code and weights.",
+      "In WorldFoundry it runs as a world / video task — provide a starting image and navigation input, and it produces a long-horizon world video together with preview metadata."
+    ],
+    "zh": [
+      "Infinite-World 由 MeiGen-AI 开发,是一个面向长时程生成的交互式世界模型。从一张条件图片出发,它让你在场景中导航,并能持续生成远超短片的视频。",
+      "其设计强调记忆,使世界在序列延展到长时程时仍保持一致。它以带交互导航的图生视频方式工作,并以代码加权重形式发布。",
+      "在 WorldFoundry 中,它以世界/视频任务运行——提供一张起始图片和导航输入,它便产出长时程的世界视频以及预览元数据。"
+    ]
+  },
+  "whenToUse": {
+    "en": "Reach for Infinite-World when you want to explore a scene interactively from a single image and generate extended video that stays coherent over a long horizon.",
+    "zh": "当你想从单张图片交互式探索场景、并生成在长时程内保持连贯的长视频时,可以选择 Infinite-World。"
+  },
+  "notFor": {
+    "en": "It needs the checkpoint and a capable GPU, and its focus is image-conditioned long-horizon navigation rather than free-form text-to-video.",
+    "zh": "它需要 checkpoint 与足够的 GPU,重点在于图像条件的长时程导航,而非自由的文生视频。"
+  },
+  "highlights": {
+    "en": [
+      "Long-horizon world generation from a single image",
+      "Memory-consistent scene as the sequence extends",
+      "Interactive image-to-video navigation",
+      "Released with code and weights"
+    ],
+    "zh": [
+      "从单张图片进行长时程世界生成",
+      "序列延展时保持记忆一致的场景",
+      "交互式图生视频导航",
+      "以代码加权重形式发布"
+    ]
+  }
+}

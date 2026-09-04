@@ -1,4 +1,16 @@
-"""Native Vchitect SD3-style three-encoder prompt conditioner."""
+"""Vchitect-2B :class:`~...contracts.ConditionEncoder` (CLIP + CLIP + T5).
+
+Mirrors SD3: two CLIP-with-projection towers plus T5-XXL.
+``encode`` returns ``prompt_embeds`` (concatenated sequence)
+and ``pooled_prompt_embeds`` for
+:class:`~...denoisers.vchitect.VchitectDenoiser`.
+
+:func:`build_vchitect_prompt_conditioner` is the recipe
+factory.  Latent decode is the SD3 frame VAE
+(:mod:`~...autoencoders.sd3`).
+
+SD3-family conditioning, not a video LLM encoder.
+"""
 
 from __future__ import annotations
 
@@ -12,6 +24,8 @@ from ...loaders import NativeCheckpointResolver
 
 
 class VchitectPromptConditioner:
+    """Load the three Hugging Face text towers from a local snapshot."""
+
     def __init__(self, root, *, device: torch.device, dtype: torch.dtype) -> None:
         from transformers import CLIPTextModelWithProjection, CLIPTokenizer, T5EncoderModel, T5TokenizerFast
 
@@ -87,6 +101,7 @@ class VchitectPromptConditioner:
         device: torch.device,
         dtype: torch.dtype,
     ) -> Conditioning:
+        """Return SD3-style ``prompt_embeds`` and ``pooled_prompt_embeds``."""
         del device, dtype
         negative = request.negative_prompts or ("",) * request.batch_size
         return Conditioning(
@@ -96,6 +111,7 @@ class VchitectPromptConditioner:
 
 
 def build_vchitect_prompt_conditioner(context: ComponentBuildContext) -> VchitectPromptConditioner:
+    """Build the dual-CLIP + T5 Vchitect prompt conditioner."""
     materialized = NativeCheckpointResolver().materialize(context.require_checkpoint("resources"))
     return VchitectPromptConditioner(
         materialized.root,

@@ -9,7 +9,7 @@ WorldFoundry 遵循一条最重要的设计规则：**把模型执行与 benchma
 
 把这条最重要规则画成一张图：模型执行与 benchmark 评测只通过归一化 artifact 接触。模型产出 `GenerationResult` 行，benchmark 消费它；两侧都不越过边界去碰对方的内部实现。
 
-![模型执行与 benchmark 评测以 artifact 边界分离](/diagrams/boundary.zh.svg)
+<ArchDiagram id="artifact-boundary" locale="zh" />
 
 下方四层总览图标出两侧各自位于哪一层；上方的边界图是对两者交接面的放大。
 
@@ -43,16 +43,9 @@ WorldFoundry 遵循一条最重要的设计规则：**把模型执行与 benchma
 
 ### 例子：Matrix-Game 2 输出跨过边界
 
-仓库中的 Matrix-Game 2 universal 示例使用初始图像 `worldfoundry/data/test_cases/matrix-game-2/universal/0000.png` 和动作条件配置。Operator 会把这些输入转换成模型原生调用，pipeline 负责 checkpoint 与推理，输出端再写出视频和 metadata。概念上的流向如下：
+仓库中的 Matrix-Game 2 universal 示例使用初始图像 `worldfoundry/data/test_cases/matrix-game-2/universal/0000.png` 和动作条件配置。Operator 会把这些输入转换成模型原生调用，pipeline 负责 checkpoint 与推理，输出端再写出视频和 metadata。
 
-```text
-初始图像 + action 序列 + seed/fps
-  -> Matrix-Game 2 operator
-  -> Matrix-Game 2 pipeline / checkpoint
-  -> generated_video + metadata
-  -> GenerationResult 中的 ArtifactRef
-  -> 视觉 review，或读取 generated_video 的兼容 metric
-```
+<ArchDiagram id="matrix-game" locale="zh" />
 
 评测端只需知道 artifact 的 kind、URI 与 sample identity，不需要知道 Matrix-Game 2 怎样加载权重。反过来，pipeline 也从不 import 某个 benchmark 的 evaluator。若生成成功但 benchmark 所需的 prompt set 不完整，`GenerationResult` 仍然有效，而 scorecard 中的 leaderboard eligibility 仍然为 false。
 

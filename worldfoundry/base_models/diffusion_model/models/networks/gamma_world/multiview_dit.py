@@ -13,6 +13,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+"""Multi-view / multi-agent Gamma-World DiT.
+
+Extends :class:`MinimalDiT` with action-conditioned blocks and 4D RoPE
+so several camera streams share one token lattice.  Latents remain
+``B C T H W`` (T may pack views); tokens are ``B T H W C``.
+"""
+
 import math
 from typing import List, Optional, Tuple
 
@@ -38,6 +45,8 @@ from worldfoundry.base_models.diffusion_model.models.networks.gamma_world.multia
 
 
 class ActionBlock(Block):
+    """DiT block that linearly injects per-token action embeddings before AdaLN attn."""
+
     def __init__(
         self,
         *args,
@@ -168,6 +177,8 @@ class ActionBlock(Block):
 
 
 class MinimalV1LVGDiT(MinimalDiT):
+    """Multi-view MinimalDiT with optional action-control blocks and 4D RoPE."""
+
     def __init__(
         self,
         *args,

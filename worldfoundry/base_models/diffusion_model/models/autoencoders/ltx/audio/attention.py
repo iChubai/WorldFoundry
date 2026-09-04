@@ -1,3 +1,16 @@
+"""Self-attention blocks for the LTX audio VAE / vocoder.
+
+Checkpoint-compatible 1-D attention over spectrogram-like
+feature maps.  :class:`AttnBlock` is the residual QKV unit;
+:func:`make_attn` selects the implementation from
+:class:`AttentionType`.
+
+Tensors are channel-first 2-D maps used by :mod:`.audio_vae`
+and :mod:`.vocoder` — not runner Protocol types.
+
+This is LTX audio graph math, sibling of :mod:`.resnet`.
+"""
+
 from enum import Enum
 
 import torch
@@ -17,6 +30,7 @@ class AttentionType(Enum):
 
 
 class AttnBlock(torch.nn.Module):
+    """Residual self-attention block over LTX audio feature maps."""
     def __init__(
         self,
         in_channels: int,
@@ -63,6 +77,7 @@ def make_attn(
     attn_type: AttentionType = AttentionType.VANILLA,
     norm_type: NormType = NormType.GROUP,
 ) -> torch.nn.Module:
+    """Build an attention module from an :class:`AttentionType` token."""
     match attn_type:
         case AttentionType.VANILLA:
             return AttnBlock(in_channels, norm_type=norm_type)

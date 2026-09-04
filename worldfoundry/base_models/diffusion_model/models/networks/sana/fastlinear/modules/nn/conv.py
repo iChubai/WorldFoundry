@@ -14,7 +14,16 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-"""Module for base_models -> diffusion_model -> image -> sana -> diffusion -> model -> nets -> fastlinear -> modules -> nn -> conv.py functionality."""
+"""Conv2d + optional norm/act helper used by SANA MBConvPreGLU.
+
+:class:`ConvLayer` wraps ``nn.Conv2d`` with same-padding, dropout, and
+registry-built norm / activation.  It is the building block of the
+PyTorch MBConv + pre-GLU reference that the Triton fused FFN mirrors.
+
+Input / output are channel-first ``B C H W`` feature maps.  Norm names
+follow :mod:`.norm` (``bn2d``, ``ln2d``, …); act names follow
+:mod:`~worldfoundry.base_models.diffusion_model.models.networks.sana.activation`.
+"""
 
 import torch
 from torch import nn
@@ -26,7 +35,7 @@ from .norm import build_norm, get_norm_name
 
 
 class ConvLayer(nn.Module):
-    """Conv layer implementation."""
+    """Conv2d with optional fused norm and activation for MBConv stacks."""
 
     def __init__(
         self,

@@ -1,4 +1,4 @@
-"""Narrow Flash Linear Attention imports for inference-only profiles.
+"""Narrow Flash Linear Attention imports for inference-only SANA-WM profiles.
 
 Recent FLA releases expose their complete layers and models API from the
 package root. Importing one convolution through that public surface therefore

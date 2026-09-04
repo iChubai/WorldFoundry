@@ -13,6 +13,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+"""NATTEN neighborhood attention wrapper for Gamma-World self-attn.
+
+Replaces dense self-attn with a local 3D window over the ``T H W``
+token lattice.  Falls back to ``base_attn_op`` when NATTEN kernels are
+unavailable.  Layout inside the op is ``B S H D``.
+"""
+
 from collections import namedtuple
 from collections.abc import Mapping, Sequence
 from typing import Optional
@@ -55,6 +62,8 @@ ALLOWED_COMPUTE_CAPS = [80, 90, 100]
 
 
 class NeighborhoodAttention(nn.Module):
+    """Windowed 3D self-attn over the post-patch ``(T, H, W)`` lattice."""
+
     def __init__(self, natten_parameters, base_attn_op):
         super(NeighborhoodAttention, self).__init__()
 

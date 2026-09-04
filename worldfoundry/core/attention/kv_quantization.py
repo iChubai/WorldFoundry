@@ -26,6 +26,10 @@ from torch import Tensor
 
 KVQuantDType = Literal["none", "fp8", "int8", "int4", "int2"]
 
+# ──────────────────────────────────────────────────────────────────────────
+# Config + packed codes — group-wise scales; sub-byte codes live in uint8
+# ──────────────────────────────────────────────────────────────────────────
+
 # Integer code widths. fp8 is stored in a native torch dtype, not packed codes.
 _INT_BITS: dict[str, int] = {"int8": 8, "int4": 4, "int2": 2}
 
@@ -64,6 +68,7 @@ class KVQuantConfig:
     symmetric: bool = False
 
     def __post_init__(self) -> None:
+        """Reject unknown dtypes, non-positive groups, and missing fp8 support."""
         if self.dtype not in ("none", "fp8", "int8", "int4", "int2"):
             raise ValueError(f"Unsupported KV quantization dtype {self.dtype!r}")
         if self.group_size < 1:
@@ -122,6 +127,11 @@ class QuantizedTensor:
         if self.zero_point is not None:
             total += self.zero_point.numel() * self.zero_point.element_size()
         return total
+
+
+# ──────────────────────────────────────────────────────────────────────────
+# Quantize / dequantize — write once, restore on read; never in-place
+# ──────────────────────────────────────────────────────────────────────────
 
 
 def _pack_codes(codes: Tensor, bits: int) -> Tensor:
@@ -237,6 +247,11 @@ def dequantize_kv(quantized: QuantizedTensor) -> Tensor:
     return restored.reshape(quantized.shape).to(quantized.dtype)
 
 
+# ──────────────────────────────────────────────────────────────────────────
+# Append-only store — keep chunks compressed until attention materializes
+# ──────────────────────────────────────────────────────────────────────────
+
+
 class QuantizedKVStore:
     """Append-only KV storage that quantizes on write and restores on read.
 
@@ -280,10 +295,12 @@ class QuantizedKVStore:
 
     @staticmethod
     def _store(tensor: Tensor, config: KVQuantConfig) -> QuantizedTensor | Tensor:
+        """Quantize when enabled; otherwise clone a detached dense copy."""
         return quantize_kv(tensor.detach(), config) if config.enabled else tensor.detach().clone()
 
     @staticmethod
     def _restore(item: QuantizedTensor | Tensor) -> Tensor:
+        """Dequantize a :class:`QuantizedTensor`; pass dense tensors through."""
         return dequantize_kv(item) if isinstance(item, QuantizedTensor) else item
 
     def append(self, keys: Tensor, values: Tensor) -> None:

@@ -1,0 +1,41 @@
+{
+  "id": "unik3d-prior",
+  "tagline": {
+    "en": "UniK3D — a universal-camera monocular 3D estimator used as a geometry prior, handling pinhole and panoramic views alike.",
+    "zh": "UniK3D——用作几何先验的通用相机单目 3D 估计器，同样适用于针孔与全景视角。"
+  },
+  "overview": {
+    "en": [
+      "UniK3D estimates metric 3D structure from a single image and is designed to work across camera types — from standard pinhole images to wide-field and panoramic (360°) views. This universal-camera design is what sets it apart, letting one model handle very different capture geometries.",
+      "In WorldFoundry it is exposed as an independent geometry prior through a shared geometry-prior contract, producing depth and 3D estimates that downstream tasks can build on. It can estimate the camera automatically, while pinhole and panorama camera settings remain available as explicit overrides. The default checkpoint uses a ViT-L backbone, resolved from Hugging Face or a local path.",
+      "In WorldFoundry you enable it as a prior — give it an image, and it produces metric depth and 3D structure, adapting to the camera model."
+    ],
+    "zh": [
+      "UniK3D 从单张图像估计度量 3D 结构，并被设计为可跨相机类型工作——从标准针孔图像到大视场乃至全景（360°）视角。这种通用相机设计正是它的独特之处，让一个模型能应对差异很大的成像几何。",
+      "在 WorldFoundry 中，它通过统一的几何先验契约作为独立几何先验暴露出来，产出深度与 3D 估计供下游任务构建。它可以自动估计相机，同时针孔与全景相机设置仍作为显式覆盖项保留。默认 checkpoint 采用 ViT-L 骨干，可从 Hugging Face 解析或由本地路径提供。",
+      "在 WorldFoundry 中，你把它作为先验启用——给它一张图像，它就会产出度量深度与 3D 结构，并自适应相机模型。"
+    ]
+  },
+  "whenToUse": {
+    "en": "When you need metric monocular 3D or depth as a geometry prior and your inputs span different camera types — including wide-field or panoramic images.",
+    "zh": "当你需要度量的单目 3D 或深度作为几何先验、且输入涵盖不同相机类型——包括大视场或全景图像时。"
+  },
+  "notFor": {
+    "en": "Commercial use — the upstream release is CC-BY-NC-4.0, so respect the non-commercial terms when enabling this prior. It is a 3D/depth estimator, not a generator.",
+    "zh": "不适合商业用途——上游发布采用 CC-BY-NC-4.0，启用该先验时请遵守其非商业条款。它是 3D/深度估计器，而非生成模型。"
+  },
+  "highlights": {
+    "en": [
+      "Universal-camera monocular 3D and depth estimation",
+      "Handles pinhole, wide-field, and panoramic views",
+      "Automatic camera estimation with explicit overrides",
+      "Non-commercial license (CC-BY-NC-4.0)"
+    ],
+    "zh": [
+      "通用相机的单目 3D 与深度估计",
+      "适用于针孔、大视场与全景视角",
+      "自动相机估计，并支持显式覆盖",
+      "非商业许可（CC-BY-NC-4.0）"
+    ]
+  }
+}

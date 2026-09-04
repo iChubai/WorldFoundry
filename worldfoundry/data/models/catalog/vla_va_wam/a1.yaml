@@ -8,6 +8,7 @@ aliases:
 availability: open_source
 provider: official_repo
 official_sources:
+  paper: https://arxiv.org/abs/2604.05672
   github:
     url: https://github.com/ATeam-Research/A1
     revision: 2fcb07da2932eaaad441cddea91179845aa23c9c

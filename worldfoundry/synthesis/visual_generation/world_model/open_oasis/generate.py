@@ -6,8 +6,7 @@ References:
 import torch
 from dit import DiT_models
 from vae import VAE_models
-from torchvision.io import read_video, write_video
-from utils import load_prompt, load_actions, sigmoid_beta_schedule
+from utils import load_prompt, load_actions, sigmoid_beta_schedule, write_video_compat
 from tqdm import tqdm
 from einops import rearrange
 from torch import autocast
@@ -61,7 +60,11 @@ def main(args):
         n_prompt_frames=n_prompt_frames,
     )
     # get input action stream
-    actions = load_actions(args.actions_path, action_offset=args.video_offset)[:, :total_frames]
+    actions = load_actions(
+        args.actions_path,
+        action_offset=args.video_offset,
+        num_frames=total_frames,
+    )
 
     # sampling inputs
     x = x.to(device)
@@ -131,7 +134,7 @@ def main(args):
     # save video
     x = torch.clamp(x, 0, 1)
     x = (x * 255).byte()
-    write_video(args.output_path, x[0].cpu(), fps=args.fps)
+    write_video_compat(args.output_path, x[0], fps=args.fps)
     print(f"generation saved to {args.output_path}.")
 
 
@@ -165,7 +168,7 @@ if __name__ == "__main__":
     parse.add_argument(
         "--actions-path",
         type=str,
-        help="File to load actions from (.actions.pt or .one_hot_actions.pt)",
+        help="File to load actions from (.actions.pt, .one_hot_actions.pt, or .one_hot_actions.json)",
         default="sample_data/sample_actions_0.one_hot_actions.pt",
     )
     parse.add_argument(

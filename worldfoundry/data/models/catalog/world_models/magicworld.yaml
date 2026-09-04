@@ -10,6 +10,9 @@ checkpoint: LuckyLiGY/MagicWorld
 runtime_profile: runtime-profile:magicworld
 runner_target: worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner
 pipeline_binding: magicworld
+official_sources:
+  project_page: https://vivocameraresearch.github.io/magicworld/
+  paper: https://arxiv.org/abs/2511.18886
 integration:
   status: integrated
   notes:

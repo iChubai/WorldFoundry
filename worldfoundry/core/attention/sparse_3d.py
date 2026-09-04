@@ -14,7 +14,28 @@
 # of rights and permissions under this agreement.
 # See the License for the specific language governing permissions and limitations under the License.
 
-"""Sparse spatiotemporal block-attention masks and execution."""
+"""Sparse spatiotemporal block-attention masks and execution.
+
+Hunyuan-style video attention windows a 3-D (time, height, width)
+token grid instead of attending densely. This module builds the block
+masks and the gather/scatter index maps; the actual matmul still goes
+through the shared attention dispatcher so a missing sparse kernel
+falls back to exact SDPA.
+
+Not this module:
+    Not an eviction policy and not a KV cache — those live in
+    :mod:`worldfoundry.core.attention.kvcache`. Does not implement the
+    FlexBlock kernel (imported from ``flex_block_attn``). Dense
+    fallback is the caller's responsibility when that package is
+    missing.
+
+Public surface:
+
+- :func:`tile` / :func:`untile` — 3-D block gather / scatter.
+- :func:`create_sta_3d_mask` / :func:`create_moba_3d_mask` /
+  :func:`create_ssta_3d_mask` — window, top-k, and union masks.
+- :func:`ssta_3d_attention` — pad, tile, FlexBlock, untile, unpad.
+"""
 
 import math
 from functools import lru_cache
@@ -22,6 +43,11 @@ from functools import lru_cache
 import numpy as np
 import torch
 from einops import rearrange
+
+
+# ──────────────────────────────────────────────────────────────────────────
+# Tile gather / scatter — FlexBlock wants tokens grouped by (n_t, n_h, n_w)
+# ──────────────────────────────────────────────────────────────────────────
 
 
 def tile(x, canvas_thw, tile_thw, sp_size=1):
@@ -91,6 +117,13 @@ def get_tile_t_h_w(tile_id, tile_thw_dim):
     tile_w = tile_id % tile_w_dim
 
     return tile_t, tile_h, tile_w
+
+
+# ──────────────────────────────────────────────────────────────────────────
+# Block routing — similarity vs redundancy-aware top-k over block centroids
+# ──────────────────────────────────────────────────────────────────────────
+
+
 def importance_sampling(q, k, topk, threshold=0.0, lambda_=0.9, adaptive_pool=None):
     r"""Select top-k blocks based on importance scores considering both similarity and redundancy.
     
@@ -170,6 +203,12 @@ def similarity_sampling(q, k, topk,
         topk = min(topk, gate.size(-1))
         _, top_block_indices = gate.topk(k=topk, dim=-1, sorted=False)
     return top_block_indices
+
+
+# ──────────────────────────────────────────────────────────────────────────
+# Mask builders — STA window ∪ MOBA top-k; text blocks stay fully visible
+# ──────────────────────────────────────────────────────────────────────────
+
 
 def create_moba_3d_mask(q, 
                         k, 
@@ -475,6 +514,12 @@ def create_ssta_3d_mask(q,
         eye_mask = torch.eye(ssta_3d_mask.shape[1]-pad_start_index, dtype=torch.bool, device=ssta_3d_mask.device).unsqueeze(0)
         ssta_3d_mask[:, pad_start_index:, pad_start_index:] = ssta_3d_mask[:, pad_start_index:, pad_start_index:] | eye_mask
     return ssta_3d_mask
+
+
+# ──────────────────────────────────────────────────────────────────────────
+# Sparse launch — pad to tile multiples, FlexBlock, crop pad + text tail
+# ──────────────────────────────────────────────────────────────────────────
+
 
 def ssta_3d_attention(all_q, 
                      all_k, 

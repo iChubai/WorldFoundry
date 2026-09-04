@@ -11,7 +11,17 @@
 
 import torch
 import math
-from depth_diff_gaussian_rasterization_min import GaussianRasterizationSettings, GaussianRasterizer
+
+from worldfoundry.synthesis.visual_generation.three_d_four_d.runtime_extension_overlay import (
+    add_runtime_extension_overlay,
+)
+
+add_runtime_extension_overlay(
+    "diff_gaussian_rasterization",
+    environment_variable="WORLDFOUNDRY_DIFF_GAUSSIAN_RASTERIZATION_EXTENSION_DIR",
+)
+
+from diff_gaussian_rasterization import GaussianRasterizationSettings, GaussianRasterizer
 from scene.gaussian_model import GaussianModel
 from utils.sh import eval_sh
 import torch.nn.functional as F
@@ -51,7 +61,10 @@ def render(viewpoint_camera, pc: GaussianModel, opt, bg_color: torch.Tensor, sca
         debug=opt.debug
     )
 
-    rasterizer = GaussianRasterizer(raster_settings=raster_settings)
+    rasterizer = GaussianRasterizer(
+        raster_settings=raster_settings,
+        return_extra_outputs=True,
+    )
 
     # means3D = pc.get_xyz
     means3D = pc.get_xyz_all

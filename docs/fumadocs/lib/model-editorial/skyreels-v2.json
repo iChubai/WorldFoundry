@@ -1,0 +1,41 @@
+{
+  "id": "skyreels-v2",
+  "tagline": {
+    "en": "Skywork's open video family with FPS-conditioned generation, spanning a lightweight 1.3B and a higher-fidelity 14B for text-to-video and image-to-video.",
+    "zh": "Skywork 开源的视频模型家族，支持 FPS 条件生成，涵盖轻量 1.3B 与更高保真的 14B，覆盖文生视频与图生视频。"
+  },
+  "overview": {
+    "en": [
+      "SkyReels-V2 is Skywork's open-weight video generation family. It turns a text prompt into a short video, and can also animate a still image into motion.",
+      "The lineup comes in two sizes so you can trade quality for hardware: a lightweight 1.3B at 540p and a larger 14B at 720p, each available for both text-to-video and image-to-video. The generation is built on an FPS-conditioned diffusion approach related to the Wan video architecture, pairing a text conditioner, a video VAE, and a diffusion denoiser.",
+      "In WorldFoundry you run SkyReels-V2 through the shared pipeline — pick a checkpoint, give it a prompt (and a reference image for image-to-video), and it writes out a video clip."
+    ],
+    "zh": [
+      "SkyReels-V2 是 Skywork 开源权重的视频生成模型家族。它可以把一段文字提示词生成为短视频，也能让一张静态图片动起来。",
+      "该系列提供两种规模，方便你在画质与硬件间权衡：540p 的轻量 1.3B 与 720p 的更大 14B，且文生视频、图生视频两条路径都各有对应 checkpoint。其生成基于与 Wan 视频架构相关的 FPS 条件扩散方法，由文本条件器、视频 VAE 与扩散去噪器组合而成。",
+      "在 WorldFoundry 中，你通过统一 pipeline 运行 SkyReels-V2——选一个 checkpoint，给它提示词（图生视频再加一张参考图），它就会输出一段视频。"
+    ]
+  },
+  "whenToUse": {
+    "en": "A good open choice when you want text-to-video or image-to-video and would like to trade off between the lighter 540p 1.3B and the higher-fidelity 720p 14B depending on your hardware.",
+    "zh": "当你想做文生视频或图生视频，并希望根据硬件在更轻量的 540p 1.3B 与更高保真的 720p 14B 之间取舍时，它是不错的开放选择。"
+  },
+  "notFor": {
+    "en": "Longer clips or sustained narrative shots — outputs are short. Checkpoints are downloaded separately, so plan for the download and disk space; the weights carry a custom (non-Apache) license, so review the terms before commercial use.",
+    "zh": "不适合较长片段或需要连续叙事的镜头——输出较短。Checkpoint 需单独下载，请预留下载时间与磁盘空间；权重采用自定义（非 Apache）许可，商用前请先查阅条款。"
+  },
+  "highlights": {
+    "en": [
+      "Open weights for both text-to-video and image-to-video",
+      "Two sizes: 1.3B at 540p and 14B at 720p",
+      "FPS-conditioned generation on a Wan-related architecture",
+      "Custom license — review terms before commercial use"
+    ],
+    "zh": [
+      "文生视频与图生视频均提供开放权重",
+      "两种规模：540p 的 1.3B 与 720p 的 14B",
+      "基于 Wan 相关架构的 FPS 条件生成",
+      "自定义许可——商用前请查阅条款"
+    ]
+  }
+}

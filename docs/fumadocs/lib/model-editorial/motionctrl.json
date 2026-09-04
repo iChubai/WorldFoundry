@@ -1,0 +1,41 @@
+{
+  "id": "motionctrl",
+  "tagline": {
+    "en": "Tencent ARC's motion controller for video — direct camera moves and object motion in generation.",
+    "zh": "腾讯 ARC 的视频运动控制器——在生成中指挥镜头运动与物体运动。"
+  },
+  "overview": {
+    "en": [
+      "MotionCtrl adds explicit motion control to video generation. From Tencent ARC, it lets you separately steer camera movement and object motion, so a text-to-video or image-to-video result follows the trajectory you intend rather than whatever the base model happens to produce.",
+      "It works as a control layer over a video diffusion backbone, taking camera poses and object-motion cues as conditions. WorldFoundry vendors the MotionCtrl model stack, control modules, sampler, default inference config, and camera/object-motion fixtures in-tree; the checkpoints stay as external assets in the usual cache.",
+      "In WorldFoundry you run the default route with a prompt (or image) plus a camera-pose fixture, and it renders a motion-controlled clip."
+    ],
+    "zh": [
+      "MotionCtrl 为视频生成加入了显式的运动控制。它出自腾讯 ARC，可以分别指挥镜头运动与物体运动，让文生视频或图生视频的结果沿着你设定的轨迹进行，而不是任由底座模型自由发挥。",
+      "它作为视频扩散底座之上的控制层工作，以相机位姿和物体运动线索作为条件。WorldFoundry 将 MotionCtrl 的模型栈、控制模块、采样器、默认推理配置以及相机/物体运动 fixture 内置于代码中；checkpoint 仍作为外部资产存放在常规缓存里。",
+      "在 WorldFoundry 中，你用一段提示词（或图片）加一份相机位姿 fixture 运行默认路径，它就会渲染出一段受运动控制的片段。"
+    ]
+  },
+  "whenToUse": {
+    "en": "Use it when you want fine control over camera movement or object motion in generated video — following a specified camera trajectory rather than accepting the model's default motion.",
+    "zh": "当你想对生成视频中的镜头运动或物体运动进行精细控制时使用——沿指定的相机轨迹运动，而非接受模型默认的运动。"
+  },
+  "notFor": {
+    "en": "It's a motion-control layer, not a standalone high-fidelity generator; results depend on the underlying video backbone and the checkpoints, which are downloaded separately.",
+    "zh": "它是运动控制层，而非独立的高保真生成器；效果取决于底层视频底座与 checkpoint，后者需单独下载。"
+  },
+  "highlights": {
+    "en": [
+      "Explicit control of camera and object motion",
+      "Works over text-to-video and image-to-video generation",
+      "From Tencent ARC",
+      "In-tree runtime with default motion fixtures; checkpoints supplied separately"
+    ],
+    "zh": [
+      "对镜头与物体运动的显式控制",
+      "适用于文生视频与图生视频",
+      "出自腾讯 ARC",
+      "内置运行时含默认运动 fixture；checkpoint 需单独提供"
+    ]
+  }
+}

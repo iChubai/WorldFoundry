@@ -14,7 +14,17 @@
 # of rights and permissions under this agreement.
 # See the License for the specific language governing permissions and limitations under the License.
 
-"""Dense, masked, sparse, and sequence-parallel multimodal attention."""
+"""Dense, masked, sparse, and sequence-parallel multimodal attention.
+
+Hunyuan-style image+text+video streams mix packed text, dense video,
+optional sparse windows, and sequence parallel. This module is the
+facade: it inspects the batch metadata and delegates to varlen,
+hybrid, sparse-3d, or SP attention instead of each DiT block forking
+its own backend ladder.
+
+Do not import FlashAttention here — backend probing stays in
+:mod:`worldfoundry.core.attention.backends`.
+"""
 
 from typing import Optional
 
@@ -23,7 +33,10 @@ import numpy as np
 import torch
 import torch.nn.functional as F
 
-from worldfoundry.core.attention.backends import resolve_attention_backend
+from worldfoundry.core.attention.backends import (
+    normalize_attention_backend,
+    resolve_attention_backend,
+)
 from worldfoundry.core.attention.native import scaled_dot_product_attention
 from worldfoundry.core.attention.varlen import masked_attention
 from worldfoundry.core.distributed.sequence_mesh_state import get_parallel_state
@@ -33,6 +46,10 @@ from worldfoundry.core.distributed.sequence_parallel_runtime import (
 )
 
 from .sparse_3d import ssta_3d_attention
+
+# ──────────────────────────────────────────────────────────────────────────
+# Dense / masked path — shared backends; no FlashAttention import here
+# ──────────────────────────────────────────────────────────────────────────
 
 
 @torch.compiler.disable
@@ -104,24 +121,21 @@ def attention(
         raise NotImplementedError(f"Unsupported attention backend: {attn_mode}")
 
 
+# ──────────────────────────────────────────────────────────────────────────
+# Image+text SP facade — all-to-all video heads, shard text heads, then join
+# ──────────────────────────────────────────────────────────────────────────
+
+
 @torch.compiler.disable
 def parallel_attention(q, k, v, img_q_len, img_kv_len, 
                        attn_mode=None, text_mask=None, 
                        attn_param=None,
                        block_idx=None,
                        ):
-    """Parallel attention.
+    """Hunyuan-style alias for :func:`sequence_parallel_attention`.
 
-    Args:
-        q: The q.
-        k: The k.
-        v: The v.
-        img_q_len: The img q len.
-        img_kv_len: The img kv len.
-        attn_mode: The attn mode.
-        text_mask: The text mask.
-        attn_param: The attn param.
-        block_idx: The block idx.
+    Checkpoint blocks call this name; the implementation lives in
+    :func:`sequence_parallel_attention` so the backend ladder is not forked.
     """
     return sequence_parallel_attention(q, k, v, img_q_len, img_kv_len, attn_mode, text_mask, attn_param=attn_param, block_idx=block_idx)
 
@@ -132,18 +146,15 @@ def sequence_parallel_attention(q, k, v,
                                 attn_param=None,
                                 block_idx=None,
                                 ):
-    """Sequence parallel attention.
+    """Join packed video and text streams, optionally under sequence parallel.
 
-    Args:
-        q: The q.
-        k: The k.
-        v: The v.
-        img_q_len: The img q len.
-        img_kv_len: The img kv len.
-        attn_mode: The attn mode.
-        text_mask: The text mask.
-        attn_param: The attn param.
-        block_idx: The block idx.
+    ``q``/``k``/``v`` are ``(video, text)`` pairs. When SP is on, video
+    tensors all-to-all heads into sequence shards and text tensors keep a
+    local head slice (text is short; gathering it would dominate). After
+    attention, video is scattered back and text heads are all-gathered.
+
+    FlexBlock/SSTA is accepted only because this facade builds the full
+    3D mask and tile geometry; other model-specific backends still fail.
     """
     assert attn_mode is not None
     query, encoder_query = q
@@ -165,12 +176,7 @@ def sequence_parallel_attention(q, k, v,
         value = all_to_all_4D(value, sp_group, scatter_dim=2, gather_dim=1)
 
         def shrink_head(encoder_state, dim):
-            """Shrink head.
-
-            Args:
-                encoder_state: The encoder state.
-                dim: The dim.
-            """
+            """Keep this rank's head slice; text is not all-to-alled."""
             local_heads = encoder_state.shape[dim] // sp_size
             return encoder_state.narrow(
                 dim, sp_rank * local_heads, local_heads
@@ -183,7 +189,14 @@ def sequence_parallel_attention(q, k, v,
     sequence_length = query.size(1)
     encoder_sequence_length = encoder_query.size(1)
 
-    attn_mode = resolve_attention_backend(attn_mode, query.device)
+    normalized_attn_mode = normalize_attention_backend(attn_mode)
+    attn_mode = resolve_attention_backend(
+        normalized_attn_mode,
+        query.device,
+        # This facade constructs the complete SSTA/FlexBlock mask and block
+        # geometry below. No other model-specific backend is accepted here.
+        allow_model_specific=normalized_attn_mode == "flex_block_attention",
+    )
     
     if attn_mode == "sage_attention":
         from sageattention import sageattn
@@ -271,11 +284,7 @@ def sequence_parallel_attention(q, k, v,
         win_size = attn_param["win_size"][0].copy()
 
         def get_image_tile(tile_size):
-            """Get image tile.
-
-            Args:
-                tile_size: The tile size.
-            """
+            """Map a token-count tile onto a supported ``(T, H, W)`` image tile."""
             block_size = np.prod(tile_size)
             if block_size == 384:
                 tile_size = (1, 16, 24)

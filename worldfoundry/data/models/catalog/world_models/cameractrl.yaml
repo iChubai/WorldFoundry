@@ -18,6 +18,8 @@ modalities:
 - video-diffusion-plugin
 name: CameraCtrl
 official_sources:
+  paper: https://arxiv.org/abs/2404.02101
+  project_page: https://hehao13.github.io/projects-CameraCtrl/
   github:
     confirmed_by: git ls-remote --heads
     confirmed_ref: refs/heads/main

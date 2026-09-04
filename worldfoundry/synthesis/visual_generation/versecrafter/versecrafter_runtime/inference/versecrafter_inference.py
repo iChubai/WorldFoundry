@@ -83,6 +83,18 @@ parser.add_argument('--config_path', type=str, default=None,
                     help='Local VerseCrafter YAML config path')
 parser.add_argument('--video_length', type=int, default=81,
                     help='Output frame count')
+parser.add_argument(
+    '--gpu_memory_mode',
+    choices=(
+        'model_full_load',
+        'model_full_load_and_qfloat8',
+        'model_cpu_offload',
+        'model_cpu_offload_and_qfloat8',
+        'sequential_cpu_offload',
+    ),
+    default='model_full_load',
+    help='Component placement policy used during diffusion inference',
+)
 args = parser.parse_args()
 
 # Parse sample_size from string to list
@@ -103,7 +115,7 @@ sample_size = [int(x) for x in args.sample_size.split(',')]
 #
 # sequential_cpu_offload means that each layer of the model will be moved to the CPU after use,
 # resulting in slower speeds but saving a large amount of GPU memory.
-GPU_memory_mode     = "model_full_load"
+GPU_memory_mode     = args.gpu_memory_mode
 # Multi GPUs config
 # Please ensure that the product of ulysses_degree and ring_degree equals the number of GPUs used.
 # For example, if you are using 8 GPUs, you can set ulysses_degree = 2 and ring_degree = 4.
@@ -329,10 +341,14 @@ else:
 coefficients = [8.10705460e+03,  2.13393892e+03, -3.72934672e+02,  1.66203073e+01, -4.17769401e-02]
 
 if coefficients is not None:
-    print(f"Enable TeaCache with threshold {teacache_threshold} and skip the first {num_skip_start_steps} steps.")
+    effective_skip_start_steps = min(num_skip_start_steps, num_inference_steps)
+    print(
+        f"Enable TeaCache with threshold {teacache_threshold} and skip the first "
+        f"{effective_skip_start_steps} steps."
+    )
     pipeline.transformer.enable_teacache(
         coefficients, num_inference_steps, teacache_threshold,
-        num_skip_start_steps=num_skip_start_steps, offload=teacache_offload
+        num_skip_start_steps=effective_skip_start_steps, offload=teacache_offload
     )
 
 if cfg_skip_ratio is not None:

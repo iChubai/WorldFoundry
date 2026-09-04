@@ -1,4 +1,17 @@
-"""Small helpers for releasing process-local inference runtime caches."""
+"""Release process-local inference runtime caches and unused CUDA blocks.
+
+Long-lived Studio / CLI processes keep compiled graphs, compiled
+modules, and policy runtimes in ordinary Python dicts. Clearing those
+dicts is not enough: cyclic references keep tensors alive, and
+``torch.cuda.empty_cache`` only returns *already-unreferenced* blocks
+to the caching allocator.
+
+:func:`clear_inference_runtime_cache` therefore (1) drops the mapping,
+(2) runs ``gc.collect()``, then (3) lazily imports torch and calls
+``empty_cache`` when CUDA is present. The torch import is delayed so
+model-discovery processes that never execute a policy do not pay for
+an accelerator runtime.
+"""
 
 from __future__ import annotations
 

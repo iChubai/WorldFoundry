@@ -1,0 +1,41 @@
+{
+  "id": "splatt3r",
+  "tagline": {
+    "en": "Splatt3R — feed-forward 3D Gaussian Splatting from a pair of uncalibrated images, no poses or camera intrinsics required.",
+    "zh": "Splatt3R——从一对未标定图像前馈生成 3D 高斯泼溅，无需相机位姿或内参。"
+  },
+  "overview": {
+    "en": [
+      "Splatt3R is a feed-forward 3D reconstruction model from Brandon Smart and collaborators. Given two ordinary photos of a scene, it predicts a 3D Gaussian Splatting representation in a single pass — no per-scene optimization, and no camera poses or calibration needed.",
+      "It builds on the DUSt3R/MASt3R line of pointmap-based geometry models, extending them to directly output splats you can render from new viewpoints. In WorldFoundry the runtime produces a PLY Gaussian splat file as its artifact, ready to load into standard splat viewers.",
+      "Because it is feed-forward, reconstruction is fast compared with optimization-based Gaussian Splatting: you supply the image pair and get a 3D scene out."
+    ],
+    "zh": [
+      "Splatt3R 是 Brandon Smart 及合作者的前馈式 3D 重建模型。给它同一场景的两张普通照片，它便一次前向推理即可预测出 3D 高斯泼溅表示——无需逐场景优化，也不需要相机位姿或标定。",
+      "它承袭 DUSt3R/MASt3R 这一基于 pointmap 的几何模型路线，并将其扩展为可直接输出用于新视角渲染的高斯泼溅。在 WorldFoundry 中，运行时会产出一个 PLY 高斯泼溅文件，可直接载入常见的 splat 查看器。",
+      "由于是前馈式，其重建速度相比基于优化的高斯泼溅要快得多：给它一对图像，就能得到一个 3D 场景。"
+    ]
+  },
+  "whenToUse": {
+    "en": "Great when you want fast 3D reconstruction from just two casual photos, with no camera calibration and no lengthy per-scene optimization.",
+    "zh": "当你希望仅凭两张随手拍的照片快速做 3D 重建，且不想做相机标定或漫长的逐场景优化时，它非常合适。"
+  },
+  "notFor": {
+    "en": "Aimed at sparse two-view reconstruction rather than dense many-view capture; checkpoints are external assets you stage separately.",
+    "zh": "面向稀疏双视图重建，而非稠密多视图采集；checkpoint 是外部资源，需单独准备。"
+  },
+  "highlights": {
+    "en": [
+      "Reconstructs 3D from a pair of uncalibrated images",
+      "Feed-forward — no per-scene optimization",
+      "Outputs a PLY Gaussian splat artifact",
+      "Built on the DUSt3R / MASt3R geometry lineage"
+    ],
+    "zh": [
+      "从一对未标定图像重建 3D",
+      "前馈式——无需逐场景优化",
+      "输出 PLY 高斯泼溅文件",
+      "构建于 DUSt3R / MASt3R 几何模型路线之上"
+    ]
+  }
+}

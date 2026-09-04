@@ -14,7 +14,11 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-"""Module for base_models -> diffusion_model -> image -> sana -> diffusion -> model -> nets -> fastlinear -> modules -> triton_lite_mla_kernels -> vk_mm_relu_bwd.py functionality."""
+"""Triton kernel: backward of the padded ``VᵀK`` accumulation through ReLU(K).
+
+Public entry: :func:`vk_mm_relu_bwd`.  Writes ``grad_k`` / ``grad_v`` in
+place from ``grad_vk`` and the saved K ReLU mask.
+"""
 
 import torch
 import triton
@@ -153,14 +157,9 @@ def vk_mm_relu_bwd(
     grad_k: torch.Tensor,
     grad_v: torch.Tensor,
 ) -> None:
-    """
-    Input:
-        grad_vk: (B, H, C+1, C), fp32
-        k: (B, N, H, C), fp16
-        v: (B, N, H, C), fp16
-        k_relu_mask: (B, N, H, C), bool
-        grad_k: (B, N, H, C), fp16
-        grad_v: (B, N, H, C), fp16
+    """In-place ``grad_k`` / ``grad_v`` from ``grad_vk`` and the K ReLU mask.
+
+    ``grad_vk`` is ``(B, H, C+1, C)`` fp32; ``k``/``v``/masks are ``(B, N, H, C)``.
     """
 
     assert grad_vk.dim() == 4 and k.dim() == 4 and v.dim() == 4 and k_relu_mask.dim() == 4

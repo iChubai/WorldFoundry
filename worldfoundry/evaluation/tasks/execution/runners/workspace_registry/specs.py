@@ -193,6 +193,18 @@ CLI_RUNNERS: dict[str, WorkspaceRunnerSpec] = {
         default_metrics=("mind_average",),
         input_kind="mind_results_or_generated_videos",
     ),
+    "pawbench": WorkspaceRunnerSpec(
+        "pawbench",
+        "worldfoundry.evaluation.tasks.execution.runners.pawbench.run_pawbench_official_runner",
+        generated_arg="--generated-artifact-dir",
+        dataset_root_arg="--dataset-root",
+        model_arg="--model-name",
+        supports_official_runtime=True,
+        accepts_generated_artifacts=True,
+        supports_fixture=True,
+        default_metrics=("calibration_tvd_percent", "coverage_percent"),
+        input_kind="pawbench_dataset_rollouts_or_official_metrics",
+    ),
     "phyeduvideo": WorkspaceRunnerSpec(
         "phyeduvideo",
         "worldfoundry.evaluation.tasks.execution.runners.phyeduvideo.run_phyeduvideo_official_runner",
@@ -420,6 +432,26 @@ CLI_RUNNERS: dict[str, WorkspaceRunnerSpec] = {
         generated_arg=None,
         dimension_arg="--dimension",
     ),
+    "worldatlas-arena": WorkspaceRunnerSpec(
+        "worldatlas-arena",
+        "worldfoundry.evaluation.tasks.execution.runners.worldatlas_arena.run_worldatlas_arena_official_runner",
+        generated_arg="--generated-artifact-dir",
+        dataset_manifest_arg="--manifest",
+        model_arg="--model-name",
+        limit_arg="--limit",
+        supports_official_runtime=True,
+        accepts_generated_artifacts=True,
+        supports_fixture=True,
+        default_metrics=(
+            "long_sequence",
+            "action_control",
+            "consistency_3d_4d",
+            "physics",
+            "quality",
+            "real_time",
+        ),
+        input_kind="worldatlas_arena_manifest_predictions_or_official_report",
+    ),
     "worldbench": WorkspaceRunnerSpec(
         "worldbench",
         "worldfoundry.evaluation.tasks.execution.runners.worldbench.run_worldbench_official_runner",
@@ -482,4 +514,3 @@ CLI_RUNNERS: dict[str, WorkspaceRunnerSpec] = {
         accepts_generated_artifacts=True,
     ),
 }
-

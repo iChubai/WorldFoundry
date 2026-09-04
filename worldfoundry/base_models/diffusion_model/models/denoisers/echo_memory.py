@@ -1,4 +1,23 @@
-"""Echo-Memory denoiser assembled through the canonical native infra."""
+"""Echo-Memory denoiser assembled on the shared Wan :class:`~...contracts.Denoiser` contract.
+
+Echo-Memory is a Wan2.1-T2V-1.3B DiT whose blocks are *promoted* to
+checkpoint-declared extra slots (action MLP, action attention, block-wise
+SSM, VideoSSM hybrid, spatial memory adapter).  This module does not own
+sampling: the runner still calls ``__call__(DenoiserInput) -> DenoiserOutput``.
+
+``DenoiserInput.conditioning`` mapping
+--------------------------------------
+- ``context`` (required tensor): UMT5 prompt embeddings from the Wan
+  :class:`~...contracts.ConditionEncoder`.
+- ``actions`` (required): planar camera / embodiment actions; rank-2
+  inputs are unsqueezed to a batch.
+- ``num_context_frames`` (required positive int): how many latent frames
+  are treated as memory context (suffix packing).
+
+Weights load through :class:`~...loaders.module.NativeModuleLoader` after
+:func:`.echo_memory_checkpoint.inspect_echo_checkpoint` validates the
+safetensors header against the recipe in :mod:`.echo_memory_spec`.
+"""
 
 from __future__ import annotations
 
@@ -78,7 +97,12 @@ def _install_echo_memory_modules(
 
 
 class EchoWanModel(WanModel):
-    """Canonical Wan network with checkpoint-declared Echo module slots."""
+    """Wan2.1-T2V-1.3B graph plus Echo memory / action / SSM slots.
+
+    Construction first builds the canonical Wan stack, then replaces each
+    attention block and installs ``memory_adapter`` so the checkpoint can
+    load extra keys that a plain :class:`WanModel` would reject.
+    """
 
     def __init__(
         self,
@@ -96,7 +120,12 @@ class EchoWanModel(WanModel):
 
 
 class EchoMemoryDenoiser:
-    """Expose one immutable Echo model through the shared denoiser contract."""
+    """:class:`~...contracts.Denoiser` adapter for one Echo-Memory recipe.
+
+    Maps ``DenoiserInput.latents`` / ``timestep`` / ``conditioning`` onto
+    :meth:`EchoWanModel.forward` and returns velocity/flow as
+    ``DenoiserOutput.sample``.  Autocast uses the recipe policy dtype.
+    """
 
     def __init__(
         self,
@@ -110,6 +139,7 @@ class EchoMemoryDenoiser:
         self.compute_dtype = compute_dtype
 
     def __call__(self, model_input: DenoiserInput) -> DenoiserOutput:
+        """Evaluate one CFG branch; TeaCache is not used (variable memory path)."""
         conditioning = model_input.conditioning
         context = conditioning.get("context")
         if not isinstance(context, torch.Tensor):

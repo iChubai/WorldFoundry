@@ -1,4 +1,15 @@
-"""Shared image/video preprocessing for latent-conditioned video recipes."""
+"""Shared image / video pixel prep for Video2World-style initializers.
+
+Normalizes one still or the tail of one video to ``BCTHW`` in ``[-1, 1]``.
+The returned integer is the number of *physical* conditioning frames; the
+remaining slots repeat the last frame so causal VAEs do not see a black
+cut.  The model-owned latent mask (built by the initializer) decides
+which encoded frames stay frozen during denoising.
+
+Used by Cosmos Predict2 / Predict1 and similar encoded initializers.
+Accepts ``request.inputs[\"image\"]`` / ``images`` or ``video`` / ``videos``,
+not both.  Batch size must be 1.
+"""
 
 from __future__ import annotations
 

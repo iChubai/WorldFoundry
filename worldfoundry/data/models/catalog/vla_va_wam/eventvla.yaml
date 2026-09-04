@@ -8,6 +8,8 @@ availability: open_source
 provider: official_repo
 license: mit
 official_sources:
+  paper: https://arxiv.org/abs/2606.20092
+  project_page: https://ganlin-yang.github.io/EventVLA.github.io/
   github:
     url: https://github.com/InternRobotics/EventVLA
     head_sha: 4b5b26030abddf83bc60e1a6b067de8f521fd0ec

@@ -1,0 +1,41 @@
+{
+  "id": "echo-memory-ssm-ctx5-every1-hint21",
+  "tagline": {
+    "en": "Echo-Memory's most attentive state-space memory setting — a five-frame context refreshed at every step, for the tightest long-range recall in the SSM line.",
+    "zh": "Echo-Memory 最勤勉的状态空间记忆配置——五帧上下文、每一步都刷新,在 SSM 系列中提供最紧密的长程记忆。"
+  },
+  "overview": {
+    "en": [
+      "Echo-Memory is a memory-augmented world model on the open Wan2.1 diffusion backbone. From a starting image, a text prompt and a camera trajectory it rolls out video of an explorable scene, using a memory mechanism to hold the scene together over long rollouts.",
+      "This identity runs a state-space memory (SSM) module at its most attentive: a context window of five frames, memory refreshed at every single step, and a hint length of 21. Among the SSM variants it keeps the most active memory state and updates most frequently — the setting to reach for when tracking the scene closely matters more than saving compute.",
+      "In WorldFoundry you run it through the shared diffusion pipeline with a local Echo-Memory checkpoint, assembled from shared Wan components. It's aimed at memory research and interactive world-model experiments where you want an SSM configuration that stays maximally in sync with the rollout."
+    ],
+    "zh": [
+      "Echo-Memory 是构建在开源 Wan2.1 扩散骨干上的记忆增强世界模型。它以起始图像、文字提示词和相机轨迹为输入,推演出可探索场景的视频,并用记忆机制在长程推演中维持场景连贯。",
+      "本模型把状态空间记忆(SSM)模块调到最勤勉的档位:上下文窗口为五帧、每一步都刷新记忆、hint 长度为 21。在各 SSM 变体中,它维持的记忆状态最活跃、更新也最频繁——当紧密追踪场景比节省算力更重要时,就选它。",
+      "在 WorldFoundry 中,你通过统一扩散 pipeline、配合本地 Echo-Memory checkpoint 运行它,配方由共享 Wan 组件组装而成。它面向记忆机制研究与交互式世界模型实验,适合需要 SSM 配置与推演过程保持最大同步的场景。"
+    ]
+  },
+  "whenToUse": {
+    "en": "Choose it when you want the SSM line's tightest long-range consistency, or when studying how a larger context updated every step changes an SSM world model's behaviour.",
+    "zh": "当你想要 SSM 系列中最紧密的长程一致性,或研究更大上下文、逐步更新如何改变 SSM 世界模型的行为时,选它。"
+  },
+  "notFor": {
+    "en": "Updating every step with a five-frame context is the costliest SSM setting here — if compute is tight, the leaner ctx1/every-4 variant fits better. You also supply a compatible local checkpoint.",
+    "zh": "五帧上下文加逐步更新是这里开销最高的 SSM 配置——若算力紧张,更精简的 ctx1/每四步变体更合适。此外你需自备兼容的本地 checkpoint。"
+  },
+  "highlights": {
+    "en": [
+      "State-space memory at its most attentive: 5-frame context, update every step, hint 21",
+      "Highest active memory state and update frequency among the SSM variants",
+      "Image + text + camera trajectory in, video out",
+      "Echo-Memory weights under CC-BY-4.0; Wan2.1 backbone Apache-2.0"
+    ],
+    "zh": [
+      "最勤勉的状态空间记忆:五帧上下文、每步更新、hint 21",
+      "SSM 变体中记忆状态与更新频率最高的一档",
+      "输入图像+文本+相机轨迹,输出视频",
+      "Echo-Memory 权重采用 CC-BY-4.0,Wan2.1 骨干为 Apache-2.0"
+    ]
+  }
+}

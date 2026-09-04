@@ -1,3 +1,17 @@
+"""Strided causal downsample for the LTX audio VAE encoder.
+
+:class:`Downsample` and :func:`build_downsampling_path` shrink
+spectrogram maps along the configured
+:class:`~.causality_axis.CausalityAxis` without future-frame
+leak.  Used only on the encoder side of :mod:`.audio_vae`.
+
+Tensors stay ``N C H W``.  The matching expander is
+:mod:`.upsample` on the decoder.
+
+This is LTX audio graph math, not a tiling helper (video
+tiling lives in :mod:`~..video.tiling`).
+"""
+
 from typing import Set, Tuple
 
 import torch

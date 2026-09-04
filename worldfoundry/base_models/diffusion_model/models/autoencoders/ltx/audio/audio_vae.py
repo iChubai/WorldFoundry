@@ -1,3 +1,16 @@
+"""LTX audio VAE encoder/decoder CNN.
+
+Causal 2-D convolutions over spectrogram-like latents
+(``LATENT_DOWNSAMPLE_FACTOR = 4``).  Public helpers
+:func:`encode_audio` / :func:`decode_audio` and
+:class:`AudioEncoder` / :class:`AudioDecoder` are the surfaces
+used by :class:`~..component.LTXMediaDecoder`.
+
+Layout is channel-first 2-D (time × frequency), not BCTHW
+video.  Residual stacks and mid-block attention are
+implementation detail; do not comment every conv.
+"""
+
 from __future__ import annotations
 
 from typing import Set, Tuple

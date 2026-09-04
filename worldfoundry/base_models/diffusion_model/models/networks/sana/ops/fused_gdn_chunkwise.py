@@ -83,7 +83,7 @@ _CAM_IDENTITY_CACHE: dict[
 
 @dataclass(frozen=True)
 class _PhaseCfg:
-    """Phase cfg implementation."""
+    """Per-phase kernel launch knobs (warps, block size, stages, acc fusion)."""
 
     nw: int  # num_warps
     BS: int = 0  # BLOCK_S (Phase A/C only; 0 = N/A for Phase B)
@@ -93,7 +93,7 @@ class _PhaseCfg:
 
 @dataclass(frozen=True)
 class _ChunkwiseCfg:
-    """Chunkwise cfg implementation."""
+    """Arch-specific chunkwise GDN launch config for phases A/B/C."""
 
     A: _PhaseCfg
     B: _PhaseCfg
@@ -1084,8 +1084,9 @@ def _phase_b_dtile_kernel(
             M = tl.zeros([BLOCK_D, D_TILE], dtype=tl.float32)
         if not SKIP_Z:
             z = tl.zeros([BLOCK_D], dtype=tl.float32)
-            if is_lead and LOAD_INIT_STATE:
-                z = tl.load(init_state_z_ptr + bh * BLOCK_D + offs_d_full).to(tl.float32)
+            if LOAD_INIT_STATE:
+                if is_lead:
+                    z = tl.load(init_state_z_ptr + bh * BLOCK_D + offs_d_full).to(tl.float32)
 
         for f in range(F):
             I_P_kv_f = tl.load(I_P_kv_ptr + bh * F * BLOCK_D * BLOCK_D + f * BLOCK_D * BLOCK_D + offs_dd_full)
@@ -1107,17 +1108,19 @@ def _phase_b_dtile_kernel(
 
             tl.store(M_fwd_ptr + bh * F * BLOCK_D * BLOCK_D + f * BLOCK_D * BLOCK_D + offs_dd_tile, M)
 
-            if is_lead and not SKIP_Z:
-                I_P_z_f = tl.load(I_P_z_ptr + bh * F * BLOCK_D * BLOCK_D + f * BLOCK_D * BLOCK_D + offs_dd_full)
-                B_f = tl.load(B_ptr + bh * F * BLOCK_D + f * BLOCK_D + offs_d_full)
-                z_temp = tl.sum(I_P_z_f * z[None, :], axis=1)
-                z = g_f * z_temp + B_f
-                tl.store(z_fwd_ptr + bh * F * BLOCK_D + f * BLOCK_D + offs_d_full, z)
+            if not SKIP_Z:
+                if is_lead:
+                    I_P_z_f = tl.load(I_P_z_ptr + bh * F * BLOCK_D * BLOCK_D + f * BLOCK_D * BLOCK_D + offs_dd_full)
+                    B_f = tl.load(B_ptr + bh * F * BLOCK_D + f * BLOCK_D + offs_d_full)
+                    z_temp = tl.sum(I_P_z_f * z[None, :], axis=1)
+                    z = g_f * z_temp + B_f
+                    tl.store(z_fwd_ptr + bh * F * BLOCK_D + f * BLOCK_D + offs_d_full, z)
 
         if SAVE_FINAL_STATE:
             tl.store(final_state_kv_ptr + bh * BLOCK_D * BLOCK_D + offs_dd_tile, M)
-            if is_lead and not SKIP_Z:
-                tl.store(final_state_z_ptr + bh * BLOCK_D + offs_d_full, z)
+            if not SKIP_Z:
+                if is_lead:
+                    tl.store(final_state_z_ptr + bh * BLOCK_D + offs_d_full, z)
 
     if DIRECTION != 1:
         M = tl.zeros([BLOCK_D, D_TILE], dtype=tl.float32)
@@ -1126,8 +1129,9 @@ def _phase_b_dtile_kernel(
 
         if not COMBINED_HISTORY:
             tl.store(M_rev_ptr + bh * F * BLOCK_D * BLOCK_D + (F - 1) * BLOCK_D * BLOCK_D + offs_dd_tile, M)
-            if is_lead and not SKIP_Z:
-                tl.store(z_rev_ptr + bh * F * BLOCK_D + (F - 1) * BLOCK_D + offs_d_full, z)
+            if not SKIP_Z:
+                if is_lead:
+                    tl.store(z_rev_ptr + bh * F * BLOCK_D + (F - 1) * BLOCK_D + offs_d_full, z)
 
         for f_iter in range(F - 1):
             f_src = F - 1 - f_iter
@@ -1149,22 +1153,25 @@ def _phase_b_dtile_kernel(
                 M_temp = tl.dot(I_P_kv_f.to(dot_dtype), M.to(dot_dtype), out_dtype=tl.float32, input_precision=dot_ip)
                 M = g_f * M_temp + A_f
 
-            if is_lead and not SKIP_Z:
-                I_P_z_f = tl.load(I_P_z_ptr + bh * F * BLOCK_D * BLOCK_D + f_src * BLOCK_D * BLOCK_D + offs_dd_full)
-                B_f = tl.load(B_ptr + bh * F * BLOCK_D + f_src * BLOCK_D + offs_d_full)
-                z_temp = tl.sum(I_P_z_f * z[None, :], axis=1)
-                z = g_f * z_temp + B_f
+            if not SKIP_Z:
+                if is_lead:
+                    I_P_z_f = tl.load(I_P_z_ptr + bh * F * BLOCK_D * BLOCK_D + f_src * BLOCK_D * BLOCK_D + offs_dd_full)
+                    B_f = tl.load(B_ptr + bh * F * BLOCK_D + f_src * BLOCK_D + offs_d_full)
+                    z_temp = tl.sum(I_P_z_f * z[None, :], axis=1)
+                    z = g_f * z_temp + B_f
 
             if COMBINED_HISTORY:
                 M_addr = M_fwd_ptr + bh * F * BLOCK_D * BLOCK_D + f_dst * BLOCK_D * BLOCK_D + offs_dd_tile
                 tl.store(M_addr, tl.load(M_addr) + M)
-                if is_lead and not SKIP_Z:
-                    z_addr = z_fwd_ptr + bh * F * BLOCK_D + f_dst * BLOCK_D + offs_d_full
-                    tl.store(z_addr, tl.load(z_addr) + z)
+                if not SKIP_Z:
+                    if is_lead:
+                        z_addr = z_fwd_ptr + bh * F * BLOCK_D + f_dst * BLOCK_D + offs_d_full
+                        tl.store(z_addr, tl.load(z_addr) + z)
             else:
                 tl.store(M_rev_ptr + bh * F * BLOCK_D * BLOCK_D + f_dst * BLOCK_D * BLOCK_D + offs_dd_tile, M)
-                if is_lead and not SKIP_Z:
-                    tl.store(z_rev_ptr + bh * F * BLOCK_D + f_dst * BLOCK_D + offs_d_full, z)
+                if not SKIP_Z:
+                    if is_lead:
+                        tl.store(z_rev_ptr + bh * F * BLOCK_D + f_dst * BLOCK_D + offs_d_full, z)
 
 
 _PHASE_B_DTILE_ARCH_CACHE: dict = {}  # (dev, dot_prec) -> (d_splits, nw, ns, acc)

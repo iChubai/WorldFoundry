@@ -61,6 +61,7 @@ def _preferred_video_output(paths: Sequence[Path]) -> Path | None:
         "output_vc_refine.mp4",
         "output_refine.mp4",
         "output_t2v.mp4",
+        "output_t2v_distill.mp4",
         "output_i2v.mp4",
         "output_vc.mp4",
     ):

@@ -1,4 +1,23 @@
-"""Framework-owned construction of components and execution strategies."""
+"""Framework-owned assembly: turn a NativeDiffusionRecipe into a DiffusionExecutor.
+
+This module is the assembler hop on the recipe → assembler → strategy → runner path:
+
+    recipe (declares ComponentSpec / ExecutionSpec / checkpoints)
+        → assembler (this file: construct components, hand them to the strategy registry)
+        → strategy (runners/strategies.py: validate bindings, instantiate a runner)
+        → runner (runners/*.py: the actual sampling loop)
+
+Inputs: NativeDiffusionRecipe plus optional RuntimePolicy, checkpoint_overrides,
+component_options, and DiffusionExtension values.
+Outputs: :meth:`NativeDiffusionAssembler.build` returns a DiffusionExecutor;
+:meth:`NativeDiffusionAssembler.build_components` returns ``dict[ComponentKey, object]``.
+
+Must not:
+    - let a model package supply a runner or pipeline factory on the recipe;
+    - implement a sampling loop or register an execution strategy here;
+    - send training through :meth:`build` (it hard-codes ``BuildPurpose.INFERENCE``).
+      Training must call ``build_components(..., purpose=BuildPurpose.TRAINING)``.
+"""
 
 from __future__ import annotations
 
@@ -29,7 +48,21 @@ from .runners import (
 
 
 class NativeDiffusionAssembler:
-    """Build model recipes without permitting model-owned runtime factories."""
+    """Assemble a declarative recipe into a framework-owned executor.
+
+    Model packages must not ship their own runtime factories.
+
+    Responsibilities:
+        1. Resolve checkpoint overrides (directory vs single-file semantics differ;
+           see :meth:`_checkpoints`).
+        2. Call each :class:`ComponentSpec` factory with a :class:`ComponentBuildContext`,
+           then isinstance-check the result against ``_EXPECTED_PROTOCOLS``.
+        3. Hand the component dict to :class:`ExecutionStrategyRegistry.build`.
+
+    Neighbors: upstream is :class:`NativeDiffusionRecipe` /
+    :meth:`NativeDiffusionRegistry.build_runner`; downstream is the strategy
+    registry and a concrete runner such as NativeDiffusionRunner.
+    """
 
     _EXPECTED_PROTOCOLS = {
         ComponentKind.DENOISER: Denoiser,
@@ -56,6 +89,20 @@ class NativeDiffusionAssembler:
         component_options: Mapping[str | ComponentKey, Mapping[str, object]] | None = None,
         extensions: Iterable[DiffusionExtension] = (),
     ) -> DiffusionExecutor:
+        """Inference path: build every component, then bind a runner via ``recipe.execution.strategy``.
+
+        Args:
+            recipe: Self-validated :class:`NativeDiffusionRecipe`.
+            policy: RuntimePolicy (device / dtype / offload). ``None`` uses the default.
+            checkpoint_overrides: Keys that replace ``recipe.checkpoints``; unknown keys raise :exc:`KeyError`.
+            component_options: Per-ComponentKey (or ``"kind:name"`` string) option overrides.
+            extensions: DiffusionExtension hooks for the runner lifecycle. This method
+                does not consume them; it only forwards them to the strategy.
+
+        Returns a DiffusionExecutor. An unknown strategy raises
+        :exc:`UnsupportedExecutionStrategyError`. A factory that misses its protocol
+        raises :exc:`TypeError`.
+        """
         components = self.build_components(
             recipe,
             purpose=BuildPurpose.INFERENCE,
@@ -85,11 +132,19 @@ class NativeDiffusionAssembler:
         component_options: Mapping[str | ComponentKey, Mapping[str, object]] | None = None,
         component_keys: Iterable[ComponentKey] | None = None,
     ) -> dict[ComponentKey, object]:
-        """Construct a recipe's components without creating an inference runner.
+        """Construct the component graph without creating an inference runner.
 
-        Training code must call this seam with ``BuildPurpose.TRAINING``.  The
-        ordinary :meth:`build` path remains inference-only and backwards
-        compatible.
+        Training must use this seam. It needs the same ComponentSpec / CheckpointSpec
+        set, but must not go through :meth:`build` (which hard-codes
+        ``BuildPurpose.INFERENCE`` and immediately binds a runner). Pass
+        ``purpose=BuildPurpose.TRAINING`` so factories can reject inference-only
+        wrappers (TeaCache, cuda_graph, …) before parameters or optimizer state exist.
+
+        ``component_keys`` selects an optional subset; ``None`` means every component.
+        An empty tuple / non-ComponentKey / duplicate / unknown key raises
+        :exc:`ValueError` / :exc:`TypeError` / :exc:`ValueError` / :exc:`KeyError`.
+        A factory whose result does not implement ``_EXPECTED_PROTOCOLS[kind]``
+        raises :exc:`TypeError`.
         """
 
         resolved_purpose = BuildPurpose(purpose)
@@ -141,7 +196,11 @@ class NativeDiffusionAssembler:
         recipe: NativeDiffusionRecipe,
         overrides: Mapping[str, CheckpointSpec | str],
     ) -> dict[str, CheckpointSpec]:
-        """Resolve audited recipe checkpoint overrides for training or inference."""
+        """Resolve and audit recipe checkpoint overrides for training or inference.
+
+        Unknown override keys raise :exc:`KeyError`. Directory vs single-file
+        semantics live in :meth:`_checkpoints`.
+        """
 
         return NativeDiffusionAssembler._checkpoints(recipe, overrides)
 
@@ -159,6 +218,8 @@ class NativeDiffusionAssembler:
                 checkpoints[key] = value
                 continue
             resolved = Path(value).expanduser()
+            # Directory override: replace only ``source``. Keep the recipe's files,
+            # hashes, and allow_patterns so a local cache dir still loads the audited list.
             if resolved.is_dir():
                 default = checkpoints[key]
                 checkpoints[key] = CheckpointSpec(
@@ -173,6 +234,9 @@ class NativeDiffusionAssembler:
                 )
             else:
                 default = checkpoints[key]
+                # Single file + original spec has exactly one audited file: remap
+                # hash/size onto the new filename and point ``source`` at the parent
+                # directory so a bare path does not wipe the whole CheckpointSpec.
                 if len(default.files) == 1 and (
                     default.file_sha256 or default.file_size_bytes
                 ):
@@ -196,6 +260,7 @@ class NativeDiffusionAssembler:
                         resource_size_bytes=default.resource_size_bytes,
                     )
                 else:
+                    # Multi-file or unaudited spec: fall back to a source that is the path itself.
                     checkpoints[key] = CheckpointSpec(value)
         return checkpoints
 
@@ -204,6 +269,11 @@ class NativeDiffusionAssembler:
         recipe: NativeDiffusionRecipe,
         values: Mapping[str | ComponentKey, Mapping[str, object]],
     ) -> dict[ComponentKey, Mapping[str, object]]:
+        """Normalize ``"kind:name"`` strings or ComponentKey values onto recipe keys.
+
+        Unknown keys raise :exc:`KeyError`. Caller mappings are copied so later
+        in-place edits cannot leak into the recipe.
+        """
         recipe_keys = {component.key for component in recipe.components}
         by_string = {str(key): key for key in recipe_keys}
         normalized: dict[ComponentKey, Mapping[str, object]] = {}

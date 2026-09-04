@@ -1,3 +1,17 @@
+"""Causal 2-D convolution used by the LTX audio VAE.
+
+:class:`CausalConv2d` pads so no future frame leaks along
+:class:`~.causality_axis.CausalityAxis`.  :func:`make_conv2d`
+is the factory consumed by residual / downsample / upsample
+blocks.
+
+Tensors are ``N C H W`` spectrogram maps.  This is shared
+graph math for :mod:`.audio_vae` and the vocoder path, not a
+runner adapter.
+
+Sibling of the video :class:`~..video.convolution.CausalConv3d`.
+"""
+
 import torch
 import torch.nn.functional as F
 

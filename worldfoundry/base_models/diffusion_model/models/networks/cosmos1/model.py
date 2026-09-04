@@ -1,8 +1,21 @@
 """Inference-only Cosmos Predict1 / GEN3C diffusion transformer.
 
-The module contains checkpoint-shaped forward math only.  Sampling, loading,
-offload, text encoding, video tokenization, and camera preparation are owned by
-the shared diffusion infrastructure.
+Checkpoint-shaped forward math only.  Sampling, loading, offload, text
+encoding, video tokenization, and camera preparation live in the shared
+diffusion infrastructure (``denoisers/cosmos1.py`` + recipe).
+
+Architecture
+------------
+The 7B Predict1 DiT reuses Cosmos 2.5 block primitives
+(:class:`Cosmos25TransformerBlock`, AdaLN, RoPE, patch embed) and adds a
+factorized learnable absolute position table (T/H/W) that is RMS-normalized
+and added before every block.  Latents are ``B C T H W``; ``in_channels=81``
+is the GEN3C packed video+camera layout.  When ``concat_padding_mask`` is
+set, a nearest-resized spatial mask is broadcast over time and concatenated
+as an extra channel before patchify.
+
+This module must stay numerically compatible with the pinned Hub checkpoint.
+Do not introduce runner or offload logic here.
 """
 
 from __future__ import annotations
@@ -23,6 +36,7 @@ from ..cosmos2p5.model import (
 
 
 def _rms_normalize(value: torch.Tensor, eps: float = 1e-6) -> torch.Tensor:
+    """RMS-normalize the last dim in fp32, then cast the scale back to ``value.dtype``."""
     norm = torch.linalg.vector_norm(value, dim=-1, keepdim=True, dtype=torch.float32)
     norm = norm / value.shape[-1] ** 0.5 + eps
     return value / norm.to(value.dtype)
@@ -42,6 +56,7 @@ class Cosmos1LearnablePosition(nn.Module):
         nn.init.trunc_normal_(self.pos_emb_t, std=0.02)
 
     def forward(self, grid: tuple[int, int, int], batch: int) -> torch.Tensor:
+        """Return ``[B, T*H*W, C]`` positions for ``grid``, or raise if it exceeds the table."""
         frames, height, width = grid
         if frames > len(self.pos_emb_t) or height > len(self.pos_emb_h) or width > len(self.pos_emb_w):
             raise ValueError(f"Cosmos1 latent grid {grid} exceeds the checkpoint position table")
@@ -107,6 +122,12 @@ class Cosmos1Transformer3DModel(nn.Module):
         padding_mask: torch.Tensor | None,
         fps: float | torch.Tensor | None,
     ) -> tuple[torch.Tensor, tuple[torch.Tensor, torch.Tensor], tuple[int, int, int]]:
+        """Pack ``B C T H W`` latents into ``B (T'H'W') C`` tokens and 3D RoPE.
+
+        Optionally concatenates a nearest-resized spatial padding mask as an
+        extra channel (broadcast over time) so the patch embed sees the GEN3C
+        packed layout.  ``grid`` is the post-patch token lattice ``(T', H', W')``.
+        """
         batch, _, frames, height, width = hidden_states.shape
         if self.config.concat_padding_mask:
             if padding_mask is None:
@@ -122,6 +143,7 @@ class Cosmos1Transformer3DModel(nn.Module):
         return tokens, self.rope(hidden_states, fps), grid
 
     def _unpatchify(self, hidden_states: torch.Tensor, grid: tuple[int, int, int]) -> torch.Tensor:
+        """Fold ``B (T'H'W') (pt·ph·pw·C)`` tokens back to ``B C T H W`` video latents."""
         from einops import rearrange
 
         frames, height, width = grid
@@ -147,6 +169,12 @@ class Cosmos1Transformer3DModel(nn.Module):
         fps: float | None = None,
         padding_mask: torch.Tensor | None = None,
     ) -> torch.Tensor:
+        """Denoise packed video+camera latents; return ``B C T H W`` residual.
+
+        ``encoder_hidden_states`` is the text (or other) cross-attn context.
+        The factorized absolute table is added *before every block*, matching
+        the Predict1 checkpoint (not a one-shot positional add at the stem).
+        """
         if attention_mask is not None:
             attention_mask = attention_mask[:, None, None].to(dtype=torch.bool)
         hidden_states, rotary_emb, grid = self._patchify(hidden_states, padding_mask, fps)

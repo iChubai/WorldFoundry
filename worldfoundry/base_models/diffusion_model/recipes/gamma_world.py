@@ -1,4 +1,21 @@
-"""Native declarative recipes for released Gamma-World variants."""
+"""Native declarative recipes for released Gamma-World variants.
+
+Each public function returns a :class:`NativeDiffusionRecipe`.  Recipes
+do not construct runners.
+
+Shared roles: Cosmos-multiview DiT, Cosmos-Reason1 conditioner
+(full-concat embeddings, length 512), Gamma latent initializer, Wan
+UniPC (shift 5.0), and the Gamma video codec as encoder + decoder.
+CFG is on for all variants; default guidance/steps are recipe options.
+
+Family split
+------------
+- Causal few-step: ``autoregressive-window``, distilled-x0, 4 fixed
+  timesteps, guidance 1.0, context timestep 128.
+- Causal: ``autoregressive-window``, flow prediction, 35 steps,
+  guidance 5.0.
+- Bidirectional: ``standard`` (full-sequence), 35 steps, guidance 5.0.
+"""
 
 from __future__ import annotations
 
@@ -41,6 +58,8 @@ def _recipe(
     guidance: float,
     execution_options: dict[str, object] | None = None,
 ) -> NativeDiffusionRecipe:
+    """Bind shared Gamma roles; ``strategy`` chooses window vs full-sequence."""
+
     denoiser = ComponentKey(ComponentKind.DENOISER)
     conditioner = ComponentKey(ComponentKind.CONDITIONER)
     initializer = ComponentKey(ComponentKind.LATENT_INITIALIZER)
@@ -129,6 +148,8 @@ def _recipe(
 
 
 def gamma_world_causal_few_step_recipe() -> NativeDiffusionRecipe:
+    """Causal distilled 4-step window sampler (x0, fixed timesteps 1000–250)."""
+
     return _recipe(
         model_id="gamma-world-causal-few-step",
         weight_file="causal-few-step/model.safetensors",
@@ -146,6 +167,8 @@ def gamma_world_causal_few_step_recipe() -> NativeDiffusionRecipe:
 
 
 def gamma_world_causal_recipe() -> NativeDiffusionRecipe:
+    """Causal flow 35-step ``autoregressive-window`` sampler, CFG 5.0."""
+
     return _recipe(
         model_id="gamma-world-causal",
         weight_file="causal/model.safetensors",
@@ -159,6 +182,8 @@ def gamma_world_causal_recipe() -> NativeDiffusionRecipe:
 
 
 def gamma_world_bidirectional_recipe() -> NativeDiffusionRecipe:
+    """Bidirectional full-sequence ``standard`` sampler, 35 steps, CFG 5.0."""
+
     return _recipe(
         model_id="gamma-world-bidirectional",
         weight_file="bidirectional/model.safetensors",

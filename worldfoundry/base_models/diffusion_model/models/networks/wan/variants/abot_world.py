@@ -1,5 +1,8 @@
-"""Inference-only causal Wan backbone used by ABot-World."""
+"""ABot-World inference-only causal Wan 2.2 backbone.
 
+Causal self-attention, relative / reference RoPE, and an action adapter
+on the Wan 2.2 official stem.  Adds action + causal hooks.
+"""
 from __future__ import annotations
 
 import math

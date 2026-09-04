@@ -1,0 +1,41 @@
+{
+  "id": "gen3c",
+  "tagline": {
+    "en": "NVIDIA's GEN3C — a Cosmos-based world model for camera-controlled video from a single image, with 3D-consistent navigation.",
+    "zh": "NVIDIA 的 GEN3C——基于 Cosmos 的世界模型，从单张图像生成相机可控、3D 一致的可导航视频。"
+  },
+  "overview": {
+    "en": [
+      "GEN3C is a world model from NVIDIA that turns an image into video you can navigate with precise camera control. It's built on NVIDIA's Cosmos Predict1 foundation, and its strength is 3D consistency — the generated view stays coherent as the camera moves through the scene.",
+      "The pipeline pairs the GEN3C Cosmos-7B checkpoint with MoGe depth estimation. Named camera trajectories, MoGe depth, and RGBD forward warping are handled as native preprocessing that seeds the generation; you can also supply your own pre-rendered 3D-cache tensors if you already have them.",
+      "In WorldFoundry, GEN3C runs through the shared native diffusion pipeline: give it a starting image and a camera path, and it renders a camera-controlled clip with the geometry kept consistent."
+    ],
+    "zh": [
+      "GEN3C 是 NVIDIA 推出的世界模型，能把一张图像变成可用精确相机控制来导航的视频。它构建于 NVIDIA 的 Cosmos Predict1 基础之上，强项在于 3D 一致性——相机在场景中移动时，生成的视角保持连贯。",
+      "该 pipeline 将 GEN3C Cosmos-7B checkpoint 与 MoGe 深度估计搭配。命名相机轨迹、MoGe 深度与 RGBD 前向 warping 作为原生预处理，为生成提供初始条件；若你已有预渲染的 3D-cache 张量，也可直接提供。",
+      "在 WorldFoundry 中，GEN3C 通过共享的原生扩散 pipeline 运行：给它一张起始图像和一条相机路径，它便渲染出几何保持一致的、相机可控的片段。"
+    ]
+  },
+  "whenToUse": {
+    "en": "Reach for GEN3C when you want to explore a scene from a single image with controlled camera moves and 3D-consistent navigation — for example flying a camera through a still.",
+    "zh": "当你想从单张图像出发、以可控相机运动进行 3D 一致的场景导航时——例如让相机穿越一张静态图——GEN3C 很合适。"
+  },
+  "notFor": {
+    "en": "It's a camera-controlled, image-conditioned world model rather than a general text-to-video generator. Checkpoints (including the MoGe depth model) are downloaded separately.",
+    "zh": "它是相机可控、以图像为条件的世界模型，而非通用文生视频生成器。checkpoint（含 MoGe 深度模型）需单独下载。"
+  },
+  "highlights": {
+    "en": [
+      "Camera-controlled video from a single image",
+      "3D-consistent navigation built on NVIDIA Cosmos Predict1",
+      "Named camera trajectories, MoGe depth, and RGBD warping as native preprocessing",
+      "Accepts pre-rendered 3D-cache tensors as an alternative input"
+    ],
+    "zh": [
+      "从单张图像生成相机可控的视频",
+      "基于 NVIDIA Cosmos Predict1 的 3D 一致导航",
+      "命名相机轨迹、MoGe 深度与 RGBD warping 作为原生预处理",
+      "也可接受预渲染的 3D-cache 张量作为输入"
+    ]
+  }
+}

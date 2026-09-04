@@ -1,0 +1,41 @@
+{
+  "id": "matrix-game-3.5-third-person",
+  "tagline": {
+    "en": "Matrix-Game 3.5 Third-Person — an Apache-2.0 world model with subject references for long, camera-steered third-person video.",
+    "zh": "Matrix-Game 3.5 第三人称——Apache-2.0 许可,支持主体参考图,生成相机可控、长时程的第三人称视频。"
+  },
+  "overview": {
+    "en": [
+      "Matrix-Game 3.5 Third-Person Base is an interactive world model from Riemann Dynamics, released under Apache-2.0. From a starting image it generates third-person video you can steer with a camera trajectory, and it accepts subject-reference images so a protagonist keeps a consistent appearance.",
+      "This is the 25-step bidirectional 5B base model, built on the Wan2.2-TI2V-5B backbone with a conditioner, latent initializer, scheduler, denoiser, and decoder, plus a depth model (Depth-Anything's DA3) as a geometry dependency. Subject references are optional — you can pass none, a single image, or up to a small set of crops, and the runtime uses up to two references per request. Generation runs block by block (each block adds 84 frames and consumes 84 camera poses) for long-horizon rollouts.",
+      "In WorldFoundry you provide a starting image, a camera trajectory, and optionally one or more subject references; the pipeline generates the third-person rollout, exporting frames at 1280×704, 16 fps."
+    ],
+    "zh": [
+      "Matrix-Game 3.5 Third-Person Base 是 Riemann Dynamics 推出的交互式世界模型,采用 Apache-2.0 许可。它以一张图片为起点生成第三人称视频,你可以用相机轨迹操控,并接受主体参考图,让主角保持外观一致。",
+      "这是 25 步双向 5B 基础模型,构建在 Wan2.2-TI2V-5B 骨干之上,由条件器、隐变量初始化器、调度器、去噪器与解码器组成,并以深度模型(Depth-Anything 的 DA3)作为几何依赖。主体参考图是可选的——可以不给、给一张,或给少量裁剪图,运行时每次请求最多使用两张参考。生成按块进行(每块新增 84 帧、消耗 84 个相机位姿),支持长时程 rollout。",
+      "在 WorldFoundry 中,你提供一张起始图片、一条相机轨迹,以及可选的一或多张主体参考图;pipeline 便生成第三人称 rollout,以 1280×704、16 fps 导出帧序列。"
+    ]
+  },
+  "whenToUse": {
+    "en": "Use this model for camera-steered, third-person world exploration from an image, especially when you want a protagonist to stay consistent via subject-reference images across a long rollout.",
+    "zh": "当你想从图片出发做相机可控的第三人称世界探索,尤其希望通过主体参考图让主角在长 rollout 中保持一致时,适合使用该模型。"
+  },
+  "notFor": {
+    "en": "The released weights are the 25-step base model, not a few-step real-time distilled version, so generation is not real-time. The runtime uses at most two subject references per request, its depth dependency (DA3) carries a separate non-commercial license, and checkpoints are downloaded separately.",
+    "zh": "当前发布的是 25 步基础模型,而非少步实时蒸馏版本,因此生成并非实时。运行时每次请求最多使用两张主体参考,其深度依赖(DA3)带有单独的非商用许可,Checkpoint 需单独下载。"
+  },
+  "highlights": {
+    "en": [
+      "Matrix-Game 3.5 base weights under Apache-2.0",
+      "Camera-steered, third-person generation with subject-reference support",
+      "Long-horizon rollouts built block by block (84 new frames per block)",
+      "Output: 1280×704 frames at 16 fps; depth dependency (DA3) is non-commercial"
+    ],
+    "zh": [
+      "Matrix-Game 3.5 基础权重,Apache-2.0 许可",
+      "相机可控的第三人称生成,支持主体参考图",
+      "按块累积的长时程 rollout(每块新增 84 帧)",
+      "输出:1280×704、16 fps;深度依赖 DA3 为非商用许可"
+    ]
+  }
+}

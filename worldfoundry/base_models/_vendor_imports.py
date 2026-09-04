@@ -15,6 +15,20 @@ so wrappers stop hand-rolling the ``remove + insert(0)`` preemption pattern:
 
 Deliberately stdlib-only: wrappers must be importable without pulling any
 heavy dependency.
+
+Remaining [VI-14] collisions that this helper does **not** fail-fast on
+(asserting them would hard-fail live pipeline combinations):
+
+- ``dust3r`` / ``croco``: canonical ``general_3d/dust3r``, MonST3R's fork,
+  and Stable Virtual Camera's older third_party snapshot all expose the
+  same top-level names. Canonical + MASt3R wrappers already call
+  :func:`assert_top_level_not_shadowed`; the other two copies still prepend
+  their own trees (see [VI-8]).
+- ``opensora``: Open-Sora and Open-Sora-Plan are different upstreams with
+  the same package name.
+- ``utils`` / ``models``: generic names exposed by CroCo and several
+  synthesis/eval runtimes. ``vmem`` and ``fantasy_world`` additionally
+  evict foreign ``sys.modules`` entries on init.
 """
 
 from __future__ import annotations
@@ -23,6 +37,18 @@ import sys
 from pathlib import Path
 
 __all__ = ["assert_top_level_not_shadowed", "prepend_import_path"]
+
+# Document-only registry of unresolved top-level collisions ([VI-14]).
+# Do not wire these into assert_top_level_not_shadowed: several live trees
+# legitimately expose the same names, and a global fail-fast would break
+# current multi-model pipelines. Dedup is [VI-8]/[VI-9], not a one-line guard.
+UNRESOLVED_TOP_LEVEL_COLLISIONS = (
+    "dust3r",
+    "croco",
+    "opensora",
+    "utils",
+    "models",
+)
 
 
 def prepend_import_path(path: str | Path) -> None:

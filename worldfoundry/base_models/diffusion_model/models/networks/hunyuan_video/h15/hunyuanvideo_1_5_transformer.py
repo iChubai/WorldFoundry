@@ -14,7 +14,14 @@
 # of rights and permissions under this agreement.
 # See the License for the specific language governing permissions and limitations under the License.
 
-"""Native checkpoint-compatible HunyuanVideo 1.5 diffusion transformer."""
+"""Native checkpoint-compatible HunyuanVideo 1.5 MM-DiT.
+
+1.5 keeps the dual-then-single stream layout.  Latents are ``B C T H W``
+(optionally channel-concatenated with condition/mask).  :class:`PatchEmbed`
+is Conv3d → ``B S C``.  Text may include ByT5 / vision projections.
+Double-stream blocks jointly attend video+text QKV; single-stream blocks
+run on the concatenated sequence.  Sequence-parallel helpers live in core.
+"""
 
 from typing import Any, Dict, Optional, Tuple, Union
 
@@ -62,7 +69,7 @@ from .modules.token_refiner import SingleTokenRefiner
 
 
 class MMDoubleStreamBlock(nn.Module):
-    """Mm double stream block implementation."""
+    """HY 1.5 dual-stream block: separate AdaLN/QKV, joint attention, separate FFN."""
 
     def __init__(
         self,
@@ -77,20 +84,7 @@ class MMDoubleStreamBlock(nn.Module):
         dtype: Optional[torch.dtype] = None,
         device: Optional[torch.device] = None,
     ):
-        """Init.
-
-        Args:
-            hidden_size: The hidden size.
-            heads_num: The heads num.
-            mlp_width_ratio: The mlp width ratio.
-            mlp_act_type: The mlp act type.
-            attn_mode: The attn mode.
-            qk_norm: The qk norm.
-            qk_norm_type: The qk norm type.
-            qkv_bias: The qkv bias.
-            dtype: The dtype.
-            device: The device.
-        """
+        """Separate AdaLN/QKV/FFN for video and text; attention is joint."""
         factory_kwargs = {"device": device, "dtype": dtype}
         super().__init__()
 
@@ -143,11 +137,11 @@ class MMDoubleStreamBlock(nn.Module):
         self.hybrid_seq_parallel_attn = None
 
     def enable_deterministic(self):
-        """Enable deterministic."""
+        """Prefer a bitwise-stable attention kernel when the backend allows it."""
         self.deterministic = True
 
     def disable_deterministic(self):
-        """Disable deterministic."""
+        """Allow the faster non-deterministic attention kernel."""
         self.deterministic = False
 
     def forward(
@@ -161,20 +155,9 @@ class MMDoubleStreamBlock(nn.Module):
         is_flash=False,
         block_idx=None,
     ) -> Tuple[torch.Tensor, torch.Tensor]:
-        """Forward.
+        """Dual-stream block: separate AdaLN/QKV, joint attention, separate FFN.
 
-        Args:
-            img: The img.
-            txt: The txt.
-            vec: The vec.
-            freqs_cis: The freqs cis.
-            text_mask: The text mask.
-            attn_param: The attn param.
-            is_flash: The is flash.
-            block_idx: The block idx.
-
-        Returns:
-            The return value.
+        ``img`` / ``txt`` are ``B S C``; RoPE is applied to the video stream only.
         """
         (
             img_mod1_shift,
@@ -257,7 +240,7 @@ class MMDoubleStreamBlock(nn.Module):
 
 
 class MMSingleStreamBlock(nn.Module):
-    """Mm single stream block implementation."""
+    """HY 1.5 concatenated video+text block; RoPE is applied to the video prefix only."""
 
     def __init__(
         self,
@@ -272,20 +255,6 @@ class MMSingleStreamBlock(nn.Module):
         dtype: Optional[torch.dtype] = None,
         device: Optional[torch.device] = None,
     ):
-        """Init.
-
-        Args:
-            hidden_size: The hidden size.
-            heads_num: The heads num.
-            mlp_width_ratio: The mlp width ratio.
-            mlp_act_type: The mlp act type.
-            attn_mode: The attn mode.
-            qk_norm: The qk norm.
-            qk_norm_type: The qk norm type.
-            qk_scale: The qk scale.
-            dtype: The dtype.
-            device: The device.
-        """
         factory_kwargs = {"device": device, "dtype": dtype}
         super().__init__()
 
@@ -319,11 +288,11 @@ class MMSingleStreamBlock(nn.Module):
         self.hybrid_seq_parallel_attn = None
 
     def enable_deterministic(self):
-        """Enable deterministic."""
+        """Force the attention backend onto a deterministic path when available."""
         self.deterministic = True
 
     def disable_deterministic(self):
-        """Disable deterministic."""
+        """Restore the default (possibly non-deterministic) attention backend."""
         self.deterministic = False
 
     def forward(
@@ -336,7 +305,7 @@ class MMSingleStreamBlock(nn.Module):
         attn_param=None,
         is_flash=False,
     ) -> torch.Tensor:
-        """Forward pass for the single stream block."""
+        """Gated self-attn + fused MLP on joint ``B (S_img+S_txt) C`` tokens."""
         mod_shift, mod_scale, mod_gate = self.modulation(vec).chunk(3, dim=-1)
         x_mod = modulate(self.pre_norm(x), shift=mod_shift, scale=mod_scale)
 
@@ -450,41 +419,7 @@ class HunyuanVideo_1_5_DiffusionTransformer(nn.Module, NativeConfigMixin):
         ideal_resolution: str = None,
         ideal_task: str = None,
     ):
-        """Init.
-
-        Args:
-            patch_size: The patch size.
-            in_channels: The in channels.
-            concat_condition: The concat condition.
-            out_channels: The out channels.
-            hidden_size: The hidden size.
-            heads_num: The heads num.
-            mlp_width_ratio: The mlp width ratio.
-            mlp_act_type: The mlp act type.
-            mm_double_blocks_depth: The mm double blocks depth.
-            mm_single_blocks_depth: The mm single blocks depth.
-            rope_dim_list: The rope dim list.
-            qkv_bias: The qkv bias.
-            qk_norm: The qk norm.
-            qk_norm_type: The qk norm type.
-            guidance_embed: The guidance embed.
-            use_meanflow: The use meanflow.
-            text_projection: The text projection.
-            use_attention_mask: The use attention mask.
-            text_states_dim: The text states dim.
-            text_states_dim_2: The text states dim 2.
-            text_pool_type: The text pool type.
-            rope_theta: The rope theta.
-            attn_mode: The attn mode.
-            attn_param: The attn param.
-            glyph_byT5_v2: The glyph byt5 v2.
-            vision_projection: The vision projection.
-            vision_states_dim: The vision states dim.
-            is_reshape_temporal_channels: The is reshape temporal channels.
-            use_cond_type_embedding: The use cond type embedding.
-            ideal_resolution: The ideal resolution.
-            ideal_task: The ideal task.
-        """
+        """Patch-embed ``B C T H W``, run dual- then single-stream MM-DiT blocks, unpatchify."""
         super().__init__()
         factory_kwargs = {}
         attn_mode = normalize_attention_backend(attn_mode)
@@ -665,25 +600,21 @@ class HunyuanVideo_1_5_DiffusionTransformer(nn.Module, NativeConfigMixin):
             self.cond_type_embedding = None
 
     def enable_deterministic(self):
-        """Enable deterministic."""
+        """Propagate deterministic attention to every dual/single-stream block."""
         for block in self.double_blocks:
             block.enable_deterministic()
         for block in self.single_blocks:
             block.enable_deterministic()
 
     def disable_deterministic(self):
-        """Disable deterministic."""
+        """Propagate the fast attention kernel to every dual/single-stream block."""
         for block in self.double_blocks:
             block.disable_deterministic()
         for block in self.single_blocks:
             block.disable_deterministic()
 
     def get_rotary_pos_embed(self, rope_sizes):
-        """Get rotary pos embed.
-
-        Args:
-            rope_sizes: The rope sizes.
-        """
+        """Build 3D RoPE ``(cos, sin)`` for the post-patch lattice ``rope_sizes``."""
         target_ndim = 3
         head_dim = self.hidden_size // self.heads_num
         rope_dim_list = self.rope_dim_list
@@ -766,28 +697,10 @@ class HunyuanVideo_1_5_DiffusionTransformer(nn.Module, NativeConfigMixin):
         mask_type="t2v",
         extra_kwargs=None,
     ) -> Union[torch.Tensor, Dict[str, torch.Tensor]]:
-        """Forward.
+        """Denoise ``B C T H W`` latents through double- then single-stream blocks.
 
-        Args:
-            hidden_states: The hidden states.
-            timestep: The timestep.
-            text_states: The text states.
-            text_states_2: The text states 2.
-            encoder_attention_mask: The encoder attention mask.
-            timestep_r: The timestep r.
-            vision_states: The vision states.
-            output_features: The output features.
-            output_features_stride: The output features stride.
-            attention_kwargs: The attention kwargs.
-            freqs_cos: The freqs cos.
-            freqs_sin: The freqs sin.
-            return_dict: The return dict.
-            guidance: The guidance.
-            mask_type: The mask type.
-            extra_kwargs: The extra kwargs.
-
-        Returns:
-            The return value.
+        Optional ``vision_states`` / ByT5 glyph tokens are projected into the
+        text stream.  ``mask_type`` selects t2v vs i2v channel packing.
         """
 
         if guidance is None:
@@ -997,7 +910,15 @@ class HunyuanVideo_1_5_DiffusionTransformer(nn.Module, NativeConfigMixin):
         Args:
             attn_mode: The attn mode.
         """
-        attn_mode = resolve_attention_backend(attn_mode, next(self.parameters()).device)
+        normalized_attn_mode = normalize_attention_backend(attn_mode)
+        attn_mode = resolve_attention_backend(
+            normalized_attn_mode,
+            next(self.parameters()).device,
+            # Hunyuan's multimodal attention facade owns the SSTA/FlexBlock
+            # mask and block-geometry planner. Other model-specific names must
+            # retain generic fail-fast behavior.
+            allow_model_specific=normalized_attn_mode == "flex_block_attention",
+        )
         self.attn_mode = attn_mode
         for block in self.double_blocks:
             block.attn_mode = attn_mode 

@@ -16,7 +16,7 @@ from functools import lru_cache
 from pathlib import Path
 from typing import Any, Iterable, Mapping, Sequence
 
-from worldfoundry.core.inference import (
+from worldfoundry.runtime.inference_catalog import (
     LINGBOT_VARIANT_BASE_ACT_PREVIEW,
     LINGBOT_VARIANT_BASE_CAM,
     LINGBOT_VARIANT_FAST,

@@ -4,7 +4,10 @@ import glob
 import os
 import os.path as osp
 
-import fire
+try:
+    import fire
+except ModuleNotFoundError:  # The official environment does not always ship python-fire.
+    fire = None
 import numpy as np
 import torch
 import torch.nn.functional as F
@@ -438,4 +441,11 @@ def main(
 
 
 if __name__ == "__main__":
-    fire.Fire(main)
+    if fire is not None:
+        fire.Fire(main)
+    else:
+        from worldfoundry.base_models.three_dimensions.general_3d.stable_virtual_camera.stable_virtual_camera_runtime.cli import (
+            parse_main_args,
+        )
+
+        main(**parse_main_args())

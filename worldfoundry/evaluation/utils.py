@@ -14,6 +14,7 @@ import os
 import platform
 import subprocess
 import sys
+import tempfile
 from functools import lru_cache
 from importlib import metadata
 from pathlib import Path
@@ -26,6 +27,10 @@ from worldfoundry.core.io.manifests import (
     manifest_paths,
 )
 from worldfoundry.core.io.paths import (
+    BENCHMARKS_DATA_ROOT,
+    DATA_ROOT,
+    REPO_ROOT,
+    hfd_dataset_root_path,
     package_data_path,
     package_data_root,
     package_root,
@@ -112,10 +117,7 @@ worldfoundry_data_root = package_data_root
 worldfoundry_data_path = package_data_path
 
 PACKAGE_ROOT = Path(__file__).resolve().parent
-REPO_ROOT = worldfoundry_repository_root()
 SRC_ROOT = REPO_ROOT
-DATA_ROOT = worldfoundry_data_root()
-BENCHMARKS_DATA_ROOT = DATA_ROOT / "benchmarks"
 BENCHMARK_ZOO_DIR = BENCHMARKS_DATA_ROOT / "catalog"
 BENCHMARK_TASK_ROOT = BENCHMARKS_DATA_ROOT / "tasks" / "external"
 BENCHMARK_ASSETS_ROOT = BENCHMARKS_DATA_ROOT / "assets"
@@ -128,7 +130,7 @@ MODEL_RUNTIME_ENVIRONMENTS_ROOT = MODEL_RUNTIME_ROOT / "environments"
 MODEL_RUNTIME_ASSETS_ROOT = MODEL_RUNTIME_ROOT / "assets"
 TMP_ROOT = REPO_ROOT / "tmp"
 CACHE_ROOT = REPO_ROOT / "cache"
-HFD_DATASET_CACHE_ROOT = resolve_worldfoundry_path("${WORLDFOUNDRY_CACHE_DIR}/data/hfd_datasets")
+HFD_DATASET_CACHE_ROOT = hfd_dataset_root_path()
 
 
 def benchmark_task_sample_path(benchmark_id: str) -> Path | None:
@@ -151,21 +153,7 @@ def worldfoundry_hfd_dataset_root() -> Path:
     only for defaults shared by benchmark download, data probes, and audits.
     """
 
-    for name in (
-        "WORLDFOUNDRY_BENCHMARK_DATA_ROOT",
-        "WORLDFOUNDRY_LOCAL_DATA_ROOT",
-        "WORLDFOUNDRY_LOCAL_CACHE_DATA_ROOT",
-    ):
-        value = os.environ.get(name)
-        if value:
-            return Path(value).expanduser()
-
-    data_dir = os.environ.get("WORLDFOUNDRY_DATA_DIR")
-    if data_dir:
-        root = Path(data_dir).expanduser()
-        return root if root.name == "hfd_datasets" else root / "hfd_datasets"
-
-    return HFD_DATASET_CACHE_ROOT
+    return hfd_dataset_root_path()
 
 
 def ensure_repo_root_on_sys_path() -> Path:
@@ -185,7 +173,7 @@ def ensure_repo_root_on_sys_path() -> Path:
 
 # ── Version / fingerprint capture ──────────────────────────────────────
 
-VERSION_CONTEXT_SCHEMA_VERSION = "worldfoundry-version-context"
+VERSION_CONTEXT_SCHEMA_VERSION = "worldfoundry-version-context-v2"
 RUN_FINGERPRINT_SCHEMA_VERSION = "worldfoundry-run-fingerprint"
 # Explicit engine revision: bump the numeric suffix when evaluation-engine
 # behavior changes in a way that affects results, so run manifests written by
@@ -225,6 +213,47 @@ def _run_git(root: Path, *args: str) -> str | None:
     return result.stdout.strip()
 
 
+def _git_diff_sha256(root: Path) -> str | None:
+    """Hash the tracked working-tree diff without buffering it in memory.
+
+    Untracked files are intentionally excluded.  A bounded probe keeps version
+    capture from stalling runs on large or remote filesystems; callers retain
+    ``dirty=True`` and record a null digest when the diff cannot be captured.
+    """
+
+    command = (
+        "git",
+        "-C",
+        str(root),
+        "diff",
+        "--binary",
+        "--full-index",
+        "--no-ext-diff",
+        "--no-textconv",
+        "--no-color",
+        "HEAD",
+        "--",
+    )
+    try:
+        with tempfile.TemporaryFile() as diff_stream:
+            result = subprocess.run(
+                command,
+                stdout=diff_stream,
+                stderr=subprocess.DEVNULL,
+                check=False,
+                timeout=5,
+            )
+            if result.returncode != 0:
+                return None
+            diff_stream.seek(0)
+            digest = hashlib.sha256()
+            while chunk := diff_stream.read(1024 * 1024):
+                digest.update(chunk)
+            return digest.hexdigest()
+    except (OSError, subprocess.SubprocessError):
+        return None
+
+
 def git_metadata(repo_root: str | Path | None = None) -> dict[str, Any]:
     """Get status and commit metadata of the current git repository.
 
@@ -235,12 +264,14 @@ def git_metadata(repo_root: str | Path | None = None) -> dict[str, Any]:
     root = Path(repo_root) if repo_root is not None else _repo_root()
     commit = _run_git(root, "rev-parse", "HEAD")
     if commit is None:
-        return {"available": False, "commit": None, "dirty": None}
+        return {"available": False, "commit": None, "dirty": None, "dirty_diff_sha256": None}
     status = _run_git(root, "status", "--porcelain", "--untracked-files=no")
+    dirty = None if status is None else bool(status)
     return {
         "available": True,
         "commit": commit,
-        "dirty": None if status is None else bool(status),
+        "dirty": dirty,
+        "dirty_diff_sha256": _git_diff_sha256(root) if dirty else None,
     }
 
 
@@ -360,6 +391,7 @@ def build_version_context(
     engine_version: str = EVALUATION_ENGINE_VERSION,
     extra: Mapping[str, Any] | None = None,
     repo_root: str | Path | None = None,
+    git_context: Mapping[str, Any] | None = None,
 ) -> dict[str, Any]:
     """Construct a comprehensive version context dictionary capturing engine, runtime, and git state."""
     return {
@@ -369,9 +401,8 @@ def build_version_context(
         "worldfoundry_version": package_version(),
         "python": {
             "version": platform.python_version(),
-            "executable": sys.executable,
         },
-        "git": git_metadata(repo_root),
+        "git": dict(git_context) if git_context is not None else git_metadata(repo_root),
         "contract_versions": contract_versions(),
         "benchmark": jsonable(benchmark or {}),
         "model": jsonable(model or {}),

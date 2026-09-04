@@ -3,7 +3,7 @@
 import os
 import numpy as np
 import torch
-from typing import List, Optional, Union, Dict, Any
+from typing import List, Mapping, Optional, Union, Dict, Any
 from PIL import Image
 import base64
 import io
@@ -14,6 +14,45 @@ from ..base_models.three_dimensions.point_clouds.flash_world.utils import (
     matrix_to_quaternion,
     quaternion_to_matrix,
 )
+
+
+def _text_from_flash_world_interaction(interaction: Any) -> Optional[str]:
+    """Return prompt text from a mapping interaction; None if it is not text."""
+    if isinstance(interaction, Mapping):
+        raw = interaction.get("text_prompt")
+        if raw is None:
+            raw = interaction.get("prompt")
+        if raw is None:
+            return None
+        return str(raw)
+    return None
+
+
+def _split_flash_world_interactions(
+    interactions: List[Any],
+    text_prompt: str = "",
+    prompt: str = "",
+) -> tuple:
+    """Split recorded interactions into prompt text and camera-action tokens.
+
+    The literal template token ``"text_prompt"`` carries no body and is
+    dropped from the camera list. Mapping entries with ``text_prompt`` or
+    ``prompt`` contribute their text. Explicit kwargs win over collected text.
+    """
+    collected: List[str] = []
+    camera_actions: List[Any] = []
+    for item in interactions:
+        mapped = _text_from_flash_world_interaction(item)
+        if mapped is not None:
+            if mapped:
+                collected.append(mapped)
+            continue
+        if item == "text_prompt":
+            continue
+        camera_actions.append(item)
+    resolved = text_prompt or prompt or " ".join(collected)
+    return resolved, camera_actions
+
 
 # Shared focal point for look-at and dolly forward/backward (must stay consistent).
 _LOOK_AT_TARGET = np.array([0.0, 0.5, 0.0], dtype=np.float64)
@@ -174,14 +213,16 @@ class FlashWorldOperator(BaseOperator):
         Check if interaction is in the interaction template.
         
         Args:
-            interaction: Interaction string to check
+            interaction: Template token, or a mapping with ``text_prompt``/``prompt``.
             
         Returns:
             True if interaction is valid
             
         Raises:
-            ValueError: If interaction is not in template
+            ValueError: If interaction is not in template and is not text
         """
+        if _text_from_flash_world_interaction(interaction) is not None:
+            return True
         if interaction not in self.interaction_template:
             raise ValueError(f"{interaction} not in template. Available: {self.interaction_template}")
         return True
@@ -191,7 +232,7 @@ class FlashWorldOperator(BaseOperator):
         Add interaction to current_interaction list after validation.
         
         Args:
-            interaction: Interaction string to add
+            interaction: Template token or ``{"text_prompt": "..."}`` / ``{"prompt": "..."}``.
         """
         self.check_interaction(interaction)
         self.current_interaction.append(interaction)
@@ -200,7 +241,9 @@ class FlashWorldOperator(BaseOperator):
         self, 
         num_frames: Optional[int] = None,
         image_width: int = 704,
-        image_height: int = 480
+        image_height: int = 480,
+        text_prompt: str = "",
+        prompt: str = "",
     ) -> Dict[str, Any]:
         """
         Process current interactions and convert to features for representation/synthesis.
@@ -210,10 +253,12 @@ class FlashWorldOperator(BaseOperator):
             num_frames: Number of frames for video generation (optional)
             image_width: Image width for camera intrinsics
             image_height: Image height for camera intrinsics
+            text_prompt: Optional scene text; wins over recorded mapping entries
+            prompt: Alias for ``text_prompt`` (pipeline ``__call__`` uses this name)
             
         Returns:
             Dictionary containing processed interaction features:
-                - text_prompt: str, text description (if provided)
+                - text_prompt: str, text from kwargs or recorded mapping interactions
                 - cameras: List[Dict], camera parameters for each frame
                 - num_frames: int, number of frames
         """
@@ -225,12 +270,12 @@ class FlashWorldOperator(BaseOperator):
         
         num_frames = num_frames or 16
         
-        text_prompt = ""
-        # Preserve list order; every non-text entry is a motion segment (forward, left, camera_l, ...)
-        camera_actions = [
-            a for a in self.current_interaction
-            if a != "text_prompt"
-        ]
+        # Preserve list order; text tokens/mappings are not motion segments.
+        text_prompt, camera_actions = _split_flash_world_interactions(
+            self.current_interaction,
+            text_prompt=text_prompt,
+            prompt=prompt,
+        )
         
         # Convert camera actions to camera parameters
         cameras = self._camera_actions_to_cameras(

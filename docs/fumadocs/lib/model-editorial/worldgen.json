@@ -1,0 +1,41 @@
+{
+  "id": "worldgen",
+  "tagline": {
+    "en": "Generate an explorable 3D world from text or a single image.",
+    "zh": "从文本或单张图片生成可探索的 3D 世界。"
+  },
+  "overview": {
+    "en": [
+      "WorldGen generates a 3D world from either a text prompt or a single image. It takes a high-level description or picture and produces a scene you can explore in three dimensions, aimed at text-to-3D-world and image-to-3D-world creation.",
+      "The generation flow builds on strong image foundation models to imagine the scene and then lift it into a 3D representation, so a short prompt can become an explorable environment. It fits naturally alongside the other 3D/4D world generators in the catalog.",
+      "In WorldFoundry, WorldGen runs through the shared 3D/4D pipeline: you give it a text prompt or image and a configuration, and the in-tree adapter drives the inference flow. Some foundation-model and WorldGen assets must be staged locally before a full run."
+    ],
+    "zh": [
+      "WorldGen 可以从一句文本提示词或一张图片生成 3D 世界。它接收一段高层描述或一张图片，产出可以在三维中探索的场景，面向文生 3D 世界与图生 3D 世界的创作。",
+      "其生成流程借助强大的图像基础模型来想象场景，再将其提升为 3D 表示，于是一句简短提示词就能变成可探索的环境。它与目录中其他 3D/4D 世界生成模型自然互补。",
+      "在 WorldFoundry 中，WorldGen 通过共享的 3D/4D pipeline 运行：你给它文本提示词或图片以及一份配置，内置适配器便驱动推理流程。完整运行前，需要在本地准备好部分基础模型与 WorldGen 资源。"
+    ]
+  },
+  "whenToUse": {
+    "en": "Use it when you want to turn a text prompt or a single image into an explorable 3D world — for scene prototyping, previsualization, or immersive content.",
+    "zh": "当你想把一句文本提示词或单张图片变成可探索的 3D 世界时使用它——适合场景原型、预演可视化或沉浸式内容。"
+  },
+  "notFor": {
+    "en": "Not a metric reconstruction of a real capture, and a full run depends on the required foundation-model and WorldGen assets being available locally.",
+    "zh": "它不是对真实采集的度量重建，完整运行依赖所需的基础模型与 WorldGen 资源在本地就绪。"
+  },
+  "highlights": {
+    "en": [
+      "Text-to-3D-world and image-to-3D-world generation",
+      "Turns a short prompt or one image into an explorable scene",
+      "Builds on strong image foundation models",
+      "Runs through WorldFoundry's shared 3D/4D pipeline"
+    ],
+    "zh": [
+      "支持文生 3D 世界与图生 3D 世界",
+      "把简短提示词或单张图片变成可探索场景",
+      "借助强大的图像基础模型",
+      "通过 WorldFoundry 共享的 3D/4D pipeline 运行"
+    ]
+  }
+}

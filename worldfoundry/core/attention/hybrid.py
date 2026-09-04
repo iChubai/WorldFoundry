@@ -1,4 +1,11 @@
-"""Shared dense, packed, and hybrid-provider attention adapters."""
+"""Dense, packed, and hybrid-provider attention adapters.
+
+Some blocks flatten heads into ``hidden``; others already have ``[B,S,H,D]``.
+These adapters reshape once and call :func:`attention_forward` so a model
+does not fork its own backend list. Hybrid-provider variants exist for
+checkpoints that mix exact SDPA with an explicit sparse kernel on one
+stream only.
+"""
 
 from __future__ import annotations
 
@@ -10,6 +17,10 @@ import torch
 from worldfoundry.core.attention.backends import resolve_attention_backend
 from worldfoundry.core.attention.native import scaled_dot_product_attention
 from worldfoundry.core.attention.varlen import flash_attention, varlen_scaled_dot_product_attention
+
+# ──────────────────────────────────────────────────────────────────────────
+# Flattened adapters — reshape once, then reuse shared dispatch / SDPA
+# ──────────────────────────────────────────────────────────────────────────
 
 
 def flattened_attention(
@@ -89,6 +100,11 @@ def flattened_attention(
                 is_causal=causal,
             ).transpose(1, 2)
     return output.reshape(output.shape[0], output.shape[1], -1)
+
+
+# ──────────────────────────────────────────────────────────────────────────
+# Hybrid provider — sequence-parallel image stream + shared text attention
+# ──────────────────────────────────────────────────────────────────────────
 
 
 def hybrid_provider_attention(
@@ -197,6 +213,11 @@ def parallel_attention(
     )
 
 
+# ──────────────────────────────────────────────────────────────────────────
+# Vanilla scores — explicit O(S²) path for checkpoints that request it
+# ──────────────────────────────────────────────────────────────────────────
+
+
 def _vanilla_attention(
     query: torch.Tensor,
     key: torch.Tensor,
@@ -206,6 +227,12 @@ def _vanilla_attention(
     dropout_p: float,
     causal: bool,
 ) -> torch.Tensor:
+    """Materialize scores in PyTorch when a caller opts out of fused kernels.
+
+    Causal and an explicit mask cannot be combined: the two contracts
+    disagree on how the lower triangle interacts with padding, and
+    silently OR-ing them would hide a caller bug.
+    """
     query = query.transpose(1, 2)
     key = key.transpose(1, 2)
     value = value.transpose(1, 2)

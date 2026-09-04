@@ -15,7 +15,18 @@
 # SPDX-License-Identifier: Apache-2.0
 
 # This file is modified from https://github.com/PixArt-alpha/PixArt-sigma
-"""Module for base_models -> diffusion_model -> image -> sana -> diffusion -> model -> nets -> sana_multi_scale.py functionality."""
+"""Multi-scale SANA image DiT (``SanaMS``).
+
+Same adaLN-single + caption cross-attention stack as :class:`Sana`, but the
+patch embed (:class:`PatchEmbedMS`) and interpolable position encodings accept
+arbitrary ``H×W`` latent grids.  One checkpoint therefore covers many
+resolutions.  ``SanaMSLinearFFN`` swaps the FFN for :class:`GLUMBConvLinear`
+(1×1 convs replaced by ``nn.Linear``).  ``SanaMSCM`` is the consistency-model
+head used by SANA-Sprint.
+
+Factory helpers at the bottom (``SanaMS_600M_P1_D28``, ``SanaMS_1600M_*``, …)
+are the published width/depth/patch-size combinations.
+"""
 
 import os
 
@@ -60,9 +71,7 @@ if _xformers_available:
 
 
 class SanaMSBlock(nn.Module):
-    """
-    A Sana block with global shared adaptive layer norm zero (adaLN-Zero) conditioning.
-    """
+    """SanaMS block: adaLN-single self-attn (LiteLA / Flash / Triton) + caption cross-attn + FFN."""
 
     def __init__(
         self,
@@ -194,9 +203,7 @@ class SanaMSBlock(nn.Module):
 #                                 Core Sana Model                                #
 #################################################################################
 class SanaMS(Sana):
-    """
-    Diffusion model with a Transformer backbone.
-    """
+    """Multi-scale SANA image DiT: variable ``H×W`` via PatchEmbedMS + interpolable PE."""
 
     def __init__(
         self,
@@ -515,7 +522,7 @@ class SanaMS(Sana):
 
 
 class SanaMSCM(SanaMS):
-    """Sana mscm implementation."""
+    """SANA-Sprint consistency-model head: same SanaMS graph, log-variance output."""
 
     def forward(self, x, timestep, y, data_info=None, return_logvar=False, **kwargs):
         """Forward.

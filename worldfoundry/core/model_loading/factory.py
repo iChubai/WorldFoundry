@@ -1,10 +1,23 @@
-"""Resolve and construct Python objects from declarative model configuration."""
+"""Resolve and construct Python objects from declarative model configuration.
+
+Hydra-style mappings name a ``target`` / ``class_path`` plus
+``params`` / ``init_args``. :func:`resolve_symbol` imports
+``package.module:Symbol`` (or dotted form). :func:`instantiate_from_config`
+calls the constructor. :func:`count_parameters` / :func:`count_params`
+report torch-style parameter counts for LVDM-shaped modules.
+
+This does not load weights or download repositories.
+"""
 
 from __future__ import annotations
 
 import importlib
 from collections.abc import Mapping
 from typing import Any
+
+# ──────────────────────────────────────────────────────────────────────────
+# Symbol resolve — colon form or last-dot; reload / invalidate_cache are opt-in
+# ──────────────────────────────────────────────────────────────────────────
 
 
 def resolve_symbol(
@@ -24,6 +37,11 @@ def resolve_symbol(
     if reload:
         module = importlib.reload(module)
     return getattr(module, symbol_name)
+
+
+# ──────────────────────────────────────────────────────────────────────────
+# Instantiate + parameter counts — Hydra target/class_path; no weight load
+# ──────────────────────────────────────────────────────────────────────────
 
 
 def get_obj_from_str(

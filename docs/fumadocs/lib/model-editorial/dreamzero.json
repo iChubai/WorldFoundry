@@ -1,0 +1,41 @@
+{
+  "id": "dreamzero",
+  "tagline": {
+    "en": "NVIDIA GEAR's DreamZero — an Apache-2.0 world-action model that predicts video and robot actions from camera observations.",
+    "zh": "NVIDIA GEAR 的 DreamZero——Apache-2.0 许可的世界-动作模型,从相机观测预测视频与机器人动作。"
+  },
+  "overview": {
+    "en": [
+      "DreamZero is an embodied world-action model from NVIDIA's GEAR-Dreams, released under Apache-2.0. It takes camera and proprioceptive observations from a robot and predicts both future video and the actions to take, making it a policy for real-world manipulation.",
+      "It ships in two checkpoints — one trained on DROID and one on AgiBot — and builds on a Wan2.1-I2V-14B video backbone with a UMT5 text encoder. In WorldFoundry the default 14B server runs across two CUDA ranks, while a lighter Wan2.2 5B entrypoint can run on a single rank. The policy follows the DROID/RoboArena observation contract: two external cameras, a wrist camera, joint and gripper positions, and a prompt.",
+      "In WorldFoundry, DreamZero runs as a distributed policy server that a WebSocket client drives; it emits action-trace artifacts and preserves the predicted-video contract in metadata."
+    ],
+    "zh": [
+      "DreamZero 是 NVIDIA GEAR-Dreams 推出的具身世界-动作模型,采用 Apache-2.0 许可。它接收机器人的相机与本体感知观测,同时预测未来视频与要执行的动作,可作为真实世界操作任务的策略。",
+      "它提供两个 checkpoint——一个在 DROID 上训练、一个在 AgiBot 上训练——构建于 Wan2.1-I2V-14B 视频骨干之上,配 UMT5 文本编码器。在 WorldFoundry 中,默认 14B 服务跨两个 CUDA rank 运行,而更轻量的 Wan2.2 5B 入口可在单个 rank 上运行。该策略遵循 DROID/RoboArena 观测约定:两路外部相机、一路腕部相机、关节与夹爪位置,以及提示词。",
+      "在 WorldFoundry 中,DreamZero 作为分布式策略服务运行,由 WebSocket 客户端驱动;它产出 action-trace 产物,并在元数据中保留预测视频的约定。"
+    ]
+  },
+  "whenToUse": {
+    "en": "Use DreamZero when you want an embodied world-action policy that predicts both video and robot actions from multi-camera observations, in the DROID/RoboArena setup.",
+    "zh": "当你想要一个具身的世界-动作策略,在 DROID/RoboArena 设定下从多相机观测同时预测视频与机器人动作时,适合使用 DreamZero。"
+  },
+  "notFor": {
+    "en": "It's a robot policy, not a general text-to-video generator, and expects the DROID/RoboArena observation setup. Checkpoint-backed execution needs a staged DROID or AgiBot checkpoint and a compatible multi-GPU CUDA topology.",
+    "zh": "它是机器人策略,而非通用的文生视频生成器,并需要 DROID/RoboArena 的观测设定。基于 checkpoint 的运行需要就位的 DROID 或 AgiBot checkpoint,以及兼容的多 GPU CUDA 拓扑。"
+  },
+  "highlights": {
+    "en": [
+      "Apache-2.0 embodied world-action model from NVIDIA GEAR",
+      "Predicts both future video and robot actions",
+      "DROID and AgiBot checkpoints on a Wan2.1-I2V-14B backbone",
+      "Runs as a distributed policy server driven over WebSocket"
+    ],
+    "zh": [
+      "NVIDIA GEAR 推出的 Apache-2.0 具身世界-动作模型",
+      "同时预测未来视频与机器人动作",
+      "DROID 与 AgiBot 两个 checkpoint,基于 Wan2.1-I2V-14B 骨干",
+      "作为分布式策略服务运行,通过 WebSocket 驱动"
+    ]
+  }
+}

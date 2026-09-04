@@ -101,6 +101,10 @@ VIDEO_RUNNER_REGISTRY: dict[str, VideoRunnerSpec] = {
         "worldfoundry/evaluation/tasks/execution/runners/mirabench/run_mirabench_official_runner.py",
         "--official-results-path",
     ),
+    "pawbench": VideoRunnerSpec(
+        "worldfoundry/evaluation/tasks/execution/runners/pawbench/run_pawbench_official_runner.py",
+        "--official-results-path",
+    ),
     "memobench": VideoRunnerSpec(
         "worldfoundry/evaluation/tasks/execution/runners/memobench/run_memobench_official_runner.py",
         "--official-results-path",
@@ -223,6 +227,10 @@ VIDEO_RUNNER_REGISTRY: dict[str, VideoRunnerSpec] = {
     ),
     "worldarena": VideoRunnerSpec(
         "worldfoundry/evaluation/tasks/execution/runners/worldarena/run_worldarena_official_runner.py",
+        "--official-results-path",
+    ),
+    "worldatlas-arena": VideoRunnerSpec(
+        "worldfoundry/evaluation/tasks/execution/runners/worldatlas_arena/run_worldatlas_arena_official_runner.py",
         "--official-results-path",
     ),
     "worldbench": VideoRunnerSpec(

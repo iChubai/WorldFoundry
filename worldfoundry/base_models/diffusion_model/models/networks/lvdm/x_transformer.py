@@ -1,4 +1,9 @@
-"""shout-out to https://github.com/lucidrains/x-transformers/tree/main/x_transformers"""
+"""x-transformers encoder used as an LVDM text / context tower.
+
+Not the video UNet.  Tokens are ``B L C``.  :class:`TransformerWrapper`
+embeds tokens, adds positions, and runs :class:`AttentionLayers`.
+Adapted from https://github.com/lucidrains/x-transformers
+"""
 from functools import partial
 from inspect import isfunction
 from collections import namedtuple
@@ -22,52 +27,33 @@ LayerIntermediates = namedtuple('Intermediates', [
 
 
 class AbsolutePositionalEmbedding(nn.Module):
-    """Absolute positional embedding implementation."""
+    """Learned ``[max_seq_len, dim]`` positions added to ``B L C``."""
     def __init__(self, dim, max_seq_len):
-        """Init.
-
-        Args:
-            dim: The dim.
-            max_seq_len: The max seq len.
-        """
+        """Learned position table of shape ``[max_seq_len, dim]``."""
         super().__init__()
         self.emb = nn.Embedding(max_seq_len, dim)
         self.init_()
 
     def init_(self):
-        """Init."""
+        """Normal-init the position embedding table."""
         nn.init.normal_(self.emb.weight, std=0.02)
 
     def forward(self, x):
-        """Forward.
-
-        Args:
-            x: The x.
-        """
+        """Return positions ``[1, L, dim]`` for ``x`` of layout ``B L C``."""
         n = torch.arange(x.shape[1], device=x.device)
         return self.emb(n)[None, :, :]
 
 
 class FixedPositionalEmbedding(nn.Module):
-    """Fixed positional embedding implementation."""
+    """Sinusoidal positions for ``B L C`` text / context tokens."""
     def __init__(self, dim):
-        """Init.
-
-        Args:
-            dim: The dim.
-        """
+        """Cache inverse frequencies for sinusoidal positions."""
         super().__init__()
         inv_freq = 1. / (10000 ** (torch.arange(0, dim, 2).float() / dim))
         self.register_buffer('inv_freq', inv_freq)
 
     def forward(self, x, seq_dim=1, offset=0):
-        """Forward.
-
-        Args:
-            x: The x.
-            seq_dim: The seq dim.
-            offset: The offset.
-        """
+        """Sinusoidal positions broadcastable onto ``B L C``."""
         t = torch.arange(x.shape[seq_dim], device=x.device).type_as(self.inv_freq) + offset
         sinusoid_inp = torch.einsum('i , j -> i j', t, self.inv_freq)
         emb = torch.cat((sinusoid_inp.sin(), sinusoid_inp.cos()), dim=-1)
@@ -98,78 +84,41 @@ def default(val, d):
 
 
 def always(val):
-    """Always.
-
-    Args:
-        val: The val.
-    """
+    """Return a callable that ignores its args and yields ``val``."""
     def inner(*args, **kwargs):
-        """Inner."""
         return val
     return inner
 
 
 def not_equals(val):
-    """Not equals.
-
-    Args:
-        val: The val.
-    """
+    """Return a predicate ``x != val`` used by attention-flag helpers."""
     def inner(x):
-        """Inner.
-
-        Args:
-            x: The x.
-        """
         return x != val
     return inner
 
 
 def equals(val):
-    """Equals.
-
-    Args:
-        val: The val.
-    """
+    """Return a predicate ``x == val`` used by attention-flag helpers."""
     def inner(x):
-        """Inner.
-
-        Args:
-            x: The x.
-        """
         return x == val
     return inner
 
 
 def max_neg_value(tensor):
-    """Max neg value.
-
-    Args:
-        tensor: The tensor.
-    """
+    """Most-negative finite value for ``tensor.dtype`` (attention masking)."""
     return -torch.finfo(tensor.dtype).max
 
 
 # keyword argument helpers
 
 def pick_and_pop(keys, d):
-    """Pick and pop.
-
-    Args:
-        keys: The keys.
-        d: The d.
-    """
+    """Pop ``keys`` from ``d`` and return them as a new dict (x-transformers kwargs)."""
     values = list(map(lambda key: d.pop(key), keys))
     return dict(zip(keys, values))
 
 
 def group_dict_by_key(cond, d):
-    """Group dict by key.
-
-    Args:
-        cond: The cond.
-        d: The d.
-    """
+    """Split ``d`` into ``(matches, rest)`` using predicate ``cond(key)``."""
     return_val = [dict(), dict()]
     for key in d.keys():
         match = bool(cond(key))
@@ -179,32 +128,17 @@ def group_dict_by_key(cond, d):
 
 
 def string_begins_with(prefix, str):
-    """String begins with.
-
-    Args:
-        prefix: The prefix.
-        str: The str.
-    """
+    """True if ``str`` starts with ``prefix`` (used to split attn kwargs)."""
     return str.startswith(prefix)
 
 
 def group_by_key_prefix(prefix, d):
-    """Group by key prefix.
-
-    Args:
-        prefix: The prefix.
-        d: The d.
-    """
+    """Partition ``d`` by whether keys start with ``prefix``."""
     return group_dict_by_key(partial(string_begins_with, prefix), d)
 
 
 def groupby_prefix_and_trim(prefix, d):
-    """Groupby prefix and trim.
-
-    Args:
-        prefix: The prefix.
-        d: The d.
-    """
+    """Like ``group_by_key_prefix`` but strip ``prefix`` from the matching keys."""
     kwargs_with_prefix, kwargs = group_dict_by_key(partial(string_begins_with, prefix), d)
     kwargs_without_prefix = dict(map(lambda x: (x[0][len(prefix):], x[1]), tuple(kwargs_with_prefix.items())))
     return kwargs_without_prefix, kwargs
@@ -212,128 +146,79 @@ def groupby_prefix_and_trim(prefix, d):
 
 # classes
 class Scale(nn.Module):
-    """Scale implementation."""
+    """Multiply a submodule output by a constant scale."""
     def __init__(self, value, fn):
-        """Init.
-
-        Args:
-            value: The value.
-            fn: The fn.
-        """
+        """Wrap a module and scale its output."""
         super().__init__()
         self.value = value
         self.fn = fn
 
     def forward(self, x, **kwargs):
-        """Forward.
-
-        Args:
-            x: The x.
-        """
+        """Return ``scale * fn(x)``."""
         x, *rest = self.fn(x, **kwargs)
         return (x * self.value, *rest)
 
 
 class Rezero(nn.Module):
-    """Rezero implementation."""
+    """ReZero residual: learnable scalar gate on a submodule."""
     def __init__(self, fn):
-        """Init.
-
-        Args:
-            fn: The fn.
-        """
+        """Wrap a module with a learned ReZero gate."""
         super().__init__()
         self.fn = fn
         self.g = nn.Parameter(torch.zeros(1))
 
     def forward(self, x, **kwargs):
-        """Forward.
-
-        Args:
-            x: The x.
-        """
+        """Return ``g * fn(x)`` with a learned scalar ``g``."""
         x, *rest = self.fn(x, **kwargs)
         return (x * self.g, *rest)
 
 
 class ScaleNorm(nn.Module):
-    """Scale norm implementation."""
+    """Scale-normalized layer used by the x-transformers encoder."""
     def __init__(self, dim, eps=1e-5):
-        """Init.
-
-        Args:
-            dim: The dim.
-            eps: The eps.
-        """
+        """Scale-normalize over the last dim."""
         super().__init__()
         self.scale = dim ** -0.5
         self.eps = eps
         self.g = nn.Parameter(torch.ones(1))
 
     def forward(self, x):
-        """Forward.
-
-        Args:
-            x: The x.
-        """
+        """Normalize ``[..., dim]`` tokens."""
         norm = torch.norm(x, dim=-1, keepdim=True) * self.scale
         return x / norm.clamp(min=self.eps) * self.g
 
 
 class RMSNorm(nn.Module):
-    """Rms norm implementation."""
+    """RMSNorm used by the x-transformers encoder."""
     def __init__(self, dim, eps=1e-8):
-        """Init.
-
-        Args:
-            dim: The dim.
-            eps: The eps.
-        """
+        """RMS-normalize over the last dim."""
         super().__init__()
         self.scale = dim ** -0.5
         self.eps = eps
         self.g = nn.Parameter(torch.ones(dim))
 
     def forward(self, x):
-        """Forward.
-
-        Args:
-            x: The x.
-        """
+        """RMS-normalize ``[..., dim]`` tokens."""
         norm = torch.norm(x, dim=-1, keepdim=True) * self.scale
         return x / norm.clamp(min=self.eps) * self.g
 
 
 class Residual(nn.Module):
-    """Residual implementation."""
+    """Add the submodule output to its input."""
     def forward(self, x, residual):
-        """Forward.
-
-        Args:
-            x: The x.
-            residual: The residual.
-        """
+        """Return ``x + fn(x)``."""
         return x + residual
 
 
 class GRUGating(nn.Module):
-    """Gru gating implementation."""
+    """GRU-style residual gate around a transformer submodule."""
     def __init__(self, dim):
-        """Init.
-
-        Args:
-            dim: The dim.
-        """
+        """GRU residual gate around a submodule."""
         super().__init__()
         self.gru = nn.GRUCell(dim, dim)
 
     def forward(self, x, residual):
-        """Forward.
-
-        Args:
-            x: The x.
-            residual: The residual.
-        """
+        """Gate ``fn(x)`` into ``x`` with a GRU cell."""
         gated_output = self.gru(
             rearrange(x, 'b n d -> (b n) d'),
             rearrange(residual, 'b n d -> (b n) d')
@@ -345,39 +230,22 @@ class GRUGating(nn.Module):
 # feedforward
 
 class GEGLU(nn.Module):
-    """Geglu implementation."""
+    """Gated-GELU FFN: linear to 2x width, then value * GELU(gate) on the last dim."""
     def __init__(self, dim_in, dim_out):
-        """Init.
-
-        Args:
-            dim_in: The dim in.
-            dim_out: The dim out.
-        """
+        """Linear map ``dim_in → 2 * dim_out`` for the value/gate split."""
         super().__init__()
         self.proj = nn.Linear(dim_in, dim_out * 2)
 
     def forward(self, x):
-        """Forward.
-
-        Args:
-            x: The x.
-        """
+        """Return ``value * GELU(gate)`` on the last dimension."""
         x, gate = self.proj(x).chunk(2, dim=-1)
         return x * F.gelu(gate)
 
 
 class FeedForward(nn.Module):
-    """Feed forward implementation."""
+    """Position-wise MLP used inside LVDM transformer blocks (``B S C``)."""
     def __init__(self, dim, dim_out=None, mult=4, glu=False, dropout=0.):
-        """Init.
-
-        Args:
-            dim: The dim.
-            dim_out: The dim out.
-            mult: The mult.
-            glu: The glu.
-            dropout: The dropout.
-        """
+        """Build the expand / GELU-or-GEGLU / contract MLP."""
         super().__init__()
         inner_dim = int(dim * mult)
         dim_out = default(dim_out, dim)
@@ -393,17 +261,13 @@ class FeedForward(nn.Module):
         )
 
     def forward(self, x):
-        """Forward.
-
-        Args:
-            x: The x.
-        """
+        """Apply the position-wise MLP to ``[..., C]`` tokens."""
         return self.net(x)
 
 
 # attention.
 class Attention(nn.Module):
-    """Attention implementation."""
+    """x-transformers multi-head attention on ``B L C`` context tokens."""
     def __init__(
             self,
             dim,
@@ -418,21 +282,7 @@ class Attention(nn.Module):
             dropout=0.,
             on_attn=False
     ):
-        """Init.
-
-        Args:
-            dim: The dim.
-            dim_head: The dim head.
-            heads: The heads.
-            causal: The causal.
-            mask: The mask.
-            talking_heads: The talking heads.
-            sparse_topk: The sparse topk.
-            use_entmax15: The use entmax15.
-            num_mem_kv: The num mem kv.
-            dropout: The dropout.
-            on_attn: The on attn.
-        """
+        """Build the x-transformers attention projections."""
         super().__init__()
         if use_entmax15:
             raise NotImplementedError("Check out entmax activation instead of softmax activation!")
@@ -482,18 +332,7 @@ class Attention(nn.Module):
             prev_attn=None,
             mem=None
     ):
-        """Forward.
-
-        Args:
-            x: The x.
-            context: The context.
-            mask: The mask.
-            context_mask: The context mask.
-            rel_pos: The rel pos.
-            sinusoidal_emb: The sinusoidal emb.
-            prev_attn: The prev attn.
-            mem: The mem.
-        """
+        """Self- or cross-attend ``B L C`` context tokens."""
         b, n, _, h, talking_heads, device = *x.shape, self.heads, self.talking_heads, x.device
         kv_input = default(context, x)
 
@@ -586,7 +425,7 @@ class Attention(nn.Module):
 
 
 class AttentionLayers(nn.Module):
-    """Attention layers implementation."""
+    """Stack of self/cross-attn and FFN layers for the text tower."""
     def __init__(
             self,
             dim,
@@ -611,30 +450,7 @@ class AttentionLayers(nn.Module):
             gate_residual=False,
             **kwargs
     ):
-        """Init.
-
-        Args:
-            dim: The dim.
-            depth: The depth.
-            heads: The heads.
-            causal: The causal.
-            cross_attend: The cross attend.
-            only_cross: The only cross.
-            use_scalenorm: The use scalenorm.
-            use_rmsnorm: The use rmsnorm.
-            use_rezero: The use rezero.
-            rel_pos_num_buckets: The rel pos num buckets.
-            rel_pos_max_distance: The rel pos max distance.
-            position_infused_attn: The position infused attn.
-            custom_layers: The custom layers.
-            sandwich_coef: The sandwich coef.
-            par_ratio: The par ratio.
-            residual_attn: The residual attn.
-            cross_residual_attn: The cross residual attn.
-            macaron: The macaron.
-            pre_norm: The pre norm.
-            gate_residual: The gate residual.
-        """
+        """Stack encoder attention / FFN layers."""
         super().__init__()
         ff_kwargs, kwargs = groupby_prefix_and_trim('ff_', kwargs)
         attn_kwargs, _ = groupby_prefix_and_trim('attn_', kwargs)
@@ -730,16 +546,7 @@ class AttentionLayers(nn.Module):
             mems=None,
             return_hiddens=False
     ):
-        """Forward.
-
-        Args:
-            x: The x.
-            context: The context.
-            mask: The mask.
-            context_mask: The context mask.
-            mems: The mems.
-            return_hiddens: The return hiddens.
-        """
+        """Run the encoder stack on ``B L C`` tokens."""
         hiddens = []
         intermediates = []
         prev_attn = None
@@ -792,16 +599,16 @@ class AttentionLayers(nn.Module):
 
 
 class Encoder(AttentionLayers):
-    """Encoder implementation."""
+    """Encoder-only AttentionLayers (no causal mask) for LVDM context."""
     def __init__(self, **kwargs):
-        """Init."""
+        """Encoder-only layer stack (no causal mask)."""
         assert 'causal' not in kwargs, 'cannot set causality on encoder'
         super().__init__(causal=False, **kwargs)
 
 
 
 class TransformerWrapper(nn.Module):
-    """Transformer wrapper implementation."""
+    """Token embed + positions + AttentionLayers for LVDM text."""
     def __init__(
             self,
             *,
@@ -815,7 +622,7 @@ class TransformerWrapper(nn.Module):
             tie_embedding=False,
             use_pos_emb=True
     ):
-        """Init."""
+        """Token embed, positions, and the encoder stack."""
         super().__init__()
         assert isinstance(attn_layers, AttentionLayers), 'attention layers must be one of Encoder or Decoder'
 
@@ -850,7 +657,7 @@ class TransformerWrapper(nn.Module):
                 attn_layers.num_memory_tokens = num_memory_tokens
 
     def init_(self):
-        """Init."""
+        """init_ helper for :class:`TransformerWrapper`."""
         nn.init.normal_(self.token_emb.weight, std=0.02)
 
     def forward(
@@ -863,16 +670,7 @@ class TransformerWrapper(nn.Module):
             mems=None,
             **kwargs
     ):
-        """Forward.
-
-        Args:
-            x: The x.
-            return_embeddings: The return embeddings.
-            mask: The mask.
-            return_mems: The return mems.
-            return_attn: The return attn.
-            mems: The mems.
-        """
+        """Embed tokens ``B L`` → ``B L C`` and run the encoder."""
         b, n, device, num_mem = *x.shape, x.device, self.num_memory_tokens
         x = self.token_emb(x)
         x += self.pos_emb(x)

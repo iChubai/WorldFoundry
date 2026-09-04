@@ -39,6 +39,7 @@ class RealtimeSpec:
     steady_input_frames: int | None = None
 
     def __post_init__(self) -> None:
+        """Reject non-positive clocks or empty control vocabularies before a session starts."""
         if self.fps < 1:
             raise ValueError("RealtimeSpec.fps must be positive.")
         if self.first_chunk_frames < 1 or self.steady_chunk_frames < 1:
@@ -79,6 +80,7 @@ class RealtimeSpec:
         )
 
     def to_payload(self) -> dict[str, Any]:
+        """JSON-safe dict; omit unset optional input-clock fields so clients do not treat ``null`` as 0."""
         payload = asdict(self)
         for optional_name in (
             "input_fps",
@@ -150,13 +152,21 @@ class RealtimeSpec:
 class InteractiveWorldPipeline(Protocol):
     """Structural API implemented by model-specific resident adapters."""
 
-    def prepare_realtime(self) -> Mapping[str, Any] | None: ...
+    def prepare_realtime(self) -> Mapping[str, Any] | None:
+        """Optional one-time setup; return metadata the scheduler may advertise."""
+        ...
 
-    def configure_realtime(self, images: Any, prompt: str = "", **kwargs: Any) -> Any: ...
+    def configure_realtime(self, images: Any, prompt: str = "", **kwargs: Any) -> Any:
+        """Seed the resident session (first frames / prompt) without unloading weights."""
+        ...
 
-    def stream_realtime(self, interactions: list[str], **kwargs: Any) -> Any: ...
+    def stream_realtime(self, interactions: list[str], **kwargs: Any) -> Any:
+        """Advance one control chunk and return the next RGB frames."""
+        ...
 
-    def reset_realtime(self) -> None: ...
+    def reset_realtime(self) -> None:
+        """Clear session state while keeping loaded weights resident."""
+        ...
 
 
 __all__ = [

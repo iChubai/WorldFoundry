@@ -1,0 +1,41 @@
+{
+  "id": "hunyuanvideo",
+  "tagline": {
+    "en": "Tencent's HunyuanVideo — a large open-weight video model for text-to-video and image-to-video.",
+    "zh": "腾讯的 HunyuanVideo——大型开放权重视频模型，支持文生视频与图生视频。"
+  },
+  "overview": {
+    "en": [
+      "HunyuanVideo is Tencent's video generation model, offering both text-to-video and image-to-video. It's one of the larger open-weight video foundation models, generating a clip from a prompt or animating a source image.",
+      "In WorldFoundry, both the text-to-video and image-to-video routes are declarative recipes assembled by the shared native diffusion runner. The pipeline wires up the canonical network, prompt encoders, a causal 3D VAE, scheduler, and loaders through role-based components.",
+      "You supply the checkpoints locally. The Hugging Face license metadata is listed as \"other,\" so review Tencent's upstream terms before redistribution."
+    ],
+    "zh": [
+      "HunyuanVideo 是腾讯推出的视频生成模型，同时支持文生视频与图生视频。它是规模较大的开放权重视频基础模型之一，可从提示词生成片段，或让一张源图动起来。",
+      "在 WorldFoundry 中，文生视频与图生视频两条路径都是由共享的原生扩散 runner 组装的声明式配方。pipeline 通过基于角色的组件接入标准网络、提示词编码器、因果 3D VAE、调度器与加载器。",
+      "你在本地自备 checkpoint。其 Hugging Face 许可元数据标注为 \"other\"，再分发前请查阅腾讯的上游条款。"
+    ]
+  },
+  "whenToUse": {
+    "en": "Choose HunyuanVideo when you want a large, capable video foundation model with both text-to-video and image-to-video, and can supply the checkpoints yourself.",
+    "zh": "当你想要一个大型、能力强的视频基础模型，同时具备文生视频与图生视频，且能自备 checkpoint 时，可选 HunyuanVideo。"
+  },
+  "notFor": {
+    "en": "Its Hugging Face license is listed as \"other\" — review the upstream terms before redistribution. Checkpoints are large external assets, so plan for download and disk space.",
+    "zh": "其 Hugging Face 许可标注为 \"other\"——再分发前请查阅上游条款。checkpoint 是较大的外部资产，请预留下载时间与磁盘空间。"
+  },
+  "highlights": {
+    "en": [
+      "Text-to-video and image-to-video from Tencent",
+      "Large open-weight video foundation model",
+      "Uses a causal 3D VAE with role-based diffusion components",
+      "Checkpoints are external assets; license listed as \"other\""
+    ],
+    "zh": [
+      "腾讯出品，支持文生视频与图生视频",
+      "大型开放权重视频基础模型",
+      "采用因果 3D VAE 与基于角色的扩散组件",
+      "checkpoint 为外部资产；许可标注为 \"other\""
+    ]
+  }
+}

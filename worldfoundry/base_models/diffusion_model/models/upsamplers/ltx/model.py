@@ -1,3 +1,12 @@
+"""LTX Conv residual CNN that spatially (or temporally) upsamples VAE latents.
+
+Used by :class:`~.component.LTXSpatialLatentProcessor` between multi-stage
+passes.  Input / output are un-normalized BCTHW tensors.  Spatial 2× uses
+pixel-shuffle; non-integer scales use :class:`SpatialRationalResampler`.
+Temporal upsample drops the first output frame (it encodes one pixel
+frame).  Not a :class:`~...contracts.LatentProcessor` by itself.
+"""
+
 import torch
 from einops import rearrange
 
@@ -81,6 +90,7 @@ class LatentUpsampler(torch.nn.Module):
         self.final_conv = conv(mid_channels, in_channels, kernel_size=3, padding=1)
 
     def forward(self, latent: torch.Tensor) -> torch.Tensor:
+        """Upsample a BCTHW latent; 2-D path folds time into the batch."""
         b, _, f, _, _ = latent.shape
 
         if self.dims == 2:

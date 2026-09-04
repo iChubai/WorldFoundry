@@ -96,7 +96,6 @@ def build_official_command(*, config, repo_root: Path, generated_video_dir: Path
         args.python,
     ]
     optional_args = {
-        "--gemini-api-key": args.gemini_api_key,
         "--naturalness-path": args.naturalness_path,
         "--model-weights-dir": args.model_weights_dir,
         "--regression-ckpt": args.regression_ckpt,
@@ -115,6 +114,16 @@ def build_official_command(*, config, repo_root: Path, generated_video_dir: Path
         if value is not None:
             command.extend([flag, str(value)])
     return command
+
+
+def build_official_environment(
+    *, config, repo_root: Path, generated_video_dir: Path, output_dir: Path, args: Any
+) -> dict[str, str]:
+    """Pass the Gemini credential without exposing it in argv or scorecards."""
+    del config, repo_root, generated_video_dir, output_dir
+    if not args.gemini_api_key:
+        return {}
+    return {"WORLDFOUNDRY_DEVIL_GEMINI_API_KEY": str(args.gemini_api_key)}
 
 def extend_parser(parser) -> None:
     parser.add_argument(
@@ -147,6 +156,7 @@ def main(argv: list[str] | None = None) -> int:
         CONFIG,
         ors.RunnerHooks(
             build_official_command=build_official_command,
+            build_official_environment=build_official_environment,
             discover_official_results=discover_official_results,
             extract_metrics=extract_metrics,
             extend_parser=extend_parser,

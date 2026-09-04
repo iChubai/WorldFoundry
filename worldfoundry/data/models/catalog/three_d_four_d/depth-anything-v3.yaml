@@ -13,6 +13,8 @@ source:
   official_repo_url: https://github.com/ByteDance-Seed/Depth-Anything-3
   license: apache-2.0
 official_sources:
+  paper: https://arxiv.org/abs/2511.10647
+  project_page: https://depth-anything-3.github.io/
   github:
     url: https://github.com/ByteDance-Seed/Depth-Anything-3
   huggingface:

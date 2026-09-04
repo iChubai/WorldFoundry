@@ -2,6 +2,7 @@
 
 import logging
 import os
+from pathlib import Path
 from typing import TYPE_CHECKING, Any, Generator, List, Mapping, Optional, Sequence
 
 import torch
@@ -94,12 +95,23 @@ class HunyuanWorldPlayPipeline(PipelineABC):
             HunyuanWorldPlayPipeline: Pipeline 实例
         """
         defaults = load_hunyuan_world_runtime_defaults("worldplay")
-        model_path = model_path or str(defaults["model_path"])
+        model_options = dict(model_path) if isinstance(model_path, Mapping) else {}
+        if model_options:
+            model_path = (
+                model_options.pop("model_path", None)
+                or model_options.pop("checkpoint_path", None)
+                or str(defaults["model_path"])
+            )
+        else:
+            model_path = model_path or str(defaults["model_path"])
         if required_components is not None:
             synthesis_path = required_components.get("video_model_path", defaults["video_model_path"])
         else:
-            synthesis_path = str(defaults["video_model_path"])
-        mode = str(mode or defaults["mode"])
+            synthesis_path = model_options.pop("video_model_path", str(defaults["video_model_path"]))
+        mode = str(mode or model_options.pop("mode", None) or defaults["mode"])
+        for key in ("model_id", "variant_id", "profile_id", "runtime_profile", "required_components"):
+            model_options.pop(key, None)
+        kwargs = {**model_options, **kwargs}
         synthesis_path = resolve_worldplay_video_model_path(synthesis_path, mode)
         device = str(device or defaults["device"])
         create_sr_pipeline = bool(defaults["create_sr_pipeline"] if create_sr_pipeline is None else create_sr_pipeline)
@@ -189,6 +201,13 @@ class HunyuanWorldPlayPipeline(PipelineABC):
         """Save video for HunyuanWorldPlayPipeline."""
         write_video(video, path, fps=fps)
 
+    @staticmethod
+    def _normalize_pose(pose_data: Any) -> Any:
+        """Normalize typed-CLI interaction tokens to the official pose string."""
+        if isinstance(pose_data, Sequence) and not isinstance(pose_data, (str, bytes, bytearray)):
+            return ",".join(str(value) for value in pose_data)
+        return pose_data
+
     def __call__(
         self,
         *,
@@ -215,6 +234,9 @@ class HunyuanWorldPlayPipeline(PipelineABC):
         forward_speed: Optional[float] = None,
         yaw_speed_deg: Optional[float] = None,
         pitch_speed_deg: Optional[float] = None,
+        output_path: Optional[str | os.PathLike[str]] = None,
+        fps: int = 24,
+        return_dict: bool = False,
         **kwargs
     ):
         """
@@ -264,7 +286,7 @@ class HunyuanWorldPlayPipeline(PipelineABC):
             raise ValueError("Either images or image_path must be provided")
 
         video_length = num_frames
-        pose_value = interactions if interactions is not None else pose
+        pose_value = self._normalize_pose(interactions if interactions is not None else pose)
         if pose_value is None:
             raise ValueError("pose or interactions must be provided")
         inferred_video_length = self.operators.infer_video_length(pose_value)
@@ -304,7 +326,20 @@ class HunyuanWorldPlayPipeline(PipelineABC):
             **kwargs
         )
         
-        return output
+        if output_path is None:
+            return output
+
+        videos = output.videos if hasattr(output, "videos") else output
+        artifact_path = Path(output_path).expanduser().resolve()
+        artifact_path.parent.mkdir(parents=True, exist_ok=True)
+        self.save_video(videos, str(artifact_path), fps=fps)
+        result = {
+            "artifact_path": str(artifact_path),
+            "status": "succeeded",
+            "fps": int(fps),
+            "num_output_frames": int(videos.shape[2]) if torch.is_tensor(videos) and videos.ndim == 5 else None,
+        }
+        return result if return_dict or output_path is not None else output
 
     def stream(self, *args, **kwds) -> Generator[torch.Tensor, List[str], None]:
         """

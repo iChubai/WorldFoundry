@@ -20,6 +20,8 @@ modalities:
 - long-video-generation
 name: Echo-Infinity
 official_sources:
+  paper: https://arxiv.org/abs/2606.04527
+  project_page: https://echo-team-joy-future-academy-jd.github.io/Echo-Infinity/
   github:
     url: https://github.com/Echo-Team-Joy-Future-Academy-JD/Echo-Infinity
   huggingface:

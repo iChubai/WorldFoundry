@@ -22,9 +22,10 @@ from worldfoundry.evaluation.utils import (
 )
 
 from .help import WorldFoundryArgumentParser
-from .utils import CliUsageError, json_dump, load_json_mapping, parse_key_value_mapping
+from .utils import CliUsageError, cli_prog_name, json_dump, load_json_mapping, parse_key_value_mapping
 
 _BENCHMARK_RUN_MODE_CHOICES = ("normalizer", "official-run", "official-validation", "contract")
+_EMBODIED_ACCEPTED_LICENSES_ENV = "WORLDFOUNDRY_ACCEPTED_LICENSES"
 
 # ── CLI banners and public command surface ──────────────────────
 
@@ -32,16 +33,16 @@ _FIRST_RUN_BANNER = """\
 WorldFoundry evaluation CLI
 
 Start with GPU-ready discovery and validation commands:
-  worldfoundry-eval zoo benchmarks --json
-  worldfoundry-eval zoo models
-  worldfoundry-eval tasks list
+  {prog} zoo benchmarks --json
+  {prog} zoo models
+  {prog} tasks list
 
 Then run a selected model x benchmark cell:
-  worldfoundry-eval run --benchmark <id> --model <model-id> --output-dir tmp/worldfoundry_run --json
+  {prog} run --benchmark <id> --model <model-id> --output-dir tmp/worldfoundry_run --json
 
 Interactive and help:
-  worldfoundry-eval tui
-  worldfoundry-eval <command> --help
+  {prog} tui
+  {prog} <command> --help
 """
 
 _PUBLIC_ROOT_COMMANDS = (
@@ -78,7 +79,7 @@ _PUBLIC_ROOT_COMMANDS = (
 
 def _print_first_run_banner() -> None:
     """Print the first-run discovery banner when no subcommand is selected."""
-    print(_FIRST_RUN_BANNER.rstrip())
+    print(_FIRST_RUN_BANNER.format(prog=cli_prog_name()).rstrip())
 
 
 # ── Module and data loading helpers ─────────────────────────────
@@ -346,8 +347,26 @@ def _handle_tui(args: argparse.Namespace) -> int:
 # ── Evaluate command ─────────────────────────────────────────────
 
 
+def _validate_evaluate_usage(args: argparse.Namespace) -> None:
+    """Raise :class:`CliUsageError` for mutually exclusive evaluate flags (CM-08)."""
+
+    task_args = (args.task_type, args.benchmark_name, args.data_path)
+    if args.embodied_spec is not None and any(item is not None for item in task_args):
+        raise CliUsageError(
+            "--embodied-spec cannot be combined with --task-type/--benchmark-name/--data-path"
+        )
+    if args.samples_path is not None and args.embodied_spec is None:
+        raise CliUsageError("--samples-path requires --embodied-spec")
+    if args.embodied_spec is not None and args.samples_path is not None and args.requests_path is not None:
+        raise CliUsageError("use either --samples-path or --requests-path with --embodied-spec, not both")
+    if any(item is not None for item in task_args) and not all(item is not None for item in task_args):
+        raise CliUsageError("--task-type, --benchmark-name, and --data-path must be provided together")
+
+
 def _handle_evaluate(args: argparse.Namespace) -> int:
     """Route evaluate workloads to either cached run-plan replay or runtime eval."""
+    if args.plan is None:
+        _validate_evaluate_usage(args)
     from worldfoundry.evaluation.runner import EvaluateRunRequest, execute_evaluate_run
 
     if args.plan is not None:
@@ -361,16 +380,6 @@ def _handle_evaluate(args: argparse.Namespace) -> int:
                 f"samples={result.sample_count}, scorecard={result.scorecard_path}"
             )
         return result.exit_code
-
-    task_args = (args.task_type, args.benchmark_name, args.data_path)
-    if args.embodied_spec is not None and any(item is not None for item in task_args):
-        raise CliUsageError("--embodied-spec cannot be combined with --task-type/--benchmark-name/--data-path")
-    if args.samples_path is not None and args.embodied_spec is None:
-        raise CliUsageError("--samples-path requires --embodied-spec")
-    if args.embodied_spec is not None and args.samples_path is not None and args.requests_path is not None:
-        raise CliUsageError("use either --samples-path or --requests-path with --embodied-spec, not both")
-    if any(item is not None for item in task_args) and not all(item is not None for item in task_args):
-        raise CliUsageError("--task-type, --benchmark-name, and --data-path must be provided together")
 
     requests = None
     benchmark_metadata = None
@@ -492,8 +501,26 @@ def _handle_evaluate(args: argparse.Namespace) -> int:
     return result.exit_code
 
 
+def _accept_embodied_licenses(license_ids: list[str] | None) -> None:
+    """Merge explicit CLI acknowledgements into the embodied license environment."""
+
+    accepted = [
+        item.strip()
+        for item in os.environ.get(_EMBODIED_ACCEPTED_LICENSES_ENV, "").split(",")
+        if item.strip()
+    ]
+    for value in license_ids or ():
+        for item in str(value).split(","):
+            normalized = item.strip()
+            if normalized and normalized not in accepted:
+                accepted.append(normalized)
+    if accepted:
+        os.environ[_EMBODIED_ACCEPTED_LICENSES_ENV] = ",".join(accepted)
+
+
 def _handle_embodied_run(args: argparse.Namespace) -> int:
     """Run an embodied closed-loop evaluation config."""
+    _accept_embodied_licenses(getattr(args, "accept_license", None))
     from worldfoundry.evaluation.tasks.embodied.orchestrator import run_embodied_eval_config
 
     result = run_embodied_eval_config(
@@ -855,7 +882,7 @@ def _handle_direct_model_run(args: argparse.Namespace) -> int:
     if not schema.runnable:
         raise CliUsageError(
             f"model {schema.model_id!r} is not runnable: {schema.blocked_reason}. "
-            f"Use `worldfoundry-eval run {schema.requested_model_id} --model-status` for its contract."
+            f"Use `{cli_prog_name()} run {schema.requested_model_id} --model-status` for its contract.",
         )
     resolution = _resolved_model_run_options(args)
     missing = [
@@ -904,7 +931,7 @@ def _handle_direct_model_run(args: argparse.Namespace) -> int:
             model_config=load_json_mapping(args.model_config),
             dataset_id=args.dataset_id or f"{schema.model_id}:direct",
             run_id=args.run_id,
-            fail_on_sample_error=args.fail_on_sample_error,
+            fail_on_sample_error=bool(args.fail_on_sample_error or args.fail_on_generation_error),
             write_artifacts_index=not args.no_artifacts_index,
             generation_cache_dir=args.generation_cache_dir,
             generation_cache_mode=args.generation_cache_mode,
@@ -936,7 +963,7 @@ def _handle_run(args: argparse.Namespace) -> int:
     if schema is not None and not schema.runnable and not args.print_config and not args.plan_only:
         raise CliUsageError(
             f"model {schema.model_id!r} is not runnable: {schema.blocked_reason}. "
-            f"Use `worldfoundry-eval run {schema.requested_model_id} --model-status` for its contract."
+            f"Use `{cli_prog_name()} run {schema.requested_model_id} --model-status` for its contract.",
         )
     if args.plan is not None:
         result = _execute_run_plan_file(args)
@@ -1058,24 +1085,10 @@ def _handle_run_in_process(args: argparse.Namespace) -> int:
     return result.exit_code
 
 
-def _cli_prog_name() -> str:
-    """Match usage/help branding to the console script that was invoked.
-
-    ``worldfoundry`` and ``worldfoundry-eval`` share this parser; anything
-    else (``python -m worldfoundry.cli``, tests, ...) keeps the historical
-    ``worldfoundry-eval`` branding.
-    """
-
-    name = Path(sys.argv[0]).name
-    if name in {"worldfoundry", "worldfoundry-eval"}:
-        return name
-    return "worldfoundry-eval"
-
-
 def _build_parser(model_run_schema: Any | None = None) -> argparse.ArgumentParser:
     """Build all CLI commands, keeping parser wiring near handler selection."""
     parser = WorldFoundryArgumentParser(
-        prog=_cli_prog_name(),
+        prog=cli_prog_name(),
         description="WorldFoundry benchmark evaluation subsystem for the WorldFoundry repository.",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog=(
@@ -1246,6 +1259,13 @@ def _build_parser(model_run_schema: Any | None = None) -> argparse.ArgumentParse
     embodied_run_parser.add_argument("--no-docker", action="store_true")
     embodied_run_parser.add_argument("--pull-docker", action="store_true")
     embodied_run_parser.add_argument("--no-save", action="store_true")
+    embodied_run_parser.add_argument(
+        "--accept-license",
+        action="append",
+        default=None,
+        metavar="LICENSE_ID",
+        help="Acknowledge an embodied simulator/data license; repeat for multiple licenses",
+    )
     embodied_run_parser.add_argument("--json", action="store_true")
     embodied_run_parser.set_defaults(func=_handle_embodied_run)
 

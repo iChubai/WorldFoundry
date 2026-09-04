@@ -1,3 +1,12 @@
+"""VerseCrafter GeoAda Wan (VACE-like geometry hint trunk + TeaCache).
+
+Built on VideoX-Fun blocks.  A parallel GeoAda stack emits hints that
+selected main blocks add (same stack-of-skips pattern as VACE).
+``process_teacache_skip_logic`` can skip the main stack.
+
+Adds geometry/VACE-like hints and TeaCache.  No action or linear attn.
+"""
+
 import torch
 import torch.cuda.amp as amp
 import torch.nn as nn
@@ -23,6 +32,8 @@ def _process_blocks_forward(blocks, x, kwargs):
 
 
 class VerseCrafterWanAttentionBlock(WanAttentionBlock):
+    """GeoAda condition block that stacks skip hints (VACE-style)."""
+
     def __init__(
             self,
             cross_attn_type,
@@ -46,6 +57,7 @@ class VerseCrafterWanAttentionBlock(WanAttentionBlock):
         nn.init.zeros_(self.after_proj.bias)
 
     def forward(self, c, x, **kwargs):
+        """Advance the stacked GeoAda tensor; layer 0 mixes in the main stream."""
         if self.block_id == 0:
             c = self.before_proj(c) + x
             all_c = []
@@ -62,6 +74,8 @@ class VerseCrafterWanAttentionBlock(WanAttentionBlock):
 
 
 class BaseWanAttentionBlock(WanAttentionBlock):
+    """Main Fun block with an optional GeoAda hint injection point."""
+
     def __init__(
         self,
         cross_attn_type,
@@ -78,6 +92,7 @@ class BaseWanAttentionBlock(WanAttentionBlock):
         self.block_id = block_id
 
     def forward(self, x, hints, context_scale=1.0, **kwargs):
+        """Run the Fun block, then add the mapped GeoAda hint when selected."""
         x = super().forward(x, **kwargs)
         if self.block_id is not None:
             x = x + hints[self.block_id] * context_scale
@@ -85,6 +100,8 @@ class BaseWanAttentionBlock(WanAttentionBlock):
 
 
 class VerseCrafterWanTransformer3DModel(WanTransformer3DModel):
+    """VideoX-Fun Wan plus a GeoAda hint trunk and TeaCache skip hook."""
+
     @register_to_config
     def __init__(self,
                  geoada_layers=None,
@@ -143,6 +160,7 @@ class VerseCrafterWanTransformer3DModel(WanTransformer3DModel):
         seq_len,
         kwargs
     ):
+        """Patchify GeoAda context, run the hint trunk, return skip tensors."""
         # embeddings
         c = [self.geoada_patch_embedding(u.unsqueeze(0)) for u in geoada_context]
         c = [u.flatten(2).transpose(1, 2) for u in c]

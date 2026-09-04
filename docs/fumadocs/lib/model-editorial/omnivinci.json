@@ -1,0 +1,41 @@
+{
+  "id": "omnivinci",
+  "tagline": {
+    "en": "NVIDIA's omni-modal reasoning model — understands and answers questions over images, video, and audio together.",
+    "zh": "NVIDIA 的全模态推理模型——统一理解图像、视频与音频并回答相关问题。"
+  },
+  "overview": {
+    "en": [
+      "OmniVinci is an omni-modal understanding model from NVIDIA. Rather than generating media, it reasons over what you give it — an image, a video clip, or an audio track — and answers questions about the content in natural language.",
+      "It handles a spread of tasks under one model: general multimodal reasoning, audio reasoning, image question answering, and video question answering. That makes it a single entry point when your input mixes several modalities and you want a unified answer.",
+      "In WorldFoundry, OmniVinci runs as an understanding route: you supply media plus a question or instruction, and it returns a text response. Model assets are fetched from the published checkpoint before a run."
+    ],
+    "zh": [
+      "OmniVinci 是 NVIDIA 推出的全模态理解模型。它不生成媒体,而是对你给出的内容——图像、视频片段或音频——进行推理,并用自然语言回答与内容相关的问题。",
+      "它用一个模型覆盖多类任务:通用多模态推理、音频推理、图像问答与视频问答。当输入混合了多种模态、你又希望得到统一答案时,它就是一个便捷的入口。",
+      "在 WorldFoundry 中,OmniVinci 作为理解路径运行:你提供媒体加上一个问题或指令,它返回文本回答。运行前会从发布的 checkpoint 拉取模型资产。"
+    ]
+  },
+  "whenToUse": {
+    "en": "Use OmniVinci when you need to ask questions about images, video, or audio — captioning, content Q&A, or reasoning that spans more than one modality at once.",
+    "zh": "当你需要就图像、视频或音频提问时——如描述生成、内容问答,或跨越多种模态的推理——可以使用 OmniVinci。"
+  },
+  "notFor": {
+    "en": "Not a generator: it does not create images or video, only understands and answers about them. It needs its checkpoint and assets available before running.",
+    "zh": "它不是生成器:不会创建图像或视频,只做理解与问答。运行前需要准备好其 checkpoint 与资产。"
+  },
+  "highlights": {
+    "en": [
+      "Omni-modal understanding from NVIDIA",
+      "Handles image, video, and audio inputs",
+      "Multimodal reasoning, audio reasoning, and image/video Q&A in one model",
+      "Text-out understanding route, not a media generator"
+    ],
+    "zh": [
+      "NVIDIA 出品的全模态理解模型",
+      "支持图像、视频与音频输入",
+      "多模态推理、音频推理、图像/视频问答同在一个模型",
+      "输出文本的理解路径,而非媒体生成器"
+    ]
+  }
+}

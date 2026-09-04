@@ -1,4 +1,16 @@
-"""Small, framework-independent helpers for merging inference LoRA weights."""
+"""Small, framework-independent helpers for merging inference LoRA weights.
+
+Released adapters use several naming layouts (PEFT A/B, LightX2V pair/
+diff, rank-scaled alpha, flattened ComfyUI paths, or unnamed ordered
+up/down lists). :class:`GeneralLoRALoader` and
+:class:`LightX2VLoRALoader` fuse named matrices in place.
+:func:`merge_named_lora_`, :func:`merge_rank_scaled_lora_`,
+:func:`merge_flattened_path_lora_`, and :func:`merge_ordered_lora_`
+are the public entry points.
+
+Merges mutate the base module; they do not keep a separate adapter
+stack for later unload.
+"""
 
 from __future__ import annotations
 
@@ -11,16 +23,22 @@ from torch import nn
 
 LOGGER = logging.getLogger(__name__)
 
+# ──────────────────────────────────────────────────────────────────────────
+# Named PEFT A/B (or up/down) — fuse in place; no unload stack
+# ──────────────────────────────────────────────────────────────────────────
+
 
 class GeneralLoRALoader:
     """Merge named PEFT-style LoRA matrices into a model in place."""
 
     def __init__(self, device: str | torch.device = "cpu", torch_dtype: torch.dtype = torch.float32) -> None:
+        """Stage LoRA matrices on ``device`` in ``torch_dtype`` before fusing."""
         self.device = device
         self.torch_dtype = torch_dtype
 
     @staticmethod
     def get_name_dict(lora_state_dict) -> dict[str, tuple[str, str]]:
+        """Map base module names to ``(up, down)`` keys for PEFT or lora_up/down."""
         pairs = {}
         for key in lora_state_dict:
             if ".lora_up." in key:
@@ -75,6 +93,7 @@ class GeneralLoRALoader:
 
     @torch.no_grad()
     def load(self, model: nn.Module, state_dict_lora, alpha: float = 1.0) -> int:
+        """Fuse named LoRA A/B (or up/down) matrices into matching module weights."""
         updated = 0
         pairs = self.get_name_dict(state_dict_lora)
         for name, module in model.named_modules():
@@ -95,11 +114,51 @@ class GeneralLoRALoader:
         return updated
 
 
+# ──────────────────────────────────────────────────────────────────────────
+# Public named merge — optional expected_modules ABI check
+# ──────────────────────────────────────────────────────────────────────────
+
+
+def merge_named_lora_(
+    model: nn.Module,
+    state_dict,
+    *,
+    alpha: float = 1.0,
+    expected_modules: int | None = None,
+    owner: str = "LoRA",
+    device: str | torch.device = "cpu",
+    torch_dtype: torch.dtype = torch.float32,
+) -> int:
+    """Fuse a named A/B adapter and optionally enforce its module ABI."""
+
+    merged = GeneralLoRALoader(device=device, torch_dtype=torch_dtype).load(
+        model,
+        state_dict,
+        alpha=alpha,
+    )
+    if expected_modules is not None and merged != int(expected_modules):
+        raise ValueError(f"{owner} merged {merged} modules; expected {int(expected_modules)}")
+    return merged
+
+
+# ──────────────────────────────────────────────────────────────────────────
+# LightX2V pair/diff + rank-scaled alpha + flattened ComfyUI paths
+# ──────────────────────────────────────────────────────────────────────────
+
+
 class LightX2VLoRALoader(GeneralLoRALoader):
     """Merge LightX2V pair/diff checkpoint layouts without a backend dependency."""
 
     @staticmethod
-    def get_name_dict(lora_state_dict):
+    def get_lightx2v_mappings(
+        lora_state_dict,
+    ) -> tuple[dict[str, tuple[str, str]], dict[str, str]]:
+        """Return paired LoRA matrices and direct-delta tensor mappings.
+
+        This is intentionally separate from ``GeneralLoRALoader.get_name_dict``
+        so subclasses retain the parent's dictionary return contract.
+        """
+
         pairs: dict[str, tuple[str, str]] = {}
         diffs: dict[str, str] = {}
         for prefix in ("", "diffusion_model."):
@@ -121,23 +180,33 @@ class LightX2VLoRALoader(GeneralLoRALoader):
 
     @torch.no_grad()
     def load(self, model: nn.Module, state_dict_lora, alpha: float = 1.0) -> int:
-        pairs, diffs = self.get_name_dict(state_dict_lora)
+        """Fuse LightX2V pair matrices and direct-delta tensors into named parameters."""
+        pairs, diffs = self.get_lightx2v_mappings(state_dict_lora)
         updated = 0
-        state_dict = model.state_dict()
-        for name, parameter in state_dict.items():
+        for name, parameter in model.named_parameters():
             if name in pairs:
                 key_a, key_b = pairs[name]
-                lora_a = state_dict_lora[key_a].to(device=self.device, dtype=self.torch_dtype)
-                lora_b = state_dict_lora[key_b].to(device=self.device, dtype=self.torch_dtype)
-                if parameter.shape == (lora_b.shape[0], lora_a.shape[1]):
-                    state_dict[name] = parameter.to(device=self.device, dtype=self.torch_dtype) + float(alpha) * (lora_b @ lora_a)
-                    updated += 1
+                lora_a = state_dict_lora[key_a].to(device=parameter.device, dtype=self.torch_dtype)
+                lora_b = state_dict_lora[key_b].to(device=parameter.device, dtype=self.torch_dtype)
+                if lora_a.ndim != 2 or lora_b.ndim != 2:
+                    raise ValueError(f"LightX2V LoRA pair for {name} must contain matrices")
+                delta = lora_b @ lora_a
+                if parameter.shape != delta.shape:
+                    raise ValueError(
+                        f"LightX2V LoRA delta for {name} has shape {tuple(delta.shape)}, "
+                        f"expected {tuple(parameter.shape)}"
+                    )
+                parameter.add_(delta.to(dtype=parameter.dtype), alpha=float(alpha))
+                updated += 1
             elif name in diffs:
-                delta = state_dict_lora[diffs[name]].to(device=self.device, dtype=self.torch_dtype)
-                if parameter.shape == delta.shape:
-                    state_dict[name] = parameter.to(device=self.device, dtype=self.torch_dtype) + float(alpha) * delta
-                    updated += 1
-        model.load_state_dict(state_dict)
+                delta = state_dict_lora[diffs[name]].to(device=parameter.device, dtype=self.torch_dtype)
+                if parameter.shape != delta.shape:
+                    raise ValueError(
+                        f"LightX2V direct delta for {name} has shape {tuple(delta.shape)}, "
+                        f"expected {tuple(parameter.shape)}"
+                    )
+                parameter.add_(delta.to(dtype=parameter.dtype), alpha=float(alpha))
+                updated += 1
         LOGGER.info("merged %d LightX2V LoRA tensors", updated)
         return updated
 
@@ -258,11 +327,21 @@ def merge_flattened_path_lora_(
     return updated
 
 
+# ──────────────────────────────────────────────────────────────────────────
+# Unnamed alternating up/down lists — traversal order is part of the format
+# ──────────────────────────────────────────────────────────────────────────
+
+
 def _ordered_modules(
     model: nn.Module,
     *,
     ancestor_class_names: frozenset[str],
 ) -> Iterable[nn.Module]:
+    """Yield Linear/Conv children under named ancestor classes in ``modules()`` order.
+
+    Unnamed LoRA lists have no parameter keys; this traversal *is* the ABI.
+    Changing ancestor names silently remaps weights onto the wrong layers.
+    """
     for ancestor in model.modules():
         if ancestor.__class__.__name__ not in ancestor_class_names:
             continue
@@ -274,6 +353,11 @@ def _ordered_modules(
 
 
 def _lora_delta(up: torch.Tensor, down: torch.Tensor, target: torch.Tensor) -> torch.Tensor:
+    """``up @ down`` for Linear, flattened GEMM then reshape for Conv.
+
+    Failure: :exc:`ValueError` when ranks or the resulting shape disagree
+    with *target* — fail closed rather than broadcast into the wrong layer.
+    """
     if target.ndim == 2:
         if up.ndim != 2 or down.ndim != 2:
             raise ValueError("linear LoRA tensors must be matrices")
@@ -338,6 +422,7 @@ __all__ = [
     "GeneralLoRALoader",
     "LightX2VLoRALoader",
     "merge_flattened_path_lora_",
+    "merge_named_lora_",
     "merge_ordered_lora_",
     "merge_rank_scaled_lora_",
 ]

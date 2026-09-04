@@ -1,4 +1,15 @@
-"""Compatibility helpers for loading partially matching model state dictionaries."""
+"""Compatibility helpers for loading partially matching model state dictionaries.
+
+Released checkpoints can omit TE extra-state, carry quantization
+observers, or disagree on a few tensor shapes.
+:func:`load_state_dict_non_strict` (alias :data:`non_strict_load_model`)
+drops mismatched keys, skips ``_extra_state``, then calls
+``load_state_dict(..., strict=False)``. :class:`IncompatibleKeys`
+reports missing, unexpected, and shape-incorrect names.
+
+This is not the fail-closed assigner in
+:mod:`worldfoundry.core.checkpoint.assignment`.
+"""
 
 from __future__ import annotations
 
@@ -8,14 +19,25 @@ import torch
 
 from worldfoundry.core.distributed.logging import log
 
+# ──────────────────────────────────────────────────────────────────────────
+# Non-strict assign — drop shape mismatches and TE extra-state; report leftovers
+# ──────────────────────────────────────────────────────────────────────────
+
 
 class IncompatibleKeys(NamedTuple):
+    """Keys that did not load cleanly during a non-strict state-dict load."""
+
     missing_keys: list[str]
     unexpected_keys: list[str]
     incorrect_shapes: list[tuple[str, tuple[int, ...], tuple[int, ...]]]
 
 
 def _module_for_key(model: torch.nn.Module, key: str) -> torch.nn.Module:
+    """Walk dotted *key* to the owning module (last segment is the tensor name).
+
+    Used to detect FakeQuantize/Observer parents so a shape mismatch on a
+    quantization buffer is not treated as a checkpoint error.
+    """
     module = model
     for part in key.split(".")[:-1]:
         module = getattr(module, part)

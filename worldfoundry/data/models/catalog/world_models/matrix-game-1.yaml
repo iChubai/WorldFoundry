@@ -19,6 +19,8 @@ availability:
   license: mit
   requires_auth: false
 sources:
+  paper: https://arxiv.org/abs/2506.18701
+  project_page: https://matrix-game-homepage.github.io/
   github:
     url: https://github.com/SkyworkAI/Matrix-Game
     confirmed_ref: refs/heads/main

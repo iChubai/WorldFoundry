@@ -50,10 +50,17 @@ import torchvision.transforms.functional as TF
 from msgpack import packb, unpackb
 
 
-from settings import MODEL_FOLDER
+from settings import compiler_stance, resolve_model_asset
 from worldfoundry.base_models.diffusion_model.models.autoencoders.wan.reference_21 import WanVAE
 import torch._dynamo as dynamo
-dynamo.config.recompile_limit = 32
+
+# PyTorch renamed this setting in older releases and removed the compatibility
+# alias in newer ones.  Keep the upstream intent without making module import
+# depend on one specific Dynamo config schema.
+if hasattr(dynamo.config, "recompile_limit"):
+    dynamo.config.recompile_limit = 32
+elif hasattr(dynamo.config, "accumulated_recompile_limit"):
+    dynamo.config.accumulated_recompile_limit = 32
 
 # Helper function for resampling frames
 def resample_array(array, target_length):
@@ -196,7 +203,7 @@ def load_vae():
     from runtime_utils.vae_block3 import VAEEncoderWrapper
     from runtime_utils.vae_block3 import VAEDecoderWrapper
     vae_dtype = torch.float16
-    vae_path = os.path.join(MODEL_FOLDER, "Wan2.1-T2V-1.3B", "Wan2.1_VAE.pth")
+    vae_path = str(resolve_model_asset("Wan2.1-T2V-1.3B", "Wan2.1_VAE.pth"))
     vae = WanVAE(vae_pth=vae_path, dtype=vae_dtype)
     vae_encoder = VAEEncoderWrapper(vae)
 
@@ -711,9 +718,9 @@ class GenerationSession:
         
         if (self.params.width, self.params.height) != (832, 480):
             print("Falling back to eager for VAE decode")
-            ctx = torch.compiler.set_stance("force_eager")
+            ctx = compiler_stance(torch, "force_eager")
         else:
-            ctx = torch.compiler.set_stance("default")
+            ctx = compiler_stance(torch, "default")
         
         with ctx:
             pixels, self.decode_vae_cache = models.vae_decoder(denoised_pred.half(), *self.decode_vae_cache)

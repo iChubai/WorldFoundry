@@ -1,0 +1,41 @@
+{
+  "id": "open-sora",
+  "tagline": {
+    "en": "HPC-AI Tech's open text-to-video model — Apache-2.0 weights built on the STDiT diffusion transformer and a dedicated video VAE.",
+    "zh": "HPC-AI Tech 开源的文生视频模型——Apache-2.0 权重,基于 STDiT 扩散 transformer 与专用视频 VAE。"
+  },
+  "overview": {
+    "en": [
+      "Open-Sora is HPC-AI Tech's open effort to make high-quality text-to-video generation accessible. You give it a text prompt and it produces a short video clip, with weights released under Apache-2.0.",
+      "The pipeline pairs an STDiT diffusion transformer (the STDiT-v3 checkpoint) with a dedicated video VAE (OpenSora-VAE-v1.2) that compresses and reconstructs video latents; an earlier high-quality STDiT-v1 checkpoint is also available. Because model and VAE live in separate repositories, both are staged for a run.",
+      "In WorldFoundry, Open-Sora runs through the shared pipeline — supply a prompt, and it renders a video."
+    ],
+    "zh": [
+      "Open-Sora 是 HPC-AI Tech 让高质量文生视频更易获得的开源项目。你给它一段文字提示词,它生成一段短视频片段,权重以 Apache-2.0 许可发布。",
+      "该流程将 STDiT 扩散 transformer(STDiT-v3 checkpoint)与专用视频 VAE(OpenSora-VAE-v1.2)配对,后者负责压缩与重建视频 latent;此外还提供一个更早的高质量 STDiT-v1 checkpoint。由于模型与 VAE 分属不同仓库,运行时需同时准备两者。",
+      "在 WorldFoundry 中,Open-Sora 通过统一 pipeline 运行——给出提示词,它就渲染出一段视频。"
+    ]
+  },
+  "whenToUse": {
+    "en": "Use Open-Sora when you want an openly-licensed text-to-video model to prototype prompt-driven clip generation on your own hardware.",
+    "zh": "当你想用一个开放许可的文生视频模型、在自有硬件上做提示词驱动的片段生成原型时,可以使用 Open-Sora。"
+  },
+  "notFor": {
+    "en": "Generation needs both the STDiT model and its matching VAE, downloaded separately — plan for the extra download and disk space before a run.",
+    "zh": "生成需要 STDiT 模型与其配套 VAE,两者需分别下载——运行前请预留额外的下载与磁盘空间。"
+  },
+  "highlights": {
+    "en": [
+      "Open text-to-video from HPC-AI Tech",
+      "Apache-2.0 licensed weights",
+      "STDiT diffusion transformer plus a dedicated video VAE",
+      "STDiT-v3 and an earlier high-quality STDiT-v1 checkpoint"
+    ],
+    "zh": [
+      "HPC-AI Tech 开源的文生视频模型",
+      "Apache-2.0 许可权重",
+      "STDiT 扩散 transformer 配合专用视频 VAE",
+      "STDiT-v3 与更早的高质量 STDiT-v1 checkpoint"
+    ]
+  }
+}

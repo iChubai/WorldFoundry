@@ -1,4 +1,10 @@
-"""StepVideo native VAE decoder component."""
+"""StepVideo :class:`~...contracts.LatentDecoder`.
+
+Wraps the native 64-channel :class:`~.model.AutoencoderKL`.  The VAE
+returns ``[B, F, C, H, W]``; this adapter permutes to BCTHW and clamps
+``[-1, 1]``.  ``return_latent`` skips decode.  Encode is not on this
+role (T2V draws noise with 17-frame packing).
+"""
 
 from __future__ import annotations
 
@@ -20,10 +26,13 @@ def _vae_state_dict(state_dict: Mapping[str, object]) -> Mapping[str, object]:
 
 
 class StepVideoDecoder:
+    """Permute StepVideo VAE output to the runner's BCTHW layout."""
+
     def __init__(self, vae: AutoencoderKL) -> None:
         self.vae = vae
 
     def decode(self, latents: torch.Tensor, request: DiffusionRequest) -> torch.Tensor:
+        """Decode packed latents to BCTHW pixels."""
         if bool(request.inputs.get("return_latent", False)):
             return latents
         video = self.vae.decode(latents)
@@ -33,6 +42,7 @@ class StepVideoDecoder:
 
 
 def build_step_video_decoder(context: ComponentBuildContext) -> StepVideoDecoder:
+    """Load the StepVideo VAE and remap ``decoder.conv_out`` keys."""
     vae = NativeModuleLoader().load(
         ModuleLoadSpec(
             module_class=AutoencoderKL,

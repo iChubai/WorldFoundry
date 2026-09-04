@@ -13,6 +13,8 @@ source:
   status: open_source
   official_repo_url: https://github.com/AgibotTech/Genie-Envisioner
 official_sources:
+  project_page: https://genie-envisioner.github.io/
+  paper: https://arxiv.org/abs/2508.05635
   worldarena_space: https://huggingface.co/spaces/WorldArena/WorldArena
   github:
     url: https://github.com/AgibotTech/Genie-Envisioner
@@ -35,10 +37,11 @@ runtime_profile: runtime-profile:genie-envisioner
 runner_target: worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner
 pipeline_binding: genie-envisioner
 runner_parity:
-  status: implemented_checkpoint_pending
+  status: implemented_checkpoint_required
   notes:
-  - The pipeline resolves the vendored inference entrypoint and returns blocked runtime diagnostics until checkpoints and
-    task assets are staged.
+  - The compatibility launcher executes the released GE-base checkpoint with local LTX components.
+  - The default consumes synchronized ALOHA high/left-wrist/right-wrist images without synthesizing camera views.
+  - Checkpoint-matched AgiBot or LeRobot trajectories remain necessary for action-quality parity.
 catalog_category: world_models
 catalog_scope: World-model catalog entries. Integrated entries expose in-tree WorldFoundry runtimes; blocked entries retain
   upstream provenance without runnable backends.

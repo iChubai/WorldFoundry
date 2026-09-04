@@ -1,5 +1,8 @@
-"""Module for base_models -> diffusion_model -> video -> wan -> variants -> self_forcing -> wan -> modules -> causal_model.py functionality."""
+"""Self-Forcing causal Wan (chunk KV cache, teacher-forcing train).
 
+Causal self-attention over generated prefixes.  Used by the shared
+Self-Forcing runtime.  Adds causal attention; no VACE or linear attn.
+"""
 from worldfoundry.core.attention.varlen import attention
 from .model import (
     WanRMSNorm,
@@ -65,7 +68,7 @@ def causal_rope_apply(x, grid_sizes, freqs, start_frame=0):
 
 
 class CausalWanSelfAttention(nn.Module):
-    """Causal wan self attention implementation."""
+    """Causal self-attention with optional KV cache and frame-offset RoPE."""
 
     def __init__(self,
                  dim,
@@ -128,11 +131,7 @@ class CausalWanSelfAttention(nn.Module):
 
         # query, key, value function
         def qkv_fn(x):
-            """Qkv fn.
-
-            Args:
-                x: The x.
-            """
+            """Project and reshape QKV to ``[B, L, H, D]``."""
             q = self.norm_q(self.q(x)).view(b, s, n, d)
             k = self.norm_k(self.k(x)).view(b, s, n, d)
             v = self.v(x).view(b, s, n, d)
@@ -266,7 +265,7 @@ class CausalWanSelfAttention(nn.Module):
 
 
 class CausalWanAttentionBlock(nn.Module):
-    """Causal wan attention block implementation."""
+    """Causal Wan block: cached self-attn, cross-attn, then gated FFN."""
 
     def __init__(self,
                  cross_attn_type,
@@ -384,7 +383,7 @@ class CausalWanAttentionBlock(nn.Module):
 
 
 class CausalHead(nn.Module):
-    """Causal head implementation."""
+    """AdaLN output head used by causal Wan graphs."""
 
     def __init__(self, dim, out_dim, patch_size, eps=1e-6):
         """Init.
@@ -424,9 +423,7 @@ class CausalHead(nn.Module):
 
 
 class CausalWanModel(nn.Module, NativeConfigMixin):
-    r"""
-    Wan diffusion backbone supporting both text-to-video and image-to-video.
-    """
+    r"""Self-Forcing causal Wan (chunk KV cache, teacher-forcing train)."""
 
     ignore_for_config = [
         'patch_size', 'cross_attn_norm', 'qk_norm', 'text_dim'

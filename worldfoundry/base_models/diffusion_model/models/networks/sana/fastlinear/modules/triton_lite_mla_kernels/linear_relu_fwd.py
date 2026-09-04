@@ -14,7 +14,13 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-"""Module for base_models -> diffusion_model -> image -> sana -> diffusion -> model -> nets -> fastlinear -> modules -> triton_lite_mla_kernels -> linear_relu_fwd.py functionality."""
+"""Triton kernel: fused QKV linear + ReLU for LiteMLA.
+
+Public entry: :func:`linear_relu_fwd`.  Applies ``x @ Wᵀ`` then ReLU on the
+first two-thirds of the output channels (Q and K); V is left linear.  Also
+writes a boolean ReLU mask for the backward kernels.  Do not edit the
+``@triton.jit`` body without a numerical check against this contract.
+"""
 
 import torch
 import triton
@@ -189,14 +195,10 @@ def linear_relu_fwd_kernel(
 
 
 def linear_relu_fwd(a: torch.Tensor, b: torch.Tensor) -> torch.Tensor:
-    """Linear relu fwd.
+    """Fused ``y = relu(x @ Wᵀ)`` on Q/K channels; V stays linear.
 
-    Args:
-        a: The a.
-        b: The b.
-
-    Returns:
-        The return value.
+    ``a`` is ``[..., K]``, ``b`` is ``[N, K]`` with ``N % 3 == 0``.  Returns
+    ``(y, relu_mask)`` where ``y`` has the same leading shape as ``a``.
     """
     # Check constraints.
     assert a.shape[-1] == b.shape[1], "Incompatible dimensions"

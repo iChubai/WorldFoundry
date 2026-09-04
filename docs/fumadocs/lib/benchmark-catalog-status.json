@@ -80,6 +80,32 @@
     "summaryZh": "导入预计算 metric 并归一化为 scorecard",
     "verificationStatus": "in_tree_artifact_import_ready"
   },
+  "apple-pi": {
+    "aliases": [],
+    "badges": [
+      "integrated"
+    ],
+    "category": "World Models",
+    "categoryZh": "世界模型",
+    "domains": [
+      "law-grounded-physical-reasoning",
+      "perception",
+      "formulation",
+      "deduction"
+    ],
+    "integrationStatus": "integrated",
+    "leaderboardValid": false,
+    "logoKey": "ntu",
+    "metrics": [
+      "deduction"
+    ],
+    "name": "Apple-PI",
+    "requiresApi": true,
+    "runtimeKind": "in_tree_model_backed",
+    "summary": "In-tree evaluator scores artifact bundles per the task protocol; some dimensions may call a hosted API",
+    "summaryZh": "仓内 evaluator 按 task protocol 评估 artifact bundle；部分维度可能调用 hosted API",
+    "verificationStatus": "pending"
+  },
   "behavior1k": {
     "aliases": [
       "BEHAVIOR-1K",
@@ -306,7 +332,7 @@
     ],
     "integrationStatus": "integrated",
     "leaderboardValid": false,
-    "logoKey": "",
+    "logoKey": "pku",
     "metrics": [
       "fetv_average"
     ],
@@ -412,6 +438,37 @@
     "summary": "Imports official or upstream results into a normalized scorecard",
     "summaryZh": "导入官方 / 上游结果并归一化为 scorecard",
     "verificationStatus": "normalizer_only"
+  },
+  "larybench": {
+    "aliases": [
+      "LARY",
+      "latent-action-representation-yielding-benchmark"
+    ],
+    "badges": [
+      "integrated"
+    ],
+    "category": "Embodied AI",
+    "categoryZh": "具身 AI",
+    "domains": [
+      "vla",
+      "embodied-action",
+      "robot-manipulation",
+      "action-recognition"
+    ],
+    "integrationStatus": "integrated",
+    "leaderboardValid": false,
+    "logoKey": "meituan",
+    "metrics": [
+      "extraction_coverage",
+      "top1_accuracy",
+      "val_seen_mse"
+    ],
+    "name": "LARYBench",
+    "requiresApi": false,
+    "runtimeKind": "in_tree_official_source",
+    "summary": "In-tree official runtime extracts latent actions and probes them with classification and regression",
+    "summaryZh": "仓内 official runtime 抽取 latent action 并以分类与回归探针评测",
+    "verificationStatus": "pending_checkpoint_and_dataset_run"
   },
   "libero": {
     "aliases": [
@@ -649,7 +706,7 @@
     ],
     "integrationStatus": "integrated",
     "leaderboardValid": false,
-    "logoKey": "",
+    "logoKey": "harvard",
     "metrics": [
       "memobench_average"
     ],
@@ -760,7 +817,7 @@
     ],
     "integrationStatus": "integrated",
     "leaderboardValid": false,
-    "logoKey": "",
+    "logoKey": "tencent",
     "metrics": [
       "mirabench_average"
     ],
@@ -799,6 +856,35 @@
     "summaryZh": "导入官方 / 上游结果并归一化为 scorecard",
     "verificationStatus": "normalizer_only"
   },
+  "pawbench": {
+    "aliases": [
+      "PAW-Calibration",
+      "PAW-Coverage"
+    ],
+    "badges": [
+      "integrated"
+    ],
+    "category": "World Models",
+    "categoryZh": "世界模型",
+    "domains": [
+      "stochastic-physical-dynamics",
+      "distribution-calibration",
+      "outcome-coverage"
+    ],
+    "integrationStatus": "integrated",
+    "leaderboardValid": false,
+    "logoKey": "sjtu",
+    "metrics": [
+      "calibration_tvd_percent",
+      "coverage_percent"
+    ],
+    "name": "PAWBench",
+    "requiresApi": true,
+    "runtimeKind": "in_tree_official_runtime_hosted_judges",
+    "summary": "Evaluates probability calibration and outcome coverage across repeated video-world-model rollouts",
+    "summaryZh": "评估视频世界模型重复 rollout 的概率校准与结果覆盖率",
+    "verificationStatus": "in_tree_runtime_cpu_contract_verified"
+  },
   "phyeduvideo": {
     "aliases": [],
     "badges": [
@@ -814,7 +900,7 @@
     ],
     "integrationStatus": "integrated",
     "leaderboardValid": false,
-    "logoKey": "",
+    "logoKey": "adobe",
     "metrics": [
       "phyeduvideo_average"
     ],
@@ -901,6 +987,30 @@
     "summary": "Imports precomputed metrics and normalizes them into a scorecard",
     "summaryZh": "导入预计算 metric 并归一化为 scorecard",
     "verificationStatus": "result_importer_ready"
+  },
+  "physical-ai-bench": {
+    "aliases": [],
+    "badges": [
+      "integrated"
+    ],
+    "category": "World Models",
+    "categoryZh": "世界模型",
+    "domains": [],
+    "integrationStatus": "integrated",
+    "leaderboardValid": false,
+    "logoKey": "gatech",
+    "metrics": [
+      "aesthetic_quality",
+      "vqa_accuracy",
+      "dover_tech_score",
+      "canny_f1_score"
+    ],
+    "name": "Physical AI Bench (PAI-Bench)",
+    "requiresApi": false,
+    "runtimeKind": "in_tree_multi_track_evaluator",
+    "summary": "In-tree multi-track evaluator scores generation and conditional-generation videos",
+    "summaryZh": "仓内多赛道 evaluator 评估 generation 与 conditional-generation 生成视频",
+    "verificationStatus": "verified"
   },
   "physics-iq": {
     "aliases": [],
@@ -1107,7 +1217,7 @@
     ],
     "integrationStatus": "integrated",
     "leaderboardValid": false,
-    "logoKey": "",
+    "logoKey": "umich",
     "metrics": [
       "success_rate"
     ],
@@ -1173,6 +1283,7 @@
     ],
     "integrationStatus": "integrated",
     "leaderboardValid": false,
+    "logoKey": "nvidia",
     "metrics": [
       "vbench_overall",
       "revisit_psnr",
@@ -1213,6 +1324,32 @@
     "summary": "Imports official or upstream results into a normalized scorecard",
     "summaryZh": "导入官方 / 上游结果并归一化为 scorecard",
     "verificationStatus": "normalizer_only"
+  },
+  "stevo-bench": {
+    "aliases": [],
+    "badges": [
+      "integrated"
+    ],
+    "category": "World Models",
+    "categoryZh": "世界模型",
+    "domains": [
+      "unobserved-state-evolution",
+      "physical-dynamics",
+      "chemical-dynamics",
+      "agent-behavior"
+    ],
+    "integrationStatus": "integrated",
+    "leaderboardValid": false,
+    "logoKey": "caltech",
+    "metrics": [
+      "task_success"
+    ],
+    "name": "STEVO-Bench",
+    "requiresApi": true,
+    "runtimeKind": "in_tree_official_runtime_hosted_judges",
+    "summary": "In-tree official runtime scores generated videos with hosted VLM judges",
+    "summaryZh": "仓内 official runtime 通过 hosted VLM judges 对生成视频评分",
+    "verificationStatus": "pending"
   },
   "t2v-compbench": {
     "aliases": [],
@@ -1363,7 +1500,7 @@
     "domains": [],
     "integrationStatus": "integrated",
     "leaderboardValid": false,
-    "logoKey": "",
+    "logoKey": "sjtu",
     "metrics": [
       "videobench_average"
     ],
@@ -1649,6 +1786,40 @@
     "summaryZh": "闭环仿真 rollout，或归一化官方 rollout 结果",
     "verificationStatus": "in_tree_video_quality_runtime"
   },
+  "worldatlas-arena": {
+    "aliases": [
+      "WorldAtlas Arena"
+    ],
+    "badges": [
+      "integrated"
+    ],
+    "category": "World Models",
+    "categoryZh": "世界模型",
+    "domains": [
+      "world-model",
+      "long-horizon-memory",
+      "3d-4d-consistency",
+      "physics",
+      "real-time-interaction"
+    ],
+    "integrationStatus": "integrated",
+    "leaderboardValid": false,
+    "logoKey": "openenvision",
+    "metrics": [
+      "long_sequence",
+      "action_control",
+      "consistency_3d_4d",
+      "physics",
+      "quality",
+      "real_time"
+    ],
+    "name": "WorldArena (WorldAtlas Arena)",
+    "requiresApi": false,
+    "runtimeKind": "in_tree_official_runtime",
+    "summary": "Preserves the official six-axis vector for generated world-model rollouts",
+    "summaryZh": "保留生成式世界模型 rollout 的官方六轴向量评测",
+    "verificationStatus": "in_tree_runtime_cpu_contract_verified"
+  },
   "worldbench": {
     "aliases": [],
     "badges": [
@@ -1659,7 +1830,7 @@
     "domains": [],
     "integrationStatus": "integrated",
     "leaderboardValid": false,
-    "logoKey": "",
+    "logoKey": "ucla",
     "metrics": [
       "foreground_miou"
     ],
@@ -1737,7 +1908,7 @@
     ],
     "integrationStatus": "integrated",
     "leaderboardValid": false,
-    "logoKey": "",
+    "logoKey": "tsinghua",
     "metrics": [
       "score_pr"
     ],

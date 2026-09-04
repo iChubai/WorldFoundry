@@ -18,6 +18,8 @@ integration_status: integrated
 license: manual_review:missing_hf_license
 name: Being-H0.5
 official_sources:
+  paper: https://arxiv.org/abs/2605.00078
+  project_page: https://research.beingbeyond.com/ptr
   github:
     head_sha: 66b959e05db225fd816f8a517d94a9c0585cfc3e
     subdir: Being-H05

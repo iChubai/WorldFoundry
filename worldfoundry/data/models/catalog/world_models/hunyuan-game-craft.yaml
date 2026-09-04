@@ -13,6 +13,8 @@ source:
   official_repo_url: https://github.com/Tencent-Hunyuan/Hunyuan-GameCraft-1.0
   license: tencent-hunyuan-community
 official_sources:
+  project_page: https://hunyuan-gamecraft.github.io/
+  paper: https://arxiv.org/abs/2506.17201
   github:
     url: https://github.com/Tencent-Hunyuan/Hunyuan-GameCraft-1.0
   huggingface:

@@ -1,5 +1,8 @@
-"""Module for base_models -> diffusion_model -> video -> wan -> variants -> krea_realtime -> wan -> modules -> causal_model.py functionality."""
+"""Krea realtime causal Wan (chunk cache + optional SageAttention).
 
+Realtime streaming DiT.  Attention may dispatch to :mod:`.krea_sage`.
+Adds causal attention and optional linear/Sage kernels.
+"""
 import functools
 from .krea_attention import attention
 import math
@@ -207,7 +210,7 @@ def causal_rope_apply(x, grid_sizes, freqs, start_frame=0):
 
 
 class CausalWanSelfAttention(nn.Module):
-    """Causal wan self attention implementation."""
+    """Causal self-attention with optional KV cache and frame-offset RoPE."""
 
     def __init__(self,
                  dim,
@@ -288,11 +291,7 @@ class CausalWanSelfAttention(nn.Module):
         # query, key, value function
         # @torch.compile(dynamic=True, mode="max-autotune-no-cudagraphs")
         def qkv_fn(x):
-            """Qkv fn.
-
-            Args:
-                x: The x.
-            """
+            """Project and reshape QKV to ``[B, L, H, D]``."""
             if self.fused_projections:
                 # print("Using fused projections")
                 q, k, v = self.to_qkv(x).chunk(3, dim=-1)
@@ -450,7 +449,7 @@ class CausalWanSelfAttention(nn.Module):
 
 
 class CausalWanAttentionBlock(nn.Module):
-    """Causal wan attention block implementation."""
+    """Causal Wan block: cached self-attn, cross-attn, then gated FFN."""
 
     def __init__(self,
                  cross_attn_type,
@@ -568,7 +567,7 @@ class CausalWanAttentionBlock(nn.Module):
 
 
 class CausalHead(nn.Module):
-    """Causal head implementation."""
+    """AdaLN output head used by causal Wan graphs."""
 
     def __init__(self, dim, out_dim, patch_size, eps=1e-6):
         """Init.
@@ -608,9 +607,7 @@ class CausalHead(nn.Module):
 
 
 class CausalWanModel(nn.Module, NativeConfigMixin):
-    r"""
-    Wan diffusion backbone supporting both text-to-video and image-to-video.
-    """
+    r"""Krea realtime causal Wan (chunk cache, optional SageAttention)."""
 
     ignore_for_config = [
         'patch_size', 'cross_attn_norm', 'qk_norm', 'text_dim'

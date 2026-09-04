@@ -1,4 +1,19 @@
-"""Native LTX video/audio autoencoder components."""
+"""LTX video / audio codec adapters for the native runner contracts.
+
+Loader wrappers (:class:`LTXVideoEncoderModule`, decoder, vocoder) own
+checkpoint config + key prefixes.  Runner-facing types:
+
+- :class:`LTXMediaDecoder` (:class:`~...runners.MultiModalLatentDecoder`):
+  unpatchify video+audio, decode pixels, vocode waveform.
+- :class:`LTXVideoMediaDecoder`: video-only multimodal decode.
+- :class:`LTXTensorVideoCodec`: :class:`~...contracts.LatentEncoder` +
+  :class:`~...contracts.LatentDecoder` for BCTHW tensors (SANA-WM).
+- :class:`DiffusersLTX2TensorVideoCodec`: same contract over a Diffusers
+  LTX-2 VAE.
+
+``DiffusionRequest`` supplies FPS / ``return_latent``; tiling comes from
+component options.
+"""
 
 from __future__ import annotations
 
@@ -9,8 +24,14 @@ import torch.nn.functional as functional
 
 from ....components import ComponentBuildContext
 from ....contracts import DiffusionRequest, ModalityState
-from ....loaders import CheckpointSpec, ModuleLoadSpec, NativeModuleLoader, safetensors_json_metadata
-from ....optimizations import RuntimePolicy
+from ....loaders import (
+    CheckpointSpec,
+    ModuleLoadSpec,
+    NativeCheckpointResolver,
+    NativeModuleLoader,
+    safetensors_json_metadata,
+)
+from ....optimizations import OffloadMode, RuntimePolicy
 from ....runners import MultiModalLatentDecoder
 from ...representations.ltx.patchifiers import AudioPatchifier, VideoLatentPatchifier
 from ...representations.ltx.types import AudioLatentShape, VideoLatentShape, VideoPixelShape
@@ -26,27 +47,36 @@ from .video import (
 
 
 class LTXVideoEncoderModule(torch.nn.Module):
+    """Native-loader wrapper around the configured LTX video encoder CNN."""
+
     def __init__(self, checkpoint_config: Mapping[str, object]) -> None:
         super().__init__()
         self.encoder = VideoEncoderConfigurator.from_config(dict(checkpoint_config))
 
     def forward(self, sample: torch.Tensor) -> torch.Tensor:
+        """Encode BCTHW pixels to video latents."""
         return self.encoder(sample)
 
 
 class LTXVideoDecoderModule(torch.nn.Module):
+    """Native-loader wrapper around the configured LTX video decoder CNN."""
+
     def __init__(self, checkpoint_config: Mapping[str, object]) -> None:
         super().__init__()
         self.decoder = VideoDecoderConfigurator.from_config(dict(checkpoint_config))
 
 
 class LTXAudioDecoderModule(torch.nn.Module):
+    """Native-loader wrapper around the LTX audio VAE decoder."""
+
     def __init__(self, checkpoint_config: Mapping[str, object]) -> None:
         super().__init__()
         self.decoder = AudioDecoderConfigurator.from_config(dict(checkpoint_config))
 
 
 class LTXVocoderModule(torch.nn.Module):
+    """Native-loader wrapper around the LTX waveform vocoder."""
+
     def __init__(self, checkpoint_config: Mapping[str, object]) -> None:
         super().__init__()
         self.vocoder = VocoderConfigurator.from_config(dict(checkpoint_config))
@@ -209,6 +239,7 @@ class LTXMediaDecoder(MultiModalLatentDecoder):
         states: Mapping[str, ModalityState],
         request: DiffusionRequest,
     ) -> Mapping[str, object]:
+        """Unpatchify, decode video chunks, and vocode audio from joint states."""
         video_shape, audio_shape = self._shapes(request)
         video_latent = VideoLatentPatchifier(1).unpatchify(states["video"].latent, video_shape)
         audio_latent = AudioPatchifier(1).unpatchify(states["audio"].latent, audio_shape)
@@ -347,6 +378,7 @@ class LTXTensorVideoCodec:
 
     @torch.no_grad()
     def encode(self, images: torch.Tensor) -> torch.Tensor:
+        """Encode BCTHW RGB to 128-channel LTX latents (optional tiling)."""
         if images.ndim != 5 or images.shape[1] != 3:
             raise ValueError(f"LTX tensor codec expects BCTHW RGB video, got {tuple(images.shape)}")
         device, dtype = self._input_target(self.encoder)
@@ -379,6 +411,7 @@ class LTXTensorVideoCodec:
         latents: torch.Tensor,
         request: DiffusionRequest | None = None,
     ) -> torch.Tensor:
+        """Decode LTX latents to BCTHW pixels; center-crop to ``request`` size."""
         if request is not None and bool(request.inputs.get("return_latent", False)):
             return latents
         device, dtype = self._input_target(self.decoder)
@@ -403,6 +436,87 @@ class LTXTensorVideoCodec:
                     left : left + request.width,
                 ]
         return video.clamp_(-1.0, 1.0)
+
+
+class DiffusersLTX2TensorVideoCodec:
+    """BCTHW codec for official diffusers-format LTX-2 VAE directories."""
+
+    spatial_compression_factor = 32
+    temporal_compression_factor = 8
+    latent_ch = 128
+
+    def __init__(
+        self,
+        vae: torch.nn.Module,
+        *,
+        compute_device: str | torch.device | None = None,
+        compute_dtype: torch.dtype | None = None,
+        offload_after_call: bool = False,
+    ) -> None:
+        self.vae = vae
+        parameter = next(vae.parameters())
+        self.compute_device = torch.device(compute_device or parameter.device)
+        self.compute_dtype = compute_dtype or parameter.dtype
+        self.offload_after_call = bool(offload_after_call)
+
+    def _activate(self) -> None:
+        self.vae.to(device=self.compute_device, dtype=self.compute_dtype)
+
+    def _deactivate(self) -> None:
+        if not self.offload_after_call:
+            return
+        self.vae.to(device="cpu")
+        if self.compute_device.type == "cuda" and torch.cuda.is_available():
+            with torch.cuda.device(self.compute_device):
+                torch.cuda.empty_cache()
+
+    def _normalize(self, latents: torch.Tensor) -> torch.Tensor:
+        mean = self.vae.latents_mean.view(1, -1, 1, 1, 1).to(latents)
+        std = self.vae.latents_std.view(1, -1, 1, 1, 1).to(latents)
+        return (latents - mean) * float(self.vae.config.scaling_factor) / std
+
+    def _denormalize(self, latents: torch.Tensor) -> torch.Tensor:
+        mean = self.vae.latents_mean.view(1, -1, 1, 1, 1).to(latents)
+        std = self.vae.latents_std.view(1, -1, 1, 1, 1).to(latents)
+        return latents * std / float(self.vae.config.scaling_factor) + mean
+
+    @torch.no_grad()
+    def encode(self, images: torch.Tensor) -> torch.Tensor:
+        self._activate()
+        try:
+            pixels = images.to(device=self.compute_device, dtype=self.compute_dtype)
+            posterior = self.vae.encode(pixels, return_dict=False)[0]
+            return self._normalize(posterior.mode())
+        finally:
+            self._deactivate()
+
+    @torch.no_grad()
+    def decode(
+        self,
+        latents: torch.Tensor,
+        request: DiffusionRequest | None = None,
+    ) -> torch.Tensor:
+        if request is not None and bool(request.inputs.get("return_latent", False)):
+            return latents
+        self._activate()
+        try:
+            values = self._denormalize(
+                latents.to(device=self.compute_device, dtype=self.compute_dtype)
+            )
+            video = self.vae.decode(values, return_dict=False)[0]
+            if request is not None and video.shape[-2:] != (request.height, request.width):
+                decoded_height, decoded_width = video.shape[-2:]
+                if decoded_height < request.height or decoded_width < request.width:
+                    raise ValueError(
+                        "diffusers LTX-2 decoder output is smaller than the requested crop: "
+                        f"{decoded_height}x{decoded_width} < {request.height}x{request.width}"
+                    )
+                top = (decoded_height - request.height) // 2
+                left = (decoded_width - request.width) // 2
+                video = video[..., top : top + request.height, left : left + request.width]
+            return video.clamp_(-1.0, 1.0)
+        finally:
+            self._deactivate()
 
 
 def _tiling_from_options(options: Mapping[str, object]) -> TilingConfig | None:
@@ -482,12 +596,57 @@ def build_ltx_tensor_video_codec(context: ComponentBuildContext) -> LTXTensorVid
     )
 
 
+def build_diffusers_ltx2_tensor_video_codec(
+    context: ComponentBuildContext,
+) -> DiffusersLTX2TensorVideoCodec:
+    """Load the official SANA-WM LTX-2 VAE without network fallback."""
+
+    materialized = NativeCheckpointResolver().materialize(context.require_checkpoint("weights"))
+    weight_path = next(
+        (path for path in materialized.paths if path.suffix == ".safetensors"),
+        None,
+    )
+    if weight_path is None:
+        raise FileNotFoundError("diffusers LTX-2 checkpoint has no safetensors weights")
+    component_root = weight_path.parent
+    if not (component_root / "config.json").is_file():
+        raise FileNotFoundError(f"diffusers LTX-2 config is missing: {component_root / 'config.json'}")
+
+    from diffusers import AutoencoderKLLTX2Video
+
+    vae = AutoencoderKLLTX2Video.from_pretrained(
+        component_root,
+        local_files_only=True,
+        torch_dtype=context.policy.dtype,
+    )
+    staged_offload = bool(
+        context.policy.device.type != "cpu"
+        and context.component_options.get(
+            "offload",
+            context.policy.offload.mode is not OffloadMode.NONE,
+        )
+    )
+    if not staged_offload:
+        vae.to(device=context.policy.device, dtype=context.policy.dtype)
+    vae.eval()
+    if bool(context.component_options.get("tiled", True)):
+        vae.enable_tiling()
+    return DiffusersLTX2TensorVideoCodec(
+        vae,
+        compute_device=context.policy.device,
+        compute_dtype=context.policy.dtype,
+        offload_after_call=staged_offload,
+    )
+
+
 __all__ = [
     "LTXMediaDecoder",
+    "DiffusersLTX2TensorVideoCodec",
     "LTXVideoMediaDecoder",
     "LTXTensorVideoCodec",
     "LTXVideoEncoderModule",
     "build_ltx_media_decoder",
+    "build_diffusers_ltx2_tensor_video_codec",
     "build_ltx_video_media_decoder",
     "build_ltx_tensor_video_codec",
     "convert_ltx_audio_decoder_state_dict",

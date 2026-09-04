@@ -1,3 +1,16 @@
+"""PixelNorm and RMSNorm shared by LTX video / audio VAEs.
+
+:class:`PixelNorm` and :func:`build_normalization_layer`
+implement the checkpoint-compatible norms selected by
+:class:`NormType`.  Both video (:mod:`~..video.resnet`) and
+audio (:mod:`~..audio.audio_vae`) import this module.
+
+Tensors keep their incoming layout (BCTHW video or NCHW
+audio).  No encode/decode or tiling logic lives here.
+
+This is shared LTX graph math, not a runner adapter.
+"""
+
 from enum import Enum
 
 import torch

@@ -1,0 +1,41 @@
+{
+  "id": "lingbot-va",
+  "tagline": {
+    "en": "Apache-2.0 autoregressive video-action world model for robot control, with base and task-tuned checkpoints.",
+    "zh": "Apache-2.0 许可的自回归视频-动作世界模型,用于机器人控制,含基础与任务调优 checkpoint。"
+  },
+  "overview": {
+    "en": [
+      "LingBot-VA is an autoregressive video-action world model for robot control. It couples world modeling with action generation: as it rolls forward it produces action traces and can carry predicted-video metadata, using a server/client runtime for inference.",
+      "It ships three Apache-2.0 checkpoints: a base model plus two post-trained variants tuned for RoboTwin and for LIBERO-Long. The architecture is an inference-only Wan-VA design covering the model graph, a distributed server and client, preprocessing, action diffusion, KV-cache updates, and action decoding, all constructed strictly from local checkpoints.",
+      "In WorldFoundry you point the server at a staged checkpoint and drive rollouts that emit action traces. All three checkpoints are open-weight on Hugging Face."
+    ],
+    "zh": [
+      "LingBot-VA 是一个用于机器人控制的自回归视频-动作世界模型。它把世界建模与动作生成耦合起来:在向前推演时输出动作轨迹(action trace),并可携带预测视频的元数据,推理采用服务端/客户端运行时。",
+      "它发布三个 Apache-2.0 checkpoint:一个基础模型,加上分别针对 RoboTwin 与 LIBERO-Long 调优的两个后训练变体。其架构是一个仅推理的 Wan-VA 设计,涵盖模型图、分布式服务端与客户端、预处理、动作扩散、KV-cache 更新与动作解码,且严格从本地 checkpoint 构建。",
+      "在 WorldFoundry 中,你让服务端指向一个备好的 checkpoint,驱动会输出动作轨迹的推演。三个 checkpoint 均为 Hugging Face 上的开放权重。"
+    ]
+  },
+  "whenToUse": {
+    "en": "Use it when you want an openly-licensed video-action world model for robot control that produces action rollouts — with task-tuned checkpoints ready for RoboTwin and LIBERO-Long.",
+    "zh": "当你想要一个开放许可的视频-动作世界模型、用于机器人控制并产出动作推演——且已备有面向 RoboTwin 与 LIBERO-Long 的任务调优 checkpoint 时,选它。"
+  },
+  "notFor": {
+    "en": "It runs a server/client stack and constructs strictly from local checkpoints, so the weights must be staged first. Its output is action traces for control, not general video generation.",
+    "zh": "它运行服务端/客户端栈,且严格从本地 checkpoint 构建,因此权重须先备好。其输出是用于控制的动作轨迹,而非通用视频生成。"
+  },
+  "highlights": {
+    "en": [
+      "Apache-2.0 across all three checkpoints",
+      "Autoregressive video-action world model for robot control",
+      "Base plus RoboTwin and LIBERO-Long post-trained variants",
+      "Server/client runtime built strictly from local checkpoints"
+    ],
+    "zh": [
+      "三个 checkpoint 全部 Apache-2.0",
+      "面向机器人控制的自回归视频-动作世界模型",
+      "基础模型加 RoboTwin 与 LIBERO-Long 后训练变体",
+      "服务端/客户端运行时,严格从本地 checkpoint 构建"
+    ]
+  }
+}

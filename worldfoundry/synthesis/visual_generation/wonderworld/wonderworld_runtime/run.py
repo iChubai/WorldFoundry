@@ -6,7 +6,6 @@ from PIL import Image
 from datetime import datetime
 import threading
 
-from transformers import OneFormerForUniversalSegmentation, OneFormerProcessor
 import numpy as np
 import torch
 from omegaconf import OmegaConf
@@ -24,6 +23,11 @@ from util.general_utils import apply_depth_colormap, save_video
 from util.utils import save_depth_map, prepare_scheduler, soft_stitching
 from util.utils import load_inference_prompt_config, convert_pt3d_cam_to_3dgs_cam, sky_image_dir
 from util.segment_utils import create_mask_generator_repvit
+from util.checkpoints import (
+    diffusers_local_load_kwargs,
+    load_oneformer,
+    local_model_ref,
+)
 from util.free_lunch_utils import register_free_upblock2d, register_free_crossattn_upblock2d
  
 from arguments import GSParams, CameraParams
@@ -45,18 +49,6 @@ warnings.filterwarnings("ignore")
 class BatchEmitter:
     def emit(self, *_args, **_kwargs):
         return None
-
-
-def _ckpt_root() -> Path:
-    return Path(os.environ.get("WORLDFOUNDRY_CKPT_DIR", Path(__file__).resolve().parents[6] / "ckpt"))
-
-
-def _local_model_ref(default: str, *candidates: str) -> str:
-    for candidate in candidates:
-        path = _ckpt_root() / candidate
-        if path.exists():
-            return str(path)
-    return default
 
 
 socketio = BatchEmitter()
@@ -155,16 +147,17 @@ def run(config):
     example = config['example_name']
     sky_dir = sky_image_dir(example)
 
-    oneformer_ref = _local_model_ref("shi-labs/oneformer_ade20k_swin_large", "oneformer_ade20k_swin_large")
-    segment_processor = OneFormerProcessor.from_pretrained(oneformer_ref)
-    segment_model = OneFormerForUniversalSegmentation.from_pretrained(oneformer_ref).to('cuda')
+    segment_processor, segment_model = load_oneformer()
+    segment_model = segment_model.to(config["device"])
 
     mask_generator = create_mask_generator_repvit()
 
+    stable_diffusion_ref = str(config["stable_diffusion_checkpoint"])
     inpainter_pipeline = StableDiffusionInpaintPipeline.from_pretrained(
-            config["stable_diffusion_checkpoint"],
+            stable_diffusion_ref,
             safety_checker=None,
             torch_dtype=torch.bfloat16,
+            **diffusers_local_load_kwargs(stable_diffusion_ref),
         ).to(config["device"])
     inpainter_pipeline.scheduler = DDIMScheduler.from_config(inpainter_pipeline.scheduler.config)
     inpainter_pipeline.unet.set_attn_processor(AttnProcessor2_0())
@@ -174,16 +167,29 @@ def run(config):
     assert len(rotation_path) == config['num_scenes']
     
     
+    depth_ref = local_model_ref(
+        "prs-eth/marigold-v1-0",
+        "prs-eth--marigold-v1-0",
+        "marigold-v1-0",
+        "marigold-depth-v1-0",
+    )
     depth_model = MarigoldPipeline.from_pretrained(
-        _local_model_ref("prs-eth/marigold-depth-v1-0", "marigold-depth-v1-0"),
+        depth_ref,
         torch_dtype=torch.bfloat16,
+        **diffusers_local_load_kwargs(depth_ref),
     ).to(config["device"])
     depth_model.scheduler = EulerDiscreteScheduler.from_config(depth_model.scheduler.config)
     depth_model.scheduler = prepare_scheduler(depth_model.scheduler)
 
+    normals_ref = local_model_ref(
+        "prs-eth/marigold-normals-v0-1",
+        "prs-eth--marigold-normals-v0-1",
+        "marigold-normals-v0-1",
+    )
     normal_estimator = MarigoldNormalsPipeline.from_pretrained(
-        _local_model_ref("prs-eth/marigold-normals-v0-1", "prs-eth--marigold-normals-v0-1"),
+        normals_ref,
         torch_dtype=torch.bfloat16,
+        **diffusers_local_load_kwargs(normals_ref),
     ).to(config["device"])
     
     print('###### ------------------ Keyframe (the major part of point clouds) generation ------------------ ######') 

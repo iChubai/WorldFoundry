@@ -61,6 +61,9 @@ ENV/
 conda/
 conda_envs/
 
+# Optional ABI-sensitive native wheel scaffold; not part of the source release.
+/packages/
+
 # Packaging and build outputs
 build/
 dist/
@@ -355,9 +358,26 @@ worldfoundry/base_models/three_dimensions/general_3d/mvdiffusion/mvdiffusion_run
 worldfoundry/data/models/runtime/configs/*/assets/
 worldfoundry/data/models/runtime/configs/*/data/
 worldfoundry/data/models/validation/
-worldfoundry/data/benchmarks/reproduction_profiles/
 worldfoundry/data/test_cases/
+!worldfoundry/data/test_cases/
+worldfoundry/data/test_cases/*
+!worldfoundry/data/test_cases/oasis/
+worldfoundry/data/test_cases/oasis/*
+!worldfoundry/data/test_cases/oasis/README.md
+!worldfoundry/data/test_cases/oasis/sample_image_0.png
+!worldfoundry/data/test_cases/uni3c/
+!worldfoundry/data/test_cases/uni3c/**
 worldfoundry/synthesis/visual_generation/wonderworld/wonderworld_runtime/sky_img/
 worldfoundry/cli/assets/*.png
 worldfoundry/studio/assets/*.png
 worldfoundry/studio/assets/vendor/
+
+# Local-only development, test, planning, and benchmark workspaces.
+/tests/
+/test_stream/
+/test/
+/plan/
+/memory/
+/configs/
+/benchmarks/
+/gg

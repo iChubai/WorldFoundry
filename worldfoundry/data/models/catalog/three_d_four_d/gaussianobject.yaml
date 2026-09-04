@@ -8,6 +8,8 @@ source:
   status: open_source
   official_repo_url: https://github.com/GaussianObject/GaussianObject
 official_sources:
+  paper: https://arxiv.org/abs/2402.10259
+  project_page: https://gaussianobject.github.io/
   github:
     url: https://github.com/GaussianObject/GaussianObject
     head_sha: 91048a5dd3f9313e5bca8ecca651bdbac5099836

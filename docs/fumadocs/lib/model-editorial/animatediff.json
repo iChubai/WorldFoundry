@@ -1,0 +1,41 @@
+{
+  "id": "animatediff",
+  "tagline": {
+    "en": "The classic way to animate a Stable Diffusion image model — a plug-in motion module turns text prompts into short videos.",
+    "zh": "让 Stable Diffusion 图像模型动起来的经典方案——一个可插拔的运动模块,把文本提示词变成短视频。"
+  },
+  "overview": {
+    "en": [
+      "AnimateDiff is a widely-used approach for turning a text-to-image diffusion model into a text-to-video generator. Rather than training a video model from scratch, it inserts a learned motion module into a frozen Stable Diffusion backbone so the frames move coherently.",
+      "Because it builds on the Stable Diffusion v1.5 ecosystem, it pairs naturally with community image checkpoints (the default demo uses a RealisticVision-style base) and a CLIP text encoder. The motion module is the reusable piece that adds temporal consistency on top of whatever image model you plug in.",
+      "In WorldFoundry, AnimateDiff runs through the shared video pipeline: give it a text prompt and it renders a short animated clip. The primary AnimateDiff weights are Apache-2.0 licensed."
+    ],
+    "zh": [
+      "AnimateDiff 是把文生图扩散模型改造成文生视频生成器的一种广泛使用的方法。它不从零训练视频模型,而是在冻结的 Stable Diffusion 主干中插入一个学习到的运动模块,使各帧连贯运动。",
+      "由于它构建在 Stable Diffusion v1.5 生态之上,可以自然地搭配社区图像 checkpoint(默认 demo 使用 RealisticVision 风格的底模)以及 CLIP 文本编码器。运动模块是可复用的核心组件,它为你接入的任意图像模型叠加时序一致性。",
+      "在 WorldFoundry 中,AnimateDiff 通过共享视频 pipeline 运行:给它一段文本提示词,它就会渲染一小段动画片段。AnimateDiff 主权重采用 Apache-2.0 许可。"
+    ]
+  },
+  "whenToUse": {
+    "en": "A good fit when you want to animate the familiar Stable Diffusion v1.5 style and reuse existing image checkpoints, or when you want a lightweight, well-understood route into text-to-video.",
+    "zh": "当你想为熟悉的 Stable Diffusion v1.5 画风注入动态、并复用已有图像 checkpoint,或想要一条轻量、成熟的文生视频入口时,它很合适。"
+  },
+  "notFor": {
+    "en": "Not the choice for long-form or highly cinematic video — it produces short clips, and quality is tied to the SD v1.5-era backbone rather than newer large video models.",
+    "zh": "不适合长视频或追求高度电影感的场景——它生成的是短片段,画质也受限于 SD v1.5 时代的主干,而非更新的大型视频模型。"
+  },
+  "highlights": {
+    "en": [
+      "Plug-in motion module for Stable Diffusion image models",
+      "Reuses community SD v1.5 checkpoints for varied styles",
+      "Primary AnimateDiff weights are Apache-2.0",
+      "Simple text-to-video workflow"
+    ],
+    "zh": [
+      "作用于 Stable Diffusion 图像模型的可插拔运动模块",
+      "复用社区 SD v1.5 checkpoint 实现多样画风",
+      "AnimateDiff 主权重采用 Apache-2.0 许可",
+      "简单的文生视频工作流"
+    ]
+  }
+}

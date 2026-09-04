@@ -1,4 +1,16 @@
-"""Checkpoint-compatible HunyuanVideo language-model encoders."""
+"""Checkpoint-compatible HunyuanVideo language-model wrappers.
+
+:class:`HunyuanVideoLLMEncoder` and
+:class:`HunyuanVideoMLLMEncoder` adapt Hugging Face causal
+LMs so original Hunyuan prompt encoding can call them as
+encoder-only towers.
+
+Used by :mod:`.original` / :mod:`.i2v`.  HunyuanVideo 1.5
+LLM loading lives under :mod:`.h15_text`.
+
+This is a weight-compatible wrapper, not a ConditionEncoder
+by itself.
+"""
 
 from transformers import LlamaModel, LlamaConfig, DynamicCache, LlavaForConditionalGeneration
 from copy import deepcopy

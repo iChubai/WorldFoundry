@@ -13,6 +13,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+"""Per-frame KV cache used by causal Gamma-World rollout.
+
+Cache capacity is counted in latent frames (each frame is ``H'·W'``
+tokens after patchify), not raw sequence length.  The attention op
+wrapper concatenates cached K/V in front of the current chunk.
+"""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -24,6 +31,8 @@ import torch.nn as nn
 
 @dataclass
 class KVCacheConfig:
+    """Flags controlling whether the current step reads and/or writes the KV cache."""
+
     run_with_kv: bool = False
     store_kv: bool = False
     current_idx: int = 0

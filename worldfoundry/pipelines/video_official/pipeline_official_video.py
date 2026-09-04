@@ -13,7 +13,7 @@ from worldfoundry.synthesis.visual_generation.memory.video import VideoArtifactM
 from worldfoundry.synthesis.visual_generation.official_video_runtime import OfficialVideoRuntime
 
 if TYPE_CHECKING:
-    from worldfoundry.evaluation.models.pipelines.invocation import PipelineInvocation
+    from worldfoundry.core.contracts import PipelineInvocation
 
 
 class OfficialVideoPipeline(PipelineABC):
@@ -48,7 +48,7 @@ class OfficialVideoPipeline(PipelineABC):
         **kwargs: Any,
     ) -> "OfficialVideoPipeline":
         """Load the pipeline from pretrained checkpoints and configurations."""
-        resolved_model_id = model_id or cls.MODEL_ID
+        resolved_model_id = cls.MODEL_ID or model_id
         runtime_kwargs: dict[str, Any] = {}
         if isinstance(model_path, Mapping):
             runtime_kwargs.update(model_path)
@@ -59,6 +59,7 @@ class OfficialVideoPipeline(PipelineABC):
         for key in (*PipelineABC.FRAMEWORK_LOADING_OPTION_KEYS, "model_id", "pipeline_target", "runtime_profile"):
             runtime_kwargs.pop(key, None)
         runtime = OfficialVideoRuntime.from_model_id(resolved_model_id, device=device, **runtime_kwargs)
+        runtime.prepare()
         return cls(model_id=resolved_model_id, runtime=runtime, device=device)
 
     def process(self, prompt: str, images: Any = None, video: Any = None, **kwargs: Any) -> dict[str, Any]:

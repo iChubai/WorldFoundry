@@ -1,4 +1,15 @@
-"""Checkpoint-compatible Wan control adapter layers."""
+"""Wan 2.1 / 2.2 spatial control adapter (camera / ControlNet residual).
+
+``SimpleAdapter`` is the official camera-control stem used when a Wan
+checkpoint publishes an overlay ``control_adapter`` that is added onto
+patch embeddings.  It pixel-unshuffles each frame, projects to DiT width,
+and applies a small residual stack.  ``process_camera_coordinates`` builds
+Plücker features from a planar camera trajectory so callers do not need
+to reimplement that geometry.
+
+This module does not own VACE, action, or causal attention; those live in
+:mod:`.vace` and :mod:`.variants`.
+"""
 
 from __future__ import annotations
 
@@ -7,6 +18,8 @@ from torch import nn
 
 
 class ResidualBlock(nn.Module):
+    """Two-convolution residual used after the adapter's spatial projection."""
+
     def __init__(self, dim: int) -> None:
         super().__init__()
         self.conv1 = nn.Conv2d(dim, dim, kernel_size=3, padding=1)
@@ -14,11 +27,17 @@ class ResidualBlock(nn.Module):
         self.conv2 = nn.Conv2d(dim, dim, kernel_size=3, padding=1)
 
     def forward(self, values: torch.Tensor) -> torch.Tensor:
+        """Return ``values`` plus a 3x3 residual, keeping ``B C H W`` layout."""
         return values + self.conv2(self.relu(self.conv1(values)))
 
 
 class SimpleAdapter(nn.Module):
-    """Spatial control adapter used by Wan camera-conditioned checkpoints."""
+    """Spatial control adapter used by Wan camera-conditioned checkpoints.
+
+    Input is ``B C F H W`` camera / control latents.  Each frame is
+    independently unshuffled and convolved so the output grid matches the
+    DiT patch embedding and can be added in :meth:`WanModel.patchify`.
+    """
 
     def __init__(
         self,
@@ -41,6 +60,7 @@ class SimpleAdapter(nn.Module):
         self.residual_blocks = nn.Sequential(*[ResidualBlock(out_dim) for _ in range(num_residual_blocks)])
 
     def forward(self, values: torch.Tensor) -> torch.Tensor:
+        """Project ``B C F H W`` control latents onto the DiT patch grid."""
         batch, channels, frames, height, width = values.shape
         values = values.permute(0, 2, 1, 3, 4).reshape(
             batch * frames,

@@ -1,9 +1,22 @@
+"""LTX Gemma tokenizer with weight pairs for the prompt conditioner.
+
+:class:`LTXVGemmaTokenizer` wraps the Gemma tokenizer and
+the video/audio weight pairs used when packing captions.
+:class:`PaddingSide` selects left or right pad.
+
+Token ids go into Gemma-3; hidden states then pass through
+:mod:`.feature_extractor`.  Not a T5 / UMT5 tokenizer.
+
+Used exclusively by :class:`~.component.LTXPromptConditioner`.
+"""
+
 from enum import Enum
 
 from transformers import AutoTokenizer
 
 
 class PaddingSide(str, Enum):
+    """Whether the LTX Gemma tokenizer pads on the left or right."""
     LEFT = "left"
     RIGHT = "right"
 

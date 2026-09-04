@@ -3,14 +3,15 @@ import { SiteHeader } from '@/components/site-header';
 import { notFound } from 'next/navigation';
 import { getMDXComponents } from '@/components/mdx';
 import { createRelativeLink } from 'fumadocs-ui/mdx';
-import { getBenchmarkBadges } from '@/lib/benchmark-catalog';
+import { getBenchmarkCatalogEntry } from '@/lib/benchmark-catalog';
+import { BenchmarkIdentityMark } from '@/components/benchmark-identity-mark';
 import { getDocsBreadcrumbs } from '@/lib/docs-breadcrumb';
 import {
   docsLabels,
+  isApiReferenceHubDocsPage,
   isBenchmarkHubDocsPage,
   isTableDenseDocsPage,
 } from '@/lib/docs-navigation';
-import { BenchmarkBadge } from '@/components/benchmark-badge';
 import { DocsBreadcrumb } from '@/components/docs-breadcrumb';
 import { DocsPagination } from '@/components/docs-pagination';
 import { DocsRelatedLinks } from '@/components/docs-related-links';
@@ -21,14 +22,15 @@ import { DocsReadingProgress } from '@/components/docs-reading-progress';
 import { DocsScrollBridge } from '@/components/docs-scroll-bridge';
 import { DocsSidebarApiTree } from '@/components/docs-sidebar-api-tree';
 import { DocsSidebarArchitectureTree } from '@/components/docs-sidebar-architecture-tree';
-import { DocsSidebarFooter } from '@/components/docs-sidebar-footer';
 import { DocsSidebarIcon } from '@/components/docs-sidebar-icon';
 import { DocsSidebarMetricsTree } from '@/components/docs-sidebar-metrics-tree';
 import { DocsTocRail } from '@/components/docs-toc-rail';
+import { MetricQuickNav } from '@/components/metric-quick-nav';
 import { DocsWelcomeHero } from '@/components/docs-welcome-hero';
 import { getDocsLastUpdated } from '@/lib/docs-last-updated';
 import { getDocsPagination } from '@/lib/docs-pagination';
 import { getDocsRelatedLinks } from '@/lib/docs-related-links';
+import { resolveMetricQuickNavFromSlugs } from '@/lib/metric-quick-nav';
 import {
   getDocsSidebarGroups,
   isApiReferenceSidebarOpen,
@@ -73,19 +75,31 @@ export async function DocsPage({ slug, locale }: { slug: string[] | undefined; l
   const githubUrl = `https://github.com/${gitConfig.user}/${gitConfig.repo}/blob/${gitConfig.branch}/docs/fumadocs/content/docs/${page.path}`;
   const docsHref = getPageUrl([], normalized);
   const benchmarkHubPage = isBenchmarkHubDocsPage(page.slugs);
+  const apiHubPage = isApiReferenceHubDocsPage(page.slugs);
   const usesWideTableLayout = isTableDenseDocsPage(page.slugs) || benchmarkHubPage;
 
   const toc = page.data.toc ?? [];
+  const metricNav = resolveMetricQuickNavFromSlugs(page.slugs);
   const pagination = getDocsPagination(page.slugs, normalized);
   const relatedLinks = getDocsRelatedLinks(page.slugs, normalized);
   const breadcrumbs = getDocsBreadcrumbs(page.slugs, normalized, page.data.title);
-  const pageBadges =
+  const benchmarkId =
     page.slugs[0] === 'evaluation' && page.slugs[1] === 'benchmark-hub' && page.slugs.length === 3
-      ? getBenchmarkBadges(page.slugs[2])
-      : [];
+      ? page.slugs[2]
+      : undefined;
+  const benchmarkEntry = benchmarkId ? getBenchmarkCatalogEntry(benchmarkId) : undefined;
   const lastUpdated = getDocsLastUpdated(page.path, normalized);
   const isWelcomePage = page.slugs.length === 0;
-  const showToc = toc.length > 0;
+  const showToc = !isWelcomePage && toc.length > 0;
+  const showRail = showToc || Boolean(metricNav);
+  const metricQuickNav = metricNav ? (
+    <MetricQuickNav
+      locale={normalized}
+      page={metricNav.page}
+      variant={metricNav.variant}
+      placement="rail"
+    />
+  ) : null;
 
   return (
     <main
@@ -93,7 +107,9 @@ export async function DocsPage({ slug, locale }: { slug: string[] | undefined; l
         'pi-doc-shell',
         isWelcomePage ? 'pi-doc-shell-welcome' : '',
         usesWideTableLayout ? 'pi-doc-shell-table-wide' : '',
-        usesWideTableLayout && showToc ? 'pi-doc-shell-table-wide-has-toc' : '',
+        usesWideTableLayout && showRail ? 'pi-doc-shell-table-wide-has-toc' : '',
+        apiHubPage ? 'pi-doc-shell-api-hub' : '',
+        metricNav ? 'pi-doc-shell-has-metric-nav' : '',
       ]
         .filter(Boolean)
         .join(' ')}
@@ -234,7 +250,6 @@ export async function DocsPage({ slug, locale }: { slug: string[] | undefined; l
               );
             })}
           </nav>
-          <DocsSidebarFooter />
         </aside>
 
         <div className="pi-doc-main">
@@ -246,22 +261,6 @@ export async function DocsPage({ slug, locale }: { slug: string[] | undefined; l
                   locale={normalized}
                 />
                 <div className="pi-doc-article-inner pi-doc-welcome-body">
-                  <DocsPageActions
-                    copyMarkdownCopiedLabel={t.askAiCopied}
-                    copyMarkdownLabel={t.askAiCopy}
-                    editLabel={t.editPage}
-                    githubUrl={githubUrl}
-                    lastUpdated={lastUpdated}
-                    lastUpdatedLabel={t.lastUpdated}
-                    markdownLabel={t.markdown}
-                    markdownUrl={markdownUrl}
-                    pageTitle={page.data.title}
-                  />
-
-                  {showToc ? (
-                    <DocsInlineToc items={toc} pageKey={page.url} slugs={page.slugs} title={t.onThisPage} />
-                  ) : null}
-
                   <div className="pi-doc-content">
                     <MDX
                       components={getMDXComponents({
@@ -283,19 +282,23 @@ export async function DocsPage({ slug, locale }: { slug: string[] | undefined; l
                 {breadcrumbs.length > 1 ? <DocsBreadcrumb items={breadcrumbs} /> : null}
 
                 <div className="pi-doc-title-row">
-                  <h1>{page.data.title}</h1>
-                  {pageBadges.length > 0 ? (
-                    <div className="pi-doc-title-badges">
-                      {pageBadges.map((kind) => (
-                        <BenchmarkBadge kind={kind} locale={normalized} key={kind} />
-                      ))}
-                    </div>
-                  ) : null}
+                  <div className="pi-doc-title-heading">
+                    {benchmarkId && benchmarkEntry ? (
+                      <BenchmarkIdentityMark
+                        id={benchmarkId}
+                        name={benchmarkEntry.name}
+                        category={benchmarkEntry.category}
+                        logoKey={benchmarkEntry.logoKey}
+                        size="large"
+                      />
+                    ) : null}
+                    <h1>{page.data.title}</h1>
+                  </div>
                 </div>
 
-                {page.data.description ? (
+                {benchmarkId || !page.data.description ? null : (
                   <p className="pi-doc-description">{page.data.description}</p>
-                ) : null}
+                )}
 
                 <DocsPageActions
                   copyMarkdownCopiedLabel={t.askAiCopied}
@@ -334,8 +337,10 @@ export async function DocsPage({ slug, locale }: { slug: string[] | undefined; l
           </article>
         </div>
 
-        {showToc ? (
-          <DocsTocRail key={page.url} items={toc} pageKey={page.url} slugs={page.slugs} title={t.onThisPage} />
+        {showRail ? (
+          <DocsTocRail key={page.url} items={toc} pageKey={page.url} slugs={page.slugs} title={t.onThisPage}>
+            {metricQuickNav}
+          </DocsTocRail>
         ) : null}
       </div>
     </main>

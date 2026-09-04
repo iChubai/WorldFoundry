@@ -9,6 +9,8 @@ source:
   status: open_source
   official_repo_url: https://github.com/Caoang327/HexPlane
 official_sources:
+  paper: https://arxiv.org/abs/2301.09632
+  project_page: https://caoang327.github.io/HexPlane/
   github:
     url: https://github.com/Caoang327/HexPlane
     head_sha: fc99b61da94fc406702d9e080ca5e37f5d7dcfad

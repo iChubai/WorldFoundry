@@ -10,11 +10,17 @@ from typing import Any, Dict, Optional
 import numpy as np
 from PIL import Image
 
+from worldfoundry.core.io import artifact_root_path
 from worldfoundry.core.io.artifacts import depths_to_pil_images
 
 from ...operators.lingbot_map_operator import LingBotMapOperator
 from ...representations.point_clouds_generation.lingbot_map import LingBotMapRepresentation
 from ..pipeline_utils import PipelineABC
+
+
+def _default_output_dir(name: str = "lingbot_map_output") -> str:
+    """Resolve a stable default output directory instead of writing to the CWD."""
+    return str(artifact_root_path() / name)
 
 
 class LingBotMapResult:
@@ -213,7 +219,7 @@ class LingBotMapResult:
 
     def save(self, output_dir: str | Path | None = None, output_name: str = "lingbot_map_predictions.npz") -> list[str]:
         """Save for LingBotMapResult."""
-        output_path = Path(output_dir or "./lingbot_map_output")
+        output_path = Path(output_dir or _default_output_dir())
         output_path.mkdir(parents=True, exist_ok=True)
         saved: list[str] = []
 

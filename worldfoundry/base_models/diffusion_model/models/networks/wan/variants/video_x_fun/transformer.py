@@ -1,3 +1,12 @@
+"""VideoX-Fun / Fun-Control Wan 2.1–2.2 transformer.
+
+Official-layout Fun DiT: extra control / inpaint channels, reference
+conv, CLIP, and TeaCache skip logic (``process_teacache_skip_logic``).
+:class:`Wan2_2Transformer3DModel` is the 2.2 subclass.
+
+Adds control channels and TeaCache hooks.  Not a causal or linear-attn fork.
+"""
+
 import glob
 import json
 import math
@@ -619,9 +628,19 @@ class MLPProj(torch.nn.Module):
 
 
 class WanTransformer3DModel(WanTransformerMethodsMixin, nn.Module, NativeConfigMixin):
-    r"""
-    Wan diffusion backbone supporting both text-to-video and image-to-video.
-    """
+    r"""VideoX-Fun Wan 2.1 DiT with control/inpaint channels and TeaCache skip."""
+
+    @property
+    def dtype(self) -> torch.dtype:
+        """Return the parameter dtype expected by Diffusers pipelines."""
+
+        return next(self.parameters()).dtype
+
+    @property
+    def device(self) -> torch.device:
+        """Return the parameter device expected by Diffusers pipelines."""
+
+        return next(self.parameters()).device
 
     # ignore_for_config = [
     #     'patch_size', 'cross_attn_norm', 'qk_norm', 'text_dim', 'window_size'
@@ -1125,9 +1144,7 @@ class WanTransformer3DModel(WanTransformerMethodsMixin, nn.Module, NativeConfigM
 
 
 class Wan2_2Transformer3DModel(WanTransformer3DModel):
-    r"""
-    Wan diffusion backbone supporting both text-to-video and image-to-video.
-    """
+    r"""VideoX-Fun Wan 2.2 subclass (per-token timestep / Fun 2.2 layout)."""
 
     # ignore_for_config = [
     #     'patch_size', 'cross_attn_norm', 'qk_norm', 'text_dim', 'window_size'

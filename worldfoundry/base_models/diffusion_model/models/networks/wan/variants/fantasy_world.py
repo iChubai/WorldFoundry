@@ -1,10 +1,10 @@
-"""FantasyWorld roles composed around the canonical native Wan transformer.
+"""FantasyWorld: IRG bidirectional fusion + Wan 2.1 camera adapter.
 
-Only the released model's unique IRG bidirectional fusion and Wan2.1 camera
-adapter live here.  Patchification, timestep conditioning, Wan attention,
-VAE/text/image roles, scheduling, and device policy remain shared infra.
+Only FantasyWorld-specific roles live here (IRG blocks, camera pose
+encoder, fusion model).  The host DiT remains canonical native Wan.
+
+Adds camera / IRG fusion.  No VACE trunk, causal cache, or linear attn.
 """
-
 from __future__ import annotations
 
 from typing import Any, Sequence

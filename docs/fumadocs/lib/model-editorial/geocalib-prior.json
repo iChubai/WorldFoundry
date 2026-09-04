@@ -1,0 +1,41 @@
+{
+  "id": "geocalib-prior",
+  "tagline": {
+    "en": "A single-image camera-calibration prior — recover intrinsics and the gravity direction to feed downstream 3D pipelines.",
+    "zh": "单图相机标定先验——从一张图片恢复内参与重力方向,为下游 3D 流程提供几何先验。"
+  },
+  "overview": {
+    "en": [
+      "GeoCalib, from the CVG group (cvg), is a camera-calibration prior. From a single image it estimates the camera's parameters and the direction of gravity, giving downstream systems a geometric anchor to build on.",
+      "Rather than a standalone generator, it plays the role of a geometry prior: camera calibration, gravity (up-vector) estimation, and a general geometric prior that other 3D and world models can consume.",
+      "In WorldFoundry it is exposed as an independent geometry-prior component. Other pipelines — for example scene reconstruction that needs to know where the camera is pointing — import it as a shared building block rather than keeping a private copy."
+    ],
+    "zh": [
+      "GeoCalib 由 CVG 团队(cvg)开发,是一个相机标定先验。它能从单张图片估计相机参数与重力方向,为下游系统提供可依赖的几何锚点。",
+      "它并非独立的生成器,而是承担几何先验的角色:相机标定、重力(向上向量)估计,以及可供其他 3D 与世界模型消费的通用几何先验。",
+      "在 WorldFoundry 中,它作为独立的几何先验组件对外提供。其他 pipeline——例如需要知道相机朝向的场景重建——会把它作为共享构件引入,而不必各自维护私有副本。"
+    ]
+  },
+  "whenToUse": {
+    "en": "Use it when a 3D or reconstruction pipeline needs camera intrinsics or a gravity direction estimated from a single image, as a prior that upstream steps can rely on.",
+    "zh": "当某个 3D 或重建 pipeline 需要从单张图片估计相机内参或重力方向、作为上游步骤可依赖的先验时,使用它。"
+  },
+  "notFor": {
+    "en": "It is a calibration and geometry prior, not an image, video, or 3D-scene generator — it produces camera and gravity estimates, not rendered content.",
+    "zh": "它是标定与几何先验,不是图像、视频或 3D 场景的生成器——它输出的是相机与重力估计,而非渲染内容。"
+  },
+  "highlights": {
+    "en": [
+      "Estimates camera calibration from a single image",
+      "Recovers the gravity (up) direction",
+      "Serves as a shared geometry prior for downstream 3D pipelines",
+      "Exposed as an independent, reusable component in WorldFoundry"
+    ],
+    "zh": [
+      "从单张图片估计相机标定",
+      "恢复重力(向上)方向",
+      "为下游 3D 流程提供共享几何先验",
+      "在 WorldFoundry 中作为独立、可复用的组件对外提供"
+    ]
+  }
+}

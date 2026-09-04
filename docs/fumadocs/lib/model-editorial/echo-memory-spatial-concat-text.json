@@ -1,0 +1,41 @@
+{
+  "id": "echo-memory-spatial-concat-text",
+  "tagline": {
+    "en": "Echo-Memory (Spatial Concat-Text) — an ablation of the Echo-Memory world model that feeds spatial memory in by concatenation.",
+    "zh": "Echo-Memory（Spatial Concat-Text）——Echo-Memory 世界模型的一个消融变体，以拼接方式注入空间记忆。"
+  },
+  "overview": {
+    "en": [
+      "Echo-Memory Spatial Concat-Text is an interactive world model in WorldFoundry, provided as a research ablation of the Echo-Memory family. From a starting image, plus text and a camera trajectory, it generates action-conditioned video for studying how memory is represented in world models.",
+      "This identity is a fixed recipe that wires spatial memory into the model by concatenating it with the text pathway, processing context in two chunks. It pairs the Echo-Memory checkpoint (CC-BY-4.0) with shared Wan2.1 components (Apache-2.0) through WorldFoundry's native diffusion pipeline and a frozen-context strategy. It takes image, text, camera-trajectory, and video inputs; the memory method is fixed, not chosen at runtime.",
+      "As an ablation it exists mainly to compare this spatial-concat design against other Echo-Memory memory strategies. You can run it with a researcher-supplied local checkpoint that passes strict architecture validation."
+    ],
+    "zh": [
+      "Echo-Memory Spatial Concat-Text 是 WorldFoundry 中的交互式世界模型，以 Echo-Memory 家族的一个研究消融变体形式提供。从一张起始图像，加上文本和相机轨迹，它生成动作条件视频，用于研究世界模型中记忆的表示方式。",
+      "这个模型身份是一套固定配方，把空间记忆与文本通路拼接后注入模型，以两个 chunk 处理上下文。它通过 WorldFoundry 的原生扩散 pipeline 与冻结上下文策略，将 Echo-Memory checkpoint（CC-BY-4.0）与共享的 Wan2.1 组件（Apache-2.0）搭配。它接受图像、文本、相机轨迹与视频输入；记忆方法固定，不在运行时选择。",
+      "作为消融变体，它主要用于把这种空间拼接设计与 Echo-Memory 的其他记忆策略作对比。你可以用一个通过严格架构校验、由研究者提供的本地 checkpoint 来运行它。"
+    ]
+  },
+  "whenToUse": {
+    "en": "Use it for research comparisons within the Echo-Memory family — specifically to study a spatial memory injected by concatenation with the text pathway.",
+    "zh": "适合在 Echo-Memory 家族内做研究对比——特别是研究以与文本通路拼接方式注入的空间记忆。"
+  },
+  "notFor": {
+    "en": "It's an ablation variant for research, not a general-purpose generator, and the memory design is fixed. Running it needs a researcher-supplied local checkpoint plus the shared Wan2.1 weights.",
+    "zh": "它是用于研究的消融变体，而非通用生成器，记忆设计也是固定的。运行它需要研究者提供的本地 checkpoint，以及共享的 Wan2.1 权重。"
+  },
+  "highlights": {
+    "en": [
+      "Research ablation of the Echo-Memory world model",
+      "Spatial memory injected by concatenation with the text pathway",
+      "Frozen-context strategy over two chunks",
+      "Echo-Memory checkpoint (CC-BY-4.0) with Wan2.1 components (Apache-2.0)"
+    ],
+    "zh": [
+      "Echo-Memory 世界模型的研究消融变体",
+      "以与文本通路拼接方式注入空间记忆",
+      "跨两个 chunk 的冻结上下文策略",
+      "Echo-Memory checkpoint（CC-BY-4.0）搭配 Wan2.1 组件（Apache-2.0）"
+    ]
+  }
+}

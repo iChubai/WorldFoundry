@@ -356,6 +356,7 @@ class DistributedSpec:
     dp_shard: str | int = "auto"
     cp: int = 1
     tp: int = 1
+    timeout_seconds: int = 1800
 
     def __post_init__(self) -> None:
         backend = _normalize_id(self.backend, field_name="distributed.backend")
@@ -374,6 +375,10 @@ class DistributedSpec:
             dp_shard = _positive_int(self.dp_shard, field_name="distributed.dp_shard")
         cp = _positive_int(self.cp, field_name="distributed.cp")
         tp = _positive_int(self.tp, field_name="distributed.tp")
+        timeout_seconds = _positive_int(
+            self.timeout_seconds,
+            field_name="distributed.timeout_seconds",
+        )
         if backend == "single" and (dp_replicate != 1 or cp != 1 or tp != 1 or dp_shard != "auto"):
             raise ValueError("distributed.backend='single' requires dp_replicate=cp=tp=1 and dp_shard=auto")
         object.__setattr__(self, "backend", backend)
@@ -381,6 +386,7 @@ class DistributedSpec:
         object.__setattr__(self, "dp_shard", dp_shard)
         object.__setattr__(self, "cp", cp)
         object.__setattr__(self, "tp", tp)
+        object.__setattr__(self, "timeout_seconds", timeout_seconds)
 
 
 @dataclass(frozen=True, slots=True)
@@ -555,7 +561,7 @@ class TrainingRecipe:
             distributed=DistributedSpec(
                 **section(
                     "distributed",
-                    {"backend", "dp_replicate", "dp_shard", "cp", "tp"},
+                    {"backend", "dp_replicate", "dp_shard", "cp", "tp", "timeout_seconds"},
                 )
             ),
             checkpoint=CheckpointSpec(

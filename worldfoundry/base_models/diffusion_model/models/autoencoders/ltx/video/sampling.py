@@ -1,3 +1,17 @@
+"""Space-to-depth downsample and depth-to-space upsample for LTX video.
+
+:class:`SpaceToDepthDownsample` and :class:`DepthToSpaceUpsample`
+implement the LTX video scale changes (official 8× time /
+32× space overall).  They operate on BCTHW feature maps
+inside :mod:`.video_vae`.
+
+Not the same as audio :mod:`~..audio.downsample` /
+:mod:`~..audio.upsample` (those are causal 2-D).
+
+This is LTX video graph math, not spatial tiling
+(:mod:`.tiling`).
+"""
+
 import math
 from typing import Tuple, Union
 
@@ -10,6 +24,7 @@ from .enums import PaddingModeType
 
 
 class SpaceToDepthDownsample(nn.Module):
+    """Pack spatial (and optional temporal) pixels into channels."""
     def __init__(
         self,
         dims: Union[int, Tuple[int, int]],
@@ -66,6 +81,7 @@ class SpaceToDepthDownsample(nn.Module):
 
 
 class DepthToSpaceUpsample(nn.Module):
+    """Unpack channels back to spatial/temporal resolution."""
     def __init__(
         self,
         dims: int | Tuple[int, int],

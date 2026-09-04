@@ -14,7 +14,17 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-"""Module for base_models -> diffusion_model -> image -> sana -> diffusion -> model -> nets -> fastlinear -> modules -> mb_conv_pre_glu.py functionality."""
+"""PyTorch MBConv + pre-GLU reference for the SANA Triton fused FFN.
+
+Tokens arrive as ``B N C`` (square spatial grid unless ``HW`` is
+given), are reshaped to ``B C H W``, then run inverted 1×1 → GLU →
+depthwise conv → pointwise 1×1.  The GLU is applied *before* the
+depthwise conv (pre-GLU), matching the fused Triton kernel.
+
+This file is the readable reference graph; production SANA inference
+uses the Triton path.  Do not change numerics without updating the
+fused kernel.
+"""
 
 import torch
 from torch import nn
@@ -27,7 +37,7 @@ from worldfoundry.core.nn import get_same_padding, val2tuple
 
 
 class MBConvPreGLU(nn.Module):
-    """Mb conv pre glu implementation."""
+    """Mobile inverted bottleneck with the GLU applied before the depthwise conv."""
 
     def __init__(
         self,

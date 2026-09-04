@@ -51,6 +51,7 @@ export type ModelRecipeIndexEntry = {
     role?: string;
     status?: string;
   } | null;
+  teaser?: string | null;
 };
 
 export type ModelRecipeIndexData = {
@@ -184,6 +185,22 @@ export type ModelRecipePublisher = {
   kind: 'company' | 'university' | 'lab' | null;
 };
 
+export type ModelRecipeFigure = {
+  src: string;
+  poster?: string;
+  kind?: 'image' | 'video';
+  caption?: string;
+  captionZh?: string;
+};
+
+export type ModelRecipePaper = {
+  title: string;
+  year?: number;
+  venue?: string;
+  arxivId?: string;
+  abstract?: string;
+};
+
 export type ModelRecipeDocs = {
   curated: boolean;
   publisher: ModelRecipePublisher | null;
@@ -206,6 +223,8 @@ export type ModelRecipeDocs = {
   benchmarks: ModelRecipeBenchmarkRef[];
   limitations: string[];
   limitationsZh: string[];
+  paper: ModelRecipePaper | null;
+  figures: ModelRecipeFigure[];
 };
 
 export type ModelRecipe = Omit<ModelRecipeIndexEntry, 'runtime' | 'checkpoint'> & {

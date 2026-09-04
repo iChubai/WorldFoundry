@@ -1,4 +1,14 @@
-"""Prompt adapter for the native Wan text encoder role."""
+"""Thin adapter that feeds the native Wan UMT5 conditioner.
+
+:class:`WanPrompter` is a convenience wrapper around
+:class:`~.model.WanTextEncoder` / tokenizer for call sites
+that still use a Diffusers-like ``encode_prompt`` API.
+
+Native recipes should call
+:class:`~.component.WanTextConditioner.encode` instead.
+
+No new transformer weights live here.
+"""
 
 from __future__ import annotations
 

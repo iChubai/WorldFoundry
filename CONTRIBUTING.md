@@ -68,3 +68,21 @@ Before release or large runtime imports, run the public quality gates:
 make lint
 make docs-check
 ```
+
+On a fresh CPU-only environment, install the release-gate Torch wheels from
+the official CPU index before installing the normal `[eval_core]` extra:
+
+```bash
+python -m pip install --index-url https://download.pytorch.org/whl/cpu \
+  "torch>=2.7,<2.12.0" "torchvision>=0.22,<0.27.0"
+python -m pip install -e ".[eval_core]"
+make test-eval-core
+```
+
+When model manifests or homepage recipes change, refresh and verify the
+checked-in recipe data:
+
+```bash
+npm --prefix docs/fumadocs run models:generate
+npm --prefix docs/fumadocs run models:check
+```

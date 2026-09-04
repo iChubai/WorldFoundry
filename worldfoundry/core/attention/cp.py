@@ -13,7 +13,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Context-parallel attention (ring / ulysses) built on native SDPA primitives."""
+"""Context-parallel attention (ring / Ulysses) built on native SDPA primitives.
+
+:class:`ContextParallelAttention` wraps :class:`NativeAttention` with a
+DeviceMesh so Q is shared and K/V are sequence-sharded (or the reverse,
+depending on the ring vs Ulysses option). Load-balance is left *off* so
+causal video windows stay aligned with RoPE CP splits in
+:mod:`worldfoundry.core.attention.rope`.
+"""
 
 from contextlib import nullcontext
 from typing import Any, Callable, ContextManager, Literal, cast
@@ -21,9 +28,17 @@ from typing import Any, Callable, ContextManager, Literal, cast
 import torch
 import torch.distributed._functional_collectives as funcol
 from torch import Tensor
-from torch.distributed.tensor.device_mesh import DeviceMesh
+
+try:
+    from torch.distributed.tensor.device_mesh import DeviceMesh
+except ImportError:  # PyTorch 2.4 compatibility.
+    from torch.distributed.device_mesh import DeviceMesh
 
 from worldfoundry.core.attention.native import NativeAttention
+
+# ──────────────────────────────────────────────────────────────────────────
+# SDPA entry points — cuDNN / Flash with an optional LSE for ring merge
+# ──────────────────────────────────────────────────────────────────────────
 
 # For type checking, cast the native ops to the expected signature.
 _sdpa_cudnn: Callable[..., tuple[Tensor, ...]] = cast(
@@ -56,6 +71,11 @@ def torch_sdpa_flash(
     """Scaled dot-product attention via Flash Attention backend."""
     out, lse, *_ = _sdpa_flash(query, key, value)
     return out, (lse if return_lse else None)
+
+
+# ──────────────────────────────────────────────────────────────────────────
+# CP wrapper — ring LSE-merge or Ulysses all-to-all on NativeAttention
+# ──────────────────────────────────────────────────────────────────────────
 
 
 class ContextParallelAttention(NativeAttention):
@@ -95,6 +115,7 @@ class ContextParallelAttention(NativeAttention):
         return tensor
 
     def _impl(self, query: Tensor, key: Tensor, value: Tensor) -> Tensor:
+        """Dispatch to ring or Ulysses; unknown ``method`` is a programming error."""
         if self.method == "ring":
             return self._impl_ring(query, key, value)
         if self.method == "ulysses":

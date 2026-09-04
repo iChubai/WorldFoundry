@@ -21,6 +21,9 @@ checkpoint_refs:
   filename: model.pt
   requires_auth: true
   gated: true
+official_sources:
+  project_page: https://szymanowiczs.github.io/lagernvs
+  paper: https://arxiv.org/abs/2603.20176
 integration:
   kind: pipeline_runner
   status: integrated

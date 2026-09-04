@@ -1,10 +1,19 @@
+"""Echo-Infinity learned query-memory encoder.
+
+A small stack of cross-attention layers compresses cached K/V into
+learned query tokens (optionally multi-group) that later chunks attend
+to.  Memory adapter only.
+"""
+
 import torch
 import torch.nn as nn
 
 from .attention import attention
 from .model import WanRMSNorm
 
+
 class MemoryCrossAttentionLayer(nn.Module):
+    """One query-memory encoder layer: attend queries to cached K/V, then FFN."""
 
     def __init__(self, dim, num_heads, ffn_dim, qk_norm=True, eps=1e-06):
         super().__init__()
@@ -18,6 +27,7 @@ class MemoryCrossAttentionLayer(nn.Module):
         self.ffn = nn.Sequential(nn.Linear(dim, ffn_dim), nn.GELU(approximate='tanh'), nn.Linear(ffn_dim, dim))
 
     def forward(self, query_state, cached_k, cached_v):
+        """Update learned queries by cross-attending to a cached memory bank."""
         b = query_state.shape[0]
         m = query_state.shape[1]
         n, d = (self.num_heads, self.head_dim)
@@ -33,6 +43,7 @@ class MemoryCrossAttentionLayer(nn.Module):
         return query_state
 
 class QueryMemoryEncoder(nn.Module):
+    """Compress cached K/V into learned query tokens for later Infinity chunks."""
 
     def __init__(self, config):
         super().__init__()

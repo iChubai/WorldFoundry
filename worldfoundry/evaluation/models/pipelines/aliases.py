@@ -92,6 +92,7 @@ class PipelineAliasRegistry:
 
     def __init__(self, groups: tuple[PipelineAliasGroup, ...] = ()) -> None:
         """Initialize the PipelineAliasRegistry with a collection of groups."""
+        self._frozen = False
         self._canonical: dict[str, PipelineAliasGroup] = {}
         self._aliases: dict[str, PipelineAliasGroup] = {}
         for group in groups:
@@ -99,6 +100,11 @@ class PipelineAliasRegistry:
 
     def register(self, group: PipelineAliasGroup) -> None:
         """Register a single PipelineAliasGroup and its aliases into the registry."""
+        if self._frozen:
+            raise RuntimeError(
+                "cannot register on a cached PipelineAliasRegistry; "
+                "construct a new instance or call clear_pipeline_alias_registry_cache()"
+            )
         group.validate()
         canonical_key = _alias_key(group.canonical_id)
         existing = self._canonical.get(canonical_key)
@@ -298,16 +304,17 @@ def _cached_pipeline_alias_registry(root_text: str) -> PipelineAliasRegistry:
     independent cached registries.
     """
     root = Path(root_text) if root_text else DEFAULT_PIPELINE_ALIASES_ROOT
-    return PipelineAliasRegistry(load_pipeline_alias_groups(root))
+    registry = PipelineAliasRegistry(load_pipeline_alias_groups(root))
+    registry._frozen = True
+    return registry
 
 
 def load_pipeline_alias_registry(root: str | Path | None = None) -> PipelineAliasRegistry:
     """Retrieve the cached global :class:`PipelineAliasRegistry`.
 
-    Uses :func:`_cached_pipeline_alias_registry` so repeated calls with the
-    same ``root`` return the same registry object.  Call
-    :func:`clear_pipeline_alias_registry_cache` after editing alias YAML
-    inside a long-lived process.
+    Repeated calls with the same ``root`` return the same frozen instance
+    (``register`` raises).  Call :func:`clear_pipeline_alias_registry_cache`
+    after editing alias YAML inside a long-lived process.
     """
     root_text = "" if root is None else str(Path(root))
     return _cached_pipeline_alias_registry(root_text)
@@ -325,6 +332,7 @@ __all__ = [
     "RUNTIME_VIDEO_ALIASES",
     "build_alias_mapping",
     "build_runtime_video_mapping",
+    "clear_pipeline_alias_registry_cache",
     "load_pipeline_alias_groups",
     "load_pipeline_alias_registry",
 ]

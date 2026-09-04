@@ -1,4 +1,10 @@
-"""Resident Wan 2.1 codec compatibility component."""
+"""Path-loaded Wan 2.1 VAE wrapper for DreamX / resident pipelines.
+
+Not the runner :class:`~...contracts.LatentDecoder`.  Constructs the
+camera-21 CNN from a ``.pth`` path and applies official mean/std scale.
+``encode_to_latent`` / ``decode_to_pixel`` use ``[B, T, C, H, W]``
+(time-before-channel), the resident layout.
+"""
 
 from __future__ import annotations
 

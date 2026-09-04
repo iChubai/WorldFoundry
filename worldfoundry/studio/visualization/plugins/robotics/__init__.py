@@ -6,6 +6,7 @@ Concrete helpers live in submodules so optional visualization dependencies stay 
 from __future__ import annotations
 
 __all__ = [
+    "action_overlay",
     "keyboard_overlay",
     "realtime",
     "robotics",

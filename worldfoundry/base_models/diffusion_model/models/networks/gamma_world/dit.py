@@ -13,6 +13,21 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+"""Gamma-World MinimalDiT: full-attention 3D video transformer.
+
+Architecture
+------------
+:class:`PatchEmbed` maps ``B C T H W`` to ``B T' H' W' C`` then flatten
+to ``B S C`` (``S = T'·H'·W'``).  :class:`VideoRopePosition3DEmb` (or
+learnable axis tables) supply 3D positions.  Each :class:`Block` is
+AdaLN-gated self-attn (optional i2v cross-attn) + GPT2 FFN.
+:class:`FinalLayer` unpatchifies to ``B C T H W``.  Attention backends
+include flex, i4, neighborhood, and context-parallel A2A.
+
+This file is large; helpers exist to keep checkpoint layouts and
+distributed attention interchangeable without changing residual math.
+"""
+
 import math
 from collections import namedtuple
 from collections.abc import Sequence
@@ -60,6 +75,8 @@ _COMPILED_FLEX_ATTENTION = compile_callable_cached(
 
 
 class RMSNorm(torch.nn.Module):
+    """RMSNorm on the last dim; used for Q/K and residual streams."""
+
     def __init__(self, dim: int, eps: float = 1e-5):
         super().__init__()
         self.eps = eps
@@ -78,6 +95,8 @@ class RMSNorm(torch.nn.Module):
 
 # ---------------------- Feed Forward Network -----------------------
 class GPT2FeedForward(nn.Module):
+    """Bias-free GELU MLP used as the DiT FFN on ``B S C`` or ``B T H W C`` tokens."""
+
     def __init__(self, d_model: int, d_ff: int):
         super().__init__()
         self.activation = nn.GELU()
@@ -420,8 +439,15 @@ class Attention(nn.Module):
         return self.compute_attention(q, k, v, video_size=video_size, kv_cache_cfg=kv_cache_cfg)
 
     def set_context_parallel_group(self, process_group, ranks, stream, cp_comm_type: str = "p2p"):
-        # self.attn_op.set_context_parallel_group(process_group, ranks, stream, cp_comm_type="a2a")
-        self.attn_op.set_context_parallel_group(process_group, ranks, stream, cp_comm_type=cp_comm_type)
+        if isinstance(self.attn_op, NativeAttention):
+            self.attn_op.set_context_parallel_group(process_group)
+            return
+        self.attn_op.set_context_parallel_group(
+            process_group,
+            ranks,
+            stream,
+            cp_comm_type=cp_comm_type,
+        )
 
 
 class I2VCrossAttention(Attention):
@@ -1550,6 +1576,7 @@ class MinimalDiT(nn.Module):
         return x_B_T_H_W_D, None, extra_pos_emb
 
     def unpatchify(self, x_B_T_H_W_M):
+        """Fold ``B T H W (p1·p2·t·C)`` patch tokens back to ``B C T H W`` video latents."""
         x_B_C_Tt_Hp_Wp = rearrange(
             x_B_T_H_W_M,
             "B T H W (p1 p2 t C) -> B C (T t) (H p1) (W p2)",
@@ -1570,11 +1597,11 @@ class MinimalDiT(nn.Module):
         intermediate_feature_ids: Optional[List[int]] = None,
         img_context_emb: Optional[torch.Tensor] = None,
     ) -> torch.Tensor | List[torch.Tensor] | Tuple[torch.Tensor, List[torch.Tensor]]:
-        """
-        Args:
-            x: (B, C, T, H, W) tensor of spatial-temp inputs
-            timesteps: (B, ) tensor of timesteps
-            crossattn_emb: (B, N, D) tensor of cross-attention embeddings
+        """Denoise video latents through AdaLN DiT blocks.
+
+        ``x_B_C_T_H_W`` is channel-first video.  Inside the trunk tokens live as
+        ``B T H W D`` (not flattened ``B S C``) so RoPE can stay 3D-aware.
+        ``crossattn_emb`` is text context ``B N D``.
         """
         assert isinstance(data_type, DataType), (
             f"Expected DataType, got {type(data_type)}. We need discuss this flag later."

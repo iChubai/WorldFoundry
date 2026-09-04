@@ -1,3 +1,13 @@
+"""DreamZero Pi0-style action encoder (Wan 2.1 action tokens).
+
+Maps per-step continuous actions plus a batch timestep into DiT-width
+tokens that later blocks can cross-attend or concat.  This file is
+inference-only encoding math; the host transformer lives in
+:mod:`.action` / :mod:`.model`.
+
+No camera, VACE, causal, or linear-attention logic.
+"""
+
 # Inference-only DreamZero architecture.
 ### Implemented based on Pi0 Action Encoding
 import torch
@@ -5,6 +15,7 @@ import torch.nn as nn
 
 
 def swish(x):
+    """SiLU / Swish used between the action MLP layers."""
     return x * torch.sigmoid(x)
 
 
@@ -42,6 +53,8 @@ class SinusoidalPositionalEncoding(nn.Module):
 
 
 class ActionEncoder(nn.Module):
+    """Embed ``(B, T, action_dim)`` actions conditioned on a scalar timestep per batch."""
+
     def __init__(self, action_dim, hidden_size):
         super().__init__()
         self.hidden_size = hidden_size

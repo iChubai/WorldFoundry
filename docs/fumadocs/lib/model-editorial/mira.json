@@ -1,0 +1,41 @@
+{
+  "id": "mira",
+  "tagline": {
+    "en": "MIRA — a multiplayer, action-conditioned world model for offline inference on the Rocket Science dataset.",
+    "zh": "MIRA——面向多玩家、动作条件的世界模型,在 Rocket Science 数据集上做离线推理。"
+  },
+  "overview": {
+    "en": [
+      "MIRA is an action-conditioned, multiplayer interactive world model. It rolls a world forward from actions, and is designed around multiplayer game-world scenarios.",
+      "WorldFoundry vendors the upstream inference source and exposes offline inference only — there's no training or metric entrypoint. You run it against a local MIRA checkpoint and a local split of the Rocket Science dataset (which must include its index.json).",
+      "In WorldFoundry you point the workspace at your staged checkpoint and dataset split, and it generates a Rocket Science rollout, using the shared video backend for decoding and output."
+    ],
+    "zh": [
+      "MIRA 是一个动作条件、多玩家的交互式世界模型。它从动作出发向前推演世界,围绕多玩家游戏世界场景设计。",
+      "WorldFoundry 内置了上游的推理源码,只暴露离线推理——不含训练或指标入口。你需要用本地 MIRA checkpoint 和本地的 Rocket Science 数据集切片(须包含其 index.json)来运行。",
+      "在 WorldFoundry 中,你把工作区指向已就位的 checkpoint 与数据集切片,它便生成一段 Rocket Science rollout,并使用统一视频后端进行解码与输出。"
+    ]
+  },
+  "whenToUse": {
+    "en": "Use MIRA when you want to explore an action-conditioned, multiplayer world model offline and you already have a compatible checkpoint and a local Rocket Science split to run against.",
+    "zh": "当你想离线探索一个动作条件、多玩家的世界模型,并且已备有兼容的 checkpoint 与本地 Rocket Science 切片时,适合使用 MIRA。"
+  },
+  "notFor": {
+    "en": "It's inference-only — no training or evaluation entrypoint is included. It requires a local checkpoint and a local Rocket Science split; the full public dataset is very large and is not downloaded automatically.",
+    "zh": "它只做推理——不含训练或评测入口。运行需要本地 checkpoint 与本地 Rocket Science 切片;完整公开数据集体量极大,不会自动下载。"
+  },
+  "highlights": {
+    "en": [
+      "Action-conditioned, multiplayer interactive world model",
+      "Offline inference only — training and metrics are intentionally omitted",
+      "Runs against a local checkpoint and Rocket Science dataset split",
+      "Uses WorldFoundry's shared video backend for decoding and output"
+    ],
+    "zh": [
+      "动作条件的多玩家交互式世界模型",
+      "仅离线推理——刻意不含训练与指标入口",
+      "基于本地 checkpoint 与 Rocket Science 数据集切片运行",
+      "使用 WorldFoundry 统一视频后端进行解码与输出"
+    ]
+  }
+}

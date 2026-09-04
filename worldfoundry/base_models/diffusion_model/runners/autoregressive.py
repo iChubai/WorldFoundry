@@ -1,9 +1,23 @@
-"""Framework-owned windowed autoregressive diffusion execution."""
+"""Framework-owned windowed autoregressive diffusion execution.
+
+Implements the ``autoregressive-window`` strategy runner at the bottom of:
+
+    recipe.execution.strategy == "autoregressive-window"
+        → build_autoregressive_window_strategy
+        → AutoregressiveWindowRunner.run
+
+Inputs: WindowedDenoiser plus canonical RunnerComponents, prediction_mode
+(flow / distilled-x0), fixed_timesteps, and context_timestep.
+Output: DiffusionOutput; metadata includes block_size / n_views / prediction_mode.
+Must not: let a model package own KV-cache windows or bypass
+WindowedDenoiser.create_kv_cache; on the distilled-x0 path, do not shift
+context_timestep a second time (see the cache-commit comment).
+"""
 
 from __future__ import annotations
 
 from collections.abc import Mapping, Sequence
-from typing import Protocol, runtime_checkable
+from typing import Any, Protocol, runtime_checkable
 
 import torch
 from einops import rearrange
@@ -19,14 +33,19 @@ from ..contracts import (
     LatentInitialization,
     SchedulerStep,
 )
-from ..extensions import DiffusionExtension, DiffusionRunContext
+from ..extensions import DiffusionRunContext
 from ..schedulers.wan import add_flow_noise, shift_flow_sigmas
-from .base import NativeDiffusionRunner, RunnerComponents
+from .base import NativeDiffusionRunner
 
 
 @runtime_checkable
 class WindowedDenoiser(Denoiser, Protocol):
-    """Extra architecture surface required by the generic window runner."""
+    """Extra architecture surface required by the window runner: block_size, variant, KV-cache creation.
+
+    Attention implementations stay on the model component; the framework owns window
+    slicing and cache lifetime. AutoregressiveWindowRunner construction raises
+    :exc:`TypeError` if this protocol is not satisfied.
+    """
 
     block_size: int
     variant: str
@@ -40,11 +59,16 @@ class WindowedDenoiser(Denoiser, Protocol):
         frame_sequence_length: int,
         device: torch.device,
         dtype: torch.dtype,
-    ) -> list[dict[str, Tensor]]: ...
+    ) -> Any: ...
 
 
 class AutoregressiveWindowRunner(NativeDiffusionRunner):
-    """Own block traversal, CFG, solver updates, and KV-cache lifetime."""
+    """Own block traversal, CFG, solver updates, and KV-cache lifetime.
+
+    ``prediction_mode`` may be only ``flow`` or ``distilled-x0``; the latter requires fixed_timesteps.
+    Construction: non-WindowedDenoiser → :exc:`TypeError`; illegal mode or missing
+    fixed_timesteps → :exc:`ValueError`.
+    """
 
     def __init__(
         self,
@@ -52,9 +76,10 @@ class AutoregressiveWindowRunner(NativeDiffusionRunner):
         prediction_mode: str = "flow",
         fixed_timesteps: Sequence[int] = (),
         context_timestep: int = 0,
+        guidance_mode: str = "standard",
         **kwargs: object,
     ) -> None:
-        super().__init__(**kwargs)
+        super().__init__(guidance_mode=guidance_mode, **kwargs)
         if not isinstance(self.components.denoiser, WindowedDenoiser):
             raise TypeError("autoregressive-window requires a WindowedDenoiser component")
         self.windowed_denoiser = self.components.denoiser
@@ -70,6 +95,7 @@ class AutoregressiveWindowRunner(NativeDiffusionRunner):
         self,
         request: DiffusionRequest,
     ) -> tuple[DiffusionRunContext, Tensor, Mapping[str, object]]:
+        """Encode conditions, run extensions, initialize latents. Same semantics as the standard runner, without entering the sampling loop."""
         generator = self._generator(request.sampling.seed)
         conditioning = self.components.conditioner.encode(
             request,
@@ -137,6 +163,7 @@ class AutoregressiveWindowRunner(NativeDiffusionRunner):
         start: int,
         end: int,
     ) -> Tensor:
+        """Fold as ``(V, T)`` then slice the time window. Return unchanged if lengths do not match, so shared conditions are not mis-sliced."""
         if tensor.ndim == 5:
             if tensor.shape[2] != n_views * frames_per_view:
                 return tensor
@@ -157,10 +184,11 @@ class AutoregressiveWindowRunner(NativeDiffusionRunner):
         frames_per_view: int,
         start: int,
         end: int,
-        cache: list[dict[str, Tensor]],
+        cache: object,
         frame_sequence_length: int,
         block_noise: Tensor,
     ) -> dict[str, object]:
+        """Slice temporal tensors onto the current block and inject kv_cache / RoPE bounds / block_noise."""
         result = dict(values)
         for key in (
             "gt_frames",
@@ -196,6 +224,7 @@ class AutoregressiveWindowRunner(NativeDiffusionRunner):
         positive: Mapping[str, object],
         negative: Mapping[str, object] | None,
     ) -> DenoiserOutput:
+        """One in-window prediction. distilled-x0 skips CFG; flow uses classic ``ε_neg + s*(ε_pos-ε_neg)``."""
         positive_output = self._call_denoiser_with_conditioning(
             context,
             latents=latents,
@@ -211,10 +240,28 @@ class AutoregressiveWindowRunner(NativeDiffusionRunner):
             conditioning=negative,
         )
         scale = context.request.sampling.guidance_scale
+        if self.guidance_mode == "positive":
+            guided = positive_output.sample + scale * (
+                positive_output.sample - negative_output.sample
+            )
+        else:
+            guided = negative_output.sample + scale * (
+                positive_output.sample - negative_output.sample
+            )
         return DenoiserOutput(
-            sample=negative_output.sample + scale * (positive_output.sample - negative_output.sample),
+            sample=guided,
             extras={"positive": positive_output.extras, "negative": negative_output.extras},
         )
+
+    def _use_negative_branch(self, context: DiffusionRunContext) -> bool:
+        """Apply the same skip rules as the canonical runner's CFG lifecycle."""
+
+        if self.prediction_mode != "flow" or not context.conditioning.negative:
+            return False
+        scale = context.request.sampling.guidance_scale
+        if self.guidance_mode == "standard":
+            return scale != 1.0
+        return scale != 0.0
 
     @staticmethod
     def _noise_like(value: Tensor, generator: torch.Generator) -> Tensor:
@@ -320,6 +367,7 @@ class AutoregressiveWindowRunner(NativeDiffusionRunner):
     @torch.no_grad()
     def run(self, request: DiffusionRequest) -> DiffusionOutput:
         context: DiffusionRunContext | None = None
+        run_error: BaseException | None = None
         try:
             context, initial_noise, artifacts = self._prepare_context(request)
             n_views = int(context.conditioning.shared.get("n_views", 1))
@@ -344,7 +392,7 @@ class AutoregressiveWindowRunner(NativeDiffusionRunner):
                 "dtype": self.dtype,
             }
             positive_cache = self.windowed_denoiser.create_kv_cache(**cache_kwargs)
-            use_negative = bool(context.conditioning.negative) and self.prediction_mode == "flow"
+            use_negative = self._use_negative_branch(context)
             negative_cache = self.windowed_denoiser.create_kv_cache(**cache_kwargs) if use_negative else None
 
             output = torch.zeros_like(initial_noise)
@@ -464,10 +512,13 @@ class AutoregressiveWindowRunner(NativeDiffusionRunner):
                 extension.on_run_end(context)
             return result
         except BaseException as error:
+            run_error = error
             if context is not None:
                 for extension in reversed(self.extensions):
                     extension.on_run_error(context, error)
             raise
+        finally:
+            self._end_denoiser_request(context, error=run_error)
 
 
 __all__ = ["AutoregressiveWindowRunner", "WindowedDenoiser"]

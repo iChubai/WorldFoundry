@@ -1,0 +1,41 @@
+{
+  "id": "diffusion-policy",
+  "tagline": {
+    "en": "Diffusion Policy — Stanford's visuomotor robot policy that generates action sequences with a diffusion model, here as a low-dimensional Push-T runtime.",
+    "zh": "Diffusion Policy——斯坦福提出的视觉运动机器人策略,用扩散模型生成动作序列,这里以低维 Push-T 运行时提供。"
+  },
+  "overview": {
+    "en": [
+      "Diffusion Policy is a widely-used approach to robot control from Stanford that frames action generation as conditional denoising: given the current state, it uses a diffusion model to generate a short sequence of actions rather than predicting one step at a time. This makes it well-suited to multimodal, precise visuomotor tasks.",
+      "The variant here is the low-dimensional Push-T policy, reconstructed in-tree from the released model. It exposes a predict_action interface that emits the Push-T action schema and produces action traces for policy rollout.",
+      "In WorldFoundry it runs inference-only. For safety, the original executable workspace checkpoint is not loaded directly; a converted, tensor-only checkpoint is used instead, so conversion happens once in a trusted offline step before running."
+    ],
+    "zh": [
+      "Diffusion Policy 是斯坦福提出、被广泛使用的机器人控制方法,它把动作生成建模为条件去噪:给定当前状态,用扩散模型生成一小段动作序列,而非逐步预测。这使它很适合多模态、需要精确控制的视觉运动任务。",
+      "这里的变体是低维 Push-T 策略,在仓库内从发布的模型重建而来。它提供 predict_action 接口,输出 Push-T 动作规格,并生成用于策略推进(rollout)的动作轨迹。",
+      "在 WorldFoundry 中它仅做推理。出于安全考虑,不直接加载原始的可执行 workspace checkpoint,而改用转换后、仅含张量的 checkpoint;因此需要先在可信的离线环境中完成一次转换,再运行。"
+    ]
+  },
+  "whenToUse": {
+    "en": "When you want a diffusion-based visuomotor policy for robot control and action rollout — here specifically the low-dimensional Push-T task — and prefer a well-established action-generation method.",
+    "zh": "当你需要一个基于扩散的视觉运动策略用于机器人控制与动作推进时——这里具体为低维 Push-T 任务——并倾向于使用成熟的动作生成方法。"
+  },
+  "notFor": {
+    "en": "This is a robot action policy, not a video or image generator. The original dill workspace checkpoint is rejected at load; convert it to a tensor-only checkpoint offline first.",
+    "zh": "它是机器人动作策略,而非视频或图像生成器。原始的 dill workspace checkpoint 在加载时会被拒绝;请先在离线环境把它转换为仅含张量的 checkpoint。"
+  },
+  "highlights": {
+    "en": [
+      "Diffusion-based visuomotor policy for robot control",
+      "Generates action sequences via conditional denoising",
+      "Low-dimensional Push-T runtime with a predict_action interface",
+      "Loads a safe, tensor-only converted checkpoint"
+    ],
+    "zh": [
+      "面向机器人控制的扩散式视觉运动策略",
+      "通过条件去噪生成动作序列",
+      "低维 Push-T 运行时,提供 predict_action 接口",
+      "加载安全的、仅含张量的转换 checkpoint"
+    ]
+  }
+}

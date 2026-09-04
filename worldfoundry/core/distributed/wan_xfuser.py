@@ -1,3 +1,13 @@
+"""Wan + xFuser long-context attention adapter.
+
+Binds xfuser SP ranks to Wan block forwards (AMP + rearrange). Requires
+the xfuser package. The in-tree substitute is
+:mod:`worldfoundry.core.attention.patch_xdit_context_parallel`.
+
+Public surface: :func:`usp_attn_forward`, :func:`usp_attn_s2v_forward`,
+:func:`sp_prope_forward`, and the RoPE helpers.
+"""
+
 import torch
 import torch.cuda.amp as amp
 from einops import rearrange
@@ -11,8 +21,18 @@ from worldfoundry.core.distributed.sequence_parallel_runtime import (
     xFuserLongContextAttention,
 )
 
+# ──────────────────────────────────────────────────────────────────────────
+# RoPE + USP attention — freqs are sliced per SP rank after padding to full S
+# ──────────────────────────────────────────────────────────────────────────
+
 
 def pad_freqs(original_tensor, target_len):
+    """Pad frequency rows with ones so a short RoPE table covers the full SP sequence.
+
+    Ones are the complex multiplicative identity, so padded tokens keep their
+    values instead of being rotated by uninitialized memory.
+    """
+
     seq_len, s1, s2 = original_tensor.shape
     pad_size = target_len - seq_len
     padding_tensor = torch.ones(
@@ -66,6 +86,8 @@ def rope_apply(x, grid_sizes, freqs):
     return torch.stack(output)
 
 def rope_apply_qk(q, k, grid_sizes, freqs):
+    """Apply :func:`rope_apply` to Q and K with the same grid / freqs."""
+
     q = rope_apply(q, grid_sizes, freqs)
     k = rope_apply(k, grid_sizes, freqs)
     return q, k
@@ -77,14 +99,25 @@ def usp_attn_forward(self,
                      freqs,
                      dtype=torch.bfloat16,
                      t=0):
+    """Wan self-attention forward that routes Q/K/V through xFuser long-context.
+
+    Bound onto a block as a method. RoPE is applied on the local SP shard
+    after freqs are padded to the full sequence. Unpadded attention is still
+    a TODO — padded tokens currently participate in the kernel.
+    """
+
     b, s, n, d = *x.shape[:2], self.num_heads, self.head_dim
     half_dtypes = (torch.float16, torch.bfloat16)
 
     def half(x):
+        """Cast to ``dtype`` unless already float16/bfloat16 (AMP path)."""
+
         return x if x.dtype in half_dtypes else x.to(dtype)
 
     # query, key, value function
     def qkv_fn(x):
+        """Project and reshape Q/K/V to ``[B, S, H, D]`` on the local shard."""
+
         q = self.norm_q(self.q(x)).view(b, s, n, d)
         k = self.norm_k(self.k(x)).view(b, s, n, d)
         v = self.v(x).view(b, s, n, d)
@@ -118,6 +151,12 @@ def usp_attn_forward(self,
 @amp.autocast(enabled=False)
 @torch.compiler.disable()
 def s2v_rope_apply(x, grid_sizes, freqs):
+    """Speech-to-video RoPE: per-sample freqs, float64 complex multiply, then float32.
+
+    Unlike :func:`rope_apply` this does not slice freqs by SP rank — the
+    caller already packed a per-sample table that matches the local shard.
+    """
+
     s, n, c = x.size(1), x.size(2), x.size(3) // 2
     # loop over samples
     output = []
@@ -135,6 +174,8 @@ def s2v_rope_apply(x, grid_sizes, freqs):
     return torch.stack(output).float()
 
 def s2v_rope_apply_qk(q, k, grid_sizes, freqs):
+    """Apply :func:`s2v_rope_apply` to Q and K with the same per-sample freqs."""
+
     q = s2v_rope_apply(q, grid_sizes, freqs)
     k = s2v_rope_apply(k, grid_sizes, freqs)
     return q, k
@@ -146,14 +187,20 @@ def usp_attn_s2v_forward(self,
                      freqs,
                      dtype=torch.bfloat16,
                      t=0):
+    """S2V self-attention forward through xFuser, using per-sample RoPE tables."""
+
     b, s, n, d = *x.shape[:2], self.num_heads, self.head_dim
     half_dtypes = (torch.float16, torch.bfloat16)
 
     def half(x):
+        """Cast to ``dtype`` unless already float16/bfloat16 (AMP path)."""
+
         return x if x.dtype in half_dtypes else x.to(dtype)
 
     # query, key, value function
     def qkv_fn(x):
+        """Project and reshape Q/K/V to ``[B, S, H, D]`` on the local shard."""
+
         q = self.norm_q(self.q(x)).view(b, s, n, d)
         k = self.norm_k(self.k(x)).view(b, s, n, d)
         v = self.v(x).view(b, s, n, d)
@@ -184,6 +231,10 @@ def usp_attn_s2v_forward(self,
     x = self.o(x)
     return x
 
+
+# ──────────────────────────────────────────────────────────────────────────
+# PRoPE + camera attention — head-parallel when N % sp == 0, else all-gather
+# ──────────────────────────────────────────────────────────────────────────
 
 
 def _all_to_all_4d(tensor, scatter_dim, gather_dim, sp_group_obj):

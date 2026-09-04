@@ -1,0 +1,37 @@
+{
+  "id": "pi3",
+  "tagline": {
+    "en": "A feed-forward visual-geometry model that turns images into 3D point clouds and camera trajectories.",
+    "zh": "一个前馈式视觉几何模型,把图像转成 3D 点云与相机轨迹。"
+  },
+  "overview": {
+    "en": [
+      "Pi3 is a visual-geometry reconstruction model from the Pi3 project (yyfz). Given images or video of a scene, it recovers the 3D structure as a point cloud together with the camera path that captured it.",
+      "In WorldFoundry, Pi3 is wired up as a point-cloud pipeline for 3D reconstruction and trajectory rendering. You feed it views of a scene and it produces the reconstructed geometry and the estimated camera trajectory, which you can visualize as a point cloud."
+    ],
+    "zh": [
+      "Pi3 是 Pi3 项目(yyfz)推出的视觉几何重建模型。给它一组场景图像或视频,它就能把场景的 3D 结构还原为点云,并同时估计出拍摄时的相机轨迹。",
+      "在 WorldFoundry 中,Pi3 被接成一条点云 pipeline,用于 3D 重建与轨迹渲染。你输入场景的多个视角,它输出重建后的几何结构与估计出的相机轨迹,并可以点云形式可视化。"
+    ]
+  },
+  "whenToUse": {
+    "en": "When you want to reconstruct 3D geometry and camera motion from images or video — building point clouds and recovering trajectories from ordinary views.",
+    "zh": "当你想从图像或视频重建 3D 几何与相机运动时——用普通视角构建点云、还原轨迹。"
+  },
+  "notFor": {
+    "en": "It is a reconstruction model, not a generative one — it does not synthesize new images or video from text.",
+    "zh": "它是重建模型而非生成模型——不能从文字合成新的图像或视频。"
+  },
+  "highlights": {
+    "en": [
+      "Feed-forward 3D reconstruction from images or video",
+      "Outputs point clouds and estimated camera trajectories",
+      "Focused on 3D & 4D geometry rather than generation"
+    ],
+    "zh": [
+      "从图像或视频前馈式重建 3D",
+      "输出点云与估计的相机轨迹",
+      "聚焦 3D & 4D 几何而非生成"
+    ]
+  }
+}

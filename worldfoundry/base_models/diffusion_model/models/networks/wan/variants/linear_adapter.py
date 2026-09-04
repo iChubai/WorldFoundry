@@ -1,4 +1,13 @@
-"""Module for base_models -> diffusion_model -> video -> wan -> models -> linear_wan_adapter.py functionality."""
+"""Sana / Sana-Video aliases on the linear-attention Wan 2.1 graph.
+
+Historical Sana checkpoints use ``SanaVideoMSBlock`` / ``SanaWanModel``
+class names.  The math is identical to :mod:`.linear`: flash self-attn
+or linear (ReLU / power) attention plus the official Wan packing.
+
+This adapter only rebuilds ``self.blocks`` with the Sana type names so
+state-dict keys and ``_no_split_modules`` stay compatible.  No action,
+camera, VACE, causal, or TeaCache hooks are added here.
+"""
 
 import torch.nn as nn
 
@@ -6,14 +15,15 @@ from worldfoundry.base_models.diffusion_model.models.networks.wan.variants.linea
 
 
 class SanaVideoMSBlock(WanAttentionBlock):
-    """Sana video ms block implementation."""
+    """Checkpoint alias of :class:`WanAttentionBlock` for Sana-Video weights."""
     pass
 
 
 class SanaWanModel(WanModel):
-    """Sana wan model implementation."""
+    """Wan 2.1 T2V/I2V stem with Sana-named flash-attention blocks."""
+
     def __init__(self, *args, **kwargs):
-        """Init."""
+        """Rebuild the block stack after the official Wan constructor."""
         super().__init__(*args, **kwargs)
         cross_attn_type = "t2v_cross_attn" if self.model_type == "t2v" else "i2v_cross_attn"
         self.blocks = nn.ModuleList(
@@ -34,9 +44,10 @@ class SanaWanModel(WanModel):
 
 
 class SanaWanLinearAttentionModel(WanLinearAttentionModel):
-    """Sana wan linear attention model implementation."""
+    """Sana-named wrapper around :class:`WanLinearAttentionModel`."""
+
     def __init__(self, *args, **kwargs):
-        """Init."""
+        """Rebuild blocks as flash self-attn + MLP FFN with Sana class names."""
         super().__init__(*args, **kwargs)
         cross_attn_type = "t2v_cross_attn" if self.model_type == "t2v" else "i2v_cross_attn"
         self_attn_types = ["flash"] * self.num_layers

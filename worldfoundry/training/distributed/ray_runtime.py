@@ -64,6 +64,8 @@ class RayDevicePoolConfig:
             default) preserves the historical unbounded wait; setting a value
             turns "the cluster can never satisfy STRICT_PACK" from a silent
             hang into a raised error with scheduler diagnostics.
+        placement_ready_timeout_s: Backward-compatible alias for
+            ``placement_timeout_seconds``.
     """
 
     num_devices: int
@@ -73,6 +75,7 @@ class RayDevicePoolConfig:
     accelerator_resource: str = "GPU"
     ray_address: str | None = None
     placement_timeout_seconds: float | None = None
+    placement_ready_timeout_s: float | None = None
 
     def __post_init__(self) -> None:
         if self.num_devices <= 0 or self.devices_per_node <= 0:
@@ -83,6 +86,16 @@ class RayDevicePoolConfig:
             raise ValueError("cpus_per_worker must be positive")
         if self.placement_timeout_seconds is not None and not self.placement_timeout_seconds > 0:
             raise ValueError("placement_timeout_seconds must be positive when set")
+        if self.placement_ready_timeout_s is not None and not self.placement_ready_timeout_s > 0:
+            raise ValueError("placement_ready_timeout_s must be positive when set")
+        if (
+            self.placement_timeout_seconds is not None
+            and self.placement_ready_timeout_s is not None
+            and self.placement_timeout_seconds != self.placement_ready_timeout_s
+        ):
+            raise ValueError(
+                "placement_timeout_seconds and placement_ready_timeout_s must match when both are set"
+            )
         resource = str(self.accelerator_resource).strip()
         if not resource:
             raise ValueError("accelerator_resource must be non-empty")
@@ -408,19 +421,21 @@ class RayDevicePool:
         if self._ray is not None:
             return
         ray = import_module("ray")
+        ray_was_initialized = ray.is_initialized()
         started_ray = False
-        if not ray.is_initialized():
-            ray.init(address=self.config.ray_address, ignore_reinit_error=True)
-            started_ray = True
-        placement_group_module = import_module("ray.util.placement_group")
 
         # Everything created below is rolled back on failure.  ``self._ray``
         # is only assigned once setup fully succeeded, so a failed setup must
         # release its own resources here: ``shutdown()`` early-returns on
         # ``self._ray is None`` and ``__exit__`` never runs when ``__enter__``
         # raises (TR-12).
+        placement_group_module = None
         groups: list[object] = []
         try:
+            if not ray_was_initialized:
+                ray.init(address=self.config.ray_address, ignore_reinit_error=True)
+                started_ray = True
+            placement_group_module = import_module("ray.util.placement_group")
             remaining = self.config.num_devices
             while remaining:
                 node_devices = min(self.config.devices_per_node, remaining)
@@ -433,7 +448,11 @@ class RayDevicePool:
                 groups.append(group)
                 remaining -= node_devices
             ready = [group.ready() for group in groups]
-            timeout = self.config.placement_timeout_seconds
+            timeout = (
+                self.config.placement_timeout_seconds
+                if self.config.placement_timeout_seconds is not None
+                else self.config.placement_ready_timeout_s
+            )
             try:
                 if timeout is None:
                     ray.get(ready)
@@ -450,15 +469,28 @@ class RayDevicePool:
                     logger.error("placement groups failed to become ready; scheduler state: %s", table)
                 raise
         except BaseException:
-            for group in groups:
+            if placement_group_module is not None:
+                for group in groups:
+                    try:
+                        placement_group_module.remove_placement_group(group)
+                    except Exception:
+                        logger.warning(
+                            "failed to remove placement group during setup rollback",
+                            exc_info=True,
+                        )
+            should_shutdown_ray = started_ray
+            if not ray_was_initialized and not should_shutdown_ray:
                 try:
-                    placement_group_module.remove_placement_group(group)
+                    # ``ray.init`` can raise after starting local services.
+                    # Treat a now-initialized session as owned by this failed
+                    # setup call and roll it back as well.
+                    should_shutdown_ray = ray.is_initialized()
                 except Exception:
                     logger.warning(
-                        "failed to remove placement group during setup rollback",
+                        "failed to inspect Ray state during setup rollback",
                         exc_info=True,
                     )
-            if started_ray:
+            if should_shutdown_ray:
                 try:
                     ray.shutdown()
                 except Exception:

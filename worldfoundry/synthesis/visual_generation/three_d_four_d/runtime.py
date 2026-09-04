@@ -13,10 +13,10 @@ from typing import Any, Mapping, Sequence
 
 import yaml
 
+from worldfoundry.core.geometry import depth_to_world_points
 from worldfoundry.evaluation.models.runtime.profiles import load_runtime_profile
 from worldfoundry.evaluation.utils import REPO_ROOT
 from worldfoundry.synthesis.base_synthesis import BaseSynthesis
-from worldfoundry.studio.visualization.core.geometry import depth_to_world_points
 
 
 @dataclass(frozen=True)
@@ -93,8 +93,8 @@ THREE_D_FOUR_D_RUNTIME_SPECS: Mapping[str, ThreeDFourDRuntimeSpec] = {
         repo_names=("MVDiffusion", "mvdiffusion"),
         entrypoint="demo.py",
         command_kind="mvdiffusion_demo",
-        artifact_kind="generated_3d_asset",
-        artifact_filename="mvdiffusion.png",
+        artifact_kind="generated_video",
+        artifact_filename="mvdiffusion.mp4",
         required_input="prompt_or_image",
         source_repo_url="https://github.com/Tangshitao/MVDiffusion",
         input_schema={"prompt": True, "image": True, "video": False, "actions": ["camera_views"]},
@@ -509,8 +509,6 @@ class ThreeDFourDRuntimeSynthesis(BaseSynthesis):
             env["WORLDFOUNDRY_DA2_MODEL_PATH"] = str(da2_model_path)
         ckpt_root = _ckpt_root()
         env.setdefault("TORCH_HOME", str(ckpt_root / "torch_hub"))
-        for offline_key in ("HF_HUB_OFFLINE", "TRANSFORMERS_OFFLINE", "HF_DATASETS_OFFLINE"):
-            env.pop(offline_key, None)
         hf_home_candidates = [
             Path(str(env.get("WORLDFOUNDRY_HFD_ROOT") or "")).expanduser(),
             Path(str(env.get("HF_HOME") or "")).expanduser(),
@@ -605,8 +603,11 @@ class ThreeDFourDRuntimeSynthesis(BaseSynthesis):
             return command
         if self.spec.command_kind == "worldgen_inference":
             command = [python, entrypoint, "--prompt", prompt or "a 3D scene", "--output_dir", output_dir]
+            pano_image = options.get("pano_image", self.options.get("pano_image"))
+            if pano_image:
+                command.extend(["--pano_image", str(pano_image)])
             expanded_images = _expand_image_inputs(images)
-            if expanded_images:
+            if expanded_images and not pano_image:
                 command.extend(["--image", expanded_images[0]])
             if not _bool_option(options, self.options, "viewer"):
                 command.append("--no_viewer")
@@ -699,7 +700,14 @@ class ThreeDFourDRuntimeSynthesis(BaseSynthesis):
                 command.extend(["--image_path", images[0]])
             text_path = options.get("text_path", self.options.get("text_path"))
             if text_path:
-                command.extend(["--text_path", str(text_path)])
+                resolved_text_path = Path(str(text_path)).expanduser()
+                if not resolved_text_path.is_absolute() and self.source_root is not None:
+                    resolved_text_path = self.source_root / resolved_text_path
+                if resolved_text_path.is_file():
+                    command.extend(["--text_path", str(resolved_text_path.resolve())])
+            steps = options.get("steps", self.options.get("steps"))
+            if steps is not None:
+                command.extend(["--steps", str(max(int(steps), 1))])
             if _bool_option(options, self.options, "gen_video"):
                 command.append("--gen_video")
             return command

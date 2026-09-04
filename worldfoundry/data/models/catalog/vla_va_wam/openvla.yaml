@@ -20,6 +20,8 @@ output_artifacts:
 - action_trace
 - rollout_metrics
 official_sources:
+  paper: https://arxiv.org/abs/2406.09246
+  project_page: https://openvla.github.io/
   github:
     head_sha: c8f03f48af692657d3060c19588038c7220e9af9
     url: https://github.com/openvla/openvla

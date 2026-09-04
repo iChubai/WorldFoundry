@@ -9,7 +9,10 @@ from typing import Protocol, runtime_checkable
 import torch
 
 from worldfoundry.training.checkpoint.checkpointer import TrainingCheckpointer
-from worldfoundry.training.checkpoint.staging import PendingTrainingCheckpoint
+from worldfoundry.training.checkpoint.staging import (
+    PendingTrainingCheckpoint,
+    wait_for_pending_checkpoints,
+)
 from worldfoundry.training.checkpoint.state import TrainingProgress
 from worldfoundry.training.post_training.shared.batching import latent_token_count as _latent_tokens
 
@@ -105,9 +108,7 @@ class NativeDMDTrainingSession:
             self._pending.append(artifact)
 
     def wait_for_checkpoints(self) -> None:
-        for pending in self._pending:
-            pending.wait()
-        self._pending.clear()
+        wait_for_pending_checkpoints(self._pending)
 
     def run(
         self,

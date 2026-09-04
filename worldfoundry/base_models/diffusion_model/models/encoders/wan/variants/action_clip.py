@@ -1,6 +1,16 @@
 # Modified from ``https://github.com/openai/CLIP'' and ``https://github.com/mlfoundations/open_clip''
 # Copyright 2024-2025 The Alibaba Wan Team Authors. All rights reserved.
-"""Module for base_models -> diffusion_model -> video -> wan -> media_encoders -> action_clip.py functionality."""
+"""Action-conditioned CLIP encoder for Wan action recipes.
+
+Checkpoint-shaped XLM-RoBERTa CLIP that matches action
+recipe weights.  :class:`CLIPModel` is the public surface;
+hidden-size / token layout match :mod:`~..clip`.
+
+Used when action checkpoints cannot load the default CLIP
+key map.  Text prompts still go through UMT5.
+
+Wan CLIP variant, sibling of :mod:`.linear_clip`.
+"""
 
 import logging
 import math
@@ -14,6 +24,7 @@ from worldfoundry.base_models.diffusion_model.models.networks.wan.variants.actio
 from worldfoundry.base_models.diffusion_model.models.encoders.wan.model import HuggingfaceTokenizer
 from worldfoundry.base_models.diffusion_model.models.encoders.wan.xlm_roberta import XLMRoberta
 from worldfoundry.core.nn import ModuleDeviceDtypeMixin
+from worldfoundry.core.model_loading import load_torch_state_dict
 
 __all__ = [
     'XLMRobertaCLIP',
@@ -684,7 +695,7 @@ class CLIPModel(ModuleDeviceDtypeMixin, nn.Module):
         self.model = self.model.eval().requires_grad_(False)
         logging.info(f'loading {checkpoint_path}')
         self.model.load_state_dict(
-            torch.load(checkpoint_path, map_location='cpu'))
+            load_torch_state_dict(checkpoint_path, map_location='cpu'))
 
         # init tokenizer
         self.tokenizer = HuggingfaceTokenizer(

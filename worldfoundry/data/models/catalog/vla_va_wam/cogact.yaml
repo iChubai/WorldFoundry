@@ -16,6 +16,8 @@ integration:
 license: mit
 name: CogACT
 official_sources:
+  paper: https://arxiv.org/abs/2411.19650
+  project_page: https://cogact.github.io/CogACT_paper.pdf
   github:
     head_sha: b174a1b86dee
     url: https://github.com/microsoft/CogACT

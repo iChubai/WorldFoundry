@@ -1,3 +1,16 @@
+"""DreamX-World causal Wan wrappers used by the camera-conditioned recipe.
+
+These classes are **not** the shared :class:`~...contracts.Denoiser`
+adapter.  DreamX-World's streaming camera loop owns its own scheduler and
+KV-cache protocol; it calls :class:`WanDiffusionCameraWrapper.forward`
+with ``noisy_image_or_video``, ``conditional_dict["prompt_embeds"]``, and
+optional ``y_camera`` / ``y`` tensors.
+
+:class:`WanTextEncoder` and :class:`WanVAEWrapper` re-export the resident
+Wan 2.1 / 2.2 helpers with DreamX's 48-channel Wan2.2 VAE statistics.
+The causal DiT is :class:`~..networks.wan.variants.dreamx_world.causal.CausalWanModel`.
+"""
+
 from typing import List, Optional
 import torch
 
@@ -19,6 +32,8 @@ from worldfoundry.base_models.diffusion_model.loaders.wan_variant import load_wa
 
 
 class WanTextEncoder(_WanTextEncoder):
+    """Resident Wan UMT5 encoder with DreamX default bfloat16 weights."""
+
     def __init__(
         self,
         text_encoder_path: str,
@@ -33,6 +48,8 @@ class WanTextEncoder(_WanTextEncoder):
 
 
 class WanVAEWrapper(_WanVAEWrapper):
+    """Wan2.2 48-channel VAE wrapper with official mean / std statistics."""
+
     def __init__(self, vae_path: str):
         super().__init__(
             vae_path=vae_path,
@@ -45,6 +62,13 @@ class WanVAEWrapper(_WanVAEWrapper):
 
 
 class WanDiffusionCameraWrapper(torch.nn.Module):
+    """Causal Wan DiT plus flow-match scheduler for DreamX camera streaming.
+
+    ``forward`` returns ``(flow_pred, pred_x0)`` rather than
+    :class:`~...contracts.DenoiserOutput`; the DreamX runtime converts
+    flow to x0 through :class:`InferenceFlowMatchScheduler`.
+    """
+
     def __init__(
         self,
         model_config_path: str,
@@ -82,6 +106,7 @@ class WanDiffusionCameraWrapper(torch.nn.Module):
         self.seq_len = 880 * num_output_frames
 
     def get_scheduler(self) -> InferenceFlowMatchScheduler:
+        """Return the flow-match scheduler owned by this wrapper."""
         return self.scheduler
 
     def forward(

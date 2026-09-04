@@ -16,6 +16,10 @@
 
 """Triton-fused camera-branch UCPE single-path delta-rule prep.
 
+This is the CamCtrl counterpart of :mod:`fused_gdn`: it fuses RMSNorm / ReLU /
+UCPE 4×4 / RoPE for the *camera* QKV, then the chunkwise scan in
+``fused_gdn_chunkwise`` consumes the prepared tensors.
+
 Companion to :mod:`diffusion.model.ops.fused_gdn` (main GDN branch). This
 module hosts the inference-path prep pipeline for the *camera* branch of
 :class:`ChunkCausalGDNUCPESinglePathLiteLA`.

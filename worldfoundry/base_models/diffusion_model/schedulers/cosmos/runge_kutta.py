@@ -13,7 +13,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Native Cosmos component."""
+"""Runge–Kutta ODE steps for the Cosmos Predict1 residual sampler.
+
+Phi-function helpers and residual / regularized Euler updates used
+to advance ``x_s`` from time ``s`` to ``t`` given an x0 (or epsilon)
+prediction.  Registered names: ``1euler``, ``2mid``, ``2mid_stable``,
+``2heun_edm``, ``2heun_naive``, ``3kutta_naive``.
+
+Times are EDM sigmas (log-space inside the residual RK2 step).
+:func:`get_runge_kutta_fn` is the sampler entry point.  Multistep
+AB2 lives in :mod:`.multi_step`.
+"""
 
 from typing import Callable, Tuple
 

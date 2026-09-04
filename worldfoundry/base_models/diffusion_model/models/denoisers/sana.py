@@ -204,6 +204,17 @@ def sana_world_config() -> dict[str, object]:
     }
 
 
+def sana_world_streaming_config() -> dict[str, object]:
+    """Return the chunk-causal Stage-1 graph used by SANA-WM streaming."""
+
+    config = sana_world_config()
+    config.update(
+        chunk_size=3,
+        chunk_split_strategy="first_chunk_plus_one",
+    )
+    return config
+
+
 def _unwrap_sana_state_dict(value: Mapping[str, object]) -> Mapping[str, object]:
     state: Mapping[str, object] = value
     wrappers = {"state_dict", "generator", "module", "model_state"}
@@ -247,6 +258,31 @@ def _sana_state_dict_converter(
         return converted
 
     return convert
+
+
+def _sana_streaming_state_dict_converter(
+    *,
+    input_size: int,
+    patch_size: int | tuple[int, int, int],
+    hidden_size: int,
+):
+    """Unwrap the streaming ``model.pt`` payload before canonical key cleanup."""
+
+    convert = _sana_state_dict_converter(
+        input_size=input_size,
+        patch_size=patch_size,
+        hidden_size=hidden_size,
+    )
+
+    def streaming_convert(value: Mapping[str, object]) -> Mapping[str, object]:
+        state: Mapping[str, object] = value
+        for wrapper in ("generator", "state_dict"):
+            nested = state.get(wrapper)
+            if isinstance(nested, Mapping):
+                state = nested
+        return convert(state)
+
+    return streaming_convert
 
 
 class SanaDenoiser:
@@ -308,16 +344,28 @@ class SanaDenoiser:
             raise TypeError("Sana denoising requires a tensor 'context_mask' condition")
 
         latents = model_input.latents
-        timestep = model_input.timestep.to(device=latents.device, dtype=torch.float32).reshape(-1)
-        if timestep.numel() == 1:
-            timestep = timestep.expand(latents.shape[0])
-        if timestep.numel() != latents.shape[0]:
-            raise ValueError("Sana timestep must be scalar or contain one value per sample")
+        timestep = model_input.timestep.to(device=latents.device, dtype=torch.float32)
+        temporal_shape = (latents.shape[0], 1, latents.shape[2]) if latents.ndim == 5 else None
+        if temporal_shape is not None and tuple(timestep.shape) == temporal_shape:
+            timestep = timestep.clone()
+        else:
+            timestep = timestep.reshape(-1)
+            if timestep.numel() == 1:
+                timestep = timestep.expand(latents.shape[0])
+            if timestep.numel() != latents.shape[0]:
+                raise ValueError(
+                    "Sana timestep must be scalar, contain one value per sample, "
+                    "or be [B,1,T] for temporal prefix recomputation"
+                )
         frame_info = model_input.conditioning.get("condition_frame_info")
         if frame_info and latents.ndim == 5:
             if not isinstance(frame_info, Mapping):
                 raise TypeError("Sana condition_frame_info must map frame indices to timestep weights")
-            frame_timestep = timestep[:, None, None].expand(-1, 1, latents.shape[2]).clone()
+            frame_timestep = (
+                timestep
+                if timestep.ndim == 3
+                else timestep[:, None, None].expand(-1, 1, latents.shape[2]).clone()
+            )
             for raw_index, raw_weight in frame_info.items():
                 index = int(raw_index)
                 if not 0 <= index < latents.shape[2]:
@@ -432,16 +480,18 @@ def _build(
     module_class: type[nn.Module],
     config: Mapping[str, object],
     output_scale: float = 1.0,
+    state_dict_converter=None,
 ) -> SanaDenoiser:
+    converter = state_dict_converter or _sana_state_dict_converter(
+        input_size=int(config["input_size"]),
+        patch_size=config["patch_size"],  # type: ignore[arg-type]
+        hidden_size=int(config["hidden_size"]),
+    )
     model = NativeModuleLoader().load(
         ModuleLoadSpec(
             module_class=module_class,
             config=config,
-            state_dict_converter=_sana_state_dict_converter(
-                input_size=int(config["input_size"]),
-                patch_size=config["patch_size"],  # type: ignore[arg-type]
-                hidden_size=int(config["hidden_size"]),
-            ),
+            state_dict_converter=converter,
             vram_module_map=_module_map(),
             layer_container="blocks",
         ),
@@ -522,6 +572,25 @@ def build_sana_world_denoiser(context: ComponentBuildContext) -> SanaDenoiser:
     return _build(context, module_class=SanaMSVideoCamCtrl, config=sana_world_config())
 
 
+def build_sana_world_streaming_denoiser(context: ComponentBuildContext) -> SanaDenoiser:
+    """Load the public streaming ``model.pt`` onto the chunk-causal CamCtrl graph."""
+
+    from ..networks.sana.sana_multi_scale_video_camctrl import SanaMSVideoCamCtrl
+
+    config = sana_world_streaming_config()
+    converter = _sana_streaming_state_dict_converter(
+        input_size=int(config["input_size"]),
+        patch_size=config["patch_size"],  # type: ignore[arg-type]
+        hidden_size=int(config["hidden_size"]),
+    )
+    return _build(
+        context,
+        module_class=SanaMSVideoCamCtrl,
+        config=config,
+        state_dict_converter=converter,
+    )
+
+
 __all__ = [
     "SanaDenoiser",
     "build_sana_controlnet_denoiser",
@@ -531,6 +600,7 @@ __all__ = [
     "build_sana_streaming_denoiser",
     "build_sana_video_denoiser",
     "build_sana_world_denoiser",
+    "build_sana_world_streaming_denoiser",
     "sana_controlnet_config",
     "sana_image_config",
     "sana_sprint_config",
@@ -538,4 +608,5 @@ __all__ = [
     "sana_streaming_config",
     "sana_video_config",
     "sana_world_config",
+    "sana_world_streaming_config",
 ]

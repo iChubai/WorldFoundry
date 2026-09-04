@@ -1,0 +1,41 @@
+{
+  "id": "kairos-sensenova",
+  "tagline": {
+    "en": "An Apache-2.0 embodied world model — a 4B text/image-to-video generator with a distilled robot recipe for fast rollouts.",
+    "zh": "Apache-2.0 的具身世界模型——4B 文/图生视频生成器,含蒸馏机器人配方以实现快速 rollout。"
+  },
+  "overview": {
+    "en": [
+      "Kairos is an embodied world model that generates video from text, an image, or both. It is aimed at robotics and embodied settings, where predicting how a scene evolves helps drive action.",
+      "It comes in 4B variants: a 480P pretrained checkpoint, a 720P checkpoint, and a distilled 480P robot recipe tuned for faster inference. The runtime is Apache-2.0 licensed, and the default route uses the distilled robot 480P recipe. The stack pairs the Kairos model with a Qwen text encoder and a Wan2.1 text-to-video component.",
+      "In WorldFoundry it runs as text-to-video, image-to-video, text-image-to-video, or an embodied-world-model task. The 480P distilled route is the default; the 720P and non-distilled variants are available by pointing at the corresponding checkpoints."
+    ],
+    "zh": [
+      "Kairos 是一个具身世界模型,能从文字、图片或二者共同生成视频。它面向机器人与具身场景——预测场景如何演变有助于驱动动作。",
+      "它提供 4B 的多个变体:480P 预训练 checkpoint、720P checkpoint,以及为更快推理调优的蒸馏 480P 机器人配方。其运行时采用 Apache-2.0 许可,默认路径使用蒸馏机器人 480P 配方。技术栈将 Kairos 模型与 Qwen 文本编码器、Wan2.1 文生视频组件组合在一起。",
+      "在 WorldFoundry 中,它以文生视频、图生视频、文+图生视频或具身世界模型任务运行。480P 蒸馏路径为默认;指向相应 checkpoint 即可使用 720P 与非蒸馏变体。"
+    ]
+  },
+  "whenToUse": {
+    "en": "Use it when you want an openly-licensed embodied world model to generate video from text and/or an image, especially for robot-style scenes — the distilled 480P recipe favors faster rollouts.",
+    "zh": "当你想用一个开放许可的具身世界模型、从文字和/或图片生成视频,尤其是机器人风格的场景时,使用它——蒸馏 480P 配方更利于快速 rollout。"
+  },
+  "notFor": {
+    "en": "It targets a multi-GPU inference setup and needs the Kairos, Qwen, and Wan2.1 checkpoints laid out per its config, so it is not a lightweight single-card option.",
+    "zh": "它面向多卡推理配置,需要按其配置布置 Kairos、Qwen 与 Wan2.1 的 checkpoint,并非轻量的单卡方案。"
+  },
+  "highlights": {
+    "en": [
+      "Apache-2.0 licensed runtime",
+      "Text-to-video, image-to-video, and text+image-to-video in one model",
+      "4B variants at 480P and 720P, plus a distilled robot recipe",
+      "Embodied world model aimed at robotics scenes"
+    ],
+    "zh": [
+      "运行时采用 Apache-2.0 许可",
+      "文生视频、图生视频、文+图生视频集于一身",
+      "480P 与 720P 的 4B 变体,外加蒸馏机器人配方",
+      "面向机器人场景的具身世界模型"
+    ]
+  }
+}

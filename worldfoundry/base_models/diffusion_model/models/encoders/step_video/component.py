@@ -1,4 +1,10 @@
-"""In-process StepVideo LLM and CLIP conditioning."""
+"""StepVideo :class:`~...contracts.ConditionEncoder` (STEP1 LLM + Hunyuan CLIP).
+
+``encode`` concatenates optional ``positive_magic`` / ``negative_magic``
+suffixes onto ``DiffusionRequest`` prompts, then returns
+``prompt_embeds``, ``clip_embeds``, and ``attention_mask``.  Shared
+``fps`` is forwarded to the denoiser.  Magic strings are not rewritten.
+"""
 
 from __future__ import annotations
 
@@ -15,6 +21,8 @@ from .step_llm import STEP1TextEncoder
 
 
 class StepVideoPromptConditioner:
+    """Dual-encoder conditioner: STEP1 hidden states + CLIP tokens."""
+
     def __init__(self, llm: STEP1TextEncoder, clip: HunyuanClip) -> None:
         self.llm = llm
         self.clip = clip
@@ -31,6 +39,7 @@ class StepVideoPromptConditioner:
         }
 
     def encode(self, request, *, device, dtype):
+        """Return LLM + CLIP tensors for both CFG branches."""
         positive_magic = str(request.inputs.get("positive_magic", request.inputs.get("pos_magic", "")))
         negative_magic = str(request.inputs.get("negative_magic", request.inputs.get("neg_magic", "")))
         positive = tuple(prompt + positive_magic for prompt in request.prompts)

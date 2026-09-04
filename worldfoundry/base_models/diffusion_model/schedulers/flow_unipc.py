@@ -2,7 +2,11 @@
 # Convert unipc for flow matching
 # Copyright 2024-2025 The Alibaba Wan Team Authors. All rights reserved.
 
-"""Native flow-matching UniPC solver shared by diffusion model families."""
+"""Native flow-matching UniPC solver shared by diffusion model families.
+
+Training-free multistep solver shared by Wan, Cosmos3, and MAGI-2 adapters.
+The runner sees only ``SchedulerStep``; solver history lives on this object.
+"""
 
 import math
 from typing import List, Optional, Tuple, Union
@@ -16,6 +20,26 @@ from ._solver_support import (
     deprecate,
     register_to_config,
 )
+
+
+def _solve_small_system_on_cpu(
+    matrix: torch.Tensor,
+    rhs: torch.Tensor,
+    *,
+    device: torch.device,
+    dtype: torch.dtype,
+) -> torch.Tensor:
+    """Solve UniPC's tiny coefficient system without creating a cuSOLVER handle.
+
+    UniPC solves at most a handful of scalar coefficients per step.  Running
+    that solve on CUDA needlessly initializes cuSOLVER at the point where the
+    denoiser is already close to peak memory, which can fail even though the
+    actual system is only 2x2 or 3x3.  The schedule tensors are CPU float32
+    values already, so keep the solve there and transfer only its coefficients.
+    """
+
+    solution = torch.linalg.solve(matrix.to(device="cpu"), rhs.to(device="cpu"))
+    return solution.to(device=device, dtype=dtype)
 
 
 class FlowUniPCMultistepScheduler(NativeSchedulerMixin):
@@ -454,8 +478,8 @@ class FlowUniPCMultistepScheduler(NativeSchedulerMixin):
             rks.append(rk)
             D1s.append((mi - m0) / rk)  # pyright: ignore
 
-        rks.append(1.0)
-        rks = torch.tensor(rks, device=device)
+        rks.append(torch.ones_like(h))
+        rks = torch.stack(rks).to(device="cpu")
 
         R = []
         b = []
@@ -480,7 +504,7 @@ class FlowUniPCMultistepScheduler(NativeSchedulerMixin):
             h_phi_k = h_phi_k / hh - 1 / factorial_i
 
         R = torch.stack(R)
-        b = torch.tensor(b, device=device)
+        b = torch.stack(b).to(device="cpu")
 
         if len(D1s) > 0:
             D1s = torch.stack(D1s, dim=1)  # (B, K)
@@ -488,7 +512,12 @@ class FlowUniPCMultistepScheduler(NativeSchedulerMixin):
             if order == 2:
                 rhos_p = torch.tensor([0.5], dtype=x.dtype, device=device)
             else:
-                rhos_p = torch.linalg.solve(R[:-1, :-1], b[:-1]).to(device).to(x.dtype)
+                rhos_p = _solve_small_system_on_cpu(
+                    R[:-1, :-1],
+                    b[:-1],
+                    device=device,
+                    dtype=x.dtype,
+                )
         else:
             D1s = None
 
@@ -589,8 +618,8 @@ class FlowUniPCMultistepScheduler(NativeSchedulerMixin):
             rks.append(rk)
             D1s.append((mi - m0) / rk)  # pyright: ignore
 
-        rks.append(1.0)
-        rks = torch.tensor(rks, device=device)
+        rks.append(torch.ones_like(h))
+        rks = torch.stack(rks).to(device="cpu")
 
         R = []
         b = []
@@ -615,7 +644,7 @@ class FlowUniPCMultistepScheduler(NativeSchedulerMixin):
             h_phi_k = h_phi_k / hh - 1 / factorial_i
 
         R = torch.stack(R)
-        b = torch.tensor(b, device=device)
+        b = torch.stack(b).to(device="cpu")
 
         if len(D1s) > 0:
             D1s = torch.stack(D1s, dim=1)
@@ -626,7 +655,12 @@ class FlowUniPCMultistepScheduler(NativeSchedulerMixin):
         if order == 1:
             rhos_c = torch.tensor([0.5], dtype=x.dtype, device=device)
         else:
-            rhos_c = torch.linalg.solve(R, b).to(device).to(x.dtype)
+            rhos_c = _solve_small_system_on_cpu(
+                R,
+                b,
+                device=device,
+                dtype=x.dtype,
+            )
 
         if self.predict_x0:
             x_t_ = sigma_t / sigma_s0 * x - alpha_t * h_phi_1 * m0

@@ -1,0 +1,41 @@
+{
+  "id": "wan-2p5",
+  "tagline": {
+    "en": "Wan 2.5 as a hosted API — text-to-video and image-to-video through Alibaba's DashScope, no local GPU needed.",
+    "zh": "以托管 API 形式提供的 Wan 2.5——通过阿里云 DashScope 使用文生视频与图生视频,无需本地 GPU。"
+  },
+  "overview": {
+    "en": [
+      "Wan 2.5 API is a hosted route to the Wan video model, served through Alibaba's DashScope platform rather than run locally. It covers both text-to-video and image-to-video.",
+      "Because it's a cloud service, there are no weights to download and no GPU to provision — you send a prompt (and an image for image-to-video) and receive generated video back. You supply your own DashScope API key.",
+      "In WorldFoundry you use it through the hosted-API pipeline: configure your key, choose the task, and the service handles generation on the provider side."
+    ],
+    "zh": [
+      "Wan 2.5 API 是 Wan 视频模型的托管方式,通过阿里云 DashScope 平台提供,而非本地运行。它同时覆盖文生视频与图生视频。",
+      "由于是云服务,无需下载权重、也无需准备 GPU——你发送提示词(图生视频再加一张图),即可拿回生成的视频。你需要自备 DashScope API key。",
+      "在 WorldFoundry 中,你通过托管 API pipeline 使用它:配置好 key、选择任务,生成由服务商侧完成。"
+    ]
+  },
+  "whenToUse": {
+    "en": "Use it when you want Wan-quality video generation without local hardware — ideal for quick prototyping or when you'd rather offload compute to the provider.",
+    "zh": "当你想获得 Wan 级别的视频生成、又不想使用本地硬件时用它——非常适合快速原型,或希望把算力交给服务商的场景。"
+  },
+  "notFor": {
+    "en": "Not for offline or air-gapped use — it requires network access and your own API key, and output availability depends on the provider's service.",
+    "zh": "不适合离线或隔离网络环境——它需要联网并自备 API key,输出是否可用取决于服务商的服务。"
+  },
+  "highlights": {
+    "en": [
+      "Hosted API — no local weights or GPU required",
+      "Text-to-video and image-to-video",
+      "Served via Alibaba's DashScope platform",
+      "Bring your own API key"
+    ],
+    "zh": [
+      "托管 API——无需本地权重或 GPU",
+      "支持文生视频与图生视频",
+      "通过阿里云 DashScope 平台提供",
+      "需自备 API key"
+    ]
+  }
+}

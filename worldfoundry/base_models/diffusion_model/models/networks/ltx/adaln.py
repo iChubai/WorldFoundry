@@ -1,3 +1,11 @@
+"""PixArt-style AdaLN-single for LTX timestep modulation.
+
+Produces a packed coefficient vector of length 6 (self-attn + FFN +
+output scale/shift) or 9 when text cross-attn also uses AdaLN.  Tokens
+remain ``B T D``; the linear maps sinusoidal timestep features to those
+coefficients.
+"""
+
 from typing import Optional, Tuple
 
 import torch
@@ -43,5 +51,6 @@ class AdaLayerNormSingle(torch.nn.Module):
         timestep: torch.Tensor,
         hidden_dtype: Optional[torch.dtype] = None,
     ) -> Tuple[torch.Tensor, torch.Tensor]:
+        """Return ``(linear(silu(emb(t))), emb(t))`` for block AdaLN and the final head."""
         embedded_timestep = self.emb(timestep, hidden_dtype=hidden_dtype)
         return self.linear(self.silu(embedded_timestep)), embedded_timestep

@@ -18,6 +18,8 @@ checkpoint_refs:
   filename: sam_vit_b_01ec64.pth
 - repo_id: ShilongLiu/GroundingDINO
   filename: groundingdino_swint_ogc.pth
+official_sources:
+  paper: https://arxiv.org/abs/2305.06558
 integration:
   kind: pipeline_runner
   status: integrated

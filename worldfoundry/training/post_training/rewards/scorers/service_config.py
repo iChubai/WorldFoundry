@@ -13,7 +13,12 @@ from .config import CLAPConfig, VideoPickScoreConfig
 
 @dataclass(frozen=True, slots=True)
 class ScorerServiceConfig:
-    """Network settings and reward components hosted by one service process."""
+    """Network settings and reward components hosted by one service process.
+
+    When ``server.host`` is omitted the default is loopback
+    (``127.0.0.1``). Non-loopback binds require reward-service bearer-token
+    authentication.
+    """
 
     host: str
     port: int
@@ -89,7 +94,7 @@ class ScorerServiceConfig:
             AgenticToolSuccessConfig,
         )
         return cls(
-            host=str(server.get("host", "0.0.0.0")),
+            host=str(server.get("host", "127.0.0.1")),
             port=int(server.get("port", 8080)),
             fail_fast=bool(server.get("fail_fast", True)),
             videopickscore=video_config,

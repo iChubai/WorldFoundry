@@ -53,6 +53,7 @@ def default_camera_path(*, fps: float = 16.0) -> dict[str, Any]:
 
 
 def _finite_float(value: Any, *, label: str) -> float:
+    """Parse a finite float; NaN/inf would make keyframe times non-monotonic without a clear error."""
     try:
         result = float(value)
     except (TypeError, ValueError) as exc:
@@ -63,6 +64,7 @@ def _finite_float(value: Any, *, label: str) -> float:
 
 
 def _vector(value: Any, *, label: str, length: int = 3) -> list[float]:
+    """Require a fixed-length numeric vector; strings are rejected so ``\"1,2,3\"`` cannot sneak in."""
     if not isinstance(value, Sequence) or isinstance(value, (str, bytes)) or len(value) != length:
         raise CameraPathError(f"{label} must contain exactly {length} numbers.")
     return [_finite_float(item, label=f"{label}[{index}]") for index, item in enumerate(value)]
@@ -170,6 +172,7 @@ def normalize_camera_path(
 
 
 def _smoothstep(values: Any) -> Any:
+    """Hermite smoothstep; eases segment alpha so linear lerp does not look piecewise-linear."""
     return values * values * (3.0 - 2.0 * values)
 
 

@@ -1,4 +1,4 @@
-"""Native HunyuanVideo latent codecs."""
+"""HunyuanVideo / 1.5 causal 3-D VAE :class:`~...contracts.LatentEncoder` / decoder roles."""
 
 from .component import (
     HunyuanVideo15Codec,

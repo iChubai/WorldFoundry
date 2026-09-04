@@ -1,3 +1,11 @@
+"""HunyuanVideo image-to-video MM-DiT (dual then single stream).
+
+Same layout as the T2V backbone: latents ``B C T H W`` (often with extra
+concatenated condition channels), tokens ``B S C``.  Double-stream
+blocks keep video and text separate until joint attention; single-stream
+blocks concatenate them.  Token-replace AdaLN can modulate an i2v prefix.
+"""
+
 from typing import Any, Dict, List, Optional, Tuple, Union
 
 import torch
@@ -168,6 +176,7 @@ class MMDoubleStreamBlock(nn.Module):
         token_replace_vec: torch.Tensor = None,
         frist_frame_token_num: int = None,
     ) -> Tuple[torch.Tensor, torch.Tensor]:
+        """Joint-attend video ``img`` and text ``txt`` (both ``B S C``); return the pair."""
         if condition_type == "token_replace":
             img_mod1, token_replace_img_mod1 = self.img_mod(vec, secondary_value=token_replace_vec)
             (img_mod1_shift,
@@ -414,6 +423,7 @@ class MMSingleStreamBlock(nn.Module):
         token_replace_vec: torch.Tensor = None,
         frist_frame_token_num: int = None,
     ) -> torch.Tensor:
+        """Single-stream block on concatenated video+text tokens ``B (Sv+St) C``."""
         if condition_type == "token_replace":
             mod, tr_mod = self.modulation(vec, secondary_value=token_replace_vec)
             (mod_shift,
@@ -720,6 +730,7 @@ class HYVideoDiffusionTransformer(nn.Module):
         guidance: torch.Tensor = None,  # Guidance for modulation, should be cfg_scale x 1000.
         return_dict: bool = True,
     ) -> Union[torch.Tensor, Dict[str, torch.Tensor]]:
+        """Patch-embed ``x`` as ``B C T H W``, run dual- then single-stream blocks, unpatchify."""
         out = {}
         img = x
         txt = text_states

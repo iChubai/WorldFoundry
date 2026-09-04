@@ -25,6 +25,7 @@ def _first_existing(*candidates):
 def _worldgen_lora(filename: str) -> str:
     local_path = _first_existing(
         CKPT_ROOT / "WorldGen" / "models--WorldGen-Flux-Lora" / filename,
+        CKPT_ROOT / "LeoXie--WorldGen" / "models--WorldGen-Flux-Lora" / filename,
         CKPT_ROOT / "hfd" / "custom--WorldGen" / "models--WorldGen-Flux-Lora" / filename,
     )
     if local_path:

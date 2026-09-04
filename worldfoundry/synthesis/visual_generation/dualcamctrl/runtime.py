@@ -10,11 +10,16 @@ import numpy as np
 import torch
 from PIL import Image
 
+from worldfoundry.core.checkpoint import load_weights_only
 from worldfoundry.synthesis.visual_generation.dualcamctrl.native_pipeline import (
     WanVideoCameraPipeline,
 )
 from worldfoundry.core.io import file_sha256
-from worldfoundry.core.io.paths import checkpoint_root_path, local_model_root_path
+from worldfoundry.core.io.paths import (
+    checkpoint_root_path,
+    local_model_root_path,
+    resolve_local_hf_model_path,
+)
 from worldfoundry.core.io.video import write_video
 from worldfoundry.core.model_loading import ModelConfig, load_state_dict
 from worldfoundry.evaluation.utils import worldfoundry_data_path
@@ -251,6 +256,17 @@ class DualCamCtrlRuntime:
             if preferred.is_file():
                 return ModelConfig(path=str(preferred), offload_device=self.device, offload_dtype=self.torch_dtype)
             roots.append(preferred)
+        flat_name = model_id.replace("/", "--")
+        roots.extend(
+            (
+                checkpoint_root_path(flat_name),
+                checkpoint_root_path("hfd", flat_name),
+            )
+        )
+        try:
+            roots.append(resolve_local_hf_model_path(model_id))
+        except FileNotFoundError:
+            pass
         roots.extend(
             (
                 Path(self.local_model_path) / Path(model_id),
@@ -448,7 +464,7 @@ class DualCamCtrlRuntime:
         original_height: int = 360,
         original_width: int = 640,
     ) -> torch.Tensor:
-        data = torch.load(Path(camera_file).expanduser(), map_location="cpu")
+        data = load_weights_only(Path(camera_file).expanduser(), map_location="cpu")
         cameras_info = torch.as_tensor(data["cameras"], dtype=torch.float32)
         if cameras_info.shape[1] == 18:
             cameras_info = torch.cat([torch.zeros(cameras_info.shape[0], 1), cameras_info], dim=1)

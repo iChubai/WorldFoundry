@@ -1,4 +1,22 @@
 # Copyright 2024-2025 The Alibaba Wan Team Authors. All rights reserved.
+"""Video DiT blocks using xFuser long-context attention and SP RoPE.
+
+Requires xfuser. Applies :func:`make_sequence_parallel_rope_apply` so
+frequencies match USP ranks, then runs ``xFuserLongContextAttention``.
+The no-xfuser equivalent is
+:mod:`worldfoundry.core.attention.patch_xdit_context_parallel`.
+
+Not this module:
+    Scope-style (non-VACE) xfuser forwards live in
+    :mod:`.scope_xdit_context_parallel`. In-tree Ulysses without xfuser
+    lives in :mod:`.patch_xdit_context_parallel`.
+
+Public surface:
+
+- :func:`usp_dit_forward` / :func:`usp_dit_forward_vace` /
+  :func:`usp_attn_forward` — monkey-patch targets for Wan video + VACE.
+"""
+
 import torch
 import torch.cuda.amp as amp
 from xfuser.core.distributed import (
@@ -17,7 +35,14 @@ rope_apply = make_sequence_parallel_rope_apply(
 )
 
 
+# ──────────────────────────────────────────────────────────────────────────
+# Monkey-patch forwards — VACE hints, then USP shard / xfuser attn / gather
+# ──────────────────────────────────────────────────────────────────────────
+
+
 def usp_dit_forward_vace(self, x, vace_context, seq_len, kwargs):
+    """Run VACE hint blocks on the local SP shard of the control tokens."""
+
     # embeddings
     c = [self.vace_patch_embedding(u.unsqueeze(0)) for u in vace_context]
     c = [u.flatten(2).transpose(1, 2) for u in c]
@@ -115,14 +140,26 @@ def usp_dit_forward(
 
 
 def usp_attn_forward(self, x, seq_lens, grid_sizes, freqs, dtype=torch.bfloat16):
+    """Self-attention with SP RoPE and xFuser long-context attention.
+
+    ``seq_lens`` is accepted for call-site compatibility; the current
+    path still attends the padded shard (see TODOs). Half-cast happens
+    only for the xfuser kernel so the output projection stays in the
+    module dtype.
+    """
+
     b, s, n, d = *x.shape[:2], self.num_heads, self.head_dim
     half_dtypes = (torch.float16, torch.bfloat16)
 
     def half(x):
+        """Cast to the kernel dtype only when the tensor is not already half."""
+
         return x if x.dtype in half_dtypes else x.to(dtype)
 
     # query, key, value function
     def qkv_fn(x):
+        """Project, RMSNorm Q/K, and view as ``[B, S, H, D]``."""
+
         q = self.norm_q(self.q(x)).view(b, s, n, d)
         k = self.norm_k(self.k(x)).view(b, s, n, d)
         v = self.v(x).view(b, s, n, d)

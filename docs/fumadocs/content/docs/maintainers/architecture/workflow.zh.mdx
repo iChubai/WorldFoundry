@@ -9,20 +9,20 @@ description: 从 CLI 输入到 artifacts、metrics、scorecard 和 report 的端
 
 ## 入口
 
-每条用户可见命令最终都会到达 `evaluation/tasks/execution/orchestration/evaluate.py` 中的 `run_evaluate()`（`run_evaluate` 在 `:1057`）。控制台入口是 `worldfoundry/cli/main.py:1580` `main()`，子命令会分发到以下四种形态之一：
+控制台入口是 `worldfoundry/cli/main.py:1888` `main()`。多数 evaluate 与仅模型运行接着进入 `evaluation/tasks/execution/orchestration/evaluate.py` 的 `run_evaluate()`（`:1071`）。**model-plus-benchmark 不走这个 facade**：编排调用 `execute_prepared_evaluation()` → `model_benchmark.py` 里的 `run_model_benchmark()`。CLI 会分发到以下四种形态之一：
 
 - **evaluate** — 归一化输入、选择 run mode，返回一个 `EvaluateRunResult`。
 - **existing outputs** — 通过 `existing_results.py` 评分磁盘上已有 artifact，不加载模型。
 - **model run** — 经 `resolver.py` 解析 model runner，调用 `generate()`，再评分归一化结果。
 - **model plus benchmark** — 经 `model_benchmark.py` 先生成，再端到端调用 benchmark-zoo runner。
 
-第一个实质分支始终是 mode 选择：本次 run 是否需要在 GPU 上加载权重，还是只消费已有文件。
+对 evaluate 与仅模型运行，第一个实质分支是 mode 选择：本次 run 是否需要在 GPU 上加载权重，还是只消费已有文件。model-plus-benchmark 不进入这个分叉。
 
 ## Evaluate 主流程
 
 主流程如下：一个 `EvaluateRunRequest` 进入 facade，选定 mode，从 task registry 加载或物化输入，再由 delegate runner 写出标准 artifact bundle。若输出目录缺文件，沿此流程查应由哪个 runner 阶段产出。
 
-<CallChainDiagram />
+<CallChainDiagram locale="zh" />
 
 ```python
 # worldfoundry/cli/main.py → evaluation/tasks/execution/orchestration/evaluate.py
@@ -71,11 +71,11 @@ else:
     return ExistingResultsRunner(...).score(results)  # metric ids → existing-results 路径
 ```
 
-关键点：模型执行和 benchmark scoring 是分开的。Model runner 只输出 `GenerationResult`；结果归一化后才评分。`ContractRunner`（`orchestration/contract.py:92`）与 `ExistingResultsRunner`（`orchestration/existing_results.py:89`）是此分叉选择的两个 delegate runner；模型解析用 `evaluation/models/runners/resolver.py:365` 的 `resolve_model_zoo_runner()`。
+关键点：模型执行和 benchmark scoring 是分开的。Model runner 只输出 `GenerationResult`；结果归一化后才评分。`ContractRunner`（`orchestration/contract.py:96`）与 `ExistingResultsRunner`（`orchestration/existing_results.py:93`）是此分叉选择的两个 delegate runner；模型解析用 `evaluation/models/runners/resolver.py:386` 的 `resolve_model_zoo_runner()`。
 
 ## Contract Runner 细节
 
-`run_contract()` 是最严格的 in-process path，也是 artifact 布局的参考实现（`run_contract` 在 `evaluation/tasks/execution/orchestration/contract.py:848`，`ContractRunner` 在 `:92`）。每个阶段都会写出或更新下游 validation、docs export 与 leaderboard 工具期望找到的文件。调试不完整 run 时按阶段顺序排查：缺少 `metrics/per_sample.jsonl` 通常是 generation 未完成对齐，而非 reporting 失败。
+`run_contract()` 是最严格的 in-process path，也是 artifact 布局的参考实现（`run_contract` 在 `evaluation/tasks/execution/orchestration/contract.py:852`，`ContractRunner` 在 `:96`）。每个阶段都会写出或更新下游 validation、docs export 与 leaderboard 工具期望找到的文件。调试不完整 run 时按阶段顺序排查：缺少 `metrics/per_sample.jsonl` 通常是 generation 未完成对齐，而非 reporting 失败。
 
 ```python
 # evaluation/tasks/execution/orchestration/contract.py → run_contract()

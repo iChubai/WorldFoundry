@@ -7,6 +7,20 @@ cache identity includes the concrete GPU profile, tensor signature, runtime
 compiler fingerprint, and the complete in-tree kernel source fingerprint, so a
 decision measured on one architecture or kernel revision cannot leak to
 another.
+
+Not this module:
+    First-use timing and numerical comparison live in
+    :class:`worldfoundry.core.kernels.registry.KernelRegistry`. Triton
+    ``@autotune`` config pickles live in :mod:`.triton_autotune`.
+
+Public surface:
+
+- :func:`persistent_autotune_cache_enabled` — env gate (XC-9 plus legacy name).
+- :func:`load_persistent_selection` / :func:`store_persistent_selection` —
+  exact-key JSON records; any miss or I/O error is a no-op.
+- :func:`invalidate_persistent_selection` — drop one winner after a later
+  optional-kernel failure.
+- :func:`persistent_selection_cache_info` — manifest-safe metadata.
 """
 
 from __future__ import annotations
@@ -27,7 +41,15 @@ _FALSE_VALUES = frozenset({"0", "false", "no", "off", "disable", "disabled", "no
 _TRUE_VALUES = frozenset({"1", "true", "yes", "on", "enable", "enabled"})
 
 
+# ──────────────────────────────────────────────────────────────────────────
+# Env / identity — unknown tokens keep the default so a typo cannot disable
+# inference; cache keys hash schema + source + runtime + device + signature
+# ──────────────────────────────────────────────────────────────────────────
+
+
 def _env_flag(name: str, *, default: bool) -> bool:
+    """Parse a boolean env flag; unrecognized values keep *default*."""
+
     configured = os.getenv(name)
     if configured is None or not configured.strip():
         return default
@@ -40,8 +62,16 @@ def _env_flag(name: str, *, default: bool) -> bool:
 
 
 def persistent_autotune_cache_enabled() -> bool:
-    """Return whether successful numerical autotune decisions may be reused."""
+    """Return whether successful numerical autotune decisions may be reused.
 
+    Prefer ``WORLDFOUNDRY_KERNEL_AUTOTUNE_CACHE_ENABLED`` (XC-9). The older
+    ``WORLDFOUNDRY_KERNEL_AUTOTUNE_CACHE`` boolean name remains a fallback so
+    existing jobs keep working.
+    """
+
+    configured = os.getenv("WORLDFOUNDRY_KERNEL_AUTOTUNE_CACHE_ENABLED")
+    if configured is not None and configured.strip():
+        return _env_flag("WORLDFOUNDRY_KERNEL_AUTOTUNE_CACHE_ENABLED", default=True)
     return _env_flag("WORLDFOUNDRY_KERNEL_AUTOTUNE_CACHE", default=True)
 
 
@@ -150,6 +180,13 @@ def _selection_identity(
     signature: tuple[object, ...],
     tensor: Any,
 ) -> tuple[str, dict[str, Any]]:
+    """Return ``(sha256, payload)`` for one op/candidate/signature/device.
+
+    Device UUIDs are excluded so cloned nodes with the same SKU share a hit.
+    Source and runtime fingerprints keep a newer kernel tree from reusing a
+    winner measured against older Triton or in-tree Python.
+    """
+
     payload = {
         "schema": _CACHE_SCHEMA,
         "source": _kernel_source_fingerprint(),
@@ -164,6 +201,13 @@ def _selection_identity(
 
 
 def _cache_directory() -> Path | None:
+    """Resolve the on-disk root, or ``None`` when the cache must stay unused.
+
+    Failure: any environment or filesystem error returns ``None`` so the eager
+    dispatcher remains operational. The directory is further scoped by a
+    truncated source fingerprint to isolate kernel-tree revisions.
+    """
+
     if not persistent_autotune_cache_enabled():
         return None
     configured = os.getenv("WORLDFOUNDRY_KERNEL_AUTOTUNE_CACHE_DIR", "").strip()
@@ -171,7 +215,7 @@ def _cache_directory() -> Path | None:
         if configured:
             root = Path(configured).expanduser()
         else:
-            from worldfoundry.runtime.compile_cache import configure_persistent_compile_cache
+            from worldfoundry.core.compile_cache import configure_persistent_compile_cache
 
             root = configure_persistent_compile_cache(namespace="kernel-autotune").root / "kernel-autotune"
         directory = root / _kernel_source_fingerprint()[:20]
@@ -181,6 +225,11 @@ def _cache_directory() -> Path | None:
         # This cache is an optimization. Environment- or filesystem-specific
         # setup failures must leave the exact eager dispatcher operational.
         return None
+
+
+# ──────────────────────────────────────────────────────────────────────────
+# Public load / store — atomic replace; schema or winner mismatch is a miss
+# ──────────────────────────────────────────────────────────────────────────
 
 
 def persistent_selection_cache_info() -> dict[str, object]:

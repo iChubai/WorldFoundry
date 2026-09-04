@@ -1,0 +1,41 @@
+{
+  "id": "hma",
+  "tagline": {
+    "en": "An Apache-2.0 heterogeneous masked autoregressive world model that predicts robot video from actions.",
+    "zh": "Apache-2.0 许可的异构掩码自回归世界模型,依据动作预测机器人视频。"
+  },
+  "overview": {
+    "en": [
+      "HMA (Heterogeneous Masked Autoregression) is Lirui Wang's open-weight world model for robotics, released under Apache-2.0. Given a scene and a sequence of actions, it predicts how the world unfolds — an action-conditioned video model for robot dynamics.",
+      "It comes in two flavours built on different backbones: a MAGVIT-based 362M variant and a MAR-based 1B variant, letting you pick between a lighter discrete-token model and a larger continuous one. The base checkpoints are published on Hugging Face.",
+      "In WorldFoundry you run HMA to roll out robot dynamics as video from an initial frame and an action stream. The model checkpoints and robot assets are pulled in at run time, so have them staged before generation."
+    ],
+    "zh": [
+      "HMA(异构掩码自回归,Heterogeneous Masked Autoregression)是 Lirui Wang 开源的机器人世界模型,采用 Apache-2.0 许可。给定一个场景与一串动作,它预测世界如何演变——是一个面向机器人动力学的动作条件视频模型。",
+      "它提供两种基于不同骨干的形态:基于 MAGVIT 的 362M 变体,以及基于 MAR 的 1B 变体,让你在更轻量的离散 token 模型与更大的连续模型之间选择。基础 checkpoint 已发布于 Hugging Face。",
+      "在 WorldFoundry 中,你可以用 HMA 从初始帧加一段动作序列出发,把机器人动力学以视频形式推演出来。模型权重与机器人素材在运行时载入,请在生成前先备好。"
+    ]
+  },
+  "whenToUse": {
+    "en": "Reach for HMA when you want an openly-licensed world model to simulate robot dynamics and generate action-conditioned rollouts. The 362M variant is the lighter starting point; the 1B variant offers higher-fidelity continuous prediction.",
+    "zh": "当你需要一个开放许可的世界模型来模拟机器人动力学、生成动作条件推演时,HMA 值得一试。362M 变体是更轻量的起点;1B 变体提供更高保真的连续预测。"
+  },
+  "notFor": {
+    "en": "This is a research world model for robot dynamics, not a general text-to-video generator. Checkpoints and robot assets are downloaded separately, so plan for the download and disk space.",
+    "zh": "它是面向机器人动力学的研究型世界模型,而非通用文生视频生成器。Checkpoint 与机器人素材需单独下载,请预留下载时间与磁盘空间。"
+  },
+  "highlights": {
+    "en": [
+      "Apache-2.0 open weights",
+      "Action-conditioned video prediction for robot dynamics",
+      "Two backbones: MAGVIT 362M and MAR 1B",
+      "Base checkpoints available on Hugging Face"
+    ],
+    "zh": [
+      "Apache-2.0 开放权重",
+      "面向机器人动力学的动作条件视频预测",
+      "两种骨干:MAGVIT 362M 与 MAR 1B",
+      "基础 checkpoint 已上线 Hugging Face"
+    ]
+  }
+}

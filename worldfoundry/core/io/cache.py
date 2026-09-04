@@ -1,4 +1,9 @@
-"""Rank-safe local caching for local and remote inference assets."""
+"""Rank-safe local caching for local and remote inference assets.
+
+Rank 0 downloads under a lock; others wait. S3 and HTTP share this
+path so a multi-GPU job does not stampede the object store. Hugging
+Face snapshots still go through ``hf.py``.
+"""
 
 from __future__ import annotations
 
@@ -8,11 +13,18 @@ from pathlib import Path
 from typing import Any
 from uuid import uuid4
 
+from .paths import cache_root_path
 from .serialization import load_serialized
 from .storage import copy_uri, parse_uri_scheme, uri_to_local_path
 
+# ──────────────────────────────────────────────────────────────────────────
+# Cache slot — S3/HTTP → local path; flock + rank-0 so workers do not stampede
+# ──────────────────────────────────────────────────────────────────────────
+
 
 def _storage_options(backend_args: dict[str, Any] | None) -> dict[str, Any]:
+    """Strip WorldFoundry-only keys before passing options to :func:`copy_uri`."""
+
     options = dict(backend_args or {})
     for key in ("backend", "path_mapping", "s3_credential_path"):
         options.pop(key, None)
@@ -20,8 +32,10 @@ def _storage_options(backend_args: dict[str, Any] | None) -> dict[str, Any]:
 
 
 def _cache_path(source_path, cache_fp=None, cache_dir=None) -> Path:
+    """Map a URI to a cache file; ``://`` becomes ``/`` so S3 keys stay unique."""
+
     if cache_dir is None:
-        cache_dir = os.environ.get("TORCH_HOME") or os.environ.get("WORLDFOUNDRY_CACHE_DIR", "~/.cache/worldfoundry")
+        cache_dir = cache_root_path()
     root = Path(os.path.expanduser(str(cache_dir)))
     target = (
         Path(os.path.expanduser(str(cache_fp)))
@@ -86,6 +100,8 @@ def _populate_lock(cache_path: Path):
 
 
 def _distributed_rank_and_barrier():
+    """Return ``(rank, barrier)``; missing process group is treated as single-process rank 0."""
+
     try:
         from worldfoundry.core.distributed import torch_process_group as distributed
 

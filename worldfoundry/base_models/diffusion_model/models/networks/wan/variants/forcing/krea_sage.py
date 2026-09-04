@@ -1,4 +1,11 @@
-"""Module for base_models -> diffusion_model -> video -> wan -> variants -> krea_realtime -> wan -> modules -> sage.py functionality."""
+"""Optional SageAttention custom op for Krea realtime causal Wan.
+
+Krea may replace flash attention with ``sageattn`` when the package is
+installed and ``DISABLE_SAGEATTENTION`` is unset.  The custom op plus
+fake kernel keep ``torch.compile`` / export graphs valid.
+
+This is a kernel adapter only: no action, camera, VACE, or TeaCache.
+"""
 
 import torch
 from typing import Optional
@@ -14,33 +21,12 @@ try:
     @torch.library.custom_op("mylib::sageattn", mutates_args={"q", "k", "v"}, device_types="cuda")
     def sageattn_func(q: torch.Tensor, k: torch.Tensor, v: torch.Tensor,
                       attn_mask: Optional[torch.Tensor] = None , dropout_p: float = 0, is_causal: bool = False) -> torch.Tensor:
-        """Sageattn func.
-
-        Args:
-            q: The q.
-            k: The k.
-            v: The v.
-            attn_mask: The attn mask.
-            dropout_p: The dropout p.
-            is_causal: The is causal.
-
-        Returns:
-            The return value.
-        """
+        """Run SageAttention; layout matches flash-attn ``[B, L, H, D]``."""
         return sageattn(q, k, v, attn_mask=attn_mask, dropout_p=dropout_p, is_causal=is_causal)
     
     @sageattn_func.register_fake
     def _sageattn_fake(q, k, v, attn_mask=None, dropout_p=0, is_causal=False):
-        """Helper function to sageattn fake.
-
-        Args:
-            q: The q.
-            k: The k.
-            v: The v.
-            attn_mask: The attn mask.
-            dropout_p: The dropout p.
-            is_causal: The is causal.
-        """
+        """Meta / fake kernel used by ``torch.compile`` to infer the output shape."""
         return torch.empty(*q.shape, device=q.device, dtype=q.dtype)
     
     print("SageAttention loaded successfully")

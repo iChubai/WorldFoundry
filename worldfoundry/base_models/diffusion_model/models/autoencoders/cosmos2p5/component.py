@@ -1,4 +1,11 @@
-"""Shared Wan codec role for Cosmos Predict 2.5 initialization and decoding."""
+"""Cosmos Predict 2.5 Wan-VAE :class:`~...contracts.LatentEncoder` / decoder.
+
+One :class:`Cosmos25VideoCodec` instance serves encoded initialization
+and final decode.  Encode uses
+:func:`~...initializers.video_conditioning.prepare_video_conditioning_pixels`
+or Canny edge frames for Transfer-2.5 control.  The inner network is
+:class:`~..wan.model.WanVideoVAE` with the official 2.1 key remap.
+"""
 
 from __future__ import annotations
 
@@ -15,6 +22,25 @@ from ....loaders import ModuleLoadSpec, NativeModuleLoader
 from ...initializers.video_conditioning import prepare_video_conditioning_pixels
 from ..wan.component import convert_wan21_vae_state_dict
 from ..wan.model import CausalConv3d, RMS_norm, Upsample, WanVideoVAE
+
+
+def _extract_canny_edges(frames, *, low_threshold: int = 100, high_threshold: int = 200):
+    """Convert uint8 RGB control frames to the official edge-control format."""
+
+    import cv2
+    import numpy as np
+
+    low = int(low_threshold)
+    high = int(high_threshold)
+    if not 0 <= low < high <= 255:
+        raise ValueError("Canny thresholds must satisfy 0 <= low < high <= 255")
+    edge_frames = []
+    for frame in frames:
+        rgb = np.asarray(frame)[..., :3]
+        gray = cv2.cvtColor(rgb, cv2.COLOR_RGB2GRAY)
+        edges = cv2.Canny(gray, low, high)
+        edge_frames.append(np.repeat(edges[..., None], 3, axis=-1))
+    return np.stack(edge_frames, axis=0)
 
 
 class Cosmos25VideoCodec:
@@ -51,14 +77,25 @@ class Cosmos25VideoCodec:
             if request.inputs.get(key) is not None:
                 control = request.inputs[key]
                 break
-        if isinstance(control, Mapping):
-            variant = str(request.inputs.get("controlnet_variant", "edge"))
+        control_is_mapping = isinstance(control, Mapping)
+        variant = str(request.inputs.get("controlnet_variant", "edge")).lower()
+        if control_is_mapping:
             control = control.get(variant, next(iter(control.values()), None))
         if control is None:
             return None
         if request.batch_size != 1:
             raise ValueError("Cosmos Transfer2.5 control video currently requires batch size 1")
-        frames = torch.from_numpy(coerce_video_frames(control)).permute(0, 3, 1, 2)
+        frame_array = coerce_video_frames(control)
+        control_is_preprocessed = bool(
+            request.inputs.get("control_is_preprocessed", control_is_mapping)
+        )
+        if variant == "edge" and not control_is_preprocessed:
+            frame_array = _extract_canny_edges(
+                frame_array,
+                low_threshold=int(request.inputs.get("canny_low_threshold", 100)),
+                high_threshold=int(request.inputs.get("canny_high_threshold", 200)),
+            )
+        frames = torch.from_numpy(frame_array).permute(0, 3, 1, 2)
         if not len(frames):
             raise ValueError("Cosmos Transfer2.5 control video cannot be empty")
         frames = self._resize(frames, request.height, request.width)

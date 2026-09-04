@@ -1,3 +1,17 @@
+"""Original HunyuanVideo I2V LLaVA / CLIP text encoder.
+
+Used by :class:`~.component.HunyuanVideoPromptConditioner`
+for image-to-video recipes.  :class:`TextEncoder` wraps the
+LLaVA-style LLM plus CLIP tokenizer path.
+
+Prompt tokens and optional image features feed the original
+Hunyuan DiT.  HunyuanVideo 1.5 should use :mod:`.h15_text`
+/ :mod:`.h15_vision` instead.
+
+Checkpoint-compatible wrappers; do not rewrite template
+strings that may contain Chinese.
+"""
+
 from dataclasses import dataclass
 from typing import Optional, Tuple
 from copy import deepcopy
@@ -18,6 +32,7 @@ from .constants import PRECISION_TO_TYPE, TEXT_ENCODER_PATH, TOKENIZER_PATH
 
 
 def use_default(value, default):
+    """Return ``value`` unless it is None, otherwise ``default``."""
     return value if value is not None else default
 
 
@@ -28,6 +43,7 @@ def load_text_encoder(
     logger=None,
     device=None,
 ):
+    """Load the original HunyuanVideo I2V LLaVA / CLIP text encoder."""
     if text_encoder_path is None:
         text_encoder_path = TEXT_ENCODER_PATH[text_encoder_type]
     if logger is not None:
@@ -68,6 +84,7 @@ def load_text_encoder(
 def load_tokenizer(
     tokenizer_type, tokenizer_path=None, padding_side="right", logger=None
 ):
+    """Load the tokenizer paired with the I2V text encoder."""
     if tokenizer_path is None:
         tokenizer_path = TOKENIZER_PATH[tokenizer_type]
     if logger is not None:
@@ -116,6 +133,7 @@ class TextEncoderModelOutput(ModelOutput):
 
 
 class TextEncoder(nn.Module):
+    """Original HunyuanVideo I2V prompt encoder (LLaVA / CLIP)."""
     def __init__(
         self,
         text_encoder_type: str,

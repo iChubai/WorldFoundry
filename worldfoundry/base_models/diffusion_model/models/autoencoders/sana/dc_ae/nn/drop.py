@@ -14,7 +14,17 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-"""Module for base_models -> diffusion_model -> image -> sana -> diffusion -> model -> dc_ae -> efficientvit -> models -> nn -> drop.py functionality."""
+"""Drop-path / dropout helpers for DC-AE residual stages.
+
+:func:`apply_drop_func` / :func:`apply_droppath` and
+:class:`DropPathResidualBlock` implement stochastic depth
+used when building EfficientViT stages.
+
+Applied to residual feature maps (BCHW or BCTHW) inside
+:mod:`.ops`.  Inference typically leaves drop-path off.
+
+Sana DC-AE training utility; not used by Wan / LTX VAEs.
+"""
 
 from typing import Any, Optional
 

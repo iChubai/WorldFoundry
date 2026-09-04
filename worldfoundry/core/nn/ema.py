@@ -1,4 +1,9 @@
-"""Exponential moving-average module shared by model implementations."""
+"""Exponential moving-average module shared by model implementations.
+
+Shadow weights for eval without a second optimizer. Updates stay on
+the same device as the source; FSDP2 uses
+``DTensorFastEmaModelUpdater`` in ``device_mesh_collectives`` instead.
+"""
 
 import torch
 from torch import nn
@@ -6,8 +11,14 @@ from torch import nn
 from worldfoundry.core.distributed.device_mesh_collectives import get_local_tensor_if_dtensor
 
 
+# ──────────────────────────────────────────────────────────────────────────
+# Shadow buffers — dots stripped from names; decay stays FP32 (BF16 would freeze)
+# ──────────────────────────────────────────────────────────────────────────
+
+
 class LitEma(nn.Module):
     """Lit ema implementation."""
+
     def __init__(self, model, decay=0.9999, use_num_upates=True):
         """Init.
 
@@ -42,28 +53,43 @@ class LitEma(nn.Module):
         Args:
             model: The model.
         """
-        decay = self.decay
-
-        if self.num_updates >= 0:
-            self.num_updates += 1
-            decay = min(self.decay,(1 + self.num_updates) / (10 + self.num_updates))
-
+        updates_enabled = self.num_updates.ge(0)
+        self.num_updates.add_(updates_enabled.to(dtype=self.num_updates.dtype))
+        scheduled_decay = (1 + self.num_updates) / (10 + self.num_updates)
+        decay = torch.where(updates_enabled, torch.minimum(self.decay, scheduled_decay), self.decay)
         one_minus_decay = 1.0 - decay
 
         with torch.no_grad():
             m_param = dict(model.named_parameters())
             shadow_params = dict(self.named_buffers())
-
+            grouped: dict[
+                tuple[torch.device, torch.dtype],
+                tuple[list[torch.Tensor], list[torch.Tensor]],
+            ] = {}
             for key in m_param:
                 if m_param[key].requires_grad:
                     sname = self.m_name2s_name[key]
                     shadow = get_local_tensor_if_dtensor(shadow_params[sname])
                     parameter = get_local_tensor_if_dtensor(m_param[key]).detach()
-                    if parameter.dtype != shadow.dtype:
-                        parameter = parameter.to(dtype=shadow.dtype)
-                    shadow.sub_(shadow - parameter, alpha=float(one_minus_decay.item()))
+                    if parameter.device != shadow.device or parameter.dtype != shadow.dtype:
+                        parameter = parameter.to(device=shadow.device, dtype=shadow.dtype)
+                    shadows, parameters = grouped.setdefault((shadow.device, shadow.dtype), ([], []))
+                    shadows.append(shadow)
+                    parameters.append(parameter)
                 else:
                     assert key not in self.m_name2s_name
+            # Numerical-behavior note: foreach_lerp evaluates the same EMA
+            # equation in fused device kernels, but the operation ordering can
+            # differ by a final rounding bit from the former per-parameter
+            # ``sub_(shadow - parameter)`` expression (CC-37).
+            for (device, dtype), (shadows, parameters) in grouped.items():
+                del dtype
+                weight = one_minus_decay.to(device=device)
+                torch._foreach_lerp_(shadows, parameters, weight)
+
+    # ──────────────────────────────────────────────────────────────────────
+    # Eval copy / store-restore — swap shadows in without a second optimizer
+    # ──────────────────────────────────────────────────────────────────────
 
     def copy_to(self, model):
         """Copy to.
@@ -75,6 +101,7 @@ class LitEma(nn.Module):
         shadow_params = dict(self.named_buffers())
         for key in m_param:
             if m_param[key].requires_grad:
+                # Buffer names dropped '.' so the map is required to copy back.
                 m_param[key].data.copy_(shadow_params[self.m_name2s_name[key]].data)
             else:
                 assert key not in self.m_name2s_name
@@ -99,5 +126,11 @@ class LitEma(nn.Module):
           parameters: Iterable of `torch.nn.Parameter`; the parameters to be
             updated with the stored parameters.
         """
-        for c_param, param in zip(self.collected_params, parameters):
+        parameters = list(parameters)
+        if len(parameters) != len(self.collected_params):
+            raise ValueError(
+                "restore parameter count does not match the preceding store: "
+                f"{len(parameters)} != {len(self.collected_params)}"
+            )
+        for c_param, param in zip(self.collected_params, parameters, strict=True):
             param.data.copy_(c_param.data)

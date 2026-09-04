@@ -9,6 +9,8 @@ source:
   status: open_source
   official_repo_url: https://github.com/Zerg-Overmind/GaussianFlow
 official_sources:
+  paper: https://arxiv.org/abs/2403.12365
+  project_page: https://zerg-overmind.github.io/GaussianFlow.github.io/
   github:
     url: https://github.com/Zerg-Overmind/GaussianFlow
     head_sha: 9a09f684d2af1394abb603a74339869cef33530e

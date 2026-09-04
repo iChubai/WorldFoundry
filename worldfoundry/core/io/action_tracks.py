@@ -1,4 +1,12 @@
-"""Reusable loading and normalization for frame-aligned action tracks."""
+"""Reusable loading and normalization for frame-aligned action tracks.
+
+Robot / world-model recipes store per-frame continuous actions as JSON
+(``{"action": [[...], ...], "state": ...}``). :func:`load_action_track`
+reads that mapping; :func:`normalize_action_track` (below) pads or
+truncates rows to ``num_frames`` and a fixed width so a short clip
+does not crash the conditioner. This is JSON I/O only — value scaling
+lives in :mod:`worldfoundry.core.action_normalization`.
+"""
 
 from __future__ import annotations
 
@@ -7,6 +15,10 @@ from pathlib import Path
 from typing import Any
 
 from .serialization import read_json
+
+# ──────────────────────────────────────────────────────────────────────────
+# JSON action tracks — pad/truncate to num_frames; no value scaling here
+# ──────────────────────────────────────────────────────────────────────────
 
 
 def load_action_track(source: Mapping[str, Any] | str | Path) -> dict[str, Any]:
@@ -19,6 +31,8 @@ def load_action_track(source: Mapping[str, Any] | str | Path) -> dict[str, Any]:
 
 
 def _normalize_rows(rows: Any, *, num_frames: int, width: int, name: str) -> list[list[float]]:
+    """Pad short tracks with zeros; reject row-width mismatches instead of silent crop."""
+
     if not isinstance(rows, Sequence) or isinstance(rows, (str, bytes, bytearray)):
         raise TypeError(f"action track {name!r} must be a sequence")
     normalized: list[list[float]] = []
@@ -39,7 +53,11 @@ def normalize_action_track(
     action_dim: int = 23,
     camera_dim: int = 2,
 ) -> dict[str, list[list[float]]]:
-    """Validate and pad/truncate a keyboard/camera action track to ``num_frames``."""
+    """Validate and pad/truncate a keyboard/camera action track to ``num_frames``.
+
+    Missing trailing rows become zeros. A missing ``camera`` key is
+    omitted from the result; ``keyboard`` is required.
+    """
 
     if num_frames <= 0:
         raise ValueError("num_frames must be positive")
@@ -61,7 +79,11 @@ def action_track_tensors(
     action_dim: int = 23,
     camera_dim: int = 2,
 ):
-    """Return batched float32 keyboard and optional camera tensors."""
+    """Return batched float32 keyboard and optional camera tensors.
+
+    Shapes are ``[1, T, action_dim]`` and ``[1, T, camera_dim]`` (or
+    ``None`` when the track has no camera rows).
+    """
 
     import torch
 

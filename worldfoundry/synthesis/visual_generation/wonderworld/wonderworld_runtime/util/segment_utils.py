@@ -4,16 +4,33 @@ from pathlib import Path
 from PIL import Image
 
 
-def _ckpt_root() -> Path:
-    return Path(os.environ.get("WORLDFOUNDRY_CKPT_DIR", Path(__file__).resolve().parents[7] / "ckpt"))
+def _checkpoint_roots() -> tuple[Path, ...]:
+    primary = Path(
+        os.environ.get(
+            "WORLDFOUNDRY_CKPT_DIR",
+            Path(__file__).resolve().parents[7] / "ckpt",
+        )
+    ).expanduser()
+    roots = [primary]
+    hfd_root = os.environ.get("WORLDFOUNDRY_HFD_ROOT")
+    if hfd_root:
+        roots.append(Path(hfd_root).expanduser())
+    alternate_name = {"ckpt": "ckpts", "ckpts": "ckpt"}.get(primary.name)
+    if alternate_name:
+        roots.append(primary.with_name(alternate_name))
+    return tuple(dict.fromkeys(roots))
 
 
 def _first_existing_ckpt(*relative_paths: str) -> str:
-    for relative_path in relative_paths:
-        candidate = _ckpt_root() / relative_path
-        if candidate.is_file():
-            return str(candidate)
-    return str(_ckpt_root() / relative_paths[0])
+    checked = []
+    for root in _checkpoint_roots():
+        for relative_path in relative_paths:
+            candidate = root / relative_path
+            checked.append(candidate)
+            if candidate.is_file():
+                return str(candidate)
+    rendered = "\n  - ".join(str(path) for path in checked)
+    raise FileNotFoundError(f"WonderWorld checkpoint is missing; checked:\n  - {rendered}")
 
 
 def save_sam_anns(anns, save_path="saved_image.png"):

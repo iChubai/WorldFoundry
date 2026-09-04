@@ -1,4 +1,9 @@
-"""URI storage primitives for local and remote file-like paths."""
+"""URI storage primitives for local and remote file-like paths.
+
+``open_uri`` / ``copy_uri`` / ``list_uri`` hide ``file://`` vs S3.
+Model code should not import boto3. Suffix and media kind live in
+``media.py``.
+"""
 
 from __future__ import annotations
 
@@ -11,6 +16,10 @@ from pathlib import Path
 from typing import BinaryIO, Generator, Iterable, TextIO
 from urllib.parse import unquote, urlparse
 from urllib.request import Request, urlopen
+
+# ──────────────────────────────────────────────────────────────────────────
+# Scheme dispatch — empty / file:// is local; anything else needs fsspec
+# ──────────────────────────────────────────────────────────────────────────
 
 
 def parse_uri_scheme(uri: str | os.PathLike[str]) -> str:
@@ -119,6 +128,11 @@ def write_text_uri(
 
     with open_uri(uri, "w", encoding=encoding, **storage_options) as handle:
         handle.write(data)
+
+
+# ──────────────────────────────────────────────────────────────────────────
+# Exists / list / copy / remove — local Path vs fsspec; HTTP reads without fsspec
+# ──────────────────────────────────────────────────────────────────────────
 
 
 def exists_uri(uri: str | os.PathLike[str], **storage_options) -> bool:
@@ -265,12 +279,16 @@ def remove_uri(uri: str | os.PathLike[str], **storage_options) -> None:
 
 
 def _read_http_bytes(uri: str) -> bytes:
+    """Fetch HTTP(S) without fsspec; identify as WorldFoundry so CDNs do not block urllib."""
+
     request = Request(uri, headers={"User-Agent": "worldfoundry"})
     with urlopen(request, timeout=30) as response:
         return response.read()
 
 
 def _optional_fsspec():
+    """Return the fsspec module or ``None`` so local-only jobs skip the S3 extra."""
+
     try:
         import fsspec  # type: ignore
     except ImportError:

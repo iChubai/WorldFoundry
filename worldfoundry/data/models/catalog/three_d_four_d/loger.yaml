@@ -10,6 +10,8 @@ source:
   official_repo_url: https://github.com/Junyi42/LoGeR
   license: apache-2.0
 official_sources:
+  project_page: https://LoGeR-project.github.io/
+  paper: https://arxiv.org/abs/2603.03269
   github:
     url: https://github.com/Junyi42/LoGeR
   huggingface:

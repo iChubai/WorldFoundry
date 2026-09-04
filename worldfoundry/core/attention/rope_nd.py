@@ -1,4 +1,26 @@
-"""Generic n-D rotary position embedding utilities."""
+"""Generic n-D rotary position embedding utilities.
+
+Some architectures (n-D DiTs, multi-axis world models) rotate tokens
+along more than three axes. This module builds a meshgrid of integer
+positions, looks up a 1-D frequency table per axis, and composes them
+through :func:`worldfoundry.core.attention.rope.apply_rotary_embedding`.
+
+Prefer :mod:`worldfoundry.core.attention.rope` / :mod:`.rope_2d` when
+the layout is known — those modules match released checkpoint
+frequency splits (time vs height vs width head-dim slices). This
+generic path is for adapters that cannot hard-code the axis count.
+
+Not this module:
+    Not a drop-in for Wan 3D RoPE (2:2:2 split). Not sequence-parallel.
+    Complex cis tables live in :mod:`.complex_rope`.
+
+Public surface:
+
+- :func:`get_meshgrid_nd` / :func:`get_nd_rotary_pos_embed` /
+  :func:`get_1d_rotary_pos_embed` — table builders.
+- :func:`reshape_rotary_for_broadcast` / :func:`apply_nd_rotary_embedding`
+  — apply with optional KV-prefix ``start_offset``.
+"""
 
 from __future__ import annotations
 
@@ -7,7 +29,14 @@ import torch
 from worldfoundry.core.attention.rope import apply_rotary_embedding
 
 
+# ──────────────────────────────────────────────────────────────────────────
+# Axis helpers — accept a scalar broadcast or an explicit per-axis tuple
+# ──────────────────────────────────────────────────────────────────────────
+
+
 def _to_tuple(value: int | tuple[int, ...] | list[int], *, dim: int) -> tuple[int, ...]:
+    """Broadcast a scalar to ``dim`` axes, or validate an explicit tuple."""
+
     if isinstance(value, int):
         return (value,) * dim
     if len(value) == dim:
@@ -16,9 +45,16 @@ def _to_tuple(value: int | tuple[int, ...] | list[int], *, dim: int) -> tuple[in
 
 
 def _default_device() -> torch.device:
+    """Prefer the current CUDA device so tables land next to activations."""
+
     if torch.cuda.is_available():
         return torch.device("cuda", torch.cuda.current_device())
     return torch.device("cpu")
+
+
+# ──────────────────────────────────────────────────────────────────────────
+# Grid + apply — linspace(endpoint=False) so integer cells stay unshifted
+# ──────────────────────────────────────────────────────────────────────────
 
 
 def get_meshgrid_nd(
@@ -152,12 +188,19 @@ def _slice_freqs_for_value(
     head_first: bool,
     start_offset: int,
 ) -> torch.Tensor:
+    """Slice a frequency table to the value's sequence window (KV prefix)."""
+
     seq_dim = -2 if head_first else 1
     if start_offset == 0 and freqs.shape[seq_dim] == value.shape[seq_dim]:
         return freqs
     slices = [slice(None)] * freqs.ndim
     slices[seq_dim] = slice(start_offset, start_offset + value.shape[seq_dim])
     return freqs[tuple(slices)]
+
+
+# ──────────────────────────────────────────────────────────────────────────
+# Table builders — one 1-D table per axis, concatenated on the head width
+# ──────────────────────────────────────────────────────────────────────────
 
 
 def get_nd_rotary_pos_embed(
@@ -228,6 +271,8 @@ def _expand_factor(
     length: int,
     name: str,
 ) -> list[float]:
+    """Expand a scalar or length-1 list to one factor per RoPE axis."""
+
     if isinstance(factor, (int, float)):
         return [float(factor)] * length
     if len(factor) == 1:

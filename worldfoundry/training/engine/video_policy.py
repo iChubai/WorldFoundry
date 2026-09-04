@@ -738,7 +738,10 @@ def materialize_video_flow_policy_training_run(
     if recipe.distributed.backend == "fsdp2":
         if resolved_device.type != "cuda":
             raise ValueError("video flow-policy FSDP2 execution requires CUDA")
-        distributed_context = DistributedTrainingContext(device_type="cuda")
+        distributed_context = DistributedTrainingContext(
+            device_type="cuda",
+            timeout_seconds=recipe.distributed.timeout_seconds,
+        )
         resolved_device = distributed_context.device
     elif recipe.distributed.backend != "single":
         raise ValueError("video flow-policy training supports single-device or FSDP2 execution")

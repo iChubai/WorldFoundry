@@ -1,3 +1,9 @@
+"""PixArt-style caption MLP that maps prompt embeddings into LTX hidden size.
+
+Used as ``caption_projection`` on video and/or audio stems so text context
+shares the same ``D`` as ``B T D`` tokens.
+"""
+
 import torch
 
 
@@ -22,6 +28,7 @@ class PixArtAlphaTextProjection(torch.nn.Module):
         self.linear_2 = torch.nn.Linear(in_features=hidden_size, out_features=out_features, bias=True)
 
     def forward(self, caption: torch.Tensor) -> torch.Tensor:
+        """Project ``[..., in_features]`` caption tokens to ``[..., out_features]``."""
         hidden_states = self.linear_1(caption)
         hidden_states = self.act_1(hidden_states)
         hidden_states = self.linear_2(hidden_states)

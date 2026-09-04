@@ -14,7 +14,17 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-"""Module for base_models -> diffusion_model -> image -> sana -> diffusion -> model -> nets -> fastlinear -> modules -> nn -> norm.py functionality."""
+"""Normalization factory for SANA Triton MBConv / LiteMLA modules.
+
+:func:`build_norm` constructs BatchNorm2d, SyncBN, LayerNorm, or
+channel-first :class:`LayerNorm2d` from a short name.  ``ln2d`` is the
+default inside fused MBConv stacks (normalize over the channel axis of
+``B C H W``).  :func:`get_norm_name` is the inverse for module strings.
+
+Also ships BN reset / remove helpers used by the upstream EfficientViT
+training scripts.  Those helpers import optional training packages and
+are unused by SANA inference.
+"""
 
 import copy
 import warnings
@@ -27,7 +37,7 @@ __all__ = ["LayerNorm2d", "build_norm", "get_norm_name", "reset_bn", "remove_bn"
 
 
 class LayerNorm2d(nn.LayerNorm):
-    """Layer norm d implementation."""
+    """Channel-first 2-D LayerNorm used inside fused MBConv stacks."""
 
     rmsnorm = False
 

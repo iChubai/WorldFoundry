@@ -69,13 +69,18 @@ WORLD_MODEL_RUNTIME_SPECS: Mapping[str, WorldModelRuntimeSpec] = {
     "ctrl-world": WorldModelRuntimeSpec(
         model_id="ctrl-world",
         display_name="Ctrl-World",
-        runtime_module="worldfoundry.synthesis.visual_generation.ctrl_world",
+        runtime_module="worldfoundry.synthesis.visual_generation.ctrl_world.worldfoundry_runtime",
         runtime_root_attr=None,
         runtime_root_func="runtime_root",
-        entrypoint_attr=None,
-        entrypoint_relative="scripts/rollout_replay_traj.py",
-        blocked_reason="Ctrl-World source is vendored in-tree; execution still requires official checkpoints and task assets.",
-        input_schema=_ROBOT_INPUTS,
+        blocked_reason="",
+        official_repo_url="https://github.com/Robert-gyj/Ctrl-World",
+        required_assets=(
+            "yjguo/Ctrl-World checkpoint-10000.pt",
+            "stabilityai/stable-video-diffusion-img2vid",
+            "openai/clip-vit-base-patch32",
+            "an official DROID three-view trajectory or explicitly labeled synthetic three-view/action smoke input",
+        ),
+        input_schema={"prompt": True, "image": True, "video": False, "actions": ["robot_action"]},
     ),
     "causal-rcm": WorldModelRuntimeSpec(
         model_id="causal-rcm",
@@ -111,24 +116,33 @@ WORLD_MODEL_RUNTIME_SPECS: Mapping[str, WorldModelRuntimeSpec] = {
     "genie-envisioner": WorldModelRuntimeSpec(
         model_id="genie-envisioner",
         display_name="Genie Envisioner",
-        runtime_module="worldfoundry.synthesis.visual_generation.genie_envisioner",
+        runtime_module="worldfoundry.synthesis.visual_generation.genie_envisioner.worldfoundry_runtime",
         runtime_root_attr=None,
         runtime_root_func="runtime_root",
-        entrypoint_attr=None,
-        entrypoint_relative="main.py",
-        blocked_reason="Genie Envisioner source is vendored in-tree; execution still requires official checkpoints and robot task assets.",
-        input_schema=_ROBOT_INPUTS,
+        blocked_reason="",
+        official_repo_url="https://github.com/AgibotTech/Genie-Envisioner",
+        required_assets=(
+            "agibot-world/Genie-Envisioner GE-base checkpoint",
+            "Lightricks/LTX-Video 0.9 tokenizer, T5 text encoder, and VAE",
+            "an official AgiBot/LeRobot three-view trajectory or explicitly labeled synthetic three-view smoke input",
+        ),
+        input_schema={"prompt": True, "image": True, "video": False, "actions": ["robot_action"]},
     ),
     "giga-world-0": WorldModelRuntimeSpec(
         model_id="giga-world-0",
         display_name="GigaWorld-0",
-        runtime_module="worldfoundry.synthesis.visual_generation.giga_world_0",
+        runtime_module="worldfoundry.synthesis.visual_generation.giga_world_0.worldfoundry_runtime",
         runtime_root_attr=None,
         runtime_root_func="runtime_root",
-        entrypoint_attr=None,
-        entrypoint_relative="scripts/inference.py",
-        blocked_reason="GigaWorld-0 source is vendored in-tree; execution still requires official checkpoints and task assets.",
-        input_schema=_ROBOT_INPUTS,
+        blocked_reason="",
+        official_repo_url="https://github.com/open-gigaai/giga-world-0",
+        required_assets=(
+            "open-gigaai/GigaWorld-0-Video-GR1-2b transformer checkpoint",
+            "google-t5/t5-11b encoder converted locally to safetensors",
+            "Wan-AI/Wan2.1-T2V-1.3B-Diffusers VAE",
+            "an official GR1 observation or explicitly labeled single-image checkpoint smoke input",
+        ),
+        input_schema={"prompt": True, "image": True, "video": False, "actions": []},
     ),
     "leworldmodel": WorldModelRuntimeSpec(
         model_id="leworldmodel",
@@ -212,13 +226,17 @@ WORLD_MODEL_RUNTIME_SPECS: Mapping[str, WorldModelRuntimeSpec] = {
     "tesseract": WorldModelRuntimeSpec(
         model_id="tesseract",
         display_name="TesserAct",
-        runtime_module="worldfoundry.synthesis.visual_generation.tesseract",
+        runtime_module="worldfoundry.synthesis.visual_generation.tesseract.worldfoundry_runtime",
         runtime_root_attr=None,
         runtime_root_func="runtime_root",
-        entrypoint_attr=None,
-        entrypoint_relative="inference/inference_rgbdn_sft.py",
-        blocked_reason="TesserAct source is vendored in-tree; execution still requires official checkpoints and embodied task assets.",
-        input_schema=_ROBOT_INPUTS,
+        blocked_reason="",
+        official_repo_url="https://github.com/UMass-Embodied-AGI/TesserAct",
+        required_assets=(
+            "anyeZHY/tesseract RGB-depth-normal SFT transformer checkpoint",
+            "THUDM/CogVideoX-5b-I2V tokenizer, text encoder, VAE, and scheduler",
+            "an RGB input plus official depth/normal conditioning or explicit synthetic-gradient smoke conditioning",
+        ),
+        input_schema={"prompt": True, "image": True, "video": False, "actions": ["robot_action"]},
     ),
     "dreamx-world-5b-cam": WorldModelRuntimeSpec(
         model_id="dreamx-world-5b-cam",
@@ -261,10 +279,16 @@ WORLD_MODEL_RUNTIME_SPECS: Mapping[str, WorldModelRuntimeSpec] = {
     "egowm": WorldModelRuntimeSpec(
         model_id="egowm",
         display_name="EgoWM",
-        source_dir_names=("egowm",),
+        runtime_module="worldfoundry.synthesis.visual_generation.world_model.egowm.worldfoundry_runtime",
+        runtime_root_attr=None,
+        runtime_root_func="runtime_root",
         official_repo_url="https://github.com/miccooper9/egowm",
-        blocked_reason="EgoWM official source route is registered; execution requires the egowm checkpoint package and an official inference/evaluation entrypoint configuration.",
-        required_assets=("anuragba/egowm checkpoint assets",),
+        blocked_reason="",
+        required_assets=(
+            "anuragba/egowm 25-DoF navigation checkpoint",
+            "Stable Video Diffusion img2vid base model",
+            "official EgoWM source checkout",
+        ),
         input_schema={"prompt": True, "image": True, "video": True, "actions": ["navigation_action", "egocentric_action"]},
     ),
     "happyoyster": WorldModelRuntimeSpec(
@@ -278,11 +302,16 @@ WORLD_MODEL_RUNTIME_SPECS: Mapping[str, WorldModelRuntimeSpec] = {
     "hma": WorldModelRuntimeSpec(
         model_id="hma",
         display_name="HMA",
-        source_dir_names=("HMA",),
+        runtime_module="worldfoundry.synthesis.visual_generation.world_model.hma.worldfoundry_runtime",
+        runtime_root_attr=None,
+        runtime_root_func="runtime_root",
         official_repo_url="https://github.com/liruiw/HMA",
-        entrypoint_relative="hma/generate.py",
-        blocked_reason="HMA official generator route is registered; execution requires HMA checkpoints, robot trajectories, and the official runtime environment.",
-        required_assets=("liruiw/hma-base-cont or liruiw/hma-base-disc checkpoint", "robot rollout/action input"),
+        blocked_reason="",
+        required_assets=(
+            "liruiw/hma-base-cont checkpoint",
+            "Stable Video Diffusion temporal VAE",
+            "official HMA source checkout and prompt frame",
+        ),
         input_schema=_ROBOT_INPUTS,
     ),
     "hunyuanworld-1": WorldModelRuntimeSpec(
@@ -335,12 +364,37 @@ WORLD_MODEL_RUNTIME_SPECS: Mapping[str, WorldModelRuntimeSpec] = {
     "shotstream": WorldModelRuntimeSpec(
         model_id="shotstream",
         display_name="ShotStream",
-        source_dir_names=("ShotStream",),
+        runtime_module="worldfoundry.synthesis.visual_generation.world_model.shotstream.worldfoundry_runtime",
+        runtime_root_attr=None,
+        runtime_root_func="runtime_root",
         official_repo_url="https://github.com/KlingAIResearch/ShotStream",
-        entrypoint_relative="Inference_Causal.py",
-        blocked_reason="ShotStream official inference route is registered; execution requires KlingTeam/ShotStream checkpoints and streaming runtime assets.",
-        required_assets=("KlingTeam/ShotStream checkpoint assets",),
+        blocked_reason="",
+        required_assets=(
+            "KlingTeam/ShotStream causal checkpoint bundle",
+            "Wan-AI/Wan2.1-T2V-1.3B base model",
+            "official ShotStream source checkout",
+        ),
         input_schema={"prompt": True, "image": True, "video": True, "actions": ["stream_control", "edit"]},
+    ),
+    "solarwm": WorldModelRuntimeSpec(
+        model_id="solarwm",
+        display_name="SolarWM",
+        runtime_module="worldfoundry.synthesis.visual_generation.world_model.solarwm.worldfoundry_runtime",
+        runtime_root_attr=None,
+        runtime_root_func="runtime_root",
+        official_repo_url="https://github.com/Junchao-cs/SolarWM",
+        blocked_reason="",
+        required_assets=(
+            "junchaoh-cs/SolarWM-Wan2.2-5B base and Stage2 checkpoint assets",
+            "junchaoh-cs/SolarWM-Data release indexes and raw shards",
+            "official SolarWM source checkout",
+        ),
+        input_schema={
+            "prompt": False,
+            "image": False,
+            "video": True,
+            "actions": ["camera_trajectory"],
+        },
     ),
     "simworld": WorldModelRuntimeSpec(
         model_id="simworld",
@@ -503,6 +557,10 @@ class WorldModelRuntimeSynthesis(BaseSynthesis):
                     paths.append(expand_worldfoundry_path(value))
         return list(dict.fromkeys(paths))
 
+    def _artifact_kind(self) -> str:
+        """Return the runtime profile's declared artifact kind."""
+        return str(getattr(self.runtime_profile, "artifact_kind", None) or "generated_world")
+
     def _missing_runtime_requirements(self) -> list[dict[str, str]]:
         missing: list[dict[str, str]] = []
         if not self.runtime_root.is_dir():
@@ -656,7 +714,7 @@ class WorldModelRuntimeSynthesis(BaseSynthesis):
             "status": status,
             "model_id": self.model_id,
             "display_name": self.model_name,
-            "artifact_kind": "generated_world",
+            "artifact_kind": self._artifact_kind(),
             "backend": self.profile.backend,
             "backend_quality": "in_tree_runtime_manifest",
             "runtime_root": str(self.runtime_root),
@@ -723,7 +781,7 @@ class WorldModelRuntimeSynthesis(BaseSynthesis):
             return {
                 "status": "blocked",
                 "model_id": self.model_id,
-                "artifact_kind": "generated_world",
+                "artifact_kind": self._artifact_kind(),
                 "runtime": self.profile.backend,
                 "backend_quality": "missing_runtime_requirements",
                 "artifact_path": str(plan_path),
@@ -754,7 +812,7 @@ class WorldModelRuntimeSynthesis(BaseSynthesis):
             return {
                 "status": "failed",
                 "model_id": self.model_id,
-                "artifact_kind": "generated_world",
+                "artifact_kind": self._artifact_kind(),
                 "runtime": self.profile.backend,
                 "backend_quality": "official_entrypoint_failed",
                 "artifact_path": str(output),
@@ -767,7 +825,7 @@ class WorldModelRuntimeSynthesis(BaseSynthesis):
             return {
                 "status": "failed",
                 "model_id": self.model_id,
-                "artifact_kind": "generated_world",
+                "artifact_kind": self._artifact_kind(),
                 "runtime": self.profile.backend,
                 "backend_quality": "official_entrypoint_no_artifact",
                 "artifact_path": str(output),
@@ -781,7 +839,7 @@ class WorldModelRuntimeSynthesis(BaseSynthesis):
         return {
             "status": "succeeded",
             "model_id": self.model_id,
-            "artifact_kind": "generated_world",
+            "artifact_kind": self._artifact_kind(),
             "runtime": self.profile.backend,
             "backend_quality": "official_entrypoint",
             "artifact_path": str(output),

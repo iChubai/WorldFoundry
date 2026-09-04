@@ -15,10 +15,6 @@ mask builder) consumes.
 Nothing here allocates tensors or binds an attention backend — the predicates
 are pure index arithmetic, so callers stay free to compile them, materialize
 them into range lists, or evaluate them on CPU for visualization and tests.
-
-Adapted from the block-mask implementation in NVIDIA NVlabs rCM
-(https://github.com/NVlabs/rcm, Apache-2.0); see the runtime's
-``THIRD_PARTY_NOTICES.md``.
 """
 
 from __future__ import annotations
@@ -29,6 +25,10 @@ from typing import Any, Callable, Literal
 import torch
 
 MaskMode = Literal["none", "block_causal", "teacher_forcing"]
+
+# ──────────────────────────────────────────────────────────────────────────
+# Chunk schedule — one geometry for masks, rollout, and streaming offsets
+# ──────────────────────────────────────────────────────────────────────────
 
 
 @dataclass(frozen=True)
@@ -125,6 +125,11 @@ class BlockPattern:
         return bounds
 
 
+# ──────────────────────────────────────────────────────────────────────────
+# Mask spec + predicates — pure index arithmetic, no tensors or backends
+# ──────────────────────────────────────────────────────────────────────────
+
+
 @dataclass(frozen=True)
 class AttnMaskSpec:
     """Declarative description of a block-structured attention mask.
@@ -168,6 +173,7 @@ def _block_causal_mask_fn(spec: AttnMaskSpec, q_real: int, kv_real: int) -> tupl
     use_first_q = q_block_offset == 0
 
     def mask(batch, head, q_idx, kv_idx):
+        """Allow KV blocks up to the query block, plus optional sinks/window."""
         del batch, head
         valid = (q_idx < q_real) & (kv_idx < kv_real)
 
@@ -199,6 +205,7 @@ def _teacher_forcing_mask_fn(spec: AttnMaskSpec, q_real: int, kv_real: int) -> t
     total_len = 2 * clean_len
 
     def mask(batch, head, q_idx, kv_idx):
+        """Allow packed [clean | noisy] teacher-forcing; keep the diagonal open."""
         del batch, head
         valid = (q_idx < q_real) & (kv_idx < kv_real) & (q_idx < total_len) & (kv_idx < total_len)
 

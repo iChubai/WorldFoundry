@@ -1,4 +1,9 @@
-"""Native checkpoint-compatible Vchitect transformer blocks."""
+"""Vchitect joint DiT blocks (AdaLN + spatial/temporal/text attention).
+
+Hidden states are per-frame patches ``(B·F) S C``.  Context is text
+tokens repeated over frames.  The last block is ``context_pre_only``:
+it updates video tokens but drops the text residual (SD3-style).
+"""
 
 from __future__ import annotations
 
@@ -9,26 +14,34 @@ from .attention import Attention
 
 
 class GELU(nn.Module):
+    """Linear + tanh-GELU used as the FFN expansion."""
+
     def __init__(self, dim_in: int, dim_out: int) -> None:
         super().__init__()
         self.proj = nn.Linear(dim_in, dim_out)
 
     def forward(self, hidden_states: torch.Tensor) -> torch.Tensor:
+        """Expand ``[..., dim_in]`` to ``[..., dim_out]``."""
         return torch.nn.functional.gelu(self.proj(hidden_states), approximate="tanh")
 
 
 class FeedForward(nn.Module):
+    """GELU MLP with a no-op Dropout slot so state-dict keys stay ``net.0/1/2``."""
+
     def __init__(self, dim: int) -> None:
         super().__init__()
         self.net = nn.ModuleList((GELU(dim, dim * 4), nn.Dropout(0.0), nn.Linear(dim * 4, dim)))
 
     def forward(self, hidden_states: torch.Tensor) -> torch.Tensor:
+        """Map ``(B·F) S C`` tokens through the three-module MLP."""
         for module in self.net:
             hidden_states = module(hidden_states)
         return hidden_states
 
 
 class AdaLayerNormZero(nn.Module):
+    """AdaLN-Zero: emit MSA/MLP ``(shift, scale, gate)`` from the timestep embedding."""
+
     def __init__(self, dim: int) -> None:
         super().__init__()
         self.silu = nn.SiLU()
@@ -36,6 +49,7 @@ class AdaLayerNormZero(nn.Module):
         self.norm = nn.LayerNorm(dim, elementwise_affine=False, eps=1e-6)
 
     def forward(self, hidden_states: torch.Tensor, embedding: torch.Tensor):
+        """Return ``(normed_for_msa, gate_msa, shift_mlp, scale_mlp, gate_mlp)``."""
         shift_msa, scale_msa, gate_msa, shift_mlp, scale_mlp, gate_mlp = self.linear(
             self.silu(embedding)
         ).chunk(6, dim=1)
@@ -44,6 +58,8 @@ class AdaLayerNormZero(nn.Module):
 
 
 class AdaLayerNormContinuous(nn.Module):
+    """Final / context-pre-only AdaLN (shift/scale only, no residual gate)."""
+
     def __init__(self, dim: int) -> None:
         super().__init__()
         self.silu = nn.SiLU()
@@ -51,11 +67,14 @@ class AdaLayerNormContinuous(nn.Module):
         self.norm = nn.LayerNorm(dim, elementwise_affine=False, eps=1e-6)
 
     def forward(self, hidden_states: torch.Tensor, embedding: torch.Tensor) -> torch.Tensor:
+        """``norm(x) * (1+scale) + shift``; ``embedding`` is ``[B, C]`` (broadcast over S)."""
         scale, shift = self.linear(self.silu(embedding)).chunk(2, dim=1)
         return self.norm(hidden_states) * (1 + scale[:, None]) + shift[:, None]
 
 
 class JointTransformerBlock(nn.Module):
+    """One Vchitect layer: AdaLN → joint attn → gated FFN (video and optional text)."""
+
     def __init__(self, dim: int, heads: int, *, context_pre_only: bool) -> None:
         super().__init__()
         self.context_pre_only = bool(context_pre_only)
@@ -77,6 +96,7 @@ class JointTransformerBlock(nn.Module):
         frequencies: torch.Tensor,
         frames: int,
     ) -> tuple[torch.Tensor | None, torch.Tensor]:
+        """Return ``(updated_context or None, updated_video)`` on ``(B·F) S C``."""
         normalized, gate_msa, shift_mlp, scale_mlp, gate_mlp = self.norm1(hidden_states, embedding)
         if self.context_pre_only:
             normalized_context = self.norm1_context(encoder_hidden_states, embedding)

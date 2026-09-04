@@ -16,6 +16,10 @@
 
 """Camera-control utility helpers for the Sana-WM bidirectional path.
 
+UCPE (Unified Camera Pose Embedding) turns per-frame pose + UCM intrinsics
+into per-pixel ray matrices that transform camera-branch Q/K/V.  The dual
+GDN+UCPE blocks themselves live in ``sana_gdn_camctrl_blocks``.
+
 Only the helpers needed by ``BidirectionalGDNUCPESinglePathLiteLABothTriton``
 and ``BidirectionalSoftmaxUCPESinglePathLiteLA`` are kept here.  The model uses
 the UCPE (Unified Camera Pose Embedding) formulation, which builds per-pixel

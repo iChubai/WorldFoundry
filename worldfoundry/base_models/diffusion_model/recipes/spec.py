@@ -1,4 +1,17 @@
-"""Immutable, declarative model recipes."""
+"""Immutable, declarative model recipes: the only input contract for the pipeline.
+
+This module only describes which pure components and which framework strategy to use.
+It sits at the top of:
+
+    NativeDiffusionRecipe (this module)
+        → NativeDiffusionRegistry.resolve / assembler.build
+        → ExecutionStrategyRegistry
+        → runner.run(DiffusionRequest)
+
+Inputs: model_id, a ComponentSpec tuple, ExecutionSpec, and a CheckpointSpec mapping.
+Output: a recipe frozen by ``__post_init__`` for read-only assembler consumption.
+Must not provide a runner or pipeline factory, or perform loading / sampling here.
+"""
 
 from __future__ import annotations
 
@@ -14,8 +27,23 @@ from ..loaders import CheckpointSpec
 class NativeDiffusionRecipe:
     """One public model assembled exclusively from canonical infra roles.
 
-    A recipe cannot provide a runner or pipeline factory.  It selects pure
-    component factories and a framework-owned execution strategy instead.
+    A recipe cannot provide a runner. It selects pure component factories and a
+    framework-owned execution strategy instead.
+
+    Fields:
+        model_id: Canonical ID; empty is illegal. Case/underscore normalization
+            happens at registry registration time.
+        components: Non-empty ComponentSpec tuple; ComponentKey values must be unique.
+        execution: ExecutionSpec (strategy ID + bindings). Bindings must point at
+            declared components.
+        checkpoints: Logical name → CheckpointSpec. Every ComponentSpec.checkpoints
+            value must exist here.
+        aliases: Extra resolve names reserved by the registry.
+        capabilities / options / metadata: Capability tags and read-only extras.
+            The assembler does not interpret strategy from these.
+
+    ``__post_init__`` raises :exc:`ValueError` for an empty model_id, no components,
+    duplicate ComponentKey, unknown checkpoint reference, or a binding to a missing component.
     """
 
     model_id: str
@@ -61,6 +89,7 @@ class NativeDiffusionRecipe:
 
 
 def _key(value: str) -> str:
+    """Same identity normalization as NativeDiffusionRegistry: strip, lower, ``_`` → ``-``."""
     return str(value).strip().lower().replace("_", "-")
 
 

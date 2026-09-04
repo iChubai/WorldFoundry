@@ -1,14 +1,14 @@
-"""DeepSpeed Ulysses Context Parallelism (CP) communication primitive.
+"""Ulysses context-parallel (CP) communication primitive.
 
-This module implements the DeepSpeed Ulysses context parallel attention mechanism
-using PyTorch Distributed All-to-All communication primitives.
+This module implements Ulysses context-parallel attention using
+PyTorch Distributed All-to-All communication primitives.
 
 Core Design Philosophy:
 1. Dimension Transformation: Before local attention calculation, input tensors are
    gathered across the sequence dimension (S) and scattered across the head dimension (H)
    to all active ranks. This allows each rank to hold the full sequence of a subset of heads,
    enabling the use of high-performance single-GPU attention kernels (e.g., FlashAttention).
-2. Zero-Redundant Communication: Compared to Megatron-LM Tensor Parallelism (TP), Ulysses
+2. Zero-Redundant Communication: Compared to tensor parallelism (TP), Ulysses
    requires only two All-to-All communication phases (pre-attention and post-attention),
    scaling linearly with the tensor size and matching high-bandwidth NVLink/RoCE networks.
 3. Compiler Barriers: PyTorch Distributed primitives (especially `all_to_all_single`)
@@ -21,6 +21,10 @@ import torch.distributed as dist
 
 from worldfoundry.core.distributed import context_parallel_util
 from worldfoundry.core.distributed.sequence_ops import all_to_all_many
+
+# ──────────────────────────────────────────────────────────────────────────
+# All-to-all reshape — permute so all_to_all_single can slice dim 0
+# ──────────────────────────────────────────────────────────────────────────
 
 
 def all_to_all(tensor, scatter_idx, gather_idx, group=None, gather=True):
@@ -86,6 +90,7 @@ def all_to_all(tensor, scatter_idx, gather_idx, group=None, gather=True):
     # Output shape: [N, B, H/N, S/N, D] (where each local rank received S/N slice from N ranks)
     # Target shape: [B, H/N, S, D] where sequence dimension S = N * (S/N) is merged.
     def reorder_tensor(tensor, gather_idx):
+        """Move rank (dim 0) next to ``gather_idx`` and merge, or keep one rank."""
         t_shape = list(tensor.shape)
         world_size = t_shape[0]
 
@@ -117,6 +122,11 @@ def all_to_all(tensor, scatter_idx, gather_idx, group=None, gather=True):
     output = reorder_tensor(output, gather_idx)
 
     return output
+
+
+# ──────────────────────────────────────────────────────────────────────────
+# Ulysses phases — gather sequence before local attn, scatter heads after
+# ──────────────────────────────────────────────────────────────────────────
 
 
 @torch.compiler.disable
@@ -169,6 +179,7 @@ def ulysses_wrapper(func):
     """
 
     def wrapper(self, query, key, value, shape):
+        """Run ``func`` between Ulysses gather-in and scatter-out."""
         query, key, value = ulysses_a2a_in(query, key, value)
         output = func(self, query, key, value, shape)
         output = ulysses_a2a_out(output)

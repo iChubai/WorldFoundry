@@ -1,6 +1,22 @@
-"""Accelerator-aware feature extraction shared by inference evaluators."""
+"""Accelerator-aware feature extraction shared by inference evaluators.
+
+Responsibility
+    Encode a batched image tensor through a caller-supplied encoder with OOM
+    backoff, then (optionally) score pairwise cosine consistency.
+
+Boundaries
+    Eval-only. Not part of the denoise loop, not a model preprocess step, and
+    not a CUDA Graph runner — batching is :func:`adaptive_batched_inference`.
+
+Public surface
+    :func:`batched_image_features`, :func:`mean_pairwise_cosine_distance`.
+"""
 
 from __future__ import annotations
+
+# ──────────────────────────────────────────────────────────────────────────
+# Eval-only encoders — OOM-safe batching; encoder must be shape-stable
+# ──────────────────────────────────────────────────────────────────────────
 
 from collections.abc import Callable, Sequence
 

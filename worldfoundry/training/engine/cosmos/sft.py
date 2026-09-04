@@ -442,7 +442,10 @@ def materialize_cosmos_cached_training_session(
     if recipe.distributed.backend == "fsdp2":
         if resolved_device.type != "cuda":
             raise ValueError("Cosmos FSDP2 materialization requires CUDA")
-        distributed_context = DistributedTrainingContext(device_type="cuda")
+        distributed_context = DistributedTrainingContext(
+            device_type="cuda",
+            timeout_seconds=recipe.distributed.timeout_seconds,
+        )
         resolved_device = distributed_context.device
     elif recipe.distributed.backend != "single":
         raise ValueError(f"Cosmos materialization does not support {recipe.distributed.backend!r}")

@@ -1,0 +1,41 @@
+{
+  "id": "uni3c",
+  "tagline": {
+    "en": "Alibaba DAMO Academy's controllable image-to-video model — drive a clip with camera trajectories, and optionally human motion, on top of a Wan2.1 backbone.",
+    "zh": "阿里达摩院的可控图生视频模型——在 Wan2.1 骨干之上,用相机轨迹、并可选叠加人体动作来驱动视频生成。"
+  },
+  "overview": {
+    "en": [
+      "Uni3C is a controllable video generation model from Alibaba DAMO Academy. Starting from an image, it renders a video that follows a specified camera path, and in its unified mode it can also be driven by human body and hand motion.",
+      "It builds on a Wan2.1 image-to-video 14B backbone and a RealisDance-DiT component, offering two paths: a camera-only mode and a unified camera-plus-human mode. Camera mode takes pre-rendered control inputs — a render video, a render mask, and camera info — while unified mode additionally uses SMPL body and hand render videos so the subject's motion tracks your control signal.",
+      "In WorldFoundry, you provide the source image and the matching control bundle for the mode you want; the control renders stay explicit inputs rather than being generated for you, so you keep precise control over camera and motion."
+    ],
+    "zh": [
+      "Uni3C 是阿里达摩院推出的可控视频生成模型。它从一张图像出发,生成一段沿指定相机路径运动的视频;在统一模式下,还能由人体与手部动作共同驱动。",
+      "它基于 Wan2.1 图生视频 14B 骨干与 RealisDance-DiT 组件,提供两条路径:仅相机模式与相机加人体的统一模式。相机模式需要预渲染的控制输入——渲染视频、渲染遮罩与相机信息;统一模式则额外使用 SMPL 人体与手部渲染视频,使主体动作跟随你的控制信号。",
+      "在 WorldFoundry 中,你按所选模式提供源图像和对应的控制包;这些控制渲染是显式输入而非自动生成,因此你能对相机与动作保持精确掌控。"
+    ]
+  },
+  "whenToUse": {
+    "en": "Reach for Uni3C when you want image-to-video with precise camera control, or when you also need to steer a subject's body and hand motion in the generated clip.",
+    "zh": "当你想要带精确相机控制的图生视频,或需要在生成片段中进一步操控主体的人体与手部动作时,适合使用 Uni3C。"
+  },
+  "notFor": {
+    "en": "It expects pre-rendered control bundles as input rather than producing camera or motion for you, so it is less suited to quick text-only generation without prepared control assets.",
+    "zh": "它需要预渲染的控制包作为输入,而不会替你生成相机或动作,因此不太适合没有准备好控制素材、只凭文字快速生成的场景。"
+  },
+  "highlights": {
+    "en": [
+      "Camera-controlled image-to-video, with an optional unified human-motion mode",
+      "Built on a Wan2.1 image-to-video 14B backbone plus RealisDance-DiT",
+      "Camera mode uses render video, render mask, and camera info",
+      "Unified mode adds SMPL body and hand render videos"
+    ],
+    "zh": [
+      "相机可控的图生视频,并可选人体动作的统一模式",
+      "基于 Wan2.1 图生视频 14B 骨干与 RealisDance-DiT",
+      "相机模式使用渲染视频、渲染遮罩与相机信息",
+      "统一模式额外加入 SMPL 人体与手部渲染视频"
+    ]
+  }
+}

@@ -13,22 +13,43 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Functions for performing operations with broadcasting to the right axis
-#
-# Example
-# input1: tensor of size (N1, N2)
-# input2: tensor of size (N1, N2, N3, N4)
-# batch_mul(input1, input2) = input1[:, :, None, None] * input2
-#
-# If the common dimensions don't match, we raise an assertion error.
+"""Elementwise batch ops that broadcast on the right.
+
+Responsibility
+    Align a short tensor to a longer one by appending trailing singleton
+    dims, then apply ``+ * - /``. Collate equal or ragged 1-D tensors.
+
+Boundaries
+    Torch-only. Not numpy/tensor-polymorphic (that is ``array_tensor_utils``)
+    and not a pytree walker. Leading dims must already match; disagreement
+    is an assertion, not silent left-broadcast.
+
+Public surface
+    :func:`common_broadcast`, :func:`batch_add`, :func:`batch_mul`,
+    :func:`batch_sub`, :func:`batch_div`, :func:`stack_or_pad_tensors`.
+
+Example
+    ``(N1, N2)`` and ``(N1, N2, N3, N4)`` → first tensor becomes
+    ``(N1, N2, 1, 1)`` before the op.
+"""
 
 from collections.abc import Sequence
 
 import torch
 from torch import Tensor
 
+# ──────────────────────────────────────────────────────────────────────────
+# Right-broadcast arithmetic — pad trailing axes; never the leading batch
+# ──────────────────────────────────────────────────────────────────────────
+
 
 def common_broadcast(x: Tensor, y: Tensor) -> tuple[Tensor, Tensor]:
+    """Reshape the shorter rank so both tensors share ndim, leading dims equal.
+
+    Failure: :exc:`AssertionError` when any shared leading axis disagrees.
+    This is intentional — broadcasting the *wrong* axis would silently mix
+    batch items. Dtype and device are unchanged.
+    """
     ndims1 = x.ndim
     ndims2 = y.ndim
 
@@ -45,23 +66,32 @@ def common_broadcast(x: Tensor, y: Tensor) -> tuple[Tensor, Tensor]:
 
 
 def batch_add(x: Tensor, y: Tensor) -> Tensor:
+    """Right-broadcast then add; same leading-dim contract as :func:`common_broadcast`."""
     x, y = common_broadcast(x, y)
     return x + y
 
 
 def batch_mul(x: Tensor, y: Tensor) -> Tensor:
+    """Right-broadcast then multiply; used for per-sample scales on N-D features."""
     x, y = common_broadcast(x, y)
     return x * y
 
 
 def batch_sub(x: Tensor, y: Tensor) -> Tensor:
+    """Right-broadcast then subtract."""
     x, y = common_broadcast(x, y)
     return x - y
 
 
 def batch_div(x: Tensor, y: Tensor) -> Tensor:
+    """Right-broadcast then divide; does not guard divide-by-zero."""
     x, y = common_broadcast(x, y)
     return x / y
+
+
+# ──────────────────────────────────────────────────────────────────────────
+# Collation — equal tensors stack; ragged 1-D sequences pad, nothing else
+# ──────────────────────────────────────────────────────────────────────────
 
 
 def stack_or_pad_tensors(

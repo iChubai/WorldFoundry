@@ -3,6 +3,10 @@
 These types intentionally cover only the inference-time surface used by the
 canonical WorldFoundry schedulers.  They keep numerical code independent of
 Diffusers without recreating its training, serialization, or Hub APIs.
+
+:class:`SchedulerConfig` is deepcopy-safe so the multi-modal runner can copy
+per-modality schedulers.  :func:`randn_tensor` supports one generator per
+batch item.  A generator-list length mismatch raises :exc:`ValueError`.
 """
 
 from __future__ import annotations

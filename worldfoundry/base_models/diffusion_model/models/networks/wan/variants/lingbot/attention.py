@@ -1,5 +1,8 @@
-"""Module for base_models -> diffusion_model -> video -> wan -> wan_2p2 -> modules -> lingbot_attention.py functionality."""
+"""LingBot / Wan 2.2 flash-attention dispatcher.
 
+Kernel adapter (FlashAttn 3/2 or SDPA) for LingBot official-layout
+blocks.  Causal-fast math lives in :mod:`.fast`.
+"""
 import torch
 
 try:
@@ -21,6 +24,13 @@ __all__ = [
     'flash_attention',
     'attention',
 ]
+
+
+def _flash_attention_output_tensor(output):
+    """Normalize FlashAttention 3's version-dependent return contract."""
+    if isinstance(output, (tuple, list)):
+        return output[0]
+    return output
 
 
 def flash_attention(
@@ -114,7 +124,8 @@ def flash_attention(
             max_seqlen_k=lk,
             softmax_scale=softmax_scale,
             causal=causal,
-            deterministic=deterministic).unflatten(0, (b, lq))
+            deterministic=deterministic)
+        x = _flash_attention_output_tensor(x).unflatten(0, (b, lq))
     else:
         if FLASH_ATTN_2_AVAILABLE:
             x = flash_attn.flash_attn_varlen_func(

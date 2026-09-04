@@ -1,4 +1,15 @@
-"""Declarative native Vchitect-2 recipe."""
+"""Native declarative recipe for Vchitect-2.0 2B text-to-video.
+
+Returns a :class:`NativeDiffusionRecipe` only.  Does not construct a
+runner.
+
+Binds the Vchitect MMDiT denoiser, triple text-encoder conditioner
+(CLIP-L / CLIP-G / T5 from the Hub snapshot), Vchitect latent
+initializer, Wan flow-match Euler (shift 3.0), and an SD3 frame-wise
+VAE decoder.  Execution is the default ``standard`` five-role binding.
+CFG is on; temporal compression is 1 (per-frame latents).  No dual
+expert or multistage refinement.
+"""
 
 from __future__ import annotations
 
@@ -18,6 +29,8 @@ VCHITECT_REVISION = "37936818734242d8e75685b9ee43d2d2e447f98c"
 
 
 def vchitect_2_t2v_recipe() -> NativeDiffusionRecipe:
+    """Vchitect-2 T2V: MMDiT + three text encoders + Euler flow-match, CFG."""
+
     checkpoints = {
         "transformer": CheckpointSpec(
             repo_id=VCHITECT_REPO_ID,

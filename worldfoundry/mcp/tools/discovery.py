@@ -9,12 +9,12 @@ from __future__ import annotations
 
 import threading
 import time
-from fnmatch import fnmatchcase
 from typing import Any
 
 from worldfoundry.cli.tui_discovery import load_tui_catalog
 
 from .context import MCPToolContext, get_default_context
+from .query import matches_query
 
 # Discovery tools are the hottest calls in an agent session; reloading every
 # manifest plus conda probing on each list/get is wasteful for a long-lived
@@ -71,7 +71,7 @@ def list_models_payload(
     for row in catalog.models:
         if runnable_only and row.runner_kind != "runnable_runner":
             continue
-        if query and not _matches(query, row.model_id, row.name, row.provider, *row.tasks):
+        if query and not matches_query(query, row.model_id, row.name, row.provider, *row.tasks):
             continue
         payload = row.to_dict()
         if not include_notes:
@@ -133,7 +133,7 @@ def list_benchmarks_payload(
     for row in catalog.benchmarks:
         if integrated_only and row.integration_status != "integrated":
             continue
-        if query and not _matches(query, row.benchmark_id, row.name, *row.domains, *row.modalities, *row.tags):
+        if query and not matches_query(query, row.benchmark_id, row.name, *row.domains, *row.modalities, *row.tags):
             continue
         payload = row.to_dict()
         if not include_notes:
@@ -195,7 +195,7 @@ def list_tasks_payload(
     )
     filtered: list[dict[str, Any]] = []
     for payload in rows:
-        if query and not _matches(
+        if query and not matches_query(
             query,
             payload.get("task_type"),
             payload.get("benchmark_name"),
@@ -232,26 +232,6 @@ def get_task_info_payload(task: str, benchmark: str | None = None) -> dict[str, 
             raise ValueError(f"task {task!r} matched {len(matches)} benchmarks; pass benchmark explicitly")
         return matches[0]
     return get_benchmark_zoo_cli_task(task, benchmark)
-
-
-# ── Internal helpers ───────────────────────────────────────────────────
-
-
-def _matches(query: str, *values: object) -> bool:
-    """Check whether any *values* match *query* using glob or substring semantics.
-
-    When ``query`` contains glob characters (``*``, ``?``, ``[``, ``]``),
-    :func:`fnmatch.fnmatchcase` is used; otherwise a plain substring check
-    is performed.  All comparisons are case-insensitive.
-    """
-
-    needle = query.casefold()
-    glob_query = any(char in needle for char in "*?[]")
-    return any(
-        fnmatchcase(str(value).casefold(), needle) if glob_query else needle in str(value).casefold()
-        for value in values
-        if value
-    )
 
 
 __all__ = [

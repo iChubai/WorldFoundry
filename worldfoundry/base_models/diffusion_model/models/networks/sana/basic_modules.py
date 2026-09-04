@@ -14,7 +14,15 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-"""Module for base_models -> diffusion_model -> image -> sana -> diffusion -> model -> nets -> basic_modules.py functionality."""
+"""SANA feed-forward building blocks (GLUMBConv and MLP variants).
+
+:class:`GLUMBConv` is the inverted-bottleneck FFN used by most SANA graphs:
+1×1 expand → depthwise conv → GLU (SiLU×SiLU) → 1×1 project.  Temporal
+siblings (:class:`GLUMBConvTemp`, :class:`ChunkGLUMBConvTemp`,
+:class:`CachedGLUMBConvTemp`) add a causal / chunked depthwise mix over
+frames for video.  :class:`MBConvPreGLU` is the pre-GLU mobile bottleneck
+that the Triton fused path in ``fastlinear/`` mirrors.
+"""
 
 from typing import List
 
@@ -29,7 +37,7 @@ from worldfoundry.core.nn import get_same_padding, val2tuple
 
 
 class ConvLayer(nn.Module):
-    """Conv layer implementation."""
+    """Conv + optional norm/act used inside GLUMBConv inverted bottlenecks."""
 
     def __init__(
         self,
@@ -134,7 +142,7 @@ _INT32_SAFE_CONV_ELEMENTS = 1 << 30  # 1,073,741,824
 
 
 class GLUMBConv(nn.Module):
-    """Glumb conv implementation."""
+    """Inverted bottleneck with gated linear unit (GLUMB) as the SANA FFN."""
 
     def __init__(
         self,
@@ -250,7 +258,7 @@ class GLUMBConv(nn.Module):
 
 
 class GLUMBConvTemp(GLUMBConv):
-    """Glumb conv temp implementation."""
+    """GLUMBConv plus a temporal depthwise mix over latent frames."""
 
     def __init__(
         self,
@@ -332,7 +340,7 @@ class GLUMBConvTemp(GLUMBConv):
 
 
 class ChunkGLUMBConvTemp(GLUMBConvTemp):
-    """Chunk glumb conv temp implementation."""
+    """Chunk-causal temporal GLUMBConv for long video FFN passes."""
 
     def forward(self, x: torch.Tensor, HW=None, chunk_index: List[int] = [0]) -> torch.Tensor:
         """Forward.
@@ -429,7 +437,7 @@ class ChunkGLUMBConvTemp(GLUMBConvTemp):
 
 
 class CachedGLUMBConvTemp(GLUMBConvTemp):
-    """Cached glumb conv temp implementation."""
+    """Autoregressive temporal GLUMBConv that caches the depthwise halo."""
 
     def __init__(self, *args, **kwargs):
         """Init."""
@@ -493,7 +501,7 @@ class CachedGLUMBConvTemp(GLUMBConvTemp):
 
 
 class MBConvPreGLU(nn.Module):
-    """Mb conv pre glu implementation."""
+    """Mobile inverted bottleneck with the GLU applied *before* the depthwise conv."""
 
     def __init__(
         self,

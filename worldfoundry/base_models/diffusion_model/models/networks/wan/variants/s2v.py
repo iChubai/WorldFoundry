@@ -1,5 +1,9 @@
-"""Wan2.2 speech-to-video transformer variant."""
+"""Wan 2.2 speech-to-video DiT (audio injector + motion encoder).
 
+Native packed Wan with causal audio encoding, FramePack motion, and
+per-block audio injection.  Adds audio / motion conditioning.  No VACE
+or linear attn.
+"""
 import numpy as np
 import torch
 import torch.nn as nn
@@ -108,7 +112,7 @@ def rope_precompute(x, grid_sizes, freqs, start=None):
 
 
 class CausalConv1d(nn.Module):
-    """Causal conv d implementation."""
+    """1-D causal convolution used by the S2V motion / audio encoders."""
 
     def __init__(self, chan_in, chan_out, kernel_size=3, stride=1, dilation=1, pad_mode='replicate', **kwargs):
         """Init.
@@ -140,7 +144,7 @@ class CausalConv1d(nn.Module):
 
 
 class MotionEncoder_tc(nn.Module):
-    """Motion encoder tc implementation."""
+    """Temporal-convolution motion encoder for Wan 2.2 S2V."""
 
     def __init__(self, in_dim: int, hidden_dim: int, num_heads=int, need_global=True, dtype=None, device=None):
         """Init.
@@ -226,7 +230,7 @@ class MotionEncoder_tc(nn.Module):
 
 
 class FramePackMotioner(nn.Module):
-    """Frame pack motioner implementation."""
+    """FramePack-style motion tokenizer consumed by the S2V DiT."""
 
     def __init__(self, inner_dim=1024, num_heads=16, zip_frame_buckets=[1, 2, 16], drop_mode="drop", *args, **kwargs):
         """Init.
@@ -329,7 +333,7 @@ class FramePackMotioner(nn.Module):
 
 
 class AdaLayerNorm(nn.Module):
-    """Ada layer norm implementation."""
+    """AdaLN used by S2V audio / motion injection."""
 
     def __init__(
         self,
@@ -365,7 +369,7 @@ class AdaLayerNorm(nn.Module):
 
 
 class AudioInjector_WAN(nn.Module):
-    """Audio injector wan implementation."""
+    """Per-block audio residual injector for Wan 2.2 S2V."""
 
     def __init__(
         self,
@@ -417,7 +421,7 @@ class AudioInjector_WAN(nn.Module):
 
 
 class CausalAudioEncoder(nn.Module):
-    """Causal audio encoder implementation."""
+    """Causal audio encoder that produces per-frame S2V condition tokens."""
 
     def __init__(self, dim=5120, num_layers=25, out_dim=2048, num_token=4, need_global=False):
         """Init.
@@ -452,7 +456,7 @@ class CausalAudioEncoder(nn.Module):
 
 
 class WanS2VDiTBlock(DiTBlock):
-    """Wan v di t block implementation."""
+    """Wan 2.2 S2V DiT block (audio-aware residual on the native graph)."""
 
     def forward(self, x, context, t_mod, seq_len_x, freqs):
         """Forward.
@@ -480,7 +484,7 @@ class WanS2VDiTBlock(DiTBlock):
 
 
 class WanS2VModel(torch.nn.Module):
-    """Wan v model implementation."""
+    """Wan 2.2 speech-to-video transformer."""
 
     def __init__(
         self,
@@ -818,7 +822,7 @@ class WanS2VModel(torch.nn.Module):
 
 
 class WanS2VModelStateDictConverter:
-    """Wan v model state dict converter implementation."""
+    """Key remap / config recovery for Wan 2.2 S2V checkpoints."""
 
     def __init__(self):
         """Init."""

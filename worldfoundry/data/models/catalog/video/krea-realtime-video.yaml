@@ -16,6 +16,7 @@ source:
   hf_repo_id: krea/krea-realtime-video
   license: apache-2.0
 official_sources:
+  project_page: https://www.krea.ai/
   github:
     url: https://github.com/krea-ai/realtime-video
   huggingface:

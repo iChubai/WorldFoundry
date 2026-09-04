@@ -1,0 +1,41 @@
+{
+  "id": "videocrafter1-i2v",
+  "tagline": {
+    "en": "The image-to-video route of VideoCrafter1 — animate a still image into a short generated clip.",
+    "zh": "VideoCrafter1 的图生视频路径——把一张静态图片生成为一段短视频。"
+  },
+  "overview": {
+    "en": [
+      "VideoCrafter1 I2V is the image-to-video path of the open-source VideoCrafter family. It takes a still image as the starting frame and generates motion from it, producing a short video clip.",
+      "It runs as an inference-only route wrapping the official VideoCrafter image-to-video pipeline, using the Image2Video checkpoint. There's no training or download tooling bundled — it's set up purely for generation.",
+      "In WorldFoundry you provide the input image and set frame count, fps, and seed; the shared pipeline handles loading and writes out the resulting video."
+    ],
+    "zh": [
+      "VideoCrafter1 I2V 是开源 VideoCrafter 家族的图生视频路径。它以一张静态图片为起始帧,从中生成运动,产出一段短视频片段。",
+      "它以推理路径运行,封装官方 VideoCrafter 图生视频流程,使用 Image2Video checkpoint。其中不附带训练或下载工具——它纯粹面向生成。",
+      "在 WorldFoundry 中,你提供输入图片并设定帧数、fps 与随机种子;统一 pipeline 负责加载并输出最终视频。"
+    ]
+  },
+  "whenToUse": {
+    "en": "Use it when you have a starting image and want VideoCrafter1 to bring it into motion as a short clip.",
+    "zh": "当你有一张起始图片,想用 VideoCrafter1 让它动起来、生成一段短片时使用它。"
+  },
+  "notFor": {
+    "en": "Not for text-only generation (use the text-to-video route) and not for training. Checkpoint licensing isn't stated, so verify terms before commercial use.",
+    "zh": "不适合纯文本生成(请用文生视频路径),也不用于训练。该 checkpoint 未标明许可,商用前请核实条款。"
+  },
+  "highlights": {
+    "en": [
+      "Image-to-video: animate a still into a short clip",
+      "Part of the open-source VideoCrafter family",
+      "Inference-only route with fps, frame-count, and seed controls",
+      "Runs through the shared WorldFoundry pipeline"
+    ],
+    "zh": [
+      "图生视频:把静态图片生成为短片",
+      "隶属开源 VideoCrafter 家族",
+      "推理路径,提供 fps、帧数与种子控制",
+      "通过 WorldFoundry 统一 pipeline 运行"
+    ]
+  }
+}

@@ -1,3 +1,15 @@
+"""Small tensor helpers (snake, pad) for the LTX audio VAE.
+
+:class:`AudioProcessor` holds lightweight activations and
+padding used by residual and vocoder blocks.  Snake-style
+periodic activations also appear in :mod:`.vocoder`.
+
+Inputs are channel-first spectrogram tensors.  No runner
+Protocol or checkpoint loading lives here.
+
+Shared LTX audio graph utilities, sibling of :mod:`.resnet`.
+"""
+
 import torch
 import torchaudio
 from torch import nn

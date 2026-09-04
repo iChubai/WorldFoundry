@@ -14,7 +14,13 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-"""Module for base_models -> diffusion_model -> image -> sana -> diffusion -> model -> nets -> fastlinear -> modules -> lite_mla.py functionality."""
+"""PyTorch LiteMLA: lightweight multi-scale linear attention.
+
+Reference implementation of the ReLU-kernel linear attention used by SANA
+image blocks.  Multi-scale depthwise convs on Q/K (``scales``) mix local
+context before the associative ``VK`` accumulation.  The Triton module
+:class:`TritonLiteMLA` is the fused equivalent.
+"""
 
 import os
 from typing import Optional, Tuple

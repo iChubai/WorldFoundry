@@ -1,5 +1,11 @@
-"""Module for base_models -> diffusion_model -> video -> wan -> models -> action_wan2p2.py functionality."""
+"""Wan 2.2 action-conditioned DiT (per-token timestep + optional INT8).
 
+Official-layout Wan 2.2 packing with action residuals and optional
+Triton INT8 Q projections.  ``rope_apply_with_indices`` supports
+non-contiguous frame indices for action-aligned RoPE.
+
+Adds action conditioning.  No VACE, camera ControlNet, or linear attn.
+"""
 import math
 import re
 import torch
@@ -28,7 +34,7 @@ def _get_triton_kernels():
         return None
 
 class Int8Linear(nn.Module):
-    """Int linear implementation."""
+    """INT8-weight linear used for optional quantized Q projections."""
     def __init__(self, in_features, out_features, bias=True, device=None, dtype=None):
         """Init.
 
@@ -71,7 +77,7 @@ class Int8Linear(nn.Module):
     def weight(self):
         """Weight."""
         class DummyWeight:
-            """Dummy weight implementation."""
+            """Placeholder parameter holder for INT8 scale / zero-point metadata."""
             def __init__(self, dtype):
                 """Init.
 
@@ -272,12 +278,7 @@ __all__ = ['WanModel']
 
 
 def sinusoidal_embedding_1d(dim, position):
-    """Sinusoidal embedding 1d.
-
-    Args:
-        dim: The dim.
-        position: The position.
-    """
+    """Classic sinusoidal features for 1-D timestep / position ids."""
     assert dim % 2 == 0
     half = dim // 2
     position = position.type(torch.float64)
@@ -290,13 +291,7 @@ def sinusoidal_embedding_1d(dim, position):
 
 @torch.amp.autocast('cuda', enabled=False)
 def rope_params(max_seq_len, dim, theta=10000):
-    """Rope params.
-
-    Args:
-        max_seq_len: The max seq len.
-        dim: The dim.
-        theta: The theta.
-    """
+    """Build complex cis frequencies for one RoPE axis."""
     assert dim % 2 == 0
     freqs = torch.outer(
         torch.arange(max_seq_len),
@@ -308,13 +303,7 @@ def rope_params(max_seq_len, dim, theta=10000):
 
 @torch.amp.autocast('cuda', enabled=False)
 def rope_apply(x, grid_sizes, freqs):
-    """Rope apply.
-
-    Args:
-        x: The x.
-        grid_sizes: The grid sizes.
-        freqs: The freqs.
-    """
+    """Apply per-sample 3D RoPE to packed tokens; leave pad tokens unrotated."""
     n, c = x.size(2), x.size(3) // 2
     freqs = freqs.split([c - 2 * (c // 3), c // 3, c // 3], dim=1)
     output = []    
@@ -393,7 +382,7 @@ def rope_apply_with_indices(x, grid_sizes, freqs, t_indices=None):
     return torch.stack(output).float()
 
 class WanRMSNorm(nn.Module):
-    """Wan rms norm implementation."""
+    """RMSNorm with a learned scale; compute in fp32 when the impl upcasts."""
 
     def __init__(self, dim, eps=1e-5):
         """Init.
@@ -415,16 +404,12 @@ class WanRMSNorm(nn.Module):
         return self._norm(x.float()).to(x.dtype) * self.weight
 
     def _norm(self, x):
-        """Helper function to norm.
-
-        Args:
-            x: The x.
-        """
+        """RMS-normalize the last dim of ``x``."""
         return x * torch.rsqrt(x.pow(2).mean(dim=-1, keepdim=True) + self.eps)
 
 
 class WanLayerNorm(nn.LayerNorm):
-    """Wan layer norm implementation."""
+    """LayerNorm that typically upcasts to fp32, then restores the activation dtype."""
 
     def __init__(self, dim, eps=1e-6, elementwise_affine=False):
         """Init.
@@ -451,7 +436,7 @@ class WanLayerNorm(nn.LayerNorm):
 
 
 class WanSelfAttention(nn.Module):
-    """Wan self attention implementation."""
+    """Wan self-attention: RMSNorm Q/K, 3D RoPE, flash or variant kernel."""
 
     def __init__(self,
                  dim,
@@ -502,11 +487,7 @@ class WanSelfAttention(nn.Module):
         b, s, n, d = *x.shape[:2], self.num_heads, self.head_dim
 
         def qkv_fn(x):
-            """Qkv fn.
-
-            Args:
-                x: The x.
-            """
+            """Project and reshape QKV to ``[B, L, H, D]``."""
             q = self.norm_q(self.q(x)).view(b, s, n, d)
             k = self.norm_k(self.k(x)).view(b, s, n, d)
             v = self.v(x).view(b, s, n, d)
@@ -588,7 +569,7 @@ class WanSelfAttention(nn.Module):
 
 
 class WanCrossAttention(WanSelfAttention):
-    """Wan cross attention implementation."""
+    """Wan text cross-attention (optional KV cache)."""
 
     def forward(self, x, context, context_lens, fa_version=None):
         r"""
@@ -610,7 +591,7 @@ class WanCrossAttention(WanSelfAttention):
 
 
 class WanAttentionBlock(nn.Module):
-    """Wan attention block implementation."""
+    """Wan transformer block: AdaLN self-attn, cross-attn, then AdaLN FFN."""
 
     def __init__(self,
                  dim,
@@ -812,7 +793,7 @@ class WanAttentionBlock(nn.Module):
 
 
 class Head(nn.Module):
-    """Head implementation."""
+    """AdaLN-modulated output projection from tokens to packed patch voxels."""
 
     def __init__(self, dim, out_dim, patch_size, eps=1e-6):
         """Init.
@@ -863,9 +844,7 @@ class Head(nn.Module):
         return x
 
 class WanModel(nn.Module, NativeConfigMixin):
-    r"""
-    Wan diffusion backbone supporting both text-to-video and image-to-video.
-    """
+    r"""Wan 2.2 action-conditioned DiT (per-token timestep, optional INT8 Q)."""
 
     ignore_for_config = [
         'patch_size', 'cross_attn_norm', 'qk_norm', 'text_dim', 'window_size'

@@ -1,3 +1,16 @@
+"""Instantiate LTX video encoder/decoder CNNs from checkpoint JSON.
+
+:class:`VideoEncoderConfigurator` and
+:class:`VideoDecoderConfigurator` rebuild
+:class:`~.video_vae.VideoEncoder` / :class:`VideoDecoder`
+from metadata shipped with LTX weights.
+
+They do not run encode/decode or tiling; they only construct
+modules.  :mod:`~..component` calls them at load time.
+
+Sibling of the audio :mod:`~..audio.model_configurator`.
+"""
+
 from worldfoundry.base_models.diffusion_model.models.autoencoders.ltx.video.enums import (
     LogVarianceType,
     NormLayerType,

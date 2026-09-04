@@ -1,3 +1,16 @@
+"""LTX feature-extractor versions (V1/V2) for Gemma hidden states.
+
+:class:`FeatureExtractorV1` and :class:`FeatureExtractorV2`
+choose which Gemma layers to expose.
+:func:`norm_and_concat_per_token_rms` is the V2 concat path.
+
+Outputs feed :mod:`.embeddings_processor` then
+:mod:`.embeddings_connector`.  No tokenizer lives here.
+
+Checkpoint version is selected by
+:class:`~.component.LTXPromptConditioner`.
+"""
+
 import math
 
 import torch

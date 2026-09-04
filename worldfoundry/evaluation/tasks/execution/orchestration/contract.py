@@ -30,7 +30,11 @@ from worldfoundry.evaluation.api import (
     enrich_artifact_ref,
     is_generation_result_successful,
 )
-from worldfoundry.evaluation.reporting import write_run_manifest_artifacts, write_run_report_artifacts
+from worldfoundry.evaluation.reporting import (
+    REPRODUCIBILITY_PACKAGES,
+    write_run_manifest_artifacts,
+    write_run_report_artifacts,
+)
 from worldfoundry.evaluation.reporting.scorecard import write_scorecard
 from worldfoundry.evaluation.utils import (
     build_run_fingerprint,
@@ -992,7 +996,7 @@ def run_contract(
             "generation_cache_namespace": run_request.generation_cache_namespace,
         },
         cache_paths=cache_paths_from_stats({}), # No cache stats yet at this point
-        package_names=("worldfoundry", "numpy", "pandas"),
+        package_names=REPRODUCIBILITY_PACKAGES,
         manifest_path=paths["manifest"],
         environment_path=paths["environment"],
         env_requirements_path=paths["env_requirements"],
@@ -1207,7 +1211,7 @@ def run_contract(
             "generation_cache_namespace": run_request.generation_cache_namespace,
         },
         cache_paths=cache_paths_from_stats(generation_cache_stats), # Include final cache stats
-        package_names=("worldfoundry", "numpy", "pandas"),
+        package_names=REPRODUCIBILITY_PACKAGES,
         manifest_path=paths["manifest"],
         environment_path=paths["environment"],
         env_requirements_path=paths["env_requirements"],

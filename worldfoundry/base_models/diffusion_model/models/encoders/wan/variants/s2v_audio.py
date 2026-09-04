@@ -1,4 +1,15 @@
-"""Wan2.2 S2V audio feature encoder."""
+"""Wan2.2 speech-to-video audio feature encoder.
+
+:class:`WanS2VAudioEncoder` turns a waveform into the audio
+tokens the Wan 2.2 S2V DiT cross-attends to.
+:func:`linear_interpolation` / :func:`get_sample_indices`
+resample features to the video frame grid.
+
+This is a ConditionEncoder-side audio tower, not the LTX
+or MiniMax H3 VAE vocoder.
+
+Text prompts remain UMT5.
+"""
 
 import math
 import numpy as np

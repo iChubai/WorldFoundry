@@ -1,0 +1,277 @@
+"""Training adapter for the native LTX video (multi-modal contract) graph.
+
+LTX drives a ``MultiModalDenoiserInput`` whose per-modality ``ModalityState`` is
+a *patchified token sequence* ``[B, tokens, C]`` (not ``[B,C,T,H,W]``), carrying
+per-token ``denoise_mask`` and RoPE ``positions``.  This adapter integrates the
+video-only path — the smallest correct exercise of the multi-modal forward — by
+reusing the model's own ``VideoLatentTools``/patchifier to build the token
+sequence and its positions from a clean ``[B,C,T,H,W]`` latent (training uses a
+fully-denoised mask of ones).
+
+The LTX scheduler is rectified-flow (``velocity = (x - x0) / sigma``, ``sigma``
+in ``[0, 1]``) and the denoiser returns ``x0`` on the token sequence.  To reuse
+the audited ``FlowMatchingObjective`` (velocity target ``noise - clean``), the
+adapter declares ``prediction_type = "flow_velocity"``, corrupts the token
+sequence with the flow objective, and converts the denoiser's ``x0`` back to a
+velocity ``(x_sigma - x0) / sigma`` in :meth:`forward_model`.
+"""
+
+from __future__ import annotations
+
+from collections.abc import Mapping
+from math import isfinite
+from typing import Any
+
+import torch
+from torch import nn
+
+from worldfoundry.base_models.diffusion_model.components import ComponentKey, ComponentKind
+from worldfoundry.base_models.diffusion_model.contracts import (
+    ModalityState,
+    MultiModalDenoiserInput,
+)
+from worldfoundry.training.api.contracts import ObjectiveBatch, PreparedBatch, TrainingBatch
+from worldfoundry.training.models._common import (
+    component_module as _component_module,
+    freeze as _freeze,
+    module_device_dtype as _module_device_dtype,
+    normalize_effective_sigmas as _normalize_effective_sigmas,
+    positive_int as _positive_int,
+)
+
+LTX_DEFAULT_FPS = 24.0
+_POSITIONS_KEY = "_ltx_video_positions"
+_DENOISE_MASK_KEY = "_ltx_video_denoise_mask"
+
+
+def _video_tools(clean_latents: torch.Tensor, *, fps: float):
+    """Build the LTX video patchifier tools for one clean latent shape."""
+
+    from worldfoundry.base_models.diffusion_model.models.representations.ltx.patchifiers import (
+        VideoLatentPatchifier,
+    )
+    from worldfoundry.base_models.diffusion_model.models.representations.ltx.tools import (
+        VideoLatentTools,
+    )
+    from worldfoundry.base_models.diffusion_model.models.representations.ltx.types import (
+        VideoLatentShape,
+    )
+
+    shape = VideoLatentShape.from_torch_shape(clean_latents.shape)
+    return VideoLatentTools(VideoLatentPatchifier(1), shape, float(fps))
+
+
+class LTXVideoTrainAdapter:
+    """Own LTX video token-sequence conditioning and multi-modal training forward."""
+
+    prediction_type = "flow_velocity"
+    lora_target_preset = "ltx-attention"
+    conditioning_dropout_owner = "none"
+    model_family = "ltx-video"
+
+    def __init__(
+        self,
+        denoiser: object,
+        codec: object | None,
+        conditioner: object | None,
+        *,
+        expected_latent_channels: int = 128,
+        default_fps: float = LTX_DEFAULT_FPS,
+    ) -> None:
+        trainable_module = _component_module(denoiser, "model")
+        if trainable_module is None:
+            raise TypeError("LTX denoiser must expose an nn.Module as 'model'")
+        if not callable(denoiser):
+            raise TypeError("LTX denoiser must be callable")
+
+        fps = float(default_fps)
+        if not isfinite(fps) or fps <= 0:
+            raise ValueError("default_fps must be finite and positive")
+
+        self.denoiser = denoiser
+        self.codec = codec
+        self.conditioner = conditioner
+        self.trainable_module = trainable_module
+        self.expected_latent_channels = _positive_int(
+            expected_latent_channels,
+            field_name="expected_latent_channels",
+        )
+        self.default_fps = fps
+
+        codec_module = _component_module(codec, "vae", "model")
+        conditioner_module = _component_module(conditioner, "text_encoder", "encoder", "model")
+        self.frozen_modules = tuple(
+            dict.fromkeys(module for module in (codec_module, conditioner_module) if module is not None)
+        )
+        for module in self.frozen_modules:
+            _freeze(module)
+        self.trainable_module.train()
+
+        blocks = getattr(self.trainable_module, "transformer_blocks", getattr(self.trainable_module, "blocks", ()))
+        self.fsdp_block_classes = tuple(dict.fromkeys(type(block) for block in blocks if isinstance(block, nn.Module)))
+        self.conditioning_dropout_probability = 0.0
+
+    def _keep_frozen_modules_in_eval(self) -> None:
+        for module in self.frozen_modules:
+            module.eval()
+
+    def prepare_batch(self, batch: TrainingBatch) -> PreparedBatch:
+        if not isinstance(batch, TrainingBatch):
+            raise TypeError("batch must be a TrainingBatch")
+        cached_latents = batch.conditions.get("clean_latents")
+        if not isinstance(cached_latents, torch.Tensor):
+            raise TypeError("LTX training requires precomputed clean_latents")
+        if cached_latents.ndim != 5:
+            raise ValueError(f"LTX clean_latents must be [B,C,T,H,W]; got {tuple(cached_latents.shape)}")
+
+        self._keep_frozen_modules_in_eval()
+        device, dtype = _module_device_dtype(self.trainable_module)
+        clean_latents = cached_latents.detach().to(device=device, dtype=dtype)
+        if int(clean_latents.shape[1]) != self.expected_latent_channels:
+            raise ValueError(
+                f"LTX clean latents contain {int(clean_latents.shape[1])} channels; "
+                f"expected {self.expected_latent_channels}"
+            )
+
+        context = batch.conditions.get("video_context", batch.conditions.get("context"))
+        if not isinstance(context, torch.Tensor):
+            raise ValueError("LTX training requires a precomputed 'video_context' text tensor")
+        context = context.to(device=device, dtype=dtype)
+
+        fps = float(batch.conditions.get("fps", batch.metadata.get("fps", self.default_fps)))
+        tools = _video_tools(clean_latents, fps=fps)
+        state = tools.create_initial_state(device, dtype, clean_latents)
+        # create_initial_state builds a fully-denoised mask (all ones) and RoPE
+        # positions from the patch grid — exactly the training-time contract.
+        token_latent = state.latent
+        positions = state.positions
+        denoise_mask = state.denoise_mask
+
+        conditioning: dict[str, object] = {
+            "video_context": context,
+            _POSITIONS_KEY: positions,
+            _DENOISE_MASK_KEY: denoise_mask,
+        }
+        context_mask = batch.conditions.get("context_mask")
+        if isinstance(context_mask, torch.Tensor):
+            conditioning["context_mask"] = context_mask.to(device=device)
+
+        sample_weights = batch.sample_weights
+        if isinstance(sample_weights, torch.Tensor):
+            sample_weights = sample_weights.to(device=device, dtype=torch.float32)
+
+        metadata: dict[str, Any] = dict(batch.metadata)
+        metadata.update(
+            {
+                "model_family": self.model_family,
+                "prediction_type": self.prediction_type,
+                "latent_shape": tuple(int(value) for value in clean_latents.shape),
+                "token_shape": tuple(int(value) for value in token_latent.shape),
+                "precomputed_latents": True,
+                "conditioning_dropout_owner": self.conditioning_dropout_owner,
+                "conditioning_dropout_probability": self.conditioning_dropout_probability,
+            }
+        )
+        return PreparedBatch(
+            sample_ids=batch.sample_ids,
+            clean_latents={"video": token_latent},
+            conditioning=conditioning,
+            loss_mask=None,
+            sample_weights=sample_weights,
+            metadata=metadata,
+        )
+
+    def forward_train(self, batch: ObjectiveBatch):
+        return self.forward_model(batch, training=True)
+
+    def forward_model(
+        self,
+        batch: ObjectiveBatch,
+        *,
+        training: bool,
+        branch: str = "positive",
+    ):
+        if not isinstance(training, bool):
+            raise TypeError("training must be a bool")
+        if branch not in {"positive", "negative"}:
+            raise ValueError("branch must be 'positive' or 'negative'")
+        if not isinstance(batch, ObjectiveBatch):
+            raise TypeError("batch must be an ObjectiveBatch")
+        model_input = batch.model_input
+        if not isinstance(model_input, Mapping) or set(model_input) != {"video"}:
+            raise TypeError("LTX training requires a {'video': tensor} model_input tree")
+        noisy = model_input["video"]
+        if not torch.is_tensor(noisy) or noisy.ndim != 3:
+            raise ValueError(f"LTX video tokens must be [B,tokens,C]; got {getattr(noisy, 'shape', None)}")
+        prediction_type = batch.metadata.get("prediction_type")
+        if prediction_type is not None and prediction_type != self.prediction_type:
+            raise ValueError(f"LTX adapter predicts {self.prediction_type!r}, got objective {prediction_type!r}")
+
+        conditioning = dict(batch.conditioning)
+        positions = conditioning.pop(_POSITIONS_KEY, None)
+        denoise_mask = conditioning.pop(_DENOISE_MASK_KEY, None)
+        if not isinstance(positions, torch.Tensor) or not isinstance(denoise_mask, torch.Tensor):
+            raise ValueError("LTX forward requires token positions/denoise_mask threaded from prepare_batch")
+
+        sigmas = _normalize_effective_sigmas(
+            batch.sigmas,
+            batch_size=int(noisy.shape[0]),
+            device=noisy.device,
+            family="LTX",
+        )
+
+        state = ModalityState(
+            latent=noisy,
+            denoise_mask=denoise_mask.to(device=noisy.device, dtype=noisy.dtype),
+            positions=positions.to(device=noisy.device),
+            clean_latent=noisy,
+        )
+        self.trainable_module.train(training)
+        self._keep_frozen_modules_in_eval()
+        output = self.denoiser(
+            MultiModalDenoiserInput(
+                modalities={"video": state},
+                timestep=sigmas,
+                conditioning=conditioning,
+                step_index=0,
+                total_steps=1000,
+                branch=branch,
+            )
+        )
+        samples = getattr(output, "samples", None)
+        if not isinstance(samples, Mapping) or "video" not in samples:
+            raise TypeError("LTX denoiser must return a MultiModalDenoiserOutput with a 'video' sample")
+        x0 = samples["video"]
+        if not torch.is_tensor(x0) or x0.shape != noisy.shape:
+            raise ValueError("LTX video sample must match the noised token shape")
+        # The denoiser returns x0 on the tokens; convert to the rectified-flow
+        # velocity the flow-matching objective targets: v = (x_sigma - x0) / sigma.
+        sigma = sigmas.reshape((-1,) + (1,) * (noisy.ndim - 1)).clamp_min(1.0e-6)
+        velocity = (noisy - x0) / sigma
+        return {"video": velocity}
+
+
+def build_cached_ltx_video_train_adapter(
+    components: Mapping[ComponentKey, object],
+    **options: object,
+) -> LTXVideoTrainAdapter:
+    """Build an LTX video adapter that consumes only immutable cached features."""
+
+    if not isinstance(components, Mapping):
+        raise TypeError("components must be a mapping")
+    denoiser_key = ComponentKey(ComponentKind.DENOISER)
+    unexpected = sorted(str(key) for key in components if key != denoiser_key)
+    if unexpected:
+        raise ValueError(f"cached LTX training accepts only the denoiser component; got {unexpected}")
+    try:
+        denoiser = components[denoiser_key]
+    except KeyError as error:
+        raise KeyError(f"cached LTX training components are missing {denoiser_key}") from error
+    return LTXVideoTrainAdapter(denoiser=denoiser, codec=None, conditioner=None, **options)
+
+
+__all__ = [
+    "LTX_DEFAULT_FPS",
+    "LTXVideoTrainAdapter",
+    "build_cached_ltx_video_train_adapter",
+]

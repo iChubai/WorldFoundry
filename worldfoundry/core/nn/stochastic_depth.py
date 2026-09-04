@@ -1,4 +1,8 @@
-"""Stochastic-depth helpers shared by ViT-style transformer blocks."""
+"""Stochastic-depth helpers shared by ViT-style transformer blocks.
+
+Subset-batch residual add used when DropPath would otherwise keep a
+full-batch mask. Training only; inference is a no-op add.
+"""
 
 from __future__ import annotations
 
@@ -6,6 +10,11 @@ from typing import Any, Callable, Optional
 
 import torch
 from torch import Tensor
+
+
+# ──────────────────────────────────────────────────────────────────────────
+# Subset-batch residual — cheaper than a full-batch DropPath mask at high p
+# ──────────────────────────────────────────────────────────────────────────
 
 
 def drop_add_residual_stochastic_depth(
@@ -33,10 +42,16 @@ def drop_add_residual_stochastic_depth(
     x_flat = x.flatten(1)
     residual = residual.flatten(1)
 
+    # Scale the subset residual so the full-batch expectation matches an un-dropped add.
     residual_scale_factor = b / sample_subset_size
 
     x_plus_residual = torch.index_add(x_flat, 0, brange, residual.to(dtype=x.dtype), alpha=residual_scale_factor)
     return x_plus_residual.view_as(x)
+
+
+# ──────────────────────────────────────────────────────────────────────────
+# Shared index / scale helpers — LayerScale uses xformers scaled_index_add
+# ──────────────────────────────────────────────────────────────────────────
 
 
 def get_branges_scales(x: Tensor, sample_drop_ratio: float = 0.0) -> tuple[Tensor, float]:

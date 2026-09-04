@@ -1,0 +1,41 @@
+{
+  "id": "monst3r",
+  "tagline": {
+    "en": "Geometry estimation for dynamic scenes — reconstruct structure even when things are moving.",
+    "zh": "面向动态场景的几何估计——即使画面中有物体在运动也能重建结构。"
+  },
+  "overview": {
+    "en": [
+      "MonST3R estimates scene geometry in the presence of motion. Where many reconstruction methods assume a static scene, MonST3R is built to recover structure from video where objects and the camera are moving, extending the DUSt3R line of pointmap-based reconstruction to dynamic content.",
+      "In WorldFoundry it runs the in-tree, non-interactive demo path and exports the result as a GLB scene you can open in standard 3D viewers. The Studio default disables the optional flow loss so previews aren't blocked; the full dynamic-mask setup additionally needs RAFT2 and SAM2 assets configured.",
+      "In WorldFoundry you feed it a video through the geometry route and it materializes a GLB scene artifact."
+    ],
+    "zh": [
+      "MonST3R 在有运动的情况下估计场景几何。许多重建方法假设场景静止，而 MonST3R 专为从物体与相机都在移动的视频中恢复结构而设计，把 DUSt3R 一脉的 pointmap 重建方法扩展到动态内容。",
+      "在 WorldFoundry 中，它运行内置的非交互 demo 路径，把结果导出为可在标准 3D 查看器中打开的 GLB 场景。Studio 默认关闭可选的 flow loss，以免阻塞预览；完整的动态掩码设置还需要配置 RAFT2 与 SAM2 资产。",
+      "在 WorldFoundry 中，你通过几何路径给它一段视频，它就会生成一个 GLB 场景产物。"
+    ]
+  },
+  "whenToUse": {
+    "en": "Reach for MonST3R when you need geometry from video that contains motion — moving objects or a moving camera — and want an exportable 3D scene.",
+    "zh": "当你需要从含运动（移动物体或移动相机）的视频中获取几何，并希望得到可导出的 3D 场景时，选择 MonST3R。"
+  },
+  "notFor": {
+    "en": "The public source is non-commercial, so downstream use must honor the upstream license. Full dynamic-mask results require RAFT2 and SAM2 assets set up alongside it.",
+    "zh": "其公开源码为非商业用途，下游使用须遵守上游许可。完整的动态掩码效果需要额外配置 RAFT2 与 SAM2 资产。"
+  },
+  "highlights": {
+    "en": [
+      "Geometry estimation robust to motion in the scene",
+      "Extends the DUSt3R pointmap reconstruction approach to dynamic video",
+      "Exports a GLB scene for standard 3D viewers",
+      "Non-commercial upstream license"
+    ],
+    "zh": [
+      "对场景中运动稳健的几何估计",
+      "把 DUSt3R 的 pointmap 重建方法扩展到动态视频",
+      "导出 GLB 场景，可用标准 3D 查看器打开",
+      "上游许可为非商业用途"
+    ]
+  }
+}

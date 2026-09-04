@@ -1,4 +1,16 @@
-"""Native checkpoint-compatible Wan UMT5 text encoder."""
+"""Native checkpoint-compatible Wan UMT5 text encoder.
+
+Encoder-only T5 graph used by
+:class:`~.component.WanTextConditioner`.  :class:`WanTextEncoder`
+plus :class:`HuggingfaceTokenizer` are the public surfaces.
+
+Outputs are ``context`` sequences (B, L, C) for the Wan DiT.
+Image tokens are :mod:`.image` / :mod:`.clip`.  Official
+layout reference: :mod:`.reference`.
+
+Chinese / multilingual strings pass through the tokenizer
+unchanged.
+"""
 
 import html
 import math

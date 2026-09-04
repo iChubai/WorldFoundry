@@ -19,6 +19,8 @@ modalities:
 - image-to-video
 name: MotionCtrl
 official_sources:
+  paper: https://arxiv.org/abs/2312.03641
+  project_page: https://wanquanf.github.io/MotionCtrl/
   github:
     confirmed_by: git ls-remote --heads
     confirmed_ref: refs/heads/main

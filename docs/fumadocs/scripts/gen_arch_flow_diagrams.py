@@ -1,17 +1,17 @@
 #!/usr/bin/env python3
-"""Generate arrow-connected flow diagrams (SVG) for the architecture docs.
+"""SVG generator for architecture flow diagrams.
 
-Each diagram is a left-to-right flow of rounded-rect nodes joined by line +
-arrowhead connectors. Node text is rendered with <foreignObject> HTML so the
-browser handles fonts (incl. CJK), wrapping, and weight. Arrows are real SVG
-shapes. Output is light-themed to match the docs shell (color-scheme: light).
+Text uses native SVG <text> so labels still render when the file is shown as
+an <img> (Next.js / markdown images). HTML foreignObject is not used.
+
+The docs site prefers React diagrams via `components/arch-diagram.tsx`. Keep
+this script for the static SVGs under public/diagrams/.
 
 Run:  python3 scripts/gen_arch_flow_diagrams.py
 Writes SVGs to public/diagrams/.
 """
 from __future__ import annotations
 import html
-import os
 from pathlib import Path
 
 # ── palette (matches app/styles/tokens.css light theme) ──────────────────
@@ -46,24 +46,160 @@ ROOT = Path(__file__).resolve().parent.parent
 OUT = ROOT / "public" / "diagrams"
 
 
+FONT = (
+    "ui-sans-serif, system-ui, -apple-system, 'Segoe UI', "
+    "'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', sans-serif"
+)
+
+
 def esc(s: str) -> str:
     return html.escape(s, quote=False)
 
 
-def node_html(role: str | None, title: str, detail: str | None) -> str:
-    role_chip = (
-        f'<span class="role">{esc(role)}</span>' if role else ""
-    )
-    detail_html = (
-        f'<p class="detail">{esc(detail)}</p>' if detail else ""
+def _char_width(ch: str, size: float) -> float:
+    code = ord(ch)
+    if ch == " ":
+        return size * 0.34
+    if 0x4E00 <= code <= 0x9FFF or 0x3000 <= code <= 0x303F or 0xFF00 <= code <= 0xFFEF:
+        return size
+    if ch in "ilI.,:'/":
+        return size * 0.32
+    if ch.isupper() or ch in "MW@":
+        return size * 0.68
+    return size * 0.56
+
+
+def _text_width(text: str, size: float) -> float:
+    return sum(_char_width(ch, size) for ch in text)
+
+
+def wrap_lines(text: str, max_width: float, size: float) -> list[str]:
+    tokens: list[str] = []
+    buf = ""
+    for ch in text:
+        if ch == " ":
+            if buf:
+                tokens.append(buf)
+                buf = ""
+            tokens.append(" ")
+        else:
+            buf += ch
+    if buf:
+        tokens.append(buf)
+
+    lines: list[str] = []
+    current = ""
+    current_w = 0.0
+    for tok in tokens:
+        token_w = _text_width(tok, size)
+        if current and current_w + token_w > max_width:
+            lines.append(current.rstrip())
+            current = tok.lstrip()
+            current_w = _text_width(current, size)
+            if current_w > max_width and len(current) > 1:
+                overflow = current
+                current = ""
+                current_w = 0.0
+                for ch in overflow:
+                    ch_w = _char_width(ch, size)
+                    if current and current_w + ch_w > max_width:
+                        lines.append(current)
+                        current = ch
+                        current_w = ch_w
+                    else:
+                        current += ch
+                        current_w += ch_w
+        else:
+            current += tok
+            current_w += token_w
+    if current.strip():
+        lines.append(current.rstrip())
+    return lines or [text]
+
+
+def svg_text(
+    x: float,
+    y: float,
+    content: str,
+    *,
+    size: float,
+    fill: str,
+    weight: int = 400,
+    anchor: str = "start",
+    italic: bool = False,
+) -> str:
+    style = (
+        f"font-family:{FONT};font-size:{size}px;font-weight:{weight};"
+        f"fill:{fill};font-style:{'italic' if italic else 'normal'}"
     )
     return (
-        f'<div class="node">'
-        f'<div class="head">{role_chip}<span class="idx"></span></div>'
-        f'<div class="title">{esc(title)}</div>'
-        f'{detail_html}'
-        f'</div>'
+        f'<text x="{x:.1f}" y="{y:.1f}" text-anchor="{anchor}" style="{style}">'
+        f"{esc(content)}</text>"
     )
+
+
+def role_chip(x: float, y: float, role: str, *, size: float = 9) -> str:
+    width = 8 + _text_width(role, size)
+    height = size + 5
+    return (
+        f'<rect x="{x:.1f}" y="{y:.1f}" width="{width:.1f}" height="{height:.1f}" '
+        f'rx="3" ry="3" style="fill:none;stroke:var(--c-line);stroke-width:1"/>'
+        + svg_text(x + 4, y + size + 1.2, role, size=size, fill="var(--c-muted)", weight=500)
+    )
+
+
+def node_svg(
+    x: float,
+    y: float,
+    w: float,
+    h: float,
+    role: str | None,
+    title: str,
+    detail: str | None,
+    *,
+    compact: bool = False,
+) -> str:
+    radius = 8 if compact else 10
+    pad_x = 10 if compact else 12
+    pad_y = 7 if compact else 12
+    title_size = 12 if compact else 13
+    detail_size = 10 if compact else 11
+    parts = [
+        f'<rect x="{x:.1f}" y="{y:.1f}" width="{w:.1f}" height="{h:.1f}" '
+        f'rx="{radius}" ry="{radius}" style="fill:var(--c-card);stroke:var(--c-line);stroke-width:1"/>'
+    ]
+    cursor = y + pad_y
+    if role:
+        parts.append(role_chip(x + pad_x, cursor, role, size=9 if compact else 10))
+        cursor += 16 if compact else 20
+    parts.append(
+        svg_text(x + pad_x, cursor + title_size, title, size=title_size, fill="var(--c-ink)", weight=650)
+    )
+    cursor += title_size + (4 if compact else 6)
+    if detail:
+        for line in wrap_lines(detail, w - pad_x * 2, detail_size):
+            parts.append(
+                svg_text(x + pad_x, cursor + detail_size, line, size=detail_size, fill="var(--c-muted)")
+            )
+            cursor += detail_size + 2
+    return "".join(parts)
+
+
+def palette_style(*, include_band: bool = False) -> str:
+    extra_light = f"; --c-band: {LIGHT['band']}" if include_band else ""
+    extra_dark = f"; --c-band: {DARK['band']}" if include_band else ""
+    return f"""  <style>
+    :root {{
+      --c-bg: {LIGHT['bg']}; --c-card: {LIGHT['card']}; --c-ink: {LIGHT['ink']};
+      --c-muted: {LIGHT['muted']}; --c-line: {LIGHT['line']}; --c-accent: {LIGHT['accent']}{extra_light};
+    }}
+    @media (prefers-color-scheme: dark) {{
+      :root {{
+        --c-bg: {DARK['bg']}; --c-card: {DARK['card']}; --c-ink: {DARK['ink']};
+        --c-muted: {DARK['muted']}; --c-line: {DARK['line']}; --c-accent: {DARK['accent']}{extra_dark};
+      }}
+    }}
+  </style>"""
 
 
 def render(steps: list[dict], out_path: Path, aria: str) -> None:
@@ -76,17 +212,9 @@ def render(steps: list[dict], out_path: Path, aria: str) -> None:
     for i, st in enumerate(steps):
         x = PAD + i * (NODE_W + GAP)
         y = PAD
-        # box
         nodes_svg.append(
-            f'<rect x="{x}" y="{y}" width="{NODE_W}" height="{NODE_H}" rx="10" ry="10" '
-            f'style="fill:var(--c-card);stroke:var(--c-line);stroke-width:1"/>'
+            node_svg(x, y, NODE_W, NODE_H, st.get("role"), st["title"], st.get("detail"))
         )
-        # html text
-        fo = node_html(st.get("role"), st["title"], st.get("detail"))
-        nodes_svg.append(
-            f'<foreignObject x="{x}" y="{y}" width="{NODE_W}" height="{NODE_H}">{fo}</foreignObject>'
-        )
-        # arrow to next
         if i < n - 1:
             ax1 = x + NODE_W
             ax2 = x + NODE_W + GAP
@@ -100,23 +228,7 @@ def render(steps: list[dict], out_path: Path, aria: str) -> None:
                 f'style="fill:var(--c-accent)"/>'
             )
 
-    style = f"""  <style>
-    :root {{
-      --c-bg: {LIGHT['bg']}; --c-card: {LIGHT['card']}; --c-ink: {LIGHT['ink']};
-      --c-muted: {LIGHT['muted']}; --c-line: {LIGHT['line']}; --c-accent: {LIGHT['accent']};
-    }}
-    @media (prefers-color-scheme: dark) {{
-      :root {{
-        --c-bg: {DARK['bg']}; --c-card: {DARK['card']}; --c-ink: {DARK['ink']};
-        --c-muted: {DARK['muted']}; --c-line: {DARK['line']}; --c-accent: {DARK['accent']};
-      }}
-    }}
-    .node {{ box-sizing: border-box; width: 100%; height: 100%; padding: 10px 12px; font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", "Noto Sans SC", "PingFang SC", "Microsoft YaHei", sans-serif; display: flex; flex-direction: column; gap: 3px; }}
-    .head {{ display: flex; align-items: center; gap: 6px; min-height: 16px; }}
-    .role {{ font-size: 10px; line-height: 1; color: var(--c-muted); border: 1px solid var(--c-line); border-radius: 3px; padding: 2px 5px; white-space: nowrap; }}
-    .title {{ font-size: 13px; font-weight: 650; color: var(--c-ink); line-height: 1.25; }}
-    .detail {{ margin: 2px 0 0; font-size: 11px; line-height: 1.45; color: var(--c-muted); }}
-  </style>"""
+    style = palette_style()
 
     svg = f'''<?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" width="{width}" height="{height}" viewBox="0 0 {width} {height}" role="img" aria-label="{esc(aria)}">
@@ -136,7 +248,7 @@ def render_boundary(data: dict, out_path: Path, aria: str) -> None:
     Left and right columns each hold a vertical flow of node cards. A tinted
     central band marks the artifact boundary; one bold arrow crosses it to
     show that only GenerationResult / artifact refs cross, never checkpoints
-    or evaluators. Node text reuses node_html so the grammar matches the
+    or evaluators. Node text uses the same native SVG labels as the
     linear flow diagrams.
     """
     PAD = 20
@@ -176,12 +288,16 @@ def render_boundary(data: dict, out_path: Path, aria: str) -> None:
         for i, st in enumerate(nodes):
             y = start_y + i * (NODE_H + NODE_VGAP)
             out.append(
-                f'<rect x="{x0}" y="{y}" width="{node_w}" height="{NODE_H}" rx="8" ry="8" '
-                f'style="fill:var(--c-card);stroke:var(--c-line);stroke-width:1"/>'
-            )
-            out.append(
-                f'<foreignObject x="{x0}" y="{y}" width="{node_w}" height="{NODE_H}">'
-                f'{node_html(st.get("role"), st["title"], st.get("detail"))}</foreignObject>'
+                node_svg(
+                    x0,
+                    y,
+                    node_w,
+                    NODE_H,
+                    st.get("role"),
+                    st["title"],
+                    st.get("detail"),
+                    compact=True,
+                )
             )
             if i < len(nodes) - 1:
                 ax = x0 + node_w / 2
@@ -207,31 +323,42 @@ def render_boundary(data: dict, out_path: Path, aria: str) -> None:
             f'<rect x="{cx}" y="{PAD}" width="{COL_W}" height="{col_h}" rx="12" ry="12" '
             f'style="fill:none;stroke:var(--c-line);stroke-width:1"/>'
         )
-    # column headers
     for cx, title in ((lx, data["left_title"]), (rx, data["right_title"])):
         parts.append(
-            f'<foreignObject x="{cx}" y="{PAD}" width="{COL_W}" height="{HEADER_H}">'
-            f'<div class="bcol-head">{esc(title)}</div></foreignObject>'
+            svg_text(cx + 16, PAD + 28, title, size=13, fill="var(--c-ink)", weight=700)
         )
 
-    # boundary band (tinted + dashed to read as "the interface")
     parts.append(
         f'<rect x="{band_x}" y="{PAD}" width="{BAND_W}" height="{col_h}" rx="12" ry="12" '
         f'style="fill:var(--c-band);stroke:var(--c-line);stroke-width:1;stroke-dasharray:4 3"/>'
     )
-    parts.append(
-        f'<foreignObject x="{band_x}" y="{PAD + 10}" width="{BAND_W}" height="44">'
-        f'<div class="band-label">{esc(data["boundary_label"])}</div></foreignObject>'
-    )
+    band_cx = band_x + BAND_W / 2
+    for i, line in enumerate(wrap_lines(data["boundary_label"].upper(), BAND_W - 16, 10)):
+        parts.append(
+            svg_text(
+                band_cx,
+                PAD + 22 + i * 13,
+                line,
+                size=10,
+                fill="var(--c-muted)",
+                weight=700,
+                anchor="middle",
+            )
+        )
 
-    # inner node flows
     parts.extend(col_nodes(left, node_x_left))
     parts.extend(col_nodes(right, node_x_right))
 
-    # bold cross-boundary arrow at mid-height, label above and below
     parts.append(
-        f'<foreignObject x="{band_x}" y="{mid_y - 30}" width="{BAND_W}" height="22">'
-        f'<div class="cross-main">{esc(data["cross_main"])}</div></foreignObject>'
+        svg_text(
+            band_cx,
+            mid_y - 16,
+            data["cross_main"],
+            size=11,
+            fill="var(--c-accent)",
+            weight=700,
+            anchor="middle",
+        )
     )
     parts.append(
         f'<line x1="{band_x}" y1="{mid_y}" x2="{rx - 9}" y2="{mid_y}" '
@@ -242,41 +369,31 @@ def render_boundary(data: dict, out_path: Path, aria: str) -> None:
         f'style="fill:var(--c-accent)"/>'
     )
     parts.append(
-        f'<foreignObject x="{band_x}" y="{mid_y + 6}" width="{BAND_W}" height="20">'
-        f'<div class="cross-sub">{esc(data["cross_sub"])}</div></foreignObject>'
+        svg_text(
+            band_cx,
+            mid_y + 18,
+            data["cross_sub"],
+            size=9,
+            fill="var(--c-muted)",
+            weight=500,
+            anchor="middle",
+        )
     )
 
-    # captions under each column
     for cx, cap in ((lx, data["left_caption"]), (rx, data["right_caption"])):
-        parts.append(
-            f'<foreignObject x="{cx}" y="{caption_top}" width="{COL_W}" height="{CAPTION_H}">'
-            f'<div class="bcol-cap">{esc(cap)}</div></foreignObject>'
-        )
+        for i, line in enumerate(wrap_lines(cap, COL_W - 32, 10)):
+            parts.append(
+                svg_text(
+                    cx + 16,
+                    caption_top + 14 + i * 13,
+                    line,
+                    size=10,
+                    fill="var(--c-muted)",
+                    italic=True,
+                )
+            )
 
-    style = f"""  <style>
-    :root {{
-      --c-bg: {LIGHT['bg']}; --c-card: {LIGHT['card']}; --c-ink: {LIGHT['ink']};
-      --c-muted: {LIGHT['muted']}; --c-line: {LIGHT['line']}; --c-accent: {LIGHT['accent']};
-      --c-band: {LIGHT['band']};
-    }}
-    @media (prefers-color-scheme: dark) {{
-      :root {{
-        --c-bg: {DARK['bg']}; --c-card: {DARK['card']}; --c-ink: {DARK['ink']};
-        --c-muted: {DARK['muted']}; --c-line: {DARK['line']}; --c-accent: {DARK['accent']};
-        --c-band: {DARK['band']};
-      }}
-    }}
-    .node {{ box-sizing: border-box; width: 100%; height: 100%; padding: 7px 10px; font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", "Noto Sans SC", "PingFang SC", "Microsoft YaHei", sans-serif; display: flex; flex-direction: column; gap: 2px; }}
-    .head {{ display: flex; align-items: center; gap: 6px; min-height: 14px; }}
-    .role {{ font-size: 9px; line-height: 1; color: var(--c-muted); border: 1px solid var(--c-line); border-radius: 3px; padding: 1px 4px; white-space: nowrap; }}
-    .title {{ font-size: 12px; font-weight: 650; color: var(--c-ink); line-height: 1.2; }}
-    .detail {{ margin: 1px 0 0; font-size: 10px; line-height: 1.4; color: var(--c-muted); }}
-    .bcol-head {{ box-sizing: border-box; width: 100%; height: 100%; display: flex; align-items: center; padding: 0 16px; font-family: ui-sans-serif, system-ui, sans-serif; font-size: 13px; font-weight: 700; letter-spacing: 0.02em; color: var(--c-ink); }}
-    .bcol-cap {{ box-sizing: border-box; width: 100%; height: 100%; padding: 4px 16px; font-family: ui-sans-serif, system-ui, sans-serif; font-size: 10px; line-height: 1.4; color: var(--c-muted); font-style: italic; }}
-    .band-label {{ box-sizing: border-box; width: 100%; text-align: center; font-family: ui-sans-serif, system-ui, sans-serif; font-size: 10px; line-height: 1.25; font-weight: 700; letter-spacing: 0.04em; color: var(--c-muted); text-transform: uppercase; }}
-    .cross-main {{ box-sizing: border-box; width: 100%; text-align: center; font-family: ui-sans-serif, system-ui, sans-serif; font-size: 11px; line-height: 1.2; font-weight: 700; color: var(--c-accent); }}
-    .cross-sub {{ box-sizing: border-box; width: 100%; text-align: center; font-family: ui-mono, ui-sans-serif, system-ui, sans-serif; font-size: 9px; line-height: 1.2; color: var(--c-muted); }}
-  </style>"""
+    style = palette_style(include_band=True)
 
     svg = f'''<?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" width="{width}" height="{height}" viewBox="0 0 {width} {height}" role="img" aria-label="{esc(aria)}">

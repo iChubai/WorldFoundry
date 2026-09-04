@@ -10,7 +10,10 @@ import numpy as np
 import torch
 import torch.distributed as dist
 
-from transformers import AutoTokenizer, UMT5EncoderModel
+from transformers import UMT5EncoderModel
+from worldfoundry.synthesis.visual_generation.longcat_video.longcat_video_runtime.tokenizer_loading import (
+    load_longcat_tokenizer,
+)
 from worldfoundry.synthesis.visual_generation.longcat_video.longcat_video_runtime.video_io import write_video
 from diffusers.utils import load_video
 
@@ -66,7 +69,7 @@ def generate(args):
     cp_size = context_parallel_util.get_cp_size()
     cp_split_hw = context_parallel_util.get_optimal_split(cp_size)
 
-    tokenizer = AutoTokenizer.from_pretrained(checkpoint_dir, subfolder="tokenizer", torch_dtype=torch.bfloat16)
+    tokenizer = load_longcat_tokenizer(checkpoint_dir)
     text_encoder = UMT5EncoderModel.from_pretrained(checkpoint_dir, subfolder="text_encoder", torch_dtype=torch.bfloat16)
     vae = AutoencoderKLWan.from_pretrained(checkpoint_dir, subfolder="vae", torch_dtype=torch.bfloat16)
     scheduler = FlowMatchEulerDiscreteScheduler.from_pretrained(checkpoint_dir, subfolder="scheduler", torch_dtype=torch.bfloat16)

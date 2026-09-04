@@ -20,6 +20,8 @@ modalities:
 - video-diffusion
 name: DualCamCtrl
 official_sources:
+  paper: https://arxiv.org/abs/2511.23127
+  project_page: https://soyouthinkyoucantell.github.io/dualcamctrl-page/
   github:
     confirmed_by: local checkout from official repository
     confirmed_ref: f4f064f39c84b0e9597e99979ec56361570d8bef

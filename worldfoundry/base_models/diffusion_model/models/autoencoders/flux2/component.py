@@ -1,4 +1,10 @@
-"""Framework-integrated construction and encoding for the FLUX.2 autoencoder."""
+"""FLUX.2 :class:`~...contracts.LatentEncoder` construction and batch encode.
+
+Loads ``ae.safetensors`` from ``black-forest-labs/FLUX.2-dev`` through
+:class:`~...loaders.module.NativeModuleLoader`.  :func:`encode_video_batch_refs`
+folds ``[B,T,H,W,C]`` frames through the 2-D AE.  The module itself
+exposes ``encode`` / ``decode`` on :class:`~.model.Flux2Autoencoder`.
+"""
 
 from __future__ import annotations
 

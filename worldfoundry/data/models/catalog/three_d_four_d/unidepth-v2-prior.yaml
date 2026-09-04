@@ -17,6 +17,9 @@ source:
 checkpoint_refs:
 - repo_id: lpiccinelli/unidepth-v2-vitl14
   filename: model.safetensors
+official_sources:
+  project_page: https://lpiccinelli-eth.github.io/pub/unidepth/
+  paper: https://arxiv.org/abs/2502.20110
 integration:
   kind: pipeline_runner
   status: integrated

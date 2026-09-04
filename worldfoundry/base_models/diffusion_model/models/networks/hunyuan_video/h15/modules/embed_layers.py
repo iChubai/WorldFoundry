@@ -14,7 +14,19 @@
 # of rights and permissions under this agreement.
 # See the License for the specific language governing permissions and limitations under the License.
 
-"""HunyuanVideo 1.5 model-specific patch and conditioning projections."""
+"""HunyuanVideo 1.5 patch embed and conditioning projections.
+
+These layers sit at the DiT stem: :class:`PatchEmbed` is a Conv3d that
+maps ``B C T H W`` latents (optionally concatenated with condition /
+mask channels) to flattened tokens ``B (T'H'W') C``.  Extra concat
+weights are zero-init so a text-to-video checkpoint stays a no-op until
+image-to-video finetune fills them.
+
+:class:`ByT5Mapper`, :class:`VisionProjection`, and
+:class:`ClipVisionProjection` map glyph / vision encoder features into
+DiT width.  CLIP's down-projection starts at zero so unused vision
+tokens do not change a t2v graph.
+"""
 
 import torch
 import torch.nn as nn
@@ -37,6 +49,7 @@ class ByT5Mapper(nn.Module):
         self.act_fn = nn.GELU()
 
     def forward(self, value):
+        """Map ByT5 glyph tokens ``B L C_in`` to DiT width (optional residual)."""
         residual = value
         value = self.act_fn(self.fc1(self.layernorm(value)))
         value = self.fc3(self.act_fn(self.fc2(value)))
@@ -44,17 +57,11 @@ class ByT5Mapper(nn.Module):
 
 
 class PatchEmbed(nn.Module):
-    """2D Image to Patch Embedding
+    """HY 1.5 Conv3d patch embed: ``B C T H W`` → ``B (T'H'W') C``.
 
-    Image to Patch Embedding using Conv2d
-
-    A convolution based approach to patchifying a 2D image w/ embedding projection.
-
-    Based on the impl in https://github.com/google-research/vision_transformer
-
-    Hacked together by / Copyright 2020 Ross Wightman
-
-    Remove the _assert function in forward function to be compatible with multi-resolution images.
+    When ``concat_condition`` is set the conv sees extra condition/mask
+    channels; those extra input weights are zero-init so a t2v checkpoint
+    stays a no-op until i2v finetune fills them.
     """
 
     def __init__(
@@ -70,20 +77,6 @@ class PatchEmbed(nn.Module):
         dtype=None,
         device=None,
     ):
-        """Init.
-
-        Args:
-            patch_size: The patch size.
-            in_chans: The in chans.
-            embed_dim: The embed dim.
-            is_reshape_temporal_channels: The is reshape temporal channels.
-            concat_condition: The concat condition.
-            norm_layer: The norm layer.
-            flatten: The flatten.
-            bias: The bias.
-            dtype: The dtype.
-            device: The device.
-        """
         factory_kwargs = {"dtype": dtype, "device": device}
         super().__init__()
         patch_size = to_2tuple(patch_size)
@@ -117,11 +110,7 @@ class PatchEmbed(nn.Module):
         self.norm = norm_layer(embed_dim) if norm_layer else nn.Identity()
 
     def forward(self, x):
-        """Forward.
-
-        Args:
-            x: The x.
-        """
+        """Project then optionally flatten patches to ``B S C``."""
         x = self.proj(x)
         if self.flatten:
             x = x.flatten(2).transpose(1, 2)  # BCHW -> BNC
@@ -130,15 +119,9 @@ class PatchEmbed(nn.Module):
 
 
 class VisionProjection(torch.nn.Module):
-    """Vision projection implementation."""
+    """LN-GELU MLP that maps vision-encoder tokens into DiT hidden size."""
 
     def __init__(self, input_dim, output_dim):
-        """Init.
-
-        Args:
-            input_dim: The input dim.
-            output_dim: The output dim.
-        """
         super().__init__()
 
         self.proj = torch.nn.Sequential(
@@ -151,22 +134,13 @@ class VisionProjection(torch.nn.Module):
         
 
     def forward(self, vision_embeds):
-        """Forward.
-
-        Args:
-            vision_embeds: The vision embeds.
-        """
+        """Project ``B L C_vis`` vision tokens to ``B L C_dit``."""
         return self.proj(vision_embeds)
 
 class ClipVisionProjection(nn.Module):
-    """Clip vision projection implementation."""
-    def __init__(self, in_channels, out_channels):
-        """Init.
+    """Zero-init down-projection of CLIP vision features into DiT width."""
 
-        Args:
-            in_channels: The in channels.
-            out_channels: The out channels.
-        """
+    def __init__(self, in_channels, out_channels):
         super().__init__()
         self.up = nn.Linear(in_channels, out_channels * 3)
         self.down = nn.Linear(out_channels * 3, out_channels)
@@ -174,10 +148,6 @@ class ClipVisionProjection(nn.Module):
         torch.nn.init.zeros_(self.down.bias)
 
     def forward(self, x):
-        """Forward.
-
-        Args:
-            x: The x.
-        """
+        """``down(silu(up(x)))``; down weights start at zero so CLIP is a no-op until trained."""
         projected_x = self.down(nn.functional.silu(self.up(x)))
         return projected_x

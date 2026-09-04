@@ -11,6 +11,7 @@ name: LIBERO-Para
 output_artifacts:
 - action_trace
 official_sources:
+  project_page: https://cau-hai-lab.github.io/LIBERO-Para/
   github:
     head_sha: dec2d93ad591a6f55d50e792dea4637a3b9dc1dd
     url: https://github.com/cau-hai-lab/LIBERO-Para

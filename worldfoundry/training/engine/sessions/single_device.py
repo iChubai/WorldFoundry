@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import math
-import random
 import time
 from collections.abc import Iterable, Iterator, Mapping
 from contextlib import contextmanager
@@ -14,6 +13,7 @@ import torch
 import torch.distributed as dist
 
 from worldfoundry.core.time import utc_now_iso
+from worldfoundry.core.utils.torch_utils import set_seed_everywhere
 from worldfoundry.training.api.contracts import TrainingBatch, TrainStepResult
 from worldfoundry.training.checkpoint.artifacts import TrainingCheckpointArtifact
 from worldfoundry.training.checkpoint.checkpointer import TrainingCheckpointer
@@ -317,6 +317,7 @@ class SingleDeviceTrainingSession:
         fixed_corruption: bool = False,
         maximum_final_to_initial_loss_ratio: float | None = None,
         resume_checkpoint: str | Path | None = None,
+        allow_environment_drift: bool = False,
     ) -> SingleDeviceRunSummary:
         """Execute optimizer steps and persist a complete or failed run record.
 
@@ -334,6 +335,10 @@ class SingleDeviceTrainingSession:
             raise TypeError("seed must be an integer, not bool")
         if not isinstance(fixed_batch, bool) or not isinstance(fixed_corruption, bool):
             raise TypeError("fixed_batch and fixed_corruption must be bool values")
+        if not isinstance(allow_environment_drift, bool):
+            raise TypeError("allow_environment_drift must be a bool")
+        if allow_environment_drift and resume_checkpoint is None:
+            raise ValueError("allow_environment_drift requires resume_checkpoint")
         ratio = maximum_final_to_initial_loss_ratio
         if ratio is not None:
             ratio = float(ratio)
@@ -364,14 +369,12 @@ class SingleDeviceTrainingSession:
             resumed_from = TrainingCheckpointer(resume_path.parent).load(
                 checkpoint_state,
                 resume_path,
+                allow_environment_drift=allow_environment_drift,
             )
         else:
             rank_seed = self._rank_seed(int(seed))
             self.objective_generator.manual_seed(rank_seed)
-            random.seed(rank_seed)
-            torch.manual_seed(rank_seed)
-            if self.engine.device.type == "cuda":
-                torch.cuda.manual_seed_all(rank_seed)
+            set_seed_everywhere(rank_seed)
         initial_global_step = self.engine.global_step
         self._manifest = self._base_manifest(
             max_steps=int(max_steps),
@@ -398,12 +401,17 @@ class SingleDeviceTrainingSession:
         checkpointer = TrainingCheckpointer(self.output_dir / "checkpoints") if checkpoint_interval > 0 else None
         pending_checkpoint: PendingTrainingCheckpoint | None = None
 
-        def finish_pending_checkpoint() -> None:
+        def finish_pending_checkpoint(*, coordinate: bool = True) -> None:
             nonlocal pending_checkpoint
             current = pending_checkpoint
             pending_checkpoint = None
-            if current is not None:
-                self._record_checkpoint(current.wait())
+            if current is None:
+                return
+            artifact = current.wait(coordinate=coordinate)
+            if coordinate:
+                if artifact is None:
+                    raise RuntimeError("coordinated checkpoint wait returned no artifact")
+                self._record_checkpoint(artifact)
 
         if self.engine.device.type == "cuda":
             torch.cuda.reset_peak_memory_stats(self.engine.device)
@@ -423,9 +431,7 @@ class SingleDeviceTrainingSession:
                 if fixed_corruption:
                     rank_seed = self._rank_seed(int(seed))
                     self.objective_generator.manual_seed(rank_seed)
-                    torch.manual_seed(rank_seed)
-                    if self.engine.device.type == "cuda":
-                        torch.cuda.manual_seed_all(rank_seed)
+                    set_seed_everywhere(rank_seed)
 
                 step_started = time.perf_counter()
                 result = self.engine.train_accumulation(
@@ -467,12 +473,15 @@ class SingleDeviceTrainingSession:
                     else:
                         self._record_checkpoint(saved)
             finish_pending_checkpoint()
-        except Exception as error:
-            checkpoint_error: Exception | None = None
+        except BaseException as error:
+            checkpoint_error: BaseException | None = None
             if pending_checkpoint is not None:
                 try:
-                    finish_pending_checkpoint()
-                except Exception as pending_error:  # noqa: BLE001 - preserve the training failure.
+                    # Partial-rank failures must not enter finalize's process-group
+                    # barriers.  Join the local write only; TE-05 orphan cleanup
+                    # removes the leftover staging directory on the next save.
+                    finish_pending_checkpoint(coordinate=False)
+                except BaseException as pending_error:  # Preserve the training failure, including interrupts.
                     checkpoint_error = pending_error
             elapsed = time.perf_counter() - started
             self._manifest.update(

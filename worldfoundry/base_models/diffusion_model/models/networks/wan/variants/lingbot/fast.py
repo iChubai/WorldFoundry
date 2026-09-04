@@ -1,4 +1,11 @@
-"""Some of the functions are borrowed from SelfForcing (https://github.com/guandeh17/Self-Forcing)."""
+"""LingBot causal-fast DiT (Self-Forcing-style chunk KV cache).
+
+Borrowed patterns from Self-Forcing.  Frames are generated in chunks
+with causal self-attention and a persistent KV cache.  Host layers come
+from :mod:`.model`.
+
+Adds causal / fast-attention hooks.  No VACE or linear attn.
+"""
 import math
 from einops import rearrange
 
@@ -65,7 +72,7 @@ def causal_rope_apply(x, grid_sizes, freqs, start_frame=0):
 
 
 class CausalWanSelfAttention(nn.Module):
-    """Causal wan self attention implementation."""
+    """Causal self-attention with optional KV cache and frame-offset RoPE."""
 
     def __init__(self,
                  dim,
@@ -195,7 +202,7 @@ class CausalWanSelfAttention(nn.Module):
 
 
 class WanCrossAttention(WanSelfAttention):
-    """Wan cross attention implementation."""
+    """Wan text cross-attention (optional KV cache)."""
 
     def forward(
         self,
@@ -244,7 +251,7 @@ class WanCrossAttention(WanSelfAttention):
 
 
 class CausalWanAttentionBlock(nn.Module):
-    """Causal wan attention block implementation."""
+    """Causal Wan block: cached self-attn, cross-attn, then gated FFN."""
 
     def __init__(self,
                  dim,
@@ -409,7 +416,7 @@ class CausalWanAttentionBlock(nn.Module):
 
 
 class CausalHead(nn.Module):
-    """Causal head implementation."""
+    """AdaLN output head used by causal Wan graphs."""
 
     def __init__(self, dim, out_dim, patch_size, eps=1e-6):
         """Init.
@@ -456,9 +463,7 @@ class CausalHead(nn.Module):
 
 
 class WanModelFast(nn.Module, NativeConfigMixin):
-    r"""
-    Wan diffusion backbone supporting both text-to-video and image-to-video.
-    """
+    r"""LingBot causal-fast DiT (Self-Forcing-style chunk KV cache)."""
 
     ignore_for_config = [
         'patch_size', 'cross_attn_norm', 'qk_norm', 'text_dim'

@@ -14,7 +14,9 @@
 # of rights and permissions under this agreement.
 # See the License for the specific language governing permissions and limitations under the License.
 
-"""Native checkpoint-compatible HunyuanVideo 1.5 video autoencoder."""
+"""HunyuanVideo 1.5 Conv3D video autoencoder.
+
+Checkpoint-compatible causal 3-D VAE with tiling. Public ``encode`` / ``decode`` are wrapped by :class:`~.component.HunyuanVideo15Codec`."""
 
 import math
 from dataclasses import dataclass

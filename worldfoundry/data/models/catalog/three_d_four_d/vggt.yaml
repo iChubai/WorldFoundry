@@ -10,6 +10,7 @@ source:
   official_repo_url: https://github.com/facebookresearch/vggt
   license: apache-2.0
 official_sources:
+  project_page: https://vgg-t.github.io/
   paper: https://openaccess.thecvf.com/content/CVPR2025/papers/Wang_VGGT_Visual_Geometry_Grounded_Transformer_CVPR_2025_paper.pdf
   github:
     url: https://github.com/facebookresearch/vggt

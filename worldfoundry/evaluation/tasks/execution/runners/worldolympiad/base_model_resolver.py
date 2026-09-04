@@ -2,7 +2,7 @@
 
 The vendored WorldOlympiad runtime under ``runtime/worldolympiad`` is
 byte-identical to upstream and is adapted *only* through CLI arguments and
-environment variables (see ``runtime/WORLDFOUNDRY_PROVENANCE.md``). It needs
+environment variables. It needs
 four base models — QwenVL, Depth Anything 3, SAM3, and CLIP — which the runner
 previously resolved ad-hoc from a caller-supplied ``--weights-dir`` and an
 external ``--da3-src`` checkout.

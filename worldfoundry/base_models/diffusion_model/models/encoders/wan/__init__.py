@@ -1,4 +1,16 @@
-"""Native Wan text-conditioning components."""
+"""Wan UMT5 / CLIP :class:`~...contracts.ConditionEncoder` roles.
+
+Package entry for Wan prompt (and optional image) conditioning.
+:class:`~.component.WanTextConditioner` encodes prompts to
+``Conditioning(positive={"context": ...}, negative=...)``.
+:class:`WanImageTextConditioner` adds CLIP visual tokens to
+``shared``.
+
+Factories load UMT5 + tokenizer (and optional CLIP) through
+the native module loader.  Chinese / multilingual prompt
+strings pass through unchanged.  Variants live under
+:mod:`.variants`.
+"""
 
 from .component import (
     WanTextConditioner,

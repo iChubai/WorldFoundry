@@ -1,0 +1,76 @@
+---
+title: PAWBench
+description: Distributional evaluation of probability calibration and physical-outcome coverage across repeated video-world-model rollouts.
+---
+
+## About
+
+**Publishers:** Shanghai Jiao Tong University, Shanghai AI Laboratory, Krea AI,
+Hugging Face, Shanghai Innovation Institute, Tongyi Lab, and the University of
+Hong Kong.
+
+PAWBench asks whether repeated generations recover the **distribution** of
+physically valid futures, rather than whether one video looks plausible. It
+contains 50 scenes: 25 calibration scenes with reference outcome probabilities
+and 25 coverage scenes. A complete official run generates 50 independent
+rollouts per scene, for 2,500 videos in total.
+
+Official sources:
+
+- [Paper](https://arxiv.org/abs/2608.27345)
+- [Project page](https://pawbench.github.io/)
+- [Official repository](https://github.com/Andrew0613/PAWBench)
+- [Dataset](https://huggingface.co/datasets/Andrew613/PAWBench)
+
+## Metrics
+
+PAWBench intentionally keeps its two tracks separate; it does not define one
+combined leaderboard scalar.
+
+| Metric | Meaning | Direction |
+| --- | --- | --- |
+| `calibration_tvd_percent` | Total-variation distance between generated and reference outcome distributions. | Lower is better |
+| `coverage_percent` | Fraction of the official physical-outcome support observed in repeated rollouts. | Higher is better |
+
+## Run or import results
+
+Stage the official dataset and a complete rollout tree, then configure the
+official PAWEval judge:
+
+```bash
+hf download Andrew613/PAWBench --repo-type dataset --local-dir /data/pawbench
+export OPENROUTER_API_KEY=<your-key>
+
+worldfoundry-eval zoo benchmark-run \
+  --benchmark-id pawbench \
+  --mode official-run \
+  --benchmark-data-root /data/pawbench \
+  --generated-artifact-dir /data/my-model-rollouts \
+  --output-dir tmp/pawbench/official-run \
+  --json
+```
+
+The in-tree runtime vendors the official evaluator. Fresh judging uses Gemini
+3.5 Flash through OpenRouter by default; alternate OpenAI-compatible judges are
+useful for analysis but are not directly comparable with the official setup.
+Existing `metrics.json` files or run directories can be normalized without
+network access:
+
+```bash
+worldfoundry-eval zoo benchmark-run \
+  --benchmark-id pawbench \
+  --mode official-validation \
+  --official-results-path /path/to/pawbench/run \
+  --output-dir tmp/pawbench/imported \
+  --json
+```
+
+## Outputs and limits
+
+Runs write `scorecard.json`, `raw_metric_table.jsonl`,
+`per_sample_scores.jsonl`, and `benchmark_contract.json`. The checked-in sample
+is only a result-normalizer fixture. Full-dataset execution, hosted-judge
+reproducibility, and leaderboard parity remain unverified; incomplete rollout
+coverage is reported as a blocker rather than silently averaged.
+
+[← Benchmark Hub](/docs/evaluation/benchmark-hub)

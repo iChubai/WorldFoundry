@@ -1,4 +1,19 @@
-"""Declarative native recipes for HunyuanVideo model variants."""
+"""Native declarative recipes for HunyuanVideo and HunyuanVideo 1.5.
+
+Each public function returns a :class:`NativeDiffusionRecipe`.  Recipes
+do not construct runners.  Execution is the default ``standard``
+strategy; I2V additionally binds the codec as ``latent_encoder``.
+
+Family split
+------------
+- Original T2V / I2V: Hunyuan DiT, LLaVA-Llama + CLIP-L conditioner,
+  flow-match Euler (shift 7.0), original 16-channel VAE.  Embedded
+  (non-CFG) guidance.  I2V freezes the first frame.
+- HunyuanVideo 1.5 T2V / I2V: 32-channel VAE, LLM + ByT5 + Glyph
+  conditioner (FLUX Redux vision on I2V), flow-match Euler (shift 9.0
+  T2V / 7.0 I2V), glyph-conditioning.  Default quality pins are the
+  official non-distilled 720p weights.
+"""
 
 from __future__ import annotations
 
@@ -51,16 +66,39 @@ def _execution(*, image_to_video: bool) -> ExecutionSpec:
     return ExecutionSpec(bindings=bindings)
 
 
-def _original_resources(repo_id: str) -> CheckpointSpec:
-    primary = "text_encoder_i2v/config.json" if repo_id.endswith("-I2V") else "text_encoder/config.json"
+def _original_primary_resources(*, image_to_video: bool) -> CheckpointSpec:
+    # Tencent's HunyuanVideo model repositories contain the DiT and VAE, but
+    # not the LLaVA/Llama text encoder required by the released inference
+    # code. Keep that dependency as its own checkpoint role so a local Tencent
+    # snapshot is not incorrectly expected to contain files from XTuner.
     return CheckpointSpec(
-        repo_id=repo_id,
-        files=(primary, "text_encoder_2/config.json"),
-        allow_patterns=("text_encoder*/**",),
+        repo_id="xtuner/llava-llama-3-8b-v1_1-transformers",
+        files=("config.json",),
+        allow_patterns=("*",),
+        metadata={"resource_role": "hunyuanvideo-primary-text-encoder", "image_to_video": image_to_video},
+    )
+
+
+def _original_clip_resources() -> CheckpointSpec:
+    # The pooled CLIP-L conditioning model is likewise a separate upstream
+    # repository. Declaring it independently also lets T2V and I2V share one
+    # verified local copy instead of duplicating 1.7 GiB of weights.
+    return CheckpointSpec(
+        repo_id="openai/clip-vit-large-patch14",
+        files=("config.json",),
+        allow_patterns=("*",),
+        metadata={"resource_role": "hunyuanvideo-clip-text-encoder"},
     )
 
 
 def hunyuan_video_t2v_recipe() -> NativeDiffusionRecipe:
+    """Original HunyuanVideo T2V: DiT + dual text encoders + flow-match Euler.
+
+    Binds ``build_hunyuan_video_denoiser``, LLaVA-Llama/CLIP conditioner,
+    noise initializer, flow-match scheduler (shift 7.0), and the original
+    VAE codec as decoder only.  Strategy ``standard``; embedded guidance.
+    """
+
     repo_id = "tencent/HunyuanVideo"
     denoiser, conditioner, initializer, scheduler, codec = _keys()
     checkpoints = {
@@ -73,7 +111,8 @@ def hunyuan_video_t2v_recipe() -> NativeDiffusionRecipe:
             files=("hunyuan-video-t2v-720p/vae/pytorch_model.pt",),
             allow_patterns=("hunyuan-video-t2v-720p/vae/*",),
         ),
-        "resources": _original_resources(repo_id),
+        "primary": _original_primary_resources(image_to_video=False),
+        "clip": _original_clip_resources(),
     }
     return NativeDiffusionRecipe(
         model_id=HUNYUAN_VIDEO_T2V_MODEL_ID,
@@ -83,7 +122,7 @@ def hunyuan_video_t2v_recipe() -> NativeDiffusionRecipe:
             ComponentSpec(
                 conditioner,
                 build_hunyuan_video_prompt_conditioner,
-                {"primary": "resources", "clip": "resources"},
+                {"primary": "primary", "clip": "clip"},
             ),
             ComponentSpec(initializer, build_hunyuan_video_latent_initializer),
             ComponentSpec(scheduler, build_hunyuan_video_flow_match_scheduler, options={"shift": 7.0}),
@@ -103,6 +142,13 @@ def hunyuan_video_t2v_recipe() -> NativeDiffusionRecipe:
 
 
 def hunyuan_video_i2v_recipe() -> NativeDiffusionRecipe:
+    """Original HunyuanVideo I2V with frozen first frame and encoded init.
+
+    Same five roles as T2V, but the I2V DiT, ``image_to_video`` conditioner,
+    and initializer with ``freeze_first_frame``.  The VAE is also bound as
+    ``latent_encoder``.  Strategy ``standard``; embedded guidance.
+    """
+
     repo_id = "tencent/HunyuanVideo-I2V"
     denoiser, conditioner, initializer, scheduler, codec = _keys()
     checkpoints = {
@@ -115,7 +161,8 @@ def hunyuan_video_i2v_recipe() -> NativeDiffusionRecipe:
             files=("hunyuan-video-i2v-720p/vae/pytorch_model.pt",),
             allow_patterns=("hunyuan-video-i2v-720p/vae/*",),
         ),
-        "resources": _original_resources(repo_id),
+        "primary": _original_primary_resources(image_to_video=True),
+        "clip": _original_clip_resources(),
     }
     return NativeDiffusionRecipe(
         model_id=HUNYUAN_VIDEO_I2V_MODEL_ID,
@@ -124,7 +171,7 @@ def hunyuan_video_i2v_recipe() -> NativeDiffusionRecipe:
             ComponentSpec(
                 conditioner,
                 build_hunyuan_video_prompt_conditioner,
-                {"primary": "resources", "clip": "resources"},
+                {"primary": "primary", "clip": "clip"},
                 {"image_to_video": True},
             ),
             ComponentSpec(
@@ -150,6 +197,8 @@ def hunyuan_video_i2v_recipe() -> NativeDiffusionRecipe:
 
 
 def _h15_recipe(*, image_to_video: bool) -> NativeDiffusionRecipe:
+    """Assemble HunyuanVideo 1.5 T2V or I2V on ``standard`` (glyph + optional vision)."""
+
     repo_id = "tencent/HunyuanVideo-1.5"
     denoiser, conditioner, initializer, scheduler, codec = _keys()
     model_id = HUNYUAN_VIDEO15_I2V_MODEL_ID if image_to_video else HUNYUAN_VIDEO15_T2V_MODEL_ID
@@ -174,7 +223,8 @@ def _h15_recipe(*, image_to_video: bool) -> NativeDiffusionRecipe:
                 "config.json",
                 "text_encoder/llm/config.json",
                 "text_encoder/byt5-small/config.json",
-                "text_encoder/Glyph-SDXL-v2/checkpoints/byt5_model.pt",
+                "text_encoder/byt5-small/model.safetensors",
+                "text_encoder/Glyph-SDXL-v2/checkpoints/model.safetensors",
                 "text_encoder/Glyph-SDXL-v2/assets/color_idx.json",
                 "text_encoder/Glyph-SDXL-v2/assets/multilingual_10-lang_idx.json",
             ),
@@ -234,14 +284,29 @@ def _h15_recipe(*, image_to_video: bool) -> NativeDiffusionRecipe:
 
 
 def hunyuan_video15_t2v_recipe() -> NativeDiffusionRecipe:
+    """HunyuanVideo 1.5 T2V (non-distilled 720p) with glyph conditioning.
+
+    Binds the 1.5 DiT, LLM/ByT5/Glyph conditioner, concat-condition
+    initializer, flow-match Euler (shift 9.0), and 32-channel VAE.
+    Strategy ``standard``.
+    """
+
     return _h15_recipe(image_to_video=False)
 
 
 def hunyuan_video15_i2v_recipe() -> NativeDiffusionRecipe:
+    """HunyuanVideo 1.5 I2V (non-distilled 720p) plus FLUX Redux vision.
+
+    Same stack as 1.5 T2V with I2V DiT, vision checkpoint, encoder-bound
+    VAE, and flow-match shift 7.0.  Strategy ``standard``.
+    """
+
     return _h15_recipe(image_to_video=True)
 
 
 def hunyuan_video_recipes() -> tuple[NativeDiffusionRecipe, ...]:
+    """Return the four public HunyuanVideo recipes in registration order."""
+
     return (
         hunyuan_video_t2v_recipe(),
         hunyuan_video_i2v_recipe(),

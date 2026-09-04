@@ -1,4 +1,11 @@
-"""Prompt templates and tokenization for the integrated Cosmos3 language backbone."""
+"""Cosmos3 tokenizer-only :class:`~...contracts.ConditionEncoder`.
+
+Does **not** run a separate text tower: the omni transformer embeds
+``input_ids`` itself.  ``encode`` returns ``Conditioning.positive`` /
+``negative`` with ``input_ids`` and optional ``action_domain_id``.
+System / duration / FPS templates are applied in English; user prompt
+strings are not rewritten.
+"""
 
 from __future__ import annotations
 
@@ -78,6 +85,7 @@ class Cosmos3PromptConditioner:
         device: torch.device,
         dtype: torch.dtype,
     ) -> Conditioning:
+        """Return tokenized ``input_ids`` (and optional ``action_domain_id``)."""
         del dtype
         prompt = self._single(request.prompts, name="prompt")
         positive = self._tokenize(

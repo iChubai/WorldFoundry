@@ -12,6 +12,7 @@ source:
   official_repo_url: https://github.com/AbdelStark/mosaicmem
   license: mit
 official_sources:
+  paper: https://arxiv.org/abs/2603.17117
   github:
     url: https://github.com/AbdelStark/mosaicmem
     head_sha: 3178e01e3639d7e2e7a487d5d589fd5f53719904

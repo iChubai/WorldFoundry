@@ -43,6 +43,11 @@ from worldfoundry.core.attention.kv_cache_policy import (
     KVCachePolicy,
 )
 from worldfoundry.core.attention.kv_quantization import KVQuantConfig, QuantizedKVStore
+from worldfoundry.core.device import get_current_torch_device
+
+# ──────────────────────────────────────────────────────────────────────────
+# Fixed rolling buffer — shapes never change, so CUDA Graphs can capture it
+# ──────────────────────────────────────────────────────────────────────────
 
 
 @dataclass
@@ -96,8 +101,8 @@ class BlockKVCache:
     sink_size: int = 0
     """Number of sink tokens at the start of the cache that are never evicted. Defaults to 0."""
 
-    device: torch.device | str = torch.device("cuda")
-    """Device to store the cache on."""
+    device: torch.device | str | None = None
+    """Device to store the cache on; defaults to the process-selected device."""
 
     dtype: torch.dtype = torch.float16
     """Data type to store the cache in."""
@@ -149,6 +154,13 @@ class BlockKVCache:
         return cache
 
     def __post_init__(self) -> None:
+        """Normalize ``seq_dim`` and allocate the fixed ``sink + window`` buffers.
+
+        Raises:
+            AssertionError: k/v ranks disagree, ``seq_dim`` is out of range,
+                or the sequence length is not ``sink_size + window_size``.
+        """
+        self.device = get_current_torch_device() if self.device is None else torch.device(self.device)
         assert self.k_shape[:-1] == self.v_shape[:-1], "k and v must have the same shape except for the last dimension"
 
         tensor_dim = len(self.k_shape)
@@ -201,6 +213,7 @@ class BlockKVCache:
         self._n_cached = total_size
 
     def _current_chunk_overlaps_sink(self) -> bool:
+        """Return whether this chunk still writes into the pinned sink prefix."""
         assert self._curr_chunk_idx is not None, "Must call before_update() before checking sink overlap"
         return self.sink_size > 0 and self._curr_chunk_idx * self.chunk_size < self.sink_size
 
@@ -357,6 +370,11 @@ class BlockKVCache:
         self._prev_chunk_idx = -1
         self._curr_chunk_idx = None
         self._n_cached = 0
+
+
+# ──────────────────────────────────────────────────────────────────────────
+# Compacting cache — pluggable policy + quantization; shapes can change
+# ──────────────────────────────────────────────────────────────────────────
 
 
 class CompactingKVCache:

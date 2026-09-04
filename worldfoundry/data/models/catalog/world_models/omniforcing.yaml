@@ -12,6 +12,7 @@ source:
   official_repo_url: https://github.com/OmniForcing/OmniForcing
   license: manual_review:missing_root_license
 official_sources:
+  paper: https://arxiv.org/abs/2603.11647
   github:
     url: https://github.com/OmniForcing/OmniForcing
     head_sha: cd6791433e3de4cbe156c125730d45a45d52fcae

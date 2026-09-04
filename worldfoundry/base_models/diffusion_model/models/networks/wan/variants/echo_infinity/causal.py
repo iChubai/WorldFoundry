@@ -1,5 +1,10 @@
-"""Module for base_models -> diffusion_model -> video -> wan -> variants -> echo_infinity -> wan -> modules -> causal_model.py functionality."""
+"""Echo-Infinity causal Wan 2.x with chunk KV cache.
 
+Causal self-attention plus ``causal_rope_apply`` for streaming chunks.
+Sink / query memory banks are in sibling modules.
+
+Adds causal attention.  No VACE or linear attn.
+"""
 from .attention import attention
 from .model import WanRMSNorm, rope_apply, WanLayerNorm, WAN_CROSSATTENTION_CLASSES, rope_params, MLPProj, sinusoidal_embedding_1d
 from torch.nn.attention.flex_attention import create_block_mask, flex_attention
@@ -37,7 +42,7 @@ def causal_rope_apply(x, grid_sizes, freqs, start_frame=0):
     return torch.stack(output).type_as(x)
 
 class CausalWanSelfAttention(nn.Module):
-    """Causal wan self attention implementation."""
+    """Causal self-attention with optional KV cache and frame-offset RoPE."""
 
     def __init__(self, dim, num_heads, local_attn_size=-1, sink_size=0, qk_norm=True, eps=1e-06):
         """Init.
@@ -129,11 +134,7 @@ class CausalWanSelfAttention(nn.Module):
             cache_start = current_start
 
         def qkv_fn(x):
-            """Qkv fn.
-
-            Args:
-                x: The x.
-            """
+            """Project and reshape QKV to ``[B, L, H, D]``."""
             q = self.norm_q(self.q(x)).view(b, s, n, d)
             k = self.norm_k(self.k(x)).view(b, s, n, d)
             v = self.v(x).view(b, s, n, d)
@@ -461,7 +462,7 @@ class CausalWanSelfAttention(nn.Module):
             return x
 
 class CausalWanAttentionBlock(nn.Module):
-    """Causal wan attention block implementation."""
+    """Causal Wan block: cached self-attn, cross-attn, then gated FFN."""
 
     def __init__(self, cross_attn_type, dim, ffn_dim, num_heads, local_attn_size=-1, sink_size=0, qk_norm=True, cross_attn_norm=False, eps=1e-06):
         """Init.
@@ -550,7 +551,7 @@ class CausalWanAttentionBlock(nn.Module):
             return x
 
 class CausalHead(nn.Module):
-    """Causal head implementation."""
+    """AdaLN output head used by causal Wan graphs."""
 
     def __init__(self, dim, out_dim, patch_size, eps=1e-06):
         """Init.
@@ -584,7 +585,7 @@ class CausalHead(nn.Module):
         return x
 
 class CausalWanModel(nn.Module, NativeConfigMixin):
-    """Causal wan model implementation."""
+    """Causal Wan transformer (chunk KV cache, official or packed layout)."""
     ignore_for_config = ['patch_size', 'cross_attn_norm', 'qk_norm', 'text_dim']
     _no_split_modules = ['WanAttentionBlock']
     _supports_gradient_checkpointing = True

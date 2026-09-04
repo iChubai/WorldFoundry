@@ -16,6 +16,7 @@ source:
   notes:
   - Concrete Wall-X/WALL-OSS algorithm source is tracked from the X Square Robot official repository.
 official_sources:
+  paper: https://arxiv.org/abs/2606.01955
   github:
     head_sha: e23a5868465be0d4e2543d73e16210b5cf21e22e
     url: https://github.com/X-Square-Robot/wall-x

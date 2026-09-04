@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import copy
+import sys
 from collections.abc import Mapping
 from concurrent.futures import Future
 from pathlib import Path
@@ -29,6 +30,7 @@ class StagedCheckpointFinalizer(Protocol):
         world_size: int,
         staging_strategy: str,
         optional_state_presence: Mapping[str, bool],
+        coordinate: bool = True,
     ) -> TrainingCheckpointArtifact: ...
 
 
@@ -102,22 +104,70 @@ class PendingTrainingCheckpoint:
     def done(self) -> bool:
         return self._artifact is not None or self._future.done()
 
-    def wait(self, timeout: float | None = None) -> TrainingCheckpointArtifact:
-        if self._artifact is None:
-            self._future.result(timeout=timeout)
-            self._artifact = self._manager.finalize_staged_checkpoint(
-                staging_path=self._staging_path,
-                final_path=self._final_path,
-                global_step=self._global_step,
-                identity=self._identity,
-                gradient_accumulation_phase=self._gradient_accumulation_phase,
-                world_size=self._world_size,
-                staging_strategy=self._staging_strategy,
-                optional_state_presence=self._optional_state_presence,
-            )
+    def wait(
+        self,
+        timeout: float | None = None,
+        *,
+        coordinate: bool = True,
+    ) -> TrainingCheckpointArtifact | None:
+        """Join the local async write, then optionally commit it.
+
+        ``coordinate=True`` (default) finalizes through the checkpointer,
+        including the multi-rank barriers.  ``coordinate=False`` only waits
+        for this rank's write thread and leaves the staging directory for
+        orphan cleanup -- use that on exception paths where sibling ranks
+        may not enter finalize.
+        """
+
+        if not isinstance(coordinate, bool):
+            raise TypeError("coordinate must be a bool")
+        if self._artifact is not None:
+            return self._artifact
+        self._future.result(timeout=timeout)
+        if not coordinate:
+            return None
+        self._artifact = self._manager.finalize_staged_checkpoint(
+            staging_path=self._staging_path,
+            final_path=self._final_path,
+            global_step=self._global_step,
+            identity=self._identity,
+            gradient_accumulation_phase=self._gradient_accumulation_phase,
+            world_size=self._world_size,
+            staging_strategy=self._staging_strategy,
+            optional_state_presence=self._optional_state_presence,
+            coordinate=True,
+        )
         return self._artifact
+
+
+def wait_for_pending_checkpoints(
+    pending_checkpoints: list[PendingTrainingCheckpoint],
+    *,
+    coordinate: bool | None = None,
+) -> None:
+    """Join a session's pending writes with exception-safe coordination.
+
+    A normal call coordinates checkpoint finalization across ranks.  When a
+    session calls this helper from a ``finally`` block while another exception
+    is propagating, only the local writes are joined: sibling ranks may still
+    be training and therefore cannot be assumed to enter a finalize barrier.
+    Callers may pass ``coordinate`` explicitly when they are not relying on
+    the active exception state.
+    """
+
+    if coordinate is None:
+        coordinate = sys.exc_info()[0] is None
+    elif not isinstance(coordinate, bool):
+        raise TypeError("coordinate must be a bool or None")
+    for pending in pending_checkpoints:
+        if coordinate:
+            pending.wait()
+        else:
+            pending.wait(coordinate=False)
+    pending_checkpoints.clear()
 
 
 __all__ = [
     "PendingTrainingCheckpoint",
+    "wait_for_pending_checkpoints",
 ]

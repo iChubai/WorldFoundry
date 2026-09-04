@@ -1,4 +1,29 @@
-"""Reusable neural-network layers owned by WorldFoundry core."""
+"""Reusable vision-language layers owned by WorldFoundry core.
+
+This is the shared ``nn.Module`` kit (MLP, SwiGLU, DropPath, PatchEmbed,
+LayerScale) used by ViT, SAM, and DiT blocks. Keep checkpoint-visible names
+stable: ``Mlp`` is the timm two-layer FFN; ``SamHeadMLP`` / ``SamMLPBlock``
+are SAM-specific so a mask head never aliases a transformer FFN.
+
+Tuple helpers (``to_2tuple``, ``val2list``) exist so config scalars and
+pairs share one constructor path. :func:`zero_module` detaches and zeros
+parameters — used for residual adapters that must start as identity.
+``XFORMERS_AVAILABLE`` is a probe, not an auto-enable: fused attention
+still goes through :mod:`worldfoundry.core.attention`.
+
+Not this module:
+    DiT AdaLN / modulation lives in
+    :mod:`worldfoundry.core.nn.diffusion_transformer`. Conv FFNs that
+    take ``HW`` live in :mod:`worldfoundry.core.nn.convolutional_mlp`.
+    2D patchify without a conv lives in :mod:`worldfoundry.core.nn.patching`.
+
+Public surface:
+    Tuple helpers, :class:`DropPath` / :class:`LayerNorm2d` /
+    :class:`LayerScale`, SAM and timm MLPs, :class:`VisionAttention`,
+    :class:`DomainAwareLinear`, :class:`PositionEmbeddingRandom`,
+    :class:`PatchEmbed` / :class:`PatchEmbed_Mlp`, :class:`SwiGLUFFN` /
+    :class:`SwiGLUFFNFused`.
+"""
 
 from __future__ import annotations
 
@@ -13,15 +38,32 @@ import torch.nn.functional as F
 from torch import Tensor, nn
 
 
+# ──────────────────────────────────────────────────────────────────────────
+# Tuple / list helpers — config scalars and pairs share one constructor path
+# ──────────────────────────────────────────────────────────────────────────
+
+
 def to_2tuple(value: int | Sequence[int] | bool | Sequence[bool] | float | Sequence[float]):
+    """Repeat a scalar into a 2-tuple; pass a sequence through as a pair."""
     return _ntuple(2)(value)
 
 
 def to_3tuple(value: int | Sequence[int] | bool | Sequence[bool] | float | Sequence[float]):
+    """Repeat a scalar into a 3-tuple; pass a sequence through as a triple."""
     return _ntuple(3)(value)
 
 
 def make_2tuple(value: int | tuple[int, int]) -> tuple[int, int]:
+    """Require an int or a length-2 tuple; refuse longer sequences.
+
+    Unlike :func:`to_2tuple`, a 3-tuple is an error so patch sizes cannot
+    silently truncate.
+
+    Raises:
+        ValueError: ``value`` is a tuple whose length is not 2.
+        TypeError: ``value`` is neither an int nor a tuple.
+    """
+
     if isinstance(value, tuple):
         if len(value) != 2:
             raise ValueError("expected a two-item tuple.")
@@ -93,20 +135,24 @@ def zero_module(module: nn.Module) -> nn.Module:
     return module
 
 
-# ---------------------------------------------------------------------------
-# Stochastic depth and normalization
-# ---------------------------------------------------------------------------
+# ──────────────────────────────────────────────────────────────────────────
+# Stochastic depth and channel-first normalization
+# ──────────────────────────────────────────────────────────────────────────
 
 
 class DropPath(nn.Module):
     """Drop residual paths per sample."""
 
     def __init__(self, drop_prob: float | None = 0.0, scale_by_keep: bool = True) -> None:
+        """``drop_prob=None`` is treated as 0 so config YAML nulls are safe."""
+
         super().__init__()
         self.drop_prob = 0.0 if drop_prob is None else drop_prob
         self.scale_by_keep = scale_by_keep
 
     def forward(self, x: Tensor) -> Tensor:
+        """No-op in eval; in train, scale surviving samples when requested."""
+
         return drop_path(x, float(self.drop_prob), self.training, self.scale_by_keep)
 
 
@@ -114,12 +160,16 @@ class LayerNorm2d(nn.Module):
     """2D layer normalization over the channel dimension (dim=1)."""
 
     def __init__(self, num_channels: int, eps: float = 1e-6) -> None:
+        """Allocate channel-wise γ/β broadcast over spatial axes (SAM layout)."""
+
         super().__init__()
         self.weight = nn.Parameter(torch.ones(num_channels))
         self.bias = nn.Parameter(torch.zeros(num_channels))
         self.eps = eps
 
     def forward(self, x: Tensor) -> Tensor:
+        """Normalize over dim=1 (C) for ``[B, C, H, W]``; last-dim LN would be wrong."""
+
         u = x.mean(1, keepdim=True)
         s = (x - u).pow(2).mean(1, keepdim=True)
         x = (x - u) / torch.sqrt(s + self.eps)
@@ -153,6 +203,8 @@ class LayerScale(nn.Module):
         self.reset_parameters()
 
     def reset_parameters(self) -> None:
+        """Copy a tensor init or fill a scalar; used after meta-device materialize."""
+
         if isinstance(self.init_values, Tensor):
             with torch.no_grad():
                 self.gamma.copy_(self.init_values)
@@ -164,12 +216,14 @@ class LayerScale(nn.Module):
         return x.mul_(self.gamma) if self.inplace else x * self.gamma
 
     def extra_repr(self) -> str:
+        """Include init and inplace flags so module printouts distinguish LayerScales."""
+
         return f"dim={self.dim}, init_values={self.init_values}, inplace={self.inplace}"
 
 
-# ---------------------------------------------------------------------------
-# MLP blocks
-# ---------------------------------------------------------------------------
+# ──────────────────────────────────────────────────────────────────────────
+# MLP blocks — SAM names stay distinct from the timm ViT ``Mlp``
+# ──────────────────────────────────────────────────────────────────────────
 
 
 class SamMLPBlock(nn.Module):
@@ -181,12 +235,16 @@ class SamMLPBlock(nn.Module):
         mlp_dim: int,
         act: Type[nn.Module] = nn.GELU,
     ) -> None:
+        """Build the ``lin1`` / ``lin2`` names expected by SAM checkpoints."""
+
         super().__init__()
         self.lin1 = nn.Linear(embedding_dim, mlp_dim)
         self.lin2 = nn.Linear(mlp_dim, embedding_dim)
         self.act = act()
 
     def forward(self, x: Tensor) -> Tensor:
+        """Token-wise FFN; shape ``[..., embedding_dim]`` is unchanged."""
+
         return self.lin2(self.act(self.lin1(x)))
 
 
@@ -202,6 +260,8 @@ class SamHeadMLP(nn.Module):
         activation: nn.Module = nn.ReLU,
         sigmoid_output: bool = False,
     ) -> None:
+        """Stack ``num_layers`` linears with activation on every layer except the last."""
+
         super().__init__()
         self.num_layers = num_layers
         h = [hidden_dim] * (num_layers - 1)
@@ -210,6 +270,8 @@ class SamHeadMLP(nn.Module):
         self.act = activation()
 
     def forward(self, x: Tensor) -> Tensor:
+        """Optional sigmoid is for IoU / mask logits, not the transformer FFN."""
+
         for i, layer in enumerate(self.layers):
             x = self.act(layer(x)) if i < self.num_layers - 1 else layer(x)
         if self.sigmoid_output:
@@ -270,6 +332,11 @@ class Mlp(nn.Module):
         return x
 
 
+# ──────────────────────────────────────────────────────────────────────────
+# Attention, domain linear, and SAM prompt positional encodings
+# ──────────────────────────────────────────────────────────────────────────
+
+
 class VisionAttention(nn.Module):
     """Checkpoint-compatible ViT self-attention used by native model graphs.
 
@@ -288,6 +355,8 @@ class VisionAttention(nn.Module):
         proj_drop: float = 0.0,
         norm_layer: Callable[..., nn.Module] = nn.LayerNorm,
     ) -> None:
+        """Fail fast when ``dim`` is not divisible by ``num_heads`` (timm layout)."""
+
         super().__init__()
         if dim % num_heads:
             raise ValueError(f"attention dim {dim} must be divisible by {num_heads} heads")
@@ -302,6 +371,8 @@ class VisionAttention(nn.Module):
         self.proj_drop = nn.Dropout(proj_drop)
 
     def forward(self, x: Tensor) -> Tensor:
+        """``[B, N, C]`` self-attention with optional QK-norm; output matches input shape."""
+
         batch, tokens, channels = x.shape
         qkv = self.qkv(x).reshape(batch, tokens, 3, self.num_heads, self.head_dim)
         q, k, v = qkv.permute(2, 0, 3, 1, 4).unbind(0)
@@ -321,6 +392,8 @@ class DomainAwareLinear(nn.Module):
     """
 
     def __init__(self, input_size: int, output_size: int, num_domains: int = 20) -> None:
+        """Xavier on flattened weights, zero bias — per-domain start is identity-ish."""
+
         super().__init__()
         if input_size <= 0 or output_size <= 0 or num_domains <= 0:
             raise ValueError("input_size, output_size, and num_domains must be positive")
@@ -333,6 +406,12 @@ class DomainAwareLinear(nn.Module):
         nn.init.zeros_(self.bias.weight)
 
     def forward(self, x: Tensor, domain_id: Tensor) -> Tensor:
+        """Apply the domain's weight; accept ``[B, D]`` or ``[B, S, D]``.
+
+        Raises:
+            ValueError: ``domain_id`` rank/range is invalid, or ``x`` width mismatches.
+        """
+
         if domain_id.ndim == 0:
             domain_id = domain_id.unsqueeze(0)
         if domain_id.ndim != 1:
@@ -359,6 +438,8 @@ class PositionEmbeddingRandom(nn.Module):
     """Positional encoding using random spatial frequencies."""
 
     def __init__(self, num_pos_feats: int = 64, scale: Optional[float] = None) -> None:
+        """Register a non-learned Gaussian frequency matrix (SAM prompt encoder)."""
+
         super().__init__()
         if scale is None or scale <= 0.0:
             scale = 1.0
@@ -368,12 +449,16 @@ class PositionEmbeddingRandom(nn.Module):
         )
 
     def _pe_encoding(self, coords: Tensor) -> Tensor:
+        """Map coords in [0, 1] to ``[-1, 1]`` then a 2π Fourier feature."""
+
         coords = 2 * coords - 1
         coords = coords @ self.positional_encoding_gaussian_matrix
         coords = 2 * np.pi * coords
         return torch.cat([torch.sin(coords), torch.cos(coords)], dim=-1)
 
     def forward(self, size: Tuple[int, int]) -> Tensor:
+        """Dense ``[C, H, W]`` encoding for a regular grid of size ``(H, W)``."""
+
         h, w = size
         device: torch.device = self.positional_encoding_gaussian_matrix.device
         grid = torch.ones((h, w), device=device, dtype=torch.float32)
@@ -386,15 +471,17 @@ class PositionEmbeddingRandom(nn.Module):
         return pe.permute(2, 0, 1)
 
     def forward_with_coords(self, coords_input: Tensor, image_size: Tuple[int, int]) -> Tensor:
+        """Encode sparse ``[B, N, 2]`` xy coords normalized by ``image_size`` (W, H)."""
+
         coords = coords_input.clone()
         coords[:, :, 0] = coords[:, :, 0] / image_size[1]
         coords[:, :, 1] = coords[:, :, 1] / image_size[0]
         return self._pe_encoding(coords.to(torch.float))
 
 
-# ---------------------------------------------------------------------------
-# Patch embedding
-# ---------------------------------------------------------------------------
+# ──────────────────────────────────────────────────────────────────────────
+# Patch embedding — conv proj, or unshuffle + MLP for some released ViTs
+# ──────────────────────────────────────────────────────────────────────────
 
 
 class PatchEmbed(nn.Module):
@@ -438,6 +525,8 @@ class PatchEmbed(nn.Module):
         self.norm = norm_layer(embed_dim) if norm_layer else nn.Identity()
 
     def reset_parameters(self) -> None:
+        """Uniform init scaled by fan-in of the patch convolution (checkpoint match)."""
+
         k = 1 / (self.in_chans * (self.patch_size[0] ** 2))
         nn.init.uniform_(self.proj.weight, -math.sqrt(k), math.sqrt(k))
         if self.proj.bias is not None:
@@ -465,6 +554,8 @@ class PatchEmbed(nn.Module):
         return x
 
     def flops(self) -> float:
+        """Report conv + optional norm FLOPs for the *nominal* ``img_size`` grid."""
+
         ho, wo = self.patches_resolution
         flops = ho * wo * self.embed_dim * self.in_chans * (self.patch_size[0] * self.patch_size[1])
         if self.norm is not None:
@@ -484,6 +575,12 @@ class PatchEmbed_Mlp(PatchEmbed):
         norm_layer: Optional[Callable[..., nn.Module]] = None,
         flatten_embedding: bool = True,
     ) -> None:
+        """Replace the conv ``proj`` with unshuffle + MLP; requires a square patch.
+
+        Raises:
+            ValueError: ``patch_size`` is not square.
+        """
+
         super().__init__(img_size, patch_size, in_chans, embed_dim, norm_layer, flatten_embedding)
         patch_hw = make_2tuple(patch_size)
         if patch_hw[0] != patch_hw[1]:
@@ -501,10 +598,18 @@ class PixelUnshuffle(nn.Module):
     """Module wrapper for ``torch.nn.functional.pixel_unshuffle``."""
 
     def __init__(self, downscale_factor: int) -> None:
+        """Keep ``downscale_factor`` as a buffer-free attribute so meta init works."""
+
         super().__init__()
         self.downscale_factor = int(downscale_factor)
 
     def forward(self, value: Tensor) -> Tensor:
+        """Unshuffle ``[B, C, H, W]``; empty tensors use ``view`` because F. fails.
+
+        Raises:
+            ValueError: empty input spatial dims are 0 or not divisible by the factor.
+        """
+
         if value.numel() == 0:
             channels, height, width = value.shape[-3:]
             factor = self.downscale_factor
@@ -520,19 +625,25 @@ class Permute(nn.Module):
     dims: tuple[int, ...]
 
     def __init__(self, dims: tuple[int, ...]) -> None:
+        """Record axes as a tuple so the module is picklable and checkpoint-stable."""
+
         super().__init__()
         self.dims = tuple(dims)
 
     def __repr__(self) -> str:
+        """Compact ``Permute(0, 2, 3, 1)`` form used in PatchEmbed_Mlp graphs."""
+
         return f"Permute{self.dims}"
 
     def forward(self, value: Tensor) -> Tensor:
+        """Apply the stored axis permutation; no shape validation (caller contract)."""
+
         return value.permute(*self.dims)
 
 
-# ---------------------------------------------------------------------------
-# SwiGLU feed-forward
-# ---------------------------------------------------------------------------
+# ──────────────────────────────────────────────────────────────────────────
+# SwiGLU feed-forward — w12/w3 names; fused variant rounds for tensor cores
+# ──────────────────────────────────────────────────────────────────────────
 
 
 class SwiGLUFFN(nn.Module):
@@ -547,6 +658,8 @@ class SwiGLUFFN(nn.Module):
         drop: float = 0.0,
         bias: bool = True,
     ) -> None:
+        """``act_layer`` / ``drop`` are accepted for MLP-factory compatibility and ignored."""
+
         super().__init__()
         del act_layer, drop
         out_features = out_features or in_features
@@ -555,6 +668,8 @@ class SwiGLUFFN(nn.Module):
         self.w3 = nn.Linear(hidden_features, out_features, bias=bias)
 
     def forward(self, x: Tensor) -> Tensor:
+        """Last-dim SwiGLU matching the ``w12`` / ``w3`` checkpoint split."""
+
         x12 = self.w12(x)
         x1, x2 = x12.chunk(2, dim=-1)
         return self.w3(F.silu(x1) * x2)
@@ -590,6 +705,7 @@ class SwiGLUFFNFused(SwiGLU):
         """
         out_features = out_features or in_features
         hidden_features = hidden_features or in_features
+        # SwiGLU paper 2/3 width, then round up to a multiple of 8 for tensor cores.
         hidden_features = (int(hidden_features * 2 / 3) + 7) // 8 * 8
         super().__init__(
             in_features=in_features,
@@ -602,7 +718,11 @@ class SwiGLUFFNFused(SwiGLU):
 
 
 def _ntuple(n: int):
+    """Build a parser that repeats scalars to length ``n`` and tuples sequences."""
+
     def parse(value):
+        """Return an n-tuple; strings are treated as scalars, not iterables."""
+
         if isinstance(value, collections.abc.Iterable) and not isinstance(value, str):
             return tuple(value)
         return tuple(repeat(value, n))

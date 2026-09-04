@@ -1,4 +1,16 @@
-"""Native checkpoint-compatible HunyuanVideo diffusion transformer."""
+"""Native checkpoint-compatible HunyuanVideo MM-DiT.
+
+Architecture
+------------
+``PatchEmbed`` is a stride-``(1,2,2)`` Conv3d: ``B C T H W`` → ``B (T'H'W') C``.
+Text tokens are refined by :class:`SingleTokenRefiner` (AdaLN self-attn
+stack).  Early :class:`MMDoubleStreamBlock` layers keep video (stream A)
+and text (stream B) in separate AdaLN/QKV paths, then concatenate QKV
+for joint attention.  Later :class:`MMSingleStreamBlock` layers operate
+on the concatenated ``B S C`` sequence.  Optional token-replace
+modulation applies a different AdaLN vector to a prefix (i2v first
+frame).  :class:`FinalLayer` unpatchifies back to ``B C T H W``.
+"""
 
 from functools import partial
 
@@ -30,38 +42,23 @@ attention = partial(flattened_attention, backend="torch")
 
 
 class PatchEmbed(torch.nn.Module):
-    """Patch embed implementation."""
-    def __init__(self, patch_size=(1, 2, 2), in_channels=16, embed_dim=3072):
-        """Init.
+    """3D patch embed: ``B C T H W`` → ``B (T' H' W') C`` via strided Conv3d."""
 
-        Args:
-            patch_size: The patch size.
-            in_channels: The in channels.
-            embed_dim: The embed dim.
-        """
+    def __init__(self, patch_size=(1, 2, 2), in_channels=16, embed_dim=3072):
         super().__init__()
         self.proj = torch.nn.Conv3d(in_channels, embed_dim, kernel_size=patch_size, stride=patch_size)
 
     def forward(self, x):
-        """Forward.
-
-        Args:
-            x: The x.
-        """
+        """Flatten the patch grid onto the sequence axis after the conv."""
         x = self.proj(x)
         x = x.flatten(2).transpose(1, 2)
         return x
 
 
 class IndividualTokenRefinerBlock(torch.nn.Module):
-    """Individual token refiner block implementation."""
-    def __init__(self, hidden_size=3072, num_heads=24):
-        """Init.
+    """One AdaLN-gated self-attn + MLP layer inside the text token refiner."""
 
-        Args:
-            hidden_size: The hidden size.
-            num_heads: The num heads.
-        """
+    def __init__(self, hidden_size=3072, num_heads=24):
         super().__init__()
         self.num_heads = num_heads
         self.norm1 = torch.nn.LayerNorm(hidden_size, elementwise_affine=True, eps=1e-6)
@@ -80,13 +77,7 @@ class IndividualTokenRefinerBlock(torch.nn.Module):
         )
 
     def forward(self, x, c, attn_mask=None):
-        """Forward.
-
-        Args:
-            x: The x.
-            c: The c.
-            attn_mask: The attn mask.
-        """
+        """Refine ``B L C`` text tokens; ``c`` is pooled timestep+context AdaLN."""
         gate_msa, gate_mlp = self.adaLN_modulation(c).chunk(2, dim=1)
 
         norm_x = self.norm1(x)
@@ -103,15 +94,9 @@ class IndividualTokenRefinerBlock(torch.nn.Module):
 
 
 class SingleTokenRefiner(torch.nn.Module):
-    """Single token refiner implementation."""
-    def __init__(self, in_channels=4096, hidden_size=3072, depth=2):
-        """Init.
+    """Project LLM text embeddings and refine them before the MM-DiT stack."""
 
-        Args:
-            in_channels: The in channels.
-            hidden_size: The hidden size.
-            depth: The depth.
-        """
+    def __init__(self, in_channels=4096, hidden_size=3072, depth=2):
         super().__init__()
         self.input_embedder = torch.nn.Linear(in_channels, hidden_size, bias=True)
         self.t_embedder = TimestepEmbeddings(256, hidden_size, computation_device="cpu")
@@ -123,13 +108,7 @@ class SingleTokenRefiner(torch.nn.Module):
         self.blocks = torch.nn.ModuleList([IndividualTokenRefinerBlock(hidden_size=hidden_size) for _ in range(depth)])
 
     def forward(self, x, t, mask=None):
-        """Forward.
-
-        Args:
-            x: The x.
-            t: The t.
-            mask: The mask.
-        """
+        """``x`` is ``B L C_text``; ``mask`` builds a causal-safe pairwise attn mask."""
         timestep_aware_representations = self.t_embedder(t, dtype=torch.float32)
 
         mask_float = mask.float().unsqueeze(-1)
@@ -151,15 +130,9 @@ class SingleTokenRefiner(torch.nn.Module):
 
 
 class MMDoubleStreamBlockComponent(torch.nn.Module):
-    """Mm double stream block component implementation."""
-    def __init__(self, hidden_size=3072, heads_num=24, mlp_width_ratio=4):
-        """Init.
+    """One MM-DiT stream (video or text): AdaLN, QKV, then gated residual FFN."""
 
-        Args:
-            hidden_size: The hidden size.
-            heads_num: The heads num.
-            mlp_width_ratio: The mlp width ratio.
-        """
+    def __init__(self, hidden_size=3072, heads_num=24, mlp_width_ratio=4):
         super().__init__()
         self.heads_num = heads_num
 
@@ -179,15 +152,7 @@ class MMDoubleStreamBlockComponent(torch.nn.Module):
         )
 
     def forward(self, hidden_states, conditioning, freqs_cis=None, token_replace_vec=None, tr_token=None):
-        """Forward.
-
-        Args:
-            hidden_states: The hidden states.
-            conditioning: The conditioning.
-            freqs_cis: The freqs cis.
-            token_replace_vec: The token replace vec.
-            tr_token: The tr token.
-        """
+        """Return ``((q,k,v), attn/ff gates, token-replace gates)`` for joint attention."""
         mod1_shift, mod1_scale, mod1_gate, mod2_shift, mod2_scale, mod2_gate = self.mod(conditioning).chunk(6, dim=-1)
         if token_replace_vec is not None:
             assert tr_token is not None
@@ -215,15 +180,7 @@ class MMDoubleStreamBlockComponent(torch.nn.Module):
         return (q, k, v), (mod1_gate, mod2_shift, mod2_scale, mod2_gate), (tr_mod1_gate, tr_mod2_shift, tr_mod2_scale, tr_mod2_gate)
 
     def process_ff(self, hidden_states, attn_output, mod, mod_tr=None, tr_token=None):
-        """Process ff.
-
-        Args:
-            hidden_states: The hidden states.
-            attn_output: The attn output.
-            mod: The mod.
-            mod_tr: The mod tr.
-            tr_token: The tr token.
-        """
+        """Apply gated attn residual then AdaLN-modulated FFN on ``B S C``."""
         mod1_gate, mod2_shift, mod2_scale, mod2_gate = mod
         if mod_tr is not None:
             tr_mod1_gate, tr_mod2_shift, tr_mod2_scale, tr_mod2_gate = mod_tr
@@ -245,15 +202,9 @@ class MMDoubleStreamBlockComponent(torch.nn.Module):
 
 
 class MMDoubleStreamBlock(torch.nn.Module):
-    """Mm double stream block implementation."""
-    def __init__(self, hidden_size=3072, heads_num=24, mlp_width_ratio=4):
-        """Init.
+    """Dual-stream MM-DiT block: separate AdaLN/QKV, joint attention, separate FFN."""
 
-        Args:
-            hidden_size: The hidden size.
-            heads_num: The heads num.
-            mlp_width_ratio: The mlp width ratio.
-        """
+    def __init__(self, hidden_size=3072, heads_num=24, mlp_width_ratio=4):
         super().__init__()
         self.component_a = MMDoubleStreamBlockComponent(hidden_size, heads_num, mlp_width_ratio)
         self.component_b = MMDoubleStreamBlockComponent(hidden_size, heads_num, mlp_width_ratio)
@@ -271,20 +222,7 @@ class MMDoubleStreamBlock(torch.nn.Module):
         max_seqlen_q=None,
         max_seqlen_kv=None,
     ):
-        """Forward.
-
-        Args:
-            hidden_states_a: The hidden states a.
-            hidden_states_b: The hidden states b.
-            conditioning: The conditioning.
-            freqs_cis: The freqs cis.
-            token_replace_vec: The token replace vec.
-            tr_token: The tr token.
-            cu_seqlens_q: Packed query sequence offsets.
-            cu_seqlens_kv: Packed key/value sequence offsets.
-            max_seqlen_q: Maximum packed query length.
-            max_seqlen_kv: Maximum packed key/value length.
-        """
+        """Joint-attend video stream A and text stream B; return updated ``B S C`` pairs."""
         (q_a, k_a, v_a), mod_a, mod_tr = self.component_a(hidden_states_a, conditioning, freqs_cis, token_replace_vec, tr_token)
         (q_b, k_b, v_b), mod_b, _ = self.component_b(hidden_states_b, conditioning, freqs_cis=None)
 
@@ -310,15 +248,9 @@ class MMDoubleStreamBlock(torch.nn.Module):
 
 
 class MMSingleStreamBlockOriginal(torch.nn.Module):
-    """Mm single stream block original implementation."""
-    def __init__(self, hidden_size=3072, heads_num=24, mlp_width_ratio=4):
-        """Init.
+    """Legacy fused QKV+MLP single-stream block (kept for checkpoint compatibility)."""
 
-        Args:
-            hidden_size: The hidden size.
-            heads_num: The heads num.
-            mlp_width_ratio: The mlp width ratio.
-        """
+    def __init__(self, hidden_size=3072, heads_num=24, mlp_width_ratio=4):
         super().__init__()
         self.hidden_size = hidden_size
         self.heads_num = heads_num
@@ -336,14 +268,7 @@ class MMSingleStreamBlockOriginal(torch.nn.Module):
         self.modulation = DiTModulation(hidden_size, factor=3, zero_init=False)
 
     def forward(self, x, vec, freqs_cis=None, txt_len=256):
-        """Forward.
-
-        Args:
-            x: The x.
-            vec: The vec.
-            freqs_cis: The freqs cis.
-            txt_len: The txt len.
-        """
+        """Attend concatenated ``B (S_img+S_txt) C``; RoPE is applied only to the video prefix."""
         mod_shift, mod_scale, mod_gate = self.modulation(vec).chunk(3, dim=-1)
         x_mod = modulate(self.pre_norm(x), shift=mod_shift, scale=mod_scale)
         qkv, mlp = torch.split(self.linear1(x_mod), [3 * self.hidden_size, self.mlp_hidden_dim], dim=-1)
@@ -366,15 +291,9 @@ class MMSingleStreamBlockOriginal(torch.nn.Module):
 
 
 class MMSingleStreamBlock(torch.nn.Module):
-    """Mm single stream block implementation."""
-    def __init__(self, hidden_size=3072, heads_num=24, mlp_width_ratio=4):
-        """Init.
+    """Concatenated video+text DiT block; RoPE covers the video prefix only."""
 
-        Args:
-            hidden_size: The hidden size.
-            heads_num: The heads num.
-            mlp_width_ratio: The mlp width ratio.
-        """
+    def __init__(self, hidden_size=3072, heads_num=24, mlp_width_ratio=4):
         super().__init__()
         self.heads_num = heads_num
 
@@ -405,20 +324,7 @@ class MMSingleStreamBlock(torch.nn.Module):
         max_seqlen_q=None,
         max_seqlen_kv=None,
     ):
-        """Forward.
-
-        Args:
-            hidden_states: The hidden states.
-            conditioning: The conditioning.
-            freqs_cis: The freqs cis.
-            txt_len: The txt len.
-            token_replace_vec: The token replace vec.
-            tr_token: The tr token.
-            cu_seqlens_q: Packed query sequence offsets.
-            cu_seqlens_kv: Packed key/value sequence offsets.
-            max_seqlen_q: Maximum packed query length.
-            max_seqlen_kv: Maximum packed key/value length.
-        """
+        """Run gated self-attn + FFN on the joint ``B S C`` sequence."""
         mod_shift, mod_scale, mod_gate = self.mod(conditioning).chunk(3, dim=-1)
         if token_replace_vec is not None:
             assert tr_token is not None
@@ -464,15 +370,9 @@ class MMSingleStreamBlock(torch.nn.Module):
 
 
 class FinalLayer(torch.nn.Module):
-    """Final layer implementation."""
-    def __init__(self, hidden_size=3072, patch_size=(1, 2, 2), out_channels=16):
-        """Init.
+    """AdaLN + linear unpatch projection to ``pt*ph*pw*C`` per video token."""
 
-        Args:
-            hidden_size: The hidden size.
-            patch_size: The patch size.
-            out_channels: The out channels.
-        """
+    def __init__(self, hidden_size=3072, patch_size=(1, 2, 2), out_channels=16):
         super().__init__()
 
         self.norm_final = torch.nn.LayerNorm(hidden_size, elementwise_affine=False, eps=1e-6)
@@ -481,12 +381,7 @@ class FinalLayer(torch.nn.Module):
         self.adaLN_modulation = torch.nn.Sequential(torch.nn.SiLU(), torch.nn.Linear(hidden_size, 2 * hidden_size))
 
     def forward(self, x, c):
-        """Forward.
-
-        Args:
-            x: The x.
-            c: The c.
-        """
+        """Map video tokens ``B S C`` to packed patch channels using timestep AdaLN ``c``."""
         shift, scale = self.adaLN_modulation(c).chunk(2, dim=1)
         x = modulate(self.norm_final(x), shift=shift, scale=scale)
         x = self.linear(x)
@@ -494,18 +389,9 @@ class FinalLayer(torch.nn.Module):
 
 
 class HunyuanVideoDiT(torch.nn.Module):
-    """Hunyuan video di t implementation."""
-    def __init__(self, in_channels=16, hidden_size=3072, text_dim=4096, num_double_blocks=20, num_single_blocks=40, guidance_embed=True):
-        """Init.
+    """Checkpoint-compatible HunyuanVideo MM-DiT (double then single stream)."""
 
-        Args:
-            in_channels: The in channels.
-            hidden_size: The hidden size.
-            text_dim: The text dim.
-            num_double_blocks: The num double blocks.
-            num_single_blocks: The num single blocks.
-            guidance_embed: The guidance embed.
-        """
+    def __init__(self, in_channels=16, hidden_size=3072, text_dim=4096, num_double_blocks=20, num_single_blocks=40, guidance_embed=True):
         super().__init__()
         self.img_in = PatchEmbed(in_channels=in_channels, embed_dim=hidden_size)
         self.txt_in = SingleTokenRefiner(in_channels=text_dim, hidden_size=hidden_size)
@@ -528,24 +414,13 @@ class HunyuanVideoDiT(torch.nn.Module):
         self.rope_dim_list = [16, 56, 56]
 
     def unpatchify(self, x, T, H, W):
-        """Unpatchify.
-
-        Args:
-            x: The x.
-            T: The t.
-            H: The h.
-            W: The w.
-        """
+        """Fold ``B (T'H'W') (C·1·2·2)`` tokens back to ``B C T H W`` (patch ``(1,2,2)``)."""
         x = rearrange(x, "B (T H W) (C pT pH pW) -> B C (T pT) (H pH) (W pW)", H=H, W=W, pT=1, pH=2, pW=2)
         return x
 
 
     def prepare_freqs(self, latents):
-        """Prepare freqs.
-
-        Args:
-            latents: The latents.
-        """
+        """Build 3-axis RoPE for the post-patch ``(T, H/2, W/2)`` lattice from ``B C T H W``."""
         return get_nd_rotary_pos_embed(
             [16, 56, 56],
             [latents.shape[2], latents.shape[3] // 2, latents.shape[4] // 2],
@@ -567,18 +442,7 @@ class HunyuanVideoDiT(torch.nn.Module):
         guidance: torch.Tensor = None,
         **kwargs
     ):
-        """Forward.
-
-        Args:
-            x: The x.
-            t: The t.
-            prompt_emb: The prompt emb.
-            text_mask: The text mask.
-            pooled_prompt_emb: The pooled prompt emb.
-            freqs_cos: The freqs cos.
-            freqs_sin: The freqs sin.
-            guidance: The guidance.
-        """
+        """Denoise ``B C T H W`` latents; return residual in the same layout."""
         B, C, T, H, W = x.shape
 
         vec = self.time_in(t, dtype=torch.float32) + self.vector_in(pooled_prompt_emb)

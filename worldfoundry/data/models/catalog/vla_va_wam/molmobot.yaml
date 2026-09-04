@@ -17,6 +17,8 @@ integration:
 license: apache-2.0
 name: MolmoBot
 official_sources:
+  paper: https://arxiv.org/abs/2603.16861
+  project_page: https://allenai.github.io/MolmoBot
   github:
     head_sha: 33c0ca77bf60
     url: https://github.com/allenai/MolmoBot

@@ -1,3 +1,9 @@
+"""DreamX-World Wan transformer (official packing + ProPE option).
+
+Wan 2.x Fun-style stem with optional :class:`PropeSelfAttention`.
+Causal rollout is :mod:`.causal`.  Adds optional pose RoPE; no VACE.
+"""
+
 import glob
 import json
 import math
@@ -506,9 +512,7 @@ class WanTransformer3DModel(
     nn.Module,
     NativeConfigMixin,
 ):
-    r"""
-    Wan diffusion backbone supporting both text-to-video and image-to-video.
-    """
+    r"""DreamX-World Wan transformer (optional ProPE self-attention)."""
 
     # ignore_for_config = [
     #     'patch_size', 'cross_attn_norm', 'qk_norm', 'text_dim', 'window_size'
@@ -837,9 +841,7 @@ class WanTransformer3DModel(
         return x
 
 class Wan2_2Transformer3DModel(WanTransformer3DModel):
-    r"""
-    Wan diffusion backbone supporting both text-to-video and image-to-video.
-    """
+    r"""DreamX-World Wan 2.2 transformer subclass."""
 
     # ignore_for_config = [
     #     'patch_size', 'cross_attn_norm', 'qk_norm', 'text_dim', 'window_size'

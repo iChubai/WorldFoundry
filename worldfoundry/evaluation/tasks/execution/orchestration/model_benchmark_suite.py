@@ -1113,8 +1113,8 @@ def _write_empty_comparison(
             "comparison_markdown": str(output_md.resolve()),
         },
     }
-    write_json(output_json, payload, atomic=False)
-    write_text(output_md, build_markdown_comparison(payload), atomic=False)
+    write_json(output_json, payload)
+    write_text(output_md, build_markdown_comparison(payload))
     return payload
 
 
@@ -1135,7 +1135,7 @@ def _write_suite_artifacts(root: Path, cells: Sequence[Mapping[str, Any]]) -> di
         "scorecard_count": len(scorecard_rows),
         "rows": scorecard_rows,
     }
-    write_json(scorecards_json, scorecards_payload, atomic=False)
+    write_json(scorecards_json, scorecards_payload)
     write_jsonl(scorecards_jsonl, scorecard_rows, atomic=False)
 
     summary_paths, labels = _run_summary_paths_and_labels(cells)
@@ -1145,7 +1145,7 @@ def _write_suite_artifacts(root: Path, cells: Sequence[Mapping[str, Any]]) -> di
     index_html = root / "index" / "index.html"
     index_roots: Sequence[str | Path] = summary_paths if summary_paths else (root,)
     index = write_run_index(index_roots, output_json=index_json, output_jsonl=index_jsonl)
-    write_text(index_md, build_markdown_run_index(index), atomic=False)
+    write_text(index_md, build_markdown_run_index(index))
     write_run_browser(index, index_html)
 
     comparison_json = root / "comparison" / "comparison.json"
@@ -1318,7 +1318,7 @@ def _run_model_cells(
 
                 runner_state: dict[str, Any] = {"reused": None, "reset": None, "memo_before": None}
 
-                def acquire_runner() -> Any:
+                def acquire_runner(plan=plan, runner_state=runner_state) -> Any:
                     nonlocal resolved_runner, runner_use_count
                     if resolved_runner is None:
                         resolved_runner = _resolve_suite_model_runner(request, plan)
@@ -1710,8 +1710,8 @@ def run_model_benchmark_suite(
     }
     manifest_path = root / "suite_manifest.json"
     report_path = root / "suite_report.md"
-    write_json(manifest_path, payload, atomic=False)
-    write_text(report_path, build_markdown_suite_report(payload), atomic=False)
+    write_json(manifest_path, payload)
+    write_text(report_path, build_markdown_suite_report(payload))
     return ModelBenchmarkSuiteResult(
         schema_version=MODEL_BENCHMARK_SUITE_RESULT_SCHEMA_VERSION,
         status=status,

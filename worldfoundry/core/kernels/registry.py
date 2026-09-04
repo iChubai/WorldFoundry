@@ -1,10 +1,27 @@
 """Runtime registry for optional in-tree accelerator kernels.
 
-The registry deliberately keeps the PyTorch implementation as the semantic
-source of truth.  Accelerator kernels are selected per workload signature and
-failed signatures are quarantined, so one unsupported shape does not disable a
-backend globally.  CUDA out-of-memory errors are never converted into a silent
-fallback because retrying usually increases peak memory.
+PyTorch remains the semantic source of truth. A Triton / native kernel is
+chosen per workload signature; a failed signature is quarantined so one
+bad shape does not disable the backend globally. CUDA OOM is never turned
+into a silent fallback — retrying usually raises peak memory.
+
+Callers use :mod:`worldfoundry.core.kernels.diffusion` public ops, not
+this registry directly. :func:`kernel_dispatch_report` /
+``clear_kernel_dispatch_cache`` (on the diffusion facade) reset the cache
+after a device change or a hot-reloaded extension.
+
+Not this module:
+    Persistent winner JSON lives in :mod:`.autotune_cache`. Capability
+    profiles live in :mod:`.capabilities`. Operator-facing thresholds live
+    in :mod:`.diffusion`.
+
+Public surface:
+
+- :data:`KERNEL_REGISTRY` — process-wide candidate table.
+- :func:`kernel_dispatch_receipt_scope` — request-local execution receipt.
+- :func:`kernel_autotune_enabled` / :func:`kernel_dispatch_report` /
+  :func:`clear_kernel_dispatch_cache`.
+- :class:`KernelNotSupported` — wrapper-raised contract miss (quarantined).
 """
 
 from __future__ import annotations
@@ -13,12 +30,84 @@ import os
 import threading
 import warnings
 from collections import OrderedDict, defaultdict, deque
+from collections.abc import Iterator, MutableMapping
+from contextlib import contextmanager
+from contextvars import ContextVar
 from dataclasses import dataclass
 from statistics import median
 from typing import Any, Callable
 
 KernelCallable = Callable[..., Any]
 KernelPredicate = Callable[..., bool]
+
+_KERNEL_DISPATCH_RECEIPT: ContextVar[MutableMapping[str, Any] | None] = ContextVar(
+    "worldfoundry_kernel_dispatch_receipt",
+    default=None,
+)
+
+
+# ──────────────────────────────────────────────────────────────────────────
+# Request-local receipts — prove a cached selection actually executed
+# ──────────────────────────────────────────────────────────────────────────
+
+
+@contextmanager
+def kernel_dispatch_receipt_scope(
+    receipt: MutableMapping[str, Any],
+) -> Iterator[None]:
+    """Capture the concrete implementation selected by logical kernel calls.
+
+    The registry's selection cache is useful diagnostic state, but by itself it
+    does not prove that a request executed a cached implementation.  A model
+    optimization can use this request-local scope around its public kernel call
+    and retain an execution receipt without changing tensor return values.
+    Context variables keep concurrent Workspace jobs isolated.
+    """
+
+    token = _KERNEL_DISPATCH_RECEIPT.set(receipt)
+    try:
+        yield
+    finally:
+        _KERNEL_DISPATCH_RECEIPT.reset(token)
+
+
+def _publish_dispatch_receipt(
+    *,
+    op: str,
+    implementation: str,
+    backend: str,
+    accelerated: bool,
+    fallback: bool,
+    cache_hit: bool,
+    failures: list[str],
+    quarantined: list[str],
+    reason: str | None = None,
+) -> None:
+    """Append one dispatch event when a request-local receipt scope is active.
+
+    Failure: a non-list ``dispatches`` bag raises :class:`TypeError` so a
+    corrupted receipt is not silently dropped.
+    """
+
+    receipt = _KERNEL_DISPATCH_RECEIPT.get()
+    if receipt is None:
+        return
+    dispatches = receipt.setdefault("dispatches", [])
+    if not isinstance(dispatches, list):
+        raise TypeError("kernel dispatch receipt 'dispatches' must be a list")
+    dispatches.append(
+        {
+            "op": str(op),
+            "implementation": str(implementation),
+            "backend": str(backend),
+            "accelerated": bool(accelerated),
+            "fallback": bool(fallback),
+            "cache_hit": bool(cache_hit),
+            "failures": list(failures),
+            "quarantined": list(quarantined),
+            "reason": reason,
+        }
+    )
 
 
 def _outputs_equivalent(reference: Any, candidate: Any) -> bool:
@@ -69,6 +158,11 @@ def _outputs_equivalent(reference: Any, candidate: Any) -> bool:
         return False
 
 
+# ──────────────────────────────────────────────────────────────────────────
+# Candidate table — priority then name; autotune is opt-in per registration
+# ──────────────────────────────────────────────────────────────────────────
+
+
 class KernelNotSupported(RuntimeError):
     """Raised by a kernel wrapper when a workload is outside its contract."""
 
@@ -90,6 +184,8 @@ class KernelRegistry:
     """Select accelerator kernels while retaining an explicit fallback."""
 
     def __init__(self, *, failure_limit: int = 1024, selection_limit: int = 4096) -> None:
+        """Bound quarantine and selection caches so a long process cannot grow without limit."""
+
         self._candidates: dict[str, list[KernelCandidate]] = defaultdict(list)
         self._failures: set[tuple[object, ...]] = set()
         self._failure_order: deque[tuple[object, ...]] = deque()
@@ -111,6 +207,8 @@ class KernelRegistry:
         priority: int = 0,
         autotune: bool = False,
     ) -> KernelCandidate:
+        """Register one implementation; duplicate ``name`` for the same op is refused."""
+
         candidate = KernelCandidate(
             op=str(op),
             backend=str(backend),
@@ -127,6 +225,32 @@ class KernelRegistry:
         entries.sort(key=lambda item: (-item.priority, item.name))
         return candidate
 
+    @staticmethod
+    def _invoke_candidate(
+        candidate: KernelCandidate,
+        args: tuple[Any, ...],
+        kwargs: dict[str, Any],
+    ) -> Any:
+        """Run a CUDA candidate with the input tensor's device made current.
+
+        Workspace can execute jobs for several GPUs in different threads of
+        one process. Triton launches use the calling thread's current CUDA
+        context, which is not necessarily the device that owns the input
+        pointer. PyTorch operators normally install their own device guard;
+        optional custom candidates need the same protection here.
+        """
+
+        import torch
+
+        tensor = next(
+            (value for value in (*args, *kwargs.values()) if isinstance(value, torch.Tensor) and value.is_cuda),
+            None,
+        )
+        if tensor is None:
+            return candidate.implementation(*args, **kwargs)
+        with torch.cuda.device(tensor.device):
+            return candidate.implementation(*args, **kwargs)
+
     def dispatch(
         self,
         op: str,
@@ -135,20 +259,64 @@ class KernelRegistry:
         signature: tuple[object, ...],
         **kwargs: Any,
     ) -> Any:
+        """Select a candidate or *fallback* for one workload *signature*.
+
+        Cache key is ``(op, requested backend, autotune flag, *signature)``.
+        Optional-kernel failures quarantine that signature; CUDA OOM,
+        :class:`KeyboardInterrupt`, and :class:`SystemExit` always re-raise.
+        """
+
         requested = os.getenv("WORLDFOUNDRY_KERNEL_BACKEND", "auto").strip().casefold() or "auto"
+        failures: list[str] = []
+        quarantined: list[str] = []
         if requested in {"torch", "pytorch", "native", "off", "disabled"}:
-            return fallback(*args, **kwargs)
+            result = fallback(*args, **kwargs)
+            _publish_dispatch_receipt(
+                op=op,
+                implementation="torch",
+                backend="torch",
+                accelerated=False,
+                fallback=True,
+                cache_hit=False,
+                failures=failures,
+                quarantined=quarantined,
+                reason="torch backend explicitly requested",
+            )
+            return result
 
         selection_key = (op, requested, kernel_autotune_enabled(), *signature)
         cached, cache_hit = self._cached_selection(selection_key)
         skipped: set[str] = set()
         if cache_hit:
             if cached is None:
-                return fallback(*args, **kwargs)
+                result = fallback(*args, **kwargs)
+                _publish_dispatch_receipt(
+                    op=op,
+                    implementation="torch",
+                    backend="torch",
+                    accelerated=False,
+                    fallback=True,
+                    cache_hit=True,
+                    failures=failures,
+                    quarantined=quarantined,
+                    reason="cached torch selection",
+                )
+                return result
             failure_key = (cached.name, *signature)
             if failure_key not in self._failures:
                 try:
-                    return cached.implementation(*args, **kwargs)
+                    result = self._invoke_candidate(cached, args, kwargs)
+                    _publish_dispatch_receipt(
+                        op=op,
+                        implementation=cached.name,
+                        backend=cached.backend,
+                        accelerated=True,
+                        fallback=False,
+                        cache_hit=True,
+                        failures=failures,
+                        quarantined=quarantined,
+                    )
+                    return result
                 except BaseException as exc:
                     if _is_out_of_memory(exc) or isinstance(exc, (KeyboardInterrupt, SystemExit)):
                         raise
@@ -163,7 +331,10 @@ class KernelRegistry:
                         RuntimeWarning,
                         stacklevel=3,
                     )
+                    failures.append(f"{cached.name}: {type(exc).__name__}: {exc}")
                     skipped.add(cached.name)
+            else:
+                quarantined.append(cached.name)
 
         for candidate in self._candidates.get(op, ()):
             if candidate.name in skipped:
@@ -172,6 +343,7 @@ class KernelRegistry:
                 continue
             failure_key = (candidate.name, *signature)
             if failure_key in self._failures:
+                quarantined.append(candidate.name)
                 continue
             try:
                 if not candidate.predicate(*args, **kwargs):
@@ -186,9 +358,42 @@ class KernelRegistry:
                     )
                     self._remember_selection(selection_key, selected)
                     self._remember_autotune(selection_key, record)
+                    if selected is None:
+                        _publish_dispatch_receipt(
+                            op=op,
+                            implementation="torch",
+                            backend="torch",
+                            accelerated=False,
+                            fallback=True,
+                            cache_hit=bool(record.get("cache_hit")),
+                            failures=failures,
+                            quarantined=quarantined,
+                            reason=f"autotune winner: {record.get('winner', 'torch')}",
+                        )
+                    else:
+                        _publish_dispatch_receipt(
+                            op=op,
+                            implementation=selected.name,
+                            backend=selected.backend,
+                            accelerated=True,
+                            fallback=False,
+                            cache_hit=bool(record.get("cache_hit")),
+                            failures=failures,
+                            quarantined=quarantined,
+                        )
                     return result
-                result = candidate.implementation(*args, **kwargs)
+                result = self._invoke_candidate(candidate, args, kwargs)
                 self._remember_selection(selection_key, candidate)
+                _publish_dispatch_receipt(
+                    op=op,
+                    implementation=candidate.name,
+                    backend=candidate.backend,
+                    accelerated=True,
+                    fallback=False,
+                    cache_hit=False,
+                    failures=failures,
+                    quarantined=quarantined,
+                )
                 return result
             except BaseException as exc:
                 if _is_out_of_memory(exc) or isinstance(exc, (KeyboardInterrupt, SystemExit)):
@@ -203,8 +408,21 @@ class KernelRegistry:
                     RuntimeWarning,
                     stacklevel=3,
                 )
+                failures.append(f"{candidate.name}: {type(exc).__name__}: {exc}")
         self._remember_selection(selection_key, None)
-        return fallback(*args, **kwargs)
+        result = fallback(*args, **kwargs)
+        _publish_dispatch_receipt(
+            op=op,
+            implementation="torch",
+            backend="torch",
+            accelerated=False,
+            fallback=True,
+            cache_hit=False,
+            failures=failures,
+            quarantined=quarantined,
+            reason="no accelerated candidate completed",
+        )
+        return result
 
     def _autotune_candidate(
         self,
@@ -259,7 +477,7 @@ class KernelRegistry:
                 }
             )
             selected = candidate if winner == candidate.name else None
-            result = candidate.implementation(*args, **kwargs) if selected is not None else fallback(*args, **kwargs)
+            result = self._invoke_candidate(candidate, args, kwargs) if selected is not None else fallback(*args, **kwargs)
             return selected, result, record
 
         try:
@@ -285,6 +503,8 @@ class KernelRegistry:
         rounds = min(max(rounds, 1), 9)
 
         def elapsed_ms(function: KernelCallable) -> float:
+            """Time *iterations* launches after one warmup; requires a CUDA tensor."""
+
             warmup = function(*args, **kwargs)
             del warmup
             torch.cuda.synchronize(tensor.device)
@@ -376,7 +596,7 @@ class KernelRegistry:
             winner=winner,
             record=record,
         )
-        result = candidate.implementation(*args, **kwargs) if selected is not None else fallback(*args, **kwargs)
+        result = self._invoke_candidate(candidate, args, kwargs) if selected is not None else fallback(*args, **kwargs)
         return (
             selected,
             result,
@@ -413,6 +633,8 @@ class KernelRegistry:
             return
 
     def _cached_selection(self, key: tuple[object, ...]) -> tuple[KernelCandidate | None, bool]:
+        """LRU-touch one selection; ``(None, False)`` means the key was never stored."""
+
         with self._lock:
             if key not in self._selection_cache:
                 return None, False
@@ -421,6 +643,8 @@ class KernelRegistry:
             return selected, True
 
     def _remember_selection(self, key: tuple[object, ...], selected: KernelCandidate | None) -> None:
+        """Store *selected* (or explicit PyTorch ``None``) and evict the oldest entry."""
+
         with self._lock:
             self._selection_cache.pop(key, None)
             self._selection_cache[key] = selected
@@ -428,10 +652,14 @@ class KernelRegistry:
                 self._selection_cache.popitem(last=False)
 
     def _drop_selection(self, key: tuple[object, ...]) -> None:
+        """Forget one cached winner after a later optional-kernel failure."""
+
         with self._lock:
             self._selection_cache.pop(key, None)
 
     def _remember_autotune(self, key: tuple[object, ...], record: dict[str, object]) -> None:
+        """Retain one timing/mismatch record for :meth:`report` diagnostics."""
+
         with self._lock:
             self._autotune_records.pop(key, None)
             self._autotune_records[key] = record
@@ -439,6 +667,8 @@ class KernelRegistry:
                 self._autotune_records.popitem(last=False)
 
     def _remember_failure(self, key: tuple[object, ...], exc: BaseException) -> None:
+        """Quarantine one ``(candidate, *signature)`` so the next call skips it."""
+
         with self._lock:
             if key in self._failures:
                 return
@@ -451,8 +681,17 @@ class KernelRegistry:
             self._failure_messages[key] = f"{type(exc).__name__}: {exc}"
 
     def report(self) -> dict[str, object]:
+        """Snapshot candidates, cache occupancy, autotune winners, and quarantine text."""
+
         from worldfoundry.core.kernels.autotune_cache import persistent_selection_cache_info
 
+        selections: dict[str, dict[str, int]] = {}
+        with self._lock:
+            for key, candidate in self._selection_cache.items():
+                op = str(key[0])
+                implementation = "torch" if candidate is None else candidate.name
+                counts = selections.setdefault(op, {})
+                counts[implementation] = counts.get(implementation, 0) + 1
         return {
             "requested_backend": os.getenv("WORLDFOUNDRY_KERNEL_BACKEND", "auto"),
             "operators": {
@@ -468,6 +707,7 @@ class KernelRegistry:
                 for op, candidates in sorted(self._candidates.items())
             },
             "selection_cache_entries": len(self._selection_cache),
+            "selected_implementations": selections,
             "autotune_enabled": kernel_autotune_enabled(),
             "persistent_autotune_cache": persistent_selection_cache_info(),
             "autotune_records": tuple(self._autotune_records.values()),
@@ -476,6 +716,8 @@ class KernelRegistry:
         }
 
     def clear_failures(self) -> None:
+        """Drop quarantine, in-memory selections, and autotune records together."""
+
         with self._lock:
             self._failures.clear()
             self._failure_order.clear()
@@ -484,12 +726,26 @@ class KernelRegistry:
             self._autotune_records.clear()
 
 
+# ──────────────────────────────────────────────────────────────────────────
+# Failure classification — OOM re-raises; Triton/contract misses quarantine
+# ──────────────────────────────────────────────────────────────────────────
+
+
 def _is_out_of_memory(exc: BaseException) -> bool:
+    """Detect allocator failures that must not become a silent PyTorch fallback."""
+
     message = str(exc).casefold()
     return "out of memory" in message or "alloc_failed" in message or type(exc).__name__ == "OutOfMemoryError"
 
 
 def _is_optional_kernel_failure(exc: BaseException) -> bool:
+    """Return whether *exc* is a recoverable kernel-contract or compiler miss.
+
+    Genuine application :class:`RuntimeError` values (wrong shapes from the
+    caller) still propagate. Marker strings cover PTX / SM / Triton compile
+    failures that should not abort inference.
+    """
+
     if isinstance(exc, (ImportError, OSError, KernelNotSupported)):
         return True
     module = type(exc).__module__.casefold()
@@ -511,13 +767,25 @@ def _is_optional_kernel_failure(exc: BaseException) -> bool:
     return any(marker in message for marker in markers)
 
 
+# ──────────────────────────────────────────────────────────────────────────
+# Process-wide table — env gates for first-use timing vs forced PyTorch
+# ──────────────────────────────────────────────────────────────────────────
+
+
 KERNEL_REGISTRY = KernelRegistry()
 
 
 def kernel_autotune_enabled() -> bool:
-    """Return whether first-use eager kernel measurements are enabled."""
+    """Return whether first-use eager kernel measurements are enabled.
 
-    return os.getenv("WORLDFOUNDRY_KERNEL_AUTOTUNE", "").strip().casefold() in {
+    Prefer ``WORLDFOUNDRY_KERNEL_AUTOTUNE_ENABLED`` (XC-9). The older
+    ``WORLDFOUNDRY_KERNEL_AUTOTUNE`` name remains a fallback.
+    """
+
+    configured = os.getenv("WORLDFOUNDRY_KERNEL_AUTOTUNE_ENABLED")
+    if configured is None or not configured.strip():
+        configured = os.getenv("WORLDFOUNDRY_KERNEL_AUTOTUNE", "")
+    return configured.strip().casefold() in {
         "1",
         "true",
         "yes",
@@ -545,6 +813,7 @@ __all__ = [
     "KernelNotSupported",
     "KernelRegistry",
     "clear_kernel_dispatch_cache",
+    "kernel_dispatch_receipt_scope",
     "kernel_autotune_enabled",
     "kernel_dispatch_report",
 ]

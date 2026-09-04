@@ -1,0 +1,41 @@
+{
+  "id": "ctrl-world",
+  "tagline": {
+    "en": "An interactive, action-conditioned world model — roll out video that responds to the actions you feed it.",
+    "zh": "一个交互式、动作驱动的世界模型——展开对你输入动作作出响应的视频。"
+  },
+  "overview": {
+    "en": [
+      "Ctrl-World is an interactive world model: rather than generating a fixed clip, it rolls out video that responds to actions you supply, making it suited to game-style and action-conditioned world modeling. You steer the unfolding scene step by step.",
+      "It builds on a video-diffusion foundation, pairing a Stable Video Diffusion image-to-video backbone with a CLIP image encoder to condition and continue the rollout. The generation proceeds as a controllable sequence, so the model keeps producing frames as new actions arrive.",
+      "In WorldFoundry, Ctrl-World's source is vendored in-tree and exposed through a runtime pipeline: you provide the starting condition and actions, and it drives the rollout entrypoint. The checkpoints and task assets are staged separately before a full run."
+    ],
+    "zh": [
+      "Ctrl-World 是一个交互式世界模型：它不是生成一段固定片段，而是展开对你所提供动作作出响应的视频，因此适合游戏风格与动作驱动的世界建模。你逐步引导场景的推进。",
+      "它构建在视频扩散基础之上，把 Stable Video Diffusion 的图生视频骨干与 CLIP 图像编码器结合，用于条件化并延续 rollout。生成过程是一个可控序列，因而随着新动作到来，模型会持续产出帧。",
+      "在 WorldFoundry 中，Ctrl-World 的源码内置于代码库，并通过运行时 pipeline 对外提供：你给出起始条件和动作，它便驱动 rollout 入口。checkpoint 与任务资源需在完整运行前单独准备。"
+    ]
+  },
+  "whenToUse": {
+    "en": "Use it when you want an interactive, action-conditioned world model — driving a video rollout with actions for game-world or embodied-simulation exploration.",
+    "zh": "当你想要一个交互式、动作驱动的世界模型时使用它——用动作驱动视频 rollout，用于游戏世界或具身仿真的探索。"
+  },
+  "notFor": {
+    "en": "Not a one-shot text-to-video generator — its value is the interactive, action-driven rollout, which needs an action stream. Checkpoints and task assets must be staged before running.",
+    "zh": "它不是一次性的文生视频生成器——其价值在于交互式、动作驱动的 rollout，需要有动作流输入。运行前需准备好 checkpoint 与任务资源。"
+  },
+  "highlights": {
+    "en": [
+      "Interactive, action-conditioned world model",
+      "Rolls out video that responds to supplied actions",
+      "Built on Stable Video Diffusion with a CLIP image encoder",
+      "Source vendored in-tree behind a runtime pipeline"
+    ],
+    "zh": [
+      "交互式、动作驱动的世界模型",
+      "展开对所输入动作作出响应的视频",
+      "构建在 Stable Video Diffusion 与 CLIP 图像编码器之上",
+      "源码内置于代码库，通过运行时 pipeline 对外提供"
+    ]
+  }
+}

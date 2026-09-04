@@ -39,9 +39,23 @@ def backward(ctx, grad_out_color, grad_radii, grad_depth):
     # args include grad_depth
 ```
 
+### Optional median-depth and opacity outputs
+
+The CUDA forward path also computes median depth and final opacity for consumers
+that need visibility diagnostics. The public Python API remains backward
+compatible: `GaussianRasterizer(raster_settings=...)` still returns
+`(color, radii, depth)`. Callers must explicitly construct it with
+`return_extra_outputs=True` to receive
+`(color, radii, depth, median_depth, final_opacity)`.
+
+The two auxiliary outputs are forward-only. Their gradients are intentionally
+ignored, while the canonical color and depth backward path remains unchanged.
+The canonical low-pass covariance filter is also retained.
+
 ### CUDA kernel changes
 
-- `rasterize_points.cu`: extended to compute and return per-pixel depth
+- `rasterize_points.cu`: extended to compute and return per-pixel depth, median
+  depth, and final opacity
 - `cuda_rasterizer/forward.h`, `forward.cu`, `backward.h`, `backward.cu`: updated
   to propagate depth through the rasterization pipeline
 - `rasterizer.h`: struct definitions extended for depth buffers
@@ -50,4 +64,5 @@ def backward(ctx, grad_out_color, grad_radii, grad_depth):
 
 These modifications enable depth rendering alongside color, which is required by
 WorldEvals' 3D/4D Gaussian model evaluation tasks (4D-GS, pixelSplat, etc.) that
-need depth maps as part of their output.
+need depth maps as part of their output. The opt-in auxiliary outputs additionally
+support WonderWorld without maintaining a second rasterizer fork.

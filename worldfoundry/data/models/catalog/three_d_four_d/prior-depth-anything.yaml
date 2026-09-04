@@ -16,6 +16,9 @@ source:
 checkpoint_refs:
 - repo_id: Rain729/Prior-Depth-Anything
   filename: prior_depth_anything_vits.pth
+official_sources:
+  project_page: https://prior-depth-anything.github.io/
+  paper: https://arxiv.org/abs/2505.10565
 integration:
   kind: pipeline_runner
   status: integrated

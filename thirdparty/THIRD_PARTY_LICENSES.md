@@ -10,17 +10,9 @@ It is not a substitute for the full upstream license text retained in each compo
 - license: Inria non-commercial research license (Gaussian-Splatting License)
 - license_summary: Free for research and evaluation use; commercial use requires explicit consent from Inria. Derivative works must retain the same use limitation. See the upstream `LICENSE.md` for full terms.
 - commercial_restrictions: **Non-commercial only** — research and evaluation use permitted; commercial use prohibited without prior written consent from Inria (`stip-sophia.transfert@inria.fr`).
-- purpose: CUDA rasterization extension for 3D Gaussian Splatting, modified to output depth alongside color and radii.
-- modifications: See `MODIFICATIONS.md`.
-
-## `depth-diff-gaussian-rasterization-min` (modified fork)
-
-- local_path: `thirdparty/depth-diff-gaussian-rasterization-min`
-- upstream_url: `https://github.com/graphdeco/diff-gaussian-rasterization`
-- license: Inria non-commercial research license (same as upstream diff-gaussian-rasterization)
-- license_summary: Same terms as `diff-gaussian-rasterization` above — non-commercial research use only.
-- commercial_restrictions: **Non-commercial only** — same as `diff-gaussian-rasterization`.
-- purpose: Depth-focused variant of diff-gaussian-rasterization, outputting depth, median depth, and final opacity.
+- purpose: CUDA rasterization extension for 3D Gaussian Splatting, modified to
+  output depth alongside color and radii and to expose opt-in median-depth and
+  final-opacity diagnostics.
 - modifications: See `MODIFICATIONS.md`.
 
 ## `simple-knn` (modified fork)
@@ -51,3 +43,13 @@ It is not a substitute for the full upstream license text retained in each compo
 - license_file: `thirdparty/gsplat/gsplat/cuda/csrc/third_party/glm/copying.txt`
 - commercial_restrictions: none stated in the MIT license; Happy Bunny License includes a non-binding military-use note.
 - purpose: C++ mathematics header dependency used by the CUDA extension.
+
+## Quarantined snapshots with incomplete license bundles
+
+### `SageAttention`
+
+- local_path: `thirdparty/SageAttention`
+- upstream_url: `https://github.com/thu-ml/SageAttention`
+- declared_license: Apache-2.0 in the retained `setup.py`
+- license_file: **missing from the imported snapshot**
+- distribution_status: **blocked** — excluded from source distributions until the exact upstream revision and full license text are restored.

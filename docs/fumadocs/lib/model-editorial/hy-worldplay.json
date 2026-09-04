@@ -1,0 +1,41 @@
+{
+  "id": "hy-worldplay",
+  "tagline": {
+    "en": "Tencent Hunyuan's interactive world model — drive a scene in real time with camera and action controls from a single image.",
+    "zh": "腾讯混元的交互式世界模型——从单张图片出发,用相机与动作控制实时驱动场景。"
+  },
+  "overview": {
+    "en": [
+      "HY-WorldPlay, from Tencent Hunyuan (HY-World), is an interactive world model. From a starting image and a stream of camera or action inputs, it generates video of the scene as you move through it.",
+      "It is designed for streaming, real-time interaction with camera-action control. The system builds on Tencent's HunyuanVideo-1.5 for video generation, alongside supporting components such as a Qwen2.5-VL vision-language model and a FLUX.1 Redux image module.",
+      "In WorldFoundry it runs as an image-pose-video task — supply an image and a sequence of poses or actions, and it renders the corresponding interactive world video."
+    ],
+    "zh": [
+      "HY-WorldPlay 由腾讯混元(HY-World)开发,是一个交互式世界模型。从一张起始图片和一串相机或动作输入出发,它生成随你移动而变化的场景视频。",
+      "它面向流式、实时的交互,支持相机-动作控制。系统以腾讯 HunyuanVideo-1.5 作为视频生成底座,并搭配 Qwen2.5-VL 视觉-语言模型、FLUX.1 Redux 图像模块等支撑组件。",
+      "在 WorldFoundry 中,它以图像-位姿-视频任务运行——提供一张图片和一串位姿或动作,它便渲染出对应的交互式世界视频。"
+    ]
+  },
+  "whenToUse": {
+    "en": "Use it when you want to interactively play through a world from a single image, steering with camera and action controls to generate streaming, real-time-style video.",
+    "zh": "当你想从单张图片交互式地穿行一个世界、用相机与动作控制来生成流式、实时风格的视频时,使用它。"
+  },
+  "notFor": {
+    "en": "It targets a multi-GPU setup and needs the HY-WorldPlay and HunyuanVideo-1.5 assets, so it is not a lightweight single-card option.",
+    "zh": "它面向多卡配置,需要 HY-WorldPlay 与 HunyuanVideo-1.5 相关资源,并非轻量的单卡方案。"
+  },
+  "highlights": {
+    "en": [
+      "Interactive world model with camera and action control",
+      "Streaming, real-time-style scene playthrough from one image",
+      "Built on Tencent's HunyuanVideo-1.5 video stack",
+      "Runs as an image-pose-video task in WorldFoundry"
+    ],
+    "zh": [
+      "带相机与动作控制的交互式世界模型",
+      "从单张图片实现流式、实时风格的场景穿行",
+      "构建于腾讯 HunyuanVideo-1.5 视频技术栈之上",
+      "在 WorldFoundry 中以图像-位姿-视频任务运行"
+    ]
+  }
+}

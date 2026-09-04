@@ -8,8 +8,7 @@ checked in under ``runtime/worldolympiad`` (``--run-official``) or normalizes
 judge outputs that already exist (``--official-results-path``).
 
 Weights, the Depth Anything 3 source tree, and the batch working state all live
-outside the checked-in runtime, so the vendored source stays read-only. See
-``runtime/WORLDFOUNDRY_PROVENANCE.md`` for the pinned upstream revision.
+outside the checked-in runtime, so the vendored source stays read-only.
 """
 
 from __future__ import annotations

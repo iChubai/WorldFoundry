@@ -1,5 +1,14 @@
 # Copyright 2024-2025 The Alibaba Wan Team Authors. All rights reserved.
-"""Module for base_models -> diffusion_model -> video -> wan -> wan_2p2 -> configs -> wan_s2v_14B.py functionality."""
+"""Official Wan 2.2 speech-to-video 14B EasyDict (wav2vec + FramePack).
+
+UMT5 + Wan2.1 VAE plus a nested ``transformer`` EasyDict: AdaIN audio
+injection on selected layers, FramePack temporal packing, 73 motion
+frames, and wav2vec2-large-xlsr-53 features (1024-d).  Inference
+drops the first motion frame, shift 3, CFG 4.5, 40 steps.
+
+Audio inject layer indices are part of the released graph; do not
+reorder them without a matching checkpoint.
+"""
 
 from easydict import EasyDict
 

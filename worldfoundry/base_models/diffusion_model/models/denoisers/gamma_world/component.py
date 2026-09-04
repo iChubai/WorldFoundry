@@ -1,4 +1,11 @@
-"""Checkpoint-compatible Gamma-World denoisers for the native role system."""
+"""Checkpoint-compatible Gamma-World denoisers for the native role system.
+
+Implements :class:`~...contracts.Denoiser` for bidirectional / causal /
+few-step variants.  Sampling and KV-cache lifecycle stay in the runner;
+this module only maps ``DenoiserInput`` onto the DiT and exposes cache
+allocation helpers.  Weights load through
+:class:`~...loaders.module.NativeModuleLoader`.
+"""
 
 from __future__ import annotations
 

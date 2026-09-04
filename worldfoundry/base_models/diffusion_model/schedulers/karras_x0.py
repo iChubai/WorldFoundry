@@ -1,4 +1,9 @@
-"""Framework-owned Karras schedule with x0-form Adams-Bashforth updates."""
+"""Framework-owned Karras schedule with x0-form Adams-Bashforth updates.
+
+Used when a denoiser predicts clean ``x0`` (Cosmos EDM-style) rather than
+flow.  Implements :class:`~..contracts.DiffusionScheduler`.  The AB2
+instance stores the previous prediction across steps of one run.
+"""
 
 from __future__ import annotations
 

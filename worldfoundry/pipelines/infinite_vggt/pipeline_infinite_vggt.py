@@ -15,7 +15,7 @@ if TYPE_CHECKING:
 import numpy as np
 from PIL import Image
 
-from worldfoundry.core.io import write_text_file
+from worldfoundry.core.io import artifact_root_path, write_text_file
 from worldfoundry.core.io.artifacts import (
     depth_to_colormap_pil,
     save_depth_colormap,
@@ -25,6 +25,11 @@ from ...operators.infinite_vggt_operator import InfiniteVGGTOperator
 from ...representations.point_clouds_generation.vggt.infinite_vggt_representation import (
     InfiniteVGGTRepresentation,
 )
+
+
+def _default_output_dir(name: str = "infinite_vggt_output") -> str:
+    """Resolve a stable default output directory instead of writing to the CWD."""
+    return str(artifact_root_path() / name)
 
 
 class InfiniteVGGTResult:
@@ -58,7 +63,7 @@ class InfiniteVGGTResult:
 
     def save(self, output_dir: Optional[str] = None) -> List[str]:
         """Export to ply, glb, or depth images. User calls this; pipeline does not save."""
-        output_root = Path(output_dir or "./infinite_vggt_output").expanduser()
+        output_root = Path(output_dir or _default_output_dir()).expanduser()
         output_root.mkdir(parents=True, exist_ok=True)
         saved: List[str] = []
 

@@ -1,5 +1,15 @@
 # SPDX-License-Identifier: Apache-2.0
-"""Module for base_models -> diffusion_model -> video -> wan -> wan_2p1 -> configs -> causal_wan_config.py functionality."""
+"""FSDP shard predicate and DiT config for causal Wan 2.1 graphs.
+
+:func:`is_causal_block` matches ``blocks.<index>…`` module names so
+FSDP2 shards each transformer block.  :class:`CausalWanArchConfig`
+installs that predicate; :class:`CausalWanConfig` is the
+:class:`~worldfoundry.core.configuration.model_config.DiTConfig`
+wrapper used by causal / streaming Wan 2.1 recipes.
+
+This is wiring only; the causal attention mask lives on the network,
+not in these dataclasses.
+"""
 
 from dataclasses import dataclass, field
 
@@ -7,14 +17,9 @@ from worldfoundry.core.configuration.model_config import DiTArchConfig, DiTConfi
 
 
 def is_causal_block(n: str, m) -> bool:
-    """Is causal block.
+    """Return True when ``n`` is a ``blocks.<index>…`` FSDP shard root.
 
-    Args:
-        n: The n.
-        m: The m.
-
-    Returns:
-        The return value.
+    ``m`` is unused; the signature matches the generic shard predicate.
     """
     parts = n.split(".")
     return len(parts) >= 2 and parts[0] == "blocks" and parts[1].isdigit()

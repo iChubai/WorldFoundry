@@ -1,4 +1,13 @@
-"""Module for base_models -> diffusion_model -> video -> lvdm -> variants -> vid2world -> lvdm -> models -> samplers -> ddim_multiplecond.py functionality."""
+"""Vid2World multi-condition DDIM (extra CFG streams, float32 buffers).
+
+Video-to-world sibling of :mod:`.ddim_multiplecond`.  The solver is
+the same multi-cond DDIM loop; buffers are registered in float32
+(the non-vid2world file uses bfloat16) to match the Vid2World
+checkpoint numerics.
+
+Import this module only from Vid2World recipes.  Shared timestep
+math stays in :mod:`.schedule_math`.
+"""
 
 import numpy as np
 from tqdm import tqdm
@@ -32,8 +41,9 @@ class DDIMSampler(object):
             attr: The attr.
         """
         if type(attr) == torch.Tensor:
-            if attr.device != torch.device("cuda"):
-                attr = attr.to(torch.device("cuda"))
+            target_device = torch.device(self.model.device)
+            if attr.device != target_device:
+                attr = attr.to(target_device)
         setattr(self, name, attr)
 
     def make_schedule(self, ddim_num_steps, ddim_discretize="uniform", ddim_eta=0., verbose=True):

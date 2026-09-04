@@ -1,5 +1,8 @@
-"""KV-cached dual-stream MMDiT inference model used by MoVerse."""
+"""MoVerse KV-cached dual-stream MMDiT (inference).
 
+Second stream alongside the causal Wan graph.  Adds MMDiT + KV cache.
+No VACE or linear-attention processors.
+"""
 import math
 from typing import List, Optional, Set, Tuple
 

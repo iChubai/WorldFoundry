@@ -1,3 +1,12 @@
+"""Build and patchify LTX :class:`~...contracts.ModalityState` objects.
+
+:class:`VideoLatentTools` / :class:`AudioLatentTools` allocate zero
+latents, denoise masks, and RoPE positions, then flatten them through
+:class:`~.patchifiers.VideoLatentPatchifier` / :class:`AudioPatchifier`.
+The multi-stage initializer and spatial processor share these helpers so
+stage geometry stays consistent.
+"""
+
 from dataclasses import dataclass, replace
 from typing import Protocol
 

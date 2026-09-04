@@ -1,14 +1,29 @@
+"""Hyperparameters for LTX Gemma tokenization and connectors.
+
+:class:`Gemma3TextConfig`, :class:`Gemma3VisionConfig`,
+:class:`Gemma3ConfigData`, and :class:`Gemma3RopeScaling`
+mirror the serialized Gemma-3 settings used by
+:class:`~.component.LTXPromptConditioner`.
+
+No forward pass lives here.  The tokenizer is :mod:`.tokenizer`;
+projection is :mod:`.embeddings_connector`.
+
+LTX-2 family only — Sana Gemma-2 has its own config.
+"""
+
 from dataclasses import asdict, dataclass, field
 
 
 @dataclass
 class Gemma3RopeScaling:
+    """RoPE scaling hyperparameters for LTX Gemma-3."""
     factor: float = 8.0
     rope_type: str = "linear"
 
 
 @dataclass
 class Gemma3TextConfig:
+    """Gemma-3 text-tower hyperparameters used by LTX."""
     attention_bias: bool = False
     attention_dropout: float = 0.0
     attn_logit_softcapping: float | None = None
@@ -38,6 +53,7 @@ class Gemma3TextConfig:
 
 @dataclass
 class Gemma3VisionConfig:
+    """Gemma-3 vision-tower hyperparameters used by LTX."""
     attention_dropout: float = 0.0
     hidden_act: str = "gelu_pytorch_tanh"
     hidden_size: int = 1152
@@ -55,6 +71,7 @@ class Gemma3VisionConfig:
 
 @dataclass
 class Gemma3ConfigData:
+    """Combined Gemma-3 config blob serialized with LTX weights."""
     architectures: list[str] = field(default_factory=lambda: ["Gemma3ForConditionalGeneration"])
     boi_token_index: int = 255999
     eoi_token_index: int = 256000

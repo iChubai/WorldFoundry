@@ -1,4 +1,11 @@
-"""Framework-owned canonical diffusion runners."""
+"""Framework-owned canonical runner and strategy export surface.
+
+This package is the downstream execution layer: after the assembler selects a
+strategy, runners are instantiated here and ``run(DiffusionRequest)``. It only
+re-exports the DiffusionExecutor protocol and the runner types strategy builders
+need. It does not register recipes at import time.
+Must not: put a runner factory on a recipe; implement a sampling loop in this file.
+"""
 
 from .autoregressive import AutoregressiveWindowRunner, WindowedDenoiser
 from .base import DualConditionGuidanceRunner, NativeDiffusionRunner, RunnerComponents
@@ -9,6 +16,14 @@ from .multistage import (
     MultiStageComponents,
     MultiStageLatentInitializer,
 )
+from .prefix_recompute import (
+    PrefixRecomputeRunner,
+    PrefixRecomputeWindow,
+    PrefixRefiner,
+    prefix_chunk_boundaries,
+    prefix_recompute_window,
+)
+from .staged import InferenceStage, InferenceStageGraph, InferenceStageRunner, StagedDiffusionPipeline
 from .strategies import (
     DiffusionExecutor,
     ExecutionBuildContext,
@@ -16,7 +31,6 @@ from .strategies import (
     UnsupportedExecutionStrategyError,
     default_execution_strategy_registry,
 )
-from .staged import InferenceStage, InferenceStageGraph, InferenceStageRunner, StagedDiffusionPipeline
 from .wan_staged import TeaCache, WanStagedPipeline, model_fn_wan_video
 
 __all__ = [
@@ -35,6 +49,9 @@ __all__ = [
     "MultiStageComponents",
     "MultiStageLatentInitializer",
     "NativeDiffusionRunner",
+    "PrefixRecomputeRunner",
+    "PrefixRecomputeWindow",
+    "PrefixRefiner",
     "RunnerComponents",
     "StagedDiffusionPipeline",
     "TeaCache",
@@ -43,4 +60,6 @@ __all__ = [
     "UnsupportedExecutionStrategyError",
     "default_execution_strategy_registry",
     "model_fn_wan_video",
+    "prefix_chunk_boundaries",
+    "prefix_recompute_window",
 ]

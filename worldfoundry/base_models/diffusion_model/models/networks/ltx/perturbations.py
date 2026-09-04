@@ -1,3 +1,10 @@
+"""Spatio-Temporal Guidance (STG) skip masks for LTX attention branches.
+
+Perturbations zero selected self-attn or A↔V cross-attn paths per sample
+and block so guidance can compare a full pass against a skipped one.
+Masks are ``[0, 1]`` and broadcast over ``B T D`` token tensors.
+"""
+
 from dataclasses import dataclass
 from enum import Enum
 
@@ -22,6 +29,7 @@ class Perturbation:
     blocks: list[int] | None  # None means all blocks
 
     def is_perturbed(self, perturbation_type: PerturbationType, block: int) -> bool:
+        """True when this rule skips ``perturbation_type`` at ``block`` (or all blocks)."""
         if self.type != perturbation_type:
             return False
 
@@ -38,6 +46,7 @@ class PerturbationConfig:
     perturbations: list[Perturbation] | None
 
     def is_perturbed(self, perturbation_type: PerturbationType, block: int) -> bool:
+        """True if any listed perturbation matches this type and block."""
         if self.perturbations is None:
             return False
 
@@ -45,6 +54,7 @@ class PerturbationConfig:
 
     @staticmethod
     def empty() -> "PerturbationConfig":
+        """No-op config used when STG is disabled for a sample."""
         return PerturbationConfig([])
 
 
@@ -55,8 +65,9 @@ class BatchedPerturbationConfig:
     perturbations: list[PerturbationConfig]
 
     def mask(
-        self, perturbation_type: PerturbationType, block: int, device: DeviceLikeType, dtype: torch.dtype
+        self, perturbation_type: PerturbationType, block: int, device: DeviceLikeType,         dtype: torch.dtype
     ) -> torch.Tensor:
+        """Per-sample ``[B]`` mask: 1 keeps the branch, 0 skips it."""
         mask = torch.ones((len(self.perturbations),), device=device, dtype=dtype)
         for batch_idx, perturbation in enumerate(self.perturbations):
             if perturbation.is_perturbed(perturbation_type, block):
@@ -65,15 +76,19 @@ class BatchedPerturbationConfig:
         return mask
 
     def mask_like(self, perturbation_type: PerturbationType, block: int, values: torch.Tensor) -> torch.Tensor:
+        """Broadcast :meth:`mask` to ``values``'s trailing dims (typically ``B 1 1``)."""
         mask = self.mask(perturbation_type, block, values.device, values.dtype)
         return mask.view(mask.numel(), *([1] * len(values.shape[1:])))
 
     def any_in_batch(self, perturbation_type: PerturbationType, block: int) -> bool:
+        """True if at least one sample skips this branch (needs a mixed mask)."""
         return any(perturbation.is_perturbed(perturbation_type, block) for perturbation in self.perturbations)
 
     def all_in_batch(self, perturbation_type: PerturbationType, block: int) -> bool:
+        """True if every sample skips this branch (Q/K path can be omitted)."""
         return all(perturbation.is_perturbed(perturbation_type, block) for perturbation in self.perturbations)
 
     @staticmethod
     def empty(batch_size: int) -> "BatchedPerturbationConfig":
+        """All-keep config for a batch that is not using STG."""
         return BatchedPerturbationConfig([PerturbationConfig.empty() for _ in range(batch_size)])

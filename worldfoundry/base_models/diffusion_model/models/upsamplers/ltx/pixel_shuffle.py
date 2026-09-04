@@ -1,3 +1,9 @@
+"""N-D pixel-shuffle used by the LTX latent upsampler.
+
+``dims=1`` expands time, ``dims=2`` expands H/W, ``dims=3`` expands all
+three.  Inverse of the LTX patchifier layout.
+"""
+
 import torch
 from einops import rearrange
 

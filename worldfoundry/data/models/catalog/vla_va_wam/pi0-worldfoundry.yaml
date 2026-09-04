@@ -15,6 +15,9 @@ source:
   official_repo_url: https://github.com/Physical-Intelligence/openpi
   notes:
   - Originally exposed by WorldFoundry-native-3D.
+official_sources:
+  project_page: https://www.physicalintelligence.company/blog/pi0
+  paper: https://arxiv.org/abs/2410.24164
 integration:
   status: runtime_ported
   notes:

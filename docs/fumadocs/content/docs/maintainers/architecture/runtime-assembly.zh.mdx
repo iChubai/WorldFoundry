@@ -9,15 +9,7 @@ description: pipeline、operator、synthesis、representation、base_models 的�
 
 要记住的一条链：
 
-```text
-PipelineABC
-  -> BaseOperator: 校验/加载/整形 interaction 与媒体
-  -> BaseSynthesis: native runtime 调用或 hosted API
-     -> NativeDiffusionPipeline（仅本地扩散）
-  -> BaseRepresentation: 推导深度、点云、3DGS、panorama、geometry
-  -> BaseMemory: 为流式或多轮控制保留前序状态
-  -> GenerationResult
-```
+<ArchDiagram id="runtime-assembly" locale="zh" />
 
 每个可运行方法都需要一个 pipeline 和一个 operator。operator 可以很薄，但必须存在。
 

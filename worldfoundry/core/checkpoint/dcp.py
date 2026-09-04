@@ -1,7 +1,17 @@
 # SPDX-FileCopyrightText: Copyright (c) 2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 
-"""Shared inference-only helpers for loading PyTorch distributed checkpoints."""
+"""Shared inference-only helpers for loading PyTorch distributed checkpoints.
+
+WorldFoundry inference can resume from DCP directories on local disk or
+S3. :class:`DistributedCheckpointer` is a load-only facade: it picks a
+storage reader, wraps the module as :class:`ModelWrapper`, and calls
+:func:`dcp_load_state_dict`. :class:`DefaultLoadPlanner` keeps older DCP
+key layouts and optional size-mismatched channel loads working when
+torch's private planner internals are present.
+
+This module does not save checkpoints or run async training dumps.
+"""
 
 from __future__ import annotations
 
@@ -18,6 +28,10 @@ from torch.distributed.checkpoint.state_dict import StateDictOptions, get_model_
 from torch.distributed.checkpoint.stateful import Stateful
 
 from worldfoundry.core.distributed.logging import log
+
+# ──────────────────────────────────────────────────────────────────────────
+# Planner internals — torch's private DCP APIs; lock derived_version writers
+# ──────────────────────────────────────────────────────────────────────────
 
 if TYPE_CHECKING:
     from worldfoundry.core.io.s3_filesystem import S3StorageReader
@@ -45,6 +59,15 @@ try:
         strict: bool,
         allow_mismatched_size: bool,
     ) -> LoadPlan:
+        """Build read items, skipping ``_extra_state`` and optional size mismatches.
+
+        DCP metadata always records optimizer ``_extra_state`` blobs that
+        inference modules never own; treating them as missing keys would
+        reject every released training dump. Size mismatches are skipped
+        (or rejected) so a checkpoint with extra channels can still load
+        when ``dcp_allow_mismatched_size`` is set.
+        """
+
         requests = []
         for name, value in state_dict.items():
             if name.endswith("._extra_state"):
@@ -70,13 +93,19 @@ try:
                 requests += _create_read_items(name, saved, value)
         return LoadPlan(requests)
 
+    # ──────────────────────────────────────────────────────────────────────
+    # Compatible planner — old 2.3 key layout + optional channel mismatch
+    # ──────────────────────────────────────────────────────────────────────
+
     class DefaultLoadPlanner(_DefaultLoadPlanner):
         """Load planner compatible with old DCP key layouts and partial loads."""
 
         def set_partial_channel_weight(self, allow_mismatched_size: bool) -> None:
+            """Allow or reject tensors whose saved size differs from the model."""
             self.allow_mismatched_size = allow_mismatched_size
 
         def create_local_plan(self) -> LoadPlan:
+            """Build a local read plan, falling back to the pre-2.4 DCP key layout."""
             if self.metadata is None:
                 raise RuntimeError("Checkpoint metadata has not been initialized")
             if self.flatten_state_dict:
@@ -111,6 +140,11 @@ except ImportError:
     )
 
 
+# ──────────────────────────────────────────────────────────────────────────
+# Load + shape audit — DCP itself does not fail on missing keys
+# ──────────────────────────────────────────────────────────────────────────
+
+
 def dcp_load_state_dict(state_dict: dict[str, Any], storage_reader, load_planner) -> None:
     """Load a DCP state dictionary and reject tensor shape mismatches."""
 
@@ -137,15 +171,22 @@ def dcp_load_state_dict(state_dict: dict[str, Any], storage_reader, load_planner
         raise RuntimeError("Checkpoint tensor shape mismatches:\n" + "\n".join(mismatches))
 
 
+# ──────────────────────────────────────────────────────────────────────────
+# Stateful adapter — EMA / LoRA prefix rewrites live only on this wrapper
+# ──────────────────────────────────────────────────────────────────────────
+
+
 class ModelWrapper(Stateful):
     """Adapt one or more modules to PyTorch DCP's ``Stateful`` protocol."""
 
     def __init__(self, model: nn.Module | Sequence[nn.Module], load_ema_to_reg: bool = False) -> None:
+        """Wrap one or more modules; optionally map ``net_ema.`` keys onto ``net.``."""
         self.models = [model] if isinstance(model, nn.Module) else list(model)
         self.load_ema_to_reg = load_ema_to_reg
         self.checkpoint_to_model_key: dict[str, str] = {}
 
     def state_dict(self, mapping_keys: Mapping[str, str] | None = None) -> dict[str, Any]:
+        """Collect DCP keys, applying EMA and LoRA prefix rewrites when needed."""
         state_dict = {key: value for model in self.models for key, value in get_model_state_dict(model).items()}
         if self.load_ema_to_reg:
             state_dict = {key.replace("net.", "net_ema.", 1): value for key, value in state_dict.items()}
@@ -163,6 +204,7 @@ class ModelWrapper(Stateful):
         return state_dict
 
     def load_state_dict(self, state_dict: dict[str, Any]) -> None:
+        """Invert EMA/LoRA key rewrites and assign tensors with ``strict=False``."""
         state_dict = dict(state_dict)
         for checkpoint_key, model_key in self.checkpoint_to_model_key.items():
             if checkpoint_key in state_dict:
@@ -178,14 +220,21 @@ class ModelWrapper(Stateful):
         list(map(setter, self.models))
 
 
+# ──────────────────────────────────────────────────────────────────────────
+# Inference facade — load-only; training dump / async save args are ignored
+# ──────────────────────────────────────────────────────────────────────────
+
+
 class DistributedCheckpointer:
     """Compatibility facade that exposes only inference-time checkpoint loading."""
 
     def __init__(self, config_checkpoint, config_job=None, callbacks=None, disable_async: bool = True) -> None:
+        """Keep only ``config_checkpoint``; unused training args are ignored."""
         del config_job, callbacks, disable_async
         self.config_checkpoint = config_checkpoint
 
     def get_storage_reader(self, checkpoint_path: str) -> S3StorageReader | FileSystemReader:
+        """Return an S3 reader when object-store loading is enabled, else local."""
         object_store = getattr(self.config_checkpoint, "load_from_object_store", None)
         if object_store is not None and object_store.enabled:
             # Lazy: pulls boto3, which local-checkpoint deployments don't have.

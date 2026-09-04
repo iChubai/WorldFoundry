@@ -9,6 +9,7 @@ aliases:
 availability: open_source
 provider: official_repo
 official_sources:
+  paper: https://arxiv.org/abs/2602.22818
   github:
     url: https://github.com/huggingface/lerobot
     revision: 8fff0fde7c79f23a93d845d1a50e985de01f8b8a

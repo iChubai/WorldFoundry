@@ -55,6 +55,9 @@ catalog_policy:
     task tags only.
   parity: This manifest does not claim WorldFoundry runtime parity unless an explicit parity run and expected artifact are
     recorded.
+official_sources:
+  project_page: https://ailab-cvc.github.io/videocrafter2/
+  paper: https://arxiv.org/abs/2401.09047
 integration:
   status: integrated
   notes:

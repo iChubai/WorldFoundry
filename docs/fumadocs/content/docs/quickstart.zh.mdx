@@ -38,7 +38,9 @@ description: 配置环境、准备资产、使用 TUI 或 CLI，然后运行推�
 ## 前置条件
 
 - **操作系统：** 推荐 Linux，用于 GPU 推理和大多数 benchmark runner
-- **Python：** 通过 WorldFoundry 统一 conda 环境使用 3.10+
+- **安装路径：** 轻量 CPU catalog/CLI/TUI 工作使用 `python -m pip install -e ".[tui]"`；CUDA conda runtime 使用 `bash scripts/setup/bootstrap_worldfoundry.sh`。可选 extras 不会自动选择 CUDA PyTorch wheel index。
+- **可选 native kernels：** `packages/worldfoundry-native-kernels` 是独立且 ABI-sensitive 的 wheel。CPU-only 主机应跳过；GPU 主机必须在目标 PyTorch 环境内用 `--no-isolation` 构建。
+- **Python：** 3.10+；GPU 路径由 WorldFoundry 统一 conda 环境管理
 - **可选：** 支持 CUDA 的 GPU、用于 gated checkpoint 的 Hugging Face token
 
 <Callout type="info" title="说明">
@@ -47,7 +49,7 @@ description: 配置环境、准备资产、使用 TUI 或 CLI，然后运行推�
 
 ## 1. 环境配置
 
-Bootstrap 会创建默认 WorldFoundry runtime，并写出一份本地 shell 文件，里面包含 CLI、Studio 和评测 runner 会用到的路径。每次打开新 shell 后都应该先 source 这个文件。
+下面的命令描述 GPU runtime 路径。Bootstrap 会创建默认 WorldFoundry runtime，并写出一份本地 shell 文件，里面包含 CLI、Studio 和评测 runner 会用到的路径。每次打开新 shell 后都应该先 source 这个文件。
 
 <Tabs items={['默认安装', '共享路径', '运行前检查']}>
   <Tab>

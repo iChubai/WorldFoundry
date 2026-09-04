@@ -1,4 +1,17 @@
-"""Triton-optimized operators for Sana video models."""
+"""Triton-fused GDN operator surface for SANA video / V2V / CamCtrl.
+
+This package does not own the Python GDN math (that lives in
+``sana_gdn_blocks`` / ``sana_v2v_attn_blocks``).  It prepares QKV + RoPE
+tables and dispatches to:
+
+* :mod:`fused_gdn` — bidirectional fused scan + RoPE / inv-RMS helpers
+* :mod:`fused_gdn_chunkwise` — chunk-parallel Phase A/B/C pipeline (default
+  when ``USE_CHUNKWISE_GDN=1``)
+* :mod:`fused_cam_gdn` — camera-branch UCPE prep fused with the same scan
+
+``_prepare_fused_gdn_inputs`` is the shared projection/normalize step used
+by the V2V attention blocks.
+"""
 
 import os
 from dataclasses import dataclass
@@ -85,8 +98,8 @@ def _prepare_fused_gdn_inputs(self, x: torch.Tensor, HW) -> _FusedGDNPrep:
     k_scale = (D**-0.5) * (S**-0.5)
 
     if not isinstance(self.q_norm, nn.Identity):
-        q_nw = _execution_weight_bias(self.q_norm)[0].float()
-        k_nw = _execution_weight_bias(self.k_norm)[0].float()
+        q_nw = _execution_weight_bias(self.q_norm)[0].to(device=x.device, dtype=torch.float32)
+        k_nw = _execution_weight_bias(self.k_norm)[0].to(device=x.device, dtype=torch.float32)
     else:
         q_nw = torch.ones(C, device=x.device, dtype=torch.float32)
         k_nw = torch.ones(C, device=x.device, dtype=torch.float32)

@@ -6,12 +6,11 @@ import { useMemo, useState } from 'react';
 import type { ModelRecipe, ModelRecipeTask } from '@/lib/model-recipe-types';
 
 type Locale = 'en' | 'zh';
-type CommandTab = 'prepare' | 'install' | 'inspect' | 'check' | 'run';
+type CommandTab = 'prepare' | 'install' | 'check' | 'run';
 
 const labels = {
   en: {
     title: 'Build your run',
-    description: 'Choose a recorded variant and task profile, then copy the exact command for that route.',
     variant: 'Variant',
     task: 'Task',
     taskProfile: 'Task profile',
@@ -32,17 +31,16 @@ const labels = {
     noArtifacts: 'No artifact contract is recorded for this task.',
     prepare: 'Prepare',
     install: 'Install',
-    inspect: 'Inspect',
     check: 'Check assets',
     run: 'Run',
     copy: 'Copy',
     copied: 'Copied',
+    command: 'Command',
     defaultVariant: 'Default model ID',
     notRecorded: 'Not recorded',
   },
   zh: {
     title: '构建运行命令',
-    description: '选择仓库中已记录的 variant 和 task profile，然后复制对应 route 的准备、检查或运行命令。',
     variant: 'Variant',
     task: '任务',
     taskProfile: '任务 Profile',
@@ -63,11 +61,11 @@ const labels = {
     noArtifacts: '该 task 没有记录 Artifact 契约。',
     prepare: '准备',
     install: '安装',
-    inspect: '查看 Manifest',
     check: '检查资产',
     run: '运行',
     copy: '复制',
     copied: '已复制',
+    command: '命令',
     defaultVariant: '默认 Model ID',
     notRecorded: '未记录',
   },
@@ -114,8 +112,6 @@ function commandFor(tab: CommandTab, recipe: ModelRecipe, runtimeModelId: string
       return `bash scripts/inference/prepare_model_infer.sh ${runtimeModelId}`;
     case 'install':
       return `bash scripts/setup/model_env_install.sh --model ${runtimeModelId}`;
-    case 'inspect':
-      return recipe.commands.inspect;
     case 'check':
       return recipe.commands.check;
     case 'run':
@@ -184,7 +180,10 @@ export function ModelCommandBuilder({ recipe, locale = 'en' }: { recipe: ModelRe
   const choices = useMemo(
     () =>
       recipe.variants.length > 0
-        ? recipe.variants
+        ? recipe.variants.map((variant) => ({
+            ...variant,
+            pipelineTarget: variant.pipelineTarget ?? recipe.runtime.pipelineTarget,
+          }))
         : [
             {
               id: recipe.id,
@@ -233,7 +232,7 @@ export function ModelCommandBuilder({ recipe, locale = 'en' }: { recipe: ModelRe
   ) ?? taskChoices[0];
   const [selectedId, setSelectedId] = useState(defaultChoice?.id ?? recipe.id);
   const [selectedTaskId, setSelectedTaskId] = useState(defaultTask?.id ?? 'default');
-  const [tab, setTab] = useState<CommandTab>(defaultChoice && isRunnableVariant(defaultChoice) ? 'run' : 'inspect');
+  const [tab, setTab] = useState<CommandTab>(defaultChoice && isRunnableVariant(defaultChoice) ? 'run' : 'check');
   const [copied, setCopied] = useState(false);
   const selected = choices.find((choice) => choice.id === selectedId) ?? choices[0];
   const selectedTask = taskChoices.find((task) => task.id === selectedTaskId) ?? taskChoices[0];
@@ -272,105 +271,110 @@ export function ModelCommandBuilder({ recipe, locale = 'en' }: { recipe: ModelRe
 
   const tabs: CommandTab[] = [
     ...(hasProfile ? (['prepare', 'install'] as CommandTab[]) : []),
-    'inspect',
     'check',
     ...(hasPipeline ? (['run'] as CommandTab[]) : []),
   ];
   const runUnavailable = tab === 'run' && !hasPipeline;
 
   return (
-    <section className="wf-command-builder" aria-labelledby="wf-command-builder-title">
-      <div className="wf-command-builder-heading">
-        <div>
-          <h2 id="wf-command-builder-title">{t.title}</h2>
-          <p>{t.description}</p>
-        </div>
-        <div className="wf-command-builder-heading-route">
+    <section className="wf-command-builder" id="use" aria-labelledby="wf-command-builder-title">
+      <header className="wf-command-builder-heading">
+        <h2 id="wf-command-builder-title">{t.title}</h2>
+        <p className="wf-command-builder-heading-route">
           <span>{t.pipeline}</span>
           <code>{selectedPipeline ?? t.noPipeline}</code>
-        </div>
-      </div>
+        </p>
+      </header>
 
-      <div className="wf-command-builder-controls">
-        <label>
-          <span>{t.variant}</span>
-          <select
-            value={selectedId}
-            onChange={(event) => {
-              const nextId = event.target.value;
-              const nextChoice = choices.find((choice) => choice.id === nextId);
-              setSelectedId(nextId);
-              if (selectedTask.variantIds.length > 0 && !selectedTask.variantIds.includes(nextId)) {
-                const compatible = taskChoices.find((task) => task.variantIds.includes(nextId));
-                if (compatible) setSelectedTaskId(compatible.id);
-              }
-              if (tab === 'run' && (!nextChoice || !isRunnableVariant(nextChoice))) setTab('inspect');
-              setCopied(false);
-            }}
-          >
-            {choices.map((choice) => (
-              <option value={choice.id} key={choice.id}>
-                {variantLabel(choice, t.notRecorded)}
-              </option>
-            ))}
-          </select>
-        </label>
-        <div>
-          <span>{t.task}</span>
-          {taskChoices.length > 1 ? (
+      <div className="wf-command-builder-panel">
+        <div className="wf-command-builder-controls">
+          <label>
+            <span>{t.variant}</span>
             <select
-              value={selectedTask.id}
+              value={selectedId}
               onChange={(event) => {
-                const nextTask = taskChoices.find((task) => task.id === event.target.value) ?? taskChoices[0];
-                setSelectedTaskId(nextTask.id);
-                if (nextTask.variantIds.length > 0 && !nextTask.variantIds.includes(selected?.id ?? '')) {
-                  const nextVariantId = nextTask.variantIds[0];
-                  const nextChoice = choices.find((choice) => choice.id === nextVariantId);
-                  setSelectedId(nextVariantId);
-                  if (tab === 'run' && (!nextChoice || !isRunnableVariant(nextChoice))) setTab('inspect');
+                const nextId = event.target.value;
+                const nextChoice = choices.find((choice) => choice.id === nextId);
+                setSelectedId(nextId);
+                if (selectedTask.variantIds.length > 0 && !selectedTask.variantIds.includes(nextId)) {
+                  const compatible = taskChoices.find((task) => task.variantIds.includes(nextId));
+                  if (compatible) setSelectedTaskId(compatible.id);
                 }
+                if (tab === 'run' && (!nextChoice || !isRunnableVariant(nextChoice))) setTab('check');
                 setCopied(false);
               }}
             >
-              {taskChoices.map((task) => (
-                <option value={task.id} key={task.id}>
-                  {task.label} ({task.id})
+              {choices.map((choice) => (
+                <option value={choice.id} key={choice.id}>
+                  {variantLabel(choice, t.notRecorded)}
                 </option>
               ))}
             </select>
-          ) : (
-            <strong>
-              {selectedTask.label} <code>{selectedTask.id}</code>
-            </strong>
-          )}
+          </label>
+          <div>
+            <span>{t.task}</span>
+            {taskChoices.length > 1 ? (
+              <select
+                value={selectedTask.id}
+                onChange={(event) => {
+                  const nextTask = taskChoices.find((task) => task.id === event.target.value) ?? taskChoices[0];
+                  setSelectedTaskId(nextTask.id);
+                  if (nextTask.variantIds.length > 0 && !nextTask.variantIds.includes(selected?.id ?? '')) {
+                    const nextVariantId = nextTask.variantIds[0];
+                    const nextChoice = choices.find((choice) => choice.id === nextVariantId);
+                    setSelectedId(nextVariantId);
+                    if (tab === 'run' && (!nextChoice || !isRunnableVariant(nextChoice))) setTab('prepare');
+                  }
+                  setCopied(false);
+                }}
+              >
+                {taskChoices.map((task) => (
+                  <option value={task.id} key={task.id}>
+                    {task.label} ({task.id})
+                  </option>
+                ))}
+              </select>
+            ) : (
+              <strong>
+                {selectedTask.label} <code>{selectedTask.id}</code>
+              </strong>
+            )}
+          </div>
+          <div>
+            <span>{t.environment}</span>
+            <strong>{selectedEnvironment ?? t.notRecorded}</strong>
+          </div>
+          <div>
+            <span>{t.device}</span>
+            <strong>{selectedDevice ?? t.notRecorded}</strong>
+          </div>
         </div>
-        <div>
-          <span>{t.environment}</span>
-          <strong>{selectedEnvironment ?? t.notRecorded}</strong>
+        {selectedRunner || selected?.loadingMethod || recipe.runtime.loadingMethod || selected?.invocationMode || recipe.runtime.invocationMode ? (
+        <div className="wf-command-builder-runtime">
+          {selectedRunner ? (
+          <div>
+            <span>{t.runner}</span>
+            <code>{selectedRunner}</code>
+          </div>
+          ) : null}
+          {selected?.loadingMethod || recipe.runtime.loadingMethod ? (
+          <div>
+            <span>{t.loading}</span>
+            <strong>{selected?.loadingMethod ?? recipe.runtime.loadingMethod}</strong>
+          </div>
+          ) : null}
+          {selected?.invocationMode || recipe.runtime.invocationMode ? (
+          <div>
+            <span>{t.invocation}</span>
+            <strong>{selected?.invocationMode ?? recipe.runtime.invocationMode}</strong>
+          </div>
+          ) : null}
         </div>
-        <div>
-          <span>{t.device}</span>
-          <strong>{selectedDevice ?? t.notRecorded}</strong>
-        </div>
-      </div>
-
-      <div className="wf-command-builder-runtime">
-        <div>
-          <span>{t.runner}</span>
-          <code>{selectedRunner ?? t.notRecorded}</code>
-        </div>
-        <div>
-          <span>{t.loading}</span>
-          <strong>{selected?.loadingMethod ?? recipe.runtime.loadingMethod ?? t.notRecorded}</strong>
-        </div>
-        <div>
-          <span>{t.invocation}</span>
-          <strong>{selected?.invocationMode ?? recipe.runtime.invocationMode ?? t.notRecorded}</strong>
-        </div>
+        ) : null}
       </div>
 
       {taskChoices.length > 0 ? (
-        <details className="wf-command-builder-contracts" open>
+        <details className="wf-command-builder-contracts">
           <summary>
             {t.taskContract} <code>{selectedTask.id}</code>
           </summary>
@@ -394,38 +398,52 @@ export function ModelCommandBuilder({ recipe, locale = 'en' }: { recipe: ModelRe
         </details>
       ) : null}
 
-      <div className="wf-command-builder-tabs" role="tablist" aria-label={t.title}>
-        {tabs.map((item) => (
-          <button
-            type="button"
-            role="tab"
-            aria-selected={tab === item}
-            className={tab === item ? 'is-active' : undefined}
-            key={item}
-            onClick={() => {
-              setTab(item);
-              setCopied(false);
-            }}
-          >
-            {t[item]}
-          </button>
-        ))}
-      </div>
-
-      <div className="wf-command-builder-code">
-        {runUnavailable ? (
-          <p className="wf-command-builder-unavailable">{t.noPipeline}</p>
-        ) : (
-          <>
-            <pre key={`${selectedId}:${tab}`}>
-              <code>{command}</code>
-            </pre>
-            <button type="button" onClick={copyCommand} aria-live="polite">
-              {copied ? <Check aria-hidden="true" size={14} /> : <Copy aria-hidden="true" size={14} />}
-              {copied ? t.copied : t.copy}
+      <div className="wf-command-builder-terminal">
+        <div className="wf-command-builder-tabs" role="tablist" aria-label={t.title}>
+          {tabs.map((item) => (
+            <button
+              type="button"
+              role="tab"
+              aria-selected={tab === item}
+              className={tab === item ? 'is-active' : undefined}
+              key={item}
+              onClick={() => {
+                setTab(item);
+                setCopied(false);
+              }}
+            >
+              {t[item]}
             </button>
-          </>
-        )}
+          ))}
+        </div>
+        <details className="wf-command-builder-command">
+          <summary>
+            {t.command}
+            {runUnavailable ? null : (
+              <button
+                type="button"
+                aria-live="polite"
+                onClick={(event) => {
+                  event.preventDefault();
+                  event.stopPropagation();
+                  void copyCommand();
+                }}
+              >
+                {copied ? <Check aria-hidden="true" size={13} /> : <Copy aria-hidden="true" size={13} />}
+                {copied ? t.copied : t.copy}
+              </button>
+            )}
+          </summary>
+          <div className="wf-command-builder-code">
+            {runUnavailable ? (
+              <p className="wf-command-builder-unavailable">{t.noPipeline}</p>
+            ) : (
+              <pre key={`${selectedId}:${tab}`}>
+                <code>{command}</code>
+              </pre>
+            )}
+          </div>
+        </details>
       </div>
     </section>
   );

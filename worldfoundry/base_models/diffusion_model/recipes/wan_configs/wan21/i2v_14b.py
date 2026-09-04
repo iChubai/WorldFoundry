@@ -1,5 +1,14 @@
 # Copyright 2024-2025 The Alibaba Wan Team Authors. All rights reserved.
-"""Module for base_models -> diffusion_model -> video -> wan -> wan_2p1 -> configs -> wan_i2v_14B.py functionality."""
+"""Official Wan 2.1 I2V 14B EasyDict (UMT5 + CLIP + Wan2.1 VAE).
+
+Extends :data:`~.shared.wan_shared_cfg` with the 40-layer / 5120-dim
+DiT, OpenCLIP XLM-RoBERTa ViT-H/14, and a camera-shake prefix on the
+shared Chinese negative prompt.  VAE stride is ``(4, 8, 8)``.
+
+This is the in-tree I2V graph used by most recipes.  The upstream
+filename variant lives in :mod:`.i2v_14b_upstream` (same numbers,
+no extra neg-prompt prefix).
+"""
 
 import torch
 

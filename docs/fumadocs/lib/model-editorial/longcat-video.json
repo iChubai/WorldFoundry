@@ -1,0 +1,37 @@
+{
+  "id": "longcat-video",
+  "tagline": {
+    "en": "Meituan LongCat's MIT-licensed video model, tuned for long-video generation and continuation.",
+    "zh": "美团 LongCat 推出的 MIT 许可视频模型,擅长长视频生成与续写。"
+  },
+  "overview": {
+    "en": [
+      "LongCat-Video is an open video-generation model from Meituan's LongCat team, released under the MIT license. Alongside text-to-video and image-to-video, its emphasis is on longer clips and video continuation — extending an existing video rather than only starting from scratch.",
+      "In WorldFoundry it runs through a model-specific pipeline that drives the vendored demo scripts once you explicitly request execution, using local LongCat-Video checkpoints. You supply your prompt or seed video, and it generates the continuation or clip."
+    ],
+    "zh": [
+      "LongCat-Video 是美团 LongCat 团队开源的视频生成模型,采用 MIT 许可。除了文生视频与图生视频,它更侧重较长片段与视频续写——在已有视频基础上延展,而不只是从零开始。",
+      "在 WorldFoundry 中,它通过一条专用 pipeline 运行,在你显式请求执行后驱动内置的 demo 脚本,并使用本地 LongCat-Video checkpoint。你提供提示词或起始视频,它便生成续写或片段。"
+    ]
+  },
+  "whenToUse": {
+    "en": "A good fit when you want longer generated video or need to continue an existing clip, and want an openly-licensed (MIT) model for it.",
+    "zh": "当你想要更长的生成视频、或需要续写已有片段,并希望使用一个开放许可(MIT)的模型时,它很合适。"
+  },
+  "notFor": {
+    "en": "Checkpoints are staged locally rather than bundled, and the pipeline runs only when you explicitly request execution, so set both up before you generate.",
+    "zh": "Checkpoint 需在本地准备而非随附,且 pipeline 只在你显式请求执行时才运行,请在生成前把两者都配置好。"
+  },
+  "highlights": {
+    "en": [
+      "MIT license, openly available weights",
+      "Focus on long-video generation and continuation",
+      "Also supports text-to-video and image-to-video"
+    ],
+    "zh": [
+      "MIT 许可,权重开放可用",
+      "专注长视频生成与续写",
+      "同时支持文生视频与图生视频"
+    ]
+  }
+}

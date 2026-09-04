@@ -87,7 +87,7 @@ class LongCatVideoPipeline(PipelineABC):
         """Load the pipeline from pretrained checkpoints and configurations."""
         del model_id
         options = cls._normalize_options(model_path, required_components, kwargs)
-        checkpoint_dir = options.get("checkpoint_dir") or options.get("ckpt_dir")
+        checkpoint_dir = options.get("checkpoint_dir") or options.get("ckpt_dir") or options.get("model_path")
         if checkpoint_dir is None and model_path is not None and not isinstance(model_path, dict):
             checkpoint_dir = model_path
         task_type = str(options.get("task_type") or "t2v")

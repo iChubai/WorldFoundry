@@ -3,6 +3,8 @@ name: SANA-WM
 aliases:
 - sana world model
 - sana-wm-2.6b
+- sana-wm-streaming
+- Efficient-Large-Model/SANA-WM_streaming
 tasks:
 - world-model
 - camera-controlled-video
@@ -13,20 +15,42 @@ source:
   official_repo_url: https://github.com/NVlabs/Sana
   license: apache-2.0
 official_sources:
+  project_page: https://nvlabs.github.io/Sana/WM/
   paper: https://arxiv.org/abs/2605.15178
   github:
     url: https://github.com/NVlabs/Sana
 runtime_profile: runtime-profile:sana-wm
 runner_target: worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner
 pipeline_binding: sana-wm
+runner_entry_kind: runnable_runner
+integration_status: integrated
 integration:
-  status: runnable
+  status: integrated
   notes:
   - WorldFoundry registers an in-tree resident pipeline with configurable multi-GPU component placement.
 runner_parity:
   status: implemented
   notes:
   - The quality profile keeps the bidirectional stage and LTX-2 refiner enabled.
+variants:
+- id: sana-wm-streaming
+  task: camera-controlled-video
+  provider: official_repo
+  checkpoint_refs:
+  - repo_id: Efficient-Large-Model/SANA-WM_streaming
+    revision: c7694938c854b1fcc29468e9514f1ea2d0c4ba8e
+    license: apache-2.0
+  runtime_profile: sana-wm-streaming
+  pipeline_binding: sana-wm-streaming
+  runner_target: worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner
+  integration:
+    status: integrated
+    notes: Native prefix recomputation, fixed four-step Stage-1 scheduler, LTX-2
+      refiner, Gemma-3 connectors, and causal VAE are all declaratively bound.
+  runner_parity:
+    status: pending
+    notes: CPU fake-component execution validates the complete chunk/refiner lifecycle;
+      full checkpoint inference needs CUDA.
 catalog_category: world_models
 catalog_scope: World-model catalog entries. Integrated entries expose in-tree WorldFoundry runtimes; blocked entries retain
   upstream provenance without runnable backends.

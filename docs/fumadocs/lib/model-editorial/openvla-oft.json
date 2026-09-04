@@ -1,0 +1,41 @@
+{
+  "id": "openvla-oft",
+  "tagline": {
+    "en": "An MIT-licensed 7B VLA policy with optimized fine-tuning — fast LIBERO action prediction from images and instructions.",
+    "zh": "MIT 许可的 7B VLA 策略，采用优化微调（OFT）——从图像与指令快速预测 LIBERO 动作。"
+  },
+  "overview": {
+    "en": [
+      "OpenVLA-OFT is an optimized fine-tuning variant of the OpenVLA vision-language-action policy. Like OpenVLA, it takes camera images plus a language instruction and predicts robot actions; the OFT recipe tunes it for fast, high-quality action prediction on manipulation tasks.",
+      "WorldFoundry provides five MIT-licensed 7B checkpoints fine-tuned for the LIBERO suite — spatial, object, goal, LIBERO-10, and a combined checkpoint — each emitting an 8-step, 7-dimensional action chunk from full and wrist camera images plus state. An in-tree fast path computes only the final hidden state and action-position logits, matching the full reference path exactly while doing less work.",
+      "In WorldFoundry you stage a checkpoint locally and run the action-prediction or policy-rollout route; it returns an action trace for the robot rather than an image or video."
+    ],
+    "zh": [
+      "OpenVLA-OFT 是 OpenVLA 视觉-语言-动作策略的优化微调（OFT）变体。与 OpenVLA 一样，它接收相机图像加语言指令并预测机器人动作；OFT 方案将其调优为在操作任务上快速、高质量地预测动作。",
+      "WorldFoundry 提供五个 MIT 许可的 7B checkpoint，均在 LIBERO 套件上微调——spatial、object、goal、LIBERO-10 以及一个组合 checkpoint——每个都从全景与腕部相机图像加状态出发，输出 8 步、7 维的动作。内置的快速路径只计算最终隐藏状态与动作位置的 logits，在减少计算的同时与完整参考路径完全一致。",
+      "在 WorldFoundry 中，你把 checkpoint 放到本地并运行动作预测或 policy-rollout 路径；它返回给机器人的动作轨迹，而非图像或视频。"
+    ]
+  },
+  "whenToUse": {
+    "en": "Use it when you want a fast, openly-licensed OpenVLA policy tuned for the LIBERO benchmark, with separate checkpoints for the spatial, object, goal, and 10-task settings.",
+    "zh": "当你想要一个快速、开放许可、针对 LIBERO 基准调优的 OpenVLA 策略，并需要 spatial、object、goal 与 10 任务设置各自的 checkpoint 时使用。"
+  },
+  "notFor": {
+    "en": "Not a video or image generator — its output is action traces. At 7B it needs adequate GPU memory (a validated run peaked around 14.5 GiB), and checkpoints are staged locally.",
+    "zh": "它不是视频或图像生成器——输出为动作轨迹。作为 7B 模型，运行需要足够的 GPU 显存（一次验证运行的峰值约为 14.5 GiB），且 checkpoint 需放到本地。"
+  },
+  "highlights": {
+    "en": [
+      "MIT license, open 7B weights",
+      "Five LIBERO fine-tunes: spatial, object, goal, 10, and combined",
+      "Emits 8×7 action chunks from full + wrist images plus state",
+      "Fast path matches the full reference path with zero error"
+    ],
+    "zh": [
+      "MIT 许可，开放 7B 权重",
+      "五个 LIBERO 微调版本：spatial、object、goal、10 与组合版",
+      "从全景+腕部图像加状态输出 8×7 动作",
+      "快速路径与完整参考路径零误差一致"
+    ]
+  }
+}

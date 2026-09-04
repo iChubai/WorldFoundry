@@ -1,4 +1,13 @@
-"""Latent initialization roles for Sana image and video recipes."""
+"""Sana image / video / ControlNet / world-model :class:`~...contracts.LatentInitializer` roles.
+
+:class:`SanaNoiseInitializer` draws DC-AE-shaped noise (32-channel image
+latents by default; video uses temporal compression).  ControlNet, video-to-
+video, and world-model subclasses implement
+:class:`~...contracts.EncodedLatentInitializer` and encode
+``control_image`` / source video / first-frame observations through the
+recipe-bound DC-AE.  Optional ``allow_spatial_padding`` rounds H/W up to
+the codec stride for Sprint / variable-resolution recipes.
+"""
 
 from __future__ import annotations
 
@@ -75,6 +84,7 @@ class SanaNoiseInitializer:
         device: torch.device,
         dtype: torch.dtype,
     ) -> torch.Tensor:
+        """Return image ``[B,C,H,W]`` or video ``[B,C,T,H,W]`` Gaussian noise."""
         return self._noise(
             request,
             generator=generator,
@@ -87,6 +97,7 @@ class SanaControlNetInitializer(SanaNoiseInitializer):
     """Encode the HED/control image with the recipe-bound DC-AE codec."""
 
     def initialize(self, *args, **kwargs):
+        """Rejected: ControlNet must use :meth:`initialize_with_encoder`."""
         raise RuntimeError("Sana ControlNet requires its latent_encoder binding")
 
     @torch.no_grad()
@@ -117,6 +128,7 @@ class SanaControlNetInitializer(SanaNoiseInitializer):
         ).div(127.5).sub(1.0)
         if request.batch_size > 1:
             pixels = pixels.expand(request.batch_size, -1, -1, -1)
+        # DC-AE encode the control image; the denoiser reads ``control_signal``.
         control = latent_encoder.encode(pixels.to(device=device, dtype=dtype))
         noise = self._noise(request, generator=generator, device=device, dtype=dtype)
         if control.shape != noise.shape:
@@ -131,6 +143,7 @@ class SanaVideoToVideoInitializer(SanaNoiseInitializer):
     """Encode a source video and expose it as explicit V2V conditioning."""
 
     def initialize(self, *args, **kwargs):
+        """Rejected: SANA-Streaming must use :meth:`initialize_with_encoder`."""
         raise RuntimeError("Sana video-to-video requires its latent_encoder binding")
 
     @torch.no_grad()
@@ -182,6 +195,7 @@ class SanaWorldInitializer(SanaNoiseInitializer):
     """Encode the anchor image and build explicit camera-conditioning tensors."""
 
     def initialize(self, *args, **kwargs):
+        """Rejected: SANA-WM must use :meth:`initialize_with_encoder`."""
         raise RuntimeError("SANA-WM requires its recipe-bound LTX latent encoder")
 
     @staticmethod
@@ -194,17 +208,25 @@ class SanaWorldInitializer(SanaNoiseInitializer):
         if direct_camera is not None or direct_plucker is not None:
             if direct_camera is None or direct_plucker is None:
                 raise ValueError("camera_conditions and chunk_plucker must be provided together")
-            return {
+            conditions = {
                 "camera_conditions": torch.as_tensor(direct_camera),
                 "chunk_plucker": torch.as_tensor(direct_plucker),
             }
+            if conditions["camera_conditions"].ndim == 2:
+                conditions["camera_conditions"] = conditions["camera_conditions"].unsqueeze(0)
+            if conditions["chunk_plucker"].ndim == 4:
+                conditions["chunk_plucker"] = conditions["chunk_plucker"].unsqueeze(0)
+            return conditions
 
         poses = request.inputs.get("camera_to_world", request.inputs.get("camera_poses"))
         if poses is None:
-            actions = request.inputs.get(
-                "camera_actions",
-                request.inputs.get("interactions", request.inputs.get("camera_action", ())),
-            )
+            actions = request.inputs.get("camera_actions")
+            if actions is None:
+                actions = request.inputs.get("interactions")
+            if actions is None:
+                actions = request.inputs.get("camera_action")
+            if actions is None:
+                actions = ()
             if isinstance(actions, str) and "-" not in actions:
                 actions = [actions]
             poses = rollout_wasd_camera_actions(actions, num_frames=request.num_frames)
@@ -231,7 +253,7 @@ class SanaWorldInitializer(SanaNoiseInitializer):
             )
         if intrinsics.ndim >= 2:
             intrinsics = intrinsics[: request.num_frames]
-        return pack_spatiotemporal_camera_conditioning(
+        conditions = pack_spatiotemporal_camera_conditioning(
             poses,
             intrinsics,
             image_height=request.height,
@@ -239,6 +261,9 @@ class SanaWorldInitializer(SanaNoiseInitializer):
             temporal_stride=8,
             spatial_stride=32,
         )
+        conditions["camera_conditions"] = conditions["camera_conditions"].unsqueeze(0)
+        conditions["chunk_plucker"] = conditions["chunk_plucker"].unsqueeze(0)
+        return conditions
 
     @torch.no_grad()
     def initialize_with_encoder(
@@ -251,6 +276,7 @@ class SanaWorldInitializer(SanaNoiseInitializer):
         dtype: torch.dtype,
     ) -> LatentInitialization:
         from PIL import ImageOps
+
         from worldfoundry.core import load_pil_image
 
         if request.batch_size != 1:

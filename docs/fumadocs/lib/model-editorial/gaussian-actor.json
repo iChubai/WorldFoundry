@@ -1,0 +1,41 @@
+{
+  "id": "gaussian-actor",
+  "tagline": {
+    "en": "A Gaussian-policy actor from LeRobot — a stochastic action policy for reinforcement-learning-style robot control.",
+    "zh": "来自 LeRobot 的高斯策略 actor——面向强化学习式机器人控制的随机动作策略。"
+  },
+  "overview": {
+    "en": [
+      "Gaussian Actor is the gaussian_actor policy from Hugging Face's LeRobot library. It models a robot's action as a Gaussian distribution, so instead of committing to a single output it produces a mean and spread you can sample from — a common building block in reinforcement-learning control.",
+      "It plugs into WorldFoundry through an in-tree action runtime adapter that wraps the LeRobot policy directly, so you can run it for actor policy or reinforcement-learning workflows.",
+      "In WorldFoundry, point it at your local checkpoint and feed observations to get actions; when the checkpoint isn't staged yet, the runtime tells you which assets are still needed."
+    ],
+    "zh": [
+      "Gaussian Actor 是 Hugging Face LeRobot 库中的 gaussian_actor 策略。它把机器人动作建模为高斯分布,因此不是给出单一输出,而是产生可供采样的均值与方差——这是强化学习控制中的常见构件。",
+      "它通过一个 in-tree 的动作运行适配器接入 WorldFoundry,该适配器直接封装 LeRobot 策略,便于你用于 actor 策略或强化学习工作流。",
+      "在 WorldFoundry 中,把它指向本地 checkpoint 并喂入观测即可得到动作;当 checkpoint 尚未准备好时,运行时会告诉你还缺哪些资产。"
+    ]
+  },
+  "whenToUse": {
+    "en": "Use it when you need a stochastic Gaussian action policy — for reinforcement-learning control or as an actor component where sampling actions from a distribution matters.",
+    "zh": "当你需要一个随机的高斯动作策略时使用它——用于强化学习控制,或作为需要从分布中采样动作的 actor 组件。"
+  },
+  "notFor": {
+    "en": "It's an action policy, not a generative video or image model, and it targets LeRobot-style setups. You'll need to supply a compatible checkpoint and robot or simulator.",
+    "zh": "它是动作策略,而非生成式视频或图像模型,面向 LeRobot 式的配置。你需要提供兼容的 checkpoint 以及机器人或仿真器。"
+  },
+  "highlights": {
+    "en": [
+      "Gaussian action policy from the LeRobot library",
+      "Outputs a distribution over actions to sample from",
+      "Suited to reinforcement-learning control",
+      "Runs via an in-tree LeRobot action adapter"
+    ],
+    "zh": [
+      "来自 LeRobot 库的高斯动作策略",
+      "输出可供采样的动作分布",
+      "适合强化学习控制",
+      "通过 in-tree 的 LeRobot 动作适配器运行"
+    ]
+  }
+}

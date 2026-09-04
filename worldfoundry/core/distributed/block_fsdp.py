@@ -17,6 +17,10 @@ from torch.distributed.fsdp import MixedPrecision, ShardingStrategy
 from torch.distributed.fsdp.wrap import lambda_auto_wrap_policy
 from torch.distributed.utils import _free_storage
 
+# ──────────────────────────────────────────────────────────────────────────
+# FSDP1 wrap / teardown — inference only; training uses apply_fsdp2
+# ──────────────────────────────────────────────────────────────────────────
+
 
 def shard_model(
     model,
@@ -59,6 +63,13 @@ def shard_model_orig_params(
     sharding_strategy=ShardingStrategy.FULL_SHARD,
     sync_module_states=True,
 ):
+    """Always wrap with ``use_orig_params=True`` so LoRA / PEFT can see real names.
+
+    Same FSDP1 inference contract as :func:`shard_model`, but never falls back
+    to flattened params. Needed when adapters index parameters by the original
+    ``named_parameters`` keys.
+    """
+
     return FSDP(
         module=model,
         process_group=process_group,
@@ -74,6 +85,12 @@ def shard_model_orig_params(
 
 
 def free_model(model):
+    """Release FSDP flat-param storage, then drop the module and CUDA cache.
+
+    ``del model`` alone leaves the flat parameter allocation alive until the
+    next GC cycle, which is enough to OOM the next shard.
+    """
+
     for m in model.modules():
         if isinstance(m, FSDP):
             _free_storage(m._handle.flat_param.data)

@@ -1147,6 +1147,20 @@ PhyEduVideoContract = ExternalBenchmarkContract(
     ),
 )
 
+PAWBenchContract = ExternalBenchmarkContract(
+    benchmark_id="pawbench",
+    display_name="PAWBench",
+    input_keys=("dataset_root", "generated_video_dir", "official_results_path"),
+    output_keys=("scorecard", "raw_metric_table", "per_sample_scores", "benchmark_contract"),
+    metric_ids=("calibration_tvd_percent", "coverage_percent"),
+    requires_upstream_runtime=False,
+    notes=(
+        "The official PAWBench evaluator and PAWEval rubrics are vendored in-tree.",
+        "WorldFoundry preserves PAW-Calibration TVD and PAW-Coverage as separate metrics without a synthetic average.",
+        "Fresh official evaluation requires the external dataset, 50 rollouts per scene, and the hosted Gemini 3.5 Flash judge through OpenRouter.",
+    ),
+)
+
 WorldArenaContract = ExternalBenchmarkContract(
     benchmark_id="worldarena",
     display_name="WorldArena",
@@ -1169,6 +1183,27 @@ WorldArenaContract = ExternalBenchmarkContract(
     notes=(
         "Contract records WorldArena perceptual and functional embodied-world-model evaluation outputs.",
         "Full validation requires WorldArena/RoboTwin assets and official task execution.",
+    ),
+)
+
+WorldAtlasArenaContract = ExternalBenchmarkContract(
+    benchmark_id="worldatlas-arena",
+    display_name="WorldArena (WorldAtlas Arena)",
+    input_keys=("benchmark_manifest", "generated_video_dir", "official_results_path"),
+    output_keys=("scorecard", "raw_metric_table", "per_sample_scores", "benchmark_contract"),
+    metric_ids=(
+        "long_sequence",
+        "action_control",
+        "consistency_3d_4d",
+        "physics",
+        "quality",
+        "real_time",
+    ),
+    requires_upstream_runtime=True,
+    notes=(
+        "The OpenEnvision evaluator and benchmark configuration are vendored in-tree.",
+        "WorldFoundry preserves the upstream six-axis score vector and does not synthesize a global scalar.",
+        "Full execution requires caller-provided benchmark media, manifests, predictions, and metric assets.",
     ),
 )
 
@@ -1743,6 +1778,7 @@ _BUILTIN_CONTRACT_ITEMS = (
     MINDContract,
     MiraBenchContract,
     MolmoSpacesContract,
+    PAWBenchContract,
     PhyEduVideoContract,
     PhysVidBenchContract,
     PhyGenBenchContract,
@@ -1777,6 +1813,7 @@ _BUILTIN_CONTRACT_ITEMS = (
     VMBenchContract,
     WBenchContract,
     WorldArenaContract,
+    WorldAtlasArenaContract,
     WorldBenchContract,
     WorldInWorldContract,
     WorldModelBenchContract,

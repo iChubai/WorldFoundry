@@ -1,8 +1,32 @@
-"""Sequence metadata builders shared by variable-length attention kernels."""
+"""Sequence metadata builders shared by variable-length attention kernels.
+
+FlashAttention's packed ABI wants an int32 ``cu_seqlens`` vector.
+Building it with a Python loop forces a host sync. This module
+constructs those tensors on-device from a text mask plus an image
+token count so varlen and sequence-parallel packed attention stay
+on the GPU.
+
+:func:`get_cu_seqlens` encodes each sample as a padded block of
+``text_len + img_len``; odd offsets are the valid length and even
+offsets are the padded end.
+
+Not this module:
+    Does not launch attention. Packed dataclass ABI lives in
+    :mod:`.packed_sequence`. Kernel dispatch lives in :mod:`.varlen`.
+
+Public surface:
+
+- :func:`get_cu_seqlens` — on-device alternating valid/pad offsets.
+"""
 
 from __future__ import annotations
 
 import torch
+
+
+# ──────────────────────────────────────────────────────────────────────────
+# Packed offsets — keep construction on-device to avoid a host sync
+# ──────────────────────────────────────────────────────────────────────────
 
 
 def get_cu_seqlens(text_mask: torch.Tensor, img_len: int) -> torch.Tensor:

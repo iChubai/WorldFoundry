@@ -1,4 +1,13 @@
-"""LVDM beta schedules, timestep embeddings, and DDIM sampling math."""
+"""LVDM beta schedules, sinusoidal timestep embeddings, and DDIM math.
+
+Helpers shared by every LVDM / VideoCrafter DDIM sampler:
+:func:`make_beta_schedule` (linear / cosine / sqrt),
+:func:`make_ddim_timesteps` / :func:`make_ddim_sampling_parameters`,
+:func:`timestep_embedding`, and :func:`rescale_noise_cfg`.
+
+These functions are pure numerics.  Stateful sampling loops live in
+:mod:`.ddim` and the vid2world / multi-cond siblings.
+"""
 
 import math
 import numpy as np

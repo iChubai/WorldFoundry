@@ -25,6 +25,10 @@ from torch.distributed.algorithms._checkpoint.checkpoint_wrapper import (
     checkpoint_wrapper as ptd_checkpoint_wrapper,
 )
 
+# ──────────────────────────────────────────────────────────────────────────
+# FSDP2 inference wrap — silent single-device fallback when API is missing
+# ──────────────────────────────────────────────────────────────────────────
+
 
 def apply_ac(model):
     """Apply activation checkpointing to the model."""
@@ -76,6 +80,13 @@ def shard_model(model, param_dtype=torch.bfloat16, reduce_dtype=torch.float32):
 
 
 def free_model(model):
+    """Drop the sharded module and flush CUDA cache after inference teardown.
+
+    FSDP2 does not expose a flat-param handle, so this cannot free storage
+    the way :func:`block_fsdp.free_model` does — only the Python graph and
+    the allocator cache.
+    """
+
     del model
     gc.collect()
     torch.cuda.empty_cache()

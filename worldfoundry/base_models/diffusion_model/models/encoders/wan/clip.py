@@ -1,6 +1,17 @@
 # Modified from ``https://github.com/openai/CLIP'' and ``https://github.com/mlfoundations/open_clip''
 # Copyright 2024-2025 The Alibaba Wan Team Authors. All rights reserved.
-"""Checkpoint-compatible Wan XLM-RoBERTa CLIP encoder."""
+"""Checkpoint-compatible Wan XLM-RoBERTa CLIP image/text encoder.
+
+Used by I2V recipes for visual tokens in
+``Conditioning.shared``.  :class:`CLIPModel` is the public
+encode surface; ViT + XLM-RoBERTa towers are implementation
+detail.
+
+Text-only T2V uses UMT5 (:mod:`.model`) instead.  Fun-Control
+wraps this graph in :mod:`.variants.video_x_fun`.
+
+Wan CLIP family, not Hunyuan CLIP or OpenCLIP.
+"""
 
 import logging
 import math
@@ -10,6 +21,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 from worldfoundry.core.attention.varlen import flash_attention
+from worldfoundry.core.model_loading import load_torch_state_dict
 
 from .model import HuggingfaceTokenizer
 from .xlm_roberta import XLMRoberta
@@ -698,7 +710,7 @@ class CLIPModel:
         self.model = self.model.eval().requires_grad_(False)
         logging.info(f'loading {checkpoint_path}')
         self.model.load_state_dict(
-            torch.load(checkpoint_path, map_location='cpu'))
+            load_torch_state_dict(checkpoint_path, map_location='cpu'))
 
         # init tokenizer
         self.tokenizer = HuggingfaceTokenizer(

@@ -11,6 +11,7 @@ from .runtime import (
     DEFAULT_CAMERACTRL_CKPT,
     DEFAULT_CAMERACTRL_CONFIG,
     DEFAULT_CAMERACTRL_IMAGE_LORA,
+    DEFAULT_CAMERACTRL_MOTION_ADAPTER,
     DEFAULT_SD15_ROOT,
     CameraCtrlRuntime,
 )
@@ -29,6 +30,7 @@ class CameraCtrlSynthesis(RuntimeAdapterSynthesis):
         "pose_adaptor_ckpt",
         "model_config",
         "motion_module_ckpt",
+        "motion_adapter_ckpt",
         "image_lora_ckpt",
         "image_lora_rank",
         "unet_subfolder",
@@ -41,5 +43,6 @@ __all__ = [
     "DEFAULT_CAMERACTRL_CKPT",
     "DEFAULT_CAMERACTRL_CONFIG",
     "DEFAULT_CAMERACTRL_IMAGE_LORA",
+    "DEFAULT_CAMERACTRL_MOTION_ADAPTER",
     "DEFAULT_SD15_ROOT",
 ]

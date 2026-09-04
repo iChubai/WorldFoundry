@@ -1,4 +1,6 @@
-"""Native monolithic facade for the original HunyuanVideo causal 3D VAE."""
+"""Monolithic facade for the original HunyuanVideo causal 3-D VAE.
+
+Composes :mod:`.original_encoder` and :mod:`.original_decoder`. Public ``encode`` / ``decode`` match the official tiling API."""
 
 from __future__ import annotations
 

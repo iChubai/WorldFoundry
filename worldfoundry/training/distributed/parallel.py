@@ -5,6 +5,7 @@ from __future__ import annotations
 import os
 from dataclasses import dataclass
 from datetime import timedelta
+from inspect import signature
 from types import TracebackType
 
 import torch
@@ -36,6 +37,16 @@ def _environment_int(name: str, *, default: int | None = None) -> int:
         return int(raw)
     except ValueError as error:
         raise RuntimeError(f"distributed launch variable {name} must be an integer") from error
+
+
+def _accepts_device_id(function: object) -> bool:
+    """Return whether a process-group initializer exposes ``device_id``."""
+
+    try:
+        parameters = signature(function).parameters
+    except (TypeError, ValueError):
+        return False
+    return "device_id" in parameters
 
 
 @dataclass(frozen=True, slots=True)
@@ -203,12 +214,17 @@ class DistributedTrainingContext:
             if dist.get_rank() != rank or dist.get_world_size() != world_size:
                 raise RuntimeError("active process group differs from torchrun environment")
         else:
+            init_kwargs: dict[str, object] = {
+                "backend": backend,
+                "init_method": "env://",
+                "rank": rank,
+                "world_size": world_size,
+                "timeout": timedelta(seconds=timeout),
+            }
+            if resolved_device_type == "cuda" and _accepts_device_id(dist.init_process_group):
+                init_kwargs["device_id"] = device
             dist.init_process_group(
-                backend=backend,
-                init_method="env://",
-                rank=rank,
-                world_size=world_size,
-                timeout=timedelta(seconds=timeout),
+                **init_kwargs,
             )
             self._owns_process_group = True
         self.rank = rank

@@ -5,18 +5,7 @@ description: Studio 如何发现模型、驱动 pipeline、落盘 run，以及�
 
 Studio 是覆盖同一套 pipeline 与 artifact 契约的目录驱动 shell，供 CLI 推理与评测共用。它不拥有模型权重、打分逻辑或 benchmark manifest；职责是发现可运行条目、准备输入、调用正确的 runtime driver、写出 `RunRecord`，并为 UI 挑选 preview assets。同一套执行核心可服务 Gradio（`app.py`）、Workspace job、conda 子进程与 torchrun worker，变化的只是展示层。
 
-```text
-launch args
-  -> StudioLaunchConfig
-  -> discover_catalog()
-  -> StudioManager
-  -> prepare_inputs()
-  -> runtime_driver_for()
-  -> run()
-  -> materialize_run()
-  -> pick_preview_assets()
-  -> Gradio / Workspace UI update
-```
+<ArchDiagram id="studio" locale="zh" />
 
 推理语义放在 `studio/execution.py`，catalog 发现放在 `studio/catalog.py`。`studio/app.py` 应保持轻薄：布局、回调与 Gradio 组件更新。若改动也必须在没有 Gradio 的 `runtime_job.py` 或 `workspace_app.py` 中生效，就应落在 execution，而不是 UI 文件。
 
@@ -96,16 +85,7 @@ Preview 空白通常意味着 pipeline 把文件写到了预期 key 之外、返
 
 实时路径刻意把模型状态与展示状态分开：
 
-```text
-浏览器按键边沿
-  -> RealtimeControlResampler
-  -> ResidentWorldRuntime（单一 worker thread）
-  -> realtime_frames_from_result()
-  -> VideoPostprocessStream（会话级状态链）
-  -> 分辨率/JPEG transport 处理
-  -> latest-interactive 或 ordered-quality 队列
-  -> WebRTC / WebSocket
-```
+<ArchDiagram id="studio-realtime" locale="zh" />
 
 模型通过 `RealtimeSpec` 拥有因果时序；transport 不应猜测 latent stride，也不能
 静默改变严格 segment 帧数。`latest-interactive` 会在有界 backpressure 后丢弃旧帧，

@@ -14,7 +14,11 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-"""Module for base_models -> diffusion_model -> image -> sana -> diffusion -> model -> nets -> fastlinear -> modules -> triton_mb_conv_pre_glu.py functionality."""
+"""Triton-fused MBConv + pre-GLU FFN used by SANA ``triton_linear`` blocks.
+
+``linear_glu_fwd`` fuses the expand projection and the GLU; ``depthwise_conv_fwd``
+fuses the spatial depthwise conv.  Numerics match :class:`MBConvPreGLU`.
+"""
 
 import torch
 from torch import nn
@@ -29,7 +33,7 @@ from worldfoundry.core.nn import get_same_padding, val2tuple
 
 
 class TritonMBConvPreGLU(nn.Module):
-    """Triton mb conv pre glu implementation."""
+    """Checkpoint-compatible MBConvPreGLU with fused Triton expand/GLU + DW conv."""
 
     def __init__(
         self,

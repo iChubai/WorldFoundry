@@ -1,4 +1,13 @@
-"""Generic frozen-context lifecycle for suffix-conditioned diffusion."""
+"""Generic frozen-context lifecycle for suffix-conditioned diffusion.
+
+Installed by the ``frozen-context`` runner strategy.  A clean context suffix
+from ``DiffusionRequest.inputs["frozen_context_latents"]`` is written back
+onto the tail of the latent sequence after every scheduler update so the
+denoiser can attend to a known past without the solver drifting it.
+
+The suffix must be shorter than the full latent time axis.  Shape changes
+during the run are treated as a contract violation.
+"""
 
 from __future__ import annotations
 
@@ -8,7 +17,17 @@ from .base import DiffusionExtension, DiffusionRunContext
 
 
 class FrozenContextSuffixExtension(DiffusionExtension):
-    """Restore a clean context suffix after every scheduler update."""
+    """Restore a clean context suffix after every scheduler update.
+
+    ``on_run_start`` caches a ``[B, C, T, H, W]`` tensor (unsqueezing 4-D
+    input).  ``after_step`` copies that suffix onto ``latents[:, :, -T:]``.
+
+    Raises:
+        TypeError: ``frozen_context_latents`` is missing or not a tensor.
+        ValueError: Rank / empty time axis; channel or spatial mismatch;
+            suffix not shorter than the full sequence.
+        RuntimeError: ``after_step`` runs before ``on_run_start``.
+    """
 
     extension_id = "frozen-context-suffix"
 

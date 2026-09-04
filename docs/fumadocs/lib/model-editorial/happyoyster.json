@@ -1,0 +1,37 @@
+{
+  "id": "happyoyster",
+  "tagline": {
+    "en": "HappyOyster — a hosted world-generation API integrated into WorldFoundry as a service route.",
+    "zh": "HappyOyster——一个托管的世界生成 API,以服务路由形式接入 WorldFoundry。"
+  },
+  "overview": {
+    "en": [
+      "HappyOyster is a world-generation service accessed through an API rather than local weights. Instead of running a model on your own hardware, you call the service and it returns generated world content.",
+      "In WorldFoundry the HappyOyster route is registered so it appears alongside local models. Because it's a hosted product, actually generating requires the service's credentials and endpoint, which you configure at runtime."
+    ],
+    "zh": [
+      "HappyOyster 是一个通过 API 访问的世界生成服务,而非本地权重。你不必在自己的硬件上运行模型,而是调用该服务,由它返回生成的世界内容。",
+      "在 WorldFoundry 中,HappyOyster 路由已注册,使它与本地模型并列出现。由于它是托管产品,真正生成需要该服务的凭证与访问端点,你需在运行时进行配置。"
+    ]
+  },
+  "whenToUse": {
+    "en": "Use HappyOyster when you'd rather call a hosted world-generation service than run a model locally, and you have access to its API.",
+    "zh": "当你更愿意调用托管的世界生成服务、而非在本地运行模型,并且你有该 API 的访问权限时,使用 HappyOyster。"
+  },
+  "notFor": {
+    "en": "It needs your own API credentials and endpoint, and outputs depend on the external service — availability, pricing, and behavior are outside WorldFoundry's control.",
+    "zh": "它需要你自备 API 凭证与访问端点,输出依赖外部服务——可用性、计费与行为都不在 WorldFoundry 的掌控之内。"
+  },
+  "highlights": {
+    "en": [
+      "Hosted world-generation API, not local weights",
+      "Integrated into WorldFoundry as a service route",
+      "Requires your own API credentials and endpoint"
+    ],
+    "zh": [
+      "托管的世界生成 API,而非本地权重",
+      "以服务路由形式接入 WorldFoundry",
+      "需自备 API 凭证与访问端点"
+    ]
+  }
+}

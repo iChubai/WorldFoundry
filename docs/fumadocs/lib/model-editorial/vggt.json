@@ -1,0 +1,41 @@
+{
+  "id": "vggt",
+  "tagline": {
+    "en": "Meta AI's Visual Geometry Grounded Transformer — a feed-forward model that recovers 3D geometry from images, with a two-stage 3D Gaussian Splatting pipeline.",
+    "zh": "Meta AI 的 Visual Geometry Grounded Transformer——从图像前馈式恢复三维几何的模型,并配有两阶段 3D 高斯泼溅(3DGS)流程。"
+  },
+  "overview": {
+    "en": [
+      "VGGT is a 3D reconstruction model from Meta AI (FAIR), presented at CVPR 2025. Given one or more images, its transformer directly predicts 3D geometry — points, depth, and camera information — in a single feed-forward pass, without the slow per-scene optimization that traditional pipelines rely on.",
+      "In WorldFoundry it is registered as a two-stage 3D Gaussian Splatting pipeline: VGGT infers scene geometry, which then seeds a 3DGS representation, giving you point clouds and reconstructions from ordinary image input. It is a distinct entry from the related VGGT-World world model.",
+      "You feed it images and get back 3D structure — a fast starting point for reconstruction, novel-view work, or downstream 3D understanding."
+    ],
+    "zh": [
+      "VGGT 是 Meta AI(FAIR)推出的三维重建模型,发表于 CVPR 2025。给定一张或多张图像,它的 transformer 在一次前馈中直接预测三维几何——点、深度与相机信息,无需传统流程那种缓慢的逐场景优化。",
+      "在 WorldFoundry 中,它被注册为两阶段 3D 高斯泼溅流程:VGGT 先推断场景几何,再以此初始化 3DGS 表示,从普通图像输入得到点云与重建结果。它与相关的 VGGT-World 世界模型是不同的条目。",
+      "你输入图像,得到三维结构——是重建、新视角合成或下游三维理解的一个快速起点。"
+    ]
+  },
+  "whenToUse": {
+    "en": "Choose VGGT when you need fast, feed-forward 3D reconstruction or 3D Gaussian Splatting from images, without running lengthy per-scene optimization.",
+    "zh": "当你需要从图像做快速、前馈式的三维重建或 3D 高斯泼溅,又不想跑漫长的逐场景优化时,适合选择 VGGT。"
+  },
+  "notFor": {
+    "en": "It targets geometry and reconstruction from images rather than text-driven video or scene generation; you provide the input views.",
+    "zh": "它面向从图像恢复几何与重建,而非文本驱动的视频或场景生成;输入视角需由你提供。"
+  },
+  "highlights": {
+    "en": [
+      "Feed-forward 3D geometry prediction — no per-scene optimization",
+      "Two-stage 3D Gaussian Splatting pipeline in WorldFoundry",
+      "Outputs point clouds and 3D reconstructions from images",
+      "From Meta AI (FAIR), presented at CVPR 2025"
+    ],
+    "zh": [
+      "前馈式三维几何预测——无需逐场景优化",
+      "在 WorldFoundry 中为两阶段 3D 高斯泼溅流程",
+      "从图像输出点云与三维重建",
+      "出自 Meta AI(FAIR),发表于 CVPR 2025"
+    ]
+  }
+}

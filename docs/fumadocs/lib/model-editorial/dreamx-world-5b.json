@@ -1,0 +1,41 @@
+{
+  "id": "dreamx-world-5b",
+  "tagline": {
+    "en": "DreamX-World 5B AR — an interactive world model that grows video autoregressively from a starting image, built on a Wan2.2 5B backbone.",
+    "zh": "DreamX-World 5B AR——从起始图像自回归延展视频的交互式世界模型,基于 Wan2.2 5B 主干构建。"
+  },
+  "overview": {
+    "en": [
+      "DreamX-World 5B AR is an interactive world model from the AMAP DreamX-World project. Starting from an image, it autoregressively generates video block by block, continuing from the previous frames so the scene evolves over time under a resident, cached runtime.",
+      "It uses the released causal 5B checkpoint together with a Wan2.2 TI2V-5B support checkpoint, and runs a distilled four-step AR-forcing schedule for its causal latent blocks. Its attention, cross-attention, latent, and VAE caches stay resident across steps, and decoded frames are output-only — never fed back in as conditioning.",
+      "In WorldFoundry it runs through the unified pipeline directly on the two local checkpoints — give it a starting image and controls, and it produces the world video."
+    ],
+    "zh": [
+      "DreamX-World 5B AR 是来自 AMAP DreamX-World 项目的交互式世界模型。它从一张图像出发,逐块自回归地生成视频,并从上一批帧继续延展,使场景在常驻、带缓存的运行时中随时间演变。",
+      "它使用发布的因果 5B checkpoint,配合 Wan2.2 TI2V-5B 支撑 checkpoint,并对因果隐空间块采用蒸馏的四步 AR-forcing 调度。它的注意力、交叉注意力、隐空间与 VAE 缓存在各步之间保持常驻;解码出的帧仅作为输出,绝不作为条件回灌。",
+      "在 WorldFoundry 中,它通过统一 pipeline 直接在两个本地 checkpoint 上运行:给它一张起始图像和控制信号,它便生成世界视频。"
+    ]
+  },
+  "whenToUse": {
+    "en": "When you want an interactive, image-to-video world model that extends a scene autoregressively over time from a starting frame, with a resident cached session for continuous rollout.",
+    "zh": "当你需要一个交互式的图生视频世界模型,从起始帧出发随时间自回归延展场景,并借助常驻缓存会话实现连续推进时。"
+  },
+  "notFor": {
+    "en": "It requires both the DreamX-World 5B checkpoint and a Wan2.2 TI2V-5B support checkpoint staged locally; prepare both before running.",
+    "zh": "它需要在本地同时准备好 DreamX-World 5B checkpoint 与 Wan2.2 TI2V-5B 支撑 checkpoint;运行前请备齐两者。"
+  },
+  "highlights": {
+    "en": [
+      "Interactive, autoregressive image-to-video world model",
+      "Extends the scene block by block from previous frames",
+      "Distilled four-step AR-forcing schedule",
+      "Built on a causal 5B checkpoint plus a Wan2.2 TI2V-5B backbone"
+    ],
+    "zh": [
+      "交互式、自回归的图生视频世界模型",
+      "从上一批帧起逐块延展场景",
+      "蒸馏的四步 AR-forcing 调度",
+      "基于因果 5B checkpoint 与 Wan2.2 TI2V-5B 主干"
+    ]
+  }
+}

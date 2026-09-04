@@ -12,19 +12,39 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+"""Pipeline Parallel (PP) micro-batch scheduler.
+
+:class:`PPScheduler` moves activations between adjacent stages via
+``get_pp_*`` ranks. Only the first/last PP ranks touch data loaders and
+loss. This is *not* TP or CP — those shard a single stage's tensors.
+Use ``init_pp_scheduler`` once after ``initialize_model_parallel``.
+"""
+
 import queue
 from dataclasses import dataclass
 from typing import Optional
 
 import torch
 
-from . import model_parallel_groups as mpu
+import worldfoundry.core.distributed.model_parallel_groups as mpu
+
+
+# ──────────────────────────────────────────────────────────────────────────
+# Async P2P queue — pair the recv buffer with its Work so wait() is explicit
+# ──────────────────────────────────────────────────────────────────────────
 
 
 @dataclass
 class TensorAndHandler:
+    """A posted ``irecv`` buffer plus the :class:`Work` that fills it."""
+
     tensor: torch.Tensor
     handler: torch.distributed.Work
+
+
+# ──────────────────────────────────────────────────────────────────────────
+# Adjacent-stage scheduler — first/last PP ranks own data loaders and loss
+# ──────────────────────────────────────────────────────────────────────────
 
 
 class PPScheduler:
@@ -105,6 +125,10 @@ class PPScheduler:
         tensor_and_handler.handler.wait()
         return tensor_and_handler.tensor
 
+
+# ──────────────────────────────────────────────────────────────────────────
+# Process-wide scheduler — one instance after initialize_model_parallel
+# ──────────────────────────────────────────────────────────────────────────
 
 _PP_SCHEDULER: Optional[PPScheduler] = None
 

@@ -1,4 +1,21 @@
-"""Native declarative recipes for the LTX-2 audio-video family."""
+"""Native declarative recipes for the LTX-2 / LTX-Video audio-video family.
+
+Each public function returns a :class:`NativeDiffusionRecipe`: component
+factories, Hub-pinned :class:`CheckpointSpec` values, and an execution
+strategy id.  Recipes do not construct runners.
+
+Family split
+------------
+- LTX-2 / LTX-2.3 I2V and T2V: joint audio-video DiT, Gemma prompt
+  conditioner, multistage latent initializer, two ``LTXFixedEulerScheduler``
+  instances, a spatial latent upsampler, and a tiled media decoder.
+  Strategy is ``joint-multistage`` with ``stage_steps=(8, 3)``.
+- LTX-Video 0.9.8 I2V: video-only DiT, T5 conditioner, two-pass Euler
+  (``stage_steps=(7, 3)``), still ``joint-multistage``.
+
+Both paths denoise at a reduced spatial scale, upsample latents, then
+refine.  Distilled checkpoints; no dual-expert CFG routing.
+"""
 
 from __future__ import annotations
 
@@ -18,6 +35,7 @@ from .spec import NativeDiffusionRecipe
 
 LTX2_I2V_MODEL_ID = "ltx-2-i2v"
 LTX23_I2V_MODEL_ID = "ltx-2.3-i2v"
+LTX23_T2V_MODEL_ID = "ltx-2.3-t2v"
 LTX_VIDEO_I2V_MODEL_ID = "ltx-video-i2v"
 LTX2_REPO_ID = "Lightricks/LTX-2"
 LTX23_REPO_ID = "Lightricks/LTX-2.3"
@@ -58,7 +76,22 @@ def _ltx_recipe(
     checkpoint_file: str,
     upsampler_file: str,
     aliases: tuple[str, ...],
+    generation_type: str = "i2v",
 ) -> NativeDiffusionRecipe:
+    """Assemble one LTX-2 / 2.3 recipe from a generation type and Hub pins.
+
+    Binds joint denoiser, Gemma conditioner, multistage initializer, two
+    fixed-sigma Euler schedulers, spatial upsampler, and tiled decoder.
+    Selects ``joint-multistage``.  ``generation_type`` is ``i2v`` or ``t2v``.
+    """
+
+    try:
+        generation_capability = {
+            "i2v": "image-to-video",
+            "t2v": "text-to-video",
+        }[generation_type]
+    except KeyError as error:
+        raise ValueError(f"unsupported LTX generation type: {generation_type!r}") from error
     denoiser = ComponentKey(ComponentKind.DENOISER)
     conditioner = ComponentKey(ComponentKind.CONDITIONER)
     initializer = ComponentKey(ComponentKind.LATENT_INITIALIZER)
@@ -148,7 +181,7 @@ def _ltx_recipe(
             options={"stage_steps": (8, 3)},
         ),
         checkpoints=checkpoints,
-        capabilities=frozenset({"image-to-video", "joint-audio-video", "two-stage-refinement"}),
+        capabilities=frozenset({generation_capability, "joint-audio-video", "two-stage-refinement"}),
         options={
             "latent_channels": 128,
             "spatial_compression": 32,
@@ -164,6 +197,8 @@ def _ltx_recipe(
 
 
 def ltx2_i2v_recipe() -> NativeDiffusionRecipe:
+    """LTX-2 19B distilled I2V on ``joint-multistage`` (8 then 3 Euler steps)."""
+
     return _ltx_recipe(
         model_id=LTX2_I2V_MODEL_ID,
         repo_id=LTX2_REPO_ID,
@@ -175,6 +210,8 @@ def ltx2_i2v_recipe() -> NativeDiffusionRecipe:
 
 
 def ltx23_i2v_recipe() -> NativeDiffusionRecipe:
+    """LTX-2.3 22B distilled I2V; same roles and two-stage Euler as LTX-2."""
+
     return _ltx_recipe(
         model_id=LTX23_I2V_MODEL_ID,
         repo_id=LTX23_REPO_ID,
@@ -185,8 +222,28 @@ def ltx23_i2v_recipe() -> NativeDiffusionRecipe:
     )
 
 
+def ltx23_t2v_recipe() -> NativeDiffusionRecipe:
+    """LTX-2.3 22B distilled T2V; same joint stack as I2V, ``t2v`` capability."""
+
+    return _ltx_recipe(
+        model_id=LTX23_T2V_MODEL_ID,
+        repo_id=LTX23_REPO_ID,
+        revision=LTX23_REVISION,
+        checkpoint_file="ltx-2.3-22b-distilled-1.1.safetensors",
+        upsampler_file="ltx-2.3-spatial-upscaler-x2-1.1.safetensors",
+        aliases=("ltx2.3-t2v", "ltx2_3_t2v"),
+        generation_type="t2v",
+    )
+
+
 def ltx_video_i2v_recipe() -> NativeDiffusionRecipe:
-    """Native official two-pass recipe for distilled LTX-Video 0.9.8."""
+    """LTX-Video 0.9.8 distilled I2V on ``joint-multistage`` (7 then 3 steps).
+
+    Binds the video-only DiT, T5 conditioner, video initializer (first-stage
+    scale 2/3), two fixed-sigma Euler schedulers, spatial upsampler with
+    AdaIN, and a tiled video decoder with tone-map compression.  No joint
+    audio path; refinement is still two-stage.
+    """
 
     denoiser = ComponentKey(ComponentKind.DENOISER)
     conditioner = ComponentKey(ComponentKind.CONDITIONER)
@@ -306,9 +363,11 @@ def ltx_video_i2v_recipe() -> NativeDiffusionRecipe:
 
 __all__ = [
     "LTX23_I2V_MODEL_ID",
+    "LTX23_T2V_MODEL_ID",
     "LTX2_I2V_MODEL_ID",
     "LTX_VIDEO_I2V_MODEL_ID",
     "ltx23_i2v_recipe",
+    "ltx23_t2v_recipe",
     "ltx2_i2v_recipe",
     "ltx_video_i2v_recipe",
 ]

@@ -6,13 +6,14 @@ import argparse
 import json
 import os
 import re
+import sys
 from pathlib import Path
 from typing import Any
 
 _JSON_NUMBER_RE = re.compile(r"-?(?:0|[1-9]\d*)(?:\.\d+)?(?:[eE][+-]?\d+)?\Z")
 
 
-class CliUsageError(Exception):
+class CliUsageError(ValueError):
     """User-facing command-usage error raised by CLI handlers.
 
     Handlers raise this for invalid flag combinations, missing required
@@ -22,6 +23,19 @@ class CliUsageError(Exception):
     argparse usage-error convention — keeping runtime failures (exit 1)
     distinguishable from usage mistakes (CM-08).
     """
+
+def cli_prog_name() -> str:
+    """Match usage/help branding to the console script that was invoked.
+
+    ``worldfoundry`` and ``worldfoundry-eval`` share this parser; anything
+    else (``python -m worldfoundry.cli``, tests, ...) keeps the historical
+    ``worldfoundry-eval`` branding so existing help-contract tests stay stable.
+    """
+
+    name = Path(sys.argv[0]).name
+    if name in {"worldfoundry", "worldfoundry-eval"}:
+        return name
+    return "worldfoundry-eval"
 
 
 def json_dump(payload: object) -> None:
@@ -152,8 +166,9 @@ def canonical_benchmark_zoo_id(value: str | None, manifest_dir: Path | None) -> 
 
 def resolve_cli_benchmark_for_materialize(task_type: str, benchmark_name: str) -> Any:
     """Resolve a benchmark adapter for legacy task-type/materialize CLI flows."""
+    prog = cli_prog_name()
     raise ValueError(
         "Task-type/benchmark-name materialization is retired for benchmark-zoo entries. "
-        "Use `worldfoundry-eval run --benchmark <id> --model <id>` or "
-        "`worldfoundry-eval task materialize` with a filesystem task YAML."
+        f"Use `{prog} run --benchmark <id> --model <id>` or "
+        f"`{prog} task materialize` with a filesystem task YAML."
     )

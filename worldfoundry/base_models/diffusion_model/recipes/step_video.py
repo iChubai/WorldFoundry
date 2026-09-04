@@ -1,4 +1,15 @@
-"""Declarative native Step-Video-T2V recipe."""
+"""Native declarative recipe for official Step-Video-T2V.
+
+Returns a :class:`NativeDiffusionRecipe` only.  Does not construct a
+runner.
+
+Binds the Step-Video DiT, Step-LLM + Hunyuan-CLIP conditioner, family
+latent initializer, Step-Video flow scheduler (``time_shift=13.0``,
+forward in time), and the v2 VAE decoder.  Execution is the default
+``standard`` five-role binding.  CFG is on; no dual expert or extra
+refinement stage.  Latents are 64-channel with 16x spatial compression
+and a 3-latent / 17-pixel temporal chunk.
+"""
 
 from __future__ import annotations
 
@@ -18,6 +29,8 @@ STEP_VIDEO_REVISION = "7a2b639ca2685350e87a4df7e4026285309f7fb6"
 
 
 def step_video_t2v_recipe() -> NativeDiffusionRecipe:
+    """Step-Video-T2V: DiT + dual text encoders + flow scheduler, CFG."""
+
     checkpoints = {
         "transformer": CheckpointSpec(
             repo_id=STEP_VIDEO_REPO_ID,

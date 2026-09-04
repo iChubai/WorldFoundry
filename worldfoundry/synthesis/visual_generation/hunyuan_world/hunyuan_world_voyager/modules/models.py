@@ -2,7 +2,8 @@ from typing import Any, Dict, List, Optional, Tuple, Union
 
 import torch
 import torch.nn as nn
-from diffusers.configuration_utils import register_to_config
+from diffusers.configuration_utils import ConfigMixin, register_to_config
+from diffusers.models import ModelMixin
 from einops import rearrange
 
 # 从基础模块导入原始类
@@ -222,7 +223,9 @@ class MMSingleStreamBlock(BaseMMSingleStreamBlock):
         )
 
 
-class HYVideoDiffusionTransformer(BaseHYVideoDiffusionTransformer):
+class HYVideoDiffusionTransformer(
+    BaseHYVideoDiffusionTransformer, ModelMixin, ConfigMixin
+):
     """
     Extended HunyuanVideo Transformer with Image-to-Video conditioning support.
     

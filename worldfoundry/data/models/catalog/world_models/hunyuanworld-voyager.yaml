@@ -19,6 +19,8 @@ modalities:
 name: HunyuanWorld-Voyager
 pipeline_binding: hunyuanworld-voyager
 official_sources:
+  project_page: https://3d-models.hunyuan.tencent.com/world/
+  paper: https://arxiv.org/abs/2405.07719
   github:
     confirmed_by: git ls-remote --heads
     confirmed_ref: refs/heads/main

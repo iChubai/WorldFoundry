@@ -1,4 +1,9 @@
-"""Sana video temporal attention-mask construction."""
+"""SANA video temporal attention-mask construction.
+
+Builds the FlexAttention block mask used by windowed / first-frame-visible
+softmax layers in :class:`SanaMSVideo`.  The first latent frame attends
+globally; later frames see a local temporal window.
+"""
 
 from __future__ import annotations
 

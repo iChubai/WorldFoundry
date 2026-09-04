@@ -15,6 +15,9 @@ source:
 checkpoint_refs:
 - repo_id: dylanebert/pixelSplat
   license: mit
+official_sources:
+  project_page: https://dcharatan.github.io/pixelsplat
+  paper: https://arxiv.org/abs/2312.12337
 integration:
   kind: pipeline_runner
   status: planned

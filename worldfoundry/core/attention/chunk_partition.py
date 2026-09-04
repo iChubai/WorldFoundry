@@ -15,8 +15,13 @@ from dataclasses import dataclass
 import torch
 from torch import Tensor
 
+# ──────────────────────────────────────────────────────────────────────────
+# Partition + token geometry — explicit chunks, not first-plus-uniform
+# ──────────────────────────────────────────────────────────────────────────
+
 
 def _positive_triplet(value: tuple[int, ...], *, field_name: str) -> tuple[int, int, int]:
+    """Require a 3-tuple of positive integers (patch sizes)."""
     result = tuple(int(item) for item in value)
     if len(result) != 3 or any(item <= 0 for item in result):
         raise ValueError(f"{field_name} must contain three positive integers")
@@ -33,6 +38,7 @@ class TemporalChunkPartition:
     compressed_patch_size: tuple[int, int, int] = (1, 4, 4)
 
     def __post_init__(self) -> None:
+        """Reject empty/non-positive chunks and finer compressed spatial patches."""
         chunks = tuple(int(value) for value in self.chunks)
         if not chunks or any(value <= 0 for value in chunks):
             raise ValueError("chunks must contain positive latent-frame counts")
@@ -57,10 +63,12 @@ class TemporalChunkPartition:
 
     @property
     def frame_count(self) -> int:
+        """Total latent frames across every chunk in the partition."""
         return sum(self.chunks)
 
     @property
     def chunk_count(self) -> int:
+        """Number of temporal chunks (not frames) in the partition."""
         return len(self.chunks)
 
     def prefix(self, chunk_count: int) -> tuple[int, ...]:
@@ -142,6 +150,7 @@ class DualResolutionTokenGeometry:
     compressed_capacity: int
 
     def __post_init__(self) -> None:
+        """Require every token/capacity field to be positive."""
         if any(
             int(value) <= 0
             for value in (
@@ -152,6 +161,11 @@ class DualResolutionTokenGeometry:
             )
         ):
             raise ValueError("dual-resolution token geometry must be positive")
+
+
+# ──────────────────────────────────────────────────────────────────────────
+# Dual-resolution store — recent full-res chunks plus compressed history
+# ──────────────────────────────────────────────────────────────────────────
 
 
 class DualResolutionKVCache:
@@ -168,6 +182,12 @@ class DualResolutionKVCache:
         device: torch.device | str,
         dtype: torch.dtype,
     ) -> None:
+        """Allocate layer-major full and compressed buffers.
+
+        Layout is ``[layers, 2, batch, heads, capacity, head_dim]`` so a
+        layer can index ``full[layer]`` / ``compressed[layer]`` as writable
+        ``(k, v)`` pairs without slicing the layer axis at every step.
+        """
         if not isinstance(geometry, DualResolutionTokenGeometry):
             raise TypeError("geometry must be DualResolutionTokenGeometry")
         dimensions = {
@@ -203,6 +223,7 @@ class DualResolutionKVCache:
         return self.full[int(index)], self.compressed[int(index)]
 
     def reset(self) -> None:
+        """Zero both caches and clear the committed-chunk counter."""
         self.full.zero_()
         self.compressed.zero_()
         self.num_cached_chunks = 0

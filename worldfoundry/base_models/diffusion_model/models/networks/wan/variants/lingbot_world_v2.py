@@ -1,12 +1,8 @@
-"""LingBot-World-V2 causal-fast DiT.
+"""LingBot-World-V2 causal-fast DiT (packed / official hybrid).
 
-Adapted from ``Robbyant/lingbot-world-v2`` at commit
-``94f43115de8d4a4f9f282126528c300a0b232c5f``. The V2-specific causal
-backbone remains here while common Wan layers and attention kernels are
-provided by WorldFoundry's canonical Wan implementation. Upstream code is
-licensed under CC BY-NC-SA 4.0.
+V2-specific causal backbone; common Wan layers come from WorldFoundry.
+Adds causal / fast-attention hooks.  Licensed CC BY-NC-SA 4.0 upstream.
 """
-
 import math
 
 import torch
@@ -355,9 +351,7 @@ class CausalHead(nn.Module):
 
 
 class WanModelFast(nn.Module, NativeConfigMixin):
-    r"""
-    Wan diffusion backbone supporting both text-to-video and image-to-video.
-    """
+    r"""LingBot-World-V2 causal-fast DiT."""
 
     ignore_for_config = ["patch_size", "cross_attn_norm", "qk_norm", "text_dim"]
     _no_split_modules = ["WanAttentionBlock"]

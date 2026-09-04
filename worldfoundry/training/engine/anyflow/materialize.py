@@ -133,7 +133,10 @@ def materialize_anyflow_training_run(
     resolved_device = torch.device(device)
     distributed_context: DistributedTrainingContext | None = None
     if recipe.distributed.backend == "ddp":
-        distributed_context = DistributedTrainingContext(device_type="cuda")
+        distributed_context = DistributedTrainingContext(
+            device_type="cuda",
+            timeout_seconds=recipe.distributed.timeout_seconds,
+        )
         resolved_device = distributed_context.device
     elif resolved_device.type == "cuda" and not torch.cuda.is_available():
         raise RuntimeError("CUDA was requested but is not available")

@@ -16,7 +16,13 @@ from ...representations.point_clouds_generation.pi3.pi3_representation import (
 from ...representations.point_clouds_generation.pi3.pi3x_representation import (
     Pi3XRepresentation,
 )
+from worldfoundry.core.io import artifact_root_path
 from worldfoundry.core.io.artifacts import render_point_cloud
+
+
+def _default_output_dir(name: str = "pi3_output") -> str:
+    """Resolve a stable default output directory instead of writing to the CWD."""
+    return str(artifact_root_path() / name)
 
 
 def _apply_camera_delta(c2w: np.ndarray, delta: List[float]) -> np.ndarray:
@@ -75,7 +81,7 @@ class Pi3Result:
     def save(self, output_dir: Optional[str] = None) -> List[str]:
         """Save for Pi3Result."""
         if output_dir is None:
-            output_dir = "./pi3_output"
+            output_dir = _default_output_dir()
 
         os.makedirs(output_dir, exist_ok=True)
         saved_files: List[str] = []

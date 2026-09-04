@@ -9,12 +9,10 @@ recursive-include worldfoundry/data/benchmarks/runtime_profiles *.yaml
 recursive-include worldfoundry/data/benchmarks/assets *.json *.jsonl *.csv *.txt *.md *.png
 recursive-include worldfoundry/data/benchmarks/assets/larybench *.yaml
 recursive-include worldfoundry/evaluation/tasks/execution/runners/larybench *.md LICENSE.*
-recursive-include worldfoundry/synthesis/visual_generation/rolling_forcing LICENSE* LEGAL.md UPSTREAM.md
-recursive-include worldfoundry/synthesis/visual_generation/stable_video_infinity LICENSE
-include worldfoundry/synthesis/visual_generation/moverse/UPSTREAM.md
 recursive-include worldfoundry/synthesis/visual_generation/moverse/moverse_runtime *
 recursive-include worldfoundry/synthesis/visual_generation/uni3c/uni3c_runtime *
-recursive-include worldfoundry/synthesis/visual_generation/world_model/mira_wm *.py *.md *.txt LICENSE .worldfoundry_upstream_commit
+recursive-include worldfoundry/synthesis/visual_generation/evoke/evoke_runtime *
+recursive-include worldfoundry/synthesis/visual_generation/world_model/mira_wm *.py *.md *.txt
 recursive-include worldfoundry/synthesis/visual_generation/rcm/rcm_runtime *.py *.md
 recursive-include worldfoundry/evaluation/tasks/execution/runners/physics_iq/official *.py
 recursive-include worldfoundry/evaluation/tasks/execution/runners/chronomagic_bench/runtime/chronomagic_bench/MTScore/configs *.json
@@ -22,19 +20,19 @@ include worldfoundry/evaluation/tasks/execution/runners/devil_dynamics/runtime/o
 recursive-include worldfoundry/evaluation/tasks/execution/runners/ewmbench/runtime/ewmbench *.yaml *.yml
 recursive-include worldfoundry/evaluation/tasks/execution/runners/fetv/runtime/fetv_eval *.py *.cpp *.cu *.h *.txt *.yaml *.yml *.json
 recursive-include worldfoundry/evaluation/tasks/execution/runners/phyfps_bench_gen/runtime/visual_chronometer/inference/configs *.yaml *.yml
+recursive-include worldfoundry/evaluation/tasks/execution/runners/pawbench/runtime *.py *.yaml *.yml *.md *.txt *.cff LICENSE
 recursive-include worldfoundry/evaluation/tasks/execution/runners/t2v_compbench/runtime/t2v_compbench/dot/configs *.json
 recursive-include worldfoundry/evaluation/tasks/execution/runners/vbench_plus_plus/runtime/vbench2_beta_long/configs *.yaml *.yml
 recursive-include worldfoundry/evaluation/tasks/execution/runners/vmbench/runtime/official *.py *.sh *.txt *.md *.yaml *.yml *.json
-recursive-include worldfoundry/evaluation/tasks/execution/runners/wbench/runtime/wbench *.yaml *.yml LICENSE LICENSE.*
+recursive-include worldfoundry/evaluation/tasks/execution/runners/wbench/runtime/wbench *.yaml *.yml
 recursive-include worldfoundry/evaluation/tasks/execution/runners/world_in_world/runtime/official *.py *.sh *.txt *.md *.yaml *.yml *.json
 recursive-include worldfoundry/evaluation/tasks/execution/runners/worldarena/runtime/video_quality *.yaml *.yml
+recursive-include worldfoundry/evaluation/tasks/execution/runners/worldatlas_arena/runtime *.py *.yaml *.yml *.md LICENSE UPSTREAM.md
 recursive-include worldfoundry/evaluation/tasks/execution/runners/wrbench/runtime *.py *.json *.txt *.md LICENSE
 recursive-include worldfoundry/base_models/perception_core/video_text/fetv_blip *.py *.json *.yaml *.yml *.txt
 recursive-include worldfoundry/base_models/perception_core/video_quality/fetv_stylegan_v *.py *.cpp *.cu *.h *.json *.yaml *.yml *.txt
 recursive-include worldfoundry/base_models/three_dimensions/general_3d/vipe/csrc *.cpp *.cu *.h *.cuh
-include worldfoundry/base_models/three_dimensions/general_3d/vipe/LICENSE
 include worldfoundry/base_models/three_dimensions/general_3d/vipe/THIRD_PARTY_LICENSES.md
-include worldfoundry/base_models/three_dimensions/general_3d/vipe/UPSTREAM.md
 recursive-include worldfoundry/studio/native/world_explorer *
 recursive-include worldfoundry/data/models/catalog *.yaml
 recursive-include worldfoundry/data/models/runtime *.yaml
@@ -44,7 +42,6 @@ recursive-include worldfoundry/data/models/runtime/configs *.yaml
 recursive-include worldfoundry/data/models/runtime/configs *.yml
 recursive-include worldfoundry/data/models/runtime/configs *.json
 recursive-include worldfoundry/data/models/runtime/environments *.yaml
-recursive-include worldfoundry/base_models/diffusion_model/diffsynth/tokenizer_configs *
 # Keep source distributions reproducible from a dirty development checkout.
 prune tmp
 prune cache
@@ -66,6 +63,7 @@ prune worldfoundry/studio/native/world_explorer/dependencies/glfw
 prune worldfoundry/studio/native/world_explorer/dependencies/imgui
 prune worldfoundry/studio/native/world_explorer/dependencies/pybind11
 prune worldfoundry/studio/native/world_explorer/dependencies/tinylogger
+prune worldfoundry/studio/assets/vendor
 
 # License-gated upstream runtimes are allowed as ignored local checkouts only.
 prune worldfoundry/base_models/three_dimensions/depth/dvlt/dvlt_runtime
@@ -79,12 +77,18 @@ prune worldfoundry/base_models/three_dimensions/general_3d/stable_virtual_camera
 prune worldfoundry/base_models/three_dimensions/point_clouds/cut3r
 prune worldfoundry/base_models/three_dimensions/point_clouds/gaussian_splatting
 prune worldfoundry/base_models/three_dimensions/point_clouds/pi3
+prune worldfoundry/base_models/three_dimensions/slam/mega_sam_runtime/UniDepth
+prune worldfoundry/synthesis/visual_generation/hunyuan_world/hunyuan_game_craft
+prune worldfoundry/synthesis/visual_generation/hunyuan_world/hunyuan_world_voyager
+prune worldfoundry/synthesis/visual_generation/hunyuan_world/hunyuan_worldplay
+prune worldfoundry/synthesis/visual_generation/hunyuan_world/hy_world_2p0_panogen_runtime
+prune worldfoundry/synthesis/visual_generation/hunyuan_world/hy_world_2p0_worldgen_runtime
 prune worldfoundry/synthesis/visual_generation/krea_realtime/realtime_video_runtime
 prune worldfoundry/synthesis/visual_generation/open_sora/open_sora_runtime
 prune worldfoundry/synthesis/visual_generation/vmem/vmem_runtime/extern/CUT3R
 prune worldfoundry/synthesis/visual_generation/wonderworld/wonderworld_runtime
-prune thirdparty/depth-diff-gaussian-rasterization-min
 prune thirdparty/diff-gaussian-rasterization
+prune thirdparty/SageAttention
 prune thirdparty/simple-knn
 
 # Upstream runtime mirrors should ship source code, not demo galleries, notebooks,
@@ -100,7 +104,3 @@ global-exclude *.7z *.arrow *.bz2 *.ckpt *.feather *.gguf *.gz *.h5 *.hdf5
 global-exclude *.gif *.ipynb *.pdf
 global-exclude *.mlmodel *.mp4 *.npy *.npz *.onnx *.parquet *.pickle *.pkl
 global-exclude *.pt *.pth *.rar *.safetensors *.sqlite *.sqlite3 *.tar *.tgz *.zip *.zst
-
-# Small tokenizer vocabularies are source assets, not checkpoint archives.
-include worldfoundry/base_models/perception_core/general_perception/open_clip/bpe_simple_vocab_16e6.txt.gz
-include worldfoundry/base_models/perception_core/segment/sam3/assets/bpe_simple_vocab_16e6.txt.gz

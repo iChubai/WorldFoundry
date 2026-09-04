@@ -1,4 +1,10 @@
-"""Denoiser adapters for original and 1.5 HunyuanVideo checkpoints."""
+"""Denoiser adapters for original and 1.5 HunyuanVideo checkpoints.
+
+Each class implements :class:`~...contracts.Denoiser`.  Factories load
+weights through :class:`~...loaders.module.NativeModuleLoader`.  Required
+conditioning keys (``text_states``, masks, pooled embeds) raise
+:exc:`KeyError` / :exc:`TypeError` when missing.
+"""
 
 from __future__ import annotations
 

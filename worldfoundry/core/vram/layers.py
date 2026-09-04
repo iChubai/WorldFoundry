@@ -1,9 +1,29 @@
+"""Per-module VRAM wrappers: offload / onload / compute-device state machine.
+
+:class:`AutoTorchModule` and its Linear/Module subclasses wrap a child so
+inactive weights sit on ``offload_device`` (often CPU or a :class:`DiskMap`
+view) and move to ``computation_device`` only around ``forward``. State
+``0/1/2`` is offloaded / onloaded / pinned-for-compute.
+
+Why wrap instead of ``model.cpu()`` / ``model.cuda()``: a video DiT has
+dozens of blocks; moving the whole tree every step thrashes the allocator.
+Wrappers move *one* module and can skip the copy when VRAM headroom
+(``vram_limit``) says the weight is already resident.
+
+``WORLDFOUNDRY_VRAM_CHECK_INTERVAL`` throttles free-memory probes — checking
+every layer on every step is itself a CUDA sync. Deep-copy fallbacks log
+once per class because a misplaced preparing/compute device pair otherwise
+silently clones a 100M-parameter block each call.
+"""
+
 import copy
+import logging
+import os
 from typing import Union
 
 import torch
 
-from ..device import IS_NPU_AVAILABLE, get_device_name, parse_device_type
+from ..device import get_device_name, is_npu_available, parse_device_type
 from .disk_map import DiskMap
 from .initialization import init_weights_on_device, skip_model_initialization
 
@@ -15,6 +35,60 @@ _FLOAT8_DTYPES = tuple(
     )
     if dtype is not None
 )
+logger = logging.getLogger(__name__)
+_DEEPCOPY_WARNING_CLASSES: set[type[torch.nn.Module]] = set()
+_INVALID_VRAM_CHECK_INTERVALS: set[str] = set()
+
+# ──────────────────────────────────────────────────────────────────────────
+# Probe throttle and deepcopy warning — mem_get_info is a CUDA sync
+# ──────────────────────────────────────────────────────────────────────────
+
+
+def _vram_check_interval() -> int:
+    """Return how many ``check_free_vram`` calls may reuse the last probe.
+
+    ``mem_get_info`` synchronizes the device. Checking every layer every step
+    is itself a stall. Invalid env values fail closed to ``1`` (probe every
+    check) and log once per distinct bad string.
+    """
+    value = os.getenv("WORLDFOUNDRY_VRAM_CHECK_INTERVAL", "1")
+    try:
+        interval = int(value)
+    except ValueError:
+        interval = 1
+    if interval < 1:
+        interval = 1
+    if str(interval) != value and value not in _INVALID_VRAM_CHECK_INTERVALS:
+        _INVALID_VRAM_CHECK_INTERVALS.add(value)
+        logger.warning(
+            "Invalid WORLDFOUNDRY_VRAM_CHECK_INTERVAL=%r; using 1 (probe every check).",
+            value,
+        )
+    return interval
+
+
+def _warn_deepcopy_once(module: torch.nn.Module) -> None:
+    """Log once per class when a wrapper deep-copies a module for a compute cast.
+
+    A misplaced preparing/compute device pair otherwise silently clones a
+    100M-parameter block on every forward.
+    """
+    module_type = type(module)
+    if module_type in _DEEPCOPY_WARNING_CLASSES:
+        return
+    _DEEPCOPY_WARNING_CLASSES.add(module_type)
+    parameter_count = sum(parameter.numel() for parameter in module.parameters())
+    logger.warning(
+        "Temporary VRAM casting deep-copies %s (%d parameters) on each computation; "
+        "align preparing/computation placement or use a specialized wrapper to avoid this cost.",
+        module_type.__name__,
+        parameter_count,
+    )
+
+
+# ──────────────────────────────────────────────────────────────────────────
+# State machine — 0 offloaded / 1 onloaded / 2 pinned for compute
+# ──────────────────────────────────────────────────────────────────────────
 
 
 class AutoTorchModule(torch.nn.Module):
@@ -90,6 +164,9 @@ class AutoTorchModule(torch.nn.Module):
         self.computation_dtype = computation_dtype
         self.computation_device = computation_device
         self.vram_limit = vram_limit
+        self._vram_check_interval = _vram_check_interval()
+        self._vram_checks_since_probe = 0
+        self._cached_vram_decision: bool | None = None
 
     def cast_to(self, weight, dtype, device):
         """Copy one tensor to ``dtype`` and ``device`` without mutating the source."""
@@ -101,10 +178,18 @@ class AutoTorchModule(torch.nn.Module):
         """Return whether current accelerator usage is below ``vram_limit``."""
         if self.vram_limit is None or self.computation_device_type not in {"cuda", "npu"}:
             return True
-        device = self.computation_device if not IS_NPU_AVAILABLE else get_device_name()
+        if (
+            self._cached_vram_decision is not None
+            and self._vram_checks_since_probe < self._vram_check_interval - 1
+        ):
+            self._vram_checks_since_probe += 1
+            return self._cached_vram_decision
+        device = self.computation_device if not is_npu_available() else get_device_name()
         gpu_mem_state = getattr(torch, self.computation_device_type).mem_get_info(device)
         used_memory = (gpu_mem_state[1] - gpu_mem_state[0]) / (1024**3)
-        return used_memory < self.vram_limit
+        self._cached_vram_decision = used_memory < self.vram_limit
+        self._vram_checks_since_probe = 0
+        return self._cached_vram_decision
 
     def offload(self):
         """Move managed parameters to the inactive placement and set state 0."""
@@ -130,6 +215,11 @@ class AutoTorchModule(torch.nn.Module):
             return name
         else:
             return self.name + "." + name
+
+
+# ──────────────────────────────────────────────────────────────────────────
+# Recursive wrap — disk vs device offload; deepcopy only when placement differs
+# ──────────────────────────────────────────────────────────────────────────
 
 
 class AutoWrappedModule(AutoTorchModule):
@@ -195,6 +285,12 @@ class AutoWrappedModule(AutoTorchModule):
             self.disk_offload = False
 
     def load_from_disk(self, torch_dtype, device, copy_module=False):
+        """Materialize disk-backed parameters onto *device*; buffers stay resident.
+
+        Non-persistent buffers cannot be reconstructed from a state dict, so
+        they are never replaced. ``copy_module=True`` clones first so the
+        stored module can remain on meta after a temporary compute load.
+        """
         if copy_module:
             module = copy.deepcopy(self.module)
         else:
@@ -204,21 +300,37 @@ class AutoWrappedModule(AutoTorchModule):
             param = self.disk_map[self.param_name(name)]
             param = param.to(dtype=torch_dtype, device=device)
             state_dict[name] = param
-        module.load_state_dict(state_dict, assign=True)
+        # Parameters are disk-backed, but buffers deliberately remain resident
+        # because non-persistent buffers cannot be reconstructed from a state
+        # dict. Missing buffer keys are therefore expected here.
+        module.load_state_dict(state_dict, assign=True, strict=False)
         module.to(dtype=torch_dtype, device=device)
         return module
 
     def offload_to_disk(self, model: torch.nn.Module):
-        for buf in model.buffers():
-            # If there are some parameters are registed in buffers (not in state dict),
-            # We cannot offload the model.
-            for children in model.children():
-                self.offload_to_disk(children)
-            break
-        else:
-            model.to("meta")
+        """Replace disk-backed parameters with meta placeholders, retaining buffers."""
+
+        direct_buffers = tuple(model.named_buffers(recurse=False))
+        if direct_buffers:
+            logger.debug(
+                "Retaining %d direct buffer(s) on %s while offloading its parameters to disk.",
+                len(direct_buffers),
+                type(model).__name__,
+            )
+        for name, parameter in tuple(model.named_parameters(recurse=False)):
+            model._parameters[name] = torch.nn.Parameter(
+                torch.empty_like(parameter, device="meta"),
+                requires_grad=parameter.requires_grad,
+            )
+        for child in model.children():
+            self.offload_to_disk(child)
 
     def offload(self):
+        """Return to inactive placement: meta placeholders on disk, else ``.to(offload)``.
+
+        Disk offload must not ``.to(cpu)`` — that would materialize the full
+        module and defeat the mmap path.
+        """
         # offload / onload / preparing -> offload
         if self.state != 0:
             if self.disk_offload:
@@ -228,6 +340,7 @@ class AutoWrappedModule(AutoTorchModule):
             self.state = 0
 
     def onload(self):
+        """Prefetch from disk or move from offload; skip when the target is still disk."""
         # offload / onload / preparing -> onload
         if self.state < 1:
             if self.disk_offload and self.onload_device != "disk" and self.offload_device == "disk":
@@ -237,6 +350,7 @@ class AutoWrappedModule(AutoTorchModule):
             self.state = 1
 
     def preparing(self):
+        """Second-stage prefetch; materialize only when leaving disk for a real device."""
         # onload / preparing -> preparing
         if self.state != 2:
             if self.disk_offload and self.preparing_device != "disk" and self.onload_device == "disk":
@@ -246,9 +360,16 @@ class AutoWrappedModule(AutoTorchModule):
             self.state = 2
 
     def cast_to(self, module, dtype, device):
+        """Deep-copy then move so the stored offload weights are not mutated in place."""
+        _warn_deepcopy_once(module)
         return copy.deepcopy(module).to(dtype=dtype, device=device)
 
     def computation(self):
+        """Return a module at compute placement without permanently leaving the current state.
+
+        Reuses ``self.module`` when dtype/device already match. Disk + copy
+        keeps the stored module on meta. Otherwise :meth:`cast_to` clones.
+        """
         # offload / onload / preparing -> computation (temporary)
         if self.state == 2:
             torch_dtype, device = self.preparing_dtype, self.preparing_device
@@ -265,16 +386,23 @@ class AutoWrappedModule(AutoTorchModule):
         return module
 
     def forward(self, *args, **kwargs):
+        """Promote to preparing when VRAM headroom allows, then run a compute copy."""
         if self.state == 1 and (self.vram_limit is None or self.check_free_vram()):
             self.preparing()
         module = self.computation()
         return module(*args, **kwargs)
 
     def __getattr__(self, name):
+        """Fall through to the wrapped module so callers keep the original interface."""
         if name in self.__dict__ or name == "module":
             return super().__getattr__(name)
         else:
             return getattr(self.module, name)
+
+
+# ──────────────────────────────────────────────────────────────────────────
+# Direct-parameter wrap — children are wrapped separately; never pickle DiskMap
+# ──────────────────────────────────────────────────────────────────────────
 
 
 class AutoWrappedNonRecurseModule(AutoWrappedModule):
@@ -296,6 +424,11 @@ class AutoWrappedNonRecurseModule(AutoWrappedModule):
         disk_map: DiskMap = None,
         **kwargs,
     ):
+        """Wrap *module* and restrict disk keys to direct parameters only.
+
+        Children are wrapped separately; listing recursive names would
+        double-load those weights and fight the child wrappers.
+        """
         super().__init__(
             module,
             offload_dtype,
@@ -315,6 +448,7 @@ class AutoWrappedNonRecurseModule(AutoWrappedModule):
             self.required_params = [name for name, _ in self.module.named_parameters(recurse=False)]
 
     def load_from_disk(self, torch_dtype, device, copy_module=False):
+        """Materialize this module's direct parameters only; children own their own maps."""
         if copy_module:
             module = copy.deepcopy(self.module)
         else:
@@ -328,6 +462,7 @@ class AutoWrappedNonRecurseModule(AutoWrappedModule):
         return module
 
     def offload_to_disk(self, model: torch.nn.Module):
+        """Replace only direct parameters with meta placeholders; children stay untouched."""
         for name in self.required_params:
             parameter = model._parameters.get(name)
             if parameter is None:
@@ -338,10 +473,20 @@ class AutoWrappedNonRecurseModule(AutoWrappedModule):
             )
 
     def cast_to(self, module, dtype, device):
+        """Return *module* unchanged; the architecture owns parameter casts.
+
+        Deep-copying would pickle child ``DiskMap`` readers (open safetensors
+        handles) and fail. Callers must already be at compute placement.
+        """
         # Parameter casting is implemented in the model architecture.
         return module
 
     def forward(self, *args, **kwargs):
+        """In-place disk materialize when offloaded; otherwise the recursive path.
+
+        Deep-copy of a hierarchy that contains independently disk-backed
+        children tries to pickle their open safetensors readers.
+        """
         if self.disk_offload and self.state == 0:
             # A non-recursive wrapper may contain independently disk-backed
             # children.  Deep-copying that hierarchy attempts to pickle their
@@ -359,10 +504,16 @@ class AutoWrappedNonRecurseModule(AutoWrappedModule):
         return super().forward(*args, **kwargs)
 
     def __getattr__(self, name):
+        """Fall through to the wrapped module; ``module`` itself stays on this class."""
         if name in self.__dict__ or name == "module":
             return super().__getattr__(name)
         else:
             return getattr(self.module, name)
+
+
+# ──────────────────────────────────────────────────────────────────────────
+# LayerNorm / Linear specialists — avoid deepcopy; Linear owns FP8 and LoRA
+# ──────────────────────────────────────────────────────────────────────────
 
 
 class WanAutoCastLayerNorm(torch.nn.LayerNorm, AutoTorchModule):
@@ -382,6 +533,11 @@ class WanAutoCastLayerNorm(torch.nn.LayerNorm, AutoTorchModule):
         vram_limit: float = None,
         **kwargs,
     ):
+        """Steal affine tensors from *module* after a meta construction.
+
+        Building a second LayerNorm on the default device would double-allocate
+        the affine weights. Meta init plus assignment keeps one storage.
+        """
         with init_weights_on_device(device=torch.device("meta")):
             super().__init__(
                 module.normalized_shape,
@@ -408,6 +564,11 @@ class WanAutoCastLayerNorm(torch.nn.LayerNorm, AutoTorchModule):
         self.computation_device_type = parse_device_type(self.computation_device)
 
     def forward(self, x, *args, **kwargs):
+        """Norm in float32 then ``type_as(x)`` so mixed-precision affine stays stable.
+
+        Temporary casts are used when VRAM headroom is tight; otherwise
+        :meth:`keep` pins weights at compute placement for the next step.
+        """
         if self.state == 2:
             weight, bias = self.weight, self.bias
         else:
@@ -516,6 +677,13 @@ class AutoWrappedLinear(torch.nn.Linear, AutoTorchModule):
         weight: torch.Tensor,
         bias: torch.Tensor = None,
     ) -> torch.Tensor:
+        """Row-wise scaled FP8 matmul via ``torch._scaled_mm``.
+
+        Scales are the exact values passed to the kernel so dequantization
+        matches the quantization (CC-28). ``e4m3fnuz`` halves the representable
+        max; that factor is baked into ``fp8_max`` and recovered by the kernel
+        scales, not a post-hoc multiply.
+        """
         device = input.device
         origin_dtype = input.dtype
         origin_shape = input.shape
@@ -530,10 +698,14 @@ class AutoWrappedLinear(torch.nn.Linear, AutoTorchModule):
         if self.computation_dtype == getattr(torch, "float8_e4m3fnuz", None):
             fp8_max = fp8_max / 2.0
         scale_a = torch.clamp(x_max / fp8_max, min=1.0).float().to(device=device)
-        # Allocate directly on the compute device: creating on CPU first added
-        # one H2D copy (and a potential sync) per layer per forward (CC-28).
-        scale_b = torch.ones((weight.shape[0], 1), device=device)
-        input = input / (scale_a + 1e-8)
+        weight_max = torch.amax(torch.abs(weight), dim=1, keepdim=True)
+        scale_b = torch.clamp(weight_max / fp8_max, min=1.0).float().to(device=device)
+        # Both operands use the exact scales handed to _scaled_mm. The former
+        # unit weight scale silently saturated values outside the FP8 range;
+        # adding epsilon only on the input division also made dequantization
+        # mathematically inconsistent (CC-28).
+        input = input / scale_a
+        weight = weight / scale_b
         input = input.to(self.computation_dtype)
         weight = weight.to(self.computation_dtype)
         bias = None if bias is None else bias.to(torch.bfloat16)
@@ -551,6 +723,11 @@ class AutoWrappedLinear(torch.nn.Linear, AutoTorchModule):
         return result
 
     def load_from_disk(self, torch_dtype, device, assign=True):
+        """Fetch ``name.weight`` / ``name.bias`` from the disk map.
+
+        ``assign=False`` returns tensors without mutating this module so a
+        temporary compute copy can leave the stored weights on meta.
+        """
         weight = self.disk_map[self.name + ".weight"].to(dtype=torch_dtype, device=device)
         bias = None if self.bias is None else self.disk_map[self.name + ".bias"].to(dtype=torch_dtype, device=device)
         if assign:
@@ -561,6 +738,7 @@ class AutoWrappedLinear(torch.nn.Linear, AutoTorchModule):
         return weight, bias
 
     def offload(self):
+        """Drop to meta on disk offload; otherwise move this Linear to offload placement."""
         # offload / onload / preparing -> offload
         if self.state != 0:
             if self.disk_offload:
@@ -570,6 +748,7 @@ class AutoWrappedLinear(torch.nn.Linear, AutoTorchModule):
             self.state = 0
 
     def onload(self):
+        """Prefetch this Linear from disk or move from offload; skip a still-disk target."""
         # offload / onload / preparing -> onload
         if self.state < 1:
             if self.disk_offload and self.onload_device != "disk" and self.offload_device == "disk":
@@ -579,6 +758,7 @@ class AutoWrappedLinear(torch.nn.Linear, AutoTorchModule):
             self.state = 1
 
     def preparing(self):
+        """Second-stage prefetch for this Linear; materialize only when leaving disk."""
         # onload / preparing -> preparing
         if self.state != 2:
             if self.disk_offload and self.preparing_device != "disk" and self.onload_device == "disk":
@@ -588,6 +768,10 @@ class AutoWrappedLinear(torch.nn.Linear, AutoTorchModule):
             self.state = 2
 
     def computation(self):
+        """Return weight/bias at compute placement without permanently leaving the current state.
+
+        ``assign=False`` on the disk path so the stored Linear stays on meta.
+        """
         # offload / onload / preparing -> computation (temporary)
         if self.state == 2:
             torch_dtype, device = self.preparing_dtype, self.preparing_device
@@ -607,6 +791,7 @@ class AutoWrappedLinear(torch.nn.Linear, AutoTorchModule):
         return weight, bias
 
     def linear_forward(self, x, weight, bias):
+        """Dense GEMM, or the FP8 scaled path when ``computation_dtype`` is float8."""
         if self.enable_fp8:
             out = self.fp8_linear(x, weight, bias)
         else:
@@ -614,6 +799,11 @@ class AutoWrappedLinear(torch.nn.Linear, AutoTorchModule):
         return out
 
     def lora_forward(self, x, out):
+        """Add LoRA deltas after the base linear so merge order matches PEFT (B @ A).
+
+        A custom ``lora_merger`` stacks adapters instead of summing, for
+        multi-adapter blends that are not a simple scale.
+        """
         if self.lora_merger is None:
             for lora_A, lora_B in zip(self.lora_A_weights, self.lora_B_weights):
                 out = out + x @ lora_A.T @ lora_B.T
@@ -626,6 +816,11 @@ class AutoWrappedLinear(torch.nn.Linear, AutoTorchModule):
         return out
 
     def forward(self, x, *args, **kwargs):
+        """Promote when VRAM allows, run the Linear, then apply LoRA on the output.
+
+        LoRA is applied after the base GEMM so the merge order matches PEFT
+        (delta on the activation, not a second fused weight).
+        """
         if self.state == 1 and (self.vram_limit is None or self.check_free_vram()):
             self.preparing()
         weight, bias = self.computation()
@@ -633,6 +828,11 @@ class AutoWrappedLinear(torch.nn.Linear, AutoTorchModule):
         if len(self.lora_A_weights) > 0:
             out = self.lora_forward(x, out)
         return out
+
+
+# ──────────────────────────────────────────────────────────────────────────
+# Install wrappers — wrap vs whole-model .to(); overflow policy after param budget
+# ──────────────────────────────────────────────────────────────────────────
 
 
 @torch.no_grad()

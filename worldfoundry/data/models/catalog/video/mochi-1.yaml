@@ -65,6 +65,8 @@ demo_parity:
   - Official Mochi-1 preview CLI parity command is wired with fixed prompt, seed,
     resolution, frame count, CFG scale, and step count, but the full 31-frame /
     64-step official quality run remains pending.
+official_sources:
+  project_page: https://www.genmo.ai/blog
 integration:
   status: integrated
   notes:

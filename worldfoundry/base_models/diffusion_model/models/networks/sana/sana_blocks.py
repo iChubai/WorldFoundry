@@ -15,7 +15,29 @@
 # SPDX-License-Identifier: Apache-2.0
 
 # This file is modified from https://github.com/PixArt-alpha/PixArt-sigma
-"""Module for base_models -> diffusion_model -> image -> sana -> diffusion -> model -> nets -> sana_blocks.py functionality."""
+"""Shared SANA attention, embeddings, patchify, RoPE, and adaLN helpers.
+
+Linear attention
+----------------
+:class:`LiteLA` is ReLU-kernel linear attention: after RMSNorm on Q/K,
+``relu(Q)`` / ``relu(K)`` turn the softmax into an associative kernel so
+``attn(Q,K,V) = relu(Q) @ (relu(K)ᵀ V) / (relu(Q) @ relu(K)ᵀ 1)``.  Cost is
+``O(N · d²)`` rather than ``O(N² · d)``.  :class:`LiteLAReLURope` applies
+RoPE after the ReLU kernel (used by video).  :class:`ChunkedLiteLAReLURope`
+splits long token axes to bound peak memory.
+
+Softmax / window / causal
+-------------------------
+:class:`FlashAttention` is multi-head softmax with optional QK-norm.
+:class:`ChunkCausalAttention` / :class:`CachedCausalAttention` and
+:class:`WindowAttention` cover temporal-causal and HWT-windowed video.
+
+Conditioning
+------------
+:func:`t2i_modulate` is the adaLN-single affine (``x * (1 + scale) + shift``).
+:class:`CaptionEmbedder` / :class:`TimestepEmbedder` / :class:`PatchEmbedMS`
+(and 3-D / RoPE variants) are shared by every SANA graph.
+"""
 
 import math
 import os
@@ -41,29 +63,19 @@ if _xformers_available:
 
 
 def modulate(x, shift, scale):
-    """Modulate.
+    """AdaLN affine with an extra sequence axis: ``x * (1 + scale) + shift``."""
 
-    Args:
-        x: The x.
-        shift: The shift.
-        scale: The scale.
-    """
     return x * (1 + scale.unsqueeze(1)) + shift.unsqueeze(1)
 
 
 def t2i_modulate(x, shift, scale):
-    """T2i modulate.
+    """SANA adaLN-single affine; ``shift``/``scale`` already match ``x`` rank."""
 
-    Args:
-        x: The x.
-        shift: The shift.
-        scale: The scale.
-    """
     return x * (1 + scale) + shift
 
 
 class MultiHeadCrossAttention(nn.Module):
-    """Multi head cross attention implementation."""
+    """Caption (and optional image-embed) cross-attention over packed tokens."""
 
     def __init__(self, d_model, num_heads, attn_drop=0.0, proj_drop=0.0, qk_norm=False, **block_kwargs):
         """Init.
@@ -288,7 +300,13 @@ class MultiHeadCrossVallinaAttention(MultiHeadCrossAttention):
 
 
 class LiteLA(Attention_):
-    r"""Lightweight linear attention"""
+    r"""ReLU-kernel linear attention (LiteLA).
+
+    Projects QKV, optionally RMS-normalizes Q/K, applies ``relu``, then
+    evaluates the associative kernel ``Q @ (KᵀV) / (Q @ Kᵀ1)`` so the
+    sequence length never appears as a quadratic score matrix.  ``PAD_VAL``
+    is appended as a dummy key/value so the denominator cannot vanish.
+    """
 
     PAD_VAL = 1
 
@@ -423,7 +441,7 @@ class LiteLA(Attention_):
 
 
 class LiteLAReLURope(Attention_):
-    r"""Lightweight linear attention with first relu kernel and then rope"""
+    r"""LiteLA with RoPE applied *after* the ReLU kernel (video spatial path)."""
 
     PAD_VAL = 1
 
@@ -1050,7 +1068,7 @@ class SelfAttnProcessorLiteLAReLURope:
 
 
 class FlashAttention(Attention_):
-    """Multi-head Flash Attention block with qk norm."""
+    """Multi-head softmax attention with optional QK-norm (FlashAttention when available)."""
 
     def __init__(
         self,
@@ -2235,7 +2253,7 @@ class WindowAttention(FlashAttention):
 
         if remainder_t > 0 or remainder_h > 0 or remainder_w > 0:
             if self.pad_if_needed:
-                # 向上调整window尺寸以覆盖所有tokens
+                # Round window sizes up so every token is covered.
                 temporal_window = (T + self.temporal_window_count - 1) // self.temporal_window_count
                 spatial_window_h = (H + self.spatial_window_h_count - 1) // self.spatial_window_h_count
                 spatial_window_w = (W + self.spatial_window_w_count - 1) // self.spatial_window_w_count
@@ -2298,7 +2316,7 @@ class WindowAttention(FlashAttention):
             k = k.view(B, T, H, W, self.num_heads, C // self.num_heads)
             v = v.view(B, T, H, W, self.num_heads, C // self.num_heads)
 
-        # 5. Window attention计算
+        # 5. Window attention.
         num_windows_t = self.temporal_window_count
         num_windows_h = self.spatial_window_h_count
         num_windows_w = self.spatial_window_w_count

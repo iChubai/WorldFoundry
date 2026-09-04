@@ -1,0 +1,41 @@
+{
+  "id": "openpi",
+  "tagline": {
+    "en": "Physical Intelligence's open release of the π (pi) vision-language-action policies — flow-based generalist controllers for real robots.",
+    "zh": "Physical Intelligence 开源的 π(pi)系列视觉-语言-动作策略——面向真实机器人的流式通用控制器。"
+  },
+  "overview": {
+    "en": [
+      "OpenPI is Physical Intelligence's open release of its π family of vision-language-action (VLA) policies. These models take camera views and a language instruction and output robot actions, aiming at generalist manipulation rather than a single hard-coded skill.",
+      "The release covers several variants — including pi0-base, the LIBERO-tuned pi05-libero, and the faster pi0-fast-base and pi0-fast-droid checkpoints — so you can pick between broad pretrained policies and ones adapted to specific benchmarks or robots. Runtime construction expects complete, locally staged checkpoints.",
+      "In WorldFoundry, OpenPI runs as an embodied policy: it consumes observations and an instruction and produces an action trace and rollout, not video or images."
+    ],
+    "zh": [
+      "OpenPI 是 Physical Intelligence 开源的 π 系列视觉-语言-动作(VLA)策略。这类模型读取摄像头画面与语言指令,输出机器人动作,目标是通用操控而非单一写死的技能。",
+      "此次发布包含多个变体——如 pi0-base、面向 LIBERO 调优的 pi05-libero,以及更快的 pi0-fast-base 与 pi0-fast-droid,便于你在宽泛的预训练策略与针对特定基准或机器人适配的版本之间选择。运行时构建需要完整、已在本地准备好的 checkpoint。",
+      "在 WorldFoundry 中,OpenPI 作为具身策略运行:它读取观测与指令,产出的是动作轨迹与 rollout,而非视频或图像。"
+    ]
+  },
+  "whenToUse": {
+    "en": "Use OpenPI when you want state-of-the-art open VLA policies as a base for robot manipulation — evaluated on benchmarks like LIBERO or adapted to your own hardware.",
+    "zh": "当你想以先进的开放 VLA 策略作为机器人操控基础时,可以使用 OpenPI——既可在 LIBERO 等基准上评测,也可适配到你自己的硬件。"
+  },
+  "notFor": {
+    "en": "Not a media generator — it outputs robot actions and needs a robot or simulator with matching action space. Checkpoints must be prepared locally before a run.",
+    "zh": "它不是媒体生成器——输出的是机器人动作,需要动作空间匹配的机器人或仿真环境。运行前须在本地准备好 checkpoint。"
+  },
+  "highlights": {
+    "en": [
+      "Open π (pi) vision-language-action policies from Physical Intelligence",
+      "Multiple variants including pi0-base, pi05-libero, pi0-fast-base, pi0-fast-droid",
+      "Predicts robot actions from images and language",
+      "Inference-only runtime with locally staged checkpoints"
+    ],
+    "zh": [
+      "Physical Intelligence 开源的 π(pi)视觉-语言-动作策略",
+      "多个变体:pi0-base、pi05-libero、pi0-fast-base、pi0-fast-droid",
+      "从图像与语言预测机器人动作",
+      "仅推理运行时,使用本地准备的 checkpoint"
+    ]
+  }
+}

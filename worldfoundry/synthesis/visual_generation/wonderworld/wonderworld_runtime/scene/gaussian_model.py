@@ -17,6 +17,15 @@ import torch
 from torch import nn
 
 from io import BytesIO
+from worldfoundry.synthesis.visual_generation.three_d_four_d.runtime_extension_overlay import (
+    add_runtime_extension_overlay,
+)
+
+add_runtime_extension_overlay(
+    "simple_knn",
+    environment_variable="WORLDFOUNDRY_SIMPLE_KNN_EXTENSION_DIR",
+)
+
 from simple_knn._C import distCUDA2
 from utils.general import inverse_sigmoid, get_expon_lr_func, build_rotation
 from utils.system import mkdir_p

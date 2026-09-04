@@ -1,6 +1,17 @@
 # Modified from transformers.models.t5.modeling_t5
 # Copyright 2024-2025 The Alibaba Wan Team Authors. All rights reserved.
-"""Module for base_models -> diffusion_model -> video -> wan -> wan_2p1 -> modules -> t5.py functionality."""
+"""Reference Wan 2.1 T5 encoder (official layout).
+
+Full T5 encoder/decoder graph matching the official Wan 2.1
+release layout, used by compatibility loaders.
+:class:`T5EncoderModel` / :func:`umt5_xxl` are the usual
+entry points.
+
+Native runner path is the encoder-only :mod:`.model`.
+Do not mix state dicts between the two without a converter.
+
+Wan UMT5 family, not STEP1 or Gemma.
+"""
 
 import logging
 import math
@@ -10,6 +21,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 from worldfoundry.core.model_loading import load_state_dict as load_core_state_dict
+from worldfoundry.core.model_loading import load_torch_checkpoint
 from worldfoundry.core.model_loading import load_torch_state_dict
 
 __all__ = [
@@ -722,7 +734,12 @@ class T5EncoderModel:
         if load_with_core_loader:
             state_dict = load_core_state_dict(checkpoint_path, device="cpu")
         elif load_with_mmap:
-            state_dict = torch.load(checkpoint_path, map_location='cpu', mmap=True)
+            state_dict = load_torch_checkpoint(
+                checkpoint_path,
+                map_location="cpu",
+                weights_only=True,
+                mmap=True,
+            )
         else:
             state_dict = load_torch_state_dict(checkpoint_path, map_location='cpu')
         model.load_state_dict(state_dict)

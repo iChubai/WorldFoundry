@@ -14,6 +14,7 @@ source:
   hf_repo_id: meituan-longcat/LongCat-Video
   license: mit
 official_sources:
+  paper: https://arxiv.org/abs/2510.22200
   project_page: https://meituan-longcat.github.io/LongCat-Video/
   github:
     url: https://github.com/meituan-longcat/LongCat-Video

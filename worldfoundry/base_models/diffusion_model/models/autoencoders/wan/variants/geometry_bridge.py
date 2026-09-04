@@ -1,5 +1,16 @@
 # Copyright Alibaba Inc. All Rights Reserved.
-"""Module for base_models -> diffusion_model -> video -> wan -> vae -> geometry_bridge.py functionality."""
+"""Geometry-bridge Wan VAE that encodes extra channel maps.
+
+Extends the Wan 2.1 causal 3-D CNN so depth / normal (or
+other) maps ride along the channel axis.
+:class:`ChannelExpandAndReshape` packs those extras before
+the shared residual stack.
+
+Video RGB remains BCTHW; extra maps must broadcast to the
+same T/H/W.  Latent width stays checkpoint-compatible.
+
+Wan-family variant, not a separate geometry autoencoder.
+"""
 
 import logging
 

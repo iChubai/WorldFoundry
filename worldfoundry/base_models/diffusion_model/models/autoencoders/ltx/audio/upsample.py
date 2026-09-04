@@ -1,3 +1,16 @@
+"""Causal upsample for the LTX audio VAE decoder.
+
+:class:`Upsample` and :func:`build_upsampling_path` expand
+spectrogram maps along the causal axis without peeking at
+future frames.  Decoder-only counterpart of :mod:`.downsample`.
+
+Tensors stay ``N C H W``.  Used by :class:`~.audio_vae.AudioDecoder`
+when reconstructing features before the vocoder.
+
+This is LTX audio graph math, not video depth-to-space
+(:mod:`~..video.sampling`).
+"""
+
 from typing import Set, Tuple
 
 import torch
@@ -10,6 +23,7 @@ from worldfoundry.base_models.diffusion_model.models.autoencoders.ltx.common.nor
 
 
 class Upsample(torch.nn.Module):
+    """Causal 2-D upsample block for the LTX audio decoder."""
     def __init__(
         self,
         in_channels: int,

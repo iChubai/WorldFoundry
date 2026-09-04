@@ -14,7 +14,17 @@
 # of rights and permissions under this agreement.
 # See the License for the specific language governing permissions and limitations under the License.
 
-"""Checkpoint-compatible HunyuanVideo 1.5 spatial upsamplers."""
+"""Checkpoint-compatible HunyuanVideo 1.5 spatial latent upsamplers.
+
+CNN used by the 1.5 super-resolution / 720p pass.  Shares
+:class:`CausalConv3d` / :class:`ResnetBlock` building blocks with the
+HunyuanVideo 1.5 VAE.  This is a network module, not the runner
+:class:`~...contracts.LatentProcessor`; recipes wrap it when a stage
+boundary needs learned 2× spatial upsample.
+
+:class:`UpsamplerType` selects learned, fixed (pixel-repeat), none, or
+the combined learned+fixed graph from the official release.
+"""
 
 from collections.abc import Sequence
 from dataclasses import dataclass
@@ -40,7 +50,8 @@ from worldfoundry.base_models.diffusion_model.models.autoencoders.hunyuan_video.
 
 
 class UpsamplerType(Enum):
-    """Upsampler type implementation."""
+    """Which spatial-upsample graph the 1.5 checkpoint owns."""
+
     LEARNED = "learned"
     FIXED = "fixed"
     NONE = "none"
@@ -49,7 +60,7 @@ class UpsamplerType(Enum):
 
 @dataclass
 class UpsamplerConfig:
-    """Upsampler config implementation."""
+    """Serializable HunyuanVideo 1.5 upsampler hyperparameters."""
     load_from: str
     enable: bool = False
     hidden_channels: int = 128

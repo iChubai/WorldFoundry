@@ -1,4 +1,6 @@
-"""Native FLUX.2 latent autoencoder network."""
+"""FLUX.2 2-D autoencoder network (encode/decode stills).
+
+Checkpoint-compatible CNN. :func:`~.component.encode_video_batch_refs` folds video frames through this module."""
 
 from __future__ import annotations
 
@@ -135,6 +137,7 @@ class Encoder(nn.Module):
 
 
 class Flux2Autoencoder(nn.Module):
+    """FLUX.2 2-D AE with official encode/decode and latent scale."""
     def __init__(self, params: Flux2AutoencoderConfig) -> None:
         super().__init__()
         self.encoder = Encoder(

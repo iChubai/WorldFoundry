@@ -14,7 +14,12 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-"""Module for base_models -> diffusion_model -> image -> sana -> diffusion -> model -> nets -> fastlinear -> modules -> triton_lite_mla_kernels -> pad_vk_mm_fwd.py functionality."""
+"""Triton kernel: padded ``VᵀK`` accumulation for linear attention.
+
+Public entry: :func:`pad_vk_mm_fwd`.  For each head, computes
+``VK = [V; 1]ᵀ K`` so the extra row is the ``Kᵀ1`` denominator used by
+LiteLA.  Shapes: ``v, k: (B, N, H, C)`` → ``vk: (B, H, C+1, C)``.
+"""
 
 import torch
 import triton
@@ -156,12 +161,10 @@ def pad_vk_mm_fwd_kernel_fp32_fp32(
 
 
 def pad_vk_mm_fwd(a, b, compute_dtype: torch.dtype, output_dtype: torch.dtype):
-    """
-    Input:
-        v: (B, N, H, C)
-        k: (B, N, H, C)
-    Output:
-        vk: (B, H, C+1, C)
+    """Accumulate padded ``VᵀK`` for LiteLA.
+
+    ``a`` is V and ``b`` is K, both ``(B, N, H, C)``.  Returns
+    ``(B, H, C+1, C)`` where the last row of the ``C+1`` axis is ``Kᵀ1``.
     """
     # Check constraints.
     assert a.dim() == 4 and b.dim() == 4

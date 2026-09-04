@@ -15,10 +15,24 @@
 
 """Process-wide stdlib :mod:`logging` filters installed at import time.
 
-Currently houses one filter: :class:`_DowngradeInductorAutotuneFallback`.
-:func:`install_inductor_autotune_demote` is invoked at module load so any
-WorldFoundry entry point that transitively imports :mod:`worldfoundry.core`
-inherits the demotion without explicit setup.
+WorldFoundry's public logging entry point is
+:func:`worldfoundry.core.logging_setup.configure_logging`, which is
+opt-in. This module is the exception: importing
+:mod:`worldfoundry.core` attaches
+:class:`_DowngradeInductorAutotuneFallback` to
+``torch._inductor.select_algorithm`` so a healthy ``torch.compile``
+autotune pass does not look like a crash.
+
+Inductor logs two structurally equivalent candidate-kernel rejections
+at ERROR (``Runtime error during autotuning`` and
+``CUDA compilation error during autotuning``). Both mean "this template
+failed, try the next one". The filter mutates ``record.levelno`` to
+WARNING before handlers run so the trail stays visible without paging
+on-call.
+
+:func:`install_inductor_autotune_demote` is idempotent and is invoked
+at module load. Do not put other process-wide logging side effects
+here; those belong in :mod:`worldfoundry.core.logging_setup`.
 """
 
 from __future__ import annotations
@@ -55,6 +69,7 @@ class _DowngradeInductorAutotuneFallback(logging.Filter):
     """
 
     def filter(self, record: logging.LogRecord) -> bool:
+        """Always keep the record; demote matching ERROR autotune fallbacks to WARNING."""
         if record.levelno < logging.ERROR:
             return True
         message = record.getMessage()

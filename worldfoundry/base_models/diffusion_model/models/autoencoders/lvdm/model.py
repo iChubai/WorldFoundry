@@ -1,4 +1,6 @@
-"""Checkpoint-compatible latent video diffusion autoencoder."""
+"""LVDM / VideoCrafter AutoencoderKL (4-ch, frame-wise).
+
+Standard SD VAE graph. :class:`~.component.LVDMVideoDecoder` calls ``decode`` per frame."""
 
 import os
 from contextlib import contextmanager

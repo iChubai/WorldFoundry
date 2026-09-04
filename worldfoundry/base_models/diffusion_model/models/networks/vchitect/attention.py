@@ -1,4 +1,16 @@
-"""Native spatial/temporal/cross attention used by Vchitect-2."""
+"""Native spatial, temporal, and text-cross attention for Vchitect-2.
+
+Video tokens are packed as a frame-batch ``(B·T) S C`` so spatial
+attention is joint over video + context tokens on each frame.
+Temporal attention rearranges to ``(B·S) T C``, applies 1-D RoPE
+along T, then returns to frame-batch layout.  Text cross-attention
+uses the first-frame context keys/values against queries flattened
+over ``S·T``.
+
+Returns ``(video, context)`` residuals.  ``context_pre_only`` skips
+the extra context output projection on early blocks, matching the
+released Vchitect-2 checkpoint.
+"""
 
 from __future__ import annotations
 
@@ -41,6 +53,7 @@ class Attention(nn.Module):
 
     @staticmethod
     def _rotary(values: torch.Tensor, frequencies: torch.Tensor) -> torch.Tensor:
+        """Apply complex 1D RoPE along the temporal axis of ``(..., T, H, D)``."""
         complex_values = torch.view_as_complex(values.float().reshape(*values.shape[:-1], -1, 2))
         frequencies = frequencies[: values.shape[1]].view(1, values.shape[1], 1, -1)
         return torch.view_as_real(complex_values * frequencies).flatten(3).to(values.dtype)
@@ -53,6 +66,7 @@ class Attention(nn.Module):
         frequencies: torch.Tensor,
         frames: int,
     ) -> tuple[torch.Tensor, torch.Tensor]:
+        """Spatial joint attn + temporal RoPE attn + text cross; return ``(video, context)``."""
         residual_length = hidden_states.shape[1]
         frame_batch = hidden_states.shape[0]
         if frame_batch % frames:

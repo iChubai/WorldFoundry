@@ -9,6 +9,8 @@ source:
   official_repo_url: https://github.com/robbyant/lingbot-world
   license: apache-2.0
 official_sources:
+  project_page: https://technology.robbyant.com/lingbot-world
+  paper: https://arxiv.org/abs/2601.20540
   github:
     url: https://github.com/robbyant/lingbot-world
     revision: a43bec7f8091c83e9b30b16b912f6fc906236fa6

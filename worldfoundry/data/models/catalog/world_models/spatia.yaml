@@ -10,6 +10,9 @@ checkpoint: Jinjing713/Spatia
 runtime_profile: runtime-profile:spatia
 runner_target: worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner
 pipeline_binding: spatia
+official_sources:
+  project_page: https://zhaojingjing713.github.io/Spatia/
+  paper: https://arxiv.org/abs/2512.15716
 integration:
   status: integrated
   notes: [Official source is vendored at revision f75b10c9bb5f6b0cd779ec8c41ab33dd8382dba3.]

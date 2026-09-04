@@ -17,6 +17,61 @@ WorldFoundry uses conda as the single supported environment path. The documented
 4. Switch to a dedicated env only when `runtime/environments/<category>/<model-id>.yaml` records an ABI or simulator constraint.
 5. Use benchmark-specific scripts only for official metrics, reference metrics, or physics stacks.
 
+## Python install surfaces
+
+`pyproject.toml` exposes two intentionally different dependency surfaces:
+
+- **Optional dependencies (extras)** are the public, wheel-visible install surface for users and contributors. Install the smallest extra that matches the feature you need, for example `python -m pip install -e ".[ui]"`.
+- **Dependency groups** are source-checkout tooling and resolver buckets. They are not wheel extras and are not selected with `.[name]`. With a PEP 735-capable pip, use a command such as `python -m pip install --group lint`; environment tooling may consume the same groups directly.
+
+`all` is a curated general-runtime bundle, not the literal union of every extra. It deliberately excludes development tools, proprietary NVIDIA VFX bindings, training stacks, and model-specific ABI islands. In the table below, “In `all`” means that every package name declared by that extra is represented in `all`; install the named extra as well when its tighter version constraints are part of the runtime contract.
+
+| Extra | Purpose | In `all` | Editable install |
+| --- | --- | --- | --- |
+| `api` | Hosted model API clients and image/request helpers. | Yes | `.[api]` |
+| `apple_pi` | Apple-PI evaluation runtime, judge clients, and media helpers. | Yes | `.[apple_pi]` |
+| `hf` | Hugging Face and ModelScope asset download support. | Yes | `.[hf]` |
+| `video` | Broad video, media, data, and 3D runtime dependencies. | No | `.[video]` |
+| `vipe` | ViPE geometry/depth runtime and visualization stack. | No | `.[vipe]` |
+| `molmoact2` | MolmoAct2 model serving stack with its narrow Transformers contract. | No | `.[molmoact2]` |
+| `metrics` | General evaluation metrics and dataset I/O. | No | `.[metrics]` |
+| `distribution_metrics` | Perceptual and distribution metric models. | No | `.[distribution_metrics]` |
+| `dvlt` | DVLT 3D/visualization runtime. | No | `.[dvlt]` |
+| `ui` | Complete Studio/browser UI, including realtime transport dependencies. | Yes | `.[ui]` |
+| `studio_realtime` | Minimal WebRTC/realtime Studio transport stack. | Yes | `.[studio_realtime]` |
+| `rtx_postprocess` | Proprietary NVIDIA VFX post-processing; explicit opt-in only. | No | `.[rtx_postprocess]` |
+| `tui` | Textual terminal UI. | Yes | `.[tui]` |
+| `optimized_core` | Optional Torch-based core acceleration dependencies. | Yes | `.[optimized_core]` |
+| `train_core` | Core training, fine-tuning, and data dependencies. | No | `.[train_core]` |
+| `train_video` | Video/audio training codecs and tensor stack. | No | `.[train_video]` |
+| `train_runtime` | Distributed and service-side training runtime. | No | `.[train_runtime]` |
+| `profiling` | Model profiling helpers. | No | `.[profiling]` |
+| `web` | Minimal FastAPI web service surface. | Yes | `.[web]` |
+| `mcp` | Model Context Protocol server/client support. | Yes | `.[mcp]` |
+| `worldscore` | WorldScore evaluation runtime. | Yes | `.[worldscore]` |
+| `studio_pointcloud` | Point-cloud Studio visualization. | Yes | `.[studio_pointcloud]` |
+| `studio_rerun` | Rerun-based Studio visualization. | Yes | `.[studio_rerun]` |
+| `studio_geometry` | Geometry and Open3D Studio visualization. | Yes | `.[studio_geometry]` |
+| `studio_plot` | Plotting and color utilities for Studio. | No | `.[studio_plot]` |
+| `dev` | Build, pre-commit, and repository-pinned lint tooling. | No | `.[dev]` |
+| `eval_core` | Minimal collection/runtime dependencies for the CPU `test/eval_core` release gate. | No | `.[eval_core]` |
+| `all` | Curated general runtime bundle described above. | — | `.[all]` |
+
+The source-only dependency groups are narrower resolver building blocks:
+
+| Group | Intended use |
+| --- | --- |
+| `lint` | Repository-pinned pre-commit and Ruff toolchain. |
+| `flash_attn_fa25` | Flash-attention bucket for FA 2.5-compatible environments. |
+| `flash_attn_fa28` | Flash-attention bucket for FA 2.8-compatible environments. |
+| `runtime_clip_bundle` | CLIP-oriented runtime compatibility bundle. |
+| `runtime_timm_bundle` | Timm/Torch runtime compatibility bundle. |
+| `three_d_core` | Shared point-cloud and 3D geometry packages. |
+| `transformers_high` | Current Transformers/Diffusers compatibility bucket. |
+| `transformers_low` | Legacy or model-constrained Transformers compatibility bucket. |
+
+These groups select Python requirements only. CUDA/Torch wheel selection, native extension builds, and isolated model environments still go through the setup scripts and runtime profiles documented below.
+
 ## Clone-to-run setup scripts
 
 Run these scripts from the repository root. They are part of the public release
@@ -27,6 +82,18 @@ surface, not local machine notes.
 - **`scripts/setup/model_env_install.sh`** — Per-model environment resolution. Reads `worldfoundry/data/models/runtime/environments/**`; routes compatible profiles back to the unified env and creates dedicated envs only for hard ABI conflicts.
 - **`scripts/inference/prepare_model_infer.sh`** — Checkpoint/Hugging Face preparation per model. Defaults to a plan/check-local flow. Add `--download` only after reviewing license, gated access, and storage requirements.
 - **`scripts/workspace/run_workspace.sh`** — Start the browser Workspace from an activated runtime. Keeps `PYTHONPATH=.`, `WORLDFOUNDRY_WORKSPACE_MAX_JOBS`, and `WORLDFOUNDRY_CKPT_DIR` explicit.
+
+The unified installer selects a Torch range that exists on the resolved wheel
+index: cu121 uses Torch 2.4–2.5, cu124 uses 2.4–2.6, and cu128 uses 2.7 or
+newer within the repository upper bound. After the CUDA-index install, the
+exact Torch/Torchvision/Torchaudio versions constrain the remaining PyPI pass
+so indirect dependencies cannot replace the selected CUDA build. On hosts
+without `nvidia-smi`, bootstrap explicitly uses the cu128 wheel index while
+enabling `--allow-no-cuda` and skipping flash-attn; direct installer calls with
+`--cuda auto` instead fail fast and ask for an explicit tier. If another
+selected extra requires a newer Torch than that tier publishes, dependency
+resolution fails explicitly instead of falling back to a PyPI CPU/different
+CUDA wheel.
 
 Recommended fresh-clone path:
 
@@ -121,6 +188,68 @@ Prefer native Hugging Face loading (`from_pretrained`, `snapshot_download`, and
 standard HF cache variables) for public checkpoints. Use `WORLDFOUNDRY_CKPT_DIR`
 for upstream runtimes that require a fixed directory layout or for local soft
 links that preserve official paths without duplicating large files.
+
+### Benchmark dataset layouts
+
+`worldfoundry-eval dataset locate <org/name>` resolves an existing dataset
+without network access. It checks the per-dataset environment override first,
+then local asset/data manifests, a direct data root, and finally Hugging Face
+cache snapshots. Direct roots accept `org/name`, `org--name`, and nested
+`hfd_datasets` layouts; hub caches use the standard
+`datasets--org--name/snapshots/<revision>` layout. Use
+`worldfoundry-eval dataset plan <org/name> [...]` to print deduplicated download
+commands without executing them.
+
+## Compiler caches
+
+`worldfoundry.core.compile_cache` configures persistent `torch.compile` caches
+for Inductor, Triton, the CUDA driver JIT, and torch C++/CUDA extensions. The
+compatibility import `worldfoundry.runtime.compile_cache` exposes the same API.
+The root is `WORLDFOUNDRY_COMPILE_CACHE_DIR` when set, otherwise
+`${WORLDFOUNDRY_CACHE_DIR}/compile`. Generated-code caches are partitioned by a
+Torch/Triton/cuDNN/Python/accelerator fingerprint. Explicit
+`TORCHINDUCTOR_CACHE_DIR`, `TRITON_CACHE_DIR`, `TORCH_EXTENSIONS_DIR`, and
+`CUDA_CACHE_PATH` values take precedence when writable; an unwritable cache
+falls back to a process-local temporary directory with a warning.
+
+On a multi-node cluster, use node-local storage rather than a shared NFS or
+project mount. The fingerprint separates incompatible software and accelerator
+stacks, but it does not isolate concurrent writers on different nodes:
+
+```bash
+export WORLDFOUNDRY_COMPILE_CACHE_DIR=/local-ssd/${USER}/worldfoundry-compile
+```
+
+Autotune defaults are applied with `setdefault`, so values exported before
+launch win. WorldFoundry defaults to
+`TORCHINDUCTOR_AUTOTUNE_LOCAL_CACHE=1` and
+`TORCHINDUCTOR_AUTOTUNE_REMOTE_CACHE=0`; opt in to a remote autotune cache only
+when the cluster provides a compatible service.
+
+## Logging
+
+The CLI flags and environment variables below feed the same opt-in logging
+pipeline, `worldfoundry.core.logging_setup.configure_logging`. Explicit CLI
+flags take precedence over inherited environment values.
+
+| Setting | CLI | Environment | Behavior |
+| --- | --- | --- | --- |
+| Level | `--log-level` | `WORLDFOUNDRY_LOG_LEVEL` | Console and file threshold; the CLI accepts `DEBUG`, `INFO`, `WARNING`, `ERROR`, or `CRITICAL`. |
+| File sink | `--log-file` | `WORLDFOUNDRY_LOG_FILE` | Optional rotating file path. Output-owning CLI commands create a per-run `events.jsonl` when neither is set. |
+| JSON Lines | `--log-json` | `WORLDFOUNDRY_LOG_JSON` | Makes the file sink JSON Lines; console output remains text. |
+| Child context | — | `WORLDFOUNDRY_LOG_CONTEXT` | JSON object containing structured correlation fields such as `run_id`, `job_id`, `benchmark_id`, and `model_id`. |
+
+Framework-owned workers receive structured context through
+`log_context_environment()`. `WORLDFOUNDRY_RUN_ID` is also exported by
+output-owning CLI operations for operator visibility, but it is not a
+replacement for `WORLDFOUNDRY_LOG_CONTEXT`.
+
+Structured log messages and fields redact sensitive key names, bearer tokens,
+common OpenAI/Hugging Face/GitHub/Slack/AWS token formats, and compact JWTs.
+Raw stdout/stderr capture remains fidelity-preserving and may use a separate
+line or argument scrubber; do not assume every captured byte passed through the
+structured logger. Loguru keeps native time/count retention semantics, while
+the stdlib fallback interprets retention as a rotated backup-file count.
 
 ## Dedicated model environment exceptions
 

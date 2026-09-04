@@ -53,6 +53,7 @@ from worldfoundry.evaluation.utils import BENCHMARK_ZOO_DIR, REPO_ROOT
 ExtractMetricsFn = Callable[[Any, Path], dict[str, dict[str, Any]]]
 DiscoverResultsFn = Callable[[Path, Path | None], Path | None]
 BuildCommandFn = Callable[..., list[str] | None]
+BuildEnvironmentFn = Callable[..., Mapping[str, str] | None]
 ExtendParserFn = Callable[[argparse.ArgumentParser], None]
 
 
@@ -88,6 +89,36 @@ class RunnerHooks:
     extract_metrics: ExtractMetricsFn | None = None
     prepare_upstream_results: PrepareResultsFn | None = None
     extend_parser: ExtendParserFn | None = None
+    build_official_environment: BuildEnvironmentFn | None = None
+
+
+_SENSITIVE_COMMAND_FLAGS = re.compile(
+    r"(?:^|[-_])(?:api[-_]?key|auth[-_]?token|access[-_]?token|token|secret|password)$",
+    re.IGNORECASE,
+)
+
+
+def redact_command_secrets(command: list[str] | None) -> list[str] | None:
+    """Redact values carried by secret-like CLI flags before persistence."""
+    if command is None:
+        return None
+    redacted: list[str] = []
+    redact_next = False
+    for raw_arg in command:
+        arg = str(raw_arg)
+        if redact_next:
+            redacted.append("<redacted>")
+            redact_next = False
+            continue
+        if arg.startswith("-") and "=" in arg:
+            flag, _value = arg.split("=", 1)
+            if _SENSITIVE_COMMAND_FLAGS.search(flag.lstrip("-")):
+                redacted.append(f"{flag}=<redacted>")
+                continue
+        redacted.append(arg)
+        if arg.startswith("-") and _SENSITIVE_COMMAND_FLAGS.search(arg.lstrip("-")):
+            redact_next = True
+    return redacted
 
 
 # ---------------------------------------------------------------------------
@@ -665,7 +696,7 @@ def build_scorecard(
             "status": run_status,
             "started_at": utc_now_iso(),
             "runner": runner_name,
-            "command": command,
+            "command": redact_command_secrets(command),
             "returncode": returncode,
             "duration_seconds": duration_seconds,
         },
@@ -847,6 +878,16 @@ def run_official_pipeline(
         else:
             env = os.environ.copy()
             env["PYTHONPATH"] = command_pythonpath(command_root)
+            if hooks.build_official_environment is not None:
+                hook_env = hooks.build_official_environment(
+                    config=config,
+                    repo_root=command_root,
+                    generated_video_dir=generated_video_dir,
+                    output_dir=output_dir,
+                    args=args,
+                )
+                if hook_env:
+                    env.update({str(key): str(value) for key, value in hook_env.items()})
             if generated_video_dir is not None:
                 for env_name in config.generated_video_envs:
                     env[env_name] = str(generated_video_dir)
@@ -999,7 +1040,7 @@ def write_failed_scorecard(
             "status": "failed",
             "started_at": utc_now_iso(),
             "runner": runner_name or f"benchmark_zoo_{benchmark_id.replace('-', '_')}_official_runner",
-            "command": command,
+            "command": redact_command_secrets(command),
             "returncode": returncode,
             "duration_seconds": None,
             "error": reason,
@@ -1037,6 +1078,7 @@ def write_failed_scorecard(
             "scorecard": str(scorecard_path),
             "raw_metric_table": str(raw_metric_table_path),
             "per_sample_scores": str(per_sample_scores_path),
+            "upstream_results": str(resolved_output_dir / "blocked_results.json"),
         },
         "official_benchmark_verified": False,
         "integration_evidence": False,
@@ -1056,7 +1098,7 @@ def runner_result_payload(config: BenchRunnerConfig, scorecard: dict[str, Any], 
         "scorecard": scorecard["artifacts"]["scorecard"],
         "raw_metric_table": scorecard["artifacts"]["raw_metric_table"],
         "per_sample_scores": scorecard["artifacts"]["per_sample_scores"],
-        "upstream_results": scorecard["artifacts"]["upstream_results"],
+        "upstream_results": scorecard["artifacts"].get("upstream_results"),
         "official_benchmark_verified": scorecard.get("official_benchmark_verified"),
         "integration_evidence": scorecard.get("integration_evidence"),
         "normalization_ok": scorecard.get("normalization_ok"),
@@ -1084,8 +1126,16 @@ def run_main(config: BenchRunnerConfig, hooks: RunnerHooks, argv: list[str] | No
         sample_path = benchmark_task_sample_path(config.benchmark_id)
         if sample_path is None:
             logger.event("ERROR", "official_runner.fixture_missing", "Official runner fixture is unavailable")
+            reason = f"no checked-in sample for {config.benchmark_id} under {BENCHMARK_ASSETS_ROOT / config.benchmark_id}"
+            write_failed_scorecard(
+                benchmark_id=config.benchmark_id,
+                display_name=config.display_name,
+                output_dir=args.output_dir,
+                reason=reason,
+                returncode=2,
+            )
             print(
-                f"error: no checked-in sample for {config.benchmark_id} under {BENCHMARK_ASSETS_ROOT / config.benchmark_id}",
+                f"error: {reason}",
                 file=sys.stderr,
             )
             return 2
@@ -1094,8 +1144,18 @@ def run_main(config: BenchRunnerConfig, hooks: RunnerHooks, argv: list[str] | No
         env_results = resolve_results_path(config, None)
         if env_results is None:
             logger.event("ERROR", "official_runner.results_missing", "Official runner results path is unavailable")
+            reason = (
+                f"--official-results-path or {config.results_path_env} is required unless --run-official is set"
+            )
+            write_failed_scorecard(
+                benchmark_id=config.benchmark_id,
+                display_name=config.display_name,
+                output_dir=args.output_dir,
+                reason=reason,
+                returncode=2,
+            )
             print(
-                f"error: --official-results-path or {config.results_path_env} is required unless --run-official is set",
+                f"error: {reason}",
                 file=sys.stderr,
             )
             return 2

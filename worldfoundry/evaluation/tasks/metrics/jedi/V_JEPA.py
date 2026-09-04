@@ -23,9 +23,7 @@ from vjepa.models.attentive_pooler import AttentiveClassifier
 from .V_JEPA_utils import *
 
 import logging
-logging.basicConfig()
-logger = logging.getLogger()
-logger.setLevel(logging.INFO)
+logger = logging.getLogger(__name__)
 
 
 def find_free_port() -> int:

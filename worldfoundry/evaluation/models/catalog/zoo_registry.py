@@ -255,6 +255,7 @@ class ModelZooRegistry:
 
     def __init__(self, entries: Iterable[ModelZooEntry] = ()) -> None:
         """Initialize the ModelZooRegistry with optional model entries."""
+        self._frozen = False
         self._store = AliasRegistryStore[ModelZooEntry](
             item_name=lambda entry: entry.model_id,
             duplicate_error=DuplicateModelZooKeyError,
@@ -301,6 +302,11 @@ class ModelZooRegistry:
 
     def register(self, entry: ModelZooEntry) -> ModelZooEntry:
         """Register a single model entry and its aliases in the registry."""
+        if self._frozen:
+            raise RuntimeError(
+                "cannot register on a cached ModelZooRegistry; "
+                "construct a new instance or call clear_model_zoo_registry_cache()"
+            )
         if not isinstance(entry, ModelZooEntry):
             raise TypeError(f"expected ModelZooEntry, got {type(entry).__name__}")
         if entry.hf_repo_id:
@@ -449,11 +455,20 @@ class ModelZooRegistry:
 @lru_cache(maxsize=32)
 def _load_model_zoo_registry_cached(resolved_root: str) -> ModelZooRegistry:
     """Load the model zoo registry into memory and cache the registry instance."""
-    return ModelZooRegistry.from_directory(Path(resolved_root))
+    registry = ModelZooRegistry.from_directory(Path(resolved_root))
+    registry._frozen = True
+    return registry
 
 
 def load_model_zoo_registry(path: str | Path | None = None) -> ModelZooRegistry:
-    """Load and cache the ModelZooRegistry from a directory path."""
+    """Load and cache the ModelZooRegistry from a directory path.
+
+    The returned object is the process-wide cached instance and is frozen:
+    ``register`` raises so callers cannot pollute later lookups.  Overlay
+    extra entries on ``ModelZooRegistry(load_model_zoo_registry(...).list())``.
+    Call :func:`clear_model_zoo_registry_cache` after editing YAML in a
+    long-lived process.
+    """
     root = Path(path) if path is not None else default_model_zoo_dir()
     return _load_model_zoo_registry_cached(str(root.resolve()))
 

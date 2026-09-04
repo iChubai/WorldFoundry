@@ -10,11 +10,18 @@ from pathlib import Path
 from PIL import Image
 from typing import Optional, Any, TYPE_CHECKING
 from ..pipeline_utils import PipelineABC
+from worldfoundry.core.io import artifact_root_path
 from worldfoundry.runtime.env import resolve_ckpt_dir
 
 DEFAULT_HUNYUAN_WORLD_VOYAGER_MOGE1_REPO = "Ruicheng/moge-vitl"
 
 logger = logging.getLogger(__name__)
+
+
+def _default_output_dir(name: str = "hunyuan_world_voyager") -> str:
+    """Resolve a stable default output directory instead of writing to the CWD."""
+    return str(artifact_root_path() / name)
+
 
 if TYPE_CHECKING:
     from ...operators.hunyuan_world_voyager_operator import HunyuanWorldVoyagerOperator
@@ -49,7 +56,7 @@ class HunyuanWorldVoyagerPipeline(PipelineABC):
                         model_path: Optional[str | dict[str, Any]] = None,
                         required_components = None,
                         device: str = "cuda",
-                        represent_render_dir: str = './output/hunyuan_world_voyager/represent_render',
+                        represent_render_dir: Optional[str] = None,
                         save_representation_video: bool = False,
                         **kwargs) -> 'HunyuanWorldVoyagerPipeline':
         """
@@ -112,7 +119,9 @@ class HunyuanWorldVoyagerPipeline(PipelineABC):
 
         rendering_args = parse_args(argv=[])
         rendering_args.model_base = model_path
-        rendering_args.input_path = represent_render_dir
+        rendering_args.input_path = represent_render_dir or _default_output_dir(
+            "hunyuan_world_voyager/represent_render"
+        )
 
         from ...synthesis.visual_generation.hunyuan_world.hunyuan_world_voyager_synthesis import HunyuanWorldVoyagerSynthesis
         from ...operators.hunyuan_world_voyager_operator import HunyuanWorldVoyagerOperator
@@ -302,7 +311,7 @@ class HunyuanWorldVoyagerPipeline(PipelineABC):
                  prompt = "",
                  num_frames = None,
                  condition_dir: str | os.PathLike[str] | None = None,
-                 output_save_path = "./output/hunyuan_world_voyager/final_render",
+                 output_save_path: Optional[str] = None,
                  i2v_stability=True,
                  seed: int | None = None,
                  infer_steps: int | None = None,
@@ -314,6 +323,9 @@ class HunyuanWorldVoyagerPipeline(PipelineABC):
                  width: int | None = None,
                  **kwargs):
         """inference function of the pipeline"""
+        output_save_path = output_save_path or _default_output_dir(
+            "hunyuan_world_voyager/final_render"
+        )
         if seed is not None:
             self.rendering_args.seed = int(seed)
         if infer_steps is not None:

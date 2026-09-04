@@ -8,6 +8,7 @@ from typing import Any, Optional, Union
 
 import numpy as np
 import torch
+import torch.distributed as dist
 from einops import rearrange, repeat
 from PIL import Image
 from tqdm import tqdm
@@ -41,6 +42,7 @@ from worldfoundry.base_models.diffusion_model.runners.staged import (
     InferenceStageRunner,
     StagedDiffusionPipeline,
 )
+from worldfoundry.core.distributed.sequence_ops import gather_forward
 from worldfoundry.core.model_loading import GeneralLoRALoader, ModelConfig, load_state_dict
 from worldfoundry.core.nn import FlowMatchScheduler, RMSNorm, sinusoidal_embedding_1d
 from worldfoundry.core.vram import (
@@ -50,6 +52,18 @@ from worldfoundry.core.vram import (
     enable_vram_management,
     move_direct_tensors_to_device,
 )
+
+
+def _sequence_parallel_world_size() -> int:
+    return dist.get_world_size() if dist.is_available() and dist.is_initialized() else 1
+
+
+def _sequence_parallel_rank() -> int:
+    return dist.get_rank() if dist.is_available() and dist.is_initialized() else 0
+
+
+def _sequence_parallel_all_gather(value: torch.Tensor, *, dim: int) -> torch.Tensor:
+    return gather_forward(value, dim) if _sequence_parallel_world_size() > 1 else value
 
 
 class LongViePipeline(StagedDiffusionPipeline):
@@ -396,22 +410,21 @@ class LongViePipeline(StagedDiffusionPipeline):
             ring_degree: The ring degree.
             ulysses_degree: The ulysses degree.
         """
-        import torch.distributed as dist
-        from xfuser.core.distributed import initialize_model_parallel, init_distributed_environment
+        local_rank = int(os.getenv("LOCAL_RANK", os.getenv("RANK", "0")))
+        torch.cuda.set_device(local_rank)
         if not dist.is_initialized():
             dist.init_process_group(backend="nccl", init_method="env://")
-        init_distributed_environment(rank=dist.get_rank(), world_size=dist.get_world_size())
-        initialize_model_parallel(
-            sequence_parallel_degree=dist.get_world_size(),
-            ring_degree=ring_degree,
-            ulysses_degree=ulysses_degree,
-        )
-        torch.cuda.set_device(int(os.getenv("LOCAL_RANK", str(dist.get_rank())) or dist.get_rank()))
+        world_size = dist.get_world_size()
+        if ring_degree != 1 or ulysses_degree != world_size:
+            raise ValueError(
+                "The in-tree LongVie USP runtime supports full-world Ulysses only: "
+                f"ring_degree=1 and ulysses_degree=world_size={world_size}; got "
+                f"ring_degree={ring_degree}, ulysses_degree={ulysses_degree}."
+            )
 
 
     def enable_usp(self):
         """Enable usp."""
-        from xfuser.core.distributed import get_sequence_parallel_world_size
         from worldfoundry.core.attention.patch_xdit_context_parallel import usp_attn_forward, usp_dit_forward
 
         for block in self.dit.blocks:
@@ -426,7 +439,7 @@ class LongViePipeline(StagedDiffusionPipeline):
             for block in self.dit2.blocks:
                 block.self_attn.forward = types.MethodType(usp_attn_forward, block.self_attn)
             self.dit2.forward = types.MethodType(usp_dit_forward, self.dit2)
-        self.sp_size = get_sequence_parallel_world_size()
+        self.sp_size = _sequence_parallel_world_size()
         self.use_unified_sequence_parallel = True
 
 
@@ -1404,10 +1417,8 @@ def model_fn_wan_video(
         )
 
     if use_unified_sequence_parallel:
-        import torch.distributed as dist
-        from xfuser.core.distributed import (get_sequence_parallel_rank,
-                                            get_sequence_parallel_world_size,
-                                            get_sp_group)
+        if not dist.is_initialized():
+            raise RuntimeError("LongVie USP requires an initialized torch.distributed process group")
 
     # Timestep
     if dit.seperated_timestep and fuse_vae_embedding_in_latents:
@@ -1417,9 +1428,9 @@ def model_fn_wan_video(
         ]).flatten()
         t = dit.time_embedding(sinusoidal_embedding_1d(dit.freq_dim, timestep).unsqueeze(0))
         if use_unified_sequence_parallel and dist.is_initialized() and dist.get_world_size() > 1:
-            t_chunks = torch.chunk(t, get_sequence_parallel_world_size(), dim=1)
+            t_chunks = torch.chunk(t, _sequence_parallel_world_size(), dim=1)
             t_chunks = [torch.nn.functional.pad(chunk, (0, 0, 0, t_chunks[0].shape[1]-chunk.shape[1]), value=0) for chunk in t_chunks]
-            t = t_chunks[get_sequence_parallel_rank()]
+            t = t_chunks[_sequence_parallel_rank()]
         t_mod = dit.time_projection(t).unflatten(2, (6, dit.dim))
     else:
         t = dit.time_embedding(sinusoidal_embedding_1d(dit.freq_dim, timestep))
@@ -1521,18 +1532,18 @@ def model_fn_wan_video(
         if dist.is_initialized() and dist.get_world_size() > 1:
             x_original_len = x.size(1)
             dense_original_len = dense.size(1)
-            chunks = torch.chunk(x, get_sequence_parallel_world_size(), dim=1)
+            chunks = torch.chunk(x, _sequence_parallel_world_size(), dim=1)
             pad_shape = chunks[0].shape[1] - chunks[-1].shape[1]
             chunks = [torch.nn.functional.pad(chunk, (0, 0, 0, chunks[0].shape[1]-chunk.shape[1]), value=0) for chunk in chunks]
-            x = chunks[get_sequence_parallel_rank()]
+            x = chunks[_sequence_parallel_rank()]
 
-            dense_chunks = torch.chunk(dense, get_sequence_parallel_world_size(), dim=1)
+            dense_chunks = torch.chunk(dense, _sequence_parallel_world_size(), dim=1)
             dense_chunks = [torch.nn.functional.pad(chunk, (0, 0, 0, dense_chunks[0].shape[1]-chunk.shape[1]), value=0) for chunk in dense_chunks]
-            dense = dense_chunks[get_sequence_parallel_rank()]
+            dense = dense_chunks[_sequence_parallel_rank()]
             
-            sparse_chunks = torch.chunk(sparse, get_sequence_parallel_world_size(), dim=1)
+            sparse_chunks = torch.chunk(sparse, _sequence_parallel_world_size(), dim=1)
             sparse_chunks = [torch.nn.functional.pad(chunk, (0, 0, 0, sparse_chunks[0].shape[1]-chunk.shape[1]), value=0) for chunk in sparse_chunks]
-            sparse = sparse_chunks[get_sequence_parallel_rank()]
+            sparse = sparse_chunks[_sequence_parallel_rank()]
             
 
     if tea_cache_update:
@@ -1599,20 +1610,20 @@ def model_fn_wan_video(
                     sparse = sparse_block(sparse, control_context, control_t_mod, freqs)
                 # for history context, we should gather x and dense to apply the indice of them
                 if use_unified_sequence_parallel and dist.is_initialized() and dist.get_world_size() > 1 and history_latents is not None:
-                    x_full = get_sp_group().all_gather(x, dim=1)
+                    x_full = _sequence_parallel_all_gather(x, dim=1)
                     x_full = x_full[:, :x_original_len]
                     
-                    dense_full = get_sp_group().all_gather(dense, dim=1)
+                    dense_full = _sequence_parallel_all_gather(dense, dim=1)
                     dense_full = dense_full[:, :dense_original_len]
                     
-                    sparse_full = get_sp_group().all_gather(sparse, dim=1)
+                    sparse_full = _sequence_parallel_all_gather(sparse, dim=1)
                     sparse_full = sparse_full[:, :dense_original_len]
 
                     x_full[:, -dense_original_len:] += dual_controller.control_combine_linears[block_id](dense_full + sparse_full)
 
-                    x_chunks = torch.chunk(x_full, get_sequence_parallel_world_size(), dim=1)
+                    x_chunks = torch.chunk(x_full, _sequence_parallel_world_size(), dim=1)
                     x_chunks = [torch.nn.functional.pad(chunk, (0, 0, 0, x_chunks[0].shape[1]-chunk.shape[1]), value=0) for chunk in x_chunks]
-                    x = x_chunks[get_sequence_parallel_rank()]
+                    x = x_chunks[_sequence_parallel_rank()]
                 else:
                     if history_latents is not None:
                         x[:,-dense.size(1):] += dual_controller.control_combine_linears[block_id](dense + sparse)
@@ -1625,21 +1636,21 @@ def model_fn_wan_video(
 
     if history_latents is not None:
         if use_unified_sequence_parallel and dist.is_initialized() and dist.get_world_size() > 1:
-            x_full = get_sp_group().all_gather(x, dim=1)
+            x_full = _sequence_parallel_all_gather(x, dim=1)
             x_full = x_full[:, :x_original_len]
             x_full = x_full[:, -dense_original_len:]
             
-            x_chunks = torch.chunk(x_full, get_sequence_parallel_world_size(), dim=1)
+            x_chunks = torch.chunk(x_full, _sequence_parallel_world_size(), dim=1)
             current_pad_shape = x_chunks[0].shape[1] - x_chunks[-1].shape[1]
             x_chunks = [torch.nn.functional.pad(chunk, (0, 0, 0, x_chunks[0].shape[1]-chunk.shape[1]), value=0) for chunk in x_chunks]
-            x = x_chunks[get_sequence_parallel_rank()]
+            x = x_chunks[_sequence_parallel_rank()]
         else:
             x = x[:, -dense.size(1):]
         f -= f_h
     x = dit.head(x, t)
     if use_unified_sequence_parallel:
         if dist.is_initialized() and dist.get_world_size() > 1:
-            x = get_sp_group().all_gather(x, dim=1)
+            x = _sequence_parallel_all_gather(x, dim=1)
             x = x[:, :-pad_shape] if pad_shape > 0 else x
     # Remove reference latents
     if reference_latents is not None:

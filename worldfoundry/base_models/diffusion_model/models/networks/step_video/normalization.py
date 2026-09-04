@@ -1,4 +1,9 @@
-"""Module for base_models -> diffusion_model -> video -> step_video -> step_video_runtime -> stepvideo -> modules -> normalization.py functionality."""
+"""StepVideo norms, sinusoidal timesteps, and PixArt AdaLN-single.
+
+Used by the DiT stem: RMSNorm on Q/K, Fourier timestep features, and
+:class:`AdaLayerNormSingle` that emits the 6-wide scale/shift/gate table
+broadcast over ``B S C`` tokens.
+"""
 
 from typing import Any, Dict, Optional, Union, Tuple
 import torch
@@ -7,7 +12,7 @@ import math
 
 
 class RMSNorm(nn.Module):
-    """Rms norm implementation."""
+    """RMSNorm over the last dim of Q/K or tokens (``[..., dim]``)."""
     def __init__(
         self,
         dim: int,
@@ -136,26 +141,16 @@ def get_timestep_embedding(
 
 
 class Timesteps(nn.Module):
-    """Timesteps implementation."""
-    def __init__(self, num_channels: int, flip_sin_to_cos: bool, downscale_freq_shift: float):
-        """Init.
+    """Sinusoidal timestep features of width ``num_channels``."""
 
-        Args:
-            num_channels: The num channels.
-            flip_sin_to_cos: The flip sin to cos.
-            downscale_freq_shift: The downscale freq shift.
-        """
+    def __init__(self, num_channels: int, flip_sin_to_cos: bool, downscale_freq_shift: float):
         super().__init__()
         self.num_channels = num_channels
         self.flip_sin_to_cos = flip_sin_to_cos
         self.downscale_freq_shift = downscale_freq_shift
 
     def forward(self, timesteps):
-        """Forward.
-
-        Args:
-            timesteps: The timesteps.
-        """
+        """Map scalar timesteps to ``[B, num_channels]`` Fourier features."""
         t_emb = get_timestep_embedding(
             timesteps,
             self.num_channels,
@@ -167,7 +162,7 @@ class Timesteps(nn.Module):
 
 
 class TimestepEmbedding(nn.Module):
-    """Timestep embedding implementation."""
+    """SiLU MLP that maps Fourier timestep features to AdaLN width."""
     def __init__(
         self,
         in_channels: int,
@@ -178,17 +173,6 @@ class TimestepEmbedding(nn.Module):
         cond_proj_dim=None,
         sample_proj_bias=True
     ):
-        """Init.
-
-        Args:
-            in_channels: The in channels.
-            time_embed_dim: The time embed dim.
-            act_fn: The act fn.
-            out_dim: The out dim.
-            post_act_fn: The post act fn.
-            cond_proj_dim: The cond proj dim.
-            sample_proj_bias: The sample proj bias.
-        """
         super().__init__()
         linear_cls = nn.Linear
 
@@ -226,12 +210,7 @@ class TimestepEmbedding(nn.Module):
             self.post_act = get_activation(post_act_fn)
 
     def forward(self, sample, condition=None):
-        """Forward.
-
-        Args:
-            sample: The sample.
-            condition: The condition.
-        """
+        """Optionally add a projected condition, then run the two-layer MLP."""
         if condition is not None:
             sample = sample + self.cond_proj(condition)
         sample = self.linear_1(sample)
@@ -249,15 +228,9 @@ class TimestepEmbedding(nn.Module):
 
 
 class PixArtAlphaCombinedTimestepSizeEmbeddings(nn.Module):
-    """Pix art alpha combined timestep size embeddings implementation."""
-    def __init__(self, embedding_dim, size_emb_dim, use_additional_conditions: bool = False):
-        """Init.
+    """Sum timestep Fourier features with optional resolution / nframe / fps embeddings."""
 
-        Args:
-            embedding_dim: The embedding dim.
-            size_emb_dim: The size emb dim.
-            use_additional_conditions: The use additional conditions.
-        """
+    def __init__(self, embedding_dim, size_emb_dim, use_additional_conditions: bool = False):
         super().__init__()
 
         self.outdim = size_emb_dim
@@ -272,14 +245,7 @@ class PixArtAlphaCombinedTimestepSizeEmbeddings(nn.Module):
             self.fps_embedder = TimestepEmbedding(in_channels=256, time_embed_dim=embedding_dim)
 
     def forward(self, timestep, resolution=None, nframe=None, fps=None):
-        """Forward.
-
-        Args:
-            timestep: The timestep.
-            resolution: The resolution.
-            nframe: The nframe.
-            fps: The fps.
-        """
+        """Return the combined AdaLN embedding ``[B, embedding_dim]``."""
         hidden_dtype = next(self.timestep_embedder.parameters()).dtype
 
         timesteps_proj = self.time_proj(timestep)
@@ -315,13 +281,6 @@ class AdaLayerNormSingle(nn.Module):
             use_additional_conditions (`bool`): To use additional conditions for normalization or not.
     """
     def __init__(self, embedding_dim: int, use_additional_conditions: bool = False, time_step_rescale=1000):
-        """Init.
-
-        Args:
-            embedding_dim: The embedding dim.
-            use_additional_conditions: The use additional conditions.
-            time_step_rescale: The time step rescale.
-        """
         super().__init__()
 
         self.emb = PixArtAlphaCombinedTimestepSizeEmbeddings(
@@ -338,15 +297,7 @@ class AdaLayerNormSingle(nn.Module):
         timestep: torch.Tensor,
         added_cond_kwargs: Dict[str, torch.Tensor] = None,
     ) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]:
-        """Forward.
-
-        Args:
-            timestep: The timestep.
-            added_cond_kwargs: The added cond kwargs.
-
-        Returns:
-            The return value.
-        """
+        """Return ``(6*C modulation, raw timestep embedding)`` for the DiT blocks."""
         embedded_timestep = self.emb(timestep*self.time_step_rescale, **added_cond_kwargs)
 
         out = self.linear(self.silu(embedded_timestep))
@@ -362,12 +313,6 @@ class PixArtAlphaTextProjection(nn.Module):
     """
 
     def __init__(self, in_features, hidden_size):
-        """Init.
-
-        Args:
-            in_features: The in features.
-            hidden_size: The hidden size.
-        """
         super().__init__()
         self.linear_1 = nn.Linear(
                 in_features, 
@@ -382,11 +327,7 @@ class PixArtAlphaTextProjection(nn.Module):
             )
 
     def forward(self, caption):
-        """Forward.
-
-        Args:
-            caption: The caption.
-        """
+        """Project caption tokens ``B L C_text`` to DiT hidden size."""
         hidden_states = self.linear_1(caption)
         hidden_states = self.act_1(hidden_states)
         hidden_states = self.linear_2(hidden_states)

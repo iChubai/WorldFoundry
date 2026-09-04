@@ -1,4 +1,18 @@
-"""Native Cosmos Predict1 / GEN3C recipe."""
+"""Native Cosmos Predict1 GEN3C (7B) camera-controlled world recipe.
+
+Returns a :class:`NativeDiffusionRecipe` only.  Does not construct a
+runner.
+
+Binds the GEN3C FA-DiT denoiser, T5-11B conditioner (mask-ones, CFG
+positive branch), Cosmos Tokenizer1 video codec as encoder and decoder,
+GEN3C initializer with a MoGe depth model, and a Karras x0 Euler
+scheduler (``sigma_min=0.0002``, ``sigma_max=80``, ``rho=7``).
+
+Strategy is the default ``standard`` path with
+``guidance_mode="positive"`` (CFG on the positive prediction, not a
+dual-expert split).  Capabilities cover image-to-world, camera-controlled
+video, and rendered 3D-cache conditioning.
+"""
 
 from __future__ import annotations
 
@@ -23,6 +37,11 @@ MOGE_REVISION = "979e84da9415762c30e6c0cf8dc0962896c793df"
 
 
 def gen3c_recipe() -> NativeDiffusionRecipe:
+    """GEN3C Cosmos-1 7B: T5 + Karras x0 Euler + depth-conditioned init.
+
+    Strategy ``standard``; ``guidance_mode="positive"`` for CFG.
+    """
+
     denoiser = ComponentKey(ComponentKind.DENOISER)
     conditioner = ComponentKey(ComponentKind.CONDITIONER)
     initializer = ComponentKey(ComponentKind.LATENT_INITIALIZER)

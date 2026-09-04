@@ -1,0 +1,41 @@
+{
+  "id": "vmem",
+  "tagline": {
+    "en": "VMem — an interactive world model with surfel-indexed memory, so navigable video stays consistent as you explore.",
+    "zh": "VMem——带 surfel 索引记忆的交互式世界模型，让可导航视频在你探索时保持一致。"
+  },
+  "overview": {
+    "en": [
+      "VMem is an interactive video world model that generates a scene you can move through. Its key idea is memory: it maintains a geometry-indexed record of what it has already rendered, so as you navigate the world stays consistent instead of drifting or forgetting earlier views.",
+      "It streams video frame by frame in response to camera motion, making it suited to interactive exploration rather than fixed clips. Under the hood it pairs a Stable Diffusion 2.1 backbone with a CLIP image encoder and DUSt3R/CUT3R-style geometry for its spatial memory.",
+      "In WorldFoundry the VMem runtime is built in-tree, so you can run the navigation experience with staged VMem and CUT3R checkpoints and no external checkout."
+    ],
+    "zh": [
+      "VMem 是一个可交互的视频世界模型，能生成你可以在其中穿行的场景。它的核心是记忆：维护一份以几何为索引的、对已渲染内容的记录，因此你导航时世界会保持一致，而不会漂移或遗忘先前的视角。",
+      "它随相机运动逐帧流式生成视频，因而适合交互式探索，而非固定片段。其内部将 Stable Diffusion 2.1 主干与 CLIP 图像编码器，以及 DUSt3R/CUT3R 风格的几何结合起来，构成空间记忆。",
+      "在 WorldFoundry 中，VMem 运行时内置于代码树中，你只需准备好 VMem 与 CUT3R 的 checkpoint，无需外部代码即可运行导航体验。"
+    ]
+  },
+  "whenToUse": {
+    "en": "Use VMem when you want to explore a generated scene interactively and need earlier views to stay consistent as the camera moves — its memory is built for that.",
+    "zh": "当你想交互式地探索一个生成场景，并希望相机移动时先前的视角保持一致时，选择 VMem——它的记忆机制正为此而生。"
+  },
+  "notFor": {
+    "en": "Not aimed at one-shot text-to-video; it needs several staged checkpoints (VMem, CUT3R, and the diffusion/CLIP backbones) and is driven by camera navigation.",
+    "zh": "不面向一次性文生视频；它需要准备多个 checkpoint（VMem、CUT3R 以及扩散/CLIP 主干），并由相机导航驱动。"
+  },
+  "highlights": {
+    "en": [
+      "Interactive, navigable video world model",
+      "Geometry-indexed memory keeps views consistent over time",
+      "Streams frames in response to camera motion",
+      "Built on Stable Diffusion 2.1 with CLIP and CUT3R/DUSt3R geometry"
+    ],
+    "zh": [
+      "可交互、可导航的视频世界模型",
+      "以几何为索引的记忆让视角随时间保持一致",
+      "随相机运动流式生成帧",
+      "基于 Stable Diffusion 2.1，结合 CLIP 与 CUT3R/DUSt3R 几何"
+    ]
+  }
+}

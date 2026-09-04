@@ -104,7 +104,8 @@ const labels = {
     returns: 'Returns',
     source: 'Source',
     staticmethod: 'static method',
-    symbols: 'Symbols',
+    symbols: 'symbols',
+    guide: 'Guide',
     warnings: 'Warnings',
   },
   zh: {
@@ -127,10 +128,78 @@ const labels = {
     returns: '返回值',
     source: '源码',
     staticmethod: '静态方法',
-    symbols: '符号',
+    symbols: '个符号',
+    guide: '指南',
     warnings: '警告',
   },
 } as const;
+
+const catalogBlurbs: Record<string, LocalizedText> = {
+  core: {
+    en: 'How to pick attention, loading, I/O, and acceleration APIs.',
+    zh: '如何选择注意力、加载、I/O 与加速 API。',
+  },
+  'core-attention': {
+    en: 'SDPA dispatch, fused backends, RoPE, and KV cache.',
+    zh: 'SDPA 分发、融合后端、RoPE 与 KV cache。',
+  },
+  'core-configuration': {
+    en: 'LazyConfig and deferred object graphs.',
+    zh: 'LazyConfig 与延迟对象图。',
+  },
+  'core-io-media': {
+    en: 'Paths, URIs, images, video, and serialization.',
+    zh: '路径、URI、图像、视频与序列化。',
+  },
+  'core-model-loading': {
+    en: 'Checkpoints, state dicts, DiskMap, and construction.',
+    zh: 'Checkpoint、state dict、DiskMap 与构造。',
+  },
+  'core-distributed': {
+    en: 'Collectives and context-parallel split/gather.',
+    zh: '集合通信与 context-parallel 切分/聚合。',
+  },
+  'core-runtime': {
+    en: 'Process setup, compile, timers, and realtime.',
+    zh: '进程设置、编译、计时与 realtime。',
+  },
+  'core-nn-math': {
+    en: 'Shared tensor transforms and math helpers.',
+    zh: '共享张量变换与数学辅助。',
+  },
+  'core-acceleration-memory': {
+    en: 'Caches, offload, VRAM, and kernels.',
+    zh: 'Cache、offload、VRAM 与 kernels。',
+  },
+  'core-foundations': {
+    en: 'Registries, utilities, and safety contracts.',
+    zh: 'Registry、通用工具与安全契约。',
+  },
+  contracts: {
+    en: 'Artifact refs and generation request/result shapes.',
+    zh: 'Artifact 引用与生成 request/result 形态。',
+  },
+  models: {
+    en: 'World-model manifests, configs, and runners.',
+    zh: '世界模型 manifest、配置与 runner。',
+  },
+  'metrics-tasks': {
+    en: 'Metric specs, task configs, and benchmark contracts.',
+    zh: 'Metric spec、task 配置与 benchmark 契约。',
+  },
+  runs: {
+    en: 'Run requests and the public benchmark facade.',
+    zh: 'Run 请求与公开 benchmark facade。',
+  },
+  reporting: {
+    en: 'Scorecards, run manifests, and markdown reports.',
+    zh: 'Scorecard、run manifest 与 Markdown 报告。',
+  },
+  runtime: {
+    en: 'Env reports, local assets, and path expansion.',
+    zh: '环境报告、本地资产与路径展开。',
+  },
+};
 
 function sourceUrl(sourcePath: string, line: number) {
   return `${data.repository}/blob/${data.branch}/${sourcePath}#L${line}`;
@@ -270,11 +339,17 @@ function IntroBlock({
     !normalizedIntro.startsWith(normalizedDoc) &&
     docstring.includes('\n\n');
 
+  const shortIntro =
+    Boolean(text) &&
+    !showDetails &&
+    !text.includes('\n') &&
+    text.replace(/\s+/g, ' ').trim().length <= 180;
+
   return (
-    <div className="wf-api-overview">
+    <div className={`wf-api-overview${shortIntro ? ' is-lead' : ''}`}>
       {text ? (
         <div className="wf-api-intro">
-          <h4>{t.overview}</h4>
+          {shortIntro ? null : <h4>{t.overview}</h4>}
           <Description locale={locale} value={text} />
         </div>
       ) : (
@@ -333,15 +408,14 @@ function SymbolMeta({
   const importStmt = `from ${publicModule} import ${name}`;
   return (
     <div className="wf-api-meta">
-      <div className="wf-api-meta-row">
-        <span className="wf-api-meta-label">{t.module}</span>
-        <code className="wf-api-meta-value">{publicModule}</code>
-      </div>
-      <div className="wf-api-meta-row">
-        <span className="wf-api-meta-label">{t.import}</span>
-        <code className="wf-api-meta-value wf-api-meta-import">{importStmt}</code>
-        <ApiCopyButton value={importStmt} label={t.copy} doneLabel={t.copied} />
-      </div>
+      <code className="wf-api-meta-value" title={t.module}>
+        {publicModule}
+      </code>
+      <span className="wf-api-meta-sep" aria-hidden="true">
+        ·
+      </span>
+      <code className="wf-api-meta-value wf-api-meta-import">{importStmt}</code>
+      <ApiCopyButton value={importStmt} label={t.copy} doneLabel={t.copied} />
     </div>
   );
 }
@@ -861,50 +935,56 @@ export function PythonApiGroupReference({
   );
 }
 
+function catalogPreviewNames(page: CatalogPage) {
+  const qualified = page.symbols.length > 0 ? page.symbols : (data.groups[page.slug] ?? []);
+  return qualified.slice(0, 4).map((symbol) => data.symbols[symbol]?.name ?? symbol.split('.').pop() ?? symbol);
+}
+
 export function PythonApiCatalog({ locale = 'en' }: { locale?: Locale }) {
   const t = labels[locale];
   return (
     <div className="wf-api-catalog not-prose">
       {data.catalog.map((section) => (
         <section className="wf-api-catalog-section" key={section.id}>
-          <h2>{section.title[locale]}</h2>
-          <p>{section.description[locale]}</p>
-          {section.pages.map((page) => {
-            const href = withBasePath(`${docsPrefix(locale)}/api-reference/${page.slug}`) ??
-              `${docsPrefix(locale)}/api-reference/${page.slug}`;
-            return (
-              <div className="wf-api-catalog-page" key={page.slug}>
-                <h3>
-                  <a href={href}>{page.title[locale]}</a>
-                  {page.kind === 'reference' ? (
-                    <span className="wf-api-catalog-count">
-                      {page.symbol_count ?? page.symbols.length} {t.symbols}
-                    </span>
-                  ) : null}
-                </h3>
-                {page.symbols.length > 0 ? (
-                  <ul className="wf-api-catalog-symbols">
-                    {page.symbols.map((symbol) => {
-                      const entry = data.symbols[symbol];
-                      const symbolLink =
-                        withBasePath(
-                          `${docsPrefix(locale)}/api-reference/${page.slug}#${symbolAnchor(symbol)}`,
-                        ) ?? `${docsPrefix(locale)}/api-reference/${page.slug}#${symbolAnchor(symbol)}`;
-                      return (
-                        <li key={symbol}>
-                          <a href={symbolLink}>
-                            <code>
-                              {entry.public_module}.{entry.name}
-                            </code>
-                          </a>
+          <header className="wf-api-catalog-section-head">
+            <h2>{section.title[locale]}</h2>
+            <p>{section.description[locale]}</p>
+          </header>
+          <div className="wf-api-catalog-grid">
+            {section.pages.map((page) => {
+              const href =
+                withBasePath(`${docsPrefix(locale)}/api-reference/${page.slug}`) ??
+                `${docsPrefix(locale)}/api-reference/${page.slug}`;
+              const preview = catalogPreviewNames(page);
+              const count = page.symbol_count ?? page.symbols.length;
+              const blurb = catalogBlurbs[page.slug]?.[locale];
+
+              return (
+                <a
+                  className={['pi-doc-hub-card', 'wf-api-catalog-card', page.kind === 'guide' ? 'is-guide' : '']
+                    .filter(Boolean)
+                    .join(' ')}
+                  href={href}
+                  key={page.slug}
+                >
+                  <strong>{page.title[locale]}</strong>
+                  {blurb ? <p className="pi-doc-hub-card-desc">{blurb}</p> : null}
+                  {preview.length > 0 ? (
+                    <ul className="wf-api-catalog-chips">
+                      {preview.map((name) => (
+                        <li key={name}>
+                          <code>{name}</code>
                         </li>
-                      );
-                    })}
-                  </ul>
-                ) : null}
-              </div>
-            );
-          })}
+                      ))}
+                    </ul>
+                  ) : null}
+                  <span className="wf-api-catalog-meta">
+                    {page.kind === 'guide' ? t.guide : `${count} ${t.symbols}`}
+                  </span>
+                </a>
+              );
+            })}
+          </div>
         </section>
       ))}
     </div>

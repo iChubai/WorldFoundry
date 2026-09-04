@@ -1,4 +1,9 @@
-"""Module for base_models -> diffusion_model -> video -> lvdm -> models -> samplers -> ddim.py functionality."""
+"""DDIM sampler used by LVDM / VideoCrafter recipes (including T2V-Turbo).
+
+Legacy stateful solver that predates :class:`~...contracts.DiffusionScheduler`.
+Recipes that still need DDIM construct :class:`DDIMSampler` instead of going
+through Diffusers.  Numerical helpers live in :mod:`.schedule_math`.
+"""
 
 import numpy as np
 from tqdm import tqdm
@@ -32,8 +37,9 @@ class DDIMSampler(object):
             attr: The attr.
         """
         if type(attr) == torch.Tensor:
-            if attr.device != torch.device("cuda"):
-                attr = attr.to(torch.device("cuda"))
+            target_device = torch.device(self.model.device)
+            if attr.device != target_device:
+                attr = attr.to(target_device)
         setattr(self, name, attr)
 
     def make_schedule(self, ddim_num_steps, ddim_discretize="uniform", ddim_eta=0., verbose=True):

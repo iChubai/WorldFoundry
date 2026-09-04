@@ -1,0 +1,41 @@
+{
+  "id": "causal-forcing",
+  "tagline": {
+    "en": "An autoregressive video-diffusion world model from THU-ML that generates video frame-by-frame, built on Wan2.1 for real-time-oriented rollout.",
+    "zh": "来自 THU-ML 的自回归视频扩散世界模型,基于 Wan2.1 逐块生成视频,面向实时化的推进(rollout)。"
+  },
+  "overview": {
+    "en": [
+      "Causal-Forcing is an autoregressive video-diffusion method from THU-ML. Rather than denoising a whole clip at once, it generates video causally — extending the sequence chunk by chunk — which suits streaming and interactive, real-time-oriented generation.",
+      "It supports text-to-video and image-to-video, and works alongside Wan2.1 weights: the pretrained checkpoint pairs with a Wan2.1 backbone, and different configurations expose chunk-wise, frame-wise, and Causal-Forcing++ variants. The Hugging Face checkpoint lives under the zhuhz22 account.",
+      "In WorldFoundry the official inference path is run in-tree. You supply a prompt (and an image for image-to-video), select a checkpoint and config, and it produces the video; the local Wan2.1 weights and the chosen Causal-Forcing checkpoint need to be staged together."
+    ],
+    "zh": [
+      "Causal-Forcing 是 THU-ML 提出的自回归视频扩散方法。它不一次性对整段视频去噪,而是因果地逐块延展序列来生成视频,因此适合流式、交互式、面向实时的生成。",
+      "它支持文生视频与图生视频,并与 Wan2.1 权重配合工作:预训练 checkpoint 搭配 Wan2.1 主干,不同配置提供 chunk-wise、frame-wise 以及 Causal-Forcing++ 等变体。Hugging Face 上的 checkpoint 位于 zhuhz22 账号下。",
+      "在 WorldFoundry 中,官方推理路径在仓库内直接运行。你给出提示词(图生视频再加一张图),选好 checkpoint 与配置,它就生成视频;需要把本地 Wan2.1 权重与所选的 Causal-Forcing checkpoint 一并准备好。"
+    ]
+  },
+  "whenToUse": {
+    "en": "When you want streaming or interactive video generation that grows the sequence over time, rather than rendering a fixed-length clip in one pass — for example real-time-oriented rollout on top of a Wan2.1 backbone.",
+    "zh": "当你需要随时间不断延展序列的流式或交互式视频生成,而非一次性渲染固定长度片段时——例如在 Wan2.1 主干之上做面向实时的推进。"
+  },
+  "notFor": {
+    "en": "It depends on both a Causal-Forcing checkpoint and local Wan2.1 weights, so you need to prepare that pair before running. Frame-wise and Causal-Forcing++ setups require overriding the default config.",
+    "zh": "它同时依赖 Causal-Forcing checkpoint 与本地 Wan2.1 权重,运行前需备好这一对文件。frame-wise 与 Causal-Forcing++ 等设置需要覆盖默认配置。"
+  },
+  "highlights": {
+    "en": [
+      "Autoregressive, chunk-by-chunk video generation",
+      "Text-to-video and image-to-video",
+      "Real-time-oriented rollout on a Wan2.1 backbone",
+      "Chunk-wise, frame-wise, and Causal-Forcing++ variants"
+    ],
+    "zh": [
+      "自回归、逐块推进的视频生成",
+      "支持文生视频与图生视频",
+      "在 Wan2.1 主干上做面向实时的推进",
+      "提供 chunk-wise、frame-wise 与 Causal-Forcing++ 变体"
+    ]
+  }
+}

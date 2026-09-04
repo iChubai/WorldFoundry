@@ -1,0 +1,41 @@
+{
+  "id": "bernini-r-1.3b",
+  "tagline": {
+    "en": "ByteDance's Bernini-R renderer at 1.3B — an Apache-2.0 model spanning image and video generation, including reference-guided modes.",
+    "zh": "字节跳动 Bernini-R 渲染器的 1.3B 版本——Apache-2.0 许可,覆盖图像与视频生成,并支持参考条件模式。"
+  },
+  "overview": {
+    "en": [
+      "Bernini-R is the renderer of ByteDance's Bernini family, published on Hugging Face under Apache-2.0 in a Diffusers-compatible format. This 1.3B variant is a compact renderer fine-tuned from Wan2.1's 1.3B backbone, so it inherits Wan-style video generation and layers image and reference-conditioned modes on top.",
+      "A single model covers a broad task set: text-to-image and image-to-image for stills, text-to-video and video-to-video for motion, and reference-to-video plus reference-video-to-video, where a reference image or clip steers the generated result.",
+      "In WorldFoundry you run it through the shared pipeline — pick the checkpoint and task, supply a prompt (and an image, video, or reference where the task calls for it), and it renders the output."
+    ],
+    "zh": [
+      "Bernini-R 是字节跳动 Bernini 系列的渲染(生成)模型,以 Diffusers 兼容格式、Apache-2.0 许可发布在 Hugging Face 上。这个 1.3B 变体是从 Wan2.1 的 1.3B 主干微调而来的轻量渲染器,既继承了 Wan 风格的视频生成,又增加了图像与参考条件的生成模式。",
+      "一个模型覆盖多种任务:文生图与图生图用于静态图像,文生视频与视频到视频用于动态画面,还有参考到视频与参考视频到视频——用一张参考图或一段参考片段来引导生成结果。",
+      "在 WorldFoundry 中,你通过统一 pipeline 运行它:选好 checkpoint 与任务,给出提示词(以及任务需要的图像、视频或参考素材),它便渲染出结果。"
+    ]
+  },
+  "whenToUse": {
+    "en": "When you want an openly-licensed, compact renderer that spans both image and video generation — including reference-guided video — and prefer the smaller 1.3B size for lighter setups.",
+    "zh": "当你想要一个开放许可、体量紧凑的渲染器,同时覆盖图像与视频生成(含参考引导的视频),并倾向于用更小的 1.3B 规模在较轻量的环境上运行时。"
+  },
+  "notFor": {
+    "en": "When you need the highest fidelity or larger-scale video, the 14B renderer is the heavier alternative. Checkpoints are downloaded separately rather than bundled.",
+    "zh": "当你追求最高保真度或更大规模的视频时,14B 渲染器是更重的替代选择。Checkpoint 需单独下载,而非随附。"
+  },
+  "highlights": {
+    "en": [
+      "Apache-2.0, fully open weights",
+      "One model for text/image-to-image and text/video/reference-to-video",
+      "Reference-conditioned image and video generation",
+      "Compact 1.3B, fine-tuned from Wan2.1"
+    ],
+    "zh": [
+      "Apache-2.0,完全开放权重",
+      "一个模型覆盖文/图生图与文本/视频/参考条件的视频生成",
+      "支持参考条件的图像与视频生成",
+      "紧凑的 1.3B,从 Wan2.1 微调而来"
+    ]
+  }
+}

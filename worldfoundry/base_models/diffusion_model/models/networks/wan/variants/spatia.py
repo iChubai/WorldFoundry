@@ -1,4 +1,14 @@
-"""Spatia's reference-position and VACE extensions for native Wan."""
+"""Spatia (Wan 2.2 TI2V): reference-frame RoPE plus optional VACE hints.
+
+Spatia prepends reference video frames to the latent grid.  Those tokens
+keep a shifted 3D RoPE (time taken from the end of the frequency table,
+height offset by ``H``) so they do not collide with target-frame
+positions.  When a DiffSynth-shaped VACE trunk is supplied, hints are
+computed on the *target* tokens only and injected via
+:meth:`WanModel.after_transformer_block`.
+
+No action, camera, causal, or linear-attention logic lives here.
+"""
 
 from dataclasses import dataclass
 from typing import Any
@@ -23,6 +33,8 @@ VaceWanAttentionBlock, VaceWanModel, VaceWanModelDictConverter = build_vace_wan_
 
 @dataclass(slots=True)
 class _SpatiaTokenState:
+    """Per-forward bookkeeping for reference-token count and VACE hints."""
+
     reference_tokens: int
     vace_hints: tuple[torch.Tensor, ...] | list[torch.Tensor] | None
     vace: torch.nn.Module | None
@@ -41,6 +53,7 @@ class SpatiaWanModel(WanModel):
         grid_size: tuple[int, int, int],
         **kwargs: Any,
     ):
+        """Shift RoPE for reference frames and optionally run the VACE trunk."""
         f_all, h, w = grid_size
         num_ref_frames = int(kwargs.get("num_ref_frames", 0) or 0)
         if not 0 <= num_ref_frames < f_all:
@@ -95,6 +108,7 @@ class SpatiaWanModel(WanModel):
         token_state: _SpatiaTokenState,
         **kwargs: Any,
     ) -> torch.Tensor:
+        """Add the mapped VACE hint onto target tokens; leave reference tokens intact."""
         del kwargs
         if token_state.vace_hints is None or token_state.vace is None:
             return x

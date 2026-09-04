@@ -1,0 +1,49 @@
+schema_version: 2
+model_id: magi2-preview
+display_name: MAGI-2 Preview (audio-video, MoE)
+task_family: video_generation
+groups:
+- video
+- audio
+source_repos:
+- url: https://github.com/SandAI-org/MAGI-2-preview
+checkpoints:
+- repo_id: sand-ai/MAGI-2-preview
+  revision: main
+  role: preview_transformer
+- repo_id: sand-ai/MAGI-2-preview
+  revision: main
+  role: refiner_transformer
+- repo_id: sand-ai/MAGI-2-preview
+  revision: main
+  role: video_vae
+- repo_id: sand-ai/MAGI-2-preview
+  revision: main
+  role: turbo_vae
+- repo_id: sand-ai/MAGI-2-preview
+  revision: main
+  role: audio_vae
+- repo_id: sand-ai/MAGI-2-preview
+  revision: main
+  role: text_encoder
+input_schema:
+  prompt: true
+  image: true
+  video: false
+  audio: false
+  actions:
+  - seed
+  - task
+artifact_kind: generated_video
+artifact_filename: magi2-preview.mp4
+execution:
+  backend_stage: in_tree_runtime_plan
+  runtime_status: checkpoint_runtime_required
+  integration_status: planned
+  pipeline_binding: magi2-preview
+integration:
+  status: planned
+notes:
+- MAGI-2-preview 114B MoE (256 experts, top-6, 6B active/token) audio+video DiT, ported from SandAI Apache-2.0.
+- Two-stage: preview (low-res, 100 steps) -> refiner (1080p, 5 steps). T2V and I2V, 10s clips, joint audio muxed.
+- Upstream targets 8xHopper; this port collapses cp/ep/dp to single-GPU (sequential residency for the 114B MoE).

@@ -1,4 +1,23 @@
-"""Declarative native recipes for the Sana image/video family."""
+"""Native declarative recipes for the Sana image / video / world family.
+
+Each public function returns a :class:`NativeDiffusionRecipe`.  Variant
+metadata (task, runner, Hub path, defaults) lives in
+:mod:`.sana_variants`; this module only binds components and a strategy.
+Recipes do not construct runners.
+
+Family split
+------------
+- Image (Sana / Sana 1.5): DC-AE codec, Gemma conditioner, flow-match
+  scheduler, ``standard`` strategy, classifier-free guidance.
+- Sprint: SCM scheduler, embedded guidance (no CFG), optional teacher
+  checkpoint, ``decoder_input_scale=0.5``.
+- ControlNet: HED-conditioned denoiser, encoded initialization so the
+  control image is VAE-encoded before denoise.
+- Video 480p: Wan VAE + Flow-DPM; 720p: LTX tensor codec + Flow-DPM.
+- Long streaming: ``chunked-kv-cache`` with Euler, KV sink tokens.
+- SANA-WM: world-model DiT, flow-match (shift 9.8), LTX-2 codec,
+  ``standard`` with encoded initialization (camera / interactive I2V).
+"""
 
 from __future__ import annotations
 
@@ -6,7 +25,10 @@ from collections.abc import Mapping
 
 from ..components import ComponentKey, ComponentKind, ComponentSpec, ExecutionSpec
 from ..loaders import CheckpointSpec
-from ..models.autoencoders.ltx import build_ltx_tensor_video_codec
+from ..models.autoencoders.ltx import (
+    build_diffusers_ltx2_tensor_video_codec,
+    build_ltx_tensor_video_codec,
+)
 from ..models.autoencoders.sana import build_sana_dc_autoencoder
 from ..models.autoencoders.wan import build_wan_video_decoder
 from ..models.denoisers.sana import (
@@ -16,8 +38,13 @@ from ..models.denoisers.sana import (
     build_sana_streaming_denoiser,
     build_sana_video_denoiser,
     build_sana_world_denoiser,
+    build_sana_world_streaming_denoiser,
 )
-from ..models.encoders.sana import build_sana_prompt_conditioner
+from ..models.denoisers.sana_refiner import build_sana_wm_ltx2_refiner_processor
+from ..models.encoders.sana import (
+    build_sana_prompt_conditioner,
+    build_sana_wm_refiner_conditioner,
+)
 from ..models.initializers.sana import (
     build_sana_controlnet_initializer,
     build_sana_image_initializer,
@@ -30,6 +57,7 @@ from ..schedulers import (
     build_sana_flow_match_scheduler,
     build_sana_scm_scheduler,
     build_sana_streaming_euler_scheduler,
+    build_sana_wm_streaming_euler_scheduler,
 )
 from .sana_variants import SANA_ALIASES, SanaVariant, get_sana_variant
 from .spec import NativeDiffusionRecipe
@@ -50,6 +78,9 @@ SANA_WAN_REPO_ID = "Wan-AI/Wan2.1-T2V-1.3B"
 SANA_WAN_REVISION = "37ec512624d61f7aa208f7ea8140a131f93afc9a"
 SANA_WM_REPO_ID = "Efficient-Large-Model/SANA-WM_bidirectional"
 SANA_WM_REVISION = "90e0ff3b8f1f9b54a92b4b707edeaa27073aec84"
+SANA_WM_STREAMING_MODEL_ID = "sana-wm-streaming"
+SANA_WM_STREAMING_REPO_ID = "Efficient-Large-Model/SANA-WM_streaming"
+SANA_WM_STREAMING_REVISION = "c7694938c854b1fcc29468e9514f1ea2d0c4ba8e"
 SANA_SPRINT_TEACHER_CHECKPOINTS = {
     "sana-sprint-600m-1024px": CheckpointSpec(
         repo_id="Efficient-Large-Model/Sana_Sprint_0.6B_1024px_teacher",
@@ -183,6 +214,8 @@ def _parameter_scale(model_id: str) -> str:
 
 
 def _image_recipe(variant: SanaVariant) -> NativeDiffusionRecipe:
+    """Compose image / Sprint / ControlNet on ``standard`` (SCM vs flow-match)."""
+
     denoiser, conditioner, initializer, scheduler, codec = _keys()
     checkpoints = _shared_checkpoints(variant)
     teacher_checkpoint = SANA_SPRINT_TEACHER_CHECKPOINTS.get(variant.model_id)
@@ -264,6 +297,8 @@ def _image_recipe(variant: SanaVariant) -> NativeDiffusionRecipe:
 
 
 def _video_recipe(variant: SanaVariant) -> NativeDiffusionRecipe:
+    """Compose video or streaming; long-KV uses ``chunked-kv-cache``."""
+
     denoiser, conditioner, initializer, scheduler, codec = _keys()
     checkpoints = _shared_checkpoints(variant)
     streaming = variant.runner == "streaming"
@@ -278,6 +313,18 @@ def _video_recipe(variant: SanaVariant) -> NativeDiffusionRecipe:
         codec_factory = build_wan_video_decoder
         codec_options: dict[str, object] = {"tiled": True}
         channels, spatial, temporal = 16, 8, 4
+    elif streaming and variant.mode == "bidirectional_short":
+        checkpoints["codec"] = CheckpointSpec(
+            repo_id=SANA_LTX_REPO_ID,
+            revision=SANA_LTX_REVISION,
+            files=(
+                "vae/diffusion_pytorch_model.safetensors",
+                "vae/config.json",
+            ),
+        )
+        codec_factory = build_diffusers_ltx2_tensor_video_codec
+        codec_options = {"tiled": True}
+        channels, spatial, temporal = 128, 32, 8
     else:
         checkpoints["codec"] = CheckpointSpec(
             repo_id=SANA_LTX_REPO_ID,
@@ -370,7 +417,14 @@ def _video_recipe(variant: SanaVariant) -> NativeDiffusionRecipe:
 
 
 def sana_recipe(model_id: str) -> NativeDiffusionRecipe:
-    """Resolve one public Sana ID into native role composition."""
+    """Resolve one public Sana ID into image or video role composition.
+
+    Dispatches on :class:`SanaVariant.task`.  Image / Sprint / ControlNet
+    bind DiT, Gemma, DC-AE, and either flow-match or SCM.  Video binds the
+    video or streaming DiT, Gemma, Wan or LTX codec, and Flow-DPM (or
+    streaming Euler for long-KV).  Strategy is ``standard`` unless
+    ``mode=="long_streaming"`` (then ``chunked-kv-cache``).
+    """
 
     variant = get_sana_variant(model_id)
     if variant.task in {"text-to-video", "video-to-video"}:
@@ -379,7 +433,14 @@ def sana_recipe(model_id: str) -> NativeDiffusionRecipe:
 
 
 def sana_world_recipe() -> NativeDiffusionRecipe:
-    """SANA-WM as the same five native roles used by every diffusion model."""
+    """SANA-WM camera-controlled world model on the five native roles.
+
+    Binds ``build_sana_world_denoiser``, Gemma conditioner, world
+    initializer, flow-match scheduler (shift 9.8), and a tiled LTX-2
+    tensor codec used as both encoder and decoder.  Strategy is
+    ``standard`` with encoded initialization.  CFG is on; capabilities
+    include camera-control and interactive world-model I2V.
+    """
 
     denoiser, conditioner, initializer, scheduler, codec = _keys()
     checkpoints = {
@@ -401,9 +462,12 @@ def sana_world_recipe() -> NativeDiffusionRecipe:
             allow_patterns=SANA_TOKENIZER_FILES,
         ),
         "codec": CheckpointSpec(
-            repo_id=SANA_LTX_REPO_ID,
-            revision=SANA_LTX_REVISION,
-            files=("ltx-2-19b-dev.safetensors",),
+            repo_id=SANA_WM_REPO_ID,
+            revision=SANA_WM_REVISION,
+            files=(
+                "vae/diffusion_pytorch_model.safetensors",
+                "vae/config.json",
+            ),
         ),
     }
     return NativeDiffusionRecipe(
@@ -421,7 +485,7 @@ def sana_world_recipe() -> NativeDiffusionRecipe:
             ComponentSpec(scheduler, build_sana_flow_match_scheduler, options={"shift": 9.8}),
             ComponentSpec(
                 codec,
-                build_ltx_tensor_video_codec,
+                build_diffusers_ltx2_tensor_video_codec,
                 {"weights": "codec"},
                 {
                     "tiled": True,
@@ -448,4 +512,168 @@ def sana_world_recipe() -> NativeDiffusionRecipe:
     )
 
 
-__all__ = ["sana_recipe", "sana_world_recipe"]
+def sana_wm_streaming_recipe() -> NativeDiffusionRecipe:
+    """Chunk-causal SANA-WM Stage-1 plus the released LTX-2 refiner/VAE."""
+
+    denoiser, conditioner, initializer, scheduler, codec = _keys()
+    refiner = ComponentKey(ComponentKind.LATENT_PROCESSOR, "refiner")
+    refiner_conditioner = ComponentKey(ComponentKind.CONDITIONER, "refiner")
+    repo_id = SANA_WM_STREAMING_REPO_ID
+    revision = SANA_WM_STREAMING_REVISION
+    gemma_files = (
+        "gemma3_12b/model.safetensors.index.json",
+        "gemma3_12b/model-00001-of-00005.safetensors",
+        "gemma3_12b/model-00002-of-00005.safetensors",
+        "gemma3_12b/model-00003-of-00005.safetensors",
+        "gemma3_12b/model-00004-of-00005.safetensors",
+        "gemma3_12b/model-00005-of-00005.safetensors",
+    )
+    checkpoints = {
+        "dit": CheckpointSpec(
+            repo_id=repo_id,
+            revision=revision,
+            files=("sana_dit/model.pt",),
+            metadata={"license": "Apache-2.0"},
+        ),
+        "text-encoder": CheckpointSpec(
+            repo_id=SANA_GEMMA_REPO_ID,
+            revision=SANA_GEMMA_REVISION,
+            files=("gemma-2-2b-it.safetensors",),
+            allow_patterns=("config.json", "gemma-2-2b-it.safetensors"),
+        ),
+        "tokenizer": CheckpointSpec(
+            repo_id=SANA_GEMMA_REPO_ID,
+            revision=SANA_GEMMA_REVISION,
+            files=SANA_TOKENIZER_FILES,
+            allow_patterns=SANA_TOKENIZER_FILES,
+        ),
+        "codec": CheckpointSpec(
+            repo_id=repo_id,
+            revision=revision,
+            files=("ltx2_causal_vae/diffusion_pytorch_model.safetensors",),
+            allow_patterns=("ltx2_causal_vae/config.json",),
+        ),
+        "refiner": CheckpointSpec(
+            repo_id=repo_id,
+            revision=revision,
+            files=("refiner_diffusers/transformer/diffusion_pytorch_model.safetensors",),
+            allow_patterns=("refiner_diffusers/transformer/config.json",),
+        ),
+        "refiner-connectors": CheckpointSpec(
+            repo_id=repo_id,
+            revision=revision,
+            files=("refiner_diffusers/connectors/diffusion_pytorch_model.safetensors",),
+            allow_patterns=("refiner_diffusers/connectors/config.json",),
+        ),
+        "refiner-text-encoder": CheckpointSpec(
+            repo_id=repo_id,
+            revision=revision,
+            files=gemma_files,
+            allow_patterns=(
+                "gemma3_12b/*.json",
+                "gemma3_12b/tokenizer.model",
+            ),
+        ),
+    }
+    return NativeDiffusionRecipe(
+        model_id=SANA_WM_STREAMING_MODEL_ID,
+        aliases=(repo_id,),
+        components=(
+            ComponentSpec(
+                denoiser,
+                build_sana_world_streaming_denoiser,
+                {"weights": "dit"},
+            ),
+            ComponentSpec(
+                conditioner,
+                build_sana_prompt_conditioner,
+                {"weights": "text-encoder", "tokenizer": "tokenizer"},
+                {"max_length": 300},
+            ),
+            ComponentSpec(initializer, build_sana_world_initializer),
+            ComponentSpec(scheduler, build_sana_wm_streaming_euler_scheduler),
+            ComponentSpec(
+                codec,
+                build_diffusers_ltx2_tensor_video_codec,
+                {"weights": "codec"},
+                {"tiled": True},
+            ),
+            ComponentSpec(
+                refiner,
+                build_sana_wm_ltx2_refiner_processor,
+                {"weights": "refiner"},
+                {"sigmas": (0.909375, 0.725, 0.421875, 0.0)},
+            ),
+            ComponentSpec(
+                refiner_conditioner,
+                build_sana_wm_refiner_conditioner,
+                {
+                    "weights": "refiner-text-encoder",
+                    "connectors": "refiner-connectors",
+                },
+                {"max_length": 1024},
+            ),
+        ),
+        execution=ExecutionSpec(
+            strategy="prefix-recompute",
+            bindings={
+                "denoiser": denoiser,
+                "conditioner": conditioner,
+                "latent_initializer": initializer,
+                "latent_encoder": codec,
+                "scheduler": scheduler,
+                "decoder": codec,
+                "refiner": refiner,
+                "refiner_conditioner": refiner_conditioner,
+            },
+            options={
+                "guidance_mode": "standard",
+                "chunk_size": 3,
+                "history_frames": 6,
+                "sink_frames": 1,
+                "refiner_max_frames": 11,
+            },
+        ),
+        checkpoints=checkpoints,
+        capabilities=frozenset(
+            {
+                "image-to-video",
+                "camera-control",
+                "interactive-world-model",
+                "causal-generation",
+                "latent-refinement",
+            }
+        ),
+        options={
+            "latent_channels": 128,
+            "spatial_compression": 32,
+            "temporal_compression": 8,
+            "default_height": 704,
+            "default_width": 1280,
+            "default_num_frames": 241,
+            "default_num_inference_steps": 4,
+            "default_guidance_scale": 1.0,
+            "default_fps": 16,
+        },
+        metadata={
+            "architecture": "sana-world-streaming-camctrl",
+            "parameter_scale": "2.6B+LTX2",
+            "resolution": "704x1280",
+            "native_inference": True,
+            "output_layout": "BCTHW",
+            "latent_chunk_size": 3,
+            "refiner_max_frames": 11,
+            "repository_revision": revision,
+            "upstream_flashdreams_revision": "289da6f1d232de5abaa30d686c977b9c0040fe76",
+        },
+    )
+
+
+__all__ = [
+    "SANA_WM_STREAMING_MODEL_ID",
+    "SANA_WM_STREAMING_REPO_ID",
+    "SANA_WM_STREAMING_REVISION",
+    "sana_recipe",
+    "sana_wm_streaming_recipe",
+    "sana_world_recipe",
+]

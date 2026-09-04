@@ -1,8 +1,15 @@
 """Native Gamma-World prompt and action conditioning.
 
-Gamma-World uses the shared Cosmos Reason1 text backbone. This module only
-renames its generic ``context`` output to the tensor names consumed by the
-Gamma denoisers and normalizes frame-aligned action tracks.
+Gamma-World uses the shared Cosmos Reason1 text backbone
+(:class:`~..cosmos2p5.component.Cosmos25PromptConditioner`).
+This module renames generic ``context`` outputs to the tensor
+names consumed by Gamma denoisers.
+
+Action tracks are frame-aligned and normalized from
+``DiffusionRequest``.  Default negative prompt is English;
+user strings are not rewritten.
+
+This is a ConditionEncoder adapter, not a new LLM.
 """
 
 from __future__ import annotations

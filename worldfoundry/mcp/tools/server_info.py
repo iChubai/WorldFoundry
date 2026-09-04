@@ -66,12 +66,12 @@ def server_info_payload(*, context: MCPToolContext | None = None) -> dict[str, A
             "configured_keys": env_keys,
         },
         "docs": {
-            "mcp": "/docs/reference/mcp",
+            "mcp": "/docs/maintainers/architecture/surfaces-orchestration",
             "cli": "/docs/reference/cli",
-            "evaluation_quickstart": "/docs/evaluation/quickstart",
+            "evaluation_quickstart": "/docs/evaluation",
             "metrics": "/docs/evaluation/metrics",
-            "agent_setup": "/docs/guides/agent-setup",
-            "docker": "/docs/guides/docker",
+            "agent_setup": "/docs/reference/environments",
+            "docker": "/docs/evaluation/embodied-official-runtime",
         },
         "workflow": [
             "Call server_info to confirm paths and available tools.",

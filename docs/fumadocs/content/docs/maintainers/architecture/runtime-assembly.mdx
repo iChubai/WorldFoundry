@@ -9,15 +9,7 @@ This is the directory-level and base-class map of the model-execution side. It a
 
 The one chain to remember:
 
-```text
-PipelineABC
-  -> BaseOperator: validate/load/shape interactions and media
-  -> BaseSynthesis: native runtime call or hosted API
-     -> NativeDiffusionPipeline (local diffusion only)
-  -> BaseRepresentation: derive depth, point cloud, 3DGS, panorama, geometry
-  -> BaseMemory: keep prior state for streaming or multi-turn control
-  -> GenerationResult
-```
+<ArchDiagram id="runtime-assembly" />
 
 Every runnable method needs both a pipeline and an operator. Operators may be thin, but they must exist.
 

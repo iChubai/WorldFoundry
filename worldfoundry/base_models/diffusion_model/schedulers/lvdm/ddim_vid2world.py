@@ -1,4 +1,12 @@
-"""Module for base_models -> diffusion_model -> video -> lvdm -> variants -> vid2world -> lvdm -> models -> samplers -> ddim.py functionality."""
+"""Vid2World DDIM sampler with KV-cache injection for autoregressive video.
+
+Extends the legacy LVDM DDIM loop with :class:`~.kv_cache.KVCacheManager`
+wired into every Vid2World CrossAttention.  Used when decoding long
+videos chunk-by-chunk without re-encoding the full context.
+
+Not a DiffusionScheduler Protocol implementation.  Multi-cond
+Vid2World sampling lives in :mod:`.ddim_multiplecond_vid2world`.
+"""
 
 import numpy as np
 from tqdm import tqdm
@@ -49,8 +57,9 @@ class DDIMSampler(object):
             attr: The attr.
         """
         if type(attr) == torch.Tensor:
-            if attr.device != torch.device("cuda"):
-                attr = attr.to(torch.device("cuda"))
+            target_device = torch.device(self.model.device)
+            if attr.device != target_device:
+                attr = attr.to(target_device)
         setattr(self, name, attr)
 
     def make_schedule(self, ddim_num_steps, ddim_discretize="uniform", ddim_eta=0., verbose=True):

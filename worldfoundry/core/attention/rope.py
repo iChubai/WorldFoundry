@@ -15,7 +15,29 @@
 
 """3D rotary position embeddings with CP-aware shifting.
 
-Used by DiTs (e.g. Wan, Omnidreams) that patchify into a (T, H, W) sequence.
+Wan / Omnidreams patchify into a ``(T, H, W)`` sequence. Head dim is split
+across time/height/width (2:2:2). :class:`RotaryPositionEmbedding3D` emits
+monotonically increasing AR positions — rotate K *before* the KV cache
+write. :class:`KVCacheRelativeRotaryPositionEmbedding3D` emits bounded
+sink+window *slot* positions — store unrotated K and rotate on read.
+
+``shift_t`` shards frequencies along sequence dim 0 when a CP group is
+set, matching :func:`~worldfoundry.core.distributed.context_parallel.split_inputs_cp`.
+
+Not this module:
+    Complex cis tables live in :mod:`.complex_rope`. 2D / n-D generic
+    tables live in :mod:`.rope_2d` / :mod:`.rope_nd`. The fused
+    inference kernel lives in :mod:`.rope_kernel`. Sequence-parallel
+    Wan adapters live in :mod:`.sequence_parallel_rope`.
+
+Public surface:
+
+- :func:`apply_rotary_embedding` / :func:`rotate_half` /
+  :func:`rotary_frequencies` — layout-agnostic rotate and NumPy tables.
+- :class:`RotaryPositionEmbedding3D` — unbounded AR time positions.
+- :class:`KVCacheRelativeRotaryPositionEmbedding3D` — bounded cache-slot
+  positions.
+- :func:`apply_rope_freqs` — in-place fused apply for a fresh Q/K tile.
 """
 
 from typing import Any, TypeVar
@@ -24,12 +46,25 @@ import torch
 from einops import repeat
 from torch import Tensor
 from torch.distributed import ProcessGroup
-from torch.distributed.tensor.device_mesh import DeviceMesh
+
+try:
+    # PyTorch 2.5 moved DeviceMesh under the DTensor package.  Keep the
+    # public 2.4 location as a fallback because the unified CUDA 12.1
+    # inference environment intentionally uses torch 2.4.x.
+    from torch.distributed.tensor.device_mesh import DeviceMesh
+except ImportError:  # pragma: no cover - selected by the installed torch
+    from torch.distributed.device_mesh import DeviceMesh
 
 from worldfoundry.core.attention.rope_kernel import apply_rotary_pos_emb
+from worldfoundry.core.device import get_current_torch_device
 from worldfoundry.core.distributed.context_parallel import split_inputs_cp
 
 T = TypeVar("T")
+
+
+# ──────────────────────────────────────────────────────────────────────────
+# Layout-agnostic rotate — torch or NumPy, interleaved or half-split
+# ──────────────────────────────────────────────────────────────────────────
 
 
 def rotate_half(value: Any) -> Any:
@@ -99,6 +134,14 @@ def apply_rotary_embedding(
 
 
 def _interleave_rotary(first: Any, second: Any, cos: Any, sin: Any, *, like: Any) -> Any:
+    """Write interleaved pairs without a stack that would change stride.
+
+    Empty-like allocation plus even/odd stores keeps the checkpoint
+    layout ``(2k, 2k+1)`` even when the source halves were contiguous
+    slices. NumPy is used only when the caller passed arrays (table
+    builders), not as a silent CPU fallback for CUDA tensors.
+    """
+
     if isinstance(like, torch.Tensor):
         output = torch.empty_like(_concat((first, second), like=like))
         output[..., ::2] = first * cos - second * sin
@@ -139,6 +182,8 @@ def rotary_frequencies(
 
 
 def _concat(values: tuple[Any, ...], *, like: Any) -> Any:
+    """Concatenate on the last axis using the same backend as ``like``."""
+
     if isinstance(like, torch.Tensor):
         return torch.cat(values, dim=-1)
 
@@ -148,6 +193,13 @@ def _concat(values: tuple[Any, ...], *, like: Any) -> Any:
 
 
 def unpack_optional(maybe_object: T | None) -> T:
+    """Return ``maybe_object`` or raise if a CP path ran without a group.
+
+    Callers set ``cp_group`` and ``device_mesh`` together; a ``None``
+    here means the enable flag and the group drifted, not a legal
+    single-rank mode (that path never calls this helper).
+    """
+
     if maybe_object is None:
         raise ValueError("Expected a non-None object")
     return maybe_object
@@ -156,7 +208,7 @@ def unpack_optional(maybe_object: T | None) -> T:
 def _compute_freqs(
     dim: int,
     extrapolation_ratio: float = 1.0,
-    device: torch.device = torch.device("cuda"),
+    device: torch.device | str | None = None,
 ) -> Tensor:
     """Compute base frequencies for one RoPE dimension with NTK extrapolation.
 
@@ -167,11 +219,17 @@ def _compute_freqs(
     Returns:
         Base frequencies of shape ``[dim // 2]``.
     """
-    dim_range = torch.arange(0, dim, 2, dtype=torch.float32, device=device)[: (dim // 2)] / dim
+    resolved_device = get_current_torch_device() if device is None else torch.device(device)
+    dim_range = torch.arange(0, dim, 2, dtype=torch.float32, device=resolved_device)[: (dim // 2)] / dim
     ntk_factor = extrapolation_ratio ** (dim / (dim - 2))
     theta = 10000.0 * ntk_factor
     freqs = 1.0 / (theta**dim_range)
     return freqs
+
+
+# ──────────────────────────────────────────────────────────────────────────
+# Shared 3D tables — 2:2:2 head split, optional CP shard of seq dim 0
+# ──────────────────────────────────────────────────────────────────────────
 
 
 class _RotaryPositionEmbedding3DBase:
@@ -191,7 +249,7 @@ class _RotaryPositionEmbedding3DBase:
         w_extrapolation_ratio: float = 1.0,
         t_extrapolation_ratio: float = 1.0,
         interleaved: bool = False,
-        device: torch.device = torch.device("cuda"),
+        device: torch.device | str | None = None,
     ) -> None:
         """Build 3D RoPE for the given sequence lengths and head dimension.
 
@@ -209,24 +267,32 @@ class _RotaryPositionEmbedding3DBase:
         self.len_h = len_h
         self.len_w = len_w
         self.len_t = len_t
-        self.device = device
+        self.device = get_current_torch_device() if device is None else torch.device(device)
         self.interleaved = interleaved
 
         dim_w = dim_h = head_dim // 6 * 2
         dim_t = head_dim - (dim_h + dim_w)
 
-        self.raw_freqs_h = _compute_freqs(dim_h, h_extrapolation_ratio, device)
-        self.raw_freqs_w = _compute_freqs(dim_w, w_extrapolation_ratio, device)
-        self.raw_freqs_t = _compute_freqs(dim_t, t_extrapolation_ratio, device)
+        self.raw_freqs_h = _compute_freqs(dim_h, h_extrapolation_ratio, self.device)
+        self.raw_freqs_w = _compute_freqs(dim_w, w_extrapolation_ratio, self.device)
+        self.raw_freqs_t = _compute_freqs(dim_t, t_extrapolation_ratio, self.device)
 
         self.device_mesh: DeviceMesh | None = None
         self.cp_group: ProcessGroup | None = None
 
     def _freq_components_for_len(self, len_t: int) -> tuple[Tensor, Tensor, Tensor]:
+        """Expand base freqs onto a ``0 .. len_t-1`` time axis."""
+
         seq_t = torch.arange(len_t, dtype=torch.float32, device=self.device)
         return self._freq_components(seq_t)
 
     def _freq_components(self, seq_t: Tensor) -> tuple[Tensor, Tensor, Tensor]:
+        """Broadcast T/H/W freqs onto the flattened ``(T, H, W)`` token order.
+
+        Each axis is outer-producted independently then repeated so a
+        later ``shift_t`` can add a time offset without rebuilding H/W.
+        """
+
         seq_h = torch.arange(self.len_h, dtype=torch.float32, device=self.device)
         seq_w = torch.arange(self.len_w, dtype=torch.float32, device=self.device)
         len_t = seq_t.shape[0]
@@ -273,6 +339,13 @@ class _RotaryPositionEmbedding3DBase:
         return self.device_mesh.size() if self.device_mesh is not None else 1
 
     def _cat_freqs(self, freqs_t: Tensor, freqs_h: Tensor, freqs_w: Tensor) -> Tensor:
+        """Pack T/H/W halves into the full-width layout ``shift_t`` emits.
+
+        Interleaved checkpoints store pairs as ``(2k, 2k+1)`` so each
+        axis is ``repeat_interleave``'d; the half-split layout
+        concatenates ``[t, h, w, t, h, w]`` to match ``(d, d+D/2)``.
+        """
+
         if self.interleaved:
             return torch.cat(
                 [
@@ -361,8 +434,10 @@ class RotaryPositionEmbedding3D(_RotaryPositionEmbedding3DBase):
         w_extrapolation_ratio: float = 1.0,
         t_extrapolation_ratio: float = 1.0,
         interleaved: bool = False,
-        device: torch.device = torch.device("cuda"),
+        device: torch.device | str | None = None,
     ) -> None:
+        """Allocate one-chunk T/H/W tables; AR offset is applied in ``shift_t``."""
+
         super().__init__(
             head_dim=head_dim,
             len_h=len_h,
@@ -493,8 +568,15 @@ class KVCacheRelativeRotaryPositionEmbedding3D(_RotaryPositionEmbedding3DBase):
         w_extrapolation_ratio: float = 1.0,
         t_extrapolation_ratio: float = 1.0,
         interleaved: bool = False,
-        device: torch.device = torch.device("cuda"),
+        device: torch.device | str | None = None,
     ) -> None:
+        """Build bounded cache-slot tables; ``sink + window`` must divide ``len_t``.
+
+        CP splits each AR chunk independently. If the cache length is not
+        a multiple of ``len_t``, a rank would own a fractional chunk and
+        the slot positions would no longer match the unrotated K write.
+        """
+
         assert sink_size_t >= 0, "sink_size_t must be non-negative"
         assert window_size_t > 0, "window_size_t must be positive"
         self.sink_size_t = sink_size_t
@@ -531,6 +613,8 @@ class KVCacheRelativeRotaryPositionEmbedding3D(_RotaryPositionEmbedding3DBase):
         return freqs.reshape(-1, *freq_shape)
 
     def set_context_parallel_group(self, cp_group: ProcessGroup | None) -> None:
+        """Cache the CP-split frequency tensor so ``shift_t`` stays allocation-free."""
+
         super().set_context_parallel_group(cp_group)
         self._rope_freqs_cp = (
             None if cp_group is None else self._split_cache_freqs_cp(self._rope_freqs, self.kvcache_total_size_t)
@@ -558,6 +642,11 @@ class KVCacheRelativeRotaryPositionEmbedding3D(_RotaryPositionEmbedding3DBase):
                 return self._rope_freqs_cp
             return self._split_cache_freqs_cp(self._rope_freqs, self.kvcache_total_size_t)
         return self._rope_freqs
+
+
+# ──────────────────────────────────────────────────────────────────────────
+# In-place apply — Q/K are freshly materialised; no autograd graph to keep
+# ──────────────────────────────────────────────────────────────────────────
 
 
 def apply_rope_freqs(x: Tensor, freqs: Tensor, interleaved: bool = False) -> Tensor:

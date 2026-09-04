@@ -14,7 +14,17 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-"""Module for base_models -> diffusion_model -> image -> sana -> diffusion -> model -> dc_ae -> efficientvit -> models -> nn -> norm.py functionality."""
+"""Normalization layers used by Sana DC-AE (RMS, BN, LN).
+
+:class:`RMSNorm2d` / :class:`RMSNorm3d`, :class:`LayerNorm2d`,
+and :func:`build_norm` are the checkpoint-compatible norms
+for 2-D and temporal DC-AE graphs.
+
+Tensors are BCHW (2-D) or BCTHW (3-D).  Optional Triton
+kernel lives in :mod:`.triton_rms_norm`.
+
+This is DC-AE graph math, distinct from LTX PixelNorm.
+"""
 
 from typing import Optional
 

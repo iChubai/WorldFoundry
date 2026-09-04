@@ -1,0 +1,41 @@
+{
+  "id": "dino-wm",
+  "tagline": {
+    "en": "DINO-WM — a world model that predicts in DINO visual-feature space, enabling planning without reconstructing raw pixels.",
+    "zh": "DINO-WM——在 DINO 视觉特征空间中预测的世界模型,无需重建原始像素即可进行规划。"
+  },
+  "overview": {
+    "en": [
+      "DINO-WM is a world model that operates in the latent feature space of pretrained DINO visual features rather than in pixel space. By predicting how those features evolve, it captures scene dynamics compactly and can be used for planning toward goals — a predictive-coding style approach to robot and environment world modeling.",
+      "Because it plans in feature space, it doesn't need to reconstruct raw images to reason about the future, which is what makes it suited to task-directed planning and evaluation.",
+      "In WorldFoundry the official planning/evaluation route is run in-tree, including the vendored environment simulators needed for planning runs. You stage the checkpoint and task assets, and it drives the planning entrypoint."
+    ],
+    "zh": [
+      "DINO-WM 是一个在预训练 DINO 视觉特征的隐空间(而非像素空间)中运作的世界模型。它通过预测这些特征如何演变,以紧凑的方式捕捉场景动态,并可用于面向目标的规划——这是一种预测编码风格的机器人与环境世界建模方法。",
+      "由于它在特征空间中规划,推理未来时无需重建原始图像,这正是它适合面向任务的规划与评估的原因。",
+      "在 WorldFoundry 中,官方的规划/评估路径在仓库内运行,并包含规划所需、随仓库附带的环境模拟器。你准备好 checkpoint 与任务资源,它便驱动规划入口。"
+    ]
+  },
+  "whenToUse": {
+    "en": "When you want a world model that plans in visual-feature space for goal-directed tasks — reasoning about future states without pixel reconstruction — for robot and environment planning.",
+    "zh": "当你想要一个在视觉特征空间中为目标导向任务做规划的世界模型——无需像素重建即可推理未来状态——用于机器人与环境规划时。"
+  },
+  "notFor": {
+    "en": "Running planning needs the checkpoint and task-asset layout staged locally, along with the vendored environment simulators; prepare these before a run.",
+    "zh": "运行规划需要在本地准备好 checkpoint 与任务资源布局,以及随附的环境模拟器;请在运行前备好。"
+  },
+  "highlights": {
+    "en": [
+      "World model in DINO visual-feature space",
+      "Plans toward goals without reconstructing pixels",
+      "Predictive-coding approach for robot/environment modeling",
+      "Ships with the environment simulators needed for planning"
+    ],
+    "zh": [
+      "在 DINO 视觉特征空间中的世界模型",
+      "面向目标规划,无需重建像素",
+      "面向机器人/环境建模的预测编码方法",
+      "附带规划所需的环境模拟器"
+    ]
+  }
+}

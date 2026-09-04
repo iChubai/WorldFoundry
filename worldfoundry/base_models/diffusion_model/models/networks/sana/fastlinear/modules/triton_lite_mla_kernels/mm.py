@@ -14,7 +14,12 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-"""Module for base_models -> diffusion_model -> image -> sana -> diffusion -> model -> nets -> fastlinear -> modules -> triton_lite_mla_kernels -> mm.py functionality."""
+"""Triton kernel: dtype-aware GEMM used by LiteMLA autograd.
+
+Public entry: :func:`matmul`.  Falls back to ``a @ b`` when dtypes already
+match; otherwise launches a tiled GEMM so mixed fp16/fp32 autocast stays
+exact.  Do not comment or retune the ``@triton.jit`` body here.
+"""
 
 import torch
 import triton
@@ -194,16 +199,10 @@ def matmul_kernel(
 
 
 def matmul(a: torch.Tensor, b: torch.Tensor, compute_dtype: torch.dtype, output_dtype: torch.dtype) -> torch.Tensor:
-    """Matmul.
+    """``a @ b`` in ``compute_dtype``, stored as ``output_dtype``.
 
-    Args:
-        a: The a.
-        b: The b.
-        compute_dtype: The compute dtype.
-        output_dtype: The output dtype.
-
-    Returns:
-        The return value.
+    ``a`` is ``[..., K]``, ``b`` is ``[K, N]``.  Used by LiteMLA backward
+    when autocast would otherwise change the GEMM dtype.
     """
     # Check constraints.
     assert a.shape[-1] == b.shape[0], "Incompatible dimensions"

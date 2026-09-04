@@ -1,4 +1,14 @@
-"""Shared native Cosmos components."""
+"""EDM log-normal SDE used by Cosmos Predict1 residual samplers.
+
+:class:`EDMSDE` draws training / solver sigmas from a log-normal
+whose ``(p_mean, p_std)`` match Karras EDM, then clamps to
+``[sigma_min, sigma_max]``.  :meth:`EDMSDE.marginal_prob` is the
+identity perturbation ``(x0, sigma)``; subclasses may override.
+
+``sample_t`` currently allocates on CUDA.  This module does not
+implement the residual ODE stepper; see :mod:`.runge_kutta` and
+:mod:`.res_sampler`.
+"""
 
 from statistics import NormalDist
 

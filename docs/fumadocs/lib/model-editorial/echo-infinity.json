@@ -1,0 +1,41 @@
+{
+  "id": "echo-infinity",
+  "tagline": {
+    "en": "Echo-Infinity — an autoregressive video diffusion model built for long, continuous text-to-video generation.",
+    "zh": "Echo-Infinity——面向长时、连续文生视频生成的自回归视频扩散模型。"
+  },
+  "overview": {
+    "en": [
+      "Echo-Infinity is a world model that generates video from text. It is built around autoregressive video diffusion — generating the sequence forward in time — which is what lets it target long-form output rather than a single short clip.",
+      "The Echo-Infinity team ships it as inference code together with model weights. In WorldFoundry it runs as an infer-only path: the runtime is vendored in-tree, and it draws on both Echo-Infinity and Wan2.1 weights staged locally.",
+      "Because it targets extended generation, you point it at a text prompt and it rolls the video out over time. Training scripts, prompt datasets, and download helpers are intentionally left out — this is a run-the-model setup, with weights supplied from your local checkpoint directory."
+    ],
+    "zh": [
+      "Echo-Infinity 是一个从文本生成视频的世界模型。它以自回归视频扩散为核心——沿时间轴向前逐步生成——这也是它能面向长视频而非单个短片的原因。",
+      "Echo-Infinity 团队以推理代码加模型权重的形式发布。在 WorldFoundry 中它以仅推理路径运行：运行时代码内置在仓库内，并依赖本地准备好的 Echo-Infinity 与 Wan2.1 权重。",
+      "由于面向长时生成，你给它一段文字提示词，它便沿时间把视频逐步展开。训练脚本、提示词数据集与下载辅助工具被有意省略——这是一套直接运行模型的配置，权重从你本地的 checkpoint 目录提供。"
+    ]
+  },
+  "whenToUse": {
+    "en": "Choose Echo-Infinity when you want long, continuous text-to-video and prefer an autoregressive approach that extends the sequence over time rather than producing a fixed short clip.",
+    "zh": "当你想要长时、连续的文生视频，且倾向于沿时间延展序列的自回归方式（而非固定短片）时，可选 Echo-Infinity。"
+  },
+  "notFor": {
+    "en": "It ships as an inference-only runtime — no training scripts or download helpers — so you stage the Echo-Infinity and Wan2.1 weights yourself before running.",
+    "zh": "它以仅推理运行时发布——不含训练脚本或下载辅助工具——因此运行前需自行准备好 Echo-Infinity 与 Wan2.1 权重。"
+  },
+  "highlights": {
+    "en": [
+      "Autoregressive video diffusion aimed at long-video generation",
+      "Text-to-video world model",
+      "Inference-only runtime vendored in WorldFoundry",
+      "Draws on Echo-Infinity plus Wan2.1 weights, supplied locally"
+    ],
+    "zh": [
+      "面向长视频生成的自回归视频扩散",
+      "文生视频世界模型",
+      "仅推理运行时，内置于 WorldFoundry",
+      "依赖本地提供的 Echo-Infinity 与 Wan2.1 权重"
+    ]
+  }
+}

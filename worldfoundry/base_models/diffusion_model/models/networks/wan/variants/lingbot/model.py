@@ -1,5 +1,8 @@
-"""Module for base_models -> diffusion_model -> video -> wan -> wan_2p2 -> modules -> lingbot_model.py functionality."""
+"""Official-layout Wan 2.2 stem used by LingBot recipes.
 
+Bidirectional list-of-videos packing (Wan 2.2).  Causal-fast / KV-cache
+behavior is in :mod:`.fast`.  No VACE or action encoder here.
+"""
 import math
 from einops import rearrange
 
@@ -19,12 +22,7 @@ __all__ = ['WanModel']
 
 
 def sinusoidal_embedding_1d(dim, position):
-    """Sinusoidal embedding 1d.
-
-    Args:
-        dim: The dim.
-        position: The position.
-    """
+    """Classic sinusoidal features for 1-D timestep / position ids."""
     # preprocess
     assert dim % 2 == 0
     half = dim // 2
@@ -39,13 +37,7 @@ def sinusoidal_embedding_1d(dim, position):
 
 @torch.amp.autocast('cuda', enabled=False)
 def rope_params(max_seq_len, dim, theta=10000):
-    """Rope params.
-
-    Args:
-        max_seq_len: The max seq len.
-        dim: The dim.
-        theta: The theta.
-    """
+    """Build complex cis frequencies for one RoPE axis."""
     assert dim % 2 == 0
     freqs = torch.outer(
         torch.arange(max_seq_len),
@@ -57,13 +49,7 @@ def rope_params(max_seq_len, dim, theta=10000):
 
 @torch.amp.autocast('cuda', enabled=False)
 def rope_apply(x, grid_sizes, freqs):
-    """Rope apply.
-
-    Args:
-        x: The x.
-        grid_sizes: The grid sizes.
-        freqs: The freqs.
-    """
+    """Apply per-sample 3D RoPE to packed tokens; leave pad tokens unrotated."""
     n, c = x.size(2), x.size(3) // 2
     if not freqs.is_complex():
         freqs = torch.view_as_complex(freqs.contiguous())
@@ -96,7 +82,7 @@ def rope_apply(x, grid_sizes, freqs):
 
 
 class WanRMSNorm(nn.Module):
-    """Wan rms norm implementation."""
+    """RMSNorm with a learned scale; compute in fp32 when the impl upcasts."""
 
     def __init__(self, dim, eps=1e-5):
         """Init.
@@ -118,16 +104,12 @@ class WanRMSNorm(nn.Module):
         return self._norm(x.float()).type_as(x) * self.weight
 
     def _norm(self, x):
-        """Helper function to norm.
-
-        Args:
-            x: The x.
-        """
+        """RMS-normalize the last dim of ``x``."""
         return x * torch.rsqrt(x.pow(2).mean(dim=-1, keepdim=True) + self.eps)
 
 
 class WanLayerNorm(nn.LayerNorm):
-    """Wan layer norm implementation."""
+    """LayerNorm that typically upcasts to fp32, then restores the activation dtype."""
 
     def __init__(self, dim, eps=1e-6, elementwise_affine=False):
         """Init.
@@ -148,7 +130,7 @@ class WanLayerNorm(nn.LayerNorm):
 
 
 class WanSelfAttention(nn.Module):
-    """Wan self attention implementation."""
+    """Wan self-attention: RMSNorm Q/K, 3D RoPE, flash or variant kernel."""
 
     def __init__(self,
                  dim,
@@ -218,7 +200,7 @@ class WanSelfAttention(nn.Module):
 
 
 class WanCrossAttention(WanSelfAttention):
-    """Wan cross attention implementation."""
+    """Wan text cross-attention (optional KV cache)."""
 
     def forward(self, x, context, context_lens):
         r"""
@@ -244,7 +226,7 @@ class WanCrossAttention(WanSelfAttention):
 
 
 class WanAttentionBlock(nn.Module):
-    """Wan attention block implementation."""
+    """Wan transformer block: AdaLN self-attn, cross-attn, then AdaLN FFN."""
 
     def __init__(self,
                  dim,
@@ -344,14 +326,7 @@ class WanAttentionBlock(nn.Module):
 
         # cross-attention & ffn function
         def cross_attn_ffn(x, context, context_lens, e):
-            """Cross attn ffn.
-
-            Args:
-                x: The x.
-                context: The context.
-                context_lens: The context lens.
-                e: The e.
-            """
+            """Second half of the block: cross-attn then gated FFN."""
             x = x + self.cross_attn(self.norm3(x), context, context_lens)
             y = self.ffn(
                 layer_norm_scale_shift(
@@ -370,7 +345,7 @@ class WanAttentionBlock(nn.Module):
 
 
 class Head(nn.Module):
-    """Head implementation."""
+    """AdaLN-modulated output projection from tokens to packed patch voxels."""
 
     def __init__(self, dim, out_dim, patch_size, eps=1e-6):
         """Init.
@@ -417,9 +392,7 @@ class Head(nn.Module):
 
 
 class WanModel(nn.Module, NativeConfigMixin):
-    r"""
-    Wan diffusion backbone supporting both text-to-video and image-to-video.
-    """
+    r"""Official-layout Wan 2.2 stem used by LingBot recipes."""
 
     ignore_for_config = [
         'patch_size', 'cross_attn_norm', 'qk_norm', 'text_dim', 'window_size'

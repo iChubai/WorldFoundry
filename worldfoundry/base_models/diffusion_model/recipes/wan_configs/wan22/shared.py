@@ -1,5 +1,14 @@
 # Copyright 2024-2025 The Alibaba Wan Team Authors. All rights reserved.
-"""Module for base_models -> diffusion_model -> video -> wan -> wan_2p2 -> configs -> shared_config.py functionality."""
+"""Fields shared by every official Wan 2.2 EasyDict identity.
+
+Same UMT5 / bf16 / 1000-step / 16 fps / Chinese neg-prompt defaults
+as Wan 2.1, plus ``frame_num = 81``.  Per-identity files update this
+object then set VAE (Wan2.1 vs Wan2.2), DiT width, and sampler
+shift / CFG / MoE boundary.
+
+Changing a field here changes T2V A14B, I2V A14B, TI2V 5B, S2V, and
+Animate at once.
+"""
 
 import torch
 from easydict import EasyDict

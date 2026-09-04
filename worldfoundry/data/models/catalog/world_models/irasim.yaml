@@ -11,6 +11,9 @@ provider: official_repo
 source:
   status: open_source
   official_repo_url: https://github.com/bytedance/IRASim
+official_sources:
+  project_page: https://gen-irasim.github.io/
+  paper: https://arxiv.org/abs/2406.14540
 integration:
   status: planned
   notes:

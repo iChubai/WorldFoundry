@@ -14,7 +14,8 @@ notes:
 - Shares LongVie 1's dedicated Transformers 4.57 overlay while inheriting the unified CUDA/Wan dependencies.
 - Pins kernels 0.12.1 because kernels 0.13 requires huggingface-hub 1.3+, which is incompatible with the Transformers
   4.57 overlay's huggingface-hub <1 constraint.
-- Studio launches the quality profile with four torchrun ranks (USP ring=1, ulysses=4); rank 0 alone writes output artifacts.
+- Studio launches the quality profile with four torchrun ranks using the in-tree Ulysses implementation (USP ring=1,
+  ulysses=4); rank 0 alone writes output artifacts, with no external xFuser dependency.
 - execute=True loads control.safetensors and dit.safetensors from WORLDFOUNDRY_HFD_ROOT or the bench-local ckpt/hfd fallback;
   every segment requires user-provided image/prompt/dense-depth/sparse-track conditioning.
 - Full checkpoint-backed parity should be run in this isolated env because the base test env may not include video-generation
@@ -41,12 +42,11 @@ pip_packages:
 - opencv-python
 - huggingface_hub>=0.34,<1
 - kernels==0.12.1
-- xfuser
 python: '3.10'
 validation_imports:
 - torch
 - torchvision
-- transformers>=4.57.0,<5
+- transformers
 - accelerate
 - peft
 - imageio
@@ -62,4 +62,3 @@ validation_imports:
 - numpy
 - cv2
 - kernels
-- xfuser

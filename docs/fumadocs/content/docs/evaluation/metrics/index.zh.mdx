@@ -3,7 +3,6 @@ title: 指标
 description: 树内 metric registry 与分布/感知类 compute API。
 ---
 
-import { MetricQuickNav } from '@/components/metric-quick-nav';
 import MetricsSetup from '../../../../mdx/partials/metrics-usage-setup.zh.mdx';
 
 WorldFoundry 提供树内 metric 层——由 registry 管理的 scorer 与分布/感知 compute 例程，runner 通过稳定契约调用。Benchmark 决定*在什么数据上测什么*；metric 决定*如何把预测变成数字*。每条注册项声明输入、可选 checkpoint 依赖与输出形态；runner 引用 metric ID，registry 解析别名、校验可用性并路由到对应 `compute_*`，使模型代码不接触打分细节、打分却在跨机器时保持可复现。本 hub 只记录仓库实际实现了什么，并非已发表指标的综述。
@@ -13,8 +12,6 @@ WorldFoundry 提供树内 metric 层——由 registry 管理的 scorer 与分�
 ## 快速开始
 
 <MetricsSetup />
-
-<MetricQuickNav locale="zh" variant="hub" />
 
 ## 子页面
 

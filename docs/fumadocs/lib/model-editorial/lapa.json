@@ -1,0 +1,41 @@
+{
+  "id": "lapa",
+  "tagline": {
+    "en": "MIT-licensed Latent Action Pretraining — a 7B model that learns actions from video without action labels.",
+    "zh": "MIT 许可的 Latent Action Pretraining(潜在动作预训练)——一个从视频中学习动作、无需动作标注的 7B 模型。"
+  },
+  "overview": {
+    "en": [
+      "LAPA (Latent Action Pretraining) is an approach for learning robot actions from video by discovering a latent action space, rather than relying on labeled action data. The released LAPA-7B-openx model applies this to the Open X-Embodiment data and is available under an MIT license.",
+      "It is a visual-action model: it consumes visual context and produces actions as latent action tokens, distinct from a video-generation model even though it draws on video. The 7B checkpoint is published on Hugging Face.",
+      "In WorldFoundry you run LAPA to derive action tokens from visual input. The 7B weights are staged as action-token model assets and pulled in at run time."
+    ],
+    "zh": [
+      "LAPA(Latent Action Pretraining,潜在动作预训练)是一种从视频中学习机器人动作的方法:它通过发现一个潜在动作空间来学习,而不依赖带标注的动作数据。已发布的 LAPA-7B-openx 将该方法应用于 Open X-Embodiment 数据,以 MIT 许可提供。",
+      "它是一个视觉-动作模型:摄入视觉上下文,以潜在动作 token 的形式输出动作——尽管借助视频,但它区别于视频生成模型。7B checkpoint 已发布于 Hugging Face。",
+      "在 WorldFoundry 中,你运行 LAPA 从视觉输入推导动作 token。7B 权重以动作 token 模型素材的形式备好,在运行时载入。"
+    ]
+  },
+  "whenToUse": {
+    "en": "Use it when you want a latent-action pretraining approach that learns actions from video without action labels, and outputs latent action tokens from visual context.",
+    "zh": "当你想要一种潜在动作预训练方法——从视频中无标注地学习动作,并从视觉上下文输出潜在动作 token 时,选它。"
+  },
+  "notFor": {
+    "en": "It is an action-token model, not a video generator, so don't expect rendered video output. The 7B checkpoint downloads separately, so plan for the download and disk space.",
+    "zh": "它是动作 token 模型而非视频生成器,不要期待渲染出的视频输出。7B checkpoint 需单独下载,请预留下载时间与磁盘空间。"
+  },
+  "highlights": {
+    "en": [
+      "MIT-licensed LAPA-7B-openx checkpoint",
+      "Learns actions from video without action labels",
+      "Latent-action pretraining on Open X-Embodiment data",
+      "Outputs latent action tokens from visual context"
+    ],
+    "zh": [
+      "MIT 许可的 LAPA-7B-openx checkpoint",
+      "从视频中学习动作,无需动作标注",
+      "在 Open X-Embodiment 数据上做潜在动作预训练",
+      "从视觉上下文输出潜在动作 token"
+    ]
+  }
+}

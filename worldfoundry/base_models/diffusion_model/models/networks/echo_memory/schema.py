@@ -1,4 +1,15 @@
-"""Immutable architecture settings for native Echo-Memory networks."""
+"""Immutable architecture settings for native Echo-Memory networks.
+
+A public model identity maps to exactly one :class:`EchoMemoryRecipe`.
+Recipes pin the memory mechanism (raw context, spatial grid, block
+state-space, or VideoSSM hybrid), context-frame count, spatial injection
+mode, and sampler defaults.  They are frozen dataclasses so released
+checkpoints stay comparable and new research methods register as sibling
+recipes without changing existing behavior.
+
+Lookup is by recipe id only; callers must not infer a recipe from a
+checkpoint path.  Use :func:`get_echo_memory_recipe` to resolve ids.
+"""
 
 from __future__ import annotations
 
@@ -171,7 +182,11 @@ ECHO_MEMORY_RECIPES: Mapping[str, EchoMemoryRecipe] = MappingProxyType(_RECIPES)
 
 
 def get_echo_memory_recipe(recipe_id: str) -> EchoMemoryRecipe:
-    """Resolve one recipe without accepting checkpoint-path heuristics."""
+    """Return the frozen recipe for ``recipe_id``.
+
+    Raises:
+        KeyError: if the id is not in :data:`ECHO_MEMORY_RECIPES`.
+    """
 
     try:
         return ECHO_MEMORY_RECIPES[str(recipe_id)]

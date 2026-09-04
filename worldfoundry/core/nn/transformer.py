@@ -1,4 +1,20 @@
-"""Small transformer shape helpers without model-specific state."""
+"""Transformer shape helpers without model-specific state.
+
+Head split/merge, causal masks, sinusoidal 1D tables. Used by DiT and
+ViT so each model does not reimplement ``hidden % heads``.
+
+Not this module:
+    Block shells live in :mod:`worldfoundry.core.nn.vit_block`.
+    Attention kernels live in :mod:`worldfoundry.core.attention`.
+    DDPM-style timestep tables live in :mod:`worldfoundry.core.nn.timestep`.
+
+Public surface:
+
+- :class:`TransformerShapeSpec` / :func:`transformer_shape_spec`
+- :func:`split_attention_heads` / :func:`merge_attention_heads`
+- :func:`causal_attention_mask` / :func:`sinusoidal_embedding_1d`
+- Re-exports of stochastic-depth helpers for older import paths.
+"""
 
 from __future__ import annotations
 
@@ -7,6 +23,11 @@ from typing import Any
 
 import numpy as np
 import torch
+
+
+# ──────────────────────────────────────────────────────────────────────────
+# Shape spec — hidden / heads / MLP width with divisibility checks
+# ──────────────────────────────────────────────────────────────────────────
 
 
 @dataclass(frozen=True)
@@ -66,6 +87,11 @@ def mlp_hidden_size(hidden_size: int, *, multiplier: float = 4.0, multiple_of: i
     return ((max(1, width) + multiple - 1) // multiple) * multiple
 
 
+# ──────────────────────────────────────────────────────────────────────────
+# Head split / merge — last-dim hidden ↔ (heads, head_dim)
+# ──────────────────────────────────────────────────────────────────────────
+
+
 def split_attention_heads(value: Any, num_heads: int) -> Any:
     """Reshape ``(..., seq, hidden)`` to ``(..., heads, seq, head_dim)``."""
 
@@ -86,6 +112,11 @@ def merge_attention_heads(value: Any) -> Any:
         raise ValueError("attention-head input must have at least heads, sequence, and head_dim dimensions.")
     merged = _swapaxes(value, -3, -2)
     return merged.reshape(*shape[:-3], shape[-2], shape[-3] * shape[-1])
+
+
+# ──────────────────────────────────────────────────────────────────────────
+# Causal mask and 1D sinusoid — DiT t-embed and decoder attention
+# ──────────────────────────────────────────────────────────────────────────
 
 
 def causal_attention_mask(query_len: int, key_len: int | None = None, *, include_self: bool = True) -> np.ndarray:
@@ -137,6 +168,12 @@ def sinusoidal_embedding_1d(
 
 
 def _swapaxes(value: Any, axis1: int, axis2: int) -> Any:
+    """Swap two axes on numpy or torch without importing either in the helper.
+
+    Raises:
+        TypeError: the object exposes neither ``swapaxes`` nor ``transpose``.
+    """
+
     if hasattr(value, "swapaxes"):
         return value.swapaxes(axis1, axis2)
     if hasattr(value, "transpose"):

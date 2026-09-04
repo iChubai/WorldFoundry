@@ -1,4 +1,25 @@
-"""Pluggable transformer execution callables shared by native model architectures."""
+"""Pluggable transformer execution callables shared by native architectures.
+
+Pre-attention / gated-attention / post-SA hooks so a fused kernel can
+replace a subgraph without rewriting the module tree. Default ops are
+PyTorch; Triton swaps in via ``kernels.diffusion``.
+
+Not this module:
+    Kernel implementations live in :mod:`worldfoundry.core.kernels`.
+    Attention backend enums live in
+    :mod:`worldfoundry.core.attention.model_backends`. Block shells
+    that *call* these hooks live in :mod:`worldfoundry.core.nn.vit_block`.
+
+Public surface:
+
+- Protocols :class:`PreAttentionCallable`, :class:`AdaZeroCallable`,
+  :class:`PostSACallable`, :class:`GatedAttentionCallable`.
+- Portable impls :class:`PytorchPreAttention`,
+  :class:`PytorchAdaZeroFunction`, :class:`PytorchPostSAFunction`,
+  :class:`PytorchGatedAttention`.
+- :class:`TransformerAttentionOps` / :class:`TransformerOpsConfig` /
+  :data:`DEFAULT_TRANSFORMER_OPS`.
+"""
 
 from __future__ import annotations
 
@@ -18,7 +39,14 @@ from worldfoundry.core.kernels import residual_gate_add, rms_norm_scale_shift
 from worldfoundry.core.nn.normalization import rms_norm
 
 
+# ──────────────────────────────────────────────────────────────────────────
+# Hook protocols — fused kernels must match these signatures
+# ──────────────────────────────────────────────────────────────────────────
+
+
 class PreAttentionCallable(Protocol):
+    """Q/K RMSNorm + optional RoPE before the attention kernel."""
+
     def __call__(
         self,
         query: torch.Tensor,
@@ -27,20 +55,31 @@ class PreAttentionCallable(Protocol):
         mask: torch.Tensor | None,
         query_position: torch.Tensor | None,
         key_position: torch.Tensor | None,
-    ) -> tuple[torch.Tensor, torch.Tensor]: ...
+    ) -> tuple[torch.Tensor, torch.Tensor]:
+        """Return normalized (and optionally rotated) ``(query, key)``.
+
+        ``mask`` is part of the fused-op signature; portable impls may ignore it.
+        """
+        ...
 
 
 class AdaZeroCallable(Protocol):
+    """AdaLN-zero: RMSNorm then scale/shift from a timestep embedding."""
+
     def __call__(
         self,
         value: torch.Tensor,
         eps: float,
         scale: torch.Tensor,
         shift: torch.Tensor,
-    ) -> torch.Tensor: ...
+    ) -> torch.Tensor:
+        """Apply RMSNorm + affine; ``scale`` / ``shift`` are already broadcastable."""
+        ...
 
 
 class PostSACallable(Protocol):
+    """Residual + gate add after self-attention, then optional RMSNorm."""
+
     def __call__(
         self,
         residual: torch.Tensor,
@@ -48,16 +87,27 @@ class PostSACallable(Protocol):
         norm_weights: torch.Tensor | None,
         eps: float,
         gate: torch.Tensor,
-    ) -> tuple[torch.Tensor, torch.Tensor]: ...
+    ) -> tuple[torch.Tensor, torch.Tensor]:
+        """Return ``(gated_residual, normalized_residual)`` for the FFN path."""
+        ...
 
 
 class GatedAttentionCallable(Protocol):
+    """Per-head gate applied to attention output (e.g. LTX ``to_gate_logits``)."""
+
     def __call__(
         self,
         residual: torch.Tensor,
         attention_output: torch.Tensor,
         attention_module: nn.Module,
-    ) -> torch.Tensor: ...
+    ) -> torch.Tensor:
+        """Gate ``attention_output`` using logits projected from ``residual``."""
+        ...
+
+
+# ──────────────────────────────────────────────────────────────────────────
+# Portable PyTorch defaults — Triton / fused ops replace these per config
+# ──────────────────────────────────────────────────────────────────────────
 
 
 class PytorchPreAttention:
@@ -72,6 +122,13 @@ class PytorchPreAttention:
         query_position: torch.Tensor | None,
         key_position: torch.Tensor | None,
     ) -> tuple[torch.Tensor, torch.Tensor]:
+        """Apply ``q_norm`` / ``k_norm``; RoPE only when a position tensor is present.
+
+        Raises:
+            TypeError: positions were supplied but the module has no
+                ``apply_rotary_embedding``.
+        """
+
         del mask
         query = attention_module.q_norm(query)
         key = attention_module.k_norm(key)
@@ -85,6 +142,8 @@ class PytorchPreAttention:
 
 
 class PytorchAdaZeroFunction:
+    """Portable AdaLN-zero implemented with :func:`rms_norm_scale_shift`."""
+
     def __call__(
         self,
         value: torch.Tensor,
@@ -92,10 +151,14 @@ class PytorchAdaZeroFunction:
         scale: torch.Tensor,
         shift: torch.Tensor,
     ) -> torch.Tensor:
+        """Same math as fused AdaLN-zero; last-dim RMS then ``x*(1+scale)+shift``."""
+
         return rms_norm_scale_shift(value, scale, shift, eps=eps)
 
 
 class PytorchPostSAFunction:
+    """Portable residual-gate add plus RMSNorm after self-attention."""
+
     def __call__(
         self,
         residual: torch.Tensor,
@@ -104,17 +167,23 @@ class PytorchPostSAFunction:
         eps: float,
         gate: torch.Tensor,
     ) -> tuple[torch.Tensor, torch.Tensor]:
+        """``residual + value * gate``, then RMSNorm for the following FFN."""
+
         output = residual_gate_add(residual, value, gate)
         return output, rms_norm(output, norm_weights, eps=eps)
 
 
 class PytorchGatedAttention:
+    """Apply a sigmoid gate derived from the residual to each attention head."""
+
     def __call__(
         self,
         residual: torch.Tensor,
         attention_output: torch.Tensor,
         attention_module: nn.Module,
     ) -> torch.Tensor:
+        """``2·σ(to_gate_logits(residual))`` per head; 2× keeps the gate mean near 1."""
+
         gate_logits = attention_module.to_gate_logits(residual)
         batch, tokens, _ = attention_output.shape
         output = attention_output.view(batch, tokens, attention_module.heads, attention_module.dim_head)
@@ -124,6 +193,11 @@ class PytorchGatedAttention:
             tokens,
             attention_module.heads * attention_module.dim_head,
         )
+
+
+# ──────────────────────────────────────────────────────────────────────────
+# Frozen configs — swap one hook without rewriting the module tree
+# ──────────────────────────────────────────────────────────────────────────
 
 
 @dataclass(frozen=True)
@@ -156,6 +230,10 @@ class TransformerOpsConfig:
         ada_zero: AdaZeroCallable | None = None,
         post_sa: PostSACallable | None = None,
     ) -> TransformerOpsConfig:
+        """Build a config from enums or already-resolved callables.
+
+        ``None`` hook arguments keep the portable PyTorch defaults.
+        """
         attention_callable = attention.to_callable() if isinstance(attention, AttentionFunction) else attention
         masked_callable = (
             masked_attention.to_callable()

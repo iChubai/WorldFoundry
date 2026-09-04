@@ -1,0 +1,41 @@
+{
+  "id": "pi0",
+  "tagline": {
+    "en": "Physical Intelligence's pi0 — a flow-based vision-language-action foundation model for robot control.",
+    "zh": "Physical Intelligence 的 pi0——一个基于 flow 的视觉-语言-动作机器人控制基础模型。"
+  },
+  "overview": {
+    "en": [
+      "pi0 is a vision-language-action foundation model from Physical Intelligence, released through their open OpenPI project. It maps camera observations and a language instruction into continuous robot actions, generating smooth action chunks so a robot can carry out manipulation tasks described in plain language.",
+      "Built on a vision-language backbone with a flow-based action expert, pi0 is designed as a generalist policy that can be adapted across robot embodiments and tasks. In WorldFoundry it runs on the in-tree OpenPI runtime with a pi0-specific configuration.",
+      "This is an action-generation model: given observations it emits an action trace rather than producing video. The policy checkpoint is obtained separately before you roll it out."
+    ],
+    "zh": [
+      "pi0 是 Physical Intelligence 推出的视觉-语言-动作基础模型，通过其开放的 OpenPI 项目发布。它把相机观测和一条语言指令映射为连续的机器人动作，生成平滑的动作片段，使机器人能完成用自然语言描述的操作任务。",
+      "pi0 建立在视觉-语言主干之上，并配有一个基于 flow 的动作专家模块，被设计为可跨机器人本体和任务适配的通用策略。在 WorldFoundry 中，它运行于内置的 OpenPI 运行时，并采用 pi0 专属配置。",
+      "这是一个动作生成模型：给定观测，它输出的是一段动作轨迹，而非视频。策略 checkpoint 需在推演前单独获取。"
+    ]
+  },
+  "whenToUse": {
+    "en": "Reach for pi0 when you want a generalist vision-language-action policy that turns camera input and language instructions into robot actions, and prefer a flow-based approach to smooth action generation.",
+    "zh": "当你想要一个通用的视觉-语言-动作策略，把相机输入和语言指令转成机器人动作，并偏好基于 flow 的平滑动作生成时，可以选择 pi0。"
+  },
+  "notFor": {
+    "en": "An action-generation policy, not a video-generation model — it outputs action traces. The policy checkpoint is supplied separately.",
+    "zh": "它是动作生成策略，而非视频生成模型——输出的是动作轨迹。策略 checkpoint 需单独提供。"
+  },
+  "highlights": {
+    "en": [
+      "Vision-language-action foundation model from Physical Intelligence",
+      "Flow-based action expert on a vision-language backbone",
+      "Generalist policy adaptable across embodiments and tasks",
+      "Runs on WorldFoundry's in-tree OpenPI runtime, emitting action traces"
+    ],
+    "zh": [
+      "来自 Physical Intelligence 的视觉-语言-动作基础模型",
+      "在视觉-语言主干上配备基于 flow 的动作专家",
+      "可跨机器人本体与任务适配的通用策略",
+      "运行于 WorldFoundry 内置 OpenPI 运行时，输出动作轨迹"
+    ]
+  }
+}

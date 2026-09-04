@@ -14,7 +14,14 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-"""Module for base_models -> diffusion_model -> image -> sana -> diffusion -> model -> nets -> fastlinear -> modules -> __init__.py functionality."""
+"""Triton-fused LiteMLA and MBConvPreGLU used by SANA ``triton_linear`` blocks.
+
+:class:`TritonLiteMLA` fuses QKV+ReLU, ``VK`` accumulation, and the
+normalized ``Q @ VK`` projection of linear attention.  :class:`TritonMBConvPreGLU`
+fuses the pre-GLU linear and the depthwise conv of the mobile FFN.
+PyTorch reference modules (:class:`LiteMLA`, :class:`MBConvPreGLU`) live
+alongside for CPU / non-Triton fallbacks.
+"""
 
 from .triton_lite_mla import *
 from .triton_lite_mla_fwd import *

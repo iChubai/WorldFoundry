@@ -1,4 +1,13 @@
-"""Checkpoint-key conversion for the original HunyuanVideo DiT."""
+"""Civitai / official-key remapping for the original HunyuanVideo DiT.
+
+The released HunyuanVideo transformer uses ``double_blocks`` /
+``single_blocks`` / ``txt_in.individual_token_refiner`` names.  The
+native module in :mod:`..networks.hunyuan_video` uses ``component_a`` /
+``component_b`` dual-stream names and splits fused ``linear1`` / ``linear2``
+weights.  :class:`HunyuanVideoDiTStateDictConverter.from_civitai` is the
+``state_dict_converter`` passed to :class:`~...loaders.module.NativeModuleLoader`
+by :mod:`.hunyuan_video`; it does not implement :class:`~...contracts.Denoiser`.
+"""
 
 from __future__ import annotations
 
@@ -6,17 +15,13 @@ import torch
 
 
 class HunyuanVideoDiTStateDictConverter:
-    """Hunyuan video di t state dict converter implementation."""
+    """Map official HunyuanVideo DiT keys onto the native module tree."""
+
     def __init__(self):
-        """Init."""
         pass
 
     def from_civitai(self, state_dict):
-        """From civitai.
-
-        Args:
-            state_dict: The state dict.
-        """
+        """Rewrite one checkpoint dict; unwraps a top-level ``module`` wrapper."""
         if "module" in state_dict:
             state_dict = state_dict["module"]
         direct_dict = {

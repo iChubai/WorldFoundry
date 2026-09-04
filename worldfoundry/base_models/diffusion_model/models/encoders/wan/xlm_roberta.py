@@ -1,6 +1,15 @@
 # Modified from transformers.models.xlm_roberta.modeling_xlm_roberta
 # Copyright 2024-2025 The Alibaba Wan Team Authors. All rights reserved.
-"""XLM-RoBERTa blocks used by the native Wan image conditioner."""
+"""XLM-RoBERTa transformer blocks used by the Wan CLIP conditioner.
+
+:class:`XLMRoberta` is the text tower inside :mod:`.clip`.
+:func:`xlm_roberta_large` builds the official-width graph.
+
+This is not the UMT5 prompt encoder (:mod:`.model`).
+I2V recipes consume it via :class:`~.clip.CLIPModel`.
+
+Wan CLIP family only.
+"""
 
 import torch
 import torch.nn as nn

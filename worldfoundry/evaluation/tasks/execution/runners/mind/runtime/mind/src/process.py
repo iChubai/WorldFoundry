@@ -279,7 +279,7 @@ def compute_metrics(gt_root, test_root, dino_path, output_path, requested_metric
     monitor_thread.start()
 
     try:
-        with mp.Pool(processes=num_gpus) as pool:
+        with mp.get_context("spawn").Pool(processes=num_gpus) as pool:
             worker_args = [
                 (task_queue, result_list, gt_root, test_root, dino_path,
                     requested_metrics, video_max_time, process_batch_size, f'cuda:{i}', i, stop_event)

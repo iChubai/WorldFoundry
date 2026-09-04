@@ -9,14 +9,14 @@ This page traces one evaluation run from the CLI through artifact files on disk.
 
 ## Entry points
 
-Every user-facing command eventually reaches `run_evaluate()` in `evaluation/tasks/execution/orchestration/evaluate.py` (`run_evaluate` at `:1057`). The console entry is `worldfoundry/cli/main.py:1580` `main()`, which dispatches subcommands into one of four shapes:
+The console entry is `worldfoundry/cli/main.py:1888` `main()`. Most evaluate and model-only runs then enter `run_evaluate()` in `evaluation/tasks/execution/orchestration/evaluate.py` (`:1071`). A model-plus-benchmark run does **not** go through that facade: orchestration calls `execute_prepared_evaluation()` → `run_model_benchmark()` in `model_benchmark.py`. The CLI dispatches into one of four shapes:
 
 - **evaluate** — normalizes inputs, picks a run mode, and returns one `EvaluateRunResult`.
 - **existing outputs** — scores artifacts already on disk through `existing_results.py` without loading a model.
 - **model run** — resolves a model runner via `resolver.py`, calls `generate()`, then scores normalized results.
 - **model plus benchmark** — runs generation and then a benchmark-zoo runner end to end through `model_benchmark.py`.
 
-The first meaningful branch is always mode selection: whether the run needs model weights on GPU, or only files that already exist.
+For evaluate and model-only runs, the first meaningful branch is mode selection: whether the run needs model weights on GPU, or only files that already exist. Model-plus-benchmark never enters that fork.
 
 ## Evaluate workflow
 
@@ -71,11 +71,11 @@ else:
     return ExistingResultsRunner(...).score(results)  # metric ids → existing-results path
 ```
 
-Important distinction: model execution and benchmark scoring are separated. A model runner only emits `GenerationResult` objects. Scoring happens after results are normalized. `ContractRunner` (`orchestration/contract.py:92`) and `ExistingResultsRunner` (`orchestration/existing_results.py:89`) are the two delegate runners this fork chooses between; model resolution uses `resolve_model_zoo_runner()` at `evaluation/models/runners/resolver.py:365`.
+Important distinction: model execution and benchmark scoring are separated. A model runner only emits `GenerationResult` objects. Scoring happens after results are normalized. `ContractRunner` (`orchestration/contract.py:96`) and `ExistingResultsRunner` (`orchestration/existing_results.py:93`) are the two delegate runners this fork chooses between; model resolution uses `resolve_model_zoo_runner()` at `evaluation/models/runners/resolver.py:386`.
 
 ## Contract runner detail
 
-`run_contract()` is the strictest in-process path and the reference implementation for artifact layout (`run_contract` at `evaluation/tasks/execution/orchestration/contract.py:848`, `ContractRunner` at `:92`). Each stage writes or updates a file that downstream validation, docs exports, and leaderboard tooling expect to find. When debugging a partial run, walk the stages in order: a missing `metrics/per_sample.jsonl` usually means generation never finished alignment, not that reporting failed.
+`run_contract()` is the strictest in-process path and the reference implementation for artifact layout (`run_contract` at `evaluation/tasks/execution/orchestration/contract.py:852`, `ContractRunner` at `:96`). Each stage writes or updates a file that downstream validation, docs exports, and leaderboard tooling expect to find. When debugging a partial run, walk the stages in order: a missing `metrics/per_sample.jsonl` usually means generation never finished alignment, not that reporting failed.
 
 ```python
 # evaluation/tasks/execution/orchestration/contract.py → run_contract()

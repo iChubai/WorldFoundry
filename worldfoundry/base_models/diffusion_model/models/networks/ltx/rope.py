@@ -1,3 +1,11 @@
+"""LTX rotary embeddings over patch midpoint grids.
+
+Video positions are ``(B, 3, T, 2)`` start/end bounds on (time, H, W);
+audio is a 1-D time grid.  Frequencies are evaluated at the patch
+midpoint (``use_middle_indices_grid``) then packed as SPLIT
+``(B, H, T, D/2)`` or legacy INTERLEAVED ``(..., D)`` cos/sin.
+"""
+
 import functools
 import math
 from enum import Enum
@@ -9,6 +17,8 @@ from einops import rearrange
 
 
 class LTXRopeType(Enum):
+    """Checkpoint RoPE layout: interleaved pairs vs split first/second half."""
+
     INTERLEAVED = "interleaved"
     SPLIT = "split"
 
@@ -18,6 +28,7 @@ def apply_rotary_emb(
     freqs_cis: Tuple[torch.Tensor, torch.Tensor],
     rope_type: LTXRopeType = LTXRopeType.SPLIT,
 ) -> torch.Tensor:
+    """Rotate ``input_tensor`` by precomputed ``(cos, sin)`` in the requested layout."""
     if rope_type == LTXRopeType.INTERLEAVED:
         # Note: INTERLEAVED rope is a legacy mode. Prefer SPLIT instead.
         return apply_interleaved_rotary_emb(input_tensor, *freqs_cis)
@@ -30,6 +41,7 @@ def apply_rotary_emb(
 def apply_interleaved_rotary_emb(
     input_tensor: torch.Tensor, cos_freqs: torch.Tensor, sin_freqs: torch.Tensor
 ) -> torch.Tensor:
+    """Legacy pair-wise rotate: even/odd channels treated as complex pairs."""
     t_dup = rearrange(input_tensor, "... (d r) -> ... d r", r=2)
     t1, t2 = t_dup.unbind(dim=-1)
     t_dup = torch.stack((-t2, t1), dim=-1)
@@ -43,6 +55,7 @@ def apply_interleaved_rotary_emb(
 def apply_split_rotary_emb(
     input_tensor: torch.Tensor, cos_freqs: torch.Tensor, sin_freqs: torch.Tensor
 ) -> torch.Tensor:
+    """Split-half rotate; reshape keeps batch/seq symbolic under ``torch.compile``."""
     if sin_freqs.shape != cos_freqs.shape:
         raise ValueError(
             f"apply_split_rotary_emb: sin_freqs.shape {tuple(sin_freqs.shape)} must equal "
@@ -88,6 +101,7 @@ def apply_split_rotary_emb(
 def generate_freq_grid_np(
     positional_embedding_theta: float, positional_embedding_max_pos_count: int, inner_dim: int
 ) -> torch.Tensor:
+    """Cached numpy frequency grid (used when ``double_precision_rope`` is set)."""
     theta = positional_embedding_theta
     start = 1
     end = theta
@@ -109,6 +123,7 @@ def generate_freq_grid_np(
 def generate_freq_grid_pytorch(
     positional_embedding_theta: float, positional_embedding_max_pos_count: int, inner_dim: int
 ) -> torch.Tensor:
+    """Cached torch frequency grid (default path; same formula as the numpy helper)."""
     theta = positional_embedding_theta
     start = 1
     end = theta
@@ -130,6 +145,7 @@ def generate_freq_grid_pytorch(
 
 
 def get_fractional_positions(indices_grid: torch.Tensor, max_pos: list[int]) -> torch.Tensor:
+    """Normalize each axis of the position grid into ``[0, 1]`` by ``max_pos``."""
     n_pos_dims = indices_grid.shape[1]
     assert n_pos_dims == len(max_pos), (
         f"Number of position dimensions ({n_pos_dims}) must match max_pos length ({len(max_pos)})"
@@ -144,6 +160,7 @@ def get_fractional_positions(indices_grid: torch.Tensor, max_pos: list[int]) -> 
 def generate_freqs(
     indices: torch.Tensor, indices_grid: torch.Tensor, max_pos: list[int], use_middle_indices_grid: bool
 ) -> torch.Tensor:
+    """Map patch index bounds to frequencies; midpoint mode uses ``(start+end)/2``."""
     if use_middle_indices_grid:
         assert len(indices_grid.shape) == 4
         assert indices_grid.shape[-1] == 2
@@ -160,6 +177,7 @@ def generate_freqs(
 
 
 def split_freqs_cis(freqs: torch.Tensor, pad_size: int, num_attention_heads: int) -> tuple[torch.Tensor, torch.Tensor]:
+    """Pad then reshape frequencies to ``(B, H, T, D/2)`` for split-half RoPE."""
     cos_freq = freqs.cos()
     sin_freq = freqs.sin()
 
@@ -183,6 +201,7 @@ def split_freqs_cis(freqs: torch.Tensor, pad_size: int, num_attention_heads: int
 
 
 def interleaved_freqs_cis(freqs: torch.Tensor, pad_size: int) -> tuple[torch.Tensor, torch.Tensor]:
+    """Duplicate each frequency onto even/odd channels for interleaved RoPE."""
     cos_freq = freqs.cos().repeat_interleave(2, dim=-1)
     sin_freq = freqs.sin().repeat_interleave(2, dim=-1)
     if pad_size != 0:
@@ -204,6 +223,7 @@ def precompute_freqs_cis(
     rope_type: LTXRopeType = LTXRopeType.SPLIT,
     freq_grid_generator: Callable[[float, int, int, torch.device], torch.Tensor] = generate_freq_grid_pytorch,
 ) -> tuple[torch.Tensor, torch.Tensor]:
+    """Build ``(cos, sin)`` RoPE caches from a token position grid."""
     if max_pos is None:
         max_pos = [20, 2048, 2048]
 

@@ -1,0 +1,41 @@
+{
+  "id": "last-r1",
+  "tagline": {
+    "en": "A vision-language-action policy trained with reinforcement learning for robot control.",
+    "zh": "以强化学习训练的视觉-语言-动作策略,用于机器人控制。"
+  },
+  "overview": {
+    "en": [
+      "LaST-R1 is a vision-language-action (VLA) model for robot control, developed with a reinforcement-learning stage in its training. It maps visual observations and instructions to robot actions as a policy.",
+      "WorldFoundry runs LaST-R1 through an official-policy runtime adapter, so it fits the shared inference flow. The published checkpoint is hosted on Hugging Face and pulled in at run time.",
+      "In WorldFoundry you give the model observations and it returns an action policy rollout."
+    ],
+    "zh": [
+      "LaST-R1 是一个用于机器人控制的视觉-语言-动作(VLA)模型,其训练中包含强化学习阶段。它以策略的形式,把视觉观测与指令映射为机器人动作。",
+      "WorldFoundry 通过官方策略运行时适配器运行 LaST-R1,使其契合统一的推理流程。已发布的 checkpoint 托管于 Hugging Face,在运行时载入。",
+      "在 WorldFoundry 中,你把观测交给模型,它便返回动作策略推演。"
+    ]
+  },
+  "whenToUse": {
+    "en": "Use it when you want a reinforcement-learning-trained VLA policy for robot control and action rollouts.",
+    "zh": "当你想要一个以强化学习训练、用于机器人控制与动作推演的 VLA 策略时,选它。"
+  },
+  "notFor": {
+    "en": "It is a control policy, not a media generator — it outputs robot actions. The checkpoint downloads separately, so stage it before running.",
+    "zh": "它是控制策略而非媒体生成器——输出的是机器人动作。Checkpoint 需单独下载,请在运行前先备好。"
+  },
+  "highlights": {
+    "en": [
+      "Vision-language-action policy for robot control",
+      "Trained with a reinforcement-learning stage",
+      "Runs through an official-policy runtime adapter",
+      "Checkpoint published on Hugging Face"
+    ],
+    "zh": [
+      "面向机器人控制的视觉-语言-动作策略",
+      "训练中包含强化学习阶段",
+      "通过官方策略运行时适配器运行",
+      "Checkpoint 已发布于 Hugging Face"
+    ]
+  }
+}

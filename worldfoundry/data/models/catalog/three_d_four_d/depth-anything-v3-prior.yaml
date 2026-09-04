@@ -16,6 +16,9 @@ source:
 checkpoint_refs:
 - repo_id: depth-anything/DA3METRIC-LARGE
   filename: model.safetensors
+official_sources:
+  project_page: https://depth-anything-3.github.io/
+  paper: https://arxiv.org/abs/2511.10647
 integration:
   kind: pipeline_runner
   status: integrated

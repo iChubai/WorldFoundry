@@ -14,7 +14,11 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-"""Module for base_models -> diffusion_model -> image -> sana -> diffusion -> model -> nets -> fastlinear -> modules -> triton_lite_mla_fwd.py functionality."""
+"""Forward-only Triton LiteMLA (no backward) for SANA inference.
+
+Same fused linear-attention pipeline as :mod:`triton_lite_mla` but omits
+the backward kernels.  Used when the graph is frozen.
+"""
 
 import torch
 from torch import nn
@@ -26,7 +30,7 @@ from .triton_lite_mla_kernels.vk_q_mm_divide_fwd import vk_q_mm_divide_fwd
 
 
 class TritonLiteMLAFwdFunction(torch.autograd.Function):
-    """Triton lite mla fwd function implementation."""
+    """Forward-only autograd Function wrapping fused LiteMLA kernels."""
     @staticmethod
     def forward(
         ctx,
@@ -107,7 +111,7 @@ class TritonLiteMLAFwdFunction(torch.autograd.Function):
 
 
 class TritonLiteMLAFwd(nn.Module):
-    """Triton lite mla fwd implementation."""
+    """Inference-only LiteLA using the fused Triton forward kernels."""
     def __init__(
         self,
         dim: int,

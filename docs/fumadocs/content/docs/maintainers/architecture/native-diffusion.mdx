@@ -11,28 +11,9 @@ This avoids two failure modes: copying complete upstream frameworks into each mo
 
 ## Ownership and flow
 
-```text
-catalog / runtime profile
-  -> public pipeline, operator, and synthesis boundary
-  -> NativeDiffusionPipeline
-  -> model ID -> immutable recipe
-  -> NativeDiffusionAssembler
-       core-backed checkpoint loading and runtime policy
-       pure architecture components
-       framework-owned execution strategy
-  -> NativeDiffusionRunner
-       condition encoder
-       latent initializer
-       scheduler + framework-owned denoising loop
-       denoiser network
-       latent decoder
-       optional instance-local extensions
-  -> normalized WorldFoundry artifact
-```
-
 The public model ID remains independent: Echo Memory variants, Matrix Game variants, and ordinary generation models each receive their own immutable recipe and catalog identity. Recipes may reuse component implementations, but one model is never represented as an option flag on another model's global pipeline.
 
-![Native diffusion assembly flow](/diagrams/flow-native-diffusion.svg)
+<ArchDiagram id="native-diffusion" />
 
 ## Package roles
 

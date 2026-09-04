@@ -1,7 +1,15 @@
-"""Declarative component and execution specifications.
+"""Declarative component identity and execution specs.
 
-Model packages provide checkpoint-compatible component implementations.  They
-do not provide runners, pipelines, loaders, or optimization managers.
+This is the upstream spec layer shared by NativeDiffusionRecipe and the assembler:
+
+    recipe fills ComponentSpec / ExecutionSpec
+        → assembler calls each factory with ComponentBuildContext
+        → strategy looks up ComponentKey via ExecutionSpec.bindings
+        → runner consumes protocol objects only and never reads these dataclasses
+
+This module does not run a model; it only defines immutable specs and BuildPurpose.
+Model packages must not provide a runner, pipeline, loader, or optimization manager
+here (or on a recipe). They may only supply checkpoint-compatible component implementations.
 """
 
 from __future__ import annotations
@@ -16,11 +24,12 @@ from .optimizations import AttentionBackend, OffloadMode, QuantizationMode, Runt
 
 
 class BuildPurpose(str, Enum):
-    """Why a component graph is being constructed.
+    """Why a component graph is being built. The assembler writes this onto ComponentBuildContext.purpose.
 
-    Component factories default to inference for backwards compatibility.  A
-    training assembler must opt in explicitly so factories can reject
-    inference-only wrappers before parameters or optimizer state are created.
+    Factories default to inference for backwards compatibility. A training assembler
+    must pass TRAINING explicitly so factories can reject TeaCache, cuda_graph, and
+    other inference-only wrappers before parameters or optimizer state exist.
+    ROLLOUT / REWARD are reserved for RL-side paths.
     """
 
     INFERENCE = "inference"
@@ -30,6 +39,8 @@ class BuildPurpose(str, Enum):
 
 
 class ComponentKind(str, Enum):
+    """Component role. Maps 1:1 onto contracts protocols via assembler._EXPECTED_PROTOCOLS."""
+
     DENOISER = "denoiser"
     CONDITIONER = "conditioner"
     LATENT_ENCODER = "latent_encoder"
@@ -41,7 +52,16 @@ class ComponentKind(str, Enum):
 
 @dataclass(frozen=True, slots=True, order=True)
 class ComponentKey:
-    """Stable kind/name identity for a component within one recipe."""
+    """Stable kind/name identity inside one recipe. Strategy bindings and checkpoints address by this.
+
+    Fields:
+        kind: ComponentKind; chooses which protocol the assembler isinstance-checks.
+        name: Instance name under that kind. Defaults to ``main``. Normalized to
+            lowercase with ``_`` → ``-``.
+
+    ``str(key)`` looks like ``"denoiser:main"`` and is a valid component_options string key.
+    An empty name raises :exc:`ValueError`.
+    """
 
     kind: ComponentKind
     name: str = "main"
@@ -59,7 +79,20 @@ class ComponentKey:
 
 @dataclass(frozen=True, slots=True)
 class ComponentBuildContext:
-    """Framework-owned input to a pure component factory."""
+    """Framework-owned immutable input to a pure component factory. Model packages must not hold a runner.
+
+    Fields:
+        model_id: Public ID of the owning recipe.
+        key: ComponentKey being constructed.
+        policy: RuntimePolicy. TRAINING rejects inference accelerators via
+            :func:`validate_runtime_policy_for_purpose`.
+        checkpoints: Local ``name → CheckpointSpec`` bindings (recipe keys already resolved).
+        recipe_options / component_options: Read-only mappings; the latter overrides same-name options.
+        purpose: BuildPurpose, default INFERENCE.
+
+    Failures: empty checkpoint binding name → :exc:`ValueError`; non-CheckpointSpec value →
+    :exc:`TypeError`; illegal training policy → :exc:`ValueError`.
+    """
 
     model_id: str
     key: ComponentKey
@@ -86,12 +119,12 @@ class ComponentBuildContext:
         )
 
     def checkpoint(self, name: str = "weights") -> CheckpointSpec | None:
-        """Return one optional named checkpoint bound by the recipe."""
+        """Return one optional named checkpoint bound by the recipe, or ``None``."""
 
         return self.checkpoints.get(name)
 
     def require_checkpoint(self, name: str = "weights") -> CheckpointSpec:
-        """Return one named checkpoint or fail before model construction."""
+        """Return a named checkpoint or raise :exc:`KeyError` before model construction."""
 
         try:
             return self.checkpoints[name]
@@ -99,15 +132,26 @@ class ComponentBuildContext:
             raise KeyError(f"component {self.key} requires checkpoint binding {name!r}") from error
 
 
+# RuntimePolicy.options keys forbidden on a training build (inference accelerators / wrappers).
 _TRAINING_FORBIDDEN_OPTIONS = frozenset(
     {
+        "adacache",
         "block_swap",
         "cache_skip",
         "cuda_graph",
         "enable_cuda_graph",
+        "feature_cache",
+        "approximate_attention",
+        "fuse_qkv",
+        "inplace_residual",
+        "rms_norm_precision",
         "inference_mode",
+        "magcache",
+        "static_cross_kv",
         "step_cache",
+        "taylorseer",
         "teacache",
+        "teacache_thresh",
     }
 )
 
@@ -115,9 +159,11 @@ _TRAINING_FORBIDDEN_OPTIONS = frozenset(
 def validate_runtime_policy_for_purpose(policy: RuntimePolicy, purpose: BuildPurpose | str) -> None:
     """Fail closed when a training build requests inference-only behavior.
 
-    P0 deliberately accepts a narrow policy.  Frozen-component offload and
-    training-safe quantization can be added later through training-owned
-    contracts instead of silently reusing inference wrappers.
+    Non-TRAINING returns immediately. TRAINING rejects offload, quantization, SAGE
+    attention, and ``_TRAINING_FORBIDDEN_OPTIONS`` (TeaCache, cuda_graph, cache_skip, …).
+    P0 deliberately accepts a narrow policy; frozen-component offload and
+    training-safe quantization must go through training-owned contracts instead of
+    silently reusing inference wrappers. Raises :exc:`ValueError` on violation.
     """
 
     resolved = BuildPurpose(purpose)
@@ -138,12 +184,22 @@ def validate_runtime_policy_for_purpose(policy: RuntimePolicy, purpose: BuildPur
         raise ValueError("training component build rejects " + ", ".join(errors))
 
 
+# Pure component factory: consumes only ComponentBuildContext; must not return a runner/pipeline.
 ComponentFactory = Callable[[ComponentBuildContext], object]
 
 
 @dataclass(frozen=True, slots=True)
 class ComponentSpec:
-    """One architecture component selected by a model recipe."""
+    """One architecture component selected by a recipe: identity + pure factory + checkpoint names.
+
+    Fields:
+        key: ComponentKey.
+        factory: ``ComponentBuildContext → object``. Must not close over a runner.
+        checkpoints: Local name → key in ``recipe.checkpoints`` (not a filesystem path).
+        options: Component-level defaults, overridable by assembler component_options.
+
+    A non-callable factory raises :exc:`TypeError`; empty binding names raise :exc:`ValueError`.
+    """
 
     key: ComponentKey
     factory: ComponentFactory
@@ -160,6 +216,7 @@ class ComponentSpec:
         object.__setattr__(self, "options", MappingProxyType(dict(self.options)))
 
 
+# Default role → ComponentKey bindings for standard / most single-stage strategies.
 STANDARD_COMPONENT_BINDINGS = MappingProxyType(
     {
         "denoiser": ComponentKey(ComponentKind.DENOISER),
@@ -173,7 +230,13 @@ STANDARD_COMPONENT_BINDINGS = MappingProxyType(
 
 @dataclass(frozen=True, slots=True)
 class ExecutionSpec:
-    """Selection of a framework-owned execution strategy and its bindings."""
+    """Select a framework-owned execution strategy and declare role → ComponentKey bindings.
+
+    A recipe may only fill a strategy ID and bindings; it cannot supply a runner factory.
+    The strategy name is normalized to lowercase with ``_`` → ``-`` (same as
+    ExecutionStrategyRegistry). An empty strategy raises :exc:`ValueError`. An unknown
+    ID raises UnsupportedExecutionStrategyError only when the assembler asks the registry.
+    """
 
     strategy: str = "standard"
     bindings: Mapping[str, ComponentKey] = field(default_factory=lambda: dict(STANDARD_COMPONENT_BINDINGS))

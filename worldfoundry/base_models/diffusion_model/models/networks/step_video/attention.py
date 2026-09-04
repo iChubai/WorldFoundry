@@ -1,4 +1,8 @@
-"""Module for base_models -> diffusion_model -> video -> step_video -> step_video_runtime -> stepvideo -> modules -> attentions.py functionality."""
+"""StepVideo attention processors on ``B S H D`` QKV.
+
+``torch`` uses shared SDPA.  ``parallel`` is intentionally not implemented
+in this graph: sequence-parallel attention is installed by the runtime.
+"""
 
 import torch
 import torch.nn as nn
@@ -6,17 +10,13 @@ from einops import rearrange
 from worldfoundry.core.attention import scaled_dot_product_attention as _worldfoundry_scaled_dot_product_attention
 
 class Attention(nn.Module):
-    """Attention implementation."""
+    """Mixin that selects the SDPA processor used by self/cross-attn blocks."""
+
     def __init__(self):
-        """Init."""
         super().__init__()
     
     def attn_processor(self, attn_type):
-        """Attn processor.
-
-        Args:
-            attn_type: The attn type.
-        """
+        """Return the callable for ``attn_type`` (``torch`` only in this graph)."""
         if attn_type == 'torch':
             return self.torch_attn_func
         elif attn_type == 'parallel':
@@ -34,16 +34,7 @@ class Attention(nn.Module):
         drop_rate=0.0,
         **kwargs
     ):
-        """Torch attn func.
-
-        Args:
-            q: The q.
-            k: The k.
-            v: The v.
-            attn_mask: The attn mask.
-            causal: The causal.
-            drop_rate: The drop rate.
-        """
+        """SDPA on ``B S H D``; a 3-D mask is broadcast across heads."""
 
         if attn_mask is not None and attn_mask.dtype != torch.bool:
             attn_mask = attn_mask.to(q.dtype)
@@ -67,12 +58,5 @@ class Attention(nn.Module):
         causal=False,
         **kwargs
     ):
-        """Parallel attn func.
-
-        Args:
-            q: The q.
-            k: The k.
-            v: The v.
-            causal: The causal.
-        """
+        """Placeholder: sequence-parallel attention is wired by the runtime, not here."""
         raise RuntimeError("parallel attention must be installed through a WorldFoundry runtime extension")

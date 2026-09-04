@@ -12,6 +12,7 @@ source:
   status: open_source
   official_repo_url: https://github.com/WEIRDLabUW/unified-world-model
 official_sources:
+  paper: https://arxiv.org/abs/2504.02792
   project_page: https://weirdlabuw.github.io/uwm/
   github:
     url: https://github.com/WEIRDLabUW/unified-world-model

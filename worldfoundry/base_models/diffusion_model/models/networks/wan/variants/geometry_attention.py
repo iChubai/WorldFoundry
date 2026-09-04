@@ -1,5 +1,7 @@
-"""Module for base_models -> diffusion_model -> video -> wan -> components -> geometry_attention.py functionality."""
+"""Flash-attention dispatcher used by the geometry Wan transformer.
 
+Kernel adapter for :mod:`.geometry`.  No geometry math here.
+"""
 import torch
 
 try:

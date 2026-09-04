@@ -2,12 +2,18 @@
 
 from __future__ import annotations
 
+from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
 from pathlib import Path, PurePosixPath
-from typing import Any, Mapping
+from typing import Any
 
 from ..pipelines.aliases import load_pipeline_alias_registry
-from ..pipelines.bindings import load_pipeline_binding_registry, resolve_pipeline_binding
+from ..pipelines.bindings import (
+    PipelineBindingRegistry,
+    load_pipeline_binding_registry,
+    resolve_pipeline_binding,
+    runtime_profile_id,
+)
 from .assets import RuntimeAssetProfile, load_runtime_asset_profile_by_id
 from .environments import RuntimeEnvironmentProfile, load_runtime_environment_profile_by_id
 from .profiles import RuntimeProfile
@@ -234,15 +240,104 @@ def validate_pipeline_aliases_against_bindings(
     return tuple(issues)
 
 
+def validate_catalog_references(
+    *,
+    catalog_root: str | Path | None = None,
+    binding_root: str | Path | None = None,
+    profile_root: str | Path | None = None,
+    catalog_entries: Iterable[Any] | None = None,
+    bindings: PipelineBindingRegistry | None = None,
+    runtime_profiles: Iterable[RuntimeProfile] | Mapping[str, RuntimeProfile] | None = None,
+    runner_registry: Any = None,
+) -> tuple[RuntimeValidationIssue, ...]:
+    """Validate model-catalog references without importing model runtimes.
+
+    Every explicitly declared ``pipeline_binding``, ``runtime_profile``, and
+    ``runner_target`` on both top-level model entries and variants must resolve
+    through the corresponding built-in registry.  Module-style runner targets
+    use :meth:`ModelRunnerRegistry.resolve_key`, preserving the runner
+    registry's lazy-import contract.
+
+    Optional pre-loaded registries are accepted so aggregate validation and
+    focused tests can avoid repeated manifest scans.
+    """
+
+    if catalog_entries is None:
+        from ..catalog.zoo_registry import load_model_zoo_registry
+
+        catalog_entries = load_model_zoo_registry(catalog_root).list()
+    if bindings is None:
+        bindings = load_pipeline_binding_registry(binding_root)
+    if runtime_profiles is None:
+        from .profiles import DEFAULT_RUNTIME_PROFILES_ROOT, load_runtime_profile_manifests
+
+        runtime_profiles = load_runtime_profile_manifests(profile_root or DEFAULT_RUNTIME_PROFILES_ROOT)
+    if runner_registry is None:
+        from ..runners.registry import builtin_model_runner_registry
+
+        runner_registry = builtin_model_runner_registry()
+
+    profile_ids = _runtime_profile_reference_ids(runtime_profiles)
+    issues: list[RuntimeValidationIssue] = []
+    for entry in catalog_entries:
+        references = ((f"catalog.{entry.model_id}", f"model catalog entry {entry.model_id!r}", entry),)
+        variant_references = tuple(
+            (
+                f"catalog.{entry.model_id}.variants.{variant.variant_id}",
+                f"model catalog entry {entry.model_id!r} variant {variant.variant_id!r}",
+                variant,
+            )
+            for variant in entry.variants
+        )
+        for field_prefix, owner, reference in (*references, *variant_references):
+            binding_id = _text_or_none(reference.pipeline_binding)
+            if binding_id:
+                try:
+                    bindings.get(binding_id)
+                except KeyError:
+                    issues.append(
+                        RuntimeValidationIssue(
+                            code="catalog_pipeline_binding_missing",
+                            field=f"{field_prefix}.pipeline_binding",
+                            message=f"{owner} references unknown pipeline binding {binding_id!r}",
+                        )
+                    )
+
+            profile_id = runtime_profile_id(reference.runtime_profile)
+            if profile_id and profile_id not in profile_ids:
+                issues.append(
+                    RuntimeValidationIssue(
+                        code="catalog_runtime_profile_missing",
+                        field=f"{field_prefix}.runtime_profile",
+                        message=f"{owner} references unknown runtime profile {profile_id!r}",
+                    )
+                )
+
+            runner_target = _text_or_none(reference.runner_target)
+            if runner_target:
+                try:
+                    runner_registry.resolve_key(runner_target)
+                except (KeyError, ValueError):
+                    issues.append(
+                        RuntimeValidationIssue(
+                            code="catalog_runner_target_unresolved",
+                            field=f"{field_prefix}.runner_target",
+                            message=f"{owner} references unresolved runner target {runner_target!r}",
+                        )
+                    )
+
+    return tuple(issues)
+
+
 def validate_runtime_registry(
     *,
     profile_root: str | Path | None = None,
 ) -> tuple[RuntimeValidationIssue, ...]:
-    """Validate runtime profile manifests and pipeline alias references.
+    """Validate model-catalog, runtime-profile, and pipeline-alias references.
 
     Environments and assets are loaded once up front and shared across all
-    per-profile checks (previously each profile re-scanned both manifest
-    trees, making the validation O(N²) in file IO).
+    catalog and per-profile checks.  This keeps reference validation linear in
+    the number of manifests rather than re-scanning data trees per profile.
     """
 
     from .assets import load_runtime_asset_profiles
@@ -250,8 +345,9 @@ def validate_runtime_registry(
     from .profiles import DEFAULT_RUNTIME_PROFILES_ROOT, load_runtime_profile_manifests
 
     issues: list[RuntimeValidationIssue] = []
-    issues.extend(validate_pipeline_aliases_against_bindings())
     profiles = tuple(load_runtime_profile_manifests(profile_root or DEFAULT_RUNTIME_PROFILES_ROOT))
+    issues.extend(validate_pipeline_aliases_against_bindings())
+    issues.extend(validate_catalog_references(runtime_profiles=profiles))
     environments = load_runtime_environment_profiles()
     assets = load_runtime_asset_profiles(runtime_profiles={profile.model_id: profile for profile in profiles})
     for profile in profiles:
@@ -315,6 +411,25 @@ def _text_or_none(value: Any) -> str | None:
     return text or None
 
 
+def _runtime_profile_reference_ids(
+    profiles: Iterable[RuntimeProfile] | Mapping[str, RuntimeProfile],
+) -> frozenset[str]:
+    """Return every key accepted as a catalog runtime-profile reference."""
+    ids: set[str] = set()
+    values: Iterable[RuntimeProfile]
+    if isinstance(profiles, Mapping):
+        ids.update(str(key) for key in profiles)
+        values = profiles.values()
+    else:
+        values = profiles
+    for profile in values:
+        ids.add(profile.model_id)
+        profile_id = _text_or_none(profile.execution.get("profile_id"))
+        if profile_id:
+            ids.add(profile_id)
+    return frozenset(ids)
+
+
 def _lookup_environment(
     environment_id: str,
     environments: Mapping[str, RuntimeEnvironmentProfile] | None,
@@ -349,6 +464,7 @@ def _lookup_asset(
 __all__ = [
     "KNOWN_ARTIFACT_KINDS",
     "RuntimeValidationIssue",
+    "validate_catalog_references",
     "validate_pipeline_aliases_against_bindings",
     "validate_runtime_profile_references",
     "validate_runtime_registry",

@@ -1,5 +1,16 @@
 # Copyright 2024-2025 The Alibaba Wan Team Authors. All rights reserved.
-"""Module for base_models -> diffusion_model -> video -> wan -> vae -> linear_wan.py functionality."""
+"""Wan VAE with linear (not conv) projection variants.
+
+Causal 3-D encoder/decoder whose patch / unpatch path can
+use linear projections instead of the default conv stem.
+:class:`WanVAE` still exposes BCTHW encode/decode with the
+Wan 2.1 16-ch mean/std contract.
+
+Checkpoint-shaped for linear-attention / research forks.
+Default recipes should keep :mod:`~..model`.
+
+Still the Wan video-VAE family, not Sana DC-AE.
+"""
 
 import logging
 from dataclasses import dataclass
@@ -13,7 +24,7 @@ from einops import rearrange
 from omegaconf import MISSING, OmegaConf
 
 from worldfoundry.core.io import hf_download_or_fpath
-from worldfoundry.core.model_loading.file import load_state_dict
+from worldfoundry.core.model_loading.file import load_state_dict, load_torch_state_dict
 from worldfoundry.core.attention import scaled_dot_product_attention as _worldfoundry_scaled_dot_product_attention
 
 __all__ = [
@@ -728,7 +739,7 @@ def _video_vae(pretrained_path=None, z_dim=None, device="cpu", **kwargs):
     if local_path.endswith((".safetensors", ".safetensors.index.json")):
         state_dict = load_state_dict(local_path, device="cpu")
     else:
-        checkpoint = torch.load(local_path, map_location="cpu")
+        checkpoint = load_torch_state_dict(local_path, map_location="cpu")
         state_dict = checkpoint["state_dict"] if isinstance(checkpoint, dict) and "state_dict" in checkpoint else checkpoint
     model.load_state_dict(state_dict, assign=True)
 

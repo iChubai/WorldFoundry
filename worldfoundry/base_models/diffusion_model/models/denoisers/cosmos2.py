@@ -1,4 +1,24 @@
-"""Native Cosmos Predict2 Video2World denoiser roles."""
+"""Native Cosmos Predict2 Video2World denoiser roles.
+
+Implements :class:`~...contracts.Denoiser` for 2B / 14B Video2World recipes.
+The runner calls ``__call__(DenoiserInput) -> DenoiserOutput``.  The inner
+network is the shared Predict 2.5 DiT
+(:class:`~..networks.cosmos2p5.model.Cosmos25Transformer3DModel`) with
+Predict2 channel / RoPE configs and the official Predict 2.5 key remap.
+
+``DenoiserInput.conditioning`` mapping
+--------------------------------------
+- ``context``: text embeddings.
+- ``condition_latents`` / ``condition_mask`` / ``condition_indicator``:
+  Video2World frozen-frame tensors.  Masked regions stay on the condition
+  latent; unmasked regions receive rectified-flow preconditioning.
+- ``padding_mask`` (optional tensor).
+- ``fps`` (optional float, default 16).
+
+Rectified-flow coefficients: ``c_in = c_skip = 1/(σ+1)``,
+``c_out = -σ/(σ+1)``.  Conditioned frames use ``sigma_conditional``
+(default ``1e-4``) so their effective timestep stays near zero.
+"""
 
 from __future__ import annotations
 
@@ -40,6 +60,7 @@ class Cosmos2Denoiser:
         self.sigma_conditional = float(sigma_conditional)
 
     def __call__(self, model_input: DenoiserInput) -> DenoiserOutput:
+        """Evaluate one CFG branch and return clean-x0 style ``sample``."""
         values = model_input.conditioning
         context = values.get("context")
         conditions = tuple(
@@ -110,10 +131,12 @@ def _build(context: ComponentBuildContext, config: Mapping[str, object]) -> Cosm
 
 
 def build_cosmos2_2b_denoiser(context: ComponentBuildContext) -> Cosmos2Denoiser:
+    """Load the 2B Video2World Predict2 denoiser from ``weights``."""
     return _build(context, COSMOS2_2B_CONFIG)
 
 
 def build_cosmos2_14b_denoiser(context: ComponentBuildContext) -> Cosmos2Denoiser:
+    """Load the 14B Video2World Predict2 denoiser from ``weights``."""
     return _build(context, COSMOS2_14B_CONFIG)
 
 

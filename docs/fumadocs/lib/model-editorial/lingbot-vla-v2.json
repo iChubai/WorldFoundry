@@ -1,0 +1,41 @@
+{
+  "id": "lingbot-vla-v2",
+  "tagline": {
+    "en": "Apache-2.0 6B vision-language-action policy on a Qwen3-VL MoE backbone, for robot control.",
+    "zh": "Apache-2.0 许可、基于 Qwen3-VL MoE 骨干的 6B 视觉-语言-动作策略,用于机器人控制。"
+  },
+  "overview": {
+    "en": [
+      "LingBot-VLA 2.0 is the next-generation LingBot vision-language-action policy for robot control, built on a Qwen3-VL Mixture-of-Experts backbone. It integrates the official policy, batched inference, feature transforms, robot mappings, and normalization directly for action prediction.",
+      "The runtime preserves official batched observation inference and Qwen3-VL image_grid_thw handling, works with a 55-dimensional internal representation and a denoising step, and offers optional torch.compile paths. Perception teachers used only during training are excluded — the model consumes their distilled representations from the trained weights. The public 6B checkpoint uses a bundled official-derived inference config, and robot-specific downstream checkpoints can override it with their own config file.",
+      "In WorldFoundry you stage the 6B checkpoint (published under Apache-2.0 on Hugging Face) and its Qwen3-VL processor assets, supply observations, and the model returns an action prediction."
+    ],
+    "zh": [
+      "LingBot-VLA 2.0 是新一代 LingBot 视觉-语言-动作策略,用于机器人控制,构建在 Qwen3-VL 混合专家(MoE)骨干之上。它直接集成了官方策略、批量推理、特征变换、机器人映射与归一化,用于动作预测。",
+      "运行时保留了官方的批量观测推理与 Qwen3-VL 的 image_grid_thw 处理,使用一个 55 维内部表示与一个去噪步骤,并提供可选的 torch.compile 路径。仅用于训练的感知教师被排除在外——模型从训练好的权重中消费它们蒸馏出的表示。公开的 6B checkpoint 采用自带的官方衍生推理配置,机器人专用的下游 checkpoint 可用各自的配置文件覆盖它。",
+      "在 WorldFoundry 中,你备好 6B checkpoint(以 Apache-2.0 发布于 Hugging Face)及其 Qwen3-VL 处理器素材,提供观测,模型便返回动作预测。"
+    ]
+  },
+  "whenToUse": {
+    "en": "Use it when you want the latest LingBot VLA policy — a Qwen3-VL MoE-based model with batched inference — for robot action prediction and control.",
+    "zh": "当你想要最新的 LingBot VLA 策略——一个基于 Qwen3-VL MoE、支持批量推理的模型——用于机器人动作预测与控制时,选它。"
+  },
+  "notFor": {
+    "en": "It outputs robot actions, not media. The 6B checkpoint and its Qwen3-VL processor assets download separately, so plan for the download and disk space.",
+    "zh": "它输出机器人动作而非媒体内容。6B checkpoint 及其 Qwen3-VL 处理器素材需单独下载,请预留下载时间与磁盘空间。"
+  },
+  "highlights": {
+    "en": [
+      "Apache-2.0 6B policy on a Qwen3-VL MoE backbone",
+      "Batched observation inference with a denoising step",
+      "Optional torch.compile paths",
+      "Downstream checkpoints can override the inference config"
+    ],
+    "zh": [
+      "Apache-2.0 的 6B 策略,基于 Qwen3-VL MoE 骨干",
+      "批量观测推理,含去噪步骤",
+      "可选的 torch.compile 路径",
+      "下游 checkpoint 可覆盖推理配置"
+    ]
+  }
+}

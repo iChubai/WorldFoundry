@@ -78,6 +78,8 @@ runner_parity:
   - Registry, component contracts, architecture construction, conditioning masks, and AB2
     scheduler numerics are validated locally; gated checkpoint and GPU parity are separate.
 official_sources:
+  paper: https://arxiv.org/abs/2501.03575
+  project_page: https://research.nvidia.com/labs/dir/cosmos-predict2/
   github:
     url: https://github.com/nvidia-cosmos/cosmos-predict2
   huggingface:

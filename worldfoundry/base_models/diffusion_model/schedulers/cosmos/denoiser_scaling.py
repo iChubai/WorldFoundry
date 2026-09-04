@@ -13,7 +13,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Native Cosmos component."""
+"""EDM and rectified-flow scaling coefficients for Cosmos denoisers.
+
+:class:`EDMScaling` returns the classic Karras ``(c_skip, c_out, c_in,
+c_noise)`` tuple from a per-sample sigma, plus EDM loss weights.
+:class:`RectifiedFlowScaling` maps sigma to the RF / flow-matching
+coefficients (requires ``sigma_data == 1``).
+
+Consumed by Predict1 residual samplers, not by the unified
+DiffusionScheduler path.  Cosmos3 uses UniPC in ``schedulers/cosmos3``
+instead.
+"""
 
 from typing import Tuple
 
@@ -47,6 +57,7 @@ class EDMScaling:
         return c_skip, c_out, c_in, c_noise
 
     def sigma_loss_weights(self, sigma: torch.Tensor) -> torch.Tensor:
+        """EDM preconditioning weights ``(σ² + σ_data²) / (σ σ_data)²``."""
         return (sigma**2 + self.sigma_data**2) / (sigma * self.sigma_data) ** 2
 
 
@@ -63,4 +74,5 @@ class RectifiedFlowScaling:
         return 1.0 - t, -t, 1.0 - t, t * self.t_scaling_factor
 
     def sigma_loss_weights(self, sigma: torch.Tensor) -> torch.Tensor:
+        """Rectified-flow loss weights ``1 / σ²``."""
         return 1.0 / sigma**2

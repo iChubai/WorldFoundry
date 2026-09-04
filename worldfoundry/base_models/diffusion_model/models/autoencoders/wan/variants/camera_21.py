@@ -1,5 +1,15 @@
 # Copyright 2024-2025 The Alibaba Wan Team Authors. All rights reserved.
-"""Module for base_models -> diffusion_model -> video -> wan -> vae -> camera_wan2p1.py functionality."""
+"""Wan 2.1 camera-control VAE used by resident / DreamX wrappers.
+
+Checkpoint-shaped causal 3-D CNN for camera-control recipes.
+Public surface is :class:`WanVAE` with the same 16-ch BCTHW
+contract as Wan 2.1 (8× space / 4× time, official mean/std).
+
+Resident loaders and some DreamX paths import this graph
+instead of :mod:`~..model`.  Not a new latent scale.
+
+Sibling of :mod:`.action_21` and :mod:`~..reference_21`.
+"""
 
 import logging
 
@@ -7,6 +17,7 @@ import torch
 import torch.cuda.amp as amp
 import torch.nn as nn
 import torch.nn.functional as F
+from worldfoundry.core.model_loading import load_torch_state_dict
 from einops import rearrange
 from worldfoundry.core.attention import scaled_dot_product_attention as _worldfoundry_scaled_dot_product_attention
 
@@ -789,7 +800,7 @@ def _video_vae(pretrained_path=None, z_dim=None, device='cpu', **kwargs):
     # load checkpoint
     logging.info(f'loading {pretrained_path}')
     model.load_state_dict(
-        torch.load(pretrained_path, map_location=device), assign=True)
+        load_torch_state_dict(pretrained_path, map_location=device), assign=True)
 
     return model
 

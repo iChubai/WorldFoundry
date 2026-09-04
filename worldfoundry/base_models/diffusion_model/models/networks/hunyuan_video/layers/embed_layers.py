@@ -1,4 +1,9 @@
-"""Original HunyuanVideo patch embedding layer."""
+"""HunyuanVideo 3D patch embed shared by the i2v MM-DiT.
+
+Despite the class docstring inherited from ViT, ``proj`` is Conv3d:
+``B C T H W`` → flatten → ``B (T'H'W') C``.  Used when the i2v model
+imports :class:`PatchEmbed` from this package rather than ``original.py``.
+"""
 
 import torch.nn as nn
 
@@ -6,18 +11,7 @@ from worldfoundry.core.nn.layers import to_2tuple
 
 
 class PatchEmbed(nn.Module):
-    """2D Image to Patch Embedding
-
-    Image to Patch Embedding using Conv2d
-
-    A convolution based approach to patchifying a 2D image w/ embedding projection.
-
-    Based on the impl in https://github.com/google-research/vision_transformer
-
-    Hacked together by / Copyright 2020 Ross Wightman
-
-    Remove the _assert function in forward function to be compatible with multi-resolution images.
-    """
+    """Conv3d patch embed: ``B C T H W`` → ``B (T'H'W') C`` (optional flatten)."""
 
     def __init__(
         self,
@@ -30,18 +24,6 @@ class PatchEmbed(nn.Module):
         dtype=None,
         device=None,
     ):
-        """Init.
-
-        Args:
-            patch_size: The patch size.
-            in_chans: The in chans.
-            embed_dim: The embed dim.
-            norm_layer: The norm layer.
-            flatten: The flatten.
-            bias: The bias.
-            dtype: The dtype.
-            device: The device.
-        """
         factory_kwargs = {"dtype": dtype, "device": device}
         super().__init__()
         patch_size = to_2tuple(patch_size)
@@ -63,11 +45,7 @@ class PatchEmbed(nn.Module):
         self.norm = norm_layer(embed_dim) if norm_layer else nn.Identity()
 
     def forward(self, x):
-        """Forward.
-
-        Args:
-            x: The x.
-        """
+        """Project then optionally flatten ``B C T H W`` patches to ``B S C``."""
         x = self.proj(x)
         if self.flatten:
             x = x.flatten(2).transpose(1, 2)  # BCHW -> BNC

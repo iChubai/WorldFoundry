@@ -3,7 +3,6 @@ title: Metrics
 description: In-tree metric registry and distribution/perceptual compute APIs.
 ---
 
-import { MetricQuickNav } from '@/components/metric-quick-nav';
 import MetricsSetup from '../../../../mdx/partials/metrics-usage-setup.mdx';
 
 WorldFoundry ships an in-tree metric layer — a registry of scorers and distribution/perceptual compute routines that runners invoke through a stable contract. Benchmarks decide *what* to measure on *which* data; metrics decide *how* to turn predictions into numbers. Each entry declares inputs, optional checkpoint dependencies, and output shape; runners reference metric IDs and the registry resolves aliases, validates availability, and routes to the right `compute_*`. This keeps model code out of scoring while making scoring reproducible across machines. This hub documents what the repository actually implements — it is not a survey of every published score.
@@ -13,8 +12,6 @@ The in-tree catalog spans four families (see the table below): **scorers & quali
 ## Getting started
 
 <MetricsSetup />
-
-<MetricQuickNav locale="en" variant="hub" />
 
 ## Pages
 

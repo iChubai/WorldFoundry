@@ -14,7 +14,18 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-"""Module for base_models -> diffusion_model -> image -> sana -> diffusion -> model -> dc_ae -> efficientvit -> models -> efficientvit -> dc_ae_with_temporal.py functionality."""
+"""DC-AE with temporal blocks for Sana video / streaming recipes.
+
+Same latent contract as the image DC-AE (BCHW / BCTHW,
+32 channels at f32) plus 3-D residual stages.
+:class:`DCAEWithTemporal` is the public encode/decode
+surface.  :func:`st_dc_ae_f32t4c32_chunked_causal` is the
+chunked-causal factory.
+
+Image-only recipes should use :mod:`.dc_ae` instead.
+
+This is still the Sana DC-AE family, not a Wan causal VAE.
+"""
 
 from dataclasses import dataclass, field
 from typing import Any, Optional

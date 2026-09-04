@@ -1,4 +1,17 @@
-"""Pure-tensor packing rules for the Cosmos3 omni token sequence."""
+"""Pure-tensor packing of Cosmos3 text / vision / sound / action tokens.
+
+No modules or weights: this file only computes index tensors.  The joint
+denoiser calls :func:`build_cosmos3_sequence_layout` with tokenizer
+``input_ids`` and a ``ModalityState`` map.  Returned
+:class:`Cosmos3SequenceLayout.values` keys match
+:class:`~...networks.cosmos3.model.Cosmos3OmniTransformer` kwargs
+(``text_indexes``, ``vision_sequence_indexes``, per-modality timesteps,
+MSE-loss indexes, RoPE ``position_ids``).
+
+Temporal positions can be integer or FPS-scaled floats.  Spatial indices
+optionally reset per modality.  Noisy-frame indexes come from
+``ModalityState.denoise_mask`` so frozen context tokens stay clean.
+"""
 
 from __future__ import annotations
 

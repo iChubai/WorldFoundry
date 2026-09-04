@@ -1,4 +1,19 @@
-"""Declarative native recipes for the SkyReels family."""
+"""Native declarative recipes for SkyReels V2 (Wan-DF) and V3 (R2V).
+
+Each public function returns a :class:`NativeDiffusionRecipe`.  Recipes
+do not construct runners.
+
+Family split
+------------
+- V2 DF 1.3B 540P: Wan-style T2V DiT, UMT5 conditioner, T2V initializer,
+  UniPC (shift 8.0), Wan 2.1 VAE decoder.  Default ``standard``
+  bindings.  CFG plus FPS conditioning.
+- V3 R2V 14B: SkyReels V3 DiT, Diffusers Wan text conditioner,
+  reference-image latent initializer (up to 4 refs), UniPC (shift 5.0),
+  Diffusers Wan codec as encoder + decoder.  Strategy
+  ``dual-condition-guidance`` with a secondary image guidance scale
+  (default 1.0) in addition to text CFG.
+"""
 
 from __future__ import annotations
 
@@ -25,6 +40,8 @@ SKYREELS_V3_REVISION = "8df04fa97e062099633b366d19a6b0b2dabd5a69"
 
 
 def skyreels_v2_recipe() -> NativeDiffusionRecipe:
+    """SkyReels-V2 DF 1.3B T2V: Wan stack + UniPC, ``standard`` CFG."""
+
     checkpoints = {
         "dit": CheckpointSpec(
             repo_id=SKYREELS_V2_REPO_ID,
@@ -91,7 +108,13 @@ def skyreels_v2_recipe() -> NativeDiffusionRecipe:
 
 
 def skyreels_v3_recipe() -> NativeDiffusionRecipe:
-    """Return the native SkyReels-V3 reference-to-video recipe."""
+    """SkyReels-V3 14B reference-to-video with dual-condition CFG.
+
+    Binds V3 DiT, Diffusers Wan text conditioner, reference initializer,
+    UniPC, and Wan codec (encoder + decoder).  Strategy
+    ``dual-condition-guidance``: text CFG plus
+    ``secondary_guidance_scale`` from ``image_guidance_scale``.
+    """
 
     denoiser = ComponentKey(ComponentKind.DENOISER)
     conditioner = ComponentKey(ComponentKind.CONDITIONER)

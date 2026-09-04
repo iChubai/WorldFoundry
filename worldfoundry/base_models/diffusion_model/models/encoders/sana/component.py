@@ -1,4 +1,11 @@
-"""Native Gemma-2 prompt conditioning shared by every Sana recipe."""
+"""Sana Gemma-2 :class:`~...contracts.ConditionEncoder`.
+
+Tokenizes prompts (optionally prefixed with the official English
+enhancement template) and encodes them with Gemma-2.  Returns
+``Conditioning.positive[\"context\"]`` / ``negative[\"context\"]`` for
+the Sana DiT cross-attention.  Does not rewrite non-English user
+prompts; the prefix is English-only instruction text from the release.
+"""
 
 from __future__ import annotations
 
@@ -136,6 +143,7 @@ class SanaPromptConditioner:
         device: torch.device,
         dtype: torch.dtype,
     ) -> Conditioning:
+        """Encode prompts (plus optional motion-score suffix) to Gemma-2 context."""
         motion_score = int(request.inputs.get("motion_score", 0))
         if motion_score < 0:
             raise ValueError("Sana motion_score must be non-negative")

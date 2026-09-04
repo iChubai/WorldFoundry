@@ -19,7 +19,6 @@ from worldfoundry.evaluation.utils import (
     MODEL_ZOO_DIR,
     REPO_ROOT,
     manifest_paths,
-    worldfoundry_hfd_dataset_root,
 )
 
 from .utils import (
@@ -39,14 +38,6 @@ _BENCHMARK_RUN_MODE_CHOICES = tuple(sorted(BENCHMARK_RUN_PUBLIC_MODES))
 
 _SCRIPT_MODEL_ZOO_DOWNLOAD_CHECKPOINTS = "scripts/model_zoo/download_checkpoints.py"
 _SCRIPT_SETUP_DOWNLOAD_EMBODIED_ACTION_ASSETS = "scripts/setup/download_embodied_action_official_assets.py"
-
-# ── Default path helpers ────────────────────────────────────────
-
-
-def _default_hfd_dataset_root() -> Path:
-    """Return the default HFD dataset root path."""
-    return worldfoundry_hfd_dataset_root()
-
 
 # ── Formatting and display helpers ───────────────────────────────
 

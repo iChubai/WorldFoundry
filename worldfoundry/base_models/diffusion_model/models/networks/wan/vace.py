@@ -1,4 +1,24 @@
-"""Checkpoint-compatible Wan VACE network on the canonical Wan graph."""
+"""Wan 2.1 VACE (Video All-in-one Creation and Editing) on the native graph.
+
+VACE adds a parallel condition transformer that consumes extra video
+latents (masks, references, edits) and injects residual hints into a
+subset of the main DiT blocks.  This file is the packed-tensor native
+implementation used by WorldFoundry recipes.
+
+Control flow
+------------
+1. Patchify noisy latents with the shared Wan stem.
+2. Patchify ``vace_context`` with ``vace_patch_embedding``.
+3. Run ``vace_blocks`` (must include layer 0).  Block 0 mixes the first
+   condition tokens with the main hidden states; later blocks refine the
+   condition stream and emit an ``after_proj`` hint.
+4. Run the main ``blocks``.  Each :class:`BaseWanAttentionBlock` that
+   maps to a VACE layer adds ``hint * vace_context_scale``.
+
+No action, camera, causal, linear-attention, or TeaCache hooks live here.
+The DiffSynth-shaped factory that stacks hints as a tensor is
+:mod:`.vace_core`.
+"""
 
 from __future__ import annotations
 
@@ -28,6 +48,7 @@ class VaceWanAttentionBlock(DiTBlock):
         super().__init__(has_image_input, dim, num_heads, ffn_dim, eps)
         self.block_id = int(block_id)
         if self.block_id == 0:
+            # First VACE layer is the only one allowed to see the main stream.
             self.before_proj = torch.nn.Linear(dim, dim)
         self.after_proj = torch.nn.Linear(dim, dim)
 
@@ -76,6 +97,7 @@ class BaseWanAttentionBlock(DiTBlock):
         hints: Sequence[torch.Tensor],
         context_scale: float = 1.0,
     ) -> torch.Tensor:
+        """Run the Wan block, then add the mapped VACE hint when this layer is selected."""
         hidden_states = super().forward(
             hidden_states,
             context,
@@ -202,6 +224,7 @@ class VaceWanModel(WanModel):
         vace_context_scale: float = 1.0,
         **_: object,
     ) -> torch.Tensor:
+        """Denoise ``x`` while injecting VACE hints computed from ``vace_context``."""
         if x.ndim != 5:
             raise ValueError(f"Wan VACE latents must be BCTHW, got {tuple(x.shape)}")
         if vace_context.ndim != 5:
@@ -232,6 +255,37 @@ class VaceWanModel(WanModel):
         condition = rearrange(condition, "b c f h w -> b (f h w) c").contiguous()
         frequencies = self._frequencies(frames, height, width, device=hidden_states.device)
 
+        sequence_parallel_state = getattr(
+            self,
+            "_worldfoundry_sequence_parallel",
+            None,
+        )
+        sequence_parallel_length = hidden_states.shape[1]
+        if sequence_parallel_state is not None:
+            from worldfoundry.core.distributed.sequence_parallel_runtime import (
+                sequence_parallel_chunk,
+            )
+
+            degree = int(sequence_parallel_state.sp_degree)
+            padding = (-sequence_parallel_length) % degree
+            if padding:
+                hidden_states = torch.nn.functional.pad(hidden_states, (0, 0, 0, padding))
+                condition = torch.nn.functional.pad(condition, (0, 0, 0, padding))
+                frequencies = torch.cat(
+                    [
+                        frequencies,
+                        torch.ones(
+                            padding,
+                            *frequencies.shape[1:],
+                            dtype=frequencies.dtype,
+                            device=frequencies.device,
+                        ),
+                    ],
+                    dim=0,
+                )
+            hidden_states = sequence_parallel_chunk(hidden_states, dim=1)
+            condition = sequence_parallel_chunk(condition, dim=1)
+
         hints: list[torch.Tensor] = []
         for block in self.vace_blocks:
             condition, hint = block(
@@ -251,6 +305,13 @@ class VaceWanModel(WanModel):
                 hints=hints,
                 context_scale=vace_context_scale,
             )
+        if sequence_parallel_state is not None:
+            from worldfoundry.core.distributed.sequence_parallel_runtime import (
+                sequence_parallel_all_gather,
+            )
+
+            hidden_states = sequence_parallel_all_gather(hidden_states, dim=1)
+            hidden_states = hidden_states[:, :sequence_parallel_length]
         hidden_states = self.head(hidden_states, time_embedding)
         return self.unpatchify(hidden_states, (frames, height, width))
 

@@ -14,6 +14,7 @@ modalities:
 - long-horizon
 name: WorldCam
 official_sources:
+  paper: https://arxiv.org/abs/2603.16871
   github:
     confirmed_by: git ls-remote --heads
     confirmed_ref: refs/heads/main

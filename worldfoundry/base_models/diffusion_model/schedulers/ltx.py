@@ -1,4 +1,11 @@
-"""Native LTX rectified-flow schedules."""
+"""Native LTX rectified-flow schedules.
+
+:class:`LTXFixedEulerScheduler` consumes an explicit distilled sigma list
+(not a generated path).  ``schedule`` fails if
+``num_inference_steps != len(sigmas) - 1`` or if sigmas are not
+monotonically non-increasing.  Used by the LTX joint / video denoisers
+through the standard runner loop.
+"""
 
 from __future__ import annotations
 

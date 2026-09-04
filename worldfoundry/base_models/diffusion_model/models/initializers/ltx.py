@@ -1,4 +1,16 @@
-"""Native LTX multi-stage video/audio latent initialization."""
+"""LTX multi-stage :class:`~...runners.MultiStageLatentInitializer`.
+
+The joint-multistage runner calls ``initialize_stage`` once per resolution
+pass.  Each stage builds patchified :class:`~...contracts.ModalityState`
+objects for video (and optionally audio) via
+:mod:`..representations.ltx`.  An optional first-frame image is encoded
+with the LTX video VAE and injected into the clean latent / denoise mask.
+
+``stage_divisors`` shrink spatial size on early stages (default ``(2, 1)``
+for LTX-2 AV).  The video-only LTX-Video factory uses ``(1, 1)`` plus
+``first_stage_scale`` (default 2/3) to match the official two-pass ABI.
+This is not the single-tensor :class:`~...contracts.LatentInitializer`.
+"""
 
 from __future__ import annotations
 
@@ -222,6 +234,7 @@ class LTXMultiStageLatentInitializer(MultiStageLatentInitializer):
 def build_ltx_multistage_latent_initializer(
     context: ComponentBuildContext,
 ) -> LTXMultiStageLatentInitializer:
+    """Build the LTX-2 joint audio-video two-stage initializer."""
     return LTXMultiStageLatentInitializer(load_ltx_video_encoder(context))
 
 

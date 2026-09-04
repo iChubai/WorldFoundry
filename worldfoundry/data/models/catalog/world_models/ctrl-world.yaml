@@ -37,10 +37,11 @@ runtime_profile: runtime-profile:ctrl-world
 runner_target: worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner
 pipeline_binding: ctrl-world
 runner_parity:
-  status: implemented_checkpoint_pending
+  status: implemented_checkpoint_required
   notes:
-  - The pipeline resolves the vendored rollout entrypoint and returns blocked runtime diagnostics until checkpoints and task
-    assets are staged.
+  - The compatibility launcher executes the released checkpoint with local SVD and CLIP components.
+  - The default consumes synchronized ALOHA high/left-wrist/right-wrist images without synthesizing camera views.
+  - Checkpoint-matched DROID views and actions remain necessary for action-quality parity.
 catalog_category: world_models
 catalog_scope: World-model catalog entries. Integrated entries expose in-tree WorldFoundry runtimes; blocked entries retain
   upstream provenance without runnable backends.

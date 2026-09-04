@@ -14,9 +14,34 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-"""Module for base_models -> diffusion_model -> image -> sana -> diffusion -> utils -> cam_utils.py functionality."""
+"""Camera-conditioning geometry shared by SANA-WM and other pose-aware DiTs.
+
+SANA's camera-control path (and any recipe that packs poses into AdaLN /
+Plücker tokens) needs the same operations: sample random camera-to-world
+matrices, invert SE(3) poses cheaply, unproject pixels into a 6-D raymap,
+and pack pixel-rate poses into latent-rate tensors.
+
+This module is the core home for that plumbing so
+``base_models/.../cam_utils.py`` does not own a second copy:
+
+- :func:`generate_random_c2w_poses` / :func:`random_rotation_matrix_quaternion`
+  — uniform SO(3) via unit quaternions plus bounded translation.
+- :func:`get_pose_inverse` — batched ``[R|t]`` inverse using ``R^T``.
+- :func:`compute_raymap` — OpenCV unprojection to Plücker ``(d, m)`` or
+  ``(o, d)`` at an arbitrary resolution.
+- :func:`pack_spatiotemporal_camera_conditioning` — relative-to-first-frame
+  poses plus a dense chunked Plücker volume at latent stride.
+
+Pixel-center convention here is integer pixel indices (no ``+0.5``),
+matching the original SANA cam_utils. For RealEstate10K-style Plücker
+with half-pixel centers see :mod:`worldfoundry.core.camera_pose`.
+"""
 
 import torch
+
+# ──────────────────────────────────────────────────────────────────────────
+# Random SE(3) — unit-quaternion SO(3) plus bounded translation
+# ──────────────────────────────────────────────────────────────────────────
 
 
 def generate_random_c2w_poses(N, max_translation_range=10.0, dtype=torch.float32, device="cpu"):
@@ -89,9 +114,11 @@ def generate_random_c2w_poses(N, max_translation_range=10.0, dtype=torch.float32
 
 
 def random_rotation_matrix_quaternion(dtype=torch.float32, device="cpu"):
-    """
-    Generates a random 3x3 rotation matrix using a random unit quaternion.
-    This provides a uniform distribution of rotations.
+    """Return one uniform random 3x3 rotation from a unit quaternion.
+
+    Sampling four i.i.d. Gaussians and normalizing yields a uniform
+    distribution on SO(3). Prefer
+    :func:`generate_random_c2w_poses` when a batched 4x4 pose is needed.
     """
     # 1. Generate four random numbers (components of a random quaternion)
     q = torch.randn(4, dtype=dtype, device=device)
@@ -120,11 +147,22 @@ def random_rotation_matrix_quaternion(dtype=torch.float32, device="cpu"):
     return R
 
 
+# ──────────────────────────────────────────────────────────────────────────
+# Pose inverse, Plücker raymap, latent-rate packing
+# ──────────────────────────────────────────────────────────────────────────
+
+
 def get_pose_inverse(T):
-    """
-    Computes the inverse of a batch of 4x4 homogeneous transformation matrices T
-    using the R^T = R^-1 property for rotation matrices.
-    T: (..., 4, 4) tensor
+    """Invert batched 4x4 camera poses using ``R^{-1} = R^T``.
+
+    Faster and more stable than ``torch.linalg.inv`` for rigid transforms.
+    Leading batch dimensions are preserved.
+
+    Args:
+        T: ``(..., 4, 4)`` homogeneous matrices with orthonormal ``R``.
+
+    Returns:
+        ``(..., 4, 4)`` inverses on the same device/dtype as *T*.
     """
     # Extract R and t
     R = T[..., :3, :3]  # (..., 3, 3)
@@ -218,9 +256,11 @@ def _normalize_poses_identity_unit_distance(
     ref0_idx: int,
     ref1_idx: int,
 ):
-    """
-    Normalize the poses such that the ref0 camera is the identity
-    and the ref1 camera is unit distance to the ref0 camera.
+    """Rewrite poses so *ref0* is identity and *ref1* is unit distance away.
+
+    Used as a numerically-stable canonicalization before packing camera
+    tokens. Distances below ``1e-2`` are left unscaled so two coincident
+    cameras do not explode the translation.
     """
 
     ref0_c2w = in_c2ws[ref0_idx]

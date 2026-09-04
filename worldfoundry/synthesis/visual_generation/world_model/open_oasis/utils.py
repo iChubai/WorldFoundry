@@ -3,7 +3,11 @@ Adapted from https://github.com/buoyancy99/diffusion-forcing/blob/main/algorithm
 Action format derived from VPT https://github.com/openai/Video-Pre-Training
 """
 
+import json
 import math
+from pathlib import Path
+
+import av
 import torch
 from torch import nn
 from torchvision.io import read_image, read_video
@@ -85,6 +89,27 @@ IMAGE_EXTENSIONS = {"png", "jpg", "jpeg"}
 VIDEO_EXTENSIONS = {"mp4"}
 
 
+def write_video_compat(path, frames: torch.Tensor, *, fps: int) -> None:
+    """Encode RGB uint8 frames without torchvision's removed PyAV string enum API."""
+    output_path = Path(path)
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    frames = frames.detach().cpu().contiguous()
+    if frames.ndim != 4 or frames.shape[-1] != 3:
+        raise ValueError(f"video frames must have shape [T, H, W, 3], got {tuple(frames.shape)}")
+
+    with av.open(str(output_path), mode="w") as container:
+        stream = container.add_stream("libx264", rate=int(fps))
+        stream.width = int(frames.shape[2])
+        stream.height = int(frames.shape[1])
+        stream.pix_fmt = "yuv420p"
+        for frame in frames:
+            video_frame = av.VideoFrame.from_ndarray(frame.numpy(), format="rgb24")
+            for packet in stream.encode(video_frame):
+                container.mux(packet)
+        for packet in stream.encode():
+            container.mux(packet)
+
+
 def load_prompt(path, video_offset=None, n_prompt_frames=1):
     if path.lower().split(".")[-1] in IMAGE_EXTENSIONS:
         print("prompt is image; ignoring video_offset and n_prompt_frames")
@@ -96,9 +121,16 @@ def load_prompt(path, video_offset=None, n_prompt_frames=1):
         if video_offset is not None:
             prompt = prompt[video_offset:]
         prompt = prompt[:n_prompt_frames]
+        prompt = rearrange(prompt, "t h w c -> t c h w")
     else:
         raise ValueError(f"unrecognized prompt file extension; expected one in {IMAGE_EXTENSIONS} or {VIDEO_EXTENSIONS}")
     assert prompt.shape[0] == n_prompt_frames, f"input prompt {path} had less than n_prompt_frames={n_prompt_frames} frames"
+    if prompt.shape[1] == 1:
+        prompt = prompt.repeat(1, 3, 1, 1)
+    elif prompt.shape[1] == 4:
+        prompt = prompt[:, :3]
+    elif prompt.shape[1] != 3:
+        raise ValueError(f"input prompt must have 1, 3, or 4 channels, got {prompt.shape[1]}")
     prompt = resize(prompt, (360, 640))
     # add batch dimension
     prompt = rearrange(prompt, "t c h w -> 1 t c h w")
@@ -106,16 +138,40 @@ def load_prompt(path, video_offset=None, n_prompt_frames=1):
     return prompt
 
 
-def load_actions(path, action_offset=None):
+def _fit_actions_to_frames(actions: torch.Tensor, num_frames: int) -> torch.Tensor:
+    """Trim an action stream or hold its final control through the requested clip."""
+    if num_frames < 1:
+        raise ValueError(f"num_frames must be positive, got {num_frames}")
+    if actions.shape[0] < 1:
+        raise ValueError("action stream must contain at least one frame")
+    if actions.shape[0] < num_frames:
+        held = actions[-1:].expand(num_frames - actions.shape[0], -1)
+        actions = torch.cat([actions, held], dim=0)
+    return actions[:num_frames]
+
+
+def load_actions(path, action_offset=None, num_frames=None):
     if path.endswith(".actions.pt"):
         actions = one_hot_actions(torch.load(path))
     elif path.endswith(".one_hot_actions.pt"):
         actions = torch.load(path, weights_only=True)
+    elif path.endswith(".one_hot_actions.json"):
+        with open(path, encoding="utf-8") as handle:
+            actions = torch.tensor(json.load(handle), dtype=torch.float32)
     else:
-        raise ValueError("unrecognized action file extension; expected '*.actions.pt' or '*.one_hot_actions.pt'")
+        raise ValueError(
+            "unrecognized action file extension; expected '*.actions.pt', "
+            "'*.one_hot_actions.pt', or '*.one_hot_actions.json'"
+        )
+    if actions.ndim != 2 or actions.shape[1] != len(ACTION_KEYS):
+        raise ValueError(
+            f"one-hot actions must have shape [frames, {len(ACTION_KEYS)}], got {tuple(actions.shape)}"
+        )
     if action_offset is not None:
         actions = actions[action_offset:]
     actions = torch.cat([torch.zeros_like(actions[:1]), actions], dim=0)
+    if num_frames is not None:
+        actions = _fit_actions_to_frames(actions, int(num_frames))
     # add batch dimension
     actions = rearrange(actions, "t d -> 1 t d")
     return actions

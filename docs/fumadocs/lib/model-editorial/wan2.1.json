@@ -1,0 +1,41 @@
+{
+  "id": "wan2.1",
+  "tagline": {
+    "en": "Alibaba's open video model — Apache-2.0 text-to-video and image-to-video, from an 8GB-friendly 1.3B up to 14B.",
+    "zh": "阿里开源的视频模型——Apache-2.0 许可,支持文生视频与图生视频,从 8GB 显存可跑的 1.3B 到 14B。"
+  },
+  "overview": {
+    "en": [
+      "Wan2.1 is Wan-AI's open-weight video generation family, released under Apache-2.0 with no gating. It turns a text prompt into a short video, and can also animate a still image into motion.",
+      "The family comes in four sizes so you can trade quality for hardware: a lightweight text-to-video 1.3B that fits in roughly 8GB of VRAM, a larger 14B for higher fidelity, and two image-to-video 14B checkpoints tuned for 480p and 720p. Under the hood it pairs a UMT5 text encoder with a dedicated video VAE and a diffusion denoiser.",
+      "In WorldFoundry you run Wan2.1 through the shared pipeline — pick a checkpoint, give it a prompt (and an image for image-to-video), and it writes out an MP4. The 1.3B text-to-video route renders a 5-second clip at 832×480."
+    ],
+    "zh": [
+      "Wan2.1 是 Wan-AI 开源的视频生成模型家族,采用 Apache-2.0 许可、无使用门槛。它可以把一段文字提示词生成为短视频,也能让一张静态图片动起来。",
+      "该家族提供四种规模,方便你在画质与硬件间权衡:约 8GB 显存即可运行的轻量文生视频 1.3B、追求更高保真度的 14B,以及针对 480p 和 720p 调优的两个图生视频 14B。其内部由 UMT5 文本编码器、专用视频 VAE 与扩散去噪器组合而成。",
+      "在 WorldFoundry 中,你通过统一 pipeline 运行 Wan2.1——选一个 checkpoint,给它提示词(图生视频再加一张图),它就会输出一段 MP4。1.3B 文生视频路径可生成 832×480、约 5 秒的片段。"
+    ]
+  },
+  "whenToUse": {
+    "en": "A strong default when you want an openly-licensed video model to prototype text-to-video on modest hardware — the 1.3B fits in about 8GB. Step up to the 14B or image-to-video checkpoints when you need higher fidelity or want to animate an existing image.",
+    "zh": "当你想用一个开放许可的视频模型、在普通硬件上做文生视频原型时,它是很好的默认选择——1.3B 约 8GB 显存即可运行。若需要更高保真度,或想让已有图片动起来,可升级到 14B 或图生视频 checkpoint。"
+  },
+  "notFor": {
+    "en": "Longer clips or sustained narrative shots — outputs are short (around 5 seconds). Checkpoints are downloaded separately rather than bundled, so plan for the download and disk space.",
+    "zh": "不适合较长片段或需要连续叙事的镜头——输出较短(约 5 秒)。Checkpoint 需单独下载而非随附,请预留下载时间与磁盘空间。"
+  },
+  "highlights": {
+    "en": [
+      "Apache-2.0, fully open weights across all four checkpoints",
+      "Text-to-video and image-to-video in one family",
+      "1.3B runs in roughly 8GB VRAM",
+      "1.3B output: 832×480, ~5s at 16 fps"
+    ],
+    "zh": [
+      "Apache-2.0,四个 checkpoint 全部完全开放权重",
+      "文生视频与图生视频同属一个家族",
+      "1.3B 约 8GB 显存即可运行",
+      "1.3B 输出:832×480、约 5 秒、16 fps"
+    ]
+  }
+}

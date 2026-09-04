@@ -1,4 +1,16 @@
-"""Small native configuration helpers shared by checkpoint-shaped PyTorch modules."""
+"""Native configuration helpers shared by checkpoint-shaped PyTorch modules.
+
+Vendored runtimes ship native modules in a Diffusers-like directory
+layout without inheriting Diffusers' ``ModelMixin``.
+:class:`ConfigNamespace` is a dict with attribute access.
+:class:`NativeConfigMixin` registers constructor kwargs, loads
+``config.json``, and reconstructs weights via
+:func:`worldfoundry.core.model_loading.model.load_model`.
+:func:`register_to_config` captures ``__init__`` arguments.
+
+This is not Hydra instantiation
+(:mod:`worldfoundry.core.model_loading.factory`).
+"""
 
 from __future__ import annotations
 
@@ -9,18 +21,29 @@ from pathlib import Path
 
 import torch
 
+# ──────────────────────────────────────────────────────────────────────────
+# Attribute-access dict — KeyError becomes AttributeError for config.key reads
+# ──────────────────────────────────────────────────────────────────────────
+
 
 class ConfigNamespace(dict):
     """Mapping with attribute access for immutable-looking model configuration."""
 
     def __getattr__(self, name: str):
+        """Read a config key as an attribute; missing keys raise :exc:`AttributeError`."""
         try:
             return self[name]
         except KeyError as error:
             raise AttributeError(name) from error
 
     def __setattr__(self, name: str, value) -> None:
+        """Write through to the mapping so ``config.x = y`` stays JSON-serializable."""
         self[name] = value
+
+
+# ──────────────────────────────────────────────────────────────────────────
+# Native module mixin — register kwargs, load config.json, reconstruct weights
+# ──────────────────────────────────────────────────────────────────────────
 
 
 class NativeConfigMixin:
@@ -29,6 +52,7 @@ class NativeConfigMixin:
     config: ConfigNamespace
 
     def register_to_config(self, **values) -> None:
+        """Store keyword values on ``self.config``, creating it if needed."""
         config = getattr(self, "config", None)
         if config is None:
             config = ConfigNamespace()
@@ -126,6 +150,11 @@ class NativeConfigMixin:
         )
 
 
+# ──────────────────────────────────────────────────────────────────────────
+# Constructor capture — bind args onto self.config before the real __init__
+# ──────────────────────────────────────────────────────────────────────────
+
+
 def register_to_config(initializer):
     """Capture constructor arguments without depending on an external model framework."""
 
@@ -133,6 +162,7 @@ def register_to_config(initializer):
 
     @wraps(initializer)
     def wrapped(self, *args, **kwargs):
+        """Populate ``self.config`` then call the original initializer."""
         bound = signature.bind(self, *args, **kwargs)
         bound.apply_defaults()
         values = {name: value for name, value in bound.arguments.items() if name != "self"}

@@ -7,6 +7,7 @@ availability: open_source
 provider: official_repo
 license: mixed-mit-apache-2.0
 official_sources:
+  paper: https://arxiv.org/abs/2402.03766
   github:
     url: https://github.com/liyaxuanliyaxuan/TinyVLA
     head_sha: 94f441827b45e4f76316ef6a0ae443736dc93a5d
@@ -29,7 +30,7 @@ checkpoint:
   - task config.json containing action dimensions and head type
   - dataset_stats.pkl, JSON, or NPZ
 integration:
-  status: in_tree_checkpoint_gated_runtime
+  status: integrated
   notes:
   - LLaVA-Pythia, CLIP/SigLIP vision fusion, ACT, and conditional 1D diffusion action heads execute in process.
   - Both merged weights and local LoRA plus non-LoRA action tensors are supported without source checkouts or remote code.

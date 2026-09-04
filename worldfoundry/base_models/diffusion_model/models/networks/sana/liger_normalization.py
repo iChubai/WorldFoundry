@@ -14,14 +14,11 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-"""Liger-Kernel RMSNorm wrapper for Sana video training.
+"""Liger-Kernel RMSNorm wrapper for SANA GDN / video training.
 
-Provides a drop-in replacement for ``diffusion.model.norms.RMSNorm`` using
-Liger-Kernel's Triton-fused implementation.  Enabled by default when
-liger-kernel is installed.  Disable via ``SANA_USE_LIGER=0``.
-
-The Triton kernel fuses cast → square → mean → rsqrt → scale into a single
-GPU pass, eliminating ~5-6 intermediate tensor allocations per call.
+Drop-in replacement for :class:`normalization.RMSNorm` using Liger's
+Triton-fused kernel (cast → square → mean → rsqrt → scale in one pass).
+Enabled when liger-kernel is installed; disable with ``SANA_USE_LIGER=0``.
 """
 
 import logging

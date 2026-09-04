@@ -1,4 +1,19 @@
-"""Inventory helpers for reusable model-layer dedup audits."""
+"""Inventory helpers for reusable model-layer dedup audits.
+
+Lists layer classes so a refactor can prove two DiTs share core nn
+blocks instead of forking copies.
+
+Not this module:
+    The layers themselves live under :mod:`worldfoundry.core.nn` and
+    :mod:`worldfoundry.core.attention`. This file only walks the tree
+    and hashes sources.
+
+Public surface:
+
+- :class:`FoundationLayerInventoryEntry`
+- :func:`iter_foundation_layer_files` / :func:`build_foundation_layer_inventory`
+- :func:`file_duplicate_groups` / :func:`ast_duplicate_groups`
+"""
 
 from __future__ import annotations
 
@@ -9,11 +24,18 @@ from dataclasses import asdict, dataclass
 from pathlib import Path
 from typing import Iterable, Sequence
 
+
+# ──────────────────────────────────────────────────────────────────────────
+# Defaults — scopes, filename tokens, and directories the walker skips
+# ──────────────────────────────────────────────────────────────────────────
+
+
 DEFAULT_FOUNDATION_LAYER_SCOPES = (
     "worldfoundry/core",
     "worldfoundry/base_models",
     "worldfoundry/pipelines",
     "worldfoundry/synthesis",
+    "worldfoundry/training",
 )
 DEFAULT_FOUNDATION_LAYER_TOKENS = (
     "attention",
@@ -39,6 +61,11 @@ DEFAULT_SKIP_DIR_NAMES = {
 RUNTIME_DIR_MARKERS = {"runtime", "third_party", "thirdparty", "vendor"}
 
 
+# ──────────────────────────────────────────────────────────────────────────
+# Inventory entry — path, hashes, tokens, and re-export detection
+# ──────────────────────────────────────────────────────────────────────────
+
+
 @dataclass(frozen=True)
 class FoundationLayerInventoryEntry:
     """One candidate file in the model-layer dedup inventory."""
@@ -56,7 +83,14 @@ class FoundationLayerInventoryEntry:
     runtime_owned: bool
 
     def to_dict(self) -> dict[str, object]:
+        """JSON-ready mapping for audit reports; tuples become lists via ``asdict``."""
+
         return asdict(self)
+
+
+# ──────────────────────────────────────────────────────────────────────────
+# Walk and build — filename-token match, then per-file AST metadata
+# ──────────────────────────────────────────────────────────────────────────
 
 
 def iter_foundation_layer_files(
@@ -144,6 +178,11 @@ def build_foundation_layer_inventory(
     return tuple(sorted(entries, key=lambda entry: entry.path))
 
 
+# ──────────────────────────────────────────────────────────────────────────
+# Duplicate groups — identical bytes or identical parsed AST
+# ──────────────────────────────────────────────────────────────────────────
+
+
 def file_duplicate_groups(entries: Iterable[FoundationLayerInventoryEntry]) -> tuple[tuple[str, ...], ...]:
     """Group inventory entries with identical file bytes."""
 
@@ -161,6 +200,8 @@ def _duplicate_groups(
     *,
     key_name: str,
 ) -> tuple[tuple[str, ...], ...]:
+    """Bucket paths by ``key_name``; skip re-export-only files and empty hashes."""
+
     grouped: dict[str, list[str]] = {}
     for entry in entries:
         if entry.reexport_only:
@@ -173,10 +214,17 @@ def _duplicate_groups(
     return tuple(sorted(groups, key=lambda group: (-len(group), group[0])))
 
 
+# ──────────────────────────────────────────────────────────────────────────
+# AST helpers — hash, imports, public names, re-export-only detection
+# ──────────────────────────────────────────────────────────────────────────
+
+
 def _ast_metadata(
     path: Path,
     content: bytes,
 ) -> tuple[str | None, str | None, tuple[str, ...], tuple[str, ...], bool]:
+    """Parse ``content``; on decode/syntax errors return ``ast_error`` and empty metadata."""
+
     try:
         source = content.decode("utf-8")
         tree = ast.parse(source, filename=str(path))
@@ -193,6 +241,8 @@ def _ast_metadata(
 
 
 def _imports_from_ast(tree: ast.AST) -> tuple[str, ...]:
+    """Collect absolute and relative import module names (not aliases)."""
+
     imports: set[str] = set()
     for node in ast.walk(tree):
         if isinstance(node, ast.Import):
@@ -204,6 +254,8 @@ def _imports_from_ast(tree: ast.AST) -> tuple[str, ...]:
 
 
 def _public_symbols_from_ast(tree: ast.Module) -> tuple[str, ...]:
+    """Top-level public classes, functions, and assigned names (no ``_`` prefix)."""
+
     symbols: set[str] = set()
     for node in tree.body:
         if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)) and not node.name.startswith("_"):
@@ -221,6 +273,8 @@ def _public_symbols_from_ast(tree: ast.Module) -> tuple[str, ...]:
 
 
 def _is_reexport_only_ast(tree: ast.Module) -> bool:
+    """True when the module is only imports plus a docstring / ``__all__``."""
+
     significant_nodes: list[ast.stmt] = []
     for node in tree.body:
         if isinstance(node, ast.Expr) and isinstance(node.value, ast.Constant) and isinstance(node.value.value, str):
@@ -238,15 +292,31 @@ def _is_reexport_only_ast(tree: ast.Module) -> bool:
     return all(isinstance(node, (ast.Import, ast.ImportFrom)) for node in significant_nodes)
 
 
+# ──────────────────────────────────────────────────────────────────────────
+# Path / token helpers — owner package, skip rules, runtime markers
+# ──────────────────────────────────────────────────────────────────────────
+
+
 def _owner_package(relative_path: str) -> str:
+    """Derive a dotted owner from ``worldfoundry/...`` or ``src/worldfoundry/...``.
+
+    Stops after the first package past the known layer roots so two files
+    under the same model stay grouped without listing every submodule.
+    """
+
     path = Path(relative_path)
     parts = path.parts
-    if len(parts) < 3 or parts[0] != "src" or parts[1] != "worldfoundry":
+    if len(parts) >= 3 and parts[:2] == ("src", "worldfoundry"):
+        package_parts = ["worldfoundry"]
+        owner_parts = parts[2:-1]
+    elif len(parts) >= 2 and parts[0] == "worldfoundry":
+        package_parts = ["worldfoundry"]
+        owner_parts = parts[1:-1]
+    else:
         return ""
-    package_parts = ["worldfoundry"]
-    for part in parts[2:-1]:
+    for part in owner_parts:
         package_parts.append(part)
-        if part in {"core", "base_models", "pipelines", "synthesis", "evaluation"}:
+        if part in {"core", "base_models", "pipelines", "synthesis", "training", "evaluation"}:
             continue
         if len(package_parts) >= 4:
             break
@@ -254,6 +324,8 @@ def _owner_package(relative_path: str) -> str:
 
 
 def _relative_path(path: Path, root: Path) -> str:
+    """Prefer a root-relative path; fall back to the absolute string if not under ``root``."""
+
     try:
         return str(path.relative_to(root))
     except ValueError:
@@ -261,10 +333,14 @@ def _relative_path(path: Path, root: Path) -> str:
 
 
 def _normalize_token(value: str) -> str:
+    """Lowercase, strip, and treat hyphens as underscores for filename matching."""
+
     return str(value).strip().lower().replace("-", "_")
 
 
 def _should_skip_dir(name: str, *, include_runtime: bool) -> bool:
+    """Skip cache/venv dirs always; skip vendor/runtime dirs unless requested."""
+
     if name in DEFAULT_SKIP_DIR_NAMES:
         return True
     if include_runtime:
@@ -274,6 +350,8 @@ def _should_skip_dir(name: str, *, include_runtime: bool) -> bool:
 
 
 def _is_runtime_owned(path: Path) -> bool:
+    """True if any path part is a vendor/runtime marker (dedup audits can exclude these)."""
+
     return any(part.lower().endswith("_runtime") or part.lower() in RUNTIME_DIR_MARKERS for part in path.parts)
 
 

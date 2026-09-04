@@ -8,6 +8,8 @@ aliases:
 availability: open_source
 provider: official_repo
 official_sources:
+  paper: https://arxiv.org/abs/2410.07864
+  project_page: https://rdt-robotics.github.io/rdt-robotics/
   github:
     url: https://github.com/thu-ml/RoboticsDiffusionTransformer
     revision: cd79363a1387e8f81c7724d070ef7e45fd23150f

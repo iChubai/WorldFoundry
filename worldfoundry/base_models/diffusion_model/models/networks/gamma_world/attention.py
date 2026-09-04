@@ -18,6 +18,12 @@
 # Description:
 # Single point of entry for all generic attention ops (self and cross attention), that tries to
 # deliver the best performance possible given any use case (GPU and environment).
+
+"""Gamma-World attention dispatcher (SDPA / Flash / Sage / I4).
+
+``attention()`` accepts QKV as ``B S H D`` and picks a backend from the
+device compute capability.  Used by DiT blocks and context-parallel ops.
+"""
 #
 # On Hopper GPUs (i.e. H100, H20, H200), Flash Attention 3 is the best-performing choice, but it
 # needs to be installed. When it is not available, the second best choice is cuDNN attention, which
@@ -72,15 +78,7 @@ except ModuleNotFoundError:
 
 
 def get_device_cc(device) -> int:
-    """
-    Returns the compute capability of a given torch device if it's a CUDA device, otherwise returns 0.
-
-    Args:
-        device: torch device.
-
-    Returns:
-        device_cc (int): compute capability in the SmXXX format (i.e. 90 for Hopper).
-    """
+    """Return CUDA compute capability as an integer (e.g. 90 for Hopper), or 0 if not CUDA."""
     if torch.cuda.is_available() and torch.version.cuda and device.type == "cuda":
         major, minor = torch.cuda.get_device_capability(device)
         return major * 10 + minor

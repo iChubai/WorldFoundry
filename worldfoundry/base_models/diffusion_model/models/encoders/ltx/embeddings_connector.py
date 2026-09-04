@@ -1,3 +1,17 @@
+"""Project Gemma hidden states onto LTX cross-attention width.
+
+:class:`Embeddings1DConnector` maps Gemma layers onto the
+video and audio token widths the LTX DiT expects.
+Configurator classes rebuild the connector from checkpoint
+JSON.
+
+19B graphs may skip this and project inside the transformer;
+22B uses this module.  Input is packed Gemma hidden states;
+output is video/audio context.
+
+Used after :mod:`.feature_extractor` / :mod:`.embeddings_processor`.
+"""
+
 import torch
 
 from worldfoundry.base_models.diffusion_model.models.networks.ltx.attention import Attention

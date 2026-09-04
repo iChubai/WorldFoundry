@@ -12,6 +12,7 @@ import asyncio
 import functools
 import json
 import logging
+import math
 import os
 import re
 import time
@@ -22,7 +23,7 @@ from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass, field, replace
 from fractions import Fraction
 from pathlib import Path
-from typing import Any, Callable, Coroutine, Mapping
+from typing import Any, Callable, Mapping
 from urllib.parse import quote
 
 import numpy as np
@@ -57,8 +58,11 @@ from worldfoundry.studio.serving.realtime.input import (
     interactions_from_segments,
 )
 from worldfoundry.studio.serving.realtime.media import (
+    ChunkPresentationBuffer,
     FrameQueuePolicy,
     LatestFrameBuffer,
+    RealtimePresentationMode,
+    WebSocketPacingMode,
     realtime_frames_from_result,
 )
 from worldfoundry.studio.serving.realtime.media import encode_jpeg_frames as _encode_jpeg_frames
@@ -83,6 +87,7 @@ _PROMPT_BOUNDARY_MODEL_IDS = frozenset(
 _TEXT_EVENT_ID = re.compile(r"^[A-Za-z0-9_.:-]{1,64}$")
 _MAX_TEXT_EVENTS = 12
 _MAX_TEXT_EVENT_PROMPT = 1000
+_EXPLICIT_DISCONNECT_CLOSE_GRACE_SECONDS = 0.25
 _CHUNK_METRIC_NAMES = (
     "condition_ms",
     "model_ms",
@@ -448,6 +453,160 @@ def _env_optional_timeout_s(name: str) -> float | None:
     return timeout_s or None
 
 
+def _realtime_shutdown_timeout_s() -> float:
+    """Return the strict cooperative-shutdown budget."""
+
+    name = "WORLDFOUNDRY_REALTIME_SHUTDOWN_TIMEOUT_SECONDS"
+    raw = os.getenv(name, "5").strip()
+    try:
+        timeout_s = float(raw)
+    except ValueError as exc:
+        raise ValueError(f"{name} must be a positive finite number of seconds.") from exc
+    if not math.isfinite(timeout_s) or timeout_s <= 0.0:
+        raise ValueError(f"{name} must be a positive finite number of seconds, got {raw!r}.")
+    return timeout_s
+
+
+def _shutdown_deadline(deadline: float | None = None) -> float:
+    if deadline is not None:
+        return deadline
+    return asyncio.get_running_loop().time() + _realtime_shutdown_timeout_s()
+
+
+def _consume_task_result(task: asyncio.Task[Any]) -> None:
+    if task.cancelled():
+        return
+    try:
+        error = task.exception()
+    except BaseException:
+        logger.warning(
+            "Could not retrieve realtime teardown task result for %s.",
+            task.get_name(),
+            exc_info=True,
+        )
+        # Done callbacks must never re-raise into the event loop.
+        return
+    else:
+        if error is not None:
+            logger.warning(
+                "Realtime teardown task %s failed: %s",
+                task.get_name(),
+                error,
+                exc_info=(type(error), error, error.__traceback__),
+            )
+
+
+def _retain_shutdown_task(
+    task: asyncio.Task[Any],
+    retained: set[asyncio.Task[Any]],
+) -> None:
+    """Keep cancellation-resistant tasks alive until their result is consumed."""
+
+    if task.done():
+        _consume_task_result(task)
+        return
+    if task in retained:
+        return
+    retained.add(task)
+
+    def discard(completed: asyncio.Task[Any]) -> None:
+        retained.discard(completed)
+        _consume_task_result(completed)
+
+    task.add_done_callback(discard)
+
+
+async def _finish_tasks_by_deadline(
+    tasks: tuple[asyncio.Task[Any] | None, ...],
+    *,
+    deadline: float,
+    retained: set[asyncio.Task[Any]],
+    label: str,
+    cancel_now: bool,
+    warn_on_timeout: bool = True,
+) -> bool:
+    """Wait within the remaining budget, then cancel and retain stragglers."""
+
+    current = asyncio.current_task()
+    pending = {
+        task
+        for task in tasks
+        if task is not None and task is not current and not task.done()
+    }
+    for task in tasks:
+        if task is not None and task is not current and task.done():
+            _consume_task_result(task)
+    if cancel_now:
+        for task in pending:
+            task.cancel()
+    if not pending:
+        return True
+    remaining = max(deadline - asyncio.get_running_loop().time(), 0.0)
+    try:
+        if remaining > 0.0:
+            done, pending = await asyncio.wait(pending, timeout=remaining)
+        else:
+            done = set()
+    except BaseException:
+        for task in pending:
+            task.cancel()
+            _retain_shutdown_task(task, retained)
+        raise
+    for task in done:
+        _consume_task_result(task)
+    if not pending:
+        return True
+    for task in pending:
+        task.cancel()
+        _retain_shutdown_task(task, retained)
+    if warn_on_timeout:
+        logger.warning(
+            "Realtime shutdown deadline expired while waiting for %s (%d task(s) still running).",
+            label,
+            len(pending),
+        )
+    return False
+
+
+async def _run_by_shutdown_deadline(
+    awaitable: Any,
+    *,
+    deadline: float,
+    retained: set[asyncio.Task[Any]],
+    label: str,
+    warn_on_timeout: bool = True,
+) -> bool:
+    task = asyncio.create_task(awaitable, name=f"world-realtime-shutdown-{label}")
+    return await _finish_tasks_by_deadline(
+        (task,),
+        deadline=deadline,
+        retained=retained,
+        label=label,
+        cancel_now=False,
+        warn_on_timeout=warn_on_timeout,
+    )
+
+
+async def _acquire_lock_by_shutdown_deadline(
+    lock: asyncio.Lock,
+    *,
+    deadline: float,
+    label: str,
+) -> bool:
+    """Acquire a cooperative asyncio lock without exceeding the budget."""
+
+    remaining = max(deadline - asyncio.get_running_loop().time(), 0.0)
+    if remaining <= 0.0:
+        logger.warning("Realtime shutdown deadline expired before acquiring %s.", label)
+        return False
+    try:
+        await asyncio.wait_for(lock.acquire(), timeout=remaining)
+    except asyncio.TimeoutError:
+        logger.warning("Realtime shutdown deadline expired while acquiring %s.", label)
+        return False
+    return True
+
+
 def _env_bool(name: str, default: bool) -> bool:
     raw = os.getenv(name, "").strip().lower()
     if not raw:
@@ -750,7 +909,10 @@ class ResidentWorldRuntime:
         self._executor = ThreadPoolExecutor(max_workers=1, thread_name_prefix="world-realtime-runtime")
         self._base_request: PreparedInputs | None = None
         self._preload_future: asyncio.Future[Any] | None = None
+        self._preload_task: asyncio.Task[Any] | None = None
         self._preload_error: str | None = None
+        self._shutdown_tasks: set[asyncio.Task[Any]] = set()
+        self._closed = False
         self.warmup_ms = 0.0
         self._configured = False
         self._first_stream_step = True
@@ -893,6 +1055,8 @@ class ResidentWorldRuntime:
             return
         loop = asyncio.get_running_loop()
         self._preload_future = loop.create_future()
+        current_task = asyncio.current_task()
+        self._preload_task = current_task
         try:
             request = await self._run(
                 self._build_request,
@@ -911,11 +1075,19 @@ class ResidentWorldRuntime:
             if self.warmup_chunks and self.warmup_image_path and self.entry.supports_stream:
                 await self._warmup()
             self._preload_future.set_result(None)
-        except Exception as exc:
-            self._preload_error = str(exc)
-            self._preload_future.set_exception(exc)
-            traceback.print_exc()
+        except BaseException as exc:
+            if isinstance(exc, asyncio.CancelledError):
+                if not self._preload_future.done():
+                    self._preload_future.cancel()
+            else:
+                self._preload_error = str(exc)
+                if not self._preload_future.done():
+                    self._preload_future.set_exception(exc)
+                traceback.print_exc()
             raise
+        finally:
+            if self._preload_task is current_task:
+                self._preload_task = None
 
     async def _warmup(self) -> None:
         """Compile and stabilize the actual resident stream before user input."""
@@ -1202,9 +1374,30 @@ class ResidentWorldRuntime:
         self._seed_image = None
         self._first_stream_step = True
 
-    async def close(self) -> None:
-        await self.reset()
-        self._executor.shutdown(wait=False, cancel_futures=True)
+    async def close(self, *, deadline: float | None = None) -> None:
+        if self._closed:
+            return
+        deadline = _shutdown_deadline(deadline)
+        self._closed = True
+        try:
+            await _finish_tasks_by_deadline(
+                (self._preload_task,),
+                deadline=deadline,
+                retained=self._shutdown_tasks,
+                label="runtime preload",
+                cancel_now=True,
+            )
+            await _run_by_shutdown_deadline(
+                self.reset(),
+                deadline=deadline,
+                retained=self._shutdown_tasks,
+                label="runtime reset",
+            )
+        finally:
+            # Running Python/CUDA callables cannot be killed safely. Do not
+            # join them here; reject queued work and let running work finish
+            # cooperatively after the async shutdown handler returns.
+            self._executor.shutdown(wait=False, cancel_futures=True)
 
     @property
     def ready(self) -> bool:
@@ -1224,12 +1417,14 @@ class ResidentWorldRuntime:
 class _ActivePeer:
     peer: Any
     channel: Any | None
-    frames: LatestFrameBuffer
+    frames: LatestFrameBuffer | ChunkPresentationBuffer
     resampler: RealtimeControlResampler
+    presentation_mode: RealtimePresentationMode = RealtimePresentationMode.HOLD_LAST
     generation_task: asyncio.Task[Any] | None = None
     liveness_task: asyncio.Task[Any] | None = None
     input_task: asyncio.Task[Any] | None = None
     setup_task: asyncio.Task[Any] | None = None
+    close_task: asyncio.Task[Any] | None = None
     input_messages: asyncio.Queue[Any] = field(default_factory=asyncio.Queue)
     closed: bool = False
     first_action: asyncio.Event = field(default_factory=asyncio.Event)
@@ -1261,11 +1456,13 @@ class _ActiveSocket:
     socket: Any
     resampler: RealtimeControlResampler
     frame_packets: asyncio.Queue[bytes]
+    pacing_mode: WebSocketPacingMode = WebSocketPacingMode.LEGACY_DUAL
     send_lock: asyncio.Lock = field(default_factory=asyncio.Lock)
     generation_task: asyncio.Task[Any] | None = None
     sender_task: asyncio.Task[Any] | None = None
     liveness_task: asyncio.Task[Any] | None = None
     closed: bool = False
+    disconnect_requested: bool = False
     first_action: asyncio.Event = field(default_factory=asyncio.Event)
     action_arrivals: deque[float] = field(default_factory=deque)
     chunk_index: int = 0
@@ -1303,21 +1500,39 @@ class RealtimePeerManager:
         fps: int,
         chunk_frames: int,
         ice_servers: list[dict[str, Any]] | None = None,
+        presentation_mode: RealtimePresentationMode | str | None = None,
+        socket_pacing_mode: WebSocketPacingMode | str | None = None,
     ) -> None:
         self.runtime = runtime
         self.fps = fps
         self.chunk_frames = chunk_frames
         self.ice_servers = list(ice_servers or [])
+        configured_presentation_mode = (
+            presentation_mode
+            if presentation_mode is not None
+            else os.environ.get(
+                "WORLDFOUNDRY_REALTIME_PRESENTATION_MODE",
+                RealtimePresentationMode.HOLD_LAST.value,
+            )
+        )
+        self.presentation_mode = RealtimePresentationMode.from_value(configured_presentation_mode)
+        configured_socket_pacing_mode = (
+            socket_pacing_mode
+            if socket_pacing_mode is not None
+            else os.environ.get(
+                "WORLDFOUNDRY_REALTIME_SOCKET_PACING_MODE",
+                WebSocketPacingMode.LEGACY_DUAL.value,
+            )
+        )
+        self.socket_pacing_mode = WebSocketPacingMode.from_value(configured_socket_pacing_mode)
         self._active: _ActivePeer | None = None
         self._active_socket: _ActiveSocket | None = None
         self._lock = asyncio.Lock()
         self._draining = False
         self._drain_done = asyncio.Event()
         self._drain_done.set()
-        # The event loop only keeps weak references to tasks; fire-and-forget
-        # cleanup tasks must be anchored here so they cannot be garbage
-        # collected mid-flight (RUF006).
-        self._background_tasks: set[asyncio.Task[Any]] = set()
+        self._shutdown_tasks: set[asyncio.Task[Any]] = set()
+        self._deferred_close_task: asyncio.Task[Any] | None = None
         self._perf_log_interval_chunks = _env_int(
             "WORLDFOUNDRY_REALTIME_PERF_LOG_INTERVAL_CHUNKS",
             5,
@@ -1329,20 +1544,6 @@ class RealtimePeerManager:
             minimum=0,
         )
         self._perf_jsonl_path = os.environ.get("WORLDFOUNDRY_REALTIME_PERF_JSONL", "").strip() or None
-
-    def _spawn_background_task(self, coro: Coroutine[Any, Any, Any], *, name: str) -> asyncio.Task[Any]:
-        """Schedule a fire-and-forget coroutine while keeping a strong reference.
-
-        ``asyncio`` only keeps weak references to running tasks, so a bare
-        ``asyncio.create_task`` result can be garbage collected before it runs
-        to completion.  Anchoring the task in ``self._background_tasks`` (and
-        discarding it on completion, per the asyncio documentation) guarantees
-        cleanup work such as ``close_active`` is never silently dropped.
-        """
-        task = asyncio.create_task(coro, name=name)
-        self._background_tasks.add(task)
-        task.add_done_callback(self._background_tasks.discard)
-        return task
 
     @staticmethod
     def _positive_int_runtime_value(value: Any, *, label: str) -> int:
@@ -1401,6 +1602,8 @@ class RealtimePeerManager:
     ) -> None:
         window = active.perf_window
         metrics = getattr(self.runtime, "last_generation_metrics", {}) or {}
+        presentation_mode = getattr(active, "presentation_mode", None)
+        socket_pacing_mode = getattr(active, "pacing_mode", None)
         stage_ms = {
             "generation_ms": generation_ms,
             "pixel_post_ms": pixel_post_ms,
@@ -1446,6 +1649,12 @@ class RealtimePeerManager:
                     logger_name=__name__,
                     model_id=model_id,
                     postprocess=list(getattr(self.runtime, "postprocess_names", ())),
+                    presentation_mode=(
+                        presentation_mode.value if isinstance(presentation_mode, RealtimePresentationMode) else None
+                    ),
+                    socket_pacing_mode=(
+                        socket_pacing_mode.value if isinstance(socket_pacing_mode, WebSocketPacingMode) else None
+                    ),
                     **timing.to_payload(),
                 )
             except (OSError, TypeError, ValueError):
@@ -1733,23 +1942,66 @@ class RealtimePeerManager:
     def draining(self) -> bool:
         return self._draining
 
-    async def close_active(self) -> None:
-        async with self._lock:
-            active = self._active
-            self._active = None
-            active_socket = self._active_socket
-            self._active_socket = None
-            has_session = not ((active is None or active.closed) and (active_socket is None or active_socket.closed))
-            if has_session:
-                self._draining = True
-                self._drain_done.clear()
-            wait_for_drain = self._draining and not has_session
+    def _detach_active_locked(
+        self,
+    ) -> tuple[_ActivePeer | None, _ActiveSocket | None, bool, bool]:
+        active = self._active
+        self._active = None
+        active_socket = self._active_socket
+        self._active_socket = None
+        has_session = not ((active is None or active.closed) and (active_socket is None or active_socket.closed))
+        if has_session:
+            self._draining = True
+            self._drain_done.clear()
+        wait_for_drain = self._draining and not has_session
+        return active, active_socket, has_session, wait_for_drain
+
+    def _schedule_deferred_close(self) -> None:
+        existing = self._deferred_close_task
+        if existing is not None and not existing.done():
+            return
+        timeout_s = _realtime_shutdown_timeout_s()
+        task = asyncio.create_task(
+            self._deferred_close_after_lock(timeout_s),
+            name="world-realtime-deferred-close",
+        )
+        self._deferred_close_task = task
+
+        def clear_deferred(completed: asyncio.Task[Any]) -> None:
+            if self._deferred_close_task is completed:
+                self._deferred_close_task = None
+
+        task.add_done_callback(clear_deferred)
+        _retain_shutdown_task(task, self._shutdown_tasks)
+
+    async def _deferred_close_after_lock(self, timeout_s: float) -> None:
+        await self._lock.acquire()
+        try:
+            detached = self._detach_active_locked()
+        finally:
+            self._lock.release()
+        deadline = asyncio.get_running_loop().time() + timeout_s
+        await self._finish_active_close(*detached, deadline=deadline)
+
+    async def _finish_active_close(
+        self,
+        active: _ActivePeer | None,
+        active_socket: _ActiveSocket | None,
+        has_session: bool,
+        wait_for_drain: bool,
+        *,
+        deadline: float,
+    ) -> None:
         if wait_for_drain:
-            await self._drain_done.wait()
+            await _run_by_shutdown_deadline(
+                self._drain_done.wait(),
+                deadline=deadline,
+                retained=self._shutdown_tasks,
+                label="concurrent session drain",
+            )
             return
         if not has_session:
             return
-        current_task = asyncio.current_task()
         try:
             if active is not None and not active.closed:
                 active.closed = True
@@ -1759,15 +2011,20 @@ class RealtimePeerManager:
                     active.input_task,
                     active.setup_task,
                 )
-                for task in tasks:
-                    if task is not None and task is not current_task:
-                        task.cancel()
-                await asyncio.gather(
-                    *(task for task in tasks if task is not None and task is not current_task),
-                    return_exceptions=True,
+                await _finish_tasks_by_deadline(
+                    tasks,
+                    deadline=deadline,
+                    retained=self._shutdown_tasks,
+                    label="WebRTC workers",
+                    cancel_now=True,
                 )
                 active.frames.close()
-                await active.peer.close()
+                await _run_by_shutdown_deadline(
+                    active.peer.close(),
+                    deadline=deadline,
+                    retained=self._shutdown_tasks,
+                    label="WebRTC peer close",
+                )
             if active_socket is not None and not active_socket.closed:
                 active_socket.closed = True
                 tasks = (
@@ -1775,22 +2032,70 @@ class RealtimePeerManager:
                     active_socket.sender_task,
                     active_socket.liveness_task,
                 )
-                for task in tasks:
-                    if task is not None and task is not current_task:
-                        task.cancel()
-                await asyncio.gather(
-                    *(task for task in tasks if task is not None and task is not current_task),
-                    return_exceptions=True,
+                await _finish_tasks_by_deadline(
+                    tasks,
+                    deadline=deadline,
+                    retained=self._shutdown_tasks,
+                    label="WebSocket workers",
+                    cancel_now=True,
                 )
                 if not active_socket.socket.closed:
-                    await active_socket.socket.close()
+                    socket_close_deadline = deadline
+                    if active_socket.disconnect_requested:
+                        # The application-level disconnect already states the
+                        # client's intent. Give the RFC 6455 close handshake a
+                        # short chance to complete, but do not let a client
+                        # that stops reading consume the runtime-reset budget.
+                        socket_close_deadline = min(
+                            deadline,
+                            asyncio.get_running_loop().time()
+                            + _EXPLICIT_DISCONNECT_CLOSE_GRACE_SECONDS,
+                        )
+                    close_completed = await _run_by_shutdown_deadline(
+                        active_socket.socket.close(),
+                        deadline=socket_close_deadline,
+                        retained=self._shutdown_tasks,
+                        label="WebSocket close",
+                        warn_on_timeout=not active_socket.disconnect_requested,
+                    )
+                    if active_socket.disconnect_requested and not close_completed:
+                        logger.info(
+                            "Explicit WebSocket disconnect close handshake did not complete "
+                            "within its bounded grace period; continuing session teardown."
+                        )
         finally:
             try:
-                await self.runtime.reset()
+                await _run_by_shutdown_deadline(
+                    self.runtime.reset(),
+                    deadline=deadline,
+                    retained=self._shutdown_tasks,
+                    label="session runtime reset",
+                )
             finally:
-                async with self._lock:
-                    self._draining = False
-                    self._drain_done.set()
+                # The leader detached the session while holding _lock. These
+                # two non-awaiting assignments are atomic on the event loop;
+                # reacquiring the lock here could itself exceed the deadline.
+                self._draining = False
+                self._drain_done.set()
+
+    async def close_active(self, *, deadline: float | None = None) -> None:
+        deadline = _shutdown_deadline(deadline)
+        acquired = await _acquire_lock_by_shutdown_deadline(
+            self._lock,
+            deadline=deadline,
+            label="realtime session lock",
+        )
+        if not acquired:
+            # The caller's absolute deadline still wins, but preserve the
+            # close intent. A single retained task will detach and tear down
+            # the session when an in-flight setup operation releases _lock.
+            self._schedule_deferred_close()
+            return
+        try:
+            detached = self._detach_active_locked()
+        finally:
+            self._lock.release()
+        await self._finish_active_close(*detached, deadline=deadline)
 
     async def create_answer(self, *, offer: Mapping[str, Any], session: Mapping[str, Any]) -> dict[str, str]:
         from aiortc import RTCConfiguration, RTCIceServer, RTCPeerConnection, RTCSessionDescription
@@ -1822,20 +2127,38 @@ class RealtimePeerManager:
             queue_policy = _frame_queue_policy(
                 ordered_required="prompt_update" in self.runtime.realtime_spec.controls,
             )
-            frames = LatestFrameBuffer(
-                maxsize=_env_int(
-                    "WORLDFOUNDRY_REALTIME_FRAME_QUEUE",
-                    max(self.runtime.steady_chunk_frames(self.chunk_frames), 8),
-                ),
-                backpressure_ms=_env_int(
-                    "WORLDFOUNDRY_REALTIME_BACKPRESSURE_MS",
-                    max(
-                        int(self.runtime.steady_chunk_frames(self.chunk_frames) * 500 / self.fps),
-                        50,
-                    ),
-                ),
-                policy=queue_policy,
+            requested_presentation_mode = session.get("presentation_mode")
+            presentation_mode = (
+                self.presentation_mode
+                if requested_presentation_mode in (None, "")
+                else RealtimePresentationMode.from_value(requested_presentation_mode)
             )
+            if presentation_mode is RealtimePresentationMode.REAL_FRAMES:
+                frames: LatestFrameBuffer | ChunkPresentationBuffer = ChunkPresentationBuffer(
+                    fps=self.fps,
+                    maximum_fps=_env_int(
+                        "WORLDFOUNDRY_REALTIME_PRESENTATION_MAX_FPS",
+                        self.fps * 2,
+                        minimum=self.fps,
+                    ),
+                    mailbox_size=2,
+                    policy=queue_policy,
+                )
+            else:
+                frames = LatestFrameBuffer(
+                    maxsize=_env_int(
+                        "WORLDFOUNDRY_REALTIME_FRAME_QUEUE",
+                        max(self.runtime.steady_chunk_frames(self.chunk_frames), 8),
+                    ),
+                    backpressure_ms=_env_int(
+                        "WORLDFOUNDRY_REALTIME_BACKPRESSURE_MS",
+                        max(
+                            int(self.runtime.steady_chunk_frames(self.chunk_frames) * 500 / self.fps),
+                            50,
+                        ),
+                    ),
+                    policy=queue_policy,
+                )
             rtc_configuration = RTCConfiguration(
                 iceServers=[
                     RTCIceServer(
@@ -1850,6 +2173,7 @@ class RealtimePeerManager:
             track = _build_video_track(
                 frames=frames,
                 fps=self.fps,
+                presentation_mode=presentation_mode,
             )
             pc.addTrack(track)
             loop = asyncio.get_running_loop()
@@ -1861,6 +2185,7 @@ class RealtimePeerManager:
                     fps=self._runtime_input_fps(),
                     start_time=loop.time(),
                 ),
+                presentation_mode=presentation_mode,
                 last_client_message_at=loop.time(),
                 prompt_scheduled="prompt_update" in self.runtime.realtime_spec.controls,
                 initial_segment_pending=("prompt_update" in self.runtime.realtime_spec.controls),
@@ -1885,7 +2210,8 @@ class RealtimePeerManager:
 
                 @channel.on("close")
                 def on_close() -> None:
-                    self._spawn_background_task(self.close_active(), name="world-realtime-close-active")
+                    active.close_task = asyncio.create_task(self.close_active())
+                    active.close_task.add_done_callback(_consume_task_result)
 
                 active.generation_task = asyncio.create_task(self._generation_worker(active))
                 active.liveness_task = asyncio.create_task(self._liveness_watchdog(active))
@@ -1903,6 +2229,7 @@ class RealtimePeerManager:
                         "catalog_revision": active.catalog_revision,
                         "active_event_id": active.active_event_id,
                         "frame_queue_policy": active.frames.policy.value,
+                        "presentation_mode": active.presentation_mode.value,
                         "resolution": active.output_resolution.to_payload(),
                         "resolution_revision": active.output_resolution.revision,
                     },
@@ -1986,6 +2313,12 @@ class RealtimePeerManager:
                     self.runtime.queued_segment_generation or "prompt_update" in self.runtime.realtime_spec.controls
                 ),
             )
+            requested_socket_pacing_mode = session.get("socket_pacing_mode")
+            socket_pacing_mode = (
+                self.socket_pacing_mode
+                if requested_socket_pacing_mode in (None, "")
+                else WebSocketPacingMode.from_value(requested_socket_pacing_mode)
+            )
             loop = asyncio.get_running_loop()
             active = _ActiveSocket(
                 socket=socket,
@@ -1999,6 +2332,7 @@ class RealtimePeerManager:
                         max(self.runtime.steady_chunk_frames(self.chunk_frames) * 2, 16),
                     )
                 ),
+                pacing_mode=socket_pacing_mode,
                 last_client_message_at=loop.time(),
                 prompt_scheduled="prompt_update" in self.runtime.realtime_spec.controls,
                 initial_segment_pending=("prompt_update" in self.runtime.realtime_spec.controls),
@@ -2034,6 +2368,7 @@ class RealtimePeerManager:
                 "catalog_revision": active.catalog_revision,
                 "active_event_id": active.active_event_id,
                 "frame_queue_policy": active.frame_queue_policy.value,
+                "socket_pacing_mode": active.pacing_mode.value,
                 "resolution": active.output_resolution.to_payload(),
                 "resolution_revision": active.output_resolution.revision,
             },
@@ -2065,6 +2400,7 @@ class RealtimePeerManager:
             return
         message_type = str(payload.get("type") or "").lower()
         if message_type == "disconnect":
+            active.disconnect_requested = True
             await self.close_active()
             return
         if message_type in {"heartbeat", "ping"}:
@@ -2277,7 +2613,10 @@ class RealtimePeerManager:
                                     ),
                                 },
                             )
-                    frames, generation_ms = await generation_task
+                    # Keep worker cancellation separate from the model task so
+                    # the handler can explicitly cancel and retain a model
+                    # coroutine that does not acknowledge cancellation.
+                    frames, generation_ms = await asyncio.shield(generation_task)
                 except ValueError as exc:
                     if not active.queued_segments:
                         raise
@@ -2289,7 +2628,7 @@ class RealtimePeerManager:
                     continue
                 except BaseException:
                     generation_task.cancel()
-                    await asyncio.gather(generation_task, return_exceptions=True)
+                    _retain_shutdown_task(generation_task, self._shutdown_tasks)
                     raise
                 pixel_post_started = loop.time()
                 quality = _env_int(
@@ -2413,15 +2752,16 @@ class RealtimePeerManager:
         try:
             while not active.closed:
                 packet = await active.frame_packets.get()
-                now = loop.time()
-                if deadline is not None:
-                    deadline += 1.0 / self.fps
-                    if deadline > now:
-                        await asyncio.sleep(deadline - now)
-                    elif now - deadline > 1.0 / self.fps:
+                if active.pacing_mode is WebSocketPacingMode.LEGACY_DUAL:
+                    now = loop.time()
+                    if deadline is not None:
+                        deadline += 1.0 / self.fps
+                        if deadline > now:
+                            await asyncio.sleep(deadline - now)
+                        elif now - deadline > 1.0 / self.fps:
+                            deadline = now
+                    else:
                         deadline = now
-                else:
-                    deadline = now
                 async with active.send_lock:
                     await active.socket.send_bytes(packet)
         except asyncio.CancelledError:
@@ -2653,6 +2993,9 @@ class RealtimePeerManager:
                         "control_latency_ms": round(control_latency_ms, 1) if control_latency_ms is not None else None,
                         "queue_depth": queue_depth,
                         "dropped_frames": active.frames.dropped_frames,
+                        "dropped_chunks": getattr(active.frames, "dropped_chunks", 0),
+                        "presented_frames": getattr(active.frames, "presented_frames", None),
+                        "presentation_mode": active.presentation_mode.value,
                         "pixel_post_ms": round(pixel_post_ms, 1),
                         "resolution": resolution_snapshot.to_payload(),
                         "resolution_revision": resolution_snapshot.revision,
@@ -2692,8 +3035,9 @@ class RealtimePeerManager:
 
 def _build_video_track(
     *,
-    frames: LatestFrameBuffer,
+    frames: LatestFrameBuffer | ChunkPresentationBuffer,
     fps: int,
+    presentation_mode: RealtimePresentationMode | str = RealtimePresentationMode.HOLD_LAST,
 ) -> Any:
     from aiortc import MediaStreamTrack
     from aiortc.mediastreams import MediaStreamError
@@ -2704,46 +3048,60 @@ def _build_video_track(
 
         def __init__(self) -> None:
             super().__init__()
+            self._presentation_mode = RealtimePresentationMode.from_value(presentation_mode)
             self._pts = 0
             self._time_base = Fraction(1, fps)
             self._interval = 1.0 / fps
             self._deadline: float | None = None
             self._last_array: np.ndarray | None = None
+            self._first_real_frame_at: float | None = None
 
         async def recv(self) -> VideoFrame:
             loop = asyncio.get_running_loop()
-            if self._last_array is None:
+            if self._presentation_mode is RealtimePresentationMode.REAL_FRAMES:
                 try:
-                    self._last_array = await frames.get()
+                    frame_array = await frames.get()
                 except EOFError as exc:
                     raise MediaStreamError from exc
-                self._deadline = loop.time()
-            else:
-                assert self._deadline is not None
                 now = loop.time()
-                self._deadline += self._interval
-                if self._deadline > now:
-                    await asyncio.sleep(self._deadline - now)
-                elif now - self._deadline > self._interval:
-                    self._deadline = now
-                try:
-                    self._last_array = frames.get_nowait()
-                except asyncio.QueueEmpty:
-                    # Keep a constant RTP clock even between generated chunks.
-                    # Besides giving the browser a stable live stream, the
-                    # repeated hold frame flushes the encoder's final source
-                    # frame instead of leaving it buffered until the next user
-                    # action arrives.
-                    pass
-                except EOFError as exc:
-                    raise MediaStreamError from exc
+                if self._first_real_frame_at is None:
+                    self._first_real_frame_at = now
+                pts = max(self._pts, round((now - self._first_real_frame_at) * fps))
+            else:
+                if self._last_array is None:
+                    try:
+                        self._last_array = await frames.get()
+                    except EOFError as exc:
+                        raise MediaStreamError from exc
+                    self._deadline = loop.time()
+                else:
+                    assert self._deadline is not None
+                    now = loop.time()
+                    self._deadline += self._interval
+                    if self._deadline > now:
+                        await asyncio.sleep(self._deadline - now)
+                    elif now - self._deadline > self._interval:
+                        self._deadline = now
+                    try:
+                        self._last_array = frames.get_nowait()
+                    except asyncio.QueueEmpty:
+                        # Keep a constant RTP clock even between generated chunks.
+                        # Besides giving the browser a stable live stream, the
+                        # repeated hold frame flushes the encoder's final source
+                        # frame instead of leaving it buffered until the next user
+                        # action arrives.
+                        pass
+                    except EOFError as exc:
+                        raise MediaStreamError from exc
+                frame_array = self._last_array
+                pts = self._pts
             # Frames are already resized in the generation worker. Keep the
             # aiortc cadence path free of synchronous resize/canvas work; a
             # held frame is therefore repeated at zero additional scale cost.
-            frame = VideoFrame.from_ndarray(self._last_array, format="rgb24")
-            frame.pts = self._pts
+            frame = VideoFrame.from_ndarray(frame_array, format="rgb24")
+            frame.pts = pts
             frame.time_base = self._time_base
-            self._pts += 1
+            self._pts = pts + 1
             return frame
 
     return RealtimeVideoTrack()
@@ -2896,6 +3254,7 @@ def serve_realtime_world_frontend(
 
     app = web.Application(client_max_size=2 * 1024**3, middlewares=middlewares)
     preload_task: asyncio.Task[Any] | None = None
+    shutdown_tasks: set[asyncio.Task[Any]] = set()
 
     async def cleanup_owned_uploads() -> None:
         async with upload_cleanup_lock:
@@ -3107,12 +3466,22 @@ def serve_realtime_world_frontend(
         )
 
     async def on_shutdown(_: Any) -> None:
-        if preload_task is not None and not preload_task.done():
-            preload_task.cancel()
-            await asyncio.gather(preload_task, return_exceptions=True)
-        await peers.close_active()
-        await runtime.close()
-        await cleanup_owned_uploads()
+        deadline = _shutdown_deadline()
+        await _finish_tasks_by_deadline(
+            (preload_task,),
+            deadline=deadline,
+            retained=shutdown_tasks,
+            label="application preload",
+            cancel_now=True,
+        )
+        await peers.close_active(deadline=deadline)
+        await runtime.close(deadline=deadline)
+        await _run_by_shutdown_deadline(
+            cleanup_owned_uploads(),
+            deadline=deadline,
+            retained=shutdown_tasks,
+            label="owned upload cleanup",
+        )
 
     app.router.add_get("/", index)
     app.router.add_get("/world.css", css)

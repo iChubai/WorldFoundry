@@ -152,7 +152,10 @@ def materialize_wan_dmd_training_run(
     if recipe.distributed.backend == "fsdp2":
         if resolved_device.type != "cuda":
             raise ValueError("native Wan DMD FSDP2 materialization requires CUDA")
-        distributed_context = DistributedTrainingContext(device_type="cuda")
+        distributed_context = DistributedTrainingContext(
+            device_type="cuda",
+            timeout_seconds=recipe.distributed.timeout_seconds,
+        )
         resolved_device = distributed_context.device
     try:
         world_size = 1 if distributed_context is None else distributed_context.world_size

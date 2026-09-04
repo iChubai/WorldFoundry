@@ -1,32 +1,24 @@
-"""Module for base_models -> diffusion_model -> video -> step_video -> step_video_runtime -> stepvideo -> modules -> rope.py functionality."""
+"""StepVideo rotary embeddings: 1D cache plus factorized 3D mesh.
+
+Self-attn splits the head dim into ``(F, H, W)`` bands and applies
+independent 1D RoPE using a cartesian ``(F, H', W')`` index mesh.
+Tokens are ``B S H D``.
+"""
 
 import torch
 
 
 class RoPE1D:
-    """Ro d implementation."""
-    def __init__(self, freq=1e4, F0=1.0, scaling_factor=1.0):
-        """Init.
+    """Cached 1D RoPE over integer positions (used as the 3D axis primitive)."""
 
-        Args:
-            freq: The freq.
-            F0: The f0.
-            scaling_factor: The scaling factor.
-        """
+    def __init__(self, freq=1e4, F0=1.0, scaling_factor=1.0):
         self.base = freq
         self.F0 = F0
         self.scaling_factor = scaling_factor
         self.cache = {}
 
     def get_cos_sin(self, D, seq_len, device, dtype):
-        """Get cos sin.
-
-        Args:
-            D: The d.
-            seq_len: The seq len.
-            device: The device.
-            dtype: The dtype.
-        """
+        """Return cached ``(cos, sin)`` of shape ``[seq_len, D]``."""
         if (D, seq_len, device, dtype) not in self.cache:
             inv_freq = 1.0 / (self.base ** (torch.arange(0, D, 2).float().to(device) / D))
             t = torch.arange(seq_len, device=device, dtype=inv_freq.dtype)
@@ -39,23 +31,12 @@ class RoPE1D:
 
     @staticmethod
     def rotate_half(x):
-        """Rotate half.
-
-        Args:
-            x: The x.
-        """
+        """Swap-and-negate halves: the complex multiply used by RoPE."""
         x1, x2 = x[..., : x.shape[-1] // 2], x[..., x.shape[-1] // 2:]
         return torch.cat((-x2, x1), dim=-1)
 
     def apply_rope1d(self, tokens, pos1d, cos, sin):
-        """Apply rope1d.
-
-        Args:
-            tokens: The tokens.
-            pos1d: The pos1d.
-            cos: The cos.
-            sin: The sin.
-        """
+        """Gather ``cos/sin`` by ``pos1d`` (``B S`` ints) and rotate ``B S H D``."""
         assert pos1d.ndim == 2
         cos = torch.nn.functional.embedding(pos1d, cos)[:, :, None, :]
         sin = torch.nn.functional.embedding(pos1d, sin)[:, :, None, :]
@@ -78,25 +59,14 @@ class RoPE1D:
 
 
 class RoPE3D(RoPE1D):
-    """Ro d implementation."""
-    def __init__(self, freq=1e4, F0=1.0, scaling_factor=1.0):
-        """Init.
+    """Factorized 3D RoPE: split head dim across (F, H, W) and rotate each band."""
 
-        Args:
-            freq: The freq.
-            F0: The f0.
-            scaling_factor: The scaling factor.
-        """
+    def __init__(self, freq=1e4, F0=1.0, scaling_factor=1.0):
         super(RoPE3D, self).__init__(freq, F0, scaling_factor)
         self.position_cache = {}
 
     def get_mesh_3d(self, rope_positions, bsz):
-        """Get mesh 3d.
-
-        Args:
-            rope_positions: The rope positions.
-            bsz: The bsz.
-        """
+        """Cartesian ``(F, H, W)`` index table of shape ``[B, F*H*W, 3]``."""
         f, h, w = rope_positions
 
         if f"{f}-{h}-{w}" not in self.position_cache:

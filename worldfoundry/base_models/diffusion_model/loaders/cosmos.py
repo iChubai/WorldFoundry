@@ -13,7 +13,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Database of released checkpoints."""
+"""NVIDIA Cosmos released-checkpoint registry (UUID / S3 / Hugging Face).
+
+This is a vendor catalog, not the recipe :class:`CheckpointSpec` path.
+Cosmos 2.5 factories may resolve a UUID through :func:`get_checkpoint_by_uuid`
+and then wrap the local path as a :class:`CheckpointSpec` for
+:class:`NativeModuleLoader`.  The runner never calls these helpers.
+
+``INTERNAL`` builds prefer the S3 URI; public builds require an ``hf`` entry
+or :func:`get_checkpoint_path` raises :exc:`ValueError`.  Duplicate UUID or
+S3 registration fails at import.
+"""
 
 import functools
 import os

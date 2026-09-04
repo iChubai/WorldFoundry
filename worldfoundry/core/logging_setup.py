@@ -32,10 +32,6 @@ benign Inductor autotuner-fallback demotion in
 
 from __future__ import annotations
 
-from collections.abc import Iterator, Mapping
-from contextlib import contextmanager
-from contextvars import ContextVar, Token
-from datetime import datetime, timezone
 import json
 import logging
 import os
@@ -43,6 +39,10 @@ import re
 import sys
 import threading
 import traceback
+from collections.abc import Iterator, Mapping
+from contextlib import contextmanager
+from contextvars import ContextVar, Token
+from datetime import datetime, timezone
 from logging.handlers import RotatingFileHandler
 from pathlib import Path
 from typing import Any
@@ -64,7 +64,7 @@ _LOG_LEVEL_ENV = "WORLDFOUNDRY_LOG_LEVEL"
 _LOG_FILE_ENV = "WORLDFOUNDRY_LOG_FILE"
 _LOG_JSON_ENV = "WORLDFOUNDRY_LOG_JSON"
 _LOG_CONTEXT_ENV = "WORLDFOUNDRY_LOG_CONTEXT"
-# The sequence-parallel stack (adapted from vLLM) reconfigures the *root*
+# The sequence-parallel stack reconfigures the *root*
 # logger via ``logging.config.dictConfig`` when this is truthy (its default).
 # Setting it to "0" before ``sp.logger`` is imported makes that takeover a
 # no-op, so the central config owns the root logger exclusively.
@@ -109,7 +109,16 @@ _SENSITIVE_ASSIGNMENT = re.compile(
     r"cookie|credential|token)\b\s*[=:]\s*)([^\s,;]+)"
 )
 _BEARER_TOKEN = re.compile(r"(?i)(\bbearer\s+)([^\s,;]+)")
-_KNOWN_TOKEN = re.compile(r"\b(?:sk|hf)[_-][A-Za-z0-9_-]{8,}\b")
+_KNOWN_TOKEN = re.compile(
+    r"\b(?:"
+    r"(?:sk|hf)[_-][A-Za-z0-9_-]{8,}"
+    r"|gh[pousr]_[A-Za-z0-9_]{20,}"
+    r"|github_pat_[A-Za-z0-9_]{20,}"
+    r"|xox[baprs]-[A-Za-z0-9-]{10,}"
+    r"|AKIA[0-9A-Z]{16}"
+    r"|eyJ[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+"
+    r")\b"
+)
 
 
 def bind_log_context(**fields: Any) -> Token[dict[str, Any]]:
@@ -330,6 +339,7 @@ class _RedactingTextFormatter(logging.Formatter):
     """Normal text formatter that also redacts exception bodies."""
 
     def format(self, record: logging.LogRecord) -> str:
+        """Sanitize extras, then redact secrets that may appear in the rendered line."""
         _sanitize_record(record)
         return _redact_text(super().format(record))
 
@@ -343,6 +353,7 @@ class WorldFoundryLoggerAdapter(logging.LoggerAdapter):
     """
 
     def process(self, message: object, kwargs: dict[str, Any]) -> tuple[object, dict[str, Any]]:
+        """Merge adapter-bound fields with per-call extras without dropping caller ``extra``."""
         extra = dict(kwargs.get("extra") or {})
         supplied = extra.pop("_worldfoundry_fields", {})
         fields = dict(self.extra.get("_worldfoundry_fields", {}))
@@ -457,6 +468,7 @@ _LEVEL_ALIASES = {
 
 
 def _resolve_level(level: str | int | None, default: int = logging.INFO) -> int:
+    """Accept int, name, or WARN/FATAL/TRACE aliases; unknown names fail instead of becoming ``Level N``."""
     if level is None or level == "":
         return default
     if isinstance(level, int):
@@ -484,6 +496,7 @@ class _StdlibToLoguruHandler(logging.Handler):
     """
 
     def emit(self, record: logging.LogRecord) -> None:
+        """Forward one stdlib record into loguru; never raise — failures go to ``handleError``."""
         try:
             _sanitize_record(record)
             try:
@@ -506,6 +519,7 @@ class _JsonFormatter(logging.Formatter):
     """Emit the stable WorldFoundry JSONL schema for stdlib records."""
 
     def format(self, record: logging.LogRecord) -> str:
+        """One JSON object per line; keys sorted so Studio/eval parsers can diff logs."""
         _sanitize_record(record)
         exception = self.formatException(record.exc_info) if record.exc_info else None
         payload = _json_event_payload(
@@ -560,7 +574,11 @@ def _loguru_json_format(record: Mapping[str, Any]) -> str:
         timestamp=timestamp,
         pid=getattr(process, "id", os.getpid()),
     )
-    return json.dumps(payload, ensure_ascii=False, sort_keys=True) + "\n"
+    rendered = json.dumps(payload, ensure_ascii=False, sort_keys=True)
+    # A Loguru callable formatter returns a format template, not final text.
+    # Escape JSON braces so keys such as ``benchmark_id`` are not interpreted
+    # as replacement fields by ``str.format_map`` inside the sink.
+    return rendered.replace("{", "{{").replace("}", "}}") + "\n"
 
 
 def _redact_loguru_record(record: dict[str, Any]) -> bool:
@@ -574,6 +592,7 @@ def _redact_loguru_record(record: dict[str, Any]) -> bool:
 
 
 def _make_text_formatter() -> logging.Formatter:
+    """Stdlib text formatter whose msec prefix matches the loguru sink (``.`` not ``,``)."""
     formatter = _RedactingTextFormatter(_STDLIB_FORMAT, datefmt=_DATEFMT)
     # Render sub-second as ``.123`` (not the stdlib default ``,123``) so the
     # prefix matches the loguru sink byte-for-byte.
@@ -618,6 +637,7 @@ def _configure_stdlib(
     rotation: str,
     retention: str,
 ) -> None:
+    """Replace root handlers with stderr + optional rotating file; no loguru in this path."""
     root = logging.getLogger()
     root.handlers.clear()
     root.setLevel(level)
@@ -657,6 +677,7 @@ def _configure_loguru(
     retention: str,
     colorize: bool | None,
 ) -> None:
+    """Reset loguru sinks and intercept stdlib so vendored loggers share one pipeline."""
     _loguru_logger.remove()  # type: ignore[union-attr]
     # Bridge stdlib logging into loguru so vendored / sequence-parallel loggers
     # share the same sinks as the facade.

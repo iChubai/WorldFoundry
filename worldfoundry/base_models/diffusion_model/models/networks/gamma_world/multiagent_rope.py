@@ -1,16 +1,24 @@
 # SPDX-FileCopyrightText: Copyright (c) 2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 
+"""4D / multi-agent RoPE frequencies for Gamma-World multiview DiT.
+
+Extends 3D (T, H, W) rotary frequencies with an agent/view axis so
+tokens from different cameras stay distinguishable.  Applied to
+``B S (H D)`` Q/K inside attention.
+"""
 
 import torch
 from einops import rearrange
 
 
 def modulate(x: torch.Tensor, shift: torch.Tensor, scale: torch.Tensor):
+    """AdaLN affine used by action-conditioned blocks."""
     return x * (1 + scale) + shift
 
 
 def sinusoidal_embedding_1d(dim, position):
+    """1D Fourier features for a vector of integer positions."""
     sinusoid = torch.outer(
         position.type(torch.float64),
         torch.pow(10000, -torch.arange(dim // 2, dtype=torch.float64, device=position.device).div(dim // 2)),

@@ -7,6 +7,8 @@ aliases:
 availability: open_source
 provider: official_repo
 official_sources:
+  paper: https://arxiv.org/abs/2403.03181
+  project_page: https://sjlee.cc/vq-bet/
   github:
     head_sha: 09d4851288ca5deaaa1ab367a208e520f8ee9a84
     url: https://github.com/jayLEE0301/vq_bet_official

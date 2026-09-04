@@ -1,7 +1,11 @@
 # SPDX-FileCopyrightText: Copyright (c) 2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 
-"""Native Cosmos component."""
+"""Face pixelation helper for Cosmos post-decode safety.
+
+Downscales a face crop to ``blocks×blocks`` then nearest-neighbor
+upscales so identity is obscured without changing the surrounding frame.
+"""
 
 import cv2
 import numpy as np

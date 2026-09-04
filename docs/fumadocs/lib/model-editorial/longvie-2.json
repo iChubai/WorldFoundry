@@ -1,0 +1,41 @@
+{
+  "id": "longvie-2",
+  "tagline": {
+    "en": "Vchitect's long-video model — generate extended, controllable clips from an image with depth and trajectory guidance, on Wan2.1.",
+    "zh": "Vchitect 的长视频模型——以深度和轨迹引导、从图片生成可控的长片段,底座基于 Wan2.1。"
+  },
+  "overview": {
+    "en": [
+      "LongVie 2, from Vchitect, is a controllable long-video generation model. It extends a clip well beyond a single segment by chaining generated segments together while keeping the motion continuous.",
+      "It is built on canonical Wan2.1 components — the I2V 14B 480P and T2V 1.3B backbones — and adds LongVie-specific control and attention. Each 81-frame segment takes a prompt plus dense depth and sparse pointmap/track control videos, and the first segment also takes an image. Continuations reuse the previous final frame, an eight-frame history, and the noise state to stay coherent. Full-quality defaults are 81 frames at 16 FPS and 50 denoising steps, at 640×352.",
+      "In WorldFoundry it runs as image-to-video, long-video-generation, depth-controlled-video, and trajectory-controlled-video tasks, producing queued control-video segments (not real-time interaction)."
+    ],
+    "zh": [
+      "LongVie 2 由 Vchitect 开发,是一个可控的长视频生成模型。它通过把生成的片段串接起来、并保持运动连续,从而把视频扩展到远超单段的长度。",
+      "它构建在经典的 Wan2.1 组件之上——I2V 14B 480P 与 T2V 1.3B 底座——并加入 LongVie 专属的控制与注意力机制。每个 81 帧片段需要一段提示词,外加稠密深度与稀疏点图/轨迹控制视频,首个片段还需要一张图片。续写会复用上一段的最后一帧、八帧历史与噪声状态以保持连贯。全质量默认为 81 帧、16 FPS、50 步去噪,分辨率 640×352。",
+      "在 WorldFoundry 中,它以图生视频、长视频生成、深度控制视频与轨迹控制视频任务运行,产出排队的控制视频片段(而非实时交互)。"
+    ]
+  },
+  "whenToUse": {
+    "en": "Reach for LongVie 2 when you need extended video that stays coherent across segments and want fine control via depth maps and trajectory/track inputs, starting from an image.",
+    "zh": "当你需要跨片段保持连贯的长视频,并想通过深度图与轨迹/track 输入进行精细控制、从一张图片开始时,可以选择 LongVie 2。"
+  },
+  "notFor": {
+    "en": "It expects a prompt plus dense depth and sparse track control videos per segment, so it is not a one-shot text-to-video tool; full-quality runs target a multi-GPU setup and it is queued rather than real-time.",
+    "zh": "它对每个片段都需要提示词加稠密深度与稀疏 track 控制视频,并非一键式文生视频工具;全质量运行面向多卡配置,且为排队执行而非实时。"
+  },
+  "highlights": {
+    "en": [
+      "Controllable long-video generation via segment continuation",
+      "Depth-controlled and trajectory/track-controlled inputs",
+      "Built on canonical Wan2.1 I2V 14B and T2V 1.3B components",
+      "Full-quality output: 81-frame segments at 640×352, 16 FPS"
+    ],
+    "zh": [
+      "通过片段续写实现可控的长视频生成",
+      "支持深度控制与轨迹/track 控制输入",
+      "构建于经典的 Wan2.1 I2V 14B 与 T2V 1.3B 组件之上",
+      "全质量输出:81 帧片段、640×352、16 FPS"
+    ]
+  }
+}

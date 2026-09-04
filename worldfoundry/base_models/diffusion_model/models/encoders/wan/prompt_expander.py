@@ -1,5 +1,17 @@
 # Copyright 2024-2025 The Alibaba Wan Team Authors. All rights reserved.
-"""Module for base_models -> diffusion_model -> video -> wan -> wan_2p2 -> utils -> prompt_extend.py functionality."""
+"""Optional Wan 2.2 LLM prompt expander.
+
+Rewrites prompts using :mod:`.system_prompts` before UMT5
+encode.  Chinese / English system strings are ABI — do not
+rewrite them.  :class:`QwenPromptExpander` /
+:class:`DashScopePromptExpander` are the backends.
+
+Not a :class:`~...contracts.ConditionEncoder`.  The expander
+returns text; :class:`~.component.WanTextConditioner` still
+encodes it.
+
+Disable this for bit-exact official prompt encoding.
+"""
 
 import json
 import logging

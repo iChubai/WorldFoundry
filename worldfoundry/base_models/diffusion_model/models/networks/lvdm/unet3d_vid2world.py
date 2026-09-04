@@ -1,4 +1,8 @@
-"""Module for base_models -> diffusion_model -> video -> lvdm -> variants -> vid2world -> lvdm -> modules -> networks -> openaimodel3d.py functionality."""
+"""Vid2World LVDM 3D UNet (same ``B C T H W`` residual stack as ``unet3d``).
+
+Conditioning may include an extra visual stream; layout and skip
+connections match the released vid2world checkpoint.
+"""
 
 from functools import partial
 from abc import abstractmethod
@@ -36,15 +40,7 @@ class TimestepEmbedSequential(nn.Sequential, TimestepBlock):
     """
 
     def forward(self, x, emb, context=None, batch_size=None, kv_cache_info=None):
-        """Forward.
-
-        Args:
-            x: The x.
-            emb: The emb.
-            context: The context.
-            batch_size: The batch size.
-            kv_cache_info: The kv cache info.
-        """
+        """Dispatch ``B C H W`` (or packed ``(B·T) C H W``) through ResBlocks and spatial/temporal transformers; temporal layers see ``B C T H W``."""
         for layer in self:
             if isinstance(layer, TimestepBlock):
                 x = layer(x, emb, batch_size=batch_size)
@@ -69,16 +65,7 @@ class Downsample(nn.Module):
     """
 
     def __init__(self, channels, use_conv, dims=2, out_channels=None, padding=1, causal=False):
-        """Init.
-
-        Args:
-            channels: The channels.
-            use_conv: The use conv.
-            dims: The dims.
-            out_channels: The out channels.
-            padding: The padding.
-            causal: The causal.
-        """
+        """Optional strided conv that downsamples the inner spatial dims."""
         super().__init__()
         self.channels = channels
         self.out_channels = out_channels or channels
@@ -95,11 +82,7 @@ class Downsample(nn.Module):
             self.op = avg_pool_nd(dims, kernel_size=stride, stride=stride) # No temporal mix, stride in 3D case is (1,2,2)
 
     def forward(self, x):
-        """Forward.
-
-        Args:
-            x: The x.
-        """
+        """Halve ``H``/``W`` (3D: inner two dims) of the feature volume."""
         assert x.shape[1] == self.channels
         return self.op(x)       
 
@@ -114,16 +97,7 @@ class Upsample(nn.Module):
     """
 
     def __init__(self, channels, use_conv, dims=2, out_channels=None, padding=1, causal=False):
-        """Init.
-
-        Args:
-            channels: The channels.
-            use_conv: The use conv.
-            dims: The dims.
-            out_channels: The out channels.
-            padding: The padding.
-            causal: The causal.
-        """
+        """Nearest upsample plus optional conv on the spatial dims."""
         super().__init__()
         self.channels = channels
         self.out_channels = out_channels or channels
@@ -134,11 +108,7 @@ class Upsample(nn.Module):
             self.conv = conv_nd(dims, self.channels, self.out_channels, 3, padding=padding, causal=_causal)
 
     def forward(self, x):
-        """Forward.
-
-        Args:
-            x: The x.
-        """
+        """Double ``H``/``W`` of the UNet feature volume."""
         assert x.shape[1] == self.channels
         if self.dims == 3:
             x = F.interpolate(x, (x.shape[2], x.shape[3] * 2, x.shape[4] * 2), mode='nearest')
@@ -182,23 +152,7 @@ class ResBlock(TimestepBlock):
         tempspatial_aware=False,
         causal=False
     ):
-        """Init.
-
-        Args:
-            channels: The channels.
-            emb_channels: The emb channels.
-            dropout: The dropout.
-            out_channels: The out channels.
-            use_scale_shift_norm: The use scale shift norm.
-            dims: The dims.
-            use_checkpoint: The use checkpoint.
-            use_conv: The use conv.
-            up: The up.
-            down: The down.
-            use_temporal_conv: The use temporal conv.
-            tempspatial_aware: The tempspatial aware.
-            causal: The causal.
-        """
+        """GroupNorm-SiLU residual block with optional up/down and temporal conv."""
         super().__init__()
         self.channels = channels
         self.emb_channels = emb_channels
@@ -269,13 +223,7 @@ class ResBlock(TimestepBlock):
         return checkpoint(self._forward, input_tuple, self.parameters(), self.use_checkpoint)
 
     def _forward(self, x, emb, batch_size=None):
-        """Helper function to forward.
-
-        Args:
-            x: The x.
-            emb: The emb.
-            batch_size: The batch size.
-        """
+        """Unchecked residual path: GroupNorm-SiLU, timestep Ada, optional temporal conv."""
         if self.updown:
             in_rest, in_conv = self.in_layers[:-1], self.in_layers[-1]
             h = in_rest(x)
@@ -309,15 +257,7 @@ class TemporalConvBlock(nn.Module):
     Adapted from modelscope: https://github.com/modelscope/modelscope/blob/master/modelscope/models/multi_modal/video_synthesis/unet_sd.py
     """
     def __init__(self, in_channels, out_channels=None, dropout=0.0, spatial_aware=False, causal=False):
-        """Init.
-
-        Args:
-            in_channels: The in channels.
-            out_channels: The out channels.
-            dropout: The dropout.
-            spatial_aware: The spatial aware.
-            causal: The causal.
-        """
+        """3D conv mixer along time (optionally spatially aware kernels)."""
         super(TemporalConvBlock, self).__init__()
         if out_channels is None:
             out_channels = in_channels
@@ -347,11 +287,7 @@ class TemporalConvBlock(nn.Module):
         nn.init.zeros_(self.conv4[-1].bias)
 
     def forward(self, x):
-        """Forward.
-
-        Args:
-            x: The x.
-        """
+        """Mix ``B C T H W`` along time and add the residual."""
         identity = x
         x = self.conv1(x)
         x = self.conv2(x)
@@ -424,42 +360,7 @@ class UNetModel(nn.Module):
                  action_emb=False,
                  action_dim=13,
                 ):
-        """Init.
-
-        Args:
-            in_channels: The in channels.
-            model_channels: The model channels.
-            out_channels: The out channels.
-            num_res_blocks: The num res blocks.
-            attention_resolutions: The attention resolutions.
-            dropout: The dropout.
-            channel_mult: The channel mult.
-            conv_resample: The conv resample.
-            dims: The dims.
-            context_dim: The context dim.
-            use_scale_shift_norm: The use scale shift norm.
-            resblock_updown: The resblock updown.
-            num_heads: The num heads.
-            num_head_channels: The num head channels.
-            transformer_depth: The transformer depth.
-            use_linear: The use linear.
-            use_checkpoint: The use checkpoint.
-            temporal_conv: The temporal conv.
-            tempspatial_aware: The tempspatial aware.
-            temporal_attention: The temporal attention.
-            use_relative_position: The use relative position.
-            use_causal_attention: The use causal attention.
-            temporal_length: The temporal length.
-            use_fp16: The use fp16.
-            addition_attention: The addition attention.
-            temporal_selfatt_only: The temporal selfatt only.
-            image_cross_attention: The image cross attention.
-            image_cross_attention_scale_learnable: The image cross attention scale learnable.
-            default_fs: The default fs.
-            fs_condition: The fs condition.
-            action_emb: The action emb.
-            action_dim: The action dim.
-        """
+        """Build the 3D UNet encoder/decoder with spatial and optional temporal attn."""
         super(UNetModel, self).__init__()
         if num_heads == -1:
             assert num_head_channels != -1, 'Either num_heads or num_head_channels has to be set'
@@ -689,17 +590,7 @@ class UNetModel(nn.Module):
         )
 
     def forward(self, x, timesteps, context=None, features_adapter=None, fs=None, action_mask=None, kv_cache_info=None, **kwargs):
-        """Forward.
-
-        Args:
-            x: The x.
-            timesteps: The timesteps.
-            context: The context.
-            features_adapter: The features adapter.
-            fs: The fs.
-            action_mask: The action mask.
-            kv_cache_info: The kv cache info.
-        """
+        """Denoise ``x`` of layout ``B C T H W`` conditioned on timesteps and text context."""
         b,_,t,_,_ = x.shape
         # timesteps is of shape [b] or [b, t]
         t_emb = timestep_embedding(timesteps, self.model_channels, repeat_only=False).type(x.dtype) # Create sinusoidal timestep embeddings [1, 320]

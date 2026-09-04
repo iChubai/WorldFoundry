@@ -13,6 +13,20 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+"""Deferred constructor calls for editable inference configuration trees.
+
+:class:`LazyCall` wraps a callable (or its import path) so that invoking
+it records ``_target_`` plus keyword arguments in an OmegaConf
+``DictConfig`` instead of constructing the object. The resulting tree is
+mutable — later code can override ``out_channels`` or swap a nested
+module — and :func:`~worldfoundry.core.configuration.lazy_config.instantiate.instantiate`
+materializes it when a real instance is needed.
+
+This is the Detectron2 / fvcore LazyCall contract used by Cosmos-family
+inference configs. Positional arguments are intentionally unsupported at
+call time so the stored mapping stays keyword-only and editable.
+"""
+
 import collections.abc as abc
 import inspect
 from dataclasses import is_dataclass
@@ -23,6 +37,10 @@ from omegaconf import DictConfig
 from worldfoundry.core.configuration.lazy_config.registry import convert_target_to_string
 
 __all__ = ["LazyCall"]
+
+# ──────────────────────────────────────────────────────────────────────────
+# Defaults + call recording — inspect never imports a string _target_
+# ──────────────────────────────────────────────────────────────────────────
 
 
 def get_default_params(cls_or_func):

@@ -85,6 +85,8 @@ variants:
     status: pending
     notes:
     - Native recipe and registry assembly pass; checkpoint-backed CUDA artifact parity must be repeated after cutover.
+official_sources:
+  paper: https://arxiv.org/abs/2511.18870
 integration:
   status: integrated
   notes:

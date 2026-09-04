@@ -68,14 +68,23 @@ class CosmosPredict2p5Pipeline(PipelineABC):
         options = dict(model_path) if isinstance(model_path, Mapping) else {}
         options.update(required_components or {})
         options.update(kwargs)
-        source = options.get("checkpoint_path", options.get("transformer_model_path", model_path))
+        source = (
+            options.get("checkpoint_path")
+            or options.get("transformer_model_path")
+            or options.get("model_path")
+            or model_path
+        )
         resolved_model_id = _model_id(str(options.get("variant_id") or model_id or ""), source)
         overrides: dict[str, str] = {}
-        if isinstance(source, (str, Path)) and Path(source).expanduser().is_dir():
-            root = Path(source).expanduser().resolve()
-            overrides["transformer"] = str(root)
-            if (root / "tokenizer.pth").is_file():
-                overrides["vae"] = str(root)
+        if isinstance(source, (str, Path)):
+            checkpoint = Path(source).expanduser()
+            if checkpoint.is_dir():
+                root = checkpoint.resolve()
+                overrides["transformer"] = str(root)
+                if (root / "tokenizer.pth").is_file():
+                    overrides["vae"] = str(root)
+            elif checkpoint.is_file():
+                overrides["transformer"] = str(checkpoint.resolve())
         vae_source = options.get("vae_model_path")
         if isinstance(vae_source, (str, Path)) and Path(vae_source).expanduser().exists():
             overrides["vae"] = str(Path(vae_source).expanduser().resolve())
@@ -115,7 +124,12 @@ class CosmosPredict2p5Pipeline(PipelineABC):
         options = dict(model_path) if isinstance(model_path, Mapping) else {}
         options.update(required_components or {})
         options.update(kwargs)
-        source = options.get("checkpoint_path", options.get("transformer_model_path", model_path))
+        source = (
+            options.get("checkpoint_path")
+            or options.get("transformer_model_path")
+            or options.get("model_path")
+            or model_path
+        )
         return {
             "model_id": _model_id(str(options.get("variant_id") or options.get("model_id") or ""), source),
             "checkpoint": str(source) if source is not None else None,

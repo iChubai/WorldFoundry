@@ -13,7 +13,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Native Cosmos component."""
+"""Aegis / NVIDIA safety category instructions for Cosmos prompt filtering.
+
+Each dict holds ``category``, ``blocked_reason``, and the classifier
+``instruction`` text.  Recipes concatenate these into the guardrail
+prompt; this file does not run a model.
+"""
 
 VIOLENCE = {
     "category": "violence",

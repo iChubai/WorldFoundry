@@ -1,4 +1,16 @@
-"""Prompt templates and precision constants for original HunyuanVideo."""
+"""Prompt templates and precision constants for original HunyuanVideo.
+
+Template strings may contain Chinese or other-script
+placeholders consumed by the official tokenizer.  They are
+checkpoint ABI — do not rewrite or translate them.
+
+Also holds precision / default-length tokens used by
+:mod:`.original` and :mod:`.i2v`.  No tensor encode lives
+here.
+
+HunyuanVideo 1.5 glyph formatting is
+:mod:`.h15_text.byT5.format_prompt`, not this file.
+"""
 
 import os
 import torch

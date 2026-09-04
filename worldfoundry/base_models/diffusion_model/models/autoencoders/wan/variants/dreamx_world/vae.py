@@ -1,4 +1,16 @@
-"""Native adapter around the canonical Wan 2.2 3:8 VAE."""
+"""DreamX-World adapter around the canonical Wan 2.2 48-channel VAE.
+
+:class:`AutoencoderKLWan3_8` mixes
+:class:`~...adapter.WanAutoencoderAdapterMixin` with the
+reference Wan 2.2 CNN from :mod:`~...reference_22`.
+
+Latents are 48-channel BCTHW, 4× temporal / 8× spatial,
+official Wan 2.2 mean/std.  This is a loading / naming
+adapter, not a new residual graph.
+
+Used by DreamX-World recipes; runner VAE38 path is
+:func:`~...component.build_wan_video_vae38_decoder`.
+"""
 
 from __future__ import annotations
 
@@ -20,6 +32,7 @@ from worldfoundry.base_models.diffusion_model.models.autoencoders.wan.reference_
 from worldfoundry.core.model_loading import load_model
 
 class AutoencoderKLWan3_8(WanAutoencoderAdapterMixin, nn.Module):
+    """DreamX-World wrapper around the Wan 2.2 48-channel VAE38."""
     def __init__(
         self,
         latent_channels: int = 48,

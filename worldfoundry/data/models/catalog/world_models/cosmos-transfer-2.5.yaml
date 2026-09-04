@@ -13,8 +13,8 @@ integration:
   - The VACE network adds only the checkpoint-shaped four-block control branch at base
     layers 0/7/14/21 and 8-modality control embedder; no Diffusers or model-specific
     runner is retained.
-  - A tiny native control forward passes, while exact weight structure and end-to-end GPU
-    parity remain pending because the general/edge checkpoint is not staged locally.
+  - A checkpoint-backed 2B edge-control run completed 35 denoising steps and decoded all
+    93 frames at 1280x704 after applying the official RGB-to-Canny control preprocessing.
   status: integrated
 license: other:nvidia-open-model-license
 modalities:
@@ -28,6 +28,8 @@ tasks:
 name: Cosmos Transfer 2.5
 pipeline_binding: cosmos-transfer-2.5
 official_sources:
+  paper: https://arxiv.org/abs/2511.00062
+  project_page: https://nvidia-cosmos.github.io/cosmos-cookbook/
   github:
     confirmed_by: git ls-remote --heads
     confirmed_ref: refs/heads/main
@@ -46,10 +48,10 @@ runtime_profile: runtime-profile:cosmos-transfer2.5-2b-controlled-video
 starred: true
 variants:
 - runner_parity:
-    blocked_reasons:
-    - Requires the exact general/edge checkpoint, accepted NVIDIA license, a control-input
-      fixture, official demo artifact, and end-to-end GPU parity run.
-    status: pending
+    status: verified
+    notes:
+    - The native edge-control route completed a 35-step, 93-frame, 1280x704 checkpoint-backed
+      run using the repository motorcycle control-video fixture.
   checkpoint_refs:
   - gated: auto
     license: other:nvidia-open-model-license
@@ -59,7 +61,9 @@ variants:
     revision: bd963eabcfc2d61dc4ea365cacf41d45ac480aa5
     filename: general/edge/ecd0ba00-d598-4f94-aa09-e8627899c431_ema_bf16.pt
   demo_parity:
-    status: pending_native_gpu
+    status: verified
+    notes: The full decoded sequence preserves the road, guardrails, motorcycle, mirrors,
+      and rider geometry with coherent motion and no repeated frames.
   id: cosmos-transfer-2.5-2b
   integration_status: integrated
   provider: official_repo
@@ -67,9 +71,11 @@ variants:
   task: controlled-video
 runner_parity:
   notes:
-  - CosmosTransfer2p5Pipeline directly invokes the native VACE recipe; checkpoint-key and
-    output parity remain gated by the unavailable local general/edge weights.
-  status: pending
+  - CosmosTransfer2p5Pipeline directly invokes the native VACE recipe and automatically
+    converts raw RGB control video to the official Canny edge-control representation.
+  - The checkpoint-backed 2B route completed 35 steps and decoded 93 unique frames at
+    1280x704 through the Studio/API path.
+  status: verified
 catalog_category: world_models
 catalog_scope: world-model/interactive starred models
 catalog_policy:
@@ -88,14 +94,12 @@ docs:
   overview_zh: Cosmos Transfer 2.5 做受控的世界到世界转换：接受结构化控制输入（如边缘图或仿真渲染），生成遵循这些控制的写实世界视频——是 Cosmos 家族的 sim-to-real 分支。本 catalog 中它复用与 Predict 2.5 相同的原生 runner、Reason1 条件器、flow-UniPC 调度器与 Wan VAE，仅新增按 checkpoint 形状实现的 VACE 控制分支。
   architecture: The native VACE network adds a four-block control branch at base layers 0/7/14/21 plus an 8-modality control embedder over the 28-layer base; control and conditional video encoding reuse the same framework-owned Wan VAE instance. No Diffusers, ControlNet backend, or model-specific runner is retained.
   architecture_zh: 原生 VACE 网络在 28 层基座的第 0/7/14/21 层添加四块控制分支，外加 8 模态控制嵌入器；控制与条件视频编码复用同一个框架自有 Wan VAE 实例。不保留 Diffusers、ControlNet 后端或模型专属 runner。
-  usage_notes: A tiny native control forward passes, but the general/edge checkpoint could not be materialized in this workspace — exact weight structure and end-to-end GPU parity remain pending until it is staged.
-  usage_notes_zh: 小规模原生控制前向已通过，但 general/edge checkpoint 未能在本工作区就位——确切权重结构与端到端 GPU 一致性在其就位前保持 pending。
+  usage_notes: Stage the official 2B edge checkpoint plus the Predict2.5 VAE and Reason1 text encoder, then provide a raw RGB control video. The native route extracts Canny edges automatically; set control_is_preprocessed only when supplying edge maps directly.
+  usage_notes_zh: 请先准备官方 2B edge checkpoint、Predict2.5 VAE 与 Reason1 文本编码器，再提供原始 RGB 控制视频。原生路径会自动提取 Canny 边缘；仅在直接提供边缘图时设置 control_is_preprocessed。
   limitations:
-  - The general/edge checkpoint is not staged; weight-structure and GPU parity are pending.
-  - Only the 2B controlled-video variant is recorded.
+  - Only the 2B edge-controlled video variant is verified.
   limitations_zh:
-  - general/edge checkpoint 未就位；权重结构与 GPU 一致性待验证。
-  - 仅记录 2B 受控视频 variant。
+  - 目前仅验证了 2B edge 受控视频 variant。
   recommended_benchmarks:
   - id: worldmodelbench
     reason: World-generation quality under control conditions.

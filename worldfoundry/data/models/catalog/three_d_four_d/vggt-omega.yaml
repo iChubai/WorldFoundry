@@ -17,6 +17,11 @@ checkpoint_refs:
   local_dir: ${WORLDFOUNDRY_CKPT_DIR}/VGGT-Omega
   estimated_size_gb: 9.29
   license: cc-by-nc-4.0
+official_sources:
+  project_page: https://vggt-omega.github.io/
+  paper: https://arxiv.org/abs/2605.15195
+  github:
+    url: https://github.com/facebookresearch/vggt-omega
 integration:
   kind: pipeline_runner
   status: integrated

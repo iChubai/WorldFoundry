@@ -1,0 +1,41 @@
+{
+  "id": "hunyuanworld-mirror",
+  "tagline": {
+    "en": "Tencent Hunyuan's feed-forward 3D reconstruction model — turn images or video into point clouds, Gaussian splats, depth and normals.",
+    "zh": "腾讯混元的前馈式 3D 重建模型——把图像或视频转成点云、高斯 splat、深度图与法线图。"
+  },
+  "overview": {
+    "en": [
+      "HunyuanWorld-Mirror, from Tencent Hunyuan (HY-World), is a 3D reconstruction model. It takes images or video of a scene and reconstructs its geometry in a single feed-forward pass, without a lengthy per-scene optimization.",
+      "The model outputs a rich set of geometry products from the same input: a point-cloud PLY, a Gaussian-splat PLY, depth maps, and normal maps. Its modalities span image-to-3D and video-to-3D reconstruction, released as code and weights.",
+      "In WorldFoundry it runs through the HunyuanWorld-Mirror pipeline as a 3D task — hand it one or more images (or a path to them), and it writes the reconstruction artifacts to the output directory."
+    ],
+    "zh": [
+      "HunyuanWorld-Mirror 由腾讯混元(HY-World)开发,是一个 3D 重建模型。它接收场景的图像或视频,以单次前馈方式重建其几何,而无需耗时的逐场景优化。",
+      "该模型可从同一输入产出一整套几何结果:点云 PLY、高斯 splat PLY、深度图与法线图。其模态涵盖图像到 3D 与视频到 3D 的重建,以代码加权重形式发布。",
+      "在 WorldFoundry 中,它通过 HunyuanWorld-Mirror pipeline 以 3D 任务运行——给它一张或多张图片(或它们的路径),它便把重建结果写入输出目录。"
+    ]
+  },
+  "whenToUse": {
+    "en": "Use it when you want fast, feed-forward 3D reconstruction from images or video, producing point clouds, Gaussian splats, and depth/normal maps in one pass.",
+    "zh": "当你想从图像或视频进行快速的前馈式 3D 重建、一次性产出点云、高斯 splat 与深度/法线图时,使用它。"
+  },
+  "notFor": {
+    "en": "It is a reconstruction model, not a text- or image-to-video generator. Running it needs the checkpoint, a compatible GPU, and 3D dependencies such as gsplat and open3d.",
+    "zh": "它是重建模型,不是文/图生视频的生成器。运行它需要 checkpoint、兼容的 GPU,以及 gsplat、open3d 等 3D 依赖。"
+  },
+  "highlights": {
+    "en": [
+      "Feed-forward 3D reconstruction from images or video",
+      "Outputs point-cloud and Gaussian-splat PLY, plus depth and normal maps",
+      "Supports both image-to-3D and video-to-3D",
+      "Released with code and weights"
+    ],
+    "zh": [
+      "从图像或视频进行前馈式 3D 重建",
+      "输出点云与高斯 splat PLY,以及深度图和法线图",
+      "同时支持图像到 3D 与视频到 3D",
+      "以代码加权重形式发布"
+    ]
+  }
+}

@@ -20,6 +20,8 @@ integration:
 license: apache-2.0
 name: X-WAM
 official_sources:
+  paper: https://arxiv.org/abs/2604.26694
+  project_page: https://sharinka0715.github.io/X-WAM/
   github:
     head_sha: 72cfb86b33fc5060963ef63412f16439fcfa472f
     url: https://github.com/sharinka0715/X-WAM

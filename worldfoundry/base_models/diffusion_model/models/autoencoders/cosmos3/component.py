@@ -1,4 +1,10 @@
-"""Cosmos3 codec composition without a Diffusers backend."""
+"""Cosmos3 multimodal :class:`~...runners.MultiModalLatentDecoder`.
+
+Video uses the shared Wan2.2 48-channel :class:`WanVideoVAE38`.  Sound
+uses :class:`~.audio.Cosmos3AVAEAudioDecoder`.  :class:`Cosmos3MediaDecoder`
+implements ``decode(states, request)`` for the joint runner.  Loaders
+remap official Diffusers Wan2.2 keys onto the native VAE38.
+"""
 
 from __future__ import annotations
 
@@ -12,6 +18,7 @@ from ....loaders import CheckpointSpec, ModuleLoadSpec, NativeModuleLoader, chec
 from ....optimizations import RuntimePolicy
 from ....runners import MultiModalLatentDecoder
 from ..wan import convert_diffusers_wan22_vae_state_dict
+from ..wan.component import _resolve_vae_decode_autocast
 from ..wan.model import CausalConv3d, RMS_norm, Upsample, WanVideoVAE38
 from .audio import Cosmos3AVAEAudioDecoder
 
@@ -42,10 +49,12 @@ def load_cosmos3_video_vae_checkpoint(
     )
     if not isinstance(module, WanVideoVAE38):
         raise TypeError(f"expected WanVideoVAE38, got {type(module).__name__}")
+    module.decode_autocast_dtype = _resolve_vae_decode_autocast(policy)
     return module
 
 
 def load_cosmos3_video_vae(context: ComponentBuildContext) -> WanVideoVAE38:
+    """Load the recipe-bound Wan2.2 VAE38 from the ``weights`` checkpoint."""
     return load_cosmos3_video_vae_checkpoint(context.require_checkpoint("weights"), context.policy)
 
 
@@ -99,6 +108,7 @@ class Cosmos3MediaDecoder(MultiModalLatentDecoder):
         states: Mapping[str, ModalityState],
         request: DiffusionRequest,
     ) -> Mapping[str, object]:
+        """Decode video (and optional sound / action) from joint modality states."""
         video_latent = states["video"].latent
         if bool(request.inputs.get("return_latent", False)):
             video = video_latent

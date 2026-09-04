@@ -1,0 +1,41 @@
+{
+  "id": "wan22-fun-a14b-cam",
+  "tagline": {
+    "en": "Wan2.2-Fun A14B Control Camera — the higher-capacity camera-controlled image-to-video model from Alibaba PAI's VideoX-Fun.",
+    "zh": "Wan2.2-Fun A14B Control Camera——出自阿里 PAI VideoX-Fun 的更大容量镜头可控图生视频模型。"
+  },
+  "overview": {
+    "en": [
+      "Wan2.2-Fun A14B Control Camera is a camera-controlled video model from Alibaba PAI's VideoX-Fun project, built on the Wan2.2 lineage. It generates video from an input image while letting you steer the virtual camera.",
+      "This is the A14B checkpoint — the higher-capacity option in the Wan2.2-Fun camera-control family, aimed at more detailed results than the 5B variant. You give it a starting image and a camera trajectory, and it renders a clip that follows that viewpoint.",
+      "In WorldFoundry you run it through the shared pipeline, providing the image and camera path; the checkpoint route is wired for camera-conditioned image-to-video."
+    ],
+    "zh": [
+      "Wan2.2-Fun A14B Control Camera 是阿里 PAI 的 VideoX-Fun 项目推出的镜头可控视频模型,构建在 Wan2.2 脉络之上。它从输入图片生成视频,同时让你操控虚拟相机。",
+      "这是 A14B checkpoint——Wan2.2-Fun 相机控制家族中容量更大的选项,相较 5B 变体面向更精细的效果。你给它一张起始图片和一条相机轨迹,它便渲染出沿该视角运动的片段。",
+      "在 WorldFoundry 中,你通过统一 pipeline 运行它,提供图片与相机路径;该 checkpoint 路径为镜头条件化的图生视频而接入。"
+    ]
+  },
+  "whenToUse": {
+    "en": "Use it when you want camera-driven image-to-video at higher capacity on the Wan2.2 base — deliberate camera moves from a starting frame with more detail than the 5B model.",
+    "zh": "当你想在 Wan2.2 基础上做更大容量、以相机为主导的图生视频时用它——从起始帧出发做刻意的相机运动,细节多于 5B 模型。"
+  },
+  "notFor": {
+    "en": "Heavier than the 5B variant, so it needs more compute. Requires the checkpoint to be downloaded before use.",
+    "zh": "比 5B 变体更重,需要更多算力。使用前需先下载 checkpoint。"
+  },
+  "highlights": {
+    "en": [
+      "Camera-controlled image-to-video with trajectory control",
+      "A14B — the higher-capacity camera-control checkpoint",
+      "From Alibaba PAI's VideoX-Fun, built on Wan2.2",
+      "Runs through the shared WorldFoundry pipeline"
+    ],
+    "zh": [
+      "镜头可控的图生视频,支持轨迹控制",
+      "A14B——容量更大的相机控制 checkpoint",
+      "出自阿里 PAI 的 VideoX-Fun,构建于 Wan2.2",
+      "通过 WorldFoundry 统一 pipeline 运行"
+    ]
+  }
+}

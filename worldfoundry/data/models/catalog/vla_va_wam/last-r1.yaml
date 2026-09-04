@@ -13,6 +13,8 @@ name: LaST-R1
 output_artifacts:
 - action_trace
 official_sources:
+  paper: https://arxiv.org/abs/2604.28192
+  project_page: https://siriyep.github.io/last-r1/
   github:
     head_sha: ba4e939632427e066f734bf9f7abfa11cc4911f6
     url: https://github.com/CHEN-H01/LaST-R1

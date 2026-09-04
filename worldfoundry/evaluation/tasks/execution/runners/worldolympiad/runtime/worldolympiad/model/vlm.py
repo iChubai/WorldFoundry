@@ -9,6 +9,7 @@ import requests
 from model.openrouter import (
     chat_openrouter_call,
     clean_json_content,
+    get_openrouter_api_key,
     parse_json_content,
     text_openrouter_call,
     video_openrouter_call,
@@ -250,6 +251,7 @@ __all__ = [
     "DEFAULT_VLM_BACKEND",
     "clean_json_content",
     "parse_json_content",
+    "get_openrouter_api_key",
     "resolve_vlm_backend",
     "default_model_name_for_backend",
     "resolve_model_name",

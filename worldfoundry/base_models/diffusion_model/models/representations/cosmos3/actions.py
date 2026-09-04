@@ -1,4 +1,12 @@
-"""Published Cosmos3 embodiment-domain metadata."""
+"""Published Cosmos3 embodiment-domain IDs and raw action widths.
+
+``ACTION_DOMAIN_IDS`` maps recipe / dataset names onto the integer
+``action_domain_id`` tensor the omni transformer expects.
+``ACTION_RAW_DIMS`` is the per-domain action-vector width used by
+:class:`~...initializers.cosmos3.Cosmos3LatentInitializer` when allocating
+action latents.  Several aliases share an ID (for example Agibot variants
+all use 15).
+"""
 
 ACTION_DOMAIN_IDS = {
     "no_action": 0,

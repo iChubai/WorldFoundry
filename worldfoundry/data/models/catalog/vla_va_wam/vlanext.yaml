@@ -16,6 +16,8 @@ integration:
 license: s-lab-1.0
 name: VLANeXt
 official_sources:
+  paper: https://arxiv.org/abs/2602.18532
+  project_page: https://dravenalg.github.io/VLANeXt
   github:
     head_sha: f4162397af20
     url: https://github.com/DravenALG/VLANeXt

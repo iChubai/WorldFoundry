@@ -7,6 +7,8 @@ availability: open_source
 provider: official_repo
 license: apache-2.0
 official_sources:
+  paper: https://arxiv.org/abs/2607.00678
+  project_page: https://amap-cvlab.github.io/ABot-Manipulation/
   github:
     url: https://github.com/amap-cvlab/ABot-Manipulation
     head_sha: 16088c08ad5762e19d76a36ef7dab9f7eda8e974

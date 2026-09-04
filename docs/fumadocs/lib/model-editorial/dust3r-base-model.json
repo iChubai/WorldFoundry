@@ -1,0 +1,41 @@
+{
+  "id": "dust3r-base-model",
+  "tagline": {
+    "en": "The DUSt3R base-model profile — the underlying checkpoint that supplies feed-forward 3D reconstruction as a geometry prior.",
+    "zh": "DUSt3R 基础模型配置——为几何先验提供前馈式 3D 重建的底层 checkpoint。"
+  },
+  "overview": {
+    "en": [
+      "This is the base-model profile behind the DUSt3R entry: the underlying network and checkpoint that produce feed-forward 3D reconstruction from images. DUSt3R, from NAVER LABS Europe, predicts dense 3D geometry from a small set of uncalibrated views in a single pass.",
+      "It shares the same in-tree source as the main DUSt3R catalog entry, so both draw on one implementation. Rather than being a standalone app, it is the reusable geometry component — from two views it can produce a dense point-cloud reconstruction.",
+      "In WorldFoundry it is exposed through the shared geometry-prior pipeline as a source of 3D structure for downstream 3D and 4D stages, rather than as an end-to-end pipeline runner of its own."
+    ],
+    "zh": [
+      "这是 DUSt3R 条目背后的基础模型配置:即从图像产出前馈式 3D 重建的底层网络与 checkpoint。DUSt3R 来自 NAVER LABS Europe,能在一次推理中从少量未标定视角预测稠密 3D 几何。",
+      "它与主 DUSt3R 目录条目共享同一份内置源码,因此二者基于同一实现。它并非独立应用,而是可复用的几何组件——从两个视角即可产出稠密点云重建。",
+      "在 WorldFoundry 中,它通过共享的 geometry-prior pipeline 对外提供,作为下游 3D、4D 环节的三维结构来源,而非自身独立的端到端 pipeline 运行器。"
+    ]
+  },
+  "whenToUse": {
+    "en": "This profile is what you reference when you need DUSt3R's reconstruction as a geometry prior inside a larger 3D/4D workflow, rather than running it as a standalone tool.",
+    "zh": "当你需要在更大的 3D/4D 工作流中把 DUSt3R 的重建作为几何先验来引用,而非作为独立工具运行时,就使用这个配置。"
+  },
+  "notFor": {
+    "en": "It's a base-model profile, not a standalone pipeline runner — use the main DUSt3R route for a runnable path. The same non-commercial DUSt3R licensing applies.",
+    "zh": "它是基础模型配置,而非独立的 pipeline 运行器——要可运行的路径请使用主 DUSt3R 入口。同样适用 DUSt3R 的非商用许可。"
+  },
+  "highlights": {
+    "en": [
+      "Base-model profile behind the DUSt3R entry",
+      "Feed-forward 3D reconstruction from a few views",
+      "Produces dense point-cloud geometry",
+      "Surfaced as a geometry prior for 3D/4D stages"
+    ],
+    "zh": [
+      "DUSt3R 条目背后的基础模型配置",
+      "从少量视角前馈式重建 3D",
+      "产出稠密点云几何",
+      "以几何先验形式服务于 3D/4D 环节"
+    ]
+  }
+}

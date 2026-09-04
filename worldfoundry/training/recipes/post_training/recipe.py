@@ -363,7 +363,7 @@ class PostTrainingRecipe:
             distributed=DistributedSpec(
                 **section(
                     "distributed",
-                    {"backend", "dp_replicate", "dp_shard", "cp", "tp"},
+                    {"backend", "dp_replicate", "dp_shard", "cp", "tp", "timeout_seconds"},
                 )
             ),
             checkpoint=PostTrainingCheckpointSpec(**checkpoint_payload),

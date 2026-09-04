@@ -13,6 +13,8 @@ source:
   official_repo_url: https://github.com/Wan-Video/Wan2.1
   hf_repo_id: Wan-AI/Wan2.1-VACE-14B
 official_sources:
+  paper: https://arxiv.org/abs/2503.07598
+  project_page: https://pku-yuangroup.github.io/Helios-Page/
   github:
     url: https://github.com/Wan-Video/Wan2.1
   huggingface:

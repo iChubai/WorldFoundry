@@ -8,10 +8,10 @@ code -- use ``worldfoundry.core.configuration.lazy_config.instantiate``
 """
 
 import importlib.resources
-import logging
 import os
 import sys
 from copy import deepcopy
+from threading import RLock
 
 import hydra
 import tree
@@ -20,9 +20,13 @@ from omegaconf import DictConfig, OmegaConf
 from ..utils.functional_utils import call_once, is_mapping, is_sequence, meta_decorator
 from .print_utils import to_scientific_str
 
-_logger = logging.getLogger(__name__)
+# ──────────────────────────────────────────────────────────────────────────
+# Hydra / OmegaConf — resolvers and run-context queries
+# ──────────────────────────────────────────────────────────────────────────
 
 _CLASS_REGISTRY = {}  # for instantiation
+_CLASS_REGISTRY_LOCK = RLock()
+_REGISTRY_MISSING = object()
 
 
 def resource_file_path(pkg_name, fname) -> str:
@@ -104,6 +108,8 @@ def register_omegaconf_resolvers() -> None:
     # try each key until the key exists. Useful for multiple classes that have different
     # names for the same key
     def _try_key(cfg, *keys):
+        """Return the first present key; used when sibling classes name the same field differently."""
+
         for k in keys:
             if k in cfg:
                 return cfg[k]
@@ -115,6 +121,8 @@ def register_omegaconf_resolvers() -> None:
     OmegaConf.register_new_resolver("underscore_to_dots", lambda s: s.replace("_", "."))
 
     def _no_instantiate(cfg):
+        """Mark a subtree so :func:`instantiate` returns the config mapping as-is."""
+
         cfg = deepcopy(cfg)
         cfg[_NO_INSTANTIATE] = True
         return cfg
@@ -122,19 +130,28 @@ def register_omegaconf_resolvers() -> None:
     OmegaConf.register_new_resolver("no_instantiate", _no_instantiate)
 
 
-# ---------------------------------------------------------------------------
-# Instantiation tools
-# ---------------------------------------------------------------------------
+# ──────────────────────────────────────────────────────────────────────────
+# Instantiation — legacy cls/class vocabulary; new code uses lazy_config
+# ──────────────────────────────────────────────────────────────────────────
+
+
+def _registry_put_many(bindings) -> None:
+    """Atomically add *bindings*, refusing to rebind names to other callables."""
+    pending = dict(bindings)
+    with _CLASS_REGISTRY_LOCK:
+        for name, class_type in pending.items():
+            existing = _CLASS_REGISTRY.get(name, _REGISTRY_MISSING)
+            if existing is not _REGISTRY_MISSING and existing is not class_type:
+                raise ValueError(
+                    f"config_utils class registry: {name!r} is already bound to {existing!r}, "
+                    f"cannot rebind to {class_type!r}"
+                )
+        _CLASS_REGISTRY.update(pending)
 
 
 def _registry_put(name, class_type) -> None:
-    """Insert into the legacy registry, warning on silent replacement."""
-    existing = _CLASS_REGISTRY.get(name)
-    if existing is not None and existing is not class_type:
-        _logger.warning(
-            "config_utils class registry: %r is being re-registered (%r replaces %r)", name, class_type, existing
-        )
-    _CLASS_REGISTRY[name] = class_type
+    """Insert one name into the legacy registry."""
+    _registry_put_many(((name, class_type),))
 
 
 def register_callable(name, class_type) -> None:
@@ -149,11 +166,11 @@ def register_callable(name, class_type) -> None:
 def register_class(cls, alias=None):
     """Decorator that registers a class (and optional aliases) for config instantiation."""
     assert callable(cls)
-    _registry_put(cls.__name__, cls)
+    names = [cls.__name__]
     if alias:
         assert is_sequence(alias)
-        for a in alias:
-            _registry_put(str(a), cls)
+        names.extend(str(a) for a in alias)
+    _registry_put_many((name, cls) for name in names)
     return cls
 
 
@@ -179,10 +196,11 @@ def omegaconf_save(cfg, *paths: str, resolve: bool = True) -> None:
 
 def get_class(path):
     """Resolve a class from the registry or from a fully qualified import path."""
-    if path in _CLASS_REGISTRY:
-        return _CLASS_REGISTRY[path]
-    else:
-        assert "." in path, f"Because {path} is not found in class registry, it must be a full module path"
+    with _CLASS_REGISTRY_LOCK:
+        class_type = _CLASS_REGISTRY.get(path, _REGISTRY_MISSING)
+    if class_type is not _REGISTRY_MISSING:
+        return class_type
+    assert "." in path, f"Because {path} is not found in class registry, it must be a full module path"
     try:
         from importlib import import_module
 
@@ -204,6 +222,8 @@ _OMEGA_MISSING = "???"
 
 
 def _get_instantiate_params(cfg, kwargs=None):
+    """Split ``cls``/``class`` out; ``???`` must be filled from *kwargs* or raise."""
+
     params = cfg
     f_args, f_kwargs = (), {}
     for k, value in params.items():
@@ -226,6 +246,8 @@ def _get_instantiate_params(cfg, kwargs=None):
 
 
 def _instantiate_single(cfg):
+    """Instantiate one mapping; ``__no_instantiate__`` short-circuits to a deep copy."""
+
     if is_mapping(cfg) and ("cls" in cfg or "class" in cfg):
         assert bool("cls" in cfg) != bool("class" in cfg), (
             'to instantiate from config, one and only one of "cls" or "class" key should be provided'

@@ -31,8 +31,11 @@ checkpoint:
     - image-to-video
     license_status: pending
   notes: HF repos are public and non-gated, but cardData did not expose a license.
+official_sources:
+  project_page: https://lllyasviel.github.io/frame_pack_gitpage/
+  paper: https://arxiv.org/abs/2504.12626
 integration:
-  status: verified
+  status: integrated
   notes:
   - WorldFoundry vendors the minimal infer-only FramePack runtime in-tree; missing checkpoint/assets are reported at runtime.
   - The in-tree route materializes official outputs through the shared pipeline contract.

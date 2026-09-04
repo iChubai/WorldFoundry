@@ -1,4 +1,9 @@
-"""Native LTX audio-video denoiser component."""
+"""Native LTX audio-video denoiser component.
+
+Adapts the official LTX velocity transformer to the multi-modal
+``Denoiser`` contract used by the joint AV runner.  Config comes from
+safetensors metadata via :func:`~...loaders.metadata.safetensors_json_metadata`.
+"""
 
 from __future__ import annotations
 
@@ -8,7 +13,12 @@ import torch
 
 from ...components import ComponentBuildContext
 from ...contracts import MultiModalDenoiserInput, MultiModalDenoiserOutput
-from ...loaders import ModuleLoadSpec, NativeModuleLoader, safetensors_json_metadata
+from ...loaders import (
+    ModuleLoadSpec,
+    NativeCheckpointResolver,
+    NativeModuleLoader,
+    safetensors_json_metadata,
+)
 from ..networks.ltx.modality import Modality
 from ..networks.ltx.model import LTXModel
 from ..networks.ltx.perturbations import BatchedPerturbationConfig
@@ -113,21 +123,28 @@ class LTXJointDenoiser:
             raise KeyError(f"LTX joint denoising is missing {error.args[0]!r}") from error
         if not isinstance(video_context, torch.Tensor) or not isinstance(audio_context, torch.Tensor):
             raise TypeError("LTX video_context and audio_context must be tensors")
-        context_mask = model_input.conditioning.get("context_mask")
-        if context_mask is not None and not isinstance(context_mask, torch.Tensor):
-            raise TypeError("LTX context_mask must be a tensor")
+        video_context_mask = self._context_mask(
+            model_input.conditioning,
+            "video_context_mask",
+            token_count=video_state.latent.shape[1],
+        )
+        audio_context_mask = self._context_mask(
+            model_input.conditioning,
+            "audio_context_mask",
+            token_count=audio_state.latent.shape[1],
+        )
 
         video = self._modality(
             video_state,
             sigma=model_input.timestep,
             context=video_context,
-            context_mask=context_mask,
+            context_mask=video_context_mask,
         )
         audio = self._modality(
             audio_state,
             sigma=model_input.timestep,
             context=audio_context,
-            context_mask=context_mask,
+            context_mask=audio_context_mask,
         )
         perturbations = BatchedPerturbationConfig.empty(video_state.latent.shape[0])
         with torch.autocast(
@@ -144,6 +161,24 @@ class LTXJointDenoiser:
                 "audio": audio.latent - audio.timesteps * audio_velocity,
             }
         )
+
+    @staticmethod
+    def _context_mask(
+        conditioning: Mapping[str, object],
+        modality_key: str,
+        *,
+        token_count: int,
+    ) -> torch.Tensor | None:
+        """Resolve a modality/stage mask while preserving the shared fallback."""
+
+        value = conditioning.get(modality_key, conditioning.get("context_mask"))
+        if isinstance(value, Mapping):
+            value = value.get(token_count, value.get(str(token_count)))
+            if value is None:
+                raise KeyError(f"LTX {modality_key} has no mask for {token_count} query tokens")
+        if value is not None and not isinstance(value, torch.Tensor):
+            raise TypeError(f"LTX {modality_key} must be a tensor or token-count mapping")
+        return value
 
 
 class LTXVideoDenoiser:
@@ -166,9 +201,11 @@ class LTXVideoDenoiser:
             raise KeyError(f"LTX-Video denoising is missing {error.args[0]!r}") from error
         if not isinstance(context, torch.Tensor):
             raise TypeError("LTX-Video context must be a tensor")
-        context_mask = model_input.conditioning.get("context_mask")
-        if context_mask is not None and not isinstance(context_mask, torch.Tensor):
-            raise TypeError("LTX-Video context_mask must be a tensor")
+        context_mask = LTXJointDenoiser._context_mask(
+            model_input.conditioning,
+            "video_context_mask",
+            token_count=state.latent.shape[1],
+        )
         video = LTXJointDenoiser._modality(
             state,
             sigma=model_input.timestep,
@@ -196,6 +233,34 @@ def build_ltx_joint_denoiser(context: ComponentBuildContext) -> LTXJointDenoiser
         AutoWrappedNonRecurseModule,
     )
 
+    post_load_hook = None
+    lora_checkpoint = context.checkpoint("lora")
+    if lora_checkpoint is not None:
+        materialized_lora = NativeCheckpointResolver().materialize(lora_checkpoint)
+        from worldfoundry.core.model_loading import load_state_dict, merge_named_lora_
+
+        lora_source: str | list[str]
+        lora_paths = tuple(str(path) for path in materialized_lora.paths)
+        lora_source = lora_paths[0] if len(lora_paths) == 1 else list(lora_paths)
+        lora_state = load_state_dict(lora_source, torch_dtype=context.policy.dtype, device="cpu")
+        expected_modules = context.component_options.get("expected_lora_modules")
+        lora_alpha = float(context.component_options.get("lora_alpha", 1.0))
+
+        def merge_lora(wrapper: torch.nn.Module) -> None:
+            if not isinstance(wrapper, LTXAVTransformerModule):
+                raise TypeError("LTX LoRA hook received an unexpected transformer wrapper")
+            merge_named_lora_(
+                wrapper.velocity_model,
+                lora_state,
+                alpha=lora_alpha,
+                expected_modules=int(expected_modules) if expected_modules is not None else None,
+                owner="LTX LoRA",
+                device="cpu",
+                torch_dtype=context.policy.dtype,
+            )
+
+        post_load_hook = merge_lora
+
     model = NativeModuleLoader().load(
         ModuleLoadSpec(
             module_class=LTXAVTransformerModule,
@@ -209,6 +274,7 @@ def build_ltx_joint_denoiser(context: ComponentBuildContext) -> LTXJointDenoiser
                 torch.nn.RMSNorm: AutoWrappedModule,
             },
             layer_container="velocity_model.transformer_blocks",
+            post_load_hook=post_load_hook,
         ),
         context.require_checkpoint("weights"),
         context.policy,

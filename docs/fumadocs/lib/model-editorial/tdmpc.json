@@ -1,0 +1,37 @@
+{
+  "id": "tdmpc",
+  "tagline": {
+    "en": "A model-predictive-control policy that plans actions through a learned world model.",
+    "zh": "一个模型预测控制(MPC)策略,通过学习到的世界模型规划动作。"
+  },
+  "overview": {
+    "en": [
+      "TD-MPC (Temporal Difference Model Predictive Control) is a control method that learns a world model and uses it for planning: it rolls the model forward to search for good action sequences, combining model-predictive control with a learned value function. WorldFoundry sources it from the official TD-MPC repository rather than a generic policy zoo.",
+      "In WorldFoundry TD-MPC runs through an in-tree action runtime adapter against the concrete TD-MPC policy. You supply a checkpoint for your task; if it is absent, the runtime reports the missing asset rather than blocking."
+    ],
+    "zh": [
+      "TD-MPC(Temporal Difference Model Predictive Control)是一种控制方法,它学习一个世界模型并用于规划:向前展开该模型以搜索优质动作序列,把模型预测控制与学习到的价值函数结合起来。WorldFoundry 从官方 TD-MPC 仓库获取它,而非通用策略库。",
+      "在 WorldFoundry 中,TD-MPC 通过一个内置的动作运行时适配器,针对具体的 TD-MPC 策略运行。你为任务提供 checkpoint;若缺失,运行时会报告缺少的资源,而不会阻塞。"
+    ]
+  },
+  "whenToUse": {
+    "en": "When you want a planning-based control policy that learns a world model and uses model-predictive control, rather than a purely reactive policy.",
+    "zh": "当你想要一个基于规划的控制策略——学习世界模型并使用模型预测控制,而非纯反应式策略时。"
+  },
+  "notFor": {
+    "en": "Running rollouts needs a task checkpoint; without one the runtime reports the missing asset rather than producing actions.",
+    "zh": "运行 rollout 需要任务 checkpoint;没有它时,运行时会报告缺少的资源,而非产出动作。"
+  },
+  "highlights": {
+    "en": [
+      "Model-predictive control with a learned world model",
+      "Planning-based rather than purely reactive control",
+      "Sourced from the official TD-MPC repository"
+    ],
+    "zh": [
+      "结合学习世界模型的模型预测控制",
+      "基于规划而非纯反应式控制",
+      "源自官方 TD-MPC 仓库"
+    ]
+  }
+}

@@ -29,9 +29,15 @@ from PIL import Image
 
 
 def _save_trajectory_tum_format(traj, path):
-    from dust3r.utils.vo_eval import save_trajectory_tum_format
-
-    return save_trajectory_tum_format(traj, path)
+    poses, timestamps = traj
+    poses = np.asarray(to_numpy(poses))
+    timestamps = np.asarray(to_numpy(timestamps)).reshape(-1)
+    if len(poses) != len(timestamps):
+        raise ValueError("trajectory poses and timestamps must have the same length")
+    with open(path, "w", encoding="utf-8") as handle:
+        for timestamp, pose in zip(timestamps, poses):
+            handle.write(" ".join(map(str, (timestamp, *pose))) + "\n")
+    print(f"Saved trajectory to {path}")
 
 def c2w_to_tumpose(c2w):
     """

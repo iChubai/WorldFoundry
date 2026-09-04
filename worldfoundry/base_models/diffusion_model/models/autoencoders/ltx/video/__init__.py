@@ -1,4 +1,16 @@
-"""Video VAE package."""
+"""LTX video VAE CNN, tiling, and encoder/decoder configurators.
+
+Subpackage entry for the LTX 3-D residual UNet.
+:class:`~.video_vae.VideoEncoder` / :class:`VideoDecoder` are the
+public encode/decode surfaces.  Official compression is 8×
+temporal / 32× spatial with 128 latent channels (BCTHW).
+
+:class:`~.tiling.TilingConfig` enables spatial / temporal tiles
+for long clips.  :class:`~.model_configurator.VideoEncoderConfigurator`
+rebuilds the CNN from checkpoint metadata.
+
+Consumed by :class:`~..component.LTXMediaDecoder` and tensor codecs.
+"""
 
 from worldfoundry.base_models.diffusion_model.models.autoencoders.ltx.video.model_configurator import (
     VideoDecoderConfigurator,

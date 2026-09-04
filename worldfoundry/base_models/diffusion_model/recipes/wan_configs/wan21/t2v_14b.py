@@ -1,5 +1,13 @@
 # Copyright 2024-2025 The Alibaba Wan Team Authors. All rights reserved.
-"""Module for base_models -> diffusion_model -> video -> wan -> wan_2p1 -> configs -> wan_t2v_14B.py functionality."""
+"""Official Wan 2.1 T2V 14B EasyDict (UMT5 + Wan2.1 VAE, 40-layer DiT).
+
+Text-to-video 14B: dim 5120, FFN 13824, 40 heads, QK and cross-attn
+norm, patch ``(1, 2, 2)``, VAE stride ``(4, 8, 8)``.  Inherits T5 /
+dtype / neg-prompt from :mod:`.shared`.  No CLIP tower.
+
+Used as the base for the T2I 14B alias in :mod:`..action_21`.
+Checkpoint names stay on this EasyDict; runners do not hard-code them.
+"""
 
 from easydict import EasyDict
 

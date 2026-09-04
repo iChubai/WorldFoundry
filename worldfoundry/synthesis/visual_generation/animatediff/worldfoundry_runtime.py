@@ -395,7 +395,7 @@ class AnimateDiffRuntime:
             video: Not supported in this integration; will raise ValueError if provided.
             interactions: A sequence of interaction strings (currently unused).
             output_path: Optional path to save the generated video. If None,
-                         defaults to "animatediff.gif" in the current working directory.
+                         defaults to "animatediff.mp4" in the current working directory.
             fps: Frames per second for the output video. If None, defaults to 8.
             **kwargs: Additional parameters for the AnimateDiff pipeline, including:
                 - `official_config_path`, `config_path`, `config`: (Deprecated) for legacy config execution.
@@ -452,12 +452,14 @@ class AnimateDiffRuntime:
         ).videos
 
         # Determine and resolve the output path, ensuring parent directories exist
-        target = Path(output_path) if output_path is not None else Path.cwd() / "animatediff.gif"
+        target = Path(output_path) if output_path is not None else Path.cwd() / "animatediff.mp4"
         target = target.expanduser().resolve()
         target.parent.mkdir(parents=True, exist_ok=True)
-        # Ensure the output file has a valid video suffix, defaulting to .gif
-        if target.suffix.lower() not in {".gif", ".mp4"}:
-            target = target.with_suffix(".gif")
+        # The evaluation runner historically proposed a GIF name for this
+        # profile.  Normalize every direct inference artifact to MP4 so it is
+        # a regular, frame-accurate video demo.
+        if target.suffix.lower() != ".mp4":
+            target = target.with_suffix(".mp4")
 
         from worldfoundry.core.io.video import save_videos_grid
 

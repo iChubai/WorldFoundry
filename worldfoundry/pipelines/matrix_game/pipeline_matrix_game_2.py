@@ -40,19 +40,33 @@ class MatrixGame2Pipeline(PipelineABC):
 
     @classmethod
     def from_pretrained(cls,
-                        model_path: Optional[str] = None,
-                        required_components: Optional[dict] = None,
+                        model_path: Any = None,
+                        required_components: Optional[Mapping[str, Any]] = None,
                         device: str = "cuda",
                         # Use bfloat16 precision to balance memory efficiency and numeric range
                         weight_dtype = torch.bfloat16,
                         mode = "universal",
                         **kwargs) -> "MatrixGame2Pipeline":
         """Load the pipeline from pretrained checkpoints and configurations."""
-        runtime_kwargs = {**(required_components or {}), **kwargs}
-        mode = runtime_kwargs.pop("mode", mode)
-        if model_path is not None:
-            synthesis_model_path = model_path
+        runtime_kwargs = dict(model_path) if isinstance(model_path, Mapping) else {}
+        if isinstance(model_path, Mapping):
+            synthesis_model_path = runtime_kwargs.pop("model_path", None) or runtime_kwargs.pop(
+                "pretrained_model_path", None
+            )
         else:
+            synthesis_model_path = model_path
+        nested_components = runtime_kwargs.pop("required_components", None)
+        if nested_components is not None:
+            if not isinstance(nested_components, Mapping):
+                raise TypeError("required_components must be a mapping")
+            runtime_kwargs.update(nested_components)
+        if required_components is not None:
+            if not isinstance(required_components, Mapping):
+                raise TypeError("required_components must be a mapping")
+            runtime_kwargs.update(required_components)
+        runtime_kwargs.update(kwargs)
+        mode = runtime_kwargs.pop("mode", mode)
+        if synthesis_model_path in {None, ""}:
             synthesis_model_path = str(resolve_ckpt_dir() / "Matrix-Game-2.0")
         
         logger.info("Loading MatrixGame2 synthesis model from %s...", synthesis_model_path)

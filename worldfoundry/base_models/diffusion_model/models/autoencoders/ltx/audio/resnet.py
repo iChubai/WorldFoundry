@@ -1,3 +1,15 @@
+"""Residual blocks for the LTX audio VAE.
+
+:class:`ResnetBlock` is the main encoder/decoder residual.
+:class:`ResBlock1` / :class:`ResBlock2` are the vocoder AMP
+residuals.  All use causal 2-D convs from :mod:`.causal_conv_2d`.
+
+Tensors are ``N C H W`` spectrogram maps.  Header-level docs
+only — do not comment every inner conv.
+
+Consumed by :mod:`.audio_vae` and :mod:`.vocoder`.
+"""
+
 from typing import Tuple
 
 import torch
@@ -13,6 +25,7 @@ LRELU_SLOPE = 0.1
 
 
 class ResBlock1(torch.nn.Module):
+    """Vocoder AMP residual with dilated causal convolutions (variant 1)."""
     def __init__(self, channels: int, kernel_size: int = 3, dilation: Tuple[int, int, int] = (1, 3, 5)):
         super(ResBlock1, self).__init__()
         self.convs1 = torch.nn.ModuleList(
@@ -84,6 +97,7 @@ class ResBlock1(torch.nn.Module):
 
 
 class ResBlock2(torch.nn.Module):
+    """Vocoder AMP residual with dilated causal convolutions (variant 2)."""
     def __init__(self, channels: int, kernel_size: int = 3, dilation: Tuple[int, int] = (1, 3)):
         super(ResBlock2, self).__init__()
         self.convs = torch.nn.ModuleList(
@@ -116,6 +130,7 @@ class ResBlock2(torch.nn.Module):
 
 
 class ResnetBlock(torch.nn.Module):
+    """Main residual unit used by the LTX audio encoder/decoder."""
     def __init__(
         self,
         *,

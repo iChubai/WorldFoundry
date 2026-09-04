@@ -1,17 +1,54 @@
-"""Optimized attention primitives and KV cache for streaming inference."""
+"""Attention subsystem: backend probing, layout-agnostic dispatch, RoPE, KV cache, and Context Parallel.
+
+This package separates *which Attention kernel to run* from *how a model writes QKV*:
+
+- ``backends``: zero-cost probing via ``find_spec`` (does not import crash-prone
+  extensions). Distinguishes *installed* from *usable* (compute capability, HIP vs
+  CUDA). ``auto`` deliberately resolves to in-tree PyTorch SDPA (the
+  no-external-repo contract). FlashAttention, SageAttention, and xFormers require
+  an explicit env opt-in and fall back to SDPA when unusable.
+- ``dispatch``: normalizes einops layouts, then picks a backend from the workload
+  signature. Short sequences, masks, and non-half dtypes always take exact SDPA
+  to avoid fused-kernel launch cost or mismatched mask contracts. Failed
+  signatures are quarantined; ``torch_sdpa`` is always retained as the last path.
+- ``native``: exact SDPA wrapper, GQA compatibility, all-false-mask row
+  normalization, and ``NativeAttention`` that can attach Context Parallel.
+- ``varlen``: variable-length / packed path. Dense unpadded batches are *not*
+  packed into varlen (slower for the small batches diffusion uses). External
+  FlashAttention is tried only when ``version=2/3``; otherwise jagged Flash or
+  per-sample SDPA.
+- ``rope`` / ``rope_*``: 2D / 3D / ND / complex RoPE. The 3D path is CP-aware.
+  The KV-cache-relative variant is for sink+window caches (do not rotate K on
+  write; rotate on read).
+- ``kvcache``: ``BlockKVCache`` is a fixed-size rolling buffer (CUDA Graph
+  friendly) vs ``CompactingKVCache`` with pluggable policy/quantization (dynamic
+  gather; not Graph-capturable).
+- Ulysses / xDiT CP / sequence-parallel modules handle long sequences across
+  ranks: all-to-all head dim into sequence shards, compute locally, then swap back.
+
+Public symbols load lazily through ``__getattr__`` so
+``import worldfoundry.core.attention`` does not pull in every Triton or
+distributed dependency.
+"""
 
 from __future__ import annotations
 
 from importlib import import_module
 from typing import Any
 
+# ──────────────────────────────────────────────────────────────────────────
+# Lazy export table — names resolve on first access so import stays cheap
+# ──────────────────────────────────────────────────────────────────────────
+
 _EXPORT_MODULES = {
     "AttentionKernelCapability": "worldfoundry.core.attention.backends",
+    "ModelSpecificAttentionBackendError": "worldfoundry.core.attention.backends",
     "apply_complex_rotary_embedding": "worldfoundry.core.attention.complex_rope",
     "AttentionCallable": "worldfoundry.core.attention.model_backends",
     "AttentionFunction": "worldfoundry.core.attention.model_backends",
     "AttentionBackendInfo": "worldfoundry.core.attention.native",
     "BlockKVCache": "worldfoundry.core.attention.kvcache",
+    "InferenceParams": "worldfoundry.core.attention.inference_state",
     "CausalVideoCacheGeometry": "worldfoundry.core.attention.causal_cache",
     "allocate_causal_video_cache": "worldfoundry.core.attention.causal_cache",
     "begin_causal_video_cache_block": "worldfoundry.core.attention.causal_cache",
@@ -33,7 +70,9 @@ _EXPORT_MODULES = {
     "attention_backend_capability": "worldfoundry.core.attention.backends",
     "attention_backend_from_env": "worldfoundry.core.attention.backends",
     "attention_dispatch_report": "worldfoundry.core.attention.dispatch",
+    "attention_compile_receipt_scope": "worldfoundry.core.attention.dispatch",
     "attention_forward": "worldfoundry.core.attention.dispatch",
+    "attention_provider_runtime_report": "worldfoundry.core.attention.dispatch",
     "clear_attention_dispatch_cache": "worldfoundry.core.attention.dispatch",
     "complex_rotary_frequencies": "worldfoundry.core.attention.complex_rope",
     "complex_rotary_frequencies_3d": "worldfoundry.core.attention.complex_rope",
@@ -64,6 +103,8 @@ _EXPORT_MODULES = {
     "packed_sequence_attention": "worldfoundry.core.attention.dispatch",
     "attention": "worldfoundry.core.attention.varlen",
     "probe_attention_backends": "worldfoundry.core.attention.backends",
+    "require_generic_attention_backend": "worldfoundry.core.attention.backends",
+    "reset_attention_provider_runtime": "worldfoundry.core.attention.dispatch",
     "reshape_rotary_for_broadcast": "worldfoundry.core.attention.rope_nd",
     "invert_camera_intrinsics": "worldfoundry.core.attention.projective_rope",
     "invert_se3": "worldfoundry.core.attention.projective_rope",
@@ -86,6 +127,11 @@ _EXPORT_MODULES = {
 
 
 def __getattr__(name: str) -> Any:
+    """Resolve a public symbol from ``_EXPORT_MODULES`` on first access.
+
+    The result is written back into ``globals()`` so later lookups skip
+    ``import_module``. Unknown names raise :class:`AttributeError`.
+    """
     module_name = _EXPORT_MODULES.get(name)
     if module_name is None:
         raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
@@ -96,16 +142,19 @@ def __getattr__(name: str) -> Any:
 
 
 def __dir__() -> list[str]:
+    """Merge materialized globals with ``__all__`` so completion sees every export."""
     return sorted({*globals(), *__all__})
 
 
 __all__ = [
     "AttentionKernelCapability",
+    "ModelSpecificAttentionBackendError",
     "AttentionCallable",
     "AttentionFunction",
     "BlockKVCache",
     "CausalVideoCacheGeometry",
     "ContextParallelAttention",
+    "InferenceParams",
     "AttentionBackendInfo",
     "KVCacheRelativeRotaryPositionEmbedding3D",
     "ModelMetaArgs",
@@ -121,7 +170,9 @@ __all__ = [
     "attention_backend_from_env",
     "attention_backend_report",
     "attention_dispatch_report",
+    "attention_compile_receipt_scope",
     "attention_forward",
+    "attention_provider_runtime_report",
     "clear_attention_dispatch_cache",
     "complex_rotary_frequencies",
     "complex_rotary_frequencies_3d",
@@ -160,6 +211,8 @@ __all__ = [
     "pad_freqs",
     "packed_sequence_attention",
     "probe_attention_backends",
+    "require_generic_attention_backend",
+    "reset_attention_provider_runtime",
     "QKVSelfAttention",
     "QKNormRopeSelfAttention",
     "CSOHelper",

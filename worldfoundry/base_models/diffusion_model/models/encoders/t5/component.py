@@ -1,4 +1,13 @@
-"""Model-independent native T5 prompt conditioning."""
+"""Shared T5 :class:`~...contracts.ConditionEncoder`.
+
+Tokenizes ``DiffusionRequest.prompts`` / ``negative_prompts`` and runs a
+Hugging Face T5 encoder loaded through
+:class:`~...loaders.module.NativeModuleLoader`.  Returns
+:class:`~...contracts.Conditioning` with ``positive[\"context\"]`` and,
+when CFG ≠ 1, ``negative[\"context\"]``.  Used by recipes that do not
+own a family-specific text tower (and as a fallback for Wan-compatible
+T5 variants).
+"""
 
 from __future__ import annotations
 
@@ -119,6 +128,7 @@ class T5EncoderConditioner:
         device: torch.device,
         dtype: torch.dtype,
     ) -> Conditioning:
+        """Tokenize prompts and return T5 ``context`` / mask tensors."""
         positive = self._values(
             self._encode(request.prompts, device=device),
             device=device,

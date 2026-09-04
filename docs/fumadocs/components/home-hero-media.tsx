@@ -24,15 +24,19 @@ export function HomeHeroMedia({ children }: { children?: ReactNode }) {
   const [carouselVisible, setCarouselVisible] = useState(true);
   const [videoReady, setVideoReady] = useState(false);
 
-  const visibleSlides = useMemo(
-    () =>
-      ([-1, 0, 1] as const).map((offset) => ({
-        offset,
-        slide: slideAt(activeIndex, offset),
-        key: `${slideAt(activeIndex, offset).id}-${offset}`,
-      })),
-    [activeIndex],
-  );
+  const isCarousel = homeHeroSlides.length > 1;
+  const visibleSlides = useMemo(() => {
+    if (!isCarousel) {
+      const slide = homeHeroSlides[0];
+      return [{ offset: 0 as const, slide, key: slide.id }];
+    }
+
+    return ([-1, 0, 1] as const).map((offset) => ({
+      offset,
+      slide: slideAt(activeIndex, offset),
+      key: `${slideAt(activeIndex, offset).id}-${offset}`,
+    }));
+  }, [activeIndex, isCarousel]);
 
   const activeSlide = homeHeroSlides[activeIndex];
   const showVideo = activeSlide.kind === 'video' && videoAllowed && motionAllowed;
@@ -199,30 +203,32 @@ export function HomeHeroMedia({ children }: { children?: ReactNode }) {
           <span>{activeSlide.caption}</span>
         </div>
 
-        <div className="wf-home-hero-carousel-controls">
-          <button type="button" className="wf-home-hero-carousel-nav" aria-label="Previous demo" onClick={goPrev}>
-            <ChevronLeft aria-hidden="true" size={18} strokeWidth={1.8} />
-          </button>
-          <div className="wf-home-hero-carousel-dots" role="tablist" aria-label="Demo selection">
-            {homeHeroSlides.map((slide, index) => (
-              <button
-                key={slide.id}
-                type="button"
-                role="tab"
-                aria-selected={index === activeIndex}
-                aria-label={slide.label}
-                className={index === activeIndex ? 'is-active' : undefined}
-                onClick={() => {
-                  setActiveIndex(index);
-                  setVideoReady(false);
-                }}
-              />
-            ))}
+        {isCarousel ? (
+          <div className="wf-home-hero-carousel-controls">
+            <button type="button" className="wf-home-hero-carousel-nav" aria-label="Previous demo" onClick={goPrev}>
+              <ChevronLeft aria-hidden="true" size={18} strokeWidth={1.8} />
+            </button>
+            <div className="wf-home-hero-carousel-dots" role="tablist" aria-label="Demo selection">
+              {homeHeroSlides.map((slide, index) => (
+                <button
+                  key={slide.id}
+                  type="button"
+                  role="tab"
+                  aria-selected={index === activeIndex}
+                  aria-label={slide.label}
+                  className={index === activeIndex ? 'is-active' : undefined}
+                  onClick={() => {
+                    setActiveIndex(index);
+                    setVideoReady(false);
+                  }}
+                />
+              ))}
+            </div>
+            <button type="button" className="wf-home-hero-carousel-nav" aria-label="Next demo" onClick={goNext}>
+              <ChevronRight aria-hidden="true" size={18} strokeWidth={1.8} />
+            </button>
           </div>
-          <button type="button" className="wf-home-hero-carousel-nav" aria-label="Next demo" onClick={goNext}>
-            <ChevronRight aria-hidden="true" size={18} strokeWidth={1.8} />
-          </button>
-        </div>
+        ) : null}
       </div>
     </div>
   );

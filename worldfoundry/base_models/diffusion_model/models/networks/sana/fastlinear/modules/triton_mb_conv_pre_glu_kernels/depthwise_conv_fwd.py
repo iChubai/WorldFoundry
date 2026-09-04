@@ -14,7 +14,11 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-"""Module for base_models -> diffusion_model -> image -> sana -> diffusion -> model -> nets -> fastlinear -> modules -> triton_mb_conv_pre_glu_kernels -> depthwise_conv_fwd.py functionality."""
+"""Triton kernel: NHWC depthwise conv for fused MBConvPreGLU.
+
+Public entry: :func:`depthwise_conv_fwd`.  ``x``/``y`` are ``(B, H, W, C)``,
+``weight`` is ``(C, K, K)``, ``bias`` is ``(C,)``.
+"""
 
 import torch
 import triton
@@ -136,14 +140,7 @@ def depthwise_conv_fwd_kernel(
 
 
 def depthwise_conv_fwd(x: torch.Tensor, weight: torch.Tensor, bias: torch.Tensor) -> torch.Tensor:
-    """
-    Input:
-        x: (B, H, W, C)
-        weight: (C, K, K)
-        bias: (C,)
-    Output:
-        y: (B, H, W, C)
-    """
+    """NHWC depthwise conv used after the pre-GLU expand in MBConvPreGLU."""
     assert x.dim() == 4 and weight.dim() == 3 and bias.dim() == 1
     assert x.shape[-1] == weight.shape[0] == bias.shape[0]  # C
     assert weight.shape[1] == weight.shape[2]  # K

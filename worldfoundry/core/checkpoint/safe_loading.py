@@ -1,12 +1,29 @@
-"""Fail-closed helpers for inference-time PyTorch checkpoint loading."""
+"""Fail-closed helpers for inference-time PyTorch checkpoint loading.
+
+Untrusted or wrapper-shaped checkpoints must not execute pickle or
+leak non-tensor metadata into ``load_state_dict``. :func:`load_weights_only`
+reads safetensors or ``torch.load(..., weights_only=True)``.
+:func:`tensor_state_dict` / :func:`load_tensor_state_dict` unwrap
+conventional containers (``state_dict``, ``model``, …) and require a
+flat string-to-tensor mapping. :func:`require_tensor` and
+:func:`require_mapping` reject unexpected payload shapes.
+
+Not a format dispatcher — use :mod:`worldfoundry.core.checkpoint.load`
+for URL routing.
+"""
 
 from __future__ import annotations
 
 from collections.abc import Mapping, Sequence
-from os import PathLike
+from os import PathLike, fspath
+from pathlib import Path
 from typing import Any, BinaryIO
 
 import torch
+
+# ──────────────────────────────────────────────────────────────────────────
+# Wrapper keys — conventional training dumps nest tensors under one of these
+# ──────────────────────────────────────────────────────────────────────────
 
 DEFAULT_STATE_DICT_KEYS = ("state_dict", "model_state_dict", "model", "module")
 
@@ -17,7 +34,15 @@ def load_weights_only(
     map_location: Any = "cpu",
     mmap: bool | None = None,
 ) -> object:
-    """Deserialize only tensors and PyTorch's allowlisted primitive containers."""
+    """Load safetensors or deserialize PyTorch's allowlisted tensor containers."""
+
+    if isinstance(source, (str, PathLike)) and Path(fspath(source)).suffix == ".safetensors":
+        if mmap is not None:
+            raise ValueError("safetensors loading does not accept the PyTorch mmap option")
+        from safetensors.torch import load_file
+
+        device = "cpu" if map_location is None else str(map_location)
+        return load_file(fspath(source), device=device)
 
     kwargs: dict[str, Any] = {
         "map_location": map_location,
@@ -25,7 +50,17 @@ def load_weights_only(
     }
     if mmap is not None:
         kwargs["mmap"] = mmap
-    return torch.load(source, **kwargs)
+    # Some official tensor checkpoints contain Python ``set`` values in
+    # non-weight metadata.  Keep weights-only deserialization enabled and
+    # allow only that primitive container for the duration of this load.
+    # Downstream state-dict validation still requires string -> Tensor values.
+    with torch.serialization.safe_globals([set]):
+        return torch.load(source, **kwargs)
+
+
+# ──────────────────────────────────────────────────────────────────────────
+# Fail-closed unwrap — reject pickle leftovers before load_state_dict
+# ──────────────────────────────────────────────────────────────────────────
 
 
 def require_tensor(payload: object, *, source: str) -> torch.Tensor:

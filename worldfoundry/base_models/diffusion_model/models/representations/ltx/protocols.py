@@ -1,3 +1,13 @@
+"""LTX-local Protocols for patchify / schedule / guidance helpers.
+
+These are **not** the runner contracts in
+:mod:`worldfoundry.base_models.diffusion_model.contracts`.  They describe
+the small objects used while packing LTX video/audio latents into
+transformer tokens (:class:`Patchifier`) and optional research schedulers /
+guiders.  The production runner still uses :class:`~...contracts.Denoiser`
+and :class:`~...contracts.LatentProcessor`.
+"""
+
 from typing import Protocol, Tuple
 
 import torch

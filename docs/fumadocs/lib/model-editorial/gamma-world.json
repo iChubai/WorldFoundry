@@ -1,0 +1,41 @@
+{
+  "id": "gamma-world",
+  "tagline": {
+    "en": "Gamma-World — a multi-agent, action-conditioned world model with real-time causal few-step streaming.",
+    "zh": "Gamma-World——支持多智能体、动作条件的世界模型，具备实时因果少步流式生成。"
+  },
+  "overview": {
+    "en": [
+      "Gamma-World is a world model for multi-agent, action-conditioned video. From per-player images and per-player actions, it generates video of an interactive world — several agents acting in the same scene at once.",
+      "It comes in three inference modes: bidirectional, causal, and a four-step causal variant. The four-step causal-few-step model is the default and is built for streaming, generating in a few denoising steps so it can run responsively. Under the hood it reuses shared infrastructure — Cosmos-Reason1 conditioning, a Wan VAE, scheduling, and windowed execution — assembled as a native diffusion recipe.",
+      "To use it, pass a sequence of per-player images along with one action mapping per player (or point it at a compatible eval directory), and it rolls the world forward. The Gamma-World checkpoint is Apache-2.0."
+    ],
+    "zh": [
+      "Gamma-World 是一个面向多智能体、动作条件视频的世界模型。它从每个玩家的图像和每个玩家的动作出发，生成交互式世界的视频——多个智能体在同一场景中同时行动。",
+      "它提供三种推理模式：双向、因果，以及四步因果变体。四步的 causal-few-step 模型是默认项，专为流式生成打造，只需几步去噪即可运行，因而响应迅速。其内部复用了共享基础设施——Cosmos-Reason1 条件、Wan VAE、调度与窗口化执行——以原生扩散配方组装。",
+      "使用时，传入一组每玩家图像并为每个玩家提供一份动作映射（或指向一个兼容的评测目录），它便把世界向前推进。Gamma-World checkpoint 为 Apache-2.0。"
+    ]
+  },
+  "whenToUse": {
+    "en": "Use Gamma-World for multi-agent, action-driven world rollouts — several players acting in one scene — especially when you want responsive, streaming generation via the four-step causal mode.",
+    "zh": "适合多智能体、动作驱动的世界 rollout——多个玩家在同一场景行动——尤其当你想通过四步因果模式获得响应式流式生成时。"
+  },
+  "notFor": {
+    "en": "It expects structured per-player image and action inputs rather than a single text prompt, so it's not a plain text-to-video generator. Checkpoints are downloaded separately.",
+    "zh": "它需要结构化的每玩家图像与动作输入，而非单一文本提示词，因此不是普通的文生视频生成器。checkpoint 需单独下载。"
+  },
+  "highlights": {
+    "en": [
+      "Multi-agent, action-conditioned world generation",
+      "Bidirectional, causal, and four-step causal inference modes",
+      "Four-step causal-few-step default for streaming generation",
+      "Gamma-World checkpoint under Apache-2.0"
+    ],
+    "zh": [
+      "多智能体、动作条件的世界生成",
+      "双向、因果与四步因果三种推理模式",
+      "默认四步 causal-few-step，用于流式生成",
+      "Gamma-World checkpoint 采用 Apache-2.0"
+    ]
+  }
+}

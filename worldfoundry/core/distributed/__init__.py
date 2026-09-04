@@ -1,6 +1,36 @@
-"""Distributed tensor helpers shared by optimized runtime modules."""
+"""Distributed primitives: process groups, splits, and collectives for TP / CP / SP / FSDP / PP.
+
+Each parallel axis has a distinct job so one DeviceMesh does not mix semantics:
+
+- **TP (Tensor Parallel)**: shards Linear/Attention hidden dims across ranks and
+  restores them with in-group all-reduce or all-gather. See ``get_tp_*`` in
+  ``model_parallel_groups``.
+- **CP (Context Parallel)**: shards Q/K/V along the sequence dim (Ulysses / ring /
+  xDiT). ``context_parallel`` owns split/cat/broadcast. The Ulysses scheduler in
+  the attention package must be paired with these splits or RoPE positions
+  misalign.
+- **SP (Sequence Parallel)**: the ``sequence_parallel/`` subpackage (process
+  state, NCCL wrappers, all-to-all). Often paired with CP: all-to-all head dim
+  into sequence shards, then run attention locally.
+- **FSDP / FSDP2**: ``fsdp_runtime`` / ``fsdp2_sharding`` / ``block_fsdp``.
+  Parameter sharding plus forward all-gather. FSDP2 uses DTensor/DeviceMesh.
+  Inference can disable gradient buckets.
+- **PP (Pipeline Parallel)**: ``pipeline_parallel.PPScheduler`` schedules
+  micro-batches by stage; ``get_pp_*`` finds upstream/downstream ranks.
+- **DP**: data-parallel groups (including a gloo backup) for metrics, EMA, and
+  broadcasts. They do not shard a single sample's sequence.
+
+``initialize_model_parallel`` builds the TP/CP/PP/DP groups together. Collectives
+are split by payload type across ``generic_collectives``, ``tensor_collectives``,
+``object_collectives``, and ``device_mesh_collectives`` so CPU pickle and GPU
+tensors do not share one path.
+"""
 
 from __future__ import annotations
+
+# ──────────────────────────────────────────────────────────────────────────
+# Public re-exports — keep this facade import-light; no eager NCCL init
+# ──────────────────────────────────────────────────────────────────────────
 
 from .context_parallel import (
     broadcast,
@@ -66,6 +96,10 @@ from .rank_orchestration import (
     SignalBus,
     distributed_op,
 )
+
+# ──────────────────────────────────────────────────────────────────────────
+# __all__ — names callers may import from worldfoundry.core.distributed
+# ──────────────────────────────────────────────────────────────────────────
 
 __all__ = [
     "DistributedOpSpec",

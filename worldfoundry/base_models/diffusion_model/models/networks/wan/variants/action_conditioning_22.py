@@ -1,5 +1,8 @@
-"""Module for base_models -> diffusion_model -> video -> wan -> components -> action_conditioning_wan2p2.py functionality."""
+"""Wan 2.2 ActionModule: mouse / keyboard fusion for the 2.2 action DiT.
 
+Same role as :mod:`.action_conditioning_21` but sized for Wan 2.2 hidden
+widths and per-token timestep layouts.  Host graph is :mod:`.action_22`.
+"""
 import torch
 import torch.nn as nn
 from typing import Any, List, Tuple, Optional, Union, Dict
@@ -20,7 +23,7 @@ from worldfoundry.core.attention import scaled_dot_product_attention as _worldfo
 DISABLE_COMPILE = False
 
 class WanRMSNorm(nn.Module):
-    """Wan rms norm implementation."""
+    """RMSNorm with a learned scale; compute in fp32 when the impl upcasts."""
     def __init__(self, dim, eps=1e-5):
         """Init.
 
@@ -41,12 +44,7 @@ class WanRMSNorm(nn.Module):
         return x * torch.rsqrt(x.pow(2).mean(dim=-1, keepdim=True) + self.eps) # fast_rms_norm(x, self.weight, self.eps)
 
 def sinusoidal_embedding_1d(dim, position):
-    """Sinusoidal embedding 1d.
-
-    Args:
-        dim: The dim.
-        position: The position.
-    """
+    """Classic sinusoidal features for 1-D timestep / position ids."""
     assert dim % 2 == 0
     half = dim // 2
     position = position.type(torch.float64)
@@ -56,9 +54,7 @@ def sinusoidal_embedding_1d(dim, position):
     return x
 
 class ActionModule(nn.Module):
-    """
-    action module from https://arxiv.org/pdf/2501.08325
-    """
+    """Wan 2.2 mouse / keyboard fusion (arXiv:2501.08325) for action-Wan."""
 
     def __init__(
         self, 
@@ -310,6 +306,8 @@ class ActionModule(nn.Module):
                 k_pt = k.transpose(1, 2)
                 v_pt = v.transpose(1, 2)
                 attn = _worldfoundry_scaled_dot_product_attention(q_pt, k_pt, v_pt).transpose(1, 2).contiguous()
+            if isinstance(attn, (tuple, list)):
+                attn = attn[0]
             attn = rearrange(attn, '(b S) T h d -> b (T S) (h d)',b=B)
             hidden_states = rearrange(x, "(B S) T C -> B (T S) C", B=B)
             attn = self.proj_mouse(attn)
@@ -378,6 +376,8 @@ class ActionModule(nn.Module):
                 k_pt = k.transpose(1, 2)
                 v_pt = v.transpose(1, 2)
                 attn = _worldfoundry_scaled_dot_product_attention(q_pt, k_pt, v_pt, is_causal=False).transpose(1, 2).contiguous()
+            if isinstance(attn, (tuple, list)):
+                attn = attn[0]
             attn = rearrange(attn, '(B S) T H D -> B (T S) (H D)', S=S)
             attn = self.proj_keyboard(attn)
             hidden_states = hidden_states + attn

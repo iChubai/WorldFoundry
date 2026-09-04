@@ -1,0 +1,37 @@
+{
+  "id": "lingbot-world-act",
+  "tagline": {
+    "en": "Robbyant's action-conditioned world model — generate interactive video driven by actions.",
+    "zh": "Robbyant 推出的动作条件世界模型——由动作驱动生成可交互视频。"
+  },
+  "overview": {
+    "en": [
+      "LingBot-World Base Act is an interactive world model from Robbyant. Instead of generating video from a prompt alone, it is conditioned on actions: you feed it actions and it produces the video that would result, making it suited to interactive, action-driven scenarios.",
+      "It builds on Robbyant's in-tree LingBot runtime and the shared Wan base modules, resolving the dedicated action checkpoint (Base-Act) rather than the camera-conditioned variant. It runs in its own environment to keep the action-conditioned path behaving correctly."
+    ],
+    "zh": [
+      "LingBot-World Base Act 是 Robbyant 推出的可交互世界模型。它不是仅凭提示词生成视频,而是以动作为条件:你输入动作,它便产出相应的视频结果,因而适合交互式、由动作驱动的场景。",
+      "它构建在 Robbyant 内置的 LingBot 运行时与共享的 Wan 基础模块之上,并解析专用的动作 checkpoint(Base-Act),而非相机条件变体。它在专属环境中运行,以保证动作条件路径行为正确。"
+    ]
+  },
+  "whenToUse": {
+    "en": "Use it when you want to drive video generation with actions — exploring how a scene evolves in response to inputs, rather than producing a fixed clip from a single text prompt.",
+    "zh": "当你希望用动作来驱动视频生成——探索场景如何随输入演变,而非用单条文本提示词产出固定片段时,可以使用它。"
+  },
+  "notFor": {
+    "en": "Weights are staged locally rather than bundled, so download them before running. It relies on a dedicated environment, so it is not a drop-in for a generic shared setup.",
+    "zh": "权重需在本地准备而非随附,请在运行前先下载。它依赖专属环境,因此不适合直接放入通用共享配置中。"
+  },
+  "highlights": {
+    "en": [
+      "Action-conditioned interactive world model",
+      "Generates video that responds to input actions",
+      "Built on the LingBot runtime and shared Wan base modules"
+    ],
+    "zh": [
+      "动作条件的可交互世界模型",
+      "生成对输入动作作出响应的视频",
+      "构建于 LingBot 运行时与共享 Wan 基础模块之上"
+    ]
+  }
+}

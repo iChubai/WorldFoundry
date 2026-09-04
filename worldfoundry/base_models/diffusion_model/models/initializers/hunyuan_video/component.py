@@ -1,4 +1,13 @@
-"""HunyuanVideo latent geometry and image-conditioning initialization."""
+"""HunyuanVideo T2V / I2V :class:`~...contracts.LatentInitializer`.
+
+T2V (``image_to_video=False``) returns Gaussian noise, optionally with a
+zero ``condition_latents`` concat channel for graphs that always expect
+it.  I2V requires the recipe-bound VAE: the first frame is encoded and
+either concatenated (``concat_condition``) or written into latent frame 0
+(``freeze_first_frame``).  Keys land in
+``LatentInitialization.conditioning`` for
+:class:`~...denoisers.hunyuan_video` adapters.
+"""
 
 from __future__ import annotations
 
@@ -94,6 +103,7 @@ class HunyuanVideoLatentInitializer:
         device: torch.device,
         dtype: torch.dtype,
     ) -> torch.Tensor | LatentInitialization:
+        """T2V noise, or raise when I2V must use :meth:`initialize_with_encoder`."""
         if self.image_to_video:
             raise RuntimeError("HunyuanVideo I2V recipe requires its latent_encoder binding")
         noise = self._noise(request, generator=generator, device=device, dtype=dtype)
@@ -116,6 +126,7 @@ class HunyuanVideoLatentInitializer:
         device: torch.device,
         dtype: torch.dtype,
     ) -> LatentInitialization:
+        """Encode the reference still and pack I2V condition tensors."""
         noise = self._noise(request, generator=generator, device=device, dtype=dtype)
         pixels = _normalized_image_tensor(
             _reference_image(request),
@@ -154,6 +165,7 @@ class HunyuanVideoLatentInitializer:
 
 
 def build_hunyuan_video_latent_initializer(context: ComponentBuildContext) -> HunyuanVideoLatentInitializer:
+    """Build from recipe ``latent_channels`` / compression and I2V flags."""
     options = context.component_options
     return HunyuanVideoLatentInitializer(
         channels=int(options.get("channels", context.recipe_options.get("latent_channels", 16))),

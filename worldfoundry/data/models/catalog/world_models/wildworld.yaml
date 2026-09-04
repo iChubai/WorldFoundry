@@ -12,6 +12,8 @@ source:
   official_repo_url: https://github.com/ShandaAI/WildWorld
   license: non-commercial-research
 official_sources:
+  paper: https://arxiv.org/abs/2603.23497
+  project_page: https://alaya-studio.github.io/wildworld-project/
   github:
     url: https://github.com/ShandaAI/WildWorld
     head_sha: 23971043ae34d802b83661a964fe291f14d277f7

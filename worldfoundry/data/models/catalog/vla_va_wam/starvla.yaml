@@ -16,6 +16,8 @@ integration:
   status: integrated
 name: StarVLA
 official_sources:
+  paper: https://arxiv.org/abs/2604.05014
+  project_page: https://starvla.github.io/contributors
   github:
     head_sha: 5ce9e2ed59dc94de926c335d36a3681c243a58f7
     url: https://github.com/starVLA/starVLA

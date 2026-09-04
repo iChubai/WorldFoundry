@@ -13,6 +13,8 @@ source:
   status: open_source
   official_repo_url: https://github.com/open-gigaai/giga-world-0
 official_sources:
+  project_page: https://giga-world-0.github.io/
+  paper: https://arxiv.org/abs/2511.19861
   worldarena_space: https://huggingface.co/spaces/WorldArena/WorldArena
   github:
     url: https://github.com/open-gigaai/giga-world-0
@@ -26,19 +28,20 @@ official_sources:
 checkpoint_refs:
 - repo_id: open-gigaai/GigaWorld-0-Video-Pretrain-2b
 - repo_id: open-gigaai/GigaWorld-0-Video-GR1-2b
+- repo_id: google-t5/t5-11b
+- repo_id: Wan-AI/Wan2.1-T2V-1.3B-Diffusers
 integration:
   status: runtime_ported
   notes:
-  - WorldFoundry registers an in-tree runtime manifest pipeline for the vendored GigaWorld-0 source.
-  - Official WorldArena-listed source is vendored in-tree under worldfoundry/synthesis/visual_generation/giga_world_0/giga_world_0_runtime.
+  - WorldFoundry registers an executable GR1 image-to-video runtime using the released transformer, T5 encoder, and Wan Diffusers VAE.
+  - The launcher accepts an explicit torch-attention compatibility backend for low-resolution checkpoint smoke while retaining the official NATTEN route.
 runtime_profile: runtime-profile:giga-world-0
 runner_target: worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner
 pipeline_binding: giga-world-0
 runner_parity:
-  status: implemented_checkpoint_pending
+  status: implemented_checkpoint_required
   notes:
-  - The pipeline resolves the vendored inference entrypoint and returns blocked runtime diagnostics until checkpoints and
-    task assets are staged.
+  - Single-image smoke does not establish official GR1 dataset or full-quality sampling parity.
 catalog_category: world_models
 catalog_scope: World-model catalog entries. Integrated entries expose in-tree WorldFoundry runtimes; blocked entries retain
   upstream provenance without runnable backends.

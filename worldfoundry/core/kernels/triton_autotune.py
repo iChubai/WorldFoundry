@@ -14,7 +14,11 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-"""Shared Triton autotuning and dtype helpers."""
+"""Shared Triton autotune and dtype helpers.
+
+Persistent configs go through ``autotune_cache`` (hardware-scoped).
+This module only defines how a kernel asks for a config.
+"""
 
 import builtins
 import os
@@ -27,6 +31,11 @@ import triton.language as tl
 from triton.runtime.autotuner import Autotuner
 
 
+# ──────────────────────────────────────────────────────────────────────────
+# Dtype map — only the three floating types the in-tree GEMM kernels launch
+# ──────────────────────────────────────────────────────────────────────────
+
+
 def get_tl_dtype_from_torch_dtype(dtype: torch.dtype) -> tl.dtype:
     """Map supported PyTorch floating-point dtypes to Triton dtypes."""
 
@@ -37,6 +46,11 @@ def get_tl_dtype_from_torch_dtype(dtype: torch.dtype) -> tl.dtype:
     if dtype == torch.bfloat16:
         return tl.bfloat16
     raise NotImplementedError(f"dtype {dtype} is not supported")
+
+
+# ──────────────────────────────────────────────────────────────────────────
+# Persistent Triton configs — keyed by device name + kernel fn, not SM/source
+# ──────────────────────────────────────────────────────────────────────────
 
 
 class CustomAutotuner(Autotuner):
@@ -76,6 +90,8 @@ class CustomAutotuner(Autotuner):
             key = [_args[i] for i in self.key_idx]
             for arg in _args:
                 if hasattr(arg, "dtype"):
+                    # Dtype is not always in Triton's declared key; INT8 vs FP8
+                    # GEMM must not share a BLOCK_M/N/K winner.
                     key.append(str(arg.dtype))
             key = tuple(key)
             if key not in self.cache:
@@ -90,6 +106,7 @@ class CustomAutotuner(Autotuner):
                 self.pre_hook(args, reset_only=True)
                 self.configs_timings = timings
                 if not dist.is_initialized() or dist.get_rank() == 0:
+                    # Rank-0 only: concurrent writers would corrupt the pickle.
                     best_config_cache_dir = os.path.dirname(self.best_config_cache_path)
                     os.makedirs(best_config_cache_dir, exist_ok=True)
                     with open(self.best_config_cache_path, "wb") as f:
@@ -112,6 +129,11 @@ class CustomAutotuner(Autotuner):
         )
         self.nargs = None
         return ret
+
+
+# ──────────────────────────────────────────────────────────────────────────
+# Decorator — same kwargs as triton.autotune, but persists the winner pickle
+# ──────────────────────────────────────────────────────────────────────────
 
 
 def custom_autotune(

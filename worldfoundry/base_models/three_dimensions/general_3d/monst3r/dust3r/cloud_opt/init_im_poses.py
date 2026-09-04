@@ -21,7 +21,11 @@ from dust3r.viz import to_numpy
 
 from dust3r.cloud_opt.commons import edge_str, i_j_ij, compute_edge_scores
 import matplotlib.pyplot as plt
-import seaborn as sns
+
+try:
+    import seaborn as sns
+except ImportError:
+    sns = None
 
 def draw_edge_scores_map(edge_scores, save_path, n_imgs=None):
     """Draw edge scores map.
@@ -44,7 +48,11 @@ def draw_edge_scores_map(edge_scores, save_path, n_imgs=None):
 
     # Plotting the heatmap
     plt.figure(figsize=(int(5.5*np.log(n_imgs)-2), int((5.5*np.log(n_imgs)-2) * 3 / 4)))
-    sns.heatmap(heatmap_matrix, annot=True, fmt=".1f", cmap="viridis", cbar=True, annot_kws={"fontsize": int(-4.2*np.log(n_imgs)+22.4)})
+    if sns is not None:
+        sns.heatmap(heatmap_matrix, annot=True, fmt=".1f", cmap="viridis", cbar=True, annot_kws={"fontsize": int(-4.2*np.log(n_imgs)+22.4)})
+    else:
+        image = plt.imshow(heatmap_matrix, cmap="viridis")
+        plt.colorbar(image)
     plt.title("Heatmap of Edge Scores")
     plt.xlabel("Node")
     plt.ylabel("Node")

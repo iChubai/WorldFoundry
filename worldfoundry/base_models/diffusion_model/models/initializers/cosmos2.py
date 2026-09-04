@@ -1,4 +1,14 @@
-"""Native Cosmos Predict2 Video2World latent initialization."""
+"""Cosmos Predict2 Video2World :class:`~...contracts.EncodedLatentInitializer`.
+
+``initialize`` always raises: this role requires the recipe-bound
+:class:`~...contracts.LatentEncoder`.  ``initialize_with_encoder`` encodes
+the observation (image or video tail via
+:func:`.video_conditioning.prepare_video_conditioning_pixels`), draws
+σ-max Gaussian noise, and returns :class:`~...contracts.LatentInitialization`
+whose extra tensors (``condition_latents``, ``condition_mask``,
+``condition_indicator``, ``padding_mask``, ``fps``) become
+``DenoiserInput.conditioning`` for :class:`~..denoisers.cosmos2.Cosmos2Denoiser`.
+"""
 
 from __future__ import annotations
 
@@ -31,6 +41,7 @@ class Cosmos2Video2WorldInitializer:
         device: torch.device,
         dtype: torch.dtype,
     ) -> torch.Tensor:
+        """Rejected: Predict2 must use :meth:`initialize_with_encoder`."""
         del request, generator, device, dtype
         raise RuntimeError("Cosmos Predict2 requires its latent_encoder binding")
 

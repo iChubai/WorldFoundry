@@ -1,0 +1,41 @@
+{
+  "id": "uwm",
+  "tagline": {
+    "en": "Unified World Models from WEIRD Lab (UW) — a robot world model that couples action-conditioned video prediction with policy learning.",
+    "zh": "华盛顿大学 WEIRD Lab 的 Unified World Models——把动作条件视频预测与策略学习结合在一起的机器人世界模型。"
+  },
+  "overview": {
+    "en": [
+      "Unified World Models (UWM) is a research model from the WEIRD Lab at the University of Washington. It brings video prediction and robot action together in one framework, so the same model can imagine how a scene evolves under an action and produce the action itself.",
+      "The approach uses a diffusion formulation over video and action, letting it serve both as a world model and as a policy. UWM is distributed as upstream source with evaluation routes such as LIBERO-90 and DROID; the checkpoints and datasets are downloaded separately.",
+      "In WorldFoundry, UWM's source and configuration are tracked so you can resolve its model zoo config and inference route. To run real rollouts you stage the required checkpoints and assets, which the runtime plan lists for you."
+    ],
+    "zh": [
+      "Unified World Models(UWM)是华盛顿大学 WEIRD Lab 的研究模型。它把视频预测与机器人动作统一到一个框架里,同一个模型既能设想场景在某个动作下如何演化,也能生成动作本身。",
+      "该方法在视频与动作上采用扩散式建模,因而既可作为世界模型,也可作为策略。UWM 以上游源码形式发布,附带 LIBERO-90、DROID 等评测路径;checkpoint 与数据集需另行下载。",
+      "在 WorldFoundry 中,UWM 的源码与配置已被纳入,你可以解析它的模型库配置与推理路径。要跑真实 rollout,需要按运行时列出的清单准备好相应的 checkpoint 与素材。"
+    ]
+  },
+  "whenToUse": {
+    "en": "Use UWM when you want to explore a unified world-model-and-policy approach for manipulation, and you can supply the benchmark checkpoints and datasets it evaluates on.",
+    "zh": "当你想探索操作任务上统一世界模型与策略的方法,并能提供它所用评测的 checkpoint 与数据集时,适合使用 UWM。"
+  },
+  "notFor": {
+    "en": "It is a research codebase rather than a turnkey policy; you must download and stage the checkpoints and datasets yourself before it can generate or evaluate.",
+    "zh": "它更像研究代码库而非开箱即用的策略;你需要自行下载并准备好 checkpoint 与数据集,它才能生成或评测。"
+  },
+  "highlights": {
+    "en": [
+      "Unifies action-conditioned video prediction and policy learning",
+      "Diffusion-based formulation over video and action",
+      "Ships with evaluation routes such as LIBERO-90 and DROID",
+      "From the WEIRD Lab at the University of Washington"
+    ],
+    "zh": [
+      "统一了动作条件视频预测与策略学习",
+      "在视频与动作上采用扩散式建模",
+      "附带 LIBERO-90、DROID 等评测路径",
+      "出自华盛顿大学 WEIRD Lab"
+    ]
+  }
+}

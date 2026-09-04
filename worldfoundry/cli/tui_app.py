@@ -164,6 +164,7 @@ class WorldFoundryTui(App[None]):
         widget binding.
         """
         super().__init__()
+        self._stop_task: asyncio.Task[None] | None = None
         # ── Catalog directories ──
         self.model_manifest_dir = Path(model_manifest_dir) if model_manifest_dir is not None else None
         self.benchmark_manifest_dir = Path(benchmark_manifest_dir) if benchmark_manifest_dir is not None else None
@@ -774,6 +775,11 @@ class WorldFoundryTui(App[None]):
 
     async def on_unmount(self) -> None:
         """Terminate the running subprocess and cancel the task on app exit."""
+        stop_task = self._stop_task
+        if stop_task is not None and not stop_task.done():
+            stop_task.cancel()
+            with contextlib.suppress(asyncio.CancelledError):
+                await stop_task
         task = self.running_task
         process = self.running_process
         if process is not None and process.returncode is None:
@@ -836,7 +842,21 @@ class WorldFoundryTui(App[None]):
     def action_stop_command(self) -> None:
         """Stop the running subprocess if the Stop button is not disabled."""
         if not self.query_one("#stop", Button).disabled:
-            asyncio.create_task(self._stop_process())
+            if self._stop_task is not None and not self._stop_task.done():
+                return
+            task = asyncio.create_task(self._stop_process())
+            self._stop_task = task
+
+            def _clear_stop_task(done: asyncio.Task[None]) -> None:
+                if self._stop_task is done:
+                    self._stop_task = None
+                if done.cancelled():
+                    return
+                error = done.exception()
+                if error is not None:
+                    self._write_log(f"Unable to stop the active run: {type(error).__name__}: {error}")
+
+            task.add_done_callback(_clear_stop_task)
 
     def action_refresh(self) -> None:
         """Reload the catalog from disk and re-sync all UI state."""

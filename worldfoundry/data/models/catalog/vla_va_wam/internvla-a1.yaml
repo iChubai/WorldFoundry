@@ -19,6 +19,8 @@ tasks:
 output_artifacts:
 - action_trace
 official_sources:
+  paper: https://arxiv.org/abs/2607.04988
+  project_page: https://internrobotics.github.io/internvla-a15.github.io
   github:
     url: https://github.com/InternRobotics/InternVLA-A-series
     head_sha: a3707592607575aac35355ecf010264f666a700b

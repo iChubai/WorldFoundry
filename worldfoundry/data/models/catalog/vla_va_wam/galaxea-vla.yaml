@@ -5,6 +5,8 @@ availability: open_source_noncommercial
 provider: official_repo
 license: g0-plus-community-license-non-commercial
 official_sources:
+  paper: https://arxiv.org/abs/2608.11739
+  project_page: https://opengalaxea.github.io/G05/
   github:
     url: https://github.com/OpenGalaxea/GalaxeaVLA
     head_sha: 13a16a9049aee8f1d799b56fccc0c5832a75fc2f

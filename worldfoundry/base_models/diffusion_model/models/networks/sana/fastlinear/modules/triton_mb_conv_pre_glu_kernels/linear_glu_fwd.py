@@ -14,7 +14,11 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-"""Module for base_models -> diffusion_model -> image -> sana -> diffusion -> model -> nets -> fastlinear -> modules -> triton_mb_conv_pre_glu_kernels -> linear_glu_fwd.py functionality."""
+"""Triton kernel: fused expand linear + GLU for MBConvPreGLU.
+
+Public entry: :func:`linear_glu_fwd`.  ``weight`` is ``(2D, C)``; the two
+halves are the GLU gate and value.  Returns ``(..., D)``.
+"""
 
 import torch
 import triton
@@ -205,14 +209,7 @@ def linear_glu_fwd_kernel(
 
 
 def linear_glu_fwd(x: torch.Tensor, weight: torch.Tensor, bias: torch.Tensor) -> torch.Tensor:
-    """
-    Input:
-        x: (..., C)
-        weight: (2*D, C)
-        bias: (2*D,)
-    Output:
-        y: (..., D)
-    """
+    """Fused ``silu(x @ W_gate + b) * (x @ W_up + b)`` expand for MBConvPreGLU."""
     assert x.dim() >= 1 and weight.dim() == 2 and bias.dim() == 1
     assert x.shape[-1] == weight.shape[-1]  # C
     assert weight.shape[0] == bias.shape[0]  # D

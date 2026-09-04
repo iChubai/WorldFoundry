@@ -1,0 +1,41 @@
+{
+  "id": "prior-depth-anything",
+  "tagline": {
+    "en": "A depth-completion prior — refine and complete metric depth using a prompt depth signal.",
+    "zh": "深度补全先验——借助 prompt 深度信号细化并补全度量深度。"
+  },
+  "overview": {
+    "en": [
+      "Prior Depth Anything is a depth-completion prior. Rather than predicting depth from scratch, it takes a prompt metric-depth signal and refines or completes it, producing cleaner, denser metric depth. In WorldFoundry it lives as an independent prior that higher-level geometry pipelines can share.",
+      "It covers depth completion, metric depth estimation, and acts as a geometry prior, exposed through WorldFoundry's shared geometry-prior pipeline and operator contract. Because it consumes prompt depth, it pairs naturally with a base depth model — for example refining a Depth Anything 3 metric-depth condition.",
+      "In WorldFoundry you can invoke it directly to complete a depth input, or let a downstream pipeline pull it in as a shared prior."
+    ],
+    "zh": [
+      "Prior Depth Anything 是一个深度补全先验。它不从零预测深度，而是接收一个 prompt 度量深度信号，对其进行细化或补全，产出更干净、更稠密的度量深度。在 WorldFoundry 中，它作为独立先验存在，可供更高层的几何 pipeline 共享。",
+      "它涵盖深度补全、度量深度估计，并充当几何先验，通过 WorldFoundry 统一的几何先验 pipeline 与算子契约暴露。由于它消费 prompt 深度，因此天然适合与基础深度模型搭配——例如细化 Depth Anything 3 的度量深度条件。",
+      "在 WorldFoundry 中，你可以直接调用它补全一份深度输入，也可以让下游 pipeline 把它作为共享先验引入。"
+    ]
+  },
+  "whenToUse": {
+    "en": "Use it when you already have a coarse or sparse metric-depth signal and want to complete or refine it — for example cleaning up the output of a base depth model.",
+    "zh": "当你已有一份粗糙或稀疏的度量深度信号、想对其补全或细化时使用——例如清理基础深度模型的输出。"
+  },
+  "notFor": {
+    "en": "It's a completion prior that expects a prompt depth input, not a from-scratch depth estimator or a full scene reconstructor.",
+    "zh": "它是需要 prompt 深度输入的补全先验，而非从零开始的深度估计器或完整的场景重建器。"
+  },
+  "highlights": {
+    "en": [
+      "Depth completion and refinement from a prompt depth signal",
+      "Produces metric depth",
+      "Reusable geometry prior across WorldFoundry pipelines",
+      "Pairs naturally with a base depth model"
+    ],
+    "zh": [
+      "从 prompt 深度信号进行深度补全与细化",
+      "产出度量深度",
+      "可跨 WorldFoundry pipeline 复用的几何先验",
+      "天然适合与基础深度模型搭配"
+    ]
+  }
+}

@@ -4,21 +4,20 @@ import importlib.util
 import os
 from pathlib import Path
 
-from worldfoundry.core.io.paths import resolve_data_path
+from worldfoundry.core.io.paths import resolve_data_path, resolve_worldfoundry_path
 
 
 RUNTIME_DIR = Path(__file__).resolve().parent
 OFFICIAL_ENTRYPOINT = RUNTIME_DIR / "infer.py"
 CONFIG_DIR = resolve_data_path("models", "runtime", "configs", "le_wm", "config", "eval")
-BLOCKED_REASON = (
-    "LeWorldModel official eval route is vendored in-tree; execution requires "
-    "the stable-worldmodel environment plus task datasets and, for non-random "
-    "policies, a LeWorldModel checkpoint."
-)
+# The requirements hook below is authoritative.  Keeping a non-empty static
+# reason would make the shared runtime-manifest facade report this route as
+# blocked even after its environment and dataset have been staged.
+BLOCKED_REASON = ""
 
 
 def _dataset_candidates(dataset_name: str, cache_dir: Path) -> list[Path]:
-    raw = Path(dataset_name).expanduser()
+    raw = resolve_worldfoundry_path(dataset_name)
     if raw.suffix in {".h5", ".hdf5"} or raw.is_absolute():
         return [raw]
     return [
@@ -32,11 +31,13 @@ def missing_requirements(*, options, runtime_root, entrypoint, profile):
     del runtime_root, profile
     options = dict(options or {})
     missing = []
-    config_dir = Path(str(options.get("config_dir") or CONFIG_DIR)).expanduser()
+    config_dir = resolve_worldfoundry_path(str(options.get("config_dir") or CONFIG_DIR))
     config_name = str(options.get("config_name") or options.get("task") or "pusht")
     config_file = config_dir / (config_name if config_name.endswith(".yaml") else f"{config_name}.yaml")
     policy = str(options.get("policy") or "random")
-    cache_dir = Path(str(options.get("cache_dir") or os.environ.get("STABLEWM_HOME") or "~/.stable-wm")).expanduser()
+    cache_dir = resolve_worldfoundry_path(
+        str(options.get("cache_dir") or os.environ.get("STABLEWM_HOME") or "~/.stable-wm")
+    )
 
     if entrypoint is None or not Path(entrypoint).is_file():
         missing.append({"kind": "entrypoint", "path": str(entrypoint or ""), "reason": "LeWorldModel infer.py is missing"})
@@ -68,7 +69,7 @@ def missing_requirements(*, options, runtime_root, entrypoint, profile):
                 )
 
     if policy != "random":
-        policy_path = Path(policy).expanduser()
+        policy_path = resolve_worldfoundry_path(policy)
         checkpoint_path = policy_path if policy_path.is_absolute() else cache_dir / f"{policy}_object.ckpt"
         if not checkpoint_path.is_file():
             missing.append({"kind": "checkpoint", "path": str(checkpoint_path), "reason": "LeWorldModel policy checkpoint is missing"})
@@ -85,7 +86,7 @@ def build_command(context):
         context["python"],
         context["entrypoint"],
         "--config-dir",
-        str(options.get("config_dir") or CONFIG_DIR),
+        str(resolve_worldfoundry_path(str(options.get("config_dir") or CONFIG_DIR))),
         "--config-name",
         str(options.get("config_name") or options.get("task") or "pusht"),
         "--policy",
@@ -107,7 +108,10 @@ def build_command(context):
         ("img_size", "--img-size"),
     ):
         if option_key in options and options[option_key] not in (None, ""):
-            command.extend([flag, str(options[option_key])])
+            value = options[option_key]
+            if option_key in {"cache_dir", "dataset_name"}:
+                value = resolve_worldfoundry_path(str(value))
+            command.extend([flag, str(value)])
     return command
 
 

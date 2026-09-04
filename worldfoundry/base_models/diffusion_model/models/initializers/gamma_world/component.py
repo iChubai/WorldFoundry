@@ -1,4 +1,14 @@
-"""Native multi-view latent initialization for Gamma-World."""
+"""Gamma-World multi-view :class:`~...contracts.EncodedLatentInitializer`.
+
+Requires the recipe-bound Wan :class:`~...contracts.LatentEncoder`.
+``request.inputs[\"images\"]`` is one still per player, or a single
+horizontally concatenated strip that
+:func:`~worldfoundry.core.utils.split_horizontal_views` splits.
+``initialize`` without an encoder always raises.
+
+Returned :class:`~...contracts.LatentInitialization` carries per-view
+first-frame latents and masks for the Gamma-World denoiser.
+"""
 
 from __future__ import annotations
 
@@ -37,6 +47,7 @@ class GammaWorldLatentInitializer:
         device: torch.device,
         dtype: torch.dtype,
     ) -> torch.Tensor:
+        """Rejected: Gamma-World must use :meth:`initialize_with_encoder`."""
         del request, generator, device, dtype
         raise RuntimeError("Gamma-World requires its shared Wan latent_encoder binding")
 

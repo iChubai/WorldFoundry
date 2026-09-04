@@ -3,11 +3,33 @@
 from __future__ import annotations
 
 import json
+import os
+from collections.abc import Callable
+from functools import wraps
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, ParamSpec, TypeVar, cast
 
 if TYPE_CHECKING:
     from worldfoundry.training.recipes import PostTrainingRecipe, TrainingRecipe
+
+_P = ParamSpec("_P")
+_R = TypeVar("_R")
+
+
+def record_elastic_worker_errors(function: Callable[_P, _R]) -> Callable[_P, _R]:
+    """Record torchrun worker failures without importing Torch for normal CLI use."""
+
+    @wraps(function)
+    def wrapper(*args: _P.args, **kwargs: _P.kwargs) -> _R:
+        if not os.environ.get("TORCHELASTIC_ERROR_FILE"):
+            return function(*args, **kwargs)
+        try:
+            from torch.distributed.elastic.multiprocessing.errors import record
+        except ImportError:
+            return function(*args, **kwargs)
+        return cast(_R, record(function)(*args, **kwargs))
+
+    return wrapper
 
 
 def training_family(model_recipe: str) -> str:
@@ -120,6 +142,7 @@ def load_cache_recipe(path: Path) -> TrainingRecipe | PostTrainingRecipe:
 __all__ = [
     "checkpoint_overrides",
     "load_cache_recipe",
+    "record_elastic_worker_errors",
     "training_base_dir",
     "training_checkpoint_key",
     "training_family",

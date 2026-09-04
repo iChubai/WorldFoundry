@@ -144,6 +144,13 @@ BENCHMARK_INTEGRATION_REGISTRY: dict[str, BenchmarkIntegrationSpec] = {
     "mirabench": BenchmarkIntegrationSpec(
         "mirabench", IntegrationTier.IN_TREE, _runner_path("mirabench"),
     ),
+    "pawbench": BenchmarkIntegrationSpec(
+        "pawbench",
+        IntegrationTier.MODEL_BACKED,
+        _runner_path("pawbench"),
+        hf_dataset_id="Andrew613/PAWBench",
+        judge_model_id="google/gemini-3.5-flash",
+    ),
     "memobench": BenchmarkIntegrationSpec(
         "memobench",
         IntegrationTier.IN_TREE,
@@ -302,6 +309,9 @@ BENCHMARK_INTEGRATION_REGISTRY: dict[str, BenchmarkIntegrationSpec] = {
     ),
     "worldarena": BenchmarkIntegrationSpec(
         "worldarena", IntegrationTier.IN_TREE, _runner_path("worldarena"),
+    ),
+    "worldatlas-arena": BenchmarkIntegrationSpec(
+        "worldatlas-arena", IntegrationTier.IN_TREE, _runner_path("worldatlas-arena"),
     ),
     "worldbench": BenchmarkIntegrationSpec(
         "worldbench",

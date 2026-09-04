@@ -14,8 +14,12 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-"""FlowMap/FAR Wan graph used by native WorldFoundry training."""
+"""AnyFlow / FlowMap / FAR Wan graph (Diffusers-shaped, native training).
 
+NVIDIA AnyFlow Wan transformer with FlexAttention block masks,
+dual timestep embeddings, and cache mixins.  Used by WorldFoundry
+FlowMap training.  Adds flow-map attention masks; not VACE.
+"""
 # Copied from NVlabs/AnyFlow commit d2acf7373a45173082ec47eb16553a373b10f856;
 # the author implementation was modified from diffusers v0.35.1 Wan.
 
@@ -69,6 +73,8 @@ def apply_rotary_emb(hidden_states: torch.Tensor, freqs: torch.Tensor):
 
 
 class WanSelfAttnProcessor2_0:
+    """AnyFlow self-attention: SDPA or FlexAttention, plus optional FAR KV cache."""
+
     def __init__(self):
         if not hasattr(F, 'scaled_dot_product_attention'):
             raise ImportError('WanSelfAttnProcessor2_0 requires PyTorch 2.0. To use it, please upgrade PyTorch to 2.0.')
@@ -143,6 +149,8 @@ class WanSelfAttnProcessor2_0:
 
 
 class WanCrossAttnProcessor2_0:
+    """AnyFlow text/image cross-attention processor (PyTorch 2 SDPA)."""
+
     def __init__(self):
         if not hasattr(F, 'scaled_dot_product_attention'):
             raise ImportError('WanCrossAttnProcessor2_0 requires PyTorch 2.0. To use it, please upgrade PyTorch to 2.0.')
@@ -184,6 +192,8 @@ class WanCrossAttnProcessor2_0:
 
 
 class WanImageEmbedding(torch.nn.Module):
+    """Project CLIP / image tokens into AnyFlow hidden size."""
+
     def __init__(self, in_features: int, out_features: int):
         super().__init__()
 
@@ -199,6 +209,8 @@ class WanImageEmbedding(torch.nn.Module):
 
 
 class WanTimeTextImageEmbedding(nn.Module):
+    """Per-frame timestep + text (+ image) embeddings for FAR / AnyFlow."""
+
     def __init__(
         self,
         dim: int,
@@ -278,6 +290,8 @@ class WanTimeTextImageEmbedding(nn.Module):
 
 
 class WanTwoTimeTextImageEmbedding(nn.Module):
+    """Gated mix of ``t`` and delta-time embeddings (AnyFlow ``r`` / ``t-r``)."""
+
     def __init__(
         self,
         dim: int,

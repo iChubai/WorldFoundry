@@ -1,4 +1,12 @@
-"""Native Vchitect denoiser component."""
+"""Native Vchitect-2B denoiser adapter.
+
+Implements :class:`~...contracts.Denoiser`.  The runner calls
+``__call__(DenoiserInput) -> DenoiserOutput``.  Conditioning is SD3-style:
+``prompt_embeds`` (joint attention tokens) and ``pooled_prompt_embeds``
+from :mod:`..encoders.vchitect`.  ``DenoiserInput.latents`` are 16-channel
+SD3 latents; the transformer predicts the flow/velocity residual returned
+as ``DenoiserOutput.sample``.
+"""
 
 from __future__ import annotations
 
@@ -26,10 +34,12 @@ VCHITECT_2B_CONFIG = {
 
 
 class VchitectDenoiser:
+    """Vchitect-XL transformer adapter for the standard runner loop."""
     def __init__(self, model: VchitectXLTransformerModel) -> None:
         self.model = model
 
     def __call__(self, model_input: DenoiserInput) -> DenoiserOutput:
+        """Map ``DenoiserInput`` onto :class:`VchitectXLTransformerModel`."""
         prompt = model_input.conditioning.get("prompt_embeds")
         pooled = model_input.conditioning.get("pooled_prompt_embeds")
         if not isinstance(prompt, torch.Tensor) or not isinstance(pooled, torch.Tensor):
@@ -47,6 +57,7 @@ class VchitectDenoiser:
 
 
 def build_vchitect_denoiser(context: ComponentBuildContext) -> VchitectDenoiser:
+    """Load the 2B Vchitect-XL transformer from the ``weights`` checkpoint."""
     model = NativeModuleLoader().load(
         ModuleLoadSpec(
             module_class=VchitectXLTransformerModel,

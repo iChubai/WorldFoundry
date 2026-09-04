@@ -22,6 +22,8 @@ checkpoint_refs:
   requires_auth: true
   notes:
   - Hugging Face API reports gated=auto; accept access terms before downloading.
+official_sources:
+  paper: https://arxiv.org/abs/2501.08453
 integration:
   status: integrated
   verification_status: gpu_validation_verified

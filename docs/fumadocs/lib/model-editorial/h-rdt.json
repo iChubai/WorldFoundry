@@ -1,0 +1,41 @@
+{
+  "id": "h-rdt",
+  "tagline": {
+    "en": "H-RDT — a flow-matching vision-language-action model pretrained on human motion, designed to transfer to robot fine-tunes.",
+    "zh": "H-RDT——以人体动作预训练的 flow-matching 视觉-语言-动作模型,面向迁移到机器人微调。"
+  },
+  "overview": {
+    "en": [
+      "H-RDT is a vision-language-action (VLA) model from the EmbodiedFoundation group. It combines a transformer with a flow-matching sampler, a DINOv2-plus-SigLIP vision path, and an optional T5 language path to predict actions from images and instructions.",
+      "The official release is a 48-dimensional human-motion pretraining checkpoint — the idea being to learn broadly from human motion first, then fine-tune to a robot's own state and action space. By default it consumes a single 384-pixel image view and returns a 16-step chunk of 48-dimensional actions, using DINOv2 and SigLIP weights bundled in the snapshot. To save memory you can supply precomputed language embeddings and skip loading T5-v1.1-XXL. Robot fine-tunes may redefine the state/action dimension and camera count through their own checkpoint config.",
+      "In WorldFoundry, H-RDT runs in-process from local weights; it never imports a source checkout or executes checkpoint-provided Python."
+    ],
+    "zh": [
+      "H-RDT 是 EmbodiedFoundation 团队推出的视觉-语言-动作(VLA)模型。它把 transformer 与 flow-matching 采样器、DINOv2 加 SigLIP 的视觉路径,以及可选的 T5 语言路径结合起来,依据图像与指令预测动作。",
+      "官方发布的是一个 48 维的人体动作预训练 checkpoint——思路是先从人体动作中广泛学习,再微调到机器人自身的状态与动作空间。默认情况下它接收单个 384 像素的图像视角,返回 16 步、48 维的动作序列,使用快照中自带的 DINOv2 与 SigLIP 权重。为节省显存,你可以提供预先计算好的语言嵌入,从而跳过加载 T5-v1.1-XXL。机器人微调可以通过各自的 checkpoint 配置,重新定义状态/动作维度与相机数量。",
+      "在 WorldFoundry 中,H-RDT 从本地权重在进程内运行;它绝不导入源码 checkout,也不执行 checkpoint 自带的 Python。"
+    ]
+  },
+  "whenToUse": {
+    "en": "A good base when you want a VLA that starts from broad human-motion pretraining and can be fine-tuned to your robot's specific state, action space, and camera setup.",
+    "zh": "当你想要一个从广泛人体动作预训练出发、并可微调到你机器人具体状态、动作空间与相机配置的 VLA 时,它是不错的基座。"
+  },
+  "notFor": {
+    "en": "The released checkpoint is the human-motion pretraining model, not a ready 14-dimensional robot policy — that comes from your own fine-tune. Full precomputed-free use also downloads T5-v1.1-XXL separately, which is heavy on lower-memory GPUs.",
+    "zh": "已发布的 checkpoint 是人体动作预训练模型,而非可用的 14 维机器人策略——后者来自你自己的微调。若不使用预计算嵌入,还需单独下载 T5-v1.1-XXL,这在显存较小的 GPU 上负担较重。"
+  },
+  "highlights": {
+    "en": [
+      "VLA pretrained on human motion, built to transfer to robots",
+      "Flow-matching sampler with DINOv2 + SigLIP vision",
+      "Default: one 384px view in, 16×48 action chunk out",
+      "Optional precomputed language embeddings to skip T5"
+    ],
+    "zh": [
+      "以人体动作预训练、面向迁移到机器人的 VLA",
+      "flow-matching 采样器,搭配 DINOv2 + SigLIP 视觉",
+      "默认:输入单个 384px 视角,输出 16×48 动作序列",
+      "可选预计算语言嵌入以跳过 T5"
+    ]
+  }
+}

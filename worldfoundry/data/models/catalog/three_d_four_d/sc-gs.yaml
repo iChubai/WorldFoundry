@@ -9,6 +9,8 @@ source:
   status: open_source
   official_repo_url: https://github.com/CVMI-Lab/SC-GS
 official_sources:
+  paper: https://arxiv.org/abs/2312.05709
+  project_page: https://yihua7.github.io/SC-GS-web/
   github:
     url: https://github.com/CVMI-Lab/SC-GS
     head_sha: 3a9d2ad4e4fc058b0763d446ae9e6b1be120b872

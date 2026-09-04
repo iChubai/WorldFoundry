@@ -1,4 +1,13 @@
-"""Immutable checkpoint sources used by diffusion recipes."""
+"""Immutable checkpoint sources used by diffusion recipes.
+
+A recipe names one logical role (``weights``, ``vae``, ``tokenizer``, …) as a
+:class:`CheckpointSpec`.  The resolver / loader consume that spec; the runner
+and ``Denoiser`` Protocol never see Hub IDs or integrity maps.
+
+Construction fails unless the spec is a complete, safe, self-consistent
+declaration.  After ``__post_init__``, ``source`` is always a ``tuple[str, ...]``
+and the mapping fields are frozen ``MappingProxyType`` views.
+"""
 
 from __future__ import annotations
 
@@ -14,7 +23,35 @@ _SHA256_PATTERN = re.compile(r"[0-9a-f]{64}")
 
 @dataclass(frozen=True, slots=True)
 class CheckpointSpec:
-    """A local or Hub-backed source for one logical model component."""
+    """A local or Hub-backed source for one logical model component.
+
+    Exactly one of a local ``source`` or a Hub ``repo_id`` must be present.
+
+    Attributes:
+        source: Local file(s) or a single directory.  Normalized to
+            ``tuple[str, ...]``.  Empty strings are rejected.
+        repo_id: Hugging Face repository.  When there is no local source,
+            ``files`` must list every weight file to materialize.
+        revision: Optional Hub git revision (branch, tag, or commit).
+        files: Relative weight filenames under the snapshot / directory.
+            Duplicates and blank names are rejected.
+        allow_patterns: Extra Hub download filters merged with ``files``.
+        metadata: Caller-owned audit notes; never used for I/O.
+        file_sha256 / file_size_bytes: Integrity for declared ``files``.
+            Keys that are not in ``files`` fail construction.
+        resource_sha256 / resource_size_bytes: Integrity for sidecar
+            resources (tokenizer JSON, configs).  Keys must be relative,
+            must not contain ``..`` or overlap ``files``, and must use a
+            64-hex SHA-256 plus a positive byte size.
+
+    Raises:
+        ValueError: Missing source and ``repo_id``; Hub spec without
+            ``files``; empty / duplicate file names; integrity keys that
+            reference undeclared files; resource paths that collide with
+            ``files`` or are unsafe; invalid SHA-256; non-positive sizes.
+        TypeError: A size field is a ``bool`` (rejected so ``True`` cannot
+            silently become ``1``).
+    """
 
     source: str | os.PathLike[str] | Sequence[str | os.PathLike[str]] | None = None
     repo_id: str | None = None
@@ -103,6 +140,7 @@ class CheckpointSpec:
 
     @property
     def sources(self) -> tuple[str, ...]:
+        """Normalized local sources; empty when the spec is Hub-only."""
         return cast(tuple[str, ...], self.source)
 
 

@@ -28,6 +28,7 @@ from worldfoundry.base_models.diffusion_model.models.encoders.wan.reference impo
 from worldfoundry.base_models.diffusion_model.models.autoencoders.wan.reference_21_streaming import Wan2_1_VAE
 
 from worldfoundry.base_models.diffusion_model.schedulers.flow_unipc import FlowUniPCMultistepScheduler
+from .distributed import distributed_barrier
 from .utils.cam_utils import (
     compute_relative_poses,
     interpolate_camera_poses,
@@ -221,8 +222,7 @@ class WanI2VFast:
                     attention_forward, block.self_attn)
             model.forward = types.MethodType(model_forward, model)
 
-        if dist.is_initialized():
-            dist.barrier()
+        distributed_barrier(self.device)
 
         if dit_fsdp:
             model = shard_fn(model)
@@ -568,8 +568,7 @@ class WanI2VFast:
         if offload_model:
             gc.collect()
             torch.cuda.synchronize()
-        if dist.is_initialized():
-            dist.barrier()
+        distributed_barrier(self.device)
 
         return videos[0] if self.rank == 0 else None
 

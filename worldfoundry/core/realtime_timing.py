@@ -3,8 +3,8 @@
 
 """Transport-neutral timing records for realtime generation sessions.
 
-The record/window split is adapted from NVIDIA FlashDreams' realtime timing
-infrastructure, with WorldFoundry-specific chunk metrics and JSONL payloads.
+Per-chunk records fold into an interval window. Chunk metrics and JSONL
+payloads stay process-local (monotonic clocks are not exported).
 """
 
 from __future__ import annotations
@@ -16,6 +16,7 @@ from dataclasses import dataclass
 
 
 def _percentile_sorted(values: list[float], percentile: float) -> float:
+    """Linear-interpolated percentile on a pre-sorted sample; empty input is a caller bug."""
     if not values:
         raise ValueError("Cannot compute a percentile for an empty sample.")
     if len(values) == 1:
@@ -28,6 +29,7 @@ def _percentile_sorted(values: list[float], percentile: float) -> float:
 
 
 def _finite_values(values: Mapping[str, float]) -> dict[str, float]:
+    """Drop NaN/inf gauges so a single bad CUDA timer cannot poison the JSONL window."""
     return {str(name): float(value) for name, value in values.items() if math.isfinite(float(value))}
 
 
@@ -44,6 +46,7 @@ class TimingDistribution:
 
     @classmethod
     def from_values(cls, values: list[float]) -> "TimingDistribution":
+        """Summarize finite samples only; an all-NaN list is treated as empty and rejected."""
         ordered = sorted(float(value) for value in values if math.isfinite(float(value)))
         if not ordered:
             raise ValueError("Cannot summarize an empty timing sample.")
@@ -57,6 +60,7 @@ class TimingDistribution:
         )
 
     def to_payload(self) -> dict[str, int | float]:
+        """Flat JSON object for one stage; field names stay stable for Studio dashboards."""
         return {
             "count": self.count,
             "mean_ms": self.mean_ms,
@@ -89,10 +93,12 @@ class RealtimeChunkTiming:
     gauges: Mapping[str, float]
 
     def __post_init__(self) -> None:
+        """Strip non-finite stage/gauge values before the record can enter a window."""
         object.__setattr__(self, "stage_ms", _finite_values(self.stage_ms))
         object.__setattr__(self, "gauges", _finite_values(self.gauges))
 
     def to_payload(self) -> dict[str, object]:
+        """JSONL row; monotonic clocks stay local — only the derived ``server_chunk_ms`` is exported."""
         return {
             "session_id": self.session_id,
             "chunk_index": self.chunk_index,
@@ -125,6 +131,7 @@ class RealtimeTimingSummary:
     gauges: Mapping[str, float]
 
     def to_payload(self) -> dict[str, object]:
+        """Serialize one interval; stage keys are sorted so diffs stay stable."""
         return {
             "chunk_count": self.chunk_count,
             "frame_count": self.frame_count,
@@ -142,6 +149,7 @@ class RealtimeTimingWindow:
     """Collect chunk timings and summarize the current logging interval."""
 
     def __init__(self) -> None:
+        """Empty window; drop counters start at zero until the first measured chunk."""
         self._samples: list[RealtimeChunkTiming] = []
         self._observed_chunks = 0
         self._dropped_at_start = 0
@@ -155,9 +163,11 @@ class RealtimeTimingWindow:
 
     @property
     def measured_chunks(self) -> int:
+        """Non-warmup samples that will appear in the next :meth:`summary`."""
         return len(self._samples)
 
     def record(self, timing: RealtimeChunkTiming) -> None:
+        """Accept one chunk; warmup rows increment ``observed_chunks`` but stay out of the summary."""
         previous_dropped_frames = self._last_dropped_frames
         self._last_dropped_frames = max(int(timing.dropped_frames), 0)
         self._observed_chunks += 1
@@ -168,6 +178,7 @@ class RealtimeTimingWindow:
         self._samples.append(timing)
 
     def summary(self) -> RealtimeTimingSummary | None:
+        """Fold measured samples into one interval; ``None`` when only warmup (or nothing) arrived."""
         if not self._samples:
             return None
         grouped: dict[str, list[float]] = defaultdict(list)

@@ -16,6 +16,10 @@
 
 """Triton-fused GDN attention blocks (single-GPU inference).
 
+These subclasses keep the PyTorch GDN / UCPE module tree and only replace
+the scan with ``ops.fused_gdn`` / ``ops.fused_cam_gdn`` so checkpoints load
+unchanged.
+
 Drop-in replacements for the chunk-causal and bidirectional GDN attention
 blocks whose main GDN scan (and, optionally, camera branch) is rewired
 through a fused mega-kernel (:mod:`diffusion.model.ops.fused_gdn` for the
@@ -33,16 +37,13 @@ raise ``NotImplementedError``:
 
 from __future__ import annotations
 
+import os
+
 import torch
 import torch.nn as nn
 
-from worldfoundry.base_models.diffusion_model.models.networks.sana.sana_camctrl_blocks import (
-    _maybe_drop_cam_branch,
-    _prepare_ray_apply_fns,
-)
-from worldfoundry.base_models.diffusion_model.models.networks.sana.sana_gdn_blocks import BidirectionalGDN
-from worldfoundry.base_models.diffusion_model.models.networks.sana.sana_gdn_camctrl_blocks import (
-    BidirectionalGDNUCPESinglePathLiteLA,
+from worldfoundry.base_models.diffusion_model.models.networks.sana.ops import (
+    _execution_weight_bias,
 )
 from worldfoundry.base_models.diffusion_model.models.networks.sana.ops.fused_cam_gdn import (
     _invert_SE3,
@@ -58,6 +59,57 @@ from worldfoundry.base_models.diffusion_model.models.networks.sana.ops.fused_gdn
 from worldfoundry.base_models.diffusion_model.models.networks.sana.ops.fused_gdn_chunkwise import (
     cam_scan_bidi_chunkwise,
 )
+from worldfoundry.base_models.diffusion_model.models.networks.sana.sana_camctrl_blocks import (
+    _maybe_drop_cam_branch,
+    _prepare_ray_apply_fns,
+)
+from worldfoundry.base_models.diffusion_model.models.networks.sana.sana_gdn_blocks import BidirectionalGDN
+from worldfoundry.base_models.diffusion_model.models.networks.sana.sana_gdn_camctrl_blocks import (
+    BidirectionalGDNUCPESinglePathLiteLA,
+)
+
+
+def _triton_gdn_is_supported(version: str | None = None) -> bool:
+    """Return whether Triton's compiler supports the fused GDN dot layouts."""
+
+    if os.environ.get("WORLDFOUNDRY_FORCE_SANA_TRITON_GDN", "0") == "1":
+        return True
+    if version is None:
+        import triton
+
+        version = triton.__version__
+    numeric = []
+    for item in str(version).split(".")[:2]:
+        digits = "".join(character for character in item if character.isdigit())
+        numeric.append(int(digits or 0))
+    return tuple((numeric + [0, 0])[:2]) >= (3, 2)
+
+
+def _project_materialized_camera_qkv(
+    x: torch.Tensor,
+    q_proj: nn.Module,
+    k_proj: nn.Module,
+    v_proj: nn.Module,
+) -> torch.Tensor:
+    """Fuse camera QKV while honoring VRAM-managed linear wrappers."""
+
+    q_w, q_b = _execution_weight_bias(q_proj)
+    k_w, k_b = _execution_weight_bias(k_proj)
+    v_w, v_b = _execution_weight_bias(v_proj)
+    weights = (q_w, k_w, v_w)
+    qkv_w = torch.cat(weights)
+    biases = (q_b, k_b, v_b)
+    qkv_b = None
+    if any(bias is not None for bias in biases):
+        qkv_b = torch.cat(
+            [
+                bias
+                if bias is not None
+                else torch.zeros(weight.shape[0], device=weight.device, dtype=weight.dtype)
+                for bias, weight in zip(biases, weights)
+            ]
+        )
+    return torch.nn.functional.linear(x, qkv_w, qkv_b)
 
 
 class BidirectionalGDNTriton(BidirectionalGDN):
@@ -104,6 +156,18 @@ class BidirectionalGDNTriton(BidirectionalGDN):
         Returns:
             The return value.
         """
+        if not _triton_gdn_is_supported():
+            return BidirectionalGDN.forward(
+                self,
+                x,
+                mask=mask,
+                HW=HW,
+                rotary_emb=rotary_emb,
+                block_mask=block_mask,
+                apply_output_gate=apply_output_gate,
+                **kwargs,
+            )
+
         # ---- Guards: this path supports inference only. -------------------
         if HW is None:
             raise ValueError("BidirectionalGDNTriton requires HW=(T, H, W).")
@@ -147,8 +211,12 @@ class BidirectionalGDNTriton(BidirectionalGDN):
 
         # ---- 4. Full-channel RMSNorm weights. -----------------------------
         if not isinstance(self.q_norm, nn.Identity):
-            q_nw = self.q_norm.weight.float().contiguous()
-            k_nw = self.k_norm.weight.float().contiguous()
+            # VRAM-managed modules intentionally keep their public source
+            # parameters on CPU.  Triton receives raw pointers, so use each
+            # wrapper's materialized computation weight and explicitly move
+            # it to the same device as the kernel inputs.
+            q_nw = _execution_weight_bias(self.q_norm)[0].to(device=x.device, dtype=torch.float32).contiguous()
+            k_nw = _execution_weight_bias(self.k_norm)[0].to(device=x.device, dtype=torch.float32).contiguous()
             norm_eps = float(getattr(self.q_norm, "eps", 1e-5))
         else:
             q_nw = torch.ones(C, device=x.device, dtype=torch.float32)
@@ -348,6 +416,15 @@ class BidirectionalGDNUCPESinglePathLiteLABothTriton(BidirectionalGDNUCPESingleP
         Returns:
             The return value.
         """
+        if not _triton_gdn_is_supported():
+            return super()._forward_cam_branch(
+                x,
+                HW,
+                camera_conditions,
+                rotary_emb,
+                **kwargs,
+            )
+
         # ---- Guards: k_conv_only=True. ----
         if kwargs.get("frame_valid_mask", None) is not None:
             raise NotImplementedError(
@@ -368,9 +445,12 @@ class BidirectionalGDNUCPESinglePathLiteLABothTriton(BidirectionalGDNUCPESingleP
         D_head = self.cam_head_dim
 
         # ---- 1. QKV linear + bidirectional short conv on K ---------------
-        qkv_w = torch.cat([self.q_proj_cam.weight, self.k_proj_cam.weight, self.v_proj_cam.weight])
-        qkv_b = torch.cat([self.q_proj_cam.bias, self.k_proj_cam.bias, self.v_proj_cam.bias])
-        qkv_cam = torch.nn.functional.linear(x, qkv_w, qkv_b)
+        qkv_cam = _project_materialized_camera_qkv(
+            x,
+            self.q_proj_cam,
+            self.k_proj_cam,
+            self.v_proj_cam,
+        )
         q_raw, k_raw, v_raw = qkv_cam.chunk(3, dim=-1)
 
         if self.conv_k_cam is not None:
@@ -409,8 +489,16 @@ class BidirectionalGDNUCPESinglePathLiteLABothTriton(BidirectionalGDNUCPESingleP
             rope_sin = torch.zeros(N, D_head // 2, device=x.device, dtype=torch.float32)
 
         # ---- 4. Fused Triton prep kernel --------------------------------
-        q_norm_w = self.q_norm_cam.weight.float().contiguous()
-        k_norm_w = self.k_norm_cam.weight.float().contiguous()
+        q_norm_w = (
+            _execution_weight_bias(self.q_norm_cam)[0]
+            .to(device=x.device, dtype=torch.float32)
+            .contiguous()
+        )
+        k_norm_w = (
+            _execution_weight_bias(self.k_norm_cam)[0]
+            .to(device=x.device, dtype=torch.float32)
+            .contiguous()
+        )
         k_scale = (D_head**-0.5) * (S**-0.5)
         norm_eps_val = float(
             getattr(

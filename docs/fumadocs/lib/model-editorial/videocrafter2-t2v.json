@@ -1,0 +1,41 @@
+{
+  "id": "videocrafter2-t2v",
+  "tagline": {
+    "en": "VideoCrafter2 text-to-video — the newer, Apache-2.0 open route in the VideoCrafter family.",
+    "zh": "VideoCrafter2 文生视频——VideoCrafter 家族中较新的 Apache-2.0 开放路径。"
+  },
+  "overview": {
+    "en": [
+      "VideoCrafter2 T2V is the text-to-video path built on VideoCrafter2, the newer generation of the open-source VideoCrafter family. You give it a text prompt and it generates a short video clip.",
+      "VideoCrafter2 is released under Apache-2.0 with open weights, making it a friendly choice for open text-to-video experimentation. In WorldFoundry it runs as an inference-only route: no training or dataset tooling is bundled.",
+      "You supply a prompt and set frame count, fps, and seed; the shared pipeline loads the checkpoint and writes out the video."
+    ],
+    "zh": [
+      "VideoCrafter2 T2V 是构建在 VideoCrafter2 之上的文生视频路径——VideoCrafter2 是开源 VideoCrafter 家族的较新一代。你给它一段文字提示词,它就生成一段短视频片段。",
+      "VideoCrafter2 采用 Apache-2.0 许可、权重开放,是做开放文生视频实验的友好选择。在 WorldFoundry 中它以推理路径运行:不附带训练或数据集工具。",
+      "你提供提示词并设定帧数、fps 与随机种子;统一 pipeline 会加载 checkpoint 并输出视频。"
+    ]
+  },
+  "whenToUse": {
+    "en": "A solid default within the VideoCrafter family when you want an openly-licensed text-to-video model and prefer the newer VideoCrafter2 over VideoCrafter1.",
+    "zh": "在 VideoCrafter 家族内,当你想要一个开放许可的文生视频模型、并偏好较新的 VideoCrafter2 而非 VideoCrafter1 时,它是稳妥的默认选择。"
+  },
+  "notFor": {
+    "en": "Not for image-to-video (use the image-to-video route) and not for training — only inference is packaged here.",
+    "zh": "不适合图生视频(请用图生视频路径),也不用于训练——此处仅打包了推理。"
+  },
+  "highlights": {
+    "en": [
+      "Text-to-video from the newer VideoCrafter2 generation",
+      "Apache-2.0 with open weights",
+      "Inference-only route with fps, frame-count, and seed controls",
+      "Runs through the shared WorldFoundry pipeline"
+    ],
+    "zh": [
+      "较新的 VideoCrafter2 一代的文生视频",
+      "Apache-2.0、权重开放",
+      "推理路径,提供 fps、帧数与种子控制",
+      "通过 WorldFoundry 统一 pipeline 运行"
+    ]
+  }
+}

@@ -3,8 +3,21 @@
 
 """CUDA-to-host frame prefetch primitives for realtime presentation.
 
-Adapted from NVIDIA FlashDreams.  Torch is imported lazily so CPU-only Studio
-and manifest tooling do not acquire an accelerator dependency.
+Responsibility: start a non-blocking D2H copy onto pinned host memory
+so presentation can overlap with the next decode, then materialize a
+contiguous numpy view only when transport asks.
+
+This module is not a video decoder, display pipeline, or CUDA Graph
+participant. Torch is imported lazily so CPU-only Studio and manifest
+tooling do not acquire an accelerator dependency. Failed prefetch
+returns ``False`` / falls back to a blocking ``.cpu()`` — it must not
+raise into the decode loop.
+
+Public surface:
+- :class:`CudaHostPrefetch` — one tensor, one side-stream copy.
+- :class:`LazyCudaFrame` — keep a decoded frame on CUDA until host
+  materialization; implements ``__array__``.
+- :func:`prefetch_to_numpy` — duck-typed kick for any lazy frame.
 """
 
 from __future__ import annotations
@@ -15,14 +28,23 @@ from typing import Any
 import numpy as np
 import numpy.typing as npt
 
+# Presentation workers may prefetch from multiple threads. Keep lazy stream
+# creation and cache reads under this lock so first access cannot create two
+# streams with unrelated copy ordering for the same device.
 _STREAMS_LOCK = threading.Lock()
 _HOST_COPY_STREAMS: dict[int, Any] = {}
+
+
+# ──────────────────────────────────────────────────────────────────────────
+# Side-stream D2H — pin, copy, record; never raise into the decode loop
+# ──────────────────────────────────────────────────────────────────────────
 
 
 class CudaHostPrefetch:
     """Stage one CUDA tensor into pinned host memory on a reusable side stream."""
 
     def __init__(self, tensor: Any, *, source_event: Any | None = None) -> None:
+        """Hold the source tensor; copy starts only on :meth:`start`."""
         self._tensor = tensor
         self._source_event = source_event
         self._host_tensor: Any | None = None
@@ -31,9 +53,16 @@ class CudaHostPrefetch:
 
     @property
     def started(self) -> bool:
+        """True after :meth:`start` ran, even when the copy was declined."""
         return self._started
 
     def start(self) -> bool:
+        """Begin a non-blocking D2H copy; ``False`` means stay on the fallback path.
+
+        Missing torch, a non-CUDA tensor, or any copy exception is a
+        declined prefetch, not a crash. ``record_stream`` keeps the source
+        alive until the side stream finishes even if the producer frees it.
+        """
         if self._started:
             return self._host_tensor is not None
         self._started = True
@@ -66,11 +95,17 @@ class CudaHostPrefetch:
         return True
 
     def to_numpy(self) -> np.ndarray:
+        """Block on the copy event and return a contiguous host view."""
         if self._host_tensor is None:
             raise RuntimeError("CUDA host prefetch was not started successfully.")
         if self._done_event is not None:
             self._done_event.synchronize()
         return np.ascontiguousarray(self._host_tensor.numpy())
+
+
+# ──────────────────────────────────────────────────────────────────────────
+# Lazy frame — CUDA until transport; host materialization drops the source
+# ──────────────────────────────────────────────────────────────────────────
 
 
 class LazyCudaFrame:
@@ -83,6 +118,7 @@ class LazyCudaFrame:
         *,
         source_event: object | None = None,
     ) -> None:
+        """Alias one index in a CUDA batch; do not copy until prefetch or ``to_numpy``."""
         self._frames_hwc_uint8: Any | None = frames_hwc_uint8
         self._frame_index = int(frame_index)
         self._source_event = source_event
@@ -90,6 +126,7 @@ class LazyCudaFrame:
         self._prefetch: CudaHostPrefetch | None = None
 
     def prefetch_to_numpy(self) -> None:
+        """Kick a side-stream copy if the frame is still on CUDA and uncached."""
         if self._host is not None or self._prefetch is not None or self._frames_hwc_uint8 is None:
             return
         frame = self._frames_hwc_uint8[self._frame_index].detach()
@@ -98,6 +135,12 @@ class LazyCudaFrame:
             self._prefetch = prefetch
 
     def to_numpy(self) -> np.ndarray:
+        """Materialize host pixels once, then drop the CUDA batch alias.
+
+        After this returns the CUDA source is cleared so a later
+        :meth:`to_cuda_tensor` cannot observe a stale batch that the
+        decoder already reused.
+        """
         if self._host is not None:
             return self._host
         if self._prefetch is not None:
@@ -114,11 +157,13 @@ class LazyCudaFrame:
         return self._host
 
     def to_cuda_tensor(self) -> Any:
+        """Return the still-resident CUDA slice; refuse after host materialization."""
         if self._frames_hwc_uint8 is None:
             raise RuntimeError("Lazy CUDA frame was already materialized on the host.")
         return self._frames_hwc_uint8[self._frame_index]
 
     def to_cuda_event(self) -> object | None:
+        """Producer event while the CUDA source lives; ``None`` after host materialization."""
         return self._source_event if self._frames_hwc_uint8 is not None else None
 
     def __array__(
@@ -126,6 +171,7 @@ class LazyCudaFrame:
         dtype: npt.DTypeLike | None = None,
         copy: bool | None = None,
     ) -> np.ndarray:
+        """NumPy protocol: honor ``copy=False`` only when the dtype already matches."""
         array = self.to_numpy()
         if dtype is not None:
             target_dtype = np.dtype(dtype)
@@ -144,6 +190,7 @@ def prefetch_to_numpy(frame: object) -> None:
 
 
 def _host_copy_stream(torch: Any, device: Any) -> Any:
+    """Reuse one side stream per device index so copies stay ordered per GPU."""
     index = getattr(device, "index", None)
     key = 0 if index is None else int(index)
     with _STREAMS_LOCK:

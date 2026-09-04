@@ -1,4 +1,14 @@
-"""Native UMT5 encoder backed by the canonical Wan T5 layers."""
+"""DreamX UMT5 encoder backed by the canonical Wan T5 layers.
+
+:class:`WanT5EncoderModel` is a naming / loading adapter
+for DreamX-World so its checkpoints attach to
+:mod:`~...model.WanTextEncoder`.
+
+``context`` token contract is unchanged.  VAE counterpart:
+:mod:`~...autoencoders.wan.variants.dreamx_world`.
+
+Compatibility wrapper, not a new tokenizer.
+"""
 
 from __future__ import annotations
 
@@ -18,6 +28,7 @@ from worldfoundry.core.nn import ModuleDeviceDtypeMixin
 
 
 class WanT5EncoderModel(ModuleDeviceDtypeMixin, nn.Module):
+    """DreamX-World name for the canonical Wan UMT5 encoder."""
     def __init__(
         self,
         vocab: int | nn.Embedding,

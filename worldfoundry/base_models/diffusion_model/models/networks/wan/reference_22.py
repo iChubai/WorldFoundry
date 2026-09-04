@@ -1,5 +1,22 @@
 # Copyright 2024-2025 The Alibaba Wan Team Authors. All rights reserved.
-"""Module for base_models -> diffusion_model -> video -> wan -> wan_2p2 -> modules -> model.py functionality."""
+"""Official-layout Wan 2.2 DiT (list-of-videos packing, per-token timestep).
+
+Wan 2.2 keeps the 2.1 packing (per-sample patchify + pad to ``seq_len``)
+but changes a few contracts:
+
+- ``model_type`` is ``t2v`` / ``i2v`` / ``ti2v`` / ``s2v`` (no FLF / VACE
+  branch inside this file).
+- Cross-attention is a single :class:`WanCrossAttention` with optional
+  KV cache; I2V condition is concatenated on the *video* channel (``y``),
+  not as CLIP tokens.
+- Timestep modulation is per-token: scalar ``t`` is expanded to
+  ``[B, seq_len]`` so later tokens can carry a different noise level.
+- :class:`WanLayerNorm` casts affine params to fp32 with the activation
+  so wholesale BF16 checkpoints stay numerically valid.
+
+No action, camera, VACE, causal, linear-attention, or TeaCache hooks
+live here.  Those are :mod:`.variants` or the native packed :mod:`.model`.
+"""
 
 import math
 
@@ -13,12 +30,7 @@ __all__ = ['WanModel']
 
 
 def sinusoidal_embedding_1d(dim, position):
-    """Sinusoidal embedding 1d.
-
-    Args:
-        dim: The dim.
-        position: The position.
-    """
+    """Classic sinusoidal features for 1-D timestep / position ids."""
     # preprocess
     assert dim % 2 == 0
     half = dim // 2
@@ -33,13 +45,7 @@ def sinusoidal_embedding_1d(dim, position):
 
 @torch.amp.autocast('cuda', enabled=False)
 def rope_params(max_seq_len, dim, theta=10000):
-    """Rope params.
-
-    Args:
-        max_seq_len: The max seq len.
-        dim: The dim.
-        theta: The theta.
-    """
+    """Build complex cis frequencies for one RoPE axis."""
     assert dim % 2 == 0
     freqs = torch.outer(
         torch.arange(max_seq_len),
@@ -51,13 +57,7 @@ def rope_params(max_seq_len, dim, theta=10000):
 
 @torch.amp.autocast('cuda', enabled=False)
 def rope_apply(x, grid_sizes, freqs):
-    """Rope apply.
-
-    Args:
-        x: The x.
-        grid_sizes: The grid sizes.
-        freqs: The freqs.
-    """
+    """Apply per-sample 3D RoPE to packed tokens; leave pad tokens unrotated."""
     n, c = x.size(2), x.size(3) // 2
 
     # split freqs
@@ -88,7 +88,7 @@ def rope_apply(x, grid_sizes, freqs):
 
 
 class WanRMSNorm(nn.Module):
-    """Wan rms norm implementation."""
+    """RMSNorm with a learned scale; compute in fp32 when the impl upcasts."""
 
     def __init__(self, dim, eps=1e-5):
         """Init.
@@ -119,7 +119,7 @@ class WanRMSNorm(nn.Module):
 
 
 class WanLayerNorm(nn.LayerNorm):
-    """Wan layer norm implementation."""
+    """LayerNorm that typically upcasts to fp32, then restores the activation dtype."""
 
     def __init__(self, dim, eps=1e-6, elementwise_affine=False):
         """Init.
@@ -151,7 +151,7 @@ class WanLayerNorm(nn.LayerNorm):
 
 
 class WanSelfAttention(nn.Module):
-    """Wan self attention implementation."""
+    """Wan self-attention: RMSNorm Q/K, 3D RoPE, flash or variant kernel."""
 
     def __init__(self,
                  dim,
@@ -223,7 +223,7 @@ class WanSelfAttention(nn.Module):
 
 
 class WanCrossAttention(WanSelfAttention):
-    """Wan cross attention implementation."""
+    """Wan text cross-attention (optional KV cache)."""
 
     def forward(self, x, context, context_lens, crossattn_cache=None):
         r"""
@@ -255,7 +255,7 @@ class WanCrossAttention(WanSelfAttention):
 
 
 class WanAttentionBlock(nn.Module):
-    """Wan attention block implementation."""
+    """Wan transformer block: AdaLN self-attn, cross-attn, then AdaLN FFN."""
 
     def __init__(self,
                  dim,
@@ -354,7 +354,7 @@ class WanAttentionBlock(nn.Module):
 
 
 class Head(nn.Module):
-    """Head implementation."""
+    """AdaLN-modulated output projection from tokens to packed patch voxels."""
 
     def __init__(self, dim, out_dim, patch_size, eps=1e-6):
         """Init.
@@ -395,9 +395,7 @@ class Head(nn.Module):
 
 
 class WanModel(nn.Module, NativeConfigMixin):
-    r"""
-    Wan diffusion backbone supporting both text-to-video and image-to-video.
-    """
+    r"""Official-layout Wan 2.2 DiT with per-token timestep modulation."""
 
     ignore_for_config = [
         'patch_size', 'cross_attn_norm', 'qk_norm', 'text_dim', 'window_size'

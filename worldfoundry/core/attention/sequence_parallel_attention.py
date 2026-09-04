@@ -1,3 +1,23 @@
+"""Sequence-parallel attention for packed image+video tokens.
+
+Wan-style dual streams (image query length vs video KV) need a 4D all-to-all
+that keeps ``cu_seqlens`` consistent across ranks. This module gathers or
+reshards those packed sequences, then prefers varlen FlashAttention when
+explicitly available and falls back to in-tree SDPA.
+
+Not this module:
+    RoPE frequency padding lives in :mod:`.sequence_parallel_rope`.
+    Ulysses-only (single stream) lives in :mod:`.ulysses_attention`.
+    SageAttention is used only when the caller sets ``use_sage`` *and*
+    the probe says it is usable — never as an implicit ``auto`` pick.
+
+Public surface:
+
+- :func:`parallel_attention` — dual-stream SP attention returning
+  ``(hidden, None)`` so Hunyuan-style callers can ignore the second
+  slot.
+"""
+
 import torch
 
 try:
@@ -16,6 +36,11 @@ from worldfoundry.core.distributed.sequence_parallel_runtime import (
 )
 
 
+# ──────────────────────────────────────────────────────────────────────────
+# Dual-stream SP — image tokens exchange; encoder heads are rank-narrowed
+# ──────────────────────────────────────────────────────────────────────────
+
+
 def parallel_attention(
     q,
     k,
@@ -28,6 +53,16 @@ def parallel_attention(
     max_seqlen_kv,
     use_sage,
 ):
+    """Attend packed image+encoder streams under an optional SP mesh.
+
+    Image Q/K/V are all-to-all'd (scatter heads, gather sequence).
+    Encoder states are already replicated, so only the local head
+    slice is kept. The SDPA fallback loops per sample because a dense
+    launch would attend into padding that ``cu_seqlens`` had excluded.
+    The trailing ``None`` matches Hunyuan call sites that unpack a
+    pair.
+    """
+
     query, encoder_query = q
     key, encoder_key = k
     value, encoder_value = v
@@ -40,6 +75,8 @@ def parallel_attention(
         )
 
         def shrink_head(encoder_state, dim):
+            """Keep this rank's head slice of a fully-replicated encoder tensor."""
+
             local_heads = encoder_state.shape[dim] // nccl_info.sp_size
             return encoder_state.narrow(dim, nccl_info.rank_within_group * local_heads, local_heads)
 

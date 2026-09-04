@@ -12,6 +12,20 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+"""Inference-only Cosmos3 omni Mixture-of-Tokens transformer.
+
+Checkpoint-shaped joint sequence model: text (causal understanding prefix)
+plus generation tokens for vision / optional sound / optional action share
+one packed stream.  Vision latents enter as per-item ``C T H W`` cubes,
+are spatially patchified to ``(T · H' · W', p*p*C)``, then scattered into
+the joint ``[S, hidden]`` buffer.  Sound is ``[C, T]`` packed to
+``[T, C]``; action is ``[T, D]``.  Dual-pathway attention keeps und
+tokens causal and lets gen tokens attend to und+gen.
+
+Sampling and packing of ``position_ids`` live in the Cosmos3 denoiser /
+recipe.  Do not introduce runner logic here.
+"""
+
 import math
 from types import SimpleNamespace
 
@@ -23,6 +37,34 @@ from worldfoundry.core.attention import scaled_dot_product_attention
 from worldfoundry.core.gradient import gradient_checkpoint_forward
 from worldfoundry.core.nn import DomainAwareLinear
 from worldfoundry.core.nn.timestep import TimestepEmbedding, Timesteps
+
+
+def _module_param_device(module: nn.Module) -> torch.device | None:
+    """Resolve the compute device of ``module``, honoring layerwise-offload wrappers.
+
+    Offload wrappers keep backing parameters on CPU while materializing a
+    temporary computation module on the accelerator.  Prefer that execution
+    target over the backing parameter's storage device.
+    """
+    for candidate in module.modules():
+        computation_device = getattr(candidate, "computation_device", None)
+        if computation_device is not None:
+            return torch.device(computation_device)
+    parameter = next(module.parameters(), None)
+    return None if parameter is None else parameter.device
+
+
+def _to_device(value, device: torch.device | None):
+    """Move tensors (and nested tuples/lists) onto ``device`` without recopying."""
+    if device is None:
+        return value
+    if torch.is_tensor(value):
+        return value if value.device == device else value.to(device, non_blocking=True)
+    if isinstance(value, tuple):
+        return tuple(_to_device(item, device) for item in value)
+    if isinstance(value, list):
+        return [_to_device(item, device) for item in value]
+    return value
 
 
 class Cosmos3AttnProcessor:
@@ -39,6 +81,7 @@ class Cosmos3AttnProcessor:
         gen_seq: torch.Tensor,
         rotary_emb: tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor],
     ) -> tuple[torch.Tensor, torch.Tensor]:
+        """Return ``(und_out, gen_out)`` for packed ``[S, C]`` und/gen streams."""
         # Per-pathway projections
         q_und = attn.to_q(und_seq).view(-1, attn.num_attention_heads, attn.head_dim)
         k_und = attn.to_k(und_seq).view(-1, attn.num_key_value_heads, attn.head_dim)
@@ -92,6 +135,8 @@ class Cosmos3AttnProcessor:
 
 
 class Cosmos3VLTextRotaryEmbedding(nn.Module):
+    """Interleaved 3-axis mRoPE for the joint Cosmos3 sequence (text + video + extra modalities)."""
+
     def __init__(self, head_dim: int, rope_theta: float, rope_axes_dim: tuple[int, int, int]):
         super().__init__()
         inv_freq = 1.0 / (rope_theta ** (torch.arange(0, head_dim, 2, dtype=torch.float32) / head_dim))
@@ -109,6 +154,7 @@ class Cosmos3VLTextRotaryEmbedding(nn.Module):
         return freqs_t
 
     def forward(self, position_ids, device, dtype):
+        """``position_ids`` is ``[3, B, N]`` (or ``[B, N]`` broadcast to 3 axes) → ``(cos, sin)``."""
         if position_ids.ndim == 2:
             position_ids = position_ids[None, ...].expand(3, position_ids.shape[0], -1)  # [3,B,N]
         inv_freq_expanded = (
@@ -127,6 +173,8 @@ class Cosmos3VLTextRotaryEmbedding(nn.Module):
 
 
 class Cosmos3VLTextMLP(nn.Module):
+    """SwiGLU FFN used independently on the understanding and generation streams."""
+
     def __init__(self, hidden_size: int, intermediate_size: int):
         super().__init__()
         self.gate_proj = nn.Linear(hidden_size, intermediate_size, bias=False)
@@ -135,6 +183,7 @@ class Cosmos3VLTextMLP(nn.Module):
         self.act_fn = nn.SiLU()
 
     def forward(self, x):
+        """``down(silu(gate(x)) * up(x))`` on ``[..., hidden]`` tokens."""
         return self.down_proj(self.act_fn(self.gate_proj(x)) * self.up_proj(x))
 
 
@@ -189,6 +238,7 @@ class Cosmos3PackedMoTAttention(nn.Module):
         gen_seq: torch.Tensor,
         rotary_emb: tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor],
     ) -> tuple[torch.Tensor, torch.Tensor]:
+        """Dispatch packed und/gen sequences to :class:`Cosmos3AttnProcessor`."""
         return self.processor(self, und_seq, gen_seq, rotary_emb)
 
 
@@ -235,6 +285,7 @@ class Cosmos3VLTextMoTDecoderLayer(nn.Module):
         gen_seq: torch.Tensor,
         rotary_emb: tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor],
     ) -> tuple[torch.Tensor, torch.Tensor]:
+        """Pre-norm dual residual: shared attention, then per-pathway SwiGLU MLPs."""
         und_norm = self.input_layernorm(und_seq)
         gen_norm = self.input_layernorm_moe_gen(gen_seq)
 
@@ -369,6 +420,7 @@ class Cosmos3OmniTransformer(nn.Module):
         noisy_frame_indexes: list[torch.Tensor],
         token_shapes: list[tuple[int, ...]],
     ) -> torch.Tensor:
+        """Scatter-add timestep embeddings onto noisy spatial (or temporal) tokens only."""
         start_noisy_index = 0
         flattened_noisy_frame_indexes: list[torch.Tensor] = []
         for noisy_indexes_i, token_shape_i in zip(noisy_frame_indexes, token_shapes):
@@ -385,6 +437,7 @@ class Cosmos3OmniTransformer(nn.Module):
         self,
         tokens_vision: list[torch.Tensor],
     ) -> tuple[torch.Tensor, list[tuple[int, int, int]]]:
+        """Pad ``C T H W`` cubes to a multiple of ``p``, then pack as ``[Σ T·H'·W', p*p*C]``."""
         p = self.config.latent_patch_size
         latent_channel = self.config.latent_channel
         packed_latent: list[torch.Tensor] = []
@@ -417,6 +470,7 @@ class Cosmos3OmniTransformer(nn.Module):
         noisy_frame_indexes_vision: list[torch.Tensor],
         original_latent_shapes: list[tuple[int, int, int]],
     ) -> list[torch.Tensor]:
+        """Inverse of :meth:`_patchify_and_pack_latents`; zeros stay at conditioned frames."""
         p = self.config.latent_patch_size
         latent_channel = self.config.latent_channel
         unpatchified_latents: list[torch.Tensor] = []
@@ -651,6 +705,10 @@ class Cosmos3OmniTransformer(nn.Module):
         gen_seq = hidden_states[und_len:]
         rotary_emb = (cos[:und_len], sin[:und_len], cos[und_len:], sin[und_len:])
         for decoder_layer in self.layers:
+            layer_device = _module_param_device(decoder_layer)
+            und_seq = _to_device(und_seq, layer_device)
+            gen_seq = _to_device(gen_seq, layer_device)
+            rotary_emb = _to_device(rotary_emb, layer_device)
             und_seq, gen_seq = gradient_checkpoint_forward(
                 decoder_layer,
                 self._enable_gradient_checkpointing and self.training,
@@ -659,6 +717,9 @@ class Cosmos3OmniTransformer(nn.Module):
                 gen_seq,
                 rotary_emb,
             )
+        home_device = _module_param_device(self.norm)
+        und_seq = _to_device(und_seq, home_device)
+        gen_seq = _to_device(gen_seq, home_device)
         und_out = self.norm(und_seq)
         gen_out = self.norm_moe_gen(gen_seq)
         last_hidden_state = torch.cat([und_out, gen_out], dim=0)

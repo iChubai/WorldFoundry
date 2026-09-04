@@ -1,5 +1,17 @@
 # Copyright 2024-2025 The Alibaba Wan Team Authors. All rights reserved.
-"""Module for base_models -> diffusion_model -> video -> wan -> wan_2p2 -> modules -> vae2_2.py functionality."""
+"""Reference Wan 2.2 48-channel VAE38 CNN (official mean/std).
+
+Checkpoint-compatible causal 3-D encoder/decoder for
+VAE38 latents: 48 channels, BCTHW, 4× temporal / 8×
+spatial, official ``WAN_2P2_VAE_MEAN`` / ``STD`` tables.
+
+:class:`Wan2_2_VAE` is the public encode/decode surface.
+:mod:`.model.WanVideoVAE38` is the runner-facing native
+twin.  DreamX-World wraps this via
+:mod:`.variants.dreamx_world.vae`.
+
+Header-level docs only; residual stacks are graph math.
+"""
 
 import logging
 from dataclasses import dataclass

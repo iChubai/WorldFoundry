@@ -1,4 +1,11 @@
-"""Framework-independent adapter surface for native Wan VAE variants."""
+"""Diffusers-shaped encode/decode façade over the native Wan VAE.
+
+:class:`WanAutoencoderAdapterMixin` returns
+:class:`~worldfoundry.core.nn.AutoencoderKLOutput` /
+:class:`DecoderOutput` so variant VAEs can drop into older pipelines
+without importing Diffusers.  The runner uses :class:`WanVideoDecoder`
+instead.  Encode is deterministic (zero log-variance).
+"""
 
 from __future__ import annotations
 
@@ -45,6 +52,7 @@ class WanAutoencoderAdapterMixin(ModuleDeviceDtypeMixin):
         return int(self.config.spatial_compression_ratio)
 
     def encode(self, value: torch.Tensor, return_dict: bool = True):
+        """Encode a batch; wrap the mean as a deterministic diagonal Gaussian."""
         encoded = torch.stack(
             [
                 self.model.encode(item.unsqueeze(0), self.scale).squeeze(0)
@@ -58,6 +66,7 @@ class WanAutoencoderAdapterMixin(ModuleDeviceDtypeMixin):
         return (posterior,)
 
     def decode(self, value: torch.Tensor, return_dict: bool = True):
+        """Decode a latent batch and clamp pixels to ``[-1, 1]``."""
         decoded = torch.stack(
             [
                 self.model.decode(item.unsqueeze(0), self.scale)

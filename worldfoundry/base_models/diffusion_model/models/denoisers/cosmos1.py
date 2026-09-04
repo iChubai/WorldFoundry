@@ -1,4 +1,9 @@
-"""Native Cosmos Predict1 / GEN3C denoiser role."""
+"""Native Cosmos Predict1 / GEN3C denoiser role.
+
+EDM-preconditioned wrapper around the native 3D transformer.  The runner
+supplies ``DenoiserInput``; this class maps GEN3C video-pose conditions and
+returns clean-x0 style ``DenoiserOutput.sample``.
+"""
 
 from __future__ import annotations
 
@@ -79,6 +84,7 @@ def convert_cosmos1_state_dict(state_dict: Mapping[str, object]) -> Mapping[str,
 
 
 class Cosmos1Gen3CDenoiser:
+    """GEN3C Video2World denoiser with EDM preconditioning and pose control."""
     def __init__(self, model: Cosmos1Transformer3DModel, *, sigma_data: float = 0.5) -> None:
         self.model = model
         self.sigma_data = float(sigma_data)

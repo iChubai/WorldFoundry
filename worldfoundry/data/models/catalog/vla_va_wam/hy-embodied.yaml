@@ -15,6 +15,7 @@ name: HY-Embodied
 output_artifacts:
 - action_trace
 official_sources:
+  paper: https://arxiv.org/abs/2607.12894
   github:
     head_sha: c9b3530ebe3598bfb2dafc391fabd52badaa4ab7
     url: https://github.com/Tencent-Hunyuan/HY-Embodied

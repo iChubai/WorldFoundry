@@ -337,23 +337,13 @@ class MMDoubleStreamBlock(nn.Module):
             ), f"img_kk: {img_qq.shape}, img_q: {img_q.shape}, img_kk: {img_kk.shape}, img_k: {img_k.shape}"
             img_q, img_k = img_qq, img_kk
 
-        img_attn, vision_kv = sequence_parallel_attention_vision(
-            img_q,
-            img_k,
-            img_v,
+        img_attn, img_attn_prope, vision_kv = sequence_parallel_attention_vision(
+            (img_q, img_q_prope),
+            (img_k, img_k_prope),
+            (img_v, img_v_prope),
             block_idx=block_idx,
             kv_cache=kv_cache,
             cache_vision=cache_vision,
-        )
-
-        # PRoPE attention (separate path)
-        img_attn_prope, _ = sequence_parallel_attention_vision(
-            img_q_prope,
-            img_k_prope,
-            img_v_prope,
-            block_idx=block_idx,
-            kv_cache=kv_cache,
-            cache_vision=False,
         )
         img_attn_prope = rearrange(img_attn_prope, "B L (H D) -> B H L D", H=self.heads_num)
         img_attn_prope = apply_fn_o(img_attn_prope)

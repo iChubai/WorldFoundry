@@ -3,9 +3,24 @@
 
 """Deadline-aware prewarm helpers for realtime inference.
 
-The lifecycle and timing model is adapted from NVIDIA FlashDreams.  This
-version also supports asynchronous serving callbacks so Studio can apply the
-same deadline semantics without cancelling an in-flight model worker.
+Responsibility: run cold-start and steady-state warmup steps under one
+shared deadline, recording wall times without cancelling an in-flight
+model worker.
+
+This module is not a CUDA Graph capturer, a thread pool, or a request
+canceller. Model calls commonly execute on a dedicated thread and
+cannot be aborted safely; the deadline is checked *before and after*
+each callback so an overrun is reported only once the callback returns.
+
+Public surface:
+- :class:`PrewarmTimeoutError` / :class:`PrewarmDeadline`
+- :class:`PrewarmTiming` / :class:`PrewarmSequenceTiming`
+- :func:`run_timed_prewarm` / :func:`run_prewarm_sequence` /
+  :func:`run_async_prewarm_sequence`
+- :func:`cuda_graph_prewarm_steps` — warmup + capture + replay count
+
+Asynchronous serving callbacks share the same deadline semantics so
+Studio can time a worker without cancelling an in-flight model call.
 """
 
 from __future__ import annotations
@@ -16,10 +31,16 @@ from dataclasses import dataclass
 from typing import Any
 
 
+# ──────────────────────────────────────────────────────────────────────────
+# Timing records — wall clocks only; no CUDA-event attribution
+# ──────────────────────────────────────────────────────────────────────────
+
+
 class PrewarmTimeoutError(TimeoutError):
     """Raised after a synchronous model step crosses its prewarm deadline."""
 
     def __init__(self, label: str, *, timeout_s: float, elapsed_s: float) -> None:
+        """Keep label/budget/elapsed so Studio can log without parsing the message."""
         self.label = label
         self.timeout_s = timeout_s
         self.elapsed_s = elapsed_s
@@ -36,10 +57,12 @@ class PrewarmTiming:
 
     @property
     def elapsed_s(self) -> float:
+        """Step duration in seconds (same clock as ``time_fn``)."""
         return self.end_time - self.start_time
 
     @property
     def elapsed_ms(self) -> float:
+        """Step duration in milliseconds for log lines that already use ms."""
         return self.elapsed_s * 1000.0
 
 
@@ -53,18 +76,21 @@ class PrewarmSequenceTiming:
 
     @property
     def steps(self) -> tuple[PrewarmTiming, ...]:
+        """Cold start first when present, then every steady-state record."""
         if self.cold_start is None:
             return self.steady_state
         return (self.cold_start, *self.steady_state)
 
     @property
     def elapsed_s(self) -> float:
+        """Span from the first step start to the last step end (0 if empty)."""
         if not self.steps:
             return 0.0
         return self.steps[-1].end_time - self.steps[0].start_time
 
     @property
     def elapsed_ms(self) -> float:
+        """Sequence span in milliseconds."""
         return self.elapsed_s * 1000.0
 
 
@@ -84,6 +110,7 @@ class PrewarmDeadline:
         timeout_s: float | None = None,
         time_fn: Callable[[], float] = time.perf_counter,
     ) -> "PrewarmDeadline":
+        """Stamp ``start_time`` now; ``timeout_s=None`` means no expiry."""
         _validate_timeout(timeout_s)
         return cls(label=label, start_time=time_fn(), timeout_s=timeout_s)
 
@@ -93,6 +120,7 @@ class PrewarmDeadline:
         now: float | None = None,
         time_fn: Callable[[], float] = time.perf_counter,
     ) -> float:
+        """Seconds since :meth:`start`; ``now`` avoids a second clock read after a step."""
         return (time_fn() if now is None else now) - self.start_time
 
     def remaining_s(
@@ -101,6 +129,7 @@ class PrewarmDeadline:
         now: float | None = None,
         time_fn: Callable[[], float] = time.perf_counter,
     ) -> float | None:
+        """Seconds left, clamped at 0; ``None`` when no timeout was configured."""
         if self.timeout_s is None:
             return None
         return max(self.timeout_s - self.elapsed_s(now=now, time_fn=time_fn), 0.0)
@@ -111,6 +140,7 @@ class PrewarmDeadline:
         now: float | None = None,
         time_fn: Callable[[], float] = time.perf_counter,
     ) -> None:
+        """Raise :class:`PrewarmTimeoutError` only after the in-flight callback returned."""
         if self.timeout_s is None:
             return
         elapsed_s = self.elapsed_s(now=now, time_fn=time_fn)
@@ -120,6 +150,11 @@ class PrewarmDeadline:
                 timeout_s=self.timeout_s,
                 elapsed_s=elapsed_s,
             )
+
+
+# ──────────────────────────────────────────────────────────────────────────
+# Runners — check deadline around each callback; never cancel in-flight work
+# ──────────────────────────────────────────────────────────────────────────
 
 
 def run_timed_prewarm(
@@ -235,6 +270,7 @@ def _run_deadlined_step(
     deadline: PrewarmDeadline,
     time_fn: Callable[[], float],
 ) -> PrewarmTiming:
+    """Refuse to start if already expired; raise after return if the step overran."""
     deadline.raise_if_expired(time_fn=time_fn)
     started = time_fn()
     result = step()
@@ -251,6 +287,7 @@ async def _run_async_deadlined_step(
     deadline: PrewarmDeadline,
     time_fn: Callable[[], float],
 ) -> PrewarmTiming:
+    """Same as :func:`_run_deadlined_step` for awaitables that cannot be cancelled."""
     deadline.raise_if_expired(time_fn=time_fn)
     started = time_fn()
     result = await step()
@@ -261,11 +298,13 @@ async def _run_async_deadlined_step(
 
 
 def _validate_timeout(timeout_s: float | None) -> None:
+    """Reject a negative budget; ``None`` is the explicit 'no deadline' sentinel."""
     if timeout_s is not None and timeout_s < 0.0:
         raise ValueError(f"timeout_s must be non-negative, got {timeout_s}.")
 
 
 def _validate_steps(steady_steps: int) -> None:
+    """Zero steady steps is legal (cold-start-only); a negative count is not."""
     if steady_steps < 0:
         raise ValueError(f"steady_steps must be non-negative, got {steady_steps}.")
 

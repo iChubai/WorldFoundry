@@ -11,6 +11,7 @@ checkpoint:
   repo_id: robbyant/lingbot-vla-4b-posttrain-robotwin
   license: apache-2.0
 official_sources:
+  paper: https://arxiv.org/abs/2508.02317
   github:
     url: https://github.com/Robbyant/lingbot-vla
     head_sha: 4eb34b7693a0

@@ -1,0 +1,41 @@
+{
+  "id": "ahawam",
+  "tagline": {
+    "en": "A world-action model that couples video prediction with action generation for robot manipulation.",
+    "zh": "一个把视频预测与动作生成耦合起来的世界-动作模型，面向机器人操作。"
+  },
+  "overview": {
+    "en": [
+      "AHA-WAM is a world-action model (WAM) for robot control: it jointly reasons about what the world will look like next and what actions the robot should take. It reads recent observations plus an instruction and predicts an action chunk for the task.",
+      "It runs paired video and action experts with a shared cache, keeps a six-frame history, and performs two-phase chunked inference. It builds on a Wan2.1-based video stack — a video VAE and a UMT5 text encoder — with the released RoboTwin2.0 checkpoint targeting dual-arm ALOHA-style setups. All assets load locally with strict key matching, and the compute precision and device placement adapt to the available GPUs.",
+      "In WorldFoundry, AHA-WAM runs through the embodied action pipeline rather than video generation: you feed it multi-view camera observations and robot state, and it returns an open-loop action chunk. Trainers, datasets, simulators and deployment servers are out of scope."
+    ],
+    "zh": [
+      "AHA-WAM 是一个面向机器人控制的世界-动作模型（WAM）：它同时推理世界接下来会是什么样子，以及机器人该采取什么动作。它读取近期观测加一条指令，为任务预测出一个动作块。",
+      "它运行成对的视频专家与动作专家、共享同一缓存，保留六帧历史，并执行两阶段的分块推理。它构建在基于 Wan2.1 的视频栈之上——视频 VAE 与 UMT5 文本编码器——已发布的 RoboTwin2.0 checkpoint 面向双臂 ALOHA 风格配置。所有资源以严格键匹配在本地加载，计算精度与设备放置会根据可用 GPU 自适应。",
+      "在 WorldFoundry 中，AHA-WAM 走的是具身动作 pipeline，而非视频生成：你给它多视角相机观测和机器人状态，它便返回一个开环动作块。训练器、数据集、仿真器与部署服务不在其中。"
+    ]
+  },
+  "whenToUse": {
+    "en": "Use it when you want a world-action model that predicts robot actions alongside video, for dual-arm manipulation — for example RoboTwin2.0-style tasks from multi-view observations.",
+    "zh": "当你想要一个在预测视频的同时给出机器人动作的世界-动作模型、用于双臂操作时使用它——例如从多视角观测执行 RoboTwin2.0 风格的任务。"
+  },
+  "notFor": {
+    "en": "Not a general video generator despite its video stack — its purpose is action prediction, and it needs robot observations and state to run. Training, simulation and deployment tooling are excluded.",
+    "zh": "尽管带有视频栈，它并不是通用视频生成器——其目的是动作预测，运行需要机器人观测与状态。训练、仿真与部署工具均不包含。"
+  },
+  "highlights": {
+    "en": [
+      "World-action model coupling video prediction with action generation",
+      "Paired video/action experts, six-frame history, two-phase chunked inference",
+      "Built on a Wan2.1-based video VAE and UMT5 encoder",
+      "RoboTwin2.0 checkpoint for dual-arm manipulation"
+    ],
+    "zh": [
+      "把视频预测与动作生成耦合的世界-动作模型",
+      "成对视频/动作专家、六帧历史、两阶段分块推理",
+      "构建在基于 Wan2.1 的视频 VAE 与 UMT5 编码器之上",
+      "提供面向双臂操作的 RoboTwin2.0 checkpoint"
+    ]
+  }
+}

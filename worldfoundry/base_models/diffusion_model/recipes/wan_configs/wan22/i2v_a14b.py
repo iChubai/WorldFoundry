@@ -1,5 +1,14 @@
 # Copyright 2024-2025 The Alibaba Wan Team Authors. All rights reserved.
-"""Module for base_models -> diffusion_model -> video -> wan -> wan_2p2 -> configs -> wan_i2v_A14B.py functionality."""
+"""Official Wan 2.2 I2V A14B dual-expert EasyDict.
+
+Same 40×5120 DiT / Wan2.1 VAE as Wan 2.1 I2V, plus MoE-style
+``low_noise_model`` / ``high_noise_model`` checkpoints and a 0.900
+sigma boundary.  CFG is ``(3.5, 3.5)`` for the two experts; 40
+sample steps, shift 5.
+
+LingBot-World-V2 deep-copies this object and tightens the sampler
+(see :mod:`..lingbot_world_v2`).
+"""
 
 import torch
 from easydict import EasyDict

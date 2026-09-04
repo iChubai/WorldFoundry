@@ -14,7 +14,12 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-"""Module for base_models -> diffusion_model -> image -> sana -> diffusion -> model -> nets -> fastlinear -> modules -> triton_lite_mla_kernels -> proj_divide_bwd.py functionality."""
+"""Triton kernel: LiteMLA output-projection backward + denominator divide.
+
+Public entry: :func:`proj_divide_bwd`.  Maps ``grad_y`` through ``proj_weight``
+and splits the result into numerator / denominator gradients over the
+padded ``C+1`` column of ``vk_q``.
+"""
 
 import torch
 import triton
@@ -254,13 +259,10 @@ def proj_divide_bwd_kernel(
 
 
 def proj_divide_bwd(grad_y: torch.Tensor, proj_weight: torch.Tensor, vk_q: torch.Tensor, eps: float) -> torch.Tensor:
-    """
-    Input:
-        grad_y: (B, N, H*C)
-        proj_weight: (H*C, H*C)
-        vk_q: (B, N, H, C+1)
-    Output:
-        grad_vk_q: (B, N, H, C+1)
+    """Backprop through the LiteMLA output proj and the ``/ (QKᵀ1 + eps)`` divide.
+
+    ``grad_y``: ``(B, N, H*C)``; ``proj_weight``: ``(H*C, H*C)``; ``vk_q``:
+    ``(B, N, H, C+1)``.  Returns ``grad_vk_q`` with the same shape as ``vk_q``.
     """
     assert vk_q.is_contiguous()  # to ensure the stride of vk_q and grad_vk_q are the same
 

@@ -1,3 +1,18 @@
+"""LTX video VAE encoder/decoder (3-D residual UNet).
+
+Official 8× temporal / 32× spatial compression, 128 latent
+channels, BCTHW layout.  :class:`VideoEncoder` /
+:class:`VideoDecoder` are the public encode/decode surfaces.
+Optional spatial/temporal tiling uses :mod:`.tiling`.
+
+:func:`map_temporal_slice` / :func:`map_spatial_slice` convert
+latent tile ranges back to pixel slices with trapezoidal
+blend weights.  Residual stacks are implementation detail.
+
+Consumed by :class:`~..component.LTXMediaDecoder` and tensor
+codecs; sibling of :mod:`~..audio.audio_vae`.
+"""
+
 import logging
 from typing import Any, Callable, Iterator, List, Tuple
 
@@ -177,6 +192,7 @@ def _make_encoder_block(
 
 
 class VideoEncoder(nn.Module):
+    """LTX video VAE encoder: BCTHW pixels to 128-channel latents."""
     _DEFAULT_NORM_NUM_GROUPS = 32
     """
     Variational Autoencoder Encoder. Encodes video frames into a latent representation.
@@ -590,6 +606,7 @@ def _make_decoder_block(
 
 
 class VideoDecoder(nn.Module):
+    """LTX video VAE decoder: 128-channel latents to BCTHW pixels."""
     _DEFAULT_NORM_NUM_GROUPS = 32
     """
     Variational Autoencoder Decoder. Decodes latent representation into video frames.
@@ -1075,6 +1092,7 @@ def to_mapping_operation(
 
 
 def map_temporal_slice(begin: int, end: int, left_ramp: int, right_ramp: int, scale: int) -> Tuple[slice, torch.Tensor]:
+    """Map a latent time tile to a pixel slice and trapezoidal blend weights."""
     start = begin * scale
     stop = 1 + (end - 1) * scale
     left_ramp = 0 if left_ramp == 0 else 1 + (left_ramp - 1) * scale
@@ -1112,6 +1130,7 @@ def map_temporal_interval_to_latent(
 
 
 def map_spatial_slice(begin: int, end: int, left_ramp: int, right_ramp: int, scale: int) -> Tuple[slice, torch.Tensor]:
+    """Map a latent spatial tile to a pixel slice and trapezoidal blend weights."""
     start = begin * scale
     stop = end * scale
     left_ramp = left_ramp * scale

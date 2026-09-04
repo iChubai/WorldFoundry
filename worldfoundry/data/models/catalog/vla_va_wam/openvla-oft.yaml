@@ -18,6 +18,8 @@ integration:
 license: mit
 name: OpenVLA-OFT
 official_sources:
+  paper: https://arxiv.org/abs/2502.19645
+  project_page: https://openvla-oft.github.io/#train-compute
   github:
     head_sha: e4287e94541f
     url: https://github.com/moojink/openvla-oft

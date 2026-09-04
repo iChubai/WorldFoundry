@@ -1,6 +1,14 @@
 # SPDX-FileCopyrightText: Copyright (c) 2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 
+"""Multi-agent action encoders injected into Gamma-World DiT tokens.
+
+Action trajectories (per-agent, per-time) are embedded and either added
+to video tokens or concatenated spatially.  Video tokens stay
+``B (T'H'W') C`` / ``B T H W C``; action embeddings are resampled to
+latent time before fusion.
+"""
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -8,6 +16,8 @@ from einops import rearrange
 
 
 class RMS_norm(nn.Module):
+    """RMSNorm that can broadcast over channel-first ``B C T H W`` action maps."""
+
     def __init__(self, dim, channel_first=True, images=True, bias=False):
         super().__init__()
         broadcastable_dims = (1, 1, 1) if not images else (1, 1)
@@ -25,6 +35,7 @@ class RMS_norm(nn.Module):
 
 
 class SolarisActionEncoder(nn.Module):
+    """Encode a single agent's action sequence into DiT-width temporal tokens."""
     def __init__(
         self,
         keyboard_dim=23,
@@ -103,6 +114,7 @@ class SolarisActionEncoder(nn.Module):
 
 
 def _resample_action_emb_to_latent_t(emb: torch.Tensor, latent_f_per_view: int, use_conv1d: bool) -> torch.Tensor:
+    """Align action embeddings ``[B, T_act, C]`` to latent frames (linear interp or assert)."""
     if use_conv1d:
         return F.interpolate(emb.transpose(1, 2), size=latent_f_per_view, mode="linear", align_corners=False).transpose(
             1, 2
@@ -112,6 +124,8 @@ def _resample_action_emb_to_latent_t(emb: torch.Tensor, latent_f_per_view: int, 
 
 
 class MultiAgentActionControlModule(nn.Module):
+    """Fuse several agents' keyboard/camera actions into per-view latent tokens."""
+
     def __init__(
         self,
         keyboard_dim: int = 23,
@@ -215,6 +229,7 @@ class MultiAgentActionControlModule(nn.Module):
 
 
 class MultiAgentActionControlNAgentsModule(MultiAgentActionControlModule):
+    """Per-agent encoder pool selected by ``agent_pool_indices``."""
     def __init__(
         self,
         keyboard_dim: int = 23,
@@ -301,6 +316,7 @@ class MultiAgentActionControlNAgentsModule(MultiAgentActionControlModule):
 
 
 class MultiAgentActionControlSharedEncoderModule(MultiAgentActionControlModule):
+    """All agents share one action encoder; views are tiled along latent time."""
     def __init__(
         self,
         keyboard_dim: int = 23,
@@ -365,6 +381,7 @@ class MultiAgentActionControlSharedEncoderModule(MultiAgentActionControlModule):
 
 
 class MultiAgentActionControlSpatialConcatModule(MultiAgentActionControlModule):
+    """Tile per-agent action bias along width instead of packing views in time."""
     def __init__(
         self,
         keyboard_dim: int = 23,
@@ -460,6 +477,7 @@ def build_multi_agent_action_control(
     share_encoder: bool = False,
     spatial_concat: bool = False,
 ) -> MultiAgentActionControlModule:
+    """Factory for the three multi-agent fusion layouts (pool / shared / spatial concat)."""
     if spatial_concat:
         if share_encoder:
             raise ValueError(

@@ -1,4 +1,22 @@
-"""Canonical Cosmos3 denoiser component and loader."""
+"""Cosmos3 joint (video / sound / action) denoiser adapter.
+
+Implements the multimodal denoiser surface used by the joint-multistage
+runner: ``__call__(MultiModalDenoiserInput) -> MultiModalDenoiserOutput``.
+This is not the single-tensor :class:`~...contracts.Denoiser` Protocol;
+Cosmos3 packs several :class:`~...contracts.ModalityState` objects into one
+omni sequence and returns a sample per requested modality.
+
+``MultiModalDenoiserInput.conditioning`` must contain tokenizer ``input_ids``
+and, when action tokens are present, ``action_domain_id``.  Optional
+``fps`` defaults to 24.  Video is required; sound and action are optional
+and only forwarded when their modality state is present.
+
+Layout construction is delegated to
+:func:`~..representations.cosmos3.build_cosmos3_sequence_layout` so this
+adapter stays a thin mapping from framework-owned states onto
+:class:`~..networks.cosmos3.model.Cosmos3OmniTransformer` kwargs.  The
+inner transformer is **not** CUDA-graph safe (variable-length packing).
+"""
 
 from __future__ import annotations
 
@@ -12,7 +30,12 @@ from ..representations.cosmos3 import build_cosmos3_sequence_layout
 
 
 class Cosmos3JointDenoiser:
-    """Adapt the Cosmos3 omni transformer to framework-owned modality states."""
+    """Map framework modality states onto the Cosmos3 omni transformer.
+
+    The runner owns ``ModalityState.latent`` / masks; this class only
+    flattens them through the published packing rules and re-keys the
+    transformer outputs as ``MultiModalDenoiserOutput.samples``.
+    """
 
     def __init__(self, model: Cosmos3OmniTransformer) -> None:
         self.model = model
@@ -24,6 +47,7 @@ class Cosmos3JointDenoiser:
         *,
         device: torch.device,
     ) -> torch.Tensor:
+        """Broadcast the runner's scalar noise level to ``count`` packed tokens."""
         return torch.full(
             (count,),
             float(timestep.item()),
@@ -32,6 +56,7 @@ class Cosmos3JointDenoiser:
         )
 
     def __call__(self, model_input: MultiModalDenoiserInput) -> MultiModalDenoiserOutput:
+        """Evaluate one joint denoise step for the requested modalities."""
         try:
             input_ids = model_input.conditioning["input_ids"]
             video = model_input.modalities["video"]

@@ -8,6 +8,8 @@ availability: open_source
 provider: official_repo
 license: mit
 official_sources:
+  paper: https://arxiv.org/abs/2606.09811
+  project_page: https://serene-sivy.github.io/aha-wam/
   github:
     url: https://github.com/Serene-SIVY/AHA-WAM
     head_sha: 69076f6206518554477be5639deb016eee03a9d6
@@ -22,7 +24,7 @@ checkpoint:
   filename: robotwin_ahawam.pt
   license: mit
 integration:
-  status: in_tree_checkpoint_runtime
+  status: integrated
   notes:
   - The exact video/action experts, mixture cache editor, six-frame history, two-phase chunk inference, VAE, and UMT5 encoder execute in process.
   - Every asset is loaded from local storage with strict key matching; no upstream checkout, server, Hub download, or custom remote implementation is used.

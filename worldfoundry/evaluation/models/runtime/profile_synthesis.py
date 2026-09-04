@@ -16,9 +16,10 @@ from __future__ import annotations
 
 import json
 import sys
-import tempfile
 from pathlib import Path
 from typing import Any, Mapping, Sequence
+
+from worldfoundry.core.io.paths import scratch_directory
 
 from worldfoundry.evaluation.models.runtime.profiles import (
     DEFAULT_COND_DIR,
@@ -291,7 +292,10 @@ class RuntimeProfileSynthesis(BaseSynthesis):
         # Accepted for backwards compatibility with callers that pass a
         # timeout; there is no execution path that could consume it.
         kwargs.pop("timeout_seconds", None)
-        run_dir = Path(kwargs.pop("run_dir", "") or tempfile.mkdtemp(prefix=f"{_safe_name(self.model_id)}_"))
+        run_dir = Path(
+            kwargs.pop("run_dir", "")
+            or scratch_directory(f"{_safe_name(self.model_id)}_")
+        )
         run_dir = run_dir.expanduser().resolve()
         run_dir.mkdir(parents=True, exist_ok=True)
         context = self._context(

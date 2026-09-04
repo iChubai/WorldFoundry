@@ -12,6 +12,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+"""Context-parallel runtime: CSO helper, Ulysses scheduler, and CP pre/post process.
+
+Long video sequences do not fit one GPU's attention workspace. This module
+splits packed Q/K/V along the sequence (or head) dim, runs local attention,
+then concatenates. :class:`UlyssesScheduler` orders the all-to-alls so RoPE
+positions stay aligned with :mod:`worldfoundry.core.distributed.context_parallel`
+splits. :class:`CSOHelper` is the communication-then-compute helper used by
+packed core / cross attention.
+
+Do not call these collectives without the matching RoPE CP shard — positions
+would silently rotate the wrong tokens.
+"""
+
 import math
 from typing import Callable, List, Tuple, Union
 
@@ -24,14 +37,17 @@ from worldfoundry.core.utils.misc_utils import divide
 
 
 def _rearrange(*args, **kwargs):
+    """Import einops lazily so CPU-only import of this module stays cheap."""
     from einops import rearrange
 
     return rearrange(*args, **kwargs)
 
 
-#####################################################
-# Common Primitives
-#####################################################
+# ──────────────────────────────────────────────────────────────────────────
+# Scatter / gather — slice packed sequences onto CP ranks (or gather them back)
+# ──────────────────────────────────────────────────────────────────────────
+
+
 def scatter_to_context_parallel_region(input_, cp_split_sizes, cp_shuffle_num=1, cp_pad_size=0):
     """Split the tensor along its first dimension and keep the
     corresponding slice."""
@@ -93,17 +109,29 @@ def gather_from_context_parallel_region(input_, cp_split_sizes, cp_shuffle_num=1
 
 
 class FakeHandle:
+    """Completed work handle used when CP world size is 1 (no collective)."""
+
     def __init__(self):
+        """Construct a no-op handle that is already complete."""
         pass
 
     def wait(self):
+        """No-op; there is no outstanding collective to join."""
         pass
 
 
-#####################################################
-# Context Parallel Process
-#####################################################
+# ──────────────────────────────────────────────────────────────────────────
+# Packed-parameter rewrite — keep varlen ranges aligned after a CP split
+# ──────────────────────────────────────────────────────────────────────────
+
+
 def update_packed_seq_params_for_cuda_graph(cross_attn_params: PackedCrossAttnParams, xattn_mask: torch.Tensor):
+    """Rewrite KV ranges onto the static caption layout CUDA Graphs captured.
+
+    Live ``cu_seqlens_k`` change with the mask; the graph captured a fixed
+    caption length. Map each dynamic start onto that static grid so the
+    packed kernel still indexes the captured buffer.
+    """
     assert xattn_mask is not None
     # xattn_mask: (N * denoising_range_num, L, 1, 1)
     xattn_mask = xattn_mask.reshape(xattn_mask.shape[0], -1)
@@ -240,6 +268,11 @@ def cp_ulysses_process(
     xattn_mask_for_cuda_graph: Union[torch.Tensor, None],
     cross_attn_params: PackedCrossAttnParams,
 ):
+    """Scatter tokens/RoPE/condition map and rewrite cross-attn ranges for Ulysses.
+
+    Sequence is split as evenly as possible (remainder on the first ranks).
+    RoPE travels with the tokens so positions stay aligned after the scatter.
+    """
     seq_len, N, D = x.shape
     assert seq_len == rope.size(0), f"seq_len: {seq_len} != rope.size(0): {rope.size(0)}"
     assert condition_map.size(0) == seq_len, f"condition_map.size(0): {condition_map.size(0)} != seq_len: {seq_len}"
@@ -272,6 +305,12 @@ def cp_shuffle_overlap_process(
     core_attn_params: PackedCoreAttnParams,
     cross_attn_params: PackedCrossAttnParams,
 ):
+    """Scatter a shuffle-overlap layout and scale packed ranges for padding.
+
+    When ``seq_len / denoising_range_num`` is not divisible by CP size,
+    tokens are padded so each shuffle chunk shards evenly. Query ranges
+    are scaled by the padded/unpadded ratio; KV ranges stay global.
+    """
     seq_len, N, D = x.shape
     assert seq_len == rope.size(0), f"seq_len: {seq_len} != rope.size(0): {rope.size(0)}"
     assert condition_map.size(0) == seq_len, f"condition_map.size(0): {condition_map.size(0)} != seq_len: {seq_len}"
@@ -397,9 +436,11 @@ def cp_post_process(cp_size: int, cp_strategy: str, x: torch.Tensor, meta_args: 
     return x
 
 
-#####################################################
-# Ulysses Attention Pipeline
-#####################################################
+# ──────────────────────────────────────────────────────────────────────────
+# Ulysses pipeline — all-to-all heads↔sequence, overlap comm with compute
+# ──────────────────────────────────────────────────────────────────────────
+
+
 def all_to_all_input_split(
     tensor: torch.Tensor, cp_split_sizes: List[int]
 ) -> Tuple[torch.Tensor, torch.distributed.Work]:
@@ -452,6 +493,12 @@ def all_to_all_output_split(
 def fused_qkv_communication(
     q: torch.Tensor, k: torch.Tensor, v: torch.Tensor, cp_split_sizes: List[int]
 ) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
+    """All-to-all Q, K, and V in one collective by concatenating heads.
+
+    Repeats K/V heads when CP size is a multiple of KV heads (MQA/GQA)
+    so every rank still receives a valid head shard. One fused launch
+    cuts CPU-bound kernel overhead on short sequences.
+    """
     cp_world_size = mpu.get_cp_world_size()
     if cp_world_size == 1:
         return q, k, v
@@ -484,6 +531,7 @@ class UlyssesScheduler:
     """
 
     def __init__(self):
+        """No instance state; methods are static schedules."""
         pass
 
     @staticmethod
@@ -591,6 +639,13 @@ class UlyssesScheduler:
         cp_size: int,
         cp_split_sizes: List[int] = None,
     ):
+        """Run core attention in ``overlap_degree`` head chunks, then cross-attn.
+
+        Query is split so each chunk's output all-to-all can overlap the next
+        chunk's compute. Cross-attention runs after the last core kernel is
+        launched, hiding the final restore collective. ``overlap_degree=-1``
+        means one query-head group per KV head (GQA/MQA).
+        """
         # Split Query, Key, Value into multiple parts
         # k/v may have different sequence length with q due to kv cache
         q_seq, q_head, q_hidden = query.shape
@@ -630,9 +685,11 @@ class UlyssesScheduler:
         return core_attn_out, xattn_out
 
 
-#####################################################
-# CSO(context shuffle overlap) Attention Pipeline
-#####################################################
+# ──────────────────────────────────────────────────────────────────────────
+# CSO pipeline — shuffle-overlap all-to-all for older GPUs
+# ──────────────────────────────────────────────────────────────────────────
+
+
 def cso_communication(
     input: torch.Tensor, cp_world_size: int, cp_split_sizes: List[int], comm_type: str = None
 ) -> Tuple[torch.Tensor, torch.distributed.Work]:
@@ -674,11 +731,13 @@ class CSOHelper:
     """
 
     def __init__(self, cp_shuffle_num, cp_world_size, cp_split_sizes):
+        """Record shuffle count and per-chunk split sizes (split sizes ÷ shuffle)."""
         self.cp_shuffle_num = cp_shuffle_num
         self.cp_world_size = cp_world_size
         self.cp_split_sizes = [divide(x, self.cp_shuffle_num) for x in cp_split_sizes]
 
     def split_query_for_overlap(self, query):
+        """Reshape queries into shuffle chunks and start the first async exchange."""
         query = _rearrange(
             query, "(dn spb) (cp hn) hd -> (dn cp spb) hn hd", cp=self.cp_world_size, dn=self.cp_shuffle_num
         ).contiguous()
@@ -687,6 +746,12 @@ class CSOHelper:
         return querys, handle_q
 
     def overlap(self, fattn, qs, k, v):
+        """Rotate query/output all-to-alls around ``fattn`` so comm hides compute.
+
+        When ``cp_shuffle_num>1``, later iterations pack the previous output
+        with the next query so one collective restores output while fetching
+        the next query. The last iteration issues a dedicated output exchange.
+        """
         core_attn_outs = []
         o = None
         for i in range(self.cp_shuffle_num):

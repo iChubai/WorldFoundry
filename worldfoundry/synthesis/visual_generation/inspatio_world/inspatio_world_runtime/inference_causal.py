@@ -13,11 +13,7 @@ from torch.utils.data import DataLoader, SequentialSampler
 from torch.utils.data.distributed import DistributedSampler
 from tqdm import tqdm
 
-try:
-    from torchvision.io import write_video as _torchvision_write_video
-except ImportError:
-    _torchvision_write_video = None
-
+from worldfoundry.core.io.video import write_video_torchvision
 from worldfoundry.core.vram import DynamicSwapInstaller, get_cuda_free_memory_gb, gpu
 from pipeline import CausalInferencePipeline
 from pipeline.causal_inference import denoise_block
@@ -26,17 +22,7 @@ from utils.render_warper import convert_mask_video
 
 
 def write_video(filename, video_array, fps):
-    if _torchvision_write_video is not None:
-        _torchvision_write_video(filename, video_array, fps=fps)
-        return
-
-    import imageio.v2 as imageio
-
-    if torch.is_tensor(video_array):
-        frames = video_array.detach().cpu().clamp(0, 255).to(torch.uint8).numpy()
-    else:
-        frames = np.asarray(video_array).clip(0, 255).astype(np.uint8)
-    imageio.mimwrite(filename, frames, fps=fps, macro_block_size=None)
+    write_video_torchvision(filename, video_array, fps=fps)
 
 # ============================================================================
 # Argument parsing

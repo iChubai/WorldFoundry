@@ -1,0 +1,37 @@
+{
+  "id": "thinksound",
+  "tagline": {
+    "en": "A video-to-audio model that generates a soundtrack to match a silent clip.",
+    "zh": "一个视频到音频模型，为无声片段生成配套的声音。"
+  },
+  "overview": {
+    "en": [
+      "ThinkSound is a video-to-audio generation model: given a video clip, it synthesizes matching audio, turning a silent scene into one with sound. It comes from the FunAudioLLM project and uses a diffusion-based approach to audio generation.",
+      "In WorldFoundry it targets the video-to-audio and audio-generation routes — you feed it video and it produces an audio track. It runs from the ThinkSound diffusion checkpoint, staged in your local or Hugging Face cache."
+    ],
+    "zh": [
+      "ThinkSound 是一个视频到音频生成模型：给它一段视频，它便合成与之匹配的音频，把无声画面变得有声。它来自 FunAudioLLM 项目，采用基于扩散的音频生成方法。",
+      "在 WorldFoundry 中，它面向视频到音频与音频生成路径——你输入视频，它产出一条音轨。它从 ThinkSound 扩散 checkpoint 运行，checkpoint 放在你的本地或 Hugging Face 缓存中。"
+    ]
+  },
+  "whenToUse": {
+    "en": "Use it when you want to generate an audio track for a silent video clip — adding sound that follows what happens on screen.",
+    "zh": "当你想为一段无声视频生成音轨时使用——添加与画面内容相呼应的声音。"
+  },
+  "notFor": {
+    "en": "It is an audio generator, not a video model — it produces sound for video you already have. It requires the ThinkSound diffusion checkpoint to be available in your cache before it can run.",
+    "zh": "它是音频生成器，而非视频模型——它为你已有的视频生成声音。运行前需要 ThinkSound 扩散 checkpoint 已在你的缓存中就绪。"
+  },
+  "highlights": {
+    "en": [
+      "Video-to-audio generation from the FunAudioLLM project",
+      "Diffusion-based audio synthesis",
+      "Produces a soundtrack matched to a video clip"
+    ],
+    "zh": [
+      "来自 FunAudioLLM 项目的视频到音频生成",
+      "基于扩散的音频合成",
+      "为视频片段产出匹配的音轨"
+    ]
+  }
+}

@@ -1,4 +1,26 @@
-"""Shared RoPE and attention paths for sequence-parallel video inference."""
+"""Shared RoPE and attention factories for sequence-parallel video inference.
+
+Ulysses / USP ranks own a contiguous token shard. RoPE frequency
+tables are usually built for the *global* length; applying them
+naively on a short shard either truncates or broadcasts wrong
+positions. :func:`pad_freqs` and
+:func:`make_sequence_parallel_rope_apply` slice/pad the table so each
+rank rotates with its global offsets.
+
+Not this module:
+    Causal vs non-causal attention is *not* chosen here — callers pick
+    :mod:`.causal_rope_sequence_parallel` or
+    :mod:`.rope_sequence_parallel` (and the padded-Ulysses variant for
+    memory tokens). Does not own the SP process group.
+
+Public surface:
+
+- :func:`pad_freqs` / :func:`apply_sequence_parallel_rope` — identity-pad
+  and per-sample 3D apply on a shard.
+- :func:`make_sequence_parallel_rope_apply` /
+  :func:`make_sequence_parallel_attention_forward` — bind rank providers.
+- :func:`sequence_parallel_attention_forward` — Wan QKV / RoPE / out.
+"""
 
 from __future__ import annotations
 
@@ -8,6 +30,11 @@ import torch
 from torch import Tensor
 
 from worldfoundry.core.kernels import hidden_qk_rmsnorm_rope_3d
+
+
+# ──────────────────────────────────────────────────────────────────────────
+# Frequency pad / apply — global offsets on a contiguous token shard
+# ──────────────────────────────────────────────────────────────────────────
 
 
 def pad_freqs(original_tensor: Tensor, target_len: int) -> Tensor:
@@ -73,6 +100,8 @@ def make_sequence_parallel_rope_apply(
     """Bind runtime rank providers to the shared sequence-parallel RoPE path."""
 
     def rope_apply(x: Tensor, grid_sizes: Tensor, freqs: Tensor) -> Tensor:
+        """Apply SP RoPE using the bound world-size / rank providers."""
+
         return apply_sequence_parallel_rope(
             x,
             grid_sizes,
@@ -83,6 +112,11 @@ def make_sequence_parallel_rope_apply(
         )
 
     return rope_apply
+
+
+# ──────────────────────────────────────────────────────────────────────────
+# Wan attention forward — fused QK RMSNorm+RoPE when batch==1 and qk_norm
+# ──────────────────────────────────────────────────────────────────────────
 
 
 def sequence_parallel_attention_forward(
@@ -158,6 +192,8 @@ def make_sequence_parallel_attention_forward(
         freqs: Tensor,
         dtype: torch.dtype = torch.bfloat16,
     ) -> Tensor:
+        """Wan-block ``forward`` bound to one attention + RoPE pair."""
+
         return sequence_parallel_attention_forward(
             module,
             x,

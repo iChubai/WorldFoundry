@@ -1,0 +1,39 @@
+{
+  "id": "allegro",
+  "tagline": {
+    "en": "Allegro — rhymes-ai's Apache-2.0 open video model for text-to-video and image-to-video generation.",
+    "zh": "Allegro——rhymes-ai 出品的 Apache-2.0 开源视频模型，支持文生视频与图生视频。"
+  },
+  "overview": {
+    "en": [
+      "Allegro is an open video generation model from rhymes-ai, released under Apache-2.0. It generates video from a text prompt and, in its TI2V form, can also animate a still image into motion.",
+      "The family includes the base Allegro checkpoint and Allegro-TI2V, both openly licensed and ungated. In WorldFoundry the TI2V runtime is wrapped in-tree, with the checkpoint weights supplied as local assets."
+    ],
+    "zh": [
+      "Allegro 是 rhymes-ai 发布的开源视频生成模型，采用 Apache-2.0 许可。它可从文字提示词生成视频，其 TI2V 形态还能让一张静态图动起来。",
+      "该家族包含基础的 Allegro checkpoint 与 Allegro-TI2V，两者均为开放许可、无使用门槛。在 WorldFoundry 中，TI2V 运行时被内置封装，checkpoint 权重以本地资源提供。"
+    ]
+  },
+  "whenToUse": {
+    "en": "A solid choice when you want an openly-licensed (Apache-2.0) video model for text-to-video, or the TI2V checkpoint to animate an existing image.",
+    "zh": "当你想要一个开放许可（Apache-2.0）的视频模型做文生视频，或用 TI2V checkpoint 让已有图片动起来时，是可靠的选择。"
+  },
+  "notFor": {
+    "en": "Checkpoint weights are downloaded separately rather than bundled, so plan for the download and disk space.",
+    "zh": "checkpoint 权重需单独下载而非随附，请预留下载时间与磁盘空间。"
+  },
+  "highlights": {
+    "en": [
+      "Apache-2.0, open and ungated weights",
+      "Text-to-video and image-to-video (TI2V) in one family",
+      "From rhymes-ai",
+      "Runs through an in-tree TI2V runtime wrapper"
+    ],
+    "zh": [
+      "Apache-2.0，开放且无门槛权重",
+      "文生视频与图生视频（TI2V）同属一个家族",
+      "来自 rhymes-ai",
+      "通过内置的 TI2V 运行时封装运行"
+    ]
+  }
+}

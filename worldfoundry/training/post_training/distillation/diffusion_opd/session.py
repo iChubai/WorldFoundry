@@ -8,7 +8,10 @@ from math import prod
 import torch
 
 from worldfoundry.training.checkpoint.checkpointer import TrainingCheckpointer
-from worldfoundry.training.checkpoint.staging import PendingTrainingCheckpoint
+from worldfoundry.training.checkpoint.staging import (
+    PendingTrainingCheckpoint,
+    wait_for_pending_checkpoints,
+)
 from worldfoundry.training.checkpoint.state import TrainingProgress
 
 from .batching import NativeDiffusionOPDDataLoader
@@ -61,9 +64,7 @@ class NativeDiffusionOPDTrainingSession:
         self._pending: list[PendingTrainingCheckpoint] = []
 
     def wait_for_checkpoints(self) -> None:
-        for pending in self._pending:
-            pending.wait()
-        self._pending.clear()
+        wait_for_pending_checkpoints(self._pending)
 
     def train_iteration(
         self,

@@ -1,0 +1,41 @@
+{
+  "id": "motionbricks",
+  "tagline": {
+    "en": "NVIDIA's whole-body motion generator from the GR00T line — building human and humanoid motion for control.",
+    "zh": "来自 NVIDIA GR00T 系列的全身动作生成器——为控制而生成人类与人形机器人的动作。"
+  },
+  "overview": {
+    "en": [
+      "MotionBricks is a whole-body motion generation model from NVIDIA's research group, part of the GR00T whole-body control effort. It focuses on producing human and humanoid action — coherent, physically plausible motion that can serve as a foundation for controlling humanoid robots.",
+      "As a world-model-oriented approach to motion, it treats generation as building up movement that respects body dynamics, rather than replaying fixed clips. This makes it relevant to embodied research where an agent needs realistic whole-body behavior.",
+      "In WorldFoundry, MotionBricks is registered through its official source with the accompanying motion and robot assets prepared separately before you generate."
+    ],
+    "zh": [
+      "MotionBricks 是 NVIDIA 研究团队推出的全身动作生成模型，属于 GR00T 全身控制项目的一部分。它专注于生成人类与人形机器人的动作——连贯、符合物理规律的运动，可作为控制人形机器人的基础。",
+      "作为面向世界模型的动作生成方法，它把生成看作在尊重身体动力学的前提下构建运动，而非重放固定片段。这让它对需要真实全身行为的具身研究很有价值。",
+      "在 WorldFoundry 中，MotionBricks 通过其官方源接入，配套的动作与机器人资源需在生成前单独准备。"
+    ]
+  },
+  "whenToUse": {
+    "en": "Use MotionBricks when you need generated whole-body human or humanoid motion — for humanoid control research or for producing physically grounded action sequences.",
+    "zh": "当你需要生成全身的人类或人形机器人动作时，可以使用 MotionBricks——适合人形机器人控制研究，或生成有物理依据的动作序列。"
+  },
+  "notFor": {
+    "en": "Not a video or scene generator; its output is motion for control. Checkpoints and robot assets are prepared separately before you can run it.",
+    "zh": "它不是视频或场景生成器，输出的是用于控制的动作。运行前需单独准备 checkpoint 与机器人资源。"
+  },
+  "highlights": {
+    "en": [
+      "Whole-body human and humanoid motion generation",
+      "From NVIDIA's GR00T whole-body control line",
+      "Aimed at humanoid control and embodied research",
+      "Registered in WorldFoundry via its official source"
+    ],
+    "zh": [
+      "全身人类与人形机器人动作生成",
+      "源自 NVIDIA GR00T 全身控制系列",
+      "面向人形机器人控制与具身研究",
+      "通过官方源接入 WorldFoundry"
+    ]
+  }
+}

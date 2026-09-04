@@ -1,3 +1,9 @@
+"""MoVerse causal Wan 2.x rollout graph.
+
+Causal self-attention + KV cache for MoVerse.  Dual-stream MMDiT
+inference is :mod:`.mmdit`.
+"""
+
 from worldfoundry.base_models.diffusion_model.models.networks.wan.mixins import (
     WanTransformerMethodsMixin,
 )
@@ -686,9 +692,7 @@ class CausalHead(nn.Module):
 
 
 class CausalWanModel(WanTransformerMethodsMixin, nn.Module, NativeConfigMixin):
-    r"""
-    Wan diffusion backbone supporting both text-to-video and image-to-video.
-    """
+    r"""MoVerse causal Wan 2.x rollout graph."""
 
     ignore_for_config = [
         'patch_size', 'cross_attn_norm', 'qk_norm', 'text_dim',

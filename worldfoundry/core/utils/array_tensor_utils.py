@@ -1,30 +1,57 @@
-"""Nested-structure helpers for numpy arrays and torch tensors."""
+"""Nested-structure helpers for numpy arrays and torch tensors.
+
+Responsibility
+    Walk pytrees and apply stack / concat / slice / reduce without converting
+    every leaf to torch. Use when a batch mixes numpy video frames and tensor
+    latents.
+
+Boundaries
+    Not a device mover and not a CUDA Graph signature helper. Leaves stay
+    numpy or torch; mixing both *inside one stack/concat* follows the first
+    leaf's type. Requires ``dm_tree`` via :func:`tree_utils._require_tree`.
+    In-place ops (``any_zero_``, ``any_fill_``, ``any_assign``) mutate leaves.
+
+Public surface
+    Type predicates, ``any_*`` tree ops, :func:`chunk_seq`, :func:`get_batch_size`.
+"""
 
 from typing import Any, Dict, List, Optional, Union
 
 import numpy as np
 import torch
 
-from ..structures.predicates import is_sequence
-from ..structures.tree_utils import (
+from .functional_utils import is_sequence, make_recursive_func
+from .tree_utils import (
     _require_tree,
     copy_non_leaf,
     tree_assign_at_path,
     tree_value_at_path,
 )
-from .functional_utils import make_recursive_func
+
+
+# ──────────────────────────────────────────────────────────────────────────
+# Type predicates — cheap leaf tests used by every any_* helper
+# ──────────────────────────────────────────────────────────────────────────
 
 
 def is_array_tensor(obj):
+    """Return whether ``obj`` is an ``ndarray`` or a torch tensor (not a pytree)."""
     return isinstance(obj, (np.ndarray, torch.Tensor))
 
 
 def is_numpy(obj):
+    """Return whether ``obj`` is a numpy ndarray (scalars and tensors are False)."""
     return isinstance(obj, np.ndarray)
 
 
 def is_tensor(obj):
+    """Return whether ``obj`` is a torch tensor, including subclasses."""
     return torch.is_tensor(obj)
+
+
+# ──────────────────────────────────────────────────────────────────────────
+# Tree stack / concat / chunk — first leaf's type wins; floats become float32
+# ──────────────────────────────────────────────────────────────────────────
 
 
 def any_stack(xs: List, *, dim: int = 0):
@@ -33,6 +60,7 @@ def any_stack(xs: List, *, dim: int = 0):
     """
 
     def _any_stack_helper(*xs):
+        """Stack one aligned leaf tuple; python floats become ``float32`` ndarrays."""
         x = xs[0]
         if isinstance(x, np.ndarray):
             return np.stack(xs, axis=dim)
@@ -54,6 +82,7 @@ def any_concat(xs: List, *, dim: int = 0):
     """
 
     def _any_concat_helper(*xs):
+        """Concatenate one aligned leaf tuple; python floats become ``float32``."""
         x = xs[0]
         if isinstance(x, np.ndarray):
             return np.concatenate(xs, axis=dim)
@@ -81,6 +110,12 @@ def any_chunk(x, chunks: int, *, dim: int = 0, strict: bool = True) -> List[Any]
     x_copies = [copy_non_leaf(x) for _ in range(chunks)]
 
     def _any_chunk_helper(path, x):
+        """Split one leaf along ``dim`` and write chunks into the skeleton copies.
+
+        Failure: :exc:`NotImplementedError` on non-array leaves when
+        ``strict``. Numpy uses ``np.split`` (must divide evenly); torch uses
+        ``torch.chunk`` (last chunk may be shorter).
+        """
         if is_array_tensor(x):
             if isinstance(x, np.ndarray):
                 chunked_values = np.split(x, chunks, axis=dim)
@@ -113,6 +148,11 @@ def chunk_seq(arr, chunks: int, check_divide=True):
     if check_divide and m != 0:
         raise ValueError(f"Array len {len(arr)} does not divide chunks {chunks}")
     return (arr[i * k + min(i, m) : (i + 1) * k + min(i + 1, m)] for i in range(chunks))
+
+
+# ──────────────────────────────────────────────────────────────────────────
+# Leaf-preserving factories / in-place fills — keep python scalars as scalars
+# ──────────────────────────────────────────────────────────────────────────
 
 
 @make_recursive_func
@@ -194,6 +234,7 @@ def get_batch_size(x, strict: bool = False) -> int:
     """
 
     def _get_batch_size(x):
+        """Leading dim of an array/tensor, else ``len`` for sequences."""
         if isinstance(x, np.ndarray):
             return x.shape[0]
         elif torch.is_tensor(x):
@@ -214,8 +255,18 @@ def get_batch_size(x, strict: bool = False) -> int:
         return _get_batch_size(xs[0])
 
 
+# ──────────────────────────────────────────────────────────────────────────
+# Batch-axis and reduce — leading dim is always the batch; others stay put
+# ──────────────────────────────────────────────────────────────────────────
+
+
 @make_recursive_func
 def add_batch_dim(x):
+    """Insert a leading singleton so a single sample matches a batched API.
+
+    Shape: ``(...)`` → ``(1, ...)``. Failure: :exc:`NotImplementedError` on
+    non-array leaves (the recursive wrapper already walks mappings / sequences).
+    """
     if is_numpy(x):
         return np.expand_dims(x, axis=0)
     elif is_tensor(x):
@@ -226,6 +277,10 @@ def add_batch_dim(x):
 
 @make_recursive_func
 def remove_batch_dim(x):
+    """Squeeze a leading size-1 batch dim; size ≠ 1 is a numpy / torch error.
+
+    Shape: ``(1, ...)`` → ``(...)``.
+    """
     if is_numpy(x):
         return np.squeeze(x, axis=0)
     elif is_tensor(x):
@@ -236,6 +291,10 @@ def remove_batch_dim(x):
 
 @make_recursive_func
 def any_to_primitive(x):
+    """Convert array / tensor / numpy scalar leaves to nested Python lists.
+
+    Non-numeric leaves pass through so a mixed config tree can be JSON-dumped.
+    """
     if isinstance(x, (np.ndarray, np.number, torch.Tensor)):
         return x.tolist()
     else:
@@ -244,6 +303,10 @@ def any_to_primitive(x):
 
 @make_recursive_func
 def any_get_shape(x):
+    """Return ``tuple(shape)`` for an array or tensor leaf.
+
+    Failure: :exc:`NotImplementedError` on python scalars (they have no shape).
+    """
     if is_numpy(x):
         return tuple(x.shape)
     elif is_tensor(x):
@@ -254,6 +317,7 @@ def any_get_shape(x):
 
 @make_recursive_func
 def any_mean(x, dim: Optional[int] = None, keepdim: bool = False):
+    """Mean over ``dim`` (or all axes). Numpy ``axis`` and torch ``dim`` stay aligned."""
     if is_numpy(x):
         return np.mean(x, axis=dim, keepdims=keepdim)
     elif is_tensor(x):
@@ -264,12 +328,18 @@ def any_mean(x, dim: Optional[int] = None, keepdim: bool = False):
 
 @make_recursive_func
 def any_variance(x, dim: Optional[int] = None, keepdim: bool = False, unbiased: bool = False):
+    """Variance with a shared ``unbiased`` flag (numpy ``ddof=1`` vs torch ``unbiased``)."""
     if is_numpy(x):
         return np.var(x, axis=dim, keepdims=keepdim, ddof=1 if unbiased else 0)
     elif is_tensor(x):
         return torch.var(x, dim=dim, keepdim=keepdim, unbiased=unbiased)
     else:
         raise NotImplementedError(f"Unsupported data structure: {type(x)}")
+
+
+# ──────────────────────────────────────────────────────────────────────────
+# Debug describe / slice / assign — mutate only when the caller asks
+# ──────────────────────────────────────────────────────────────────────────
 
 
 @make_recursive_func
@@ -317,6 +387,11 @@ def any_describe_str(x, shape_only=False):
 
 
 def any_describe(x, msg="", *, shape_only=False):
+    """Pretty-print a tree of :func:`any_describe_str` lines for debugging.
+
+    ``(msg, x)`` argument order is accepted either way so call sites can
+    write ``any_describe("latents", t)`` or ``any_describe(t, "latents")``.
+    """
     # from omlet.utils import yaml_dumps
     from pprint import pprint
 
@@ -351,6 +426,7 @@ def any_assign(x, assign_value, slice):
     """
 
     def _any_assign_helper(path, v):
+        """Write ``v`` into the matching leaf of ``x`` at ``slice`` (in-place)."""
         y = tree_value_at_path(x, path)
         y[slice] = v
 

@@ -31,7 +31,12 @@ from .errors import (
     TrainingCheckpointError,
 )
 from .staging import ImmutableTrainingFileSystemWriter, PendingTrainingCheckpoint
-from .state import TrainingState
+from .state import (
+    TrainingState,
+    _identity_compatibility_error,
+    _identity_section_differences,
+    _upgrade_legacy_resume_identity,
+)
 
 TRAINING_CHECKPOINT_MANIFEST_SCHEMA = "worldfoundry-training-checkpoint"
 TRAINING_CHECKPOINT_COMMIT_SCHEMA = "worldfoundry-training-checkpoint-commit"
@@ -277,9 +282,19 @@ class TrainingCheckpointer:
         world_size: int,
         staging_strategy: str,
         optional_state_presence: Mapping[str, bool],
+        coordinate: bool = True,
     ) -> TrainingCheckpointArtifact:
-        """Atomically commit a completed synchronous or asynchronous write."""
+        """Atomically commit a completed synchronous or asynchronous write.
 
+        ``coordinate=True`` (default) runs the rank barriers that keep a
+        multi-rank commit aligned.  Pass ``coordinate=False`` only on a
+        path where other ranks will not enter this function -- typically a
+        local exception handler -- so a partial-rank failure cannot hang on
+        ``dist.barrier``.
+        """
+
+        if not isinstance(coordinate, bool):
+            raise TypeError("coordinate must be a bool")
         if staging_strategy not in CHECKPOINT_STAGING_STRATEGIES:
             raise TrainingCheckpointError(f"unsupported checkpoint staging strategy: {staging_strategy!r}")
         resolved_optional_presence = dict(optional_state_presence)
@@ -287,7 +302,8 @@ class TrainingCheckpointer:
             not isinstance(value, bool) for value in resolved_optional_presence.values()
         ):
             raise TrainingCheckpointError("optional training-state presence is invalid")
-        _barrier()
+        if coordinate:
+            _barrier()
         rank, active_world_size = _distributed_context()
         if active_world_size != world_size:
             raise TrainingCheckpointError("world size changed while checkpoint save was pending")
@@ -336,7 +352,8 @@ class TrainingCheckpointer:
             # deletion loop can never leave the root without a valid latest.
             if self.keep_last is not None:
                 self._apply_retention(keep_last=self.keep_last, newest_path=final_path)
-        _barrier()
+        if coordinate:
+            _barrier()
         return self.inspect(final_path)
 
     def _resolve(self, checkpoint: str | Path | None) -> Path:
@@ -441,15 +458,27 @@ class TrainingCheckpointer:
         self,
         state: TrainingState,
         checkpoint: str | Path | None = None,
+        *,
+        allow_environment_drift: bool = False,
     ) -> TrainingCheckpointArtifact:
         if not isinstance(state, TrainingState):
             raise TypeError("state must be TrainingState")
+        if not isinstance(allow_environment_drift, bool):
+            raise TypeError("allow_environment_drift must be a bool")
         path = self._resolve(checkpoint)
         artifact = self.inspect(path)
-        if dict(artifact.identity) != dict(state.identity):
-            raise TrainingCheckpointCompatibilityError(
-                "checkpoint identity differs from the active recipe/data/model/runtime"
-            )
+        saved_identity = _canonical_mapping(
+            artifact.identity,
+            field_name="checkpoint identity",
+        )
+        _upgrade_legacy_resume_identity(saved_identity, state.identity)
+        identity_differences = _identity_section_differences(
+            saved_identity,
+            state.identity,
+            allow_environment_drift=allow_environment_drift,
+        )
+        if identity_differences:
+            raise _identity_compatibility_error(identity_differences)
         if dict(artifact.optional_state_presence) != state.optional_state_presence:
             differences = sorted(
                 name
@@ -459,7 +488,8 @@ class TrainingCheckpointer:
             raise TrainingCheckpointCompatibilityError(
                 "optional training-state presence differs for " + ", ".join(differences)
             )
-        dcp.load({"trainer": state}, checkpoint_id=path)
+        with state.identity_load_policy(allow_environment_drift=allow_environment_drift):
+            dcp.load({"trainer": state}, checkpoint_id=path)
         if state.progress.optimizer_steps != artifact.global_step:
             raise TrainingCheckpointCompatibilityError("loaded progress step differs from the checkpoint manifest")
         return artifact

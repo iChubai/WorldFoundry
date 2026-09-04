@@ -1,4 +1,14 @@
-"""Module for base_models -> diffusion_model -> image -> sana -> diffusion -> model -> dc_ae -> efficientvit -> models -> nn -> ops_3d.py functionality."""
+"""3-D residual / downsample ops for temporal DC-AE.
+
+:class:`ConvLayer3d`, :class:`ResBlock3d`, pixel-shuffle
+3-D up/down layers, and :class:`ResidualBlock3d` support
+:mod:`~..efficientvit.dc_ae_with_temporal`.
+
+Tensors are BCTHW.  2-D siblings are :mod:`.ops`.
+``custom_conv3d`` splits channels when needed for memory.
+
+Used only by Sana temporal DC-AE, not MiniMax / Wan CNNs.
+"""
 
 from typing import Optional, Sequence
 

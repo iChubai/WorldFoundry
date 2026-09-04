@@ -1,4 +1,16 @@
-"""Environment-token encoder shared by native Wan world-model variants."""
+"""Environment-token encoder shared by native Wan world-model variants.
+
+:class:`WanVGGTEnvironmentEncoder` loads a VGGT-1B backbone
+and emits environment tokens for world-model recipes.
+:func:`resolve_vggt_1b_root` / :func:`load_vggt_1b_backbone`
+locate weights.
+
+Outputs join Wan ``context`` / control maps; they are not
+UMT5 prompt tokens.  Prompt encode stays on
+:class:`~.component.WanTextConditioner`.
+
+World-model extra, not required for plain T2V.
+"""
 
 from __future__ import annotations
 

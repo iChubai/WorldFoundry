@@ -176,7 +176,10 @@ def prepare_wan_rollout_assets(
     if recipe.distributed.backend == "fsdp2":
         if resolved_device.type != "cuda":
             raise ValueError("Wan rollout FSDP2 materialization requires CUDA")
-        distributed_context = DistributedTrainingContext(device_type="cuda")
+        distributed_context = DistributedTrainingContext(
+            device_type="cuda",
+            timeout_seconds=recipe.distributed.timeout_seconds,
+        )
         resolved_device = distributed_context.device
     resolved_reward_device = torch.device(resolved_device if reward_device is None else reward_device)
     if distributed_context is not None and resolved_reward_device.type == "cuda":

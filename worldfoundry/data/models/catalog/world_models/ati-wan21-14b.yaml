@@ -11,6 +11,7 @@ checkpoints:
 - repo_id: Wan-AI/Wan2.1-I2V-14B-480P
   role: wan21_i2v_base_components
 official_sources:
+  paper: https://arxiv.org/abs/2505.22944
   github:
     url: https://github.com/bytedance/ATI
     revision: 1a002caf7bb55cfb016dcc670c357bd803af3a0d

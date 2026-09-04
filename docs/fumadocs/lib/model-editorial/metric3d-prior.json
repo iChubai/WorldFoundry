@@ -1,0 +1,41 @@
+{
+  "id": "metric3d-prior",
+  "tagline": {
+    "en": "A monocular metric-depth model — recover real-world depth in meters from a single image.",
+    "zh": "单目度量深度模型——从单张图片恢复以米为单位的真实深度。"
+  },
+  "overview": {
+    "en": [
+      "Metric3D is a monocular depth model that estimates metric depth — depth in real-world units — from a single image, rather than only relative depth. In WorldFoundry it serves as an independent geometry prior that other pipelines can build on.",
+      "It handles monocular depth estimation, metric depth estimation, and acts as a geometry prior. WorldFoundry exposes it through the shared geometry-prior pipeline and operator contract, and the VIPE SLAM defaults reference it by name through the shared priors factory.",
+      "In WorldFoundry you can call it directly for depth on a single image, or let a higher-level pipeline pull it in as its depth prior."
+    ],
+    "zh": [
+      "Metric3D 是一个单目深度模型，从单张图片估计度量深度——即以真实世界单位表示的深度，而不仅是相对深度。在 WorldFoundry 中，它作为一个独立的几何先验，可供其他 pipeline 复用。",
+      "它支持单目深度估计、度量深度估计，并可充当几何先验。WorldFoundry 通过统一的几何先验 pipeline 与算子契约暴露它，VIPE SLAM 的默认配置也通过共享先验工厂按名称引用它。",
+      "在 WorldFoundry 中，你可以直接调用它对单张图片估计深度，也可以让更高层的 pipeline 把它作为深度先验引入。"
+    ]
+  },
+  "whenToUse": {
+    "en": "Use it when you need metric (real-scale) depth from a single image, or a reusable depth prior that downstream 3D and SLAM pipelines can consume.",
+    "zh": "当你需要从单张图片得到度量（真实尺度）深度，或需要一个可供下游 3D 与 SLAM pipeline 复用的深度先验时，使用它。"
+  },
+  "notFor": {
+    "en": "It's a geometry prior, not a full scene reconstructor or generator — pair it with higher-level pipelines for those tasks.",
+    "zh": "它是几何先验，而非完整的场景重建或生成器——重建与生成任务请搭配更高层的 pipeline。"
+  },
+  "highlights": {
+    "en": [
+      "Metric depth (real-world units) from a single image",
+      "Monocular and metric depth estimation",
+      "Reusable geometry prior across WorldFoundry pipelines",
+      "Referenced by the VIPE SLAM defaults"
+    ],
+    "zh": [
+      "从单张图片得到度量深度（真实世界单位）",
+      "支持单目与度量深度估计",
+      "可跨 WorldFoundry pipeline 复用的几何先验",
+      "被 VIPE SLAM 默认配置引用"
+    ]
+  }
+}

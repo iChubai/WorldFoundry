@@ -1,4 +1,12 @@
-"""Wan prompt conditioning implemented against native component contracts."""
+"""Wan UMT5 / CLIP :class:`~...contracts.ConditionEncoder` adapters.
+
+:class:`WanTextConditioner.encode` tokenizes ``DiffusionRequest.prompts``
+and returns ``Conditioning(positive={\"context\": ...}, negative=...)``.
+:class:`WanImageTextConditioner` adds CLIP visual tokens to ``shared``.
+Factories load UMT5 + tokenizer (and optional CLIP) through the native
+module loader.  Chinese / multilingual prompt strings are passed through
+unchanged.
+"""
 
 from __future__ import annotations
 
@@ -57,6 +65,7 @@ class WanTextConditioner:
         device: torch.device,
         dtype: torch.dtype,
     ) -> Conditioning:
+        """Return UMT5 ``context`` for positive (and CFG-negative) prompts."""
         positive = self._encode(request.prompts, device=device, dtype=dtype)
         negative: dict[str, torch.Tensor] = {}
         if request.sampling.guidance_scale != 1.0:
@@ -121,6 +130,7 @@ class WanImageTextConditioner(WanTextConditioner):
         device: torch.device,
         dtype: torch.dtype,
     ) -> Conditioning:
+        """Add CLIP ``clip_feature`` to the shared map of the UMT5 conditioner."""
         conditioning = super().encode(request, device=device, dtype=dtype)
         shared = dict(conditioning.shared)
         shared["clip_feature"] = self._encode_image(request, device=device, dtype=dtype)

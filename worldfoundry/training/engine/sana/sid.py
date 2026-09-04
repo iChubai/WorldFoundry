@@ -3,13 +3,13 @@
 from __future__ import annotations
 
 import json
-import random
 from collections.abc import Mapping
 from pathlib import Path
 from typing import Literal
 
 import torch
 
+from worldfoundry.core.utils.torch_utils import set_seed_everywhere
 from worldfoundry.training.checkpoint.checkpointer import TrainingCheckpointer
 from worldfoundry.training.checkpoint.state import TrainingProgress, TrainingState
 from worldfoundry.training.data.dataset import TrainingManifestDataset
@@ -76,10 +76,7 @@ def _strict_bool(value: object, *, field_name: str) -> bool:
 
 def _seed(seed: int) -> None:
     resolved = int(seed) % (2**63 - 1)
-    random.seed(resolved)
-    torch.manual_seed(resolved)
-    if torch.cuda.is_available():
-        torch.cuda.manual_seed_all(resolved)
+    set_seed_everywhere(resolved)
 
 
 def _validate_recipe(recipe: PostTrainingRecipe) -> SIDAlgorithmSpec:
@@ -257,7 +254,10 @@ def materialize_sana_sid_training_run(
     if recipe.distributed.backend == "fsdp2":
         if resolved_device.type != "cuda":
             raise ValueError("SANA SiD FSDP2 materialization requires CUDA")
-        distributed_context = DistributedTrainingContext(device_type="cuda")
+        distributed_context = DistributedTrainingContext(
+            device_type="cuda",
+            timeout_seconds=recipe.distributed.timeout_seconds,
+        )
         resolved_device = distributed_context.device
 
     try:

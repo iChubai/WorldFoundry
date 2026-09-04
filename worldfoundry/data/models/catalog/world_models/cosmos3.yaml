@@ -39,6 +39,8 @@ modalities:
 - world-generation
 name: Cosmos3
 official_sources:
+  paper: https://arxiv.org/abs/2606.02800
+  project_page: https://research.nvidia.com/labs/cosmos-lab/cosmos3/
   github:
     confirmed_by: official NVIDIA Cosmos repository
     confirmed_ref: aefdf852c16237039785d84ab3327167cb0ec07f

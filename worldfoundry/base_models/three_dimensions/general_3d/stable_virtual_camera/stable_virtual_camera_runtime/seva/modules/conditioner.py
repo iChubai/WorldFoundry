@@ -1,9 +1,17 @@
 """Module for base_models -> three_dimensions -> general_3d -> stable_virtual_camera -> stable_virtual_camera_runtime -> seva -> modules -> conditioner.py functionality."""
 
+from pathlib import Path
+
 import kornia
 import open_clip
 import torch
 from torch import nn
+
+from worldfoundry.core.io.paths import resolve_local_hf_model_path
+
+
+DEFAULT_CLIP_REPO = "laion/CLIP-ViT-H-14-laion2B-s32B-b79K"
+DEFAULT_CLIP_WEIGHT = "open_clip_pytorch_model.bin"
 
 
 class CLIPConditioner(nn.Module):
@@ -11,11 +19,21 @@ class CLIPConditioner(nn.Module):
     mean: torch.Tensor
     std: torch.Tensor
 
-    def __init__(self):
+    def __init__(self, pretrained_model_path: str | None = None):
         """Init."""
         super().__init__()
+        if pretrained_model_path is None:
+            local_model = resolve_local_hf_model_path(
+                DEFAULT_CLIP_REPO,
+                required_files=(DEFAULT_CLIP_WEIGHT,),
+            )
+            checkpoint = local_model / DEFAULT_CLIP_WEIGHT
+        else:
+            checkpoint = Path(pretrained_model_path)
+            if checkpoint.is_dir():
+                checkpoint = checkpoint / DEFAULT_CLIP_WEIGHT
         self.module = open_clip.create_model_and_transforms(
-            "ViT-H-14", pretrained="laion2b_s32b_b79k"
+            "ViT-H-14", pretrained=str(checkpoint)
         )[0]
         self.module.eval().requires_grad_(False)  # type: ignore
         self.register_buffer(

@@ -28,6 +28,8 @@ checkpoint:
     WorldFoundry GPU route uses v1.3.0 plus google/mt5-xxl. The text encoder is
     staged by scripts/inference/prepare_model_infer.sh to avoid duplicating the
     50GB checkpoint inside both WORLDFOUNDRY_CKPT_DIR and WORLDFOUNDRY_HFD_ROOT.
+official_sources:
+  paper: https://arxiv.org/abs/2412.00131
 integration:
   status: integrated
   notes:

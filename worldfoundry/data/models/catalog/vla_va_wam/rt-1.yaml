@@ -12,6 +12,8 @@ integration:
   status: runtime_ported
 name: RT-1
 official_sources:
+  paper: https://arxiv.org/abs/2212.06817
+  project_page: https://robotics-transformer.github.io/
   github:
     head_sha: 4569641b8111f3f402c32d8e24becd2a6e952ecc
     url: https://github.com/google-research/robotics_transformer

@@ -1,3 +1,9 @@
+"""MagicWorld causal Wan with persistent KV cache.
+
+Streaming variant of :mod:`.model`.  Adds causal attention and cache
+hooks.  No VACE or linear attn.
+"""
+
 
 from worldfoundry.base_models.diffusion_model.models.networks.wan.mixins import (
     WanTransformerMethodsMixin,
@@ -417,9 +423,7 @@ class CausalHead(nn.Module):
 
 
 class CausalWanModel(WanTransformerMethodsMixin, nn.Module, NativeConfigMixin):
-    r"""
-    Wan diffusion backbone supporting both text-to-video and image-to-video.
-    """
+    r"""MagicWorld causal Wan with persistent KV cache."""
 
     ignore_for_config = [
         'patch_size', 'cross_attn_norm', 'qk_norm', 'text_dim'

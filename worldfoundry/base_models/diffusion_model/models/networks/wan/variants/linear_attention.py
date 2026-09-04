@@ -1,6 +1,8 @@
 # Copyright 2024-2025 The Alibaba Wan Team Authors. All rights reserved.
-"""Module for base_models -> diffusion_model -> video -> wan -> components -> linear_attention.py functionality."""
+"""Flash + block-sparse attention kernels for linear-attention Wan.
 
+Used by :mod:`.linear`.  Kernel adapter only (flash, block-sparse, SDPA).
+"""
 import torch
 
 try:

@@ -15,6 +15,8 @@ checkpoint_refs:
   license: cc-by-nc-4.0
 - repo_id: cerspense/zeroscope_v2_XL
   license: cc-by-nc-4.0
+official_sources:
+  project_page: https://huggingface.co/cerspense/zeroscope_v2_576w
 integration:
   status: integrated
 runner_target: worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner

@@ -13,6 +13,7 @@ source:
   official_repo_url: https://github.com/liruiw/HMA
   license: apache-2.0
 official_sources:
+  project_page: https://liruiw.github.io/hma
   paper: https://arxiv.org/abs/2502.04296
   github:
     url: https://github.com/liruiw/HMA
@@ -43,12 +44,12 @@ variants:
 integration:
   status: runtime_ported
   notes:
-  - HMA official generator route is registered; checkpoints/robot assets are runtime-gated.
+  - HMA official continuous interactive inference is bound through a user-staged source checkout and local checkpoint directories.
 runner_parity:
-  status: implemented_checkpoint_pending
+  status: implemented
   notes:
-  - resolve_model_zoo_config and pipeline import are expected to pass; real generation
-    emits a runtime plan until required checkpoints/assets are staged.
+  - The compatibility wrapper runs the official STMAR action-conditioned sampler and decodes each predicted latent with the SVD temporal VAE.
+  - Real GPU validation evidence is tracked per run rather than embedded as a machine-local catalog path.
 runtime_profile: runtime-profile:hma
 output_artifacts:
 - generated_video

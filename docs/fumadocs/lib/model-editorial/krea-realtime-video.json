@@ -1,0 +1,39 @@
+{
+  "id": "krea-realtime-video",
+  "tagline": {
+    "en": "Krea's Apache-2.0 14B model for real-time, streaming text-to-video generation.",
+    "zh": "Krea 推出的 Apache-2.0 许可 14B 模型,面向实时、流式的文生视频生成。"
+  },
+  "overview": {
+    "en": [
+      "Krea Realtime Video is a 14B video model from Krea, released under Apache-2.0. It is built for real-time and streaming generation, aiming to produce video as it goes rather than only after a full offline render.",
+      "It handles text-to-video and video-to-video, and its streaming design lets frames come out progressively. In WorldFoundry the route gives you controls over the number of blocks generated, resolution, frame rate, and seed, so you can tune the length and look of the output."
+    ],
+    "zh": [
+      "Krea Realtime Video 是 Krea 推出的 14B 视频模型,采用 Apache-2.0 许可。它专为实时与流式生成设计,力求边生成边出画,而非只在完整离线渲染后才产出。",
+      "它支持文生视频与视频到视频,其流式设计让画面可以逐步输出。在 WorldFoundry 中,该路径提供生成块数(num_blocks)、分辨率、帧率与随机种子等控制项,便于你调节输出的长度与观感。"
+    ]
+  },
+  "whenToUse": {
+    "en": "Choose it when responsiveness matters — interactive or streaming video generation where you want frames to appear progressively rather than waiting on a full batch render, and you want an openly-licensed model to do it with.",
+    "zh": "当响应速度很重要时可以选它——需要交互式或流式视频生成、希望画面逐步出现而非等待整批渲染完成,并且想用一个开放许可的模型来实现时。"
+  },
+  "notFor": {
+    "en": "Checkpoints are downloaded separately and reported as missing at runtime if absent, so stage them before generating. As a 14B model, expect meaningful GPU requirements.",
+    "zh": "Checkpoint 需单独下载,若缺失会在运行时报出,请在生成前先准备好。作为 14B 模型,请预期相当的 GPU 需求。"
+  },
+  "highlights": {
+    "en": [
+      "Apache-2.0 licensed, 14B video model",
+      "Built for real-time, streaming generation",
+      "Text-to-video and video-to-video support",
+      "Controls for block count, resolution, fps, and seed"
+    ],
+    "zh": [
+      "Apache-2.0 许可,14B 视频模型",
+      "专为实时、流式生成设计",
+      "支持文生视频与视频到视频",
+      "可控制生成块数、分辨率、帧率与随机种子"
+    ]
+  }
+}

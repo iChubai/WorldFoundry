@@ -16,6 +16,9 @@ source:
 checkpoint_refs:
 - repo_id: Insta360-Research/DAP-weights
   filename: model.pth
+official_sources:
+  project_page: https://insta360-research-team.github.io/DAP_website/
+  paper: https://arxiv.org/abs/2512.16913
 integration:
   kind: pipeline_runner
   status: integrated

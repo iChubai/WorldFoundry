@@ -26,6 +26,8 @@ pip_packages:
 - safetensors
 - pillow
 - numpy
+- einops
+- ftfy
 validation_imports:
 - torch
 - torchvision

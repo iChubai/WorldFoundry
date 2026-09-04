@@ -1,4 +1,14 @@
-"""Framework-owned joint-modality, multi-stage diffusion execution."""
+"""Framework-owned joint-modality, multi-stage diffusion execution.
+
+Implements ``joint-multistage``: recipe bindings declare ``scheduler-*`` roles;
+the assembler hands constructed components here. This runner does not use the
+standard NativeDiffusionRunner loop.
+
+Inputs: MultiStageComponents, stage_steps matching the scheduler count.
+Output: DiffusionOutput whose artifacts come from decode_modalities (must include ``video``).
+Must not: skip the latent processor between stages, or accept a request whose
+num_inference_steps does not equal sum(stage_steps).
+"""
 
 from __future__ import annotations
 
@@ -24,7 +34,11 @@ from ..contracts import (
 
 
 class MultiStageLatentInitializer:
-    """Runtime surface required by the generic multi-stage runner."""
+    """Runtime surface required by the generic multi-stage runner.
+
+    ``initialize`` is a convenience that starts stage 0. Concrete recipes must
+    implement :meth:`initialize_stage` (this base raises NotImplementedError).
+    """
 
     def initialize(self, request, *, generator, device, dtype):
         return self.initialize_stage(
@@ -52,7 +66,11 @@ class MultiStageLatentInitializer:
 
 
 class MultiModalLatentDecoder:
-    """Runtime surface for decoders that emit more than one artifact."""
+    """Runtime surface for decoders that emit more than one artifact.
+
+    ``decode`` returns only the ``video`` artifact for DiffusionOutput.sample.
+    :meth:`decode_modalities` must be implemented by the recipe decoder.
+    """
 
     def decode(self, latents, request):
         return self.decode_modalities(latents, request)["video"]
@@ -67,6 +85,8 @@ class MultiModalLatentDecoder:
 
 @dataclass(frozen=True, slots=True)
 class MultiStageComponents:
+    """Bound roles for JointMultiStageDiffusionRunner. ``schedulers`` is one per stage."""
+
     denoiser: object
     conditioner: ConditionEncoder
     latent_initializer: MultiStageLatentInitializer
@@ -76,7 +96,13 @@ class MultiStageComponents:
 
 
 class JointMultiStageDiffusionRunner:
-    """Run declaratively scheduled stages over a mapping of modality states."""
+    """Run declaratively scheduled stages over a mapping of ModalityState values.
+
+    Construction requires one scheduler per stage_steps entry; each stage_steps
+    value must be positive. CFG is classic ``ε_neg + s*(ε_pos-ε_neg)`` applied
+    independently per modality. After each intra-stage step, denoise_mask blends
+    the prediction with clean_latent so frozen regions are not updated.
+    """
 
     def __init__(
         self,
@@ -120,6 +146,7 @@ class JointMultiStageDiffusionRunner:
         total_steps: int,
         guidance_scale: float,
     ) -> MultiModalDenoiserOutput:
+        """Per-modality CFG. At scale==1 or without negative, return the positive branch only."""
         def call(branch: str) -> MultiModalDenoiserOutput:
             output = self.components.denoiser(
                 MultiModalDenoiserInput(
@@ -235,6 +262,7 @@ class JointMultiStageDiffusionRunner:
                     denoised = prediction.samples[name]
                     if denoised.shape != state.latent.shape:
                         raise ValueError(f"{name} denoiser output shape does not match its latent state")
+                    # denoise_mask==1 updates; ==0 keeps clean_latent so frozen regions stay put.
                     denoised = denoised * state.denoise_mask + state.clean_latent * (1 - state.denoise_mask)
                     latent = modality_schedulers[name].step(
                         denoised,

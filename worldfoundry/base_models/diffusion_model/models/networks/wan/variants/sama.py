@@ -1,4 +1,14 @@
-"""SAMA semantic/source-token conditioning on the canonical Wan graph."""
+"""SAMA (Wan 2.x): joint video + SigLIP semantic-token denoising.
+
+The host :class:`WanModel` stem is unchanged.  Optional source-video
+tokens and projected SigLIP semantic tokens are prepended in
+:meth:`prepare_token_sequence`, tagged with a 3-way segment embedding
+(source=0, semantic=1, target=2).  Semantic tokens use zero RoPE.
+:meth:`finalize_token_sequence` strips prefixes and emits a semantic
+diffusion head prediction.
+
+No action, camera, VACE, causal, or linear-attention hooks live here.
+"""
 
 from __future__ import annotations
 
@@ -41,6 +51,8 @@ class SemanticDiffusionHead(nn.Module):
 
 @dataclass(slots=True)
 class _SamaTokenState:
+    """Counts used to split concatenated source / semantic / target tokens."""
+
     target_tokens: int
     source_tokens: int
     semantic_tokens: int
@@ -75,6 +87,7 @@ class SamaWanModel(WanModel):
         grid_size: tuple[int, int, int],
         **kwargs: Any,
     ):
+        """Concat source (optional), semantic (optional), then target video tokens."""
         del grid_size
         source_latents = kwargs.get("source_latents")
         semantic_latents = kwargs.get("semantic_latents")
@@ -121,6 +134,7 @@ class SamaWanModel(WanModel):
         )
 
     def finalize_token_sequence(self, x: torch.Tensor, token_state: _SamaTokenState, **kwargs: Any):
+        """Return target tokens plus an optional semantic-head prediction."""
         del kwargs
         semantic_prediction = None
         if token_state.semantic_tokens:

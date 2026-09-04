@@ -17,6 +17,8 @@ integration:
 license: apache-2.0
 name: MME-VLA
 official_sources:
+  paper: https://arxiv.org/abs/2603.04639
+  project_page: https://robomme.github.io/challenge.html
   github:
     head_sha: ecf086c3be7c
     url: https://github.com/RoboMME/robomme_policy_learning

@@ -51,6 +51,8 @@ checkpoint:
     license_status: manual_review_required
   notes: Representative public HF repos were metadata-checked only; license is reported
     as 'other'.
+official_sources:
+  paper: https://arxiv.org/abs/2504.13074
 integration:
   status: integrated
   notes:

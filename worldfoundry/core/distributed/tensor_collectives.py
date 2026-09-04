@@ -18,8 +18,18 @@ try:
 except ImportError:  # pragma: no cover - torch 2.7+ provides this module.
     _functional_collectives = None
 
+# ──────────────────────────────────────────────────────────────────────────
+# Dimension / group helpers — negative dims and WORLD fallback
+# ──────────────────────────────────────────────────────────────────────────
+
 
 def _normalise_dim(dim: int, ndim: int, *, name: str) -> int:
+    """Convert a possibly-negative dim to ``[0, ndim)`` or raise.
+
+    A 0-D tensor has no gather axis; fail here rather than let NCCL see an
+    empty split.
+    """
+
     if ndim < 1:
         raise ValueError(f"{name} requires a tensor with at least one dimension")
     value = int(dim)
@@ -29,13 +39,22 @@ def _normalise_dim(dim: int, ndim: int, *, name: str) -> int:
 
 
 def _world_size(group: dist.ProcessGroup | None) -> int:
+    """Process-group size, or 1 so single-process callers skip the collective."""
+
     if not dist.is_available() or not dist.is_initialized():
         return 1
     return int(dist.get_world_size(group))
 
 
 def _functional_group(group: dist.ProcessGroup | None) -> Any:
+    """Functional collectives treat ``None`` as WORLD, not "no communication"."""
+
     return dist.group.WORLD if group is None else group
+
+
+# ──────────────────────────────────────────────────────────────────────────
+# Equal-shape gather / all-to-all — one packed buffer, not a Python list
+# ──────────────────────────────────────────────────────────────────────────
 
 
 def all_gather_concat(

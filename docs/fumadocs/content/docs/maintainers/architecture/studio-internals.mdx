@@ -5,18 +5,7 @@ description: How Studio discovers models, drives pipelines, materializes runs, a
 
 Studio is a catalog-driven shell over the same pipeline and artifact contracts used by CLI inference and evaluation. It does not own model weights, scoring logic, or benchmark manifests. Its job is to discover runnable entries, prepare inputs, invoke the right runtime driver, write a `RunRecord`, and pick preview assets for the UI. The same execution core can serve Gradio (`app.py`), Workspace jobs, conda child processes, and torchrun workers; only the presentation layer changes.
 
-```text
-launch args
-  -> StudioLaunchConfig
-  -> discover_catalog()
-  -> StudioManager
-  -> prepare_inputs()
-  -> runtime_driver_for()
-  -> run()
-  -> materialize_run()
-  -> pick_preview_assets()
-  -> Gradio / Workspace UI update
-```
+<ArchDiagram id="studio" />
 
 Keep inference semantics in `studio/execution.py` and catalog discovery in `studio/catalog.py`. `studio/app.py` should stay thin: layout, callbacks, and Gradio component updates. If a change must also work from `runtime_job.py` or `workspace_app.py` without Gradio, it belongs in execution, not in the UI file.
 
@@ -96,16 +85,7 @@ Treat `app.py` as presentation glue. Launch flags that only affect Gradio stay t
 
 The realtime path deliberately separates model state from presentation state:
 
-```text
-browser key edges
-  -> RealtimeControlResampler
-  -> ResidentWorldRuntime (one worker thread)
-  -> realtime_frames_from_result()
-  -> VideoPostprocessStream (one session-scoped chain)
-  -> resolution/JPEG transport work
-  -> latest-interactive or ordered-quality queue
-  -> WebRTC / WebSocket
-```
+<ArchDiagram id="studio-realtime" />
 
 Models own causal cadence through `RealtimeSpec`; transports must not infer
 latent strides or silently change exact segment counts. `latest-interactive`

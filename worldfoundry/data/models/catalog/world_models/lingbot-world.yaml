@@ -18,6 +18,8 @@ modalities:
 name: LingBot-World
 pipeline_binding: lingbot-world
 official_sources:
+  project_page: https://technology.robbyant.com/lingbot-world
+  paper: https://arxiv.org/abs/2601.20540
   github:
     confirmed_by: git ls-remote --heads
     confirmed_ref: refs/heads/main

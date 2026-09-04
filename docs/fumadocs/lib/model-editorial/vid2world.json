@@ -1,0 +1,41 @@
+{
+  "id": "vid2world",
+  "tagline": {
+    "en": "THUML's Vid2World — turns a pretrained video diffusion model into an interactive, action-conditioned world model.",
+    "zh": "清华 THUML 的 Vid2World——把预训练的视频扩散模型改造成可交互、动作条件的世界模型。"
+  },
+  "overview": {
+    "en": [
+      "Vid2World is a research model from THUML (Tsinghua University's Machine Learning Group). Its idea is to adapt a large pretrained video diffusion model into an interactive world model, so that generation can be conditioned on actions and unfold step by step rather than as one fixed clip.",
+      "By repurposing video diffusion for interaction, the model predicts how a scene responds to actions over time — useful for simulation and world-model research. It is distributed as upstream source with an evaluation route.",
+      "In WorldFoundry the source and configuration are registered so you can resolve its config and inference route; the checkpoints and config assets are staged separately, with the runtime listing what it needs."
+    ],
+    "zh": [
+      "Vid2World 是清华大学机器学习组(THUML)的研究模型。其思路是把大型预训练视频扩散模型改造为可交互的世界模型,使生成可以以动作为条件、逐步展开,而不是一次生成一段固定片段。",
+      "通过把视频扩散用于交互,该模型能预测场景随时间对动作的响应——对仿真与世界模型研究很有用。它以上游源码形式发布,并附带评测路径。",
+      "在 WorldFoundry 中,其源码与配置已被注册,你可以解析它的配置与推理路径;checkpoint 与配置素材需另行准备,运行时会列出所需内容。"
+    ]
+  },
+  "whenToUse": {
+    "en": "Reach for Vid2World when you want an action-conditioned, interactive world model derived from video diffusion, and you can supply its checkpoints and config assets.",
+    "zh": "当你想要一个由视频扩散衍生、动作条件的可交互世界模型,并能提供其 checkpoint 与配置素材时,适合使用 Vid2World。"
+  },
+  "notFor": {
+    "en": "It is a research codebase rather than a turnkey generator; real generation requires you to stage the checkpoints and config assets first.",
+    "zh": "它更像研究代码库而非开箱即用的生成器;真实生成前需先准备好 checkpoint 与配置素材。"
+  },
+  "highlights": {
+    "en": [
+      "Adapts pretrained video diffusion into an interactive world model",
+      "Action-conditioned, step-by-step generation",
+      "Distributed as upstream source with an evaluation route",
+      "From THUML at Tsinghua University"
+    ],
+    "zh": [
+      "把预训练视频扩散改造为可交互世界模型",
+      "动作条件、逐步展开的生成",
+      "以上游源码形式发布,附带评测路径",
+      "出自清华大学 THUML"
+    ]
+  }
+}

@@ -5,9 +5,7 @@ import {
   BarChart3,
   ExternalLink,
   FileCode2,
-  GitBranch,
   Package,
-  ShieldCheck,
 } from 'lucide-react';
 
 import { DocsMobileNavToggle } from '@/components/docs-mobile-nav';
@@ -16,8 +14,9 @@ import { DocsScrollBridge } from '@/components/docs-scroll-bridge';
 import { ModelCommandBuilder } from '@/components/model-command-builder';
 import { ModelIdentityMark } from '@/components/model-identity-mark';
 import { SiteHeader } from '@/components/site-header';
-import type { ModelRecipe, ModelRecipeSource } from '@/lib/model-recipe-types';
+import type { ModelRecipe, ModelRecipeFigure } from '@/lib/model-recipe-types';
 import { getRelatedModelRecipes, modelRecipeData } from '@/lib/model-recipes';
+import { withBasePath, withMediaPath } from '@/lib/site-path';
 
 type Locale = 'en' | 'zh';
 
@@ -32,8 +31,11 @@ const copy = {
     overview: 'Overview',
     use: 'Use this model',
     whatIs: 'What this model is',
+    fromThePaper: 'From the paper',
+    inThisCatalog: 'In this catalog',
+    paperFigure: 'Paper figure',
     whatIsIntro:
-      'Plain-language summary assembled from the catalog manifest — what the model does, what it takes in, and what it writes out.',
+      'How the model is built and what it can do, taken from the official paper and catalog records — plus what this repository actually wires.',
     curatedNarrative: 'Curated in the catalog manifest',
     synthesizedNarrative: 'Synthesized from recorded manifest fields',
     architecture: 'Architecture',
@@ -129,9 +131,8 @@ const copy = {
     variantContractIntro:
       'Select a variant in the run builder above to inspect its pipeline-specific input and artifact contract.',
     installIntro:
-      'The environment resolver reads the recorded profile and chooses the unified or dedicated environment shown here. Copy the install command to materialize it.',
-    assetsIntro:
-      'Run the local check before allocating compute. Gated, private, and license fields below come directly from the checkpoint manifest.',
+      'The environment resolver reads the recorded profile and chooses the unified or dedicated environment shown here. Package pins below are the ones that profile actually expects.',
+    assetsIntro: 'Recorded weight repositories. Only fields present in the manifest are shown.',
     launchIntro:
       'The generated command selects the recorded task profile and writes durable result manifests and artifacts.',
     evidenceIntro:
@@ -164,7 +165,10 @@ const copy = {
     overview: '概览',
     use: '使用此模型',
     whatIs: '这个模型是什么',
-    whatIsIntro: '由 catalog manifest 生成的平实说明——模型做什么、接受什么输入、写出什么。',
+    fromThePaper: '论文在说什么',
+    inThisCatalog: '在本目录里',
+    paperFigure: '论文配图',
+    whatIsIntro: '模型怎么构建、能做什么，来自官方论文与 catalog 记录，并标明本仓库实际接通了哪条路径。',
     curatedNarrative: '来自 catalog manifest 的人工撰写内容',
     synthesizedNarrative: '由 manifest 已记录字段自动合成',
     architecture: '架构',
@@ -254,8 +258,8 @@ const copy = {
     noArtifacts: '该模型没有记录 artifact 契约。',
     noCheckpoints: 'Catalog manifest 没有记录 checkpoint 仓库。',
     variantContractIntro: '请在上方运行构建器中选择 variant，查看该 Pipeline 对应的输入与 Artifact 契约。',
-    installIntro: '环境解析器会读取已记录 profile，并选择此处显示的统一或独立环境。复制安装命令即可创建它。',
-    assetsIntro: '分配算力前先做本地检查；gated、private 与 license 字段直接来自 checkpoint manifest。',
+    installIntro: '环境解析器会读取已记录 profile，并选择此处显示的统一或独立环境。下方包版本是该 profile 实际要求的约束。',
+    assetsIntro: '已记录的权重仓库。仅显示 manifest 中有值的字段。',
     launchIntro: '生成的命令会选择已记录的 task profile，并持久保存结果 manifest 与 artifact。',
     evidenceIntro: 'Catalog 集成、原生 demo parity 与 runner parity 是三条独立记录。未验证的内容保持“未记录”，绝不升级为支持声明。',
     useIntro: '选择已记录路径，确认环境与资产，然后运行。',
@@ -318,40 +322,135 @@ function revision(recipe: ModelRecipe, kind: 'checkpoint' | 'source') {
   return recipe.sources.find((item) => item.revision)?.revision;
 }
 
-function artifactSummary(recipe: ModelRecipe, fallback: string) {
-  if (recipe.artifacts.length === 0) return fallback;
-  return recipe.artifacts
-    .slice(0, 2)
-    .map((artifact) => artifact.filename || artifact.kind)
-    .join(', ');
-}
-
-function runnerIsVerified(value: string) {
-  const normalized = value.toLowerCase();
-  return !normalized.includes('partial') && (
-    normalized.includes('verified') || normalized.includes('validated') || normalized.includes('passed')
+function isUnavailableStatus(status: string) {
+  const normalized = status.toLowerCase().replaceAll('-', '_');
+  return ['not_recorded', 'planned', 'profile', 'profile_only', 'blocked', 'unavailable', 'missing'].some((marker) =>
+    normalized.includes(marker),
   );
 }
 
 function isRunnableVariant(value: { pipelineTarget: string | null; status: string }) {
-  const status = value.status.toLowerCase().replaceAll('-', '_');
-  const unavailable = ['not_recorded', 'planned', 'profile', 'profile_only', 'blocked', 'unavailable', 'missing'];
-  return Boolean(value.pipelineTarget) && !unavailable.some((marker) => status.includes(marker));
+  return Boolean(value.pipelineTarget) && !isUnavailableStatus(value.status);
 }
 
 function modalityLabel(value: string, locale: Locale) {
   return locale === 'zh' ? modalityLabelsZh[value] ?? value : value;
 }
 
-function sourceHost(url: string) {
-  try {
-    return new URL(url).hostname.replace(/^www\./, '');
-  } catch {
-    return url;
-  }
+function primarySources(sources: ModelRecipe['sources']) {
+  const seen = new Set<string>();
+  return sources.filter((source) => {
+    if (source.kind === 'weights') return false;
+    if (seen.has(source.kind)) return false;
+    seen.add(source.kind);
+    return true;
+  });
 }
 
-function DefinitionRow({ label, value }: { label: string; value: string | null | undefined }) {
+const FORMULAIC_HIGHLIGHT = /(?:env\s*·|huggingface weights|runnable worldfoundry|dedicated env|unified env|python \d|cuda \d|gated or private)/i;
+const CATALOG_VOICE = /(?:In this catalog|Both integration and runner|WorldFoundry serves it|WorldFoundry binds it|WorldFoundry wraps|在本 catalog|本 catalog|WorldFoundry 通过)/;
+
+function usefulHighlights(highlights: string[], tasks: string[]) {
+  const taskNorms = tasks.map((task) => task.replace(/[._-]+/g, ' ').toLowerCase());
+  return highlights.filter((item) => {
+    const norm = item.replace(/[._-]+/g, ' ').toLowerCase().trim();
+    if (norm.length < 10 || FORMULAIC_HIGHLIGHT.test(norm)) return false;
+    return !taskNorms.some((task) => norm === task || norm.includes(task));
+  });
+}
+
+function splitHero(paragraphs: string[]) {
+  if (paragraphs.length === 0) {
+    return { lead: '', rest: [] as string[] };
+  }
+  const [first, ...tail] = paragraphs;
+  const match = first.match(CATALOG_VOICE);
+  if (match?.index && match.index > 36) {
+    return {
+      lead: first.slice(0, match.index).trim(),
+      rest: [first.slice(match.index).trim(), ...tail].filter(Boolean),
+    };
+  }
+  return { lead: first, rest: tail };
+}
+
+function firstSentence(text: string, limit = 280) {
+  const clipped = text.replace(/\s+/g, ' ').trim();
+  const match = clipped.match(/^(.+?[.。])\s/);
+  const sentence = (match?.[1] || clipped).trim();
+  return sentence.length > limit ? `${sentence.slice(0, limit - 1)}…` : sentence;
+}
+
+function figureSrc(path: string | undefined) {
+  if (!path) return path;
+  return (path.startsWith('/demos/') ? withMediaPath(path) : withBasePath(path)) || path;
+}
+
+function RecipeFigure({
+  figure,
+  locale,
+  priority,
+}: {
+  figure: ModelRecipeFigure;
+  locale: Locale;
+  priority?: boolean;
+}) {
+  const caption = locale === 'zh' ? figure.captionZh || figure.caption : figure.caption;
+  const src = figureSrc(figure.src);
+  const poster = figureSrc(figure.poster);
+  if (!src) return null;
+  return (
+    <figure className="wf-recipe-media">
+      {figure.kind === 'video' ? (
+        <video
+          autoPlay
+          loop
+          muted
+          playsInline
+          poster={poster}
+          preload={priority ? 'metadata' : 'none'}
+        >
+          <source src={src} type="video/mp4" />
+        </video>
+      ) : (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img alt={caption || ''} decoding="async" src={src} />
+      )}
+      {caption ? <figcaption>{caption}</figcaption> : null}
+    </figure>
+  );
+}
+
+function checkpointHref(id: string, sources: ModelRecipe['sources']) {
+  const match = sources.find((source) => source.url.includes(id));
+  if (match) return match.url;
+  if (/^[\w.-]+\/[\w.-]+/.test(id)) return `https://huggingface.co/${id}`;
+  return undefined;
+}
+
+function checkpointChips(
+  checkpoint: ModelRecipe['checkpoints'][number],
+  locale: Locale,
+) {
+  const chips: string[] = [];
+  if (checkpoint.role) chips.push(checkpoint.role.replaceAll('_', ' '));
+  if (checkpoint.license) chips.push(checkpoint.license);
+  if (checkpoint.revision) chips.push(checkpoint.revision.slice(0, 9));
+  if (checkpoint.gated === true) chips.push(locale === 'zh' ? '门控' : 'Gated');
+  if (checkpoint.private === true) chips.push(locale === 'zh' ? '私有' : 'Private');
+  return chips;
+}
+
+function DefinitionRow({
+  label,
+  value,
+  hideEmpty = false,
+}: {
+  label: string;
+  value: string | null | undefined;
+  hideEmpty?: boolean;
+}) {
+  if (hideEmpty && !value) return null;
   return (
     <div>
       <dt>{label}</dt>
@@ -360,62 +459,19 @@ function DefinitionRow({ label, value }: { label: string; value: string | null |
   );
 }
 
-function CommandBlock({ label, children }: { label?: string; children: string }) {
-  return (
-    <div className="wf-recipe-command-block">
-      {label ? <span className="wf-recipe-command-label">{label}</span> : null}
-      <pre className="wf-recipe-static-command">
-        <code>{children}</code>
-      </pre>
-    </div>
-  );
-}
-
-function SourcesTable({ sources, locale }: { sources: ModelRecipeSource[]; locale: Locale }) {
-  const t = copy[locale];
-  return (
-    <table className="wf-recipe-sources-table">
-      <thead>
-        <tr>
-          <th>{locale === 'zh' ? '类型' : 'Kind'}</th>
-          <th>{t.sourceLink}</th>
-          <th>{t.sourceRevisionCol}</th>
-        </tr>
-      </thead>
-      <tbody>
-        {sources.map((source) => (
-          <tr key={`${source.kind}:${source.url}`}>
-            <td>
-              <span className={`wf-recipe-source-kind is-${source.kind}`}>
-                {t[sourceKindLabelKeys[source.kind]]}
-              </span>
-            </td>
-            <td>
-              <a href={source.url} target="_blank" rel="noreferrer">
-                {source.label}
-                <small>{sourceHost(source.url)}</small>
-                <ExternalLink aria-hidden="true" size={11} />
-              </a>
-            </td>
-            <td>{source.revision ? <code>{source.revision.slice(0, 12)}</code> : '—'}</td>
-          </tr>
-        ))}
-      </tbody>
-    </table>
-  );
-}
-
 export function ModelRecipePage({ recipe, locale }: { recipe: ModelRecipe; locale: Locale }) {
   const t = copy[locale];
   const basePath = modelBasePath(locale);
   const related = getRelatedModelRecipes(recipe, 4);
-  const taskLabel = recipe.tasks.length > 0 ? recipe.tasks.join(' · ') : t.notRecorded;
   const docs = recipe.docs;
   const overviewParagraphs = locale === 'zh' && docs.overviewZh.length > 0 ? docs.overviewZh : docs.overview;
   const architectureParagraphs =
     locale === 'zh' && docs.architectureZh.length > 0 ? docs.architectureZh : docs.architecture;
   const usageNoteParagraphs = locale === 'zh' && docs.usageNotesZh.length > 0 ? docs.usageNotesZh : docs.usageNotes;
-  const highlights = locale === 'zh' && docs.highlightsZh.length > 0 ? docs.highlightsZh : docs.highlights;
+  const highlights = usefulHighlights(
+    locale === 'zh' && docs.highlightsZh.length > 0 ? docs.highlightsZh : docs.highlights,
+    recipe.tasks,
+  );
   const useCases = locale === 'zh' && docs.useCasesZh.length > 0 ? docs.useCasesZh : docs.useCases;
   const limitations = locale === 'zh' && docs.limitationsZh.length > 0 ? docs.limitationsZh : docs.limitations;
   const publisher = docs.publisher;
@@ -441,29 +497,19 @@ export function ModelRecipePage({ recipe, locale }: { recipe: ModelRecipe; local
           ? '统一环境'
           : 'Unified environment'
         : t.notRecorded;
-  const routedVariants = recipe.variants.filter(isRunnableVariant);
-  const hasRunnableRoute = routedVariants.length > 0 || (
-    recipe.variants.length === 0
-    && Boolean(recipe.runtime.pipelineTarget)
-    && !['planned', 'profile', 'blocked'].includes(recipe.status.group)
+  const routedVariants = recipe.variants.filter((variant) =>
+    isRunnableVariant({
+      pipelineTarget: variant.pipelineTarget ?? recipe.runtime.pipelineTarget,
+      status: variant.status,
+    }),
   );
-  const routeIsVerified = runnerIsVerified(recipe.status.runner);
+  const hasRunnableRoute =
+    routedVariants.length > 0
+    || (
+      Boolean(recipe.runtime.pipelineTarget)
+      && !['planned', 'profile', 'blocked'].includes(recipe.status.group)
+    );
   const isReferenceOnly = !hasRunnableRoute;
-  const usageState = isReferenceOnly
-    ? 'reference'
-    : routeIsVerified
-      ? 'ready'
-      : 'caution';
-  const usageTitle = usageState === 'ready'
-    ? t.readyNow
-    : usageState === 'caution'
-      ? t.needsValidation
-      : t.referenceOnly;
-  const usageDescription = usageState === 'ready'
-    ? t.readyNowDescription
-    : usageState === 'caution'
-      ? t.needsValidationDescription
-      : t.referenceOnlyDescription;
   const runnablePeers = isReferenceOnly
     ? modelRecipeData.recipes
         .filter((candidate) => candidate.id !== recipe.id
@@ -472,23 +518,48 @@ export function ModelRecipePage({ recipe, locale }: { recipe: ModelRecipe; local
         .slice(0, 4)
     : [];
   const benchmarkHubBase = `${locale === 'zh' ? '/zh' : ''}/docs/evaluation/benchmark-hub`;
+  const paper = docs.paper ?? null;
+  const figures = docs.figures ?? [];
+  const heroFigure = figures[0];
+  const extraFigures = figures.slice(1);
+  const { lead: splitLead, rest: splitRest } = splitHero(overviewParagraphs);
+  const heroLead = splitLead || recipe.summary || '';
+  const paperQuote =
+    paper?.abstract && firstSentence(paper.abstract) && firstSentence(paper.abstract) !== heroLead
+      ? firstSentence(paper.abstract)
+      : '';
+  const whatIsOverview = splitRest;
+  const heroSources = primarySources(recipe.sources);
+  const showAbout =
+    whatIsOverview.length > 0
+    || extraFigures.length > 0
+    || highlights.length > 0
+    || architectureParagraphs.length > 0
+    || usageNoteParagraphs.length > 0
+    || useCases.length > 0
+    || hasHardware;
+  const envFacts = [
+    [t.environment, recipe.runtime.environmentName],
+    [t.environmentKind, recipe.runtime.environmentName ? environmentKind : null],
+    [t.python, recipe.runtime.python],
+    [t.cuda, recipe.runtime.cudaLabel],
+    [t.pytorch, recipe.runtime.packageVersions.torch && recipe.runtime.packageVersions.torch !== 'torch'
+      ? recipe.runtime.packageVersions.torch
+      : null],
+  ].filter((entry): entry is [string, string] => Boolean(entry[1]));
+  const showVariants = recipe.variants.length > 1;
+  const showEvidence = limitations.length > 0 || recipe.notes.length > 0;
   const sections: Array<[string, string]> = [
     ['overview', t.overview],
     ['use', t.use],
-    ['what-is', t.whatIs],
-    ['sources', t.sourcesSection],
-    ['launch', t.launch],
-    // The install section is fully omitted for reference-only entries, so its
-    // anchor must not appear in the sidebar either.
-    ...(isReferenceOnly ? [] : ([['install', t.install]] as Array<[string, string]>)),
-    ['assets', t.assets],
-    ['variants', t.variantsSection],
+    ...(showAbout ? ([['what-is', t.whatIs]] as Array<[string, string]>) : []),
+    ...(isReferenceOnly || envFacts.length === 0 ? [] : ([['install', t.install]] as Array<[string, string]>)),
+    ...(recipe.checkpoints.length > 0 ? ([['assets', t.assets]] as Array<[string, string]>) : []),
+    ...(showVariants ? ([['variants', t.variantsSection]] as Array<[string, string]>) : []),
     ...(docs.benchmarks.length > 0 ? ([['benchmarks', t.benchmarksSection]] as Array<[string, string]>) : []),
-    ['evidence', t.evidence],
+    ...(showEvidence ? ([['evidence', t.evidence]] as Array<[string, string]>) : []),
     ['advanced', t.advanced],
   ];
-  let sectionNumber = 0;
-  const nextSectionNumber = () => String(sectionNumber++).padStart(2, '0');
 
   return (
     <main className="pi-doc-shell wf-recipe-shell" lang={locale}>
@@ -560,103 +631,96 @@ export function ModelRecipePage({ recipe, locale }: { recipe: ModelRecipe; local
                 <strong>{recipe.name}</strong>
               </nav>
 
-              <header className="wf-recipe-hero" id="overview">
-                <p className="wf-recipe-eyebrow">
-                  {recipe.categoryLabel} · {taskLabel}
-                </p>
-                <div className="wf-recipe-title-row">
-                  <ModelIdentityMark
-                    id={recipe.id}
-                    name={recipe.name}
-                    provider={recipe.provider}
-                    category={recipe.category}
-                    size="large"
-                  />
-                  <div>
-                    <h1>{recipe.name}</h1>
-                    <p>
-                      {publisherName ?? recipe.provider}
-                      {publisherKindLabel ? (
-                        <span className="wf-recipe-publisher-kind"> · {publisherKindLabel}</span>
-                      ) : null}
-                    </p>
-                  </div>
-                </div>
-                <p className="wf-recipe-summary">{recipe.summary}</p>
-                <div className="wf-recipe-hero-meta">
-                  <span className={`wf-recipe-status wf-recipe-status-${recipe.status.group}`}>
-                    <ShieldCheck aria-hidden="true" size={13} />
-                    {recipe.status.label}
-                  </span>
-                  <span>{environmentKind}</span>
-                  {revision(recipe, 'source') ? <span>{locale === 'zh' ? '源码已固定' : 'Pinned source'}</span> : null}
-                  <code>{recipe.id}</code>
-                </div>
-                {hasModalities ? (
-                  <div className="wf-recipe-modality-strip" aria-label={t.modalities}>
-                    {docs.modalities.inputs.map((item) => (
-                      <span className="wf-recipe-modality is-input" key={`in:${item}`}>
-                        {modalityLabel(item, locale)}
-                      </span>
-                    ))}
-                    {docs.modalities.inputs.length > 0 && docs.modalities.outputs.length > 0 ? (
-                      <ArrowRight aria-hidden="true" size={13} />
-                    ) : null}
-                    {docs.modalities.outputs.map((item) => (
-                      <span className="wf-recipe-modality is-output" key={`out:${item}`}>
-                        {modalityLabel(item, locale)}
-                      </span>
-                    ))}
-                  </div>
-                ) : null}
-                {recipe.sources.length > 0 ? (
-                  <nav className="wf-recipe-source-links" aria-label={t.officialSources}>
-                    {recipe.sources.slice(0, 5).map((source) => (
-                      <a href={source.url} target="_blank" rel="noreferrer" key={`${source.kind}:${source.url}`}>
-                        {source.label}
-                        <ExternalLink aria-hidden="true" size={11} />
-                      </a>
-                    ))}
-                  </nav>
-                ) : null}
-              </header>
-
-              <div className={`wf-recipe-runbar is-${usageState}`} id="use">
-                <div className="wf-recipe-runbar-head">
-                  <ShieldCheck aria-hidden="true" size={15} />
-                  <div>
-                    <span className="wf-recipe-runbar-label">{t.integration}</span>
-                    <strong>{usageTitle}</strong>
-                    <p>{usageDescription}</p>
-                  </div>
-                </div>
-                {routedVariants.length > 0 ? (
-                  <div className="wf-recipe-runbar-routes">
-                    <span>{t.supportedRoutes}</span>
+              <header className={`wf-recipe-hero${heroFigure ? ' has-figure' : ''}`} id="overview">
+                <div className="wf-recipe-hero-copy">
+                  <p className="wf-recipe-eyebrow">
+                    {recipe.categoryLabel} · {recipe.status.label}
+                  </p>
+                  <div className="wf-recipe-title-row">
+                    <ModelIdentityMark
+                      id={recipe.id}
+                      name={recipe.name}
+                      provider={recipe.provider}
+                      category={recipe.category}
+                      size="large"
+                    />
                     <div>
-                      {routedVariants.map((variant) => (
-                        <code key={variant.id}>{variant.id}</code>
-                      ))}
+                      <h1>{recipe.name}</h1>
+                      <p>
+                        {publisherName ?? recipe.provider}
+                        {publisherKindLabel ? (
+                          <span className="wf-recipe-publisher-kind"> · {publisherKindLabel}</span>
+                        ) : null}
+                      </p>
                     </div>
                   </div>
-                ) : null}
-              </div>
+                  {paper?.title ? (
+                    <cite className="wf-recipe-paper-cite">
+                      {paper.arxivId ? (
+                        <a href={`https://arxiv.org/abs/${paper.arxivId}`} rel="noreferrer" target="_blank">
+                          {paper.title}
+                        </a>
+                      ) : (
+                        paper.title
+                      )}
+                      {paper.venue || paper.year ? (
+                        <span>
+                          {' '}
+                          ({[paper.venue, paper.year].filter(Boolean).join(', ')})
+                        </span>
+                      ) : null}
+                    </cite>
+                  ) : null}
+                  {heroLead ? <p className="wf-recipe-summary">{heroLead}</p> : null}
+                  {paperQuote ? (
+                    <blockquote className="wf-recipe-paper-quote">
+                      <span>{t.fromThePaper}</span>
+                      {paperQuote}
+                    </blockquote>
+                  ) : null}
+                  {hasModalities ? (
+                    <div className="wf-recipe-modality-strip" aria-label={t.modalities}>
+                      {docs.modalities.inputs.map((item) => (
+                        <span className="wf-recipe-modality is-input" key={`in:${item}`}>
+                          {modalityLabel(item, locale)}
+                        </span>
+                      ))}
+                      {docs.modalities.inputs.length > 0 && docs.modalities.outputs.length > 0 ? (
+                        <ArrowRight aria-hidden="true" size={13} />
+                      ) : null}
+                      {docs.modalities.outputs.map((item) => (
+                        <span className="wf-recipe-modality is-output" key={`out:${item}`}>
+                          {modalityLabel(item, locale)}
+                        </span>
+                      ))}
+                    </div>
+                  ) : null}
+                  {heroSources.length > 0 ? (
+                    <nav className="wf-recipe-source-links" aria-label={t.officialSources}>
+                      {heroSources.map((source) => (
+                        <a href={source.url} target="_blank" rel="noreferrer" key={`${source.kind}:${source.url}`}>
+                          <span className={`wf-recipe-source-kind is-${source.kind}`}>
+                            {t[sourceKindLabelKeys[source.kind]]}
+                          </span>
+                          {source.label}
+                          {source.revision ? <code>{source.revision.slice(0, 12)}</code> : null}
+                          <ExternalLink aria-hidden="true" size={11} />
+                        </a>
+                      ))}
+                    </nav>
+                  ) : null}
+                </div>
+                {heroFigure ? <RecipeFigure figure={heroFigure} locale={locale} priority /> : null}
+              </header>
 
               {isReferenceOnly ? (
-                <section className="wf-recipe-reference-card" aria-labelledby="wf-reference-heading">
+                <section className="wf-recipe-reference-card" id="use" aria-labelledby="wf-reference-heading">
                   <h2 id="wf-reference-heading">{t.referenceHeadline}</h2>
                   <p>{t.referenceBody}</p>
                   <dl className="wf-recipe-reference-meta">
-                    {publisherName || recipe.provider ? (
-                      <DefinitionRow
-                        label={publisherName ? t.publisher : 'Provider'}
-                        value={publisherName ?? recipe.provider}
-                      />
-                    ) : null}
-                    <DefinitionRow label={t.tasksLabel} value={recipe.tasks.length > 0 ? recipe.tasks.join(' · ') : null} />
-                    <DefinitionRow label={t.integration} value={formatStatus(recipe.status.integration, t.notRecorded)} />
-                    <DefinitionRow label={t.runnerEvidence} value={formatStatus(recipe.status.runner, t.notRecorded)} />
-                    <DefinitionRow label={t.demoEvidence} value={formatStatus(recipe.status.demo, t.notRecorded)} />
+                    <DefinitionRow hideEmpty label={t.tasksLabel} value={recipe.tasks.length > 0 ? recipe.tasks.join(' · ') : null} />
+                    <DefinitionRow hideEmpty label={t.integration} value={formatStatus(recipe.status.integration, '')} />
+                    <DefinitionRow hideEmpty label={t.runnerEvidence} value={formatStatus(recipe.status.runner, '')} />
                   </dl>
                   {runnablePeers.length > 0 ? (
                     <div className="wf-recipe-reference-peers">
@@ -676,25 +740,28 @@ export function ModelRecipePage({ recipe, locale }: { recipe: ModelRecipe; local
                 <ModelCommandBuilder recipe={recipe} locale={locale} />
               )}
 
+              {showAbout ? (
               <section className="wf-recipe-section wf-recipe-what-is" id="what-is">
                 <header>
-                  <span>{nextSectionNumber()}</span>
-                  <div>
-                    <h2>{t.whatIs}</h2>
-                    <p>{t.whatIsIntro}</p>
-                  </div>
+                  <h2>{t.whatIs}</h2>
                 </header>
-                <div className="wf-recipe-overview-prose">
-                  {overviewParagraphs.map((paragraph) => (
-                    <p key={paragraph}>{paragraph}</p>
-                  ))}
-                </div>
-                <p className="wf-recipe-narrative-origin">
-                  {docs.curated ? t.curatedNarrative : t.synthesizedNarrative}
-                </p>
+                {whatIsOverview.length > 0 ? (
+                  <div className="wf-recipe-overview-prose">
+                    <p className="wf-recipe-catalog-kicker">{t.inThisCatalog}</p>
+                    {whatIsOverview.map((paragraph) => (
+                      <p key={paragraph}>{paragraph}</p>
+                    ))}
+                  </div>
+                ) : null}
+                {extraFigures.length > 0 ? (
+                  <div className="wf-recipe-media-grid">
+                    {extraFigures.map((figure) => (
+                      <RecipeFigure figure={figure} key={figure.src} locale={locale} />
+                    ))}
+                  </div>
+                ) : null}
                 {highlights.length > 0 ? (
                   <div className="wf-recipe-highlights" aria-label={t.highlights}>
-                    <span>{t.highlights}</span>
                     <ul>
                       {highlights.map((item) => (
                         <li key={item}>{item}</li>
@@ -728,23 +795,6 @@ export function ModelRecipePage({ recipe, locale }: { recipe: ModelRecipe; local
                     </ul>
                   </div>
                 ) : null}
-                <dl className="wf-recipe-what-is-meta">
-                  {publisherName ? (
-                    <DefinitionRow
-                      label={t.publisher}
-                      value={
-                        publisherKindLabel
-                          ? locale === 'zh'
-                            ? `${publisherName}（${publisherKindLabel}）`
-                            : `${publisherName} (${publisherKindLabel})`
-                          : publisherName
-                      }
-                    />
-                  ) : null}
-                  <DefinitionRow label={t.tasksLabel} value={recipe.tasks.length > 0 ? recipe.tasks.join(' · ') : t.notRecorded} />
-                  <DefinitionRow label={t.environment} value={recipe.runtime.environmentName} />
-                  <DefinitionRow label={t.output} value={artifactSummary(recipe, t.notRecorded)} />
-                </dl>
                 {hasHardware ? (
                   <div className="wf-recipe-hardware">
                     <h3>{t.hardwareGuidance}</h3>
@@ -765,214 +815,87 @@ export function ModelRecipePage({ recipe, locale }: { recipe: ModelRecipe; local
                     ) : null}
                   </div>
                 ) : null}
-                <div className="wf-recipe-contracts">
-                  <div>
-                    <h3>{t.inputsOverview}</h3>
-                    {recipe.inputContract.length > 0 ? (
-                      <table>
-                        <thead>
-                          <tr>
-                            <th>{t.field}</th>
-                            <th>{t.recordedContract}</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {recipe.inputContract.map((item) => (
-                            <tr key={item.field}>
-                              <td><code>{item.field}</code></td>
-                              <td>{item.detail}</td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    ) : (
-                      <p>{t.noContract}</p>
-                    )}
-                  </div>
-                  <div>
-                    <h3>{t.outputsOverview}</h3>
-                    {recipe.artifacts.length > 0 ? (
-                      <table>
-                        <thead>
-                          <tr>
-                            <th>{t.artifactKind}</th>
-                            <th>{t.filename}</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {recipe.artifacts.map((artifact, index) => (
-                            <tr key={`${artifact.kind}:${artifact.filename}:${index}`}>
-                              <td><code>{artifact.kind}</code></td>
-                              <td><code>{artifact.filename || '—'}</code></td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    ) : (
-                      <p>{t.noArtifacts}</p>
-                    )}
-                  </div>
-                </div>
               </section>
+              ) : null}
 
-              <section className="wf-recipe-section" id="sources">
-                <header>
-                  <span>{nextSectionNumber()}</span>
-                  <div>
-                    <h2>{t.sourcesSection}</h2>
-                    <p>{t.sourcesIntro}</p>
-                  </div>
-                </header>
-                {recipe.sources.length > 0 ? (
-                  <SourcesTable sources={recipe.sources} locale={locale} />
-                ) : (
-                  <p className="wf-recipe-empty-note">{t.noSources}</p>
-                )}
-                <div className="wf-recipe-provenance">
-                  <div>
-                    <GitBranch aria-hidden="true" size={16} />
-                    <strong>{t.provenance}</strong>
-                  </div>
-                  <code>{recipe.catalogPath}</code>
-                </div>
-              </section>
-
-              <section className="wf-recipe-section" id="launch">
-                <header>
-                  <span>{nextSectionNumber()}</span>
-                  <div>
-                    <h2>{t.launch}</h2>
-                    <p>{isReferenceOnly ? t.referenceOnlyDescription : recipe.variants.length > 0 ? t.variantContractIntro : t.launchIntro}</p>
-                  </div>
-                </header>
-                {isReferenceOnly ? null : recipe.variants.length === 0 && recipe.runtime.pipelineTarget ? (
-                  <CommandBlock>{recipe.commands.run}</CommandBlock>
-                ) : null}
-                {isReferenceOnly || recipe.variants.length === 0 ? null : (
-                  <p className="wf-recipe-builder-pointer">{t.launchBuilderHint}</p>
-                )}
-              </section>
-
-              {isReferenceOnly ? null : (
+              {!isReferenceOnly && envFacts.length > 0 ? (
               <section className="wf-recipe-section" id="install">
                 <header>
-                  <span>{nextSectionNumber()}</span>
-                  <div>
-                    <h2>{t.install}</h2>
-                    <p>{t.installIntro}</p>
-                  </div>
+                  <h2>{t.install}</h2>
                 </header>
-                <dl className="wf-recipe-environment-grid">
-                  <DefinitionRow label={t.environment} value={recipe.runtime.environmentName} />
-                  <DefinitionRow label={t.environmentKind} value={environmentKind} />
-                  <DefinitionRow label={t.python} value={recipe.runtime.python} />
-                  <DefinitionRow label={t.cuda} value={recipe.runtime.cudaLabel} />
-                  <DefinitionRow label={t.pytorch} value={recipe.runtime.packageVersions.torch} />
-                  <DefinitionRow label={t.driverStatus} value={recipe.runtime.driverStatus} />
+                <dl className="wf-recipe-facts">
+                  {envFacts.map(([label, value]) => (
+                    <DefinitionRow key={label} label={label} value={value} />
+                  ))}
                 </dl>
-                <CommandBlock label={t.installCommand}>{recipe.commands.install}</CommandBlock>
-                {recipe.runtime.pipPackages.length === 0 && recipe.runtime.condaPackages.length === 0 ? (
-                  <p className="wf-recipe-empty-note">{t.notRecorded}</p>
-                ) : (
-                  <div className="wf-recipe-package-columns">
-                    <details>
-                      <summary>
-                        {t.packages} <span>{recipe.runtime.pipPackages.length}</span>
-                      </summary>
-                      {recipe.runtime.pipPackages.length > 0 ? (
-                        <ul>
-                          {recipe.runtime.pipPackages.map((item) => (
-                            <li key={item}>
-                              <code>{item}</code>
-                            </li>
-                          ))}
-                        </ul>
-                      ) : (
-                        <p>{t.notRecorded}</p>
-                      )}
-                    </details>
-                    <details>
-                      <summary>
-                        {t.condaPackages} <span>{recipe.runtime.condaPackages.length}</span>
-                      </summary>
-                      {recipe.runtime.condaPackages.length > 0 ? (
-                        <ul>
-                          {recipe.runtime.condaPackages.map((item) => (
-                            <li key={item}>
-                              <code>{item}</code>
-                            </li>
-                          ))}
-                        </ul>
-                      ) : (
-                        <p>{t.notRecorded}</p>
-                      )}
-                    </details>
-                  </div>
-                )}
-                {recipe.runtime.validationImports.length > 0 ? (
-                  <p className="wf-recipe-validation-imports">
-                    <span>{t.validationImports}</span>
-                    {recipe.runtime.validationImports.map((item) => (
-                      <code key={item}>{item}</code>
-                    ))}
-                  </p>
+                {recipe.runtime.pipPackages.length > 0 ? (
+                  <details className="wf-recipe-package-fold">
+                    <summary>
+                      {t.packages} <span>{recipe.runtime.pipPackages.length}</span>
+                    </summary>
+                    <ul>
+                      {recipe.runtime.pipPackages.map((item) => (
+                        <li key={item}>
+                          <code>{item}</code>
+                        </li>
+                      ))}
+                    </ul>
+                  </details>
                 ) : null}
               </section>
-              )}
+              ) : null}
 
+              {recipe.checkpoints.length > 0 ? (
               <section className="wf-recipe-section" id="assets">
                 <header>
-                  <span>{nextSectionNumber()}</span>
-                  <div>
-                    <h2>{t.assets}</h2>
-                    <p>{isReferenceOnly ? t.referenceOnlyDescription : t.assetsIntro}</p>
-                  </div>
+                  <h2>{t.assets}</h2>
                 </header>
-                {isReferenceOnly ? null : (
-                  <>
-                    <CommandBlock label={t.checkCommand}>{recipe.commands.check}</CommandBlock>
-                    <CommandBlock label={t.prepareCommand}>{recipe.commands.prepare}</CommandBlock>
-                  </>
-                )}
-                {recipe.checkpoints.length > 0 ? (
-                  <div className="wf-recipe-checkpoints">
-                    {recipe.checkpoints.map((checkpoint) => (
-                      <article key={`${checkpoint.id}:${checkpoint.revision ?? ''}`}>
-                        <div>
-                          <Package aria-hidden="true" size={16} />
-                          <strong>{checkpoint.id}</strong>
-                        </div>
-                        <dl>
-                          <DefinitionRow label="Revision" value={checkpoint.revision} />
-                          <DefinitionRow label="License" value={checkpoint.license} />
-                          <DefinitionRow label="Gated" value={typeof checkpoint.gated === 'boolean' ? String(checkpoint.gated) : null} />
-                          <DefinitionRow label="Private" value={typeof checkpoint.private === 'boolean' ? String(checkpoint.private) : null} />
-                          {checkpoint.role ? <DefinitionRow label="Role" value={checkpoint.role} /> : null}
-                        </dl>
-                        {checkpoint.notes && checkpoint.notes.length > 0 ? (
-                          <ul className="wf-recipe-checkpoint-notes">
-                            {checkpoint.notes.map((note) => (
-                              <li key={note}>{note}</li>
-                            ))}
-                          </ul>
-                        ) : null}
-                      </article>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="wf-recipe-empty-note">{isReferenceOnly ? t.referenceOnlyDescription : t.noCheckpoints}</p>
-                )}
+                <ul className="wf-recipe-checkpoints">
+                    {recipe.checkpoints.map((checkpoint) => {
+                      const href = checkpointHref(checkpoint.id, recipe.sources);
+                      const chips = checkpointChips(checkpoint, locale);
+                      const title = (
+                        <code>{checkpoint.id}</code>
+                      );
+                      return (
+                        <li key={`${checkpoint.id}:${checkpoint.revision ?? ''}`}>
+                          <div className="wf-recipe-checkpoint-row">
+                            <Package aria-hidden="true" size={15} />
+                            {href ? (
+                              <a href={href} target="_blank" rel="noreferrer">
+                                {title}
+                                <ExternalLink aria-hidden="true" size={11} />
+                              </a>
+                            ) : (
+                              title
+                            )}
+                            {chips.length > 0 ? (
+                              <span className="wf-recipe-checkpoint-meta">
+                                {chips.map((chip) => (
+                                  <span key={chip}>{chip}</span>
+                                ))}
+                              </span>
+                            ) : null}
+                          </div>
+                          {checkpoint.notes && checkpoint.notes.length > 0 ? (
+                            <ul className="wf-recipe-checkpoint-notes">
+                              {checkpoint.notes.map((note) => (
+                                <li key={note}>{note}</li>
+                              ))}
+                            </ul>
+                          ) : null}
+                        </li>
+                      );
+                    })}
+                  </ul>
               </section>
+              ) : null}
 
+              {showVariants ? (
               <section className="wf-recipe-section" id="variants">
                 <header>
-                  <span>{nextSectionNumber()}</span>
-                  <div>
-                    <h2>{t.variantsSection}</h2>
-                    <p>{t.variantsIntro}</p>
-                  </div>
+                  <h2>{t.variantsSection}</h2>
                 </header>
-                {recipe.variants.length > 0 ? (
                   <div className="wf-recipe-variants-scroll">
                     <table className="wf-recipe-variants-table">
                       <thead>
@@ -992,7 +915,7 @@ export function ModelRecipePage({ recipe, locale }: { recipe: ModelRecipe; local
                             <td>{variant.runtimeProfile ? <code>{variant.runtimeProfile}</code> : '—'}</td>
                             <td>{variant.pipelineBinding ? <code>{variant.pipelineBinding}</code> : '—'}</td>
                             <td>
-                              <span className={`wf-recipe-variant-status ${isRunnableVariant(variant) ? 'is-runnable' : 'is-pending'}`}>
+                              <span className={`wf-recipe-variant-status ${isRunnableVariant({ pipelineTarget: variant.pipelineTarget ?? recipe.runtime.pipelineTarget, status: variant.status }) ? 'is-runnable' : 'is-pending'}`}>
                                 {formatStatus(variant.status, t.notRecorded)}
                               </span>
                             </td>
@@ -1001,24 +924,13 @@ export function ModelRecipePage({ recipe, locale }: { recipe: ModelRecipe; local
                       </tbody>
                     </table>
                   </div>
-                ) : (
-                  <p className="wf-recipe-empty-note">{t.noVariants}</p>
-                )}
-                <dl className="wf-recipe-runtime-matrix">
-                  <DefinitionRow label={t.binding} value={recipe.runtime.bindingId} />
-                  <DefinitionRow label={t.runner} value={recipe.runtime.runner ?? recipe.runtime.runnerTarget} />
-                  <DefinitionRow label={t.pipeline} value={recipe.runtime.pipelineTarget} />
-                </dl>
               </section>
+              ) : null}
 
               {docs.benchmarks.length > 0 ? (
                 <section className="wf-recipe-section" id="benchmarks">
                   <header>
-                    <span>{nextSectionNumber()}</span>
-                    <div>
-                      <h2>{t.benchmarksSection}</h2>
-                      <p>{t.benchmarksIntro}</p>
-                    </div>
+                    <h2>{t.benchmarksSection}</h2>
                   </header>
                   <div className="wf-recipe-bench-grid">
                     {docs.benchmarks.map((bench) => (
@@ -1048,23 +960,13 @@ export function ModelRecipePage({ recipe, locale }: { recipe: ModelRecipe; local
                 </section>
               ) : null}
 
+              {showEvidence ? (
               <section className="wf-recipe-section" id="evidence">
                 <header>
-                  <span>{nextSectionNumber()}</span>
-                  <div>
-                    <h2>{t.evidence}</h2>
-                    <p>{t.evidenceIntro}</p>
-                  </div>
+                  <h2>{t.evidence}</h2>
                 </header>
-                <dl className="wf-recipe-evidence-grid">
-                  <DefinitionRow label={t.integration} value={formatStatus(recipe.status.integration, t.notRecorded)} />
-                  <DefinitionRow label={t.runnerEvidence} value={formatStatus(recipe.status.runner, t.notRecorded)} />
-                  <DefinitionRow label={t.demoEvidence} value={formatStatus(recipe.status.demo, t.notRecorded)} />
-                  <DefinitionRow label={t.validationImports} value={recipe.runtime.validationImports.join(', ') || null} />
-                </dl>
                 {limitations.length > 0 ? (
                   <div className="wf-recipe-limitations">
-                    <h3>{t.limitations}</h3>
                     <ul>
                       {limitations.map((item) => (
                         <li key={item}>{item}</li>
@@ -1084,51 +986,21 @@ export function ModelRecipePage({ recipe, locale }: { recipe: ModelRecipe; local
                     </ul>
                   </details>
                 ) : null}
-                <div className="wf-recipe-provenance">
-                  <div>
-                    <GitBranch aria-hidden="true" size={16} />
-                    <strong>{t.provenance}</strong>
-                  </div>
-                  <code>{recipe.catalogPath}</code>
-                  {recipe.sources.map((source) => (
-                    <a href={source.url} target="_blank" rel="noreferrer" key={`${source.kind}:${source.url}`}>
-                      <span>{source.label}</span>
-                      <code>{source.revision ?? source.url}</code>
-                      <ExternalLink aria-hidden="true" size={11} />
-                    </a>
-                  ))}
-                </div>
               </section>
+              ) : null}
 
               <details className="wf-recipe-advanced" id="advanced">
                 <summary>
-                  <span>{nextSectionNumber()}</span>
-                  <div>
-                    <h2>{t.advanced}</h2>
-                    <p>{t.advancedIntro}</p>
-                  </div>
+                  <h2>{t.advanced}</h2>
                 </summary>
                 <div className="wf-recipe-advanced-body">
-                  <dl className="wf-recipe-version-matrix">
-                    <DefinitionRow label={t.integration} value={formatStatus(recipe.status.integration, t.notRecorded)} />
-                    <DefinitionRow label={t.runnerEvidence} value={formatStatus(recipe.status.runner, t.notRecorded)} />
-                    <DefinitionRow label={t.environment} value={recipe.runtime.environmentName} />
-                    <DefinitionRow label={t.python} value={recipe.runtime.python} />
-                    <DefinitionRow label={t.cuda} value={recipe.runtime.cudaLabel} />
-                    <DefinitionRow label={t.pytorch} value={recipe.runtime.packageVersions.torch} />
-                    <DefinitionRow label={t.sourceRevision} value={revision(recipe, 'source')} />
-                    <DefinitionRow label={t.checkpointRevision} value={revision(recipe, 'checkpoint')} />
-                  </dl>
-
                   <dl className="wf-recipe-runtime-matrix">
-                    <DefinitionRow label={t.profile} value={recipe.runtime.profileId} />
-                    <DefinitionRow label={t.binding} value={recipe.runtime.bindingId} />
-                    <DefinitionRow label={t.runner} value={recipe.runtime.runner ?? recipe.runtime.runnerTarget} />
-                    <DefinitionRow label={t.pipeline} value={recipe.runtime.pipelineTarget} />
-                    <DefinitionRow label={t.backend} value={recipe.runtime.backendStage} />
-                    <DefinitionRow label={t.runtimeStatus} value={recipe.runtime.runtimeStatus} />
-                    <DefinitionRow label={t.driverStatus} value={recipe.runtime.driverStatus} />
-                    <DefinitionRow label={t.environmentKind} value={environmentKind} />
+                    <DefinitionRow hideEmpty label={t.profile} value={recipe.runtime.profileId} />
+                    <DefinitionRow hideEmpty label={t.binding} value={recipe.runtime.bindingId} />
+                    <DefinitionRow hideEmpty label={t.backend} value={recipe.runtime.backendStage} />
+                    <DefinitionRow hideEmpty label={t.runtimeStatus} value={recipe.runtime.runtimeStatus} />
+                    <DefinitionRow hideEmpty label={t.sourceRevision} value={revision(recipe, 'source')} />
+                    <DefinitionRow hideEmpty label={t.checkpointRevision} value={revision(recipe, 'checkpoint')} />
                   </dl>
                 </div>
               </details>
@@ -1161,25 +1033,6 @@ export function ModelRecipePage({ recipe, locale }: { recipe: ModelRecipe; local
             </div>
           </article>
         </div>
-
-        <aside className="pi-doc-right-rail wf-recipe-rail" aria-label={t.compatibility}>
-          <h2>{t.compatibility}</h2>
-          <dl>
-            <DefinitionRow label={t.runtime} value={environmentKind} />
-            <DefinitionRow label={t.python} value={recipe.runtime.python} />
-            <DefinitionRow label={t.cuda} value={recipe.runtime.cudaLabel} />
-            <DefinitionRow label={t.pytorch} value={recipe.runtime.packageVersions.torch} />
-            <DefinitionRow label={t.checkpoint} value={recipe.checkpoints[0]?.id} />
-            <DefinitionRow label={t.checkpointRevision} value={revision(recipe, 'checkpoint')} />
-            <DefinitionRow label={t.output} value={artifactSummary(recipe, t.notRecorded)} />
-          </dl>
-          <div className="wf-recipe-rail-status">
-            <span>{t.integration}</span>
-            <strong>{formatStatus(recipe.status.integration, t.notRecorded)}</strong>
-            <span>{t.runnerEvidence}</span>
-            <strong>{formatStatus(recipe.status.runner, t.notRecorded)}</strong>
-          </div>
-        </aside>
       </div>
     </main>
   );

@@ -38,8 +38,6 @@ def _install_write_video() -> None:
         import torchvision.io as tv_io
     except Exception:
         return
-    if hasattr(tv_io, "write_video"):
-        return
 
     def write_video(
         filename: str,

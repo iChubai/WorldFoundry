@@ -1,0 +1,41 @@
+{
+  "id": "stable-virtual-camera",
+  "tagline": {
+    "en": "Stability AI's SEVA — generative novel view synthesis with camera control, turning input images into new camera viewpoints.",
+    "zh": "Stability AI 的 SEVA——具备相机控制的生成式新视角合成，把输入图像转成新的相机视角。"
+  },
+  "overview": {
+    "en": [
+      "Stable Virtual Camera (also known as SEVA) is a model from Stability AI, with authors from the University of Oxford and UC Berkeley. It performs generative novel view synthesis: given input images of a scene, it renders new views from camera positions you specify.",
+      "Unlike purely geometric reprojection, it generates the new viewpoints, so it can fill in content that was not directly visible in the inputs while following your requested camera control. This makes it useful for exploring a captured scene from fresh angles.",
+      "In WorldFoundry you run it through the shared pipeline via the upstream demo entrypoint — provide input images and target camera parameters, and it renders the synthesized views. The checkpoint is gated on Hugging Face, so you need approved access to download it."
+    ],
+    "zh": [
+      "Stable Virtual Camera（又名 SEVA）是 Stability AI 的模型，作者来自牛津大学与加州大学伯克利分校。它执行生成式新视角合成：给定一个场景的输入图像，它能从你指定的相机位置渲染出新的视角。",
+      "与纯粹的几何重投影不同，它是生成新视角，因此能补全输入中并未直接可见的内容，同时遵循你请求的相机控制。这让它很适合从全新角度探索已拍摄的场景。",
+      "在 WorldFoundry 中，你通过统一 pipeline、经由上游 demo 入口运行它——提供输入图像与目标相机参数，它就会渲染出合成视角。该 checkpoint 在 Hugging Face 上受限，需获批访问后方可下载。"
+    ]
+  },
+  "whenToUse": {
+    "en": "When you want to synthesize new camera viewpoints of a scene from input images, with control over the target camera — going beyond what strict geometric reprojection can show.",
+    "zh": "当你想从输入图像合成场景的新相机视角、并对目标相机加以控制——超越严格几何重投影所能呈现的内容时。"
+  },
+  "notFor": {
+    "en": "Open, ungated use — the checkpoint is gated on Hugging Face, so you must request and be granted access before running.",
+    "zh": "不适合开放、无门槛的使用——该 checkpoint 在 Hugging Face 上受限，运行前你需申请并获批访问。"
+  },
+  "highlights": {
+    "en": [
+      "Generative novel view synthesis with camera control",
+      "From Stability AI with Oxford and UC Berkeley authors",
+      "Renders new viewpoints from input images",
+      "Checkpoint is gated — approved access required"
+    ],
+    "zh": [
+      "具备相机控制的生成式新视角合成",
+      "由 Stability AI 与牛津、UC Berkeley 作者共同完成",
+      "从输入图像渲染新视角",
+      "Checkpoint 受限——需获批访问"
+    ]
+  }
+}

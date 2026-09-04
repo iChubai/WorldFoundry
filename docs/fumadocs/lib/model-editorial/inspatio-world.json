@@ -1,0 +1,41 @@
+{
+  "id": "inspatio-world",
+  "tagline": {
+    "en": "InSpatio's video-conditioned world model — extend and re-render a scene along new trajectories and camera views, built on Wan2.1.",
+    "zh": "InSpatio 的视频条件世界模型——沿新轨迹与相机视角扩展并重渲染场景,底座基于 Wan2.1。"
+  },
+  "overview": {
+    "en": [
+      "InSpatio-World, from InSpatio, is a world model that generates video conditioned on an input video and a chosen trajectory. It can continue a scene, follow new camera motion, and synthesize novel views.",
+      "It builds on the Wan2.1 text-to-video 1.3B backbone and adds spatial components — for example a Depth Anything depth model and a Florence-2 vision model — to support trajectory-conditioned generation and novel-view synthesis. The InSpatio-World checkpoint is Apache-2.0 licensed.",
+      "In WorldFoundry it runs as a video-conditioned world-generation task, covering trajectory-conditioned video and novel-view synthesis. All components resolve from local checkpoints."
+    ],
+    "zh": [
+      "InSpatio-World 由 InSpatio 开发,是一个以输入视频和指定轨迹为条件生成视频的世界模型。它能续写场景、跟随新的相机运动,并合成新视角。",
+      "它以 Wan2.1 文生视频 1.3B 为底座,并加入空间组件——例如 Depth Anything 深度模型与 Florence-2 视觉模型——来支持轨迹条件生成与新视角合成。InSpatio-World 的 checkpoint 采用 Apache-2.0 许可。",
+      "在 WorldFoundry 中,它以视频条件的世界生成任务运行,涵盖轨迹条件视频与新视角合成。所有组件均从本地 checkpoint 解析。"
+    ]
+  },
+  "whenToUse": {
+    "en": "Use it when you have an input video and want to extend the scene or re-render it along a new camera trajectory, including synthesizing novel views.",
+    "zh": "当你有一段输入视频、想沿新的相机轨迹扩展或重渲染场景(包括合成新视角)时,使用它。"
+  },
+  "notFor": {
+    "en": "It is video-conditioned, so it expects an input video rather than a pure text prompt, and needs its checkpoints and a GPU to run.",
+    "zh": "它是视频条件的,期望输入一段视频而非纯文字提示词,并需要其 checkpoint 与 GPU 才能运行。"
+  },
+  "highlights": {
+    "en": [
+      "Apache-2.0 licensed InSpatio-World checkpoint",
+      "Trajectory-conditioned video and novel-view synthesis",
+      "Built on the Wan2.1 text-to-video 1.3B backbone",
+      "Runs from local checkpoints in WorldFoundry"
+    ],
+    "zh": [
+      "InSpatio-World checkpoint 采用 Apache-2.0 许可",
+      "轨迹条件视频与新视角合成",
+      "基于 Wan2.1 文生视频 1.3B 底座构建",
+      "在 WorldFoundry 中从本地 checkpoint 运行"
+    ]
+  }
+}

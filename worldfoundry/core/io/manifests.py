@@ -16,6 +16,10 @@ import yaml
 
 MANIFEST_SUFFIXES = (".yaml", ".yml")
 
+# ──────────────────────────────────────────────────────────────────────────
+# Canonical YAML loaders — runtime must not import evaluation for this
+# ──────────────────────────────────────────────────────────────────────────
+
 
 def load_manifest(path: str | Path) -> Any:
     """Load a checked-in YAML WorldFoundry manifest.
@@ -38,7 +42,12 @@ def load_manifest(path: str | Path) -> Any:
 
 
 def manifest_paths(root: str | Path) -> tuple[Path, ...]:
-    """Return YAML manifest files under a directory tree."""
+    """Return sorted ``.yaml`` / ``.yml`` paths under *root* (recursive).
+
+    Raises:
+        FileNotFoundError: *root* does not exist.
+        NotADirectoryError: *root* is a file.
+    """
 
     path = Path(root)
     if not path.exists():
@@ -50,7 +59,17 @@ def manifest_paths(root: str | Path) -> tuple[Path, ...]:
 
 
 def load_manifest_collection(root: str | Path, *, item_key: str) -> dict[str, Any]:
-    """Load a manifest file or a directory of one-item YAML manifests."""
+    """Load a manifest file or a directory of one-item YAML manifests.
+
+    A file is returned as-is (or wrapped as ``{item_key: payload}``).
+    A directory merges ``_manifest.yaml`` metadata (if present) with
+    every other YAML file's *item_key* list. Non-dict entries are
+    appended to that list.
+
+    Args:
+        root: File or directory of checked-in manifests.
+        item_key: Collection key (for example ``"examples"``).
+    """
 
     path = Path(root)
     if path.is_file():

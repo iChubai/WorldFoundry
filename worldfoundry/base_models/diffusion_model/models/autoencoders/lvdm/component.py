@@ -1,4 +1,9 @@
-"""Native latent codec adapter for frame-wise LVDM video models."""
+"""LVDM / VideoCrafter frame-wise :class:`~...contracts.LatentDecoder`.
+
+Decodes each latent frame independently through an SD AutoencoderKL
+(``scale_factor=0.18215``).  Input is BCTHW; there is no temporal VAE.
+Weights come from the VideoCrafter ``first_stage_model.*`` prefix.
+"""
 
 from __future__ import annotations
 
@@ -44,11 +49,14 @@ def _autoencoder_state_dict(state_dict: Mapping[str, object]) -> Mapping[str, ob
 
 
 class LVDMVideoDecoder:
+    """Per-frame SD-VAE decode of BCTHW latents."""
+
     def __init__(self, model: AutoencoderKL, *, scale_factor: float = 0.18215) -> None:
         self.model = model
         self.scale_factor = float(scale_factor)
 
     def decode(self, latents: torch.Tensor, request: DiffusionRequest) -> torch.Tensor:
+        """Decode each time slice independently and concat along T."""
         if bool(request.inputs.get("return_latent", False)):
             return latents
         if latents.ndim != 5:

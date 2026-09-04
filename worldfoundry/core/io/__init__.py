@@ -1,4 +1,27 @@
-"""I/O primitives without model-specific semantics."""
+"""I/O primitives: path resolution, Hugging Face / cache downloads, video codecs, and serialization.
+
+No model-specific semantics. Upper layers should enter through these APIs instead
+of concatenating HF/S3 URLs by hand:
+
+- ``paths``: logical roots for the repo, cache, checkpoints, hfd, conda, and
+  artifacts. Shared ``resolve_*`` tokens keep containers, NFS, and local trees
+  on one convention instead of hard-coded script paths.
+- ``hf``: ``hf://`` and snapshot materialization. Rank 0 downloads; other ranks
+  wait on the local path so every GPU does not hit the Hub at once.
+- ``download`` / ``cache``: URL/S3 into a local cache with locks and reuse so
+  multiprocess workers do not clobber the same file.
+- ``video`` / ``video_data`` / ``video_tiling``: read frames, sample, write
+  H.264, and convert tensors <-> uint8. Tiling shards long or high-res videos
+  so one decode does not blow RAM.
+- ``serialization``: json / jsonl / generic dump-load plus format inference.
+- ``integrity``: atomic replace, canonical hashes, and path-escape checks for
+  evaluation artifacts.
+- ``storage``: unified open/copy/list for local and remote URIs.
+- Also: manifests, media suffixes, Hydra/OmegaConf, HDF5, audio, disk quotas.
+
+Symbols and submodules load lazily via ``__getattr__`` so ``import`` of this
+package does not pull in cv2, decord, or boto3.
+"""
 
 from __future__ import annotations
 
@@ -72,6 +95,7 @@ _EXPORT_MODULES = {
     "available_bytes": "worldfoundry.core.io.disk",
     "build_depth_visualizations": "worldfoundry.core.io.artifacts",
     "cache_root_path": "worldfoundry.core.io.paths",
+    "scratch_directory": "worldfoundry.core.io.paths",
     "cache_min_free_bytes": "worldfoundry.core.io.disk",
     "bytes_from_gib": "worldfoundry.core.io.disk",
     "colorize_depth_map": "worldfoundry.core.io.artifacts",
@@ -161,6 +185,7 @@ _EXPORT_MODULES = {
     "host_id": "worldfoundry.core.io.file_utils",
     "host_name": "worldfoundry.core.io.file_utils",
     "hfd_root_path": "worldfoundry.core.io.paths",
+    "hfd_dataset_root_path": "worldfoundry.core.io.paths",
     "hydra_config": "worldfoundry.core.io.config_utils",
     "hydra_original_dir": "worldfoundry.core.io.config_utils",
     "hydra_override_arg_list": "worldfoundry.core.io.config_utils",
@@ -255,6 +280,7 @@ _EXPORT_MODULES = {
     "model_source_root_path": "worldfoundry.core.io.paths",
     "official_runtime_repo_path": "worldfoundry.core.io.paths",
     "checkpoint_root_path": "worldfoundry.core.io.paths",
+    "checkpoint_root_candidates": "worldfoundry.core.io.paths",
     "HF_URI_SCHEME": "worldfoundry.core.io.hf",
     "hf_download_or_fpath": "worldfoundry.core.io.hf",
     "resolve_hf_path": "worldfoundry.core.io.hf",
@@ -345,8 +371,14 @@ _EXPORT_MODULES = {
     "yaml_loads": "worldfoundry.core.io.json_utils",
 }
 
+# ──────────────────────────────────────────────────────────────────────────
+# Lazy facade — import_module only when a name is first accessed
+# ──────────────────────────────────────────────────────────────────────────
+
 
 def __getattr__(name: str) -> Any:
+    """Resolve a submodule or export on first access and cache it on this module."""
+
     module_name = _SUBMODULES.get(name) or _EXPORT_MODULES.get(name)
     if module_name is None:
         raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
@@ -357,6 +389,8 @@ def __getattr__(name: str) -> Any:
 
 
 def __dir__() -> list[str]:
+    """Expose lazy ``__all__`` names to completion tools even before first access."""
+
     return sorted({*globals(), *__all__})
 
 

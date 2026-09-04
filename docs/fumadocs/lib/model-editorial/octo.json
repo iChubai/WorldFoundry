@@ -1,0 +1,41 @@
+{
+  "id": "octo",
+  "tagline": {
+    "en": "A generalist robot policy from Berkeley's RAIL lab — one transformer that drives many robots from camera views and language instructions.",
+    "zh": "来自伯克利 RAIL 实验室的通用机器人策略——用一个 transformer,根据摄像头画面与语言指令驱动多种机器人。"
+  },
+  "overview": {
+    "en": [
+      "Octo is an open generalist robot policy from the RAIL lab at UC Berkeley. Instead of training a separate controller for every robot and task, it learns a single transformer that maps camera observations and a language instruction to robot actions, and it was designed to transfer across a wide range of embodiments.",
+      "It ships in two sizes — octo-small and octo-base (the 1.5 releases) — so you can trade capacity for speed. At inference the policy consumes the recent observation history and emits an action chunk, i.e. a short sequence of future actions, which is the standard way these policies keep motion smooth.",
+      "In WorldFoundry, Octo runs as an embodied action policy: you give it observations and an instruction, and it rolls out actions rather than generating pixels or video."
+    ],
+    "zh": [
+      "Octo 是加州大学伯克利分校 RAIL 实验室推出的开放通用机器人策略。它不为每个机器人和任务单独训练控制器,而是学习一个 transformer,把摄像头观测和语言指令映射为机器人动作,并且从设计之初就着眼于在多种机器人本体间迁移。",
+      "它提供两种规模——octo-small 与 octo-base(均为 1.5 版本),便于在容量与速度之间权衡。推理时,策略读取近期的观测历史,输出一个 action chunk(即一小段未来动作序列),这也是这类策略保持动作连贯的常规做法。",
+      "在 WorldFoundry 中,Octo 作为具身动作策略运行:你提供观测与指令,它输出的是一串动作,而非图像或视频。"
+    ]
+  },
+  "whenToUse": {
+    "en": "Reach for Octo when you want an open, pretrained starting point for robot manipulation or generalist control — either evaluated directly or fine-tuned onto your own robot and action space.",
+    "zh": "当你想要一个开放的、预训练的机器人操控或通用控制起点时,可以选择 Octo——既可直接评测,也可微调到你自己的机器人与动作空间上。"
+  },
+  "notFor": {
+    "en": "Not a video or image generator — it produces robot actions, so it only makes sense inside a robot or simulation setup with a matching observation and action space.",
+    "zh": "它不是视频或图像生成器——它输出的是机器人动作,只有在具备匹配观测与动作空间的真实机器人或仿真环境中才有意义。"
+  },
+  "highlights": {
+    "en": [
+      "Open generalist policy from UC Berkeley's RAIL lab",
+      "Two sizes: octo-small and octo-base (1.5 releases)",
+      "Predicts action chunks from image and language inputs",
+      "Designed to transfer and fine-tune across many robots"
+    ],
+    "zh": [
+      "来自 UC Berkeley RAIL 实验室的开放通用策略",
+      "两种规模:octo-small 与 octo-base(1.5 版本)",
+      "从图像与语言输入预测 action chunk",
+      "面向多种机器人的迁移与微调而设计"
+    ]
+  }
+}

@@ -1,0 +1,41 @@
+{
+  "id": "stable-video-infinity",
+  "tagline": {
+    "en": "EPFL VITA's long-video model — extends image-to-video into extended, prompt-streamed clips by continuing motion clip after clip.",
+    "zh": "EPFL VITA 的长视频模型——通过逐片续接运动，把图生视频扩展为更长、可按提示流生成的片段。"
+  },
+  "overview": {
+    "en": [
+      "Stable Video Infinity 2.0 (SVI) is a long-video generation approach from the VITA lab at EPFL. Starting from an image-to-video base, it continues motion across successive clips so that short generations chain into a longer, coherent video.",
+      "It works by continuing motion frames from one clip into the next, padding with reference frames, and advancing through a stream of prompts — letting the content evolve over time. The runtime reuses Wan2.1's image-to-video components (its DiT, T5 and CLIP encoders, and VAE) plus the released SVI LoRA weights, giving each clip its own seed so successive segments differ.",
+      "In WorldFoundry you run it through the shared pipeline — provide an input image and a prompt (or a stream of prompts), and it writes out an extended video, stitching the per-clip segments into one continuous H.264 output. The code is inference-only; Wan and SVI weights are resolved separately."
+    ],
+    "zh": [
+      "Stable Video Infinity 2.0（SVI）是 EPFL VITA 实验室提出的长视频生成方法。它以图生视频为基座，在连续片段间续接运动，使多段短生成串联成一段更长、连贯的视频。",
+      "其做法是把一段片段的运动帧续接到下一段、用参考帧做填充，并沿着一串提示词推进——让内容随时间演化。运行时复用 Wan2.1 的图生视频组件（其 DiT、T5 与 CLIP 编码器以及 VAE），再加上已发布的 SVI LoRA 权重，并为每段片段分配独立随机种子，使各段之间产生差异。",
+      "在 WorldFoundry 中，你通过统一 pipeline 运行它——提供一张输入图与提示词（或一串提示词），它就会输出一段扩展视频，把逐片段拼接为一条连续的 H.264 输出。其代码为纯推理；Wan 与 SVI 权重需单独获取。"
+    ]
+  },
+  "whenToUse": {
+    "en": "When you want longer, coherent video that goes beyond a single short clip — driven from an image and evolved through a stream of prompts.",
+    "zh": "当你想生成超越单段短片、更长且连贯的视频——由一张图片驱动、沿一串提示词演化时。"
+  },
+  "notFor": {
+    "en": "Pure text-to-video from scratch — it starts from an input image. It also relies on separately staged Wan2.1 and SVI weights, so plan for the downloads and disk space.",
+    "zh": "不适合从零开始的纯文生视频——它以输入图片为起点。它还依赖单独部署的 Wan2.1 与 SVI 权重，请预留下载时间与磁盘空间。"
+  },
+  "highlights": {
+    "en": [
+      "Long, coherent video by continuing motion clip after clip",
+      "Prompt-stream generation — content evolves over time",
+      "Built on Wan2.1 image-to-video plus SVI LoRA weights",
+      "SVI code is MIT-licensed; inference-only in-tree"
+    ],
+    "zh": [
+      "逐片续接运动，生成长且连贯的视频",
+      "提示流生成——内容随时间演化",
+      "基于 Wan2.1 图生视频，叠加 SVI LoRA 权重",
+      "SVI 代码采用 MIT 许可；仓库内为纯推理"
+    ]
+  }
+}

@@ -382,10 +382,23 @@ class _HunyuanWorldPlayInternalPipeline(DiffusionPipeline):
         try:
             load_from = os.path.join(cached_folder, "text_encoder")
             glyph_root = os.path.join(load_from, "Glyph-SDXL-v2")
+            safe_glyph_checkpoint = os.path.join(
+                glyph_root,
+                "checkpoints/model.safetensors",
+            )
+            legacy_glyph_checkpoint = os.path.join(
+                glyph_root,
+                "checkpoints/byt5_model.pt",
+            )
+            glyph_checkpoint = (
+                safe_glyph_checkpoint
+                if os.path.isfile(safe_glyph_checkpoint)
+                else legacy_glyph_checkpoint
+            )
             required_glyph_files = [
                 os.path.join(glyph_root, "assets/color_idx.json"),
                 os.path.join(glyph_root, "assets/multilingual_10-lang_idx.json"),
-                os.path.join(glyph_root, "checkpoints/byt5_model.pt"),
+                glyph_checkpoint,
             ]
             missing_glyph_files = [
                 path for path in required_glyph_files if not os.path.exists(path)
@@ -424,7 +437,7 @@ class _HunyuanWorldPlayInternalPipeline(DiffusionPipeline):
 
             byt5_args = dict(
                 byT5_google_path=byT5_google_path,
-                byT5_ckpt_path=os.path.join(glyph_root, "checkpoints/byt5_model.pt"),
+                byT5_ckpt_path=glyph_checkpoint,
                 multilingual_prompt_format_color_path=multilingual_prompt_format_color_path,
                 multilingual_prompt_format_font_path=multilingual_prompt_format_font_path,
                 byt5_max_length=byt5_max_length,
@@ -832,7 +845,7 @@ class _HunyuanWorldPlayInternalPipeline(DiffusionPipeline):
                     "Prompt contains quoted glyph text, but Glyph-SDXL-v2 is not "
                     "available. Expected text_encoder/Glyph-SDXL-v2 with "
                     "assets/color_idx.json, assets/multilingual_10-lang_idx.json, "
-                    "and checkpoints/byt5_model.pt."
+                    "and checkpoints/model.safetensors (or the legacy byt5_model.pt)."
                 )
             text_styles = [
                 {"color": None, "font-family": None} for _ in range(len(glyph_texts))

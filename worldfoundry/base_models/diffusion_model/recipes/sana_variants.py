@@ -1,4 +1,21 @@
-"""Public metadata for Sana native diffusion recipes."""
+"""Static catalog of Sana family variants consumed by :mod:`.sana`.
+
+This module does not bind components or select an execution strategy.
+:func:`sana_recipe` reads :class:`SanaVariant` fields (task, runner, Hub
+path, resolution, optional ``mode``) and composes the native recipe.
+
+``runner`` values used by the image / video factories
+----------------------------------------------------
+- ``image``: text-to-image DiT, flow-match, CFG.
+- ``sprint``: few-step SCM, embedded guidance.
+- ``controlnet``: HED ControlNet, encoded initialization.
+- ``video``: text-to-video, Flow-DPM, ``standard``.
+- ``streaming``: video-to-video; ``mode=="long_streaming"`` selects
+  ``chunked-kv-cache``, otherwise bidirectional short stays ``standard``.
+
+Do not treat this table as a SHA rewrite surface; pin fields stay as
+declared on each :class:`SanaVariant`.
+"""
 
 from __future__ import annotations
 
@@ -11,7 +28,13 @@ from worldfoundry.core.io.paths import package_data_path
 
 @dataclass(frozen=True)
 class SanaVariant:
-    """Static metadata needed to run one Sana family variant."""
+    """Immutable Hub + runtime metadata for one public Sana model id.
+
+    ``task`` / ``runner`` / ``mode`` decide which factories and strategy
+    :func:`sana_recipe` selects.  Optional ``default_*`` fields are
+    sampling hints for callers; they are not written into ExecutionSpec
+    here.  Checkpoint pin fields (revision, SHA-256, size) are optional.
+    """
 
     model_id: str
     display_name: str
@@ -36,33 +59,20 @@ class SanaVariant:
 
     @property
     def artifact_kind(self) -> str:
-        """Artifact kind.
+        """Return ``generated_video`` for video tasks, else ``generated_image``."""
 
-        Returns:
-            The return value.
-        """
         return "generated_video" if self.task in {"text-to-video", "video-to-video"} else "generated_image"
 
     @property
     def default_extension(self) -> str:
-        """Default extension.
+        """Return ``.mp4`` for video artifacts, else ``.png``."""
 
-        Returns:
-            The return value.
-        """
         return ".mp4" if self.artifact_kind == "generated_video" else ".png"
 
 
 def _hf(repo_id: str, filename: str) -> str:
-    """Helper function to hf.
+    """Build a repository-relative ``hf://<repo>/checkpoints/<file>`` path."""
 
-    Args:
-        repo_id: The repo id.
-        filename: The filename.
-
-    Returns:
-        The return value.
-    """
     return f"hf://{repo_id}/checkpoints/{filename}"
 
 
@@ -408,28 +418,25 @@ SANA_ALIASES: Mapping[str, str] = {
 
 
 def normalize_sana_model_id(model_id: str | None) -> str:
-    """Normalize sana model id.
+    """Map aliases and ``_`` / case to a canonical :data:`SANA_VARIANTS` key.
 
-    Args:
-        model_id: The model id.
-
-    Returns:
-        The return value.
+    ``None`` or empty becomes ``sana``, which aliases to
+    ``sana-1600m-1024px-bf16``.  Unknown keys are returned unchanged so
+    :func:`get_sana_variant` can raise with the original id.
     """
+
     raw = (model_id or "sana").strip()
     key = raw.lower().replace("_", "-")
     return SANA_ALIASES.get(key, key)
 
 
 def get_sana_variant(model_id: str | None) -> SanaVariant:
-    """Get sana variant.
+    """Return the :class:`SanaVariant` for ``model_id`` after alias normalization.
 
-    Args:
-        model_id: The model id.
-
-    Returns:
-        The return value.
+    Raises:
+        KeyError: if the normalized id is not in :data:`SANA_VARIANTS`.
     """
+
     key = normalize_sana_model_id(model_id)
     try:
         return SANA_VARIANTS[key]
@@ -439,11 +446,8 @@ def get_sana_variant(model_id: str | None) -> SanaVariant:
 
 
 def config_root() -> Path:
-    """Config root.
+    """Return the packaged Sana YAML config directory used by some runners."""
 
-    Returns:
-        The return value.
-    """
     return package_data_path("models", "runtime", "configs", "sana")
 
 

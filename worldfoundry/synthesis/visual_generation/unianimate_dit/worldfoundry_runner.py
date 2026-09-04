@@ -74,6 +74,12 @@ def _rewrite_demo_script(
         "start_frame = 0 # random.randint(0, _total_frame_num-cover_frame_num-1)",
         text,
     )
+    if "num_frames=max_frames" not in text:
+        text = text.replace(
+            "        input_image=ref_frame,\n",
+            "        input_image=ref_frame,\n        num_frames=max_frames,\n",
+            1,
+        )
     del use_usp
     return text
 

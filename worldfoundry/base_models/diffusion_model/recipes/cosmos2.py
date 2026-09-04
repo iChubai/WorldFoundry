@@ -1,4 +1,14 @@
-"""Native Cosmos Predict2 Video2World 2B and 14B recipes."""
+"""Native Cosmos Predict2 Video2World 2B and 14B recipes.
+
+Each public function returns a :class:`NativeDiffusionRecipe`.  Recipes
+do not construct runners.
+
+Both scales bind a Predict2 DiT, T5-11B conditioner, Cosmos 2.5 video
+codec (encoder + decoder), Video2World initializer (``sigma_max=80``),
+and a Karras x0 Adams-Bashforth-2 scheduler.  Strategy is ``standard``
+with ``guidance_mode="positive"`` (CFG, not dual-expert).  Same latent
+geometry: 16 channels, 8x spatial / 4x temporal compression.
+"""
 
 from __future__ import annotations
 
@@ -29,6 +39,8 @@ def _recipe(
     denoiser_factory,
     aliases: tuple[str, ...],
 ) -> NativeDiffusionRecipe:
+    """Bind Predict2 DiT, T5, 2.5 VAE, Video2World init, and Karras x0 AB2."""
+
     denoiser = ComponentKey(ComponentKind.DENOISER)
     conditioner = ComponentKey(ComponentKind.CONDITIONER)
     initializer = ComponentKey(ComponentKind.LATENT_INITIALIZER)
@@ -109,6 +121,8 @@ def _recipe(
 
 
 def cosmos2_2b_video2world_recipe() -> NativeDiffusionRecipe:
+    """Predict2 2B Video2World: T5 + Karras x0 AB2, ``standard`` CFG."""
+
     return _recipe(
         model_id=COSMOS2_2B_MODEL_ID,
         repo_id=COSMOS2_2B_REPO_ID,
@@ -124,6 +138,8 @@ def cosmos2_2b_video2world_recipe() -> NativeDiffusionRecipe:
 
 
 def cosmos2_14b_video2world_recipe() -> NativeDiffusionRecipe:
+    """Predict2 14B Video2World; same roles and CFG as the 2B recipe."""
+
     return _recipe(
         model_id=COSMOS2_14B_MODEL_ID,
         repo_id=COSMOS2_14B_REPO_ID,

@@ -1,4 +1,9 @@
-"""Stateless schedulers for Sana recipes."""
+"""Stateless schedulers for Sana recipes.
+
+Factories return objects that satisfy :class:`~..contracts.DiffusionScheduler`.
+Flow-match reuses Wan Euler; DPM / SCM / streaming Euler are Sana-specific
+adapters.  Unknown ``scheduler_options`` keys raise :exc:`ValueError`.
+"""
 
 from __future__ import annotations
 
@@ -141,6 +146,73 @@ def build_sana_streaming_euler_scheduler(
     )
 
 
+class SanaWMStreamingEulerScheduler:
+    """Fixed distilled Stage-1 schedule for SANA-WM streaming.
+
+    ``(1000, 960, 889, 727, 0)`` already contains the released schedule
+    shift, so the runtime-facing ``shift`` option is accepted as provenance
+    only and is deliberately not applied a second time.
+    """
+
+    TIMESTEPS = (1000.0, 960.0, 889.0, 727.0, 0.0)
+
+    def __init__(self, *, num_train_timesteps: int = 1000) -> None:
+        self.num_train_timesteps = int(num_train_timesteps)
+        if self.num_train_timesteps <= 0:
+            raise ValueError("num_train_timesteps must be positive")
+
+    def schedule(
+        self,
+        sampling: SamplingConfig,
+        *,
+        device: torch.device,
+        dtype: torch.dtype,
+    ) -> tuple[SchedulerStep, ...]:
+        del dtype
+        unsupported = set(sampling.scheduler_options) - {"shift"}
+        if unsupported:
+            raise ValueError(
+                f"unsupported SanaWMStreamingEulerScheduler options: {sorted(unsupported)}"
+            )
+        required_steps = len(self.TIMESTEPS) - 1
+        if sampling.num_inference_steps != required_steps:
+            raise ValueError(
+                f"SANA-WM streaming requires exactly {required_steps} inference steps"
+            )
+        values = torch.tensor(self.TIMESTEPS, device=device, dtype=torch.float32)
+        return tuple(
+            SchedulerStep(index=index, timestep=values[index], next_timestep=values[index + 1])
+            for index in range(required_steps)
+        )
+
+    @staticmethod
+    def scale_model_input(latents: Tensor, step: SchedulerStep) -> Tensor:
+        del step
+        return latents
+
+    def step(
+        self,
+        model_output: Tensor,
+        step: SchedulerStep,
+        latents: Tensor,
+        *,
+        generator: torch.Generator,
+    ) -> Tensor:
+        del generator
+        current = step.timestep.to(device=latents.device, dtype=latents.dtype)
+        following = step.next_timestep.to(device=latents.device, dtype=latents.dtype)
+        delta = (following - current) / float(self.num_train_timesteps)
+        return latents + delta * model_output.to(dtype=latents.dtype)
+
+
+def build_sana_wm_streaming_euler_scheduler(
+    context: ComponentBuildContext,
+) -> SanaWMStreamingEulerScheduler:
+    return SanaWMStreamingEulerScheduler(
+        num_train_timesteps=int(context.component_options.get("num_train_timesteps", 1000))
+    )
+
+
 class SanaSCMScheduler:
     """Native TrigFlow/sCM sampler used by Sana Sprint checkpoints."""
 
@@ -213,8 +285,10 @@ __all__ = [
     "SanaSCMScheduler",
     "SanaFlowDPMScheduler",
     "SanaStreamingEulerScheduler",
+    "SanaWMStreamingEulerScheduler",
     "build_sana_flow_dpm_scheduler",
     "build_sana_flow_match_scheduler",
     "build_sana_scm_scheduler",
     "build_sana_streaming_euler_scheduler",
+    "build_sana_wm_streaming_euler_scheduler",
 ]

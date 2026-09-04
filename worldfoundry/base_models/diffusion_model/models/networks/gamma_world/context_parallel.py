@@ -16,6 +16,12 @@
 # from neophilia; Author: Qsh (qsh.zh27@gmail.com)
 # MIT License
 
+"""Context-parallel all-to-all attention wrappers for Gamma-World.
+
+Splits the sequence dim across ranks, all-to-alls into a head-sharded
+layout, runs local attention, then reverses.  Tensors are ``B S H D``.
+"""
+
 import os
 from typing import Any, Callable, List, Union
 
@@ -31,6 +37,8 @@ from worldfoundry.base_models.diffusion_model.models.networks.gamma_world.neighb
 
 
 def post_all2all(local_seq_2_local_head, seq_world_size):
+    """Build the inverse rearrange after an A2A: heads-local ↔ sequence-local."""
+
     def post_func(input):
         # b, s, n, h
         if local_seq_2_local_head:

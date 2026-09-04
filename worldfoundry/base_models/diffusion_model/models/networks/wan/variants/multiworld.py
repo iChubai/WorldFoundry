@@ -1,5 +1,8 @@
-"""MultiWorld action/environment conditioning as a thin native Wan variant."""
+"""MultiWorld / It-Takes-Two: multi-agent action on native Wan.
 
+Agent-wise self-attention, action RoPE, and a custom DiT block that
+cross-attends pooled agent tokens.  Adds action / multi-agent hooks.
+"""
 from __future__ import annotations
 
 from typing import Any, Mapping

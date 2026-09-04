@@ -1,5 +1,8 @@
-"""Module for base_models -> diffusion_model -> video -> wan -> variants -> echo_infinity -> wan -> modules -> causal_model_infinity_memory.py functionality."""
+"""Echo-Infinity memory-augmented causal Wan (hidden-state bank).
 
+Stores and replays memory hidden states across clips.  Used with
+:mod:`.infinity` / :mod:`.causal`.  Memory adapter only.
+"""
 import math
 import types
 from types import SimpleNamespace
@@ -194,7 +197,7 @@ def _block_inf_mem_forward(self, x, e, seq_lens, grid_sizes, freqs, context, con
         return x
 
 class CausalWanModelInfinityMemory(CausalWanModelInfinityBase):
-    """Causal wan model infinity memory implementation."""
+    """Echo-Infinity causal Wan that reads/writes the hidden-state memory bank."""
 
     def enable_infmem(self, relative_rope: bool=True, relative_rope_pmax: int=21, num_frame_per_block_attr: int=3):
         """Enable infmem.

@@ -1,0 +1,41 @@
+{
+  "id": "a1",
+  "tagline": {
+    "en": "An affordance-aware vision-language-action policy — turn camera views and a language instruction into robot actions.",
+    "zh": "一个具备可供性感知的视觉-语言-动作策略——把相机视角和语言指令转化为机器人动作。"
+  },
+  "overview": {
+    "en": [
+      "A1 is a vision-language-action (VLA) policy for robot manipulation. It takes what the robot sees together with a natural-language instruction and predicts the actions to carry it out — a policy you roll out step by step to complete a task.",
+      "It builds on a vision-language backbone and a dedicated action head, combining components such as a Molmo/CLIP-style visual encoder with L1, DiT, or flow-based action decoders. The runtime derives action dimensions directly from the checkpoint and validates each action-token boundary, and it loads tokenizer and checkpoint assets locally without executing checkpoint code. A LIBERO-Spatial checkpoint is available alongside a pretraining checkpoint.",
+      "In WorldFoundry, A1 runs through the embodied action pipeline rather than video generation: you pick a checkpoint, feed it observations and an instruction, and it returns an action chunk you can execute or evaluate."
+    ],
+    "zh": [
+      "A1 是一个面向机器人操作的视觉-语言-动作（VLA）策略。它接收机器人所看到的画面以及一条自然语言指令，预测出执行任务所需的动作——这是一个你逐步展开（rollout）以完成任务的策略。",
+      "它构建在视觉-语言骨干和专用动作头之上，组合了诸如 Molmo/CLIP 风格视觉编码器与 L1、DiT 或 flow 动作解码器等组件。运行时直接从 checkpoint 推导动作维度并校验每个动作 token 的边界，且在本地加载 tokenizer 与 checkpoint 资源、不执行 checkpoint 代码。除预训练 checkpoint 外，还提供一个 LIBERO-Spatial checkpoint。",
+      "在 WorldFoundry 中，A1 走的是具身动作 pipeline，而非视频生成：选定一个 checkpoint，给它观测和指令，它便返回可执行或可评测的动作块（action chunk）。"
+    ]
+  },
+  "whenToUse": {
+    "en": "Use it when you need a language-conditioned robot policy that maps images and an instruction to actions, with a LIBERO-Spatial checkpoint ready for manipulation tasks.",
+    "zh": "当你需要一个语言驱动的机器人策略、把图像与指令映射为动作时使用它，并有现成的 LIBERO-Spatial checkpoint 可用于操作任务。"
+  },
+  "notFor": {
+    "en": "Not a media-generation model — it outputs action traces, not images or video. To run it meaningfully you need robot observations and an instruction, plus the checkpoint assets staged locally.",
+    "zh": "它不是媒体生成模型——输出的是动作轨迹，而非图像或视频。要有意义地运行它，你需要机器人观测和指令，并在本地准备好 checkpoint 资源。"
+  },
+  "highlights": {
+    "en": [
+      "Affordance-aware vision-language-action policy for manipulation",
+      "Visual encoder plus L1 / DiT / flow action heads",
+      "Action dimensions derived from the checkpoint, with per-token validation",
+      "LIBERO-Spatial checkpoint plus a pretraining checkpoint"
+    ],
+    "zh": [
+      "面向操作、具备可供性感知的视觉-语言-动作策略",
+      "视觉编码器搭配 L1 / DiT / flow 动作头",
+      "动作维度由 checkpoint 推导，并逐 token 校验",
+      "提供 LIBERO-Spatial checkpoint 与预训练 checkpoint"
+    ]
+  }
+}

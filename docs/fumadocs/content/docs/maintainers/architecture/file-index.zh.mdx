@@ -11,9 +11,9 @@ description: WorldFoundry 各包的“源码目录 → 职责”速查表，含�
 
 | 包 | 职责 | 首读文件 |
 | --- | --- | --- |
-| `worldfoundry/cli` | 面向用户的命令：TUI、evaluate、embodied、run、validate、zoo、preflight、reporting。调度到编排层，不承载模型推理或打分。 | `cli/main.py:1580` `main()`；子命令树在 `cli/main.py:1091` |
+| `worldfoundry/cli` | 面向用户的命令：TUI、evaluate、embodied、run、validate、zoo、preflight、reporting。调度到编排层，不承载模型推理或打分。 | `cli/main.py:1888` `main()`；子命令树在 `cli/main.py:1088` |
 | `worldfoundry/cli/tui*.py` | 引导式发现 TUI（discovery、brand、app）。 | `cli/tui.py`、`cli/tui_app.py` |
-| `worldfoundry/mcp` | MCP server 与工具（discovery、metrics、readiness、context），复用同一 catalog/runtime 契约。 | `mcp/__init__.py:30` `main()`；`mcp/tools/registration.py:47` `register_tools` |
+| `worldfoundry/mcp` | MCP server 与工具（discovery、metrics、readiness、context），复用同一 catalog/runtime 契约。 | `mcp/__init__.py:30` `main()`；`mcp/server.py:38` `create_mcp_server`；`mcp/tools/registration.py:55` `register_tools` |
 | `worldfoundry/runtime` | 执行环境准备：conda profile、device pool、CUDA 分层、编译缓存、in-tree CLI 桥、资产 staging。 | `runtime/conda.py`、`runtime/env.py`、`runtime/cuda_tiers.py` |
 | `worldfoundry/data` | Catalog、runtime profile、benchmark task 与测试 fixture。声明“存在什么、是否就绪”，不含 runtime 行为。 | `data/models/catalog/`、`data/benchmarks/catalog/`、`data/models/runtime/profiles/` |
 | `worldfoundry/core` | 共享推理基础设施：加载、attention、分布式、VRAM、kernel、memory、配置、IO、安全。offload/distributed/kernel/quantization 的唯一归属。 | [核心基础设施](/zh/docs/maintainers/architecture/core-infrastructure) |
@@ -23,11 +23,12 @@ description: WorldFoundry 各包的“源码目录 → 职责”速查表，含�
 | `worldfoundry/synthesis` | 树内 runtime 执行：hosted API wrapper、native runtime bridge、各 family 的 `synthesis.py`、动作面、memory 模块。 | `synthesis/base_synthesis.py:38` `BaseSynthesis`；[Runtime 组装](/zh/docs/maintainers/architecture/runtime-assembly) |
 | `worldfoundry/representations` | 把模型输出转换为几何/世界 artifact：深度、点云、3DGS、panorama、geometry 资产。 | `representations/base_representation.py:4` `BaseRepresentation` |
 | `worldfoundry/evaluation` | 公共契约、执行 runner、catalog 加载、metric、reporting、scorecard。artifact 边界上 benchmark 一侧。 | [评测核心](/zh/docs/maintainers/architecture/evaluation-core) |
-| `worldfoundry/studio` | 复用同一 catalog/runtime 契约的交互式预览壳。仅展示层胶水。 | `studio/execution.py`、`studio/catalog.py`；[Studio 内部](/zh/docs/maintainers/architecture/studio-internals) |
+| `worldfoundry/studio` | 复用同一 catalog/runtime 契约的交互式预览壳。仅展示层胶水。 | `studio/cli.py:78` `main()`；`studio/execution.py`、`studio/catalog.py`；[Studio 内部](/zh/docs/maintainers/architecture/studio-internals) |
+| `worldfoundry/training` | 训练与后训练 recipe（SFT、蒸馏、RL）。不在 evaluate/scorecard 这条路上。 | `training/recipes/spec.py` |
 
 ## 各行如何衔接
 
-一次 run 是顺着表格向下流动，而不是随机横向引用。用户输入经 `cli` 或 `mcp` 进入；`runtime` 与 `data` 准备环境并声明可运行项；`core` 与 `base_models` 提供共享推理原语；`pipelines` 加 `operators` 加 `synthesis` 把归一化 request 变成 `GenerationResult`；需要时 `representations` 产出几何 artifact；`evaluation` 消费 artifact 产出 scorecard；`studio` 通过 UI 壳预览同一 artifact。
+一次 run 是顺着表格向下流动，而不是随机横向引用。用户输入经 `cli` 或 `mcp` 进入；`runtime` 与 `data` 准备环境并声明可运行项；`core` 与 `base_models` 提供共享推理原语；`pipelines` 加 `operators` 加 `synthesis` 把归一化 request 变成 `GenerationResult`；需要时 `representations` 产出几何 artifact；`evaluation` 消费 artifact 产出 scorecard；`studio` 通过 UI 壳预览同一 artifact。`training` 在这条脊线旁边：它产出 checkpoint，不给 checkpoint 打分。
 
 <Callout type="info">
   一个文件所在的包应当在你读代码之前就回答“这一类改动归谁”。如果不确定某修复属于哪一层，从 [架构](/zh/docs/maintainers/architecture) 起步，选择与你要改的层匹配的子页。

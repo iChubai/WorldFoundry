@@ -1,9 +1,10 @@
-"""Explicit Sana block selection without a second framework registry.
+"""Explicit SANA block selection without a second framework registry.
 
-The released Sana and Sana-Video checkpoints store the block implementation
-name in their model configuration.  Resolving those names belongs to the
+The released SANA and SANA-Video checkpoints store the block implementation
+name in their model configuration (LiteLA, GDN, UCPE CamCtrl, Triton fused
+variants, GLUMBConv / Linear FFN).  Resolving those names belongs to the
 checkpoint-compatible graph, but registering them globally does not.  The
-small lazy mapping here keeps optional GDN/Triton imports out of ordinary Sana
+small lazy mapping here keeps optional GDN/Triton imports out of ordinary SANA
 image inference and makes every supported checkpoint architecture visible in
 one place.
 """

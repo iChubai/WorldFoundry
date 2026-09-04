@@ -1,4 +1,19 @@
-"""Strict checkpoint inspection and import for native Echo-Memory models."""
+"""Strict safetensors inspection and key remapping for Echo-Memory DiTs.
+
+The Echo release stores extra action / SSM / spatial-memory tensors on top
+of a Wan2.1-T2V-1.3B backbone.  Before :class:`~...loaders.module.NativeModuleLoader`
+constructs :class:`.echo_memory.EchoWanModel`, callers inspect the header
+only (no weight materialization) so the architecture — which blocks own
+``action_mlp``, ``self_attn_with_action``, ``block_wise_ssm``,
+``videossm_hybrid``, and whether a spatial memory adapter is present —
+is known at graph-build time.
+
+``normalize_echo_state_dict`` strips vendor prefixes (``module.``,
+``model.``, ``dit.``, ``_forward_module.``) and relocates spatial-memory
+keys under ``memory_adapter.*`` to match the native module tree.
+``load_echo_checkpoint`` is the strict import used by research tooling;
+the production denoiser factory uses the converter + native loader.
+"""
 
 from __future__ import annotations
 
@@ -141,6 +156,7 @@ def inspect_echo_checkpoint_shapes(
 
 
 def normalize_echo_state_dict(state_dict: Mapping[str, Any]) -> dict[str, Any]:
+    """Rewrite Echo checkpoint keys onto the native :class:`EchoWanModel` tree."""
     keys = tuple(state_dict)
     normalized_keys, prefix = _strip_common_prefix(keys)
     result: dict[str, Any] = {}

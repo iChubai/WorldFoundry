@@ -1,0 +1,41 @@
+{
+  "id": "wilddet3d",
+  "tagline": {
+    "en": "Allen Institute for AI's WildDet3D — a 3D object detector for in-the-wild scenes and open-world perception.",
+    "zh": "艾伦人工智能研究院(AI2)的 WildDet3D——面向真实野外场景与开放世界感知的三维物体检测器。"
+  },
+  "overview": {
+    "en": [
+      "WildDet3D is a 3D detection model from the Allen Institute for AI (AI2). It targets 3D object detection in unconstrained, in-the-wild scenes, aiming to perceive object geometry and position beyond the narrow, curated settings that many 3D detectors assume.",
+      "It is distributed as upstream source with detector weights; the checkpoint on Hugging Face carries a SAM-derived license, which you should review before use.",
+      "In WorldFoundry the source and configuration are registered so you can resolve its config and inference route; the detector assets are staged separately, and the runtime lists what it needs before running detection."
+    ],
+    "zh": [
+      "WildDet3D 是艾伦人工智能研究院(AI2)推出的三维检测模型。它面向无约束的真实野外场景做三维物体检测,力求在许多三维检测器所假设的狭窄、精挑场景之外,感知物体的几何与位置。",
+      "它以上游源码加检测器权重形式发布;Hugging Face 上的 checkpoint 采用源自 SAM 的许可,使用前请先审阅。",
+      "在 WorldFoundry 中,其源码与配置已被注册,你可以解析它的配置与推理路径;检测器素材需另行准备,运行时会在检测前列出所需内容。"
+    ]
+  },
+  "whenToUse": {
+    "en": "Use WildDet3D when you need 3D object detection for diverse, real-world scenes rather than a single curated benchmark domain.",
+    "zh": "当你需要在多样的真实场景中做三维物体检测,而非局限于单一精挑基准域时,适合使用 WildDet3D。"
+  },
+  "notFor": {
+    "en": "It is a perception model, not a generative one; it needs its detector assets staged, and its checkpoint carries a SAM-derived license to review.",
+    "zh": "它是感知模型而非生成模型;需要准备好检测器素材,且其 checkpoint 采用源自 SAM 的许可,需要审阅。"
+  },
+  "highlights": {
+    "en": [
+      "3D object detection for in-the-wild, open-world scenes",
+      "From the Allen Institute for AI (AI2)",
+      "Checkpoint carries a SAM-derived license — review before use",
+      "Distributed as upstream source with detector weights"
+    ],
+    "zh": [
+      "面向真实野外、开放世界场景的三维物体检测",
+      "出自艾伦人工智能研究院(AI2)",
+      "checkpoint 采用源自 SAM 的许可,使用前请审阅",
+      "以上游源码加检测器权重形式发布"
+    ]
+  }
+}

@@ -72,6 +72,7 @@ class MCPToolContext:
 
 
 DEFAULT_CONTEXT = MCPToolContext()
+_current_default_context = DEFAULT_CONTEXT
 
 
 def get_default_context() -> MCPToolContext:
@@ -82,20 +83,28 @@ def get_default_context() -> MCPToolContext:
     installed via :func:`set_default_context` is observed everywhere.
     """
 
-    return DEFAULT_CONTEXT
+    return _current_default_context
 
 
 def set_default_context(context: MCPToolContext) -> MCPToolContext:
-    """Install *context* as the process-wide default and return it.
+    """Install *context* while synchronizing the public default singleton.
 
-    ``create_mcp_server`` calls this with the server's own context so payload
-    functions invoked without an explicit ``context`` argument share the same
-    job store and output root as the registered tools — the default context
-    and the server context can no longer hold two separate stores (CM-29).
+    Copying fields onto ``DEFAULT_CONTEXT`` keeps existing import aliases in
+    sync.  The late-bound accessor still returns the actual installed context,
+    preserving context identity for callers and allowing a previous context to
+    be restored.  Registered tools and direct payload calls therefore share
+    one job store and output root (CM-29).
     """
 
-    global DEFAULT_CONTEXT
-    DEFAULT_CONTEXT = context
+    global _current_default_context
+    if context is DEFAULT_CONTEXT:
+        _current_default_context = DEFAULT_CONTEXT
+        return DEFAULT_CONTEXT
+    DEFAULT_CONTEXT.output_root = context.output_root
+    DEFAULT_CONTEXT.model_manifest_dir = context.model_manifest_dir
+    DEFAULT_CONTEXT.benchmark_manifest_dir = context.benchmark_manifest_dir
+    DEFAULT_CONTEXT.job_store = context.job_store
+    _current_default_context = context
     return context
 
 

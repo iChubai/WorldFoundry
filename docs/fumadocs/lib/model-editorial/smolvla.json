@@ -1,0 +1,39 @@
+{
+  "id": "smolvla",
+  "tagline": {
+    "en": "Hugging Face's compact vision-language-action policy, built on the LeRobot stack.",
+    "zh": "Hugging Face 推出的紧凑型视觉-语言-动作策略,构建于 LeRobot 技术栈之上。"
+  },
+  "overview": {
+    "en": [
+      "SmolVLA is a compact vision-language-action policy from Hugging Face, developed within the LeRobot project. It reads camera views and an instruction and generates robot actions, using a flow-matching action head on top of a small SmolVLM2 vision-language backbone — the emphasis is on a lightweight model that is practical to run and fine-tune.",
+      "WorldFoundry ships two checkpoints: a base foundation model for fine-tuning, and a LIBERO task checkpoint that is the default for rollouts. The LIBERO checkpoint carries matching 8-D state and 7-D action statistics and produces a 50-step action chunk (1x50x7), while the base model is kept as a fine-tuning asset. Loading is local-only and preserves the official flow-matching architecture and preprocessing."
+    ],
+    "zh": [
+      "SmolVLA 是 Hugging Face 推出的紧凑型视觉-语言-动作策略,在 LeRobot 项目内开发。它读取相机画面与指令并生成机器人动作,在小型 SmolVLM2 视觉-语言主干之上使用 flow-matching 动作头——重点是一个轻量、便于运行与微调的模型。",
+      "WorldFoundry 提供两个 checkpoint:用于微调的基础底座模型,以及作为 rollout 默认的 LIBERO 任务 checkpoint。LIBERO checkpoint 带有匹配的 8 维状态与 7 维动作统计量,输出 50 步动作块(1x50x7);基础模型则保留作为微调资源。加载为纯本地方式,保留官方的 flow-matching 架构与预处理。"
+    ]
+  },
+  "whenToUse": {
+    "en": "When you want a small, practical VLA policy to run manipulation rollouts or fine-tune on your own robot — the LIBERO checkpoint works as a ready default.",
+    "zh": "当你想要一个小巧、实用的 VLA 策略来跑操作 rollout 或在自己的机器人上微调时——LIBERO checkpoint 可作为现成默认。"
+  },
+  "notFor": {
+    "en": "The base foundation checkpoint lacks a complete task state-normalization contract and is meant for fine-tuning, not direct rollout. It also depends on the SmolVLM2 backbone, which is downloaded separately.",
+    "zh": "基础底座 checkpoint 缺少完整的任务状态归一化契约,用于微调而非直接 rollout。它还依赖 SmolVLM2 主干,需单独下载。"
+  },
+  "highlights": {
+    "en": [
+      "Compact VLA policy from Hugging Face's LeRobot",
+      "Flow-matching action head on a SmolVLM2 backbone",
+      "LIBERO task checkpoint is the rollout default (1x50x7 actions)",
+      "Local-only loading; base model reserved for fine-tuning"
+    ],
+    "zh": [
+      "Hugging Face LeRobot 推出的紧凑 VLA 策略",
+      "在 SmolVLM2 主干上使用 flow-matching 动作头",
+      "LIBERO 任务 checkpoint 为 rollout 默认(1x50x7 动作)",
+      "纯本地加载;基础模型保留用于微调"
+    ]
+  }
+}

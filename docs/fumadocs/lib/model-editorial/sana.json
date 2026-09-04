@@ -1,0 +1,41 @@
+{
+  "id": "sana",
+  "tagline": {
+    "en": "NVIDIA's efficient diffusion family — fast high-resolution text-to-image, extended into text-to-video and streaming.",
+    "zh": "NVIDIA 的高效扩散家族——快速的高分辨率文生图,并延伸到文生视频与流式生成。"
+  },
+  "overview": {
+    "en": [
+      "Sana is an efficient text-to-image diffusion family from NVIDIA (NVlabs), designed to generate high-resolution images quickly. In WorldFoundry it also spans text-to-video, video-to-video, and image-conditioned generation, so one family covers still images through video.",
+      "The lineup is broad. Image checkpoints range from a 600M model up to 1.6B and 4.8B variants, at resolutions from 512px and 1024px all the way to 2K and 4K, plus multilingual, BF16, ControlNet, and fast Sana-Sprint options. The video side includes SANA-Video 2B at 480p and 720p, and the SANA-Streaming long and bidirectional video-to-video routes. It uses a Gemma-2 text encoder, and the streaming routes build on a causal LTX-2 VAE.",
+      "Weights live on Hugging Face and are downloaded separately. In WorldFoundry, Sana runs on shared role-based diffusion components (denoiser, encoder, autoencoder, scheduler, and recipe), and the streaming routes accept a source video path or an hf:// URI."
+    ],
+    "zh": [
+      "Sana 是 NVIDIA(NVlabs)推出的高效文生图扩散家族,目标是快速生成高分辨率图像。在 WorldFoundry 中,它还覆盖文生视频、视频到视频以及图像条件生成,因此一个家族即可从静态图像贯通到视频。",
+      "阵容很广。图像 checkpoint 从 600M 到 1.6B、4.8B,分辨率从 512px、1024px 一直到 2K 与 4K,另有多语言、BF16、ControlNet 以及快速的 Sana-Sprint 选项。视频侧包含 480p 与 720p 的 SANA-Video 2B,以及 SANA-Streaming 的长视频与双向视频到视频路由。它使用 Gemma-2 文本编码器,流式路由构建在因果 LTX-2 VAE 之上。",
+      "权重发布在 Hugging Face 上,需单独下载。在 WorldFoundry 中,Sana 运行于共享的、按角色划分的扩散组件(去噪器、编码器、autoencoder、调度器与 recipe)之上,流式路由可接受源视频路径或 hf:// URI。"
+    ]
+  },
+  "whenToUse": {
+    "en": "When you want fast, high-resolution text-to-image generation with room to scale from 512px up to 4K, or need one family that also reaches into text-to-video and streaming video-to-video.",
+    "zh": "当你想要快速、高分辨率的文生图,并希望从 512px 一路扩展到 4K,或需要一个同时能延伸到文生视频与流式视频到视频的家族时。"
+  },
+  "notFor": {
+    "en": "Checkpoints are external Hugging Face downloads rather than bundled, so plan for download and disk space. The many variants also mean you should pick the right size and resolution for your hardware.",
+    "zh": "Checkpoint 是外部 Hugging Face 下载而非随附,请预留下载与磁盘空间。变体众多,也意味着需要按硬件挑选合适的规模与分辨率。"
+  },
+  "highlights": {
+    "en": [
+      "Efficient high-resolution text-to-image, 512px up to 4K",
+      "Sizes from 600M to 1.6B and 4.8B, plus Sana-Sprint and ControlNet",
+      "SANA-Video 2B (480p/720p) and SANA-Streaming video routes",
+      "Gemma-2 text encoder; streaming uses a causal LTX-2 VAE"
+    ],
+    "zh": [
+      "高效的高分辨率文生图,512px 直到 4K",
+      "规模从 600M 到 1.6B、4.8B,另有 Sana-Sprint 与 ControlNet",
+      "SANA-Video 2B(480p/720p)与 SANA-Streaming 视频路由",
+      "Gemma-2 文本编码器;流式路由使用因果 LTX-2 VAE"
+    ]
+  }
+}

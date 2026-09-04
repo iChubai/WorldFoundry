@@ -12,16 +12,31 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+"""Inference-time distributed init and rank predicates.
+
+``dist_init`` brings up the process group with a generous timeout so a
+slow rank-0 download does not abort NCCL. :func:`is_last_rank` /
+:func:`is_last_tp_cp_rank` decide who writes artifacts: only the last
+TP×CP rank should dump video so shards do not overwrite each other.
+
+This is not FSDP/PP setup — those live in ``fsdp_runtime`` and
+``pipeline_parallel``.
+"""
+
 import os
 from datetime import timedelta
 
 import torch
 
+import worldfoundry.core.distributed.model_parallel_groups as mpu
 from worldfoundry.core.distributed.logging import print_rank_0
 from worldfoundry.core.distributed.pipeline_parallel import init_pp_scheduler
 
-from . import model_parallel_groups as mpu
 from .generic_collectives import get_world_size  # noqa: F401 - public compatibility export
+
+# ──────────────────────────────────────────────────────────────────────────
+# Inference process-group + CP/PP mesh — not a wrapper of init_torch_distributed
+# ──────────────────────────────────────────────────────────────────────────
 
 
 def dist_init(config):
@@ -37,7 +52,14 @@ def dist_init(config):
         requires CUDA, binds each rank to a local device, verifies
         ``cp_size * pp_size == world_size``, and initializes the pipeline
         scheduler when pipeline parallelism is active.
+
+    CC-17 WONTFIX: not a wrapper of ``init_torch_distributed``. Backend and
+    timeout come from ``config``, device binding is ``rank % device_count``
+    (not ``LOCAL_RANK``), and this function also creates CP/PP groups plus
+    the PP scheduler.
     """
+    # CC-17 WONTFIX: keep this body. Different default backend, required env,
+    # device binding, and extra group creation — wrapping would change behavior.
 
     assert torch.cuda.is_available()
     device_count = torch.cuda.device_count()
@@ -74,6 +96,11 @@ def dist_init(config):
     print_rank_0("Initialize torch distribution and model parallel successfully")
 
 
+# ──────────────────────────────────────────────────────────────────────────
+# Artifact-writer predicates and backend device — last TP×CP rank dumps video
+# ──────────────────────────────────────────────────────────────────────────
+
+
 def is_last_rank():
     """Return whether this worker is the final rank in the global process group."""
     return torch.distributed.get_rank() == (torch.distributed.get_world_size() - 1)
@@ -85,6 +112,12 @@ def is_last_tp_cp_rank():
 
 
 def get_device(local_rank=None):
+    """Map the process-group backend to the tensor device collectives must use.
+
+    NCCL tensors live on CUDA; Gloo is CPU-only. Any other backend is refused
+    rather than guessed — a silent CPU fallback would hang the first NCCL op.
+    """
+
     backend = torch.distributed.get_backend()
     if backend == "nccl":
         if local_rank is None:

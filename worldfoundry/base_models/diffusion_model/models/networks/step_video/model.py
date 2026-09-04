@@ -10,7 +10,16 @@
 # The above copyright notice and this permission notice shall be included in all
 # copies or substantial portions of the Software.
 # ==============================================================================
-"""Module for base_models -> diffusion_model -> video -> step_video -> step_video_runtime -> stepvideo -> modules -> model.py functionality."""
+"""StepVideo DiT: per-frame 2D patch embed + AdaLN-single transformer.
+
+Architecture
+------------
+Input latents are ``B F C H W``.  :meth:`patchfy` rearranges to
+``(B·F) C H W``, Conv2d-patches to ``(B·F) (H'W') C``, then the stack
+sees ``B (F·H'·W') C`` with 3D RoPE over ``(F, H', W')``.  Text is
+PixArt-projected (optional CLIP concat).  The head AdaLN-modulates
+per-frame tokens and unpatchifies to ``B F C H W``.
+"""
 
 from types import SimpleNamespace
 from typing import Dict, Optional
@@ -23,7 +32,8 @@ from .normalization import AdaLayerNormSingle, PixArtAlphaTextProjection
 
 
 class StepVideoModel(nn.Module):
-    """Step video model implementation."""
+    """Checkpoint-compatible StepVideo transformer (AdaLN-single, 3D RoPE)."""
+
     _no_split_modules = ["StepVideoTransformerBlock", "PatchEmbed"]
 
     def __init__(
@@ -42,23 +52,6 @@ class StepVideoModel(nn.Module):
         caption_channels: Optional[int]|list|tuple = [6144, 1024],
         attention_type: Optional[str] = "torch",
     ):
-        """Init.
-
-        Args:
-            num_attention_heads: The num attention heads.
-            attention_head_dim: The attention head dim.
-            in_channels: The in channels.
-            out_channels: The out channels.
-            num_layers: The num layers.
-            dropout: The dropout.
-            patch_size: The patch size.
-            norm_type: The norm type.
-            norm_elementwise_affine: The norm elementwise affine.
-            norm_eps: The norm eps.
-            use_additional_conditions: The use additional conditions.
-            caption_channels: The caption channels.
-            attention_type: The attention type.
-        """
         super().__init__()
 
         self.config = SimpleNamespace(
@@ -118,23 +111,13 @@ class StepVideoModel(nn.Module):
         self.parallel = attention_type=='parallel'
 
     def patchfy(self, hidden_states):
-        """Patchfy.
-
-        Args:
-            hidden_states: The hidden states.
-        """
+        """Fold ``B F C H W`` into per-frame 2D patches ``(B·F) (H'W') C``."""
         hidden_states = rearrange(hidden_states, 'b f c h w -> (b f) c h w')
         hidden_states = self.pos_embed(hidden_states)
         return hidden_states
 
     def prepare_attn_mask(self, encoder_attention_mask, encoder_hidden_states, q_seqlen):
-        """Prepare attn mask.
-
-        Args:
-            encoder_attention_mask: The encoder attention mask.
-            encoder_hidden_states: The encoder hidden states.
-            q_seqlen: The q seqlen.
-        """
+        """Build a boolean ``[B, Q, max_kv]`` mask and crop padded text tokens."""
         kv_seqlens = encoder_attention_mask.sum(dim=1).int()
         mask = torch.zeros([len(kv_seqlens), q_seqlen, max(kv_seqlens)], dtype=torch.bool, device=encoder_attention_mask.device)
         encoder_hidden_states = encoder_hidden_states[:,: max(kv_seqlens)]
@@ -152,16 +135,7 @@ class StepVideoModel(nn.Module):
         attn_mask=None,
         parallel=True
     ):
-        """Block forward.
-
-        Args:
-            hidden_states: The hidden states.
-            encoder_hidden_states: The encoder hidden states.
-            timestep: The timestep.
-            rope_positions: The rope positions.
-            attn_mask: The attn mask.
-            parallel: The parallel.
-        """
+        """Run the AdaLN transformer stack on ``B (F·S) C`` video tokens."""
 
         for i, block in enumerate(self.transformer_blocks):
             hidden_states = block(
@@ -187,18 +161,7 @@ class StepVideoModel(nn.Module):
         fps: torch.Tensor=None,
         return_dict: bool = True,
     ):
-        """Forward.
-
-        Args:
-            hidden_states: The hidden states.
-            encoder_hidden_states: The encoder hidden states.
-            encoder_hidden_states_2: The encoder hidden states 2.
-            timestep: The timestep.
-            added_cond_kwargs: The added cond kwargs.
-            encoder_attention_mask: The encoder attention mask.
-            fps: The fps.
-            return_dict: The return dict.
-        """
+        """Denoise ``B F C H W`` latents; return the same layout (or ``{'x': ...}``)."""
         assert hidden_states.ndim==5; "hidden_states's shape should be (bsz, f, ch, h ,w)"
 
         bsz, frame, _, height, width = hidden_states.shape

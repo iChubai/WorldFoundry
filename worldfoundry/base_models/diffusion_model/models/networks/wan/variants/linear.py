@@ -1,6 +1,13 @@
 # Copyright 2024-2025 The Alibaba Wan Team Authors. All rights reserved.
-"""Module for base_models -> diffusion_model -> video -> wan -> models -> linear_wan.py functionality."""
+"""Linear-attention Wan 2.1 / Sana-Video DiT (official packing).
 
+Replaces selected self-attention layers with ReLU / power linear
+attention (MLLA, STConv, LePE variants).  Flash attention remains
+available per layer via ``self_attn_types``.  TeaCache-style
+:class:`BlockHook` / :class:`AttentionHook` can snapshot activations.
+
+Adds linear attention and TeaCache hooks.  No VACE or causal cache.
+"""
 import math
 from typing import Optional
 
@@ -17,7 +24,7 @@ __all__ = ["WanModel"]
 
 
 class AttentionHook:
-    """Attention hook implementation."""
+    """Stores one attention output tensor for TeaCache / debug inspection."""
 
     output = None
 
@@ -57,7 +64,7 @@ def cosine_similarity(x, y, dim=1):
 
 
 class BlockHook:
-    """Block hook implementation."""
+    """TeaCache-style block hook: snapshot or skip a transformer block."""
 
     x_in = None
     x_self_attn = None
@@ -148,12 +155,7 @@ class BlockHook:
 
 
 def sinusoidal_embedding_1d(dim, position):
-    """Sinusoidal embedding 1d.
-
-    Args:
-        dim: The dim.
-        position: The position.
-    """
+    """Classic sinusoidal features for 1-D timestep / position ids."""
     # preprocess
     assert dim % 2 == 0
     half = dim // 2
@@ -167,13 +169,7 @@ def sinusoidal_embedding_1d(dim, position):
 
 @amp.autocast(enabled=False)
 def rope_params(max_seq_len, dim, theta=10000):
-    """Rope params.
-
-    Args:
-        max_seq_len: The max seq len.
-        dim: The dim.
-        theta: The theta.
-    """
+    """Build complex cis frequencies for one RoPE axis."""
     assert dim % 2 == 0
     freqs = torch.outer(
         torch.arange(max_seq_len), 1.0 / torch.pow(theta, torch.arange(0, dim, 2).to(torch.float64).div(dim))
@@ -184,13 +180,7 @@ def rope_params(max_seq_len, dim, theta=10000):
 
 @amp.autocast(enabled=False)
 def rope_apply(x, grid_sizes, freqs):
-    """Rope apply.
-
-    Args:
-        x: The x.
-        grid_sizes: The grid sizes.
-        freqs: The freqs.
-    """
+    """Apply per-sample 3D RoPE to packed tokens; leave pad tokens unrotated."""
     n, c = x.size(2), x.size(3) // 2
 
     # split freqs
@@ -222,7 +212,7 @@ def rope_apply(x, grid_sizes, freqs):
 
 
 class WanRMSNorm(nn.Module):
-    """Wan rms norm implementation."""
+    """RMSNorm with a learned scale; compute in fp32 when the impl upcasts."""
 
     def __init__(self, dim, eps=1e-5):
         """Init.
@@ -244,16 +234,12 @@ class WanRMSNorm(nn.Module):
         return self._norm(x.float()).type_as(x) * self.weight
 
     def _norm(self, x):
-        """Helper function to norm.
-
-        Args:
-            x: The x.
-        """
+        """RMS-normalize the last dim of ``x``."""
         return x * torch.rsqrt(x.pow(2).mean(dim=-1, keepdim=True) + self.eps)
 
 
 class WanLayerNorm(nn.LayerNorm):
-    """Wan layer norm implementation."""
+    """LayerNorm that typically upcasts to fp32, then restores the activation dtype."""
 
     def __init__(self, dim, eps=1e-6, elementwise_affine=False):
         """Init.
@@ -274,7 +260,7 @@ class WanLayerNorm(nn.LayerNorm):
 
 
 class WanSelfAttention(nn.Module):
-    """Wan self attention implementation."""
+    """Wan self-attention: RMSNorm Q/K, 3D RoPE, flash or variant kernel."""
 
     def __init__(self, dim, num_heads, window_size=(-1, -1), qk_norm=True, eps=1e-6, **kwargs):
         """Init.
@@ -318,11 +304,7 @@ class WanSelfAttention(nn.Module):
 
         # query, key, value function
         def qkv_fn(x):
-            """Qkv fn.
-
-            Args:
-                x: The x.
-            """
+            """Project and reshape QKV to ``[B, L, H, D]``."""
             q = self.norm_q(self.q(x)).view(b, s, n, d)
             k = self.norm_k(self.k(x)).view(b, s, n, d)
             v = self.v(x).view(b, s, n, d)
@@ -351,7 +333,7 @@ class WanSelfAttention(nn.Module):
 
 
 class WanLinearAttention(WanSelfAttention):
-    """Wan linear attention implementation."""
+    """ReLU / power linear self-attention used in place of flash MSA."""
 
     PAD_VAL = 1
 
@@ -404,11 +386,7 @@ class WanLinearAttention(WanSelfAttention):
         x_dtype = x.dtype
 
         def qkv_fn(x):
-            """Qkv fn.
-
-            Args:
-                x: The x.
-            """
+            """Project and reshape QKV to ``[B, L, H, D]``."""
             q = self.norm_q(self.q(x)).view(b, s, n, d)
             k = self.norm_k(self.k(x)).view(b, s, n, d)
             v = self.v(x).view(b, s, n, d)
@@ -484,7 +462,7 @@ class WanLinearAttention(WanSelfAttention):
 
 
 class STConv(nn.Module):
-    """St conv implementation."""
+    """Space-time depthwise conv used by MLLA linear attention."""
 
     def __init__(self, in_dim, out_dim, kernel_size=3, stride=1, padding=1):
         """Init.
@@ -516,7 +494,7 @@ class STConv(nn.Module):
 
 
 class MLLALinearAttention(WanLinearAttention):
-    """Mlla linear attention implementation."""
+    """MLLA linear attention (ReLU kernel + optional conv)."""
 
     def __init__(self, dim, num_heads, window_size=(-1, -1), qk_norm=True, eps=1e-6, **kwargs):
         """Init.
@@ -554,11 +532,7 @@ class MLLALinearAttention(WanLinearAttention):
         x_dtype = x.dtype
 
         def qkv_fn(x):
-            """Qkv fn.
-
-            Args:
-                x: The x.
-            """
+            """Project and reshape QKV to ``[B, L, H, D]``."""
             q = self.norm_q(self.q(x)).view(b, s, n, d)
             k = self.norm_k(self.k(x)).view(b, s, n, d)
             v = self.v(x).view(b, s, n, d)
@@ -584,7 +558,7 @@ class MLLALinearAttention(WanLinearAttention):
 
 
 class MLLALePEAttention(WanLinearAttention):
-    """Mlla le pe attention implementation."""
+    """MLLA linear attention with locally-enhanced positional encoding."""
 
     def __init__(self, dim, num_heads, window_size=(-1, -1), qk_norm=True, eps=1e-6, **kwargs):
         """Init.
@@ -623,11 +597,7 @@ class MLLALePEAttention(WanLinearAttention):
         x_dtype = x.dtype
 
         def qkv_fn(x):
-            """Qkv fn.
-
-            Args:
-                x: The x.
-            """
+            """Project and reshape QKV to ``[B, L, H, D]``."""
             q = self.norm_q(self.q(x)).view(b, s, n, d)
             k = self.norm_k(self.k(x)).view(b, s, n, d)
             v = self.v(x).view(b, s, n, d)
@@ -659,7 +629,7 @@ class MLLALePEAttention(WanLinearAttention):
 
 
 class WanT2VCrossAttention(WanSelfAttention):
-    """Wan v cross attention implementation."""
+    """Wan text or image-text cross-attention."""
 
     def forward(self, x, context, context_lens):
         r"""
@@ -685,7 +655,7 @@ class WanT2VCrossAttention(WanSelfAttention):
 
 
 class WanI2VCrossAttention(WanSelfAttention):
-    """Wan v cross attention implementation."""
+    """Wan text or image-text cross-attention."""
 
     def __init__(self, dim, num_heads, window_size=(-1, -1), qk_norm=True, eps=1e-6):
         """Init.
@@ -748,7 +718,7 @@ WAN_SELFATTENTION_CLASSES = {
 
 
 class WanAttentionBlock(nn.Module):
-    """Wan attention block implementation."""
+    """Wan transformer block: AdaLN self-attn, cross-attn, then AdaLN FFN."""
 
     def __init__(
         self,
@@ -899,7 +869,7 @@ class WanAttentionBlock(nn.Module):
 
 
 class Head(nn.Module):
-    """Head implementation."""
+    """AdaLN-modulated output projection from tokens to packed patch voxels."""
 
     def __init__(self, dim, out_dim, patch_size, eps=1e-6):
         """Init.
@@ -939,7 +909,7 @@ class Head(nn.Module):
 
 
 class MLPProj(torch.nn.Module):
-    """Mlp proj implementation."""
+    """CLIP image-token projector (I2V / FLF2V)."""
 
     def __init__(self, in_dim, out_dim):
         """Init.
@@ -969,9 +939,7 @@ class MLPProj(torch.nn.Module):
 
 
 class WanModel(nn.Module, NativeConfigMixin):
-    r"""
-    Wan diffusion backbone supporting both text-to-video and image-to-video.
-    """
+    r"""Wan 2.1 official-layout stem; subclassed by the linear-attention variant."""
 
     # ignore_for_config = ["patch_size", "cross_attn_norm", "qk_norm", "text_dim", "window_size"]
     ignore_for_config = ["cross_attn_norm", "qk_norm", "text_dim", "window_size"]
@@ -1267,7 +1235,7 @@ class WanModel(nn.Module, NativeConfigMixin):
 
 
 class WanLinearAttentionModel(WanModel):
-    """Wan linear attention model implementation."""
+    """Wan 2.1 stem whose self-attn layers can be flash or linear."""
 
     ignore_for_config = ["cross_attn_norm", "qk_norm", "text_dim", "window_size"]
 

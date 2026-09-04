@@ -1,0 +1,41 @@
+{
+  "id": "hyworld-worldgen",
+  "tagline": {
+    "en": "HY-World 2.0 Trajectory Renderer — Tencent Hunyuan's camera-controlled render stage over a pre-built 3D world scene.",
+    "zh": "HY-World 2.0 轨迹渲染器——腾讯混元在预构建 3D 世界场景上做相机可控渲染的阶段。"
+  },
+  "overview": {
+    "en": [
+      "The HY-World 2.0 Trajectory Renderer is the camera-controlled rendering stage of Tencent Hunyuan's HY-World 2.0. Given a pre-materialized HY-World scene and a camera path, it renders video along that trajectory — point-cloud rendering that moves a virtual camera through an existing 3D world.",
+      "This route is specifically the trajectory-render stage: it takes an image, a camera JSON describing the path, and a scene's point cloud, and produces camera-controlled video. It deliberately loads no model checkpoint — the geometry comes from the scene, not from generated weights — and includes an in-tree point-splat fallback so it doesn't require PyTorch3D.",
+      "In WorldFoundry, the one asset you need to supply is a pre-materialized local HY-World scene (its point cloud); the image and camera JSON are ordinary inputs. Building that scene is the job of the separate full HY-World generation pipeline, not this stage."
+    ],
+    "zh": [
+      "HY-World 2.0 轨迹渲染器是腾讯混元 HY-World 2.0 中的相机可控渲染阶段。给定一个已构建好的 HY-World 场景和一条相机路径，它沿该轨迹渲染视频——通过点云渲染，让虚拟相机在既有 3D 世界中移动。",
+      "这条路径专指轨迹渲染阶段：它接受一张图像、一份描述路径的相机 JSON 和场景的点云，产出相机可控的视频。它有意不加载任何模型 checkpoint——几何来自场景本身，而非生成的权重——并内置了点 splat 回退，因此无需 PyTorch3D。",
+      "在 WorldFoundry 中，你唯一需要提供的资产是一个已构建好的本地 HY-World 场景（其点云）；图像与相机 JSON 是常规输入。构建该场景属于独立的完整 HY-World 生成 pipeline，而非此阶段。"
+    ]
+  },
+  "whenToUse": {
+    "en": "Use this renderer when you already have a materialized HY-World scene and want to fly a camera through it along a defined trajectory to produce point-cloud-rendered video.",
+    "zh": "当你已有一个构建好的 HY-World 场景，想沿定义好的轨迹让相机穿越并产出点云渲染视频时，可用此渲染器。"
+  },
+  "notFor": {
+    "en": "It doesn't generate a world from scratch — that's the separate full HY-World pipeline's job. It needs a pre-materialized scene point cloud on hand before rendering.",
+    "zh": "它不从零生成世界——那是独立的完整 HY-World pipeline 的职责。渲染前需备有已构建好的场景点云。"
+  },
+  "highlights": {
+    "en": [
+      "Camera-controlled video from a pre-built HY-World scene",
+      "Point-cloud rendering along a camera JSON trajectory",
+      "Loads no model checkpoint — geometry comes from the scene",
+      "In-tree point-splat fallback; no PyTorch3D required"
+    ],
+    "zh": [
+      "在预构建的 HY-World 场景上生成相机可控视频",
+      "沿相机 JSON 轨迹做点云渲染",
+      "不加载任何模型 checkpoint——几何来自场景",
+      "内置点 splat 回退，无需 PyTorch3D"
+    ]
+  }
+}

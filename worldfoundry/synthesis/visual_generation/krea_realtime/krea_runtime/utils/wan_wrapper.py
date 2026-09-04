@@ -13,7 +13,7 @@ from worldfoundry.base_models.diffusion_model.models.networks.wan.variants.forci
 from worldfoundry.base_models.diffusion_model.models.networks.wan.variants.forcing.krea import CausalWanModel
 from worldfoundry.base_models.diffusion_model.loaders.wan_variant import load_wan_transformer
 import os
-from settings import MODEL_FOLDER
+from settings import resolve_model_asset, resolve_model_path
 
 
 from safetensors.torch import load_file as safe_load_file
@@ -28,13 +28,19 @@ class WanTextEncoder(torch.nn.Module):
             dtype=torch.float32,
             device=torch.device('cuda')
         ).eval().requires_grad_(False)
-        self.text_encoder.load_state_dict(
-            safe_load_file(os.path.join(MODEL_FOLDER, "Wan2.1-T2V-1.3B", "models_t5_umt5-xxl-enc-bf16.safetensors"),
-                       device='cuda')
+        text_encoder_path = resolve_model_asset(
+            "Wan2.1-T2V-1.3B",
+            "models_t5_umt5-xxl-enc-bf16.safetensors",
+            "models_t5_umt5-xxl-enc-bf16.pth",
         )
+        if text_encoder_path.suffix == ".safetensors":
+            state_dict = safe_load_file(str(text_encoder_path), device="cuda")
+        else:
+            state_dict = torch.load(text_encoder_path, map_location="cuda", weights_only=True)
+        self.text_encoder.load_state_dict(state_dict)
 
         self.tokenizer = HuggingfaceTokenizer(
-            name=os.path.join(MODEL_FOLDER, "Wan2.1-T2V-1.3B", "google", "umt5-xxl/"), seq_len=512, clean='whitespace')
+            name=str(resolve_model_path("Wan2.1-T2V-1.3B") / "google" / "umt5-xxl"), seq_len=512, clean='whitespace')
 
     @property
     def device(self):
@@ -71,7 +77,7 @@ class WanVAEWrapper(torch.nn.Module):
         self.std = torch.tensor(std, dtype=torch.float32)
 
         # init model
-        vae_path = os.path.join(MODEL_FOLDER, "Wan2.1-T2V-1.3B", "Wan2.1_VAE.pth")
+        vae_path = str(resolve_model_asset("Wan2.1-T2V-1.3B", "Wan2.1_VAE.pth"))
         self.model = _video_vae(
             pretrained_path=vae_path,
             z_dim=16,
@@ -133,7 +139,7 @@ class WanDiffusionWrapper(torch.nn.Module):
         super().__init__()
 
         print("Loading WAN model, with name", model_name)
-        model_path = os.path.join(MODEL_FOLDER, model_name)
+        model_path = str(resolve_model_path(model_name))
         del meta_init
         if is_causal:
             self.model = load_wan_transformer(

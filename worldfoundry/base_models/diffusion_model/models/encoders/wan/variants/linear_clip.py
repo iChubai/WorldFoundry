@@ -1,6 +1,17 @@
 # Modified from ``https://github.com/openai/CLIP'' and ``https://github.com/mlfoundations/open_clip''
 # Copyright 2024-2025 The Alibaba Wan Team Authors. All rights reserved.
-"""Module for base_models -> diffusion_model -> video -> wan -> media_encoders -> linear_clip.py functionality."""
+"""Linear-projection CLIP variant used by some Wan world models.
+
+Same XLM-RoBERTa + ViT CLIP family as :mod:`~..clip`, but
+the projection head matches linear-attention / world-model
+checkpoints.  :class:`CLIPModel` is the public surface.
+
+Token layout remains CLIP visual / text embeddings for
+``Conditioning.shared``.  Default I2V should keep
+:mod:`~..clip`.
+
+Wan CLIP variant, sibling of :mod:`.action_clip`.
+"""
 
 import logging
 import math

@@ -1,0 +1,41 @@
+{
+  "id": "abot-world-0-5b-lf",
+  "tagline": {
+    "en": "An interactive world model that turns a starting image and actions into a continuously rolling video.",
+    "zh": "一个交互式世界模型，把起始图片与动作序列续写成连续滚动的视频。"
+  },
+  "overview": {
+    "en": [
+      "ABot-World is an interactive, action-conditioned world model from the amap-cvlab team. Starting from a single image, it generates a video of how the scene unfolds and lets you steer that future with actions, block by block.",
+      "This is the 0.5B-LF (low-frame / fast) causal variant, built on Wan-family components — Wan attention, a T5 text encoder, and the Wan2.2 VAE — with FP8 support. It keeps a resident causal state across action blocks, so each new block continues from the last: the first block returns 9 RGB frames and subsequent blocks return 12, rendering at 1280×704.",
+      "In WorldFoundry it runs offline-first from a local checkpoint. You give it a starting frame, then drive the rollout with actions, and it streams out the evolving world as decodable video."
+    ],
+    "zh": [
+      "ABot-World 是高德视觉实验室（amap-cvlab）团队的交互式、动作条件化世界模型。它从一张图片出发，生成场景如何演变的视频，并让你用动作一块（block）接一块地引导这个未来。",
+      "这是 0.5B-LF（低帧率 / 快速）因果变体，构建在 Wan 系列组件之上——Wan 注意力、T5 文本编码器与 Wan2.2 VAE——并支持 FP8。它在各动作块之间保持常驻的因果状态，因此每个新块都从上一块续写：首块返回 9 帧 RGB，后续块返回 12 帧，渲染分辨率为 1280×704。",
+      "在 WorldFoundry 中，它以离线优先方式从本地 checkpoint 运行。你给它一帧起始画面，再用动作推进推演，它便把不断演变的世界以可解码视频的形式流式输出。"
+    ]
+  },
+  "whenToUse": {
+    "en": "Use it when you want an interactive world model that rolls forward from an image under your action inputs — useful for exploring how a scene responds to control, block by block.",
+    "zh": "当你想要一个交互式世界模型、从一张图片出发在你的动作输入下不断向前推演时使用——便于逐块探索场景如何响应控制。"
+  },
+  "notFor": {
+    "en": "Not a one-shot text-to-video tool — it is action-driven and rolls out in short blocks. It runs offline from a local checkpoint directory, so stage the weights before use.",
+    "zh": "它不是一次成片的文生视频工具——它由动作驱动、以短块方式推演。它从本地 checkpoint 目录离线运行，请先把权重放好再使用。"
+  },
+  "highlights": {
+    "en": [
+      "Interactive, action-conditioned world model built on Wan components",
+      "Lightweight 0.5B causal variant with FP8 support",
+      "Resident causal state carries across action blocks",
+      "Renders at 1280×704; first block 9 frames, later blocks 12"
+    ],
+    "zh": [
+      "构建于 Wan 组件之上的交互式、动作条件化世界模型",
+      "轻量 0.5B 因果变体，支持 FP8",
+      "常驻因果状态在各动作块间延续",
+      "渲染分辨率 1280×704；首块 9 帧，后续块 12 帧"
+    ]
+  }
+}

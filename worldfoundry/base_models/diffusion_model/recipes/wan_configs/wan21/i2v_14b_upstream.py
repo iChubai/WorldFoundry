@@ -1,5 +1,14 @@
 # Copyright 2024-2025 The Alibaba Wan Team Authors. All rights reserved.
-"""Module for base_models -> diffusion_model -> video -> wan -> wan_2p1 -> configs -> wan_i2v_14B_upstream.py functionality."""
+"""Upstream-layout Wan 2.1 I2V 14B EasyDict (no extra neg-prompt prefix).
+
+Same architecture as :mod:`.i2v_14b` (UMT5-XXL, OpenCLIP ViT-H/14,
+Wan2.1 VAE, 40×5120 DiT) but keeps the shared negative prompt
+unchanged.  Imported by action-21 recipes that want the official
+Alibaba filename layout.
+
+Do not mix this object with :data:`i2v_14b.i2v_14B` when comparing
+sampler prompts; only the neg-prompt string differs.
+"""
 
 import torch
 

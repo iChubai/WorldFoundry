@@ -1,0 +1,41 @@
+{
+  "id": "worldgrow",
+  "tagline": {
+    "en": "A world-generation model that grows 3D scenes by progressive expansion, building on a TRELLIS-style 3D generation backbone.",
+    "zh": "一个通过逐步扩展来生成三维场景的世界生成模型,基于 TRELLIS 式的三维生成骨干。"
+  },
+  "overview": {
+    "en": [
+      "WorldGrow is a world-generation model focused on building 3D scenes that can grow — expanding a scene outward step by step rather than producing everything at once. This lets it construct larger, coherent worlds through progressive scene expansion.",
+      "It builds on TRELLIS-style 3D generation and is distributed as upstream source with checkpoints. In WorldFoundry the source and configuration are registered so you can resolve its config and inference route; the checkpoints and TRELLIS assets are staged separately.",
+      "The checkpoint's licensing needs review before use, and the runtime lists the assets it requires before real scene generation."
+    ],
+    "zh": [
+      "WorldGrow 是一个世界生成模型,专注于构建能够生长的三维场景——逐步向外扩展场景,而非一次性生成全部内容。这让它可以通过渐进式的场景扩展,构建更大、更连贯的世界。",
+      "它基于 TRELLIS 式的三维生成,以上游源码加 checkpoint 形式发布。在 WorldFoundry 中,其源码与配置已被注册,你可以解析它的配置与推理路径;checkpoint 与 TRELLIS 素材需另行准备。",
+      "checkpoint 的许可在使用前需要审阅,运行时也会在真实场景生成前列出所需素材。"
+    ]
+  },
+  "whenToUse": {
+    "en": "Use WorldGrow when you want to generate or progressively expand large 3D scenes rather than produce a single fixed shot or object.",
+    "zh": "当你想生成或渐进式扩展大型三维场景,而非产出单一固定镜头或物体时,适合使用 WorldGrow。"
+  },
+  "notFor": {
+    "en": "It is a research codebase; you must review the checkpoint's licensing and stage the checkpoints and TRELLIS assets before it can generate.",
+    "zh": "它是研究代码库;你需要审阅 checkpoint 的许可,并准备好 checkpoint 与 TRELLIS 素材,它才能生成。"
+  },
+  "highlights": {
+    "en": [
+      "Generates 3D scenes through progressive expansion",
+      "Builds on a TRELLIS-style 3D generation backbone",
+      "Distributed as upstream source with checkpoints",
+      "Checkpoint licensing should be reviewed before use"
+    ],
+    "zh": [
+      "通过渐进式扩展生成三维场景",
+      "基于 TRELLIS 式的三维生成骨干",
+      "以上游源码加 checkpoint 形式发布",
+      "checkpoint 许可在使用前需审阅"
+    ]
+  }
+}

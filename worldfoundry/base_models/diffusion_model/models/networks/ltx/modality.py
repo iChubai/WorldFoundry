@@ -1,3 +1,10 @@
+"""Packed per-modality inputs for the LTX transformer.
+
+A :class:`Modality` is already tokenized: ``latent`` is ``B T D`` (not
+``B C T H W``).  Video ``positions`` are 3-axis patch bounds; audio is
+1-D time.  The preprocessor turns this bundle into :class:`TransformerArgs`.
+"""
+
 from __future__ import annotations
 
 import dataclasses

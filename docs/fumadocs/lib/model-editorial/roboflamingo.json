@@ -1,0 +1,41 @@
+{
+  "id": "roboflamingo",
+  "tagline": {
+    "en": "A vision-language-model robot policy built on OpenFlamingo — turn images and instructions into action.",
+    "zh": "基于 OpenFlamingo 的视觉-语言模型机器人策略——把图像与指令转化为动作。"
+  },
+  "overview": {
+    "en": [
+      "RoboFlamingo adapts a vision-language model into a robot policy. It builds on the OpenFlamingo backbone (with an MPT language model) to turn camera images and language instructions into robot actions, showing that a capable VLM can be fine-tuned into an effective manipulation policy.",
+      "WorldFoundry vendors the RoboFlamingo/OpenFlamingo architecture and inference code in-tree and stages the released RoboFlamingo policy checkpoint together with its OpenFlamingo and MPT backbone components. It runs as a VLM/VLA policy that emits action traces, not video.",
+      "In WorldFoundry you run the policy route with the staged checkpoints to produce robot action traces."
+    ],
+    "zh": [
+      "RoboFlamingo 把一个视觉-语言模型改造成机器人策略。它以 OpenFlamingo 骨干（搭配 MPT 语言模型）为基础，把相机图像与语言指令转化为机器人动作，表明一个强大的 VLM 可以被微调成有效的操作策略。",
+      "WorldFoundry 将 RoboFlamingo/OpenFlamingo 的架构与推理代码内置于代码库，并将已发布的 RoboFlamingo 策略 checkpoint 连同其 OpenFlamingo 与 MPT 骨干组件一并准备好。它作为输出动作轨迹（而非视频）的 VLM/VLA 策略运行。",
+      "在 WorldFoundry 中，你用准备好的 checkpoint 运行策略路径，即可产出机器人动作轨迹。"
+    ]
+  },
+  "whenToUse": {
+    "en": "Use it when you want a VLM-based robot policy — mapping camera images and instructions to actions using an OpenFlamingo-derived backbone.",
+    "zh": "当你想要一个基于 VLM 的机器人策略时使用——用源自 OpenFlamingo 的骨干把相机图像与指令映射为动作。"
+  },
+  "notFor": {
+    "en": "Not a video or image generator — its output is action traces and it stays within the embodied-action pipeline. It needs the RoboFlamingo, OpenFlamingo, and MPT components staged together.",
+    "zh": "它不是视频或图像生成器——输出为动作轨迹，且只在具身动作 pipeline 内使用。它需要 RoboFlamingo、OpenFlamingo 与 MPT 组件一并准备好。"
+  },
+  "highlights": {
+    "en": [
+      "VLM-based robot manipulation policy",
+      "Built on the OpenFlamingo backbone with an MPT language model",
+      "Outputs robot action traces",
+      "In-tree architecture and inference code"
+    ],
+    "zh": [
+      "基于 VLM 的机器人操作策略",
+      "构建于 OpenFlamingo 骨干，搭配 MPT 语言模型",
+      "输出机器人动作轨迹",
+      "架构与推理代码内置"
+    ]
+  }
+}

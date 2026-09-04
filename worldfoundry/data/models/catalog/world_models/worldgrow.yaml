@@ -13,6 +13,8 @@ source:
   hf_repo_id: UranusITS/WorldGrow
   license: manual_review:missing_root_license
 official_sources:
+  project_page: https://world-grow.github.io/
+  paper: https://arxiv.org/abs/2510.21682
   github:
     url: https://github.com/world-grow/WorldGrow
     head_sha: 1f2ac49c30fd1390a810a201019ed26c02487883

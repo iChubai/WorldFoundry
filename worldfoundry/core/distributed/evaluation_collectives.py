@@ -1,26 +1,52 @@
-"""Small process-group helpers shared by evaluation runtimes."""
+"""Process-group helpers shared by evaluation runtimes.
+
+Eval jobs often run one process per GPU without TP. These helpers
+gather predictions and broadcast prompts on the default group so a
+metric script does not import model-parallel state.
+"""
 
 from __future__ import annotations
 
 import math
 import os
 import pickle
+import warnings
 from typing import Any
 
 import torch
 from torch import distributed as dist
 
+import worldfoundry.core.distributed.torch_process_group as _torch_process_group
+
 from .generic_collectives import get_collective_device, get_rank, get_world_size
+
+# ──────────────────────────────────────────────────────────────────────────
+# Rank-0 I/O and process-group init — eval jobs skip model-parallel state
+# ──────────────────────────────────────────────────────────────────────────
 
 
 def print0(*args, **kwargs) -> None:
+    """Print only on global rank 0 so metric scripts do not N-way spam stdout."""
+
     if get_rank() == 0:
         print(*args, **kwargs)
 
 
 def dist_init() -> None:
-    """Initialize a default process group from torchrun-style environment variables."""
+    """Initialize a default process group from torchrun-style environment variables.
 
+    Deprecated: call
+    :func:`worldfoundry.core.distributed.torch_process_group.init_torch_distributed`
+    after publishing the same env fallbacks. ``MASTER_*`` / rank defaults and
+    the CUDA→nccl / CPU→gloo backend choice are unchanged (CC-17).
+    """
+
+    warnings.warn(
+        "worldfoundry.core.distributed.evaluation_collectives.dist_init is deprecated; "
+        "use worldfoundry.core.distributed.torch_process_group.init_torch_distributed",
+        DeprecationWarning,
+        stacklevel=2,
+    )
     if dist.is_available() and dist.is_initialized():
         return
     os.environ.setdefault("MASTER_ADDR", "localhost")
@@ -31,7 +57,10 @@ def dist_init() -> None:
     use_cuda = torch.cuda.is_available()
     if use_cuda:
         torch.cuda.set_device(int(os.environ["LOCAL_RANK"]))
-    dist.init_process_group(backend="nccl" if use_cuda else "gloo", init_method="env://")
+    _torch_process_group.init_torch_distributed(
+        backend="nccl" if use_cuda else "gloo",
+        init_method="env://",
+    )
 
 
 def all_gather(value: Any) -> list[Any]:
@@ -86,20 +115,33 @@ def all_gather(value: Any) -> list[Any]:
     ]
 
 
+# ──────────────────────────────────────────────────────────────────────────
+# Eval gather helpers — pickle objects or shard a list without TP/CP
+# ──────────────────────────────────────────────────────────────────────────
+
+
 def barrier() -> None:
+    """No-op when the default group is not up so single-GPU eval stays silent."""
+
     if dist.is_available() and dist.is_initialized():
         dist.barrier()
 
 
 def merge_list_of_list(results):
+    """Flatten one level of nested lists after an :func:`all_gather` of shards."""
+
     return [item for sublist in results for item in sublist]
 
 
 def gather_list_of_dict(results):
+    """Gather per-rank lists of dicts and flatten into one list on every rank."""
+
     return merge_list_of_list(all_gather(results))
 
 
 def distribute_list_to_rank(data_list):
+    """Give each rank a strided slice so eval items are load-balanced, not cloned."""
+
     return data_list[get_rank() :: get_world_size()]
 
 

@@ -1,4 +1,15 @@
-"""T2V-Turbo conditioning adapter over the shared LVDM OpenCLIP encoder."""
+"""T2V-Turbo :class:`~...contracts.ConditionEncoder` over LVDM OpenCLIP.
+
+Loads ``cond_stage_model.*`` from a VideoCrafter checkpoint
+and encodes prompts to ``context``.  Also exports
+:func:`guidance_embedding` for LCM guidance-scale sinusoidal
+features used by the turbo denoiser.
+
+:class:`T2VTurboConditioner` is the runner-facing adapter.
+OpenCLIP graph internals live in :mod:`.lvdm.condition`.
+
+This is the LVDM / VideoCrafter family, not Wan UMT5.
+"""
 
 from __future__ import annotations
 
@@ -49,6 +60,7 @@ def guidance_embedding(
 
 
 class T2VTurboConditioner:
+    """Encode prompts to LVDM ``context`` tokens for T2V-Turbo."""
     def __init__(self, text_encoder: Any) -> None:
         self.text_encoder = text_encoder
 
@@ -80,6 +92,7 @@ class T2VTurboConditioner:
 
 
 def build_t2v_turbo_conditioner(context: ComponentBuildContext) -> T2VTurboConditioner:
+    """Load the VideoCrafter OpenCLIP tower as a T2V-Turbo conditioner."""
     from .lvdm.condition import FrozenOpenCLIPEmbedder
 
     encoder = NativeModuleLoader().load(

@@ -9,10 +9,10 @@ import { InlineTOC } from 'fumadocs-ui/components/inline-toc';
 import { Tab, Tabs } from '@/components/docs-tabs';
 import * as TabsComponents from 'fumadocs-ui/components/tabs';
 import defaultMdxComponents from 'fumadocs-ui/mdx';
-import { DocsGithubInfo } from '@/components/docs-github-info';
 import { DocsZoomImage } from '@/components/docs-zoom-image';
 import { DocsWelcomeAcknowledgements } from '@/components/docs-welcome-acknowledgements';
 import { BenchmarkRecipeCatalog } from '@/components/benchmark-recipe-catalog';
+import { ArchDiagram } from '@/components/arch-diagram';
 import { CallChainDiagram } from '@/components/call-chain-diagram';
 import { MetricQuickNav } from '@/components/metric-quick-nav';
 import { ModelRecipeCatalog } from '@/components/model-recipe-catalog';
@@ -94,11 +94,10 @@ export function getMDXComponents(components?: MDXComponents) {
     InlineTOC,
     Tab,
     Tabs,
+    ArchDiagram,
     BenchmarkRecipeCatalog,
     CallChainDiagram,
-    DocsGithubInfo,
     DocsWelcomeAcknowledgements,
-    GithubInfo: DocsGithubInfo,
     MetricQuickNav,
     ModelRecipeCatalog,
     ModelRecipeHeader,

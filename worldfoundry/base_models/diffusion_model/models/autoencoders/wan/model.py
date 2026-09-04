@@ -1,4 +1,14 @@
-"""Native checkpoint-compatible Wan video autoencoder."""
+"""Causal 3-D CNN for Wan 2.1 (16-ch) and Wan 2.2 VAE38 (48-ch) video latents.
+
+Checkpoint-compatible encoder / decoder with causal temporal convolutions
+and optional spatial tiling.  Public surface: :class:`WanVideoVAE` /
+:class:`WanVideoVAE38` ``encode`` / ``decode`` (BCTHW, official mean/std
+scale).  Residual / mid / upsample blocks are implementation detail;
+do not comment every conv.  Runner recipes use
+:class:`~.component.WanVideoDecoder` rather than this module directly.
+"""
+
+import contextlib
 
 import torch
 import torch.nn as nn
@@ -1364,6 +1374,36 @@ class WanVideoVAE(nn.Module):
         self.upsampling_factor = 8
         self.z_dim = z_dim
         self.vae_pretrained_path = vae_pretrained_path
+        self.decode_autocast_dtype: torch.dtype | None = None
+
+    def _decode_autocast_is_redundant(
+        self,
+        input_dtype: torch.dtype | None,
+    ) -> bool:
+        """Whether resident weights and input already satisfy the cast target."""
+
+        dtype = getattr(self, "decode_autocast_dtype", None)
+        if dtype is None or input_dtype != dtype:
+            return False
+        model = getattr(self, "model", None)
+        if not isinstance(model, nn.Module):
+            return False
+        parameter = next(model.parameters(), None)
+        return parameter is not None and parameter.dtype == dtype
+
+    def _decode_autocast(self, input_dtype: torch.dtype | None = None):
+        """Return the opt-in CUDA autocast context used only for VAE decode.
+
+        Autocast is useful when FP32-resident weights should execute in BF16 or
+        FP16.  It adds material dispatcher overhead to this convolution-heavy
+        codec when weights and inputs already use the requested dtype, so that
+        provably redundant case is elided.
+        """
+
+        dtype = getattr(self, "decode_autocast_dtype", None)
+        if dtype is None or self._decode_autocast_is_redundant(input_dtype):
+            return contextlib.nullcontext()
+        return torch.autocast(device_type="cuda", dtype=dtype)
 
     def build_1d_mask(self, length, left_bound, right_bound, border_width):
         """Build 1d mask.
@@ -1400,58 +1440,73 @@ class WanVideoVAE(nn.Module):
         mask = rearrange(mask, "H W -> 1 1 1 H W")
         return mask
 
-    def tiled_decode(self, hidden_states, device, tile_size, tile_stride):
-        """Tiled decode.
-
-        Args:
-            hidden_states: The hidden states.
-            device: The device.
-            tile_size: The tile size.
-            tile_stride: The tile stride.
-        """
-        _, _, T, H, W = hidden_states.shape
+    @staticmethod
+    def _spatial_tile_tasks(height, width, tile_size, tile_stride):
         size_h, size_w = tile_size
         stride_h, stride_w = tile_stride
-
-        # Split tasks
         tasks = []
-        for h in range(0, H, stride_h):
-            if h - stride_h >= 0 and h - stride_h + size_h >= H:
+        for h in range(0, height, stride_h):
+            if h - stride_h >= 0 and h - stride_h + size_h >= height:
                 continue
-            for w in range(0, W, stride_w):
-                if w - stride_w >= 0 and w - stride_w + size_w >= W:
+            for w in range(0, width, stride_w):
+                if w - stride_w >= 0 and w - stride_w + size_w >= width:
                     continue
-                h_, w_ = h + size_h, w + size_w
-                tasks.append((h, h_, w, w_))
+                tasks.append((h, h + size_h, w, w + size_w))
+        return tasks
 
-        data_device = "cpu"
-        computation_device = device
-
-        out_T = T * 4 - 3
+    def _merge_spatial_decode_tiles(
+        self,
+        decoded_tiles,
+        tasks,
+        *,
+        hidden_states,
+        tile_size,
+        tile_stride,
+    ):
+        _, _, latent_frames, height, width = hidden_states.shape
+        size_h, size_w = tile_size
+        stride_h, stride_w = tile_stride
+        output_frames = latent_frames * 4 - 3
+        data_device = torch.device("cpu")
         weight = torch.zeros(
-            (1, 1, out_T, H * self.upsampling_factor, W * self.upsampling_factor),
+            (
+                1,
+                1,
+                output_frames,
+                height * self.upsampling_factor,
+                width * self.upsampling_factor,
+            ),
             dtype=hidden_states.dtype,
             device=data_device,
         )
         values = torch.zeros(
-            (1, 3, out_T, H * self.upsampling_factor, W * self.upsampling_factor),
+            (
+                1,
+                3,
+                output_frames,
+                height * self.upsampling_factor,
+                width * self.upsampling_factor,
+            ),
             dtype=hidden_states.dtype,
             device=data_device,
         )
-
-        for h, h_, w, w_ in tqdm(tasks, desc="VAE decoding"):
-            hidden_states_batch = hidden_states[:, :, :, h:h_, w:w_].to(computation_device)
-            hidden_states_batch = self.model.decode(hidden_states_batch, self.scale).to(data_device)
-
+        if len(decoded_tiles) != len(tasks):
+            raise RuntimeError(
+                f"decoded {len(decoded_tiles)} VAE tiles for {len(tasks)} spatial tasks"
+            )
+        for index, (h, h_, w, w_) in enumerate(tasks):
+            hidden_states_batch = decoded_tiles[index].to(
+                device=data_device,
+                dtype=hidden_states.dtype,
+            )
             mask = self.build_mask(
                 hidden_states_batch,
-                is_bound=(h == 0, h_ >= H, w == 0, w_ >= W),
+                is_bound=(h == 0, h_ >= height, w == 0, w_ >= width),
                 border_width=(
                     (size_h - stride_h) * self.upsampling_factor,
                     (size_w - stride_w) * self.upsampling_factor,
                 ),
             ).to(dtype=hidden_states.dtype, device=data_device)
-
             target_h = h * self.upsampling_factor
             target_w = w * self.upsampling_factor
             values[
@@ -1468,9 +1523,181 @@ class WanVideoVAE(nn.Module):
                 target_h : target_h + hidden_states_batch.shape[3],
                 target_w : target_w + hidden_states_batch.shape[4],
             ] += mask
-        values = values / weight
-        values = values.clamp_(-1, 1)
-        return values
+        if bool((weight == 0).any()):
+            raise RuntimeError("Wan VAE spatial tiles did not cover the complete output")
+        return (values / weight).clamp_(-1, 1)
+
+    def _decode_tile(self, hidden_states, device, temporal_chunk_size=0):
+        if temporal_chunk_size:
+            return self.temporal_chunked_decode(
+                hidden_states,
+                device,
+                chunk_size=temporal_chunk_size,
+            )
+        return self.model.decode(hidden_states, self.scale)
+
+    def tiled_decode(
+        self,
+        hidden_states,
+        device,
+        tile_size,
+        tile_stride,
+        temporal_chunk_size=0,
+    ):
+        """Tiled decode.
+
+        Args:
+            hidden_states: The hidden states.
+            device: The device.
+            tile_size: The tile size.
+            tile_stride: The tile stride.
+        """
+        _, _, T, H, W = hidden_states.shape
+        tasks = self._spatial_tile_tasks(H, W, tile_size, tile_stride)
+        decoded_tiles = []
+        for h, h_, w, w_ in tqdm(tasks, desc="VAE decoding"):
+            tile = hidden_states[:, :, :, h:h_, w:w_].to(device)
+            decoded_tiles.append(
+                self._decode_tile(tile, device, temporal_chunk_size).to("cpu")
+            )
+        return self._merge_spatial_decode_tiles(
+            decoded_tiles,
+            tasks,
+            hidden_states=hidden_states,
+            tile_size=tile_size,
+            tile_stride=tile_stride,
+        )
+
+    def parallel_tiled_decode(
+        self,
+        hidden_states,
+        device,
+        tile_size,
+        tile_stride,
+        *,
+        temporal_chunk_size=0,
+        group=None,
+    ):
+        """Shard spatial VAE tiles across ranks and gather decoded tiles.
+
+        Every rank reconstructs the same output so downstream runner control
+        flow remains rank-consistent. Only shape/index metadata uses object
+        collectives; decoded pixels travel through typed tensor collectives.
+        """
+
+        import torch.distributed as dist
+
+        if not dist.is_available() or not dist.is_initialized():
+            raise RuntimeError("parallel Wan VAE decode requires an initialized process group")
+        world_size = int(dist.get_world_size(group))
+        rank = int(dist.get_rank(group))
+        if world_size <= 1:
+            raise RuntimeError("parallel Wan VAE decode requires more than one rank")
+        _, _, _, height, width = hidden_states.shape
+        tasks = self._spatial_tile_tasks(height, width, tile_size, tile_stride)
+        local_metadata = []
+        local_flat = []
+        local_error = None
+        try:
+            for task_index in range(rank, len(tasks), world_size):
+                h, h_, w, w_ = tasks[task_index]
+                tile = hidden_states[:, :, :, h:h_, w:w_].to(device)
+                decoded = self._decode_tile(tile, device, temporal_chunk_size).to(
+                    device=device,
+                    dtype=hidden_states.dtype,
+                )
+                local_metadata.append((task_index, tuple(decoded.shape), decoded.numel()))
+                local_flat.append(decoded.reshape(-1))
+        except Exception as error:  # all ranks must reach the status collective
+            local_error = f"rank {rank}: {type(error).__name__}: {error}"
+
+        errors = [None] * world_size
+        dist.all_gather_object(errors, local_error, group=group)
+        failures = [error for error in errors if error]
+        if failures:
+            raise RuntimeError("parallel Wan VAE tile decode failed: " + "; ".join(failures))
+
+        metadata_by_rank = [None] * world_size
+        dist.all_gather_object(metadata_by_rank, local_metadata, group=group)
+        rank_sizes = [
+            sum(int(item[2]) for item in (metadata or []))
+            for metadata in metadata_by_rank
+        ]
+        max_size = max(rank_sizes, default=0)
+        if max_size == 0:
+            raise RuntimeError("parallel Wan VAE decode produced no tile payloads")
+        payload = torch.zeros(max_size, dtype=hidden_states.dtype, device=device)
+        if local_flat:
+            flattened = torch.cat(local_flat)
+            payload[: flattened.numel()] = flattened
+        gathered_payloads = [torch.empty_like(payload) for _ in range(world_size)]
+        dist.all_gather(gathered_payloads, payload.contiguous(), group=group)
+
+        decoded_tiles = [None] * len(tasks)
+        for rank_index, metadata in enumerate(metadata_by_rank):
+            offset = 0
+            for task_index, shape, numel in metadata or []:
+                decoded_tiles[int(task_index)] = gathered_payloads[rank_index][
+                    offset : offset + int(numel)
+                ].reshape(tuple(shape)).to("cpu")
+                offset += int(numel)
+        if any(tile is None for tile in decoded_tiles):
+            raise RuntimeError("parallel Wan VAE gather did not return every spatial tile")
+        return self._merge_spatial_decode_tiles(
+            decoded_tiles,
+            tasks,
+            hidden_states=hidden_states,
+            tile_size=tile_size,
+            tile_stride=tile_stride,
+        )
+
+    def temporal_chunked_decode(self, hidden_states, device, *, chunk_size):
+        """Exact causal decode with bounded GPU output residency.
+
+        The decoder's convolution cache stays live across all latent frames;
+        completed output chunks are moved to CPU. This is temporal streaming,
+        not independent per-chunk decoding, so no boundary context is lost.
+        """
+
+        size = int(chunk_size)
+        if size <= 0:
+            raise ValueError("Wan VAE temporal chunk size must be positive")
+        model = self.model
+        z = hidden_states.to(device)
+        model.clear_cache()
+        try:
+            scale = [value.to(dtype=z.dtype, device=z.device) for value in self.scale]
+            z = z / scale[1].view(1, self.z_dim, 1, 1, 1) + scale[0].view(
+                1,
+                self.z_dim,
+                1,
+                1,
+                1,
+            )
+            x = model.conv2(z)
+            output_chunks = []
+            pending = []
+            for index in range(x.shape[2]):
+                model._conv_idx = [0]
+                kwargs = {"feat_cache": model._feat_map, "feat_idx": model._conv_idx}
+                if isinstance(model, VideoVAE38_) and index == 0:
+                    kwargs["first_chunk"] = True
+                decoded, model._feat_map, model._conv_idx = model.decoder(
+                    x[:, :, index : index + 1],
+                    **kwargs,
+                )
+                pending.append(decoded)
+                if len(pending) == size or index + 1 == x.shape[2]:
+                    chunk = torch.cat(pending, dim=2)
+                    if isinstance(model, VideoVAE38_):
+                        chunk = unpatchify(chunk, patch_size=2)
+                    output_chunks.append(chunk.to("cpu"))
+                    pending.clear()
+            if not output_chunks:
+                raise ValueError("cannot decode an empty Wan latent sequence")
+            return torch.cat(output_chunks, dim=2).clamp_(-1, 1)
+        finally:
+            model.clear_cache()
 
     def tiled_encode(self, video, device, tile_size, tile_stride):
         """Tiled encode.
@@ -1575,9 +1802,13 @@ class WanVideoVAE(nn.Module):
             tile_size: The tile size.
             tile_stride: The tile stride.
         """
-        videos = [video.to("cpu") for video in videos]
+        # Spatial tiling deliberately stages the source on CPU and transfers
+        # one tile at a time.  The resident dense path must keep an already
+        # materialized CUDA tensor in place; forcing it through CPU here adds
+        # a full video-sized D2H/H2D round trip before any encoder work.
+        source_videos = videos.to("cpu") if tiled else videos
         hidden_states = []
-        for video in videos:
+        for video in source_videos:
             video = video.unsqueeze(0)
             if tiled:
                 tile_size = (tile_size[0] * self.upsampling_factor, tile_size[1] * self.upsampling_factor)
@@ -1590,7 +1821,15 @@ class WanVideoVAE(nn.Module):
         hidden_states = torch.stack(hidden_states)
         return hidden_states
 
-    def decode(self, hidden_states, device, tiled=False, tile_size=(34, 34), tile_stride=(18, 16)):
+    def decode(
+        self,
+        hidden_states,
+        device,
+        tiled=False,
+        tile_size=(34, 34),
+        tile_stride=(18, 16),
+        temporal_chunk_size=0,
+    ):
         """Decode.
 
         Args:
@@ -1600,12 +1839,48 @@ class WanVideoVAE(nn.Module):
             tile_size: The tile size.
             tile_stride: The tile stride.
         """
-        hidden_states = [hidden_state.to("cpu") for hidden_state in hidden_states]
+        with self._decode_autocast(hidden_states.dtype):
+            return self._decode(
+                hidden_states,
+                device,
+                tiled,
+                tile_size,
+                tile_stride,
+                temporal_chunk_size,
+            )
+
+    def _decode(
+        self,
+        hidden_states,
+        device,
+        tiled,
+        tile_size,
+        tile_stride,
+        temporal_chunk_size,
+    ):
+        # CPU staging is part of the bounded-memory spatial-tiling contract.
+        # Dense and temporal-streaming decode can consume resident CUDA
+        # latents directly.  Moving them to CPU here only for single_decode()
+        # to move them back was a measurable hot-path regression versus
+        # LightX2V, especially at production resolution.
+        source_hidden_states = hidden_states.to("cpu") if tiled else hidden_states
         videos = []
-        for hidden_state in hidden_states:
+        for hidden_state in source_hidden_states:
             hidden_state = hidden_state.unsqueeze(0)
             if tiled:
-                video = self.tiled_decode(hidden_state, device, tile_size, tile_stride)
+                video = self.tiled_decode(
+                    hidden_state,
+                    device,
+                    tile_size,
+                    tile_stride,
+                    temporal_chunk_size,
+                )
+            elif temporal_chunk_size:
+                video = self.temporal_chunked_decode(
+                    hidden_state,
+                    device,
+                    chunk_size=temporal_chunk_size,
+                )
             else:
                 video = self.single_decode(hidden_state, device)
             video = video.squeeze(0)
@@ -1880,3 +2155,4 @@ class WanVideoVAE38(WanVideoVAE):
         self.upsampling_factor = 16
         self.z_dim = z_dim
         self.vae_pretrained_path = vae_pretrained_path
+        self.decode_autocast_dtype: torch.dtype | None = None

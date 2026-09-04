@@ -12,6 +12,7 @@ source:
   official_repo_url: https://github.com/NVlabs/GR00T-WholeBodyControl
   license: apache-2.0
 official_sources:
+  project_page: https://nvlabs.github.io/motionbricks/
   paper: https://arxiv.org/pdf/2604.24833
   github:
     url: https://github.com/NVlabs/GR00T-WholeBodyControl

@@ -1,27 +1,47 @@
-"""Module for base_models -> diffusion_model -> diffsynth -> models -> wan_video_vace_core.py functionality."""
+"""DiffSynth-shaped Wan VACE factory (hint stack, Civitai key filter).
+
+This is not a standalone Wan version.  Callers pass the host DiT block
+class and a state-dict hasher; the factory returns checkpoint-compatible
+``VaceWanAttentionBlock`` / ``VaceWanModel`` / ``VaceWanModelDictConverter``
+with ``__module__`` rewritten so loaders see the historical DiffSynth path.
+
+Compared with :mod:`.vace`:
+- Condition tokens are a stacked tensor: previous hints plus the live
+  condition stream (``[..., c_skip, c]``).
+- ``forward`` returns only the hint sequence (everything except the last
+  stacked plane).  The host DiT injects those hints.
+- Optional gradient-checkpoint / CPU-offload wrappers match DiffSynth.
+
+No action, camera, causal, linear-attention, or TeaCache logic lives here.
+"""
 
 import torch
 
 
 def build_vace_wan_classes(dit_block_cls, hash_state_dict_keys, *, module_name: str):
-    """Build vace wan classes.
+    """Build DiffSynth-layout VACE classes bound to ``dit_block_cls``.
 
     Args:
-        dit_block_cls: The dit block cls.
-        hash_state_dict_keys: The hash state dict keys.
+        dit_block_cls: Host Wan DiT block used as the VACE condition block.
+        hash_state_dict_keys: Fingerprint helper used to recover 14B configs.
+        module_name: Historical module path written onto the generated classes.
+
+    Returns:
+        ``(VaceWanAttentionBlock, VaceWanModel, VaceWanModelDictConverter)``.
     """
     class VaceWanAttentionBlock(dit_block_cls):
-        """Vace wan attention block implementation."""
+        """VACE condition block that stacks skip hints for later main-graph injection."""
+
         def __init__(self, has_image_input, dim, num_heads, ffn_dim, eps=1e-6, block_id=0):
-            """Init.
+            """Build QKV/FFN from the host block, plus VACE before/after projections.
 
             Args:
-                has_image_input: The has image input.
-                dim: The dim.
-                num_heads: The num heads.
-                ffn_dim: The ffn dim.
-                eps: The eps.
-                block_id: The block id.
+                has_image_input: Whether the host block also has CLIP image KV.
+                dim: Transformer hidden size.
+                num_heads: Attention heads (must divide ``dim``).
+                ffn_dim: Feed-forward inner width.
+                eps: RMS / LayerNorm epsilon.
+                block_id: Official VACE layer id; ``0`` owns ``before_proj``.
             """
             super().__init__(has_image_input, dim, num_heads, ffn_dim, eps=eps)
             self.block_id = block_id
@@ -30,14 +50,15 @@ def build_vace_wan_classes(dit_block_cls, hash_state_dict_keys, *, module_name: 
             self.after_proj = torch.nn.Linear(self.dim, self.dim)
 
         def forward(self, c, x, context, t_mod, freqs):
-            """Forward.
+            """Advance the stacked condition tensor and append a new hint plane.
 
             Args:
-                c: The c.
-                x: The x.
-                context: The context.
-                t_mod: The t mod.
-                freqs: The freqs.
+                c: Condition tokens.  Layer 0 is a single stream; later layers
+                    are ``stack([hint_0, ..., hint_{n-1}, live_c])``.
+                x: Main-graph hidden states mixed in only at layer 0.
+                context: Text (and optional image) cross-attention context.
+                t_mod: Timestep AdaLN modulation, shape ``[B, 6, C]``.
+                freqs: 3D RoPE frequencies for the patch grid.
             """
             if self.block_id == 0:
                 c = self.before_proj(c) + x
@@ -52,7 +73,8 @@ def build_vace_wan_classes(dit_block_cls, hash_state_dict_keys, *, module_name: 
             return c
 
     class VaceWanModel(torch.nn.Module):
-        """Vace wan model implementation."""
+        """Standalone VACE condition trunk that emits hints for a host Wan DiT."""
+
         def __init__(
             self,
             vace_layers=(0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28),
@@ -64,17 +86,17 @@ def build_vace_wan_classes(dit_block_cls, hash_state_dict_keys, *, module_name: 
             ffn_dim=8960,
             eps=1e-6,
         ):
-            """Init.
+            """Build the VACE patch embed and selected condition blocks.
 
             Args:
-                vace_layers: The vace layers.
-                vace_in_dim: The vace in dim.
-                patch_size: The patch size.
-                has_image_input: The has image input.
-                dim: The dim.
-                num_heads: The num heads.
-                ffn_dim: The ffn dim.
-                eps: The eps.
+                vace_layers: Official layer ids that emit hints (must include 0).
+                vace_in_dim: Channels of the VACE context video (often 96).
+                patch_size: Same 3D patch as the host Wan DiT.
+                has_image_input: Forwarded to each condition block.
+                dim: Hidden size; must match the host DiT.
+                num_heads: Attention heads; must match the host DiT.
+                ffn_dim: Feed-forward inner width.
+                eps: Normalization epsilon.
             """
             super().__init__()
             self.vace_layers = vace_layers
@@ -100,16 +122,19 @@ def build_vace_wan_classes(dit_block_cls, hash_state_dict_keys, *, module_name: 
             use_gradient_checkpointing: bool = False,
             use_gradient_checkpointing_offload: bool = False,
         ):
-            """Forward.
+            """Patchify VACE context, run the condition trunk, and return hint tensors.
+
+            Per-sample context videos are padded to the host token length so
+            hints line up with the main packed sequence.
 
             Args:
-                x: The x.
-                vace_context: The vace context.
-                context: The context.
-                t_mod: The t mod.
-                freqs: The freqs.
-                use_gradient_checkpointing: The use gradient checkpointing.
-                use_gradient_checkpointing_offload: The use gradient checkpointing offload.
+                x: Host hidden states used only to size padding (``[B, L, C]``).
+                vace_context: Per-sample VACE videos (list of ``[C, F, H, W]``).
+                context: Shared text / image cross-attention tokens.
+                t_mod: Host timestep modulation, ``[B, 6, C]``.
+                freqs: Host 3D RoPE frequencies.
+                use_gradient_checkpointing: Recompute condition blocks in backward.
+                use_gradient_checkpointing_offload: Same, but stash activations on CPU.
             """
             c = [self.vace_patch_embedding(u.unsqueeze(0)) for u in vace_context]
             c = [u.flatten(2).transpose(1, 2) for u in c]
@@ -121,13 +146,9 @@ def build_vace_wan_classes(dit_block_cls, hash_state_dict_keys, *, module_name: 
             )
 
             def create_custom_forward(module):
-                """Create custom forward.
+                """Wrap ``module`` so ``torch.utils.checkpoint`` can call it."""
 
-                Args:
-                    module: The module.
-                """
                 def custom_forward(*inputs):
-                    """Custom forward."""
                     return module(*inputs)
 
                 return custom_forward
@@ -161,16 +182,21 @@ def build_vace_wan_classes(dit_block_cls, hash_state_dict_keys, *, module_name: 
 
         @staticmethod
         def state_dict_converter():
-            """State dict converter."""
+            """Return the Civitai / DiffSynth key filter for this VACE trunk."""
             return VaceWanModelDictConverter()
 
     class VaceWanModelDictConverter:
-        """Vace wan model dict converter implementation."""
+        """Keep only ``vace*`` tensors and recover the 14B VACE layout from a hash."""
+
         def from_civitai(self, state_dict):
-            """From civitai.
+            """Filter a full checkpoint down to VACE weights and optional config.
 
             Args:
-                state_dict: The state dict.
+                state_dict: Combined Wan + VACE (or Civitai) state dict.
+
+            Returns:
+                ``(vace_only_state_dict, config)``.  Config is filled when the
+                filtered keys match the known 14B fingerprint.
             """
             state_dict_ = {name: param for name, param in state_dict.items() if name.startswith("vace")}
             if hash_state_dict_keys(state_dict_) == "3b2726384e4f64837bdf216eea3f310d":

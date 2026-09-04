@@ -1,5 +1,11 @@
-"""Module for base_models -> diffusion_model -> video -> wan -> components -> action_conditioning_wan2p1.py functionality."""
+"""Wan 2.1 ActionModule: mouse / keyboard tokens fused into DiT hidden states.
 
+Implements the Matrix-Game / action-Wan recipe (arXiv:2501.08325).
+Mouse and keyboard streams are windowed onto latent frames, then
+cross-attended (flex / flash) into spatial tokens.
+
+Action encoder only.  The host transformer is :mod:`.action_21`.
+"""
 from typing import Any, List, Tuple, Optional, Union, Dict
 import os
 from einops import rearrange
@@ -29,16 +35,7 @@ except Exception:
 
 
 def _flash_attention(q: torch.Tensor, k: torch.Tensor, v: torch.Tensor, *, causal: bool = False) -> torch.Tensor:
-    """Helper function to flash attention.
-
-    Args:
-        q: The q.
-        k: The k.
-        v: The v.
-
-    Returns:
-        The return value.
-    """
+    """Dispatch QKV to FlashAttn 3/2 or PyTorch SDPA."""
     if _flash_attn_interface is not None:
         try:
             out = _flash_attn_interface.flash_attn_func(q, k, v, causal=causal)
@@ -59,7 +56,7 @@ if os.environ.get("WORLDFOUNDRY_ENABLE_TORCH_COMPILE", "").lower() in {"1", "tru
     
 
 class WanRMSNorm(nn.Module):
-    """Wan rms norm implementation."""
+    """RMSNorm with a learned scale; compute in fp32 when the impl upcasts."""
     def __init__(self, dim, eps=1e-5):
         """Init.
 
@@ -81,10 +78,10 @@ class WanRMSNorm(nn.Module):
 
 
 class ActionModule(nn.Module):
-    """
-    action module from https://arxiv.org/pdf/2501.08325
-    鼠标控制信号的输入是一个 L*D 的向量
-    键盘同样
+    """Mouse / keyboard action fusion from arXiv:2501.08325.
+
+    Both mouse and keyboard arrive as ``[L, D]`` sequences (latent-aligned
+    after windowing).  They are projected and cross-attended into video tokens.
     """
 
     def __init__(

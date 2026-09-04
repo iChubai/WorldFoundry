@@ -7,7 +7,7 @@ from typing import Optional, Dict, Any
 
 from ...operators.luma_ray2_operator import LumaRay2Operator
 from ...synthesis.visual_generation.luma.luma_ray2_synthesis import LumaRay2Synthesis
-from ..api_runtime import resolve_api_key
+from ..api_runtime import load_api_pipeline_from_pretrained, resolve_api_key
 
 
 _API_KEY_ENV = ("LUMA_API_KEY", "LUMALABS_API_KEY")
@@ -33,6 +33,27 @@ class LumaRay2Pipeline(PipelineABC):
         self.api_key = api_key
         self.operator = operator
         self.synthesis_model = synthesis_model
+
+    @classmethod
+    def from_pretrained(
+        cls,
+        model_path: Any = None,
+        required_components: Optional[Dict[str, Any]] = None,
+        device: str = "cuda",
+        model_id: Optional[str] = None,
+        **kwargs: Any,
+    ) -> "LumaRay2Pipeline":
+        """Build the API-only pipeline through the unified loader contract."""
+        return load_api_pipeline_from_pretrained(
+            cls,
+            model_path=model_path,
+            required_components=required_components,
+            device=device,
+            model_id=model_id,
+            default_endpoint="https://api.lumalabs.ai/dream-machine/v1",
+            service_name="Luma Ray-2",
+            **kwargs,
+        )
 
     @classmethod
     def api_init(

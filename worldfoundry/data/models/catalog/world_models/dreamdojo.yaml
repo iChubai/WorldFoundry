@@ -17,6 +17,7 @@ modalities:
 - long-horizon
 name: DreamDojo
 official_sources:
+  paper: https://arxiv.org/abs/2602.06949
   github:
     confirmed_by: local git rev-parse HEAD
     confirmed_ref: 02f119b759d5c7f84a399fdeea3c6e82e7ed6cff

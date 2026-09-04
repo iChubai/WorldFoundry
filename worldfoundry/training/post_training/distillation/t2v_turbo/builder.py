@@ -393,7 +393,10 @@ def materialize_t2v_turbo_training_run(
     if recipe.distributed.backend == "fsdp2":
         if resolved_device.type != "cuda":
             raise ValueError("FSDP2 materialization requires device='cuda'")
-        distributed_context = DistributedTrainingContext(device_type="cuda")
+        distributed_context = DistributedTrainingContext(
+            device_type="cuda",
+            timeout_seconds=recipe.distributed.timeout_seconds,
+        )
         resolved_device = distributed_context.device
     elif recipe.distributed.backend != "single":
         raise NotImplementedError(f"T2V-Turbo materialization does not implement {recipe.distributed.backend!r}")

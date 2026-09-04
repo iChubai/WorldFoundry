@@ -12,6 +12,8 @@ source:
   status: open_source
   official_repo_url: https://github.com/wow-world-model/wow-world-model
 official_sources:
+  project_page: https://wow-world-model.github.io/
+  paper: https://arxiv.org/abs/2509.22642
   worldarena_space: https://huggingface.co/spaces/WorldArena/WorldArena
   github:
     url: https://github.com/wow-world-model/wow-world-model

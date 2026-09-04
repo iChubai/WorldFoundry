@@ -1,5 +1,16 @@
 # Copyright 2024-2025 The Alibaba Wan Team Authors. All rights reserved.
-"""Module for base_models -> diffusion_model -> video -> wan -> wan_2p1 -> modules -> vae.py functionality."""
+"""Reference Wan 2.1 VAE CNN (camera-21 lineage).
+
+Checkpoint-compatible causal 3-D encoder/decoder used as
+the official-layout reference for 16-channel Wan 2.1
+latents (BCTHW, 8× space / 4× time, official mean/std).
+
+:class:`WanVAE` is the public encode/decode surface.
+Residual / causal conv blocks are implementation detail.
+
+:mod:`.model` is the runner-facing native graph;
+this file exists for compatibility loaders.
+"""
 
 import logging
 
@@ -7,6 +18,7 @@ import torch
 import torch.cuda.amp as amp
 import torch.nn as nn
 import torch.nn.functional as F
+from worldfoundry.core.model_loading import load_torch_state_dict
 from einops import rearrange
 from worldfoundry.core.attention import scaled_dot_product_attention as _worldfoundry_scaled_dot_product_attention
 
@@ -772,7 +784,7 @@ def _video_vae(pretrained_path=None, z_dim=None, device='cpu', **kwargs):
     # load checkpoint
     logging.info(f'loading {pretrained_path}')
     model.load_state_dict(
-        torch.load(pretrained_path, map_location=device), assign=True)
+        load_torch_state_dict(pretrained_path, map_location=device), assign=True)
 
     return model
 

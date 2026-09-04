@@ -23,6 +23,8 @@ checkpoint:
     gated: false
     tasks:
     - image-to-video
+official_sources:
+  paper: https://arxiv.org/abs/2505.13211
 integration:
   status: integrated
   notes:

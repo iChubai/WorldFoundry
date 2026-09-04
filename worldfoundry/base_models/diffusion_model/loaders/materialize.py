@@ -1,4 +1,15 @@
-"""Checkpoint materialization shared by modules and non-weight resources."""
+"""Checkpoint materialization shared by modules and non-weight resources.
+
+Turns a frozen :class:`CheckpointSpec` into local paths the module loader can
+open.  Recipes and runners never call Hugging Face or hash files themselves;
+this resolver is the only I/O seam between a declarative spec and a
+:class:`MaterializedCheckpoint`.
+
+Local sources keep the user-facing symlink name (``model.safetensors``) so the
+lazy loader still sees the format.  Hub specs first try a cached snapshot, then
+download a filtered subset.  Integrity maps on the spec are verified after
+paths exist; missing maps skip the audit.
+"""
 
 from __future__ import annotations
 
@@ -12,7 +23,17 @@ from .checkpoints import CheckpointSpec
 
 @dataclass(frozen=True, slots=True)
 class MaterializedCheckpoint:
-    """Resolved local view of one declarative checkpoint source."""
+    """Resolved local view of one declarative checkpoint source.
+
+    Attributes:
+        root: Snapshot or directory that owns relative resource paths.
+        paths: Materialized weight files in ``CheckpointSpec.files`` order
+            (or the raw local sources when ``files`` is empty).
+
+    :meth:`directory` fails with :exc:`ValueError` on absolute / ``..``
+    resource paths and :exc:`FileNotFoundError` when no candidate directory
+    exists (including the flattened local-override layout).
+    """
 
     root: Path
     paths: tuple[Path, ...]
@@ -45,7 +66,19 @@ class MaterializedCheckpoint:
 
 
 class NativeCheckpointResolver:
-    """Resolve local paths or a filtered Hub snapshot through core I/O."""
+    """Resolve local paths or a filtered Hub snapshot through core I/O.
+
+    :meth:`materialize` picks local vs Hub from ``checkpoint.sources``, then
+    always runs :meth:`_verify_integrity` when any hash/size map is set.
+
+    Raises:
+        FileNotFoundError: A local source, declared file, or audited sidecar
+            is missing.
+        ValueError: Local ``files`` without a single directory source; size
+            or SHA-256 mismatch after materialization.
+        RuntimeError: Declared ``files`` count no longer matches materialized
+            paths (identity lost).
+    """
 
     def materialize(self, checkpoint: CheckpointSpec) -> MaterializedCheckpoint:
         if checkpoint.sources:

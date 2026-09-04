@@ -1,0 +1,41 @@
+{
+  "id": "dreamx-world-5b-cam",
+  "tagline": {
+    "en": "DreamX-World 5B Cam — a camera-controllable interactive world model that steers image-to-video generation with camera pose, on a Wan2.2 5B backbone.",
+    "zh": "DreamX-World 5B Cam——可用相机位姿控制的交互式世界模型,在 Wan2.2 5B 主干上引导图生视频生成。"
+  },
+  "overview": {
+    "en": [
+      "DreamX-World 5B Cam is the camera-controllable variant of the AMAP DreamX-World world model. Starting from an image, it generates video you can steer with camera pose controls, so you can move the viewpoint through the evolving scene interactively.",
+      "It runs the 5B Cam checkpoint together with a Wan2.2 TI2V-5B support checkpoint, integrating the camera-conditioned runtime, pose controls, VAE, and text-encoder adapters in one pipeline. A resident session caches weights and prompt embeddings and continues from the previous final frame, and multi-GPU inference is supported with configurable Ulysses sequence parallelism (1/2/3/4/6/8 ranks).",
+      "In WorldFoundry it runs through the unified pipeline directly on the local checkpoints — provide a starting image, a prompt, and camera controls, and it produces the world video."
+    ],
+    "zh": [
+      "DreamX-World 5B Cam 是 AMAP DreamX-World 世界模型中支持相机控制的变体。它从一张图像出发生成视频,并可用相机位姿控制引导,使你能交互式地在演变的场景中移动视角。",
+      "它运行 5B Cam checkpoint,配合 Wan2.2 TI2V-5B 支撑 checkpoint,把相机条件的运行时、位姿控制、VAE 与文本编码器适配器整合进同一 pipeline。常驻会话会缓存权重与提示词嵌入,并从上一批的最后一帧继续;多卡推理支持可配置的 Ulysses 序列并行(1/2/3/4/6/8 rank)。",
+      "在 WorldFoundry 中,它通过统一 pipeline 直接在本地 checkpoint 上运行:给出起始图像、提示词与相机控制,它便生成世界视频。"
+    ]
+  },
+  "whenToUse": {
+    "en": "When you want an interactive image-to-video world model whose viewpoint you can drive with camera pose controls, and you may want to scale inference across multiple GPUs.",
+    "zh": "当你想要一个可用相机位姿控制来驱动视角的交互式图生视频世界模型,并可能希望把推理扩展到多张 GPU 时。"
+  },
+  "notFor": {
+    "en": "It requires both the DreamX-World 5B Cam checkpoint and a Wan2.2 TI2V-5B support checkpoint staged locally. If you don't need camera control, the AR variant covers plain autoregressive rollout.",
+    "zh": "它需要在本地同时准备好 DreamX-World 5B Cam checkpoint 与 Wan2.2 TI2V-5B 支撑 checkpoint。若不需要相机控制,AR 变体可覆盖普通的自回归推进。"
+  },
+  "highlights": {
+    "en": [
+      "Camera-controllable interactive world model",
+      "Steer the viewpoint with camera pose controls",
+      "Resident session continues from the previous final frame",
+      "Multi-GPU inference with configurable Ulysses sequence parallelism"
+    ],
+    "zh": [
+      "支持相机控制的交互式世界模型",
+      "用相机位姿控制引导视角",
+      "常驻会话从上一批最后一帧继续",
+      "多卡推理,支持可配置的 Ulysses 序列并行"
+    ]
+  }
+}

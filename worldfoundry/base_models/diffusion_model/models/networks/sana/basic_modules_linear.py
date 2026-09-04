@@ -14,9 +14,12 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-"""
-GLUMBConv with 1x1 Conv replaced by Linear layers for better efficiency.
-The 1x1 Conv2d is mathematically equivalent to Linear layer.
+"""GLUMBConv FFN with 1×1 convolutions replaced by ``nn.Linear``.
+
+A 1×1 ``Conv2d`` is mathematically a Linear on the channel axis.  Using
+``nn.Linear`` avoids the NHWC↔NCHW transposes that dominate the FFN cost
+on long video token sequences.  :class:`GLUMBConvLinearTemp` adds the
+same temporal depthwise mix as :class:`GLUMBConvTemp`.
 """
 
 import torch

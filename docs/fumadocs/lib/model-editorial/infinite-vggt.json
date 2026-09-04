@@ -1,0 +1,41 @@
+{
+  "id": "infinite-vggt",
+  "tagline": {
+    "en": "Streaming 3D reconstruction that builds scene geometry from a video as frames arrive.",
+    "zh": "流式 3D 重建,随视频帧到达即时构建场景几何。"
+  },
+  "overview": {
+    "en": [
+      "Infinite VGGT (StreamVGGT) is a 3D reconstruction model that works in a streaming fashion: instead of waiting for a full image set, it ingests frames as they come in and incrementally recovers the scene's 3D structure. It builds on the VGGT line of feed-forward geometry models.",
+      "This makes it a fit for long or open-ended video, where reconstructing everything at once is impractical. WorldFoundry vendors the StreamVGGT pipeline in-tree for streaming reconstruction.",
+      "In WorldFoundry you feed it a sequence of frames and it produces the reconstructed 3D geometry. Checkpoint-backed inference needs the StreamVGGT weights staged first."
+    ],
+    "zh": [
+      "Infinite VGGT(StreamVGGT)是一个以流式方式工作的 3D 重建模型:它不必等待完整的图像集,而是随帧到达逐步摄入,并增量地恢复场景的 3D 结构。它构建在 VGGT 系列前馈几何模型之上。",
+      "这让它适合处理长视频或开放式视频——对这类输入,一次性重建全部内容并不现实。WorldFoundry 将 StreamVGGT pipeline 内置在项目中用于流式重建。",
+      "在 WorldFoundry 中,你把一段帧序列交给它,它便输出重建的 3D 几何。基于 checkpoint 的推理需要先备好 StreamVGGT 权重。"
+    ]
+  },
+  "whenToUse": {
+    "en": "Use it for 3D reconstruction from video where frames arrive over time — long or continuous sequences that you'd rather process incrementally than all at once.",
+    "zh": "当你要从随时间到达的视频帧做 3D 重建——面对长序列或连续序列、更希望增量处理而非一次性处理时,选它。"
+  },
+  "notFor": {
+    "en": "It reconstructs geometry, it does not generate new imagery. The model weights are downloaded separately, so stage them before running.",
+    "zh": "它重建几何,而不生成新图像。模型权重需单独下载,请在运行前先备好。"
+  },
+  "highlights": {
+    "en": [
+      "Streaming, incremental 3D reconstruction",
+      "Handles long or open-ended video sequences",
+      "Builds on the VGGT feed-forward geometry approach",
+      "Pipeline vendored in-tree in WorldFoundry"
+    ],
+    "zh": [
+      "流式、增量的 3D 重建",
+      "可处理长视频或开放式视频序列",
+      "构建于 VGGT 前馈几何方法之上",
+      "pipeline 在 WorldFoundry 中内置"
+    ]
+  }
+}

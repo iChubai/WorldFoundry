@@ -1,0 +1,39 @@
+{
+  "id": "hailuo-2p3",
+  "tagline": {
+    "en": "Hailuo 2.3 — MiniMax's hosted video API for image-to-video with audio, called through WorldFoundry.",
+    "zh": "Hailuo 2.3——MiniMax 的托管视频 API，支持带音频的图生视频，可在 WorldFoundry 中调用。"
+  },
+  "overview": {
+    "en": [
+      "Hailuo 2.3 is MiniMax's hosted video generation service. It's an image-to-video model that also produces synchronized audio, accessed as a cloud API rather than run on your own GPUs.",
+      "In WorldFoundry, Hailuo 2.3 is available through the Studio hosted-API pipeline. Because it's a hosted service, you bring your own MiniMax API key, and the output and available model versions depend on MiniMax's service and your account access."
+    ],
+    "zh": [
+      "Hailuo 2.3 是 MiniMax 提供的托管视频生成服务。它是一款图生视频模型，还能生成同步音频，以云端 API 形式访问，而非在你自己的 GPU 上运行。",
+      "在 WorldFoundry 中，Hailuo 2.3 通过 Studio 托管 API pipeline 提供。由于是托管服务，你需自备 MiniMax API key，输出与可用的模型版本取决于 MiniMax 的服务与你的账户权限。"
+    ]
+  },
+  "whenToUse": {
+    "en": "Use Hailuo 2.3 when you want high-quality image-to-video with audio and prefer calling a hosted API over managing local weights and GPUs.",
+    "zh": "当你想要带音频的高质量图生视频，且倾向于调用托管 API 而非自行管理本地权重与 GPU 时，可用 Hailuo 2.3。"
+  },
+  "notFor": {
+    "en": "It's a hosted API: you need your own MiniMax API key, and results depend on the provider's service and account access. Not for fully offline or self-hosted workflows.",
+    "zh": "它是托管 API：需自备 MiniMax API key，结果依赖服务商的服务与账户权限。不适合完全离线或自托管的工作流。"
+  },
+  "highlights": {
+    "en": [
+      "Image-to-video with synchronized audio",
+      "MiniMax's hosted Hailuo service",
+      "Called through the WorldFoundry Studio hosted-API pipeline",
+      "Bring your own MiniMax API key"
+    ],
+    "zh": [
+      "图生视频，含同步音频",
+      "MiniMax 托管的 Hailuo 服务",
+      "通过 WorldFoundry Studio 托管 API pipeline 调用",
+      "需自备 MiniMax API key"
+    ]
+  }
+}

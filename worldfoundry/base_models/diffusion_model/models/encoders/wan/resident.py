@@ -1,4 +1,14 @@
-"""Resident Wan 2.1 prompt-conditioning compatibility component."""
+"""Resident Wan 2.1 prompt-conditioning wrapper (path-loaded UMT5).
+
+:class:`WanTextEncoder` here loads UMT5 from a filesystem
+path for resident / camera-control processes that do not go
+through :class:`~.component.WanTextConditioner`.
+
+Token / hidden-size contract matches :mod:`.model`.
+Prefer the native component in new recipes.
+
+Compatibility wrapper only.
+"""
 
 from __future__ import annotations
 
@@ -13,6 +23,7 @@ from .reference import umt5_xxl
 
 
 class WanTextEncoder(nn.Module):
+    """Path-loaded UMT5 wrapper used by resident Wan 2.1 processes."""
     def __init__(
         self,
         model_root: str | Path | None = None,

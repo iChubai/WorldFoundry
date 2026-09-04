@@ -30,7 +30,11 @@ from worldfoundry.evaluation.api import (
     align_batch_metric_outputs,
     is_generation_result_successful,
 )
-from worldfoundry.evaluation.reporting import write_run_manifest_artifacts, write_run_report_artifacts
+from worldfoundry.evaluation.reporting import (
+    REPRODUCIBILITY_PACKAGES,
+    write_run_manifest_artifacts,
+    write_run_report_artifacts,
+)
 from worldfoundry.evaluation.reporting.scorecard import write_scorecard
 from worldfoundry.evaluation.utils import (
     build_run_fingerprint,
@@ -704,7 +708,7 @@ def run_existing_results(
             "write_artifacts_index": run_request.write_artifacts_index,
         },
         cache_paths=run_request.cache_paths or {},
-        package_names=("worldfoundry", "numpy", "pandas"),
+        package_names=REPRODUCIBILITY_PACKAGES,
         manifest_path=paths["manifest"],
         environment_path=paths["environment"],
         env_requirements_path=paths["env_requirements"],
@@ -843,7 +847,7 @@ def run_existing_results(
             "write_artifacts_index": run_request.write_artifacts_index,
         },
         cache_paths=run_request.cache_paths or {},
-        package_names=("worldfoundry", "numpy", "pandas"),
+        package_names=REPRODUCIBILITY_PACKAGES,
         manifest_path=paths["manifest"],
         environment_path=paths["environment"],
         env_requirements_path=paths["env_requirements"],

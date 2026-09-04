@@ -6,11 +6,36 @@
 # Licensed under the Apache License, Version 2.0 (see LICENSE.txt at repo root).
 #
 # Modifications Copyright (c) 2026 SkyworkAI and contributors.
+"""Ulysses attention that pads local sequences before the all-to-all.
+
+Standard Ulysses assumes ``L % p == 0``. Causal caches and memory tokens
+often violate that. Pad, communicate, then crop so the local kernel still
+sees a dense shard. Prefer the unpadded path in
+:mod:`worldfoundry.core.attention.ulysses_attention` when lengths already
+divide evenly (less traffic).
+
+Not this module:
+    Causal LingBot graphs belong in
+    :mod:`.causal_ulysses_attention`. RoPE frequency sharding belongs
+    in :mod:`.sequence_parallel_rope`. This file only pads heads /
+    exchanges / crops.
+
+Public surface:
+
+- :func:`distributed_attention` — pad heads to ``p``, Ulysses all-to-all,
+  local :func:`attention`, crop dummy heads.
+"""
+
 import torch
 import torch.distributed as dist
 
 from worldfoundry.core.attention import attention
 from worldfoundry.core.distributed.sequence_ops import all_to_all, all_to_all_many
+
+
+# ──────────────────────────────────────────────────────────────────────────
+# Padded Ulysses — head-pad so all-to-all shapes match when Nq % p != 0
+# ──────────────────────────────────────────────────────────────────────────
 
 
 def distributed_attention(
@@ -22,8 +47,7 @@ def distributed_attention(
     fa_version=None,
 ):
     """
-    Performs distributed attention based on DeepSpeed Ulysses attention mechanism.
-    please refer to https://arxiv.org/pdf/2309.14509
+    Sequence-parallel attention via Ulysses all-to-all (https://arxiv.org/pdf/2309.14509).
 
     Args:
         q:           [B, Lq // p, Nq, C1].

@@ -20,6 +20,8 @@ integration:
 license: apache-2.0
 name: GigaBrain-0
 official_sources:
+  paper: https://arxiv.org/abs/2608.15875
+  project_page: https://gigaai-research.github.io/GigaBrain-Challenge-2026/
   github:
     head_sha: 61a919407dbc2bb945a926cc002749097cc9ebdf
     url: https://github.com/open-gigaai/giga-brain-0

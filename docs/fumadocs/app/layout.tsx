@@ -7,6 +7,7 @@ import 'fumadocs-ui/components/image-zoom2.css';
 import './styles/tokens.css';
 import './global.css';
 import './fd-skin.css';
+import './arch-diagram.css';
 import type { Metadata } from 'next';
 
 const faviconPath = withBasePath('/favicon.svg') ?? '/favicon.svg';

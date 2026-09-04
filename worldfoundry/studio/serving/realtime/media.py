@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import io
+import math
 from collections.abc import Iterator, Mapping
 from enum import Enum
 from typing import Any
@@ -47,6 +48,60 @@ class FrameQueuePolicy(str, Enum):
             raise ValueError(f"Unknown frame queue policy {value!r}; expected one of: {supported}.") from exc
 
 
+class RealtimePresentationMode(str, Enum):
+    """Ownership model for realtime video pacing."""
+
+    HOLD_LAST = "hold-last"
+    REAL_FRAMES = "real-frames"
+
+    @classmethod
+    def from_value(cls, value: "RealtimePresentationMode | str") -> "RealtimePresentationMode":
+        if isinstance(value, cls):
+            return value
+        normalized = str(value or "").strip().lower().replace("_", "-")
+        aliases = {
+            "legacy": cls.HOLD_LAST,
+            "repeat": cls.HOLD_LAST,
+            "repeat-last": cls.HOLD_LAST,
+            "real": cls.REAL_FRAMES,
+            "source": cls.REAL_FRAMES,
+            "no-repeat": cls.REAL_FRAMES,
+        }
+        if normalized in aliases:
+            return aliases[normalized]
+        try:
+            return cls(normalized)
+        except ValueError as exc:
+            supported = ", ".join(item.value for item in cls)
+            raise ValueError(f"Unknown realtime presentation mode {value!r}; expected one of: {supported}.") from exc
+
+
+class WebSocketPacingMode(str, Enum):
+    """Select which WebSocket layer owns frame pacing."""
+
+    LEGACY_DUAL = "legacy-dual"
+    CLIENT_ONLY = "client-only"
+
+    @classmethod
+    def from_value(cls, value: "WebSocketPacingMode | str") -> "WebSocketPacingMode":
+        if isinstance(value, cls):
+            return value
+        normalized = str(value or "").strip().lower().replace("_", "-")
+        aliases = {
+            "legacy": cls.LEGACY_DUAL,
+            "dual": cls.LEGACY_DUAL,
+            "client": cls.CLIENT_ONLY,
+            "browser": cls.CLIENT_ONLY,
+        }
+        if normalized in aliases:
+            return aliases[normalized]
+        try:
+            return cls(normalized)
+        except ValueError as exc:
+            supported = ", ".join(item.value for item in cls)
+            raise ValueError(f"Unknown WebSocket pacing mode {value!r}; expected one of: {supported}.") from exc
+
+
 class LatestFrameBuffer:
     """Bounded frame queue with selectable latency/quality congestion policy.
 
@@ -85,7 +140,7 @@ class LatestFrameBuffer:
             except asyncio.QueueFull:
                 try:
                     await asyncio.wait_for(self._closed_event.wait(), timeout=0.05)
-                except TimeoutError:
+                except asyncio.TimeoutError:
                     continue
         return False
 
@@ -110,7 +165,7 @@ class LatestFrameBuffer:
                         await asyncio.wait_for(self._queue.put(rgb), timeout=remaining)
                         accepted += 1
                         continue
-                    except TimeoutError:
+                    except asyncio.TimeoutError:
                         pass
             while self._queue.full():
                 try:
@@ -148,6 +203,203 @@ class LatestFrameBuffer:
             except asyncio.QueueEmpty:
                 break
         self._queue.put_nowait(None)
+
+
+class ChunkPresentationBuffer:
+    """Present complete generated chunks through a two-frame sender mailbox.
+
+    The active/pending chunk split follows NVIDIA FlashDreams' presentation
+    manager design. The event-loop clock lives here so transports only request
+    real frames; they do not add another pacing loop or repeat a held frame.
+    """
+
+    def __init__(
+        self,
+        *,
+        fps: float,
+        maximum_fps: float | None = None,
+        mailbox_size: int = 2,
+        policy: FrameQueuePolicy | str = FrameQueuePolicy.LATEST_INTERACTIVE,
+    ) -> None:
+        fps = float(fps)
+        maximum_fps = fps if maximum_fps is None else float(maximum_fps)
+        if not math.isfinite(fps) or fps <= 0.0:
+            raise ValueError("fps must be a positive finite number")
+        if not math.isfinite(maximum_fps) or maximum_fps < fps:
+            raise ValueError("maximum_fps must be finite and >= fps")
+        if mailbox_size < 1:
+            raise ValueError("mailbox_size must be >= 1")
+
+        self.maxsize = int(mailbox_size)
+        self.policy = FrameQueuePolicy.from_value(policy)
+        self._frame_interval = 1.0 / fps
+        self._backlog_interval = 1.0 / maximum_fps
+        self._mailbox: asyncio.Queue[np.ndarray | None] = asyncio.Queue(maxsize=self.maxsize)
+        self._pending_available = asyncio.Event()
+        self._pending_available.set()
+        self._loop: asyncio.AbstractEventLoop | None = None
+        self._scheduled: asyncio.Handle | None = None
+        self._next_frame_at: float | None = None
+        self._active_chunk: list[np.ndarray] | None = None
+        self._active_index = 0
+        self._pending_chunk: list[np.ndarray] | None = None
+        self._blocked_on_mailbox = False
+        self.dropped_frames = 0
+        self.dropped_chunks = 0
+        self.presented_frames = 0
+        self.last_enqueue_ms = 0.0
+        self.closed = False
+
+    def _bind_loop(self) -> asyncio.AbstractEventLoop:
+        loop = asyncio.get_running_loop()
+        if self._loop is None:
+            self._loop = loop
+        elif self._loop is not loop:
+            raise RuntimeError("presentation buffer cannot move between event loops")
+        return loop
+
+    def qsize(self) -> int:
+        active = 0 if self._active_chunk is None else len(self._active_chunk) - self._active_index
+        pending = 0 if self._pending_chunk is None else len(self._pending_chunk)
+        return self._mailbox.qsize() + active + pending
+
+    async def put_chunk(self, frames: list[np.ndarray]) -> int:
+        if self.closed:
+            return 0
+        loop = self._bind_loop()
+        started = loop.time()
+        prepared = [np.ascontiguousarray(frame) for frame in frames]
+        if not prepared:
+            self.last_enqueue_ms = (loop.time() - started) * 1000.0
+            return 0
+
+        while not self.closed:
+            if self._active_chunk is None:
+                self._active_chunk = prepared
+                self._active_index = 0
+                self._schedule_next(0.0)
+                break
+            if self._pending_chunk is None:
+                self._pending_chunk = prepared
+                self._pending_available.clear()
+                self._accelerate_for_backlog()
+                break
+            if self.policy is FrameQueuePolicy.LATEST_INTERACTIVE:
+                self.dropped_frames += len(self._pending_chunk)
+                self.dropped_chunks += 1
+                self._pending_chunk = prepared
+                self._accelerate_for_backlog()
+                break
+            self._pending_available.clear()
+            await self._pending_available.wait()
+
+        self.last_enqueue_ms = (loop.time() - started) * 1000.0
+        return 0 if self.closed else len(prepared)
+
+    async def get(self) -> np.ndarray:
+        frame = await self._mailbox.get()
+        if frame is None:
+            raise EOFError("presentation buffer closed")
+        self._resume_after_mailbox_read()
+        return frame
+
+    def get_nowait(self) -> np.ndarray:
+        frame = self._mailbox.get_nowait()
+        if frame is None:
+            raise EOFError("presentation buffer closed")
+        self._resume_after_mailbox_read()
+        return frame
+
+    def _resume_after_mailbox_read(self) -> None:
+        if not self.closed and self._blocked_on_mailbox:
+            self._blocked_on_mailbox = False
+            self._schedule_next(0.0)
+
+    def _schedule_next(self, delay: float) -> None:
+        if self.closed or self._scheduled is not None:
+            return
+        loop = self._loop
+        if loop is None:
+            return
+        delay = max(float(delay), 0.0)
+        self._next_frame_at = loop.time() + delay
+        if delay == 0.0:
+            self._scheduled = loop.call_soon(self._present_next)
+        else:
+            self._scheduled = loop.call_later(delay, self._present_next)
+
+    def _accelerate_for_backlog(self) -> None:
+        loop = self._loop
+        if loop is None or self._scheduled is None or self._next_frame_at is None:
+            return
+        accelerated_at = loop.time() + self._backlog_interval
+        if accelerated_at >= self._next_frame_at:
+            return
+        self._scheduled.cancel()
+        self._scheduled = None
+        self._next_frame_at = None
+        self._schedule_next(self._backlog_interval)
+
+    def _promote_pending(self) -> bool:
+        if self._pending_chunk is None:
+            return False
+        self._active_chunk = self._pending_chunk
+        self._active_index = 0
+        self._pending_chunk = None
+        self._pending_available.set()
+        return True
+
+    def _present_next(self) -> None:
+        self._scheduled = None
+        self._next_frame_at = None
+        if self.closed:
+            return
+        if self._active_chunk is None and not self._promote_pending():
+            return
+        assert self._active_chunk is not None
+
+        if self._mailbox.full():
+            if self.policy is FrameQueuePolicy.ORDERED_QUALITY:
+                self._blocked_on_mailbox = True
+                return
+            try:
+                stale = self._mailbox.get_nowait()
+                if stale is not None:
+                    self.dropped_frames += 1
+            except asyncio.QueueEmpty:
+                pass
+
+        had_backlog = self._pending_chunk is not None
+        self._mailbox.put_nowait(self._active_chunk[self._active_index])
+        self._active_index += 1
+        self.presented_frames += 1
+        if self._active_index >= len(self._active_chunk):
+            self._active_chunk = None
+            self._active_index = 0
+            self._promote_pending()
+        if self._active_chunk is not None:
+            interval = self._backlog_interval if had_backlog else self._frame_interval
+            self._schedule_next(interval)
+
+    def close(self) -> None:
+        if self.closed:
+            return
+        self.closed = True
+        if self._scheduled is not None:
+            self._scheduled.cancel()
+            self._scheduled = None
+        self._next_frame_at = None
+        self._active_chunk = None
+        self._active_index = 0
+        self._pending_chunk = None
+        self._blocked_on_mailbox = False
+        self._pending_available.set()
+        while True:
+            try:
+                self._mailbox.get_nowait()
+            except asyncio.QueueEmpty:
+                break
+        self._mailbox.put_nowait(None)
 
 
 def realtime_frames_from_result(result: Any) -> list[np.ndarray]:
@@ -258,6 +510,7 @@ def encode_jpeg_frames(
 
 
 __all__ = [
+    "ChunkPresentationBuffer",
     "FrameQueuePolicy",
     "LatestFrameBuffer",
     "MAX_OUTPUT_HEIGHT",
@@ -265,6 +518,8 @@ __all__ = [
     "MAX_OUTPUT_WIDTH",
     "MIN_OUTPUT_HEIGHT",
     "MIN_OUTPUT_WIDTH",
+    "RealtimePresentationMode",
+    "WebSocketPacingMode",
     "encode_jpeg_frames",
     "realtime_frames_from_result",
     "resize_rgb_frame",

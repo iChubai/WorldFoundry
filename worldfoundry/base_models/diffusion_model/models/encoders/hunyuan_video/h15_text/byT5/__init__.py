@@ -14,7 +14,18 @@
 # of rights and permissions under this agreement.
 # See the License for the specific language governing permissions and limitations under the License.
 
-"""HunyuanVideo 1.5 glyph-aware ByT5 conditioning."""
+"""HunyuanVideo 1.5 glyph-aware ByT5 conditioning loader.
+
+Builds the ByT5 encoder + tokenizer used for glyph / OCR-style
+prompt features in HunyuanVideo 1.5.
+:func:`load_glyph_byT5_v2` is the usual entry.
+
+Outputs join the LLM tokens inside
+:class:`~..component.HunyuanVideo15PromptConditioner`.
+Prompt string formatting is :mod:`.format_prompt`.
+
+License header above is Tencent Hunyuan; keep it intact.
+"""
 
 import json
 import torch

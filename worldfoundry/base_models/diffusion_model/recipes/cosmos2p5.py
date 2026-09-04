@@ -1,4 +1,21 @@
-"""Native Cosmos Predict 2.5 2B and 14B recipes."""
+"""Native Cosmos Predict 2.5 and Transfer 2.5 recipes.
+
+Each public function returns a :class:`NativeDiffusionRecipe`.  Component
+factories are imported lazily so optional Cosmos 2.5 deps stay unloaded
+until a recipe is actually built.  Recipes do not construct runners.
+
+Family split
+------------
+- Predict 2.5 2B / 14B: DiT, Cosmos-Reason1 conditioner, video VAE used
+  as both latent initializer and decoder, Wan UniPC (shift 5.0,
+  Karras sigmas).  Strategy ``standard`` with
+  ``guidance_mode="positive"`` (CFG).  Text / image / video-to-world.
+- Transfer 2.5 2B: VACE-style controlled DiT on the same four roles;
+  edge-to-world / controlled-video capabilities.
+
+The 2B recipe also pins a pre-trained transformer snapshot as an extra
+checkpoint role; it is not a second denoiser expert.
+"""
 
 from __future__ import annotations
 
@@ -75,6 +92,8 @@ def _recipe(
     architecture: str = "cosmos-predict2.5-minimal-v1-lvg-dit",
     pretrained_checkpoint: CheckpointSpec | None = None,
 ) -> NativeDiffusionRecipe:
+    """Bind DiT, Reason1 conditioner, VAE-as-initializer, and Wan UniPC CFG."""
+
     denoiser = ComponentKey(ComponentKind.DENOISER)
     conditioner = ComponentKey(ComponentKind.CONDITIONER)
     codec = ComponentKey(ComponentKind.LATENT_INITIALIZER)
@@ -155,6 +174,8 @@ def _recipe(
 
 
 def cosmos25_2b_recipe() -> NativeDiffusionRecipe:
+    """Predict 2.5 2B: Reason1 text + UniPC + VAE-as-initializer, CFG."""
+
     return _recipe(
         model_id=COSMOS25_2B_MODEL_ID,
         repo_id=COSMOS25_2B_REPO_ID,
@@ -172,6 +193,8 @@ def cosmos25_2b_recipe() -> NativeDiffusionRecipe:
 
 
 def cosmos25_14b_recipe() -> NativeDiffusionRecipe:
+    """Predict 2.5 14B; same four-role ``standard`` CFG stack as 2B."""
+
     return _recipe(
         model_id=COSMOS25_14B_MODEL_ID,
         repo_id=COSMOS25_14B_REPO_ID,
@@ -183,6 +206,8 @@ def cosmos25_14b_recipe() -> NativeDiffusionRecipe:
 
 
 def cosmos25_transfer_2b_recipe() -> NativeDiffusionRecipe:
+    """Transfer 2.5 2B edge-controlled video; same UniPC CFG, VACE DiT."""
+
     return _recipe(
         model_id=COSMOS25_TRANSFER_2B_MODEL_ID,
         repo_id=COSMOS25_TRANSFER_2B_REPO_ID,

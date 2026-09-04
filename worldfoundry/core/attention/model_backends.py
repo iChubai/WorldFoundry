@@ -1,3 +1,25 @@
+"""Model-facing attention callables: SDPA wrappers, piecewise, and backend enums.
+
+DiT blocks should depend on these Protocols / Enums rather than importing
+FlashAttention or xFormers. The split is intentional:
+
+- :class:`AttentionCallable` / :class:`MaskedAttentionCallable` — QKV
+  signatures used by native transformer blocks.
+- :class:`PytorchAttention` — in-tree SDPA with a recorded backend
+  priority (cuDNN / Flash / Efficient / Math). ``auto`` stays here.
+- :class:`XFormersAttention` / :class:`FlashAttention3` /
+  :class:`FlashAttention4` — explicit opt-in adapters. They are never
+  selected by ``automatic_attention()``.
+- :class:`PiecewiseAttention` — in-tree PISA sparse path for long LTX
+  self-attention; density/block size come from env or constructor.
+- :class:`AttentionFunction` / :class:`MaskedAttentionFunction` —
+  string-stable enums so a recipe can pin a backend without importing
+  the adapter class.
+
+:func:`_torch_default_sdpa_priority` reads torch's live priority so the
+wrapper does not drift when PyTorch reorders cuDNN vs Flash.
+"""
+
 import functools
 import importlib.util
 import logging
@@ -16,6 +38,10 @@ from worldfoundry.core.attention.piecewise import piecewise_attention
 
 logger = logging.getLogger(__name__)
 
+# ──────────────────────────────────────────────────────────────────────────
+# SDPA helpers — snapshot torch's live priority; never hard-code the order
+# ──────────────────────────────────────────────────────────────────────────
+
 
 def _torch_default_sdpa_priority() -> list[SDPBackend]:
     """Fetch torch's current default SDPA priority order at runtime.
@@ -26,14 +52,31 @@ def _torch_default_sdpa_priority() -> list[SDPBackend]:
     risk because the project pins ``torch`` in the lockfile, so any
     rename/removal surfaces on a controlled torch bump rather than silently.
     """
-    return [SDPBackend(p) for p in torch._C._get_sdp_priority_order()]
+    getter = getattr(torch._C, "_get_sdp_priority_order", None)
+    if callable(getter):
+        return [SDPBackend(p) for p in getter()]
+    # torch 2.5 exposes ``sdpa_kernel`` but not the priority introspection
+    # helper added later. Preserve its native CUDA preference and let the
+    # context manager skip kernels unavailable on the current device.
+    return [
+        SDPBackend.CUDNN_ATTENTION,
+        SDPBackend.FLASH_ATTENTION,
+        SDPBackend.EFFICIENT_ATTENTION,
+        SDPBackend.MATH,
+    ]
 
 
 def _module_available(name: str) -> bool:
+    """Return whether ``name`` is importable without executing the package."""
     try:
         return importlib.util.find_spec(name) is not None
     except (ImportError, ModuleNotFoundError, ValueError):
         return False
+
+
+# ──────────────────────────────────────────────────────────────────────────
+# Protocols + adapters — DiT blocks depend on these, not on Flash/xFormers
+# ──────────────────────────────────────────────────────────────────────────
 
 
 class AttentionCallable(Protocol):
@@ -41,7 +84,9 @@ class AttentionCallable(Protocol):
     this protocol; backends that support masks too (Pytorch/SDPA, xFormers) are
     structurally usable here and as :class:`MaskedAttentionCallable`."""
 
-    def __call__(self, q: torch.Tensor, k: torch.Tensor, v: torch.Tensor, heads: int) -> torch.Tensor: ...
+    def __call__(self, q: torch.Tensor, k: torch.Tensor, v: torch.Tensor, heads: int) -> torch.Tensor:
+        """Unmasked QKV; ``heads`` unpacks the flattened last dimension."""
+        ...
 
 
 class MaskedAttentionCallable(Protocol):
@@ -51,11 +96,21 @@ class MaskedAttentionCallable(Protocol):
 
     def __call__(
         self, q: torch.Tensor, k: torch.Tensor, v: torch.Tensor, heads: int, mask: torch.Tensor
-    ) -> torch.Tensor: ...
+    ) -> torch.Tensor:
+        """Masked QKV; ``mask`` is required because this is already the masked path."""
+        ...
 
 
 class PytorchAttention(AttentionCallable):
+    """Exact SDPA wrapper with an explicit backend priority list.
+
+    ``priority=None`` snapshots torch's current default order at
+    construction so later ``sdpa_kernel`` mutations do not change an
+    already-built block. Also implements the masked protocol.
+    """
+
     def __init__(self, priority: list[SDPBackend] | None = None) -> None:
+        """Snapshot ``priority`` or torch's current default SDPA order."""
         # priority=None -> snapshot torch's default SDPA priority at construction.
         self._priority = priority if priority is not None else _torch_default_sdpa_priority()
 
@@ -67,8 +122,9 @@ class PytorchAttention(AttentionCallable):
         return f"SDPA[{'>'.join(b.name for b in self._priority)}]"
 
     def __call__(
-        self, q: torch.Tensor, k: torch.Tensor, v: torch.Tensor, heads: int, mask: torch.Tensor | None = None
+        self,         q: torch.Tensor, k: torch.Tensor, v: torch.Tensor, heads: int, mask: torch.Tensor | None = None
     ) -> torch.Tensor:
+        """Serve both unmasked and masked protocols with the pinned SDPA order."""
         return flattened_multihead_attention(
             q,
             k,
@@ -80,6 +136,14 @@ class PytorchAttention(AttentionCallable):
 
 
 class XFormersAttention(AttentionCallable):
+    """Explicit xFormers ``memory_efficient_attention`` adapter.
+
+    Bool masks are converted to additive ``0 / -inf`` (xformers does not
+    accept SDPA bool masks). The last mask dimension is padded to an
+    8-aligned *storage* width, then sliced back to the logical key
+    length. Not part of ``automatic_attention()``.
+    """
+
     label = "xFormers"
 
     def __call__(
@@ -90,6 +154,7 @@ class XFormersAttention(AttentionCallable):
         heads: int,
         mask: torch.Tensor | None = None,
     ) -> torch.Tensor:
+        """Run xFormers attention; bool masks become additive so they actually mask."""
         try:
             from xformers.ops import memory_efficient_attention
         except (ImportError, OSError) as exc:
@@ -141,6 +206,8 @@ class XFormersAttention(AttentionCallable):
 
 
 class FlashAttention3(AttentionCallable):
+    """Explicit Hopper FlashAttention-3 adapter (no mask support)."""
+
     label = "FlashAttention3"
 
     def __call__(
@@ -150,6 +217,7 @@ class FlashAttention3(AttentionCallable):
         v: torch.Tensor,
         heads: int,
     ) -> torch.Tensor:
+        """Run Hopper FA3; there is no mask kernel on this path."""
         try:
             import flash_attn_interface
         except (ImportError, OSError) as exc:
@@ -166,6 +234,8 @@ class FlashAttention3(AttentionCallable):
 
 
 class FlashAttention4(AttentionCallable):
+    """Explicit FlashAttention-4 (cute) adapter (no mask support)."""
+
     label = "FlashAttention4"
 
     def __call__(
@@ -175,6 +245,7 @@ class FlashAttention4(AttentionCallable):
         v: torch.Tensor,
         heads: int,
     ) -> torch.Tensor:
+        """Run CuTeDSL FA4; there is no mask kernel on this path."""
         try:
             from flash_attn.cute import flash_attn_func as flash_attn_4_func
         except (ImportError, OSError) as exc:
@@ -196,12 +267,14 @@ class PiecewiseAttention(AttentionCallable):
     label = "PISA[in-tree]"
 
     def __init__(self, density: float | None = None, block_size: int | None = None) -> None:
+        """Read density/block size from env when the constructor leaves them unset."""
         self.density = float(os.getenv("WORLDFOUNDRY_PISA_DENSITY", "0.1")) if density is None else float(density)
         self.block_size = (
             int(os.getenv("WORLDFOUNDRY_PISA_BLOCK_SIZE", "64")) if block_size is None else int(block_size)
         )
 
     def __call__(self, q: torch.Tensor, k: torch.Tensor, v: torch.Tensor, heads: int) -> torch.Tensor:
+        """Apply piecewise sparse attention; density/block size are constructor policy."""
         batch, _, hidden = q.shape
         head_dim = hidden // heads
         q_heads, k_heads, v_heads = (value.view(batch, -1, heads, head_dim).transpose(1, 2) for value in (q, k, v))
@@ -215,10 +288,12 @@ class PiecewiseAttention(AttentionCallable):
         return out.transpose(1, 2).reshape(batch, -1, hidden)
 
 
-# --- Automatic selection -----------------------------------------------------
-# AUTOMATIC stays inside PyTorch and chooses an exact SDPA policy for each GPU
-# family. External providers remain explicit enum choices, so importing or
-# running the default LTX path never depends on another repository package.
+# ──────────────────────────────────────────────────────────────────────────
+# Automatic selection — stay inside PyTorch; external providers stay explicit
+# ──────────────────────────────────────────────────────────────────────────
+# AUTOMATIC chooses an exact SDPA policy per GPU family. External providers
+# remain explicit enum choices, so the default LTX path never depends on
+# another repository package.
 
 
 def _sdpa_can_use(backend: SDPBackend, *, with_mask: bool) -> bool:
@@ -275,6 +350,11 @@ def _native_pytorch_attention(
     with_mask: bool,
     device: torch.device | str | None = None,
 ) -> PytorchAttention:
+    """Build a :class:`PytorchAttention` from :func:`native_sdpa_priority` names.
+
+    An empty priority (ROCm / unknown capability) falls back to torch's
+    live default order rather than inventing an architecture-specific list.
+    """
     names = native_sdpa_priority(device, has_mask=with_mask)
     if not names:
         return PytorchAttention()
@@ -291,6 +371,7 @@ class _DeviceAwarePytorchAttention(AttentionCallable):
     """Choose the in-tree exact SDPA policy from each call's tensor device."""
 
     def __init__(self, *, with_mask: bool) -> None:
+        """Prebuild per-device SDPA policies so compiled forwards never probe CUDA."""
         self.with_mask = with_mask
         self.label = "SDPA[device-aware,masked]" if with_mask else "SDPA[device-aware]"
         # Build policies outside model forward.  In particular,
@@ -317,6 +398,7 @@ class _DeviceAwarePytorchAttention(AttentionCallable):
         heads: int,
         mask: torch.Tensor | None = None,
     ) -> torch.Tensor:
+        """Pick the policy for ``q``'s device; unknown CUDA indices use the fallback."""
         if q.device.type != "cuda":
             implementation = self._cpu_attention
         else:
@@ -357,6 +439,11 @@ def automatic_masked_attention() -> MaskedAttentionCallable:
     return fn
 
 
+# ──────────────────────────────────────────────────────────────────────────
+# String-stable enums — recipes pin a backend without importing the adapter
+# ──────────────────────────────────────────────────────────────────────────
+
+
 def _resolve_sdpa_variant(backend: SDPBackend, name: str, *, with_mask: bool) -> PytorchAttention:
     """Build a single-backend ``PytorchAttention`` pin, raising if the backend
     can't actually serve the call on this machine. Used by both
@@ -375,6 +462,12 @@ def _resolve_sdpa_variant(backend: SDPBackend, name: str, *, with_mask: bool) ->
 
 
 class AttentionFunction(Enum):
+    """String-stable unmasked attention backend pin for native DiT blocks.
+
+    ``AUTOMATIC`` stays inside PyTorch SDPA. Every other member is an
+    explicit opt-in and raises if the package or SDPA backend is unusable.
+    """
+
     PYTORCH = "pytorch"
     XFORMERS = "xformers"
     FLASH_ATTENTION_3 = "flash_attention_3"
@@ -442,6 +535,12 @@ class AttentionFunction(Enum):
 
 
 class MaskedAttentionFunction(Enum):
+    """String-stable masked attention backend pin (SDPA / xFormers only).
+
+    FlashAttention 3/4 are omitted because they have no mask kernel.
+    ``AUTOMATIC`` uses device-aware SDPA with a cuDNN preference.
+    """
+
     """Backends usable on the masked path. Mirrors :class:`AttentionFunction` minus
     the variants the torch SDPA dispatcher (or the wrapped kernel) rejects with a
     mask: ``SDPA_FLASH`` -- FLASH kernel cannot serve an additive ``attn_mask``;
@@ -485,4 +584,3 @@ class MaskedAttentionFunction(Enum):
                 return _resolve_sdpa_variant(
                     SDPBackend.EFFICIENT_ATTENTION, "MaskedAttentionFunction.SDPA_EFFICIENT", with_mask=True
                 )
-

@@ -1,4 +1,10 @@
-"""Native role adapter for the Cosmos Tokenize1 TorchScript artifact."""
+"""Cosmos Predict1 Tokenize1 :class:`~...contracts.LatentEncoder` / decoder.
+
+Wraps official TorchScript encoder/decoder artifacts.  Encode applies
+per-chunk mean/std then ``latent_scale`` (σ_data = 0.5).  Decode inverts
+that contract.  Only 1-frame stills or 121-pixel / 16-latent video chunks
+are supported.  ``return_latent`` skips decode.
+"""
 
 from __future__ import annotations
 
@@ -70,6 +76,7 @@ class Cosmos1VideoCodec:
 
     @torch.no_grad()
     def encode_raw(self, images: torch.Tensor) -> torch.Tensor:
+        """Run the TorchScript encoder without mean/std / σ_data scaling."""
         if images.ndim == 4:
             images = images.unsqueeze(2)
         if images.ndim != 5:
@@ -80,10 +87,12 @@ class Cosmos1VideoCodec:
 
     @torch.no_grad()
     def decode_raw(self, latents: torch.Tensor) -> torch.Tensor:
+        """Run the TorchScript decoder on already-unnormalized latents."""
         return _first_tensor(self.decoder(latents.to(self.dtype))).to(latents.dtype)
 
     @torch.no_grad()
     def encode(self, images: torch.Tensor) -> torch.Tensor:
+        """Encode pixels and apply Tokenize1 mean/std × ``latent_scale``."""
         latent = self.encode_raw(images)
         mean, std = self._stats(latent.shape[2], latent)
         # Cosmos Predict1 trains the diffusion model on tokenizer-normalized
@@ -95,6 +104,7 @@ class Cosmos1VideoCodec:
 
     @torch.no_grad()
     def decode(self, latents: torch.Tensor, request: DiffusionRequest) -> torch.Tensor:
+        """Invert σ_data / mean-std and decode; trim to ``request.num_frames``."""
         if bool(request.inputs.get("return_latent", False)):
             return latents
         if not bool(torch.isfinite(latents).all()):

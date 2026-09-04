@@ -1,4 +1,15 @@
-"""Public model identities declared by the Echo-Memory release metadata."""
+"""Published Echo-Memory model IDs, aliases, and upstream checkpoint status.
+
+Recipes look up a :class:`EchoMemoryModelSpec` by ``model_id`` (or alias)
+via :func:`get_echo_memory_model_spec`.  The spec pins the immutable
+:class:`~..networks.echo_memory.schema.EchoMemoryRecipe` and the relative
+safetensors path inside the official Hugging Face snapshot.
+
+``EchoCheckpointAvailability`` is deliberately separate from identity:
+several paper / ablation IDs are still catalogued even when upstream has
+not released, or has retracted, the matching weights.  The denoiser
+factory only loads specs whose availability is ``PUBLIC_CURRENT``.
+"""
 
 from __future__ import annotations
 

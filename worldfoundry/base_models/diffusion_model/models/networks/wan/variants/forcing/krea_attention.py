@@ -1,6 +1,8 @@
 # Copyright 2024-2025 The Alibaba Wan Team Authors. All rights reserved.
-"""Module for base_models -> diffusion_model -> video -> wan -> variants -> krea_realtime -> wan -> modules -> attention.py functionality."""
+"""Flash-attention dispatcher used by Krea realtime Wan.
 
+Kernel adapter for Krea blocks.  SageAttention is :mod:`.krea_sage`.
+"""
 import torch
 try:
     import flash_attn_interface

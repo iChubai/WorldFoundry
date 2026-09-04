@@ -1,7 +1,23 @@
+"""Wan-family TeaCache coefficients and the original residual cache object.
+
+:func:`get_teacache_coefficients` returns the published 4th-order polynomial
+for a known model-name substring, or ``None`` (and a print) when unsupported.
+:class:`TeaCache` is the training-free residual reuse object from
+https://github.com/ali-vilab/TeaCache.  The native DiT path prefers
+:class:`~worldfoundry.core.acceleration.AdaptiveResidualCache` wired through
+:class:`~...models.denoisers.graph_wrapped.FeatureCacheDenoiserMixin`, which
+keeps one cache per CFG branch.
+
+Constructor fails when ``num_steps < 1``, ``rel_l1_thresh < 0``, or
+``num_skip_start_steps`` is outside ``[0, num_steps]``.
+"""
+
 import numpy as np
 import torch
 
+
 def get_teacache_coefficients(model_name):
+    """Return published rescale coefficients, or ``None`` if the name is unknown."""
     if "wan2.1-t2v-1.3b" in model_name.lower() or "wan2.1-fun-1.3b" in model_name.lower() \
         or "wan2.1-fun-v1.1-1.3b" in model_name.lower() or "wan2.1-vace-1.3b" in model_name.lower():
         return [-5.21862437e+04, 9.23041404e+03, -5.28275948e+02, 1.36987616e+01, -4.99875664e-02]

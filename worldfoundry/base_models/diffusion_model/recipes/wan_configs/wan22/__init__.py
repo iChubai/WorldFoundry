@@ -1,4 +1,13 @@
-"""Declarative Wan 2.2 architecture and inference geometry data."""
+"""Declarative Wan 2.2 architecture and inference geometry data.
+
+Index for Wan 2.2 / A14B identities: dual-expert T2V and I2V A14B,
+TI2V 5B (Wan2.2 VAE38), speech-to-video 14B, and Animate 14B.
+``WAN_CONFIGS`` maps short names; ``SIZE_CONFIGS`` / ``SUPPORTED_SIZES``
+list legal pixel rectangles per identity.
+
+Shared T5 / dtype / 81-frame defaults live in :mod:`.shared`.
+Dual-expert graphs add low/high-noise checkpoints and a sigma boundary.
+"""
 
 from .animate_14b import animate_14B
 from .i2v_a14b import i2v_A14B

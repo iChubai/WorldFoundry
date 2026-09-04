@@ -9,6 +9,7 @@ source:
   status: open_source
   official_repo_url: https://github.com/eloialonso/iris
 official_sources:
+  paper: https://arxiv.org/abs/2310.08764
   github:
     url: https://github.com/eloialonso/iris
     head_sha: 24326aaaa283c527f42b89b44cfdecf2665a7a16

@@ -1,4 +1,8 @@
-"""Tensor and checkpoint helpers shared by classic diffusion networks."""
+"""Tensor and checkpoint helpers shared by classic diffusion networks.
+
+Shape/cast utilities for U-Net residuals. DiT modulation lives in
+``diffusion_transformer``; do not mix the two vocabularies.
+"""
 
 import math
 from inspect import isfunction
@@ -6,6 +10,11 @@ import torch
 import torch.utils.checkpoint
 from torch import nn
 import torch.distributed as dist
+
+
+# ──────────────────────────────────────────────────────────────────────────
+# Distributed gather and AMP — U-Net residual helpers, not DiT modulation
+# ──────────────────────────────────────────────────────────────────────────
 
 
 def gather_data(data, return_np=True):
@@ -24,9 +33,12 @@ def autocast(f):
     """
     def do_autocast(*args, **kwargs):
         """Do autocast."""
-        with torch.cuda.amp.autocast(enabled=True,
-                                     dtype=torch.get_autocast_gpu_dtype(),
-                                     cache_enabled=torch.is_autocast_cache_enabled()):
+        with torch.amp.autocast(
+            "cuda",
+            enabled=True,
+            dtype=torch.get_autocast_gpu_dtype(),
+            cache_enabled=torch.is_autocast_cache_enabled(),
+        ):
             return f(*args, **kwargs)
     return do_autocast
 
@@ -53,6 +65,7 @@ def extract_into_tensor_2d(a, t, x_shape):
     if len(t.shape) == 2:
         b, t_dim = t.shape
         ndim = len(x_shape)
+        # Video is B,C,T,... so gather along axis 2; 2-D images gather on axis 1.
         time_dim_idx = 2 if ndim >= 3 else 1
         flat_values = a.gather(-1, t.reshape(-1))
         values_bt = flat_values.reshape(b, t_dim)
@@ -61,6 +74,11 @@ def extract_into_tensor_2d(a, t, x_shape):
             output_shape.append(t_dim if i == time_dim_idx else 1)
         return values_bt.reshape(output_shape)
     raise ValueError(f"extract_into_tensor_2d expects 1D or 2D timesteps, got shape {tuple(t.shape)}")
+
+
+# ──────────────────────────────────────────────────────────────────────────
+# Noise, defaults, and small predicates used by classic U-Net graphs
+# ──────────────────────────────────────────────────────────────────────────
 
 
 def noise_like(shape, device, repeat=False):
@@ -157,9 +175,15 @@ def init_(tensor):
         tensor: The tensor.
     """
     dim = tensor.shape[-1]
+    # Fan-in uniform, same as the improved-diffusion residual Linear init.
     std = 1 / math.sqrt(dim)
     tensor.uniform_(-std, std)
     return tensor
+
+# ──────────────────────────────────────────────────────────────────────────
+# Activation checkpoint — flag-gated; use_reentrant=False for current PyTorch
+# ──────────────────────────────────────────────────────────────────────────
+
 
 ckpt = torch.utils.checkpoint.checkpoint
 def checkpoint(func, inputs, params, flag):

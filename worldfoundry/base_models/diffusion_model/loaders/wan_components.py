@@ -1,4 +1,14 @@
-"""Canonical checkpoint-bundle loading for native Wan inference variants."""
+"""Canonical checkpoint-bundle loading for native Wan inference variants.
+
+Loads an official Wan directory into explicit roles (DiT, T5, VAE, tokenizer,
+optional CLIP) without a model-manager backend.  Recipe factories call these
+helpers, then wrap the DiT in a :class:`~..models.denoisers.wan.WanDenoiser`
+that satisfies the runner ``Denoiser`` Protocol.
+
+Each helper fails if a role glob does not match exactly one file, or if the
+tokenizer directory ``google/umt5-xxl`` is missing.  Architecture is inferred
+from the state-dict layout; pass ``transformer_config`` when inference fails.
+"""
 
 from __future__ import annotations
 
@@ -25,7 +35,15 @@ from ..models.networks.wan import WanModel, WanModelStateDictConverter
 
 @dataclass(slots=True)
 class WanInferenceComponents:
-    """Explicit Wan roles loaded from one official checkpoint directory."""
+    """Explicit Wan roles loaded from one official checkpoint directory.
+
+    Attributes:
+        dit: Transformer used as the denoiser inner network.
+        text_encoder: UMT5 text encoder.
+        vae: Wan 2.1 or 2.2 video VAE (class chosen from the filename).
+        tokenizer_path: Directory ``<root>/google/umt5-xxl``.
+        image_encoder: Optional CLIP tower for I2V bundles.
+    """
 
     dit: torch.nn.Module
     text_encoder: WanTextEncoder
@@ -36,7 +54,11 @@ class WanInferenceComponents:
 
 @dataclass(slots=True)
 class WanConditioningComponents:
-    """Wan text/VAE roles that can be shared by one or more denoisers."""
+    """Wan text/VAE roles that can be shared by one or more denoisers.
+
+    Same fields as :class:`WanInferenceComponents` except ``dit``.  Dual-expert
+    recipes load this once and attach two DiTs.
+    """
 
     text_encoder: WanTextEncoder
     vae: WanVideoVAE

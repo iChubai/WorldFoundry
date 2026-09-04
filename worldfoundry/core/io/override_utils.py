@@ -1,6 +1,18 @@
-"""Lightweight command-line configuration formatting helpers."""
+"""Lightweight command-line configuration formatting helpers.
+
+Hydra overrides are strings (``model.hidden=64``, ``foo=null``).
+:func:`format_override_value` turns a Python value into that spelling:
+``None`` → ``null``, bools lowercased, lists as ``[a,b]``, empty
+string quoted. Used when a Studio / CLI layer forwards structured
+kwargs onto a Cosmos Hydra compose command without importing Hydra
+itself.
+"""
 
 from __future__ import annotations
+
+# ──────────────────────────────────────────────────────────────────────────
+# Hydra override spelling — None → null; empty string stays quoted
+# ──────────────────────────────────────────────────────────────────────────
 
 
 def format_override_value(value) -> str:

@@ -19,6 +19,7 @@ integration_status: integrated
 license: Apache-2.0
 name: Hy-Embodied-0.5-VLA
 official_sources:
+  paper: https://arxiv.org/abs/2606.14409
   github:
     head_sha: 8ba4c8cbdf42a4bcf0a19be4bd2841405dfe15e9
     url: https://github.com/Tencent-Hunyuan/Hy-Embodied-0.5-VLA

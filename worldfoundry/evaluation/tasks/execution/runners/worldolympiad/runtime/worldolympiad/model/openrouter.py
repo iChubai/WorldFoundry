@@ -6,6 +6,30 @@ import time
 import json
 
 
+OPENROUTER_API_KEY_ENV_NAMES = (
+    "WORLDFOUNDRY_OPENROUTER_API_KEY",
+    "OPENROUTER_API_KEY",
+    "api_key",
+)
+
+
+def get_openrouter_api_key() -> str | None:
+    """Resolve the OpenRouter key, retaining the legacy lowercase fallback."""
+
+    return next((value for name in OPENROUTER_API_KEY_ENV_NAMES if (value := os.getenv(name))), None)
+
+
+def _openrouter_headers() -> Dict[str, str]:
+    api_key = get_openrouter_api_key()
+    if not api_key:
+        names = ", ".join(OPENROUTER_API_KEY_ENV_NAMES[:-1])
+        raise RuntimeError(f"Missing OpenRouter API key; set {names}")
+    return {
+        "Authorization": f"Bearer {api_key}",
+        "Content-Type": "application/json",
+    }
+
+
 def clean_json_content(content: str) -> str:
     content = content.strip()
     if content.startswith("```json"):
@@ -70,10 +94,7 @@ def text_openrouter_call(system_prompt: str, user_content: str, model_name: str)
             {"role": "user", "content": user_content},
         ],
     }
-    headers = {
-        "Authorization": f"Bearer {os.getenv('api_key')}",
-        "Content-Type": "application/json",
-    }
+    headers = _openrouter_headers()
     url = "https://openrouter.ai/api/v1/chat/completions"
     return _post_with_retry(url, headers, payload, timeout=180, max_retries=3)
 
@@ -129,10 +150,7 @@ def video_openrouter_call(data_url, system_prompt: str, user_content: str, model
         "messages": messages
     }
     url = "https://openrouter.ai/api/v1/chat/completions"
-    headers = {
-        "Authorization": f"Bearer {os.getenv('api_key')}",
-        "Content-Type": "application/json"
-    }
+    headers = _openrouter_headers()
     resp_json = _post_with_retry(url, headers, payload, timeout=180, max_retries=3)
     return resp_json
 
@@ -148,8 +166,5 @@ def chat_openrouter_call(
     """
     payload = {"model": model_name, "messages": messages}
     url = "https://openrouter.ai/api/v1/chat/completions"
-    headers = {
-        "Authorization": f"Bearer {os.getenv('api_key')}",
-        "Content-Type": "application/json",
-    }
+    headers = _openrouter_headers()
     return _post_with_retry(url, headers, payload, timeout=timeout, max_retries=max_retries)

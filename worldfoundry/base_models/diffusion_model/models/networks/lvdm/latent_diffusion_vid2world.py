@@ -1,9 +1,8 @@
-"""
-wild mixture of
-https://github.com/openai/improved-diffusion/blob/e94489283bb876ac1477d5dd7709bbbd2d9902ce/improved_diffusion/gaussian_diffusion.py
-https://github.com/lucidrains/denoising-diffusion-pytorch/blob/7706bdfc6f527f58d33f84b7b522e61e6e3164b3/denoising_diffusion_pytorch/denoising_diffusion_pytorch.py
-https://github.com/CompVis/taming-transformers
--- merci
+"""Vid2World LVDM Lightning wrapper (same DDPM + 3D UNet contract).
+
+Latents and UNet features are ``B C T H W``.  Visual conditioning is
+packed into the UNet's extra context stream.  Sampler math is inherited
+from the original LVDM mixture of OpenAI / lucidrains / taming code.
 """
 
 from functools import partial
@@ -36,7 +35,7 @@ __conditioning_keys__ = {'concat': 'c_concat',
                          'adm': 'y'}
 
 class DDPM(pl.LightningModule):
-    """Ddpm implementation."""
+    """Gaussian diffusion wrapper: beta schedule plus the 3D UNet denoiser."""
     # classic DDPM with Gaussian diffusion, in image space
     def __init__(self,
                  unet_config,
@@ -68,38 +67,7 @@ class DDPM(pl.LightningModule):
                  logvar_init=0.,
                  rescale_betas_zero_snr=False,
                  ):
-        """Init.
-
-        Args:
-            unet_config: The unet config.
-            timesteps: The timesteps.
-            beta_schedule: The beta schedule.
-            loss_type: The loss type.
-            ckpt_path: The ckpt path.
-            ignore_keys: The ignore keys.
-            load_only_unet: The load only unet.
-            monitor: The monitor.
-            use_ema: The use ema.
-            first_stage_key: The first stage key.
-            image_size: The image size.
-            channels: The channels.
-            log_every_t: The log every t.
-            clip_denoised: The clip denoised.
-            linear_start: The linear start.
-            linear_end: The linear end.
-            cosine_s: The cosine s.
-            given_betas: The given betas.
-            original_elbo_weight: The original elbo weight.
-            v_posterior: The v posterior.
-            l_simple_weight: The l simple weight.
-            conditioning_key: The conditioning key.
-            parameterization: The parameterization.
-            scheduler_config: The scheduler config.
-            use_positional_encodings: The use positional encodings.
-            learn_logvar: The learn logvar.
-            logvar_init: The logvar init.
-            rescale_betas_zero_snr: The rescale betas zero snr.
-        """
+        """Register the beta schedule and construct the 3D UNet wrapper."""
         super().__init__()
         assert parameterization in ["eps", "x0", "v"], 'currently only supporting "eps" and "x0" and "v"'
         self.parameterization = parameterization
@@ -341,13 +309,7 @@ class DDPM(pl.LightningModule):
         return posterior_mean, posterior_variance, posterior_log_variance_clipped
 
     def p_mean_variance(self, x, t, clip_denoised: bool):
-        """P mean variance.
-
-        Args:
-            x: The x.
-            t: The t.
-            clip_denoised: The clip denoised.
-        """
+        """Predict the posterior mean/variance of ``x_t`` (``B C T H W`` or ``B C H W``)."""
         model_out = self.model(x, t)
         if self.parameterization == "eps":
             x_recon = self.predict_start_from_noise(x, t=t, noise=model_out)
@@ -361,14 +323,7 @@ class DDPM(pl.LightningModule):
 
     @torch.no_grad()
     def p_sample(self, x, t, clip_denoised=True, repeat_noise=False):
-        """P sample.
-
-        Args:
-            x: The x.
-            t: The t.
-            clip_denoised: The clip denoised.
-            repeat_noise: The repeat noise.
-        """
+        """Ancestral sample ``x_{t-1}`` from the predicted posterior."""
         b, *_, device = *x.shape, x.device
         model_mean, _, model_log_variance = self.p_mean_variance(x=x, t=t, clip_denoised=clip_denoised)
         noise = noise_like(x.shape, device, repeat_noise)
@@ -423,13 +378,7 @@ class DDPM(pl.LightningModule):
                 extract_into_tensor_2d(self.sqrt_one_minus_alphas_cumprod, t, x_start.shape) * noise)
 
     def get_v(self, x, noise, t):
-        """Get v.
-
-        Args:
-            x: The x.
-            noise: The noise.
-            t: The t.
-        """
+        """v-prediction target from clean ``x`` and noise at timestep ``t``."""
         return (
                 extract_into_tensor_2d(self.sqrt_alphas_cumprod, t, x.shape) * noise -
                 extract_into_tensor_2d(self.sqrt_one_minus_alphas_cumprod, t, x.shape) * x
@@ -496,11 +445,7 @@ class DDPM(pl.LightningModule):
         return loss, loss_dict
 
     def forward(self, x, *args, **kwargs):
-        """Forward.
-
-        Args:
-            x: The x.
-        """
+        """Sample a timestep and compute the diffusion training loss."""
         # b, c, h, w, device, img_size, = *x.shape, x.device, self.image_size
         # assert h == img_size and w == img_size, f'height and width of image must be {img_size}'
         t = torch.randint(0, self.num_timesteps, (x.shape[0],), device=self.device).long()
@@ -551,34 +496,7 @@ class LatentDiffusion(DDPM):
                  rand_cond_frame=False,
                  en_and_decode_n_samples_a_time=None,
                  *args, **kwargs):
-        """Init.
-
-        Args:
-            first_stage_config: The first stage config.
-            cond_stage_config: The cond stage config.
-            num_timesteps_cond: The num timesteps cond.
-            cond_stage_key: The cond stage key.
-            cond_stage_trainable: The cond stage trainable.
-            cond_stage_forward: The cond stage forward.
-            conditioning_key: The conditioning key.
-            uncond_prob: The uncond prob.
-            uncond_type: The uncond type.
-            scale_factor: The scale factor.
-            scale_by_std: The scale by std.
-            encoder_type: The encoder type.
-            only_model: The only model.
-            noise_strength: The noise strength.
-            use_dynamic_rescale: The use dynamic rescale.
-            base_scale: The base scale.
-            turning_step: The turning step.
-            interp_mode: The interp mode.
-            fps_condition_type: The fps condition type.
-            perframe_ae: The perframe ae.
-            df_loss: The df loss.
-            logdir: The logdir.
-            rand_cond_frame: The rand cond frame.
-            en_and_decode_n_samples_a_time: The en and decode n samples a time.
-        """
+        """Attach the first-stage VAE and condition key routing."""
         self.num_timesteps_cond = default(num_timesteps_cond, 1)
         self.scale_by_std = scale_by_std
         assert self.num_timesteps_cond <= kwargs['timesteps']
@@ -722,11 +640,7 @@ class LatentDiffusion(DDPM):
    
     @torch.no_grad()
     def encode_first_stage(self, x):
-        """Encode first stage.
-
-        Args:
-            x: The x.
-        """
+        """VAE-encode a video/image batch; latents stay channel-first."""
         if self.encoder_type == "2d" and x.dim() == 5:
             b, _, t, _, _ = x.shape
             x = rearrange(x, 'b c t h w -> (b t) c h w')
@@ -840,12 +754,7 @@ class LatentDiffusion(DDPM):
         return out
 
     def forward(self, x, c, **kwargs):
-        """Forward.
-
-        Args:
-            x: The x.
-            c: The c.
-        """
+        """Encode the batch, add noise, and denoise ``B C T H W`` latents."""
         # x.shape: b, c, t, h, w
         if self.df_loss:
             # print("forwarding LatentDiffusion with df_loss")
@@ -946,17 +855,7 @@ class LatentDiffusion(DDPM):
         return loss, loss_dict  
 
     def p_mean_variance(self, x, c, t, clip_denoised: bool, return_x0=False, score_corrector=None, corrector_kwargs=None, **kwargs):
-        """P mean variance.
-
-        Args:
-            x: The x.
-            c: The c.
-            t: The t.
-            clip_denoised: The clip denoised.
-            return_x0: The return x0.
-            score_corrector: The score corrector.
-            corrector_kwargs: The corrector kwargs.
-        """
+        """Conditioned posterior mean/variance for latent ``x`` of layout ``B C T H W``."""
         t_in = t
         model_out = self.apply_model(x, t_in, c, **kwargs)
 
@@ -984,20 +883,7 @@ class LatentDiffusion(DDPM):
     @torch.no_grad()
     def p_sample(self, x, c, t, clip_denoised=False, repeat_noise=False, return_x0=False, \
                  temperature=1., noise_dropout=0., score_corrector=None, corrector_kwargs=None, **kwargs):
-        """P sample.
-
-        Args:
-            x: The x.
-            c: The c.
-            t: The t.
-            clip_denoised: The clip denoised.
-            repeat_noise: The repeat noise.
-            return_x0: The return x0.
-            temperature: The temperature.
-            noise_dropout: The noise dropout.
-            score_corrector: The score corrector.
-            corrector_kwargs: The corrector kwargs.
-        """
+        """Conditioned ancestral step on latent ``x`` (``B C T H W``)."""
         b, *_, device = *x.shape, x.device
         outputs = self.p_mean_variance(x=x, c=c, t=t, clip_denoised=clip_denoised, return_x0=return_x0, \
                                        score_corrector=score_corrector, corrector_kwargs=corrector_kwargs, **kwargs)
@@ -1137,19 +1023,9 @@ class LatentDiffusion(DDPM):
         return samples, intermediates
 
 class LatentVisualDiffusion(LatentDiffusion):
-    """Latent visual diffusion implementation."""
+    """LatentDiffusion plus a visual condition encoder."""
     def __init__(self, img_cond_stage_config, image_proj_stage_config, freeze_embedder=True, image_proj_model_trainable=True, action_emb=False, action_dropout_prob=0.0, action_random_drop_btw_timestep=False, *args, **kwargs):
-        """Init.
-
-        Args:
-            img_cond_stage_config: The img cond stage config.
-            image_proj_stage_config: The image proj stage config.
-            freeze_embedder: The freeze embedder.
-            image_proj_model_trainable: The image proj model trainable.
-            action_emb: The action emb.
-            action_dropout_prob: The action dropout prob.
-            action_random_drop_btw_timestep: The action random drop btw timestep.
-        """
+        """Add the visual condition encoder on top of LatentDiffusion."""
         super().__init__(*args, **kwargs)
         self.image_proj_model_trainable = image_proj_model_trainable
         self._init_embedder(img_cond_stage_config, freeze_embedder)
@@ -1286,34 +1162,16 @@ class LatentVisualDiffusion(LatentDiffusion):
         return out
 
 class DiffusionWrapper(pl.LightningModule):
-    """Diffusion wrapper implementation."""
+    """Thin Lightning/Module adapter that routes cond keys into the UNet."""
     def __init__(self, diff_model_config, conditioning_key):
-        """Init.
-
-        Args:
-            diff_model_config: The diff model config.
-            conditioning_key: The conditioning key.
-        """
+        """Store the UNet and the conditioning-key routing mode."""
         super().__init__()
         self.diffusion_model = instantiate_from_config(diff_model_config)
         self.conditioning_key = conditioning_key
 
     def forward(self, x, t, c_concat: list = None, c_crossattn: list = None, c_action: list = None, c_action_mask: list = None,
                 c_adm=None, s=None, mask=None, kv_cache_info=None, **kwargs):
-        """Forward.
-
-        Args:
-            x: The x.
-            t: The t.
-            c_concat: The c concat.
-            c_crossattn: The c crossattn.
-            c_action: The c action.
-            c_action_mask: The c action mask.
-            c_adm: The c adm.
-            s: The s.
-            mask: The mask.
-            kv_cache_info: The kv cache info.
-        """
+        """Route ``c_concat`` / ``c_crossattn`` into the 3D UNet."""
         # temporal_context = fps is foNone
         if self.conditioning_key is None:
             out = self.diffusion_model(x, t, kv_cache_info=kv_cache_info)

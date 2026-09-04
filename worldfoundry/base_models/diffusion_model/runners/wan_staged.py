@@ -1,4 +1,12 @@
-"""Wan-specific staged execution built on the shared native runner utilities."""
+"""Wan-specific staged execution built on StagedDiffusionPipeline.
+
+Research-oriented path for custom Wan conditioning (I2V, ControlNet, VACE,
+TeaCache, USP). Not selected by NativeDiffusionAssembler; native Wan recipes
+use strategy + NativeDiffusionRunner instead.
+
+Must not: cast scheduler timesteps to BF16 before the sinusoidal embedding
+(see the denoise loop); register this pipeline as a recipe runner factory.
+"""
 
 import types
 from ..models.networks.wan.model import WanModel, RMSNorm
@@ -658,6 +666,7 @@ class WanStagedPipeline(StagedDiffusionPipeline):
                 **prompt_emb_posi, **image_emb, **extra_input,
                 **tea_cache_posi, **usp_kwargs, **motion_kwargs, **vace_kwargs, **reference_image_kwargs,
             )
+            # Classic CFG: ε_neg + cfg_scale * (ε_pos - ε_neg). Skip the negative pass at scale 1.
             if cfg_scale != 1.0:
                 noise_pred_nega = model_fn_wan_video(
                     self.dit, motion_controller=self.motion_controller, vace=self.vace,
@@ -686,7 +695,13 @@ class WanStagedPipeline(StagedDiffusionPipeline):
 
 
 class TeaCache:
-    """Tea cache implementation."""
+    """Skip redundant DiT blocks when modulated time input barely changes.
+
+    coefficients_dict is per official Wan model_id. check() accumulates a
+    polynomial-rescaled relative L1; below rel_l1_thresh, update() replays the
+    previous residual instead of running blocks. First and last steps always compute.
+    Unknown model_id raises :exc:`ValueError`.
+    """
     def __init__(self, num_inference_steps, rel_l1_thresh, model_id):
         """Init.
 
@@ -715,13 +730,7 @@ class TeaCache:
         self.coefficients = self.coefficients_dict[model_id]
 
     def check(self, dit: WanModel, x, t_mod):
-        """Check.
-
-        Args:
-            dit: The dit.
-            x: The x.
-            t_mod: The t mod.
-        """
+        """Return True when the block loop can be skipped (replay previous residual)."""
         modulated_inp = t_mod.clone()
         if self.step == 0 or self.step == self.num_inference_steps - 1:
             should_calc = True
@@ -744,20 +753,12 @@ class TeaCache:
         return not should_calc
 
     def store(self, hidden_states):
-        """Store.
-
-        Args:
-            hidden_states: The hidden states.
-        """
+        """Remember residual = hidden_states - input snapshot after a full block pass."""
         self.previous_residual = hidden_states - self.previous_hidden_states
         self.previous_hidden_states = None
 
     def update(self, hidden_states):
-        """Update.
-
-        Args:
-            hidden_states: The hidden states.
-        """
+        """Replay the stored residual instead of running DiT blocks."""
         hidden_states = hidden_states + self.previous_residual
         return hidden_states
 
@@ -780,23 +781,11 @@ def model_fn_wan_video(
     motion_bucket_id: Optional[torch.Tensor] = None,
     **kwargs,
 ):
-    """Model fn wan video.
+    """Single Wan DiT forward used by WanStagedPipeline.
 
-    Args:
-        dit: The dit.
-        motion_controller: The motion controller.
-        vace: The vace.
-        x: The x.
-        timestep: The timestep.
-        context: The context.
-        clip_feature: The clip feature.
-        y: The y.
-        reference_latents: The reference latents.
-        vace_context: The vace context.
-        vace_scale: The vace scale.
-        tea_cache: The tea cache.
-        use_unified_sequence_parallel: The use unified sequence parallel.
-        motion_bucket_id: The motion bucket id.
+    Official path: sin/cos from full-precision timestep, then cast only the
+    finished embedding to the latent dtype. TeaCache may skip the block loop.
+    VACE hints are added on mapped layers. USP chunks sequence dim across ranks.
     """
     if use_unified_sequence_parallel:
         import torch.distributed as dist

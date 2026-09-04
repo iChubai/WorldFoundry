@@ -3,9 +3,22 @@
 
 """Framework-neutral streaming video post-processing contracts.
 
-The per-stream session, buffering, and ordered-chain semantics are adapted
-from NVIDIA FlashDreams.  WorldFoundry additionally supports NumPy frame lists
-so Studio can use the same boundary without forcing a tensor stack or copy.
+Responsibility: per-stream session, ordered-chain, and layout-aware
+chunk types that a generator, processors, and a sink can exchange
+without copying frames. NumPy frame lists are accepted so Studio can
+use the same boundary without a tensor stack.
+
+Not this module: NVIDIA RTX VSR lives in
+:mod:`worldfoundry.core.video_postprocess_rtx` and is imported only
+when a preset selects it. Encode / decode lives in
+:mod:`worldfoundry.core.io.video` and
+:mod:`worldfoundry.core.safety.video_io`.
+
+Public surface: :class:`VideoSpec`, :class:`VideoChunk`,
+:class:`VideoPostProcessor`, :class:`VideoPostProcessorSession`,
+:class:`VideoPostprocessChain`, :class:`VideoPostprocessStream`,
+:func:`infer_video_spec`, :func:`video_frame_count`,
+:func:`frame_list_from_chunks`.
 """
 
 from __future__ import annotations
@@ -27,6 +40,10 @@ VideoTensorLayout = Literal[
     "bvtchw",
 ]
 
+# ──────────────────────────────────────────────────────────────────────────
+# Stream ABI — static spec plus one chunk; layouts never imply a copy
+# ──────────────────────────────────────────────────────────────────────────
+
 
 @dataclass(frozen=True, slots=True, kw_only=True)
 class VideoSpec:
@@ -39,6 +56,8 @@ class VideoSpec:
     dtype: str | None = None
 
     def __post_init__(self) -> None:
+        """Reject non-positive geometry so a later processor cannot invent pixels."""
+
         if self.height < 1 or self.width < 1:
             raise ValueError("VideoSpec height and width must be positive.")
         if self.channels < 1:
@@ -57,7 +76,14 @@ class VideoChunk:
 
     @property
     def frame_count(self) -> int:
+        """Count frames from the declared layout; empty chunks are valid (buffering)."""
+
         return video_frame_count(self.frames, layout=self.layout)
+
+
+# ──────────────────────────────────────────────────────────────────────────
+# Processor factory / session — one session owns one logical output stream
+# ──────────────────────────────────────────────────────────────────────────
 
 
 class VideoPostProcessorSession(ABC):
@@ -85,9 +111,13 @@ class VideoPostProcessor(ABC):
 
     @property
     def name(self) -> str:
+        """Stable telemetry id; subclasses override when the class name is not the preset."""
+
         return type(self).__name__
 
     def output_spec(self, input_spec: VideoSpec) -> VideoSpec:
+        """Declare the spec this processor emits; default is identity (no resize)."""
+
         return input_spec
 
     @abstractmethod
@@ -100,23 +130,35 @@ class IdentityVideoPostProcessor(VideoPostProcessor):
 
     @property
     def name(self) -> str:
+        """Preset id used by Studio when no real processor is selected."""
+
         return "identity"
 
     def start(self, spec: VideoSpec) -> VideoPostProcessorSession:
+        """Open a passthrough session that still enforces flush-then-reject."""
+
         return _IdentityVideoPostProcessorSession(spec)
 
 
 class _IdentityVideoPostProcessorSession(VideoPostProcessorSession):
+    """Zero-copy session: return the same chunk until ``flush`` closes it."""
+
     def __init__(self, spec: VideoSpec) -> None:
+        """Record the stream spec; identity does not allocate buffers."""
+
         self.spec = spec
         self._closed = False
 
     def process(self, chunk: VideoChunk) -> list[VideoChunk]:
+        """Return ``chunk`` unchanged; reject work after ``flush``."""
+
         if self._closed:
             raise RuntimeError("cannot process video after the identity session was flushed")
         return [chunk]
 
     def flush(self) -> list[VideoChunk]:
+        """Close the session; identity never buffers a tail."""
+
         self._closed = True
         return []
 
@@ -129,15 +171,21 @@ class VideoPostprocessChain:
 
     @property
     def names(self) -> tuple[str, ...]:
+        """Ordered processor ids for telemetry; empty when the chain is a no-op."""
+
         return tuple(processor.name for processor in self.processors)
 
     def output_spec(self, input_spec: VideoSpec) -> VideoSpec:
+        """Compose declared specs left-to-right so the sink can size buffers first."""
+
         current = input_spec
         for processor in self.processors:
             current = processor.output_spec(current)
         return current
 
     def start(self, input_spec: VideoSpec) -> VideoPostProcessorSession:
+        """Open one session per factory, feeding each the previous output spec."""
+
         sessions: list[VideoPostProcessorSession] = []
         current = input_spec
         for processor in self.processors:
@@ -147,24 +195,35 @@ class VideoPostprocessChain:
 
 
 class _VideoPostprocessChainSession(VideoPostProcessorSession):
+    """Pipeline of sessions; a flush tail is fed into the remaining stages only."""
+
     def __init__(self, sessions: list[VideoPostProcessorSession]) -> None:
+        """Own the already-started sessions; ``_closed`` is terminal after a failed flush."""
+
         self._sessions = sessions
         self._closed = False
 
     def prepare(self) -> None:
+        """Warm every stage before the first measured chunk so latency is not front-loaded."""
+
         for session in self._sessions:
             session.prepare()
 
     def process(self, chunk: VideoChunk) -> list[VideoChunk]:
+        """Push one chunk through every stage; reject work after ``flush``."""
+
         if self._closed:
             raise RuntimeError("cannot process a post-processing chain after flush()")
         return self._run(first_session_index=0, chunks=[chunk])
 
     def flush(self) -> list[VideoChunk]:
+        """Drain each stage once; a partial failure must not be retried.
+
+        Retrying would re-emit tails already produced by an earlier stage.
+        """
+
         if self._closed:
             return []
-        # A partial failure is terminal; retrying could duplicate tails already
-        # emitted by an earlier session in the chain.
         self._closed = True
         outputs: list[VideoChunk] = []
         for index, session in enumerate(self._sessions):
@@ -174,6 +233,8 @@ class _VideoPostprocessChainSession(VideoPostProcessorSession):
         return outputs
 
     def close(self) -> None:
+        """Discard remaining tails; idempotent so ``reset`` can call it twice."""
+
         if self._closed:
             return
         self._closed = True
@@ -186,6 +247,12 @@ class _VideoPostprocessChainSession(VideoPostProcessorSession):
         first_session_index: int,
         chunks: Iterable[VideoChunk],
     ) -> list[VideoChunk]:
+        """Feed ``chunks`` through ``sessions[first_session_index:]`` in order.
+
+        Each stage may expand or collapse the pending list (buffering).
+        Starting mid-chain is how a flushed tail skips stages that already ran.
+        """
+
         pending = list(chunks)
         for session in self._sessions[first_session_index:]:
             emitted: list[VideoChunk] = []
@@ -205,6 +272,8 @@ class VideoPostprocessStepStats:
     buffering: bool
 
     def to_payload(self) -> dict[str, float | int | bool]:
+        """JSON-safe receipt; ``buffering`` is True when the stage emitted no frames."""
+
         return {
             "elapsed_ms": self.elapsed_ms,
             "input_frames": self.input_frames,
@@ -222,6 +291,8 @@ class VideoPostprocessStream:
         chain: VideoPostprocessChain | None = None,
         fps: float | None = None,
     ) -> None:
+        """Bind a chain; the session is created lazily on the first ``process``."""
+
         self.chain = chain or VideoPostprocessChain()
         self.fps = fps
         self.input_spec: VideoSpec | None = None
@@ -233,10 +304,14 @@ class VideoPostprocessStream:
 
     @property
     def processor_names(self) -> tuple[str, ...]:
+        """Chain ids for Studio overlays; empty when the default identity chain is used."""
+
         return self.chain.names
 
     @property
     def chunk_index(self) -> int:
+        """Number of ``process`` calls completed; used as ``autoregressive_index``."""
+
         return self._chunk_index
 
     def process(
@@ -246,6 +321,13 @@ class VideoPostprocessStream:
         layout: VideoTensorLayout,
         metadata: dict[str, Any] | None = None,
     ) -> list[VideoChunk]:
+        """Run one AR chunk; the first call freezes the input spec for the stream.
+
+        A later chunk whose inferred spec differs is rejected so a processor
+        cannot silently resize mid-stream. ``finish`` is terminal until
+        :meth:`reset`.
+        """
+
         if self._closed:
             raise RuntimeError("cannot process video after finish()")
         spec = infer_video_spec(frames, layout=layout, fps=self.fps)
@@ -277,6 +359,8 @@ class VideoPostprocessStream:
         return outputs
 
     def finish(self) -> list[VideoChunk]:
+        """Flush buffered tails once; later calls return an empty list."""
+
         if self._closed:
             return []
         self._closed = True
@@ -297,6 +381,8 @@ class VideoPostprocessStream:
         self._closed = False
 
     def _validate_outputs(self, outputs: Iterable[VideoChunk]) -> None:
+        """Require every non-empty chunk to match the chain's declared output spec."""
+
         expected = self.output_spec
         if expected is None:
             return
@@ -310,6 +396,11 @@ class VideoPostprocessStream:
             )
             if actual != expected:
                 raise ValueError(f"postprocess chain declared output {expected!r} but emitted {actual!r}.")
+
+
+# ──────────────────────────────────────────────────────────────────────────
+# Layout helpers — infer H/W/C and T without copying; Studio needs frame-list
+# ──────────────────────────────────────────────────────────────────────────
 
 
 def infer_video_spec(
@@ -369,6 +460,8 @@ def infer_video_spec(
 
 
 def video_frame_count(frames: Any, *, layout: VideoTensorLayout) -> int:
+    """Return the time-axis length for ``layout``; ``frame-list`` is ``len(frames)``."""
+
     if layout == "frame-list":
         return len(frames)
     shape = _shape(frames, layout)
@@ -400,6 +493,8 @@ def frame_list_from_chunks(chunks: Iterable[VideoChunk]) -> list[Any]:
 
 
 def _shape(value: Any, layout: VideoTensorLayout) -> tuple[int, ...]:
+    """Read ``value.shape`` without importing torch/numpy; missing shape is a TypeError."""
+
     shape = getattr(value, "shape", None)
     if shape is None:
         raise TypeError(f"{layout} video value does not expose a shape")
@@ -407,6 +502,8 @@ def _shape(value: Any, layout: VideoTensorLayout) -> tuple[int, ...]:
 
 
 def _require_ndim(shape: tuple[int, ...], expected: int, layout: str) -> None:
+    """Fail closed when a layout's rank does not match the tensor; never infer a missing axis."""
+
     if len(shape) != expected:
         raise ValueError(f"layout {layout!r} requires {expected} dimensions; got shape {shape}.")
 

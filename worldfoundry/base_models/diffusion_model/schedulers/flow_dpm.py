@@ -2,7 +2,13 @@
 # Convert dpm solver for flow matching
 # Copyright 2024-2025 The Alibaba Wan Team Authors. All rights reserved.
 
-"""Native flow-matching DPM++ solver shared by diffusion model families."""
+"""Native flow-matching DPM++ solver shared by diffusion model families.
+
+Stateful Diffusers-compatible numerics used by Wan / Sana adapters that
+expose the runner ``DiffusionScheduler`` Protocol.  Recipes should prefer
+the family wrappers (``WanFlowUniPCScheduler``, ``SanaFlowDPMScheduler``)
+rather than constructing this class in a runner directly.
+"""
 
 import inspect
 import math

@@ -1,0 +1,41 @@
+{
+  "id": "qwen2.5-omni",
+  "tagline": {
+    "en": "Alibaba Qwen's 7B omni-modal model — reasons over text, images, audio, and video in a single model.",
+    "zh": "阿里 Qwen 的 7B 全模态模型——用一个模型统一理解文本、图像、音频与视频。"
+  },
+  "overview": {
+    "en": [
+      "Qwen2.5-Omni is the omni-modal member of Alibaba's Qwen2.5 family, released at the 7B scale. It brings text, image, audio, and video into one model so you can ask questions that cut across modalities and get a single grounded answer.",
+      "It covers general multimodal reasoning, audio reasoning, image question answering, and video question answering. Because it builds on the widely used Qwen line, it's a familiar and capable choice for perception-and-reasoning tasks.",
+      "In WorldFoundry, Qwen2.5-Omni runs as an understanding route: give it media plus a prompt and it returns text. The model assets are fetched from the published 7B checkpoint before a run."
+    ],
+    "zh": [
+      "Qwen2.5-Omni 是阿里 Qwen2.5 家族中的全模态成员,以 7B 规模发布。它把文本、图像、音频与视频纳入同一模型,让你能提出跨模态的问题,并得到统一、有据的回答。",
+      "它覆盖通用多模态推理、音频推理、图像问答与视频问答。由于它构建在广受使用的 Qwen 系列之上,对于感知与推理类任务是熟悉而有力的选择。",
+      "在 WorldFoundry 中,Qwen2.5-Omni 作为理解路径运行:给它媒体加提示词,它返回文本。运行前会从发布的 7B checkpoint 拉取模型资产。"
+    ]
+  },
+  "whenToUse": {
+    "en": "Use Qwen2.5-Omni when you want a single open model to caption, answer questions about, or reason over images, audio, and video together.",
+    "zh": "当你想用一个开放模型对图像、音频与视频进行描述、问答或联合推理时,可以使用 Qwen2.5-Omni。"
+  },
+  "notFor": {
+    "en": "Not a media generator — it understands and answers rather than creating images or video. It needs its 7B checkpoint and assets staged before running.",
+    "zh": "它不是媒体生成器——只做理解与问答,不生成图像或视频。运行前需要准备好其 7B checkpoint 与资产。"
+  },
+  "highlights": {
+    "en": [
+      "Omni-modal model in Alibaba's Qwen2.5 family, 7B scale",
+      "Text, image, audio, and video in one model",
+      "Multimodal reasoning, audio reasoning, and image/video Q&A",
+      "Text-out understanding route, not a generator"
+    ],
+    "zh": [
+      "阿里 Qwen2.5 家族中的全模态模型,7B 规模",
+      "文本、图像、音频、视频同在一个模型",
+      "多模态推理、音频推理、图像/视频问答",
+      "输出文本的理解路径,而非生成器"
+    ]
+  }
+}

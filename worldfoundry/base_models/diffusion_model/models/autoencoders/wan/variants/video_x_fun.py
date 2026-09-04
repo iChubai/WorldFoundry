@@ -1,4 +1,15 @@
-"""Native adapter around the canonical Wan 2.1 VAE."""
+"""Fun-Control / Video-X adapter around the canonical Wan 2.1 VAE.
+
+:class:`AutoencoderKLWan` wraps the Wan 2.1 causal CNN via
+:class:`~..adapter.WanAutoencoderAdapterMixin` so Fun-Control
+and Video-X loaders see a Diffusers-like API.
+
+Latents remain 16-channel BCTHW, 8× spatial / 4× temporal,
+official Wan 2.1 mean/std.  No new residual math.
+
+Prefer :class:`~..component.WanVideoDecoder` for native
+recipes.
+"""
 
 from __future__ import annotations
 
@@ -110,6 +121,7 @@ def _convert_state_dict(state: dict[str, torch.Tensor]) -> dict[str, torch.Tenso
 
 
 class AutoencoderKLWan(WanAutoencoderAdapterMixin, nn.Module):
+    """Fun-Control / Video-X wrapper around the Wan 2.1 16-channel VAE."""
     def __init__(
         self,
         latent_channels: int = 16,

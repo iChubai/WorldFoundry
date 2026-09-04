@@ -1,4 +1,16 @@
-"""Canonical flow-matching schedules used by Wan inference families."""
+"""Canonical flow-matching schedules used by Wan inference families.
+
+Implements the runner :class:`~..contracts.DiffusionScheduler` Protocol for
+Wan recipes.  :class:`WanFlowMatchEulerScheduler` is the stateless default:
+``schedule`` builds a shifted sigma path and ``step`` does
+``latents + (σ_{t+1} - σ_t) * flow``.  :class:`WanFlowUniPCScheduler` wraps
+the shared UniPC solver.  :class:`InferenceFlowMatchScheduler` is a
+transitional stateful API for causal wrappers.
+
+Unsupported keys in ``SamplingConfig.scheduler_options`` raise
+:exc:`ValueError`.  Shift / sigma / step counts must be positive and
+``sigma_max > sigma_min``.
+"""
 
 from __future__ import annotations
 
@@ -215,6 +227,126 @@ def build_wan_flow_match_euler_scheduler(
     )
 
 
+class FastVideoCausalWanSelfForcingScheduler:
+    """Fixed eight-step self-forcing sampler released with CausalWan2.2.
+
+    The configured values are raw training indices.  Model calls receive the
+    rationally shifted timestep, while each completed prediction is converted
+    to ``x0`` and re-noised at the *next* shifted sigma.  Re-noising in
+    :meth:`step` is equivalent to the upstream sampler doing it immediately
+    before the following model call and keeps all randomness on the runner's
+    request-scoped generator.
+    """
+
+    DEFAULT_RAW_TIMESTEPS = (1000, 850, 700, 550, 350, 275, 200, 125)
+
+    def __init__(
+        self,
+        *,
+        raw_timesteps: tuple[int, ...] = DEFAULT_RAW_TIMESTEPS,
+        shift: float = 5.0,
+        num_train_timesteps: int = 1000,
+        timestep_dtype: torch.dtype = torch.float32,
+    ) -> None:
+        self.raw_timesteps = tuple(int(value) for value in raw_timesteps)
+        self.shift = float(shift)
+        self.num_train_timesteps = int(num_train_timesteps)
+        self.timestep_dtype = timestep_dtype
+        if self.num_train_timesteps <= 0:
+            raise ValueError("num_train_timesteps must be positive")
+        if self.shift <= 0:
+            raise ValueError("shift must be positive")
+        if not self.timestep_dtype.is_floating_point:
+            raise ValueError("timestep_dtype must be floating point")
+        if not self.raw_timesteps:
+            raise ValueError("FastVideo CausalWan raw_timesteps cannot be empty")
+        if any(value <= 0 or value > self.num_train_timesteps for value in self.raw_timesteps):
+            raise ValueError("FastVideo CausalWan raw timesteps must be in (0, num_train_timesteps]")
+        if any(left <= right for left, right in zip(self.raw_timesteps, self.raw_timesteps[1:])):
+            raise ValueError("FastVideo CausalWan raw timesteps must be strictly descending")
+
+    def schedule(
+        self,
+        sampling: SamplingConfig,
+        *,
+        device: torch.device,
+        dtype: torch.dtype,
+    ) -> tuple[SchedulerStep, ...]:
+        del dtype
+        unsupported = set(sampling.scheduler_options) - {"shift"}
+        if unsupported:
+            raise ValueError(
+                "unsupported FastVideoCausalWanSelfForcingScheduler options: "
+                f"{sorted(unsupported)}"
+            )
+        if sampling.num_inference_steps != len(self.raw_timesteps):
+            raise ValueError(
+                "FastVideo CausalWan requires exactly "
+                f"{len(self.raw_timesteps)} inference steps"
+            )
+        shift = float(sampling.scheduler_options.get("shift", self.shift))
+        raw = torch.tensor(
+            (*self.raw_timesteps, 0),
+            device=device,
+            dtype=self.timestep_dtype,
+        )
+        sigmas = shift_flow_sigmas(raw / float(self.num_train_timesteps), shift)
+        model_timesteps = sigmas * float(self.num_train_timesteps)
+        return tuple(
+            SchedulerStep(
+                index=index,
+                timestep=model_timesteps[index],
+                next_timestep=model_timesteps[index + 1],
+            )
+            for index in range(len(self.raw_timesteps))
+        )
+
+    @staticmethod
+    def scale_model_input(latents: Tensor, step: SchedulerStep) -> Tensor:
+        del step
+        return latents
+
+    def step(
+        self,
+        model_output: Tensor,
+        step: SchedulerStep,
+        latents: Tensor,
+        *,
+        generator: torch.Generator,
+    ) -> Tensor:
+        sigma = step.timestep.to(device=latents.device, dtype=torch.float64)
+        sigma = sigma / float(self.num_train_timesteps)
+        clean = flow_prediction_to_x0(model_output, latents, sigma)
+        next_sigma = step.next_timestep.to(device=latents.device, dtype=torch.float64)
+        next_sigma = next_sigma / float(self.num_train_timesteps)
+        if float(next_sigma.detach().cpu()) == 0.0:
+            return clean
+        noise = torch.randn(
+            clean.shape,
+            generator=generator,
+            device=clean.device,
+            dtype=clean.dtype,
+        )
+        return add_flow_noise(clean, noise, next_sigma)
+
+
+def build_fastvideo_causal_wan_self_forcing_scheduler(
+    context: ComponentBuildContext,
+) -> FastVideoCausalWanSelfForcingScheduler:
+    options = context.component_options
+    return FastVideoCausalWanSelfForcingScheduler(
+        raw_timesteps=tuple(
+            int(value)
+            for value in options.get(
+                "raw_timesteps",
+                FastVideoCausalWanSelfForcingScheduler.DEFAULT_RAW_TIMESTEPS,
+            )
+        ),
+        shift=float(options.get("shift", 5.0)),
+        num_train_timesteps=int(options.get("num_train_timesteps", 1000)),
+    )
+
+
 class WanFlowUniPCScheduler:
     """Native scheduler-contract adapter for Wan's canonical UniPC solver."""
 
@@ -249,13 +381,21 @@ class WanFlowUniPCScheduler:
         use_karras_sigma = bool(sampling.scheduler_options.get("use_karras_sigma", self.use_karras_sigma))
         # The NVIDIA solver's historical Karras branch interprets ``N`` as
         # intervals and returns N+1 model-evaluation points. The canonical
-        # scheduler contract defines N as evaluations, so translate here.
-        solver_steps = sampling.num_inference_steps - 1 if use_karras_sigma and sampling.num_inference_steps > 1 else sampling.num_inference_steps
+        # scheduler contract defines N as evaluations, so translate here. A
+        # one-evaluation schedule cannot represent a Karras interval (passing
+        # zero would divide by zero), so use the equivalent single flow step
+        # from sigma_max to the terminal sigma.
+        effective_karras_sigma = use_karras_sigma and sampling.num_inference_steps > 1
+        solver_steps = (
+            sampling.num_inference_steps - 1
+            if effective_karras_sigma
+            else sampling.num_inference_steps
+        )
         self.solver.set_timesteps(
             solver_steps,
             device=device,
             shift=float(sampling.scheduler_options.get("shift", self.shift)),
-            use_kerras_sigma=use_karras_sigma,
+            use_kerras_sigma=effective_karras_sigma,
         )
         timesteps = self.solver.timesteps
         terminal = torch.zeros((), device=device, dtype=timesteps.dtype)
@@ -395,10 +535,12 @@ class InferenceFlowMatchScheduler:
 
 
 __all__ = [
+    "FastVideoCausalWanSelfForcingScheduler",
     "InferenceFlowMatchScheduler",
     "WanFlowMatchEulerScheduler",
     "WanFlowUniPCScheduler",
     "add_flow_noise",
+    "build_fastvideo_causal_wan_self_forcing_scheduler",
     "build_wan_flow_match_euler_scheduler",
     "build_wan_flow_unipc_scheduler",
     "build_wan_sigmas",

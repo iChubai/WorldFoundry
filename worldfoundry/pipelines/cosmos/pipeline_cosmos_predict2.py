@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 import secrets
 from collections.abc import Mapping
 from pathlib import Path
@@ -11,6 +12,7 @@ import torch
 
 from worldfoundry.base_models.diffusion_model import NativeDiffusionPipeline
 from worldfoundry.base_models.diffusion_model.contracts import DiffusionRequest, SamplingConfig
+from worldfoundry.base_models.diffusion_model.loaders import CheckpointSpec
 from worldfoundry.base_models.diffusion_model.optimizations import (
     RuntimePolicy,
     parse_offload_policy,
@@ -62,6 +64,48 @@ def _subdirectory(
     return None
 
 
+def _text_encoder_override(path: Path) -> CheckpointSpec | str | None:
+    """Resolve Hugging Face T5 ``.bin`` or sharded safetensors exports."""
+
+    path = path.expanduser()
+    if path.is_file():
+        return str(path.resolve())
+    if not path.is_dir():
+        return None
+    if (path / "pytorch_model.bin").is_file():
+        return str(path.resolve())
+    if (path / "model.safetensors").is_file():
+        return CheckpointSpec(
+            source=path.resolve(),
+            files=("model.safetensors",),
+            allow_patterns=("model.safetensors", "config.json"),
+        )
+
+    index_path = path / "model.safetensors.index.json"
+    if not index_path.is_file():
+        return None
+    payload = json.loads(index_path.read_text(encoding="utf-8"))
+    weight_map = payload.get("weight_map") if isinstance(payload, dict) else None
+    if not isinstance(weight_map, Mapping) or not weight_map:
+        raise ValueError(f"invalid T5 safetensors index: {index_path}")
+    shards = tuple(dict.fromkeys(str(filename) for filename in weight_map.values()))
+    unsafe = tuple(
+        filename
+        for filename in shards
+        if Path(filename).is_absolute() or ".." in Path(filename).parts
+    )
+    if unsafe:
+        raise ValueError(f"unsafe T5 safetensors shard paths in {index_path}: {list(unsafe)}")
+    missing = tuple(filename for filename in shards if not (path / filename).is_file())
+    if missing:
+        raise FileNotFoundError(f"T5 safetensors shards do not exist below {path}: {list(missing)}")
+    return CheckpointSpec(
+        source=path.resolve(),
+        files=shards,
+        allow_patterns=(*shards, "config.json", "model.safetensors.index.json"),
+    )
+
+
 class CosmosPredict2Pipeline(PipelineABC):
     """Studio-facing wrapper around the canonical Predict2 2B/14B recipes."""
 
@@ -89,8 +133,8 @@ class CosmosPredict2Pipeline(PipelineABC):
         options: Mapping[str, Any],
         *,
         model_id: str,
-    ) -> dict[str, str] | None:
-        overrides: dict[str, str] = {}
+    ) -> dict[str, CheckpointSpec | str] | None:
+        overrides: dict[str, CheckpointSpec | str] = {}
         source = options.get("checkpoint_path", options.get("transformer_model_path", model_path))
         if isinstance(source, (str, Path)):
             path = Path(source).expanduser()
@@ -109,24 +153,34 @@ class CosmosPredict2Pipeline(PipelineABC):
                 )
                 if model_root is not None:
                     overrides.update({"transformer": str(model_root.resolve()), "vae": str(model_root.resolve())})
-                text_root = path if (path / "pytorch_model.bin").is_file() else _subdirectory(
+                text_roots = (
                     path,
-                    ("t5-11b", "google-t5--t5-11b", "google-t5/t5-11b"),
-                    required_file="pytorch_model.bin",
+                    path / "text_encoder",
+                    path / "t5-11b",
+                    path / "google-t5--t5-11b",
+                    path / "google-t5" / "t5-11b",
                 )
-                if text_root is not None:
-                    overrides.update(
-                        {"text-encoder": str(text_root.resolve()), "text-tokenizer": str(text_root.resolve())}
-                    )
+                for text_root in text_roots:
+                    text_override = _text_encoder_override(text_root)
+                    if text_override is None:
+                        continue
+                    overrides["text-encoder"] = text_override
+                    if (text_root / "spiece.model").is_file():
+                        overrides["text-tokenizer"] = str(text_root.resolve())
+                    break
         explicit = {
             "transformer": options.get("transformer_model_path"),
             "vae": options.get("vae_model_path", options.get("tokenizer_model_path")),
-            "text-encoder": options.get("text_encoder_model_path"),
             "text-tokenizer": options.get("text_tokenizer_path", options.get("text_encoder_model_path")),
         }
         for role, value in explicit.items():
             if isinstance(value, (str, Path)) and Path(value).expanduser().exists():
                 overrides[role] = str(Path(value).expanduser().resolve())
+        text_encoder_path = options.get("text_encoder_model_path")
+        if isinstance(text_encoder_path, (str, Path)):
+            text_override = _text_encoder_override(Path(text_encoder_path))
+            if text_override is not None:
+                overrides["text-encoder"] = text_override
         return overrides or None
 
     @classmethod
@@ -199,6 +253,8 @@ class CosmosPredict2Pipeline(PipelineABC):
         video: Any = None,
         video_path: str | None = None,
         output_path: str | Path | None = None,
+        output_dir: str | Path | None = None,
+        task_type: str | None = None,
         guidance_scale: float = 7.0,
         num_inference_steps: int = COSMOS_PREDICT2_DEFAULT_NUM_INFERENCE_STEPS,
         fps: int = COSMOS_PREDICT2_DEFAULT_FPS,
@@ -211,6 +267,10 @@ class CosmosPredict2Pipeline(PipelineABC):
         return_dict: bool = False,
         **kwargs: Any,
     ) -> Any:
+        # Workspace supplies these dispatch fields to every model. Cosmos
+        # materializes through ``output_path`` (or returns the tensor for the
+        # Workspace materializer), so neither changes native inference.
+        del output_dir, task_type
         if kwargs:
             raise TypeError(f"unsupported Cosmos Predict2 inference options: {sorted(kwargs)}")
         image_value = image if image is not None else images

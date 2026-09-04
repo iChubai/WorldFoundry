@@ -1,0 +1,41 @@
+{
+  "id": "mem-0",
+  "tagline": {
+    "en": "A memory-augmented vision-language-action policy with an episodic memory bank, for dual-arm robot control.",
+    "zh": "带情景记忆库的记忆增强视觉-语言-动作策略,面向双臂机器人控制。"
+  },
+  "overview": {
+    "en": [
+      "Mem-0 is a memory-augmented vision-language-action policy for robot control. Its runtime pairs an episodic memory bank with a Qwen feature path, a classifier, and a flow-matching action decoder, letting the policy draw on past experience when deciding what to do.",
+      "This entry targets the published M1 multi-task execution checkpoint, which runs on its own without a separate high-level planning server. The output matches the official 14-value dual-arm joint layout: internally the model works in a 16-dimensional padded state/action space and drops two padding slots to produce the 14-dimensional environment output. The checkpoint is stored as byte-split parts that the runtime reads as one seekable stream, avoiding a second full copy of the roughly 15.3 GB weights.",
+      "In WorldFoundry you stage the M1 checkpoint along with its normalization statistics and a local Qwen backbone, supply observations, and the model returns a dual-arm action chunk."
+    ],
+    "zh": [
+      "Mem-0 是一个用于机器人控制的记忆增强视觉-语言-动作策略。其运行时把情景记忆库与 Qwen 特征路径、一个分类器,以及一个 flow-matching 动作解码器结合起来,让策略在决策时能借助过往经验。",
+      "本条目面向已发布的 M1 多任务执行 checkpoint,它可独立运行,无需单独的高层规划服务端。输出对齐官方的 14 值双臂关节布局:模型内部在 16 维填充的状态/动作空间中工作,并去掉两个填充槽位,得到 14 维的环境输出。checkpoint 以字节切分的多个部分存储,运行时将其作为一个可寻址流读取,避免为约 15.3 GB 的权重再造一份完整副本。",
+      "在 WorldFoundry 中,你备好 M1 checkpoint 及其归一化统计与本地 Qwen 骨干,提供观测,模型便返回一段双臂动作块。"
+    ]
+  },
+  "whenToUse": {
+    "en": "Use it when you want a memory-augmented VLA policy for dual-arm robot control, drawing on an episodic memory bank for multi-task execution.",
+    "zh": "当你想要一个记忆增强的 VLA 策略、用于双臂机器人控制,并借助情景记忆库完成多任务执行时,选它。"
+  },
+  "notFor": {
+    "en": "It outputs robot actions, not media. The M1 checkpoint (roughly 15.3 GB), its normalization statistics, and a local Qwen backbone must be staged before running.",
+    "zh": "它输出机器人动作而非媒体内容。M1 checkpoint(约 15.3 GB)、其归一化统计与本地 Qwen 骨干须先备好方可运行。"
+  },
+  "highlights": {
+    "en": [
+      "Memory-augmented VLA policy with an episodic memory bank",
+      "Flow-matching action decoder on a Qwen feature path",
+      "Outputs the official 14-value dual-arm joint layout",
+      "Byte-split checkpoint read as one stream, no second copy"
+    ],
+    "zh": [
+      "带情景记忆库的记忆增强 VLA 策略",
+      "Qwen 特征路径上的 flow-matching 动作解码器",
+      "输出官方 14 值双臂关节布局",
+      "字节切分的 checkpoint 以单流读取,无需再造副本"
+    ]
+  }
+}

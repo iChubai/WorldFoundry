@@ -1,4 +1,19 @@
-"""Preprocessing helpers for Wan environment-observation encoders."""
+"""Preprocessing helpers for Wan / MultiWorld VGGT environment encoders.
+
+VGGT (and the Wan env-obs adapters that wrap it) expect a batched
+``float32`` RGB tensor at a ViT-friendly size (default 224, sides
+rounded to multiples of 14). This module owns that resize/crop/pad
+contract so model families do not each reimplement letterboxing:
+
+- :func:`preprocess_pil_for_vggt` — one RGB PIL image.
+- :func:`load_and_preprocess_images` — paths, optional stereo
+  ``left`` / ``right`` crop, then stack + pad to a common H×W.
+- :func:`load_and_preprocess_videos` — OpenCV frame sampling with
+  stride / start / target-frame count, same view + resize rules.
+
+``mode="crop"`` center-crops a too-tall resize; ``mode="pad"`` pads
+with white. Video loading requires optional ``opencv-python``.
+"""
 
 from __future__ import annotations
 
@@ -14,20 +29,29 @@ from PIL import Image
 ViewMode = Literal["full", "left", "right"]
 ResizeMode = Literal["crop", "pad"]
 
+# ──────────────────────────────────────────────────────────────────────────
+# VGGT letterbox — long side = target; short side rounded to multiples of 14
+# ──────────────────────────────────────────────────────────────────────────
+
 
 def _normalize_view(view: str) -> ViewMode:
+    """Reject unknown stereo views so a typo cannot silently return a full frame."""
+
     if view not in {"full", "left", "right"}:
         raise ValueError("return_view must be one of 'full', 'left', or 'right'")
     return view  # type: ignore[return-value]
 
 
 def _resize_for_vggt(img: Image.Image, *, target_size: int, mode: ResizeMode, source_size: tuple[int, int] | None = None) -> torch.Tensor:
+    """Resize then crop/pad; *source_size* keeps stereo FOV math on the uncropped frame."""
+
     width, height = source_size or img.size
     if mode not in {"crop", "pad"}:
         raise ValueError("mode must be either 'crop' or 'pad'")
 
     if width >= height:
         new_width = target_size
+        # ViT patch grid is 14×14; rounding after scale keeps aspect close.
         new_height = round(height * (new_width / width) / 14) * 14
     else:
         new_height = target_size
@@ -59,13 +83,20 @@ def preprocess_pil_for_vggt(
     target_size: int = 224,
     mode: ResizeMode = "pad",
 ) -> torch.Tensor:
-    """Preprocess one PIL image for the MultiWorld VGGT environment encoder."""
+    """Preprocess one PIL image for the MultiWorld VGGT environment encoder.
+
+    Converts to RGB, resizes so the long side is *target_size* (short
+    side rounded to a multiple of 14), then crops or pads per *mode*.
+    Returns ``[3, H, W]`` in ``[0, 1]``.
+    """
 
     img = pil_image.convert("RGB")
     return _resize_for_vggt(img, target_size=target_size, mode=mode)
 
 
 def _open_rgb(path: str | Path) -> Image.Image:
+    """Load RGB; composite RGBA onto white so alpha does not become black."""
+
     img = Image.open(path)
     if img.mode == "RGBA":
         background = Image.new("RGBA", img.size, (255, 255, 255, 255))
@@ -74,6 +105,8 @@ def _open_rgb(path: str | Path) -> Image.Image:
 
 
 def _select_view(img: Image.Image, view: ViewMode) -> tuple[Image.Image, tuple[int, int]]:
+    """Crop left/right stereo halves; return the *original* size for letterbox FOV."""
+
     width, height = img.size
     if view == "left":
         return img.crop((0, 0, width // 2, height)), (width, height)
@@ -83,6 +116,8 @@ def _select_view(img: Image.Image, view: ViewMode) -> tuple[Image.Image, tuple[i
 
 
 def _pad_to_common_shape(tensors: list[torch.Tensor]) -> list[torch.Tensor]:
+    """White-pad mixed H×W tensors so they can stack into one batch."""
+
     shapes = {(tensor.shape[1], tensor.shape[2]) for tensor in tensors}
     if len(shapes) <= 1:
         return tensors
@@ -108,7 +143,20 @@ def load_and_preprocess_images(
     return_view: str = "full",
     target_size: int = 224,
 ) -> torch.Tensor:
-    """Load image paths and produce a batched VGGT env-observation tensor."""
+    """Load image paths and produce a batched VGGT env-observation tensor.
+
+    Args:
+        image_path_list: One or more image files. RGBA is composited on
+            white.
+        mode: ``"crop"`` or ``"pad"`` after the 14-aligned resize.
+        return_view: ``"full"``, or ``"left"`` / ``"right"`` half of a
+            side-by-side stereo frame (crop uses the *original* size so
+            the 14-grid stays consistent).
+        target_size: Long-side target in pixels.
+
+    Returns:
+        ``[N, 3, H, W]`` float32 tensor, padded to a common spatial size.
+    """
 
     if not image_path_list:
         raise ValueError("At least 1 image is required")
@@ -123,6 +171,8 @@ def load_and_preprocess_images(
 
 
 def _read_video_frames(path: str | Path, *, start_point: int, frame_stride: int, target_frames: int | None) -> list[np.ndarray]:
+    """Sample RGB frames via OpenCV; missing cv2 or an empty file raises, never returns []."""
+
     try:
         import cv2
     except ModuleNotFoundError as error:
@@ -154,6 +204,8 @@ def _read_video_frames(path: str | Path, *, start_point: int, frame_stride: int,
 
 
 def _select_frame_view(frame: np.ndarray, view: ViewMode) -> Image.Image:
+    """Stereo crop for a video frame; unlike images, FOV uses the cropped size."""
+
     img = Image.fromarray(frame).convert("RGB")
     width, height = img.size
     if view == "left":
@@ -172,7 +224,18 @@ def load_and_preprocess_videos(
     start_point: int = 0,
     target_size: int = 224,
 ) -> torch.Tensor:
-    """Load videos and produce a batched VGGT env-observation tensor."""
+    """Load videos and produce a batched VGGT env-observation tensor.
+
+    Samples frames with OpenCV (``start_point``, ``frame_stride``,
+    optional ``target_frames``), applies the same view + resize rules as
+    :func:`load_and_preprocess_images`, and stacks to
+    ``[N, T, 3, H, W]``. Videos of different spatial sizes are padded
+    to the max H×W in the batch.
+
+    Raises:
+        ModuleNotFoundError: ``opencv-python`` is not installed.
+        ValueError: A path is empty or yields no frames.
+    """
 
     if not video_path_list:
         raise ValueError("At least 1 video is required")

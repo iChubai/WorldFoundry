@@ -18,6 +18,7 @@ integration:
 license: mit
 name: Latent Action Pretraining
 official_sources:
+  paper: https://arxiv.org/abs/2410.11758
   github:
     head_sha: 46aca51d7faebcec02d7d323bbb3820c2df07bc6
     url: https://github.com/LatentActionPretraining/LAPA

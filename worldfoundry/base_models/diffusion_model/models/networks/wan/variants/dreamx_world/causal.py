@@ -1,3 +1,8 @@
+"""DreamX-World causal Wan (chunk KV cache).
+
+Causal self-attention on the DreamX stem.  Adds causal hooks.
+"""
+
 from worldfoundry.base_models.diffusion_model.models.networks.wan.mixins import (
     WanTransformerMethodsMixin,
 )

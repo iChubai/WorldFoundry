@@ -1,3 +1,15 @@
+"""Build LTX audio decoder / vocoder graphs from checkpoint config.
+
+:class:`AudioDecoderConfigurator`, :class:`AudioEncoderConfigurator`,
+and :class:`VocoderConfigurator` instantiate the CNN / vocoder
+from serialized JSON metadata shipped with LTX checkpoints.
+
+They do not run encode/decode; they only wire modules that
+:mod:`.audio_vae` and :mod:`.vocoder` already define.
+
+Used by :mod:`~..component` when loading LTX-2 media weights.
+"""
+
 from worldfoundry.base_models.diffusion_model.models.autoencoders.ltx.audio.attention import AttentionType
 from worldfoundry.base_models.diffusion_model.models.autoencoders.ltx.audio.audio_vae import AudioDecoder, AudioEncoder
 from worldfoundry.base_models.diffusion_model.models.autoencoders.ltx.audio.causality_axis import CausalityAxis
@@ -90,6 +102,8 @@ class VocoderConfigurator:
 
 
 class AudioDecoderConfigurator:
+    """Instantiate the LTX audio decoder CNN from checkpoint JSON."""
+
     @classmethod
     def from_config(cls: type[AudioDecoder], config: dict) -> AudioDecoder:
         audio_vae_cfg = config.get("audio_vae", {})
@@ -126,6 +140,8 @@ class AudioDecoderConfigurator:
 
 
 class AudioEncoderConfigurator:
+    """Instantiate the LTX audio encoder CNN from checkpoint JSON."""
+
     @classmethod
     def from_config(cls: type[AudioEncoder], config: dict) -> AudioEncoder:
         audio_vae_cfg = config.get("audio_vae", {})

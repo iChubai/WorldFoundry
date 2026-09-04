@@ -1,4 +1,40 @@
-"""Reusable layers and tensor operations for diffusion transformers."""
+"""Reusable DiT layers: AdaLN modulation, RMSNorm, MLPs, and residual gates.
+
+Video DiTs condition every block on timestep (and often text) through
+scale-shift-gate, not by concatenating a time token. This module owns that
+shared vocabulary so Wan / Cosmos / MiniMax checkpoints keep the same
+parameter names and zero-init conventions:
+
+- :class:`AdaLayerNorm` / :class:`DiTModulation` project embeddings into
+  MSA/MLP (and optional dual-stream) affine parameters. Modulation Linear
+  layers are zero-initialized so a fresh block is an identity residual.
+- :func:`modulate_sequence` / :func:`apply_gate` (and ``*_with_prefix``)
+  apply those parameters. Prefix variants exist because packed image+video
+  sequences often share one hidden state but not one time embedding.
+- :class:`DiTFinalLayer` is the unpatchify head: AdaLN then a zero-init
+  Linear to patch voxels.
+- :func:`velocity_to_denoised` converts a flow prediction back to a sample
+  without pulling in a scheduler.
+
+Factories :func:`activation_layer` and :func:`normalization_layer` keep
+string configs from growing a model-local if/else tree.
+
+Not this module:
+    Noise calendars live in :mod:`worldfoundry.core.nn.diffusion_schedulers`.
+    DDPM sinusoids live in :mod:`worldfoundry.core.nn.timestep`. U-Net
+    residuals live in :mod:`worldfoundry.core.nn.classic_diffusion`.
+    Stateless ``rms_norm`` lives in :mod:`worldfoundry.core.nn.normalization`.
+
+Public surface:
+
+- Norms / AdaLN: :class:`RMSNorm`, :class:`AdaLayerNorm`, :class:`DiTModulation`.
+- MLPs / embeddings: :class:`TransformerMLP`, :class:`MLPEmbedder`,
+  :class:`ConditioningProjection`, :class:`SinusoidalTimestepEmbedder`,
+  :class:`ConcatenatedLinear`, :class:`DiTFinalLayer`.
+- Sequence ops: :func:`modulate_sequence`, :func:`scale_shift`,
+  :func:`apply_gate`, prefix variants, :func:`velocity_to_denoised`.
+- Factories: :func:`activation_layer`, :func:`normalization_layer`.
+"""
 
 from __future__ import annotations
 
@@ -10,6 +46,11 @@ import torch
 from torch import nn
 
 
+# ──────────────────────────────────────────────────────────────────────────
+# Checkpoint-stable norms — float RMS, then optional affine / AdaLN
+# ──────────────────────────────────────────────────────────────────────────
+
+
 class RMSNorm(nn.Module):
     """Checkpoint-stable RMS normalization with optional affine weight."""
 
@@ -19,17 +60,43 @@ class RMSNorm(nn.Module):
         eps: float = 1e-6,
         elementwise_affine: bool = True,
         *,
+        compute_mode: str = "fp32",
         device: torch.device | str | None = None,
         dtype: torch.dtype | None = None,
     ) -> None:
+        """Register optional ``weight`` in the published DiT layout.
+
+        ``elementwise_affine=False`` is the AdaLN case: scale/shift come from
+        the timestep Linear, not a learned γ.
+        """
+
         super().__init__()
         self.eps = float(eps)
+        self.set_compute_mode(compute_mode)
         weight = torch.ones(int(dim), device=device, dtype=dtype) if elementwise_affine else None
         self.weight = nn.Parameter(weight) if weight is not None else None
 
+    def set_compute_mode(self, mode: str) -> None:
+        """Select fp32-stable or input-dtype RMS accumulation.
+
+        The input path matches inference runtimes that deliberately trade a
+        small BF16 numerical change for lower reduction/cast overhead.  FP32
+        remains the default for checkpoint-stable training and inference.
+        """
+
+        normalized = str(mode).strip().casefold()
+        if normalized not in {"fp32", "input"}:
+            raise ValueError("RMSNorm compute_mode must be 'fp32' or 'input'")
+        self.compute_mode = normalized
+
     def forward(self, value: torch.Tensor) -> torch.Tensor:
+        """Normalize the last dim in float32, then cast back (AMP-stable)."""
+
         input_dtype = value.dtype
-        normalized = value * torch.rsqrt(value.float().square().mean(-1, keepdim=True) + self.eps)
+        reduction = value.float() if self.compute_mode == "fp32" else value
+        normalized = value * torch.rsqrt(
+            reduction.square().mean(-1, keepdim=True) + self.eps
+        )
         normalized = normalized.to(input_dtype)
         return normalized if self.weight is None else normalized * self.weight
 
@@ -46,6 +113,15 @@ class AdaLayerNorm(nn.Module):
         device: torch.device | str | None = None,
         dtype: torch.dtype | None = None,
     ) -> None:
+        """Size the modulation Linear for single (2), MSA+MLP (6), or dual (9).
+
+        The inner LayerNorm is affine-free so this Linear is the only
+        learned scale/shift.
+
+        Raises:
+            ValueError: ``single`` and ``dual`` are both true.
+        """
+
         super().__init__()
         if single and dual:
             raise ValueError("single and dual AdaLayerNorm modes are mutually exclusive")
@@ -62,6 +138,13 @@ class AdaLayerNorm(nn.Module):
         )
 
     def forward(self, value: torch.Tensor, embedding: torch.Tensor):
+        """Apply AdaLN from ``embedding`` ``[B, D]`` onto ``value`` ``[B, S, D]``.
+
+        Single mode returns the modulated tensor. Default mode returns
+        ``(modulated, gate_msa, shift_mlp, scale_mlp, gate_mlp)``. Dual
+        mode appends a second MSA stream ``(second, gate_msa_2)``.
+        """
+
         parameters = self.linear(torch.nn.functional.silu(embedding)).unsqueeze(1)
         if self.single:
             scale, shift = parameters.chunk(2, dim=2)
@@ -87,6 +170,11 @@ class AdaLayerNorm(nn.Module):
         shift_msa, scale_msa, gate_msa, shift_mlp, scale_mlp, gate_mlp = parameters.chunk(6, dim=2)
         normalized = normalized * (1 + scale_msa) + shift_msa
         return normalized, gate_msa, shift_mlp, scale_mlp, gate_mlp
+
+
+# ──────────────────────────────────────────────────────────────────────────
+# String factories — keep model configs from growing a local if/else tree
+# ──────────────────────────────────────────────────────────────────────────
 
 
 def activation_layer(name: str) -> Callable[[], nn.Module]:
@@ -115,6 +203,11 @@ def normalization_layer(name: str) -> type[nn.Module]:
     raise ValueError(f"unknown normalization type: {name}")
 
 
+# ──────────────────────────────────────────────────────────────────────────
+# Modulation, MLPs, embeddings — zero-init Linears stay identity residuals
+# ──────────────────────────────────────────────────────────────────────────
+
+
 class DiTModulation(nn.Module):
     """Zero-initialized activation-plus-linear AdaLN parameter projection."""
 
@@ -128,6 +221,12 @@ class DiTModulation(nn.Module):
         dtype: torch.dtype | None = None,
         device: torch.device | str | None = None,
     ) -> None:
+        """Project ``hidden_size`` → ``factor * hidden_size`` (shift/scale/gate packs).
+
+        ``zero_init=True`` (default) makes a fresh block an identity residual,
+        matching published DiT checkpoints.
+        """
+
         super().__init__()
         self.act = act_layer()
         self.linear = nn.Linear(
@@ -147,6 +246,8 @@ class DiTModulation(nn.Module):
         *,
         secondary_value: torch.Tensor | None = None,
     ) -> torch.Tensor | tuple[torch.Tensor, torch.Tensor]:
+        """Emit modulation tokens; dual-stream passes a second embedding through the same Linear."""
+
         output = self.linear(self.act(value))
         if secondary_value is None:
             return output
@@ -169,6 +270,12 @@ class TransformerMLP(nn.Module):
         device: torch.device | str | None = None,
         dtype: torch.dtype | None = None,
     ) -> None:
+        """``use_conv=True`` swaps Linears for 1×1 Conv2d (spatial DiT FFNs).
+
+        Bias and dropout may be a pair so the two projections can differ,
+        matching timm-style constructors.
+        """
+
         super().__init__()
         hidden_channels = int(hidden_channels or in_channels)
         out_features = int(out_features or in_channels)
@@ -184,6 +291,8 @@ class TransformerMLP(nn.Module):
         self.drop2 = nn.Dropout(drop_pair[1])
 
     def forward(self, value: torch.Tensor) -> torch.Tensor:
+        """``fc1 → act → drop → optional norm → fc2 → drop``; last-dim or NCHW."""
+
         value = self.fc1(value)
         value = self.act(value)
         value = self.drop1(value)
@@ -202,6 +311,8 @@ class MLPEmbedder(nn.Module):
         device: torch.device | str | None = None,
         dtype: torch.dtype | None = None,
     ) -> None:
+        """``in_layer`` / ``out_layer`` names match Flux-style conditioners."""
+
         super().__init__()
         factory_kwargs = {"device": device, "dtype": dtype}
         self.in_layer = nn.Linear(in_dim, hidden_dim, bias=True, **factory_kwargs)
@@ -209,6 +320,8 @@ class MLPEmbedder(nn.Module):
         self.out_layer = nn.Linear(hidden_dim, hidden_dim, bias=True, **factory_kwargs)
 
     def forward(self, value: torch.Tensor) -> torch.Tensor:
+        """Last-dim ``in_dim`` → ``hidden_dim``; used for vector conditions, not tokens."""
+
         return self.out_layer(self.silu(self.in_layer(value)))
 
 
@@ -223,6 +336,8 @@ class ConditioningProjection(nn.Module):
         dtype: torch.dtype | None = None,
         device: torch.device | str | None = None,
     ) -> None:
+        """``linear_1`` / ``linear_2`` names match Cosmos / Wan text projectors."""
+
         super().__init__()
         factory_kwargs = {"dtype": dtype, "device": device}
         self.linear_1 = nn.Linear(in_channels, hidden_size, bias=True, **factory_kwargs)
@@ -230,6 +345,8 @@ class ConditioningProjection(nn.Module):
         self.linear_2 = nn.Linear(hidden_size, hidden_size, bias=True, **factory_kwargs)
 
     def forward(self, value: torch.Tensor) -> torch.Tensor:
+        """Project the last dim to ``hidden_size`` (token or pooled text)."""
+
         return self.linear_2(self.act_1(self.linear_1(value)))
 
 
@@ -246,6 +363,12 @@ class SinusoidalTimestepEmbedder(nn.Module):
         dtype: torch.dtype | None = None,
         device: torch.device | str | None = None,
     ) -> None:
+        """Normal-init the two Linears (std=0.02) — DiT paper, not Xavier.
+
+        ``max_period`` must match the scheduler family; action-flow often
+        uses a much shorter period than video DiTs.
+        """
+
         super().__init__()
         self.frequency_embedding_size = int(frequency_embedding_size)
         self.max_period = float(max_period)
@@ -260,6 +383,8 @@ class SinusoidalTimestepEmbedder(nn.Module):
         nn.init.normal_(self.mlp[2].weight, std=0.02)
 
     def forward(self, timestep: torch.Tensor) -> torch.Tensor:
+        """``[N]`` or broadcastable t → MLP output in the Linear weight dtype."""
+
         from worldfoundry.core.nn.transformer import sinusoidal_embedding_1d
 
         frequencies = sinusoidal_embedding_1d(
@@ -281,10 +406,14 @@ class ConcatenatedLinear(nn.Module):
         device: torch.device | str | None = None,
         dtype: torch.dtype | None = None,
     ) -> None:
+        """``in_dim`` is the *concatenated* width (stream_a + stream_b)."""
+
         super().__init__()
         self.fc = nn.Linear(in_dim, out_dim, bias=bias, device=device, dtype=dtype)
 
     def forward(self, first: torch.Tensor, second: torch.Tensor) -> torch.Tensor:
+        """Cat on dim=2 (token feature); both inputs must already be contiguous-safe."""
+
         return self.fc(torch.cat((first.contiguous(), second.contiguous()), dim=2).contiguous())
 
 
@@ -300,6 +429,12 @@ class DiTFinalLayer(nn.Module):
         device: torch.device | str | None = None,
         dtype: torch.dtype | None = None,
     ) -> None:
+        """Zero-init the unpatchify Linear and AdaLN so a fresh head is zeros.
+
+        ``patch_size`` may be an int (square) or an n-D tuple; the Linear
+        writes ``prod(patch) * out_channels`` per token.
+        """
+
         super().__init__()
         factory_kwargs = {"device": device, "dtype": dtype}
         self.norm_final = nn.LayerNorm(hidden_size, elementwise_affine=False, eps=1e-6, **factory_kwargs)
@@ -315,8 +450,15 @@ class DiTFinalLayer(nn.Module):
         nn.init.zeros_(self.adaLN_modulation[1].bias)
 
     def forward(self, value: torch.Tensor, condition: torch.Tensor) -> torch.Tensor:
+        """``[B, N, hidden]`` tokens → ``[B, N, patch_volume * out_channels]`` voxels."""
+
         shift, scale = self.adaLN_modulation(condition).chunk(2, dim=1)
         return self.linear(modulate_sequence(self.norm_final(value), shift=shift, scale=scale))
+
+
+# ──────────────────────────────────────────────────────────────────────────
+# Sequence modulation / gates — prefix splits for packed image+video
+# ──────────────────────────────────────────────────────────────────────────
 
 
 def modulate_sequence(

@@ -1,17 +1,36 @@
-"""Shared staged inference runner for research pipelines with custom inputs."""
+"""Shared staged inference runner for research pipelines with custom inputs.
+
+This is a parallel research path, not the native recipe → assembler → strategy
+→ runner chain. StagedDiffusionPipeline owns preprocessing, VRAM/LoRA helpers,
+and CFG-guided model_fn; InferenceStageGraph / InferenceStageRunner sequence
+declarative stages. Native recipes should still be preferred for standard models.
+
+Must not: mutate a process-wide DiffSynth registry; discover checkpoints without
+an explicit ``model_pool_factory``.
+"""
 
 from PIL import Image
 import torch
 import numpy as np
 from einops import rearrange, repeat, reduce
 from typing import Union
-from worldfoundry.core.device import IS_NPU_AVAILABLE, get_device_name, get_device_type, parse_device_type
+from worldfoundry.core.device import get_device_name, get_device_type, is_npu_available, parse_device_type
 from worldfoundry.core.model_loading import GeneralLoRALoader, ModelConfig, load_state_dict
 from worldfoundry.core.vram import AutoTorchModule, AutoWrappedLinear
 
 
 class InferenceStage:
-    """One declarative preprocessing or postprocessing stage."""
+    """One declarative preprocessing or postprocessing stage.
+
+    Fields:
+        seperate_cfg: When True, InferenceStageRunner runs process() once for
+            positive and (if cfg_scale != 1) once for negative.
+        take_over: When True, process() receives the full shared/posi/nega maps
+            and must return the updated triple.
+        input_params / output_params: Shared-state keys this stage reads / writes.
+        input_params_posi / input_params_nega: Branch-local remaps for CFG.
+        onload_model_names: Models this stage needs on device; used by the graph split.
+    """
 
     def __init__(
         self,
@@ -43,7 +62,7 @@ class InferenceStage:
         self.onload_model_names = onload_model_names
 
     def fetch_input_params(self):
-        """Fetch input params."""
+        """Union of shared / positive / negative input keys, used to build the stage graph."""
         params = []
         if self.input_params is not None:
             for param in self.input_params:
@@ -58,7 +77,7 @@ class InferenceStage:
         return params
 
     def fetch_output_params(self):
-        """Fetch output params."""
+        """Keys this stage writes; later stages that read them become graph dependents."""
         params = []
         if self.output_params is not None:
             for param in self.output_params:
@@ -66,14 +85,7 @@ class InferenceStage:
         return params
 
     def process(self, pipe, **kwargs) -> dict:
-        """Process.
-
-        Args:
-            pipe: The pipe.
-
-        Returns:
-            The return value.
-        """
+        """Run the stage. Override in subclasses. Default is a no-op empty dict."""
         return {}
 
     def post_process(self, pipe, **kwargs) -> dict:
@@ -393,7 +405,7 @@ class StagedDiffusionPipeline(torch.nn.Module):
 
     def get_vram(self):
         """Get vram."""
-        device = self.device if not IS_NPU_AVAILABLE else get_device_name()
+        device = self.device if not is_npu_available() else get_device_name()
         return getattr(torch, self.device_type).mem_get_info(device)[1] / (1024**3)
 
     def enable_cpu_offload(self):
@@ -668,14 +680,10 @@ class StagedDiffusionPipeline(torch.nn.Module):
         return vram_management_enabled
 
     def cfg_guided_model_fn(self, model_fn, cfg_scale, inputs_shared, inputs_posi, inputs_nega, **inputs_others):
-        """Cfg guided model fn.
+        """Classic CFG: ε_neg + cfg_scale * (ε_pos - ε_neg). Tuple outputs are guided per-element.
 
-        Args:
-            model_fn: The model fn.
-            cfg_scale: The cfg scale.
-            inputs_shared: The inputs shared.
-            inputs_posi: The inputs posi.
-            inputs_nega: The inputs nega.
+        When cfg_scale == 1.0 the negative pass is skipped. Optional positive_only_lora
+        is fused only for the positive branch, then cleared.
         """
         if inputs_shared.get("positive_only_lora", None) is not None:
             self.clear_lora(verbose=0)
@@ -698,7 +706,11 @@ class StagedDiffusionPipeline(torch.nn.Module):
 
 
 class InferenceStageGraph:
-    """Dependency graph for staged inference inputs and outputs."""
+    """Dependency graph for staged inference inputs and outputs.
+
+    Used to split units into model-related vs unrelated subgraphs so VRAM
+    onload can keep only the stages that touch named models.
+    """
 
     def __init__(self):
         """Init."""
@@ -846,17 +858,11 @@ class InferenceStageRunner:
         inputs_posi: dict,
         inputs_nega: dict,
     ) -> tuple[dict, dict]:
-        """Call.
+        """Dispatch one stage against shared / CFG state maps.
 
-        Args:
-            unit: The unit.
-            pipe: The pipe.
-            inputs_shared: The inputs shared.
-            inputs_posi: The inputs posi.
-            inputs_nega: The inputs nega.
-
-        Returns:
-            The return value.
+        take_over: the stage replaces this method. seperate_cfg: run process()
+        on positive, then on negative only if cfg_scale != 1 (else reuse the
+        positive outputs). Otherwise write into inputs_shared only.
         """
         if unit.take_over:
             # Let the pipeline unit take over this function.

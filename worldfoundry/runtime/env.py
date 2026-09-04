@@ -13,12 +13,13 @@ import platform
 import shutil
 import subprocess
 import sys
-from collections.abc import Sequence
+from collections.abc import MutableMapping, Sequence
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 from typing import Mapping as TypingMapping
 
+from worldfoundry.core.env_registry import LEGACY_ENV_ALIASES, getenv_registered
 from worldfoundry.core.io.paths import (
     artifact_root_path,
     cache_root_path,
@@ -41,6 +42,28 @@ CORE_ENV_KEYS = (
     "WORLDFOUNDRY_MODEL_SOURCE_DIR",
     "WORLDFOUNDRY_ARTIFACT_DIR",
     "WORLDFOUNDRY_HFD_ROOT",
+    "WORLDFOUNDRY_DETERMINISTIC",
+)
+# Feature flags and kernel/runtime switches that are not path roots (XC-8/XC-9).
+FEATURE_ENV_KEYS = (
+    "WORLDFOUNDRY_DETERMINISTIC",
+    "WORLDFOUNDRY_KERNEL_AUTOTUNE",
+    "WORLDFOUNDRY_KERNEL_AUTOTUNE_ENABLED",
+    "WORLDFOUNDRY_KERNEL_AUTOTUNE_CACHE",
+    "WORLDFOUNDRY_KERNEL_AUTOTUNE_CACHE_ENABLED",
+    "WORLDFOUNDRY_KERNEL_AUTOTUNE_CACHE_DIR",
+    "WORLDFOUNDRY_KERNEL_AUTOTUNE_REFRESH",
+    "WORLDFOUNDRY_KERNEL_AUTOTUNE_ITERS",
+    "WORLDFOUNDRY_KERNEL_AUTOTUNE_ROUNDS",
+    "WORLDFOUNDRY_AUTO_CUDA_VISIBLE_DEVICES",
+    "WORLDFOUNDRY_AUTO_GPU_MAX_MEMORY_FRACTION",
+    "WORLDFOUNDRY_AUTO_GPU_MAX_UTILIZATION_FRACTION",
+    "WORLDFOUNDRY_MATRIXGAME3_CUDA_VISIBLE_DEVICES",
+    "WORLDFOUNDRY_TRAINER_TARGET_DEVICE",
+    "WORLDFOUNDRY_TRAINER_CACHE_ROOT",
+    "WORLDFOUNDRY_TRAINER_CONFIG_ROOT",
+    "WORLDFOUNDRY_TRAINER_TORCH_PROFILER_DIR",
+    "WORLDFOUNDRY_VRAM_CHECK_INTERVAL",
 )
 HF_ENV_KEYS = (
     "HF_HOME",
@@ -54,7 +77,11 @@ HF_ENV_KEYS = (
 RUNTIME_ENV_KEYS = (
     "CUDA_VISIBLE_DEVICES",
     "CONDA_DEFAULT_ENV",
+    "OPENROUTER_API_KEY",
     "VIRTUAL_ENV",
+    "WORLDFOUNDRY_CALVIN_DATASET_ROOT",
+    "WORLDFOUNDRY_OPENROUTER_API_KEY",
+    "WORLDFOUNDRY_ROBOCEREBRA_ROOT",
 )
 _SENSITIVE_MARKERS = ("TOKEN", "API_KEY", "SECRET", "PASSWORD", "CREDENTIAL")
 
@@ -360,6 +387,19 @@ def resolve_hfd_root(env: EnvMapping | None = None) -> Path:
     """
 
     return hfd_root_path(env=os.environ if env is None else env)
+
+
+HF_ENDPOINT_OVERRIDE_ENV = "WORLDFOUNDRY_HF_ENDPOINT"
+
+
+def apply_hf_endpoint_override(env: MutableMapping[str, str]) -> str | None:
+    """Apply an explicitly configured Hugging Face endpoint to a child env."""
+
+    override = (env.get(HF_ENDPOINT_OVERRIDE_ENV) or "").strip()
+    if override:
+        env["HF_ENDPOINT"] = override
+        return override
+    return env.get("HF_ENDPOINT") or None
 
 
 def redact_env_for_manifest(env: EnvMapping | None = None, keys: Sequence[str] | None = None) -> dict[str, Any]:

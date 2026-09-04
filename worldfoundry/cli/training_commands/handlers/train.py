@@ -8,15 +8,19 @@ from pathlib import Path
 
 from ..common import (
     checkpoint_overrides,
+    record_elastic_worker_errors,
     training_base_dir,
     training_checkpoint_key,
     training_family,
 )
 
 
+@record_elastic_worker_errors
 def _handle_train(args: argparse.Namespace) -> int:
     from worldfoundry.training.recipes import TrainingRecipe
 
+    if args.allow_environment_drift and args.resume_checkpoint is None:
+        raise ValueError("--allow-environment-drift requires --resume-checkpoint")
     recipe_path = args.recipe.expanduser().resolve()
     recipe = TrainingRecipe.from_file(recipe_path)
     base_dir = training_base_dir(args.base_dir)
@@ -99,6 +103,7 @@ def _handle_train(args: argparse.Namespace) -> int:
             fixed_corruption=fixed_corruption,
             maximum_final_to_initial_loss_ratio=ratio,
             resume_checkpoint=args.resume_checkpoint,
+            allow_environment_drift=args.allow_environment_drift,
         )
         artifact = None
         artifact_kind = None
@@ -172,6 +177,14 @@ def register_train_subparser(
         help=(
             "Resume exact model/optimizer/data/RNG state from one committed DCP directory; "
             "the output directory must still be new."
+        ),
+    )
+    parser.add_argument(
+        "--allow-environment-drift",
+        action="store_true",
+        help=(
+            "Allow only the environment section (Torch/CUDA/device metadata) to differ when resuming; "
+            "recipe, model, data, optimizer, runtime, and topology identity remain strict."
         ),
     )
     parser.add_argument("--fixed-batch", action="store_true")

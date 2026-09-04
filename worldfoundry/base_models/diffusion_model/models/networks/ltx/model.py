@@ -1,3 +1,17 @@
+"""LTX velocity DiT and x0 wrappers.
+
+:class:`LTXModel` is the checkpoint-shaped backbone.  Each modality arrives
+as a :class:`Modality` of already-patchified ``B T D`` tokens (video:
+spatial-temporal patches; audio: 1-D time).  Stem projections + AdaLN
+preprocessors build :class:`TransformerArgs`; stacked
+:class:`BasicAVTransformerBlock` layers run self-attn, text cross-attn,
+optional A↔V cross-attn, and FFN.  The head is AdaLN scale-shift then a
+linear map back to latent channels.
+
+:class:`X0Model` converts predicted velocity to denoised latents using
+per-token timesteps.  Sampling lives in the LTX denoiser, not here.
+"""
+
 from enum import Enum
 
 import torch
@@ -28,22 +42,23 @@ from worldfoundry.core.nn import velocity_to_denoised as to_denoised
 
 
 class LTXModelType(Enum):
+    """Which modality stems and A↔V cross-attn tables this checkpoint owns."""
+
     AudioVideo = "ltx av model"
     VideoOnly = "ltx video only model"
     AudioOnly = "ltx audio only model"
 
     def is_video_enabled(self) -> bool:
+        """True when the video patch stem and video blocks exist."""
         return self in (LTXModelType.AudioVideo, LTXModelType.VideoOnly)
 
     def is_audio_enabled(self) -> bool:
+        """True when the audio patch stem and audio blocks exist."""
         return self in (LTXModelType.AudioVideo, LTXModelType.AudioOnly)
 
 
 class LTXModel(torch.nn.Module):
-    """
-    LTX model transformer implementation.
-    This class implements the transformer blocks for the LTX model.
-    """
+    """Checkpoint-compatible LTX velocity DiT (video, audio, or joint AV)."""
 
     def __init__(  # noqa: PLR0913
         self,
@@ -75,6 +90,7 @@ class LTXModel(torch.nn.Module):
         audio_caption_projection: torch.nn.Module | None = None,
         cross_attention_adaln: bool = False,
     ):
+        """Build video and/or audio stems, AV cross-attn AdaLN, and the block stack."""
         super().__init__()
         self._enable_gradient_checkpointing = False
         self.cross_attention_adaln = cross_attention_adaln
@@ -427,10 +443,10 @@ class LTXModel(torch.nn.Module):
     def forward(
         self, video: Modality | None, audio: Modality | None, perturbations: BatchedPerturbationConfig
     ) -> tuple[torch.Tensor, torch.Tensor]:
-        """
-        Forward pass for LTX models.
-        Returns:
-            Processed output tensors
+        """Predict velocity for each enabled modality; unused streams return ``None``.
+
+        Inputs are packed ``B T D`` latents inside :class:`Modality`.  STG
+        perturbations skip selected self/cross-attn branches per sample.
         """
         if not self.model_type.is_video_enabled() and video is not None:
             raise ValueError("Video is not enabled for this model")

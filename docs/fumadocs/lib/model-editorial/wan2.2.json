@@ -1,0 +1,41 @@
+{
+  "id": "wan2.2",
+  "tagline": {
+    "en": "Wan2.2 — Alibaba's Apache-2.0 next-gen video family, spanning text-to-video, image-to-video, and combined text+image.",
+    "zh": "Wan2.2——阿里 Apache-2.0 许可的新一代视频家族,覆盖文生视频、图生视频与文+图生视频。"
+  },
+  "overview": {
+    "en": [
+      "Wan2.2 is the next generation of Wan-AI's open video model, versioned separately from Wan2.1 upstream. It covers text-to-video, image-to-video, and combined text-and-image-to-video, all released under Apache-2.0 with open weights.",
+      "The family comes in a few sizes: A14B checkpoints for text-to-video and for image-to-video, plus a more compact TI2V-5B that handles the combined text-and-image-to-video path. That gives you a choice between higher fidelity and lighter footprint.",
+      "In WorldFoundry you run Wan2.2 through the shared pipeline — pick a checkpoint, provide a prompt (and an image where applicable), and it renders the clip."
+    ],
+    "zh": [
+      "Wan2.2 是 Wan-AI 开源视频模型的新一代,在上游与 Wan2.1 分开版本管理。它覆盖文生视频、图生视频以及文+图生视频,全部采用 Apache-2.0 许可、权重开放。",
+      "该家族提供多种规模:用于文生视频和图生视频的 A14B checkpoint,以及更紧凑、负责文+图生视频路径的 TI2V-5B。你可以在更高保真度与更轻量之间做选择。",
+      "在 WorldFoundry 中,你通过统一 pipeline 运行 Wan2.2——选一个 checkpoint,给出提示词(需要时再加一张图),它就渲染出片段。"
+    ]
+  },
+  "whenToUse": {
+    "en": "A strong default when you want an openly-licensed, current-generation video model. Choose the A14B checkpoints for fidelity, or the 5B TI2V route when you want a lighter model that takes both text and an image.",
+    "zh": "当你想要一个开放许可、当前一代的视频模型时,它是有力的默认选择。追求保真度选 A14B checkpoint;想要更轻量、同时接受文字与图片的模型则选 5B 的 TI2V 路径。"
+  },
+  "notFor": {
+    "en": "The A14B checkpoints are large, so plan for the compute and download. Checkpoints are fetched separately rather than bundled.",
+    "zh": "A14B checkpoint 较大,请预留算力与下载。Checkpoint 需单独获取而非随附。"
+  },
+  "highlights": {
+    "en": [
+      "Apache-2.0 with open weights across the family",
+      "Text-to-video, image-to-video, and combined text+image-to-video",
+      "Sizes include A14B checkpoints and a compact TI2V-5B",
+      "Runs through the shared WorldFoundry pipeline"
+    ],
+    "zh": [
+      "全家族 Apache-2.0、权重开放",
+      "支持文生视频、图生视频与文+图生视频",
+      "规模含 A14B checkpoint 与紧凑的 TI2V-5B",
+      "通过 WorldFoundry 统一 pipeline 运行"
+    ]
+  }
+}

@@ -1,0 +1,41 @@
+{
+  "id": "libero-para",
+  "tagline": {
+    "en": "A vision-language-action policy for robot control, evaluated on the LIBERO benchmark.",
+    "zh": "面向机器人控制的视觉-语言-动作策略,在 LIBERO 基准上评测。"
+  },
+  "overview": {
+    "en": [
+      "LIBERO-Para is a vision-language-action (VLA) policy geared toward the LIBERO robot-manipulation benchmark. It maps visual observations and instructions to robot actions for policy rollout and evaluation.",
+      "WorldFoundry runs it through an official-policy runtime adapter, fitting the shared inference flow. The checkpoint is hosted on Hugging Face and pulled in at run time.",
+      "In WorldFoundry you supply observations and it returns an action rollout, which you can score on the LIBERO benchmark tasks."
+    ],
+    "zh": [
+      "LIBERO-Para 是面向 LIBERO 机器人操作基准的视觉-语言-动作(VLA)策略。它把视觉观测与指令映射为机器人动作,用于策略推演与评测。",
+      "WorldFoundry 通过官方策略运行时适配器运行它,契合统一的推理流程。Checkpoint 托管于 Hugging Face,在运行时载入。",
+      "在 WorldFoundry 中,你提供观测,它便返回动作推演,可在 LIBERO 基准任务上评分。"
+    ]
+  },
+  "whenToUse": {
+    "en": "Use it when you want a VLA policy to run and evaluate robot control on the LIBERO benchmark.",
+    "zh": "当你想用一个 VLA 策略在 LIBERO 基准上运行并评测机器人控制时,选它。"
+  },
+  "notFor": {
+    "en": "It is a control policy for benchmark evaluation, not a media generator. The checkpoint downloads separately, so stage it before running.",
+    "zh": "它是用于基准评测的控制策略,而非媒体生成器。Checkpoint 需单独下载,请在运行前先备好。"
+  },
+  "highlights": {
+    "en": [
+      "Vision-language-action policy for robot control",
+      "Targets the LIBERO manipulation benchmark",
+      "Runs through an official-policy runtime adapter",
+      "Checkpoint published on Hugging Face"
+    ],
+    "zh": [
+      "面向机器人控制的视觉-语言-动作策略",
+      "面向 LIBERO 操作基准",
+      "通过官方策略运行时适配器运行",
+      "Checkpoint 已发布于 Hugging Face"
+    ]
+  }
+}

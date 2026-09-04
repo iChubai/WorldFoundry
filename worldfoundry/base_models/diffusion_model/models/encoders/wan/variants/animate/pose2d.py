@@ -1,5 +1,17 @@
 # Copyright 2024-2025 The Alibaba Wan Team Authors. All rights reserved.
-"""Module for base_models -> diffusion_model -> video -> wan -> wan_2p2 -> modules -> animate -> preprocess -> pose2d_utils.py functionality."""
+"""Wan Animate 2-D pose preprocessor (DWPose-style keypoints).
+
+Converts detector keypoints / heatmaps into the tensor
+layout Animate control channels expect.
+:class:`AAPoseMeta` plus the ``keypoints_from_*`` helpers
+are the public surface.
+
+Outputs are pose tensors, not UMT5 ``context``.  Text
+encode stays on :class:`~...component.WanTextConditioner`.
+
+Animate family only; large metric helpers are vendored
+evaluation math.
+"""
 
 import warnings
 import cv2

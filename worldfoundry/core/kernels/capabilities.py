@@ -1,8 +1,26 @@
 """Accelerator capability and policy profiles for in-tree kernels.
 
-The profiles are deliberately feature-based rather than a whitelist of product
-names.  This keeps mixed GPU nodes correct and makes future CUDA devices fall
-back safely when their exact architecture has not been tuned yet.
+Profiles are feature-based (SM, HIP vs CUDA, memory), not a product-name
+whitelist. Mixed A100/H100 nodes stay correct when the active tensor
+device changes after import. Unknown future SMs keep working through
+PyTorch unless ``WORLDFOUNDRY_ALLOW_UNTESTED_GPU_KERNELS`` opts them into
+qualification.
+
+:data:`QUALIFIED_TRITON_CAPABILITIES` is eligibility, not a benchmark
+claim. Each op still runs its runtime predicate and optional numerical
+autotune. HIP is never mistaken for NVIDIA CUDA.
+
+Not this module:
+    Workload predicates and size thresholds per operator live in
+    :mod:`.diffusion`. Persistent winner records live in :mod:`.autotune_cache`.
+
+Public surface:
+
+- :data:`QUALIFIED_TRITON_CAPABILITIES` — SM pairs allowed to attempt Triton.
+- :class:`KernelDeviceProfile` / :func:`kernel_device_profile` — one device.
+- :func:`detected_kernel_device_profiles` — every visible CUDA/ROCm device.
+- :func:`default_kernel_thresholds` / :func:`triton_tensor_eligible` /
+  :func:`profile_supports_dtype` — launch-policy helpers.
 """
 
 from __future__ import annotations
@@ -60,13 +78,22 @@ class KernelDeviceProfile:
     adaln_min_elements: int
 
     def to_dict(self) -> dict[str, object]:
+        """JSON-safe profile; compute capability becomes a two-int list."""
+
         payload = asdict(self)
         if self.compute_capability is not None:
             payload["compute_capability"] = list(self.compute_capability)
         return payload
 
 
+# ──────────────────────────────────────────────────────────────────────────
+# Family / thresholds — conservative element counts until autotune measures
+# ──────────────────────────────────────────────────────────────────────────
+
+
 def _cuda_family(capability: tuple[int, int] | None) -> str:
+    """Map SM major/minor to a policy family; unknown SMs stay named, not refused."""
+
     if capability is None:
         return "cuda-unknown"
     major, minor = capability
@@ -86,6 +113,8 @@ def _cuda_family(capability: tuple[int, int] | None) -> str:
 
 
 def _default_thresholds(family: str) -> tuple[int, int]:
+    """Return ``(residual_gate, AdaLN)`` element floors for one architecture family."""
+
     mib = 1024 * 1024
     if family in {"volta", "turing", "cuda-unknown", "rocm"} or family.startswith("cuda-sm"):
         # Legacy/untested targets prefer vendor kernels until enough work is
@@ -115,6 +144,8 @@ def default_kernel_thresholds(capability: tuple[int, int] | None) -> tuple[int, 
 
 
 def _normalise_cuda_device(device: torch.device | str | int | None) -> torch.device:
+    """Pin a bare ``cuda`` handle to the calling thread's current device."""
+
     if device is None:
         if torch.cuda.is_available():
             return torch.device("cuda", torch.cuda.current_device())
@@ -162,6 +193,8 @@ def kernel_device_profile(device: torch.device | str | int | None = None) -> Ker
 
 @lru_cache(maxsize=64)
 def _cuda_profile_cached(index: int, hip: bool, allow_untested: bool) -> KernelDeviceProfile:
+    """Build one CUDA/HIP profile; HIP never claims Triton until CDNA is qualified."""
+
     properties = torch.cuda.get_device_properties(index)
     name = str(getattr(properties, "name", f"GPU {index}"))
     total_memory = int(getattr(properties, "total_memory", 0)) or None
@@ -220,7 +253,18 @@ def _cuda_profile_cached(index: int, hip: bool, allow_untested: bool) -> KernelD
     )
 
 
+# ──────────────────────────────────────────────────────────────────────────
+# Eligibility — dtype + SM gates used by every in-tree Triton predicate
+# ──────────────────────────────────────────────────────────────────────────
+
+
 def profile_supports_dtype(profile: KernelDeviceProfile, dtype: torch.dtype) -> bool:
+    """Return whether *profile* may launch the current in-tree fused kernels for *dtype*.
+
+    FP8/FP4 flags describe hardware presence only. Unlisted dtypes (int8, int32)
+    are refused here; quantized GEMM has its own contract.
+    """
+
     if dtype == torch.float16:
         return profile.supports_fp16
     if dtype == torch.bfloat16:

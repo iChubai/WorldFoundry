@@ -1,4 +1,16 @@
-"""Small structured configuration primitives shared by in-tree inference runtimes."""
+"""Small structured configuration primitives shared by in-tree inference runtimes.
+
+Cosmos-family recipes compose a released model from attrs objects:
+:class:`Config` holds the LazyCall ``model`` graph plus job / trainer /
+checkpoint / model-parallel fields. :func:`make_freezable` adds a
+recursive ``freeze()`` so a composed config cannot be mutated after
+validation.
+
+Megatron's ``ModelParallelConfig`` is imported lazily inside
+:func:`_default_model_parallel` so ``import worldfoundry.core.configuration``
+never pulls torch/megatron. Without megatron, an attrs fallback carries
+only ``context_parallel_size``.
+"""
 
 from __future__ import annotations
 
@@ -7,6 +19,10 @@ from typing import Any, TypeVar
 import attrs
 
 from worldfoundry.core.configuration.lazy_config import LazyDict
+
+# ──────────────────────────────────────────────────────────────────────────
+# Megatron-free fallback — import configuration without pulling torch
+# ──────────────────────────────────────────────────────────────────────────
 
 
 @attrs.define(slots=False)
@@ -38,7 +54,14 @@ T = TypeVar("T")
 
 
 def _is_attrs_instance(value: object) -> bool:
+    """True for attrs instances only; dataclasses and mappings stay mutable."""
+
     return attrs.has(type(value))
+
+
+# ──────────────────────────────────────────────────────────────────────────
+# Freeze decorator — recursive on nested attrs, not on list/dict contents
+# ──────────────────────────────────────────────────────────────────────────
 
 
 def make_freezable(cls: T) -> T:
@@ -57,11 +80,15 @@ def make_freezable(cls: T) -> T:
     original_setattr = cls.__setattr__
 
     def setattr_override(self, key, value) -> None:  # noqa: ANN001
+        """Block assignment after ``freeze`` except the freeze flag itself."""
+
         if getattr(self, "_is_frozen", False) and key != "_is_frozen":
             raise AttributeError("Cannot modify frozen instance")
         original_setattr(self, key, value)
 
     def freeze(self) -> None:  # noqa: ANN001
+        """Walk nested attrs children first so a parent cannot thaw a child."""
+
         for value in attrs.asdict(self, recurse=False).values():
             if _is_attrs_instance(value) and hasattr(value, "freeze"):
                 value.freeze()
@@ -73,9 +100,16 @@ def make_freezable(cls: T) -> T:
     return cls
 
 
+# ──────────────────────────────────────────────────────────────────────────
+# Inference attrs tree — job / store / cuDNN / checkpoint / EMA / compose
+# ──────────────────────────────────────────────────────────────────────────
+
+
 @make_freezable
 @attrs.define(slots=False)
 class JobConfig:
+    """Optional job identity (project / group / name) for artifact prefixes."""
+
     project: str = ""
     group: str = ""
     name: str = ""
@@ -94,6 +128,8 @@ class ObjectStoreConfig:
 @make_freezable
 @attrs.define(slots=False)
 class CuDNNConfig:
+    """cuDNN determinism / benchmark flags consumed at inference construct."""
+
     deterministic: bool = False
     benchmark: bool = True
 
@@ -101,6 +137,8 @@ class CuDNNConfig:
 @make_freezable
 @attrs.define(slots=False)
 class InferenceRuntimeConfig:
+    """Trainer-shaped runtime knobs that inference construction still reads."""
+
     cudnn: CuDNNConfig = attrs.field(factory=CuDNNConfig)
 
 
@@ -140,6 +178,7 @@ class Config:
     checkpoint: CheckpointConfig = attrs.field(factory=CheckpointConfig)
 
     def to_dict(self) -> dict[str, Any]:
+        """Deep-copy this config tree into a plain dict (attrs ``asdict``)."""
         return attrs.asdict(self)
 
     def validate(self) -> None:

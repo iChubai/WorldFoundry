@@ -16,6 +16,7 @@ name: OpenPIE 0.6
 output_artifacts:
 - action_trace
 official_sources:
+  paper: https://arxiv.org/abs/2106.09685
   github:
     head_sha: 1ac451028782466c60f49e9d0a66c3ca49c1a141
     url: https://github.com/exla-ai/fla

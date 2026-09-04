@@ -1,0 +1,41 @@
+{
+  "id": "dynamicrafter",
+  "tagline": {
+    "en": "DynamiCrafter — animates a still image into a short video, using video diffusion priors, with 512 and 1024 resolution variants.",
+    "zh": "DynamiCrafter——借助视频扩散先验把静态图片动画化为短视频,提供 512 与 1024 两种分辨率变体。"
+  },
+  "overview": {
+    "en": [
+      "DynamiCrafter is an image-to-video model that brings a single still image to life, animating it into a short clip. It leverages pretrained video diffusion priors so the generated motion stays coherent with the input image's content.",
+      "The public, non-gated Hugging Face releases come in two main resolution variants — a 512 and a 1024 image-to-video runtime — under the Doubiiu account. Note that the model cards don't expose an explicit license, so review the upstream license terms before redistributing.",
+      "In WorldFoundry the image-to-video runtimes are wrapped in-tree. You supply a starting image (and prompt), pick the 512 or 1024 route, and it renders the animated video."
+    ],
+    "zh": [
+      "DynamiCrafter 是一个图生视频模型,能让一张静态图片动起来,把它动画化为一段短视频。它借助预训练的视频扩散先验,使生成的运动与输入图像内容保持连贯。",
+      "其公开、无门槛的 Hugging Face 发布提供两个主要分辨率变体——512 与 1024 的图生视频运行时——位于 Doubiiu 账号下。需要注意:模型卡未标明明确的 license,因此在再分发前请先查阅上游的许可条款。",
+      "在 WorldFoundry 中,图生视频运行时以仓库内封装的方式提供。你给出一张起始图片(以及提示词),选择 512 或 1024 路径,它便渲染出动画化的视频。"
+    ]
+  },
+  "whenToUse": {
+    "en": "When you want to animate a single still image into a short video and choose between a lighter 512 route and a higher-resolution 1024 route.",
+    "zh": "当你想把一张静态图片动画化为短视频,并在更轻量的 512 路径与更高分辨率的 1024 路径之间选择时。"
+  },
+  "notFor": {
+    "en": "The Hugging Face model cards don't state an explicit license, so review upstream terms before redistribution. Checkpoints are downloaded separately rather than bundled.",
+    "zh": "Hugging Face 模型卡未标明明确的 license,再分发前请先查阅上游条款。Checkpoint 需单独下载而非随附。"
+  },
+  "highlights": {
+    "en": [
+      "Image-to-video: animate a single still image",
+      "Uses pretrained video diffusion priors",
+      "512 and 1024 resolution variants",
+      "Public, non-gated Hugging Face checkpoints"
+    ],
+    "zh": [
+      "图生视频:让单张静态图片动起来",
+      "借助预训练的视频扩散先验",
+      "512 与 1024 两种分辨率变体",
+      "公开、无门槛的 Hugging Face checkpoint"
+    ]
+  }
+}

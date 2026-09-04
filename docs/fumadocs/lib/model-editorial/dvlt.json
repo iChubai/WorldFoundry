@@ -1,0 +1,41 @@
+{
+  "id": "dvlt",
+  "tagline": {
+    "en": "NVIDIA's Déjà View Looping Transformer — feed-forward 3D reconstruction, camera pose, and depth from multiple views.",
+    "zh": "NVIDIA 的 Déjà View Looping Transformer——从多视图前馈式重建 3D 结构、相机位姿与深度。"
+  },
+  "overview": {
+    "en": [
+      "DVLT (Déjà View Looping Transformer) is a 3D & 4D reconstruction model from NVIDIA's research labs. Given a set of images, it recovers 3D structure, estimates camera poses, and predicts depth — the building blocks for turning a handful of views into a coherent scene.",
+      "It follows the feed-forward transformer approach to reconstruction: rather than optimizing a scene per capture, the network infers geometry directly from the input views. Output can be exported as a GLB mesh for downstream 3D use.",
+      "In WorldFoundry, DVLT runs through a wrapper that drives the GLB export path. The model weights are distributed separately by NVIDIA under a non-commercial research and evaluation license, so you supply them locally."
+    ],
+    "zh": [
+      "DVLT（Déjà View Looping Transformer）是 NVIDIA 研究团队推出的 3D 与 4D 重建模型。给定一组图像，它能恢复 3D 结构、估计相机位姿并预测深度——这些正是把少量视图拼成完整场景的基础构件。",
+      "它采用前馈 transformer 的重建思路：无需对每次采集单独优化场景，而是由网络直接从输入视图推断几何。结果可导出为 GLB 网格，便于后续 3D 使用。",
+      "在 WorldFoundry 中，DVLT 通过一个包装器运行，驱动 GLB 导出流程。模型权重由 NVIDIA 单独分发，采用非商业研究与评估许可，需你在本地自备。"
+    ]
+  },
+  "whenToUse": {
+    "en": "Reach for DVLT when you want feed-forward 3D reconstruction from multiple images — geometry, camera pose, and depth in one pass — and can work within a research/evaluation license.",
+    "zh": "当你想从多张图像做前馈式 3D 重建——一次得到几何、相机位姿与深度——且能接受研究/评估许可时，DVLT 是合适之选。"
+  },
+  "notFor": {
+    "en": "Commercial deployment: the checkpoint is released under an NVIDIA non-commercial research and evaluation license. Weights are downloaded separately, so plan for local staging.",
+    "zh": "不适合商业部署：checkpoint 采用 NVIDIA 非商业研究与评估许可。权重需单独下载，请预留本地准备时间。"
+  },
+  "highlights": {
+    "en": [
+      "3D reconstruction, camera pose estimation, and depth from multi-view inputs",
+      "Feed-forward transformer reconstruction — no per-scene optimization",
+      "Exports GLB meshes for downstream 3D pipelines",
+      "NVIDIA non-commercial research/evaluation license"
+    ],
+    "zh": [
+      "从多视图输入完成 3D 重建、相机位姿估计与深度预测",
+      "前馈 transformer 重建，无需逐场景优化",
+      "可导出 GLB 网格，衔接后续 3D 流程",
+      "NVIDIA 非商业研究/评估许可"
+    ]
+  }
+}

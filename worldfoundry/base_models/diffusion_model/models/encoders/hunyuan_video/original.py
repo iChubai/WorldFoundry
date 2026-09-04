@@ -1,4 +1,15 @@
-"""Original HunyuanVideo text and pooled-conditioning encoders."""
+"""Original HunyuanVideo text and pooled-conditioning encoders.
+
+Llama + CLIP path for the first HunyuanVideo release.
+:class:`TextEncoder` plus :func:`load_text_encoder` /
+:func:`load_tokenizer` are the public surfaces.
+
+``encode`` produces sequence tokens and pooled CLIP features
+consumed by the original Hunyuan denoiser.  I2V extras are
+:mod:`.i2v`.  Version 1.5 is :mod:`.h15_text`.
+
+Template / precision constants: :mod:`.constants`.
+"""
 
 from dataclasses import dataclass
 from typing import Optional, Tuple
@@ -10,6 +21,19 @@ from transformers import CLIPTextModel, CLIPTokenizer, AutoTokenizer, AutoModel
 from transformers.utils import ModelOutput
 
 from .constants import PRECISION_TO_TYPE
+
+
+def _llm_final_layer_norm(model: nn.Module) -> nn.Module:
+    direct = getattr(model, "norm", None)
+    if isinstance(direct, nn.Module):
+        return direct
+    language_model = getattr(model, "language_model", None)
+    nested = getattr(language_model, "norm", None)
+    if isinstance(nested, nn.Module):
+        return nested
+    raise AttributeError(
+        f"{type(model).__name__} exposes neither .norm nor .language_model.norm"
+    )
 
 
 def use_default(value, default):
@@ -52,7 +76,7 @@ def load_text_encoder(
         text_encoder = AutoModel.from_pretrained(
             text_encoder_path, low_cpu_mem_usage=True
         )
-        text_encoder.final_layer_norm = text_encoder.norm
+        text_encoder.final_layer_norm = _llm_final_layer_norm(text_encoder)
     else:
         raise ValueError(f"Unsupported text encoder type: {text_encoder_type}")
     # from_pretrained will ensure that the model is in eval mode.

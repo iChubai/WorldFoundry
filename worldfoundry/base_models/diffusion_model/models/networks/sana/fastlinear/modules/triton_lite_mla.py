@@ -14,7 +14,15 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-"""Module for base_models -> diffusion_model -> image -> sana -> diffusion -> model -> nets -> fastlinear -> modules -> triton_lite_mla.py functionality."""
+"""Triton LiteMLA with autograd: fused linear-attention for SANA image DiT.
+
+The custom Function chains the kernels in ``triton_lite_mla_kernels/``:
+
+1. ``linear_relu_fwd`` — QKV projection + ReLU on Q/K
+2. ``pad_vk_mm_fwd`` — accumulate padded ``VᵀK`` (the linear-attention KV)
+3. ``vk_q_mm_divide_fwd`` — ``Q @ VK`` with the pad-column denominator
+4. output projection; backward uses ``vk_*_bwd`` + ``proj_divide_bwd``
+"""
 
 from typing import Optional
 
@@ -32,7 +40,7 @@ from .triton_lite_mla_kernels.vk_q_mm_relu_bwd import vk_q_mm_relu_bwd
 
 
 class TritonLiteMLAFunction(torch.autograd.Function):
-    """Triton lite mla function implementation."""
+    """Autograd wrapper around the fused LiteMLA Triton kernels."""
     @staticmethod
     def forward(
         ctx,
@@ -126,7 +134,7 @@ class TritonLiteMLAFunction(torch.autograd.Function):
 
 
 class TritonLiteMLA(nn.Module):
-    """Triton lite mla implementation."""
+    """Drop-in LiteLA with fused Triton QKV+ReLU+VK+proj (training + inference)."""
     def __init__(
         self,
         dim: int,

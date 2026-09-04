@@ -1,3 +1,11 @@
+"""MagicWorld official-layout Wan stem (bidirectional).
+
+Wan 2.x packing used by MagicWorld.  Causal / KV-cache behavior is in
+:mod:`.causal`.  Chinese inline comments in the cache path describe
+local-variable then write-through order and are translated in-place
+where they are comments (not string literals).
+"""
+
 import math
 
 import torch
@@ -261,16 +269,16 @@ class WanI2VCrossAttention(WanSelfAttention):
         # k_img = self.norm_k_img(self.k_img(context_img)).view(b, -1, n, d)
         # v_img = self.v_img(context_img).view(b, -1, n, d)
 
-        # ---- 生成或读取 KV --------------------------------------------------------------
+        # Build text/image KV, or reuse the persistent cross-attention cache.
         if crossattn_cache is not None:
             if not crossattn_cache["is_init"]:
-                # 先算出局部变量
+                # Compute locals first so a failed projection cannot leave a half-written cache.
                 k     = self.norm_k(self.k(context)).view(b, -1, n, d)
                 v     = self.v(context).view(b, -1, n, d)
                 k_img = self.norm_k_img(self.k_img(context_img)).view(b, -1, n, d)
                 v_img = self.v_img(context_img).view(b, -1, n, d)
 
-                # 再写入缓存
+                # Then write the cache atomically.
                 crossattn_cache.update({
                     "is_init": True,
                     "k": k,
@@ -518,9 +526,7 @@ class MLPProj(torch.nn.Module):
 
 
 class WanModel(WanTransformerMethodsMixin, nn.Module, NativeConfigMixin):
-    r"""
-    Wan diffusion backbone supporting both text-to-video and image-to-video.
-    """
+    r"""MagicWorld official-layout Wan stem (bidirectional)."""
 
     ignore_for_config = [
         'patch_size', 'cross_attn_norm', 'qk_norm', 'text_dim', 'window_size'

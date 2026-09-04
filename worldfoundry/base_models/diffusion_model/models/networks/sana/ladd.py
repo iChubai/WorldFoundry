@@ -31,6 +31,8 @@ from torch.nn.utils.spectral_norm import SpectralNorm
 
 
 class LADDResidualBlock(nn.Module):
+    """Residual wrapper around one LADD spectral-conv / norm stage."""
+
     def __init__(self, function: Callable[[torch.Tensor], torch.Tensor]) -> None:
         super().__init__()
         if not isinstance(function, nn.Module):

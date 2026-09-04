@@ -10,7 +10,17 @@
 # The above copyright notice and this permission notice shall be included in all
 # copies or substantial portions of the Software.
 # ==============================================================================
-"""Module for base_models -> diffusion_model -> video -> step_video -> step_video_runtime -> stepvideo -> text_encoder -> stepllm.py functionality."""
+"""STEP1 decoder-only LLM used as StepVideo's primary text encoder.
+
+:class:`STEP1TextEncoder` / :class:`Step1Model` run the
+STEP1 transformer and return hidden states for the StepVideo
+denoiser.  Tokenizer is :mod:`.tokenizer`.
+
+This is a decoder-only LM used encoder-style (last hidden
+states), not UMT5.  Optional FlashAttention: :mod:`.flash_attention`.
+
+Paired with Hunyuan CLIP in :class:`~.component.StepVideoPromptConditioner`.
+"""
 
 import os
 from typing import Optional

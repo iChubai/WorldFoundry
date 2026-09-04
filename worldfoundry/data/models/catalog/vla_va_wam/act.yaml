@@ -10,6 +10,7 @@ integration:
   status: integrated
 name: Action Chunking Transformer
 official_sources:
+  paper: https://arxiv.org/abs/2304.13705
   github:
     head_sha: 742c753c0d4a5d87076c8f69e5628c79a8cc5488
     url: https://github.com/tonyzhaozh/act

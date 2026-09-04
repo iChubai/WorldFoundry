@@ -13,6 +13,7 @@ availability: open_source
 license: apache-2.0
 release_type: code_and_weights
 official_sources:
+  paper: https://arxiv.org/abs/2512.22096
   github:
     url: https://github.com/stdstu12/YUME
   project_page: https://stdstu12.github.io/YUME-Project/
@@ -48,7 +49,7 @@ variants:
   checkpoint_refs:
   - repo_id: stdstu123/Yume-I2V-540P
   integration:
-    status: verified
+    status: integrated
   runner_parity:
     status: verified
     notes:
@@ -63,7 +64,7 @@ variants:
   checkpoint_refs:
   - repo_id: stdstu123/Yume-5B-720P
   integration:
-    status: verified
+    status: integrated
   runner_parity:
     status: verified
     notes:

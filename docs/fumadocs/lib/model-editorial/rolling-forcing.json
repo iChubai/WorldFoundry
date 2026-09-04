@@ -1,0 +1,41 @@
+{
+  "id": "rolling-forcing",
+  "tagline": {
+    "en": "Autoregressive video diffusion for long clips — generates extended text-to-video by rolling generation forward frame block by frame block.",
+    "zh": "面向长片段的自回归视频扩散——逐帧块向前推进,生成较长的文生视频。"
+  },
+  "overview": {
+    "en": [
+      "RollingForcing is an autoregressive video diffusion model built for long video generation. Where many models render a fixed short clip in one shot, it rolls generation forward over time, producing extended text-to-video sequences block by block.",
+      "It builds on a causal variant of the Wan2.1 backbone and uses an attention-sink KV cache to keep earlier context in view as the video grows longer, following a rolling multi-frame block scheme. The released route is text-to-video, driven by a prompt, and runs in BF16.",
+      "In WorldFoundry, RollingForcing runs as an inference-only long-video route — give it a prompt and it decodes a long clip at 832×480, 16 fps."
+    ],
+    "zh": [
+      "RollingForcing 是一个面向长视频生成的自回归视频扩散模型。许多模型一次性渲染出固定的短片,而它随时间向前滚动生成,按帧块逐段产出较长的文生视频序列。",
+      "它构建在 Wan2.1 骨干的因果变体之上,采用 attention-sink KV 缓存,在视频变长时保留早期上下文,遵循滚动的多帧块方案。发布的路径是由提示词驱动的文生视频,以 BF16 运行。",
+      "在 WorldFoundry 中,RollingForcing 作为仅推理的长视频路径运行——给它提示词,它就解码出一段 832×480、16 fps 的长片段。"
+    ]
+  },
+  "whenToUse": {
+    "en": "Use RollingForcing when you want long, continuous text-to-video rather than a fixed short clip — for research on extended autoregressive video generation.",
+    "zh": "当你想要长而连续的文生视频、而非固定短片时,可以使用 RollingForcing——适合扩展式自回归视频生成的研究。"
+  },
+  "notFor": {
+    "en": "Licensed for academic use only — commercial and production use is not permitted. It also needs BF16 and enough GPU memory, so low-memory cards may struggle.",
+    "zh": "仅授权学术使用——不允许商用与生产使用。它还需要 BF16 与足够的显存,低显存显卡可能吃力。"
+  },
+  "highlights": {
+    "en": [
+      "Autoregressive video diffusion aimed at long clips",
+      "Causal Wan2.1 backbone with attention-sink KV cache",
+      "Text-to-video output at 832×480, 16 fps",
+      "Academic-use-only license"
+    ],
+    "zh": [
+      "面向长片段的自回归视频扩散",
+      "因果 Wan2.1 骨干配合 attention-sink KV 缓存",
+      "文生视频输出为 832×480、16 fps",
+      "仅限学术使用的许可"
+    ]
+  }
+}

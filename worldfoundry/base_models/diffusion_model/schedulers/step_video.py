@@ -1,4 +1,10 @@
-"""Stateless native StepVideo flow scheduler."""
+"""Stateless native StepVideo flow scheduler.
+
+:class:`StepVideoFlowScheduler` builds a shifted linear sigma path and
+integrates flow with Euler.  Only ``time_shift`` is accepted in
+``scheduler_options``; other keys raise :exc:`ValueError`.  ``time_shift``
+must be positive.
+"""
 
 from __future__ import annotations
 
@@ -9,6 +15,7 @@ from ..contracts import SamplingConfig, SchedulerStep
 
 
 class StepVideoFlowScheduler:
+    """Euler flow integrator with StepVideo's rational time-shift."""
     def __init__(self, *, time_shift: float = 13.0, reverse: bool = False) -> None:
         self.time_shift = float(time_shift)
         self.reverse = bool(reverse)

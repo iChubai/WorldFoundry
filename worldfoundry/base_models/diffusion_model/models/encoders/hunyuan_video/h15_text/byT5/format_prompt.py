@@ -14,7 +14,18 @@
 # of rights and permissions under this agreement.
 # See the License for the specific language governing permissions and limitations under the License.
 
-"""Multilingual glyph prompt formatting for HunyuanVideo 1.5."""
+"""Multilingual glyph prompt formatting for HunyuanVideo 1.5.
+
+:class:`MultilingualPromptFormat` turns color / glyph
+instructions into the ByT5 input strings the 1.5 tower
+expects.  May emit Chinese or other-script text; those
+literals are ABI — do not rewrite them.
+
+No model weights live here.  The loader is
+:func:`~.load_glyph_byT5_v2` in the parent package.
+
+Used only by HunyuanVideo 1.5, not the original Llama path.
+"""
 
 import json
 

@@ -1,0 +1,41 @@
+{
+  "id": "wan-2p7",
+  "tagline": {
+    "en": "Wan 2.7 as a hosted API — image-to-video through Alibaba's DashScope, no local GPU needed.",
+    "zh": "以托管 API 形式提供的 Wan 2.7——通过阿里云 DashScope 使用图生视频,无需本地 GPU。"
+  },
+  "overview": {
+    "en": [
+      "Wan 2.7 API is a hosted route to the Wan video model, served through Alibaba's DashScope platform rather than run locally. Here it exposes image-to-video generation.",
+      "As a cloud service, there are no weights to download and no GPU to provision — you send an image (with your prompt) and receive generated video back. You supply your own DashScope API key.",
+      "In WorldFoundry you use it through the hosted-API pipeline: configure your key and the service handles generation on the provider side."
+    ],
+    "zh": [
+      "Wan 2.7 API 是 Wan 视频模型的托管方式,通过阿里云 DashScope 平台提供,而非本地运行。这里它暴露的是图生视频生成。",
+      "作为云服务,无需下载权重、也无需准备 GPU——你发送一张图片(连同提示词),即可拿回生成的视频。你需要自备 DashScope API key。",
+      "在 WorldFoundry 中,你通过托管 API pipeline 使用它:配置好 key,生成由服务商侧完成。"
+    ]
+  },
+  "whenToUse": {
+    "en": "Use it when you want to animate an image with the latest hosted Wan generation, without setting up local hardware.",
+    "zh": "当你想用最新的托管 Wan 让图片动起来、又不必搭建本地硬件时用它。"
+  },
+  "notFor": {
+    "en": "Not for offline use — it requires network access and your own API key, and output availability depends on the provider's service.",
+    "zh": "不适合离线使用——它需要联网并自备 API key,输出是否可用取决于服务商的服务。"
+  },
+  "highlights": {
+    "en": [
+      "Hosted API — no local weights or GPU required",
+      "Image-to-video generation",
+      "Served via Alibaba's DashScope platform",
+      "Bring your own API key"
+    ],
+    "zh": [
+      "托管 API——无需本地权重或 GPU",
+      "图生视频生成",
+      "通过阿里云 DashScope 平台提供",
+      "需自备 API key"
+    ]
+  }
+}

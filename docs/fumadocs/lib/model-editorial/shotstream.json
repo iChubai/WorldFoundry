@@ -1,0 +1,37 @@
+{
+  "id": "shotstream",
+  "tagline": {
+    "en": "Kling's interactive, streaming video generator for real-time video synthesis.",
+    "zh": "Kling 推出的交互式流式视频生成器,面向实时视频合成。"
+  },
+  "overview": {
+    "en": [
+      "ShotStream is an interactive video generation model from the Kling team (Kling AI Research). It is built for streaming, real-time video synthesis rather than one-shot offline rendering, so frames are produced as an ongoing stream you can interact with.",
+      "In WorldFoundry the official inference route is registered. You stage the ShotStream checkpoint and streaming assets, then run generation through the pipeline to produce interactive, streaming video."
+    ],
+    "zh": [
+      "ShotStream 是 Kling 团队(Kling AI Research)推出的交互式视频生成模型。它面向流式、实时的视频合成,而非一次性的离线渲染,因此画面以持续的流形式产生,可供交互。",
+      "在 WorldFoundry 中已注册官方推理路由。备好 ShotStream 的 checkpoint 与流式资源后,即可通过 pipeline 运行生成,产出交互式的流式视频。"
+    ]
+  },
+  "whenToUse": {
+    "en": "When you want interactive, real-time streaming video generation rather than a single pre-rendered clip.",
+    "zh": "当你想要交互式、实时的流式视频生成,而非单段预渲染片段时。"
+  },
+  "notFor": {
+    "en": "Running it requires downloading the checkpoint and streaming assets first. Check the model's licensing terms before use.",
+    "zh": "运行前需先下载 checkpoint 与流式资源。使用前请确认该模型的许可条款。"
+  },
+  "highlights": {
+    "en": [
+      "Interactive, streaming video generation from the Kling team",
+      "Built for real-time synthesis rather than offline rendering",
+      "Official inference route wired into the pipeline"
+    ],
+    "zh": [
+      "Kling 团队推出的交互式流式视频生成",
+      "面向实时合成而非离线渲染",
+      "官方推理路由已接入 pipeline"
+    ]
+  }
+}

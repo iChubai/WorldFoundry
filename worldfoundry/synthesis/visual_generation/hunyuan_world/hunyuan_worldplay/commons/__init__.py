@@ -131,6 +131,11 @@ def is_flash2_available():
 
 def is_flash3_available():
     try:
+        # The WorldPlay FA3 wrapper also uses FlashAttention 2's padding
+        # helpers.  Treat FA3 as unavailable when only flash_attn_interface is
+        # installed; otherwise the capability probe succeeds and generation
+        # later crashes in flash_attn_no_pad_v3.
+        from flash_attn.bert_padding import pad_input, unpad_input  # noqa: F401
         from flash_attn_interface import (
             flash_attn_varlen_func as flash_attn_varlen_func_v3,
         )  # noqa: F401
@@ -219,17 +224,22 @@ def maybe_fallback_attn_mode(attn_mode, infer_state=None, block_idx=None):
 def auto_offload_model(models, device, enabled=True):
     from diffusers.hooks.group_offloading import _is_group_offload_enabled
 
+    movable_models = []
     if enabled:
         if isinstance(models, nn.Module):
             models = [models]
-        for model in models:
-            if model is not None:
-                model.to(device)
-    yield
-    if enabled:
-        for model in models:
-            if model is not None:
-                model.to(torch.device("cpu"))
+        movable_models = [
+            model
+            for model in models
+            if model is not None and not _is_group_offload_enabled(model)
+        ]
+        for model in movable_models:
+            model.to(device)
+    try:
+        yield
+    finally:
+        for model in movable_models:
+            model.to(torch.device("cpu"))
 
 
 def get_gpu_memory(device=None):

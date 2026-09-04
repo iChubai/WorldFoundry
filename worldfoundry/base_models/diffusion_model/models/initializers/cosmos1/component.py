@@ -1,4 +1,16 @@
-"""GEN3C image and rendered-camera conditioning initialization."""
+"""GEN3C :class:`~...contracts.EncodedLatentInitializer` for Predict1 Video2World.
+
+Implements ``initialize_with_encoder``: the recipe-bound Tokenize1 VAE
+encodes the reference image; a depth network plus
+:func:`~worldfoundry.core.spatial_warp.forward_warp_indexed_frames` build
+the 3D cache.  Returned :class:`~...contracts.LatentInitialization`
+conditioning keys (``condition_latents``, ``condition_indicator``,
+``condition_video_input_mask``, ``condition_video_pose``,
+``condition_noise``) map onto :class:`~...denoisers.cosmos1.Cosmos1Gen3CDenoiser`.
+
+``initialize`` without an encoder always raises.  Camera trajectories come
+from ``request.inputs`` or :func:`named_camera_trajectory_tensors`.
+"""
 
 from __future__ import annotations
 

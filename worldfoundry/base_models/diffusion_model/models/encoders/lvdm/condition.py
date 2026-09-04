@@ -1,4 +1,15 @@
-"""Module for base_models -> diffusion_model -> video -> lvdm -> modules -> encoders -> condition.py functionality."""
+"""LVDM FrozenOpenCLIPEmbedder and related condition modules.
+
+Checkpoint-compatible CLIP text (and optional image) towers
+used by LVDM / T2V-Turbo.  :class:`FrozenOpenCLIPEmbedder`
+is the usual prompt encoder; CLIP+T5 combo is
+:class:`FrozenCLIPT5Encoder`.
+
+Outputs are ``context`` token sequences.  A second key
+layout lives in :mod:`.condition2`.
+
+This is the OpenCLIP family, not Gemma or UMT5.
+"""
 
 import os
 from pathlib import Path
@@ -28,6 +39,17 @@ def _checkpoint_root() -> Path:
     return Path(os.environ.get("WORLDFOUNDRY_CKPT_DIR", "~/.cache/worldfoundry/checkpoints")).expanduser()
 
 
+def _checkpoint_roots() -> tuple[Path, ...]:
+    """Return the configured checkpoint root and its local ckpt/ckpts sibling."""
+
+    root = _checkpoint_root()
+    roots = [root]
+    if root.name in {"ckpt", "ckpts"}:
+        sibling_name = "ckpts" if root.name == "ckpt" else "ckpt"
+        roots.append(root.with_name(sibling_name))
+    return tuple(dict.fromkeys(roots))
+
+
 def _local_hf_model(version: str) -> str:
     """Helper function to local hf model.
 
@@ -39,13 +61,15 @@ def _local_hf_model(version: str) -> str:
     """
     if not isinstance(version, str) or os.path.exists(version):
         return version
-    mapping = {
-        "openai/clip-vit-large-patch14": _checkpoint_root() / "hfd" / "openai--clip-vit-large-patch14",
-        "openai/clip-vit-base-patch32": _checkpoint_root() / "hfd" / "openai--clip-vit-base-patch32",
-    }
-    candidate = mapping.get(version)
-    if candidate and candidate.exists():
-        return str(candidate)
+    repo_dir = {
+        "openai/clip-vit-large-patch14": "openai--clip-vit-large-patch14",
+        "openai/clip-vit-base-patch32": "openai--clip-vit-base-patch32",
+    }.get(version)
+    if repo_dir:
+        for root in _checkpoint_roots():
+            for candidate in (root / repo_dir, root / "hfd" / repo_dir):
+                if candidate.is_dir():
+                    return str(candidate)
     return version
 
 
@@ -62,13 +86,20 @@ def _local_open_clip_pretrained(arch: str, version: str) -> str:
     if not isinstance(version, str) or os.path.exists(version):
         return version
     if arch == "ViT-H-14" and version in {"laion2b_s32b_b79k", "laion/CLIP-ViT-H-14-laion2B-s32B-b79K"}:
-        candidates = [
-            os.environ.get("WORLDFOUNDRY_OPENCLIP_VITH14_PATH", ""),
-            str(_checkpoint_root() / "CLIP-ViT-H-14-laion2B-s32B-b79K" / "open_clip_pytorch_model.bin"),
-            str(_checkpoint_root() / "CLIP-ViT-H-14-laion2B-s32B-b79K" / "open_clip_model.safetensors"),
-        ]
+        candidates = [os.environ.get("WORLDFOUNDRY_OPENCLIP_VITH14_PATH", "")]
+        for root in _checkpoint_roots():
+            for repo_dir in (
+                "laion--CLIP-ViT-H-14-laion2B-s32B-b79K",
+                "CLIP-ViT-H-14-laion2B-s32B-b79K",
+            ):
+                candidates.extend(
+                    (
+                        str(root / repo_dir / "open_clip_pytorch_model.bin"),
+                        str(root / repo_dir / "open_clip_model.safetensors"),
+                    )
+                )
         for candidate in candidates:
-            if candidate and Path(candidate).exists():
+            if candidate and Path(candidate).is_file():
                 return candidate
     return version
 

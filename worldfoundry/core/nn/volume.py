@@ -1,9 +1,18 @@
-"""Reusable volumetric tensor resizing and pixel rearrangement."""
+"""Volumetric tensor resizing and 3D pixel rearrangement.
+
+``pixel_shuffle_3d`` / chunked interpolate for video latents that do
+not fit a single ``F.interpolate``. Keep 2D patchify in ``patching``.
+"""
 
 import math
 
 import torch
 import torch.nn.functional as F
+
+
+# ──────────────────────────────────────────────────────────────────────────
+# Chunked 5-D interpolate — stay under int32 element counts
+# ──────────────────────────────────────────────────────────────────────────
 
 
 def chunked_interpolate(x, scale_factor, mode="nearest"):
@@ -61,6 +70,11 @@ def chunked_interpolate(x, scale_factor, mode="nearest"):
     return torch.cat(chunks, dim=1)
 
 
+# ──────────────────────────────────────────────────────────────────────────
+# 3-D pixel shuffle / unshuffle — channel cube interleaved into T, H, W
+# ──────────────────────────────────────────────────────────────────────────
+
+
 def pixel_shuffle_3d(x, upscale_factor):
     """
     3D pixelshuffle operation.
@@ -72,6 +86,7 @@ def pixel_shuffle_3d(x, upscale_factor):
     C_new = C // (r * r * r)
     x = x.view(B, C_new, r, r, r, T, H, W)
 
+    # (r,r,r) from channels is interleaved into T, H, W (not a 2-D shuffle).
     x = x.permute(0, 1, 5, 2, 6, 3, 7, 4)
 
     y = x.reshape(B, C_new, T * r, H * r, W * r)
@@ -97,6 +112,11 @@ def pixel_unshuffle_3d(x, downsample_factor):
     x = x.permute(0, 1, 3, 5, 7, 2, 4, 6)
     y = x.reshape(B, C_new, T_new, H_new, W_new)
     return y
+
+
+# ──────────────────────────────────────────────────────────────────────────
+# Divisibility — pad a count so it divides ``dividend`` after integer //
+# ──────────────────────────────────────────────────────────────────────────
 
 
 def ceil_to_divisible(n: int, dividend: int) -> int:

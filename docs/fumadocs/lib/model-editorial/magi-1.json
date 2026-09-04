@@ -1,0 +1,41 @@
+{
+  "id": "magi-1",
+  "tagline": {
+    "en": "Sand AI's open, Apache-2.0 video model — animate a still image into motion.",
+    "zh": "Sand AI 开源的视频模型——Apache-2.0 许可,把静态图片生成为动态视频。"
+  },
+  "overview": {
+    "en": [
+      "MAGI-1 is an open video generation model from Sand AI, released under Apache-2.0 with no gating. It takes a still image and animates it into a short clip, and can drive broader video generation from that starting frame.",
+      "The model generates video autoregressively, extending the scene forward rather than denoising a whole clip at once. You supply an input image and sampling controls; it renders the motion out from there.",
+      "In WorldFoundry you run MAGI-1 through the shared pipeline — point it at the local checkpoint, give it an image, tune the sampling settings, fps, and seed, and it writes out a video."
+    ],
+    "zh": [
+      "MAGI-1 是 Sand AI 开源的视频生成模型,采用 Apache-2.0 许可、无使用门槛。它以一张静态图片为起点,将其生成为一段短视频,也可从该起始帧展开更广义的视频生成。",
+      "该模型采用自回归方式生成视频,沿时间向前扩展画面,而非一次性对整段片段去噪。你提供输入图片与采样控制,它便从这一帧开始渲染出运动。",
+      "在 WorldFoundry 中,你通过统一 pipeline 运行 MAGI-1——指向本地 checkpoint,给它一张图片,调好采样设置、fps 与 seed,它就会输出一段视频。"
+    ]
+  },
+  "whenToUse": {
+    "en": "Reach for MAGI-1 when you want an openly-licensed model to turn a single image into motion, and you value an autoregressive approach that grows the clip frame by frame.",
+    "zh": "当你想用一个开放许可的模型把单张图片变成动态视频,并看重逐帧向前扩展的自回归生成方式时,可以选择 MAGI-1。"
+  },
+  "notFor": {
+    "en": "Text-only prompting without a starting image isn't its focus — it works from an input frame. The checkpoint is downloaded separately, so plan for the download and disk space.",
+    "zh": "它并非以纯文字提示、无起始图片的生成为主——它需要一帧输入图片。Checkpoint 需单独下载,请预留下载时间与磁盘空间。"
+  },
+  "highlights": {
+    "en": [
+      "Apache-2.0, fully open weights",
+      "Image-to-video: animate a still frame into a clip",
+      "Autoregressive generation that extends the scene forward",
+      "Runs through WorldFoundry's shared pipeline with fps and seed controls"
+    ],
+    "zh": [
+      "Apache-2.0,权重完全开放",
+      "图生视频:把静态帧生成为动态片段",
+      "自回归生成,沿时间向前扩展画面",
+      "通过 WorldFoundry 统一 pipeline 运行,支持 fps 与 seed 控制"
+    ]
+  }
+}

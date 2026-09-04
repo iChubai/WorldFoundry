@@ -1,4 +1,11 @@
-"""Sana DC-AE role for the canonical diffusion runner."""
+"""Sana DC-AE :class:`~...contracts.LatentEncoder` + :class:`~...contracts.LatentDecoder`.
+
+Wraps the f32c32 Deep-Compression Autoencoder.  ``encode`` scales latents
+by the official ``scaling_factor`` (~0.414).  ``decode`` inverts that
+scale (and optional ``decoder_input_scale``) then clamps pixels to
+``[-1, 1]``.  Image-only: BCHW RGB in, BCHW out.  ``return_latent`` skips
+decode.
+"""
 
 from __future__ import annotations
 

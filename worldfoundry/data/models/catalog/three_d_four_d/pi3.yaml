@@ -10,6 +10,7 @@ source:
   official_repo_url: https://github.com/yyfz/Pi3
   license: apache-2.0
 official_sources:
+  project_page: https://yyfz.github.io/pi3/
   paper: https://arxiv.org/pdf/2507.13347
   github:
     url: https://github.com/yyfz/Pi3

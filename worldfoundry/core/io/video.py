@@ -1,33 +1,90 @@
-"""Video read/write primitives shared by inference and evaluation code."""
+"""Video read/write primitives shared by inference and evaluation code.
+
+Decode and encode stay here so model pipelines do not import cv2/decord
+directly. FFmpeg is resolved as explicit path → ImageIO bundle → ``PATH``
+by default. Set ``WORLDFOUNDRY_FFMPEG_PREFERENCE=system`` when a deployment
+intentionally wants its system binary first.
+
+Why not always decode the whole file: I2V / eval often need a few frames
+or a resized tensor. :func:`sample_video_frames` and
+:func:`load_frames_from_video` take that path; tiling for huge inputs
+lives in :mod:`worldfoundry.core.io.video_tiling`. Writes go through
+H.264 helpers so evaluation artifacts share one color-range contract.
+"""
 
 from __future__ import annotations
 
 import json
 import math
+import os
 import shutil
 import subprocess
 import tempfile
+import threading
 from pathlib import Path
 from typing import Any, Iterable, Optional
 
 from .media import IMAGE_EXTENSIONS, VIDEO_EXTENSIONS
+from .paths import scratch_directory
 from .storage import local_path_for_uri, parse_uri_scheme, uri_to_local_path, write_binary_uri
 
+# ──────────────────────────────────────────────────────────────────────────
+# FFmpeg / decode — explicit path → ImageIO bundle → PATH; never import cv2 here
+# ──────────────────────────────────────────────────────────────────────────
 
-def _resolve_ffmpeg_executable(explicit: str | Path | None = None) -> str | None:
-    """Resolve an explicit, system, or ImageIO-bundled FFmpeg executable."""
+_MAX_FFMPEG_STDERR_BYTES = 1024 * 1024
+_FFMPEG_STDERR_TRUNCATED_PREFIX = b"[earlier FFmpeg stderr truncated]\n"
 
-    if explicit is not None:
-        return str(explicit)
-    system = shutil.which("ffmpeg")
-    if system:
-        return system
+
+def _imageio_ffmpeg_executable() -> str | None:
+    """Return ImageIO's pinned FFmpeg binary when that optional dep exists."""
+
     try:
         import imageio_ffmpeg
 
         return imageio_ffmpeg.get_ffmpeg_exe()
     except (ImportError, OSError, RuntimeError):
         return None
+
+
+def _resolve_ffmpeg_executable(
+    explicit: str | Path | None = None,
+    *,
+    preference: str | None = None,
+) -> str | None:
+    """Resolve FFmpeg with a deterministic, overrideable priority.
+
+    The bundled executable is the default because its encoder build is pinned
+    with ImageIO and benchmarks substantially faster than several older PATH
+    installations. ``preference="system"`` (or the matching environment
+    variable) reverses the last two candidates without removing the portable
+    fallback.
+    """
+
+    if explicit is not None:
+        return str(explicit)
+    requested = str(
+        preference
+        if preference is not None
+        else os.getenv("WORLDFOUNDRY_FFMPEG_PREFERENCE", "bundled")
+    ).strip().casefold()
+    aliases = {
+        "bundle": "bundled",
+        "bundled": "bundled",
+        "imageio": "bundled",
+        "path": "system",
+        "system": "system",
+    }
+    try:
+        resolved_preference = aliases[requested]
+    except KeyError as error:
+        raise ValueError(
+            "WORLDFOUNDRY_FFMPEG_PREFERENCE must be 'bundled' or 'system'"
+        ) from error
+
+    if resolved_preference == "system":
+        return shutil.which("ffmpeg") or _imageio_ffmpeg_executable()
+    return _imageio_ffmpeg_executable() or shutil.which("ffmpeg")
 
 
 def extract_frames_from_video_url(video_url: str):
@@ -93,7 +150,12 @@ def video_tensor_to_uint8_frames(video_tensor, *, value_range: str | tuple[float
 
     if not torch.is_tensor(video_tensor):
         raise TypeError(f"Expected torch.Tensor, got {type(video_tensor)}")
-    tensor = video_tensor.detach().cpu().float()
+    # Normalize on the source device, then transfer the compact uint8 result.
+    # Moving a decoded CUDA video to CPU first used to copy four bytes per
+    # channel and run clamp/scale on the host.  The final artifact only needs
+    # one byte per channel, so doing the numerically identical FP32 work on the
+    # accelerator cuts both PCIe traffic and public-generation latency.
+    tensor = video_tensor.detach()
     if tensor.ndim == 5:
         if tensor.shape[0] != 1:
             raise ValueError(f"Expected batch size 1 for 5D video tensor, got shape {tuple(tensor.shape)}")
@@ -108,6 +170,7 @@ def video_tensor_to_uint8_frames(video_tensor, *, value_range: str | tuple[float
         video = tensor.permute(0, 2, 3, 1)
     else:
         raise ValueError(f"Unable to infer channel layout for video tensor shape {tuple(tensor.shape)}")
+    video = video.float()
     if value_range == "auto":
         low, high = (-1.0, 1.0) if float(video.min()) < 0.0 else (0.0, 1.0)
     elif value_range == "-1,1":
@@ -118,8 +181,11 @@ def video_tensor_to_uint8_frames(video_tensor, *, value_range: str | tuple[float
         low, high = value_range
     if high <= low:
         raise ValueError("value_range high bound must be larger than low bound.")
-    video = ((video.clamp(float(low), float(high)) - float(low)) * (255.0 / (float(high) - float(low)))).to(torch.uint8)
-    return video.numpy()
+    video = (
+        (video.clamp(float(low), float(high)) - float(low))
+        * (255.0 / (float(high) - float(low)))
+    ).to(torch.uint8)
+    return video.contiguous().cpu().numpy()
 
 
 def coerce_video_frames(video_input):
@@ -368,6 +434,8 @@ def extract_video_frames_to_directory(
 
 
 def _ffprobe_number(value: Any) -> float | None:
+    """Parse an ffprobe numeric field; ``N/A`` / empty become ``None``, not 0."""
+
     if value in (None, "", "N/A"):
         return None
     try:
@@ -377,6 +445,8 @@ def _ffprobe_number(value: Any) -> float | None:
 
 
 def _ffprobe_rate(value: Any) -> float | None:
+    """Parse ``num/den`` frame rates; ``0/0`` is treated as missing, not infinity."""
+
     if value in (None, "", "0/0", "N/A"):
         return None
     text = str(value)
@@ -520,6 +590,36 @@ def save_video_frames(video_frames, output_path: str | Path, fps: int = 16, **kw
     write_video(video_frames, output_path, fps=fps, **kwargs)
 
 
+def _drain_ffmpeg_stderr(
+    stream: Any,
+    result: list[bytes],
+    *,
+    max_bytes: int = _MAX_FFMPEG_STDERR_BYTES,
+) -> None:
+    """Drain FFmpeg stderr concurrently and retain a bounded diagnostic tail."""
+
+    tail = bytearray()
+    truncated = False
+    while True:
+        chunk = stream.read(8192)
+        if not chunk:
+            break
+        encoded = chunk.encode() if isinstance(chunk, str) else bytes(chunk)
+        tail.extend(encoded)
+        excess = len(tail) - max_bytes
+        if excess > 0:
+            del tail[:excess]
+            truncated = True
+
+    prefix = _FFMPEG_STDERR_TRUNCATED_PREFIX if truncated else b""
+    result.append(prefix + bytes(tail))
+
+
+# ──────────────────────────────────────────────────────────────────────────
+# H.264 writers — one color-range contract for eval artifacts
+# ──────────────────────────────────────────────────────────────────────────
+
+
 def save_video_h264(
     video_frames,
     output_path: str | Path,
@@ -527,8 +627,15 @@ def save_video_h264(
     fps: float = 16.0,
     crf: int = 18,
     preset: str = "medium",
+    faststart: bool = False,
 ) -> None:
-    """Write THWC RGB frames as a local H.264/yuv420p MP4 with FFmpeg."""
+    """Write THWC RGB frames as a local H.264/yuv420p MP4 with FFmpeg.
+
+    ``faststart`` is opt-in because relocating MP4 metadata performs another
+    file pass after encoding.  Local generation results are already complete
+    when this function returns, so the extra pass adds latency without
+    changing the encoded frames or their quality.
+    """
 
     frames = coerce_video_frames(video_frames)
     if int(frames.shape[0]) == 0:
@@ -568,30 +675,52 @@ def save_video_h264(
         str(int(crf)),
         "-pix_fmt",
         "yuv420p",
-        "-movflags",
-        "+faststart",
-        str(target),
     ]
+    if faststart:
+        command.extend(("-movflags", "+faststart"))
+    command.append(str(target))
     process = subprocess.Popen(
         command,
         stdin=subprocess.PIPE,
         stdout=subprocess.DEVNULL,
         stderr=subprocess.PIPE,
     )
+    assert process.stdin is not None
+    assert process.stderr is not None
+    stderr_chunks: list[bytes] = []
+    stderr_thread = threading.Thread(
+        target=_drain_ffmpeg_stderr,
+        args=(process.stderr, stderr_chunks),
+        name="worldfoundry-ffmpeg-stderr",
+        daemon=True,
+    )
+    stderr_thread.start()
+    write_error: BrokenPipeError | None = None
     try:
-        assert process.stdin is not None
-        for index in range(frame_count):
-            process.stdin.write(frames[index].tobytes())
-        process.stdin.close()
-        assert process.stderr is not None
-        stderr = process.stderr.read()
-        process.wait()
-    except Exception:
+        try:
+            for index in range(frame_count):
+                process.stdin.write(frames[index].tobytes())
+        except BrokenPipeError as exc:
+            write_error = exc
+        finally:
+            try:
+                process.stdin.close()
+            except BrokenPipeError as exc:
+                if write_error is None:
+                    write_error = exc
+        returncode = process.wait()
+    except BaseException:
         process.kill()
         process.wait()
+        stderr_thread.join()
         raise
-    if process.returncode != 0:
-        message = stderr.decode("utf-8", errors="ignore")
+    stderr_thread.join()
+    message = b"".join(stderr_chunks).decode("utf-8", errors="replace")
+    if write_error is not None:
+        raise RuntimeError(
+            f"ffmpeg closed while encoding {target} (exit code {returncode}): {message}"
+        ) from write_error
+    if returncode != 0:
         raise RuntimeError(f"ffmpeg H.264 encode failed for {target}: {message}")
 
 
@@ -691,8 +820,34 @@ def write_video_torchvision(
         torchvision_write_video = None
 
     if torchvision_write_video is not None:
-        torchvision_write_video(str(filename), video_array, fps, *args, **kwargs)
-        return
+        try:
+            torchvision_write_video(str(filename), video_array, fps, *args, **kwargs)
+            return
+        except TypeError as exc:
+            # torchvision<=0.20 assigns the string ``"NONE"`` to
+            # ``VideoFrame.pict_type``.  Newer PyAV releases require the enum's
+            # integer value instead, so encoding fails after inference has
+            # already completed.  Preserve the torchvision-compatible entry
+            # point while using the in-tree FFmpeg encoder for this version
+            # mismatch.
+            if "integer is required" not in str(exc):
+                raise
+
+            options = kwargs.get("options")
+            try:
+                crf = int(options.get("crf", 18)) if isinstance(options, dict) else 18
+            except (TypeError, ValueError):
+                crf = 18
+            # Match torchvision's input contract exactly here: write_video
+            # casts THWC inputs directly to uint8.  coerce_video_frames()
+            # treats non-negative torch tensors as normalized [0, 1] data,
+            # which turns the common float [0, 255] inputs used by official
+            # runtimes into almost entirely white frames.
+            import torch
+
+            frames = torch.as_tensor(video_array, dtype=torch.uint8).detach().cpu().numpy()
+            save_video_h264(frames, filename, fps=fps, crf=crf)
+            return
 
     import cv2
     import numpy as np
@@ -725,21 +880,43 @@ def write_video(
     format: str | None = None,
     **kwargs,
 ) -> None:
-    """Write a THWC video array/list to a local path or remote URI."""
+    """Write a THWC video array/list to a local path or remote URI.
 
-    import imageio
+    The ordinary local MP4 path streams RGB bytes straight to FFmpeg.  This
+    avoids importing and initializing ImageIO's plugin after inference while
+    retaining its effective default x264 CRF (23).  Custom ImageIO options,
+    explicit quality settings, non-MP4 containers, and remote targets keep the
+    general ImageIO path.
+    """
 
     frames = coerce_video_frames(video_frames)
-    write_kwargs = {"fps": fps, "macro_block_size": 1, **kwargs}
-    if quality is not None:
-        write_kwargs["quality"] = quality
 
     if parse_uri_scheme(output_path) == "file":
         target = uri_to_local_path(output_path)
         target.parent.mkdir(parents=True, exist_ok=True)
+        normalized_format = None if format is None else str(format).lstrip(".").casefold()
+        if (
+            target.suffix.casefold() == ".mp4"
+            and normalized_format in {None, "mp4"}
+            and quality is None
+            and not kwargs
+        ):
+            save_video_h264(frames, target, fps=fps, crf=23)
+            return
+
+        import imageio
+
+        write_kwargs = {"fps": fps, "macro_block_size": 1, **kwargs}
+        if quality is not None:
+            write_kwargs["quality"] = quality
         imageio.mimsave(str(target), frames, format=format, **write_kwargs)
         return
 
+    import imageio
+
+    write_kwargs = {"fps": fps, "macro_block_size": 1, **kwargs}
+    if quality is not None:
+        write_kwargs["quality"] = quality
     suffix = Path(str(output_path)).suffix or ".mp4"
     with tempfile.NamedTemporaryFile(suffix=suffix, delete=True) as handle:
         imageio.mimsave(handle.name, frames, format=format, **write_kwargs)
@@ -768,7 +945,7 @@ def materialize_video_input(
             return str(candidate.resolve())
 
     if output_dir is None:
-        output_dir = tempfile.mkdtemp(prefix="worldfoundry_video_")
+        output_dir = scratch_directory("worldfoundry_video_")
     output_path = Path(output_dir).expanduser().resolve() / filename
     frames = coerce_video_frames(video_input)
     save_video_frames(frames, str(output_path), fps=fps)

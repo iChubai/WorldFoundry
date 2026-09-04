@@ -8,6 +8,7 @@ availability: open_source
 provider: official_repo
 license: mit
 official_sources:
+  paper: https://arxiv.org/abs/2510.23511
   github:
     url: https://github.com/Dexmal/dexbotic
     head_sha: 0f5ae6382bf0bc6196120f0930ce342ae54e7354

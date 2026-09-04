@@ -1,3 +1,13 @@
+"""Named shapes for LTX pixel / latent / audio tensors.
+
+:class:`VideoPixelShape` is BGR ``[B, T, H, W]`` plus FPS.
+:class:`VideoLatentShape` is VAE ``[B, C, T, H, W]`` after the default
+8× temporal and 32× spatial compression.  :class:`AudioLatentShape` is
+derived from the video pixel timeline so audio and video stay aligned
+across multi-stage passes.  Used by patchifiers, initializers, and the
+spatial :class:`~...contracts.LatentProcessor`.
+"""
+
 from dataclasses import dataclass, replace
 from typing import NamedTuple
 

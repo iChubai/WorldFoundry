@@ -1,0 +1,41 @@
+{
+  "id": "cut3r",
+  "tagline": {
+    "en": "Continuous 3D reconstruction from images — export a point cloud or lift it into 3D Gaussians.",
+    "zh": "从图像做连续 3D 重建——导出点云，或进一步提升为 3D 高斯。"
+  },
+  "overview": {
+    "en": [
+      "CUT3R reconstructs 3D geometry from images, producing a dense point cloud of the captured scene. It belongs to the recent family of feed-forward 3D reconstruction methods that recover geometry directly, without a full traditional structure-from-motion pipeline.",
+      "In WorldFoundry it offers two routes: a point-cloud export, and a two-stage path that lifts the reconstruction into a 3D Gaussian Splatting (3DGS) representation you can render from new viewpoints. This makes it useful both as a geometry source and as a way to get a renderable 3D asset.",
+      "Both routes are registered in-tree and discovered through Studio. Checkpoint-backed inference depends on staged local or Hugging Face CUT3R weights, so set those up before a full run."
+    ],
+    "zh": [
+      "CUT3R 从图像重建 3D 几何，产出所采集场景的稠密点云。它属于近期的前馈式 3D 重建方法家族，直接恢复几何，而无需完整的传统 structure-from-motion 流程。",
+      "在 WorldFoundry 中它提供两条路径：点云导出，以及把重建结果提升为可从新视角渲染的 3D 高斯泼溅（3DGS）表示的两阶段路径。这让它既可作为几何来源，也可用于得到可渲染的 3D 资产。",
+      "两条路径都在代码库内注册，并通过 Studio 发现。基于 checkpoint 的推理依赖本地或 Hugging Face 上准备好的 CUT3R 权重，请在完整运行前设置好。"
+    ]
+  },
+  "whenToUse": {
+    "en": "Use it when you need 3D reconstruction from images — either a point cloud for geometry, or a two-stage lift into 3D Gaussians for a renderable asset.",
+    "zh": "当你需要从图像做 3D 重建时使用它——既可得到用于几何的点云，也可通过两阶段路径提升为可渲染的 3D 高斯资产。"
+  },
+  "notFor": {
+    "en": "Not a text- or image-driven world generator — it reconstructs from real image input rather than imagining new scenes. Checkpoint-backed inference needs the CUT3R weights staged first.",
+    "zh": "它不是文本或图像驱动的世界生成器——它从真实图像输入进行重建，而非想象新场景。基于 checkpoint 的推理需先准备好 CUT3R 权重。"
+  },
+  "highlights": {
+    "en": [
+      "Feed-forward 3D reconstruction from images",
+      "Point-cloud export route",
+      "Two-stage lift into 3D Gaussian Splatting",
+      "Registered in-tree and discovered through Studio"
+    ],
+    "zh": [
+      "从图像进行前馈式 3D 重建",
+      "点云导出路径",
+      "两阶段提升为 3D 高斯泼溅",
+      "在代码库内注册，通过 Studio 发现"
+    ]
+  }
+}

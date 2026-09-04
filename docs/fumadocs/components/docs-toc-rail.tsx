@@ -2,7 +2,7 @@
 
 import { ScrollProvider, type TOCItemType } from 'fumadocs-core/toc';
 import { AlignLeft } from 'lucide-react';
-import { useRef } from 'react';
+import { type ReactNode, useRef } from 'react';
 
 import { DocsTocLinks } from '@/components/docs-toc-links';
 import { DocsTocScrollSpyProvider } from '@/lib/docs-toc-scroll-spy';
@@ -13,13 +13,22 @@ type DocsTocRailProps = {
   items: TOCItemType[];
   slugs: readonly string[];
   pageKey: string;
+  children?: ReactNode;
 };
 
-export function DocsTocRail({ title, items, slugs, pageKey }: DocsTocRailProps) {
+export function DocsTocRail({ title, items, slugs, pageKey, children }: DocsTocRailProps) {
   const linksRef = useRef<HTMLDivElement>(null);
   const toc = useDocsTocItems(slugs, items);
 
-  if (toc.length === 0) return null;
+  if (toc.length === 0 && !children) return null;
+
+  if (toc.length === 0) {
+    return (
+      <aside className="pi-doc-right-rail" aria-label={title}>
+        {children}
+      </aside>
+    );
+  }
 
   return (
     <DocsTocScrollSpyProvider key={pageKey} items={toc}>
@@ -32,6 +41,7 @@ export function DocsTocRail({ title, items, slugs, pageKey }: DocsTocRailProps) 
             </span>
             <DocsTocLinks items={toc} linksRef={linksRef} />
           </nav>
+          {children}
         </aside>
       </ScrollProvider>
     </DocsTocScrollSpyProvider>

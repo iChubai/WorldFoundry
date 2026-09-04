@@ -1,4 +1,9 @@
-"""Module for base_models -> diffusion_model -> video -> lvdm -> modules -> attention_temporal.py functionality."""
+"""Factorized spatial-temporal attention for the short LVDM UNet.
+
+:class:`SpatialTemporalTransformer` runs spatial then temporal (or
+windowed ST) attention on ``B C T H W`` features.  Reshape helpers
+document the ``B S C`` vs video-layout conversions.
+"""
 
 import math
 from inspect import isfunction
@@ -31,39 +36,22 @@ from worldfoundry.core.nn.classic_diffusion import (
 
 
 class GEGLU(nn.Module):
-    """Geglu implementation."""
+    """Gated-GELU FFN: linear to 2x width, then value * GELU(gate) on the last dim."""
     def __init__(self, dim_in, dim_out):
-        """Init.
-
-        Args:
-            dim_in: The dim in.
-            dim_out: The dim out.
-        """
+        """Linear map ``dim_in → 2 * dim_out`` for the value/gate split."""
         super().__init__()
         self.proj = nn.Linear(dim_in, dim_out * 2)
 
     def forward(self, x):
-        """Forward.
-
-        Args:
-            x: The x.
-        """
+        """Return ``value * GELU(gate)`` on the last dimension."""
         x, gate = self.proj(x).chunk(2, dim=-1)
         return x * F.gelu(gate)
 
 
 class FeedForward(nn.Module):
-    """Feed forward implementation."""
+    """Position-wise MLP used inside LVDM transformer blocks (``B S C``)."""
     def __init__(self, dim, dim_out=None, mult=4, glu=False, dropout=0.):
-        """Init.
-
-        Args:
-            dim: The dim.
-            dim_out: The dim out.
-            mult: The mult.
-            glu: The glu.
-            dropout: The dropout.
-        """
+        """Build the expand / GELU-or-GEGLU / contract MLP."""
         super().__init__()
         inner_dim = int(dim * mult)
         dim_out = default(dim_out, dim)
@@ -79,11 +67,7 @@ class FeedForward(nn.Module):
         )
 
     def forward(self, x):
-        """Forward.
-
-        Args:
-            x: The x.
-        """
+        """Apply the position-wise MLP to ``[..., C]`` tokens."""
         return self.net(x)
 
 
@@ -101,12 +85,7 @@ class RelativePosition(nn.Module):
     """ https://github.com/evelinehong/Transformer_Relative_Position_PyTorch/blob/master/relative_position.py """
 
     def __init__(self, num_units, max_relative_position):
-        """Init.
-
-        Args:
-            num_units: The num units.
-            max_relative_position: The max relative position.
-        """
+        """Allocate the ``[-max, +max]`` relative-position table."""
         super().__init__()
         self.num_units = num_units
         self.max_relative_position = max_relative_position
@@ -114,12 +93,7 @@ class RelativePosition(nn.Module):
         nn.init.xavier_uniform_(self.embeddings_table)
 
     def forward(self, length_q, length_k):
-        """Forward.
-
-        Args:
-            length_q: The length q.
-            length_k: The length k.
-        """
+        """Return ``[Lq, Lk, num_units]`` embeddings for the two sequence lengths."""
         device = self.embeddings_table.device
         range_vec_q = th.arange(length_q, device=device)
         range_vec_k = th.arange(length_k, device=device)
@@ -134,7 +108,7 @@ class RelativePosition(nn.Module):
 
 
 class TemporalCrossAttention(nn.Module):
-    """Temporal cross attention implementation."""
+    """Cross-attention along time after flattening spatial axes to batch."""
     def __init__(self, 
         query_dim, 
         context_dim=None, 
@@ -151,23 +125,7 @@ class TemporalCrossAttention(nn.Module):
         joint_train_mode="same_batch",
         **kwargs,
     ):
-        """Init.
-
-        Args:
-            query_dim: The query dim.
-            context_dim: The context dim.
-            heads: The heads.
-            dim_head: The dim head.
-            dropout: The dropout.
-            temporal_length: The temporal length.
-            image_length: The image length.
-            use_relative_position: The use relative position.
-            img_video_joint_train: The img video joint train.
-            use_tempoal_causal_attn: The use tempoal causal attn.
-            bidirectional_causal_attn: The bidirectional causal attn.
-            tempoal_attn_type: The tempoal attn type.
-            joint_train_mode: The joint train mode.
-        """
+        """QKV for attention along the temporal axis."""
         super().__init__()
         inner_dim = dim_head * heads
         context_dim = default(context_dim, query_dim)
@@ -241,13 +199,7 @@ class TemporalCrossAttention(nn.Module):
         nn.init.constant_(self.to_out[0].bias, 0)
 
     def forward(self, x, context=None, mask=None):
-        """Forward.
-
-        Args:
-            x: The x.
-            context: The context.
-            mask: The mask.
-        """
+        """Attend along time on tokens flattened from a video feature map."""
         # if context is None:
         #     print(f'[Temp Attn] x={x.shape},context=None')
         # else:
@@ -339,20 +291,10 @@ class TemporalCrossAttention(nn.Module):
 
 
 class CrossAttention(nn.Module):
-    """Cross attention implementation."""
+    """Multi-head attention on flattened UNet tokens (spatial ``H·W`` or temporal ``T``)."""
     def __init__(self, query_dim, context_dim=None, heads=8, dim_head=64, dropout=0.,
                  sa_shared_kv=False, shared_type='only_first', **kwargs,):
-        """Init.
-
-        Args:
-            query_dim: The query dim.
-            context_dim: The context dim.
-            heads: The heads.
-            dim_head: The dim head.
-            dropout: The dropout.
-            sa_shared_kv: The sa shared kv.
-            shared_type: The shared type.
-        """
+        """Build QKV projections; optional relative bias and image-context branch."""
         super().__init__()
         inner_dim = dim_head * heads
         context_dim = default(context_dim, query_dim)
@@ -376,13 +318,7 @@ class CrossAttention(nn.Module):
             self.forward = self.efficient_forward
 
     def forward(self, x, context=None, mask=None):
-        """Forward.
-
-        Args:
-            x: The x.
-            context: The context.
-            mask: The mask.
-        """
+        """Attend queries ``B S C`` to text/image context; return the same layout."""
         h = self.heads
         b = x.shape[0]
         
@@ -415,13 +351,7 @@ class CrossAttention(nn.Module):
         return self.to_out(out)
     
     def efficient_forward(self, x, context=None, mask=None):
-        """Efficient forward.
-
-        Args:
-            x: The x.
-            context: The context.
-            mask: The mask.
-        """
+        """xFormers path for the same ``B S C`` attention as ``forward``."""
         q = self.to_q(x)
         context = default(context, x)
         k = self.to_k(context)
@@ -450,26 +380,12 @@ class CrossAttention(nn.Module):
         return self.to_out(out)
 
 class VideoSpatialCrossAttention(CrossAttention):
-    """Video spatial cross attention implementation."""
+    """Spatial cross-attention specialized for video feature maps."""
     def __init__(self, query_dim, context_dim=None, heads=8, dim_head=64, dropout=0):
-        """Init.
-
-        Args:
-            query_dim: The query dim.
-            context_dim: The context dim.
-            heads: The heads.
-            dim_head: The dim head.
-            dropout: The dropout.
-        """
+        """Spatial cross-attn specialized for video maps."""
         super().__init__(query_dim, context_dim, heads, dim_head, dropout)
     def forward(self, x, context=None, mask=None):
-        """Forward.
-
-        Args:
-            x: The x.
-            context: The context.
-            mask: The mask.
-        """
+        """Spatial cross-attn; input is flattened ``H·W`` tokens."""
         b, c, t, h, w = x.shape
         if context is not None:
             context = context.repeat(t, 1, 1)
@@ -477,7 +393,7 @@ class VideoSpatialCrossAttention(CrossAttention):
         return spatial_attn_reshape_back(x,b,h)
 
 class BasicTransformerBlockST(nn.Module):
-    """Basic transformer block st implementation."""
+    """Factorized spatial-then-temporal transformer block on video tokens."""
     def __init__(self, 
         # Spatial Stuff
         dim, 
@@ -502,29 +418,7 @@ class BasicTransformerBlockST(nn.Module):
         window_size=2,
         **kwargs,
     ):
-        """Init.
-
-        Args:
-            dim: The dim.
-            n_heads: The n heads.
-            d_head: The d head.
-            dropout: The dropout.
-            context_dim: The context dim.
-            gated_ff: The gated ff.
-            checkpoint: The checkpoint.
-            temporal_length: The temporal length.
-            image_length: The image length.
-            use_relative_position: The use relative position.
-            img_video_joint_train: The img video joint train.
-            cross_attn_on_tempoal: The cross attn on tempoal.
-            temporal_crossattn_type: The temporal crossattn type.
-            order: The order.
-            temporalcrossfirst: The temporalcrossfirst.
-            temporal_context_dim: The temporal context dim.
-            split_stcontext: The split stcontext.
-            local_spatial_temporal_attn: The local spatial temporal attn.
-            window_size: The window size.
-        """
+        """Wire factorized spatial and temporal attention + FFN."""
         super().__init__()
         # Self attention
         self.attn1 = CrossAttention(query_dim=dim, heads=n_heads, dim_head=d_head, dropout=dropout, **kwargs,)
@@ -574,15 +468,7 @@ class BasicTransformerBlockST(nn.Module):
         
     ##############################################################################################################################################
     def forward(self, x, context=None, temporal_context=None, no_temporal_attn=None, attn_mask=None, **kwargs):
-        """Forward.
-
-        Args:
-            x: The x.
-            context: The context.
-            temporal_context: The temporal context.
-            no_temporal_attn: The no temporal attn.
-            attn_mask: The attn mask.
-        """
+        """Run spatial then temporal attention on video tokens, then the FFN."""
         # print(f'no_temporal_attn={no_temporal_attn}')
         
         if not self.split_stcontext:
@@ -607,15 +493,7 @@ class BasicTransformerBlockST(nn.Module):
             # return checkpoint(self._forward, (x, context, temporal_context), self.parameters(), self.checkpoint)
             
     def _forward(self, x, context=None, temporal_context=None, mask=None, no_temporal_attn=None, ):
-        """Helper function to forward.
-
-        Args:
-            x: The x.
-            context: The context.
-            temporal_context: The temporal context.
-            mask: The mask.
-            no_temporal_attn: The no temporal attn.
-        """
+        """Inner factorized ST attention used by gradient checkpointing."""
         assert(x.dim() == 5), f"x shape = {x.shape}"
         b, c, t, h, w = x.shape
         
@@ -634,13 +512,7 @@ class BasicTransformerBlockST(nn.Module):
         return x
     
     def _forward_no_temporal_attn(self, x, context=None, temporal_context=None, ):
-        """Helper function to forward no temporal attn.
-
-        Args:
-            x: The x.
-            context: The context.
-            temporal_context: The temporal context.
-        """
+        """Spatial-only path; restores ``B C T H W`` without temporal attention."""
         # temporary implementation :(
         # because checkpoint does not support non-tensor inputs currently.
         assert(x.dim() == 5), f"x shape = {x.shape}"
@@ -662,12 +534,7 @@ class BasicTransformerBlockST(nn.Module):
         return x
     
     def _forward_nocontext(self, x, no_temporal_attn=None):
-        """Helper function to forward nocontext.
-
-        Args:
-            x: The x.
-            no_temporal_attn: The no temporal attn.
-        """
+        """Self-attn-only ST path when no text context is provided."""
         assert(x.dim() == 5), f"x shape = {x.shape}"
         b, c, t, h, w = x.shape
         
@@ -685,15 +552,7 @@ class BasicTransformerBlockST(nn.Module):
     ##############################################################################################################################################
     
     def _st_cross_attn(self, x, context=None, temporal_context=None, order="stst", mask=None): #no_temporal_attn=None, 
-        """Helper function to st cross attn.
-
-        Args:
-            x: The x.
-            context: The context.
-            temporal_context: The temporal context.
-            order: The order.
-            mask: The mask.
-        """
+        """Factorized spatial/temporal attention on flattened video tokens."""
         b, c, t, h, w = x.shape
         # print(f'[_st_cross_attn input] x={x.shape}, context={context.shape}')
         
@@ -842,45 +701,19 @@ class BasicTransformerBlockST(nn.Module):
     ##############################################################################################################################################
 
 def spatial_attn_reshape(x):
-    """Spatial attn reshape.
-
-    Args:
-        x: The x.
-    """
+    """``B C T H W`` → ``(B·T) (H·W) C`` for per-frame spatial attention."""
     return rearrange(x, 'b c t h w -> (b t) (h w) c')
 def spatial_attn_reshape_back(x,b,h):
-    """Spatial attn reshape back.
-
-    Args:
-        x: The x.
-        b: The b.
-        h: The h.
-    """
+    """Inverse of :func:`spatial_attn_reshape` (needs ``b`` and spatial ``h``)."""
     return rearrange(x, '(b t) (h w) c -> b c t h w', b=b,h=h)
 def temporal_attn_reshape(x):
-    """Temporal attn reshape.
-
-    Args:
-        x: The x.
-    """
+    """``B C T H W`` → ``(B·H·W) T C`` for per-pixel temporal attention."""
     return rearrange(x, 'b c t h w -> (b h w) t c')
 def temporal_attn_reshape_back(x, b,h,w):
-    """Temporal attn reshape back.
-
-    Args:
-        x: The x.
-        b: The b.
-        h: The h.
-        w: The w.
-    """
+    """Inverse of :func:`temporal_attn_reshape`."""
     return rearrange(x, '(b h w) t c -> b c t h w', b=b, h=h, w=w)
 def local_spatial_temporal_attn_reshape(x, window_size):
-    """Local spatial temporal attn reshape.
-
-    Args:
-        x: The x.
-        window_size: The window size.
-    """
+    """Window ``B C T H W`` into ``(B·NH·NW) (T·wh·ww) C`` local ST tokens."""
     B, C, T, H, W = x.shape
     NH = H // window_size
     NW = W // window_size
@@ -891,16 +724,7 @@ def local_spatial_temporal_attn_reshape(x, window_size):
     x = rearrange(x, 'b c t nh wh nw ww -> (b nh nw) (t wh ww) c') # (B, NH, NW) (T, window_size, window_size) C 
     return x
 def local_spatial_temporal_attn_reshape_back(x, window_size, b, h, w, t):
-    """Local spatial temporal attn reshape back.
-
-    Args:
-        x: The x.
-        window_size: The window size.
-        b: The b.
-        h: The h.
-        w: The w.
-        t: The t.
-    """
+    """Inverse of :func:`local_spatial_temporal_attn_reshape`."""
     B, L, C = x.shape
     NH = h // window_size
     NW = w // window_size
@@ -934,26 +758,7 @@ class SpatialTemporalTransformer(nn.Module):
         temporal_context_dim=None,
         **kwargs,
         ):
-        """Init.
-
-        Args:
-            in_channels: The in channels.
-            n_heads: The n heads.
-            d_head: The d head.
-            depth: The depth.
-            dropout: The dropout.
-            context_dim: The context dim.
-            temporal_length: The temporal length.
-            image_length: The image length.
-            use_relative_position: The use relative position.
-            img_video_joint_train: The img video joint train.
-            cross_attn_on_tempoal: The cross attn on tempoal.
-            temporal_crossattn_type: The temporal crossattn type.
-            order: The order.
-            temporalcrossfirst: The temporalcrossfirst.
-            split_stcontext: The split stcontext.
-            temporal_context_dim: The temporal context dim.
-        """
+        """Project channels and stack ST transformer blocks."""
         super().__init__()
 
         self.in_channels = in_channels
@@ -992,13 +797,7 @@ class SpatialTemporalTransformer(nn.Module):
                                               padding=0))
         
     def forward(self, x, context=None, temporal_context=None, **kwargs):
-        """Forward.
-
-        Args:
-            x: The x.
-            context: The context.
-            temporal_context: The temporal context.
-        """
+        """Map ``B C T H W`` to tokens, run ST blocks, project back to the volume."""
         # note: if no context is given, cross-attention defaults to self-attention
         assert(x.dim() == 5), f"x shape = {x.shape}"
         b, c, t, h, w = x.shape
@@ -1016,7 +815,7 @@ class SpatialTemporalTransformer(nn.Module):
 # ---------------------------------------------------------------------------------------------------
 
 class STAttentionBlock2(nn.Module):
-    """St attention block implementation."""
+    """Legacy spatial-temporal attention block on UNet features."""
     def __init__(
         self, 
         channels,
@@ -1087,12 +886,7 @@ class STAttentionBlock2(nn.Module):
         self.proj_out_t = zero_module(conv_nd(1, channels, channels, 1)) # conv_dim, in_channels, out_channels, kernel_size
 
     def forward(self, x, mask=None):
-        """Forward.
-
-        Args:
-            x: The x.
-            mask: The mask.
-        """
+        """Apply ST attention to a UNet feature volume."""
         b, c, t, h, w = x.shape
         
         # spatial
@@ -1136,11 +930,7 @@ class QKVAttentionLegacy(nn.Module):
     """
 
     def __init__(self, n_heads):
-        """Init.
-
-        Args:
-            n_heads: The n heads.
-        """
+        """Legacy split-heads-last QKV attention."""
         super().__init__()
         self.n_heads = n_heads
 
@@ -1167,13 +957,7 @@ class QKVAttentionLegacy(nn.Module):
 
     @staticmethod
     def count_flops(model, _x, y):
-        """Count flops.
-
-        Args:
-            model: The model.
-            _x: The x.
-            y: The y.
-        """
+        """fvcore flop-count hook for the legacy QKV kernel."""
         return count_flops_attn(model, _x, y)
 
 # ---------------------------------------------------------------------------------------------------------------
@@ -1184,11 +968,7 @@ class QKVAttention(nn.Module):
     """
 
     def __init__(self, n_heads):
-        """Init.
-
-        Args:
-            n_heads: The n heads.
-        """
+        """Split-heads-first QKV attention."""
         super().__init__()
         self.n_heads = n_heads
 

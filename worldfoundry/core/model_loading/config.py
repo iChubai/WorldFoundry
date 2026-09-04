@@ -1,4 +1,14 @@
-"""Model checkpoint path resolution and device/dtype placement config."""
+"""Model checkpoint path resolution and device/dtype placement config.
+
+:class:`ModelConfig` (aliased as :data:`LoaderModelConfig`) describes
+where weights come from — an explicit path or a Hugging Face /
+ModelScope repo — and how they move through offload / onload /
+preparing / computation devices. :meth:`ModelConfig.download_if_necessary`
+materializes the source and, under USP, downloads only on rank zero.
+
+This is placement and download policy, not the file deserializer
+(:mod:`worldfoundry.core.model_loading.file`).
+"""
 
 import glob
 import os
@@ -8,6 +18,10 @@ from typing import Dict, Optional, Union
 import torch
 
 from worldfoundry.core.io.paths import local_model_root_path
+
+# ──────────────────────────────────────────────────────────────────────────
+# Placement + download policy — not the file deserializer (see .file)
+# ──────────────────────────────────────────────────────────────────────────
 
 
 @dataclass
@@ -194,4 +208,13 @@ class ModelConfig:
         }
 
 
-__all__ = ["ModelConfig"]
+# ──────────────────────────────────────────────────────────────────────────
+# Compatibility alias — prefer LoaderModelConfig in new code
+# ──────────────────────────────────────────────────────────────────────────
+
+# Prefer this unambiguous name in new code. ``ModelConfig`` remains for
+# compatibility with existing loader configs and serialized targets.
+LoaderModelConfig = ModelConfig
+
+
+__all__ = ["LoaderModelConfig", "ModelConfig"]

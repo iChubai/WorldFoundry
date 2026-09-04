@@ -1,0 +1,41 @@
+{
+  "id": "spatial-forcing",
+  "tagline": {
+    "en": "An Apache-2.0 7B VLA policy that adds spatial supervision to OpenVLA-OFT for LIBERO manipulation.",
+    "zh": "Apache-2.0 许可的 7B VLA 策略，在 OpenVLA-OFT 基础上加入空间监督，面向 LIBERO 操作。"
+  },
+  "overview": {
+    "en": [
+      "Spatial-Forcing is a vision-language-action policy for robot manipulation from the OpenHelix team. It builds on the OpenVLA-OFT recipe and, during training, uses spatial supervision (via VGGT and an alignment projector) to strengthen the model's 3D understanding — while the released policies run with the standard OpenVLA-OFT inference path.",
+      "WorldFoundry provides four Apache-2.0 7B checkpoints fine-tuned for the LIBERO suite — spatial, object, goal, and LIBERO-10. Each takes full and wrist camera images plus an 8-dimensional state, applies a deterministic center crop, and emits an 8-step, 7-dimensional action chunk. The spatial-supervision components are training-only and are not loaded at inference.",
+      "In WorldFoundry you stage a checkpoint locally and run the action-prediction or policy-rollout route; it returns an action trace for the robot rather than an image or video."
+    ],
+    "zh": [
+      "Spatial-Forcing 是 OpenHelix 团队推出的面向机器人操作的视觉-语言-动作策略。它构建在 OpenVLA-OFT 方案之上，并在训练时借助空间监督（通过 VGGT 与一个对齐投影器）来增强模型的三维理解——而发布出来的策略仍以标准的 OpenVLA-OFT 推理路径运行。",
+      "WorldFoundry 提供四个 Apache-2.0 许可的 7B checkpoint，均在 LIBERO 套件上微调——spatial、object、goal 与 LIBERO-10。每个都接收全景与腕部相机图像加一个 8 维状态，施加确定性中心裁剪，并输出 8 步、7 维的动作。空间监督组件仅用于训练，推理时并不加载。",
+      "在 WorldFoundry 中，你把 checkpoint 放到本地并运行动作预测或 policy-rollout 路径；它返回给机器人的动作轨迹，而非图像或视频。"
+    ]
+  },
+  "whenToUse": {
+    "en": "Use it when you want a LIBERO-tuned VLA policy that leverages spatial supervision for stronger 3D grounding, with openly-licensed checkpoints for all four LIBERO settings.",
+    "zh": "当你想要一个针对 LIBERO 调优、借助空间监督获得更强三维定位能力的 VLA 策略，并需要四个 LIBERO 设置的开放许可 checkpoint 时使用。"
+  },
+  "notFor": {
+    "en": "Not a video or image generator — its output is action traces. The real-robot Pi0 branch has no released checkpoint and is a user-trained path; stage checkpoints locally before use.",
+    "zh": "它不是视频或图像生成器——输出为动作轨迹。真机 Pi0 分支没有发布 checkpoint，属于需用户自行训练的路径；使用前请把 checkpoint 放到本地。"
+  },
+  "highlights": {
+    "en": [
+      "Apache-2.0, open 7B weights",
+      "Spatial supervision on top of the OpenVLA-OFT recipe",
+      "Four LIBERO fine-tunes: spatial, object, goal, and 10",
+      "Emits 8×7 action chunks from two-camera input plus 8-D state"
+    ],
+    "zh": [
+      "Apache-2.0 许可，开放 7B 权重",
+      "在 OpenVLA-OFT 方案之上加入空间监督",
+      "四个 LIBERO 微调版本：spatial、object、goal 与 10",
+      "从双相机输入加 8 维状态输出 8×7 动作"
+    ]
+  }
+}

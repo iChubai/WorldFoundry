@@ -1,9 +1,16 @@
 """Model-independent safety and postprocessing guardrail orchestration.
 
-This module is interface-level (two Protocols and an orchestration class), so
-it deliberately avoids heavyweight imports: logging goes through the stdlib
-and numpy is imported only for type checking. Concrete guardrail
-implementations bring their own model dependencies.
+This module is interface-level (two Protocols and an orchestration
+class), so it deliberately avoids heavyweight imports: logging goes
+through the stdlib and numpy is imported only for type checking.
+Concrete guardrail implementations (prompt classifiers, NSFW video
+filters, face blur) bring their own model dependencies.
+
+:class:`GuardrailRunner` is fail-open when no classifiers are
+configured: it logs a warning and reports safe. Deployments that
+require enforcement must attach at least one
+:class:`ContentSafetyGuardrail`. Postprocessors are applied in order
+and may be empty (the original frames are returned).
 """
 
 from __future__ import annotations
@@ -16,6 +23,10 @@ if TYPE_CHECKING:
     import numpy as np
 
 log = logging.getLogger(__name__)
+
+# ──────────────────────────────────────────────────────────────────────────
+# Protocols — classifiers and frame postprocessors; no model imports here
+# ──────────────────────────────────────────────────────────────────────────
 
 
 class ContentSafetyGuardrail(Protocol):
@@ -32,6 +43,11 @@ class PostprocessingGuardrail(Protocol):
     def postprocess(self, frames: np.ndarray) -> np.ndarray:
         """Return safety-processed frames."""
         ...
+
+
+# ──────────────────────────────────────────────────────────────────────────
+# Orchestrator — fail-open without classifiers; postprocessors may be empty
+# ──────────────────────────────────────────────────────────────────────────
 
 
 class GuardrailRunner:

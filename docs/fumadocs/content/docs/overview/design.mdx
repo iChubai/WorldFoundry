@@ -9,7 +9,7 @@ WorldFoundry follows one primary design rule: **separate model execution from be
 
 The primary rule in one picture: model execution and benchmark evaluation meet only through normalized artifacts. A model produces `GenerationResult` rows; a benchmark consumes them. Neither side reaches through the boundary for the other's internals.
 
-![Model execution and benchmark evaluation separated by the artifact boundary](/diagrams/boundary.svg)
+<ArchDiagram id="artifact-boundary" />
 
 The four-layer overview below maps where these two sides live; the boundary diagram above is the zoom-in on their interface.
 
@@ -43,16 +43,9 @@ The file boundary is intentional. A costly generation job can finish once, be vi
 
 ### Example: one Matrix-Game 2 output crossing the boundary
 
-The checked-in Matrix-Game 2 universal example uses the initial image at `worldfoundry/data/test_cases/matrix-game-2/universal/0000.png` together with an action-conditioned configuration. The operator translates those inputs into the native model call, the pipeline owns checkpoint execution, and the output side writes video and metadata. Conceptually, the flow is:
+The checked-in Matrix-Game 2 universal example uses the initial image at `worldfoundry/data/test_cases/matrix-game-2/universal/0000.png` together with an action-conditioned configuration. The operator translates those inputs into the native model call, the pipeline owns checkpoint execution, and the output side writes video and metadata.
 
-```text
-initial image + action sequence + seed/fps
-  -> Matrix-Game 2 operator
-  -> Matrix-Game 2 pipeline / checkpoint
-  -> generated_video + metadata
-  -> ArtifactRef inside GenerationResult
-  -> visual review or a compatible metric that reads generated_video
-```
+<ArchDiagram id="matrix-game" />
 
 Evaluation only needs the artifact kind, URI, and sample identity; it does not need to know how Matrix-Game 2 loads its weights. Conversely, the pipeline never imports a benchmark evaluator. If generation succeeds but the benchmark's required prompt set is incomplete, the `GenerationResult` can still be valid while leaderboard eligibility in the scorecard stays false.
 

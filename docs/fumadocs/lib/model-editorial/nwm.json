@@ -1,0 +1,41 @@
+{
+  "id": "nwm",
+  "tagline": {
+    "en": "Meta's Navigation World Models — predict egocentric video conditioned on navigation actions.",
+    "zh": "Meta 的导航世界模型——在导航动作的条件下预测第一人称视频。"
+  },
+  "overview": {
+    "en": [
+      "Navigation World Models (NWM), from Meta, is a world model built for navigation. Given a starting view and a sequence of movement actions, it predicts the egocentric video an agent would see as it travels through the environment.",
+      "This action-conditioned, first-person formulation lets you ask what-if questions about routes: feed in a candidate trajectory and see the imagined rollout. It is an early candidate in WorldFoundry for evaluating navigation video beyond the driving domain, and ships in variants tuned for different navigation settings.",
+      "In WorldFoundry, NWM is driven through the world-model interface — provide context and navigation actions, and it rolls out the predicted video. Checkpoints and the supporting datasets are staged separately before you run it."
+    ],
+    "zh": [
+      "导航世界模型（NWM）由 Meta 开发，是一个面向导航构建的世界模型。给定一个起始画面和一串移动动作，它会预测智能体在环境中行进时所看到的第一人称视频。",
+      "这种动作条件、第一人称的建模方式，让你可以对路线做「假设」推演：输入一条候选轨迹，看看想象中的推演结果。在 WorldFoundry 里，它是用于评估驾驶领域之外导航视频的早期候选，并提供了针对不同导航场景调优的变体。",
+      "在 WorldFoundry 中，NWM 通过世界模型接口驱动——给出上下文和导航动作，它就推演出预测视频。checkpoint 与配套数据集需在运行前单独准备。"
+    ]
+  },
+  "whenToUse": {
+    "en": "Reach for NWM when you want to imagine egocentric navigation — predicting what an agent would see along a candidate trajectory, especially in non-driving settings.",
+    "zh": "当你想「想象」第一人称导航时，可以选择 NWM——预测智能体沿某条候选轨迹会看到什么，尤其适合非驾驶场景。"
+  },
+  "notFor": {
+    "en": "Not a general text-to-video model; it is action-conditioned and navigation-oriented. Checkpoints and datasets are staged separately before use.",
+    "zh": "它不是通用的文生视频模型，而是动作条件、面向导航的。checkpoint 与数据集需在使用前单独准备。"
+  },
+  "highlights": {
+    "en": [
+      "Action-conditioned, egocentric navigation video prediction",
+      "From Meta (FAIR)",
+      "Variants tuned for different navigation settings",
+      "Runs through WorldFoundry's world-model interface"
+    ],
+    "zh": [
+      "动作条件、第一人称的导航视频预测",
+      "来自 Meta（FAIR）",
+      "提供面向不同导航场景调优的变体",
+      "通过 WorldFoundry 世界模型接口运行"
+    ]
+  }
+}

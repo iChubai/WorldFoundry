@@ -1,0 +1,37 @@
+{
+  "id": "tesseract",
+  "tagline": {
+    "en": "An embodied world model that generates action-conditioned video for robotics tasks.",
+    "zh": "一个具身世界模型,为机器人任务生成动作条件视频。"
+  },
+  "overview": {
+    "en": [
+      "TesserAct is an embodied world model from the UMass Embodied AGI group. It generates action-conditioned video for robotics — predicting how a scene evolves in response to actions — so it can serve as a learned model of an embodied environment.",
+      "In WorldFoundry the official TesserAct source is vendored in-tree and exposed through a runtime pipeline. The pipeline resolves the vendored inference entrypoint; to run generation you stage the TesserAct checkpoint and the embodied-task assets it needs."
+    ],
+    "zh": [
+      "TesserAct 是 UMass Embodied AGI 团队推出的具身世界模型。它为机器人生成动作条件视频——预测场景如何随动作演化——因而可以作为具身环境的学习模型。",
+      "在 WorldFoundry 中,官方 TesserAct 源已内置,并通过运行时 pipeline 暴露。pipeline 会解析内置的推理入口;要运行生成,需备好 TesserAct 的 checkpoint 及其所需的具身任务资源。"
+    ]
+  },
+  "whenToUse": {
+    "en": "When you want an embodied world model that produces action-conditioned video for robotics — modeling how actions change a scene.",
+    "zh": "当你想要一个具身世界模型、为机器人生成动作条件视频时——建模动作如何改变场景。"
+  },
+  "notFor": {
+    "en": "Generation is gated on staging the checkpoint and embodied-task assets first, so it is not ready to run out of the box.",
+    "zh": "生成需先备好 checkpoint 与具身任务资源,因此不能开箱即用。"
+  },
+  "highlights": {
+    "en": [
+      "Embodied world model for robotics",
+      "Generates action-conditioned video",
+      "Official source vendored with an in-tree inference entrypoint"
+    ],
+    "zh": [
+      "面向机器人的具身世界模型",
+      "生成动作条件视频",
+      "内置官方源与推理入口"
+    ]
+  }
+}

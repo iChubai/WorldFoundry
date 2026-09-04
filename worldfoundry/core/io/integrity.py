@@ -1,4 +1,9 @@
-"""Dependency-light integrity primitives for local evidence and artifacts."""
+"""Integrity primitives for local evidence and artifacts.
+
+Atomic replace, canonical JSON hash, and path-escape checks. Use these
+for eval ledgers; ``serialization.py`` is convenience I/O and may
+leave a truncated file on crash.
+"""
 
 from __future__ import annotations
 
@@ -9,13 +14,17 @@ from collections.abc import Iterable, Mapping
 from pathlib import Path
 from uuid import uuid4
 
+# ──────────────────────────────────────────────────────────────────────────
+# Canonical JSON — allow_nan=False so hashes stay IEEE-safe and portable
+# ──────────────────────────────────────────────────────────────────────────
+
 
 def canonical_json(value: object) -> str:
     """Serialize strict JSON deterministically for hashing and evidence files."""
 
     return json.dumps(
         value,
-        allow_nan=False,
+        allow_nan=False,  # NaN / Inf are not portable JSON and would break hashes
         ensure_ascii=False,
         separators=(",", ":"),
         sort_keys=True,
@@ -70,6 +79,11 @@ def sync_directory(path: str | os.PathLike[str]) -> None:
         os.fsync(descriptor)
     finally:
         os.close(descriptor)
+
+
+# ──────────────────────────────────────────────────────────────────────────
+# Exclusive / atomic replace — eval ledgers; crash must not leave a truncated file
+# ──────────────────────────────────────────────────────────────────────────
 
 
 def write_exclusive_bytes(

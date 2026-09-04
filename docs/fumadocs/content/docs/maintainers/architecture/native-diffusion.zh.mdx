@@ -11,28 +11,9 @@ WorldFoundry 用原生基础设施实现本地 diffusion inference。DiffSynth�
 
 ## 职责与数据流
 
-```text
-catalog / runtime profile
-  -> public pipeline、operator 与 synthesis boundary
-  -> NativeDiffusionPipeline
-  -> model ID -> immutable recipe
-  -> NativeDiffusionAssembler
-       复用 core 的 checkpoint loading 与 runtime policy
-       纯 architecture components
-       框架持有的 execution strategy
-  -> NativeDiffusionRunner
-       condition encoder
-       latent initializer
-       scheduler + 框架自有 denoising loop
-       denoiser network
-       latent decoder
-       可选的 instance-local extensions
-  -> 归一化 WorldFoundry artifact
-```
-
 公开 model ID 始终独立：Echo Memory variants、Matrix Game variants 和普通生成模型分别拥有不可变 recipe 与 catalog identity。Recipe 可以复用 component implementation，但不能把一个模型降成另一个全局 pipeline 上的 option flag。
 
-![原生扩散装配流程](/diagrams/flow-native-diffusion.zh.svg)
+<ArchDiagram id="native-diffusion" locale="zh" />
 
 ## 目录职责
 

@@ -10,7 +10,16 @@
 # The above copyright notice and this permission notice shall be included in all
 # copies or substantial portions of the Software.
 # ==============================================================================
-"""Module for base_models -> diffusion_model -> video -> step_video -> step_video_runtime -> stepvideo -> text_encoder -> flashattention.py functionality."""
+"""Flash-attention helper used by the StepVideo STEP1 LLM.
+
+:func:`flash_attn_func` and :class:`FlashSelfAttention`
+wrap an optional FlashAttention kernel.  If the wheel is
+missing, STEP1 falls back to SDPA inside :mod:`.step_llm`.
+
+This is an attention runtime helper, not a conditioner.
+
+StepVideo-only; MiniMax H3 has its own :mod:`~...autoencoders.minimax_h3_video.flash`.
+"""
 
 import torch
 from worldfoundry.core.attention import scaled_dot_product_attention

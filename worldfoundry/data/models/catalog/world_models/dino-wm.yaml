@@ -9,6 +9,7 @@ source:
   status: open_source
   official_repo_url: https://github.com/gaoyuezhou/dino_wm
 official_sources:
+  paper: https://arxiv.org/abs/2411.04983
   project_page: https://dino-wm.github.io/
   github:
     url: https://github.com/gaoyuezhou/dino_wm

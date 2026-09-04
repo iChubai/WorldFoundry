@@ -1,5 +1,17 @@
 # Copyright 2024-2025 The Alibaba Wan Team Authors. All rights reserved.
-"""Module for base_models -> diffusion_model -> video -> wan -> wan_2p2 -> modules -> vae2_1.py functionality."""
+"""Streaming Wan 2.1 VAE with cached causal encode/decode.
+
+Same 16-channel BCTHW contract as :mod:`.reference_21`,
+but :class:`CausalConv3d` / :class:`Wan2_1_VAE` keep a
+feature cache so long videos can be encoded or decoded
+chunk-by-chunk without peeking at future frames.
+
+Not a Tiny-AE preview (:mod:`.variants.tae_22`).
+Official mean/std scaling is unchanged.
+
+Use when a recipe needs cached streaming rather than
+the one-shot :class:`~.model.WanVideoVAE`.
+"""
 
 import logging
 

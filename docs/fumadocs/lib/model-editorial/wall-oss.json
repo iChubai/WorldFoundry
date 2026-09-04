@@ -1,0 +1,41 @@
+{
+  "id": "wall-oss",
+  "tagline": {
+    "en": "X Square Robot's Wall-OSS — an open vision-language-action policy built on the Wall-X family, offered in flow and fast variants.",
+    "zh": "X Square Robot 的 Wall-OSS——基于 Wall-X 家族的开放视觉-语言-动作策略,提供 flow 与 fast 两个版本。"
+  },
+  "overview": {
+    "en": [
+      "Wall-OSS is an open vision-language-action model from X Square Robot, built on the Wall-X policy line. It maps visual observations and language instructions to robot actions, aimed at general-purpose embodied control.",
+      "Two checkpoints are published: a flow variant and a fast variant, so you can trade off between generation style and speed. The weights are available openly on Hugging Face.",
+      "In WorldFoundry, Wall-OSS runs through an in-tree action runtime adapter against the concrete Wall-X policy. You stage the checkpoint you want; the runtime reports if it is missing so you can add it before running."
+    ],
+    "zh": [
+      "Wall-OSS 是 X Square Robot 推出的开放视觉-语言-动作模型,基于 Wall-X 策略系列。它把视觉观测与语言指令映射为机器人动作,面向通用具身控制。",
+      "已发布两个 checkpoint:flow 版本与 fast 版本,方便你在生成方式与速度之间权衡。权重在 Hugging Face 上开放提供。",
+      "在 WorldFoundry 中,Wall-OSS 通过内置动作运行时适配器,对接具体的 Wall-X 策略运行。你准备好想用的 checkpoint 即可;若缺失,运行时会提示,便于你在运行前补齐。"
+    ]
+  },
+  "whenToUse": {
+    "en": "Use Wall-OSS when you want an openly available VLA policy for robot control and need to choose between a flow variant and a faster variant for your latency budget.",
+    "zh": "当你想要一个开放可得的 VLA 策略做机器人控制,并需要在 flow 版本与更快的版本之间按延迟预算选择时,适合使用 Wall-OSS。"
+  },
+  "notFor": {
+    "en": "As a policy it needs the matching checkpoint staged and a compatible robot/task setup; it is not a text-to-video or scene-generation model.",
+    "zh": "作为策略,它需要准备好对应的 checkpoint 以及兼容的机器人/任务设置;它不是文生视频或场景生成模型。"
+  },
+  "highlights": {
+    "en": [
+      "Open vision-language-action policy built on the Wall-X family",
+      "Two checkpoints: a flow variant and a fast variant",
+      "Openly available weights on Hugging Face",
+      "Runs through an in-tree action runtime adapter"
+    ],
+    "zh": [
+      "基于 Wall-X 家族的开放视觉-语言-动作策略",
+      "两个 checkpoint:flow 版本与 fast 版本",
+      "权重在 Hugging Face 上开放提供",
+      "通过内置动作运行时适配器运行"
+    ]
+  }
+}

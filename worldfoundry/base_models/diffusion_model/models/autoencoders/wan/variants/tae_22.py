@@ -1,4 +1,15 @@
-"""Inference-only streaming TAEW2.2 decoder."""
+"""Inference-only streaming TAEW2.2 decoder for Wan 2.2 latents.
+
+:class:`TAEW22StreamingDecoder` is a tiny autoencoder that
+previews 48-channel Wan 2.2 latents with cached causal
+state.  It is not a training-quality VAE38.
+
+Input latents are BCTHW (Wan 2.2 layout).  Output is a
+fast RGB preview, not the official decoder.
+
+Use for interactive preview; final decode stays on
+:class:`~..model.WanVideoVAE38`.
+"""
 
 from __future__ import annotations
 
@@ -7,9 +18,8 @@ from pathlib import Path
 from typing import Any
 
 import torch
-import torch.nn.functional as F
 from torch import nn
-
+from torch.nn import functional as F
 
 _WorkItem = namedtuple("_WorkItem", ("tensor", "block_index"))
 
@@ -96,7 +106,13 @@ class TAEW22StreamingDecoder(nn.Module):
         self.reset()
 
     def _load_decoder(self, checkpoint_path: str | Path) -> None:
-        raw = torch.load(str(checkpoint_path), map_location="cpu", weights_only=True)
+        path = Path(checkpoint_path).expanduser()
+        if path.suffix.casefold() == ".safetensors":
+            from safetensors.torch import load_file
+
+            raw = load_file(str(path), device="cpu")
+        else:
+            raw = torch.load(str(path), map_location="cpu", weights_only=True)
         if isinstance(raw, dict) and "state_dict" in raw:
             raw = raw["state_dict"]
         if not isinstance(raw, dict):

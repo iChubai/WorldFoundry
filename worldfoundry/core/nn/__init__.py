@@ -1,9 +1,42 @@
-"""Small reusable neural-network tensor helpers."""
+"""Neural-network building blocks: diffusion schedules, DiT modulation, timestep embeddings, norms, and shared layers.
+
+This package has no model identity. It only exports composable ``nn.Module``s and
+pure helpers:
+
+- ``diffusion_schedulers``: ``SchedulerInterface`` plus ``FlowMatchScheduler``.
+  Training/sampling noise calendars, shift, and bound clipping live here so each
+  DiT does not invent its own sigma schedule.
+- ``diffusion_transformer``: AdaLN, DiT modulation, final layer, concatenated
+  Linear, and conditioning projections. Modulation turns timestep/condition into
+  scale-shift-gate — the main interface for video DiTs.
+- ``timestep``: sinusoidal timestep embeddings and their projections, aligned
+  with the scheduler's continuous ``t``.
+- ``normalization``: RMSNorm, LayerScale, and other light ops that pair with
+  attention/MLP residuals.
+- ``layers``: MLP / SwiGLU / DropPath / PatchEmbed and other vision-language
+  shared layers.
+- ``transformer`` / ``transformer_ops`` / ``vit_block``: head split, causal
+  masks, pre-norm residuals. Ops keep swappable fused implementations out of
+  the module graph.
+- ``activation_checkpointing``: training SAC config; inference uses
+  ``checkpoint_compat``.
+- ``ema`` / ``distributions`` / ``vae2d`` / ``volume``: EMA, diagonal Gaussian,
+  2D VAE, and 3D pixel-shuffle helpers.
+
+Symbols load lazily via ``__getattr__``. Some attention names are re-exported
+from ``core.attention`` so model code can depend only on ``worldfoundry.core.nn``.
+"""
 
 from __future__ import annotations
 
 from importlib import import_module
 from typing import Any
+
+
+# ──────────────────────────────────────────────────────────────────────────
+# Lazy export table — resolve symbols only on first attribute access
+# ──────────────────────────────────────────────────────────────────────────
+
 
 _EXPORT_MODULES = {
     "AdaLayerNorm": "worldfoundry.core.nn.diffusion_transformer",
@@ -111,7 +144,18 @@ _EXPORT_MODULES = {
 }
 
 
+# ──────────────────────────────────────────────────────────────────────────
+# Attribute resolve — import_module once, then cache on this package
+# ──────────────────────────────────────────────────────────────────────────
+
+
 def __getattr__(name: str) -> Any:
+    """Materialize one public symbol on first access.
+
+    Raises:
+        AttributeError: ``name`` is not in the lazy export table.
+    """
+
     module_name = _EXPORT_MODULES.get(name)
     if module_name is None:
         raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
@@ -122,6 +166,8 @@ def __getattr__(name: str) -> Any:
 
 
 def __dir__() -> list[str]:
+    """Union materialized globals with the lazy ``__all__`` list for completion."""
+
     return sorted({*globals(), *__all__})
 
 

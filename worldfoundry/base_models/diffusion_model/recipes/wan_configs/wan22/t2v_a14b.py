@@ -1,5 +1,13 @@
 # Copyright 2024-2025 The Alibaba Wan Team Authors. All rights reserved.
-"""Module for base_models -> diffusion_model -> video -> wan -> wan_2p2 -> configs -> wan_t2v_A14B.py functionality."""
+"""Official Wan 2.2 T2V A14B dual-expert EasyDict.
+
+40×5120 DiT on Wan2.1 VAE with ``low_noise_model`` /
+``high_noise_model`` experts, boundary 0.875, shift 12, and CFG
+``(3.0, 4.0)``.  No CLIP tower.  40 sample steps.
+
+The higher shift vs I2V A14B is intentional (text-only sampling).
+Expert weights are selected at inference from the sigma boundary.
+"""
 
 from easydict import EasyDict
 

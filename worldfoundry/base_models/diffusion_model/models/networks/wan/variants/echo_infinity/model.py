@@ -1,5 +1,8 @@
-"""Module for base_models -> diffusion_model -> video -> wan -> variants -> echo_infinity -> wan -> modules -> model.py functionality."""
+"""Echo-Infinity bidirectional Wan stem (official packing).
 
+Building-block Wan 2.x graph used by Infinity causal / memory variants.
+Memory adapters attach outside this file.  No VACE or linear attn.
+"""
 import math
 import torch
 import torch.nn as nn
@@ -9,12 +12,7 @@ from .attention import flash_attention
 __all__ = ['WanModel']
 
 def sinusoidal_embedding_1d(dim, position):
-    """Sinusoidal embedding 1d.
-
-    Args:
-        dim: The dim.
-        position: The position.
-    """
+    """Classic sinusoidal features for 1-D timestep / position ids."""
     assert dim % 2 == 0
     half = dim // 2
     position = position.type(torch.float64)
@@ -23,26 +21,14 @@ def sinusoidal_embedding_1d(dim, position):
     return x
 
 def rope_params(max_seq_len, dim, theta=10000):
-    """Rope params.
-
-    Args:
-        max_seq_len: The max seq len.
-        dim: The dim.
-        theta: The theta.
-    """
+    """Build complex cis frequencies for one RoPE axis."""
     assert dim % 2 == 0
     freqs = torch.outer(torch.arange(max_seq_len), 1.0 / torch.pow(theta, torch.arange(0, dim, 2).to(torch.float64).div(dim)))
     freqs = torch.polar(torch.ones_like(freqs), freqs)
     return freqs
 
 def rope_apply(x, grid_sizes, freqs):
-    """Rope apply.
-
-    Args:
-        x: The x.
-        grid_sizes: The grid sizes.
-        freqs: The freqs.
-    """
+    """Apply per-sample 3D RoPE to packed tokens; leave pad tokens unrotated."""
     n, c = (x.size(2), x.size(3) // 2)
     freqs = freqs.split([c - 2 * (c // 3), c // 3, c // 3], dim=1)
     output = []
@@ -56,7 +42,7 @@ def rope_apply(x, grid_sizes, freqs):
     return torch.stack(output).type_as(x)
 
 class WanRMSNorm(nn.Module):
-    """Wan rms norm implementation."""
+    """RMSNorm with a learned scale; compute in fp32 when the impl upcasts."""
 
     def __init__(self, dim, eps=1e-05):
         """Init.
@@ -79,15 +65,11 @@ class WanRMSNorm(nn.Module):
         return self._norm(x.float()).type_as(x) * self.weight
 
     def _norm(self, x):
-        """Helper function to norm.
-
-        Args:
-            x: The x.
-        """
+        """RMS-normalize the last dim of ``x``."""
         return x * torch.rsqrt(x.pow(2).mean(dim=-1, keepdim=True) + self.eps)
 
 class WanLayerNorm(nn.LayerNorm):
-    """Wan layer norm implementation."""
+    """LayerNorm that typically upcasts to fp32, then restores the activation dtype."""
 
     def __init__(self, dim, eps=1e-06, elementwise_affine=False):
         """Init.
@@ -108,7 +90,7 @@ class WanLayerNorm(nn.LayerNorm):
         return super().forward(x).type_as(x)
 
 class WanSelfAttention(nn.Module):
-    """Wan self attention implementation."""
+    """Wan self-attention: RMSNorm Q/K, 3D RoPE, flash or variant kernel."""
 
     def __init__(self, dim, num_heads, window_size=(-1, -1), qk_norm=True, eps=1e-06):
         """Init.
@@ -147,11 +129,7 @@ class WanSelfAttention(nn.Module):
         b, s, n, d = (*x.shape[:2], self.num_heads, self.head_dim)
 
         def qkv_fn(x):
-            """Qkv fn.
-
-            Args:
-                x: The x.
-            """
+            """Project and reshape QKV to ``[B, L, H, D]``."""
             q = self.norm_q(self.q(x)).view(b, s, n, d)
             k = self.norm_k(self.k(x)).view(b, s, n, d)
             v = self.v(x).view(b, s, n, d)
@@ -163,7 +141,7 @@ class WanSelfAttention(nn.Module):
         return x
 
 class WanT2VCrossAttention(WanSelfAttention):
-    """Wan v cross attention implementation."""
+    """Wan text or image-text cross-attention."""
 
     def forward(self, x, context, context_lens, crossattn_cache=None):
         """Forward.
@@ -195,7 +173,7 @@ class WanT2VCrossAttention(WanSelfAttention):
         return x
 
 class WanGanCrossAttention(WanSelfAttention):
-    """Wan gan cross attention implementation."""
+    """GAN-style cross-attention used by some Wan discriminator / aux heads."""
 
     def forward(self, x, context, crossattn_cache=None):
         """Forward.
@@ -215,7 +193,7 @@ class WanGanCrossAttention(WanSelfAttention):
         return x
 
 class WanI2VCrossAttention(WanSelfAttention):
-    """Wan v cross attention implementation."""
+    """Wan text or image-text cross-attention."""
 
     def __init__(self, dim, num_heads, window_size=(-1, -1), qk_norm=True, eps=1e-06):
         """Init.
@@ -258,7 +236,7 @@ class WanI2VCrossAttention(WanSelfAttention):
 WAN_CROSSATTENTION_CLASSES = {'t2v_cross_attn': WanT2VCrossAttention, 'i2v_cross_attn': WanI2VCrossAttention}
 
 class WanAttentionBlock(nn.Module):
-    """Wan attention block implementation."""
+    """Wan transformer block: AdaLN self-attn, cross-attn, then AdaLN FFN."""
 
     def __init__(self, cross_attn_type, dim, ffn_dim, num_heads, window_size=(-1, -1), qk_norm=True, cross_attn_norm=False, eps=1e-06):
         """Init.
@@ -306,14 +284,7 @@ class WanAttentionBlock(nn.Module):
         x = x + y * e[2]
 
         def cross_attn_ffn(x, context, context_lens, e):
-            """Cross attn ffn.
-
-            Args:
-                x: The x.
-                context: The context.
-                context_lens: The context lens.
-                e: The e.
-            """
+            """Second half of the block: cross-attn then gated FFN."""
             x = x + self.cross_attn(self.norm3(x), context, context_lens)
             y = self.ffn(self.norm2(x) * (1 + e[4]) + e[3])
             x = x + y * e[5]
@@ -322,7 +293,7 @@ class WanAttentionBlock(nn.Module):
         return x
 
 class GanAttentionBlock(nn.Module):
-    """Gan attention block implementation."""
+    """Auxiliary GAN attention block (not on the main denoising residual)."""
 
     def __init__(self, dim=1536, ffn_dim=8192, num_heads=12, window_size=(-1, -1), qk_norm=True, cross_attn_norm=True, eps=1e-06):
         """Init.
@@ -371,7 +342,7 @@ class GanAttentionBlock(nn.Module):
         return x
 
 class Head(nn.Module):
-    """Head implementation."""
+    """AdaLN-modulated output projection from tokens to packed patch voxels."""
 
     def __init__(self, dim, out_dim, patch_size, eps=1e-06):
         """Init.
@@ -404,7 +375,7 @@ class Head(nn.Module):
         return x
 
 class MLPProj(torch.nn.Module):
-    """Mlp proj implementation."""
+    """CLIP image-token projector (I2V / FLF2V)."""
 
     def __init__(self, in_dim, out_dim):
         """Init.
@@ -426,7 +397,7 @@ class MLPProj(torch.nn.Module):
         return clip_extra_context_tokens
 
 class RegisterTokens(nn.Module):
-    """Register tokens implementation."""
+    """Learned register / prefix tokens prepended to the packed sequence."""
 
     def __init__(self, num_registers: int, dim: int):
         """Init.
@@ -448,7 +419,7 @@ class RegisterTokens(nn.Module):
         nn.init.normal_(self.register_tokens, std=0.02)
 
 class WanModel(nn.Module, NativeConfigMixin):
-    """Wan model implementation."""
+    """Official-layout Wan diffusion transformer stem."""
     ignore_for_config = ['patch_size', 'cross_attn_norm', 'qk_norm', 'text_dim', 'window_size']
     _no_split_modules = ['WanAttentionBlock']
     _supports_gradient_checkpointing = True

@@ -16,6 +16,9 @@ source:
 checkpoint_refs:
 - repo_id: depth-anything/Video-Depth-Anything-Large
   filename: video_depth_anything_vitl.pth
+official_sources:
+  project_page: https://videodepthanything.github.io/
+  paper: https://arxiv.org/abs/2501.12375
 integration:
   kind: pipeline_runner
   status: integrated

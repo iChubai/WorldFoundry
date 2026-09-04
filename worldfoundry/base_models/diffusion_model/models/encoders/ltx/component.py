@@ -1,4 +1,11 @@
-"""Native Gemma prompt conditioning for LTX-2.x."""
+"""LTX-2 Gemma-3 :class:`~...contracts.ConditionEncoder`.
+
+Runs Gemma-3, then the official embeddings connector / processor so
+video and audio caption tokens match the DiT cross-attention width.
+``encode(DiffusionRequest, ...)`` returns
+:class:`~...contracts.Conditioning` with video/audio context tensors.
+19B graphs project captions inside the transformer; 22B projects here.
+"""
 
 from __future__ import annotations
 
@@ -119,7 +126,14 @@ def convert_ltx_gemma_state_dict(state_dict: Mapping[str, object]) -> Mapping[st
             if key == "language_model.model.embed_tokens.weight":
                 converted["model.lm_head.weight"] = value
         elif key.startswith("vision_tower."):
-            converted[f"model.model.{key}"] = value
+            # Both Google's Gemma-3 snapshots and current Transformers expose
+            # the SigLIP backbone through its outer ``vision_model`` wrapper.
+            # Some converted snapshots omit that segment, so normalize both
+            # source layouts to the module's checkpoint-compatible path.
+            suffix = key.removeprefix("vision_tower.")
+            if not suffix.startswith("vision_model."):
+                suffix = f"vision_model.{suffix}"
+            converted[f"model.model.vision_tower.{suffix}"] = value
         elif key.startswith("multi_modal_projector."):
             converted[f"model.model.{key}"] = value
     return converted
@@ -159,12 +173,13 @@ def convert_ltx_video_embedding_processor_state_dict(
 
 
 def _ltx_text_module_map():
+    from transformers.models.gemma3.modeling_gemma3 import Gemma3RMSNorm
+
     from worldfoundry.core.vram import (
         AutoWrappedLinear,
         AutoWrappedModule,
         AutoWrappedNonRecurseModule,
     )
-    from transformers.models.gemma3.modeling_gemma3 import Gemma3RMSNorm
 
     return {
         Embeddings1DConnector: AutoWrappedNonRecurseModule,
@@ -280,6 +295,7 @@ class LTXPromptConditioner:
         device: torch.device,
         dtype: torch.dtype,
     ) -> Conditioning:
+        """Return Gemma-processed ``video_context`` / ``audio_context`` tensors."""
         video, audio, mask = self._encode_batch(request.prompts)
         return Conditioning(
             positive={

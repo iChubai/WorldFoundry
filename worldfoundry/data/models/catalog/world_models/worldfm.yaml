@@ -18,6 +18,8 @@ name: InSpatio-WorldFM
 output_artifacts:
 - generated_world
 official_sources:
+  paper: https://arxiv.org/abs/2603.11911
+  project_page: https://inspatio.github.io/worldfm
   github:
     confirmed_by: git ls-remote --heads
     confirmed_ref: refs/heads/main

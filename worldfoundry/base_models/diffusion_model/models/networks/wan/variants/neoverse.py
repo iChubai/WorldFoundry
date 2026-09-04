@@ -1,4 +1,11 @@
-"""NeoVerse control branch for the native Wan transformer."""
+"""NeoVerse camera/mask/RGB/depth control branch (VACE-like hint stack).
+
+A parallel condition trunk consumes packed RGB+depth latents plus a
+downsampled mask/Plücker camera volume.  Blocks stack skip hints the
+same way as DiffSynth VACE; the host Wan DiT adds those hints.
+
+Adds camera + geometric control hints.  No action, causal, or linear attn.
+"""
 
 import math
 import torch
@@ -8,18 +15,10 @@ from worldfoundry.core.model_loading import hash_state_dict_keys
 from worldfoundry.core.nn import zero_module
 
 class AttentionBlock(DiTBlock):
-    """Attention block implementation."""
-    def __init__(self, has_image_input, dim, num_heads, ffn_dim, eps=1e-6, block_id=0):
-        """Init.
+    """NeoVerse condition block that stacks skip hints for the host DiT."""
 
-        Args:
-            has_image_input: The has image input.
-            dim: The dim.
-            num_heads: The num heads.
-            ffn_dim: The ffn dim.
-            eps: The eps.
-            block_id: The block id.
-        """
+    def __init__(self, has_image_input, dim, num_heads, ffn_dim, eps=1e-6, block_id=0):
+        """Build host QKV/FFN plus VACE-style before/after projections."""
         super().__init__(has_image_input, dim, num_heads, ffn_dim, eps=eps)
         self.block_id = block_id
         if block_id == 0:
@@ -27,15 +26,7 @@ class AttentionBlock(DiTBlock):
         self.after_proj = torch.nn.Linear(self.dim, self.dim)
 
     def forward(self, c, x, context, t_mod, freqs):
-        """Forward.
-
-        Args:
-            c: The c.
-            x: The x.
-            context: The context.
-            t_mod: The t mod.
-            freqs: The freqs.
-        """
+        """Advance the stacked condition tensor; layer 0 mixes in the main stream."""
         if self.block_id == 0:
             c = self.before_proj(c) + x
             all_c = []
@@ -50,7 +41,8 @@ class AttentionBlock(DiTBlock):
 
 
 class NeoVerseControlBranch(torch.nn.Module):
-    """Neo verse control branch implementation."""
+    """Standalone NeoVerse trunk that emits hints from RGB/depth/mask/camera."""
+
     def __init__(
         self,
         control_layers=(0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28),
@@ -62,18 +54,7 @@ class NeoVerseControlBranch(torch.nn.Module):
         ffn_dim=8960,
         eps=1e-6,
     ):
-        """Init.
-
-        Args:
-            control_layers: The control layers.
-            control_in_dim: The control in dim.
-            patch_size: The patch size.
-            has_image_input: The has image input.
-            dim: The dim.
-            num_heads: The num heads.
-            ffn_dim: The ffn dim.
-            eps: The eps.
-        """
+        """Build mask/camera embed, control patch embed, and selected hint blocks."""
         super().__init__()
         self.control_layers = control_layers
         self.control_in_dim = control_in_dim
@@ -97,11 +78,7 @@ class NeoVerseControlBranch(torch.nn.Module):
         self.control_patch_embedding = torch.nn.Conv3d(control_in_dim, dim, kernel_size=patch_size, stride=patch_size)
 
     def initialize(self, missing_keys):
-        """Initialize.
-
-        Args:
-            missing_keys: The missing keys.
-        """
+        """Kaiming-init missing tensors and zero the hint projections."""
         params_dict = dict(self.named_parameters())
         with torch.no_grad():
             for key in missing_keys:
@@ -128,20 +105,7 @@ class NeoVerseControlBranch(torch.nn.Module):
         use_gradient_checkpointing: bool = False,
         use_gradient_checkpointing_offload: bool = False,
     ):
-        """Forward.
-
-        Args:
-            x: The x.
-            target_rgb_latents: The target rgb latents.
-            target_depth_latents: The target depth latents.
-            target_cams: The target cams.
-            target_masks: The target masks.
-            context: The context.
-            t_mod: The t mod.
-            freqs: The freqs.
-            use_gradient_checkpointing: The use gradient checkpointing.
-            use_gradient_checkpointing_offload: The use gradient checkpointing offload.
-        """
+        """Pack RGB+depth+mask/camera, run the condition trunk, return hint tensors."""
         target_latents = torch.cat((target_rgb_latents, target_depth_latents), dim=1)
         target_mask_cams = torch.cat((target_masks, target_cams), dim=2).permute(0, 2, 1, 3, 4) # [B, C, T, H, W]
         target_mask_cams = F.pad(target_mask_cams, self.control_mask_padding, mode="constant", value=0)
@@ -151,13 +115,9 @@ class NeoVerseControlBranch(torch.nn.Module):
         c = torch.cat((c, c.new_zeros(c.shape[0], x.shape[1] - c.shape[1], c.shape[2])), dim=1)
 
         def create_custom_forward(module):
-            """Create custom forward.
+            """Wrap ``module`` so ``torch.utils.checkpoint`` can call it."""
 
-            Args:
-                module: The module.
-            """
             def custom_forward(*inputs):
-                """Custom forward."""
                 return module(*inputs)
             return custom_forward
 
@@ -182,22 +142,18 @@ class NeoVerseControlBranch(torch.nn.Module):
 
     @staticmethod
     def state_dict_converter():
-        """State dict converter."""
+        """Return the Civitai key filter for this control branch."""
         return NeoVerseControlBranchDictConverter()
 
 
 class NeoVerseControlBranchDictConverter:
-    """Neo verse control branch dict converter implementation."""
+    """Keep ``control*`` tensors and recover the 14B layout from a fingerprint."""
+
     def __init__(self):
-        """Init."""
         pass
 
     def from_civitai(self, state_dict):
-        """From civitai.
-
-        Args:
-            state_dict: The state dict.
-        """
+        """Filter a combined checkpoint down to NeoVerse control weights."""
         state_dict_ = {name: param for name, param in state_dict.items() if name.startswith("control")}
         config = {}
         if hash_state_dict_keys(state_dict_) == "45cf2d04f7f77286df2bf0e723a36e03":

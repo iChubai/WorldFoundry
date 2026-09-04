@@ -1,4 +1,9 @@
-"""Module for base_models -> diffusion_model -> video -> lvdm -> modules -> attention.py functionality."""
+"""LVDM spatial and temporal transformers on UNet feature maps.
+
+SpatialTransformer rearranges ``B C T H W`` → ``(B·T) (H·W) C`` for
+2D self/cross-attn, then restores.  TemporalTransformer rearranges to
+``(B·H·W) T C`` so attention runs along time.  Not a DiT token stack.
+"""
 
 import importlib.util
 
@@ -27,12 +32,7 @@ class RelativePosition(nn.Module):
     """ https://github.com/evelinehong/Transformer_Relative_Position_PyTorch/blob/master/relative_position.py """
 
     def __init__(self, num_units, max_relative_position):
-        """Init.
-
-        Args:
-            num_units: The num units.
-            max_relative_position: The max relative position.
-        """
+        """Allocate the ``[-max, +max]`` relative-position table."""
         super().__init__()
         self.num_units = num_units
         self.max_relative_position = max_relative_position
@@ -40,12 +40,7 @@ class RelativePosition(nn.Module):
         nn.init.xavier_uniform_(self.embeddings_table)
 
     def forward(self, length_q, length_k):
-        """Forward.
-
-        Args:
-            length_q: The length q.
-            length_k: The length k.
-        """
+        """Return ``[Lq, Lk, num_units]`` embeddings for the two sequence lengths."""
         device = self.embeddings_table.device
         range_vec_q = torch.arange(length_q, device=device)
         range_vec_k = torch.arange(length_k, device=device)
@@ -58,26 +53,11 @@ class RelativePosition(nn.Module):
 
 
 class CrossAttention(nn.Module):
-    """Cross attention implementation."""
+    """Multi-head attention on flattened UNet tokens (spatial ``H·W`` or temporal ``T``)."""
 
     def __init__(self, query_dim, context_dim=None, heads=8, dim_head=64, dropout=0., 
                  relative_position=False, temporal_length=None, video_length=None, image_cross_attention=False, image_cross_attention_scale=1.0, image_cross_attention_scale_learnable=False, text_context_len=77):
-        """Init.
-
-        Args:
-            query_dim: The query dim.
-            context_dim: The context dim.
-            heads: The heads.
-            dim_head: The dim head.
-            dropout: The dropout.
-            relative_position: The relative position.
-            temporal_length: The temporal length.
-            video_length: The video length.
-            image_cross_attention: The image cross attention.
-            image_cross_attention_scale: The image cross attention scale.
-            image_cross_attention_scale_learnable: The image cross attention scale learnable.
-            text_context_len: The text context len.
-        """
+        """Build QKV projections; optional relative bias and image-context branch."""
         super().__init__()
         inner_dim = dim_head * heads
         context_dim = default(context_dim, query_dim)
@@ -114,13 +94,7 @@ class CrossAttention(nn.Module):
 
 
     def forward(self, x, context=None, mask=None):
-        """Forward.
-
-        Args:
-            x: The x.
-            context: The context.
-            mask: The mask.
-        """
+        """Attend queries ``B S C`` to text/image context; return the same layout."""
         spatial_self_attn = (context is None)
         k_ip, v_ip, out_ip = None, None, None
 
@@ -186,13 +160,7 @@ class CrossAttention(nn.Module):
         return self.to_out(out)
     
     def efficient_forward(self, x, context=None, mask=None):
-        """Efficient forward.
-
-        Args:
-            x: The x.
-            context: The context.
-            mask: The mask.
-        """
+        """xFormers path for the same ``B S C`` attention as ``forward``."""
         spatial_self_attn = (context is None)
         k_ip, v_ip, out_ip = None, None, None
 
@@ -259,28 +227,11 @@ class CrossAttention(nn.Module):
 
 
 class BasicTransformerBlock(nn.Module):
-    """Basic transformer block implementation."""
+    """LN + self-attn + optional text/image cross-attn + FFN on ``B S C`` tokens."""
 
     def __init__(self, dim, n_heads, d_head, dropout=0., context_dim=None, gated_ff=True, checkpoint=True,
                 disable_self_attn=False, attention_cls=None, video_length=None, image_cross_attention=False, image_cross_attention_scale=1.0, image_cross_attention_scale_learnable=False, text_context_len=77):
-        """Init.
-
-        Args:
-            dim: The dim.
-            n_heads: The n heads.
-            d_head: The d head.
-            dropout: The dropout.
-            context_dim: The context dim.
-            gated_ff: The gated ff.
-            checkpoint: The checkpoint.
-            disable_self_attn: The disable self attn.
-            attention_cls: The attention cls.
-            video_length: The video length.
-            image_cross_attention: The image cross attention.
-            image_cross_attention_scale: The image cross attention scale.
-            image_cross_attention_scale_learnable: The image cross attention scale learnable.
-            text_context_len: The text context len.
-        """
+        """Wire self-attn, cross-attn, and the gated FFN."""
         super().__init__()
         attn_cls = CrossAttention if attention_cls is None else attention_cls
         self.disable_self_attn = disable_self_attn
@@ -297,13 +248,7 @@ class BasicTransformerBlock(nn.Module):
 
 
     def forward(self, x, context=None, mask=None, **kwargs):
-        """Forward.
-
-        Args:
-            x: The x.
-            context: The context.
-            mask: The mask.
-        """
+        """Checkpointed residual block on ``B S C`` (spatial ``H·W`` or temporal ``T``)."""
         ## implementation tricks: because checkpointing doesn't support non-tensor (e.g. None or scalar) arguments
         input_tuple = (x,)      ## should not be (x), otherwise *input_tuple will decouple x into multiple arguments
         if context is not None:
@@ -315,13 +260,7 @@ class BasicTransformerBlock(nn.Module):
 
 
     def _forward(self, x, context=None, mask=None):
-        """Helper function to forward.
-
-        Args:
-            x: The x.
-            context: The context.
-            mask: The mask.
-        """
+        """Inner self-attn / cross-attn / FFN path used by gradient checkpointing."""
         x = self.attn1(self.norm1(x), context=context if self.disable_self_attn else None, mask=mask) + x
         x = self.attn2(self.norm2(x), context=context, mask=mask) + x
         x = self.ff(self.norm3(x)) + x
@@ -341,22 +280,7 @@ class SpatialTransformer(nn.Module):
     def __init__(self, in_channels, n_heads, d_head, depth=1, dropout=0., context_dim=None,
                  use_checkpoint=True, disable_self_attn=False, use_linear=False, video_length=None,
                  image_cross_attention=False, image_cross_attention_scale_learnable=False):
-        """Init.
-
-        Args:
-            in_channels: The in channels.
-            n_heads: The n heads.
-            d_head: The d head.
-            depth: The depth.
-            dropout: The dropout.
-            context_dim: The context dim.
-            use_checkpoint: The use checkpoint.
-            disable_self_attn: The disable self attn.
-            use_linear: The use linear.
-            video_length: The video length.
-            image_cross_attention: The image cross attention.
-            image_cross_attention_scale_learnable: The image cross attention scale learnable.
-        """
+        """Build the spatial stack that flattens ``H·W`` into the token axis."""
         super().__init__()
         self.in_channels = in_channels
         inner_dim = n_heads * d_head
@@ -390,12 +314,7 @@ class SpatialTransformer(nn.Module):
 
 
     def forward(self, x, context=None, **kwargs):
-        """Forward.
-
-        Args:
-            x: The x.
-            context: The context.
-        """
+        """Rearrange ``B C T H W`` → ``(B·T) (H·W) C``, attend, then restore."""
         b, c, h, w = x.shape
         x_in = x
         x = self.norm(x)
@@ -424,24 +343,7 @@ class TemporalTransformer(nn.Module):
     def __init__(self, in_channels, n_heads, d_head, depth=1, dropout=0., context_dim=None,
                  use_checkpoint=True, use_linear=False, only_self_att=True, causal_attention=False, causal_block_size=1,
                  relative_position=False, temporal_length=None, use_image_dataset=False):
-        """Init.
-
-        Args:
-            in_channels: The in channels.
-            n_heads: The n heads.
-            d_head: The d head.
-            depth: The depth.
-            dropout: The dropout.
-            context_dim: The context dim.
-            use_checkpoint: The use checkpoint.
-            use_linear: The use linear.
-            only_self_att: The only self att.
-            causal_attention: The causal attention.
-            causal_block_size: The causal block size.
-            relative_position: The relative position.
-            temporal_length: The temporal length.
-            use_image_dataset: The use image dataset.
-        """
+        """Build the temporal stack that attends along ``T`` after flattening space."""
         super().__init__()
         self.only_self_att = only_self_att
         self.relative_position = relative_position
@@ -486,12 +388,7 @@ class TemporalTransformer(nn.Module):
         self.use_linear = use_linear
 
     def forward(self, x, context=None):
-        """Forward.
-
-        Args:
-            x: The x.
-            context: The context.
-        """
+        """Rearrange ``B C T H W`` → ``(B·H·W) T C``, attend, then restore."""
         b, c, t, h, w = x.shape
         x_in = x
         x = self.norm(x)
@@ -542,39 +439,22 @@ class TemporalTransformer(nn.Module):
     
 
 class GEGLU(nn.Module):
-    """Geglu implementation."""
+    """Gated-GELU FFN: linear to 2x width, then value * GELU(gate) on the last dim."""
     def __init__(self, dim_in, dim_out):
-        """Init.
-
-        Args:
-            dim_in: The dim in.
-            dim_out: The dim out.
-        """
+        """Linear map ``dim_in → 2 * dim_out`` for the value/gate split."""
         super().__init__()
         self.proj = nn.Linear(dim_in, dim_out * 2)
 
     def forward(self, x):
-        """Forward.
-
-        Args:
-            x: The x.
-        """
+        """Return ``value * GELU(gate)`` on the last dimension."""
         x, gate = self.proj(x).chunk(2, dim=-1)
         return x * F.gelu(gate)
 
 
 class FeedForward(nn.Module):
-    """Feed forward implementation."""
+    """Position-wise MLP used inside LVDM transformer blocks (``B S C``)."""
     def __init__(self, dim, dim_out=None, mult=4, glu=False, dropout=0.):
-        """Init.
-
-        Args:
-            dim: The dim.
-            dim_out: The dim out.
-            mult: The mult.
-            glu: The glu.
-            dropout: The dropout.
-        """
+        """Build the expand / GELU-or-GEGLU / contract MLP."""
         super().__init__()
         inner_dim = int(dim * mult)
         dim_out = default(dim_out, dim)
@@ -590,24 +470,14 @@ class FeedForward(nn.Module):
         )
 
     def forward(self, x):
-        """Forward.
-
-        Args:
-            x: The x.
-        """
+        """Apply the position-wise MLP to ``[..., C]`` tokens."""
         return self.net(x)
 
 
 class LinearAttention(nn.Module):
-    """Linear attention implementation."""
+    """Linear attention on a spatial feature map ``B C H W``."""
     def __init__(self, dim, heads=4, dim_head=32):
-        """Init.
-
-        Args:
-            dim: The dim.
-            heads: The heads.
-            dim_head: The dim head.
-        """
+        """1x1 conv QKV used by the linear-attention fallback."""
         super().__init__()
         self.heads = heads
         hidden_dim = dim_head * heads
@@ -615,11 +485,7 @@ class LinearAttention(nn.Module):
         self.to_out = nn.Conv2d(hidden_dim, dim, 1)
 
     def forward(self, x):
-        """Forward.
-
-        Args:
-            x: The x.
-        """
+        """Linear attention on a spatial feature map ``B C H W``."""
         b, c, h, w = x.shape
         qkv = self.to_qkv(x)
         q, k, v = rearrange(qkv, 'b (qkv heads c) h w -> qkv b heads c (h w)', heads = self.heads, qkv=3)
@@ -631,13 +497,9 @@ class LinearAttention(nn.Module):
 
 
 class SpatialSelfAttention(nn.Module):
-    """Spatial self attention implementation."""
+    """Conv QKV self-attention on a ``B C H W`` UNet feature map."""
     def __init__(self, in_channels):
-        """Init.
-
-        Args:
-            in_channels: The in channels.
-        """
+        """Conv QKV for pixel-wise spatial self-attention."""
         super().__init__()
         self.in_channels = in_channels
 
@@ -664,11 +526,7 @@ class SpatialSelfAttention(nn.Module):
                                         padding=0)
 
     def forward(self, x):
-        """Forward.
-
-        Args:
-            x: The x.
-        """
+        """Self-attend a ``B C H W`` map and add the residual."""
         h_ = x
         h_ = self.norm(h_)
         q = self.q(h_)

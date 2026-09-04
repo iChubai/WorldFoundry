@@ -267,6 +267,7 @@ def _normalize_source_status(value: Any) -> str:
         return "api"
     if normalized in _CLOSED_ALIASES:
         return "closed"
+    _warn_unknown_status_once("source_status", normalized, "unknown")
     return "unknown"
 
 

@@ -29,6 +29,10 @@ from typing import Protocol, runtime_checkable
 import torch
 from torch import Tensor
 
+# ──────────────────────────────────────────────────────────────────────────
+# Policy I/O — blocks, state, and the decision a policy must return
+# ──────────────────────────────────────────────────────────────────────────
+
 
 @dataclass(frozen=True)
 class CachedBlock:
@@ -125,6 +129,11 @@ class KVCachePolicy(Protocol):
         ...
 
 
+# ──────────────────────────────────────────────────────────────────────────
+# Index helpers — expand kept blocks into token / frame vectors
+# ──────────────────────────────────────────────────────────────────────────
+
+
 def _token_indices(state: CacheState, positions: list[int], *, device: torch.device | str = "cpu") -> Tensor:
     """Expand kept block positions into ascending token indices."""
     if not positions:
@@ -149,6 +158,11 @@ def _frame_positions(
     if not chunks:
         return torch.empty(0, dtype=torch.long, device=device)
     return torch.cat(chunks)
+
+
+# ──────────────────────────────────────────────────────────────────────────
+# Structural policies — decide from the block schedule alone
+# ──────────────────────────────────────────────────────────────────────────
 
 
 @dataclass(frozen=True)
@@ -178,6 +192,7 @@ class SlidingWindowPolicy:
     sink_blocks: int = 0
 
     def __post_init__(self) -> None:
+        """Require a positive window and sinks strictly inside that budget."""
         if self.window_blocks < 1:
             raise ValueError(f"window_blocks must be >= 1, got {self.window_blocks}")
         if self.sink_blocks < 0:
@@ -221,6 +236,7 @@ class BankedSinkPolicy:
     recent_blocks: int = 2
 
     def __post_init__(self) -> None:
+        """Require at least one bank block and one recent block."""
         if self.bank_blocks < 1:
             raise ValueError(f"bank_blocks must be >= 1, got {self.bank_blocks}")
         if self.recent_blocks < 1:
@@ -273,6 +289,7 @@ class BlockRelativeRoPEPolicy:
     frame_limit: int = 21
 
     def __post_init__(self) -> None:
+        """Require a positive budget, sinks inside it, and ``frame_limit >= 2``."""
         if self.cache_blocks < 1:
             raise ValueError(f"cache_blocks must be >= 1, got {self.cache_blocks}")
         if self.sink_blocks < 0:
@@ -312,6 +329,10 @@ class BlockRelativeRoPEPolicy:
             kept_blocks=tuple(kept),
         )
 
+
+# ──────────────────────────────────────────────────────────────────────────
+# Registry — construct a policy by name without importing the class
+# ──────────────────────────────────────────────────────────────────────────
 
 POLICY_REGISTRY: dict[str, type] = {
     "keep_all": KeepAllPolicy,

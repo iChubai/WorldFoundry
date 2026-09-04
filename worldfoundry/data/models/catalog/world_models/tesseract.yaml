@@ -11,6 +11,8 @@ source:
   status: open_source
   official_repo_url: https://github.com/UMass-Embodied-AGI/TesserAct
 official_sources:
+  project_page: https://tesseractworld.github.io/
+  paper: https://arxiv.org/abs/2504.20995
   worldarena_space: https://huggingface.co/spaces/WorldArena/WorldArena
   github:
     url: https://github.com/UMass-Embodied-AGI/TesserAct
@@ -21,6 +23,7 @@ official_sources:
     status: confirmed
 checkpoint_refs:
 - repo_id: anyeZHY/tesseract
+- repo_id: THUDM/CogVideoX-5b-I2V
 integration:
   status: runtime_ported
   notes:
@@ -30,10 +33,10 @@ runtime_profile: runtime-profile:tesseract
 runner_target: worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner
 pipeline_binding: tesseract
 runner_parity:
-  status: implemented_checkpoint_pending
+  status: implemented_checkpoint_required
   notes:
-  - The pipeline resolves the vendored TesserAct inference entrypoint and returns blocked runtime diagnostics until checkpoints
-    and embodied task assets are staged.
+  - The pipeline executes the official RGB-depth-normal SFT transformer with a local CogVideoX-5b-I2V base model.
+  - Users can supply official depth/normal conditioning files; the built-in synthetic-gradient mode is explicitly a demo smoke path.
 catalog_category: world_models
 catalog_scope: World-model catalog entries. Integrated entries expose in-tree WorldFoundry runtimes; blocked entries retain
   upstream provenance without runnable backends.

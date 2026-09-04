@@ -1,0 +1,41 @@
+{
+  "id": "neoverse",
+  "tagline": {
+    "en": "A 4D world model from in-the-wild monocular video, built on Wan components.",
+    "zh": "基于 Wan 组件、从野外单目视频构建 4D 世界模型。"
+  },
+  "overview": {
+    "en": [
+      "NeoVerse is a 4D world model that works from in-the-wild monocular video — ordinary single-camera footage rather than multi-view rigs. It comes from authors at CASIA and CreateAI and aims to lift casual video into a controllable 4D scene.",
+      "In WorldFoundry it's assembled natively on top of the shared Wan components, adding its own control and reconstruction roles plus a LoRA on top. The official video-input path treats the scene as dynamic (static_scene=false), following the README-style tilt-up demo.",
+      "In WorldFoundry you run the tilt-up video route with local NeoVerse assets. Runtime execution needs the NeoVerse, Wan, reconstructor, LoRA, and CUDA assets in place."
+    ],
+    "zh": [
+      "NeoVerse 是一个 4D 世界模型，从野外单目视频出发——即普通的单相机拍摄，而非多视角装置。它由 CASIA 与 CreateAI 的作者提出，目标是把随手拍摄的视频提升为可控的 4D 场景。",
+      "在 WorldFoundry 中，它原生构建在共享的 Wan 组件之上，加入自有的控制与重建角色以及一层 LoRA。官方的视频输入路径把场景视为动态（static_scene=false），沿用 README 中的 tilt-up 演示。",
+      "在 WorldFoundry 中，你用本地 NeoVerse 资产运行 tilt-up 视频路径。运行时需要备好 NeoVerse、Wan、重建器、LoRA 与 CUDA 资产。"
+    ]
+  },
+  "whenToUse": {
+    "en": "Use it when you want to build a 4D world from everyday monocular video rather than staged multi-camera capture, and can supply the local assets it depends on.",
+    "zh": "当你想从日常单目视频（而非布置好的多相机采集）构建 4D 世界，并能提供其所依赖的本地资产时，使用它。"
+  },
+  "notFor": {
+    "en": "Not a lightweight or plug-and-play route: real inference is checkpoint- and GPU-gated and requires NeoVerse, Wan, reconstructor, LoRA, and CUDA assets. Plan for the setup.",
+    "zh": "它不是轻量或即插即用的路径：真实推理受 checkpoint 与 GPU 限制，需要 NeoVerse、Wan、重建器、LoRA 与 CUDA 资产。请预留环境搭建。"
+  },
+  "highlights": {
+    "en": [
+      "4D world modeling from in-the-wild monocular video",
+      "Native assembly over shared Wan components",
+      "Adds model-specific control and reconstruction roles plus LoRA",
+      "From authors at CASIA and CreateAI"
+    ],
+    "zh": [
+      "从野外单目视频进行 4D 世界建模",
+      "在共享 Wan 组件之上原生组装",
+      "加入自有的控制与重建角色及 LoRA",
+      "出自 CASIA 与 CreateAI 的作者"
+    ]
+  }
+}

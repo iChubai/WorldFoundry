@@ -17,6 +17,8 @@ name: FastWAM
 output_artifacts:
 - action_trace
 official_sources:
+  paper: https://arxiv.org/abs/2603.16666
+  project_page: https://yuantianyuan01.github.io/FastWAM/
   github:
     head_sha: 45d8e1458921d83f8ad6cf9ce993d371208dabd0
     url: https://github.com/yuantianyuan01/FastWAM

@@ -11,6 +11,8 @@ source:
   official_repo_url: https://github.com/nv-tlabs/GEN3C
   license: nvidia-source-code
 official_sources:
+  paper: https://arxiv.org/abs/2503.03751
+  project_page: https://research.nvidia.com/labs/toronto-ai/GEN3C/
   github:
     url: https://github.com/nv-tlabs/GEN3C
   huggingface:

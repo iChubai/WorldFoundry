@@ -10,6 +10,7 @@ import lpips
 from transformers import CLIPTextModel, CLIPTokenizer
 from diffusers import AutoencoderKL, UNet2DConditionModel, DDIMScheduler
 from torchvision.transforms import ToPILImage
+from util.checkpoints import diffusers_local_load_kwargs
 
 def l2_loss(input, target):
     return (input - target) ** 2
@@ -39,10 +40,27 @@ class SyncDiffusion(nn.Module):
             raise ValueError(f'Stable-diffusion version {self.sd_version} not supported.')
 
         # Load pretrained models from HuggingFace
-        self.vae = AutoencoderKL.from_pretrained(model_key, subfolder="vae").to(self.device)
-        self.tokenizer = CLIPTokenizer.from_pretrained(model_key, subfolder="tokenizer")
-        self.text_encoder = CLIPTextModel.from_pretrained(model_key, subfolder="text_encoder").to(self.device)
-        self.unet = UNet2DConditionModel.from_pretrained(model_key, subfolder="unet").to(self.device)
+        model_load_kwargs = diffusers_local_load_kwargs(model_key)
+        self.vae = AutoencoderKL.from_pretrained(
+            model_key,
+            subfolder="vae",
+            **model_load_kwargs,
+        ).to(self.device)
+        self.tokenizer = CLIPTokenizer.from_pretrained(
+            model_key,
+            subfolder="tokenizer",
+            local_files_only=True,
+        )
+        self.text_encoder = CLIPTextModel.from_pretrained(
+            model_key,
+            subfolder="text_encoder",
+            **model_load_kwargs,
+        ).to(self.device)
+        self.unet = UNet2DConditionModel.from_pretrained(
+            model_key,
+            subfolder="unet",
+            **model_load_kwargs,
+        ).to(self.device)
         
         # Freeze models
         for p in self.unet.parameters():
@@ -58,7 +76,11 @@ class SyncDiffusion(nn.Module):
         print(f'[INFO] loaded stable diffusion!')
 
         # Set DDIM scheduler
-        self.scheduler = DDIMScheduler.from_pretrained(model_key, subfolder="scheduler")
+        self.scheduler = DDIMScheduler.from_pretrained(
+            model_key,
+            subfolder="scheduler",
+            local_files_only=True,
+        )
 
         # load perceptual loss (LPIPS)
         self.percept_loss = lpips.LPIPS(net='vgg').to(self.device)

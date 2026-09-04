@@ -15,9 +15,11 @@ source:
   hf_repo_id: KlingTeam/ShotStream
   license: manual_review:missing_root_license
 official_sources:
+  paper: https://arxiv.org/abs/2603.25746
+  project_page: https://luo0207.github.io/ShotStream/
   github:
     url: https://github.com/KlingAIResearch/ShotStream
-    head_sha: 7ddcfaef6cf303966351c4640269897181bb009d
+    head_sha: 917a0478fe47d71ddcf3269d052cbe3be2ae10e8
   huggingface:
   - repo_id: KlingTeam/ShotStream
     type: model
@@ -26,13 +28,12 @@ runtime_profile: runtime-profile:shotstream
 integration:
   status: runtime_ported
   notes:
-  - ShotStream official inference route is registered; checkpoint/streaming assets
-    are runtime-gated.
+  - ShotStream official causal inference is bound through a user-staged source checkout and local checkpoint directories.
 runner_parity:
-  status: implemented_checkpoint_pending
+  status: implemented
   notes:
-  - resolve_model_zoo_config and pipeline import are expected to pass; real generation
-    emits a runtime plan until required checkpoints/assets are staged.
+  - The wrapper runs the official 4-step causal generator and normalizes its generated MP4 to the requested artifact path.
+  - Real GPU validation evidence is tracked per run rather than embedded as a machine-local catalog path.
 catalog_category: world_models
 catalog_scope: World-model catalog entries. Integrated entries expose in-tree WorldFoundry
   runtimes; blocked entries retain upstream provenance without runnable backends.

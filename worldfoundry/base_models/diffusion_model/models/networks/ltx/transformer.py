@@ -1,3 +1,11 @@
+"""LTX dual-stream DiT block (self-attn, text CA, optional A↔V CA, FFN).
+
+Tokens stay ``B T D`` throughout.  Video and audio each own AdaLN tables
+and attention modules; joint checkpoints add audio-to-video and
+video-to-audio attention.  A↔V uses pre-cross snapshots so direction
+order does not leak into the other stream's keys.
+"""
+
 from dataclasses import dataclass, replace
 
 import torch
@@ -15,6 +23,8 @@ from worldfoundry.core.nn import TransformerOpsConfig, rms_norm
 
 @dataclass
 class TransformerConfig:
+    """Per-modality block widths: hidden dim, heads, head dim, text context dim."""
+
     dim: int
     heads: int
     d_head: int
@@ -24,6 +34,8 @@ class TransformerConfig:
 
 
 class BasicAVTransformerBlock(torch.nn.Module):
+    """One LTX layer: per-stream MSA + text CA, optional bidirectional AV CA, FFN."""
+
     def __init__(
         self,
         video: TransformerConfig | None = None,
@@ -32,6 +44,7 @@ class BasicAVTransformerBlock(torch.nn.Module):
         norm_eps: float = 1e-6,
         ops: TransformerOpsConfig | None = None,
     ):
+        """Construct only the stems present in ``video`` / ``audio`` configs."""
         super().__init__()
 
         if ops is None:
@@ -130,6 +143,7 @@ class BasicAVTransformerBlock(torch.nn.Module):
     def get_ada_values(
         self, scale_shift_table: torch.Tensor, batch_size: int, timestep: torch.Tensor, indices: slice
     ) -> tuple[torch.Tensor, ...]:
+        """Slice AdaLN ``(shift, scale, gate, ...)`` for this residual branch."""
         num_ada_params = scale_shift_table.shape[0]
 
         ada_values = (
@@ -147,6 +161,7 @@ class BasicAVTransformerBlock(torch.nn.Module):
         scale_shift_indices: slice,
         num_scale_shift_values: int = 4,
     ) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
+        """AV cross-attn AdaLN: scale/shift from one timestep, gate from the other modality's sigma."""
         scale_shift_ada_values = self.get_ada_values(
             scale_shift_table[:num_scale_shift_values, :], batch_size, scale_shift_timestep, scale_shift_indices
         )
@@ -193,6 +208,7 @@ class BasicAVTransformerBlock(torch.nn.Module):
         video: TransformerArgs | None,
         audio: TransformerArgs | None,
     ) -> tuple[TransformerArgs | None, TransformerArgs | None]:
+        """Update ``TransformerArgs.x`` for each enabled stream; empty tensors are skipped."""
         if video is None and audio is None:
             raise ValueError("At least one of video or audio must be provided")
 
@@ -364,6 +380,7 @@ def apply_cross_attention_adaln(
     context_mask: torch.Tensor | None = None,
     norm_eps: float = 1e-6,
 ) -> torch.Tensor:
+    """Text CA with AdaLN on queries and a separate prompt scale/shift on keys/values."""
     batch_size = x.shape[0]
     shift_kv, scale_kv = (
         prompt_scale_shift_table[None, None].to(device=x.device, dtype=x.dtype)

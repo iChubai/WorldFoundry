@@ -25,6 +25,9 @@ checkpoint:
     tasks:
     - image-to-video
     - text-to-video
+official_sources:
+  project_page: https://i2vgen-xl.github.io/
+  paper: https://arxiv.org/abs/2311.04145
 integration:
   status: integrated
   notes:

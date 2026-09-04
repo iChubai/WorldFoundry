@@ -1,4 +1,14 @@
-"""Module for base_models -> diffusion_model -> video -> wan -> configs -> action_wan2p2.py functionality."""
+"""Wan 2.2 / Matrix-Game-3 action-recipe architecture data.
+
+Pins the UMT5 + Wan2.2 VAE38 + 40-layer 5.1k-wide DiT used by
+Matrix-Game-3.0 world-action recipes.  Shared fields (text length,
+dtype, train timesteps) live on ``wan_shared_cfg``; the
+``matrix_game3`` EasyDict adds 48-channel VAE stride ``(4, 16, 16)``
+and English negative prompts.
+
+``WAN_CONFIGS`` is the runner lookup; ``MAX_AREA_CONFIGS`` caps the
+704×1280 pixel budget.
+"""
 
 from __future__ import annotations
 

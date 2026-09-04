@@ -1,4 +1,22 @@
 # Copyright 2024-2025 The Alibaba Wan Team Authors. All rights reserved.
+"""Wan self-attn: sequence-parallel RoPE plus Ulysses (non-causal default).
+
+Thin adapter that binds
+:func:`~worldfoundry.core.attention.sequence_parallel_rope.make_sequence_parallel_attention_forward`
+to :func:`~worldfoundry.core.attention.ulysses_attention.distributed_attention`.
+
+Not this module:
+    Causal video should import :mod:`.causal_rope_sequence_parallel`.
+    Memory-token padded Ulysses lives in :mod:`.padded_ulysses_attention`.
+    This file does not implement RoPE or the all-to-all itself.
+
+Public surface:
+
+- :func:`rope_apply` — SP-sliced Wan 3D RoPE.
+- :func:`sp_dit_forward` / :data:`sp_attn_forward` — monkey-patch
+  targets for non-causal Wan DiT blocks.
+"""
+
 import torch
 
 from worldfoundry.core.attention.sequence_parallel_rope import (
@@ -8,6 +26,10 @@ from worldfoundry.core.attention.sequence_parallel_rope import (
 from worldfoundry.core.attention.ulysses_attention import distributed_attention
 from worldfoundry.core.distributed.sequence_ops import gather_forward, get_rank, get_world_size
 from worldfoundry.core.nn import sinusoidal_embedding_1d
+
+# ──────────────────────────────────────────────────────────────────────────
+# Bound factories — same callables Wan blocks already import by name
+# ──────────────────────────────────────────────────────────────────────────
 
 rope_apply = make_sequence_parallel_rope_apply(get_world_size, get_rank)
 

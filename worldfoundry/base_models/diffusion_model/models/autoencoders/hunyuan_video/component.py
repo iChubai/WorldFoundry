@@ -1,4 +1,10 @@
-"""HunyuanVideo latent codecs implemented against the native contracts."""
+"""HunyuanVideo / 1.5 :class:`~...contracts.LatentEncoder` + :class:`~...contracts.LatentDecoder`.
+
+:class:`HunyuanVideoOriginalCodec` wraps the causal 3-D VAE (mode ×
+scaling_factor; decode returns ``[0, 1]``).  :class:`HunyuanVideo15Codec`
+wraps the 1.5 Conv3D VAE.  Both honor ``return_latent`` and optional
+spatial tiling.  Shared by I2V initialization and final decode.
+"""
 
 from __future__ import annotations
 

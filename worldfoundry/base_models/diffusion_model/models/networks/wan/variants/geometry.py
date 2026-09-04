@@ -1,5 +1,12 @@
-"""Module for base_models -> diffusion_model -> video -> wan -> models -> geometry_wan.py functionality."""
+"""Geometry-conditioned Wan DiT (cross-modality + shifted RoPE).
 
+Official-layout Wan with extra geometry tokens.  ``rope_apply_shift``
+leaves a prefix of special tokens unrotated so pose / point tokens can
+sit in front of the video patch grid.  :class:`WanCrossModalityAttention`
+fuses geometry into video tokens.
+
+Adds geometry / camera-like tokens.  No VACE, action, or linear attn.
+"""
 import math
 
 import torch
@@ -16,12 +23,7 @@ FIRST_LAST_FRAME_CONTEXT_TOKEN_NUMBER = 257 * 2
 
 
 def sinusoidal_embedding_1d(dim, position):
-    """Sinusoidal embedding 1d.
-
-    Args:
-        dim: The dim.
-        position: The position.
-    """
+    """Classic sinusoidal features for 1-D timestep / position ids."""
     # preprocess
     assert dim % 2 == 0
     half = dim // 2
@@ -36,13 +38,7 @@ def sinusoidal_embedding_1d(dim, position):
 
 @amp.autocast(enabled=False)
 def rope_params(max_seq_len, dim, theta=10000):
-    """Rope params.
-
-    Args:
-        max_seq_len: The max seq len.
-        dim: The dim.
-        theta: The theta.
-    """
+    """Build complex cis frequencies for one RoPE axis."""
     assert dim % 2 == 0
     freqs = torch.outer(
         torch.arange(max_seq_len),
@@ -54,13 +50,7 @@ def rope_params(max_seq_len, dim, theta=10000):
 
 @amp.autocast(enabled=False)
 def rope_apply(x, grid_sizes, freqs):
-    """Rope apply.
-
-    Args:
-        x: The x.
-        grid_sizes: The grid sizes.
-        freqs: The freqs.
-    """
+    """Apply per-sample 3D RoPE to packed tokens; leave pad tokens unrotated."""
     n, c = x.size(2), x.size(3) // 2
 
     # split freqs
@@ -108,14 +98,13 @@ def rope_apply_shift(x, grid_sizes, freqs, special_cnt=0):
         seq_len = f * h * w
         x_i = x[i]
 
-        # -- special 在前，patch 在后 --
-        # 先把 special token 原样保留
+        # Special tokens first, video patches after.  Keep special tokens as-is.
         # [special_cnt, num_heads, 2*d]
         special = x_i[:special_cnt]
         # [seq_len, num_heads, 2*d]
         patch = x_i[special_cnt: special_cnt + seq_len]
 
-        # 做 RoPE
+        # Rotate only the patch tokens with 3D RoPE.
         patch_cplx = torch.view_as_complex(patch.float().reshape(
             seq_len, n, -1, 2))
         freqs_i = torch.cat([
@@ -125,7 +114,7 @@ def rope_apply_shift(x, grid_sizes, freqs, special_cnt=0):
         ], dim=-1).reshape(seq_len, 1, -1)
         rotated = torch.view_as_real(patch_cplx * freqs_i).flatten(2)
 
-        # 把 special + rotated patch + 可能多余的 tail 拼回去
+        # Reassemble special + rotated patches + any leftover pad tail.
         tail = x_i[special_cnt + seq_len:]
         x_i_out = torch.cat([special, rotated, tail], dim=0)
         output.append(x_i_out)
@@ -134,7 +123,7 @@ def rope_apply_shift(x, grid_sizes, freqs, special_cnt=0):
 
 
 class WanRMSNorm(nn.Module):
-    """Wan rms norm implementation."""
+    """RMSNorm with a learned scale; compute in fp32 when the impl upcasts."""
 
     def __init__(self, dim, eps=1e-5):
         """Init.
@@ -156,16 +145,12 @@ class WanRMSNorm(nn.Module):
         return self._norm(x.float()).type_as(x) * self.weight
 
     def _norm(self, x):
-        """Helper function to norm.
-
-        Args:
-            x: The x.
-        """
+        """RMS-normalize the last dim of ``x``."""
         return x * torch.rsqrt(x.pow(2).mean(dim=-1, keepdim=True) + self.eps)
 
 
 class WanLayerNorm(nn.LayerNorm):
-    """Wan layer norm implementation."""
+    """LayerNorm that typically upcasts to fp32, then restores the activation dtype."""
 
     def __init__(self, dim, eps=1e-6, elementwise_affine=False):
         """Init.
@@ -186,7 +171,7 @@ class WanLayerNorm(nn.LayerNorm):
 
 
 class WanSelfAttention(nn.Module):
-    """Wan self attention implementation."""
+    """Wan self-attention: RMSNorm Q/K, 3D RoPE, flash or variant kernel."""
 
     def __init__(self,
                  dim,
@@ -232,11 +217,7 @@ class WanSelfAttention(nn.Module):
 
         # query, key, value function
         def qkv_fn(x):
-            """Qkv fn.
-
-            Args:
-                x: The x.
-            """
+            """Project and reshape QKV to ``[B, L, H, D]``."""
             q = self.norm_q(self.q(x)).view(b, s, n, d)
             k = self.norm_k(self.k(x)).view(b, s, n, d)
             v = self.v(x).view(b, s, n, d)
@@ -258,7 +239,7 @@ class WanSelfAttention(nn.Module):
 
 
 class WanT2VCrossAttention(WanSelfAttention):
-    """Wan v cross attention implementation."""
+    """Wan text or image-text cross-attention."""
 
     def forward(self, x, context, context_lens):
         r"""
@@ -284,7 +265,7 @@ class WanT2VCrossAttention(WanSelfAttention):
 
 
 class WanCrossModalityAttention(nn.Module):
-    """Wan cross modality attention implementation."""
+    """Cross-attention from video tokens onto geometry / pose context."""
 
     def __init__(self,
                  dim,
@@ -336,11 +317,7 @@ class WanCrossModalityAttention(nn.Module):
 
         # query, key, value function
         def qkv_fn(x):
-            """Qkv fn.
-
-            Args:
-                x: The x.
-            """
+            """Project and reshape QKV to ``[B, L, H, D]``."""
             q = self.norm_q(self.q(x)).view(b, -1, n, d)
             k = self.norm_k(self.k(context)).view(b, -1, n, d)
             v = self.v(context).view(b, -1, n, d)
@@ -361,7 +338,7 @@ class WanCrossModalityAttention(nn.Module):
 
 
 class WanI2VCrossAttention(WanSelfAttention):
-    """Wan v cross attention implementation."""
+    """Wan text or image-text cross-attention."""
 
     def __init__(self,
                  dim,
@@ -423,7 +400,7 @@ WAN_CROSSATTENTION_CLASSES = {
 
 
 class WanAttentionBlock(nn.Module):
-    """Wan attention block implementation."""
+    """Wan transformer block: AdaLN self-attn, cross-attn, then AdaLN FFN."""
 
     def __init__(self,
                  cross_attn_type,
@@ -504,14 +481,7 @@ class WanAttentionBlock(nn.Module):
 
         # cross-attention & ffn function
         def cross_attn_ffn(x, context, context_lens, e):
-            """Cross attn ffn.
-
-            Args:
-                x: The x.
-                context: The context.
-                context_lens: The context lens.
-                e: The e.
-            """
+            """Second half of the block: cross-attn then gated FFN."""
             x = x + self.cross_attn(self.norm3(x), context, context_lens)
             y = self.ffn(self.norm2(x).float() * (1 + e[4]) + e[3])
             with amp.autocast(dtype=torch.float32):
@@ -539,9 +509,9 @@ class WanCrossAttentionBlock(nn.Module):
 
     def __init__(
         self,
-        dim: int,                  # x 的通道数
-        context_input_dim: int,    # context 的通道数
-        qkv_dim: int,              # q/k/v 的中间维度
+        dim: int,                  # hidden width of x
+        context_input_dim: int,    # hidden width of the geometry context
+        qkv_dim: int,              # shared Q/K/V inner width
         ffn_dim: int,
         num_heads: int,
         window_size: tuple = (-1, -1),
@@ -613,7 +583,7 @@ class WanCrossAttentionBlock(nn.Module):
             The return value.
         """
         if e.shape[1] >= 3:
-            e = e[:, :3]           # 仅用到 shift/scale/gate
+            e = e[:, :3]           # only shift / scale / gate are used here
         else:
             raise ValueError("e 必须至少含 3 个通道 (shift, scale, gate)")
 
@@ -636,7 +606,7 @@ class WanCrossAttentionBlock(nn.Module):
 
 
 class Head(nn.Module):
-    """Head implementation."""
+    """AdaLN-modulated output projection from tokens to packed patch voxels."""
 
     def __init__(self, dim, out_dim, patch_size, eps=1e-6):
         """Init.
@@ -675,7 +645,7 @@ class Head(nn.Module):
 
 
 class MLPProj(torch.nn.Module):
-    """Mlp proj implementation."""
+    """CLIP image-token projector (I2V / FLF2V)."""
 
     def __init__(self, in_dim, out_dim, flf_pos_emb=False):
         """Init.
@@ -710,9 +680,7 @@ class MLPProj(torch.nn.Module):
 
 
 class WanModel(nn.Module, NativeConfigMixin):
-    r"""
-    Wan diffusion backbone supporting both text-to-video and image-to-video.
-    """
+    r"""Geometry-conditioned Wan DiT (shifted RoPE + cross-modality attention)."""
 
     ignore_for_config = [
         'patch_size', 'cross_attn_norm', 'qk_norm', 'text_dim', 'window_size'

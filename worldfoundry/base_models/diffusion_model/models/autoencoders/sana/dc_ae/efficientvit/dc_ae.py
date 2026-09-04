@@ -14,7 +14,19 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-"""Module for base_models -> diffusion_model -> image -> sana -> diffusion -> model -> dc_ae -> efficientvit -> models -> efficientvit -> dc_ae.py functionality."""
+"""Sana Deep-Compression Autoencoder (f32c32) image encode/decode.
+
+Checkpoint-compatible EfficientViT CNN.  Public
+:class:`DCAE.encode` / :meth:`DCAE.decode` are the surfaces
+wrapped by :class:`~...component.SanaDCAutoencoder`.
+
+Pixels are BCHW RGB.  Default recipe is 32× spatial
+compression and 32 latent channels (``dc_ae_f32c32``).
+Also ships f64c128 / f128c512 factories.
+
+Do not comment every residual / MBConv; those are
+implementation detail.
+"""
 
 from dataclasses import dataclass, field
 from typing import Any, Optional

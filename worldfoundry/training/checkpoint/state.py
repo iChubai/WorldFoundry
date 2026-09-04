@@ -5,8 +5,10 @@ from __future__ import annotations
 import json
 import random
 from collections.abc import Iterable, Mapping
+from contextlib import contextmanager
 from dataclasses import dataclass
 from types import MappingProxyType
+from typing import Iterator
 
 import torch
 import torch.distributed as dist
@@ -30,6 +32,28 @@ from .errors import TrainingCheckpointCompatibilityError
 
 TRAINING_RUNTIME_STATE_SCHEMA = "worldfoundry-training-runtime-state-json-loader"
 TRAINING_PROGRESS_SCHEMA = "worldfoundry-training-progress"
+_RUNTIME_REQUIRED_FIELDS = frozenset(
+    {
+        "schema",
+        "engine",
+        "progress",
+        "dataloader",
+        "torch_cpu_rng_state",
+        "torch_cuda_rng_states",
+        "objective_generator_state",
+        "python_random_state",
+    }
+)
+# Optional so checkpoints written before TE-06 still resume.  New saves always
+# include it; unknown extra keys remain a hard compatibility error.
+_RUNTIME_OPTIONAL_FIELDS = frozenset({"numpy_random_state"})
+_LEGACY_DISTRIBUTED_TIMEOUT_SECONDS = 1800
+_RECIPE_IDENTITY_SCHEMAS = frozenset(
+    {
+        "worldfoundry-training",
+        "worldfoundry-post-training",
+    }
+)
 
 
 def _canonical_json(value: object) -> str:
@@ -48,6 +72,82 @@ def _canonical_mapping(value: Mapping[str, object], *, field_name: str) -> dict[
     return normalized
 
 
+def _upgrade_legacy_resume_identity(
+    saved: dict[str, object],
+    active: Mapping[str, object],
+) -> None:
+    """Fill identity defaults absent from checkpoints written by older releases.
+
+    ``distributed.timeout_seconds`` was added as an operational process-group
+    deadline. An omitted value means the historical 30-minute default; explicit
+    timeout changes remain subject to the normal strict section comparison.
+    """
+
+    candidates: list[tuple[dict[str, object], Mapping[str, object]]] = []
+    if active.get("schema") == "worldfoundry-training-resume-identity":
+        candidates.append((saved, active))
+
+    saved_recipe = saved.get("recipe")
+    active_recipe = active.get("recipe")
+    if (
+        isinstance(saved_recipe, dict)
+        and isinstance(active_recipe, Mapping)
+        and active_recipe.get("schema") in _RECIPE_IDENTITY_SCHEMAS
+    ):
+        candidates.append((saved_recipe, active_recipe))
+
+    for saved_container, active_container in candidates:
+        saved_distributed = saved_container.get("distributed")
+        active_distributed = active_container.get("distributed")
+        if not isinstance(saved_distributed, dict) or not isinstance(active_distributed, Mapping):
+            continue
+        if (
+            "timeout_seconds" not in saved_distributed
+            and active_distributed.get("timeout_seconds") == _LEGACY_DISTRIBUTED_TIMEOUT_SECONDS
+        ):
+            saved_distributed["timeout_seconds"] = _LEGACY_DISTRIBUTED_TIMEOUT_SECONDS
+
+
+def _identity_section_differences(
+    saved: Mapping[str, object],
+    active: Mapping[str, object],
+    *,
+    allow_environment_drift: bool = False,
+) -> dict[str, object]:
+    """Return deterministic, top-level resume-identity differences."""
+
+    differences: dict[str, object] = {}
+    for section in sorted(set(saved) | set(active)):
+        if allow_environment_drift and section == "environment":
+            continue
+        saved_present = section in saved
+        active_present = section in active
+        saved_value = saved.get(section)
+        active_value = active.get(section)
+        if saved_present == active_present and saved_value == active_value:
+            continue
+        differences[section] = {
+            "checkpoint": {
+                "present": saved_present,
+                "value": saved_value,
+            },
+            "active": {
+                "present": active_present,
+                "value": active_value,
+            },
+        }
+    return differences
+
+
+def _identity_compatibility_error(
+    differences: Mapping[str, object],
+) -> TrainingCheckpointCompatibilityError:
+    return TrainingCheckpointCompatibilityError(
+        "training resume identity differs by section:\n" + _canonical_json(differences),
+        section_differences=differences,
+    )
+
+
 def _distributed_context() -> tuple[int, int]:
     if dist.is_available() and dist.is_initialized():
         return dist.get_rank(), dist.get_world_size()
@@ -56,6 +156,95 @@ def _distributed_context() -> tuple[int, int]:
 
 def _rank_key(rank: int) -> str:
     return f"rank-{rank:08d}"
+
+
+def _cuda_rng_state_dict() -> dict[str, torch.Tensor]:
+    """Snapshot only the CUDA device owned by this rank/process."""
+
+    if not torch.cuda.is_available():
+        return {}
+    device_count = torch.cuda.device_count()
+    if device_count <= 0:
+        return {}
+    device_index = int(torch.cuda.current_device())
+    if not 0 <= device_index < device_count:
+        raise RuntimeError(f"active CUDA device {device_index} is outside the visible device inventory")
+    return {
+        f"device-{device_index:04d}": torch.cuda.get_rng_state(device_index).clone(),
+    }
+
+
+def _local_cuda_rng_state(
+    payload: object,
+) -> tuple[int, torch.Tensor] | None:
+    """Select a rank-local RNG state from current or legacy all-device payloads."""
+
+    if not isinstance(payload, Mapping):
+        raise TrainingCheckpointCompatibilityError("saved CUDA RNG state inventory is invalid")
+    if not torch.cuda.is_available() or torch.cuda.device_count() <= 0:
+        if payload:
+            raise TrainingCheckpointCompatibilityError("saved CUDA RNG device count differs from the active process")
+        return None
+    device_count = torch.cuda.device_count()
+    device_index = int(torch.cuda.current_device())
+    if not 0 <= device_index < device_count:
+        raise TrainingCheckpointCompatibilityError("active CUDA RNG device is invalid")
+    local_key = f"device-{device_index:04d}"
+    keys = set(payload)
+    legacy_keys = {f"device-{index:04d}" for index in range(device_count)}
+    if keys not in ({local_key}, legacy_keys):
+        raise TrainingCheckpointCompatibilityError("saved CUDA RNG device inventory is invalid")
+    value = payload.get(local_key)
+    if not isinstance(value, torch.Tensor) or value.dtype is not torch.uint8:
+        raise TrainingCheckpointCompatibilityError("saved CUDA RNG state is invalid")
+    return device_index, value.cpu()
+
+
+def _numpy_rng_state_dict() -> dict[str, object]:
+    """Snapshot the process-global NumPy RandomState in DCP-safe Python types."""
+
+    import numpy as np
+
+    kind, keys, pos, has_gauss, cached_gaussian = np.random.get_state()
+    return {
+        "kind": str(kind),
+        "keys": [int(value) for value in keys],
+        "pos": int(pos),
+        "has_gauss": int(has_gauss),
+        "cached_gaussian": float(cached_gaussian),
+    }
+
+
+def _restore_numpy_rng_state(payload: object) -> None:
+    import numpy as np
+
+    if not isinstance(payload, Mapping):
+        raise TrainingCheckpointCompatibilityError("saved NumPy RNG state is invalid")
+    expected = {"kind", "keys", "pos", "has_gauss", "cached_gaussian"}
+    if set(payload) != expected:
+        raise TrainingCheckpointCompatibilityError("saved NumPy RNG state fields are invalid")
+    kind = payload["kind"]
+    keys = payload["keys"]
+    pos = payload["pos"]
+    has_gauss = payload["has_gauss"]
+    cached_gaussian = payload["cached_gaussian"]
+    if not isinstance(kind, str) or not kind:
+        raise TrainingCheckpointCompatibilityError("saved NumPy RNG kind is invalid")
+    if not isinstance(keys, (list, tuple)) or not keys:
+        raise TrainingCheckpointCompatibilityError("saved NumPy RNG keys are invalid")
+    if isinstance(pos, bool) or not isinstance(pos, int):
+        raise TrainingCheckpointCompatibilityError("saved NumPy RNG pos is invalid")
+    if isinstance(has_gauss, bool) or not isinstance(has_gauss, int):
+        raise TrainingCheckpointCompatibilityError("saved NumPy RNG has_gauss is invalid")
+    if isinstance(cached_gaussian, bool) or not isinstance(cached_gaussian, (int, float)):
+        raise TrainingCheckpointCompatibilityError("saved NumPy RNG cached_gaussian is invalid")
+    try:
+        key_array = np.asarray(keys, dtype=np.uint32)
+    except (TypeError, ValueError) as error:
+        raise TrainingCheckpointCompatibilityError("saved NumPy RNG keys are invalid") from error
+    if key_array.ndim != 1:
+        raise TrainingCheckpointCompatibilityError("saved NumPy RNG keys are invalid")
+    np.random.set_state((kind, key_array, pos, int(has_gauss), float(cached_gaussian)))
 
 
 def _optimizer_key(index: int) -> str:
@@ -203,6 +392,7 @@ class TrainingState(Stateful):
         self.objective_generator = objective_generator
         self.progress = progress
         self.identity = MappingProxyType(_canonical_mapping(identity, field_name="training resume identity"))
+        self._allow_environment_drift = False
         self.ignore_frozen_parameters = ignore_frozen_parameters
         self._optional_stateful = optional_stateful
         self._options = StateDictOptions(
@@ -217,6 +407,19 @@ class TrainingState(Stateful):
     @property
     def optional_state_presence(self) -> dict[str, bool]:
         return {name: component is not None for name, component in self._optional_stateful.items()}
+
+    @contextmanager
+    def identity_load_policy(self, *, allow_environment_drift: bool = False) -> Iterator[None]:
+        """Temporarily select the identity policy used by DCP ``load_state_dict``."""
+
+        if not isinstance(allow_environment_drift, bool):
+            raise TypeError("allow_environment_drift must be a bool")
+        previous = self._allow_environment_drift
+        self._allow_environment_drift = allow_environment_drift
+        try:
+            yield
+        finally:
+            self._allow_environment_drift = previous
 
     def _local_runtime_state(self) -> dict[str, object]:
         engine_state = self.engine.state_dict()
@@ -234,18 +437,16 @@ class TrainingState(Stateful):
             serialized_dataloader = _canonical_json(dataloader_state)
         except TypeError as error:
             raise TypeError("training dataloader state must contain canonical JSON values") from error
-        cuda_states = {
-            f"device-{index:04d}": value.clone() for index, value in enumerate(torch.cuda.get_rng_state_all())
-        }
         return {
             "schema": TRAINING_RUNTIME_STATE_SCHEMA,
             "engine": engine_state,
             "progress": self.progress.state_dict(),
             "dataloader": serialized_dataloader,
             "torch_cpu_rng_state": torch.get_rng_state().clone(),
-            "torch_cuda_rng_states": cuda_states,
+            "torch_cuda_rng_states": _cuda_rng_state_dict(),
             "objective_generator_state": self.objective_generator.get_state().clone(),
             "python_random_state": random.getstate(),
+            "numpy_random_state": _numpy_rng_state_dict(),
         }
 
     def _runtime_by_rank(self) -> dict[str, object]:
@@ -308,10 +509,14 @@ class TrainingState(Stateful):
             state_dict["identity"],
             field_name="saved training resume identity",
         )
-        if saved_identity != dict(self.identity):
-            raise TrainingCheckpointCompatibilityError(
-                "saved training identity differs from the active recipe/data/model/runtime"
-            )
+        _upgrade_legacy_resume_identity(saved_identity, self.identity)
+        identity_differences = _identity_section_differences(
+            saved_identity,
+            self.identity,
+            allow_environment_drift=self._allow_environment_drift,
+        )
+        if identity_differences:
+            raise _identity_compatibility_error(identity_differences)
         if int(state_dict["optimizer_count"]) != len(self.optimizers):
             raise TrainingCheckpointCompatibilityError(
                 "saved optimizer inventory differs from the active training stack"
@@ -366,17 +571,10 @@ class TrainingState(Stateful):
         local_runtime = runtime_by_rank[_rank_key(rank)]
         if not isinstance(local_runtime, Mapping):
             raise TrainingCheckpointCompatibilityError("saved local runtime state is invalid")
-        runtime_expected = {
-            "schema",
-            "engine",
-            "progress",
-            "dataloader",
-            "torch_cpu_rng_state",
-            "torch_cuda_rng_states",
-            "objective_generator_state",
-            "python_random_state",
-        }
-        if set(local_runtime) != runtime_expected:
+        runtime_keys = set(local_runtime)
+        if not _RUNTIME_REQUIRED_FIELDS <= runtime_keys:
+            raise TrainingCheckpointCompatibilityError("saved local runtime fields differ from the active schema")
+        if runtime_keys - _RUNTIME_REQUIRED_FIELDS - _RUNTIME_OPTIONAL_FIELDS:
             raise TrainingCheckpointCompatibilityError("saved local runtime fields differ from the active schema")
         if local_runtime["schema"] != TRAINING_RUNTIME_STATE_SCHEMA:
             raise TrainingCheckpointCompatibilityError(
@@ -398,14 +596,7 @@ class TrainingState(Stateful):
             raise TrainingCheckpointCompatibilityError("saved CPU RNG state is invalid")
         if not isinstance(generator_state, torch.Tensor) or generator_state.dtype is not torch.uint8:
             raise TrainingCheckpointCompatibilityError("saved objective generator state is invalid")
-        if not isinstance(cuda_rng_states, Mapping) or len(cuda_rng_states) != torch.cuda.device_count():
-            raise TrainingCheckpointCompatibilityError("saved CUDA RNG device count differs from the active process")
-        ordered_cuda_states: list[torch.Tensor] = []
-        for index in range(torch.cuda.device_count()):
-            value = cuda_rng_states.get(f"device-{index:04d}")
-            if not isinstance(value, torch.Tensor) or value.dtype is not torch.uint8:
-                raise TrainingCheckpointCompatibilityError("saved CUDA RNG state is invalid")
-            ordered_cuda_states.append(value.cpu())
+        local_cuda_state = _local_cuda_rng_state(cuda_rng_states)
 
         set_model_state_dict(
             self.model,
@@ -437,10 +628,13 @@ class TrainingState(Stateful):
         for optimizer in self.optimizers:
             optimizer.zero_grad(set_to_none=True)
         torch.set_rng_state(cpu_rng_state.cpu())
-        if ordered_cuda_states:
-            torch.cuda.set_rng_state_all(ordered_cuda_states)
+        if local_cuda_state is not None:
+            device_index, cuda_rng_state = local_cuda_state
+            torch.cuda.set_rng_state(cuda_rng_state, device=device_index)
         self.objective_generator.set_state(generator_state.cpu())
         random.setstate(local_runtime["python_random_state"])
+        if "numpy_random_state" in local_runtime:
+            _restore_numpy_rng_state(local_runtime["numpy_random_state"])
 
 
 __all__ = [

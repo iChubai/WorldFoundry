@@ -13,6 +13,7 @@ source:
   official_repo_url: https://github.com/miccooper9/egowm
   hf_repo_id: anuragba/egowm
 official_sources:
+  paper: https://arxiv.org/abs/2601.15284
   project_page: https://egowm.github.io/
   github:
     url: https://github.com/miccooper9/egowm
@@ -38,12 +39,12 @@ variants:
 integration:
   status: runtime_ported
   notes:
-  - EgoWM official source route is registered; checkpoint/assets are runtime-gated.
+  - EgoWM official 25-DoF SVD inference is bound through a user-staged source checkout and local checkpoint directories.
 runner_parity:
-  status: implemented_checkpoint_pending
+  status: implemented
   notes:
-  - resolve_model_zoo_config and pipeline import are expected to pass; real generation
-    emits a runtime plan until required checkpoints/assets are staged.
+  - The compatibility wrapper runs the official action/state-conditioned SVD model and normalizes its MP4 to the requested artifact path.
+  - Real GPU validation evidence is tracked per run rather than embedded as a machine-local catalog path.
 runtime_profile: runtime-profile:egowm
 output_artifacts:
 - generated_video

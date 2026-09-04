@@ -38,10 +38,14 @@ Fumadocs 是唯一维护的文档面。新增或修改页面时，在 `docs/fuma
 
 行为变更时，更新对应 owning page：
 
-- **新模型或 runtime profile** — `guides/supported-models`、`reference/environments`，行为变化时更新模型指南。
+- **新模型或 runtime profile** — `guides/supported-models`、`reference/environments`，行为变化时更新模型指南。先用 `npm --prefix docs/fumadocs run models:generate` 刷新已检入的首页 recipes，再用 `npm --prefix docs/fumadocs run models:check` 验证。论文标题与配图用 `npm --prefix docs/fumadocs run models:media` 在 generate 之后刷新。
 - **新 benchmark** — `evaluation/benchmark-hub/<benchmark-id>`、benchmark 指南；内部实现变化时同步维护者架构页。
 - **CLI 或输出 schema** — `reference/cli`，以及拥有相关行为的 architecture 页面。
 - **内部 workflow** — `maintainers/architecture`（尤其是 workflow 与 evaluation-core）。
+
+基于 Python 的文档 codegen 与漂移检查（`api:*`、`models:*`、`coverage:*` 和
+`cli:screenshots`）统一经 `docs/fumadocs/scripts/run-python.sh` 调用解释器。需要覆盖时，
+解析顺序为 `WF_DOCS_PYTHON`、`PYTHON`、`python3`、`python`。
 
 ## 本地验证
 
@@ -50,6 +54,16 @@ bash scripts/setup/conda_install.sh --preset slim --env-name worldfoundry
 make lint
 make docs-check
 cd docs/fumadocs && npm run types:check && npm run build
+```
+
+在全新 CPU 环境上运行 `test/eval_core` 发布门禁时，先安装官方 CPU Torch
+wheels，再安装正常 package extra：
+
+```bash
+python -m pip install --index-url https://download.pytorch.org/whl/cpu \
+  "torch>=2.7,<2.12.0" "torchvision>=0.22,<0.27.0"
+python -m pip install -e ".[eval_core]"
+make test-eval-core
 ```
 
 模型/profile audit：

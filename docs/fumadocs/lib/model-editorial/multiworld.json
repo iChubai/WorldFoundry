@@ -1,0 +1,41 @@
+{
+  "id": "multiworld",
+  "tagline": {
+    "en": "MultiWorld — a multi-agent, interactive video world model exploring worlds where more than one agent acts at once.",
+    "zh": "MultiWorld——一个多智能体、交互式的视频世界模型，探索多个智能体同时行动的世界。"
+  },
+  "overview": {
+    "en": [
+      "MultiWorld is an interactive video world model focused on multi-agent settings — worlds where more than one agent can act, illustrated by its 「It Takes Two」 configuration. It generates interactive, game-like video rather than acting as a robot control policy.",
+      "In WorldFoundry the MultiWorld It-Takes-Two pipeline is registered as the model-zoo entry with an in-tree wrapper, so you drive it through the shared interface for interactive and multi-agent video generation.",
+      "Full generation depends on additional runtime dependencies and checkpoints, which you stage locally before running end to end."
+    ],
+    "zh": [
+      "MultiWorld 是一个交互式视频世界模型，聚焦多智能体场景——即多个智能体可同时行动的世界，其「It Takes Two」配置正体现了这一点。它生成交互式、类游戏的视频，而非充当机器人控制策略。",
+      "在 WorldFoundry 中，MultiWorld 的 It-Takes-Two pipeline 已作为 model-zoo 条目注册并配有内置封装，你可通过统一接口驱动它，用于交互式与多智能体视频生成。",
+      "完整生成依赖额外的运行时依赖与 checkpoint，需要你在端到端运行前于本地准备好。"
+    ]
+  },
+  "whenToUse": {
+    "en": "Use MultiWorld when your scenario involves multiple interacting agents in a generated, game-like world rather than a single controllable stream.",
+    "zh": "当你的场景涉及在生成的类游戏世界中有多个相互作用的智能体，而非单一可控流时，可以使用 MultiWorld。"
+  },
+  "notFor": {
+    "en": "It's a video world model, not a control policy. Full generation is gated on extra dependencies and checkpoints you provide locally.",
+    "zh": "它是视频世界模型，而非控制策略。完整生成需依赖你在本地提供的额外依赖与 checkpoint。"
+  },
+  "highlights": {
+    "en": [
+      "Multi-agent, interactive video world model",
+      "「It Takes Two」 configuration for more than one acting agent",
+      "Registered in-tree through the shared pipeline",
+      "Full generation requires extra dependencies and checkpoints staged locally"
+    ],
+    "zh": [
+      "多智能体、交互式视频世界模型",
+      "面向多个行动智能体的「It Takes Two」配置",
+      "通过统一 pipeline 以内置方式注册",
+      "完整生成需在本地准备额外依赖与 checkpoint"
+    ]
+  }
+}

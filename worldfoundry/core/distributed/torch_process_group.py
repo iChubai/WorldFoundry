@@ -1,4 +1,12 @@
-"""Torch process-group helpers shared by runtime and training code."""
+"""Torch process-group helpers shared by runtime and training code.
+
+Create/destroy the default group and query backend. Model-parallel
+subgroups are *not* created here — that is ``initialize_model_parallel``.
+
+Public surface: :func:`init_torch_distributed`, :func:`get_rank`,
+:func:`get_world_size`, :func:`rank0_first`, :class:`DistributedDataParallel`,
+and the WORLD tensor collectives.
+"""
 
 from __future__ import annotations
 
@@ -34,12 +42,17 @@ try:
 except Exception:  # pragma: no cover - optional training dependency.
 
     class _NoParallelState:
+        """Stub when ``megatron_compat.parallel_state`` cannot be imported."""
         @staticmethod
         def is_initialized() -> bool:
+            """Always false — Megatron parallel_state is not importable here."""
+
             return False
 
         @staticmethod
         def get_data_parallel_group(with_context_parallel: bool = False):
+            """``None`` so DDP falls back to the default process group."""
+
             return None
 
     parallel_state = _NoParallelState()
@@ -47,8 +60,19 @@ except Exception:  # pragma: no cover - optional training dependency.
 
 logger = logging.getLogger(__name__)
 
+# ──────────────────────────────────────────────────────────────────────────
+# Device / affinity helpers — bind CUDA before any NCCL collective
+# ──────────────────────────────────────────────────────────────────────────
+
 
 def _get_local_cuda_device(local_rank: int) -> int:
+    """Map ``LOCAL_RANK`` to a CUDA index, honoring an explicit override.
+
+    ``WORLDFOUNDRY_GEN3C_LOCAL_CUDA_DEVICE`` is for Gen3C jobs that pin a
+    process to a non-ordinal GPU. An unparsable value is ignored so a typo
+    cannot crash launch after ranks have already rendezvoused.
+    """
+
     override = os.getenv("WORLDFOUNDRY_GEN3C_LOCAL_CUDA_DEVICE")
     if override is None:
         return local_rank
@@ -63,6 +87,12 @@ def _get_local_cuda_device(local_rank: int) -> int:
 
 
 def _get_gpu_cpu_affinity(device_idx: int) -> list[int]:
+    """Return CPU ids NVML associates with ``device_idx``, or ``[]`` without pynvml.
+
+    Empty means "do not call ``sched_setaffinity``" so a missing NVML cannot
+    pin the process to the empty set and starve it.
+    """
+
     if pynvml is None:
         return []
     handle = pynvml.nvmlDeviceGetHandleByIndex(device_idx)
@@ -76,6 +106,12 @@ def _get_gpu_cpu_affinity(device_idx: int) -> list[int]:
 
 
 def _set_cuda_l2_fetch_granularity() -> None:
+    """Best-effort ``cudaDeviceSetLimit`` for L2 fetch (enum ``0x05`` = 128 B).
+
+    Missing ``libcudart.so`` is ignored: this is a throughput hint, not a
+    correctness requirement.
+    """
+
     if not torch.cuda.is_available():
         return
     try:
@@ -87,8 +123,31 @@ def _set_cuda_l2_fetch_granularity() -> None:
         logger.debug("libcudart.so is unavailable; skipped CUDA device limit setup.")
 
 
-def init() -> int | None:
-    """Initialize a NCCL process group from torchrun-style environment variables."""
+# ──────────────────────────────────────────────────────────────────────────
+# Canonical process-group init — other dist_init helpers must call this
+# ──────────────────────────────────────────────────────────────────────────
+
+
+def init_torch_distributed(
+    backend: str = "nccl",
+    init_method: str | None = "env://",
+    world_size: int | None = None,
+    rank: int | None = None,
+    timeout: timedelta | None = None,
+) -> int | None:
+    """Canonical torch.distributed process-group initialization.
+
+    Other entry points in this package (``generic_collectives.dist_init``,
+    ``metric_sync.init_distributed``, ``evaluation_collectives.dist_init``,
+    ``runtime_setup.init_distributed``, ``sequence_ops.init_distributed_group``,
+    multiprocess launch) should call this function rather than
+    ``torch.distributed.init_process_group`` directly.
+
+    Reads torchrun-style ``LOCAL_RANK`` for device binding, applies NCCL
+    defaults when unset, and initializes the default process group. Extra
+    ``init_process_group`` arguments are forwarded so launchers that pass an
+    explicit rendezvous URL / rank keep their call-site contract.
+    """
 
     local_rank = int(os.getenv("LOCAL_RANK", 0))
     local_cuda_device = _get_local_cuda_device(local_rank)
@@ -111,17 +170,21 @@ def init() -> int | None:
     if dist.is_available():
         if torch.cuda.is_available():
             torch.cuda.set_device(local_cuda_device)
-        timeout_seconds = int(os.getenv("TORCH_NCCL_HEARTBEAT_TIMEOUT_SEC", 1800))
-        dist.init_process_group(
-            backend="nccl",
-            init_method="env://",
-            timeout=timedelta(seconds=timeout_seconds),
-        )
+        if timeout is None:
+            timeout = timedelta(seconds=int(os.getenv("TORCH_NCCL_HEARTBEAT_TIMEOUT_SEC", 1800)))
+        init_kwargs: dict[str, Any] = {"backend": backend, "timeout": timeout}
+        if init_method is not None:
+            init_kwargs["init_method"] = init_method
+        if world_size is not None:
+            init_kwargs["world_size"] = world_size
+        if rank is not None:
+            init_kwargs["rank"] = rank
+        dist.init_process_group(**init_kwargs)
         logger.info(
             "Initialized distributed process group with local rank %s, CUDA device %s, and timeout %s.",
             local_rank,
             local_cuda_device,
-            timeout_seconds,
+            timeout,
         )
 
     _set_cuda_l2_fetch_granularity()
@@ -129,8 +192,26 @@ def init() -> int | None:
     return None
 
 
+# ──────────────────────────────────────────────────────────────────────────
+# Canonical rank / world-size queries — other modules must delegate here
+# ──────────────────────────────────────────────────────────────────────────
+
+
+def init() -> int | None:
+    """Initialize a NCCL process group from torchrun-style environment variables.
+
+    Alias of :func:`init_torch_distributed`, the canonical initializer.
+    """
+
+    return init_torch_distributed()
+
+
 def get_rank(group: Optional[dist.ProcessGroup] = None) -> int:
-    """Return this worker's rank, or 0 outside distributed execution."""
+    """Return this worker's rank, or 0 outside distributed execution.
+
+    Canonical rank query for ``worldfoundry.core.distributed``. Other
+    ``get_rank`` helpers in this package should delegate here.
+    """
 
     if dist.is_available() and dist.is_initialized():
         return dist.get_rank(group)
@@ -138,14 +219,31 @@ def get_rank(group: Optional[dist.ProcessGroup] = None) -> int:
 
 
 def get_world_size(group: Optional[dist.ProcessGroup] = None) -> int:
-    """Return the process-group size, or 1 outside distributed execution."""
+    """Return the process-group size, or 1 outside distributed execution.
+
+    Canonical world-size query for ``worldfoundry.core.distributed``. Other
+    ``get_world_size`` helpers in this package should delegate here.
+    """
 
     if dist.is_available() and dist.is_initialized():
         return dist.get_world_size(group)
     return 1
 
 
+def get_local_rank() -> int:
+    """Return this worker's local rank from ``LOCAL_RANK``, or 0 if not distributed.
+
+    Canonical local-rank query for ``worldfoundry.core.distributed``.
+    """
+
+    if not dist.is_available() or not dist.is_initialized():
+        return 0
+    return int(os.getenv("LOCAL_RANK", 0))
+
+
 def is_rank0() -> bool:
+    """True on global rank 0, including the single-process fallback."""
+
     return get_rank() == 0
 
 
@@ -190,11 +288,18 @@ def device_with_rank(device: str) -> str:
     return device
 
 
+# ──────────────────────────────────────────────────────────────────────────
+# Rank-0 helpers — barrier even on rank-0 failure so peers do not NCCL-timeout
+# ──────────────────────────────────────────────────────────────────────────
+
+
 def rank0_only(func: Callable) -> Callable:
     """Run ``func`` only on global rank 0."""
 
     @functools.wraps(func)
     def wrapper(*args, **kwargs):  # noqa: ANN202
+        """Call ``func`` only when :func:`is_rank0`; otherwise return ``None``."""
+
         if is_rank0():
             return func(*args, **kwargs)
         return None
@@ -203,6 +308,8 @@ def rank0_only(func: Callable) -> Callable:
 
 
 def barrier() -> None:
+    """Default-group barrier; no-op when torch.distributed is not initialized."""
+
     if dist.is_available() and dist.is_initialized():
         dist.barrier()
 
@@ -220,6 +327,8 @@ def rank0_first(func: Callable) -> Callable:
 
     @functools.wraps(func)
     def wrapper(*args, **kwargs):  # noqa: ANN202
+        """Run ``func`` on rank 0, barrier, then on other ranks if rank 0 succeeded."""
+
         distributed = dist.is_available() and dist.is_initialized() and get_world_size() > 1
         result = None
         rank0_error: BaseException | None = None
@@ -248,6 +357,11 @@ def rank0_first(func: Callable) -> Callable:
     return wrapper
 
 
+# ──────────────────────────────────────────────────────────────────────────
+# DDP wrap — prefer Megatron DP+CP group when parallel_state is live
+# ──────────────────────────────────────────────────────────────────────────
+
+
 def parallel_model_wrapper(config_ddp: Any, model: torch.nn.Module) -> torch.nn.Module | DistributedDataParallel:
     """Wrap a model with DDP when a process group is initialized."""
 
@@ -272,17 +386,32 @@ def parallel_model_wrapper(config_ddp: Any, model: torch.nn.Module) -> torch.nn.
     return model
 
 
+# ──────────────────────────────────────────────────────────────────────────
+# DDP wrapper — training_step must go through forward so hooks fire
+# ──────────────────────────────────────────────────────────────────────────
+
+
 class DistributedDataParallel(torch.nn.parallel.DistributedDataParallel):
     """DDP wrapper that redirects ``training_step`` through ``forward``."""
 
     def __init__(self, model: torch.nn.Module, *args, **kwargs):
+        """Remember whether we already warned about static_graph + ddp_sync_grad."""
+
         super().__init__(model, *args, **kwargs)
         self.show_sync_grad_static_graph_warning = True
 
     def training_step(self, *args, **kwargs) -> Any:
+        """Temporarily point ``module.forward`` at ``training_step`` and call DDP.
+
+        Lightning-style modules implement ``training_step`` instead of
+        ``forward``. DDP only hooks ``forward``, so we swap for one call.
+        """
+
         original_forward = self.module.forward
 
         def wrapped_training_step(*_args, **_kwargs):  # noqa: ANN202
+            """Restore ``forward`` before the real ``training_step`` to avoid recursion."""
+
             self.module.forward = original_forward
             return self.module.training_step(*_args, **_kwargs)
 
@@ -335,6 +464,7 @@ def collate_batches(data_batches: list[dict[str, torch.Tensor]]) -> torch.Tensor
         if dummy_count_value > 0:
             data_collate = data_collate[:-dummy_count_value]
     elif isinstance(data_batches[0], collections.abc.Mapping):
+        # Recurse per key so a mixed tensor/dict batch stays aligned across ranks.
         data_collate = {}
         for key in data_batches[0].keys():
             data_collate[key] = collate_batches([data[key] for data in data_batches])  # type: ignore[index]
@@ -343,8 +473,15 @@ def collate_batches(data_batches: list[dict[str, torch.Tensor]]) -> torch.Tensor
     return data_collate
 
 
+# ──────────────────────────────────────────────────────────────────────────
+# Tensor collectives — no-op when world_size < 2 so callers stay branch-free
+# ──────────────────────────────────────────────────────────────────────────
+
+
 @torch.no_grad()
 def all_gather_tensor(tensor: torch.Tensor) -> list[torch.Tensor]:
+    """All-gather equal tensors on WORLD; return ``[tensor]`` when alone."""
+
     if get_world_size() == 1:
         return [tensor]
     tensor_list = [torch.zeros_like(tensor) for _ in range(get_world_size())]
@@ -353,6 +490,8 @@ def all_gather_tensor(tensor: torch.Tensor) -> list[torch.Tensor]:
 
 
 def broadcast(tensor, src, group=None, async_op=False):
+    """In-place broadcast; identity when ``world_size < 2``."""
+
     if get_world_size() < 2:
         return tensor
     dist.broadcast(tensor, src=src, group=group, async_op=async_op)
@@ -360,6 +499,12 @@ def broadcast(tensor, src, group=None, async_op=False):
 
 
 def dist_reduce_tensor(tensor, rank=0, reduce="mean"):
+    """Reduce onto ``rank`` then optionally divide; only that rank sees the mean.
+
+    Non-destination ranks still participate in ``dist.reduce`` but must not
+    divide — they hold the unreduced local value.
+    """
+
     if get_world_size() < 2:
         return tensor
     with torch.no_grad():
@@ -370,6 +515,11 @@ def dist_reduce_tensor(tensor, rank=0, reduce="mean"):
             elif reduce != "sum":
                 raise NotImplementedError(f"Unsupported reduce mode: {reduce}")
     return tensor
+
+
+# ──────────────────────────────────────────────────────────────────────────
+# Parameter broadcast — ignore list + 250 MiB buckets (c10d helper)
+# ──────────────────────────────────────────────────────────────────────────
 
 
 def sync_model_states(
@@ -434,9 +584,11 @@ __all__ = [
     "ddp_sync_grad",
     "device_with_rank",
     "dist_reduce_tensor",
+    "get_local_rank",
     "get_rank",
     "get_world_size",
     "init",
+    "init_torch_distributed",
     "is_local_rank0",
     "is_rank0",
     "parallel_model_wrapper",

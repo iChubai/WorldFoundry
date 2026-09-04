@@ -1,7 +1,21 @@
-"""WorldFoundry-owned primitives with no model identity.
+"""WorldFoundry first-party primitives with no model identity.
 
-Re-exports are loaded lazily via :func:`__getattr__` so importing
-:mod:`worldfoundry.core` does not eagerly import every submodule.
+This package is the public facade for :mod:`worldfoundry.core`.
+``_EXPORT_MODULES`` maps each exported name to its real submodule; the object
+itself is resolved only when ``from worldfoundry.core import Xxx`` or attribute
+access runs :func:`__getattr__`, which ``import_module``s the target and writes
+the result back into ``globals()``. That keeps:
+
+- ``import worldfoundry.core`` from eagerly pulling torch, Hydra, DCP, or the
+  video stack;
+- control-plane and CPU-only processes able to import this package safely;
+- repeated lookups of the same symbol from calling ``import_module`` again
+  (the first successful resolve is cached on the module).
+
+:func:`__dir__` merges already-materialized globals with the lazy ``__all__``
+list so completion tools see every public name. ``log_filters`` is the only
+import-time side effect: it demotes Inductor autotuner noise and is not
+listed in the lazy export table.
 """
 
 from __future__ import annotations
@@ -26,10 +40,12 @@ _EXPORT_MODULES = {
     "AutoWrappedModule": "worldfoundry.core.vram",
     "AutoWrappedNonRecurseModule": "worldfoundry.core.vram",
     "CudaSyncTimer": "worldfoundry.core.time",
+    "DiffusionModelConfig": "worldfoundry.core.configuration",
     "DiskMap": "worldfoundry.core.vram",
     "DTensorFastEmaModelUpdater": "worldfoundry.core.distributed",
     "FlowMatchScheduler": "worldfoundry.core.nn.diffusion_schedulers",
     "LayerwiseOffloadHandle": "worldfoundry.core.vram",
+    "LoaderModelConfig": "worldfoundry.core.model_loading",
     "DuplicateRegistryKeyError": "worldfoundry.core.registry",
     "DropPath": "worldfoundry.core.nn.layers",
     "LayerScale": "worldfoundry.core.nn.layers",
@@ -54,14 +70,9 @@ _EXPORT_MODULES = {
     "InferenceArtifactSpec": "worldfoundry.core.inference",
     "InferenceCheckpointRef": "worldfoundry.core.inference",
     "InferenceFieldSpec": "worldfoundry.core.inference",
-    "InferenceParams": "worldfoundry.core.inference_state",
+    "InferenceParams": "worldfoundry.core.attention.inference_state",
     "InferenceTaskProfile": "worldfoundry.core.inference",
     "InferenceVariantSpec": "worldfoundry.core.inference",
-    "LINGBOT_VARIANT_BASE_ACT_PREVIEW": "worldfoundry.core.inference",
-    "LINGBOT_VARIANT_BASE_CAM": "worldfoundry.core.inference",
-    "LINGBOT_VARIANT_FAST": "worldfoundry.core.inference",
-    "LINGBOT_WORLD_INFERENCE_SPEC": "worldfoundry.core.inference",
-    "LINGBOT_WORLD_MODEL_ID": "worldfoundry.core.inference",
     "ModelInferenceSpec": "worldfoundry.core.inference",
     "WorldFoundryInferenceInfraState": "worldfoundry.core.inference",
     "SwiGLU": "worldfoundry.core.nn.layers",
@@ -116,12 +127,10 @@ _EXPORT_MODULES = {
     "flattened_multihead_attention": "worldfoundry.core.attention",
     "hash_model_file": "worldfoundry.core.model_loading",
     "hash_state_dict_keys": "worldfoundry.core.model_loading",
-    "generic_model_inference_spec": "worldfoundry.core.inference",
     "get_log_context": "worldfoundry.core.logging_setup",
     "get_logger": "worldfoundry.core.logging_setup",
     "log_context_environment": "worldfoundry.core.logging_setup",
     "get_video_details": "worldfoundry.core.io",
-    "get_model_inference_spec": "worldfoundry.core.inference",
     "get_local_tensor_if_dtensor": "worldfoundry.core.distributed",
     "get_total_norm": "worldfoundry.core.gradient",
     "build_rename_dict": "worldfoundry.core.model_loading",
@@ -134,7 +143,6 @@ _EXPORT_MODULES = {
     "is_last_rank": "worldfoundry.core.distributed",
     "is_last_tp_cp_rank": "worldfoundry.core.distributed",
     "is_accelerator_out_of_memory": "worldfoundry.core.utils.inference_runtime",
-    "list_model_inference_specs": "worldfoundry.core.inference",
     "is_remote_uri": "worldfoundry.core.io",
     "join_uri": "worldfoundry.core.io",
     "layer_scale": "worldfoundry.core.nn.normalization",
@@ -164,7 +172,6 @@ _EXPORT_MODULES = {
     "merge_attention_heads": "worldfoundry.core.nn.transformer",
     "mlp_hidden_size": "worldfoundry.core.nn.transformer",
     "named_apply": "worldfoundry.core.nn.module_utils",
-    "model_inference_spec": "worldfoundry.core.inference",
     "model_parallel_is_initialized": "worldfoundry.core.distributed",
     "normalize_attention_backend": "worldfoundry.core.attention",
     "normalize_action_values": "worldfoundry.core.action_normalization",
@@ -280,16 +287,19 @@ _EXPORT_MODULES = {
 
 
 def __getattr__(name: str) -> Any:
+    """Resolve ``name`` from ``_EXPORT_MODULES`` and cache it on this module."""
     module_name = _EXPORT_MODULES.get(name)
     if module_name is None:
         raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
     module = import_module(module_name)
     value = getattr(module, name)
+    # Cache on globals so the next attribute access skips import_module.
     globals()[name] = value
     return value
 
 
 def __dir__() -> list[str]:
+    """Merge materialized globals with lazy ``__all__`` for completion and ``dir()``."""
     return sorted({*globals(), *__all__})
 
 

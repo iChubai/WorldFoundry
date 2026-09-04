@@ -1,10 +1,20 @@
-"""Tensor-tree and deterministic random helpers used during inference.
+"""Inference runtime helpers: adaptive batch, OOM detection, token limits.
 
-Layering debt: :func:`_compile_eval_forward` lazily imports
-``worldfoundry.runtime.compile_cache`` (an upper layer) at call time, so the
-compile path still requires the runtime package even though this module
-imports cleanly without it. The proper fix is to sink the compile-cache
-primitives below core; see review finding CF-2.
+Responsibility
+    Shrink batch on allocator OOM, resolve ``max_new_tokens`` / batch size
+    from scoped env vars, and optionally compile a stable evaluator forward.
+
+Boundaries
+    Not the CUDA Graph runner — that is ``inference_graph``. Not training
+    AMP. Compiler failures are remembered on the callable owner so a flaky
+    Inductor kernel is not retried every batch; allocator OOM is never
+    swallowed as a compile failure.
+
+Public surface
+    :func:`adaptive_batched_inference`, :func:`resolve_inference_batch_size`,
+    :func:`resolve_generation_max_new_tokens`, :func:`is_accelerator_out_of_memory`,
+    :func:`to`, :func:`arch_invariant_rand`, :func:`get_data_batch_size`,
+    :func:`disabled_train`, :func:`timer`.
 """
 
 from __future__ import annotations
@@ -26,6 +36,11 @@ _FALSE_VALUES = {"0", "false", "no", "off", "disable", "disabled", "none"}
 _TRUE_VALUES = {"1", "true", "yes", "on", "enable", "enabled"}
 
 
+# ──────────────────────────────────────────────────────────────────────────
+# OOM / env — scoped WORLDFOUNDRY_EVAL_* overrides beat automatic sizing
+# ──────────────────────────────────────────────────────────────────────────
+
+
 def is_accelerator_out_of_memory(exc: BaseException) -> bool:
     """Return whether an exception reports an accelerator allocation failure."""
 
@@ -45,6 +60,7 @@ def is_accelerator_out_of_memory(exc: BaseException) -> bool:
 
 
 def _batch_size_env_names(scope: str | None) -> tuple[str, ...]:
+    """Scoped ``WORLDFOUNDRY_EVAL_<SCOPE>_BATCH_SIZE`` then the global fallback."""
     names: list[str] = []
     if scope:
         normalized = "".join(character if character.isalnum() else "_" for character in scope).upper()
@@ -56,6 +72,7 @@ def _batch_size_env_names(scope: str | None) -> tuple[str, ...]:
 
 
 def _scoped_eval_env_names(scope: str | None, suffix: str) -> tuple[str, ...]:
+    """Build ``WORLDFOUNDRY_EVAL_<SCOPE>_<SUFFIX>`` then the unscope fallback."""
     names: list[str] = []
     if scope:
         normalized = "".join(character if character.isalnum() else "_" for character in scope).upper()
@@ -104,6 +121,7 @@ def _resolve_batch_size_buckets(
 
 
 def _scoped_eval_value(scope: str | None, suffix: str) -> str | None:
+    """First non-empty scoped env value, or ``None`` if unset."""
     for env_name in _scoped_eval_env_names(scope, suffix):
         value = os.getenv(env_name)
         if value is not None and value.strip():
@@ -112,6 +130,7 @@ def _scoped_eval_value(scope: str | None, suffix: str) -> str | None:
 
 
 def _scoped_eval_flag(scope: str | None, suffix: str, *, default: bool) -> bool:
+    """Parse a scoped boolean env; unknown spellings raise :exc:`ValueError`."""
     value = _scoped_eval_value(scope, suffix)
     if value is None:
         return default
@@ -125,6 +144,7 @@ def _scoped_eval_flag(scope: str | None, suffix: str, *, default: bool) -> bool:
 
 
 def _compiler_runtime_failure(exc: BaseException) -> bool:
+    """Detect Dynamo / Inductor / Triton compile errors (not allocator OOM)."""
     module = type(exc).__module__.casefold()
     if module.startswith(("torch._dynamo", "torch._inductor", "triton")):
         return True
@@ -144,6 +164,7 @@ def _compiler_runtime_failure(exc: BaseException) -> bool:
 
 
 def _compile_failure_owner(function: Callable[..., Any]) -> Any:
+    """Bound-method owner if present, else the callable itself (failure cache key)."""
     owner = getattr(function, "__self__", None)
     return function if owner is None else owner
 
@@ -159,6 +180,7 @@ def _has_persistent_compile_owner(function: Callable[..., Any]) -> bool:
 
 
 def _power_of_two_batch_buckets(maximum: int) -> tuple[int, ...]:
+    """``1, 2, 4, …, maximum`` so compile/Graph capture sees a small shape set."""
     buckets: list[int] = []
     value = 1
     while value < maximum:
@@ -185,7 +207,7 @@ def _compile_eval_forward(
     if failure_key in failures:
         return forward
 
-    from worldfoundry.runtime.compile_cache import CompilePolicy, compile_callable_cached
+    from worldfoundry.core.compile_cache import CompilePolicy, compile_callable_cached
 
     compiled = compile_callable_cached(
         forward,
@@ -204,6 +226,7 @@ def _compile_eval_forward(
     compiled_active = True
 
     def compiled_or_eager(batch: torch.Tensor) -> torch.Tensor:
+        """Run compiled; on a non-OOM compiler error, remember and fall back."""
         nonlocal compiled_active
         if not compiled_active:
             return forward(batch)
@@ -256,6 +279,7 @@ def resolve_generation_max_new_tokens(default: int, *, scope: str | None = None)
 
 
 def _coerce_torch_device(device: torch.device | str | int) -> torch.device:
+    """Treat a bare int as ``cuda:<n>`` so env / CLI device ids stay consistent."""
     return torch.device("cuda", device) if isinstance(device, int) else torch.device(device)
 
 
@@ -462,7 +486,18 @@ def adaptive_batched_inference(
     return final_output
 
 
+# ──────────────────────────────────────────────────────────────────────────
+# Tree move / RNG / batch size — eval helpers that stay out of the denoise loop
+# ──────────────────────────────────────────────────────────────────────────
+
+
 def to(data: Any, *, device=None, dtype=None, memory_format=torch.preserve_format) -> Any:
+    """Recursively ``.to`` tensor leaves; skip channels-last on the wrong rank.
+
+    Mappings and non-string sequences keep their type. Non-tensor leaves
+    pass through. ``channels_last`` / ``channels_last_3d`` are ignored unless
+    rank is 4 / 5 so NHWC is never applied to a 2-D feature.
+    """
     if isinstance(data, torch.Tensor):
         if memory_format == torch.channels_last and data.dim() != 4:
             memory_format = torch.preserve_format
@@ -479,11 +514,16 @@ def to(data: Any, *, device=None, dtype=None, memory_format=torch.preserve_forma
 
 
 def arch_invariant_rand(shape, dtype: torch.dtype, device, seed: int | None = None) -> torch.Tensor:
+    """Host ``RandomState`` Gaussian so CPU vs CUDA generators cannot diverge."""
     array = np.random.RandomState(seed).standard_normal(shape).astype(np.float32)
     return torch.from_numpy(array).to(dtype=dtype, device=device)
 
 
 def get_data_batch_size(data: Any) -> int:
+    """Infer leading batch length from a tensor, mapping, or sequence tree.
+
+    Failure: :exc:`ValueError` when no tensor / sequence leaf is found.
+    """
     if isinstance(data, torch.Tensor):
         return len(data)
     if isinstance(data, Mapping):
@@ -498,12 +538,14 @@ def get_data_batch_size(data: Any) -> int:
 
 
 def disabled_train(self, mode: bool = True):
+    """No-op ``train()`` replacement so eval modules cannot flip BN / dropout."""
     del mode
     return self
 
 
 @contextmanager
 def timer(name: str):
+    """Log wall time of a block; import logger lazily to stay CPU-importable."""
     started = time.perf_counter()
     yield
     from worldfoundry.core.distributed.logging import log

@@ -1,0 +1,39 @@
+{
+  "id": "worldcam",
+  "tagline": {
+    "en": "WorldCam — a camera-controllable world model from KAIST, Adobe Research, and MAUM AI, built on Wan2.1.",
+    "zh": "WorldCam——由 KAIST、Adobe Research 与 MAUM AI 打造的相机可控世界模型，构建于 Wan2.1 之上。"
+  },
+  "overview": {
+    "en": [
+      "WorldCam is a world model developed by KAIST, Adobe Research, and MAUM AI. It generates video worlds you can steer with precise camera control, and is designed for long-horizon, interactive, game-like scenes rather than short fixed clips.",
+      "It builds on the Wan2.1 text-to-video 1.3B backbone, adding conditioning on a camera pose so you can direct how the viewpoint moves through the generated world. In WorldFoundry the runtime is in-tree and supports the official-style conditioning-video path with local WorldCam and Wan assets."
+    ],
+    "zh": [
+      "WorldCam 是由 KAIST、Adobe Research 与 MAUM AI 共同研发的世界模型。它生成可用精确相机控制来操控的视频世界，专为长时程、可交互、类游戏的场景设计，而非短促固定的片段。",
+      "它以 Wan2.1 文生视频 1.3B 为主干，加入相机位姿条件，让你能指挥视点如何在生成世界中移动。在 WorldFoundry 中，运行时内置于代码树，支持官方风格的条件视频路线，并可使用本地的 WorldCam 与 Wan 资源。"
+    ]
+  },
+  "whenToUse": {
+    "en": "Use WorldCam when you want precise camera control over a generated world and are interested in long-horizon, interactive, game-style video.",
+    "zh": "当你想对生成世界进行精确相机控制，并关注长时程、可交互、游戏风格的视频时，选择 WorldCam。"
+  },
+  "notFor": {
+    "en": "Released as code only, so you supply the WorldCam and Wan2.1 weights yourself; it targets camera-conditioned world generation rather than plain prompt-to-video.",
+    "zh": "以纯代码形式发布，权重需你自行准备 WorldCam 与 Wan2.1；它面向相机条件的世界生成，而非单纯的提示词到视频。"
+  },
+  "highlights": {
+    "en": [
+      "Precise camera-pose control over the generated world",
+      "Aimed at long-horizon, interactive, game-like video",
+      "Built on the Wan2.1 T2V 1.3B backbone",
+      "From KAIST, Adobe Research, and MAUM AI"
+    ],
+    "zh": [
+      "对生成世界的精确相机位姿控制",
+      "面向长时程、可交互、类游戏的视频",
+      "构建于 Wan2.1 T2V 1.3B 主干之上",
+      "来自 KAIST、Adobe Research 与 MAUM AI"
+    ]
+  }
+}

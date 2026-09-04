@@ -1,0 +1,41 @@
+{
+  "id": "abot-m0",
+  "tagline": {
+    "en": "A Qwen3-VL-based vision-language-action policy for single- and bimanual manipulation.",
+    "zh": "基于 Qwen3-VL 的视觉-语言-动作策略，面向单臂与双臂操作。"
+  },
+  "overview": {
+    "en": [
+      "ABot-M0 is a vision-language-action (VLA) policy for robot manipulation, including bimanual tasks. It reads camera views, robot state and a language instruction, and predicts the actions to carry the task out.",
+      "It pairs a Qwen3-VL-4B-Instruct vision-language backbone with a flow-based action expert, with optional geometry fusion, released preprocessing, and action de-normalization built in. The runtime accepts the released config and dataset-statistics layout directly and chooses its compute precision based on the GPU generation it finds. Task checkpoints are released for LIBERO, RoboCasa and RoboTwin2 environments.",
+      "In WorldFoundry, ABot-M0 runs through the embodied action pipeline rather than video generation: you pick a checkpoint matching your benchmark, feed it observations and an instruction, and it returns an action trace. Only inference components are included — training, deployment services and robot SDK code are out of scope."
+    ],
+    "zh": [
+      "ABot-M0 是一个面向机器人操作的视觉-语言-动作（VLA）策略，涵盖双臂任务。它读取相机视角、机器人状态和一条语言指令，预测出执行任务所需的动作。",
+      "它把 Qwen3-VL-4B-Instruct 视觉-语言骨干与基于 flow 的动作专家结合，内置可选的几何融合、已发布的预处理以及动作反归一化。运行时可直接采用发布的配置与数据统计布局，并根据所在 GPU 代次选择计算精度。任务 checkpoint 覆盖 LIBERO、RoboCasa 与 RoboTwin2 环境。",
+      "在 WorldFoundry 中，ABot-M0 走的是具身动作 pipeline，而非视频生成：选定与你的基准匹配的 checkpoint，给它观测和指令，它便返回一段动作轨迹。这里只包含推理组件——训练、部署服务与机器人 SDK 代码不在其中。"
+    ]
+  },
+  "whenToUse": {
+    "en": "Use it when you need a language-conditioned manipulation policy that handles single- or dual-arm tasks, with checkpoints ready for LIBERO, RoboCasa or RoboTwin2.",
+    "zh": "当你需要一个语言驱动、能处理单臂或双臂任务的操作策略时使用它，并有面向 LIBERO、RoboCasa 或 RoboTwin2 的现成 checkpoint。"
+  },
+  "notFor": {
+    "en": "Not a media-generation model — it outputs robot actions, not images or video. To run it you need robot observations, state and an instruction, and it excludes training and deployment tooling.",
+    "zh": "它不是媒体生成模型——输出的是机器人动作，而非图像或视频。运行它需要机器人观测、状态和指令，且不包含训练与部署工具。"
+  },
+  "highlights": {
+    "en": [
+      "Qwen3-VL-4B vision-language backbone with a flow action expert",
+      "Handles single-arm and bimanual manipulation",
+      "Checkpoints for LIBERO, RoboCasa and RoboTwin2",
+      "Runs the released config/statistics layout directly, inference-only"
+    ],
+    "zh": [
+      "Qwen3-VL-4B 视觉-语言骨干搭配 flow 动作专家",
+      "支持单臂与双臂操作",
+      "提供 LIBERO、RoboCasa 与 RoboTwin2 的 checkpoint",
+      "可直接运行发布的配置/统计布局，仅含推理"
+    ]
+  }
+}

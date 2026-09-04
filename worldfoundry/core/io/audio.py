@@ -1,4 +1,8 @@
-"""Dependency-light audio artifact helpers shared by model pipelines."""
+"""Dependency-light audio artifact helpers shared by model pipelines.
+
+Float32 channel convert, write, and mux onto video. Avoids pulling
+torchaudio into every inference job.
+"""
 
 from __future__ import annotations
 
@@ -11,6 +15,10 @@ from pathlib import Path
 from typing import Any
 
 import numpy as np
+
+# ──────────────────────────────────────────────────────────────────────────
+# Waveform normalize / WAV write / ffmpeg mux — no torchaudio import
+# ──────────────────────────────────────────────────────────────────────────
 
 
 def _ffmpeg_executables() -> tuple[str, ...]:

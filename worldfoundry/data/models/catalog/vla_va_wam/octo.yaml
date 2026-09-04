@@ -20,6 +20,8 @@ integration:
   status: integrated
 name: Octo
 official_sources:
+  paper: https://arxiv.org/abs/2405.12213
+  project_page: https://octo-models.github.io/
   github:
     head_sha: 241fb3514b7c40957a86d869fecb7c7fc353f540
     url: https://github.com/octo-models/octo

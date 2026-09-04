@@ -14,7 +14,16 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-"""Module for base_models -> diffusion_model -> image -> sana -> diffusion -> model -> dc_ae -> efficientvit -> models -> nn -> triton_rms_norm.py functionality."""
+"""Optional Triton RMSNorm kernel for DC-AE.
+
+:class:`TritonRMSNorm2dFunc` is the autograd Function used
+by :class:`~.norm.TritonRMSNorm2d` when Triton is available.
+Otherwise :mod:`.norm` falls back to PyTorch RMSNorm.
+
+Tensors are BCHW feature maps inside DC-AE stages.
+
+This is an optional kernel, not a codec entry point.
+"""
 
 import torch
 import triton

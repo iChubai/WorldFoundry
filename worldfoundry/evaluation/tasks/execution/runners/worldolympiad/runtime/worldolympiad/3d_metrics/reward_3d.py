@@ -26,6 +26,7 @@ from model.vlm import (
     DEFAULT_VLM_BACKEND,
     chat_vlm_call,
     clean_json_content,
+    get_openrouter_api_key,
     parse_json_content,
     resolve_model_name,
     resolve_vlm_backend,
@@ -156,8 +157,11 @@ class VLMScorer:
     ):
         self.backend = resolve_vlm_backend(backend)
         self.model_name = resolve_model_name(model_name, self.backend)
-        if self.backend == "openrouter" and not os.getenv("api_key"):
-            raise RuntimeError("Missing OpenRouter api_key in environment or .env")
+        if self.backend == "openrouter" and not get_openrouter_api_key():
+            raise RuntimeError(
+                "Missing OpenRouter key; set WORLDFOUNDRY_OPENROUTER_API_KEY "
+                "or OPENROUTER_API_KEY"
+            )
         self.timeout = timeout
         self.video_task_template = """You are a calibrated 3D consistency judge for static-scene reconstruction.
 You will be given several sampled frames from a Gaussian-Splat render reconstructed from a source video after dynamic foreground regions were masked and video-inpainted.
@@ -1019,4 +1023,3 @@ def score_video_file(
     finally:
         if manager.processes:
             manager.shutdown()
-

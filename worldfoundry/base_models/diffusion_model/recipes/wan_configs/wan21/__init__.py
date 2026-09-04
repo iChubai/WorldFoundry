@@ -1,4 +1,13 @@
-"""Wan 2.1 architecture data."""
+"""Wan 2.1 architecture EasyDicts (T2V 1.3B / 14B and I2V 14B).
+
+Package index for the official Wan 2.1 release configs.  Each identity
+is an EasyDict: UMT5-XXL text, Wan2.1 VAE stride ``(4, 8, 8)``,
+patch ``(1, 2, 2)``, and the 1.3B vs 14B DiT widths.  ``WAN_CONFIGS``
+maps the short names used by runners.
+
+Shared T5 / dtype / negative-prompt defaults live in :mod:`.shared`.
+I2V additionally loads OpenCLIP XLM-RoBERTa.
+"""
 
 from .i2v_14b import i2v_14B
 from .t2v_14b import t2v_14B

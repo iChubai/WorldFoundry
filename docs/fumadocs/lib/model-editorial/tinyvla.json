@@ -1,0 +1,41 @@
+{
+  "id": "tinyvla",
+  "tagline": {
+    "en": "A compact vision-language-action backbone built on LLaVA-Pythia, offered in 400M, 700M, and 1.3B sizes for lightweight robot policy training.",
+    "zh": "基于 LLaVA-Pythia 的轻量视觉-语言-动作骨干,提供 400M、700M、1.3B 三种规模,面向轻量机器人策略训练。"
+  },
+  "overview": {
+    "en": [
+      "TinyVLA is a small vision-language-action model aimed at embodied control on modest hardware. It pairs a LLaVA-Pythia language-vision backbone with CLIP/SigLIP vision fusion and an action head, so a robot can turn an image and a language instruction into predicted actions.",
+      "The published backbones come in three sizes — 400M, 700M, and 1.3B — and the action head can be either an ACT-style predictor or a conditional 1D diffusion head. These released weights are VLM backbones intended for policy training: you fine-tune on your own robot data, together with the matching normalization statistics, to obtain a task-ready policy.",
+      "In WorldFoundry, TinyVLA runs through the shared action runtime. Both merged weights and a local LoRA plus non-LoRA action tensors are supported, so you can bring your own trained checkpoint and drive action prediction directly."
+    ],
+    "zh": [
+      "TinyVLA 是一个面向具身控制、可在普通硬件上运行的小型视觉-语言-动作模型。它把 LLaVA-Pythia 的语言-视觉骨干与 CLIP/SigLIP 视觉融合、动作头结合起来,让机器人能把一张图像加一条语言指令转成预测动作。",
+      "已发布的骨干提供 400M、700M、1.3B 三种规模,动作头可以是 ACT 式预测器,也可以是条件式一维扩散头。这些权重是用于策略训练的 VLM 骨干:你需要在自己的机器人数据上做微调,并配套对应的归一化统计量,才能得到可直接执行任务的策略。",
+      "在 WorldFoundry 中,TinyVLA 通过统一的动作运行时执行。它同时支持合并后的权重,以及本地的 LoRA 加非 LoRA 动作张量,因此你可以带上自己训练好的 checkpoint,直接进行动作预测。"
+    ]
+  },
+  "whenToUse": {
+    "en": "Pick TinyVLA when you want a small, easy-to-train VLA backbone for imitation learning on a specific robot and task, and you plan to fine-tune it on your own demonstrations.",
+    "zh": "当你需要一个小巧、易训练的 VLA 骨干,在特定机器人和任务上做模仿学习,并打算用自己的示范数据微调时,TinyVLA 是合适的选择。"
+  },
+  "notFor": {
+    "en": "It is not a plug-and-play robot policy — the released weights are backbones for training, so you must supply a task-trained action checkpoint and its normalization statistics before it can act.",
+    "zh": "它不是即插即用的机器人策略——发布的权重是用于训练的骨干,你必须自备经任务训练的动作 checkpoint 及其归一化统计量,它才能产生动作。"
+  },
+  "highlights": {
+    "en": [
+      "Three backbone sizes: 400M, 700M, and 1.3B",
+      "LLaVA-Pythia backbone with CLIP/SigLIP vision fusion",
+      "Choice of ACT or conditional 1D diffusion action head",
+      "Works with merged weights or local LoRA plus action tensors"
+    ],
+    "zh": [
+      "三种骨干规模:400M、700M、1.3B",
+      "LLaVA-Pythia 骨干,配 CLIP/SigLIP 视觉融合",
+      "动作头可选 ACT 或条件式一维扩散",
+      "支持合并权重,或本地 LoRA 加动作张量"
+    ]
+  }
+}

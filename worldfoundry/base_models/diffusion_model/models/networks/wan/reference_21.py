@@ -1,5 +1,24 @@
 # Copyright 2024-2025 The Alibaba Wan Team Authors. All rights reserved.
-"""Module for base_models -> diffusion_model -> video -> wan -> wan_2p1 -> modules -> model.py functionality."""
+"""Official-layout Wan 2.1 DiT (list-of-videos packing).
+
+This is the Alibaba Wan 2.1 reference graph: each sample is a ``[C, F, H, W]``
+tensor, patchified independently, then padded to a shared ``seq_len``.
+Cross-attention is selected by ``model_type``:
+
+- ``t2v``: text only
+- ``i2v`` / ``flf2v``: CLIP image tokens + T5 text (FLF adds a 514-token
+  first/last-frame position table)
+- ``vace``: same stem; VACE hints are composed outside this module
+
+Self-attention applies 3D RoPE per sample using that sample's
+``(F, H, W)`` grid.  An optional ``memory_adapter`` may rewrite tokens
+before the block loop (Echo-Infinity / memory recipes).
+
+
+This file does not implement action, camera ControlNet, causal attention,
+linear attention, or TeaCache.  Those live in :mod:`.variants` or on the
+native packed graph in :mod:`.model`.
+"""
 
 import math
 
@@ -16,11 +35,11 @@ FIRST_LAST_FRAME_CONTEXT_TOKEN_NUMBER = 257 * 2
 
 
 def sinusoidal_embedding_1d(dim, position):
-    """Sinusoidal embedding 1d.
+    """Classic transformer sinusoidal features for 1-D timestep / position ids.
 
     Args:
-        dim: The dim.
-        position: The position.
+        dim: Even embedding width.
+        position: Scalar or 1-D positions, promoted to float64 for the outer product.
     """
     # preprocess
     assert dim % 2 == 0
@@ -35,12 +54,12 @@ def sinusoidal_embedding_1d(dim, position):
 
 @torch.amp.autocast("cuda", enabled=False)
 def rope_params(max_seq_len, dim, theta=10000):
-    """Rope params.
+    """Build complex cis frequencies for one RoPE axis (time, height, or width).
 
     Args:
-        max_seq_len: The max seq len.
-        dim: The dim.
-        theta: The theta.
+        max_seq_len: Table length (official Wan uses 1024).
+        dim: Even rotary dimension for this axis.
+        theta: RoPE base.
     """
     assert dim % 2 == 0
     freqs = torch.outer(
@@ -52,12 +71,12 @@ def rope_params(max_seq_len, dim, theta=10000):
 
 @torch.amp.autocast("cuda", enabled=False)
 def rope_apply(x, grid_sizes, freqs):
-    """Rope apply.
+    """Apply per-sample 3D RoPE to packed tokens; leave pad tokens unrotated.
 
     Args:
-        x: The x.
-        grid_sizes: The grid sizes.
-        freqs: The freqs.
+        x: Query or key, ``[B, L, H, D]``.
+        grid_sizes: Per-sample ``(F, H, W)`` patch grid, ``[B, 3]``.
+        freqs: Concatenated complex tables for the three axes.
     """
     n, c = x.size(2), x.size(3) // 2
 
@@ -90,14 +109,12 @@ def rope_apply(x, grid_sizes, freqs):
 
 
 class WanRMSNorm(nn.Module):
-    """Wan rms norm implementation."""
+    """RMSNorm with a learned scale; compute in fp32, return ``x`` dtype."""
 
     def __init__(self, dim, eps=1e-5):
-        """Init.
-
-        Args:
-            dim: The dim.
-            eps: The eps.
+        """Args:
+            dim: Channel width of the last dimension.
+            eps: Stabilizer added inside the rsqrt.
         """
         super().__init__()
         self.dim = dim
@@ -112,24 +129,18 @@ class WanRMSNorm(nn.Module):
         return self._norm(x.float()).type_as(x) * self.weight
 
     def _norm(self, x):
-        """Helper function to norm.
-
-        Args:
-            x: The x.
-        """
+        """RMS-normalize the last dim of ``x`` (already promoted to float)."""
         return x * torch.rsqrt(x.pow(2).mean(dim=-1, keepdim=True) + self.eps)
 
 
 class WanLayerNorm(nn.LayerNorm):
-    """Wan layer norm implementation."""
+    """LayerNorm that upcasts to fp32 for the reduction, then restores dtype."""
 
     def __init__(self, dim, eps=1e-6, elementwise_affine=False):
-        """Init.
-
-        Args:
-            dim: The dim.
-            eps: The eps.
-            elementwise_affine: The elementwise affine.
+        """Args:
+            dim: Normalized width.
+            eps: LayerNorm epsilon.
+            elementwise_affine: Official Wan uses affine only on some norms.
         """
         super().__init__(dim, elementwise_affine=elementwise_affine, eps=eps)
 
@@ -142,17 +153,15 @@ class WanLayerNorm(nn.LayerNorm):
 
 
 class WanSelfAttention(nn.Module):
-    """Wan self attention implementation."""
+    """Wan 2.1 self-attention: RMSNorm Q/K, 3D RoPE, optional local window."""
 
     def __init__(self, dim, num_heads, window_size=(-1, -1), qk_norm=True, eps=1e-6):
-        """Init.
-
-        Args:
-            dim: The dim.
-            num_heads: The num heads.
-            window_size: The window size.
-            qk_norm: The qk norm.
-            eps: The eps.
+        """Args:
+            dim: Hidden size (must be divisible by ``num_heads``).
+            num_heads: Attention heads.
+            window_size: Flash-attention local window; ``(-1, -1)`` is global.
+            qk_norm: If true, RMSNorm query and key before RoPE.
+            eps: RMSNorm epsilon.
         """
         assert dim % num_heads == 0
         super().__init__()
@@ -183,11 +192,7 @@ class WanSelfAttention(nn.Module):
 
         # query, key, value function
         def qkv_fn(x):
-            """Qkv fn.
-
-            Args:
-                x: The x.
-            """
+            """Project and reshape QKV to ``[B, L, H, D]``."""
             q = self.norm_q(self.q(x)).view(b, s, n, d)
             k = self.norm_k(self.k(x)).view(b, s, n, d)
             v = self.v(x).view(b, s, n, d)
@@ -210,7 +215,7 @@ class WanSelfAttention(nn.Module):
 
 
 class WanT2VCrossAttention(WanSelfAttention):
-    """Wan v cross attention implementation."""
+    """Text-only cross-attention used by Wan 2.1 T2V."""
 
     def forward(self, x, context, context_lens):
         r"""
@@ -236,18 +241,10 @@ class WanT2VCrossAttention(WanSelfAttention):
 
 
 class WanI2VCrossAttention(WanSelfAttention):
-    """Wan v cross attention implementation."""
+    """Wan 2.1 I2V / FLF2V cross-attention: CLIP image tokens plus T5 text."""
 
     def __init__(self, dim, num_heads, window_size=(-1, -1), qk_norm=True, eps=1e-6):
-        """Init.
-
-        Args:
-            dim: The dim.
-            num_heads: The num heads.
-            window_size: The window size.
-            qk_norm: The qk norm.
-            eps: The eps.
-        """
+        """Add image K/V projections on top of the shared text QKV stem."""
         super().__init__(dim, num_heads, window_size, qk_norm, eps)
 
         self.k_img = nn.Linear(dim, dim)
@@ -286,7 +283,7 @@ class WanI2VCrossAttention(WanSelfAttention):
 
 
 class MatrixGame2WanI2VCrossAttention(WanSelfAttention):
-    """Matrix game wan v cross attention implementation."""
+    """I2V cross-attention with an optional persistent KV cache (Matrix-Game 2)."""
 
     def forward(self, x, context, crossattn_cache=None):
         r"""
@@ -329,7 +326,7 @@ WAN_CROSSATTENTION_CLASSES = {
 
 
 class WanAttentionBlock(nn.Module):
-    """Wan attention block implementation."""
+    """Wan 2.1 transformer block: AdaLN self-attn, cross-attn, then AdaLN FFN."""
 
     def __init__(
         self,
@@ -342,17 +339,15 @@ class WanAttentionBlock(nn.Module):
         cross_attn_norm=False,
         eps=1e-6,
     ):
-        """Init.
-
-        Args:
-            cross_attn_type: The cross attn type.
-            dim: The dim.
-            ffn_dim: The ffn dim.
-            num_heads: The num heads.
-            window_size: The window size.
-            qk_norm: The qk norm.
-            cross_attn_norm: The cross attn norm.
-            eps: The eps.
+        """Args:
+            cross_attn_type: Key into ``WAN_CROSSATTENTION_CLASSES``.
+            dim: Hidden size.
+            ffn_dim: Feed-forward inner width.
+            num_heads: Attention heads.
+            window_size: Local window for self-attention.
+            qk_norm: RMSNorm Q/K in both attentions.
+            cross_attn_norm: If true, affine LayerNorm before cross-attn.
+            eps: Norm epsilon.
         """
         super().__init__()
         self.dim = dim
@@ -408,14 +403,7 @@ class WanAttentionBlock(nn.Module):
 
         # cross-attention & ffn function
         def cross_attn_ffn(x, context, context_lens, e):
-            """Cross attn ffn.
-
-            Args:
-                x: The x.
-                context: The context.
-                context_lens: The context lens.
-                e: The e.
-            """
+            """Second half of the block: text/image cross-attn then gated FFN."""
             x = x + self.cross_attn(self.norm3(x), context, context_lens)
             y = self.ffn(self.norm2(x).float() * (1 + e[4]) + e[3])
             with torch.amp.autocast("cuda", dtype=torch.float32):
@@ -427,16 +415,14 @@ class WanAttentionBlock(nn.Module):
 
 
 class Head(nn.Module):
-    """Head implementation."""
+    """AdaLN-modulated output projection from tokens to packed patch voxels."""
 
     def __init__(self, dim, out_dim, patch_size, eps=1e-6):
-        """Init.
-
-        Args:
-            dim: The dim.
-            out_dim: The out dim.
-            patch_size: The patch size.
-            eps: The eps.
+        """Args:
+            dim: Hidden size.
+            out_dim: VAE latent channels after unpatchify.
+            patch_size: ``(t, h, w)`` used to expand each token.
+            eps: LayerNorm epsilon.
         """
         super().__init__()
         self.dim = dim
@@ -466,15 +452,13 @@ class Head(nn.Module):
 
 
 class MLPProj(torch.nn.Module):
-    """Mlp proj implementation."""
+    """CLIP image-token projector for Wan 2.1 I2V / first-last-frame I2V."""
 
     def __init__(self, in_dim, out_dim, flf_pos_emb=False):
-        """Init.
-
-        Args:
-            in_dim: The in dim.
-            out_dim: The out dim.
-            flf_pos_emb: The flf pos emb.
+        """Args:
+            in_dim: CLIP width (officially 1280).
+            out_dim: DiT hidden size.
+            flf_pos_emb: Add the 514-token first/last-frame position table.
         """
         super().__init__()
 
@@ -489,11 +473,7 @@ class MLPProj(torch.nn.Module):
             self.emb_pos = nn.Parameter(torch.zeros(1, FIRST_LAST_FRAME_CONTEXT_TOKEN_NUMBER, 1280))
 
     def forward(self, image_embeds):
-        """Forward.
-
-        Args:
-            image_embeds: The image embeds.
-        """
+        """Project CLIP tokens; FLF mode reshapes two frames onto the pos table."""
         if hasattr(self, "emb_pos"):
             bs, n, d = image_embeds.shape
             image_embeds = image_embeds.view(-1, 2 * n, d)
@@ -503,9 +483,7 @@ class MLPProj(torch.nn.Module):
 
 
 class WanModel(nn.Module, NativeConfigMixin):
-    r"""
-    Wan diffusion backbone supporting both text-to-video and image-to-video.
-    """
+    r"""Official-layout Wan 2.1 T2V / I2V / FLF2V DiT (list-of-videos packing)."""
 
     ignore_for_config = ["patch_size", "cross_attn_norm", "qk_norm", "text_dim", "window_size"]
     _no_split_modules = ["WanAttentionBlock"]

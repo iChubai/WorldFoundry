@@ -1,0 +1,41 @@
+{
+  "id": "xiaomi-robotics-1",
+  "tagline": {
+    "en": "Xiaomi Robotics' vision-language-action policy — a Qwen3-VL backbone with a rectified-flow action head.",
+    "zh": "小米机器人团队的视觉-语言-动作策略——以 Qwen3-VL 为主干，配合 rectified-flow 动作头。"
+  },
+  "overview": {
+    "en": [
+      "Xiaomi-Robotics-1 (XR1) is a vision-language-action (VLA) policy from the Xiaomi Robotics team. It takes camera images plus a language instruction and predicts robot actions, pairing a Qwen3-VL vision-language backbone with a rectified-flow diffusion transformer that decodes the motions.",
+      "The policy predicts relative actions with its own preprocessing and normalization, and restores to roughly a 5-billion-parameter model. Precision is chosen automatically for your hardware — fp16 on Turing, bf16 on Ampere and newer, fp32 on CPU — and it runs with an in-tree exact-attention path, so no optional FlashAttention package is required.",
+      "In WorldFoundry you load the checkpoint locally and run the policy in-process; it emits an action trace for the robot rather than an image or video."
+    ],
+    "zh": [
+      "Xiaomi-Robotics-1（XR1）是小米机器人团队的视觉-语言-动作（VLA）策略。它接收相机图像加语言指令并预测机器人动作，以 Qwen3-VL 视觉-语言主干搭配一个 rectified-flow 扩散 transformer 来解码动作。",
+      "该策略预测相对动作，带有自己的预处理与归一化流程，还原后约为 50 亿参数规模。精度会依你的硬件自动选择——Turing 上用 fp16，Ampere 及更新架构用 bf16，CPU 上用 fp32——并采用内置的精确注意力路径运行，无需额外安装 FlashAttention。",
+      "在 WorldFoundry 中，你在本地加载 checkpoint 并在进程内运行该策略；它输出的是给机器人的动作轨迹，而非图像或视频。"
+    ]
+  },
+  "whenToUse": {
+    "en": "Use it when you want a Qwen3-VL-based VLA policy for robot manipulation that maps images and instructions to relative actions, with automatic precision selection across GPU generations.",
+    "zh": "当你想要一个基于 Qwen3-VL 的 VLA 策略用于机器人操作，把图像与指令映射为相对动作，并希望在不同 GPU 世代间自动选择精度时使用。"
+  },
+  "notFor": {
+    "en": "Not a video or image generator — its output is action traces. At multi-billion-parameter scale it needs adequate GPU memory, and the checkpoint must be staged locally.",
+    "zh": "它不是视频或图像生成器——输出为动作轨迹。作为数十亿参数规模的模型，运行需要足够的 GPU 显存，且 checkpoint 需放到本地。"
+  },
+  "highlights": {
+    "en": [
+      "Qwen3-VL backbone with a rectified-flow action head",
+      "Around 5B parameters, predicts relative robot actions",
+      "Automatic dtype selection: fp16 / bf16 / fp32 by hardware",
+      "Runs on an in-tree exact-attention path, no FlashAttention required"
+    ],
+    "zh": [
+      "Qwen3-VL 主干搭配 rectified-flow 动作头",
+      "约 50 亿参数，预测相对机器人动作",
+      "按硬件自动选择精度：fp16 / bf16 / fp32",
+      "使用内置精确注意力路径运行，无需 FlashAttention"
+    ]
+  }
+}

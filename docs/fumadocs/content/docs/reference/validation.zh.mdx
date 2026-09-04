@@ -19,7 +19,25 @@ description: 代码、文档、runner 和 benchmark facade 的发布门禁。
 | Benchmark runner | `zoo benchmark-run --mode official-validation` 或 `--mode official-run` | Official result import、official runtime 和 full-suite fairness gate。 |
 | Suite 或 matrix | `run --all-benchmarks --plan-only --json` | 规划选中的 cells，然后用可运行 benchmark 路径验证 artifacts。 |
 
+## 准备 CPU eval-core 门禁环境
+
+先从 PyTorch 官方 CPU wheel index 安装 Torch/Torchvision，再从正常 package index 安装已声明的测试 extra：
+
+```bash
+python -m pip install --index-url https://download.pytorch.org/whl/cpu \
+  "torch>=2.7,<2.12.0" "torchvision>=0.22,<0.27.0"
+python -m pip install -e ".[eval_core]"
+```
+
+拆成两条命令是有意为之：Python package metadata 不能指定 CPU 专用 wheel index；如果把整个 extra 都指向 PyTorch index，pytest、NumPy 等包反而可能不可见。
+
 ## 发布门禁
+
+轻量 editable checkout 在运行 core 门禁前，先安装声明的测试依赖：
+
+```bash
+python -m pip install -e ".[dev,eval_core]"
+```
 
 <Tabs items={['core', 'docs', 'model', 'benchmark']}>
   <Tab>
@@ -37,6 +55,7 @@ conda run -p "${WORLDFOUNDRY_UNIFIED_ENV_PREFIX}" worldfoundry-eval zoo benchmar
 
 ```bash
 cd docs/fumadocs
+npm run models:check
 npm run types:check
 npm run build
 curl -I http://localhost:8013/docs

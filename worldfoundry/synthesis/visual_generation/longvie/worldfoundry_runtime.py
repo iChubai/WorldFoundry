@@ -148,6 +148,40 @@ class LongVieOfficialRuntime:
             return torch.float32
         return torch.bfloat16
 
+    def _resolve_variant_weights(self) -> tuple[Path, Path | None]:
+        """Resolve weights without silently crossing LongVie generations."""
+
+        if self.variant == "longvie-1" and not self.control_weight_path and not self.weight_dir:
+            raise FileNotFoundError(
+                "LongVie-1 has no published default checkpoint. Provide an explicitly staged "
+                "first-generation control_weight_path or weight_dir, or use longvie-2 for the "
+                "public Vchitect/LongVie2 weights."
+            )
+
+        control_path = resolve_control_weight_path(
+            self.control_weight_path,
+            weight_dir=self.weight_dir,
+        )
+        if self.variant == "longvie-1":
+            if self.dit_weight_path:
+                raise ValueError(
+                    "LongVie-1 does not accept a DiT override; dit.safetensors belongs to LongVie2."
+                )
+            if (control_path.parent / "dit.safetensors").is_file():
+                raise ValueError(
+                    "LongVie-1 cannot use a checkpoint directory containing LongVie2's "
+                    "dit.safetensors. Use model_id='longvie-2' or provide an explicit "
+                    "first-generation control-only checkpoint."
+                )
+            return control_path, None
+
+        dit_path = resolve_dit_weight_path(
+            self.dit_weight_path,
+            weight_dir=self.weight_dir,
+            required=self.variant == "longvie-2",
+        )
+        return control_path, dit_path
+
     def load(self) -> Any:
         if self.pipe is not None:
             return self.pipe
@@ -212,12 +246,7 @@ class LongVieOfficialRuntime:
         dtype = self._torch_dtype()
         base_dir = resolve_wan21_i2v_dir(self.wan_base_dir)
         tokenizer_path = resolve_wan21_tokenizer_dir(self.tokenizer_dir)
-        control_path = resolve_control_weight_path(self.control_weight_path, weight_dir=self.weight_dir)
-        dit_path = resolve_dit_weight_path(
-            self.dit_weight_path,
-            weight_dir=self.weight_dir,
-            required=self.variant == "longvie-2",
-        )
+        control_path, dit_path = self._resolve_variant_weights()
         dit_files = sorted(base_dir.glob("diffusion_pytorch_model*.safetensors"))
         if not dit_files:
             raise FileNotFoundError(f"LongVie Wan DiT shards not found in {base_dir}")

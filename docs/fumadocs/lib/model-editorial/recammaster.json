@@ -1,0 +1,41 @@
+{
+  "id": "recammaster",
+  "tagline": {
+    "en": "Re-render an existing video from a new camera trajectory, built on Wan2.1.",
+    "zh": "以全新相机轨迹重新渲染已有视频，基于 Wan2.1 构建。"
+  },
+  "overview": {
+    "en": [
+      "ReCamMaster performs camera-controlled video re-rendering: give it a single input video and a target camera trajectory, and it generates the same scene as if shot from a different camera path. It comes from the Kling team at Kuaishou together with academic collaborators.",
+      "It's built on Wan2.1 — the runtime uses a ReCamMaster checkpoint alongside Wan2.1-T2V-1.3B — and WorldFoundry exposes the pipeline, operator, and synthesis runtime in-tree under the Kling namespace. The main route is a video-to-video demo driven by a camera trajectory.",
+      "In WorldFoundry you run the camera-controlled re-rendering route with local ReCamMaster and Wan assets. Runtime execution needs Wan2.1, the ReCamMaster checkpoint, torchvision, and CUDA in place."
+    ],
+    "zh": [
+      "ReCamMaster 做的是相机控制的视频重渲染：给它一段输入视频和一条目标相机轨迹，它会生成同一场景在另一条相机路径下拍摄的效果。它出自快手 Kling 团队与学术合作者。",
+      "它构建在 Wan2.1 之上——运行时使用 ReCamMaster checkpoint 搭配 Wan2.1-T2V-1.3B——WorldFoundry 在 Kling 命名空间下内置了对应的 pipeline、算子与合成运行时。主路径是由相机轨迹驱动的视频到视频演示。",
+      "在 WorldFoundry 中，你用本地 ReCamMaster 与 Wan 资产运行相机控制重渲染路径。运行时需要备好 Wan2.1、ReCamMaster checkpoint、torchvision 与 CUDA。"
+    ]
+  },
+  "whenToUse": {
+    "en": "Use it when you have an existing video and want to re-render it along a new camera path — for camera-trajectory changes and video-to-video re-shooting.",
+    "zh": "当你已有一段视频、想沿新的相机路径重新渲染时使用——用于相机轨迹变化与视频到视频的重拍。"
+  },
+  "notFor": {
+    "en": "Not a from-scratch text-to-video generator; it re-renders an input video. Real inference is checkpoint- and GPU-gated and needs Wan2.1 plus the ReCamMaster checkpoint.",
+    "zh": "它不是从零开始的文生视频生成器；它重渲染一段输入视频。真实推理受 checkpoint 与 GPU 限制，需要 Wan2.1 加 ReCamMaster checkpoint。"
+  },
+  "highlights": {
+    "en": [
+      "Camera-controlled re-rendering of an existing video",
+      "Built on Wan2.1 (uses Wan2.1-T2V-1.3B)",
+      "Video-to-video driven by a target camera trajectory",
+      "From the Kling team at Kuaishou with academic collaborators"
+    ],
+    "zh": [
+      "对已有视频进行相机控制的重渲染",
+      "基于 Wan2.1 构建（使用 Wan2.1-T2V-1.3B）",
+      "由目标相机轨迹驱动的视频到视频",
+      "出自快手 Kling 团队与学术合作者"
+    ]
+  }
+}

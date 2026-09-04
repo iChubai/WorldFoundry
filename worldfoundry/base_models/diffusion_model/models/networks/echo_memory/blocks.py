@@ -1,4 +1,17 @@
-"""Native Wan blocks used by Echo-Memory checkpoint recipes."""
+"""Native Wan residual blocks used by Echo-Memory checkpoint recipes.
+
+Echo-Memory extends the packed Wan DiT with optional action embeddings
+and temporal memory slots declared by an immutable recipe.  Video tokens
+stay ``B (F·HW) C``; 12-D relative-RT actions are ``B F 12`` and are
+broadcast over each spatial grid.  Spatial-grid recipes pool context
+frames into a fixed token set and inject them via text concat or gated
+cross-attention.
+
+State-space variants scan along latent time independently per spatial
+token (block-wise SSM) or apply a depthwise temporal convolution
+(VideoSSM hybrid).  Modules are selected by
+:class:`~.schema.EchoMemoryRecipe`, not by runtime flags.
+"""
 
 from __future__ import annotations
 
@@ -28,6 +41,7 @@ class CameraPoseEmbedding(nn.Module):
         nn.init.zeros_(self.proj.bias)
 
     def forward(self, actions: torch.Tensor) -> torch.Tensor:
+        """Project ``[B, F, 12]`` relative-RT actions to ``[B, F, dim]``."""
         return self.proj(actions)
 
 
@@ -49,6 +63,7 @@ class EchoTemporalSelfAttention(nn.Module):
         self.norm_k = RMSNorm(self.dim, eps=eps)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
+        """Self-attend a temporal sequence ``[B·HW, F, C]`` (no RoPE)."""
         batch, sequence = x.shape[:2]
         q = self.norm_q(self.q(x))
         k = self.norm_k(self.k(x))
@@ -68,6 +83,7 @@ class BlockWiseStateSpaceMemory(nn.Module):
         self.gate = nn.Parameter(torch.zeros(1))
 
     def forward(self, x: torch.Tensor, *, frames: int) -> torch.Tensor:
+        """Scan ``B (F·HW) C`` along F independently per spatial token."""
         batch, tokens, dim = x.shape
         if frames <= 1 or dim != self.dim or tokens % frames:
             return x
@@ -109,6 +125,7 @@ class VideoSSMHybridMemory(nn.Module):
         self.gate = nn.Parameter(torch.zeros(1))
 
     def forward(self, x: torch.Tensor, *, frames: int) -> torch.Tensor:
+        """Depthwise temporal conv over the F axis of ``B (F·HW) C`` tokens."""
         batch, tokens, dim = x.shape
         if frames <= 1 or dim != self.dim or tokens % frames:
             return x
@@ -142,6 +159,7 @@ class SpatialGridMemory(nn.Module):
         height: int,
         width: int,
     ) -> torch.Tensor:
+        """Pool context tokens to ``[B, num_tokens, C]`` via a learned spatial grid."""
         batch, tokens, dim = context_tokens.shape
         if dim != self.dim:
             raise ValueError(f"spatial memory dim mismatch: input={dim}, module={self.dim}")
@@ -165,6 +183,7 @@ class SpatialCrossAttentionReadout(nn.Module):
         self.gate = nn.Parameter(torch.zeros(1))
 
     def forward(self, target: torch.Tensor, memory: torch.Tensor) -> torch.Tensor:
+        """Gated cross-attn: target queries attend to spatial memory tokens."""
         delta, _ = self.attn(target, memory, memory, need_weights=False)
         return target + torch.tanh(self.gate) * delta
 
@@ -206,6 +225,7 @@ class EchoWanAttentionBlock(DiTBlock):
         x: torch.Tensor,
         memory_context: Mapping[str, Any],
     ) -> torch.Tensor:
+        """Add per-frame 12D action embeddings, broadcast over ``H·W`` tokens."""
         frames, height, width = _memory_grid_size(memory_context)
         actions = memory_context.get("actions")
         if actions is None:
@@ -233,6 +253,7 @@ class EchoWanAttentionBlock(DiTBlock):
         original_x: torch.Tensor,
         memory_context: Mapping[str, Any],
     ) -> torch.Tensor:
+        """Optional temporal self-attn over F after reshaping ``B (F·HW) C``."""
         module = getattr(self, "self_attn_with_action", None)
         if module is None:
             return action_x
@@ -250,6 +271,7 @@ class EchoWanAttentionBlock(DiTBlock):
         x: torch.Tensor,
         memory_context: Mapping[str, Any],
     ) -> torch.Tensor:
+        """Run the recipe's SSM / VideoSSM branch when those modules exist."""
         block_ssm = getattr(self, "block_wise_ssm", None)
         video_ssm = getattr(self, "videossm_hybrid", None)
         if block_ssm is None and video_ssm is None:
@@ -270,6 +292,7 @@ class EchoWanAttentionBlock(DiTBlock):
         freqs: torch.Tensor,
         memory_context: Mapping[str, Any] | None = None,
     ) -> torch.Tensor:
+        """Wan residual block plus Echo action / SSM slots on ``B (F·HW) C``."""
         if memory_context is None:
             raise ValueError("EchoWanAttentionBlock requires memory_context")
         has_seq = len(t_mod.shape) == 4
@@ -291,6 +314,7 @@ class EchoWanAttentionBlock(DiTBlock):
 
 
 def _memory_grid_size(memory_context: Mapping[str, Any]) -> tuple[int, int, int]:
+    """Read the declared ``(frames, height, width)`` latent grid from memory_context."""
     values = tuple(int(value) for value in memory_context.get("grid_size", ()))
     if len(values) != 3 or min(values) <= 0:
         raise ValueError("Echo memory_context requires a positive (frames, height, width) grid_size")
@@ -332,6 +356,7 @@ class EchoWanMemoryAdapter(nn.Module):
         grid_size: tuple[int, int, int],
         memory_context: Mapping[str, Any] | None,
     ) -> tuple[torch.Tensor, torch.Tensor, Mapping[str, Any] | None]:
+        """Optionally pool context frames into spatial memory and inject into text/video."""
         if memory_context is None:
             raise ValueError("Echo recipes require memory_context")
         frames, height, width = (int(value) for value in grid_size)

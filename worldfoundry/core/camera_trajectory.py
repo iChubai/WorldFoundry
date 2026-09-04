@@ -1,4 +1,26 @@
-"""Reusable camera-trajectory parsing and action-token conversion."""
+"""Reusable camera-trajectory parsing and action-token conversion.
+
+World models consume camera motion in several incompatible encodings:
+held WASD/IJKL keys, compact ``w*4,j*2`` strings, Wan 19-D pose rows,
+GEN3C named paths, 6-D AdaLN deltas, Echo 12-D RT, and 81-class
+WorldPlay labels. This module converts between those encodings without
+importing a model family.
+
+Groups:
+
+- **Rollout** — :func:`rollout_wasd_camera_actions` (held keys → c2w),
+  :func:`parse_camera_trajectory` / :func:`camera_trajectory_view_matrices`
+  / :func:`camera_trajectory_tensors` (string → w2c + intrinsics).
+- **Named / planar** — :func:`named_camera_trajectory_tensors` (GEN3C
+  left/right/zoom/orbit), :func:`generate_planar_camera_coordinates`
+  plus :func:`wan_camera_coordinates_to_plucker`.
+- **Action tokens** — :func:`camera_poses_to_adaln_actions`,
+  :func:`camera_poses_to_relative_rt12_actions`,
+  :func:`discretize_camera_poses_to_actions`,
+  :func:`camera_trajectory_action_labels`.
+
+OpenCV convention throughout: +X right, +Y down, +Z forward.
+"""
 
 from __future__ import annotations
 
@@ -33,13 +55,34 @@ _TRAJECTORY_ACTION_LABELS = {
     "k": (0, 4),
 }
 
+# Studio / catalog tokens used by SANA-WM and other WASD world models.
+_NAMED_WASD_ACTIONS = {
+    "forward": "w",
+    "back": "s",
+    "backward": "s",
+    "left": "a",
+    "right": "d",
+    "camera_up": "i",
+    "camera_down": "k",
+    "camera_l": "j",
+    "camera_left": "j",
+    "camera_r": "l",
+    "camera_right": "l",
+}
+
+# ──────────────────────────────────────────────────────────────────────────
+# Rollout — held WASD/IJKL keys or compact trajectory strings → poses
+# ──────────────────────────────────────────────────────────────────────────
+
 
 def _rotation_x(theta: float) -> np.ndarray:
+    """Right-handed rotation about +X (pitch); used by WASD rollout, not by Plücker encoding."""
     cosine, sine = np.cos(theta), np.sin(theta)
     return np.asarray([[1, 0, 0], [0, cosine, -sine], [0, sine, cosine]], dtype=np.float64)
 
 
 def _rotation_y(theta: float) -> np.ndarray:
+    """Right-handed rotation about +Y (yaw)."""
     cosine, sine = np.cos(theta), np.sin(theta)
     return np.asarray([[cosine, 0, sine], [0, 1, 0], [-sine, 0, cosine]], dtype=np.float64)
 
@@ -61,9 +104,11 @@ def rollout_wasd_camera_actions(
 
     allowed = frozenset("wasdijkl")
     if isinstance(actions, str):
-        per_frame: list[str] = []
         cleaned = "".join(actions.replace("，", ",").split())
-        if cleaned:
+        if cleaned and "-" not in cleaned:
+            actions = [part for part in cleaned.split(",") if part]
+        elif cleaned:
+            per_frame: list[str] = []
             for segment in cleaned.split(","):
                 if "-" not in segment:
                     raise ValueError(
@@ -75,8 +120,11 @@ def rollout_wasd_camera_actions(
                 per_frame.extend([keys] * int(raw_duration))
         else:
             per_frame = []
-    else:
-        per_frame = [str(value).strip().lower() for value in actions]
+    if not isinstance(actions, str):
+        per_frame = [
+            _NAMED_WASD_ACTIONS.get(str(value).strip().lower(), str(value).strip().lower())
+            for value in actions
+        ]
 
     target_transitions = None if num_frames is None else max(int(num_frames) - 1, 0)
     if target_transitions is not None:
@@ -127,7 +175,17 @@ def parse_camera_trajectory(
     translation_step: float = 0.08,
     rotation_step_degrees: float = 3.0,
 ) -> list[dict[str, float]]:
-    """Parse ``w*4,j*2`` camera controls into per-frame motions."""
+    """Parse ``w*4,j*2`` camera controls into per-frame motion dicts.
+
+    Each comma-separated segment is a direction and optional repeat
+    (``w``, ``w*19``, ``left``, ``dn``). Directions include translation
+    (``w/s/a/d/u/dn``) and rotation (``j/l/i/k`` plus named
+    left/right/up/down). ``z`` is a no-op frame.
+
+    Returns:
+        One dict per output frame with a subset of ``forward``,
+        ``right``, ``up``, ``yaw``, ``pitch`` in metres / radians.
+    """
 
     rotation_step = np.radians(float(rotation_step_degrees))
     motions = {
@@ -171,7 +229,15 @@ def camera_trajectory_view_matrices(
     translation_step: float = 0.08,
     rotation_step_degrees: float = 3.0,
 ) -> np.ndarray:
-    """Return OpenCV world-to-camera matrices, including the identity frame."""
+    """Return OpenCV world-to-camera matrices, including the identity frame.
+
+    Applies :func:`parse_camera_trajectory` (or a pre-parsed motion
+    sequence) to an identity c2w, then inverts each pose so callers that
+    expect w2c (Wan / GEN3C loaders) can use the result directly.
+
+    Returns:
+        ``[T, 4, 4]`` float32 world-to-camera matrices.
+    """
 
     motions = (
         parse_camera_trajectory(
@@ -209,7 +275,16 @@ def camera_trajectory_tensors(
     device: Any = "cpu",
     dtype: Any = None,
 ):
-    """Return batched view matrices and normalized camera intrinsics."""
+    """Return batched view matrices and normalized camera intrinsics.
+
+    Wraps :func:`camera_trajectory_view_matrices` and repeats a single
+    pinhole intrinsic ``[[fx, 0, cx], [0, fy, cy], [0, 0, 1]]`` across
+    time. Defaults match the historical WorldPlay / SANA-WM cameras.
+
+    Returns:
+        ``(views, intrinsics)`` with shapes ``[1, T, 4, 4]`` and
+        ``[1, T, 3, 3]`` on *device*.
+    """
 
     import torch
 
@@ -225,6 +300,11 @@ def camera_trajectory_tensors(
         torch.as_tensor(view_matrices, dtype=tensor_dtype, device=device).unsqueeze(0),
         torch.as_tensor(intrinsics, dtype=tensor_dtype, device=device).unsqueeze(0),
     )
+
+
+# ──────────────────────────────────────────────────────────────────────────
+# Named / planar paths — GEN3C left/right/zoom/orbit and Wan Plücker
+# ──────────────────────────────────────────────────────────────────────────
 
 
 def generate_planar_camera_coordinates(
@@ -254,7 +334,12 @@ def generate_planar_camera_coordinates(
         0,
     ),
 ) -> list[list[float]]:
-    """Create the compact camera rows used by Wan camera-control checkpoints."""
+    """Create the compact camera rows used by Wan camera-control checkpoints.
+
+    Each row is the 19-D layout ``[id, fx, fy, cx, cy, 0, 0, *w2c_3x4]``.
+    Planar directions translate the camera along world X (left/right)
+    and Y (up/down) by *speed* per frame, starting from *origin*.
+    """
 
     if length <= 0:
         raise ValueError("length must be positive")
@@ -294,7 +379,13 @@ def wan_camera_coordinates_to_plucker(
     original_height: int = 720,
     device: Any = "cpu",
 ):
-    """Convert Wan camera rows to ``[T,H,W,6]`` Plücker features."""
+    """Convert Wan 19-D camera rows to ``[T, H, W, 6]`` Plücker features.
+
+    Rescales normalized fx/fy for letterboxed resize from
+    ``original_width x original_height`` to ``width x height``, recenters
+    poses so frame 0 is the identity, then calls
+    :func:`worldfoundry.core.geometry.ray_condition`.
+    """
 
     import torch
 
@@ -414,6 +505,11 @@ def named_camera_trajectory_tensors(
     return views, intrinsics
 
 
+# ──────────────────────────────────────────────────────────────────────────
+# Action tokens — AdaLN deltas, Echo RT12, WorldPlay 81-class labels
+# ──────────────────────────────────────────────────────────────────────────
+
+
 def camera_poses_to_adaln_actions(
     camera_to_world: Any,
     *,
@@ -525,7 +621,17 @@ def camera_poses_to_relative_rt12_actions(
 
 
 def select_adaln_actions(actions: Any, latent_indices: Any, *, device: Any = None, dtype: Any = None):
-    """Select and clamp latent-rate action rows for a rollout segment."""
+    """Select and clamp latent-rate action rows for a rollout segment.
+
+    Args:
+        actions: ``[B, T, 6]`` AdaLN action tensor (or array).
+        latent_indices: 1-D index list; values are clamped into
+            ``[0, T-1]`` so a short clip does not index-error.
+        device / dtype: Optional relocation of the gathered rows.
+
+    Returns:
+        ``[B, len(indices), 6]`` on *device*.
+    """
 
     import torch
 
@@ -540,7 +646,12 @@ def select_adaln_actions(actions: Any, latent_indices: Any, *, device: Any = Non
 
 
 def one_hot_camera_actions_to_labels(one_hot: Any) -> np.ndarray:
-    """Map forward/backward/left/right one-hot rows to labels 0–8."""
+    """Map forward/backward/left/right one-hot rows to labels 0–8.
+
+    Combinations of the four translation bits become the WorldPlay
+    9-way translation class (idle plus four cardinals plus four
+    diagonals). Unknown bit patterns map to 0 (idle).
+    """
 
     rows = np.asarray(one_hot)
     if rows.ndim != 2 or rows.shape[1] != 4:
@@ -549,7 +660,14 @@ def one_hot_camera_actions_to_labels(one_hot: Any) -> np.ndarray:
 
 
 def discretize_camera_poses_to_actions(view_matrices: Any) -> np.ndarray:
-    """Derive the 81-class WorldPlay action labels from world-to-camera poses."""
+    """Derive the 81-class WorldPlay action labels from world-to-camera poses.
+
+    Consecutive c2w relatives are thresholded into 4-bit translation
+    (angle to +Z / +X) and 4-bit rotation (yaw/pitch degrees). Each
+    nibble is mapped through :func:`one_hot_camera_actions_to_labels`
+    and combined as ``translation * 9 + rotation``. Frame 0 is idle.
+    Requires SciPy only on this path.
+    """
 
     from scipy.spatial.transform import Rotation
 
@@ -587,7 +705,13 @@ def discretize_camera_poses_to_actions(view_matrices: Any) -> np.ndarray:
 
 
 def camera_trajectory_action_labels(trajectory: str, num_frames: int):
-    """Convert a compact trajectory string to a padded int64 Torch tensor."""
+    """Convert a compact trajectory string to a padded int64 Torch tensor.
+
+    Parses ``w*4,j*2``-style segments via :data:`_TRAJECTORY_ACTION_LABELS`
+    and writes labels into ``result[1:]``, leaving frame 0 as idle.
+    Shorter strings are padded with zeros; longer ones are truncated to
+    *num_frames*.
+    """
 
     import torch
 

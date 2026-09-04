@@ -1,5 +1,13 @@
 # Copyright 2024-2025 The Alibaba Wan Team Authors. All rights reserved.
-"""Module for base_models -> diffusion_model -> video -> wan -> wan_2p2 -> configs -> wan_animate_14B.py functionality."""
+"""Official Wan 2.2 Animate 14B EasyDict (pose / face / relight LoRA).
+
+40-layer 5120-dim DiT on Wan2.1 VAE, plus CLIP, a face encoder, a
+512-d motion encoder, and ``relighting_lora.ckpt``.  Inference uses
+77 frames at 30 fps, shift 5, CFG 1.0.
+
+The Chinese default prompt is a placeholder; runners overwrite it.
+Architecture width matches I2V A14B; extra towers are Animate-only.
+"""
 
 from easydict import EasyDict
 

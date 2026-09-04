@@ -8,6 +8,7 @@ availability: open_source_noncommercial
 provider: official_repo
 license: cc-by-nc-sa-4.0
 official_sources:
+  paper: https://arxiv.org/abs/2503.06669
   github:
     url: https://github.com/OpenDriveLab/AgiBot-World
     head_sha: 98f136ea6b345db1a08451a2f543d67c1789a809

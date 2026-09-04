@@ -1,3 +1,12 @@
+"""LTX video / audio latent patchify and unpatchify.
+
+:class:`VideoLatentPatchifier` rearranges ``B C (F p1) (H p2) (W p3)``
+into ``B (F H W) (C p1 p2 p3)`` tokens for the DiT.  Temporal patch size
+is always 1; spatial patch size is typically 1 for LTX-2.  :class:`AudioPatchifier`
+does the 1-D analogue.  Also exports pixel-coordinate helpers used for
+RoPE and first-frame injection.  Implements :class:`~.protocols.Patchifier`.
+"""
+
 import math
 from typing import Optional, Tuple
 
@@ -13,6 +22,8 @@ from worldfoundry.base_models.diffusion_model.models.representations.ltx.types i
 
 
 class VideoLatentPatchifier(Patchifier):
+    """Flatten a BCTHW video latent into DiT tokens (temporal patch size 1)."""
+
     def __init__(self, patch_size: int):
         # Patch sizes for video latents.
         self._patch_size = (

@@ -8,6 +8,12 @@ from typing import Any, Mapping
 from worldfoundry.evaluation.api.json_contract import JsonContract, require_mapping, to_plain
 from worldfoundry.evaluation.utils import load_manifest
 
+from .runner_kinds import (
+    IN_TREE_EXECUTION_KINDS,
+    IN_TREE_RESULT_NORMALIZER_KINDS,
+    normalize_runner_kind,
+)
+
 _LOGGER = logging.getLogger(__name__)
 _WARNED_UNRECOGNIZED_STATUSES: set[tuple[str, str]] = set()
 
@@ -92,20 +98,17 @@ _PENDING_VERIFICATION_ALIASES = frozenset({"pending_runner", "pending_validation
 # assert an in-tree runtime surface and map to ``in_tree_runtime``.
 _IN_TREE_NORMALIZER_OPEN_SOURCE_ALIASES = frozenset(
     {
-        "in_tree_result_importer",
         "in_tree_result_importer_and_bounded_aggregator",
         "in_tree_result_importer_and_bounded_caption_qa",
         "in_tree_scorer_with_external_probe_checkout",
     }
-)
+) | IN_TREE_RESULT_NORMALIZER_KINDS
 _IN_TREE_RUNTIME_OPEN_SOURCE_ALIASES = frozenset(
     {
-        "in_tree_official_runtime",
-        "in_tree_official_source",
         "in_tree_clean_reimplementation",
         "in_tree_runtime_bounded_official_component_verified",
     }
-)
+) | IN_TREE_EXECUTION_KINDS
 # Maturity states describing an implemented-but-not-fully-verified runner
 # surface.  Bounded/component verification intentionally does NOT promote to
 # ``verified_runner`` (partial evidence must not claim full verification).
@@ -973,7 +976,10 @@ class BenchmarkRunnerSpec(JsonSerializable):
         object.__setattr__(self, "env", _to_plain(self.env) if isinstance(self.env, Mapping) else {})
         object.__setattr__(self, "assets", _to_plain(self.assets) if isinstance(self.assets, Mapping) else {})
         object.__setattr__(self, "dependency_profile", _optional_str(self.dependency_profile))
-        object.__setattr__(self, "runtime", _to_plain(self.runtime) if isinstance(self.runtime, Mapping) else {})
+        runtime = dict(_to_plain(self.runtime)) if isinstance(self.runtime, Mapping) else {}
+        if "kind" in runtime:
+            runtime["kind"] = normalize_runner_kind(runtime["kind"], context="BenchmarkRunnerSpec.runtime.kind")
+        object.__setattr__(self, "runtime", runtime)
         object.__setattr__(self, "expected_artifacts", _tuple_of_artifacts(self.expected_artifacts))
         object.__setattr__(
             self,

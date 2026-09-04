@@ -1,14 +1,26 @@
+"""DualCamCtrl gated 3D residual fusion (main tokens × control tokens).
+
+Used by :class:`WanControlNet` when ``use_gate_3d_linear`` is set.
+Packed ``[B, F*H*W, C]`` streams are reshaped to 3D, reduced, mixed with
+depthwise temporal convs, then sigmoid-gated back onto the main stream.
+``proj_out`` is zero-initialized so the adapter starts as an identity.
+
+Camera-control fusion only.  No VACE, action, causal, or linear attn.
+"""
+
 import torch
 import torch.nn as nn
 from einops import rearrange
 
 
 class ResidualFusion3D_Gating(nn.Module):
+    """Per-voxel gated fusion of main and control hidden states."""
+
     def __init__(self, C, reduction=4):
         super().__init__()
         mid = max(8, C // reduction)
 
-        # 对 main / control 做 1x1x1 降维
+        # 1x1x1 channel reduction for the main and control volumes.
         self.main_embed = nn.Conv3d(C, mid, kernel_size=1, bias=False)
         self.control_embed = nn.Conv3d(C, mid, kernel_size=1, bias=False)
 
@@ -59,7 +71,7 @@ class ResidualFusion3D_Gating(nn.Module):
         B = x.shape[0]
         C = x.shape[-1]
 
-        # reshape到3D格式
+        # Fold packed tokens back to a 3D volume for the conv mixer.
         x = rearrange(x, "b (f h w) c -> b c f h w", f=f, h=h, w=w)
         r = rearrange(r, "b (f h w) c -> b c f h w", f=f, h=h, w=w)
 
@@ -85,7 +97,6 @@ class ResidualFusion3D_Gating(nn.Module):
 
         v = self.proj_out(v)  # zero-init projection (residual safe)
 
-        # reshape回 [B,FHW,C]
         v = rearrange(v, "b c f h w -> b (f h w) c")
         return v
 

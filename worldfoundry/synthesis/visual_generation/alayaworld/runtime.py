@@ -359,7 +359,7 @@ class AlayaWorldRuntime:
         weight_paths = tuple(str(path) for path in sorted(model_folder.glob("model-*.safetensors")))
         if not weight_paths:
             raise FileNotFoundError(f"no Gemma safetensors shards found below {model_folder}")
-        policy = RuntimePolicy(device=self.device, dtype=self.dtype)
+        policy = self._prompt_runtime_policy(device=self.device, dtype=self.dtype)
         gemma = load_ltx_gemma_module(CheckpointSpec(source=weight_paths), policy)
         processor = load_ltx_embedding_processor_module(
             CheckpointSpec(source=self.checkpoint_path),
@@ -393,6 +393,13 @@ class AlayaWorldRuntime:
         del gemma, processor, tokenizer, encoded, output, input_ids, attention_mask
         _cleanup_cuda()
         return context
+
+    @staticmethod
+    def _prompt_runtime_policy(*, device: torch.device, dtype: torch.dtype) -> RuntimePolicy:
+        """Keep the 12B Gemma prompt encoder below the generation VRAM peak."""
+
+        del device
+        return RuntimePolicy(device=torch.device("cpu"), dtype=dtype)
 
     def _build_vae(self):
         checkpoint = CheckpointSpec(source=self.checkpoint_path)
@@ -714,6 +721,12 @@ class AlayaWorldRuntime:
                 intrinsic=intrinsic,
                 target_latent_start=target_base,
             )
+            # DA3 is only needed again while appending generated RGB frames.
+            # Keeping it on CUDA here overlaps it with the Alaya transformer,
+            # history encoder and both VAE halves, which exceeds an 80GB card.
+            # Preserve the exact DA3 depth path but run later updates from CPU.
+            spatial.offload_depth_model()
+            _cleanup_cuda()
 
         transformer, history_encoder = self._build_transformer()
         context = context.to(device=self.device, dtype=self.dtype)

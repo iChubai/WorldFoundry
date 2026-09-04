@@ -36,6 +36,8 @@ _CALL_RUNTIME_ALIASES = {
     "sample_steps": "ddim_steps",
     "infer_steps": "ddim_steps",
     "sampling_steps": "ddim_steps",
+    "guidance_scale": "unconditional_guidance_scale",
+    "cfg_scale": "unconditional_guidance_scale",
 }
 
 

@@ -8,6 +8,8 @@ aliases:
 availability: open_source
 provider: official_repo
 official_sources:
+  paper: https://arxiv.org/abs/2410.24164
+  project_page: https://www.physicalintelligence.company/blog/pi0
   github:
     head_sha: c23745b5ad24e98f66967ea795a07b2588ed6c79
     url: https://github.com/Physical-Intelligence/openpi

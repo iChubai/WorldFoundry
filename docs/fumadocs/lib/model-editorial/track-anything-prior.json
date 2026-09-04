@@ -1,0 +1,41 @@
+{
+  "id": "track-anything-prior",
+  "tagline": {
+    "en": "Segment and Track Anything — a video segmentation and object-tracking prior combining SAM, GroundingDINO, and AOT.",
+    "zh": "Segment and Track Anything——结合 SAM、GroundingDINO 与 AOT 的视频分割与目标跟踪先验。"
+  },
+  "overview": {
+    "en": [
+      "Segment and Track Anything is a video segmentation and object-tracking system, used in WorldFoundry as a perception prior. Rather than generating media, it finds objects in a video and follows them across frames, producing masks and tracks.",
+      "It combines several well-known components: SAM for segmentation, GroundingDINO for text-grounded detection (so you can name what to segment), and AOT/DeAOT for propagating masks through a video. That mix lets it segment and track objects with or without explicit prompts.",
+      "In WorldFoundry, it is exposed through the shared geometry-prior contract — feed it a video and it returns segmentation and tracking outputs that downstream 3D/4D and generation steps can build on."
+    ],
+    "zh": [
+      "Segment and Track Anything 是一个视频分割与目标跟踪系统,在 WorldFoundry 中用作感知先验。它不生成媒体,而是在视频中找出目标并跨帧跟随,产出掩码与轨迹。",
+      "它结合了几个知名组件:用于分割的 SAM、用于文本 grounding 检测的 GroundingDINO(让你可以用名称指定要分割的对象),以及用于在视频中传播掩码的 AOT/DeAOT。这一组合让它在有或没有显式提示的情况下都能分割并跟踪目标。",
+      "在 WorldFoundry 中,它通过共享的几何先验契约暴露——输入一段视频,它返回分割与跟踪结果,供下游的 3D/4D 与生成步骤使用。"
+    ]
+  },
+  "whenToUse": {
+    "en": "Use this prior when you need to segment and track objects through a video — masks and object trajectories to feed downstream 3D/4D or generation pipelines.",
+    "zh": "当你需要在视频中分割并跟踪目标——获得掩码与目标轨迹以供下游 3D/4D 或生成流程使用时,可以使用这个先验。"
+  },
+  "notFor": {
+    "en": "Not a generative model — it outputs segmentation and tracks, not new video or images. Real inference needs its component checkpoints and assets available.",
+    "zh": "它不是生成模型——输出的是分割与轨迹,而非新的视频或图像。真正推理需要准备好其各组件的 checkpoint 与资产。"
+  },
+  "highlights": {
+    "en": [
+      "Video object segmentation and tracking prior",
+      "Combines SAM, GroundingDINO, and AOT/DeAOT",
+      "Text-grounded detection lets you name what to segment",
+      "Exposed through the shared geometry-prior contract"
+    ],
+    "zh": [
+      "视频目标分割与跟踪先验",
+      "结合 SAM、GroundingDINO 与 AOT/DeAOT",
+      "文本 grounding 检测,可用名称指定分割对象",
+      "通过共享的几何先验契约暴露"
+    ]
+  }
+}

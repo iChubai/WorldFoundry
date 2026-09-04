@@ -1,0 +1,41 @@
+{
+  "id": "scope",
+  "tagline": {
+    "en": "An action-conditioned interactive world model, built as a Wan network variant.",
+    "zh": "动作条件的交互式世界模型，作为 Wan 网络变体构建。"
+  },
+  "overview": {
+    "en": [
+      "SCOPE is an interactive, game-oriented world model with action conditioning. From a starting image and a stream of actions, it generates video that responds to what you do, framed as an action-conditioned image-to-video model.",
+      "In WorldFoundry its action conditioning is integrated as a canonical Wan network variant, reusing the shared Wan encoder, VAE, loader, scheduler, and staged runner — only its action-conditioned network stays model-specific. The large model weights remain external HuggingFace assets injected via a model directory.",
+      "In WorldFoundry you run the image-action-to-video route with staged SCOPE weights, an input image, and an action sequence to synthesize the interactive result."
+    ],
+    "zh": [
+      "SCOPE 是一个面向游戏、带动作条件的交互式世界模型。它从一张起始图片和一串动作出发，生成对你操作作出响应的视频，定位为动作条件的图生视频模型。",
+      "在 WorldFoundry 中，它的动作条件被集成为一个标准的 Wan 网络变体，复用共享的 Wan 编码器、VAE、加载器、调度器与分阶段 runner——只有其动作条件网络保持模型专属。大模型权重仍作为外部 HuggingFace 资产，通过模型目录注入。",
+      "在 WorldFoundry 中，你用准备好的 SCOPE 权重、一张输入图片和一段动作序列运行图像-动作到视频路径，即可合成交互式结果。"
+    ]
+  },
+  "whenToUse": {
+    "en": "Use it when you want an action-conditioned interactive world model — generating video that reacts to an action stream from a starting image.",
+    "zh": "当你想要一个动作条件的交互式世界模型时使用——从起始图片出发、生成对动作序列作出反应的视频。"
+  },
+  "notFor": {
+    "en": "Not for offline text-to-video; it's action-conditioned and needs an input image and actions. The model weights are external assets you stage yourself, and it requires the run to be explicitly enabled for execution.",
+    "zh": "不适合离线文生视频；它是动作条件的，需要输入图片和动作。模型权重为需自行准备的外部资产，且需显式开启执行才能运行。"
+  },
+  "highlights": {
+    "en": [
+      "Action-conditioned interactive world model",
+      "Integrated as a canonical Wan network variant",
+      "Reuses shared Wan encoder, VAE, loader, and scheduler",
+      "Image-action-to-video generation"
+    ],
+    "zh": [
+      "动作条件的交互式世界模型",
+      "集成为标准的 Wan 网络变体",
+      "复用共享的 Wan 编码器、VAE、加载器与调度器",
+      "图像-动作到视频生成"
+    ]
+  }
+}

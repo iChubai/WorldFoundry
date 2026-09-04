@@ -11,6 +11,7 @@ source:
   status: open_source
   official_repo_url: https://github.com/thuml/Vid2World
 official_sources:
+  paper: https://arxiv.org/abs/2505.14357
   project_page: https://knightnemo.github.io/vid2world/
   github:
     url: https://github.com/thuml/Vid2World

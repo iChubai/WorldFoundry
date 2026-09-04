@@ -1,5 +1,22 @@
 # Copyright 2024-2025 The Alibaba Wan Team Authors. All rights reserved.
-"""Module for base_models -> diffusion_model -> video -> wan -> wan_2p2 -> utils -> utils.py functionality."""
+"""Wan video geometry helpers (latent grid, frame alignment, debug I/O).
+
+Lifted from Wan 2.2 utils so core I/O does not import a base_model
+package. Used when a resize, tile, or mask must match the DiT patch
+grid, and when official Wan recipes dump a debug mp4/png.
+
+Public surface:
+
+- :func:`best_output_size` — largest ``dw``×``dh``-aligned rectangle
+  under *expected_area* that stays close to the source aspect.
+- :func:`masks_like` — paired latent masks for Wan schedulers
+  (first-slice vs YUME trailing-slice).
+- :func:`save_video` / :func:`save_image` / :func:`merge_video_audio`
+  — debug artifact writers (errors are logged, not always raised;
+  that is the vendored contract).
+- :func:`download_cosyvoice_repo` / :func:`download_cosyvoice_model`
+  — optional CosyVoice fetch used by Wan audio recipes.
+"""
 
 import binascii
 import logging
@@ -14,14 +31,15 @@ import torchvision
 
 __all__ = ['save_video', 'save_image']
 
+logger = logging.getLogger(__name__)
+
+# ──────────────────────────────────────────────────────────────────────────
+# Latent-grid helpers and debug writers — vendored Wan contract (log, not raise)
+# ──────────────────────────────────────────────────────────────────────────
+
 
 def rand_name(length=8, suffix=''):
-    """Rand name.
-
-    Args:
-        length: The length.
-        suffix: The suffix.
-    """
+    """Return a hex filename stem of *length* random bytes, plus *suffix*."""
     name = binascii.b2a_hex(os.urandom(length)).decode('utf-8')
     if suffix:
         if not suffix.startswith('.'):
@@ -39,9 +57,6 @@ def merge_video_audio(video_path: str, audio_path: str):
     video_path (str): Path to the original video file
     audio_path (str): Path to the audio file
     """
-    # set logging
-    logging.basicConfig(level=logging.INFO)
-
     # check
     if not os.path.exists(video_path):
         raise FileNotFoundError(f"video file {video_path} does not exist")
@@ -75,18 +90,18 @@ def merge_video_audio(video_path: str, audio_path: str):
         ]
 
         # execute the command
-        logging.info("Start merging video and audio...")
+        logger.info("Start merging video and audio...")
         result = subprocess.run(
             command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
 
         # check result
         if result.returncode != 0:
             error_msg = f"FFmpeg execute failed: {result.stderr}"
-            logging.error(error_msg)
+            logger.error(error_msg)
             raise RuntimeError(error_msg)
 
         shutil.move(temp_output, video_path)
-        logging.info(f"Merge completed, saved to {video_path}")
+        logger.info(f"Merge completed, saved to {video_path}")
 
     finally:
         # Failures propagate to the caller; only the temp mux output is
@@ -102,16 +117,11 @@ def save_video(tensor,
                nrow=8,
                normalize=True,
                value_range=(-1, 1)):
-    """Save video.
+    """Write a ``[C, T, H, W]`` (or batched grid) tensor as an H.264 mp4.
 
-    Args:
-        tensor: The tensor.
-        save_file: The save file.
-        fps: The fps.
-        suffix: The suffix.
-        nrow: The nrow.
-        normalize: The normalize.
-        value_range: The value range.
+    Each time slice is passed through ``make_grid`` so a batch becomes
+    one panel. Failures are logged and swallowed (vendored Wan contract).
+    When *save_file* is omitted the file lands in ``/tmp/<rand>.mp4``.
     """
     # cache file
     cache_file = osp.join('/tmp', rand_name(
@@ -138,18 +148,14 @@ def save_video(tensor,
     except Exception as e:
         # Vendored contract swallows the error; log at ERROR so a missing
         # output file is at least visible in logs.
-        logging.error(f'save_video failed, error: {e}')
+        logger.error(f'save_video failed, error: {e}')
 
 
 def save_image(tensor, save_file, nrow=8, normalize=True, value_range=(-1, 1)):
-    """Save image.
+    """Write a tensor as an image via ``torchvision.utils.save_image``.
 
-    Args:
-        tensor: The tensor.
-        save_file: The save file.
-        nrow: The nrow.
-        normalize: The normalize.
-        value_range: The value range.
+    Unknown suffixes become ``.png``. Failures are logged and the
+    function returns ``None`` (vendored Wan contract).
     """
     # cache file
     suffix = osp.splitext(save_file)[1]
@@ -170,7 +176,7 @@ def save_image(tensor, save_file, nrow=8, normalize=True, value_range=(-1, 1)):
         return save_file
     except Exception as e:
         # Vendored contract swallows the error (returns None); log at ERROR.
-        logging.error(f'save_image failed, error: {e}')
+        logger.error(f'save_image failed, error: {e}')
 
 
 def masks_like(tensor, zero=False, generator=None, p=0.2, current_latent_num=None):
@@ -216,14 +222,11 @@ def masks_like(tensor, zero=False, generator=None, p=0.2, current_latent_num=Non
 
 
 def best_output_size(w, h, dw, dh, expected_area):
-    """Best output size.
+    """Largest ``dw``×``dh``-aligned size under *expected_area* near *w*/*h*.
 
-    Args:
-        w: The w.
-        h: The h.
-        dw: The dw.
-        dh: The dh.
-        expected_area: The expected area.
+    Tries snapping width first vs height first and keeps the candidate
+    whose aspect is closer to the source. Used to pick a latent-grid-
+    aligned decode size without exceeding a pixel budget.
     """
     # float output size
     ratio = w / h
@@ -251,11 +254,7 @@ def best_output_size(w, h, dw, dh, expected_area):
 
 
 def download_cosyvoice_repo(repo_path):
-    """Download cosyvoice repo.
-
-    Args:
-        repo_path: The repo path.
-    """
+    """Clone FunAudioLLM/CosyVoice (recursive, ``main``) into *repo_path*."""
     try:
         import git
     except ImportError:
@@ -264,11 +263,6 @@ def download_cosyvoice_repo(repo_path):
 
 
 def download_cosyvoice_model(model_name, model_path):
-    """Download cosyvoice model.
-
-    Args:
-        model_name: The model name.
-        model_path: The model path.
-    """
+    """Download ``iic/{model_name}`` from ModelScope into *model_path*."""
     from modelscope import snapshot_download
     snapshot_download('iic/{}'.format(model_name), local_dir=model_path)

@@ -14,6 +14,8 @@ tasks:
   - video-to-video
   - audio-video-generation
 official_sources:
+  paper: https://arxiv.org/abs/2601.03233
+  project_page: https://ltx.video
   github:
     url: https://github.com/Lightricks/LTX-2
   docs:
@@ -114,7 +116,11 @@ variants:
     demo_parity:
       status: pending_demo
     runner_parity:
-      status: planned
+      status: pending
+    runner_target: worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner
+    pipeline_binding: ltx-2.3-t2v
+    integration:
+      status: integrated
   - id: ltx-2.3-i2v
     task: image-to-video
     provider: official_repo
@@ -157,7 +163,7 @@ demo_parity:
   status: pending
   notes:
     - LTX-2 and LTX-2.3 I2V routes share WorldFoundry's native diffusion infrastructure.
-    - LTX-2.x T2V and V2V variants remain planned/profile-only.
+    - LTX-2.3 T2V and both I2V routes use native components; LTX-2 T2V and V2V remain profile-only.
     - Full upstream parity remains pending; per-run artifact checks are tracked
       outside the model catalog.
 notes:
@@ -174,7 +180,7 @@ catalog_policy:
 integration:
   status: integrated
   notes:
-    - WorldFoundry implements LTX-2.x I2V with native components and the generic joint multi-stage runner; T2V/V2V variants remain profile-only.
+    - WorldFoundry implements LTX-2.x I2V and LTX-2.3 T2V with native components and the generic joint multi-stage runner; V2V and LTX-2 T2V remain profile-only.
     - No Diffusers pipeline, copied upstream pipeline, or per-model loader is used.
 runner_parity:
   status: partial_studio_visual_validation_verified

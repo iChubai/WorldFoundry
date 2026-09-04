@@ -34,6 +34,7 @@ SHA256_HEX_LENGTH = 64
 DEFAULT_FILE_CHUNK_SIZE = 1024 * 1024
 _SHA256_HEX_RE = re.compile(r"^[0-9a-f]{64}$")
 _SQLITE_IN_CHUNK_SIZE = 400
+_SQLITE_BUSY_TIMEOUT_MS = 30_000
 
 # Schema tracking versions and valid operational strings
 GENERATION_RESULT_CACHE_SCHEMA_VERSION = "worldfoundry-generation-result-cache"
@@ -435,13 +436,19 @@ class GenerationResultCache:
 
     def _connect(self) -> sqlite3.Connection:
         """Instantiates a synchronous connection with safe transactional timeout defaults."""
-        connection = sqlite3.connect(str(self.cache_path), timeout=30.0)
+        connection = sqlite3.connect(
+            str(self.cache_path),
+            timeout=_SQLITE_BUSY_TIMEOUT_MS / 1000,
+        )
         connection.row_factory = sqlite3.Row
+        connection.execute(f"PRAGMA busy_timeout={_SQLITE_BUSY_TIMEOUT_MS}")
+        connection.execute("PRAGMA synchronous=NORMAL")
         return connection
 
     def _init_db(self) -> None:
         """Ensures the core caching tables and indices are initialized on disk."""
         with self._connect() as connection:
+            connection.execute("PRAGMA journal_mode=WAL")
             connection.execute(
                 """
                 CREATE TABLE IF NOT EXISTS generation_results (
@@ -556,18 +563,23 @@ class GenerationResultCache:
                 )
                 audit_events.append(("hit", key, None))
 
-            connection.executemany(
-                """
-                UPDATE generation_results
-                SET hits = hits + ?, updated_at = ?
-                WHERE namespace = ? AND key_hash = ?
-                """,
-                (
-                    (increment, accessed_at, self.namespace, key_hash)
-                    for key_hash, increment in hit_increments.items()
-                ),
-            )
-            connection.commit()
+            try:
+                connection.executemany(
+                    """
+                    UPDATE generation_results
+                    SET hits = hits + ?, updated_at = ?
+                    WHERE namespace = ? AND key_hash = ?
+                    """,
+                    (
+                        (increment, accessed_at, self.namespace, key_hash)
+                        for key_hash, increment in hit_increments.items()
+                    ),
+                )
+                connection.commit()
+            except sqlite3.OperationalError as exc:
+                connection.rollback()
+                if not any(reason in str(exc).lower() for reason in ("locked", "busy")):
+                    raise
 
         self._audit_many(audit_events)
         return records

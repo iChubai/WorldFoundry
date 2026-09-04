@@ -1,4 +1,10 @@
-"""PUSA's per-frame timestep behavior as a thin native Wan variant."""
+"""PUSA (Wan 2.2) per-frame timestep on the native packed Wan graph.
+
+PUSA checkpoints keep the standard Wan parameter graph.  The only added
+behavior is expanding one diffusion timestep per latent frame across the
+spatial patch tokens so AdaLN can vary along time.  Attention, VACE,
+action, camera, causal, and linear-attention paths are unchanged.
+"""
 
 from __future__ import annotations
 
@@ -16,6 +22,7 @@ class PusaWanModel(WanModel):
     """
 
     def __init__(self, *args, **kwargs) -> None:
+        """Force the host Wan graph to accept ``[B, L]`` timesteps."""
         kwargs["per_token_timestep"] = True
         super().__init__(*args, **kwargs)
 
@@ -26,6 +33,7 @@ class PusaWanModel(WanModel):
         context: torch.Tensor,
         **kwargs,
     ) -> torch.Tensor:
+        """Expand per-frame timesteps to one value per patch token, then call Wan."""
         if timestep.ndim == 2:
             temporal_tokens = (x.shape[2] - self.patch_size[0]) // self.patch_size[0] + 1
             spatial_tokens = (

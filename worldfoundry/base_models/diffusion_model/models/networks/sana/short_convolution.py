@@ -1,4 +1,10 @@
-"""Native causal depthwise short convolution for Sana GDN blocks."""
+"""Native causal depthwise short convolution for SANA GDN blocks.
+
+GDN applies a small causal conv on Q/K/V before the delta-rule scan (the
+FLA ``ShortConvolution``).  This module is the inference-only equivalent
+that loads the checkpoint ``weight`` of shape ``(C, 1, K)`` without pulling
+the full Flash Linear Attention package.
+"""
 
 from __future__ import annotations
 

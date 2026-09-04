@@ -12,6 +12,10 @@ from dataclasses import dataclass, field
 from enum import Enum
 from typing import Any, Mapping, Protocol, Sequence, runtime_checkable
 
+# ──────────────────────────────────────────────────────────────────────────
+# Sequence ownership — who owns a span, how it updates, how CFG applies
+# ──────────────────────────────────────────────────────────────────────────
+
 
 class SequenceRole(str, Enum):
     """Semantic ownership of one contiguous latent sequence segment."""
@@ -34,6 +38,11 @@ class GuidanceMode(str, Enum):
     CONDITIONAL_ONLY = "conditional_only"
 
 
+# ──────────────────────────────────────────────────────────────────────────
+# Layout contracts — contiguous, ordered segments; empty name / inverted span fail
+# ──────────────────────────────────────────────────────────────────────────
+
+
 @dataclass(frozen=True)
 class SequenceSegment:
     """One contiguous temporal range in a model's latent input."""
@@ -46,6 +55,7 @@ class SequenceSegment:
     guidance: GuidanceMode
 
     def __post_init__(self) -> None:
+        """Refuse empty names and inverted ``[start, stop)`` half-open spans."""
         if not self.name.strip():
             raise ValueError("sequence segment name must be non-empty")
         if self.start < 0 or self.stop <= self.start:
@@ -74,6 +84,7 @@ class DenoisingLayout:
     temporal_dim: int = 1
 
     def __post_init__(self) -> None:
+        """Require at least one segment and a contiguous, ordered cover from 0."""
         if not self.segments:
             raise ValueError("denoising layout must contain at least one segment")
         cursor = 0
@@ -95,6 +106,11 @@ class DenoisingLayout:
         """Return all segments owned by ``role`` in layout order."""
 
         return tuple(segment for segment in self.segments if segment.role is role)
+
+
+# ──────────────────────────────────────────────────────────────────────────
+# Sampler extension points — adapter owns layout; base sampler owns encode/step
+# ──────────────────────────────────────────────────────────────────────────
 
 
 @dataclass(frozen=True)

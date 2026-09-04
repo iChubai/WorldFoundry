@@ -1,4 +1,15 @@
-"""Native LTX latent processor used between diffusion stages."""
+"""LTX :class:`~...contracts.LatentProcessor` between multi-stage passes.
+
+Implements ``process(Mapping[str, ModalityState], DiffusionRequest) ->
+Mapping[str, Tensor]``.  The joint runner calls this after stage 1 so
+stage 2 can re-initialize from dense (unpatchified, spatially upsampled)
+video latents.  Audio is unpatchified but not spatially scaled.
+
+Pipeline: unpatchify → per-channel un-normalize → Conv3d upsampler →
+normalize → optional AdaIN toward the pre-upsample latent.  Weights load
+through :class:`~...loaders.module.NativeModuleLoader` (``weights`` +
+``statistics`` checkpoints).
+"""
 
 from __future__ import annotations
 
@@ -18,21 +29,27 @@ from .model_configurator import LatentUpsamplerConfigurator
 
 
 class LTXLatentUpsamplerModule(torch.nn.Module):
+    """Thin ``nn.Module`` wrapper so the native loader can own the CNN."""
+
     def __init__(self, checkpoint_config: Mapping[str, object]) -> None:
         super().__init__()
         self.upsampler = LatentUpsamplerConfigurator.from_config(dict(checkpoint_config))
 
     def forward(self, latent: torch.Tensor) -> torch.Tensor:
+        """Spatially upsample an un-normalized BCTHW video latent."""
         return self.upsampler(latent)
 
 
 class LTXVideoLatentStatistics(torch.nn.Module):
+    """Per-channel mean/std used before and after the spatial upsampler."""
+
     def __init__(self, latent_channels: int = 128) -> None:
         super().__init__()
         self.statistics = PerChannelStatistics(latent_channels=latent_channels)
 
 
 def convert_ltx_upsampler_state_dict(state_dict: Mapping[str, object]) -> Mapping[str, object]:
+    """Prefix official upsampler keys with ``upsampler.`` for the wrapper module."""
     return {f"upsampler.{key}": value for key, value in state_dict.items()}
 
 
@@ -99,6 +116,7 @@ class LTXSpatialLatentProcessor:
         states: Mapping[str, ModalityState],
         request: DiffusionRequest,
     ) -> Mapping[str, torch.Tensor]:
+        """Unpatchify stage-1 states and return dense latents for stage 2."""
         fps = float(request.inputs.get("frame_rate", 24.0))
         stage_height, stage_width = self._stage_one_size(request)
         stage_one_pixels = VideoPixelShape(
@@ -136,6 +154,7 @@ class LTXSpatialLatentProcessor:
 def build_ltx_spatial_latent_processor(
     context: ComponentBuildContext,
 ) -> LTXSpatialLatentProcessor:
+    """Load the spatial upsampler + VAE statistics and return the processor."""
     from worldfoundry.core.vram import AutoWrappedLinear, AutoWrappedModule
 
     module_map = {

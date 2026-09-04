@@ -1,0 +1,41 @@
+{
+  "id": "wonderjourney",
+  "tagline": {
+    "en": "Generate a perpetual 3D journey — wander from one scene into the next, growing a coherent world as you go.",
+    "zh": "生成一段可持续漫游的 3D 旅程——从一个场景走向下一个，边走边生长出连贯的世界。"
+  },
+  "overview": {
+    "en": [
+      "WonderJourney, from Koven Yu and collaborators, generates a perpetual sequence of connected 3D scenes. Starting from a text prompt or an image, it produces a wandering journey where the camera keeps moving forward into freshly imagined, geometrically consistent surroundings.",
+      "Rather than a single static reconstruction, it repeatedly extends the scene: as the viewpoint advances it imagines what should come next and lifts it into 3D, so you can fly through a continuous world. This makes it a good fit for scene expansion and image-to-3D-world exploration.",
+      "In WorldFoundry, WonderJourney runs through the shared 3D/4D pipeline: you provide a starting prompt or image and a configuration, and it drives the generation flow to produce the journey. Some runtime assets and dependencies must be staged locally before a full run."
+    ],
+    "zh": [
+      "WonderJourney 出自 Koven Yu 及其合作者，用于生成一段持续连接的 3D 场景序列。从一句文本提示词或一张图片出发，它会产出一段不断向前漫游的旅程，镜头持续推进到新想象出的、几何上保持一致的环境中。",
+      "它不是生成单个静态重建，而是反复扩展场景：随着视角前进，它想象接下来该出现什么，并将其提升到 3D，于是你可以在一个连续的世界里穿行。这让它很适合场景扩展与从图像出发的 3D 世界探索。",
+      "在 WorldFoundry 中，WonderJourney 通过共享的 3D/4D pipeline 运行：你给出起始提示词或图片以及一份配置，它便驱动生成流程产出这段旅程。完整运行前，需要在本地准备好部分运行时资源与依赖。"
+    ]
+  },
+  "whenToUse": {
+    "en": "Reach for it when you want to generate an open-ended, fly-through 3D experience from a prompt or a single image — extending a scene outward into a continuous journey rather than reconstructing a fixed capture.",
+    "zh": "当你想从一句提示词或一张图片生成开放式、可穿行的 3D 体验时选择它——把一个场景不断向外扩展成连续旅程，而不是重建一次固定的采集。"
+  },
+  "notFor": {
+    "en": "Not a metrically-accurate reconstruction tool — it imagines new content rather than measuring a real capture. A full run needs the required runtime assets and dependencies in place.",
+    "zh": "它不是度量精确的重建工具——它是在想象新内容，而非测量真实采集。完整运行需要事先准备好所需的运行时资源与依赖。"
+  },
+  "highlights": {
+    "en": [
+      "Generates a perpetual sequence of connected 3D scenes",
+      "Starts from a text prompt or a single image",
+      "Camera flies forward through a continuously extended world",
+      "Runs through WorldFoundry's shared 3D/4D pipeline"
+    ],
+    "zh": [
+      "生成持续连接的 3D 场景序列",
+      "从文本提示词或单张图片起步",
+      "镜头在不断扩展的世界中向前穿行",
+      "通过 WorldFoundry 共享的 3D/4D pipeline 运行"
+    ]
+  }
+}

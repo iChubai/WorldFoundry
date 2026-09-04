@@ -19,6 +19,8 @@ modalities:
 - 3d-reconstruction
 name: ViewCrafter
 official_sources:
+  paper: https://arxiv.org/abs/2409.02048
+  project_page: https://drexubery.github.io/ViewCrafter/
   github:
     confirmed_by: git ls-remote --heads
     confirmed_ref: refs/heads/main

@@ -15,6 +15,7 @@ source:
   hf_repo_id: facebook/nwm
   license: cc-by-nc-4.0
 official_sources:
+  paper: https://arxiv.org/abs/2412.03572
   project_page: https://www.amirbar.net/nwm/
   github:
     url: https://github.com/facebookresearch/nwm

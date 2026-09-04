@@ -26,16 +26,22 @@ export HF_TOKEN="hf_..."   # 或 huggingface-cli login
 ```bash
 wget https://hf-mirror.com/hfd/hfd.sh
 chmod a+x hfd.sh
-export HF_ENDPOINT=https://hf-mirror.com
+export WORLDFOUNDRY_HF_ENDPOINT=https://hf-mirror.com
+export HF_ENDPOINT="${WORLDFOUNDRY_HF_ENDPOINT}"
 
 ./hfd.sh Skywork/Matrix-Game-2.0 \
   --local-dir "${WORLDFOUNDRY_HFD_ROOT:-${HOME}/.cache/worldfoundry/models/checkpoints/hfd}/Skywork--Matrix-Game-2.0"
 
 ./hfd.sh BestWishYsh/ChronoMagic-Pro --dataset \
-  --local-dir "${WORLDFOUNDRY_HFD_DATASET_ROOT:-${HOME}/.cache/worldfoundry/cache/data/datasets}/BestWishYsh__ChronoMagic-Pro"
+  --local-dir "${WORLDFOUNDRY_HFD_DATASET_ROOT:-${WORLDFOUNDRY_DATA_DIR:-${HOME}/.cache/worldfoundry/data}/datasets}/BestWishYsh__ChronoMagic-Pro"
 ```
 
-也可设置 `HF_ENDPOINT=https://hf-mirror.com` 后继续用 `hf download`。Gated repo 需先在 Hugging Face 官网申请许可，再用 `--hf_token "${HF_TOKEN}"`。
+Studio 默认不选择任何第三方镜像；如需让 Studio 子进程使用镜像，请显式设置
+`WORLDFOUNDRY_HF_ENDPOINT`。直接运行 Hugging Face 工具时仍使用上例的
+`HF_ENDPOINT`。Gated repo 需先在 Hugging Face 官网申请许可，再用
+`--hf_token "${HF_TOKEN}"`。
+
+镜像始终需要显式启用。Studio 派发的子进程会继承 shell 中已有的 `HF_ENDPOINT`，默认不会重定向到第三方镜像。若只想覆盖 WorldFoundry 管理的子进程，导出 `WORLDFOUNDRY_HF_ENDPOINT`；它优先于继承的 `HF_ENDPOINT`。
 
 ## 1. 初始化目录与环境变量
 

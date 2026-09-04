@@ -1,0 +1,41 @@
+{
+  "id": "worldmem",
+  "tagline": {
+    "en": "An interactive world model with long-term memory, keeping scenes consistent over time — demonstrated in Minecraft-style environments.",
+    "zh": "一个带长期记忆的可交互世界模型,让场景随时间保持一致——在 Minecraft 式环境中做了演示。"
+  },
+  "overview": {
+    "en": [
+      "WorldMem is an interactive world model whose central idea is memory: as you explore and act in a generated environment, it remembers what it has already produced, so places you revisit stay consistent instead of drifting or being regenerated differently.",
+      "It is demonstrated in Minecraft-style environments, where an agent moves through a world that the model keeps coherent over long horizons. The work is described in an accompanying paper and project page and distributed as upstream source.",
+      "In WorldFoundry the route is registered so you can resolve its config and inference path; the model and data assets are staged separately, and the runtime lists what it needs before generating."
+    ],
+    "zh": [
+      "WorldMem 是一个可交互世界模型,其核心思想是记忆:当你在生成的环境中探索和行动时,它会记住已经生成过的内容,因此你再次回到某处时,场景保持一致,而不会漂移或被重新生成成另一个样子。",
+      "它在 Minecraft 式环境中做了演示,智能体在模型长时保持连贯的世界里移动。相关工作有配套论文与项目主页,并以上游源码形式发布。",
+      "在 WorldFoundry 中,其路径已被注册,你可以解析它的配置与推理路径;模型与数据素材需另行准备,运行时会在生成前列出所需内容。"
+    ]
+  },
+  "whenToUse": {
+    "en": "Use WorldMem when long-term consistency matters — an interactive, explorable world where revisited locations should remain stable over time.",
+    "zh": "当长期一致性很重要时,适合使用 WorldMem——一个可交互、可探索的世界,其中重访的地点应随时间保持稳定。"
+  },
+  "notFor": {
+    "en": "It is a research codebase demonstrated in game-style environments; you must stage its model and data assets before real generation.",
+    "zh": "它是在游戏式环境中演示的研究代码库;真实生成前需准备好其模型与数据素材。"
+  },
+  "highlights": {
+    "en": [
+      "Interactive world model with long-term memory",
+      "Keeps revisited scenes consistent over long horizons",
+      "Demonstrated in Minecraft-style environments",
+      "Distributed as upstream source with an accompanying paper"
+    ],
+    "zh": [
+      "带长期记忆的可交互世界模型",
+      "让重访的场景在长时程内保持一致",
+      "在 Minecraft 式环境中做了演示",
+      "以上游源码形式发布,附配套论文"
+    ]
+  }
+}

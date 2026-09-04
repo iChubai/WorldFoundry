@@ -1,4 +1,14 @@
-"""Pure-PyTorch Vchitect-2 diffusion transformer."""
+"""Pure-PyTorch Vchitect-2 diffusion transformer.
+
+Architecture
+------------
+Latents enter as ``B F C H W``.  :class:`PatchEmbed` is per-frame Conv2d
+plus a centered crop of a 2D absolute position table → ``(B·F) S C``.
+Timestep and pooled text are added into AdaLN embeddings.  Each
+:class:`JointTransformerBlock` attends spatially (video+text), temporally
+(with complex RoPE over ``F``), and cross to text.  Output unpatchifies
+to ``B F C H W``.
+"""
 
 from __future__ import annotations
 
@@ -12,6 +22,8 @@ from .blocks import AdaLayerNormContinuous, JointTransformerBlock
 
 
 class PatchEmbed(nn.Module):
+    """2D Conv patch embed + cropped absolute pos table: ``B C H W`` → ``B (H'W') C``."""
+
     def __init__(
         self,
         *,
@@ -28,6 +40,7 @@ class PatchEmbed(nn.Module):
         self.pos_embed = nn.Parameter(torch.empty(1, pos_embed_max_size**2, embed_dim))
 
     def _position(self, height: int, width: int) -> torch.Tensor:
+        """Center-crop the square pos table to the current ``H'×W'`` patch grid."""
         if height > self.pos_embed_max_size or width > self.pos_embed_max_size:
             raise ValueError("Vchitect latent patch grid exceeds the checkpoint position table")
         table = self.pos_embed.reshape(
@@ -41,6 +54,7 @@ class PatchEmbed(nn.Module):
         return table[:, top : top + height, left : left + width].reshape(1, height * width, -1)
 
     def forward(self, images: torch.Tensor) -> torch.Tensor:
+        """Patchify a single-frame (or folded-frame) ``B C H W`` latent."""
         patches = self.proj(images)
         height, width = patches.shape[-2:]
         patches = patches.flatten(2).transpose(1, 2)
@@ -48,6 +62,8 @@ class PatchEmbed(nn.Module):
 
 
 class TimestepEmbedding(nn.Module):
+    """Two-layer SiLU MLP used for both timestep Fourier features and pooled text."""
+
     def __init__(self, in_dim: int, out_dim: int) -> None:
         super().__init__()
         self.linear_1 = nn.Linear(in_dim, out_dim)
@@ -55,10 +71,12 @@ class TimestepEmbedding(nn.Module):
         self.linear_2 = nn.Linear(out_dim, out_dim)
 
     def forward(self, values: torch.Tensor) -> torch.Tensor:
+        """Map ``[..., in_dim]`` to ``[..., out_dim]``."""
         return self.linear_2(self.act(self.linear_1(values)))
 
 
 def timestep_projection(timesteps: torch.Tensor, dim: int = 256) -> torch.Tensor:
+    """Sinusoidal Fourier features of shape ``[B, dim]`` from scalar timesteps."""
     half = dim // 2
     exponent = -torch.log(torch.tensor(10000.0, device=timesteps.device)) * torch.arange(
         half,
@@ -70,12 +88,15 @@ def timestep_projection(timesteps: torch.Tensor, dim: int = 256) -> torch.Tensor
 
 
 class CombinedTimestepTextProjEmbeddings(nn.Module):
+    """Sum of projected timestep Fourier features and pooled caption embedding."""
+
     def __init__(self, embedding_dim: int, pooled_projection_dim: int) -> None:
         super().__init__()
         self.timestep_embedder = TimestepEmbedding(256, embedding_dim)
         self.text_embedder = TimestepEmbedding(pooled_projection_dim, embedding_dim)
 
     def forward(self, timestep: torch.Tensor, pooled_projection: torch.Tensor) -> torch.Tensor:
+        """Return the AdaLN embedding shared by every joint block."""
         projected = timestep_projection(timestep, 256).to(dtype=pooled_projection.dtype)
         return self.timestep_embedder(projected) + self.text_embedder(pooled_projection)
 
@@ -139,6 +160,7 @@ class VchitectXLTransformerModel(nn.Module):
         self.rope_scaling_factor = float(rope_scaling_factor)
 
     def _frequencies(self, frames: int, device: torch.device) -> torch.Tensor:
+        """Complex 1D RoPE frequencies over the temporal axis (used inside attention)."""
         dim = self.config.attention_head_dim
         frequency = 1.0 / (
             1e6 ** (torch.arange(0, dim, 2, device=device, dtype=torch.float32) / dim)
@@ -155,6 +177,7 @@ class VchitectXLTransformerModel(nn.Module):
         pooled_projections: torch.Tensor,
         timestep: torch.Tensor,
     ) -> torch.Tensor:
+        """Denoise ``B F C H W`` latents; return residual in the same layout."""
         if hidden_states.ndim != 5:
             raise ValueError("Vchitect expects latents in [B,F,C,H,W] layout")
         batch, frames, _, height, width = hidden_states.shape

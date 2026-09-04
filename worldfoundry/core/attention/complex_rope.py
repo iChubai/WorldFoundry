@@ -1,4 +1,15 @@
-"""Complex-valued rotary tables used by video diffusion transformers."""
+"""Complex-valued rotary tables used by video diffusion transformers.
+
+Some Wan checkpoints store RoPE as complex cis tables (``cis = exp(iθ)``)
+rather than separate cos/sin. This module builds those tables and
+applies them with a complex multiply so the checkpoint math stays
+bit-compatible. Real cos/sin 3D RoPE — including the CP-aware and
+KV-cache-relative variants — lives in
+:mod:`worldfoundry.core.attention.rope`.
+
+:func:`complex_rotary_frequencies` is 1-D; :func:`complex_rotary_frequencies_3d`
+packs time/height/width into one table for video tokens.
+"""
 
 from __future__ import annotations
 
@@ -50,13 +61,33 @@ def apply_complex_rotary_embedding(
     value: torch.Tensor,
     frequencies: torch.Tensor,
     num_heads: int,
+    *,
+    compute_dtype: torch.dtype = torch.float64,
 ) -> torch.Tensor:
-    """Apply a broadcast complex RoPE table to ``[B,S,H*D]`` tokens."""
+    """Apply a broadcast complex RoPE table to ``[B,S,H*D]`` tokens.
+
+    ``compute_dtype`` is explicit because casting only the frequency table does
+    not select a lower-precision complex multiply: a float64 activation would
+    promote a complex64 table back to complex128.  Keeping the activation and
+    table on the same real/complex precision makes fp32 and fp64 genuine,
+    independently testable execution paths.
+    """
+
+    if compute_dtype not in {torch.float32, torch.float64}:
+        raise ValueError("complex RoPE compute_dtype must be float32 or float64")
 
     value = rearrange(value, "b s (h d) -> b s h d", h=int(num_heads))
-    complex_value = torch.view_as_complex(value.to(torch.float64).reshape(*value.shape[:-1], -1, 2))
+    complex_value = torch.view_as_complex(
+        value.to(compute_dtype)
+        .reshape(*value.shape[:-1], -1, 2)
+        .contiguous()
+    )
+    complex_dtype = (
+        torch.complex64 if compute_dtype is torch.float32 else torch.complex128
+    )
     if frequencies.device.type == "npu":
-        frequencies = frequencies.to(torch.complex64)
+        complex_dtype = torch.complex64
+    frequencies = frequencies.to(complex_dtype)
     output = torch.view_as_real(complex_value * frequencies).flatten(2)
     return output.to(value.dtype)
 

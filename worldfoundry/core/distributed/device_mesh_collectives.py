@@ -1,4 +1,10 @@
-"""Collectives built on torch DeviceMesh and DTensor."""
+"""Collectives built on torch DeviceMesh and DTensor (FSDP2 / EMA).
+
+DTensor-aware EMA and state broadcast need the local tensor, not the
+global view. :func:`get_local_tensor_if_dtensor` unwraps before a host
+collective. Used with FSDP2 meshes; plain TP/CP groups stay on
+``model_parallel_groups``.
+"""
 
 from __future__ import annotations
 
@@ -17,14 +23,31 @@ except ImportError:  # pragma: no cover - optional torch feature.
     Replicate = None
     distribute_tensor = None
 
+# ──────────────────────────────────────────────────────────────────────────
+# DeviceMesh broadcast — replicate via DTensor, never raw NCCL on a mesh
+# ──────────────────────────────────────────────────────────────────────────
+
 
 def _mesh_device(mesh: DeviceMesh) -> torch.device:
+    """Bind CUDA collectives to this process's current device, not ``cuda:0``.
+
+    A bare ``cuda`` device would land every rank on GPU 0 and NCCL would
+    report a duplicate GPU.
+    """
+
     if mesh.device_type == "cuda":
         return torch.device("cuda", torch.cuda.current_device())
     return torch.device(mesh.device_type)
 
 
 def broadcast(tensor: torch.Tensor, cp_or_tp_mesh: DeviceMesh) -> torch.Tensor:
+    """Replicate ``tensor`` across a CP/TP mesh via DTensor ``Replicate``.
+
+    Requires ``torch.distributed.tensor``. A missing import is a hard error
+    rather than a silent no-op so a single-rank fallback cannot look like a
+    successful multi-rank broadcast.
+    """
+
     if Replicate is None or distribute_tensor is None:
         raise ImportError("torch.distributed.tensor is required for DeviceMesh broadcast.")
     tensor = tensor.to(_mesh_device(cp_or_tp_mesh))
@@ -72,19 +95,34 @@ def all_to_all_tensor(
     )
 
 
+# ──────────────────────────────────────────────────────────────────────────
+# DTensor EMA — operate on local shards so foreach kernels stay on-device
+# ──────────────────────────────────────────────────────────────────────────
+
+
 class DTensorFastEmaModelUpdater:
     """Foreach-based EMA updater that operates on local DTensor shards."""
 
     def __init__(self) -> None:
+        """Start with an empty cache; :meth:`cache` must precede :meth:`restore`."""
+
         self.is_cached = False
 
     def copy_to(self, src_model: torch.nn.Module, tgt_model: torch.nn.Module) -> None:
+        """Overwrite target local shards with source local shards (no broadcast)."""
+
         with torch.no_grad():
             for tgt_params, src_params in zip(tgt_model.parameters(), src_model.parameters()):
                 get_local_tensor_if_dtensor(tgt_params).data.copy_(get_local_tensor_if_dtensor(src_params).data)
 
     @torch.no_grad()
     def update_average(self, src_model: torch.nn.Module, tgt_model: torch.nn.Module, beta: float = 0.9999) -> None:
+        """In-place EMA on local FP32 shards: ``tgt = beta * tgt + (1 - beta) * src``.
+
+        EMA in a lower dtype silently underflows the ``1 - beta`` term, so the
+        target must already be FP32.
+        """
+
         target_list = []
         source_list = []
         for tgt_params, src_params in zip(tgt_model.parameters(), src_model.parameters()):
@@ -98,6 +136,12 @@ class DTensorFastEmaModelUpdater:
 
     @torch.no_grad()
     def cache(self, parameters: Any, is_cpu: bool = False) -> None:
+        """Snapshot local shards before a temporary overwrite (eval / checkpoint).
+
+        Nested :meth:`cache` without :meth:`restore` is refused so a later
+        restore cannot apply the wrong generation of weights.
+        """
+
         assert self.is_cached is False, "EMA cache is already taken. Did you forget to restore it?"
         device = "cpu" if is_cpu else ("cuda" if torch.cuda.is_available() else None)
         collected = []
@@ -110,6 +154,8 @@ class DTensorFastEmaModelUpdater:
 
     @torch.no_grad()
     def restore(self, parameters: Any) -> None:
+        """Write cached local shards back; ``strict=False`` zip matches FSDP holes."""
+
         assert self.is_cached, "EMA cache is not taken yet."
         for cached_param, param in zip(self.collected_params, parameters, strict=False):
             local_param = get_local_tensor_if_dtensor(param)
@@ -120,6 +166,11 @@ class DTensorFastEmaModelUpdater:
 
 FastEmaModelUpdater = DTensorFastEmaModelUpdater
 get_local_tensor_if_DTensor = get_local_tensor_if_dtensor
+
+
+# ──────────────────────────────────────────────────────────────────────────
+# Replicate-mesh state broadcast — CPU tensors hop through CUDA for NCCL
+# ──────────────────────────────────────────────────────────────────────────
 
 
 def broadcast_dtensor_model_states(model: torch.nn.Module, mesh: DeviceMesh) -> None:

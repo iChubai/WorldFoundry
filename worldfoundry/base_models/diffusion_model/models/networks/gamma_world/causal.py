@@ -13,6 +13,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+"""Chunk-causal Gamma-World DiT with KV cache.
+
+Same ``B C T H W`` → ``B T H W C`` token path as :class:`MinimalDiT`,
+but self-attn is causal across temporal chunks so long videos can be
+rolled out with a KV cache.  FlexAttention supplies the block mask.
+"""
 
 import math
 from collections import namedtuple
@@ -65,6 +71,8 @@ DEBUG = False
 
 
 class CausalSelfAttention(nn.Module):
+    """Causal (or chunk-causal) multi-head self-attn over ``B T H W C`` video tokens."""
+
     def __init__(
         self,
         query_dim: int,
@@ -754,6 +762,7 @@ class CausalSelfAttention(nn.Module):
 
 
 class CausalCosmosBlock(nn.Module):
+    """AdaLN DiT block with causal self-attn (and optional i2v / action cross-attn)."""
     def __init__(
         self,
         x_dim: int,
@@ -973,6 +982,7 @@ class CausalCosmosBlock(nn.Module):
 
 
 class CosmosCausalDiT(nn.Module):
+    """Causal Gamma-World transformer: patchify ``B C T H W``, chunk-causal stack, unpatchify."""
     def __init__(
         self,
         max_img_h: int,

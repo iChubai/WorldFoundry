@@ -16,6 +16,9 @@ source:
 checkpoint_refs:
 - repo_id: JUGGHM/Metric3D
   filename: metric_depth_vit_giant2_800k.pth
+official_sources:
+  project_page: https://jugghm.github.io/Metric3Dv2/
+  paper: https://arxiv.org/abs/2403.12013
 integration:
   kind: pipeline_runner
   status: integrated

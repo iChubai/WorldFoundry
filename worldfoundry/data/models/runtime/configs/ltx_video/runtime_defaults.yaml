@@ -11,7 +11,7 @@ defaults:
     frame_rate: 30
     negative_prompt: worst quality, inconsistent motion, blurry, jittery, distorted
     conditioning_start_frames: 0
-    model_path: ${WORLDFOUNDRY_CKPT_DIR}/LTX-Video
+    model_path: ${WORLDFOUNDRY_HFD_ROOT}/Lightricks--LTX-Video
     num_inference_steps: 10
     guidance_scale: 1.0
     cpu_offload: true

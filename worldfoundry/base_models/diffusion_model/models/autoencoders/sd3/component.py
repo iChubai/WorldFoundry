@@ -1,4 +1,11 @@
-"""Native SD3-family frame decoder component."""
+"""SD3-family per-frame :class:`~...contracts.LatentDecoder`.
+
+Decodes ``[B, F, C, H, W]`` latents through a 2-D VAE decoder
+(``NativeVAE2DDecoder``), applying the official scale/shift
+(``1.5305`` / ``0.0609``).  Output is BCTHW in ``[-1, 1]``.  Used by
+Vchitect and other SD3-latent video recipes.  Encode is not implemented
+here (T2V noise is drawn directly).
+"""
 
 from __future__ import annotations
 
@@ -22,6 +29,8 @@ def _decoder_state_dict(state_dict: Mapping[str, object]) -> Mapping[str, object
 
 
 class SD3FrameDecoder:
+    """Fold time into batch, decode each frame, restore BCTHW."""
+
     def __init__(
         self,
         decoder: NativeVAE2DDecoder,
@@ -34,6 +43,7 @@ class SD3FrameDecoder:
         self.shift_factor = float(shift_factor)
 
     def decode(self, latents: torch.Tensor, request: DiffusionRequest) -> torch.Tensor:
+        """Decode ``[B,F,C,H,W]`` latents to BCTHW pixels."""
         if bool(request.inputs.get("return_latent", False)):
             return latents
         if latents.ndim != 5:
@@ -46,6 +56,7 @@ class SD3FrameDecoder:
 
 
 def build_sd3_frame_decoder(context: ComponentBuildContext) -> SD3FrameDecoder:
+    """Load decoder-only weights from the ``weights`` checkpoint."""
     decoder = NativeModuleLoader().load(
         ModuleLoadSpec(
             module_class=NativeVAE2DDecoder,

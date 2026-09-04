@@ -1,4 +1,23 @@
-"""Import-light subprocess launch helpers shared by model runtimes."""
+"""Import-light subprocess launch helpers shared by model runtimes.
+
+Official recipes and eval harnesses spawn workers (single-node
+``torchrun``, ffmpeg, vendor scripts) and must stay observable without
+pulling a training stack into the parent. This module therefore depends
+only on the stdlib plus an optional ``psutil`` for trees that were not
+started in their own session.
+
+Public surface:
+
+- :func:`run_logged_subprocess` — bounded stdout/stderr files, JSONL
+  lifecycle events, WorldFoundry log-context env, timeout → SIGTERM
+  then SIGKILL of the process group (or a psutil tree fallback).
+- :func:`terminate_process_group` / :func:`terminate_process_tree` —
+  the two teardown strategies used by the launcher.
+- :func:`read_text_tail` — last *N* lines of a potentially huge log
+  without reading the whole file.
+- :func:`torchrun_module_command` / :func:`run_torchrun_module` —
+  build or run ``python -m torch.distributed.run --standalone``.
+"""
 
 from __future__ import annotations
 
@@ -11,9 +30,20 @@ from collections.abc import Mapping, Sequence
 from pathlib import Path
 from typing import Any
 
+# ──────────────────────────────────────────────────────────────────────────
+# Teardown — process-group first, then psutil tree fallback
+# ──────────────────────────────────────────────────────────────────────────
+
 
 def terminate_process_group(process: subprocess.Popen[Any], *, grace_seconds: float = 3.0) -> None:
-    """Terminate a process and all descendants in its dedicated process group."""
+    """Terminate a process and all descendants in its dedicated process group.
+
+    POSIX path sends ``SIGTERM`` to the group (``os.killpg``), waits
+    *grace_seconds*, then ``SIGKILL``. Windows falls back to
+    ``terminate`` / ``kill`` on the parent only. Already-exited
+    processes are a no-op. The child must have been started with
+    ``start_new_session=True`` (see :func:`run_logged_subprocess`).
+    """
 
     if process.poll() is not None:
         return
@@ -40,7 +70,13 @@ def terminate_process_group(process: subprocess.Popen[Any], *, grace_seconds: fl
 
 
 def terminate_process_tree(process: subprocess.Popen[Any], *, grace_seconds: float = 3.0) -> None:
-    """Terminate one process and recursively terminate descendants without a process group."""
+    """Terminate one process and recursively terminate descendants without a process group.
+
+    Used when the child was *not* started in a new session. With
+    ``psutil`` installed, children are ``terminate``'d first, then the
+    parent, then any survivors are ``kill``'d. Without psutil only the
+    parent is signalled — grandchildren may leak.
+    """
 
     if process.poll() is not None:
         return
@@ -83,6 +119,11 @@ def terminate_process_tree(process: subprocess.Popen[Any], *, grace_seconds: flo
                 pass
         if alive:
             psutil.wait_procs(alive, timeout=max(float(grace_seconds), 0.0))
+
+
+# ──────────────────────────────────────────────────────────────────────────
+# Launch + observe — bounded logs, JSONL lifecycle, timeout → SIGTERM/KILL
+# ──────────────────────────────────────────────────────────────────────────
 
 
 def run_logged_subprocess(
@@ -192,7 +233,13 @@ def read_text_tail(
     max_lines: int = 20,
     max_bytes: int = 64 * 1024,
 ) -> str:
-    """Read a bounded UTF-8 tail from a potentially very large log file."""
+    """Read a bounded UTF-8 tail from a potentially very large log file.
+
+    Seeks to ``max(size - max_bytes, 0)`` and keeps the last
+    *max_lines* decoded lines. A mid-file seek drops the first partial
+    line so the result does not start with a torn UTF-8 sequence.
+    Missing files yield ``""``.
+    """
 
     if max_lines < 1 or max_bytes < 1:
         raise ValueError("max_lines and max_bytes must be positive")
@@ -213,6 +260,11 @@ def read_text_tail(
     return "\n".join(text.splitlines()[-int(max_lines) :])
 
 
+# ──────────────────────────────────────────────────────────────────────────
+# torchrun helper — standalone single-node, no training stack in the parent
+# ──────────────────────────────────────────────────────────────────────────
+
+
 def torchrun_module_command(
     module: str,
     *,
@@ -220,7 +272,11 @@ def torchrun_module_command(
     args: Sequence[str] = (),
     python_executable: str = sys.executable,
 ) -> list[str]:
-    """Build a single-node torchrun command for a Python module."""
+    """Build a single-node torchrun command for a Python module.
+
+    Equivalent to ``python -m torch.distributed.run --standalone
+    --nproc_per_node N -m MODULE ...``. Does not launch the process.
+    """
 
     if nproc_per_node < 1:
         raise ValueError("nproc_per_node must be positive")
@@ -245,7 +301,12 @@ def run_torchrun_module(
     env: Mapping[str, str] | None = None,
     python_executable: str = sys.executable,
 ) -> subprocess.CompletedProcess[str]:
-    """Run a single-node Python module under torchrun and capture its logs."""
+    """Run a single-node Python module under torchrun and capture its logs.
+
+    Uses :func:`subprocess.run` with ``capture_output=True`` and
+    ``check=False``. Prefer :func:`run_logged_subprocess` when the
+    worker may run long enough that in-memory capture is unsafe.
+    """
 
     return subprocess.run(
         torchrun_module_command(

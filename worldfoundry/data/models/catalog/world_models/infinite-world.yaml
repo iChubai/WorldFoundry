@@ -19,6 +19,8 @@ name: Infinite-World
 output_artifacts:
 - generated_world
 official_sources:
+  paper: https://arxiv.org/abs/2602.02393
+  project_page: https://rq-wu.github.io/projects/infinite-world
   github:
     confirmed_by: git ls-remote --heads
     confirmed_ref: refs/heads/main

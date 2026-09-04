@@ -17,6 +17,9 @@ source:
 checkpoint_refs:
 - repo_id: lpiccinelli/unik3d-vitl
   filename: model.safetensors
+official_sources:
+  project_page: https://lpiccinelli-eth.github.io/pub/unik3d/
+  paper: https://arxiv.org/abs/2503.16591
 integration:
   kind: pipeline_runner
   status: integrated

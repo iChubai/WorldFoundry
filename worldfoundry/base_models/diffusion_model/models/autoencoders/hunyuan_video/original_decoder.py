@@ -1,4 +1,16 @@
-"""Native HunyuanVideo causal 3D VAE decoder."""
+"""Original HunyuanVideo causal 3-D VAE decoder CNN.
+
+Checkpoint-compatible decoder used by the original HunyuanVideo
+recipe (not HunyuanVideo 1.5).  Public surface:
+:class:`HunyuanVideoVAEDecoder` wrapping :class:`DecoderCausal3D`.
+
+Latents are BCTHW, typically 16 channels, 8× spatial / 4× temporal
+compression.  Temporal convolutions are causal (pad past frames
+only).  Mid-block attention uses a frame-causal mask.
+
+Sibling of :mod:`.original_encoder`.  The runner adapter lives in
+:mod:`.component`; residual / upsample blocks here are graph math.
+"""
 
 import torch
 import torch.nn as nn

@@ -1,4 +1,9 @@
-"""Native latent-consistency scheduler used by T2V-Turbo."""
+"""Native latent-consistency scheduler used by T2V-Turbo.
+
+Implements :class:`~..contracts.DiffusionScheduler` for 4–8 LCM steps
+without a Diffusers dependency.  Paired with
+:class:`~..models.denoisers.t2v_turbo.T2VTurboDenoiser`.
+"""
 
 from __future__ import annotations
 

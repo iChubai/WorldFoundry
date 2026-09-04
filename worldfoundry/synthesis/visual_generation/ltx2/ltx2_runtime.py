@@ -63,7 +63,7 @@ class LTX2Video:
     def __init__(
         self,
         model_name: str,
-        generation_type: Literal["i2v"],
+        generation_type: Literal["i2v", "t2v"],
         version_hint: str,
         checkpoint_path: str,
         height: int,
@@ -89,8 +89,8 @@ class LTX2Video:
         **kwargs,
     ) -> None:
         del pipeline_variant, kwargs
-        if generation_type != "i2v":
-            raise ValueError("LTX native runtime currently supports image-to-video inference")
+        if generation_type not in {"i2v", "t2v"}:
+            raise ValueError(f"unsupported LTX generation type: {generation_type!r}")
         if image_frame_index != 0:
             raise ValueError("LTX image conditioning currently targets the first frame")
         if enhance_prompt:
@@ -102,7 +102,8 @@ class LTX2Video:
 
         self.model_name = str(model_name)
         self.generation_type = generation_type
-        self.model_id = "ltx-2.3-i2v" if str(version_hint).startswith("2.3") else "ltx-2-i2v"
+        version = "2.3" if str(version_hint).startswith("2.3") else "2"
+        self.model_id = f"ltx-{version}-{generation_type}"
         self.height = int(height)
         self.width = int(width)
         self.num_frames = int(num_frames)
@@ -149,8 +150,20 @@ class LTX2Video:
         self.last_audio_sampling_rate: int | None = None
 
     def generate_video(self, prompt: str, image_path: str | None = None) -> torch.Tensor:
-        if image_path is None:
+        if self.generation_type == "i2v" and image_path is None:
             raise ValueError("LTX image-to-video inference requires image_path")
+        if self.generation_type == "t2v" and image_path is not None:
+            raise ValueError("LTX text-to-video inference does not accept image_path")
+        inputs: dict[str, object] = {
+            "frame_rate": self.frame_rate,
+        }
+        if image_path is not None:
+            inputs.update(
+                {
+                    "image": str(Path(image_path).expanduser().resolve()),
+                    "image_strength": self.image_strength,
+                }
+            )
         request = DiffusionRequest(
             prompt=str(prompt or ""),
             negative_prompt=self.negative_prompt or None,
@@ -162,11 +175,7 @@ class LTX2Video:
                 guidance_scale=self.guidance_scale,
                 seed=self.seed,
             ),
-            inputs={
-                "image": str(Path(image_path).expanduser().resolve()),
-                "image_strength": self.image_strength,
-                "frame_rate": self.frame_rate,
-            },
+            inputs=inputs,
         )
         output = self.pipeline(request)
         audio = output.artifacts.get("audio")

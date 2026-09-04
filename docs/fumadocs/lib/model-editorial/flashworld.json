@@ -1,0 +1,41 @@
+{
+  "id": "flashworld",
+  "tagline": {
+    "en": "Fast 3D scene generation from a single image or a text prompt, built on the Wan2.2 backbone.",
+    "zh": "从单张图片或一段文字快速生成 3D 场景,底座基于 Wan2.2。"
+  },
+  "overview": {
+    "en": [
+      "FlashWorld, from the FlashWorld team (imlixinyang), turns an image or a text prompt into a 3D scene. Instead of the slow, per-scene optimization that traditional 3D reconstruction relies on, it aims to produce a navigable scene quickly.",
+      "It builds on the Wan2.2 text-to-image/video backbone and pairs it with a scene representation you can render from new camera positions. You give it an image (or a prompt) and it generates the scene together with camera-conditioned views.",
+      "In WorldFoundry you run FlashWorld through the shared pipeline as an image-conditioned camera-scene task — provide an image, and it renders the generated scene along a camera path."
+    ],
+    "zh": [
+      "FlashWorld 由 FlashWorld 团队(imlixinyang)开发,能把一张图片或一段文字提示词生成为 3D 场景。与传统 3D 重建依赖逐场景的缓慢优化不同,它的目标是快速产出可漫游的场景。",
+      "它以 Wan2.2 的文/图生成底座为基础,搭配可从新相机位姿渲染的场景表示。你给它一张图片(或提示词),它就会生成场景以及相机条件下的视角。",
+      "在 WorldFoundry 中,你通过统一 pipeline 以图像条件的相机场景任务运行 FlashWorld——提供一张图片,它便会沿相机轨迹渲染出生成的场景。"
+    ]
+  },
+  "whenToUse": {
+    "en": "Reach for FlashWorld when you want to generate an explorable 3D scene from a single image or a prompt without running a lengthy per-scene reconstruction pass.",
+    "zh": "当你想从单张图片或一段提示词生成可探索的 3D 场景,又不想跑一遍耗时的逐场景重建时,可以选择 FlashWorld。"
+  },
+  "notFor": {
+    "en": "It needs the FlashWorld and Wan2.2 checkpoints plus a CUDA GPU, so it is not a lightweight or CPU-only option. Checkpoints are downloaded separately.",
+    "zh": "它需要 FlashWorld 与 Wan2.2 的 checkpoint 以及一块 CUDA GPU,并非轻量或纯 CPU 方案。Checkpoint 需单独下载。"
+  },
+  "highlights": {
+    "en": [
+      "Generates a 3D scene from a single image or a text prompt",
+      "Built on the Wan2.2 TI2V backbone",
+      "Renders camera-conditioned views of the generated scene",
+      "Runs as an image-conditioned camera-scene task in WorldFoundry"
+    ],
+    "zh": [
+      "从单张图片或文字提示词生成 3D 场景",
+      "基于 Wan2.2 TI2V 底座构建",
+      "可渲染生成场景的相机条件视角",
+      "在 WorldFoundry 中以图像条件相机场景任务运行"
+    ]
+  }
+}

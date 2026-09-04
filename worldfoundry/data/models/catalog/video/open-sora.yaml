@@ -30,6 +30,13 @@ checkpoint:
     gated: false
     tasks:
     - video-autoencoder
+  - id: DeepFloyd/t5-v1_1-xxl
+    sha: c9c625d2ec93667ec579ede125fd3811d1f81d37
+    license: apache-2.0
+    private: false
+    gated: false
+    tasks:
+    - text-encoding
   - id: hpcai-tech/OpenSora-STDiT-v1-HQ-16x512x512
     sha: 45dcc2854df21b814108ac4abf4956965dac72b1
     license: apache-2.0
@@ -38,6 +45,9 @@ checkpoint:
     tasks:
     - text-to-video
   notes: OpenSora-STDiT-v2 candidate returned 401 in this pass and is not listed.
+official_sources:
+  project_page: https://hpcaitech.github.io/Open-Sora/
+  paper: https://arxiv.org/abs/2503.09642
 integration:
   status: integrated
   notes:
@@ -46,8 +56,8 @@ demo_parity:
   status: pending
   notes: No WorldFoundry runtime or official-output parity run was performed for this
     manifest update.
-notes: Open-Sora often requires separate model and VAE repos; both confirmed public
-  HF repos are listed.
+notes: Open-Sora requires separate model, video VAE, and T5-XXL repos; all three
+  confirmed public HF repos are listed.
 catalog_category: video
 catalog_scope: Official GitHub and/or Hugging Face confirmed open-source or open-weight
   video generation models. Checkpoints are not tracked in git; local validation may

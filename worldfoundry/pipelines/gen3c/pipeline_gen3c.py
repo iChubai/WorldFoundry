@@ -212,6 +212,9 @@ class Gen3CPipeline(PipelineABC):
         input_path = kwargs.pop("input_path", kwargs.pop("image_path", None))
         if images is None:
             images = input_path
+        interaction_signal = kwargs.pop("interaction_signal", None)
+        if interactions is None and interaction_signal is not None:
+            interactions = interaction_signal
         # The curated Workspace contract mirrors the official GEN3C CLI while
         # this native pipeline uses WorldFoundry's common diffusion names.
         # Normalize the official aliases before rejecting genuinely unknown

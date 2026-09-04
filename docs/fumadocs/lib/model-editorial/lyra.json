@@ -1,0 +1,41 @@
+{
+  "id": "lyra",
+  "tagline": {
+    "en": "NVIDIA's generative 3D and 4D world model — turn inputs into explorable scenes.",
+    "zh": "NVIDIA 的生成式 3D/4D 世界模型——把输入转化为可探索的场景。"
+  },
+  "overview": {
+    "en": [
+      "Lyra is a generative 3D and 4D world model from NVIDIA's Spatial Intelligence Lab. Rather than producing a flat video, it builds a scene you can look around and move through, aimed at open, generative world generation.",
+      "WorldFoundry ships both Lyra-1 and Lyra-2 pipelines, with Lyra-2 as the default and Lyra-1 available as an explicit variant. Alongside the world model it uses a Depth Anything 3 asset for geometry, and it includes a native World Explorer for interactive rendering.",
+      "In WorldFoundry you pick the Lyra variant you want and run it through the shared pipeline. Runtime execution needs local Lyra checkpoints, the text-encoder and DA3 assets, and a working CUDA setup."
+    ],
+    "zh": [
+      "Lyra 是 NVIDIA Spatial Intelligence Lab 推出的生成式 3D/4D 世界模型。它不生成平面视频，而是构建一个可以环视、可以在其中移动的场景，面向开放式的生成式世界生成。",
+      "WorldFoundry 同时提供 Lyra-1 与 Lyra-2 两条 pipeline，默认使用 Lyra-2，Lyra-1 作为显式变体保留。除世界模型外，它还借助 Depth Anything 3 资产处理几何，并自带一个用于交互式渲染的原生 World Explorer。",
+      "在 WorldFoundry 中，你选定想用的 Lyra 变体，通过统一 pipeline 运行即可。运行时需要本地 Lyra checkpoint、文本编码器与 DA3 资产，以及可用的 CUDA 环境。"
+    ]
+  },
+  "whenToUse": {
+    "en": "Reach for Lyra when you want to generate an explorable 3D/4D scene rather than a fixed clip — for spatial world building and interactive exploration. Lyra-2 is the recommended starting point.",
+    "zh": "当你想生成一个可探索的 3D/4D 场景、而非固定片段时，选择 Lyra——适合空间世界构建与交互式探索。Lyra-2 是推荐的起点。"
+  },
+  "notFor": {
+    "en": "Not a lightweight or plug-and-play model: it depends on local checkpoints, text-encoder and DA3 assets, and CUDA runtime dependencies, so plan for the setup and hardware.",
+    "zh": "它不是轻量或即插即用的模型：依赖本地 checkpoint、文本编码器与 DA3 资产，以及 CUDA 运行时依赖，请预留环境搭建与硬件资源。"
+  },
+  "highlights": {
+    "en": [
+      "Generative 3D and 4D world model, not just video",
+      "Lyra-1 and Lyra-2 pipelines, with Lyra-2 as the default",
+      "Native World Explorer for interactive rendering",
+      "From NVIDIA's Spatial Intelligence Lab"
+    ],
+    "zh": [
+      "生成式 3D/4D 世界模型，而不仅是视频",
+      "同时提供 Lyra-1 与 Lyra-2，默认 Lyra-2",
+      "自带原生 World Explorer 交互式渲染",
+      "出自 NVIDIA Spatial Intelligence Lab"
+    ]
+  }
+}

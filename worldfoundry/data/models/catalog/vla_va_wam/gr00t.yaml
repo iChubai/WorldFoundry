@@ -19,6 +19,8 @@ integration:
 license: other:nvidia-open-model-license
 name: NVIDIA GR00T
 official_sources:
+  paper: https://arxiv.org/abs/2503.14734
+  project_page: https://research.nvidia.com/labs/lpr/publication/gr00tn1_2025/
   github:
     head_sha: 3df8b3825d67f755e69141446f4315f281b9b7e6
     url: https://github.com/NVIDIA/Isaac-GR00T

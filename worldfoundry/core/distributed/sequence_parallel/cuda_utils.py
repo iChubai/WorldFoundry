@@ -1,14 +1,34 @@
 # SPDX-License-Identifier: Apache-2.0
 # Extracted from trainer/utils.py — CUDA utility functions needed by SP infra.
+"""CUDA stream/device helpers used by sequence-parallel communicators.
+
+Keeps NCCL ops on the caller's stream and avoids import-time
+``cuda.set_device``. Thread-local current device is the same CC-25 rule
+as attention probing.
+
+Not a CUDA runtime — this module only tracks the Python-visible current
+stream and locates ``libnccl`` / ``librccl``. Graph capture still uses
+:mod:`.device_communicators.pynccl`.
+
+Public surface: :func:`find_nccl_library`, :func:`current_stream`,
+:func:`install_torch_set_stream_patch`, :func:`restore_torch_set_stream`,
+:func:`torch_set_stream_patch_removed`.
+"""
+
 import threading
 from contextlib import contextmanager
 
 import torch
 
-from . import envs
+import worldfoundry.core.distributed.sequence_parallel.envs as envs
 from .logger import init_logger
 
 logger = init_logger(__name__)
+
+
+# ──────────────────────────────────────────────────────────────────────────
+# NCCL shared-object lookup — TRAINER_NCCL_SO_PATH overrides PyTorch's soname
+# ──────────────────────────────────────────────────────────────────────────
 
 
 def find_nccl_library() -> str:
@@ -44,12 +64,18 @@ class _StreamCache(threading.local):
     """
 
     def __init__(self) -> None:
+        """Start empty so the first :func:`current_stream` read hits PyTorch."""
         self.value: torch.cuda.Stream | None = None
 
 
 _STREAM_CACHE = _StreamCache()
 # Original torch.cuda.set_stream, captured when the patch installs.
 prev_set_stream = None
+
+
+# ──────────────────────────────────────────────────────────────────────────
+# set_stream monkey-patch — cache the Python-visible stream for pynccl
+# ──────────────────────────────────────────────────────────────────────────
 
 
 def install_torch_set_stream_patch() -> None:
@@ -68,6 +94,7 @@ def install_torch_set_stream_patch() -> None:
     prev_set_stream = current
 
     def _patched_set_stream(stream: torch.cuda.Stream | None) -> None:
+        """Record ``stream`` then forward; ``None`` only updates the cache."""
         _STREAM_CACHE.value = stream
         if stream is not None:
             prev_set_stream(stream)
@@ -94,7 +121,12 @@ def restore_torch_set_stream() -> bool:
 
 @contextmanager
 def torch_set_stream_patch_removed():
-    """Temporarily restore the original ``torch.cuda.set_stream`` in a scope."""
+    """Temporarily restore the original ``torch.cuda.set_stream`` in a scope.
+
+    Needed when a callee (CUDA-graph capture, third-party NCCL) must see
+    the unpatched API. Reinstalls only if this scope was the one that
+    removed the patch, so nested uses do not leak a double-patch.
+    """
 
     was_patched = restore_torch_set_stream()
     try:

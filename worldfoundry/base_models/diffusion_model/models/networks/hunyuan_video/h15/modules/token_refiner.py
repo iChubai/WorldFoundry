@@ -14,7 +14,17 @@
 # of rights and permissions under this agreement.
 # See the License for the specific language governing permissions and limitations under the License.
 
-"""HunyuanVideo 1.5 model-specific token refinement layers."""
+"""HunyuanVideo 1.5 caption-token refinement stack.
+
+Before text tokens enter DiT cross-attention they pass through
+:class:`SingleTokenRefiner`: a linear embed, a timestep + pooled-text
+condition, then a stack of :class:`IndividualTokenRefinerBlock` layers.
+Each block is self-attention + MLP with adaLN gates from the condition
+vector.  Layout is ``B L C`` throughout.
+
+This is HY 1.5-specific (not the original HunyuanVideo refiner).
+Masks keep the first token visible so attention weights stay finite.
+"""
 
 from typing import Optional
 
@@ -67,20 +77,7 @@ class IndividualTokenRefinerBlock(nn.Module):
         dtype: Optional[torch.dtype] = None,
         device: Optional[torch.device] = None,
     ):
-        """Init.
-
-        Args:
-            hidden_size: The hidden size.
-            heads_num: The heads num.
-            mlp_width_ratio: The mlp width ratio.
-            mlp_drop_rate: The mlp drop rate.
-            act_type: The act type.
-            qk_norm: The qk norm.
-            qk_norm_type: The qk norm type.
-            qkv_bias: The qkv bias.
-            dtype: The dtype.
-            device: The device.
-        """
+        """Self-attn + MLP block that refines caption tokens ``B L C``."""
         factory_kwargs = {"device": device, "dtype": dtype}
         super().__init__()
         self.heads_num = heads_num
@@ -177,21 +174,7 @@ class IndividualTokenRefiner(nn.Module):
         dtype: Optional[torch.dtype] = None,
         device: Optional[torch.device] = None,
     ):
-        """Init.
-
-        Args:
-            hidden_size: The hidden size.
-            heads_num: The heads num.
-            depth: The depth.
-            mlp_width_ratio: The mlp width ratio.
-            mlp_drop_rate: The mlp drop rate.
-            act_type: The act type.
-            qk_norm: The qk norm.
-            qk_norm_type: The qk norm type.
-            qkv_bias: The qkv bias.
-            dtype: The dtype.
-            device: The device.
-        """
+        """Stack IndividualTokenRefinerBlock layers."""
         factory_kwargs = {"device": device, "dtype": dtype}
         super().__init__()
         self.blocks = nn.ModuleList(
@@ -270,22 +253,7 @@ class SingleTokenRefiner(nn.Module):
         dtype: Optional[torch.dtype] = None,
         device: Optional[torch.device] = None,
     ):
-        """Init.
-
-        Args:
-            in_channels: The in channels.
-            hidden_size: The hidden size.
-            heads_num: The heads num.
-            depth: The depth.
-            mlp_width_ratio: The mlp width ratio.
-            mlp_drop_rate: The mlp drop rate.
-            act_type: The act type.
-            qk_norm: The qk norm.
-            qk_norm_type: The qk norm type.
-            qkv_bias: The qkv bias.
-            dtype: The dtype.
-            device: The device.
-        """
+        """Project caption tokens, add timestep/text cond, then refine ``B L C``."""
         factory_kwargs = {"device": device, "dtype": dtype}
         super().__init__()
         self.input_embedder = nn.Linear(in_channels, hidden_size, bias=True, **factory_kwargs)

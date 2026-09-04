@@ -1,3 +1,10 @@
+"""Anti-aliased integer spatial downsample (separable binomial blur + stride).
+
+Used by :class:`SpatialRationalResampler` after pixel-shuffle so rational
+scales (3/2, 3/4, …) do not alias.  Applies on H/W only; 3-D inputs are
+folded per frame.
+"""
+
 import math
 
 import torch

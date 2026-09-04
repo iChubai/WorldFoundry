@@ -1,4 +1,20 @@
-"""Inference-only Cosmos Predict 2.5 diffusion transformer."""
+"""Inference-only Cosmos Predict 2.5 diffusion transformer.
+
+Checkpoint-shaped DiT math for Predict 2.5 and Transfer 2.5 (VACE control).
+Sampling, loading, text encoding, and tokenization live in
+``denoisers/cosmos2p5.py`` + the recipe.
+
+Architecture
+------------
+Latents enter as ``B C T H W``.  After optional condition-mask / padding-mask
+channel concat, :class:`Cosmos25PatchEmbed` folds each ``(pt, ph, pw)`` cube
+into one token, yielding ``B (T' H' W') C``.  3D RoPE is factorized over
+T/H/W (with optional FPS warping).  Each :class:`Cosmos25TransformerBlock`
+is AdaLN-Zero gated self-attn → text cross-attn → FFN.  Transfer 2.5 runs a
+sparse control branch and adds hints into the base stream.
+
+This module must stay numerically compatible with the pinned Hub checkpoint.
+"""
 
 from __future__ import annotations
 
@@ -14,6 +30,8 @@ from worldfoundry.core.nn.timestep import Timesteps
 
 
 class Cosmos25PatchEmbed(nn.Module):
+    """Linear 3D patch embed: ``B C T H W`` → ``B T' H' W' C`` tokens."""
+
     def __init__(self, in_channels: int, out_channels: int, patch_size: tuple[int, int, int]) -> None:
         super().__init__()
         self.patch_size = patch_size
@@ -21,6 +39,7 @@ class Cosmos25PatchEmbed(nn.Module):
         self.proj = nn.Linear(in_channels * volume, out_channels, bias=False)
 
     def forward(self, value: torch.Tensor) -> torch.Tensor:
+        """Reshape each patch cube onto the last dim, then project to ``out_channels``."""
         batch, channels, frames, height, width = value.shape
         pt, ph, pw = self.patch_size
         value = value.reshape(batch, channels, frames // pt, pt, height // ph, ph, width // pw, pw)
@@ -28,6 +47,8 @@ class Cosmos25PatchEmbed(nn.Module):
 
 
 class Cosmos25TimestepEmbedding(nn.Module):
+    """SiLU MLP that expands sinusoidal timestep features to ``3 * hidden`` AdaLN bias."""
+
     def __init__(self, hidden_size: int) -> None:
         super().__init__()
         self.linear_1 = nn.Linear(hidden_size, hidden_size, bias=False)
@@ -39,17 +60,22 @@ class Cosmos25TimestepEmbedding(nn.Module):
 
 
 class Cosmos25TimeEmbed(nn.Module):
+    """Sinusoidal timestep → ``(projected, temb)`` pair used by every AdaLN block."""
+
     def __init__(self, hidden_size: int) -> None:
         super().__init__()
         self.time_proj = Timesteps(hidden_size, flip_sin_to_cos=True, downscale_freq_shift=0.0)
         self.t_embedder = Cosmos25TimestepEmbedding(hidden_size)
 
     def forward(self, reference: torch.Tensor, timestep: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
+        """Cast the Fourier features to ``reference.dtype`` so AdaLN stays in the compute dtype."""
         projected = self.time_proj(timestep).type_as(reference)
         return projected, self.t_embedder(projected)
 
 
 class Cosmos25AdaLayerNormZero(nn.Module):
+    """AdaLN-Zero: LayerNorm plus LoRA-bottleneck ``(shift, scale, gate)`` from timestep."""
+
     def __init__(self, hidden_size: int, lora_dim: int) -> None:
         super().__init__()
         self.norm = nn.LayerNorm(hidden_size, elementwise_affine=False, eps=1e-6)
@@ -63,12 +89,15 @@ class Cosmos25AdaLayerNormZero(nn.Module):
         embedded_timestep: torch.Tensor,
         temb: torch.Tensor,
     ) -> tuple[torch.Tensor, torch.Tensor]:
+        """Return ``(norm(x) * (1+scale) + shift, gate)``; ``temb`` is the residual AdaLN bias."""
         modulation = self.linear_2(self.linear_1(self.activation(embedded_timestep))) + temb
         shift, scale, gate = modulation.chunk(3, dim=-1)
         return self.norm(hidden_states) * (1 + scale) + shift, gate
 
 
 class Cosmos25AdaLayerNorm(nn.Module):
+    """Final-layer AdaLN (shift/scale only; no residual gate)."""
+
     def __init__(self, hidden_size: int, lora_dim: int) -> None:
         super().__init__()
         self.embedding_dim = hidden_size
@@ -78,6 +107,7 @@ class Cosmos25AdaLayerNorm(nn.Module):
         self.linear_2 = nn.Linear(lora_dim, hidden_size * 2, bias=False)
 
     def forward(self, value: torch.Tensor, embedded_timestep: torch.Tensor, temb: torch.Tensor) -> torch.Tensor:
+        """Apply ``norm(x) * (1+scale) + shift``; reuse the first ``2*C`` of ``temb`` as residual."""
         modulation = self.linear_2(self.linear_1(self.activation(embedded_timestep)))
         modulation = modulation + temb[..., : self.embedding_dim * 2]
         shift, scale = modulation.chunk(2, dim=-1)
@@ -85,6 +115,8 @@ class Cosmos25AdaLayerNorm(nn.Module):
 
 
 class Cosmos25Attention(nn.Module):
+    """QK-RMSNorm multi-head attention; self-attn when ``context_dim`` is ``None``."""
+
     def __init__(self, query_dim: int, context_dim: int | None, heads: int, head_dim: int) -> None:
         super().__init__()
         context_dim = query_dim if context_dim is None else context_dim
@@ -106,6 +138,7 @@ class Cosmos25Attention(nn.Module):
         attention_mask: torch.Tensor | None = None,
         rotary_emb: tuple[torch.Tensor, torch.Tensor] | None = None,
     ) -> torch.Tensor:
+        """Attend ``B S C`` queries to context; RoPE is applied in fp32 then cast back."""
         context = hidden_states if encoder_hidden_states is None else encoder_hidden_states
         query = self.to_q(hidden_states).unflatten(-1, (self.heads, self.head_dim)).transpose(1, 2)
         key = self.to_k(context).unflatten(-1, (self.heads, self.head_dim)).transpose(1, 2)
@@ -124,6 +157,8 @@ class Cosmos25Attention(nn.Module):
 
 
 class _GELUProjection(nn.Module):
+    """Bias-free Linear + GELU, matching the checkpoint's first FFN slice."""
+
     def __init__(self, hidden_size: int, intermediate_size: int) -> None:
         super().__init__()
         self.proj = nn.Linear(hidden_size, intermediate_size, bias=False)
@@ -133,6 +168,8 @@ class _GELUProjection(nn.Module):
 
 
 class Cosmos25FeedForward(nn.Module):
+    """GELU MLP with a no-op Dropout slot so state-dict keys stay ``net.0/1/2``."""
+
     def __init__(self, hidden_size: int, mlp_ratio: float) -> None:
         super().__init__()
         intermediate = int(hidden_size * mlp_ratio)
@@ -151,6 +188,8 @@ class Cosmos25FeedForward(nn.Module):
 
 
 class Cosmos25TransformerBlock(nn.Module):
+    """One Predict 2.5 DiT block: gated self-attn, text cross-attn, then FFN."""
+
     def __init__(
         self, hidden_size: int, heads: int, head_dim: int, text_dim: int, mlp_ratio: float, lora_dim: int
     ) -> None:
@@ -171,6 +210,7 @@ class Cosmos25TransformerBlock(nn.Module):
         rotary_emb: tuple[torch.Tensor, torch.Tensor],
         attention_mask: torch.Tensor | None,
     ) -> torch.Tensor:
+        """Run the three AdaLN-gated residual branches on ``B S C`` tokens."""
         normalized, gate = self.norm1(hidden_states, embedded_timestep, temb)
         hidden_states = hidden_states + gate * self.attn1(normalized, rotary_emb=rotary_emb)
         normalized, gate = self.norm2(hidden_states, embedded_timestep, temb)
@@ -184,6 +224,13 @@ class Cosmos25TransformerBlock(nn.Module):
 
 
 class Cosmos25RotaryPosEmbed(nn.Module):
+    """Factorized 3D RoPE over the post-patch ``(T', H', W')`` lattice.
+
+    Head dim is split as ``(T remainder, H, W)`` with NTK-aware axis scales.
+    Temporal positions can be warped by ``fps / base_fps`` so motion speed
+    stays consistent across frame rates.
+    """
+
     def __init__(
         self,
         head_dim: int,
@@ -203,6 +250,7 @@ class Cosmos25RotaryPosEmbed(nn.Module):
         )
 
     def forward(self, value: torch.Tensor, fps: float | None) -> tuple[torch.Tensor, torch.Tensor]:
+        """Return ``(cos, sin)`` of shape ``[T'*H'*W', head_dim]`` from a ``B C T H W`` dummy."""
         _, _, frames, height, width = value.shape
         sizes = (frames // self.patch_size[0], height // self.patch_size[1], width // self.patch_size[2])
         sequence = torch.arange(max(self.max_size), device=value.device, dtype=torch.float32)
@@ -243,6 +291,7 @@ class Cosmos25Transformer3DModel(nn.Module):
         concat_padding_mask: bool = True,
         **unused_config: object,
     ) -> None:
+        """Build the Predict 2.5 stem; extra checkpoint keys are accepted and ignored."""
         super().__init__()
         del unused_config
         hidden_size = num_attention_heads * attention_head_dim
@@ -282,6 +331,7 @@ class Cosmos25Transformer3DModel(nn.Module):
         condition_mask: torch.Tensor | None,
         padding_mask: torch.Tensor | None,
     ) -> tuple[torch.Tensor, tuple[torch.Tensor, torch.Tensor], tuple[int, int, int]]:
+        """Optional channel concat + patch embed → ``B (T'H'W') C`` tokens and RoPE."""
         batch, _, frames, height, width = hidden_states.shape
         if condition_mask is not None:
             hidden_states = torch.cat((hidden_states, condition_mask.type_as(hidden_states)), dim=1)
@@ -302,6 +352,11 @@ class Cosmos25Transformer3DModel(nn.Module):
         encoder_hidden_states: torch.Tensor,
         grid: tuple[int, int, int],
     ) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
+        """Project text and broadcast timestep AdaLN to every spatial token.
+
+        ``timestep`` may be scalar per sample or one value per latent frame;
+        both are expanded to ``B (T' H' W') C`` to match the token stream.
+        """
         batch = hidden_states.shape[0]
         token_frames, token_height, token_width = grid
         encoder_hidden_states = self.text_embed(encoder_hidden_states)
@@ -324,6 +379,7 @@ class Cosmos25Transformer3DModel(nn.Module):
         return encoder_hidden_states, projected, temb
 
     def _unpatchify(self, hidden_states: torch.Tensor, grid: tuple[int, int, int]) -> torch.Tensor:
+        """Fold ``B (T'H'W') (pt·ph·pw·C)`` tokens back to ``B C T H W`` video latents."""
         token_frames, token_height, token_width = grid
         pt, ph, pw = self.config.patch_size
         return rearrange(
@@ -349,6 +405,7 @@ class Cosmos25Transformer3DModel(nn.Module):
         padding_mask: torch.Tensor | None = None,
         control_hidden_states: dict[str, torch.Tensor] | None = None,
     ) -> torch.Tensor:
+        """Denoise ``B C T H W`` latents; optional per-block ``control_hidden_states`` are added in."""
         if attention_mask is not None:
             attention_mask = attention_mask[:, None, None].to(dtype=torch.bool)
         hidden_states, rotary_emb, grid = self._prepare_tokens(
@@ -401,6 +458,7 @@ class Cosmos25ControlTransformerBlock(Cosmos25TransformerBlock):
         rotary_emb: tuple[torch.Tensor, torch.Tensor],
         attention_mask: torch.Tensor | None,
     ) -> tuple[torch.Tensor, torch.Tensor]:
+        """Run the control branch; layer 0 mixes in base tokens via ``before_proj``."""
         before_proj = getattr(self, "before_proj", None)
         if before_proj is not None:
             hidden_states = before_proj(hidden_states) + base_hidden_states
@@ -487,6 +545,7 @@ class Cosmos25Transfer3DModel(Cosmos25Transformer3DModel):
         padding_mask: torch.Tensor | None = None,
         control_context_scale: float | torch.Tensor = 1.0,
     ) -> torch.Tensor:
+        """Denoise with a sparse VACE control branch; pad unused control channels to the max modality count."""
         if condition_mask is None:
             raise ValueError("Cosmos Transfer2.5 requires a condition mask")
         if latent_control_input.shape[1] > self.num_control_channels:

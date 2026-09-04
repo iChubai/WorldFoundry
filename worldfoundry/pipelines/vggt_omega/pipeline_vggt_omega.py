@@ -9,12 +9,18 @@ from typing import Any, Dict, Optional, Union
 import numpy as np
 from PIL import Image
 
+from worldfoundry.core.io import artifact_root_path
 from ...synthesis.visual_generation.memory.runtime import RuntimeMemory
 from ...operators.vggt_omega_operator import VGGTOmegaOperator
 from worldfoundry.representations.point_clouds_generation.vggt.vggt_omega_representation import (
     VGGTOmegaRepresentation,
 )
 from ..pipeline_utils import PipelineABC
+
+
+def _default_output_dir(name: str = "vggt_omega_output") -> str:
+    """Resolve a stable default output directory instead of writing to the CWD."""
+    return str(artifact_root_path() / name)
 
 
 _REPO_ROOT = Path(__file__).resolve().parents[4]
@@ -279,7 +285,7 @@ class VGGTOmegaPipeline(PipelineABC):
     def run_official_scene_export(
         self,
         image_path: Union[str, list[str]],
-        output_dir: str = "./vggt_omega_output",
+        output_dir: Optional[str] = None,
         image_resolution: Optional[int] = None,
         preprocess_mode: str = "balanced",
         patch_size: Optional[int] = None,
@@ -304,7 +310,7 @@ class VGGTOmegaPipeline(PipelineABC):
         return _run_official_scene_export(
             input_source=image_path,
             model=self.representation_model.model,
-            output_dir=output_dir,
+            output_dir=output_dir or _default_output_dir(),
             device=self.representation_model.device,
             image_resolution=image_resolution or getattr(self.representation_model, "resolution", 512),
             preprocess_mode=preprocess_mode,

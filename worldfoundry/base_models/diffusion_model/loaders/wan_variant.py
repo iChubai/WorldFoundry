@@ -1,4 +1,10 @@
-"""Checkpoint loading shared by in-tree Wan inference variants."""
+"""Checkpoint loading shared by in-tree Wan inference variants.
+
+``from_pretrained``-style helper for Fun / Camera / Action graphs that ship
+``config.json`` next to weights.  Distinct from :mod:`.wan_components`, which
+loads official Alibaba bundles.  Missing ``config.json`` or a non-matching
+filename raises :exc:`FileNotFoundError` / :exc:`ValueError`.
+"""
 
 from __future__ import annotations
 
@@ -66,10 +72,19 @@ def load_wan_transformer(
     if converter is not None and "has_image_input" in config:
         config = converter(config)
     state_dict = load_state_dict(str(root), device="cpu")
-    del low_cpu_mem_usage
     model = model_class.from_config(config, **overrides)
     state_dict = _compatible_state_dict(model, state_dict)
-    model.load_state_dict(state_dict, strict=False)
+    # These inference checkpoints are already stored in the requested dtype.
+    # ``assign=True`` replaces parameter storage with checkpoint tensors
+    # instead of copying BF16 weights into a freshly allocated FP32 model and
+    # then converting the entire model back to BF16.  Missing variant-specific
+    # parameters retain their constructor initialization and are converted by
+    # the final ``to`` below.
+    model.load_state_dict(
+        state_dict,
+        strict=False,
+        assign=bool(low_cpu_mem_usage),
+    )
     return model.to(dtype=torch_dtype).eval()
 
 
@@ -92,6 +107,7 @@ def load_wan_config(
 
 
 class WanVariantLoadingMixin:
+    """Attach a native ``from_pretrained`` constructor to a Wan variant class."""
     @classmethod
     def from_pretrained(
         cls,

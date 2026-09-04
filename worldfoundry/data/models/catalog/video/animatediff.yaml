@@ -19,6 +19,9 @@ checkpoint_refs:
 - repo_id: openai/clip-vit-large-patch14
   notes:
   - Resolved from the existing hfd HunyuanGameCraft local copy via HF cache symlinks.
+official_sources:
+  project_page: https://animatediff.github.io/
+  paper: https://arxiv.org/abs/2307.04725
 integration:
   status: integrated
 runner_target: worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner

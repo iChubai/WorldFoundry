@@ -1,4 +1,10 @@
-"""Cosmos Predict 2.5 Reason1 prompt conditioning."""
+"""Cosmos Predict 2.5 Reason1 (Qwen2.5-VL) :class:`~...contracts.ConditionEncoder`.
+
+Tokenizes prompts with an optional English system prefix and encodes
+them with the Qwen2.5-VL text tower (layer-concat strategy).  Returns
+``Conditioning.positive[\"context\"]`` for the Predict 2.5 DiT.  Does
+not rewrite user prompt strings.
+"""
 
 from __future__ import annotations
 
@@ -10,10 +16,18 @@ import torch
 import torch.nn as nn
 from transformers import AutoConfig, AutoTokenizer
 from transformers.models.qwen2_5_vl.modeling_qwen2_5_vl import (
-    Qwen2_5_VLRMSNorm,
     Qwen2_5_VLRotaryEmbedding,
     Qwen2_5_VLTextModel,
 )
+
+try:
+    # transformers <= 4.56 kept a Qwen2.5-VL-specific export.
+    from transformers.models.qwen2_5_vl.modeling_qwen2_5_vl import Qwen2_5_VLRMSNorm
+except ImportError:
+    # transformers 4.57 reuses and exports the base Qwen2 implementation.
+    from transformers.models.qwen2_5_vl.modeling_qwen2_5_vl import (
+        Qwen2RMSNorm as Qwen2_5_VLRMSNorm,
+    )
 
 from ....components import ComponentBuildContext
 from ....contracts import Conditioning, DiffusionRequest

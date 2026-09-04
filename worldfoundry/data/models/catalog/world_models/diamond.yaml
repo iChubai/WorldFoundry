@@ -15,6 +15,7 @@ source:
   official_repo_url: https://github.com/eloialonso/diamond
   license: mit
 official_sources:
+  paper: https://arxiv.org/abs/2405.12399
   project_page: https://diamond-wm.github.io/
   github:
     url: https://github.com/eloialonso/diamond

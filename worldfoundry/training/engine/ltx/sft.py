@@ -341,7 +341,10 @@ def materialize_ltx_cached_training_session(
     if recipe.distributed.backend == "fsdp2":
         if resolved_device.type != "cuda":
             raise ValueError("native FSDP2 materialization requires device='cuda'")
-        distributed_context = DistributedTrainingContext(device_type="cuda")
+        distributed_context = DistributedTrainingContext(
+            device_type="cuda",
+            timeout_seconds=recipe.distributed.timeout_seconds,
+        )
         resolved_device = distributed_context.device
     elif recipe.distributed.backend != "single":
         raise NotImplementedError(f"LTX materialization does not implement {recipe.distributed.backend!r}")

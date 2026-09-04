@@ -1,7 +1,11 @@
 # SPDX-FileCopyrightText: Copyright (c) 2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 
-"""Native Cosmos component."""
+"""LlamaGuard S1–S14 unsafe-category labels used by Cosmos prompt checks.
+
+Keys match the official LlamaGuard taxonomy (``S1`` … ``s14``).  Values
+are short English labels only; the classifier lives outside this module.
+"""
 
 UNSAFE_CATEGORIES = {
     "S1": "Violent Crimes.",

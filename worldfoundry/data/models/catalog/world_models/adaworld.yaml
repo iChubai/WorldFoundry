@@ -9,6 +9,7 @@ source:
   status: open_source
   official_repo_url: https://github.com/Little-Podi/AdaWorld
 official_sources:
+  paper: https://arxiv.org/abs/2503.18938
   project_page: https://adaptable-world-model.github.io/
   github:
     url: https://github.com/Little-Podi/AdaWorld

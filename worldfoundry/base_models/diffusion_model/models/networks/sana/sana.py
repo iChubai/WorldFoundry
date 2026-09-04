@@ -15,7 +15,22 @@
 # SPDX-License-Identifier: Apache-2.0
 
 # This file is modified from https://github.com/PixArt-alpha/PixArt-sigma
-"""Module for base_models -> diffusion_model -> image -> sana -> diffusion -> model -> nets -> sana.py functionality."""
+"""Fixed-resolution SANA image DiT (PixArt-sigma lineage).
+
+Checkpoint-compatible transformer used by the original SANA image recipes.
+Each :class:`SanaBlock` is adaLN-single: a shared timestep table of six
+vectors (shift/scale/gate for MSA and MLP) is added to ``t`` and applied
+around self-attention and the FFN.  Caption tokens enter through a separate
+cross-attention.  Self-attention is selected by ``attn_type``:
+
+* ``flash`` — multi-head softmax (FlashAttention when available)
+* ``linear`` / ``triton_linear`` — LiteLA ReLU-kernel linear attention
+  (``O(N)`` via ``VK`` accumulation; Triton fuses QKV+ReLU+VK+proj)
+* ``vanilla`` — plain PyTorch attention
+
+FFN is ``mlp``, depthwise-MLP, or GLUMBConv (inverted bottleneck + GLU).
+Variable-resolution and video graphs subclass this through ``SanaMS``.
+"""
 
 import logging
 import os
@@ -196,9 +211,7 @@ class SanaBlock(nn.Module):
 #                                 Core Sana Model                                #
 #################################################################################
 class Sana(nn.Module):
-    """
-    Diffusion model with a Transformer backbone.
-    """
+    """Fixed-resolution SANA image DiT: patch embed → adaLN-single blocks → final layer."""
 
     def __init__(
         self,
@@ -571,11 +584,11 @@ def get_1d_sincos_pos_embed_from_grid(embed_dim, pos):
 #                                   Sana Configs                              #
 #################################################################################
 def Sana_600M_P1_D28(**kwargs):
-    """Sana 600m p1 d28."""
+    """Published 600M SANA: patch=1, depth=28."""
     return Sana(depth=28, hidden_size=1152, patch_size=1, num_heads=16, **kwargs)
 
 
 def Sana_1600M_P1_D20(**kwargs):
-    """Sana 1600m p1 d20."""
+    """Published 1.6B SANA: patch=1, depth=20."""
     # 20 layers, 1648.48M
     return Sana(depth=20, hidden_size=2240, patch_size=1, num_heads=20, **kwargs)

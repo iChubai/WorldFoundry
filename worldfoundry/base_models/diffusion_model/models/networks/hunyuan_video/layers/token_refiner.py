@@ -1,4 +1,9 @@
-"""Original HunyuanVideo model-specific token refinement layers."""
+"""Text token refiner used by the HunyuanVideo i2v MM-DiT.
+
+Projects LLM embeddings to DiT width, then runs AdaLN-gated self-attn
+blocks on ``B L C`` text tokens.  The pooled context+timestep vector
+gates each residual.  Video tokens are not refined here.
+"""
 
 from typing import Optional
 
@@ -22,7 +27,8 @@ from worldfoundry.core.nn import (
 
 
 class IndividualTokenRefinerBlock(nn.Module):
-    """Individual token refiner block implementation."""
+    """AdaLN-gated self-attn + MLP over ``B L C`` text tokens."""
+
     def __init__(
         self,
         hidden_size,
@@ -36,20 +42,6 @@ class IndividualTokenRefinerBlock(nn.Module):
         dtype: Optional[torch.dtype] = None,
         device: Optional[torch.device] = None,
     ):
-        """Init.
-
-        Args:
-            hidden_size: The hidden size.
-            heads_num: The heads num.
-            mlp_width_ratio: The mlp width ratio.
-            mlp_drop_rate: The mlp drop rate.
-            act_type: The act type.
-            qk_norm: The qk norm.
-            qk_norm_type: The qk norm type.
-            qkv_bias: The qkv bias.
-            dtype: The dtype.
-            device: The device.
-        """
         factory_kwargs = {"device": device, "dtype": dtype}
         super().__init__()
         self.heads_num = heads_num
@@ -103,13 +95,7 @@ class IndividualTokenRefinerBlock(nn.Module):
         c: torch.Tensor,  # timestep_aware_representations + context_aware_representations
         attn_mask: torch.Tensor = None,
     ):
-        """Forward.
-
-        Args:
-            x: The x.
-            c: The c.
-            attn_mask: The attn mask.
-        """
+        """``c`` is the pooled timestep+context vector used as AdaLN gates."""
         gate_msa, gate_mlp = self.adaLN_modulation(c).chunk(2, dim=1)
 
         norm_x = self.norm1(x)
@@ -131,7 +117,8 @@ class IndividualTokenRefinerBlock(nn.Module):
 
 
 class IndividualTokenRefiner(nn.Module):
-    """Individual token refiner implementation."""
+    """Stack of :class:`IndividualTokenRefinerBlock` with a pairwise padding mask."""
+
     def __init__(
         self,
         hidden_size,
@@ -146,21 +133,6 @@ class IndividualTokenRefiner(nn.Module):
         dtype: Optional[torch.dtype] = None,
         device: Optional[torch.device] = None,
     ):
-        """Init.
-
-        Args:
-            hidden_size: The hidden size.
-            heads_num: The heads num.
-            depth: The depth.
-            mlp_width_ratio: The mlp width ratio.
-            mlp_drop_rate: The mlp drop rate.
-            act_type: The act type.
-            qk_norm: The qk norm.
-            qk_norm_type: The qk norm type.
-            qkv_bias: The qkv bias.
-            dtype: The dtype.
-            device: The device.
-        """
         factory_kwargs = {"device": device, "dtype": dtype}
         super().__init__()
         self.blocks = nn.ModuleList(
@@ -186,13 +158,7 @@ class IndividualTokenRefiner(nn.Module):
         c: torch.LongTensor,
         mask: Optional[torch.Tensor] = None,
     ):
-        """Forward.
-
-        Args:
-            x: The x.
-            c: The c.
-            mask: The mask.
-        """
+        """Apply the stack; ``mask`` is ``B L`` (1=keep) expanded to pairwise attn."""
         self_attn_mask = None
         if mask is not None:
             batch_size = mask.shape[0]
@@ -234,23 +200,6 @@ class SingleTokenRefiner(nn.Module):
         dtype: Optional[torch.dtype] = None,
         device: Optional[torch.device] = None,
     ):
-        """Init.
-
-        Args:
-            in_channels: The in channels.
-            hidden_size: The hidden size.
-            heads_num: The heads num.
-            depth: The depth.
-            mlp_width_ratio: The mlp width ratio.
-            mlp_drop_rate: The mlp drop rate.
-            act_type: The act type.
-            qk_norm: The qk norm.
-            qk_norm_type: The qk norm type.
-            qkv_bias: The qkv bias.
-            attn_mode: The attn mode.
-            dtype: The dtype.
-            device: The device.
-        """
         factory_kwargs = {"device": device, "dtype": dtype}
         super().__init__()
         self.attn_mode = attn_mode
@@ -287,13 +236,7 @@ class SingleTokenRefiner(nn.Module):
         t: torch.LongTensor,
         mask: Optional[torch.LongTensor] = None,
     ):
-        """Forward.
-
-        Args:
-            x: The x.
-            t: The t.
-            mask: The mask.
-        """
+        """Project ``B L C_text`` and refine; ``t`` is the diffusion timestep."""
         timestep_aware_representations = self.t_embedder(t)
 
         if mask is None:

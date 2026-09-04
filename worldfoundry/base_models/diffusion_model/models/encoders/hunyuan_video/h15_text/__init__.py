@@ -14,7 +14,18 @@
 # of rights and permissions under this agreement.
 # See the License for the specific language governing permissions and limitations under the License.
 
-"""HunyuanVideo 1.5 prompt encoder wrappers."""
+"""HunyuanVideo 1.5 prompt encoder wrappers (LLM + ByT5 glyph).
+
+Loads the 1.5 language-model encoder and optional ByT5 glyph
+tower.  :class:`TextEncoder` is the public encode surface used
+by :class:`~..component.HunyuanVideo15PromptConditioner`.
+
+Token tensors feed the Hunyuan 1.5 DiT cross-attention.
+Glyph / multilingual formatting lives in :mod:`.byT5`.
+Vision is a sibling package :mod:`~..h15_vision`.
+
+License header above is Tencent Hunyuan; keep it intact.
+"""
 
 import os
 from copy import deepcopy

@@ -3,6 +3,7 @@
     "4dworldbench": "ustc",
     "ai2thor": "ai2",
     "aigcbench": "benchcouncil",
+    "apple-pi": "ntu",
     "behavior1k": "stanford",
     "bridgedata-v2": "berkeley",
     "calvin": "freiburg",
@@ -11,6 +12,7 @@
     "devil-dynamics": "cas",
     "evalcrafter": "tencent",
     "ewmbench": "agibot",
+    "fetv": "pku",
     "genai-bench": "waterloo",
     "ipv-bench": "nus",
     "iworld-bench": "tsinghua",
@@ -24,10 +26,14 @@
     "likephys": "oxford",
     "maniskill": "ucsd",
     "maniskill2": "ucsd",
+    "memobench": "harvard",
     "metaworld": "farama",
     "mikasa": "airi",
     "mind": "csu",
+    "mirabench": "tencent",
     "molmospaces": "ai2",
+    "pawbench": "sjtu",
+    "phyeduvideo": "adobe",
     "phyfps-bench-gen": "tamu",
     "phygenbench": "shanghai-ai-lab",
     "phyground": "nu-lab",
@@ -39,15 +45,18 @@
     "rlbench": "imperial",
     "robocasa": "nvidia",
     "robocerebra": "buaa",
+    "robomme": "umich",
     "robotwin": "hku",
     "sana-wm-bench": "nvidia",
     "simpler-env": "google-deepmind",
+    "stevo-bench": "caltech",
     "t2v-compbench": "hku",
     "t2v-safety-bench": "cas",
     "t2vworldbench": "sjsu",
     "vbench": "shanghai-ai-lab",
     "vbench-2.0": "shanghai-ai-lab",
     "vbench-plus-plus": "shanghai-ai-lab",
+    "video-bench": "sjtu",
     "videophy": "google",
     "videophy2": "google",
     "videoscience-bench": "ucsd",
@@ -59,8 +68,11 @@
     "wbench": "meituan",
     "world-in-world": "jhu",
     "worldarena": "tsinghua",
+    "worldatlas-arena": "openenvision",
+    "worldbench": "ucla",
     "worldmodelbench": "nvidia",
     "worldolympiad": "alibaba",
+    "worldreasonbench": "tsinghua",
     "worldscore": "stanford",
     "wrbench": "ustc"
   },
@@ -72,6 +84,7 @@
     "ac3d": "snap",
     "act": "stanford",
     "adaworld": "hkust",
+    "alayaworld": "alayalab",
     "allegro": "rhymes",
     "animatediff": "cuhk",
     "astra": "tsinghua",
@@ -131,6 +144,7 @@
     "emu3.5": "baai",
     "eo1": "shanghai-ai-lab",
     "eventvla": "shanghai-ai-lab",
+    "evoke": "alayalab",
     "fantasyworld": "amap",
     "flashworld": "tencent",
     "framepack": "stanford",
@@ -173,6 +187,8 @@
     "internvla-a1": "shanghai-ai-lab",
     "irasim": "bytedance",
     "iris": "unige",
+    "joyai-echo-longvideo": "jd",
+    "joyai-echo-wm": "jd",
     "k-planes": "berkeley",
     "kairos-sensenova": "sensetime",
     "kling-api": "kuaishou",
@@ -195,22 +211,28 @@
     "longcat-video": "meituan",
     "longvie-1": "shanghai-ai-lab",
     "longvie-2": "shanghai-ai-lab",
+    "ltx-2.5": "lightricks",
     "ltx-2.x": "lightricks",
     "ltx-video": "lightricks",
     "luma-ray2": "luma",
     "lyra": "nvidia",
     "magi-1": "sandai",
+    "magi2-preview": "sandai",
     "magicworld": "vivo",
     "matrix-game-1": "skywork",
     "matrix-game-2": "skywork",
     "matrix-game-3": "skywork",
     "matrix-game-3.5-first-person": "riemann-dynamics",
     "matrix-game-3.5-third-person": "riemann-dynamics",
+    "mem-0": "hku",
     "metric3d-prior": "dji",
     "mineworld": "microsoft",
+    "minimax-h3": "minimax",
     "minwm-hy-action2v": "shengshu",
     "minwm-wan-action2v": "shengshu",
+    "mira": "mira-wm",
     "mmaudio": "sony",
+    "mme-vla": "umich",
     "mochi-1": "genmo",
     "modelscope-t2v": "alibaba",
     "molmoact2": "ai2",
@@ -220,11 +242,13 @@
     "motionbricks": "nvidia",
     "motionctrl": "tencent",
     "multi-task-dit": "huggingface",
+    "multiworld": "map-org",
     "mvdiffusion": "sfu",
     "neoverse": "createai",
     "nwm": "meta",
     "oasis-500m": "etched",
     "octo": "berkeley",
+    "omniforcing": "omniforcing",
     "omnivinci": "nvidia",
     "open-magvit2": "tencent",
     "open-sora": "hpcaitech",
@@ -261,18 +285,21 @@
     "shape-of-motion": "berkeley",
     "shotstream": "kuaishou",
     "show-o": "nus",
+    "simworld": "simworld",
     "skyreels-v2": "skywork",
     "skyreels-v3": "skywork",
     "smolvla": "huggingface",
     "solaris": "nyu",
     "sora2": "openai",
     "spatia": "microsoft",
+    "spatial-forcing": "openhelix",
     "spatial-ladder": "zju",
     "spatial-reasoner": "jhu",
     "spirit-v1.5": "spirit-ai",
     "splatt3r": "oxford",
     "stable-video-infinity": "epfl",
     "stable-virtual-camera": "stability",
+    "starvla": "starvla",
     "starwm": "cas",
     "step-video-t2v": "stepfun",
     "t2v_turbo_t2v": "google",
@@ -366,7 +393,18 @@
     "airi": {
       "abbr": "AIRI",
       "key": "airi",
-      "name": "AIRI (Artificial Intelligence Research Institute)"
+      "license": "Public domain (text logo)",
+      "name": "AIRI (Artificial Intelligence Research Institute)",
+      "source": "Original simple wordmark rendition for the identity mark",
+      "src": "/org-logos/airi.svg"
+    },
+    "alayalab": {
+      "abbr": "AL",
+      "key": "alayalab",
+      "license": "Public domain (simple geometry)",
+      "name": "AlayaLab",
+      "source": "Original simple A monogram for the identity mark",
+      "src": "/org-logos/alayalab.svg"
     },
     "alibaba": {
       "abbr": "AL",
@@ -427,7 +465,10 @@
     "buaa": {
       "abbr": "BUAA",
       "key": "buaa",
-      "name": "Beihang University"
+      "license": "Organization brand mark",
+      "name": "Beihang University",
+      "source": "Official university brand mark (www.buaa.edu.cn), crest cropped for the identity mark",
+      "src": "/org-logos/buaa.png"
     },
     "bytedance": {
       "abbr": "BD",
@@ -437,20 +478,37 @@
       "source": "Simple Icons (https://simpleicons.org), CC0-1.0",
       "src": "/org-logos/bytedance.svg"
     },
+    "caltech": {
+      "abbr": "CIT",
+      "key": "caltech",
+      "license": "Public domain (simple seal rendition)",
+      "name": "California Institute of Technology (Caltech)",
+      "source": "Original simple circular-seal rendition of the Caltech seal (torch)",
+      "src": "/org-logos/caltech.svg"
+    },
     "cas": {
       "abbr": "CAS",
       "key": "cas",
-      "name": "Chinese Academy of Sciences"
+      "license": "Organization brand mark",
+      "name": "Chinese Academy of Sciences",
+      "source": "Official CAS seal from the UCAS brand mark (www.ucas.ac.cn), crest cropped for the identity mark",
+      "src": "/org-logos/cas.png"
     },
     "cau": {
       "abbr": "CAU",
       "key": "cau",
-      "name": "CAU HAI Lab"
+      "license": "Public domain (simple seal rendition)",
+      "name": "Chung-Ang University (HAI Lab)",
+      "source": "Original simple circular-seal rendition of the CAU monogram",
+      "src": "/org-logos/cau.svg"
     },
     "cityu": {
       "abbr": "CityU",
       "key": "cityu",
-      "name": "City University of Hong Kong"
+      "license": "Public domain (simple seal rendition)",
+      "name": "City University of Hong Kong",
+      "source": "Original simple circular-seal rendition of the CityU emblem",
+      "src": "/org-logos/cityu.svg"
     },
     "cmu": {
       "abbr": "CMU",
@@ -471,12 +529,18 @@
     "csu": {
       "abbr": "CSU",
       "key": "csu",
-      "name": "Central South University"
+      "license": "Organization brand mark",
+      "name": "Central South University",
+      "source": "Official university brand mark (www.csu.edu.cn), crest cropped for the identity mark",
+      "src": "/org-logos/csu.png"
     },
     "cuhk": {
       "abbr": "CUHK",
       "key": "cuhk",
-      "name": "The Chinese University of Hong Kong"
+      "license": "Public domain (simple seal rendition)",
+      "name": "The Chinese University of Hong Kong",
+      "source": "Original simple circular-seal rendition of the CUHK bird emblem",
+      "src": "/org-logos/cuhk.svg"
     },
     "dexmal": {
       "abbr": "DX",
@@ -553,7 +617,10 @@
     "galaxea": {
       "abbr": "GX",
       "key": "galaxea",
-      "name": "Galaxea AI"
+      "license": "Organization brand mark",
+      "name": "Galaxea AI",
+      "source": "GitHub organization brand avatar (github.com/OpenGalaxea)",
+      "src": "/org-logos/galaxea.png"
     },
     "gatech": {
       "abbr": "GT",
@@ -598,17 +665,34 @@
     "happyoyster": {
       "abbr": "HO",
       "key": "happyoyster",
-      "name": "HappyOyster"
+      "license": "Public domain (simple geometry)",
+      "name": "HappyOyster",
+      "source": "Original simple oyster/pearl monogram for the identity mark",
+      "src": "/org-logos/happyoyster.svg"
+    },
+    "harvard": {
+      "abbr": "HU",
+      "key": "harvard",
+      "license": "Public domain (simple seal rendition)",
+      "name": "Harvard University",
+      "source": "Original simple shield rendition of the Harvard crimson",
+      "src": "/org-logos/harvard.svg"
     },
     "hku": {
       "abbr": "HKU",
       "key": "hku",
-      "name": "The University of Hong Kong"
+      "license": "Public domain (simple seal rendition)",
+      "name": "The University of Hong Kong",
+      "source": "Original simple shield rendition of the HKU coat of arms",
+      "src": "/org-logos/hku.svg"
     },
     "hkust": {
       "abbr": "HKUST",
       "key": "hkust",
-      "name": "Hong Kong University of Science and Technology"
+      "license": "Public domain (simple seal rendition)",
+      "name": "Hong Kong University of Science and Technology",
+      "source": "Original simple circular-seal rendition of the HKUST emblem",
+      "src": "/org-logos/hkust.svg"
     },
     "hpcaitech": {
       "abbr": "HA",
@@ -629,7 +713,10 @@
     "hust": {
       "abbr": "HUST",
       "key": "hust",
-      "name": "Huazhong University of Science and Technology"
+      "license": "Public domain (simple seal rendition)",
+      "name": "Huazhong University of Science and Technology",
+      "source": "Original simple circular-seal rendition of the HUST emblem",
+      "src": "/org-logos/hust.svg"
     },
     "imperial": {
       "abbr": "ICL",
@@ -658,7 +745,10 @@
     "jd": {
       "abbr": "JD",
       "key": "jd",
-      "name": "JD.com (Joy Future Academy)"
+      "license": "Organization brand mark",
+      "name": "JD.com (Joy Future Academy)",
+      "source": "GitHub organization brand avatar (github.com/jd-opensource)",
+      "src": "/org-logos/jd.png"
     },
     "jhu": {
       "abbr": "JHU",
@@ -716,6 +806,14 @@
       "source": "GitHub organization brand avatar (github.com/lumalabs-ai), pre-existing repo asset",
       "src": "/org-logos/luma.png"
     },
+    "map-org": {
+      "abbr": "MAP",
+      "key": "map-org",
+      "license": "Organization brand mark",
+      "name": "MAP (multimodal-art-projection)",
+      "source": "GitHub organization brand avatar (github.com/multimodal-art-projection)",
+      "src": "/org-logos/map-org.png"
+    },
     "meigen": {
       "abbr": "MG",
       "key": "meigen",
@@ -751,7 +849,10 @@
     "midea": {
       "abbr": "MD",
       "key": "midea",
-      "name": "Midea Group"
+      "license": "Public domain (text logo)",
+      "name": "Midea Group",
+      "source": "Original simple wordmark rendition for the identity mark",
+      "src": "/org-logos/midea.svg"
     },
     "mila": {
       "abbr": "MILA",
@@ -768,6 +869,14 @@
       "name": "MiniMax",
       "source": "Simple Icons (https://simpleicons.org), CC0-1.0",
       "src": "/org-logos/minimax.svg"
+    },
+    "mira-wm": {
+      "abbr": "MI",
+      "key": "mira-wm",
+      "license": "Public domain (text logo)",
+      "name": "MIRA",
+      "source": "Original simple wordmark rendition for the identity mark",
+      "src": "/org-logos/mira-wm.svg"
     },
     "mit": {
       "abbr": "MIT",
@@ -788,17 +897,26 @@
     "ntu": {
       "abbr": "NTU",
       "key": "ntu",
-      "name": "Nanyang Technological University"
+      "license": "Organization brand mark",
+      "name": "Nanyang Technological University",
+      "source": "Official university brand mark (www.ntu.edu.sg), crest cropped for the identity mark",
+      "src": "/org-logos/ntu.png"
     },
     "nu-lab": {
       "abbr": "NU",
       "key": "nu-lab",
-      "name": "NU World Model & Embodied AI Lab"
+      "license": "Public domain (simple seal rendition)",
+      "name": "Northeastern University (World Model & Embodied AI Lab)",
+      "source": "Original simple circular-seal rendition of the Northeastern N",
+      "src": "/org-logos/northeastern.svg"
     },
     "nus": {
       "abbr": "NUS",
       "key": "nus",
-      "name": "National University of Singapore"
+      "license": "Organization brand mark",
+      "name": "National University of Singapore",
+      "source": "Official university brand mark (www.nus.edu.sg), coat of arms cropped for the identity mark",
+      "src": "/org-logos/nus.png"
     },
     "nvidia": {
       "abbr": "NV",
@@ -816,6 +934,14 @@
       "source": "https://commons.wikimedia.org/wiki/File:New_York_University_Seal.svg",
       "src": "/org-logos/nyu.svg"
     },
+    "omniforcing": {
+      "abbr": "OF",
+      "key": "omniforcing",
+      "license": "Organization brand mark",
+      "name": "OmniForcing",
+      "source": "GitHub organization brand avatar (github.com/OmniForcing)",
+      "src": "/org-logos/omniforcing.png"
+    },
     "openai": {
       "abbr": "OA",
       "key": "openai",
@@ -823,6 +949,22 @@
       "name": "OpenAI",
       "source": "Simple Icons (https://simpleicons.org), CC0-1.0",
       "src": "/org-logos/openai.svg"
+    },
+    "openenvision": {
+      "abbr": "OE",
+      "key": "openenvision",
+      "license": "Project brand mark",
+      "name": "OpenEnvision",
+      "source": "WorldFoundry / OpenEnvision site mark (docs/fumadocs/public/logo.svg)",
+      "src": "/org-logos/openenvision.svg"
+    },
+    "openhelix": {
+      "abbr": "OH",
+      "key": "openhelix",
+      "license": "Organization brand mark",
+      "name": "OpenHelix",
+      "source": "GitHub organization brand avatar (github.com/OpenHelix-Team)",
+      "src": "/org-logos/openhelix.png"
     },
     "oppo": {
       "abbr": "OP",
@@ -867,7 +1009,10 @@
     "riemann-dynamics": {
       "abbr": "RD",
       "key": "riemann-dynamics",
-      "name": "Riemann Dynamics"
+      "license": "Organization brand mark",
+      "name": "Riemann Dynamics",
+      "source": "GitHub organization brand avatar (github.com/riemann-dynamics)",
+      "src": "/org-logos/riemann-dynamics.png"
     },
     "runway": {
       "abbr": "RW",
@@ -904,12 +1049,18 @@
     "shanda": {
       "abbr": "SH",
       "key": "shanda",
-      "name": "Shanda AI"
+      "license": "Public domain (text logo)",
+      "name": "Shanda AI",
+      "source": "Original simple wordmark rendition for the identity mark",
+      "src": "/org-logos/shanda.svg"
     },
     "shanghai-ai-lab": {
       "abbr": "SAIL",
       "key": "shanghai-ai-lab",
-      "name": "Shanghai AI Laboratory"
+      "license": "Organization brand mark",
+      "name": "Shanghai AI Laboratory",
+      "source": "GitHub organization brand avatar (github.com/OpenGVLab)",
+      "src": "/org-logos/shanghai-ai-lab.png"
     },
     "shengshu": {
       "abbr": "SS",
@@ -918,6 +1069,14 @@
       "name": "Shengshu Technology",
       "source": "GitHub organization brand avatar (github.com/shengshu-ai), pre-existing repo asset",
       "src": "/org-logos/shengshu.jpg"
+    },
+    "simworld": {
+      "abbr": "SW",
+      "key": "simworld",
+      "license": "Organization brand mark",
+      "name": "SimWorld",
+      "source": "GitHub organization brand avatar (github.com/SimWorld-AI)",
+      "src": "/org-logos/simworld.png"
     },
     "sjsu": {
       "abbr": "SJSU",
@@ -930,7 +1089,10 @@
     "sjtu": {
       "abbr": "SJTU",
       "key": "sjtu",
-      "name": "Shanghai Jiao Tong University"
+      "license": "Public domain (simple seal rendition)",
+      "name": "Shanghai Jiao Tong University",
+      "source": "Original simple circular-seal rendition of the SJTU emblem (anvil / gear / book)",
+      "src": "/org-logos/sjtu.svg"
     },
     "skywork": {
       "abbr": "SK",
@@ -967,7 +1129,10 @@
     "spirit-ai": {
       "abbr": "SP",
       "key": "spirit-ai",
-      "name": "Spirit AI"
+      "license": "Public domain (simple geometry)",
+      "name": "Spirit AI",
+      "source": "Original simple figure monogram for the identity mark",
+      "src": "/org-logos/spirit-ai.svg"
     },
     "stability": {
       "abbr": "SA",
@@ -988,7 +1153,18 @@
     "starkware": {
       "abbr": "SW",
       "key": "starkware",
-      "name": "StarkWare"
+      "license": "Public domain (simple geometry)",
+      "name": "StarkWare",
+      "source": "Original simple A-frame monogram for the identity mark",
+      "src": "/org-logos/starkware.svg"
+    },
+    "starvla": {
+      "abbr": "SV",
+      "key": "starvla",
+      "license": "Organization brand mark",
+      "name": "StarVLA",
+      "source": "GitHub organization brand avatar (github.com/starVLA)",
+      "src": "/org-logos/starvla.png"
     },
     "stepfun": {
       "abbr": "SF",
@@ -1025,7 +1201,18 @@
     "ucas": {
       "abbr": "UCAS",
       "key": "ucas",
-      "name": "University of Chinese Academy of Sciences"
+      "license": "Organization brand mark",
+      "name": "University of Chinese Academy of Sciences",
+      "source": "Official university brand mark (www.ucas.ac.cn), CAS seal cropped for the identity mark",
+      "src": "/org-logos/ucas.png"
+    },
+    "ucla": {
+      "abbr": "UCLA",
+      "key": "ucla",
+      "license": "Public domain (simple seal rendition)",
+      "name": "UCLA",
+      "source": "Original simple circular-seal rendition of the UCLA wordmark",
+      "src": "/org-logos/ucla.svg"
     },
     "ucsd": {
       "abbr": "UCSD",
@@ -1078,7 +1265,10 @@
     "ustc": {
       "abbr": "USTC",
       "key": "ustc",
-      "name": "University of Science and Technology of China"
+      "license": "Organization brand mark",
+      "name": "University of Science and Technology of China",
+      "source": "Official university brand mark (www.ustc.edu.cn), crest cropped for the identity mark",
+      "src": "/org-logos/ustc.png"
     },
     "utaustin": {
       "abbr": "UT",
@@ -1107,12 +1297,18 @@
     "waterloo": {
       "abbr": "UWL",
       "key": "waterloo",
-      "name": "University of Waterloo"
+      "license": "Public domain (simple seal rendition)",
+      "name": "University of Waterloo",
+      "source": "Original simple shield rendition of the University of Waterloo coat of arms",
+      "src": "/org-logos/waterloo.svg"
     },
     "worldfoundry": {
       "abbr": "WF",
       "key": "worldfoundry",
-      "name": "WorldFoundry"
+      "license": "Project brand mark",
+      "name": "WorldFoundry",
+      "source": "WorldFoundry site mark (docs/fumadocs/public/logo.svg)",
+      "src": "/org-logos/worldfoundry.svg"
     },
     "worldlabs": {
       "abbr": "WL",
@@ -1125,7 +1321,10 @@
     "x-humanoid": {
       "abbr": "XH",
       "key": "x-humanoid",
-      "name": "X-Humanoid (Beijing Humanoid Robot Innovation Center)"
+      "license": "Public domain (simple geometry)",
+      "name": "X-Humanoid (Beijing Humanoid Robot Innovation Center)",
+      "source": "Original simple X monogram for the identity mark",
+      "src": "/org-logos/x-humanoid.svg"
     },
     "x-square": {
       "abbr": "XS",
@@ -1154,37 +1353,22 @@
     "zju": {
       "abbr": "ZJU",
       "key": "zju",
-      "name": "Zhejiang University"
+      "license": "Organization brand mark",
+      "name": "Zhejiang University",
+      "source": "Official university emblem published at https://www.zju.edu.cn/572/list.htm",
+      "src": "/org-logos/zju.png"
     }
   },
   "unmapped": {
-    "benchmarks": [
-      "fetv",
-      "memobench",
-      "mirabench",
-      "phyeduvideo",
-      "robomme",
-      "video-bench",
-      "worldbench",
-      "worldreasonbench"
-    ],
+    "benchmarks": [],
     "models": [
       "a1",
       "ahawam",
-      "alayaworld",
       "dexora-1b",
       "fastwam",
       "lda-1b",
-      "mem-0",
-      "mira",
-      "mme-vla",
       "moverse",
-      "multiworld",
-      "omniforcing",
       "open-dreamer",
-      "simworld",
-      "spatial-forcing",
-      "starvla",
       "vggt-world",
       "worldgrow",
       "x-wam",

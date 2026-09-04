@@ -19,6 +19,9 @@ Several configuration systems coexist here (CF-11); pick by use case:
 Legacy instantiate/registry vocabularies live in
 ``worldfoundry.core.io.config_utils`` (``cls``/``class`` keys) and
 ``worldfoundry.core.model_loading.factory``; do not adopt them in new code.
+
+Public surface: the cosmos attrs tree, ``FLAGS``, LazyCall/LazyConfig,
+DiT architecture dataclasses, and :func:`instantiate`.
 """
 
 from .cosmos_config import CheckpointConfig, Config, EMAConfig, ObjectStoreConfig, make_freezable
@@ -28,6 +31,7 @@ from .model_config import (
     ArchConfig,
     DiTArchConfig,
     DiTConfig,
+    DiffusionModelConfig,
     ModelConfig,
     build_kwargs_from_config,
     require_config_value,
@@ -39,6 +43,7 @@ __all__ = [
     "ArchConfig",
     "DiTArchConfig",
     "DiTConfig",
+    "DiffusionModelConfig",
     "EMAConfig",
     "FLAGS",
     "INTERNAL",

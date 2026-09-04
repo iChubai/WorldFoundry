@@ -34,6 +34,7 @@ from pathlib import Path
 from typing import Any, Callable, Mapping
 
 from worldfoundry.core.io.paths import project_root, resolve_worldfoundry_path, worldfoundry_path_tokens
+from worldfoundry.evaluation.reporting import is_sensitive_key, redact_secret_text
 from worldfoundry.runtime.conda import (
     RuntimeCondaEnvSpec,
     apply_unified_env_override,
@@ -45,7 +46,13 @@ from worldfoundry.runtime.device_pool import (
     CudaDeviceLeasePool,
     discover_cuda_device_tokens,
 )
-from worldfoundry.runtime.env import resolve_ckpt_dir, resolve_hf_cache_dir, resolve_hfd_root
+from worldfoundry.runtime.env import (
+    apply_hf_endpoint_override,
+    getenv_registered,
+    resolve_ckpt_dir,
+    resolve_hf_cache_dir,
+    resolve_hfd_root,
+)
 
 from .execution import TORCHRUN_DISTRIBUTED_ENV, RunRecord
 from .launch_config import (
@@ -66,6 +73,7 @@ RESIDENT_WORKER_REQUEST_TIMEOUT_ENV = "WORLDFOUNDRY_STUDIO_RESIDENT_WORKER_REQUE
 DEFAULT_RESIDENT_WORKER_REQUEST_TIMEOUT_SECONDS = 6 * 60 * 60
 AUTO_GPU_PLACEMENT_ENV = "WORLDFOUNDRY_STUDIO_AUTO_GPU_PLACEMENT"
 DISPATCH_API_KEY_ENV = "WORLDFOUNDRY_STUDIO_DISPATCH_API_KEY"
+DISPATCH_SECRET_ENV_PREFIX = "WORLDFOUNDRY_STUDIO_DISPATCH_SECRET"
 CHILD_PYTHONPATH_PREPEND_ENV = "WORLDFOUNDRY_STUDIO_CHILD_PYTHONPATH_PREPEND"
 # Placeholder key in serialized payload; actual secret is passed via env.
 SECRET_ENV_REF_KEY = "__worldfoundry_secret_env__"
@@ -84,6 +92,7 @@ DEFAULT_FORCE_SUBPROCESS_MODELS = frozenset(
         "matrix-game-3",
         "helios",
         "dreamx-world-5b-cam",
+        "wan2.1-vace",
     }
 )
 LINGBOT_WORLD_MODEL_ID = "lingbot-world"
@@ -110,7 +119,25 @@ TORCHRUN_MODEL_NPROC_KEYS: Mapping[str, tuple[str, ...]] = {
         "ulysses_degree",
     ),
     "hunyuan-worldplay": ("torchrun_nproc_per_node", "torchrun_nproc", "nproc_per_node"),
+    "wan2.1-vace": (
+        "torchrun_nproc_per_node",
+        "torchrun_nproc",
+        "nproc_per_node",
+        "ulysses_size",
+        "world_size",
+    ),
 }
+TORCHRUN_DISTRIBUTED_MODELS = frozenset(
+    {
+        "hunyuan-game-craft",
+        "hunyuan-gamecraft",
+        "hunyuan-worldplay",
+        "longvie-2",
+        MATRIX_GAME3_MODEL_ID,
+        "dreamx-world-5b-cam",
+        "wan2.1-vace",
+    }
+)
 DISPATCH_ONLY_LOAD_KWARGS = frozenset(
     {
         "cuda_visible_devices",
@@ -334,6 +361,36 @@ def _discover_existing_env_spec(spec: RuntimeCondaEnvSpec) -> RuntimeCondaEnvSpe
     return None
 
 
+def _current_explicit_unified_env_spec(
+    spec: RuntimeCondaEnvSpec,
+) -> RuntimeCondaEnvSpec | None:
+    """Use the active unified interpreter when the user selected it explicitly.
+
+    Static dependency policy intentionally keeps profiles with upper version
+    bounds out of an automatically selected shared environment.  An explicit
+    ``WORLDFOUNDRY_USE_UNIFIED_ENV=1`` request is different: if Codex/Studio is
+    already running from a real ``worldfoundry-unified-*`` prefix, that exact
+    interpreter must remain discoverable so force-subprocess and torchrun
+    models do not silently fall back to same-process, single-GPU execution.
+    Model runtimes still enforce their package-version contracts on load.
+    """
+
+    enabled = os.getenv("WORLDFOUNDRY_USE_UNIFIED_ENV", "").strip().lower()
+    if enabled not in {"1", "true", "yes", "on"}:
+        return None
+    env_prefix = Path(sys.executable).expanduser().absolute().parent.parent
+    if not env_prefix.name.startswith("worldfoundry-unified-"):
+        return None
+    if not runtime_env_is_usable(env_prefix):
+        return None
+    return replace(
+        spec,
+        env_name=env_prefix.name,
+        env_root=env_prefix.parent,
+        notes=spec.notes + (f"studio_explicit_active_unified_env:{env_prefix}",),
+    )
+
+
 @lru_cache(maxsize=None)
 def workspace_runtime_spec(model_id: str) -> RuntimeCondaEnvSpec | None:
     """Resolve the Conda runtime spec for a model, with discovery and unified-env fallback."""
@@ -349,6 +406,9 @@ def workspace_runtime_spec(model_id: str) -> RuntimeCondaEnvSpec | None:
         discovered = _discover_existing_env_spec(unified_fallback)
         if discovered is not None:
             return discovered
+    current_unified = _current_explicit_unified_env_spec(spec or fallback)
+    if current_unified is not None:
+        return current_unified
     return _discover_existing_env_spec(fallback)
 
 
@@ -596,11 +656,12 @@ def _with_wan_vace_parallelism(
     *,
     world_size: int,
 ) -> dict[str, Any]:
-    """Keep the in-tree VACE USP topology aligned with its internal torchrun job.
+    """Keep native VACE Ulysses settings aligned with its outer torchrun job.
 
-    The official VACE command always enables DiT/T5 FSDP, so a one-process
-    launch is not a supported fallback.  Ulysses and ring degrees must multiply
-    to WORLD_SIZE, and the 14B checkpoint has 40 attention heads.
+    VACE runs through the native diffusion pipeline, so Workspace must launch
+    every rank and the loader must explicitly install sequence parallelism.
+    The in-tree native implementation currently supports pure Ulysses only
+    (ring size one), and the 14B checkpoint has 40 attention heads.
     """
 
     updated = dict(run_kwargs)
@@ -609,8 +670,8 @@ def _with_wan_vace_parallelism(
     normalized_world_size = int(world_size or 0)
     if normalized_world_size <= 1:
         raise ValueError(
-            "wan2.1-vace requires nproc_per_node > 1 because its in-tree official "
-            "command enables DiT/T5 FSDP."
+            "wan2.1-vace requires nproc_per_node > 1 because its native 14B "
+            "pipeline is configured for distributed sequence parallelism."
         )
     call_kwargs = _json_object_from_text(updated.get("call_kwargs_text"))
     load_kwargs = _json_object_from_text(updated.get("load_kwargs_text"))
@@ -621,12 +682,12 @@ def _with_wan_vace_parallelism(
         raise ValueError(
             f"wan2.1-vace ring_size must be an integer, got {raw_ring_size!r}."
         ) from exc
-    if ring_size <= 0 or normalized_world_size % ring_size:
+    if ring_size != 1:
         raise ValueError(
-            "wan2.1-vace requires ring_size to be a positive divisor of "
-            f"nproc_per_node={normalized_world_size}; got ring_size={ring_size}."
+            "wan2.1-vace native sequence parallelism currently requires "
+            f"ring_size=1; got ring_size={ring_size}."
         )
-    ulysses_size = normalized_world_size // ring_size
+    ulysses_size = normalized_world_size
     if 40 % ulysses_size:
         raise ValueError(
             "wan2.1-vace uses 40 attention heads, which must be divisible by "
@@ -637,6 +698,9 @@ def _with_wan_vace_parallelism(
         ulysses_size=ulysses_size,
         ring_size=ring_size,
     )
+    load_kwargs["sequence_parallel"] = ulysses_size
+    load_kwargs.pop("sp_degree", None)
+    updated["load_kwargs_text"] = json.dumps(load_kwargs)
     updated["call_kwargs_text"] = json.dumps(call_kwargs)
     return updated
 
@@ -831,7 +895,9 @@ def _matrix_game3_default_torchrun_nproc(run_kwargs: Mapping[str, Any]) -> int:
 
     if str(run_kwargs.get("device") or "").startswith("cuda:"):
         return 1
-    wmfactory_override = os.getenv("WM_MATRIXGAME3_CUDA_VISIBLE_DEVICES", "").strip()
+    wmfactory_override = (
+        getenv_registered("WORLDFOUNDRY_MATRIXGAME3_CUDA_VISIBLE_DEVICES", "") or ""
+    ).strip()
     explicit_visible = _cuda_visible_devices_from_kwargs(run_kwargs) or wmfactory_override
     visible_count = _cuda_visible_device_count(
         explicit_visible or os.getenv("CUDA_VISIBLE_DEVICES")
@@ -920,13 +986,13 @@ def _internal_torchrun_nproc(model_id: str, run_kwargs: Mapping[str, Any]) -> in
     """Return torchrun nproc for models that launch distributed jobs inside their own code."""
     call_kwargs = _json_object_from_text(run_kwargs.get("call_kwargs_text"))
     load_kwargs = _json_object_from_text(run_kwargs.get("load_kwargs_text"))
-    if model_id == "wan2.1-vace":
+    if model_id == "bernini":
         requested = (
             call_kwargs.get("nproc_per_node")
-            or call_kwargs.get("torchrun_nproc_per_node")
+            or call_kwargs.get("ulysses_size")
             or load_kwargs.get("nproc_per_node")
-            or load_kwargs.get("torchrun_nproc_per_node")
-            or 8
+            or load_kwargs.get("ulysses_size")
+            or 1
         )
     elif model_id == "kairos-sensenova":
         requested = (
@@ -949,11 +1015,15 @@ def _internal_torchrun_nproc(model_id: str, run_kwargs: Mapping[str, Any]) -> in
         nproc = int(requested or 0)
     except (TypeError, ValueError) as exc:
         raise ValueError(f"{model_id} nproc must be an integer, got {requested!r}.") from exc
-    if model_id == "wan2.1-vace" and nproc <= 1:
-        raise ValueError(
-            "wan2.1-vace requires nproc_per_node > 1 because its in-tree official "
-            "command enables DiT/T5 FSDP."
-        )
+    if model_id == "bernini":
+        if nproc < 1:
+            raise ValueError(f"bernini nproc_per_node must be positive; got {nproc}.")
+        ulysses_size = int(call_kwargs.get("ulysses_size") or nproc)
+        if ulysses_size != nproc:
+            raise ValueError(
+                "Bernini uses one Ulysses group per request, so ulysses_size must equal "
+                f"nproc_per_node; got ulysses_size={ulysses_size}, nproc_per_node={nproc}."
+            )
     if model_id == "kairos-sensenova":
         if nproc < 1 or nproc > 20:
             raise ValueError(
@@ -1042,12 +1112,16 @@ def _parse_nvidia_smi_rows() -> list[dict[str, float]]:
 def _select_wmfactory_visible_devices(num_devices: int | None = None) -> str:
     """Pick idle GPUs for WMFactory-style models using nvidia-smi heuristics."""
     requested = None if num_devices is None else max(int(num_devices or 1), 1)
-    if os.getenv("WM_AUTO_CUDA_VISIBLE_DEVICES", "1") != "1":
+    if (getenv_registered("WORLDFOUNDRY_AUTO_CUDA_VISIBLE_DEVICES", "1") or "1") != "1":
         return ""
 
     try:
-        max_mem_fraction = float(os.getenv("WM_AUTO_GPU_MAX_MEMORY_FRACTION", "0.5"))
-        max_util_fraction = float(os.getenv("WM_AUTO_GPU_MAX_UTILIZATION_FRACTION", "0.5"))
+        max_mem_fraction = float(
+            getenv_registered("WORLDFOUNDRY_AUTO_GPU_MAX_MEMORY_FRACTION", "0.5") or "0.5"
+        )
+        max_util_fraction = float(
+            getenv_registered("WORLDFOUNDRY_AUTO_GPU_MAX_UTILIZATION_FRACTION", "0.5") or "0.5"
+        )
     except ValueError:
         max_mem_fraction = 0.5
         max_util_fraction = 0.5
@@ -1382,13 +1456,87 @@ def _json_safe(value: Any) -> Any:
 
 
 def _payload_run_kwargs_with_secret_refs(run_kwargs: Mapping[str, Any]) -> tuple[dict[str, Any], dict[str, str]]:
-    payload_kwargs = dict(run_kwargs)
+    """Move payload credentials into child-only environment references.
+
+    Studio accepts JSON-encoded ``load_kwargs_text`` and ``call_kwargs_text``
+    in addition to ordinary nested mappings. If either JSON blob contains a
+    credential, the whole original blob is carried through the environment so
+    the serialized dispatch payload never contains the secret while the child
+    still receives the exact input string.
+    """
+
     secret_env: dict[str, str] = {}
-    api_key = payload_kwargs.get("api_key")
+    env_name_by_secret: dict[str, str] = {}
+    next_secret_index = 1
+
+    api_key = run_kwargs.get("api_key")
     if isinstance(api_key, str) and api_key:
-        payload_kwargs["api_key"] = {SECRET_ENV_REF_KEY: DISPATCH_API_KEY_ENV}
         secret_env[DISPATCH_API_KEY_ENV] = api_key
-    return payload_kwargs, secret_env
+        env_name_by_secret[api_key] = DISPATCH_API_KEY_ENV
+
+    def secret_ref(secret: str) -> dict[str, str]:
+        nonlocal next_secret_index
+        env_name = env_name_by_secret.get(secret)
+        if env_name is None:
+            while True:
+                env_name = f"{DISPATCH_SECRET_ENV_PREFIX}_{next_secret_index}"
+                next_secret_index += 1
+                if env_name not in secret_env:
+                    break
+            env_name_by_secret[secret] = env_name
+            secret_env[env_name] = secret
+        return {SECRET_ENV_REF_KEY: env_name}
+
+    def contains_secret(value: Any, *, sensitive_context: bool = False) -> bool:
+        if isinstance(value, Mapping):
+            if set(value) == {SECRET_ENV_REF_KEY}:
+                return False
+            return any(
+                contains_secret(
+                    item,
+                    sensitive_context=sensitive_context or is_sensitive_key(str(key)),
+                )
+                for key, item in value.items()
+            )
+        if isinstance(value, (list, tuple)):
+            return any(contains_secret(item, sensitive_context=sensitive_context) for item in value)
+        return isinstance(value, str) and bool(value) and (
+            sensitive_context or redact_secret_text(value) != value
+        )
+
+    def replace_secret_values(value: Any, *, sensitive_context: bool = False) -> Any:
+        if isinstance(value, Mapping):
+            if set(value) == {SECRET_ENV_REF_KEY}:
+                return dict(value)
+            replaced: dict[str, Any] = {}
+            for raw_key, item in value.items():
+                key = str(raw_key)
+                item_is_sensitive = sensitive_context or is_sensitive_key(key)
+                if key in {"load_kwargs_text", "call_kwargs_text"} and isinstance(item, str):
+                    try:
+                        parsed_kwargs = json.loads(item)
+                    except (TypeError, json.JSONDecodeError):
+                        parsed_kwargs = None
+                    if parsed_kwargs is not None and contains_secret(parsed_kwargs):
+                        replaced[key] = secret_ref(item)
+                        continue
+                replaced[key] = replace_secret_values(
+                    item,
+                    sensitive_context=item_is_sensitive,
+                )
+            return replaced
+        if isinstance(value, list):
+            return [replace_secret_values(item, sensitive_context=sensitive_context) for item in value]
+        if isinstance(value, tuple):
+            return tuple(replace_secret_values(item, sensitive_context=sensitive_context) for item in value)
+        if isinstance(value, str) and value and (
+            sensitive_context or redact_secret_text(value) != value
+        ):
+            return secret_ref(value)
+        return value
+
+    payload_kwargs = replace_secret_values(dict(run_kwargs))
+    return dict(payload_kwargs), secret_env
 
 
 def _repo_root() -> Path:
@@ -1538,19 +1686,22 @@ def _runtime_cache_dir(spec: RuntimeCondaEnvSpec, name: str) -> str:
 def _runtime_env(spec: RuntimeCondaEnvSpec, device: str | None = None) -> dict[str, str]:
     """Build the child-process environment: Conda paths, PYTHONPATH, and optional GPU pin."""
     env = os.environ.copy()
-    # Studio inference jobs are expected to resolve missing public/gated model
-    # assets when a token/network is available. Do not let a parent shell's
-    # offline debugging flags silently turn official demo jobs into failures.
-    env.pop("HF_HUB_OFFLINE", None)
-    env.pop("TRANSFORMERS_OFFLINE", None)
-    env.pop("HF_DATASETS_OFFLINE", None)
+    # A dedicated Conda runtime must not import packages from the launching
+    # account's ``~/.local`` tree. Besides violating the selected runtime
+    # contract, a partially installed user package can make an otherwise
+    # complete model environment fail during import (for example, boto3
+    # without its jmespath dependency while Transformers imports Accelerate).
+    env["PYTHONNOUSERSITE"] = "1"
+    # Preserve an explicitly offline parent Workspace. Unset variables still
+    # retain the normal online behavior, while strict local-checkpoint runs do
+    # not unexpectedly download from a child Conda process.
     env[STUDIO_CONDA_CHILD_ENV] = "1"
     env["WORLDFOUNDRY_REPO_ROOT"] = str(_repo_root())
     ckpt_dir = resolve_ckpt_dir(env)
     hfd_root = resolve_hfd_root(env)
     env.setdefault("WORLDFOUNDRY_CKPT_DIR", str(ckpt_dir))
     env.setdefault("WORLDFOUNDRY_HFD_ROOT", str(hfd_root))
-    env.setdefault("HF_ENDPOINT", "https://hf-mirror.com")
+    apply_hf_endpoint_override(env)
     local_hf_home = ckpt_dir / "huggingface"
     if local_hf_home.is_dir():
         env.setdefault("HF_HOME", str(local_hf_home))
@@ -2218,7 +2369,7 @@ def _run_manager_payload_in_conda_impl(
     dispatch_run_kwargs = _with_wan_vace_parallelism(
         model_id,
         dispatch_run_kwargs,
-        world_size=max(internal_torchrun_nproc, 1),
+        world_size=max(torchrun_nproc, 1),
     )
     dispatch_run_kwargs = _with_longvie2_parallelism(
         model_id,
@@ -2300,14 +2451,7 @@ def _run_manager_payload_in_conda_impl(
     if torchrun_nproc > 1:
         if model_id in {LINGBOT_WORLD_MODEL_ID, LINGBOT_WORLD_V2_MODEL_ID}:
             env[TORCHRUN_LINGBOT_ENV] = "1"
-        if model_id in {
-            "hunyuan-game-craft",
-            "hunyuan-gamecraft",
-            "hunyuan-worldplay",
-            "longvie-2",
-            MATRIX_GAME3_MODEL_ID,
-            "dreamx-world-5b-cam",
-        }:
+        if model_id in TORCHRUN_DISTRIBUTED_MODELS:
             env[TORCHRUN_DISTRIBUTED_ENV] = "1"
     if torchrun_nproc > 1 or internal_torchrun_nproc > 1:
         requested_nproc = max(torchrun_nproc, internal_torchrun_nproc)

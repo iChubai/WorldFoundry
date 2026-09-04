@@ -9,6 +9,8 @@ source:
   status: open_source
   official_repo_url: https://github.com/albertpumarola/D-NeRF
 official_sources:
+  paper: https://arxiv.org/abs/2011.13961
+  project_page: https://www.albertpumarola.com/research/D-NeRF/index.html
   github:
     url: https://github.com/albertpumarola/D-NeRF
     head_sha: 21372030b6b7fbe7832124a3b3b51607ee572224

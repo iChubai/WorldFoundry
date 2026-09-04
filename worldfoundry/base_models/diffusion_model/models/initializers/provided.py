@@ -1,4 +1,10 @@
-"""Framework-neutral initialization from caller-provided latent tensors."""
+"""Framework-neutral :class:`~...contracts.LatentInitializer` from caller tensors.
+
+Implements the initializer Protocol by reading ``request.inputs[input_key]``
+(default ``\"latents\"``) and moving it onto the run device/dtype.  Used when
+a recipe or evaluation harness already owns the starting latent (img2img,
+ inversion, or a pre-encoded trajectory).  Does not load a VAE.
+"""
 
 from __future__ import annotations
 
@@ -24,6 +30,7 @@ class ProvidedLatentInitializer:
         device: torch.device,
         dtype: torch.dtype,
     ) -> torch.Tensor:
+        """Return ``request.inputs[input_key]`` as the initial latent batch."""
         del generator
         value = request.inputs.get(self.input_key)
         if not isinstance(value, torch.Tensor):
@@ -39,6 +46,7 @@ class ProvidedLatentInitializer:
 
 
 def build_provided_latent_initializer(context: ComponentBuildContext) -> ProvidedLatentInitializer:
+    """Build from ``component_options[\"input_key\"]`` (default ``latents``)."""
     return ProvidedLatentInitializer(
         input_key=str(context.component_options.get("input_key", "latents")),
     )

@@ -11,6 +11,7 @@ integration:
   verification_status: gpu_validation_verified
 name: RoboFlamingo
 official_sources:
+  paper: https://arxiv.org/abs/2311.01378
   github:
     head_sha: 1475a07d043a62bb07ab11abfc71115bb72e2a16
     url: https://github.com/RoboFlamingo/RoboFlamingo

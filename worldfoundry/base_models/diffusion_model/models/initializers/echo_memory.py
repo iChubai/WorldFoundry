@@ -1,4 +1,13 @@
-"""Echo-Memory latent initialization on the shared request contract."""
+"""Echo-Memory :class:`~...contracts.LatentInitializer`.
+
+Builds a concatenated latent ``[target_noise | frozen_context]`` along
+time.  Target frames follow Wan 4n+1 geometry
+(``T_lat = (num_frames-1)//4 + 1``).  The suffix comes from
+``request.inputs[\"frozen_context_latents\"]`` (``[C,T,H,W]`` or
+``[B,C,T,H,W]``), already encoded by the caller.  The denoiser reads
+``num_context_frames`` from conditioning separately; this initializer
+only owns the starting tensor.
+"""
 
 from __future__ import annotations
 
@@ -45,6 +54,7 @@ class EchoMemoryLatentInitializer:
         device: torch.device,
         dtype: torch.dtype,
     ) -> torch.Tensor:
+        """Return ``cat([randn_target, frozen_context], dim=2)``."""
         if request.height % self.spatial_compression or request.width % self.spatial_compression:
             raise ValueError("Echo-Memory height and width must match Wan latent compression")
         if (request.num_frames - 1) % self.temporal_compression:
@@ -77,6 +87,7 @@ class EchoMemoryLatentInitializer:
 def build_echo_memory_latent_initializer(
     context: ComponentBuildContext,
 ) -> EchoMemoryLatentInitializer:
+    """Build with Wan-default 16-ch / 8× / 4× compression unless overridden."""
     return EchoMemoryLatentInitializer(
         channels=int(context.component_options.get("channels", 16)),
         spatial_compression=int(context.component_options.get("spatial_compression", 8)),

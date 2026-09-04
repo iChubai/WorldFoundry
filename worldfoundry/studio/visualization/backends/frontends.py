@@ -38,6 +38,15 @@ from worldfoundry.studio.serving import (
     send_json_response,
     send_text_response,
 )
+from worldfoundry.studio.vendor_assets import (
+    SPARK_MODULE_PATH,
+    THREE_CORE_MODULE_PATH,
+    THREE_MODULE_PATH,
+    VENDOR_ASSET_INSTALL_COMMAND,
+    VENDOR_ROOT,
+    VendorAssetError,
+    require_vendor_assets,
+)
 from worldfoundry.studio.visualization.core.artifacts import (
     StudioVisualizationArtifact,
     infer_visualization_artifact,
@@ -199,13 +208,10 @@ NATIVE_FRONTENDS = STUDIO_VISUALIZATIONS.native_modes
 DEFAULT_FRONTEND_PORTS = STUDIO_VISUALIZATIONS.default_ports
 SPARK_ASSET_EXTS = {".ply", ".spz", ".splat", ".ksplat", ".sog"}
 MEDIA_ASSET_EXTS = {".png", ".jpg", ".jpeg", ".webp", ".gif", ".bmp", ".mp4", ".mov", ".webm", ".mkv", ".avi", ".wav", ".mp3", ".flac", ".ogg"}
-STUDIO_ASSET_DIR = Path(__file__).resolve().parents[2] / "assets"
-VENDOR_DIR = STUDIO_ASSET_DIR / "vendor"
-SPARK_VENDOR_DIR = VENDOR_DIR / "spark"
-THREE_VENDOR_DIR = VENDOR_DIR / "three"
-SPARK_MODULE_PATH = SPARK_VENDOR_DIR / "spark.module.min.js"
-THREE_MODULE_PATH = THREE_VENDOR_DIR / "three.module.js"
-THREE_CORE_MODULE_PATH = THREE_VENDOR_DIR / "three.core.js"
+STUDIO_ASSET_DIR = VENDOR_ROOT.parent
+VENDOR_DIR = VENDOR_ROOT
+SPARK_VENDOR_DIR = SPARK_MODULE_PATH.parent
+THREE_VENDOR_DIR = THREE_MODULE_PATH.parent
 
 
 def resolve_frontend_mode(
@@ -320,6 +326,11 @@ def serve_embodied_frontend(entry: CatalogEntry, launch_config: StudioLaunchConf
 
 def serve_spark_frontend(entry: CatalogEntry, launch_config: StudioLaunchConfig) -> None:
     """Serve a standalone Spark 3DGS viewer over HTTP."""
+
+    try:
+        require_vendor_assets()
+    except VendorAssetError as exc:
+        raise SystemExit(str(exc)) from None
 
     host = host_for_frontend(launch_config)
     port = port_for_frontend(launch_config, SPARK_FRONTEND)
@@ -584,21 +595,30 @@ class SparkViewerHandler(BaseHTTPRequestHandler):
             return
         if parsed.path == "/__worldfoundry__/spark.module.js":
             if SPARK_MODULE_PATH.exists():
-                self._send_file(SPARK_MODULE_PATH, "text/javascript", cache_control="public, max-age=31536000, immutable")
+                self._send_file(SPARK_MODULE_PATH, "text/javascript", cache_control="no-store")
                 return
-            self.send_error(HTTPStatus.NOT_FOUND, "Vendored Spark module missing from WorldFoundry.")
+            self.send_error(
+                HTTPStatus.NOT_FOUND,
+                f"Vendored Spark module missing. Run {VENDOR_ASSET_INSTALL_COMMAND}.",
+            )
             return
         if parsed.path == "/__worldfoundry__/three.module.js":
             if THREE_MODULE_PATH.exists():
-                self._send_file(THREE_MODULE_PATH, "text/javascript", cache_control="public, max-age=31536000, immutable")
+                self._send_file(THREE_MODULE_PATH, "text/javascript", cache_control="no-store")
                 return
-            self.send_error(HTTPStatus.NOT_FOUND, "Vendored Three module missing from WorldFoundry.")
+            self.send_error(
+                HTTPStatus.NOT_FOUND,
+                f"Vendored Three module missing. Run {VENDOR_ASSET_INSTALL_COMMAND}.",
+            )
             return
         if parsed.path == "/__worldfoundry__/three.core.js":
             if THREE_CORE_MODULE_PATH.exists():
-                self._send_file(THREE_CORE_MODULE_PATH, "text/javascript", cache_control="public, max-age=31536000, immutable")
+                self._send_file(THREE_CORE_MODULE_PATH, "text/javascript", cache_control="no-store")
                 return
-            self.send_error(HTTPStatus.NOT_FOUND, "Vendored Three core module missing from WorldFoundry.")
+            self.send_error(
+                HTTPStatus.NOT_FOUND,
+                f"Vendored Three core module missing. Run {VENDOR_ASSET_INSTALL_COMMAND}.",
+            )
             return
         if parsed.path == "/__worldfoundry__/asset":
             query = parse_qs(parsed.query)

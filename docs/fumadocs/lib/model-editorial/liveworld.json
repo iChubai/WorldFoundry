@@ -1,0 +1,39 @@
+{
+  "id": "liveworld",
+  "tagline": {
+    "en": "A camera-controlled video world model built on Wan2.1, with geometry- and segmentation-aware conditioning.",
+    "zh": "基于 Wan2.1 构建的相机可控视频世界模型,带几何与分割感知的条件控制。"
+  },
+  "overview": {
+    "en": [
+      "LiveWorld is a world model that generates video you can steer with a camera path. Beyond producing a clip, it lets you control how the viewpoint moves through a scene, which suits camera-controlled and video-to-video work.",
+      "It composes several models around the Wan2.1 text-to-video backbone: it draws on a vision-language model, a segmentation model, and geometry/depth components to condition generation on the scene's structure. In WorldFoundry it runs through a geometry-aware, monitor-centric inference route, taking your scene inputs and a camera trajectory to render the output."
+    ],
+    "zh": [
+      "LiveWorld 是一个世界模型,可生成能用相机轨迹控制的视频。除了产出片段,它还允许你控制视角在场景中的移动方式,因而适合相机可控生成与视频到视频的任务。",
+      "它围绕 Wan2.1 文生视频骨干组合了多个模型:借助视觉语言模型、分割模型以及几何/深度组件,让生成以场景结构为条件。在 WorldFoundry 中,它通过一条几何感知、以监视视角为中心的推理路径运行,以你的场景输入与相机轨迹为条件渲染输出。"
+    ]
+  },
+  "whenToUse": {
+    "en": "Reach for LiveWorld when you need camera-controlled video that respects scene geometry — steering the viewpoint through a structured scene rather than accepting the framing of a plain text-to-video model.",
+    "zh": "当你需要尊重场景几何的相机可控视频——在结构化场景中操控视角,而非被动接受纯文生视频模型的构图时,可以选择 LiveWorld。"
+  },
+  "notFor": {
+    "en": "It depends on several separate checkpoints (the Wan backbone plus vision, segmentation, and geometry components) that are staged locally rather than bundled, so plan for multiple downloads and disk space.",
+    "zh": "它依赖多个独立 checkpoint(Wan 骨干加上视觉、分割与几何组件),这些都需在本地准备而非随附,请为多次下载与磁盘空间做好准备。"
+  },
+  "highlights": {
+    "en": [
+      "Camera-controlled video you can steer with a viewpoint path",
+      "Built on the Wan2.1 backbone with geometry-aware conditioning",
+      "Combines vision-language, segmentation, and depth components",
+      "Supports video-to-video and world-model workflows"
+    ],
+    "zh": [
+      "相机可控的视频,可用视角路径进行引导",
+      "基于 Wan2.1 骨干,带几何感知的条件控制",
+      "结合视觉语言、分割与深度组件",
+      "支持视频到视频与世界模型工作流"
+    ]
+  }
+}

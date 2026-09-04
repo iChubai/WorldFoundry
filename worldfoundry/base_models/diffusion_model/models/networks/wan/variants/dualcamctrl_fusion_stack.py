@@ -1,3 +1,12 @@
+"""DualCamCtrl stacked 3D fusion with per-block frame gates.
+
+Alternative to :mod:`.dualcamctrl_fusion` when DualCamCtrl wants a deeper
+mixer.  Each :class:`Conv3DBlock` is depthwise 3x3x3 → pointwise → a
+spatial-pooled frame gate.  ``proj_out`` is zero-init for residual safety.
+
+Camera-control fusion only.  No VACE, action, causal, or linear attn.
+"""
+
 import torch
 import torch.nn as nn
 from einops import rearrange
@@ -108,7 +117,7 @@ class ResidualFusion3D_Stack(nn.Module):
         C = x.shape[-1]
         assert C == self.C, f"Expected channel {self.C}, got {C}"
 
-        # reshape到3D格式
+        # Fold packed tokens back to a 3D volume for the stacked mixer.
         x_3d = rearrange(x, "b (f h w) c -> b c f h w", f=f, h=h, w=w)
         r_3d = rearrange(r, "b (f h w) c -> b c f h w", f=f, h=h, w=w)
 
@@ -130,7 +139,6 @@ class ResidualFusion3D_Stack(nn.Module):
         # residual safe projection
         v = self.proj_out(x_3d + z)  # apply proj_out after adding residual
 
-        # reshape回 [B,FHW,C]
         v = rearrange(v, "b c f h w -> b (f h w) c")
         return v
 

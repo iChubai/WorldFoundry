@@ -40,9 +40,31 @@ def _select_echo_checkpoint_path(
     checkpoint = Path(checkpoint_path).expanduser()
     if not checkpoint.is_absolute():
         checkpoint = Path.cwd() / checkpoint
-    if checkpoint.is_dir():
-        checkpoint = checkpoint / checkpoint_file
-    return checkpoint
+    candidates = [checkpoint]
+    for ancestor in (checkpoint, *checkpoint.parents):
+        if ancestor.name != "Echo-Memory":
+            continue
+        replacement = ancestor.parent / "Echo-Team--Echo-Memory"
+        candidates.append(replacement / checkpoint.relative_to(ancestor))
+        break
+    for candidate in candidates:
+        resolved = candidate / checkpoint_file if candidate.is_dir() else candidate
+        if resolved.is_file():
+            return resolved
+    return checkpoint / checkpoint_file if checkpoint.is_dir() else checkpoint
+
+
+def _resolve_wan_backbone_path(wan_base_dir: str | os.PathLike[str]) -> Path:
+    """Resolve both plain and owner-prefixed local Hugging Face layouts."""
+
+    requested = Path(wan_base_dir).expanduser().resolve()
+    candidates = [requested]
+    if not requested.name.startswith("Wan-AI--"):
+        candidates.append(requested.parent / f"Wan-AI--{requested.name}")
+    for candidate in candidates:
+        if candidate.is_dir():
+            return candidate
+    return requested
 
 
 class EchoMemoryRuntime:
@@ -102,7 +124,7 @@ class EchoMemoryRuntime:
         if device_id is None:
             device_id = int(os.getenv("LOCAL_RANK", "0"))
 
-        backbone = Path(wan_base_dir).expanduser().resolve()
+        backbone = _resolve_wan_backbone_path(wan_base_dir)
         if not backbone.is_dir():
             raise FileNotFoundError(f"Wan 2.1 backbone directory not found: {backbone}")
         checkpoint = _select_echo_checkpoint_path(

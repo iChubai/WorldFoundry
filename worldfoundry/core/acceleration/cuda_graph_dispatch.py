@@ -3,14 +3,33 @@
 
 """Autoregressive CUDA Graph dispatch policy.
 
-Adapted from NVIDIA FlashDreams.  WorldFoundry injects the graph-wrapper
-factory explicitly because capture mechanics differ across resident models.
+Responsibility: pick eager fill, graph drain, or graph replay for each
+AR branch, keyed by index. Capture is legal only after the sliding KV
+cache is shape-stable (capacity divisible by ``chunk_size``).
+
+This module is not a CUDA Graph runtime. Streams, memory pools, and
+capture/replay live in the caller-supplied ``wrapper_factory`` because
+resident models differ. Dynamic control flow (CFG branch, AR index)
+must stay *outside* the captured region.
+
+Public surface:
+- :func:`cuda_graph_capture_ar_index` — first AR index at which KV
+  capacity is chunk-aligned.
+- :class:`CUDAGraphDispatch` — one wrapper pair per CFG branch plus
+  ``select`` / ``reset`` / ``disable``.
+
+The wrapper factory is injected so capture mechanics stay model-owned.
 """
 
 from __future__ import annotations
 
 from collections.abc import Callable
 from typing import Any
+
+
+# ──────────────────────────────────────────────────────────────────────────
+# Capture index — KV must be shape-stable before the first graph record
+# ──────────────────────────────────────────────────────────────────────────
 
 
 def cuda_graph_capture_ar_index(
@@ -31,6 +50,11 @@ def cuda_graph_capture_ar_index(
     return capacity // chunk_size
 
 
+# ──────────────────────────────────────────────────────────────────────────
+# Dispatch — two wrappers so CFG cond/uncond never share one captured graph
+# ──────────────────────────────────────────────────────────────────────────
+
+
 class CUDAGraphDispatch:
     """Select eager fill, graph drain, or graph replay for each AR branch."""
 
@@ -44,6 +68,7 @@ class CUDAGraphDispatch:
         wrapper_factory: Callable[..., Any] | None = None,
         build: bool = True,
     ) -> None:
+        """Require non-negative capture index/warmup; build wrappers only when enabled."""
         if capture_ar_index < 0:
             raise ValueError("capture_ar_index must be non-negative.")
         if warmup_iters < 0:
@@ -60,13 +85,16 @@ class CUDAGraphDispatch:
 
     @property
     def conditional(self) -> Any | None:
+        """CFG-conditional graph wrapper, or ``None`` while disabled/unbuilt."""
         return self._conditional
 
     @property
     def unconditional(self) -> Any | None:
+        """CFG-unconditional graph wrapper, or ``None`` while disabled/unbuilt."""
         return self._unconditional
 
     def rebuild(self, *, capture_ar_index: int | None = None) -> None:
+        """Recreate both wrappers; refuse an enabled dispatch without a factory."""
         if capture_ar_index is not None:
             if capture_ar_index < 0:
                 raise ValueError("capture_ar_index must be non-negative.")
@@ -87,6 +115,7 @@ class CUDAGraphDispatch:
         )
 
     def disable(self, *, fn: Callable[..., Any] | None = None) -> None:
+        """Drop wrappers so later ``select`` returns eager ``fn`` (optional swap)."""
         if fn is not None:
             self.fn = fn
         self.enabled = False
@@ -94,6 +123,7 @@ class CUDAGraphDispatch:
         self._unconditional = None
 
     def reset(self) -> None:
+        """Reset captured graphs, or rebuild if a wrapper was never constructed."""
         if not self.enabled:
             return
         if self._conditional is None or self._unconditional is None:
@@ -103,6 +133,13 @@ class CUDAGraphDispatch:
         self._unconditional.reset()
 
     def select(self, autoregressive_index: int, *, unconditional: bool) -> Callable[..., Any]:
+        """Return drain before capture index, the graph after, eager when disabled.
+
+        ``drain`` is the wrapper's fill path while the KV window is still
+        growing. After ``capture_ar_index`` the wrapper itself is the replay
+        entry. Missing ``drain`` or a non-callable wrapper is a contract
+        error, not a silent eager fallback — that would hide a broken factory.
+        """
         if autoregressive_index < 0:
             raise ValueError("autoregressive_index must be non-negative.")
         if not self.enabled:

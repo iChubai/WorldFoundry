@@ -10,6 +10,7 @@ source:
   official_repo_url: https://github.com/yxzzhang/StarWM
   hf_repo_id: yxzhang2024/StarWM
 official_sources:
+  paper: https://arxiv.org/abs/2602.14857
   project_page: https://star-wm.github.io/
   github:
     url: https://github.com/yxzzhang/StarWM

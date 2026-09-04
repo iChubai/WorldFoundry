@@ -1,5 +1,8 @@
-"""Module for base_models -> diffusion_model -> video -> wan -> components -> action_attention_wan2p2.py functionality."""
+"""Flash-attention dispatcher used by Wan 2.2 action transformers.
 
+Same backend selection as :mod:`.action_attention_21` for the 2.2 action
+graph.  Kernel adapter only.
+"""
 import torch
 try:
     import flash_attn_interface
@@ -134,7 +137,10 @@ def flash_attention(
             max_seqlen_k=lk,
             softmax_scale=softmax_scale,
             causal=causal,
-            deterministic=deterministic).unflatten(0, (b, lq))
+            deterministic=deterministic)
+        if isinstance(x, (tuple, list)):
+            x = x[0]
+        x = x.unflatten(0, (b, lq))
     else:
         assert FLASH_ATTN_2_AVAILABLE or FLASH_ATTN_3_AVAILABLE
         x = flash_attn.flash_attn_varlen_func(

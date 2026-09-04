@@ -1,0 +1,41 @@
+{
+  "id": "vggt-omega",
+  "tagline": {
+    "en": "VGGT-Omega — a feed-forward geometry transformer that recovers 3D scene structure from images for reconstruction and novel views.",
+    "zh": "VGGT-Omega——前馈式几何 Transformer，从图像恢复 3D 场景结构，用于重建与新视角合成。"
+  },
+  "overview": {
+    "en": [
+      "VGGT-Omega is a visual geometry transformer in the VGGT family, distributed on Hugging Face as facebook/VGGT-Omega. It predicts 3D scene structure directly from images in a single feed-forward pass, supporting 3D reconstruction, Gaussian splatting, and novel-view synthesis.",
+      "The model works from as little as a single image and outputs geometry you can export as a scene. In WorldFoundry the runtime follows the official scene-export route, emitting a predictions.npz file alongside a GLB scene artifact you can open in standard 3D tools.",
+      "Note the checkpoint is released under CC-BY-NC-4.0, so its use is limited to non-commercial purposes."
+    ],
+    "zh": [
+      "VGGT-Omega 是 VGGT 系列中的视觉几何 Transformer，在 Hugging Face 上以 facebook/VGGT-Omega 发布。它以单次前馈推理直接从图像预测 3D 场景结构，支持 3D 重建、高斯泼溅与新视角合成。",
+      "该模型最少只需一张图即可工作，并输出可导出为场景的几何。在 WorldFoundry 中，运行时遵循官方的场景导出路线，产出 predictions.npz 文件以及可用常见 3D 工具打开的 GLB 场景文件。",
+      "注意该 checkpoint 采用 CC-BY-NC-4.0 许可，因此仅限非商业用途。"
+    ]
+  },
+  "whenToUse": {
+    "en": "Choose VGGT-Omega for fast, feed-forward 3D geometry recovery from images — reconstruction, splatting, or novel-view synthesis — when you can work within a non-commercial license.",
+    "zh": "当你需要从图像快速前馈恢复 3D 几何（重建、泼溅或新视角合成），且可接受非商业许可时，选择 VGGT-Omega。"
+  },
+  "notFor": {
+    "en": "The CC-BY-NC-4.0 license rules out commercial use. Weights are staged separately and not bundled in source.",
+    "zh": "CC-BY-NC-4.0 许可排除了商业用途。权重需单独准备，不随源码打包。"
+  },
+  "highlights": {
+    "en": [
+      "Feed-forward 3D geometry from images, even a single view",
+      "Covers reconstruction, Gaussian splatting, and novel-view synthesis",
+      "Exports predictions.npz plus a GLB scene artifact",
+      "CC-BY-NC-4.0 — non-commercial use"
+    ],
+    "zh": [
+      "从图像（乃至单张视图）前馈恢复 3D 几何",
+      "覆盖重建、高斯泼溅与新视角合成",
+      "导出 predictions.npz 与 GLB 场景文件",
+      "CC-BY-NC-4.0——非商业用途"
+    ]
+  }
+}

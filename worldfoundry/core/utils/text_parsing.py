@@ -1,10 +1,25 @@
-"""Small, dependency-free helpers for parsing model text outputs."""
+"""Dependency-free helpers for parsing model text outputs.
+
+Responsibility
+    Extract a final ``yes``/``no`` from judge / VLM text so benchmarks share
+    one parser instead of forking strip logic.
+
+Boundaries
+    No torch, no tokenizer, no generation. Regexes stay here; adding a new
+    eval parser belongs in this module only if it stays dependency-free.
+
+Public surface
+    :func:`extract_yes_no_answer`.
+"""
 
 from __future__ import annotations
 
 import re
 from typing import Any
 
+# ──────────────────────────────────────────────────────────────────────────
+# Yes/no extractors — structured spans win over free-form reasoning
+# ──────────────────────────────────────────────────────────────────────────
 
 _YES_NO_TOKEN = re.compile(r"\b(yes|no)\b", re.IGNORECASE)
 _STRUCTURED_YES_NO_PATTERNS = (

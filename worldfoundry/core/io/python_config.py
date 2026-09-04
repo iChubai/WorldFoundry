@@ -1,4 +1,11 @@
-"""Lightweight Python config loading helpers."""
+"""Lightweight Python config loading helpers.
+
+Trust boundary: config files are **trusted code**. ``load_python_config``
+executes the file via ``importlib`` (``exec_module``). Leaf strings may
+also run ``eval(...)`` wrappers and ``${...}`` interpolation through a
+restricted ``eval``. Only load paths you would run as a program; do not
+point this loader at untrusted uploads.
+"""
 
 from __future__ import annotations
 
@@ -11,11 +18,17 @@ from pathlib import Path
 from types import ModuleType
 from typing import Any, Iterable
 
+# ──────────────────────────────────────────────────────────────────────────
+# Trusted .py configs — exec_module + restricted eval; never load untrusted files
+# ──────────────────────────────────────────────────────────────────────────
+
 
 class EasyDict(dict):
     """Dictionary with recursive attribute access."""
 
     def __init__(self, mapping: Any | None = None, **kwargs: Any) -> None:
+        """Wrap nested dicts/lists so attribute access works at every level."""
+
         super().__init__()
         mapping = {} if mapping is None else mapping
         items = mapping.items() if hasattr(mapping, "items") else mapping
@@ -25,16 +38,22 @@ class EasyDict(dict):
             self[key] = self._wrap(value)
 
     def __getattr__(self, name: str) -> Any:
+        """Attribute lookup that raises :class:`AttributeError`, not :class:`KeyError`."""
+
         try:
             return self[name]
         except KeyError as exc:
             raise AttributeError(name) from exc
 
     def __setattr__(self, name: str, value: Any) -> None:
+        """Assign through the dict so nested values stay wrapped."""
+
         self[name] = self._wrap(value)
 
     @classmethod
     def _wrap(cls, value: Any) -> Any:
+        """Recursively wrap mappings and lists; other values are left as-is."""
+
         if isinstance(value, dict) and not isinstance(value, EasyDict):
             return cls(value)
         if isinstance(value, list):
@@ -43,6 +62,8 @@ class EasyDict(dict):
 
 
 def load_python_config(config_file: str | Path, overrides: Iterable[Any] = ()) -> EasyDict:
+    """Exec a trusted ``.py`` config, apply dotted overrides, then eval leaf strings."""
+
     cfg = EasyDict(_module_public_values(Path(config_file)))
     merge_list(cfg, list(overrides))
     eval_leaf_values(cfg)
@@ -50,6 +71,8 @@ def load_python_config(config_file: str | Path, overrides: Iterable[Any] = ()) -
 
 
 def merge_list(cfg: EasyDict, opts: list[Any]) -> EasyDict:
+    """Apply ``[key, value, ...]`` overrides; unknown dotted keys raise :class:`KeyError`."""
+
     if len(opts) % 2 != 0:
         raise ValueError(f"Expected key/value override pairs, got {opts!r}")
     for idx in range(0, len(opts), 2):
@@ -67,6 +90,8 @@ def merge_list(cfg: EasyDict, opts: list[Any]) -> EasyDict:
 
 
 def eval_leaf_values(node: EasyDict, root: EasyDict | None = None) -> EasyDict:
+    """Walk leaves and resolve ``eval(...)`` / ``${...}`` against *root*."""
+
     root = node if root is None else root
     for key, value in list(node.items()):
         if isinstance(value, EasyDict):
@@ -77,6 +102,8 @@ def eval_leaf_values(node: EasyDict, root: EasyDict | None = None) -> EasyDict:
 
 
 def _module_public_values(path: Path) -> dict[str, Any]:
+    """``exec_module`` a file and deepcopy public names; always unregister the temp module."""
+
     module_name = f"_worldfoundry_config_{path.stem}_{abs(hash(path))}"
     spec = importlib.util.spec_from_file_location(module_name, path)
     if spec is None or spec.loader is None:
@@ -166,6 +193,8 @@ def _interpolate_mixed(value: str, root: EasyDict) -> str:
 
 
 def _eval_string(value: Any, root: EasyDict) -> Any:
+    """Resolve one leaf: ``eval(...)``, whole-string ``${...}``, mixed interpolations, or literal."""
+
     if not isinstance(value, str):
         return value
     if value.startswith("eval(") and value.endswith(")"):

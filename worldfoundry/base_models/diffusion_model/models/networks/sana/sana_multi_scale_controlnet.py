@@ -14,7 +14,13 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-"""Module for base_models -> diffusion_model -> image -> sana -> diffusion -> model -> nets -> sana_multi_scale_controlnet.py functionality."""
+"""SANA multi-scale ControlNet side-branch.
+
+Copies :class:`SanaMSBlock` stacks from a frozen SanaMS backbone and injects
+control residuals through ``before_proj`` / ``after_proj`` linears.  The
+copied blocks keep the same linear / Triton-linear / FlashAttention and
+GLUMBConv choices as the teacher so control checkpoints load by name.
+"""
 
 from copy import deepcopy
 
@@ -50,7 +56,7 @@ if is_xformers_available():
 
 
 class ControlSanaMSBlock(Module):
-    """Control sana ms block implementation."""
+    """Copied SanaMSBlock plus ``before_proj`` / ``after_proj`` control residuals."""
 
     def __init__(self, base_block: SanaMSBlock, block_index: int) -> None:
         """Init.
@@ -116,9 +122,7 @@ class ControlSanaMSBlock(Module):
 
 
 class SanaMSControlNet(SanaMS):
-    """
-    Sana with ControlNet
-    """
+    """SanaMS plus a trainable ControlNet side-branch of copied blocks."""
 
     def __init__(
         self,

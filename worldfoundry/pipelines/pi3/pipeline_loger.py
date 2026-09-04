@@ -15,9 +15,15 @@ from PIL import Image
 
 from ...operators.pi3_operator import Pi3Operator
 from ...representations.point_clouds_generation.pi3.loger_representation import LoGeRRepresentation
+from worldfoundry.core.io import artifact_root_path
 from worldfoundry.core.io.artifacts import render_point_cloud
 
 logger = logging.getLogger(__name__)
+
+
+def _default_output_dir(name: str = "loger_output") -> str:
+    """Resolve a stable default output directory instead of writing to the CWD."""
+    return str(artifact_root_path() / name)
 
 
 def _apply_camera_delta(c2w: np.ndarray, delta: List[float]) -> np.ndarray:
@@ -76,7 +82,7 @@ class LoGeRResult:
     def save(self, output_dir: Optional[str] = None) -> List[str]:
         """Save for LoGeRResult."""
         if output_dir is None:
-            output_dir = "./loger_output"
+            output_dir = _default_output_dir()
         os.makedirs(output_dir, exist_ok=True)
         saved_files: List[str] = []
 

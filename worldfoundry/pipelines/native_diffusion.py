@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import os
 import secrets
 from collections.abc import Mapping
 from pathlib import Path
@@ -13,7 +14,9 @@ from worldfoundry.base_models.diffusion_model import NativeDiffusionPipeline
 from worldfoundry.base_models.diffusion_model.contracts import DiffusionRequest, SamplingConfig
 from worldfoundry.base_models.diffusion_model.optimizations import (
     RuntimePolicy,
+    parse_attention_backend,
     parse_offload_policy,
+    parse_quantization_policy,
     parse_torch_dtype,
 )
 from worldfoundry.core.io.video import save_image_or_video_tensor
@@ -49,6 +52,7 @@ class NativeVisualDiffusionPipeline(PipelineABC):
     DEFAULT_GUIDANCE_SCALE: ClassVar[float] = 7.5
     DEFAULT_NEGATIVE_PROMPT: ClassVar[str | None] = None
     DEFAULT_FPS: ClassVar[int] = 24
+    OUTPUT_VALUE_RANGE: ClassVar[str | tuple[float, float]] = "auto"
     DEFAULT_SCHEDULER_OPTIONS: ClassVar[Mapping[str, object]] = {}
     SCHEDULER_OPTION_ALIASES: ClassVar[Mapping[str, str]] = {}
     REQUEST_INPUT_DEFAULTS: ClassVar[Mapping[str, object]] = {}
@@ -56,6 +60,50 @@ class NativeVisualDiffusionPipeline(PipelineABC):
     NUM_FRAMES_ALIASES: ClassVar[tuple[str, ...]] = ("frame_num", "frames")
     NUM_INFERENCE_STEP_ALIASES: ClassVar[tuple[str, ...]] = ("infer_steps",)
     GUIDANCE_SCALE_ALIASES: ClassVar[tuple[str, ...]] = ("cfg_scale",)
+    RUNTIME_POLICY_OPTION_KEYS: ClassVar[tuple[str, ...]] = (
+        "adacache",
+        "approximate_attention",
+        "blocktaylorseer",
+        "compile_backend",
+        "compile_dynamic",
+        "compile_fullgraph",
+        "compile_mode",
+        "compile_options",
+        "cfg_gate_fraction",
+        "cfg_gate_step",
+        "cfg_parallel",
+        "cfg_parallel_degree",
+        "cuda_graph",
+        "custom",
+        "device_map",
+        "dit_weight_dtype",
+        "feature_cache",
+        "fused_rope",
+        "fuse_qkv",
+        "qkv_strategy",
+        "qkv_split_threshold",
+        "inplace_residual",
+        "magcache",
+        "rope_precision",
+        "rms_norm_precision",
+        "sequence_parallel",
+        "sp_degree",
+        "static_cross_kv",
+        "taylorseer",
+        "teacache",
+        "teacache_thresh",
+        "vae_decode_autocast",
+        "vae_channels_last_3d",
+        "vae_parallel",
+        "vae_parallel_degree",
+        "vae_preview_decoder_path",
+        "vae_spatial_tiling",
+        "vae_temporal_chunk_size",
+        "vae_tile_size",
+        "vae_tile_stride",
+        "vae_tiled_decode",
+        "vae_weight_dtype",
+    )
 
     def __init__(
         self,
@@ -123,7 +171,9 @@ class NativeVisualDiffusionPipeline(PipelineABC):
     @classmethod
     def _requested_model_id(cls, options: Mapping[str, Any]) -> str:
         if cls.ALLOW_MODEL_ID_OVERRIDE:
-            value = options.get("model_id", options.get("variant", options.get("profile_id")))
+            value = options.get("variant", options.get("variant_id"))
+            if value is None:
+                value = options.get("model_id", options.get("profile_id"))
             if value is not None:
                 return str(value)
         return cls.MODEL_ID
@@ -166,6 +216,29 @@ class NativeVisualDiffusionPipeline(PipelineABC):
         return resolved
 
     @classmethod
+    def _runtime_policy_options(cls, options: Mapping[str, Any]) -> dict[str, object]:
+        """Forward public optimization flags to the native module loader.
+
+        These flags used to be accepted by ``from_pretrained`` but dropped
+        while constructing :class:`RuntimePolicy`, so a Workspace manifest
+        could claim an optimization that was never applied.  Keep the public
+        option names explicit: unknown loading kwargs must not silently become
+        runtime policy settings.
+        """
+
+        explicit = options.get("runtime_options")
+        if explicit is None:
+            resolved: dict[str, object] = {}
+        elif isinstance(explicit, Mapping):
+            resolved = {str(name): value for name, value in explicit.items()}
+        else:
+            raise TypeError("runtime_options must be a mapping when provided")
+        for name in cls.RUNTIME_POLICY_OPTION_KEYS:
+            if name in options and options[name] is not None:
+                resolved[name] = options[name]
+        return resolved
+
+    @classmethod
     def from_pretrained(
         cls,
         model_path: str | Mapping[str, Any] | None = None,
@@ -183,6 +256,75 @@ class NativeVisualDiffusionPipeline(PipelineABC):
                 )
             options["model_id"] = model_id
         requested_model_id = cls._requested_model_id(options)
+        runtime_policy_options = cls._runtime_policy_options(options)
+        sequence_parallel = runtime_policy_options.get(
+            "sequence_parallel",
+            runtime_policy_options.get("sp_degree", False),
+        )
+        cfg_parallel = runtime_policy_options.get(
+            "cfg_parallel",
+            runtime_policy_options.get("cfg_parallel_degree", False),
+        )
+        raw_vae_parallel = runtime_policy_options.get(
+            "vae_parallel",
+            runtime_policy_options.get("vae_parallel_degree", False),
+        )
+        if isinstance(raw_vae_parallel, bool):
+            vae_parallel_degree = (
+                int(os.getenv("WORLD_SIZE", "1")) if raw_vae_parallel else 1
+            )
+            if raw_vae_parallel and vae_parallel_degree <= 1:
+                raise RuntimeError(
+                    "vae_parallel=True requires torchrun WORLD_SIZE>1 or an explicit degree"
+                )
+        else:
+            vae_parallel_degree = int(raw_vae_parallel or 1)
+        if vae_parallel_degree <= 0:
+            raise ValueError("vae_parallel degree must be positive")
+        if (
+            "vae_parallel" in runtime_policy_options
+            and "vae_parallel_degree" in runtime_policy_options
+            and int(runtime_policy_options["vae_parallel_degree"])
+            != vae_parallel_degree
+        ):
+            raise ValueError("vae_parallel and vae_parallel_degree must match")
+
+        if sequence_parallel or cfg_parallel or vae_parallel_degree > 1:
+            degree = int(sequence_parallel or 1)
+            cfg_degree = int(cfg_parallel or 1)
+            if "sequence_parallel" in runtime_policy_options and "sp_degree" in runtime_policy_options:
+                if int(runtime_policy_options["sp_degree"]) != degree:
+                    raise ValueError("sequence_parallel and sp_degree must match")
+            if "cfg_parallel" in runtime_policy_options and "cfg_parallel_degree" in runtime_policy_options:
+                if int(runtime_policy_options["cfg_parallel_degree"]) != cfg_degree:
+                    raise ValueError("cfg_parallel and cfg_parallel_degree must match")
+            if torch.device(device).type != "cuda":
+                raise ValueError("sequence/CFG/VAE parallelism requires a CUDA pipeline device")
+            from worldfoundry.core.distributed.sequence_parallel_runtime import (
+                ensure_parallel_runtime,
+            )
+
+            mesh_world_size = degree * cfg_degree
+            if mesh_world_size > 1 and vae_parallel_degree not in {
+                1,
+                mesh_world_size,
+            }:
+                raise ValueError(
+                    "vae_parallel degree must equal the complete SP×CFG world size "
+                    f"({mesh_world_size}) when combined with sequence/CFG parallelism"
+                )
+            if mesh_world_size == 1:
+                degree = vae_parallel_degree
+            device = str(ensure_parallel_runtime(degree, cfg_degree))
+            if sequence_parallel:
+                runtime_policy_options["sequence_parallel"] = degree
+            if cfg_parallel:
+                runtime_policy_options["cfg_parallel"] = cfg_degree
+            runtime_policy_options.pop("sp_degree", None)
+            runtime_policy_options.pop("cfg_parallel_degree", None)
+            if vae_parallel_degree > 1:
+                runtime_policy_options["vae_parallel"] = vae_parallel_degree
+            runtime_policy_options.pop("vae_parallel_degree", None)
         native = NativeDiffusionPipeline.from_pretrained(
             requested_model_id,
             policy=RuntimePolicy(
@@ -191,11 +333,24 @@ class NativeVisualDiffusionPipeline(PipelineABC):
                     options.get("torch_dtype", options.get("weight_dtype", options.get("dtype"))),
                     owner=cls.OWNER,
                 ),
+                attention=parse_attention_backend(
+                    options.get(
+                        "attention_backend",
+                        options.get("attention_implementation", options.get("attention", "auto")),
+                    ),
+                    owner=cls.OWNER,
+                ),
                 offload=parse_offload_policy(
                     options.get("offload_mode", "block"),
                     allow_disk=False,
                     owner=cls.OWNER,
                 ),
+                quantization=parse_quantization_policy(
+                    options.get("quantization", options.get("quantization_mode")),
+                    owner=cls.OWNER,
+                ),
+                compile=bool(options.get("compile", options.get("torch_compile", False))),
+                options=runtime_policy_options,
             ),
             checkpoint_overrides=cls._checkpoint_overrides(model_path, options),
             component_options=cls._component_options(options),
@@ -267,6 +422,7 @@ class NativeVisualDiffusionPipeline(PipelineABC):
         video: Any = None,
         video_path: str | Path | None = None,
         input_path: str | Path | None = None,
+        ref_image_path: str | Path | None = None,
         interactions: Any = None,
         negative_prompt: str | list[str] | None = None,
         output_path: str | Path | None = None,
@@ -280,8 +436,16 @@ class NativeVisualDiffusionPipeline(PipelineABC):
         guidance_scale: float | None = None,
         seed: int = 0,
         output_type: str = "auto",
+        operator_kwargs: Mapping[str, Any] | None = None,
         **kwargs: Any,
     ) -> Any:
+        # Evaluation attaches sample/task metadata as operator kwargs for
+        # action-policy pipelines.  Native diffusion recipes do not consume
+        # that routing metadata, so keep it outside the strict model option
+        # boundary.  A reference-image path is a standard image alias.
+        del operator_kwargs
+        if images is None and self.ACCEPTS_IMAGES and ref_image_path is not None:
+            images = ref_image_path
         # Studio exposes one generic input picker.  Bind it only for model
         # families that consume the corresponding modality; prompt-only
         # pipelines may safely share the same Workspace task profile.
@@ -371,7 +535,12 @@ class NativeVisualDiffusionPipeline(PipelineABC):
         artifact_path = None
         if output_path is not None and output_type != "latent":
             sample_to_save = output.sample.unsqueeze(2) if output.sample.ndim == 4 else output.sample
-            artifact_path = save_image_or_video_tensor(sample_to_save, output_path, fps=actual_fps)
+            artifact_path = save_image_or_video_tensor(
+                sample_to_save,
+                output_path,
+                fps=actual_fps,
+                value_range=self.OUTPUT_VALUE_RANGE,
+            )
         is_image = output.sample.ndim == 4
         result = {
             "sample": output.sample,

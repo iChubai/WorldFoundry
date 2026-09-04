@@ -52,8 +52,14 @@ class EchoMemoryPipeline(PipelineABC):
         options: dict[str, Any] = {}
         checkpoint_path = model_path
         if isinstance(model_path, Mapping):
-            options.update(model_path)
+            loader_options = dict(model_path)
+            nested_model_path = loader_options.pop("model_path", None)
+            options.update(loader_options)
             checkpoint_path = None
+            if isinstance(nested_model_path, Mapping):
+                options.update(nested_model_path)
+            elif nested_model_path is not None:
+                checkpoint_path = nested_model_path
         elif isinstance(model_path, str) and not model_path.strip():
             checkpoint_path = None
         options.update(required_components or {})
@@ -61,6 +67,13 @@ class EchoMemoryPipeline(PipelineABC):
         requested_model = options.pop("model_id", cls.MODEL_ID)
         if requested_model != cls.MODEL_ID:
             raise ValueError(f"{cls.__name__} is bound to {cls.MODEL_ID!r}, got {requested_model!r}")
+        for loader_key in (
+            "pipeline_binding",
+            "profile_id",
+            "runtime_profile",
+            "variant_id",
+        ):
+            options.pop(loader_key, None)
         synthesis = cls.SYNTHESIS_CLS.from_pretrained(
             pretrained_model_path=checkpoint_path,
             device=device,

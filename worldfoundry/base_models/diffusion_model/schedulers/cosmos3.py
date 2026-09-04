@@ -1,4 +1,10 @@
-"""Cosmos3's Karras flow UniPC schedule on the shared native solver."""
+"""Cosmos3's Karras flow UniPC schedule on the shared native solver.
+
+Adapter that reads the published Cosmos3 scheduler JSON (via
+:func:`~..loaders.metadata.checkpoint_json_config`) and drives
+:class:`~.flow_unipc.FlowUniPCMultistepScheduler`.  The runner only sees
+``SchedulerStep`` timesteps; UniPC state stays inside this adapter.
+"""
 
 from __future__ import annotations
 

@@ -1,3 +1,17 @@
+"""N-D conv factory (2-D / 3-D / causal) for the LTX video VAE.
+
+:func:`make_conv_nd` / :func:`make_linear_nd` build the
+convolutions used by residual and mid blocks.
+:class:`CausalConv3d` pads time so future frames do not leak;
+:class:`DualConv3d` is the 2-D+1-D factorization some
+checkpoints use.
+
+Tensors are BCTHW video maps.  Audio uses
+:mod:`~..audio.causal_conv_2d` instead.
+
+This is LTX video graph math consumed by :mod:`.resnet`.
+"""
+
 from typing import Tuple, Union
 
 import torch
@@ -22,6 +36,7 @@ def make_conv_nd(  # noqa: PLR0913
     spatial_padding_mode: PaddingModeType = PaddingModeType.ZEROS,
     temporal_padding_mode: PaddingModeType = PaddingModeType.ZEROS,
 ) -> nn.Module:
+    """Build a 2-D, 3-D, or causal convolution for the LTX video VAE."""
     if not (spatial_padding_mode == temporal_padding_mode or causal):
         raise NotImplementedError("spatial and temporal padding modes must be equal")
     if dims == 2:
@@ -79,6 +94,7 @@ def make_linear_nd(
     out_channels: int,
     bias: bool = True,
 ) -> nn.Module:
+    """Build a 1x1 N-D projection used as a channel mixer."""
     if dims == 2:
         return nn.Conv2d(in_channels=in_channels, out_channels=out_channels, kernel_size=1, bias=bias)
     elif dims in (3, (2, 1)):
@@ -88,6 +104,7 @@ def make_linear_nd(
 
 
 class DualConv3d(nn.Module):
+    """Factorized 2-D + 1-D convolution used by some LTX checkpoints."""
     def __init__(
         self,
         in_channels: int,
@@ -264,6 +281,7 @@ class DualConv3d(nn.Module):
 
 
 class CausalConv3d(nn.Module):
+    """3-D convolution that pads time so future frames do not leak."""
     def __init__(
         self,
         in_channels: int,

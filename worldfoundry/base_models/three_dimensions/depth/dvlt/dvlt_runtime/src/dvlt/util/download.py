@@ -3,7 +3,18 @@
 
 """Module for base_models -> three_dimensions -> depth -> dvlt -> dvlt_runtime -> src -> dvlt -> util -> download.py functionality."""
 
+import os
+
 import requests
+
+
+def _offline_mode_enabled():
+    return os.getenv("HF_HUB_OFFLINE", "").strip().lower() in {
+        "1",
+        "on",
+        "true",
+        "yes",
+    }
 
 
 def download_file_from_url(url, filename):
@@ -14,6 +25,11 @@ def download_file_from_url(url, filename):
         url: URL of the file to download
         filename: Local path to save the downloaded file
     """
+    if _offline_mode_enabled():
+        raise RuntimeError(
+            f"Cannot download {url}: offline mode is enabled by HF_HUB_OFFLINE."
+        )
+
     try:
         # Get the redirect URL
         response = requests.get(url, allow_redirects=False)

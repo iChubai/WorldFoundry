@@ -1,4 +1,13 @@
-"""Matrix-Game-3 T5 compatibility layer on top of shared Wan T5."""
+"""Matrix-Game-3 T5 compatibility layer on top of shared Wan T5.
+
+:class:`T5EncoderModel` exposes the names Matrix-Game-3
+loaders expect while delegating to :mod:`~..model`.
+
+Full-context recipes still emit Wan-style ``context``
+tokens.  Not a Gemma or STEP1 encoder.
+
+Use only when that checkpoint layout is required.
+"""
 
 from __future__ import annotations
 

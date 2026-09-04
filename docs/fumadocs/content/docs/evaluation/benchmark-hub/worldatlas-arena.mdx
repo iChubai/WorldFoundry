@@ -1,0 +1,63 @@
+---
+title: WorldArena (WorldAtlas Arena)
+description: OpenEnvision's six-axis benchmark for static, dynamic, long-horizon, and interactive generated worlds.
+---
+
+## About
+
+**Publisher:** OpenEnvision.
+
+WorldAtlas Arena evaluates generated world-model rollouts across image/video
+static and dynamic suites plus a memory loop. It preserves the official
+six-axis result vector and deliberately does not invent a benchmark-wide scalar.
+This catalog id is `worldatlas-arena`; it is distinct from the separate
+`worldarena` embodied benchmark entry in this hub.
+
+Official source: [OpenEnvision/WorldArena](https://github.com/OpenEnvision/WorldArena).
+
+## Metrics
+
+| Metric | Scope | Direction |
+| --- | --- | --- |
+| `long_sequence` | Long-horizon persistence and closed-loop memory. | Higher is better |
+| `action_control` | Prompt, camera, motion, and keystroke control. | Higher is better |
+| `consistency_3d_4d` | Geometry, depth, flow, and reconstruction consistency. | Higher is better |
+| `physics` | Physical plausibility and motion dynamics. | Higher is better |
+| `quality` | Perceptual quality, fidelity, and temporal artifacts. | Higher is better |
+| `real_time` | Throughput, response latency, and physical-time behavior. | Higher is better |
+
+## Run or import results
+
+Official execution requires a caller-provided manifest, benchmark media,
+predictions, and any checkpoints required by the chosen metrics:
+
+```bash
+python worldfoundry/evaluation/tasks/execution/runners/worldatlas_arena/run_worldatlas_arena_official_runner.py \
+  --run-official \
+  --manifest /data/worldarena/manifest.jsonl \
+  --generated-artifact-dir /data/worldarena/predictions \
+  --output-dir tmp/worldatlas-arena/official-run \
+  --json
+```
+
+Existing official report directories or summary JSON can be normalized through
+the catalog route:
+
+```bash
+worldfoundry-eval zoo benchmark-run \
+  --benchmark-id worldatlas-arena \
+  --mode official-validation \
+  --official-results-path /path/to/worldarena/report \
+  --output-dir tmp/worldatlas-arena/imported \
+  --json
+```
+
+## Outputs and limits
+
+The integration writes `scorecard.json`, `raw_metric_table.jsonl`,
+`per_sample_scores.jsonl`, and `benchmark_contract.json`. Existing summary
+reports can be normalized on CPU, while full metric execution may require CUDA,
+external checkpoints, media, and optional third-party runtimes. The checked-in
+fixture validates normalization only; full-suite parity is not yet verified.
+
+[← Benchmark Hub](/docs/evaluation/benchmark-hub)

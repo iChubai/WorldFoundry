@@ -21,6 +21,7 @@ integration:
 license: apache-2.0
 name: MolmoAct2
 official_sources:
+  paper: https://arxiv.org/abs/2605.02881
   github:
     head_sha: c2282820f9b188b60e66ea1636b3efd81c45cbb4
     url: https://github.com/allenai/molmoact2

@@ -1,0 +1,41 @@
+{
+  "id": "dualcamctrl",
+  "tagline": {
+    "en": "Camera-controlled image-to-video built on Wan2.1 — animate an image along a camera path with depth conditioning.",
+    "zh": "构建在 Wan2.1 之上、可控相机的图生视频——用深度条件引导,让图片沿相机路径动起来。"
+  },
+  "overview": {
+    "en": [
+      "DualCamCtrl is a camera-control world model that turns a still image into video while following a defined camera path. It is a depth-conditioned, image-to-video approach: alongside the input image it uses depth and camera information to drive coherent, controllable motion through the scene.",
+      "It builds on the Wan2.1 video family — including the Wan2.1-Fun camera-control and image-to-video checkpoints — adding the DualCamCtrl control weights on top. The default workflow follows the official RGB / depth / camera demo contract: an input image, a depth image, and a camera trajectory file.",
+      "In WorldFoundry, DualCamCtrl runs through its in-tree inference runtime on the shared pipeline. By default it loads checkpoints from the Hugging Face / local cache, and you can also point it at pre-staged local paths."
+    ],
+    "zh": [
+      "DualCamCtrl 是一个可控相机的世界模型,它把静态图片沿设定的相机路径转成视频。它是一种带深度条件的图生视频方法:除输入图片外,还借助深度和相机信息,驱动画面在场景中连贯、可控地运动。",
+      "它构建在 Wan2.1 视频家族之上——包括 Wan2.1-Fun 的相机控制与图生视频 checkpoint——并在其上叠加 DualCamCtrl 控制权重。默认工作流遵循官方的 RGB / 深度 / 相机 demo 约定:一张输入图片、一张深度图,以及一个相机轨迹文件。",
+      "在 WorldFoundry 中,DualCamCtrl 通过其内置推理运行时在共享 pipeline 上运行。默认从 Hugging Face / 本地缓存加载 checkpoint,你也可以指向预先准备好的本地路径。"
+    ]
+  },
+  "whenToUse": {
+    "en": "Use DualCamCtrl when you want to animate an image into a camera-controlled clip and can supply depth and a camera trajectory — for depth-aware, viewpoint-driven video from a single frame.",
+    "zh": "当你想把一张图片动画成可控相机的片段,并能提供深度和相机轨迹时,使用 DualCamCtrl——从单帧出发生成深度感知、由视点驱动的视频。"
+  },
+  "notFor": {
+    "en": "It expects an input image plus depth and camera inputs, so it's not a pure text-to-video tool. Checkpoints are downloaded rather than bundled, so plan for the download.",
+    "zh": "它需要一张输入图片以及深度和相机输入,因此不是纯文生视频工具。Checkpoint 需下载而非随附,请预留下载时间。"
+  },
+  "highlights": {
+    "en": [
+      "Camera-controlled, depth-conditioned image-to-video",
+      "Built on the Wan2.1 video family",
+      "Follows the official RGB / depth / camera demo contract",
+      "Ships with both code and weights"
+    ],
+    "zh": [
+      "可控相机、带深度条件的图生视频",
+      "构建在 Wan2.1 视频家族之上",
+      "遵循官方 RGB / 深度 / 相机 demo 约定",
+      "代码与权重一并提供"
+    ]
+  }
+}

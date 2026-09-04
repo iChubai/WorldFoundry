@@ -1,5 +1,9 @@
 # SPDX-License-Identifier: MIT
-"""Checkpoint-compatible UNet for the released short LVDM trainer.
+"""Checkpoint-compatible 3D UNet for the released short LVDM trainer.
+
+Latents are ``B C T H W``.  ResBlocks + :class:`SpatialTemporalTransformer`
+factorize spatial then temporal attention.  The short trainer forces the
+new QKV attention order via :class:`STAttentionBlock`.
 
 Adapted from YingqingHe/LVDM (MIT), commit
  d251dccfbf6352826f5c5681abd86e87ed7e6371, lvdm/models/modules/openaimodel3d.py.

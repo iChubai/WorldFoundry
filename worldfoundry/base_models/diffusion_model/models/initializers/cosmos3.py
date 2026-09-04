@@ -1,4 +1,13 @@
-"""Cosmos3 joint video, sound, and action latent initialization."""
+"""Cosmos3 joint :class:`~...runners.MultiStageLatentInitializer`.
+
+Defines a single stage that returns :class:`~...contracts.ModalityState`
+objects for video (required) plus optional sound and action.  Visual
+context from ``request.inputs[\"image\"]`` or ``video`` is encoded with the
+shared Wan2.2 48-channel VAE and written into ``clean_latent`` /
+``denoise_mask``.  Action tokens use :data:`ACTION_RAW_DIMS` from
+:mod:`..representations.cosmos3`.  The joint runner packs these states
+for :class:`~..denoisers.cosmos3.Cosmos3JointDenoiser`.
+"""
 
 from __future__ import annotations
 
@@ -86,6 +95,7 @@ class Cosmos3LatentInitializer(MultiStageLatentInitializer):
         device: torch.device,
         dtype: torch.dtype,
     ) -> Mapping[str, ModalityState]:
+        """Build the single-stage video / sound / action :class:`ModalityState` map."""
         del previous_latents, noise_scale
         if stage_index != 0:
             raise ValueError("Cosmos3 defines one denoising stage")

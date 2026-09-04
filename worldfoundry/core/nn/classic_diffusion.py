@@ -7,17 +7,44 @@
 #
 # thanks!
 
-"""Classic convolutional diffusion layers shared by latent video models."""
+"""Classic convolutional diffusion layers shared by latent video models.
+
+ResNet / attention blocks from U-Net era codecs (not DiT). Kept for
+VAE and legacy denoisers so they do not import Hugging Face diffusers
+just for a residual block.
+
+Not this module:
+    DiT AdaLN / modulation lives in
+    :mod:`worldfoundry.core.nn.diffusion_transformer`. Shared ViT layers
+    live in :mod:`worldfoundry.core.nn.layers`. Schedules live in
+    :mod:`worldfoundry.core.nn.diffusion_schedulers`.
+
+Public surface:
+
+- :class:`CausalConv1d` / :class:`CausalConv2d` / :class:`CausalConv3d`
+  — pad-then-crop so the first axis never sees the future.
+- :func:`conv_nd` / :func:`avg_pool_nd` / :func:`linear` — dimension
+  factories used by U-Net configs.
+- :func:`zero_module` / :func:`scale_module` / :func:`disabled_train`.
+- :func:`normalization` / :class:`GroupNormSpecific` / :class:`HybridConditioner`.
+"""
 
 import torch.nn as nn
 import torch
 from worldfoundry.core.model_loading.factory import instantiate_from_config
 
 
+# ──────────────────────────────────────────────────────────────────────────
+# Causal convolutions — pad then crop the leading axis so t cannot see t+1
+# ──────────────────────────────────────────────────────────────────────────
+
+
 class CausalConv1d(torch.nn.Module):
     """1D causal convolution compatible with conv_nd(..., causal=True)."""
 
     def __init__(self, in_channels, out_channels, kernel_size, dilation=1, padding=None):
+        """Ignore caller ``padding``; causal width is ``(k-1)*dilation`` only."""
+
         super().__init__()
         del padding
         self.padding = (kernel_size - 1) * dilation
@@ -30,6 +57,8 @@ class CausalConv1d(torch.nn.Module):
         )
 
     def forward(self, x):
+        """``[B, C, T]`` → same layout; trailing pad is dropped so output length is T."""
+
         x = self.conv1d(x)
         if self.padding > 0:
             x = x[:, :, : -self.padding]
@@ -40,6 +69,8 @@ class CausalConv2d(torch.nn.Module):
     """2D causal convolution over the first spatial axis."""
 
     def __init__(self, in_channels, out_channels, kernel_size, dilation=1, padding=None):
+        """Causal pad on axis 0, symmetric half-pad on axis 1 (U-Net video layout)."""
+
         super().__init__()
         del padding
         self.padding1 = (kernel_size - 1) * dilation
@@ -53,6 +84,8 @@ class CausalConv2d(torch.nn.Module):
         )
 
     def forward(self, x):
+        """``[B, C, T, W]`` (or H) → crop only the causal axis after the conv."""
+
         x = self.conv2d(x)
         if self.padding1 > 0:
             x = x[:, :, : -self.padding1, :]
@@ -63,6 +96,12 @@ class CausalConv3d(torch.nn.Module):
     """3D causal convolution over the temporal axis."""
 
     def __init__(self, in_channels, out_channels, kernel_size, dilation=1, padding=None):
+        """Causal pad on T; symmetric pad on H/W. ``kernel_size`` may be an int or 3-tuple.
+
+        Raises:
+            AssertionError: a tuple ``kernel_size`` is not length 3.
+        """
+
         super().__init__()
         del padding
         if isinstance(kernel_size, int):
@@ -82,17 +121,28 @@ class CausalConv3d(torch.nn.Module):
 
     @property
     def weight(self):
+        """Expose the inner conv weight so callers can zero-init or copy state."""
+
         return self.conv3d.weight
 
     @property
     def bias(self):
+        """Expose the inner conv bias for the same checkpoint / init hooks."""
+
         return self.conv3d.bias
 
     def forward(self, x):
+        """``[B, C, T, H, W]`` → crop only T after the padded conv."""
+
         x = self.conv3d(x)
         if self.padding1 > 0:
             x = x[:, :, : -self.padding1, :, :]
         return x
+
+
+# ──────────────────────────────────────────────────────────────────────────
+# Train-mode lock and parameter mutators — identity residuals at init
+# ──────────────────────────────────────────────────────────────────────────
 
 
 def disabled_train(self, mode=True):
@@ -115,6 +165,11 @@ def scale_module(module, scale):
     for p in module.parameters():
         p.detach().mul_(scale)
     return module
+
+
+# ──────────────────────────────────────────────────────────────────────────
+# N-D factories — U-Net configs pick 1/2/3 plus optional causal convs
+# ──────────────────────────────────────────────────────────────────────────
 
 
 def conv_nd(dims, *args, causal=False, **kwargs):
@@ -159,10 +214,10 @@ def avg_pool_nd(dims, *args, **kwargs):
 
 
 def nonlinearity(type='silu'):
-    """Nonlinearity.
+    """Return SiLU or LeakyReLU; unknown ``type`` yields ``None`` (legacy).
 
-    Args:
-        type: The type.
+    Callers historically treated a missing activation as optional, so this
+    does not raise on an unrecognized name.
     """
     if type == 'silu':
         return nn.SiLU()
@@ -171,13 +226,9 @@ def nonlinearity(type='silu'):
 
 
 class GroupNormSpecific(nn.GroupNorm):
-    """Group norm specific implementation."""
+    """GroupNorm subclass some U-Net checkpoints address by type name."""
     def forward(self, x):
-        """Forward.
-
-        Args:
-            x: The x.
-        """
+        """Same as :class:`torch.nn.GroupNorm`; kept for checkpoint type identity."""
         return super().forward(x)
 
 
@@ -190,27 +241,24 @@ def normalization(channels, num_groups=32):
     return GroupNormSpecific(num_groups, channels)
 
 
+# ──────────────────────────────────────────────────────────────────────────
+# Hybrid conditioner — concat stream plus cross-attn stream from configs
+# ──────────────────────────────────────────────────────────────────────────
+
+
 class HybridConditioner(nn.Module):
-    """Hybrid conditioner implementation."""
+    """Instantiate concat and cross-attention conditioners from LazyConfig dicts."""
 
     def __init__(self, c_concat_config, c_crossattn_config):
-        """Init.
+        """Both configs are resolved through :func:`instantiate_from_config`."""
 
-        Args:
-            c_concat_config: The c concat config.
-            c_crossattn_config: The c crossattn config.
-        """
         super().__init__()
         self.concat_conditioner = instantiate_from_config(c_concat_config)
         self.crossattn_conditioner = instantiate_from_config(c_crossattn_config)
 
     def forward(self, c_concat, c_crossattn):
-        """Forward.
+        """Return the U-Net dict ``{'c_concat': [...], 'c_crossattn': [...]}``."""
 
-        Args:
-            c_concat: The c concat.
-            c_crossattn: The c crossattn.
-        """
         c_concat = self.concat_conditioner(c_concat)
         c_crossattn = self.crossattn_conditioner(c_crossattn)
         return {'c_concat': [c_concat], 'c_crossattn': [c_crossattn]}

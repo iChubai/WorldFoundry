@@ -1,4 +1,4 @@
-.PHONY: help install-core install-dev docs-check lint ruff-check format-check shell-check data-check runtime-registry-check compile-eval cli-check precommit precommit-install preflight test-eval-core test-training
+.PHONY: help install-core install-dev docs-check cli-entrypoint-check lint ruff-check format-check shell-check data-check runtime-registry-check check-cuda-constraints packaging-check compile-eval cli-check precommit precommit-install preflight test-eval-core test-training
 
 PYTHON ?= python
 PIP ?= $(PYTHON) -m pip
@@ -34,21 +34,29 @@ help:
 		'WorldFoundry development targets:' \
 		'  make install-core      Install the editable core package.' \
 		'  make install-dev       Install lightweight development dependencies.' \
-		'  make docs-check        Validate documented CLI entrypoints.' \
+		'  make docs-check        Verify checked-in generated documentation.' \
+		'  make cli-entrypoint-check Validate documented CLI entrypoints.' \
 		'  make lint              Run lightweight source and catalog checks.' \
 		'  make preflight         Run the public runtime preflight.' \
-		'  make test-eval-core    Run the eval_core release-gate pytest suite (CPU).' \
-		'  make test-training     Run the tests/training pytest suite (CPU subset).'
+		'  make test-eval-core    Run the CPU release gate (install .[eval_core] first).' \
+		'  make test-training     Run the tests/training pytest suite (CPU subset).' \
+		'  make check-cuda-constraints  Verify CUDA-tier torch constraint stubs.' \
+		'  make packaging-check   Audit package discovery and license-gated wheel content.'
 
 install-core:
 	$(PIP) install -e .
 
 install-dev:
-	$(PIP) install -e .
-	$(PIP) install build pre-commit PyYAML ruff
+	$(PIP) install -e ".[dev]"
 
 docs-check:
+	npm --prefix docs/fumadocs run api:check
+	npm --prefix docs/fumadocs run models:check
+	npm --prefix docs/fumadocs run coverage:check
+
+cli-entrypoint-check:
 	PYTHONPATH=$(PYTHONPATH) $(PYTHON) -m worldfoundry.cli --help >/dev/null
+	PYTHONPATH=$(PYTHONPATH) $(PYTHON) -m worldfoundry.cli zoo models --json >/dev/null
 	PYTHONPATH=$(PYTHONPATH) $(PYTHON) -m worldfoundry.cli zoo benchmarks --json >/dev/null
 
 lint: ruff-check format-check shell-check data-check runtime-registry-check
@@ -59,8 +67,13 @@ ruff-check:
 format-check:
 	PYTHONPATH=$(PYTHONPATH) $(PYTHON) -m compileall -q $(CANONICAL_DIFFUSION_SOURCES) worldfoundry/evaluation scripts
 
+# BeeGFS: enumerate the bounded tracked paths from Git's index, not a recursive filesystem walk.
 shell-check:
-	find scripts/setup -type f -name '*.sh' -exec bash -n {} +
+	@set -eu; \
+	git ls-files 'scripts/setup/*.sh' 'scripts/dev/*.sh' 'docs/fumadocs/scripts/*.sh' | \
+	while IFS= read -r script; do \
+		if [ -f "$$script" ]; then bash -n "$$script"; fi; \
+	done
 
 data-check:
 	PYTHONPATH=$(PYTHONPATH) $(PYTHON) -m worldfoundry.cli zoo models --json >/dev/null
@@ -68,6 +81,13 @@ data-check:
 
 runtime-registry-check:
 	PYTHONPATH=$(PYTHONPATH) $(PYTHON) -c 'from worldfoundry.evaluation.models.runtime.validate import validate_runtime_registry; errors = [issue for issue in validate_runtime_registry() if issue.severity == "error"]; assert not errors, "\\n".join(f"[{issue.code}] {issue.message}" for issue in errors)'
+
+check-cuda-constraints:
+	PYTHONPATH=$(PYTHONPATH) $(PYTHON) scripts/setup/check_cuda_torch_constraints.py
+
+# Set WHEEL=path/to/worldfoundry-*.whl to add an artifact-level audit.
+packaging-check:
+	PYTHONPATH=$(PYTHONPATH) $(PYTHON) scripts/setup/check_packaging_license_gate.py $(if $(WHEEL),--wheel $(WHEEL),)
 
 compile-eval:
 	PYTHONPATH=$(PYTHONPATH) $(PYTHON) -m compileall -q worldfoundry/evaluation scripts

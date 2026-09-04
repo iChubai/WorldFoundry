@@ -180,23 +180,23 @@ variants:
   - repo_id: Efficient-Large-Model/SANA-Video_2B_480p
   runner_target: worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner
   pipeline_binding: sana-video-2b-480p
-  runtime_profile: runtime-profile:sana
+  runtime_profile: runtime-profile:sana-video-2b-480p
 - id: sana-video-2b-720p
   task: text-to-video
-  integration_status: planned
+  integration_status: integrated
   checkpoint_refs:
   - repo_id: Efficient-Large-Model/SANA-Video_2B_720p
   runner_target: worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner
   pipeline_binding: sana-video-2b-720p
-  runtime_profile: runtime-profile:sana
+  runtime_profile: runtime-profile:sana-video-2b-720p
 - id: longsana-video-2b-480p
   task: text-to-video
-  integration_status: planned
+  integration_status: integrated
   checkpoint_refs:
   - repo_id: Efficient-Large-Model/SANA-Video_2B_480p_LongLive
   runner_target: worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner
   pipeline_binding: longsana-video-2b-480p
-  runtime_profile: runtime-profile:sana
+  runtime_profile: runtime-profile:longsana-video-2b-480p
 - id: sana-streaming-2b-720p
   task: video-to-video
   integration_status: integrated
@@ -204,7 +204,7 @@ variants:
   - repo_id: Efficient-Large-Model/SANA-Streaming
   runner_target: worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner
   pipeline_binding: sana-streaming-2b-720p
-  runtime_profile: runtime-profile:sana
+  runtime_profile: runtime-profile:sana-streaming-2b-720p
   notes:
   - Official long_streaming route; defaults to 969 frames, 4 denoising steps,
     704x1280 output, and sink-token state caching.
@@ -215,7 +215,7 @@ variants:
   - repo_id: Efficient-Large-Model/SANA-Streaming_bidirectional
   runner_target: worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner
   pipeline_binding: sana-streaming-bidirectional-2b-720p
-  runtime_profile: runtime-profile:sana
+  runtime_profile: runtime-profile:sana-streaming-bidirectional-2b-720p
   notes:
   - Official bidirectional_short route; defaults to 81 frames and 50 denoising
     steps with classifier-free guidance.

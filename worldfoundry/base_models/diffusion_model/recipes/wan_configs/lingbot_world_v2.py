@@ -1,4 +1,14 @@
-"""LingBot-World-V2 configuration derived from the canonical Wan2.2 A14B config."""
+"""LingBot-World-V2 inference overlay on Wan 2.2 I2V A14B.
+
+Deep-copies the canonical :data:`~.wan22.i2v_a14b.i2v_A14B` dual-expert
+graph and overrides causal-fast sampling: 4 steps, shift 10, boundary
+0.947, 361 frames, and a Chinese negative prompt tuned for driving
+scenes.  ``fast_checkpoint`` points at the distilled transformer
+weights.
+
+Supported pixel sizes match the I2V A14B set (720p / 480p landscape
+and portrait).  Architecture width stays identical to A14B.
+"""
 
 from copy import deepcopy
 

@@ -8,9 +8,9 @@ import time
 from html import escape
 from pathlib import Path
 from typing import Any, Mapping, Sequence
+
 from PIL import Image
 
-from .gradio_runtime import gr, gradio_progress, mask_socks_proxy_env_for_gradio
 from .catalog import (
     CatalogEntry,
     catalog_as_table,
@@ -31,6 +31,7 @@ from .execution import (
     shutdown_torchrun_lingbot_fast_runtime,
     TORCHRUN_LINGBOT_FAST_ENV,
 )
+from .gradio_runtime import gr, gradio_progress, install_gradio_patches, mask_socks_proxy_env_for_gradio
 from .interfaces import interface_spec_for_entry
 from .launch_config import (
     StudioLaunchConfig,
@@ -2034,6 +2035,10 @@ def _load_recent_run(run_id: str):
 
 
 def build_demo(launch_config: StudioLaunchConfig | None = None) -> gr.Blocks:
+    # ``build_demo`` is the public programmatic launch boundary as well as the
+    # CLI path.  Install compatibility patches here so importing Studio stays
+    # side-effect free while ``build_demo().launch()`` remains fully patched.
+    install_gradio_patches()
     catalog = _studio_catalog()
     fallback_model_id = catalog[0].model_id if catalog else ""
     active_launch = launch_config or StudioLaunchConfig(model_id=fallback_model_id)

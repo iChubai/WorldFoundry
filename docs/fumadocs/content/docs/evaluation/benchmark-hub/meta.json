@@ -79,6 +79,8 @@
     "sana-wm-bench",
     "apple-pi",
     "physical-ai-bench",
-    "stevo-bench"
+    "stevo-bench",
+    "pawbench",
+    "worldatlas-arena"
   ]
 }

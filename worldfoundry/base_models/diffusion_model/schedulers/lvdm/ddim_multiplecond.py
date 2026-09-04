@@ -1,4 +1,14 @@
-"""Module for base_models -> diffusion_model -> video -> lvdm -> models -> samplers -> ddim_multiplecond.py functionality."""
+"""Multi-condition DDIM sampler for LVDM recipes with extra CFG streams.
+
+Same legacy stateful DDIM loop as :mod:`.ddim`, but the model is
+called with more than the usual cond / uncond pair (for example image
++ text + extra spatial conditions).  Used by VideoCrafter-style
+recipes that predate the DiffusionScheduler Protocol.
+
+Schedule buffers and ``rescale_noise_cfg`` come from
+:mod:`.schedule_math`.  Vid2World's variant is
+:mod:`.ddim_multiplecond_vid2world`.
+"""
 
 import numpy as np
 from tqdm import tqdm
@@ -32,8 +42,9 @@ class DDIMSampler(object):
             attr: The attr.
         """
         if type(attr) == torch.Tensor:
-            if attr.device != torch.device("cuda"):
-                attr = attr.to(torch.device("cuda"))
+            target_device = torch.device(self.model.device)
+            if attr.device != target_device:
+                attr = attr.to(target_device)
         setattr(self, name, attr)
 
     def make_schedule(self, ddim_num_steps, ddim_discretize="uniform", ddim_eta=0., verbose=True):

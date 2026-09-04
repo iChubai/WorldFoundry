@@ -14,7 +14,11 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-"""Module for base_models -> diffusion_model -> image -> sana -> diffusion -> model -> nets -> fastlinear -> modules -> triton_lite_mla_kernels -> vk_q_mm_divide_fwd.py functionality."""
+"""Triton kernel: ``Q @ VK`` with pad-column normalization (LiteLA forward).
+
+Public entry: :func:`vk_q_mm_divide_fwd`.  Multiplies query by the padded
+``VK`` matrix and divides by the extra column (``Q @ Kᵀ1 + eps``).
+"""
 
 import torch
 import triton
@@ -203,9 +207,10 @@ def vk_q_mm_divide_fwd_kernel_fp32(
 def vk_q_mm_divide_fwd(
     a: torch.Tensor, b: torch.Tensor, eps: float, compute_dtype: torch.dtype, output_dtype: torch.dtype
 ) -> torch.Tensor:
-    """
-    a: (B, H, C+1, D) # C=D
-    b: (B, N, H, D)
+    """``out = (Q @ VK[:-1]) / (Q @ VK[-1] + eps)``.
+
+    ``a`` is ``VK`` ``(B, H, C+1, D)``; ``b`` is Q ``(B, N, H, D)``.
+    Returns ``(out, mid)`` where ``mid`` keeps the unnormalized ``C+1`` column.
     """
     # Check constraints.
     assert a.dim() == 4 and b.dim() == 4

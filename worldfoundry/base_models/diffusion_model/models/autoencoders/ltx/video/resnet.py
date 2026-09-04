@@ -1,3 +1,15 @@
+"""3-D residual / mid blocks for the LTX video VAE.
+
+:class:`ResnetBlock3D` and :class:`UNetMidBlock3D` are the
+checkpoint-compatible residual stack used by
+:mod:`.video_vae`.  Convs come from :mod:`.convolution`.
+
+Tensors are BCTHW.  Header-level docs only — do not comment
+every inner conv.
+
+Sibling of the audio :mod:`~..audio.resnet`.
+"""
+
 from typing import Optional, Tuple, Union
 
 import torch

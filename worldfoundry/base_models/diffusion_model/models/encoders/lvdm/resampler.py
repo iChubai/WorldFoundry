@@ -1,7 +1,18 @@
 # modified from https://github.com/mlfoundations/open_flamingo/blob/main/open_flamingo/src/helpers.py
 # and https://github.com/lucidrains/imagen-pytorch/blob/main/imagen_pytorch/imagen_pytorch.py
 # and https://github.com/tencent-ailab/IP-Adapter/blob/main/ip_adapter/resampler.py
-"""Module for base_models -> diffusion_model -> video -> lvdm -> modules -> encoders -> resampler.py functionality."""
+"""Perceiver-style resampler that compresses CLIP tokens for LVDM.
+
+:class:`Resampler` and :class:`ImageProjModel` map a variable
+number of CLIP image tokens down to a fixed set of latents
+for IP-Adapter style LVDM recipes.
+
+Inputs are CLIP hidden states ``(B, L, C)``; outputs are
+``(B, N, C)`` learned queries.  Text encode stays on
+:mod:`.condition`.
+
+This is an LVDM extra, not the Sana / LTX connector.
+"""
 
 import math
 import torch

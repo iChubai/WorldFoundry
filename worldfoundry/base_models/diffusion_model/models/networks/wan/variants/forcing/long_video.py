@@ -71,7 +71,7 @@ def causal_rope_apply(x, grid_sizes, freqs, start_frame=0):
 
 
 class CausalWanSelfAttention(nn.Module):
-    """Causal wan self attention implementation."""
+    """Causal self-attention with optional KV cache and frame-offset RoPE."""
 
     def __init__(self,
                  dim,
@@ -343,7 +343,7 @@ class CausalWanSelfAttention(nn.Module):
 
 
 class CausalWanAttentionBlock(nn.Module):
-    """Causal wan attention block implementation."""
+    """Causal Wan block: cached self-attn, cross-attn, then gated FFN."""
 
     def __init__(self,
                  cross_attn_type,
@@ -462,7 +462,7 @@ class CausalWanAttentionBlock(nn.Module):
 
 
 class CausalHead(nn.Module):
-    """Causal head implementation."""
+    """AdaLN output head used by causal Wan graphs."""
 
     def __init__(self, dim, out_dim, patch_size, eps=1e-6):
         """Init.
@@ -502,9 +502,7 @@ class CausalHead(nn.Module):
 
 
 class CausalWanModel(nn.Module, NativeConfigMixin):
-    r"""
-    Wan diffusion backbone supporting both text-to-video and image-to-video.
-    """
+    r"""Causal Wan used by in-tree long-video / RollingForcing runtimes."""
 
     ignore_for_config = [
         'patch_size', 'cross_attn_norm', 'qk_norm', 'text_dim'

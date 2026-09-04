@@ -1,4 +1,14 @@
-"""DualCamCtrl control transformer built on the canonical Wan model."""
+"""DualCamCtrl (Wan 2.x): camera / RGB / depth ControlNet on native Wan.
+
+:class:`WanControlNet` reuses the packed :class:`WanModel` stem and adds
+a parallel control stack.  Selected host layers receive fused residuals
+from camera, RGB, and/or depth inject lists.  Fusion is either gated 3D
+conv (:class:`ResidualFusion3D_Gating`) or a stacked frame-gated block
+(:class:`ResidualFusion3D_Stack`).
+
+Adds camera (and optional RGB/depth) control.  No VACE, action encoder,
+causal attention, or linear-attention processors.
+"""
 
 from __future__ import annotations
 
@@ -16,6 +26,8 @@ from .dualcamctrl_fusion_stack import ResidualFusion3D_Stack
 
 
 class WanControlNet(WanModel):
+    """Packed Wan DiT plus a parallel control stack fused at selected layers."""
+
     def __init__(
         self,
         dim: int,
@@ -154,6 +166,7 @@ class WanControlNet(WanModel):
             self.control_blocks = None
 
     def copy_weights_from_main_branch(self):
+        """Copy host DiT block weights into the matching control blocks (init helper)."""
         # print(f"Start copying weights from main branch to control blocks.")
         if self.control_blocks is None:
             return
@@ -179,7 +192,7 @@ class WanControlNet(WanModel):
     def patchify(
         self, x: torch.Tensor, control_camera_latents_input: torch.Tensor = None
     ):
-
+        """Patchify latents and optionally add the camera-adapter residual."""
         x = self.patch_embedding(x)
 
         if (
@@ -223,7 +236,7 @@ class WanControlNet(WanModel):
         camera_pose_embedding: Optional[torch.Tensor] = None,
         **kwargs,
     ):
-
+        """Denoise ``x`` while running the control video through fused inject layers."""
         if control_video is None:
             control_video = torch.zeros_like(x)
         t = self.time_embedding(sinusoidal_embedding_1d(self.freq_dim, timestep))

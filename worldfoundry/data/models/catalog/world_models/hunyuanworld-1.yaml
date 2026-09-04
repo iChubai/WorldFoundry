@@ -16,6 +16,8 @@ modalities:
 - mesh-export
 name: HunyuanWorld 1.0
 official_sources:
+  project_page: https://3d.hunyuan.tencent.com/
+  paper: https://arxiv.org/abs/2507.21809
   github:
     confirmed_by: git ls-remote --heads
     confirmed_ref: refs/heads/main

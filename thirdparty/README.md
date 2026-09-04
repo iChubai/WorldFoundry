@@ -7,8 +7,8 @@ of the main `worldfoundry` Python package layout.
 
 | Path | Integration |
 |------|-------------|
-| `flash-attention/` | Git submodule (`Dao-AILab/flash-attention`) — initialize with `git submodule update --init thirdparty/flash-attention` |
-| `kairos_fla/` | In-tree FLA operator kernels used by select models |
+| FlashAttention | External Python dependency — install with `scripts/setup/install_flash_attn.sh` when it is not already available in the runtime |
+| `diff-gaussian-rasterization/` | Canonical depth-capable Gaussian rasterizer; auxiliary median-depth and opacity outputs are opt-in |
 | `simple-knn/` | CUDA KNN extension vendored for 3D pipelines |
 
 ## Guidelines

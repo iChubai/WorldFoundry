@@ -1,0 +1,41 @@
+{
+  "id": "molmoact2",
+  "tagline": {
+    "en": "Ai2's Apache-2.0 vision-language-action policy — turn camera views and instructions into robot actions.",
+    "zh": "Ai2 的 Apache-2.0 视觉-语言-动作策略——把相机画面与指令转化为机器人动作。"
+  },
+  "overview": {
+    "en": [
+      "MolmoAct2 is a vision-language-action (VLA) policy from Ai2 (Allen Institute for AI). It takes camera views and an instruction and predicts robot actions, so instead of generating video it drives a robot policy. The core checkpoints are released under Apache-2.0.",
+      "It comes in several profiles tuned for different robots and benchmarks — DROID, bimanual YAM, SO100/SO101, LIBERO, and a Think-LIBERO variant — each with its own camera setup and action space. WorldFoundry runs an in-tree runtime under its action-generation stack, loading the checkpoints through explicit local model and processor classes with remote code disabled, and automatically picks BF16, FP16, or FP32 based on your GPU.",
+      "In WorldFoundry you select the profile that matches your robot, point it at the checkpoint, and run the policy-rollout route to get action traces."
+    ],
+    "zh": [
+      "MolmoAct2 是 Ai2（艾伦人工智能研究所）推出的视觉-语言-动作（VLA）策略。它接收相机画面和一条指令，预测机器人动作——因此它不生成视频，而是驱动机器人策略。核心 checkpoint 以 Apache-2.0 许可发布。",
+      "它提供多个针对不同机器人与基准调优的配置——DROID、双臂 YAM、SO100/SO101、LIBERO，以及 Think-LIBERO 变体——每个都有各自的相机设置与动作空间。WorldFoundry 在其动作生成栈下运行内置运行时，通过显式的本地模型与处理器类加载 checkpoint（禁用远程代码），并根据你的 GPU 自动选择 BF16、FP16 或 FP32。",
+      "在 WorldFoundry 中，你选择与机器人匹配的配置，指向对应 checkpoint，运行 policy-rollout 路径即可得到动作轨迹。"
+    ]
+  },
+  "whenToUse": {
+    "en": "Use it when you need an openly-licensed VLA policy for robot control — mapping camera input and instructions to actions across DROID, YAM, SO100/101, or LIBERO-style setups.",
+    "zh": "当你需要一个开放许可的 VLA 策略来控制机器人时使用——把相机输入与指令映射为动作，覆盖 DROID、YAM、SO100/101 或 LIBERO 类设置。"
+  },
+  "notFor": {
+    "en": "Not a video or image generator — its output is action traces, not pixels. Pick the profile that matches your robot, since camera layout and action dimensions differ per profile.",
+    "zh": "它不是视频或图像生成器——输出的是动作轨迹而非画面。请选择与你机器人匹配的配置，因为不同配置的相机布局与动作维度各不相同。"
+  },
+  "highlights": {
+    "en": [
+      "Vision-language-action policy from Ai2",
+      "Core checkpoints under Apache-2.0",
+      "Profiles for DROID, bimanual YAM, SO100/101, LIBERO, and Think-LIBERO",
+      "Automatic BF16/FP16/FP32 precision by GPU"
+    ],
+    "zh": [
+      "出自 Ai2 的视觉-语言-动作策略",
+      "核心 checkpoint 采用 Apache-2.0 许可",
+      "覆盖 DROID、双臂 YAM、SO100/101、LIBERO 与 Think-LIBERO 配置",
+      "按 GPU 自动选择 BF16/FP16/FP32 精度"
+    ]
+  }
+}

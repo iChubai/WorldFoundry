@@ -15,6 +15,9 @@ source:
 checkpoint_refs:
 - path: https://github.com/cvg/GeoCalib/releases/download/v1.0/geocalib-pinhole.tar
   filename: geocalib-pinhole.tar
+official_sources:
+  project_page: https://www.cvg.ethz.ch/research/geocalib/
+  paper: https://arxiv.org/abs/2409.06704
 integration:
   kind: pipeline_runner
   status: integrated

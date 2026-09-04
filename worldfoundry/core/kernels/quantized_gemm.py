@@ -6,13 +6,22 @@
 # Licensed under the Apache License, Version 2.0 (see LICENSE.txt at repo root).
 #
 # Modifications Copyright (c) 2026 SkyworkAI and contributors.
-"""Module for base_models -> diffusion_model -> video -> wan -> components -> int8_triton_kernels.py functionality."""
+"""INT8 / quantized GEMM dispatch for Wan-style layers.
+
+Public quantized matmul entry with a PyTorch fallback. Triton
+implementations stay private to this file.
+"""
 
 import torch
 from triton import Config, autotune, cdiv, jit, next_power_of_2
 from triton import language as tl
 
 _ordered_datatypes = [torch.int8, torch.float16, torch.bfloat16, torch.float32]
+
+
+# ──────────────────────────────────────────────────────────────────────────
+# Row-wise quantize — BLOCK_SIZE = next_pow2(H); one program per flattened row
+# ──────────────────────────────────────────────────────────────────────────
 
 
 @jit
@@ -43,6 +52,7 @@ def int8_quantize_kernel(X, OUT, SCALES, HDIM, BLOCK_SIZE: tl.constexpr):
     x = tl.load(x_ptr + h_offset, mask=h_offset < HDIM).to(tl.float32)
     x_scale = 127.0 / tl.max(tl.abs(x))
     x_scaled = x * x_scale
+    # Symmetric INT8: away-from-zero 0.5 rounding, then store 1/scale for dequant.
     x_scaled += (0.5 * tl.where(x_scaled >= 0, 1, -1)).to(tl.int8)
     tl.store(out_ptr + h_offset, x_scaled, mask=h_offset < HDIM)
     tl.store(SCALES + row_idx, 1 / x_scale)
@@ -84,6 +94,7 @@ def fp8_quantize_kernel(X, OUT, SCALES, HDIM, BLOCK_SIZE: tl.constexpr, FP8_MAX_
     absmax = tl.max(tl.abs(x))
     eps = 1e-8
     absmax = tl.maximum(absmax, eps)
+    # e4m3 max is 448; store the scale (not its reciprocal) unlike INT8.
     x_scale = absmax / FP8_MAX_VAL
     x_scaled = x / x_scale
     x_scaled = tl.clamp(x_scaled, -FP8_MAX_VAL, FP8_MAX_VAL)
@@ -107,6 +118,11 @@ def fp8_quantize_triton(x):
     fp8_quantize_kernel[grid](x, out_scaled, scales, x_shape_orig[-1], BLOCK_SIZE, FP8_MAX_VAL=FP8_MAX, num_warps=8)
     quantized = out_scaled.to(torch.float8_e4m3fn)
     return quantized.view(x_shape_orig), scales.view(x_shape_orig[:-1])
+
+
+# ──────────────────────────────────────────────────────────────────────────
+# Accumulator dtype — FP8 promotes to fp16 before the GEMM type lattice
+# ──────────────────────────────────────────────────────────────────────────
 
 
 def upcast_if_fp8(a):
@@ -140,6 +156,11 @@ def get_higher_dtype(a, b):
             return b
         if b is d:
             return a
+
+
+# ──────────────────────────────────────────────────────────────────────────
+# INT8 GEMM — autotune key is (M, N, K); GROUP_M=8; SPLIT_K>1 uses atomic_add
+# ──────────────────────────────────────────────────────────────────────────
 
 
 @autotune(
@@ -367,6 +388,11 @@ def int8_gemm_bias_triton(a, b, bias, a_scales, b_scales, fuse_gelu=False, outpu
     return c.view(*out_shape)
 
 
+# ──────────────────────────────────────────────────────────────────────────
+# INT8 GEMM without bias — linear-layer layout only (B is transposed)
+# ──────────────────────────────────────────────────────────────────────────
+
+
 @autotune(
     configs=[
         Config({"BLOCK_M": 256, "BLOCK_N": 128, "BLOCK_K": 128, "SPLIT_K": 1}, num_stages=3, num_warps=8),
@@ -586,6 +612,11 @@ def int8_gemm_triton(a, b, a_scales, b_scales, fuse_gelu=False, output_dtype=Non
     return c.view(*out_shape)
 
 
+# ──────────────────────────────────────────────────────────────────────────
+# FP8 e4m3 GEMM — same (M, N, K) autotune key; CUDA-only launchers
+# ──────────────────────────────────────────────────────────────────────────
+
+
 @autotune(
     configs=[
         Config({"BLOCK_M": 256, "BLOCK_N": 128, "BLOCK_K": 128, "SPLIT_K": 1}, num_stages=3, num_warps=8),
@@ -767,6 +798,11 @@ def fp8_gemm_bias_triton(a, b, bias, a_scales, b_scales, fuse_gelu=False, output
         EVEN_K=even_k,
     )
     return c.view(*out_shape)
+
+
+# ──────────────────────────────────────────────────────────────────────────
+# FP8 GEMM without bias — e4m3fn / e4m3fnuz only; EVEN_K from K % BLOCK_K
+# ──────────────────────────────────────────────────────────────────────────
 
 
 @autotune(

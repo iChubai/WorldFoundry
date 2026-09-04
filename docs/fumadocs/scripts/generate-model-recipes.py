@@ -72,11 +72,23 @@ conflicts). All keys are optional. Schema::
       # stay "Not recorded".
       limitations: [ ... ]
       limitations_zh: [ ... ]
+      # Optional paper teaser. Usually filled by harvest-model-media.py
+      # from arXiv / in-repo demos; a catalog may override it.
+      paper:
+        title: ...
+        year: 2025
+        venue: CVPR 2025
+        arxiv_id: 2411.18673
+      figures:
+        - src: /models/ac3d/paper.png
+          caption: ...
 """
 
 from __future__ import annotations
 
+import argparse
 import json
+import os
 import re
 import shlex
 import sys
@@ -91,9 +103,30 @@ ROOT = Path(__file__).resolve().parents[3]
 DOCS_ROOT = Path(__file__).resolve().parents[1]
 OUT = DOCS_ROOT / "lib" / "model-recipes-data.json"
 INDEX_OUT = DOCS_ROOT / "lib" / "model-recipes-index.json"
+PAPER_MEDIA_PATH = DOCS_ROOT / "lib" / "model-paper-media.json"
+
+# Inference specs expose resolved default paths. Pin their path environment so
+# checked-in docs do not depend on the developer's home, cache, or adjacent
+# checkpoint directories.
+CANONICAL_PROJECT_ROOT = "/workspace"
+CANONICAL_PACKAGE_ROOT = f"{CANONICAL_PROJECT_ROOT}/worldfoundry"
+CANONICAL_HOME = "/home/ubuntu/.cache/worldfoundry"
+os.environ.update(
+    {
+        "WORLDFOUNDRY_HOME": CANONICAL_HOME,
+        "WORLDFOUNDRY_CACHE_DIR": CANONICAL_HOME,
+        "WORLDFOUNDRY_DATA_DIR": f"{CANONICAL_HOME}/data",
+        "WORLDFOUNDRY_ARTIFACT_DIR": f"{CANONICAL_HOME}/artifacts",
+        "WORLDFOUNDRY_MODEL_DIR": f"{CANONICAL_HOME}/models",
+        "WORLDFOUNDRY_MODEL_SOURCE_DIR": f"{CANONICAL_HOME}/official_runtime_repos",
+        "WORLDFOUNDRY_GITHUB_REPOS_ROOT": f"{CANONICAL_HOME}/official_runtime_repos",
+        "WORLDFOUNDRY_CKPT_DIR": f"{CANONICAL_HOME}/checkpoints",
+        "WORLDFOUNDRY_HFD_ROOT": f"{CANONICAL_HOME}/checkpoints/hfd",
+    }
+)
 
 sys.path.insert(0, str(ROOT))
-from worldfoundry.core.inference import get_model_inference_spec  # noqa: E402
+from worldfoundry.runtime.inference_catalog import get_model_inference_spec  # noqa: E402
 
 CATALOG_ROOT = ROOT / "worldfoundry/data/models/catalog"
 PROFILE_ROOT = ROOT / "worldfoundry/data/models/runtime/profiles"
@@ -181,6 +214,27 @@ def compact_text(value: Any, limit: int = 420) -> str | None:
     if len(result) <= limit:
         return result
     return result[: limit - 1].rstrip() + "…"
+
+
+def portable_doc_value(value: Any) -> Any:
+    """Keep checked-in docs independent of the checkout's absolute path."""
+
+    if isinstance(value, dict):
+        return {key: portable_doc_value(item) for key, item in value.items()}
+    if isinstance(value, list):
+        return [portable_doc_value(item) for item in value]
+    if isinstance(value, tuple):
+        return tuple(portable_doc_value(item) for item in value)
+    if isinstance(value, str):
+        replacements = (
+            (str(ROOT / "worldfoundry"), CANONICAL_PACKAGE_ROOT),
+            (str(ROOT), CANONICAL_PROJECT_ROOT),
+            (str(ROOT.parent), ""),
+        )
+        for source, replacement in replacements:
+            value = value.replace(source, replacement)
+        return value
+    return value
 
 
 def unique_strings(values: Iterable[Any], limit: int | None = None) -> list[str]:
@@ -983,6 +1037,30 @@ def load_benchmark_status() -> dict[str, dict[str, Any]]:
 BENCH_STATUS = load_benchmark_status()
 
 
+def load_paper_media() -> dict[str, dict[str, Any]]:
+    if not PAPER_MEDIA_PATH.exists():
+        return {}
+    data = json.loads(PAPER_MEDIA_PATH.read_text(encoding="utf-8"))
+    return data if isinstance(data, dict) else {}
+
+
+PAPER_MEDIA = load_paper_media()
+
+
+def paper_media_for(model_id: str, docs: dict[str, Any]) -> tuple[dict[str, Any] | None, list[dict[str, Any]]]:
+    extra = PAPER_MEDIA.get(model_id) if isinstance(PAPER_MEDIA.get(model_id), dict) else {}
+    paper = extra.get("paper") if isinstance(extra.get("paper"), dict) else None
+    curated_paper = docs.get("paper") if isinstance(docs.get("paper"), dict) else None
+    if curated_paper:
+        paper = {**(paper or {}), **curated_paper}
+    figures = extra.get("figures") if isinstance(extra.get("figures"), list) else []
+    curated_figures = docs.get("figures") if isinstance(docs.get("figures"), list) else []
+    if curated_figures:
+        figures = curated_figures
+    cleaned_figures = [item for item in figures if isinstance(item, dict) and item.get("src")]
+    return paper, cleaned_figures
+
+
 def bench_scan_patterns() -> list[tuple[str, "re.Pattern[str]"]]:
     """One conservative word-boundary pattern per benchmark id.
 
@@ -1435,6 +1513,7 @@ def docs_data(
     runtime: dict[str, Any],
     checkpoints: list[dict[str, Any]],
     variant_records: list[dict[str, Any]],
+    model_id: str = "",
 ) -> dict[str, Any]:
     docs = docs_override(item)
     curated = bool(docs)
@@ -1488,6 +1567,8 @@ def docs_data(
         else None
     )
 
+    paper, figures = paper_media_for(model_id or text(item.get("id")), docs)
+
     return {
         "curated": curated,
         "publisher": publisher,
@@ -1506,6 +1587,8 @@ def docs_data(
         "benchmarks": benchmark_refs(item, docs),
         "limitations": limitations,
         "limitationsZh": limitations_zh,
+        "paper": paper,
+        "figures": figures,
     }
 
 
@@ -1561,7 +1644,11 @@ def command_data(model_id: str, runtime_model_id: str, default_task: dict[str, A
     }
 
 
-def main() -> None:
+def main() -> int:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--check", action="store_true", help="Fail when generated recipe data is stale.")
+    args = parser.parse_args()
+
     profiles = manifest_index(PROFILE_ROOT, ("model_id", "id"))
     environments = manifest_index(ENVIRONMENT_ROOT, ("model_id", "id"))
     bindings = manifest_index(BINDING_ROOT, ("binding_id", "model_id", "id"))
@@ -1627,10 +1714,16 @@ def main() -> None:
                     runtime,
                     checkpoints,
                     variant_records,
+                    model_id,
                 )
                 summary = summary_for(item, tasks, notes)
                 if docs["curated"] and docs["overview"]:
-                    summary = compact_text(docs["overview"][0], 240) or summary
+                    lead = re.split(
+                        r"(?:In this catalog|Both integration and runner|WorldFoundry serves it|WorldFoundry binds it|在本 catalog|本 catalog|WorldFoundry 通过)",
+                        docs["overview"][0],
+                        maxsplit=1,
+                    )[0].strip()
+                    summary = compact_text(lead, 240) or compact_text(docs["overview"][0], 240) or summary
 
                 recipe = {
                     "id": model_id,
@@ -1657,7 +1750,7 @@ def main() -> None:
                 }
                 if not docs_catalog_visible(category_id, model_id, status["group"]):
                     continue
-                recipes.append(recipe)
+                recipes.append(portable_doc_value(recipe))
                 category_counts[category_id] += 1
 
     recipes.sort(
@@ -1679,7 +1772,7 @@ def main() -> None:
         ],
         "recipes": recipes,
     }
-    OUT.write_text(json.dumps(payload, ensure_ascii=False, indent=2) + "\n")
+    serialized_payload = json.dumps(payload, ensure_ascii=False, indent=2) + "\n"
     index_payload = {
         "total": payload["total"],
         "categories": payload["categories"],
@@ -1706,13 +1799,41 @@ def main() -> None:
                     )
                 },
                 "checkpoint": recipe["checkpoints"][0] if recipe["checkpoints"] else None,
+                "teaser": next(
+                    (
+                        item.get("poster") or item.get("src")
+                        for item in recipe.get("docs", {}).get("figures") or []
+                        if isinstance(item, dict) and (item.get("poster") or item.get("kind") != "video")
+                    ),
+                    None,
+                ),
             }
             for recipe in recipes
         ],
     }
-    INDEX_OUT.write_text(json.dumps(index_payload, ensure_ascii=False, separators=(",", ":")) + "\n")
+    serialized_index = json.dumps(index_payload, ensure_ascii=False, separators=(",", ":")) + "\n"
+
+    outputs = ((OUT, serialized_payload), (INDEX_OUT, serialized_index))
+    if args.check:
+        stale_paths = [
+            path
+            for path, expected in outputs
+            if not path.is_file() or path.read_text(encoding="utf-8") != expected
+        ]
+        if stale_paths:
+            for path in stale_paths:
+                print(f"stale generated model recipe data: {path}", file=sys.stderr)
+            print("run `npm --prefix docs/fumadocs run models:generate` to refresh it", file=sys.stderr)
+            return 1
+        print(f"model recipe data is current: {OUT} and {INDEX_OUT}")
+        return 0
+
+    for path, content in outputs:
+        if not path.is_file() or path.read_text(encoding="utf-8") != content:
+            path.write_text(content, encoding="utf-8")
     print(f"wrote {OUT} and {INDEX_OUT} recipes={len(recipes)}")
+    return 0
 
 
 if __name__ == "__main__":
-    main()
+    raise SystemExit(main())

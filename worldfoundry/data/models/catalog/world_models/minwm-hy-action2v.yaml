@@ -10,6 +10,8 @@ checkpoint: MIN-Lab/minWM
 runtime_profile: runtime-profile:minwm-hy-action2v
 runner_target: worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner
 pipeline_binding: minwm-hy-action2v
+official_sources:
+  paper: https://arxiv.org/abs/2605.30263
 integration:
   status: integrated
   notes: [Official source is vendored at revision df522a26cd4409d3e3e8f269cc98eac069b5df47.]

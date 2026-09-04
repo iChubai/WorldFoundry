@@ -1,4 +1,29 @@
-"""Projective camera transforms composed with rotary attention."""
+"""Projective camera transforms composed with rotary attention (PRoPE).
+
+PRoPE lifts camera intrinsics and SE(3) into the rotary frame so a
+camera-conditioned video DiT attends in a projective coordinate
+system rather than a purely grid-index one. Invert helpers stay here
+so geometry / pose code does not depend on a specific transformer.
+
+The attention call itself still goes through
+:func:`worldfoundry.core.attention.scaled_dot_product_attention` after
+the projective rotate. This is not a replacement for 3D RoPE on
+patch indices — models that need both compose them.
+
+Not this module:
+    Grid-index 3D / 2D / n-D RoPE lives in :mod:`.rope`, :mod:`.rope_2d`,
+    :mod:`.rope_nd`. Pose I/O lives in :mod:`worldfoundry.core.camera_pose`.
+    The old ``prope_diagonal_mask`` / ``attn_mask`` hooks are
+    intentionally not part of this interface.
+
+Public surface:
+
+- :func:`prope_dot_product_attention` — wrap SDPA with P/P_T/P_inv.
+- :func:`invert_se3` / :func:`invert_k` / :func:`lift_k` — camera
+  algebra used by pose adapters.
+- :func:`make_rope3_coeffs` — optional 3-axis view-change RoPE on the
+  tail of ``head_dim``.
+"""
 
 from functools import partial
 from typing import Callable, List, Tuple
@@ -7,6 +32,10 @@ import torch
 from einops import rearrange
 
 from worldfoundry.core.attention import scaled_dot_product_attention
+
+# ──────────────────────────────────────────────────────────────────────────
+# Camera tiling — choose a head_dim subspace that does not fight x/y-RoPE
+# ──────────────────────────────────────────────────────────────────────────
 
 # Camera tiling layouts (consumed by ``_prepare_apply_fns``).
 #
@@ -24,6 +53,11 @@ PROPE_CAMERA_LAYOUTS = {
     "full": None,
     "sf13": {"subframes": (1, 3), "dims_per_cam": 16},
 }
+
+
+# ──────────────────────────────────────────────────────────────────────────
+# Attention wrap — rotate Q/K/V, call exact SDPA, rotate output back
+# ──────────────────────────────────────────────────────────────────────────
 
 
 def prope_dot_product_attention(
@@ -76,6 +110,16 @@ def _prepare_apply_fns(
     Callable[[torch.Tensor], torch.Tensor],
     Callable[[torch.Tensor], torch.Tensor],
 ]:
+    """Build Q / KV / output applicators for one camera-layout choice.
+
+    ``full`` tiles every sub-frame matrix across the whole head (legacy,
+    overlaps axial RoPE). ``sf13`` writes two cameras into a rope-free
+    prefix so conjugation does not entangle pose with x/y frequencies.
+    Optional ``view_change_positions`` compose a 3-axis RoPE on the tail;
+    the output path inverts that RoPE *before* the projective restore so
+    the two frames do not cancel incorrectly.
+    """
+
     P, P_T, P_inv = viewmats
     if camera_layout not in PROPE_CAMERA_LAYOUTS:
         raise ValueError(
@@ -101,18 +145,31 @@ def _prepare_apply_fns(
         proj_q, proj_kv, proj_o = apply_fn_q, apply_fn_kv, apply_fn_o
 
         def apply_fn_q(x: torch.Tensor) -> torch.Tensor:
+            """Project then apply view-change RoPE on the query subspace."""
+
             return _apply_rope3_slice(proj_q(x), coeffs3, each, inverse=False)
 
         def apply_fn_kv(x: torch.Tensor) -> torch.Tensor:
+            """Project then apply view-change RoPE on the key/value subspace."""
+
             return _apply_rope3_slice(proj_kv(x), coeffs3, each, inverse=False)
 
         def apply_fn_o(x: torch.Tensor) -> torch.Tensor:
+            """Undo view-change RoPE, then restore the camera frame on output."""
+
             return proj_o(_apply_rope3_slice(x, coeffs3, each, inverse=True))
 
     return apply_fn_q, apply_fn_kv, apply_fn_o
 
 
 def _apply_tiled_projmat(feats: torch.Tensor, matrix: torch.Tensor) -> torch.Tensor:
+    """Apply one 4×4 camera matrix to every four-vector across ``head_dim``.
+
+    The reshape assumes ``head_dim`` factors as ``4*4*4*r`` so the same
+    matrix hits every sub-frame channel. That is why ``full`` overlaps
+    axial RoPE: there is no reserved prefix.
+    """
+
     feat_pc = rearrange(
         feats,
         "b h (s t) (p q j r) -> b h s t r p q j",
@@ -170,6 +227,13 @@ def _apply_block_diagonal(
     feats: torch.Tensor,
     func_size_pairs: List[Tuple[Callable[[torch.Tensor], torch.Tensor], int]],
 ) -> torch.Tensor:
+    """Split ``head_dim`` into named blocks and apply one transform per block.
+
+    Invariant: the sum of block sizes equals the last dimension; a
+    mismatch is an assertion because it means the layout spec and the
+    checkpoint head width have drifted.
+    """
+
     funcs, block_sizes = zip(*func_size_pairs)
     assert feats.shape[-1] == sum(block_sizes)
     x_blocks = torch.split(feats, block_sizes, dim=-1)
@@ -178,7 +242,18 @@ def _apply_block_diagonal(
     return out
 
 
+# ──────────────────────────────────────────────────────────────────────────
+# Camera algebra — invert / lift without importing a geometry package
+# ──────────────────────────────────────────────────────────────────────────
+
+
 def invert_se3(transforms: torch.Tensor) -> torch.Tensor:
+    """Invert an SE(3) matrix as ``R^T`` and ``-R^T t`` (last row stays 0 0 0 1).
+
+    A generic ``torch.linalg.inv`` would be slower and can break the
+    homogeneous row on half-precision pose tensors.
+    """
+
     assert transforms.shape[-2:] == (4, 4)
     r_inv = transforms[..., :3, :3].transpose(-1, -2)
     out = torch.zeros_like(transforms)
@@ -189,6 +264,8 @@ def invert_se3(transforms: torch.Tensor) -> torch.Tensor:
 
 
 def lift_k(intrinsics: torch.Tensor) -> torch.Tensor:
+    """Embed 3×3 intrinsics into 4×4 so they compose with SE(3) viewmats."""
+
     assert intrinsics.shape[-2:] == (3, 3)
     out = torch.zeros(
         intrinsics.shape[:-2] + (4, 4),
@@ -203,7 +280,14 @@ def lift_k(intrinsics: torch.Tensor) -> torch.Tensor:
 ROPE3_EACH = 8
 
 
+# ──────────────────────────────────────────────────────────────────────────
+# View-change RoPE — log-scale + two linear axes on the head_dim tail
+# ──────────────────────────────────────────────────────────────────────────
+
+
 def _rope_precompute_coeffs(positions, freq_base, freq_scale, feat_dim, device):
+    """Precompute ``(cos, sin)`` tables for one axis of view-change RoPE."""
+
     if positions.dim() == 1:
         positions = positions[None]
     num_freqs = feat_dim // 2
@@ -213,6 +297,13 @@ def _rope_precompute_coeffs(positions, freq_base, freq_scale, feat_dim, device):
 
 
 def _rope_apply_coeffs(feats, coeffs, inverse=False):
+    """Apply or invert a 2-D rotation stored as broadcast ``(cos, sin)``.
+
+    Sequence length may be an integer multiple of the coeff length
+    (sub-sampled view changes); a non-divisible pair is a layout bug
+    and raises ``ValueError``.
+    """
+
     cos, sin = coeffs
     if cos.shape[2] != feats.shape[2]:
         if feats.shape[2] % cos.shape[2] != 0:
@@ -231,12 +322,25 @@ def _rope_apply_coeffs(feats, coeffs, inverse=False):
 
 
 def make_rope3_coeffs(view_change_positions, rope_each, device, freq_base=100.0):
+    """Build three RoPE coeff tables from ``(scale, y, x)`` view deltas.
+
+    Scale is logged so a multiplicative zoom stays additive in the
+    rotary plane. Near-zero scale is clamped to avoid ``-inf``.
+    """
+
     p = view_change_positions.to(device)
     pos = torch.stack([torch.log(p[..., 0].clamp_min(1e-6)), p[..., 1], p[..., 2]], dim=-1)
     return [_rope_precompute_coeffs(pos[..., i], freq_base, 1.0, rope_each, device) for i in range(3)]
 
 
 def _apply_rope3_slice(feats, coeffs3, rope_each, inverse=False):
+    """Rotate the last ``3 * rope_each`` channels; leave the prefix untouched.
+
+    The tail is the rope-free camera subspace under ``sf13`` +
+    ``prope_disable_t_rope``. A head narrower than the slice is a
+    checkpoint mismatch, not a silent truncate.
+    """
+
     if coeffs3 is None:
         return feats
     n = 3 * rope_each
@@ -249,6 +353,12 @@ def _apply_rope3_slice(feats, coeffs3, rope_each, inverse=False):
 
 
 def invert_k(intrinsics: torch.Tensor) -> torch.Tensor:
+    """Invert pinhole intrinsics in closed form (fx, fy, cx, cy only).
+
+    A generic inverse would mix skew / unused rows that official
+    recipes keep as identity.
+    """
+
     assert intrinsics.shape[-2:] == (3, 3)
     out = torch.zeros_like(intrinsics)
     out[..., 0, 0] = 1.0 / intrinsics[..., 0, 0]

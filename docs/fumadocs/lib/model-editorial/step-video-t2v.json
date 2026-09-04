@@ -1,0 +1,39 @@
+{
+  "id": "step-video-t2v",
+  "tagline": {
+    "en": "StepFun's MIT-licensed text-to-video model, run natively in-process through WorldFoundry's shared diffusion pipeline.",
+    "zh": "StepFun 采用 MIT 许可的文生视频模型，通过 WorldFoundry 统一扩散 pipeline 在进程内原生运行。"
+  },
+  "overview": {
+    "en": [
+      "Step-Video-T2V is StepFun's open text-to-video model, released under the permissive MIT license. It turns a text prompt into a generated video clip.",
+      "Under the hood it combines a DiT-based denoiser, StepFun's own Step-LLM text encoder, a CLIP encoder, a scheduler, and a video VAE decoder. In WorldFoundry these run in-process as native role-based components on the shared diffusion runner, so prompt encoding and VAE decoding happen locally rather than through external services.",
+      "In WorldFoundry you run it through the shared pipeline — point at the checkpoint, give it a prompt, and it writes out a video."
+    ],
+    "zh": [
+      "Step-Video-T2V 是 StepFun 开源的文生视频模型，采用宽松的 MIT 许可。它可以把一段文字提示词生成为视频片段。",
+      "其内部由基于 DiT 的去噪器、StepFun 自研的 Step-LLM 文本编码器、CLIP 编码器、调度器与视频 VAE 解码器组合而成。在 WorldFoundry 中，这些以原生角色化组件的形式跑在统一扩散运行器上，因此提示词编码与 VAE 解码都在本地完成，无需依赖外部服务。",
+      "在 WorldFoundry 中，你通过统一 pipeline 运行它——指向 checkpoint，给它提示词，它就会输出一段视频。"
+    ]
+  },
+  "whenToUse": {
+    "en": "A solid open, MIT-licensed choice when you want to run text-to-video locally and prefer everything executing in-process rather than through external caption or VAE services.",
+    "zh": "当你想在本地运行文生视频、并希望一切都在进程内执行而非依赖外部字幕或 VAE 服务时，它是一个可靠的、MIT 许可的开放选择。"
+  },
+  "notFor": {
+    "en": "Image-to-video or animating an existing image — this route is text-to-video. Weights are downloaded separately, so plan for the download and disk space.",
+    "zh": "不适合图生视频或让已有图片动起来——该路径是文生视频。权重需单独下载，请预留下载时间与磁盘空间。"
+  },
+  "highlights": {
+    "en": [
+      "MIT-licensed open weights",
+      "Text-to-video generation",
+      "Runs fully in-process: DiT, Step-LLM, CLIP, scheduler, and VAE"
+    ],
+    "zh": [
+      "MIT 许可的开放权重",
+      "文生视频生成",
+      "全流程进程内运行：DiT、Step-LLM、CLIP、调度器与 VAE"
+    ]
+  }
+}

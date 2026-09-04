@@ -19,7 +19,26 @@ Validation evidence should be proportional to the changed surface: small enough 
 | Benchmark runner | `zoo benchmark-run --mode official-validation` or `--mode official-run` | Official result import, official runtime, and full-suite fairness gate. |
 | Suite or matrix | `run --all-benchmarks --plan-only --json` | Plan selected cells, then validate artifacts with runnable benchmark paths. |
 
+## Preparing the CPU eval-core gate
+
+Install Torch and Torchvision from the official CPU wheel index first, then install the declared test extra from the normal package index:
+
+```bash
+python -m pip install --index-url https://download.pytorch.org/whl/cpu \
+  "torch>=2.7,<2.12.0" "torchvision>=0.22,<0.27.0"
+python -m pip install -e ".[eval_core]"
+```
+
+The separate first command is intentional: Python package metadata cannot select a CPU-specific wheel index, while pointing the whole extra at the PyTorch index would hide packages such as pytest and NumPy.
+
 ## Release gate
+
+From a lightweight editable checkout, install the declared gate dependencies
+before running the core commands:
+
+```bash
+python -m pip install -e ".[dev,eval_core]"
+```
 
 <Tabs items={['core', 'docs', 'model', 'benchmark']}>
   <Tab>
@@ -37,6 +56,7 @@ conda run -p "${WORLDFOUNDRY_UNIFIED_ENV_PREFIX}" worldfoundry-eval zoo benchmar
 
 ```bash
 cd docs/fumadocs
+npm run models:check
 npm run types:check
 npm run build
 curl -I http://localhost:8013/docs

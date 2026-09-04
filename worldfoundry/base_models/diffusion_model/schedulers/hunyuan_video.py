@@ -1,4 +1,9 @@
-"""Stateless flow-matching schedule shared by every HunyuanVideo recipe."""
+"""Stateless flow-matching schedule shared by every HunyuanVideo recipe.
+
+Thin subclass of :class:`~.wan.WanFlowMatchEulerScheduler` with Hunyuan's
+default shift (7.0).  The runner sees the same ``DiffusionScheduler``
+contract; only construction defaults differ.
+"""
 
 from __future__ import annotations
 

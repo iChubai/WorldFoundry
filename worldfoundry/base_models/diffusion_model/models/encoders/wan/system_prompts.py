@@ -1,6 +1,12 @@
 # Copyright 2024-2025 The Alibaba Wan Team Authors. All rights reserved.
 
-"""Module for base_models -> diffusion_model -> video -> wan -> wan_2p2 -> utils -> system_prompt.py functionality."""
+"""Official Wan 2.2 bilingual system prompts for optional prompt expansion.
+
+Tables map model IDs onto the published Chinese / English director-style
+instructions used by :mod:`.prompt_expander`.  **Do not edit the prompt
+string literals**; they are part of the checkpoint ABI.  This module is
+not a :class:`~...contracts.ConditionEncoder`.
+"""
 
 T2V_A14B_ZH_SYS_PROMPT = \
 ''' 你是一位电影导演，旨在为用户输入的原始prompt添加电影元素，改写为优质Prompt，使其完整、具有表现力。

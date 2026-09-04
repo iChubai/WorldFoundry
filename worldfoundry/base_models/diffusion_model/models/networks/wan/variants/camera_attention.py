@@ -1,6 +1,9 @@
 # Copyright 2024-2025 The Alibaba Wan Team Authors. All rights reserved.
-"""Module for base_models -> diffusion_model -> video -> wan -> components -> camera_attention.py functionality."""
+"""Flash-attention dispatcher used by Wan 2.1 camera transformers.
 
+Kernel adapter (FlashAttn 3/2 or SDPA) for :mod:`.camera_21`.  No camera
+geometry or TeaCache logic lives here.
+"""
 import torch
 try:
     import flash_attn_interface
@@ -25,6 +28,7 @@ except ModuleNotFoundError:
 from worldfoundry.base_models.diffusion_model.models.networks.wan.variants.sage_attention import sageattn_func, SAGEATTN_AVAILABLE
 
 import warnings
+from worldfoundry.core.attention import flash_attention as _worldfoundry_flash_attention
 from worldfoundry.core.attention import scaled_dot_product_attention as _worldfoundry_scaled_dot_product_attention
 
 __all__ = [
@@ -70,6 +74,22 @@ def flash_attention(
     deterministic:  bool. If True, slightly slower and uses more memory.
     dtype:          torch.dtype. Apply when dtype of q/k/v is not float16/bfloat16.
     """
+    if not (FLASH_ATTN_2_AVAILABLE or FLASH_ATTN_3_AVAILABLE):
+        return _worldfoundry_flash_attention(
+            q=q,
+            k=k,
+            v=v,
+            q_lens=q_lens,
+            k_lens=k_lens,
+            dropout_p=dropout_p,
+            softmax_scale=softmax_scale,
+            q_scale=q_scale,
+            causal=causal,
+            window_size=window_size,
+            deterministic=deterministic,
+            dtype=dtype,
+            version=None,
+        )
     if FLASH_ATTN_3_AVAILABLE:
         return flash_attn_func(
             q,

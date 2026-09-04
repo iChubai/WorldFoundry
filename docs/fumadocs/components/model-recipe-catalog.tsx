@@ -94,14 +94,6 @@ function recipeHref(recipe: ModelRecipeIndexEntry, locale: Locale) {
   return `${prefix}/docs/guides/supported-models/${recipe.id}`;
 }
 
-function runtimeLabel(recipe: ModelRecipeIndexEntry, locale: Locale) {
-  const t = copy[locale];
-  if (recipe.runtime.environmentKind === 'dedicated') return t.dedicated;
-  if (recipe.runtime.environmentKind === 'unified') return t.unified;
-  if (recipe.runtime.profileId) return locale === 'zh' ? '仅 Profile' : 'Profile only';
-  return t.unrecorded;
-}
-
 function revisionLabel(recipe: ModelRecipeIndexEntry) {
   if (!recipe.checkpoint) return '—';
   if (recipe.checkpoint.revision) return recipe.checkpoint.revision.slice(0, 9);
@@ -239,11 +231,10 @@ export function ModelRecipeCatalog({ locale = 'en' }: { locale?: Locale }) {
         </div>
       </div>
 
-      <div className="wf-recipe-table" role="table" aria-label="Model recipes">
+      <div className="wf-recipe-table wf-model-table" role="table" aria-label="Model recipes">
         <div className="wf-recipe-table-head" role="row">
           <span role="columnheader">{t.model}</span>
           <span role="columnheader">{t.tasks}</span>
-          <span role="columnheader">{t.runtime}</span>
           <span role="columnheader">{t.python}</span>
           <span role="columnheader">{t.cuda}</span>
           <span role="columnheader">{t.checkpoint}</span>
@@ -281,12 +272,6 @@ export function ModelRecipeCatalog({ locale = 'en' }: { locale?: Locale }) {
                     <code key={task}>{task}</code>
                   ))}
                   {recipe.tasks.length > 2 ? <small>+{recipe.tasks.length - 2}</small> : null}
-                </span>
-                <span className="wf-recipe-row-runtime" role="cell">
-                  <span className={`wf-recipe-status wf-recipe-status-${recipe.status.group}`}>
-                    {recipe.status.label}
-                  </span>
-                  <small>{runtimeLabel(recipe, locale)}</small>
                 </span>
                 <code role="cell">{recipe.runtime.python ?? '—'}</code>
                 <code role="cell">{recipe.runtime.cudaLabel?.replace('CUDA ', '') ?? '—'}</code>

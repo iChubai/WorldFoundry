@@ -1,4 +1,10 @@
-"""Native T2V-Turbo denoiser built from the shared LVDM 3D UNet."""
+"""Native T2V-Turbo denoiser built from the shared LVDM 3D UNet.
+
+Implements :class:`~...contracts.Denoiser` for the VideoCrafter-derived
+turbo recipe.  The runner supplies ``context`` and ``timestep_cond``;
+missing either raises :exc:`TypeError`.  Weights load through
+:class:`~...loaders.module.NativeModuleLoader`.
+"""
 
 from __future__ import annotations
 
@@ -65,6 +71,7 @@ def _unet_state_dict(state_dict: Mapping[str, object]) -> Mapping[str, object]:
 
 
 class T2VTurboDenoiser:
+    """LVDM UNet adapter that consumes ``context`` and LCM ``timestep_cond``."""
     def __init__(self, model: UNetModel) -> None:
         self.model = model
 

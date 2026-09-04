@@ -1,4 +1,14 @@
-"""Sana T5 compatibility layer on top of shared Wan T5."""
+"""Sana T5 compatibility layer on top of shared Wan T5.
+
+:class:`T5EncoderModel` exposes the names Sana / core
+loaders expect while delegating to the canonical Wan T5
+layers in :mod:`~..model`.
+
+Not a second T5 implementation.  Sana's native conditioner
+is :class:`~...sana.component.SanaPromptConditioner` (Gemma-2).
+
+Use only when a recipe still asks for this wrapper name.
+"""
 
 from __future__ import annotations
 

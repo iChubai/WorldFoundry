@@ -1,3 +1,12 @@
+"""Overlap-tile masks and window iteration for long LTX videos.
+
+Builds 1-D trapezoidal / rectangular blend weights and 3-D tile grids so
+encode/decode or upsampling can run in chunks without hard seams.
+Causal video tiles use ``left_starts_from_0`` so the first window does
+not fade in from zero.  This is geometry only; the VAE / upsampler own
+the actual forward.
+"""
+
 from __future__ import annotations
 
 import itertools

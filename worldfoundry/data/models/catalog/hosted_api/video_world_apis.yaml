@@ -9,6 +9,8 @@ models:
       official_repo_url: https://www.minimax.io/
     runner_target: worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner
     pipeline_binding: hailuo-2p3
+    official_sources:
+      project_page: https://www.minimax.io/
     integration:
       status: integrated
       notes:
@@ -88,6 +90,10 @@ models:
         reason: Probes whether provider-side video models respect basic physical plausibility.
         reason_zh: 检验服务方视频模型是否遵循基本物理合理性。
 
+    official_sources:
+
+      project_page: https://app.klingai.com/
+
   - id: luma-ray2
     name: Luma Ray2
     tasks: [text-to-video, image-to-video, hosted-api]
@@ -130,6 +136,10 @@ models:
       - id: physics-iq
         reason: Probes whether provider-side video models respect basic physical plausibility.
         reason_zh: 检验服务方视频模型是否遵循基本物理合理性。
+
+    official_sources:
+
+      project_page: https://lumalabs.ai/
 
   - id: runway-gen4p5
     name: Runway Gen-4.5
@@ -174,6 +184,10 @@ models:
       - id: physics-iq
         reason: Probes whether provider-side video models respect basic physical plausibility.
         reason_zh: 检验服务方视频模型是否遵循基本物理合理性。
+
+    official_sources:
+
+      project_page: https://runwayml.com/
 
   - id: sora2
     name: Sora2
@@ -220,6 +234,10 @@ models:
         reason: Probes whether provider-side video models respect basic physical plausibility.
         reason_zh: 检验服务方视频模型是否遵循基本物理合理性。
 
+    official_sources:
+
+      project_page: https://openai.com/sora/
+
   - id: veo3
     name: Veo3
     tasks: [text-to-video, image-to-video, hosted-api]
@@ -262,6 +280,10 @@ models:
       - id: physics-iq
         reason: Probes whether provider-side video models respect basic physical plausibility.
         reason_zh: 检验服务方视频模型是否遵循基本物理合理性。
+
+    official_sources:
+
+      project_page: https://deepmind.google/technologies/veo/
 
   - id: wan-2p5
     name: Wan 2.5 API
@@ -307,6 +329,10 @@ models:
         reason: Probes whether provider-side video models respect basic physical plausibility.
         reason_zh: 检验服务方视频模型是否遵循基本物理合理性。
 
+    official_sources:
+
+      project_page: https://dashscope.aliyun.com/
+
   - id: wan-2p6
     name: Wan 2.6 API
     aliases: [wan2.6, wan-2.6]
@@ -350,6 +376,10 @@ models:
       - id: physics-iq
         reason: Probes whether provider-side video models respect basic physical plausibility.
         reason_zh: 检验服务方视频模型是否遵循基本物理合理性。
+
+    official_sources:
+
+      project_page: https://dashscope.aliyun.com/
 
   - id: wan-2p7
     name: Wan 2.7 API
@@ -395,6 +425,10 @@ models:
         reason: Probes whether provider-side video models respect basic physical plausibility.
         reason_zh: 检验服务方视频模型是否遵循基本物理合理性。
 
+    official_sources:
+
+      project_page: https://dashscope.aliyun.com/
+
   - id: worldlabs
     name: World Labs API
     tasks: [world-generation, assets, hosted-api]
@@ -434,3 +468,7 @@ models:
       - id: worldscore
         reason: Unified benchmark for scoring generated explorable worlds.
         reason_zh: 评估可探索生成世界的统一基准。
+
+    official_sources:
+
+      project_page: https://www.worldlabs.ai/

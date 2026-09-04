@@ -16,6 +16,10 @@
 
 """GDN-based UCPE camera-control attention blocks.
 
+Dual-branch video attention for Sana-WM: a main GDN scan plus a camera
+branch whose Q/K/V are transformed by UCPE ray matrices.  Softmax ablations
+(``*SoftmaxUCPE*``) swap the GDN recurrence for SDPA.
+
 Each block follows a dual-branch design:
   - **Main branch**: Inherited from the corresponding GDN variant
     (GDN / BidirectionalGDN / ChunkCausalGDN).  ``super().forward()``
@@ -59,6 +63,18 @@ from .sana_gdn_blocks import (
     _forward_softmax_attn,
     flip_and_shift,
 )
+
+
+def _camera_execution_weight_bias(module: nn.Module) -> tuple[torch.Tensor, torch.Tensor | None]:
+    """Return active parameters for plain modules and VRAM-managed wrappers."""
+
+    computation = getattr(module, "computation", None)
+    if callable(computation):
+        materialized = computation()
+        if isinstance(materialized, tuple):
+            return materialized
+        module = materialized
+    return module.weight, getattr(module, "bias", None)
 
 # ---------------------------------------------------------------------------
 # Softmax-block KV cache helpers.
@@ -739,8 +755,21 @@ class _GDNUCPEBase(GDN):
             x = x * token_valid_mask.view(B, N, 1)
 
         # Fused camera QKV projection (1 GEMM instead of 3 kernel launches).
-        qkv_w = torch.cat([self.q_proj_cam.weight, self.k_proj_cam.weight, self.v_proj_cam.weight])
-        qkv_b = torch.cat([self.q_proj_cam.bias, self.k_proj_cam.bias, self.v_proj_cam.bias])
+        q_w, q_b = _camera_execution_weight_bias(self.q_proj_cam)
+        k_w, k_b = _camera_execution_weight_bias(self.k_proj_cam)
+        v_w, v_b = _camera_execution_weight_bias(self.v_proj_cam)
+        qkv_w = torch.cat([q_w, k_w, v_w])
+        biases = (q_b, k_b, v_b)
+        qkv_b = None
+        if any(bias is not None for bias in biases):
+            qkv_b = torch.cat(
+                [
+                    bias
+                    if bias is not None
+                    else torch.zeros(weight.shape[0], device=weight.device, dtype=weight.dtype)
+                    for bias, weight in zip(biases, (q_w, k_w, v_w))
+                ]
+            )
         qkv_cam = F.linear(x, qkv_w, qkv_b)
         q_cam, k_cam, v_cam = qkv_cam.chunk(3, dim=-1)
 
@@ -1486,8 +1515,21 @@ def _prepare_cam_qkv_softmax(
     if token_valid_mask is not None:
         x = x * token_valid_mask.view(B, N, 1)
 
-    qkv_w = torch.cat([self.q_proj_cam.weight, self.k_proj_cam.weight, self.v_proj_cam.weight])
-    qkv_b = torch.cat([self.q_proj_cam.bias, self.k_proj_cam.bias, self.v_proj_cam.bias])
+    q_w, q_b = _camera_execution_weight_bias(self.q_proj_cam)
+    k_w, k_b = _camera_execution_weight_bias(self.k_proj_cam)
+    v_w, v_b = _camera_execution_weight_bias(self.v_proj_cam)
+    qkv_w = torch.cat([q_w, k_w, v_w])
+    biases = (q_b, k_b, v_b)
+    qkv_b = None
+    if any(bias is not None for bias in biases):
+        qkv_b = torch.cat(
+            [
+                bias
+                if bias is not None
+                else torch.zeros(weight.shape[0], device=weight.device, dtype=weight.dtype)
+                for bias, weight in zip(biases, (q_w, k_w, v_w))
+            ]
+        )
     qkv_cam = F.linear(x, qkv_w, qkv_b)
     q_cam, k_cam, v_cam = qkv_cam.chunk(3, dim=-1)
 

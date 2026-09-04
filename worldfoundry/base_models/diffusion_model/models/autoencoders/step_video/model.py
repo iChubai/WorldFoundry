@@ -10,7 +10,9 @@
 # The above copyright notice and this permission notice shall be included in all
 # copies or substantial portions of the Software.
 # ==============================================================================
-"""Module for base_models -> diffusion_model -> video -> step_video -> step_video_runtime -> stepvideo -> vae -> vae.py functionality."""
+"""StepVideo AutoencoderKL (64-ch, 17-frame packing).
+
+Checkpoint-compatible video VAE. Public ``encode`` / ``decode``; the runner uses :class:`~.component.StepVideoDecoder`."""
 
 import torch
 from einops import rearrange

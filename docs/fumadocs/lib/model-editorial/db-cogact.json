@@ -1,0 +1,41 @@
+{
+  "id": "db-cogact",
+  "tagline": {
+    "en": "Dexmal's Dexbotic CogACT vision-language-action policy — turn images and an instruction into robot actions.",
+    "zh": "Dexmal 的 Dexbotic CogACT 视觉-语言-动作策略——把图像与指令转化为机器人动作。"
+  },
+  "overview": {
+    "en": [
+      "DB-CogACT is a vision-language-action (VLA) policy built on Dexmal's Dexbotic framework and the CogACT approach. It takes camera images and a language instruction, optionally robot state, and predicts an action to execute — a policy you roll out step by step.",
+      "The runtime constructs the Dexbotic CogACT policy in-process from an in-tree vendored inference subset and calls its action selection directly, so it does not depend on an external server or repository checkout. Several checkpoints are available across benchmarks — including LIBERO, CALVIN and SimplerEnv variants and single- and dual-arm Dexbotic-CogACT weights — with the LIBERO checkpoint released under Apache-2.0.",
+      "In WorldFoundry, DB-CogACT runs through the embodied action pipeline rather than video generation: you pick a checkpoint, feed it a prompt and image observations, and it returns an action trace. Serving components, training and benchmark launchers are out of scope."
+    ],
+    "zh": [
+      "DB-CogACT 是一个构建在 Dexmal 的 Dexbotic 框架与 CogACT 方法之上的视觉-语言-动作（VLA）策略。它接收相机图像和一条语言指令、可选加上机器人状态，预测出要执行的动作——这是一个你逐步展开（rollout）的策略。",
+      "运行时从代码库内置的推理子集在进程内构建 Dexbotic CogACT 策略，并直接调用其动作选择，因此不依赖外部服务或仓库检出。它跨多个基准提供了若干 checkpoint——包括 LIBERO、CALVIN 与 SimplerEnv 变体，以及单臂和双臂的 Dexbotic-CogACT 权重——其中 LIBERO checkpoint 采用 Apache-2.0 许可。",
+      "在 WorldFoundry 中，DB-CogACT 走的是具身动作 pipeline，而非视频生成：选定一个 checkpoint，给它提示词和图像观测，它便返回一段动作轨迹。服务组件、训练与基准启动器不在其中。"
+    ]
+  },
+  "whenToUse": {
+    "en": "Use it when you want a language-conditioned manipulation policy from the Dexbotic/CogACT line, with checkpoints spanning LIBERO, CALVIN, SimplerEnv and single- or dual-arm setups.",
+    "zh": "当你想要一个来自 Dexbotic/CogACT 系列的语言驱动操作策略时使用它，其 checkpoint 覆盖 LIBERO、CALVIN、SimplerEnv 以及单臂或双臂配置。"
+  },
+  "notFor": {
+    "en": "Not a media-generation model — it outputs robot actions, not images or video. You need image observations and an instruction to run it, and serving/training tooling is excluded.",
+    "zh": "它不是媒体生成模型——输出的是机器人动作，而非图像或视频。运行它需要图像观测和指令，且不包含服务与训练工具。"
+  },
+  "highlights": {
+    "en": [
+      "Dexbotic CogACT vision-language-action policy",
+      "Policy constructed in-process, no external server or checkout needed",
+      "Checkpoints across LIBERO, CALVIN, SimplerEnv and single/dual-arm",
+      "LIBERO checkpoint released under Apache-2.0"
+    ],
+    "zh": [
+      "Dexbotic CogACT 视觉-语言-动作策略",
+      "策略在进程内构建，无需外部服务或仓库检出",
+      "checkpoint 覆盖 LIBERO、CALVIN、SimplerEnv 及单/双臂",
+      "LIBERO checkpoint 采用 Apache-2.0 许可"
+    ]
+  }
+}

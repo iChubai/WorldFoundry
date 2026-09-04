@@ -1,0 +1,41 @@
+{
+  "id": "pusa-vidgen",
+  "tagline": {
+    "en": "A Wan2.2-based video generator — text-to-video, image-to-video, and video extension from one pipeline.",
+    "zh": "基于 Wan2.2 的视频生成器——用一个 pipeline 实现文生视频、图生视频与视频扩展。"
+  },
+  "overview": {
+    "en": [
+      "Pusa VidGen (Pusa V1) is a video generation model that builds on the Wan2.2 architecture. It covers several jobs from one pipeline: turning a text prompt into video, animating a still image, and extending an existing clip with more motion.",
+      "It assembles from the Wan2.2 denoisers, conditioner, and VAE, with the Pusa-Wan2.2-V1 weights on top; it can also draw on the Wan2.2 base and Lightning weights. This lets it reuse a mature video backbone while adding its own capabilities.",
+      "In WorldFoundry, Pusa VidGen runs through a dedicated pipeline that writes out a generated video when you explicitly request execution — provide a prompt (and an image for image-to-video, or a clip to extend)."
+    ],
+    "zh": [
+      "Pusa VidGen(Pusa V1)是一个基于 Wan2.2 架构的视频生成模型。它用一个 pipeline 覆盖多项任务:把文字提示词生成为视频、让静态图片动起来,以及为已有片段续接更多动作。",
+      "它由 Wan2.2 的去噪器、条件模块与 VAE 组装而成,并在其上加载 Pusa-Wan2.2-V1 权重;它还可借助 Wan2.2 base 与 Lightning 权重。这让它在复用成熟视频骨干的同时,加入自有能力。",
+      "在 WorldFoundry 中,Pusa VidGen 通过专属 pipeline 运行,当你明确请求执行时输出生成的视频——给出提示词(图生视频再加一张图,或提供一段待扩展的片段)。"
+    ]
+  },
+  "whenToUse": {
+    "en": "Use Pusa VidGen when you want text-to-video, image-to-video, and clip extension from a single Wan2.2-based pipeline.",
+    "zh": "当你想用一个基于 Wan2.2 的 pipeline 同时实现文生视频、图生视频与片段扩展时,可以使用 Pusa VidGen。"
+  },
+  "notFor": {
+    "en": "It relies on Wan2.2 base weights alongside its own, so plan for staging those checkpoints. The pipeline only produces video when execution is explicitly requested.",
+    "zh": "它在自有权重之外还依赖 Wan2.2 base 权重,请预留准备这些 checkpoint 的时间。pipeline 仅在明确请求执行时才产出视频。"
+  },
+  "highlights": {
+    "en": [
+      "Built on the Wan2.2 video architecture",
+      "Text-to-video, image-to-video, and video extension in one pipeline",
+      "Reuses Wan2.2 denoisers, conditioner, and VAE",
+      "Can leverage Wan2.2 base and Lightning weights"
+    ],
+    "zh": [
+      "构建于 Wan2.2 视频架构之上",
+      "文生视频、图生视频与视频扩展同在一个 pipeline",
+      "复用 Wan2.2 的去噪器、条件模块与 VAE",
+      "可借助 Wan2.2 base 与 Lightning 权重"
+    ]
+  }
+}

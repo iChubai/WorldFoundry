@@ -1,0 +1,41 @@
+{
+  "id": "echo-memory-spatial",
+  "tagline": {
+    "en": "Echo-Memory's spatial-memory world model — generate camera-controlled video from an image and keep revisited scenery consistent over long rollouts.",
+    "zh": "Echo-Memory 的空间记忆世界模型——从一张图像出发生成相机轨迹可控的视频,并在长程推演中保持重访场景的一致性。"
+  },
+  "overview": {
+    "en": [
+      "Echo-Memory is a memory-augmented world model built on the open Wan2.1 diffusion backbone. It takes a starting image, a text prompt and a camera trajectory, then rolls out video of an explorable scene — the memory mechanism is what keeps that scene coherent as the camera moves through it and comes back.",
+      "This identity fixes the spatial-memory configuration: past frames are held in a spatial frame store and fed back into generation, so regions you revisit look the way you left them. Every WorldFoundry model in the family pins one memory recipe, so you get consistent behaviour without picking a method at runtime.",
+      "In WorldFoundry you run it through the shared diffusion pipeline with a local Echo-Memory checkpoint; the runtime assembles the recipe from shared Wan components. It is aimed at memory research and interactive world-model experiments rather than one-shot clip generation."
+    ],
+    "zh": [
+      "Echo-Memory 是一个带记忆机制的世界模型,构建在开源的 Wan2.1 扩散骨干之上。它以一张起始图像、一段文字提示词和一条相机轨迹为输入,推演出可探索场景的视频——记忆机制的作用,就是在相机移动、往返之间让场景保持连贯。",
+      "本模型固定使用空间记忆配置:过去的帧被保存在空间帧存储中,并重新注入生成过程,让你重访的区域仍保持原样。该家族的每个 WorldFoundry 身份都固定一种记忆配方,因此运行时无需自行选择方法,行为始终一致。",
+      "在 WorldFoundry 中,你通过统一的扩散 pipeline、配合一个本地 Echo-Memory checkpoint 来运行它;运行时会从共享的 Wan 组件组装出这套配方。它面向记忆机制研究与交互式世界模型实验,而非一次性的短片生成。"
+    ]
+  },
+  "whenToUse": {
+    "en": "Reach for it when you're studying spatial memory in world models, or when you want an explorable, camera-controlled scene from a single image and need revisited areas to stay consistent.",
+    "zh": "当你研究世界模型中的空间记忆,或想从单张图像生成可探索、相机可控的场景、并需要重访区域保持一致时,可以选它。"
+  },
+  "notFor": {
+    "en": "Not a turnkey text-to-video tool — the memory method is fixed for this identity and you supply a compatible local checkpoint. If you want state-space memory instead, use one of the SSM variants.",
+    "zh": "它不是开箱即用的文生视频工具——本模型的记忆方法固定,需要你自备一个兼容的本地 checkpoint。若想改用状态空间记忆,请选择 SSM 系列变体。"
+  },
+  "highlights": {
+    "en": [
+      "Memory-augmented world model on the open Wan2.1 1.3B backbone",
+      "Spatial-memory configuration: revisited scenery stays consistent",
+      "Image + text + camera trajectory in, video out",
+      "Echo-Memory weights under CC-BY-4.0; Wan2.1 backbone Apache-2.0"
+    ],
+    "zh": [
+      "构建在开源 Wan2.1 1.3B 骨干上的记忆增强世界模型",
+      "空间记忆配置:重访场景保持一致",
+      "输入图像+文本+相机轨迹,输出视频",
+      "Echo-Memory 权重采用 CC-BY-4.0,Wan2.1 骨干为 Apache-2.0"
+    ]
+  }
+}

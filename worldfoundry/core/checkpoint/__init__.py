@@ -1,9 +1,19 @@
-"""Checkpoint loading and state-dict remapping helpers."""
+"""Checkpoint loading and state-dict remapping helpers.
+
+Lazy exports cover single-file, sharded safetensors, and DCP paths. DCP
+loads do not fail on missing keys unless the caller sets ``check_success``
+or uses :func:`dcp_load_state_dict` shape validation. Shared cache writes
+are rank-0 only and atomic (temp file + ``os.replace``).
+"""
 
 from __future__ import annotations
 
 from importlib import import_module
 from typing import Any
+
+# ──────────────────────────────────────────────────────────────────────────
+# Lazy facade — keep DCP / safetensors / torch off the import path
+# ──────────────────────────────────────────────────────────────────────────
 
 _EXPORT_MODULES = {
     "DefaultLoadPlanner": "worldfoundry.core.checkpoint.dcp",
@@ -33,6 +43,8 @@ _EXPORT_MODULES = {
 
 
 def __getattr__(name: str) -> Any:
+    """Resolve a public name from its submodule on first access and cache it."""
+
     module_name = _EXPORT_MODULES.get(name)
     if module_name is None:
         raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
@@ -43,6 +55,8 @@ def __getattr__(name: str) -> Any:
 
 
 def __dir__() -> list[str]:
+    """Expose lazy exports to completion tools without importing backends."""
+
     return sorted({*globals(), *__all__})
 
 

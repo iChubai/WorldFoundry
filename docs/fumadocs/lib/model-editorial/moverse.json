@@ -1,0 +1,41 @@
+{
+  "id": "moverse",
+  "tagline": {
+    "en": "Turn a single image into a navigable 3D world — camera-controlled video backed by a panoramic Gaussian scaffold.",
+    "zh": "把单张图片变成可漫游的 3D 世界——由全景 Gaussian 支架支撑的相机可控视频。"
+  },
+  "overview": {
+    "en": [
+      "MoVerse, from the Orange 3Dv Team, turns a single image into a navigable world. Starting from one picture, it builds a scene you can move a camera through, generating camera-controlled video of the space rather than a single fixed shot.",
+      "Under the hood it combines several building blocks: a panoramic Gaussian scaffold that gives the scene 3D structure, depth estimation, panorama synthesis, and a video generator. In WorldFoundry it reuses shared components including GeoCalib, Depth Anything 3, a SHARP panorama stage, Wan, and TAEHV, and it resolves its checkpoints locally.",
+      "Because it stitches together a full 3D-aware pipeline, MoVerse expects several model snapshots to be staged in advance and runs offline; it also leans on FLUX for image filling. It is oriented toward high-fidelity scene exploration rather than lightweight clip generation."
+    ],
+    "zh": [
+      "MoVerse 由 Orange 3Dv Team 开发，能把单张图片变成可漫游的世界。它从一张图片出发，构建出一个可以移动相机穿行的场景，生成相机可控的视频，而不是一个固定镜头。",
+      "其内部由多个模块组合而成：赋予场景 3D 结构的全景 Gaussian 支架、深度估计、全景合成，以及一个视频生成器。在 WorldFoundry 中它复用了共享组件，包括 GeoCalib、Depth Anything 3、SHARP 全景阶段、Wan 和 TAEHV，并在本地解析所需 checkpoint。",
+      "由于它串联了一整套具备 3D 感知的流程，MoVerse 需要预先准备好多个模型快照并离线运行，图像填充部分还依赖 FLUX。它面向高保真的场景探索，而非轻量级的片段生成。"
+    ]
+  },
+  "whenToUse": {
+    "en": "Choose MoVerse when you want to explore a scene from a single image — generating camera trajectories through a 3D-consistent world for immersive navigation.",
+    "zh": "当你想从单张图片出发探索一个场景时，可选择 MoVerse——在一个 3D 一致的世界里生成相机轨迹，实现沉浸式漫游。"
+  },
+  "notFor": {
+    "en": "A heavyweight pipeline: it runs offline, needs several model snapshots staged in advance plus FLUX access and compatible CUDA kernels, and is best suited to capable GPUs rather than modest hardware.",
+    "zh": "这是一条重型流程：需离线运行，须预先准备好多个模型快照、FLUX 访问权限以及兼容的 CUDA kernel，更适合性能较强的 GPU，而非普通硬件。"
+  },
+  "highlights": {
+    "en": [
+      "Single image to a navigable, camera-controlled 3D world",
+      "Panoramic Gaussian scaffold for 3D structure",
+      "Reuses shared GeoCalib, Depth Anything 3, SHARP, Wan, and TAEHV components",
+      "Runs offline from locally staged snapshots"
+    ],
+    "zh": [
+      "由单张图片生成可漫游、相机可控的 3D 世界",
+      "以全景 Gaussian 支架构建 3D 结构",
+      "复用共享的 GeoCalib、Depth Anything 3、SHARP、Wan 与 TAEHV 组件",
+      "基于本地准备的快照离线运行"
+    ]
+  }
+}

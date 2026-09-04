@@ -1,0 +1,37 @@
+{
+  "id": "real-time-chunking",
+  "tagline": {
+    "en": "An inference-time action-chunking method that keeps flow-based VLA policies responsive in real time.",
+    "zh": "一种推理期的动作分块方法,让基于 flow 的 VLA 策略在实时控制中保持响应。"
+  },
+  "overview": {
+    "en": [
+      "Real-Time Chunking (RTC) is an inference-time algorithm from Physical Intelligence, not a standalone model with its own weights. It addresses a practical problem in robot control: how to run a policy that predicts actions in chunks while still reacting smoothly and continuously as the world changes.",
+      "RTC works alongside flow-based VLA policies, managing how chunks of predicted actions overlap and hand off so control stays responsive. In WorldFoundry it is routed through an in-tree action runtime adapter, and because it processes chunk context rather than generating from scratch, no checkpoint is required to run it."
+    ],
+    "zh": [
+      "Real-Time Chunking(RTC)是 Physical Intelligence 提出的推理期算法,而不是有自己权重的独立模型。它解决机器人控制中的一个实际问题:当策略按分块方式预测动作时,如何在世界不断变化时依然平滑、连续地响应。",
+      "RTC 与基于 flow 的 VLA 策略配合工作,管理预测动作分块之间的重叠与衔接,让控制保持响应性。在 WorldFoundry 中,它通过一个内置的动作运行时适配器接入;由于它处理的是分块上下文而非从零生成,运行它不需要 checkpoint。"
+    ]
+  },
+  "whenToUse": {
+    "en": "When you already run a flow-based VLA policy that predicts action chunks and want smoother, more responsive real-time control.",
+    "zh": "当你已经在运行一个按分块预测动作的 flow VLA 策略,并希望获得更平滑、更响应的实时控制时。"
+  },
+  "notFor": {
+    "en": "It is not a policy or a checkpoint on its own — it works on top of a flow-based VLA policy rather than replacing one.",
+    "zh": "它本身不是策略或 checkpoint——它是叠加在 flow VLA 策略之上使用的,而不是替代策略。"
+  },
+  "highlights": {
+    "en": [
+      "Inference-time action-chunking algorithm, not a weights-based model",
+      "Keeps chunked flow VLA policies responsive in real time",
+      "Runs without a checkpoint via the in-tree action runtime"
+    ],
+    "zh": [
+      "推理期的动作分块算法,而非基于权重的模型",
+      "让分块式 flow VLA 策略在实时控制中保持响应",
+      "通过内置动作运行时运行,无需 checkpoint"
+    ]
+  }
+}

@@ -14,7 +14,18 @@
 # of rights and permissions under this agreement.
 # See the License for the specific language governing permissions and limitations under the License.
 
-"""HunyuanVideo 1.5 SigLIP conditioning encoder."""
+"""HunyuanVideo 1.5 SigLIP vision conditioning encoder.
+
+Loads SigLIP image features for I2V / reference recipes.
+:class:`VisionEncoder` is the public encode surface used by
+:class:`~..component.HunyuanVideo15PromptConditioner`.
+
+Image tensors are processor-normalized RGB; output tokens
+go into ``Conditioning.shared`` (or the 1.5 visual slot).
+Text / glyph towers live in :mod:`~..h15_text`.
+
+License header above is Tencent Hunyuan; keep it intact.
+"""
 
 from dataclasses import dataclass
 from typing import Optional, Tuple

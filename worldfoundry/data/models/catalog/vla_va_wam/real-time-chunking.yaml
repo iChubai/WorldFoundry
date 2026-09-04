@@ -7,6 +7,7 @@ aliases:
 availability: open_source
 provider: official_repo
 official_sources:
+  paper: https://arxiv.org/abs/2506.07339
   github:
     head_sha: 9296f31d62d5bfeb5779dcb2f9bcf71ca37f448b
     url: https://github.com/Physical-Intelligence/real-time-chunking-kinetix

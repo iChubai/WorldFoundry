@@ -1,0 +1,41 @@
+{
+  "id": "echo-memory-spatial-no-injection",
+  "tagline": {
+    "en": "The spatial-memory ablation of Echo-Memory with memory injection turned off — a control for measuring what the injection step actually contributes.",
+    "zh": "Echo-Memory 空间记忆的消融版本,关闭了记忆注入——用作对照,衡量注入步骤究竟带来多少作用。"
+  },
+  "overview": {
+    "en": [
+      "Echo-Memory is a memory-augmented world model on the open Wan2.1 diffusion backbone: from a starting image, a text prompt and a camera trajectory it rolls out video of an explorable scene, with a memory mechanism meant to keep that scene coherent over long rollouts.",
+      "This identity is the no-injection ablation. It keeps the spatial memory store but does not inject those remembered frames back into generation. Set beside the full spatial-memory variant, it isolates the effect of injection — a clean baseline for seeing how much long-range consistency actually comes from the memory step.",
+      "In WorldFoundry you run it through the shared diffusion pipeline with a local Echo-Memory checkpoint, assembled from shared Wan components. It exists for controlled comparison rather than for producing the family's best-looking output."
+    ],
+    "zh": [
+      "Echo-Memory 是构建在开源 Wan2.1 扩散骨干上的记忆增强世界模型:以起始图像、文字提示词和相机轨迹为输入,推演出可探索场景的视频,记忆机制则用来在长程推演中维持场景连贯。",
+      "本模型是关闭注入的消融版本。它保留了空间记忆存储,但不把记住的帧重新注入生成过程。与完整的空间记忆变体并列比较时,它能单独隔离出注入这一步的作用——是观察长程一致性究竟有多少来自记忆步骤的干净对照。",
+      "在 WorldFoundry 中,你通过统一扩散 pipeline、配合本地 Echo-Memory checkpoint 运行它,配方由共享 Wan 组件组装而成。它的定位是做可控对比,而非产出该家族画面最佳的结果。"
+    ]
+  },
+  "whenToUse": {
+    "en": "Use it as the control in ablation studies — when you want to compare against the full spatial-memory variant and quantify what memory injection buys you.",
+    "zh": "把它作为消融实验的对照——当你想与完整空间记忆变体比较、量化记忆注入到底带来了什么时使用。"
+  },
+  "notFor": {
+    "en": "With injection disabled, expect weaker long-range consistency than the full spatial variant. It's a research control, not the configuration to pick for best output quality.",
+    "zh": "由于关闭了注入,它的长程一致性会弱于完整空间变体。它是研究对照,而非追求最佳画质时该选的配置。"
+  },
+  "highlights": {
+    "en": [
+      "Ablation control: spatial memory kept, injection disabled",
+      "Isolates the contribution of the memory-injection step",
+      "Image + text + camera trajectory in, video out",
+      "Echo-Memory weights under CC-BY-4.0; Wan2.1 backbone Apache-2.0"
+    ],
+    "zh": [
+      "消融对照:保留空间记忆,关闭注入",
+      "单独隔离记忆注入步骤的贡献",
+      "输入图像+文本+相机轨迹,输出视频",
+      "Echo-Memory 权重采用 CC-BY-4.0,Wan2.1 骨干为 Apache-2.0"
+    ]
+  }
+}

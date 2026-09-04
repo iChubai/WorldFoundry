@@ -198,13 +198,16 @@ def sequence_parallel_attention_vision(
     cache_vision=False,
 ):
     assert kv_cache is not None
-    query, query_prope = q
-    key, key_prope = k
-    value, value_prope = v
-
-    query = torch.cat([query, query_prope], dim=0)
-    key = torch.cat([key, key_prope], dim=0)
-    value = torch.cat([value, value_prope], dim=0)
+    paired_prope = isinstance(q, (tuple, list))
+    if paired_prope:
+        query, query_prope = q
+        key, key_prope = k
+        value, value_prope = v
+        query = torch.cat([query, query_prope], dim=0)
+        key = torch.cat([key, key_prope], dim=0)
+        value = torch.cat([value, value_prope], dim=0)
+    else:
+        query, key, value = q, k, v
 
     parallel_dims = get_parallel_state()
     enable_sp = parallel_dims.sp_enabled
@@ -236,8 +239,9 @@ def sequence_parallel_attention_vision(
 
     encoder_key = kv_cache[block_idx]["k_txt"]
     encoder_value = kv_cache[block_idx]["v_txt"]
-    encoder_key = repeat(encoder_key, "B H S D->(B R) H S D", R=2)
-    encoder_value = repeat(encoder_value, "B H S D->(B R) H S D", R=2)
+    if paired_prope:
+        encoder_key = repeat(encoder_key, "B H S D->(B R) H S D", R=2)
+        encoder_value = repeat(encoder_value, "B H S D->(B R) H S D", R=2)
 
     key = torch.cat([encoder_key, key], dim=2)
     value = torch.cat([encoder_value, value], dim=2)
@@ -268,9 +272,10 @@ def sequence_parallel_attention_vision(
 
     b, s, a, d = hidden_states.shape
     hidden_states = hidden_states.reshape(b, s, -1)
-    hidden_states, hidden_states_prope = torch.chunk(hidden_states, chunks=2, dim=0)
-
-    return hidden_states, hidden_states_prope, vision_kv
+    if paired_prope:
+        hidden_states, hidden_states_prope = torch.chunk(hidden_states, chunks=2, dim=0)
+        return hidden_states, hidden_states_prope, vision_kv
+    return hidden_states, vision_kv
 
 
 @torch.compiler.disable

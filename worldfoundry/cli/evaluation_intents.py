@@ -45,9 +45,10 @@ def _finish(prepared, args: argparse.Namespace) -> int:
 def _handle_score(args: argparse.Namespace) -> int:
     # Usage validation happens before the heavy orchestration import so a bad
     # flag combination fails fast (exit 2) without paying the import cost.
-    if args.benchmark and args.artifacts is None:
-        raise CliUsageError("score --benchmark requires --artifacts")
-    if not args.benchmark and (args.results is None or not args.metric):
+    if args.benchmark:
+        if args.artifacts is None:
+            raise CliUsageError("score --benchmark requires --artifacts")
+    elif args.results is None or not args.metric:
         raise CliUsageError("score without --benchmark requires --results and at least one --metric")
 
     from worldfoundry.evaluation.tasks.execution.orchestration.service import (

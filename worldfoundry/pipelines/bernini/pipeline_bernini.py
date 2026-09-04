@@ -15,7 +15,7 @@ from worldfoundry.synthesis.visual_generation.bernini.worldfoundry_runtime impor
 )
 
 if TYPE_CHECKING:
-    from worldfoundry.evaluation.models.pipelines.invocation import PipelineInvocation
+    from worldfoundry.core.contracts import PipelineInvocation
 
 GENERATION_KEYS = frozenset(
     {

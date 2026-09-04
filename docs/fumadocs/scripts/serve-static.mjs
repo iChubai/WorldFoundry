@@ -50,9 +50,24 @@ function candidates(pathname, preferRsc = false) {
 
   const cleanPath = pathname.endsWith('/') ? pathname.slice(0, -1) : pathname;
   if (preferRsc) {
-    return [`${cleanPath}.txt`, `${cleanPath}.html`, `${cleanPath}/index.txt`, `${cleanPath}/index.html`];
+    return [
+      `${cleanPath}.txt`,
+      cleanPath,
+      `${cleanPath}.html`,
+      `${cleanPath}/index.txt`,
+      `${cleanPath}/index.html`,
+    ];
   }
-  return [`${cleanPath}.html`, `${cleanPath}/index.html`];
+  return [cleanPath, `${cleanPath}.html`, `${cleanPath}/index.html`];
+}
+
+function contentType(pathname) {
+  const type = mimeTypes[extname(pathname).toLowerCase()];
+  if (type) return type;
+  if (pathname === '/api/search' || pathname.endsWith('/api/search')) {
+    return 'application/json; charset=utf-8';
+  }
+  return 'application/octet-stream';
 }
 
 function safePath(pathname) {
@@ -83,7 +98,7 @@ function sendFile(request, response, file, statusCode = 200) {
     'Cache-Control': pathname.startsWith('/_next/static/')
       ? 'public, max-age=31536000, immutable'
       : 'public, max-age=0, must-revalidate',
-    'Content-Type': mimeTypes[extname(pathname).toLowerCase()] ?? 'application/octet-stream',
+    'Content-Type': contentType(pathname),
     'Last-Modified': details.mtime.toUTCString(),
   };
 

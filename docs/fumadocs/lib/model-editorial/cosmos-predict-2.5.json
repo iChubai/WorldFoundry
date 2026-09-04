@@ -1,0 +1,41 @@
+{
+  "id": "cosmos-predict-2.5",
+  "tagline": {
+    "en": "NVIDIA Cosmos Predict 2.5 — a world-model foundation for text-, image-, and video-to-world generation, in 2B and 14B sizes.",
+    "zh": "NVIDIA Cosmos Predict 2.5——支持文本/图像/视频到世界生成的世界模型基座,提供 2B 与 14B 两种规模。"
+  },
+  "overview": {
+    "en": [
+      "Cosmos Predict 2.5 is the next step in NVIDIA's Cosmos family of world foundation models. It generates world video from text, an image, or an existing clip, targeting physical-AI and simulation workloads where you want a model that reasons about how scenes unfold.",
+      "It ships in 2B and 14B sizes under the NVIDIA Open Model License. Compared with Predict 2, it adds a Reason1 language conditioner and a flow-UniPC scheduler, decoding through a shared Wan VAE; text prompting, guidance, and image/video latent conditioning all run through the same diffusion pipeline.",
+      "In WorldFoundry it runs through the shared native diffusion pipeline — give it a prompt and, optionally, an image or video, pick the 2B or 14B checkpoint, and it generates the world video."
+    ],
+    "zh": [
+      "Cosmos Predict 2.5 是 NVIDIA Cosmos 世界基础模型家族的进一步演进。它可从文本、一张图像或一段已有视频生成世界视频,面向物理 AI 与仿真负载,适合需要模型推理场景如何展开的用途。",
+      "它以 NVIDIA Open Model License 提供 2B 与 14B 两种规模。相较 Predict 2,它引入 Reason1 语言条件器与 flow-UniPC 调度器,并通过共享的 Wan VAE 解码;文本提示、引导以及图像/视频的隐空间条件都在同一扩散 pipeline 中处理。",
+      "在 WorldFoundry 中,它通过统一的原生扩散 pipeline 运行:给出提示词,并可选地附上一张图像或一段视频,选择 2B 或 14B checkpoint,它便生成世界视频。"
+    ]
+  },
+  "whenToUse": {
+    "en": "When you want a Cosmos world model that accepts text, image, or video as input for physical-AI and simulation work, and want a choice between a lighter 2B and a higher-fidelity 14B.",
+    "zh": "当你想要一个可接受文本、图像或视频输入的 Cosmos 世界模型,用于物理 AI 与仿真,并希望在更轻的 2B 与更高保真的 14B 之间选择时。"
+  },
+  "notFor": {
+    "en": "Checkpoints are released under the NVIDIA Open Model License and downloaded separately, so plan for access and disk space. The 14B needs substantially more hardware than the 2B.",
+    "zh": "Checkpoint 以 NVIDIA Open Model License 发布并需单独下载,请预留访问权限与磁盘空间。14B 所需硬件明显高于 2B。"
+  },
+  "highlights": {
+    "en": [
+      "NVIDIA Cosmos world foundation model, version 2.5",
+      "Text-, image-, and video-to-world generation",
+      "2B and 14B checkpoints under the NVIDIA Open Model License",
+      "Reason1 conditioner with flow-UniPC scheduling and a shared Wan VAE"
+    ],
+    "zh": [
+      "NVIDIA Cosmos 世界基础模型 2.5 版",
+      "支持文本/图像/视频到世界的生成",
+      "NVIDIA Open Model License 下的 2B 与 14B checkpoint",
+      "Reason1 条件器、flow-UniPC 调度与共享 Wan VAE"
+    ]
+  }
+}

@@ -4,13 +4,13 @@ from __future__ import annotations
 
 import math
 import os
-import random
 from collections.abc import Mapping
 from pathlib import Path
 from typing import Literal
 
 import torch
 
+from worldfoundry.core.utils.torch_utils import set_seed_everywhere
 from worldfoundry.training.data.dataset import TrainingManifestDataset
 from worldfoundry.training.data.loader import build_stateful_dataloader
 from worldfoundry.training.data.sampler import DeterministicDistributedSampler
@@ -92,10 +92,7 @@ def _seed_adapter_initialization(seed: int | None) -> None:
     if isinstance(seed, bool):
         raise TypeError("initialization_seed must be an integer, not bool")
     resolved = int(seed) % (2**63 - 1)
-    random.seed(resolved)
-    torch.manual_seed(resolved)
-    if torch.cuda.is_available():
-        torch.cuda.manual_seed_all(resolved)
+    set_seed_everywhere(resolved)
 
 
 def _validate_recipe_for_sana(
@@ -507,7 +504,10 @@ def materialize_sana_cached_training_session(
     if recipe.distributed.backend == "fsdp2":
         if resolved_device.type != "cuda":
             raise ValueError("native FSDP2 materialization currently requires device='cuda'")
-        distributed_context = DistributedTrainingContext(device_type="cuda")
+        distributed_context = DistributedTrainingContext(
+            device_type="cuda",
+            timeout_seconds=recipe.distributed.timeout_seconds,
+        )
         resolved_device = distributed_context.device
     elif recipe.distributed.backend != "single":
         raise NotImplementedError(

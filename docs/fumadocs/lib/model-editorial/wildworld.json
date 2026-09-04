@@ -1,0 +1,39 @@
+{
+  "id": "wildworld",
+  "tagline": {
+    "en": "A benchmark and dataset for evaluating world models on diverse, in-the-wild scenarios.",
+    "zh": "一个用于在多样、真实野外场景下评测世界模型的基准与数据集。"
+  },
+  "overview": {
+    "en": [
+      "WildWorld is a benchmark and dataset for world models. Rather than being a generator itself, it provides data and an evaluation protocol for measuring how well world models perform across varied, real-world scenarios.",
+      "It is distributed as upstream source with benchmark and dataset assets. In WorldFoundry the source and configuration are registered so you can resolve its config and evaluation route; the dataset and benchmark assets are staged separately.",
+      "Use it as the yardstick side of world-model work — the thing you run models against, not a model you run to generate."
+    ],
+    "zh": [
+      "WildWorld 是面向世界模型的基准与数据集。它本身不是生成器,而是提供数据与评测协议,用来衡量世界模型在多样真实场景中的表现。",
+      "它以上游源码加基准、数据集素材形式发布。在 WorldFoundry 中,其源码与配置已被注册,你可以解析它的配置与评测路径;数据集与基准素材需另行准备。",
+      "把它当作世界模型工作里的标尺一侧——是你用来评测模型的对象,而非用来生成的模型。"
+    ]
+  },
+  "whenToUse": {
+    "en": "Use WildWorld when you want to benchmark or compare world models on diverse real-world scenarios using a shared dataset and evaluation protocol.",
+    "zh": "当你想用统一的数据集与评测协议,在多样真实场景下对世界模型做基准测试或比较时,适合使用 WildWorld。"
+  },
+  "notFor": {
+    "en": "It is a benchmark and dataset, not a generative model; you also need to review its licensing and stage the assets before running evaluations.",
+    "zh": "它是基准与数据集,而非生成模型;运行评测前还需审阅其许可并准备好相关素材。"
+  },
+  "highlights": {
+    "en": [
+      "Benchmark and dataset for evaluating world models",
+      "Targets diverse, in-the-wild scenarios",
+      "Distributed as upstream source with benchmark and dataset assets"
+    ],
+    "zh": [
+      "用于评测世界模型的基准与数据集",
+      "面向多样、真实野外场景",
+      "以上游源码加基准、数据集素材形式发布"
+    ]
+  }
+}

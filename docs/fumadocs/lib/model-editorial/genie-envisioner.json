@@ -1,0 +1,41 @@
+{
+  "id": "genie-envisioner",
+  "tagline": {
+    "en": "AgiBot's Genie Envisioner — a robotics world model that turns an image and actions into predicted manipulation video.",
+    "zh": "AgiBot 的 Genie Envisioner——机器人世界模型,把图像与动作转化为预测的操作视频。"
+  },
+  "overview": {
+    "en": [
+      "Genie Envisioner is a robotics world model from AgiBot (AgibotTech). It predicts how a manipulation scene will unfold, generating video conditioned on a starting image and a sequence of actions — a way to preview what a robot would see as it acts.",
+      "It builds on the LTX-Video generation backbone. In WorldFoundry the Genie Envisioner source is vendored in-tree and exposed through a runtime pipeline that resolves its inference entrypoint. Actually generating video additionally requires the Genie Envisioner checkpoints and per-task assets, which are staged separately.",
+      "In WorldFoundry you use it for robotics-world-model, image-to-video, and action-conditioned video tasks once those assets are in place."
+    ],
+    "zh": [
+      "Genie Envisioner 是 AgiBot(AgibotTech)推出的机器人世界模型。它预测操作场景将如何展开,基于一张起始图像与一段动作序列生成视频——一种预览机器人在动作过程中会看到什么的方式。",
+      "它构建在 LTX-Video 生成主干之上。在 WorldFoundry 中,Genie Envisioner 的源码以 in-tree 方式收录,并通过一个运行时 pipeline 暴露,该 pipeline 会解析其推理入口。真正生成视频还需要 Genie Envisioner 的 checkpoint 与各任务资产,这些需单独准备。",
+      "在 WorldFoundry 中,当资产就位后,你可将它用于机器人世界模型、图生视频与动作条件化视频等任务。"
+    ]
+  },
+  "whenToUse": {
+    "en": "Use Genie Envisioner when you want to predict manipulation video from an image and actions — previewing or evaluating robot behavior in imagination rather than on hardware.",
+    "zh": "当你想从图像与动作预测操作视频时使用 Genie Envisioner——在想象中而非真机上预览或评估机器人行为。"
+  },
+  "notFor": {
+    "en": "It generates predicted video rather than issuing control actions, and it can't run until its checkpoints and task assets are downloaded and staged.",
+    "zh": "它生成的是预测视频,而非发出控制动作,在其 checkpoint 与任务资产下载并准备好之前也无法运行。"
+  },
+  "highlights": {
+    "en": [
+      "Robotics world model from AgiBot",
+      "Built on the LTX-Video generation backbone",
+      "Predicts manipulation video from an image and actions",
+      "Vendored in-tree with a runtime inference pipeline"
+    ],
+    "zh": [
+      "来自 AgiBot 的机器人世界模型",
+      "构建于 LTX-Video 生成主干",
+      "由图像与动作预测操作视频",
+      "源码 in-tree 收录,带运行时推理 pipeline"
+    ]
+  }
+}

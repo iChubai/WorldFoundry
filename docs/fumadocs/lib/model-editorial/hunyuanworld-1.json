@@ -1,0 +1,41 @@
+{
+  "id": "hunyuanworld-1",
+  "tagline": {
+    "en": "Tencent Hunyuan's world model that turns text or an image into an explorable 3D world with panoramas and exportable meshes.",
+    "zh": "腾讯混元的世界模型,把文字或图片变成可探索的 3D 世界,支持全景图与可导出网格。"
+  },
+  "overview": {
+    "en": [
+      "HunyuanWorld 1.0 is Tencent Hunyuan's world-generation model. From a text prompt or a single image, it builds a coherent 3D scene you can look around and navigate, rather than a flat video.",
+      "The model spans several output forms: text-to-3D-world and image-to-3D-world generation, panoramic views, and mesh export so the result can be brought into downstream 3D tooling. It ships as code and weights.",
+      "In WorldFoundry you drive HunyuanWorld from a prompt or image to synthesize the world. The model checkpoints and some third-party assets are resolved at run time, so stage them before generation."
+    ],
+    "zh": [
+      "HunyuanWorld 1.0 是腾讯混元的世界生成模型。从一段文字提示词或一张图片出发,它构建出一个连贯、可环视与漫游的 3D 场景,而不只是一段平面视频。",
+      "该模型覆盖多种输出形态:文本到 3D 世界、图像到 3D 世界的生成,全景视角,以及网格导出——让结果能接入下游 3D 工具链。它以代码加权重的形式发布。",
+      "在 WorldFoundry 中,你从提示词或图片出发驱动 HunyuanWorld 合成世界。模型权重与部分第三方素材在运行时解析载入,请在生成前先备好。"
+    ]
+  },
+  "whenToUse": {
+    "en": "Use it when you want to generate an explorable, navigable 3D scene from text or an image — including panoramas and a mesh you can export into other 3D pipelines.",
+    "zh": "当你想从文字或图片生成可探索、可漫游的 3D 场景——包括全景图与可导出到其他 3D 流程的网格时,选它。"
+  },
+  "notFor": {
+    "en": "It targets 3D world synthesis rather than standard clip-style video generation. Checkpoints and third-party assets download separately, so allow for setup time and disk space.",
+    "zh": "它面向 3D 世界合成,而非常规短视频生成。权重与第三方素材需单独下载,请预留准备时间与磁盘空间。"
+  },
+  "highlights": {
+    "en": [
+      "Text-to-3D-world and image-to-3D-world in one model",
+      "Panoramic views for immersive scenes",
+      "Mesh export into downstream 3D tooling",
+      "Released with both code and weights"
+    ],
+    "zh": [
+      "文本到 3D 世界与图像到 3D 世界集于一体",
+      "支持全景视角,呈现沉浸式场景",
+      "网格可导出至下游 3D 工具链",
+      "代码与权重同时发布"
+    ]
+  }
+}

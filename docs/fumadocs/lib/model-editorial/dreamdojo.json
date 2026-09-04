@@ -1,0 +1,41 @@
+{
+  "id": "dreamdojo",
+  "tagline": {
+    "en": "DreamDojo — NVIDIA's action-conditioned robot world model that rolls a scene forward under a unified multi-embodiment action space.",
+    "zh": "DreamDojo——NVIDIA 的动作条件机器人世界模型，在统一的多形态动作空间下把场景沿时间推进。"
+  },
+  "overview": {
+    "en": [
+      "DreamDojo is an action-conditioned robot world model from NVIDIA, released under the NVIDIA Open Model License. It predicts how a scene evolves in response to robot actions, making it a world model for embodied settings rather than a plain video generator or a VLA policy.",
+      "It builds on NVIDIA's Cosmos action-conditioned video-to-world runtime and is driven by a 384-dimensional unified action contract that spans several embodiments — GR-1, G1, YAM, AgiBot, MANO hand poses, and latent actions — so different robots map into one shared action space. The release includes a 2B GR-1 post-trained checkpoint, and the family covers both long-horizon rollouts and a distilled real-time variant.",
+      "In WorldFoundry you run DreamDojo through its in-tree runtime wrapper for action-conditioned and interactive robot-world generation. Full generation additionally requires the converted checkpoint artifacts and the GR-1 evaluation dataset staged locally."
+    ],
+    "zh": [
+      "DreamDojo 是 NVIDIA 推出的动作条件机器人世界模型，采用 NVIDIA Open Model License。它预测场景如何随机器人动作演化，因此是面向具身场景的世界模型，而非普通视频生成器或 VLA 策略。",
+      "它构建在 NVIDIA 的 Cosmos 动作条件 video-to-world 运行时之上，由一个 384 维的统一动作约定驱动，跨越多种形态——GR-1、G1、YAM、AgiBot、MANO 手部姿态以及潜在动作——让不同机器人映射到同一个共享动作空间。该发布包含一个 2B 的 GR-1 后训练 checkpoint，家族同时覆盖长时程 rollout 与一个蒸馏的实时变体。",
+      "在 WorldFoundry 中，你通过其内置运行时封装运行 DreamDojo，用于动作条件与交互式的机器人世界生成。完整生成还需要在本地准备好转换后的 checkpoint 资产与 GR-1 评测数据集。"
+    ]
+  },
+  "whenToUse": {
+    "en": "Use DreamDojo when you want to imagine robot rollouts — generating how a scene changes under actions — across multiple embodiments through one unified action space, including long-horizon and real-time settings.",
+    "zh": "当你想生成机器人 rollout——通过一个统一动作空间、在多种形态上想象场景如何随动作变化，包括长时程与实时场景——DreamDojo 是合适的选择。"
+  },
+  "notFor": {
+    "en": "It's a world model, not a control policy that outputs joint commands, and not a general text-to-video tool. Full generation needs the converted checkpoint artifacts and evaluation dataset staged locally.",
+    "zh": "它是世界模型，而非输出关节指令的控制策略，也不是通用文生视频工具。完整生成需在本地准备好转换后的 checkpoint 资产与评测数据集。"
+  },
+  "highlights": {
+    "en": [
+      "Action-conditioned robot world model under the NVIDIA Open Model License",
+      "384-dim unified action contract spanning GR-1, G1, YAM, AgiBot, MANO, and latent actions",
+      "Built on NVIDIA's Cosmos video-to-world runtime",
+      "Long-horizon and distilled real-time variants; 2B GR-1 post-trained checkpoint"
+    ],
+    "zh": [
+      "NVIDIA Open Model License 下的动作条件机器人世界模型",
+      "384 维统一动作约定，跨 GR-1、G1、YAM、AgiBot、MANO 与潜在动作",
+      "构建于 NVIDIA 的 Cosmos video-to-world 运行时",
+      "长时程与蒸馏实时两种变体；含 2B GR-1 后训练 checkpoint"
+    ]
+  }
+}

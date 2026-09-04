@@ -31,9 +31,16 @@ def _wan_model_root(model_name: str) -> Path:
     """Resolve a Wan model without relying on the process working directory."""
 
     root = Path(os.environ.get("WORLDFOUNDRY_WAN_MODELS_ROOT", "wan_models")).expanduser()
-    if root.name == model_name:
+    hfd_name = f"Wan-AI--{model_name}"
+    if root.name in {model_name, hfd_name}:
         return root
-    return root / model_name
+    canonical = root / model_name
+    if canonical.exists():
+        return canonical
+    hfd_flat = root / hfd_name
+    if hfd_flat.exists():
+        return hfd_flat
+    return canonical
 
 
 class WanTextEncoder(torch.nn.Module):
@@ -50,7 +57,7 @@ class WanTextEncoder(torch.nn.Module):
         self.text_encoder.load_state_dict(torch.load(
             model_root / "models_t5_umt5-xxl-enc-bf16.pth",
             map_location='cpu',
-            weights_only=False,
+            weights_only=True,
         ))
 
         self.tokenizer = HuggingfaceTokenizer(

@@ -1,4 +1,15 @@
-"""Module for base_models -> diffusion_model -> video -> lvdm -> modules -> encoders -> condition2.py functionality."""
+"""Alternate LVDM OpenCLIP condition graph (second checkpoint layout).
+
+Same FrozenOpenCLIP / CLIP / T5 class set as :mod:`.condition`
+but matching a second VideoCrafter key prefix.  Use the file
+that matches the weight file.
+
+``context`` token layout is unchanged.  IP-Adapter
+resamplers are :mod:`.resampler`.
+
+Do not mix state dicts between :mod:`.condition` and this
+module.
+"""
 
 import os
 from pathlib import Path
@@ -59,6 +70,8 @@ def _local_open_clip_pretrained(arch: str, version: str) -> str:
     if arch == "ViT-H-14" and version in {"laion2b_s32b_b79k", "laion/CLIP-ViT-H-14-laion2B-s32B-b79K"}:
         candidates = [
             os.environ.get("WORLDFOUNDRY_OPENCLIP_VITH14_PATH", ""),
+            str(_checkpoint_root() / "laion--CLIP-ViT-H-14-laion2B-s32B-b79K" / "open_clip_pytorch_model.bin"),
+            str(_checkpoint_root() / "laion--CLIP-ViT-H-14-laion2B-s32B-b79K" / "open_clip_model.safetensors"),
             str(_checkpoint_root() / "CLIP-ViT-H-14-laion2B-s32B-b79K" / "open_clip_pytorch_model.bin"),
             str(_checkpoint_root() / "CLIP-ViT-H-14-laion2B-s32B-b79K" / "open_clip_model.safetensors"),
         ]

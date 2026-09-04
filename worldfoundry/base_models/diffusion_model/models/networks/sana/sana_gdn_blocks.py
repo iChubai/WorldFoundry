@@ -14,7 +14,25 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-"""Frame-wise Gated Delta Net (GDN) attention for Sana video."""
+"""Frame-wise Gated Delta Net (GDN) attention for SANA video.
+
+GDN is the video self-attention used by Sana-WM / V2V.  Tokens are grouped
+by latent frame: within a frame, Q/K/V mix fully in space; across frames a
+*gated delta rule* updates a compact recurrent state
+
+    ``S_t = S_{t-1} ⊙ decay_t + β_t · k_t v_tᵀ``
+    ``o_t = q_t S_t``  (plus a parallel ``z`` / denominator stream)
+
+instead of materializing a ``(T·S)²`` score matrix.  RoPE is applied to a
+rotated Q/K pair used only by the numerator stream.  :class:`GDN` is the
+unidirectional / chunk-causal block; :class:`BidirectionalGDN` runs a
+forward scan and a flipped backward scan and merges the two outputs.
+
+``torch_recurrent_sana_gdn`` is the exact sequential reference;
+``torch_chunk_sana_gdn`` is the parallel chunk-scan.  Triton mega-kernels
+in ``ops/`` replace both at inference.  Hybrid graphs swap every Nth block
+for softmax via ``_forward_softmax_attn``.
+"""
 
 from __future__ import annotations
 
@@ -634,7 +652,12 @@ class GDN(Attention_):
         """
         if not (self.use_output_gate and self.output_gate is not None):
             return out
-        return _apply_output_gate(out, gate_x, self.output_gate.weight, self.output_gate.bias)
+        from worldfoundry.base_models.diffusion_model.models.networks.sana.ops import (
+            _execution_weight_bias,
+        )
+
+        gate_weight, gate_bias = _execution_weight_bias(self.output_gate)
+        return _apply_output_gate(out, gate_x, gate_weight, gate_bias)
 
     @staticmethod
     def _reshape_to_temporal(x: torch.Tensor, HW: tuple[int, int, int]) -> tuple[torch.Tensor, int, int, int]:
@@ -776,17 +799,23 @@ class GDN(Attention_):
         """
         T, H, W = hw
         S = H * W
+        from worldfoundry.base_models.diffusion_model.models.networks.sana.ops import (
+            _execution_weight_bias,
+        )
+
+        beta_weight, beta_bias = _execution_weight_bias(self.beta_proj)
+        gate_weight, gate_bias = _execution_weight_bias(self.gate_proj)
         return _compute_frame_gates(
             x,
             T,
             S,
             self.heads,
-            self.beta_proj.weight,
-            self.beta_proj.bias,
-            self.gate_proj.weight,
-            self.gate_proj.bias,
-            self.dt_bias,
-            self.A_log,
+            beta_weight,
+            beta_bias,
+            gate_weight,
+            gate_bias,
+            self.dt_bias.to(device=x.device),
+            self.A_log.to(device=x.device),
         )
 
     @staticmethod

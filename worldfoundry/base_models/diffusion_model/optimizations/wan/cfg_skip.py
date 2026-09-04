@@ -1,3 +1,14 @@
+"""Late-step CFG skip for Wan graphs that batch cond and uncond in one forward.
+
+When ``cfg_skip_ratio`` is set and ``current_steps`` is in the last fraction
+of the schedule, the decorator drops the uncond half of a batched input,
+runs cond/uncond separately (or cond only), then duplicates the cond result
+so the caller still sees a 2× batch.  This is opt-in and lossy.
+
+Raises :exc:`ValueError` when no main input tensor (``hidden_states`` / ``x``
+/ first positional) is found.
+"""
+
 import inspect
 
 import numpy as np
@@ -5,6 +16,7 @@ import torch
 
 
 def cfg_skip():
+    """Decorator that optionally skips the uncond half of a batched CFG forward."""
     def decorator(func):
         def wrapper(self, *args, **kwargs):
             if 'hidden_states' in kwargs and kwargs['hidden_states'] is not None:

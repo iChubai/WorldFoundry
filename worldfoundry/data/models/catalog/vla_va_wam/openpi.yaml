@@ -15,6 +15,8 @@ integration:
 license: apache-2.0
 name: OpenPI
 official_sources:
+  paper: https://arxiv.org/abs/2504.16054
+  project_page: https://www.physicalintelligence.company/blog/openpi
   github:
     head_sha: c23745b5ad24e98f66967ea795a07b2588ed6c79
     url: https://github.com/Physical-Intelligence/openpi

@@ -9,6 +9,18 @@ NOTICE, LEGAL, SPDX, or source-header terms also apply.
 Apache-2.0 source adaptations
 -----------------------------
 
+AlayaLab Evoke
+  License: Apache License 2.0
+  Source: https://github.com/AlayaLab/Evoke
+  Source revision: 74d268516d95c8fceadd2378f91a73f9f187042b
+
+  The official Evoke runtime is bundled under
+  ``worldfoundry/synthesis/visual_generation/evoke/evoke_runtime``. Its
+  inference source, license, and provenance records are retained;
+  demonstration media, training code, datasets, teachers, rewards, and unused
+  optional backends are omitted. Nested source includes the Apache-2.0 ViGeo
+  implementation required by the supported geometric-state recipe.
+
 NVIDIA AnyFlow
   Copyright 2026 NVIDIA CORPORATION & AFFILIATES
   License: Apache License 2.0
@@ -283,8 +295,64 @@ T2V-Turbo
   consistency equations, DDIM grid, guidance convention, and same-student
   stop-gradient target.  No T2V-Turbo source files are copied into this tree.
 
+Vendored benchmark evaluator runtimes
+-------------------------------------
+
+PAWBench
+  License: Apache License 2.0
+  Source: https://github.com/Andrew0613/PAWBench
+  Revision: f9ae040227a5b76ee50e37871fbbefc89fcc7fea
+
+  The official evaluator, metric implementation, and PAWEval rubrics are
+  vendored under
+  ``worldfoundry/evaluation/tasks/execution/runners/pawbench/runtime``. The
+  complete upstream Apache-2.0 license is retained beside the vendored
+  package; benchmark data, generated rollouts, and credentials are omitted.
+
+OpenEnvision WorldArena (WorldAtlas Arena)
+  Copyright (c) 2026 OpenEnvision
+  License: MIT
+  Source: https://github.com/OpenEnvision/WorldArena
+  Revision: 1ffc3a9564215471b9c39f602a66843e0183dcd1
+
+  The benchmark evaluator package and benchmark configuration are vendored
+  under
+  ``worldfoundry/evaluation/tasks/execution/runners/worldatlas_arena/runtime``.
+  The complete upstream MIT license is retained beside the vendored package.
+
+
+Runtime-provisioned Studio browser assets
+-----------------------------------------
+
+@sparkjsdev/spark 0.1.10
+  License: MIT
+  Package: https://www.npmjs.com/package/@sparkjsdev/spark/v/0.1.10
+  Provisioned file: dist/spark.module.js
+
+three 0.178.0
+  License: MIT
+  Package: https://www.npmjs.com/package/three/v/0.178.0
+  Provisioned files: build/three.module.js, build/three.core.js
+
+  These pinned JavaScript modules are downloaded and SHA-256 verified by
+  ``python -m worldfoundry.studio.vendor_assets``. They are not redistributed
+  in WorldFoundry source distributions or wheels.
+
 Separately acquired model, reward, and data artifacts
 -----------------------------------------------------
+
+AlayaLab/Evoke
+  License: Apache License 2.0
+  https://huggingface.co/AlayaLab/Evoke
+  Revision: 7fa34ecef85754fde6f08996b1ece9d195dcd2f4
+
+pkqbajng/ViGeo1.1
+  License: CC-BY-NC-4.0 (non-commercial)
+  https://huggingface.co/pkqbajng/ViGeo1.1
+  Revision: 49103e6eeab888bae974251d3578b496bec711d7
+
+  ViGeo1.1 is required for Evoke's geometric-state path. Its weight terms are
+  independent from the Apache-2.0 code license and do not permit commercial use.
 
 NVIDIA AnyFlow model weights
   License: NVIDIA One-Way Noncommercial License (NSCLv1)
@@ -336,9 +404,10 @@ NVIDIA FlashDreams
   License: Apache License 2.0
   Source: https://github.com/NVIDIA/flashdreams
 
-  The streaming post-processing contract and RTX Video Super Resolution
-  adapter include adaptations from FlashDreams.  Adapted source files retain
-  the NVIDIA copyright and Apache-2.0 SPDX identifiers.
+  The streaming post-processing contract, realtime presentation buffer, and
+  RTX Video Super Resolution adapter include adaptations from FlashDreams.
+  Adapted source files retain the NVIDIA copyright and Apache-2.0 SPDX
+  identifiers; design-derived integrations identify their source in docstrings.
 
 nvidia-vfx
   License: NVIDIA proprietary terms

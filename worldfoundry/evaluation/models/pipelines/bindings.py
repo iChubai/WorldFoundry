@@ -100,6 +100,7 @@ class PipelineBindingRegistry:
 
     def __init__(self, bindings: tuple[PipelineBinding, ...] = ()) -> None:
         """Initialize the registry with a collection of PipelineBindings."""
+        self._frozen = False
         self._bindings: dict[str, PipelineBinding] = {}
         self._aliases: dict[str, PipelineBinding] = {}
         for binding in bindings:
@@ -107,6 +108,11 @@ class PipelineBindingRegistry:
 
     def register(self, binding: PipelineBinding) -> None:
         """Register a single PipelineBinding and its aliases into the registry."""
+        if self._frozen:
+            raise RuntimeError(
+                "cannot register on a cached PipelineBindingRegistry; "
+                "construct a new instance or call clear_pipeline_binding_registry_cache()"
+            )
         binding.validate()
         for key in (binding.binding_id, binding.model_id):
             normalized = _binding_key(key)
@@ -258,17 +264,18 @@ def load_pipeline_bindings(root: str | Path | None = None) -> tuple[PipelineBind
 def _cached_pipeline_binding_registry(root_text: str) -> PipelineBindingRegistry:
     """Cache and load the PipelineBindingRegistry from a root directory string."""
     root = Path(root_text) if root_text else DEFAULT_PIPELINE_BINDINGS_ROOT
-    return PipelineBindingRegistry(load_pipeline_bindings(root))
+    registry = PipelineBindingRegistry(load_pipeline_bindings(root))
+    registry._frozen = True
+    return registry
 
 
 def load_pipeline_binding_registry(root: str | Path | None = None) -> PipelineBindingRegistry:
     """Load and cache the PipelineBindingRegistry from the bindings root.
 
-    The returned registry is a process-wide cached instance shared across
-    callers — do not ``register`` on it (use
-    :func:`merge_pipeline_binding_plugins` for per-call overlays).  Call
-    :func:`clear_pipeline_binding_registry_cache` after editing binding YAML
-    inside a long-lived process.
+    The returned registry is a process-wide cached instance and is frozen —
+    ``register`` raises.  Use :func:`merge_pipeline_binding_plugins` for
+    per-call overlays.  Call :func:`clear_pipeline_binding_registry_cache`
+    after editing binding YAML inside a long-lived process.
     """
     root_text = "" if root is None else str(Path(root))
     return _cached_pipeline_binding_registry(root_text)
@@ -440,6 +447,7 @@ __all__ = [
     "PipelineBinding",
     "PipelineBindingRegistry",
     "first_text",
+    "clear_pipeline_binding_registry_cache",
     "load_pipeline_binding",
     "load_pipeline_binding_registry",
     "load_pipeline_binding_registry_with_plugins",

@@ -60,7 +60,6 @@ REQUIRED_SHARED_FILES = (
     NATIVE_DIFFUSION_ROOT / "models/encoders/wan/model.py",
     NATIVE_DIFFUSION_ROOT / "models/networks/matrix_game_3p5/model.py",
     NATIVE_DIFFUSION_ROOT / "models/denoisers/matrix_game_3p5.py",
-    NATIVE_DIFFUSION_ROOT / "models/networks/matrix_game_3p5/prope.py",
     NATIVE_DIFFUSION_ROOT / "models/networks/wan/model.py",
     SHARED_DA3_ROOT / "api.py",
 )

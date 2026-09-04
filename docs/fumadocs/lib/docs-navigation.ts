@@ -337,4 +337,8 @@ export function isMetricsDocsPage(slugs: readonly string[]) {
   return slugs[0] === 'evaluation' && slugs[1] === 'metrics';
 }
 
+export function isApiReferenceHubDocsPage(slugs: readonly string[]) {
+  return slugs[0] === 'api-reference' && slugs.length === 1;
+}
+
 export { getBenchmarkHubSectionLabel } from '@/lib/benchmark-catalog';

@@ -25,6 +25,10 @@ spelling that vendored Cosmos code documents.
 import os
 from dataclasses import dataclass
 
+# ──────────────────────────────────────────────────────────────────────────
+# Import-time snapshots — WORLDFOUNDRY_* first, then legacy COSMOS_*
+# ──────────────────────────────────────────────────────────────────────────
+
 
 def _env_bool(name: str, default: bool = False) -> bool:
     """Read a boolean flag from WORLDFOUNDRY_<name>, falling back to COSMOS_<name>."""
@@ -43,6 +47,8 @@ EXPERIMENTAL_CHECKPOINTS = _env_bool("EXPERIMENTAL_CHECKPOINTS")
 
 @dataclass(frozen=True)
 class Flags:
+    """Frozen bundle of the import-time snapshots for structured config trees."""
+
     internal: bool = INTERNAL
     validation: bool = VALIDATION
     verbose: bool = VERBOSE

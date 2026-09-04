@@ -17,6 +17,7 @@ modalities:
 - world-generation
 name: DreamX-World 5B AR
 official_sources:
+  paper: https://arxiv.org/abs/2606.16993
   github:
     confirmed_by: local_checkout
     confirmed_ref: ${WORLDFOUNDRY_MODEL_SOURCE_DIR}/DreamX-World

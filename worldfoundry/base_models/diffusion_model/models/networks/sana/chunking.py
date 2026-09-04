@@ -14,10 +14,13 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-"""Shared utilities for chunk-wise causal operations.
+"""Shared utilities for chunk-wise causal GDN / temporal FFN.
 
-This module provides utilities for managing temporal chunking in causal video generation,
-supporting multiple split strategies (uniform, first_frame, first_plus_one).
+SANA video can run GDN and temporal GLUMBConv in *chunk-causal* mode: each
+chunk attends (or convolves) fully inside itself and only leftward across
+chunks.  This module converts ``chunk_size`` / ``chunk_index`` configs into
+start indices and detects uniform vs first-frame / first-plus-one patterns
+so the scan can stay vectorized.
 """
 
 from typing import Any, Dict, List, Optional, Tuple

@@ -13,20 +13,7 @@ Catalog YAML 是可读支持状态与可运行 evaluation 代码之间的桥梁�
 
 完整数据故事分四步：**catalog YAML** 声明存在什么、是否 ready；**parser 与 registry** 把 YAML 转为 typed entry；**materialization** 在 generation 前固定 sample 行；**runner 与 reporting** 产出 metrics 与 scorecard。
 
-```text
-Model catalog pipeline:
-  models/catalog/*.yaml
-    -> Schema + ModelZooRegistry
-    -> resolve_model_zoo_runner()
-         \
-          +-> run_evaluate() delegate runner -> scorecard.json + report.md
-          /
-Benchmark catalog pipeline:
-  benchmarks/catalog/*.yaml
-    -> Schema + BenchmarkZooRegistry --\
-  benchmarks/tasks/external/*.yaml      +-> Materialize GenerationRequests
-    -> Task registry -------------------/
-```
+<ArchDiagram id="catalog-scorecard" locale="zh" />
 
 Model 与 benchmark catalog 是并行 pipeline。二者仅在 run time 汇合——当 `EvaluateRunRequest` 同时携带 `model_id` 与 `benchmark_id`，或 materialization 为 existing-results run 产出 requests 时。
 
@@ -58,13 +45,7 @@ Catalog field 迁移或重命名时先改 schema parser——registry 查询、r
 
 Task YAML 比 benchmark-zoo catalog entry 更细：定义 sample 列、expected artifact 与共享 protocol 片段的 `extends` 链。Materialization 把这些行变成 runner 消费的 `GenerationRequest` ledger。
 
-```text
-Task YAML（含 extends 链）
-  -> Task registry lookup --\
-Dataset manifest（可选）        +-> RunPlan fingerprint
-                               -> materialize_generation_requests()
-                               -> EvaluateRunRequest
-```
+<ArchDiagram id="task-materialize" locale="zh" />
 
 在 generation 耗 GPU 前用 `worldfoundry-eval task materialize` 证明此步。跳过 materialization 是“文档里 benchmark 可用、CI 却失败”最常见原因——runner 从未见到 task YAML 承诺的 sample ID。
 

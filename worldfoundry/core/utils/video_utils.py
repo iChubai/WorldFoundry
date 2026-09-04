@@ -1,4 +1,20 @@
-"""Video decode/encode helpers with decord, torchcodec, and ffmpeg fallbacks."""
+"""Video decode helpers with decord, torchcodec, and ffmpeg fallbacks.
+
+Responsibility
+    Read frames by index, timestamp, or full scan. Prefer fast decoders;
+    ffmpeg is the portable fallback when optional wheels are missing.
+
+Boundaries
+    Decode-only. Shared with ``io.video`` but kept here for callers that
+    already import ``core.utils``. Not a muxer, not a dataloader, and not
+    GPU decode — torchcodec is forced to CPU / NHWC. Missing frames in the
+    ffmpeg path become black (or last-frame) placeholders rather than
+    raising, so evaluators keep a fixed ``[T, H, W, 3]`` ``uint8`` shape.
+
+Public surface
+    :func:`get_frames_by_indices`, :func:`get_frames_by_timestamps`,
+    :func:`get_all_frames`.
+"""
 
 import json
 import subprocess
@@ -22,6 +38,11 @@ try:
     TORCHCODEC_AVAILABLE = True
 except (ImportError, RuntimeError):
     TORCHCODEC_AVAILABLE = False
+
+
+# ──────────────────────────────────────────────────────────────────────────
+# ffmpeg subprocess path — no extra wheels; missing frames stay shape-stable
+# ──────────────────────────────────────────────────────────────────────────
 
 
 def _get_video_info_ffmpeg(video_path: str) -> dict:
@@ -253,12 +274,24 @@ def _extract_all_frames_ffmpeg(video_path: str) -> tuple[np.ndarray, np.ndarray]
         raise ValueError(f"Failed to extract frames from {video_path}: {e}")
 
 
+# ──────────────────────────────────────────────────────────────────────────
+# Public readers — backend name is explicit; unknown names raise
+# ──────────────────────────────────────────────────────────────────────────
+
+
 def get_frames_by_indices(
     video_path: str,
     indices: list[int] | np.ndarray,
     video_backend: str = "ffmpeg",
     video_backend_kwargs: dict = {},
 ) -> np.ndarray:
+    """Decode selected frames as ``uint8`` ``[N, H, W, C]`` (OpenCV may be BGR).
+
+    Failure: :exc:`ImportError` when the named optional backend is missing,
+    :exc:`NotImplementedError` for unknown ``video_backend``. OpenCV raises
+    :exc:`ValueError` on a missing index; ffmpeg substitutes a black frame
+    so batch size stays ``len(indices)``.
+    """
     if video_backend == "decord":
         if not DECORD_AVAILABLE:
             raise ImportError("decord is not available. Install it with: pip install decord")

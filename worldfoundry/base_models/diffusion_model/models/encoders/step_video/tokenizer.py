@@ -10,7 +10,17 @@
 # The above copyright notice and this permission notice shall be included in all
 # copies or substantial portions of the Software.
 # ==============================================================================
-"""Module for base_models -> diffusion_model -> video -> step_video -> step_video_runtime -> stepvideo -> text_encoder -> tokenizer.py functionality."""
+"""STEP1 tokenizer / BPE used by the StepVideo LLM encoder.
+
+:class:`StepChatTokenizer` and :class:`Wrapped_StepChatTokenizer`
+implement the STEP1 BPE.  :class:`LLaMaEmbedding` is the
+embedding table used by :mod:`.step_llm`.
+
+Token ids feed :class:`~.step_llm.STEP1TextEncoder`.  CLIP
+tokenization is separate in :mod:`.clip`.
+
+StepVideo-specific; do not reuse for Wan UMT5.
+"""
 
 import torch.nn as nn
 import torch

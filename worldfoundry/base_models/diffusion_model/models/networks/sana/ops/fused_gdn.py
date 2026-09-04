@@ -16,6 +16,9 @@
 
 """Inference-side helpers for the bidirectional fused GDN path.
 
+The Python GDN math lives in ``sana_gdn_blocks``; this module only prepares
+RoPE / inv-RMS tables and dispatches the scan to ``fused_gdn_chunkwise``.
+
 What this file contains:
   1. Config helpers (``_get_kernel_config``, ``_kcfg``, ``_precision_params``,
      ``_resolve_launch_config``) — re-used by ``fused_gdn_chunkwise``.
@@ -54,7 +57,11 @@ def _get_kernel_config() -> dict:
     """
     if not torch.cuda.is_available():
         return {"BLOCK_S": 64, "num_stages": 1, "num_warps": 4, "STATE_FP32": False}
-    smem = torch.cuda.get_device_properties(0).shared_memory_per_multiprocessor
+    props = torch.cuda.get_device_properties(0)
+    # Some supported PyTorch builds omit this optional CUDA property. Match
+    # fused_gdn_chunkwise's conservative H100 fallback instead of failing
+    # before kernel selection.
+    smem = getattr(props, "shared_memory_per_multiprocessor", 228 * 1024)
     state_fp32 = smem >= 150 * 1024  # H100 (228KB) yes, GB10 (101KB) no
     return {"BLOCK_S": 64, "num_stages": 1, "num_warps": 8, "STATE_FP32": state_fp32}
 

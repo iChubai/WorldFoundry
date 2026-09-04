@@ -9,7 +9,7 @@ from http import HTTPStatus
 
 from ...operators.wan_2p5_operator import Wan2p5Operator
 from ...synthesis.visual_generation.wan.wan_2p5_synthesis import Wan2p5Synthesis
-from ..api_runtime import resolve_api_key
+from ..api_runtime import load_api_pipeline_from_pretrained, resolve_api_key
 
 
 _API_KEY_ENV = ("DASHSCOPE_API_KEY", "WAN_API_KEY", "ALIYUN_API_KEY")
@@ -44,7 +44,28 @@ class Wan2p5Pipeline(PipelineABC):
         self.api_key = api_key
         self.operator = operator
         self.synthesis_model = synthesis_model
-    
+
+    @classmethod
+    def from_pretrained(
+        cls,
+        model_path: Any = None,
+        required_components: Optional[Dict[str, Any]] = None,
+        device: str = "cuda",
+        model_id: Optional[str] = None,
+        **kwargs: Any,
+    ) -> "Wan2p5Pipeline":
+        """Build the API-only pipeline through the unified loader contract."""
+        return load_api_pipeline_from_pretrained(
+            cls,
+            model_path=model_path,
+            required_components=required_components,
+            device=device,
+            model_id=model_id,
+            default_endpoint="https://dashscope.aliyuncs.com/api/v1",
+            service_name="Wan 2.5",
+            **kwargs,
+        )
+
     @classmethod
     def api_init(
         cls,

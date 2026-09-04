@@ -17,6 +17,8 @@ source:
   official_repo_url: https://huggingface.co/Qwen/Qwen2.5-Omni-7B
   notes:
   - Originally exposed by WorldFoundry-native-3D.
+official_sources:
+  paper: https://arxiv.org/abs/2503.20215
 integration:
   status: integrated
   notes:

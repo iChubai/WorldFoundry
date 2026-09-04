@@ -10,7 +10,13 @@
 # The above copyright notice and this permission notice shall be included in all
 # copies or substantial portions of the Software.
 # ==============================================================================
-"""Module for base_models -> diffusion_model -> video -> step_video -> step_video_runtime -> stepvideo -> modules -> blocks.py functionality."""
+"""StepVideo DiT blocks: 3D-RoPE self-attn, text CA, AdaLN-gated FFN.
+
+Tokens are ``B (F·H'·W') C``.  Self-attn applies factorized RoPE with
+channel split ``[64, 32, 32]`` over ``(F, H', W')``.  Cross-attn reads
+projected caption tokens.  AdaLN scale/shift/gate come from the shared
+timestep table.
+"""
 
 import torch
 import torch.nn as nn
@@ -22,18 +28,9 @@ from .rope import RoPE3D
 
 
 class SelfAttention(Attention):
-    """Self attention implementation."""
-    def __init__(self, hidden_dim, head_dim, bias=False, with_rope=True, with_qk_norm=True, attn_type='torch'):
-        """Init.
+    """QK-RMSNorm self-attn with optional 3D RoPE on ``B S H D`` heads."""
 
-        Args:
-            hidden_dim: The hidden dim.
-            head_dim: The head dim.
-            bias: The bias.
-            with_rope: The with rope.
-            with_qk_norm: The with qk norm.
-            attn_type: The attn type.
-        """
+    def __init__(self, hidden_dim, head_dim, bias=False, with_rope=True, with_qk_norm=True, attn_type='torch'):
         super().__init__()
         self.head_dim = head_dim
         self.n_heads = hidden_dim // head_dim
@@ -55,14 +52,7 @@ class SelfAttention(Attention):
         self.parallel = attn_type=='parallel'
         
     def apply_rope3d(self, x, fhw_positions, rope_ch_split, parallel=True):
-        """Apply rope3d.
-
-        Args:
-            x: The x.
-            fhw_positions: The fhw positions.
-            rope_ch_split: The rope ch split.
-            parallel: The parallel.
-        """
+        """Rotate ``x`` with factorized (F, H, W) RoPE; ``parallel`` is unused here."""
         x = self.rope_3d(x, fhw_positions, rope_ch_split, parallel)
         return x
         
@@ -74,15 +64,7 @@ class SelfAttention(Attention):
         rope_positions=None,
         attn_mask=None
     ):
-        """Forward.
-
-        Args:
-            x: The x.
-            cu_seqlens: The cu seqlens.
-            max_seqlen: The max seqlen.
-            rope_positions: The rope positions.
-            attn_mask: The attn mask.
-        """
+        """Self-attend ``B S C`` video tokens; ``rope_positions`` is ``[F, H', W']``."""
         xqkv = self.wqkv(x) 
         xqkv = xqkv.view(*x.shape[:-1], self.n_heads, 3*self.head_dim)
 
@@ -111,17 +93,9 @@ class SelfAttention(Attention):
     
     
 class CrossAttention(Attention):
-    """Cross attention implementation."""
-    def __init__(self, hidden_dim, head_dim, bias=False, with_qk_norm=True, attn_type='torch'):
-        """Init.
+    """Text cross-attn: queries from video tokens, keys/values from captions."""
 
-        Args:
-            hidden_dim: The hidden dim.
-            head_dim: The head dim.
-            bias: The bias.
-            with_qk_norm: The with qk norm.
-            attn_type: The attn type.
-        """
+    def __init__(self, hidden_dim, head_dim, bias=False, with_qk_norm=True, attn_type='torch'):
         super().__init__()
         self.head_dim = head_dim
         self.n_heads = hidden_dim // head_dim
@@ -143,13 +117,7 @@ class CrossAttention(Attention):
             encoder_hidden_states: torch.Tensor,
             attn_mask=None
         ):
-        """Forward.
-
-        Args:
-            x: The x.
-            encoder_hidden_states: The encoder hidden states.
-            attn_mask: The attn mask.
-        """
+        """Attend ``B S C`` queries to ``B L C`` text context."""
         xq = self.wq(x) 
         xq = xq.view(*xq.shape[:-1], self.n_heads, self.head_dim)
         
@@ -187,42 +155,23 @@ class GELU(nn.Module):
     """
 
     def __init__(self, dim_in: int, dim_out: int, approximate: str = "none", bias: bool = True):
-        """Init.
-
-        Args:
-            dim_in: The dim in.
-            dim_out: The dim out.
-            approximate: The approximate.
-            bias: The bias.
-        """
         super().__init__()
         self.proj = nn.Linear(dim_in, dim_out, bias=bias)
         self.approximate = approximate
 
     def gelu(self, gate: torch.Tensor) -> torch.Tensor:
-        """Gelu.
-
-        Args:
-            gate: The gate.
-
-        Returns:
-            The return value.
-        """
+        """Apply GELU with this module's ``approximate`` mode."""
         return torch.nn.functional.gelu(gate, approximate=self.approximate)
 
     def forward(self, hidden_states):
-        """Forward.
-
-        Args:
-            hidden_states: The hidden states.
-        """
+        """Project then activate ``[..., dim_in]`` → ``[..., dim_out]``."""
         hidden_states = self.proj(hidden_states)
         hidden_states = self.gelu(hidden_states)
         return hidden_states
     
     
 class FeedForward(nn.Module):
-    """Feed forward implementation."""
+    """Tanh-GELU MLP with an Identity slot matching the checkpoint ``net`` keys."""
     def __init__(
         self, 
         dim: int,
@@ -231,15 +180,6 @@ class FeedForward(nn.Module):
         mult: int = 4,
         bias: bool = False,
     ):
-        """Init.
-
-        Args:
-            dim: The dim.
-            inner_dim: The inner dim.
-            dim_out: The dim out.
-            mult: The mult.
-            bias: The bias.
-        """
         super().__init__()
         inner_dim = dim*mult if inner_dim is None else inner_dim
         dim_out = dim if dim_out is None else dim_out
@@ -251,37 +191,19 @@ class FeedForward(nn.Module):
         
         
     def forward(self, hidden_states: torch.Tensor, *args, **kwargs) -> torch.Tensor:
-        """Forward.
-
-        Args:
-            hidden_states: The hidden states.
-
-        Returns:
-            The return value.
-        """
+        """Map ``B S C`` through GELU expand → linear contract."""
         for module in self.net:
             hidden_states = module(hidden_states)
         return hidden_states
     
 
 def modulate(x, scale, shift):
-    """Modulate.
-
-    Args:
-        x: The x.
-        scale: The scale.
-        shift: The shift.
-    """
+    """AdaLN affine: ``x * (1 + scale) + shift`` on the last dim."""
     x = x * (1 + scale) + shift
     return x
 
 def gate(x, gate):
-    """Gate.
-
-    Args:
-        x: The x.
-        gate: The gate.
-    """
+    """Residual gate multiply used after attn/FFN."""
     x = gate * x
     return x
 
@@ -330,16 +252,6 @@ class StepVideoTransformerBlock(nn.Module):
         ff_bias: bool = False,
         attention_type: str = 'parallel'
     ):
-        """Init.
-
-        Args:
-            dim: The dim.
-            attention_head_dim: The attention head dim.
-            norm_eps: The norm eps.
-            ff_inner_dim: The ff inner dim.
-            ff_bias: The ff bias.
-            attention_type: The attention type.
-        """
         super().__init__()
         self.dim = dim
         self.norm1 = nn.LayerNorm(dim, eps=norm_eps)
@@ -361,18 +273,7 @@ class StepVideoTransformerBlock(nn.Module):
         attn_mask = None,
         rope_positions: list = None, 
     ) -> torch.Tensor:
-        """Forward.
-
-        Args:
-            q: The q.
-            kv: The kv.
-            timestep: The timestep.
-            attn_mask: The attn mask.
-            rope_positions: The rope positions.
-
-        Returns:
-            The return value.
-        """
+        """AdaLN-gated self-attn + text CA + FFN on ``B S C`` tokens."""
         shift_msa, scale_msa, gate_msa, shift_mlp, scale_mlp, gate_mlp = (
             torch.clone(chunk) for chunk in (self.scale_shift_table[None] + timestep.reshape(-1, 6, self.dim)).chunk(6, dim=1)
         )
@@ -415,16 +316,6 @@ class PatchEmbed(nn.Module):
         flatten=True,
         bias=True,
     ):
-        """Init.
-
-        Args:
-            patch_size: The patch size.
-            in_channels: The in channels.
-            embed_dim: The embed dim.
-            layer_norm: The layer norm.
-            flatten: The flatten.
-            bias: The bias.
-        """
         super().__init__()
 
         self.flatten = flatten
@@ -435,11 +326,7 @@ class PatchEmbed(nn.Module):
         )
 
     def forward(self, latent):
-        """Forward.
-
-        Args:
-            latent: The latent.
-        """
+        """Conv2d-patch ``B C H W`` (already folded over frames) to ``B (H'W') C``."""
         latent = self.proj(latent).to(latent.dtype)   
         if self.flatten:
             latent = latent.flatten(2).transpose(1, 2)  # BCHW -> BNC

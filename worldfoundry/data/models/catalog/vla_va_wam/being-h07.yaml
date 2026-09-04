@@ -8,6 +8,8 @@ aliases:
 availability: open_source
 provider: official_repo
 official_sources:
+  paper: https://arxiv.org/abs/2605.00078
+  project_page: https://research.beingbeyond.com/ptr
   github:
     url: https://github.com/BeingBeyond/Being-H
     subdir: Being-H07

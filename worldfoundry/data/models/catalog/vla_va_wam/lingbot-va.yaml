@@ -23,6 +23,7 @@ integration:
 license: apache-2.0
 name: LingBot-VA
 official_sources:
+  paper: https://arxiv.org/abs/2601.21998
   github:
     head_sha: 58c2ae5bac46bd8114065bea9d7d256eb67c16c3
     url: https://github.com/Robbyant/lingbot-va

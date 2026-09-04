@@ -1,4 +1,16 @@
-"""Framework-owned chunked diffusion execution with persistent model caches."""
+"""Framework-owned chunked diffusion execution with persistent model caches.
+
+Implements the ``chunked-kv-cache`` strategy at the bottom of
+recipe → assembler → strategy → runner. Attention kernels stay on the model
+component; this runner owns chunk traversal, CFG, cache windows, sink-token
+retention, scheduler updates, and decode.
+
+Inputs: ChunkedCacheDenoiser plus encoded-latent RunnerComponents,
+base_chunk_frames, num_cached_chunks, sink_token.
+Output: DiffusionOutput with chunked-kv-cache metadata.
+Must not: let a model package own cache lifetime, or run without an
+EncodedLatentInitializer (construction / _prepare raise TypeError).
+"""
 
 from __future__ import annotations
 
@@ -23,10 +35,14 @@ from .base import NativeDiffusionRunner
 
 @runtime_checkable
 class ChunkedCacheDenoiser(Protocol):
-    """Architecture surface required by the generic chunked-cache runner."""
+    """Architecture surface required by the generic chunked-cache runner.
+
+    Attention implementations remain model components. Missing this protocol
+    makes ChunkedKVCacheRunner construction raise :exc:`TypeError`.
+    """
 
     def streaming_cache_layout(self) -> tuple[bool, ...]:
-        """Return one flag per block; true denotes recurrent state cache."""
+        """Return one flag per block; True means a recurrent state cache (not KV)."""
 
 
 class ChunkedKVCacheRunner(NativeDiffusionRunner):
@@ -57,6 +73,7 @@ class ChunkedKVCacheRunner(NativeDiffusionRunner):
 
     @staticmethod
     def _segments(total_frames: int, base_chunk_frames: int) -> tuple[int, ...]:
+        """Split frames into chunk boundaries. The remainder is folded into the first chunk."""
         remainder = total_frames % base_chunk_frames
         num_chunks = total_frames // base_chunk_frames
         indices = [0]
@@ -69,6 +86,7 @@ class ChunkedKVCacheRunner(NativeDiffusionRunner):
 
     @staticmethod
     def _new_cache(num_chunks: int, num_blocks: int) -> list[list[list[Tensor | None]]]:
+        """Allocate [chunk][block][6-slot] cache slots (Q/K/V plus temporal-conv extras)."""
         return [[[None] * 6 for _ in range(num_blocks)] for _ in range(num_chunks)]
 
     @staticmethod
@@ -77,6 +95,7 @@ class ChunkedKVCacheRunner(NativeDiffusionRunner):
         chunk_index: int,
         state_blocks: tuple[bool, ...],
     ) -> None:
+        """When num_cached_chunks < 0, concatenate prior-chunk KV into the current slot and clear the previous one."""
         if chunk_index == 0:
             return
         for block_index, is_state in enumerate(state_blocks):
@@ -107,6 +126,13 @@ class ChunkedKVCacheRunner(NativeDiffusionRunner):
         chunk_indices: tuple[int, ...],
         spatial_tokens: int,
     ) -> tuple[list[list[Tensor | None]], int, int]:
+        """Assemble the visible cache window for this chunk.
+
+        State blocks copy recurrent tensors from the previous chunk. KV blocks
+        either keep full history (num_cached_chunks < 0) or a sliding window.
+        When sink_token is set, chunk 0 is always retained as a sink prefix so
+        RoPE / attention still see the first tokens after the window slides.
+        """
         current = cache[chunk_index]
         if chunk_index == 0:
             return current, 0, 0
@@ -182,6 +208,7 @@ class ChunkedKVCacheRunner(NativeDiffusionRunner):
         self,
         request: DiffusionRequest,
     ) -> tuple[DiffusionRunContext, Tensor, Mapping[str, object]]:
+        """Encode, run extensions, and initialize via EncodedLatentInitializer only."""
         generator = self._generator(request.sampling.seed)
         conditioning = self.components.conditioner.encode(
             request,
@@ -238,6 +265,7 @@ class ChunkedKVCacheRunner(NativeDiffusionRunner):
         cache: list[list[Tensor | None]],
         save_cache: bool,
     ) -> dict[str, object]:
+        """Slice image_vae_embeds to this chunk and attach RoPE / kv_cache / save flag."""
         result = dict(values)
         source = result.get("image_vae_embeds")
         if isinstance(source, Tensor):
@@ -279,6 +307,7 @@ class ChunkedKVCacheRunner(NativeDiffusionRunner):
     @torch.no_grad()
     def run(self, request: DiffusionRequest) -> DiffusionOutput:
         context: DiffusionRunContext | None = None
+        run_error: BaseException | None = None
         try:
             context, latents, artifacts = self._prepare(request)
             if latents.ndim != 5:
@@ -393,6 +422,7 @@ class ChunkedKVCacheRunner(NativeDiffusionRunner):
                             branch="negative",
                             conditioning=negative_conditioning,
                         )
+                        # Classic CFG on this chunk: ε_neg + s * (ε_pos - ε_neg)
                         scale = request.sampling.guidance_scale
                         prediction = negative.sample + scale * (positive.sample - negative.sample)
                     chunk = self.components.scheduler.step(
@@ -471,10 +501,13 @@ class ChunkedKVCacheRunner(NativeDiffusionRunner):
                 extension.on_run_end(context)
             return output
         except BaseException as error:
+            run_error = error
             if context is not None:
                 for extension in reversed(self.extensions):
                     extension.on_run_error(context, error)
             raise
+        finally:
+            self._end_denoiser_request(context, error=run_error)
 
 
 __all__ = ["ChunkedCacheDenoiser", "ChunkedKVCacheRunner"]

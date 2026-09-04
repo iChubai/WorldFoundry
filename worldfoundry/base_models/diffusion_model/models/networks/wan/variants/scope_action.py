@@ -1,4 +1,14 @@
-"""SCOPE action conditioning implemented as a native Wan block variant."""
+"""SCOPE (Wan 2.2 TI2V): mouse / keyboard action residuals on native Wan blocks.
+
+:class:`ScopeActionModule` windows raw action streams onto latent frames,
+then adds a mouse self-attn residual and a keyboard cross-attn residual
+between the host block's text cross-attn and FFN.
+:class:`ScopeActionWanModel` installs those blocks and passes grid /
+action kwargs through :meth:`WanModel.block_forward_kwargs`.
+
+Adds action conditioning and per-token timesteps.  No VACE, camera
+ControlNet, causal, or linear-attention processors.
+"""
 
 from __future__ import annotations
 
@@ -74,6 +84,7 @@ class ScopeActionModule(nn.Module):
         nn.init.zeros_(self.keyboard_o_proj.weight)
 
     def _windows(self, action: torch.Tensor, latent_frames: int) -> torch.Tensor:
+        """Slice a raw action stream into one window per latent frame."""
         window = self.vae_time_compression_ratio * self.windows_size
         prefix = action[:, :1].expand(-1, window, -1)
         padded = torch.cat((prefix, action), dim=1)
@@ -104,6 +115,7 @@ class ScopeActionModule(nn.Module):
         mouse_action: torch.Tensor | None = None,
         keyboard_action: torch.Tensor | None = None,
     ) -> torch.Tensor:
+        """Add mouse and/or keyboard residuals; tokens stay ``[B, F*H*W, C]``."""
         batch, sequence, channels = x.shape
         spatial = height * width
         if sequence != frames * spatial:
@@ -165,6 +177,7 @@ class ScopeActionBlock(DiTBlock):
         mouse_action: torch.Tensor | None = None,
         keyboard_action: torch.Tensor | None = None,
     ) -> torch.Tensor:
+        """Wan AdaLN self-attn → text cross-attn → SCOPE action → gated FFN."""
         sequence_timestep = t_mod.ndim == 4
         chunk_dim = 2 if sequence_timestep else 1
         shift_msa, scale_msa, gate_msa, shift_mlp, scale_mlp, gate_mlp = (
@@ -226,6 +239,7 @@ class ScopeActionWanModel(WanModel):
         grid_size: tuple[int, int, int],
         **kwargs: Any,
     ) -> dict[str, Any]:
+        """Forward latent grid plus mouse/keyboard tensors into every SCOPE block."""
         frames, height, width = grid_size
         mouse_action = kwargs.get("mouse_action")
         keyboard_action = kwargs.get("keyboard_action")

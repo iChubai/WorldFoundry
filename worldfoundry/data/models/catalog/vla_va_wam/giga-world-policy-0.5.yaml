@@ -8,6 +8,8 @@ availability: open_source
 provider: official_repo
 license: apache-2.0
 official_sources:
+  paper: https://arxiv.org/abs/2607.13960
+  project_page: https://open-gigaai.github.io/giga-world-policy/
   github:
     url: https://github.com/open-gigaai/giga-world-policy
     head_sha: 3c36880111d3dd422c9d4ac1a26c3154f8922538
@@ -23,7 +25,7 @@ checkpoint:
   required_task_assets:
   - task-specific norm_stats_delta.json
 integration:
-  status: in_tree_checkpoint_gated_runtime
+  status: integrated
   notes:
   - Exact released action-centered Mixture-of-Transformers and official action-only diffusion loop execute in process.
   - The released transformer is a pretrained initialization; task deployment additionally requires local post-training statistics and, when applicable, a task-finetuned transformer directory.

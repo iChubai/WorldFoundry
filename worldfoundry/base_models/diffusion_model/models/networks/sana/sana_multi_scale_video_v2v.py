@@ -14,6 +14,14 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
+"""Video-to-video SANA graph with a GDN / softmax hybrid.
+
+``SanaMSVideoV2V`` reuses :class:`SanaMSVideo` but resolves attention/FFN
+names through a V2V-only registry so custom blocks (state-cached bidirectional
+GDN, after-RoPE gated softmax) do not leak into the base video recipe.
+By default about 25% of layers use softmax attention (evenly spaced); the
+rest stay on bidirectional GDN.  See :mod:`sana_v2v_attn_blocks`.
+"""
 
 import os
 from typing import List, Optional
@@ -138,9 +146,7 @@ class SanaV2VVideoMSBlock(SanaVideoMSBlock):
 #                                 Core Sana Model                                #
 #################################################################################
 class SanaMSVideoV2V(SanaMSVideo):
-    """
-    Diffusion model with a Transformer backbone.
-    """
+    """V2V SANA video DiT with a GDN / softmax hybrid and V2V-only block names."""
 
     def __init__(
         self,

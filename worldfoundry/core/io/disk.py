@@ -13,7 +13,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Disk-space preflights and ENOSPC error formatting."""
+"""Disk-space preflights and ENOSPC error formatting.
+
+Downloads and HF snapshots check free bytes first. Env knobs
+(``CACHE_MIN_FREE_*``) keep a job from filling a shared NFS cache.
+"""
 
 from __future__ import annotations
 
@@ -29,6 +33,10 @@ from worldfoundry.core.io.paths import cache_root_path
 DEFAULT_CACHE_MIN_FREE_GB = 20.0
 DEFAULT_OUTPUT_MIN_FREE_GB = 20.0
 DEFAULT_TMP_MIN_FREE_GB = 20.0
+
+# ──────────────────────────────────────────────────────────────────────────
+# Thresholds — env GiB knobs; 0 disables the corresponding preflight
+# ──────────────────────────────────────────────────────────────────────────
 
 CACHE_MIN_FREE_ENV = "WORLDFOUNDRY_MIN_CACHE_FREE_GB"
 OUTPUT_MIN_FREE_ENV = "WORLDFOUNDRY_MIN_OUTPUT_FREE_GB"
@@ -108,6 +116,8 @@ def tmp_min_free_bytes() -> int:
 
 
 def _format_bytes(num_bytes: int | None) -> str:
+    """Human-readable IEC units for error banners; ``None`` renders as ``unknown``."""
+
     if num_bytes is None:
         return "unknown"
     value = float(num_bytes)
@@ -121,6 +131,8 @@ def _format_bytes(num_bytes: int | None) -> str:
 
 
 def _nearest_existing_path(path: Path) -> Path | None:
+    """Walk parents so ``disk_usage`` works before the target directory exists."""
+
     path = path.expanduser()
     if path.exists():
         return path
@@ -143,7 +155,14 @@ def available_bytes(path: str | os.PathLike[str] | None) -> int | None:
         return None
 
 
+# ──────────────────────────────────────────────────────────────────────────
+# Error formatting — ENOSPC / quota phrases plus actionable env hints
+# ──────────────────────────────────────────────────────────────────────────
+
+
 def _env_lines(env_vars: Sequence[str]) -> list[str]:
+    """Render ``NAME: value`` lines; unset or empty becomes ``<unset>``."""
+
     lines: list[str] = []
     for name in env_vars:
         value = os.environ.get(name)
@@ -153,12 +172,16 @@ def _env_lines(env_vars: Sequence[str]) -> list[str]:
 
 
 def _settings_lines(settings: Mapping[str, object] | None) -> list[str]:
+    """Format optional CLI/settings pairs under the same indent as env lines."""
+
     if not settings:
         return []
     return [f"  {key}: {value}" for key, value in settings.items()]
 
 
 def _cause_text(exc: BaseException | None) -> str | None:
+    """Prefer the first disk-space cause in the chain; truncate long messages."""
+
     if exc is None:
         return None
     for item in _iter_exception_chain(exc):
@@ -293,7 +316,14 @@ def preflight_runtime_write_paths(
         )
 
 
+# ──────────────────────────────────────────────────────────────────────────
+# Exception classification — walk __cause__ / __context__ without cycles
+# ──────────────────────────────────────────────────────────────────────────
+
+
 def _iter_exception_chain(exc: BaseException) -> list[BaseException]:
+    """Flatten cause/context without looping if two exceptions reference each other."""
+
     stack = [exc]
     seen: set[int] = set()
     out: list[BaseException] = []
@@ -313,6 +343,8 @@ def _iter_exception_chain(exc: BaseException) -> list[BaseException]:
 
 
 def _is_single_disk_space_error(exc: BaseException) -> bool:
+    """True for :class:`DiskSpaceError`, ``ENOSPC``, or well-known phrase matches."""
+
     if isinstance(exc, DiskSpaceError):
         return True
     if isinstance(exc, OSError) and exc.errno == errno.ENOSPC:
@@ -327,6 +359,8 @@ def is_disk_space_error(exc: BaseException) -> bool:
 
 
 def _exception_path(exc: BaseException) -> str | os.PathLike[str] | None:
+    """Best-effort path from ``OSError.filename`` / ``filename2`` in the chain."""
+
     for item in _iter_exception_chain(exc):
         if isinstance(item, OSError):
             for attr in ("filename", "filename2"):

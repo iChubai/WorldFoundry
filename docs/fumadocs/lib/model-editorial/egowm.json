@@ -1,0 +1,41 @@
+{
+  "id": "egowm",
+  "tagline": {
+    "en": "EgoWM — an egocentric, action-conditioned world model that predicts first-person video for navigation.",
+    "zh": "EgoWM——以第一人称视角、动作条件化的世界模型,为导航预测第一人称视频。"
+  },
+  "overview": {
+    "en": [
+      "EgoWM is an egocentric world model. Given a first-person view and an intended action, it predicts how the scene ahead would look — a way to imagine the consequences of moving before actually moving, which is useful for navigation.",
+      "It is built on Stable Video Diffusion (SVD), and the project ships variants for different action spaces, including a 3-degrees-of-freedom and a 25-degrees-of-freedom setup. WorldFoundry registers the EgoWM source route; running real generation additionally needs the EgoWM checkpoint and assets, fetched separately.",
+      "In WorldFoundry you use EgoWM for egocentric navigation and action-conditioned video prediction once its assets are staged."
+    ],
+    "zh": [
+      "EgoWM 是一个第一人称视角(egocentric)世界模型。给定一段第一人称画面与一个意图动作,它预测前方场景将会呈现的样子——一种在真正移动之前先想象移动后果的方式,这对导航很有用。",
+      "它构建在 Stable Video Diffusion(SVD)之上,项目为不同动作空间提供了变体,包括 3 自由度与 25 自由度两种配置。WorldFoundry 已注册 EgoWM 的源码路由;运行真正的生成还需要 EgoWM 的 checkpoint 与资产,需单独获取。",
+      "在 WorldFoundry 中,当资产就位后,你可将 EgoWM 用于第一人称导航与动作条件化的视频预测。"
+    ]
+  },
+  "whenToUse": {
+    "en": "Choose EgoWM when you need to predict first-person video conditioned on actions — for example imagining navigation outcomes from an egocentric viewpoint.",
+    "zh": "当你需要基于动作预测第一人称视频时(例如从第一人称视角想象导航结果),选择 EgoWM。"
+  },
+  "notFor": {
+    "en": "It generates predicted video, not robot control actions, and it can't run until its checkpoint and assets are downloaded and staged.",
+    "zh": "它生成的是预测视频,而非机器人控制动作,在其 checkpoint 与资产下载并准备好之前也无法运行。"
+  },
+  "highlights": {
+    "en": [
+      "Egocentric, action-conditioned world model",
+      "Built on Stable Video Diffusion (SVD)",
+      "3-DoF and 25-DoF action-space variants",
+      "Aimed at first-person navigation prediction"
+    ],
+    "zh": [
+      "第一人称、动作条件化的世界模型",
+      "构建于 Stable Video Diffusion(SVD)",
+      "提供 3 自由度与 25 自由度动作空间变体",
+      "面向第一人称导航预测"
+    ]
+  }
+}

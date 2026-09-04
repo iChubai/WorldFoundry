@@ -15,6 +15,8 @@ source:
   notes:
   - Source and weights are public but restricted to non-commercial use with share-alike terms.
 official_sources:
+  project_page: https://technology.robbyant.com/lingbot-world-v2
+  paper: https://arxiv.org/abs/2607.07534
   github:
     url: https://github.com/Robbyant/lingbot-world-v2
     revision: 94f43115de8d4a4f9f282126528c300a0b232c5f

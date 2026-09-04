@@ -1,0 +1,41 @@
+{
+  "id": "fantasyworld",
+  "tagline": {
+    "en": "Geometry-consistent world modeling on Wan2.1 — generate camera-controlled video while keeping the underlying 3D structure coherent.",
+    "zh": "构建在 Wan2.1 之上、几何一致的世界建模——在生成可控相机视频的同时保持底层 3D 结构连贯。"
+  },
+  "overview": {
+    "en": [
+      "FantasyWorld, from AMAP and Beijing University of Posts and Telecommunications authors, is a world model that couples video generation with 3D prediction so the generated scene stays geometrically consistent as the camera moves. The idea is to unify video and 3D so motion doesn't drift or break the underlying structure.",
+      "It animates an input image into a camera-controlled clip, building on the Wan2.1 image-to-video family and using MoGe as a geometry component. You provide a starting image and a camera path, and it renders video whose geometry holds together across the trajectory.",
+      "In WorldFoundry, the default FantasyWorld route runs the in-tree Wan2.1 camera-control pipeline. Running it requires the FantasyWorld Wan2.1 weights along with the Wan2.1 image-to-video and MoGe assets."
+    ],
+    "zh": [
+      "FantasyWorld 由 AMAP 与北京邮电大学的作者们提出,是一个将视频生成与 3D 预测耦合起来的世界模型,使生成场景在镜头移动时保持几何一致。其思路是统一视频与 3D,让运动不至于漂移或破坏底层结构。",
+      "它把一张输入图片动画成可控相机的片段,构建在 Wan2.1 图生视频家族之上,并使用 MoGe 作为几何组件。你提供起始图片和相机路径,它就会渲染出在整条轨迹上几何都保持连贯的视频。",
+      "在 WorldFoundry 中,FantasyWorld 的默认入口运行内置的 Wan2.1 相机控制 pipeline。运行它需要 FantasyWorld Wan2.1 权重,以及 Wan2.1 图生视频和 MoGe 资源。"
+    ]
+  },
+  "whenToUse": {
+    "en": "Use FantasyWorld when you want camera-controlled video from an image and care about geometric consistency across the camera path — exploring a scene while its 3D structure stays coherent.",
+    "zh": "当你想从一张图片生成可控相机的视频、并在意整条镜头路径上的几何一致性时——在探索场景的同时保持其 3D 结构连贯——使用 FantasyWorld。"
+  },
+  "notFor": {
+    "en": "It expects an input image and a camera path rather than text alone, and it depends on several local assets (FantasyWorld and Wan2.1 weights plus MoGe), so plan for the setup.",
+    "zh": "它需要输入图片和相机路径,而非仅靠文本;并且依赖多个本地资源(FantasyWorld 与 Wan2.1 权重以及 MoGe),请预留准备工作。"
+  },
+  "highlights": {
+    "en": [
+      "Unifies video generation with 3D prediction for geometric consistency",
+      "Camera-controlled image-to-video",
+      "Built on the Wan2.1 image-to-video family, with MoGe geometry",
+      "From AMAP and BUPT authors"
+    ],
+    "zh": [
+      "统一视频生成与 3D 预测以实现几何一致",
+      "可控相机的图生视频",
+      "构建在 Wan2.1 图生视频家族之上,配合 MoGe 几何",
+      "由 AMAP 与北邮的作者提出"
+    ]
+  }
+}

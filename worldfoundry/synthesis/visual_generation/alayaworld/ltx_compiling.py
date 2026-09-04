@@ -26,6 +26,24 @@ _DEFAULT_INDUCTOR_CONFIG: dict[str, Any] = {"unsafe_skip_cache_dynamic_shape_gua
 _DEFAULT_DYNAMO_CONFIG: dict[str, Any] = {"inline_inbuilt_nn_modules": True, "cache_size_limit": 256}
 
 
+def _supported_config_options(config_module: Any, options: dict[str, Any]) -> dict[str, Any]:
+    """Drop options unavailable in the installed PyTorch release.
+
+    AlayaWorld's upstream compile defaults target a newer Inductor.  PyTorch's
+    config patcher raises ``KeyError`` for unknown keys, so version portability
+    requires feature detection rather than assuming every optimization exists.
+    """
+
+    known = getattr(config_module, "_config", None)
+    if isinstance(known, dict):
+        return {key: value for key, value in options.items() if key in known}
+    return {
+        key: value
+        for key, value in options.items()
+        if hasattr(config_module, key)
+    }
+
+
 @dataclass(frozen=True)
 class CompilationConfig:
     """``torch.compile`` configuration for transformer blocks. ``None`` keeps eager."""
@@ -48,8 +66,9 @@ class _SeqDynamicMarkingProcessor:
     about to cross into the trace.
     """
 
-    def __init__(self, inner: BlockPerturbationsProcessor) -> None:
+    def __init__(self, inner: BlockPerturbationsProcessor, *, enabled: bool = True) -> None:
         self.inner = inner
+        self.enabled = bool(enabled)
 
     def __call__(
         self,
@@ -59,6 +78,14 @@ class _SeqDynamicMarkingProcessor:
         self_attn_type: PerturbationType,
         cross_attn_type: PerturbationType,
     ) -> TransformerArgs:
+        # ``torch.compile(dynamic=False)`` requires every input dimension to be
+        # specialised.  Calling ``mark_dynamic`` in that mode creates mutually
+        # exclusive guards and fails before the first block executes.  Keep the
+        # wrapper installed so custom processors retain the same call path, but
+        # only add dynamic-shape annotations when the compile policy permits it.
+        if not self.enabled:
+            return self.inner(args, perturbations, block_idx, self_attn_type, cross_attn_type)
+
         # Positional embeddings are second-from-last regardless of rope type:
         # split rope is (B, H, T, D//2) -- dim -2 == 2; interleaved rope is (B, T, D)
         # -- dim -2 == 1. Both work via the negative index.
@@ -111,13 +138,22 @@ def compile_transformer(model: LTXModel, config: CompilationConfig) -> LTXModel:
         torch.compile(m, mode=config.mode, backend=config.backend, fullgraph=config.fullgraph, dynamic=config.dynamic)
         for m in model.transformer_blocks
     )
-    model.block_input_processor = _SeqDynamicMarkingProcessor(inner=model.block_input_processor)
+    model.block_input_processor = _SeqDynamicMarkingProcessor(
+        inner=model.block_input_processor,
+        enabled=config.dynamic is not False,
+    )
 
     def patched_dynamo_forward(*args, **kwargs) -> tuple[torch.Tensor, torch.Tensor]:
         torch.compiler.cudagraph_mark_step_begin()
+        inductor_options = _supported_config_options(
+            torch._inductor.config, config.inductor_config
+        )
+        dynamo_options = _supported_config_options(
+            torch._dynamo.config, config.dynamo_config
+        )
         with (
-            torch._inductor.config.patch(**config.inductor_config),
-            torch._dynamo.config.patch(**config.dynamo_config),  # type: ignore[attr-defined]
+            torch._inductor.config.patch(**inductor_options),
+            torch._dynamo.config.patch(**dynamo_options),  # type: ignore[attr-defined]
         ):
             return model.forward_without_compilation(*args, **kwargs)
 

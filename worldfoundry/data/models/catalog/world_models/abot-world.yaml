@@ -14,6 +14,8 @@ source:
   notes:
   - The public causal student checkpoint and inference source are available.
 official_sources:
+  paper: https://arxiv.org/abs/2607.19191
+  project_page: https://amap-cvlab.github.io/ABot-World/
   github:
     url: https://github.com/amap-cvlab/ABot-World
     revision: e2a406a176195d994bcaf5ebb92b2047edcd3c2b

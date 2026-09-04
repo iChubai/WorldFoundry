@@ -15,8 +15,13 @@ Core Architectural Design:
 3. Explicit Opt-In Providers: ``auto`` deliberately resolves to the in-tree PyTorch SDPA
    provider only (the "no-external-repo contract"); external packages such as flash-attn,
    SageAttention, and xFormers are used only when explicitly requested. When an explicitly
-   requested provider is unusable, resolution degrades to PyTorch SDPA with a warning log
-   stating the requested backend, the effective backend, and the reason.
+   requested dense provider is unusable, resolution degrades to PyTorch SDPA with a warning
+   naming the request and reason.
+4. Model-Specific Sparse Providers: VSA, FlexBlock, V-MoBA, SLA, and SageSLA need metadata
+   that a generic Q/K/V call cannot reconstruct (for example a 3D grid, block mask, layer
+   routing, or checkpoint-trained projection). They remain recognizable for capability
+   reporting, but selecting one through the generic dispatcher fails fast instead of silently
+   executing dense SDPA and falsely reporting the sparse provider as effective.
 """
 
 from __future__ import annotations
@@ -31,6 +36,10 @@ from typing import Mapping
 import torch
 
 logger = logging.getLogger(__name__)
+
+# ──────────────────────────────────────────────────────────────────────────
+# Capability record — installed vs usable are separate bits on purpose
+# ──────────────────────────────────────────────────────────────────────────
 
 
 @dataclass(frozen=True)
@@ -51,6 +60,10 @@ class AttentionKernelCapability:
     usable: bool
     reason: str = ""
 
+
+# ──────────────────────────────────────────────────────────────────────────
+# Name aliases — colloquial strings collapse here; no package is imported
+# ──────────────────────────────────────────────────────────────────────────
 
 _AUTO = "auto"
 _TORCH = "torch"
@@ -75,6 +88,10 @@ _BACKEND_ALIASES: Mapping[str, str] = {
     "flash3": "flash_attention_3",
     "flash_attn_3": "flash_attention_3",
     "flash_attn3": "flash_attention_3",
+    "flash_attention_4": "flash_attention_4",
+    "flash4": "flash_attention_4",
+    "flash_attn_4": "flash_attention_4",
+    "flash_attn4": "flash_attention_4",
     "sage": "sage_attention",
     "sage_attn": "sage_attention",
     "sage_attention": "sage_attention",
@@ -100,6 +117,7 @@ _BACKEND_ALIASES: Mapping[str, str] = {
 }
 _DEFAULT_PRIORITY = (_TORCH,)
 _REPORT_PRIORITY = (
+    "flash_attention_4",
     "flash_attention_3",
     "flash_attention_2",
     "sage_attention",
@@ -115,6 +133,60 @@ _EXPERIMENTAL_PRIORITY = (
     "sage_sla_attention",
 )
 _VIDEO_SPARSE_KERNEL_IMPORT = "fast" + "video_kernel"
+
+# These names describe model-specific attention *systems*, not drop-in Q/K/V
+# kernels. Keeping the missing inputs explicit prevents a package-presence
+# probe from being mistaken for an executable generic backend.
+_MODEL_SPECIFIC_BACKEND_REQUIREMENTS: Mapping[str, str] = {
+    "video_sparse_attention": (
+        "a VideoSparseAttention metadata builder (3D token grid, tiled indices, "
+        "variable block sizes, timestep/sparsity schedule, and compatible VSA/QAT weights)"
+    ),
+    "flex_block_attention": (
+        "an explicit block mask plus query/key block sizes prepared by the model-specific "
+        "sparse-attention planner"
+    ),
+    "vmoba_attention": (
+        "per-layer V-MoBA routing metadata (layer index, patch resolution, chunk policy, "
+        "top-k, and threshold configuration)"
+    ),
+    "sla_attention": (
+        "SLA metadata and checkpoint-trained sparse/linear blending projections"
+    ),
+    "sage_sla_attention": (
+        "SLA metadata, checkpoint-trained blending projections, and the spas_sage_attn "
+        "quantized sparse kernel stack"
+    ),
+}
+
+
+# ──────────────────────────────────────────────────────────────────────────
+# Model-specific contract — fail fast; never degrade these to dense SDPA
+# ──────────────────────────────────────────────────────────────────────────
+
+
+class ModelSpecificAttentionBackendError(ValueError):
+    """A model-specific sparse system was selected as generic Q/K/V attention."""
+
+
+def require_generic_attention_backend(value: str | None) -> str:
+    """Return a normalized generic provider or fail with its missing model contract.
+
+    Package installation alone is insufficient for the sparse systems listed
+    above. Calling them without their metadata would either be incorrect or
+    force a dense fallback, so callers must install a model-specific
+    processor/graph instead.
+    """
+
+    canonical = normalize_attention_backend(value)
+    requirement = _MODEL_SPECIFIC_BACKEND_REQUIREMENTS.get(canonical)
+    if requirement is not None:
+        raise ModelSpecificAttentionBackendError(
+            f"Attention backend {canonical!r} is model-specific and is not executable "
+            f"by the generic Q/K/V dispatcher; it requires {requirement}. Install a "
+            "checkpoint-compatible model processor that constructs this metadata."
+        )
+    return canonical
 
 
 def attention_backend_from_env(environ: Mapping[str, str] | None = None) -> str:
@@ -146,6 +218,11 @@ def normalize_attention_backend(value: str | None) -> str:
     return canonical
 
 
+# ──────────────────────────────────────────────────────────────────────────
+# Probes — find_spec only; results are cached per (capability, HIP, accel)
+# ──────────────────────────────────────────────────────────────────────────
+
+
 def probe_attention_backends(device: torch.device | str | int | None = None) -> dict[str, AttentionKernelCapability]:
     """Probe installed attention packages and hardware compatibility.
 
@@ -166,9 +243,20 @@ def _probe_attention_backends_cached(
     hip: bool,
     accelerator: bool,
 ) -> dict[str, AttentionKernelCapability]:
+    """Build the capability table for one (capability, HIP, accelerator) triple.
+
+    Cached so mixed A100/H100 nodes stay correct when the active device
+    changes after import. Sparse systems stay ``usable=False`` even when
+    the package is present — package presence is not a generic Q/K/V
+    contract.
+    """
     nvidia_cuda = capability is not None and not hip
     flash_gpu = capability is not None and capability[0] in {8, 9}
     flash3_gpu = capability == (9, 0)
+    # CuTeDSL FA4 forward kernels cover Ampere and newer NVIDIA targets. It is
+    # intentionally explicit-only because first-use JIT and shape support vary
+    # across pinned builds.
+    flash4_gpu = capability is not None and capability[0] >= 8
     sage_gpu = capability is not None and capability[0] in {8, 9}
     # Keep this aligned with the architectures compiled by SageAttention3's
     # upstream Blackwell extension.  In particular, its current build does not
@@ -176,6 +264,13 @@ def _probe_attention_backends_cached(
     # accepted merely because they share the Blackwell generation name.
     sage3_gpu = capability in {(10, 0), (12, 0), (12, 1)}
     return {
+        "flash_attention_4": _package_capability(
+            name="flash_attention_4",
+            package="flash_attn.cute",
+            usable_if=flash4_gpu,
+            unavailable_reason="flash-attn-4 (flash_attn.cute) is not installed",
+            unusable_reason="FlashAttention 4 requires NVIDIA Ampere or newer",
+        ),
         "flash_attention_3": _package_capability(
             name="flash_attention_3",
             package="flash_attn_interface",
@@ -213,42 +308,69 @@ def _probe_attention_backends_cached(
         ),
         "video_sparse_attention": _package_capability(
             name="video_sparse_attention",
-            package="video_sparse_attention_kernels",
+            package="fastvideo_kernel",
             import_name=_VIDEO_SPARSE_KERNEL_IMPORT,
-            usable_if=nvidia_cuda,
+            # Package presence proves only that kernels exist. The generic
+            # dispatcher has no VSA metadata/weight graph, so it must never
+            # advertise this model-specific system as executable.
+            usable_if=False,
             unavailable_reason="video sparse attention kernel package is not installed",
-            unusable_reason="Video sparse attention requires CUDA and model-specific kernels",
+            unusable_reason=(
+                "Video sparse attention is package-available but requires a model-specific "
+                "VSA metadata/QAT graph; it is not a generic Q/K/V backend"
+                if nvidia_cuda
+                else "Video sparse attention requires CUDA and a model-specific VSA metadata/QAT graph"
+            ),
         ),
         "flex_block_attention": _package_capability(
             name="flex_block_attention",
             package="flex_block_attn",
-            usable_if=nvidia_cuda,
+            usable_if=False,
             unavailable_reason="flex_block_attn is not installed",
-            unusable_reason="FlexBlockAttention requires an NVIDIA CUDA device",
+            unusable_reason=(
+                "FlexBlockAttention requires a model-provided block mask and block geometry; "
+                "it is not a generic Q/K/V backend"
+                if nvidia_cuda
+                else "FlexBlockAttention requires CUDA plus a model-provided block mask and block geometry"
+            ),
         ),
         "vmoba_attention": _package_capability(
             name="vmoba_attention",
-            package="vmoba_attention_kernels",
+            package="fastvideo_kernel",
             import_name=_VIDEO_SPARSE_KERNEL_IMPORT,
-            usable_if=nvidia_cuda,
+            usable_if=False,
             unavailable_reason="V-MoBA attention kernel package is not installed",
-            unusable_reason="V-MoBA attention requires CUDA and model-specific kernels",
+            unusable_reason=(
+                "V-MoBA requires model/layer routing metadata; it is not a generic Q/K/V backend"
+                if nvidia_cuda
+                else "V-MoBA requires CUDA and model/layer routing metadata"
+            ),
         ),
         "sla_attention": _package_capability(
             name="sla_attention",
-            package="sparse_linear_attention_kernels",
+            package="fastvideo_kernel",
             import_name=_VIDEO_SPARSE_KERNEL_IMPORT,
-            usable_if=nvidia_cuda,
+            usable_if=False,
             unavailable_reason="sparse linear attention kernel package is not installed",
-            unusable_reason="Sparse linear attention requires CUDA and model-specific kernels",
+            unusable_reason=(
+                "SLA requires model metadata and checkpoint-trained blending projections; "
+                "it is not a generic Q/K/V backend"
+                if nvidia_cuda
+                else "SLA requires CUDA, model metadata, and checkpoint-trained blending projections"
+            ),
         ),
         "sage_sla_attention": _package_capability(
             name="sage_sla_attention",
-            package="sage_sparse_linear_attention_kernels",
-            import_name=_VIDEO_SPARSE_KERNEL_IMPORT,
-            usable_if=nvidia_cuda,
+            package="spas_sage_attn",
+            import_name="spas_sage_attn",
+            usable_if=False,
             unavailable_reason="SageSLA attention kernel package is not installed",
-            unusable_reason="SageSLA attention requires CUDA and model-specific kernels",
+            unusable_reason=(
+                "SageSLA requires model metadata and checkpoint-trained blending projections; "
+                "it is not a generic Q/K/V backend"
+                if nvidia_cuda
+                else "SageSLA requires CUDA, model metadata, and checkpoint-trained blending projections"
+            ),
         ),
         _TORCH: AttentionKernelCapability(name=_TORCH, package="torch", available=True, usable=True),
     }
@@ -295,9 +417,16 @@ def _log_faster_backends_available(capabilities: Mapping[str, AttentionKernelCap
     )
 
 
+# ──────────────────────────────────────────────────────────────────────────
+# Resolution — auto stays in-tree; explicit requests may degrade to SDPA
+# ──────────────────────────────────────────────────────────────────────────
+
+
 def resolve_attention_backend(
     preferred: str | None = None,
     device: torch.device | str | int | None = None,
+    *,
+    allow_model_specific: bool = False,
 ) -> str:
     """Resolve the requested backend, falling back to PyTorch SDPA when unusable.
 
@@ -308,8 +437,32 @@ def resolve_attention_backend(
     If an explicitly requested package is not usable on the active hardware,
     resolution degrades to ``"torch"`` SDPA and logs a warning with the
     requested backend, the effective backend, and the capability reason.
+
+    Model-specific sparse systems fail by default. A caller that already owns
+    their full metadata/checkpoint graph may pass ``allow_model_specific=True``;
+    package and NVIDIA-device availability are still required, and there is no
+    dense fallback for that explicit request.
     """
     requested = attention_backend_from_env() if preferred is None else normalize_attention_backend(preferred)
+    if requested in _MODEL_SPECIFIC_BACKEND_REQUIREMENTS:
+        if not allow_model_specific:
+            # Even an installed sparse kernel is not callable without its
+            # model/checkpoint metadata. Degrading that explicit request to
+            # dense SDPA would make the audit record dishonest.
+            require_generic_attention_backend(requested)
+        capability = probe_attention_backends(device)[requested]
+        if not capability.available:
+            raise ModelSpecificAttentionBackendError(
+                f"Attention backend {requested!r} was selected by a model-specific "
+                f"attention graph, but its package {capability.package!r} is unavailable: "
+                f"{capability.reason or 'package probe failed'}"
+            )
+        if _cuda_compute_capability(device) is None:
+            raise ModelSpecificAttentionBackendError(
+                f"Attention backend {requested!r} was selected by a model-specific "
+                "attention graph, but it requires an NVIDIA CUDA device"
+            )
+        return requested
     capabilities = probe_attention_backends(device)
     if requested == _AUTO:
         for name in _DEFAULT_PRIORITY:
@@ -415,6 +568,11 @@ def gpu_supports_flash_attention_3(device: torch.device | str | int | None = Non
     return _cuda_compute_capability(device) == (9, 0)
 
 
+# ──────────────────────────────────────────────────────────────────────────
+# Hardware / package helpers — never import crash-prone extensions
+# ──────────────────────────────────────────────────────────────────────────
+
+
 def _cuda_compute_capability(
     device: torch.device | str | int | None = None,
 ) -> tuple[int, int] | None:
@@ -475,12 +633,14 @@ def _package_capability(
 
 __all__ = [
     "AttentionKernelCapability",
+    "ModelSpecificAttentionBackendError",
     "attention_backend_capability",
     "attention_backend_from_env",
     "attention_backend_report",
     "gpu_supports_flash_attention",
     "normalize_attention_backend",
     "probe_attention_backends",
+    "require_generic_attention_backend",
     "resolve_attention_backend",
     "resolve_transformers_attention_implementation",
 ]

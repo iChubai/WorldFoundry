@@ -9,6 +9,8 @@ source:
   status: open_source
   official_repo_url: https://github.com/hustvl/TiNeuVox
 official_sources:
+  paper: https://arxiv.org/abs/2205.15285
+  project_page: https://jaminfong.cn/tineuvox
   github:
     url: https://github.com/hustvl/TiNeuVox
     head_sha: d1f3adb6749420d10ecc074806f06459f189acbd

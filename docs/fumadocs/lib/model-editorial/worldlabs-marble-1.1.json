@@ -1,0 +1,39 @@
+{
+  "id": "worldlabs-marble-1.1",
+  "tagline": {
+    "en": "World Labs Marble 1.1 — a hosted API world model that generates explorable 3D worlds, called through your World Labs credentials.",
+    "zh": "World Labs Marble 1.1——托管 API 世界模型，生成可探索的 3D 世界，通过你的 World Labs 凭证调用。"
+  },
+  "overview": {
+    "en": [
+      "Marble 1.1 is World Labs' hosted world model, accessed as an API rather than run from local weights. It generates 3D worlds you can explore, and is exposed in WorldFoundry through the World Labs API pipeline under the marble-1.1 model id.",
+      "Because it's a hosted service, there are no weights to download and no local GPU to provision — you call the API with your own World Labs credentials, and generation runs on their side."
+    ],
+    "zh": [
+      "Marble 1.1 是 World Labs 的托管世界模型，以 API 方式访问，而非从本地权重运行。它生成可供探索的 3D 世界，在 WorldFoundry 中通过 World Labs API pipeline、以 marble-1.1 模型 id 暴露。",
+      "由于是托管服务，无需下载权重、也无需配置本地 GPU——你用自己的 World Labs 凭证调用 API，生成在其服务端完成。"
+    ]
+  },
+  "whenToUse": {
+    "en": "Use Marble 1.1 when you want to generate explorable 3D worlds through a managed API without hosting weights or GPUs yourself.",
+    "zh": "当你想通过托管 API 生成可探索的 3D 世界、又不想自行托管权重或 GPU 时，选用 Marble 1.1。"
+  },
+  "notFor": {
+    "en": "It requires your own World Labs API credentials, and both output and availability depend on the provider's service.",
+    "zh": "它需要你自备 World Labs API 凭证，输出与可用性均依赖服务商的服务。"
+  },
+  "highlights": {
+    "en": [
+      "Hosted API world model — no local weights or GPU",
+      "Generates explorable 3D worlds",
+      "Accessed via the World Labs API pipeline (marble-1.1)",
+      "Requires caller-provided World Labs credentials"
+    ],
+    "zh": [
+      "托管 API 世界模型——无需本地权重或 GPU",
+      "生成可探索的 3D 世界",
+      "通过 World Labs API pipeline 访问（marble-1.1）",
+      "需使用者自备 World Labs 凭证"
+    ]
+  }
+}

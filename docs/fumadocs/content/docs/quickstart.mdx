@@ -38,7 +38,9 @@ Most runs follow the same shape even when the model or benchmark changes: make t
 ## Prerequisites
 
 - **OS:** Linux recommended for GPU inference and most benchmark runners
-- **Python:** 3.10+ through the WorldFoundry unified conda environment
+- **Install track:** use `python -m pip install -e ".[tui]"` for lightweight CPU catalog/CLI/TUI work; use `bash scripts/setup/bootstrap_worldfoundry.sh` for the CUDA conda runtime. Optional extras do not select a CUDA PyTorch wheel index.
+- **Optional native kernels:** `packages/worldfoundry-native-kernels` is a separate, ABI-sensitive wheel. CPU-only hosts should skip it; GPU hosts must build it with `--no-isolation` inside the target PyTorch environment.
+- **Python:** 3.10+; the GPU path manages it through the WorldFoundry unified conda environment
 - **Optional:** CUDA-capable GPU, Hugging Face token for gated checkpoints
 
 <Callout type="info" title="Note">
@@ -47,7 +49,7 @@ Most runs follow the same shape even when the model or benchmark changes: make t
 
 ## 1. Environment
 
-The bootstrap step creates the default WorldFoundry runtime and writes a local shell file with the paths used by the CLI, Studio, and evaluation runners. Always source that file before running commands in a new shell.
+The commands below describe the GPU runtime path. The bootstrap step creates the default WorldFoundry runtime and writes a local shell file with the paths used by the CLI, Studio, and evaluation runners. Always source that file before running commands in a new shell.
 
 <Tabs items={['Default', 'Shared paths', 'Verify']}>
   <Tab>

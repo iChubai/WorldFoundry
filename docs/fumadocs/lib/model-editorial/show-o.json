@@ -1,0 +1,41 @@
+{
+  "id": "show-o",
+  "tagline": {
+    "en": "Show Lab's MIT-licensed unified multimodal model — here running text-to-image generation.",
+    "zh": "Show Lab 的 MIT 许可统一多模态模型——此处用于文生图生成。"
+  },
+  "overview": {
+    "en": [
+      "Show-o is a unified multimodal model from Show Lab that brings understanding and generation into a single transformer. It's released under the MIT license, and its broader design spans several multimodal tasks.",
+      "In WorldFoundry the current wrapper focuses on the text-to-image path: give it a prompt and it generates an image. The runtime source is vendored in-tree; other modes such as multimodal understanding, inpainting, and extrapolation are not wired up in this integration yet.",
+      "In WorldFoundry you run the text-to-image route with a prompt to generate an image."
+    ],
+    "zh": [
+      "Show-o 是 Show Lab 推出的统一多模态模型，把理解与生成整合进单一 transformer。它以 MIT 许可发布，整体设计覆盖多种多模态任务。",
+      "在 WorldFoundry 中，当前封装聚焦于文生图路径：给它一段提示词，它就生成一张图片。运行时源码已内置于代码库；多模态理解、inpainting、外扩等其他模式在本次集成中尚未接入。",
+      "在 WorldFoundry 中，你用一段提示词运行文生图路径即可生成图片。"
+    ]
+  },
+  "whenToUse": {
+    "en": "Use it when you want text-to-image generation from an openly-licensed unified multimodal model.",
+    "zh": "当你想用一个开放许可的统一多模态模型做文生图时使用。"
+  },
+  "notFor": {
+    "en": "In this integration only text-to-image is available — multimodal understanding, inpainting, and extrapolation are not wired up yet, so don't rely on those modes here.",
+    "zh": "在本次集成中仅提供文生图——多模态理解、inpainting 与外扩尚未接入，请勿在此依赖这些模式。"
+  },
+  "highlights": {
+    "en": [
+      "MIT license",
+      "Unified multimodal model from Show Lab",
+      "Text-to-image generation in WorldFoundry",
+      "Runtime source vendored in-tree"
+    ],
+    "zh": [
+      "MIT 许可",
+      "出自 Show Lab 的统一多模态模型",
+      "在 WorldFoundry 中提供文生图",
+      "运行时源码内置于代码库"
+    ]
+  }
+}

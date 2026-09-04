@@ -1,0 +1,41 @@
+{
+  "id": "galaxea-vla",
+  "tagline": {
+    "en": "Galaxea G0Plus — an open vision-language-action base model built on PaliGemma, meant to be fine-tuned into task-ready policies.",
+    "zh": "Galaxea G0Plus——构建在 PaliGemma 之上的开放视觉-语言-动作基座模型,面向微调为可用策略。"
+  },
+  "overview": {
+    "en": [
+      "Galaxea G0Plus is a vision-language-action (VLA) model from OpenGalaxea. It reads camera observations and an instruction and predicts robot actions, using a PaliGemma-based multimodal backbone paired with a flow-sampling action expert.",
+      "The released G0Plus checkpoint is a base model intended as a starting point for downstream fine-tuning rather than a finished, task-ready policy. Its architecture — the model, KV cache, flow sampler, tokenizer adapter, preprocessing, and normalization — is implemented in WorldFoundry, and it pairs with the google/paligemma-3b-pt-224 backbone. Normalization relies on the exact dataset statistics paired with the checkpoint, so those must be staged alongside the weights.",
+      "In WorldFoundry, G0Plus runs from staged local assets — provide observations and the matching statistics, and it returns actions for rollout or as a base for your own fine-tune."
+    ],
+    "zh": [
+      "Galaxea G0Plus 是 OpenGalaxea 推出的视觉-语言-动作(VLA)模型。它读取相机观测与指令并预测机器人动作,采用基于 PaliGemma 的多模态主干,搭配 flow 采样的 action expert。",
+      "已发布的 G0Plus checkpoint 是一个基座模型,定位为下游微调的起点,而非开箱即用的成品策略。其架构——模型本体、KV 缓存、flow 采样器、tokenizer 适配器、预处理与归一化——在 WorldFoundry 中实现,并与 google/paligemma-3b-pt-224 主干配套使用。归一化依赖与 checkpoint 配套的精确数据集统计量,因此需要将它们与权重一并准备好。",
+      "在 WorldFoundry 中,G0Plus 从本地准备好的资产运行——提供观测与匹配的统计量,它就返回可用于 rollout 的动作,或作为你自己微调的基座。"
+    ]
+  },
+  "whenToUse": {
+    "en": "Use G0Plus as a foundation to fine-tune into your own manipulation policy, especially if you want an openly available PaliGemma-based VLA to build on.",
+    "zh": "把 G0Plus 当作基座,微调成你自己的操作策略——尤其当你希望在一个开放可得、基于 PaliGemma 的 VLA 之上构建时。"
+  },
+  "notFor": {
+    "en": "Don't expect the base checkpoint to solve tasks out of the box; it's meant for fine-tuning. It also needs the exact paired dataset statistics — normalization won't fall back to made-up values — plus the PaliGemma backbone, both downloaded separately.",
+    "zh": "不要指望基座 checkpoint 开箱即用地完成任务,它是用来微调的。它还需要与之配套的精确数据集统计量(归一化不会退回到编造的数值),以及 PaliGemma 主干,两者均需单独下载。"
+  },
+  "highlights": {
+    "en": [
+      "Open VLA base model from OpenGalaxea",
+      "PaliGemma-based backbone with a flow action expert",
+      "Designed for downstream fine-tuning",
+      "Requires the exact paired dataset statistics for normalization"
+    ],
+    "zh": [
+      "来自 OpenGalaxea 的开放 VLA 基座模型",
+      "基于 PaliGemma 的主干,搭配 flow action expert",
+      "面向下游微调设计",
+      "归一化需要与之配套的精确数据集统计量"
+    ]
+  }
+}

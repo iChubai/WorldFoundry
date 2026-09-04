@@ -154,6 +154,8 @@ def _workload_type(category: str, call_params: Sequence[str]) -> str:
 
 def _field_kind(name: str, default: Any = None) -> str:
     normalized = _normalise(name)
+    if normalized == "operator-kwargs":
+        return "json"
     if isinstance(default, bool):
         return "boolean"
     if isinstance(default, int) and not isinstance(default, bool):
@@ -266,13 +268,14 @@ def _default_for_call_key(defaults: Mapping[str, Any], key: str, fallback: Any) 
     return fallback
 
 
-def _input_key(field_id: str, call_params: Sequence[str]) -> str:
+def _input_key(field_id: str, call_params: Sequence[str], *, label: str = "") -> str:
     normalized = _normalise(field_id)
+    normalized_label = _normalise(label)
     if normalized == "prompt":
         return "prompt"
-    if "video" in normalized:
+    if "video" in normalized or "video" in normalized_label:
         return "video"
-    if "image" in normalized:
+    if "image" in normalized or "image" in normalized_label:
         return "image"
     params = {_normalise(item) for item in call_params}
     if params & {"image", "images", "image-path"}:
@@ -762,10 +765,10 @@ def load_model_run_schema(
     task_id: str | None = None,
 ) -> ModelRunSchema:
     """Resolve one model into a Studio contract or Model Zoo/runtime fallback."""
-    from worldfoundry.core.inference import model_inference_spec
     from worldfoundry.evaluation.models.catalog.schema import select_default_variant
     from worldfoundry.evaluation.models.catalog.zoo_registry import load_model_zoo_registry
     from worldfoundry.evaluation.utils import MODEL_ZOO_DIR
+    from worldfoundry.runtime.inference_catalog import model_inference_spec
     from worldfoundry.studio.catalog import find_entry
 
     canonical_model_id = model_id
@@ -897,14 +900,20 @@ def load_model_run_schema(
 
     fields: list[ModelRunField] = []
     seen_options: set[str] = set()
+    normalized_model_id = _normalise(entry.model_id)
+    normalized_task_type = _normalise(entry.default_task_type)
+    text_to_video_entry = (
+        ("t2v" in normalized_model_id and "i2v" not in normalized_model_id)
+        or normalized_task_type in {"t2v", "text-to-video"}
+        or "text-to-video" in {_normalise(tag) for tag in entry.tags}
+    )
     for input_field in task.inputs:
         field_id = _normalise(input_field.field_id)
         if field_id in _SKIPPED_CALL_FIELDS:
             continue
         if (
             field_id == "input-path"
-            and "t2v" in _normalise(entry.model_id)
-            and "i2v" not in _normalise(entry.model_id)
+            and text_to_video_entry
         ):
             continue
         target = _normalise(input_field.target)
@@ -941,7 +950,7 @@ def load_model_run_schema(
                     display_name=entry.display_name,
                 ),
                 label=input_field.label,
-                input_key=_input_key(field_id, entry.call_params),
+                input_key=_input_key(field_id, entry.call_params, label=input_field.label),
             )
         )
 

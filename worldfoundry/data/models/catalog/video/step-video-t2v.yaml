@@ -19,6 +19,8 @@ checkpoint_refs:
   revision: 7a2b639ca2685350e87a4df7e4026285309f7fb6
   license: mit
   estimated_size_gb: 183
+official_sources:
+  paper: https://arxiv.org/abs/2502.10248
 integration:
   status: integrated
   notes:

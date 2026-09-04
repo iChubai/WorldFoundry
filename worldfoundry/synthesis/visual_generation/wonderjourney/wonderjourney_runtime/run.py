@@ -1,5 +1,4 @@
 import gc
-import os
 import random
 from argparse import ArgumentParser
 from pathlib import Path
@@ -8,7 +7,12 @@ from datetime import datetime
 from copy import deepcopy
 import json
 
-from transformers import OneFormerForUniversalSegmentation, OneFormerProcessor
+from transformers import (
+    CLIPTokenizerFast,
+    OneFormerForUniversalSegmentation,
+    OneFormerImageProcessor,
+    OneFormerProcessor,
+)
 import numpy as np
 import torch
 from omegaconf import OmegaConf
@@ -27,18 +31,7 @@ from util.general_utils import apply_depth_colormap, save_video
 from util.utils import save_depth_map, prepare_scheduler
 from util.utils import load_inference_prompt_config, merge_frames, merge_keyframes
 from util.segment_utils import create_mask_generator
-
-
-def _ckpt_root() -> Path:
-    return Path(os.environ.get("WORLDFOUNDRY_CKPT_DIR", Path(__file__).resolve().parents[6] / "ckpt"))
-
-
-def _local_model_ref(default: str, *candidates: str) -> str:
-    for candidate in candidates:
-        path = _ckpt_root() / candidate
-        if path.exists():
-            return str(path)
-    return default
+from util.checkpoints import diffusers_fp16_load_kwargs, local_model_ref, oneformer_local_load_kwargs
 
 
 def evaluate(model):
@@ -112,9 +105,21 @@ def run(config):
     inpainting_resolution_gen = config['inpainting_resolution_gen']
     seeding(config["seed"])
 
-    oneformer_ref = _local_model_ref("shi-labs/oneformer_coco_swin_large", "oneformer_coco_swin_large")
-    segment_processor = OneFormerProcessor.from_pretrained(oneformer_ref)
-    segment_model = OneFormerForUniversalSegmentation.from_pretrained(oneformer_ref)
+    oneformer_ref = local_model_ref("shi-labs/oneformer_coco_swin_large", "oneformer_coco_swin_large")
+    oneformer_processor_kwargs = oneformer_local_load_kwargs(oneformer_ref, processor=True)
+    if "repo_path" in oneformer_processor_kwargs:
+        with open(Path(oneformer_ref) / "preprocessor_config.json", encoding="utf-8") as handle:
+            image_processor_config = json.load(handle)
+        image_processor_config["repo_path"] = oneformer_processor_kwargs["repo_path"]
+        image_processor = OneFormerImageProcessor.from_dict(image_processor_config)
+        tokenizer = CLIPTokenizerFast.from_pretrained(oneformer_ref, local_files_only=True)
+        segment_processor = OneFormerProcessor(image_processor=image_processor, tokenizer=tokenizer)
+    else:
+        segment_processor = OneFormerProcessor.from_pretrained(oneformer_ref)
+    segment_model = OneFormerForUniversalSegmentation.from_pretrained(
+        oneformer_ref,
+        **oneformer_local_load_kwargs(oneformer_ref),
+    )
 
     mask_generator = create_mask_generator()
 
@@ -135,15 +140,20 @@ def run(config):
     scene_dict = {'scene_name': scene_name, 'entities': entities, 'style': style_prompt, 'background': background_prompt}
     inpainting_prompt = style_prompt + ', ' + content_prompt
 
+    stable_diffusion_ref = str(config["stable_diffusion_checkpoint"])
     inpainter_pipeline = StableDiffusionInpaintPipeline.from_pretrained(
-            config["stable_diffusion_checkpoint"],
+            stable_diffusion_ref,
             safety_checker=None,
             torch_dtype=torch.float16,
-            revision="fp16",
+            **diffusers_fp16_load_kwargs(stable_diffusion_ref),
         ).to(config["device"])
     inpainter_pipeline.scheduler = DPMSolverMultistepScheduler.from_config(inpainter_pipeline.scheduler.config)
     inpainter_pipeline.scheduler = prepare_scheduler(inpainter_pipeline.scheduler)
-    vae = AutoencoderKL.from_pretrained(config["stable_diffusion_checkpoint"], subfolder="vae").to(config["device"])
+    vae = AutoencoderKL.from_pretrained(
+        stable_diffusion_ref,
+        subfolder="vae",
+        **diffusers_fp16_load_kwargs(stable_diffusion_ref, subfolder="vae"),
+    ).to(config["device"])
 
     rotation_path = config['rotation_path']
     assert len(rotation_path) >= config['num_scenes'] * config['num_keyframes']
@@ -177,7 +187,7 @@ def run(config):
                         seeding(-1)
                     depth_model, _, _, _ = load_model(
                         torch.device("cuda"),
-                        _local_model_ref("dpt_beit_large_512.pt", "dpt_beit_large_512.pt"),
+                        local_model_ref("dpt_beit_large_512.pt", "dpt_beit_large_512.pt", "WonderJourney/dpt_beit_large_512.pt"),
                         "dpt_beit_large_512",
                         optimize=False,
                     )

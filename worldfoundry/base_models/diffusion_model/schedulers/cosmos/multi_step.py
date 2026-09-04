@@ -13,7 +13,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Shared Cosmos Predict1 multistep ODE solvers."""
+"""Shared Cosmos Predict1 Adams–Bashforth multistep ODE helpers.
+
+:func:`order2_fn` is the 2nd-order multistep update from the
+Predict1 residual-sampler paper (Adams–Bashforth): it reuses the
+previous x0 prediction when available, otherwise falls back to a
+regularized Euler step.
+
+:func:`get_multi_step_fn` looks up ``"2ab"``.  Runge–Kutta single-step
+methods live in :mod:`.runge_kutta`; this file is the multistep
+registry only.
+"""
 
 from typing import Callable, List, Tuple
 

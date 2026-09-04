@@ -1,0 +1,41 @@
+{
+  "id": "hunyuanworld-voyager",
+  "tagline": {
+    "en": "Tencent Hunyuan's image-conditioned world explorer — generate long-range, camera-controllable video that doubles as 3D.",
+    "zh": "腾讯混元的图像条件世界漫游模型——生成可控相机、长距离的视频,并兼具 3D 能力。"
+  },
+  "overview": {
+    "en": [
+      "HunyuanWorld-Voyager, from Tencent Hunyuan (HY-World), is a world-generation model that explores a scene from a single conditioning image. It renders video as if a camera were traveling through the world, and its outputs support 3D reconstruction as well.",
+      "It is built for long-range generation: starting from an image, it produces a conditioned video following a camera path. Released as code and weights, its modalities span image-to-video, 3D reconstruction, and long-range world generation.",
+      "In WorldFoundry it runs as a world / video task — provide a starting image (and camera conditioning), and it generates the traveled-through video clip."
+    ],
+    "zh": [
+      "HunyuanWorld-Voyager 由腾讯混元(HY-World)开发,是一个从单张条件图片出发探索场景的世界生成模型。它像相机在世界中穿行一样渲染视频,其输出也支持 3D 重建。",
+      "它面向长距离生成:从一张图片出发,沿相机轨迹生成条件视频。以代码加权重形式发布,模态涵盖图生视频、3D 重建与长距离世界生成。",
+      "在 WorldFoundry 中,它以世界/视频任务运行——提供一张起始图片(及相机条件),它便生成穿行世界的视频片段。"
+    ]
+  },
+  "whenToUse": {
+    "en": "Reach for Voyager when you want to expand a single image into an explorable world and render long-range, camera-following video whose geometry can also be reconstructed in 3D.",
+    "zh": "当你想把单张图片扩展成可探索的世界、渲染沿相机行进的长距离视频,且其几何还能重建为 3D 时,可以选择 Voyager。"
+  },
+  "notFor": {
+    "en": "It needs the HunyuanWorld-Voyager checkpoint and a capable GPU, so it is not a lightweight option; single-image world generation is its focus rather than free-form text-to-video.",
+    "zh": "它需要 HunyuanWorld-Voyager 的 checkpoint 与足够的 GPU,并非轻量方案;它聚焦单图世界生成,而非自由的文生视频。"
+  },
+  "highlights": {
+    "en": [
+      "Expands a single image into an explorable world",
+      "Long-range, camera-conditioned video generation",
+      "Outputs also support 3D reconstruction",
+      "Released with code and weights"
+    ],
+    "zh": [
+      "把单张图片扩展为可探索的世界",
+      "长距离、相机条件的视频生成",
+      "输出同样支持 3D 重建",
+      "以代码加权重形式发布"
+    ]
+  }
+}

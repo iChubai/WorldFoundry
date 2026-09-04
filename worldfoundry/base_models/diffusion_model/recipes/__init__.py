@@ -1,4 +1,11 @@
-"""Declarative model recipes and their instance-local registry."""
+"""Lazy export surface for declarative recipes and the instance-local registry.
+
+This package does not construct a runner. ``NativeDiffusionRecipe`` /
+``NativeDiffusionRegistry`` sit upstream on the pipeline; ``wan21_*_recipe``
+and similar factories load their model module only on first attribute access.
+Must not materialize every recipe at import time (that would pull optional
+dependencies). Unknown attributes raise :exc:`AttributeError`.
+"""
 
 from __future__ import annotations
 
@@ -37,6 +44,9 @@ _EXPORTS = {
     "ltx2_i2v_recipe": ".ltx",
     "ltx23_i2v_recipe": ".ltx",
     "ltx_video_i2v_recipe": ".ltx",
+    "hello_world_recipe": ".hello_world",
+    "fastvideo_causal_wan22_t2v_14b_recipe": ".wan",
+    "sana_wm_streaming_recipe": ".sana",
     "t2v_turbo_t2v_recipe": ".t2v_turbo",
     "vchitect_2_t2v_recipe": ".vchitect",
     "wan21_t2v_1p3b_recipe": ".wan",
@@ -44,12 +54,15 @@ _EXPORTS = {
     "wan21_i2v_14b_480p_recipe": ".wan",
     "wan21_i2v_14b_720p_recipe": ".wan",
     "wan22_ti2v_5b_recipe": ".wan",
+    "wan22_t2v_a14b_recipe": ".wan",
+    "wan22_i2v_a14b_recipe": ".wan",
 }
 
 __all__ = sorted(_EXPORTS)
 
 
 def __getattr__(name: str) -> Any:
+    """Lazily load a submodule attribute from ``_EXPORTS`` and cache it in ``globals()``."""
     module_name = _EXPORTS.get(name)
     if module_name is None:
         raise AttributeError(f"module {__name__!r} has no attribute {name!r}")

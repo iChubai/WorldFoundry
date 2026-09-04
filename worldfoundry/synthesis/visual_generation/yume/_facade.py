@@ -26,7 +26,14 @@ class YumeFacadeSynthesis(RuntimeFacadeSynthesis):
         super().__init__(runtime=runtime, model=model, device=device, weight_dtype=weight_dtype)
 
     @classmethod
-    def from_pretrained(cls, pretrained_model_path: str, device, weight_dtype, fsdp):
+    def from_pretrained(
+        cls,
+        pretrained_model_path: str,
+        device,
+        weight_dtype,
+        fsdp,
+        **runtime_kwargs: Any,
+    ):
         """Load the runtime from pretrained weights and wrap it."""
         return cls(
             runtime=cls._runtime_cls().from_pretrained(
@@ -34,6 +41,7 @@ class YumeFacadeSynthesis(RuntimeFacadeSynthesis):
                 device=device,
                 weight_dtype=weight_dtype,
                 fsdp=fsdp,
+                **runtime_kwargs,
             )
         )
 

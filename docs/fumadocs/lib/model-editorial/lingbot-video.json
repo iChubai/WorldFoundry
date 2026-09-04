@@ -1,0 +1,41 @@
+{
+  "id": "lingbot-video",
+  "tagline": {
+    "en": "Robbyant's Apache-2.0 video family — a lightweight 1.3B dense model and a 30B-A3B mixture-of-experts, for text-to-video and image-to-video.",
+    "zh": "Robbyant 开源的视频家族——轻量 1.3B dense 模型与 30B-A3B 专家混合模型,支持文生视频与图生视频。"
+  },
+  "overview": {
+    "en": [
+      "LingBot-Video is an open video-generation family from Robbyant, released under Apache-2.0. It generates video from text, from text plus an image, and can also produce still images from text, so it spans several generation modes in one lineup.",
+      "The family comes in two flavors: a compact Dense 1.3B for lighter workloads, and a larger MoE 30B-A3B mixture-of-experts model that activates a smaller expert subset per step for higher-capacity generation. WorldFoundry ships the inference code with direct Diffusers, optional SGLang, FSDP, context-parallel and CFG-parallel paths, plus an optional refiner stage.",
+      "The upstream recommended stack expects a dedicated environment (Transformers 5 / Diffusers 0.39), which WorldFoundry provisions for the route."
+    ],
+    "zh": [
+      "LingBot-Video 是 Robbyant 开源的视频生成家族,采用 Apache-2.0 许可。它可从文本、从文本加图片生成视频,也能从文本产出静态图像,因而在一条产品线中覆盖多种生成模式。",
+      "该家族提供两种形态:紧凑的 Dense 1.3B 适合较轻负载,而更大的 MoE 30B-A3B 专家混合模型每步仅激活一部分专家,以实现更高容量的生成。WorldFoundry 提供的推理代码包含直接 Diffusers、可选 SGLang、FSDP、上下文并行与 CFG 并行等路径,并带一个可选的 refiner 阶段。",
+      "上游推荐的运行栈需要专用环境(Transformers 5 / Diffusers 0.39),WorldFoundry 已为该路径准备好。"
+    ]
+  },
+  "whenToUse": {
+    "en": "Pick the Dense 1.3B when you want a lighter, openly-licensed video model to prototype text-to-video or image-to-video. Step up to the MoE 30B-A3B when you need higher-capacity generation and have the GPU budget for it.",
+    "zh": "当你想用一个较轻、开放许可的视频模型做文生视频或图生视频原型时,选 Dense 1.3B。当你需要更高容量的生成且具备相应 GPU 预算时,升级到 MoE 30B-A3B。"
+  },
+  "notFor": {
+    "en": "Both Dense and MoE checkpoints are external assets you download separately rather than getting bundled. The MoE model in particular is large and demands substantial GPU memory.",
+    "zh": "Dense 与 MoE 的 checkpoint 都是需单独下载的外部资源,而非随附。尤其是 MoE 模型体量庞大,对 GPU 显存要求可观。"
+  },
+  "highlights": {
+    "en": [
+      "Apache-2.0 licensed video family",
+      "Two sizes: Dense 1.3B and MoE 30B-A3B mixture-of-experts",
+      "Text-to-video, text+image-to-video, and text-to-image",
+      "Optional SGLang, FSDP, context/CFG-parallel, and refiner paths"
+    ],
+    "zh": [
+      "Apache-2.0 许可的视频家族",
+      "两种规模:Dense 1.3B 与 MoE 30B-A3B 专家混合模型",
+      "支持文生视频、文本+图生视频与文生图",
+      "可选 SGLang、FSDP、上下文/CFG 并行与 refiner 路径"
+    ]
+  }
+}

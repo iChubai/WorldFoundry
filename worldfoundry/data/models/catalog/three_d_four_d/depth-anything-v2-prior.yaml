@@ -15,6 +15,9 @@ source:
 checkpoint_refs:
 - repo_id: depth-anything/Depth-Anything-V2-Large
   filename: depth_anything_v2_vitl.pth
+official_sources:
+  project_page: https://depth-anything-v2.github.io/
+  paper: https://arxiv.org/abs/2406.09414
 integration:
   kind: pipeline_runner
   status: integrated

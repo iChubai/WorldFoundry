@@ -12,6 +12,8 @@ source:
   official_repo_url: https://github.com/MoyangLi00/DROID-W
   license: apache-2.0
 official_sources:
+  paper: https://arxiv.org/abs/2603.19076
+  project_page: https://moyangli00.github.io/droid-w/
   github:
     url: https://github.com/MoyangLi00/DROID-W
     head_sha: c3414af6047d06bafc1a6645d09f23247f3b2cdc

@@ -1,3 +1,16 @@
+"""Matrix Game 3.5 Wan DiT with optional projective camera RoPE.
+
+Architecture
+------------
+``patch_embedding`` is Conv3d: ``B C F H W`` → ``B C F' H' W'``, then
+tokens are ``B (F'H'W') C``.  Factorized 3D RoPE splits each head into
+(T, H, W) bands.  When PRoPE is on, camera viewmats replace (or zero)
+the temporal band so cross-frame addressing comes from extrinsics.
+Subject-ref memory adds learned embeddings concatenated into the stream.
+
+Reuses Wan ``MLP`` / ``CrossAttention`` / ``Head`` from ``../wan.model``.
+"""
+
 from typing import Optional, Tuple
 
 import torch
@@ -25,6 +38,7 @@ from ..wan.model import (
 
 
 def precompute_freqs_cis_3d(dim: int, end: int = 1024, theta: float = 10000.0):
+    """Build complex RoPE tables for T/H/W (plus finer QL spatial tables)."""
     temporal_dim = dim - 2 * (dim // 3)
     spatial_dim = dim // 3
     f_freqs_cis = complex_rotary_frequencies(temporal_dim, end, theta)
@@ -36,11 +50,14 @@ def precompute_freqs_cis_3d(dim: int, end: int = 1024, theta: float = 10000.0):
 
 
 class AttentionModule(nn.Module):
+    """Flattened multi-head SDPA used when PRoPE is off."""
+
     def __init__(self, num_heads):
         super().__init__()
         self.num_heads = num_heads
 
     def forward(self, q, k, v, attn_mask=None):
+        """Attend ``B S (H·D)`` QKV; optional mask is passed through."""
         x = flattened_multihead_attention(
             q,
             k,
@@ -52,6 +69,8 @@ class AttentionModule(nn.Module):
 
 
 class SelfAttention(nn.Module):
+    """Wan self-attn with 3D RoPE and optional PRoPE camera attention."""
+
     def __init__(
         self,
         dim: int,
@@ -88,6 +107,7 @@ class SelfAttention(nn.Module):
         self.attn = AttentionModule(self.num_heads)
 
     def forward(self, x, freqs, attn_mask=None, camera_info=None):
+        """Self-attend ``B S C``; ``freqs`` is complex RoPE, ``camera_info`` optional PRoPE."""
         q = self.norm_q(self.q(x))
         k = self.norm_k(self.k(x))
         v = self.v(x)
@@ -125,6 +145,8 @@ class SelfAttention(nn.Module):
 
 
 class DiTBlock(nn.Module):
+    """AdaLN-modulated self-attn + text CA + FFN (Wan block with PRoPE hooks)."""
+
     def __init__(
         self,
         has_image_input: bool,
@@ -177,6 +199,7 @@ class DiTBlock(nn.Module):
         camera_info=None,
         cross_attn_keep_mask=None,
     ):
+        """One residual block on ``B S C`` tokens; ``t_mod`` is ``6×C`` AdaLN (or per-token)."""
         has_seq = len(t_mod.shape) == 4
         chunk_dim = 2 if has_seq else 1
         # msa: multi-head self-attention  mlp: multi-layer perceptron
@@ -209,6 +232,8 @@ class DiTBlock(nn.Module):
 
 
 class WanModel(torch.nn.Module):
+    """Matrix Game 3.5 backbone: 3D patch DiT with optional camera PRoPE and ref memory."""
+
     _repeated_blocks = ["DiTBlock"]
 
     def __init__(
@@ -300,6 +325,7 @@ class WanModel(torch.nn.Module):
             self.enable_subject_ref_memory(subject_ref_memory_max_refs)
 
     def enable_subject_ref_memory(self, max_refs: int = 2):
+        """Allocate learned index/type/local-pos embeddings for subject-reference tokens."""
         max_refs = max(1, int(max_refs))
         if self.subject_ref_memory_enabled:
             if int(self.subject_ref_index_embedding.shape[0]) != max_refs:
@@ -339,6 +365,7 @@ class WanModel(torch.nn.Module):
         x: torch.Tensor,
         control_camera_latents_input: Optional[torch.Tensor] = None,
     ):
+        """Conv3d-patch ``B C F H W``; optionally add a spatial camera-control adapter."""
         x = self.patch_embedding(x)
         if self.control_adapter is not None and control_camera_latents_input is not None:
             y_camera = self.control_adapter(control_camera_latents_input)
@@ -347,6 +374,7 @@ class WanModel(torch.nn.Module):
         return x
 
     def unpatchify(self, x: torch.Tensor, grid_size: torch.Tensor):
+        """Fold ``B (F'H'W') (pt·ph·pw·C)`` back to ``B C F H W``."""
         return rearrange(
             x,
             "b (f h w) (x y z c) -> b c (f x) (h y) (w z)",
@@ -367,6 +395,7 @@ class WanModel(torch.nn.Module):
         y: Optional[torch.Tensor] = None,
         **kwargs,
     ):
+        """Denoise ``B C F H W`` latents; return residual in the same layout."""
         t = self.time_embedding(sinusoidal_embedding_1d(self.freq_dim, timestep).to(x.dtype))
         t_mod = self.time_projection(t).unflatten(1, (6, self.dim))
         context = self.text_embedding(context)

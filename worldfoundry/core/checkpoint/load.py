@@ -13,7 +13,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Unified checkpoint loader that dispatches by source URL."""
+"""Unified checkpoint loader that dispatches by source URL.
+
+Callers pass a local path, ``s3://`` URI, or Hugging Face file URL.
+:func:`load_checkpoint` / :func:`load_single_checkpoint` deserialize
+``.pt`` / ``.pth`` / ``.ckpt`` / ``.safetensors`` (and HF-style shard
+indexes) into a tensor state dict. :func:`load_distributed_checkpoint`
+loads a DCP directory into a live module. :func:`get_storage_reader`
+selects the S3 or filesystem reader. S3 hits are cached under
+``WORLDFOUNDRY_CACHE_DIR``; Hugging Face downloads preflight free disk.
+
+Safe unwrapping lives in :mod:`worldfoundry.core.checkpoint.safe_loading`;
+DCP planners live in :mod:`worldfoundry.core.checkpoint.dcp`.
+"""
 
 import io
 import json
@@ -48,6 +60,10 @@ from worldfoundry.core.logging_setup import get_logger
 # checkpoint works in minimal runtime environments.
 logger = get_logger(__name__)
 
+# ──────────────────────────────────────────────────────────────────────────
+# Cache roots — S3 credentials and the shared merged-weight cache directory
+# ──────────────────────────────────────────────────────────────────────────
+
 _OMNIDREAMS_CHECKPOINT_CREDENTIAL_PATH = os.getenv(
     "WORLDFOUNDRY_S3_CREDENTIALS", "credentials/s3_checkpoint.secret"
 )
@@ -56,11 +72,18 @@ _OMNIDREAMS_CHECKPOINT_LOCAL_CACHE_DIR = os.path.expanduser(
 )
 
 
+# ──────────────────────────────────────────────────────────────────────────
+# Disk preflight — fail before a multi-GiB download, not after ENOSPC
+# ──────────────────────────────────────────────────────────────────────────
+
+
 def _preflight_hf_cache(
     *,
     label: str,
     settings: dict[str, object] | None = None,
 ) -> int:
+    """Reserve the generic per-write floor on the Hugging Face cache root."""
+
     min_bytes = cache_min_free_bytes()
     ensure_free_disk(
         default_huggingface_cache_dir(),
@@ -73,6 +96,8 @@ def _preflight_hf_cache(
 
 
 def _hf_cache_filename(filename: str, subfolder: str | None) -> str:
+    """Join ``subfolder/filename`` the way ``hf_hub_download`` addresses the blob."""
+
     return f"{subfolder.rstrip('/')}/{filename}" if subfolder else filename
 
 
@@ -83,6 +108,12 @@ def _is_hf_file_cached(
     subfolder: str | None,
     revision: str,
 ) -> bool:
+    """Return True only when the hub helper already has a readable local blob.
+
+    Hub lookup exceptions are treated as a miss so a broken cache index
+    still falls through to a fresh download instead of aborting the load.
+    """
+
     from huggingface_hub import try_to_load_from_cache
 
     try:
@@ -141,6 +172,8 @@ def _raise_hf_cache_disk_error(
     required_bytes: int,
     settings: dict[str, object] | None = None,
 ) -> None:
+    """Re-raise ``exc`` as a disk-space error when the failure looks like ENOSPC."""
+
     disk_error = disk_space_error_from_exception(
         exc,
         path=default_huggingface_cache_dir(),
@@ -159,6 +192,8 @@ def _preflight_local_cache_path(
     label: str,
     settings: dict[str, object] | None = None,
 ) -> int:
+    """Reserve the generic per-write floor on the merged-cache parent directory."""
+
     min_bytes = cache_min_free_bytes()
     ensure_free_disk(
         os.path.dirname(path) or ".",
@@ -178,6 +213,8 @@ def _raise_local_cache_disk_error(
     required_bytes: int,
     settings: dict[str, object] | None = None,
 ) -> None:
+    """Re-raise a local-cache write failure as a disk-space error when applicable."""
+
     disk_error = disk_space_error_from_exception(
         exc,
         path=path,
@@ -188,6 +225,11 @@ def _raise_local_cache_disk_error(
     )
     if disk_error is not None:
         raise disk_error from exc
+
+
+# ──────────────────────────────────────────────────────────────────────────
+# Source classification — HF blob/resolve URLs vs extension vs shard index
+# ──────────────────────────────────────────────────────────────────────────
 
 
 def _is_huggingface_checkpoint_url(path: str) -> bool:
@@ -231,6 +273,11 @@ def _sharded_safetensors_merge_cache_path(checkpoint_path: str, local_cache_dir:
         if os.name == "nt":
             stem = stem.replace(":", "_")
     return os.path.join(local_cache_dir, "merged_safetensors", stem + ".safetensors")
+
+
+# ──────────────────────────────────────────────────────────────────────────
+# Hugging Face fetch — threads only; never fork a process that may hold CUDA
+# ──────────────────────────────────────────────────────────────────────────
 
 
 def _safetensors_device(map_location: str | torch.device) -> str:
@@ -412,6 +459,8 @@ def _load_sharded_safetensors_index_checkpoint(
         )
 
         def resolve_shard_path(shard_file: str) -> str:
+            """Map an index shard name onto the path returned by ``hf_hub_download``."""
+
             return shard_to_path[shard_file]
 
         merged = _merge_sharded_safetensors_from_index(
@@ -431,6 +480,8 @@ def _load_sharded_safetensors_index_checkpoint(
         base_dir = os.path.dirname(os.path.abspath(checkpoint_path))
 
         def resolve_shard_path(shard_file: str) -> str:
+            """Resolve a shard name relative to the local index file's directory."""
+
             return os.path.join(base_dir, shard_file)
 
         merged = _merge_sharded_safetensors_from_index(
@@ -536,9 +587,9 @@ def _download_checkpoint_from_huggingface_url(
     return local_path
 
 
-# ---------------------------------------------------------------------------
-# Public checkpoint loaders
-# ---------------------------------------------------------------------------
+# ──────────────────────────────────────────────────────────────────────────
+# Public checkpoint loaders — DCP directory vs single-file / shard index
+# ──────────────────────────────────────────────────────────────────────────
 
 
 def get_storage_reader(
@@ -769,6 +820,11 @@ def load_single_checkpoint(
     return state_dict
 
 
+# ──────────────────────────────────────────────────────────────────────────
+# Local / S3 deserialize + atomic shared-cache publish (rank-0 only)
+# ──────────────────────────────────────────────────────────────────────────
+
+
 def _load_checkpoint_from_local(
     path: str,
     ext: str,
@@ -881,9 +937,9 @@ def _save_to_local_cache(
         raise
 
 
-# ---------------------------------------------------------------------------
-# Unified entry point
-# ---------------------------------------------------------------------------
+# ──────────────────────────────────────────────────────────────────────────
+# Unified entry point — auto-detect single-file vs DCP from the path suffix
+# ──────────────────────────────────────────────────────────────────────────
 
 
 @overload
@@ -896,7 +952,8 @@ def load_checkpoint(
     map_location: str | torch.device = "cpu",
     check_success: bool = False,
     checkpoint_min_free_gb: float | None = None,
-) -> dict[str, torch.Tensor]: ...
+) -> dict[str, torch.Tensor]:
+    """Typed overload: no ``model`` returns a state dict."""
 
 
 @overload
@@ -909,7 +966,8 @@ def load_checkpoint(
     map_location: str | torch.device = "cpu",
     check_success: bool = False,
     checkpoint_min_free_gb: float | None = None,
-) -> torch.nn.Module: ...
+) -> torch.nn.Module:
+    """Typed overload: with ``model``, return that module after ``load_state_dict``."""
 
 
 def load_checkpoint(

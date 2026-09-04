@@ -1,3 +1,17 @@
+"""Per-channel latent statistics and patchify helpers for LTX video.
+
+:func:`patchify` / :func:`unpatchify` rearrange BCTHW video
+latents for the LTX DiT patch size.
+:class:`PerChannelStatistics` applies checkpoint mean/std
+along the channel axis.
+
+Used by :mod:`.video_vae` and the runner-facing
+:class:`~..component.LTXTensorVideoCodec`.  Audio statistics
+are :mod:`~..audio.statistics`.
+
+This is LTX video latent bookkeeping, not the residual UNet.
+"""
+
 import torch
 from einops import rearrange
 from torch import nn

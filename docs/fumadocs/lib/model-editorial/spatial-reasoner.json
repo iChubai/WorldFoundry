@@ -1,0 +1,39 @@
+{
+  "id": "spatial-reasoner",
+  "tagline": {
+    "en": "A multimodal model for spatial reasoning — answers questions about images and videos with a focus on spatial understanding.",
+    "zh": "一个面向空间推理的多模态模型——以空间理解为重点，回答关于图像与视频的问题。"
+  },
+  "overview": {
+    "en": [
+      "SpatialReasoner is a multimodal reasoning model aimed at spatial understanding. It takes an image or video together with a question and produces a reasoned answer, with particular attention to spatial relationships in the scene.",
+      "Because it is multimodal, it handles both image and video question answering as well as broader spatial-reasoning prompts, making it useful when a task hinges on where things are and how they relate in space.",
+      "In WorldFoundry you run it through the shared pipeline — provide an image or video and your question, and it returns an answer."
+    ],
+    "zh": [
+      "SpatialReasoner 是一个聚焦空间理解的多模态推理模型。它接收一张图像或一段视频以及一个问题，产出经过推理的回答，尤其关注场景中的空间关系。",
+      "由于是多模态模型，它既能处理图像与视频问答，也能应对更广义的空间推理提示词，适合那些取决于物体位置及其空间关系的任务。",
+      "在 WorldFoundry 中，你通过统一 pipeline 运行它——提供一张图像或一段视频以及你的问题，它就会返回答案。"
+    ]
+  },
+  "whenToUse": {
+    "en": "When you need a multimodal model to answer questions about images or videos where spatial relationships matter.",
+    "zh": "当你需要一个多模态模型、来回答涉及空间关系的图像或视频问题时。"
+  },
+  "notFor": {
+    "en": "Video or image generation — it is a reasoning and question-answering model, not a generator. The checkpoint is loaded separately, so plan for the download.",
+    "zh": "不适合视频或图像生成——它是推理与问答模型，而非生成模型。Checkpoint 需单独加载，请预留下载时间。"
+  },
+  "highlights": {
+    "en": [
+      "Multimodal reasoning model",
+      "Image and video question answering",
+      "Focused on spatial understanding and relationships"
+    ],
+    "zh": [
+      "多模态推理模型",
+      "支持图像与视频问答",
+      "聚焦空间理解与空间关系"
+    ]
+  }
+}

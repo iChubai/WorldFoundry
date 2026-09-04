@@ -1,4 +1,13 @@
-"""Module for base_models -> diffusion_model -> video -> wan -> configs -> action_wan2p1.py functionality."""
+"""Wan 2.1 action-recipe lookup tables (T2V / I2V / T2I 14B + 1.3B).
+
+Re-exports the official Wan 2.1 EasyDict graphs and maps them to the
+short names used by action-conditioned runners (``t2v-14B``,
+``i2v-14B``, …).  Also lists supported pixel sizes and max-area
+caps for those identities.
+
+``t2i-14B`` is a deepcopy of ``t2v-14B`` with a distinct display name.
+Architecture numbers stay in :mod:`.wan21`; this file is the index.
+"""
 
 from __future__ import annotations
 

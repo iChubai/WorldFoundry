@@ -13,6 +13,8 @@ integration:
   status: integrated
 name: Diffusion Policy
 official_sources:
+  paper: https://arxiv.org/abs/2303.04137
+  project_page: https://diffusion-policy.cs.columbia.edu/
   github:
     head_sha: 5ba07ac6661db573af695b419a7947ecb704690f
     url: https://github.com/real-stanford/diffusion_policy

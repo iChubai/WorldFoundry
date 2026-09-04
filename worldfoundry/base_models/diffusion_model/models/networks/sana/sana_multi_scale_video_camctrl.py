@@ -16,7 +16,23 @@
 
 
 # This file is modified from https://github.com/PixArt-alpha/PixArt-sigma
-"""Module for base_models -> diffusion_model -> image -> sana -> diffusion -> model -> nets -> sana_multi_scale_video_camctrl.py functionality."""
+"""Camera-controlled multi-scale SANA video DiT (Sana-WM / CamCtrl).
+
+``SanaMSVideoCamCtrl`` is the world-model graph: the same 3-D patch embed and
+adaLN-single blocks as :class:`SanaMSVideo`, but self-attention is a dual-branch
+GDN + UCPE block.
+
+* **Main branch** — bidirectional (or chunk-causal) Gated Delta Net over
+  video tokens; optionally Triton-fused (``sana_gdn_blocks_triton``).
+* **Camera branch** — a second QKV whose features are transformed by
+  per-pixel ray matrices from pose + UCM intrinsics (UCPE).  The two
+  branches are fused before the output gate.
+* **Hybrid softmax** — every ``softmax_every_n``-th layer can swap GDN for
+  softmax attention so a few layers keep full pairwise mixing.
+
+``DeltaActionEmbedder`` optionally injects action deltas into the timestep
+conditioning.  Register this graph with ``profile="wm"``.
+"""
 
 import os
 from typing import Optional
@@ -75,19 +91,16 @@ from .sana_gdn_camctrl_blocks import (
     BidirectionalSoftmaxUCPESinglePathLiteLA,
 )
 
-# xformers is OFF by default on this stack (see diffusion/model/nets/sana_blocks.py for rationale).
-# Opt in with ENABLE_XFORMERS=1.
-_xformers_available = (
-    os.environ.get("ENABLE_XFORMERS", "0") == "1"
-    and os.environ.get("DISABLE_XFORMERS", "0") != "1"
-    and is_xformers_available()
-)
+# Keep text packing and the shared cross-attention implementation on the same
+# backend.  Diverging here leaves the caption mask as a tensor while
+# ``MultiHeadCrossAttention`` expects xFormers sequence-length lists.
+_xformers_available = os.environ.get("DISABLE_XFORMERS", "0") != "1" and is_xformers_available()
 if _xformers_available:
     import xformers.ops
 
 
 class DeltaActionEmbedder(nn.Module):
-    """Delta action embedder implementation."""
+    """MLP that embeds per-step action deltas into the adaLN timestep stream."""
 
     def __init__(self, input_dim, hidden_size, act_layer=nn.GELU):
         """Init.
@@ -147,9 +160,7 @@ class FP32NormProxy(nn.Module):
 
 
 class SanaVideoMSCamCtrlBlock(nn.Module):
-    """
-    A Sana block with global shared adaptive layer norm zero (adaLN-Zero) conditioning.
-    """
+    """CamCtrl video block: GDN/UCPE (or softmax) self-attn + caption cross-attn + FFN."""
 
     def __init__(
         self,
@@ -675,9 +686,7 @@ def _inject_softmax_layers(
 
 
 class SanaMSVideoCamCtrl(Sana):
-    """
-    Diffusion model with a Transformer backbone.
-    """
+    """Sana-WM video DiT: GDN + UCPE camera branch, optional action embed and hybrid softmax."""
 
     def __init__(
         self,

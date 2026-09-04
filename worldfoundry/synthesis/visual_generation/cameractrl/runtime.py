@@ -36,6 +36,7 @@ DEFAULT_SD15_ROOT = Path(
 )
 DEFAULT_CAMERACTRL_CKPT = DEFAULT_SHARED_HFD_ROOT / "hehao13--CameraCtrl" / "CameraCtrl.ckpt"
 DEFAULT_CAMERACTRL_IMAGE_LORA = DEFAULT_SHARED_HFD_ROOT / "hehao13--CameraCtrl" / "RealEstate10K_LoRA.ckpt"
+DEFAULT_CAMERACTRL_MOTION_ADAPTER = DEFAULT_SHARED_HFD_ROOT / "guoyww--animatediff" / "v3_sd15_adapter.ckpt"
 
 
 class CameraCtrlRuntime:
@@ -59,9 +60,10 @@ class CameraCtrlRuntime:
         pose_adaptor_ckpt: str | Path = DEFAULT_CAMERACTRL_CKPT,
         model_config: str | Path = DEFAULT_CAMERACTRL_CONFIG,
         motion_module_ckpt: str | Path | None = None,
+        motion_adapter_ckpt: str | Path | None = DEFAULT_CAMERACTRL_MOTION_ADAPTER,
         image_lora_ckpt: str | Path | None = DEFAULT_CAMERACTRL_IMAGE_LORA,
         image_lora_rank: int = 2,
-        unet_subfolder: str = "unet_webvidlora_v3",
+        unet_subfolder: str = "unet",
         personalized_base_model: str | Path | None = None,
     ) -> None:
         """
@@ -87,6 +89,9 @@ class CameraCtrlRuntime:
         self.pose_adaptor_ckpt = str(Path(pose_adaptor_ckpt).expanduser())
         self.model_config = str(Path(model_config).expanduser())
         self.motion_module_ckpt = None if motion_module_ckpt is None else str(Path(motion_module_ckpt).expanduser())
+        self.motion_adapter_ckpt = (
+            None if motion_adapter_ckpt is None else str(Path(motion_adapter_ckpt).expanduser())
+        )
         self.image_lora_ckpt = None if image_lora_ckpt is None else str(Path(image_lora_ckpt).expanduser())
         self.image_lora_rank = int(image_lora_rank)
         self.unet_subfolder = unet_subfolder
@@ -139,9 +144,13 @@ class CameraCtrlRuntime:
             ),
             model_config=options.get("model_config") or options.get("config") or DEFAULT_CAMERACTRL_CONFIG,
             motion_module_ckpt=options.get("motion_module_ckpt"),
+            motion_adapter_ckpt=options.get(
+                "motion_adapter_ckpt",
+                DEFAULT_CAMERACTRL_MOTION_ADAPTER,
+            ),
             image_lora_ckpt=options.get("image_lora_ckpt", DEFAULT_CAMERACTRL_IMAGE_LORA),
             image_lora_rank=int(options.get("image_lora_rank", 2)),
-            unet_subfolder=str(options.get("unet_subfolder") or "unet_webvidlora_v3"),
+            unet_subfolder=str(options.get("unet_subfolder") or "unet"),
             personalized_base_model=options.get("personalized_base_model"),
         )
 
@@ -179,6 +188,7 @@ class CameraCtrlRuntime:
             self.image_lora_ckpt,
             unet_additional_kwargs,
             self.motion_module_ckpt,
+            self.motion_adapter_ckpt,
             model_configs["pose_encoder_kwargs"],
             model_configs["attention_processor_kwargs"],
             model_configs["noise_scheduler_kwargs"],

@@ -10,7 +10,10 @@ from math import isfinite
 import torch
 
 from worldfoundry.training.checkpoint.checkpointer import TrainingCheckpointer
-from worldfoundry.training.checkpoint.staging import PendingTrainingCheckpoint
+from worldfoundry.training.checkpoint.staging import (
+    PendingTrainingCheckpoint,
+    wait_for_pending_checkpoints,
+)
 from worldfoundry.training.checkpoint.state import TrainingProgress
 
 from ....rewards.scalarization import (
@@ -96,9 +99,7 @@ class NativeTokenPolicyTrainingSession:
         self._pending: list[PendingTrainingCheckpoint] = []
 
     def wait_for_checkpoints(self) -> None:
-        for pending in self._pending:
-            pending.wait()
-        self._pending.clear()
+        wait_for_pending_checkpoints(self._pending)
 
     @staticmethod
     def _validate_rollout(

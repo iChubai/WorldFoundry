@@ -13,6 +13,7 @@ source:
   official_repo_url: https://github.com/SkyworkAI/SkyReels-V3
   hf_repo_id: Skywork/SkyReels-V3-R2V-14B
 official_sources:
+  paper: https://arxiv.org/abs/2601.17323
   github:
     url: https://github.com/SkyworkAI/SkyReels-V3
   huggingface:

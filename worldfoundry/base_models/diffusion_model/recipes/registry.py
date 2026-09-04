@@ -1,4 +1,19 @@
-"""Explicit registry for declarative native diffusion recipes."""
+"""Instance-local registry of declarative native recipes.
+
+Sits between spec and assembler: lazy-import the model stack, then hand a recipe
+to the assembler to produce a runner.
+
+    default_native_diffusion_registry() freezes a lazy table
+        → resolve(model_id) yields NativeDiffusionRecipe
+        → build_runner(...) calls NativeDiffusionAssembler.build
+        → strategy / runner
+
+Inputs: identities and providers from register / register_lazy; model_id for
+resolve / build_runner.
+Outputs: NativeDiffusionRecipe or DiffusionExecutor.
+Must not mutate a process-wide singleton, force-import optional model stacks at
+import time, or let a model package register a strategy.
+"""
 
 from __future__ import annotations
 
@@ -15,19 +30,31 @@ from .spec import NativeDiffusionRecipe
 
 
 def _key(value: str) -> str:
+    """Normalize model_id / alias so ``Wan2.1`` and ``wan2.1`` collide on one key."""
     return str(value).strip().lower().replace("_", "-")
 
 
 class DuplicateNativeDiffusionRecipeError(ValueError):
-    """Raised when recipe identifiers or aliases collide."""
+    """Raised when recipe identifiers or aliases collide, or one recipe repeats its own keys."""
 
 
 class UnknownNativeDiffusionRecipeError(KeyError):
-    """Raised when no native recipe owns a requested identifier."""
+    """Raised when no native recipe owns the requested identifier (including aliases)."""
 
 
 class NativeDiffusionRegistry:
-    """Instance-local recipe registry backed by one canonical assembler."""
+    """Instance-local recipe table backed by one NativeDiffusionAssembler.
+
+    Internal maps:
+        _recipes: already-materialized NativeDiffusionRecipe values;
+        _providers: lazy providers; the model stack is imported only on resolve;
+        _model_ids: canonical key → original model_id string (for model_ids());
+        _aliases: any normalized key → canonical model_key;
+        _frozen: after freeze(), further register calls are rejected.
+
+    This class only resolves identity. Component / runner construction is always
+    delegated to the assembler.
+    """
 
     def __init__(self, assembler: NativeDiffusionAssembler | None = None) -> None:
         self._assembler = assembler or NativeDiffusionAssembler()
@@ -38,6 +65,7 @@ class NativeDiffusionRegistry:
         self._frozen = False
 
     def register(self, recipe: NativeDiffusionRecipe) -> None:
+        """Register an already-built recipe. Frozen → :exc:`RuntimeError`; collisions → :exc:`DuplicateNativeDiffusionRecipeError`."""
         model_key = _key(recipe.model_id)
         self._reserve(model_key, recipe.model_id, recipe.aliases)
         self._recipes[model_key] = recipe
@@ -49,7 +77,11 @@ class NativeDiffusionRegistry:
         *,
         aliases: Iterable[str] = (),
     ) -> None:
-        """Register recipe identity without importing its optional model stack."""
+        """Reserve identity and aliases without importing an optional model stack (Wan, Hunyuan, …).
+
+        The real NativeDiffusionRecipe is produced only when :meth:`resolve` calls the provider.
+        A non-callable provider raises :exc:`TypeError`.
+        """
 
         if not callable(provider):
             raise TypeError("native diffusion recipe provider must be callable")
@@ -58,6 +90,7 @@ class NativeDiffusionRegistry:
         self._providers[model_key] = provider
 
     def _reserve(self, model_key: str, model_id: str, aliases: Iterable[str]) -> None:
+        """Reserve model_id and aliases in _aliases for later lazy identity checks."""
         if self._frozen:
             raise RuntimeError("native diffusion registry is frozen")
         keys = (model_key, *(_key(alias) for alias in aliases))
@@ -73,6 +106,7 @@ class NativeDiffusionRegistry:
             self._aliases[alias] = model_key
 
     def freeze(self) -> None:
+        """Reject further register / register_lazy so import side effects cannot sneak in models."""
         self._frozen = True
 
     @property
@@ -80,6 +114,7 @@ class NativeDiffusionRegistry:
         return self._frozen
 
     def resolve(self, model_id: str) -> NativeDiffusionRecipe:
+        """Return the recipe for an ID or alias. Lazy entries run the provider and identity checks here."""
         key = _key(model_id)
         try:
             canonical = self._aliases[key]
@@ -97,6 +132,9 @@ class NativeDiffusionRegistry:
             raise TypeError(
                 f"provider for {canonical!r} returned {type(recipe).__name__}, expected NativeDiffusionRecipe"
             )
+        # Lazy identity check: the provider's model_id + aliases must match the
+        # set reserved by register_lazy exactly, so a delayed import cannot rename
+        # the recipe and leave aliases pointing at the wrong model.
         actual_keys = {_key(recipe.model_id), *(_key(alias) for alias in recipe.aliases)}
         reserved_keys = {alias for alias, owner in self._aliases.items() if owner == canonical}
         if _key(recipe.model_id) != canonical or actual_keys != reserved_keys:
@@ -116,6 +154,7 @@ class NativeDiffusionRegistry:
         component_options: Mapping[str | ComponentKey, Mapping[str, object]] | None = None,
         extensions: Iterable[DiffusionExtension] = (),
     ) -> DiffusionExecutor:
+        """Resolve, then ask the assembler for the full component + strategy → runner inference path."""
         return self._assembler.build(
             self.resolve(model_id),
             policy=policy,
@@ -125,10 +164,12 @@ class NativeDiffusionRegistry:
         )
 
     def model_ids(self) -> tuple[str, ...]:
+        """Reserved original model_id values (including unresolved lazy entries), sorted."""
         return tuple(sorted(self._model_ids.values()))
 
 
 def _lazy_recipe(module_name: str, factory_name: str) -> Callable[[], NativeDiffusionRecipe]:
+    """Import ``module_name`` relative to this package, then call ``factory_name()``."""
     def load() -> NativeDiffusionRecipe:
         module = import_module(module_name, __package__)
         return getattr(module, factory_name)()
@@ -137,6 +178,7 @@ def _lazy_recipe(module_name: str, factory_name: str) -> Callable[[], NativeDiff
 
 
 def _lazy_echo_recipe(model_id: str) -> Callable[[], NativeDiffusionRecipe]:
+    """Echo-Memory variant: fetch the denoiser spec, then call echo_memory_recipe."""
     def load() -> NativeDiffusionRecipe:
         module = import_module(".echo_memory", __package__)
         specs = import_module("..models.denoisers.echo_memory_spec", __package__)
@@ -146,6 +188,7 @@ def _lazy_echo_recipe(model_id: str) -> Callable[[], NativeDiffusionRecipe]:
 
 
 def _lazy_sana_recipe(model_id: str) -> Callable[[], NativeDiffusionRecipe]:
+    """Table-driven lazy SANA provider so the full weight stack is not imported before freeze."""
     def load() -> NativeDiffusionRecipe:
         module = import_module(".sana", __package__)
         return module.sana_recipe(model_id)
@@ -154,7 +197,7 @@ def _lazy_sana_recipe(model_id: str) -> Callable[[], NativeDiffusionRecipe]:
 
 
 def default_native_diffusion_registry() -> NativeDiffusionRegistry:
-    """Build the frozen registry of inference-ready native recipes."""
+    """Build and freeze the inference-ready built-in recipe table. Each call is a new instance."""
 
     registry = NativeDiffusionRegistry()
 
@@ -203,6 +246,18 @@ def default_native_diffusion_registry() -> NativeDiffusionRegistry:
             ("wan21-i2v-720p", "Wan-AI/Wan2.1-I2V-14B-720P"),
         ),
         (
+            "wan2.2-t2v-a14b",
+            ".wan",
+            "wan22_t2v_a14b_recipe",
+            ("Wan-AI/Wan2.2-T2V-A14B",),
+        ),
+        (
+            "wan2.2-i2v-a14b",
+            ".wan",
+            "wan22_i2v_a14b_recipe",
+            ("Wan-AI/Wan2.2-I2V-A14B",),
+        ),
+        (
             "wan2.2-ti2v-5b",
             ".wan",
             "wan22_ti2v_5b_recipe",
@@ -213,6 +268,12 @@ def default_native_diffusion_registry() -> NativeDiffusionRegistry:
                 "wan2.2-ti2v-5b-1280x704-121f",
                 "Wan-AI/Wan2.2-TI2V-5B",
             ),
+        ),
+        (
+            "fastvideo-causal-wan2.2-t2v-14b",
+            ".wan",
+            "fastvideo_causal_wan22_t2v_14b_recipe",
+            ("FastVideo/CausalWan2.2-I2V-A14B-Preview-Diffusers",),
         ),
         (
             "t2v_turbo_t2v",
@@ -262,7 +323,14 @@ def default_native_diffusion_registry() -> NativeDiffusionRegistry:
         ),
         ("ltx-2-i2v", ".ltx", "ltx2_i2v_recipe", ("ltx2-i2v",)),
         ("ltx-2.3-i2v", ".ltx", "ltx23_i2v_recipe", ("ltx2.3-i2v", "ltx2_3_i2v")),
+        ("ltx-2.3-t2v", ".ltx", "ltx23_t2v_recipe", ("ltx2.3-t2v", "ltx2_3_t2v")),
         ("ltx-video-i2v", ".ltx", "ltx_video_i2v_recipe", ("ltx-video",)),
+        (
+            "hello-world",
+            ".hello_world",
+            "hello_world_recipe",
+            ("helloworld", "AlayaLab/HelloWorld"),
+        ),
         (
             "hunyuanvideo-t2v",
             ".hunyuan_video",
@@ -354,6 +422,12 @@ def default_native_diffusion_registry() -> NativeDiffusionRegistry:
             ".sana",
             "sana_world_recipe",
             ("sana-wm-2.6b", "Efficient-Large-Model/SANA-WM_bidirectional"),
+        ),
+        (
+            "sana-wm-streaming",
+            ".sana",
+            "sana_wm_streaming_recipe",
+            ("Efficient-Large-Model/SANA-WM_streaming",),
         ),
     )
     for model_id, module_name, factory_name, aliases in entries:

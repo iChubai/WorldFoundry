@@ -1,4 +1,16 @@
-"""Canonical checkpoint descriptions and native component loading."""
+"""Canonical checkpoint descriptions and native component loading.
+
+This package is the only supported way a diffusion recipe materializes weights
+for a ``Denoiser`` / encoder / VAE.  A recipe declares a frozen
+:class:`CheckpointSpec`; :class:`NativeCheckpointResolver` turns it into local
+paths; :class:`NativeModuleLoader` applies :class:`~..optimizations.policy.RuntimePolicy`
+and returns a ``torch.nn.Module``.  The runner never downloads or remaps
+checkpoints itself — it only consumes the already-built protocol objects.
+
+Wan helpers (``WanInferenceComponents`` and friends) are lazy-imported so a
+generic ``from ...loaders import CheckpointSpec`` does not pull optional
+transformer dependencies.
+"""
 
 from importlib import import_module
 

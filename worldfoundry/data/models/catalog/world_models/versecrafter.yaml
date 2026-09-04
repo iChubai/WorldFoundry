@@ -10,6 +10,9 @@ checkpoint: sxzheng/VerseCrafter
 runtime_profile: runtime-profile:versecrafter
 runner_target: worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner
 pipeline_binding: versecrafter
+official_sources:
+  project_page: https://sixiaozheng.github.io/VerseCrafter_page/
+  paper: https://arxiv.org/abs/2601.05138
 integration:
   status: integrated
   notes:

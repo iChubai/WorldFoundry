@@ -10,7 +10,6 @@ from functools import partial
 
 import numpy as np
 import torch
-import torch.distributed as dist
 import torchvision.transforms.functional as TF
 from tqdm import tqdm
 
@@ -39,6 +38,7 @@ from .utils.wasd_ijkl_to_c2ws import wasd_array_to_frame_keys
 from .utils.wasd_ijkl_to_c2ws import generate_and_save_trajectory
 from .utils.wasd_ijkl_to_c2ws import action_string_to_wasd_ijkl
 from worldfoundry.core.io.artifacts import visualize_wasd_and_rotation_ui
+from .distributed import distributed_barrier
 
 
 class WanI2V:
@@ -177,8 +177,7 @@ class WanI2V:
                     sp_attn_forward, block.self_attn)
             model.forward = types.MethodType(sp_dit_forward, model)
 
-        if dist.is_initialized():
-            dist.barrier()
+        distributed_barrier(self.device)
 
         if dit_fsdp:
             model = shard_fn(model)
@@ -573,8 +572,7 @@ class WanI2V:
         if offload_model:
             gc.collect()
             torch.cuda.synchronize()
-        if dist.is_initialized():
-            dist.barrier()
+        distributed_barrier(self.device)
 
         if self.rank == 0:
             videos = videos[0]

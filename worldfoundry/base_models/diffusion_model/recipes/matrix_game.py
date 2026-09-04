@@ -1,4 +1,16 @@
-"""Native recipes for released Matrix Game 3.5 checkpoints."""
+"""Native recipes for released Matrix Game 3.5 first/third-person checkpoints.
+
+Each public function returns a :class:`NativeDiffusionRecipe`.  Recipes
+do not construct runners.
+
+Both viewpoints bind the Matrix-Game 3.5 DiT (subject-reference memory
+capacity differs), Wan UMT5 conditioner (input passthrough), Wan T2V
+initializer (48-ch / 16x / 4x, matching Wan 2.2 VAE 3.8), Wan
+flow-match Euler (shift 5.0), and the Wan 2.2 VAE38 decoder.  Execution
+is the default ``standard`` five-role binding.  CFG is on.  Family
+options: camera-conditioned video, mosaic memory, ProPE, and subject
+reference memory (2 refs first-person, 4 third-person).
+"""
 
 from __future__ import annotations
 
@@ -28,6 +40,8 @@ def _matrix_game_35_recipe(
     viewpoint: str,
     subject_ref_capacity: int,
 ) -> NativeDiffusionRecipe:
+    """Bind Matrix-Game 3.5 DiT, Wan text/VAE38, Euler flow-match, ``standard``."""
+
     checkpoints = {
         "dit": CheckpointSpec(
             repo_id=MATRIX_GAME_35_CHECKPOINT_REPO,
@@ -117,6 +131,8 @@ def _matrix_game_35_recipe(
 
 
 def matrix_game_35_first_person_recipe() -> NativeDiffusionRecipe:
+    """First-person 3.5 checkpoint; subject-ref capacity 2, ``standard`` CFG."""
+
     return _matrix_game_35_recipe(
         model_id=MATRIX_GAME_35_FIRST_PERSON_MODEL_ID,
         checkpoint_filename="first-person.safetensors",
@@ -126,6 +142,8 @@ def matrix_game_35_first_person_recipe() -> NativeDiffusionRecipe:
 
 
 def matrix_game_35_third_person_recipe() -> NativeDiffusionRecipe:
+    """Third-person 3.5 checkpoint; subject-ref capacity 4, ``standard`` CFG."""
+
     return _matrix_game_35_recipe(
         model_id=MATRIX_GAME_35_THIRD_PERSON_MODEL_ID,
         checkpoint_filename="third-person.safetensors",

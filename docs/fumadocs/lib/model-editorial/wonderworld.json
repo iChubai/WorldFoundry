@@ -1,0 +1,41 @@
+{
+  "id": "wonderworld",
+  "tagline": {
+    "en": "Interactive 3D scene generation from a single image — build an explorable world and extend it where you look.",
+    "zh": "从单张图片进行交互式 3D 场景生成——构建可探索的世界，并在你注视的方向上扩展它。"
+  },
+  "overview": {
+    "en": [
+      "WonderWorld, from authors at Stanford University and MIT, generates an interactive 3D scene from a single input image. It turns one picture into an explorable world you can move through, and lets you extend the scene in whatever direction you choose to look.",
+      "It works by reconstructing the visible content into 3D and then filling in newly revealed regions — inpainting, segmenting, and estimating depth and normals — before turning them into a 3D Gaussian representation you can render from new viewpoints. The emphasis is on interactivity: the world grows as you explore it rather than being fully generated up front.",
+      "In WorldFoundry, WonderWorld runs through the shared 3D/4D pipeline: you supply a source image and configuration, and it drives the scene-generation flow. Running it end to end requires the checkpoint and runtime assets, plus PyTorch3D-compatible extensions, to be set up locally."
+    ],
+    "zh": [
+      "WonderWorld 出自斯坦福大学与麻省理工的研究者，用于从单张输入图片生成交互式 3D 场景。它把一张图片变成可以在其中穿行探索的世界，并允许你朝任意注视方向扩展场景。",
+      "它先把可见内容重建为 3D，再补全新暴露出的区域——做图像补全、分割，并估计深度与法向——随后转化为可从新视角渲染的 3D 高斯表示。它强调交互性：世界随你的探索而生长，而非一次性全部生成。",
+      "在 WorldFoundry 中，WonderWorld 通过共享的 3D/4D pipeline 运行：你提供一张源图片和配置，它便驱动场景生成流程。端到端运行需要在本地准备好 checkpoint、运行时资源以及与 PyTorch3D 兼容的扩展。"
+    ]
+  },
+  "whenToUse": {
+    "en": "Use it when you want to turn a single image into an interactive, explorable 3D scene and grow that world outward as you navigate — for demos, prototyping, or immersive exploration.",
+    "zh": "当你想把单张图片变成可交互、可探索的 3D 场景，并在导航过程中把这个世界不断向外扩展时使用它——适合演示、原型与沉浸式探索。"
+  },
+  "notFor": {
+    "en": "Not a precise metric reconstruction of a real capture, and it has meaningful setup requirements — checkpoint and runtime assets plus PyTorch3D-compatible extensions must be available locally.",
+    "zh": "它不是对真实采集的精确度量重建，且有一定的环境要求——需在本地准备好 checkpoint、运行时资源以及与 PyTorch3D 兼容的扩展。"
+  },
+  "highlights": {
+    "en": [
+      "Interactive 3D scene generation from a single image",
+      "Extend the world in the direction you explore",
+      "Uses inpainting, segmentation and depth/normal cues, rendered as 3D Gaussians",
+      "Runs through WorldFoundry's shared 3D/4D pipeline"
+    ],
+    "zh": [
+      "从单张图片进行交互式 3D 场景生成",
+      "沿你探索的方向扩展世界",
+      "结合图像补全、分割与深度/法向线索，以 3D 高斯渲染",
+      "通过 WorldFoundry 共享的 3D/4D pipeline 运行"
+    ]
+  }
+}

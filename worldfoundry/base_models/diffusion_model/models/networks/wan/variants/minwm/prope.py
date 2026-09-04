@@ -1,3 +1,9 @@
+"""MinWM ProPE (projective positional encoding) for pose / camera.
+
+Replaces or augments RoPE with projective encodings so camera / pose
+can condition attention.  Used by MinWM causal / action graphs.
+"""
+
 # MIT License
 #
 # Copyright (c) Authors of

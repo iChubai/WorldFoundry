@@ -1,4 +1,11 @@
-"""Prompt and semantic conditioning for native HunyuanVideo recipes."""
+"""HunyuanVideo / 1.5 :class:`~...contracts.ConditionEncoder` adapters.
+
+Original recipes use Llama/LLaVA + CLIP.  HunyuanVideo 1.5 adds ByT5
+glyph tokens and optional SigLIP vision.  ``encode(DiffusionRequest)``
+returns ``prompt_embeds`` / pooled / glyph tensors in
+:class:`~...contracts.Conditioning`.  Prompt templates may contain
+Chinese; they are not rewritten here.
+"""
 
 from __future__ import annotations
 
@@ -46,10 +53,29 @@ def _request_image(request: DiffusionRequest) -> object:
 class HunyuanVideoPromptConditioner:
     """Llama/LLaVA plus CLIP conditioning for original HunyuanVideo."""
 
-    def __init__(self, primary, clip: TextEncoder, *, image_to_video: bool = False) -> None:
+    def __init__(
+        self,
+        primary,
+        clip: TextEncoder,
+        *,
+        image_to_video: bool = False,
+        release_after_encode: bool = False,
+    ) -> None:
         self.primary = primary
         self.clip = clip
         self.image_to_video = bool(image_to_video)
+        self.release_after_encode = bool(release_after_encode)
+
+    def _release_models(self) -> None:
+        """Release one-shot text encoders before the memory-heavy denoising stage."""
+
+        for encoder in (self.primary, self.clip):
+            model = getattr(encoder, "model", None)
+            if model is not None:
+                encoder.model = None
+                del model
+        if torch.cuda.is_available():
+            torch.cuda.empty_cache()
 
     @torch.no_grad()
     def _encode_branch(
@@ -84,14 +110,15 @@ class HunyuanVideoPromptConditioner:
         device: torch.device,
         dtype: torch.dtype,
     ) -> Conditioning:
+        """Return Llama/CLIP ``text_states`` tensors for both CFG branches."""
         shared = dict(request.inputs)
         shared["embedded_guidance_scale"] = float(
             request.inputs.get("embedded_guidance_scale", request.sampling.guidance_scale)
         )
-        return Conditioning(
-            positive=self._encode_branch(request.prompts, request=request, device=device, dtype=dtype),
-            shared=shared,
-        )
+        positive = self._encode_branch(request.prompts, request=request, device=device, dtype=dtype)
+        if self.release_after_encode:
+            self._release_models()
+        return Conditioning(positive=positive, shared=shared)
 
 
 def build_hunyuan_video_prompt_conditioner(context: ComponentBuildContext) -> HunyuanVideoPromptConditioner:
@@ -145,7 +172,12 @@ def build_hunyuan_video_prompt_conditioner(context: ComponentBuildContext) -> Hu
         reproduce=True,
         device=context.policy.device,
     )
-    return HunyuanVideoPromptConditioner(primary, clip, image_to_video=image_to_video)
+    return HunyuanVideoPromptConditioner(
+        primary,
+        clip,
+        image_to_video=image_to_video,
+        release_after_encode=bool(context.component_options.get("release_after_encode", False)),
+    )
 
 
 class HunyuanVideo15PromptConditioner:
@@ -225,6 +257,7 @@ class HunyuanVideo15PromptConditioner:
         device: torch.device,
         dtype: torch.dtype,
     ) -> Conditioning:
+        """Return HunyuanVideo 1.5 LLM + ByT5 (and optional SigLIP) tensors."""
         values = self._branch(request.prompts, device=device, dtype=dtype)
         shared = dict(request.inputs)
         shared["embedded_guidance_scale"] = float(

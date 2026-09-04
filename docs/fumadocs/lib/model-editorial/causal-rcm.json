@@ -1,0 +1,41 @@
+{
+  "id": "causal-rcm",
+  "tagline": {
+    "en": "NVIDIA's Apache-2.0 causal video model — autoregressive, streaming generation over latent-frame chunks.",
+    "zh": "NVIDIA 的 Apache-2.0 因果视频模型——在潜在帧块上做自回归、流式生成。"
+  },
+  "overview": {
+    "en": [
+      "Causal-rCM, from NVIDIA research, is a causal video generation model released under Apache-2.0. It generates video autoregressively — one chunk of latent frames at a time — which makes it suited to streaming and interactive world-model use, conditioned on a text prompt and optionally an image.",
+      "The chunk schedule is the main control surface: a frame-wise setting gives the lowest streaming latency while larger chunks trade latency for throughput. Distilled few-step sampling is the default for speed, and you can switch to the multi-step causal-diffusion teacher for higher quality. A sliding-window KV cache option lets you bound memory, while the default keep-all policy reproduces the unbounded cache. The released entrypoint is prompt- and image-conditioned and exposes no discrete action space — the chunk schedule is how you steer streaming.",
+      "In WorldFoundry, Causal-rCM runs through the shared video pipeline with its causal stack built in-tree. You provide a prompt (and optionally an image), choose a chunk schedule and sampling mode, and it streams out video. The DiT, VAE and text-encoder checkpoints are staged separately before a full run."
+    ],
+    "zh": [
+      "Causal-rCM 出自 NVIDIA 研究团队，是一个采用 Apache-2.0 许可的因果视频生成模型。它以自回归方式生成视频——每次一个潜在帧块——因而适合流式与交互式世界模型的用法，条件为文本提示词，可选再加一张图片。",
+      "帧块调度是主要的控制面：逐帧设置带来最低的流式延迟，而更大的块以延迟换吞吐。为追求速度，默认采用蒸馏的少步采样，你也可切换到多步因果扩散的教师模型以获得更高质量。滑动窗口 KV 缓存选项可限定显存占用，默认的全保留策略则复现无界缓存。发布的入口以提示词和图片为条件、不暴露离散动作空间——帧块调度就是你引导流式生成的方式。",
+      "在 WorldFoundry 中，Causal-rCM 通过共享视频 pipeline 运行，其因果栈内置于代码库。你给出提示词（可选再加一张图片），选择帧块调度与采样模式，它便流式输出视频。DiT、VAE 与文本编码器的 checkpoint 需在完整运行前单独准备。"
+    ]
+  },
+  "whenToUse": {
+    "en": "Use it when you want openly-licensed, streaming or interactive video generation — where producing frames chunk by chunk with controllable latency matters more than one-shot batch rendering.",
+    "zh": "当你想要开放许可的流式或交互式视频生成时使用它——即逐块产出帧、延迟可控，比一次性批量渲染更重要的场景。"
+  },
+  "notFor": {
+    "en": "The released entrypoint has no discrete action space, so it is not an action-conditioned game engine — you steer it through prompts and the chunk schedule. Checkpoints are downloaded separately before running.",
+    "zh": "发布的入口没有离散动作空间，因此它不是动作驱动的游戏引擎——你通过提示词和帧块调度来引导。checkpoint 需在运行前单独下载。"
+  },
+  "highlights": {
+    "en": [
+      "Apache-2.0 causal video generation",
+      "Autoregressive, streaming generation over latent-frame chunks",
+      "Chunk schedule trades streaming latency for throughput",
+      "Distilled few-step sampling by default, with a multi-step teacher option"
+    ],
+    "zh": [
+      "Apache-2.0 因果视频生成",
+      "在潜在帧块上做自回归、流式生成",
+      "帧块调度可在流式延迟与吞吐间权衡",
+      "默认蒸馏少步采样，另有多步教师模型可选"
+    ]
+  }
+}

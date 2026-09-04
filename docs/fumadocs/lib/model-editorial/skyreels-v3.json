@@ -1,0 +1,41 @@
+{
+  "id": "skyreels-v3",
+  "tagline": {
+    "en": "Skywork's 14B reference-to-video model — generates video guided by a reference image, with audio and video-to-video routes.",
+    "zh": "Skywork 的 14B 参考图生视频模型——以参考图引导生成视频,并支持音频与视频到视频路径。"
+  },
+  "overview": {
+    "en": [
+      "SkyReels V3 is Skywork's video generation model, released here as the 14B reference-to-video (R2V) checkpoint. It generates video guided by a reference image, using dual text-and-image conditioning so both a prompt and a reference shape the output.",
+      "Beyond reference-to-video, its tasks span audio-guided video and video-to-video generation. Under the hood it builds on a Wan-style network with a UMT5 text conditioner, a latent codec, and a UniPC scheduler, and it loads directly into the shared native graph.",
+      "In WorldFoundry, SkyReels V3 runs through the shared diffusion runner — provide a reference image and prompt (and, for the relevant routes, audio or a source video), and it renders a clip."
+    ],
+    "zh": [
+      "SkyReels V3 是 Skywork 的视频生成模型,此处以 14B 参考图生视频(R2V)checkpoint 发布。它以参考图引导生成视频,采用文本与图像双重条件,让提示词和参考图共同塑造输出。",
+      "除参考图生视频外,它的任务还涵盖音频引导视频与视频到视频生成。其内部构建在 Wan 风格网络之上,配有 UMT5 文本条件模块、latent 编解码器与 UniPC 调度器,并直接加载到共享的原生图中。",
+      "在 WorldFoundry 中,SkyReels V3 通过共享扩散 runner 运行——提供参考图与提示词(相应路径下再加音频或源视频),它就渲染出片段。"
+    ]
+  },
+  "whenToUse": {
+    "en": "Use SkyReels V3 when you want video generation anchored to a reference image, or need audio-guided or video-to-video routes in one model.",
+    "zh": "当你想让视频生成锚定到一张参考图,或需要在一个模型里使用音频引导或视频到视频路径时,可以使用 SkyReels V3。"
+  },
+  "notFor": {
+    "en": "The reference-to-video route expects a reference image, so it isn't a pure prompt-only generator. At 14B, plan for adequate GPU memory.",
+    "zh": "参考图生视频路径需要一张参考图,因此它不是纯提示词生成器。14B 规模请预留充足的显存。"
+  },
+  "highlights": {
+    "en": [
+      "14B reference-to-video model from Skywork",
+      "Dual text-and-image conditioning",
+      "Audio-guided and video-to-video routes",
+      "Wan-style network with UMT5 conditioner and UniPC scheduler"
+    ],
+    "zh": [
+      "Skywork 出品的 14B 参考图生视频模型",
+      "文本与图像双重条件",
+      "音频引导与视频到视频路径",
+      "Wan 风格网络配 UMT5 条件模块与 UniPC 调度器"
+    ]
+  }
+}

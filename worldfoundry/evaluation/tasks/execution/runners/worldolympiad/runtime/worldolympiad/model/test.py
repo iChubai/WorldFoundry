@@ -9,9 +9,11 @@ import json
 from dotenv import load_dotenv
 import os
 
+from model.openrouter import get_openrouter_api_key
+
 load_dotenv()
 
-API_KEY_REF = os.getenv("api_key")
+API_KEY_REF = get_openrouter_api_key()
 
 url = "https://openrouter.ai/api/v1/chat/completions"
 headers = {
@@ -62,4 +64,3 @@ payload = {
 }
 response = requests.post(url, headers=headers, json=payload)
 print(response.text)
-

@@ -28,6 +28,9 @@ checkpoint:
   notes: The similarly named model-scope/text-to-video-synthesis repo is reachable
     but not used here because ali-vilab/modelscope-damo-text-to-video-synthesis is
     the confirmed open-weight checkpoint selected for this manifest.
+official_sources:
+  paper: https://arxiv.org/abs/2308.06571
+  project_page: https://modelscope.cn/
 integration:
   status: integrated
   notes:

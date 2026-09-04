@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import random
 from collections.abc import Mapping
 from functools import partial
 from pathlib import Path
@@ -11,6 +10,7 @@ from typing import Literal
 import torch
 from transformers import get_constant_schedule_with_warmup
 
+from worldfoundry.core.utils.torch_utils import set_seed_everywhere
 from worldfoundry.training.checkpoint.checkpointer import TrainingCheckpointer
 from worldfoundry.training.checkpoint.state import TrainingProgress, TrainingState
 from worldfoundry.training.data.dataset import TrainingManifestDataset
@@ -90,10 +90,7 @@ def _seed(seed: int | None) -> None:
     if isinstance(seed, bool):
         raise TypeError("initialization_seed must be an integer")
     resolved = int(seed) % (2**63 - 1)
-    random.seed(resolved)
-    torch.manual_seed(resolved)
-    if torch.cuda.is_available():
-        torch.cuda.manual_seed_all(resolved)
+    set_seed_everywhere(resolved)
 
 
 def _validate_recipe(recipe: PostTrainingRecipe) -> SCMLADDAlgorithmSpec:
@@ -195,7 +192,10 @@ def materialize_sana_scm_ladd_training_run(
     if recipe.distributed.backend == "fsdp2":
         if resolved_device.type != "cuda":
             raise ValueError("SANA SCM-LADD FSDP2 materialization requires CUDA")
-        distributed_context = DistributedTrainingContext(device_type="cuda")
+        distributed_context = DistributedTrainingContext(
+            device_type="cuda",
+            timeout_seconds=recipe.distributed.timeout_seconds,
+        )
         resolved_device = distributed_context.device
     try:
         world_size = 1 if distributed_context is None else distributed_context.world_size

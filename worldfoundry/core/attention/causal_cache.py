@@ -19,8 +19,17 @@ from torch import Tensor
 from .block_pattern import BlockPattern
 from .kv_cache_policy import CachedBlock, CacheState
 
+# ──────────────────────────────────────────────────────────────────────────
+# Geometry — validate the raw ABI so graphs cannot drift from BlockPattern
+# ──────────────────────────────────────────────────────────────────────────
+
 
 def _integer(value: object, *, name: str) -> int:
+    """Coerce ``value`` to an integer index, rejecting bools.
+
+    ``bool`` is a subclass of ``int``; accepting it would silently treat
+    True/False as 1/0 and corrupt block geometry.
+    """
     if isinstance(value, bool):
         raise TypeError(f"{name} must be an integer, not bool")
     try:
@@ -44,6 +53,7 @@ class CausalVideoCacheGeometry:
     sink_frames: int = 0
 
     def __post_init__(self) -> None:
+        """Validate positive geometry and local-window vs sink invariants."""
         for name in (
             "batch_size",
             "total_frames",
@@ -77,6 +87,7 @@ class CausalVideoCacheGeometry:
 
     @property
     def pattern(self) -> BlockPattern:
+        """Uniform block pattern implied by ``frames_per_block``."""
         return BlockPattern(
             frame_tokens=self.frame_tokens,
             first_chunk_frames=self.frames_per_block,
@@ -85,19 +96,28 @@ class CausalVideoCacheGeometry:
 
     @property
     def sequence_tokens(self) -> int:
+        """Logical sequence length in tokens (``total_frames * frame_tokens``)."""
         return self.total_frames * self.frame_tokens
 
     @property
     def capacity_frames(self) -> int:
+        """Frames retained in the rolling buffer; ``total_frames`` when unbounded."""
         return self.total_frames if self.local_attention_frames == -1 else self.local_attention_frames
 
     @property
     def capacity_tokens(self) -> int:
+        """Token width of the allocated ``k`` / ``v`` buffers."""
         return self.capacity_frames * self.frame_tokens
 
     @property
     def num_blocks(self) -> int:
+        """Number of equal-sized blocks in the configured sequence."""
         return self.total_frames // self.frames_per_block
+
+
+# ──────────────────────────────────────────────────────────────────────────
+# Raw ABI — allocate / recover the dictionaries causal Wan graphs consume
+# ──────────────────────────────────────────────────────────────────────────
 
 
 def allocate_causal_video_cache(
@@ -115,6 +135,7 @@ def allocate_causal_video_cache(
     resolved_device = torch.device(device)
 
     def layer_cache() -> dict[str, Tensor]:
+        """Allocate one layer's ``k``/``v`` buffers and end-index scalars."""
         shape = (
             geometry.batch_size,
             geometry.capacity_tokens,
@@ -244,6 +265,11 @@ def causal_video_cache_geometry(cache: Mapping[str, object]) -> CausalVideoCache
     return geometry
 
 
+# ──────────────────────────────────────────────────────────────────────────
+# Block lifecycle — append-or-overwrite must stay ordered and audited
+# ──────────────────────────────────────────────────────────────────────────
+
+
 def _validate_block_span(
     geometry: CausalVideoCacheGeometry,
     *,
@@ -251,6 +277,12 @@ def _validate_block_span(
     start_frame: object,
     frame_count: object,
 ) -> tuple[int, int, int]:
+    """Require ``block_index``/start/count to match :attr:`geometry.pattern`.
+
+    Raises:
+        ValueError: The block is out of range or the span disagrees with
+            the configured first/later chunk sizes.
+    """
     resolved_block = _integer(block_index, name="block_index")
     resolved_start = _integer(start_frame, name="start_frame")
     resolved_count = _integer(frame_count, name="frame_count")

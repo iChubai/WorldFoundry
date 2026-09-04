@@ -1,4 +1,15 @@
-"""Wan motion-control conditioning encoder."""
+"""Wan motion-control conditioning encoder (camera / trajectory).
+
+:class:`WanMotionControllerModel` encodes camera or
+trajectory features into the control tokens Wan motion
+recipes consume.  :class:`WanMotionControllerModelDictConverter`
+remaps checkpoint keys.
+
+Outputs are motion tokens, not UMT5 prompt ``context``.
+Text still goes through :class:`~..component.WanTextConditioner`.
+
+Wan control family, sibling of :mod:`.s2v_audio`.
+"""
 
 import torch
 import torch.nn as nn

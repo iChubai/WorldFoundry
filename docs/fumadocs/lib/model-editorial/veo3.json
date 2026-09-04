@@ -1,0 +1,39 @@
+{
+  "id": "veo3",
+  "tagline": {
+    "en": "Google DeepMind's Veo video model, accessed as a hosted API — text-to-video and image-to-video through your own provider key.",
+    "zh": "Google DeepMind 的 Veo 视频模型，以托管 API 方式接入——通过你自己的服务商密钥使用文生视频与图生视频。"
+  },
+  "overview": {
+    "en": [
+      "Veo3 is Google DeepMind's high-fidelity video generation model, offered here as a hosted API rather than local weights. It generates video from a text prompt and can also drive generation from an input image.",
+      "Because it runs as a service, there is nothing to download and no GPU to provision — you call it through the Studio pipeline and the provider does the compute. You supply your own API key.",
+      "In WorldFoundry, Veo3 slots into the hosted-API path: configure your key, send a prompt (and optionally an image), and receive a generated clip back from the service."
+    ],
+    "zh": [
+      "Veo3 是 Google DeepMind 高保真的视频生成模型，这里以托管 API 而非本地权重的形式提供。它可以根据文字提示词生成视频，也能以输入图片驱动生成。",
+      "由于以服务方式运行，无需下载任何权重、也不必准备 GPU——你通过 Studio pipeline 调用，算力由服务商承担。需自备 API key。",
+      "在 WorldFoundry 中，Veo3 接入托管 API 路径：配置好密钥，发送提示词（可选附带一张图），即可从服务端取回生成的视频。"
+    ]
+  },
+  "whenToUse": {
+    "en": "When you want top-tier video generation without managing local hardware, and you already have (or can obtain) a provider API key.",
+    "zh": "当你想获得顶级视频生成效果、又不想维护本地硬件，且已拥有（或能申请到）服务商 API key 时。"
+  },
+  "notFor": {
+    "en": "Offline or fully self-hosted workflows — it requires your own API key and network access, and output quality, availability, and cost all depend on the provider.",
+    "zh": "不适合离线或完全自托管的流程——它需要你自备 API key 和网络访问，且输出质量、可用性与成本都取决于服务商。"
+  },
+  "highlights": {
+    "en": [
+      "Hosted API — no local weights or GPU required",
+      "Text-to-video and image-to-video",
+      "Bring your own provider API key"
+    ],
+    "zh": [
+      "托管 API——无需本地权重或 GPU",
+      "支持文生视频与图生视频",
+      "需自备服务商 API key"
+    ]
+  }
+}

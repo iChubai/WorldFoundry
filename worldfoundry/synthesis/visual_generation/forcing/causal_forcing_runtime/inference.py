@@ -74,7 +74,7 @@ else:
     pipeline = CausalDiffusionInferencePipeline(config, device=device)
 
 if args.checkpoint_path:
-    state_dict = torch.load(args.checkpoint_path, map_location="cpu")
+    state_dict = torch.load(args.checkpoint_path, map_location="cpu", weights_only=True)
     key = 'generator_ema' if args.use_ema else 'generator'
     gen_sd = state_dict[key]
 

@@ -14,6 +14,9 @@ source:
   official_repo_url: https://github.com/hkchengrex/MMAudio
   notes:
   - Originally exposed by WorldFoundry-native-3D.
+official_sources:
+  project_page: https://hkchengrex.github.io/MMAudio
+  paper: https://arxiv.org/abs/2412.15322
 integration:
   status: integrated
   notes:

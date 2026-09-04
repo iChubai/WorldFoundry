@@ -314,6 +314,8 @@ class Lyra1Runtime:
             reference_image = visual_input
         if reference_image is None:
             raise ValueError("Lyra-1 requires a visual input")
+        for compatibility_key in ("image_path", "input_path", "output_path", "task_type"):
+            kwargs.pop(compatibility_key, None)
         if kwargs:
             supported = {"negative_prompt", "condition_augment_sigma", "center_depth", "center_depth_quantile"}
             unsupported = sorted(set(kwargs) - supported)

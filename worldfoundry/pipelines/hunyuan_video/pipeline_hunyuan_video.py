@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import secrets
+import os
 from collections.abc import Mapping
 from pathlib import Path
 from typing import Any
@@ -22,6 +23,45 @@ from worldfoundry.operators.runtime_video_operator import RuntimeVideoOperator
 from worldfoundry.synthesis.visual_generation.memory.video import VideoArtifactMemory
 
 from ..pipeline_utils import PipelineABC
+
+
+def _resolve_hunyuan_checkpoint_source(
+    source: object,
+    *,
+    model_id: str,
+) -> object:
+    """Resolve stale integration paths to the unified staged checkpoint root."""
+
+    if model_id.startswith("hunyuanvideo-1.5"):
+        transformer_dir = "720p_i2v" if model_id.endswith("i2v") else "720p_t2v"
+        sentinels = (Path("transformer") / transformer_dir / "diffusion_pytorch_model.safetensors",)
+    elif model_id == "hunyuanvideo-i2v":
+        prefix = Path("hunyuan-video-i2v-720p/transformers")
+        sentinels = (
+            prefix / "mp_rank_00_model_states.safetensors",
+            prefix / "mp_rank_00_model_states.pt",
+        )
+    else:
+        prefix = Path("hunyuan-video-t2v-720p/transformers")
+        sentinels = (
+            prefix / "mp_rank_00_model_states.safetensors",
+            prefix / "mp_rank_00_model_states.pt",
+        )
+    if isinstance(source, (str, Path)):
+        explicit = Path(source).expanduser()
+        if explicit.is_dir() and any((explicit / sentinel).is_file() for sentinel in sentinels):
+            return source
+    checkpoint_root = os.getenv("WORLDFOUNDRY_CKPT_DIR") or os.getenv("WORLDEVALS_CKPT_DIR")
+    if not checkpoint_root:
+        return source
+    if model_id.startswith("hunyuanvideo-1.5"):
+        directory = "tencent--HunyuanVideo-1.5"
+    elif model_id == "hunyuanvideo-i2v":
+        directory = "tencent--HunyuanVideo-I2V"
+    else:
+        directory = "tencent--HunyuanVideo"
+    candidate = Path(checkpoint_root).expanduser() / directory
+    return candidate if any((candidate / sentinel).is_file() for sentinel in sentinels) else source
 
 
 class NativeHunyuanVideoPipeline(PipelineABC):
@@ -49,7 +89,7 @@ class NativeHunyuanVideoPipeline(PipelineABC):
         """
 
         normalized = str(value or "auto").strip().lower().replace("-", "_")
-        if normalized == "auto" and model_id.startswith("hunyuanvideo-1.5-"):
+        if normalized == "auto" and model_id.startswith("hunyuanvideo-1.5"):
             return AttentionBackend.FLASH
         if normalized in {"flash_attention", "flash_attention_2", "flash2", "flash_attn"}:
             return AttentionBackend.FLASH
@@ -78,14 +118,52 @@ class NativeHunyuanVideoPipeline(PipelineABC):
         options.update(kwargs)
         resolved_model_id = str(options.get("variant_id") or model_id or cls.MODEL_ID)
         source = options.get("checkpoint_path", options.get("model_path", model_path))
-        overrides = None
+        source = _resolve_hunyuan_checkpoint_source(source, model_id=resolved_model_id)
+        overrides: dict[str, Any] = {}
+        source_root: Path | None = None
         if isinstance(source, (str, Path)) and Path(source).expanduser().is_dir():
             source_root = Path(source).expanduser().resolve()
             root = str(source_root)
-            overrides = {name: root for name in ("transformer", "vae", "resources")}
-            local_vision = source_root / "vision_encoder" / "siglip"
-            if resolved_model_id == "hunyuanvideo-1.5-i2v" and local_vision.is_dir():
-                overrides["vision"] = str(local_vision.resolve())
+            overrides.update({name: root for name in ("transformer", "vae")})
+            if resolved_model_id.startswith("hunyuanvideo-1.5"):
+                overrides["resources"] = root
+                local_vision = source_root / "vision_encoder" / "siglip"
+                if resolved_model_id == "hunyuanvideo-1.5-i2v" and local_vision.is_dir():
+                    overrides["vision"] = str(local_vision.resolve())
+
+        if resolved_model_id in {"hunyuanvideo-t2v", "hunyuanvideo-i2v"}:
+            # The original Tencent repositories do not ship either text
+            # encoder. Prefer explicit paths, then legacy merged-directory
+            # layouts, and otherwise let each recipe role resolve its actual
+            # XTuner/OpenAI repository from WORLDFOUNDRY_CKPT_DIR.
+            primary_source = options.get(
+                "primary_text_encoder_path",
+                options.get("text_encoder_path"),
+            )
+            clip_source = options.get("clip_text_encoder_path", options.get("clip_path"))
+            if primary_source is not None:
+                overrides["primary"] = str(Path(primary_source).expanduser())
+            elif source_root is not None:
+                primary_name = (
+                    "text_encoder_i2v"
+                    if resolved_model_id == "hunyuanvideo-i2v"
+                    else "text_encoder"
+                )
+                local_primary = source_root / primary_name
+                if (local_primary / "config.json").is_file():
+                    overrides["primary"] = str(local_primary.resolve())
+            if clip_source is not None:
+                overrides["clip"] = str(Path(clip_source).expanduser())
+            elif source_root is not None:
+                local_clip = source_root / "text_encoder_2"
+                if (local_clip / "config.json").is_file():
+                    overrides["clip"] = str(local_clip.resolve())
+
+        explicit_overrides = options.get("checkpoint_overrides")
+        if explicit_overrides is not None:
+            if not isinstance(explicit_overrides, Mapping):
+                raise TypeError("checkpoint_overrides must be a mapping of recipe roles to local checkpoints")
+            overrides.update(dict(explicit_overrides))
 
         native = NativeDiffusionPipeline.from_pretrained(
             resolved_model_id,
@@ -105,11 +183,14 @@ class NativeHunyuanVideoPipeline(PipelineABC):
                     model_id=resolved_model_id,
                 ),
             ),
-            checkpoint_overrides=overrides,
+            checkpoint_overrides=overrides or None,
             component_options={
                 "latent_encoder:codec": {
                     "tiled": bool(options.get("vae_tiling", True)),
-                }
+                },
+                "conditioner:main": {
+                    "release_after_encode": bool(options.get("release_text_encoders_after_encode", False)),
+                },
             },
         )
         return cls(native_pipeline=native, device=device, model_id=resolved_model_id)
@@ -158,6 +239,8 @@ class NativeHunyuanVideoPipeline(PipelineABC):
         image_path: str | None = None,
         output_path: str | Path | None = None,
         num_frames: int | None = None,
+        frames: int | None = None,
+        frame_num: int | None = None,
         height: int | None = None,
         width: int | None = None,
         num_inference_steps: int | None = None,
@@ -175,6 +258,10 @@ class NativeHunyuanVideoPipeline(PipelineABC):
         processed = self.process(prompt=prompt, images=image_value)
         actual_seed = secrets.randbits(63) if int(seed) < 0 else int(seed)
         scale = float(guidance_scale if guidance_scale is not None else self.DEFAULT_GUIDANCE_SCALE)
+        frame_values = [value for value in (num_frames, frames, frame_num) if value is not None]
+        if len({int(value) for value in frame_values}) > 1:
+            raise ValueError("num_frames, frames, and frame_num must agree when provided together")
+        resolved_num_frames = int(frame_values[0]) if frame_values else self.DEFAULT_NUM_FRAMES
         inputs: dict[str, object] = {
             "fps": int(fps or self.DEFAULT_FPS),
             "return_latent": output_type == "latent",
@@ -186,7 +273,7 @@ class NativeHunyuanVideoPipeline(PipelineABC):
             prompt=processed["prompt"],
             height=int(height or self.DEFAULT_HEIGHT),
             width=int(width or self.DEFAULT_WIDTH),
-            num_frames=int(num_frames or self.DEFAULT_NUM_FRAMES),
+            num_frames=resolved_num_frames,
             sampling=SamplingConfig(
                 num_inference_steps=int(num_inference_steps or self.DEFAULT_NUM_INFERENCE_STEPS),
                 guidance_scale=scale,

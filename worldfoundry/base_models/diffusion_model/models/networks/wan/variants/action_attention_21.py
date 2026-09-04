@@ -1,6 +1,10 @@
 # Copyright 2024-2025 The Alibaba Wan Team Authors. All rights reserved.
-"""Module for base_models -> diffusion_model -> video -> wan -> components -> action_attention_wan2p1.py functionality."""
+"""Flash-attention dispatcher used by Wan 2.1 action transformers.
 
+Selects FlashAttn 3 (Hopper), FlashAttn 2, or PyTorch SDPA.  Optional
+variable-length packing via ``q_lens`` / ``k_lens``.  Kernel adapter only;
+no action math, VACE, or TeaCache here.
+"""
 import torch
 
 try:
@@ -124,7 +128,7 @@ def flash_attention(
         )
 
     # apply attention
-    if (version is None or version == 3) and FLASH_ATTN_3_AVAILABLE:
+    if FLASH_ATTN_3_AVAILABLE and (version is None or version == 3 or not FLASH_ATTN_2_AVAILABLE):
         # Note: dropout_p, window_size are not supported in FA3 now.
         x = flash_attn_interface.flash_attn_varlen_func(
             q=q,
@@ -134,6 +138,8 @@ def flash_attention(
                 0, dtype=torch.int32).to(q.device, non_blocking=True),
             cu_seqlens_k=torch.cat([k_lens.new_zeros([1]), k_lens]).cumsum(
                 0, dtype=torch.int32).to(q.device, non_blocking=True),
+            seqused_q=None,
+            seqused_k=None,
             max_seqlen_q=lq,
             max_seqlen_k=lk,
             softmax_scale=softmax_scale,

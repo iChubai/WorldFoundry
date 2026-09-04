@@ -1,4 +1,16 @@
-"""Module for base_models -> diffusion_model -> video -> wan -> vae -> light_wan2p2.py functionality."""
+"""Lightweight Wan 2.2 VAE variant (same 48-ch latent contract).
+
+Pruned / channels-last causal 3-D CNN that still emits
+48-channel BCTHW latents with official Wan 2.2 mean/std
+(4× time / 8× space).  :class:`Wan2_2_VAE` is the public
+surface.
+
+:func:`infer_lightvae_pruning_rate_from_ckpt` reads the
+pruning ratio from the checkpoint.  Residual blocks may
+differ from :mod:`~..reference_22`.
+
+Use only when the recipe ships a LightVAE weight file.
+"""
 
 import logging
 import torch
@@ -15,6 +27,7 @@ from einops import rearrange
 import os
 import time
 from worldfoundry.core.attention import scaled_dot_product_attention as _worldfoundry_scaled_dot_product_attention
+from worldfoundry.core.model_loading import load_torch_state_dict
 
 __all__ = [
     "Wan2_2_VAE",
@@ -163,7 +176,7 @@ def infer_lightvae_pruning_rate_from_ckpt(vae_pth, full_decoder_conv1_out=1024):
     if vae_pth is None or not os.path.exists(vae_pth):
         return None
     try:
-        raw_state = torch.load(vae_pth, map_location="cpu")
+        raw_state = load_torch_state_dict(vae_pth, map_location="cpu")
         state = _extract_checkpoint_state_dict(raw_state)
     except Exception as e:
         logging.warning(f"Failed to load checkpoint for pruning-rate inference: {e}")
@@ -1322,7 +1335,7 @@ def _video_vae(pretrained_path=None, z_dim=16, dim=160, device="cpu", **kwargs):
     # load checkpoint
     if pretrained_path is not None and os.path.exists(pretrained_path):
         logging.info(f"loading {pretrained_path}")
-        raw_state = torch.load(pretrained_path, map_location="cpu")
+        raw_state = load_torch_state_dict(pretrained_path, map_location="cpu")
         state_dict = _normalize_vae_state_dict(raw_state)
         missing, unexpected = model.load_state_dict(state_dict, strict=False, assign=True)
         logging.info(

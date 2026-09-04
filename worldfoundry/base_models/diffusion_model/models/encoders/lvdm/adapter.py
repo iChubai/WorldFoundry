@@ -1,4 +1,15 @@
-"""Module for base_models -> diffusion_model -> video -> lvdm -> modules -> encoders -> adapter.py functionality."""
+"""Adapter that exposes LVDM OpenCLIP as a Diffusers-shaped encoder.
+
+:class:`Adapter` plus residual / downsample helpers let
+legacy VideoCrafter CLIP towers look like a Diffusers text
+encoder to loaders that expect that API.
+
+Token layout stays OpenCLIP ``context`` (B, L, C).
+The native graph is :mod:`.condition`.
+
+Compatibility wrapper only — T2V-Turbo uses
+:class:`~..t2v_turbo.T2VTurboConditioner`.
+"""
 
 import torch.nn as nn
 

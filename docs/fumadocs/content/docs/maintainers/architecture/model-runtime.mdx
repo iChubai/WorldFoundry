@@ -5,21 +5,9 @@ description: How pipeline, operator, synthesis, representation, memory, and host
 
 ## Runtime shape
 
-A model call in this repository usually follows one chain:
+A model call in this repository usually follows one chain: the pipeline is the public entrypoint, the operator prepares inputs, synthesis owns checkpoint or API execution, and representation or memory join only when the task needs geometry or multi-turn state. Every path converges on the same `GenerationResult` so Studio, the CLI, and benchmarks share one artifact contract.
 
-```text
-Pipeline class
-  -> Operator: validate/load/shape interactions and media
-  -> Synthesis: call a native model runtime or hosted API
-     -> Native diffusion engine: condition/initialize/denoise/decode (local diffusion only)
-  -> Representation: derive depth, point cloud, 3DGS, scene, or world assets
-  -> Memory: keep prior state for streaming or multi-turn control
-  -> GenerationResult: normalized artifacts and metadata
-```
-
-The pipeline organizes a reproducible public entrypoint. The operator prepares inputs, interactions, and media before model execution. Synthesis owns checkpoint or API execution. Representation and memory join only when a task needs geometric outputs or multi-turn state. Every path should converge on the same `GenerationResult` semantics so Studio, the CLI, and benchmarks can share one artifact contract.
-
-![Model runtime assembly chain](/diagrams/flow-model-runtime.svg)
+<ArchDiagram id="model-runtime" />
 
 Model-specific public wrappers should be thin, but inference implementations must not be repeated across model directories. Local diffusion families compose canonical components from `worldfoundry/base_models/diffusion_model`; only genuinely model-specific network blocks and adapters belong in a family package. See [Native diffusion](/docs/maintainers/architecture/native-diffusion) for ownership and dependency rules.
 
@@ -67,19 +55,11 @@ Hosted provider paths such as Wan hosted family, Kling, Runway, Luma Ray, Hailuo
 
 ## Bridge to evaluation
 
-The evaluation runner does not import pipeline files directly unless the catalog model runner resolves to that route. The full chain is:
+The evaluation runner does not import pipeline files directly unless the catalog model runner resolves to that route.
 
-```text
-worldfoundry/data/models/catalog/<category>/<model-id>.yaml
-  -> runner_target / pipeline_target / runtime_profile binding
-  -> resolve_pipeline_route()
-  -> resolve_model_zoo_runner()
-  -> runtime runner
-  -> pipeline class or subprocess command
-  -> GenerationResult artifacts
-```
+<ArchDiagram id="model-runtime-bridge" />
 
-`resolve_pipeline_route()` (`evaluation/models/pipelines/bindings.py:307`) and `resolve_model_zoo_runner()` (`evaluation/models/runners/resolver.py:365`) turn that chain into a runnable runner. The catalog-parsing, spec-merging, and runner-resolution mechanics behind them are documented in [Evaluation Core — Model Resolution](/docs/maintainers/architecture/evaluation-core). Planned or profile-only entries may keep `runtime_profile` but should not expose a runner target; thin planning wrappers must not advertise `pipeline_target` as verified support.
+`resolve_pipeline_route()` (`evaluation/models/pipelines/bindings.py:359`) and `resolve_model_zoo_runner()` (`evaluation/models/runners/resolver.py:386`) turn that chain into a runnable runner. The catalog-parsing, spec-merging, and runner-resolution mechanics behind them are documented in [Evaluation Core — Model Resolution](/docs/maintainers/architecture/evaluation-core). Planned or profile-only entries may keep `runtime_profile` but should not expose a runner target; thin planning wrappers must not advertise `pipeline_target` as verified support.
 
 ## Model family inventory
 

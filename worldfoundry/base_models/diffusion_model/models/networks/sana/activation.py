@@ -14,7 +14,17 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-"""Module for base_models -> diffusion_model -> image -> sana -> diffusion -> model -> act.py functionality."""
+"""Activation factory used by SANA GLUMBConv / LiteMLA / MBConv stacks.
+
+:func:`build_act` constructs a registered ``nn.Module`` (SiLU, GELU,
+ReLU, identity, …) from a short name plus optional kwargs.  GELU uses
+the tanh approximation to match SANA checkpoints.  ``None`` / ``"none"``
+return no layer so residual stacks can skip an activation slot.
+
+:func:`get_act_name` is the inverse, used when serializing fused FFN
+module strings.  This registry is shared by the PyTorch MBConv
+reference and the Triton fused kernels.
+"""
 
 import copy
 
@@ -40,14 +50,7 @@ REGISTERED_ACT_DICT: dict[str, tuple[type, dict[str, any]]] = {
 
 
 def build_act(name: str or None, **kwargs) -> nn.Module or None:
-    """Build act.
-
-    Args:
-        name: The name.
-
-    Returns:
-        The return value.
-    """
+    """Construct a registered activation (``silu``, ``gelu``, ``relu``, …)."""
     if name in REGISTERED_ACT_DICT:
         act_cls, default_args = copy.deepcopy(REGISTERED_ACT_DICT[name])
         for key in default_args:
@@ -61,14 +64,7 @@ def build_act(name: str or None, **kwargs) -> nn.Module or None:
 
 
 def get_act_name(act: nn.Module or None) -> str or None:
-    """Get act name.
-
-    Args:
-        act: The act.
-
-    Returns:
-        The return value.
-    """
+    """Inverse of :func:`build_act`: module instance → registry name."""
     if act is None:
         return None
     module2name = {}

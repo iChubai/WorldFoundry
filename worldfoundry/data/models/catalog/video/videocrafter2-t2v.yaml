@@ -12,6 +12,9 @@ source:
   status: open_source
   official_repo_url: https://github.com/VideoCrafter/VideoCrafter
   license: apache-2.0
+official_sources:
+  project_page: https://ailab-cvc.github.io/videocrafter2/
+  paper: https://arxiv.org/abs/2401.09047
 integration:
   status: integrated
   notes:

@@ -3,11 +3,21 @@
 
 """Optional NVIDIA RTX Video Super Resolution post-processing.
 
-The processor contract and NVIDIA VFX invocation are adapted from NVIDIA
-FlashDreams.  WorldFoundry preserves the input layout, container, dtype, and
-numeric range so the processor can sit directly in the shared Studio frame
-pipeline.  The proprietary ``nvidia-vfx`` runtime is never imported unless an
-RTX processor is explicitly selected.
+Responsibility: apply NVIDIA VFX super-resolution / deblur / denoise
+while preserving the input layout, container, dtype, and numeric range
+so the processor can sit in the shared Studio frame pipeline.
+
+Not this module: the layout / session ABI lives in
+:mod:`worldfoundry.core.video_postprocess`. Encode / decode lives in
+:mod:`worldfoundry.core.io.video`. The proprietary ``nvidia-vfx``
+runtime is never imported unless an RTX processor is explicitly
+selected or a probe is requested.
+
+Public surface: :class:`RTXVideoSuperResolutionConfig`,
+:class:`RTXVideoSuperResolutionPostProcessor`,
+:class:`RTXVFXCapability`, :func:`inspect_rtx_vfx_capability`,
+:func:`probe_rtx_vfx_runtime`, :func:`require_rtx_vfx_runtime`,
+:func:`rtx_postprocessor_from_preset`.
 """
 
 from __future__ import annotations
@@ -70,6 +80,10 @@ RTX_POSTPROCESS_PRESET_NAMES = (
     "rtx-deblur-ultra",
 )
 
+# ──────────────────────────────────────────────────────────────────────────
+# Config + factory — quality modes cap scale; nvidia-vfx stays unimported
+# ──────────────────────────────────────────────────────────────────────────
+
 
 @dataclass(frozen=True, slots=True, kw_only=True)
 class RTXVideoSuperResolutionConfig:
@@ -91,6 +105,8 @@ class RTXVideoSuperResolutionConfig:
     float_range: RTXVideoFloatRange = "minus-one-one"
 
     def __post_init__(self) -> None:
+        """Reject illegal quality / device / scale combinations before a session starts."""
+
         if self.quality not in _QUALITY_NAMES:
             available = ", ".join(_QUALITY_NAMES)
             raise ValueError(f"Unsupported RTX VSR quality {self.quality!r}. Supported values: {available}.")
@@ -122,6 +138,12 @@ class RTXVideoSuperResolutionConfig:
         )
 
     def output_dimensions(self, input_spec: VideoSpec) -> tuple[int, int]:
+        """Resolve explicit size or ``scale``; same-resolution qualities cannot resize.
+
+        Standard / high-bitrate modes refuse downscale and cap at 4x so a
+        mis-set Studio override cannot ask VFX for an unsupported geometry.
+        """
+
         if self.output_width is not None and self.output_height is not None:
             output_height = self.output_height
             output_width = self.output_width
@@ -151,18 +173,26 @@ class RTXVideoSuperResolutionPostProcessor(VideoPostProcessor):
         config: RTXVideoSuperResolutionConfig | None = None,
         **overrides: Any,
     ) -> None:
+        """Accept either a frozen config or kwargs; mixing them would silently drop fields."""
+
         if config is not None and overrides:
             raise TypeError("Pass either an RTX VSR config or keyword overrides, not both.")
         self.config = config or RTXVideoSuperResolutionConfig(**overrides)
 
     @property
     def name(self) -> str:
+        """Stable chain id; presets share this name so telemetry stays one series."""
+
         return "rtx-video-super-resolution"
 
     def output_spec(self, input_spec: VideoSpec) -> VideoSpec:
+        """Delegate geometry to the config so the chain can size the sink first."""
+
         return self.config.output_spec(input_spec)
 
     def start(self, spec: VideoSpec) -> VideoPostProcessorSession:
+        """Open a session; the native effect is created later in ``prepare``."""
+
         return _RTXVideoSuperResolutionSession(self.config, spec)
 
 
@@ -181,6 +211,8 @@ class RTXVFXCapability:
     backend_error: str | None = None
 
     def to_payload(self) -> dict[str, Any]:
+        """JSON-safe diagnosis; ``compute_capability`` is a list so manifests need no encoder."""
+
         return {
             "available": self.available,
             "device": self.device,
@@ -192,6 +224,11 @@ class RTXVFXCapability:
             "probe_status": self.probe_status,
             "backend_error": self.backend_error,
         }
+
+
+# ──────────────────────────────────────────────────────────────────────────
+# Capability probes — static checks first; native effect only on request
+# ──────────────────────────────────────────────────────────────────────────
 
 
 def inspect_rtx_vfx_capability(*, device: int = 0) -> RTXVFXCapability:
@@ -392,8 +429,15 @@ def rtx_postprocessor_from_preset(
     return RTXVideoSuperResolutionPostProcessor(replace(config, **overrides))
 
 
+# ──────────────────────────────────────────────────────────────────────────
+# Session + layout canonicalize — BVTCHW unit float in, original domain out
+# ──────────────────────────────────────────────────────────────────────────
+
+
 @dataclass(slots=True)
 class _CanonicalInput:
+    """One chunk rewritten to BVTCHW plus enough metadata to invert the rewrite."""
+
     tensor: Any
     layout: VideoTensorLayout
     source_kind: Literal["numpy", "torch", "frame-list-numpy", "frame-list-torch"]
@@ -403,7 +447,11 @@ class _CanonicalInput:
 
 
 class _RTXVideoSuperResolutionSession(VideoPostProcessorSession):
+    """Own one VFX effect for a stream; ``flush`` closes the native handle."""
+
     def __init__(self, config: RTXVideoSuperResolutionConfig, spec: VideoSpec) -> None:
+        """Bind config and specs; the effect is created on first ``prepare`` / ``process``."""
+
         self._config = config
         self._input_spec = spec
         self._output_spec = config.output_spec(spec)
@@ -411,11 +459,15 @@ class _RTXVideoSuperResolutionSession(VideoPostProcessorSession):
         self._closed = False
 
     def prepare(self) -> None:
+        """Load the native effect before the first measured chunk."""
+
         if self._closed:
             raise RuntimeError("cannot prepare RTX VSR after flush()")
         self._ensure_effect()
 
     def process(self, chunk: VideoChunk) -> list[VideoChunk]:
+        """Upscale one chunk and restore the caller's layout / dtype / range."""
+
         if self._closed:
             raise RuntimeError("cannot process RTX VSR after flush()")
         torch = _import_torch()
@@ -447,6 +499,8 @@ class _RTXVideoSuperResolutionSession(VideoPostProcessorSession):
         return [VideoChunk(frames=output, layout=chunk.layout, metadata=metadata)]
 
     def flush(self) -> list[VideoChunk]:
+        """Close the native effect; VFX does not buffer a tail."""
+
         if self._closed:
             return []
         self._closed = True
@@ -456,6 +510,8 @@ class _RTXVideoSuperResolutionSession(VideoPostProcessorSession):
         return []
 
     def _ensure_effect(self) -> Any:
+        """Create and ``load`` the VFX effect once; a failed load must close the handle."""
+
         if self._effect is not None:
             return self._effect
         video_super_res = _load_video_super_res_class()
@@ -484,6 +540,8 @@ class _RTXVideoSuperResolutionSession(VideoPostProcessorSession):
         return effect
 
     def _run_vsr(self, canonical: Any, effect: Any) -> Any:
+        """Run VFX one RGB frame at a time; clone DLPack so the next ``run`` can reuse the buffer."""
+
         torch = _import_torch()
         batch, views, frames, _, _, _ = canonical.shape
         device = _torch_device_for_nvvfx_device(self._config.device)
@@ -521,6 +579,8 @@ class _RTXVideoSuperResolutionSession(VideoPostProcessorSession):
 
 
 def _canonicalize_chunk(chunk: VideoChunk, *, spec: VideoSpec) -> _CanonicalInput:
+    """Rewrite a chunk to BVTCHW without mixing NumPy and torch frame-list entries."""
+
     torch = _import_torch()
     frames = chunk.frames
     if chunk.layout == "frame-list":
@@ -576,6 +636,8 @@ def _canonicalize_chunk(chunk: VideoChunk, *, spec: VideoSpec) -> _CanonicalInpu
 
 
 def _to_bvtchw(tensor: Any, *, layout: VideoTensorLayout) -> Any:
+    """Permute a tensor layout into BVTCHW; ``frame-list`` is handled by the caller."""
+
     if layout == "thwc":
         return tensor.permute(0, 3, 1, 2).unsqueeze(0).unsqueeze(0)
     if layout == "tchw":
@@ -594,6 +656,8 @@ def _to_bvtchw(tensor: Any, *, layout: VideoTensorLayout) -> Any:
 
 
 def _from_bvtchw(tensor: Any, *, layout: VideoTensorLayout) -> Any:
+    """Invert :func:`_to_bvtchw` so the sink sees the same layout the generator sent."""
+
     if layout in {"frame-list", "thwc"}:
         return tensor[0, 0].permute(0, 2, 3, 1)
     if layout == "tchw":
@@ -612,6 +676,8 @@ def _from_bvtchw(tensor: Any, *, layout: VideoTensorLayout) -> Any:
 
 
 def _validate_canonical_input(canonical: Any, *, spec: VideoSpec) -> None:
+    """Require RGB BVTCHW whose H/W match the frozen stream spec."""
+
     torch = _import_torch()
     if canonical.ndim != 6:
         raise ValueError(f"RTX VSR canonical input must be BVTCHW; got shape {tuple(canonical.shape)}.")
@@ -627,6 +693,8 @@ def _validate_canonical_input(canonical: Any, *, spec: VideoSpec) -> None:
 
 
 def _frame_to_unit_float(frame: Any, *, device: Any, config: RTXVideoSuperResolutionConfig) -> Any:
+    """Map uint8 or signed-float RGB onto the ``[0, 1]`` domain VFX expects."""
+
     torch = _import_torch()
     if frame.dtype == torch.uint8:
         return frame.to(device=device, dtype=torch.float32, non_blocking=True).mul_(1.0 / 255.0).contiguous()
@@ -646,6 +714,8 @@ def _restore_numeric_domain(
     canonical: _CanonicalInput,
     config: RTXVideoSuperResolutionConfig,
 ) -> Any:
+    """Invert :func:`_frame_to_unit_float` so uint8 stays display-ready and signed float stays signed."""
+
     if canonical.uint8:
         return output_unit.clamp(0.0, 1.0).mul(255.0).round().to(dtype=canonical.source_dtype)
     if config.float_range == "minus-one-one":
@@ -654,6 +724,8 @@ def _restore_numeric_domain(
 
 
 def _restore_layout_and_container(output: Any, *, canonical: _CanonicalInput) -> Any:
+    """Return NumPy / torch / frame-list in the original device so Studio does not recast."""
+
     restored = _from_bvtchw(output, layout=canonical.layout).to(device=canonical.source_device)
     if canonical.source_kind == "frame-list-torch":
         return [frame.contiguous() for frame in restored]
@@ -664,7 +736,14 @@ def _restore_layout_and_container(output: Any, *, canonical: _CanonicalInput) ->
     return restored.contiguous()
 
 
+# ──────────────────────────────────────────────────────────────────────────
+# Optional runtime — lazy nvvfx / torch / numpy; never import at module load
+# ──────────────────────────────────────────────────────────────────────────
+
+
 def _load_video_super_res_class() -> Any:
+    """Import ``VideoSuperRes`` only when a session or probe actually needs it."""
+
     try:
         from nvvfx import VideoSuperRes  # type: ignore[import-not-found]  # noqa: PLC0415
     except Exception as exc:
@@ -676,6 +755,8 @@ def _load_video_super_res_class() -> Any:
 
 
 def _resolve_quality(video_super_res: Any, quality: str) -> Any:
+    """Map a string quality onto the installed wheel's enum (nested or module-level)."""
+
     quality_level = getattr(video_super_res, "QualityLevel", None)
     if quality_level is None:
         quality_level = _load_quality_level_enum()
@@ -732,6 +813,8 @@ def _inspect_required_driver_library() -> tuple[str | None, str | None]:
 
 
 def _exception_chain_message(exc: BaseException) -> str:
+    """Flatten ``__cause__`` / ``__context__`` so a probe receipt shows the native NGX error."""
+
     messages: list[str] = []
     current: BaseException | None = exc
     seen: set[int] = set()
@@ -744,6 +827,8 @@ def _exception_chain_message(exc: BaseException) -> str:
 
 
 def _runtime_probe_failure_reason(*, device: int, backend_error: str) -> str:
+    """Append the Linux NGX hint when the native error looks like a missing driver library."""
+
     reason = f"The native nvidia-vfx probe failed on cuda:{device}. Backend error: {backend_error}."
     lowered = backend_error.lower()
     if sys.platform.startswith("linux") and ("initializ" in lowered or "code -12" in lowered):
@@ -755,10 +840,14 @@ def _runtime_probe_failure_reason(*, device: int, backend_error: str) -> str:
 
 
 def _torch_device_for_nvvfx_device(device: int) -> Any:
+    """Map the VFX integer device index onto ``torch.device('cuda:N')``."""
+
     return _import_torch().device(f"cuda:{device}")
 
 
 def _current_cuda_stream_ptr(*, device: Any, enabled: bool) -> int:
+    """Pass the current stream pointer so VFX writes land on the Studio stream, not a default."""
+
     if not enabled or getattr(device, "type", None) != "cuda":
         return 0
     return int(_import_torch().cuda.current_stream(device=device).cuda_stream)
@@ -772,6 +861,8 @@ def _synchronize_nonblocking_output(*, device: Any, enabled: bool) -> None:
 
 
 def _installed_nvidia_vfx_version() -> str | None:
+    """Return the wheel version even when ``import nvvfx`` would still fail."""
+
     try:
         return metadata.version("nvidia-vfx")
     except metadata.PackageNotFoundError:
@@ -779,6 +870,8 @@ def _installed_nvidia_vfx_version() -> str | None:
 
 
 def _import_torch() -> Any:
+    """Import torch at call time so CPU-only processes can import this module."""
+
     try:
         import torch  # noqa: PLC0415
     except ImportError as exc:
@@ -790,6 +883,8 @@ def _import_torch() -> Any:
 
 
 def _import_numpy() -> Any:
+    """Import NumPy at call time; required only for ndarray / frame-list-numpy input."""
+
     try:
         import numpy as np  # noqa: PLC0415
     except ImportError as exc:  # pragma: no cover - Studio and tests require NumPy
@@ -798,6 +893,8 @@ def _import_numpy() -> Any:
 
 
 def _raise_mixed_frame_list() -> Any:
+    """Fail in a list comprehension without a multi-line ``else`` branch."""
+
     raise TypeError("RTX VSR frame-list input cannot mix NumPy arrays and PyTorch tensors.")
 
 

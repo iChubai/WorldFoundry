@@ -122,6 +122,10 @@ class YumeI2V:
 
         self.model = load_yume_checkpoint(self.model, os.path.join(checkpoint_dir, "Yume-Dit"))
         self.model.eval().requires_grad_(False)
+        # The released shards materialize as float32 tensors. Cast on CPU before
+        # the device transfer so the 14B DiT does not consume roughly 64 GiB of
+        # H100 memory while T5, CLIP, and the VAE are still being initialized.
+        self.model.to(dtype=config.param_dtype)
 
         if dit_fsdp:
             self.model = shard_model(self.model, device_id=device_id)

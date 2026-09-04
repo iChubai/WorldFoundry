@@ -1,4 +1,12 @@
-"""Framework-owned checkpoint metadata readers."""
+"""Framework-owned checkpoint metadata readers.
+
+Recipes use these helpers as ``ModuleLoadSpec.config_resolver`` callbacks so
+architecture JSON stays with the checkpoint, not in process-wide globals.  The
+runner never reads config files; only the loader / factory does.
+
+Both helpers reject path traversal (absolute or ``..``) and require a JSON
+object.  They do not mutate the materialized checkpoint.
+"""
 
 from __future__ import annotations
 
@@ -13,7 +21,16 @@ def checkpoint_json_config(
     checkpoint: MaterializedCheckpoint,
     relative_path: str | Path = "config.json",
 ) -> Mapping[str, object]:
-    """Read component JSON from either a snapshot root or direct subtree override."""
+    """Read component JSON from either a snapshot root or direct subtree override.
+
+    Tries ``root / relative_path`` then ``root / relative_path.name`` so a
+    flattened local directory override still works.
+
+    Raises:
+        ValueError: ``relative_path`` is absolute or contains ``..``.
+        FileNotFoundError: Neither candidate exists.
+        TypeError: The file does not contain a JSON object.
+    """
 
     relative = Path(relative_path)
     if relative.is_absolute() or ".." in relative.parts:
@@ -35,7 +52,15 @@ def safetensors_json_metadata(
     *,
     key: str = "config",
 ) -> Mapping[str, object]:
-    """Read one JSON object from the first materialized safetensors file."""
+    """Read one JSON object from the first materialized safetensors file.
+
+    Raises:
+        ValueError: No materialized paths, or the first path is not
+            ``.safetensors``.
+        RuntimeError: Optional ``safetensors`` package is missing.
+        KeyError: Header metadata does not contain ``key``.
+        TypeError: Decoded ``key`` is not a JSON object.
+    """
 
     if not checkpoint.paths:
         raise ValueError("checkpoint has no materialized files")

@@ -65,14 +65,28 @@ class TesserActDepthPatchEmbed(nn.Module):
         post_time_compression_frames = (sample_frames - 1) // self.temporal_compression_ratio + 1
         num_patches = post_patch_height * post_patch_width * post_time_compression_frames
 
-        pos_embedding = get_3d_sincos_pos_embed(
-            self.embed_dim,
-            (post_patch_width, post_patch_height),
-            post_time_compression_frames,
-            self.spatial_interpolation_scale,
-            self.temporal_interpolation_scale,
-        )
-        pos_embedding = torch.from_numpy(pos_embedding).flatten(0, 1)
+        try:
+            pos_embedding = get_3d_sincos_pos_embed(
+                self.embed_dim,
+                (post_patch_width, post_patch_height),
+                post_time_compression_frames,
+                self.spatial_interpolation_scale,
+                self.temporal_interpolation_scale,
+                output_type="pt",
+            )
+        except TypeError:
+            # diffusers<0.33 only returned NumPy arrays and did not expose
+            # output_type. Keep the vendored checkpoint usable across both APIs.
+            pos_embedding = get_3d_sincos_pos_embed(
+                self.embed_dim,
+                (post_patch_width, post_patch_height),
+                post_time_compression_frames,
+                self.spatial_interpolation_scale,
+                self.temporal_interpolation_scale,
+            )
+        if not torch.is_tensor(pos_embedding):
+            pos_embedding = torch.from_numpy(pos_embedding)
+        pos_embedding = pos_embedding.flatten(0, 1)
         joint_pos_embedding = torch.zeros(
             1, self.max_text_seq_length + num_patches, self.embed_dim, requires_grad=False
         )

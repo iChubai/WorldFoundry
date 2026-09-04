@@ -1,0 +1,39 @@
+{
+  "id": "runway-gen4p5",
+  "tagline": {
+    "en": "Runway's hosted Gen-4.5 image-to-video, called through the provider API with your own key.",
+    "zh": "Runway 托管的 Gen-4.5 图生视频,通过服务商 API 调用,需自备密钥。"
+  },
+  "overview": {
+    "en": [
+      "Runway Gen-4.5 is a commercial video generation model from Runway, accessed as a hosted API rather than local weights. It animates a still image into video, so the model itself runs on Runway's servers.",
+      "In WorldFoundry, Gen-4.5 is wired through the hosted-API Studio pipeline: you supply an input image and your own Runway API key, and the service returns the generated video. There are no weights to download and no local GPU is required."
+    ],
+    "zh": [
+      "Runway Gen-4.5 是 Runway 推出的商用视频生成模型,以托管 API 而非本地权重的方式访问。它把一张静态图片生成为视频,模型本身运行在 Runway 的服务器上。",
+      "在 WorldFoundry 中,Gen-4.5 通过托管 API 的 Studio pipeline 接入:你提供输入图片与自己的 Runway API 密钥,服务返回生成的视频。无需下载权重,也不需要本地 GPU。"
+    ]
+  },
+  "whenToUse": {
+    "en": "Use Gen-4.5 when you want Runway's hosted image-to-video quality without running anything locally, and you have a Runway API key.",
+    "zh": "当你想获得 Runway 托管的图生视频效果、又不想在本地运行任何东西,并且已有 Runway API 密钥时,可以使用 Gen-4.5。"
+  },
+  "notFor": {
+    "en": "Requires your own provider API key, and output depends on Runway's service — there are no local weights and usage is subject to their terms and pricing.",
+    "zh": "需要自备服务商 API 密钥,输出依赖 Runway 的服务——没有本地权重,使用受其条款与计费约束。"
+  },
+  "highlights": {
+    "en": [
+      "Hosted image-to-video from Runway",
+      "Called through the provider API — no local weights",
+      "Bring your own Runway API key",
+      "No local GPU needed"
+    ],
+    "zh": [
+      "Runway 提供的托管图生视频",
+      "通过服务商 API 调用——无本地权重",
+      "需自备 Runway API 密钥",
+      "无需本地 GPU"
+    ]
+  }
+}

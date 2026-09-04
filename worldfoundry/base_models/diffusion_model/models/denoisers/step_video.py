@@ -1,4 +1,9 @@
-"""Native StepVideo denoiser adapter."""
+"""Native StepVideo denoiser adapter.
+
+Implements :class:`~...contracts.Denoiser`.  Requires ``prompt_embeds``,
+``clip_embeds``, and ``attention_mask`` tensors.  Pairs with
+:class:`~...schedulers.step_video.StepVideoFlowScheduler`.
+"""
 
 from __future__ import annotations
 
@@ -28,6 +33,7 @@ STEP_VIDEO_CONFIG = {
 
 
 class StepVideoDenoiser:
+    """StepVideo DiT adapter that forwards dual text/CLIP embeddings."""
     def __init__(self, model: StepVideoModel) -> None:
         self.model = model
 

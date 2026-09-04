@@ -1,8 +1,17 @@
 #!/usr/bin/env python3
+"""Tiny AutoEncoder for Hunyuan Video (TAEHV) — fast preview decode.
+
+:class:`TAEHV` is a small memory-block CNN for previewing
+Hunyuan-style video latents.  Vendored next to Wan variants
+because several Wan preview tools share this graph.
+
+Not the official Hunyuan
+:class:`~...hunyuan_video.original_decoder.HunyuanVideoVAEDecoder`.
+MemBlock / TPool / TGrow are implementation detail.
+
+Inference-only preview path; do not use for final pixels.
 """
-Tiny AutoEncoder for Hunyuan Video
-(DNN for encoding / decoding videos to Hunyuan Video's latent space)
-"""
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as F

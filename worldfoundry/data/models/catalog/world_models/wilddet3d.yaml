@@ -13,6 +13,8 @@ source:
   hf_repo_id: allenai/WildDet3D
   license: other:sam-license
 official_sources:
+  paper: https://arxiv.org/abs/2604.08626
+  project_page: https://allenai.github.io/WildDet3D/
   github:
     url: https://github.com/allenai/WildDet3D
     head_sha: 1b8aa52b6ff3f00d0ebfa07175efc0c0c440964a

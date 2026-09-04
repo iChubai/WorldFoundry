@@ -1,0 +1,55 @@
+schema_version: 2
+model_id: solarwm
+display_name: SolarWM (Wan2.2-5B Stage2)
+task_family: world_model
+groups:
+- world
+- interactive
+- camera_conditioned
+- long_horizon
+source_repos:
+- url: https://github.com/Junchao-cs/SolarWM
+  revision: a3a3fac16466102a2b97df867f7703df7172cb2a
+  local_dir: ${WORLDFOUNDRY_MODEL_SOURCE_DIR}/SolarWM
+  role: official_inference_checkout
+  required_paths:
+  - src/solarwm/__init__.py
+  - configs/examples/wan22_ti2v_5b/infer_stage2_sgf_camera_length.yaml
+checkpoints:
+- repo_id: junchaoh-cs/SolarWM-Wan2.2-5B
+  revision: 3b9db472c44637a5bd0284a82c2d6e1ccf119220
+  role: solarwm_wan22_5b_release_bundle
+  local_dir: ${WORLDFOUNDRY_CKPT_DIR}/junchaoh-cs--SolarWM-Wan2.2-5B
+- repo_id: junchaoh-cs/SolarWM-Data
+  revision: 60c85899ee5303bb3ccdd5add7b5d606c54ddaab
+  role: inference_dataset
+  local_dir: ${WORLDFOUNDRY_DATA_DIR}/SolarWM-Data/releases-v1
+input_schema:
+  required:
+  - data_root
+  optional:
+  - config_path
+  - base_model_dir
+  - checkpoint_dir
+  - test_index
+  - sample_count
+  prompt: false
+  image: false
+  video: true
+  actions:
+  - camera_trajectory
+artifact_kind: generated_world
+artifact_filename: solarwm.mp4
+execution:
+  environment: solarwm
+  pipeline_binding: solarwm
+  backend_stage: in_tree_runtime_manifest
+  runtime_status: official_runtime_checkpoint_bound
+  integration_status: runtime_ported
+integration:
+  status: runtime_ported
+notes:
+- The default route launches the official single-GPU Wan2.2-5B Stage2/SGF camera-length configuration from a user-staged checkout.
+- 'SolarWM has dataset-backed inference: the selected row supplies its caption, source frames, and authoritative camera trajectory.'
+- The compatibility launcher forces transaction_v1 output, requires one selected sample, and copies its official video.mp4 into the WorldFoundry artifact path.
+- Other released SolarWM backbones remain cataloged variants because they require mutually incompatible runtime environments and multi-rank GPU validation.

@@ -199,7 +199,13 @@ def _metric_aliases(metric: MetricSpec) -> tuple[str, ...]:
 
 
 class _Registry(Generic[SpecT]):
-    """Base registry class managing canonical keys, aliases, and insertion order."""
+    """Typed registry facade over :class:`AliasRegistryStore`.
+
+    Public ``register(item)`` keeps the EF-01/EF-02 message contract
+    (self-collision vs cross-item) and ``_key_fn`` / ``_alias_fn``
+    customization; storage, lookup, and insertion order are delegated to
+    the shared store so the two implementations cannot drift (EF-03).
+    """
 
     def __init__(
         self,
@@ -212,12 +218,27 @@ class _Registry(Generic[SpecT]):
         self._kind = kind
         self._key_fn = key_fn
         self._alias_fn = alias_fn
-        self._items: dict[str, SpecT] = {}
-        self._aliases: dict[str, str] = {}
-        self._order: list[str] = []
+        self._store = AliasRegistryStore[SpecT](
+            item_name=key_fn,
+            duplicate_error=DuplicateRegistryKeyError,
+            unknown_error=lambda key: UnknownRegistryKeyError(f"unknown {kind}: {key!r}"),
+            field_name="registry key",
+        )
 
         for item in items:
             self.register(item)
+
+    @property
+    def _items(self) -> dict[str, SpecT]:
+        return self._store._entries
+
+    @property
+    def _aliases(self) -> dict[str, str]:
+        return self._store._aliases
+
+    @property
+    def _order(self) -> list[str]:
+        return self._store._order
 
     def __contains__(self, key: object) -> bool:
         if not isinstance(key, str):
@@ -232,7 +253,7 @@ class _Registry(Generic[SpecT]):
         return iter(self.list())
 
     def __len__(self) -> int:
-        return len(self._order)
+        return len(self._store)
 
     def register(self, item: SpecT) -> SpecT:
         item_name = self._key_fn(item)
@@ -242,7 +263,8 @@ class _Registry(Generic[SpecT]):
         # equals the item's own canonical key stays an error: upstream
         # builders deliberately leave duplicate source keys for the registry
         # to reject — but report it as a self-collision, not a cross-item
-        # conflict (EF-02).
+        # conflict (EF-02).  The store itself would skip that alias, so the
+        # check must stay on this wrapper.
         aliases = tuple(dict.fromkeys(lookup_key(alias) for alias in self._alias_fn(item)))
         for alias_key in aliases:
             if alias_key == canonical_key:
@@ -252,33 +274,19 @@ class _Registry(Generic[SpecT]):
                     "(redundant alias or duplicate source keys)"
                 )
         self._validate_new_keys(canonical_key, aliases, item_name)
-
-        self._items[canonical_key] = item
-        self._order.append(canonical_key)
-        for alias in aliases:
-            self._aliases[alias] = canonical_key
-        return item
+        return self._store.register(item_name, aliases, item)
 
     def get(self, key: str) -> SpecT:
-        canonical_key = self.resolve_key(key)
-        return self._items[canonical_key]
+        return self._store.get(key)
 
     def list(self) -> list[SpecT]:
-        return [self._items[key] for key in self._order]
+        return self._store.list()
 
     def keys(self) -> list[str]:
-        return [self._key_fn(self._items[key]) for key in self._order]
+        return self._store.keys(self._key_fn)
 
     def resolve_key(self, key: str) -> str:
-        normalized = lookup_key(key)
-        if normalized in self._items:
-            return normalized
-        try:
-            return self._aliases[normalized]
-        except KeyError as exc:
-            raise UnknownRegistryKeyError(
-                f"unknown {self._kind}: {key!r}"
-            ) from exc
+        return self._store.resolve_key(key)
 
     def resolve_name(self, key: str) -> str:
         return self._key_fn(self.get(key))

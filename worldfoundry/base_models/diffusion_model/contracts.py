@@ -1,4 +1,27 @@
-"""Typed contracts shared by canonical diffusion models and runners."""
+"""Typed contracts shared by canonical diffusion models and runners.
+
+These dataclasses and Protocols are the only boundary between the runner and
+model components.
+
+Design rules
+------------
+- **Immutable.** Requests, conditions, and step state are frozen dataclasses.
+  Extensions and models must not smuggle implicit state by mutating a shared
+  dict in place.
+- **Explicit.** Images, camera trajectories, actions, and memory references
+  live on :class:`DiffusionRequest.inputs`, not in process-wide config.
+- **Protocols, not base classes.** A denoiser / encoder / scheduler only has
+  to satisfy the Protocol; it does not inherit a framework type.
+
+Data flow for one ``runner.run``::
+
+    DiffusionRequest
+        → ConditionEncoder.encode        → Conditioning
+        → LatentInitializer.initialize   → Tensor | LatentInitialization
+        → DiffusionScheduler.schedule    → Sequence[SchedulerStep]
+        → Denoiser(DenoiserInput) / step → DenoiserOutput, then updated latents
+        → LatentDecoder.decode           → DiffusionOutput
+"""
 
 from __future__ import annotations
 
@@ -11,10 +34,12 @@ from torch import Tensor
 
 
 def _frozen_mapping(value: Mapping | None) -> Mapping:
+    """Copy a mapping into a read-only ``MappingProxyType`` so callers cannot mutate shared state."""
     return MappingProxyType(dict(value or {}))
 
 
 def _string_tuple(value: str | Sequence[str], *, field_name: str) -> tuple[str, ...]:
+    """Normalize a single string or a sequence of strings into a non-empty ``tuple[str, ...]``."""
     items = (value,) if isinstance(value, str) else tuple(str(item) for item in value)
     if not items:
         raise ValueError(f"{field_name} cannot be empty")
@@ -23,7 +48,18 @@ def _string_tuple(value: str | Sequence[str], *, field_name: str) -> tuple[str, 
 
 @dataclass(frozen=True, slots=True)
 class SamplingConfig:
-    """Model-independent settings for one denoising run."""
+    """Model-independent settings for one denoising run.
+
+    Attributes:
+        num_inference_steps: The scheduler must return exactly this many steps;
+            the runner checks the length.
+        guidance_scale: Classifier-free guidance strength.  In ``standard``
+            mode, ``1.0`` skips the negative branch.  In ``positive`` mode,
+            ``0.0`` skips it.
+        seed: Seed for the ``torch.Generator`` that produces reproducible noise.
+        scheduler_options: Extra scheduler knobs (shift, sigma range, …).
+            Frozen after construction.
+    """
 
     num_inference_steps: int = 50
     guidance_scale: float = 1.0
@@ -35,6 +71,7 @@ class SamplingConfig:
             raise ValueError("num_inference_steps must be positive")
         if self.guidance_scale < 0:
             raise ValueError("guidance_scale must be non-negative")
+        # Frozen dataclasses can only assign normalized fields via object.__setattr__.
         object.__setattr__(
             self,
             "scheduler_options",
@@ -48,7 +85,19 @@ class DiffusionRequest:
 
     Model-specific conditions such as images, camera trajectories, actions, or
     memory references live in ``inputs``.  They remain explicit values rather
-    than process-wide mutable configuration.
+    than process-wide mutable configuration.  ``metadata`` is audit-only and
+    is not used in the numerical loop.
+
+    Attributes:
+        prompt: One or more positive texts.
+        negative_prompt: Optional negative texts.  A single item is broadcast
+            across the batch.
+        height / width / num_frames: Pixel-space geometry used by the
+            initializer and decoder to infer latent shapes.
+        sampling: Step count, CFG, and seed.
+        inputs: Family-specific tensors or paths (first frame, reference
+            video, camera, …).
+        metadata: Caller audit fields copied into :class:`DiffusionOutput`.
     """
 
     prompt: str | Sequence[str]
@@ -71,6 +120,8 @@ class DiffusionRequest:
                 self.negative_prompt,
                 field_name="negative_prompt",
             )
+            # A single negative prompt is shared by the whole batch; otherwise
+            # it must align one-to-one with the positive prompts.
             if len(negative) not in (1, len(prompts)):
                 raise ValueError("negative_prompt must contain one item or match the prompt batch")
         object.__setattr__(self, "inputs", _frozen_mapping(self.inputs))
@@ -78,10 +129,12 @@ class DiffusionRequest:
 
     @property
     def prompts(self) -> tuple[str, ...]:
+        """Normalized positive prompt tuple."""
         return _string_tuple(self.prompt, field_name="prompt")
 
     @property
     def negative_prompts(self) -> tuple[str, ...] | None:
+        """Normalized negative prompts; a singleton is broadcast to the batch."""
         if self.negative_prompt is None:
             return None
         values = _string_tuple(self.negative_prompt, field_name="negative_prompt")
@@ -91,12 +144,18 @@ class DiffusionRequest:
 
     @property
     def batch_size(self) -> int:
+        """Batch size equals the number of positive prompts."""
         return len(self.prompts)
 
 
 @dataclass(frozen=True, slots=True)
 class Conditioning:
-    """Positive, negative, and branch-independent denoiser conditions."""
+    """Positive, negative, and branch-independent denoiser conditions.
+
+    Before each denoiser call the runner merges ``shared`` with the active
+    branch: ``{**shared, **positive}`` or ``{**shared, **negative}``.
+    An empty ``negative`` mapping means CFG is off.
+    """
 
     positive: Mapping[str, object]
     negative: Mapping[str, object] = field(default_factory=dict)
@@ -113,9 +172,11 @@ class LatentInitialization:
     """Initial noise plus run-local conditions produced during initialization.
 
     Image/video encoders often belong to the latent codec rather than the text
-    conditioner. Returning their results here keeps that state explicit and
-    lets the framework merge it into the immutable conditioning object before
-    the first denoiser call.
+    conditioner.  Returning their results here keeps that state explicit and
+    lets the framework merge ``conditioning`` into immutable
+    :class:`Conditioning.shared` before the first denoiser call.
+    ``artifacts`` are copied into the final :class:`DiffusionOutput`
+    (for example encoded reference frames).
     """
 
     latents: Tensor
@@ -131,7 +192,13 @@ class LatentInitialization:
 
 @dataclass(frozen=True, slots=True)
 class SchedulerStep:
-    """One immutable point in a scheduler-owned denoising trajectory."""
+    """One immutable point in a scheduler-owned denoising trajectory.
+
+    ``index`` must be contiguous and zero-based; the runner checks this.
+    ``timestep`` / ``next_timestep`` are the noise levels for this interval
+    (discrete ``t`` or continuous sigma).  The scheduler owns the semantics;
+    the denoiser only consumes the tensors.
+    """
 
     index: int
     timestep: Tensor
@@ -140,7 +207,14 @@ class SchedulerStep:
 
 @dataclass(frozen=True, slots=True)
 class DenoiserInput:
-    """Complete input for one conditional denoiser evaluation."""
+    """Complete input for one conditional denoiser evaluation.
+
+    ``request_id`` owns one inference lifecycle and ``branch`` distinguishes
+    its CFG arms (``positive`` / ``negative`` / ``unconditional``). Stateful
+    caches such as TeaCache key by both values so interleaved requests cannot
+    exchange residuals. ``with_updates`` is the immutable replacement used by
+    ``before_denoiser`` extensions.
+    """
 
     latents: Tensor
     timestep: Tensor
@@ -149,14 +223,20 @@ class DenoiserInput:
     step_index: int
     total_steps: int
     branch: str = "positive"
+    request_id: str | None = None
 
     def with_updates(self, **changes: object) -> "DenoiserInput":
+        """Return a new instance with selected fields replaced (frozen dataclass)."""
         return replace(self, **changes)
 
 
 @dataclass(frozen=True, slots=True)
 class DenoiserOutput:
-    """Noise, velocity, or flow prediction returned by a denoiser."""
+    """Noise, velocity, or flow prediction returned by a denoiser.
+
+    ``sample`` must match the input latent shape; the runner checks this.
+    ``extras`` holds non-primary tensors such as attention maps.
+    """
 
     sample: Tensor
     extras: Mapping[str, object] = field(default_factory=dict)
@@ -165,12 +245,19 @@ class DenoiserOutput:
         object.__setattr__(self, "extras", _frozen_mapping(self.extras))
 
     def with_updates(self, **changes: object) -> "DenoiserOutput":
+        """Immutable update used by ``after_denoiser`` extensions."""
         return replace(self, **changes)
 
 
 @dataclass(frozen=True, slots=True)
 class DiffusionOutput:
-    """Decoded output plus final latent and reproducibility metadata."""
+    """Decoded output plus final latent and reproducibility metadata.
+
+    ``sample`` is the decoder output.  ``latents`` is the trajectory at the
+    end of denoising, kept for a second decode or for debugging.
+    ``metadata`` records ``model_id``, seed, step count, and installed
+    extensions.
+    """
 
     sample: Tensor
     latents: Tensor
@@ -182,6 +269,7 @@ class DiffusionOutput:
         object.__setattr__(self, "metadata", _frozen_mapping(self.metadata))
 
     def with_metadata(self, **values: object) -> "DiffusionOutput":
+        """Merge extra metadata and return a new instance."""
         metadata = dict(self.metadata)
         metadata.update(values)
         return replace(self, metadata=metadata)
@@ -189,15 +277,15 @@ class DiffusionOutput:
 
 @runtime_checkable
 class Denoiser(Protocol):
-    """A trainable network that predicts one denoising update."""
+    """A trainable network that predicts one denoising update (noise / v / flow)."""
 
     def __call__(self, model_input: DenoiserInput) -> DenoiserOutput:
-        """Evaluate one positive or negative conditioning branch."""
+        """Evaluate one positive, negative, or unconditional branch."""
 
 
 @runtime_checkable
 class ConditionEncoder(Protocol):
-    """Encode prompts and model-specific inputs into denoiser conditions."""
+    """Encode prompts and model-specific inputs into :class:`Conditioning`."""
 
     def encode(
         self,
@@ -206,7 +294,7 @@ class ConditionEncoder(Protocol):
         device: torch.device,
         dtype: torch.dtype,
     ) -> Conditioning:
-        """Return conditions for one request."""
+        """Return positive / negative / shared conditions for one request."""
 
 
 @runtime_checkable
@@ -221,12 +309,17 @@ class LatentInitializer(Protocol):
         device: torch.device,
         dtype: torch.dtype,
     ) -> Tensor | LatentInitialization:
-        """Return the initial latent tensor."""
+        """Return the initial latent tensor, or a :class:`LatentInitialization`."""
 
 
 @runtime_checkable
 class EncodedLatentInitializer(Protocol):
-    """Initializer that consumes a recipe-bound shared latent encoder."""
+    """Initializer that consumes a recipe-bound shared :class:`LatentEncoder`.
+
+    When the recipe also binds ``latent_encoder`` and the initializer implements
+    this protocol, the runner calls ``initialize_with_encoder`` so each
+    initializer does not load its own VAE.
+    """
 
     def initialize_with_encoder(
         self,
@@ -242,10 +335,10 @@ class EncodedLatentInitializer(Protocol):
 
 @runtime_checkable
 class LatentEncoder(Protocol):
-    """Encode pixels into a model's latent representation."""
+    """Encode pixels into a model's latent representation (usually a VAE encoder)."""
 
     def encode(self, images: Tensor) -> Tensor:
-        """Encode a normalized image batch."""
+        """Encode a normalized image or video batch."""
 
 
 @runtime_checkable
@@ -253,12 +346,16 @@ class LatentDecoder(Protocol):
     """Decode final latents into pixels or another generated representation."""
 
     def decode(self, latents: Tensor, request: DiffusionRequest) -> Tensor:
-        """Decode a completed latent trajectory."""
+        """Decode a completed latent trajectory.  ``request`` supplies geometry."""
 
 
 @runtime_checkable
 class DiffusionScheduler(Protocol):
-    """Own the immutable denoising schedule and numerical update rule."""
+    """Own the immutable denoising schedule and numerical update rule.
+
+    ``schedule`` must not mutate global state.  Each run builds a fresh step
+    list from :class:`SamplingConfig`.
+    """
 
     def schedule(
         self,
@@ -267,10 +364,10 @@ class DiffusionScheduler(Protocol):
         device: torch.device,
         dtype: torch.dtype,
     ) -> Sequence[SchedulerStep]:
-        """Build a schedule for one run without mutating global state."""
+        """Build a schedule whose length equals ``num_inference_steps``."""
 
     def scale_model_input(self, latents: Tensor, step: SchedulerStep) -> Tensor:
-        """Scale latents before a denoiser evaluation."""
+        """Scale latents before a denoiser evaluation (for example DDPM ``1/sqrt(alpha)``)."""
 
     def step(
         self,
@@ -280,7 +377,7 @@ class DiffusionScheduler(Protocol):
         *,
         generator: torch.Generator,
     ) -> Tensor:
-        """Advance the latent trajectory by one step."""
+        """Advance the latent trajectory by one numerical step."""
 
 
 @runtime_checkable
@@ -289,8 +386,9 @@ class FinalDenoiseScheduler(Protocol):
 
     Some native samplers advance through every interval in their numerical
     schedule and then evaluate the denoiser once more at the last non-zero
-    noise level.  Keeping that request on the scheduler lets the shared runner
-    implement the lifecycle without a model-name branch.
+    noise level, treating that prediction as the final latent.  Keeping that
+    request on the scheduler lets the shared runner implement the lifecycle
+    without a model-name branch.
     """
 
     def final_denoise_step(self) -> SchedulerStep | None:
@@ -299,7 +397,12 @@ class FinalDenoiseScheduler(Protocol):
 
 @dataclass(frozen=True, slots=True)
 class ModalityState:
-    """One modality's latent, immutable conditioning mask, and positions."""
+    """One modality's latent, immutable conditioning mask, and positions.
+
+    ``denoise_mask`` marks the region updated on this step.  ``clean_latent``
+    is the frozen / conditioned reference; a masked-latent strategy projects
+    frozen regions back after every step.
+    """
 
     latent: Tensor
     denoise_mask: Tensor
@@ -308,9 +411,11 @@ class ModalityState:
     attention_mask: Tensor | None = None
 
     def with_updates(self, **changes: object) -> "ModalityState":
+        """Immutable field replacement."""
         return replace(self, **changes)
 
     def clone(self) -> "ModalityState":
+        """Deep-copy every tensor so stages do not share storage."""
         return ModalityState(
             latent=self.latent.clone(),
             denoise_mask=self.denoise_mask.clone(),
@@ -350,7 +455,11 @@ class MultiModalDenoiserOutput:
 
 @runtime_checkable
 class LatentProcessor(Protocol):
-    """Transform completed modality states between framework-owned stages."""
+    """Transform completed modality states between framework-owned stages.
+
+    The joint-multistage runner calls this before the next stage so each
+    modality is packed into the dense latents that stage's initializer needs.
+    """
 
     def process(
         self,

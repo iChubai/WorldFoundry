@@ -1,10 +1,19 @@
-"""Utilities for traversing and transforming neural-network module trees."""
+"""Utilities for traversing and transforming neural-network module trees.
+
+``named_apply`` walks children in a stable order for init and wrapping
+(VRAM / compile). Prefer this over ad-hoc ``modules()`` loops.
+"""
 
 from __future__ import annotations
 
 from typing import Callable
 
 from torch import nn
+
+
+# ──────────────────────────────────────────────────────────────────────────
+# Named tree walk — stable qualified names for init and VRAM / compile wrap
+# ──────────────────────────────────────────────────────────────────────────
 
 
 def named_apply(

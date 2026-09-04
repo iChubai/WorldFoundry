@@ -1,0 +1,39 @@
+{
+  "id": "t2v_turbo_t2v",
+  "tagline": {
+    "en": "A fast text-to-video model that pairs a VideoCrafter2 base with a T2V-Turbo LoRA for few-step generation.",
+    "zh": "一个快速的文生视频模型，以 VideoCrafter2 为基座、叠加 T2V-Turbo LoRA，实现少步数生成。"
+  },
+  "overview": {
+    "en": [
+      "T2V-Turbo is a text-to-video model designed for speed. It builds on the VideoCrafter2 base model and applies a T2V-Turbo LoRA that distills the sampling process, so high-quality clips can be produced in only a few denoising steps.",
+      "In WorldFoundry the two pieces stay separate as declarative inputs — the VideoCrafter2 base and the ordered T2V-Turbo LoRA — and are assembled on the shared native diffusion runner with its LVDM components, checkpoint loader, and offload policy.",
+      "In WorldFoundry you run it through the shared pipeline — provide the base and LoRA, give it a prompt, and it writes out a video."
+    ],
+    "zh": [
+      "T2V-Turbo 是一个面向速度设计的文生视频模型。它以 VideoCrafter2 为基座，叠加一个对采样过程进行蒸馏的 T2V-Turbo LoRA，从而只需少量去噪步数即可生成高质量片段。",
+      "在 WorldFoundry 中，这两部分作为声明式输入保持独立——VideoCrafter2 基座与有序的 T2V-Turbo LoRA——并在统一原生扩散运行器上组装，配合其 LVDM 组件、checkpoint 加载器与显存卸载策略。",
+      "在 WorldFoundry 中，你通过统一 pipeline 运行它——提供基座与 LoRA，给它提示词，它就会输出一段视频。"
+    ]
+  },
+  "whenToUse": {
+    "en": "When you want fast text-to-video generation with few denoising steps, and are comfortable supplying the VideoCrafter2 base together with the T2V-Turbo LoRA.",
+    "zh": "当你想用少量去噪步数进行快速文生视频生成，并愿意同时提供 VideoCrafter2 基座与 T2V-Turbo LoRA 时。"
+  },
+  "notFor": {
+    "en": "Image-to-video workflows — this route is text-to-video. It also depends on two separate assets (base plus LoRA), so both must be available before you run.",
+    "zh": "不适合图生视频流程——该路径是文生视频。它还依赖两个独立资产（基座 + LoRA），运行前两者都需就绪。"
+  },
+  "highlights": {
+    "en": [
+      "Few-step text-to-video for fast generation",
+      "VideoCrafter2 base plus a distilled T2V-Turbo LoRA",
+      "Runs on WorldFoundry's shared native diffusion pipeline"
+    ],
+    "zh": [
+      "少步数文生视频，生成快速",
+      "VideoCrafter2 基座搭配蒸馏的 T2V-Turbo LoRA",
+      "运行于 WorldFoundry 统一原生扩散 pipeline"
+    ]
+  }
+}

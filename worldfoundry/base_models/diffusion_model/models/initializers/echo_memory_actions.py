@@ -1,4 +1,17 @@
-"""Echo-specific planar camera actions for canonical network components."""
+"""Echo-Memory planar camera actions (RT12 rows at latent rate).
+
+Converts compact WorldFoundry trajectories (``\"left*80\"``), JSON files,
+integer-keyed mappings, or explicit ``[F,12]`` RT rows into the
+published Echo convention: XY translation, Z-axis yaw, poses relative
+to frame 0, sampled at Wan latent stride (default 4).
+
+This is **not** a :class:`~...contracts.LatentInitializer`.  Recipes /
+condition encoders call :func:`echo_camera_trajectory_actions` and place
+the result in ``request.inputs[\"actions\"]`` for the Echo denoiser.
+Vertical translation and pitch are rejected: upstream checkpoints were
+trained planar-only.  Yaw sign is flipped vs the generic OpenCV helper
+so it matches Echo's CCW-positive ``R_z``.
+"""
 
 from __future__ import annotations
 

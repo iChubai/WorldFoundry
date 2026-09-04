@@ -1,5 +1,16 @@
 # Copyright 2024-2025 The Alibaba Wan Team Authors. All rights reserved.
-"""Module for base_models -> diffusion_model -> video -> wan -> vae -> action_wan2p1.py functionality."""
+"""Wan 2.1 action-conditioned VAE variant (same latent contract).
+
+Checkpoint-shaped causal 3-D CNN matching action-recipe
+weights.  Public surface is :class:`WanVAE` (16-ch BCTHW,
+8× spatial / 4× temporal, official mean/std).
+
+Encode/decode semantics match :mod:`~..model.WanVideoVAE`.
+Residual / causal conv blocks are implementation detail.
+
+Prefer :class:`~..component.WanVideoDecoder` unless this
+checkpoint layout is required.  Sibling of :mod:`.camera_21`.
+"""
 
 import logging
 
@@ -16,6 +27,7 @@ from einops import rearrange, repeat
 
 from tqdm import tqdm
 from worldfoundry.core.attention import scaled_dot_product_attention as _worldfoundry_scaled_dot_product_attention
+from worldfoundry.core.model_loading import load_torch_state_dict
 
 CACHE_T = 2
 
@@ -780,7 +792,7 @@ def _video_vae(pretrained_path=None, z_dim=16):
     """Compatibility factory used by older Wan/MatrixGame2 wrappers."""
     model = VideoVAE_(z_dim=z_dim).eval().requires_grad_(False)
     if pretrained_path is not None:
-        model.load_state_dict(torch.load(pretrained_path, map_location="cpu"), assign=True)
+        model.load_state_dict(load_torch_state_dict(pretrained_path, map_location="cpu"), assign=True)
     return model
 
 
@@ -811,7 +823,7 @@ class WanVAE(nn.Module):
         # init model
         self.model = VideoVAE_(z_dim=z_dim).eval().requires_grad_(False)
         if pretrained_path is not None:
-            self.model.load_state_dict(torch.load(pretrained_path, map_location="cpu"), assign=True)
+            self.model.load_state_dict(load_torch_state_dict(pretrained_path, map_location="cpu"), assign=True)
         self.upsampling_factor = 8
 
     def to(self, *args, **kwargs):

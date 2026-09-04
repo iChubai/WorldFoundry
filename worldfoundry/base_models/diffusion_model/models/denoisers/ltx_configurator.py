@@ -1,3 +1,16 @@
+"""Construct checkpoint-compatible LTX DiT graphs from serialized config.
+
+Used by :mod:`.ltx` when the recipe loads an official LTX-2 audio-video or
+LTX-Video 0.9.x transformer.  This module is **not** a
+:class:`~...contracts.Denoiser`; it only instantiates
+:class:`~..networks.ltx.model.LTXModel` with ABI-checked defaults.
+
+LTX-Video 0.9.x omitted several serialized fields.  Their runtime defaults
+are part of the released checkpoint ABI: interleaved RoPE and top-left
+patch coordinates.  LTX-2.x changed both, so inheriting the newer values
+would produce valid-shaped but semantically corrupt attention.
+"""
+
 import torch
 
 from worldfoundry.base_models.diffusion_model.models.networks.ltx.model import LTXModel, LTXModelType
@@ -8,13 +21,11 @@ from worldfoundry.core.nn import DEFAULT_TRANSFORMER_OPS, TransformerOpsConfig
 
 
 class LTXModelConfigurator:
-    """
-    Configurator for LTX model.
-    Used to create an LTX model from a configuration dictionary.
-    """
+    """Build the LTX-2 joint audio-video transformer from a config dict."""
 
     @classmethod
     def from_config(cls, config: dict, ops: TransformerOpsConfig = DEFAULT_TRANSFORMER_OPS) -> LTXModel:
+        """Instantiate :class:`LTXModel` with audio-video ABI checks."""
         # Build caption projections for 19B models (projection handled in transformer).
         caption_projection, audio_caption_projection = _build_caption_projections(config, is_av=True)
 
@@ -71,15 +82,13 @@ class LTXModelConfigurator:
 
 
 class LTXVideoOnlyModelConfigurator:
-    """
-    Configurator for LTX video only model.
-    Used to create an LTX video only model from a configuration dictionary.
-    """
+    """Build the LTX-Video 0.9.x video-only transformer from a config dict."""
 
     MODEL_CLS = LTXModel
 
     @classmethod
     def from_config(cls, config: dict, ops: TransformerOpsConfig = DEFAULT_TRANSFORMER_OPS) -> LTXModel:
+        """Instantiate a video-only :class:`LTXModel` with 0.9.x ABI defaults."""
         # Build caption projection for 19B model (projection handled in transformer).
         caption_projection, _ = _build_caption_projections(config, is_av=False)
 

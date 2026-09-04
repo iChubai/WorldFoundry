@@ -1,5 +1,13 @@
 # Copyright 2024-2025 The Alibaba Wan Team Authors. All rights reserved.
-"""Module for base_models -> diffusion_model -> video -> wan -> wan_2p1 -> configs -> shared_config.py functionality."""
+"""Fields shared by every official Wan 2.1 EasyDict identity.
+
+Sets UMT5-XXL as the text encoder (bf16, 512 tokens), bf16 DiT
+weights, 1000 training timesteps, 16 fps, and the default Chinese
+negative prompt.  Per-identity files update this object then
+overwrite VAE / width / CLIP.
+
+Changing a field here changes T2V 1.3B, T2V 14B, and I2V 14B at once.
+"""
 
 import torch
 

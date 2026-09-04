@@ -13,7 +13,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Native Cosmos component."""
+"""SigLIP still encoder used by Cosmos vision-side guardrails.
+
+Loads ``google/siglip-so400m-patch14-384`` (or ``model_name``) from
+``checkpoint_dir`` and returns L2-normalized image features.  Not a
+:class:`~...contracts.ConditionEncoder`; recipes call
+:meth:`SigLIPEncoder.encode_image` directly.
+"""
 
 import torch
 from PIL import Image
@@ -21,7 +27,7 @@ from transformers import SiglipModel, SiglipProcessor
 
 
 class SigLIPEncoder(torch.nn.Module):
-    """Sig lip encoder implementation."""
+    """Hugging Face SigLIP wrapper that returns unit-norm image embeddings."""
 
     def __init__(
         self,
@@ -30,17 +36,6 @@ class SigLIPEncoder(torch.nn.Module):
         device="cuda" if torch.cuda.is_available() else "cpu",
         dtype=torch.float32,
     ) -> None:
-        """Init.
-
-        Args:
-            checkpoint_dir: The checkpoint dir.
-            model_name: The model name.
-            device: The device.
-            dtype: The dtype.
-
-        Returns:
-            The return value.
-        """
         super().__init__()
         self.checkpoint_dir = checkpoint_dir
         self.device = device

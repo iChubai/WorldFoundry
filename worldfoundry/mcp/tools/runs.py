@@ -14,6 +14,7 @@ import shlex
 from collections.abc import Mapping, Sequence
 from pathlib import Path
 from typing import Any
+from uuid import uuid4
 
 from worldfoundry.cli.tui_discovery import build_model_benchmark_command, build_suite_command
 from worldfoundry.runtime.jobs import python_module_command
@@ -184,10 +185,16 @@ async def run_evaluation_payload(
         raise ValueError("wait must be one of: auto, async, sync")
     selected_benchmarks = _benchmark_ids(benchmark=benchmark, benchmarks=benchmarks or tasks)
     ctx = context or get_default_context()
+    job_id = uuid4().hex[:12]
+    resolved_output_dir = (
+        output_dir
+        if output_dir is not None
+        else _default_output_dir(ctx.output_root, model, selected_benchmarks, job_id=job_id)
+    )
     preview = preview_run_payload(
         model=model,
         benchmarks=selected_benchmarks,
-        output_dir=output_dir,
+        output_dir=resolved_output_dir,
         suite_ids=suite_ids,
         plan_only=plan_only,
         resume=resume,
@@ -215,6 +222,7 @@ async def run_evaluation_payload(
             "plan_only": plan_only,
             "surface": "mcp",
         },
+        job_id=job_id,
     )
     if wait == "async":
         return _submitted(job.to_summary())
@@ -471,7 +479,13 @@ def _benchmark_ids(*, benchmark: str | None, benchmarks: Sequence[str] | None) -
     return tuple(deduped)
 
 
-def _default_output_dir(root: Path, model: str, benchmarks: Sequence[str]) -> Path:
+def _default_output_dir(
+    root: Path,
+    model: str,
+    benchmarks: Sequence[str],
+    *,
+    job_id: str | None = None,
+) -> Path:
     """Resolve a default output directory from model and benchmark identifiers.
 
     Joins up to two benchmark labels with the model label; appends a
@@ -480,7 +494,8 @@ def _default_output_dir(root: Path, model: str, benchmarks: Sequence[str]) -> Pa
     label = "__".join((_safe_path_label(model), *(_safe_path_label(item) for item in benchmarks[:2])))
     if len(benchmarks) > 2:
         label = f"{label}__plus_{len(benchmarks) - 2}"
-    return root / label
+    output_dir = root / label
+    return output_dir if job_id is None else output_dir / _safe_path_label(job_id)
 
 
 def _safe_path_label(value: str) -> str:

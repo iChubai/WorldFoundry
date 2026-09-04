@@ -1,4 +1,19 @@
-"""Native Cosmos3 Nano and Super recipes."""
+"""Native Cosmos3 Nano and Super omni (audio-video) recipes.
+
+Each public function returns a :class:`NativeDiffusionRecipe`.  Recipes
+do not construct runners.
+
+Both scales bind a joint audio-video DiT, tokenizer-backed prompt
+conditioner, VAE latent initializer, Flow UniPC loaded from the Hub
+scheduler config, and a media decoder that also consumes the sound
+tokenizer.  Strategy is ``joint-multistage`` with a single stage
+(``stage_steps=(35,)``) — one scheduler role (``scheduler-1``), no
+spatial upsampler pass.
+
+Capabilities include T2I / T2V / I2V / V2V, joint audio-video, and
+action / dynamics heads.  Nano and Super differ only in Hub pin and
+transformer shard count (7 vs 27).
+"""
 
 from __future__ import annotations
 
@@ -37,6 +52,8 @@ def _cosmos3_recipe(
     transformer_shards: int,
     aliases: tuple[str, ...],
 ) -> NativeDiffusionRecipe:
+    """Bind joint DiT, prompt conditioner, VAE init, UniPC, and AV decoder."""
+
     denoiser = ComponentKey(ComponentKind.DENOISER)
     conditioner = ComponentKey(ComponentKind.CONDITIONER)
     initializer = ComponentKey(ComponentKind.LATENT_INITIALIZER)
@@ -130,6 +147,8 @@ def _cosmos3_recipe(
 
 
 def cosmos3_nano_recipe() -> NativeDiffusionRecipe:
+    """Cosmos3-Nano: joint DiT + UniPC, ``joint-multistage`` one 35-step stage."""
+
     return _cosmos3_recipe(
         model_id=COSMOS3_NANO_MODEL_ID,
         repo_id=COSMOS3_NANO_REPO_ID,
@@ -140,6 +159,8 @@ def cosmos3_nano_recipe() -> NativeDiffusionRecipe:
 
 
 def cosmos3_super_recipe() -> NativeDiffusionRecipe:
+    """Cosmos3-Super; same joint-multistage roles as Nano, 27 transformer shards."""
+
     return _cosmos3_recipe(
         model_id=COSMOS3_SUPER_MODEL_ID,
         repo_id=COSMOS3_SUPER_REPO_ID,

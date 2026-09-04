@@ -3,6 +3,17 @@
 No optional package or DSO is imported at module definition time.  Runtime
 code should inspect availability during plan resolution and call ``load`` at a
 prewarm boundary, never from a compiled region or CUDA Graph capture.
+
+Not this module:
+    In-tree Triton and PyTorch fallbacks live in :mod:`.diffusion` /
+    :mod:`.moe`. This adapter never substitutes for those paths.
+
+Public surface:
+
+- :class:`NativeProviderStatus` — serializable inspect/load state.
+- :class:`NativeProviderUnavailable` — raised only when ``strict=True``.
+- :func:`native_provider_status` / :func:`load_native_provider` — inspect or
+  load; non-strict failures return a status instead of raising.
 """
 
 from __future__ import annotations
@@ -33,6 +44,8 @@ class NativeProviderStatus:
 
     @property
     def available(self) -> bool:
+        """True only after a successful ``load`` with a compatible ABI."""
+
         return (
             self.state == "loaded"
             and self.installed
@@ -43,9 +56,13 @@ class NativeProviderStatus:
 
     @property
     def inspectable(self) -> bool:
+        """True when a sidecar manifest can be read without loading the DSO."""
+
         return self.installed and self.manifest_valid
 
     def to_dict(self) -> dict[str, Any]:
+        """Flatten status for manifests; ``capabilities`` becomes a list."""
+
         return {
             "available": self.available,
             "inspectable": self.inspectable,
@@ -62,7 +79,18 @@ class NativeProviderStatus:
         }
 
 
+# ──────────────────────────────────────────────────────────────────────────
+# Import / inspect — ModuleNotFoundError for this package is "absent", not fatal
+# ──────────────────────────────────────────────────────────────────────────
+
+
 def _import_native_package() -> Any | None:
+    """Import ``worldfoundry_native_kernels`` or return ``None`` if it is not installed.
+
+    Failure: a missing *different* module still raises so broken dependencies
+    are not mistaken for an optional extra.
+    """
+
     try:
         return importlib.import_module("worldfoundry_native_kernels")
     except ModuleNotFoundError as exc:
@@ -78,6 +106,8 @@ def _status_from_manifest(
     compatible: bool | None,
     state: str,
 ) -> NativeProviderStatus:
+    """Build a status from a mapping manifest; malformed capability lists become empty."""
+
     capabilities = manifest.get("capabilities")
     normalized_capabilities = (
         tuple(str(value) for value in capabilities)
@@ -95,7 +125,12 @@ def _status_from_manifest(
         operator_abi_version=int(operator_abi) if operator_abi is not None else None,
         capabilities=normalized_capabilities,
         manifest=dict(manifest),
-    )
+        )
+
+
+# ──────────────────────────────────────────────────────────────────────────
+# Public inspect / load — never import torch through the optional package here
+# ──────────────────────────────────────────────────────────────────────────
 
 
 def native_provider_status(*, load: bool = False, strict: bool = False) -> NativeProviderStatus:

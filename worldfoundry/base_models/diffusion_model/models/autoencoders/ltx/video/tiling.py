@@ -1,3 +1,17 @@
+"""Spatial / temporal tiling configs for long LTX videos.
+
+:class:`SpatialTilingConfig`, :class:`TemporalTilingConfig`,
+and :class:`TilingConfig` describe how
+:class:`~.video_vae.VideoEncoder` / :class:`VideoDecoder`
+split long clips so VRAM stays bounded.
+
+They are dataclasses only; the split / blend math lives in
+:mod:`~...representations.ltx.tiling`.  Runner options pass
+these through :mod:`~..component`.
+
+Part of the LTX video codec family, unused by audio.
+"""
+
 from dataclasses import dataclass
 
 

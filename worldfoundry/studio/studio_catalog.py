@@ -7,7 +7,7 @@ from functools import lru_cache
 from pathlib import Path
 from typing import Any, Mapping, Sequence
 
-from worldfoundry.core.inference import ASSET_GATED_WORLD_RUNTIME_MODEL_IDS
+from worldfoundry.runtime.inference_catalog import ASSET_GATED_WORLD_RUNTIME_MODEL_IDS
 from worldfoundry.evaluation.utils import REPO_ROOT
 
 from .catalog import CatalogEntry, catalog_stats, discover_catalog, filter_catalog

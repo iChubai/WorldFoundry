@@ -1,4 +1,9 @@
-"""LTX attention layer built from shared WorldFoundry backend callables."""
+"""LTX multi-head attention on packed ``B T D`` tokens.
+
+QK-RMSNorm self- or cross-attn with LTX-specific RoPE, optional STG
+perturbation bypass (skip Q/K when the whole batch is perturbed), and
+optional per-head gating.  Backends come from :class:`TransformerAttentionOps`.
+"""
 
 import torch
 
@@ -8,6 +13,8 @@ from .rope import LTXRopeType, apply_rotary_emb
 
 
 class Attention(torch.nn.Module):
+    """Checkpoint-shaped LTX attention (self-attn when ``context_dim`` is ``None``)."""
+
     def __init__(
         self,
         query_dim: int,

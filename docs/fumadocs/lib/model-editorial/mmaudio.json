@@ -1,0 +1,41 @@
+{
+  "id": "mmaudio",
+  "tagline": {
+    "en": "MMAudio — generate synchronized audio for a video, or audio from a text prompt.",
+    "zh": "MMAudio——为视频生成同步音频,或根据文字提示生成音频。"
+  },
+  "overview": {
+    "en": [
+      "MMAudio generates audio to accompany video. Give it a silent clip and it produces a matching soundtrack; give it a text prompt and it synthesizes audio to match the description.",
+      "It's a multimodal audio generation model that conditions on video (and text) to produce sound that tracks what's happening on screen, which makes it a natural companion to video generators that output silent clips.",
+      "In WorldFoundry you run MMAudio through the shared pipeline for video-to-audio or text-to-audio, pairing it with a generated video to add sound."
+    ],
+    "zh": [
+      "MMAudio 为视频生成配套音频。给它一段无声片段,它会产出匹配的声音;给它一段文字提示,它会合成与描述相符的音频。",
+      "它是一个多模态音频生成模型,以视频(以及文字)为条件,产出与画面内容对应的声音,因而是那些只输出无声片段的视频生成模型的天然搭档。",
+      "在 WorldFoundry 中,你通过统一 pipeline 运行 MMAudio,做视频转音频或文生音频,与生成的视频配合以补上声音。"
+    ]
+  },
+  "whenToUse": {
+    "en": "Use MMAudio to add a synchronized soundtrack to a silent video, or to generate audio from a text description — a useful finishing step after generating video.",
+    "zh": "用 MMAudio 为无声视频添加同步的声音,或根据文字描述生成音频——是生成视频之后一个实用的收尾环节。"
+  },
+  "notFor": {
+    "en": "It generates audio, not video or speech dialogue. Checkpoints are downloaded separately rather than bundled.",
+    "zh": "它生成的是音频,而非视频或对白语音。Checkpoint 需单独下载,而非随附。"
+  },
+  "highlights": {
+    "en": [
+      "Video-to-audio: synchronized soundtracks for silent clips",
+      "Text-to-audio: generate sound from a prompt",
+      "Multimodal model conditioned on video and text",
+      "Runs through WorldFoundry's shared pipeline"
+    ],
+    "zh": [
+      "视频转音频:为无声片段生成同步的声音",
+      "文生音频:根据提示生成声音",
+      "以视频与文字为条件的多模态模型",
+      "通过 WorldFoundry 统一 pipeline 运行"
+    ]
+  }
+}

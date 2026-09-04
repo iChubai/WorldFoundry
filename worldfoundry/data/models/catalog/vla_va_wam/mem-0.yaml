@@ -7,6 +7,8 @@ aliases:
 availability: open_source
 provider: official_repo
 official_sources:
+  project_page: https://rmbench.github.io/
+  paper: https://arxiv.org/abs/2603.01229
   github:
     url: https://github.com/RoboTwin-Platform/RMBench
     revision: 87e0498891073d483d330195c0f160709bd92ff5

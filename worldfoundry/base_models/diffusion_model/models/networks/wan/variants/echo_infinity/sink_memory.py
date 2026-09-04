@@ -1,9 +1,23 @@
+"""Echo-Infinity sink-token KV memory for causal Wan.
+
+Keeps a fixed sink window of Q/K/V per block.  On update, sink hidden
+states are re-encoded against evicted KV so the compact bank stays
+fresh.  Causal / memory hook only.
+"""
+
 import torch
 
 from .attention import attention
 from .causal import causal_rope_apply
 
+
 class SinkMemory:
+    """Fixed-size sink-token KV bank used by Echo-Infinity causal rollouts.
+
+    Each transformer block stores Q/K/V for ``sink_size`` frames.  After a
+    chunk evicts older KV, :meth:`update` re-encodes the sink hidden
+    states against the evicted context so the compact bank stays current.
+    """
 
     def __init__(self, num_blocks, num_heads, head_dim, tokens_per_frame, sink_size, hidden_dim):
         self.num_blocks = num_blocks
@@ -24,6 +38,7 @@ class SinkMemory:
         self._pending_sink_hidden = None
 
     def reset(self):
+        """Clear per-block QKV, sink hidden states, and pending captures."""
         for i in range(self.num_blocks):
             self.memory_q[i] = None
             self.memory_k[i] = None
@@ -36,6 +51,7 @@ class SinkMemory:
         self._pending_sink_hidden = None
 
     def initialize_block(self, block_idx, q_roped, k_pre_rope, v):
+        """Seed one block's sink QKV from the first chunk."""
         self.memory_q[block_idx] = q_roped.clone().detach()
         self.memory_k[block_idx] = k_pre_rope.clone().detach()
         self.memory_v[block_idx] = v.clone().detach()
@@ -43,15 +59,18 @@ class SinkMemory:
             self.initialized = True
 
     def initialize_hidden(self, hidden):
+        """Store the sink-window hidden states used by :meth:`update`."""
         self.sink_hidden = hidden.clone().detach()
 
     def get_kv(self, block_idx):
+        """Return ``(K, V)`` for ``block_idx`` once history exists."""
         if not self.has_history:
             return None
         return (self.memory_k[block_idx], self.memory_v[block_idx])
 
     @torch.no_grad()
     def update(self, blocks, evicted_kv_all, e0, context, context_lens, freqs, grid_sizes, crossattn_cache_template=None, evicted_k_is_pre_rope=False):
+        """Re-run the sink tokens through each block against evicted KV."""
         if not self.initialized or self.sink_hidden is None:
             return
         x_mem = self.sink_hidden

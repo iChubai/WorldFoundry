@@ -1,5 +1,7 @@
 # pytorch_diffusion + derived encoder decoder
-"""Encoder and decoder blocks for latent video diffusion autoencoders."""
+"""Encoder/decoder residual and attention blocks for the LVDM AutoencoderKL.
+
+Large CNN file: header only."""
 
 import math
 import torch

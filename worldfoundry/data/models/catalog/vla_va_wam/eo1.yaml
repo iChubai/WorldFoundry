@@ -7,6 +7,7 @@ aliases:
 availability: open_source
 provider: official_repo
 official_sources:
+  paper: https://arxiv.org/abs/2508.21112
   github:
     head_sha: 451c363d7dff682700789afae0b9b17c004e8f8c
     url: https://github.com/EO-Robotics/EO

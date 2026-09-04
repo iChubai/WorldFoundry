@@ -1,4 +1,9 @@
-"""Cosmos Predict 2.5 denoiser component and official checkpoint mapping."""
+"""Cosmos Predict 2.5 denoiser component and official checkpoint mapping.
+
+Maps NVIDIA training keys onto the native inference DiT and exposes a
+``Denoiser`` for Predict 2.5 and Transfer 2.5 recipes.  The runner never
+sees the vendor checkpoint layout.
+"""
 
 from __future__ import annotations
 
@@ -92,6 +97,8 @@ COSMOS25_TRANSFER_2B_CONFIG = {
 
 
 class Cosmos25Denoiser:
+    """Predict 2.5 DiT adapter that returns a velocity-style ``DenoiserOutput``."""
+
     def __init__(self, model: Cosmos25Transformer3DModel) -> None:
         self.model = model
 

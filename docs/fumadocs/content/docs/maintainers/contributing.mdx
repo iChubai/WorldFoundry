@@ -38,10 +38,14 @@ Fumadocs is the only maintained documentation surface. Add or update paired Engl
 
 When you change behavior, update the page that owns it:
 
-- **New model or runtime profile** — `guides/supported-models`, `reference/environments`, and the model guide if behavior changes.
+- **New model or runtime profile** — `guides/supported-models`, `reference/environments`, and the model guide if behavior changes. Refresh checked-in homepage recipes with `npm --prefix docs/fumadocs run models:generate`, then verify them with `npm --prefix docs/fumadocs run models:check`. To refresh paper titles and teaser figures, run `npm --prefix docs/fumadocs run models:media` after generate.
 - **New benchmark** — `evaluation/benchmark-hub/<benchmark-id>`, the benchmark guide, and maintainer architecture pages when internals change.
 - **CLI or output schema** — `reference/cli` and architecture pages that own the changed behavior.
 - **Internal workflow** — `maintainers/architecture` (especially workflow and evaluation-core).
+
+Python-backed docs codegen and drift checks (`api:*`, `models:*`, `coverage:*`, and
+`cli:screenshots`) go through `docs/fumadocs/scripts/run-python.sh`. Override the interpreter
+with `WF_DOCS_PYTHON` (then `PYTHON`, then `python3` / `python`) when needed.
 
 ## Local validation
 
@@ -50,6 +54,16 @@ bash scripts/setup/conda_install.sh --preset slim --env-name worldfoundry
 make lint
 make docs-check
 cd docs/fumadocs && npm run types:check && npm run build
+```
+
+For the CPU `test/eval_core` release gate on a fresh environment, install the
+official CPU Torch wheels first, then the normal package extra:
+
+```bash
+python -m pip install --index-url https://download.pytorch.org/whl/cpu \
+  "torch>=2.7,<2.12.0" "torchvision>=0.22,<0.27.0"
+python -m pip install -e ".[eval_core]"
+make test-eval-core
 ```
 
 For model/profile audits:

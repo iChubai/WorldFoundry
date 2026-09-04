@@ -1,6 +1,12 @@
 # Copyright 2024-2025 The Alibaba Wan Team Authors. All rights reserved.
-"""Module for base_models -> diffusion_model -> video -> wan -> models -> camera_wan2p1.py functionality."""
+"""Wan 2.1 camera-conditioned DiT (Plücker / camera tokens + official packing).
 
+Official-layout Wan 2.1 with extra camera-aware self-attention and
+optional GAN discriminator blocks.  Camera features are consumed inside
+attention, not via the native :class:`SimpleAdapter` residual.
+
+Adds camera conditioning.  No VACE, action encoder, or linear attn.
+"""
 import math
 
 import torch
@@ -15,12 +21,7 @@ from worldfoundry.core.attention import scaled_dot_product_attention as _worldfo
 __all__ = ['WanModel']
 
 def sinusoidal_embedding_1d(dim, position):
-    """Sinusoidal embedding 1d.
-
-    Args:
-        dim: The dim.
-        position: The position.
-    """
+    """Classic sinusoidal features for 1-D timestep / position ids."""
     # preprocess
     assert dim % 2 == 0
     half = dim // 2
@@ -34,13 +35,7 @@ def sinusoidal_embedding_1d(dim, position):
 
 # @amp.autocast(enabled=False)
 def rope_params(max_seq_len, dim, theta=10000):
-    """Rope params.
-
-    Args:
-        max_seq_len: The max seq len.
-        dim: The dim.
-        theta: The theta.
-    """
+    """Build complex cis frequencies for one RoPE axis."""
     assert dim % 2 == 0
     freqs = torch.outer(
         torch.arange(max_seq_len),
@@ -52,13 +47,7 @@ def rope_params(max_seq_len, dim, theta=10000):
 
 # @amp.autocast(enabled=False)
 def rope_apply(x, grid_sizes, freqs):
-    """Rope apply.
-
-    Args:
-        x: The x.
-        grid_sizes: The grid sizes.
-        freqs: The freqs.
-    """
+    """Apply per-sample 3D RoPE to packed tokens; leave pad tokens unrotated."""
     n, c = x.size(2), x.size(3) // 2
 
     # split freqs
@@ -112,7 +101,7 @@ def rope_apply_given_freqs(x, freqs):
 
 
 class WanRMSNorm(nn.Module):
-    """Wan rms norm implementation."""
+    """RMSNorm with a learned scale; compute in fp32 when the impl upcasts."""
 
     def __init__(self, dim, eps=1e-5):
         """Init.
@@ -134,16 +123,12 @@ class WanRMSNorm(nn.Module):
         return self._norm(x.float()).type_as(x) * self.weight
 
     def _norm(self, x):
-        """Helper function to norm.
-
-        Args:
-            x: The x.
-        """
+        """RMS-normalize the last dim of ``x``."""
         return x * torch.rsqrt(x.pow(2).mean(dim=-1, keepdim=True) + self.eps)
 
 
 class WanLayerNorm(nn.LayerNorm):
-    """Wan layer norm implementation."""
+    """LayerNorm that typically upcasts to fp32, then restores the activation dtype."""
 
     def __init__(self, dim, eps=1e-6, elementwise_affine=False):
         """Init.
@@ -164,7 +149,7 @@ class WanLayerNorm(nn.LayerNorm):
 
 
 class WanSelfAttention(nn.Module):
-    """Wan self attention implementation."""
+    """Wan self-attention: RMSNorm Q/K, 3D RoPE, flash or variant kernel."""
 
     def __init__(self,
                  dim,
@@ -209,11 +194,7 @@ class WanSelfAttention(nn.Module):
 
         # query, key, value function
         def qkv_fn(x):
-            """Qkv fn.
-
-            Args:
-                x: The x.
-            """
+            """Project and reshape QKV to ``[B, L, H, D]``."""
             q = self.norm_q(self.q(x)).view(b, s, n, d)
             k = self.norm_k(self.k(x)).view(b, s, n, d)
             v = self.v(x).view(b, s, n, d)
@@ -235,7 +216,7 @@ class WanSelfAttention(nn.Module):
 
 
 class WanT2VCrossAttention(WanSelfAttention):
-    """Wan v cross attention implementation."""
+    """Wan text or image-text cross-attention."""
 
     def forward(self, x, context, context_lens, crossattn_cache=None):
         r"""
@@ -296,7 +277,7 @@ class WanT2VCrossAttention(WanSelfAttention):
 
 
 class WanGanCrossAttention(WanSelfAttention):
-    """Wan gan cross attention implementation."""
+    """GAN-style cross-attention used by some Wan discriminator / aux heads."""
 
     def forward(self, x, context, crossattn_cache=None):
         r"""
@@ -324,7 +305,7 @@ class WanGanCrossAttention(WanSelfAttention):
 
 
 class WanI2VCrossAttention(WanSelfAttention):
-    """Wan v cross attention implementation."""
+    """Wan text or image-text cross-attention."""
 
     def __init__(self,
                  dim,
@@ -414,7 +395,7 @@ WAN_CROSSATTENTION_CLASSES = {
 
 
 class WanAttentionBlock(nn.Module):
-    """Wan attention block implementation."""
+    """Wan transformer block: AdaLN self-attn, cross-attn, then AdaLN FFN."""
 
     def __init__(self,
                  cross_attn_type,
@@ -497,14 +478,7 @@ class WanAttentionBlock(nn.Module):
 
         # cross-attention & ffn function
         def cross_attn_ffn(x, context, context_lens, e):
-            """Cross attn ffn.
-
-            Args:
-                x: The x.
-                context: The context.
-                context_lens: The context lens.
-                e: The e.
-            """
+            """Second half of the block: cross-attn then gated FFN."""
             x = x + self.cross_attn(self.norm3(x), context, context_lens)
             y = self.ffn(self.norm2(x) * (1 + e[4]) + e[3])
             # with amp.autocast(dtype=torch.float32):
@@ -516,7 +490,7 @@ class WanAttentionBlock(nn.Module):
 
 
 class GanAttentionBlock(nn.Module):
-    """Gan attention block implementation."""
+    """Auxiliary GAN attention block (not on the main denoising residual)."""
 
     def __init__(self,
                  dim=1536,
@@ -616,7 +590,7 @@ class GanAttentionBlock(nn.Module):
 
 
 class Head(nn.Module):
-    """Head implementation."""
+    """AdaLN-modulated output projection from tokens to packed patch voxels."""
 
     def __init__(self, dim, out_dim, patch_size, eps=1e-6):
         """Init.
@@ -655,7 +629,7 @@ class Head(nn.Module):
 
 
 class MLPProj(torch.nn.Module):
-    """Mlp proj implementation."""
+    """CLIP image-token projector (I2V / FLF2V)."""
 
     def __init__(self, in_dim, out_dim):
         """Init.
@@ -681,9 +655,7 @@ class MLPProj(torch.nn.Module):
         return clip_extra_context_tokens
 
 class WanModel(nn.Module, NativeConfigMixin):
-    r"""
-    Wan diffusion backbone supporting both text-to-video and image-to-video.
-    """
+    r"""Wan 2.1 camera-conditioned DiT (Plücker / camera tokens in attention)."""
 
     ignore_for_config = [
         'patch_size', 'cross_attn_norm', 'qk_norm', 'text_dim', 'window_size'

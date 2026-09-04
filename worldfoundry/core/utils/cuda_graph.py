@@ -13,16 +13,56 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Inference-only CUDA Graph capture helpers."""
+"""Low-level CUDA Graph helpers (pool handle, tensor-tree signatures).
+
+Responsibility
+    Flatten tensor pytrees, build a capture cache key, and wrap modules with
+    :func:`torch.cuda.graph` for training-oriented / TE graphing.
+
+Boundaries
+    This module does not decide *when* to capture — that is
+    :class:`~worldfoundry.core.utils.inference_graph.InferenceCUDAGraphRunner`
+    and ``acceleration.cuda_graph_dispatch``. Autograd-aware; inference
+    callers that want eager fallback should use the runner, not
+    :func:`create_cuda_graph`.
+
+Public surface
+    :func:`create_cuda_graph` (``__all__``). Also used internally:
+    ``graph_pool_handle``, ``_tensor_tree_signature``, capture flags.
+"""
 
 import hashlib
 import json
 from typing import Any, Callable, Dict, Optional, Tuple, TypeVar, Union
 
 import torch
-from torch._C import _graph_pool_handle
-from torch.utils._pytree import tree_flatten as _tree_flatten
-from torch.utils._pytree import tree_unflatten as _tree_unflatten
+
+try:
+    # PyTorch has not yet promoted pytree to a stable public namespace on all
+    # supported versions. Guard the compatibility import so this module stays
+    # importable and reports an actionable runtime error if it disappears.
+    from torch.utils import _pytree as _torch_pytree
+except (ImportError, AttributeError):  # pragma: no cover - future torch guard
+    _torch_pytree = None
+
+
+# ──────────────────────────────────────────────────────────────────────────
+# Pytree + TE optional imports — capture must fail loudly if flatten is gone
+# ──────────────────────────────────────────────────────────────────────────
+
+
+def _tree_flatten(value):
+    """Flatten a tensor pytree; raise if this PyTorch build has no ``_pytree``."""
+    if _torch_pytree is None:
+        raise RuntimeError("This PyTorch build does not provide pytree helpers required by CUDA Graph capture")
+    return _torch_pytree.tree_flatten(value)
+
+
+def _tree_unflatten(values, spec):
+    """Rebuild a pytree from flattened tensors and a capture-time spec."""
+    if _torch_pytree is None:
+        raise RuntimeError("This PyTorch build does not provide pytree helpers required by CUDA Graph capture")
+    return _torch_pytree.tree_unflatten(values, spec)
 
 try:
     from transformer_engine.pytorch.distributed import get_all_rng_states, graph_safe_rng_available
@@ -33,9 +73,11 @@ except ImportError:
         """Sentinel used when Transformer Engine is not installed."""
 
     def graph_safe_rng_available() -> bool:
+        """TE-absent stub: Graph cannot register extra RNG states."""
         return False
 
     def get_all_rng_states() -> dict:
+        """TE-absent stub: no extra generator states to snapshot around warmup."""
         return {}
 
 
@@ -48,6 +90,11 @@ _IS_GRAPH_CAPTURING = False
 
 _T = TypeVar("_T")
 SingleOrTuple = Union[_T, Tuple[_T, ...]]
+
+
+# ──────────────────────────────────────────────────────────────────────────
+# Capture identity — shape-only keys are unsafe; bind stride / dtype / policy
+# ──────────────────────────────────────────────────────────────────────────
 
 
 def _tensor_signature(tensor: torch.Tensor) -> dict[str, Any]:
@@ -143,6 +190,11 @@ def _cuda_graph_cache_key(
     return f"cuda-graph-v2:{hashlib.sha256(serialized.encode('utf-8')).hexdigest()}"
 
 
+# ──────────────────────────────────────────────────────────────────────────
+# Capture flags / pool — process-wide capturing bit for TE modules
+# ──────────────────────────────────────────────────────────────────────────
+
+
 def set_capture_start() -> None:
     """Record beginning of `make_graphed_callables`."""
     global _IS_GRAPH_CAPTURING
@@ -164,7 +216,18 @@ def graph_pool_handle():
     """
     Returns an opaque token representing the id of a graph memory pool.
     """
-    return _graph_pool_handle()
+    public_factory = getattr(torch.cuda, "graph_pool_handle", None)
+    if callable(public_factory):
+        return public_factory()
+    private_factory = getattr(torch._C, "_graph_pool_handle", None)
+    if callable(private_factory):  # pragma: no cover - legacy torch fallback
+        return private_factory()
+    raise RuntimeError("This PyTorch build does not expose CUDA Graph memory-pool handles")
+
+
+# ──────────────────────────────────────────────────────────────────────────
+# Graphed callables — warmup then capture; replay copies into static buffers
+# ──────────────────────────────────────────────────────────────────────────
 
 
 def _make_graphed_callables(
@@ -499,6 +562,11 @@ def make_graphed_callables_forward(
                 torch.cuda.set_rng_state(original_rng_states)
     finally:
         set_capture_end()
+
+
+# ──────────────────────────────────────────────────────────────────────────
+# Public factory — dummy trees match stride/dtype so capture does not alias
+# ──────────────────────────────────────────────────────────────────────────
 
 
 def create_cuda_graph(

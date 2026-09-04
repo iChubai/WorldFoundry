@@ -255,6 +255,12 @@ class InspatioWorldRuntime:
         if isinstance(visual_input, (list, tuple)) and visual_input and all(
             isinstance(item, (str, os.PathLike)) for item in visual_input
         ):
+            if len(visual_input) == 1 and Path(visual_input[0]).expanduser().is_dir():
+                # Workspace normalizes ``input_path`` into ``videos=[path]``.
+                # Preserve directory inputs used to resume from precomputed
+                # ``new_vggt`` assets instead of misreporting the directory as
+                # a missing video file.
+                return self._stage_input_dir(visual_input[0], output_root, fps)
             for item in visual_input:
                 source = Path(item).expanduser()
                 if not source.exists() or not source.is_file():

@@ -1,6 +1,13 @@
 # SPDX-FileCopyrightText: Copyright (c) 2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 
+"""FlexAttention helpers for Gamma-World causal / context-parallel masks.
+
+Builds cached ``BlockMask`` objects and rewrites mask mods so Q/K live on
+sharded sequence ranks.  Tokens are ``B S H D``; this module does not
+own the DiT residual path.
+"""
+
 from functools import lru_cache
 from typing import Callable, Optional
 
@@ -8,7 +15,10 @@ import torch
 from torch import Tensor
 from torch.distributed import ProcessGroup
 from torch.distributed.tensor import DTensor, Partial, Shard
-from torch.distributed.tensor.device_mesh import DeviceMesh
+try:
+    from torch.distributed.tensor.device_mesh import DeviceMesh
+except ImportError:  # PyTorch 2.4 compatibility.
+    from torch.distributed.device_mesh import DeviceMesh
 from torch.nn.attention.flex_attention import (
     BlockMask,
     _mask_mod_signature,
@@ -26,11 +36,13 @@ def create_block_mask_cached(
     N: int,
     device: str = "cuda",
 ) -> BlockMask:
+    """LRU-cached FlexAttention ``BlockMask`` for a fixed (B, H, M, N) shape."""
     block_mask = create_block_mask(score_mod, B, H, M, N, device=device)
     return block_mask
 
 
 def causal_mask(b: int, h: int, q_idx: int, kv_idx: int) -> bool:
+    """True when query index is at or after key index (causal)."""
     return q_idx >= kv_idx
 
 
@@ -39,6 +51,7 @@ def rewrite_mask_mod_for_cp(
     rank: int,
     shard_size: int,
 ) -> _mask_mod_signature:
+    """Shift local query indices by ``rank * shard_size`` so CP ranks share one mask."""
 
     return lambda b, h, q_idx, kv_idx: mask_mod(b, h, q_idx + rank * shard_size, kv_idx)
 
@@ -54,6 +67,7 @@ def flex_attention_cp(
     seq_dim: int = 2,
     **kwargs,
 ) -> Tensor:
+    """Context-parallel FlexAttention on ``B S H D`` (or seq-dim-2) QKV."""
 
     if process_group is None:
         return flex_attention_fn(query, key, value, score_mod=mask_mod, block_mask=block_mask, **kwargs)

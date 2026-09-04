@@ -1,4 +1,13 @@
-"""Native wrapper around the canonical Wan CLIP encoder."""
+"""Native wrapper around the canonical Wan CLIP encoder (Fun-Control).
+
+:class:`CLIPModel` here delegates to :mod:`~..clip` so
+Fun-Control / Video-X loaders see their expected type name.
+
+Visual token contract is unchanged.  VAE counterpart:
+:mod:`~...autoencoders.wan.variants.video_x_fun`.
+
+Compatibility wrapper only.
+"""
 
 from __future__ import annotations
 
@@ -14,6 +23,7 @@ from worldfoundry.core.nn import ModuleDeviceDtypeMixin
 
 
 class CLIPModel(ModuleDeviceDtypeMixin, nn.Module):
+    """Fun-Control name for the canonical Wan CLIP encoder."""
     def __init__(self) -> None:
         super().__init__()
         self.model, self.transforms = clip_xlm_roberta_vit_h_14(

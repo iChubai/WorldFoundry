@@ -1,4 +1,21 @@
-"""Gradient helpers for transformer-style training and runtime code."""
+"""Gradient helpers for transformer-style training and runtime code.
+
+WorldFoundry inference is the common path, but a few in-tree trainers
+and activation-checkpoint wrappers still need:
+
+- :func:`create_custom_forward` / :func:`gradient_checkpoint_forward` —
+  a non-reentrant ``torch.utils.checkpoint`` wrapper, optionally with
+  ``torch.autograd.graph.save_on_cpu`` so activations leave GPU HBM.
+- :func:`clip_grad_norm_` / :func:`get_total_norm` /
+  :func:`clip_grads_with_norm_` — a foreach-aware clip that also
+  all-reduces the norm across a pipeline-parallel :class:`DeviceMesh`
+  (MAX for inf-norm, SUM-then-root for p-norms). DTensor norms are
+  materialized with ``full_tensor()`` before the reduction.
+
+These are not a replacement for ``torch.nn.utils.clip_grad_norm_``;
+they exist so PP/FSDP trainers share one implementation instead of
+copying Megatron snippets into each model family.
+"""
 
 from __future__ import annotations
 
@@ -9,9 +26,15 @@ import torch
 
 
 def create_custom_forward(module):
-    """Wrap *module* so :func:`torch.utils.checkpoint.checkpoint` can call it."""
+    """Wrap *module* so :func:`torch.utils.checkpoint.checkpoint` can call it.
+
+    Checkpoint requires a function of ``*inputs``. Returning a nested
+    callable keeps ``module`` and its ``**kwargs`` bound without making
+    the module itself look like a functional autograd target.
+    """
 
     def custom_forward(*inputs, **kwargs):
+        """Forward *module* so checkpoint sees a function, not a Module object."""
         return module(*inputs, **kwargs)
 
     return custom_forward
@@ -24,7 +47,12 @@ def gradient_checkpoint_forward(
     *args,
     **kwargs,
 ):
-    """Run *model* with optional activation checkpointing and CPU offload."""
+    """Run *model* with optional activation checkpointing and CPU offload.
+
+    *use_gradient_checkpointing_offload* implies checkpointing: activations
+    are saved on CPU, then the same non-reentrant checkpoint wrapper is
+    used. When both flags are false the module is called normally.
+    """
     if use_gradient_checkpointing_offload:
         with torch.autograd.graph.save_on_cpu():
             model_output = torch.utils.checkpoint.checkpoint(
@@ -54,7 +82,16 @@ def clip_grad_norm_(
     foreach: bool | None = None,
     pp_mesh: torch.distributed.device_mesh.DeviceMesh | None = None,
 ) -> torch.Tensor:
-    """Clip gradients and optionally reduce the norm across pipeline-parallel stages."""
+    """Clip gradients and optionally reduce the norm across pipeline-parallel stages.
+
+    Same contract as ``torch.nn.utils.clip_grad_norm_`` plus *pp_mesh*:
+    when set, the local total norm is all-reduced on that DeviceMesh
+    (MAX for ``inf``, SUM of ``norm**p`` then ``**(1/p)`` otherwise)
+    before scaling. DTensor norms are converted to a dense tensor first.
+
+    Returns:
+        The (possibly reduced) total gradient norm.
+    """
 
     if isinstance(parameters, torch.Tensor):
         parameters = [parameters]
@@ -87,7 +124,13 @@ def get_total_norm(
     error_if_nonfinite: bool = False,
     foreach: bool | None = None,
 ) -> torch.Tensor:
-    """Compute the total norm of tensors as if their flattened values were concatenated."""
+    """Compute the total norm of tensors as if their flattened values were concatenated.
+
+    Groups tensors by device/dtype and uses ``torch._foreach_norm`` when
+    the device supports it (or *foreach* is forced). Empty input yields
+    a CPU scalar ``0.0``. Set *error_if_nonfinite* to raise instead of
+    returning NaN/Inf.
+    """
 
     if isinstance(tensors, torch.Tensor):
         tensors = [tensors]
@@ -127,7 +170,12 @@ def clip_grads_with_norm_(
     total_norm: torch.Tensor,
     foreach: bool | None = None,
 ) -> None:
-    """Scale parameter gradients in-place using a precomputed total norm."""
+    """Scale parameter gradients in-place using a precomputed total norm.
+
+    The coefficient is ``min(1, max_norm / (total_norm + 1e-6))``.
+    Foreach multiply is used per device when available. No-op when no
+    parameter has a gradient.
+    """
 
     if isinstance(parameters, torch.Tensor):
         parameters = [parameters]
@@ -152,24 +200,28 @@ def clip_grads_with_norm_(
 
 
 def _group_tensors_by_device_and_dtype(tensorlistlist):
+    """Delegate to torch's clip-grad grouping so foreach kernels stay on one device/dtype."""
     from torch.nn.utils.clip_grad import _group_tensors_by_device_and_dtype as group_fn
 
     return group_fn(tensorlistlist)
 
 
 def _has_foreach_support(tensors, device) -> bool:
+    """True when this tensor group can use ``torch._foreach_*`` on *device*."""
     from torch.nn.utils.clip_grad import _has_foreach_support as has_support
 
     return has_support(tensors, device)
 
 
 def _device_has_foreach_support(device) -> bool:
+    """True when *device* implements foreach kernels (CPU/CUDA; not all accelerators)."""
     from torch.nn.utils.clip_grad import _device_has_foreach_support as device_has_support
 
     return device_has_support(device)
 
 
 def _is_dtensor(value: object) -> bool:
+    """Detect DTensor without importing distributed at module load when torch is CPU-only."""
     try:
         from torch.distributed._tensor.api import DTensor
     except Exception:

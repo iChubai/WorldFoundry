@@ -1,4 +1,15 @@
-"""Checkpoint-backed audio latent statistics without signal-processing dependencies."""
+"""Checkpoint-backed audio latent statistics.
+
+:class:`PerChannelStatistics` stores per-channel mean/std
+used to scale LTX audio latents.  Values come from the
+checkpoint, not from a live signal-processing pass.
+
+Broadcast shapes match the audio VAE latent layout
+(channel-first).  Video uses the sibling
+:class:`~..video.ops.PerChannelStatistics`.
+
+Loaded by :mod:`.audio_vae` during encode/decode.
+"""
 
 import torch
 from torch import nn

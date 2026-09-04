@@ -14,7 +14,18 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-"""Module for base_models -> diffusion_model -> image -> sana -> diffusion -> model -> dc_ae -> efficientvit -> models -> nn -> ops.py functionality."""
+"""2-D residual / MBConv / attention ops for Sana DC-AE.
+
+Large op file: :class:`MBConv`, :class:`FusedMBConv`,
+:class:`EfficientViTBlock`, downsample/upsample layers, and
+residual wrappers used by :mod:`~..efficientvit.dc_ae`.
+
+Tensors are BCHW image feature maps.  3-D counterparts live
+in :mod:`.ops_3d`.  Public classes already have names;
+header-level docs only.
+
+Sana DC-AE family only — not Wan residual 3-D blocks.
+"""
 
 import math
 from typing import Optional

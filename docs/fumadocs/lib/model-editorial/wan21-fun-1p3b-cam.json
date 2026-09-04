@@ -1,0 +1,41 @@
+{
+  "id": "wan21-fun-1p3b-cam",
+  "tagline": {
+    "en": "A 1.3B Wan2.1-Fun control model that animates an image along a camera path you specify.",
+    "zh": "一个 1.3B 的 Wan2.1-Fun 控制模型，沿你指定的相机轨迹让图片动起来。"
+  },
+  "overview": {
+    "en": [
+      "Wan2.1-Fun V1.1 1.3B Control Camera is a camera-controlled image-to-video model from Alibaba PAI's VideoX-Fun project. Give it a starting image and a camera trajectory, and it generates a clip that moves the camera through the scene along that path.",
+      "It is the lightweight 1.3B member of the Wan2.1-Fun control family, built on the Wan2.1 architecture with a camera-conditioned control branch. The pose-conditioned route renders the video with just a few denoising steps, producing coherent camera-motion clips at 672×384.",
+      "In WorldFoundry you run it through its pipeline — provide the image and camera control, and it writes out the resulting video."
+    ],
+    "zh": [
+      "Wan2.1-Fun V1.1 1.3B Control Camera 是阿里巴巴 PAI 的 VideoX-Fun 项目推出的相机可控图生视频模型。给它一张起始图片与一条相机轨迹，它便生成一段沿该轨迹在场景中运镜的片段。",
+      "它是 Wan2.1-Fun 控制家族中的轻量 1.3B 成员，构建在 Wan2.1 架构之上，带有相机条件化的控制分支。姿态条件化路径只需少数几个去噪步即可渲染视频，产出 672×384 的连贯运镜片段。",
+      "在 WorldFoundry 中，你通过它的 pipeline 运行——提供图片与相机控制，它便输出生成的视频。"
+    ]
+  },
+  "whenToUse": {
+    "en": "Use it when you want to animate a still image with controlled camera motion on modest hardware — a lightweight 1.3B option for pose-conditioned camera moves.",
+    "zh": "当你想在普通硬件上以可控运镜让静态图片动起来时使用——一个用于姿态条件化运镜的轻量 1.3B 选择。"
+  },
+  "notFor": {
+    "en": "It generates short camera-motion clips rather than long or narrative video. The camera checkpoint and its Wan components must be staged locally before use.",
+    "zh": "它生成的是短促的运镜片段，而非长片或叙事视频。相机 checkpoint 及其 Wan 组件需先放到本地再使用。"
+  },
+  "highlights": {
+    "en": [
+      "Camera-controlled image-to-video from Alibaba PAI's VideoX-Fun",
+      "Lightweight 1.3B model on the Wan2.1 architecture",
+      "Pose-conditioned camera motion in just a few denoising steps",
+      "Renders coherent clips at 672×384"
+    ],
+    "zh": [
+      "来自阿里巴巴 PAI VideoX-Fun 的相机可控图生视频",
+      "基于 Wan2.1 架构的轻量 1.3B 模型",
+      "仅需少数几个去噪步的姿态条件化运镜",
+      "渲染 672×384 的连贯片段"
+    ]
+  }
+}

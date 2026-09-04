@@ -17,6 +17,7 @@ integration:
 license: apache-2.0
 name: DB-CogACT / Dexbotic
 official_sources:
+  paper: https://arxiv.org/abs/2510.23511
   github:
     head_sha: 0f5ae6382bf0
     url: https://github.com/Dexmal/dexbotic

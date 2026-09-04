@@ -1,7 +1,9 @@
 # Copyright 2024-2025 The Alibaba Wan Team Authors. All rights reserved.
 
-"""Module for base_models -> diffusion_model -> video -> wan -> wan_dreamzero -> modules -> wan2_1_attention.py functionality."""
+"""DreamZero flash-attention dispatcher (Wan 2.1 kernels).
 
+Kernel adapter for DreamZero blocks.  No action math here.
+"""
 import contextlib
 import torch
 from torch.profiler import profile, ProfilerActivity
@@ -212,7 +214,7 @@ def flash_attention(
 
 
 class AttentionModule(torch.nn.Module):
-    """Attention module implementation."""
+    """DreamZero packed-sequence attention wrapper."""
     def __init__(
         self,
         num_heads: int,

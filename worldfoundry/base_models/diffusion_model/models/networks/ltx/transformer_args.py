@@ -1,3 +1,12 @@
+"""Build :class:`TransformerArgs` from an LTX :class:`Modality`.
+
+The preprocessor patch-projects ``B T D_in`` latents to hidden size,
+computes AdaLN timestep vectors, RoPE from the position grid, and
+converts ``[0,1]`` attention masks into additive log-space bias.
+Multimodal prep adds A↔V RoPE and cross-attn AdaLN from the other
+stream's sigma.
+"""
+
 from dataclasses import dataclass, replace
 
 import torch
@@ -18,6 +27,12 @@ from worldfoundry.base_models.diffusion_model.models.networks.ltx.rope import (
 
 @dataclass(frozen=True)
 class TransformerArgs:
+    """Per-stream tensors consumed by :class:`BasicAVTransformerBlock`.
+
+    ``x`` is ``B T D`` hidden tokens.  ``positional_embeddings`` is
+    ``(cos, sin)`` RoPE.  Cross-* fields are filled only for joint AV.
+    """
+
     x: torch.Tensor
     context: torch.Tensor
     context_mask: torch.Tensor
@@ -88,6 +103,8 @@ class BlockPerturbationsProcessor:
 
 
 class TransformerArgsPreprocessor:
+    """Single-modality stem: patch proj, AdaLN, RoPE, caption proj, masks."""
+
     def __init__(  # noqa: PLR0913
         self,
         patchify_proj: torch.nn.Linear,
@@ -211,6 +228,7 @@ class TransformerArgsPreprocessor:
         modality: Modality,
         cross_modality: Modality | None = None,  # noqa: ARG002
     ) -> TransformerArgs:
+        """Lift a :class:`Modality` into block-ready :class:`TransformerArgs`."""
         x = self.patchify_proj(modality.latent)
         batch_size = x.shape[0]
         timestep, embedded_timestep = self._prepare_timestep(
@@ -249,6 +267,8 @@ class TransformerArgsPreprocessor:
 
 
 class MultiModalTransformerArgsPreprocessor:
+    """Joint-AV stem: single-stream prep plus A↔V RoPE and cross-attn AdaLN."""
+
     def __init__(  # noqa: PLR0913
         self,
         patchify_proj: torch.nn.Linear,
@@ -294,6 +314,7 @@ class MultiModalTransformerArgsPreprocessor:
         modality: Modality,
         cross_modality: Modality | None = None,
     ) -> TransformerArgs:
+        """Prepare this stream and, if ``cross_modality`` is set, AV cross-attn extras."""
         transformer_args = self.simple_preprocessor.prepare(modality)
         if cross_modality is None:
             return transformer_args

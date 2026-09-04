@@ -1,4 +1,13 @@
-"""LongVie-style dual dense/sparse control branch for native Wan models."""
+"""LongVie dual dense/sparse control branch for native Wan 2.x models.
+
+This module owns only the extra ControlNet-style parameters.  Dense and
+sparse control videos each run through a half-width stack of canonical
+:class:`DiTBlock` layers; per-layer combine linears map hints back to
+full hidden size for the host :class:`WanModel`.
+
+No VACE, action, camera Plücker, causal attention, linear attention, or
+TeaCache hooks live here.
+"""
 
 from __future__ import annotations
 

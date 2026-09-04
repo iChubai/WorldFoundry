@@ -1,0 +1,41 @@
+{
+  "id": "matrix-game-3.5-first-person",
+  "tagline": {
+    "en": "Matrix-Game 3.5 First-Person — an Apache-2.0 world model that generates long, camera-steered first-person video from an image.",
+    "zh": "Matrix-Game 3.5 第一人称——Apache-2.0 许可,从图片生成相机可控、长时程的第一人称视频。"
+  },
+  "overview": {
+    "en": [
+      "Matrix-Game 3.5 First-Person Base is an interactive world model from Riemann Dynamics, released under Apache-2.0. Starting from an image, it generates first-person video you can steer with a camera trajectory, and it can roll the scene forward over a long horizon.",
+      "This is the 25-step bidirectional 5B base model. It's built on the Wan2.2-TI2V-5B backbone and pairs a conditioner, latent initializer, scheduler, denoiser, and decoder, using a depth model (Depth-Anything's DA3) as a geometry dependency. Generation proceeds block by block — each block adds 84 new frames and consumes 84 camera poses — so you can extend a rollout well beyond a single short clip. This ID is permanently bound to the first-person mode.",
+      "In WorldFoundry you supply a starting image and a camera trajectory, and the pipeline generates the first-person rollout, exporting frames at 1280×704, 16 fps."
+    ],
+    "zh": [
+      "Matrix-Game 3.5 First-Person Base 是 Riemann Dynamics 推出的交互式世界模型,采用 Apache-2.0 许可。它以一张图片为起点生成第一人称视频,你可以用相机轨迹操控,并能在长时程上持续推进画面。",
+      "这是 25 步双向 5B 基础模型,构建在 Wan2.2-TI2V-5B 骨干之上,由条件器、隐变量初始化器、调度器、去噪器与解码器组成,并以深度模型(Depth-Anything 的 DA3)作为几何依赖。生成按块进行——每块新增 84 帧、消耗 84 个相机位姿——因此你可以把 rollout 扩展到远超单段短片的长度。该 ID 永久绑定第一人称模式。",
+      "在 WorldFoundry 中,你提供一张起始图片和一条相机轨迹,pipeline 便生成第一人称 rollout,以 1280×704、16 fps 导出帧序列。"
+    ]
+  },
+  "whenToUse": {
+    "en": "Use this model when you want camera-steered, first-person world exploration from an image, especially longer rollouts built up block by block rather than a single short clip.",
+    "zh": "当你想从图片出发做相机可控的第一人称世界探索,尤其是按块累积、比单段短片更长的 rollout 时,适合使用该模型。"
+  },
+  "notFor": {
+    "en": "The currently released weights are the 25-step base model, not a few-step real-time distilled version, so generation is not real-time. Its depth dependency (DA3) carries a separate non-commercial license you must follow, and checkpoints are downloaded separately.",
+    "zh": "当前发布的是 25 步基础模型,而非少步实时蒸馏版本,因此生成并非实时。其深度依赖(DA3)带有单独的非商用许可,需遵守;Checkpoint 需单独下载。"
+  },
+  "highlights": {
+    "en": [
+      "Matrix-Game 3.5 base weights under Apache-2.0",
+      "Camera-steered, first-person world generation from an image",
+      "Long-horizon rollouts built block by block (84 new frames per block)",
+      "Output: 1280×704 frames at 16 fps; depth dependency (DA3) is non-commercial"
+    ],
+    "zh": [
+      "Matrix-Game 3.5 基础权重,Apache-2.0 许可",
+      "从图片出发的相机可控第一人称世界生成",
+      "按块累积的长时程 rollout(每块新增 84 帧)",
+      "输出:1280×704、16 fps;深度依赖 DA3 为非商用许可"
+    ]
+  }
+}

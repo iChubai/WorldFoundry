@@ -16,7 +16,20 @@
 
 
 # This file is modified from https://github.com/PixArt-alpha/PixArt-sigma
-"""Module for base_models -> diffusion_model -> image -> sana -> diffusion -> model -> nets -> sana_multi_scale_video.py functionality."""
+"""Multi-scale SANA video DiT (``SanaMSVideo``).
+
+Extends :class:`SanaMS` to ``T×H×W`` latents:
+
+* :class:`PatchEmbedMS3D` patchifies the 3-D grid
+* Wan-style 3-D RoPE (or causal / temporal-only variants) positions tokens
+* Self-attention is LiteLA, LiteLA-ReLU-RoPE, chunk-causal, windowed, or
+  FlashAttention — selected per block by the checkpoint ``attn_type``
+* FFN is GLUMBConv or a temporal/chunked/cached GLUMBConvTemp so the
+  inverted-bottleneck can mix neighbouring frames
+
+This is the base video graph.  Camera-controlled world models and V2V
+hybrids live in sibling modules and reuse these blocks.
+"""
 
 import os
 from typing import Optional
@@ -79,9 +92,7 @@ if _xformers_available:
 
 
 class SanaVideoMSBlock(nn.Module):
-    """
-    A Sana block with global shared adaptive layer norm zero (adaLN-Zero) conditioning.
-    """
+    """Video SanaMS block: 3-D RoPE self-attn + caption cross-attn + temporal FFN."""
 
     def __init__(
         self,
@@ -390,9 +401,7 @@ class SanaVideoMSBlock(nn.Module):
 #                                 Core Sana Model                                #
 #################################################################################
 class SanaMSVideo(Sana):
-    """
-    Diffusion model with a Transformer backbone.
-    """
+    """Multi-scale SANA video DiT: 3-D patch embed, Wan RoPE, LiteLA / causal / window attn."""
 
     def __init__(
         self,

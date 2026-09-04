@@ -1,0 +1,41 @@
+{
+  "id": "echo-memory-ssm-ctx1-every4-hint21",
+  "tagline": {
+    "en": "Echo-Memory's leanest state-space memory setting — a single-frame context, updated every fourth step, for the cheapest of the SSM variants.",
+    "zh": "Echo-Memory 最精简的状态空间记忆配置——单帧上下文、每四步更新一次,是 SSM 系列中开销最低的一档。"
+  },
+  "overview": {
+    "en": [
+      "Echo-Memory is a memory-augmented world model on the open Wan2.1 diffusion backbone. From a starting image, a text prompt and a camera trajectory it rolls out video of an explorable scene, using a memory mechanism to hold the scene together over long rollouts.",
+      "This identity uses a state-space memory (SSM) module tuned to its leanest setting: a context window of one frame, memory refreshed every four steps, and a hint length of 21. Compared with the denser SSM variants, it carries the least memory state and updates least often — the point on the family's curve that trades some long-range recall for lower cost.",
+      "In WorldFoundry you run it through the shared diffusion pipeline with a local Echo-Memory checkpoint, assembled from shared Wan components. It's meant for memory research and interactive world-model experiments where you want to probe how a light SSM configuration behaves."
+    ],
+    "zh": [
+      "Echo-Memory 是构建在开源 Wan2.1 扩散骨干上的记忆增强世界模型。它以起始图像、文字提示词和相机轨迹为输入,推演出可探索场景的视频,并用记忆机制在长程推演中维持场景连贯。",
+      "本模型采用状态空间记忆(SSM)模块,并调到最精简的档位:上下文窗口为单帧、每四步刷新一次记忆、hint 长度为 21。与更密集的 SSM 变体相比,它携带的记忆状态最少、更新也最不频繁——处在该家族曲线上以部分长程记忆换取更低开销的一端。",
+      "在 WorldFoundry 中,你通过统一扩散 pipeline、配合本地 Echo-Memory checkpoint 运行它,配方由共享 Wan 组件组装而成。它面向记忆机制研究与交互式世界模型实验,适合探究轻量 SSM 配置的表现。"
+    ]
+  },
+  "whenToUse": {
+    "en": "Pick it when you want the cheapest SSM memory setting in the family, or when you're mapping how context size and update frequency affect an SSM world model at the low end.",
+    "zh": "当你想要该家族中开销最低的 SSM 记忆配置,或在研究上下文大小与更新频率对 SSM 世界模型的影响、并聚焦低端时,选它。"
+  },
+  "notFor": {
+    "en": "The single-frame context and every-four-step updates mean weaker long-range recall than the denser ctx5 variants — not the choice when consistency across long revisits matters most. You also supply a compatible local checkpoint.",
+    "zh": "单帧上下文加每四步更新意味着长程记忆弱于更密集的 ctx5 变体——当长程重访的一致性最为重要时,它不是首选。此外你需自备兼容的本地 checkpoint。"
+  },
+  "highlights": {
+    "en": [
+      "State-space memory at its leanest: 1-frame context, update every 4 steps, hint 21",
+      "Lowest memory state and update frequency among the SSM variants",
+      "Image + text + camera trajectory in, video out",
+      "Echo-Memory weights under CC-BY-4.0; Wan2.1 backbone Apache-2.0"
+    ],
+    "zh": [
+      "最精简的状态空间记忆:单帧上下文、每四步更新、hint 21",
+      "SSM 变体中记忆状态与更新频率最低的一档",
+      "输入图像+文本+相机轨迹,输出视频",
+      "Echo-Memory 权重采用 CC-BY-4.0,Wan2.1 骨干为 Apache-2.0"
+    ]
+  }
+}

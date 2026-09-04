@@ -14,7 +14,17 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-"""Module for base_models -> diffusion_model -> image -> sana -> diffusion -> model -> dc_ae -> efficientvit -> models -> nn -> act.py functionality."""
+"""Activation factories used by Sana DC-AE blocks.
+
+:func:`build_act` maps config strings (SiLU, ReLU, …) onto
+``nn.Module`` constructors consumed by MBConv / residual
+stages in :mod:`.ops` and :mod:`.ops_3d`.
+
+No tensor layout of its own — activations follow the
+incoming BCHW / BCTHW feature map.
+
+This is DC-AE graph math, not a runner Protocol adapter.
+"""
 
 from functools import partial
 from typing import Optional

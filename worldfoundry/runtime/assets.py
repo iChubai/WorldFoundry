@@ -16,6 +16,7 @@ from typing import Any
 
 from worldfoundry.core.io.manifests import load_manifest
 from worldfoundry.core.io.paths import (
+    hfd_dataset_root_path,
     package_data_root,
     project_root,
     resolve_worldfoundry_path,
@@ -45,6 +46,15 @@ REPO_ROOT = project_root()
 BENCHMARKS_DATA_ROOT = package_data_root() / "benchmarks"
 
 
+def _has_huggingface_incomplete_download(path: Path) -> bool:
+    """Return whether a local-dir HF cache records an unfinished download."""
+
+    download_root = path / ".cache" / "huggingface" / "download"
+    if not download_root.is_dir():
+        return False
+    return next(download_root.rglob("*.incomplete"), None) is not None
+
+
 def _path_is_ready(path: Path | None) -> bool:
     """Return whether a resolved asset path looks usable.
 
@@ -57,7 +67,13 @@ def _path_is_ready(path: Path | None) -> bool:
     try:
         if path.is_file():
             return path.stat().st_size > 0
-        return path.exists()
+        if not path.is_dir():
+            return False
+        # ``huggingface_hub.snapshot_download(local_dir=...)`` creates this
+        # cache layout.  The visible target directory can already contain
+        # valid files while an interrupted transfer remains underneath it;
+        # treating that directory as ready would expose a partial snapshot.
+        return not _has_huggingface_incomplete_download(path)
     except OSError:
         return False
 
@@ -177,9 +193,7 @@ def worldfoundry_path_tokens(env: EnvMapping | None = None) -> dict[str, str]:
         "WORLDFOUNDRY_ARTIFACT_DIR": str(resolve_artifact_dir(environ)),
         "WORLDFOUNDRY_CKPT_DIR": str(resolve_ckpt_dir(environ)),
         "WORLDFOUNDRY_HFD_ROOT": str(resolve_hfd_root(environ)),
-        "WORLDFOUNDRY_HFD_DATASET_ROOT": str(
-            Path(environ.get("WORLDFOUNDRY_HFD_DATASET_ROOT") or resolve_data_dir(environ)).expanduser()
-        ),
+        "WORLDFOUNDRY_HFD_DATASET_ROOT": str(hfd_dataset_root_path(env=environ)),
         "WORLDFOUNDRY_BENCHMARK_REPO_ROOT": str(benchmark_repo_cache_root(environ)),
     })
     return tokens

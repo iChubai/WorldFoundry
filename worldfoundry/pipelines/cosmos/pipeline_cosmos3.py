@@ -17,6 +17,7 @@ from worldfoundry.base_models.diffusion_model.optimizations import (
 )
 from worldfoundry.core.io.video import save_image_or_video_tensor
 
+from .cosmos3_runtime import resolve_cosmos3_runtime_options
 from ..pipeline_utils import PipelineABC
 
 
@@ -56,16 +57,24 @@ class Cosmos3Pipeline(PipelineABC):
         if isinstance(source, (str, Path)) and Path(source).expanduser().is_dir():
             root = str(Path(source).expanduser().resolve())
             checkpoint_overrides = {name: root for name in ("transformer", "vae", "sound", "tokenizer", "scheduler")}
+        visible_gpus = int(torch.cuda.device_count()) if torch.cuda.is_available() else 0
+        offload_mode, device_map = resolve_cosmos3_runtime_options(
+            options,
+            model_id=resolved_model_id,
+            visible_gpus=visible_gpus,
+        )
+        policy_options = {"device_map": device_map} if device_map else {}
         native = NativeDiffusionPipeline.from_pretrained(
             resolved_model_id,
             policy=RuntimePolicy(
                 device=torch.device(device),
                 dtype=parse_torch_dtype(options.get("torch_dtype", options.get("dtype")), owner="Cosmos3"),
                 offload=parse_offload_policy(
-                    options.get("offload_mode", "block"),
+                    offload_mode,
                     allow_disk=False,
                     owner="Cosmos3",
                 ),
+                options=policy_options,
             ),
             checkpoint_overrides=checkpoint_overrides,
             component_options={
@@ -192,4 +201,4 @@ class Cosmos3Pipeline(PipelineABC):
         return result if return_dict else (artifact_path or output.sample)
 
 
-__all__ = ["Cosmos3Pipeline"]
+__all__ = ["Cosmos3Pipeline", "resolve_cosmos3_runtime_options"]

@@ -219,6 +219,9 @@ profiles:
 | `WORLDFOUNDRY_REALTIME_INFERENCE_STEPS` | model default; LingBot Fast `4` | Explicit latency/quality override. Non-distilled models are not silently reduced to four steps. |
 | `WORLDFOUNDRY_REALTIME_FRAME_QUEUE` | `max(chunk, 8)` | One steady-state chunk of bounded playback buffering. |
 | `WORLDFOUNDRY_REALTIME_FRAME_QUEUE_POLICY` | `latest-interactive` | Use `latest-interactive` to bound latency under congestion or `ordered-quality` to preserve every frame. Count-exact prompt/segment sessions always enforce `ordered-quality`. |
+| `WORLDFOUNDRY_REALTIME_PRESENTATION_MODE` | `hold-last` | WebRTC A/B switch. `hold-last` preserves the compatible constant clock; `real-frames` gives pacing to the chunk presentation manager and sends no repeated frames through its two-frame mailbox. |
+| `WORLDFOUNDRY_REALTIME_PRESENTATION_MAX_FPS` | `2 × model FPS` | Maximum active-chunk drain rate while a pending chunk is waiting in `real-frames` mode. |
+| `WORLDFOUNDRY_REALTIME_SOCKET_PACING_MODE` | `legacy-dual` | WebSocket A/B switch. `client-only` disables server-side frame sleeps and leaves the existing browser presentation clock as the sole pacing owner. |
 | `WORLDFOUNDRY_REALTIME_BACKPRESSURE_MS` | half a chunk | Preserve every frame during normal playback; evict stale frames only after this congestion budget expires. |
 | `WORLDFOUNDRY_REALTIME_WARMUP_CHUNKS` | `1` | Background stream warmup; set `0` to disable or raise it for compile/autotune experiments. |
 | `WORLDFOUNDRY_REALTIME_PREWARM_TIMEOUT_SECONDS` | unset | Optional deadline for configure plus warmup chunks. The server reports an overrun after the current non-cancellable model call returns; `0` disables it. |
@@ -233,6 +236,7 @@ profiles:
 | `WORLDFOUNDRY_REALTIME_PERF_WARMUP_CHUNKS` | `0` | Mark and exclude the first N session chunks from timing summaries. Raw JSONL events retain the warmup marker. |
 | `WORLDFOUNDRY_REALTIME_PERF_JSONL` | unset | Optional path for one canonical `realtime.chunk_timing` JSONL event per chunk. Use only while profiling to avoid hot-path file I/O. |
 | `WORLDFOUNDRY_REALTIME_LIVENESS_TIMEOUT_SECONDS` | `30` | Reclaim a session whose browser heartbeats disappear without killing a slow in-flight chunk. |
+| `WORLDFOUNDRY_REALTIME_SHUTDOWN_TIMEOUT_SECONDS` | `5` | Total deadline for cooperative async teardown of preload, session workers, transports, and runtime reset. It bounds the shutdown handler but does not force-kill a running model thread. |
 | `WORLDFOUNDRY_REALTIME_ICE_SERVERS_JSON` | unset | Optional browser-compatible STUN/TURN `iceServers` JSON for hosts that are not directly reachable. |
 
 ### Optional NVIDIA RTX post-processing
@@ -491,86 +495,6 @@ to the workspace before submitting jobs.
 
 The Gallery gives a compact visual pass over recent inference outputs and preview
 artifacts.
-
-
-## Inference demo results
-
-The gallery below is for visual orientation. It shows representative artifacts
-from in-tree Studio or Studio-compatible API runs. It is not a release-claim
-table; exact parameters, environment notes, run IDs, and remaining gaps live in
-each run's own manifest and scorecard. Only curated nontrivial examples are
-embedded here.
-
-<div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
-  <figure className="m-0">
-    <Video preload="none" loop muted playsInline controls className="w-full rounded-lg" src="/demos/studio/skyreels-v3-reference-to-video.mp4" />
-    <figcaption><strong>SkyReels V3</strong><br /><span>Reference-to-video</span></figcaption>
-  </figure>
-  <figure className="m-0">
-    <Video preload="none" loop muted playsInline controls className="w-full rounded-lg" src="/demos/studio/wan2-1-vace-girl-snake.mp4" />
-    <figcaption><strong>Wan2.1 VACE</strong><br /><span>Image/control-to-video</span></figcaption>
-  </figure>
-  <figure className="m-0">
-    <Video preload="none" loop muted playsInline controls className="w-full rounded-lg" src="/demos/studio/hunyuanvideo-t2v-cat-grass-official.mp4" />
-    <figcaption><strong>HunyuanVideo T2V</strong><br /><span>Text-to-video</span></figcaption>
-  </figure>
-  <figure className="m-0">
-    <Video preload="none" loop muted playsInline controls className="w-full rounded-lg" src="/demos/studio/hunyuanvideo-i2v-firework-official.mp4" />
-    <figcaption><strong>HunyuanVideo I2V</strong><br /><span>Image-to-video</span></figcaption>
-  </figure>
-  <figure className="m-0">
-    <Video preload="none" loop muted playsInline controls className="w-full rounded-lg" src="/demos/studio/hunyuanvideo-1-5-t2v-cat.mp4" />
-    <figcaption><strong>HunyuanVideo 1.5 T2V</strong><br /><span>Text-to-video</span></figcaption>
-  </figure>
-  <figure className="m-0">
-    <Video preload="none" loop muted playsInline controls className="w-full rounded-lg" src="/demos/studio/hunyuanvideo-1-5-i2v-firework.mp4" />
-    <figcaption><strong>HunyuanVideo 1.5 I2V</strong><br /><span>Image-to-video</span></figcaption>
-  </figure>
-  <figure className="m-0">
-    <Video preload="none" loop muted playsInline controls className="w-full rounded-lg" src="/demos/studio/ltx2-3-i2v-penguin.mp4" />
-    <figcaption><strong>LTX-2.3 I2V</strong><br /><span>Image-to-video</span></figcaption>
-  </figure>
-  <figure className="m-0">
-    <Video preload="none" loop muted playsInline controls className="w-full rounded-lg" src="/demos/studio/unianimate-dit-human-animation.mp4" />
-    <figcaption><strong>UniAnimate-DiT</strong><br /><span>Human animation</span></figcaption>
-  </figure>
-  <figure className="m-0">
-    <Video preload="none" loop muted playsInline controls className="w-full rounded-lg" src="/demos/studio/matrix-game-2-official-universal.mp4" />
-    <figcaption><strong>Matrix-Game-2</strong><br /><span>Interactive world model</span></figcaption>
-  </figure>
-  <figure className="m-0">
-    <Video preload="none" loop muted playsInline controls className="w-full rounded-lg" src="/demos/studio/matrix-game-3-cityscape.mp4" />
-    <figcaption><strong>Matrix-Game-3</strong><br /><span>Cityscape world model</span></figcaption>
-  </figure>
-  <figure className="m-0">
-    <Video preload="none" loop muted playsInline controls className="w-full rounded-lg" src="/demos/studio/hy-worldplay-official-8gpu.mp4" />
-    <figcaption><strong>HY-WorldPlay</strong><br /><span>Image-pose world video</span></figcaption>
-  </figure>
-  <figure className="m-0">
-    <Video preload="none" loop muted playsInline controls className="w-full rounded-lg" src="/demos/studio/hunyuan-game-craft-village.mp4" />
-    <figcaption><strong>Hunyuan GameCraft</strong><br /><span>Interactive village world</span></figcaption>
-  </figure>
-  <figure className="m-0">
-    <Video preload="none" loop muted playsInline controls className="w-full rounded-lg" src="/demos/studio/worldcam-industrial.mp4" />
-    <figcaption><strong>WorldCam</strong><br /><span>Camera-path world video</span></figcaption>
-  </figure>
-  <figure className="m-0">
-    <Video preload="none" loop muted playsInline controls className="w-full rounded-lg" src="/demos/studio/yume-1p5-jungle-castle.mp4" />
-    <figcaption><strong>YUME-1.5</strong><br /><span>World navigation</span></figcaption>
-  </figure>
-  <figure className="m-0">
-    <Video preload="none" loop muted playsInline controls className="w-full rounded-lg" src="/demos/studio/neoverse-robot-tabletop.mp4" />
-    <figcaption><strong>NeoVerse</strong><br /><span>Robot video-input world model</span></figcaption>
-  </figure>
-  <figure className="m-0">
-    <Video preload="none" loop muted playsInline controls className="w-full rounded-lg" src="/demos/studio/hunyuan-world-voyager-case1.mp4" />
-    <figcaption><strong>HunyuanWorld-Voyager</strong><br /><span>Conditioned world video</span></figcaption>
-  </figure>
-  <figure className="m-0">
-    <Video preload="none" loop muted playsInline controls className="w-full rounded-lg" src="/demos/studio/open-sora-plan-tokyo-street.mp4" />
-    <figcaption><strong>Open-Sora-Plan</strong><br /><span>Text-to-video</span></figcaption>
-  </figure>
-</div>
 
 ## Launch matrix
 

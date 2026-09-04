@@ -16,6 +16,10 @@
 
 """V2V attention blocks used by the active LTX2 configs.
 
+Hybrid of bidirectional GDN (``V2VBiGDNAttention``, optional state cache)
+and gated softmax (``V2VGatedSoftmaxAttention`` / after-RoPE variant).
+``SanaMSVideoV2V`` picks a subset of layers for softmax; the rest stay GDN.
+
 This file keeps the active v2v attention modules self-contained. Parameter
 names intentionally match the historical implementations so existing
 checkpoints can be loaded unchanged.
@@ -53,6 +57,22 @@ if _xformers_available:
 
 _flash_attn_available = False if os.environ.get("DISABLE_FLASH_ATTN", "0") == "1" else is_flash_attn_available()
 flash_attn_func = get_flash_attn_func() if _flash_attn_available else None
+
+
+def _bidirectional_triton_gdn_is_supported(version: str | None = None) -> bool:
+    """Return whether Triton supports the bidirectional fused dot layouts."""
+
+    if os.environ.get("WORLDFOUNDRY_FORCE_SANA_TRITON_GDN", "0") == "1":
+        return True
+    if version is None:
+        import triton
+
+        version = triton.__version__
+    numeric = []
+    for item in str(version).split(".")[:2]:
+        digits = "".join(character for character in item if character.isdigit())
+        numeric.append(int(digits or 0))
+    return tuple((numeric + [0, 0])[:2]) >= (3, 2)
 
 
 def flip_and_shift(x: torch.Tensor, dim: int = 2, shift_val: float = 0.0) -> torch.Tensor:
@@ -327,6 +347,10 @@ class V2VBiGDNAttention(nn.Module):
         self.update_rule_func = torch_recurrent_sana_gdn
 
         self.gdn_variant = _resolve_gdn_variant()
+        if self.gdn_variant != "pytorch" and not _bidirectional_triton_gdn_is_supported():
+            # Triton 3.1 aborts inside LLVM for the bidirectional dot layout,
+            # so this must be selected before compilation rather than caught.
+            self.gdn_variant = "pytorch"
         self.use_fused_gdn = self.gdn_variant != "pytorch"
 
         self.q = nn.Conv1d(in_dim, in_dim, kernel_size=1, padding=0, bias=use_bias)

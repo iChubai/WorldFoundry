@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from worldfoundry.studio.vendor_assets import VENDOR_ASSET_INSTALL_COMMAND
+
 from .assets import SPARK_MODULE_PATH, THREE_MODULE_PATH, local_module_url as _local_module_url
 
 
@@ -1307,7 +1309,13 @@ HEAD_HTML = """
       runtimePromise = Promise.all([
         import("three"),
         import("@sparkjsdev/spark"),
-      ]).then(([THREE, Spark]) => ({ THREE, Spark }));
+      ]).then(([THREE, Spark]) => ({ THREE, Spark })).catch((error) => {
+        runtimePromise = null;
+        const detail = error instanceof Error ? error.message : String(error);
+        throw new Error(
+          `3DGS browser modules unavailable. Run __WA_VENDOR_INSTALL_COMMAND__, then refresh this page. ${detail}`
+        );
+      });
     }
     return runtimePromise;
   };
@@ -1610,6 +1618,8 @@ HEAD_HTML = """
 </script>
 """.replace("__WA_THREE_MODULE_URL__", _local_module_url(THREE_MODULE_PATH)).replace(
     "__WA_SPARK_MODULE_URL__", _local_module_url(SPARK_MODULE_PATH)
+).replace(
+    "__WA_VENDOR_INSTALL_COMMAND__", VENDOR_ASSET_INSTALL_COMMAND
 )
 
 __all__ = ["HEAD_HTML"]

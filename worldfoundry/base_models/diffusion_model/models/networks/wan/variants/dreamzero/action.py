@@ -1,3 +1,9 @@
+"""DreamZero action-conditioned Wan 2.1 transformer.
+
+Concatenates / cross-attends Pi0 action tokens into the Wan 2.1 stem.
+Adds action conditioning.  No VACE, causal, or linear attn.
+"""
+
 # Inference-only DreamZero runtime retained in-tree.
 from .attention import (
     AttentionModule,
@@ -487,9 +493,7 @@ class CausalHead(nn.Module):
 
 
 class CausalWanModel(nn.Module, NativeConfigMixin):
-    r"""
-    Wan diffusion backbone supporting both text-to-video and image-to-video.
-    """
+    r"""DreamZero Wan 2.1 DiT with Pi0 action-token conditioning."""
 
     ignore_for_config = [
         'patch_size', 'cross_attn_norm', 'qk_norm', 'text_dim'

@@ -17,6 +17,8 @@ integration:
 license: apache-2.0
 name: NVIDIA DreamZero
 official_sources:
+  project_page: https://dreamzero0.github.io/
+  paper: https://arxiv.org/abs/2602.15922
   github:
     head_sha: ab790c198fbce33503358efbbd4187ce9a89adf3
     url: https://github.com/dreamzero0/dreamzero

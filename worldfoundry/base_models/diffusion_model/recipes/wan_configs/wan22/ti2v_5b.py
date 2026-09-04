@@ -1,5 +1,13 @@
 # Copyright 2024-2025 The Alibaba Wan Team Authors. All rights reserved.
-"""Module for base_models -> diffusion_model -> video -> wan -> wan_2p2 -> configs -> wan_ti2v_5B.py functionality."""
+"""Official Wan 2.2 TI2V 5B EasyDict (Wan2.2 VAE38, 30-layer DiT).
+
+Text+image-to-video 5B: dim 3072, FFN 14336, 24 heads, 30 layers.
+Uses Wan2.2 VAE (``Wan2.2_VAE.pth``, stride ``(4, 16, 16)``) and
+121 frames at 24 fps.  Shift 5, CFG 5.0, 50 steps.
+
+Pixel sizes are the 704-wide pair listed on the package
+``SUPPORTED_SIZES`` map.
+"""
 
 from easydict import EasyDict
 

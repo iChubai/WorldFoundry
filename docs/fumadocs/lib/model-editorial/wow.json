@@ -1,0 +1,41 @@
+{
+  "id": "wow",
+  "tagline": {
+    "en": "X-Humanoid's WoW — an image-to-world model that turns a first frame and actions into video, with Wan-based checkpoints from 1.3B to 14B plus a 2B DiT variant.",
+    "zh": "X-Humanoid 的 WoW——把首帧与动作转成视频的图生世界模型,提供从 1.3B 到 14B 的 Wan 版本,以及一个 2B DiT 变体。"
+  },
+  "overview": {
+    "en": [
+      "WoW is a world model from X-Humanoid that generates video from an initial image conditioned on actions — an image-to-world approach for simulating how a scene unfolds. It comes in two model families that share the same goal through different backbones.",
+      "The Wan family is built on the Wan video architecture and includes a 1.3B checkpoint (MIT-licensed) plus 14B checkpoints, reusing a conditioner, VAE, scheduler, and staged runner; the 1.3B uses VAE-only first-frame conditioning. A separate DiT 2B variant runs on the Cosmos Predict2 recipe with the WoW transformer supplied in place of the default one.",
+      "In WorldFoundry you select a checkpoint and provide a first frame; the pipeline accepts either Hugging Face repo ids or a local checkpoint directory. The Wan route defaults to 41 frames at 15 fps, and the DiT 2B route to 720p at 16 fps."
+    ],
+    "zh": [
+      "WoW 是 X-Humanoid 推出的世界模型,以动作为条件、从初始图像生成视频——一种模拟场景如何演化的图生世界方法。它有两个模型家族,目标一致但采用不同骨干。",
+      "Wan 家族基于 Wan 视频架构,包含一个 1.3B checkpoint(MIT 许可)以及多个 14B checkpoint,复用同一套 conditioner、VAE、scheduler 与分阶段 runner;1.3B 采用仅 VAE 的首帧条件。另有一个独立的 DiT 2B 变体,运行在 Cosmos Predict2 配方之上,并用 WoW 的 transformer 替换默认组件。",
+      "在 WorldFoundry 中,你选择一个 checkpoint 并提供首帧;pipeline 既接受 Hugging Face repo id,也接受本地 checkpoint 目录。Wan 路径默认 41 帧、15 fps,DiT 2B 路径默认 720p、16 fps。"
+    ]
+  },
+  "whenToUse": {
+    "en": "Reach for WoW when you want to generate video from a starting image and actions — a world-model style rollout. Start with the MIT-licensed Wan 1.3B for lighter setups, and step up to 14B or the DiT 2B variant for more capacity.",
+    "zh": "当你想从起始图像加动作生成视频——即世界模型式的 rollout 时,适合使用 WoW。轻量场景可先用 MIT 许可的 Wan 1.3B,需要更大容量时再升级到 14B 或 DiT 2B 变体。"
+  },
+  "notFor": {
+    "en": "Checkpoints are downloaded separately, and the DiT 2B route expects you to supply a local transformer checkpoint; plan for the download and staging.",
+    "zh": "checkpoint 需单独下载,DiT 2B 路径还需要你提供本地 transformer checkpoint;请预留下载与准备的时间。"
+  },
+  "highlights": {
+    "en": [
+      "Image-to-world video generation conditioned on actions",
+      "Wan family from 1.3B (MIT-licensed) to 14B, plus a DiT 2B variant",
+      "Wan route reuses a shared conditioner, VAE, scheduler, and staged runner",
+      "Accepts Hugging Face repo ids or a local checkpoint directory"
+    ],
+    "zh": [
+      "以动作为条件的图生世界视频生成",
+      "Wan 家族从 1.3B(MIT 许可)到 14B,另有 DiT 2B 变体",
+      "Wan 路径复用共享的 conditioner、VAE、scheduler 与分阶段 runner",
+      "接受 Hugging Face repo id 或本地 checkpoint 目录"
+    ]
+  }
+}

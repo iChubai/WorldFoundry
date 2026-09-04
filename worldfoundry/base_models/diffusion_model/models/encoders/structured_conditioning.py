@@ -1,8 +1,16 @@
-"""Structured condition values for native model-internal forward calls.
+"""Structured condition values for native model-internal forwards.
 
-The public diffusion lifecycle uses :class:`Conditioning`.  These small
-helpers cover networks that internally expect a typed collection of text,
-media, fps, and mask tensors without importing an upstream runtime.
+The public diffusion lifecycle uses :class:`Conditioning`.
+These helpers cover networks that internally expect a typed
+collection of text, media, fps, and mask tensors without
+importing an upstream runtime.
+
+:class:`GeneralConditioner` assembles :class:`TextAttr` /
+:class:`ReMapkey` embeddings.  :func:`broadcast_condition`
+replicates tensors under context parallel.
+
+Not a runner :class:`~...contracts.ConditionEncoder` by
+itself — Cosmo / MAGI-style internals only.
 """
 
 from __future__ import annotations
@@ -27,6 +35,7 @@ from worldfoundry.core.utils.inference_runtime import disabled_train
 
 
 class DataType(str, Enum):
+    """Whether a structured condition batch is image, video, or mixed."""
     IMAGE = "image"
     VIDEO = "video"
     MIX = "mix"
@@ -37,6 +46,7 @@ class DataType(str, Enum):
 
 @dataclass(frozen=True)
 class BaseCondition(ABC):
+    """Typed tensor bundle passed into native model-internal forwards."""
     _is_broadcasted: bool = False
 
     def to_dict(self, skip_underscore: bool = True) -> dict[str, Any]:
@@ -58,6 +68,7 @@ def broadcast_condition(
     condition: BaseCondition,
     process_group: torch.distributed.ProcessGroup | None = None,
 ) -> BaseCondition:
+    """Broadcast a structured condition across context-parallel ranks."""
     if condition.is_broadcasted:
         return condition
     values = condition.to_dict(skip_underscore=False)
@@ -70,6 +81,7 @@ def broadcast_condition(
 
 @dataclass(frozen=True)
 class Text2WorldCondition(BaseCondition):
+    """Text-to-world structured condition (tokens, masks, fps, type)."""
     crossattn_emb: torch.Tensor | None = None
     data_type: DataType = DataType.VIDEO
     padding_mask: torch.Tensor | None = None
@@ -86,6 +98,7 @@ class Text2WorldCondition(BaseCondition):
 
 
 class AbstractEmbModel(nn.Module):
+    """Base embedding module used by :class:`GeneralConditioner`."""
     def __init__(self) -> None:
         super().__init__()
         self._is_trainable = True
@@ -145,6 +158,7 @@ class AbstractEmbModel(nn.Module):
 
 
 class TextAttr(AbstractEmbModel):
+    """Embed a text-attribute tensor for structured conditioning."""
     def __init__(
         self,
         input_key: Sequence[str],
@@ -173,6 +187,7 @@ class TextAttr(AbstractEmbModel):
 
 
 class TextAttrEmptyStringDrop(TextAttr):
+    """Text attribute embedder that can drop empty strings."""
     def __init__(
         self,
         input_key: Sequence[str],
@@ -222,6 +237,7 @@ class TextAttrEmptyStringDrop(TextAttr):
 
 
 class ReMapkey(AbstractEmbModel):
+    """Rename / copy a condition tensor under a new key."""
     def __init__(
         self,
         input_key: str,
@@ -280,6 +296,7 @@ class BooleanFlag(AbstractEmbModel):
 
 
 class GeneralConditioner(nn.Module, ABC):
+    """Compose multiple embedding modules into one structured condition."""
     KEY2DIM = {"crossattn_emb": 1}
 
     def __init__(self, **emb_models: Any) -> None:

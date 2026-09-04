@@ -1,3 +1,17 @@
+"""Select and pack Gemma hidden layers for LTX contexts.
+
+:class:`EmbeddingsProcessor` gathers the configured Gemma
+layers, applies masks, and returns
+:class:`EmbeddingsProcessorOutput` for video / audio
+branches.
+
+:func:`convert_to_additive_mask` turns attention masks into
+additive biases.  Feature gathering versions are
+:mod:`.feature_extractor`.
+
+This is LTX prompt-side packing, not the DiT itself.
+"""
+
 from typing import NamedTuple
 
 import torch
@@ -7,6 +21,7 @@ from worldfoundry.base_models.diffusion_model.models.encoders.ltx.embeddings_con
 
 
 class EmbeddingsProcessorOutput(NamedTuple):
+    """Packed Gemma video/audio context tensors and masks."""
     video_encoding: torch.Tensor
     audio_encoding: torch.Tensor | None
     attention_mask: torch.Tensor

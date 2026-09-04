@@ -1,12 +1,28 @@
-"""Portable Triton encoder for NVFP4 1x16 activation quantization."""
+"""Portable Triton encoder for NVFP4 1x16 activation quantization.
+
+Responsibility: pack activations and already-swizzled E4M3 block
+scales for :class:`NVFP4Linear` with the same RNE / two-level scale
+contract as :func:`quantize_nvfp4`.
+
+This module is not a Linear layer and is not part of the package
+``__all__``. Callers use ``nvfp4.py`` public APIs; OOM must propagate
+so the linear does not silently fall back after an allocator failure.
+
+Public surface:
+- :func:`triton_quantize_nvfp4` — packed FP4 bytes + swizzled FP8 scales.
+"""
 
 from __future__ import annotations
 
 import torch
 
-from worldfoundry.runtime.compile_cache import configure_persistent_compile_cache
+from worldfoundry.core.compile_cache import configure_persistent_compile_cache
 
 configure_persistent_compile_cache(namespace="nvfp4-triton")
+
+# ──────────────────────────────────────────────────────────────────────────
+# Kernel — 1x16 blocks; E4M3 local scale + RNE E2M1; cuBLAS 128x4 swizzle
+# ──────────────────────────────────────────────────────────────────────────
 
 import triton  # noqa: E402
 import triton.language as tl  # noqa: E402
@@ -25,6 +41,7 @@ def _quantize_nvfp4_kernel(
     padded_rows: tl.constexpr,
     padded_scale_columns: tl.constexpr,
 ):
+    """One 1x16 block: E4M3 local scale, RNE E2M1 codes, cuBLAS swizzle store."""
     row = tl.program_id(0)
     scale_column = tl.program_id(1)
     valid_block = (row < rows) & (scale_column < scale_columns)
@@ -94,6 +111,11 @@ def _quantize_nvfp4_kernel(
     swizzled_offset = tile_base + (local_row % 32) * 16 + (local_row // 32) * 4 + local_column
     scale_value = tl.where(valid_block, local_scale_code, 0)
     tl.store(swizzled_scale_ptr + swizzled_offset, scale_value)
+
+
+# ──────────────────────────────────────────────────────────────────────────
+# Launch — pad to 128×4 so the swizzle store matches cuBLAS layout
+# ──────────────────────────────────────────────────────────────────────────
 
 
 def triton_quantize_nvfp4(

@@ -9,6 +9,8 @@ source:
   status: open_source
   official_repo_url: https://github.com/sarafridov/K-Planes
 official_sources:
+  paper: https://arxiv.org/abs/2301.10241
+  project_page: https://sarafridov.github.io/K-Planes
   github:
     url: https://github.com/sarafridov/K-Planes
     head_sha: b4cea7212cd5cf2d33889d9b6795873d1e0cd919

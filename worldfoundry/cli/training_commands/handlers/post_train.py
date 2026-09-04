@@ -6,9 +6,10 @@ import argparse
 import json
 from pathlib import Path
 
-from ..common import checkpoint_overrides, training_base_dir, training_family
+from ..common import checkpoint_overrides, record_elastic_worker_errors, training_base_dir, training_family
 
 
+@record_elastic_worker_errors
 def _handle_post_train(args: argparse.Namespace) -> int:
     from dataclasses import asdict
 

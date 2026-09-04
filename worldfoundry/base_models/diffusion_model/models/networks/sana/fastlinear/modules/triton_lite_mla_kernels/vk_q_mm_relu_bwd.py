@@ -14,7 +14,11 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-"""Module for base_models -> diffusion_model -> image -> sana -> diffusion -> model -> nets -> fastlinear -> modules -> triton_lite_mla_kernels -> vk_q_mm_relu_bwd.py functionality."""
+"""Triton kernel: backward of ``Q @ VK`` through ReLU(Q).
+
+Public entry: :func:`vk_q_mm_relu_bwd`.  Produces ``grad_vk`` and writes
+``grad_q`` in place using the saved Q ReLU mask.
+"""
 
 import torch
 import triton
@@ -157,15 +161,10 @@ def vk_q_mm_relu_bwd_kernel(
 def vk_q_mm_relu_bwd(
     grad_vk_q: torch.Tensor, vk: torch.Tensor, q: torch.Tensor, q_relu_mask: torch.Tensor, grad_q: torch.Tensor
 ) -> torch.Tensor:
-    """
-    Input:
-        grad_vk_q: (B, N, H, C+1), fp32
-        vk: (B, H, C+1, C), fp32
-        q: (B, N, H, C), fp16
-        q_relu_mask: (B, N, H, C), bool
-        grad_q: (B, N, H, C), fp16
-    Output:
-        grad_vk: (B, H, C+1, C), fp32
+    """Backprop ``Q @ VK`` through ReLU(Q); returns ``grad_vk``.
+
+    Writes ``grad_q`` in place.  ``grad_vk_q`` is ``(B, N, H, C+1)`` fp32;
+    ``vk`` is ``(B, H, C+1, C)``; ``q`` / mask / ``grad_q`` are ``(B, N, H, C)``.
     """
 
     assert grad_vk_q.dim() == 4 and vk.dim() == 4 and q.dim() == 4 and q_relu_mask.dim() == 4

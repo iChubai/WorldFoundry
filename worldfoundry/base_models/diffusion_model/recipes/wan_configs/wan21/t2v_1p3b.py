@@ -1,5 +1,13 @@
 # Copyright 2024-2025 The Alibaba Wan Team Authors. All rights reserved.
-"""Module for base_models -> diffusion_model -> video -> wan -> wan_2p1 -> configs -> wan_t2v_1_3B.py functionality."""
+"""Official Wan 2.1 T2V 1.3B EasyDict (same VAE, narrower DiT).
+
+Smaller text-to-video graph: dim 1536, FFN 8960, 12 heads, 30 layers.
+VAE, patch size, QK norm, and UMT5 settings match the 14B T2V
+identity so the same tokenizer / VAE checkpoints load.
+
+Supported pixel sizes are the 480p pair only; see
+:data:`~..action_21.SUPPORTED_SIZES`.
+"""
 
 from easydict import EasyDict
 

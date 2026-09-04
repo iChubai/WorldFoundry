@@ -1,0 +1,41 @@
+{
+  "id": "rdt-1b",
+  "tagline": {
+    "en": "A diffusion-transformer robot policy that predicts unified actions from vision and language.",
+    "zh": "一个扩散 Transformer 机器人策略,从视觉与语言预测统一动作。"
+  },
+  "overview": {
+    "en": [
+      "RDT-1B is the Robotics Diffusion Transformer, a vision-language-action policy from THU-ML. It takes camera views and a language instruction and generates robot actions in a unified action space, using a diffusion transformer trained for bimanual manipulation.",
+      "The policy pairs a SigLIP vision encoder with a T5-XXL text encoder to read the scene and the instruction, then denoises action sequences with a DPM sampler. In WorldFoundry it runs with two-frame, three-camera preprocessing; you can also feed precomputed text embeddings to lower peak memory.",
+      "The released weights are a pretraining checkpoint, so most deployments fine-tune it on the target robot and task before use."
+    ],
+    "zh": [
+      "RDT-1B 是 Robotics Diffusion Transformer,由 THU-ML 推出的视觉-语言-动作(VLA)策略。它接收相机画面与一条语言指令,在统一动作空间中生成机器人动作,底层是为双臂操作训练的扩散 Transformer。",
+      "该策略用 SigLIP 视觉编码器配合 T5-XXL 文本编码器来理解画面与指令,再用 DPM 采样器对动作序列去噪。在 WorldFoundry 中,它以双帧、三相机的预处理方式运行;你也可以传入预先算好的文本 embedding 来降低显存峰值。",
+      "发布的权重是预训练 checkpoint,因此多数部署会先在目标机器人与任务上做微调再使用。"
+    ]
+  },
+  "whenToUse": {
+    "en": "When you need a language-conditioned manipulation policy to fine-tune on your own robot — especially bimanual tasks where a strong diffusion-transformer base helps.",
+    "zh": "当你需要一个语言条件的操作策略、并要在自己的机器人上微调时——尤其是双臂任务,一个强扩散 Transformer 底座会很有帮助。"
+  },
+  "notFor": {
+    "en": "Not a plug-and-play policy: the released checkpoint is a pretraining base and typically needs task fine-tuning. It also depends on separate SigLIP and T5 encoders, which must be downloaded.",
+    "zh": "它不是即插即用的策略:发布的 checkpoint 是预训练底座,通常需要针对任务微调。它还依赖单独的 SigLIP 与 T5 编码器,需要下载。"
+  },
+  "highlights": {
+    "en": [
+      "Diffusion-transformer VLA policy for bimanual manipulation",
+      "SigLIP vision + T5-XXL text encoders, DPM action sampling",
+      "Two-frame, three-camera input; accepts precomputed embeddings",
+      "Released as a pretraining checkpoint for downstream fine-tuning"
+    ],
+    "zh": [
+      "面向双臂操作的扩散 Transformer VLA 策略",
+      "SigLIP 视觉 + T5-XXL 文本编码器,DPM 动作采样",
+      "双帧、三相机输入;可接受预算好的 embedding",
+      "以预训练 checkpoint 发布,便于下游微调"
+    ]
+  }
+}

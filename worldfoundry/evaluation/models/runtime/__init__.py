@@ -31,6 +31,7 @@ from .profiles import (
 from .validate import (
     KNOWN_ARTIFACT_KINDS,
     RuntimeValidationIssue,
+    validate_catalog_references,
     validate_pipeline_aliases_against_bindings,
     validate_runtime_profile_references,
     validate_runtime_registry,
@@ -60,6 +61,7 @@ __all__ = [
     "load_runtime_profiles",
     "resolve_runtime_asset_profile",
     "resolve_runtime_environment_profile",
+    "validate_catalog_references",
     "validate_pipeline_aliases_against_bindings",
     "validate_runtime_profile_references",
     "validate_runtime_registry",

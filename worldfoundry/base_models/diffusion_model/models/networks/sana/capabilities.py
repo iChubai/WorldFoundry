@@ -1,4 +1,9 @@
-"""Optional acceleration capability checks used by the Sana graph."""
+"""Optional acceleration probes used by the SANA graph.
+
+FlashAttention, xFormers, and Triton LiteMLA / MBConv are imported only when
+these helpers report the extra is installed.  Image inference can stay on
+the PyTorch LiteLA path without pulling the fused kernels.
+"""
 
 import importlib.util
 import importlib.metadata

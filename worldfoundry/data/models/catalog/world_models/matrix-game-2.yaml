@@ -31,6 +31,8 @@ modalities:
 name: Matrix-Game 2.0
 pipeline_binding: matrix-game-2
 official_sources:
+  paper: https://arxiv.org/abs/2508.13009
+  project_page: https://matrix-game-v2.github.io/
   github:
     confirmed_by: git ls-remote --heads
     confirmed_ref: refs/heads/main

@@ -14,7 +14,12 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-"""Module for base_models -> diffusion_model -> image -> sana -> diffusion -> model -> norms.py functionality."""
+"""Normalization helpers for SANA conv FFNs and attention QK-norm.
+
+:class:`LayerNorm2d` is channel-first LayerNorm (optional RMS mode).
+:class:`RMSNorm` is the sequence-token RMSNorm used by LiteLA / FlashAttention
+QK-norm.  :func:`build_norm` is the name-based factory consumed by GLUMBConv.
+"""
 
 import copy
 
@@ -26,7 +31,7 @@ __all__ = ["LayerNorm2d", "build_norm", "get_norm_name", "reset_bn", "remove_bn"
 
 
 class LayerNorm2d(nn.LayerNorm):
-    """Layer norm d implementation."""
+    """Channel-first 2-D LayerNorm (set ``rmsnorm=True`` to skip the mean)."""
 
     rmsnorm = False
 
@@ -65,16 +70,7 @@ REGISTERED_NORMALIZATION_DICT: dict[str, tuple[type, dict[str, any]]] = {
 
 
 def build_norm(name="bn2d", num_features=None, affine=True, **kwargs) -> nn.Module or None:
-    """Build norm.
-
-    Args:
-        name: The name.
-        num_features: The num features.
-        affine: The affine.
-
-    Returns:
-        The return value.
-    """
+    """Construct a registered norm (``bn2d``, ``ln``, ``ln2d``, ``syncbn``)."""
     if name in ["ln", "ln2d"]:
         kwargs["normalized_shape"] = num_features
         kwargs["elementwise_affine"] = affine
@@ -94,14 +90,7 @@ def build_norm(name="bn2d", num_features=None, affine=True, **kwargs) -> nn.Modu
 
 
 def get_norm_name(norm: nn.Module or None) -> str or None:
-    """Get norm name.
-
-    Args:
-        norm: The norm.
-
-    Returns:
-        The return value.
-    """
+    """Inverse of :func:`build_norm`: module instance → registry name."""
     if norm is None:
         return None
     module2name = {}
@@ -259,7 +248,7 @@ def set_norm_eps(model: nn.Module, eps: float or None = None, momentum: float or
 
 
 class RMSNorm(torch.nn.Module):
-    """Rms norm implementation."""
+    """Token-wise RMSNorm used by LiteLA / FlashAttention QK-norm."""
 
     def __init__(self, dim: int, scale_factor=1.0, eps: float = 1e-6, norm_dim: int = -1):
         """

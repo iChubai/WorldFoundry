@@ -1,15 +1,27 @@
-"""Model loading helpers shared by WorldFoundry runtime integrations."""
+"""Model loading helpers shared by WorldFoundry runtime integrations.
+
+Public names are resolved lazily via ``_EXPORT_MODULES`` so importing this
+package does not pull LoRA, factory, or file loaders. Two different
+``ModelConfig`` types exist: this package's loader/placement config
+(:class:`worldfoundry.core.model_loading.config.ModelConfig`) versus the
+DiT architecture dataclass in :mod:`worldfoundry.core.configuration.model_config`.
+"""
 
 from __future__ import annotations
 
 from importlib import import_module
 from typing import Any
 
+# ──────────────────────────────────────────────────────────────────────────
+# Lazy export table — do not import LoRA / file / factory at package import
+# ──────────────────────────────────────────────────────────────────────────
+
 _EXPORT_MODULES = {
     "GeneralLoRALoader": "worldfoundry.core.model_loading.lora",
     "LightX2VLoRALoader": "worldfoundry.core.model_loading.lora",
     "AttentionBackend": "worldfoundry.core.model_loading.policy",
     "InferenceModel": "worldfoundry.core.model_loading.inference_model",
+    "LoaderModelConfig": "worldfoundry.core.model_loading.config",
     "ModelConfig": "worldfoundry.core.model_loading.config",
     "OffloadMode": "worldfoundry.core.model_loading.policy",
     "OffloadPolicy": "worldfoundry.core.model_loading.policy",
@@ -31,11 +43,13 @@ _EXPORT_MODULES = {
     "load_model_loader_registry": "worldfoundry.core.model_loading.registry_config",
     "load_model_with_disk_offload": "worldfoundry.core.model_loading.model",
     "merge_ordered_lora_": "worldfoundry.core.model_loading.lora",
+    "merge_named_lora_": "worldfoundry.core.model_loading.lora",
     "merge_flattened_path_lora_": "worldfoundry.core.model_loading.lora",
     "merge_rank_scaled_lora_": "worldfoundry.core.model_loading.lora",
     "load_state_dict": "worldfoundry.core.model_loading.file",
     "load_state_dict_non_strict": "worldfoundry.core.model_loading.state_dict",
     "load_state_dict_from_folder": "worldfoundry.core.model_loading.file",
+    "load_state_dict_from_gguf": "worldfoundry.core.model_loading.file",
     "load_state_dict_from_safetensors_index": "worldfoundry.core.model_loading.file",
     "load_torch_checkpoint": "worldfoundry.core.model_loading.file",
     "load_torch_state_dict": "worldfoundry.core.model_loading.file",
@@ -50,7 +64,18 @@ _EXPORT_MODULES = {
 }
 
 
+# ──────────────────────────────────────────────────────────────────────────
+# Attribute resolve — cache on first success so later access skips import
+# ──────────────────────────────────────────────────────────────────────────
+
+
 def __getattr__(name: str) -> Any:
+    """Import the owning submodule once and cache the symbol on this module.
+
+    Failure: :exc:`AttributeError` when ``name`` is not in ``_EXPORT_MODULES``.
+    Successful lookups write into ``globals()`` so later access skips
+    ``import_module``.
+    """
     module_name = _EXPORT_MODULES.get(name)
     if module_name is None:
         raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
@@ -61,6 +86,7 @@ def __getattr__(name: str) -> Any:
 
 
 def __dir__() -> list[str]:
+    """Expose already-materialized globals plus every lazy ``__all__`` name."""
     return sorted({*globals(), *__all__})
 
 

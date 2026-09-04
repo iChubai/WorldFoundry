@@ -1,4 +1,16 @@
-"""Checkpoint-shaped Wan image conditioner built from the canonical CLIP layers."""
+"""Wan image conditioner built from the canonical CLIP layers.
+
+:class:`WanImageEncoder` wraps :mod:`.clip` so I2V recipes
+can encode reference frames to visual tokens.
+:class:`WanImageEncoderStateDictConverter` remaps checkpoint
+keys.
+
+Tokens land in ``Conditioning.shared``.  Text remains UMT5
+(:mod:`.model`).  Runner factory:
+:func:`~.component.build_wan_image_text_conditioner`.
+
+Wan I2V family, sibling of :mod:`.clip`.
+"""
 
 from __future__ import annotations
 
@@ -45,6 +57,7 @@ class WanImageEncoder(torch.nn.Module):
 
 
 class WanImageEncoderStateDictConverter:
+    """Remap official CLIP vision keys onto :class:`WanImageEncoder`."""
     def from_diffusers(self, state_dict):
         return state_dict
 

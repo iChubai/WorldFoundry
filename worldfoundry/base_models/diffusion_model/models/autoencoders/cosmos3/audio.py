@@ -1,4 +1,6 @@
-"""Inference-only Cosmos3 AVAE sound decoder."""
+"""Cosmos3 AVAE sound decoder (inference-only).
+
+Decodes 64-channel sound latents to waveform. Used by :class:`~.component.Cosmos3MediaDecoder`."""
 
 from __future__ import annotations
 

@@ -1,0 +1,41 @@
+{
+  "id": "ac3d",
+  "tagline": {
+    "en": "Snap Research's camera-control layer for video diffusion — steer the camera along a 3D trajectory while a CogVideoX backbone renders the scene.",
+    "zh": "Snap Research 为视频扩散模型打造的相机控制层——用 3D 轨迹引导镜头运动,由 CogVideoX 主干负责生成画面。"
+  },
+  "overview": {
+    "en": [
+      "AC3D is a camera-control method for text-to-video diffusion from Snap Research. It lets you specify how the camera moves through a scene, so instead of an uncontrolled clip you get one that follows a chosen trajectory — a dolly, an orbit, a pan.",
+      "It works as a ControlNet-style add-on to a CogVideoX video backbone: you give it a text prompt plus a sequence of per-frame camera poses (RealEstate10K-style pose rows), and it renders a video that respects that camera path. The workflow can start from an existing RealEstate10K layout or from a source video paired with its camera poses.",
+      "In WorldFoundry, AC3D runs through the shared video pipeline in its own environment, so you pick the checkpoint, hand it a prompt and a camera trajectory, and it writes out the resulting clip."
+    ],
+    "zh": [
+      "AC3D 是 Snap Research 提出的文生视频相机控制方法。它让你指定镜头在场景中的运动方式,于是生成的不再是随机镜头,而是沿着你选定轨迹运动的画面——推轨、环绕或摇镜。",
+      "它以 ControlNet 式的插件形式作用在 CogVideoX 视频主干上:给它一段文本提示词,再加上逐帧的相机位姿序列(RealEstate10K 风格的位姿行),它就会生成一段遵循该镜头路径的视频。工作流可以从现成的 RealEstate10K 布局出发,也可以从一段源视频配上对应相机位姿开始。",
+      "在 WorldFoundry 中,AC3D 通过共享视频 pipeline 在其独立环境里运行——选好 checkpoint,给它提示词和相机轨迹,它就会输出对应的片段。"
+    ]
+  },
+  "whenToUse": {
+    "en": "Reach for AC3D when you need explicit, trajectory-level control over camera motion in generated video — orbits, dollies and pans defined by real camera poses rather than left to chance.",
+    "zh": "当你需要对生成视频的镜头运动做明确的、轨迹级别的控制时——用真实相机位姿定义环绕、推轨、摇镜,而非听天由命——AC3D 是合适之选。"
+  },
+  "notFor": {
+    "en": "Not a plain text-to-video model if you don't care about camera paths — the value is the trajectory control, which means you need to supply camera poses. It also runs in its own environment rather than the shared stack.",
+    "zh": "如果你并不关心镜头路径,它并非普通的文生视频模型——它的价值在于轨迹控制,因此你需要提供相机位姿。此外它运行在独立环境中,而非共享环境。"
+  },
+  "highlights": {
+    "en": [
+      "Trajectory-level camera control for video generation",
+      "Built as a ControlNet-style add-on to a CogVideoX video backbone",
+      "Accepts RealEstate10K-style per-frame camera poses",
+      "Ships with both code and weights"
+    ],
+    "zh": [
+      "面向视频生成的轨迹级相机控制",
+      "以 ControlNet 式插件作用于 CogVideoX 视频主干",
+      "接受 RealEstate10K 风格的逐帧相机位姿",
+      "代码与权重一并提供"
+    ]
+  }
+}

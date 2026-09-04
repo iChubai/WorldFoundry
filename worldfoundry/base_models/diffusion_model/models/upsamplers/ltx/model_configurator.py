@@ -1,14 +1,24 @@
+"""Build :class:`LatentUpsampler` from serialized LTX checkpoint metadata.
+
+Official LTX spatial-upsampler safetensors store channel counts,
+2-D vs 3-D convs, and spatial / temporal upsample flags in JSON
+metadata.  :meth:`LatentUpsamplerConfigurator.from_config` reads
+those keys (with the same defaults as the released 2× spatial CNN)
+and returns the graph used between multi-stage LTX passes.
+
+This is construction only; encode/decode tiling and latent
+normalization live on the VAE / processor side.
+"""
+
 from worldfoundry.base_models.diffusion_model.models.upsamplers.ltx.model import LatentUpsampler
 
 
 class LatentUpsamplerConfigurator:
-    """
-    Configurator for LatentUpsampler model.
-    Used to create a LatentUpsampler model from a configuration dictionary.
-    """
+    """Build :class:`LatentUpsampler` from official safetensors JSON metadata."""
 
     @classmethod
     def from_config(cls: type[LatentUpsampler], config: dict) -> LatentUpsampler:
+        """Read channel / upsample flags and return the CNN."""
         in_channels = config.get("in_channels", 128)
         mid_channels = config.get("mid_channels", 512)
         num_blocks_per_stage = config.get("num_blocks_per_stage", 4)

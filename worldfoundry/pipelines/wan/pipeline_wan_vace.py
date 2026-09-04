@@ -24,11 +24,12 @@ class Wan2p1VACEPipeline(NativeTextToVideoPipeline):
     DEFAULT_GUIDANCE_SCALE = 5.0
     DEFAULT_NEGATIVE_PROMPT = WAN21_NEGATIVE_PROMPT
     DEFAULT_FPS = 16
-    DEFAULT_SCHEDULER_OPTIONS = {"shift": 5.0}
+    DEFAULT_SCHEDULER_OPTIONS = {"shift": 16.0}
     REQUEST_INPUT_DEFAULTS = {
         "vace_context": None,
         "vace_context_scale": 1.0,
         "vace_mask": None,
+        "vace_reference_count": 0,
     }
 
     def __call__(
@@ -48,17 +49,58 @@ class Wan2p1VACEPipeline(NativeTextToVideoPipeline):
         base_seed: int | None = None,
         **kwargs: Any,
     ) -> Any:
+        studio_references = kwargs.pop("reference_images", None)
+        if images is None and studio_references is not None:
+            images = studio_references
         if images is None and src_ref_images is not None:
             if isinstance(src_ref_images, str) and "," in src_ref_images:
                 images = [value.strip() for value in src_ref_images.split(",") if value.strip()]
             else:
                 images = src_ref_images
+        if images is None:
+            reference_count = 0
+        elif isinstance(images, str):
+            reference_count = len(
+                [value.strip() for value in images.split(",") if value.strip()]
+            )
+        elif isinstance(images, (list, tuple)):
+            reference_count = len(images)
+        else:
+            reference_count = 1
+        kwargs.setdefault("vace_reference_count", reference_count)
         if video is None:
             video = src_video
         if src_mask is not None:
             kwargs.setdefault("vace_mask", src_mask)
         height = kwargs.pop("height", None)
         width = kwargs.pop("width", None)
+
+        def merge_alias(alias_name: str, alias_value: Any, canonical_name: str) -> Any:
+            canonical_value = kwargs.pop(canonical_name, None)
+            if alias_value is None:
+                return canonical_value
+            if canonical_value is not None and canonical_value != alias_value:
+                raise ValueError(
+                    f"Wan VACE {alias_name} conflicts with explicit {canonical_name}"
+                )
+            return alias_value
+
+        frame_num = merge_alias("frame_num", frame_num, "num_frames")
+        sample_steps = merge_alias("sample_steps", sample_steps, "num_inference_steps")
+        sample_shift = merge_alias("sample_shift", sample_shift, "shift")
+        sample_guide_scale = merge_alias(
+            "sample_guide_scale", sample_guide_scale, "guidance_scale"
+        )
+        base_seed = merge_alias("base_seed", base_seed, "seed")
+        for dispatch_option in (
+            "nproc_per_node",
+            "torchrun_nproc_per_node",
+            "torchrun_nproc",
+            "ulysses_size",
+            "ring_size",
+            "world_size",
+        ):
+            kwargs.pop(dispatch_option, None)
         if size is not None:
             separator = "*" if "*" in size else "x"
             try:

@@ -1,0 +1,39 @@
+{
+  "id": "solaris",
+  "tagline": {
+    "en": "NYU VisionX's Solaris — an interactive world model that generates video you can steer, including multi-agent scenes.",
+    "zh": "NYU VisionX 出品的 Solaris——一个可交互的世界模型，能生成你可以操控的视频，包括多智能体场景。"
+  },
+  "overview": {
+    "en": [
+      "Solaris is a world model from NYU's VisionX group. Rather than producing a fixed clip, it generates video as an interactive, controllable world — you can influence how the scene unfolds, and it supports multi-agent settings where several actors move at once.",
+      "The model is run inference-only in WorldFoundry, with its pretrained weights and evaluation data hosted on Hugging Face under nyu-visionx/solaris. Because it is built to be steered, it fits interactive generation and world-simulation experiments rather than one-shot text-to-video."
+    ],
+    "zh": [
+      "Solaris 是 NYU VisionX 团队的世界模型。它不是产出一段固定片段，而是把视频当作一个可交互、可控的世界来生成——你可以影响场景如何演进，并且支持多个角色同时运动的多智能体设定。",
+      "在 WorldFoundry 中以推理模式运行，其预训练权重与评测数据托管在 Hugging Face 的 nyu-visionx/solaris 下。由于它天生面向操控，更适合交互式生成与世界模拟类实验，而非一次性的文生视频。"
+    ]
+  },
+  "whenToUse": {
+    "en": "Reach for Solaris when you want an interactive, steerable world model rather than a one-shot video generator — especially for multi-agent scenes where you want to influence how the world evolves.",
+    "zh": "当你需要的是一个可交互、可操控的世界模型，而不是一次性视频生成器时，选择 Solaris——尤其适合希望影响世界演进的多智能体场景。"
+  },
+  "notFor": {
+    "en": "Not the simplest path for plain text-to-video; it is built around interactive world simulation and needs its pretrained weights staged from Hugging Face first.",
+    "zh": "若只想做简单的文生视频，它并非最省事的选择；它围绕交互式世界模拟构建，且需先从 Hugging Face 准备好预训练权重。"
+  },
+  "highlights": {
+    "en": [
+      "Interactive, steerable video generation rather than fixed clips",
+      "Supports multi-agent world scenes",
+      "Open pretrained weights hosted on Hugging Face (nyu-visionx/solaris)",
+      "Research-backed model from NYU VisionX"
+    ],
+    "zh": [
+      "可交互、可操控的视频生成，而非固定片段",
+      "支持多智能体世界场景",
+      "开放预训练权重托管于 Hugging Face（nyu-visionx/solaris）",
+      "来自 NYU VisionX 的研究成果"
+    ]
+  }
+}

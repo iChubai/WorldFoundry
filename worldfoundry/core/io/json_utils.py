@@ -1,4 +1,14 @@
-"""JSON, YAML, and Python config file utilities."""
+"""JSON, YAML, and JSONL convenience wrappers for local paths.
+
+Thin stdlib / PyYAML helpers used by recipes. Structured dump/load with
+format inference, URI backends, and ``allow_nan=False`` ledgers live in
+:mod:`worldfoundry.core.io.serialization` and
+:mod:`worldfoundry.core.io.integrity`. These wrappers do **not** ban NaN
+unless the caller passes that flag through ``**kwargs``.
+
+Public surface: ``json_*`` / ``yaml_*`` / ``jsonl_*`` plus
+:class:`Jsonl` (in-memory reader/writer) and the verb-first aliases.
+"""
 
 import json
 import os.path as path
@@ -42,18 +52,28 @@ from typing import Dict, List
 
 from typing_extensions import Literal
 
+# ──────────────────────────────────────────────────────────────────────────
+# JSON / JSONL / YAML — local files only; no URI routing, no NaN ban by default
+# ──────────────────────────────────────────────────────────────────────────
+
 
 def json_load(*file_path, **kwargs):
+    """Load JSON from a joined local path; ``**kwargs`` go to :func:`json.load`."""
+
     file_path = f_join(file_path)
     with open(file_path, "r") as fp:
         return json.load(fp, **kwargs)
 
 
 def json_loads(string, **kwargs):
+    """Parse a JSON string; same kwargs contract as :func:`json.loads`."""
+
     return json.loads(string, **kwargs)
 
 
 def jsonl_load(*file_path, **kwargs):
+    """Load every line as JSON; blank lines become parse errors, not skips."""
+
     file_path = f_join(file_path)
     data = []
     for line in open(file_path):
@@ -62,6 +82,8 @@ def jsonl_load(*file_path, **kwargs):
 
 
 def json_dump(data, *file_path, convert_to_primitive=False, **kwargs):
+    """Write JSON; optionally coerce tensors via :func:`any_to_primitive` first."""
+
     if convert_to_primitive:
         data = any_to_primitive(data)
     file_path = f_join(file_path)
@@ -79,6 +101,8 @@ def json_dumps(data, convert_to_primitive=False, **kwargs):
 
 
 def jsonl_dump(data, *file_path):
+    """Overwrite a JSONL file; *data* must be a sequence (not a mapping)."""
+
     from .file_utils import is_sequence
 
     assert is_sequence(data)
@@ -90,16 +114,22 @@ def jsonl_dump(data, *file_path):
 
 
 def yaml_load(*file_path, loader=yaml.safe_load, **kwargs):
+    """Load YAML with ``safe_load`` by default so tags cannot construct objects."""
+
     file_path = f_join(file_path)
     with open(file_path, "r") as fp:
         return loader(fp, **kwargs)
 
 
 def yaml_loads(string, *, loader=yaml.safe_load, **kwargs):
+    """Parse a YAML string; default loader is :func:`yaml.safe_load`."""
+
     return loader(string, **kwargs)
 
 
 def yaml_dump(data, *file_path, dumper=yaml.safe_dump, convert_to_primitive=False, **kwargs):
+    """Write YAML with stable insertion order (``sort_keys=False``) unless overridden."""
+
     if convert_to_primitive:
         data = any_to_primitive(data)
     file_path = f_join(file_path)
@@ -136,7 +166,11 @@ def yaml_dumps(data, *, dumper=yaml.safe_dump, convert_to_primitive=False, **kwa
     return stream.getvalue()
 
 
-# ==================== auto-recognize extension ====================
+# ──────────────────────────────────────────────────────────────────────────
+# Suffix dispatch — .json vs .yml/.yaml only; other extensions raise IOError
+# ──────────────────────────────────────────────────────────────────────────
+
+
 def json_or_yaml_load(*file_path, **loader_kwargs):
     """
     Args:
@@ -171,8 +205,10 @@ def json_or_yaml_dump(data, *file_path, **dumper_kwargs):
         raise IOError(f'unknown file extension: "{file_path}", dumper supports only ".json", ".yml", ".yaml"')
 
 
-# ---------------- Aliases -----------------
-# add aliases where verb goes first, json_load -> load_json
+# ──────────────────────────────────────────────────────────────────────────
+# Verb-first aliases (json_load → load_json) for recipe-style imports
+# ──────────────────────────────────────────────────────────────────────────
+
 load_json = json_load
 load_yaml = yaml_load
 load_jsonl = jsonl_load
@@ -186,7 +222,9 @@ dumps_yaml = yaml_dumps
 load_json_or_yaml = json_or_yaml_load
 dump_json_or_yaml = json_or_yaml_dump
 
-# ==================== Jsonl ====================
+# ──────────────────────────────────────────────────────────────────────────
+# Jsonl — keep the whole file in memory; flush each append (eval ledgers)
+# ──────────────────────────────────────────────────────────────────────────
 
 
 class Jsonl:
@@ -216,33 +254,51 @@ class Jsonl:
             self.data = []
 
     def append(self, data: Dict):
+        """Append one mapping to memory and disk; raises in read mode."""
+
         if self._mode == "r":
             raise RuntimeError("Jsonl read mode cannot call append()")
         self.data.append(data)
         print(json_dumps(data), file=self._fp, flush=True)
 
     def extend(self, data_list: List[Dict]):
+        """Append each mapping through :meth:`append` so flush stays per-row."""
+
         for data in data_list:
             self.append(data)
 
     def close(self):
+        """Close the write handle; read mode has no handle."""
+
         if self._fp is not None:
             self._fp.close()
 
     def __getitem__(self, idx):
+        """Index the in-memory snapshot, not a live file seek."""
+
         return self.data[idx]
 
     def __len__(self):
+        """Number of rows currently held in memory."""
+
         return len(self.data)
 
     def __iter__(self):
+        """Iterate the in-memory list (includes rows appended this session)."""
+
         return iter(self.data)
 
     def __enter__(self):
+        """Context-manager identity; the file is already opened in ``__init__``."""
+
         return self
 
     def __exit__(self, type, value, traceback):
+        """Always close the write handle, including on exception."""
+
         self.close()
 
     def __bool__(self):
+        """True when at least one row is loaded or appended."""
+
         return bool(self.data)

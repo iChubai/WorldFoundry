@@ -1,4 +1,16 @@
-"""Independent native recipes for the Echo-Memory model family."""
+"""Independent native recipes for the Echo-Memory (Wan 2.1) family.
+
+Each public function returns one or more :class:`NativeDiffusionRecipe`
+values.  Recipes do not construct runners.
+
+Every variant binds the Echo DiT, Wan UMT5 text conditioner (input
+passthrough), Echo latent initializer, Wan UniPC (shift from the Echo
+recipe spec), and Wan 2.1 VAE decoder.  Strategy is ``frozen-context``:
+context frames stay fixed while future latents are sampled.  CFG is on.
+Per-id ``context_frames`` and checkpoint availability come from
+:data:`ECHO_MEMORY_MODELS`; this module does not invent extra stages or
+dual experts.
+"""
 
 from __future__ import annotations
 
@@ -19,7 +31,11 @@ from .wan import (
 
 
 def echo_memory_recipe(spec: EchoMemoryModelSpec) -> NativeDiffusionRecipe:
-    """Build one immutable Echo model identity on shared Wan components."""
+    """Build one Echo id on Wan text/VAE + ``frozen-context`` UniPC.
+
+    ``spec`` selects DiT weights, aliases, UniPC shift, and context
+    frame count.  Bindings are the default five native roles.
+    """
 
     checkpoints = {
         "dit": CheckpointSpec(
@@ -104,7 +120,7 @@ def echo_memory_recipe(spec: EchoMemoryModelSpec) -> NativeDiffusionRecipe:
 
 
 def echo_memory_recipes() -> tuple[NativeDiffusionRecipe, ...]:
-    """Return every Echo variant as a separately selectable model recipe."""
+    """Return every :data:`ECHO_MEMORY_MODELS` entry as its own recipe."""
 
     return tuple(echo_memory_recipe(spec) for spec in ECHO_MEMORY_MODELS.values())
 

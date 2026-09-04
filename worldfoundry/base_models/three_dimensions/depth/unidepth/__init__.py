@@ -15,6 +15,8 @@
 
 """Module for base_models -> three_dimensions -> depth -> unidepth -> __init__.py functionality."""
 
+import os
+from pathlib import Path
 from typing import Literal
 
 import torch
@@ -24,6 +26,50 @@ from worldfoundry.base_models.three_dimensions.general_3d.vipe.utils.misc import
 
 from ..base import DepthEstimationInput, DepthEstimationModel, DepthEstimationResult, DepthType
 from .models.unidepthv2.unidepthv2 import Pinhole, UniDepthV2
+
+UNIDEPTH_REVISION = "1d0d3c52f60b5164629d279bb9a7546458e6dcc4"
+
+
+def _offline() -> bool:
+    return os.environ.get("HF_HUB_OFFLINE") == "1" or os.environ.get("TRANSFORMERS_OFFLINE") == "1"
+
+
+def resolve_unidepth_source(type: Literal["s", "b", "l"] = "l", model_path: str | None = None) -> str:
+    """Prefer a local snapshot so Hope nodes never hit huggingface.co."""
+    if model_path:
+        path = Path(model_path)
+        if path.exists():
+            return model_path
+        if _offline():
+            raise FileNotFoundError(f"UniDepth weight missing offline: {model_path}")
+        return model_path
+    explicit = os.environ.get("WORLDFOUNDRY_UNIDEPTH_MODEL", "").strip()
+    if explicit:
+        path = Path(explicit)
+        if path.exists():
+            return explicit
+        if _offline():
+            raise FileNotFoundError(f"WORLDFOUNDRY_UNIDEPTH_MODEL is unusable offline: {explicit}")
+        return explicit
+    revision = os.environ.get("WORLDFOUNDRY_UNIDEPTH_REVISION", UNIDEPTH_REVISION).strip() or UNIDEPTH_REVISION
+    hf_home = os.environ.get("HF_HOME", "").strip()
+    if hf_home:
+        snapshot = (
+            Path(hf_home)
+            / "hub"
+            / f"models--lpiccinelli--unidepth-v2-vit{type}14"
+            / "snapshots"
+            / revision
+        )
+        if (snapshot / "model.safetensors").is_file() or (snapshot / "config.json").is_file():
+            return str(snapshot)
+    repo_id = f"lpiccinelli/unidepth-v2-vit{type}14"
+    if _offline():
+        raise FileNotFoundError(
+            f"UniDepth snapshot missing offline for {repo_id}. "
+            "Set WORLDFOUNDRY_UNIDEPTH_MODEL to a local snapshot directory."
+        )
+    return repo_id
 
 
 class UniDepth2Model(DepthEstimationModel):
@@ -39,7 +85,7 @@ class UniDepth2Model(DepthEstimationModel):
             The return value.
         """
         super().__init__()
-        self.model = UniDepthV2.from_pretrained(model_path or f"lpiccinelli/unidepth-v2-vit{type}14")
+        self.model = UniDepthV2.from_pretrained(resolve_unidepth_source(type, model_path))
         self.model.interpolation_mode = "bilinear"
         self.model = self.model.cuda().eval()
 

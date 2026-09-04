@@ -1,4 +1,26 @@
-"""Wan text-to-video latent initialization."""
+"""Wan family :class:`~...contracts.LatentInitializer` implementations.
+
+All roles share Wan 4n+1 geometry: ``T_lat = (num_frames-1)//4 + 1``,
+default 16 channels and 8× spatial compression.  The runner calls
+``initialize(DiffusionRequest, ...)`` for text-to-video; image / reference /
+VACE roles also implement
+:meth:`~...contracts.EncodedLatentInitializer.initialize_with_encoder`
+so they reuse the recipe-bound :class:`~...contracts.LatentEncoder`.
+
+Roles
+-----
+- :class:`WanTextToVideoLatentInitializer`: Gaussian noise only.
+- :class:`WanReferenceLatentInitializer`: encode 1–4 reference stills and
+  append them as extra time tokens.
+- :class:`WanImageToVideoLatentInitializer`: first-frame VAE condition + mask
+  for Wan2.1 I2V (``in_dim=36``).
+- :class:`WanTextImageToVideoLatentInitializer`: Wan2.2 TI2V first-frame
+  condition without CLIP.
+- :class:`WanVaceLatentInitializer`: VACE control video / mask packing.
+
+``LatentInitialization.conditioning`` keys become
+``DenoiserInput.conditioning`` on every denoise step.
+"""
 
 from __future__ import annotations
 
@@ -10,6 +32,13 @@ import torch
 
 from ....components import ComponentBuildContext
 from ....contracts import DiffusionRequest, LatentEncoder, LatentInitialization
+
+
+# Internal semantic proof consumed by the Wan TI2V denoiser.  The initializer
+# knows whether an image was supplied without inspecting a CUDA tensor; the
+# denoiser can therefore retain a scalar timestep for all-noise T2V requests
+# without a synchronizing ``denoise_mask.all().item()`` check.
+WAN_DENOISE_MASK_IS_ALL_ONES = "_worldfoundry_wan_denoise_mask_is_all_ones"
 
 
 class WanTextToVideoLatentInitializer:
@@ -44,8 +73,11 @@ class WanTextToVideoLatentInitializer:
         generator: torch.Generator,
         device: torch.device,
         dtype: torch.dtype,
+        extra_latent_frames: int = 0,
     ) -> torch.Tensor:
         del dtype
+        if extra_latent_frames < 0:
+            raise ValueError("extra_latent_frames must be non-negative")
         if request.height % self.spatial_compression or request.width % self.spatial_compression:
             raise ValueError(
                 f"Wan height and width must be divisible by {self.spatial_compression}: "
@@ -56,7 +88,11 @@ class WanTextToVideoLatentInitializer:
                 f"Wan num_frames must satisfy (num_frames - 1) % {self.temporal_compression} == 0: "
                 f"got {request.num_frames}"
             )
-        latent_frames = (request.num_frames - 1) // self.temporal_compression + 1
+        latent_frames = (
+            (request.num_frames - 1) // self.temporal_compression
+            + 1
+            + int(extra_latent_frames)
+        )
         return torch.randn(
             request.batch_size,
             self.channels,
@@ -76,6 +112,7 @@ class WanTextToVideoLatentInitializer:
         device: torch.device,
         dtype: torch.dtype,
     ) -> torch.Tensor:
+        """Return ``[B, C, T_lat, H/s, W/s]`` Gaussian noise (Wan T2V)."""
         return self._noise(
             request,
             generator=generator,
@@ -347,13 +384,17 @@ class WanTextImageToVideoLatentInitializer(WanTextToVideoLatentInitializer):
                 {
                     "clean_latents": torch.zeros_like(noise[:, :, :1]),
                     "denoise_mask": denoise_mask,
+                    WAN_DENOISE_MASK_IS_ALL_ONES: True,
                 },
             )
 
         from worldfoundry.core import load_pil_image
         from worldfoundry.core.utils.image_utils import resize_and_center_crop
 
-        array = np.asarray(load_pil_image(image, first_sequence_item=False))
+        array = np.array(
+            load_pil_image(image, first_sequence_item=False),
+            copy=True,
+        )
         array = resize_and_center_crop(
             array,
             target_width=request.width,
@@ -384,6 +425,7 @@ class WanTextImageToVideoLatentInitializer(WanTextToVideoLatentInitializer):
                 "clean_latents": clean,
                 "denoise_mask": denoise_mask,
                 "reference_pixels": pixels,
+                WAN_DENOISE_MASK_IS_ALL_ONES: False,
             },
         )
 
@@ -509,7 +551,22 @@ class WanVaceLatentInitializer(WanTextToVideoLatentInitializer):
         device: torch.device,
         dtype: torch.dtype,
     ) -> LatentInitialization:
-        noise = self._noise(request, generator=generator, device=device, dtype=dtype)
+        references = self._references(request)
+        declared_reference_count = int(
+            request.inputs.get("vace_reference_count", len(references))
+        )
+        if declared_reference_count != len(references):
+            raise ValueError(
+                "vace_reference_count must match the number of VACE reference images: "
+                f"{declared_reference_count} != {len(references)}"
+            )
+        noise = self._noise(
+            request,
+            generator=generator,
+            device=device,
+            dtype=dtype,
+            extra_latent_frames=declared_reference_count,
+        )
         codec_dtype = self._codec_dtype(latent_encoder)
         direct_context = request.inputs.get("vace_context")
         if direct_context is not None:
@@ -536,10 +593,12 @@ class WanVaceLatentInitializer(WanTextToVideoLatentInitializer):
             dtype=noise.dtype,
         )
         reactive = latent_encoder.encode(pixels * mask).to(device=device, dtype=noise.dtype)
-        if inactive.shape != noise.shape or reactive.shape != noise.shape:
+        generated_noise = noise[:, :, declared_reference_count:]
+        if inactive.shape != generated_noise.shape or reactive.shape != generated_noise.shape:
             raise ValueError(
                 "encoded VACE video geometry must match generated latents: "
-                f"{tuple(inactive.shape)}, {tuple(reactive.shape)} vs {tuple(noise.shape)}"
+                f"{tuple(inactive.shape)}, {tuple(reactive.shape)} vs "
+                f"{tuple(generated_noise.shape)}"
             )
         video_latents = torch.cat((inactive, reactive), dim=1)
 
@@ -555,19 +614,20 @@ class WanVaceLatentInitializer(WanTextToVideoLatentInitializer):
         )
         mask_latents = torch.nn.functional.interpolate(
             mask_latents,
-            size=noise.shape[2:],
+            size=generated_noise.shape[2:],
             mode="nearest",
         ).to(dtype=noise.dtype)
 
-        references = self._references(request)
-        if len(references) > noise.shape[2]:
+        if len(references) > generated_noise.shape[2]:
             raise ValueError(
-                f"Wan VACE accepts at most {noise.shape[2]} references at this frame count"
+                f"Wan VACE accepts at most {generated_noise.shape[2]} references "
+                "at this frame count"
             )
+        reference_latents = []
         if references:
             from worldfoundry.core import load_pil_image, resize_and_letterbox
 
-            for index, reference in enumerate(references):
+            for reference in references:
                 image = resize_and_letterbox(
                     load_pil_image(reference, first_sequence_item=False),
                     request.width,
@@ -586,16 +646,33 @@ class WanVaceLatentInitializer(WanTextToVideoLatentInitializer):
                 )
                 if reference_latent.shape[2] != 1 or reference_latent.shape[-2:] != noise.shape[-2:]:
                     raise ValueError("encoded VACE reference geometry does not match generated latents")
-                video_latents[:, :, index : index + 1] = torch.cat(
-                    (reference_latent, torch.zeros_like(reference_latent)),
-                    dim=1,
+                reference_latents.append(
+                    torch.cat(
+                        (reference_latent, torch.zeros_like(reference_latent)),
+                        dim=1,
+                    )
                 )
-                mask_latents[:, :, index : index + 1] = 0
+            video_latents = torch.cat((*reference_latents, video_latents), dim=2)
+            mask_latents = torch.cat(
+                (
+                    torch.zeros_like(mask_latents[:, :, :declared_reference_count]),
+                    mask_latents,
+                ),
+                dim=2,
+            )
+
+        expected_context_shape = (noise.shape[0], 96, *noise.shape[2:])
+        context = torch.cat((video_latents, mask_latents), dim=1)
+        if tuple(context.shape) != expected_context_shape:
+            raise ValueError(
+                "encoded VACE context geometry must match reference-prefixed noise: "
+                f"{tuple(context.shape)} vs {expected_context_shape}"
+            )
 
         return LatentInitialization(
             noise,
             {
-                "vace_context": torch.cat((video_latents, mask_latents), dim=1),
+                "vace_context": context,
                 "vace_context_scale": float(request.inputs.get("vace_context_scale", 1.0)),
             },
         )

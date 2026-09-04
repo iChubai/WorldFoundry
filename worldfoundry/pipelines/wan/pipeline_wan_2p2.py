@@ -14,6 +14,10 @@ class Wan2p2Pipeline(NativeTextToVideoPipeline):
     MODEL_ID = "wan2.2-ti2v-5b"
     OWNER = "Wan2.2 TI2V 5B"
     CHECKPOINT_ROLES = ("dit", "text-encoder", "tokenizer", "vae")
+    # Distilled/accelerated Wan releases are commonly distributed as PEFT
+    # LoRAs. Reuse the audited Wan merge path so 4-step adapters remain an
+    # opt-in checkpoint choice instead of requiring a separate pipeline.
+    PEFT_ADAPTER_COMPONENT = "denoiser:main"
     GENERATION_TYPE = "ti2v"
     ACCEPTS_IMAGES = True
     REQUIRES_IMAGES = False
@@ -24,6 +28,7 @@ class Wan2p2Pipeline(NativeTextToVideoPipeline):
     DEFAULT_GUIDANCE_SCALE = 5.0
     DEFAULT_NEGATIVE_PROMPT = WAN21_NEGATIVE_PROMPT
     DEFAULT_FPS = 24
+    OUTPUT_VALUE_RANGE = "-1,1"
     DEFAULT_SCHEDULER_OPTIONS = {"shift": 5.0}
 
     def __call__(
@@ -96,4 +101,53 @@ class Wan2p2Pipeline(NativeTextToVideoPipeline):
         )
 
 
-__all__ = ["Wan2p2Pipeline"]
+class Wan2p2T2VA14BPipeline(NativeTextToVideoPipeline):
+    """Official Wan2.2 T2V A14B dual-expert generation."""
+
+    MODEL_ID = "wan2.2-t2v-a14b"
+    OWNER = "Wan2.2 T2V A14B"
+    CHECKPOINT_ROLES = ("high-dit", "low-dit", "text-encoder", "tokenizer", "vae")
+    DEFAULT_HEIGHT = 480
+    DEFAULT_WIDTH = 832
+    DEFAULT_NUM_FRAMES = 81
+    DEFAULT_NUM_INFERENCE_STEPS = 40
+    DEFAULT_GUIDANCE_SCALE = 4.0
+    DEFAULT_NEGATIVE_PROMPT = WAN21_NEGATIVE_PROMPT
+    DEFAULT_FPS = 16
+    OUTPUT_VALUE_RANGE = "-1,1"
+    DEFAULT_SCHEDULER_OPTIONS = {"shift": 12.0}
+    REQUEST_INPUT_DEFAULTS = {
+        "low_noise_guidance_scale": 3.0,
+        "high_noise_guidance_scale": 4.0,
+    }
+
+
+class Wan2p2I2VA14BPipeline(NativeTextToVideoPipeline):
+    """Official Wan2.2 I2V A14B dual-expert generation."""
+
+    MODEL_ID = "wan2.2-i2v-a14b"
+    OWNER = "Wan2.2 I2V A14B"
+    CHECKPOINT_ROLES = ("high-dit", "low-dit", "text-encoder", "tokenizer", "vae")
+    GENERATION_TYPE = "i2v"
+    ACCEPTS_IMAGES = True
+    REQUIRES_IMAGES = True
+    DEFAULT_HEIGHT = 480
+    DEFAULT_WIDTH = 832
+    DEFAULT_NUM_FRAMES = 81
+    DEFAULT_NUM_INFERENCE_STEPS = 40
+    DEFAULT_GUIDANCE_SCALE = 3.5
+    DEFAULT_NEGATIVE_PROMPT = WAN21_NEGATIVE_PROMPT
+    DEFAULT_FPS = 16
+    OUTPUT_VALUE_RANGE = "-1,1"
+    DEFAULT_SCHEDULER_OPTIONS = {"shift": 5.0}
+    REQUEST_INPUT_DEFAULTS = {
+        "low_noise_guidance_scale": 3.5,
+        "high_noise_guidance_scale": 3.5,
+    }
+
+
+__all__ = [
+    "Wan2p2I2VA14BPipeline",
+    "Wan2p2Pipeline",
+    "Wan2p2T2VA14BPipeline",
+]

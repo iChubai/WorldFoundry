@@ -6,7 +6,6 @@ import contextlib
 import json
 import logging
 import os
-import select
 import signal
 import socket
 import subprocess
@@ -24,22 +23,14 @@ from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import FileResponse, HTMLResponse, Response, StreamingResponse
 from pydantic import BaseModel, Field
 
-from worldfoundry.core.io.paths import project_root
 from worldfoundry.core.inference import (
-    ASSET_GATED_WORLD_RUNTIME_MODEL_IDS,
-    LINGBOT_VARIANT_BASE_ACT_PREVIEW,
-    LINGBOT_VARIANT_BASE_CAM,
-    LINGBOT_VARIANT_FAST,
-    LINGBOT_WORLD_MODEL_ID,
     InferenceArtifactSpec,
     InferenceCheckpointRef,
     InferenceFieldSpec,
     InferenceTaskProfile,
     InferenceVariantSpec,
-    generic_model_inference_spec,
-    get_model_inference_spec,
-    model_inference_spec,
 )
+from worldfoundry.core.io.paths import project_root
 from worldfoundry.evaluation.tasks.execution.runners.workspace_registry import (
     run_workspace_benchmark,
     validate_workspace_registry,
@@ -48,6 +39,17 @@ from worldfoundry.evaluation.tasks.execution.runners.workspace_registry import (
     workspace_benchmark_runtime_hints,
     workspace_benchmark_supported,
 )
+from worldfoundry.runtime.inference_catalog import (
+    ASSET_GATED_WORLD_RUNTIME_MODEL_IDS,
+    LINGBOT_VARIANT_BASE_ACT_PREVIEW,
+    LINGBOT_VARIANT_BASE_CAM,
+    LINGBOT_VARIANT_FAST,
+    LINGBOT_WORLD_MODEL_ID,
+    generic_model_inference_spec,
+    get_model_inference_spec,
+    model_inference_spec,
+)
+
 from .catalog import CatalogEntry, find_entry, lingbot_world_fast_load_kwargs
 from .conda_dispatch import (
     DISPATCH_ONLY_CALL_KWARGS,
@@ -56,7 +58,12 @@ from .conda_dispatch import (
     run_manager_payload_in_conda,
 )
 from .execution import RunRecord, StudioManager, _is_gaussian_splat_ply
-from .jobs import StudioJob, StudioJobStore, format_elapsed
+from .jobs import (
+    DEFAULT_SHUTDOWN_GRACE_SECONDS,
+    StudioJob,
+    StudioJobStore,
+    format_elapsed,
+)
 from .serving import (
     bind_security_warning,
     path_allowed,
@@ -68,11 +75,15 @@ from .visualization.backends.frontends import STUDIO_VISUALIZATIONS
 from .visualization.backends.viser import npz_has_supported_geometry, viser_orientation_defaults
 from .visualization.providers.run_record import first_geometry_point_candidate, first_splat_asset
 
-
 logger = logging.getLogger(__name__)
 
 REPO_ROOT = project_root(__file__)
-MANAGER = StudioManager()
+WORKSPACE_MAX_JOBS = max(1, int(os.getenv("WORLDFOUNDRY_WORKSPACE_MAX_JOBS", "8") or "8"))
+WORKSPACE_MAX_CACHED_PIPELINES = max(
+    0,
+    int(os.getenv("WORLDFOUNDRY_WORKSPACE_MAX_CACHED_PIPELINES", str(WORKSPACE_MAX_JOBS)) or "0"),
+)
+MANAGER = StudioManager(max_cached_pipelines=WORKSPACE_MAX_CACHED_PIPELINES)
 
 
 def _initial_studio_job_counter(workspace_root: str) -> int:
@@ -86,10 +97,15 @@ def _initial_studio_job_counter(workspace_root: str) -> int:
 
 
 JOBS = StudioJobStore(
-    max_workers=int(os.getenv("WORLDFOUNDRY_WORKSPACE_MAX_JOBS", "8") or "8"),
+    max_workers=WORKSPACE_MAX_JOBS,
     initial_counter=_initial_studio_job_counter(MANAGER.workspace_root),
 )
-OPENENVISION_LOGO_PATH = Path(__file__).with_name("assets") / "openenvision-logo.png"
+_PACKAGED_OPENENVISION_LOGO_PATH = Path(__file__).with_name("assets") / "openenvision-logo.png"
+OPENENVISION_LOGO_PATH = (
+    _PACKAGED_OPENENVISION_LOGO_PATH
+    if _PACKAGED_OPENENVISION_LOGO_PATH.is_file()
+    else REPO_ROOT / "docs" / "fumadocs" / "public" / "openenvision-logo.png"
+)
 EVALUATION_VALIDATION_RESULTS_PATH = (
     REPO_ROOT / "worldfoundry" / "data" / "test_cases" / "evaluation" / "existing_results_fixture" / "results.jsonl"
 )
@@ -122,9 +138,18 @@ RUNTIME_OPTION_LABELS = {
     "cpu_offload": "CPU Offload",
     "vae_cpu_offload": "VAE Offload",
     "text_encoder_cpu_offload": "Text Encoder Offload",
+    "fuse_qkv": "Fused QKV projections",
+    "inplace_residual": "In-place residual",
+    "static_cross_kv": "Static cross-attention KV cache",
+    "fused_rope": "Fused RoPE",
 }
 RUNTIME_OPTION_ALIASES = {
-    "torch_compile": ("torch_compile", "enable_torch_compile", "use_torch_compile"),
+    "torch_compile": (
+        "torch_compile",
+        "enable_torch_compile",
+        "use_torch_compile",
+        "compile",
+    ),
     "cpu_offload": ("cpu_offload", "enable_offloading", "use_cpu_offload", "GPU_memory_mode"),
     "vae_cpu_offload": ("vae_cpu_offload", "offload_vae"),
     "text_encoder_cpu_offload": (
@@ -132,6 +157,36 @@ RUNTIME_OPTION_ALIASES = {
         "offload_t5",
         "offload_text_encoder_model",
     ),
+    "fuse_qkv": ("fuse_qkv",),
+    "inplace_residual": ("inplace_residual",),
+    "static_cross_kv": ("static_cross_kv",),
+    "fused_rope": ("fused_rope",),
+}
+RUNTIME_VALUE_OPTION_SPECS: dict[str, dict[str, Any]] = {
+    "qkv_strategy": {
+        "label": "QKV execution",
+        "kind": "choice",
+        "choices": ("auto", "packed", "split"),
+        "default": "auto",
+    },
+    "qkv_split_threshold": {
+        "label": "QKV split threshold",
+        "kind": "integer",
+        "minimum": 1,
+        "default": 8192,
+    },
+    "rope_precision": {
+        "label": "RoPE precision",
+        "kind": "choice",
+        "choices": ("fp32", "fp64"),
+        "default": "fp32",
+    },
+    "rms_norm_precision": {
+        "label": "RMSNorm precision",
+        "kind": "choice",
+        "choices": ("input", "fp32"),
+        "default": "input",
+    },
 }
 TORCH_COMPILE_ENV_MODELS = {"matrix-game-2"}
 MEDIA_TYPES = {
@@ -430,10 +485,35 @@ def _stop_all_visualizers() -> None:
             logger.warning("Failed to stop %s visualizer during shutdown.", mode, exc_info=True)
 
 
+_WORKSPACE_SHUTDOWN_LOCK = threading.Lock()
+_WORKSPACE_SHUTDOWN_COMPLETE = False
+
+
+def _shutdown_workspace(
+    grace_seconds: float = DEFAULT_SHUTDOWN_GRACE_SECONDS,
+) -> None:
+    """Run process-global Studio teardown once from FastAPI or atexit."""
+
+    global _WORKSPACE_SHUTDOWN_COMPLETE
+    with _WORKSPACE_SHUTDOWN_LOCK:
+        if _WORKSPACE_SHUTDOWN_COMPLETE:
+            return
+        _WORKSPACE_SHUTDOWN_COMPLETE = True
+    try:
+        if grace_seconds == DEFAULT_SHUTDOWN_GRACE_SECONDS:
+            JOBS.shutdown()
+        else:
+            JOBS.shutdown(grace_seconds=grace_seconds)
+    except Exception:
+        logger.warning("Failed to shut down Studio jobs cleanly.", exc_info=True)
+    finally:
+        _stop_all_visualizers()
+
+
 # uvicorn's normal exit path fires the FastAPI shutdown event, but abnormal
 # exits (unhandled exceptions before serving, SystemExit) can skip it; atexit
 # is the fallback so setsid-detached viewer children never outlive Studio.
-atexit.register(_stop_all_visualizers)
+atexit.register(_shutdown_workspace)
 
 
 def _tcp_port_available(host: str, port: int) -> bool:
@@ -581,7 +661,7 @@ def _workspace_child_python() -> str:
 
 
 def _visualizer_launch_command(mode: str, payload: VisualizerLaunchRequest, host: str, port: int) -> tuple[list[str], str, str]:
-    backend = STUDIO_VISUALIZATIONS.backend_for(mode)
+    STUDIO_VISUALIZATIONS.backend_for(mode)
     model_id = (payload.model_id or DEFAULT_VISUALIZER_MODELS.get(mode) or "").strip()
     if not model_id:
         raise HTTPException(status_code=400, detail=f"{mode} requires a model id")
@@ -766,7 +846,7 @@ def _launch_visualizer_locked(mode: str, payload: VisualizerLaunchRequest) -> di
             stderr=subprocess.STDOUT,
             text=True,
             # start_new_session is the thread-safe equivalent of
-            # preexec_fn=os.setsid: CPython documents preexec_fn as unsafe in
+            # CPython documents the legacy pre-exec callback as unsafe in
             # multi-threaded programs, and this Popen runs inside FastAPI's
             # threadpool (SA-8/PLW1509).  The child still becomes its own
             # process group leader, which _terminate_process_group relies on.
@@ -1119,6 +1199,10 @@ def _entry_runtime_param_names(entry: CatalogEntry) -> set[str]:
 
 def _entry_runtime_options(entry: CatalogEntry) -> dict[str, dict[str, Any]]:
     names = _entry_runtime_param_names(entry)
+    declared_defaults = {
+        **dict(entry.default_call_kwargs),
+        **dict(entry.default_load_kwargs),
+    }
     options: dict[str, dict[str, Any]] = {}
     for key, aliases in RUNTIME_OPTION_ALIASES.items():
         matched = [alias for alias in aliases if alias in names]
@@ -1126,11 +1210,32 @@ def _entry_runtime_options(entry: CatalogEntry) -> dict[str, dict[str, Any]]:
         if key == "torch_compile" and entry.model_id in TORCH_COMPILE_ENV_MODELS:
             supported = True
             matched.append("WORLDFOUNDRY_ENABLE_TORCH_COMPILE")
+        default = next(
+            (
+                declared_defaults[alias]
+                for alias in aliases
+                if alias in declared_defaults
+            ),
+            False,
+        )
         options[key] = {
             "label": RUNTIME_OPTION_LABELS[key],
+            "kind": "boolean",
             "supported": supported,
             "targets": matched,
+            "default": bool(default),
         }
+    for key, raw_spec in RUNTIME_VALUE_OPTION_SPECS.items():
+        spec = dict(raw_spec)
+        supported = key in names
+        spec.update(
+            {
+                "supported": supported,
+                "targets": [key] if supported else [],
+                "default": declared_defaults.get(key, spec.get("default")),
+            }
+        )
+        options[key] = spec
     return options
 
 
@@ -1254,25 +1359,58 @@ def _merge_official_links(*link_rows: Mapping[str, str]) -> dict[str, str]:
     return merged
 
 
+def _normalize_official_links(links: Mapping[str, str]) -> dict[str, str]:
+    """Keep GitHub slots for github.com URLs; treat other official sites as project pages."""
+    normalized = {key: value for key, value in links.items() if value}
+    github = normalized.get("github") or ""
+    if github and "github.com/" not in github.casefold():
+        normalized.setdefault("project", github)
+        normalized.pop("github", None)
+    return normalized
+
+
+_PAPER_SOURCE_KEYS = (
+    "paper",
+    "paper_url",
+    "paper_plus_plus",
+    "arxiv",
+    "arxiv_url",
+    "technical_report",
+    "tech_report",
+    "causal_paper",
+    "publication",
+    "pdf",
+)
+_PROJECT_SOURCE_KEYS = (
+    "project_page",
+    "project",
+    "homepage",
+    "website",
+    "webpage",
+    "project_url",
+    "official_page",
+    "demo_page",
+    "worldarena_space",
+)
+
+
+def _first_catalog_url(*values: Any) -> str:
+    for value in values:
+        text = _catalog_url_value(value)
+        if text:
+            return text
+    return ""
+
+
 def _official_links_from_sources(sources: Mapping[str, Any]) -> dict[str, str]:
     links: dict[str, str] = {}
-    github = _catalog_url_value(sources.get("github"))
+    github = _catalog_url_value(sources.get("github")) or _catalog_url_value(sources.get("inference_github"))
     if github:
         links["github"] = github
-    paper = (
-        _catalog_url_value(sources.get("paper"))
-        or _catalog_url_value(sources.get("paper_url"))
-        or _catalog_url_value(sources.get("paper_plus_plus"))
-        or _catalog_url_value(sources.get("arxiv"))
-    )
+    paper = _first_catalog_url(*(sources.get(key) for key in _PAPER_SOURCE_KEYS))
     if paper:
         links["paper"] = paper
-    project = (
-        _catalog_url_value(sources.get("project_page"))
-        or _catalog_url_value(sources.get("project"))
-        or _catalog_url_value(sources.get("homepage"))
-        or _catalog_url_value(sources.get("worldarena_space"))
-    )
+    project = _first_catalog_url(*(sources.get(key) for key in _PROJECT_SOURCE_KEYS))
     if project:
         links["project"] = project
     return links
@@ -1299,13 +1437,19 @@ def _official_links_from_catalog_entry(entry: Mapping[str, Any]) -> dict[str, st
 
     links = _merge_official_links(links, _official_links_from_sources(sources))
 
-    paper = _catalog_url_value(entry.get("paper_url")) or _catalog_url_value(entry.get("paper"))
+    paper = _first_catalog_url(*(entry.get(key) for key in _PAPER_SOURCE_KEYS))
     if paper:
         links.setdefault("paper", paper)
-    project = _catalog_url_value(entry.get("project_page")) or _catalog_url_value(entry.get("project"))
+    project = _first_catalog_url(*(entry.get(key) for key in _PROJECT_SOURCE_KEYS))
     if project:
         links.setdefault("project", project)
-    return links
+    source = entry.get("source")
+    if isinstance(source, Mapping):
+        links = _merge_official_links(links, _official_links_from_sources(source))
+        github = _catalog_url_value(source.get("official_repo_url"))
+        if github:
+            links.setdefault("github", github)
+    return _normalize_official_links(links)
 
 
 def _catalog_entry_link_keys(entry: Mapping[str, Any]) -> tuple[str, ...]:
@@ -1367,7 +1511,7 @@ def _entry_official_links(entry: CatalogEntry) -> dict[str, str]:
     github_ref = _github_url_from_model_ref(entry.default_model_ref)
     if github_ref:
         links.setdefault("github", github_ref)
-    return links
+    return _normalize_official_links(links)
 
 
 def _model_payload(entry: CatalogEntry) -> dict[str, Any]:
@@ -1407,9 +1551,25 @@ def _model_payload(entry: CatalogEntry) -> dict[str, Any]:
     }
 
 
+_WORKSPACE_MODELS_LOCK = threading.Lock()
+
+
 @lru_cache(maxsize=1)
-def _workspace_models() -> tuple[dict[str, Any], ...]:
+def _workspace_models_cached() -> tuple[dict[str, Any], ...]:
     return tuple(_model_payload(entry) for entry in _studio_catalog())
+
+
+def _workspace_models() -> tuple[dict[str, Any], ...]:
+    """Return the catalog without duplicating an expensive cold build.
+
+    ``functools.lru_cache`` is thread-safe for cache bookkeeping, but it may
+    execute a cold miss more than once when requests arrive concurrently.
+    Keep the cache lookup inside one lock so the first ``/api/models`` request
+    performs the filesystem-heavy catalog build and every follower reuses it.
+    """
+
+    with _WORKSPACE_MODELS_LOCK:
+        return _workspace_models_cached()
 
 
 @lru_cache(maxsize=1)
@@ -1567,6 +1727,62 @@ def _call_param_names(entry: CatalogEntry) -> set[str]:
 
 def _load_param_names(entry: CatalogEntry) -> set[str]:
     return set(entry.load_params) | set(entry.default_load_kwargs)
+
+
+def _hf_checkpoint_repo_identity(value: Any) -> tuple[str, str] | None:
+    """Return an HF owner/repo identity only for recognizable repository refs."""
+
+    text = str(value or "").strip().rstrip("/\\")
+    if not text:
+        return None
+    normalized = text.replace("\\", "/")
+    parts = tuple(part for part in normalized.split("/") if part)
+    for part in reversed(parts):
+        if not part.startswith("models--"):
+            continue
+        owner, separator, repo = part.removeprefix("models--").partition("--")
+        if separator and owner and repo:
+            return owner, repo
+    leaf = parts[-1] if parts else normalized
+    owner, separator, repo = leaf.partition("--")
+    if separator and owner and repo:
+        return owner, repo
+    if not normalized.startswith(("/", "./", "../")) and len(parts) == 2:
+        owner, repo = parts
+        if owner and repo:
+            return owner, repo
+    return None
+
+
+def _checkpoint_refs_equivalent(first: Any, second: Any) -> bool:
+    first_text = str(first or "").strip().rstrip("/\\")
+    second_text = str(second or "").strip().rstrip("/\\")
+    if not first_text or not second_text:
+        return False
+    if first_text == second_text:
+        return True
+    first_identity = _hf_checkpoint_repo_identity(first_text)
+    return first_identity is not None and first_identity == _hf_checkpoint_repo_identity(second_text)
+
+
+def _rebind_default_model_path(
+    load_kwargs: dict[str, Any],
+    *,
+    model_ref: str,
+    variant_load_kwargs: Mapping[str, Any],
+    entry_default_load_kwargs: Mapping[str, Any],
+) -> None:
+    """Keep a catalog model_path aligned with an explicitly resolved model_ref."""
+
+    if "model_path" in variant_load_kwargs:
+        default_model_path = variant_load_kwargs["model_path"]
+    else:
+        default_model_path = entry_default_load_kwargs.get("model_path")
+    current_model_path = load_kwargs.get("model_path")
+    if str(current_model_path or "") != str(default_model_path or ""):
+        return
+    if _checkpoint_refs_equivalent(default_model_path, model_ref):
+        load_kwargs["model_path"] = model_ref
 
 
 def _supports_attention_backend(entry: CatalogEntry) -> bool:
@@ -1973,6 +2189,38 @@ def _validate_runtime_options(entry: CatalogEntry, params: dict[str, Any]) -> No
             status_code=400,
             detail=f"{entry.model_id} does not implement these runtime options: {labels}",
         )
+    for key, spec in RUNTIME_VALUE_OPTION_SPECS.items():
+        if key not in params:
+            continue
+        option = options.get(key, {})
+        if not option.get("supported"):
+            raise HTTPException(
+                status_code=400,
+                detail=f"{entry.model_id} does not implement runtime option {key}",
+            )
+        value = params[key]
+        choices = tuple(str(choice) for choice in spec.get("choices", ()))
+        if choices and str(value) not in choices:
+            raise HTTPException(
+                status_code=400,
+                detail=f"{key} must be one of: {', '.join(choices)}",
+            )
+        if spec.get("kind") == "integer":
+            if isinstance(value, bool):
+                valid_integer = False
+            else:
+                try:
+                    normalized = int(value)
+                except (TypeError, ValueError):
+                    valid_integer = False
+                else:
+                    minimum = int(spec.get("minimum", 0))
+                    valid_integer = normalized >= minimum
+            if not valid_integer:
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"{key} must be an integer >= {spec.get('minimum', 0)}",
+                )
 
 
 def _set_runtime_option_value(target: dict[str, Any], alias: str, value: bool) -> None:
@@ -2019,6 +2267,12 @@ def _inference_run_kwargs(payload: JobCreateRequest, *, validate: bool = True) -
     if variant.variant_id not in _entry_extra_variant_ids(entry):
         call_kwargs = {**entry.default_call_kwargs, **call_kwargs}
     load_kwargs = {**entry.default_load_kwargs, **load_kwargs}
+    _rebind_default_model_path(
+        load_kwargs,
+        model_ref=model_ref,
+        variant_load_kwargs=variant_load_kwargs,
+        entry_default_load_kwargs=entry.default_load_kwargs,
+    )
     params = dict(payload.params or {})
     interactions = params.get("interactions")
     if interactions is None:
@@ -2171,7 +2425,11 @@ def _prepared_evaluation_from_payload(payload: JobCreateRequest, output_dir: str
 
 def _run_evaluation(payload: JobCreateRequest, job: StudioJob | None = None) -> dict[str, Any]:
     from worldfoundry.evaluation.runner import EvaluateRunRequest, run_evaluate
-    from worldfoundry.evaluation.tasks.execution.orchestration.plan import evaluate_request_from_run_plan, load_run_plan, validate_run_plan
+    from worldfoundry.evaluation.tasks.execution.orchestration.plan import (
+        evaluate_request_from_run_plan,
+        load_run_plan,
+        validate_run_plan,
+    )
 
     output_dir = _optional_path(payload.output_dir) or _workspace_job_output_dir("evaluations", job.job_id if job else None)
     intent_mode = (payload.eval_mode or "existing-results").strip().lower().replace("_", "-")
@@ -2430,21 +2688,61 @@ def _recent_persisted_runs(limit: int = 100) -> list[RunRecord]:
     return [record for record in MANAGER.list_recent_runs(limit=limit) if record.run_id not in active]
 
 
+_REGISTERED_ARTIFACT_CACHE_LOCK = threading.Lock()
+_REGISTERED_ARTIFACT_CACHE_SIGNATURE: tuple[Any, ...] | None = None
+_REGISTERED_ARTIFACT_CACHE_PATHS: frozenset[Path] = frozenset()
+
+
 def _registered_artifact_paths() -> set[Path]:
-    paths: set[Path] = set()
-    for job in JOBS.list():
-        for _, path in _result_artifact_paths(job.result):
-            try:
-                paths.add(Path(path).expanduser().resolve())
-            except (OSError, RuntimeError):
-                continue
-    for record in _recent_persisted_runs():
-        for _, path in _result_artifact_paths(record):
-            try:
-                paths.add(Path(path).expanduser().resolve())
-            except (OSError, RuntimeError):
-                continue
-    return paths
+    """Return the exact-path artifact allowlist, reusing an unchanged index."""
+
+    jobs = JOBS.list()
+    active_run_ids = {
+        job.result.run_id
+        for job in jobs
+        if isinstance(job.result, RunRecord)
+    }
+    persisted_runs = [
+        record
+        for record in MANAGER.list_recent_runs(limit=100)
+        if record.run_id not in active_run_ids
+    ]
+    job_rows = [(job, _result_artifact_paths(job.result)) for job in jobs]
+    persisted_rows = [(record, _result_artifact_paths(record)) for record in persisted_runs]
+    signature: tuple[Any, ...] = (
+        id(JOBS),
+        id(MANAGER),
+        tuple(
+            (job.job_id, job.status, id(job.result), tuple(path for _, path in rows))
+            for job, rows in job_rows
+        ),
+        tuple(
+            (record.run_id, id(record), tuple(path for _, path in rows))
+            for record, rows in persisted_rows
+        ),
+    )
+
+    global _REGISTERED_ARTIFACT_CACHE_PATHS, _REGISTERED_ARTIFACT_CACHE_SIGNATURE
+    with _REGISTERED_ARTIFACT_CACHE_LOCK:
+        if signature == _REGISTERED_ARTIFACT_CACHE_SIGNATURE:
+            return set(_REGISTERED_ARTIFACT_CACHE_PATHS)
+
+        paths: set[Path] = set()
+        for _, rows in job_rows:
+            for _, path in rows:
+                try:
+                    paths.add(Path(path).expanduser().resolve())
+                except (OSError, RuntimeError):
+                    continue
+        for _, rows in persisted_rows:
+            for _, path in rows:
+                try:
+                    paths.add(Path(path).expanduser().resolve())
+                except (OSError, RuntimeError):
+                    continue
+        _REGISTERED_ARTIFACT_CACHE_SIGNATURE = signature
+        _REGISTERED_ARTIFACT_CACHE_PATHS = frozenset(paths)
+        return set(paths)
 
 
 def _gallery_row_from_job(job: StudioJob) -> dict[str, Any] | None:
@@ -2614,7 +2912,7 @@ def create_app(auth_token: str = "") -> FastAPI:
 
     _load_settings_from_disk()
     app = FastAPI(title="OpenEnvision Workspace")
-    app.add_event_handler("shutdown", _stop_all_visualizers)
+    app.router.add_event_handler("shutdown", _shutdown_workspace)
 
     if auth_token:
         static_paths = {"/", "/favicon.ico", "/assets/openenvision-logo.png"}
@@ -3473,20 +3771,30 @@ WORKSPACE_HTML = r"""
     .artifactLinks {
       display: flex;
       flex-wrap: wrap;
+      align-items: center;
+      align-self: start;
       gap: 8px;
     }
     .artifactLink {
       appearance: none;
+      box-sizing: border-box;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      flex: 0 0 auto;
+      height: 32px;
+      min-height: 32px;
+      max-height: 32px;
       border: 1px solid var(--line);
       background: #111214;
       color: var(--text);
       border-radius: var(--radius-sm);
-      padding: 7px 10px;
+      padding: 0 10px;
       font-size: 12px;
       font-weight: 500;
+      line-height: 1;
       text-decoration: none;
-      max-width: 100%;
-      overflow-wrap: anywhere;
+      white-space: nowrap;
       cursor: pointer;
     }
     .artifactLink:hover { border-color: var(--line-hover); background: #1a1c1e; }
@@ -3515,6 +3823,7 @@ WORKSPACE_HTML = r"""
       border-radius: var(--radius);
       padding: 16px;
       display: grid;
+      align-content: start;
       gap: 10px;
       min-height: 160px;
       min-width: 0;
@@ -3535,6 +3844,39 @@ WORKSPACE_HTML = r"""
       overflow-wrap: anywhere;
       word-break: break-word;
     }
+    .galleryPrompt {
+      display: grid;
+      gap: 6px;
+      min-width: 0;
+    }
+    .galleryPromptText {
+      display: -webkit-box;
+      -webkit-box-orient: vertical;
+      -webkit-line-clamp: 3;
+      line-clamp: 3;
+      overflow: hidden;
+    }
+    .galleryPrompt.is-expanded .galleryPromptText,
+    .galleryPrompt.is-short .galleryPromptText {
+      display: block;
+      -webkit-line-clamp: unset;
+      line-clamp: unset;
+      overflow: visible;
+    }
+    .galleryPromptToggle {
+      appearance: none;
+      border: 0;
+      background: none;
+      padding: 0;
+      margin: 0;
+      width: fit-content;
+      color: var(--accent);
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      text-align: left;
+    }
+    .galleryPromptToggle:hover { color: var(--accent-hover); }
     .visualizerCard {
       display: flex;
       flex-direction: column;
@@ -3881,12 +4223,23 @@ WORKSPACE_HTML = r"""
           <label class="check"><input type="checkbox" id="cpuOffload" /> CPU Offload</label>
           <label class="check"><input type="checkbox" id="vaeOffload" /> VAE Offload</label>
           <label class="check"><input type="checkbox" id="textOffload" /> Text Encoder Offload</label>
+          <label class="check"><input type="checkbox" id="fuseQkv" /> Fused QKV</label>
+          <label class="check"><input type="checkbox" id="inplaceResidual" /> In-place Residual</label>
+          <label class="check"><input type="checkbox" id="staticCrossKv" /> Static Cross-KV</label>
+          <label class="check"><input type="checkbox" id="fusedRope" /> Fused RoPE</label>
+        </div>
+        <div class="formGrid" id="runtimeValues">
+          <label>QKV Execution<select id="qkvStrategy"><option value="auto">auto</option><option value="packed">packed</option><option value="split">split</option></select></label>
+          <label>QKV Split Threshold<input id="qkvSplitThreshold" type="number" min="1" value="8192" /></label>
+          <label>RoPE Precision<select id="ropePrecision"><option value="fp32">fp32</option><option value="fp64">fp64</option></select></label>
+          <label>RMSNorm Precision<select id="rmsNormPrecision"><option value="input">input</option><option value="fp32">fp32</option></select></label>
         </div>
       </div>
       <div class="modalFoot"><button class="btn" value="cancel">Cancel</button><button class="btn primary" id="createJob" value="default">Create Job</button></div>
     </form>
   </dialog>
   <script>
+    const studioAuthToken = new URLSearchParams(window.location.search).get("token") || "";
     const state = { view: "inference", jobs: [], models: [], evaluationCatalog: {benchmarks: [], metrics: [], models: []}, visualizers: [], visualizerPreviewMode: "", activeJob: "", detailRenderKey: "", detailTab: "preview", detailLogCount: 0, logStreamFilter: "all", logFollowTail: true, settings: {}, lazyVideoObserver: null, autoVideoPreloads: 0, visualizerRefreshInFlight: false, visualizerLastSync: 0 };
     const MAX_AUTO_VIDEO_PRELOADS = 4;
     const JOB_VIEWS = new Set(["inference", "evaluation"]);
@@ -3921,7 +4274,17 @@ WORKSPACE_HTML = r"""
       torchCompile: "torch_compile",
       cpuOffload: "cpu_offload",
       vaeOffload: "vae_cpu_offload",
-      textOffload: "text_encoder_cpu_offload"
+      textOffload: "text_encoder_cpu_offload",
+      fuseQkv: "fuse_qkv",
+      inplaceResidual: "inplace_residual",
+      staticCrossKv: "static_cross_kv",
+      fusedRope: "fused_rope"
+    };
+    const RUNTIME_VALUE_CONTROLS = {
+      qkvStrategy: {key: "qkv_strategy", kind: "choice", fallback: "auto"},
+      qkvSplitThreshold: {key: "qkv_split_threshold", kind: "integer", fallback: 8192},
+      ropePrecision: {key: "rope_precision", kind: "choice", fallback: "fp32"},
+      rmsNormPrecision: {key: "rms_norm_precision", kind: "choice", fallback: "input"}
     };
     const VIEW_TITLES = {
       inference: "Inference",
@@ -3932,8 +4295,34 @@ WORKSPACE_HTML = r"""
       visualizers: "Visualizers"
     };
     const $ = (id) => document.getElementById(id);
-    async function api(path, opts) {
-      const res = await fetch(path, opts);
+    function isSameOriginHttpUrl(raw) {
+      try {
+        const url = new URL(String(raw || ""), window.location.href);
+        return url.origin === window.location.origin && ["http:", "https:"].includes(url.protocol);
+      } catch {
+        return false;
+      }
+    }
+    function authenticatedUrl(raw) {
+      const value = String(raw || "");
+      if (!studioAuthToken || !value) return value;
+      try {
+        const url = new URL(value, window.location.href);
+        if (isSameOriginHttpUrl(url)) {
+          url.searchParams.set("token", studioAuthToken);
+        }
+        return url.toString();
+      } catch {
+        return value;
+      }
+    }
+    async function api(path, opts = {}) {
+      const headers = new Headers(opts.headers || {});
+      const url = authenticatedUrl(path);
+      if (studioAuthToken && isSameOriginHttpUrl(url)) {
+        headers.set("Authorization", `Bearer ${studioAuthToken}`);
+      }
+      const res = await fetch(url, { ...opts, headers });
       if (!res.ok) throw new Error(await res.text());
       return res.json();
     }
@@ -4020,8 +4409,8 @@ WORKSPACE_HTML = r"""
       return `<span class="pill ${safeClassToken(extraClass || value)}">${escapeHtml(value)}</span>`;
     }
     function renderVideoBox(url, options = {}) {
-      const src = escapeHtml(url);
-      const poster = options.poster ? ` poster="${escapeHtml(options.poster)}"` : "";
+      const src = escapeHtml(authenticatedUrl(url));
+      const poster = options.poster ? ` poster="${escapeHtml(authenticatedUrl(options.poster))}"` : "";
       const eager = !!options.eager;
       return `<div class="mediaBox ${eager ? "media-loaded" : ""}" data-media-box>
         <video controls playsinline controlsList="nodownload" preload="${eager ? "metadata" : "none"}"${poster} data-src="${src}" data-eager="${eager ? "true" : "false"}"></video>
@@ -4034,6 +4423,33 @@ WORKSPACE_HTML = r"""
       const runId = String(row.run_id || "").trim();
       if (runId) return runId;
       return pathBasename(row.output_dir || "");
+    }
+    function renderGalleryPrompt(row) {
+      return `<div class="galleryPrompt">
+        <p class="galleryPromptText">${escapeHtml(gallerySubtitle(row))}</p>
+        <button type="button" class="galleryPromptToggle" hidden aria-expanded="false">Show more</button>
+      </div>`;
+    }
+    function bindGalleryPrompts(root) {
+      if (!root) return;
+      root.querySelectorAll(".galleryPrompt").forEach(box => {
+        const textEl = box.querySelector(".galleryPromptText");
+        const btn = box.querySelector(".galleryPromptToggle");
+        if (!textEl || !btn) return;
+        const text = (textEl.textContent || "").trim();
+        const overflows = textEl.scrollHeight > textEl.clientHeight + 2;
+        if (!overflows && text.length < 120) {
+          box.classList.add("is-short");
+          btn.hidden = true;
+          return;
+        }
+        btn.hidden = false;
+        btn.onclick = () => {
+          const expanded = box.classList.toggle("is-expanded");
+          btn.setAttribute("aria-expanded", expanded ? "true" : "false");
+          btn.textContent = expanded ? "Show less" : "Show more";
+        };
+      });
     }
     function normalizePathText(path) {
       return String(path || "").trim().replace(/\/+$/, "");
@@ -4074,10 +4490,10 @@ WORKSPACE_HTML = r"""
       </div>`;
     }
     function renderImageBox(url) {
-      return `<div class="mediaBox"><img loading="lazy" decoding="async" src="${escapeHtml(url)}" /></div>`;
+      return `<div class="mediaBox"><img loading="lazy" decoding="async" src="${escapeHtml(authenticatedUrl(url))}" /></div>`;
     }
     function artifactUrl(path) {
-      return `/api/artifacts/file?path=${encodeURIComponent(path || "")}`;
+      return authenticatedUrl(`/api/artifacts/file?path=${encodeURIComponent(path || "")}`);
     }
     function artifactLink(label, path) {
       if (!path) return "";
@@ -4799,6 +5215,13 @@ WORKSPACE_HTML = r"""
         runtimeVisible = runtimeVisible || visible;
       });
       $("runtimeChecks").classList.toggle("hidden", !runtimeVisible);
+      let runtimeValueVisible = false;
+      Object.entries(RUNTIME_VALUE_CONTROLS).forEach(([id, spec]) => {
+        const visible = inference && !!(runtimeOptions[spec.key] && runtimeOptions[spec.key].supported);
+        setFieldVisible(id, visible);
+        runtimeValueVisible = runtimeValueVisible || visible;
+      });
+      $("runtimeValues").classList.toggle("hidden", !runtimeValueVisible);
     }
     function selectedModel() {
       return state.models.find(m => m.id === $("modelSelect").value);
@@ -4883,6 +5306,19 @@ WORKSPACE_HTML = r"""
       const outputs = ((task && task.outputs) || []).map(item => item.kind || item.artifact_id).join(", ") || "artifacts";
       $("inferSpecSummary").innerHTML = `<span>Inference Contract</span><strong>${escapeHtml(variant.label || variant.variant_id)} / ${escapeHtml(task.label || task.task_id)}</strong><p class="muted tiny">Inputs: ${escapeHtml(inputs)}</p><p class="muted tiny">Outputs: ${escapeHtml(outputs)}</p>`;
     }
+    function applySelectedRuntimeDefaults() {
+      const runtimeOptions = (selectedModel() && selectedModel().runtime_options) || {};
+      ["vaeOffload", "textOffload", "fuseQkv", "inplaceResidual", "staticCrossKv", "fusedRope"].forEach(id => {
+        const option = runtimeOptions[RUNTIME_CHECK_OPTIONS[id]] || {};
+        if ($(id) && option.supported) $(id).checked = !!option.default;
+      });
+      Object.entries(RUNTIME_VALUE_CONTROLS).forEach(([id, spec]) => {
+        const option = runtimeOptions[spec.key] || {};
+        if (!$(id) || !option.supported) return;
+        const value = option.default === undefined || option.default === null ? spec.fallback : option.default;
+        $(id).value = String(value);
+      });
+    }
     function applySelectedModelDefaults() {
       const selected = selectedModel();
       const variant = selectedVariant();
@@ -4895,6 +5331,7 @@ WORKSPACE_HTML = r"""
         $("modelRef").value = (variant && variant.model_ref) || selected.model_ref || "";
         $("endpoint").value = selected.endpoint || "";
       }
+      applySelectedRuntimeDefaults();
       updateCreateMode();
       applyInferTaskDefaults();
     }
@@ -4923,10 +5360,11 @@ WORKSPACE_HTML = r"""
           .join("");
         const refine = (row.video_url || row.image_url || row.model_url) ? artifactRefineButton(row.job_id || "", row.run_id || "") : "";
         const allActions = [refine, actions].filter(Boolean).join("");
-        return `<div class="itemCard">${media}<strong>${escapeHtml(row.title)}</strong><p>${escapeHtml(gallerySubtitle(row))}</p>${allActions ? `<div class="artifactLinks">${allActions}</div>` : ""}</div>`;
+        return `<div class="itemCard">${media}<strong>${escapeHtml(row.title)}</strong>${renderGalleryPrompt(row)}${allActions ? `<div class="artifactLinks">${allActions}</div>` : ""}</div>`;
       }).join("") : `<div class="muted">No completed inference outputs yet.</div>`;
       hydrateLazyMedia($("galleryGrid"));
       bindArtifactVisualizerButtons($("galleryGrid"));
+      bindGalleryPrompts($("galleryGrid"));
     }
     async function renderArtifacts() {
       const rows = await api("/api/artifacts");
@@ -5268,6 +5706,15 @@ WORKSPACE_HTML = r"""
           if (runtimeCheckVisible("cpuOffload")) params.cpu_offload = $("cpuOffload").checked;
           if (runtimeCheckVisible("vaeOffload")) params.vae_cpu_offload = $("vaeOffload").checked;
           if (runtimeCheckVisible("textOffload")) params.text_encoder_cpu_offload = $("textOffload").checked;
+          if (runtimeCheckVisible("fuseQkv")) params.fuse_qkv = $("fuseQkv").checked;
+          if (runtimeCheckVisible("inplaceResidual")) params.inplace_residual = $("inplaceResidual").checked;
+          if (runtimeCheckVisible("staticCrossKv")) params.static_cross_kv = $("staticCrossKv").checked;
+          if (runtimeCheckVisible("fusedRope")) params.fused_rope = $("fusedRope").checked;
+          Object.entries(RUNTIME_VALUE_CONTROLS).forEach(([id, spec]) => {
+            if (!fieldControlVisible(id)) return;
+            const raw = $(id).value;
+            params[spec.key] = spec.kind === "integer" ? Number(raw) : raw;
+          });
           Object.assign(params, dynamic.params);
           payload = {
             job_type: "inference",

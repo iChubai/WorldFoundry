@@ -1,13 +1,13 @@
 {
-  "modelsTotal": 283,
-  "modelsListed": 282,
-  "benchmarksTotal": 70,
+  "modelsTotal": 290,
+  "modelsListed": 273,
+  "benchmarksTotal": 75,
   "modelFamilies": [
     {
       "id": "video",
       "label": "Video",
       "blurb": "Text-, image-, and video-conditioned generation, editing, and audio-video systems.",
-      "count": 53,
+      "count": 56,
       "entries": [
         {
           "id": "allegro",
@@ -34,19 +34,16 @@
           ]
         },
         {
-          "id": "bernini-r-1.3b",
-          "name": "Bernini-R 1.3B",
+          "id": "bernini-r",
+          "name": "Bernini-R",
           "status": "integrated",
           "aliases": [
-            "bernini-r-1.3b"
-          ]
-        },
-        {
-          "id": "bernini-r-14b",
-          "name": "Bernini-R 14B",
-          "status": "integrated",
-          "aliases": [
+            "bernini-r-1.3b",
             "bernini-r-14b"
+          ],
+          "versions": [
+            "1.3B",
+            "14B"
           ]
         },
         {
@@ -82,9 +79,17 @@
           ]
         },
         {
+          "id": "fastvideo-causal-wan2.2",
+          "name": "FastVideo CausalWan 2.2",
+          "status": "integrated",
+          "aliases": [
+            "fastvideo-causal-wan2.2"
+          ]
+        },
+        {
           "id": "framepack",
           "name": "FramePack",
-          "status": "verified",
+          "status": "integrated",
           "aliases": [
             "framepack"
           ]
@@ -119,6 +124,14 @@
           "status": "integrated",
           "aliases": [
             "i2vgen-xl"
+          ]
+        },
+        {
+          "id": "joyai-echo-longvideo",
+          "name": "JoyAI-Echo 1.5 / Echo-LongVideo",
+          "status": "integrated",
+          "aliases": [
+            "joyai-echo-longvideo"
           ]
         },
         {
@@ -162,6 +175,14 @@
           ]
         },
         {
+          "id": "ltx-2.5",
+          "name": "LTX-2.5 Distilled",
+          "status": "integrated",
+          "aliases": [
+            "ltx-2.5"
+          ]
+        },
+        {
           "id": "ltx-2.x",
           "name": "LTX-2.x",
           "status": "integrated",
@@ -183,6 +204,22 @@
           "status": "integrated",
           "aliases": [
             "magi-1"
+          ]
+        },
+        {
+          "id": "magi2-preview",
+          "name": "MAGI-2 Preview",
+          "status": null,
+          "aliases": [
+            "magi2-preview"
+          ]
+        },
+        {
+          "id": "minimax-h3",
+          "name": "MiniMax H 3",
+          "status": null,
+          "aliases": [
+            "minimax-h3"
           ]
         },
         {
@@ -419,14 +456,6 @@
           ]
         },
         {
-          "id": "warp-as-history",
-          "name": "Warp-as-History",
-          "status": "verified",
-          "aliases": [
-            "warp-as-history"
-          ]
-        },
-        {
           "id": "zeroscope",
           "name": "ZeroScope",
           "status": "integrated",
@@ -440,7 +469,7 @@
       "id": "world_models",
       "label": "World models",
       "blurb": "Interactive worlds, camera/action conditioning, navigation, and simulator-shaped systems.",
-      "count": 108,
+      "count": 98,
       "entries": [
         {
           "id": "abot-world-0-5b-lf",
@@ -580,18 +609,15 @@
         },
         {
           "id": "dreamx-world-5b",
-          "name": "DreamX-World 5B AR",
+          "name": "DreamX-World 5B",
           "status": "integrated",
           "aliases": [
-            "dreamx-world-5b"
-          ]
-        },
-        {
-          "id": "dreamx-world-5b-cam",
-          "name": "DreamX-World 5B Cam",
-          "status": "integrated",
-          "aliases": [
+            "dreamx-world-5b",
             "dreamx-world-5b-cam"
+          ],
+          "versions": [
+            "AR",
+            "Cam"
           ]
         },
         {
@@ -619,91 +645,42 @@
           ]
         },
         {
-          "id": "echo-memory-block-ssm",
-          "name": "Echo-Memory Block-wise SSM",
-          "status": "blocked",
-          "aliases": [
-            "echo-memory-block-ssm"
-          ]
-        },
-        {
-          "id": "echo-memory-context-k1",
-          "name": "Echo-Memory Context K=1",
+          "id": "echo-memory",
+          "name": "Echo-Memory",
           "status": "integrated",
           "aliases": [
-            "echo-memory-context-k1"
-          ]
-        },
-        {
-          "id": "echo-memory-context-k20",
-          "name": "Echo-Memory Context K=20",
-          "status": "blocked",
-          "aliases": [
-            "echo-memory-context-k20"
-          ]
-        },
-        {
-          "id": "echo-memory-spatial-concat-text",
-          "name": "Echo-Memory Spatial Concat-Text Ablation",
-          "status": "blocked",
-          "aliases": [
-            "echo-memory-spatial-concat-text"
-          ]
-        },
-        {
-          "id": "echo-memory-spatial-cross-attn-t32",
-          "name": "Echo-Memory Spatial Cross-Attention T 32 Ablation",
-          "status": "blocked",
-          "aliases": [
-            "echo-memory-spatial-cross-attn-t32"
-          ]
-        },
-        {
-          "id": "echo-memory-spatial",
-          "name": "Echo-Memory Spatial Memory",
-          "status": "blocked",
-          "aliases": [
-            "echo-memory-spatial"
-          ]
-        },
-        {
-          "id": "echo-memory-spatial-no-injection",
-          "name": "Echo-Memory Spatial No-Injection Ablation",
-          "status": "blocked",
-          "aliases": [
-            "echo-memory-spatial-no-injection"
-          ]
-        },
-        {
-          "id": "echo-memory-ssm-ctx1-every4-hint21",
-          "name": "Echo-Memory SSM Ctx 1 Every 4 Hint 21",
-          "status": "blocked",
-          "aliases": [
-            "echo-memory-ssm-ctx1-every4-hint21"
-          ]
-        },
-        {
-          "id": "echo-memory-ssm-ctx5-every1-hint21",
-          "name": "Echo-Memory SSM Ctx 5 Every 1 Hint 21",
-          "status": "blocked",
-          "aliases": [
-            "echo-memory-ssm-ctx5-every1-hint21"
-          ]
-        },
-        {
-          "id": "echo-memory-ssm-ctx5-every4-hint81",
-          "name": "Echo-Memory SSM Ctx 5 Every 4 Hint 81",
-          "status": "blocked",
-          "aliases": [
-            "echo-memory-ssm-ctx5-every4-hint81"
-          ]
-        },
-        {
-          "id": "echo-memory-videossm-hybrid",
-          "name": "Echo-Memory VideoSSM Hybrid",
-          "status": "blocked",
-          "aliases": [
+            "echo-memory-context-k1",
+            "echo-memory-context-k20",
+            "echo-memory-block-ssm",
+            "echo-memory-spatial",
+            "echo-memory-spatial-concat-text",
+            "echo-memory-spatial-cross-attn-t32",
+            "echo-memory-spatial-no-injection",
+            "echo-memory-ssm-ctx1-every4-hint21",
+            "echo-memory-ssm-ctx5-every1-hint21",
+            "echo-memory-ssm-ctx5-every4-hint81",
             "echo-memory-videossm-hybrid"
+          ],
+          "versions": [
+            "Context K=1",
+            "Context K=20",
+            "Block-wise SSM",
+            "Spatial Memory",
+            "Spatial Concat-Text",
+            "Spatial Cross-Attention T32",
+            "Spatial No-Injection",
+            "SSM Ctx1 Every4 Hint21",
+            "SSM Ctx5 Every1 Hint21",
+            "SSM Ctx5 Every4 Hint81",
+            "VideoSSM Hybrid"
+          ]
+        },
+        {
+          "id": "joyai-echo-wm",
+          "name": "Echo-WM",
+          "status": "integrated",
+          "aliases": [
+            "joyai-echo-wm"
           ]
         },
         {
@@ -712,6 +689,14 @@
           "status": "runtime_ported",
           "aliases": [
             "egowm"
+          ]
+        },
+        {
+          "id": "evoke",
+          "name": "Evoke",
+          "status": "integrated",
+          "aliases": [
+            "evoke"
           ]
         },
         {
@@ -947,19 +932,16 @@
           ]
         },
         {
-          "id": "matrix-game-3.5-first-person",
-          "name": "Matrix-Game 3.5 First-Person Base",
+          "id": "matrix-game-3.5",
+          "name": "Matrix-Game 3.5",
           "status": "integrated",
           "aliases": [
-            "matrix-game-3.5-first-person"
-          ]
-        },
-        {
-          "id": "matrix-game-3.5-third-person",
-          "name": "Matrix-Game 3.5 Third-Person Base",
-          "status": "integrated",
-          "aliases": [
+            "matrix-game-3.5-first-person",
             "matrix-game-3.5-third-person"
+          ],
+          "versions": [
+            "First-Person",
+            "Third-Person"
           ]
         },
         {
@@ -1093,7 +1075,7 @@
         {
           "id": "sana-wm",
           "name": "SANA-WM",
-          "status": "runnable",
+          "status": "integrated",
           "aliases": [
             "sana-wm"
           ]
@@ -1136,6 +1118,14 @@
           "status": "integrated",
           "aliases": [
             "solaris"
+          ]
+        },
+        {
+          "id": "solarwm",
+          "name": "SolarWM",
+          "status": "runtime_ported",
+          "aliases": [
+            "solarwm"
           ]
         },
         {
@@ -1211,35 +1201,37 @@
           ]
         },
         {
-          "id": "wan21-fun-1p3b-cam",
-          "name": "Wan 2.1-Fun V 1.1 1.3B Control Camera",
+          "id": "wan21-fun-v1.1-cam",
+          "name": "Wan 2.1-Fun V1.1 Control Camera",
           "status": "checkpoint_gpu_validated",
           "aliases": [
-            "wan21-fun-1p3b-cam"
-          ]
-        },
-        {
-          "id": "wan21-fun-14b-cam",
-          "name": "Wan 2.1-Fun V 1.1 14B Control Camera",
-          "status": "integrated",
-          "aliases": [
+            "wan21-fun-1p3b-cam",
             "wan21-fun-14b-cam"
+          ],
+          "versions": [
+            "1.3B",
+            "14B"
           ]
         },
         {
-          "id": "wan22-fun-5b-cam",
-          "name": "Wan 2.2-Fun 5B Control Camera",
+          "id": "wan22-fun-cam",
+          "name": "Wan 2.2-Fun Control Camera",
           "status": "integrated",
           "aliases": [
-            "wan22-fun-5b-cam"
-          ]
-        },
-        {
-          "id": "wan22-fun-a14b-cam",
-          "name": "Wan 2.2-Fun A 14B Control Camera",
-          "status": "integrated",
-          "aliases": [
+            "wan22-fun-5b-cam",
             "wan22-fun-a14b-cam"
+          ],
+          "versions": [
+            "5B",
+            "A14B"
+          ]
+        },
+        {
+          "id": "warp-as-history",
+          "name": "Warp-as-History",
+          "status": "integrated",
+          "aliases": [
+            "warp-as-history"
           ]
         },
         {
@@ -1312,7 +1304,7 @@
       "id": "three_d_four_d",
       "label": "3D / 4D",
       "blurb": "Reconstruction, depth, point clouds, scene representations, and dynamic geometry.",
-      "count": 47,
+      "count": 46,
       "entries": [
         {
           "id": "4d-gs",
@@ -1332,7 +1324,7 @@
         },
         {
           "id": "cut3r",
-          "name": "CUT 3R",
+          "name": "CUT3R",
           "status": "runtime_ported",
           "aliases": [
             "cut3r"
@@ -1355,25 +1347,22 @@
           ]
         },
         {
-          "id": "depth-anything-v3-prior",
-          "name": "Depth Anything 3",
-          "status": "integrated",
-          "aliases": [
-            "depth-anything-v3-prior"
-          ]
-        },
-        {
           "id": "depth-anything-v3",
           "name": "Depth Anything 3",
           "status": "runtime_ported",
           "aliases": [
-            "depth-anything-v3"
+            "depth-anything-v3",
+            "depth-anything-v3-prior"
+          ],
+          "versions": [
+            "Base",
+            "Metric Prior"
           ]
         },
         {
           "id": "depth-anything-v1",
           "name": "Depth Anything V 1",
-          "status": "verified",
+          "status": "integrated",
           "aliases": [
             "depth-anything-v1"
           ]
@@ -1696,7 +1685,7 @@
       "id": "vla_va_wam",
       "label": "VLA / VA / WAM",
       "blurb": "Embodied policies, world-action models, and robot control stacks.",
-      "count": 64,
+      "count": 63,
       "entries": [
         {
           "id": "a1",
@@ -1725,7 +1714,7 @@
         {
           "id": "ahawam",
           "name": "AHA-WAM",
-          "status": "in_tree_checkpoint_runtime",
+          "status": "integrated",
           "aliases": [
             "ahawam"
           ]
@@ -1837,7 +1826,7 @@
         {
           "id": "giga-world-policy-0.5",
           "name": "GigaWorld-Policy-0.5",
-          "status": "in_tree_checkpoint_gated_runtime",
+          "status": "integrated",
           "aliases": [
             "giga-world-policy-0.5"
           ]
@@ -2043,14 +2032,6 @@
           ]
         },
         {
-          "id": "pi0-worldfoundry",
-          "name": "PI 0 (WorldFoundry native)",
-          "status": "runtime_ported",
-          "aliases": [
-            "pi0-worldfoundry"
-          ]
-        },
-        {
           "id": "pi0-fast",
           "name": "pi 0-FAST",
           "status": "runtime_ported",
@@ -2085,7 +2066,7 @@
         {
           "id": "rise",
           "name": "RISE",
-          "status": "in_tree_checkpoint_gated_runtime",
+          "status": "integrated",
           "aliases": [
             "rise"
           ]
@@ -2149,7 +2130,7 @@
         {
           "id": "tinyvla",
           "name": "TinyVLA",
-          "status": "in_tree_checkpoint_gated_runtime",
+          "status": "integrated",
           "aliases": [
             "tinyvla"
           ]
@@ -2305,7 +2286,7 @@
     {
       "id": "video",
       "label": "Video & world",
-      "count": 47,
+      "count": 52,
       "entries": [
         {
           "id": "4dworldbench",
@@ -2406,10 +2387,24 @@
           ]
         },
         {
+          "id": "mind",
+          "name": "MIND",
+          "aliases": [
+            "mind"
+          ]
+        },
+        {
           "id": "mirabench",
           "name": "MiraBench",
           "aliases": [
             "mirabench"
+          ]
+        },
+        {
+          "id": "pawbench",
+          "name": "PAWBench",
+          "aliases": [
+            "pawbench"
           ]
         },
         {
@@ -2473,6 +2468,20 @@
           "name": "RBench",
           "aliases": [
             "rbench"
+          ]
+        },
+        {
+          "id": "sana-wm-bench",
+          "name": "SANA-WM 80-Scene Benchmark",
+          "aliases": [
+            "sana-wm-bench"
+          ]
+        },
+        {
+          "id": "stevo-bench",
+          "name": "STEVO-Bench",
+          "aliases": [
+            "stevo-bench"
           ]
         },
         {
@@ -2592,6 +2601,13 @@
           "name": "WorldArena",
           "aliases": [
             "worldarena"
+          ]
+        },
+        {
+          "id": "worldatlas-arena",
+          "name": "WorldArena (WorldAtlas Arena)",
+          "aliases": [
+            "worldatlas-arena"
           ]
         },
         {

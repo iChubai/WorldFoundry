@@ -5,10 +5,8 @@ via :func:`get_echo_memory_model_spec`.  The spec pins the immutable
 :class:`~..networks.echo_memory.schema.EchoMemoryRecipe` and the relative
 safetensors path inside the official Hugging Face snapshot.
 
-``EchoCheckpointAvailability`` is deliberately separate from identity:
-several paper / ablation IDs are still catalogued even when upstream has
-not released, or has retracted, the matching weights.  The denoiser
-factory only loads specs whose availability is ``PUBLIC_CURRENT``.
+WorldFoundry integrates Context K=1 with its published checkpoint.
+Unreleased and retracted research variants are outside the integration scope.
 """
 
 from __future__ import annotations
@@ -73,86 +71,6 @@ _SPECS = (
         recipe_id="context-k1",
         checkpoint_file="context_k1/epoch-0.safetensors",
         aliases=("echo-context-k1",),
-    ),
-    EchoMemoryModelSpec(
-        model_id="echo-memory-context-k20",
-        display_name="Echo-Memory Context K=20",
-        recipe_id="context-k20",
-        checkpoint_file="context_k20/epoch-0.safetensors",
-        aliases=("echo-context-k20",),
-        checkpoint_availability=EchoCheckpointAvailability.UNRELEASED_BY_UPSTREAM,
-    ),
-    EchoMemoryModelSpec(
-        model_id="echo-memory-spatial",
-        display_name="Echo-Memory Spatial Memory",
-        recipe_id="spatial-grid-64",
-        checkpoint_file="spatial_mem/epoch-0.safetensors",
-        aliases=("echo-spatial-memory",),
-        checkpoint_availability=EchoCheckpointAvailability.RETRACTED_MISALIGNED_BY_UPSTREAM,
-    ),
-    EchoMemoryModelSpec(
-        model_id="echo-memory-block-ssm",
-        display_name="Echo-Memory Block-wise SSM",
-        recipe_id="block-ssm-k5",
-        checkpoint_file="block_wise_ssm_two_chunk/epoch-0.safetensors",
-        aliases=("echo-block-ssm",),
-        checkpoint_availability=EchoCheckpointAvailability.UNRELEASED_BY_UPSTREAM,
-    ),
-    EchoMemoryModelSpec(
-        model_id="echo-memory-videossm-hybrid",
-        display_name="Echo-Memory VideoSSM Hybrid",
-        recipe_id="videossm-hybrid-k5",
-        checkpoint_file="videossm_hybrid/epoch-0.safetensors",
-        aliases=("echo-videossm",),
-        checkpoint_availability=EchoCheckpointAvailability.UNRELEASED_BY_UPSTREAM,
-    ),
-    EchoMemoryModelSpec(
-        model_id="echo-memory-spatial-concat-text",
-        display_name="Echo-Memory Spatial Concat-Text Ablation",
-        recipe_id="spatial-concat-text-64",
-        checkpoint_file="spatial_concat_text_two_chunk/epoch-0.safetensors",
-        release_tier="research_ablation",
-        checkpoint_availability=EchoCheckpointAvailability.RETRACTED_MISALIGNED_BY_UPSTREAM,
-    ),
-    EchoMemoryModelSpec(
-        model_id="echo-memory-spatial-no-injection",
-        display_name="Echo-Memory Spatial No-Injection Ablation",
-        recipe_id="spatial-no-injection-64",
-        checkpoint_file="spatial_inject_none_two_chunk/epoch-0.safetensors",
-        release_tier="research_ablation",
-        checkpoint_availability=EchoCheckpointAvailability.RETRACTED_MISALIGNED_BY_UPSTREAM,
-    ),
-    EchoMemoryModelSpec(
-        model_id="echo-memory-spatial-cross-attn-t32",
-        display_name="Echo-Memory Spatial Cross-Attention T32 Ablation",
-        recipe_id="spatial-cross-attn-32",
-        checkpoint_file="spatial_cross_attn_readout_t32_g4_two_chunk/epoch-0.safetensors",
-        release_tier="research_ablation",
-        checkpoint_availability=EchoCheckpointAvailability.RETRACTED_MISALIGNED_BY_UPSTREAM,
-    ),
-    EchoMemoryModelSpec(
-        model_id="echo-memory-ssm-ctx1-every4-hint21",
-        display_name="Echo-Memory SSM Ctx1 Every4 Hint21",
-        recipe_id="block-ssm-k1-every4-hint21",
-        checkpoint_file="ssm_ablation_ctx1_every4_hint21/epoch-0.safetensors",
-        release_tier="research_ablation",
-        checkpoint_availability=EchoCheckpointAvailability.UNRELEASED_BY_UPSTREAM,
-    ),
-    EchoMemoryModelSpec(
-        model_id="echo-memory-ssm-ctx5-every1-hint21",
-        display_name="Echo-Memory SSM Ctx5 Every1 Hint21",
-        recipe_id="block-ssm-k5-every1-hint21",
-        checkpoint_file="ssm_ablation_ctx5_every1_hint21/epoch-0.safetensors",
-        release_tier="research_ablation",
-        checkpoint_availability=EchoCheckpointAvailability.UNRELEASED_BY_UPSTREAM,
-    ),
-    EchoMemoryModelSpec(
-        model_id="echo-memory-ssm-ctx5-every4-hint81",
-        display_name="Echo-Memory SSM Ctx5 Every4 Hint81",
-        recipe_id="block-ssm-k5-every4-hint81",
-        checkpoint_file="ssm_ablation_ctx5_every4_hint81/epoch-0.safetensors",
-        release_tier="research_ablation",
-        checkpoint_availability=EchoCheckpointAvailability.UNRELEASED_BY_UPSTREAM,
     ),
 )
 

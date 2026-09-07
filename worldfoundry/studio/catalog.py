@@ -141,8 +141,6 @@ STUDIO_HIDDEN_CATALOG_MODEL_IDS: frozenset[str] = frozenset(
         # AdaWorld is tracked as source/provenance only until the official env, checkpoints, and task assets are
         # reproducibly runnable from the unified Studio environment.
         "adaworld",
-        # Training-oriented 4D reconstruction repos; tracked as metadata, not release-facing Studio infer jobs.
-        "4d-gs",
         # Internal shared operator/contract surface. Concrete priors such as metric3d-prior,
         # unidepth-v2-prior, dap, and video-depth-anything-prior are the user-facing entries.
         "geometry-prior",
@@ -161,7 +159,6 @@ STUDIO_HIDDEN_CATALOG_MODEL_IDS: frozenset[str] = frozenset(
         "omnivinci",
         "emu3.5",
         "qwen2.5-omni",
-        "shape-of-motion",
         "spatial-ladder",
         "spatial-reasoner",
         "thinksound",
@@ -1761,41 +1758,6 @@ def _echo_memory_context_k1_load_kwargs() -> Dict[str, Any]:
     return _echo_memory_default_load_kwargs()
 
 
-def _echo_memory_variant_override(
-    display_name: str,
-    checkpoint_file: str,
-) -> Dict[str, Any]:
-    """Build the complete Studio contract for one immutable Echo recipe."""
-
-    return {
-        "display_name": display_name,
-        "category": "Video Generation",
-        "default_backend": "from_pretrained",
-        "supports_from_pretrained": True,
-        "default_model_ref": lambda: _echo_memory_default_ref(checkpoint_file),
-        "default_load_kwargs": _echo_memory_default_load_kwargs,
-        "default_task_type": "i2v",
-        "default_input_path": str(_data_path("test_cases", "studio_demo", "00", "image.jpg")),
-        "default_prompt": (
-            "A young man holding a bright sparkler gently turns his head as sparks scatter through "
-            "the night air; preserve identity, geometry, lighting, and smooth forward camera motion."
-        ),
-        "default_call_kwargs": {
-            "num_frames": 81,
-            "fps": 15,
-            "width": 640,
-            "height": 352,
-            "num_chunks": 2,
-            "steps": 50,
-            "guidance_scale": 5.0,
-            "seed": 42,
-            "camera_trajectory": "z*80",
-            "return_dict": True,
-        },
-        "tags": ("image-to-video", "memory", "native-diffusion", "local-checkpoint"),
-    }
-
-
 def _recammaster_default_ref() -> str:
     return _checkpoint_model_ref(
         "KlingTeam--ReCamMaster-Wan2.1",
@@ -3277,11 +3239,9 @@ def _lingbot_map_default_ref() -> str:
 
 
 _IN_TREE_REPO_PARTS: dict[str, tuple[str, ...]] = {
-    "4DGaussians": ("base_models", "three_dimensions", "general_3d", "four_d_gaussians", "four_d_gaussians_runtime"),
     "lagernvs": ("base_models", "three_dimensions", "general_3d", "lagernvs", "lagernvs_runtime"),
     "monst3r": ("base_models", "three_dimensions", "general_3d", "monst3r"),
     "MVDiffusion": ("base_models", "three_dimensions", "general_3d", "mvdiffusion", "mvdiffusion_runtime"),
-    "shape-of-motion": ("base_models", "three_dimensions", "general_3d", "shape_of_motion", "shape_of_motion_runtime"),
     "stable-virtual-camera": (
         "base_models",
         "three_dimensions",
@@ -10881,21 +10841,6 @@ CURATED_OVERRIDES: Dict[str, Dict[str, Any]] = {
         "tags": ("3dgs", "reconstruction", "camera-control", "omega"),
         "notes": "Uses the official VGGT-Omega scene-export path and emits GLB artifacts from local checkpoint trees.",
     },
-    "4d-gs": {
-        "display_name": "4D-GS",
-        "category": "3D Scene",
-        "default_backend": "from_pretrained",
-        "default_model_ref": lambda: _in_tree_repo_ref("4DGaussians"),
-        "supports_from_pretrained": True,
-        "supports_stream": False,
-        "default_task_type": "unsupported_inference",
-        "default_call_kwargs": _three_d_four_d_runtime_call_kwargs(plan_only=True),
-        "call_params": _three_d_four_d_runtime_call_params("plan_only"),
-        "load_params": _three_d_four_d_runtime_load_params(),
-        "aliases": ("4dgs", "4DGaussians"),
-        "tags": ("4d", "gaussian-splatting", "dynamic-scene"),
-        "notes": "Official reconstruction uses a training entrypoint, so this item is disabled until an infer-only runtime is integrated.",
-    },
     "lagernvs": {
         "display_name": "LagrNVS",
         "category": "3D Scene",
@@ -10990,27 +10935,6 @@ CURATED_OVERRIDES: Dict[str, Dict[str, Any]] = {
         "load_params": _three_d_four_d_runtime_load_params(),
         "tags": ("multi-view", "diffusion", "3d"),
         "notes": "Runs the official MVDiffusion demo.py entrypoint from the local official repo. The 20-step default produces a visually structured panorama; one step is suitable only for runtime smoke testing.",
-    },
-    "shape-of-motion": {
-        "display_name": "Shape of Motion",
-        "category": "3D Scene",
-        "default_backend": "from_pretrained",
-        "default_model_ref": lambda: _in_tree_repo_ref("shape-of-motion"),
-        "supports_from_pretrained": True,
-        "supports_stream": False,
-        "default_task_type": "shape_of_motion_preview",
-        "default_call_kwargs": _three_d_four_d_runtime_call_kwargs(),
-        "call_params": _three_d_four_d_runtime_call_params(
-            "data_dir",
-            "source_path",
-            "dataset_path",
-            "data_root",
-            "shape_preview_frames",
-            "shape_preview_max_points",
-        ),
-        "load_params": _three_d_four_d_runtime_load_params(),
-        "tags": ("4d", "tracking", "dynamic-scene"),
-        "notes": "Requires a Shape-of-Motion preprocessed data_dir; Studio exports a geometry preview from the official depth/camera bundle.",
     },
     "stable-virtual-camera": {
         "display_name": "Stable Virtual Camera",
@@ -11834,46 +11758,6 @@ CURATED_OVERRIDES.update(
             ),
             "tags": ("world-model", "image-to-video", "camera-control", "stream", "in-tree-runtime"),
         },
-        "echo-memory-context-k20": _echo_memory_variant_override(
-            "Echo-Memory Context K=20",
-            "context_k20/epoch-0.safetensors",
-        ),
-        "echo-memory-spatial": _echo_memory_variant_override(
-            "Echo-Memory Spatial Memory",
-            "spatial_mem/epoch-0.safetensors",
-        ),
-        "echo-memory-block-ssm": _echo_memory_variant_override(
-            "Echo-Memory Block-wise SSM",
-            "block_wise_ssm_two_chunk/epoch-0.safetensors",
-        ),
-        "echo-memory-videossm-hybrid": _echo_memory_variant_override(
-            "Echo-Memory VideoSSM Hybrid",
-            "videossm_hybrid/epoch-0.safetensors",
-        ),
-        "echo-memory-spatial-concat-text": _echo_memory_variant_override(
-            "Echo-Memory Spatial Concat-Text Ablation",
-            "spatial_concat_text_two_chunk/epoch-0.safetensors",
-        ),
-        "echo-memory-spatial-no-injection": _echo_memory_variant_override(
-            "Echo-Memory Spatial No-Injection Ablation",
-            "spatial_inject_none_two_chunk/epoch-0.safetensors",
-        ),
-        "echo-memory-spatial-cross-attn-t32": _echo_memory_variant_override(
-            "Echo-Memory Spatial Cross-Attention T32 Ablation",
-            "spatial_cross_attn_readout_t32_g4_two_chunk/epoch-0.safetensors",
-        ),
-        "echo-memory-ssm-ctx1-every4-hint21": _echo_memory_variant_override(
-            "Echo-Memory SSM Ctx1 Every4 Hint21",
-            "ssm_ablation_ctx1_every4_hint21/epoch-0.safetensors",
-        ),
-        "echo-memory-ssm-ctx5-every1-hint21": _echo_memory_variant_override(
-            "Echo-Memory SSM Ctx5 Every1 Hint21",
-            "ssm_ablation_ctx5_every1_hint21/epoch-0.safetensors",
-        ),
-        "echo-memory-ssm-ctx5-every4-hint81": _echo_memory_variant_override(
-            "Echo-Memory SSM Ctx5 Every4 Hint81",
-            "ssm_ablation_ctx5_every4_hint81/epoch-0.safetensors",
-        ),
     }
 )
 

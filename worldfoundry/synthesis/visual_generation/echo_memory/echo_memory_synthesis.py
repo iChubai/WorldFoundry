@@ -99,57 +99,7 @@ class EchoMemoryContextK1Synthesis(EchoMemorySynthesis):
     MODEL_NAME = "echo-memory-context-k1"
 
 
-class EchoMemoryContextK20Synthesis(EchoMemorySynthesis):
-    MODEL_NAME = "echo-memory-context-k20"
-
-
-class EchoMemorySpatialSynthesis(EchoMemorySynthesis):
-    MODEL_NAME = "echo-memory-spatial"
-
-
-class EchoMemoryBlockSSMSynthesis(EchoMemorySynthesis):
-    MODEL_NAME = "echo-memory-block-ssm"
-
-
-class EchoMemoryVideoSSMHybridSynthesis(EchoMemorySynthesis):
-    MODEL_NAME = "echo-memory-videossm-hybrid"
-
-
-class EchoMemorySpatialConcatTextSynthesis(EchoMemorySynthesis):
-    MODEL_NAME = "echo-memory-spatial-concat-text"
-
-
-class EchoMemorySpatialNoInjectionSynthesis(EchoMemorySynthesis):
-    MODEL_NAME = "echo-memory-spatial-no-injection"
-
-
-class EchoMemorySpatialCrossAttnT32Synthesis(EchoMemorySynthesis):
-    MODEL_NAME = "echo-memory-spatial-cross-attn-t32"
-
-
-class EchoMemorySSMCtx1Every4Hint21Synthesis(EchoMemorySynthesis):
-    MODEL_NAME = "echo-memory-ssm-ctx1-every4-hint21"
-
-
-class EchoMemorySSMCtx5Every1Hint21Synthesis(EchoMemorySynthesis):
-    MODEL_NAME = "echo-memory-ssm-ctx5-every1-hint21"
-
-
-class EchoMemorySSMCtx5Every4Hint81Synthesis(EchoMemorySynthesis):
-    MODEL_NAME = "echo-memory-ssm-ctx5-every4-hint81"
-
-
 __all__ = [
-    "EchoMemoryBlockSSMSynthesis",
     "EchoMemoryContextK1Synthesis",
-    "EchoMemoryContextK20Synthesis",
-    "EchoMemorySSMCtx1Every4Hint21Synthesis",
-    "EchoMemorySSMCtx5Every1Hint21Synthesis",
-    "EchoMemorySSMCtx5Every4Hint81Synthesis",
-    "EchoMemorySpatialConcatTextSynthesis",
-    "EchoMemorySpatialCrossAttnT32Synthesis",
-    "EchoMemorySpatialNoInjectionSynthesis",
-    "EchoMemorySpatialSynthesis",
     "EchoMemorySynthesis",
-    "EchoMemoryVideoSSMHybridSynthesis",
 ]

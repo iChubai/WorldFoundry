@@ -448,16 +448,6 @@ def default_native_diffusion_registry() -> NativeDiffusionRegistry:
 
     echo_entries = (
         ("echo-memory-context-k1", ("echo-context-k1",)),
-        ("echo-memory-context-k20", ("echo-context-k20",)),
-        ("echo-memory-spatial", ("echo-spatial-memory",)),
-        ("echo-memory-block-ssm", ("echo-block-ssm",)),
-        ("echo-memory-videossm-hybrid", ("echo-videossm",)),
-        ("echo-memory-spatial-concat-text", ()),
-        ("echo-memory-spatial-no-injection", ()),
-        ("echo-memory-spatial-cross-attn-t32", ()),
-        ("echo-memory-ssm-ctx1-every4-hint21", ()),
-        ("echo-memory-ssm-ctx5-every1-hint21", ()),
-        ("echo-memory-ssm-ctx5-every4-hint81", ()),
     )
     for model_id, aliases in echo_entries:
         registry.register_lazy(model_id, _lazy_echo_recipe(model_id), aliases=aliases)

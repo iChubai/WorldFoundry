@@ -7,18 +7,8 @@ from typing import Any
 
 from worldfoundry.pipelines.pipeline_utils import PipelineABC
 from worldfoundry.synthesis.visual_generation.echo_memory import (
-    EchoMemoryBlockSSMSynthesis,
     EchoMemoryContextK1Synthesis,
-    EchoMemoryContextK20Synthesis,
-    EchoMemorySpatialConcatTextSynthesis,
-    EchoMemorySpatialCrossAttnT32Synthesis,
-    EchoMemorySpatialNoInjectionSynthesis,
-    EchoMemorySpatialSynthesis,
-    EchoMemorySSMCtx1Every4Hint21Synthesis,
-    EchoMemorySSMCtx5Every1Hint21Synthesis,
-    EchoMemorySSMCtx5Every4Hint81Synthesis,
     EchoMemorySynthesis,
-    EchoMemoryVideoSSMHybridSynthesis,
 )
 
 
@@ -140,67 +130,7 @@ class EchoMemoryContextK1Pipeline(EchoMemoryPipeline):
     SYNTHESIS_CLS = EchoMemoryContextK1Synthesis
 
 
-class EchoMemoryContextK20Pipeline(EchoMemoryPipeline):
-    MODEL_ID = "echo-memory-context-k20"
-    SYNTHESIS_CLS = EchoMemoryContextK20Synthesis
-
-
-class EchoMemorySpatialPipeline(EchoMemoryPipeline):
-    MODEL_ID = "echo-memory-spatial"
-    SYNTHESIS_CLS = EchoMemorySpatialSynthesis
-
-
-class EchoMemoryBlockSSMPipeline(EchoMemoryPipeline):
-    MODEL_ID = "echo-memory-block-ssm"
-    SYNTHESIS_CLS = EchoMemoryBlockSSMSynthesis
-
-
-class EchoMemoryVideoSSMHybridPipeline(EchoMemoryPipeline):
-    MODEL_ID = "echo-memory-videossm-hybrid"
-    SYNTHESIS_CLS = EchoMemoryVideoSSMHybridSynthesis
-
-
-class EchoMemorySpatialConcatTextPipeline(EchoMemoryPipeline):
-    MODEL_ID = "echo-memory-spatial-concat-text"
-    SYNTHESIS_CLS = EchoMemorySpatialConcatTextSynthesis
-
-
-class EchoMemorySpatialNoInjectionPipeline(EchoMemoryPipeline):
-    MODEL_ID = "echo-memory-spatial-no-injection"
-    SYNTHESIS_CLS = EchoMemorySpatialNoInjectionSynthesis
-
-
-class EchoMemorySpatialCrossAttnT32Pipeline(EchoMemoryPipeline):
-    MODEL_ID = "echo-memory-spatial-cross-attn-t32"
-    SYNTHESIS_CLS = EchoMemorySpatialCrossAttnT32Synthesis
-
-
-class EchoMemorySSMCtx1Every4Hint21Pipeline(EchoMemoryPipeline):
-    MODEL_ID = "echo-memory-ssm-ctx1-every4-hint21"
-    SYNTHESIS_CLS = EchoMemorySSMCtx1Every4Hint21Synthesis
-
-
-class EchoMemorySSMCtx5Every1Hint21Pipeline(EchoMemoryPipeline):
-    MODEL_ID = "echo-memory-ssm-ctx5-every1-hint21"
-    SYNTHESIS_CLS = EchoMemorySSMCtx5Every1Hint21Synthesis
-
-
-class EchoMemorySSMCtx5Every4Hint81Pipeline(EchoMemoryPipeline):
-    MODEL_ID = "echo-memory-ssm-ctx5-every4-hint81"
-    SYNTHESIS_CLS = EchoMemorySSMCtx5Every4Hint81Synthesis
-
-
 __all__ = [
-    "EchoMemoryBlockSSMPipeline",
     "EchoMemoryContextK1Pipeline",
-    "EchoMemoryContextK20Pipeline",
     "EchoMemoryPipeline",
-    "EchoMemorySSMCtx1Every4Hint21Pipeline",
-    "EchoMemorySSMCtx5Every1Hint21Pipeline",
-    "EchoMemorySSMCtx5Every4Hint81Pipeline",
-    "EchoMemorySpatialConcatTextPipeline",
-    "EchoMemorySpatialCrossAttnT32Pipeline",
-    "EchoMemorySpatialNoInjectionPipeline",
-    "EchoMemorySpatialPipeline",
-    "EchoMemoryVideoSSMHybridPipeline",
 ]

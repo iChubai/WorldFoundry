@@ -55,16 +55,6 @@ MODEL_VERSION_GROUPS = {
         "name": "Echo-Memory",
         "versions": {
             "echo-memory-context-k1": "Context K=1",
-            "echo-memory-context-k20": "Context K=20",
-            "echo-memory-block-ssm": "Block-wise SSM",
-            "echo-memory-spatial": "Spatial Memory",
-            "echo-memory-spatial-concat-text": "Spatial Concat-Text",
-            "echo-memory-spatial-cross-attn-t32": "Spatial Cross-Attention T32",
-            "echo-memory-spatial-no-injection": "Spatial No-Injection",
-            "echo-memory-ssm-ctx1-every4-hint21": "SSM Ctx1 Every4 Hint21",
-            "echo-memory-ssm-ctx5-every1-hint21": "SSM Ctx5 Every1 Hint21",
-            "echo-memory-ssm-ctx5-every4-hint81": "SSM Ctx5 Every4 Hint81",
-            "echo-memory-videossm-hybrid": "VideoSSM Hybrid",
         },
     },
     "wan21-fun-v1.1-cam": {

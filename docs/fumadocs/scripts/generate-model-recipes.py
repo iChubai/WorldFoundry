@@ -171,7 +171,7 @@ STATUS_ORDER = {
     "blocked": 5,
 }
 
-# Docs catalog hides blocked 3D/4D entries — upstream YAML stays for CLI inspection.
+# Docs catalog hides blocked 3D/4D entries.
 DOCS_EXCLUDED_RECIPE_IDS: set[str] = set()
 
 

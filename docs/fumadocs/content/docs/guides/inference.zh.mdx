@@ -129,17 +129,11 @@ python -m worldfoundry.studio.workspace_job infer \
   --output-dir tmp/worldfoundry_infer/<model-id>
 ```
 
-### Echo-Memory 原生研究模型
+### Echo-Memory Context-K1
 
-Echo-Memory 在 WorldFoundry 中是 11 个不可变 model recipe，而不是带可变
-`memory_method` flag 的单一模型。每个 ID 固定 recipe、checkpoint 相对路径、
-sampler layout、action-attention 行为，以及适用时的 state-space block cadence。
-
-| 上游权重状态（2026-07-20） | Model IDs | Catalog 处理 |
-| --- | --- | --- |
-| 当前 HF `main` 可下载 | `echo-memory-context-k1` | 已集成；revision-pinned 默认 50-step、双 chunk CUDA 路线已验证，官方样例 parity 与 benchmark scoring 仍待完成。 |
-| 未发布或已移除 | `echo-memory-context-k20`、`echo-memory-block-ssm`、`echo-memory-videossm-hybrid`、`echo-memory-ssm-ctx1-every4-hint21`、`echo-memory-ssm-ctx5-every1-hint21`、`echo-memory-ssm-ctx5-every4-hint81` | 保持为独立 model entry；匹配的上游或 researcher-provided 文件出现前维持 blocked。 |
-| 因 misaligned 被撤回 | `echo-memory-spatial`、`echo-memory-spatial-concat-text`、`echo-memory-spatial-no-injection`、`echo-memory-spatial-cross-attn-t32` | 保持为独立且 blocked 的 model entry；不能用 K=1 checkpoint 代替。 |
+WorldFoundry 集成 `echo-memory-context-k1`，固定模型 recipe、checkpoint 文件和
+采样布局。结构化加载覆盖已发布的 1,185 张量 DiT；原生 pipeline 切换后的
+全新双 chunk CUDA 验证、官方样例对齐和 benchmark 评分仍待完成。未发布或已撤回权重的 Echo-Memory 变体不纳入接入范围。
 
 Runtime 直接扩展 WorldFoundry 的 canonical Wan 2.1，不调用 DiffSynth。
 架构从不会由 checkpoint header 隐式决定：先按固定 model recipe 构造模型，

@@ -1,6 +1,6 @@
 {
-  "modelsTotal": 290,
-  "modelsListed": 273,
+  "modelsTotal": 269,
+  "modelsListed": 262,
   "benchmarksTotal": 75,
   "modelFamilies": [
     {
@@ -296,7 +296,7 @@
         },
         {
           "id": "sama-14b",
-          "name": "SAMA 14B",
+          "name": "SAMA",
           "status": "integrated",
           "aliases": [
             "sama-14b"
@@ -469,7 +469,7 @@
       "id": "world_models",
       "label": "World models",
       "blurb": "Interactive worlds, camera/action conditioning, navigation, and simulator-shaped systems.",
-      "count": 98,
+      "count": 97,
       "entries": [
         {
           "id": "abot-world-0-5b-lf",
@@ -645,34 +645,11 @@
           ]
         },
         {
-          "id": "echo-memory",
+          "id": "echo-memory-context-k1",
           "name": "Echo-Memory",
           "status": "integrated",
           "aliases": [
-            "echo-memory-context-k1",
-            "echo-memory-context-k20",
-            "echo-memory-block-ssm",
-            "echo-memory-spatial",
-            "echo-memory-spatial-concat-text",
-            "echo-memory-spatial-cross-attn-t32",
-            "echo-memory-spatial-no-injection",
-            "echo-memory-ssm-ctx1-every4-hint21",
-            "echo-memory-ssm-ctx5-every1-hint21",
-            "echo-memory-ssm-ctx5-every4-hint81",
-            "echo-memory-videossm-hybrid"
-          ],
-          "versions": [
-            "Context K=1",
-            "Context K=20",
-            "Block-wise SSM",
-            "Spatial Memory",
-            "Spatial Concat-Text",
-            "Spatial Cross-Attention T32",
-            "Spatial No-Injection",
-            "SSM Ctx1 Every4 Hint21",
-            "SSM Ctx5 Every1 Hint21",
-            "SSM Ctx5 Every4 Hint81",
-            "VideoSSM Hybrid"
+            "echo-memory-context-k1"
           ]
         },
         {
@@ -844,14 +821,6 @@
           ]
         },
         {
-          "id": "iris",
-          "name": "IRIS",
-          "status": "blocked",
-          "aliases": [
-            "iris"
-          ]
-        },
-        {
           "id": "kairos-sensenova",
           "name": "Kairos Sensenova",
           "status": "verified",
@@ -954,7 +923,7 @@
         },
         {
           "id": "minwm-hy-action2v",
-          "name": "minWM HY Action 2V",
+          "name": "minWM",
           "status": "integrated",
           "aliases": [
             "minwm-hy-action2v"
@@ -1304,38 +1273,14 @@
       "id": "three_d_four_d",
       "label": "3D / 4D",
       "blurb": "Reconstruction, depth, point clouds, scene representations, and dynamic geometry.",
-      "count": 46,
+      "count": 36,
       "entries": [
-        {
-          "id": "4d-gs",
-          "name": "4D-GS",
-          "status": "blocked",
-          "aliases": [
-            "4d-gs"
-          ]
-        },
-        {
-          "id": "consistent4d",
-          "name": "Consistent 4D",
-          "status": "blocked",
-          "aliases": [
-            "consistent4d"
-          ]
-        },
         {
           "id": "cut3r",
           "name": "CUT3R",
           "status": "runtime_ported",
           "aliases": [
             "cut3r"
-          ]
-        },
-        {
-          "id": "d-nerf",
-          "name": "D-NeRF",
-          "status": "blocked",
-          "aliases": [
-            "d-nerf"
           ]
         },
         {
@@ -1416,22 +1361,6 @@
           ]
         },
         {
-          "id": "gaussianflow",
-          "name": "GaussianFlow",
-          "status": "blocked",
-          "aliases": [
-            "gaussianflow"
-          ]
-        },
-        {
-          "id": "gaussianobject",
-          "name": "GaussianObject",
-          "status": "blocked",
-          "aliases": [
-            "gaussianobject"
-          ]
-        },
-        {
           "id": "geocalib-prior",
           "name": "GeoCalib",
           "status": "integrated",
@@ -1448,27 +1377,11 @@
           ]
         },
         {
-          "id": "hexplane",
-          "name": "HexPlane",
-          "status": "blocked",
-          "aliases": [
-            "hexplane"
-          ]
-        },
-        {
           "id": "infinite-vggt",
           "name": "Infinite VGGT",
           "status": "runtime_ported",
           "aliases": [
             "infinite-vggt"
-          ]
-        },
-        {
-          "id": "k-planes",
-          "name": "K-Planes",
-          "status": "blocked",
-          "aliases": [
-            "k-planes"
           ]
         },
         {
@@ -1568,27 +1481,11 @@
           ]
         },
         {
-          "id": "sc-gs",
-          "name": "SC-GS",
-          "status": "blocked",
-          "aliases": [
-            "sc-gs"
-          ]
-        },
-        {
           "id": "track-anything-prior",
           "name": "Segment and Track Anything",
           "status": "integrated",
           "aliases": [
             "track-anything-prior"
-          ]
-        },
-        {
-          "id": "shape-of-motion",
-          "name": "Shape of Motion",
-          "status": "blocked",
-          "aliases": [
-            "shape-of-motion"
           ]
         },
         {
@@ -1605,14 +1502,6 @@
           "status": "integrated",
           "aliases": [
             "stable-virtual-camera"
-          ]
-        },
-        {
-          "id": "tineuvox",
-          "name": "TiNeuVox",
-          "status": "blocked",
-          "aliases": [
-            "tineuvox"
           ]
         },
         {

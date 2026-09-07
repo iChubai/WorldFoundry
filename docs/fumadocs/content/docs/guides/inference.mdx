@@ -133,18 +133,13 @@ python -m worldfoundry.studio.workspace_job infer \
   --output-dir tmp/worldfoundry_infer/<model-id>
 ```
 
-### Echo-Memory native research models
+### Echo-Memory Context-K1
 
-Echo-Memory is represented by eleven immutable WorldFoundry model recipes, not
-one model with a mutable `memory_method` flag. Each ID fixes its recipe,
-checkpoint-relative filename, sampler layout, action-attention behavior, and
-state-space block cadence where applicable.
-
-| Upstream weight state (2026-07-20) | Model IDs | Catalog treatment |
-| --- | --- | --- |
-| Public on current HF `main` | `echo-memory-context-k1` | Integrated; the revision-pinned default 50-step, two-chunk CUDA route is validated. Official-sample parity and benchmark scoring remain pending. |
-| Unreleased/removed | `echo-memory-context-k20`, `echo-memory-block-ssm`, `echo-memory-videossm-hybrid`, `echo-memory-ssm-ctx1-every4-hint21`, `echo-memory-ssm-ctx5-every1-hint21`, `echo-memory-ssm-ctx5-every4-hint81` | Independent model entries remain blocked until the matching upstream or researcher-provided files exist. |
-| Retracted as misaligned | `echo-memory-spatial`, `echo-memory-spatial-concat-text`, `echo-memory-spatial-no-injection`, `echo-memory-spatial-cross-attn-t32` | Independent model entries remain blocked; do not substitute the K=1 checkpoint. |
+WorldFoundry integrates `echo-memory-context-k1` with a fixed model recipe,
+checkpoint filename, and sampler layout. Structural loading covers the released
+1,185-tensor DiT; fresh two-chunk CUDA validation after the native pipeline
+cutover, official-sample parity, and benchmark scoring remain pending. Unreleased and retracted Echo-Memory variants are outside the
+integration scope.
 
 The runtime extends WorldFoundry's canonical Wan 2.1 model directly and does
 not invoke DiffSynth. No architecture is ever selected implicitly from a

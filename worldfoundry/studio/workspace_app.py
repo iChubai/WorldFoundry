@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import argparse
 import atexit
 import contextlib
 import json
@@ -6171,7 +6170,9 @@ WORKSPACE_HTML = r"""
 
 
 def main(argv: Sequence[str] | None = None) -> None:
-    parser = argparse.ArgumentParser(description="Launch the WorldFoundry FastVideo-style workspace UI.")
+    from worldfoundry.cli.help import WorldFoundryArgumentParser
+
+    parser = WorldFoundryArgumentParser(prog="worldfoundry-workspace", description="Launch the WorldFoundry Studio workspace.")
     parser.add_argument("--host", default=os.getenv("WORLDFOUNDRY_WORKSPACE_HOST", "127.0.0.1"))
     parser.add_argument("--port", type=int, default=int(os.getenv("WORLDFOUNDRY_WORKSPACE_PORT", "7870") or "7870"))
     args = parser.parse_args(list(argv) if argv is not None else None)

@@ -252,7 +252,9 @@ def env_first(*names: str) -> str:
 
 
 def build_launch_argument_parser(prog: str = "worldfoundry.studio.app") -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(
+    from worldfoundry.cli.help import WorldFoundryArgumentParser
+
+    parser = WorldFoundryArgumentParser(
         prog=prog,
         description="Launch a WorldFoundry Studio frontend with one fixed model session.",
         epilog=(

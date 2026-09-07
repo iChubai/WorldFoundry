@@ -125,6 +125,33 @@ Screen.-narrow #right-column {
     margin-top: 1;
 }
 
+Screen.-compact #main-content,
+Screen.-short #main-content {
+    padding: 0 1;
+}
+
+Screen.-compact #brand-collapse,
+Screen.-short #brand-collapse,
+Screen.-compact #status-divider,
+Screen.-short #status-divider {
+    display: none;
+}
+
+Screen.-compact #status-pane,
+Screen.-short #status-pane {
+    padding: 0 1;
+}
+
+Screen.-compact #search-row,
+Screen.-short #search-row {
+    margin-bottom: 0;
+}
+
+Screen.-compact #catalogs-pane,
+Screen.-short.-narrow #catalogs-pane {
+    height: 14;
+}
+
 #left-column {
     width: 2fr;
     height: 100%;
@@ -190,7 +217,7 @@ Screen.-narrow #right-column {
     height: 1;
     text-style: bold;
     color: $text;
-    padding: 1 0 0 0;
+    padding: 0;
     margin-bottom: 0;
 }
 
@@ -262,7 +289,11 @@ DataTable > .datatable--odd-row {
 }
 
 #run-controls {
-    height: 3;
+    layout: grid;
+    grid-size: 3;
+    grid-columns: 10 10 1fr;
+    grid-rows: 3;
+    height: 4;
     padding: 0 1;
     border-bottom: solid $border-blurred;
     align: left middle;
@@ -270,9 +301,44 @@ DataTable > .datatable--odd-row {
 }
 
 #secondary-actions {
-    width: auto;
+    layout: grid;
+    grid-size: 6;
+    grid-columns: 1fr 1fr 1fr 1fr 1fr 1fr;
+    width: 1fr;
     height: 3;
-    margin-left: 1;
+    margin-left: 0;
+}
+
+Screen.-stack-actions #run-controls {
+    grid-size: 2;
+    grid-columns: 10 1fr;
+    grid-rows: 3 3;
+    height: 7;
+}
+
+Screen.-stack-actions #secondary-actions {
+    column-span: 2;
+}
+
+Screen.-compact #secondary-actions {
+    grid-size: 3;
+    grid-columns: 1fr 1fr 1fr;
+    grid-rows: 3 3;
+    height: 6;
+}
+
+Screen.-compact #run-controls {
+    grid-rows: 3 6;
+    height: 10;
+}
+
+Screen.-compact .field-grid {
+    grid-size: 1;
+    grid-columns: 1fr;
+}
+
+Screen.-compact .full-width {
+    column-span: 1;
 }
 
 Button {
@@ -363,10 +429,10 @@ TabPane {
 }
 
 .section-title {
-    height: 1;
+    height: auto;
     text-style: bold;
     color: $text;
-    padding: 1 0 0 0;
+    padding: 0;
 }
 
 .section-rule {
@@ -401,7 +467,7 @@ TabPane {
 }
 
 .field-caption {
-    height: 1;
+    height: auto;
     color: $text-muted;
     text-style: bold;
     padding: 0 0 0 0;

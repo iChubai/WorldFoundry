@@ -128,7 +128,7 @@ class WorldFoundryTui(App[None]):
     TITLE = f"{icons['app']} WorldFoundry"
     SUB_TITLE = "Inference · Evaluation · Studio"
     ENABLE_COMMAND_PALETTE = True
-    HORIZONTAL_BREAKPOINTS = [(0, "-narrow"), (120, "-wide")]
+    HORIZONTAL_BREAKPOINTS = [(0, "-narrow"), (128, "-wide")]
 
     BINDINGS = [
         ("q", "quit", "Quit"),
@@ -301,7 +301,7 @@ class WorldFoundryTui(App[None]):
             with Vertical(id="left-column"):
                 with Vertical(id="status-pane", classes="pane"):
                     with Collapsible(title="OpenEnvision", id="brand-collapse", collapsed=False):
-                        yield Static(render_brand_logo(width_chars=64), id="brand-logo", markup=True)
+                        yield Static(render_brand_logo(width_chars=32), id="brand-logo", markup=True)
                     with Horizontal(id="action-row"):
                         yield Label("Mode:", id="action-label")
                         yield Select(icons.action_options(), value=self.action, id="action", allow_blank=False)
@@ -555,6 +555,7 @@ class WorldFoundryTui(App[None]):
         """Initialize tables, sync layouts, and focus the filter input on startup."""
         # ── Apply initial theme ──
         self._sync_action_theme()
+        self._sync_responsive_layout()
         self._sync_brand_logo()
         
         # ── Set bpytop-style border titles ──
@@ -564,7 +565,7 @@ class WorldFoundryTui(App[None]):
         self.query_one("#log-panel", Vertical).border_title = " Execution Log "
         
         self.query_one("#selection-summary", Static).border_title = " Overview "
-        if self.size.width < 120 or self.size.height < 35:
+        if self.size.width < 128 or self.size.height < 36:
             self.query_one("#brand-collapse", Collapsible).collapsed = True
         # ── Configure DataTables ──
         for table_id in ("models-table", "benchmarks-table"):
@@ -595,12 +596,24 @@ class WorldFoundryTui(App[None]):
 
     def on_resize(self, event: events.Resize) -> None:
         """Re-render the brand logo when the terminal size changes."""
-        if event.size.width < 120 or event.size.height < 35:
+        self._sync_responsive_layout()
+        if event.size.width < 128 or event.size.height < 36:
             try:
                 self.query_one("#brand-collapse", Collapsible).collapsed = True
             except NoMatches:
                 pass
         self._sync_brand_logo()
+
+    def _sync_responsive_layout(self) -> None:
+        """Reserve enough width for buttons and stack form fields on small screens."""
+        width = self.size.width
+        self.screen.set_class(width < 80, "-compact")
+        self.screen.set_class(self.size.height < 32, "-short")
+        self.screen.set_class(width < 96 or 128 <= width < 160, "-stack-actions")
+        try:
+            self.query_one("#conda-status", Static).update(self._conda_status_text())
+        except NoMatches:
+            pass
 
     def on_input_changed(self, event: Input.Changed) -> None:
         """Sync internal state and command preview when any input widget changes."""
@@ -747,7 +760,7 @@ class WorldFoundryTui(App[None]):
 
             try:
                 collapse = self.query_one("#brand-collapse", Collapsible)
-                collapse.collapsed = self.size.width < 120 or self.size.height < 35
+                collapse.collapsed = self.size.width < 128 or self.size.height < 36
             except NoMatches:
                 pass
 
@@ -1028,14 +1041,15 @@ class WorldFoundryTui(App[None]):
         """Clear and repopulate the models ``DataTable`` with the given rows."""
         table = self.query_one("#models-table", DataTable)
         table.clear(columns=True)
-        table.add_columns("ID", "Task", "Functions", "Status", "Run", "VRAM")
+        for label, width in (("ID", 24), ("Status", 12), ("Task", 24), ("Functions", 24), ("Run", 18), ("VRAM", 6)):
+            table.add_column(label, width=width)
         for row in rows:
             weight_types = tuple(infer_variant_label(variant) for variant in infer_model_variant_ids(row.model_id))
             table.add_row(
                 row.model_id,
+                _format_status(row.integration_status),
                 _short_join(row.tasks, limit=34),
                 _short_join(weight_types, limit=34),
-                _format_status(row.integration_status),
                 "infer" if is_infer_model_row(row) else row.runner_kind,
                 "-" if row.min_vram_gb is None else f"{row.min_vram_gb:g}G",
                 key=row.model_id,
@@ -1045,13 +1059,14 @@ class WorldFoundryTui(App[None]):
         """Clear and repopulate the benchmarks ``DataTable`` with the given rows."""
         table = self.query_one("#benchmarks-table", DataTable)
         table.clear(columns=True)
-        table.add_columns("ID", "Domain", "Modality", "Status", "Verify", "Metrics")
+        for label, width in (("ID", 24), ("Status", 12), ("Domain", 20), ("Modality", 20), ("Verify", 16), ("Metrics", 30)):
+            table.add_column(label, width=width)
         for row in rows:
             table.add_row(
                 row.benchmark_id,
+                _format_status(row.integration_status),
                 _short_join(row.domains, limit=30),
                 _short_join(row.modalities, limit=28),
-                _format_status(row.integration_status),
                 _format_status(row.verification_status),
                 _short_join(row.metrics, limit=34),
                 key=row.benchmark_id,
@@ -1118,7 +1133,9 @@ class WorldFoundryTui(App[None]):
                     )
                 )
             
-            self.query_one("#conda-status", Static).update(self._conda_status_text())
+            conda_status = self.query_one("#conda-status", Static)
+            conda_status.update(self._conda_status_text())
+            conda_status.tooltip = f"Environment root: {(self.catalog.conda_status or {}).get('env_root') or '-'}"
 
             if self.action == "eval":
                 eval_source = "artifacts" if self.eval_intent == "score-artifacts" else self.selected_model_id or "-"
@@ -1258,11 +1275,12 @@ class WorldFoundryTui(App[None]):
         """Build a Rich-markup string summarizing the Conda environment availability."""
         status = dict(self.catalog.conda_status or {})
         available = "yes" if status.get("conda_available") else "no"
+        if self.size.width < 80 or self.size.height < 32:
+            active = status.get('active_env') or '-'
+            return f"Conda [bold]{active}[/] · {status.get('envs_existing', 0)} envs" if available == "yes" else "Conda unavailable"
         return (
-            f"Conda [green]available[/]=[bold]{available}[/]\n"
-            f"[dim]active[/]=[bold]{status.get('active_env') or '-'}[/] "
-            f"[dim]envs[/]=[bold]{status.get('envs_existing', 0)}/{status.get('env_specs', 0)}[/]\n"
-            f"[dim]root[/]={status.get('env_root') or '-'}"
+            f"Conda [bold]{available}[/] · [dim]active[/] [bold]{status.get('active_env') or '-'}[/]\n"
+            f"[dim]Environments[/] [bold]{status.get('envs_existing', 0)}/{status.get('env_specs', 0)}[/]"
         )
 
     def _current_output_dir(self) -> Path:
@@ -1751,16 +1769,15 @@ class WorldFoundryTui(App[None]):
         # NOTE: The cropped logo's bounding box is roughly 921×713 pixels.
         aspect = 921 / 713
 
-        # Determine maximum acceptable height in rows — never so large that
-        # the CSS/Textual layout engine gets confused.
-        max_rows = max(18, int(self.size.height * 0.35))
+        # Keep the catalog visible alongside a recognizable brand mark.
+        max_rows = max(6, min(12, int(self.size.height * 0.22)))
 
         # A width of ~60 chars yields ~23 rows of Braille art.
         max_width = int(max_rows * 2 * aspect)
 
         # NOTE: Render width is constrained by available terminal width and our max height allowance.
-        available = max(40, int(self.size.width * 0.4) - 8)
-        render_width = max(40, min(available, max_width, 80))
+        available = max(16, int(self.size.width * 0.4) - 8)
+        render_width = max(16, min(available, max_width, 36))
         return render_width
 
     def _sync_brand_logo(self) -> None:

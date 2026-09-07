@@ -22,6 +22,20 @@ from worldfoundry.evaluation.utils import (
 )
 
 from .help import WorldFoundryArgumentParser
+from .presentation import (
+    BOLD,
+    MUTED,
+    Panel,
+    Row,
+    paint,
+    print_details,
+    print_hint,
+    print_notice,
+    print_table,
+    render_panels,
+    terminal_enabled,
+    terminal_width,
+)
 from .utils import CliUsageError, cli_prog_name, json_dump, load_json_mapping, parse_key_value_mapping
 
 _BENCHMARK_RUN_MODE_CHOICES = ("normalizer", "official-run", "official-validation", "contract")
@@ -79,6 +93,35 @@ _PUBLIC_ROOT_COMMANDS = (
 
 def _print_first_run_banner() -> None:
     """Print the first-run discovery banner when no subcommand is selected."""
+    if terminal_enabled():
+        prog = cli_prog_name()
+        print(paint("WorldFoundry", BOLD))
+        print(paint("World models · Inference · Evaluation", MUTED))
+        print()
+        panels = (
+            Panel(
+                "Explore",
+                (
+                    Row(f"{prog} zoo models", "Browse models and their requirements."),
+                    Row(f"{prog} zoo benchmarks", "Find benchmarks and evaluation surfaces."),
+                    Row(f"{prog} tui", "Open the interactive terminal workspace."),
+                ),
+            ),
+            Panel(
+                "Run and evaluate",
+                (
+                    Row(f"{prog} run <model> --help", "Inspect typed inputs, pipeline settings and defaults."),
+                    Row(
+                        f"{prog} run <model> --prompt 'A quiet coastal town'",
+                        "Generate with a configured model and its checkpoints.",
+                    ),
+                    Row(f"{prog} score --help", "Score generated artifacts or existing results."),
+                ),
+            ),
+        )
+        print(render_panels(panels, terminal_width(), min_column_width=48))
+        print_hint(f"Workflow templates: {prog} config list\nAll commands: {prog} --help")
+        return
     print(_FIRST_RUN_BANNER.format(prog=cli_prog_name()).rstrip())
 
 
@@ -89,6 +132,33 @@ def _curate_root_subparser_help(subparsers: argparse._SubParsersAction[argparse.
     """Keep the root help focused on the supported public command surface."""
 
     subparsers.metavar = "{" + ",".join(_PUBLIC_ROOT_COMMANDS) + "}"
+    subparsers.help_groups = {
+        "Start here": ("run", "tui", "zoo", "models"),
+        "Evaluate": ("evaluate", "score", "generate-score", "reproduce", "embodied"),
+        "Catalogs and workflows": ("tasks", "suites", "task", "dataset", "config", "plan", "metric"),
+        "Results and validation": ("compare-runs", "index-runs", "validate-artifact", "validate", "preflight"),
+        "Services": ("mcp",),
+        "Training": (
+            "train",
+            "post-train",
+            "train-audit-prompts",
+            "train-audit-rollout-prompts",
+            "train-cache",
+            "train-reward-service",
+        ),
+    }
+
+    def describe_children(action: argparse._SubParsersAction) -> None:
+        for command in action._get_subactions():
+            child = action.choices[command.dest]
+            if not child.description and command.help != argparse.SUPPRESS:
+                child.description = command.help
+        for child in set(action.choices.values()):
+            for nested in child._actions:
+                if isinstance(nested, argparse._SubParsersAction):
+                    describe_children(nested)
+
+    describe_children(subparsers)
 
 
 def _load_repo_script(relative_path: str) -> ModuleType:
@@ -375,9 +445,15 @@ def _handle_evaluate(args: argparse.Namespace) -> int:
         if args.json:
             json_dump(payload)
         else:
-            print(
-                f"Evaluate {result.status}: mode={result.mode}, "
-                f"samples={result.sample_count}, scorecard={result.scorecard_path}"
+            print_details(
+                "Evaluation result",
+                {
+                    "status": result.status,
+                    "mode": result.mode,
+                    "samples": result.sample_count,
+                    "scorecard": result.scorecard_path,
+                },
+                plain=f"Evaluate {result.status}: mode={result.mode}, samples={result.sample_count}, scorecard={result.scorecard_path}",
             )
         return result.exit_code
 
@@ -494,9 +570,15 @@ def _handle_evaluate(args: argparse.Namespace) -> int:
     if args.json:
         json_dump(payload)
     else:
-        print(
-            f"Evaluate {result.status}: mode={result.mode}, "
-            f"samples={result.sample_count}, scorecard={result.scorecard_path}"
+        print_details(
+            "Evaluation result",
+            {
+                "status": result.status,
+                "mode": result.mode,
+                "samples": result.sample_count,
+                "scorecard": result.scorecard_path,
+            },
+            plain=f"Evaluate {result.status}: mode={result.mode}, samples={result.sample_count}, scorecard={result.scorecard_path}",
         )
     return result.exit_code
 
@@ -537,10 +619,14 @@ def _handle_embodied_run(args: argparse.Namespace) -> int:
     if args.json:
         json_dump(result.to_dict())
     else:
-        print(
-            f"Embodied eval {result.evaluate_result.status}: "
-            f"samples={result.evaluate_result.sample_count}, "
-            f"scorecard={result.evaluate_result.scorecard_path}"
+        print_details(
+            "Embodied evaluation",
+            {
+                "status": result.evaluate_result.status,
+                "samples": result.evaluate_result.sample_count,
+                "scorecard": result.evaluate_result.scorecard_path,
+            },
+            plain=f"Embodied eval {result.evaluate_result.status}: samples={result.evaluate_result.sample_count}, scorecard={result.evaluate_result.scorecard_path}",
         )
     return result.evaluate_result.exit_code
 
@@ -569,7 +655,11 @@ def _handle_embodied_merge(args: argparse.Namespace) -> int:
     if args.json:
         json_dump(result.to_dict())
     else:
-        print(f"Embodied merge {result.status}: samples={result.sample_count}, scorecard={result.scorecard_path}")
+        print_details(
+            "Embodied merge",
+            {"status": result.status, "samples": result.sample_count, "scorecard": result.scorecard_path},
+            plain=f"Embodied merge {result.status}: samples={result.sample_count}, scorecard={result.scorecard_path}",
+        )
     return result.exit_code
 
 
@@ -604,9 +694,17 @@ def _handle_embodied_plan(args: argparse.Namespace) -> int:
     if args.json:
         json_dump(payload)
     else:
-        print(f"Embodied plan: requests={total}, output_dir={config.get('output_dir')}")
-        for item in benchmarks:
-            print(f"  {item['benchmark_id']}: {item['request_count']} request(s)")
+        if terminal_enabled():
+            print_details("Embodied plan", {"requests": total, "output": config.get("output_dir")})
+            print_table(
+                "Benchmarks",
+                ("Benchmark", "Requests"),
+                [(item["benchmark_id"], item["request_count"]) for item in benchmarks],
+            )
+        else:
+            print(f"Embodied plan: requests={total}, output_dir={config.get('output_dir')}")
+            for item in benchmarks:
+                print(f"  {item['benchmark_id']}: {item['request_count']} request(s)")
     return 0
 
 
@@ -625,9 +723,16 @@ def _handle_validate(args: argparse.Namespace) -> int:
         json_dump(payload)
         return 0
 
-    print(
-        f"Validated {payload['task_type']}/{payload['benchmark_name']}: "
-        f"protocol={payload['evaluation_protocol']}"
+    print_details(
+        "Task validation",
+        {
+            "task": payload["task_type"],
+            "benchmark": payload["benchmark_name"],
+            "protocol": payload["evaluation_protocol"],
+        },
+        plain=(
+            f"Validated {payload['task_type']}/{payload['benchmark_name']}: protocol={payload['evaluation_protocol']}"
+        ),
     )
     return 0
 
@@ -817,7 +922,11 @@ def _handle_worldfoundry_run(args: argparse.Namespace) -> int:
     if args.json:
         json_dump(payload)
     else:
-        print(f"Run {result.status}: kind={result.kind}, output_dir={result.output_dir}")
+        print_details(
+            "Run result",
+            {"status": result.status, "kind": result.kind, "output": result.output_dir},
+            plain=f"Run {result.status}: kind={result.kind}, output_dir={result.output_dir}",
+        )
     return result.exit_code
 
 
@@ -948,9 +1057,15 @@ def _handle_direct_model_run(args: argparse.Namespace) -> int:
     if args.json:
         json_dump(payload)
     else:
-        print(
-            f"Run {result.status}: model={schema.model_id}, "
-            f"samples={result.sample_count}, scorecard={result.scorecard_path}"
+        print_details(
+            "Model run",
+            {
+                "status": result.status,
+                "model": schema.model_id,
+                "samples": result.sample_count,
+                "scorecard": result.scorecard_path,
+            },
+            plain=f"Run {result.status}: model={schema.model_id}, samples={result.sample_count}, scorecard={result.scorecard_path}",
         )
     return result.exit_code
 
@@ -972,9 +1087,15 @@ def _handle_run(args: argparse.Namespace) -> int:
         if args.json:
             json_dump(payload)
         else:
-            print(
-                f"Run {result.status}: engine=plan, "
-                f"samples={result.sample_count}, scorecard={result.scorecard_path}"
+            print_details(
+                "Run result",
+                {
+                    "status": result.status,
+                    "engine": "plan",
+                    "samples": result.sample_count,
+                    "scorecard": result.scorecard_path,
+                },
+                plain=f"Run {result.status}: engine=plan, samples={result.sample_count}, scorecard={result.scorecard_path}",
             )
         return result.exit_code
 
@@ -1078,9 +1199,15 @@ def _handle_run_in_process(args: argparse.Namespace) -> int:
     if args.json:
         json_dump(payload)
     else:
-        print(
-            f"Run {result.status}: engine={args.engine}, "
-            f"samples={result.sample_count}, scorecard={result.scorecard_path}"
+        print_details(
+            "Run result",
+            {
+                "status": result.status,
+                "engine": args.engine,
+                "samples": result.sample_count,
+                "scorecard": result.scorecard_path,
+            },
+            plain=f"Run {result.status}: engine={args.engine}, samples={result.sample_count}, scorecard={result.scorecard_path}",
         )
     return result.exit_code
 
@@ -1089,7 +1216,7 @@ def _build_parser(model_run_schema: Any | None = None) -> argparse.ArgumentParse
     """Build all CLI commands, keeping parser wiring near handler selection."""
     parser = WorldFoundryArgumentParser(
         prog=cli_prog_name(),
-        description="WorldFoundry benchmark evaluation subsystem for the WorldFoundry repository.",
+        description="Discover world models, run inference, and evaluate results.",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog=(
             "Command areas:\n"
@@ -1136,7 +1263,7 @@ def _build_parser(model_run_schema: Any | None = None) -> argparse.ArgumentParse
 
     tui_parser = subparsers.add_parser(
         "tui",
-        help="Launch the WorldFoundry terminal UI for catalog browsing and model-benchmark runs",
+        help="Browse models and launch runs in the terminal UI",
     )
     tui_parser.add_argument("--model-manifest-dir", type=Path)
     tui_parser.add_argument("--benchmark-manifest-dir", type=Path)
@@ -1455,7 +1582,7 @@ def _build_parser(model_run_schema: Any | None = None) -> argparse.ArgumentParse
 
     run_parser = subparsers.add_parser(
         "run",
-        help="Execute or score a WorldFoundry benchmark through the unified facade",
+        help="Run model inference or a benchmark",
         description=(
             (
                 f"{model_run_schema.display_name}: {model_run_schema.description}\n"
@@ -2015,7 +2142,12 @@ def main(argv: list[str] | None = None) -> int:
                     "exit_code": 2,
                 }
             )
-        print(f"error: {exc}", file=sys.stderr)
+        print_notice(
+            str(exc),
+            level="error",
+            stream=sys.stderr,
+            hint=f"Run {cli_prog_name()} {getattr(args, 'command', '')} --help for usage.",
+        )
         return 2
     except Exception as exc:
         from worldfoundry.core.logging_setup import is_configured
@@ -2056,7 +2188,8 @@ def main(argv: list[str] | None = None) -> int:
             import traceback
 
             traceback.print_exc()
-        parser.exit(1, f"error: {_format_cli_error(exc)}\n")
+        print_notice(_format_cli_error(exc), level="error", stream=sys.stderr)
+        parser.exit(1)
 
 
 if __name__ == "__main__":

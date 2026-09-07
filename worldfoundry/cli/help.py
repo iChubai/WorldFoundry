@@ -3,62 +3,35 @@
 from __future__ import annotations
 
 import argparse
-import os
-import shutil
 import sys
 import textwrap
 from collections.abc import Sequence
-from dataclasses import dataclass
 
-_RESET = "\033[0m"
-_ACCENT = "\033[38;5;100m"
-_HEADING = "\033[1m"
-_MUTED = "\033[2m"
-_DEFAULT = "\033[38;5;100m"
-
-
-def _color_enabled() -> bool:
-    """Return whether interactive ANSI help should be emitted."""
-    if os.environ.get("NO_COLOR") is not None:
-        return False
-    force = os.environ.get("FORCE_COLOR")
-    if force is not None:
-        return force.lower() not in {"", "0", "false", "no"}
-    if os.environ.get("TERM") == "dumb":
-        return False
-    return bool(getattr(sys.stdout, "isatty", lambda: False)())
-
-
-def _paint(text: str, style: str) -> str:
-    if not text or not style or not _color_enabled():
-        return text
-    return f"{style}{text}{_RESET}"
-
-
-def _terminal_help_enabled() -> bool:
-    """Keep the panel layout in a colorless TTY, and plain help in pipes."""
-    encoding = getattr(sys.stdout, "encoding", None) or "utf-8"
-    try:
-        "╭─╮│╰╯".encode(encoding)
-    except (LookupError, UnicodeEncodeError):
-        return False
-    return _color_enabled() or (
-        os.environ.get("TERM") != "dumb" and bool(getattr(sys.stdout, "isatty", lambda: False)())
-    )
-
-
-@dataclass(frozen=True)
-class _HelpRow:
-    invocation: str
-    description: str
-    default: str | None = None
-
-
-@dataclass(frozen=True)
-class _HelpPanel:
-    title: str
-    rows: tuple[_HelpRow, ...]
-    description: str = ""
+from .presentation import (
+    BOLD as _HEADING,
+)
+from .presentation import (
+    MUTED as _MUTED,
+)
+from .presentation import (
+    Panel as _HelpPanel,
+)
+from .presentation import (
+    Row as _HelpRow,
+)
+from .presentation import (
+    paint as _paint,
+)
+from .presentation import (
+    print_notice,
+    terminal_width,
+)
+from .presentation import (
+    render_panels as _render_panel_grid,
+)
+from .presentation import (
+    terminal_enabled as _terminal_help_enabled,
+)
 
 
 class WorldFoundryArgumentParser(argparse.ArgumentParser):
@@ -73,23 +46,35 @@ class WorldFoundryArgumentParser(argparse.ArgumentParser):
             return super().format_help()
         return self._format_terminal_help()
 
+    def error(self, message: str) -> None:
+        if not _terminal_help_enabled(sys.stderr):
+            super().error(message)
+        print_notice(
+            message, level="error", hint=f"Run {self.prog} --help to see commands and options.", stream=sys.stderr
+        )
+        self.exit(2)
+
     def _format_terminal_help(self) -> str:
-        terminal_width = max(20, min(shutil.get_terminal_size((120, 24)).columns, 200))
-        usage = _wrap_usage(self._terminal_usage(), terminal_width)
+        width = terminal_width()
+        usage = _wrap_usage(self._terminal_usage(), width)
         if usage.startswith("usage:"):
             usage = _paint("usage:", _HEADING) + usage[len("usage:") :]
 
-        blocks = [usage]
+        breadcrumb = self.prog.split(maxsplit=1)
+        title = "WorldFoundry" if breadcrumb[0].startswith("worldfoundry") else breadcrumb[0]
+        if len(breadcrumb) > 1:
+            title += " / " + breadcrumb[1]
+        blocks = [_paint(_wrap_usage(title, width), _HEADING), usage]
         if self.description:
-            blocks.append(_wrap_usage(str(self.description).strip(), terminal_width))
+            blocks.append(_wrap_usage(str(self.description).strip(), width))
 
         panels = self._help_panels()
-        rendered = _render_panel_grid(panels, terminal_width)
+        rendered = _render_panel_grid(panels, width)
         if rendered:
             blocks.append(rendered)
 
         if self.epilog:
-            blocks.append(_render_epilog(str(self.epilog), terminal_width))
+            blocks.append(_render_epilog(str(self.epilog), width))
         return "\n\n".join(block for block in blocks if block).rstrip() + "\n"
 
     def _terminal_usage(self) -> str:
@@ -145,8 +130,29 @@ class WorldFoundryArgumentParser(argparse.ArgumentParser):
                     rows = tuple(
                         _HelpRow(name, str(parser.description or "")) for name, parser in action.choices.items()
                     )
-                if rows:
-                    panels.append(_HelpPanel("commands", rows, str(group.description or "")))
+                help_groups = getattr(action, "help_groups", {})
+                grouped_names = set()
+                for title, names in help_groups.items():
+                    grouped_rows = tuple(
+                        self._help_row(command)
+                        for name in names
+                        for command in commands
+                        if command.dest == name and command.help != argparse.SUPPRESS
+                    )
+                    if grouped_rows:
+                        panels.append(_HelpPanel(title, grouped_rows))
+                    grouped_names.update(names)
+                remaining = (
+                    tuple(
+                        self._help_row(command)
+                        for command in commands
+                        if command.dest not in grouped_names and command.help != argparse.SUPPRESS
+                    )
+                    if help_groups
+                    else rows
+                )
+                if remaining:
+                    panels.append(_HelpPanel("commands", remaining, str(group.description or "")))
         return tuple(panels + additional_panels)
 
     def _split_options(
@@ -173,6 +179,17 @@ class WorldFoundryArgumentParser(argparse.ArgumentParser):
 
     def _help_row(self, action: argparse.Action) -> _HelpRow:
         formatter = self._get_formatter()
+        original_metavar = formatter._get_default_metavar_for_optional
+
+        def metavar(item: argparse.Action) -> str:
+            kind = getattr(item.type, "__name__", "")
+            if kind in {"Path", "int", "float", "str"}:
+                return {"Path": "PATH", "int": "INT", "float": "FLOAT", "str": "STR"}[kind]
+            if item.dest.endswith(("_path", "_dir", "_root", "_file")):
+                return "PATH"
+            return original_metavar(item)
+
+        formatter._get_default_metavar_for_optional = metavar
         invocation = formatter._format_action_invocation(action)
         description = formatter._expand_help(action) if action.help else ""
         default = _format_default(action.default) if _should_show_default(action, description) else None
@@ -232,126 +249,6 @@ def _format_default(value: object) -> str:
     if isinstance(value, str):
         return repr(value)
     return str(value)
-
-
-def _render_panel_grid(panels: Sequence[_HelpPanel], terminal_width: int) -> str:
-    if not panels:
-        return ""
-    if terminal_width < 112 or len(panels) == 1:
-        return "\n\n".join(_render_panel(panel, terminal_width) for panel in panels)
-
-    gap = 2
-    left_width = (terminal_width - gap) // 2
-    right_width = terminal_width - gap - left_width
-    columns: list[list[str]] = [[], []]
-    heights = [0, 0]
-    # Command catalogs can dwarf all other panels. Split at command boundaries
-    # so both columns stay useful without hiding any entries.
-    balanced_panels = []
-    for panel in panels:
-        if panel.title == "commands" and len(panel.rows) > 10:
-            for start in range(0, len(panel.rows), 10):
-                balanced_panels.append(
-                    _HelpPanel(
-                        "commands" if start == 0 else "commands (continued)",
-                        panel.rows[start : start + 10],
-                        panel.description if start == 0 else "",
-                    )
-                )
-        else:
-            balanced_panels.append(panel)
-    for panel in balanced_panels:
-        column_index = 0 if heights[0] <= heights[1] else 1
-        panel_width = left_width if column_index == 0 else right_width
-        panel_lines = _render_panel_lines(panel, panel_width)
-        if columns[column_index]:
-            columns[column_index].append(" " * panel_width)
-            heights[column_index] += 1
-        columns[column_index].extend(panel_lines)
-        heights[column_index] += len(panel_lines)
-
-    output: list[str] = []
-    for row_index in range(max(heights)):
-        left_line = columns[0][row_index] if row_index < heights[0] else " " * left_width
-        right_line = columns[1][row_index] if row_index < heights[1] else ""
-        output.append(left_line + " " * gap + right_line)
-    return "\n".join(output)
-
-
-def _render_panel(panel: _HelpPanel, width: int) -> str:
-    return "\n".join(_render_panel_lines(panel, width))
-
-
-def _render_panel_lines(panel: _HelpPanel, width: int) -> list[str]:
-    inner_width = width - 4
-    title = f" {panel.title} "
-    # Long dotted group names move inside the box on small terminals.
-    title_fits = len(title) <= width - 4
-    top = f"╭─{title}{'─' * (width - len(title) - 3)}╮" if title_fits else f"╭{'─' * (width - 2)}╮"
-    lines = [_paint(top, _ACCENT)]
-
-    def append_line(text: str = "", style: str = "") -> None:
-        lines.append(
-            _paint("│", _ACCENT)
-            + " "
-            + _paint(text, style)
-            + " " * (inner_width - len(text))
-            + " "
-            + _paint("│", _ACCENT)
-        )
-
-    if not title_fits:
-        for title_line in textwrap.wrap(panel.title, width=inner_width, break_on_hyphens=False):
-            append_line(title_line, _ACCENT)
-
-    for description_line in textwrap.wrap(
-        panel.description,
-        width=inner_width,
-        break_long_words=True,
-        break_on_hyphens=False,
-    ):
-        append_line(description_line)
-    if panel.description or not title_fits:
-        append_line("─" * inner_width, _ACCENT)
-
-    for index, row in enumerate(panel.rows):
-        if index and panel.title.startswith("commands"):
-            append_line()
-        invocation_lines = textwrap.wrap(
-            row.invocation,
-            width=inner_width,
-            subsequent_indent="  ",
-            break_long_words=True,
-            break_on_hyphens=False,
-        ) or [""]
-        for invocation in invocation_lines:
-            append_line(invocation, _HEADING)
-        for description, visible_length in _description_lines(row, inner_width - 2):
-            lines.append(
-                _paint("│", _ACCENT)
-                + "   "
-                + description
-                + " " * (inner_width - 2 - visible_length)
-                + " "
-                + _paint("│", _ACCENT)
-            )
-    lines.append(_paint(f"╰{'─' * (width - 2)}╯", _ACCENT))
-    return lines
-
-
-def _description_lines(row: _HelpRow, width: int) -> list[tuple[str, int]]:
-    description = " ".join(row.description.split())
-    if row.default is not None:
-        description = f"{description} (default: {row.default})".strip()
-    default_start = description.find("(default:")
-    offset = 0
-    lines = []
-    for line in textwrap.wrap(description, width=width, break_on_hyphens=False):
-        offset = description.index(line, offset)
-        split = len(line) if default_start < 0 else max(0, min(len(line), default_start - offset))
-        lines.append((_paint(line[:split], _MUTED) + _paint(line[split:], _DEFAULT), len(line)))
-        offset += len(line)
-    return lines
 
 
 def _render_epilog(epilog: str, width: int) -> str:

@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 from pathlib import Path
 
+from .presentation import print_report
 from .utils import CliUsageError, json_dump
 
 # ── Compare runs ────────────────────────────────────────────────
@@ -82,7 +83,7 @@ def _handle_compare_runs(args: argparse.Namespace) -> int:
     if args.json:
         json_dump(comparison)
     else:
-        print(build_markdown_comparison(comparison))
+        print_report(build_markdown_comparison(comparison))
     return 1 if comparison.get("issues") and args.fail_on_issue else 0
 
 # ── Index runs ──────────────────────────────────────────────────
@@ -107,7 +108,7 @@ def _handle_index_runs(args: argparse.Namespace) -> int:
     if args.json:
         json_dump(index)
     else:
-        print(build_markdown_run_index(index))
+        print_report(build_markdown_run_index(index))
     return 1 if index.get("issues") and args.fail_on_issue else 0
 
 
@@ -142,7 +143,7 @@ def _handle_validate_artifact(args: argparse.Namespace) -> int:
     if args.json:
         json_dump(report)
     else:
-        print(build_markdown_contract_validation(report))
+        print_report(build_markdown_contract_validation(report))
     return 0 if report.get("ok") else 1
 
 

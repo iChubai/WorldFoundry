@@ -7,6 +7,7 @@ from pathlib import Path
 
 from worldfoundry.evaluation.utils import BENCHMARK_ZOO_DIR, MODEL_ZOO_DIR, TMP_ROOT
 
+from .presentation import print_details, print_notice
 from .utils import CliUsageError, json_dump, parse_key_value_mapping
 
 # NOTE: the orchestration service stack is imported inside each handler, never
@@ -19,11 +20,12 @@ def _print_prepared(prepared, *, as_json: bool) -> None:
     if as_json:
         json_dump(payload)
         return
-    print(f"intent: {payload['intent_kind']}")
-    print(f"classification: {payload['classification']}")
-    print(f"ready: {payload['ready']}")
+    print_details(
+        "Evaluation plan",
+        {"intent": payload["intent_kind"], "classification": payload["classification"], "ready": payload["ready"]},
+    )
     for issue in payload["issues"]:
-        print(f"{issue['severity']}: {issue['code']}: {issue['message']}")
+        print_notice(f"{issue['code']}: {issue['message']}", level=issue["severity"])
 
 
 def _finish(prepared, args: argparse.Namespace) -> int:
@@ -37,8 +39,7 @@ def _finish(prepared, args: argparse.Namespace) -> int:
     if args.json:
         json_dump(payload)
     else:
-        print(f"status: {payload['status']}")
-        print(f"output_dir: {payload['output_dir']}")
+        print_details("Evaluation result", {"status": payload["status"], "output_dir": payload["output_dir"]})
     return int(payload.get("exit_code", 0))
 
 

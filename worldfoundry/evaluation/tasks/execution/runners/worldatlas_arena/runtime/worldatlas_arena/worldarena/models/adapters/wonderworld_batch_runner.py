@@ -6,26 +6,26 @@ import argparse
 import contextlib
 import json
 import os
-from pathlib import Path
 import random
 import shutil
 import sys
 import tempfile
-import traceback
 import time
-from typing import Any
+import traceback
 import warnings
 import zipfile
+from pathlib import Path
+from typing import Any
 
 import cv2
 import numpy as np
-from PIL import Image
 import torch
 import yaml
+from PIL import Image
 
 from worldarena.common.checkpoints import apply_checkpoint_env
 from worldarena.models.adapters.batch_runner_common import begin_sample, print_status
-
+from worldfoundry.core.io.paths import package_data_path
 
 XYZ_SCALE = 1000
 BACKGROUND_RGB = (0.7, 0.7, 0.7)
@@ -122,6 +122,8 @@ def _require_repo_layout(repo_root: Path, entrypoint: str) -> tuple[Path, Path]:
     if not entrypoint_path.exists():
         raise FileNotFoundError(f"WonderWorld entrypoint not found: {entrypoint_path}")
     base_config_path = (repo_root / "config" / "base-config.yaml").resolve()
+    if not base_config_path.is_file():
+        base_config_path = package_data_path("models", "runtime", "configs", "wonderworld", "base-config.yaml")
     if not base_config_path.exists():
         raise FileNotFoundError(f"WonderWorld base config not found: {base_config_path}")
     return entrypoint_path, base_config_path
@@ -432,13 +434,14 @@ def _run_batch_generation(args: argparse.Namespace, *, work_dir: Path) -> list[I
     os.chdir(work_dir)
     warnings.filterwarnings("ignore")
 
+    import syncdiffusion.syncdiffusion_model as syncdiffusion_model
+    from arguments import GSParams
     from diffusers import DDIMScheduler, EulerDiscreteScheduler
     from diffusers.models.attention_processor import AttnProcessor2_0
     from gaussian_renderer import render
     from kornia.morphology import dilation
     from marigold_lcm.marigold_pipeline import MarigoldNormalsPipeline, MarigoldPipeline
-
-    import syncdiffusion.syncdiffusion_model as syncdiffusion_model
+    from models.models import KeyframeGen
     from omegaconf import OmegaConf
     from scene import GaussianModel, Scene
     from torchvision.transforms import ToPILImage, ToTensor
@@ -446,13 +449,12 @@ def _run_batch_generation(args: argparse.Namespace, *, work_dir: Path) -> list[I
     from util.segment_utils import create_mask_generator_repvit
     from util.stable_diffusion_inpaint import StableDiffusionInpaintPipeline
     from util.utils import convert_pt3d_cam_to_3dgs_cam, prepare_scheduler, save_depth_map, soft_stitching
-    from arguments import GSParams
-    from models.models import KeyframeGen
     from utils.loss import l1_loss, ssim
 
     del save_depth_map
 
-    base_config = OmegaConf.load(str((repo_root / "config" / "base-config.yaml").resolve()))
+    _, base_config_path = _require_repo_layout(repo_root, args.entrypoint)
+    base_config = OmegaConf.load(str(base_config_path))
     example_config = OmegaConf.load(str(work_dir / "config" / "worldarena_example.yaml"))
     config = OmegaConf.merge(base_config, example_config)
     config.num_scenes = int(args.num_scenes)
@@ -786,12 +788,11 @@ def _install_singleload_caches() -> None:
         if module_name in {"utils", "util", "scene"} or module_name.startswith(("utils.", "util.", "scene.")):
             sys.modules.pop(module_name, None)
 
-    from transformers import OneFormerForUniversalSegmentation, OneFormerProcessor
-    import util.segment_utils as segment_utils
-    from util.stable_diffusion_inpaint import StableDiffusionInpaintPipeline
-    from marigold_lcm.marigold_pipeline import MarigoldNormalsPipeline, MarigoldPipeline
-
     import syncdiffusion.syncdiffusion_model as syncdiffusion_model
+    import util.segment_utils as segment_utils
+    from marigold_lcm.marigold_pipeline import MarigoldNormalsPipeline, MarigoldPipeline
+    from transformers import OneFormerForUniversalSegmentation, OneFormerProcessor
+    from util.stable_diffusion_inpaint import StableDiffusionInpaintPipeline
 
     original_processor_from_pretrained = OneFormerProcessor.from_pretrained
 

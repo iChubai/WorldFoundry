@@ -10,6 +10,8 @@ from pathlib import Path
 import numpy as np
 from omegaconf import OmegaConf
 
+from worldfoundry.core.io.paths import package_data_path
+
 DEFAULT_RUNTIME_ROOT = Path(__file__).resolve().parent / "krea_runtime"
 
 
@@ -30,6 +32,8 @@ def parse_args() -> argparse.Namespace:
 
 def _write_config(repo_root: Path, checkpoint_path: Path, output_path: Path) -> Path:
     base_config = repo_root / "configs" / "self_forcing_server_14b.yaml"
+    if not base_config.is_file():
+        base_config = package_data_path('models', 'runtime', 'configs', 'krea_realtime', 'self_forcing_server_14b.yaml')
     if not base_config.is_file():
         raise FileNotFoundError(f"Krea official config not found: {base_config}")
     config = OmegaConf.load(base_config)
@@ -81,8 +85,8 @@ def main() -> None:
     old_cwd = Path.cwd()
     os.chdir(repo_root)
     try:
-        from release_server import GenerateParams
         import sample
+        from release_server import GenerateParams
 
         sample.save_video_direct = _save_video_cv2
         sample.save_video_ffmpeg_pipe = _save_video_cv2

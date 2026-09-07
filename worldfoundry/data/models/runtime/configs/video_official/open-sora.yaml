@@ -29,7 +29,7 @@ runtime:
   - id: text_encoder_tokenizer
     path: $WORLDFOUNDRY_HFD_ROOT/DeepFloyd--t5-v1_1-xxl/spiece.model
   defaults:
-    config: configs/opensora-v1-2/inference/sample.py
+    config: ${WORLDFOUNDRY_DATA_ROOT}/models/runtime/configs/open_sora/opensora-v1-2/inference/sample.py
     num_frames: 51
     resolution: 480p
     aspect_ratio: "9:16"
@@ -43,7 +43,7 @@ runtime:
   command:
   - "{python}"
   - "{repo_root}/scripts/inference.py"
-  - "{repo_root}/{config}"
+  - "{config}"
   - "--ckpt-path"
   - "{checkpoint_path}"
   - "--prompt"

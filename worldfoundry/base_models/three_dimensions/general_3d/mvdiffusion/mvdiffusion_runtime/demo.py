@@ -1,5 +1,6 @@
 """Module for base_models -> three_dimensions -> general_3d -> mvdiffusion -> mvdiffusion_runtime -> demo.py functionality."""
 
+
 import argparse
 import os
 
@@ -7,9 +8,11 @@ import cv2
 import numpy as np
 import torch
 import yaml
+from src.checkpoint_utils import resolve_mvdiffusion_checkpoint
 from src.pano_generator import PanoGenerator
 from src.pano_outpaint_generator import PanoOutpaintGenerator
-from src.checkpoint_utils import resolve_mvdiffusion_checkpoint
+
+from worldfoundry.core.io.paths import package_data_path
 
 os.environ['KMP_DUPLICATE_LIB_OK']='True'
 from datetime import datetime
@@ -129,7 +132,7 @@ def resize_and_center_crop(img, size):
 
 args = parse_args()
 if args.image_path is None:
-    config_file = 'configs/pano_generation.yaml'
+    config_file = package_data_path('models', 'runtime', 'configs', 'mvdiffusion', 'pano_generation.yaml')
     config = yaml.load(open(config_file, 'rb'), Loader=yaml.SafeLoader)
     if args.steps is not None:
         config['model']['diff_timestep'] = max(int(args.steps), 1)
@@ -141,7 +144,7 @@ if args.image_path is None:
     img=None
 else:
 
-    config_file = 'configs/pano_generation_outpaint.yaml'
+    config_file = package_data_path('models', 'runtime', 'configs', 'mvdiffusion', 'pano_generation_outpaint.yaml')
     config = yaml.load(open(config_file, 'rb'), Loader=yaml.SafeLoader)
     if args.steps is not None:
         config['model']['diff_timestep'] = max(int(args.steps), 1)

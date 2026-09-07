@@ -162,7 +162,7 @@ def worldfoundry_path_tokens(env: Mapping[str, str] | None = None) -> dict[str, 
     return {
         "WORLDFOUNDRY_REPO_ROOT": str(root),
         "WORLDFOUNDRY_PACKAGE_ROOT": str(package),
-        "WORLDFOUNDRY_DATA_ROOT": str(package / "data"),
+        "WORLDFOUNDRY_DATA_ROOT": str(package_data_root()),
         "WORLDFOUNDRY_CACHE_DIR": str(cache),
         "WORLDFOUNDRY_HOME": str(home),
         "WORLDFOUNDRY_DATA_DIR": str(data_dir),

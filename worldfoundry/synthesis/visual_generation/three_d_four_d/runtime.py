@@ -14,6 +14,7 @@ from typing import Any, Mapping, Sequence
 import yaml
 
 from worldfoundry.core.geometry import depth_to_world_points
+from worldfoundry.core.io.paths import package_data_path
 from worldfoundry.evaluation.models.runtime.profiles import load_runtime_profile
 from worldfoundry.evaluation.utils import REPO_ROOT
 from worldfoundry.synthesis.base_synthesis import BaseSynthesis
@@ -102,7 +103,7 @@ THREE_D_FOUR_D_RUNTIME_SPECS: Mapping[str, ThreeDFourDRuntimeSpec] = {
         artifact_kind="generated_world",
         artifact_filename="wonderjourney.mp4",
         required_input="config",
-        default_config="config/village.yaml",
+        default_config=str(package_data_path('models', 'runtime', 'configs', 'wonderjourney', 'village.yaml')),
         source_repo_url="https://github.com/KovenYu/WonderJourney",
         input_schema=_CAMERA_INPUT_SCHEMA,
     ),
@@ -115,7 +116,7 @@ THREE_D_FOUR_D_RUNTIME_SPECS: Mapping[str, ThreeDFourDRuntimeSpec] = {
         artifact_kind="generated_world",
         artifact_filename="wonderworld.splat",
         required_input="config",
-        default_config="config/inference.yaml",
+        default_config=str(package_data_path('models', 'runtime', 'configs', 'wonderworld', 'inference.yaml')),
         source_repo_url="https://github.com/KovenYu/WonderWorld",
         input_schema=_CAMERA_INPUT_SCHEMA,
     ),

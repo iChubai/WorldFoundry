@@ -1,58 +1,60 @@
 import torch
-torch.set_grad_enabled(False)
-from safetensors.torch import load_file, save_file
-import safetensors
-from functools import lru_cache
-from collections import deque
-from worldfoundry.core.nn import FlowMatchScheduler, SchedulerInterface
 
+from worldfoundry.core.io.paths import package_data_path
+
+torch.set_grad_enabled(False)
 import asyncio
-import random
-import os
-import random
+import base64
 import gc
 import logging
-import base64
-import threading
-from io import BytesIO
-from concurrent.futures import ThreadPoolExecutor
-from typing import Optional, Callable, Dict, List
-import traceback
-from typing import Callable, TYPE_CHECKING
+import os
 import queue
-import uuid
-import socket
-import tempfile
+import random
 import shutil
+import socket
 import subprocess
+import tempfile
+import threading
+import traceback
+import uuid
+from collections import deque
+from concurrent.futures import ThreadPoolExecutor
+from functools import lru_cache
+from io import BytesIO
+from typing import TYPE_CHECKING, Callable, Dict, List, Optional
+
 import numpy as np
+import safetensors
+from safetensors.torch import load_file, save_file
+
+from worldfoundry.core.nn import FlowMatchScheduler, SchedulerInterface
 
 if TYPE_CHECKING:
-    from utils.wan_wrapper import WanDiffusionWrapper, WanTextEncoder
-    from runtime_utils.vae_block3 import VAEEncoderWrapper, VAEDecoderWrapper
     from pipeline import CausalInferencePipeline
+    from runtime_utils.vae_block3 import VAEDecoderWrapper, VAEEncoderWrapper
+    from utils.wan_wrapper import WanDiffusionWrapper, WanTextEncoder
 
 # Internal / self-forcing imports
-from v2v import encode_video_latent, get_denoising_schedule
-from utils.misc import AtomicCounter
+import time
+from pathlib import Path
+
+import torch._dynamo as dynamo
+import torchvision.transforms.functional as TF
+from fastapi import FastAPI, File, UploadFile, WebSocket, WebSocketDisconnect
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import HTMLResponse, JSONResponse
+from msgpack import packb, unpackb
 
 # External imports
 from omegaconf import OmegaConf
-from tqdm import tqdm
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect, UploadFile, File
-from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import HTMLResponse, JSONResponse
-from pydantic import BaseModel, ValidationError
-import time
-from pathlib import Path
 from PIL import Image
-import torchvision.transforms.functional as TF
-from msgpack import packb, unpackb
-
-
+from pydantic import BaseModel, ValidationError
 from settings import compiler_stance, resolve_model_asset
+from tqdm import tqdm
+from utils.misc import AtomicCounter
+from v2v import encode_video_latent, get_denoising_schedule
+
 from worldfoundry.base_models.diffusion_model.models.autoencoders.wan.reference_21 import WanVAE
-import torch._dynamo as dynamo
 
 # PyTorch renamed this setting in older releases and removed the compatibility
 # alias in newer ones.  Keep the upstream intent without making module import
@@ -98,7 +100,7 @@ download_stream = torch.cuda.Stream(device=gpu)
 
 def load_merge_config(config_path: str | Path) -> OmegaConf:
     config = OmegaConf.load(config_path)
-    default_config = OmegaConf.load("configs/default_config.yaml")
+    default_config = OmegaConf.load(str(package_data_path('models', 'runtime', 'configs', 'krea_realtime', 'default_config.yaml')))
     merged_config = OmegaConf.merge(
         default_config, config
     )
@@ -185,7 +187,7 @@ def load_transformer(config, meta_transformer=False):
 
     if config.enable_fp8:
         log.debug("Quantizing transfofmer to fp8")
-        from torchao.quantization.quant_api import quantize_, Float8DynamicActivationFloat8WeightConfig, PerTensor
+        from torchao.quantization.quant_api import Float8DynamicActivationFloat8WeightConfig, PerTensor, quantize_
         quantize_(transformer, Float8DynamicActivationFloat8WeightConfig(granularity=PerTensor()))
 
     t_finish = time.time()
@@ -200,8 +202,7 @@ def load_vae():
 
     log.debug("Using runtime_utils.vae_block3.VAEEncoderWrapper")
     log.debug("Using runtime_utils.vae_block3.VAEDecoderWrapper")
-    from runtime_utils.vae_block3 import VAEEncoderWrapper
-    from runtime_utils.vae_block3 import VAEDecoderWrapper
+    from runtime_utils.vae_block3 import VAEDecoderWrapper, VAEEncoderWrapper
     vae_dtype = torch.float16
     vae_path = str(resolve_model_asset("Wan2.1-T2V-1.3B", "Wan2.1_VAE.pth"))
     vae = WanVAE(vae_pth=vae_path, dtype=vae_dtype)
@@ -763,7 +764,7 @@ def compile_models(models: Models):
 
 # SECTION - SERVER & HANDLING
 async def lifespan(app: FastAPI):
-    app.state.config = load_merge_config(os.getenv("CONFIG", "configs/self_forcing_server_14b.yaml"))
+    app.state.config = load_merge_config(os.getenv("CONFIG", str(package_data_path('models', 'runtime', 'configs', 'krea_realtime', 'self_forcing_server_14b.yaml'))))
     app.state.models = load_all(app.state.config)
     yield
 

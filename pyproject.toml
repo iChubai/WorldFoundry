@@ -597,6 +597,8 @@ include-package-data = true
     "models/**/*.yaml",
     "models/**/*.yml",
     "models/**/*.json",
+    "models/runtime/configs/**/*.py",
+    "models/runtime/configs/**/*.md",
 ]
 "worldfoundry.evaluation.tasks.execution.runners" = [
     "chronomagic_bench/runtime/chronomagic_bench/MTScore/configs/*.json",
@@ -623,9 +625,6 @@ include-package-data = true
 "worldfoundry.studio" = [
     "assets/**/*",
     "native/world_explorer/**/*",
-]
-"worldfoundry.synthesis.visual_generation.lingbot_video" = [
-    "default_negative_prompt*.json",
 ]
 "worldfoundry.synthesis.visual_generation.evoke" = [
     "evoke_runtime/**/*",

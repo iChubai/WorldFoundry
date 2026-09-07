@@ -6,7 +6,6 @@ import argparse
 import contextlib
 import json
 import os
-from pathlib import Path
 import shutil
 import signal
 import socket
@@ -15,10 +14,12 @@ import sys
 import tempfile
 import time
 import zipfile
+from pathlib import Path
 
 import yaml
 
 from worldarena.common.checkpoints import apply_checkpoint_env
+from worldfoundry.core.io.paths import package_data_path
 
 
 def _parse_bool(value: str | bool) -> bool:
@@ -102,6 +103,8 @@ def _require_repo_layout(repo_root: Path, entrypoint: str) -> tuple[Path, Path]:
     if not entrypoint_path.exists():
         raise FileNotFoundError(f"WonderWorld entrypoint not found: {entrypoint_path}")
     base_config_path = (repo_root / "config" / "base-config.yaml").resolve()
+    if not base_config_path.is_file():
+        base_config_path = package_data_path("models", "runtime", "configs", "wonderworld", "base-config.yaml")
     if not base_config_path.exists():
         raise FileNotFoundError(f"WonderWorld base config not found: {base_config_path}")
     return entrypoint_path, base_config_path

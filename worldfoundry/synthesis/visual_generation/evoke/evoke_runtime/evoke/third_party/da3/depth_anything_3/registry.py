@@ -15,6 +15,8 @@
 from collections import OrderedDict
 from pathlib import Path
 
+from worldfoundry.core.io.paths import package_data_path
+
 
 def get_all_models() -> OrderedDict:
     """
@@ -25,7 +27,7 @@ def get_all_models() -> OrderedDict:
     # Get path to the configs directory within the da3 package
     # Works both in development and after pip installation
     # configs_dir = files("depth_anything_3").joinpath("configs")
-    configs_dir = Path(__file__).resolve().parent / "configs"
+    configs_dir = package_data_path('models', 'runtime', 'configs', 'evoke', 'depth_anything_3')
 
     # Ensure path is a Path object for consistent cross-platform handling
     configs_dir = Path(configs_dir)

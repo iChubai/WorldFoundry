@@ -16,10 +16,13 @@
 Configuration utility functions
 """
 
+
 import importlib
-from pathlib import Path
 from typing import Any, Callable, List, Union
+
 from omegaconf import DictConfig, ListConfig, OmegaConf
+
+from worldfoundry.core.io.paths import package_data_path
 
 try:
     OmegaConf.register_new_resolver("eval", eval)
@@ -37,7 +40,9 @@ def load_config(path: str, argv: List[str] = None) -> Union[DictConfig, ListConf
     if "." in path and "/" not in path and not path.endswith(".yaml"):
         # It's a module path, load from package resources
         path_parts = path.split(".")[1:]
-        config_path = Path(__file__).resolve().parent
+        config_path = package_data_path('models', 'runtime', 'configs', 'evoke', 'depth_anything_3')
+        if path_parts and path_parts[0] == "configs":
+            path_parts = path_parts[1:]
         for part in path_parts:
             config_path = config_path.joinpath(part)
         config_path = config_path.with_suffix(".yaml")

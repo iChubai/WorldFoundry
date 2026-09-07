@@ -1,48 +1,55 @@
+import copy
 import gc
+import os
 import random
-from argparse import ArgumentParser
-from pathlib import Path
-from PIL import Image
-from datetime import datetime
+import sys
 import threading
+import time
+import warnings
+from argparse import ArgumentParser
+from datetime import datetime
+from pathlib import Path
+from random import randint
 
 import numpy as np
 import torch
+from arguments import CameraParams, GSParams
+from diffusers import AutoencoderKL, DDIMScheduler, EulerDiscreteScheduler
+from diffusers.models.attention_processor import AttnProcessor2_0
+from gaussian_renderer import render
+from kornia.morphology import dilation
+from marigold_lcm.marigold_pipeline import MarigoldNormalsPipeline, MarigoldPipeline, MarigoldPipelineNormal
+from models.models import KeyframeGen, save_point_cloud_as_ply
 from omegaconf import OmegaConf
+from PIL import Image
+from scene import GaussianModel, Scene
+from scene.cameras import Camera
+from syncdiffusion.syncdiffusion_model import SyncDiffusion
 from torchvision.transforms import ToPILImage, ToTensor
 from tqdm import tqdm
-from diffusers import AutoencoderKL, DDIMScheduler, EulerDiscreteScheduler
-from util.stable_diffusion_inpaint import StableDiffusionInpaintPipeline
-from diffusers.models.attention_processor import AttnProcessor2_0
-from marigold_lcm.marigold_pipeline import MarigoldPipeline, MarigoldPipelineNormal, MarigoldNormalsPipeline
-
-from models.models import KeyframeGen, save_point_cloud_as_ply
-from util.gs_utils import save_pc_as_3dgs, convert_pc_to_splat
 from util.chatGPT4 import TextpromptGen
-from util.general_utils import apply_depth_colormap, save_video
-from util.utils import save_depth_map, prepare_scheduler, soft_stitching
-from util.utils import load_inference_prompt_config, convert_pt3d_cam_to_3dgs_cam, sky_image_dir
-from util.segment_utils import create_mask_generator_repvit
 from util.checkpoints import (
     diffusers_local_load_kwargs,
     load_oneformer,
     local_model_ref,
 )
-from util.free_lunch_utils import register_free_upblock2d, register_free_crossattn_upblock2d
- 
-from arguments import GSParams, CameraParams
-from gaussian_renderer import render
-from scene import Scene, GaussianModel
+from util.free_lunch_utils import register_free_crossattn_upblock2d, register_free_upblock2d
+from util.general_utils import apply_depth_colormap, save_video
+from util.gs_utils import convert_pc_to_splat, save_pc_as_3dgs
+from util.segment_utils import create_mask_generator_repvit
+from util.stable_diffusion_inpaint import StableDiffusionInpaintPipeline
+from util.utils import (
+    convert_pt3d_cam_to_3dgs_cam,
+    load_inference_prompt_config,
+    prepare_scheduler,
+    save_depth_map,
+    sky_image_dir,
+    soft_stitching,
+)
 from utils.loss import l1_loss, ssim
-from scene.cameras import Camera
-from random import randint
-import time
-from syncdiffusion.syncdiffusion_model import SyncDiffusion
-from kornia.morphology import dilation
-import warnings
-import os
-import sys
-import copy
+
+from worldfoundry.core.io.paths import package_data_path
+
 warnings.filterwarnings("ignore")
 
 
@@ -602,7 +609,7 @@ if __name__ == "__main__":
     parser = ArgumentParser()
     parser.add_argument(
         "--base-config",
-        default="./config/base-config.yaml",
+        default=str(package_data_path('models', 'runtime', 'configs', 'wonderworld', 'base-config.yaml')),
         help="Config path",
     )
     parser.add_argument(

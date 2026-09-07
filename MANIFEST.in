@@ -40,6 +40,7 @@ recursive-include worldfoundry/data/models/bindings *.yaml
 recursive-include worldfoundry/data/models/runtime/configs *.yaml
 recursive-include worldfoundry/data/models/runtime/configs *.yml
 recursive-include worldfoundry/data/models/runtime/configs *.json
+recursive-include worldfoundry/data/models/runtime/configs *.py *.md
 recursive-include worldfoundry/data/models/runtime/environments *.yaml
 # Keep source distributions reproducible from a dirty development checkout.
 prune tmp

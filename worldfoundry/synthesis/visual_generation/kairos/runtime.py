@@ -22,7 +22,7 @@ from typing import Any, Mapping, Sequence
 import imageio.v3 as iio
 import numpy as np
 
-from worldfoundry.core.io.paths import checkpoint_root_path
+from worldfoundry.core.io.paths import checkpoint_root_path, package_data_path
 
 DEFAULT_NEGATIVE_PROMPT = (
     "bright tones, overexposed, static, blurred details, subtitles, style, works, paintings, images, static, "
@@ -156,7 +156,7 @@ def _default_config_path(runtime_root: str | Path, variant: str) -> str:
         root / "configs" / name,
     )
     existing = _first_existing(candidates)
-    return str(existing or candidates[0])
+    return str(existing or package_data_path('models', 'runtime', 'configs', 'kairos') / name)
 
 
 def _load_video_frames(video_path: str | Path) -> np.ndarray:

@@ -10983,7 +10983,7 @@ CURATED_OVERRIDES: Dict[str, Dict[str, Any]] = {
         "supports_stream": False,
         "default_prompt": "a village landscape",
         "default_task_type": "wonderjourney_run",
-        "default_call_kwargs": _three_d_four_d_runtime_call_kwargs(config="config/village.yaml"),
+        "default_call_kwargs": _three_d_four_d_runtime_call_kwargs(config=str(_data_path("models", "runtime", "configs", "wonderjourney", "village.yaml"))),
         "call_params": _three_d_four_d_runtime_call_params(
             "prompt",
             "config",
@@ -11007,7 +11007,7 @@ CURATED_OVERRIDES: Dict[str, Dict[str, Any]] = {
         "supports_stream": False,
         "default_prompt": "a village landscape",
         "default_task_type": "wonderworld_run",
-        "default_call_kwargs": _three_d_four_d_runtime_call_kwargs(config="config/inference.yaml"),
+        "default_call_kwargs": _three_d_four_d_runtime_call_kwargs(config=str(_data_path("models", "runtime", "configs", "wonderworld", "inference.yaml"))),
         "call_params": _three_d_four_d_runtime_call_params(
             "prompt",
             "config",

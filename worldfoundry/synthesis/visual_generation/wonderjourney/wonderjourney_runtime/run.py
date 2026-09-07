@@ -1,37 +1,37 @@
 import gc
+import json
 import random
 from argparse import ArgumentParser
-from pathlib import Path
-from PIL import Image
-from datetime import datetime
 from copy import deepcopy
-import json
+from datetime import datetime
+from pathlib import Path
 
+import numpy as np
+import torch
+import torch.nn.functional as F
+from diffusers import AutoencoderKL, DPMSolverMultistepScheduler, StableDiffusionInpaintPipeline
+from models.models import KeyframeGen, KeyframeInterp, save_point_cloud_as_ply
+from omegaconf import OmegaConf
+from PIL import Image
+from torchvision.transforms import ToPILImage, ToTensor
+from tqdm import tqdm
 from transformers import (
     CLIPTokenizerFast,
     OneFormerForUniversalSegmentation,
     OneFormerImageProcessor,
     OneFormerProcessor,
 )
-import numpy as np
-import torch
-from omegaconf import OmegaConf
-from torchvision.transforms import ToPILImage, ToTensor
-from tqdm import tqdm
-from diffusers import StableDiffusionInpaintPipeline, AutoencoderKL, DPMSolverMultistepScheduler
+from util.chatGPT4 import TextpromptGen
+from util.checkpoints import diffusers_fp16_load_kwargs, local_model_ref, oneformer_local_load_kwargs
+from util.general_utils import apply_depth_colormap, save_video
+from util.segment_utils import create_mask_generator
+from util.utils import load_inference_prompt_config, merge_frames, merge_keyframes, prepare_scheduler, save_depth_map
+
 # Modified by WorldFoundry: import midas via the package-absolute path instead of a
 # sys.path insert that hard-coded the on-disk layout between the synthesis and
 # base_models trees.
 from worldfoundry.base_models.three_dimensions.depth.midas.model_loader import load_model
-import torch.nn.functional as F
-
-from models.models import KeyframeGen, KeyframeInterp, save_point_cloud_as_ply
-from util.chatGPT4 import TextpromptGen
-from util.general_utils import apply_depth_colormap, save_video
-from util.utils import save_depth_map, prepare_scheduler
-from util.utils import load_inference_prompt_config, merge_frames, merge_keyframes
-from util.segment_utils import create_mask_generator
-from util.checkpoints import diffusers_fp16_load_kwargs, local_model_ref, oneformer_local_load_kwargs
+from worldfoundry.core.io.paths import package_data_path
 
 
 def evaluate(model):
@@ -363,7 +363,7 @@ if __name__ == "__main__":
     parser = ArgumentParser()
     parser.add_argument(
         "--base-config",
-        default="./config/base-config.yaml",
+        default=str(package_data_path('models', 'runtime', 'configs', 'wonderjourney', 'base-config.yaml')),
         help="Config path",
     )
     parser.add_argument(

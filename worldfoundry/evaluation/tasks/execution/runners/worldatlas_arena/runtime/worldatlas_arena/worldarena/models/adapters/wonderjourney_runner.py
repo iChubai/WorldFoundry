@@ -3,26 +3,26 @@
 from __future__ import annotations
 
 import argparse
+import contextlib
 import copy
 import importlib.util
-import contextlib
 import json
 import math
 import os
-from pathlib import Path
 import shutil
 import subprocess
 import sys
 import tempfile
 import time
 import traceback
+from pathlib import Path
 from typing import Any
 
 import yaml
 
 from worldarena.common.checkpoints import apply_checkpoint_env, checkpoint_root
 from worldarena.models.adapters.batch_runner_common import begin_sample, print_status
-
+from worldfoundry.core.io.paths import package_data_path
 
 # Values outside WonderJourney's native {-1, 0, 1} rotation codes let the
 # adapter carry the exact WorldArena action through the upstream run loop.
@@ -199,6 +199,8 @@ def _require_repo_layout(repo_root: Path, entrypoint: str) -> tuple[Path, Path]:
     if not entrypoint_path.exists():
         raise FileNotFoundError(f"WonderJourney entrypoint not found: {entrypoint_path}")
     base_config_path = (repo_root / "config" / "base-config.yaml").resolve()
+    if not base_config_path.is_file():
+        base_config_path = package_data_path("models", "runtime", "configs", "wonderjourney", "base-config.yaml")
     if not base_config_path.exists():
         raise FileNotFoundError(f"WonderJourney base config not found: {base_config_path}")
     return entrypoint_path, base_config_path

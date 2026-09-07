@@ -370,6 +370,7 @@ worldfoundry/data/test_cases/oasis/*
 !worldfoundry/data/test_cases/uni3c/**
 worldfoundry/synthesis/visual_generation/wonderworld/wonderworld_runtime/sky_img/
 worldfoundry/cli/assets/*.png
+!worldfoundry/cli/assets/openenvision_logo.png
 worldfoundry/studio/assets/*.png
 worldfoundry/studio/assets/vendor/
 

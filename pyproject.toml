@@ -583,6 +583,7 @@ include-package-data = true
 [tool.setuptools.package-data]
 "worldfoundry.cli" = [
     "tui_app.tcss",
+    "assets/*.png",
 ]
 "worldfoundry.data" = [
     "benchmarks/**/*.json",

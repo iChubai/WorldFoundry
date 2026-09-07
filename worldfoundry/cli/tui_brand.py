@@ -153,9 +153,9 @@ def render_logo_braille(image: Image.Image, *, width_chars: int = 56) -> str:
                 continue
 
             # ── Average colour and emit Rich-markup cell ──
-            avg_r = sum(c[0] for c in colors) // len(colors)
-            avg_g = sum(c[1] for c in colors) // len(colors)
-            avg_b = sum(c[2] for c in colors) // len(colors)
+            avg_r = sum(int(c[0]) for c in colors) // len(colors)
+            avg_g = sum(int(c[1]) for c in colors) // len(colors)
+            avg_b = sum(int(c[2]) for c in colors) // len(colors)
             
             hex_color = _rgb_to_hex(avg_r, avg_g, avg_b)
             char = chr(0x2800 + bits)

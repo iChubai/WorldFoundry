@@ -72,7 +72,25 @@ Use Evaluation to configure benchmark runs. Choose an evaluation intent, select 
 
 ![TUI Evaluation mode](/images/tui/tui-evaluation.png)
 
-Keyboard shortcuts shown in the log: `Ctrl+Q` quit, `r` refresh, `c` copy, `Tab` / `Shift+Tab` navigate.
+The main navigation shortcuts also work while a text field has focus:
+
+| Shortcut | Action |
+| --- | --- |
+| `Ctrl+F` | Focus catalog search |
+| `F2` | Focus the visible model or benchmark catalog |
+| `F3` | Focus configuration tabs; use arrow keys to switch tabs |
+| `F4` | Reveal and focus the execution log |
+| `Ctrl+R` / `Ctrl+S` | Run / stop the configured command |
+| `Ctrl+D` | Switch between WorldFoundry's matching light and dark themes |
+| `Ctrl+Q` | Quit |
+| `Tab` / `Shift+Tab` | Move between controls |
+| `Enter` | Select the highlighted catalog row |
+
+Outside text fields, `r` refreshes the catalog, `c` copies the command, `p` checks paths and the environment, `g` shows GPU status, and `a` lists output files. Toolbar tooltips also describe these actions. Catalog refresh runs in the background so navigation remains available.
+
+The official OpenEnvision logo keeps its original renderer and proportions. Small terminals hide the logo and stack the workspace vertically; use `F2`, `F3`, and `F4` to move between sections. Search and table headers stay visible while browsing rows. Filtering preserves the configured model, and the overview identifies a selection outside the current filter. Switching modes preserves each mode's model selection and any edited output directory.
+
+Unicode icons are the default. If your terminal uses a Nerd Font, opt in with `WORLDFOUNDRY_TUI_ICONS=nerd`; use `WORLDFOUNDRY_TUI_ICONS=ascii` for plain button and navigation labels.
 
 ### Configuration
 

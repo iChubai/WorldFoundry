@@ -1,7 +1,7 @@
 family: Matrix-Game
 id: matrix-game-3.5-first-person
 provider: Riemann Dynamics
-name: Matrix-Game 3.5 First-Person Base
+name: Matrix-Game 3.5
 aliases:
 - matrix-game-3.5-fp
 - matrix-game-35-first-person

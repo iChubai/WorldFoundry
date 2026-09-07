@@ -3,6 +3,8 @@ checkpoints:
 - GD-ML/DreamX-World-5B
 family: GD-ML DreamX-World
 id: dreamx-world-5b
+aliases:
+- dreamx-world-5b-ar
 integration:
   status: integrated
   notes:
@@ -15,7 +17,7 @@ modalities:
 - image-to-video
 - camera-action-control
 - world-generation
-name: DreamX-World 5B AR
+name: DreamX-World 5B
 official_sources:
   paper: https://arxiv.org/abs/2606.16993
   github:

@@ -1,9 +1,10 @@
 family: Echo-Memory
 id: echo-memory-context-k1
 provider: Echo Team at Joy Future Academy, JD
-name: Echo-Memory Context K=1
+name: Echo-Memory
 aliases:
 - echo-context-k1
+- echo-memory
 tasks:
 - image-to-video
 - action-conditioned-video

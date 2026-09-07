@@ -5,6 +5,7 @@ import json
 import os
 import re
 import sys
+from contextvars import ContextVar
 from dataclasses import dataclass, field, replace
 from functools import lru_cache
 from pathlib import Path
@@ -20,6 +21,8 @@ from worldfoundry.core.io.paths import (
 )
 
 from .runtime_paths import studio_hfd_cache_roots
+
+_CATALOG_CACHE_ROOTS: ContextVar[tuple[Path, ...] | None] = ContextVar("studio_catalog_cache_roots", default=None)
 
 PIPELINES_ROOT = Path(__file__).resolve().parents[1] / "pipelines"
 ACTION_SYNTHESIS_ROOT = Path(__file__).resolve().parents[1] / "synthesis" / "action_generation"
@@ -195,7 +198,10 @@ def _data_path(*parts: str | Path) -> Path:
 
 def _cache_candidates(*repo_dir_names: str) -> list[str]:
     candidates: list[str] = []
-    for root in studio_hfd_cache_roots(project_roots=_project_root_candidates()):
+    roots = _CATALOG_CACHE_ROOTS.get()
+    if roots is None:
+        roots = studio_hfd_cache_roots(project_roots=_project_root_candidates())
+    for root in roots:
         for repo_dir_name in repo_dir_names:
             repo_paths = [root / repo_dir_name]
             if not repo_dir_name.startswith("models--"):
@@ -12982,6 +12988,16 @@ def _build_entry(info: _AstPipelineInfo) -> CatalogEntry:
 
 @lru_cache(maxsize=1)
 def discover_catalog() -> tuple[CatalogEntry, ...]:
+    """Resolve shared checkpoint roots once per catalog build."""
+    roots = studio_hfd_cache_roots(project_roots=_project_root_candidates())
+    token = _CATALOG_CACHE_ROOTS.set(roots)
+    try:
+        return _discover_catalog_entries()
+    finally:
+        _CATALOG_CACHE_ROOTS.reset(token)
+
+
+def _discover_catalog_entries() -> tuple[CatalogEntry, ...]:
     by_module: Dict[tuple[str, str], CatalogEntry] = {}
     for info in _discover_catalog_infos():
         entry = _build_entry(info)

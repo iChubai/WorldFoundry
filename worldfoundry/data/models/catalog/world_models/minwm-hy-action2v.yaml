@@ -1,5 +1,8 @@
 id: minwm-hy-action2v
-name: minWM HY Action2V
+name: minWM
+aliases:
+- minwm
+- minwm-hy-action2v
 tasks: [interactive-world-model, action-conditioned-video, camera-controlled-video]
 provider: ShengShu AI / MIN-Lab
 source:

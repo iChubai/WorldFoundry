@@ -301,7 +301,7 @@ class WorldFoundryTui(App[None]):
             with Vertical(id="left-column"):
                 with Vertical(id="status-pane", classes="pane"):
                     with Collapsible(title="OpenEnvision", id="brand-collapse", collapsed=False):
-                        yield Static(render_brand_logo(width_chars=32, dark=self.current_theme.dark), id="brand-logo", markup=True)
+                        yield Static(render_brand_logo(width_chars=64, dark=self.current_theme.dark), id="brand-logo", markup=True)
                     with Horizontal(id="action-row"):
                         yield Label("Mode:", id="action-label")
                         yield Select(icons.action_options(), value=self.action, id="action", allow_blank=False)
@@ -1765,16 +1765,21 @@ class WorldFoundryTui(App[None]):
             return
 
     def _brand_logo_width(self) -> int:
-        """Fit the solid emblem and two wordmark rows within the sidebar height."""
+        """Compute an appropriate Braille-art logo width constrained by terminal size and aspect ratio."""
 
-        # The nearly square emblem occupies 70% of the requested width;
-        # a terminal character is approximately twice as tall as it is wide.
-        max_rows = max(6, min(12, int(self.size.height * 0.22)))
-        max_width = int((max_rows - 2) * 2 / 0.7)
+        # NOTE: The cropped logo's bounding box is roughly 921×713 pixels.
+        aspect = 921 / 713
+
+        # Determine maximum acceptable height in rows — never so large that
+        # the CSS/Textual layout engine gets confused.
+        max_rows = max(18, int(self.size.height * 0.35))
+
+        # A width of ~60 chars yields ~23 rows of Braille art.
+        max_width = int(max_rows * 2 * aspect)
 
         # NOTE: Render width is constrained by available terminal width and our max height allowance.
-        available = max(16, int(self.size.width * 0.4) - 8)
-        render_width = max(16, min(available, max_width, 36))
+        available = max(40, int(self.size.width * 0.4) - 8)
+        render_width = max(40, min(available, max_width, 80))
         return render_width
 
     def _sync_brand_logo(self) -> None:

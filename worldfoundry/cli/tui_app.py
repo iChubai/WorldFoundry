@@ -268,6 +268,7 @@ class WorldFoundryTui(App[None]):
         self.theme = WORLDFOUNDRY_THEME.name
         self._stop_task: asyncio.Task[None] | None = None
         self._refreshing = False
+        self._gpu_querying = False
         self._command_error = ""
         # ── Catalog directories ──
         self.model_manifest_dir = Path(model_manifest_dir) if model_manifest_dir is not None else None
@@ -397,13 +398,14 @@ class WorldFoundryTui(App[None]):
                             yield Button(icons["files"], id="artifacts")
                             yield Button(icons["gpu"], id="gpu-status")
                             yield Button(icons["sync"], id="refresh")
+                    yield Static("", id="command-validation", markup=False)
                     with Collapsible(title=icons["command_preview"], collapsed=True, id="command-preview"):
                         yield Static("", id="command")
                     with TabbedContent(id="config-tabs", initial="tab-general"):
                         with TabPane(icons["general"], id="tab-general"):
                             with VerticalScroll(classes="tab-scroll"):
                                 yield Static(icons["prompt_media"], classes="section-title", id="section-prompt-title")
-                                yield Rule(line_style="heavy", classes="section-rule", id="section-prompt-rule")
+                                yield Rule(line_style="solid", classes="section-rule", id="section-prompt-rule")
                                 with Vertical(id="prompt-controls", classes="field-group"):
                                     yield Label("Prompt", id="prompt-label", classes="field-caption")
                                     yield Input(value=self.prompt, placeholder="Describe the scene or action…", id="prompt")
@@ -454,7 +456,7 @@ class WorldFoundryTui(App[None]):
                                             id="metrics",
                                         )
                                 yield Static(icons["paths_runtime"], classes="section-title", id="section-paths-title")
-                                yield Rule(line_style="heavy", classes="section-rule", id="section-paths-rule")
+                                yield Rule(line_style="solid", classes="section-rule", id="section-paths-rule")
                                 with Grid(id="path-controls", classes="field-grid"):
                                     with Vertical(classes="field-group"):
                                         yield Label("Output directory", classes="field-caption")
@@ -571,7 +573,7 @@ class WorldFoundryTui(App[None]):
                                     yield Label("Checkpoint override", classes="field-caption")
                                     yield Input(value=self.ckpt_path, placeholder="optional exact checkpoint path", id="ckpt-path")
                                 yield Static(icons["advanced"], classes="section-title", id="section-model-title")
-                                yield Rule(line_style="heavy", classes="section-rule", id="section-model-rule")
+                                yield Rule(line_style="solid", classes="section-rule", id="section-model-rule")
                                 with Grid(id="neoverse-controls", classes="field-grid"):
                                     with Vertical(classes="field-group"):
                                         yield Label("Alpha threshold", id="alpha-threshold-label", classes="field-caption")
@@ -620,6 +622,12 @@ class WorldFoundryTui(App[None]):
 
     def on_mount(self) -> None:
         """Initialize tables, sync layouts, and focus the filter input on startup."""
+        self._default_field_labels = {
+            widget.id: widget.content for widget in self.query(Label) if widget.id and widget.has_class("field-caption")
+        }
+        self._default_field_placeholders = {
+            widget.id: widget.placeholder for widget in self.query("#config-tabs Input") if widget.id
+        }
         # ── Apply initial theme ──
         self._sync_action_theme()
         self._sync_responsive_layout()
@@ -671,6 +679,7 @@ class WorldFoundryTui(App[None]):
         self.query_one("#filter", Input).tooltip = "Search model names, tasks, and tags. Enter on a row selects it."
 
         # NOTE: Automatically focus the filter input on startup for smooth keyboard usage
+        self._sync_run_controls()
         self.query_one("#filter", Input).focus()
 
     def on_resize(self, event: events.Resize) -> None:
@@ -686,6 +695,7 @@ class WorldFoundryTui(App[None]):
         self.screen.set_class(self.size.height < 32, "-short")
         self.screen.set_class(width < 96 or 128 <= width < 160, "-stack-actions")
         self.sub_title = "Inference · Evaluation · Studio" if width >= 110 else ""
+        self.query_one(Footer).compact = width < 100
         self.call_after_refresh(self._refresh_catalog_layout)
         try:
             self.query_one("#conda-status", Static).update(self._conda_status_text())
@@ -898,7 +908,7 @@ class WorldFoundryTui(App[None]):
         elif button_id == "artifacts":
             self._show_artifacts()
         elif button_id == "gpu-status":
-            await self._log_gpu_status()
+            self.action_gpu_status()
         elif button_id == "refresh":
             self.action_refresh()
 
@@ -939,8 +949,10 @@ class WorldFoundryTui(App[None]):
         self._update_command()
 
     def action_focus_filter(self) -> None:
-        """Focus the catalog filter input."""
-        self.query_one("#filter", Input).focus()
+        """Reveal catalog search, including after a resize with unchanged focus."""
+        field = self.query_one("#filter", Input)
+        field.focus()
+        field.scroll_visible(animate=False)
 
     def action_focus_models(self) -> None:
         """Focus the visible catalog and keep it in view on narrow terminals."""
@@ -950,6 +962,7 @@ class WorldFoundryTui(App[None]):
         table = self.query_one("#models-table", DataTable)
         if table.row_count:
             table.focus()
+            table.scroll_visible(animate=False)
         else:
             self.action_focus_filter()
 
@@ -958,19 +971,25 @@ class WorldFoundryTui(App[None]):
         table = self.query_one("#benchmarks-table", DataTable)
         if self.action == "eval" and table.row_count:
             table.focus()
+            table.scroll_visible(animate=False)
         else:
             self.action_focus_filter()
 
     def action_focus_tabs(self) -> None:
-        """Focus the tab strip so arrow keys can switch configuration pages."""
-        if self.action == "ui":
-            self.query_one("#run", Button).focus()
-        else:
-            self.query_one("#config-tabs", TabbedContent).query_one(Tabs).focus()
+        """Reveal the tab strip even when it already has keyboard focus."""
+        target = (
+            self.query_one("#run", Button)
+            if self.action == "ui"
+            else self.query_one("#config-tabs", TabbedContent).query_one(Tabs)
+        )
+        target.focus()
+        target.scroll_visible(animate=False)
 
     def action_focus_logs(self) -> None:
         """Reveal execution output without moving the catalog selection."""
-        self.query_one("#logs", RichLog).focus()
+        log = self.query_one("#logs", RichLog)
+        log.focus()
+        log.scroll_visible(animate=False)
 
     def action_toggle_theme(self) -> None:
         """Switch between the matching WorldFoundry light and dark palettes."""
@@ -1030,7 +1049,7 @@ class WorldFoundryTui(App[None]):
             self._sync_ckpt_type_for_selected_model()
             if self.selected_benchmark_id not in {row.benchmark_id for row in self.benchmark_rows}:
                 self.selected_benchmark_id = self.benchmark_rows[0].benchmark_id if self.benchmark_rows else ""
-            self._populate_tables(self.query_one("#filter", Input).value)
+            self._populate_tables(self.query_one("#filter", Input).value, preserve_cursor=True)
             self._refresh_ckpt_type_select()
             self._sync_action_layout()
             self._sync_infer_control_layout()
@@ -1068,9 +1087,19 @@ class WorldFoundryTui(App[None]):
         """Run a preflight check and log the results."""
         self._run_preflight()
 
+    @work(group="gpu-status")
     async def action_gpu_status(self) -> None:
-        """Query GPU compute processes via ``nvidia-smi`` and log the result."""
-        await self._log_gpu_status()
+        """Query GPU status without blocking keyboard and button events."""
+        if self._gpu_querying:
+            return
+        self._gpu_querying = True
+        button = self.query_one("#gpu-status", Button)
+        button.disabled = True
+        try:
+            await self._log_gpu_status()
+        finally:
+            self._gpu_querying = False
+            button.disabled = False
 
     def action_show_artifacts(self) -> None:
         """List recent output artifacts from the current output directory."""
@@ -1115,35 +1144,42 @@ class WorldFoundryTui(App[None]):
             "--format=csv,noheader,nounits",
         )
         self._write_log("$ " + format_shell_command(command))
-        process = await asyncio.create_subprocess_exec(
-            *command,
-            stdout=asyncio.subprocess.PIPE,
-            stderr=asyncio.subprocess.STDOUT,
-        )
-        assert process.stdout is not None
-        lines: list[str] = []
-        async for raw_line in process.stdout:
-            line = raw_line.decode(errors="replace").strip()
-            if line:
-                lines.append(line)
-        exit_code = await process.wait()
-        if exit_code != 0:
-            self._write_log(f"GPU status command exited with code {exit_code}.")
-            return
-        if not lines:
-            self._write_log("No running GPU compute processes.")
-            return
-        for line in lines:
-            self._write_log("GPU " + line)
+        process = None
+        try:
+            process = await asyncio.create_subprocess_exec(
+                *command,
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.STDOUT,
+            )
+            output, _ = await asyncio.wait_for(process.communicate(), timeout=10)
+            lines = [line.strip() for line in output.decode(errors="replace").splitlines() if line.strip()]
+            if process.returncode != 0:
+                self._write_log(f"GPU status command exited with code {process.returncode}.")
+                for line in lines:
+                    self._write_log(line)
+            elif not lines:
+                self._write_log("No running GPU compute processes.")
+            else:
+                for line in lines:
+                    self._write_log("GPU " + line)
+        except asyncio.TimeoutError:
+            self._write_log("GPU status query timed out after 10 seconds.")
+        except OSError as exc:
+            self._write_log(f"Unable to query GPU status: {exc}")
+        finally:
+            if process is not None and process.returncode is None:
+                with contextlib.suppress(ProcessLookupError):
+                    process.kill()
+                await process.wait()
 
-    def _populate_tables(self, query: str = "") -> None:
+    def _populate_tables(self, query: str = "", *, preserve_cursor: bool = False) -> None:
         """Filter and repopulate the model / benchmark tables from the catalog."""
         query = query.strip().casefold()
         models = [row for row in self.model_rows if self._model_visible_for_action(row) and self._matches_model(row, query)]
         benchmarks = [row for row in self.benchmark_rows if self._matches_benchmark(row, query)]
-        self._populate_model_table(models)
+        self._populate_model_table(models, preserve_cursor=preserve_cursor)
         if self.action == "eval":
-            self._populate_benchmark_table(benchmarks)
+            self._populate_benchmark_table(benchmarks, preserve_cursor=preserve_cursor)
         self._update_pane_titles(len(models), len(benchmarks))
         self._update_selection_summary(len(models), len(benchmarks))
 
@@ -1154,7 +1190,7 @@ class WorldFoundryTui(App[None]):
     def _refresh_catalog_layout(self) -> None:
         """Fit catalog columns to the available pane width after a reflow."""
         try:
-            self._populate_tables(self.query_one("#filter", Input).value)
+            self._populate_tables(self.query_one("#filter", Input).value, preserve_cursor=True)
         except NoMatches:
             pass
 
@@ -1167,10 +1203,15 @@ class WorldFoundryTui(App[None]):
         detail_width = max(8, available - model_width - status_width - 6)
         return (("Model" if detail == "Task" else "Benchmark", model_width), ("Status", status_width), (detail, detail_width))
 
-    def _populate_model_table(self, rows: Iterable[ModelCatalogRow]) -> None:
+    def _populate_model_table(self, rows: Iterable[ModelCatalogRow], *, preserve_cursor: bool = False) -> None:
         """Keep selection aligned with the configured model and fit visible columns."""
         rows = list(rows)
         table = self.query_one("#models-table", DataTable)
+        cursor_key = self.selected_model_id
+        if preserve_cursor and table.row_count:
+            browsed_key = table.coordinate_to_cell_key(table.cursor_coordinate).row_key.value
+            if any(row.model_id == browsed_key for row in rows):
+                cursor_key = browsed_key
         table.clear(columns=True)
         columns = self._catalog_columns(table, "Task")
         for label, width in columns:
@@ -1181,17 +1222,22 @@ class WorldFoundryTui(App[None]):
             for cell, (_, width) in zip(cells, columns):
                 cell.truncate(width, overflow="ellipsis")
             table.add_row(*cells[:len(columns)], key=row.model_id)
-            if row.model_id == self.selected_model_id:
+            if row.model_id == cursor_key:
                 table.move_cursor(row=index, animate=False)
         table.display = bool(rows)
         self.query_one("#models-empty").display = not rows
         if rows:
             table.call_after_refresh(table.move_cursor, row=table.cursor_row, animate=False)
 
-    def _populate_benchmark_table(self, rows: Iterable[BenchmarkCatalogRow]) -> None:
+    def _populate_benchmark_table(self, rows: Iterable[BenchmarkCatalogRow], *, preserve_cursor: bool = False) -> None:
         """Keep benchmark selection visible while filtering or resizing."""
         rows = list(rows)
         table = self.query_one("#benchmarks-table", DataTable)
+        cursor_key = self.selected_benchmark_id
+        if preserve_cursor and table.row_count:
+            browsed_key = table.coordinate_to_cell_key(table.cursor_coordinate).row_key.value
+            if any(row.benchmark_id == browsed_key for row in rows):
+                cursor_key = browsed_key
         table.clear(columns=True)
         columns = self._catalog_columns(table, "Domain")
         for label, width in columns:
@@ -1202,7 +1248,7 @@ class WorldFoundryTui(App[None]):
             for cell, (_, width) in zip(cells, columns):
                 cell.truncate(width, overflow="ellipsis")
             table.add_row(*cells[:len(columns)], key=row.benchmark_id)
-            if row.benchmark_id == self.selected_benchmark_id:
+            if row.benchmark_id == cursor_key:
                 table.move_cursor(row=index, animate=False)
         table.display = bool(rows)
         self.query_one("#benchmarks-empty").display = not rows
@@ -1277,6 +1323,9 @@ class WorldFoundryTui(App[None]):
         """Refresh the command preview, conda status, selection status, and selection summary widgets."""
         try:
             command_text = self._command_text()
+            validation = self.query_one("#command-validation", Static)
+            validation.update(self._command_error or "")
+            validation.display = bool(self._command_error)
             command_widget = self.query_one("#command", Static)
             if self._command_error:
                 command_widget.update(Text(command_text, style=self.get_css_variables()["warning"]))
@@ -1606,6 +1655,7 @@ class WorldFoundryTui(App[None]):
             self.query_one("#run", Button).disabled = running or bool(self._command_error)
             self.query_one("#run", Button).tooltip = self._command_error or "Run the configured command (Ctrl+R)"
             self.query_one("#copy", Button).disabled = bool(self._command_error)
+            self.query_one("#copy", Button).tooltip = self._command_error or "Copy the complete command (c)"
             self.query_one("#refresh", Button).disabled = self._refreshing
             self.query_one("#stop", Button).disabled = not running
         except Exception:
@@ -1834,6 +1884,10 @@ class WorldFoundryTui(App[None]):
 
     def _sync_infer_field_text(self, specs: dict[str, InferControlSpec]) -> None:
         """Update label text and input placeholders from variant-specific control specs."""
+        for label_id, text in self._default_field_labels.items():
+            self._update_label(label_id, text)
+        for input_id, placeholder in self._default_field_placeholders.items():
+            self._update_placeholder(input_id, placeholder)
         for field_id, spec in specs.items():
             label_id, input_id = _control_widget_ids(field_id)
             if label_id:
@@ -1844,7 +1898,9 @@ class WorldFoundryTui(App[None]):
     def _update_label(self, label_id: str, text: str) -> None:
         """Update the text of a ``Label`` widget identified by *label_id*."""
         try:
-            self.query_one(f"#{label_id}", Label).update(text)
+            label = self.query_one(f"#{label_id}", Label)
+            if label.content != text:
+                label.update(text)
         except NoMatches:
             return
 
@@ -1887,7 +1943,7 @@ class WorldFoundryTui(App[None]):
     def _group_is_visible(self, group_id: str) -> bool:
         """Return whether the widget group identified by *group_id* is currently displayed."""
         try:
-            return self.query_one(f"#{group_id}").display != "none"
+            return self.query_one(f"#{group_id}").display
         except NoMatches:
             return False
 

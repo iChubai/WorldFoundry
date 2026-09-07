@@ -464,10 +464,6 @@ TabPane {
     margin-bottom: 0;
 }
 
-.full-width {
-    column-span: 2;
-}
-
 .field-group {
     height: auto;
     width: 1fr;
@@ -551,14 +547,26 @@ Select:focus {
     text-style: italic;
 }
 
+#command-validation {
+    display: none;
+    height: auto;
+    margin: 0 1 1 1;
+    padding: 0 1;
+    border-left: solid $warning;
+    color: $warning;
+}
+
 /* ── Command preview ── */
 #command-preview {
     margin-top: 0;
-    margin-bottom: 0;
+    margin-bottom: 1;
     padding: 0 1;
     border: none;
-    border-top: solid $border-blurred;
     background: $surface;
+}
+
+#command-preview.-collapsed {
+    background: transparent;
 }
 
 #command {

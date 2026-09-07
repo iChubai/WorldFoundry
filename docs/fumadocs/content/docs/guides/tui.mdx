@@ -86,9 +86,9 @@ The main navigation shortcuts also work while a text field has focus:
 | `Tab` / `Shift+Tab` | Move between controls |
 | `Enter` | Select the highlighted catalog row |
 
-Outside text fields, `r` refreshes the catalog, `c` copies the command, `p` checks paths and the environment, `g` shows GPU status, and `a` lists output files. Toolbar tooltips also describe these actions. Catalog refresh runs in the background so navigation remains available.
+Outside text fields, `r` refreshes the catalog, `c` copies the command, `p` checks paths and the environment, `g` shows GPU status, and `a` lists output files. Toolbar tooltips also describe these actions. Catalog refresh and GPU status queries run in the background so navigation remains available. GPU queries time out after 10 seconds and report failures in the execution log.
 
-The official OpenEnvision logo keeps its original renderer and proportions. Small terminals hide the logo and stack the workspace vertically; use `F2`, `F3`, and `F4` to move between sections. Search and table headers stay visible while browsing rows. Filtering preserves the configured model, and the overview identifies a selection outside the current filter. Switching modes preserves each mode's model selection and any edited output directory.
+The official OpenEnvision logo keeps its original renderer and proportions. Small terminals hide the logo and stack the workspace vertically; use `F2`, `F3`, and `F4` to move between sections. Search and table headers stay visible while browsing rows. Resizing, switching themes, and refreshing catalogs preserve the row you are browsing; press `Enter` to use it. Filtering preserves the configured model, and the overview identifies a selection outside the current filter. Switching modes preserves each mode's model selection and any edited output directory.
 
 Unicode icons are the default. If your terminal uses a Nerd Font, opt in with `WORLDFOUNDRY_TUI_ICONS=nerd`; use `WORLDFOUNDRY_TUI_ICONS=ascii` for plain button and navigation labels.
 
@@ -106,7 +106,7 @@ Inference mode presents model-specific parameters such as:
 - **Sequence length** — Maximum token or frame count.
 - **Seed** — Deterministic generation seed (optional).
 
-Changing a parameter in the TUI updates the generated command in real time. Use the Workspace or `generate-score` CLI when a custom dataset manifest needs more fields than the compact TUI exposes.
+Changing a parameter in the TUI updates the generated command in real time. If a required value is missing or invalid, an explanation appears below the toolbar and **Run** and **Copy** remain disabled until the command can be built. Use the Workspace or `generate-score` CLI when a custom dataset manifest needs more fields than the compact TUI exposes.
 
 ### Readiness indicators
 

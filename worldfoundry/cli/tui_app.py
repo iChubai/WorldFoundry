@@ -20,6 +20,7 @@ from textual import events
 from textual.app import App, ComposeResult
 from textual.containers import Grid, Horizontal, Vertical, VerticalScroll
 from textual.css.query import NoMatches
+from textual.theme import Theme
 from textual.widgets import (
     Button,
     Collapsible,
@@ -62,6 +63,44 @@ from .tui_discovery import (
 from .tui_icons import icons
 
 # ── Module constants ──────────────────────────────────────────────
+
+WORLDFOUNDRY_THEME = Theme(
+    name="worldfoundry",
+    primary="#B7C48A",
+    secondary="#AEB4BF",
+    accent="#B7C48A",
+    foreground="#E6E8EC",
+    background="#111317",
+    surface="#15181D",
+    panel="#1B1E24",
+    success="#89C5A2",
+    warning="#E5BE88",
+    error="#EE919B",
+    dark=True,
+    luminosity_spread=0.09,
+    text_alpha=1.0,
+    variables={
+        "text": "#E6E8EC",
+        "text-muted": "#AEB4BF",
+        "text-disabled": "#747C89",
+        "border": "#B7C48A",
+        "border-blurred": "#363C46",
+        "block-cursor-background": "#353E2E",
+        "block-cursor-foreground": "#F4F5F7",
+        "block-cursor-blurred-background": "#30353F",
+        "block-cursor-blurred-foreground": "#E6E8EC",
+        "block-hover-background": "#292E37",
+        "input-selection-background": "#353E2E",
+        "input-selection-foreground": "#F4F5F7",
+        "button-focus-text-style": "bold",
+        "footer-background": "#15181D",
+        "footer-description-foreground": "#AEB4BF",
+        "scrollbar": "#48505D",
+        "scrollbar-hover": "#687181",
+        "scrollbar-active": "#B7C48A",
+        "scrollbar-background": "#15181D",
+    },
+)
 
 EVALUATION_INTENT_OPTIONS = (
     ("Model Benchmark", "model-benchmark"),
@@ -164,6 +203,8 @@ class WorldFoundryTui(App[None]):
         widget binding.
         """
         super().__init__()
+        self.register_theme(WORLDFOUNDRY_THEME)
+        self.theme = WORLDFOUNDRY_THEME.name
         self._stop_task: asyncio.Task[None] | None = None
         # ── Catalog directories ──
         self.model_manifest_dir = Path(model_manifest_dir) if model_manifest_dir is not None else None
@@ -1028,19 +1069,19 @@ class WorldFoundryTui(App[None]):
             variant = ""
             if self.eval_intent == "score-artifacts":
                 catalog = f"{visible_benchmarks} benchmarks"
-                body = f"[bold cyan]Artifact directory[/]  [dim]→[/]  [bold magenta]{bench}[/]"
+                body = f"[bold]Artifact directory[/]  [dim]→[/]  [bold]{bench}[/]"
             else:
                 catalog = f"{visible_models} models · {visible_benchmarks} benchmarks"
-                body = f"[bold cyan]{model}[/]  [dim]→[/]  [bold magenta]{bench}[/]"
+                body = f"[bold]{model}[/]  [dim]→[/]  [bold]{bench}[/]"
         elif self.action == "infer":
             variant = self._selected_ckpt_type_label()
-            variant_part = f"  [dim]·[/]  [bold yellow]{variant}[/]" if variant else ""
+            variant_part = f"  [dim]· {variant}[/]" if variant else ""
             catalog = f"{visible_models} models"
-            body = f"[bold cyan]{model}[/]{variant_part}"
+            body = f"[bold]{model}[/]{variant_part}"
         else:
             variant = ""
             catalog = f"{visible_models} models"
-            body = "[bold green]Local Studio server[/]"
+            body = "[bold]Local Studio server[/]"
 
         action_label = icons.action_labels().get(self.action, self.action)
         summary.update(
@@ -1067,7 +1108,15 @@ class WorldFoundryTui(App[None]):
             if command_text.startswith("Select ") or command_text.startswith("Ckpt override"):
                 command_widget.update(Text(command_text, style="yellow"))
             else:
-                command_widget.update(Syntax(command_text, "bash", theme="monokai", word_wrap=True))
+                command_widget.update(
+                    Syntax(
+                        command_text,
+                        "bash",
+                        theme="github-dark" if self.current_theme.dark else "friendly",
+                        background_color="default",
+                        word_wrap=True,
+                    )
+                )
             
             self.query_one("#conda-status", Static).update(self._conda_status_text())
 
@@ -1735,8 +1784,7 @@ class WorldFoundryTui(App[None]):
         self._logo_update_timer = self.set_timer(0.05, do_update)
 
     def _sync_action_theme(self) -> None:
-        """Apply the action-specific Textual theme and CSS mode class."""
-        self.theme = themes.get(self.action, "textual-dark")
+        """Update the mode indicator while retaining the selected theme."""
         try:
             status_pane = self.query_one("#status-pane")
             # ── Remove old mode classes, add new one ──
@@ -1896,8 +1944,6 @@ class WorldFoundryTui(App[None]):
 
 # ── Module-level helpers ──────────────────────────────────────────
 
-# NOTE: Mapping from action mode to Textual theme name, applied when the action changes.
-themes = {"infer": "textual-dark", "eval": "textual-dark", "ui": "textual-dark"}
 
 def _normalize_select_value(value: object, *, allowed: Iterable[str] | None = None) -> str | None:
     """Normalize a ``Select`` widget value to a string, rejecting ``NULL`` and disallowed options."""

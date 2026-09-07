@@ -1,8 +1,7 @@
 """OpenEnvision brand rendering for the WorldFoundry TUI.
 
-Renders the official logo PNG as high-resolution Braille terminal art.
-Provides deep integration for dark-mode terminals by automatically inverting
-the black/dark-grey shades to white/light-grey while preserving the red accent.
+Renders the official emblem as solid terminal pixels with a readable wordmark.
+The legacy Braille renderer remains available for callers that request it.
 """
 
 from __future__ import annotations
@@ -167,21 +166,69 @@ def render_logo_braille(image: Image.Image, *, width_chars: int = 56) -> str:
 
 # ── Brand rendering ────────────────────────────────────────────────
 
-@lru_cache(maxsize=4)
-def render_brand_logo(*, width_chars: int = 56) -> str:
-    """Render the OpenEnvision logo as Braille-art with dark-mode inversion.
+def render_logo_blocks(image: Image.Image, *, width_chars: int = 56, dark: bool = True) -> str:
+    """Render the emblem with half blocks and the wordmark as native text.
 
-    Caches up to 4 width variants. Reads the PNG asset via :func:`logo_asset_path`.
-
-    Raises:
-        FileNotFoundError: When the logo asset PNG is not found.
-        RuntimeError: When Pillow is not installed.
+    The bundled asset separates its emblem and wordmark with blank rows.
+    Keeping the lettering as text avoids rasterizing it into unreadable dots
+    at the small sizes used by the TUI sidebar.
     """
+    if Image is None or np is None:
+        raise RuntimeError("Pillow is required to render the OpenEnvision logo.")
+    width_chars = max(len(BRAND_NAME), width_chars)
+    rgba = image.convert("RGBA")
+    white = Image.new("RGBA", rgba.size, "white")
+    rgb = np.asarray(Image.alpha_composite(white, rgba).convert("RGB"))
+    ink = rgb.min(axis=2) < 180
+    occupied = np.flatnonzero(ink.any(axis=1))
+    if not occupied.size:
+        return BRAND_NAME.center(width_chars)
+    gaps = np.flatnonzero(np.diff(occupied) > 2)
+    bottom = int(occupied[gaps[0]]) + 1 if gaps.size else int(occupied[-1]) + 1
+    top = int(occupied[0])
+    columns = np.flatnonzero(ink[top:bottom].any(axis=0))
+    emblem = Image.fromarray(rgb).crop((int(columns[0]), top, int(columns[-1]) + 1, bottom))
+    mark_width = max(10, round(width_chars * 0.7))
+    mark_height = max(2, round(mark_width * emblem.height / emblem.width / 2) * 2)
+    pixels = np.asarray(emblem.resize((mark_width, mark_height), Image.Resampling.LANCZOS))
+    foreground = "#e6e8ec" if dark else "#24272d"
+
+    def color(pixel):
+        red, green, blue = (int(channel) for channel in pixel)
+        if min(red, green, blue) >= 180:
+            return None
+        if red > green * 1.4 and red > blue * 1.4:
+            return "#e53935" if dark else "#c62828"
+        return foreground
+
+    padding = " " * ((width_chars - mark_width) // 2)
+    lines = []
+    for row in range(0, mark_height, 2):
+        cells = []
+        for column in range(mark_width):
+            upper = color(pixels[row, column])
+            lower = color(pixels[row + 1, column])
+            if upper and lower:
+                cells.append(f"[{upper} on {lower}]▀[/]")
+            elif upper:
+                cells.append(f"[{upper}]▀[/]")
+            elif lower:
+                cells.append(f"[{lower}]▄[/]")
+            else:
+                cells.append(" ")
+        lines.append(padding + "".join(cells) + " " * (width_chars - mark_width - len(padding)))
+    lines.extend([" " * width_chars, f"[bold {foreground}]{BRAND_NAME.center(width_chars)}[/]"])
+    return "\n".join(lines)
+
+
+@lru_cache(maxsize=8)
+def render_brand_logo(*, width_chars: int = 56, dark: bool = True) -> str:
+    """Render and cache a compact logo for the selected terminal theme."""
     path = logo_asset_path()
     if not path.is_file():
         raise FileNotFoundError(f"OpenEnvision logo asset not found: {path}")
     with Image.open(path) as image:
-        return render_logo_braille(image, width_chars=width_chars)
+        return render_logo_blocks(image, width_chars=width_chars, dark=dark)
 
 
 def render_fallback_header(*, width_chars: int = 56) -> str:

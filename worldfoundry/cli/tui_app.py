@@ -301,7 +301,7 @@ class WorldFoundryTui(App[None]):
             with Vertical(id="left-column"):
                 with Vertical(id="status-pane", classes="pane"):
                     with Collapsible(title="OpenEnvision", id="brand-collapse", collapsed=False):
-                        yield Static(render_brand_logo(width_chars=32), id="brand-logo", markup=True)
+                        yield Static(render_brand_logo(width_chars=32, dark=self.current_theme.dark), id="brand-logo", markup=True)
                     with Horizontal(id="action-row"):
                         yield Label("Mode:", id="action-label")
                         yield Select(icons.action_options(), value=self.action, id="action", allow_blank=False)
@@ -557,6 +557,7 @@ class WorldFoundryTui(App[None]):
         self._sync_action_theme()
         self._sync_responsive_layout()
         self._sync_brand_logo()
+        self.theme_changed_signal.subscribe(self, lambda theme: self._sync_brand_logo())
         
         # ── Set bpytop-style border titles ──
         self.query_one("#status-pane", Vertical).border_title = " OpenEnvision "
@@ -1764,16 +1765,12 @@ class WorldFoundryTui(App[None]):
             return
 
     def _brand_logo_width(self) -> int:
-        """Compute an appropriate Braille-art logo width constrained by terminal size and aspect ratio."""
+        """Fit the solid emblem and two wordmark rows within the sidebar height."""
 
-        # NOTE: The cropped logo's bounding box is roughly 921×713 pixels.
-        aspect = 921 / 713
-
-        # Keep the catalog visible alongside a recognizable brand mark.
+        # The nearly square emblem occupies 70% of the requested width;
+        # a terminal character is approximately twice as tall as it is wide.
         max_rows = max(6, min(12, int(self.size.height * 0.22)))
-
-        # A width of ~60 chars yields ~23 rows of Braille art.
-        max_width = int(max_rows * 2 * aspect)
+        max_width = int((max_rows - 2) * 2 / 0.7)
 
         # NOTE: Render width is constrained by available terminal width and our max height allowance.
         available = max(16, int(self.size.width * 0.4) - 8)
@@ -1794,7 +1791,7 @@ class WorldFoundryTui(App[None]):
         def do_update():
             # NOTE: For round borders, wait for size layout to settle before rendering
             try:
-                logo.update(render_brand_logo(width_chars=self._brand_logo_width()))
+                logo.update(render_brand_logo(width_chars=self._brand_logo_width(), dark=self.current_theme.dark))
             except Exception:
                 pass
             

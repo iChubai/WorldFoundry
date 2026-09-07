@@ -22,7 +22,30 @@ from worldfoundry.core.io.paths import (
 
 from .runtime_paths import studio_hfd_cache_roots
 
-_CATALOG_CACHE_ROOTS: ContextVar[tuple[Path, ...] | None] = ContextVar("studio_catalog_cache_roots", default=None)
+
+@dataclass
+class _CatalogPathSnapshot:
+    roots: tuple[Path, ...]
+    children: dict[Path, frozenset[str]]
+    exists_cache: dict[Path, bool] = field(default_factory=dict)
+
+    def missing(self, path: Path) -> bool:
+        for root, names in self.children.items():
+            try:
+                parts = path.relative_to(root).parts
+            except ValueError:
+                continue
+            if parts and ".." not in parts and parts[0] not in names:
+                return True
+        return False
+
+    def exists(self, path: Path) -> bool:
+        if path not in self.exists_cache:
+            self.exists_cache[path] = not self.missing(path) and path.exists()
+        return self.exists_cache[path]
+
+
+_CATALOG_CACHE_ROOTS: ContextVar[_CatalogPathSnapshot | None] = ContextVar("studio_catalog_cache_roots", default=None)
 
 PIPELINES_ROOT = Path(__file__).resolve().parents[1] / "pipelines"
 ACTION_SYNTHESIS_ROOT = Path(__file__).resolve().parents[1] / "synthesis" / "action_generation"
@@ -198,15 +221,17 @@ def _data_path(*parts: str | Path) -> Path:
 
 def _cache_candidates(*repo_dir_names: str) -> list[str]:
     candidates: list[str] = []
-    roots = _CATALOG_CACHE_ROOTS.get()
-    if roots is None:
-        roots = studio_hfd_cache_roots(project_roots=_project_root_candidates())
+    snapshot = _CATALOG_CACHE_ROOTS.get()
+    roots = snapshot.roots if snapshot is not None else studio_hfd_cache_roots(project_roots=_project_root_candidates())
     for root in roots:
         for repo_dir_name in repo_dir_names:
             repo_paths = [root / repo_dir_name]
             if not repo_dir_name.startswith("models--"):
                 repo_paths.append(root / f"models--{repo_dir_name}")
             for repo_path in repo_paths:
+                if snapshot is not None and snapshot.missing(repo_path):
+                    candidates.append(str(repo_path))
+                    continue
                 refs_main = repo_path / "refs" / "main"
                 snapshots_dir = repo_path / "snapshots"
                 if refs_main.is_file():
@@ -409,6 +434,7 @@ def _prefer_existing_model_ref(*candidates: str) -> str:
 
 
 def _checkpoint_model_ref(*repo_dir_names: str, fallback: str = "") -> str:
+    snapshot = _CATALOG_CACHE_ROOTS.get()
     candidates: list[str] = []
     for repo_dir_name in repo_dir_names:
         if not repo_dir_name:
@@ -419,8 +445,11 @@ def _checkpoint_model_ref(*repo_dir_names: str, fallback: str = "") -> str:
         )
         candidates.extend(_cache_candidates(repo_dir_name))
     for candidate in candidates:
-        if candidate and Path(candidate).expanduser().exists():
-            return str(Path(candidate).expanduser())
+        if candidate:
+            path = Path(candidate).expanduser()
+            exists = snapshot.exists(path) if snapshot is not None else path.exists()
+            if exists:
+                return str(path)
     if fallback:
         return fallback
     return next((candidate for candidate in candidates if candidate), "")
@@ -12990,7 +13019,16 @@ def _build_entry(info: _AstPipelineInfo) -> CatalogEntry:
 def discover_catalog() -> tuple[CatalogEntry, ...]:
     """Resolve shared checkpoint roots once per catalog build."""
     roots = studio_hfd_cache_roots(project_roots=_project_root_candidates())
-    token = _CATALOG_CACHE_ROOTS.set(roots)
+    children: dict[Path, frozenset[str]] = {}
+    for root in roots:
+        try:
+            children[root] = frozenset(path.name for path in root.iterdir())
+        except (FileNotFoundError, NotADirectoryError):
+            children[root] = frozenset()
+        except OSError:
+            # Fall back to individual checks when a root cannot be enumerated.
+            continue
+    token = _CATALOG_CACHE_ROOTS.set(_CatalogPathSnapshot(roots, children))
     try:
         return _discover_catalog_entries()
     finally:

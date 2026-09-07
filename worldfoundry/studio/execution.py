@@ -1269,6 +1269,7 @@ def maybe_extract_video_preview_image(
     output_dir: str,
     *,
     frame_position: str = "first",
+    output_name: str = "preview.png",
 ) -> Optional[str]:
     if not video_path:
         return None
@@ -1304,9 +1305,84 @@ def maybe_extract_video_preview_image(
     except Exception:
         return None
 
-    preview_path = Path(output_dir) / "preview.png"
+    filename = Path(output_name).name or "preview.png"
+    preview_path = Path(output_dir) / filename
     Image.fromarray(_to_uint8_rgb(frame)).save(preview_path)
     return str(preview_path)
+
+
+_FIRST_FRAME_FILENAMES = (
+    "first_frame.png",
+    "first_frame.jpg",
+    "first_frame.jpeg",
+    "first_frame.webp",
+    "preview.png",
+    "preview.jpg",
+    "preview.jpeg",
+    "preview.webp",
+)
+
+
+def _usable_preview_image(path: str | Path | None) -> str | None:
+    """Return a generated still path; skip missing files and conditioning inputs."""
+    if not path:
+        return None
+    candidate = Path(path)
+    try:
+        if not candidate.is_file():
+            return None
+    except OSError:
+        return None
+    if candidate.suffix.lower() not in IMAGE_EXTS:
+        return None
+    if _artifact_is_input(candidate):
+        return None
+    return str(candidate)
+
+
+def ensure_run_preview_image(record: RunRecord) -> str | None:
+    """Return a first-frame still for Gallery, extracting it from the video if needed."""
+    output_dir = str(record.output_dir or "")
+    if output_dir:
+        for name in _FIRST_FRAME_FILENAMES:
+            usable = _usable_preview_image(Path(output_dir) / name)
+            if usable:
+                return usable
+
+    usable = _usable_preview_image(record.preview_image)
+    if usable:
+        return usable
+
+    for candidate in record.gallery or ():
+        usable = _usable_preview_image(candidate)
+        if usable:
+            return usable
+
+    video_path = record.preview_video
+    if not video_path:
+        return None
+    try:
+        if not Path(video_path).is_file():
+            return None
+    except OSError:
+        return None
+
+    extract_dir = output_dir or str(Path(video_path).parent)
+    extracted = maybe_extract_video_preview_image(
+        video_path,
+        extract_dir,
+        frame_position="first",
+        output_name="first_frame.png",
+    )
+    return _usable_preview_image(extracted)
+
+
+def bind_run_preview_image(record: RunRecord) -> str | None:
+    """Resolve a first-frame still and cache the path on the in-memory record."""
+    path = ensure_run_preview_image(record)
+    if path:
+        record.preview_image = path
+    return path
 
 
 def _load_trimesh() -> Any:
@@ -3948,23 +4024,42 @@ class StudioManager:
             self._recent_runs_cache = tuple(records)
             return list(self._recent_runs_cache[:requested])
 
-    def load_run(self, run_id: str) -> RunRecord:
+    def _resolved_run_dir(self, run_id: str) -> Path:
         value = str(run_id or "")
         if not value or value in {".", ".."} or "/" in value or "\\" in value or Path(value).name != value:
             raise KeyError(f"Unknown Studio run id: {run_id}")
 
         runs_root = Path(self.runs_root).resolve()
         run_dir = runs_root / value
-        manifest_path = run_dir / "manifest.json"
         try:
             resolved_run_dir = run_dir.resolve()
-            resolved_manifest = manifest_path.resolve()
         except (OSError, RuntimeError):
             raise KeyError(f"Unknown Studio run id: {run_id}") from None
-        if resolved_run_dir.parent != runs_root or resolved_manifest.parent != resolved_run_dir:
+        if resolved_run_dir.parent != runs_root:
+            raise KeyError(f"Unknown Studio run id: {run_id}")
+        return resolved_run_dir
+
+    def delete_run(self, run_id: str) -> Path:
+        """Remove one persisted Studio run directory from ``runs_root``."""
+
+        resolved_run_dir = self._resolved_run_dir(run_id)
+        if not resolved_run_dir.is_dir():
+            raise KeyError(f"Unknown Studio run id: {run_id}")
+        shutil.rmtree(resolved_run_dir)
+        self._invalidate_recent_runs_cache()
+        return resolved_run_dir
+
+    def load_run(self, run_id: str) -> RunRecord:
+        resolved_run_dir = self._resolved_run_dir(run_id)
+        resolved_manifest = resolved_run_dir / "manifest.json"
+        try:
+            resolved_manifest = resolved_manifest.resolve()
+        except (OSError, RuntimeError):
+            raise KeyError(f"Unknown Studio run id: {run_id}") from None
+        if resolved_manifest.parent != resolved_run_dir:
             raise KeyError(f"Unknown Studio run id: {run_id}")
         try:
-            return _run_record_from_manifest(resolved_manifest, run_id=value)
+            return _run_record_from_manifest(resolved_manifest, run_id=str(run_id))
         except (OSError, TypeError, ValueError, json.JSONDecodeError):
             raise KeyError(f"Unknown Studio run id: {run_id}") from None
 

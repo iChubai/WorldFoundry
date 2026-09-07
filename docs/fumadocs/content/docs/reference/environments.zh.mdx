@@ -254,31 +254,7 @@ bash scripts/setup/model_env_install.sh --model <model-id>
 安装对应环境，再检查或下载资产。只有只想安装环境、不碰 checkpoint 时，才直接用
 `scripts/setup/model_env_install.sh`。
 
-<div className="pi-env-model-table">
-
-| 模型 | 专用环境 | Setup 命令 | 说明 |
-| --- | --- | --- | --- |
-| `ac3d` | `ac3d` | `bash scripts/inference/prepare_model_infer.sh ac3d --download` | 官方 runtime 固定 Python 3.10、PyTorch 2.4 和 CUDA 12.4。推理代码在仓内 `worldfoundry/synthesis/visual_generation/ac3d/ac3d_runtime`；外部只需要 checkpoint/asset。 |
-| `cosmos3` | `worldfoundry-cosmos3-cu128` | `bash scripts/inference/prepare_model_infer.sh cosmos3 --download` | Cosmos3 使用原生 diffusion runner、checkpoint-shaped transformer、Wan VAE38、AVAE decoder 与 core runtime policy。Guardrail 保持为可选 orchestration layer；Diffusers 不是 inference backend。 |
-| `gen3c` | `gen3c` | `bash scripts/inference/prepare_model_infer.sh gen3c --download` | 仅推理的 Cosmos Predict1 栈需要 Python 3.10、CUDA 12.4、torch 2.6、Transformer Engine 和 MoGe。setup 只对发布包做 Transformer Engine include/link patch，不再 clone 或构建训练专用的 Apex 仓库。 |
-| `lyra-1` | `lyra` | `bash scripts/inference/prepare_model_infer.sh lyra-1 --download` | 复用 GEN3C 同类的仅推理 Cosmos Predict1 / Transformer Engine 依赖。 |
-| `magi-1` | `magi-official-cu124` | `bash scripts/inference/prepare_model_infer.sh magi-1 --download` | 官方栈是 Python 3.10.12、PyTorch 2.4 / CUDA 12.4。flash-attn 和 flashinfer wheel 对 ABI 敏感，需要留在这个环境。 |
-| `warp-as-history` | `warp-as-history` | `bash scripts/inference/prepare_model_infer.sh warp-as-history --download` | 固定 Python 3.10、torch 2.5.0+cu121、diffusers 0.36、transformers 4.51 和 peft 0.17。 |
-| `hunyuanvideo-t2v`、`hunyuanvideo-i2v`、`hunyuanvideo-1.5-t2v`、`hunyuanvideo-1.5-i2v` | `worldfoundry-unified-cu128` | `bash scripts/inference/prepare_model_infer.sh hunyuanvideo-t2v --download` | 四个 ID 全部使用共享 native diffusion runner 与按角色组织的 Hunyuan component；旧 Diffusers/xFuser CLI 环境不再作为 inference backend。 |
-| `kairos-sensenova` | `kairos-sensenova` | `bash scripts/inference/prepare_model_infer.sh kairos-sensenova --download` | 使用官方 torch/CUDA 12.6 级别依赖和 SageAttention 等 native attention 包；统一 CUDA 环境没有 Kairos attention 栈时用这个环境。 |
-| `lingbot-world`、`lingbot-world-act` | `lingbot-world` | `bash scripts/inference/prepare_model_infer.sh lingbot-world --download` | Base-Cam 与独立 catalog 的公开 Base-Act checkpoint 复用仓内 runtime。parity 需要精确 torch 和 flash-attn pins；统一环境在上游式测试里生成过近黑色视频。 |
-| `wonderworld` | `wonderworld` | `bash scripts/inference/prepare_model_infer.sh wonderworld --download` | 推理路径会 import PyTorch3D CUDA 扩展；运行 official path 前需要安装或构建与该环境匹配的 PyTorch3D wheel。 |
-| `wonderjourney` | `wonderworld` | `bash scripts/inference/prepare_model_infer.sh wonderjourney --download` | 复用 WonderWorld 的 PyTorch3D 扩展环境，WonderJourney runtime 代码已在仓内。 |
-| `hunyuan-game-craft` | `HYGameCraft` | `bash scripts/inference/prepare_model_infer.sh hunyuan-game-craft --download` | 官方推理依赖 HYGameCraft 和 torchrun sequence parallelism。专用环境包含 CUDA 12.4 toolkit，并从 PyPI 发布包构建固定版本 flash-attn 2.6.3，不 clone 它的 Git 仓库；共享 GPU 机器上要显式设置 `cuda_visible_devices` / `torchrun_nproc_per_node`。 |
-| `octo` | `worldfoundry-octo-jax` | `bash scripts/inference/prepare_model_infer.sh octo --download` | JAX CUDA 11.8、Flax 0.7.5、TensorFlow、dlimp 和 Octo tokenizer 资产需要与 PyTorch CUDA 环境隔离。 |
-| `lapa` | `worldfoundry-lapa-jax-cu118` | `bash scripts/inference/prepare_model_infer.sh lapa --download` | 使用官方 Python 3.10、JAX 0.4.25 CUDA 11/cuDNN 8.6、Flax 0.8.2、Tux 0.0.2 和 Transformers 4.40 推理栈。Transformers 5 已移除 LAPA 依赖的 Flax generation 模块，因此必须隔离。 |
-| `openvla-oft` | `worldfoundry-vla-openvla-compat-cu121` | `bash scripts/inference/prepare_model_infer.sh openvla-oft --download` | Prismatic/OpenVLA 兼容栈，使用较旧 transformers/timm/tokenizers；LIBERO/ALOHA OpenVLA-OFT 推理走这个环境。 |
-| `cogact` | `worldfoundry-vla-openvla-compat-cu121` | `bash scripts/inference/prepare_model_infer.sh cogact --download` | 和 OpenVLA-OFT 复用兼容环境，inference-only 加载会复用已落盘的 OpenVLA Llama tokenizer；只有本地既没有兼容 tokenizer、也没有完整 Llama-2 mirror 时才需要 token。 |
-| `lingbot-va` | `lingbot-va` | `bash scripts/inference/prepare_model_infer.sh lingbot-va --download` | prepare-only profile，对齐官方 Python 3.10、torch 2.9、CUDA 12.6、flash-attn 栈；rollout 前先 stage LingBot-VA base/posttrain checkpoints。 |
-| `being-h05` | `beingh` | `bash scripts/inference/prepare_model_infer.sh being-h05 --download` | prepare-only profile。需要 stage 全部 Being-H0.5 checkpoints；完整 `get_action` parity 需要上游 policy 栈，并且单张 80GB GPU profile 余量不够。 |
-| `dreamdojo` | `dreamdojo` | `bash scripts/inference/prepare_model_infer.sh dreamdojo --download` | prepare-only profile，记录官方面向 H100 级主机的 torchcodec/CUDA 12.8 设置；启用真实命令模板前需要先准备 GR-1 eval dataset。 |
-
-</div>
+<DedicatedEnvCatalog locale="zh" />
 
 EvalCrafter 是当前唯一由 WorldFoundry 管理专用 metric profile 的 benchmark。
 其他 benchmark 的 native stack 会在下一节单独列出；只有各自 preflight 通过后才算已配置。
@@ -372,22 +348,44 @@ server endpoint。
 
 ## 常见问题排除 (Troubleshooting)
 
-在处理涉及 CUDA、物理模拟器或外部评估器的复杂环境时，您可能会遇到以下问题：
+在处理涉及 CUDA、物理模拟器或外部评估器的复杂环境时，您可能会遇到以下问题。
 
-### 1. CUDA 版本不匹配
-**现象**：遇到 `CUDA error: no kernel image is available for execution on the device` 或者 PyTorch 找不到 GPU。
-**解决办法**：确保主机的 NVIDIA 驱动足够新，能支持 Conda 安装的 CUDA 版本。如果您使用的是旧版驱动，可以在安装时强制指定旧的 CUDA bucket：
+<Callout type="warn" title="CUDA 版本不匹配">
+
+**现象：** 遇到 `CUDA error: no kernel image is available for execution on the device`，或者 PyTorch 找不到 GPU。
+
+**解决办法：** 确保主机的 NVIDIA 驱动足够新，能支持 Conda 安装的 CUDA 版本。如果使用的是旧版驱动，可以在安装时强制指定旧的 CUDA bucket：
+
 ```bash
 bash scripts/setup/unified_install.sh --cuda cu121
 ```
 
-### 2. 缺失系统级依赖（针对 OpenGL/3D）
-**现象**：运行具身模拟器或 3D benchmark 时，出现有关 `libGL.so.1`、`EGL` 或 headless 渲染失败的错误。
-**解决办法**：安装必需的系统级图形库。在 Ubuntu/Debian 系统上：
+</Callout>
+
+<Callout type="warn" title="缺失系统级依赖（OpenGL / 3D）">
+
+**现象：** 运行具身模拟器或 3D benchmark 时，出现有关 `libGL.so.1`、`EGL` 或 headless 渲染失败的错误。
+
+**解决办法：** 安装必需的系统级图形库。在 Ubuntu/Debian 系统上：
+
 ```bash
 sudo apt-get update && sudo apt-get install -y libgl1-mesa-glx libglib2.0-0
 ```
 
-### 3. Flash Attention 安装失败
-**现象**：在统一安装脚本编译 `flash-attn` 时卡住或报错。
-**解决办法**：`flash-attn` 对 CUDA 编译器 (`nvcc`) 的版本匹配要求极其严格。请确保本机的 `nvcc --version` 和 PyTorch 携带的 CUDA 版本一致。如果实在无法编译，可以直接去官方 Release 页面下载对应的 pre-compiled wheel 手动安装。
+</Callout>
+
+<Callout type="warn" title="Flash Attention 安装失败">
+
+**现象：** 在统一安装脚本编译 `flash-attn` 时卡住或报错。
+
+**解决办法：** `flash-attn` 对 CUDA 编译器 (`nvcc`) 的版本匹配要求极其严格。请确保本机的 `nvcc --version` 和 PyTorch 携带的 CUDA 版本一致。
+
+如果无法编译，可以跳过安装：
+
+```bash
+bash scripts/setup/unified_install.sh --skip-flash-attn
+```
+
+也可以从官方 Release 页面下载对应的 pre-compiled wheel 手动安装。
+
+</Callout>

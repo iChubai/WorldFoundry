@@ -56,13 +56,13 @@ from typing import Any
 import torch
 from torch import nn
 
-from .fastvideo_sla import (
+from .sparse_linear_attention import (
     PINNED_FASTVIDEO_COMMIT,
     FastVideoSLAAdapter,
     FastVideoSLAConfig,
     FastVideoSLALayerSpec,
 )
-from .lightx2v_sparse import (
+from .sparse_mask_attention import (
     PINNED_LIGHTX2V_COMMIT,
     LightX2VSparseAdapter,
     LightX2VSparseConfig,

@@ -2282,7 +2282,7 @@ def _build_wan_denoiser(
     def convert_checkpoint_state_dict(
         checkpoint_state: Mapping[str, object],
     ) -> Mapping[str, object]:
-        from ...optimizations.fastvideo_sla import (
+        from ...optimizations.sparse_linear_attention import (
             split_fastvideo_sla_projection_weights,
         )
 

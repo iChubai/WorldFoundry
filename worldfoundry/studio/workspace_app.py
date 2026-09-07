@@ -50,14 +50,28 @@ from worldfoundry.runtime.inference_catalog import (
     model_inference_spec,
 )
 
-from .catalog import CatalogEntry, find_entry, lingbot_world_fast_load_kwargs
+from .catalog import (
+    COGVIDEOX_DEFAULT_VARIANT_ID,
+    COGVIDEOX_STUDIO_PARENT_ID,
+    SANA_DEFAULT_IMAGE_VARIANT_ID,
+    CatalogEntry,
+    cogvideox_runtime_model_id,
+    find_entry,
+    find_runtime_entry,
+    lingbot_world_fast_load_kwargs,
+)
 from .conda_dispatch import (
     DISPATCH_ONLY_CALL_KWARGS,
     DISPATCH_ONLY_LOAD_KWARGS,
     dispatch_spec_for_inference,
     run_manager_payload_in_conda,
 )
-from .execution import RunRecord, StudioManager, _is_gaussian_splat_ply
+from .execution import (
+    RunRecord,
+    StudioManager,
+    _is_gaussian_splat_ply,
+    bind_run_preview_image,
+)
 from .jobs import (
     DEFAULT_SHUTDOWN_GRACE_SECONDS,
     StudioJob,
@@ -1102,7 +1116,7 @@ def _entry_inference_spec(entry: CatalogEntry):
                 for task in spec.tasks
             ),
         )
-    if workload_type in {"t2v", "text-video", "text-to-video"}:
+    if workload_type in {"t2v", "text-video", "text-to-video"} and entry.model_id != COGVIDEOX_STUDIO_PARENT_ID:
         spec = replace(
             spec,
             tasks=tuple(
@@ -1188,6 +1202,18 @@ def _entry_inference_spec(entry: CatalogEntry):
     extra_variants = _entry_extra_variants(entry)
     if not extra_variants:
         return spec
+    if entry.model_id == "sana":
+        return replace(
+            spec,
+            variants=extra_variants,
+            default_variant_id=SANA_DEFAULT_IMAGE_VARIANT_ID,
+        )
+    if entry.model_id == COGVIDEOX_STUDIO_PARENT_ID:
+        return replace(
+            spec,
+            variants=extra_variants,
+            default_variant_id=COGVIDEOX_DEFAULT_VARIANT_ID,
+        )
     existing_ids = {variant.variant_id for variant in spec.variants}
     merged = spec.variants + tuple(variant for variant in extra_variants if variant.variant_id not in existing_ids)
     return replace(spec, variants=merged)
@@ -1518,10 +1544,21 @@ def _model_payload(entry: CatalogEntry) -> dict[str, Any]:
     template_id = _template_id_hint(entry)
     infer_spec = _entry_inference_spec(entry)
     variant_payloads = []
+    extra_by_id = {
+        str(raw_variant.get("variant_id") or "").strip(): raw_variant
+        for raw_variant in entry.extra_variants
+    }
     for variant in infer_spec.variants:
         row = variant.to_dict()
         row["model_ref"] = _variant_model_ref(entry, variant)
         row["load_kwargs"] = _variant_load_kwargs(entry, variant)
+        extra = extra_by_id.get(variant.variant_id) or {}
+        if extra.get("workload_type"):
+            row["workload_type"] = extra["workload_type"]
+        if extra.get("default_prompt"):
+            row["default_prompt"] = extra["default_prompt"]
+        if extra.get("default_input_path"):
+            row["default_input_path"] = extra["default_input_path"]
         variant_payloads.append(row)
     return {
         "id": entry.model_id,
@@ -1530,6 +1567,7 @@ def _model_payload(entry: CatalogEntry) -> dict[str, Any]:
         "family": entry.family,
         "summary": entry.summary,
         "tags": list(entry.tags),
+        "aliases": list(entry.aliases),
         "backend": entry.default_backend,
         "model_ref": entry.default_model_ref,
         "endpoint": entry.default_endpoint,
@@ -2256,6 +2294,9 @@ def _apply_runtime_options(
 def _inference_run_kwargs(payload: JobCreateRequest, *, validate: bool = True) -> tuple[CatalogEntry, dict[str, Any]]:
     entry = find_entry(payload.model_id)
     variant, task, model_ref, variant_call_kwargs, variant_load_kwargs, contract = _resolve_inference_contract(entry, payload)
+    runtime_id = cogvideox_runtime_model_id(entry.model_id, variant.variant_id)
+    if runtime_id:
+        entry = find_runtime_entry(runtime_id)
     if validate:
         _validate_inference_payload(entry, task, payload)
     call_kwargs, load_kwargs = _merge_common_params(
@@ -2745,9 +2786,21 @@ def _registered_artifact_paths() -> set[Path]:
         return set(paths)
 
 
+def _gallery_poster_url(*, job_id: str = "", run_id: str = "", record: RunRecord) -> str:
+    """Advertise a still for video cards even when the run never persisted preview_image."""
+    if not (record.preview_video or record.preview_image or record.gallery):
+        return ""
+    if job_id:
+        return f"/api/jobs/{job_id}/image"
+    if run_id:
+        return f"/api/runs/{run_id}/image"
+    return ""
+
+
 def _gallery_row_from_job(job: StudioJob) -> dict[str, Any] | None:
     if not isinstance(job.result, RunRecord):
         return None
+    image_url = _gallery_poster_url(job_id=job.job_id, record=job.result)
     return {
         "job_id": job.job_id,
         "run_id": job.result.run_id,
@@ -2756,17 +2809,64 @@ def _gallery_row_from_job(job: StudioJob) -> dict[str, Any] | None:
         "model_id": job.model_id,
         "prompt": dict(job.metadata).get("prompt", ""),
         "video_url": f"/api/jobs/{job.job_id}/video" if job.result.preview_video else "",
-        "image_url": f"/api/jobs/{job.job_id}/image" if job.result.preview_image else "",
+        "image_url": image_url,
+        "poster_url": image_url,
         "model_url": f"/api/jobs/{job.job_id}/model" if job.result.preview_model else "",
         "output_dir": job.result.output_dir,
         "visualization_actions": _result_visualization_actions(job.result, model_id=job.model_id),
     }
 
 
+def _invalidate_registered_artifact_cache() -> None:
+    global _REGISTERED_ARTIFACT_CACHE_SIGNATURE, _REGISTERED_ARTIFACT_CACHE_PATHS
+    with _REGISTERED_ARTIFACT_CACHE_LOCK:
+        _REGISTERED_ARTIFACT_CACHE_SIGNATURE = None
+        _REGISTERED_ARTIFACT_CACHE_PATHS = frozenset()
+
+
+def _delete_gallery_item(job_id: str = "", run_id: str = "") -> dict[str, Any]:
+    """Remove a Gallery row and its persisted Studio run directory."""
+
+    job_id = str(job_id or "").strip()
+    run_id = str(run_id or "").strip()
+    if not job_id and not run_id:
+        raise HTTPException(status_code=400, detail="job_id or run_id is required")
+
+    deleted_job_id = ""
+    if job_id:
+        job = JOBS.get(job_id)
+        if job is None:
+            if not run_id:
+                raise HTTPException(status_code=404, detail="unknown job")
+        else:
+            if not job.terminal:
+                raise HTTPException(status_code=409, detail=f"cannot delete a {job.status} job")
+            if not run_id and isinstance(job.result, RunRecord):
+                run_id = str(job.result.run_id or "").strip()
+            try:
+                JOBS.delete(job_id)
+            except ValueError as exc:
+                raise HTTPException(status_code=409, detail=str(exc)) from exc
+            deleted_job_id = job_id
+
+    deleted_run_id = ""
+    if run_id:
+        try:
+            MANAGER.delete_run(run_id)
+            deleted_run_id = run_id
+        except KeyError as exc:
+            if not deleted_job_id:
+                raise HTTPException(status_code=404, detail="run not found") from exc
+
+    _invalidate_registered_artifact_cache()
+    return {"ok": True, "job_id": deleted_job_id, "run_id": deleted_run_id}
+
+
 def _gallery_row_from_run(record: RunRecord) -> dict[str, Any]:
     metadata = dict(record.metadata or {})
     request = metadata.get("request")
     prompt = request.get("prompt", "") if isinstance(request, dict) else ""
+    image_url = _gallery_poster_url(run_id=record.run_id, record=record)
     return {
         "job_id": "",
         "run_id": record.run_id,
@@ -2775,7 +2875,8 @@ def _gallery_row_from_run(record: RunRecord) -> dict[str, Any]:
         "model_id": record.model_id,
         "prompt": prompt,
         "video_url": f"/api/runs/{record.run_id}/video" if record.preview_video else "",
-        "image_url": f"/api/runs/{record.run_id}/image" if record.preview_image else "",
+        "image_url": image_url,
+        "poster_url": image_url,
         "model_url": f"/api/runs/{record.run_id}/model" if record.preview_model else "",
         "output_dir": record.output_dir,
         "visualization_actions": _result_visualization_actions(record, model_id=record.model_id),
@@ -3157,7 +3258,7 @@ def create_app(auth_token: str = "") -> FastAPI:
         job = JOBS.get(job_id)
         if job is None or not isinstance(job.result, RunRecord):
             raise HTTPException(status_code=404, detail="image not found")
-        return _safe_file_response(job.result.preview_image, request=request)
+        return _safe_file_response(bind_run_preview_image(job.result), request=request)
 
     @app.get("/api/jobs/{job_id}/model")
     def get_job_model(job_id: str, request: Request) -> Response:
@@ -3180,7 +3281,7 @@ def create_app(auth_token: str = "") -> FastAPI:
             record = MANAGER.load_run(run_id)
         except KeyError as exc:
             raise HTTPException(status_code=404, detail="run not found") from exc
-        return _safe_file_response(record.preview_image, request=request)
+        return _safe_file_response(bind_run_preview_image(record), request=request)
 
     @app.get("/api/runs/{run_id}/model")
     def get_run_model(run_id: str, request: Request) -> Response:
@@ -3207,6 +3308,10 @@ def create_app(auth_token: str = "") -> FastAPI:
                 rows.append(row)
         rows.extend(_gallery_row_from_run(record) for record in _recent_persisted_runs())
         return rows
+
+    @app.delete("/api/gallery")
+    def delete_gallery(job_id: str = "", run_id: str = "") -> dict[str, Any]:
+        return _delete_gallery_item(job_id=job_id, run_id=run_id)
 
     @app.get("/api/artifacts/file")
     def artifact_file(path: str, request: Request) -> Response:
@@ -3798,6 +3903,8 @@ WORKSPACE_HTML = r"""
       cursor: pointer;
     }
     .artifactLink:hover { border-color: var(--line-hover); background: #1a1c1e; }
+    .artifactLink.galleryDelete { color: #fca5a5; }
+    .artifactLink.galleryDelete:hover { border-color: #ef4444; background: #1c1010; }
     pre {
       margin: 0;
       border: 1px solid var(--line);
@@ -3822,13 +3929,18 @@ WORKSPACE_HTML = r"""
       background: var(--panel);
       border-radius: var(--radius);
       padding: 16px;
-      display: grid;
-      align-content: start;
+      display: flex;
+      flex-direction: column;
+      align-items: stretch;
       gap: 10px;
       min-height: 160px;
       min-width: 0;
       overflow: hidden;
       transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .itemCard > .artifactLinks {
+      margin-top: auto;
+      align-self: stretch;
     }
     .itemCard:hover {
       transform: translateY(-2px);
@@ -3843,6 +3955,23 @@ WORKSPACE_HTML = r"""
       line-height: 1.5;
       overflow-wrap: anywhere;
       word-break: break-word;
+    }
+    .catalogCard .catalogName {
+      display: -webkit-box;
+      -webkit-box-orient: vertical;
+      -webkit-line-clamp: 2;
+      line-clamp: 2;
+      overflow: hidden;
+      line-height: 1.3;
+      min-height: calc(15px * 1.3 * 2);
+    }
+    .catalogCard .catalogSummary {
+      display: -webkit-box;
+      -webkit-box-orient: vertical;
+      -webkit-line-clamp: 3;
+      line-clamp: 3;
+      overflow: hidden;
+      min-height: calc(13px * 1.5 * 3);
     }
     .galleryPrompt {
       display: grid;
@@ -3877,6 +4006,30 @@ WORKSPACE_HTML = r"""
       text-align: left;
     }
     .galleryPromptToggle:hover { color: var(--accent-hover); }
+    #galleryGrid.gridCards { align-items: stretch; }
+    .galleryCard { height: 100%; }
+    .galleryCard > strong {
+      display: -webkit-box;
+      -webkit-box-orient: vertical;
+      -webkit-line-clamp: 2;
+      line-clamp: 2;
+      overflow: hidden;
+      line-height: 1.3;
+      min-height: calc(15px * 1.3 * 2);
+    }
+    .galleryCard .mediaBox,
+    .galleryCard .mediaStack { flex-shrink: 0; }
+    .galleryCard .galleryPrompt {
+      flex: 1 1 auto;
+      min-height: calc(13px * 1.5 * 3 + 24px);
+    }
+    .galleryCard .galleryPromptText {
+      min-height: calc(13px * 1.5 * 3);
+    }
+    .galleryCard > .artifactLinks {
+      min-height: 32px;
+      flex-shrink: 0;
+    }
     .visualizerCard {
       display: flex;
       flex-direction: column;
@@ -3894,20 +4047,6 @@ WORKSPACE_HTML = r"""
     .visualizerHead strong {
       min-height: 2.5em;
       line-height: 1.25;
-    }
-    .visualizerBadges {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 6px;
-      align-items: center;
-      min-height: 28px;
-    }
-    .visualizerTags {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 6px;
-      align-content: flex-start;
-      min-height: 112px;
     }
     .visualizerAliases {
       margin: 0;
@@ -4030,23 +4169,41 @@ WORKSPACE_HTML = r"""
       object-fit: contain;
       background: #09090b;
     }
-    .mediaBox video:not([src]):not([poster]) { visibility: hidden; }
+    .mediaBox video:not([src]) { visibility: hidden; }
+    .mediaPoster {
+      z-index: 1;
+      pointer-events: none;
+    }
+    .mediaBox video[src] {
+      visibility: visible;
+      z-index: 0;
+      background: transparent;
+    }
+    .media-has-frame video {
+      z-index: 2;
+      background: #09090b;
+    }
+    .mediaStack {
+      display: flex;
+      flex-direction: column;
+      align-items: stretch;
+      gap: 8px;
+      min-width: 0;
+    }
     .mediaLoad {
       appearance: none;
-      border: 1px solid rgba(255,255,255,0.18);
-      background: rgba(255,255,255,0.08);
-      color: #f8fafc;
-      border-radius: 999px;
-      padding: 8px 14px;
+      align-self: flex-start;
+      border: 1px solid var(--line);
+      background: #111214;
+      color: var(--text);
+      border-radius: var(--radius-sm);
+      height: 32px;
+      padding: 0 10px;
       font-size: 12px;
-      font-weight: 600;
+      font-weight: 500;
       cursor: pointer;
-      backdrop-filter: blur(10px);
-      place-self: center;
-      position: relative;
-      z-index: 2;
     }
-    .mediaLoad:hover { background: rgba(255,255,255,0.14); border-color: rgba(255,255,255,0.28); }
+    .mediaLoad:hover { border-color: var(--line-hover); background: #1a1c1e; }
     .mediaHint {
       position: absolute;
       right: 10px;
@@ -4410,11 +4567,19 @@ WORKSPACE_HTML = r"""
     }
     function renderVideoBox(url, options = {}) {
       const src = escapeHtml(authenticatedUrl(url));
-      const poster = options.poster ? ` poster="${escapeHtml(authenticatedUrl(options.poster))}"` : "";
+      const posterUrl = options.poster ? authenticatedUrl(options.poster) : "";
+      const poster = posterUrl ? ` poster="${escapeHtml(posterUrl)}"` : "";
+      const posterImg = posterUrl
+        ? `<img class="mediaPoster" loading="lazy" decoding="async" src="${escapeHtml(posterUrl)}" alt="" onerror="this.remove()" />`
+        : "";
       const eager = !!options.eager;
-      return `<div class="mediaBox ${eager ? "media-loaded" : ""}" data-media-box>
-        <video controls playsinline controlsList="nodownload" preload="${eager ? "metadata" : "none"}"${poster} data-src="${src}" data-eager="${eager ? "true" : "false"}"></video>
-        ${eager ? "" : `<button class="mediaLoad" type="button" data-load-video>Play preview</button><span class="mediaHint">video</span>`}
+      return `<div class="mediaStack ${eager ? "media-loaded" : ""}" data-media-box>
+        <div class="mediaBox">
+          ${posterImg}
+          <video controls playsinline controlsList="nodownload" preload="${eager ? "metadata" : "none"}"${poster} data-src="${src}" data-eager="${eager ? "true" : "false"}"></video>
+          ${eager ? "" : `<span class="mediaHint">video</span>`}
+        </div>
+        ${eager ? "" : `<button class="mediaLoad" type="button" data-load-video>Play preview</button>`}
       </div>`;
     }
     function gallerySubtitle(row) {
@@ -4735,6 +4900,30 @@ WORKSPACE_HTML = r"""
         </div>
         ${links ? `<div class="artifactLinks">${links}</div>` : ""}`;
     }
+    function revealVideoFrame(video) {
+      const box = video && video.closest("[data-media-box]");
+      if (box) box.classList.add("media-has-frame");
+    }
+    function paintVideoFirstFrame(video, autoplay) {
+      if (!video || video.dataset.posterSeek === "1") return;
+      const seekFirst = () => {
+        if (video.dataset.posterSeek === "1") return;
+        video.dataset.posterSeek = "1";
+        if (!autoplay && video.paused) {
+          try {
+            const duration = Number(video.duration);
+            video.currentTime = Number.isFinite(duration) && duration > 0
+              ? Math.min(0.04, duration)
+              : 0.001;
+          } catch {}
+        }
+        if (video.readyState >= 2) revealVideoFrame(video);
+      };
+      video.addEventListener("seeked", () => revealVideoFrame(video), { once: true });
+      video.addEventListener("playing", () => revealVideoFrame(video), { once: true });
+      video.addEventListener("loadeddata", seekFirst, { once: true });
+      if (video.readyState >= 2) seekFirst();
+    }
     function activateVideo(video, autoplay = false) {
       if (!video || !video.dataset.src) return;
       if (!video.getAttribute("src")) {
@@ -4744,6 +4933,7 @@ WORKSPACE_HTML = r"""
       }
       const box = video.closest("[data-media-box]");
       if (box) box.classList.add("media-loaded");
+      paintVideoFirstFrame(video, autoplay);
       if (autoplay) video.play().catch(() => {});
     }
     function lazyVideoObserver() {
@@ -4963,7 +5153,7 @@ WORKSPACE_HTML = r"""
       if (needsShellRender) {
         state.detailRenderKey = detailKey;
         state.detailLogCount = 0;
-        const video = result.preview_video ? renderVideoBox(`/api/jobs/${job.id}/video`, { eager: true }) : "";
+        const video = result.preview_video ? renderVideoBox(`/api/jobs/${job.id}/video`, { eager: true, poster: `/api/jobs/${job.id}/image` }) : "";
         const image = result.preview_image ? renderImageBox(`/api/jobs/${job.id}/image`) : "";
         const evaluationSummary = renderEvaluationSummary(result);
         const resultActions = renderResultActions(full, result);
@@ -5194,8 +5384,11 @@ WORKSPACE_HTML = r"""
       setFieldVisible("attention", attentionVisible);
       if (!attentionVisible) $("attention").value = "auto";
       const fieldIds = inferTaskFieldIds();
+      const variantWorkload = (selectedVariant() && selectedVariant().workload_type) || (currentModel && currentModel.workload_type) || "";
       Object.entries(INFER_TASK_FIELD_CONTROLS).forEach(([controlId, aliases]) => {
-        const visible = inference && aliases.some(alias => fieldIds.has(normalizeFieldId(alias)));
+        let visible = inference && aliases.some(alias => fieldIds.has(normalizeFieldId(alias)));
+        if (controlId === "inputPath" && variantWorkload === "t2v") visible = false;
+        if (controlId === "inputPath" && variantWorkload === "i2v") visible = true;
         setFieldVisible(controlId, visible);
       });
       $("inferDynamicFields").classList.toggle("hidden", !inference || !inferTaskFields().some(field => !DEDICATED_INFER_FIELD_IDS.has(normalizeFieldId(field.field_id))));
@@ -5261,15 +5454,17 @@ WORKSPACE_HTML = r"""
       el.value = String(value);
     }
     function applyInferTaskDefaults() {
-      setControlDefault("prompt", taskDefaultForAliases(["prompt"], ""));
-      setControlDefault("inputPath", taskDefaultForAliases(INFER_TASK_FIELD_CONTROLS.inputPath, ""));
-      setControlDefault("numFrames", taskDefaultForAliases(INFER_TASK_FIELD_CONTROLS.numFrames, state.settings.num_frames));
-      setControlDefault("fps", taskDefaultForAliases(INFER_TASK_FIELD_CONTROLS.fps, state.settings.fps));
-      setControlDefault("height", taskDefaultForAliases(INFER_TASK_FIELD_CONTROLS.height, state.settings.height));
-      setControlDefault("width", taskDefaultForAliases(INFER_TASK_FIELD_CONTROLS.width, state.settings.width));
-      setControlDefault("steps", taskDefaultForAliases(INFER_TASK_FIELD_CONTROLS.steps, state.settings.num_inference_steps));
-      setControlDefault("guidance", taskDefaultForAliases(INFER_TASK_FIELD_CONTROLS.guidance, state.settings.guidance_scale));
-      setControlDefault("seed", taskDefaultForAliases(INFER_TASK_FIELD_CONTROLS.seed, state.settings.seed));
+      const variant = selectedVariant() || {};
+      const callKwargs = variant.call_kwargs || {};
+      setControlDefault("prompt", variant.default_prompt || taskDefaultForAliases(["prompt"], ""));
+      setControlDefault("inputPath", variant.default_input_path || taskDefaultForAliases(INFER_TASK_FIELD_CONTROLS.inputPath, ""));
+      setControlDefault("numFrames", callKwargs.num_frames || taskDefaultForAliases(INFER_TASK_FIELD_CONTROLS.numFrames, state.settings.num_frames));
+      setControlDefault("fps", callKwargs.fps || taskDefaultForAliases(INFER_TASK_FIELD_CONTROLS.fps, state.settings.fps));
+      setControlDefault("height", callKwargs.height || taskDefaultForAliases(INFER_TASK_FIELD_CONTROLS.height, state.settings.height));
+      setControlDefault("width", callKwargs.width || taskDefaultForAliases(INFER_TASK_FIELD_CONTROLS.width, state.settings.width));
+      setControlDefault("steps", callKwargs.num_inference_steps || taskDefaultForAliases(INFER_TASK_FIELD_CONTROLS.steps, state.settings.num_inference_steps));
+      setControlDefault("guidance", callKwargs.guidance_scale || taskDefaultForAliases(INFER_TASK_FIELD_CONTROLS.guidance, state.settings.guidance_scale));
+      setControlDefault("seed", callKwargs.seed || taskDefaultForAliases(INFER_TASK_FIELD_CONTROLS.seed, state.settings.seed));
     }
     function populateInferSpecControls() {
       const model = selectedModel();
@@ -5339,9 +5534,17 @@ WORKSPACE_HTML = r"""
       const q = $("catalogSearch").value.toLowerCase();
       const workload = $("catalogWorkload").value;
       let models = state.models;
-      if (workload !== "all") models = models.filter(m => m.workload_type === workload);
-      if (q) models = models.filter(m => [m.name, m.id, m.category, m.family, (m.tags || []).join(" ")].join(" ").toLowerCase().includes(q));
-      $("catalogGrid").innerHTML = models.map(m => `<div class="itemCard"><strong>${escapeHtml(m.name)}</strong>${pillHtml(m.workload_type)}<p>${escapeHtml(m.summary)}</p><p class="muted tiny">${escapeHtml(m.id)}</p>${catalogLinksHtml(m.links)}</div>`).join("");
+      if (workload !== "all") models = models.filter(m => m.workload_type === workload || (m.variants || []).some(v => v.workload_type === workload));
+      if (q) models = models.filter(m => [
+        m.name,
+        m.id,
+        m.category,
+        m.family,
+        (m.tags || []).join(" "),
+        (m.aliases || []).join(" "),
+        (m.variants || []).map(v => [v.variant_id, v.label].join(" ")).join(" "),
+      ].join(" ").toLowerCase().includes(q));
+      $("catalogGrid").innerHTML = models.map(m => `<div class="itemCard catalogCard"><strong class="catalogName">${escapeHtml(m.name)}</strong>${pillHtml(m.workload_type)}<p class="catalogSummary">${escapeHtml(m.summary)}</p><p class="muted tiny">${escapeHtml(m.id)}</p>${catalogLinksHtml(m.links)}</div>`).join("");
     }
     async function renderGallery() {
       const rows = await api("/api/gallery");
@@ -5350,7 +5553,7 @@ WORKSPACE_HTML = r"""
       state.autoVideoPreloads = 0;
       $("galleryGrid").innerHTML = rows.length ? rows.map(row => {
         const media = row.video_url
-          ? renderVideoBox(row.video_url, { poster: row.image_url || "" })
+          ? renderVideoBox(row.video_url, { poster: row.poster_url || row.image_url || "" })
           : row.image_url
             ? renderImageBox(row.image_url)
             : "";
@@ -5359,12 +5562,39 @@ WORKSPACE_HTML = r"""
           .filter(Boolean)
           .join("");
         const refine = (row.video_url || row.image_url || row.model_url) ? artifactRefineButton(row.job_id || "", row.run_id || "") : "";
-        const allActions = [refine, actions].filter(Boolean).join("");
-        return `<div class="itemCard">${media}<strong>${escapeHtml(row.title)}</strong>${renderGalleryPrompt(row)}${allActions ? `<div class="artifactLinks">${allActions}</div>` : ""}</div>`;
+        const remove = galleryDeleteButton(row);
+        const allActions = [refine, actions, remove].filter(Boolean).join("");
+        return `<div class="itemCard galleryCard">${media}<strong>${escapeHtml(row.title)}</strong>${renderGalleryPrompt(row)}<div class="artifactLinks">${allActions}</div></div>`;
       }).join("") : `<div class="muted">No completed inference outputs yet.</div>`;
       hydrateLazyMedia($("galleryGrid"));
       bindArtifactVisualizerButtons($("galleryGrid"));
+      bindGalleryDeleteButtons($("galleryGrid"));
       bindGalleryPrompts($("galleryGrid"));
+    }
+    function galleryDeleteButton(row) {
+      if (!row.job_id && !row.run_id) return "";
+      return `<button class="artifactLink galleryDelete" type="button" data-delete-job="${escapeHtml(row.job_id || "")}" data-delete-run="${escapeHtml(row.run_id || "")}">Delete</button>`;
+    }
+    function bindGalleryDeleteButtons(root = document) {
+      root.querySelectorAll("[data-delete-job], [data-delete-run]").forEach(button => {
+        button.onclick = async () => {
+          const jobId = button.dataset.deleteJob || "";
+          const runId = button.dataset.deleteRun || "";
+          if (!jobId && !runId) return;
+          if (!window.confirm("Delete this result from Gallery? The saved run files will be removed.")) return;
+          button.disabled = true;
+          try {
+            const params = new URLSearchParams();
+            if (jobId) params.set("job_id", jobId);
+            if (runId) params.set("run_id", runId);
+            await api(`/api/gallery?${params.toString()}`, { method: "DELETE" });
+            await renderGallery();
+          } catch (error) {
+            button.disabled = false;
+            window.alert(error && error.message ? error.message : "Failed to delete gallery item.");
+          }
+        };
+      });
     }
     async function renderArtifacts() {
       const rows = await api("/api/artifacts");
@@ -5472,7 +5702,6 @@ WORKSPACE_HTML = r"""
     function visualizerCard(v) {
       const mode = v.mode;
       const status = v.status || null;
-      const caps = (v.capabilities || []).map(cap => pillHtml(cap)).join(" ");
       const aliases = (v.aliases || []).join(", ") || mode;
       const assetDisplay = v.requires_asset ? "Asset path" : "Asset path";
       const paramsText = visualizerParamsText(mode, status);
@@ -5482,9 +5711,7 @@ WORKSPACE_HTML = r"""
       return `<div class="itemCard visualizerCard" data-visualizer-mode="${escapeHtml(mode)}" data-default-port="${escapeHtml(v.default_port || "")}">
         <div class="visualizerHead">
           <strong>${escapeHtml(v.title)}</strong>
-          <div class="visualizerBadges">${pillHtml(mode)} ${v.native ? pillHtml("native") : pillHtml("web")}</div>
         </div>
-        <div class="visualizerTags">${caps || `<span class="muted tiny">No capability tags</span>`}</div>
         <p class="visualizerAliases">Aliases: ${escapeHtml(aliases)}</p>
         <div class="visualizerControls">
           <label>Model<input data-visualizer-field="model" value="${escapeHtml(v.default_model || "")}" /></label>

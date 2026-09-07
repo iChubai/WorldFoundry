@@ -38,6 +38,78 @@ ABSTRACT_RUNTIME_MODEL_IDS: frozenset[str] = frozenset(
         "world-model-runtime",
     }
 )
+_SANA_IMAGE_RUNNERS = frozenset({"image", "sprint", "controlnet"})
+SANA_DEFAULT_IMAGE_VARIANT_ID = "sana-1600m-1024px-bf16"
+COGVIDEOX_STUDIO_PARENT_ID = "cogvideox_5b_t2v"
+COGVIDEOX_DEFAULT_VARIANT_ID = "cogvideox_5b_t2v"
+_COGVIDEOX_VARIANT_IDS = frozenset(
+    {
+        "cogvideox_2b_t2v",
+        "cogvideox_5b_t2v",
+        "cogvideox_5b_i2v",
+    }
+)
+_COGVIDEOX_ALIAS_TO_VARIANT = {
+    "cogvideox": "cogvideox_5b_t2v",
+    "cogvideox_2b": "cogvideox_2b_t2v",
+    "cogvideox_5b": "cogvideox_5b_t2v",
+    "cogvideox_2b_t2v": "cogvideox_2b_t2v",
+    "cogvideox_5b_t2v": "cogvideox_5b_t2v",
+    "cogvideox_5b_i2v": "cogvideox_5b_i2v",
+}
+
+
+@lru_cache(maxsize=1)
+def _sana_folded_studio_model_ids() -> frozenset[str]:
+    """Return image-family Sana checkpoint ids that belong on one Studio card."""
+
+    from worldfoundry.base_models.diffusion_model.recipes.sana_variants import SANA_VARIANTS
+
+    return frozenset(
+        variant.model_id
+        for variant in SANA_VARIANTS.values()
+        if variant.runner in _SANA_IMAGE_RUNNERS
+    )
+
+
+def _cogvideox_canonical_id(model_id: str) -> str:
+    return _normalize_model_id(model_id).replace("-", "_")
+
+
+def _cogvideox_variant_id(model_id: str) -> str | None:
+    key = _cogvideox_canonical_id(model_id)
+    if key in _COGVIDEOX_VARIANT_IDS:
+        return key
+    return _COGVIDEOX_ALIAS_TO_VARIANT.get(key)
+
+
+def _catalog_id_key(model_id: str) -> str:
+    return _normalize_model_id(model_id).replace("-", "_")
+
+
+def _cogvideox_folded_studio_model_ids() -> frozenset[str]:
+    """Return CogVideoX pipeline ids that are variants on the shared Studio card."""
+
+    folded = _COGVIDEOX_VARIANT_IDS - {COGVIDEOX_STUDIO_PARENT_ID}
+    return frozenset(item for model_id in folded for item in (model_id, model_id.replace("_", "-")))
+
+
+def _cogvideox_studio_parent_id(model_id: str) -> str | None:
+    """Return the CogVideoX card id when ``model_id`` is a folded T2V/I2V pipeline."""
+
+    if _cogvideox_variant_id(model_id):
+        return COGVIDEOX_STUDIO_PARENT_ID
+    return None
+
+
+def cogvideox_runtime_model_id(model_id: str, variant_id: str = "") -> str | None:
+    """Return the concrete CogVideoX pipeline id for a Studio card + variant."""
+
+    if _cogvideox_studio_parent_id(model_id) is None:
+        return None
+    return _cogvideox_variant_id(variant_id or model_id) or COGVIDEOX_DEFAULT_VARIANT_ID
+
+
 STUDIO_HIDDEN_CATALOG_MODEL_IDS: frozenset[str] = frozenset(
     {
         # AdaWorld is tracked as source/provenance only until the official env, checkpoints, and task assets are
@@ -67,8 +139,10 @@ STUDIO_HIDDEN_CATALOG_MODEL_IDS: frozenset[str] = frozenset(
         "spatial-ladder",
         "spatial-reasoner",
         "thinksound",
+        # Image / Sprint / ControlNet checkpoints are variants on the Sana card.
+        # CogVideoX 2B T2V and 5B I2V share the CogVideoX card with 5B T2V.
     }
-)
+) | _sana_folded_studio_model_ids() | _cogvideox_folded_studio_model_ids()
 
 # These Workspace matrix ids intentionally retain underscores while their AST
 # pipeline ids are filename-derived hyphenated slugs. Resolve them through the
@@ -2132,6 +2206,206 @@ def _sana_checkpoint_ref(repo_dir: str, checkpoint_name: str, repo_id: str) -> s
         f"{repo_dir}/{checkpoint_name}",
         fallback=f"hf://{repo_id}/checkpoints/{checkpoint_name}",
     )
+
+
+def _sana_variant_default_size(variant: Any) -> tuple[int, int]:
+    if variant.default_height is not None and variant.default_width is not None:
+        return int(variant.default_height), int(variant.default_width)
+    if variant.resolution == "720p":
+        return 720, 1280
+    if variant.resolution == "480p":
+        return 480, 832
+    if str(variant.resolution).endswith("px"):
+        side = int(str(variant.resolution).removesuffix("px"))
+        return side, side
+    return 1024, 1024
+
+
+def _sana_variant_checkpoint_ref(variant: Any) -> str:
+    filename = Path(str(variant.model_path).split("?", 1)[0]).name
+    repo_dir = str(variant.repo_id).rsplit("/", 1)[-1]
+    return _sana_checkpoint_ref(repo_dir, filename, variant.repo_id)
+
+
+@lru_cache(maxsize=1)
+def _sana_image_aliases() -> tuple[str, ...]:
+    from worldfoundry.base_models.diffusion_model.recipes.sana_variants import SANA_ALIASES
+
+    image_ids = _sana_folded_studio_model_ids()
+    aliases = list(sorted(image_ids))
+    for alias, target in SANA_ALIASES.items():
+        if alias != "sana" and target in image_ids:
+            aliases.append(alias)
+    return _coerce_aliases(*aliases)
+
+
+def _sana_studio_parent_id(model_id: str) -> str | None:
+    """Return ``sana`` when ``model_id`` is a folded image-family checkpoint."""
+
+    from worldfoundry.base_models.diffusion_model.recipes.sana_variants import SANA_ALIASES
+
+    key = _normalize_model_id(model_id)
+    folded = _sana_folded_studio_model_ids()
+    if key in folded:
+        return "sana"
+    target = SANA_ALIASES.get(key)
+    if target in folded:
+        return "sana"
+    return None
+
+
+def _sana_default_image_variant() -> Any:
+    from worldfoundry.base_models.diffusion_model.recipes.sana_variants import SANA_VARIANTS
+
+    return SANA_VARIANTS[SANA_DEFAULT_IMAGE_VARIANT_ID]
+
+
+def _sana_image_default_ref() -> str:
+    return _sana_variant_checkpoint_ref(_sana_default_image_variant())
+
+
+def _sana_image_workspace_variants() -> tuple[Dict[str, Any], ...]:
+    from worldfoundry.base_models.diffusion_model.recipes.sana_variants import SANA_VARIANTS
+
+    rows: list[Dict[str, Any]] = []
+    for variant in SANA_VARIANTS.values():
+        if variant.runner not in _SANA_IMAGE_RUNNERS:
+            continue
+        height, width = _sana_variant_default_size(variant)
+        rows.append(
+            {
+                "variant_id": variant.model_id,
+                "label": variant.display_name,
+                "status": "checkpoint-configured",
+                "checkpoints": (
+                    {
+                        "role": "primary",
+                        "uri": _sana_variant_checkpoint_ref(variant),
+                        "required": True,
+                        "status": "checkpoint-configured",
+                    },
+                ),
+                "load_kwargs": {"model_id": variant.model_id},
+                "call_kwargs": {
+                    "height": height,
+                    "width": width,
+                    "num_inference_steps": variant.default_steps or 20,
+                    "guidance_scale": variant.default_cfg_scale or 4.5,
+                    "seed": 42,
+                },
+                "notes": (variant.notes,) if variant.notes else (),
+            }
+        )
+    return tuple(rows)
+
+
+def _cogvideox_variant_specs() -> dict[str, Dict[str, Any]]:
+    return {
+        "cogvideox_2b_t2v": {
+            "generation_type": "t2v",
+            "aliases": ("cogvideox-2b-t2v", "cogvideox-2b"),
+            "label": "2B T2V",
+            "default_prompt": "A futuristic city street at sunset with reflective glass towers, clean motion, and cinematic lighting.",
+            "default_call_kwargs": {
+                "fps": 8,
+                "height": 480,
+                "num_frames": 49,
+                "num_inference_steps": 50,
+                "guidance_scale": 6.0,
+                "seed": 42,
+                "width": 720,
+            },
+            "default_model_ref": lambda: _checkpoint_model_ref(
+                "CogVideoX-2b",
+                "THUDM--CogVideoX-2b",
+                fallback="THUDM/CogVideoX-2b",
+            ),
+        },
+        "cogvideox_5b_i2v": {
+            "generation_type": "i2v",
+            "aliases": ("cogvideox-5b-i2v",),
+            "label": "5B I2V",
+            "default_prompt": (
+                "A young man holding a bright sparkler gently turns his head and smiles as "
+                "sparks scatter through the night air, with a subtle cinematic camera dolly, "
+                "stable facial details, and natural motion."
+            ),
+            "default_input_path": str(_data_path("test_cases", "studio_demo", "00", "image.jpg")),
+            "default_call_kwargs": {
+                "fps": 8,
+                "guidance_scale": 6.0,
+                "height": 480,
+                "num_frames": 49,
+                "num_inference_steps": 50,
+                "seed": 45,
+                "width": 720,
+            },
+            "default_model_ref": lambda: _checkpoint_model_ref(
+                "CogVideoX-5b-I2V",
+                "THUDM--CogVideoX-5b-I2V",
+                fallback="THUDM/CogVideoX-5b-I2V",
+            ),
+        },
+        "cogvideox_5b_t2v": {
+            "generation_type": "t2v",
+            "aliases": ("cogvideox", "cogvideox-5b-t2v", "cogvideox-5b"),
+            "label": "5B T2V",
+            "default_prompt": "A futuristic city street at sunset with reflective glass towers, clean motion, and cinematic lighting.",
+            "default_call_kwargs": {
+                "fps": 8,
+                "height": 480,
+                "num_frames": 49,
+                "num_inference_steps": 50,
+                "guidance_scale": 6.0,
+                "seed": 43,
+                "width": 720,
+            },
+            "default_model_ref": lambda: _checkpoint_model_ref(
+                "CogVideoX-5b",
+                "THUDM--CogVideoX-5b",
+                fallback="THUDM/CogVideoX-5b",
+            ),
+        },
+    }
+
+
+def _cogvideox_aliases() -> tuple[str, ...]:
+    aliases = [COGVIDEOX_STUDIO_PARENT_ID, *sorted(_cogvideox_folded_studio_model_ids())]
+    for spec in _cogvideox_variant_specs().values():
+        aliases.extend(spec.get("aliases") or ())
+    return _coerce_aliases(*aliases)
+
+
+def _cogvideox_workspace_variants() -> tuple[Dict[str, Any], ...]:
+    rows: list[Dict[str, Any]] = []
+    for variant_id, spec in _cogvideox_variant_specs().items():
+        model_ref = str(_resolve_override_value(spec.get("default_model_ref", "")) or "")
+        rows.append(
+            {
+                "variant_id": variant_id,
+                "label": spec.get("label") or variant_id,
+                "status": "checkpoint-configured",
+                "workload_type": spec.get("generation_type") or "t2v",
+                "default_prompt": spec.get("default_prompt") or "",
+                "default_input_path": spec.get("default_input_path") or "",
+                "aliases": tuple(spec.get("aliases") or ()),
+                "checkpoints": (
+                    (
+                        {
+                            "role": "primary",
+                            "uri": model_ref,
+                            "required": True,
+                            "status": "checkpoint-configured",
+                        },
+                    )
+                    if model_ref
+                    else ()
+                ),
+                "load_kwargs": {},
+                "call_kwargs": dict(_resolve_override_value(spec.get("default_call_kwargs", {})) or {}),
+            }
+        )
+    return tuple(rows)
 
 
 def _sana_video_480p_default_ref() -> str:
@@ -9099,6 +9373,72 @@ CURATED_OVERRIDES: Dict[str, Dict[str, Any]] = {
         ),
         "tags": ("text-to-video", "image-to-video", "official-runtime"),
     },
+    "sana": {
+        "display_name": "Sana",
+        "default_model_ref": _sana_image_default_ref,
+        "default_backend": "from_pretrained",
+        "supports_from_pretrained": True,
+        "default_task_type": "text-to-image",
+        "default_prompt": (
+            "A photorealistic still of a sunlit ceramic bowl of citrus on a wooden table, "
+            "sharp focus, natural lighting."
+        ),
+        "default_load_kwargs": {"model_id": SANA_DEFAULT_IMAGE_VARIANT_ID},
+        "default_call_kwargs": {
+            "height": 1024,
+            "width": 1024,
+            "num_inference_steps": 20,
+            "guidance_scale": 4.5,
+            "seed": 42,
+        },
+        "load_params": _sana_video_load_params(),
+        "extra_variants": _sana_image_workspace_variants,
+        "aliases": _sana_image_aliases(),
+        "tags": ("text-to-image", "controlnet", "sprint", "official-runtime", "local-checkpoint"),
+        "notes": (
+            "Image, Sprint, and ControlNet checkpoints share this Studio card. "
+            "Pick a variant for size, resolution, few-step Sprint, or HED ControlNet. "
+            "Sana Video, LongSANA, and SANA-Streaming stay on their own cards."
+        ),
+        "summary": (
+            "Sana text-to-image family. Select a checkpoint variant for parameter "
+            "size, resolution, Sprint, or ControlNet."
+        ),
+    },
+    "cogvideox_5b_t2v": {
+        "display_name": "CogVideoX",
+        "default_backend": "from_pretrained",
+        "supports_from_pretrained": True,
+        "default_task_type": "t2v",
+        "default_prompt": (
+            "A futuristic city street at sunset with reflective glass towers, clean motion, and cinematic lighting."
+        ),
+        "default_call_kwargs": {
+            "fps": 8,
+            "height": 480,
+            "num_frames": 49,
+            "num_inference_steps": 50,
+            "guidance_scale": 6.0,
+            "seed": 43,
+            "width": 720,
+        },
+        "default_model_ref": lambda: _checkpoint_model_ref(
+            "CogVideoX-5b",
+            "THUDM--CogVideoX-5b",
+            fallback="THUDM/CogVideoX-5b",
+        ),
+        "extra_variants": _cogvideox_workspace_variants,
+        "aliases": _cogvideox_aliases(),
+        "tags": ("video", "t2v", "i2v", "official-runtime", "local-checkpoint"),
+        "notes": (
+            "2B T2V, 5B T2V, and 5B I2V share this Studio card. "
+            "Pick a variant for size and text-to-video vs image-to-video."
+        ),
+        "summary": (
+            "CogVideoX text-to-video and image-to-video family. "
+            "Select 2B T2V, 5B T2V, or 5B I2V."
+        ),
+    },
     "sana-video-2b-480p": {
         "display_name": "Sana Video 2B 480p",
         "default_model_ref": _sana_video_480p_default_ref,
@@ -11831,68 +12171,7 @@ def _canonical_runtime_entries() -> Iterable[CatalogEntry]:
                 fallback="rhymes-ai/Allegro-TI2V",
             ),
         },
-        "cogvideox_2b_t2v": {
-            "generation_type": "t2v",
-            "aliases": ("cogvideox-2b-t2v", "cogvideox-2b"),
-            "default_prompt": "A futuristic city street at sunset with reflective glass towers, clean motion, and cinematic lighting.",
-            "default_call_kwargs": {
-                "fps": 8,
-                "height": 480,
-                "num_frames": 49,
-                "num_inference_steps": 50,
-                "guidance_scale": 6.0,
-                "seed": 42,
-                "width": 720,
-            },
-            "default_model_ref": lambda: _checkpoint_model_ref(
-                "CogVideoX-2b",
-                "THUDM--CogVideoX-2b",
-                fallback="THUDM/CogVideoX-2b",
-            ),
-        },
-        "cogvideox_5b_i2v": {
-            "generation_type": "i2v",
-            "aliases": ("cogvideox-5b-i2v",),
-            "default_prompt": (
-                "A young man holding a bright sparkler gently turns his head and smiles as "
-                "sparks scatter through the night air, with a subtle cinematic camera dolly, "
-                "stable facial details, and natural motion."
-            ),
-            "default_input_path": str(_data_path("test_cases", "studio_demo", "00", "image.jpg")),
-            "default_call_kwargs": {
-                "fps": 8,
-                "guidance_scale": 6.0,
-                "height": 480,
-                "num_frames": 49,
-                "num_inference_steps": 50,
-                "seed": 45,
-                "width": 720,
-            },
-            "default_model_ref": lambda: _checkpoint_model_ref(
-                "CogVideoX-5b-I2V",
-                "THUDM--CogVideoX-5b-I2V",
-                fallback="THUDM/CogVideoX-5b-I2V",
-            ),
-        },
-        "cogvideox_5b_t2v": {
-            "generation_type": "t2v",
-            "aliases": ("cogvideox", "cogvideox-5b-t2v", "cogvideox-5b"),
-            "default_prompt": "A futuristic city street at sunset with reflective glass towers, clean motion, and cinematic lighting.",
-            "default_call_kwargs": {
-                "fps": 8,
-                "height": 480,
-                "num_frames": 49,
-                "num_inference_steps": 50,
-                "guidance_scale": 6.0,
-                "seed": 43,
-                "width": 720,
-            },
-            "default_model_ref": lambda: _checkpoint_model_ref(
-                "CogVideoX-5b",
-                "THUDM--CogVideoX-5b",
-                fallback="THUDM/CogVideoX-5b",
-            ),
-        },
+        **_cogvideox_variant_specs(),
         "dynamicrafter_1024_i2v": {
             "generation_type": "i2v",
             "aliases": ("dynamicrafter-1024-i2v",),
@@ -12198,6 +12477,17 @@ def _canonical_runtime_entries() -> Iterable[CatalogEntry]:
             "load_params": _native_diffusion_video_load_params(),
         },
     }
+    runtime_specs[COGVIDEOX_STUDIO_PARENT_ID] = {
+        **runtime_specs[COGVIDEOX_STUDIO_PARENT_ID],
+        "display_name": "CogVideoX",
+        "summary": (
+            "CogVideoX text-to-video and image-to-video family. "
+            "Select 2B T2V, 5B T2V, or 5B I2V."
+        ),
+        "aliases": _cogvideox_aliases(),
+        "extra_variants": _cogvideox_workspace_variants,
+        "tags": ("video", "t2v", "i2v"),
+    }
 
     ast_by_slug: Dict[str, _AstPipelineInfo] = {}
     for info in _discover_ast_pipelines():
@@ -12212,7 +12502,7 @@ def _canonical_runtime_entries() -> Iterable[CatalogEntry]:
         family = matched.family if matched is not None else canonical_name.split("_", maxsplit=1)[0]
         display_name = str(spec.get("display_name") or _display_name_from_slug(slug.replace("_", "-")))
         generation_type = spec.get("generation_type", "i2v")
-        summary = f"Independent {generation_type.upper()} video pipeline for this model."
+        summary = str(spec.get("summary") or f"Independent {generation_type.upper()} video pipeline for this model.")
         if "call_params" in spec:
             call_params = tuple(_resolve_override_value(spec.get("call_params")) or ())
         else:
@@ -12287,8 +12577,9 @@ def _canonical_runtime_entries() -> Iterable[CatalogEntry]:
             default_load_kwargs=dict(_resolve_override_value(spec.get("default_load_kwargs", {})) or {}),
             default_interactions=(),
             default_call_kwargs=default_call_kwargs,
+            extra_variants=_resolve_extra_variants(spec.get("extra_variants", ())),
             aliases=tuple(spec.get("aliases", [])),
-            tags=("video", generation_type),
+            tags=tuple(spec.get("tags") or ("video", generation_type)),
             notes="Integrated runtime modules are expected under worldfoundry.pipelines; pass only WorldFoundry checkpoint/cache paths or HF repo ids as model refs.",
         )
 
@@ -12610,7 +12901,7 @@ def _discover_catalog_infos() -> tuple[_AstPipelineInfo, ...]:
 
 
 def _build_entry(info: _AstPipelineInfo) -> CatalogEntry:
-    override = CURATED_OVERRIDES.get(info.model_id, {})
+    override = CURATED_OVERRIDES.get(info.model_id) or CURATED_OVERRIDES.get(_catalog_id_key(info.model_id), {})
     inferred_category = _category_from_family(info.family, info.class_name, info.call_params)
     if (
         inferred_category == "Video Generation"
@@ -12736,7 +13027,7 @@ def discover_catalog() -> tuple[CatalogEntry, ...]:
                 default_interactions=entry.default_interactions,
                 default_load_kwargs=entry.default_load_kwargs,
                 default_call_kwargs=entry.default_call_kwargs,
-                extra_variants=entry.extra_variants,
+                extra_variants=entry.extra_variants or previous.extra_variants,
                 suggested_task_types=entry.suggested_task_types,
                 aliases=merged_aliases,
                 tags=entry.tags,
@@ -12780,15 +13071,22 @@ def _find_exact_entry_without_full_catalog(model_id: str) -> CatalogEntry | None
     normalized = _normalize_model_id(model_id)
     if not normalized:
         return None
-    ast_model_id = FAST_CANONICAL_AST_ALIASES.get(normalized, normalized)
+    parent_id = _sana_studio_parent_id(normalized) or _cogvideox_studio_parent_id(normalized)
+    ast_model_id = FAST_CANONICAL_AST_ALIASES.get(parent_id or normalized, parent_id or normalized)
     for info in _discover_catalog_infos():
         if info.model_id in ABSTRACT_RUNTIME_MODEL_IDS:
             continue
         if info.model_id in STUDIO_HIDDEN_CATALOG_MODEL_IDS:
             continue
-        if _normalize_model_id(info.model_id) == ast_model_id:
+        if _catalog_id_key(info.model_id) == _catalog_id_key(ast_model_id):
             entry = _build_entry(info)
-            if normalized != ast_model_id:
+            if parent_id is not None:
+                entry = replace(
+                    entry,
+                    model_id=parent_id,
+                    aliases=_coerce_aliases(*entry.aliases, normalized, info.model_id),
+                )
+            elif normalized != ast_model_id:
                 entry = replace(
                     entry,
                     model_id=normalized,
@@ -12796,6 +13094,26 @@ def _find_exact_entry_without_full_catalog(model_id: str) -> CatalogEntry | None
                 )
             return entry
     return None
+
+
+def find_runtime_entry(model_id: str) -> CatalogEntry:
+    """Resolve the concrete pipeline entry, ignoring Studio family folding."""
+
+    requested = _cogvideox_variant_id(model_id) or _catalog_id_key(model_id)
+    if not requested:
+        raise KeyError(f"Unknown Studio model id: {model_id}")
+    ast_model_id = FAST_CANONICAL_AST_ALIASES.get(requested, requested)
+    for info in _discover_catalog_infos():
+        if _catalog_id_key(info.model_id) == _catalog_id_key(ast_model_id):
+            entry = _build_entry(info)
+            if entry.model_id != requested:
+                entry = replace(
+                    entry,
+                    model_id=requested,
+                    aliases=_coerce_aliases(*entry.aliases, entry.model_id),
+                )
+            return entry
+    raise KeyError(f"Unknown Studio model id: {model_id}")
 
 
 def find_entry(model_id: str) -> CatalogEntry:

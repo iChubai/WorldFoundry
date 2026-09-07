@@ -12,6 +12,7 @@ import defaultMdxComponents from 'fumadocs-ui/mdx';
 import { DocsZoomImage } from '@/components/docs-zoom-image';
 import { DocsWelcomeAcknowledgements } from '@/components/docs-welcome-acknowledgements';
 import { BenchmarkRecipeCatalog } from '@/components/benchmark-recipe-catalog';
+import { DedicatedEnvCatalog } from '@/components/dedicated-env-catalog';
 import { ArchDiagram } from '@/components/arch-diagram';
 import { CallChainDiagram } from '@/components/call-chain-diagram';
 import { MetricQuickNav } from '@/components/metric-quick-nav';
@@ -96,6 +97,7 @@ export function getMDXComponents(components?: MDXComponents) {
     Tabs,
     ArchDiagram,
     BenchmarkRecipeCatalog,
+    DedicatedEnvCatalog,
     CallChainDiagram,
     DocsWelcomeAcknowledgements,
     MetricQuickNav,

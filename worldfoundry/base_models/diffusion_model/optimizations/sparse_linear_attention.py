@@ -121,7 +121,7 @@ class FastVideoSLAConfig:
             raise ValueError(
                 "FastVideo learned SLA kind must be 'fastvideo_sla' or "
                 f"'fastvideo_sagesla', got {self.kind!r}; LightX2V SLA mask "
-                "kinds belong to lightx2v_sparse.py"
+                "kinds belong to sparse_mask_attention.py"
             )
         object.__setattr__(self, "kind", kind)
         ratio = self.topk_ratio

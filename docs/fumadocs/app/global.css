@@ -3683,6 +3683,7 @@ button.pi-doc-action-chip {
 .pi-doc-content :where(
   .pi-metric-quick-nav,
   .pi-studio-viz-gallery,
+  .pi-env-catalog,
   .not-prose,
   .fd-steps,
   figure,
@@ -5029,73 +5030,301 @@ button.pi-doc-action-chip {
   z-index: 3;
 }
 
-/* Environments: dedicated model exception table — keep setup commands on one line */
-.pi-doc-shell-table-wide .pi-doc-content .pi-env-model-table {
-  margin: 20px 0 28px;
+/* Environments: dedicated model exceptions as a foldable catalog */
+.pi-env-catalog {
+  margin: 22px 0 30px;
 }
 
-.pi-doc-shell-table-wide .pi-doc-content .pi-env-model-table :where([class*='overflow-auto']) {
-  -webkit-overflow-scrolling: touch;
-  margin: 0 !important;
-  overflow-x: auto;
-  width: 100%;
+.pi-doc-content .pi-env-catalog :where(p, h3) {
+  margin: 0;
 }
 
-.pi-doc-shell-table-wide .pi-doc-content .pi-env-model-table table {
+.pi-env-catalog-toolbar {
+  align-items: baseline;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 16px;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.pi-env-catalog-toolbar p {
+  color: var(--pi-ink);
   font-size: 13px;
-  line-height: 1.55;
-  min-width: 100%;
-  table-layout: auto;
-  width: max-content;
+  line-height: 1.45;
 }
 
-.pi-doc-shell-table-wide .pi-doc-content .pi-env-model-table table :where(th, td) {
-  vertical-align: top;
+.pi-env-catalog-toolbar p strong {
+  font-variant-numeric: tabular-nums;
 }
 
-.pi-doc-shell-table-wide .pi-doc-content .pi-env-model-table :where(th:nth-child(1), td:nth-child(1)) {
-  min-width: 7.5rem;
-  white-space: nowrap;
-  width: 1%;
+.pi-env-catalog-toolbar p span {
+  color: var(--pi-muted);
+  margin-left: 8px;
 }
 
-.pi-doc-shell-table-wide .pi-doc-content .pi-env-model-table :where(th:nth-child(2), td:nth-child(2)) {
-  min-width: 9rem;
-  white-space: nowrap;
-  width: 1%;
-}
-
-.pi-doc-shell-table-wide .pi-doc-content .pi-env-model-table :where(th:nth-child(3), td:nth-child(3)) {
-  min-width: 28rem;
-  white-space: nowrap;
-  width: 1%;
-}
-
-.pi-doc-shell-table-wide .pi-doc-content .pi-env-model-table :where(th:nth-child(4), td:nth-child(4)) {
-  max-width: 26rem;
-  min-width: 16rem;
-  white-space: normal;
-  width: auto;
-}
-
-.pi-doc-shell-table-wide .pi-doc-content .pi-env-model-table :where(th:nth-child(3), th:nth-child(1), th:nth-child(2)) {
-  white-space: nowrap;
-}
-
-.pi-doc-shell-table-wide .pi-doc-content .pi-env-model-table :where(td:nth-child(1), td:nth-child(2), td:nth-child(3)) code:not(pre code) {
+.pi-env-catalog-toolbar > button {
+  appearance: none;
   background: transparent;
   border: 0;
-  box-decoration-break: unset;
-  font-size: 0.92em;
-  font-weight: 500;
-  overflow-wrap: normal;
+  color: var(--pi-muted);
+  cursor: pointer;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 650;
   padding: 0;
-  white-space: nowrap;
-  word-break: normal;
 }
 
-.pi-doc-shell-table-wide .pi-doc-content .pi-env-model-table td:nth-child(3) code:not(pre code) {
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', monospace;
+.pi-env-catalog-toolbar > button:hover {
+  color: var(--pi-ink);
+}
+
+.pi-env-catalog-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.pi-env-catalog-filters button {
+  align-items: center;
+  background: var(--pi-surface);
+  border: 1px solid var(--pi-line);
+  border-radius: 999px;
+  color: var(--pi-muted);
+  cursor: pointer;
+  display: inline-flex;
+  font-size: 12px;
+  font-weight: 600;
+  gap: 7px;
+  padding: 6px 10px 6px 12px;
+}
+
+.pi-env-catalog-filters button:hover {
+  background: var(--pi-elevated);
+  color: var(--pi-ink);
+}
+
+.pi-env-catalog-filters button.is-active {
+  background: var(--pi-ink);
+  border-color: var(--pi-ink);
+  color: var(--pi-paper);
+}
+
+.pi-env-catalog-filters button span {
+  background: color-mix(in srgb, var(--pi-paper) 18%, transparent);
+  border-radius: 999px;
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+  min-width: 1.4em;
+  padding: 1px 6px;
+  text-align: center;
+}
+
+.pi-env-catalog-filters button.is-active span {
+  background: color-mix(in srgb, var(--pi-paper) 16%, transparent);
+  color: var(--pi-paper);
+}
+
+.pi-env-catalog-list {
+  background: var(--pi-surface-card);
+  border: 1px solid var(--pi-line);
+  border-radius: 14px;
+  box-shadow: var(--pi-shadow-soft);
+  overflow: hidden;
+}
+
+.pi-env-group + .pi-env-group {
+  border-top: 1px solid var(--pi-line);
+}
+
+.pi-env-group > h3 {
+  align-items: center;
+  background: color-mix(in srgb, var(--pi-paper) 72%, var(--pi-elevated));
+  border-bottom: 1px solid var(--pi-soft-line);
+  color: var(--pi-muted);
+  display: flex;
+  font-size: 11px;
+  font-weight: 700;
+  gap: 8px;
+  letter-spacing: 0.08em;
+  margin: 0;
+  padding: 9px 14px;
+  text-transform: uppercase;
+}
+
+.pi-env-group > h3 span {
+  color: var(--pi-ink);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0;
+}
+
+.pi-doc-content .pi-env-catalog details.pi-env-entry,
+.pi-doc-content .pi-env-catalog .pi-env-entry {
+  background: transparent;
+  border: 0;
+  border-top: 1px solid var(--pi-soft-line);
+  margin: 0;
+  padding: 0;
+}
+
+.pi-env-group > .pi-env-entry:first-of-type {
+  border-top: 0;
+}
+
+.pi-doc-content .pi-env-catalog details.pi-env-entry summary {
+  align-items: center;
+  color: var(--pi-ink);
+  cursor: pointer;
+  display: grid;
+  font-size: 13px;
+  font-weight: 500;
+  gap: 10px;
+  grid-template-columns: 12px 34px minmax(0, 1fr);
+  list-style: none;
+  outline: none;
+  padding: 10px 14px;
+}
+
+.pi-doc-content .pi-env-catalog details.pi-env-entry summary::-webkit-details-marker {
+  display: none;
+}
+
+.pi-doc-content .pi-env-catalog details.pi-env-entry summary:hover {
+  background: color-mix(in srgb, var(--pi-paper) 55%, transparent);
+  color: var(--pi-ink);
+}
+
+.pi-env-entry-chevron {
+  border-left: 4px solid transparent;
+  border-right: 4px solid transparent;
+  border-top: 5px solid var(--pi-muted);
+  display: block;
+  justify-self: center;
+  transform: rotate(-90deg);
+  transition: transform 140ms ease;
+}
+
+.pi-env-entry[open] .pi-env-entry-chevron {
+  transform: rotate(0deg);
+}
+
+.pi-env-entry-main {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 12px;
+  justify-content: space-between;
+  min-width: 0;
+}
+
+.pi-env-entry-models {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  min-width: 0;
+}
+
+.pi-doc-content .pi-env-catalog .pi-env-entry-models code {
+  background: transparent;
+  border: 0;
+  font-size: 12.5px;
+  font-weight: 650;
+  padding: 0;
+}
+
+.pi-doc-content .pi-env-catalog .pi-env-entry-env {
+  background: color-mix(in srgb, var(--pi-paper) 80%, var(--pi-elevated));
+  border: 1px solid var(--pi-soft-line);
+  border-radius: 999px;
+  color: var(--pi-muted);
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1.2;
+  max-width: 100%;
+  overflow: hidden;
+  padding: 4px 8px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.pi-doc-content .pi-env-catalog details.pi-env-entry > *:not(summary) {
+  font-size: 13px;
+  margin-top: 0;
+}
+
+.pi-env-entry-body {
+  display: grid;
+  gap: 10px;
+  padding: 0 14px 14px 70px;
+}
+
+.pi-env-entry-command {
+  background: color-mix(in srgb, var(--pi-paper) 78%, var(--pi-elevated));
+  border: 1px solid var(--pi-soft-line);
+  border-radius: 10px;
+  display: grid;
+  gap: 8px;
+  padding: 10px 12px;
+}
+
+.pi-env-entry-command > div {
+  align-items: center;
+  display: flex;
+  justify-content: space-between;
+}
+
+.pi-env-entry-command span {
+  color: var(--pi-muted);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.pi-doc-content .pi-env-catalog .pi-env-entry-command > code {
+  background: transparent;
+  border: 0;
+  color: var(--pi-ink);
+  display: block;
+  font-size: 12px;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+  padding: 0;
+  white-space: pre-wrap;
+}
+
+.pi-doc-content .pi-env-catalog .pi-env-entry-body > p {
+  color: var(--pi-muted);
+  font-size: 13px;
+  line-height: 1.6;
+  margin: 0;
+}
+
+.pi-doc-content .pi-env-catalog .pi-env-entry-body > p strong {
+  color: var(--pi-ink);
+  display: block;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  margin-bottom: 4px;
+  text-transform: uppercase;
+}
+
+@media (max-width: 720px) {
+  .pi-doc-content .pi-env-catalog details.pi-env-entry summary {
+    grid-template-columns: 12px 34px minmax(0, 1fr);
+  }
+
+  .pi-env-entry-body {
+    padding-left: 14px;
+  }
+
+  .pi-env-entry-main {
+    align-items: flex-start;
+    flex-direction: column;
+  }
 }
 
 /* Studio visualizer gallery on guides/studio */
@@ -6124,6 +6353,11 @@ button.pi-doc-action-chip {
     background-color 180ms ease,
     box-shadow 180ms ease,
     transform 180ms ease;
+}
+
+.wf-home-resource-card {
+  height: 100%;
+  min-height: 158px;
 }
 
 .wf-home-capability-card {
@@ -8302,6 +8536,15 @@ a.wf-catalog-entry:hover .wf-catalog-entry-arrow {
   .wf-home-capability-card:nth-child(4),
   .wf-home-resource-card:nth-child(4) {
     animation-range: entry 6% cover 25%;
+  }
+
+  .wf-home-resource-card:nth-child(5) {
+    animation-range: entry 8% cover 27%;
+  }
+
+  .wf-home-resource-card:nth-child(6),
+  .wf-home-resource-card:nth-child(7) {
+    animation-range: entry 10% cover 29%;
   }
 
   .wf-home-configurator::before {

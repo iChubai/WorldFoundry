@@ -268,31 +268,7 @@ the resolved environment first and then checks or downloads assets. Use
 `scripts/setup/model_env_install.sh` directly only when you want to prepare the
 conda env without touching checkpoints.
 
-<div className="pi-env-model-table">
-
-| Model | Dedicated env | Setup command | Notes |
-| --- | --- | --- | --- |
-| `ac3d` | `ac3d` | `bash scripts/inference/prepare_model_infer.sh ac3d --download` | Official runtime pins Python 3.10, PyTorch 2.4, and CUDA 12.4. Runtime code is in tree under `worldfoundry/synthesis/visual_generation/ac3d/ac3d_runtime`; only checkpoints/assets are external. |
-| `cosmos3` | `worldfoundry-cosmos3-cu128` | `bash scripts/inference/prepare_model_infer.sh cosmos3 --download` | Cosmos3 uses the native diffusion runner, checkpoint-shaped transformer, Wan VAE38, AVAE decoder, and core runtime policies. Guardrails remain an optional orchestration layer; Diffusers is not an inference backend. |
-| `gen3c` | `gen3c` | `bash scripts/inference/prepare_model_infer.sh gen3c --download` | Inference-only Cosmos Predict1 stack with Python 3.10, CUDA 12.4, torch 2.6, Transformer Engine, and MoGe. Setup applies the Transformer Engine link patch from released packages; it does not clone or build the training-only Apex repository. |
-| `lyra-1` | `lyra` | `bash scripts/inference/prepare_model_infer.sh lyra-1 --download` | Uses the same inference-only Cosmos Predict1 / Transformer Engine family as GEN3C. |
-| `magi-1` | `magi-official-cu124` | `bash scripts/inference/prepare_model_infer.sh magi-1 --download` | Official stack is Python 3.10.12 with PyTorch 2.4 / CUDA 12.4. Keep flash-attn and flashinfer in this env because their wheels are ABI-sensitive. |
-| `warp-as-history` | `warp-as-history` | `bash scripts/inference/prepare_model_infer.sh warp-as-history --download` | Pins Python 3.10, torch 2.5.0+cu121, diffusers 0.36, transformers 4.51, and peft 0.17. |
-| `hunyuanvideo-t2v`, `hunyuanvideo-i2v`, `hunyuanvideo-1.5-t2v`, `hunyuanvideo-1.5-i2v` | `worldfoundry-unified-cu128` | `bash scripts/inference/prepare_model_infer.sh hunyuanvideo-t2v --download` | All four IDs use the shared native diffusion runner and role-based Hunyuan components. The former Diffusers/xFuser CLI environment is no longer an inference backend. |
-| `kairos-sensenova` | `kairos-sensenova` | `bash scripts/inference/prepare_model_infer.sh kairos-sensenova --download` | Uses the official torch/CUDA 12.6-class stack and native attention packages such as SageAttention. Use this env when unified CUDA does not provide the Kairos attention stack. |
-| `lingbot-world`, `lingbot-world-act` | `lingbot-world` | `bash scripts/inference/prepare_model_infer.sh lingbot-world --download` | Base-Cam and the independently cataloged public Base-Act checkpoint share the in-tree runtime. Parity requires exact torch and flash-attn pins; the unified env produced invalid near-black act2cam output in upstream-style tests. |
-| `wonderworld` | `wonderworld` | `bash scripts/inference/prepare_model_infer.sh wonderworld --download` | Inference imports PyTorch3D CUDA extensions. Build or install PyTorch3D wheels compatible with this env before running the official path. |
-| `wonderjourney` | `wonderworld` | `bash scripts/inference/prepare_model_infer.sh wonderjourney --download` | Shares the WonderWorld PyTorch3D extension environment and uses in-tree WonderJourney runtime code. |
-| `hunyuan-game-craft` | `HYGameCraft` | `bash scripts/inference/prepare_model_infer.sh hunyuan-game-craft --download` | Official inference relies on HYGameCraft plus torchrun sequence parallelism. The dedicated env includes the CUDA 12.4 toolkit and builds the pinned flash-attn 2.6.3 PyPI release without cloning its Git repository. Set `cuda_visible_devices` / `torchrun_nproc_per_node` explicitly on shared GPU machines. |
-| `octo` | `worldfoundry-octo-jax` | `bash scripts/inference/prepare_model_infer.sh octo --download` | JAX CUDA 11.8, Flax 0.7.5, TensorFlow, dlimp, and Octo tokenizer assets are isolated from the PyTorch CUDA env. |
-| `lapa` | `worldfoundry-lapa-jax-cu118` | `bash scripts/inference/prepare_model_infer.sh lapa --download` | Uses the official Python 3.10, JAX 0.4.25 CUDA 11/cuDNN 8.6, Flax 0.8.2, Tux 0.0.2, and Transformers 4.40 inference stack. It stays isolated because Transformers 5 removed the Flax generation modules required by LAPA. |
-| `openvla-oft` | `worldfoundry-vla-openvla-compat-cu121` | `bash scripts/inference/prepare_model_infer.sh openvla-oft --download` | Prismatic/OpenVLA-compatible stack with older transformers/timm/tokenizers. Use this env for LIBERO/ALOHA OpenVLA-OFT inference. |
-| `cogact` | `worldfoundry-vla-openvla-compat-cu121` | `bash scripts/inference/prepare_model_infer.sh cogact --download` | Shares the OpenVLA compatibility env and reuses a staged OpenVLA Llama tokenizer for inference-only loading. A token is only needed when no compatible local tokenizer or complete Llama-2 mirror exists. |
-| `lingbot-va` | `lingbot-va` | `bash scripts/inference/prepare_model_infer.sh lingbot-va --download` | Prepare-only profile for the official Python 3.10, torch 2.9, CUDA 12.6, flash-attn stack; stage the LingBot-VA base/posttrain checkpoints before rollout. |
-| `being-h05` | `beingh` | `bash scripts/inference/prepare_model_infer.sh being-h05 --download` | Prepare-only profile. Stage all Being-H0.5 checkpoints; full `get_action` parity needs the upstream policy stack and more headroom than a single 80GB GPU profile. |
-| `dreamdojo` | `dreamdojo` | `bash scripts/inference/prepare_model_infer.sh dreamdojo --download` | Prepare-only profile for the official torchcodec/CUDA 12.8 setup on H100-class hosts. Stage the GR-1 eval dataset before enabling real command templates. |
-
-</div>
+<DedicatedEnvCatalog />
 
 EvalCrafter is the only benchmark with a WorldFoundry-managed dedicated metric
 profile. Other benchmark-specific native stacks are listed below and are not
@@ -396,22 +372,44 @@ endpoint.
 
 ## Troubleshooting
 
-When working with complex setups involving CUDA, simulators, or external evaluators, you may encounter environment issues:
+When working with complex setups involving CUDA, simulators, or external evaluators, you may encounter environment issues.
 
-### 1. CUDA mismatch
-**Symptom**: `CUDA error: no kernel image is available for execution on the device` or PyTorch cannot find a GPU.
-**Solution**: Ensure your NVIDIA driver is up-to-date and supports the CUDA version installed by Conda. If you are on an older driver, you can force the installation script to use an older CUDA wheel bucket:
+<Callout type="warn" title="CUDA mismatch">
+
+**Symptom:** `CUDA error: no kernel image is available for execution on the device`, or PyTorch cannot find a GPU.
+
+**Solution:** Ensure your NVIDIA driver is up-to-date and supports the CUDA version installed by Conda. On an older driver, force the installer to use an older CUDA wheel bucket:
+
 ```bash
 bash scripts/setup/unified_install.sh --cuda cu121
 ```
 
-### 2. Missing system dependencies (e.g., for OpenGL/3D)
-**Symptom**: Errors relating to `libGL.so.1`, `EGL`, or headless rendering failures when running embodied simulators or 3D benchmarks.
-**Solution**: Install the required system-level graphics libraries. On Ubuntu/Debian:
+</Callout>
+
+<Callout type="warn" title="Missing system dependencies (OpenGL / 3D)">
+
+**Symptom:** Errors relating to `libGL.so.1`, `EGL`, or headless rendering failures when running embodied simulators or 3D benchmarks.
+
+**Solution:** Install the required system-level graphics libraries. On Ubuntu/Debian:
+
 ```bash
 sudo apt-get update && sudo apt-get install -y libgl1-mesa-glx libglib2.0-0
 ```
 
-### 3. Flash Attention installation fails
-**Symptom**: The unified install script hangs or fails during `flash-attn` compilation.
-**Solution**: `flash-attn` is extremely sensitive to mismatched CUDA compiler (`nvcc`) versions. Ensure your `nvcc --version` matches the PyTorch CUDA version. Alternatively, you can disable `flash-attn` installation by passing `--skip-flash-attn` (if supported by your environment) or installing a pre-compiled wheel from the official release page.
+</Callout>
+
+<Callout type="warn" title="Flash Attention installation fails">
+
+**Symptom:** The unified install script hangs or fails during `flash-attn` compilation.
+
+**Solution:** `flash-attn` is extremely sensitive to mismatched CUDA compiler (`nvcc`) versions. Ensure your `nvcc --version` matches the PyTorch CUDA version.
+
+Skip compilation if needed:
+
+```bash
+bash scripts/setup/unified_install.sh --skip-flash-attn
+```
+
+You can also install a pre-compiled wheel from the official release page.
+
+</Callout>

@@ -30,7 +30,7 @@ Fetch before building:
 git submodule update --init --recursive thirdparty/fastvideo-kernel/include/cutlass thirdparty/fastvideo-kernel/include/tk
 ```
 
-CUTLASS is BSD-3-Clause; ThunderKittens is MIT. See `thirdparty/THIRD_PARTY_LICENSES.md`.
+CUTLASS is BSD-3-Clause; ThunderKittens is MIT. See each submodule's upstream license.
 
 ## Modifications (vs upstream)
 

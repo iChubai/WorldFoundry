@@ -10,7 +10,7 @@ transforms (QKV fusion, TeaCache, STA/VSA) live in sibling modules and are
 applied by :class:`~..loaders.module.NativeModuleLoader`, not by the runner.
 """
 
-from .fastvideo_sla import (
+from .sparse_linear_attention import (
     FastVideoSLAAdapter,
     FastVideoSLAConfig,
     FastVideoSLAContractError,
@@ -19,7 +19,7 @@ from .fastvideo_sla import (
     resolve_fastvideo_sla_projection_weights,
     split_fastvideo_sla_projection_weights,
 )
-from .lightx2v_sparse import (
+from .sparse_mask_attention import (
     LightX2VSparseAdapter,
     LightX2VSparseConfig,
     LightX2VSparseResult,

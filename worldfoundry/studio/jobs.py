@@ -245,6 +245,23 @@ class StudioJobStore:
         with self._lock:
             return sorted(self._jobs.values(), key=lambda job: job.created_at, reverse=True)
 
+    def delete(self, job_id: str | None) -> bool:
+        """Remove a finished job from the in-memory store.
+
+        Running or queued jobs cannot be deleted; cancel them first.
+        """
+
+        if not job_id:
+            return False
+        with self._lock:
+            job = self._jobs.get(job_id)
+            if job is None:
+                return False
+            if not job.terminal:
+                raise ValueError(f"cannot delete a {job.status} job")
+            del self._jobs[job_id]
+            return True
+
     def cancel(self, job_id: str | None) -> tuple[bool, str]:
         """Request cancellation; queued jobs cancel immediately, running jobs stop cooperatively."""
         job = self.get(job_id)

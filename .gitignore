@@ -1,4 +1,4 @@
-# Test source is versioned. Generated test artifacts are ignored below.
+# Local test suites and generated test artifacts are ignored below.
 
 # Project-specific local files
 .develop_references.py
@@ -164,6 +164,7 @@ summary/
 # Runtime default CWD outputs (when --output-path is omitted)
 inspatio_world_output/
 worldfoundry_outputs/
+longcat_outputs/
 unianimate_dit_workspace/
 pixelsplat/
 dreamdojo/
@@ -381,3 +382,6 @@ worldfoundry/studio/assets/vendor/
 /configs/
 /benchmarks/
 /gg
+
+# Local upstream checkout used to build optional CUDA dependencies.
+/thirdparty/flash-attention/

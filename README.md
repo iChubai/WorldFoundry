@@ -837,8 +837,6 @@ If you use WorldFoundry or its benchmark/model integrations in research, cite th
 
 WorldFoundry-authored code is licensed under the [Apache License 2.0](LICENSE), except where a file or component carries a different license notice. Vendored and adapted upstream components remain subject to their original licenses.
 
-Some native components under `thirdparty/` are restricted to non-commercial research use. Review [Third-Party License Notes](thirdparty/THIRD_PARTY_LICENSES.md) and [Upstream Provenance](thirdparty/UPSTREAM_PROVENANCE.md) before redistribution or commercial use.
-
 ## Acknowledgment
 
 WorldFoundry integrates and wraps a large set of upstream world-model, video-generation, perception, reconstruction, and embodied-action projects. See the method-specific runtime profiles and the docs appendix for upstream project pointers and licenses.

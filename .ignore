@@ -13,3 +13,4 @@ tmp/
 **/__pycache__/
 **/*.egg-info/
 worldfoundry.egg-info/
+thirdparty/flash-attention/

@@ -3,8 +3,10 @@ WorldFoundry third-party notices
 
 This file contains attribution and license information for third-party source,
 research implementations, models, and optional packages used by WorldFoundry.
-It is not a substitute for the complete license text.  Colocated LICENSE,
-NOTICE, LEGAL, SPDX, or source-header terms also apply.
+It is not a substitute for the complete license text. Source-header SPDX
+and copyright comments still apply. Standalone LICENSE, COPYING, NOTICE, and
+UPSTREAM.md files are not kept next to vendored source; see
+docs/reference/vendored-licenses.
 
 Apache-2.0 source adaptations
 -----------------------------

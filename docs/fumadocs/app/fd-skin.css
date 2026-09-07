@@ -378,7 +378,7 @@
 }
 
 .wf-home-main .wf-home-ecosystem-chips a {
-  border-radius: var(--pi-radius-lg);
+  border-radius: var(--pi-radius-xl);
 }
 
 @media (prefers-reduced-motion: reduce) {

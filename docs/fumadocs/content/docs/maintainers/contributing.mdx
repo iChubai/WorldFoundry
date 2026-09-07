@@ -17,7 +17,7 @@ Before opening a PR, confirm the following:
 - **Python** — Keep imports lazy when a model or benchmark has heavy optional dependencies.
 - **Public entry points** — Put user-facing runtime classes under `worldfoundry/pipelines/` or evaluation runners under `worldfoundry/evaluation/`.
 - **Model runtimes** — Implement runtime integrations under `worldfoundry/synthesis/**` in-tree. Do not depend on machine-local external checkouts; record external repos/checkpoints only as provenance or acquisition metadata until ported or vendor-reviewed.
-- **Vendored code** — Treat reviewed `thirdparty/` code as isolated code. Preserve upstream license notes.
+- **Vendored code** — Treat reviewed `thirdparty/` code as isolated code. Record the license name and upstream URL on the [Vendored licenses](/docs/reference/vendored-licenses) page. Do not add colocated `LICENSE`, `COPYING`, `NOTICE`, or `UPSTREAM.md` files next to source.
 - **Synthesis** — Keep `worldfoundry/synthesis/**` infer-only: runtime wrappers, model code needed at inference time, checkpoint/path helpers, and minimal runtime configs. Do not add training launchers, dataset builders, demo media, notebooks, or generated outputs. Use `worldfoundry/data/test_cases/` for demo assets.
 - **Formatting** — Avoid large unrelated formatting changes. Do not rewrite generated or vendored files unless the task requires it.
 - **Naming** — Prefer canonical ids and direct runner paths; when a public name changes, document the migration instead of adding long-lived compatibility maps.

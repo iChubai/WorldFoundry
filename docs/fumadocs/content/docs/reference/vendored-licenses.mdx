@@ -1,0 +1,50 @@
+---
+title: Vendored licenses
+description: Upstream license terms for in-tree copies. Official texts live at the upstream URLs, not as colocated LICENSE or UPSTREAM files.
+---
+
+WorldFoundry keeps some upstream inference code under `worldfoundry/base_models` and a few synthesis runtimes. Standalone `LICENSE`, `COPYING`, `NOTICE`, and `UPSTREAM.md` files are **not** stored next to that code. Read the official text at the upstream URL before you use a tree, especially for non-commercial or research-only terms.
+
+Source-file copyright headers and SPDX comments stay in the code. Package-level attribution also lives in the repository-root `THIRD-PARTY-NOTICES` file.
+
+<Callout type="warn" title="Non-commercial trees">
+  Several 3D reconstructions are CC BY-NC-SA 4.0, CC BY-NC 4.0, or an Inria / Stability / Tencent research license. Those copies are for academic and evaluation use. Commercial use needs a separate grant from the upstream licensor.
+</Callout>
+
+## Trees
+
+| Tree | License | Notes | Official text |
+| --- | --- | --- | --- |
+| `three_dimensions/general_3d/dust3r` | CC BY-NC-SA 4.0 | Non-commercial, attribution, share-alike. | [naver/dust3r](https://github.com/naver/dust3r/blob/main/LICENSE) |
+| `three_dimensions/general_3d/mast3r` | CC BY-NC-SA 4.0 | Same family as DUSt3R. Checkpoints were trained on datasets with their own terms. | [naver/mast3r](https://github.com/naver/mast3r/blob/main/LICENSE) |
+| `three_dimensions/general_3d/monst3r` | CC BY-NC-SA 4.0 | Embeds a forked DUSt3R plus CroCo and RAFT. Do not swap the embedded `dust3r/` with the canonical tree. | [Junyi42/monst3r](https://github.com/Junyi42/monst3r/blob/main/LICENSE) |
+| `three_dimensions/general_3d/stable_virtual_camera/.../third_party/dust3r` | CC BY-NC-SA 4.0 | Older DUSt3R snapshot shipped inside Stable Virtual Camera. SVC itself uses the Stability AI non-commercial license. | [naver/dust3r](https://github.com/naver/dust3r/blob/main/LICENSE) |
+| `three_dimensions/point_clouds/gaussian_splatting` | Gaussian-Splatting License (Inria / MPII) | Research and evaluation only. Commercial use needs written consent from Inria. | [graphdeco-inria/gaussian-splatting](https://github.com/graphdeco-inria/gaussian-splatting/blob/main/LICENSE.md) |
+| `three_dimensions/general_3d/mapanything` | Apache 2.0 code; checkpoint terms vary | Default `facebook/map-anything` weights are CC BY-NC 4.0. Review any alternate checkpoint before use. | [facebookresearch/map-anything](https://github.com/facebookresearch/map-anything) |
+| `three_dimensions/slam/mega_sam_runtime` | Apache 2.0 | MegaSaM wrapper and runtime. | [mega-sam/mega-sam](https://github.com/mega-sam/mega-sam) |
+| `three_dimensions/slam/mega_sam_runtime/base` | BSD 3-Clause | Princeton Vision & Learning Lab DROID-SLAM copy embedded by MegaSaM. | [princeton-vl/DROID-SLAM](https://github.com/princeton-vl/DROID-SLAM) |
+| `.../mega_sam_runtime/base/thirdparty/lietorch` | BSD 3-Clause | LieTorch. | [princeton-vl/lietorch](https://github.com/princeton-vl/lietorch) |
+| `.../thirdparty/eigen` and `.../lietorch/eigen` | MPL 2.0 (primary) | Eigen also publishes alternate COPYING files (BSD, LGPL, GPL, Apache, MINPACK). | [libeigen/eigen](https://gitlab.com/libeigen/eigen) |
+| `three_dimensions/point_clouds/hunyuan_mirror` | Tencent HunyuanWorld community license | Catalog id `hunyuanworld-mirror`. The 2.0 tree imports `camera_utils` from this copy. | [Tencent-Hunyuan/HunyuanWorld-Mirror](https://github.com/Tencent-Hunyuan/HunyuanWorld-Mirror) |
+| `three_dimensions/point_clouds/hyworldmirror_2p0` | Tencent HunyuanWorld community license | HY-World 2.0 WorldMirror component. Do not delete this or `hunyuan_mirror` in isolation. | [Tencent-Hunyuan/HY-World-2.0](https://github.com/Tencent-Hunyuan/HY-World-2.0) |
+| `perception_core/detection/yolo_world` | GPL-3.0 | Canonical YOLO-World plus vendored `mmyolo`. | [AILab-CVC/YOLO-World](https://github.com/AILab-CVC/YOLO-World) |
+| `perception_core/video_text/opens2v_nexus/eval/utils/yoloworld` | GPL-3.0 | Second YOLO-World snapshot used by OpenS2V-Nexus eval. Same upstream as the canonical copy. | [AILab-CVC/YOLO-World](https://github.com/AILab-CVC/YOLO-World) |
+| `perception_core/video_quality/hpsv3_runtime` | MIT | Copyright 2024 HPSv3 Team. | [MizzenAI/HPSv3](https://huggingface.co/MizzenAI/HPSv3) |
+| `synthesis/visual_generation/matrix_game/matrix_game_3p5_runtime` | Apache 2.0 | Infer-only Matrix-Game 3.5 at `6c94dd787659aa19fac22581cd8bea54e65d813f`. DA3 checkpoint is CC BY-NC 4.0. | [Riemann-Dynamics/Matrix-Game-3.5](https://github.com/Riemann-Dynamics/Matrix-Game-3.5) |
+
+`MANIFEST.in` still prunes several license-gated 3D trees from the published source distribution. That packaging rule is separate from this documentation page.
+
+## Do not merge parallel copies
+
+These trees look related but are not interchangeable:
+
+- **MonST3R** embeds a forked DUSt3R. Five files differ from canonical `general_3d/dust3r` (`cloud_opt/base_opt.py`, `cloud_opt/optimizer.py`, `model.py`, `utils/misc.py`, `utils/vo_eval.py`). Replacing them breaks motion-aware optimization.
+- **Stable Virtual Camera** embeds an older DUSt3R/CroCo API. It is a different release, not a reformatted duplicate of canonical `dust3r`.
+- **MegaSaM** embeds its own DROID-SLAM, UniDepth, and Depth-Anything forks. Do not replace them with the canonical WorldFoundry trees.
+- **HunyuanWorld-Mirror** and **hyworldmirror_2p0** are two versions. The 2.0 tree imports utilities from `hunyuan_mirror`.
+- **YOLO-World** exists twice (canonical detector tree and OpenS2V-Nexus eval). Treat semantic fixes as applying to both until they are deduplicated.
+- Bare `import dust3r` / `import croco` can resolve to the wrong copy if more than one tree is on `sys.path`.
+
+## Maintainer rule
+
+When you vendor or update an in-tree upstream copy, record the license name and upstream URL on this page. Do not add a colocated `LICENSE`, `COPYING`, `NOTICE`, or `UPSTREAM.md` file next to the source.

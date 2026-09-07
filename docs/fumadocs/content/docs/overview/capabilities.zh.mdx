@@ -63,7 +63,7 @@ WorldFoundry 把 run 目录当作研究记录，而不是一次性 cache。典�
 
 WorldFoundry 不转发模型 checkpoint、受限权重、完整 benchmark 数据集、simulator 资产、API key、私有 endpoint，也不保存普通用户输出。它同样不会 vendor 每一套上游训练栈，也不保证任意 model × benchmark 组合都有意义。
 
-这些边界让仓库保持可审查，并尊重上游许可。仓库内的代码只描述外部资产如何接入一次 run，并在资产缺失时如实报告；它不会静默下载或替换受保护资源。
+这些边界让仓库保持可审查，并尊重上游许可。仓库内的代码只描述外部资产如何接入一次 run，并在资产缺失时如实报告；它不会静默下载或替换受保护资源。`base_models` 仓内副本的许可名称和正式文本见[仓内上游许可证](/zh/docs/reference/vendored-licenses)。
 
 ## 下一步
 

@@ -201,7 +201,7 @@ export function WorldFoundryArchitecture({ locale = 'en' }: { locale?: SystemMap
   const copy = architectureCopy[locale];
 
   return (
-    <figure className="wf-system-architecture" aria-label={copy.aria}>
+    <figure className="wf-system-architecture not-prose" aria-label={copy.aria}>
       <div className="wf-system-architecture-stack">
         {copy.layers.map(({ label, purpose, items, Icon }, index) => (
           <div className="wf-system-architecture-unit" key={label}>
@@ -215,7 +215,7 @@ export function WorldFoundryArchitecture({ locale = 'en' }: { locale?: SystemMap
                 <span>{String(index + 1).padStart(2, '0')}</span>
                 <Icon aria-hidden="true" size={20} strokeWidth={1.7} />
                 <div>
-                  <h3>{label}</h3>
+                  <strong>{label}</strong>
                   <p>{purpose}</p>
                 </div>
               </div>

@@ -3684,6 +3684,7 @@ button.pi-doc-action-chip {
   .pi-metric-quick-nav,
   .pi-studio-viz-gallery,
   .pi-env-catalog,
+  .wf-system-architecture,
   .not-prose,
   .fd-steps,
   figure,
@@ -5883,7 +5884,7 @@ button.pi-doc-action-chip {
   box-shadow: 0 14px 36px color-mix(in srgb, var(--pi-ink) 6%, transparent);
   color: var(--pi-ink);
   margin: 28px 0 34px;
-  overflow: hidden;
+  overflow: clip;
 }
 
 .wf-system-workflow-track {
@@ -5986,22 +5987,28 @@ button.pi-doc-action-chip {
 }
 
 .wf-system-architecture-handoff {
-  align-items: center;
+  align-items: stretch;
   display: flex;
+  flex-direction: column;
   justify-content: center;
-  padding: 0.55rem 0 0.75rem;
+  min-height: 42px;
+  padding: 0;
 }
 
 .wf-system-architecture-handoff span {
+  align-items: center;
   background: color-mix(in srgb, var(--pi-brand-accent) 10%, var(--pi-elevated));
   border: 1px solid color-mix(in srgb, var(--pi-brand-accent) 20%, var(--pi-line));
   border-radius: 4px;
   color: var(--pi-brand-accent);
+  display: inline-flex;
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
   font-size: 10px;
   font-weight: 650;
+  justify-content: center;
   letter-spacing: 0.02em;
   line-height: 1.3;
+  margin: 8px auto;
   padding: 0.18rem 0.45rem;
   position: relative;
 }
@@ -6010,33 +6017,34 @@ button.pi-doc-action-chip {
 .wf-system-architecture-handoff span::after {
   background: var(--pi-brand-accent-soft);
   content: '';
-  height: 10px;
   left: 50%;
   position: absolute;
   transform: translateX(-50%);
-  width: 1.5px;
 }
 
 .wf-system-architecture-handoff span::before {
-  top: -10px;
+  height: 8px;
+  top: -8px;
+  width: 1.5px;
 }
 
 .wf-system-architecture-handoff span::after {
   border-left: 4px solid transparent;
   border-right: 4px solid transparent;
   border-top: 5px solid var(--pi-brand-accent-soft);
-  bottom: -12px;
+  bottom: -9px;
   height: 0;
   width: 0;
 }
 
 .wf-system-architecture-layer {
-  align-items: center;
+  align-items: start;
   border-bottom: 1px solid var(--pi-line);
   display: grid;
   gap: 24px;
-  grid-template-columns: minmax(250px, 0.92fr) minmax(0, 1.25fr);
-  padding: 16px 18px;
+  grid-template-columns: minmax(220px, 0.92fr) minmax(0, 1.25fr);
+  min-height: 168px;
+  padding: 18px;
 }
 
 .wf-system-architecture-heading {
@@ -6059,16 +6067,25 @@ button.pi-doc-action-chip {
   color: var(--pi-brand-accent);
 }
 
-.wf-system-architecture-heading h3 {
+.pi-doc-content .wf-system-architecture :where(h3, p, ul, ol, li, strong) {
+  letter-spacing: inherit;
+  margin: 0;
+  padding: 0;
+  text-indent: 0;
+}
+
+.pi-doc-content .wf-system-architecture-heading strong,
+.wf-system-architecture-heading strong {
   border: 0;
+  color: var(--pi-ink);
+  display: block;
   font-family: var(--pi-brand-font), Georgia, 'Times New Roman', serif;
   font-size: 18px;
   font-weight: 650;
   line-height: 1.2;
-  margin: 0;
-  padding: 0;
 }
 
+.pi-doc-content .wf-system-architecture-heading p,
 .wf-system-architecture-heading p {
   color: var(--pi-muted);
   font-size: 11px;
@@ -6077,12 +6094,14 @@ button.pi-doc-action-chip {
 }
 
 .wf-system-architecture-layer ul {
-  display: flex;
-  flex-wrap: wrap;
+  align-content: start;
+  display: grid;
   gap: 7px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   list-style: none;
   margin: 0;
   padding: 0;
+  width: 100%;
 }
 
 .wf-system-architecture-layer li {
@@ -6091,7 +6110,9 @@ button.pi-doc-action-chip {
   color: var(--pi-ink);
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
   font-size: 10px;
-  line-height: 1;
+  line-height: 1.2;
+  list-style: none;
+  min-height: 28px;
   padding: 8px 9px;
 }
 

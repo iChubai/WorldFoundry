@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import {
   ArrowRight,
+  ArrowUpRight,
   CircleDot,
   GitCompareArrows,
   Layers3,
@@ -433,17 +434,22 @@ export default function HomePage() {
                 </span>
               </Link>
             ))}
-          </div>
-          <ul className="wf-home-ecosystem-chips" aria-label="Ecosystem links">
             {ecosystemLinks.map((item) => (
-              <li key={item.label}>
-                <a href={item.href} target="_blank" rel="noreferrer">
-                  <strong>{item.label}</strong>
-                  <span>{item.text}</span>
-                </a>
-              </li>
+              <a
+                className="wf-home-resource-card"
+                href={item.href}
+                key={item.label}
+                target="_blank"
+                rel="noreferrer"
+              >
+                <h3>{item.label}</h3>
+                <p>{item.text}</p>
+                <span aria-hidden="true">
+                  <ArrowUpRight size={15} strokeWidth={1.8} />
+                </span>
+              </a>
             ))}
-          </ul>
+          </div>
         </section>
       </div>
 

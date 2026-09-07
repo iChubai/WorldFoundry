@@ -1,0 +1,50 @@
+---
+title: 仓内上游许可证
+description: 仓内上游副本的许可条款。正式文本以官方仓库为准，不在源码旁保留 LICENSE 或 UPSTREAM 文件。
+---
+
+WorldFoundry 会在 `worldfoundry/base_models` 和少量 synthesis runtime 下保留上游推理代码。独立的 `LICENSE`、`COPYING`、`NOTICE`、`UPSTREAM.md` 文件**不会**和这些代码放在一起。使用某棵树之前，请先到上游 URL 阅读正式文本，尤其是非商业或仅研究条款。
+
+源文件里的版权头和 SPDX 注释会保留。包级别的署名也写在仓库根目录的 `THIRD-PARTY-NOTICES`。
+
+<Callout type="warn" title="非商业树">
+  多套 3D 重建代码是 CC BY-NC-SA 4.0、CC BY-NC 4.0，或 Inria / Stability / Tencent 研究许可，只适用于学术和评估。商用需要上游许可方另行授权。
+</Callout>
+
+## 目录
+
+| 目录 | 许可 | 说明 | 正式文本 |
+| --- | --- | --- | --- |
+| `three_dimensions/general_3d/dust3r` | CC BY-NC-SA 4.0 | 非商业、署名、相同方式共享。 | [naver/dust3r](https://github.com/naver/dust3r/blob/main/LICENSE) |
+| `three_dimensions/general_3d/mast3r` | CC BY-NC-SA 4.0 | 与 DUSt3R 同族。Checkpoint 训练数据另有条款。 | [naver/mast3r](https://github.com/naver/mast3r/blob/main/LICENSE) |
+| `three_dimensions/general_3d/monst3r` | CC BY-NC-SA 4.0 | 内嵌修改过的 DUSt3R，以及 CroCo 和 RAFT。不能把内嵌 `dust3r/` 和仓内正式树对换。 | [Junyi42/monst3r](https://github.com/Junyi42/monst3r/blob/main/LICENSE) |
+| `three_dimensions/general_3d/stable_virtual_camera/.../third_party/dust3r` | CC BY-NC-SA 4.0 | Stable Virtual Camera 自带的较旧 DUSt3R 快照。SVC 本身使用 Stability AI 非商业许可。 | [naver/dust3r](https://github.com/naver/dust3r/blob/main/LICENSE) |
+| `three_dimensions/point_clouds/gaussian_splatting` | Gaussian-Splatting License（Inria / MPII） | 仅研究与评估。商用需 Inria 书面同意。 | [graphdeco-inria/gaussian-splatting](https://github.com/graphdeco-inria/gaussian-splatting/blob/main/LICENSE.md) |
+| `three_dimensions/general_3d/mapanything` | 代码 Apache 2.0；权重条款另计 | 默认 `facebook/map-anything` 权重是 CC BY-NC 4.0。换 checkpoint 前先核对条款。 | [facebookresearch/map-anything](https://github.com/facebookresearch/map-anything) |
+| `three_dimensions/slam/mega_sam_runtime` | Apache 2.0 | MegaSaM wrapper 与 runtime。 | [mega-sam/mega-sam](https://github.com/mega-sam/mega-sam) |
+| `three_dimensions/slam/mega_sam_runtime/base` | BSD 3-Clause | MegaSaM 内嵌的 Princeton VLL DROID-SLAM。 | [princeton-vl/DROID-SLAM](https://github.com/princeton-vl/DROID-SLAM) |
+| `.../mega_sam_runtime/base/thirdparty/lietorch` | BSD 3-Clause | LieTorch。 | [princeton-vl/lietorch](https://github.com/princeton-vl/lietorch) |
+| `.../thirdparty/eigen` 与 `.../lietorch/eigen` | 主许可为 MPL 2.0 | Eigen 另有 BSD、LGPL、GPL、Apache、MINPACK 等 COPYING 文本。 | [libeigen/eigen](https://gitlab.com/libeigen/eigen) |
+| `three_dimensions/point_clouds/hunyuan_mirror` | Tencent HunyuanWorld community license | catalog id `hunyuanworld-mirror`。2.0 树会从这份副本 import `camera_utils`。 | [Tencent-Hunyuan/HunyuanWorld-Mirror](https://github.com/Tencent-Hunyuan/HunyuanWorld-Mirror) |
+| `three_dimensions/point_clouds/hyworldmirror_2p0` | Tencent HunyuanWorld community license | HY-World 2.0 的 WorldMirror 组件。不能单独删掉这一棵或 `hunyuan_mirror`。 | [Tencent-Hunyuan/HY-World-2.0](https://github.com/Tencent-Hunyuan/HY-World-2.0) |
+| `perception_core/detection/yolo_world` | GPL-3.0 | 正式 YOLO-World，另带 vendored `mmyolo`。 | [AILab-CVC/YOLO-World](https://github.com/AILab-CVC/YOLO-World) |
+| `perception_core/video_text/opens2v_nexus/eval/utils/yoloworld` | GPL-3.0 | OpenS2V-Nexus eval 里的第二份 YOLO-World 快照，与正式副本同源。 | [AILab-CVC/YOLO-World](https://github.com/AILab-CVC/YOLO-World) |
+| `perception_core/video_quality/hpsv3_runtime` | MIT | Copyright 2024 HPSv3 Team。 | [MizzenAI/HPSv3](https://huggingface.co/MizzenAI/HPSv3) |
+| `synthesis/visual_generation/matrix_game/matrix_game_3p5_runtime` | Apache 2.0 | 仅推理的 Matrix-Game 3.5，revision `6c94dd787659aa19fac22581cd8bea54e65d813f`。DA3 checkpoint 是 CC BY-NC 4.0。 | [Riemann-Dynamics/Matrix-Game-3.5](https://github.com/Riemann-Dynamics/Matrix-Game-3.5) |
+
+`MANIFEST.in` 仍会把若干许可受限的 3D 树从公开发布的源码包里 prune 掉。这条打包规则和本页是分开的。
+
+## 不要合并平行副本
+
+这些树看起来相关，但不能互换：
+
+- **MonST3R** 内嵌修改过的 DUSt3R。和仓内正式 `general_3d/dust3r` 有 5 个文件不同（`cloud_opt/base_opt.py`、`cloud_opt/optimizer.py`、`model.py`、`utils/misc.py`、`utils/vo_eval.py`）。换掉会破坏 motion-aware optimization。
+- **Stable Virtual Camera** 内嵌的是较旧的 DUSt3R/CroCo API，不是正式 `dust3r` 的格式化副本。
+- **MegaSaM** 自带 DROID-SLAM、UniDepth、Depth-Anything 的 fork，不能用仓内正式树替换。
+- **HunyuanWorld-Mirror** 和 **hyworldmirror_2p0** 是两个版本。2.0 树会从 `hunyuan_mirror` import 工具函数。
+- **YOLO-World** 有两份（正式 detector 树和 OpenS2V-Nexus eval）。在去重之前，语义修复要两边一起做。
+- 如果不止一棵树在 `sys.path` 上，裸 `import dust3r` / `import croco` 可能解析到错误副本。
+
+## 维护者规则
+
+vendor 或更新仓内上游副本时，在本页记录许可名称和上游 URL。不要在源码旁再放 `LICENSE`、`COPYING`、`NOTICE` 或 `UPSTREAM.md`。

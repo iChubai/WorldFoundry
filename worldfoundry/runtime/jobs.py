@@ -17,8 +17,65 @@ from typing import Any
 
 from worldfoundry.core.time import utc_now_iso as _utc_now_iso
 
-
 TERMINAL_JOB_STATUSES = frozenset({"completed", "failed", "cancelled"})
+
+# asyncio streams default to a 64 KiB readline buffer; model CLIs routinely
+# print JSON results larger than that, which used to raise ValueError, mark the
+# job failed, and orphan the child process group.
+_STREAM_BUFFER_LIMIT = 2**20
+
+# Version tag for the persisted job-index file written by
+# ``AsyncCommandJobStore(state_path=...)``.
+JOB_STORE_STATE_SCHEMA_VERSION = 1
+
+# Metadata fields persisted per job in the on-disk index. In-memory log tails
+# are intentionally excluded: raw stdout/stderr/events already live in the
+# per-job artifact files referenced by the ``*_log_path`` fields.
+_PERSISTED_JOB_FIELDS = (
+    "job_id",
+    "run_id",
+    "pid",
+    "status",
+    "created_at",
+    "started_at",
+    "completed_at",
+    "returncode",
+    "error",
+    "cwd",
+    "output_dir",
+    "log_dir",
+    "event_log_path",
+    "stdout_log_path",
+    "stderr_log_path",
+)
+
+
+def pid_alive(pid: int | None) -> bool:
+    """Best-effort liveness probe for a process id (POSIX signal 0)."""
+    if pid is None or pid <= 0:
+        return False
+    try:
+        os.kill(pid, 0)
+    except ProcessLookupError:
+        return False
+    except PermissionError:
+        # The process exists but belongs to another user.
+        return True
+    except OSError:
+        return False
+    return True
+
+
+def _iso_to_epoch(value: str | None) -> float | None:
+    """Convert an ISO-8601 timestamp (with optional ``Z`` suffix) to epoch seconds."""
+    if not value:
+        return None
+    from datetime import datetime
+
+    try:
+        return datetime.fromisoformat(str(value).replace("Z", "+00:00")).timestamp()
+    except ValueError:
+        return None
 
 
 def python_module_command(command: Sequence[str], *, python_executable: str | None = None) -> tuple[str, ...]:
@@ -74,6 +131,9 @@ def run_bounded_command(
     process_env = os.environ.copy()
     if env:
         process_env.update(env)
+    from worldfoundry.core.logging_setup import log_context_environment
+
+    process_env.update(log_context_environment())
 
     start = time.monotonic()
     process = subprocess.Popen(
@@ -139,8 +199,14 @@ class CommandJob:
     job_id: str
     command: tuple[str, ...]
     display_command: tuple[str, ...]
+    run_id: str = ""
+    pid: int | None = None
     cwd: str | None = None
     output_dir: str | None = None
+    log_dir: str | None = None
+    event_log_path: str | None = None
+    stdout_log_path: str | None = None
+    stderr_log_path: str | None = None
     metadata: Mapping[str, Any] = field(default_factory=dict)
     status: str = "queued"
     created_at: str = field(default_factory=_utc_now_iso)
@@ -150,6 +216,9 @@ class CommandJob:
     error: str | None = None
     result: Any | None = None
     logs: list[dict[str, Any]] = field(default_factory=list)
+    # True when the job was rebuilt from a persisted index after a store
+    # restart; such jobs carry no live process/task handles.
+    restored: bool = False
     _task: asyncio.Task[None] | None = field(default=None, repr=False)
     _process: asyncio.subprocess.Process | None = field(default=None, repr=False)
 
@@ -174,16 +243,23 @@ class CommandJob:
         """Return a summary dict suitable for UI polling endpoints."""
         return {
             "job_id": self.job_id,
+            "run_id": self.run_id,
+            "pid": self.pid,
             "status": self.status,
             "created_at": self.created_at,
             "started_at": self.started_at,
             "completed_at": self.completed_at,
             "returncode": self.returncode,
             "output_dir": self.output_dir,
+            "log_dir": self.log_dir,
+            "event_log_path": self.event_log_path,
+            "stdout_log_path": self.stdout_log_path,
+            "stderr_log_path": self.stderr_log_path,
             "command": list(self.display_command),
             "cwd": self.cwd,
             "metadata": dict(self.metadata),
             "error": self.error,
+            "restored": self.restored,
             "logs": self.logs[-log_tail:] if log_tail else [],
         }
 
@@ -200,9 +276,99 @@ class CommandJob:
 class AsyncCommandJobStore:
     """Small in-process command runner used by local UI and MCP surfaces."""
 
-    def __init__(self, *, max_log_lines: int = 4000) -> None:
+    def __init__(
+        self,
+        *,
+        max_log_lines: int = 4000,
+        max_jobs: int | None = None,
+        state_path: str | Path | None = None,
+    ) -> None:
         self.max_log_lines = max_log_lines
+        # Optional retention bound for terminal jobs; ``None`` keeps every job
+        # (legacy behaviour). Long-lived UI/MCP processes should set a bound.
+        self.max_jobs = max_jobs
+        # Optional on-disk JSON index (CM-28). When set, job metadata
+        # (run_id/pid/output_dir/status/log paths) survives store restarts:
+        # jobs are restored on construction and reconciled against live pids,
+        # so an MCP stdio server killed by its client can still report — and
+        # cancel — the evaluation subprocesses it left running.
+        self.state_path = None if state_path is None else Path(state_path)
         self._jobs: dict[str, CommandJob] = {}
+        if self.state_path is not None:
+            self._restore_persisted_jobs()
+
+    # ── Persistence (CM-28) ─────────────────────────────────────────
+
+    def _restore_persisted_jobs(self) -> None:
+        """Load the persisted job index and reconcile statuses against live pids.
+
+        Non-terminal jobs whose recorded pid is gone are marked failed; jobs
+        whose pid is still alive stay ``running`` as *restored* jobs (metadata
+        and on-disk log paths available, no live process handle).  A missing
+        or unreadable index starts the store empty.
+        """
+        assert self.state_path is not None
+        try:
+            payload = json.loads(self.state_path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError, ValueError):
+            return
+        rows = payload.get("jobs") if isinstance(payload, Mapping) else None
+        if not isinstance(rows, list):
+            return
+        reconciled = False
+        for row in rows:
+            if not isinstance(row, Mapping) or not row.get("job_id"):
+                continue
+            command = tuple(str(item) for item in (row.get("command") or ()))
+            job = CommandJob(
+                job_id=str(row["job_id"]),
+                command=command,
+                display_command=command,
+                restored=True,
+            )
+            for field_name in _PERSISTED_JOB_FIELDS:
+                if field_name in ("job_id",) or row.get(field_name) is None:
+                    continue
+                setattr(job, field_name, row[field_name])
+            metadata = row.get("metadata")
+            if isinstance(metadata, Mapping):
+                job.metadata = dict(metadata)
+            if not job.terminal:
+                if pid_alive(job.pid):
+                    job.status = "running"
+                else:
+                    job.status = "failed"
+                    job.error = (
+                        f"process not found after job-store restart (pid {job.pid})"
+                        if job.pid is not None
+                        else "job lost during job-store restart (no pid recorded)"
+                    )
+                    job.completed_at = job.completed_at or _utc_now_iso()
+                    reconciled = True
+            self._jobs[job.job_id] = job
+        if reconciled:
+            self._persist()
+
+    def _persist(self) -> None:
+        """Atomically write the metadata index for every tracked job."""
+        if self.state_path is None:
+            return
+        rows = []
+        for job in sorted(self._jobs.values(), key=lambda item: item.created_at):
+            row: dict[str, Any] = {name: getattr(job, name) for name in _PERSISTED_JOB_FIELDS}
+            row["command"] = list(job.display_command)
+            row["metadata"] = dict(job.metadata)
+            rows.append(row)
+        payload = {"schema_version": JOB_STORE_STATE_SCHEMA_VERSION, "jobs": rows}
+        try:
+            self.state_path.parent.mkdir(parents=True, exist_ok=True)
+            tmp_path = self.state_path.with_name(self.state_path.name + f".tmp-{os.getpid()}")
+            tmp_path.write_text(json.dumps(payload, ensure_ascii=False, default=str), encoding="utf-8")
+            os.replace(tmp_path, self.state_path)
+        except OSError:
+            # Persistence is best-effort: an unwritable index must never take
+            # down job submission or status transitions.
+            pass
 
     def submit(
         self,
@@ -214,6 +380,7 @@ class AsyncCommandJobStore:
         output_dir: str | Path | None = None,
         metadata: Mapping[str, Any] | None = None,
         job_id: str | None = None,
+        timeout: float | None = None,
     ) -> CommandJob:
         """Submit a command as an async job and start it immediately.
 
@@ -225,6 +392,8 @@ class AsyncCommandJobStore:
             output_dir: Directory for persistent output artifacts.
             metadata: Arbitrary metadata attached to the job.
             job_id: Optional explicit job identifier; auto-generated if ``None``.
+            timeout: Optional per-job wall-clock bound in seconds. On expiry the
+                subprocess group is terminated and the job is marked failed.
 
         Returns:
             The newly created :class:`CommandJob`.
@@ -232,21 +401,39 @@ class AsyncCommandJobStore:
         Raises:
             ValueError: If *job_id* already exists in the store.
         """
+        if timeout is not None and timeout <= 0:
+            raise ValueError(f"timeout must be positive, got {timeout}")
+        if self.max_jobs is not None:
+            self.prune(max_jobs=self.max_jobs)
         resolved_job_id = job_id or uuid.uuid4().hex[:12]
         if resolved_job_id in self._jobs:
             raise ValueError(f"job already exists: {resolved_job_id}")
         # Jobs are tracked in-process so UI/MCP calls can poll by id and inspect
         # both state transitions and captured stdout/stderr.
+        job_metadata = dict(metadata or {})
+        run_id = str(job_metadata.get("run_id") or resolved_job_id)
+        log_dir: Path | None = None
+        if output_dir is not None:
+            output_root = Path(output_dir)
+            safe_job_id = "".join(char if char.isalnum() or char in {"-", "_", "."} else "-" for char in resolved_job_id)
+            log_dir = output_root / "logs" / "jobs" / (safe_job_id.strip(".-") or "job")
         job = CommandJob(
             job_id=resolved_job_id,
+            run_id=run_id,
             command=tuple(str(item) for item in command),
             display_command=tuple(str(item) for item in (display_command or command)),
             cwd=str(cwd) if cwd is not None else None,
             output_dir=str(output_dir) if output_dir is not None else None,
-            metadata=dict(metadata or {}),
+            log_dir=None if log_dir is None else str(log_dir),
+            event_log_path=None if log_dir is None else str(log_dir / "events.jsonl"),
+            stdout_log_path=None if log_dir is None else str(log_dir / "stdout.log"),
+            stderr_log_path=None if log_dir is None else str(log_dir / "stderr.log"),
+            metadata=job_metadata,
         )
         self._jobs[job.job_id] = job
-        job._task = asyncio.create_task(self._run(job, dict(env or {})))
+        self._write_lifecycle_event(job, "INFO", "job.queued", "WorldFoundry job queued")
+        self._persist()
+        job._task = asyncio.create_task(self._run(job, dict(env or {}), timeout=timeout))
         return job
 
     def get(self, job_id: str) -> CommandJob | None:
@@ -256,6 +443,41 @@ class AsyncCommandJobStore:
     def list(self) -> list[CommandJob]:
         """Return all jobs sorted by creation time (most recent first)."""
         return sorted(self._jobs.values(), key=lambda job: job.created_at, reverse=True)
+
+    def prune(self, *, max_age_seconds: float | None = None, max_jobs: int | None = None) -> int:
+        """Evict terminal jobs to bound memory in long-lived UI/MCP processes.
+
+        Running or queued jobs are never evicted. ``max_age_seconds`` drops
+        terminal jobs whose completion (or creation) timestamp is older than
+        the cutoff; ``max_jobs`` keeps at most that many jobs by evicting the
+        oldest terminal ones first.
+
+        Returns:
+            The number of jobs removed.
+        """
+        removed = 0
+        if max_age_seconds is not None:
+            cutoff = time.time() - max_age_seconds
+            for job_id, job in list(self._jobs.items()):
+                if not job.terminal:
+                    continue
+                stamp = _iso_to_epoch(job.completed_at or job.created_at)
+                if stamp is not None and stamp < cutoff:
+                    del self._jobs[job_id]
+                    removed += 1
+        if max_jobs is not None and len(self._jobs) > max_jobs:
+            excess = len(self._jobs) - max_jobs
+            for job in sorted(self._jobs.values(), key=lambda item: item.created_at):
+                if excess <= 0:
+                    break
+                if not job.terminal:
+                    continue
+                del self._jobs[job.job_id]
+                removed += 1
+                excess -= 1
+        if removed:
+            self._persist()
+        return removed
 
     async def cancel(self, job_id: str) -> tuple[bool, str]:
         """Cancel a running or queued job by identifier.
@@ -273,13 +495,16 @@ class AsyncCommandJobStore:
             return False, f"job is already {job.status}"
         job.status = "cancelled"
         job.error = "cancelled by request"
+        if job.started_at is None:
+            self._write_lifecycle_event(job, "WARNING", "job.cancelled", "WorldFoundry job cancelled")
         await self._terminate_process(job)
         if job._task is not None and not job._task.done():
             job._task.cancel()
         job.completed_at = job.completed_at or _utc_now_iso()
+        self._persist()
         return True, "cancelled"
 
-    async def _run(self, job: CommandJob, env: Mapping[str, str]) -> None:
+    async def _run(self, job: CommandJob, env: Mapping[str, str], *, timeout: float | None = None) -> None:
         """Execute the job subprocess, stream logs, and set the final status."""
         # Async runner lifecycle: spawn process -> stream logs -> parse result -> set final status.
         job.status = "running"
@@ -289,6 +514,17 @@ class AsyncCommandJobStore:
         try:
             if job.output_dir:
                 Path(job.output_dir).mkdir(parents=True, exist_ok=True)
+            if job.log_dir:
+                Path(job.log_dir).mkdir(parents=True, exist_ok=True)
+            from worldfoundry.core.logging_setup import log_context_environment
+
+            process_env.update(log_context_environment(run_id=job.run_id, job_id=job.job_id, phase="job"))
+            if job.event_log_path:
+                # Give framework-owned child CLIs a per-job sink.  Their
+                # stdout/stderr remain in the separate raw artifact files.
+                process_env["WORLDFOUNDRY_LOG_FILE"] = job.event_log_path
+                process_env["WORLDFOUNDRY_LOG_JSON"] = "1"
+            self._write_lifecycle_event(job, "INFO", "job.started", "WorldFoundry job started")
             job._process = await asyncio.create_subprocess_exec(
                 *job.command,
                 cwd=job.cwd,
@@ -296,30 +532,63 @@ class AsyncCommandJobStore:
                 stdout=asyncio.subprocess.PIPE,
                 stderr=asyncio.subprocess.PIPE,
                 start_new_session=True,
+                limit=_STREAM_BUFFER_LIMIT,
             )
-            await asyncio.gather(
-                self._read_stream(job, "stdout", job._process.stdout),
-                self._read_stream(job, "stderr", job._process.stderr),
-            )
-            job.returncode = await job._process.wait()
+            job.pid = job._process.pid
+            self._persist()
+
+            async def _pump_and_wait() -> None:
+                await asyncio.gather(
+                    self._read_stream(job, "stdout", job._process.stdout),
+                    self._read_stream(job, "stderr", job._process.stderr),
+                )
+                job.returncode = await job._process.wait()
+
+            if timeout is None:
+                await _pump_and_wait()
+            else:
+                try:
+                    await asyncio.wait_for(_pump_and_wait(), timeout=timeout)
+                except asyncio.TimeoutError:
+                    await self._terminate_process(job)
+                    job.returncode = job._process.returncode
+                    if job.status != "cancelled":
+                        job.status = "failed"
+                        job.error = f"job timed out after {timeout}s"
+                        self._append_job_log(job, "stderr", f"TimeoutError: job exceeded {timeout}s\n")
+                        self._write_lifecycle_event(job, "ERROR", "job.timeout", "WorldFoundry job timed out")
+                    return
             if job.status == "cancelled":
                 return
             job.result = _extract_json_from_logs(job.logs)
             job.status = "completed" if job.returncode == 0 else "failed"
             if job.status == "failed":
                 job.error = f"command exited with code {job.returncode}"
+                self._write_lifecycle_event(job, "ERROR", "job.failed", "WorldFoundry job failed")
+            else:
+                self._write_lifecycle_event(job, "INFO", "job.finished", "WorldFoundry job finished")
         except asyncio.CancelledError:
             await self._terminate_process(job)
             job.status = "cancelled"
             job.error = job.error or "cancelled"
+            self._write_lifecycle_event(job, "WARNING", "job.cancelled", "WorldFoundry job cancelled")
             raise
         except Exception as exc:  # noqa: BLE001 - surfaced through UI/MCP status.
+            # Never leave the spawned process group running when the runner
+            # itself fails, otherwise the child keeps occupying GPUs while the
+            # job is reported as failed.
+            try:
+                await self._terminate_process(job)
+            except Exception:  # noqa: BLE001 - cleanup must not mask the original error.
+                pass
             job.status = "failed"
             job.error = str(exc)
-            job.append_log("stderr", f"{type(exc).__name__}: {exc}\n")
+            self._append_job_log(job, "stderr", f"{type(exc).__name__}: {exc}\n")
+            self._write_lifecycle_event(job, "ERROR", "job.failed", "WorldFoundry job failed", exception=exc)
         finally:
             if job.completed_at is None:
                 job.completed_at = _utc_now_iso()
+            self._persist()
 
     async def _read_stream(
         self,
@@ -331,20 +600,95 @@ class AsyncCommandJobStore:
         if stream is None:
             return
         while True:
-            chunk = await stream.readline()
+            try:
+                chunk = await stream.readline()
+            except ValueError:
+                # A single line exceeded the stream buffer limit; the reader
+                # already dropped the oversized data. Record a marker and keep
+                # draining instead of failing the job (and orphaning the child).
+                self._append_job_log(
+                    job,
+                    stream_name,
+                    f"[worldfoundry] dropped output line exceeding {_STREAM_BUFFER_LIMIT} bytes\n",
+                )
+                continue
             if not chunk:
                 break
             text = chunk.decode("utf-8", errors="replace")
-            job.append_log(stream_name, text)
+            self._append_job_log(job, stream_name, text)
             if len(job.logs) > self.max_log_lines:
                 del job.logs[: len(job.logs) - self.max_log_lines]
+
+    @staticmethod
+    def _append_job_log(job: CommandJob, stream_name: str, text: str) -> None:
+        """Keep a bounded in-memory tail while retaining full raw stream files."""
+
+        job.append_log(stream_name, text)
+        target = job.stdout_log_path if stream_name == "stdout" else job.stderr_log_path
+        if target is not None and text:
+            with Path(target).open("a", encoding="utf-8", errors="replace") as handle:
+                handle.write(text)
+
+    @staticmethod
+    def _write_lifecycle_event(
+        job: CommandJob,
+        level: str,
+        event: str,
+        message: str,
+        *,
+        exception: BaseException | None = None,
+    ) -> None:
+        """Persist job state transitions independently of child process output."""
+
+        if job.event_log_path is None:
+            return
+        from worldfoundry.core.logging_setup import write_jsonl_event
+
+        fields: dict[str, Any] = {
+            "run_id": job.run_id,
+            "job_id": job.job_id,
+            "status": job.status,
+            "returncode": job.returncode,
+            "output_dir": job.output_dir,
+        }
+        if job.started_at and job.completed_at:
+            fields["started_at"] = job.started_at
+            fields["completed_at"] = job.completed_at
+        write_jsonl_event(
+            job.event_log_path,
+            level=level,
+            event=event,
+            message=message,
+            logger_name=__name__,
+            exception=exception,
+            **fields,
+        )
 
     async def _terminate_process(self, job: CommandJob) -> None:
         """Gracefully terminate the job's subprocess, escalating to SIGKILL if needed."""
         # Graceful shutdown first, then hard stop, so benchmark runners can flush
         # partial state before the process exits.
         process = job._process
-        if process is None or process.returncode is not None:
+        if process is None:
+            # Restored jobs (CM-28) carry only the detached child's pid: signal
+            # its process group directly (children start with their own
+            # session, so pid == pgid) with the same TERM → wait → KILL ladder.
+            if sys.platform == "win32" or not pid_alive(job.pid):
+                return
+            try:
+                os.killpg(job.pid, signal.SIGTERM)  # type: ignore[arg-type]
+            except (ProcessLookupError, PermissionError):
+                return
+            for _ in range(10):
+                await asyncio.sleep(0.5)
+                if not pid_alive(job.pid):
+                    return
+            try:
+                os.killpg(job.pid, signal.SIGKILL)  # type: ignore[arg-type]
+            except (ProcessLookupError, PermissionError):
+                pass
+            return
+        if process.returncode is not None:
             return
         try:
             if sys.platform == "win32":
@@ -352,7 +696,9 @@ class AsyncCommandJobStore:
             else:
                 os.killpg(process.pid, signal.SIGTERM)
             await asyncio.wait_for(process.wait(), timeout=5)
-        except TimeoutError:
+        # Catch both spellings: asyncio.TimeoutError is only an alias of the
+        # builtin TimeoutError on Python >= 3.11.
+        except (TimeoutError, asyncio.TimeoutError):
             if sys.platform == "win32":
                 process.kill()
             else:
@@ -391,7 +737,9 @@ def _json_candidates(text: str) -> list[str]:
 __all__ = [
     "AsyncCommandJobStore",
     "CommandJob",
+    "JOB_STORE_STATE_SCHEMA_VERSION",
     "TERMINAL_JOB_STATUSES",
+    "pid_alive",
     "python_module_command",
     "run_bounded_command",
 ]

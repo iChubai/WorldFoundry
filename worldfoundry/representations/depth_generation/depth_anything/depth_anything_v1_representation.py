@@ -1,5 +1,5 @@
+import json
 import os
-import warnings
 from pathlib import Path
 from typing import Optional, Dict, Any, Union
 
@@ -7,6 +7,8 @@ import torch
 import numpy as np
 import cv2
 from torchvision.transforms import Compose
+
+from worldfoundry.core.model_loading import load_torch_checkpoint
 
 from ...base_representation import BaseRepresentation
 from ....base_models.three_dimensions.depth.depth_anything.depth_anything_v1.dpt import DepthAnything
@@ -20,7 +22,7 @@ from ....base_models.three_dimensions.depth.depth_anything.depth_anything_v1.uti
 class DepthAnything1Representation(BaseRepresentation):
     """Representation for Depth Anything V1 depth estimation model."""
     
-    def __init__(self, model: Optional[DepthAnything] = None, device: Optional[str] = None):
+    def __init__(self, model: Optional[torch.nn.Module] = None, device: Optional[str] = None):
         """
         Initialize DepthAnything1Representation.
         
@@ -67,7 +69,7 @@ class DepthAnything1Representation(BaseRepresentation):
         encoder: str = "vitl",
         device: Optional[str] = None,
         **kwargs
-    ) -> DepthAnything:
+    ) -> torch.nn.Module:
         """
         Load DepthAnything model from local checkpoint or HuggingFace repository.
         
@@ -84,7 +86,23 @@ class DepthAnything1Representation(BaseRepresentation):
         
         # Load model from local path or HuggingFace repo
         if pretrained_model_path and Path(pretrained_model_path).exists():
-            model = cls._load_from_local(pretrained_model_path, encoder, device)
+            model_path = Path(pretrained_model_path)
+            config_path = model_path / "config.json" if model_path.is_dir() else None
+            config = {}
+            if config_path is not None and config_path.is_file():
+                try:
+                    config = json.loads(config_path.read_text(encoding="utf-8"))
+                except (OSError, ValueError):
+                    config = {}
+            if config.get("model_type") == "depth_anything":
+                from transformers import AutoModelForDepthEstimation
+
+                model = AutoModelForDepthEstimation.from_pretrained(
+                    str(model_path),
+                    local_files_only=True,
+                )
+            else:
+                model = cls._load_from_local(pretrained_model_path, encoder, device)
         else:
             model = cls._load_from_huggingface(pretrained_model_path, encoder, device)
         
@@ -101,9 +119,15 @@ class DepthAnything1Representation(BaseRepresentation):
         if model_path.is_dir():
             return DepthAnything.from_pretrained(str(model_path))
 
-        with warnings.catch_warnings():
-            warnings.filterwarnings("ignore", category=FutureWarning, message=".*weights_only.*")
-            checkpoint = torch.load(model_path, map_location='cpu', weights_only=False)
+        # The checkpoint is consumed purely as a state_dict; load weights-only by
+        # default and only fall back to unrestricted pickle on legacy wrapped
+        # checkpoints that fail the safe path.
+        checkpoint = load_torch_checkpoint(
+            model_path,
+            map_location="cpu",
+            weights_only=True,
+            allow_unsafe_pickle_fallback=True,
+        )
 
         if 'model' in checkpoint:
             state_dict = checkpoint['model']
@@ -248,7 +272,8 @@ class DepthAnything1Representation(BaseRepresentation):
         h, w = input_image.shape[:2]
         
         with torch.no_grad():
-            depth = self.model(tensor)
+            model_output = self.model(tensor)
+        depth = self._prediction_tensor(model_output)
         
         # Interpolate to original size
         import torch.nn.functional as F
@@ -275,3 +300,18 @@ class DepthAnything1Representation(BaseRepresentation):
             result['depth_visualization'] = depth_vis
         
         return result
+
+    @staticmethod
+    def _prediction_tensor(model_output: Any) -> torch.Tensor:
+        """Normalize in-tree and Transformers Depth Anything outputs."""
+
+        if isinstance(model_output, torch.Tensor):
+            return model_output
+        predicted_depth = getattr(model_output, "predicted_depth", None)
+        if isinstance(predicted_depth, torch.Tensor):
+            return predicted_depth
+        if isinstance(model_output, dict) and isinstance(model_output.get("predicted_depth"), torch.Tensor):
+            return model_output["predicted_depth"]
+        raise TypeError(
+            "Depth Anything model must return a tensor or an object containing predicted_depth"
+        )

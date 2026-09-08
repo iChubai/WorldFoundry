@@ -1,8 +1,33 @@
 # Copyright 2024-2025 The Alibaba Wan Team Authors. All rights reserved.
+"""Ulysses all-to-all attention for sequence-parallel video DiTs.
+
+Each rank holds ``L // p`` tokens and all heads. Ulysses swaps the head dim
+for the full sequence, runs a local ``attention_fn`` (default in-tree
+Flash/SDPA), then swaps back. That is cheaper than ring-P2P when the all-to-all
+fits the fabric.
+
+Not this module:
+    Causal LingBot should use :mod:`.causal_ulysses_attention` instead of
+    passing a non-causal ``attention_fn`` here. Head-padding when
+    ``Nq % p != 0`` lives in :mod:`.padded_ulysses_attention`. This
+    file does not implement RoPE or a kernel.
+
+Public surface:
+
+- :func:`distributed_attention` — Wan ``[B, L/p, H, D]`` Ulysses.
+- :func:`flattened_ulysses_attention` — LTX ``[B, S_local, H*D]``
+  exchange around a caller-supplied exact attention.
+"""
+
 import torch.distributed as dist
 
 from worldfoundry.core.attention import flash_attention
 from worldfoundry.core.distributed.sequence_ops import all_to_all, all_to_all_many
+
+
+# ──────────────────────────────────────────────────────────────────────────
+# Wan Ulysses — scatter heads, gather sequence, local kernel, swap back
+# ──────────────────────────────────────────────────────────────────────────
 
 
 def distributed_attention(
@@ -15,8 +40,7 @@ def distributed_attention(
     attention_fn=flash_attention,
 ):
     """
-    Performs distributed attention based on DeepSpeed Ulysses attention mechanism.
-    please refer to https://arxiv.org/pdf/2309.14509
+    Sequence-parallel attention via Ulysses all-to-all (https://arxiv.org/pdf/2309.14509).
 
     Args:
         q:           [B, Lq // p, Nq, C1].
@@ -46,6 +70,11 @@ def distributed_attention(
     # scatter q/k/v sequence
     x = all_to_all(x, scatter_dim=1, gather_dim=2)
     return x
+
+
+# ──────────────────────────────────────────────────────────────────────────
+# Flattened Ulysses — LTX hidden layout; cross-attn must not use this path
+# ──────────────────────────────────────────────────────────────────────────
 
 
 def flattened_ulysses_attention(

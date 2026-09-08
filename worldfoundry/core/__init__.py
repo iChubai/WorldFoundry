@@ -1,7 +1,21 @@
-"""WorldFoundry-owned primitives with no model identity.
+"""WorldFoundry first-party primitives with no model identity.
 
-Re-exports are loaded lazily via :func:`__getattr__` so importing
-:mod:`worldfoundry.core` does not eagerly import every submodule.
+This package is the public facade for :mod:`worldfoundry.core`.
+``_EXPORT_MODULES`` maps each exported name to its real submodule; the object
+itself is resolved only when ``from worldfoundry.core import Xxx`` or attribute
+access runs :func:`__getattr__`, which ``import_module``s the target and writes
+the result back into ``globals()``. That keeps:
+
+- ``import worldfoundry.core`` from eagerly pulling torch, Hydra, DCP, or the
+  video stack;
+- control-plane and CPU-only processes able to import this package safely;
+- repeated lookups of the same symbol from calling ``import_module`` again
+  (the first successful resolve is cached on the module).
+
+:func:`__dir__` merges already-materialized globals with the lazy ``__all__``
+list so completion tools see every public name. ``log_filters`` is the only
+import-time side effect: it demotes Inductor autotuner noise and is not
+listed in the lazy export table.
 """
 
 from __future__ import annotations
@@ -12,7 +26,10 @@ from typing import Any
 from worldfoundry.core import log_filters as _log_filters  # noqa: F401
 
 _EXPORT_MODULES = {
+    "PromptProcessor": "worldfoundry.core.prompting",
     "assign_state_dict_strict": "worldfoundry.core.checkpoint",
+    "adaptive_batched_inference": "worldfoundry.core.utils.inference_runtime",
+    "batched_image_features": "worldfoundry.core.utils.feature_extraction",
     "euler_angles_to_rotation_matrix_zyx": "worldfoundry.core.geometry",
     "compose_horizontal_views": "worldfoundry.core.utils",
     "split_horizontal_views": "worldfoundry.core.utils",
@@ -23,10 +40,12 @@ _EXPORT_MODULES = {
     "AutoWrappedModule": "worldfoundry.core.vram",
     "AutoWrappedNonRecurseModule": "worldfoundry.core.vram",
     "CudaSyncTimer": "worldfoundry.core.time",
+    "DiffusionModelConfig": "worldfoundry.core.configuration",
     "DiskMap": "worldfoundry.core.vram",
     "DTensorFastEmaModelUpdater": "worldfoundry.core.distributed",
     "FlowMatchScheduler": "worldfoundry.core.nn.diffusion_schedulers",
     "LayerwiseOffloadHandle": "worldfoundry.core.vram",
+    "LoaderModelConfig": "worldfoundry.core.model_loading",
     "DuplicateRegistryKeyError": "worldfoundry.core.registry",
     "DropPath": "worldfoundry.core.nn.layers",
     "LayerScale": "worldfoundry.core.nn.layers",
@@ -51,14 +70,9 @@ _EXPORT_MODULES = {
     "InferenceArtifactSpec": "worldfoundry.core.inference",
     "InferenceCheckpointRef": "worldfoundry.core.inference",
     "InferenceFieldSpec": "worldfoundry.core.inference",
-    "InferenceParams": "worldfoundry.core.inference_state",
+    "InferenceParams": "worldfoundry.core.attention.inference_state",
     "InferenceTaskProfile": "worldfoundry.core.inference",
     "InferenceVariantSpec": "worldfoundry.core.inference",
-    "LINGBOT_VARIANT_BASE_ACT_PREVIEW": "worldfoundry.core.inference",
-    "LINGBOT_VARIANT_BASE_CAM": "worldfoundry.core.inference",
-    "LINGBOT_VARIANT_FAST": "worldfoundry.core.inference",
-    "LINGBOT_WORLD_INFERENCE_SPEC": "worldfoundry.core.inference",
-    "LINGBOT_WORLD_MODEL_ID": "worldfoundry.core.inference",
     "ModelInferenceSpec": "worldfoundry.core.inference",
     "WorldFoundryInferenceInfraState": "worldfoundry.core.inference",
     "SwiGLU": "worldfoundry.core.nn.layers",
@@ -82,6 +96,9 @@ _EXPORT_MODULES = {
     "clip_grad_norm_": "worldfoundry.core.gradient",
     "clip_grads_with_norm_": "worldfoundry.core.gradient",
     "compile_module_if_enabled": "worldfoundry.core.inference",
+    "bind_log_context": "worldfoundry.core.logging_setup",
+    "clear_log_context": "worldfoundry.core.logging_setup",
+    "configure_logging": "worldfoundry.core.logging_setup",
     "clear_inference_runtime_cache": "worldfoundry.core.runtime_cache",
     "coerce_video_frames": "worldfoundry.core.io",
     "Color": "worldfoundry.core.io",
@@ -101,6 +118,7 @@ _EXPORT_MODULES = {
     "env_is_true": "worldfoundry.core.utils",
     "exists_uri": "worldfoundry.core.io",
     "extract_frames_from_video_url": "worldfoundry.core.io",
+    "extract_video_frames_to_directory": "worldfoundry.core.io",
     "file_sha256": "worldfoundry.core.io",
     "get_1d_rotary_pos_embed": "worldfoundry.core.attention.rope_nd",
     "get_meshgrid_nd": "worldfoundry.core.attention.rope_nd",
@@ -109,9 +127,10 @@ _EXPORT_MODULES = {
     "flattened_multihead_attention": "worldfoundry.core.attention",
     "hash_model_file": "worldfoundry.core.model_loading",
     "hash_state_dict_keys": "worldfoundry.core.model_loading",
-    "generic_model_inference_spec": "worldfoundry.core.inference",
+    "get_log_context": "worldfoundry.core.logging_setup",
+    "get_logger": "worldfoundry.core.logging_setup",
+    "log_context_environment": "worldfoundry.core.logging_setup",
     "get_video_details": "worldfoundry.core.io",
-    "get_model_inference_spec": "worldfoundry.core.inference",
     "get_local_tensor_if_dtensor": "worldfoundry.core.distributed",
     "get_total_norm": "worldfoundry.core.gradient",
     "build_rename_dict": "worldfoundry.core.model_loading",
@@ -123,7 +142,7 @@ _EXPORT_MODULES = {
     "install_worldfoundry_inference_infra": "worldfoundry.core.inference",
     "is_last_rank": "worldfoundry.core.distributed",
     "is_last_tp_cp_rank": "worldfoundry.core.distributed",
-    "list_model_inference_specs": "worldfoundry.core.inference",
+    "is_accelerator_out_of_memory": "worldfoundry.core.utils.inference_runtime",
     "is_remote_uri": "worldfoundry.core.io",
     "join_uri": "worldfoundry.core.io",
     "layer_scale": "worldfoundry.core.nn.normalization",
@@ -140,6 +159,8 @@ _EXPORT_MODULES = {
     "load_torch_checkpoint": "worldfoundry.core.model_loading",
     "load_torch_state_dict": "worldfoundry.core.model_loading",
     "load_video_frames": "worldfoundry.core.io",
+    "log_context": "worldfoundry.core.logging_setup",
+    "write_jsonl_event": "worldfoundry.core.logging_setup",
     "LowMemoryImageFolder": "worldfoundry.core.io",
     "LowMemoryVideo": "worldfoundry.core.io",
     "load_pil_image": "worldfoundry.core.utils",
@@ -151,10 +172,10 @@ _EXPORT_MODULES = {
     "merge_attention_heads": "worldfoundry.core.nn.transformer",
     "mlp_hidden_size": "worldfoundry.core.nn.transformer",
     "named_apply": "worldfoundry.core.nn.module_utils",
-    "model_inference_spec": "worldfoundry.core.inference",
     "model_parallel_is_initialized": "worldfoundry.core.distributed",
     "normalize_attention_backend": "worldfoundry.core.attention",
     "normalize_action_values": "worldfoundry.core.action_normalization",
+    "named_camera_trajectory_tensors": "worldfoundry.core.camera_trajectory",
     "piecewise_attention": "worldfoundry.core.attention",
     "piecewise_attention_available": "worldfoundry.core.attention",
     "normalize_registry_key": "worldfoundry.core.registry",
@@ -166,6 +187,7 @@ _EXPORT_MODULES = {
     "read_binary_uri": "worldfoundry.core.io",
     "read_image_as_video_tensor": "worldfoundry.core.io",
     "read_text_uri": "worldfoundry.core.io",
+    "read_text_tail": "worldfoundry.core.process",
     "read_video": "worldfoundry.core.io",
     "resize_video_tensor_to_resolution": "worldfoundry.core.io",
     "HF_URI_SCHEME": "worldfoundry.core.io",
@@ -174,12 +196,21 @@ _EXPORT_MODULES = {
     "resolve_hf_snapshot_path": "worldfoundry.core.io",
     "resolve_local_checkpoint_file": "worldfoundry.core.io",
     "resolve_local_hf_model_path": "worldfoundry.core.io",
+    "get_current_torch_device": "worldfoundry.core.device",
     "resolve_inference_device": "worldfoundry.core.device",
+    "resolve_inference_batch_size": "worldfoundry.core.utils.inference_runtime",
+    "resize_and_letterbox": "worldfoundry.core.utils",
     "resolve_inference_dtype": "worldfoundry.core.device",
     "run_torchrun_module": "worldfoundry.core.process",
+    "run_logged_subprocess": "worldfoundry.core.process",
     "stack_or_pad_tensors": "worldfoundry.core.utils",
+    "terminate_process_group": "worldfoundry.core.process",
+    "terminate_process_tree": "worldfoundry.core.process",
     "standardize_quaternion_xyzw": "worldfoundry.core.geometry",
     "torchrun_module_command": "worldfoundry.core.process",
+    "TorchProfileResult": "worldfoundry.core.torchprofile",
+    "TORCHPROFILE_SCHEMA_VERSION": "worldfoundry.core.torchprofile",
+    "profile_torch_module": "worldfoundry.core.torchprofile",
     "resolve_attention_backend": "worldfoundry.core.attention",
     "resolve_transformers_attention_implementation": "worldfoundry.core.attention",
     "routed_swiglu_moe_pytorch": "worldfoundry.core.kernels",
@@ -208,6 +239,7 @@ _EXPORT_MODULES = {
     "as_list": "worldfoundry.core.utils",
     "jsonable": "worldfoundry.core.io",
     "mean_flat": "worldfoundry.core.utils",
+    "mean_pairwise_cosine_distance": "worldfoundry.core.utils.feature_extraction",
     "ParallelHelper": "worldfoundry.core.io",
     "PPScheduler": "worldfoundry.core.distributed",
     "pp_scheduler": "worldfoundry.core.distributed",
@@ -227,6 +259,25 @@ _EXPORT_MODULES = {
     "wrap_runner_for_worldfoundry_core": "worldfoundry.core.inference",
     "video_tensor_to_uint8_frames": "worldfoundry.core.io",
     "VideoData": "worldfoundry.core.io",
+    "IdentityVideoPostProcessor": "worldfoundry.core.video_postprocess",
+    "VideoChunk": "worldfoundry.core.video_postprocess",
+    "VideoPostProcessor": "worldfoundry.core.video_postprocess",
+    "VideoPostProcessorSession": "worldfoundry.core.video_postprocess",
+    "VideoPostprocessChain": "worldfoundry.core.video_postprocess",
+    "VideoPostprocessStepStats": "worldfoundry.core.video_postprocess",
+    "VideoPostprocessStream": "worldfoundry.core.video_postprocess",
+    "VideoSpec": "worldfoundry.core.video_postprocess",
+    "RTX_POSTPROCESS_PRESET_NAMES": "worldfoundry.core.video_postprocess_rtx",
+    "RTXVFXCapability": "worldfoundry.core.video_postprocess_rtx",
+    "RTXVFXProbeStatus": "worldfoundry.core.video_postprocess_rtx",
+    "RTXVideoFloatRange": "worldfoundry.core.video_postprocess_rtx",
+    "RTXVideoSuperResolutionConfig": "worldfoundry.core.video_postprocess_rtx",
+    "RTXVideoSuperResolutionPostProcessor": "worldfoundry.core.video_postprocess_rtx",
+    "RTXVideoSuperResolutionQuality": "worldfoundry.core.video_postprocess_rtx",
+    "inspect_rtx_vfx_capability": "worldfoundry.core.video_postprocess_rtx",
+    "probe_rtx_vfx_runtime": "worldfoundry.core.video_postprocess_rtx",
+    "require_rtx_vfx_runtime": "worldfoundry.core.video_postprocess_rtx",
+    "rtx_postprocessor_from_preset": "worldfoundry.core.video_postprocess_rtx",
     "write_binary_uri": "worldfoundry.core.io",
     "write_text_uri": "worldfoundry.core.io",
     "write_video": "worldfoundry.core.io",
@@ -236,16 +287,19 @@ _EXPORT_MODULES = {
 
 
 def __getattr__(name: str) -> Any:
+    """Resolve ``name`` from ``_EXPORT_MODULES`` and cache it on this module."""
     module_name = _EXPORT_MODULES.get(name)
     if module_name is None:
         raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
     module = import_module(module_name)
     value = getattr(module, name)
+    # Cache on globals so the next attribute access skips import_module.
     globals()[name] = value
     return value
 
 
 def __dir__() -> list[str]:
+    """Merge materialized globals with lazy ``__all__`` for completion and ``dir()``."""
     return sorted({*globals(), *__all__})
 
 

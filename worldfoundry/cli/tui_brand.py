@@ -77,7 +77,7 @@ def _prepare_logo_image(image: Image.Image) -> Image.Image:
 
 # ── Braille rendering ──────────────────────────────────────────────
 
-def render_logo_braille(image: Image.Image, *, width_chars: int = 56) -> str:
+def render_logo_braille(image: Image.Image, *, width_chars: int = 56, dark: bool = True) -> str:
     """Render the logo using Braille characters for highest terminal resolution.
 
     Each Braille character covers a 2×4 pixel block, yielding much finer
@@ -88,6 +88,7 @@ def render_logo_braille(image: Image.Image, *, width_chars: int = 56) -> str:
     Args:
         image: Source logo image (typically RGBA PNG).
         width_chars: Target width in terminal character columns.
+        dark: Invert neutral colors for dark backgrounds only.
 
     Returns:
         Rich-markup string with per-cell ``[color]`` annotations.
@@ -145,17 +146,19 @@ def render_logo_braille(image: Image.Image, *, width_chars: int = 56) -> str:
                 # NOTE: Dark-mode inversion — keep the red accent, invert everything else
                 if r > 150 and g < 100 and b < 100:
                     colors.append((r, g, b))
-                else:
+                elif dark:
                     colors.append((255 - r, 255 - g, 255 - b))
+                else:
+                    colors.append((r, g, b))
 
             if bits == 0:
                 parts.append(" ")
                 continue
 
             # ── Average colour and emit Rich-markup cell ──
-            avg_r = sum(c[0] for c in colors) // len(colors)
-            avg_g = sum(c[1] for c in colors) // len(colors)
-            avg_b = sum(c[2] for c in colors) // len(colors)
+            avg_r = sum(int(c[0]) for c in colors) // len(colors)
+            avg_g = sum(int(c[1]) for c in colors) // len(colors)
+            avg_b = sum(int(c[2]) for c in colors) // len(colors)
             
             hex_color = _rgb_to_hex(avg_r, avg_g, avg_b)
             char = chr(0x2800 + bits)
@@ -167,11 +170,11 @@ def render_logo_braille(image: Image.Image, *, width_chars: int = 56) -> str:
 
 # ── Brand rendering ────────────────────────────────────────────────
 
-@lru_cache(maxsize=4)
-def render_brand_logo(*, width_chars: int = 56) -> str:
+@lru_cache(maxsize=8)
+def render_brand_logo(*, width_chars: int = 56, dark: bool = True) -> str:
     """Render the OpenEnvision logo as Braille-art with dark-mode inversion.
 
-    Caches up to 4 width variants. Reads the PNG asset via :func:`logo_asset_path`.
+    Caches up to 8 width and theme variants. Reads the PNG asset via :func:`logo_asset_path`.
 
     Raises:
         FileNotFoundError: When the logo asset PNG is not found.
@@ -181,7 +184,7 @@ def render_brand_logo(*, width_chars: int = 56) -> str:
     if not path.is_file():
         raise FileNotFoundError(f"OpenEnvision logo asset not found: {path}")
     with Image.open(path) as image:
-        return render_logo_braille(image, width_chars=width_chars)
+        return render_logo_braille(image, width_chars=width_chars, dark=dark)
 
 
 def render_fallback_header(*, width_chars: int = 56) -> str:

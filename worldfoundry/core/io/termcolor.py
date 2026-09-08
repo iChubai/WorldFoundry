@@ -22,13 +22,25 @@
 # Original Author: Konstantin Lepa <konstantin.lepa@gmail.com>
 # Updated by Jim Fan
 
-"""ANSII Color formatting for output in terminal."""
+"""ANSI color formatting for terminal output.
+
+Vendored color helper used by legacy model-runtime config printers.
+:func:`color_text` wraps a string in SGR codes; :func:`cprint` prints
+with the same palette. :class:`Color` exposes named static helpers.
+Colors are skipped when ``ANSI_COLORS_DISABLED`` is set.
+
+Not a logging backend and not Windows-console aware beyond the env flag.
+"""
 
 import io
 import os
 from typing import List, Optional, Union
 
 __ALL__ = ["Color", "color_text", "cprint"]
+
+# ──────────────────────────────────────────────────────────────────────────
+# SGR palette — skipped when ANSI_COLORS_DISABLED is set
+# ──────────────────────────────────────────────────────────────────────────
 
 STYLES = dict(
     list(
@@ -134,26 +146,32 @@ class Color:
 
     @staticmethod
     def red(value):
+        """Return ``value`` formatted in red."""
         return color_text(str(value), "red")
 
     @staticmethod
     def green(value):
+        """Return ``value`` formatted in green."""
         return color_text(str(value), "green")
 
     @staticmethod
     def yellow(value):
+        """Return ``value`` formatted in yellow."""
         return color_text(str(value), "yellow")
 
     @staticmethod
     def blue(value):
+        """Return ``value`` formatted in blue."""
         return color_text(str(value), "blue")
 
     @staticmethod
     def magenta(value):
+        """Return ``value`` formatted in magenta."""
         return color_text(str(value), "magenta")
 
     @staticmethod
     def cyan(value):
+        """Return ``value`` formatted in cyan."""
         return color_text(str(value), "cyan")
 
 

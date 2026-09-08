@@ -3,14 +3,17 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Any, Mapping
+from typing import TYPE_CHECKING, Any, Mapping
 
-from worldfoundry.evaluation.models.pipelines.invocation import PipelineInvocation
-from worldfoundry.synthesis.visual_generation.memory.video import VideoArtifactMemory
+from worldfoundry.core.io import artifact_root_path
 from worldfoundry.operators.runtime_video_operator import RuntimeVideoOperator
-from worldfoundry.pipelines.pipeline_utils import PipelineABC
 from worldfoundry.pipelines.lyra.lyra_utils import load_pil_image, materialize_image_input
+from worldfoundry.pipelines.pipeline_utils import PipelineABC
+from worldfoundry.synthesis.visual_generation.memory.video import VideoArtifactMemory
 from worldfoundry.synthesis.visual_generation.official_video_runtime import OfficialVideoRuntime
+
+if TYPE_CHECKING:
+    from worldfoundry.core.contracts import PipelineInvocation
 
 
 class OfficialVideoPipeline(PipelineABC):
@@ -45,7 +48,7 @@ class OfficialVideoPipeline(PipelineABC):
         **kwargs: Any,
     ) -> "OfficialVideoPipeline":
         """Load the pipeline from pretrained checkpoints and configurations."""
-        resolved_model_id = model_id or cls.MODEL_ID
+        resolved_model_id = cls.MODEL_ID or model_id
         runtime_kwargs: dict[str, Any] = {}
         if isinstance(model_path, Mapping):
             runtime_kwargs.update(model_path)
@@ -56,6 +59,7 @@ class OfficialVideoPipeline(PipelineABC):
         for key in (*PipelineABC.FRAMEWORK_LOADING_OPTION_KEYS, "model_id", "pipeline_target", "runtime_profile"):
             runtime_kwargs.pop(key, None)
         runtime = OfficialVideoRuntime.from_model_id(resolved_model_id, device=device, **runtime_kwargs)
+        runtime.prepare()
         return cls(model_id=resolved_model_id, runtime=runtime, device=device)
 
     def process(self, prompt: str, images: Any = None, video: Any = None, **kwargs: Any) -> dict[str, Any]:
@@ -94,7 +98,7 @@ class OfficialVideoPipeline(PipelineABC):
         **kwargs: Any,
     ) -> Any:
         """Execute the complete pipeline generation flow."""
-        target = Path(output_path or f"tmp/pipeline_eval/{self.model_id}.mp4")
+        target = Path(output_path) if output_path else artifact_root_path() / "pipeline_eval" / f"{self.model_id}.mp4"
         processed = self.process(prompt=prompt, images=images, video=video)
         runtime_kwargs = dict(kwargs)
         if num_frames is not None:
@@ -156,24 +160,6 @@ class FramePackPipeline(OfficialVideoPipeline):
     GENERATION_TYPE = "i2v"
 
 
-class HunyuanVideo15T2VPipeline(OfficialVideoPipeline):
-    """Pipeline implementation for HunyuanVideo15T2V visual generation."""
-    MODEL_ID = "hunyuanvideo-1.5-t2v"
-    GENERATION_TYPE = "t2v"
-
-
-class HunyuanVideo15I2VPipeline(OfficialVideoPipeline):
-    """Pipeline implementation for HunyuanVideo15I2V visual generation."""
-    MODEL_ID = "hunyuanvideo-1.5-i2v"
-    GENERATION_TYPE = "i2v"
-
-
-class HunyuanVideoI2VPipeline(OfficialVideoPipeline):
-    """Pipeline implementation for HunyuanVideo I2V visual generation."""
-    MODEL_ID = "hunyuanvideo-i2v"
-    GENERATION_TYPE = "i2v"
-
-
 class I2VGenXLPipeline(OfficialVideoPipeline):
     """Pipeline implementation for I2VGenXL visual generation."""
     MODEL_ID = "i2vgen-xl"
@@ -207,12 +193,6 @@ class OpenSoraPlanPipeline(OfficialVideoPipeline):
 class OpenSoraPipeline(OfficialVideoPipeline):
     """Pipeline implementation for OpenSora visual generation."""
     MODEL_ID = "open-sora"
-    GENERATION_TYPE = "t2v"
-
-
-class SkyReelsV2Pipeline(OfficialVideoPipeline):
-    """Pipeline implementation for SkyReelsV2 visual generation."""
-    MODEL_ID = "skyreels-v2"
     GENERATION_TYPE = "t2v"
 
 
@@ -276,17 +256,9 @@ class UniAnimateDiTPipeline(OfficialVideoPipeline):
     GENERATION_TYPE = "i2v"
 
 
-class Wan21VACEPipeline(OfficialVideoPipeline):
-    """Pipeline implementation for Wan21VACE visual generation."""
-    MODEL_ID = "wan2.1-vace"
-    GENERATION_TYPE = "v2v"
-
-
 __all__ = [
     "Emu35Pipeline",
     "FramePackPipeline",
-    "HunyuanVideo15I2VPipeline",
-    "HunyuanVideo15T2VPipeline",
     "I2VGenXLPipeline",
     "KreaRealtimeVideoPipeline",
     "MAGI1Pipeline",
@@ -299,10 +271,8 @@ __all__ = [
     "OfficialVideoPipeline",
     "Qwen25OmniPipeline",
     "SAMA14BPipeline",
-    "SkyReelsV2Pipeline",
     "SpatialLadderPipeline",
     "SpatialReasonerPipeline",
     "ThinkSoundPipeline",
     "UniAnimateDiTPipeline",
-    "Wan21VACEPipeline",
 ]

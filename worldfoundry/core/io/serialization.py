@@ -1,4 +1,15 @@
-"""Structured serialization helpers for model-independent data files."""
+"""Structured serialization helpers for model-independent data files.
+
+One dump/load surface over json, jsonl, yaml, pickle, numpy, torch, images,
+and archives. Format is inferred from suffix so callers do not grow a
+per-extension if/else. :func:`jsonable` walks dataclasses and tensors into
+JSON-safe trees for logs.
+
+JSONL writers flush on an interval (``WORLDFOUNDRY_JSONL_FLUSH_INTERVAL``)
+so a crashed eval job keeps a prefix of results. Atomic replace for
+integrity-critical files lives in :mod:`worldfoundry.core.io.integrity`,
+not here — this module is convenience I/O, not a crash-safe ledger.
+"""
 
 from __future__ import annotations
 
@@ -7,9 +18,11 @@ import io
 import json
 import pickle
 import tarfile
+from collections.abc import Iterable, Iterator
 from dataclasses import asdict, is_dataclass
 from pathlib import Path
-from typing import IO, Any, Mapping, Sequence
+from typing import IO, Any, Mapping
+from uuid import uuid4
 
 import yaml
 
@@ -33,8 +46,17 @@ _CSV_FORMATS = {"csv"}
 _PANDAS_FORMATS = {"pandas", "parquet", "feather"}
 _TAR_FORMATS = {"tar", "tgz", "tar.gz", "tar.xz", "tar.bz2"}
 
+JSONL_FLUSH_INTERVAL_ENV = "WORLDFOUNDRY_JSONL_FLUSH_INTERVAL"
+DEFAULT_JSONL_FLUSH_INTERVAL = 32
+
+# ──────────────────────────────────────────────────────────────────────────
+# JSON-safe trees and JSON / JSONL — allow_nan=False so NaN cannot leak
+# ──────────────────────────────────────────────────────────────────────────
+
 
 def _callable_reference(value: Any) -> str:
+    """Stable ``module:qualname`` token for evidence logs; fall back to ``repr``."""
+
     module = getattr(value, "__module__", "")
     qualname = getattr(value, "__qualname__", "")
     if module and qualname:
@@ -107,31 +129,58 @@ def read_json_or_jsonl(path: str | Path) -> Any:
 
     source_path = Path(path)
     if source_path.suffix.lower() == ".jsonl":
-        return [json.loads(line) for line in source_path.read_text(encoding="utf-8").splitlines() if line.strip()]
+        return list(iter_jsonl(source_path))
     return read_json(source_path)
+
+
+def _iter_jsonl_rows(path: Path) -> Iterator[tuple[int, Any]]:
+    """Yield ``(1-based line, value)``; blank lines are skipped, not treated as null."""
+
+    with path.open("r", encoding="utf-8") as handle:
+        for line_number, line in enumerate(handle, start=1):
+            if line.strip():
+                yield line_number, json.loads(line)
+
+
+def iter_jsonl(path: str | Path) -> Iterator[Any]:
+    """Yield decoded values from the non-empty lines of a local JSONL file."""
+
+    for _, row in _iter_jsonl_rows(Path(path)):
+        yield row
+
+
+def iter_jsonl_objects(path: str | Path) -> Iterator[dict[str, Any]]:
+    """Yield objects from JSONL without materializing the entire file."""
+
+    source_path = Path(path)
+    for line_number, row in _iter_jsonl_rows(source_path):
+        if not isinstance(row, Mapping):
+            raise TypeError(f"expected JSON object on JSONL line {line_number} in {source_path}")
+        yield dict(row)
 
 
 def read_jsonl_objects(path: str | Path) -> list[dict[str, Any]]:
     """Read a JSONL file containing one object per non-empty line."""
 
-    source_path = Path(path)
-    rows: list[dict[str, Any]] = []
-    for line_number, line in enumerate(source_path.read_text(encoding="utf-8").splitlines(), start=1):
-        if not line.strip():
-            continue
-        row = json.loads(line)
-        if not isinstance(row, Mapping):
-            raise TypeError(f"expected JSON object on JSONL line {line_number} in {source_path}")
-        rows.append(dict(row))
-    return rows
+    return list(iter_jsonl_objects(path))
 
 
 def _atomic_write_text(path: Path, text: str, *, atomic: bool) -> Path:
+    """Write *text*; atomic mode uses a unique sibling temp so concurrent writers cannot interleave."""
+
     path.parent.mkdir(parents=True, exist_ok=True)
     if atomic:
-        tmp_path = path.with_name(f".{path.name}.tmp")
-        tmp_path.write_text(text, encoding="utf-8")
-        tmp_path.replace(path)
+        # Unique sibling temp name (same pattern as ``write_jsonl``): a fixed
+        # ``.name.tmp`` would let two concurrent writers truncate each other's
+        # temp file and publish interleaved content.
+        tmp_path = path.with_name(f".{path.name}.{uuid4().hex}.tmp")
+        try:
+            with tmp_path.open("x", encoding="utf-8") as handle:
+                handle.write(text)
+            tmp_path.replace(path)
+        except BaseException:
+            tmp_path.unlink(missing_ok=True)
+            raise
     else:
         path.write_text(text, encoding="utf-8")
     return path
@@ -146,15 +195,142 @@ def write_text_file(path: str | Path, payload: str, *, atomic: bool = True) -> P
 def write_json(path: str | Path, payload: Any, *, atomic: bool = True) -> Path:
     """Write an indented JSON object with stable key ordering."""
 
-    text = json.dumps(jsonable(payload), ensure_ascii=False, indent=2, sort_keys=True) + "\n"
+    text = json.dumps(
+        jsonable(payload),
+        ensure_ascii=False,
+        indent=2,
+        sort_keys=True,
+        allow_nan=False,
+    ) + "\n"
     return _atomic_write_text(Path(path), text, atomic=atomic)
 
 
-def write_jsonl(path: str | Path, rows: Sequence[Mapping[str, Any]], *, atomic: bool = True) -> Path:
-    """Write JSONL rows with stable key ordering."""
+def _write_jsonl_rows(handle: IO[str], rows: Iterable[Mapping[str, Any]]) -> None:
+    """Encode each mapping as one JSON line; ``allow_nan=False`` rejects NaN / Inf."""
 
-    text = "".join(json.dumps(jsonable(row), ensure_ascii=False, sort_keys=True) + "\n" for row in rows)
-    return _atomic_write_text(Path(path), text, atomic=atomic)
+    handle.writelines(
+        json.dumps(jsonable(row), ensure_ascii=False, sort_keys=True, allow_nan=False) + "\n"
+        for row in rows
+    )
+
+
+def _resolve_jsonl_flush_interval(value: int | None) -> int:
+    """Resolve flush cadence; ``0`` means flush only on close. Negative values raise."""
+
+    if value is None:
+        import os
+
+        configured = os.environ.get(JSONL_FLUSH_INTERVAL_ENV, "").strip()
+        value = DEFAULT_JSONL_FLUSH_INTERVAL if not configured else int(configured)
+    interval = int(value)
+    if interval < 0:
+        raise ValueError("JSONL flush interval must be non-negative")
+    return interval
+
+
+class JsonlWriter:
+    """Keep one JSONL file handle open and periodically publish buffered rows.
+
+    The default flush interval bounds progress loss after an interrupted run
+    while avoiding one metadata-heavy open/close cycle per evaluation sample.
+    Set ``WORLDFOUNDRY_JSONL_FLUSH_INTERVAL=1`` for the former per-row flush
+    behavior, or ``0`` to flush only when the context closes.
+    """
+
+    def __init__(
+        self,
+        path: str | Path,
+        *,
+        mode: str = "w",
+        flush_every: int | None = None,
+    ) -> None:
+        """Open-on-enter writer; *mode* is ``a`` / ``w`` / ``x`` only."""
+
+        if mode not in {"a", "w", "x"}:
+            raise ValueError("JSONL writer mode must be 'a', 'w', or 'x'")
+        self.path = Path(path)
+        self.mode = mode
+        self.flush_every = _resolve_jsonl_flush_interval(flush_every)
+        self._handle: IO[str] | None = None
+        self._pending_rows = 0
+
+    def __enter__(self) -> "JsonlWriter":
+        """Create the parent dir and open the handle; refuse a nested enter."""
+
+        if self._handle is not None:
+            raise RuntimeError("JSONL writer is already open")
+        self.path.parent.mkdir(parents=True, exist_ok=True)
+        self._handle = self.path.open(self.mode, encoding="utf-8", buffering=1024 * 1024)
+        return self
+
+    def write(self, row: Mapping[str, Any]) -> None:
+        """Append one JSON-safe row; flush when the pending count hits *flush_every*."""
+
+        if self._handle is None:
+            raise RuntimeError("JSONL writer must be used inside a context manager")
+        encoded = json.dumps(
+            jsonable(row),
+            ensure_ascii=False,
+            sort_keys=True,
+            allow_nan=False,
+        )
+        self._handle.write(encoded)
+        self._handle.write("\n")
+        self._pending_rows += 1
+        if self.flush_every and self._pending_rows >= self.flush_every:
+            self.flush()
+
+    def write_many(self, rows: Iterable[Mapping[str, Any]]) -> None:
+        """Write each mapping through :meth:`write` so flush cadence is preserved."""
+
+        for row in rows:
+            self.write(row)
+
+    def flush(self) -> None:
+        """Push the OS buffer and reset the pending-row counter; no-op if already closed."""
+        if self._handle is None:
+            return
+        self._handle.flush()
+        self._pending_rows = 0
+
+    def close(self) -> None:
+        """Flush then close; idempotent so ``__exit__`` can always call it."""
+
+        if self._handle is None:
+            return
+        handle, self._handle = self._handle, None
+        try:
+            handle.flush()
+        finally:
+            handle.close()
+            self._pending_rows = 0
+
+    def __exit__(self, exc_type, exc_value, traceback) -> None:
+        """Always close the handle, including when the ``with`` body raised."""
+
+        del exc_type, exc_value, traceback
+        self.close()
+
+
+def write_jsonl(path: str | Path, rows: Iterable[Mapping[str, Any]], *, atomic: bool = True) -> Path:
+    """Stream JSONL rows with stable key ordering and optional atomic replacement."""
+
+    destination = Path(path)
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    if not atomic:
+        with destination.open("w", encoding="utf-8") as handle:
+            _write_jsonl_rows(handle, rows)
+        return destination
+
+    temporary_path = destination.with_name(f".{destination.name}.{uuid4().hex}.tmp")
+    try:
+        with temporary_path.open("x", encoding="utf-8") as handle:
+            _write_jsonl_rows(handle, rows)
+        temporary_path.replace(destination)
+    except BaseException:
+        temporary_path.unlink(missing_ok=True)
+        raise
+    return destination
 
 
 def append_jsonl(path: str | Path, row: Mapping[str, Any]) -> Path:
@@ -163,7 +339,14 @@ def append_jsonl(path: str | Path, row: Mapping[str, Any]) -> Path:
     destination = Path(path)
     destination.parent.mkdir(parents=True, exist_ok=True)
     with destination.open("a", encoding="utf-8") as handle:
-        handle.write(json.dumps(jsonable(row), ensure_ascii=False, sort_keys=True))
+        handle.write(
+            json.dumps(
+                jsonable(row),
+                ensure_ascii=False,
+                sort_keys=True,
+                allow_nan=False,
+            )
+        )
         handle.write("\n")
     return destination
 
@@ -176,6 +359,11 @@ def reset_jsonl(path: str | Path) -> Path:
     if destination.exists():
         destination.unlink()
     return destination
+
+
+# ──────────────────────────────────────────────────────────────────────────
+# Suffix-inferred dump / load — pickle is opt-in; torch defaults to weights_only
+# ──────────────────────────────────────────────────────────────────────────
 
 
 def infer_serialization_format(file: str | Path | IO[Any] | None, file_format: str | None = None) -> str:
@@ -198,9 +386,17 @@ def load_serialized(
     *,
     file_format: str | None = None,
     encoding: str = "utf-8",
+    allow_pickle: bool = False,
     **kwargs: Any,
 ) -> Any:
-    """Load a structured object from a URI or file object."""
+    """Load a structured object from a URI or file object.
+
+    Pickle and gzip-pickle payloads are rejected by default because unpickling
+    executes arbitrary code. Trusted callers must pass ``allow_pickle=True``.
+    Torch formats independently default to ``weights_only=True``. ``.gz`` is
+    treated as gzip-compressed pickle for backward compatibility; use an
+    explicit non-gzip format for other compressed data.
+    """
 
     fmt = infer_serialization_format(file, file_format)
     if fmt in _BYTE_FORMATS:
@@ -215,8 +411,10 @@ def load_serialized(
     if fmt in _JSONL_FORMATS:
         return [json.loads(line, **kwargs) for line in _read_text(file, encoding=encoding).splitlines() if line.strip()]
     if fmt in _PICKLE_FORMATS:
+        _require_pickle_opt_in(file, allow_pickle=allow_pickle)
         return pickle.loads(_read_bytes(file), **kwargs)
     if fmt in _GZIP_FORMATS:
+        _require_pickle_opt_in(file, allow_pickle=allow_pickle)
         return pickle.loads(gzip.decompress(_read_bytes(file)), **kwargs)
     if fmt in _NUMPY_FORMATS:
         import numpy as np
@@ -248,6 +446,7 @@ def load_serialized(
             return pd.read_parquet(io.BytesIO(_read_bytes(file)), **kwargs)
         if fmt == "feather":
             return pd.read_feather(io.BytesIO(_read_bytes(file)), **kwargs)
+        _require_pickle_opt_in(file, allow_pickle=allow_pickle)
         return pd.read_pickle(io.BytesIO(_read_bytes(file)), **kwargs)
     if fmt in _MESH_FORMATS:
         import trimesh
@@ -257,6 +456,15 @@ def load_serialized(
         mode = kwargs.pop("mode", "r|*")
         return tarfile.open(fileobj=io.BytesIO(_read_bytes(file)), mode=mode, **kwargs)
     raise TypeError(f"Unsupported serialization format: {fmt}")
+
+
+def _require_pickle_opt_in(file: Any, *, allow_pickle: bool) -> None:
+    """Refuse pickle / gzip-pickle unless the caller opts in on a trusted source."""
+
+    if not allow_pickle:
+        raise ValueError(
+            f"Refusing to unpickle {file!r}; pass allow_pickle=True only for a trusted source"
+        )
 
 
 def dump_serialized(
@@ -273,13 +481,18 @@ def dump_serialized(
     if fmt in _TEXT_FORMATS:
         return _write_text_or_return(str(obj), file, encoding=encoding)
     if fmt in _JSON_FORMATS:
-        return _write_text_or_return(json.dumps(obj, **kwargs), file, encoding=encoding)
+        return _write_text_or_return(
+            json.dumps(obj, **{**kwargs, "allow_nan": False}),
+            file,
+            encoding=encoding,
+        )
     if fmt in _YAML_FORMATS:
         dumper = kwargs.pop("dumper", yaml.safe_dump)
         text = dumper(obj, **{"sort_keys": False, **kwargs})
         return _write_text_or_return(text, file, encoding=encoding)
     if fmt in _JSONL_FORMATS:
-        text = "\n".join(json.dumps(item, **kwargs) for item in obj)
+        json_kwargs = {**kwargs, "allow_nan": False}
+        text = "\n".join(json.dumps(item, **json_kwargs) for item in obj)
         if text:
             text += "\n"
         return _write_text_or_return(text, file, encoding=encoding)
@@ -342,7 +555,14 @@ def dump_serialized(
     raise TypeError(f"Unsupported serialization format: {fmt}")
 
 
+# ──────────────────────────────────────────────────────────────────────────
+# Format adapters — URI vs file-like; image / video / torch stay lazy-imported
+# ──────────────────────────────────────────────────────────────────────────
+
+
 def _normalize_format(value: str) -> str:
+    """Fold aliases (``jpeg``→``jpg``, ``yml``→``yaml``) so suffix tables stay small."""
+
     fmt = value.strip().lower().lstrip(".")
     if fmt == "jpeg":
         return "jpg"
@@ -352,6 +572,8 @@ def _normalize_format(value: str) -> str:
 
 
 def _read_bytes(file: str | Path | IO[Any]) -> bytes:
+    """Read a URI via :func:`read_binary_uri` or consume a file-like as bytes."""
+
     if isinstance(file, (str, Path)):
         return read_binary_uri(file)
     data = file.read()
@@ -361,6 +583,8 @@ def _read_bytes(file: str | Path | IO[Any]) -> bytes:
 
 
 def _read_text(file: str | Path | IO[Any], *, encoding: str) -> str:
+    """Read text from a URI or decode file-like bytes with *encoding*."""
+
     if isinstance(file, (str, Path)):
         return read_text_uri(file, encoding=encoding)
     data = file.read()
@@ -370,6 +594,8 @@ def _read_text(file: str | Path | IO[Any], *, encoding: str) -> str:
 
 
 def _write_text_or_return(text: str, file: str | Path | IO[Any] | None, *, encoding: str) -> str | None:
+    """Dump to a URI / file-like, or return *text* when *file* is ``None`` (dumps-style)."""
+
     if file is None:
         return text
     if isinstance(file, (str, Path)):
@@ -380,6 +606,8 @@ def _write_text_or_return(text: str, file: str | Path | IO[Any] | None, *, encod
 
 
 def _write_bytes_or_return(data: bytes, file: str | Path | IO[Any] | None) -> bytes | None:
+    """Binary counterpart of :func:`_write_text_or_return`."""
+
     if file is None:
         return data
     if isinstance(file, (str, Path)):
@@ -392,6 +620,8 @@ def _write_bytes_or_return(data: bytes, file: str | Path | IO[Any] | None) -> by
 def _load_image(
     file: str | Path | IO[Any], *, fmt: str = "pil", size: int | tuple[int, int] | None = None, **kwargs: Any
 ) -> Any:
+    """Decode an image into PIL / numpy / CHW torch; *fmt* here is the output kind, not the suffix."""
+
     from PIL import Image
 
     image = Image.open(io.BytesIO(_read_bytes(file)))
@@ -418,6 +648,8 @@ def _load_image(
 
 
 def _dump_image(obj: Any, file: str | Path | IO[Any] | None, *, fmt: str, **kwargs: Any) -> str | None:
+    """Encode a PIL-like object; *file* is required (images have no dumps-to-string form)."""
+
     if file is None:
         raise ValueError("image output requires a file path or file object")
     buffer = io.BytesIO()
@@ -426,6 +658,8 @@ def _dump_image(obj: Any, file: str | Path | IO[Any] | None, *, fmt: str, **kwar
 
 
 def _load_video(file: str | Path | IO[Any], *, fmt: str, mode: str = "rgb", **kwargs: Any) -> Any:
+    """Decode via imageio; ``mode=\"gray\"`` expands to HxWx1 so layouts stay 4-D."""
+
     import imageio
     import numpy as np
 
@@ -446,10 +680,12 @@ def _dump_video(
     file: str | Path | IO[Any] | None,
     *,
     fmt: str,
-    fps: int = 17,
+    fps: int = 24,
     quality: int | None = 5,
     **kwargs: Any,
 ) -> str | None:
+    """Encode a frame stack; *file* is required. ``macro_block_size=1`` avoids silent crops."""
+
     if file is None:
         raise ValueError("video output requires a file path or file object")
     import imageio
@@ -471,6 +707,8 @@ def _dump_video(
 
 
 def _torch_load_from_bytes(data: bytes, **kwargs: Any) -> Any:
+    """``torch.load`` with ``weights_only=True`` by default; never drop that flag on TypeError."""
+
     import pickle
 
     import torch
@@ -496,6 +734,9 @@ def _torch_load_from_bytes(data: bytes, **kwargs: Any) -> Any:
 
 
 __all__ = [
+    "DEFAULT_JSONL_FLUSH_INTERVAL",
+    "JSONL_FLUSH_INTERVAL_ENV",
+    "JsonlWriter",
     "dump_serialized",
     "infer_serialization_format",
     "load_serialized",

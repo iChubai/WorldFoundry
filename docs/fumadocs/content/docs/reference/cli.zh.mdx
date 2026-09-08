@@ -79,9 +79,11 @@ worldfoundry-eval run --help
 
 ![worldfoundry-eval --help 的终端输出](/images/cli/worldfoundry-eval-help.png)
 
-<p className="text-sm text-fd-muted-foreground">
-  截图来自当前 CLI；可在 <code>docs/fumadocs</code> 中运行 <code>npm run cli:screenshots</code> 重新生成。
-</p>
+<div className="text-sm text-fd-muted-foreground">
+
+截图来自当前 CLI；可在 `docs/fumadocs` 中运行 `npm run cli:screenshots` 重新生成。
+
+</div>
 
 ### 模型专属 Help
 
@@ -145,7 +147,7 @@ worldfoundry-eval run self-forcing --print-config --json
 | 命令 | 子命令 / 作用 |
 | --- | --- |
 | `task` | 对 filesystem task YAML 执行 `list`、`show`、`validate`、`materialize`。 |
-| `dataset` | 对 dataset manifest 和 request rows 执行 `create`、`show`、`validate`、`materialize`。 |
+| `dataset` | 对 sample manifest 执行 `create`、`show`、`validate`、`materialize`；用 `locate`、`plan` 定位或规划本地/HF 数据资产。 |
 | `config` | `list`、`run` 仓内 workflow template。 |
 | `plan` | `create`、`show`、`validate` 稳定的 `worldfoundry-run-plan` JSON。 |
 | `metric` | `list`、`show`、`validate` 可执行 metric ID。 |
@@ -306,6 +308,25 @@ Data root、score directory、prompt manifest、judge credential、metric subset
 </Callout>
 
 ## 输出与可复现性
+
+全局日志标志可放在 subcommand 前后，并覆盖
+[环境 → 日志](/zh/docs/reference/environments#日志) 中对应的环境变量：
+
+```bash
+worldfoundry-eval --log-level DEBUG --log-json \
+  --log-file tmp/worldfoundry.log zoo models --json
+```
+
+| 标志 | 等价环境变量 | 说明 |
+| --- | --- | --- |
+| `--log-level` | `WORLDFOUNDRY_LOG_LEVEL` | 可选 `DEBUG`、`INFO`、`WARNING`、`ERROR` 或 `CRITICAL`；默认 `INFO`。 |
+| `--log-file` | `WORLDFOUNDRY_LOG_FILE` | 可选旋转文件 sink。 |
+| `--log-json` | `WORLDFOUNDRY_LOG_JSON` | 文件 sink 使用 JSON Lines；控制台仍为文本。 |
+
+拥有输出目录的命令会创建 run id；未显式选择文件 sink 时，生命周期事件写入
+每次 run 的 `events.jsonl`。它通常位于 `<output-dir>/logs/<run-id>/`；需要独占
+认领输出目录的命令则使用隔离的 sibling 日志目录。框架托管的子进程继承结构化的
+`WORLDFOUNDRY_LOG_CONTEXT` 值。
 
 Evaluation 命令把持久化文件写入 `--output-dir`。各 benchmark 可能追加自己的文件，但共享 run surface 使用下列 artifact：
 

@@ -1,0 +1,101 @@
+---
+title: WorldOlympiad
+description: "Triathlon for long-video world models: physical faithfulness, long-horizon interaction fidelity, and 3D geometric consistency."
+---
+
+## About
+
+**Publisher:** Alibaba DAMO Academy
+
+WorldOlympiad evaluates long-video world models along three tracks. The physical track asks an MLLM judge (Qwen3-VL) confidence-weighted physics questions across mechanics, thermotics, and material properties; the interaction track judges per-chunk instruction following, transition smoothness, and global consistency for long, multi-chunk rollouts; the geometry track reconstructs the video with Depth Anything 3 (Gaussian splatting, meta-view consistency, camera-trajectory alignment). The primary `combined_score` averages the three tracks on the unit interval.
+
+WorldFoundry checks in the official batch evaluator, so `--run-official` needs no external checkout; weights are passed explicitly via `--weights-dir` and the DA3 source tree via `--da3-src`, defaulting to shared `worldfoundry/base_models` assets.
+
+Official references:
+
+- Paper: [arxiv.org/abs/2606.11129](https://arxiv.org/abs/2606.11129)
+- Project page: [alibaba-damo-academy.github.io/WorldOlympiad](https://alibaba-damo-academy.github.io/WorldOlympiad)
+- Official repository: [alibaba-damo-academy/WorldOlympiad](https://github.com/alibaba-damo-academy/WorldOlympiad)
+- License: `{'status': 'unlicensed_upstream', 'notes': 'The upstream repository publishes no LICENSE file at the pinned revision, so no redistribution terms are stated. Confirm terms with the upstream authors before redistributing the vendored runtime.'}`
+
+## Evaluation protocol
+
+Scored execution needs running QwenVL, SAM3, and DA3 reward services (`--qwen-server-urls`, `--sam3-server-urls`, `--reward-3d-server-urls`); tracks can be skipped individually (`--skip-physical`, `--skip-interaction`, `--skip-3d`). `--run-official --dry-run` exercises the real manifest, scheduler, and summarizer plumbing without GPUs or weights — the verified scope today. `--official-results-path` accepts a case root, a single judge JSON, a `summary.jsonl`, or an aggregate JSON.
+
+Primary metric: `combined_score`.
+
+| Metric | Meaning | Direction |
+| --- | --- | --- |
+| `combined_score` | Mean of the physical, interaction, and geometry track scores on the unit interval. | Higher is better |
+| `physical_score` | Confidence-weighted compliance over the physics questions the MLLM judge marked related. | Higher is better |
+| `physical_mechanics` | Physical score restricted to mechanics questions. | Higher is better |
+| `physical_thermotics` | Physical score restricted to thermodynamics questions. | Higher is better |
+| `physical_material` | Physical score restricted to material-property questions. | Higher is better |
+| `physical_compliance_rate` | Corpus-wide compliant questions divided by related questions. | Higher is better |
+| `three_d_score` | DA3 geometry score normalized from the native 0-3 range. | Higher is better |
+| `three_d_raw` | Sum of the Gaussian-splatting, meta-view, and camera-motion components on a 0-3 scale. | Higher is better |
+| `gs_score` | DA3 Gaussian-splatting reconstruction quality component. | Higher is better |
+| `meta_view_score` | Diagnostic meta-view consistency component of the geometry track. | Higher is better |
+| `camera_motion_score` | Alignment between the recovered and reference DA3 camera trajectories. | Higher is better |
+| `interaction_score` | VLM interaction score normalized from the native 0-5 range. | Higher is better |
+| `interaction_raw` | Mean of the chunk, transition, and global interaction judgements on a 0-5 scale. | Higher is better |
+| `chunk_instruction_following` | Per-chunk prompt adherence judged against the generated chunk timestamps. | Higher is better |
+| `transition_smoothness` | Smoothness across adjacent generated chunk boundaries. | Higher is better |
+| `global_consistency` | Whole-video consistency and global text alignment. | Higher is better |
+| `clip_semantic_adherence` | CLIP similarity between sampled chunk frames and their captions. | Higher is better |
+
+## Data and artifact layout
+
+In-tree paths:
+
+```text
+worldfoundry/data/benchmarks/tasks/external/worldolympiad.yaml
+worldfoundry/evaluation/tasks/execution/runners/worldolympiad
+```
+
+```text
+worldfoundry/evaluation/tasks/execution/runners/worldolympiad/runtime/worldolympiad   # official evaluator
+worldfoundry/data/benchmarks/assets/worldolympiad                                     # fixtures
+${WORLDFOUNDRY_GENERATED_ARTIFACT_DIR}/<case_id>/...                                  # official case layout
+```
+
+The benchmark dataset is hosted at Hugging Face `ziplab/WorldOlympiad`. All mutable artifacts (batch manifests, logs) are written under `--output-dir`; the runner refuses output/weights paths inside the checked-in runtime.
+
+## Run the benchmark
+
+Catalog-recorded validation command:
+
+```bash
+w o r l d f o u n d r y - e v a l   z o o   b e n c h m a r k - r u n   - - b e n c h m a r k - i d   w o r l d o l y m p i a d   - - m o d e   o f f i c i a l - v a l i d a t i o n   - - o f f i c i a l - r e s u l t s - p a t h   < c a s e _ r o o t _ o r _ j u d g e _ j s o n >   - - o u t p u t - d i r   < o u t >   - - j s o n
+```
+
+## Checkpoints and environment variables
+
+Checkpoints: DA3 (`depth-anything/DA3NESTED-GIANT-LARGE-1.1`) for geometry, `facebook/sam3` for physical segmentation, `Qwen/Qwen3-VL-8B-Instruct` as the multimodal judge, plus CLIP.
+
+- `WORLDFOUNDRY_WORLDOLYMPIAD_ROOT`: Optional override pointing at a local benchmark runtime/repository root.
+- `WORLDFOUNDRY_WORLDOLYMPIAD_RESULTS_PATH`: Default path the importer reads official result exports from when `--official-results-path` is not passed.
+- `WORLDFOUNDRY_GENERATED_ARTIFACT_DIR`: Directory containing the candidate generated artifacts to score or import against.
+- `WORLDFOUNDRY_WORLDOLYMPIAD_WEIGHTS_DIR`
+- `WORLDFOUNDRY_WORLDOLYMPIAD_DA3_SRC`
+
+Shared checkpoint assets: `depth-anything/DA3NESTED-GIANT-LARGE-1.1` (geometry_reconstruction), `facebook/sam3` (physical_segmentation), `Qwen/Qwen3-VL-8B-Instruct` (multimodal_judge).
+
+## Outputs
+
+The run writes into `--output-dir`:
+
+- `scorecard.json`: WorldFoundry scorecard with the metric values recorded above.
+- `raw_metric_table.jsonl`: Metric rows backing the scorecard.
+- `per_case_metrics.jsonl`
+- `benchmark_contract.json`: Benchmark contract record for the run (inputs, mode, provenance).
+
+Scorecard primary key: `combined_score` (leaderboard key `combined_score`), stored in `scorecard.json`.
+
+## Limitations
+
+- A scored run over the 1,000-video split has not been executed through this integration; only the batch plan is verified.
+- The upstream repository publishes no LICENSE at the pinned revision; confirm redistribution terms before redistributing the vendored runtime.
+- Dry-run plumbing evidence is not benchmark evidence.
+
+[← Benchmark Hub](/docs/evaluation/benchmark-hub)

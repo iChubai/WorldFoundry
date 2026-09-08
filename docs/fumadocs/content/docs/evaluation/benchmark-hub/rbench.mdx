@@ -1,0 +1,103 @@
+---
+title: RBench
+description: "Fine-grained robotics I2V benchmark (ICML 2026): 650 image-text cases over five task categories and four robot embodiments."
+---
+
+## About
+
+**Publisher:** Peking University (DAGroup) & ByteDance Seed
+
+RBench (from the ReVidgen project, ICML 2026) evaluates robot-oriented image-to-video generation. Its 650 image-text cases split into a task-oriented set (250 cases over common manipulation, long-horizon planning, multi-entity collaboration, spatial relationship, and visual reasoning) and an embodiment-oriented set (400 cases over dual-arm, humanoid, single-arm, and quadruped robots). Videos are scored by VLM judges (GPT or Qwen3-VL) on physical plausibility, task adherence, and stability, plus operator metrics (motion smoothness and amplitude) from a GroundingDINO/SAM2/CoTracker/Q-Align stack; the benchmark reports 0.96 Spearman correlation with human evaluation. The companion RoVid-X dataset provides 4M annotated robot clips for training.
+
+WorldFoundry's in-tree scorer reproduces the official `eval/4_embodiments` and `eval/5_tasks` aggregation from per-video outputs — including the option-to-score mapping, min-max normalization, PAS and consistency penalties, and the amplitude filter that drops videos with no measured motion amplitude.
+
+Official references:
+
+- Paper: [arxiv.org/abs/2601.15282](https://arxiv.org/abs/2601.15282)
+- Official repository: [DAGroup-PKU/ReVidgen](https://github.com/DAGroup-PKU/ReVidgen)
+
+## Evaluation protocol
+
+Point `--official-results-path` at an RBench results root (or one track/model directory); use `--result-model-id` when the tree holds several generation models and `--vlm-backend` when both GPT and Qwen judge outputs are present — the two are never mixed in one aggregation. `--track` restricts scoring to one track; `--generated-artifact-dir` adds coverage reporting.
+
+Primary metric: `rbench_overall`.
+
+| Metric | Meaning | Direction |
+| --- | --- | --- |
+| `rbench_overall` | WorldFoundry composite mean of the two official track scores; not a published RBench number. | Higher is better |
+| `embodiment_overall` | Task completion and visual quality pooled across the four robot embodiments. | Higher is better |
+| `task_completion` | Mean of normalized physical plausibility and task adherence consistency. | Higher is better |
+| `visual_quality` | Weighted stability and smoothness score after amplitude and consistency penalties. | Higher is better |
+| `visual_quality_base` | 0.8 x robot subject stability + 0.2 x motion smoothness before penalties. | Higher is better |
+| `physical_plausibility` | VLM physical plausibility score normalized from the 1-5 scale. | Higher is better |
+| `task_adherence_consistency` | VLM task adherence score normalized from the 1-5 scale. | Higher is better |
+| `robot_subject_stability` | VLM robot and object stability score normalized from the 1-15 option-mapped scale. | Higher is better |
+| `motion_smoothness` | Motion smoothness operator score. | Higher is better |
+| `motion_amplitude` | Robotic-manipulator perceptible amplitude operator score driving the PAS penalty. | Higher is better |
+| `task_track_overall` | ALL_TASKS_MEAN pooled over every scored video across the five task splits. | Higher is better |
+| `common_manipulation` | Normalized rubric score for the common manipulation split. | Higher is better |
+| `long_horizon_planning` | Normalized rubric score for the long-horizon planning split. | Higher is better |
+| `multi_entity_collaboration` | Normalized rubric score for the multi-entity collaboration split. | Higher is better |
+| `spatial_relationship` | Normalized rubric score for the spatial relationship split. | Higher is better |
+| `visual_reasoning` | Normalized rubric score for the visual reasoning split. | Higher is better |
+
+## Data and artifact layout
+
+In-tree paths:
+
+```text
+worldfoundry/data/benchmarks/tasks/external/rbench.yaml
+worldfoundry/evaluation/tasks/execution/runners/rbench
+```
+
+```text
+<rbench_data_root>/prompts/<split>_prompts.json                                # official prompts
+<rbench_data_root>/imgs/<split>/                                               # conditioning images
+<results_root>/4_embodiments/<model>/<embodiment>/VQA/<vlm>/<question>/results.csv
+<results_root>/4_embodiments/<model>/<embodiment>/motion/results.json
+<results_root>/5_tasks/<model>/<task>/<vlm>/results.csv
+```
+
+```bash
+hf download DAGroup-PKU/RBench --repo-type dataset --local-dir <rbench_data_root>
+```
+
+## Run the benchmark
+
+Catalog-recorded validation command:
+
+```bash
+worldfoundry-eval zoo benchmark-run \
+  --benchmark-id rbench \
+  --mode official-validation \
+  --official-results-path <rbench_results_root> \
+  --result-model-id <model_id> \
+  --output-dir <out> \
+  --json
+```
+
+## Checkpoints and environment variables
+
+- `WORLDFOUNDRY_RBENCH_RESULTS_PATH`: Default path the importer reads official result exports from when `--official-results-path` is not passed.
+- `WORLDFOUNDRY_RBENCH_DATA_ROOT`: Local root of the DAGroup-PKU/RBench prompt and image suite.
+- `WORLDFOUNDRY_RBENCH_VLM_BACKEND`: Default VLM judge whose outputs to aggregate.
+- `WORLDFOUNDRY_GENERATED_ARTIFACT_DIR`: Directory containing the candidate generated artifacts to score or import against.
+
+## Outputs
+
+The run writes into `--output-dir`:
+
+- `scorecard.json`: WorldFoundry scorecard with the metric values recorded above.
+- `benchmark_contract.json`: Benchmark contract record for the run (inputs, mode, provenance).
+- `raw_metric_table.jsonl`: Metric rows backing the scorecard.
+- `track_breakdown.json`
+
+Scorecard primary key: `rbench_overall` (leaderboard key `rbench_overall`), stored in `scorecard.json`.
+
+## Limitations
+
+- WorldFoundry aggregates supplied judge and operator outputs; it does not run the VLM judge or the GroundingDINO/SAM2/CoTracker/Q-Align stack in tree.
+- `rbench_overall` is a WorldFoundry composite of the two track scores, not a published RBench number.
+- GPT and Qwen judge outputs are never mixed; one backend per aggregation run.
+
+[← Benchmark Hub](/docs/evaluation/benchmark-hub)

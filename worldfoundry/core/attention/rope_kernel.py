@@ -29,6 +29,15 @@ For each ``s`` the rotation is, in fp32::
 
 where ``(a, b) = (d, d + D/2)`` when ``interleaved=False`` and
 ``(2k, 2k+1)`` when ``interleaved=True``.
+
+Not this module:
+    Table construction lives in :mod:`.rope`. This kernel is
+    inference-only (no autograd) and rejects raw fp8. Training /
+    differentiable rotate uses :func:`.rope.apply_rotary_embedding`.
+
+Public surface:
+
+- :func:`apply_rotary_pos_emb` — fused in-place apply for ``[B,S,H,D]``.
 """
 
 from __future__ import annotations
@@ -36,12 +45,17 @@ from __future__ import annotations
 import torch
 from torch import Tensor
 
-from worldfoundry.runtime.compile_cache import configure_persistent_compile_cache
+from worldfoundry.core.compile_cache import configure_persistent_compile_cache
 
 configure_persistent_compile_cache(namespace="rope-triton")
 
 import triton  # noqa: E402
 import triton.language as tl  # noqa: E402
+
+
+# ──────────────────────────────────────────────────────────────────────────
+# Triton kernel — one freqs load per (S, H) tile, broadcast across heads
+# ──────────────────────────────────────────────────────────────────────────
 
 
 @triton.jit
@@ -133,6 +147,11 @@ def _rope_inference_kernel(
 
         tl.store(row_base + a_off, out_a, mask=mask)
         tl.store(row_base + b_off, out_b, mask=mask)
+
+
+# ──────────────────────────────────────────────────────────────────────────
+# Launch helpers — tile sizes must be powers of two; short S keeps BLOCK_S=1
+# ──────────────────────────────────────────────────────────────────────────
 
 
 def _pick_block_s(s: int) -> int:

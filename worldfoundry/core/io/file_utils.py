@@ -1,5 +1,10 @@
-"""Cross-platform filesystem helpers: paths, copies, archives, and pickles."""
+"""Cross-platform filesystem helpers: paths, copies, archives, and pickles.
 
+``f_*`` helpers expand ``~`` and create parents. Prefer ``storage.py``
+for remote URIs; this module is local-path only.
+"""
+
+import ast
 import glob
 import hashlib
 import os
@@ -8,7 +13,7 @@ import shutil
 import sys
 from typing import Callable, Union
 
-from worldfoundry.core.structures.predicates import is_sequence
+from worldfoundry.core.utils.functional_utils import is_sequence
 
 __all__ = [
     "create_tar",
@@ -54,6 +59,7 @@ __all__ = [
     "load_pickle",
     "load_text",
     "load_text_lines",
+    "materialize_file",
     "md5_checksum",
     "move_with_backup",
     "next_available_file_name",
@@ -92,9 +98,9 @@ is_dir = os.path.isdir
 get_dir = os.path.dirname
 
 
-# ---------------------------------------------------------------------------
-# Host identity
-# ---------------------------------------------------------------------------
+# ──────────────────────────────────────────────────────────────────────────
+# Host identity — unix owner / hostname for lock and log prefixes
+# ──────────────────────────────────────────────────────────────────────────
 
 
 def owner_name(filepath):
@@ -120,9 +126,9 @@ def host_id():
     return host_name().split(".")[0]
 
 
-# ---------------------------------------------------------------------------
-# Path helpers
-# ---------------------------------------------------------------------------
+# ──────────────────────────────────────────────────────────────────────────
+# Path helpers — expand ~ / $VARS; parents created on write, not on join
+# ──────────────────────────────────────────────────────────────────────────
 
 
 def utf_open(fname, mode):
@@ -151,10 +157,14 @@ def f_not_empty(*fpaths):
 
 
 def f_expand(fpath):
+    """Expand ``~`` and ``$VARS`` so callers never mix raw and resolved paths."""
+
     return os.path.expandvars(os.path.expanduser(fpath))
 
 
 def f_exists(*fpaths):
+    """True when the joined, expanded path exists (file or directory)."""
+
     return os.path.exists(f_join(*fpaths))
 
 
@@ -256,10 +266,14 @@ def last_part_in_path(fpath):
 
 
 def is_abs_path(*fpath):
+    """True after join/expand — ``~/x`` is absolute once ``~`` is resolved."""
+
     return os.path.isabs(f_join(*fpath))
 
 
 def is_relative_path(*fpath):
+    """Negation of :func:`is_abs_path` after the same expand rules."""
+
     return not is_abs_path(f_join(*fpath))
 
 
@@ -297,6 +311,8 @@ def f_has_ext(fpath, ext):
 
 
 def f_glob(*fpath):
+    """Expand ``**`` globs after join; empty match is ``[]``, not an error."""
+
     return glob.glob(f_join(*fpath), recursive=True)
 
 
@@ -318,8 +334,10 @@ def f_remove(*fpath, verbose=False, plan_only=False):
             if e.errno == errno.ENOTDIR:
                 try:
                     os.remove(f)
-                except Exception as e:  # final resort safeguard
-                    pass
+                except Exception as remove_error:  # final resort safeguard
+                    import logging
+
+                    logging.getLogger(__name__).warning('f_remove failed to delete "%s": %s', f, remove_error)
     if verbose:
         print(f'Deleted "{fpath}"')
 
@@ -341,6 +359,62 @@ def f_copy(fsrc, fdst, ignore=None, include=None, exists_ok=True, verbose=False)
                 raise
     if verbose:
         print(f'Copied "{fsrc}" to "{fdst}"')
+
+
+def materialize_file(
+    source: str | os.PathLike[str],
+    destination: str | os.PathLike[str],
+    *,
+    writable: bool = True,
+) -> str:
+    """Materialize one local file using the cheapest correct filesystem path.
+
+    A copy-on-write reflink is always preferred. For immutable consumers such
+    as benchmark inputs, ``writable=False`` additionally permits a hard link;
+    callers that may modify the destination retain independent-copy semantics.
+
+    Returns one of ``existing``, ``reflink``, ``hardlink``, or ``copy``.
+    """
+    source_path = os.path.realpath(os.path.abspath(os.path.expanduser(os.fspath(source))))
+    destination_path = os.path.abspath(os.path.expanduser(os.fspath(destination)))
+    if source_path == destination_path:
+        return "existing"
+    if not os.path.isfile(source_path):
+        raise FileNotFoundError(source_path)
+    if os.path.lexists(destination_path):
+        try:
+            if os.path.samefile(source_path, destination_path):
+                return "existing"
+        except OSError:
+            pass
+
+    parent = os.path.dirname(destination_path)
+    if parent:
+        os.makedirs(parent, exist_ok=True)
+    if os.path.lexists(destination_path):
+        os.unlink(destination_path)
+
+    try:
+        import fcntl
+
+        with open(source_path, "rb") as source_file, open(destination_path, "xb") as destination_file:
+            # FICLONE: copy-on-write reflink when the filesystem supports it.
+            fcntl.ioctl(destination_file.fileno(), 0x40049409, source_file.fileno())
+        shutil.copystat(source_path, destination_path)
+        return "reflink"
+    except (ImportError, OSError):
+        if os.path.lexists(destination_path):
+            os.unlink(destination_path)
+
+    if not writable:
+        try:
+            os.link(source_path, destination_path)
+            return "hardlink"
+        except OSError:
+            pass
+
+    shutil.copy2(source_path, destination_path)
+    return "copy"
 
 
 def _f_copytree(
@@ -420,6 +494,8 @@ def _include_patterns(*patterns):
     """
 
     def _ignore_patterns(path, names):
+        """Keep names matching *patterns*; directories are never ignored (walk continues)."""
+
         import fnmatch
 
         keep = set(name for pattern in patterns for name in fnmatch.filter(names, pattern))
@@ -430,6 +506,12 @@ def _include_patterns(*patterns):
 
 
 def f_copytree(fsrc, fdst, symlinks=False, ignore=None, include=None, exist_ok=True):
+    """Copy a directory tree; *ignore* and *include* are mutually exclusive.
+
+    *include* is implemented as an ignore-callback that still descends into
+    directories so nested matches are not skipped.
+    """
+
     fsrc, fdst = f_expand(fsrc), f_expand(fdst)
     assert (ignore is None) or (include is None), "ignore= and include= are mutually exclusive"
     if ignore:
@@ -440,6 +522,8 @@ def f_copytree(fsrc, fdst, symlinks=False, ignore=None, include=None, exist_ok=T
 
 
 def f_move(fsrc, fdst):
+    """Move each glob match of *fsrc* onto *fdst* (``shutil.move`` semantics)."""
+
     fsrc, fdst = f_expand(fsrc), f_expand(fdst)
     for f in glob.glob(fsrc):
         shutil.move(f, fdst)
@@ -516,9 +600,9 @@ def md5_checksum(*fpath):
     return hash_md5.hexdigest()
 
 
-# ---------------------------------------------------------------------------
-# Archives and serialization
-# ---------------------------------------------------------------------------
+# ──────────────────────────────────────────────────────────────────────────
+# Archives and serialization — local only; remote URIs belong in storage.py
+# ──────────────────────────────────────────────────────────────────────────
 
 
 def create_tar(fsrc, output_tarball, include=None, ignore=None, compress_mode="gz"):
@@ -557,12 +641,29 @@ def extract_tar(source_tarball, output_dir=".", members=None):
         source_tarball: extract members from archive
         output_dir: default to current working dir
         members: must be a subset of the list returned by getmembers()
+
+    Extraction uses the PEP 706 ``"data"`` filter, which rejects archive
+    members that would escape ``output_dir`` (``../`` or absolute paths,
+    CVE-2007-4559) and strips dangerous metadata. On interpreters without
+    filter support the member names are validated manually before extraction.
     """
     import tarfile
 
     source_tarball, output_dir = f_expand(source_tarball), f_expand(output_dir)
     with tarfile.open(source_tarball, "r:*") as tar:
-        tar.extractall(output_dir, members=members)
+        try:
+            tar.extractall(output_dir, members=members, filter="data")
+        except TypeError:  # Python < 3.10.12 / 3.11.4 without PEP 706
+            from worldfoundry.core.io.integrity import safe_relative_path
+
+            for member in members if members is not None else tar.getmembers():
+                safe_relative_path(member.name, field_name="tar member")
+                if member.islnk() or member.issym():
+                    raise ValueError(
+                        f"tar member {member.name!r} is a link; refusing to extract "
+                        "without PEP 706 tarfile filters"
+                    )
+            tar.extractall(output_dir, members=members)
 
 
 def move_with_backup(*fpath, suffix=".bak"):
@@ -589,9 +690,11 @@ def insert_before_ext(name, insert):
 
 
 def timestamp_file_name(fname):
-    from datetime import datetime
+    """Insert a UTC ``_YYYYMMDD-HHMMSS`` stamp before the suffix to avoid clobber."""
 
-    timestr = datetime.now().strftime("_%H-%M-%S_%m-%d-%y")
+    from datetime import datetime, timezone
+
+    timestr = datetime.now(timezone.utc).strftime("_%Y%m%d-%H%M%S")
     return insert_before_ext(fname, timestr)
 
 
@@ -608,13 +711,38 @@ def next_available_file_name(
     """
 
     def fstring(fmt_str, **kwargs):
-        """
-        Simulate python f-string but without `f`
-        """
-        import shlex
+        """Format ``{i}`` / ``{i+1}`` suffix templates without ``eval``."""
+        import re
 
-        locals().update(kwargs)
-        return eval("f" + shlex.quote(fmt_str))
+        def _eval_node(node: ast.AST, env: dict) -> object:
+            """Evaluate ``{i}`` / ``{i+1}`` AST fragments; reject names outside *env*."""
+
+            if isinstance(node, ast.Name):
+                if node.id not in env:
+                    raise NameError(node.id)
+                return env[node.id]
+            if isinstance(node, ast.Constant) and isinstance(node.value, (int, float)):
+                return node.value
+            if isinstance(node, ast.UnaryOp) and isinstance(node.op, (ast.UAdd, ast.USub)):
+                value = _eval_node(node.operand, env)
+                return value if isinstance(node.op, ast.UAdd) else -value
+            if isinstance(node, ast.BinOp) and isinstance(node.op, (ast.Add, ast.Sub, ast.Mult)):
+                left = _eval_node(node.left, env)
+                right = _eval_node(node.right, env)
+                if isinstance(node.op, ast.Add):
+                    return left + right
+                if isinstance(node.op, ast.Sub):
+                    return left - right
+                return left * right
+            raise ValueError(f"unsupported format expression: {ast.dump(node)}")
+
+        def substitute(match):
+            """Replace one ``{...}`` group with its restricted arithmetic result."""
+
+            tree = ast.parse(match.group(1), mode="eval")
+            return str(_eval_node(tree.body, kwargs))
+
+        return re.sub(r"\{([^{}]+)\}", substitute, fmt_str)
 
     orig_file_path = f_join(*fpath)
     i = 0
@@ -652,17 +780,26 @@ def get_file_lock(*fpath, timeout: int = 15, logging_level="critical"):
     return Lock(f_join(*fpath), lifetime=timeout)
 
 
-def load_pickle(*fpaths):
+def load_pickle(*fpaths, allow_pickle=False):
+    """Load a trusted pickle after an explicit unsafe-format opt-in."""
+    if not allow_pickle:
+        raise ValueError(
+            "Refusing to unpickle without allow_pickle=True; only opt in for a trusted source"
+        )
     with open(f_join(*fpaths), "rb") as fp:
         return pickle.load(fp)
 
 
 def dump_pickle(data, *fpaths):
+    """Write a pickle; callers that later load must pass ``allow_pickle=True``."""
+
     with open(f_join(*fpaths), "wb") as fp:
         pickle.dump(data, fp)
 
 
 def load_text(*fpaths, by_lines=False):
+    """Read a local text file; ``by_lines=True`` keeps trailing newlines."""
+
     with open(f_join(*fpaths), "r") as fp:
         if by_lines:
             return fp.readlines()
@@ -671,21 +808,33 @@ def load_text(*fpaths, by_lines=False):
 
 
 def load_text_lines(*fpaths):
+    """Read the file as ``readlines()`` (each item still has its newline)."""
+
     return load_text(*fpaths, by_lines=True)
 
 
 def dump_text(s, *fpaths):
+    """Overwrite a local text file; parents are *not* created."""
+
     with open(f_join(*fpaths), "w") as fp:
         fp.write(s)
 
 
 def dump_text_lines(lines: list[str], *fpaths, add_newline=True):
+    """Write one line per item; default adds ``\\n`` even if the item already has one."""
+
     with open(f_join(*fpaths), "w") as fp:
         for line in lines:
             print(line, file=fp, end="\n" if add_newline else "")
 
 
 def get_package_root() -> str:
+    """Resolve the caller's top-level package directory from ``__package__``.
+
+    Raises :class:`ImportError` when the caller has no package context
+    (``__main__`` scripts, REPL) or the spec has no origin.
+    """
+
     import importlib.util
     import inspect
 

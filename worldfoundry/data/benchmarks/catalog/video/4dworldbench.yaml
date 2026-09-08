@@ -1,5 +1,7 @@
 id: 4dworldbench
 name: 4DWorldBench
+publisher: University of Science and Technology of China
+publisher_kind: university
 benchmark_kind:
 - world-generation
 - three-d-four-d-generation
@@ -207,7 +209,7 @@ integration:
   - Heavy official dependencies are resolved through WorldFoundry base_models or explicit environment variables.
 release_status: experimental
 maturity: contract_ready
-open_source_status: in_tree_official_runtime
+open_source_status: in_tree_runtime
 official_benchmark_verified: false
 integration_evidence: false
 leaderboard_valid: false
@@ -215,6 +217,11 @@ requires:
 - dataset_json prepared in the official 4DWorldBench JSON schema
 - generated videos referenced by dataset_json
 - Keye-VL, DROID-SLAM, VFIMamba, FastVQA, and OpenAI/API assets only for dimensions that use them
+dataset:
+  not_applicable: false
+  reason: Official dataset download is not published; the upstream Dataset links are placeholders and callers must prepare dataset_json.
+blockers:
+- Official dataset acquisition is blocked because the pinned upstream Dataset links do not expose a download.
 data_refs:
   task_yaml: worldfoundry/data/benchmarks/tasks/external/4dworldbench.yaml
 runner_availability:

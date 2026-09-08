@@ -180,7 +180,10 @@ def _run_infer(args: argparse.Namespace) -> int:
         )
     else:
         manager = StudioManager(workspace_root=workspace_root)
-        record = manager.run(**run_kwargs, progress_callback=None)
+        try:
+            record = manager.run(**run_kwargs, progress_callback=None)
+        finally:
+            manager.close()
     print(json.dumps(record.to_manifest(), ensure_ascii=False, indent=2, sort_keys=True))
     return 0
 

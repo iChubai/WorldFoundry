@@ -1,16 +1,81 @@
+"""In-tree xDiT-style context parallel without requiring the xFuser package.
+
+xFuser's SP ranks/world-size are reimplemented with torch.distributed so
+Wan checkpoints can run Ulysses on a stock wheel. RoPE frequencies are
+padded to the sharded length; attention goes through
+:func:`~worldfoundry.core.attention.ulysses_attention.distributed_attention`.
+
+When the real xFuser stack is installed, prefer
+:mod:`worldfoundry.core.attention.scope_xdit_context_parallel`.
+
+Not this module:
+    Does not import xfuser / yunchang. Does not own process-group
+    teardown. Video VACE hooks live in
+    :mod:`.video_xdit_context_parallel`.
+
+Public surface:
+
+- :func:`get_sequence_parallel_world_size` / :func:`get_sequence_parallel_rank`
+  — torch.distributed stand-ins for xFuser SP queries.
+- :func:`sequence_parallel_all_gather` / :func:`initialize_usp` — gather
+  and env:// init for a full-world Ulysses group.
+- :func:`rope_apply` / :func:`usp_dit_forward` / :func:`usp_attn_forward`
+  — monkey-patch targets for Wan DiT blocks.
+"""
+
+import os
 from typing import Optional
 
 import torch
+import torch.distributed as dist
 from einops import rearrange
-from xfuser.core.distributed import get_sequence_parallel_rank, get_sequence_parallel_world_size, get_sp_group
-from xfuser.core.long_ctx_attention import xFuserLongContextAttention
 
 from worldfoundry.core.attention.sequence_parallel_rope import pad_freqs
-from worldfoundry.core.distributed.xfuser_parallel import initialize_usp  # noqa: F401 - public compatibility export
+from worldfoundry.core.attention.ulysses_attention import distributed_attention
+from worldfoundry.core.distributed.sequence_ops import gather_forward
 from worldfoundry.core.nn import sinusoidal_embedding_1d
 
 
+# ──────────────────────────────────────────────────────────────────────────
+# xFuser-free SP queries — same names so monkey-patches stay drop-in
+# ──────────────────────────────────────────────────────────────────────────
+
+
+def get_sequence_parallel_world_size() -> int:
+    """Return the native Ulysses world size without requiring xFuser."""
+
+    return dist.get_world_size() if dist.is_available() and dist.is_initialized() else 1
+
+
+def get_sequence_parallel_rank() -> int:
+    """Return the native Ulysses rank without requiring xFuser."""
+
+    return dist.get_rank() if dist.is_available() and dist.is_initialized() else 0
+
+
+def sequence_parallel_all_gather(value: torch.Tensor, *, dim: int) -> torch.Tensor:
+    """Gather equal native Ulysses shards along ``dim``."""
+
+    return gather_forward(value, dim) if get_sequence_parallel_world_size() > 1 else value
+
+
+def initialize_usp(device_type: str = "cuda") -> None:
+    """Initialize the torch-native full-world Ulysses process group."""
+
+    if device_type == "cuda":
+        torch.cuda.set_device(int(os.getenv("LOCAL_RANK", os.getenv("RANK", "0"))))
+    if not dist.is_initialized():
+        dist.init_process_group(backend="nccl", init_method="env://")
+
+
 def rope_apply(x, freqs, num_heads):
+    """Rotate a local shard with the matching slice of a global freq table.
+
+    Identity-pad first so short tables do not wrap or broadcast the last
+    row onto later ranks. Complex multiply stays in float64 so Wan
+    checkpoints remain bit-compatible with the single-GPU path.
+    """
+
     x = rearrange(x, "b s (n d) -> b s n d", n=num_heads)
     s_per_rank = x.shape[1]
 
@@ -25,6 +90,11 @@ def rope_apply(x, freqs, num_heads):
     return x_out.to(x.dtype)
 
 
+# ──────────────────────────────────────────────────────────────────────────
+# Monkey-patch forwards — shard tokens, run local blocks, gather + unpad
+# ──────────────────────────────────────────────────────────────────────────
+
+
 def usp_dit_forward(
     self,
     x: torch.Tensor,
@@ -36,6 +106,14 @@ def usp_dit_forward(
     use_gradient_checkpointing_offload: bool = False,
     **kwargs,
 ):
+    """Wan DiT forward that chunks the token axis instead of calling xFuser.
+
+    Uneven last shards are zero-padded to the first chunk length so
+    all-gather sees a rectangular tensor; the pad is cropped after the
+    gather. Gradient-checkpoint closures exist only to keep
+    ``use_reentrant=False`` callable on the original ``block``.
+    """
+
     t = self.time_embedding(sinusoidal_embedding_1d(self.freq_dim, timestep))
     t_mod = self.time_projection(t).unflatten(1, (6, self.dim))
     context = self.text_embedding(context)
@@ -61,7 +139,11 @@ def usp_dit_forward(
     )
 
     def create_custom_forward(module):
+        """Bind ``module`` so checkpoint sees a 1:1 ``*inputs`` callable."""
+
         def custom_forward(*inputs):
+            """Forward ``module`` without capturing extra closure state."""
+
             return module(*inputs)
 
         return custom_forward
@@ -101,7 +183,7 @@ def usp_dit_forward(
     x = self.head(x, t)
 
     # Context Parallel
-    x = get_sp_group().all_gather(x, dim=1)
+    x = sequence_parallel_all_gather(x, dim=1)
     x = x[:, :-pad_shape] if pad_shape > 0 else x
 
     # unpatchify
@@ -110,6 +192,13 @@ def usp_dit_forward(
 
 
 def usp_attn_forward(self, x, freqs):
+    """Self-attention block: local RoPE, then in-tree Ulysses attention.
+
+    ``seq_lens=None`` because this path already padded tokens to a
+    common shard length; a second length vector would re-introduce the
+    host sync the pad was meant to avoid.
+    """
+
     q = self.norm_q(self.q(x))
     k = self.norm_k(self.k(x))
     v = self.v(x)
@@ -120,12 +209,7 @@ def usp_attn_forward(self, x, freqs):
     k = rearrange(k, "b s (n d) -> b s n d", n=self.num_heads)
     v = rearrange(v, "b s (n d) -> b s n d", n=self.num_heads)
 
-    x = xFuserLongContextAttention()(
-        None,
-        query=q,
-        key=k,
-        value=v,
-    )
+    x = distributed_attention(q, k, v, seq_lens=None)
     x = x.flatten(2)
 
     del q, k, v

@@ -33,6 +33,10 @@ try:
 finally:
     os.environ.update(_GRADIO_IMPORT_PROXY_ENV)
 
+_ORIGINAL_TEMPLATE_RESPONSE: Any = None
+_ORIGINAL_URL_OK: Any = None
+_ORIGINAL_GET_API_INFO: Any = None
+
 
 def _install_template_response_guard() -> None:
     """Route Gradio 4.14's older TemplateResponse call through Starlette >= 1.0."""
@@ -58,7 +62,9 @@ def _install_template_response_guard() -> None:
     if not params or params[0] != "request":
         return
 
+    global _ORIGINAL_TEMPLATE_RESPONSE
     original = template_response
+    _ORIGINAL_TEMPLATE_RESPONSE = template_response
 
     def guarded_template_response(*args, **kwargs):
         if args and isinstance(args[0], str):
@@ -77,9 +83,6 @@ def _install_template_response_guard() -> None:
     templates._worldfoundry_template_response_guard = True
 
 
-_install_template_response_guard()
-
-
 def _install_proxy_safe_url_check() -> None:
     """Make Gradio's localhost readiness probe ignore shell proxy settings."""
 
@@ -90,6 +93,9 @@ def _install_proxy_safe_url_check() -> None:
 
     if getattr(gr_networking, "_worldfoundry_proxy_safe_url_ok", False):
         return
+
+    global _ORIGINAL_URL_OK
+    _ORIGINAL_URL_OK = getattr(gr_networking, "url_ok", None)
 
     def proxy_safe_url_ok(url: str) -> bool:
         try:
@@ -109,9 +115,6 @@ def _install_proxy_safe_url_check() -> None:
     gr_networking._worldfoundry_proxy_safe_url_ok = True
 
 
-_install_proxy_safe_url_check()
-
-
 def _install_api_info_guard() -> None:
     """Avoid Gradio API schema crashes on components that emit bool schemas."""
 
@@ -127,6 +130,9 @@ def _install_api_info_guard() -> None:
     original = getattr(blocks_cls, "get_api_info", None)
     if original is None:
         return
+
+    global _ORIGINAL_GET_API_INFO
+    _ORIGINAL_GET_API_INFO = original
 
     def guarded_get_api_info(self, all_endpoints: bool = False):
         try:
@@ -146,7 +152,50 @@ def _install_api_info_guard() -> None:
     blocks_cls._worldfoundry_api_info_guard = True
 
 
-_install_api_info_guard()
+def install_gradio_patches() -> None:
+    """Install Gradio compatibility patches. Idempotent; call from Studio entrypoints."""
+
+    _install_template_response_guard()
+    _install_proxy_safe_url_check()
+    _install_api_info_guard()
+
+
+def uninstall_gradio_patches() -> None:
+    """Restore Gradio callables replaced by install_gradio_patches()."""
+
+    global _ORIGINAL_TEMPLATE_RESPONSE, _ORIGINAL_URL_OK, _ORIGINAL_GET_API_INFO
+
+    try:
+        import gradio.routes as gr_routes
+    except Exception:
+        gr_routes = None
+    templates = getattr(gr_routes, "templates", None) if gr_routes is not None else None
+    if templates is not None and getattr(templates, "_worldfoundry_template_response_guard", False):
+        if _ORIGINAL_TEMPLATE_RESPONSE is not None:
+            templates.TemplateResponse = _ORIGINAL_TEMPLATE_RESPONSE
+        templates._worldfoundry_template_response_guard = False
+    _ORIGINAL_TEMPLATE_RESPONSE = None
+
+    try:
+        import gradio.networking as gr_networking
+    except Exception:
+        gr_networking = None
+    if gr_networking is not None and getattr(gr_networking, "_worldfoundry_proxy_safe_url_ok", False):
+        if _ORIGINAL_URL_OK is not None:
+            gr_networking.url_ok = _ORIGINAL_URL_OK
+        gr_networking._worldfoundry_proxy_safe_url_ok = False
+    _ORIGINAL_URL_OK = None
+
+    try:
+        import gradio.blocks as gr_blocks
+    except Exception:
+        gr_blocks = None
+    blocks_cls = getattr(gr_blocks, "Blocks", None) if gr_blocks is not None else None
+    if blocks_cls is not None and getattr(blocks_cls, "_worldfoundry_api_info_guard", False):
+        if _ORIGINAL_GET_API_INFO is not None:
+            blocks_cls.get_api_info = _ORIGINAL_GET_API_INFO
+        blocks_cls._worldfoundry_api_info_guard = False
+    _ORIGINAL_GET_API_INFO = None
 
 
 def gradio_progress(*, track_tqdm: bool = False) -> Any:

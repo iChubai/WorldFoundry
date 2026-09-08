@@ -6,6 +6,14 @@
 # Licensed under the Apache License, Version 2.0 (see LICENSE.txt at repo root).
 #
 # Modifications Copyright (c) 2026 SkyworkAI and contributors.
+"""Memory-token RoPE under sequence parallel (padded Ulysses).
+
+Memory / sink tokens have a different temporal length than the rolling
+window. This module pads RoPE and uses
+:mod:`worldfoundry.core.attention.padded_ulysses_attention` so ranks can
+all-to-all unequal sequence tails without dropping the sink block.
+"""
+
 import torch
 import torch.nn.functional as torch_F
 from einops import rearrange
@@ -21,6 +29,10 @@ rope_apply = make_sequence_parallel_rope_apply(
     compute_dtype=torch.float32,
     match_frequency_dtype=True,
 )
+
+# ──────────────────────────────────────────────────────────────────────────
+# Memory-aware RoPE — sink frames and rolling frames use distinct indices
+# ──────────────────────────────────────────────────────────────────────────
 
 
 @torch.amp.autocast("cuda", enabled=False)
@@ -90,6 +102,11 @@ def rope_apply_mem_sp(x, grid_sizes, freqs, memory_length, memory_latent_idx, pr
 
 
 def _get_freqs_chunk(grid_sizes, freqs, t_indices):
+    """Build a 3D cis table for ``t_indices`` frames at spatial ``(h, w)``.
+
+    Supports both ``[M, C/2]`` and batched ``[N, M, C/2]`` frequency
+    tables. Indices may be a tensor or a Python sequence.
+    """
     f, h, w = grid_sizes
     seq_len = f * h * w
 
@@ -128,6 +145,11 @@ def _get_freqs_chunk(grid_sizes, freqs, t_indices):
         ).reshape(seq_len, 1, -1)
 
     return freqs_i
+
+
+# ──────────────────────────────────────────────────────────────────────────
+# Memory SP DiT — concatenate sink tokens, shard sequence, gather at head
+# ──────────────────────────────────────────────────────────────────────────
 
 
 def sp_dit_forward(
@@ -276,6 +298,11 @@ def sp_dit_forward(
     return [u.float() for u in x]
 
 
+# ──────────────────────────────────────────────────────────────────────────
+# Memory SP attention — padded Ulysses so unequal sink tails still exchange
+# ──────────────────────────────────────────────────────────────────────────
+
+
 def sp_attn_forward(
     self,
     x,
@@ -288,13 +315,22 @@ def sp_attn_forward(
     dtype=torch.bfloat16,
     fa_version=None,
 ):
+    """Sequence-parallel self-attention with optional memory-token RoPE.
+
+    When ``use_memory`` is set, memory and predict frames use distinct
+    temporal indices so sink tokens do not inherit the rolling window's
+    positions. QKV are cast to the linear's dtype when weights are not
+    int8-packed. Attention itself runs through padded Ulysses.
+    """
     b, s, n, d = *x.shape[:2], self.num_heads, self.head_dim
     half_dtypes = (torch.float16, torch.bfloat16)
 
     def half(x):
+        """Cast to ``dtype`` unless already float16/bfloat16."""
         return x if x.dtype in half_dtypes else x.to(dtype)
 
     def qkv_fn(x):
+        """Project QKV, matching each linear's storage dtype (including int8)."""
         x = x.contiguous()
         q_in = x if hasattr(self.q, "weight_int8") else x.to(self.q.weight.dtype)
         k_in = x if hasattr(self.k, "weight_int8") else x.to(self.k.weight.dtype)

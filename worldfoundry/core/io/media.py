@@ -1,4 +1,8 @@
-"""Media path classification helpers with no model semantics."""
+"""Media path classification helpers with no model semantics.
+
+Extension groups and MIME guesses so loaders pick a decoder without
+opening the file. Not a codec — see ``video.py`` / ``audio.py``.
+"""
 
 from __future__ import annotations
 
@@ -7,6 +11,10 @@ from enum import Enum
 from pathlib import Path
 from typing import Mapping
 from urllib.parse import unquote, urlparse
+
+# ──────────────────────────────────────────────────────────────────────────
+# Suffix tables — classify without opening the file; not a codec
+# ──────────────────────────────────────────────────────────────────────────
 
 
 class MediaKind(str, Enum):

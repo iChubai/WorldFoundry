@@ -10,6 +10,12 @@ import skimage
 from PIL import Image
 from einops import rearrange
 from kornia.geometry import PinholeCamera
+from worldfoundry.synthesis.visual_generation.three_d_four_d.pytorch3d_compat import (
+    configure_pytorch3d_extension,
+)
+
+configure_pytorch3d_extension()
+
 from pytorch3d.renderer import (
     PerspectiveCameras,
     PointsRasterizationSettings,

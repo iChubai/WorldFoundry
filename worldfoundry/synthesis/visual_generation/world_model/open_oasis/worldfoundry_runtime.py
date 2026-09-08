@@ -2,13 +2,18 @@ from __future__ import annotations
 
 from pathlib import Path
 
+from worldfoundry.core.io.paths import project_root
+from worldfoundry.synthesis.visual_generation.world_model.runtime_manifest import (
+    command_settings,
+    plan_payload,
+)
+
 
 RUNTIME_DIR = Path(__file__).resolve().parent
 OFFICIAL_ENTRYPOINT = RUNTIME_DIR / "generate.py"
-BLOCKED_REASON = (
-    "Oasis 500M official source is vendored in-tree; execution still requires "
-    "the official dependency environment, checkpoints, and task assets."
-)
+# The model-specific requirement hook below is the source of truth. Keeping a
+# static blocker here would reject execution even after every asset is staged.
+BLOCKED_REASON = ""
 
 
 def _option(options: dict, *names: str, default: str | None = None) -> str | None:
@@ -17,6 +22,13 @@ def _option(options: dict, *names: str, default: str | None = None) -> str | Non
         if value not in (None, ""):
             return str(value)
     return default
+
+
+def _runtime_path(value: str) -> str:
+    path = Path(value).expanduser()
+    if not path.is_absolute():
+        path = project_root(__file__) / path
+    return str(path.resolve())
 
 
 def missing_requirements(*, options, runtime_root, entrypoint, profile):
@@ -39,18 +51,21 @@ def missing_requirements(*, options, runtime_root, entrypoint, profile):
 
 
 def build_command(context):
-    options = dict(context.get("options") or {})
+    options = command_settings(context)
+    plan = plan_payload(context)
+    if plan.get("fps") is not None:
+        options["fps"] = plan["fps"]
     return [
         context["python"],
         context["entrypoint"],
         "--oasis-ckpt",
-        _option(options, "oasis_ckpt", "checkpoint_path", "model_path", default="") or "",
+        _runtime_path(_option(options, "oasis_ckpt", "checkpoint_path", "model_path", default="") or ""),
         "--vae-ckpt",
-        _option(options, "vae_ckpt", "vae_checkpoint_path", default="") or "",
+        _runtime_path(_option(options, "vae_ckpt", "vae_checkpoint_path", default="") or ""),
         "--prompt-path",
-        _option(options, "prompt_path", "input_path", "image_path", "video_path", default="") or "",
+        _runtime_path(_option(options, "prompt_path", "input_path", "image_path", "video_path", default="") or ""),
         "--actions-path",
-        _option(options, "actions_path", "action_path", default="") or "",
+        _runtime_path(_option(options, "actions_path", "action_path", default="") or ""),
         "--output-path",
         context["output_path"],
         "--num-frames",

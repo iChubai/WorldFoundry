@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from ..pipeline_utils import PipelineABC
-import tempfile
 from pathlib import Path
 from typing import Any, Dict, Optional, Sequence, Union
 
@@ -15,6 +14,7 @@ from ...representations.point_clouds_generation.lyra.lyra1_representation import
     Lyra1Representation,
 )
 from ...synthesis.visual_generation.lyra_1.synthesis import Lyra1Synthesis
+from worldfoundry.core.io.paths import scratch_directory
 
 
 class Lyra1Pipeline(PipelineABC):
@@ -169,8 +169,8 @@ class Lyra1Pipeline(PipelineABC):
             generated_root = output_root / "generated"
             reconstruction_root = output_root / "reconstruction"
         else:
-            generated_root = Path(tempfile.mkdtemp(prefix=f"lyra1_{mode}_generated_"))
-            reconstruction_root = Path(tempfile.mkdtemp(prefix=f"lyra1_{mode}_recon_"))
+            generated_root = scratch_directory(f"lyra1_{mode}_generated_")
+            reconstruction_root = scratch_directory(f"lyra1_{mode}_recon_")
 
         synthesis_kwargs = dict(kwargs)
         multi_trajectory = bool(synthesis_kwargs.pop("multi_trajectory", reconstruct_3d))
@@ -183,6 +183,15 @@ class Lyra1Pipeline(PipelineABC):
             multi_trajectory=multi_trajectory,
             **synthesis_kwargs,
         )
+        if synthesis_result.get("status") == "planned":
+            return {
+                **synthesis_result,
+                "mode": mode,
+                "prompt": processed["prompt"],
+                "actions": processed["actions"],
+                "mapped_trajectories": processed["mapped_trajectories"],
+                "trajectory": processed["trajectory"],
+            }
 
         reconstruction_result = None
         if reconstruct_3d:

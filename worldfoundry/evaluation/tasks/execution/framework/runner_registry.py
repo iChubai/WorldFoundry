@@ -4,6 +4,13 @@ Maps ``benchmark_id`` to in-tree runner CLI scripts and result-path flags.
 Consumed by :mod:`integration` and :class:`ManifestBenchmarkRunner` specialized
 normalizer dispatch.
 
+Runner implementation tiers:
+
+* **Hook runners** — thin scripts using ``framework.official_runner.run_main()`` plus
+  ``framework.runner_common`` helpers (preferred for new benchmarks).
+* **Legacy custom runners** — large per-bench scorecard assembly still being migrated
+  to the shared framework (see ``run_*_official_runner.py`` under each bench folder).
+
 Sections:
 
 * **VideoRunnerSpec** — per-benchmark script path and CLI flag metadata.
@@ -20,7 +27,9 @@ class VideoRunnerSpec:
     """In-tree official runner script and results-path CLI flag."""
 
     script: str
-    results_flag: str
+    # Every registered runner currently uses the shared flag; the default means
+    # new entries no longer repeat it (existing explicit values stay valid).
+    results_flag: str = "--official-results-path"
     extra_args: tuple[str, ...] = ()
     pass_benchmark_id: bool = True
 
@@ -30,6 +39,10 @@ class VideoRunnerSpec:
 # ---------------------------------------------------------------------------
 
 VIDEO_RUNNER_REGISTRY: dict[str, VideoRunnerSpec] = {
+    "apple-pi": VideoRunnerSpec(
+        "worldfoundry/evaluation/tasks/execution/runners/apple_pi/run_apple_pi_official_runner.py",
+        "--official-results-path",
+    ),
     "aigcbench": VideoRunnerSpec(
         "worldfoundry/evaluation/tasks/execution/runners/aigcbench/run_aigcbench_official_runner.py",
         "--official-results-path",
@@ -80,12 +93,24 @@ VIDEO_RUNNER_REGISTRY: dict[str, VideoRunnerSpec] = {
         "worldfoundry/evaluation/tasks/execution/runners/larybench/run_larybench_official_runner.py",
         "--official-results-path",
     ),
+    "likephys": VideoRunnerSpec(
+        "worldfoundry/evaluation/tasks/execution/runners/likephys/run_likephys_official_runner.py",
+        "--official-results-path",
+    ),
     "mirabench": VideoRunnerSpec(
         "worldfoundry/evaluation/tasks/execution/runners/mirabench/run_mirabench_official_runner.py",
         "--official-results-path",
     ),
+    "pawbench": VideoRunnerSpec(
+        "worldfoundry/evaluation/tasks/execution/runners/pawbench/run_pawbench_official_runner.py",
+        "--official-results-path",
+    ),
     "memobench": VideoRunnerSpec(
         "worldfoundry/evaluation/tasks/execution/runners/memobench/run_memobench_official_runner.py",
+        "--official-results-path",
+    ),
+    "mind": VideoRunnerSpec(
+        "worldfoundry/evaluation/tasks/execution/runners/mind/run_mind_official_runner.py",
         "--official-results-path",
     ),
     "phyeduvideo": VideoRunnerSpec(
@@ -124,6 +149,18 @@ VIDEO_RUNNER_REGISTRY: dict[str, VideoRunnerSpec] = {
     ),
     "physvidbench": VideoRunnerSpec(
         "worldfoundry/evaluation/tasks/execution/runners/physvidbench/run_physvidbench_official_runner.py",
+        "--official-results-path",
+    ),
+    "rbench": VideoRunnerSpec(
+        "worldfoundry/evaluation/tasks/execution/runners/rbench/run_rbench_official_runner.py",
+        "--official-results-path",
+    ),
+    "sana-wm-bench": VideoRunnerSpec(
+        "worldfoundry/evaluation/tasks/execution/runners/sana_wm_bench/run_sana_wm_bench_official_runner.py",
+        "--official-results-path",
+    ),
+    "stevo-bench": VideoRunnerSpec(
+        "worldfoundry/evaluation/tasks/execution/runners/stevo_bench/run_stevo_bench_official_runner.py",
         "--official-results-path",
     ),
     "t2v-compbench": VideoRunnerSpec(
@@ -192,8 +229,16 @@ VIDEO_RUNNER_REGISTRY: dict[str, VideoRunnerSpec] = {
         "worldfoundry/evaluation/tasks/execution/runners/worldarena/run_worldarena_official_runner.py",
         "--official-results-path",
     ),
+    "worldatlas-arena": VideoRunnerSpec(
+        "worldfoundry/evaluation/tasks/execution/runners/worldatlas_arena/run_worldatlas_arena_official_runner.py",
+        "--official-results-path",
+    ),
     "worldbench": VideoRunnerSpec(
         "worldfoundry/evaluation/tasks/execution/runners/worldbench/run_worldbench_official_runner.py",
+        "--official-results-path",
+    ),
+    "worldolympiad": VideoRunnerSpec(
+        "worldfoundry/evaluation/tasks/execution/runners/worldolympiad/run_worldolympiad_official_runner.py",
         "--official-results-path",
     ),
     "worldmodelbench": VideoRunnerSpec(

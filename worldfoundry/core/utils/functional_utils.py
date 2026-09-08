@@ -1,9 +1,20 @@
-"""Functional Meta-Programming and Object Inspection Utilities.
+"""Functional meta-programming and object-inspection utilities.
 
-This module provides reusable, high-level utilities for:
-1. structural reflection and object validation (e.g., protocol verification, method presence checks).
-2. state-dictionary serialization decorators (similar to PyTorch's `nn.Module.state_dict` / `load_state_dict`).
-3. dynamic functional decorators (such as recursive structure wrappers and multi-signature decorators).
+Responsibility
+    Reflection (method / signature / keys), a lightweight ``state_dict``
+    class decorator, and decorators that expand one-leaf functions over
+    nested structures or alternate calling conventions.
+
+Boundaries
+    Not a registry for models — prefer
+    ``worldfoundry.core.registry.TypedRegistry``. :class:`ClassRegistry` is
+    legacy and silently overwrites duplicate names. Recursive wrappers need
+    ``dm_tree`` when ``with_path=True``.
+
+Public surface
+    :func:`make_recursive_func`, :func:`meta_decorator`, :func:`state_dict_class`,
+    :class:`ClassRegistry`, :class:`NoopObject`, :class:`NoopContext`,
+    pack/enable varargs and kwargs helpers, signature inspectors.
 """
 
 from __future__ import annotations
@@ -12,11 +23,31 @@ import collections.abc
 import functools
 import inspect
 import pprint
-import types
 import warnings
+from collections.abc import Mapping, Sequence
 from typing import Any, Dict, Literal
 
-from worldfoundry.core.structures.predicates import is_mapping, is_sequence
+
+# ──────────────────────────────────────────────────────────────────────────
+# Type tests — strings are scalars here, never walked as sequences
+# ──────────────────────────────────────────────────────────────────────────
+
+
+def is_sequence(value: Any) -> bool:
+    """Return whether *value* is a non-string sequence."""
+
+    return isinstance(value, Sequence) and not isinstance(value, str)
+
+
+def is_mapping(value: Any) -> bool:
+    """Return whether *value* implements the mapping protocol."""
+
+    return isinstance(value, Mapping)
+
+
+# ──────────────────────────────────────────────────────────────────────────
+# State-dict mixin — named attrs only; missing keys fail at load
+# ──────────────────────────────────────────────────────────────────────────
 
 
 def state_dict_class(keys: list[str]):
@@ -30,12 +61,18 @@ def state_dict_class(keys: list[str]):
     """
 
     def _wrap_class(cls):
+        """Attach ``state_dict`` / ``load_state_dict`` / ``state_keys`` to ``cls``."""
         assert inspect.isclass(cls)
 
         def state_dict(self):
+            """Snapshot the configured attribute names; missing attrs raise :exc:`AttributeError`."""
             return {k: getattr(self, k) for k in keys}
 
         def load_state_dict(self, states: Dict[str, Any]):
+            """Restore every configured key; extra keys in ``states`` are ignored.
+
+            Failure: :exc:`ValueError` when any configured key is absent.
+            """
             if not set(keys).issubset(set(states.keys())):
                 raise ValueError(f"states does not have all the required keys: {keys}")
             for k in keys:
@@ -43,6 +80,7 @@ def state_dict_class(keys: list[str]):
 
         @property
         def state_keys(self):
+            """Read-only list of names this mixin will serialize."""
             return keys
 
         cls.state_dict = state_dict
@@ -66,6 +104,11 @@ def assert_implements_method(object, method: str | list[str]):
         assert implements_method(object, m), f"object {object.__class__} does not implement method {m}()"
 
 
+# ──────────────────────────────────────────────────────────────────────────
+# Decorator factories — @deco and @deco(...) must both be legal
+# ──────────────────────────────────────────────────────────────────────────
+
+
 def meta_decorator(decor):
     """Meta-decorator enabling a custom decorator to support both parenthesized and clean signatures.
 
@@ -81,10 +124,12 @@ def meta_decorator(decor):
     import functools
 
     def single_callable(args, kwargs):
+        """True only for ``@decorator`` (one positional callable, no kwargs)."""
         return len(args) == 1 and len(kwargs) == 0 and callable(args[0])
 
     @functools.wraps(decor)
     def new_decor(*args, **kwargs):
+        """Apply immediately, or return a closer that binds decorator args."""
         if single_callable(args, kwargs):
             return decor(args[0])
         else:
@@ -108,6 +153,7 @@ def make_recursive_func(fn, *, with_path=False):
 
     @functools.wraps(fn)
     def _wrapper(tensor_struct, *args, **kwargs):
+        """Map ``fn`` over a tree; fallback walk if ``dm_tree`` is missing."""
         if tree is not None and with_path:
             return tree.map_structure_with_path(lambda paths, x: fn(paths, x, *args, **kwargs), tensor_struct)
         if tree is not None:
@@ -155,6 +201,7 @@ def deprecated(func, msg="", action="warning", type=""):
     # only does the deprecation when being called
     @functools.wraps(func)
     def _deprecated(*args, **kwargs):
+        """Warn / raise / no-op on each call, then forward to ``func``."""
         if action in ["warning", "warn"]:
             warnings.warn(msg, WarningExceptionCls)
         elif action == "raise":
@@ -180,6 +227,7 @@ def call_once(func, on_second_call: Literal["noop", "raise", "warn"] = "noop"):
 
     @functools.wraps(func)
     def wrapper(*args, **kwargs):
+        """Run ``func`` once; later calls follow ``on_second_call``."""
         if wrapper._called:
             if on_second_call == "raise":
                 raise RuntimeError(f"{func.__name__} has already been called. Can only call once.")
@@ -199,11 +247,15 @@ class NoopObject:
     """
 
     def __init__(self, *args, **kwargs):
+        """Keep construction args for debugging; they are never used."""
         self.init_args = args
         self.init_kwargs = kwargs
 
     def __getattr__(self, name):
+        """Return a no-op callable so any method name is legal."""
+
         def _func(*args, **kwargs):
+            """Swallow the call; used as a stand-in for optional loggers / hooks."""
             pass
 
         return _func
@@ -227,90 +279,26 @@ class NoopContext:
     """
 
     def __init__(self, *args, **kwargs):
+        """Accept any args so it can replace a real context manager at a call site."""
         self.args = args
         self.kwargs = kwargs
 
     def __enter__(self):
+        """Re-enterable; unlike a generator context this object can be reused."""
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
+        """Do not suppress exceptions; just leave the placeholder."""
         pass
-
-
-def make_registry_metaclass(class_name):
-    """
-    Usage:
-
-      TrainerRegistry = make_registry_metaclass('TrainerRegistry')
-
-      class BaseTrainer(metaclass=TrainerRegistry):
-          pass
-
-      class MyTrainer(BaseTrainer):
-          pass
-
-      TrainerRegistry['MyTrainer'] -> MyTrainer class  # syntax enabled by metaclass
-      TrainerRegistry.get_class('MyTrainer')  # same as above
-      TrainerRegistry.registry -> full dict of {name: trainer_class}
-
-    Templated definition:
-        class TrainerRegistry(type):
-            registry = {}
-
-            def __new__(cls, name, bases, attr):
-                new_cls = super().__new__(cls, name, bases, attr)
-                TrainerRegistry.registry[name] = new_cls
-                return new_cls
-
-            def get_class(cls, name):
-                if name not in cls.registry:
-                    raise KeyError(
-                        f"Trainer class {name} not found in registry: "
-                        f"{pprint.pformat(cls.registry)}"
-                    )
-                return cls.registry[name]"""
-
-    def new__(cls, name, bases, attr):
-        """
-        Change the attr dict to dynamically add methods and attributes
-        """
-        new_cls = type.__new__(cls, name, bases, attr)
-        cls.registry[name] = new_cls
-        return new_cls
-
-    def get_class(cls, name):
-        if name not in cls.registry:
-            existing_cls = list(cls.registry.keys())
-            raise KeyError(f"{class_name} class '{name}' not found in registry: {existing_cls}")
-        return cls.registry[name]
-
-    def instantiate(cls_, cls, **kwargs):
-        Cls = cls_.get_class(cls)
-        return Cls(**kwargs)
-
-    class _BracketOperator(type):
-        def __getitem__(cls, name):
-            return get_class(cls, name)
-
-    return types.new_class(
-        class_name,
-        bases=(type,),
-        kwds={"metaclass": _BracketOperator},
-        exec_body=lambda ns: ns.update(
-            {
-                "registry": {},
-                "__new__": new__,
-                "get_class": classmethod(get_class),
-                "instantiate": classmethod(instantiate),
-            }
-        ),
-    )
 
 
 class ClassRegistry:
     """
-    May be a preferred way over make_registry_metaclass if your code does not support
-    metaclass well, e.g. pickle or Ray
+    LEGACY (vendored): duplicate names are silently overwritten; prefer
+    ``worldfoundry.core.registry.TypedRegistry`` for new code.
+
+    The former ``make_registry_metaclass`` factory had zero callers and was
+    removed (XC-11). Use ``TypedRegistry`` or this ``__init_subclass__`` hook.
 
     Use in conjunction with `__init_subclass__` hook in your base class
 
@@ -325,13 +313,16 @@ class ClassRegistry:
     """
 
     def __init__(self, base_class_name: str = None):
+        """Optional ``base_class_name`` is only used in missing-key error text."""
         self.registry = {}
         self._base_class_name = base_class_name
 
     def add(self, cls):
+        """Register ``cls`` by ``__name__``; a later add silently overwrites."""
         self.registry[cls.__name__] = cls
 
     def get(self, name):
+        """Look up a class; :exc:`KeyError` lists currently registered names."""
         if name not in self.registry:
             existing_cls = list(self.registry.keys())
             base_name = self._base_class_name + " " if self._base_class_name else ""
@@ -339,25 +330,30 @@ class ClassRegistry:
         return self.registry[name]
 
     def __str__(self):
+        """Pretty-print the name → class map for debugging."""
         return pprint.pformat(self.registry)
 
     def __getitem__(self, name):
+        """Same as :meth:`get` so the registry can be indexed like a dict."""
         return self.get(name)
 
     def instantiate(self, cls, **kwargs):
+        """Construct the registered class named ``cls`` with ``kwargs``."""
         return self.get(cls)(**kwargs)
 
 
-# ========================================================
-# =================== Inspect utils ====================
-# ========================================================
+# ──────────────────────────────────────────────────────────────────────────
+# Inspect utils — signature / keys; bind failures stay boolean
+# ──────────────────────────────────────────────────────────────────────────
 
 
 def func_parameters(func):
+    """Return ``inspect.signature(func).parameters`` (ordered mapping)."""
     return inspect.signature(func).parameters
 
 
 def func_has_arg(func, arg_name):
+    """True if ``arg_name`` is an explicit parameter (not covered by ``**kwargs``)."""
     return arg_name in func_parameters(func)
 
 
@@ -385,6 +381,7 @@ def enable_list_arg(func):
 
     @functools.wraps(func)
     def wrapper(*args, **kwargs):
+        """Unpack a single list arg so ``f([a, b])`` matches ``f(a, b)``."""
         args = pack_varargs(args)
         return func(*args, **kwargs)
 
@@ -399,6 +396,7 @@ def enable_varargs(func):
 
     @functools.wraps(func)
     def wrapper(*args, **kwargs):
+        """Pack ``*args`` into one list so a list-only function accepts varargs."""
         args = pack_varargs(args)
         return func(args, **kwargs)
 
@@ -445,6 +443,7 @@ def enable_dict_arg(func):
 
     @functools.wraps(func)
     def wrapper(*args, **kwargs):
+        """Accept either ``f(dict)`` or ``f(**kwargs)`` and always call with kwargs."""
         kwargs = pack_kwargs(args, kwargs)
         return func(**kwargs)
 
@@ -459,6 +458,7 @@ def enable_kwargs(func):
 
     @functools.wraps(func)
     def wrapper(*args, **kwargs):
+        """Pack kwargs into one dict so a dict-only function accepts ``**kwargs``."""
         kwargs = pack_kwargs(args, kwargs)
         return func(kwargs)
 
@@ -466,11 +466,13 @@ def enable_kwargs(func):
 
 
 def has_keys(D, keys: list):
+    """True if every name in ``keys`` is present; ``D`` must be a mapping."""
     assert is_mapping(D)
     return all(key in D for key in keys)
 
 
 def assert_has_keys(D, keys: list):
+    """Like :func:`has_keys` but raise :exc:`KeyError` naming the first missing key."""
     assert is_mapping(D), "Input is not a dict"
     for key in keys:
         if key not in D:
@@ -487,9 +489,14 @@ def method_decorator(decorator):
 
     @functools.wraps(decorator)
     def wrapped_decorator(method):
+        """Bind ``self`` before applying the original function decorator."""
+
         @functools.wraps(method)
         def wrapper(self, *args, **kwargs):
+            """Re-bind ``method`` so the inner decorator sees a plain function."""
+
             def bound_func(*args2, **kwargs2):
+                """Forward to the original method with the captured ``self``."""
                 return method(self, *args2, **kwargs2)
 
             return decorator(bound_func)(*args, **kwargs)
@@ -516,7 +523,7 @@ def accepts_kwargs(func):
 
 
 def is_signature_compatible(func, *args, **kwargs):
-    sig = inspect.signature(func)
+    """True if ``func(*args, **kwargs)`` would bind; :exc:`TypeError` stays False."""
     try:
         sig.bind(*args, **kwargs)
         return True

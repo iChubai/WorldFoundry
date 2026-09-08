@@ -15,9 +15,14 @@
 
 """Hugging Face helpers shared across encoders.
 
-Remote repos are preloaded before ``from_pretrained(..., local_files_only=True)``
-so multi-rank jobs do not race to download the same snapshot or treat a partial
-cache entry as complete.
+Remote repos are materialized *before* ``from_pretrained(..., local_files_only=True)``
+so multi-rank jobs do not race the Hub or treat a half-written snapshot as
+complete. Rank 0 downloads under a :class:`~filelock.FileLock`; other ranks
+wait on the local path.
+
+``hf://`` URIs and snapshot paths go through :func:`resolve_hf_path` /
+:func:`materialize_hf_snapshot` rather than ad-hoc ``huggingface_hub``
+calls — those skip disk-space preflights in :mod:`worldfoundry.core.io.disk`.
 """
 
 from __future__ import annotations
@@ -41,6 +46,10 @@ from worldfoundry.core.io.disk import (
     ensure_free_disk,
 )
 
+# ──────────────────────────────────────────────────────────────────────────
+# Hub snapshot materialization — rank 0 + FileLock; never skip disk preflight
+# ──────────────────────────────────────────────────────────────────────────
+
 
 def _str2bool(v: str | bool) -> bool:
     """Parse the usual yes/no/true/false/1/0 strings into a bool."""
@@ -54,6 +63,8 @@ def _str2bool(v: str | bool) -> bool:
 
 
 def _hub_cache_dir(cache_dir: str | os.PathLike[str] | None) -> Path:
+    """Expand an explicit cache, else the Hub default (``HF_HOME`` / XDG)."""
+
     if cache_dir is not None:
         return Path(cache_dir).expanduser()
     from huggingface_hub.constants import HUGGINGFACE_HUB_CACHE
@@ -62,6 +73,8 @@ def _hub_cache_dir(cache_dir: str | os.PathLike[str] | None) -> Path:
 
 
 def _snapshot_download(*args, **kwargs) -> str:
+    """Lazy-import Hub snapshot so CPU-only processes do not pay the import."""
+
     from huggingface_hub import snapshot_download
 
     return snapshot_download(*args, **kwargs)
@@ -72,6 +85,8 @@ def _lock_path(
     revision: str | None,
     cache_dir: str | os.PathLike[str] | None,
 ) -> Path:
+    """Stable lock filename under the cache so two ranks cannot race the same repo."""
+
     cache_root = _hub_cache_dir(cache_dir)
     lock_key = f"{repo_id}@{revision or 'main'}"
     lock_digest = hashlib.sha256(lock_key.encode("utf-8")).hexdigest()[:16]
@@ -83,6 +98,8 @@ def _lock_path(
 def _normalize_patterns(
     patterns: str | Sequence[str] | None,
 ) -> str | list[str] | None:
+    """Copy a pattern sequence so callers cannot mutate Hub kwargs after the fact."""
+
     if patterns is None or isinstance(patterns, str):
         return patterns
     return list(patterns)
@@ -103,6 +120,8 @@ def _parse_hf_uri(path: str) -> tuple[str, str]:
 
 
 def _allow_patterns_for_subpath(subpath: str) -> list[str] | None:
+    """Restrict a snapshot to *subpath* and its descendants; ``None`` means whole repo."""
+
     if not subpath:
         return None
     return [subpath, f"{subpath}/*", f"{subpath}/**"]
@@ -114,11 +133,11 @@ def resolve_hf_path(path: str | PathLike[str] | None) -> str | Any:
     Accepts either:
 
     * a local path (returned unchanged if it exists), or
-    * ``hf://<owner>/<repo>[/<subpath>]`` — resolves an already materialized
-      WorldFoundry-local snapshot and returns the requested file or directory.
+    * ``hf://<owner>/<repo>[/<subpath>]`` — reuses an already materialized
+      WorldFoundry-local snapshot, otherwise downloads only the requested
+      subtree through the configured Hugging Face endpoint.
 
-    Runtime I/O is deliberately offline. Repository acquisition belongs to the
-    explicit preparation workflow, never to model inference.
+    Set ``HF_HUB_OFFLINE=1`` when runtime I/O must remain strictly offline.
     """
     if not isinstance(path, str) or not path:
         return path
@@ -130,13 +149,14 @@ def resolve_hf_path(path: str | PathLike[str] | None) -> str | Any:
     repo_id, subpath = _parse_hf_uri(path)
     from worldfoundry.core.io.paths import resolve_local_hf_model_path
 
-    local_root = resolve_local_hf_model_path(repo_id)
-    resolved = local_root / subpath if subpath else local_root
-    if not resolved.exists():
-        raise FileNotFoundError(
-            f"Local Hugging Face asset for {path!r} is missing under {local_root}. "
-            "Pre-download the pinned repository before inference."
+    try:
+        local_root = resolve_local_hf_model_path(repo_id)
+    except FileNotFoundError:
+        local_root = materialize_hf_snapshot(
+            repo_id,
+            allow_patterns=_allow_patterns_for_subpath(subpath),
         )
+    resolved = local_root / subpath if subpath else local_root
     return str(resolved.resolve())
 
 
@@ -146,6 +166,8 @@ def hf_download_or_fpath(path: str | PathLike[str] | None) -> str | Any:
 
 
 def _is_probable_hf_repo_id(value: str) -> bool:
+    """Treat ``owner/name`` as a Hub id only when it is not an existing local path."""
+
     text = value.strip()
     if not text or text.startswith((".", "~", "/")):
         return False
@@ -153,10 +175,14 @@ def _is_probable_hf_repo_id(value: str) -> bool:
 
 
 def _required_files_present(directory: Path, required_files: Sequence[str]) -> bool:
+    """True when every required filename exists under *directory* (empty list always passes)."""
+
     return all((directory / filename).exists() for filename in required_files)
 
 
 def _snapshot_candidates(cache_root: Path) -> list[Path]:
+    """Prefer ``refs/main``, then ``worldfoundry-local``, then newest snapshot mtime."""
+
     snapshots_root = cache_root / "snapshots"
     if not snapshots_root.is_dir():
         return []
@@ -216,6 +242,8 @@ def _download_snapshot(
     ignore_patterns: str | Sequence[str] | None,
     token: str | bool | None = None,
 ) -> None:
+    """Download under a file lock after a cache-space preflight; wrap ENOSPC as :class:`DiskSpaceError`."""
+
     lock_file = _lock_path(repo_id, revision, cache_dir)
     cache_root = _hub_cache_dir(cache_dir)
     min_bytes = cache_min_free_bytes()

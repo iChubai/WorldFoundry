@@ -6,14 +6,13 @@ commands over private scripts.
 
 The detailed maintainer guide lives in
 [`docs/fumadocs/content/docs/maintainers/contributing.mdx`](docs/fumadocs/content/docs/maintainers/contributing.mdx).
-The test map lives in [`test/README.md`](test/README.md).
 
 ## Before Opening A Pull Request
 
 - Keep the change scoped to one pipeline, benchmark path, CLI surface, or docs area.
 - Do not commit checkpoints, generated videos, local caches, API keys, tokens, or credentials.
 - State any GPU, API quota, checkpoint, simulator, official repo, or gated-data requirement.
-- Run the focused tests or validation scripts relevant to the changed surface.
+- Run the public validation commands relevant to the changed surface.
 - Run `bash scripts/docs/build.sh --skip-bootstrap` when docs or README links change.
 - Include scorecard, preflight, or validation evidence for any readiness claim.
 
@@ -21,11 +20,11 @@ The test map lives in [`test/README.md`](test/README.md).
 
 ### Add Or Update A Model
 
-- Update `data/models/catalog/` and, when needed, `data/models/runtime_profiles/`.
+- Update `worldfoundry/data/models/catalog/` and, when needed, `worldfoundry/data/models/runtime/profiles/`.
 - Declare aliases, source status, integration status, auth, checkpoint refs, license, and blockers.
 - Add or reuse a public adapter target and a minimal validation command before claiming `integrated`.
 - Keep API/GPU/checkpoint requirements out of quickstart defaults.
-- Verify with `worldfoundry-eval zoo models --json` and focused model-zoo tests.
+- Verify with `worldfoundry-eval zoo models --json` and the smallest documented model smoke run.
 
 ### Add Or Update A Benchmark
 
@@ -33,11 +32,11 @@ The test map lives in [`test/README.md`](test/README.md).
 - Declare dataset refs, auth, unsafe/gated data, official repo, simulator, metrics, and blockers.
 - Add a contract adapter or normalizer before claiming `contract_ready`.
 - Add official runtime evidence before claiming leaderboard validity.
-- Verify with `worldfoundry-eval zoo benchmarks --json` and readiness tests.
+- Verify with `worldfoundry-eval zoo benchmarks --json` and the documented readiness checks.
 
 ### Add Or Update A Metric
 
-- Add deterministic fixtures for metric correctness.
+- Add deterministic validation examples for metric correctness.
 - Document whether higher is better, output units, primary metric status, and leaderboard mapping.
 - Ensure scorecards expose the metric under stable keys.
 
@@ -51,7 +50,7 @@ The test map lives in [`test/README.md`](test/README.md).
 
 - Update `docs/fumadocs/content/docs/reference/cli.mdx` when public behavior changes.
 - Preserve JSON output compatibility or document the breaking change.
-- Add parser/UX tests for help, error handling, and no-heavy-import behavior.
+- Run `make docs-check` and document help, error handling, and no-heavy-import behavior.
 
 ## Synthesis Is Infer-Only
 
@@ -61,11 +60,29 @@ The test map lives in [`test/README.md`](test/README.md).
 - demo media, generated outputs, checkpoints, or downloaded datasets
 - notebooks, README files, or other documentation inside the synthesis tree
 
-Put reusable demo assets under `worldfoundry/data/test_cases/`.
+Keep local demo assets in `testcase/` and reference them through explicit input paths; they are not part of the public source distribution.
 
-Before release or large runtime imports, run:
+Before release or large runtime imports, run the public quality gates:
 
 ```bash
-make synthesis-hygiene
-make synthesis-hygiene-strict
+make lint
+make docs-check
+```
+
+The public distribution includes inference and evaluation. Training sources and
+local test suites stay in the development repository. For a CPU smoke run:
+
+```bash
+python -m pip install -e .
+make cli-entrypoint-check
+make cli-check
+make packaging-check
+```
+
+When model manifests or homepage recipes change, refresh and verify the
+checked-in recipe data:
+
+```bash
+npm --prefix docs/fumadocs run models:generate
+npm --prefix docs/fumadocs run models:check
 ```

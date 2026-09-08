@@ -1,8 +1,7 @@
-.PHONY: help install-core install-dev test-fast test-eval-core test-ux docs-check lint ruff-check format-check shell-check data-check runtime-registry-check compile-eval cli-check precommit precommit-install preflight
+.PHONY: help install-core install-dev docs-check cli-entrypoint-check lint ruff-check format-check shell-check data-check runtime-registry-check check-cuda-constraints packaging-check compile-eval cli-check precommit precommit-install preflight
 
 PYTHON ?= python
 PIP ?= $(PYTHON) -m pip
-PYTEST ?= $(PYTHON) -m pytest
 PRE_COMMIT ?= $(PYTHON) -m pre_commit
 PYTHONPATH ?= .
 WORLDFOUNDRY_EVAL ?= $(PYTHON) -m worldfoundry.cli
@@ -10,61 +9,69 @@ PREFLIGHT_PROFILE ?= all
 PREFLIGHT_OUTPUT ?= tmp/preflight
 CLI_CHECK_OUTPUT ?= tmp/ci-cli-check
 RELEASE_HFD_ROOT ?= $(if $(WORLDFOUNDRY_HFD_ROOT),$(WORLDFOUNDRY_HFD_ROOT),$(HOME)/.cache/worldfoundry/checkpoints/hfd)
-EVAL_CORE_CHECK_TESTS ?= \
-	test/eval_core/test_api_contracts.py \
-	test/eval_core/test_metric_registry.py \
-	test/eval_core/test_task_yaml.py \
-	test/eval_core/test_run_manifest.py \
-	test/eval_core/test_public_namespace.py \
-	test/eval_core/test_scorecard_snapshot.py \
-	test/eval_core/test_contract_stability.py
+CANONICAL_DIFFUSION_SOURCES ?= \
+	worldfoundry/base_models/diffusion_model/*.py \
+	worldfoundry/base_models/diffusion_model/extensions \
+	worldfoundry/base_models/diffusion_model/loaders \
+	worldfoundry/base_models/diffusion_model/models \
+	worldfoundry/base_models/diffusion_model/optimizations \
+	worldfoundry/base_models/diffusion_model/recipes \
+	worldfoundry/base_models/diffusion_model/runners \
+	worldfoundry/base_models/diffusion_model/schedulers
+RUFF_SOURCES ?= \
+	worldfoundry/cli \
+	worldfoundry/evaluation/api \
+	worldfoundry/evaluation/models/runtime \
+	worldfoundry/evaluation/tasks/catalog \
+	worldfoundry/evaluation/tasks/execution/orchestration \
+	worldfoundry/mcp \
+	worldfoundry/runtime \
+	scripts/benchmark_zoo \
+	scripts/model_zoo
 
 help:
 	@printf '%s\n' \
 		'WorldFoundry development targets:' \
 		'  make install-core      Install the editable core package.' \
 		'  make install-dev       Install lightweight development dependencies.' \
-		'  make test-fast         Run fast evaluation and CLI checks.' \
-		'  make docs-check        Validate documented CLI entrypoints.' \
+		'  make docs-check        Verify checked-in generated documentation.' \
+		'  make cli-entrypoint-check Validate documented CLI entrypoints.' \
 		'  make lint              Run lightweight source and catalog checks.' \
-		'  make preflight         Run the public runtime preflight.'
+		'  make preflight         Run the public runtime preflight.' \
+		'  make check-cuda-constraints  Verify CUDA-tier torch constraint stubs.' \
+		'  make packaging-check   Audit package discovery and license-gated wheel content.'
 
 install-core:
 	$(PIP) install -e .
 
 install-dev:
-	$(PIP) install -e .
-	$(PIP) install build pre-commit pytest PyYAML ruff
-
-test-fast: test-eval-core test-ux docs-check
-
-test-eval-core:
-	PYTHONPATH=$(PYTHONPATH) $(PYTEST) -m fast_eval_core $(EVAL_CORE_CHECK_TESTS)
-
-test-ux:
-	PYTHONPATH=$(PYTHONPATH) $(PYTEST) -q \
-		test/eval_core/test_cli_ux.py \
-		test/eval_core/test_catalog_discovery_output.py \
-		test/eval_core/test_docs_quickstart.py
+	$(PIP) install -e ".[dev]"
 
 docs-check:
+	npm --prefix docs/fumadocs run api:check
+	npm --prefix docs/fumadocs run models:check
+	npm --prefix docs/fumadocs run coverage:check
+
+cli-entrypoint-check:
 	PYTHONPATH=$(PYTHONPATH) $(PYTHON) -m worldfoundry.cli --help >/dev/null
+	PYTHONPATH=$(PYTHONPATH) $(PYTHON) -m worldfoundry.cli zoo models --json >/dev/null
 	PYTHONPATH=$(PYTHONPATH) $(PYTHON) -m worldfoundry.cli zoo benchmarks --json >/dev/null
 
-lint: format-check shell-check data-check runtime-registry-check
+lint: ruff-check format-check shell-check data-check runtime-registry-check
 
 ruff-check:
-	@if $(PYTHON) -c 'import ruff' >/dev/null 2>&1; then \
-		$(PYTHON) -m ruff check worldfoundry/cli worldfoundry/evaluation worldfoundry/mcp worldfoundry/runtime scripts/benchmark_zoo scripts/model_zoo test/eval_core; \
-	else \
-		printf '%s\n' 'ruff-check: skipped because ruff is not installed; run `make install-dev` first'; \
-	fi
+	$(PYTHON) -m ruff check $(RUFF_SOURCES)
 
 format-check:
-	PYTHONPATH=$(PYTHONPATH) $(PYTHON) -m compileall -q worldfoundry/evaluation scripts test/eval_core
+	PYTHONPATH=$(PYTHONPATH) $(PYTHON) -m compileall -q $(CANONICAL_DIFFUSION_SOURCES) worldfoundry/evaluation scripts
 
+# BeeGFS: enumerate the bounded tracked paths from Git's index, not a recursive filesystem walk.
 shell-check:
-	find scripts/setup -type f -name '*.sh' -exec bash -n {} +
+	@set -eu; \
+	git ls-files 'scripts/setup/*.sh' 'scripts/dev/*.sh' 'docs/fumadocs/scripts/*.sh' | \
+	while IFS= read -r script; do \
+		if [ -f "$$script" ]; then bash -n "$$script"; fi; \
+	done
 
 data-check:
 	PYTHONPATH=$(PYTHONPATH) $(PYTHON) -m worldfoundry.cli zoo models --json >/dev/null
@@ -72,6 +79,13 @@ data-check:
 
 runtime-registry-check:
 	PYTHONPATH=$(PYTHONPATH) $(PYTHON) -c 'from worldfoundry.evaluation.models.runtime.validate import validate_runtime_registry; errors = [issue for issue in validate_runtime_registry() if issue.severity == "error"]; assert not errors, "\\n".join(f"[{issue.code}] {issue.message}" for issue in errors)'
+
+check-cuda-constraints:
+	PYTHONPATH=$(PYTHONPATH) $(PYTHON) scripts/setup/check_cuda_torch_constraints.py
+
+# Set WHEEL=... and/or SDIST=... to audit built distribution contents.
+packaging-check:
+	PYTHONPATH=$(PYTHONPATH) $(PYTHON) scripts/setup/check_packaging_license_gate.py $(if $(WHEEL),--wheel $(WHEEL),) $(if $(SDIST),--sdist $(SDIST),)
 
 compile-eval:
 	PYTHONPATH=$(PYTHONPATH) $(PYTHON) -m compileall -q worldfoundry/evaluation scripts

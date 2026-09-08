@@ -1,4 +1,21 @@
-"""Shared pre-norm ViT transformer block implementations."""
+"""Shared pre-norm ViT transformer block implementations.
+
+Residual + LayerScale + DropPath around core attention. RoPE variants
+inject frequencies before the attention callable so ViT and DiT share
+the same block shell.
+
+Not this module:
+    Attention kernels live in :mod:`worldfoundry.core.attention`.
+    Subset-batch stochastic depth lives in
+    :mod:`worldfoundry.core.nn.stochastic_depth`. Pluggable fused
+    pre/post hooks live in :mod:`worldfoundry.core.nn.transformer_ops`.
+
+Public surface:
+
+- :func:`apply_prenorm_transformer_residuals` — drop-path / SD schedule.
+- :class:`PreNormTransformerBlock` — norm → attn → ls → FFN.
+- :class:`RopePreNormTransformerBlock` — same shell, ``pos`` / ``attn_mask``.
+"""
 
 from __future__ import annotations
 
@@ -9,6 +26,11 @@ from torch import Tensor, nn
 from worldfoundry.core.attention import QKVSelfAttention
 from worldfoundry.core.nn.layers import DropPath, LayerScale, Mlp
 from worldfoundry.core.nn.stochastic_depth import drop_add_residual_stochastic_depth
+
+
+# ──────────────────────────────────────────────────────────────────────────
+# Residual schedule — full-batch DropPath vs subset-batch stochastic depth
+# ──────────────────────────────────────────────────────────────────────────
 
 
 def apply_prenorm_transformer_residuals(
@@ -29,6 +51,8 @@ def apply_prenorm_transformer_residuals(
     sd_pos = stochastic_depth_pos
 
     if training and sample_drop_ratio > 0.1:
+        # High drop rates waste a full-batch mask; subset-batch SD keeps the
+        # residual expectation while skipping most of the attention/FFN compute.
         x = drop_add_residual_stochastic_depth(
             x,
             residual_func=attn_residual,
@@ -56,6 +80,11 @@ def apply_prenorm_transformer_residuals(
     return x
 
 
+# ──────────────────────────────────────────────────────────────────────────
+# Pre-norm blocks — LayerScale + DropPath around a swappable attn/FFN pair
+# ──────────────────────────────────────────────────────────────────────────
+
+
 class PreNormTransformerBlock(nn.Module):
     """Pre-norm transformer block: norm → attn → ls → drop_path → norm → ffn."""
 
@@ -79,6 +108,13 @@ class PreNormTransformerBlock(nn.Module):
         norm_eps: float | None = None,
         attn_kwargs: Optional[dict[str, Any]] = None,
     ) -> None:
+        """Wire LayerScale only when ``init_values`` is set (CaiT-style residuals).
+
+        ``attn_class`` / ``ffn_layer`` stay factories so RoPE or SwiGLU can
+        replace the defaults without a second block type. ``drop_path`` is
+        stored as ``sample_drop_ratio`` for the subset-batch SD threshold.
+        """
+
         super().__init__()
         norm_kwargs = {"eps": norm_eps} if norm_eps is not None else {}
         extra_attn_kwargs = dict(attn_kwargs or {})
@@ -111,6 +147,8 @@ class PreNormTransformerBlock(nn.Module):
         self.sample_drop_ratio = drop_path
 
     def forward(self, x: Tensor) -> Tensor:
+        """``[B, N, dim]`` pre-norm residual; eval is a plain residual add."""
+
         return apply_prenorm_transformer_residuals(
             x,
             attn_residual=lambda xs: self.ls1(self.attn(self.norm1(xs))),
@@ -126,6 +164,12 @@ class RopePreNormTransformerBlock(PreNormTransformerBlock):
     """Pre-norm block whose attention accepts positional embeddings and optional masks."""
 
     def forward(self, x: Tensor, pos: Any = None, attn_mask: Any = None) -> Tensor:
+        """Same residual schedule as the base block, forwarding ``pos`` / ``attn_mask``.
+
+        ``pos`` is also passed into subset-batch SD so dropped rows keep
+        matching rotary frequencies.
+        """
+
         return apply_prenorm_transformer_residuals(
             x,
             attn_residual=lambda xs, pos=None, attn_mask=None: self.ls1(

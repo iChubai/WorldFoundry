@@ -13,6 +13,7 @@ import sys
 import threading
 import time
 import traceback
+import warnings
 from collections import OrderedDict
 from collections.abc import Iterator
 from dataclasses import dataclass, field, replace
@@ -26,6 +27,7 @@ from packaging.requirements import InvalidRequirement, Requirement
 from PIL import Image
 
 from worldfoundry.core.io.serialization import write_json as _core_write_json
+from worldfoundry.core.utils.import_guard import third_party_lazy_import_guard
 from worldfoundry.runtime.compile_cache import configure_persistent_compile_cache
 from worldfoundry.runtime.conda import RuntimeCondaEnvSpec, load_runtime_conda_env_specs_with_overrides
 
@@ -79,8 +81,14 @@ TORCHRUN_DISTRIBUTED_ENV = "WORLDFOUNDRY_STUDIO_TORCHRUN_DISTRIBUTED"
 STUDIO_CONDA_CHILD_ENV = "WORLDFOUNDRY_STUDIO_CONDA_CHILD"
 TORCH_COMPILE_ENV_MODELS = {"matrix-game-2"}
 RUNTIME_CHECKS_ENV = "WORLDFOUNDRY_STUDIO_RUNTIME_CHECKS"
+# Lazy torchrun command-channel group. PyTorch group creation/destruction may
+# block in collectives, so the condition only protects lifecycle transitions;
+# those calls themselves must happen without holding its lock.
 _TORCHRUN_CONTROL_GROUP: Any = None
-_TORCHRUN_CONTROL_GROUP_LOCK = threading.Lock()
+_TORCHRUN_CONTROL_GROUP_CONDITION = threading.Condition()
+_TORCHRUN_CONTROL_GROUP_STATE = "open"
+_TORCHRUN_CONTROL_GROUP_GENERATION = 0
+_TORCHRUN_CONTROL_GROUP_CREATING = False
 # Model families whose input_path should never be bound as video even if the
 # file extension is a video format. CameraCtrl, for example, uses input_path
 # as a reference for camera trajectory extraction — its predict() raises
@@ -458,41 +466,68 @@ def _torchrun_control_group() -> Any:
     failed collective, so give the command channel a service-lifetime timeout.
     Model collectives keep their normal NCCL timeout and failure detection.
     """
-    global _TORCHRUN_CONTROL_GROUP
+    global _TORCHRUN_CONTROL_GROUP, _TORCHRUN_CONTROL_GROUP_CREATING
 
-    dist = _torch_dist()
-    if (
-        not _torchrun_lingbot_fast_enabled()
-        or dist is None
-        or not dist.is_available()
-        or not dist.is_initialized()
-        or _torchrun_world_size() <= 1
-    ):
+    if not _torchrun_lingbot_fast_enabled() or _torchrun_world_size() <= 1:
         return None
 
-    with _TORCHRUN_CONTROL_GROUP_LOCK:
-        if _TORCHRUN_CONTROL_GROUP is not None:
-            return _TORCHRUN_CONTROL_GROUP
+    with _TORCHRUN_CONTROL_GROUP_CONDITION:
+        while True:
+            if _TORCHRUN_CONTROL_GROUP_STATE != "open":
+                return None
+            if _TORCHRUN_CONTROL_GROUP is not None:
+                return _TORCHRUN_CONTROL_GROUP
+            if not _TORCHRUN_CONTROL_GROUP_CREATING:
+                _TORCHRUN_CONTROL_GROUP_CREATING = True
+                generation = _TORCHRUN_CONTROL_GROUP_GENERATION
+                break
+            _TORCHRUN_CONTROL_GROUP_CONDITION.wait()
+
+    created_group = None
+    try:
+        # Re-check after claiming creation. Shutdown waits for this claim to be
+        # released, while no lifecycle lock is held around PyTorch callbacks.
+        dist = _torch_dist()
+        if (
+            dist is None
+            or not dist.is_available()
+            or not dist.is_initialized()
+        ):
+            return None
         ranks = list(range(_torchrun_world_size()))
         timeout = timedelta(days=365)
         try:
-            _TORCHRUN_CONTROL_GROUP = dist.new_group(
+            created_group = dist.new_group(
                 ranks=ranks,
                 backend="gloo",
                 timeout=timeout,
             )
         except TypeError:
             try:
-                _TORCHRUN_CONTROL_GROUP = dist.new_group(
+                created_group = dist.new_group(
                     ranks,
                     backend="gloo",
                     timeout=timeout,
                 )
             except TypeError:
-                _TORCHRUN_CONTROL_GROUP = dist.new_group(ranks, backend="gloo")
+                created_group = dist.new_group(ranks, backend="gloo")
         except Exception:
-            _TORCHRUN_CONTROL_GROUP = None
-        return _TORCHRUN_CONTROL_GROUP
+            created_group = None
+    finally:
+        with _TORCHRUN_CONTROL_GROUP_CONDITION:
+            _TORCHRUN_CONTROL_GROUP_CREATING = False
+            if created_group is not None:
+                # A shutdown that advanced the generation owns this stale
+                # result. Publish it only so shutdown can destroy it before the
+                # default process group, never so a caller can use it.
+                _TORCHRUN_CONTROL_GROUP = created_group
+            publish = (
+                created_group is not None
+                and _TORCHRUN_CONTROL_GROUP_STATE == "open"
+                and _TORCHRUN_CONTROL_GROUP_GENERATION == generation
+            )
+            _TORCHRUN_CONTROL_GROUP_CONDITION.notify_all()
+    return created_group if publish else None
 
 
 def ensure_torchrun_lingbot_fast_control_group() -> bool:
@@ -532,22 +567,47 @@ def _torchrun_min_gpu_vram_gib() -> float | None:
 
 def shutdown_torchrun_lingbot_fast_runtime() -> None:
     global _TORCHRUN_CONTROL_GROUP
+    global _TORCHRUN_CONTROL_GROUP_GENERATION, _TORCHRUN_CONTROL_GROUP_STATE
 
     _torchrun_min_gpu_vram_gib.cache_clear()
-    dist = _torch_dist()
-    if dist is None or not dist.is_available() or not dist.is_initialized():
-        return
-    control_group = _TORCHRUN_CONTROL_GROUP
-    _TORCHRUN_CONTROL_GROUP = None
-    if control_group is not None:
+    with _TORCHRUN_CONTROL_GROUP_CONDITION:
+        if _TORCHRUN_CONTROL_GROUP_STATE == "closing":
+            closing_generation = _TORCHRUN_CONTROL_GROUP_GENERATION
+            _TORCHRUN_CONTROL_GROUP_CONDITION.wait_for(
+                lambda: (
+                    _TORCHRUN_CONTROL_GROUP_STATE != "closing"
+                    or _TORCHRUN_CONTROL_GROUP_GENERATION != closing_generation
+                )
+            )
+            return
+        _TORCHRUN_CONTROL_GROUP_STATE = "closing"
+        _TORCHRUN_CONTROL_GROUP_GENERATION += 1
+        _TORCHRUN_CONTROL_GROUP_CONDITION.notify_all()
+        _TORCHRUN_CONTROL_GROUP_CONDITION.wait_for(
+            lambda: not _TORCHRUN_CONTROL_GROUP_CREATING
+        )
+        control_group = _TORCHRUN_CONTROL_GROUP
+        _TORCHRUN_CONTROL_GROUP = None
+    try:
+        dist = _torch_dist()
+        if dist is None or not dist.is_available() or not dist.is_initialized():
+            return
+        if control_group is not None:
+            try:
+                dist.destroy_process_group(control_group)
+            except Exception:
+                pass
         try:
-            dist.destroy_process_group(control_group)
+            dist.destroy_process_group()
         except Exception:
             pass
-    try:
-        dist.destroy_process_group()
-    except Exception:
-        pass
+    finally:
+        # Do not reopen creation until both the control and default groups have
+        # finished destruction. A future ensure call may then initialize a new
+        # runtime generation safely.
+        with _TORCHRUN_CONTROL_GROUP_CONDITION:
+            _TORCHRUN_CONTROL_GROUP_STATE = "open"
+            _TORCHRUN_CONTROL_GROUP_CONDITION.notify_all()
 
 
 def _is_gaussian_splat_ply(path: str | Path) -> bool:
@@ -651,6 +711,14 @@ def _safe_json(value: Any) -> Any:
     if hasattr(value, "__dict__"):
         return _safe_json(vars(value))
     return repr(value)
+
+
+def _redact_manifest_secrets(value: Any) -> Any:
+    """Redact nested credentials without adding evaluation to Studio import time."""
+
+    from worldfoundry.evaluation.reporting.run_manifest import redact_secrets
+
+    return redact_secrets(_safe_json(value))
 
 
 def _status_from_model_result(result: Any) -> str:
@@ -773,6 +841,17 @@ def guess_intrinsics(image_path: str) -> list[list[float]]:
     ]
 
 
+def _tensor_to_numpy(tensor: Any) -> np.ndarray:
+    """Move a tensor to CPU and bridge dtypes unsupported by NumPy."""
+    tensor = tensor.detach().cpu()
+    try:
+        return tensor.numpy()
+    except TypeError:
+        if tensor.is_floating_point():
+            return tensor.float().numpy()
+        raise
+
+
 def _to_uint8_rgb(frame: Any) -> np.ndarray:
     torch = _torch_module()
     if isinstance(frame, Image.Image):
@@ -783,7 +862,7 @@ def _to_uint8_rgb(frame: Any) -> np.ndarray:
             tensor = tensor.permute(1, 2, 0)
         elif tensor.ndim == 4 and tensor.shape[1] in {1, 3, 4}:
             tensor = tensor.permute(0, 2, 3, 1)
-        arr = tensor.numpy()
+        arr = _tensor_to_numpy(tensor)
     else:
         arr = np.asarray(frame)
     if arr.ndim == 2:
@@ -816,7 +895,7 @@ def _normalize_frame_list(value: Any) -> Optional[list[np.ndarray]]:
         try:
             torch = _torch_module()
             arrays = [
-                item.detach().cpu().numpy() if torch is not None and isinstance(item, torch.Tensor) else np.asarray(item)
+                _tensor_to_numpy(item) if torch is not None and isinstance(item, torch.Tensor) else np.asarray(item)
                 for item in value
             ]
             shapes = {tuple(arr.shape) for arr in arrays}
@@ -836,11 +915,22 @@ def _normalize_frame_list(value: Any) -> Optional[list[np.ndarray]]:
         if tensor.ndim == 5:
             tensor = tensor[0]
         if tensor.ndim == 4:
-            if tensor.shape[0] in {1, 3, 4}:
-                tensor = tensor.permute(1, 2, 3, 0)
+            # Prefer an explicit RGB tail unless dimension 1 is also RGB.
+            # The latter is the ambiguous TCHW case where W happens to be 3.
+            # Checking the leading dimension first misclassifies common THWC
+            # chunks containing exactly 1, 3, or 4 frames.
+            if tensor.shape[-1] == 3 and tensor.shape[1] != 3:
+                pass
             elif tensor.shape[1] in {1, 3, 4}:
                 tensor = tensor.permute(0, 2, 3, 1)
-            return [_to_uint8_rgb(frame) for frame in tensor]
+            elif tensor.shape[0] in {1, 3, 4}:
+                tensor = tensor.permute(1, 2, 3, 0)
+            elif tensor.shape[-1] not in {1, 3, 4}:
+                return None
+            # Layout is explicitly frame-major HWC at this point. Bridge each
+            # frame to NumPy first so small heights such as 3 or 4 are not
+            # reinterpreted as CHW by the generic single-frame helper.
+            return [_to_uint8_rgb(_tensor_to_numpy(frame)) for frame in tensor]
         return None
     if isinstance(value, np.ndarray) and value.ndim == 5:
         value = value[0]
@@ -863,7 +953,7 @@ def _save_preview_image_sequence(
         return []
     torch = _torch_module()
     if torch is not None and isinstance(value, torch.Tensor):
-        value = value.detach().cpu().numpy()
+        value = _tensor_to_numpy(value)
 
     frames: list[Any]
     if isinstance(value, np.ndarray):
@@ -973,6 +1063,30 @@ def _existing_artifact_paths(paths: Sequence[str | Path | None], *, check_files:
     return artifacts
 
 
+def _persist_video_artifact_in_run(
+    path: str | Path,
+    *,
+    output_dir: str | Path,
+    output_path: str | Path,
+) -> str:
+    """Copy an encoded video returned from a temporary directory into its Studio run."""
+    source = Path(path).expanduser()
+    if source.suffix.lower() not in VIDEO_EXTS or not source.is_file():
+        return str(source)
+
+    source_resolved = source.resolve()
+    run_root = Path(output_dir).expanduser().resolve()
+    if source_resolved.is_relative_to(run_root):
+        return str(source)
+
+    target = Path(output_path).expanduser()
+    if target.suffix.lower() not in VIDEO_EXTS:
+        target = target.with_suffix(source.suffix or ".mp4")
+    if source_resolved == target.resolve():
+        return str(target)
+    return _copy_file(source_resolved, target)
+
+
 def _artifact_scan_mode() -> str:
     mode = os.getenv(ARTIFACT_SCAN_MODE_ENV, "missing").strip().lower()
     if mode in {"0", "false", "no", "off"}:
@@ -1039,7 +1153,7 @@ def _write_canonical_action_trace(output_dir: str, result: Mapping[str, Any]) ->
     if not _has_action_trace_payload(payload):
         return None
 
-    _core_write_json(target, _safe_json(payload), atomic=False)
+    _core_write_json(target, _safe_json(payload), atomic=True)
     return str(target)
 
 
@@ -1155,6 +1269,7 @@ def maybe_extract_video_preview_image(
     output_dir: str,
     *,
     frame_position: str = "first",
+    output_name: str = "preview.png",
 ) -> Optional[str]:
     if not video_path:
         return None
@@ -1190,9 +1305,84 @@ def maybe_extract_video_preview_image(
     except Exception:
         return None
 
-    preview_path = Path(output_dir) / "preview.png"
+    filename = Path(output_name).name or "preview.png"
+    preview_path = Path(output_dir) / filename
     Image.fromarray(_to_uint8_rgb(frame)).save(preview_path)
     return str(preview_path)
+
+
+_FIRST_FRAME_FILENAMES = (
+    "first_frame.png",
+    "first_frame.jpg",
+    "first_frame.jpeg",
+    "first_frame.webp",
+    "preview.png",
+    "preview.jpg",
+    "preview.jpeg",
+    "preview.webp",
+)
+
+
+def _usable_preview_image(path: str | Path | None) -> str | None:
+    """Return a generated still path; skip missing files and conditioning inputs."""
+    if not path:
+        return None
+    candidate = Path(path)
+    try:
+        if not candidate.is_file():
+            return None
+    except OSError:
+        return None
+    if candidate.suffix.lower() not in IMAGE_EXTS:
+        return None
+    if _artifact_is_input(candidate):
+        return None
+    return str(candidate)
+
+
+def ensure_run_preview_image(record: RunRecord) -> str | None:
+    """Return a first-frame still for Gallery, extracting it from the video if needed."""
+    output_dir = str(record.output_dir or "")
+    if output_dir:
+        for name in _FIRST_FRAME_FILENAMES:
+            usable = _usable_preview_image(Path(output_dir) / name)
+            if usable:
+                return usable
+
+    usable = _usable_preview_image(record.preview_image)
+    if usable:
+        return usable
+
+    for candidate in record.gallery or ():
+        usable = _usable_preview_image(candidate)
+        if usable:
+            return usable
+
+    video_path = record.preview_video
+    if not video_path:
+        return None
+    try:
+        if not Path(video_path).is_file():
+            return None
+    except OSError:
+        return None
+
+    extract_dir = output_dir or str(Path(video_path).parent)
+    extracted = maybe_extract_video_preview_image(
+        video_path,
+        extract_dir,
+        frame_position="first",
+        output_name="first_frame.png",
+    )
+    return _usable_preview_image(extracted)
+
+
+def bind_run_preview_image(record: RunRecord) -> str | None:
+    """Resolve a first-frame still and cache the path on the in-memory record."""
+    path = ensure_run_preview_image(record)
+    if path:
+        record.preview_image = path
+    return path
 
 
 def _load_trimesh() -> Any:
@@ -1496,23 +1686,76 @@ class RunRecord:
     metadata: Dict[str, Any] = field(default_factory=dict)
 
     def to_manifest(self) -> Dict[str, Any]:
-        return {
-            "run_id": self.run_id,
-            "model_id": self.model_id,
-            "display_name": self.display_name,
-            "mode": self.mode,
-            "status": self.status,
-            "output_dir": self.output_dir,
-            "manifest_path": self.manifest_path,
-            "preview_video": self.preview_video,
-            "preview_image": self.preview_image,
-            "preview_splat": self.preview_splat,
-            "preview_model": self.preview_model,
-            "gallery": self.gallery,
-            "rrd_path": self.rrd_path,
-            "artifacts": self.artifacts,
-            "metadata": _safe_json(self.metadata),
-        }
+        return dict(
+            _redact_manifest_secrets(
+                {
+                    "run_id": self.run_id,
+                    "model_id": self.model_id,
+                    "display_name": self.display_name,
+                    "mode": self.mode,
+                    "status": self.status,
+                    "output_dir": self.output_dir,
+                    "manifest_path": self.manifest_path,
+                    "preview_video": self.preview_video,
+                    "preview_image": self.preview_image,
+                    "preview_splat": self.preview_splat,
+                    "preview_model": self.preview_model,
+                    "gallery": self.gallery,
+                    "rrd_path": self.rrd_path,
+                    "artifacts": self.artifacts,
+                    "metadata": self.metadata,
+                }
+            )
+        )
+
+
+def _run_record_from_manifest(manifest_path: Path, *, run_id: str | None = None) -> RunRecord:
+    """Load one Studio run without consulting the workspace-wide run index."""
+
+    payload = json.loads(manifest_path.read_text(encoding="utf-8"))
+    if not isinstance(payload, Mapping):
+        raise TypeError(f"Studio manifest must contain a JSON object: {manifest_path}")
+
+    # A pipeline may return an artifact from a temporary directory and Studio
+    # subsequently copies it into the persistent run directory. Prefer the
+    # persistent copy when an older manifest still advertises the dead path.
+    persisted_artifacts = _existing_artifact_paths(
+        [
+            *list(payload.get("artifacts") or []),
+            *collect_artifact_paths(str(manifest_path.parent)),
+        ]
+    )
+    recovered_previews = pick_preview_assets(persisted_artifacts, validate_videos=False)
+
+    def persisted_preview(key: str) -> Any:
+        configured = payload.get(key)
+        if configured:
+            try:
+                if Path(configured).is_file():
+                    return configured
+            except (OSError, TypeError, ValueError):
+                pass
+        return recovered_previews.get(key)
+
+    return RunRecord(
+        # The directory name is authoritative for direct lookups. This keeps a
+        # stale or malformed payload from aliasing another run identifier.
+        run_id=run_id or str(payload.get("run_id") or manifest_path.parent.name),
+        model_id=str(payload.get("model_id") or ""),
+        display_name=str(payload.get("display_name") or payload.get("model_id") or ""),
+        mode=str(payload.get("mode") or ""),
+        status=str(payload.get("status") or ""),
+        output_dir=str(payload.get("output_dir") or manifest_path.parent),
+        manifest_path=str(manifest_path),
+        preview_video=persisted_preview("preview_video"),
+        preview_image=persisted_preview("preview_image"),
+        preview_splat=persisted_preview("preview_splat"),
+        preview_model=persisted_preview("preview_model"),
+        gallery=list(recovered_previews.get("gallery") or payload.get("gallery") or []),
+        rrd_path=persisted_preview("rrd_path"),
+        artifacts=list(payload.get("artifacts") or []),
+        metadata=dict(payload.get("metadata") or {}),
+    )
 
 
 def _persist_studio_performance_metadata(record: RunRecord, timings: Mapping[str, float]) -> None:
@@ -1522,7 +1765,11 @@ def _persist_studio_performance_metadata(record: RunRecord, timings: Mapping[str
     if isinstance(existing, Mapping):
         cleaned = {**dict(existing), **cleaned}
     record.metadata["studio_performance"] = cleaned
-    _core_write_json(Path(record.manifest_path), record.to_manifest(), atomic=False)
+    _core_write_json(
+        Path(record.manifest_path),
+        record.to_manifest(),
+        atomic=True,
+    )
 
 
 @dataclass
@@ -1874,17 +2121,25 @@ class BaseRuntimeDriver:
         base_kwargs = dict(request.call_kwargs)
         names = _signature_names(method)
         accepts_var_kwargs = _accepts_var_kwargs(method)
+        declares_visual_modalities = hasattr(ctx.pipeline, "ACCEPTS_IMAGES") or hasattr(
+            ctx.pipeline, "ACCEPTS_VIDEO"
+        )
+        accepts_images = getattr(ctx.pipeline, "ACCEPTS_IMAGES", True) is not False
+        accepts_video = getattr(ctx.pipeline, "ACCEPTS_VIDEO", True) is not False
+        accepts_generic_input = not declares_visual_modalities or accepts_images or accepts_video
         input_path_as_video = _input_path_should_bind_as_video(request.input_path, names)
         if input_path_as_video and ctx.entry.family in _NO_VIDEO_BIND_FAMILIES:
             input_path_as_video = False
 
         if request.prompt and ("prompt" in names or accepts_var_kwargs):
             base_kwargs.setdefault("prompt", request.prompt)
-        if request.image is not None and ("images" in names or accepts_var_kwargs):
+        if accepts_images and request.image is not None and ("images" in names or accepts_var_kwargs):
             base_kwargs.setdefault("images", request.image)
-        elif request.image_path and ("images" in names or accepts_var_kwargs) and request.image is None:
+        elif accepts_images and request.image_path and ("images" in names or accepts_var_kwargs) and request.image is None:
             base_kwargs.setdefault("images", request.image_path)
         elif (
+            accepts_images
+            and
             request.video_path
             and "images" in names
             and request.image is None
@@ -1892,25 +2147,25 @@ class BaseRuntimeDriver:
             and not ({"video", "videos", "video_path"} & names)
         ):
             base_kwargs.setdefault("images", request.video_path)
-        elif request.input_path and not input_path_as_video and ("images" in names or accepts_var_kwargs) and request.image is None:
+        elif accepts_images and request.input_path and not input_path_as_video and ("images" in names or accepts_var_kwargs) and request.image is None:
             base_kwargs.setdefault("images", request.input_path)
-        if request.image_path and ("image_path" in names or accepts_var_kwargs):
+        if accepts_images and request.image_path and ("image_path" in names or accepts_var_kwargs):
             base_kwargs.setdefault("image_path", request.image_path)
-        elif request.input_path and not input_path_as_video and ("image_path" in names or accepts_var_kwargs):
+        elif accepts_images and request.input_path and not input_path_as_video and ("image_path" in names or accepts_var_kwargs):
             base_kwargs.setdefault("image_path", request.input_path)
-        if request.video_path and ("videos" in names or accepts_var_kwargs):
+        if accepts_video and request.video_path and ("videos" in names or accepts_var_kwargs):
             base_kwargs.setdefault("videos", request.video_path)
-        elif request.input_path and input_path_as_video and ("videos" in names or accepts_var_kwargs):
+        elif accepts_video and request.input_path and input_path_as_video and ("videos" in names or accepts_var_kwargs):
             base_kwargs.setdefault("videos", request.input_path)
-        if request.video_path and ("video" in names or accepts_var_kwargs):
+        if accepts_video and request.video_path and ("video" in names or accepts_var_kwargs):
             base_kwargs.setdefault("video", request.video_path)
-        elif request.input_path and input_path_as_video and ("video" in names or accepts_var_kwargs):
+        elif accepts_video and request.input_path and input_path_as_video and ("video" in names or accepts_var_kwargs):
             base_kwargs.setdefault("video", request.input_path)
-        if request.video_path and ("video_path" in names or accepts_var_kwargs):
+        if accepts_video and request.video_path and ("video_path" in names or accepts_var_kwargs):
             base_kwargs.setdefault("video_path", request.video_path)
-        elif request.input_path and input_path_as_video and ("video_path" in names or accepts_var_kwargs):
+        elif accepts_video and request.input_path and input_path_as_video and ("video_path" in names or accepts_var_kwargs):
             base_kwargs.setdefault("video_path", request.input_path)
-        if request.input_path and ("input_path" in names or accepts_var_kwargs):
+        if accepts_generic_input and request.input_path and ("input_path" in names or accepts_var_kwargs):
             base_kwargs.setdefault("input_path", request.input_path)
         if "data_path" in names:
             data_path = request.input_path or request.image_path or request.video_path
@@ -1949,7 +2204,7 @@ class BaseRuntimeDriver:
             base_kwargs.setdefault("num_frames", request.num_frames)
         if request.fps and "fps" in names:
             base_kwargs.setdefault("fps", request.fps)
-        if mode == "run" and "return_dict" in names:
+        if mode == "run" and ("return_dict" in names or accepts_var_kwargs):
             base_kwargs.setdefault("return_dict", True)
         if mode == "stream" and "images" in names and "images" not in base_kwargs:
             # Some stream() entry points require the images argument even after
@@ -2268,6 +2523,24 @@ class StudioManager:
         # already owns this lock in the same thread.
         self.lock = threading.RLock()
         self.torchrun_command_lock = threading.Lock()
+        self._recent_runs_lock = threading.RLock()
+        self._recent_runs_root_signature: tuple[int, int, int] | None = None
+        self._recent_run_manifests: tuple[Path, ...] = ()
+        self._recent_run_manifest_cursor = 0
+        self._recent_runs_cache: tuple[RunRecord, ...] = ()
+
+    def _invalidate_recent_runs_cache(self) -> None:
+        """Invalidate the manifest index after a manager-owned run write."""
+
+        with self._recent_runs_lock:
+            self._recent_runs_root_signature = None
+            self._recent_run_manifests = ()
+            self._recent_run_manifest_cursor = 0
+            self._recent_runs_cache = ()
+
+    def _persist_performance_metadata(self, record: RunRecord, timings: Mapping[str, float]) -> None:
+        _persist_studio_performance_metadata(record, timings)
+        self._invalidate_recent_runs_cache()
 
     def _torchrun_dist(self) -> Any:
         dist = _torch_dist()
@@ -2699,6 +2972,17 @@ class StudioManager:
                 return f"Scheduled after active stream: {', '.join(scheduled)}."
             return "No cached pipelines were unloaded."
 
+    def close(self) -> None:
+        """Release every idle cached pipeline and schedule active streams for disposal."""
+
+        with self.lock:
+            for key, context in list(self.pipeline_cache.items()):
+                if context.active_leases > 0:
+                    context.dispose_when_idle = True
+                    continue
+                self.pipeline_cache.pop(key, None)
+                self._dispose_pipeline_context(context)
+
     def _execute_torchrun_command(self, command: Dict[str, Any]) -> Any:
         dist = self._torchrun_dist()
         if dist is None:
@@ -2874,11 +3158,24 @@ class StudioManager:
             self._dispose_pipeline_context(context)
 
     def _dispose_pipeline_context(self, context: PipelineContext) -> None:
-        """Drop the last context reference before allocator collection."""
+        """Run a pipeline's cleanup hook before dropping its final cached reference."""
 
+        pipeline = context.pipeline
         context.pipeline = None
         context.state.clear()
-        self._collect_device_memory()
+        try:
+            cleanup = getattr(pipeline, "cleanup", None)
+            if callable(cleanup):
+                cleanup()
+        except Exception as exc:
+            warnings.warn(
+                f"Studio pipeline cleanup failed for {context.entry.model_id}: {exc}",
+                RuntimeWarning,
+                stacklevel=2,
+            )
+        finally:
+            del pipeline
+            self._collect_device_memory()
 
     def _dispose_pipeline(self, pipeline: Any) -> None:
         """Compatibility helper for detached, caller-owned pipeline values."""
@@ -2898,8 +3195,13 @@ class StudioManager:
                 pass
 
     def import_pipeline_class(self, entry: CatalogEntry) -> Any:
-        module = importlib.import_module(entry.module_path)
-        return getattr(module, entry.class_name)
+        # Pipeline modules frequently resolve Transformers/Diffusers lazy
+        # exports at import time.  A different job may be doing the same from
+        # its lazy runtime constructor, so protect the complete module import
+        # rather than only each individual importlib call.
+        with third_party_lazy_import_guard():
+            module = importlib.import_module(entry.module_path)
+            return getattr(module, entry.class_name)
 
     def runtime_driver_for(self, entry: CatalogEntry) -> BaseRuntimeDriver:
         return RUNTIME_DRIVERS.get(entry.runtime_kind, RUNTIME_DRIVERS["default"])
@@ -3158,7 +3460,7 @@ class StudioManager:
             perf_segments["total_client_ms"] = (time.perf_counter() - wall_t0) * 1000.0
             if not isinstance(result, RunRecord):
                 raise RuntimeError("Torchrun LingBot fast command did not return a Studio run record.")
-            _persist_studio_performance_metadata(result, perf_segments)
+            self._persist_performance_metadata(result, perf_segments)
             return result
 
         record = self._run_local_prepared_request(
@@ -3172,7 +3474,7 @@ class StudioManager:
         if record is None:
             return None
         perf_segments["total_client_ms"] = (time.perf_counter() - wall_t0) * 1000.0
-        _persist_studio_performance_metadata(record, perf_segments)
+        self._persist_performance_metadata(record, perf_segments)
         return record
 
     def run_realtime(
@@ -3293,18 +3595,21 @@ class StudioManager:
         manifest_path = str(
             _core_write_json(
                 Path(output_dir) / "manifest.json",
-                {
-                    "message": message,
-                    "mode": mode,
-                    "status": status,
-                    "model_id": entry.model_id,
-                    "display_name": entry.display_name,
-                    "output_dir": output_dir,
-                    "metadata": _safe_json(metadata),
-                },
-                atomic=False,
+                _redact_manifest_secrets(
+                    {
+                        "message": message,
+                        "mode": mode,
+                        "status": status,
+                        "model_id": entry.model_id,
+                        "display_name": entry.display_name,
+                        "output_dir": output_dir,
+                        "metadata": metadata,
+                    }
+                ),
+                atomic=True,
             )
         )
+        self._invalidate_recent_runs_cache()
         return RunRecord(
             run_id=Path(output_dir).name,
             model_id=entry.model_id,
@@ -3359,7 +3664,11 @@ class StudioManager:
 
         saved_artifacts: list[str] = []
         result_metadata_path = str(
-            _core_write_json(Path(output_dir) / "result_metadata.json", _safe_json(metadata), atomic=False)
+            _core_write_json(
+                Path(output_dir) / "result_metadata.json",
+                _redact_manifest_secrets(metadata),
+                atomic=True,
+            )
         )
         saved_artifacts.append(result_metadata_path)
 
@@ -3398,6 +3707,12 @@ class StudioManager:
             for key in ("generated_video_path", "output_path", "preview_video", "video_path"):
                 value = result.get(key)
                 if isinstance(value, str) and Path(value).exists():
+                    value = _persist_video_artifact_in_run(
+                        value,
+                        output_dir=output_dir,
+                        output_path=request.output_path,
+                    )
+                    result[key] = value
                     saved_artifacts.append(value)
             for key in (
                 "artifact_path",
@@ -3415,6 +3730,12 @@ class StudioManager:
             ):
                 value = result.get(key)
                 if isinstance(value, str) and Path(value).exists():
+                    value = _persist_video_artifact_in_run(
+                        value,
+                        output_dir=output_dir,
+                        output_path=request.output_path,
+                    )
+                    result[key] = value
                     saved_artifacts.append(value)
             for key in ("artifact_paths", "artifacts"):
                 values = result.get(key)
@@ -3426,16 +3747,31 @@ class StudioManager:
                 value = result.get(key)
                 if isinstance(value, str) and Path(value).exists():
                     saved_artifacts.append(value)
-            for key in ("sr_videos", "videos", "frames", "video"):
-                if key not in result:
-                    continue
-                frames = _normalize_frame_list(result[key])
-                if frames:
-                    saved_artifacts.append(export_frames_to_video(frames, request.output_path, fps=request.fps))
-                    break
+            # Pipelines that return both an already encoded video path and the
+            # source tensor have finished materializing their output. Re-encoding
+            # that tensor can overwrite the valid artifact at the same path, and
+            # is especially unsafe for model-specific sample ranges/layouts.
+            has_encoded_video = any(
+                Path(path).suffix.lower() in VIDEO_EXTS and Path(path).is_file()
+                for path in saved_artifacts
+            )
+            if not has_encoded_video:
+                for key in ("sr_videos", "videos", "frames", "video"):
+                    if key not in result:
+                        continue
+                    frames = _normalize_frame_list(result[key])
+                    if frames:
+                        saved_artifacts.append(
+                            export_frames_to_video(frames, request.output_path, fps=request.fps)
+                        )
+                        break
             if "recon_info" in result:
                 recon_path = str(
-                    _core_write_json(Path(output_dir) / "recon_info.json", _safe_json(result["recon_info"]), atomic=False)
+                    _core_write_json(
+                        Path(output_dir) / "recon_info.json",
+                        _redact_manifest_secrets(result["recon_info"]),
+                        atomic=True,
+                    )
                 )
                 saved_artifacts.append(recon_path)
             if ctx.entry.category in {"Embodied Action", "Visual Action"}:
@@ -3607,69 +3943,125 @@ class StudioManager:
             artifacts=artifact_list,
             metadata=metadata_payload,
         )
-        _core_write_json(Path(record.manifest_path), record.to_manifest(), atomic=False)
+        _core_write_json(
+            Path(record.manifest_path),
+            record.to_manifest(),
+            atomic=True,
+        )
+        self._invalidate_recent_runs_cache()
         return record
 
     def list_recent_runs(self, limit: int = 24) -> list[RunRecord]:
-        manifests = sorted(
-            Path(self.runs_root).glob("*/manifest.json"),
-            key=lambda item: item.stat().st_mtime,
-            reverse=True,
-        )
-        records = []
-        for manifest_path in manifests[:limit]:
-            try:
-                payload = json.loads(manifest_path.read_text(encoding="utf-8"))
-            except Exception:
-                continue
-            # A pipeline may return an artifact from a temporary directory and
-            # Studio subsequently copies it into the persistent run directory.
-            # After the temporary directory is removed, older manifests must
-            # prefer the persistent copy instead of advertising a dead URL.
-            persisted_artifacts = _existing_artifact_paths(
-                [
-                    *list(payload.get("artifacts") or []),
-                    *collect_artifact_paths(str(manifest_path.parent)),
-                ]
-            )
-            recovered_previews = pick_preview_assets(persisted_artifacts, validate_videos=False)
+        requested = max(0, int(limit))
+        if requested == 0:
+            return []
 
-            def persisted_preview(key: str) -> Any:
-                configured = payload.get(key)
-                if configured:
+        runs_root = Path(self.runs_root)
+        try:
+            root_stat = runs_root.stat()
+            root_signature = (root_stat.st_dev, root_stat.st_ino, root_stat.st_mtime_ns)
+        except OSError:
+            return []
+
+        # A few historical tests call this method with a SimpleNamespace. Keep
+        # that lightweight usage working while real managers use the cache.
+        cache_lock = getattr(self, "_recent_runs_lock", None)
+        if cache_lock is None:
+            cache_lock = threading.RLock()
+            self._recent_runs_lock = cache_lock
+            self._recent_runs_root_signature = None
+            self._recent_run_manifests = ()
+            self._recent_run_manifest_cursor = 0
+            self._recent_runs_cache = ()
+
+        with cache_lock:
+            cache_current = self._recent_runs_root_signature == root_signature
+            if cache_current and (
+                len(self._recent_runs_cache) >= requested
+                or self._recent_run_manifest_cursor >= len(self._recent_run_manifests)
+            ):
+                return list(self._recent_runs_cache[:requested])
+
+            if not cache_current:
+                # Studio is the writer for this tree: manager-owned manifest
+                # replacements explicitly invalidate above, while directory
+                # mtime catches additions/removals. Direct load_run bypasses the
+                # cache, so exact lookups always observe their current file.
+                manifests: list[tuple[int, Path]] = []
+                for manifest_path in runs_root.glob("*/manifest.json"):
                     try:
-                        if Path(configured).is_file():
-                            return configured
-                    except (OSError, TypeError, ValueError):
-                        pass
-                return recovered_previews.get(key)
+                        manifests.append((manifest_path.stat().st_mtime_ns, manifest_path))
+                    except OSError:
+                        continue
+                manifests.sort(key=lambda item: item[0], reverse=True)
 
-            records.append(
-                RunRecord(
-                    run_id=payload.get("run_id", manifest_path.parent.name),
-                    model_id=payload.get("model_id", ""),
-                    display_name=payload.get("display_name", payload.get("model_id", "")),
-                    mode=payload.get("mode", ""),
-                    status=payload.get("status", ""),
-                    output_dir=payload.get("output_dir", str(manifest_path.parent)),
-                    manifest_path=payload.get("manifest_path", str(manifest_path)),
-                    preview_video=persisted_preview("preview_video"),
-                    preview_image=persisted_preview("preview_image"),
-                    preview_splat=persisted_preview("preview_splat"),
-                    preview_model=persisted_preview("preview_model"),
-                    gallery=list(recovered_previews.get("gallery") or payload.get("gallery", [])),
-                    rrd_path=persisted_preview("rrd_path"),
-                    artifacts=list(payload.get("artifacts", [])),
-                    metadata=dict(payload.get("metadata", {})),
+                # Directory additions/removals update runs_root mtime. If it
+                # moved during the scan, leave the index invalid so the next
+                # call retries rather than treating a partial index as stable.
+                try:
+                    final_stat = runs_root.stat()
+                    final_signature = (final_stat.st_dev, final_stat.st_ino, final_stat.st_mtime_ns)
+                except OSError:
+                    final_signature = None
+                self._recent_runs_root_signature = (
+                    final_signature if final_signature == root_signature else None
                 )
-            )
-        return records
+                self._recent_run_manifests = tuple(path for _, path in manifests)
+                self._recent_run_manifest_cursor = 0
+                self._recent_runs_cache = ()
+
+            records = list(self._recent_runs_cache)
+            while (
+                len(records) < requested
+                and self._recent_run_manifest_cursor < len(self._recent_run_manifests)
+            ):
+                manifest_path = self._recent_run_manifests[self._recent_run_manifest_cursor]
+                self._recent_run_manifest_cursor += 1
+                try:
+                    records.append(_run_record_from_manifest(manifest_path))
+                except (OSError, TypeError, ValueError, json.JSONDecodeError):
+                    continue
+            self._recent_runs_cache = tuple(records)
+            return list(self._recent_runs_cache[:requested])
+
+    def _resolved_run_dir(self, run_id: str) -> Path:
+        value = str(run_id or "")
+        if not value or value in {".", ".."} or "/" in value or "\\" in value or Path(value).name != value:
+            raise KeyError(f"Unknown Studio run id: {run_id}")
+
+        runs_root = Path(self.runs_root).resolve()
+        run_dir = runs_root / value
+        try:
+            resolved_run_dir = run_dir.resolve()
+        except (OSError, RuntimeError):
+            raise KeyError(f"Unknown Studio run id: {run_id}") from None
+        if resolved_run_dir.parent != runs_root:
+            raise KeyError(f"Unknown Studio run id: {run_id}")
+        return resolved_run_dir
+
+    def delete_run(self, run_id: str) -> Path:
+        """Remove one persisted Studio run directory from ``runs_root``."""
+
+        resolved_run_dir = self._resolved_run_dir(run_id)
+        if not resolved_run_dir.is_dir():
+            raise KeyError(f"Unknown Studio run id: {run_id}")
+        shutil.rmtree(resolved_run_dir)
+        self._invalidate_recent_runs_cache()
+        return resolved_run_dir
 
     def load_run(self, run_id: str) -> RunRecord:
-        for record in self.list_recent_runs(limit=200):
-            if record.run_id == run_id:
-                return record
-        raise KeyError(f"Unknown Studio run id: {run_id}")
+        resolved_run_dir = self._resolved_run_dir(run_id)
+        resolved_manifest = resolved_run_dir / "manifest.json"
+        try:
+            resolved_manifest = resolved_manifest.resolve()
+        except (OSError, RuntimeError):
+            raise KeyError(f"Unknown Studio run id: {run_id}") from None
+        if resolved_manifest.parent != resolved_run_dir:
+            raise KeyError(f"Unknown Studio run id: {run_id}")
+        try:
+            return _run_record_from_manifest(resolved_manifest, run_id=str(run_id))
+        except (OSError, TypeError, ValueError, json.JSONDecodeError):
+            raise KeyError(f"Unknown Studio run id: {run_id}") from None
 
     def unload(self, model_id: Optional[str] = None) -> str:
         from .visualization.backends.viser import STUDIO_VISER

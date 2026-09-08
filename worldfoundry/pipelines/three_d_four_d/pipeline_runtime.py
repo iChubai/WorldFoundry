@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-from ...synthesis.visual_generation.memory.runtime import RuntimeMemory
 from ...operators.three_d_four_d_runtime_operator import ThreeDFourDRuntimeOperator
+from ...synthesis.visual_generation.memory.runtime import RuntimeMemory
 from ...synthesis.visual_generation.three_d_four_d.runtime import (
     ThreeDFourDRuntimeSynthesis,
 )
@@ -21,11 +21,6 @@ class ThreeDFourDRuntimePipeline(PipelineABC):
     generation_type = "three_d_four_d"
 
 
-class FourDGSPipeline(ThreeDFourDRuntimePipeline):
-    """Pipeline implementation for FourDGS visual generation."""
-    MODEL_ID = "4d-gs"
-
-
 class LagrNVSPipeline(ThreeDFourDRuntimePipeline):
     """Pipeline implementation for LagrNVS visual generation."""
     MODEL_ID = "lagernvs"
@@ -39,11 +34,6 @@ class MonST3RPipeline(ThreeDFourDRuntimePipeline):
 class MVDiffusionPipeline(ThreeDFourDRuntimePipeline):
     """Pipeline implementation for MVDiffusion visual generation."""
     MODEL_ID = "mvdiffusion"
-
-
-class ShapeOfMotionPipeline(ThreeDFourDRuntimePipeline):
-    """Pipeline implementation for ShapeOfMotion visual generation."""
-    MODEL_ID = "shape-of-motion"
 
 
 class StableVirtualCameraPipeline(ThreeDFourDRuntimePipeline):
@@ -67,11 +57,9 @@ class WorldGenPipeline(ThreeDFourDRuntimePipeline):
 
 
 __all__ = [
-    "FourDGSPipeline",
     "LagrNVSPipeline",
     "MonST3RPipeline",
     "MVDiffusionPipeline",
-    "ShapeOfMotionPipeline",
     "StableVirtualCameraPipeline",
     "ThreeDFourDRuntimePipeline",
     "WonderJourneyPipeline",

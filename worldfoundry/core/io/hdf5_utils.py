@@ -1,12 +1,31 @@
-"""Recursive HDF5 save/load and structural equality checks for Pydantic models."""
+"""Recursive HDF5 save/load and structural equality checks for Pydantic models.
+
+Eval artifacts and camera / action dumps are sometimes stored as HDF5
+groups rather than JSON so arrays stay binary. :func:`hdf5_save` /
+:func:`hdf5_load` walk a Pydantic model (or a plain dict), writing
+scalars as attributes and arrays as datasets. :func:`hdf5_equal`
+compares two groups structurally for golden-file tests.
+
+None fields are dropped on save (``exclude_none=True``). This is not
+a general HDF5 ORM and does not stream video frames.
+"""
 
 import h5py
 import numpy as np
 from pydantic import BaseModel
 
+# ──────────────────────────────────────────────────────────────────────────
+# Nested Pydantic / dict ↔ HDF5 — None dropped; not a video streamer
+# ──────────────────────────────────────────────────────────────────────────
+
 
 def hdf5_save(data: BaseModel | dict, group: h5py.Group) -> None:
-    """Recursively save Pydantic model or dict to HDF5 group."""
+    """Recursively save a Pydantic model or dict into an HDF5 *group*.
+
+    Arrays become datasets; nested models/dicts become subgroups;
+    scalars are stored as length-1 datasets. Unsupported types raise
+    :class:`ValueError`.
+    """
     if isinstance(data, BaseModel):
         # Convert to dict and exclude None values
         data_dict = data.model_dump(mode="python", exclude_none=True)
@@ -28,7 +47,7 @@ def hdf5_save(data: BaseModel | dict, group: h5py.Group) -> None:
 
 
 def hdf5_load(group: h5py.Group) -> dict:
-    """Recursively load HDF5 group to Pydantic model or dict."""
+    """Recursively load an HDF5 *group* into a nested dict of arrays/scalars."""
     data_dict = {}
     for key, value in group.items():
         if isinstance(value, h5py.Dataset):
@@ -39,7 +58,7 @@ def hdf5_load(group: h5py.Group) -> dict:
 
 
 def hdf5_is_subset(this: h5py.Group, other: h5py.Group, verbose: bool = False) -> bool:
-    """Check if this HDF5 group is a subset of another HDF5 group."""
+    """Return True when every dataset/group in *this* exists and matches *other*."""
     for key, value in this.items():
         if key not in other:
             if verbose:

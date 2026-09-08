@@ -11,6 +11,10 @@ source_repos:
 checkpoints:
 - repo_id: agibot-world/Genie-Envisioner
   role: genie_envisioner_checkpoint
+  local_dir: ${WORLDFOUNDRY_CKPT_DIR}/agibot-world--Genie-Envisioner/GE_base_fast_v0.1.safetensors
+- repo_id: Lightricks/LTX-Video
+  role: ltx_base_model
+  local_dir: ${WORLDFOUNDRY_CKPT_DIR}/Lightricks--LTX-Video
 input_schema:
   prompt: true
   image: true
@@ -18,15 +22,17 @@ input_schema:
   actions:
   - robot_action
   - world_action
-artifact_kind: generated_world
+artifact_kind: generated_video
 artifact_filename: genie-envisioner.mp4
 execution:
   backend_stage: in_tree_runtime_manifest
-  runtime_status: in_tree_runtime_manifest_checkpoint_env_pending
+  runtime_status: in_tree_runtime_manifest_checkpoint_required
   integration_status: runtime_ported
   pipeline_binding: genie-envisioner
 integration:
   status: runtime_ported
 notes:
 - Genie Envisioner source is vendored in-tree under synthesis/visual_generation/genie_envisioner/genie_envisioner_runtime.
-- The pipeline resolves the vendored inference entrypoint; execution remains checkpoint and robot-task gated.
+- The compatibility launcher uses the official GE-base multiview transformer and local LTX tokenizer, T5, and VAE.
+- The default uses synchronized ALOHA high/left-wrist/right-wrist views; synthetic-three-view remains available for smoke tests only.
+- Checkpoint-matched AgiBot or LeRobot trajectories are still required for action-quality parity.

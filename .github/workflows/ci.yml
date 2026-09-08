@@ -40,7 +40,10 @@ jobs:
       - name: Install quality gate dependencies
         run: |
           python -m pip install --upgrade pip
-          python -m pip install PyYAML
+          python -m pip install PyYAML "ruff==0.12.7"
+
+      - name: Check generated docs
+        run: make docs-check
 
       - name: Run lightweight quality gates
         run: make lint
@@ -51,5 +54,39 @@ jobs:
       - name: Run CLI check
         run: make cli-check
 
-      - name: Run documented CLI checks
-        run: make docs-check
+      - name: Run documented CLI entrypoint checks
+        run: make cli-entrypoint-check
+
+
+  packaging-license-gate:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: sh
+
+    steps:
+      - name: Checkout clean source tree
+        uses: actions/checkout@v5
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.11"
+
+      - name: Install wheel build and audit tooling
+        run: python -m pip install --upgrade build "setuptools>=77" "setuptools-scm[toml]" wheel
+
+      - name: Build and audit clean distributions
+        run: |
+          test -z "$(git status --porcelain)"
+          test ! -e build
+          audit_dir="$(mktemp -d)"
+          python -m build --outdir "$audit_dir"
+          set -- "$audit_dir"/*.whl
+          test "$#" -eq 1
+          test -f "$1"
+          wheel_path="$1"
+          set -- "$audit_dir"/*.tar.gz
+          test "$#" -eq 1
+          test -f "$1"
+          make packaging-check WHEEL="$wheel_path" SDIST="$1"

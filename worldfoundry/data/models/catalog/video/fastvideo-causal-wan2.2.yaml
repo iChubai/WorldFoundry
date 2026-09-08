@@ -1,0 +1,69 @@
+id: fastvideo-causal-wan2.2
+name: FastVideo CausalWan2.2
+aliases:
+- fastvideo-causal-wan
+- FastVideo/CausalWan2.2-I2V-A14B-Preview-Diffusers
+tasks:
+- text-to-video
+- causal-video-generation
+provider: official_repo
+source:
+  status: open_source
+  official_repo_url: https://github.com/NVIDIA/FlashDreams
+  revision: 289da6f1d232de5abaa30d686c977b9c0040fe76
+  license: apache-2.0
+official_sources:
+  paper: https://arxiv.org/abs/2606.03159
+  project_page: https://nvidia.github.io/flashdreams/main/index.html
+  github:
+    url: https://github.com/NVIDIA/FlashDreams
+    revision: 289da6f1d232de5abaa30d686c977b9c0040fe76
+  huggingface:
+  - repo_id: FastVideo/CausalWan2.2-I2V-A14B-Preview-Diffusers
+    revision: 0977572ccf137da5e577d62e3231ca840151af38
+checkpoints:
+- repo_id: FastVideo/CausalWan2.2-I2V-A14B-Preview-Diffusers
+  revision: 0977572ccf137da5e577d62e3231ca840151af38
+  license: apache-2.0
+  role: dual_expert_transformers_text_encoder_vae
+variants:
+- id: fastvideo-causal-wan2.2-t2v-14b
+  task: text-to-video
+  provider: official_repo
+  runtime_profile: fastvideo-causal-wan2.2-t2v-14b
+  pipeline_binding: fastvideo-causal-wan2.2-t2v-14b
+  runner_target: worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner
+  integration:
+    status: integrated
+  runner_parity:
+    status: pending
+    notes: CPU fake-component execution validates the schedule, expert routing, cache
+      separation, and three-frame traversal; full 14B pixels need CUDA and weights.
+runner_target: worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner
+runtime_profile: runtime-profile:fastvideo-causal-wan2.2-t2v-14b
+pipeline_binding: fastvideo-causal-wan2.2-t2v-14b
+integration:
+  status: integrated
+  notes:
+  - Native roles cover both Wan2.2 experts, T5 conditioning, VAE, the fixed shifted
+    schedule, and framework-owned self-forcing cache traversal.
+runner_parity:
+  status: pending
+catalog_category: video
+catalog_scope: Video-generation catalog entries with in-tree WorldFoundry pipeline bindings.
+docs:
+  publisher: NVIDIA / FastVideo
+  publisher_kind: company
+  publisher_zh: 英伟达 / FastVideo
+  overview: FastVideo CausalWan2.2 is an eight-step causal Wan2.2 rollout that emits
+    video in three-latent-frame blocks while routing between high- and low-noise experts.
+  overview_zh: FastVideo CausalWan2.2 是八步因果 Wan2.2 生成模型，以每块三个潜帧推进，并在高、低噪声专家之间切换。
+  architecture: WorldFoundry keeps expert KV/cross-attention caches independent and owns
+    deterministic self-forcing re-noise on the fixed shifted flow schedule.
+  architecture_zh: WorldFoundry 独立维护两个专家的 KV/交叉注意力缓存，并在固定移位 flow schedule 上执行确定性的 self-forcing 重加噪。
+  usage_notes: Defaults are 832x480, 717 frames, eight steps, guidance 1, and 16 FPS.
+  usage_notes_zh: 默认配置为 832x480、717 帧、八步、guidance 1、16 FPS。
+  limitations:
+  - Full inference requires the external A14B checkpoint and a suitable CUDA GPU.
+  limitations_zh:
+  - 完整推理需要外部 A14B checkpoint 与合适的 CUDA GPU。

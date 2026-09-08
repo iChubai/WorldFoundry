@@ -14,58 +14,130 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-"""
-This file contains primitives for multi-gpu communication.
-This is useful when doing distributed training.
+"""Generic multi-GPU primitives: rank, world size, and init checks.
+
+Thin facade so other collectives do not call ``dist.get_rank()`` raw.
+Unit tests can stub a single-process world. Tensor vs object vs mesh
+collectives live in sibling modules so CPU pickle never shares a path
+with NCCL tensors.
 """
 
 import gc
+import logging
 import os
-import pickle
 import shutil
+import warnings
 
 import torch
 import torch.distributed as dist
 
+import worldfoundry.core.distributed.torch_process_group as _torch_process_group
+
+logger = logging.getLogger(__name__)
+
+# ──────────────────────────────────────────────────────────────────────────
+# Launch-env detection — MASTER_PORT alone is not a multi-process contract
+# ──────────────────────────────────────────────────────────────────────────
+
+#: Environment variables that indicate this process was launched by a
+#: distributed launcher (torchrun/torch.distributed.launch or a scheduler
+#: that pre-populates the rendezvous contract). ``MASTER_PORT`` alone is
+#: deliberately excluded: several tools set a default port preemptively
+#: without implying a multi-process launch.
+_DISTRIBUTED_LAUNCH_ENV_VARS = (
+    "RANK",
+    "WORLD_SIZE",
+    "LOCAL_RANK",
+    "MASTER_ADDR",
+    "TORCHELASTIC_RUN_ID",
+)
+
+
+def _distributed_launch_indicators() -> dict[str, str]:
+    """Return the subset of distributed-launcher env vars present in this process."""
+
+    return {name: os.environ[name] for name in _DISTRIBUTED_LAUNCH_ENV_VARS if name in os.environ}
+
+
+def get_collective_device(group=None) -> torch.device:
+    """Return the device required by the active process-group backend.
+
+    NCCL collectives must use the CUDA device selected for this process. CPU
+    backends such as Gloo use CPU tensors. Keeping this decision in one place
+    prevents bare ``cuda`` allocations from silently landing on GPU 0.
+    """
+
+    if dist.is_available() and dist.is_initialized():
+        backend = str(dist.get_backend(group)).lower()
+        if "nccl" not in backend:
+            return torch.device("cpu")
+    if torch.cuda.is_available():
+        return torch.device("cuda", torch.cuda.current_device())
+    return torch.device("cpu")
+
+
+# ──────────────────────────────────────────────────────────────────────────
+# Rank / world-size queries — delegate to torch_process_group (canonical)
+# ──────────────────────────────────────────────────────────────────────────
+
 
 def is_distributed():
+    """True when more than one rank is in the default process group."""
+
     return get_world_size() > 1
 
 
 def get_world_size():
-    if not dist.is_available():
-        return 1
-    if not dist.is_initialized():
-        return 1
-    return dist.get_world_size()
+    """Return the process-group size, or 1 outside distributed execution.
+
+    Delegates to :func:`worldfoundry.core.distributed.torch_process_group.get_world_size`.
+    New code should call that canonical helper directly.
+    """
+
+    return _torch_process_group.get_world_size()
 
 
 def get_rank():
-    if not dist.is_available():
-        return 0
-    if not dist.is_initialized():
-        return 0
-    return dist.get_rank()
+    """Return this worker's rank, or 0 outside distributed execution.
+
+    Delegates to :func:`worldfoundry.core.distributed.torch_process_group.get_rank`.
+    New code should call that canonical helper directly.
+    """
+
+    return _torch_process_group.get_rank()
 
 
 def get_local_rank():
-    if not dist.is_available():
-        return 0
-    if not dist.is_initialized():
-        return 0
-    local_rank = int(os.getenv("LOCAL_RANK", 0))
-    return local_rank
+    """Return this worker's local rank from ``LOCAL_RANK``, or 0 if not distributed.
+
+    Delegates to :func:`worldfoundry.core.distributed.torch_process_group.get_local_rank`.
+    New code should call that canonical helper directly.
+    """
+
+    return _torch_process_group.get_local_rank()
 
 
 def is_master():
+    """True on global rank 0, including the single-process fallback (rank 0)."""
+
     return get_rank() == 0
 
 
 def is_local_master():
+    """True on the first rank of this node (``LOCAL_RANK == 0``)."""
+
     return get_local_rank() == 0
 
 
 def get_local_proc_group(group_size=8):
+    """Return (or lazily create) a contiguous intra-node process group.
+
+    Groups are cached on the function object keyed by ``group_size``.
+    ``world_size`` must divide by ``group_size`` or ranks would be left
+    without a communicator. Returns ``None`` when the world already fits
+    in one group so callers skip a useless NCCL subgroup.
+    """
+
     world_size = get_world_size()
     if world_size <= group_size or group_size == 1:
         return None
@@ -99,45 +171,105 @@ def synchronize():
     dist.barrier()
 
 
+# ──────────────────────────────────────────────────────────────────────────
+# Deprecated init + aliases — new code should call torch_process_group
+# ──────────────────────────────────────────────────────────────────────────
+
+
 def dist_init() -> None:
+    """Initialize the default NCCL process group, or fall back to single-process mode.
+
+    Deprecated: call
+    :func:`worldfoundry.core.distributed.torch_process_group.init_torch_distributed`
+    instead. Env-indicator detection and the single-process fallback are
+    unchanged (CC-12 / CC-17).
+
+    Failure semantics:
+    - If the environment carries distributed-launcher indicators (``RANK``,
+      ``WORLD_SIZE``, ``LOCAL_RANK``, ``MASTER_ADDR``, ``TORCHELASTIC_RUN_ID``),
+      an initialization failure re-raises. Masquerading a failed rank as a
+      standalone ``RANK=0/WORLD_SIZE=1`` process would skip every collective,
+      write rank-0 output paths, and leave the surviving ranks hanging at their
+      first collective until the NCCL timeout — a data-corruption path.
+    - If no such indicator is present (plain ``python script.py``), the
+      single-process fallback is legitimate and is kept.
+    """
+
+    warnings.warn(
+        "worldfoundry.core.distributed.generic_collectives.dist_init is deprecated; "
+        "use worldfoundry.core.distributed.torch_process_group.init_torch_distributed",
+        DeprecationWarning,
+        stacklevel=2,
+    )
     if is_dist_initialized():
         return
     try:
-        torch.distributed.init_process_group(backend="nccl")
-        assert torch.distributed.is_initialized()
-    except Exception:
+        _torch_process_group.init_torch_distributed()
+        if not torch.distributed.is_initialized():
+            raise RuntimeError("torch.distributed.init_process_group returned but the process group is not initialized")
+    except Exception as exc:
+        indicators = _distributed_launch_indicators()
+        if indicators:
+            rendered = ", ".join(f"{key}={value!r}" for key, value in sorted(indicators.items()))
+            logger.error(
+                "Distributed process-group initialization failed in a distributed launch environment (%s). "
+                "Refusing the single-process fallback; failing fast instead: %s",
+                rendered,
+                exc,
+            )
+            raise
         os.environ["RANK"] = "0"
         os.environ["WORLD_SIZE"] = "1"
         os.environ["LOCAL_RANK"] = "0"
-        print("warning: dist not init")
+        logger.warning(
+            "No distributed launch environment detected; continuing as a single process "
+            "(process-group init failed with: %s)",
+            exc,
+        )
 
 
 def is_dist_initialized() -> bool:
+    """True when torch.distributed has a live default process group."""
+
     return torch.distributed.is_available() and torch.distributed.is_initialized()
 
 
 def get_dist_rank() -> int:
+    """Alias of :func:`get_rank` kept for older eval call sites."""
+
     return get_rank()
 
 
 def get_dist_size() -> int:
+    """Alias of :func:`get_world_size` kept for older eval call sites."""
+
     return get_world_size()
 
 
 def get_dist_local_rank() -> int:
+    """Alias of :func:`get_local_rank` kept for older eval call sites."""
+
     return get_local_rank()
 
 
 def dist_barrier() -> None:
+    """Alias of :func:`synchronize`."""
+
     synchronize()
 
 
 def sync_tensor(tensor, reduce="mean"):
+    """All-gather ``tensor`` (or a scalar promoted to a tensor) and reduce.
+
+    ``reduce`` is ``mean``, ``sum``, ``cat``, ``root`` (rank-0 shard), or
+    omitted to return the raw list. Non-tensor inputs are wrapped on the
+    collective device so Gloo jobs do not allocate CUDA 0 by accident.
+    """
+
     if not is_dist_initialized():
         return tensor
     if not isinstance(tensor, torch.Tensor):
-        device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-        tensor = torch.tensor([tensor], device=device)
+        tensor = torch.tensor([tensor], device=get_collective_device())
     tensor_list = [torch.empty_like(tensor) for _ in range(get_world_size())]
     torch.distributed.all_gather(tensor_list, tensor.contiguous(), async_op=False)
     if reduce == "mean":
@@ -159,42 +291,9 @@ def all_gather(data):
     Returns:
         list[data]: list of data gathered from each rank
     """
-    to_device = torch.device("cuda")
-    # to_device = torch.device("cpu")
+    from .evaluation_collectives import all_gather as gather
 
-    world_size = get_world_size()
-    if world_size == 1:
-        return [data]
-
-    # serialized to a Tensor
-    buffer = pickle.dumps(data)
-    storage = torch.ByteStorage.from_buffer(buffer)
-    tensor = torch.ByteTensor(storage).to(to_device)
-
-    # obtain Tensor size of each rank
-    local_size = torch.LongTensor([tensor.numel()]).to(to_device)
-    size_list = [torch.LongTensor([0]).to(to_device) for _ in range(world_size)]
-    dist.all_gather(size_list, local_size)
-    size_list = [int(size.item()) for size in size_list]
-    max_size = max(size_list)
-
-    # receiving Tensor from all ranks
-    # we pad the tensor because torch all_gather does not support
-    # gathering tensors of different shapes
-    tensor_list = []
-    for _ in size_list:
-        tensor_list.append(torch.ByteTensor(size=(max_size,)).to(to_device))
-    if local_size != max_size:
-        padding = torch.ByteTensor(size=(max_size - local_size,)).to(to_device)
-        tensor = torch.cat((tensor, padding), dim=0)
-    dist.all_gather(tensor_list, tensor)
-
-    data_list = []
-    for size, tensor in zip(size_list, tensor_list):
-        buffer = tensor.cpu().numpy().tobytes()[:size]
-        data_list.append(pickle.loads(buffer))
-
-    return data_list
+    return gather(data)
 
 
 def reduce_dict(input_dict, average=True):
@@ -227,6 +326,8 @@ def reduce_dict(input_dict, average=True):
 
 
 def broadcast(data, **kwargs):
+    """Broadcast a picklable object via ``broadcast_object_list``; identity if alone."""
+
     if get_world_size() == 1:
         return data
     data = [data]
@@ -235,6 +336,15 @@ def broadcast(data, **kwargs):
 
 
 def all_gather_cpu(result_part, tmpdir=None, collect_by_master=True):
+    """Gather Python objects through a rank-0 pickle directory (mmcv).
+
+    Rank 0 creates and later deletes ``tmpdir``. When
+    ``collect_by_master`` is true, non-zero ranks return ``None`` after
+    dumping so they do not load every peer's file. The extra barrier
+    when ``collect_by_master`` is false keeps rank 0 from deleting the
+    directory while others still read.
+    """
+
     import mmcv
     from mmcv.runner import get_dist_info
 
@@ -265,6 +375,8 @@ def all_gather_cpu(result_part, tmpdir=None, collect_by_master=True):
 
 
 def all_gather_tensor(tensor, group_size=None, group=None):
+    """All-gather equal tensors into a list; skip NCCL when ``group_size == 1``."""
+
     if group_size is None:
         group_size = get_world_size()
     if group_size == 1:
@@ -276,6 +388,12 @@ def all_gather_tensor(tensor, group_size=None, group=None):
 
 
 def gather_difflen_tensor(feat, num_samples_list, concat=True, group=None, group_size=None):
+    """All-gather tensors that differ in dim-0 length by padding to the max.
+
+    ``num_samples_list[r]`` is the true length on rank ``r``. After the
+    gather each shard is trimmed so padding never leaks into the result.
+    """
+
     world_size = get_world_size()
     if world_size == 1:
         if not concat:
@@ -294,11 +412,18 @@ def gather_difflen_tensor(feat, num_samples_list, concat=True, group=None, group
     return feat_gather
 
 
+# ──────────────────────────────────────────────────────────────────────────
+# Autograd gather — all-reduce grads then slice this rank's range
+# ──────────────────────────────────────────────────────────────────────────
+
+
 class GatherLayer(torch.autograd.Function):
     """Gather tensors from all process, supporting backward propagation."""
 
     @staticmethod
     def forward(ctx, input):
+        """All-gather variable-length dim-0 shards and return them as a tuple."""
+
         ctx.save_for_backward(input)
         num_samples = torch.tensor(input.size(0), dtype=torch.long, device=input.device)
         ctx.num_samples_list = all_gather_tensor(num_samples)
@@ -307,6 +432,8 @@ class GatherLayer(torch.autograd.Function):
 
     @staticmethod
     def backward(ctx, *grads):  # tuple(output)'s grad
+        """All-reduce concatenated grads, then keep this rank's sample range."""
+
         (input,) = ctx.saved_tensors
         num_samples_list = ctx.num_samples_list
         rank = get_rank()
@@ -324,6 +451,8 @@ class GatherLayerWithGroup(torch.autograd.Function):
 
     @staticmethod
     def forward(ctx, input, group, group_size):
+        """All-gather equal tensors on ``group`` and return them as a tuple."""
+
         ctx.save_for_backward(input)
         ctx.group_size = group_size
         output = all_gather_tensor(input, group=group, group_size=group_size)
@@ -331,6 +460,8 @@ class GatherLayerWithGroup(torch.autograd.Function):
 
     @staticmethod
     def backward(ctx, *grads):  # tuple(output)'s grad
+        """All-reduce stacked grads and keep the shard for this group-local rank."""
+
         (input,) = ctx.saved_tensors
         grads = torch.stack(grads)
         if is_distributed():
@@ -341,6 +472,8 @@ class GatherLayerWithGroup(torch.autograd.Function):
 
 
 def gather_layer_with_group(data, group=None, group_size=None):
+    """Apply :class:`GatherLayerWithGroup` with a default of the world size."""
+
     if group_size is None:
         group_size = get_world_size()
     output = GatherLayerWithGroup.apply(data, group, group_size)
@@ -348,5 +481,7 @@ def gather_layer_with_group(data, group=None, group_size=None):
 
 
 def flush():
+    """Force Python GC plus a CUDA cache drop after a large collective teardown."""
+
     gc.collect()
     torch.cuda.empty_cache()

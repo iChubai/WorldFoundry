@@ -12,6 +12,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+"""Spatial/temporal video tiling so one decode does not blow RAM.
+
+:class:`TileProcessor` / :class:`ParallelHelper` shard huge frames,
+run a callable per tile, then blend. Used by eval and long I2V — not
+by the DiT forward (that uses latent chunks instead).
+"""
+
 import math
 from collections import OrderedDict
 from typing import List
@@ -19,7 +26,12 @@ from typing import List
 import torch
 from tqdm import tqdm
 
-from worldfoundry.runtime.compile_cache import CompilePolicy, compile_callable_cached
+# Blend helpers are compiled lazily in ``VideoTiler.__init__`` so importing
+# ``worldfoundry.core.io`` does not configure the persistent compiler cache.
+
+# ──────────────────────────────────────────────────────────────────────────
+# Tile shard / gather / overlap-blend — eval and long I2V, not DiT forward
+# ──────────────────────────────────────────────────────────────────────────
 
 
 class ParallelHelper:
@@ -31,6 +43,8 @@ class ParallelHelper:
     """
 
     def __init__(self):
+        """Stateless helper; all work is on the static methods."""
+
         pass
 
     @staticmethod
@@ -308,6 +322,8 @@ class TileProcessor:
         self.temporal_tile_overlap_factor = temporal_tile_overlap_factor
         self.sr_ratio = sr_ratio
         self.parallel_group = parallel_group
+        from worldfoundry.core.compile_cache import CompilePolicy, compile_callable_cached
+
         blend_policy = CompilePolicy(dynamic=False)
         self._blend_t_compiled = compile_callable_cached(
             self.blend_t,
@@ -326,6 +342,8 @@ class TileProcessor:
         )
 
     def blend_t(self, a: torch.Tensor, b: torch.Tensor, blend_extent: int) -> torch.Tensor:
+        """Linear-ramp overlap along time so adjacent temporal tiles do not seam."""
+
         blend_extent = min(a.shape[2], b.shape[2], blend_extent)
         for t in range(blend_extent):
             b[:, :, t, :, :] = a[:, :, -blend_extent + t, :, :] * (1 - t / blend_extent) + b[:, :, t, :, :] * (
@@ -334,6 +352,8 @@ class TileProcessor:
         return b
 
     def blend_v(self, a: torch.Tensor, b: torch.Tensor, blend_extent: int) -> torch.Tensor:
+        """Linear-ramp overlap along height (vertical tile seams)."""
+
         blend_extent = min(a.shape[3], b.shape[3], blend_extent)
         for y in range(blend_extent):
             b[:, :, :, y, :] = a[:, :, :, -blend_extent + y, :] * (1 - y / blend_extent) + b[:, :, :, y, :] * (
@@ -342,6 +362,8 @@ class TileProcessor:
         return b
 
     def blend_h(self, a: torch.Tensor, b: torch.Tensor, blend_extent: int) -> torch.Tensor:
+        """Linear-ramp overlap along width (horizontal tile seams)."""
+
         blend_extent = min(a.shape[4], b.shape[4], blend_extent)
         for x in range(blend_extent):
             b[:, :, :, :, x] = a[:, :, :, :, -blend_extent + x] * (1 - x / blend_extent) + b[:, :, :, :, x] * (
@@ -350,6 +372,8 @@ class TileProcessor:
         return b
 
     def tiled_encode(self, x: torch.FloatTensor, verbose: bool = False):
+        """Encode *x* tile-by-tile and blend overlaps in latent space."""
+
         overlap_height = int(self.tile_sample_min_height * (1 - self.spatial_tile_overlap_factor))
         overlap_width = int(self.tile_sample_min_width * (1 - self.spatial_tile_overlap_factor))
         overlap_length = int(self.tile_sample_min_length * (1 - self.temporal_tile_overlap_factor))
@@ -444,6 +468,8 @@ class TileProcessor:
         return result
 
     def tiled_decode(self, z: torch.FloatTensor, verbose: bool = False):
+        """Decode latent tiles and blend overlaps in pixel space."""
+
         overlap_height = int(self.tile_latent_min_height * (1 - self.spatial_tile_overlap_factor))
         overlap_width = int(self.tile_latent_min_width * (1 - self.spatial_tile_overlap_factor))
         overlap_length = int(self.tile_latent_min_length * (1 - self.temporal_tile_overlap_factor))

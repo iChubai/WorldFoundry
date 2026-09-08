@@ -12,6 +12,7 @@ from worldfoundry.core.io.paths import project_root
 
 from .catalog import CatalogEntry
 from .runtime_paths import studio_model_roots
+from .vendor_assets import VENDOR_ASSET_INSTALL_COMMAND
 
 REPO_ROOT = project_root(__file__)
 
@@ -350,21 +351,13 @@ def _output_groups(entry: CatalogEntry, profile: Any | None, template_id: str) -
     return ("Generated video", "Preview image", "Manifest JSON")
 
 
-def _spark_vendor_path() -> Path:
-    return REPO_ROOT / "worldfoundry" / "studio" / "assets" / "vendor" / "spark"
-
-
-def _spark_vendor_module_path() -> Path:
-    return _spark_vendor_path() / "spark.module.min.js"
-
-
 def _gui_refs(entry: CatalogEntry, template_id: str, local_repo: LocalRepoEvidence) -> tuple[str, ...]:
     refs: list[str] = []
     if local_repo.gui_paths:
         refs.append(f"Model GUI: {local_repo.path}/{local_repo.gui_paths[0]}")
     if entry.model_id == "gen3c" and local_repo.path and (Path(local_repo.path) / "gui").exists():
         refs.append(f"GEN3C authoring GUI: {local_repo.path}/gui")
-    if template_id == "scene-3d" and _spark_vendor_module_path().exists():
+    if template_id == "scene-3d":
         refs.append(f"In-tree Spark 3DGS viewer: `worldfoundry-studio {entry.model_id} --frontend spark`")
     return tuple(dict.fromkeys(refs))
 
@@ -374,8 +367,9 @@ def _launch_hints(entry: CatalogEntry, template_id: str, local_repo: LocalRepoEv
     if entry.model_id == "gen3c" and local_repo.path and (Path(local_repo.path) / "gui").exists():
         hints.append("GEN3C server: CUDA_HOME=$CONDA_PREFIX fastapi dev --no-reload ./gui/api/server.py --host 0.0.0.0")
         hints.append("GEN3C client: python gui/api/client.py")
-    if template_id == "scene-3d" and _spark_vendor_module_path().exists():
+    if template_id == "scene-3d":
         hints.append("Spark native frontend: worldfoundry-studio <model> --frontend spark --asset /path/to/scene.splat")
+        hints.append(f"Install pinned browser modules: {VENDOR_ASSET_INSTALL_COMMAND}")
     if template_id == "depth-geometry" or entry.runtime_kind in {"pointcloud_nav", "worldfm"}:
         hints.append("Viser native frontend: worldfoundry-studio <model> --frontend points --asset /path/to/scene.ply")
     if template_id == "embodied-policy" or entry.category == "Embodied Action":

@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import hashlib
 import inspect
 import json
 import os
@@ -9,13 +8,17 @@ import socket
 import subprocess
 import sys
 import time
+from contextlib import nullcontext
 from dataclasses import dataclass
 from fnmatch import fnmatch
 from pathlib import Path
 from typing import Any, Mapping
 
-from worldfoundry.core.io import load_serialized, resolve_data_path
+from worldfoundry.core.io import file_sha256, load_serialized, resolve_data_path
 from worldfoundry.runtime.assets import expand_worldfoundry_path
+
+
+_REPO_ROOT = Path(__file__).resolve().parents[3]
 
 
 def _expand_value(value: Any) -> Any:
@@ -34,7 +37,11 @@ def _existing_path(value: Any) -> Path | None:
     if not isinstance(value, str) or not value.strip():
         return None
     path = Path(value).expanduser()
-    return path.resolve() if path.exists() else None
+    candidates = (path,) if path.is_absolute() else (Path.cwd() / path, _REPO_ROOT / path)
+    for candidate in candidates:
+        if candidate.exists():
+            return candidate.resolve()
+    return None
 
 
 def _first_existing(items: Any) -> Path | None:
@@ -88,6 +95,33 @@ def _missing_required_paths(
     return missing
 
 
+def _first_complete_checkpoint(
+    items: Any,
+    *,
+    required_paths: Any,
+    repo_root: Path | None,
+) -> Path | None:
+    """Prefer a candidate that satisfies the runtime's required asset layout."""
+
+    sources = [items] if isinstance(items, (str, Path)) else items
+    if not isinstance(sources, list):
+        return None
+    first_existing: Path | None = None
+    for item in sources:
+        candidate = _existing_path(str(item))
+        if candidate is None:
+            continue
+        if first_existing is None:
+            first_existing = candidate
+        if not _missing_required_paths(
+            required_paths,
+            repo_root=repo_root,
+            checkpoint_path=candidate,
+        ):
+            return candidate
+    return first_existing
+
+
 def _format_command(items: list[str], variables: Mapping[str, Any]) -> list[str]:
     rendered: list[str] = []
     format_variables = {
@@ -122,12 +156,25 @@ def _absolute_cli_path(value: Any) -> Any:
     return Path(stripped).expanduser().resolve()
 
 
+def _resolve_flat_wan_checkpoint_alias(value: Any) -> Any:
+    """Resolve the two local mirror names used by official Wan releases."""
+
+    if not isinstance(value, (str, Path)):
+        return value
+    path = Path(value).expanduser()
+    if path.exists() or not path.name.startswith("Wan2."):
+        return path.resolve()
+    prefixed = path.parent / f"Wan-AI--{path.name}"
+    return prefixed.resolve() if prefixed.exists() else path.resolve()
+
+
 def _normalize_cli_path_variables(variables: Mapping[str, Any]) -> dict[str, Any]:
     normalized = dict(variables)
     for key, value in tuple(normalized.items()):
         if key in {
             "repo_root",
             "checkpoint_path",
+            "checkpoint_parent",
             "output_path",
             "output_dir",
             "image_path",
@@ -135,8 +182,13 @@ def _normalize_cli_path_variables(variables: Mapping[str, Any]) -> dict[str, Any
             "eval_dir",
             "vae",
             "text_encoder",
+            "wan_model_root",
+            "wan_root",
         }:
             normalized[key] = _absolute_cli_path(value)
+    for key in ("wan_model_root", "wan_root"):
+        if key in normalized:
+            normalized[key] = _resolve_flat_wan_checkpoint_alias(normalized[key])
     return normalized
 
 
@@ -207,6 +259,8 @@ class OfficialVideoRuntime:
         runtime = dict(self.config.get("runtime") or {})
         runtime.update({key: value for key, value in overrides.items() if value is not None})
         self.runtime = _expand_value(runtime)
+        self._diffusers_pipeline: Any | None = None
+        self._diffusers_pipeline_key: tuple[str, ...] | None = None
 
     @staticmethod
     def _load_config(path: str) -> dict[str, Any]:
@@ -229,7 +283,11 @@ class OfficialVideoRuntime:
         repo_sources = self.runtime.get("repo_root") or self.runtime.get("repo_root_candidates")
         checkpoint_sources = self.runtime.get("checkpoint_path") or self.runtime.get("checkpoint_candidates")
         repo_root = _first_existing(repo_sources)
-        checkpoint_path = _first_existing(checkpoint_sources)
+        checkpoint_path = _first_complete_checkpoint(
+            checkpoint_sources,
+            required_paths=self.runtime.get("required_paths"),
+            repo_root=repo_root,
+        )
 
         kind = str(self.runtime.get("kind") or "")
         if kind == "official_cli" and repo_root is None:
@@ -259,6 +317,73 @@ class OfficialVideoRuntime:
                 missing.append(f"API key environment variable is not set: {env_name}")
         return RuntimeRequirementReport(tuple(missing), repo_root, checkpoint_path)
 
+    def prepare(self) -> None:
+        """Eagerly load reusable in-process backends during pipeline loading.
+
+        Workspace serializes pipeline construction but executes different GPU
+        jobs concurrently. Loading Diffusers lazily from ``generate`` both
+        defeated the Workspace pipeline cache and allowed its lazy module
+        proxy to race with unrelated Transformers/Diffusers imports.
+        """
+
+        if str(self.runtime.get("kind") or "") != "diffusers_pipeline":
+            return
+        report = self._requirement_report()
+        if report.ready:
+            self._get_diffusers_pipeline(report.checkpoint_path)
+
+    def _get_diffusers_pipeline(
+        self,
+        checkpoint_path: Path | None,
+        *,
+        torch_dtype_name: str | None = None,
+    ) -> tuple[Any, Any]:
+        import importlib
+
+        import torch
+
+        dtype_name = str(torch_dtype_name or self.runtime.get("torch_dtype") or "float16")
+        module_name, _, attr_name = str(
+            self.runtime.get("pipeline_target") or "diffusers:DiffusionPipeline"
+        ).partition(":")
+        key = (
+            str(checkpoint_path),
+            module_name,
+            attr_name or "DiffusionPipeline",
+            dtype_name,
+            str(self.device),
+            str(bool(self.runtime.get("enable_model_cpu_offload", False))),
+            str(bool(self.runtime.get("enable_vae_tiling", False))),
+        )
+        if self._diffusers_pipeline is not None and self._diffusers_pipeline_key == key:
+            return self._diffusers_pipeline, getattr(torch, dtype_name)
+
+        module = importlib.import_module(module_name)
+        pipeline_cls = getattr(module, attr_name or "DiffusionPipeline")
+        torch_dtype = getattr(torch, dtype_name)
+        pipe = pipeline_cls.from_pretrained(str(checkpoint_path), torch_dtype=torch_dtype)
+        enable_model_cpu_offload = bool(self.runtime.get("enable_model_cpu_offload", False))
+        if enable_model_cpu_offload:
+            offload = getattr(pipe, "enable_model_cpu_offload", None)
+            if not callable(offload):
+                raise TypeError(
+                    f"{pipeline_cls.__name__} does not support requested model CPU offload"
+                )
+            offload(device=self.device)
+        elif hasattr(pipe, "to"):
+            pipe = pipe.to(self.device)
+        if bool(self.runtime.get("enable_vae_tiling", False)):
+            vae = getattr(pipe, "vae", None)
+            enable_tiling = getattr(vae, "enable_tiling", None)
+            if not callable(enable_tiling):
+                raise TypeError(
+                    f"{pipeline_cls.__name__} does not support requested VAE tiling"
+                )
+            enable_tiling()
+        self._diffusers_pipeline = pipe
+        self._diffusers_pipeline_key = key
+        return pipe, torch_dtype
+
     def runtime_plan(self, *, output_path: str | Path | None = None, prompt: str = "") -> dict[str, Any]:
         report = self._requirement_report()
         defaults = self.runtime.get("defaults")
@@ -269,6 +394,7 @@ class OfficialVideoRuntime:
             "master_port": _find_free_port(),
             "repo_root": report.repo_root or "",
             "checkpoint_path": report.checkpoint_path or "",
+            "checkpoint_parent": report.checkpoint_path.parent if report.checkpoint_path else "",
             "output_path": output_path or "",
             "output_dir": Path(output_path).parent if output_path else "",
             "prompt": prompt,
@@ -387,7 +513,7 @@ class OfficialVideoRuntime:
             "runtime": self.runtime.get("kind"),
             "backend_quality": self.runtime.get("backend_quality", "official_runtime_bridge"),
             "artifact_path": str(output),
-            "artifact_sha256": hashlib.sha256(output.read_bytes()).hexdigest() if output.is_file() else None,
+            "artifact_sha256": file_sha256(output) if output.is_file() else None,
             "metadata": dict(metadata),
         }
 
@@ -452,6 +578,7 @@ class OfficialVideoRuntime:
             "master_port": _find_free_port(),
             "repo_root": repo_root or "",
             "checkpoint_path": checkpoint_path or "",
+            "checkpoint_parent": checkpoint_path.parent if checkpoint_path else "",
             "output_path": output_path,
             "output_dir": output_path.parent,
             "prompt": prompt,
@@ -620,19 +747,11 @@ class OfficialVideoRuntime:
         checkpoint_path: Path | None,
         extra: Mapping[str, Any],
     ) -> dict[str, Any]:
-        import importlib
-
         import imageio
         import torch
 
-        module_name, _, attr_name = str(self.runtime.get("pipeline_target") or "diffusers:DiffusionPipeline").partition(":")
-        module = importlib.import_module(module_name)
-        pipeline_cls = getattr(module, attr_name or "DiffusionPipeline")
         dtype_name = str(extra.get("torch_dtype") or self.runtime.get("torch_dtype") or "float16")
-        torch_dtype = getattr(torch, dtype_name)
-        pipe = pipeline_cls.from_pretrained(str(checkpoint_path), torch_dtype=torch_dtype)
-        if hasattr(pipe, "to"):
-            pipe = pipe.to(self.device)
+        pipe, _ = self._get_diffusers_pipeline(checkpoint_path, torch_dtype_name=dtype_name)
         call_kwargs = dict(self.runtime.get("call_kwargs") or {})
         call_kwargs.update(extra)
         # Some Diffusers pipelines condition on ``target_fps`` while others do
@@ -668,7 +787,17 @@ class OfficialVideoRuntime:
                 for key, value in call_kwargs.items()
                 if key in parameters
             }
-        result = pipe(prompt=prompt, **call_kwargs)
+        autocast_dtype_name = self.runtime.get("autocast_dtype")
+        if autocast_dtype_name and str(self.device).startswith("cuda"):
+            autocast_context = torch.autocast(
+                device_type="cuda",
+                dtype=getattr(torch, str(autocast_dtype_name)),
+                cache_enabled=bool(self.runtime.get("autocast_cache_enabled", False)),
+            )
+        else:
+            autocast_context = nullcontext()
+        with autocast_context:
+            result = pipe(prompt=prompt, **call_kwargs)
         frames = getattr(result, "frames", None) or getattr(result, "videos", None) or result[0]
         if frames and isinstance(frames, list) and frames and isinstance(frames[0], list):
             frames = frames[0]

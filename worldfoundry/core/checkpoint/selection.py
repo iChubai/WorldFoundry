@@ -1,9 +1,23 @@
-"""Small, dependency-free helpers for selecting a profiled checkpoint variant."""
+"""Small, dependency-free helpers for selecting a profiled checkpoint variant.
+
+Studio and eval profiles list several checkpoint records.
+:func:`normalize_checkpoint_selector` folds punctuation so human
+spellings compare equal. :func:`select_profile_checkpoint` picks
+exactly one record after optional aliases; unknown or ambiguous
+selectors raise. :func:`selected_checkpoint_options` translates the
+chosen record into the shared runtime's path / repo / revision fields.
+
+Matching is identity-only and does not download or inspect files.
+"""
 
 from __future__ import annotations
 
 from collections.abc import Mapping, Sequence
 from typing import Any
+
+# ──────────────────────────────────────────────────────────────────────────
+# Identity matching — punctuation-folded aliases, never filesystem inspection
+# ──────────────────────────────────────────────────────────────────────────
 
 _SELECTOR_FIELDS = (
     "id",
@@ -25,6 +39,8 @@ def normalize_checkpoint_selector(value: Any) -> str:
 
 
 def _record_selectors(record: Mapping[str, Any]) -> set[str]:
+    """Collect folded ids plus the last path component so ``role`` and a repo stem both match."""
+
     selectors: set[str] = set()
     for field in _SELECTOR_FIELDS:
         value = record.get(field)

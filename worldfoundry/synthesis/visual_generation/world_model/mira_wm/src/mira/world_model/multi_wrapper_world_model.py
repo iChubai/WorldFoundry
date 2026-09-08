@@ -278,7 +278,7 @@ class MultiWrapperWorldModel(nn.Module):
             ``{"viz_video": ..., "pred_video": ...}`` uint8 tensors of shape ``(B, T, C, P*H, W)``.
         """
         # Imported here (not at module load) to keep the model independent of the training package.
-        from mira.training.visualization import (  # noqa: PLC0415
+        from mira.inference_support.visualization import (  # noqa: PLC0415
             add_prediction_border,
             video_to_uint8,
             visualize_batch,

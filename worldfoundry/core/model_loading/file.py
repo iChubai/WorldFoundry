@@ -1,4 +1,14 @@
-"""State-dict loading from safetensors, bins, folders, and remote URIs."""
+"""State-dict loading from safetensors, bins, folders, and remote URIs.
+
+:func:`load_state_dict` is the entry: a path, list of paths, directory,
+or ``*.safetensors.index.json`` becomes a flat mapping. Safetensors and
+weights-only PyTorch loads are used; later files overwrite duplicate
+keys. Hash helpers fingerprint key layouts for loader-registry matching
+without reading tensor values.
+
+Remote URIs go through :mod:`worldfoundry.core.io.storage`. This is not
+the URL dispatcher in :mod:`worldfoundry.core.checkpoint.load`.
+"""
 
 import hashlib
 import json
@@ -18,6 +28,10 @@ from worldfoundry.core.io.storage import (
     parse_uri_scheme,
     read_text_uri,
 )
+
+# ──────────────────────────────────────────────────────────────────────────
+# Full materialization — path / folder / index / safetensors / GGUF / pickle
+# ──────────────────────────────────────────────────────────────────────────
 
 
 def load_state_dict(file_path, torch_dtype=None, device="cpu", pin_memory=False, verbose=0):
@@ -55,6 +69,12 @@ def load_state_dict(file_path, torch_dtype=None, device="cpu", pin_memory=False,
             state_dict = load_state_dict_from_safetensors_index(file_path, torch_dtype=torch_dtype, device=device)
         elif file_path.endswith(".safetensors"):
             state_dict = load_state_dict_from_safetensors(file_path, torch_dtype=torch_dtype, device=device)
+        elif file_path.lower().endswith(".gguf"):
+            state_dict = load_state_dict_from_gguf(
+                file_path,
+                torch_dtype=torch_dtype,
+                device=device,
+            )
         else:
             state_dict = load_state_dict_from_bin(file_path, torch_dtype=torch_dtype, device=device)
         # If load state dict in CPU memory, `pin_memory=True` will make `model.to("cuda")` faster.
@@ -67,6 +87,11 @@ def load_state_dict(file_path, torch_dtype=None, device="cpu", pin_memory=False,
 
 
 def load_state_dict_from_folder(file_path, torch_dtype=None, device="cpu", pin_memory=False, verbose=0):
+    """Merge checkpoint files under a directory URI.
+
+    Prefers ``*.safetensors.index.json`` shards when present; otherwise loads
+    each ``.safetensors`` / ``.bin`` / ``.ckpt`` / ``.pth`` / ``.pt`` file.
+    """
     file_path = str(file_path)
     if parse_uri_scheme(file_path) == "file":
         file_names = [join_uri(file_path, file_name) for file_name in os.listdir(file_path)]
@@ -93,7 +118,14 @@ def load_state_dict_from_folder(file_path, torch_dtype=None, device="cpu", pin_m
         file_name = os.path.basename(file_path_)
         if "." not in file_name:
             continue
-        if file_name.rsplit(".", 1)[-1] not in {"safetensors", "bin", "ckpt", "pth", "pt"}:
+        if file_name.rsplit(".", 1)[-1].lower() not in {
+            "safetensors",
+            "bin",
+            "ckpt",
+            "pth",
+            "pt",
+            "gguf",
+        }:
             continue
         state_dict.update(
             load_state_dict(
@@ -108,6 +140,7 @@ def load_state_dict_from_folder(file_path, torch_dtype=None, device="cpu", pin_m
 
 
 def load_state_dict_from_safetensors(file_path, torch_dtype=None, device="cpu"):
+    """Load one safetensors file, optionally casting tensors to ``torch_dtype``."""
     state_dict = {}
     with local_path_for_uri(file_path) as local_path:
         with safe_open(str(local_path), framework="pt", device=str(device)) as f:
@@ -115,6 +148,48 @@ def load_state_dict_from_safetensors(file_path, torch_dtype=None, device="cpu"):
                 state_dict[k] = f.get_tensor(k)
                 if torch_dtype is not None:
                     state_dict[k] = state_dict[k].to(torch_dtype)
+    return state_dict
+
+
+def load_state_dict_from_gguf(file_path, torch_dtype=None, device="cpu"):
+    """Load and dequantize one GGUF checkpoint into a flat state dictionary.
+
+    GGUF is an optional checkpoint container, so its dependency is imported
+    only when a ``.gguf`` file is selected. Quantized tensors are dequantized
+    through the package's reference implementation before normal model key
+    conversion and assignment. A later ``QuantizationMode.GGUF`` transform can
+    repack eligible linears for compressed runtime storage; loading the file
+    alone does not claim a low-bit GEMM.
+    """
+
+    try:
+        import gguf
+    except ImportError as error:
+        raise RuntimeError(
+            "loading GGUF checkpoints requires the optional 'gguf' package"
+        ) from error
+
+    state_dict = {}
+    with local_path_for_uri(file_path) as local_path:
+        reader = gguf.GGUFReader(str(local_path))
+        for entry in reader.tensors:
+            name = str(entry.name)
+            if not name:
+                raise ValueError(f"GGUF checkpoint {file_path!r} contains an empty tensor name")
+            if name in state_dict:
+                raise ValueError(
+                    f"GGUF checkpoint {file_path!r} contains duplicate tensor {name!r}"
+                )
+            try:
+                array = gguf.dequantize(entry.data, entry.tensor_type)
+            except NotImplementedError:
+                # Plain integer tensors are metadata/buffer payloads rather
+                # than quantized floating weights. Preserve their dtype.
+                array = entry.data
+            tensor = torch.from_numpy(array.copy())
+            if torch_dtype is not None and tensor.is_floating_point():
+                tensor = tensor.to(dtype=torch_dtype)
+            state_dict[name] = tensor.to(device=device)
     return state_dict
 
 
@@ -146,6 +221,7 @@ def load_state_dict_from_safetensors_index(file_path, torch_dtype=None, device="
 
 
 def load_state_dict_from_bin(file_path, torch_dtype=None, device="cpu"):
+    """Load a PyTorch pickle checkpoint and unwrap a single conventional wrapper."""
     state_dict = load_torch_state_dict(file_path, map_location=device)
     if len(state_dict) == 1:
         if "state_dict" in state_dict:
@@ -161,7 +237,19 @@ def load_state_dict_from_bin(file_path, torch_dtype=None, device="cpu"):
     return state_dict
 
 
+# ──────────────────────────────────────────────────────────────────────────
+# Safe torch.load — weights_only defaults on; never drop it on TypeError
+# ──────────────────────────────────────────────────────────────────────────
+
+
 def _torch_load(checkpoint_path: str | os.PathLike[str], **kwargs: Any) -> Any:
+    """``torch.load`` after URI materialization; ``weights_only=True`` unless overridden.
+
+    Failure: do not swallow ``TypeError`` from an old PyTorch that rejects
+    ``weights_only`` — dropping that flag would silently run unrestricted
+    pickle. The caller must omit the argument explicitly via
+    :func:`load_torch_checkpoint` ``weights_only=None``.
+    """
     with local_path_for_uri(checkpoint_path) as local_path:
         # Fail closed when the installed PyTorch does not support a requested
         # safety option.  Dropping ``weights_only`` here would silently turn a
@@ -222,7 +310,13 @@ def load_torch_state_dict(checkpoint_path: str | os.PathLike[str], *, map_locati
     return load_torch_checkpoint(checkpoint_path, map_location=map_location, weights_only=True)
 
 
+# ──────────────────────────────────────────────────────────────────────────
+# Key-layout fingerprints — identity hint for the loader registry, not a hash of values
+# ──────────────────────────────────────────────────────────────────────────
+
+
 def convert_state_dict_keys_to_single_str(state_dict, with_shape=True):
+    """Serialize nested state-dict keys (and optional shapes) into one string."""
     keys = []
     for key, value in state_dict.items():
         if isinstance(key, str):
@@ -340,6 +434,7 @@ def search_for_files(folder, extensions):
 
 
 def load_keys_dict(file_path):
+    """Load parameter names and shapes from one path or a list of paths."""
     if isinstance(file_path, list):
         state_dict = {}
         for file_path_ in file_path:
@@ -347,11 +442,14 @@ def load_keys_dict(file_path):
         return state_dict
     if file_path.endswith(".safetensors"):
         return load_keys_dict_from_safetensors(file_path)
+    if file_path.lower().endswith(".gguf"):
+        return load_keys_dict_from_gguf(file_path)
     else:
         return load_keys_dict_from_bin(file_path)
 
 
 def load_keys_dict_from_safetensors(file_path):
+    """Read tensor shapes from a safetensors file without materializing values."""
     keys_dict = {}
     with safe_open(file_path, framework="pt", device="cpu") as f:
         for k in f.keys():
@@ -359,7 +457,25 @@ def load_keys_dict_from_safetensors(file_path):
     return keys_dict
 
 
+def load_keys_dict_from_gguf(file_path):
+    """Read GGUF tensor names and logical shapes without dequantizing values."""
+
+    try:
+        import gguf
+    except ImportError as error:
+        raise RuntimeError(
+            "reading GGUF checkpoint keys requires the optional 'gguf' package"
+        ) from error
+    keys_dict = {}
+    with local_path_for_uri(file_path) as local_path:
+        reader = gguf.GGUFReader(str(local_path))
+        for entry in reader.tensors:
+            keys_dict[str(entry.name)] = [int(value) for value in reversed(entry.shape)]
+    return keys_dict
+
+
 def convert_state_dict_to_keys_dict(state_dict):
+    """Replace tensors with shape lists, recursing into nested dictionaries."""
     keys_dict = {}
     for k, v in state_dict.items():
         if isinstance(v, torch.Tensor):
@@ -370,12 +486,14 @@ def convert_state_dict_to_keys_dict(state_dict):
 
 
 def load_keys_dict_from_bin(file_path):
+    """Load a pickle checkpoint and convert it to a keys-and-shapes mapping."""
     state_dict = load_state_dict_from_bin(file_path)
     keys_dict = convert_state_dict_to_keys_dict(state_dict)
     return keys_dict
 
 
 def convert_keys_dict_to_single_str(state_dict, with_shape=True):
+    """Serialize a keys-and-shapes mapping into one deterministic string."""
     keys = []
     for key, value in state_dict.items():
         if isinstance(key, str):
@@ -407,10 +525,12 @@ __all__ = [
     "hash_state_dict_keys",
     "load_keys_dict",
     "load_keys_dict_from_bin",
+    "load_keys_dict_from_gguf",
     "load_keys_dict_from_safetensors",
     "load_state_dict",
     "load_state_dict_from_bin",
     "load_state_dict_from_folder",
+    "load_state_dict_from_gguf",
     "load_state_dict_from_safetensors",
     "load_torch_checkpoint",
     "load_torch_state_dict",

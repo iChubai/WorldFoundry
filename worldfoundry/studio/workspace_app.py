@@ -1,14 +1,15 @@
 from __future__ import annotations
 
-import argparse
+import atexit
 import contextlib
 import json
+import logging
 import os
-import select
 import signal
 import socket
 import subprocess
 import sys
+import threading
 import time
 import urllib.parse
 import urllib.request
@@ -21,22 +22,14 @@ from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import FileResponse, HTMLResponse, Response, StreamingResponse
 from pydantic import BaseModel, Field
 
-from worldfoundry.core.io.paths import project_root
 from worldfoundry.core.inference import (
-    ASSET_GATED_WORLD_RUNTIME_MODEL_IDS,
-    LINGBOT_VARIANT_BASE_ACT_PREVIEW,
-    LINGBOT_VARIANT_BASE_CAM,
-    LINGBOT_VARIANT_FAST,
-    LINGBOT_WORLD_MODEL_ID,
     InferenceArtifactSpec,
     InferenceCheckpointRef,
     InferenceFieldSpec,
     InferenceTaskProfile,
     InferenceVariantSpec,
-    generic_model_inference_spec,
-    get_model_inference_spec,
-    model_inference_spec,
 )
+from worldfoundry.core.io.paths import project_root
 from worldfoundry.evaluation.tasks.execution.runners.workspace_registry import (
     run_workspace_benchmark,
     validate_workspace_registry,
@@ -45,23 +38,65 @@ from worldfoundry.evaluation.tasks.execution.runners.workspace_registry import (
     workspace_benchmark_runtime_hints,
     workspace_benchmark_supported,
 )
-from .catalog import CatalogEntry, find_entry, lingbot_world_fast_load_kwargs
+from worldfoundry.runtime.inference_catalog import (
+    ASSET_GATED_WORLD_RUNTIME_MODEL_IDS,
+    LINGBOT_VARIANT_BASE_ACT_PREVIEW,
+    LINGBOT_VARIANT_BASE_CAM,
+    LINGBOT_VARIANT_FAST,
+    LINGBOT_WORLD_MODEL_ID,
+    generic_model_inference_spec,
+    get_model_inference_spec,
+    model_inference_spec,
+)
+
+from .catalog import (
+    COGVIDEOX_DEFAULT_VARIANT_ID,
+    COGVIDEOX_STUDIO_PARENT_ID,
+    SANA_DEFAULT_IMAGE_VARIANT_ID,
+    CatalogEntry,
+    cogvideox_runtime_model_id,
+    find_entry,
+    find_runtime_entry,
+    lingbot_world_fast_load_kwargs,
+)
 from .conda_dispatch import (
     DISPATCH_ONLY_CALL_KWARGS,
     DISPATCH_ONLY_LOAD_KWARGS,
     dispatch_spec_for_inference,
     run_manager_payload_in_conda,
 )
-from .execution import RunRecord, StudioManager, _is_gaussian_splat_ply
-from .jobs import StudioJob, StudioJobStore, format_elapsed
+from .execution import (
+    RunRecord,
+    StudioManager,
+    _is_gaussian_splat_ply,
+    bind_run_preview_image,
+)
+from .jobs import (
+    DEFAULT_SHUTDOWN_GRACE_SECONDS,
+    StudioJob,
+    StudioJobStore,
+    format_elapsed,
+)
+from .serving import (
+    bind_security_warning,
+    path_allowed,
+    request_token_valid,
+    require_auth_token_for_host,
+)
 from .studio_catalog import _studio_catalog, _template_id_hint
 from .visualization.backends.frontends import STUDIO_VISUALIZATIONS
 from .visualization.backends.viser import npz_has_supported_geometry, viser_orientation_defaults
 from .visualization.providers.run_record import first_geometry_point_candidate, first_splat_asset
 
+logger = logging.getLogger(__name__)
 
 REPO_ROOT = project_root(__file__)
-MANAGER = StudioManager()
+WORKSPACE_MAX_JOBS = max(1, int(os.getenv("WORLDFOUNDRY_WORKSPACE_MAX_JOBS", "8") or "8"))
+WORKSPACE_MAX_CACHED_PIPELINES = max(
+    0,
+    int(os.getenv("WORLDFOUNDRY_WORKSPACE_MAX_CACHED_PIPELINES", str(WORKSPACE_MAX_JOBS)) or "0"),
+)
+MANAGER = StudioManager(max_cached_pipelines=WORKSPACE_MAX_CACHED_PIPELINES)
 
 
 def _initial_studio_job_counter(workspace_root: str) -> int:
@@ -75,12 +110,14 @@ def _initial_studio_job_counter(workspace_root: str) -> int:
 
 
 JOBS = StudioJobStore(
-    max_workers=int(os.getenv("WORLDFOUNDRY_WORKSPACE_MAX_JOBS", "8") or "8"),
+    max_workers=WORKSPACE_MAX_JOBS,
     initial_counter=_initial_studio_job_counter(MANAGER.workspace_root),
 )
-OPENENVISION_LOGO_PATH = Path(__file__).with_name("assets") / "openenvision-logo.png"
-EVALUATION_VALIDATION_RESULTS_PATH = (
-    REPO_ROOT / "worldfoundry" / "data" / "test_cases" / "evaluation" / "existing_results_fixture" / "results.jsonl"
+_PACKAGED_OPENENVISION_LOGO_PATH = Path(__file__).with_name("assets") / "openenvision-logo.png"
+OPENENVISION_LOGO_PATH = (
+    _PACKAGED_OPENENVISION_LOGO_PATH
+    if _PACKAGED_OPENENVISION_LOGO_PATH.is_file()
+    else REPO_ROOT / "docs" / "fumadocs" / "public" / "openenvision-logo.png"
 )
 SUPPORTED_WORKSPACE_JOB_TYPES = {"inference", "evaluation"}
 SETTING_CHOICES = {
@@ -103,14 +140,26 @@ DEFAULT_SETTINGS: dict[str, Any] = {
     "cpu_offload": False,
 }
 SETTINGS: dict[str, Any] = dict(DEFAULT_SETTINGS)
+# FastAPI runs sync endpoints on a thread pool, so process-global mutable state
+# must serialize its write paths (see also _VISUALIZER_LOCK below).
+_SETTINGS_LOCK = threading.Lock()
 RUNTIME_OPTION_LABELS = {
     "torch_compile": "Torch Compile",
     "cpu_offload": "CPU Offload",
     "vae_cpu_offload": "VAE Offload",
     "text_encoder_cpu_offload": "Text Encoder Offload",
+    "fuse_qkv": "Fused QKV projections",
+    "inplace_residual": "In-place residual",
+    "static_cross_kv": "Static cross-attention KV cache",
+    "fused_rope": "Fused RoPE",
 }
 RUNTIME_OPTION_ALIASES = {
-    "torch_compile": ("torch_compile", "enable_torch_compile", "use_torch_compile"),
+    "torch_compile": (
+        "torch_compile",
+        "enable_torch_compile",
+        "use_torch_compile",
+        "compile",
+    ),
     "cpu_offload": ("cpu_offload", "enable_offloading", "use_cpu_offload", "GPU_memory_mode"),
     "vae_cpu_offload": ("vae_cpu_offload", "offload_vae"),
     "text_encoder_cpu_offload": (
@@ -118,6 +167,36 @@ RUNTIME_OPTION_ALIASES = {
         "offload_t5",
         "offload_text_encoder_model",
     ),
+    "fuse_qkv": ("fuse_qkv",),
+    "inplace_residual": ("inplace_residual",),
+    "static_cross_kv": ("static_cross_kv",),
+    "fused_rope": ("fused_rope",),
+}
+RUNTIME_VALUE_OPTION_SPECS: dict[str, dict[str, Any]] = {
+    "qkv_strategy": {
+        "label": "QKV execution",
+        "kind": "choice",
+        "choices": ("auto", "packed", "split"),
+        "default": "auto",
+    },
+    "qkv_split_threshold": {
+        "label": "QKV split threshold",
+        "kind": "integer",
+        "minimum": 1,
+        "default": 8192,
+    },
+    "rope_precision": {
+        "label": "RoPE precision",
+        "kind": "choice",
+        "choices": ("fp32", "fp64"),
+        "default": "fp32",
+    },
+    "rms_norm_precision": {
+        "label": "RMSNorm precision",
+        "kind": "choice",
+        "choices": ("input", "fp32"),
+        "default": "input",
+    },
 }
 TORCH_COMPILE_ENV_MODELS = {"matrix-game-2"}
 MEDIA_TYPES = {
@@ -258,6 +337,8 @@ POINTS_VISUALIZER_DEFAULT_PARAMS = {
 VISUALIZER_ASSET_REQUIRED = {"media", "points"}
 VISUALIZER_URL_REQUIRED = {"embodied"}
 VISUALIZER_MANAGED: dict[str, ManagedVisualizer] = {}
+# Reentrant: _launch_visualizer stops/cleans existing viewers while holding it.
+_VISUALIZER_LOCK = threading.RLock()
 
 
 def _rerun_renderer() -> str:
@@ -304,12 +385,18 @@ def _load_settings_from_disk() -> None:
     try:
         payload = json.loads(path.read_text(encoding="utf-8"))
     except (OSError, json.JSONDecodeError):
+        logger.warning(
+            "Ignoring unreadable Studio settings file %s; keeping default settings.",
+            path,
+            exc_info=True,
+        )
         return
     if not isinstance(payload, dict):
         return
-    for key, value in payload.items():
-        if key in SETTINGS:
-            SETTINGS[key] = _coerce_setting_value(key, value)
+    with _SETTINGS_LOCK:
+        for key, value in payload.items():
+            if key in SETTINGS:
+                SETTINGS[key] = _coerce_setting_value(key, value)
 
 
 def _save_settings_to_disk() -> None:
@@ -363,35 +450,80 @@ def _visualizer_status(record: ManagedVisualizer) -> dict[str, Any]:
 
 
 def _cleanup_finished_visualizer(mode: str) -> None:
-    record = VISUALIZER_MANAGED.get(mode)
-    if record is None or record.external or _visualizer_process_alive(record.process):
-        return
-    VISUALIZER_MANAGED.pop(mode, None)
+    with _VISUALIZER_LOCK:
+        record = VISUALIZER_MANAGED.get(mode)
+        if record is None or record.external or _visualizer_process_alive(record.process):
+            return
+        VISUALIZER_MANAGED.pop(mode, None)
 
 
 def _stop_visualizer(mode: str) -> bool:
-    record = VISUALIZER_MANAGED.pop(mode, None)
-    if record is None or record.external or record.process is None:
-        return record is not None
-    process = record.process
-    if process.poll() is not None:
-        return True
-    try:
-        os.killpg(os.getpgid(process.pid), signal.SIGINT)
-    except (OSError, ProcessLookupError):
-        process.terminate()
-    try:
-        process.wait(timeout=6)
-    except subprocess.TimeoutExpired:
-        with contextlib.suppress(OSError, ProcessLookupError):
-            os.killpg(os.getpgid(process.pid), signal.SIGTERM)
+    # Idempotent: the pop makes concurrent or repeated calls (stop endpoint,
+    # shutdown event, atexit) observe no record and return without side effects.
+    with _VISUALIZER_LOCK:
+        record = VISUALIZER_MANAGED.pop(mode, None)
+        if record is None or record.external or record.process is None:
+            return record is not None
+        process = record.process
+        if process.poll() is not None:
+            return True
         try:
-            process.wait(timeout=4)
+            os.killpg(os.getpgid(process.pid), signal.SIGINT)
+        except (OSError, ProcessLookupError):
+            process.terminate()
+        try:
+            process.wait(timeout=6)
         except subprocess.TimeoutExpired:
             with contextlib.suppress(OSError, ProcessLookupError):
-                os.killpg(os.getpgid(process.pid), signal.SIGKILL)
-            process.wait(timeout=4)
-    return True
+                os.killpg(os.getpgid(process.pid), signal.SIGTERM)
+            try:
+                process.wait(timeout=4)
+            except subprocess.TimeoutExpired:
+                with contextlib.suppress(OSError, ProcessLookupError):
+                    os.killpg(os.getpgid(process.pid), signal.SIGKILL)
+                process.wait(timeout=4)
+        return True
+
+
+def _stop_all_visualizers() -> None:
+    """Best-effort teardown of managed viewer subprocesses (shutdown + atexit)."""
+
+    for mode in list(VISUALIZER_MANAGED):
+        try:
+            _stop_visualizer(mode)
+        except Exception:
+            logger.warning("Failed to stop %s visualizer during shutdown.", mode, exc_info=True)
+
+
+_WORKSPACE_SHUTDOWN_LOCK = threading.Lock()
+_WORKSPACE_SHUTDOWN_COMPLETE = False
+
+
+def _shutdown_workspace(
+    grace_seconds: float = DEFAULT_SHUTDOWN_GRACE_SECONDS,
+) -> None:
+    """Run process-global Studio teardown once from FastAPI or atexit."""
+
+    global _WORKSPACE_SHUTDOWN_COMPLETE
+    with _WORKSPACE_SHUTDOWN_LOCK:
+        if _WORKSPACE_SHUTDOWN_COMPLETE:
+            return
+        _WORKSPACE_SHUTDOWN_COMPLETE = True
+    try:
+        if grace_seconds == DEFAULT_SHUTDOWN_GRACE_SECONDS:
+            JOBS.shutdown()
+        else:
+            JOBS.shutdown(grace_seconds=grace_seconds)
+    except Exception:
+        logger.warning("Failed to shut down Studio jobs cleanly.", exc_info=True)
+    finally:
+        _stop_all_visualizers()
+
+
+# uvicorn's normal exit path fires the FastAPI shutdown event, but abnormal
+# exits (unhandled exceptions before serving, SystemExit) can skip it; atexit
+# is the fallback so setsid-detached viewer children never outlive Studio.
+atexit.register(_shutdown_workspace)
 
 
 def _tcp_port_available(host: str, port: int) -> bool:
@@ -539,7 +671,7 @@ def _workspace_child_python() -> str:
 
 
 def _visualizer_launch_command(mode: str, payload: VisualizerLaunchRequest, host: str, port: int) -> tuple[list[str], str, str]:
-    backend = STUDIO_VISUALIZATIONS.backend_for(mode)
+    STUDIO_VISUALIZATIONS.backend_for(mode)
     model_id = (payload.model_id or DEFAULT_VISUALIZER_MODELS.get(mode) or "").strip()
     if not model_id:
         raise HTTPException(status_code=400, detail=f"{mode} requires a model id")
@@ -613,6 +745,13 @@ def _artifact_visualization_action(
 
 
 def _launch_visualizer(mode: str, payload: VisualizerLaunchRequest) -> dict[str, Any]:
+    # Serialize launches: concurrent requests for one mode would otherwise both
+    # pass the reuse check and race subprocess start/stop on VISUALIZER_MANAGED.
+    with _VISUALIZER_LOCK:
+        return _launch_visualizer_locked(mode, payload)
+
+
+def _launch_visualizer_locked(mode: str, payload: VisualizerLaunchRequest) -> dict[str, Any]:
     if mode not in STUDIO_VISUALIZATIONS.modes:
         raise HTTPException(status_code=404, detail=f"unknown visualizer: {mode}")
     if mode in WORKSPACE_HIDDEN_VISUALIZER_MODES:
@@ -716,7 +855,12 @@ def _launch_visualizer(mode: str, payload: VisualizerLaunchRequest) -> dict[str,
             stdout=log_file,
             stderr=subprocess.STDOUT,
             text=True,
-            preexec_fn=os.setsid if hasattr(os, "setsid") else None,
+            # start_new_session is the thread-safe equivalent of
+            # CPython documents the legacy pre-exec callback as unsafe in
+            # multi-threaded programs, and this Popen runs inside FastAPI's
+            # threadpool (SA-8/PLW1509).  The child still becomes its own
+            # process group leader, which _terminate_process_group relies on.
+            start_new_session=hasattr(os, "setsid"),
         )
     ready = _wait_for_visualizer(health_url, timeout=_visualizer_startup_timeout(mode))
     if not ready:
@@ -838,12 +982,12 @@ def _append_task_inputs(
         return spec
     patched_tasks = []
     for task in spec.tasks:
-        existing = {(field.target, _param_key(field.field_id)) for field in task.inputs}
+        existing = {(input_field.target, _param_key(input_field.field_id)) for input_field in task.inputs}
         merged = list(task.inputs)
-        for field in fields:
-            key = (field.target, _param_key(field.field_id))
+        for input_field in fields:
+            key = (input_field.target, _param_key(input_field.field_id))
             if key not in existing:
-                merged.append(field)
+                merged.append(input_field)
                 existing.add(key)
         patched_tasks.append(replace(task, inputs=tuple(merged)))
     return replace(spec, tasks=tuple(patched_tasks))
@@ -870,11 +1014,11 @@ def _entry_inference_spec(entry: CatalogEntry):
                 replace(
                     task,
                     inputs=tuple(
-                        replace(field, default=entry.default_interactions or ("forward",))
-                        if field.target == "params"
-                        and _param_key(field.field_id) in {"interactions", "interaction", "interaction_signal", "action"}
-                        else field
-                        for field in task.inputs
+                        replace(input_field, default=entry.default_interactions or ("forward",))
+                        if input_field.target == "params"
+                        and _param_key(input_field.field_id) in {"interactions", "interaction", "interaction_signal", "action"}
+                        else input_field
+                        for input_field in task.inputs
                     ),
                 )
                 for task in spec.tasks
@@ -968,14 +1112,14 @@ def _entry_inference_spec(entry: CatalogEntry):
                 for task in spec.tasks
             ),
         )
-    if workload_type in {"t2v", "text-video", "text-to-video"}:
+    if workload_type in {"t2v", "text-video", "text-to-video"} and entry.model_id != COGVIDEOX_STUDIO_PARENT_ID:
         spec = replace(
             spec,
             tasks=tuple(
                 replace(
                     task,
                     label="Video Inference",
-                    inputs=tuple(field for field in task.inputs if field.target != "input_path"),
+                    inputs=tuple(input_field for input_field in task.inputs if input_field.target != "input_path"),
                     outputs=(
                         InferenceArtifactSpec("video", "video", required=True, preview=True),
                         InferenceArtifactSpec("manifest", "manifest", required=True),
@@ -999,7 +1143,7 @@ def _entry_inference_spec(entry: CatalogEntry):
                     task,
                     task_id="image-generation",
                     label="Image Inference",
-                    inputs=tuple(field for field in task.inputs if field.target != "input_path"),
+                    inputs=tuple(input_field for input_field in task.inputs if input_field.target != "input_path"),
                     outputs=(
                         InferenceArtifactSpec("image", "generated_image", required=True, preview=True),
                         InferenceArtifactSpec("manifest", "manifest", required=True),
@@ -1013,16 +1157,16 @@ def _entry_inference_spec(entry: CatalogEntry):
         for task in spec.tasks:
             inputs = []
             changed = False
-            for field in task.inputs:
+            for input_field in task.inputs:
                 if (
-                    field.target == "params"
-                    and _param_key(field.field_id) in {"interactions", "interaction", "interaction_signal", "action"}
-                    and (field.default is None or field.default == "")
+                    input_field.target == "params"
+                    and _param_key(input_field.field_id) in {"interactions", "interaction", "interaction_signal", "action"}
+                    and (input_field.default is None or input_field.default == "")
                 ):
-                    inputs.append(replace(field, default=entry.default_interactions))
+                    inputs.append(replace(input_field, default=entry.default_interactions))
                     changed = True
                 else:
-                    inputs.append(field)
+                    inputs.append(input_field)
             tasks.append(replace(task, inputs=tuple(inputs)) if changed else task)
         spec = replace(spec, tasks=tuple(tasks))
     if entry.default_prompt:
@@ -1030,12 +1174,12 @@ def _entry_inference_spec(entry: CatalogEntry):
         for task in spec.tasks:
             inputs = []
             changed = False
-            for field in task.inputs:
-                if field.target == "prompt" and (field.default is None or field.default == ""):
-                    inputs.append(replace(field, default=entry.default_prompt))
+            for input_field in task.inputs:
+                if input_field.target == "prompt" and (input_field.default is None or input_field.default == ""):
+                    inputs.append(replace(input_field, default=entry.default_prompt))
                     changed = True
                 else:
-                    inputs.append(field)
+                    inputs.append(input_field)
             tasks.append(replace(task, inputs=tuple(inputs)) if changed else task)
         spec = replace(spec, tasks=tuple(tasks))
     if entry.default_input_path:
@@ -1043,17 +1187,29 @@ def _entry_inference_spec(entry: CatalogEntry):
         for task in spec.tasks:
             inputs = []
             changed = False
-            for field in task.inputs:
-                if field.target == "input_path":
-                    inputs.append(replace(field, default=entry.default_input_path))
+            for input_field in task.inputs:
+                if input_field.target == "input_path":
+                    inputs.append(replace(input_field, default=entry.default_input_path))
                     changed = True
                 else:
-                    inputs.append(field)
+                    inputs.append(input_field)
             tasks.append(replace(task, inputs=tuple(inputs)) if changed else task)
         spec = replace(spec, tasks=tuple(tasks))
     extra_variants = _entry_extra_variants(entry)
     if not extra_variants:
         return spec
+    if entry.model_id == "sana":
+        return replace(
+            spec,
+            variants=extra_variants,
+            default_variant_id=SANA_DEFAULT_IMAGE_VARIANT_ID,
+        )
+    if entry.model_id == COGVIDEOX_STUDIO_PARENT_ID:
+        return replace(
+            spec,
+            variants=extra_variants,
+            default_variant_id=COGVIDEOX_DEFAULT_VARIANT_ID,
+        )
     existing_ids = {variant.variant_id for variant in spec.variants}
     merged = spec.variants + tuple(variant for variant in extra_variants if variant.variant_id not in existing_ids)
     return replace(spec, variants=merged)
@@ -1065,6 +1221,10 @@ def _entry_runtime_param_names(entry: CatalogEntry) -> set[str]:
 
 def _entry_runtime_options(entry: CatalogEntry) -> dict[str, dict[str, Any]]:
     names = _entry_runtime_param_names(entry)
+    declared_defaults = {
+        **dict(entry.default_call_kwargs),
+        **dict(entry.default_load_kwargs),
+    }
     options: dict[str, dict[str, Any]] = {}
     for key, aliases in RUNTIME_OPTION_ALIASES.items():
         matched = [alias for alias in aliases if alias in names]
@@ -1072,11 +1232,32 @@ def _entry_runtime_options(entry: CatalogEntry) -> dict[str, dict[str, Any]]:
         if key == "torch_compile" and entry.model_id in TORCH_COMPILE_ENV_MODELS:
             supported = True
             matched.append("WORLDFOUNDRY_ENABLE_TORCH_COMPILE")
+        default = next(
+            (
+                declared_defaults[alias]
+                for alias in aliases
+                if alias in declared_defaults
+            ),
+            False,
+        )
         options[key] = {
             "label": RUNTIME_OPTION_LABELS[key],
+            "kind": "boolean",
             "supported": supported,
             "targets": matched,
+            "default": bool(default),
         }
+    for key, raw_spec in RUNTIME_VALUE_OPTION_SPECS.items():
+        spec = dict(raw_spec)
+        supported = key in names
+        spec.update(
+            {
+                "supported": supported,
+                "targets": [key] if supported else [],
+                "default": declared_defaults.get(key, spec.get("default")),
+            }
+        )
+        options[key] = spec
     return options
 
 
@@ -1125,14 +1306,14 @@ def _resolve_inference_contract(
 
     model_ref = payload.model_ref or _variant_model_ref(entry, variant)
     load_kwargs = _variant_load_kwargs(entry, variant)
-    for field in task.inputs:
-        if field.target == "load_kwargs" and field.default is not None:
+    for input_field in task.inputs:
+        if input_field.target == "load_kwargs" and input_field.default is not None:
             # Task profiles may specialize a variant's loading policy.  For
             # example, Cosmos3 action inference intentionally skips the audio
             # tokenizer even though the same Nano checkpoint loads it for
             # sound-generation tasks.  Explicit request load_kwargs are merged
             # later and therefore remain the final override.
-            load_kwargs[field.field_id] = field.default
+            load_kwargs[input_field.field_id] = input_field.default
     call_kwargs = {}
     if entry.model_id == "cosmos3":
         # Cosmos3 variants carry a complete T2V fallback, while the selected
@@ -1200,25 +1381,58 @@ def _merge_official_links(*link_rows: Mapping[str, str]) -> dict[str, str]:
     return merged
 
 
+def _normalize_official_links(links: Mapping[str, str]) -> dict[str, str]:
+    """Keep GitHub slots for github.com URLs; treat other official sites as project pages."""
+    normalized = {key: value for key, value in links.items() if value}
+    github = normalized.get("github") or ""
+    if github and "github.com/" not in github.casefold():
+        normalized.setdefault("project", github)
+        normalized.pop("github", None)
+    return normalized
+
+
+_PAPER_SOURCE_KEYS = (
+    "paper",
+    "paper_url",
+    "paper_plus_plus",
+    "arxiv",
+    "arxiv_url",
+    "technical_report",
+    "tech_report",
+    "causal_paper",
+    "publication",
+    "pdf",
+)
+_PROJECT_SOURCE_KEYS = (
+    "project_page",
+    "project",
+    "homepage",
+    "website",
+    "webpage",
+    "project_url",
+    "official_page",
+    "demo_page",
+    "worldarena_space",
+)
+
+
+def _first_catalog_url(*values: Any) -> str:
+    for value in values:
+        text = _catalog_url_value(value)
+        if text:
+            return text
+    return ""
+
+
 def _official_links_from_sources(sources: Mapping[str, Any]) -> dict[str, str]:
     links: dict[str, str] = {}
-    github = _catalog_url_value(sources.get("github"))
+    github = _catalog_url_value(sources.get("github")) or _catalog_url_value(sources.get("inference_github"))
     if github:
         links["github"] = github
-    paper = (
-        _catalog_url_value(sources.get("paper"))
-        or _catalog_url_value(sources.get("paper_url"))
-        or _catalog_url_value(sources.get("paper_plus_plus"))
-        or _catalog_url_value(sources.get("arxiv"))
-    )
+    paper = _first_catalog_url(*(sources.get(key) for key in _PAPER_SOURCE_KEYS))
     if paper:
         links["paper"] = paper
-    project = (
-        _catalog_url_value(sources.get("project_page"))
-        or _catalog_url_value(sources.get("project"))
-        or _catalog_url_value(sources.get("homepage"))
-        or _catalog_url_value(sources.get("worldarena_space"))
-    )
+    project = _first_catalog_url(*(sources.get(key) for key in _PROJECT_SOURCE_KEYS))
     if project:
         links["project"] = project
     return links
@@ -1245,13 +1459,19 @@ def _official_links_from_catalog_entry(entry: Mapping[str, Any]) -> dict[str, st
 
     links = _merge_official_links(links, _official_links_from_sources(sources))
 
-    paper = _catalog_url_value(entry.get("paper_url")) or _catalog_url_value(entry.get("paper"))
+    paper = _first_catalog_url(*(entry.get(key) for key in _PAPER_SOURCE_KEYS))
     if paper:
         links.setdefault("paper", paper)
-    project = _catalog_url_value(entry.get("project_page")) or _catalog_url_value(entry.get("project"))
+    project = _first_catalog_url(*(entry.get(key) for key in _PROJECT_SOURCE_KEYS))
     if project:
         links.setdefault("project", project)
-    return links
+    source = entry.get("source")
+    if isinstance(source, Mapping):
+        links = _merge_official_links(links, _official_links_from_sources(source))
+        github = _catalog_url_value(source.get("official_repo_url"))
+        if github:
+            links.setdefault("github", github)
+    return _normalize_official_links(links)
 
 
 def _catalog_entry_link_keys(entry: Mapping[str, Any]) -> tuple[str, ...]:
@@ -1313,17 +1533,28 @@ def _entry_official_links(entry: CatalogEntry) -> dict[str, str]:
     github_ref = _github_url_from_model_ref(entry.default_model_ref)
     if github_ref:
         links.setdefault("github", github_ref)
-    return links
+    return _normalize_official_links(links)
 
 
 def _model_payload(entry: CatalogEntry) -> dict[str, Any]:
     template_id = _template_id_hint(entry)
     infer_spec = _entry_inference_spec(entry)
     variant_payloads = []
+    extra_by_id = {
+        str(raw_variant.get("variant_id") or "").strip(): raw_variant
+        for raw_variant in entry.extra_variants
+    }
     for variant in infer_spec.variants:
         row = variant.to_dict()
         row["model_ref"] = _variant_model_ref(entry, variant)
         row["load_kwargs"] = _variant_load_kwargs(entry, variant)
+        extra = extra_by_id.get(variant.variant_id) or {}
+        if extra.get("workload_type"):
+            row["workload_type"] = extra["workload_type"]
+        if extra.get("default_prompt"):
+            row["default_prompt"] = extra["default_prompt"]
+        if extra.get("default_input_path"):
+            row["default_input_path"] = extra["default_input_path"]
         variant_payloads.append(row)
     return {
         "id": entry.model_id,
@@ -1332,6 +1563,7 @@ def _model_payload(entry: CatalogEntry) -> dict[str, Any]:
         "family": entry.family,
         "summary": entry.summary,
         "tags": list(entry.tags),
+        "aliases": list(entry.aliases),
         "backend": entry.default_backend,
         "model_ref": entry.default_model_ref,
         "endpoint": entry.default_endpoint,
@@ -1353,9 +1585,25 @@ def _model_payload(entry: CatalogEntry) -> dict[str, Any]:
     }
 
 
+_WORKSPACE_MODELS_LOCK = threading.Lock()
+
+
 @lru_cache(maxsize=1)
-def _workspace_models() -> tuple[dict[str, Any], ...]:
+def _workspace_models_cached() -> tuple[dict[str, Any], ...]:
     return tuple(_model_payload(entry) for entry in _studio_catalog())
+
+
+def _workspace_models() -> tuple[dict[str, Any], ...]:
+    """Return the catalog without duplicating an expensive cold build.
+
+    ``functools.lru_cache`` is thread-safe for cache bookkeeping, but it may
+    execute a cold miss more than once when requests arrive concurrently.
+    Keep the cache lookup inside one lock so the first ``/api/models`` request
+    performs the filesystem-heavy catalog build and every follower reuses it.
+    """
+
+    with _WORKSPACE_MODELS_LOCK:
+        return _workspace_models_cached()
 
 
 @lru_cache(maxsize=1)
@@ -1482,22 +1730,8 @@ def _evaluation_catalog_payload() -> dict[str, Any]:
 
 
 def _evaluation_examples_payload() -> list[dict[str, Any]]:
-    return [
-        {
-            "id": "existing-results-validation",
-            "label": "Existing Results Validation",
-            "eval_mode": "existing-results",
-            "benchmark_id": "workspace-existing-results-validation",
-            "model_id": "workspace-demo-model",
-            "dataset_id": "workspace-validation-fixture",
-            "results_path": str(EVALUATION_VALIDATION_RESULTS_PATH),
-            "requests_path": "",
-            "metrics": ["artifact_count", "required_artifacts_present"],
-            "required_artifacts": ["generated_video"],
-            "call_kwargs": {},
-            "load_kwargs": {},
-        }
-    ]
+    """Public installs use user-provided evaluation inputs."""
+    return []
 
 
 def _param_key(value: str) -> str:
@@ -1513,6 +1747,62 @@ def _call_param_names(entry: CatalogEntry) -> set[str]:
 
 def _load_param_names(entry: CatalogEntry) -> set[str]:
     return set(entry.load_params) | set(entry.default_load_kwargs)
+
+
+def _hf_checkpoint_repo_identity(value: Any) -> tuple[str, str] | None:
+    """Return an HF owner/repo identity only for recognizable repository refs."""
+
+    text = str(value or "").strip().rstrip("/\\")
+    if not text:
+        return None
+    normalized = text.replace("\\", "/")
+    parts = tuple(part for part in normalized.split("/") if part)
+    for part in reversed(parts):
+        if not part.startswith("models--"):
+            continue
+        owner, separator, repo = part.removeprefix("models--").partition("--")
+        if separator and owner and repo:
+            return owner, repo
+    leaf = parts[-1] if parts else normalized
+    owner, separator, repo = leaf.partition("--")
+    if separator and owner and repo:
+        return owner, repo
+    if not normalized.startswith(("/", "./", "../")) and len(parts) == 2:
+        owner, repo = parts
+        if owner and repo:
+            return owner, repo
+    return None
+
+
+def _checkpoint_refs_equivalent(first: Any, second: Any) -> bool:
+    first_text = str(first or "").strip().rstrip("/\\")
+    second_text = str(second or "").strip().rstrip("/\\")
+    if not first_text or not second_text:
+        return False
+    if first_text == second_text:
+        return True
+    first_identity = _hf_checkpoint_repo_identity(first_text)
+    return first_identity is not None and first_identity == _hf_checkpoint_repo_identity(second_text)
+
+
+def _rebind_default_model_path(
+    load_kwargs: dict[str, Any],
+    *,
+    model_ref: str,
+    variant_load_kwargs: Mapping[str, Any],
+    entry_default_load_kwargs: Mapping[str, Any],
+) -> None:
+    """Keep a catalog model_path aligned with an explicitly resolved model_ref."""
+
+    if "model_path" in variant_load_kwargs:
+        default_model_path = variant_load_kwargs["model_path"]
+    else:
+        default_model_path = entry_default_load_kwargs.get("model_path")
+    current_model_path = load_kwargs.get("model_path")
+    if str(current_model_path or "") != str(default_model_path or ""):
+        return
+    if _checkpoint_refs_equivalent(default_model_path, model_ref):
+        load_kwargs["model_path"] = model_ref
 
 
 def _supports_attention_backend(entry: CatalogEntry) -> bool:
@@ -1599,8 +1889,8 @@ def _param_key_aliases(key: str) -> tuple[str, ...]:
         "guidance": ("guidance_scale", "cfg_scale", "scale"),
         "seed": ("seed",),
         "fps": ("fps",),
-        "num_inference_steps": ("num_inference_steps", "sampling_steps", "infer_steps", "num_steps"),
-        "steps": ("num_inference_steps", "sampling_steps", "infer_steps", "num_steps"),
+        "num_inference_steps": ("num_inference_steps", "sampling_steps", "infer_steps", "num_steps", "steps"),
+        "steps": ("num_inference_steps", "sampling_steps", "infer_steps", "num_steps", "steps"),
         "negative_prompt": ("negative_prompt",),
         "interactions": ("interactions", "interaction_signal", "interaction", "action"),
     }
@@ -1609,10 +1899,10 @@ def _param_key_aliases(key: str) -> tuple[str, ...]:
 
 def _task_allowed_param_keys(task: InferenceTaskProfile) -> set[str]:
     allowed: set[str] = set()
-    for field in task.inputs:
-        if field.target != "params":
+    for input_field in task.inputs:
+        if input_field.target != "params":
             continue
-        field_key = _param_key(field.field_id)
+        field_key = _param_key(input_field.field_id)
         allowed.add(field_key)
         allowed.update(_param_key(alias) for alias in _param_key_aliases(field_key))
     return allowed
@@ -1620,11 +1910,11 @@ def _task_allowed_param_keys(task: InferenceTaskProfile) -> set[str]:
 
 def _task_field_default(task: InferenceTaskProfile, *field_ids: str, target: str | None = None) -> Any:
     wanted = {_param_key(field_id) for field_id in field_ids}
-    for field in task.inputs:
-        if target is not None and field.target != target:
+    for input_field in task.inputs:
+        if target is not None and input_field.target != target:
             continue
-        if _param_key(field.field_id) in wanted and field.default is not None and field.default != "":
-            return field.default
+        if _param_key(input_field.field_id) in wanted and input_field.default is not None and input_field.default != "":
+            return input_field.default
     return None
 
 
@@ -1641,9 +1931,9 @@ def _runtime_alias_names_for_supported_options(entry: CatalogEntry) -> set[str]:
 
 def _task_declared_kwargs(task: InferenceTaskProfile, target: str) -> set[str]:
     return {
-        _param_key(field.field_id)
-        for field in task.inputs
-        if field.target == target
+        _param_key(input_field.field_id)
+        for input_field in task.inputs
+        if input_field.target == target
     }
 
 
@@ -1706,12 +1996,12 @@ def _validate_field_choice(
 
 def _task_choice_fields(task: InferenceTaskProfile, target: str) -> dict[str, tuple[str, tuple[str, ...]]]:
     fields: dict[str, tuple[str, tuple[str, ...]]] = {}
-    for field in task.inputs:
-        if field.target != target or not field.choices:
+    for input_field in task.inputs:
+        if input_field.target != target or not input_field.choices:
             continue
-        field_key = _param_key(field.field_id)
+        field_key = _param_key(input_field.field_id)
         for key in (field_key, *_param_key_aliases(field_key)):
-            fields[_param_key(key)] = (field.field_id, field.choices)
+            fields[_param_key(key)] = (input_field.field_id, input_field.choices)
     return fields
 
 
@@ -1725,10 +2015,10 @@ def _validate_task_field_choices(entry: CatalogEntry, task: InferenceTaskProfile
         if not fields:
             continue
         for key, value in values.items():
-            field = fields.get(_param_key(key))
-            if field is None:
+            choice_field = fields.get(_param_key(key))
+            if choice_field is None:
                 continue
-            field_id, choices = field
+            field_id, choices = choice_field
             _validate_field_choice(entry, task, field_id, choices, value)
 
     direct_values = {
@@ -1737,10 +2027,10 @@ def _validate_task_field_choices(entry: CatalogEntry, task: InferenceTaskProfile
         "negative_prompt": payload.negative_prompt,
         "model_ref": payload.model_ref,
     }
-    for field in task.inputs:
-        if field.target not in direct_values:
+    for input_field in task.inputs:
+        if input_field.target not in direct_values:
             continue
-        _validate_field_choice(entry, task, field.field_id, field.choices, direct_values[field.target])
+        _validate_field_choice(entry, task, input_field.field_id, input_field.choices, direct_values[input_field.target])
 
 
 def _validate_inference_payload(entry: CatalogEntry, task: InferenceTaskProfile, payload: JobCreateRequest) -> None:
@@ -1919,6 +2209,38 @@ def _validate_runtime_options(entry: CatalogEntry, params: dict[str, Any]) -> No
             status_code=400,
             detail=f"{entry.model_id} does not implement these runtime options: {labels}",
         )
+    for key, spec in RUNTIME_VALUE_OPTION_SPECS.items():
+        if key not in params:
+            continue
+        option = options.get(key, {})
+        if not option.get("supported"):
+            raise HTTPException(
+                status_code=400,
+                detail=f"{entry.model_id} does not implement runtime option {key}",
+            )
+        value = params[key]
+        choices = tuple(str(choice) for choice in spec.get("choices", ()))
+        if choices and str(value) not in choices:
+            raise HTTPException(
+                status_code=400,
+                detail=f"{key} must be one of: {', '.join(choices)}",
+            )
+        if spec.get("kind") == "integer":
+            if isinstance(value, bool):
+                valid_integer = False
+            else:
+                try:
+                    normalized = int(value)
+                except (TypeError, ValueError):
+                    valid_integer = False
+                else:
+                    minimum = int(spec.get("minimum", 0))
+                    valid_integer = normalized >= minimum
+            if not valid_integer:
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"{key} must be an integer >= {spec.get('minimum', 0)}",
+                )
 
 
 def _set_runtime_option_value(target: dict[str, Any], alias: str, value: bool) -> None:
@@ -1954,6 +2276,9 @@ def _apply_runtime_options(
 def _inference_run_kwargs(payload: JobCreateRequest, *, validate: bool = True) -> tuple[CatalogEntry, dict[str, Any]]:
     entry = find_entry(payload.model_id)
     variant, task, model_ref, variant_call_kwargs, variant_load_kwargs, contract = _resolve_inference_contract(entry, payload)
+    runtime_id = cogvideox_runtime_model_id(entry.model_id, variant.variant_id)
+    if runtime_id:
+        entry = find_runtime_entry(runtime_id)
     if validate:
         _validate_inference_payload(entry, task, payload)
     call_kwargs, load_kwargs = _merge_common_params(
@@ -1965,6 +2290,12 @@ def _inference_run_kwargs(payload: JobCreateRequest, *, validate: bool = True) -
     if variant.variant_id not in _entry_extra_variant_ids(entry):
         call_kwargs = {**entry.default_call_kwargs, **call_kwargs}
     load_kwargs = {**entry.default_load_kwargs, **load_kwargs}
+    _rebind_default_model_path(
+        load_kwargs,
+        model_ref=model_ref,
+        variant_load_kwargs=variant_load_kwargs,
+        entry_default_load_kwargs=entry.default_load_kwargs,
+    )
     params = dict(payload.params or {})
     interactions = params.get("interactions")
     if interactions is None:
@@ -2117,7 +2448,11 @@ def _prepared_evaluation_from_payload(payload: JobCreateRequest, output_dir: str
 
 def _run_evaluation(payload: JobCreateRequest, job: StudioJob | None = None) -> dict[str, Any]:
     from worldfoundry.evaluation.runner import EvaluateRunRequest, run_evaluate
-    from worldfoundry.evaluation.tasks.execution.orchestration.plan import evaluate_request_from_run_plan, load_run_plan, validate_run_plan
+    from worldfoundry.evaluation.tasks.execution.orchestration.plan import (
+        evaluate_request_from_run_plan,
+        load_run_plan,
+        validate_run_plan,
+    )
 
     output_dir = _optional_path(payload.output_dir) or _workspace_job_output_dir("evaluations", job.job_id if job else None)
     intent_mode = (payload.eval_mode or "existing-results").strip().lower().replace("_", "-")
@@ -2376,26 +2711,78 @@ def _recent_persisted_runs(limit: int = 100) -> list[RunRecord]:
     return [record for record in MANAGER.list_recent_runs(limit=limit) if record.run_id not in active]
 
 
+_REGISTERED_ARTIFACT_CACHE_LOCK = threading.Lock()
+_REGISTERED_ARTIFACT_CACHE_SIGNATURE: tuple[Any, ...] | None = None
+_REGISTERED_ARTIFACT_CACHE_PATHS: frozenset[Path] = frozenset()
+
+
 def _registered_artifact_paths() -> set[Path]:
-    paths: set[Path] = set()
-    for job in JOBS.list():
-        for _, path in _result_artifact_paths(job.result):
-            try:
-                paths.add(Path(path).expanduser().resolve())
-            except (OSError, RuntimeError):
-                continue
-    for record in _recent_persisted_runs():
-        for _, path in _result_artifact_paths(record):
-            try:
-                paths.add(Path(path).expanduser().resolve())
-            except (OSError, RuntimeError):
-                continue
-    return paths
+    """Return the exact-path artifact allowlist, reusing an unchanged index."""
+
+    jobs = JOBS.list()
+    active_run_ids = {
+        job.result.run_id
+        for job in jobs
+        if isinstance(job.result, RunRecord)
+    }
+    persisted_runs = [
+        record
+        for record in MANAGER.list_recent_runs(limit=100)
+        if record.run_id not in active_run_ids
+    ]
+    job_rows = [(job, _result_artifact_paths(job.result)) for job in jobs]
+    persisted_rows = [(record, _result_artifact_paths(record)) for record in persisted_runs]
+    signature: tuple[Any, ...] = (
+        id(JOBS),
+        id(MANAGER),
+        tuple(
+            (job.job_id, job.status, id(job.result), tuple(path for _, path in rows))
+            for job, rows in job_rows
+        ),
+        tuple(
+            (record.run_id, id(record), tuple(path for _, path in rows))
+            for record, rows in persisted_rows
+        ),
+    )
+
+    global _REGISTERED_ARTIFACT_CACHE_PATHS, _REGISTERED_ARTIFACT_CACHE_SIGNATURE
+    with _REGISTERED_ARTIFACT_CACHE_LOCK:
+        if signature == _REGISTERED_ARTIFACT_CACHE_SIGNATURE:
+            return set(_REGISTERED_ARTIFACT_CACHE_PATHS)
+
+        paths: set[Path] = set()
+        for _, rows in job_rows:
+            for _, path in rows:
+                try:
+                    paths.add(Path(path).expanduser().resolve())
+                except (OSError, RuntimeError):
+                    continue
+        for _, rows in persisted_rows:
+            for _, path in rows:
+                try:
+                    paths.add(Path(path).expanduser().resolve())
+                except (OSError, RuntimeError):
+                    continue
+        _REGISTERED_ARTIFACT_CACHE_SIGNATURE = signature
+        _REGISTERED_ARTIFACT_CACHE_PATHS = frozenset(paths)
+        return set(paths)
+
+
+def _gallery_poster_url(*, job_id: str = "", run_id: str = "", record: RunRecord) -> str:
+    """Advertise a still for video cards even when the run never persisted preview_image."""
+    if not (record.preview_video or record.preview_image or record.gallery):
+        return ""
+    if job_id:
+        return f"/api/jobs/{job_id}/image"
+    if run_id:
+        return f"/api/runs/{run_id}/image"
+    return ""
 
 
 def _gallery_row_from_job(job: StudioJob) -> dict[str, Any] | None:
     if not isinstance(job.result, RunRecord):
         return None
+    image_url = _gallery_poster_url(job_id=job.job_id, record=job.result)
     return {
         "job_id": job.job_id,
         "run_id": job.result.run_id,
@@ -2404,17 +2791,64 @@ def _gallery_row_from_job(job: StudioJob) -> dict[str, Any] | None:
         "model_id": job.model_id,
         "prompt": dict(job.metadata).get("prompt", ""),
         "video_url": f"/api/jobs/{job.job_id}/video" if job.result.preview_video else "",
-        "image_url": f"/api/jobs/{job.job_id}/image" if job.result.preview_image else "",
+        "image_url": image_url,
+        "poster_url": image_url,
         "model_url": f"/api/jobs/{job.job_id}/model" if job.result.preview_model else "",
         "output_dir": job.result.output_dir,
         "visualization_actions": _result_visualization_actions(job.result, model_id=job.model_id),
     }
 
 
+def _invalidate_registered_artifact_cache() -> None:
+    global _REGISTERED_ARTIFACT_CACHE_SIGNATURE, _REGISTERED_ARTIFACT_CACHE_PATHS
+    with _REGISTERED_ARTIFACT_CACHE_LOCK:
+        _REGISTERED_ARTIFACT_CACHE_SIGNATURE = None
+        _REGISTERED_ARTIFACT_CACHE_PATHS = frozenset()
+
+
+def _delete_gallery_item(job_id: str = "", run_id: str = "") -> dict[str, Any]:
+    """Remove a Gallery row and its persisted Studio run directory."""
+
+    job_id = str(job_id or "").strip()
+    run_id = str(run_id or "").strip()
+    if not job_id and not run_id:
+        raise HTTPException(status_code=400, detail="job_id or run_id is required")
+
+    deleted_job_id = ""
+    if job_id:
+        job = JOBS.get(job_id)
+        if job is None:
+            if not run_id:
+                raise HTTPException(status_code=404, detail="unknown job")
+        else:
+            if not job.terminal:
+                raise HTTPException(status_code=409, detail=f"cannot delete a {job.status} job")
+            if not run_id and isinstance(job.result, RunRecord):
+                run_id = str(job.result.run_id or "").strip()
+            try:
+                JOBS.delete(job_id)
+            except ValueError as exc:
+                raise HTTPException(status_code=409, detail=str(exc)) from exc
+            deleted_job_id = job_id
+
+    deleted_run_id = ""
+    if run_id:
+        try:
+            MANAGER.delete_run(run_id)
+            deleted_run_id = run_id
+        except KeyError as exc:
+            if not deleted_job_id:
+                raise HTTPException(status_code=404, detail="run not found") from exc
+
+    _invalidate_registered_artifact_cache()
+    return {"ok": True, "job_id": deleted_job_id, "run_id": deleted_run_id}
+
+
 def _gallery_row_from_run(record: RunRecord) -> dict[str, Any]:
     metadata = dict(record.metadata or {})
     request = metadata.get("request")
     prompt = request.get("prompt", "") if isinstance(request, dict) else ""
+    image_url = _gallery_poster_url(run_id=record.run_id, record=record)
     return {
         "job_id": "",
         "run_id": record.run_id,
@@ -2423,7 +2857,8 @@ def _gallery_row_from_run(record: RunRecord) -> dict[str, Any]:
         "model_id": record.model_id,
         "prompt": prompt,
         "video_url": f"/api/runs/{record.run_id}/video" if record.preview_video else "",
-        "image_url": f"/api/runs/{record.run_id}/image" if record.preview_image else "",
+        "image_url": image_url,
+        "poster_url": image_url,
         "model_url": f"/api/runs/{record.run_id}/model" if record.preview_model else "",
         "output_dir": record.output_dir,
         "visualization_actions": _result_visualization_actions(record, model_id=record.model_id),
@@ -2529,12 +2964,12 @@ def _safe_file_response(path_text: str | None, request: Request | None = None) -
     if not path.exists() or not path.is_file():
         raise HTTPException(status_code=404, detail="file not found")
     workspace_root = Path(MANAGER.workspace_root).resolve()
+    # Registered artifacts may legitimately live outside the workspace root
+    # (session-scoped exact-path allowlist); everything else must resolve under
+    # the workspace via the shared serving.path_allowed check.
     registered = path in _registered_artifact_paths()
-    if not registered:
-        try:
-            path.relative_to(workspace_root)
-        except ValueError as exc:
-            raise HTTPException(status_code=403, detail="file is outside Studio workspace") from exc
+    if not registered and not path_allowed(path, (workspace_root,)):
+        raise HTTPException(status_code=403, detail="file is outside Studio workspace")
     media_type = _file_media_type(path)
     headers = {
         "Accept-Ranges": "bytes",
@@ -2547,9 +2982,39 @@ def _safe_file_response(path_text: str | None, request: Request | None = None) -
     return FileResponse(path, media_type=media_type, headers=headers)
 
 
-def create_app() -> FastAPI:
+def create_app(auth_token: str = "") -> FastAPI:
+    """Build the Workspace FastAPI app.
+
+    This app is a single-user local tool: SETTINGS, VISUALIZER_MANAGED, JOBS,
+    and MANAGER are process-global, so every connected client shares one
+    configuration and one managed viewer per mode. Multi-user isolation is out
+    of scope. ``auth_token``, when non-empty, is required on every non-static
+    request (``Authorization: Bearer <token>`` or ``?token=<token>``); it is
+    enforced by ``main()`` for non-loopback binds.
+    """
+
     _load_settings_from_disk()
     app = FastAPI(title="OpenEnvision Workspace")
+    app.router.add_event_handler("shutdown", _shutdown_workspace)
+
+    if auth_token:
+        static_paths = {"/", "/favicon.ico", "/assets/openenvision-logo.png"}
+
+        @app.middleware("http")
+        async def require_studio_token(request: Request, call_next):
+            if request.url.path in static_paths:
+                return await call_next(request)
+            if not request_token_valid(
+                auth_token,
+                authorization_header=request.headers.get("authorization"),
+                query_token=request.query_params.get("token"),
+            ):
+                return Response(
+                    status_code=401,
+                    content="Missing or invalid Studio auth token.",
+                    media_type="text/plain",
+                )
+            return await call_next(request)
 
     @app.get("/", response_class=HTMLResponse)
     def index() -> str:
@@ -2569,9 +3034,11 @@ def create_app() -> FastAPI:
 
     @app.post("/api/settings")
     def update_settings(payload: SettingsUpdateRequest) -> dict[str, Any]:
-        SETTINGS.update({key: _coerce_setting_value(key, value) for key, value in payload.values.items()})
-        _save_settings_to_disk()
-        return dict(SETTINGS)
+        coerced = {key: _coerce_setting_value(key, value) for key, value in payload.values.items()}
+        with _SETTINGS_LOCK:
+            SETTINGS.update(coerced)
+            _save_settings_to_disk()
+            return dict(SETTINGS)
 
     @app.get("/api/models")
     def list_models(workload_type: str | None = None) -> list[dict[str, Any]]:
@@ -2773,7 +3240,7 @@ def create_app() -> FastAPI:
         job = JOBS.get(job_id)
         if job is None or not isinstance(job.result, RunRecord):
             raise HTTPException(status_code=404, detail="image not found")
-        return _safe_file_response(job.result.preview_image, request=request)
+        return _safe_file_response(bind_run_preview_image(job.result), request=request)
 
     @app.get("/api/jobs/{job_id}/model")
     def get_job_model(job_id: str, request: Request) -> Response:
@@ -2796,7 +3263,7 @@ def create_app() -> FastAPI:
             record = MANAGER.load_run(run_id)
         except KeyError as exc:
             raise HTTPException(status_code=404, detail="run not found") from exc
-        return _safe_file_response(record.preview_image, request=request)
+        return _safe_file_response(bind_run_preview_image(record), request=request)
 
     @app.get("/api/runs/{run_id}/model")
     def get_run_model(run_id: str, request: Request) -> Response:
@@ -2823,6 +3290,10 @@ def create_app() -> FastAPI:
                 rows.append(row)
         rows.extend(_gallery_row_from_run(record) for record in _recent_persisted_runs())
         return rows
+
+    @app.delete("/api/gallery")
+    def delete_gallery(job_id: str = "", run_id: str = "") -> dict[str, Any]:
+        return _delete_gallery_item(job_id=job_id, run_id=run_id)
 
     @app.get("/api/artifacts/file")
     def artifact_file(path: str, request: Request) -> Response:
@@ -3100,10 +3571,52 @@ WORKSPACE_HTML = r"""
       line-height: 1.5;
     }
     .split {
+      --split-left: 360px;
+      --split-handle: 10px;
       display: grid;
-      grid-template-columns: minmax(420px, 1fr) 400px;
-      gap: 20px;
-      align-items: start;
+      grid-template-columns: var(--split-left) var(--split-handle) minmax(0, 1fr);
+      gap: 0;
+      align-items: stretch;
+      min-width: 0;
+    }
+    .splitHandle {
+      position: relative;
+      width: var(--split-handle);
+      cursor: col-resize;
+      touch-action: none;
+      user-select: none;
+      border-radius: 999px;
+      background: transparent;
+      align-self: stretch;
+      z-index: 2;
+    }
+    .splitHandle::before {
+      content: "";
+      position: absolute;
+      top: 12px;
+      bottom: 12px;
+      left: 50%;
+      width: 3px;
+      transform: translateX(-50%);
+      border-radius: 999px;
+      background: var(--line);
+      transition: background 0.15s ease, box-shadow 0.15s ease;
+    }
+    .splitHandle:hover::before,
+    .splitHandle:focus-visible::before,
+    .split.is-resizing .splitHandle::before {
+      background: var(--accent);
+      box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.18);
+    }
+    .splitHandle:focus-visible {
+      outline: none;
+    }
+    .split.is-resizing {
+      cursor: col-resize;
+      user-select: none;
+    }
+    .split.is-resizing .panel {
+      pointer-events: none;
     }
     .panel {
       border: 1px solid var(--line);
@@ -3111,6 +3624,7 @@ WORKSPACE_HTML = r"""
       border-radius: var(--radius);
       box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
       overflow: hidden;
+      min-width: 0;
     }
     .panelHead {
       display: flex;
@@ -3164,10 +3678,139 @@ WORKSPACE_HTML = r"""
     .muted { color: var(--muted); }
     .tiny { font-size: 12px; }
     .detail {
+      align-content: start;
       display: grid;
-      gap: 16px;
-      padding: 20px;
+      gap: 14px;
+      padding: 16px 20px 20px;
+      min-height: 0;
     }
+    .detailTabs {
+      align-items: center;
+      align-self: start;
+      display: flex;
+      flex-wrap: wrap;
+      flex: none;
+      gap: 8px;
+      margin: 0;
+    }
+    .detailTab {
+      appearance: none;
+      align-items: center;
+      border: 1px solid var(--line);
+      background: #111214;
+      color: var(--muted);
+      border-radius: 999px;
+      display: inline-flex;
+      flex: none;
+      gap: 2px;
+      height: auto;
+      line-height: 1.2;
+      padding: 6px 12px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      white-space: nowrap;
+    }
+    .detailTab:hover { border-color: var(--line-hover); color: var(--text); }
+    .detailTab.active {
+      background: rgba(16, 185, 129, 0.12);
+      border-color: rgba(16, 185, 129, 0.45);
+      color: #34d399;
+    }
+    .detailTabPanel { display: none; gap: 16px; min-width: 0; }
+    .detailTabPanel.active { display: grid; align-content: start; }
+    .logToolbar {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 8px;
+    }
+    .logFilter {
+      appearance: none;
+      border: 1px solid var(--line);
+      background: #111214;
+      color: var(--muted);
+      border-radius: 999px;
+      padding: 5px 10px;
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .logFilter.active {
+      color: var(--text);
+      border-color: var(--line-hover);
+      background: #1a1c1e;
+    }
+    .logFilter.system.active { color: #fbbf24; border-color: rgba(251, 191, 36, 0.35); }
+    .logFilter.stdout.active { color: #60a5fa; border-color: rgba(96, 165, 250, 0.35); }
+    .logFilter.stderr.active { color: #f87171; border-color: rgba(248, 113, 113, 0.35); }
+    .logFollow {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      margin-left: auto;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 500;
+      cursor: pointer;
+      user-select: none;
+    }
+    .logFollow input {
+      width: 14px;
+      height: 14px;
+      min-height: 0;
+      margin: 0;
+      accent-color: var(--accent);
+      cursor: pointer;
+    }
+    .logPanel {
+      margin: 0;
+      border: 1px solid var(--line);
+      background: #09090b;
+      border-radius: var(--radius-sm);
+      padding: 12px 14px;
+      color: #e5e7eb;
+      overflow: auto;
+      min-height: 50vh;
+      max-height: min(72vh, 900px);
+      font-family: 'ui-monospace', 'SFMono-Regular', 'Menlo', 'Monaco', 'Consolas', monospace;
+      font-size: 12px;
+      line-height: 1.55;
+    }
+    .logLine {
+      display: grid;
+      grid-template-columns: auto 1fr;
+      gap: 8px;
+      align-items: start;
+      padding: 2px 0;
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+    }
+    .logMeta {
+      color: #71717a;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+    .logLine.log-stream-system .logMeta { color: #fbbf24; }
+    .logLine.log-stream-stdout .logMeta { color: #60a5fa; }
+    .logLine.log-stream-stderr .logMeta { color: #f87171; }
+    .logText { color: #e5e7eb; }
+    .logBadge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 18px;
+      height: 18px;
+      margin-left: 4px;
+      padding: 0 5px;
+      border-radius: 999px;
+      background: #232529;
+      color: var(--muted);
+      font-size: 10px;
+      font-weight: 700;
+    }
+    .detailTab.active .logBadge { background: rgba(16, 185, 129, 0.18); color: #6ee7b7; }
     .detailGrid {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -3182,26 +3825,68 @@ WORKSPACE_HTML = r"""
     }
     .metric span { display: block; color: var(--muted); font-size: 12px; margin-bottom: 6px; font-weight: 500; }
     .metric strong { font-size: 14px; font-weight: 500; overflow-wrap: anywhere; }
+    .metric-wide { grid-column: 1 / -1; }
+    .pathMetric { min-height: 0; }
+    .pathRow {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      min-width: 0;
+    }
+    .pathBasename {
+      font-size: 14px;
+      font-weight: 600;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      min-width: 0;
+      flex: 1;
+    }
+    .pathParent {
+      margin-top: 6px;
+      font-family: 'ui-monospace', 'SFMono-Regular', 'Menlo', 'Monaco', 'Consolas', monospace;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .btn.tiny {
+      min-height: 28px;
+      padding: 4px 10px;
+      font-size: 11px;
+      flex-shrink: 0;
+    }
     .artifactLinks {
       display: flex;
       flex-wrap: wrap;
+      align-items: center;
+      align-self: start;
       gap: 8px;
     }
     .artifactLink {
       appearance: none;
+      box-sizing: border-box;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      flex: 0 0 auto;
+      height: 32px;
+      min-height: 32px;
+      max-height: 32px;
       border: 1px solid var(--line);
       background: #111214;
       color: var(--text);
       border-radius: var(--radius-sm);
-      padding: 7px 10px;
+      padding: 0 10px;
       font-size: 12px;
       font-weight: 500;
+      line-height: 1;
       text-decoration: none;
-      max-width: 100%;
-      overflow-wrap: anywhere;
+      white-space: nowrap;
       cursor: pointer;
     }
     .artifactLink:hover { border-color: var(--line-hover); background: #1a1c1e; }
+    .artifactLink.galleryDelete { color: #fca5a5; }
+    .artifactLink.galleryDelete:hover { border-color: #ef4444; background: #1c1010; }
     pre {
       margin: 0;
       border: 1px solid var(--line);
@@ -3210,7 +3895,8 @@ WORKSPACE_HTML = r"""
       padding: 16px;
       color: #e5e7eb;
       overflow: auto;
-      max-height: 320px;
+      min-height: 240px;
+      max-height: min(72vh, 900px);
       font-family: 'ui-monospace', 'SFMono-Regular', 'Menlo', 'Monaco', 'Consolas', monospace;
       font-size: 12px;
       line-height: 1.6;
@@ -3225,12 +3911,18 @@ WORKSPACE_HTML = r"""
       background: var(--panel);
       border-radius: var(--radius);
       padding: 16px;
-      display: grid;
+      display: flex;
+      flex-direction: column;
+      align-items: stretch;
       gap: 10px;
       min-height: 160px;
       min-width: 0;
       overflow: hidden;
       transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .itemCard > .artifactLinks {
+      margin-top: auto;
+      align-self: stretch;
     }
     .itemCard:hover {
       transform: translateY(-2px);
@@ -3245,6 +3937,80 @@ WORKSPACE_HTML = r"""
       line-height: 1.5;
       overflow-wrap: anywhere;
       word-break: break-word;
+    }
+    .catalogCard .catalogName {
+      display: -webkit-box;
+      -webkit-box-orient: vertical;
+      -webkit-line-clamp: 2;
+      line-clamp: 2;
+      overflow: hidden;
+      line-height: 1.3;
+      min-height: calc(15px * 1.3 * 2);
+    }
+    .catalogCard .catalogSummary {
+      display: -webkit-box;
+      -webkit-box-orient: vertical;
+      -webkit-line-clamp: 3;
+      line-clamp: 3;
+      overflow: hidden;
+      min-height: calc(13px * 1.5 * 3);
+    }
+    .galleryPrompt {
+      display: grid;
+      gap: 6px;
+      min-width: 0;
+    }
+    .galleryPromptText {
+      display: -webkit-box;
+      -webkit-box-orient: vertical;
+      -webkit-line-clamp: 3;
+      line-clamp: 3;
+      overflow: hidden;
+    }
+    .galleryPrompt.is-expanded .galleryPromptText,
+    .galleryPrompt.is-short .galleryPromptText {
+      display: block;
+      -webkit-line-clamp: unset;
+      line-clamp: unset;
+      overflow: visible;
+    }
+    .galleryPromptToggle {
+      appearance: none;
+      border: 0;
+      background: none;
+      padding: 0;
+      margin: 0;
+      width: fit-content;
+      color: var(--accent);
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      text-align: left;
+    }
+    .galleryPromptToggle:hover { color: var(--accent-hover); }
+    #galleryGrid.gridCards { align-items: stretch; }
+    .galleryCard { height: 100%; }
+    .galleryCard > strong {
+      display: -webkit-box;
+      -webkit-box-orient: vertical;
+      -webkit-line-clamp: 2;
+      line-clamp: 2;
+      overflow: hidden;
+      line-height: 1.3;
+      min-height: calc(15px * 1.3 * 2);
+    }
+    .galleryCard .mediaBox,
+    .galleryCard .mediaStack { flex-shrink: 0; }
+    .galleryCard .galleryPrompt {
+      flex: 1 1 auto;
+      min-height: calc(13px * 1.5 * 3 + 24px);
+    }
+    .galleryCard .galleryPromptText {
+      min-height: calc(13px * 1.5 * 3);
+    }
+    .galleryCard > .artifactLinks {
+      min-height: 32px;
+      flex-shrink: 0;
     }
     .visualizerCard {
       display: flex;
@@ -3263,20 +4029,6 @@ WORKSPACE_HTML = r"""
     .visualizerHead strong {
       min-height: 2.5em;
       line-height: 1.25;
-    }
-    .visualizerBadges {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 6px;
-      align-items: center;
-      min-height: 28px;
-    }
-    .visualizerTags {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 6px;
-      align-content: flex-start;
-      min-height: 112px;
     }
     .visualizerAliases {
       margin: 0;
@@ -3392,32 +4144,48 @@ WORKSPACE_HTML = r"""
       grid-area: 1 / 1;
     }
     .mediaBox video, .mediaBox img {
+      position: absolute;
+      inset: 0;
       width: 100%;
       height: 100%;
-      max-width: 100%;
-      max-height: 100%;
-      display: block;
       object-fit: contain;
       background: #09090b;
-      place-self: stretch;
     }
-    .mediaBox video:not([src]):not([poster]) { visibility: hidden; }
+    .mediaBox video:not([src]) { visibility: hidden; }
+    .mediaPoster {
+      z-index: 1;
+      pointer-events: none;
+    }
+    .mediaBox video[src] {
+      visibility: visible;
+      z-index: 0;
+      background: transparent;
+    }
+    .media-has-frame video {
+      z-index: 2;
+      background: #09090b;
+    }
+    .mediaStack {
+      display: flex;
+      flex-direction: column;
+      align-items: stretch;
+      gap: 8px;
+      min-width: 0;
+    }
     .mediaLoad {
       appearance: none;
-      border: 1px solid rgba(255,255,255,0.18);
-      background: rgba(255,255,255,0.08);
-      color: #f8fafc;
-      border-radius: 999px;
-      padding: 8px 14px;
+      align-self: flex-start;
+      border: 1px solid var(--line);
+      background: #111214;
+      color: var(--text);
+      border-radius: var(--radius-sm);
+      height: 32px;
+      padding: 0 10px;
       font-size: 12px;
-      font-weight: 600;
+      font-weight: 500;
       cursor: pointer;
-      backdrop-filter: blur(10px);
-      place-self: center;
-      position: relative;
-      z-index: 2;
     }
-    .mediaLoad:hover { background: rgba(255,255,255,0.14); border-color: rgba(255,255,255,0.28); }
+    .mediaLoad:hover { border-color: var(--line-hover); background: #1a1c1e; }
     .mediaHint {
       position: absolute;
       right: 10px;
@@ -3485,7 +4253,8 @@ WORKSPACE_HTML = r"""
       .navGroup { display: flex; align-items: center; gap: 8px; }
       .navLabel { display: none; }
       .navBtn { white-space: nowrap; }
-      .split { grid-template-columns: 1fr; }
+      .split { grid-template-columns: 1fr; gap: 16px; }
+      .splitHandle { display: none; }
       .formGrid, .checks, .visualizerControls { grid-template-columns: 1fr; }
     }
   </style>
@@ -3518,7 +4287,7 @@ WORKSPACE_HTML = r"""
       <div class="content">
         <section id="view-inference" class="view active">
           <div class="toolbar"><div class="filters"><label>Type<select id="jobTypeFilter"><option value="all">All jobs</option><option value="inference">Inference</option><option value="evaluation">Evaluation</option></select></label><label>Status<select id="statusFilter"><option value="all">All status</option><option>queued</option><option>running</option><option>completed</option><option>failed</option><option>cancelled</option></select></label></div><button class="btn" id="refreshJobs">Refresh</button></div>
-          <div class="split"><div class="panel"><div class="panelHead"><strong>Job Queue</strong><span class="muted tiny" id="jobCount">0 jobs</span></div><div class="jobList" id="jobList"></div></div><div class="panel"><div class="panelHead"><strong>Job Detail</strong><button class="btn danger" id="stopJob">Stop</button></div><div class="detail" id="jobDetail"><span class="muted">Select a job.</span></div></div></div>
+          <div class="split" id="jobSplit" data-split-key="worldfoundry.studio.jobSplitLeft" data-split-default="360" data-split-min-left="240" data-split-min-right="360"><div class="panel"><div class="panelHead"><strong>Job Queue</strong><span class="muted tiny" id="jobCount">0 jobs</span></div><div class="jobList" id="jobList"></div></div><div class="splitHandle" role="separator" aria-orientation="vertical" aria-label="Resize job queue and detail" title="Drag to resize · double-click to reset" tabindex="0"></div><div class="panel"><div class="panelHead"><strong>Job Detail</strong><button class="btn danger" id="stopJob">Stop</button></div><div class="detail" id="jobDetail"><span class="muted">Select a job.</span></div></div></div>
         </section>
         <section id="view-catalog" class="view"><div class="toolbar"><div class="filters"><label>Search<input id="catalogSearch" placeholder="model, tag, family" /></label><label>Workload<select id="catalogWorkload"><option value="all">All</option><option value="t2v">T2V</option><option value="i2v">I2V</option><option value="v2v">V2V</option><option value="3d">3D</option><option value="geometry">Geometry</option><option value="action">Action</option><option value="api">API</option><option value="world">World</option></select></label></div></div><div class="gridCards" id="catalogGrid"></div></section>
         <section id="view-gallery" class="view"><div class="gridCards" id="galleryGrid"></div></section>
@@ -3593,13 +4362,24 @@ WORKSPACE_HTML = r"""
           <label class="check"><input type="checkbox" id="cpuOffload" /> CPU Offload</label>
           <label class="check"><input type="checkbox" id="vaeOffload" /> VAE Offload</label>
           <label class="check"><input type="checkbox" id="textOffload" /> Text Encoder Offload</label>
+          <label class="check"><input type="checkbox" id="fuseQkv" /> Fused QKV</label>
+          <label class="check"><input type="checkbox" id="inplaceResidual" /> In-place Residual</label>
+          <label class="check"><input type="checkbox" id="staticCrossKv" /> Static Cross-KV</label>
+          <label class="check"><input type="checkbox" id="fusedRope" /> Fused RoPE</label>
+        </div>
+        <div class="formGrid" id="runtimeValues">
+          <label>QKV Execution<select id="qkvStrategy"><option value="auto">auto</option><option value="packed">packed</option><option value="split">split</option></select></label>
+          <label>QKV Split Threshold<input id="qkvSplitThreshold" type="number" min="1" value="8192" /></label>
+          <label>RoPE Precision<select id="ropePrecision"><option value="fp32">fp32</option><option value="fp64">fp64</option></select></label>
+          <label>RMSNorm Precision<select id="rmsNormPrecision"><option value="input">input</option><option value="fp32">fp32</option></select></label>
         </div>
       </div>
       <div class="modalFoot"><button class="btn" value="cancel">Cancel</button><button class="btn primary" id="createJob" value="default">Create Job</button></div>
     </form>
   </dialog>
   <script>
-    const state = { view: "inference", jobs: [], models: [], evaluationCatalog: {benchmarks: [], metrics: [], models: []}, visualizers: [], visualizerPreviewMode: "", activeJob: "", detailRenderKey: "", settings: {}, lazyVideoObserver: null, autoVideoPreloads: 0, visualizerRefreshInFlight: false, visualizerLastSync: 0 };
+    const studioAuthToken = new URLSearchParams(window.location.search).get("token") || "";
+    const state = { view: "inference", jobs: [], models: [], evaluationCatalog: {benchmarks: [], metrics: [], models: []}, visualizers: [], visualizerPreviewMode: "", activeJob: "", detailRenderKey: "", detailTab: "preview", detailLogCount: 0, logStreamFilter: "all", logFollowTail: true, settings: {}, lazyVideoObserver: null, autoVideoPreloads: 0, visualizerRefreshInFlight: false, visualizerLastSync: 0 };
     const MAX_AUTO_VIDEO_PRELOADS = 4;
     const JOB_VIEWS = new Set(["inference", "evaluation"]);
     const INFER_INFRA_FIELDS = ["workloadType","modelSelect","variantSelect","taskProfile","device","backend","attention","modelRef","endpoint","apiKey","callJson","loadJson"];
@@ -3633,7 +4413,17 @@ WORKSPACE_HTML = r"""
       torchCompile: "torch_compile",
       cpuOffload: "cpu_offload",
       vaeOffload: "vae_cpu_offload",
-      textOffload: "text_encoder_cpu_offload"
+      textOffload: "text_encoder_cpu_offload",
+      fuseQkv: "fuse_qkv",
+      inplaceResidual: "inplace_residual",
+      staticCrossKv: "static_cross_kv",
+      fusedRope: "fused_rope"
+    };
+    const RUNTIME_VALUE_CONTROLS = {
+      qkvStrategy: {key: "qkv_strategy", kind: "choice", fallback: "auto"},
+      qkvSplitThreshold: {key: "qkv_split_threshold", kind: "integer", fallback: 8192},
+      ropePrecision: {key: "rope_precision", kind: "choice", fallback: "fp32"},
+      rmsNormPrecision: {key: "rms_norm_precision", kind: "choice", fallback: "input"}
     };
     const VIEW_TITLES = {
       inference: "Inference",
@@ -3644,8 +4434,34 @@ WORKSPACE_HTML = r"""
       visualizers: "Visualizers"
     };
     const $ = (id) => document.getElementById(id);
-    async function api(path, opts) {
-      const res = await fetch(path, opts);
+    function isSameOriginHttpUrl(raw) {
+      try {
+        const url = new URL(String(raw || ""), window.location.href);
+        return url.origin === window.location.origin && ["http:", "https:"].includes(url.protocol);
+      } catch {
+        return false;
+      }
+    }
+    function authenticatedUrl(raw) {
+      const value = String(raw || "");
+      if (!studioAuthToken || !value) return value;
+      try {
+        const url = new URL(value, window.location.href);
+        if (isSameOriginHttpUrl(url)) {
+          url.searchParams.set("token", studioAuthToken);
+        }
+        return url.toString();
+      } catch {
+        return value;
+      }
+    }
+    async function api(path, opts = {}) {
+      const headers = new Headers(opts.headers || {});
+      const url = authenticatedUrl(path);
+      if (studioAuthToken && isSameOriginHttpUrl(url)) {
+        headers.set("Authorization", `Bearer ${studioAuthToken}`);
+      }
+      const res = await fetch(url, { ...opts, headers });
       if (!res.ok) throw new Error(await res.text());
       return res.json();
     }
@@ -3732,12 +4548,20 @@ WORKSPACE_HTML = r"""
       return `<span class="pill ${safeClassToken(extraClass || value)}">${escapeHtml(value)}</span>`;
     }
     function renderVideoBox(url, options = {}) {
-      const src = escapeHtml(url);
-      const poster = options.poster ? ` poster="${escapeHtml(options.poster)}"` : "";
+      const src = escapeHtml(authenticatedUrl(url));
+      const posterUrl = options.poster ? authenticatedUrl(options.poster) : "";
+      const poster = posterUrl ? ` poster="${escapeHtml(posterUrl)}"` : "";
+      const posterImg = posterUrl
+        ? `<img class="mediaPoster" loading="lazy" decoding="async" src="${escapeHtml(posterUrl)}" alt="" onerror="this.remove()" />`
+        : "";
       const eager = !!options.eager;
-      return `<div class="mediaBox ${eager ? "media-loaded" : ""}" data-media-box>
-        <video controls playsinline controlsList="nodownload" preload="${eager ? "metadata" : "none"}"${poster} data-src="${src}" data-eager="${eager ? "true" : "false"}"></video>
-        ${eager ? "" : `<button class="mediaLoad" type="button" data-load-video>Play preview</button><span class="mediaHint">video</span>`}
+      return `<div class="mediaStack ${eager ? "media-loaded" : ""}" data-media-box>
+        <div class="mediaBox">
+          ${posterImg}
+          <video controls playsinline controlsList="nodownload" preload="${eager ? "metadata" : "none"}"${poster} data-src="${src}" data-eager="${eager ? "true" : "false"}"></video>
+          ${eager ? "" : `<span class="mediaHint">video</span>`}
+        </div>
+        ${eager ? "" : `<button class="mediaLoad" type="button" data-load-video>Play preview</button>`}
       </div>`;
     }
     function gallerySubtitle(row) {
@@ -3745,16 +4569,78 @@ WORKSPACE_HTML = r"""
       if (prompt) return prompt;
       const runId = String(row.run_id || "").trim();
       if (runId) return runId;
-      const outputDir = String(row.output_dir || "").replace(/\/+$/, "");
-      if (!outputDir) return "";
-      const parts = outputDir.split("/");
-      return parts[parts.length - 1] || outputDir;
+      return pathBasename(row.output_dir || "");
+    }
+    function renderGalleryPrompt(row) {
+      return `<div class="galleryPrompt">
+        <p class="galleryPromptText">${escapeHtml(gallerySubtitle(row))}</p>
+        <button type="button" class="galleryPromptToggle" hidden aria-expanded="false">Show more</button>
+      </div>`;
+    }
+    function bindGalleryPrompts(root) {
+      if (!root) return;
+      root.querySelectorAll(".galleryPrompt").forEach(box => {
+        const textEl = box.querySelector(".galleryPromptText");
+        const btn = box.querySelector(".galleryPromptToggle");
+        if (!textEl || !btn) return;
+        const text = (textEl.textContent || "").trim();
+        const overflows = textEl.scrollHeight > textEl.clientHeight + 2;
+        if (!overflows && text.length < 120) {
+          box.classList.add("is-short");
+          btn.hidden = true;
+          return;
+        }
+        btn.hidden = false;
+        btn.onclick = () => {
+          const expanded = box.classList.toggle("is-expanded");
+          btn.setAttribute("aria-expanded", expanded ? "true" : "false");
+          btn.textContent = expanded ? "Show less" : "Show more";
+        };
+      });
+    }
+    function normalizePathText(path) {
+      return String(path || "").trim().replace(/\/+$/, "");
+    }
+    function pathBasename(path) {
+      const cleaned = normalizePathText(path);
+      if (!cleaned) return "";
+      const parts = cleaned.split("/");
+      return parts[parts.length - 1] || cleaned;
+    }
+    function pathParentText(path) {
+      const cleaned = normalizePathText(path);
+      const parts = cleaned.split("/");
+      if (parts.length <= 1) return cleaned;
+      parts.pop();
+      return parts.join("/");
+    }
+    function pathParentDisplay(path) {
+      const parent = pathParentText(path);
+      if (!parent) return "";
+      if (parent.length <= 56) return parent;
+      return "…" + parent.slice(-55);
+    }
+    function renderOutputPath(path) {
+      const value = normalizePathText(path);
+      if (!value) {
+        return `<div class="metric metric-wide pathMetric"><span>Output</span><strong class="muted">pending</strong></div>`;
+      }
+      const base = pathBasename(value);
+      const parent = pathParentDisplay(value);
+      return `<div class="metric metric-wide pathMetric">
+        <span>Output directory</span>
+        <div class="pathRow">
+          <strong class="pathBasename" title="${escapeHtml(value)}">${escapeHtml(base)}</strong>
+          <button type="button" class="btn tiny" data-copy-path="${escapeHtml(value)}">Copy path</button>
+        </div>
+        ${parent ? `<div class="pathParent muted tiny" title="${escapeHtml(value)}">${escapeHtml(parent)}</div>` : ""}
+      </div>`;
     }
     function renderImageBox(url) {
-      return `<div class="mediaBox"><img loading="lazy" decoding="async" src="${escapeHtml(url)}" /></div>`;
+      return `<div class="mediaBox"><img loading="lazy" decoding="async" src="${escapeHtml(authenticatedUrl(url))}" /></div>`;
     }
     function artifactUrl(path) {
-      return `/api/artifacts/file?path=${encodeURIComponent(path || "")}`;
+      return authenticatedUrl(`/api/artifacts/file?path=${encodeURIComponent(path || "")}`);
     }
     function artifactLink(label, path) {
       if (!path) return "";
@@ -3996,6 +4882,30 @@ WORKSPACE_HTML = r"""
         </div>
         ${links ? `<div class="artifactLinks">${links}</div>` : ""}`;
     }
+    function revealVideoFrame(video) {
+      const box = video && video.closest("[data-media-box]");
+      if (box) box.classList.add("media-has-frame");
+    }
+    function paintVideoFirstFrame(video, autoplay) {
+      if (!video || video.dataset.posterSeek === "1") return;
+      const seekFirst = () => {
+        if (video.dataset.posterSeek === "1") return;
+        video.dataset.posterSeek = "1";
+        if (!autoplay && video.paused) {
+          try {
+            const duration = Number(video.duration);
+            video.currentTime = Number.isFinite(duration) && duration > 0
+              ? Math.min(0.04, duration)
+              : 0.001;
+          } catch {}
+        }
+        if (video.readyState >= 2) revealVideoFrame(video);
+      };
+      video.addEventListener("seeked", () => revealVideoFrame(video), { once: true });
+      video.addEventListener("playing", () => revealVideoFrame(video), { once: true });
+      video.addEventListener("loadeddata", seekFirst, { once: true });
+      if (video.readyState >= 2) seekFirst();
+    }
     function activateVideo(video, autoplay = false) {
       if (!video || !video.dataset.src) return;
       if (!video.getAttribute("src")) {
@@ -4005,6 +4915,7 @@ WORKSPACE_HTML = r"""
       }
       const box = video.closest("[data-media-box]");
       if (box) box.classList.add("media-loaded");
+      paintVideoFirstFrame(video, autoplay);
       if (autoplay) video.play().catch(() => {});
     }
     function lazyVideoObserver() {
@@ -4059,6 +4970,123 @@ WORKSPACE_HTML = r"""
       $("pageTitle").textContent = VIEW_TITLES[view] || (view[0].toUpperCase() + view.slice(1));
     }
     function statusClass(status) { return "pill " + safeClassToken(status); }
+    function logStreamClass(stream) { return "log-stream-" + safeClassToken(stream || "log"); }
+    function logRowsFiltered(logRows) {
+      const filter = state.logStreamFilter || "all";
+      if (filter === "all") return logRows;
+      return logRows.filter(row => String(row.stream || "log") === filter);
+    }
+    function renderLogLine(row) {
+      const stream = String(row.stream || "log");
+      return `<div class="logLine ${logStreamClass(stream)}"><span class="logMeta">[${escapeHtml(stream)}]</span><span class="logText">${escapeHtml(row.text || "")}</span></div>`;
+    }
+    function renderLogPanelHtml(logRows) {
+      const rows = logRowsFiltered(logRows);
+      if (!rows.length) {
+        const filter = state.logStreamFilter || "all";
+        if (filter !== "all") return `<span class="muted">No ${escapeHtml(filter)} logs.</span>`;
+        return `<span class="muted">No logs yet.</span>`;
+      }
+      return rows.map(renderLogLine).join("");
+    }
+    function logPanelNearBottom(panel) {
+      if (!panel) return true;
+      return panel.scrollHeight - panel.scrollTop - panel.clientHeight < 48;
+    }
+    function scrollLogPanelToBottom(panel) {
+      if (!panel) return;
+      panel.scrollTop = panel.scrollHeight;
+    }
+    function updateLogBadge(count) {
+      const badge = $("jobLogBadge");
+      if (badge) badge.textContent = String(count || 0);
+    }
+    function setDetailTab(tab) {
+      state.detailTab = tab;
+      document.querySelectorAll("[data-detail-tab]").forEach(btn => btn.classList.toggle("active", btn.dataset.detailTab === tab));
+      document.querySelectorAll("[data-detail-panel]").forEach(panel => panel.classList.toggle("active", panel.dataset.detailPanel === tab));
+    }
+    function bindDetailTabs(root = document) {
+      root.querySelectorAll("[data-detail-tab]").forEach(btn => {
+        btn.onclick = () => setDetailTab(btn.dataset.detailTab || "preview");
+      });
+      root.querySelectorAll("[data-log-filter]").forEach(btn => {
+        btn.onclick = () => {
+          state.logStreamFilter = btn.dataset.logFilter || "all";
+          state.detailLogCount = -1;
+          root.querySelectorAll("[data-log-filter]").forEach(el => el.classList.toggle("active", el.dataset.logFilter === state.logStreamFilter));
+          const panel = $("jobLogPanel");
+          if (panel && panel.dataset.logSource) {
+            try {
+              updateJobLogs(JSON.parse(panel.dataset.logSource), { forceRebuild: true });
+            } catch {}
+          }
+        };
+      });
+      const follow = $("jobLogFollow");
+      if (follow) {
+        follow.checked = state.logFollowTail;
+        follow.onchange = () => { state.logFollowTail = follow.checked; };
+      }
+      const copyBtn = $("jobLogCopy");
+      if (copyBtn) {
+        copyBtn.onclick = async () => {
+          const panel = $("jobLogPanel");
+          if (!panel) return;
+          const text = panel.innerText || "";
+          try {
+            await navigator.clipboard.writeText(text);
+            copyBtn.textContent = "Copied";
+            setTimeout(() => { copyBtn.textContent = "Copy"; }, 1200);
+          } catch {
+            alert("Copy failed.");
+          }
+        };
+      }
+      root.querySelectorAll("[data-copy-path]").forEach(btn => {
+        btn.onclick = async () => {
+          const text = btn.dataset.copyPath || "";
+          if (!text) return;
+          try {
+            await navigator.clipboard.writeText(text);
+            const label = btn.textContent;
+            btn.textContent = "Copied";
+            setTimeout(() => { btn.textContent = label; }, 1200);
+          } catch {
+            alert("Copy failed.");
+          }
+        };
+      });
+      setDetailTab(state.detailTab || "preview");
+    }
+    function updateJobLogs(full, options = {}) {
+      const panel = $("jobLogPanel");
+      if (!panel) return false;
+      const logRows = full.logs || [];
+      const forceRebuild = !!options.forceRebuild;
+      updateLogBadge(logRows.length);
+      panel.dataset.logSource = JSON.stringify(logRows);
+      const prevCount = state.detailLogCount || 0;
+      const filterChanged = panel.dataset.logFilter !== state.logStreamFilter;
+      if (filterChanged || forceRebuild || prevCount > logRows.length || state.logStreamFilter !== panel.dataset.activeFilter) {
+        const nearBottom = logPanelNearBottom(panel);
+        panel.innerHTML = renderLogPanelHtml(logRows);
+        panel.dataset.logFilter = state.logStreamFilter;
+        panel.dataset.activeFilter = state.logStreamFilter;
+        state.detailLogCount = logRows.length;
+        if (state.logFollowTail && (nearBottom || full.status === "running" || full.status === "queued")) scrollLogPanelToBottom(panel);
+        return true;
+      }
+      if (logRows.length <= prevCount) return false;
+      const nearBottom = logPanelNearBottom(panel);
+      logRows.slice(prevCount).forEach(row => {
+        if (state.logStreamFilter !== "all" && String(row.stream || "log") !== state.logStreamFilter) return;
+        panel.insertAdjacentHTML("beforeend", renderLogLine(row));
+      });
+      state.detailLogCount = logRows.length;
+      if (state.logFollowTail && (nearBottom || full.status === "running" || full.status === "queued")) scrollLogPanelToBottom(panel);
+      return true;
+    }
     function renderJobs() {
       const type = $("jobTypeFilter").value;
       const status = $("statusFilter").value;
@@ -4071,7 +5099,17 @@ WORKSPACE_HTML = r"""
           <div class="jobTitleLine"><strong>${escapeHtml(job.title)}</strong><span class="${statusClass(job.status)}">${escapeHtml(job.status)}</span></div>
           <div class="muted tiny">${escapeHtml(job.model_name)} · ${escapeHtml(job.elapsed)} · ${escapeHtml(job.id)}</div>
         </button>`).join("") : `<div class="detail muted">No jobs yet. Create one above.</div>`;
-      document.querySelectorAll("[data-job]").forEach(btn => btn.onclick = () => { state.activeJob = btn.dataset.job; state.detailRenderKey = ""; renderJobs(); renderDetail(); });
+      document.querySelectorAll("[data-job]").forEach(btn => btn.onclick = () => {
+        const nextJob = btn.dataset.job;
+        if (nextJob !== state.activeJob) {
+          state.activeJob = nextJob;
+          state.detailRenderKey = "";
+          state.detailLogCount = 0;
+          const selected = state.jobs.find(item => item.id === nextJob);
+          state.detailTab = (selected && (selected.status === "running" || selected.status === "queued")) ? "logs" : "preview";
+        }
+        renderJobs();
+      });
       renderDetail();
     }
     async function refreshJobs() {
@@ -4081,37 +5119,75 @@ WORKSPACE_HTML = r"""
     }
     async function renderDetail() {
       const job = state.jobs.find(j => j.id === state.activeJob);
-      if (!job) { state.detailRenderKey = ""; $("jobDetail").innerHTML = `<span class="muted">Select a job.</span>`; return; }
+      if (!job) {
+        state.detailRenderKey = "";
+        state.detailLogCount = 0;
+        $("jobDetail").innerHTML = `<span class="muted">Select a job.</span>`;
+        return;
+      }
       let full = job;
       try { full = await api("/api/jobs/" + job.id); } catch {}
       const logRows = full.logs || [];
-      const lastLog = logRows.length ? logRows[logRows.length - 1] : {};
       const result = full.result || {};
       const actionKey = (full.visualization_actions || []).map(action => [action.mode, action.path, action.label].join(":")).join("|");
-      const detailKey = [job.id, full.status, full.error || "", result.preview_video || "", result.preview_image || "", result.preview_model || "", result.preview_splat || "", actionKey, logRows.length, lastLog.stream || "", lastLog.text || ""].join("|");
-      if (state.detailRenderKey === detailKey) return;
-      state.detailRenderKey = detailKey;
-      const video = result.preview_video ? renderVideoBox(`/api/jobs/${job.id}/video`, { eager: true }) : "";
-      const image = result.preview_image ? renderImageBox(`/api/jobs/${job.id}/image`) : "";
-      const evaluationSummary = renderEvaluationSummary(result);
-      const resultActions = renderResultActions(full, result);
-      const logs = logRows.map(row => `[${row.stream}] ${row.text}`).join("");
-      const resultJson = full.result ? JSON.stringify(full.result, null, 2) : "";
-      $("jobDetail").innerHTML = `
-        ${video || image}
-        ${resultActions}
-        <div class="detailGrid">
-          <div class="metric"><span>Status</span><strong>${escapeHtml(full.status)}</strong></div>
-          <div class="metric"><span>Model</span><strong>${escapeHtml(full.model_name)}</strong></div>
-          <div class="metric"><span>Type</span><strong>${escapeHtml(full.job_type)}</strong></div>
-          <div class="metric"><span>Output</span><strong>${escapeHtml(full.output_dir || "pending")}</strong></div>
-        </div>
-        ${full.error ? `<div class="metric"><span>Error</span><strong>${escapeHtml(full.error)}</strong></div>` : ""}
-        ${evaluationSummary}
-        ${resultJson ? `<pre>${escapeHtml(resultJson)}</pre>` : ""}
-        <pre>${escapeHtml(logs || "No logs yet.")}</pre>`;
-      hydrateLazyMedia($("jobDetail"));
-      bindArtifactVisualizerButtons($("jobDetail"));
+      const detailKey = [job.id, full.status, full.error || "", result.preview_video || "", result.preview_image || "", result.preview_model || "", result.preview_splat || "", actionKey].join("|");
+      const needsShellRender = state.detailRenderKey !== detailKey;
+      if (needsShellRender) {
+        state.detailRenderKey = detailKey;
+        state.detailLogCount = 0;
+        const video = result.preview_video ? renderVideoBox(`/api/jobs/${job.id}/video`, { eager: true, poster: `/api/jobs/${job.id}/image` }) : "";
+        const image = result.preview_image ? renderImageBox(`/api/jobs/${job.id}/image`) : "";
+        const evaluationSummary = renderEvaluationSummary(result);
+        const resultActions = renderResultActions(full, result);
+        const resultJson = full.result ? JSON.stringify(full.result, null, 2) : "";
+        const logFilterBtn = (filter, label) => `<button type="button" class="logFilter ${safeClassToken(filter)} ${state.logStreamFilter === filter ? "active" : ""}" data-log-filter="${escapeHtml(filter)}">${escapeHtml(label)}</button>`;
+        $("jobDetail").innerHTML = `
+          <div class="detailTabs">
+            <button type="button" class="detailTab ${state.detailTab === "preview" ? "active" : ""}" data-detail-tab="preview">Preview</button>
+            <button type="button" class="detailTab ${state.detailTab === "logs" ? "active" : ""}" data-detail-tab="logs">Logs<span class="logBadge" id="jobLogBadge">${logRows.length}</span></button>
+            <button type="button" class="detailTab ${state.detailTab === "result" ? "active" : ""}" data-detail-tab="result">Result</button>
+          </div>
+          <div class="detailTabPanel ${state.detailTab === "preview" ? "active" : ""}" data-detail-panel="preview">
+            ${video || image || `<span class="muted">No preview yet.</span>`}
+            ${resultActions}
+            <div class="detailGrid">
+              <div class="metric"><span>Status</span><strong>${escapeHtml(full.status)}</strong></div>
+              <div class="metric"><span>Model</span><strong>${escapeHtml(full.model_name)}</strong></div>
+              <div class="metric"><span>Type</span><strong>${escapeHtml(full.job_type)}</strong></div>
+            </div>
+            ${renderOutputPath(full.output_dir)}
+            ${full.error ? `<div class="metric"><span>Error</span><strong>${escapeHtml(full.error)}</strong></div>` : ""}
+            ${evaluationSummary}
+          </div>
+          <div class="detailTabPanel ${state.detailTab === "logs" ? "active" : ""}" data-detail-panel="logs">
+            <div class="logToolbar">
+              ${logFilterBtn("all", "All")}
+              ${logFilterBtn("system", "System")}
+              ${logFilterBtn("stdout", "Stdout")}
+              ${logFilterBtn("stderr", "Stderr")}
+              <button type="button" class="btn" id="jobLogCopy">Copy</button>
+              <label class="logFollow"><input type="checkbox" id="jobLogFollow" ${state.logFollowTail ? "checked" : ""} />Follow tail</label>
+            </div>
+            <div class="logPanel" id="jobLogPanel">${renderLogPanelHtml(logRows)}</div>
+          </div>
+          <div class="detailTabPanel ${state.detailTab === "result" ? "active" : ""}" data-detail-panel="result">
+            ${resultJson ? `<pre>${escapeHtml(resultJson)}</pre>` : `<span class="muted">No structured result yet.</span>`}
+          </div>`;
+        hydrateLazyMedia($("jobDetail"));
+        bindArtifactVisualizerButtons($("jobDetail"));
+        bindDetailTabs($("jobDetail"));
+        const panel = $("jobLogPanel");
+        if (panel) {
+          panel.dataset.logSource = JSON.stringify(logRows);
+          panel.dataset.logFilter = state.logStreamFilter;
+          panel.dataset.activeFilter = state.logStreamFilter;
+          state.detailLogCount = logRows.length;
+          if (state.logFollowTail && (full.status === "running" || full.status === "queued")) scrollLogPanelToBottom(panel);
+        }
+      } else {
+        updateJobLogs(full);
+        updateLogBadge(logRows.length);
+      }
     }
     async function loadModels() {
       state.models = await api("/api/models");
@@ -4290,8 +5366,11 @@ WORKSPACE_HTML = r"""
       setFieldVisible("attention", attentionVisible);
       if (!attentionVisible) $("attention").value = "auto";
       const fieldIds = inferTaskFieldIds();
+      const variantWorkload = (selectedVariant() && selectedVariant().workload_type) || (currentModel && currentModel.workload_type) || "";
       Object.entries(INFER_TASK_FIELD_CONTROLS).forEach(([controlId, aliases]) => {
-        const visible = inference && aliases.some(alias => fieldIds.has(normalizeFieldId(alias)));
+        let visible = inference && aliases.some(alias => fieldIds.has(normalizeFieldId(alias)));
+        if (controlId === "inputPath" && variantWorkload === "t2v") visible = false;
+        if (controlId === "inputPath" && variantWorkload === "i2v") visible = true;
         setFieldVisible(controlId, visible);
       });
       $("inferDynamicFields").classList.toggle("hidden", !inference || !inferTaskFields().some(field => !DEDICATED_INFER_FIELD_IDS.has(normalizeFieldId(field.field_id))));
@@ -4311,6 +5390,13 @@ WORKSPACE_HTML = r"""
         runtimeVisible = runtimeVisible || visible;
       });
       $("runtimeChecks").classList.toggle("hidden", !runtimeVisible);
+      let runtimeValueVisible = false;
+      Object.entries(RUNTIME_VALUE_CONTROLS).forEach(([id, spec]) => {
+        const visible = inference && !!(runtimeOptions[spec.key] && runtimeOptions[spec.key].supported);
+        setFieldVisible(id, visible);
+        runtimeValueVisible = runtimeValueVisible || visible;
+      });
+      $("runtimeValues").classList.toggle("hidden", !runtimeValueVisible);
     }
     function selectedModel() {
       return state.models.find(m => m.id === $("modelSelect").value);
@@ -4350,15 +5436,17 @@ WORKSPACE_HTML = r"""
       el.value = String(value);
     }
     function applyInferTaskDefaults() {
-      setControlDefault("prompt", taskDefaultForAliases(["prompt"], ""));
-      setControlDefault("inputPath", taskDefaultForAliases(INFER_TASK_FIELD_CONTROLS.inputPath, ""));
-      setControlDefault("numFrames", taskDefaultForAliases(INFER_TASK_FIELD_CONTROLS.numFrames, state.settings.num_frames));
-      setControlDefault("fps", taskDefaultForAliases(INFER_TASK_FIELD_CONTROLS.fps, state.settings.fps));
-      setControlDefault("height", taskDefaultForAliases(INFER_TASK_FIELD_CONTROLS.height, state.settings.height));
-      setControlDefault("width", taskDefaultForAliases(INFER_TASK_FIELD_CONTROLS.width, state.settings.width));
-      setControlDefault("steps", taskDefaultForAliases(INFER_TASK_FIELD_CONTROLS.steps, state.settings.num_inference_steps));
-      setControlDefault("guidance", taskDefaultForAliases(INFER_TASK_FIELD_CONTROLS.guidance, state.settings.guidance_scale));
-      setControlDefault("seed", taskDefaultForAliases(INFER_TASK_FIELD_CONTROLS.seed, state.settings.seed));
+      const variant = selectedVariant() || {};
+      const callKwargs = variant.call_kwargs || {};
+      setControlDefault("prompt", variant.default_prompt || taskDefaultForAliases(["prompt"], ""));
+      setControlDefault("inputPath", variant.default_input_path || taskDefaultForAliases(INFER_TASK_FIELD_CONTROLS.inputPath, ""));
+      setControlDefault("numFrames", callKwargs.num_frames || taskDefaultForAliases(INFER_TASK_FIELD_CONTROLS.numFrames, state.settings.num_frames));
+      setControlDefault("fps", callKwargs.fps || taskDefaultForAliases(INFER_TASK_FIELD_CONTROLS.fps, state.settings.fps));
+      setControlDefault("height", callKwargs.height || taskDefaultForAliases(INFER_TASK_FIELD_CONTROLS.height, state.settings.height));
+      setControlDefault("width", callKwargs.width || taskDefaultForAliases(INFER_TASK_FIELD_CONTROLS.width, state.settings.width));
+      setControlDefault("steps", callKwargs.num_inference_steps || taskDefaultForAliases(INFER_TASK_FIELD_CONTROLS.steps, state.settings.num_inference_steps));
+      setControlDefault("guidance", callKwargs.guidance_scale || taskDefaultForAliases(INFER_TASK_FIELD_CONTROLS.guidance, state.settings.guidance_scale));
+      setControlDefault("seed", callKwargs.seed || taskDefaultForAliases(INFER_TASK_FIELD_CONTROLS.seed, state.settings.seed));
     }
     function populateInferSpecControls() {
       const model = selectedModel();
@@ -4395,6 +5483,19 @@ WORKSPACE_HTML = r"""
       const outputs = ((task && task.outputs) || []).map(item => item.kind || item.artifact_id).join(", ") || "artifacts";
       $("inferSpecSummary").innerHTML = `<span>Inference Contract</span><strong>${escapeHtml(variant.label || variant.variant_id)} / ${escapeHtml(task.label || task.task_id)}</strong><p class="muted tiny">Inputs: ${escapeHtml(inputs)}</p><p class="muted tiny">Outputs: ${escapeHtml(outputs)}</p>`;
     }
+    function applySelectedRuntimeDefaults() {
+      const runtimeOptions = (selectedModel() && selectedModel().runtime_options) || {};
+      ["vaeOffload", "textOffload", "fuseQkv", "inplaceResidual", "staticCrossKv", "fusedRope"].forEach(id => {
+        const option = runtimeOptions[RUNTIME_CHECK_OPTIONS[id]] || {};
+        if ($(id) && option.supported) $(id).checked = !!option.default;
+      });
+      Object.entries(RUNTIME_VALUE_CONTROLS).forEach(([id, spec]) => {
+        const option = runtimeOptions[spec.key] || {};
+        if (!$(id) || !option.supported) return;
+        const value = option.default === undefined || option.default === null ? spec.fallback : option.default;
+        $(id).value = String(value);
+      });
+    }
     function applySelectedModelDefaults() {
       const selected = selectedModel();
       const variant = selectedVariant();
@@ -4407,6 +5508,7 @@ WORKSPACE_HTML = r"""
         $("modelRef").value = (variant && variant.model_ref) || selected.model_ref || "";
         $("endpoint").value = selected.endpoint || "";
       }
+      applySelectedRuntimeDefaults();
       updateCreateMode();
       applyInferTaskDefaults();
     }
@@ -4414,9 +5516,17 @@ WORKSPACE_HTML = r"""
       const q = $("catalogSearch").value.toLowerCase();
       const workload = $("catalogWorkload").value;
       let models = state.models;
-      if (workload !== "all") models = models.filter(m => m.workload_type === workload);
-      if (q) models = models.filter(m => [m.name, m.id, m.category, m.family, (m.tags || []).join(" ")].join(" ").toLowerCase().includes(q));
-      $("catalogGrid").innerHTML = models.map(m => `<div class="itemCard"><strong>${escapeHtml(m.name)}</strong>${pillHtml(m.workload_type)}<p>${escapeHtml(m.summary)}</p><p class="muted tiny">${escapeHtml(m.id)}</p>${catalogLinksHtml(m.links)}</div>`).join("");
+      if (workload !== "all") models = models.filter(m => m.workload_type === workload || (m.variants || []).some(v => v.workload_type === workload));
+      if (q) models = models.filter(m => [
+        m.name,
+        m.id,
+        m.category,
+        m.family,
+        (m.tags || []).join(" "),
+        (m.aliases || []).join(" "),
+        (m.variants || []).map(v => [v.variant_id, v.label].join(" ")).join(" "),
+      ].join(" ").toLowerCase().includes(q));
+      $("catalogGrid").innerHTML = models.map(m => `<div class="itemCard catalogCard"><strong class="catalogName">${escapeHtml(m.name)}</strong>${pillHtml(m.workload_type)}<p class="catalogSummary">${escapeHtml(m.summary)}</p><p class="muted tiny">${escapeHtml(m.id)}</p>${catalogLinksHtml(m.links)}</div>`).join("");
     }
     async function renderGallery() {
       const rows = await api("/api/gallery");
@@ -4425,7 +5535,7 @@ WORKSPACE_HTML = r"""
       state.autoVideoPreloads = 0;
       $("galleryGrid").innerHTML = rows.length ? rows.map(row => {
         const media = row.video_url
-          ? renderVideoBox(row.video_url, { poster: row.image_url || "" })
+          ? renderVideoBox(row.video_url, { poster: row.poster_url || row.image_url || "" })
           : row.image_url
             ? renderImageBox(row.image_url)
             : "";
@@ -4434,11 +5544,39 @@ WORKSPACE_HTML = r"""
           .filter(Boolean)
           .join("");
         const refine = (row.video_url || row.image_url || row.model_url) ? artifactRefineButton(row.job_id || "", row.run_id || "") : "";
-        const allActions = [refine, actions].filter(Boolean).join("");
-        return `<div class="itemCard">${media}<strong>${escapeHtml(row.title)}</strong><p>${escapeHtml(gallerySubtitle(row))}</p>${allActions ? `<div class="artifactLinks">${allActions}</div>` : ""}</div>`;
+        const remove = galleryDeleteButton(row);
+        const allActions = [refine, actions, remove].filter(Boolean).join("");
+        return `<div class="itemCard galleryCard">${media}<strong>${escapeHtml(row.title)}</strong>${renderGalleryPrompt(row)}<div class="artifactLinks">${allActions}</div></div>`;
       }).join("") : `<div class="muted">No completed inference outputs yet.</div>`;
       hydrateLazyMedia($("galleryGrid"));
       bindArtifactVisualizerButtons($("galleryGrid"));
+      bindGalleryDeleteButtons($("galleryGrid"));
+      bindGalleryPrompts($("galleryGrid"));
+    }
+    function galleryDeleteButton(row) {
+      if (!row.job_id && !row.run_id) return "";
+      return `<button class="artifactLink galleryDelete" type="button" data-delete-job="${escapeHtml(row.job_id || "")}" data-delete-run="${escapeHtml(row.run_id || "")}">Delete</button>`;
+    }
+    function bindGalleryDeleteButtons(root = document) {
+      root.querySelectorAll("[data-delete-job], [data-delete-run]").forEach(button => {
+        button.onclick = async () => {
+          const jobId = button.dataset.deleteJob || "";
+          const runId = button.dataset.deleteRun || "";
+          if (!jobId && !runId) return;
+          if (!window.confirm("Delete this result from Gallery? The saved run files will be removed.")) return;
+          button.disabled = true;
+          try {
+            const params = new URLSearchParams();
+            if (jobId) params.set("job_id", jobId);
+            if (runId) params.set("run_id", runId);
+            await api(`/api/gallery?${params.toString()}`, { method: "DELETE" });
+            await renderGallery();
+          } catch (error) {
+            button.disabled = false;
+            window.alert(error && error.message ? error.message : "Failed to delete gallery item.");
+          }
+        };
+      });
     }
     async function renderArtifacts() {
       const rows = await api("/api/artifacts");
@@ -4546,7 +5684,6 @@ WORKSPACE_HTML = r"""
     function visualizerCard(v) {
       const mode = v.mode;
       const status = v.status || null;
-      const caps = (v.capabilities || []).map(cap => pillHtml(cap)).join(" ");
       const aliases = (v.aliases || []).join(", ") || mode;
       const assetDisplay = v.requires_asset ? "Asset path" : "Asset path";
       const paramsText = visualizerParamsText(mode, status);
@@ -4556,9 +5693,7 @@ WORKSPACE_HTML = r"""
       return `<div class="itemCard visualizerCard" data-visualizer-mode="${escapeHtml(mode)}" data-default-port="${escapeHtml(v.default_port || "")}">
         <div class="visualizerHead">
           <strong>${escapeHtml(v.title)}</strong>
-          <div class="visualizerBadges">${pillHtml(mode)} ${v.native ? pillHtml("native") : pillHtml("web")}</div>
         </div>
-        <div class="visualizerTags">${caps || `<span class="muted tiny">No capability tags</span>`}</div>
         <p class="visualizerAliases">Aliases: ${escapeHtml(aliases)}</p>
         <div class="visualizerControls">
           <label>Model<input data-visualizer-field="model" value="${escapeHtml(v.default_model || "")}" /></label>
@@ -4780,6 +5915,15 @@ WORKSPACE_HTML = r"""
           if (runtimeCheckVisible("cpuOffload")) params.cpu_offload = $("cpuOffload").checked;
           if (runtimeCheckVisible("vaeOffload")) params.vae_cpu_offload = $("vaeOffload").checked;
           if (runtimeCheckVisible("textOffload")) params.text_encoder_cpu_offload = $("textOffload").checked;
+          if (runtimeCheckVisible("fuseQkv")) params.fuse_qkv = $("fuseQkv").checked;
+          if (runtimeCheckVisible("inplaceResidual")) params.inplace_residual = $("inplaceResidual").checked;
+          if (runtimeCheckVisible("staticCrossKv")) params.static_cross_kv = $("staticCrossKv").checked;
+          if (runtimeCheckVisible("fusedRope")) params.fused_rope = $("fusedRope").checked;
+          Object.entries(RUNTIME_VALUE_CONTROLS).forEach(([id, spec]) => {
+            if (!fieldControlVisible(id)) return;
+            const raw = $(id).value;
+            params[spec.key] = spec.kind === "integer" ? Number(raw) : raw;
+          });
           Object.assign(params, dynamic.params);
           payload = {
             job_type: "inference",
@@ -4840,6 +5984,9 @@ WORKSPACE_HTML = r"""
       }
       const job = await api("/api/jobs", { method: "POST", headers: {"Content-Type":"application/json"}, body: JSON.stringify(payload) });
       state.activeJob = job.id;
+      state.detailRenderKey = "";
+      state.detailLogCount = 0;
+      state.detailTab = "logs";
       $("createDialog").close();
       setView(jobType);
       await refreshJobs();
@@ -4863,6 +6010,138 @@ WORKSPACE_HTML = r"""
     $("catalogSearch").oninput = renderCatalog;
     $("catalogWorkload").onchange = renderCatalog;
     $("stopJob").onclick = async () => { if (!state.activeJob) return; await api(`/api/jobs/${state.activeJob}/stop`, {method:"POST"}); await refreshJobs(); };
+    function readStoredSplitLeft(key) {
+      if (!key) return null;
+      try {
+        const raw = localStorage.getItem(key);
+        if (raw == null || raw === "") return null;
+        const value = Number(raw);
+        return Number.isFinite(value) && value > 0 ? value : null;
+      } catch (_) {
+        return null;
+      }
+    }
+    function splitHandleWidth(split) {
+      const raw = getComputedStyle(split).getPropertyValue("--split-handle");
+      const value = Number.parseFloat(raw);
+      return Number.isFinite(value) && value > 0 ? value : 10;
+    }
+    function clampSplitLeft(split, width) {
+      const minLeft = Number(split.dataset.splitMinLeft || 240);
+      const minRight = Number(split.dataset.splitMinRight || 360);
+      const handle = splitHandleWidth(split);
+      const total = split.getBoundingClientRect().width;
+      const available = Math.max(0, total - handle);
+      // Absolute floors so a narrow container never forces an impossible layout.
+      const hardMinLeft = Math.min(minLeft, Math.max(160, Math.floor(available * 0.25)));
+      const hardMinRight = Math.min(minRight, Math.max(240, Math.floor(available * 0.35)));
+      const maxLeft = Math.max(hardMinLeft, available - hardMinRight);
+      const minAllowed = Math.min(hardMinLeft, maxLeft);
+      return Math.round(Math.min(Math.max(Number(width) || minAllowed, minAllowed), maxLeft));
+    }
+    function applySplitLeft(split, width, { persist = true } = {}) {
+      if (!split || split.clientWidth <= 0) return null;
+      const handle = split.querySelector(".splitHandle");
+      if (handle && getComputedStyle(handle).display === "none") return null;
+      const next = clampSplitLeft(split, width);
+      split.style.setProperty("--split-left", `${next}px`);
+      if (persist && split.dataset.splitKey) {
+        try { localStorage.setItem(split.dataset.splitKey, String(next)); } catch (_) {}
+      }
+      return next;
+    }
+    function currentSplitLeft(split, fallback) {
+      const inline = Number.parseFloat(split.style.getPropertyValue("--split-left"));
+      if (Number.isFinite(inline) && inline > 0) return inline;
+      const computed = Number.parseFloat(getComputedStyle(split).getPropertyValue("--split-left"));
+      if (Number.isFinite(computed) && computed > 0) return computed;
+      return fallback;
+    }
+    function initResizableSplits() {
+      document.querySelectorAll(".split[data-split-key]").forEach(split => {
+        const handle = split.querySelector(".splitHandle");
+        if (!handle || handle.dataset.splitBound === "1") return;
+        handle.dataset.splitBound = "1";
+        const defaultWidth = Number(split.dataset.splitDefault || 360);
+        const stored = readStoredSplitLeft(split.dataset.splitKey);
+        const syncFromStorageOrDefault = () => {
+          applySplitLeft(split, stored == null ? defaultWidth : stored, { persist: false });
+        };
+        // Layout may not be ready on first paint; sync now and on next frames.
+        syncFromStorageOrDefault();
+        requestAnimationFrame(syncFromStorageOrDefault);
+
+        let dragging = false;
+        let activePointerId = null;
+
+        const onPointerMove = (event) => {
+          if (!dragging || event.pointerId !== activePointerId) return;
+          const left = event.clientX - split.getBoundingClientRect().left;
+          applySplitLeft(split, left);
+        };
+        const stopDrag = (event) => {
+          if (!dragging) return;
+          if (event && activePointerId != null && event.pointerId !== activePointerId) return;
+          dragging = false;
+          const pointerId = activePointerId;
+          activePointerId = null;
+          split.classList.remove("is-resizing");
+          handle.removeEventListener("pointermove", onPointerMove);
+          handle.removeEventListener("pointerup", stopDrag);
+          handle.removeEventListener("pointercancel", stopDrag);
+          if (pointerId != null) {
+            try { handle.releasePointerCapture(pointerId); } catch (_) {}
+          }
+        };
+        handle.addEventListener("pointerdown", (event) => {
+          if (event.button !== 0) return;
+          if (getComputedStyle(handle).display === "none") return;
+          event.preventDefault();
+          dragging = true;
+          activePointerId = event.pointerId;
+          split.classList.add("is-resizing");
+          handle.setPointerCapture(event.pointerId);
+          handle.addEventListener("pointermove", onPointerMove);
+          handle.addEventListener("pointerup", stopDrag);
+          handle.addEventListener("pointercancel", stopDrag);
+          onPointerMove(event);
+        });
+        handle.addEventListener("dblclick", () => {
+          if (getComputedStyle(handle).display === "none") return;
+          applySplitLeft(split, defaultWidth);
+        });
+        handle.addEventListener("keydown", (event) => {
+          if (getComputedStyle(handle).display === "none") return;
+          const current = currentSplitLeft(split, defaultWidth);
+          if (event.key === "ArrowLeft") {
+            event.preventDefault();
+            applySplitLeft(split, current - 24);
+          } else if (event.key === "ArrowRight") {
+            event.preventDefault();
+            applySplitLeft(split, current + 24);
+          } else if (event.key === "Home") {
+            event.preventDefault();
+            applySplitLeft(split, defaultWidth);
+          }
+        });
+      });
+
+      // One shared resize listener reclamps all splits when the viewport changes.
+      if (!window.__wfSplitResizeBound) {
+        window.__wfSplitResizeBound = true;
+        let resizeTimer = 0;
+        window.addEventListener("resize", () => {
+          window.clearTimeout(resizeTimer);
+          resizeTimer = window.setTimeout(() => {
+            document.querySelectorAll(".split[data-split-key]").forEach(split => {
+              const fallback = Number(split.dataset.splitDefault || 360);
+              applySplitLeft(split, currentSplitLeft(split, fallback), { persist: false });
+            });
+          }, 50);
+        });
+      }
+    }
+    initResizableSplits();
     initializeWorkspace()
       .catch(err => { $("serverState").textContent = err.message; });
     setInterval(refreshJobs, 3000);
@@ -4874,14 +6153,21 @@ WORKSPACE_HTML = r"""
 
 
 def main(argv: Sequence[str] | None = None) -> None:
-    parser = argparse.ArgumentParser(description="Launch the WorldFoundry FastVideo-style workspace UI.")
+    from worldfoundry.cli.help import WorldFoundryArgumentParser
+
+    parser = WorldFoundryArgumentParser(prog="worldfoundry-workspace", description="Launch the WorldFoundry Studio workspace.")
     parser.add_argument("--host", default=os.getenv("WORLDFOUNDRY_WORKSPACE_HOST", "127.0.0.1"))
     parser.add_argument("--port", type=int, default=int(os.getenv("WORLDFOUNDRY_WORKSPACE_PORT", "7870") or "7870"))
     args = parser.parse_args(list(argv) if argv is not None else None)
 
+    auth_token = require_auth_token_for_host(args.host, server_name="OpenEnvision Workspace")
+    warning = bind_security_warning(args.host)
+    if warning:
+        print(warning, flush=True)
+
     import uvicorn
 
-    uvicorn.run(create_app(), host=args.host, port=args.port)
+    uvicorn.run(create_app(auth_token=auth_token), host=args.host, port=args.port)
 
 
 if __name__ == "__main__":

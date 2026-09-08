@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Mirror docs/fumadocs onto local SSD for faster Next.js dev.
 # Keeps a minimal WorldFoundry tree under /tmp with worldfoundry/ + scripts/
-# symlinked back to the CPFS repo so generate scripts still resolve paths.
+# symlinked back to the shared checkout so generate scripts still resolve paths.
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -15,8 +15,8 @@ RSYNC_EXCLUDES=(
   --exclude '.next.*'
   --exclude 'out'
   --exclude 'out.*'
-  --exclude 'tmp/worldfoundry-docs-next'
-  --exclude 'tmp/worldfoundry-webpack-cache'
+  --exclude 'node_modules'
+  --exclude 'tmp/'
 )
 
 sync_repo_links() {
@@ -30,13 +30,14 @@ sync_repo_links() {
     ln -sfn "${REPO_ROOT}/${name}" "${target}"
   done
 
-  # Logos are regenerated on CPFS; symlink avoids stale SSD copies and 404 storms in dev.
+  # Logos are regenerated in the shared checkout; keep the SSD mirror current without
+  # copying the generated tree on every source sync.
   mkdir -p "${LOCAL_FUMADOCS}/public"
-  local logo_link="${LOCAL_FUMADOCS}/public/model-logos"
+  local logo_link="${LOCAL_FUMADOCS}/public/org-logos"
   if [[ -e "${logo_link}" && ! -L "${logo_link}" ]]; then
     rm -rf "${logo_link}"
   fi
-  ln -sfn "${FUMADOCS_SRC}/public/model-logos" "${logo_link}"
+  ln -sfn "${FUMADOCS_SRC}/public/org-logos" "${logo_link}"
 }
 
 clean_local_caches() {
@@ -55,24 +56,34 @@ sync_to_local() {
   sync_repo_links
   (
     cd "${LOCAL_FUMADOCS}"
-    export PATH="${WF_DOCS_NODE_BIN:-/mnt/cpfs/yangboxue/visual_generation/juanxi/shell-config/codex/node/bin}:/mnt/cpfs/yangboxue/visual_generation/juanxi/shell-config/codex/npm-global/bin:${PATH}"
-    npm run mdx:generate
+    if [[ -n "${WF_DOCS_NODE_BIN:-}" ]]; then
+      export PATH="${WF_DOCS_NODE_BIN}:${PATH}"
+    fi
+    if [[ -n "${WF_DOCS_NPM_BIN:-}" ]]; then
+      export PATH="${WF_DOCS_NPM_BIN}:${PATH}"
+    fi
+    if ! command -v npm >/dev/null 2>&1; then
+      echo "npm is required; install Node.js or set WF_DOCS_NODE_BIN/WF_DOCS_NPM_BIN" >&2
+      exit 1
+    fi
+    if [[ ! -d node_modules ]]; then
+      echo "Installing docs dependencies on local SSD"
+      npm ci --prefer-offline --no-audit --no-fund
+    fi
+    npm run predev
   )
   echo "Local mirror ready at ${LOCAL_FUMADOCS}"
 }
 
 sync_back() {
-  echo "Syncing local edits back to CPFS: ${FUMADOCS_SRC}"
+  echo "Syncing local edits back to shared checkout: ${FUMADOCS_SRC}"
   rsync -a "${RSYNC_EXCLUDES[@]}" \
-    --exclude 'node_modules' \
     "${LOCAL_FUMADOCS}/" "${FUMADOCS_SRC}/"
   echo "Synced back to ${FUMADOCS_SRC}"
 }
 
 run_dev() {
-  if [[ ! -d "${LOCAL_FUMADOCS}/node_modules" ]]; then
-    sync_to_local
-  fi
+  sync_to_local
   cd "${LOCAL_FUMADOCS}"
   export WF_DOCS_FAST_CACHE=1
   echo "Starting dev server from ${LOCAL_FUMADOCS}"
@@ -85,12 +96,14 @@ Usage: $(basename "$0") <command>
 
 Commands:
   sync   Copy docs/fumadocs to local SSD (${LOCAL_FUMADOCS})
-  back   Sync local source edits back to CPFS (excludes node_modules)
+  back   Sync local source edits back to the shared checkout (excludes node_modules)
   clean  Remove local Next.js/webpack dev caches
   dev    Ensure local mirror exists, then run npm run dev:fast
 
 Environment:
   WF_DOCS_LOCAL_ROOT  Override local repo root (default: /tmp/wf-docs-dev/WorldFoundry)
+  WF_DOCS_NODE_BIN    Optional directory containing node/npm executables
+  WF_DOCS_NPM_BIN     Optional directory containing global npm executables
 EOF
 }
 

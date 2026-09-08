@@ -42,6 +42,8 @@ CONFIG_IMAGE=${CONFIG_VALUES[0]}
 CONFIG_SOURCE_IMAGE=${CONFIG_VALUES[1]}
 CONFIG_CONDA_ENV=${CONFIG_VALUES[2]}
 CONFIG_ID=${CONFIG_VALUES[3]}
+EVAL_ID=${WF_EMBODIED_EVAL_ID:-${CONFIG_ID}-$(date -u +%Y%m%dT%H%M%SZ)}
+WORKERS=${WF_DLC_WORKERS:-1}
 if [[ "${WF_DLC_USE_SOURCE_IMAGE:-0}" == "1" ]]; then
   DEFAULT_WORKER_IMAGE=${CONFIG_SOURCE_IMAGE:-${CONFIG_IMAGE}}
 else
@@ -66,8 +68,13 @@ export WF_EMBODIED_SERVE_CONFIG="${WF_EMBODIED_SERVE_CONFIG:-}"
 export WF_EMBODIED_SERVE_PORT="${WF_EMBODIED_SERVE_PORT:-8000}"
 export WF_EMBODIED_PLAN_ONLY="${WF_EMBODIED_PLAN_ONLY:-0}"
 export WF_EMBODIED_NO_SAVE="${WF_EMBODIED_NO_SAVE:-0}"
+export WF_EMBODIED_EVAL_ID="${EVAL_ID}"
+export WF_EMBODIED_EXPECTED_NUM_SHARDS="${WORKERS}"
+export WF_EMBODIED_MERGE_TIMEOUT="${WF_EMBODIED_MERGE_TIMEOUT:-14400}"
+export WF_EMBODIED_MERGE_POLL_SECONDS="${WF_EMBODIED_MERGE_POLL_SECONDS:-2}"
 export WF_EMBODIED_BOOTSTRAP="${WF_EMBODIED_BOOTSTRAP:-0}"
 export WF_EMBODIED_BOOTSTRAP_PACKAGES="${WF_EMBODIED_BOOTSTRAP_PACKAGES:-pyyaml msgpack packaging tqdm websockets}"
+export WORLDFOUNDRY_ACCEPTED_LICENSES="${WORLDFOUNDRY_ACCEPTED_LICENSES:-}"
 export PYTHONDONTWRITEBYTECODE="${PYTHONDONTWRITEBYTECODE:-1}"
 bash scripts/embodied/run_dlc_embodied_eval.sh "${CONFIG}" "${OUTPUT_DIR}"
 EOF
@@ -90,7 +97,7 @@ CMD=(
   --security_group_id="${WF_DLC_SECURITY_GROUP_ID:-sg-0jl0pd5qaerdj75wmred}"
   --extended_cidrs="${WF_DLC_EXTENDED_CIDRS:-10.1.255.0/29,10.1.255.8/29,10.1.16.0/20}"
   --priority="${WF_DLC_PRIORITY:-1}"
-  --workers="${WF_DLC_WORKERS:-1}"
+  --workers="${WORKERS}"
   --worker_image="${WORKER_IMAGE}"
   --worker_cpu="${WF_DLC_WORKER_CPU:-116}"
   --worker_memory="${WF_DLC_WORKER_MEMORY:-1800Gi}"
@@ -121,6 +128,7 @@ done
 printf 'DLC worker image: %s\n' "${WORKER_IMAGE}"
 printf 'DLC conda env: %s\n' "${CONDA_ENV}"
 printf 'DLC output dir: %s\n' "${OUTPUT_DIR}"
+printf 'DLC eval id: %s\n' "${EVAL_ID}"
 printf '+'
 printf ' %q' "${PRINT_CMD[@]}"
 printf '\n'

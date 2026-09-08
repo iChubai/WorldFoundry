@@ -1,4 +1,24 @@
-"""Packed attention sequence metadata used by long-context inference runtimes."""
+"""Packed attention sequence metadata for long-context inference.
+
+Variable-length / packed kernels (Flash varlen, jagged SDPA) need
+cumulative sequence lengths and a max length, not a padded
+``[B, S]`` tensor. This module is the shared ABI. Varlen dispatch and
+the CP runtime both consume these dataclasses so a model family does
+not invent a second packing layout.
+
+Not this module:
+    Building ``cu_seqlens`` from a text mask lives in
+    :mod:`.sequence_metadata`. Running packed kernels lives in
+    :mod:`.varlen`. These types carry ranges only — they do not
+    allocate or launch attention.
+
+Public surface:
+
+- :class:`PackedCoreAttnParams` — self-attention ``cu_seqlens`` + max.
+- :class:`PackedCrossAttnParams` — encoder/decoder packed ranges.
+- :class:`ModelMetaArgs` — per-forward metadata a DiT block can stash
+  (text vs video token counts, packing flags).
+"""
 
 from __future__ import annotations
 
@@ -7,6 +27,11 @@ from typing import List
 
 import numpy as np
 import torch
+
+
+# ──────────────────────────────────────────────────────────────────────────
+# Packed range ABI — device tensors plus CPU copies for host-side planners
+# ──────────────────────────────────────────────────────────────────────────
 
 
 @dataclass(frozen=True)

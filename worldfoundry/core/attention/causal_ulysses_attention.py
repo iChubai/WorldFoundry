@@ -1,5 +1,14 @@
-from worldfoundry.base_models.diffusion_model.video.wan.wan_2p2.modules.lingbot_attention import flash_attention
+"""Causal Ulysses attention: sequence-sharded QKV plus the in-tree causal kernel.
+
+Ulysses all-to-alls heads into full-sequence shards, then runs
+local attention. This wrapper pins that local kernel to
+:func:`~worldfoundry.core.attention.varlen.flash_attention` so causal video
+(LingBot) keeps one mask/window contract. Generic (possibly non-causal)
+Ulysses lives in :mod:`worldfoundry.core.attention.ulysses_attention`.
+"""
+
 from worldfoundry.core.attention.ulysses_attention import distributed_attention as _distributed_attention
+from worldfoundry.core.attention.varlen import flash_attention
 
 
 def distributed_attention(

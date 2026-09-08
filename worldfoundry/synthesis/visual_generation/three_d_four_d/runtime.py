@@ -13,10 +13,11 @@ from typing import Any, Mapping, Sequence
 
 import yaml
 
+from worldfoundry.core.geometry import depth_to_world_points
+from worldfoundry.core.io.paths import package_data_path
 from worldfoundry.evaluation.models.runtime.profiles import load_runtime_profile
 from worldfoundry.evaluation.utils import REPO_ROOT
 from worldfoundry.synthesis.base_synthesis import BaseSynthesis
-from worldfoundry.studio.visualization.core.geometry import depth_to_world_points
 
 
 @dataclass(frozen=True)
@@ -44,24 +45,6 @@ _CAMERA_INPUT_SCHEMA = {
 
 
 THREE_D_FOUR_D_RUNTIME_SPECS: Mapping[str, ThreeDFourDRuntimeSpec] = {
-    "4d-gs": ThreeDFourDRuntimeSpec(
-        model_id="4d-gs",
-        display_name="4D-GS",
-        repo_names=("4DGaussians",),
-        entrypoint="",
-        command_kind="unsupported_inference",
-        artifact_kind="generated_4d_scene",
-        artifact_filename="4dgs_output",
-        required_input="dataset",
-        source_repo_url="https://github.com/hustvl/4DGaussians",
-        input_schema={
-            "prompt": False,
-            "image": False,
-            "video": True,
-            "actions": ["dynamic_scene_dataset", "render_path"],
-        },
-        notes=("Official reconstruction uses a training entrypoint; disabled in the infer-only runtime registry.",),
-    ),
     "lagernvs": ThreeDFourDRuntimeSpec(
         model_id="lagernvs",
         display_name="LagrNVS",
@@ -93,23 +76,11 @@ THREE_D_FOUR_D_RUNTIME_SPECS: Mapping[str, ThreeDFourDRuntimeSpec] = {
         repo_names=("MVDiffusion", "mvdiffusion"),
         entrypoint="demo.py",
         command_kind="mvdiffusion_demo",
-        artifact_kind="generated_3d_asset",
-        artifact_filename="mvdiffusion.png",
+        artifact_kind="generated_video",
+        artifact_filename="mvdiffusion.mp4",
         required_input="prompt_or_image",
         source_repo_url="https://github.com/Tangshitao/MVDiffusion",
         input_schema={"prompt": True, "image": True, "video": False, "actions": ["camera_views"]},
-    ),
-    "shape-of-motion": ThreeDFourDRuntimeSpec(
-        model_id="shape-of-motion",
-        display_name="Shape of Motion",
-        repo_names=("shape-of-motion", "Shape-of-Motion"),
-        entrypoint="",
-        command_kind="shape_of_motion_preview",
-        artifact_kind="generated_4d_scene",
-        artifact_filename="shape_of_motion_scene.ply",
-        required_input="dataset",
-        source_repo_url="https://github.com/vye16/shape-of-motion",
-        input_schema={"prompt": False, "image": False, "video": True, "actions": ["preprocessed_data_dir", "camera_path"]},
     ),
     "stable-virtual-camera": ThreeDFourDRuntimeSpec(
         model_id="stable-virtual-camera",
@@ -132,7 +103,7 @@ THREE_D_FOUR_D_RUNTIME_SPECS: Mapping[str, ThreeDFourDRuntimeSpec] = {
         artifact_kind="generated_world",
         artifact_filename="wonderjourney.mp4",
         required_input="config",
-        default_config="config/village.yaml",
+        default_config=str(package_data_path('models', 'runtime', 'configs', 'wonderjourney', 'village.yaml')),
         source_repo_url="https://github.com/KovenYu/WonderJourney",
         input_schema=_CAMERA_INPUT_SCHEMA,
     ),
@@ -145,7 +116,7 @@ THREE_D_FOUR_D_RUNTIME_SPECS: Mapping[str, ThreeDFourDRuntimeSpec] = {
         artifact_kind="generated_world",
         artifact_filename="wonderworld.splat",
         required_input="config",
-        default_config="config/inference.yaml",
+        default_config=str(package_data_path('models', 'runtime', 'configs', 'wonderworld', 'inference.yaml')),
         source_repo_url="https://github.com/KovenYu/WonderWorld",
         input_schema=_CAMERA_INPUT_SCHEMA,
     ),
@@ -165,17 +136,9 @@ THREE_D_FOUR_D_RUNTIME_SPECS: Mapping[str, ThreeDFourDRuntimeSpec] = {
 
 
 IN_TREE_RUNTIME_DIRS: Mapping[str, tuple[str, ...]] = {
-    "4d-gs": ("base_models", "three_dimensions", "general_3d", "four_d_gaussians", "four_d_gaussians_runtime"),
     "lagernvs": ("base_models", "three_dimensions", "general_3d", "lagernvs", "lagernvs_runtime"),
     "monst3r": ("base_models", "three_dimensions", "general_3d", "monst3r"),
     "mvdiffusion": ("base_models", "three_dimensions", "general_3d", "mvdiffusion", "mvdiffusion_runtime"),
-    "shape-of-motion": (
-        "base_models",
-        "three_dimensions",
-        "general_3d",
-        "shape_of_motion",
-        "shape_of_motion_runtime",
-    ),
     "stable-virtual-camera": (
         "base_models",
         "three_dimensions",
@@ -288,27 +251,6 @@ class ThreeDFourDRuntimeSynthesis(BaseSynthesis):
             if requested_plan_path != plan_path:
                 _write_json(requested_plan_path, plan_payload)
             return self._prepared(run_dir, requested_plan_path, command)
-
-        if self.spec.command_kind == "shape_of_motion_preview":
-            preview_path = _maybe_export_shape_of_motion_preview(output.parent, {**self.options, **kwargs})
-            if preview_path is not None:
-                if preview_path.resolve() != output.resolve():
-                    output.parent.mkdir(parents=True, exist_ok=True)
-                    shutil.copy2(preview_path, output)
-                    preview_path = output
-                return {
-                    "status": "succeeded",
-                    "model_id": self.model_id,
-                    "artifact_kind": self.spec.artifact_kind,
-                    "artifact_path": str(preview_path),
-                    "artifact_sha256": _sha256(preview_path) if preview_path.is_file() else None,
-                    "run_dir": str(run_dir),
-                    "plan_path": str(plan_path),
-                    "command": command,
-                    "runtime": "worldfoundry.three_d_four_d.shape_of_motion_preview",
-                    "backend_quality": "official_preprocessed_preview",
-                    "metadata": plan_payload,
-                }
 
         missing = self._missing_runtime_requirements(context)
         if missing:
@@ -426,8 +368,6 @@ class ThreeDFourDRuntimeSynthesis(BaseSynthesis):
 
     def _missing_runtime_requirements(self, context: Mapping[str, Any]) -> list[str]:
         missing: list[str] = []
-        if self.spec.command_kind == "unsupported_inference":
-            missing.append(f"{self.spec.display_name} does not expose an infer-only WorldFoundry runtime yet")
         if self.source_root is None:
             missing.append(
                 "runtime source checkout missing; set source_root or WORLDFOUNDRY_THREE_D_FOUR_D_REPOS_ROOT "
@@ -435,10 +375,7 @@ class ThreeDFourDRuntimeSynthesis(BaseSynthesis):
             )
         elif not self.source_root.is_dir():
             missing.append(f"runtime source root does not exist: {self.source_root}")
-        if (
-            self.spec.command_kind not in {"unsupported_inference", "shape_of_motion_preview"}
-            and (self.entrypoint is None or not self.entrypoint.is_file())
-        ):
+        if self.entrypoint is None or not self.entrypoint.is_file():
             missing.append(f"runtime entrypoint missing: {self.spec.entrypoint}")
         if self.spec.required_input == "prompt" and not str(context.get("prompt") or "").strip():
             missing.append("prompt input required")
@@ -509,8 +446,6 @@ class ThreeDFourDRuntimeSynthesis(BaseSynthesis):
             env["WORLDFOUNDRY_DA2_MODEL_PATH"] = str(da2_model_path)
         ckpt_root = _ckpt_root()
         env.setdefault("TORCH_HOME", str(ckpt_root / "torch_hub"))
-        for offline_key in ("HF_HUB_OFFLINE", "TRANSFORMERS_OFFLINE", "HF_DATASETS_OFFLINE"):
-            env.pop(offline_key, None)
         hf_home_candidates = [
             Path(str(env.get("WORLDFOUNDRY_HFD_ROOT") or "")).expanduser(),
             Path(str(env.get("HF_HOME") or "")).expanduser(),
@@ -537,29 +472,8 @@ class ThreeDFourDRuntimeSynthesis(BaseSynthesis):
         images = [str(item) for item in context.get("images") or []]
         video = str(context.get("video") or "")
         seed = str(options.get("seed", self.options.get("seed", 1234)))
-        gpu = str(options.get("gpu", self.options.get("gpu", "0")))
         config = str(options.get("config") or self.options.get("config") or self.spec.default_config or "")
 
-        if self.spec.command_kind == "unsupported_inference":
-            return [python, "-c", f"raise SystemExit({self.spec.display_name!r} + ' has no infer-only runtime')"]
-        if self.spec.command_kind == "shape_of_motion_preview":
-            data_dir = (
-                options.get("data_dir")
-                or options.get("source_path")
-                or options.get("dataset_path")
-                or options.get("data_root")
-                or ""
-            )
-            return [
-                python,
-                "-m",
-                "worldfoundry.synthesis.visual_generation.three_d_four_d.runtime",
-                "--shape-of-motion-preview",
-                "--data-dir",
-                str(data_dir),
-                "--output",
-                output_path,
-            ]
         if self.spec.command_kind == "lagernvs_minimal":
             length = str(options.get("video_length", self.options.get("video_length", 100)))
             model_repo = _lagernvs_model_repo(
@@ -605,8 +519,11 @@ class ThreeDFourDRuntimeSynthesis(BaseSynthesis):
             return command
         if self.spec.command_kind == "worldgen_inference":
             command = [python, entrypoint, "--prompt", prompt or "a 3D scene", "--output_dir", output_dir]
+            pano_image = options.get("pano_image", self.options.get("pano_image"))
+            if pano_image:
+                command.extend(["--pano_image", str(pano_image)])
             expanded_images = _expand_image_inputs(images)
-            if expanded_images:
+            if expanded_images and not pano_image:
                 command.extend(["--image", expanded_images[0]])
             if not _bool_option(options, self.options, "viewer"):
                 command.append("--no_viewer")
@@ -699,7 +616,14 @@ class ThreeDFourDRuntimeSynthesis(BaseSynthesis):
                 command.extend(["--image_path", images[0]])
             text_path = options.get("text_path", self.options.get("text_path"))
             if text_path:
-                command.extend(["--text_path", str(text_path)])
+                resolved_text_path = Path(str(text_path)).expanduser()
+                if not resolved_text_path.is_absolute() and self.source_root is not None:
+                    resolved_text_path = self.source_root / resolved_text_path
+                if resolved_text_path.is_file():
+                    command.extend(["--text_path", str(resolved_text_path.resolve())])
+            steps = options.get("steps", self.options.get("steps"))
+            if steps is not None:
+                command.extend(["--steps", str(max(int(steps), 1))])
             if _bool_option(options, self.options, "gen_video"):
                 command.append("--gen_video")
             return command
@@ -799,7 +723,7 @@ def _coerce_model_artifact_output(output: Path, spec: ThreeDFourDRuntimeSpec) ->
     artifact_suffix = Path(spec.artifact_filename).suffix.lower()
     if not artifact_suffix or output.suffix.lower() == artifact_suffix:
         return output
-    if spec.command_kind in {"monst3r_demo", "worldgen_inference", "shape_of_motion_preview"}:
+    if spec.command_kind in {"monst3r_demo", "worldgen_inference"}:
         return output.with_name(Path(spec.artifact_filename).name)
     return output
 
@@ -1052,151 +976,6 @@ def _default_wonderworld_image() -> str:
         if candidate.is_file():
             return str(candidate)
     return ""
-
-
-def _maybe_export_shape_of_motion_preview(output_dir: Path, options: Mapping[str, Any]) -> Path | None:
-    data_dir_value = (
-        options.get("data_dir")
-        or options.get("source_path")
-        or options.get("dataset_path")
-        or options.get("data_root")
-        or ""
-    )
-    data_dir = Path(str(data_dir_value)).expanduser()
-    if not data_dir.is_dir():
-        return None
-
-    output_dir.mkdir(parents=True, exist_ok=True)
-    ply_path = output_dir / "shape_of_motion_scene.ply"
-    if ply_path.exists():
-        return ply_path
-
-    npz_candidates = [data_dir / f"{data_dir.name}.npz", *sorted(data_dir.glob("*.npz"))]
-    npz_path = next((path for path in npz_candidates if path.is_file()), None)
-    if npz_path is None:
-        return None
-
-    try:
-        import numpy as np
-        from PIL import Image
-    except Exception:
-        return None
-
-    def npz_value(bundle: Any, *keys: str) -> Any:
-        for key in keys:
-            if key in bundle.files:
-                return bundle[key]
-        return None
-
-    try:
-        bundle = np.load(npz_path)
-        depths = npz_value(bundle, "depths", "depth")
-        intrinsics = npz_value(bundle, "intrinsic", "intrinsics", "K")
-        cam_c2w = npz_value(bundle, "cam_c2w", "c2w", "poses")
-    except Exception:
-        return None
-    if depths is None or intrinsics is None or cam_c2w is None:
-        return None
-
-    image_files = _shape_of_motion_image_files(data_dir)
-    if not image_files:
-        return None
-
-    depths = np.asarray(depths)
-    intrinsics = np.asarray(intrinsics)
-    cam_c2w = np.asarray(cam_c2w)
-    if depths.ndim == 2:
-        depths = depths[None, ...]
-
-    max_points = int(options.get("shape_preview_max_points") or 4096)
-    max_frames = min(len(depths), len(image_files), int(options.get("shape_preview_frames") or 3))
-    points: list[tuple[float, float, float, int, int, int]] = []
-    for frame_idx in range(max_frames):
-        depth = np.asarray(depths[frame_idx]).squeeze()
-        if depth.ndim != 2:
-            continue
-        height, width = depth.shape
-        intrinsic = intrinsics[frame_idx] if intrinsics.ndim == 3 else intrinsics
-        c2w = cam_c2w[frame_idx] if cam_c2w.ndim == 3 else cam_c2w
-        if intrinsic.shape[0] < 3 or intrinsic.shape[1] < 3 or c2w.shape[0] < 3 or c2w.shape[1] < 4:
-            continue
-        try:
-            image = Image.open(image_files[frame_idx]).convert("RGB").resize((width, height))
-            colors = np.asarray(image)
-        except Exception:
-            colors = np.full((height, width, 3), 192, dtype=np.uint8)
-
-        frame_budget = max(1, max_points // max_frames)
-        stride = max(1, int(((height * width) / frame_budget) ** 0.5))
-        ys, xs = np.mgrid[0:height:stride, 0:width:stride]
-        zs = depth[ys, xs]
-        valid = np.isfinite(zs) & (zs > 0)
-        if not np.any(valid):
-            continue
-        xs = xs[valid].astype(np.float32)
-        ys = ys[valid].astype(np.float32)
-        zs = zs[valid].astype(np.float32)
-        fx = float(intrinsic[0, 0]) or 1.0
-        fy = float(intrinsic[1, 1]) or 1.0
-        cx = float(intrinsic[0, 2])
-        cy = float(intrinsic[1, 2])
-        camera_points = np.stack(((xs - cx) / fx * zs, (ys - cy) / fy * zs, zs), axis=-1)
-        world_points = camera_points @ np.asarray(c2w[:3, :3]).T + np.asarray(c2w[:3, 3])
-        rgb = colors[ys.astype(np.int64), xs.astype(np.int64)]
-        for xyz, color in zip(world_points, rgb, strict=False):
-            points.append(
-                (
-                    float(xyz[0]),
-                    float(xyz[1]),
-                    float(xyz[2]),
-                    int(color[0]),
-                    int(color[1]),
-                    int(color[2]),
-                )
-            )
-            if len(points) >= max_points:
-                break
-        if len(points) >= max_points:
-            break
-
-    if not points:
-        return None
-    _write_ascii_ply(ply_path, points)
-    return ply_path
-
-
-def _shape_of_motion_image_files(data_dir: Path) -> list[Path]:
-    image_root = data_dir / "images"
-    candidates = [image_root]
-    if image_root.is_dir():
-        candidates.extend(path for path in sorted(image_root.iterdir()) if path.is_dir())
-    for root in candidates:
-        if not root.is_dir():
-            continue
-        images = [
-            path
-            for path in sorted(root.iterdir())
-            if path.suffix.lower() in {".png", ".jpg", ".jpeg", ".webp", ".bmp"}
-        ]
-        if images:
-            return images
-    return []
-
-
-def _write_ascii_ply(path: Path, points: Sequence[tuple[float, float, float, int, int, int]]) -> None:
-    with path.open("w", encoding="ascii") as handle:
-        handle.write("ply\n")
-        handle.write("format ascii 1.0\n")
-        handle.write(f"element vertex {len(points)}\n")
-        handle.write("property float x\n")
-        handle.write("property float y\n")
-        handle.write("property float z\n")
-        handle.write("property uchar red\n")
-        handle.write("property uchar green\n")
-        handle.write("property uchar blue\n")
-        handle.write("end_header\n")
-        for x, y, z, r, g, b in points:
-            handle.write(f"{x:.6f} {y:.6f} {z:.6f} {r:d} {g:d} {b:d}\n")
 
 
 def _expand_image_inputs(images: Sequence[str]) -> list[str]:

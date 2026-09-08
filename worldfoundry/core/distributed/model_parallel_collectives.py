@@ -1,7 +1,12 @@
 # SPDX-FileCopyrightText: Copyright (c) 2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 
-"""Inference-time tensor/context-parallel batch collectives."""
+"""Inference-time tensor/context-parallel batch collectives.
+
+Broadcast or gather a *batch* (prompts, latents) so every TP/CP rank
+sees the same sample before sharding activations. Not for per-layer
+all-reduce — that stays inside the parallel Linear/Attention.
+"""
 
 import logging
 
@@ -12,6 +17,10 @@ from torch.distributed import broadcast, get_process_group_ranks
 from worldfoundry.core.distributed.megatron_compat import mpu, parallel_state
 
 logger = logging.getLogger(__name__)
+
+# ──────────────────────────────────────────────────────────────────────────
+# Load-balanced CP chunking — ranks take [i] and [2P-i-1] to even causal load
+# ──────────────────────────────────────────────────────────────────────────
 
 
 def get_batch_on_this_cp_rank(inputs: torch.Tensor) -> torch.Tensor:
@@ -61,6 +70,11 @@ def gather_batch_from_cp_ranks(outputs: torch.Tensor) -> torch.Tensor:
     except Exception as exc:
         logger.exception("[Rank %s] Failed to gather context-parallel output", cp_rank)
         raise RuntimeError("failed to gather context-parallel output") from exc
+
+
+# ──────────────────────────────────────────────────────────────────────────
+# Batch broadcast — every TP/CP rank must see the same sample before sharding
+# ──────────────────────────────────────────────────────────────────────────
 
 
 def broadcast_data_batch_in_tp_cp_group(data_batch: dict) -> None:

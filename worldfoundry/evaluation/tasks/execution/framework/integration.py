@@ -68,6 +68,13 @@ def _runner_path(benchmark_id: str) -> str:
 # ---------------------------------------------------------------------------
 
 BENCHMARK_INTEGRATION_REGISTRY: dict[str, BenchmarkIntegrationSpec] = {
+    "apple-pi": BenchmarkIntegrationSpec(
+        "apple-pi",
+        IntegrationTier.MODEL_BACKED,
+        _runner_path("apple-pi"),
+        hf_dataset_id="yaorunmao/Apple-PI-GT",
+        judge_model_id="gemini-3-flash-preview",
+    ),
     "aigcbench": BenchmarkIntegrationSpec(
         "aigcbench",
         IntegrationTier.IN_TREE,
@@ -105,6 +112,12 @@ BENCHMARK_INTEGRATION_REGISTRY: dict[str, BenchmarkIntegrationSpec] = {
     "fetv": BenchmarkIntegrationSpec(
         "fetv", IntegrationTier.IN_TREE, _runner_path("fetv"),
     ),
+    "4dworldbench": BenchmarkIntegrationSpec(
+        "4dworldbench",
+        IntegrationTier.MODEL_BACKED,
+        _runner_path("4dworldbench"),
+        judge_model_id="Kwai-Keye/Keye-VL-1_5-8B",
+    ),
     "genai-bench": BenchmarkIntegrationSpec(
         "genai-bench",
         IntegrationTier.IN_TREE,
@@ -116,13 +129,38 @@ BENCHMARK_INTEGRATION_REGISTRY: dict[str, BenchmarkIntegrationSpec] = {
     "iworld-bench": BenchmarkIntegrationSpec(
         "iworld-bench", IntegrationTier.IN_TREE, _runner_path("iworld-bench"),
     ),
+    "larybench": BenchmarkIntegrationSpec(
+        "larybench",
+        IntegrationTier.IN_TREE,
+        _runner_path("larybench"),
+        hf_dataset_id="meituan-longcat/LARYBench",
+    ),
+    "likephys": BenchmarkIntegrationSpec(
+        "likephys",
+        IntegrationTier.IN_TREE,
+        _runner_path("likephys"),
+        hf_dataset_id="JianhaoDYDY/LikePhys-Benchmark",
+    ),
     "mirabench": BenchmarkIntegrationSpec(
         "mirabench", IntegrationTier.IN_TREE, _runner_path("mirabench"),
+    ),
+    "pawbench": BenchmarkIntegrationSpec(
+        "pawbench",
+        IntegrationTier.MODEL_BACKED,
+        _runner_path("pawbench"),
+        hf_dataset_id="Andrew613/PAWBench",
+        judge_model_id="google/gemini-3.5-flash",
     ),
     "memobench": BenchmarkIntegrationSpec(
         "memobench",
         IntegrationTier.IN_TREE,
         _runner_path("memobench"),
+    ),
+    "mind": BenchmarkIntegrationSpec(
+        "mind",
+        IntegrationTier.IN_TREE,
+        _runner_path("mind"),
+        hf_dataset_id="CSU-JPG/MIND",
     ),
     "phyeduvideo": BenchmarkIntegrationSpec(
         "phyeduvideo", IntegrationTier.IN_TREE, _runner_path("phyeduvideo"),
@@ -174,6 +212,26 @@ BENCHMARK_INTEGRATION_REGISTRY: dict[str, BenchmarkIntegrationSpec] = {
         IntegrationTier.MODEL_BACKED,
         _runner_path("physvidbench"),
         judge_model_id="models/gemini-2.0-flash",
+    ),
+    "rbench": BenchmarkIntegrationSpec(
+        "rbench",
+        IntegrationTier.MODEL_BACKED,
+        _runner_path("rbench"),
+        hf_dataset_id="DAGroup-PKU/RBench",
+        judge_model_id="gpt-4o+Qwen3-VL",
+    ),
+    "sana-wm-bench": BenchmarkIntegrationSpec(
+        "sana-wm-bench",
+        IntegrationTier.IN_TREE,
+        _runner_path("sana-wm-bench"),
+        hf_dataset_id="Efficient-Large-Model/SANA-WM-Bench",
+    ),
+    "stevo-bench": BenchmarkIntegrationSpec(
+        "stevo-bench",
+        IntegrationTier.MODEL_BACKED,
+        _runner_path("stevo-bench"),
+        hf_dataset_id="JhanLiufu/StEvo-Bench",
+        judge_model_id="gemini-3.1-pro-preview",
     ),
     "t2v-compbench": BenchmarkIntegrationSpec(
         "t2v-compbench", IntegrationTier.IN_TREE, _runner_path("t2v-compbench"),
@@ -252,6 +310,9 @@ BENCHMARK_INTEGRATION_REGISTRY: dict[str, BenchmarkIntegrationSpec] = {
     "worldarena": BenchmarkIntegrationSpec(
         "worldarena", IntegrationTier.IN_TREE, _runner_path("worldarena"),
     ),
+    "worldatlas-arena": BenchmarkIntegrationSpec(
+        "worldatlas-arena", IntegrationTier.IN_TREE, _runner_path("worldatlas-arena"),
+    ),
     "worldbench": BenchmarkIntegrationSpec(
         "worldbench",
         IntegrationTier.IN_TREE,
@@ -261,6 +322,19 @@ BENCHMARK_INTEGRATION_REGISTRY: dict[str, BenchmarkIntegrationSpec] = {
     ),
     "worldmodelbench": BenchmarkIntegrationSpec(
         "worldmodelbench", IntegrationTier.MODEL_BACKED, _runner_path("worldmodelbench"),
+    ),
+    "worldolympiad": BenchmarkIntegrationSpec(
+        "worldolympiad",
+        IntegrationTier.MODEL_BACKED,
+        _runner_path("worldolympiad"),
+        hf_dataset_id="ziplab/WorldOlympiad",
+        judge_model_id="Qwen/Qwen3-VL-8B-Instruct+facebook/sam3+depth-anything/DA3NESTED-GIANT-LARGE-1.1",
+    ),
+    "worldreasonbench": BenchmarkIntegrationSpec(
+        "worldreasonbench",
+        IntegrationTier.MODEL_BACKED,
+        _runner_path("worldreasonbench"),
+        judge_model_id="qwen3.5-27b",
     ),
     "worldscore": BenchmarkIntegrationSpec(
         "worldscore",

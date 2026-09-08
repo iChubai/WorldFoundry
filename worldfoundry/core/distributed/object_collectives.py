@@ -1,8 +1,14 @@
-"""Object and tensor collectives for lightweight distributed jobs."""
+"""Object and tensor collectives for lightweight distributed jobs.
+
+``broadcast_object`` / gather of Python payloads (configs, path lists).
+Do not put large GPU tensors here — use ``tensor_collectives`` so NCCL
+stays on device.
+
+Public surface: :func:`all_gather`, :func:`reduce_dict`, :func:`synchronize`,
+:data:`LOCAL_PROCESS_GROUP`.
+"""
 
 from __future__ import annotations
-
-import pickle
 
 import torch
 from torch import distributed as dist
@@ -13,8 +19,19 @@ from .generic_collectives import is_master as is_primary
 
 LOCAL_PROCESS_GROUP = None
 
+# ──────────────────────────────────────────────────────────────────────────
+# Intra-node group + object collectives — pickle stays off the NCCL tensor path
+# ──────────────────────────────────────────────────────────────────────────
+
 
 def get_local_rank() -> int:
+    """Return this process's rank inside :data:`LOCAL_PROCESS_GROUP`.
+
+    Unlike :func:`torch_process_group.get_local_rank`, this requires the
+    intra-node group created by :mod:`multiprocess_launch`. A missing group
+    is a hard error so a caller cannot silently treat every rank as local 0.
+    """
+
     if not dist.is_available() or not dist.is_initialized():
         return 0
     if LOCAL_PROCESS_GROUP is None:
@@ -23,6 +40,8 @@ def get_local_rank() -> int:
 
 
 def synchronize() -> None:
+    """Barrier on the default group; no-op outside a multi-rank process group."""
+
     if not dist.is_available() or not dist.is_initialized():
         return
     if dist.get_world_size() == 1:
@@ -31,6 +50,8 @@ def synchronize() -> None:
 
 
 def all_reduce(tensor, op=dist.ReduceOp.SUM):
+    """In-place all-reduce; identity when ``world_size == 1`` so callers stay branch-free."""
+
     if get_world_size() == 1:
         return tensor
     dist.all_reduce(tensor, op=op)
@@ -40,34 +61,18 @@ def all_reduce(tensor, op=dist.ReduceOp.SUM):
 def all_gather(value):
     """Gather picklable Python objects from every rank."""
 
-    world_size = get_world_size()
-    if world_size == 1:
-        return [value]
+    from .evaluation_collectives import all_gather as gather
 
-    buffer = pickle.dumps(value)
-    storage = torch.ByteStorage.from_buffer(buffer)
-    tensor = torch.ByteTensor(storage).to("cuda")
-
-    local_size = torch.IntTensor([tensor.numel()]).to("cuda")
-    size_list = [torch.IntTensor([1]).to("cuda") for _ in range(world_size)]
-    dist.all_gather(size_list, local_size)
-    size_list = [int(size.item()) for size in size_list]
-    max_size = max(size_list)
-
-    tensor_list = [torch.ByteTensor(size=(max_size,)).to("cuda") for _ in size_list]
-    if local_size != max_size:
-        padding = torch.ByteTensor(size=(max_size - local_size,)).to("cuda")
-        tensor = torch.cat((tensor, padding), 0)
-
-    dist.all_gather(tensor_list, tensor)
-    values = []
-    for size, gathered_tensor in zip(size_list, tensor_list):
-        gathered_buffer = gathered_tensor.cpu().numpy().tobytes()[:size]
-        values.append(pickle.loads(gathered_buffer))
-    return values
+    return gather(value)
 
 
 def reduce_dict(input_dict, average=True):
+    """Reduce tensor values onto rank 0; keys are sorted so ranks agree on order.
+
+    Non-zero ranks still participate in the collective but must not divide —
+    only rank 0 holds the accumulated sum.
+    """
+
     world_size = get_world_size()
     if world_size < 2:
         return input_dict
@@ -82,6 +87,8 @@ def reduce_dict(input_dict, average=True):
 
 
 def data_sampler(dataset, shuffle, distributed):
+    """Pick a sampler that does not duplicate examples across ranks when distributed."""
+
     if distributed:
         return data.distributed.DistributedSampler(dataset, shuffle=shuffle)
     if shuffle:

@@ -1,4 +1,26 @@
-"""In-tree PISA piecewise sparse attention with exact portable fallback."""
+"""In-tree PISA piecewise sparse attention with exact portable fallback.
+
+Long LTX / video sequences cannot afford dense attention. PISA keeps
+a sparse window of blocks; Triton kernels live in
+:mod:`worldfoundry.core.attention.triton_piecewise_attention`. This
+module is the portable entry: probe eligibility, then either launch
+TMA or fall back to exact SDPA so quality gates and CPU CI can
+disable PISA without a second code path in the DiT block. Density /
+block size come from env or the caller
+(:class:`PiecewiseAttention` in ``model_backends``).
+
+Not this module:
+    Not part of ``auto`` dispatch — a recipe must opt in. Does not
+    implement the Triton kernels. OOM from the TMA path is never
+    swallowed (retrying dense SDPA can OOM again on the score tensor).
+
+Public surface:
+
+- :func:`piecewise_attention_available` — Hopper / DC-Blackwell + Triton
+  TMA probe without importing the kernel on CPU.
+- :func:`piecewise_attention` — PISA or exact SDPA; ``strict`` fails
+  instead of falling back.
+"""
 
 from __future__ import annotations
 
@@ -9,7 +31,20 @@ import torch
 from worldfoundry.core.attention.native import native_sdpa_priority, scaled_dot_product_attention
 
 
+# ──────────────────────────────────────────────────────────────────────────
+# Eligibility — TMA descriptors are Hopper / data-center Blackwell only
+# ──────────────────────────────────────────────────────────────────────────
+
+
 def _pisa_device_eligible(device: torch.device | str) -> bool:
+    """Return whether this CUDA device has a measured TMA launch policy.
+
+    ROCm and consumer Blackwell stay on exact SDPA: their shared-memory
+    budgets were never calibrated for the vendored kernel. Capability
+    probe failures (no context, bad device) are treated as ineligible
+    rather than raised so dispatch can keep falling back.
+    """
+
     parsed = torch.device(device)
     if parsed.type != "cuda" or getattr(torch.version, "hip", None) is not None:
         return False
@@ -33,7 +68,7 @@ def piecewise_attention_available(device: torch.device | str | None = None) -> b
     if not _pisa_device_eligible(parsed):
         return False
     try:
-        from worldfoundry.runtime.compile_cache import configure_persistent_compile_cache
+        from worldfoundry.core.compile_cache import configure_persistent_compile_cache
 
         configure_persistent_compile_cache(namespace="pisa-triton")
         import triton  # noqa: F401
@@ -49,6 +84,12 @@ def _exact_attention(
     v: torch.Tensor,
     scale: float | None,
 ) -> torch.Tensor:
+    """Exact SDPA with native backend order; used when PISA must not run.
+
+    GQA is enabled only when head counts differ so the fallback stays
+    bit-compatible with the dense dispatcher on equal-head workloads.
+    """
+
     return scaled_dot_product_attention(
         q,
         k,
@@ -57,6 +98,11 @@ def _exact_attention(
         enable_gqa=q.shape[1] != k.shape[1],
         backends=native_sdpa_priority(q.device),
     )
+
+
+# ──────────────────────────────────────────────────────────────────────────
+# Portable entry — TMA when eligible, exact SDPA otherwise
+# ──────────────────────────────────────────────────────────────────────────
 
 
 def piecewise_attention(

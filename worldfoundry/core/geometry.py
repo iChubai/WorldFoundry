@@ -1,4 +1,20 @@
-"""Geometry helpers shared by camera-conditioned visual generation runtimes."""
+"""Geometry helpers shared by camera-conditioned visual generation runtimes.
+
+Camera-control recipes need the same SE(3) / pinhole primitives whether
+the model is Wan, SANA-WM, or GEN3C. This module is the NumPy/Torch
+home for those ops so family packages do not each copy Euler and
+quaternion conversions:
+
+- Depth unprojection (:func:`depth_to_world_points`).
+- ZYX Euler ↔ rotation matrix, OpenCV ``(z, y, x)`` order, and
+  WXYZ / XYZW quaternions (XYZW path adapted from PyTorch3D).
+- :func:`ray_condition` — per-pixel Plücker or origin+direction
+  features from ``[fx, fy, cx, cy]`` and c2w (half-pixel centers).
+- :func:`render_point_cloud_frames_torch` — debug splat of world
+  points back into camera frames.
+
+OpenCV convention: +X right, +Y down, +Z forward.
+"""
 
 from __future__ import annotations
 
@@ -8,6 +24,37 @@ import numpy as np
 import torch
 import torch.nn.functional as F
 from torch import Tensor
+
+# ──────────────────────────────────────────────────────────────────────────
+# Pinhole unprojection + Euler / quaternion conversions (OpenCV axes)
+# ──────────────────────────────────────────────────────────────────────────
+
+
+def depth_to_world_points(depth: np.ndarray, intrinsics: np.ndarray, pose: np.ndarray) -> np.ndarray:
+    """Unproject a depth image with an OpenCV camera-to-world transform."""
+
+    depth = np.asarray(depth)
+    intrinsics = np.asarray(intrinsics)
+    pose = np.asarray(pose)
+    if depth.ndim != 2:
+        raise ValueError(f"expected a 2D depth image, got shape {depth.shape}")
+    if intrinsics.shape != (3, 3):
+        raise ValueError(f"expected 3x3 camera intrinsics, got shape {intrinsics.shape}")
+    if pose.shape not in {(3, 4), (4, 4)}:
+        raise ValueError(f"expected a 3x4 or 4x4 camera pose, got shape {pose.shape}")
+
+    height, width = depth.shape
+    x, y = np.meshgrid(np.arange(width), np.arange(height))
+    # OpenCV pinhole: X = (u - cx) * Z / fx, Y = (v - cy) * Z / fy, then R @ p + t.
+    camera_points = np.stack(
+        (
+            (x - intrinsics[0, 2]) * depth / intrinsics[0, 0],
+            (y - intrinsics[1, 2]) * depth / intrinsics[1, 1],
+            depth,
+        ),
+        axis=-1,
+    )
+    return camera_points @ pose[:3, :3].T + pose[:3, 3]
 
 
 def euler_angles_to_rotation_matrix_zyx(euler_angles: np.ndarray) -> np.ndarray:
@@ -25,6 +72,7 @@ def rotation_matrix_to_euler_angles_zyx(rotation: np.ndarray) -> np.ndarray:
     identity = np.identity(3, dtype=rotation.dtype)
     if rotation.shape != (3, 3) or np.linalg.norm(identity - rotation.T @ rotation) >= 1e-6:
         raise ValueError("expected a valid 3x3 rotation matrix")
+    # ZYX Euler: sy ~ 0 is gimbal lock; recover x from row 1 and freeze z.
     sy = math.sqrt(rotation[0, 0] ** 2 + rotation[1, 0] ** 2)
     if sy >= 1e-6:
         x = math.atan2(rotation[2, 1], rotation[2, 2])
@@ -151,12 +199,18 @@ def standardize_quaternion_xyzw(quaternions: Tensor) -> Tensor:
 
 
 def _sqrt_positive_part(value: Tensor) -> Tensor:
+    """sqrt of the positive part only; the grad-enabled path avoids ``sqrt(0)`` singularities."""
     result = torch.zeros_like(value)
     positive = value > 0
     if torch.is_grad_enabled():
         result[positive] = torch.sqrt(value[positive])
         return result
     return torch.where(positive, torch.sqrt(value), result)
+
+
+# ──────────────────────────────────────────────────────────────────────────
+# Plücker / origin+direction rays and debug splat
+# ──────────────────────────────────────────────────────────────────────────
 
 
 def torch_meshgrid_ij(*args):

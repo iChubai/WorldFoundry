@@ -1,0 +1,59 @@
+---
+title: WorldArena（WorldAtlas Arena）
+description: OpenEnvision 面向静态、动态、长时程和交互式生成世界的六轴 benchmark。
+---
+
+## 简介
+
+**发布机构：** OpenEnvision。
+
+WorldAtlas Arena 覆盖 image/video 静态与动态 suite，以及 memory loop。它保留
+官方六轴结果向量，不虚构 benchmark-wide 单一标量。其 catalog id 是
+`worldatlas-arena`，与本 Hub 中独立的具身 benchmark `worldarena` 不是同一条目。
+
+官方来源：[OpenEnvision/WorldArena](https://github.com/OpenEnvision/WorldArena)。
+
+## 指标
+
+| 指标 | 范围 | 方向 |
+| --- | --- | --- |
+| `long_sequence` | 长时程保持与闭环记忆。 | 越高越好 |
+| `action_control` | Prompt、相机、运动和键盘控制。 | 越高越好 |
+| `consistency_3d_4d` | 几何、深度、光流和重建一致性。 | 越高越好 |
+| `physics` | 物理合理性与运动动力学。 | 越高越好 |
+| `quality` | 感知质量、保真度和时序 artifact。 | 越高越好 |
+| `real_time` | 吞吐、响应延迟和物理时间行为。 | 越高越好 |
+
+## 运行或导入结果
+
+官方执行需要调用方提供 manifest、benchmark media、prediction，以及所选 metric
+需要的 checkpoint：
+
+```bash
+python worldfoundry/evaluation/tasks/execution/runners/worldatlas_arena/run_worldatlas_arena_official_runner.py \
+  --run-official \
+  --manifest /data/worldarena/manifest.jsonl \
+  --generated-artifact-dir /data/worldarena/predictions \
+  --output-dir tmp/worldatlas-arena/official-run \
+  --json
+```
+
+已有官方 report 目录或 summary JSON 可通过 catalog route 归一化：
+
+```bash
+worldfoundry-eval zoo benchmark-run \
+  --benchmark-id worldatlas-arena \
+  --mode official-validation \
+  --official-results-path /path/to/worldarena/report \
+  --output-dir tmp/worldatlas-arena/imported \
+  --json
+```
+
+## 输出与限制
+
+集成输出 `scorecard.json`、`raw_metric_table.jsonl`、
+`per_sample_scores.jsonl` 和 `benchmark_contract.json`。已有 summary report 可在
+CPU 上归一化；完整 metric 执行可能需要 CUDA、外部 checkpoint、媒体和可选
+third-party runtime。仓内 fixture 只验证 normalizer，完整 suite parity 尚未验证。
+
+[← Benchmark Hub](/zh/docs/evaluation/benchmark-hub)

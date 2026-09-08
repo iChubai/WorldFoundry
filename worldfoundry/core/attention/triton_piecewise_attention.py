@@ -2,8 +2,24 @@
 # SPDX-License-Identifier: MIT
 """In-tree PISA piecewise-attention Triton/TMA kernels.
 
-Adapted from NVIDIA Sol-Engine's SGLang runtime. SGLang integration, logging,
-and backend classes are deliberately excluded. See THIRD_PARTY_NOTICES.md.
+Serving-runtime integration, logging, and backend classes are
+deliberately excluded.
+
+PISA computes a density-fraction of KV blocks exactly and approximates
+the remainder with block centroids. That changes model math: the
+portable entry in :mod:`.piecewise` never selects this path from
+``auto`` dispatch.
+
+Not this module:
+    Eligibility, GQA rejection, and exact-SDPA fallback live in
+    :mod:`.piecewise`. This file assumes Hopper / DC-Blackwell TMA
+    and contiguous ``[B, H, T, D]`` half tensors. OOM is not caught
+    here — the caller decides whether to retry.
+
+Public surface:
+
+- :func:`piecewise_attention_tma` — autograd Function around the
+  TMA kernels (the only symbol recipes should import).
 """
 
 from __future__ import annotations
@@ -12,7 +28,7 @@ import os
 
 import torch
 
-from worldfoundry.runtime.compile_cache import configure_persistent_compile_cache
+from worldfoundry.core.compile_cache import configure_persistent_compile_cache
 
 configure_persistent_compile_cache(namespace="pisa-triton")
 
@@ -22,17 +38,38 @@ from triton.tools.tensor_descriptor import TensorDescriptor  # noqa: E402
 
 _COMPILED_TAYLOR_ERROR_BLOCK_INDICES = None
 
+
+# ──────────────────────────────────────────────────────────────────────────
+# TMA helpers — allocator must follow q.device in single-process multi-GPU
+# ──────────────────────────────────────────────────────────────────────────
+
+
 def _make_tma_allocator(device: torch.device):
+    """Bind Triton's descriptor allocator to ``device`` rather than GPU 0."""
+
     def alloc_fn(size: int, alignment: int, stream):
+        """Allocate an int8 scratch buffer on the bound CUDA device."""
+
         return torch.empty(size, device=device, dtype=torch.int8)
 
     return alloc_fn
 
 
 def build_block_map(indices, nt_kv):
+    """Expand top-k block indices into a dense ``[…, NT_KV]`` membership map.
+
+    Backward kernels scan all KV chunks and need an O(1) selected test;
+    scattering once is cheaper than a nested compare inside each tile.
+    """
+
     block_map = torch.zeros(*indices.shape[:-1], nt_kv, device=indices.device, dtype=torch.int8)
     block_map.scatter_(-1, indices.to(torch.long), 1)
     return block_map.contiguous()
+
+
+# ──────────────────────────────────────────────────────────────────────────
+# Centroid kernels — mean Q/K and sum-V per block, plus a K variance proxy
+# ──────────────────────────────────────────────────────────────────────────
 
 
 @triton.jit
@@ -50,6 +87,13 @@ def chunk_reduce_kv_kernel(
     BK: tl.constexpr,
     BV: tl.constexpr,
 ):
+    """Reduce one KV block to ``(mean K, sum V, max(0, Var||K||))``.
+
+    Variance is a routing proxy, not a statistically unbiased estimator:
+    negative leftovers from fp16 cancellation are clamped so log-domain
+    top-k never sees ``NaN``.
+    """
+
     i_t, i_bh = tl.program_id(0), tl.program_id(1)
     block_size = tl.minimum(BT, T - i_t * BT).to(tl.float32)
 
@@ -87,6 +131,8 @@ def chunk_reduce_k_kernel(
     BT: tl.constexpr,
     BK: tl.constexpr,
 ):
+    """K-only centroid path when V centroids are not needed for routing."""
+
     i_t, i_bh = tl.program_id(0), tl.program_id(1)
     block_size = tl.minimum(BT, T - i_t * BT).to(tl.float32)
 
@@ -117,6 +163,8 @@ def chunk_reduce_q_kernel(
     BT: tl.constexpr,
     BK: tl.constexpr,
 ):
+    """Mean-reduce one query block; used only for Taylor-error routing."""
+
     i_t, i_bh = tl.program_id(0), tl.program_id(1)
     block_size = tl.minimum(BT, T - i_t * BT).to(tl.float32)
 
@@ -136,6 +184,12 @@ def chunk_reduce_qkv(
     block_size: int,
     include_v_centroid: bool = True,
 ):
+    """Launch Q/K(/V) centroid kernels and return ``(qc, kc, vc, k_var)``.
+
+    ``vc`` is ``None`` when ``include_v_centroid`` is false so a
+    routing-only call does not allocate an unused V table.
+    """
+
     B, H, T_Q, K, T_KV, V = *q.shape, *v.shape[-2:]
 
     N_Q = triton.cdiv(T_Q, block_size)
@@ -201,6 +255,11 @@ def chunk_reduce_qkv(
     return qc, kc, vc, k_var
 
 
+# ──────────────────────────────────────────────────────────────────────────
+# Forward kernel — exact online softmax on selected blocks, centroid rest
+# ──────────────────────────────────────────────────────────────────────────
+
+
 @triton.jit
 def piecewise_attn_fwd_kernel(
     q_desc,
@@ -226,6 +285,13 @@ def piecewise_attn_fwd_kernel(
     GROUP_SIZE: tl.constexpr,
     APPROX_REMAINDER: tl.constexpr,
 ):
+    """Online-softmax attention: exact tiles from ``indices``, else centroids.
+
+    ``sm_scale`` is multiplied by ``1/ln(2)`` because the kernel uses
+    ``exp2``. Remainder blocks contribute ``prob * block_len`` to the
+    normalizer so a short last tile is not treated as a full ``BT``.
+    """
+
     i_v, i_t, i_bh = tl.program_id(0), tl.program_id(1), tl.program_id(2)
 
     token_offsets = tl.arange(0, BT)
@@ -313,6 +379,8 @@ def attn_bwd_preprocess(
     BT: tl.constexpr,
     BV: tl.constexpr,
 ):
+    """Precompute ``delta = sum(O * dO)`` for the backward softmax identity."""
+
     i_t, i_bh = tl.program_id(0), tl.program_id(1)
 
     t_start = i_t * BT
@@ -361,6 +429,8 @@ def piecewise_attn_bwd_dq_kernel(
     NS: tl.constexpr,
     GROUP_SIZE: tl.constexpr,
 ):
+    """Accumulate ``dQ`` from exact selected tiles plus unselected centroids."""
+
     i_v, i_t, i_bh = tl.program_id(0), tl.program_id(1), tl.program_id(2)
 
     q_start = i_t * BT
@@ -463,6 +533,8 @@ def piecewise_attn_bwd_approx_dkdv_kernel(
     NT_KV: tl.constexpr,
     BN: tl.constexpr,
 ):
+    """Centroid-path ``dKc`` / ``dVc`` for KV blocks that were not exact."""
+
     i_v, i_kv_group, i_bh = tl.program_id(0), tl.program_id(1), tl.program_id(2)
 
     offs_c = i_kv_group * BN + tl.arange(0, BN)
@@ -545,6 +617,12 @@ def piecewise_attn_bwd_exact_dkdv_kernel(
     NT_Q: tl.constexpr,
     NT_KV: tl.constexpr,
 ):
+    """Exact-path ``dK`` / ``dV``, then add the centroid grads for that block.
+
+    Unselected blocks still receive ``dKc`` / ``dVc`` broadcast onto
+    every token so the approximate forward remains differentiable.
+    """
+
     i_v, i_kv, i_bh = tl.program_id(0), tl.program_id(1), tl.program_id(2)
 
     kv_start = i_kv * BT
@@ -611,6 +689,11 @@ def piecewise_attn_bwd_exact_dkdv_kernel(
     )
 
 
+# ──────────────────────────────────────────────────────────────────────────
+# Python launchers — TMA descriptors + grid; autotune stays on the kernels
+# ──────────────────────────────────────────────────────────────────────────
+
+
 def piecewise_attn_fwd(
     q: torch.Tensor,
     k: torch.Tensor,
@@ -622,6 +705,8 @@ def piecewise_attn_fwd(
     scale: float,
     approx_remainder: bool = True,
 ):
+    """Run the piecewise forward kernel and return ``(output, logsumexp)``."""
+
     B, H, T_Q, K, T_KV, V = *q.shape, *v.shape[-2:]
     BT, NS = block_size, block_indices.shape[-1]
 
@@ -684,6 +769,8 @@ def piecewise_attn_bwd(
     block_size: int,
     scale: float,
 ):
+    """Run preprocess + ``dQ`` + approx/exact ``dK/dV`` and return grads."""
+
     B, H, T_Q, K, T_KV, V = *q.shape, *v.shape[-2:]
     BT, NS = block_size, block_indices.shape[-1]
 
@@ -750,6 +837,8 @@ def piecewise_attn_bwd(
     # BNC = 64
     # grid = (triton.cdiv(V, BV), triton.cdiv(NT_KV, BNC), B * H)
     def grid(meta):
+        """Autotune grid: ``BN`` is chosen by the kernel config, not the caller."""
+
         return (triton.cdiv(V, BV), triton.cdiv(NT_KV, meta["BN"]), B * H)
 
     piecewise_attn_bwd_approx_dkdv_kernel[grid](
@@ -802,6 +891,11 @@ def piecewise_attn_bwd(
     return dq, dk, dv
 
 
+# ──────────────────────────────────────────────────────────────────────────
+# Routing — log-domain Taylor error so exp(2*logit)*k_var cannot overflow
+# ──────────────────────────────────────────────────────────────────────────
+
+
 @torch.no_grad()
 def taylor_error_block_indices(
     qc: torch.Tensor,       # [B, H, NT_Q, K]
@@ -811,6 +905,13 @@ def taylor_error_block_indices(
     scale: float,
     eps: float = 1e-8,
 ):
+    """Pick the ``density`` fraction of KV blocks with largest routing score.
+
+    Score is ``scale * qc·kc + log(k_var)``, equivalent to
+    ``topk(exp(2*logit) * k_var)`` without the exp. ``k_var`` is
+    clamped so a zero-variance block does not become ``-inf``.
+    """
+
     NT_KV = kc.shape[2]
 
     top_k = max(1, int(density * NT_KV))
@@ -835,6 +936,8 @@ def taylor_error_block_indices(
 
 
 def _should_compile_piecewise_route() -> bool:
+    """Opt-in ``torch.compile`` of the routing op; off unless the env flag is truthy."""
+
     return os.environ.get("SGLANG_PIECEWISE_ATTN_COMPILE_ROUTE", "0").lower() in (
         "1",
         "true",
@@ -843,6 +946,8 @@ def _should_compile_piecewise_route() -> bool:
 
 
 def _compiled_taylor_error_block_indices():
+    """Lazily ``torch.compile`` the router; reused across forwards in one process."""
+
     global _COMPILED_TAYLOR_ERROR_BLOCK_INDICES
     if _COMPILED_TAYLOR_ERROR_BLOCK_INDICES is None:
         mode = os.environ.get(
@@ -857,9 +962,18 @@ def _compiled_taylor_error_block_indices():
     return _COMPILED_TAYLOR_ERROR_BLOCK_INDICES
 
 
+# ──────────────────────────────────────────────────────────────────────────
+# Autograd + public entry — density/block_size are non-diff; OOM not caught
+# ──────────────────────────────────────────────────────────────────────────
+
+
 class PiecewiseAttentionFunction(torch.autograd.Function):
+    """Autograd boundary around TMA PISA; density / block_size are non-diff."""
+
     @staticmethod
     def forward(ctx, q, k, v, density, block_size, scale):
+        """Route blocks, run TMA forward, stash tensors needed for backward."""
+
         # Triton's launcher and descriptor allocator both use current_device;
         # tensor pointers alone do not switch it in a single-process multi-GPU
         # runtime.
@@ -893,6 +1007,8 @@ class PiecewiseAttentionFunction(torch.autograd.Function):
 
     @staticmethod
     def backward(ctx, do):
+        """Rebind the TMA allocator, then return ``dQ, dK, dV`` only."""
+
         q, k, v, kc, vc, o, lse, block_indices = ctx.saved_tensors
 
         scale = ctx.scale
@@ -926,7 +1042,8 @@ def piecewise_attention_tma(
     density: float = 0.1,
     block_size: int = 64,
 ) -> torch.Tensor:
-    """
+    """Launch PISA TMA attention; default scale is ``1/sqrt(K)``.
+
     Args:
         q (torch.Tensor):
             queries of shape `[B, H, T, K]`.

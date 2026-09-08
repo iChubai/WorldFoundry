@@ -1,5 +1,7 @@
 id: memobench
 name: MemoBench
+publisher: Harvard University
+publisher_kind: university
 benchmark_kind:
 - world-model
 - visual-memory
@@ -235,6 +237,10 @@ requires:
 - Gemini or compatible VLM credentials for VQA
 blockers:
 - Leaderboard parity requires generated frames for the complete synthetic and real suites plus Step 1, ORS, VQA, and leaderboard evidence.
+dataset:
+  hf_dataset_id: tonyc54/MemoBench
+  revision: fcdb9d2138c4152c76a84b9a57b4106b47f89e7b
+  license: mit
 data_refs:
   task_yaml: worldfoundry/data/benchmarks/tasks/external/memobench.yaml
   sample_results: worldfoundry/data/benchmarks/assets/memobench/sample_results.csv

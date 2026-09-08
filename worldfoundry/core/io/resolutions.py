@@ -1,4 +1,18 @@
-"""Canonical video generation resolutions shared by model runtimes."""
+"""Canonical video generation resolutions shared by model runtimes.
+
+Recipes look up ``(height, width)`` by a named tier (``"720"``,
+``"480p"``, …) and an aspect key (``"16,9"``). Image and video tables
+are separate because some families letterbox video differently from
+stills at the same nominal resolution (see the 1024 4:3 entries).
+
+These sizes are already aligned to typical VAE / patch strides (often
+multiples of 16 or 32). Changing a cell here changes every recipe that
+imports the table — do not "round" a single model's request in-place.
+"""
+
+# ──────────────────────────────────────────────────────────────────────────
+# Named (H, W) tables — video 1024 4:3 letterbox differs from stills
+# ──────────────────────────────────────────────────────────────────────────
 
 IMAGE_RES_SIZE_INFO = {
     "1080": {"1,1": (1024, 1024), "4,3": (1440, 1056), "3,4": (1056, 1440), "16,9": (1920, 1056), "9,16": (1056, 1920)},

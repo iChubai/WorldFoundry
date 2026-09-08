@@ -1,16 +1,23 @@
+"""Causal RoPE + Ulysses for sequence-parallel video generation.
+
+Applies 3D RoPE on the local SP shard, then causal Ulysses attention.
+Frequencies are padded to the shard length so ranks with unequal tail
+tokens still broadcast. This is the LingBot causal path; non-causal Wan
+self-attn uses :mod:`worldfoundry.core.attention.rope_sequence_parallel`.
+"""
+
 import math
 
 import torch
 import torch.nn.functional as torch_F
 from einops import rearrange
 
-from worldfoundry.base_models.diffusion_model.video.wan.wan_2p2.modules.lingbot_attention import flash_attention
-from worldfoundry.base_models.diffusion_model.video.wan.wan_2p2.modules.lingbot_model import sinusoidal_embedding_1d
 from worldfoundry.core.attention.causal_ulysses_attention import distributed_attention
 from worldfoundry.core.attention.sequence_parallel_rope import (
     make_sequence_parallel_attention_forward,
     make_sequence_parallel_rope_apply,
 )
+from worldfoundry.core.attention.varlen import flash_attention
 from worldfoundry.core.distributed.sequence_ops import (
     all_to_all,
     all_to_all_many,
@@ -19,6 +26,7 @@ from worldfoundry.core.distributed.sequence_ops import (
     get_world_size,
 )
 from worldfoundry.core.kernels import hidden_qk_rmsnorm_rope_3d
+from worldfoundry.core.nn.transformer import sinusoidal_embedding_1d
 
 # The chunked causal path is adapted from Robbyant/lingbot-world-v2 commit
 # 94f43115 under CC BY-NC-SA 4.0; see the integration's upstream license file.
@@ -26,9 +34,20 @@ from worldfoundry.core.kernels import hidden_qk_rmsnorm_rope_3d
 
 rope_apply = make_sequence_parallel_rope_apply(get_world_size, get_rank)
 
+# ──────────────────────────────────────────────────────────────────────────
+# 3D causal RoPE — rotate a shard starting at an arbitrary frame
+# ──────────────────────────────────────────────────────────────────────────
+
 
 @torch.amp.autocast("cuda", enabled=False)
 def causal_rope_apply(x, grid_sizes, freqs, start_frame=0):
+    """Apply 3D complex RoPE to a local shard, starting at ``start_frame``.
+
+    Frequencies are split into time/height/width and expanded to the
+    sample's ``(F, H, W)`` grid. Tokens past ``seq_len`` are left
+    unrotated so padded tails stay identity. Autocast is disabled so
+    the complex multiply stays in float64.
+    """
     n, c = x.size(2), x.size(3) // 2
     if not freqs.is_complex():
         freqs = torch.view_as_complex(freqs.contiguous())
@@ -60,6 +79,11 @@ def causal_rope_apply(x, grid_sizes, freqs, start_frame=0):
         # append to collection
         output.append(x_i)
     return torch.stack(output).type_as(x)
+
+
+# ──────────────────────────────────────────────────────────────────────────
+# Non-causal SP DiT — sequence-sharded tokens (Wan self-attn path)
+# ──────────────────────────────────────────────────────────────────────────
 
 
 def sp_dit_forward(
@@ -179,6 +203,11 @@ sp_attn_forward = make_sequence_parallel_attention_forward(
     get_world_size,
     get_rank,
 )
+
+
+# ──────────────────────────────────────────────────────────────────────────
+# Causal SP DiT — every rank holds the full sequence; heads are split
+# ──────────────────────────────────────────────────────────────────────────
 
 
 def sp_dit_forward_causal(
@@ -437,6 +466,11 @@ def sp_attn_forward_causal(
     x_full = x_full.flatten(2)
     x_full = self.o(x_full)
     return x_full
+
+
+# ──────────────────────────────────────────────────────────────────────────
+# Chunked causal SP — sequence shards + all-to-all (LingBot-World-V2)
+# ──────────────────────────────────────────────────────────────────────────
 
 
 def sp_dit_forward_causal_chunked(

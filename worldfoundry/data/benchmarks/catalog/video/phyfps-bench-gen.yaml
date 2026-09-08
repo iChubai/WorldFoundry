@@ -1,5 +1,7 @@
 id: phyfps-bench-gen
 name: PhyFPS-Bench-Gen
+publisher: Texas A&M University
+publisher_kind: university
 benchmark_kind:
 - text-to-video
 - temporal-consistency
@@ -180,6 +182,9 @@ validation_command:
 checkpoint_refs: []
 blockers:
 - Full leaderboard parity requires the complete official assets, generated artifacts, and verified scorecard evidence.
+dataset:
+  not_applicable: true
+  reason: The official 100-prompt suite is versioned in the pinned GitHub source; generated videos are caller-provided, so no Hugging Face dataset is required.
 artifact_layout:
   generated_artifact_dir_env: WORLDFOUNDRY_GENERATED_ARTIFACT_DIR
   output_artifact: benchmark_scorecard

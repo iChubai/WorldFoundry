@@ -1,12 +1,40 @@
-"""Variable-length attention primitives used by packed vision/language models."""
+"""Variable-length / packed attention for vision-language and Wan-style batches.
+
+Dense unpadded batches stay on one SDPA launch — packing them into varlen
+is slower for the small batches diffusion uses. External FlashAttention
+2/3 is tried only when ``version`` is set; otherwise jagged Flash SDPA
+(when batch is large enough) or a per-sample SDPA loop.
+
+:func:`masked_attention` packs non-prefix padding into dense prefixes so
+kernels that only understand ``cu_seqlens`` still see valid tokens.
+``max_seqlen_*`` avoids a GPU-to-CPU ``.item()`` sync before a varlen launch.
+
+Not this module:
+    Backend probing lives in :mod:`.backends`. Exact dense SDPA lives
+    in :mod:`.native`. Packed dataclass ABI lives in
+    :mod:`.packed_sequence`. This module does not import FlashAttention
+    at module scope.
+
+Public surface:
+
+- :func:`flash_attention` — Wan-compatible dense / packed entry.
+- :func:`attention` — alias with Cosmos-style keyword names.
+- :func:`masked_attention` — pack non-prefix padding, then restore.
+- :func:`varlen_scaled_dot_product_attention` — already-packed
+  ``cu_seqlens`` path.
+"""
 
 from __future__ import annotations
 
+import logging
+import operator
 import os
 import warnings
 from typing import Any
 
 import torch
+
+logger = logging.getLogger(__name__)
 
 from worldfoundry.core.attention.backends import probe_attention_backends
 from worldfoundry.core.attention.native import native_sdpa_priority, scaled_dot_product_attention
@@ -15,6 +43,12 @@ try:
     from torch.nn.attention.bias import causal_lower_right as _causal_lower_right
 except ImportError:
     _causal_lower_right = None
+
+
+# ──────────────────────────────────────────────────────────────────────────
+# Public entries — dense SDPA by default; packed / FA2/3 only when asked
+# ──────────────────────────────────────────────────────────────────────────
+
 
 def flash_attention(
     q: torch.Tensor,
@@ -30,8 +64,15 @@ def flash_attention(
     deterministic: bool = False,
     dtype: torch.dtype = torch.bfloat16,
     version: int | None = None,
+    max_seqlen_q: int | None = None,
+    max_seqlen_k: int | None = None,
 ) -> torch.Tensor:
-    """Wan-compatible attention with an in-tree default execution path."""
+    """Wan-compatible attention with an in-tree default execution path.
+
+    ``max_seqlen_q`` and ``max_seqlen_k`` let packing callers pass maxima they
+    already computed.  Supplying them avoids a GPU-to-CPU ``.item()`` sync
+    immediately before an external variable-length FlashAttention launch.
+    """
 
     half_dtypes = (torch.float16, torch.bfloat16)
     if dtype not in half_dtypes:
@@ -43,6 +84,8 @@ def flash_attention(
         raise ValueError("q, k and v must have matching batch and key/value sequence dimensions")
 
     def half(value: torch.Tensor) -> torch.Tensor:
+        """Cast to the kernel dtype only when the tensor is not already half."""
+
         return value if value.dtype in half_dtypes else value.to(dtype)
 
     # The common unpadded path should remain one dense SDPA launch. Packing it
@@ -97,15 +140,31 @@ def flash_attention(
 
     if q_lens is None:
         q_lens = torch.full((batch,), q_len, dtype=torch.int32, device=q.device)
+        resolved_max_seqlen_q = q_len
     else:
         q_lens = _validated_lengths(q_lens, batch=batch, maximum=q_len, device=q.device, name="q_lens")
+        resolved_max_seqlen_q = _resolve_max_seqlen(
+            max_seqlen_q,
+            lengths=q_lens,
+            padded_length=q_len,
+            batch=batch,
+            name="max_seqlen_q",
+        )
     q_valid = torch.arange(q_len, device=q.device).unsqueeze(0) < q_lens.unsqueeze(1)
     q = half(q[q_valid])
 
     if k_lens is None:
         k_lens = torch.full((batch,), k_len, dtype=torch.int32, device=k.device)
+        resolved_max_seqlen_k = k_len
     else:
         k_lens = _validated_lengths(k_lens, batch=batch, maximum=k_len, device=k.device, name="k_lens")
+        resolved_max_seqlen_k = _resolve_max_seqlen(
+            max_seqlen_k,
+            lengths=k_lens,
+            padded_length=k_len,
+            batch=batch,
+            name="max_seqlen_k",
+        )
     k_valid = torch.arange(k_len, device=k.device).unsqueeze(0) < k_lens.unsqueeze(1)
     k = half(k[k_valid])
     v = half(v[k_valid])
@@ -123,13 +182,13 @@ def flash_attention(
     if version == 3:
         try:
             import flash_attn_interface
-        except Exception:
-            pass
+        except Exception as exc:
+            logger.debug("flash_attn_interface import failed: %s", exc)
     elif version == 2:
         try:
             import flash_attn as flash_attn_module
-        except Exception:
-            pass
+        except Exception as exc:
+            logger.debug("flash_attn import failed: %s", exc)
     capabilities = probe_attention_backends(q.device) if version in {2, 3} else {}
     use_fa3 = (
         version == 3
@@ -146,6 +205,10 @@ def flash_attention(
         warnings.warn(
             "FlashAttention 3 is unavailable on this GPU/runtime; falling back to PyTorch SDPA."
         )
+    if version == 2 and not use_fa2:
+        warnings.warn(
+            "FlashAttention 2 is unavailable on this GPU/runtime; falling back to PyTorch SDPA."
+        )
 
     if use_fa3:
         output = flash_attn_interface.flash_attn_varlen_func(
@@ -156,8 +219,8 @@ def flash_attention(
             cu_seqlens_k=cu_k,
             seqused_q=None,
             seqused_k=None,
-            max_seqlen_q=int(q_lens.max().item()) if batch else 0,
-            max_seqlen_k=int(k_lens.max().item()) if batch else 0,
+            max_seqlen_q=resolved_max_seqlen_q,
+            max_seqlen_k=resolved_max_seqlen_k,
             softmax_scale=softmax_scale,
             causal=causal,
             window_size=window_size,
@@ -172,8 +235,8 @@ def flash_attention(
             v=v,
             cu_seqlens_q=cu_q,
             cu_seqlens_k=cu_k,
-            max_seqlen_q=int(q_lens.max().item()) if batch else 0,
-            max_seqlen_k=int(k_lens.max().item()) if batch else 0,
+            max_seqlen_q=resolved_max_seqlen_q,
+            max_seqlen_k=resolved_max_seqlen_k,
             dropout_p=dropout_p,
             softmax_scale=softmax_scale,
             causal=causal,
@@ -191,8 +254,8 @@ def flash_attention(
             softmax_scale=softmax_scale,
             causal=causal,
             window_size=window_size,
-            max_seqlen_q=q_len,
-            max_seqlen_k=k_len,
+            max_seqlen_q=resolved_max_seqlen_q,
+            max_seqlen_k=resolved_max_seqlen_k,
         )
 
     padded = output.new_zeros((batch, q_len, *output.shape[1:]))
@@ -215,6 +278,8 @@ def attention(
     dtype: torch.dtype = torch.bfloat16,
     fa_version: int | None = None,
     version: int | None = None,
+    max_seqlen_q: int | None = None,
+    max_seqlen_k: int | None = None,
     *,
     query: torch.Tensor | None = None,
     key: torch.Tensor | None = None,
@@ -245,7 +310,109 @@ def attention(
         deterministic=deterministic,
         dtype=dtype,
         version=fa_version if fa_version is not None else version,
+        max_seqlen_q=max_seqlen_q,
+        max_seqlen_k=max_seqlen_k,
     )
+
+
+def masked_attention(
+    query: torch.Tensor,
+    key: torch.Tensor,
+    value: torch.Tensor,
+    *,
+    query_mask: torch.Tensor | None = None,
+    key_mask: torch.Tensor | None = None,
+    dropout_p: float = 0.0,
+    softmax_scale: float | None = None,
+    causal: bool = False,
+    deterministic: bool = False,
+    dtype: torch.dtype = torch.bfloat16,
+    version: int | None = None,
+) -> torch.Tensor:
+    """Apply attention to padded sequences and restore the query layout.
+
+    Masks use ``True`` for valid tokens and may contain non-prefix padding. This
+    adapter is shared by model families whose tensors are padded while optimized
+    attention kernels consume packed sequences.
+    """
+
+    if query.ndim != 4 or key.ndim != 4 or value.ndim != 4:
+        raise ValueError("query, key, and value must have shape [batch, sequence, heads, head_dim]")
+    batch, query_length = query.shape[:2]
+    key_length = key.shape[1]
+    if key.shape[0] != batch or value.shape[:2] != (batch, key_length):
+        raise ValueError("query, key, and value must have matching batch and key/value dimensions")
+
+    query_mask = _validated_padding_mask(
+        query_mask,
+        batch=batch,
+        length=query_length,
+        device=query.device,
+        name="query_mask",
+    )
+    key_mask = _validated_padding_mask(
+        key_mask,
+        batch=batch,
+        length=key_length,
+        device=key.device,
+        name="key_mask",
+    )
+    if query_mask is None and key_mask is None:
+        return flash_attention(
+            query,
+            key,
+            value,
+            dropout_p=dropout_p,
+            softmax_scale=softmax_scale,
+            causal=causal,
+            deterministic=deterministic,
+            dtype=dtype,
+            version=version,
+        )
+    if query_mask is None:
+        query_mask = torch.ones((batch, query_length), dtype=torch.bool, device=query.device)
+    if key_mask is None:
+        key_mask = torch.ones((batch, key_length), dtype=torch.bool, device=key.device)
+
+    query_lengths = query_mask.sum(dim=1, dtype=torch.int32)
+    key_lengths = key_mask.sum(dim=1, dtype=torch.int32)
+    max_query_length = int(query_lengths.max().item()) if batch else 0
+    max_key_length = int(key_lengths.max().item()) if batch else 0
+    packed_query = query.new_zeros((batch, max_query_length, *query.shape[2:]))
+    packed_key = key.new_zeros((batch, max_key_length, *key.shape[2:]))
+    packed_value = value.new_zeros((batch, max_key_length, *value.shape[2:]))
+    for index in range(batch):
+        query_count = int(query_lengths[index].item())
+        key_count = int(key_lengths[index].item())
+        packed_query[index, :query_count] = query[index, query_mask[index]]
+        packed_key[index, :key_count] = key[index, key_mask[index]]
+        packed_value[index, :key_count] = value[index, key_mask[index]]
+
+    packed_output = flash_attention(
+        packed_query,
+        packed_key,
+        packed_value,
+        q_lens=query_lengths,
+        k_lens=key_lengths,
+        dropout_p=dropout_p,
+        softmax_scale=softmax_scale,
+        causal=causal,
+        deterministic=deterministic,
+        dtype=dtype,
+        version=version,
+        max_seqlen_q=max_query_length,
+        max_seqlen_k=max_key_length,
+    )
+    output = query.new_zeros(query.shape)
+    for index in range(batch):
+        query_count = int(query_lengths[index].item())
+        output[index, query_mask[index]] = packed_output[index, :query_count]
+    return output
+
+
+# ──────────────────────────────────────────────────────────────────────────
+# Already-packed path — cu_seqlens in, no pad/unpad; FA2/3 still explicit
+# ──────────────────────────────────────────────────────────────────────────
 
 
 def varlen_scaled_dot_product_attention(
@@ -268,24 +435,61 @@ def varlen_scaled_dot_product_attention(
 
     window_size = _validated_window_size(window_size)
     flash_attn_varlen_func = None
+    flash_attn_varlen_func_v3 = None
     if version == 2:
         try:
             from flash_attn import flash_attn_varlen_func
-        except Exception:
-            pass
-    capabilities = probe_attention_backends(query.device) if version == 2 else {}
+        except Exception as exc:
+            logger.debug("flash_attn import failed: %s", exc)
+    elif version == 3:
+        try:
+            from flash_attn_interface import flash_attn_varlen_func as flash_attn_varlen_func_v3
+        except Exception as exc:
+            logger.debug("flash_attn_interface import failed: %s", exc)
+    capabilities = probe_attention_backends(query.device) if version in {2, 3} else {}
+    if version == 3 and (
+        flash_attn_varlen_func_v3 is None or not capabilities["flash_attention_3"].usable or dropout_p != 0.0
+    ):
+        warnings.warn("FlashAttention 3 is unavailable on this GPU/runtime; falling back to PyTorch SDPA.")
+    if version == 2 and (flash_attn_varlen_func is None or not capabilities["flash_attention_2"].usable):
+        warnings.warn("FlashAttention 2 is unavailable on this GPU/runtime; falling back to PyTorch SDPA.")
+    if (
+        flash_attn_varlen_func_v3 is not None
+        and capabilities["flash_attention_3"].usable
+        and dropout_p == 0.0
+    ):
+        resolved_max_q = _max_from_cumulative(cu_seqlens_q, max_seqlen_q, name="max_seqlen_q")
+        resolved_max_k = _max_from_cumulative(cu_seqlens_k, max_seqlen_k, name="max_seqlen_k")
+        output = flash_attn_varlen_func_v3(
+            q=query,
+            k=key,
+            v=value,
+            cu_seqlens_q=cu_seqlens_q,
+            cu_seqlens_k=cu_seqlens_k,
+            seqused_q=None,
+            seqused_k=None,
+            max_seqlen_q=resolved_max_q,
+            max_seqlen_k=resolved_max_k,
+            softmax_scale=softmax_scale,
+            causal=causal,
+            window_size=window_size,
+            deterministic=bool(kwargs.pop("deterministic", False)),
+        )
+        return output[0] if isinstance(output, tuple) else output
     if (
         flash_attn_varlen_func is not None
         and capabilities["flash_attention_2"].usable
     ):
+        resolved_max_q = _max_from_cumulative(cu_seqlens_q, max_seqlen_q, name="max_seqlen_q")
+        resolved_max_k = _max_from_cumulative(cu_seqlens_k, max_seqlen_k, name="max_seqlen_k")
         return flash_attn_varlen_func(
             query,
             key,
             value,
             cu_seqlens_q=cu_seqlens_q,
             cu_seqlens_k=cu_seqlens_k,
-            max_seqlen_q=max_seqlen_q,
-            max_seqlen_k=max_seqlen_k,
+            max_seqlen_q=resolved_max_q,
+            max_seqlen_k=resolved_max_k,
             dropout_p=dropout_p,
             softmax_scale=softmax_scale,
             causal=causal,
@@ -321,6 +525,15 @@ def _varlen_attention_torch(
     max_seqlen_q: int | None = None,
     max_seqlen_k: int | None = None,
 ) -> torch.Tensor:
+    """Exact packed attention: jagged Flash SDPA, else a per-sample SDPA loop.
+
+    The loop is the portable fallback for small batches, windowed
+    attention, GQA, and CPU. CPU half tensors are promoted to fp32
+    because math SDPA is unstable in fp16 on CPU. Rectangular causal
+    windows that produce all-masked leading rows are ``nan_to_num``'d
+    so backends that return NaN stay bit-compatible with math.
+    """
+
     jagged_output = _varlen_attention_jagged_flash(
         query,
         key,
@@ -486,8 +699,83 @@ def _varlen_attention_jagged_flash(
         return None
 
 
+# ──────────────────────────────────────────────────────────────────────────
+# Packed ABI helpers — keep host syncs off the dense / compile-hot path
+# ──────────────────────────────────────────────────────────────────────────
+
+
 def _offsets(cu_seqlens: torch.Tensor) -> list[int]:
+    """Materialize cumulative offsets on CPU for the per-sample SDPA loop.
+
+    A host copy is acceptable here because this path already decided
+    jagged Flash was ineligible; the alternative is a Python index
+    into a CUDA tensor per sample, which syncs once per batch item.
+    """
+
     return [int(item) for item in cu_seqlens.detach().cpu().tolist()]
+
+
+def _integer_max_seqlen(value: int, *, name: str, upper_bound: int | None = None) -> int:
+    """Accept any ``operator.index`` integer; reject bools and out-of-range."""
+
+    try:
+        resolved = operator.index(value)
+    except TypeError as exc:
+        raise TypeError(f"{name} must be an integer") from exc
+    if resolved < 0 or (upper_bound is not None and resolved > upper_bound):
+        suffix = f" and at most {upper_bound}" if upper_bound is not None else ""
+        raise ValueError(f"{name} must be non-negative{suffix}")
+    return resolved
+
+
+def _assert_lengths_fit_max(lengths: torch.Tensor, maximum: int, *, name: str) -> None:
+    """Fail if any packed length exceeds the declared max (async on CUDA).
+
+    ``torch._assert_async`` avoids a host sync on the hot varlen path;
+    older PyTorch falls back to ``.item()``.
+    """
+
+    if lengths.numel() == 0:
+        return
+    valid = torch.all((lengths >= 0) & (lengths <= maximum))
+    message = f"sequence lengths must be between 0 and {name}={maximum}"
+    if lengths.device.type == "cpu":
+        if not bool(valid.item()):
+            raise ValueError(message)
+        return
+    assert_async = getattr(torch, "_assert_async", None)
+    if callable(assert_async):
+        assert_async(valid, message)
+    elif not bool(valid.item()):  # pragma: no cover - compatibility with old torch
+        raise ValueError(message)
+
+
+def _resolve_max_seqlen(
+    provided: int | None,
+    *,
+    lengths: torch.Tensor,
+    padded_length: int,
+    batch: int,
+    name: str,
+) -> int:
+    """Use a caller-supplied max when present so launch avoids ``.item()``."""
+
+    if provided is None:
+        return int(lengths.max().item()) if batch else 0
+    resolved = _integer_max_seqlen(provided, name=name, upper_bound=padded_length)
+    _assert_lengths_fit_max(lengths, resolved, name=name)
+    return resolved
+
+
+def _max_from_cumulative(cumulative: torch.Tensor, provided: int | None, *, name: str) -> int:
+    """Resolve max seqlen from ``cu_seqlens`` diffs, or trust a caller max."""
+
+    lengths = cumulative[1:] - cumulative[:-1]
+    if provided is None:
+        return int(lengths.max().item()) if lengths.numel() else 0
+    resolved = _integer_max_seqlen(provided, name=name)
+    _assert_lengths_fit_max(lengths, resolved, name=name)
+    return resolved
 
 
 def _validated_lengths(
@@ -498,15 +786,35 @@ def _validated_lengths(
     device: torch.device,
     name: str,
 ) -> torch.Tensor:
+    """Move a per-sample length vector to device int32 and bound-check it."""
+
     if lengths.ndim != 1 or lengths.numel() != batch:
         raise ValueError(f"{name} must contain exactly one length per batch item")
     lengths = lengths.to(device=device, dtype=torch.int32, non_blocking=True)
-    if lengths.numel() and (int(lengths.min().item()) < 0 or int(lengths.max().item()) > maximum):
-        raise ValueError(f"{name} values must be between 0 and {maximum}")
+    _assert_lengths_fit_max(lengths, maximum, name=name)
     return lengths
 
 
+def _validated_padding_mask(
+    mask: torch.Tensor | None,
+    *,
+    batch: int,
+    length: int,
+    device: torch.device,
+    name: str,
+) -> torch.Tensor | None:
+    """Require a ``[B, L]`` keep-mask; ``None`` means the axis is dense."""
+
+    if mask is None:
+        return None
+    if mask.shape != (batch, length):
+        raise ValueError(f"{name} must have shape [{batch}, {length}]")
+    return mask.to(device=device, dtype=torch.bool, non_blocking=True)
+
+
 def _bottom_right_causal_mask(q_len: int, k_len: int, device: torch.device) -> torch.Tensor:
+    """Bottom-right causal keep-mask (FlashAttention rectangular convention)."""
+
     query_positions = torch.arange(q_len, device=device)[:, None]
     key_positions = torch.arange(k_len, device=device)[None, :]
     return key_positions <= query_positions + (k_len - q_len)
@@ -536,6 +844,8 @@ def _bottom_right_window_mask(
 
 
 def _validated_window_size(window_size: tuple[int, int]) -> tuple[int, int]:
+    """Require a ``(left, right)`` pair; ``-1`` means an unbounded side."""
+
     if not isinstance(window_size, (tuple, list)) or len(window_size) != 2:
         raise ValueError("window_size must be a (left, right) pair")
     left, right = (int(item) for item in window_size)

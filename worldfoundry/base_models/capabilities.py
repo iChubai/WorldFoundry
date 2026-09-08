@@ -34,11 +34,7 @@ def _path_tokens(env: Mapping[str, str] | None = None) -> dict[str, str]:
     cache_root = Path(core_tokens["WORLDFOUNDRY_CACHE_DIR"]).expanduser()
     data_root = Path(core_tokens["WORLDFOUNDRY_DATA_DIR"]).expanduser()
     hfd_root = Path(core_tokens["WORLDFOUNDRY_HFD_ROOT"]).expanduser()
-    hfd_dataset_root = Path(
-        environ.get("WORLDFOUNDRY_HFD_DATASET_ROOT")
-        or environ.get("WORLDFOUNDRY_LOCAL_DATA_ROOT")
-        or data_root / "hfd_datasets"
-    ).expanduser()
+    hfd_dataset_root = Path(core_tokens["WORLDFOUNDRY_HFD_DATASET_ROOT"]).expanduser()
     default_workspace_root = hfd_root.parent
     workspace_root = str(
         Path(
@@ -1004,6 +1000,38 @@ BASE_MODEL_CAPABILITIES: dict[str, BaseModelCapability] = {
                 required_files=("config.json",),
                 required_any_paths=("model.safetensors", "pytorch_model.bin", "model-00001-of-00004.safetensors"),
                 note="Keye-VL judge model used by 4DWorldBench alignment, motion-QA, and caption-helper dimensions.",
+            ),
+        ),
+    ),
+    "qwen3_vl_8b_instruct": BaseModelCapability(
+        id="qwen3_vl_8b_instruct",
+        family="multimodal_judge",
+        canonical_owner="worldfoundry.base_models.llm_mllm_core.mllm.qwen",
+        canonical_path="worldfoundry/base_models/llm_mllm_core/mllm/qwen",
+        package_imports=("torch", "transformers"),
+        install_packages=("torch", "transformers"),
+        asset_env=("WORLDFOUNDRY_QWEN3_VL_MODEL_DIR", "QWENVL_MODEL_PATH"),
+        assets=(
+            BaseModelAsset(
+                id="qwen3_vl_8b_instruct_model_dir",
+                kind="dir",
+                role="model_dir",
+                env=("WORLDFOUNDRY_QWEN3_VL_MODEL_DIR", "QWENVL_MODEL_PATH"),
+                local_path="${WORLDFOUNDRY_HFD_ROOT}/Qwen--Qwen3-VL-8B-Instruct",
+                alternate_paths=(
+                    "${WORLDFOUNDRY_CKPT_DIR}/hfd/Qwen--Qwen3-VL-8B-Instruct",
+                    "${WORLDFOUNDRY_CKPT_DIR}/Qwen3-VL-8B-Instruct",
+                    "${WORLDFOUNDRY_WORKSPACE_ROOT}/ckpt/hfd/Qwen--Qwen3-VL-8B-Instruct",
+                ),
+                hf_repo_id="Qwen/Qwen3-VL-8B-Instruct",
+                min_file_count=3,
+                required_files=("config.json",),
+                required_any_paths=(
+                    "model.safetensors",
+                    "pytorch_model.bin",
+                    "model-00001-of-00005.safetensors",
+                ),
+                note="Qwen3-VL-8B-Instruct VLM judge used by the WorldOlympiad physical, interaction, and geometry tracks; reused in place of an ad-hoc --weights-dir/QwenVL checkout.",
             ),
         ),
     ),
@@ -2813,6 +2841,23 @@ BASE_MODEL_CAPABILITIES.update(
                 },
             ),
         ),
+        "likephys_dataset_assets": _benchmark_dataset_capability(
+            "likephys_dataset_assets",
+            (
+                {
+                    "asset_id": "likephys_dataset_dir",
+                    "env": "WORLDFOUNDRY_LIKEPHYS_DATASET_ROOT",
+                    "repo_id": "JianhaoDYDY/LikePhys-Benchmark",
+                    "local_name": "JianhaoDYDY__LikePhys-Benchmark",
+                    "alternate_local_names": (
+                        "JianhaoDYDY/LikePhys-Benchmark",
+                        "datasets--JianhaoDYDY--LikePhys-Benchmark",
+                        "LikePhys-Benchmark",
+                    ),
+                    "note": "LikePhys paired valid/impossible physics clips probed by the likelihood-preference evaluator.",
+                },
+            ),
+        ),
         "phyground_dataset_assets": _benchmark_dataset_capability(
             "phyground_dataset_assets",
             (
@@ -2823,6 +2868,23 @@ BASE_MODEL_CAPABILITIES.update(
                     "local_name": "NU-World-Model-Embodied-AI__phyground",
                     "alternate_local_names": ("NU-World-Model-Embodied-AI/phyground",),
                     "note": "PhyGround official HF dataset for grounded physical-reasoning evaluation.",
+                },
+            ),
+        ),
+        "rbench_dataset_assets": _benchmark_dataset_capability(
+            "rbench_dataset_assets",
+            (
+                {
+                    "asset_id": "rbench_dataset_dir",
+                    "env": "WORLDFOUNDRY_RBENCH_DATASET_ROOT",
+                    "repo_id": "DAGroup-PKU/RBench",
+                    "local_name": "DAGroup-PKU__RBench",
+                    "alternate_local_names": (
+                        "DAGroup-PKU/RBench",
+                        "datasets--DAGroup-PKU--RBench",
+                        "RBench",
+                    ),
+                    "note": "RBench prompts and first-frame conditioning images for robotics image-to-video evaluation.",
                 },
             ),
         ),
@@ -3904,8 +3966,10 @@ BASE_MODEL_STACKS: dict[str, BaseModelStack] = {
             "libero_dataset_assets",
             "libero_para_source_assets",
             "libero_para_dataset_assets",
+            "likephys_dataset_assets",
             "phyground_dataset_assets",
             "physvidbench_dataset_assets",
+            "rbench_dataset_assets",
             "robotwin_dataset_assets",
             "vbench2_dataset_assets",
             "video_bench_dataset_assets",
@@ -3966,8 +4030,10 @@ BASE_MODEL_STACKS: dict[str, BaseModelStack] = {
             "libero_dataset_assets",
             "libero_para_source_assets",
             "libero_para_dataset_assets",
+            "likephys_dataset_assets",
             "phyground_dataset_assets",
             "physvidbench_dataset_assets",
+            "rbench_dataset_assets",
             "robotwin_dataset_assets",
             "vbench2_dataset_assets",
             "video_bench_dataset_assets",
@@ -4092,6 +4158,7 @@ BENCHMARK_DATA_ASSET_CAPABILITIES: dict[str, tuple[str, ...]] = {
     "iworld-bench": ("iworld_bench_source_assets", "iworld_bench_dataset_assets"),
     "libero": ("libero_source_assets", "libero_dataset_assets"),
     "libero-para": ("libero_para_source_assets", "libero_para_dataset_assets"),
+    "likephys": ("likephys_dataset_assets",),
     "maniskill": ("maniskill_source_assets",),
     "metaworld": ("metaworld_source_assets",),
     "mirabench": ("mirabench_source_assets",),
@@ -4101,6 +4168,7 @@ BENCHMARK_DATA_ASSET_CAPABILITIES: dict[str, tuple[str, ...]] = {
     "phyfps-bench-gen": ("visual_chronometer_source_assets",),
     "physics-iq": ("physics_iq_source_assets",),
     "physvidbench": ("physvidbench_dataset_assets", "physvidbench_source_assets"),
+    "rbench": ("rbench_dataset_assets",),
     "rlbench": ("rlbench_source_assets",),
     "robocasa": ("robocasa_source_assets",),
     "robotwin": ("robotwin_dataset_assets",),

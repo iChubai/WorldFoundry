@@ -780,7 +780,7 @@ def execute_prepared_evaluation(prepared: PreparedEvaluation) -> Any:
         raise ValueError(f"evaluation preflight failed: {messages or 'request is not executable'}")
     output_dir = Path(prepared.request.output_dir).expanduser().resolve()
     output_dir.mkdir(parents=True, exist_ok=True)
-    write_json(output_dir / "prepared_evaluation.json", prepared.to_dict(), atomic=False)
+    write_json(output_dir / "prepared_evaluation.json", prepared.to_dict())
     if isinstance(prepared.request, ModelBenchmarkRunRequest):
         return run_model_benchmark(prepared.request)
     return execute_evaluate_run(prepared.request)

@@ -21,7 +21,7 @@ from tqdm import tqdm
 from mira.codec.codec_model import VideoCodec
 from mira.data.batch import VideoActionBatch
 from mira.ml.config_loading import drop_removed_fields, strip_hydra_targets
-from mira.training.checkpoints import resolve_checkpoint
+from mira.inference_support.checkpoints import resolve_checkpoint
 from mira.world_model.actions_config import ActionTensors
 from mira.world_model.config import LatentWorldModelConfig, WorldModelInferenceConfig
 from mira.world_model.diffusion_transformer import DiffusionTransformer
@@ -506,7 +506,7 @@ class LatentWorldModel(nn.Module):
             where ``viz_video`` stacks the HUD-annotated prediction over the ground truth vertically.
         """
         # Imported here (not at module load) to keep the model independent of the training package.
-        from mira.training.visualization import (  # noqa: PLC0415
+        from mira.inference_support.visualization import (  # noqa: PLC0415
             add_prediction_border,
             video_to_uint8,
             visualize_batch,

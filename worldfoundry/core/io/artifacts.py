@@ -1,4 +1,19 @@
-"""Shared artifact visualization utilities without Studio dependencies."""
+"""Artifact visualization without Studio dependencies.
+
+Depth colormaps, optical-flow RGB, point-cloud renders, and WASD / IJKL
+overlays for eval and debug. Nothing here sits on a model forward path:
+callers import these helpers only when writing human-readable evidence.
+
+Boundaries:
+- OpenCV / matplotlib / ONNX sky-seg are pulled at import or call time;
+  this is not a codec or storage layer.
+- Action overlays mutate or convert frames; they do not persist video.
+- :func:`download_file_from_url` is a legacy helper; new code should use
+  :func:`worldfoundry.core.io.download.download_to_cache`.
+
+Public surface: colormap constants, depth / flow / normal visualizers,
+game-control overlays, and open-loop action comparison plots.
+"""
 
 from __future__ import annotations
 
@@ -9,6 +24,10 @@ import numpy as np
 from PIL import Image
 
 from worldfoundry.core.geometry import rotation_matrix_to_euler_angles_opencv
+
+# ──────────────────────────────────────────────────────────────────────────
+# Depth colormaps — per-frame min/max stretch so NaN / empty maps stay blank
+# ──────────────────────────────────────────────────────────────────────────
 
 COLORMAP_VIRIDIS = "viridis"
 COLORMAP_INFERNO = "inferno"
@@ -24,10 +43,14 @@ _CV2_COLORMAPS = {
 
 
 def _resolve_colormap(colormap: str) -> int:
+    """Map a case-insensitive name to a cv2 LUT; unknown names become viridis."""
+
     return _CV2_COLORMAPS.get(str(colormap).lower(), cv2.COLORMAP_VIRIDIS)
 
 
 def squeeze_depth_to_2d(depth: np.ndarray) -> Optional[np.ndarray]:
+    """Return ``(H, W)`` depth or ``None`` when leftover axes remain after squeeze."""
+
     arr = np.asarray(depth)
     arr = np.squeeze(arr)
     if arr.ndim != 2:
@@ -36,6 +59,13 @@ def squeeze_depth_to_2d(depth: np.ndarray) -> Optional[np.ndarray]:
 
 
 def depth_to_uint8(depth: np.ndarray) -> Optional[np.ndarray]:
+    """Stretch finite depths onto ``[0, 255]``; all-NaN maps become zeros, not noise.
+
+    Non-2D inputs return ``None`` so a batch visualizer can skip a frame.
+    Constant maps get a tiny vmax epsilon so OpenCV colormaps still receive
+    a defined uint8 plane.
+    """
+
     arr = np.asarray(depth, dtype=np.float64)
     squeezed = squeeze_depth_to_2d(arr)
     if squeezed is None:
@@ -57,6 +87,8 @@ def depth_to_colormap_rgb(
     depth_uint8: np.ndarray,
     colormap: str = COLORMAP_INFERNO,
 ) -> np.ndarray:
+    """Apply a cv2 LUT and convert BGR → RGB for matplotlib / PIL consumers."""
+
     arr = np.asarray(depth_uint8)
     if arr.ndim == 3 and arr.shape[-1] == 1:
         arr = arr[..., 0]
@@ -69,6 +101,8 @@ def depth_to_colormap_pil(
     colormap: str = COLORMAP_VIRIDIS,
     grayscale: bool = False,
 ) -> Optional[Image.Image]:
+    """Build a PIL RGB image; ``None`` when the depth plane cannot be squeezed."""
+
     depth_uint8 = depth_to_uint8(depth)
     if depth_uint8 is None:
         return None
@@ -84,6 +118,8 @@ def save_depth_colormap(
     output_path: str,
     colormap: str = COLORMAP_VIRIDIS,
 ) -> Optional[str]:
+    """Write a colormap image; return ``None`` instead of leaving an empty file."""
+
     img = depth_to_colormap_pil(depth, colormap=colormap)
     if img is None:
         return None
@@ -96,6 +132,8 @@ def depths_to_pil_images(
     mode: Literal["grayscale", "colormap"] = "grayscale",
     colormap: str = COLORMAP_VIRIDIS,
 ) -> List[Image.Image]:
+    """Convert a ``(H, W)`` or ``(N, H, W)`` stack, dropping unsqueezable frames."""
+
     arr = np.asarray(depth_maps)
     if arr.ndim == 2:
         arr = arr[np.newaxis, ...]
@@ -120,6 +158,13 @@ def prepare_depth_visualization(
     grayscale: bool = False,
     colormap: str = COLORMAP_INFERNO,
 ) -> np.ndarray:
+    """Always return an HxWx3 plane so overlay code can assume RGB/BGR.
+
+    Already-uint8 maps skip the min/max stretch (they are display-ready).
+    Unsqueezeable float maps fall back to a raw cast rather than raising,
+    because debug viewers prefer a garbage frame over a crashed job.
+    """
+
     if depth.dtype == np.uint8:
         depth_uint8 = squeeze_depth_to_2d(depth)
     else:
@@ -135,6 +180,8 @@ def build_depth_visualizations(
     depth: np.ndarray,
     colormap: str = COLORMAP_INFERNO,
 ) -> np.ndarray:
+    """Stack per-frame RGB visualizations; unsqueezable maps become black."""
+
     arr = np.asarray(depth)
     if arr.ndim == 2:
         arr = arr[np.newaxis, ...]
@@ -154,6 +201,8 @@ def create_depth_visualization(
     depth: np.ndarray,
     colormap: str = COLORMAP_VIRIDIS,
 ) -> Optional[np.ndarray]:
+    """Single-map RGB colormap, or ``None`` when *depth* is missing / not 2D."""
+
     if depth is None:
         return None
     depth_uint8 = depth_to_uint8(depth)
@@ -169,6 +218,13 @@ def colorize_depth_map(
     far: float | None = None,
     cmap: str = "Spectral",
 ) -> np.ndarray:
+    """Colorize metric depth via inverse-depth so nearby surfaces keep contrast.
+
+    Zero / masked pixels become NaN before the 0.001 / 0.999 quantiles so
+    sky and holes do not pin the near/far range. The Spectral LUT is
+    inverted (``1 - disp``) to match the common "warm = near" convention.
+    """
+
     import matplotlib
 
     assert depth.ndim == 2, "depth should be of shape (H, W)"
@@ -181,9 +237,15 @@ def colorize_depth_map(
     if far is None:
         far = np.nanquantile(depth, 0.999)
 
+    # Inverse-depth stretch: linear depth compresses the near field.
     disp = (1 / depth - 1 / far) / (1 / near - 1 / far)
     colored = np.nan_to_num(matplotlib.colormaps[cmap](1.0 - disp)[..., :3], 0)
     return np.ascontiguousarray((colored.clip(0, 1) * 255).astype(np.uint8))
+
+
+# ──────────────────────────────────────────────────────────────────────────
+# Surface normals and ONNX sky masks (debug overlays, not model inputs)
+# ──────────────────────────────────────────────────────────────────────────
 
 
 def colorize_normal_map(
@@ -191,9 +253,12 @@ def colorize_normal_map(
     mask: np.ndarray | None = None,
     flip_yz: bool = False,
 ) -> np.ndarray:
+    """Map unit normals from ``[-1, 1]`` to RGB; optional YZ flip for OpenGL vs OpenCV."""
+
     if mask is not None:
         normal = np.where(mask[..., None], normal, 0)
     if flip_yz:
+        # OpenGL-style +Y-up / +Z-forward → OpenCV display axes.
         normal = normal * [0.5, -0.5, -0.5] + 0.5
     else:
         normal = normal * 0.5 + 0.5
@@ -201,6 +266,12 @@ def colorize_normal_map(
 
 
 def run_skyseg(onnx_session, input_size: Sequence[int], image: np.ndarray) -> np.ndarray:
+    """Run a SkySeg ONNX session at *input_size* and return a min-max uint8 logit map.
+
+    ImageNet mean/std and BGR→RGB match the published SkySeg preprocess.
+    The caller still owns resize-back and thresholding via :func:`segment_sky`.
+    """
+
     import copy
 
     temp_image = copy.deepcopy(image)
@@ -225,6 +296,13 @@ def run_skyseg(onnx_session, input_size: Sequence[int], image: np.ndarray) -> np
 
 
 def segment_sky(image_or_path, onnx_session, threshold: int = 32) -> np.ndarray:
+    """Return a 255-on-sky mask; raise :class:`FileNotFoundError` if a path cannot be read.
+
+    SkySeg is invoked at 320×320 (the published input) then resized to the
+    source resolution. Values *below* ``threshold`` are treated as sky because
+    the network's low logit band is the sky class after min-max stretch.
+    """
+
     import os
 
     if isinstance(image_or_path, (str, os.PathLike)):
@@ -240,24 +318,50 @@ def segment_sky(image_or_path, onnx_session, threshold: int = 32) -> np.ndarray:
     return output_mask
 
 
-def download_file_from_url(url: str, filename: str) -> str | None:
+# ──────────────────────────────────────────────────────────────────────────
+# Legacy URL fetch — prefer download_to_cache (atomic rename + validation)
+# ──────────────────────────────────────────────────────────────────────────
+
+
+def download_file_from_url(url: str, filename: str, timeout: float = 60.0) -> str | None:
+    """Download ``url`` to ``filename``; return the path, or None on failure.
+
+    A failed or interrupted download never leaves a partial file behind:
+    callers gate re-downloads on ``os.path.exists``, so a truncated artifact
+    would otherwise be treated as valid forever. Prefer
+    ``worldfoundry.core.io.download.download_to_cache`` for new code (atomic
+    rename plus validation).
+    """
+    import logging
+    import os
+
     import requests
 
     try:
-        response = requests.get(url, stream=True, allow_redirects=True)
-        response.raise_for_status()
-        with open(filename, "wb") as handle:
-            for chunk in response.iter_content(chunk_size=8192):
-                if chunk:
-                    handle.write(chunk)
-        print(f"Downloaded {filename} successfully.")
+        with requests.get(url, stream=True, allow_redirects=True, timeout=timeout) as response:
+            response.raise_for_status()
+            with open(filename, "wb") as handle:
+                for chunk in response.iter_content(chunk_size=8192):
+                    if chunk:
+                        handle.write(chunk)
         return filename
     except requests.exceptions.RequestException as exc:
-        print(f"Error downloading file: {exc}")
+        try:
+            os.remove(filename)
+        except OSError:
+            pass
+        logging.getLogger(__name__).warning("Error downloading %s to %s: %s", url, filename, exc)
         return None
 
 
+# ──────────────────────────────────────────────────────────────────────────
+# Matplotlib / Baker–Scharstein flow — LUT helpers for tensors and UV fields
+# ──────────────────────────────────────────────────────────────────────────
+
+
 def apply_color_map(x, color_map: str = "inferno"):
+    """Apply a matplotlib LUT to a ``[0, 1]`` tensor, keeping device and dropping alpha."""
+
     import matplotlib
     import torch
 
@@ -272,6 +376,8 @@ def apply_color_map(x, color_map: str = "inferno"):
 
 
 def apply_color_map_to_image(image, color_map: str = "inferno"):
+    """Colorize an HWC-last tensor and permute to channel-first for torchvision grids."""
+
     from einops import rearrange
 
     image = apply_color_map(image, color_map)
@@ -279,6 +385,8 @@ def apply_color_map_to_image(image, color_map: str = "inferno"):
 
 
 def make_colorwheel() -> np.ndarray:
+    """Baker–Scharstein colorwheel (Middlebury flow viz); segment lengths are fixed by convention."""
+
     ry = 15
     yg = 6
     gc = 4
@@ -311,10 +419,16 @@ def make_colorwheel() -> np.ndarray:
 
 
 def flow_uv_to_colors(u: np.ndarray, v: np.ndarray, convert_to_bgr: bool = False) -> np.ndarray:
+    """Map unit-normalized UV flow to RGB; magnitude > 1 is desaturated, not clipped.
+
+    ``arctan2(-v, -u)`` matches the Middlebury hue convention (0° = leftward).
+    """
+
     flow_image = np.zeros((u.shape[0], u.shape[1], 3), np.uint8)
     colorwheel = make_colorwheel()
     ncols = colorwheel.shape[0]
     rad = np.sqrt(np.square(u) + np.square(v))
+    # Negated axes: Middlebury 0° points left, not right.
     a = np.arctan2(-v, -u) / np.pi
     fk = (a + 1) / 2 * (ncols - 1)
     k0 = np.floor(fk).astype(np.int32)
@@ -339,6 +453,11 @@ def flow_to_image(
     clip_flow: float | None = None,
     convert_to_bgr: bool = False,
 ) -> np.ndarray:
+    """Normalize ``[H, W, 2]`` flow by its peak radius, then colorize.
+
+    Raises :class:`AssertionError` when the layout is not ``[H, W, 2]``.
+    """
+
     assert flow_uv.ndim == 3, "input flow must have three dimensions"
     assert flow_uv.shape[2] == 2, "input flow must have shape [H,W,2]"
     if clip_flow is not None:
@@ -354,6 +473,13 @@ def flow_to_image(
 
 
 def _reshape_viz_batch_img(img_data, shape: int | str = 7) -> tuple:
+    """Pack a batch into an HWC grid; ``shape`` is ``N`` or ``\"RxC\"``.
+
+    Raises:
+        RuntimeError: *shape* is neither an int nor an ``RxC`` string.
+        TypeError: *img_data* is neither a tensor nor an ndarray.
+    """
+
     import torch
     from einops import rearrange
     from torchvision.utils import make_grid
@@ -390,6 +516,8 @@ def show_batch_img(
     is_n1p1: bool = False,
     auto_n1p1: bool = True,
 ) -> None:
+    """Show a batch grid; auto-detect ``[-1, 1]`` when the min is below ``-0.5``."""
+
     import matplotlib.pyplot as plt
     import torch
 
@@ -408,6 +536,8 @@ def show_batch_img(
 
 
 def save_batch_img(fpath: str, img_data, shape: int | str = 7) -> None:
+    """Write a batch grid as uint8; values are assumed to be in ``[0, 1]``."""
+
     import os
 
     import torch
@@ -423,6 +553,8 @@ def save_batch_img(fpath: str, img_data, shape: int | str = 7) -> None:
 
 
 def visualize_latent_tensor_bcthw(tensor, nrow: int = 1, show_norm: bool = False, save_fig_path: str | None = None):
+    """Plot channel-mean (and optional L2) of a ``B C (T N) H W`` latent for debug dumps."""
+
     import os
 
     import einops
@@ -446,6 +578,8 @@ def visualize_latent_tensor_bcthw(tensor, nrow: int = 1, show_norm: bool = False
 
 
 def visualize_tensor_bcthw(tensor, nrow: int = 4, save_fig_path: str | None = None):
+    """Grid-plot a ``BCTHW`` video tensor; abort if max > 200 (almost certainly uint8)."""
+
     import os
 
     import einops
@@ -462,6 +596,11 @@ def visualize_tensor_bcthw(tensor, nrow: int = 4, save_fig_path: str | None = No
     plt.figure(figsize=(20, 20))
     plt.imshow(grid.permute(1, 2, 0))
     plt.show()
+
+
+# ──────────────────────────────────────────────────────────────────────────
+# Point-cloud splat (z-buffer) — eval evidence, not a renderer used at train time
+# ──────────────────────────────────────────────────────────────────────────
 
 
 def render_point_cloud(
@@ -519,6 +658,11 @@ def render_point_cloud(
     return Image.fromarray(canvas)
 
 
+# ──────────────────────────────────────────────────────────────────────────
+# Game-control overlays — Matrix-Game / GTA / Temple Run HUD on eval frames
+# ──────────────────────────────────────────────────────────────────────────
+
+
 def parse_game_control_config(
     config, mode: str = "universal"
 ) -> tuple[dict[int, dict[str, bool]], dict[int, tuple[float, float]]]:
@@ -554,8 +698,9 @@ def parse_game_control_config(
 
         if mode == "universal":
             mouse_y, mouse_x = mouse[i]
-            mouse_y = -1 * mouse_y
+            mouse_y = -1 * mouse_y  # recipe Y is inverted relative to image +Y
             if i == 0:
+                # First frame pins the cursor to the 640×352 letterbox center.
                 mouse_data[i] = (320, 352 // 2)
             else:
                 global_scale_factor = 0.1
@@ -576,6 +721,8 @@ def draw_game_rounded_rectangle(
     radius: int = 10,
     alpha: float = 0.5,
 ) -> None:
+    """Blend a rounded rectangle onto *image* in place (OpenCV BGR)."""
+
     overlay = image.copy()
     x1, y1 = top_left
     x2, y2 = bottom_right
@@ -597,6 +744,8 @@ def draw_game_keys_on_frame(
     bottom_margin: int = 30,
     mode: str = "universal",
 ) -> None:
+    """Draw WASD (and Temple Run left/right) keys; green means pressed."""
+
     h, w, _ = frame.shape
     horizon_shift = 90
     vertical_shift = -20
@@ -662,6 +811,8 @@ def overlay_rgba_icon(
     scale: float = 1.0,
     rotation: float = 0,
 ) -> None:
+    """Alpha-composite a BGRA icon at *position*, clipped to the frame bounds."""
+
     x, y = position
     h, w, _ = icon.shape
     scaled_width = int(w * scale)
@@ -710,6 +861,8 @@ def process_game_control_video(
     process_icon: bool = True,
     mode: str = "universal",
 ) -> list[np.ndarray]:
+    """Overlay keys/cursor on each frame and return float RGB in ``[0, 1]``."""
+
     key_data, mouse_data = parse_game_control_config(config, mode=mode)
     frame_width = input_video[0].shape[1]
     frame_height = input_video[0].shape[0]
@@ -745,6 +898,8 @@ def draw_navigation_rounded_rectangle(
     r: int,
     alpha: float = 0.6,
 ) -> np.ndarray:
+    """Blend a rounded rectangle and return the mutated *img* (in-place)."""
+
     overlay = img.copy()
     x1, y1 = pt1
     x2, y2 = pt2
@@ -767,6 +922,8 @@ def draw_chevron(
     color: tuple[int, int, int],
     thickness: int = 3,
 ) -> np.ndarray:
+    """Stroke a three-point chevron; unknown *direction* leaves *img* unchanged."""
+
     x, y = center
     offset = size // 2
     if direction == "up":
@@ -784,6 +941,8 @@ def draw_chevron(
 
 
 def draw_wasd_ui(frame: np.ndarray, wasd_onehot: np.ndarray, position: tuple[int, int]) -> np.ndarray:
+    """Highlight WASD keys from a length-4 one-hot (W, A, S, D)."""
+
     key_size = 40
     spacing = 5
     x, y = position
@@ -813,6 +972,8 @@ def draw_wasd_ui(frame: np.ndarray, wasd_onehot: np.ndarray, position: tuple[int
 
 
 def draw_ijkl_ui(frame: np.ndarray, rotation_direction: str, width: int, height: int) -> np.ndarray:
+    """Draw IJKL look keys in the lower-right; *rotation_direction* is up/left/down/right."""
+
     key_size = 40
     spacing = 5
     margin_right = 50
@@ -846,8 +1007,10 @@ def draw_ijkl_ui(frame: np.ndarray, rotation_direction: str, width: int, height:
 
 
 def draw_rotation_ui(
-    frame: np.ndarray, rotation_direction: str, width: int, height: int, mode: str = "arrow"
+    frame: np.ndarray, rotation_direction: str, width: int, height: int,     mode: str = "arrow"
 ) -> np.ndarray:
+    """Draw an edge chevron or IJKL keys; ``\"no\"`` / unknown directions are no-ops."""
+
     if mode == "arrow":
         if rotation_direction == "no":
             return frame
@@ -889,6 +1052,8 @@ def draw_rotation_ui(
 
 
 def compute_rotation_angles_batch_opencv(c2w_a_batch: np.ndarray, c2w_b_batch: np.ndarray) -> np.ndarray:
+    """Relative ZYX Euler (OpenCV) between paired camera-to-world matrices."""
+
     c2w_a_inv_batch = np.linalg.inv(c2w_a_batch)
     t_rel_batch = np.matmul(c2w_a_inv_batch, c2w_b_batch)
     r_rel_batch = t_rel_batch[:, :3, :3]
@@ -899,7 +1064,18 @@ def compute_rotation_angles_batch_opencv(c2w_a_batch: np.ndarray, c2w_b_batch: n
     return np.array(rotation_angles)
 
 
+# ──────────────────────────────────────────────────────────────────────────
+# Pose → discrete WASD / look labels (pair-wise; last frame padded idle)
+# ──────────────────────────────────────────────────────────────────────────
+
+
 def extract_rotation_directions(c2w_poses: np.ndarray, threshold: float = 0.005) -> list[str]:
+    """Classify consecutive pose deltas as look left/right/up/down; last frame is ``\"no\"``.
+
+    A terminal ``\"no\"`` pads the pair-wise deltas to pose length so overlays
+    stay index-aligned with frames.
+    """
+
     rotation_actions = []
     rotates = compute_rotation_angles_batch_opencv(c2w_poses[:-1], c2w_poses[1:])
     for rotate in rotates:
@@ -912,11 +1088,13 @@ def extract_rotation_directions(c2w_poses: np.ndarray, threshold: float = 0.005)
             rotation_actions.append("up" if up > 0 else "down")
         else:
             rotation_actions.append("no")
-    rotation_actions.append("no")
+    rotation_actions.append("no")  # pair-wise deltas are one shorter than poses
     return rotation_actions
 
 
 def extract_translation_wasd(c2ws: np.ndarray, threshold: float = 0.01) -> np.ndarray:
+    """One-hot WASD from camera-space translation; last row is idle to match frame count."""
+
     c2w_a_inv = np.linalg.inv(c2ws[:-1])
     t_rels = np.matmul(c2w_a_inv, c2ws[1:])
 
@@ -935,6 +1113,8 @@ def extract_translation_wasd(c2ws: np.ndarray, threshold: float = 0.01) -> np.nd
 
 
 def ijkl_onehot_to_direction(ijkl_onehot: np.ndarray) -> str:
+    """Decode IJKL one-hot (up/left/down/right); first hit above 0.5 wins, else ``\"no\"``."""
+
     idx_to_direction = ["up", "left", "down", "right"]
     for i in range(4):
         if ijkl_onehot[i] > 0.5:
@@ -951,8 +1131,14 @@ def visualize_wasd_and_rotation_ui(
     rotation_threshold: float = 0.005,
     rotation_ui_mode: str = "keys",
 ) -> np.ndarray:
+    """Stamp WASD / look HUD onto ``[0, 1]`` RGB frames; require actions or poses.
+
+    Raises:
+        ValueError: neither *wasd_actions* nor *c2ws* is provided.
+    """
+
     frames = (frames * 255).astype(np.uint8)
-    frames = frames[..., ::-1]
+    frames = frames[..., ::-1]  # RGB → BGR for OpenCV drawing, reversed on return
 
     if wasd_actions is None and c2ws is None:
         raise ValueError("Either wasd_actions or c2ws must be provided.")
@@ -980,6 +1166,8 @@ def visualize_wasd_and_rotation_ui(
 
 
 def rotation_directions_to_onehot(rotation_directions: Sequence[str]) -> np.ndarray:
+    """Encode look labels as IJKL one-hots; unknown labels become idle."""
+
     direction_to_onehot = {
         "up": [1, 0, 0, 0],
         "left": [0, 1, 0, 0],
@@ -998,6 +1186,8 @@ def save_openloop_action_comparison(
     n_chunk_action: int,
     save_path: str,
 ) -> None:
+    """Plot GT vs inferred action dims; chunk starts are marked for open-loop eval."""
+
     import matplotlib.pyplot as plt
 
     num_dims = gt_actions.shape[-1]

@@ -402,10 +402,15 @@ def call_pipeline_from_pretrained(
     supports_unified = all(name in parameters for name in unified_kwargs) or (
         has_var_kwargs and not explicit_parameters
     )
+    supports_unified_subset = "model_path" in parameters and "required_components" in parameters
     if supports_unified and (
         not required_positional or all(parameter.name in unified_kwargs for parameter in required_positional)
     ):
         return loader(**unified_kwargs)
+    if supports_unified_subset and (
+        not required_positional or all(parameter.name in unified_kwargs for parameter in required_positional)
+    ):
+        return loader(**{name: value for name, value in unified_kwargs.items() if name in parameters})
 
     # ── Subset kwargs: pass only names that exist in the signature ─
     kwargs: dict[str, Any] = {}

@@ -1,9 +1,23 @@
-"""Strict, allocation-free state-dict assignment for inference models."""
+"""Strict, allocation-free state-dict assignment for inference models.
+
+Released weights are often assigned onto a meta-device skeleton and
+only later moved to the chosen compute dtype.
+:func:`validate_state_dict_compatibility` rejects missing, unexpected,
+or shape-mismatched keys without consulting dtype.
+:func:`assign_state_dict_strict` then loads with ``strict=True`` and
+``assign=True`` so tensors are bound in place rather than copied.
+
+This is not a remapper and does not unwrap nested checkpoint wrappers.
+"""
 
 from __future__ import annotations
 
 from collections.abc import Mapping
 from typing import Any
+
+# ──────────────────────────────────────────────────────────────────────────
+# Compatibility gate — dtype-agnostic so meta skeletons can take FP32 weights
+# ──────────────────────────────────────────────────────────────────────────
 
 
 def validate_state_dict_compatibility(
@@ -38,6 +52,8 @@ def validate_state_dict_compatibility(
         return
 
     def preview(values: list[Any], limit: int = 12) -> str:
+        """Cap the error payload so a 7B key dump cannot drown the real mismatch."""
+
         suffix = f" ... (+{len(values) - limit})" if len(values) > limit else ""
         return f"{values[:limit]}{suffix}"
 
@@ -49,6 +65,11 @@ def validate_state_dict_compatibility(
     if mismatched:
         details.append(f"shape_mismatches={preview(mismatched)}")
     raise RuntimeError(f"{label} is incompatible with {type(module).__name__}: " + "; ".join(details))
+
+
+# ──────────────────────────────────────────────────────────────────────────
+# In-place bind — assign=True so meta parameters are replaced, not copied
+# ──────────────────────────────────────────────────────────────────────────
 
 
 def assign_state_dict_strict(

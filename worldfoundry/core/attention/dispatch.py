@@ -1,19 +1,52 @@
-"""Dispatching attention wrapper for model code that uses flexible QKV layouts."""
+"""Layout-agnostic Attention dispatch: normalize any einops QKV pattern, then pick a kernel.
+
+Why this split exists — instead of "use Flash whenever it is installed":
+
+- **Do not resolve a device at import.** ``initialize_attention_priority`` only
+  reads the env preference (usually ``auto``). Calling
+  ``cuda.get_device_capability`` at import would create a CUDA context on GPU 0
+  and break fork workers. Capability bits are probed lazily through
+  ``__getattr__``.
+- **``auto`` does not enable external packages.** The in-tree contract is
+  PyTorch SDPA (which already dispatches to bundled Flash/cuDNN).
+  FlashAttention, SageAttention, and xFormers are explicit opt-ins.
+- **``attn_mask`` or ``compatibility_mode`` go to ``torch_sdpa``.** Fused
+  kernels do not share one mask contract; forcing FlashAttention can silently
+  compute the wrong scores.
+- **Short sequences** below ``WORLDFOUNDRY_ATTENTION_MIN_FUSED_SEQUENCE`` (or
+  the SM defaults 64/128/256) pay more in fused-kernel launch than they save,
+  so they stay on SDPA.
+- **Non-fp16/bf16** is almost never supported by fused kernels; the path is
+  fixed to ``torch``.
+- **Failure quarantine.** Optional-package load failures are marked
+  unavailable. ``kernel not supported`` RuntimeErrors are isolated by
+  ``(backend, device, dtype, shape)``. OOM must propagate — never retry with
+  an explicit O(S²) score tensor that can OOM again.
+- The candidate list always ends with ``torch``. Use
+  ``attention_dispatch_report`` / ``clear_attention_dispatch_cache`` to debug
+  or reset after a hot-reload in a long-lived process.
+"""
 
 import math
 import os
 import threading
 import warnings
 from collections import deque
+from collections.abc import Iterator, MutableMapping
+from contextlib import contextmanager
+from contextvars import ContextVar
 from functools import lru_cache
 
 import torch
 from einops import rearrange
 
 from worldfoundry.core.attention.backends import (
+    attention_backend_capability,
     attention_backend_from_env,
     gpu_supports_flash_attention,
+    normalize_attention_backend,
     probe_attention_backends,
+    require_generic_attention_backend,
     resolve_attention_backend,
 )
 from worldfoundry.core.attention.native import (
@@ -23,8 +56,13 @@ from worldfoundry.core.attention.native import (
     scaled_dot_product_attention as _worldfoundry_scaled_dot_product_attention,
 )
 
+# ──────────────────────────────────────────────────────────────────────────
+# Import-time policy — record the env preference; do not bind a CUDA device
+# ──────────────────────────────────────────────────────────────────────────
+
 
 def initialize_attention_priority():
+    """Record the env preference (usually ``auto``) without binding a device backend at import."""
     # Keep the user's preference (usually ``auto``) unresolved until a tensor
     # device is known. Resolving at import time can permanently select CPU SDPA
     # before a worker calls torch.cuda.set_device().
@@ -32,15 +70,41 @@ def initialize_attention_priority():
 
 
 ATTENTION_IMPLEMENTATION = initialize_attention_priority()
-_CAPABILITIES = probe_attention_backends()
-FLASH_ATTN_3_AVAILABLE = _CAPABILITIES["flash_attention_3"].available
-FLASH_ATTN_2_AVAILABLE = _CAPABILITIES["flash_attention_2"].available
-SAGE_ATTN_AVAILABLE = _CAPABILITIES["sage_attention"].available
-XFORMERS_AVAILABLE = _CAPABILITIES["xformers"].available
+
+# CC-07: capability probing calls ``torch.cuda.get_device_capability`` which
+# lazily creates a CUDA context. Doing that at import time breaks fork-based
+# workers and pins a context on GPU 0 before ``torch.cuda.set_device``.
+# ``_CAPABILITIES`` and the ``*_AVAILABLE`` flags are therefore resolved on
+# first attribute access instead of at import, and are never frozen into
+# module globals (``probe_attention_backends`` already caches per runtime
+# signature).
+_LAZY_CAPABILITY_EXPORTS = {
+    "FLASH_ATTN_4_AVAILABLE": "flash_attention_4",
+    "FLASH_ATTN_3_AVAILABLE": "flash_attention_3",
+    "FLASH_ATTN_2_AVAILABLE": "flash_attention_2",
+    "SAGE_ATTN_AVAILABLE": "sage_attention",
+    "XFORMERS_AVAILABLE": "xformers",
+}
+
+
+def __getattr__(name: str):
+    """Lazily export ``_CAPABILITIES`` and ``*_AVAILABLE`` so import does not create a CUDA context."""
+    if name == "_CAPABILITIES":
+        return probe_attention_backends()
+    backend_name = _LAZY_CAPABILITY_EXPORTS.get(name)
+    if backend_name is not None:
+        return probe_attention_backends()[backend_name].available
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
 
 
 def _gpu_supports_flash_attention():
+    """Return whether the current device is a validated in-tree FA2 target."""
     return gpu_supports_flash_attention()
+
+
+# ──────────────────────────────────────────────────────────────────────────
+# Layout adapters — normalize any einops pattern, then restore the caller
+# ──────────────────────────────────────────────────────────────────────────
 
 
 def rearrange_qkv(
@@ -53,6 +117,7 @@ def rearrange_qkv(
     required_in_pattern="b n s d",
     dims=None,
 ):
+    """Rearrange Q/K/V from the caller layout into the backend ``required_in_pattern``."""
     dims = {} if dims is None else dims
     if q_pattern != required_in_pattern:
         q = rearrange(q, f"{q_pattern} -> {required_in_pattern}", **dims)
@@ -64,6 +129,7 @@ def rearrange_qkv(
 
 
 def rearrange_out(out: torch.Tensor, out_pattern="b n s d", required_out_pattern="b n s d", dims=None):
+    """Restore backend output from the internal layout to the caller ``out_pattern``."""
     dims = {} if dims is None else dims
     if out_pattern != required_out_pattern:
         out = rearrange(out, f"{required_out_pattern} -> {out_pattern}", **dims)
@@ -82,6 +148,7 @@ def torch_sdpa(
     attn_mask=None,
     scale=None,
 ):
+    """Exact path: in-tree ``scaled_dot_product_attention``. Failures do not retry with dense O(S²)."""
     required_in_pattern, required_out_pattern = "b n s d", "b n s d"
     q, k, v = rearrange_qkv(q, k, v, q_pattern, k_pattern, v_pattern, required_in_pattern, dims)
     # The core helper already supplies a math implementation when PyTorch does
@@ -100,6 +167,11 @@ def torch_sdpa(
     return out
 
 
+# ──────────────────────────────────────────────────────────────────────────
+# Explicit providers — one callable per opt-in kernel; never selected by auto
+# ──────────────────────────────────────────────────────────────────────────
+
+
 def flash_attention_3(
     q: torch.Tensor,
     k: torch.Tensor,
@@ -111,6 +183,7 @@ def flash_attention_3(
     dims=None,
     scale=None,
 ):
+    """FlashAttention 3 entry (Hopper ``flash_attn_interface``); layout ``b s n d``."""
     import flash_attn_interface
 
     required_in_pattern, required_out_pattern = "b s n d", "b s n d"
@@ -120,6 +193,99 @@ def flash_attention_3(
         out = out[0]
     out = rearrange_out(out, out_pattern, required_out_pattern, dims)
     return out
+
+
+def _flash_attention_4_impl(
+    q: torch.Tensor,
+    k: torch.Tensor,
+    v: torch.Tensor,
+    softmax_scale: float | None,
+) -> torch.Tensor:
+    """Call either the public or pinned private CuTeDSL FA4 interface."""
+
+    try:
+        from flash_attn.cute import flash_attn_func
+    except ImportError:
+        from flash_attn.cute.interface import _flash_attn_fwd
+
+        result = _flash_attn_fwd(
+            q,
+            k,
+            v,
+            softmax_scale=softmax_scale,
+            causal=False,
+            window_size_left=None,
+            window_size_right=None,
+            softcap=0.0,
+            num_splits=1,
+            pack_gqa=None,
+        )
+    else:
+        result = flash_attn_func(q, k, v, softmax_scale=softmax_scale)
+    return result[0] if isinstance(result, tuple) else result
+
+
+@torch.library.custom_op(
+    "worldfoundry::flash_attention_4_forward",
+    mutates_args=(),
+    device_types="cuda",
+)
+def _flash_attention_4_forward(
+    q: torch.Tensor,
+    k: torch.Tensor,
+    v: torch.Tensor,
+    softmax_scale: float | None,
+) -> torch.Tensor:
+    """Opaque compile boundary around FA4's CuTeDSL/JIT implementation."""
+
+    return _flash_attention_4_impl(q, k, v, softmax_scale)
+
+
+@torch.library.register_fake("worldfoundry::flash_attention_4_forward")
+def _flash_attention_4_forward_fake(
+    q: torch.Tensor,
+    k: torch.Tensor,
+    v: torch.Tensor,
+    softmax_scale: float | None,
+) -> torch.Tensor:
+    """Fake tensor for Dynamo tracing; output width follows ``v``, not ``q``."""
+    del k, softmax_scale
+    return q.new_empty((*q.shape[:-1], v.shape[-1]))
+
+
+def flash_attention_4(
+    q: torch.Tensor,
+    k: torch.Tensor,
+    v: torch.Tensor,
+    q_pattern="b n s d",
+    k_pattern="b n s d",
+    v_pattern="b n s d",
+    out_pattern="b n s d",
+    dims=None,
+    scale=None,
+):
+    """Explicit inference-only FlashAttention 4 entry; layout ``b s n d``."""
+
+    if torch.is_grad_enabled() and any(tensor.requires_grad for tensor in (q, k, v)):
+        raise RuntimeError("WorldFoundry FlashAttention 4 currently only supports inference")
+    required_in_pattern, required_out_pattern = "b s n d", "b s n d"
+    q, k, v = rearrange_qkv(
+        q,
+        k,
+        v,
+        q_pattern,
+        k_pattern,
+        v_pattern,
+        required_in_pattern,
+        dims,
+    )
+    out = torch.ops.worldfoundry.flash_attention_4_forward(
+        q.contiguous(),
+        k.contiguous(),
+        v.contiguous(),
+        scale,
+    )
+    return rearrange_out(out, out_pattern, required_out_pattern, dims)
 
 
 def flash_attention_2(
@@ -133,6 +299,7 @@ def flash_attention_2(
     dims=None,
     scale=None,
 ):
+    """FlashAttention 2 entry (``flash_attn``); layout ``b s n d``."""
     import flash_attn
 
     required_in_pattern, required_out_pattern = "b s n d", "b s n d"
@@ -153,6 +320,7 @@ def sage_attention(
     dims=None,
     scale=None,
 ):
+    """SageAttention entry (approximate; explicit opt-in); layout ``b n s d``."""
     from sageattention import sageattn
 
     required_in_pattern, required_out_pattern = "b n s d", "b n s d"
@@ -173,7 +341,7 @@ def sage_attention_3(
     dims=None,
     scale=None,
 ):
-    """Run an explicitly requested Blackwell FP4 provider when it is built."""
+    """SageAttention 3 (Blackwell FP4). Does not support GQA/MQA or a custom softmax scale."""
 
     from sageattn3 import sageattn3_blackwell
 
@@ -199,6 +367,7 @@ def xformers_attention(
     dims=None,
     scale=None,
 ):
+    """xFormers memory-efficient attention. GQA is rejected until a 5D layout exists."""
     import xformers.ops as xops
 
     required_in_pattern, required_out_pattern = "b s n d", "b s n d"
@@ -206,6 +375,187 @@ def xformers_attention(
     out = xops.memory_efficient_attention(q, k, v, scale=scale)
     out = rearrange_out(out, out_pattern, required_out_pattern, dims)
     return out
+
+
+# ──────────────────────────────────────────────────────────────────────────
+# Provider telemetry — prove which kernel ran without distorting the graph
+# ──────────────────────────────────────────────────────────────────────────
+
+_PROVIDER_RUNTIME_EVENT_NAMES = (
+    "attempts",
+    "successes",
+    "fallbacks",
+    "errors",
+    "quarantined_skips",
+    "compiled_graph_traces",
+)
+_PROVIDER_RUNTIME: dict[str, dict[str, int]] = {}
+_PROVIDER_RUNTIME_LOCK = threading.Lock()
+_PROVIDER_COMPILE_RECEIPT_SINK: ContextVar[
+    MutableMapping[str, int] | None
+] = ContextVar("worldfoundry_attention_compile_receipt_sink", default=None)
+
+
+@contextmanager
+def attention_compile_receipt_scope(
+    sink: MutableMapping[str, int],
+) -> Iterator[None]:
+    """Bind compiled-provider receipts to the wrapper currently executing.
+
+    The process-global report is useful for eager runs, but a compiled graph
+    can be cached before request-scoped counters are reset.  The owning module
+    therefore keeps its own persistent receipt map.  A context variable ties a
+    Dynamo trace to that exact compiled wrapper without placing telemetry in
+    the generated graph.
+    """
+
+    token = _PROVIDER_COMPILE_RECEIPT_SINK.set(sink)
+    try:
+        yield
+    finally:
+        _PROVIDER_COMPILE_RECEIPT_SINK.reset(token)
+
+
+def _record_provider_runtime(selected: str, **increments: int) -> None:
+    """Record provider events without putting locks around kernel execution.
+
+    Dynamo/Inductor must not trace a Python lock or mutable process-global
+    telemetry. The compiled-forward counter owned by the module loader proves
+    compiled execution; eager and CUDA-Graph capture calls continue to prove
+    the concrete attention provider here.
+    """
+
+    if torch.compiler.is_compiling():
+        return
+    unknown = set(increments) - set(_PROVIDER_RUNTIME_EVENT_NAMES)
+    if unknown:
+        raise ValueError(f"unknown attention provider runtime events {sorted(unknown)}")
+    with _PROVIDER_RUNTIME_LOCK:
+        counters = _PROVIDER_RUNTIME.setdefault(
+            selected,
+            {name: 0 for name in _PROVIDER_RUNTIME_EVENT_NAMES},
+        )
+        for event, increment in increments.items():
+            counters[event] += int(increment)
+
+
+@torch.compiler.assume_constant_result
+def _record_compiled_provider_graph_trace(selected: str) -> int:
+    """Write one compile-time receipt without adding an op to the runtime graph.
+
+    Dynamo evaluates ``assume_constant_result`` functions while constructing a
+    graph and replaces their return value with a constant.  Recording only
+    after the provider callable traced successfully proves which provider is
+    embedded in that graph; the module loader's compiled-wrapper call counter
+    separately proves the graph was executed.  This avoids a Python callback
+    or tiny counter kernel on every attention call, either of which would
+    distort the benchmark being audited.
+    """
+
+    with _PROVIDER_RUNTIME_LOCK:
+        counters = _PROVIDER_RUNTIME.setdefault(
+            selected,
+            {name: 0 for name in _PROVIDER_RUNTIME_EVENT_NAMES},
+        )
+        counters["compiled_graph_traces"] += 1
+        count = counters["compiled_graph_traces"]
+    sink = _PROVIDER_COMPILE_RECEIPT_SINK.get()
+    if sink is not None:
+        sink[selected] = int(sink.get(selected, 0)) + 1
+    return count
+
+
+def attention_provider_runtime_report() -> dict[str, dict[str, int]]:
+    """Return provider execution counters copied under the telemetry lock.
+
+    ``attempts`` and ``successes`` prove that a selected provider callable ran;
+    ``fallbacks`` records only classified load/shape failures that proceeded to
+    another backend. ``compiled_graph_traces`` is a zero-runtime-overhead
+    receipt that the provider callable successfully entered a compiled graph;
+    it becomes execution proof only together with the owning compiled
+    wrapper's positive runtime call count. An installed wrapper with neither
+    proof is therefore not misreported as runtime-effective.
+    """
+
+    with _PROVIDER_RUNTIME_LOCK:
+        return {
+            provider: dict(counters)
+            for provider, counters in sorted(_PROVIDER_RUNTIME.items())
+        }
+
+
+def reset_attention_provider_runtime() -> None:
+    """Reset provider call telemetry without changing capability caches."""
+
+    with _PROVIDER_RUNTIME_LOCK:
+        _PROVIDER_RUNTIME.clear()
+
+
+def _invoke_attention_provider(
+    selected: str,
+    q: torch.Tensor,
+    k: torch.Tensor,
+    v: torch.Tensor,
+    q_pattern: str,
+    k_pattern: str,
+    v_pattern: str,
+    out_pattern: str,
+    dims,
+    scale,
+) -> torch.Tensor:
+    """Invoke one qualified non-Torch provider or fail for an unwired name."""
+
+    if selected == "flash_attention_4":
+        return flash_attention_4(q, k, v, q_pattern, k_pattern, v_pattern, out_pattern, dims, scale=scale)
+    if selected == "flash_attention_3":
+        return flash_attention_3(q, k, v, q_pattern, k_pattern, v_pattern, out_pattern, dims, scale=scale)
+    if selected == "flash_attention_2":
+        return flash_attention_2(q, k, v, q_pattern, k_pattern, v_pattern, out_pattern, dims, scale=scale)
+    if selected == "sage_attention":
+        return sage_attention(q, k, v, q_pattern, k_pattern, v_pattern, out_pattern, dims, scale=scale)
+    if selected == "sage_attention_3":
+        return sage_attention_3(q, k, v, q_pattern, k_pattern, v_pattern, out_pattern, dims, scale=scale)
+    if selected == "xformers":
+        return xformers_attention(q, k, v, q_pattern, k_pattern, v_pattern, out_pattern, dims, scale=scale)
+    # Gives VSA/FlexBlock/V-MoBA/SLA/SageSLA an actionable model-contract
+    # error. Any other resolved-but-unwired provider is an invariant breach.
+    require_generic_attention_backend(selected)
+    raise RuntimeError(
+        f"Attention backend {selected!r} resolved as executable but has no generic provider callable"
+    )
+
+
+def _invoke_attention_provider_audited(selected: str, *args, **kwargs) -> torch.Tensor:
+    """Run one non-Torch provider and record attempt/success/error/trace."""
+    try:
+        output = _invoke_attention_provider(selected, *args, **kwargs)
+    except Exception:
+        _record_provider_runtime(selected, attempts=1, errors=1)
+        raise
+    if torch.compiler.is_compiling():
+        _record_compiled_provider_graph_trace(selected)
+    else:
+        _record_provider_runtime(selected, attempts=1, successes=1)
+    return output
+
+
+def _invoke_torch_sdpa_audited(*args, **kwargs) -> torch.Tensor:
+    """Run in-tree SDPA and record the same telemetry as optional providers."""
+    try:
+        output = torch_sdpa(*args, **kwargs)
+    except Exception:
+        _record_provider_runtime("torch", attempts=1, errors=1)
+        raise
+    if torch.compiler.is_compiling():
+        _record_compiled_provider_graph_trace("torch")
+    else:
+        _record_provider_runtime("torch", attempts=1, successes=1)
+    return output
+
+
+# ──────────────────────────────────────────────────────────────────────────
+# Dispatch — quarantine load/shape failures; torch SDPA is always last
+# ──────────────────────────────────────────────────────────────────────────
 
 
 def attention_forward(
@@ -220,83 +570,111 @@ def attention_forward(
     attn_mask=None,
     scale=None,
     compatibility_mode=False,
+    backend: str | None = None,
 ):
-    """Dispatch Q/K/V attention across qualified exact backends.
+    """Dispatch QKV Attention across qualified backends for this device, dtype, and shape.
 
-    Tensor layouts are described by einops-style patterns and normalized
-    before execution. Automatic mode tries only providers that are available
-    for the current device, dtype, and shape, remembers unsupported workload
-    signatures, and always retains the in-tree PyTorch SDPA path as the exact
+    Layouts are einops patterns and are normalized before execution. ``auto``
+    only tries *explicit* candidates that are usable on the current hardware
+    (the default list is empty, so the path is SDPA). Unsupported workload
+    signatures are remembered, and in-tree PyTorch SDPA is always the exact
     fallback.
 
     Args:
-        q: Query tensor in ``q_pattern`` layout.
-        k: Key tensor in ``k_pattern`` layout.
-        v: Value tensor in ``v_pattern`` layout.
-        q_pattern: Layout pattern for ``q``.
-        k_pattern: Layout pattern for ``k``.
-        v_pattern: Layout pattern for ``v``.
+        q / k / v: Tensors in ``q_pattern`` / ``k_pattern`` / ``v_pattern``.
+        q_pattern / k_pattern / v_pattern: Input layouts.
         out_pattern: Requested output layout.
-        dims: Named dimensions needed to expand grouped pattern terms such as
-            ``(n d)``.
-        attn_mask: Optional boolean or additive attention mask. A mask forces
-            the PyTorch compatibility path because optional fused providers do
-            not share one mask contract.
-        scale: Optional softmax scale; ``None`` uses the backend default.
-        compatibility_mode: Skip optional providers and execute PyTorch SDPA
-            directly.
+        dims: Named dimensions needed to expand grouped terms such as ``(n d)``.
+        attn_mask: Boolean or additive mask. A mask forces SDPA because fused
+            kernels do not share one mask contract.
+        scale: Softmax scale; ``None`` uses the backend default.
+        compatibility_mode: Skip optional providers and run PyTorch SDPA.
+        backend: Optional request-scoped provider. When omitted, retain the
+            process default resolved from ``WORLDFOUNDRY_ATTENTION_BACKEND``.
 
     Returns:
         Attention output rearranged into ``out_pattern``.
 
     Raises:
-        RuntimeError: The selected provider fails for a reason other than an
-            unsupported kernel or optional-library availability problem.
+        ModelSpecificAttentionBackendError: A sparse attention system was
+            selected without its required model/checkpoint metadata graph.
+        RuntimeError: The selected provider failed for a reason other than an
+            unsupported kernel or a missing optional library.
 
     Notes:
-        Backend choice can be inspected with ``attention_dispatch_report``.
-        Use ``clear_attention_dispatch_cache`` after changing provider
-        availability inside a long-lived process.
+        Inspect the choice with ``attention_dispatch_report``. After changing
+        provider availability in a long-lived process, call
+        ``clear_attention_dispatch_cache``.
     """
+    preferred = ATTENTION_IMPLEMENTATION if backend is None else normalize_attention_backend(backend)
+    # Validate before compatibility/mask short-circuiting. An explicit sparse
+    # request must never look successful merely because it silently took SDPA.
+    require_generic_attention_backend(preferred)
     if compatibility_mode or (attn_mask is not None):
-        return torch_sdpa(q, k, v, q_pattern, k_pattern, v_pattern, out_pattern, dims, attn_mask=attn_mask, scale=scale)
+        return _invoke_torch_sdpa_audited(
+            q,
+            k,
+            v,
+            q_pattern,
+            k_pattern,
+            v_pattern,
+            out_pattern,
+            dims,
+            attn_mask=attn_mask,
+            scale=scale,
+        )
     signature = _attention_signature(q, k, v, q_pattern, k_pattern, v_pattern, dims)
     candidates = _select_attention_backends_cached(
-        ATTENTION_IMPLEMENTATION,
+        preferred,
         str(q.device),
         str(q.dtype),
         signature,
         _short_attention_threshold(q.device),
-        tuple(sorted(_UNAVAILABLE_ATTENTION_BACKENDS)),
+        _unavailable_backends_snapshot(),
     )
     for selected in candidates:
         if selected == "torch":
             break
         failure_key = (selected, str(q.device), str(q.dtype), signature)
         if failure_key in _FAILED_ATTENTION_SIGNATURES:
+            _record_provider_runtime(selected, quarantined_skips=1)
             continue
         try:
-            if selected == "flash_attention_3":
-                return flash_attention_3(q, k, v, q_pattern, k_pattern, v_pattern, out_pattern, dims, scale=scale)
-            if selected == "flash_attention_2":
-                return flash_attention_2(q, k, v, q_pattern, k_pattern, v_pattern, out_pattern, dims, scale=scale)
-            if selected == "sage_attention":
-                return sage_attention(q, k, v, q_pattern, k_pattern, v_pattern, out_pattern, dims, scale=scale)
-            if selected == "sage_attention_3":
-                return sage_attention_3(q, k, v, q_pattern, k_pattern, v_pattern, out_pattern, dims, scale=scale)
-            if selected == "xformers":
-                return xformers_attention(q, k, v, q_pattern, k_pattern, v_pattern, out_pattern, dims, scale=scale)
+            return _invoke_attention_provider_audited(
+                selected,
+                q,
+                k,
+                v,
+                q_pattern,
+                k_pattern,
+                v_pattern,
+                out_pattern,
+                dims,
+                scale,
+            )
         except (ImportError, OSError) as exc:
             if not _is_backend_load_error(selected, exc):
                 raise
-            _UNAVAILABLE_ATTENTION_BACKENDS.add(selected)
+            _quarantine_unavailable_backend(selected)
+            _record_provider_runtime(selected, fallbacks=1)
             _warn_backend_fallback(selected, exc)
         except RuntimeError as exc:
             if not _is_unsupported_kernel_error(exc):
                 raise
             _remember_failed_attention_signature(failure_key)
+            _record_provider_runtime(selected, fallbacks=1)
             _warn_backend_fallback(selected, exc)
-    return torch_sdpa(q, k, v, q_pattern, k_pattern, v_pattern, out_pattern, dims, scale=scale)
+    return _invoke_torch_sdpa_audited(
+        q,
+        k,
+        v,
+        q_pattern,
+        k_pattern,
+        v_pattern,
+        out_pattern,
+        dims,
+        scale=scale,
+    )
 
 
 _FAILED_ATTENTION_SIGNATURE_LIMIT = 1024
@@ -304,9 +682,36 @@ _FAILED_ATTENTION_SIGNATURES: set[tuple[object, ...]] = set()
 _FAILED_ATTENTION_SIGNATURE_ORDER: deque[tuple[object, ...]] = deque()
 _FAILED_ATTENTION_SIGNATURE_LOCK = threading.Lock()
 _UNAVAILABLE_ATTENTION_BACKENDS: set[str] = set()
+_UNAVAILABLE_ATTENTION_BACKENDS_LOCK = threading.Lock()
+
+
+def _unavailable_backends_snapshot() -> tuple[str, ...]:
+    """Return a stable snapshot while other threads quarantine providers."""
+
+    with _UNAVAILABLE_ATTENTION_BACKENDS_LOCK:
+        return tuple(sorted(_UNAVAILABLE_ATTENTION_BACKENDS))
+
+
+def _quarantine_unavailable_backend(selected: str) -> None:
+    """Atomically mark an optional provider unavailable for this process."""
+
+    with _UNAVAILABLE_ATTENTION_BACKENDS_LOCK:
+        _UNAVAILABLE_ATTENTION_BACKENDS.add(selected)
+
+
+# ──────────────────────────────────────────────────────────────────────────
+# Workload eligibility — short / non-half / GQA constraints per provider
+# ──────────────────────────────────────────────────────────────────────────
 
 
 def _short_attention_threshold(device: torch.device | str | None = None) -> int:
+    """Minimum sequence length that may try a fused kernel.
+
+    Volta (SM70) pays more launch cost, so the default is 256. Hopper
+    (SM90) is 64. Everything else is 128.
+    ``WORLDFOUNDRY_ATTENTION_MIN_FUSED_SEQUENCE`` overrides; a non-integer
+    value falls back to 128 rather than crashing dispatch.
+    """
     try:
         configured = os.getenv("WORLDFOUNDRY_ATTENTION_MIN_FUSED_SEQUENCE")
         if configured is not None:
@@ -379,6 +784,11 @@ def _attention_signature(
     v_pattern: str,
     dims: dict | None,
 ) -> tuple[object, ...]:
+    """Hash QKV layout into a quarantine key, or ``unknown`` when unpackable.
+
+    Unknown layouts still dispatch; they just cannot be shape-gated or
+    remembered as a failed fused signature.
+    """
     q_shape = _tensor_layout_shape(q, q_pattern, dims)
     k_shape = _tensor_layout_shape(k, k_pattern, dims)
     v_shape = _tensor_layout_shape(v, v_pattern, dims)
@@ -423,9 +833,12 @@ def _select_attention_backends_cached(
         if max(q_seq, k_seq) < short_threshold:
             return ("torch",)
 
-    capabilities = probe_attention_backends(device)
     if preferred == "auto":
-        requested = _auto_attention_backends(device)
+        # Keep the automatic policy centralized in ``resolve_attention_backend``.
+        # Its production contract resolves auto to Torch, while tests or future
+        # offline selectors can inject an exact, qualified provider here.
+        resolved = resolve_attention_backend(preferred, device)
+        requested = () if resolved == "torch" else (resolved,)
     elif preferred == "flash_attention":
         requested = ("flash_attention_3", "flash_attention_2")
     else:
@@ -437,8 +850,7 @@ def _select_attention_backends_cached(
         candidate
         for candidate in requested
         if candidate not in blocked
-        and capabilities.get(candidate) is not None
-        and capabilities[candidate].usable
+        and attention_backend_capability(candidate, device).usable
         and _attention_backend_shape_eligible(candidate, device, dtype, signature)
     )
     return (*selected, "torch")
@@ -450,6 +862,12 @@ def _attention_backend_shape_eligible(
     dtype: str,
     signature: tuple[object, ...],
 ) -> bool:
+    """Return whether ``selected`` can serve this signature without a kernel error.
+
+    Rejects mismatched K/V, GQA on xFormers/Sage3, illegal head dims, and
+    Sage3 sequences below 512. Unknown signatures return True so the
+    kernel itself is the source of truth.
+    """
     if signature[0] != "known":
         return True
 
@@ -477,7 +895,7 @@ def _attention_backend_shape_eligible(
         return False
     if k_heads <= 0 or q_heads % k_heads:
         return False
-    if selected in {"flash_attention_2", "flash_attention_3"}:
+    if selected in {"flash_attention_2", "flash_attention_3", "flash_attention_4"}:
         if int(head_dim) <= 0 or int(head_dim) > 256 or int(head_dim) % 8:
             return False
     if selected == "sage_attention" and int(head_dim) not in {64, 128}:
@@ -497,6 +915,11 @@ def _attention_backend_shape_eligible(
 
 
 def _remember_failed_attention_signature(key: tuple[object, ...]) -> None:
+    """Record a failed fused signature, evicting the oldest past the cap.
+
+    The cap keeps a long-lived process from growing an unbounded set of
+    shape keys. Eviction is FIFO, not LRU — a rare shape may be retried.
+    """
     with _FAILED_ATTENTION_SIGNATURE_LOCK:
         if key in _FAILED_ATTENTION_SIGNATURES:
             return
@@ -518,15 +941,21 @@ def attention_dispatch_report() -> dict[str, object]:
     else:
         device = torch.device("cpu")
     capability = _device_compute_capability(device)
+    cache_info = getattr(_select_attention_backends_cached, "cache_info", None)
     return {
         "requested": ATTENTION_IMPLEMENTATION,
         "device": str(device),
         "compute_capability": capability,
         "auto_priority": list(_auto_attention_backends(device)) or ["torch"],
         "native_sdpa_priority": list(native_sdpa_priority(device)) or ["pytorch-auto"],
-        "selection_cache": _select_attention_backends_cached.cache_info()._asdict(),
-        "unavailable_backends": sorted(_UNAVAILABLE_ATTENTION_BACKENDS),
+        "selection_cache": (
+            cache_info()._asdict()
+            if callable(cache_info)
+            else {"injected_selector": True}
+        ),
+        "unavailable_backends": list(_unavailable_backends_snapshot()),
         "failed_signatures": len(_FAILED_ATTENTION_SIGNATURES),
+        "provider_calls": attention_provider_runtime_report(),
         "min_fused_sequence": _short_attention_threshold(device),
     }
 
@@ -538,8 +967,13 @@ def clear_attention_dispatch_cache() -> None:
     with _FAILED_ATTENTION_SIGNATURE_LOCK:
         _FAILED_ATTENTION_SIGNATURES.clear()
         _FAILED_ATTENTION_SIGNATURE_ORDER.clear()
-    _UNAVAILABLE_ATTENTION_BACKENDS.clear()
+    with _UNAVAILABLE_ATTENTION_BACKENDS_LOCK:
+        _UNAVAILABLE_ATTENTION_BACKENDS.clear()
 
+
+# ──────────────────────────────────────────────────────────────────────────
+# Failure classification — quarantine load/shape errors; never quarantine OOM
+# ──────────────────────────────────────────────────────────────────────────
 
 _UNSUPPORTED_KERNEL_MARKERS = (
     "not supported",
@@ -552,6 +986,7 @@ _UNSUPPORTED_KERNEL_MARKERS = (
 )
 
 _BACKEND_IMPORT_ROOTS = {
+    "flash_attention_4": ("flash_attn",),
     "flash_attention_3": ("flash_attn_interface",),
     "flash_attention_2": ("flash_attn", "flash_attn_2_cuda"),
     "sage_attention": ("sageattention",),
@@ -594,6 +1029,7 @@ def _is_unsupported_kernel_error(exc: RuntimeError) -> bool:
 
 
 def _warn_backend_fallback(selected: str, exc: BaseException) -> None:
+    """Warn that ``selected`` failed and the next eligible backend will run."""
     warnings.warn(
         f"Attention backend {selected!r} is unavailable for this workload; "
         f"trying the next eligible backend: {exc}",
@@ -603,7 +1039,13 @@ def _warn_backend_fallback(selected: str, exc: BaseException) -> None:
 
 
 def packed_sequence_attention(
-    q: torch.Tensor, k: torch.Tensor, v: torch.Tensor, num_heads: int, compatibility_mode=False, scale=None
+    q: torch.Tensor,
+    k: torch.Tensor,
+    v: torch.Tensor,
+    num_heads: int,
+    compatibility_mode: bool = False,
+    scale=None,
+    backend: str | None = None,
 ):
     """Apply the shared dispatcher to flattened packed-sequence Q/K/V.
 
@@ -614,6 +1056,7 @@ def packed_sequence_attention(
         num_heads: Head count used to split the final dimension.
         compatibility_mode: Force the exact PyTorch SDPA path.
         scale: Optional attention softmax scale.
+        backend: Optional request-scoped provider name.
 
     Returns:
         Tensor shaped ``(batch, query_sequence, heads * value_head_dim)``.
@@ -634,20 +1077,25 @@ def packed_sequence_attention(
         dims={"n": num_heads},
         scale=scale,
         compatibility_mode=compatibility_mode,
+        backend=backend,
     )
 
 
 __all__ = [
     "ATTENTION_IMPLEMENTATION",
+    "attention_compile_receipt_scope",
     "attention_dispatch_report",
     "attention_forward",
+    "attention_provider_runtime_report",
     "clear_attention_dispatch_cache",
     "flash_attention_2",
     "flash_attention_3",
+    "flash_attention_4",
     "initialize_attention_priority",
     "packed_sequence_attention",
     "rearrange_out",
     "rearrange_qkv",
+    "reset_attention_provider_runtime",
     "sage_attention",
     "sage_attention_3",
     "torch_sdpa",

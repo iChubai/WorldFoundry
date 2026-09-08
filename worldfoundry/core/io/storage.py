@@ -1,4 +1,9 @@
-"""URI storage primitives for local and remote file-like paths."""
+"""URI storage primitives for local and remote file-like paths.
+
+``open_uri`` / ``copy_uri`` / ``list_uri`` hide ``file://`` vs S3.
+Model code should not import boto3. Suffix and media kind live in
+``media.py``.
+"""
 
 from __future__ import annotations
 
@@ -11,6 +16,10 @@ from pathlib import Path
 from typing import BinaryIO, Generator, Iterable, TextIO
 from urllib.parse import unquote, urlparse
 from urllib.request import Request, urlopen
+
+# ──────────────────────────────────────────────────────────────────────────
+# Scheme dispatch — empty / file:// is local; anything else needs fsspec
+# ──────────────────────────────────────────────────────────────────────────
 
 
 def parse_uri_scheme(uri: str | os.PathLike[str]) -> str:
@@ -121,6 +130,11 @@ def write_text_uri(
         handle.write(data)
 
 
+# ──────────────────────────────────────────────────────────────────────────
+# Exists / list / copy / remove — local Path vs fsspec; HTTP reads without fsspec
+# ──────────────────────────────────────────────────────────────────────────
+
+
 def exists_uri(uri: str | os.PathLike[str], **storage_options) -> bool:
     """Return whether a URI exists."""
 
@@ -210,6 +224,9 @@ def list_uri(
     return sorted(value for value in values if value.endswith(suffixes))
 
 
+_COPY_CHUNK_BYTES = 16 * 1024 * 1024
+
+
 @contextmanager
 def local_path_for_uri(uri: str | os.PathLike[str], **storage_options) -> Generator[Path, None, None]:
     """Yield a local path, downloading remote bytes to a temporary file when needed."""
@@ -219,20 +236,28 @@ def local_path_for_uri(uri: str | os.PathLike[str], **storage_options) -> Genera
         return
     suffix = Path(urlparse(str(uri)).path).suffix
     with tempfile.NamedTemporaryFile(suffix=suffix, delete=True) as handle:
-        handle.write(read_binary_uri(uri, **storage_options))
+        with open_uri(uri, "rb", **storage_options) as source_handle:
+            shutil.copyfileobj(source_handle, handle, length=_COPY_CHUNK_BYTES)
         handle.flush()
         yield Path(handle.name)
 
 
 def copy_uri(src: str | os.PathLike[str], dst: str | os.PathLike[str], **storage_options) -> str:
-    """Copy one URI to another using storage-aware byte streams."""
+    """Copy one URI to another using storage-aware byte streams.
+
+    Remote transfers stream in bounded chunks instead of buffering the whole
+    object in memory; this is the byte mover underneath the download caches,
+    where objects are multi-GB checkpoints.
+    """
 
     if parse_uri_scheme(src) == "file" and parse_uri_scheme(dst) == "file":
         source = uri_to_local_path(src)
         target = uri_to_local_path(dst)
         target.parent.mkdir(parents=True, exist_ok=True)
         return str(shutil.copy(source, target))
-    write_binary_uri(dst, read_binary_uri(src, **storage_options), **storage_options)
+    with open_uri(src, "rb", **storage_options) as source_handle:
+        with open_uri(dst, "wb", **storage_options) as target_handle:
+            shutil.copyfileobj(source_handle, target_handle, length=_COPY_CHUNK_BYTES)
     return str(dst)
 
 
@@ -254,12 +279,16 @@ def remove_uri(uri: str | os.PathLike[str], **storage_options) -> None:
 
 
 def _read_http_bytes(uri: str) -> bytes:
+    """Fetch HTTP(S) without fsspec; identify as WorldFoundry so CDNs do not block urllib."""
+
     request = Request(uri, headers={"User-Agent": "worldfoundry"})
     with urlopen(request, timeout=30) as response:
         return response.read()
 
 
 def _optional_fsspec():
+    """Return the fsspec module or ``None`` so local-only jobs skip the S3 extra."""
+
     try:
         import fsspec  # type: ignore
     except ImportError:

@@ -1,4 +1,27 @@
-"""I/O primitives without model-specific semantics."""
+"""I/O primitives: path resolution, Hugging Face / cache downloads, video codecs, and serialization.
+
+No model-specific semantics. Upper layers should enter through these APIs instead
+of concatenating HF/S3 URLs by hand:
+
+- ``paths``: logical roots for the repo, cache, checkpoints, hfd, conda, and
+  artifacts. Shared ``resolve_*`` tokens keep containers, NFS, and local trees
+  on one convention instead of hard-coded script paths.
+- ``hf``: ``hf://`` and snapshot materialization. Rank 0 downloads; other ranks
+  wait on the local path so every GPU does not hit the Hub at once.
+- ``download`` / ``cache``: URL/S3 into a local cache with locks and reuse so
+  multiprocess workers do not clobber the same file.
+- ``video`` / ``video_data`` / ``video_tiling``: read frames, sample, write
+  H.264, and convert tensors <-> uint8. Tiling shards long or high-res videos
+  so one decode does not blow RAM.
+- ``serialization``: json / jsonl / generic dump-load plus format inference.
+- ``integrity``: atomic replace, canonical hashes, and path-escape checks for
+  evaluation artifacts.
+- ``storage``: unified open/copy/list for local and remote URIs.
+- Also: manifests, media suffixes, Hydra/OmegaConf, HDF5, audio, disk quotas.
+
+Symbols and submodules load lazily via ``__getattr__`` so ``import`` of this
+package does not pull in cv2, decord, or boto3.
+"""
 
 from __future__ import annotations
 
@@ -16,7 +39,9 @@ _SUBMODULES = {
     "file_utils": "worldfoundry.core.io.file_utils",
     "hdf5_utils": "worldfoundry.core.io.hdf5_utils",
     "hf": "worldfoundry.core.io.hf",
+    "integrity": "worldfoundry.core.io.integrity",
     "json_utils": "worldfoundry.core.io.json_utils",
+    "manifests": "worldfoundry.core.io.manifests",
     "media": "worldfoundry.core.io.media",
     "override_utils": "worldfoundry.core.io.override_utils",
     "paths": "worldfoundry.core.io.paths",
@@ -51,6 +76,10 @@ _EXPORT_MODULES = {
     "IMAGE_EXTENSIONS": "worldfoundry.core.io.media",
     "IMAGE_RES_SIZE_INFO": "worldfoundry.core.io.resolutions",
     "Jsonl": "worldfoundry.core.io.json_utils",
+    "JsonlWriter": "worldfoundry.core.io.serialization",
+    "append_jsonl_durable": "worldfoundry.core.io.integrity",
+    "canonical_json": "worldfoundry.core.io.integrity",
+    "canonical_sha256": "worldfoundry.core.io.integrity",
     "JSON_EXTENSIONS": "worldfoundry.core.io.media",
     "MEDIA_EXTENSION_GROUPS": "worldfoundry.core.io.media",
     "MIME_TYPES_BY_SUFFIX": "worldfoundry.core.io.media",
@@ -66,6 +95,7 @@ _EXPORT_MODULES = {
     "available_bytes": "worldfoundry.core.io.disk",
     "build_depth_visualizations": "worldfoundry.core.io.artifacts",
     "cache_root_path": "worldfoundry.core.io.paths",
+    "scratch_directory": "worldfoundry.core.io.paths",
     "cache_min_free_bytes": "worldfoundry.core.io.disk",
     "bytes_from_gib": "worldfoundry.core.io.disk",
     "colorize_depth_map": "worldfoundry.core.io.artifacts",
@@ -106,7 +136,9 @@ _EXPORT_MODULES = {
     "dumps_yaml": "worldfoundry.core.io.json_utils",
     "extract_tar": "worldfoundry.core.io.file_utils",
     "file_sha256": "worldfoundry.core.io.file_utils",
+    "ensure_path_within": "worldfoundry.core.io.integrity",
     "extract_frames_from_video_url": "worldfoundry.core.io.video",
+    "extract_video_frames_to_directory": "worldfoundry.core.io.video",
     "exists_uri": "worldfoundry.core.io.storage",
     "extract_rotation_directions": "worldfoundry.core.io.artifacts",
     "extract_translation_wasd": "worldfoundry.core.io.artifacts",
@@ -153,6 +185,7 @@ _EXPORT_MODULES = {
     "host_id": "worldfoundry.core.io.file_utils",
     "host_name": "worldfoundry.core.io.file_utils",
     "hfd_root_path": "worldfoundry.core.io.paths",
+    "hfd_dataset_root_path": "worldfoundry.core.io.paths",
     "hydra_config": "worldfoundry.core.io.config_utils",
     "hydra_original_dir": "worldfoundry.core.io.config_utils",
     "hydra_override_arg_list": "worldfoundry.core.io.config_utils",
@@ -160,6 +193,8 @@ _EXPORT_MODULES = {
     "infer_media_kind": "worldfoundry.core.io.media",
     "infer_serialization_format": "worldfoundry.core.io.serialization",
     "insert_before_ext": "worldfoundry.core.io.file_utils",
+    "iter_jsonl": "worldfoundry.core.io.serialization",
+    "iter_jsonl_objects": "worldfoundry.core.io.serialization",
     "instantiate": "worldfoundry.core.io.config_utils",
     "ijkl_onehot_to_direction": "worldfoundry.core.io.artifacts",
     "is_abs_path": "worldfoundry.core.io.file_utils",
@@ -183,6 +218,7 @@ _EXPORT_MODULES = {
     "join_uri": "worldfoundry.core.io.storage",
     "last_part_in_path": "worldfoundry.core.io.file_utils",
     "list_uri": "worldfoundry.core.io.storage",
+    "list_numbered_frame_paths": "worldfoundry.core.io.video",
     "local_data_root_path": "worldfoundry.core.io.paths",
     "load_json": "worldfoundry.core.io.json_utils",
     "load_from_cache_or_uri": "worldfoundry.core.io.cache",
@@ -194,6 +230,10 @@ _EXPORT_MODULES = {
     "load_text": "worldfoundry.core.io.file_utils",
     "load_text_lines": "worldfoundry.core.io.file_utils",
     "load_yaml": "worldfoundry.core.io.json_utils",
+    "MANIFEST_SUFFIXES": "worldfoundry.core.io.manifests",
+    "load_manifest": "worldfoundry.core.io.manifests",
+    "load_manifest_collection": "worldfoundry.core.io.manifests",
+    "manifest_paths": "worldfoundry.core.io.manifests",
     "load_serialized": "worldfoundry.core.io.serialization",
     "load_frames_from_video": "worldfoundry.core.io.video",
     "load_video_frames": "worldfoundry.core.io.video",
@@ -207,6 +247,7 @@ _EXPORT_MODULES = {
     "loads_yaml": "worldfoundry.core.io.json_utils",
     "md5_checksum": "worldfoundry.core.io.file_utils",
     "make_colorwheel": "worldfoundry.core.io.artifacts",
+    "materialize_file": "worldfoundry.core.io.file_utils",
     "maybe_download_hf_repo_on_rank0": "worldfoundry.core.io.hf",
     "merge_list": "worldfoundry.core.io.python_config",
     "min_free_bytes_from_env": "worldfoundry.core.io.disk",
@@ -219,6 +260,8 @@ _EXPORT_MODULES = {
     "output_min_free_bytes": "worldfoundry.core.io.disk",
     "owner_name": "worldfoundry.core.io.file_utils",
     "package_module_root": "worldfoundry.core.io.paths",
+    "package_data_path": "worldfoundry.core.io.paths",
+    "package_data_root": "worldfoundry.core.io.paths",
     "package_root": "worldfoundry.core.io.paths",
     "parse_uri_scheme": "worldfoundry.core.io.storage",
     "parse_game_control_config": "worldfoundry.core.io.artifacts",
@@ -228,6 +271,7 @@ _EXPORT_MODULES = {
     "pretty_repr_str": "worldfoundry.core.io.print_utils",
     "prepare_depth_visualization": "worldfoundry.core.io.artifacts",
     "process_game_control_video": "worldfoundry.core.io.artifacts",
+    "probe_video_metadata": "worldfoundry.core.io.video",
     "print_config": "worldfoundry.core.io.config_utils",
     "print_str": "worldfoundry.core.io.print_utils",
     "project_root": "worldfoundry.core.io.paths",
@@ -236,6 +280,7 @@ _EXPORT_MODULES = {
     "model_source_root_path": "worldfoundry.core.io.paths",
     "official_runtime_repo_path": "worldfoundry.core.io.paths",
     "checkpoint_root_path": "worldfoundry.core.io.paths",
+    "checkpoint_root_candidates": "worldfoundry.core.io.paths",
     "HF_URI_SCHEME": "worldfoundry.core.io.hf",
     "hf_download_or_fpath": "worldfoundry.core.io.hf",
     "resolve_hf_path": "worldfoundry.core.io.hf",
@@ -249,8 +294,14 @@ _EXPORT_MODULES = {
     "read_json_or_jsonl": "worldfoundry.core.io.serialization",
     "read_jsonl_objects": "worldfoundry.core.io.serialization",
     "read_binary_uri": "worldfoundry.core.io.storage",
+    "replace_json_atomic": "worldfoundry.core.io.integrity",
+    "replace_jsonl_atomic": "worldfoundry.core.io.integrity",
     "read_image_as_video_tensor": "worldfoundry.core.io.video",
     "read_text_uri": "worldfoundry.core.io.storage",
+    "sample_video_frames": "worldfoundry.core.io.video",
+    "safe_relative_path": "worldfoundry.core.io.integrity",
+    "sync_directory": "worldfoundry.core.io.integrity",
+    "text_sha256": "worldfoundry.core.io.integrity",
     "read_video": "worldfoundry.core.io.video",
     "register_callable": "worldfoundry.core.io.config_utils",
     "register_class": "worldfoundry.core.io.config_utils",
@@ -290,6 +341,9 @@ _EXPORT_MODULES = {
     "write_json": "worldfoundry.core.io.serialization",
     "write_jsonl": "worldfoundry.core.io.serialization",
     "write_binary_uri": "worldfoundry.core.io.storage",
+    "write_exclusive_bytes": "worldfoundry.core.io.integrity",
+    "write_exclusive_json": "worldfoundry.core.io.integrity",
+    "write_exclusive_text": "worldfoundry.core.io.integrity",
     "write_audio": "worldfoundry.core.io.audio",
     "write_text_uri": "worldfoundry.core.io.storage",
     "write_video": "worldfoundry.core.io.video",
@@ -317,8 +371,14 @@ _EXPORT_MODULES = {
     "yaml_loads": "worldfoundry.core.io.json_utils",
 }
 
+# ──────────────────────────────────────────────────────────────────────────
+# Lazy facade — import_module only when a name is first accessed
+# ──────────────────────────────────────────────────────────────────────────
+
 
 def __getattr__(name: str) -> Any:
+    """Resolve a submodule or export on first access and cache it on this module."""
+
     module_name = _SUBMODULES.get(name) or _EXPORT_MODULES.get(name)
     if module_name is None:
         raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
@@ -329,6 +389,8 @@ def __getattr__(name: str) -> Any:
 
 
 def __dir__() -> list[str]:
+    """Expose lazy ``__all__`` names to completion tools even before first access."""
+
     return sorted({*globals(), *__all__})
 
 

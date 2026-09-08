@@ -1,0 +1,113 @@
+---
+title: LikePhys
+description: Training-free likelihood-preference probe of intuitive physics in video diffusion models over 12 simulated scenarios.
+---
+
+## About
+
+**Publisher:** University of Oxford
+
+LikePhys evaluates intuitive physics understanding inside a video diffusion model itself — not the videos it generates. For each of 12 simulated scenarios (rigid bodies, fluids, deformables, optics), the benchmark pairs a physically valid clip with matched physically-implausible variations, then asks whether the model assigns higher likelihood (lower denoising ELBO) to the valid clip. The primary metric is the mis-rank rate: how often the model prefers the implausible variation. Lower is better everywhere.
+
+WorldFoundry reproduces the official mis-rank formulas in tree (`evaluator.py` `compute_misrank_normalized` and `read_exp_final.py` aggregation, including the paper's `filter_config` variation exclusions), and can drive the upstream ELBO probe from a caller-supplied LikePhys checkout.
+
+Official references:
+
+- Paper: [arxiv.org/abs/2510.11512](https://arxiv.org/abs/2510.11512)
+- Project page: [yuanjianhao508.github.io/LikePhys](https://yuanjianhao508.github.io/LikePhys/)
+- Official repository: [YuanJianhao508/LikePhys](https://github.com/YuanJianhao508/LikePhys)
+
+## Evaluation protocol
+
+Two paths:
+
+- **Result normalization**: point `--official-results-path` at `results_<model>.json` files (or an experiment directory holding `<scenario>/results_<probe_model>.json`); the runner recomputes mis-rank aggregates with the official filters. Use `--probe-model` when a results root holds several probe backends, and `--no-report-filter` to keep variations the paper excludes.
+- **Official probe** (`--run-official`): executes the upstream `evaluator.py` from a LikePhys checkout (set `WORLDFOUNDRY_LIKEPHYS_EVALUATOR_ROOT`) because it needs the upstream forked diffusers pipelines/schedulers; requires CUDA and the probed model checkpoints. `--dry-run` prepares the workspace and prints the commands without executing.
+
+Primary metric: `likephys_misrank_rate`.
+
+| Metric | Meaning | Direction |
+| --- | --- | --- |
+| `likephys_misrank_rate` | Variation-weighted mean mis-rank rate over every scored scenario/variation pair. | Lower is better |
+| `likephys_dataset_weighted_misrank_rate` | Mean over per-scenario mis-rank rates, weighting each of the 12 scenarios equally. | Lower is better |
+| `rigid_body_misrank_rate` | Mis-rank over ball drop, ball collision, pendulum, block slide, and pyramid scenarios. | Lower is better |
+| `fluid_misrank_rate` | Mis-rank over droplet, faucet, and river fluid scenarios. | Lower is better |
+| `deformable_misrank_rate` | Mis-rank over cloth drape and waving flag scenarios. | Lower is better |
+| `optics_misrank_rate` | Mis-rank over moving-light and moving-camera shadow scenarios. | Lower is better |
+| `temporal_disorder_misrank_rate` | Mis-rank restricted to the temporal_disorder variation shared by all 12 scenarios. | Lower is better |
+
+## Data and artifact layout
+
+In-tree paths:
+
+```text
+worldfoundry/data/benchmarks/tasks/external/likephys.yaml
+worldfoundry/evaluation/tasks/execution/runners/likephys
+```
+
+Dataset clips and result files follow the upstream layout:
+
+```text
+<likephys_data_root>/<scenario>_videos/subgroup_XXX/valid_00.mp4          # physically valid clip
+<likephys_data_root>/<scenario>_videos/subgroup_XXX/<variation>_00.mp4    # implausible variations
+<likephys_results_root>/<scenario>/results_<probe_model>.json             # per-scenario probe results
+```
+
+Stage the benchmark clips from Hugging Face:
+
+```bash
+hf download JianhaoDYDY/LikePhys-Benchmark --repo-type dataset --local-dir <likephys_data_root>
+```
+
+## Run the benchmark
+
+Catalog-recorded validation command:
+
+```bash
+worldfoundry-eval zoo benchmark-run \
+  --benchmark-id likephys \
+  --mode official-validation \
+  --official-results-path <likephys_results_root> \
+  --output-dir <out> \
+  --json
+```
+
+Run the upstream ELBO probe for one model on one scenario (requires CUDA and a LikePhys checkout):
+
+```bash
+WORLDFOUNDRY_LIKEPHYS_EVALUATOR_ROOT=/path/to/LikePhys \
+${WORLDFOUNDRY_UNIFIED_PYTHON} \
+  worldfoundry/evaluation/tasks/execution/runners/likephys/run_likephys_official_runner.py \
+  --run-official \
+  --probe-model wan2.1-T2V-1.3b \
+  --scenario ball_drop \
+  --benchmark-data-root "${WORLDFOUNDRY_LIKEPHYS_DATA_ROOT}" \
+  --output-dir tmp/likephys/probe \
+  --json
+```
+
+## Checkpoints and environment variables
+
+- `WORLDFOUNDRY_LIKEPHYS_EVALUATOR_ROOT`
+- `WORLDFOUNDRY_LIKEPHYS_RESULTS_PATH`: Default path the importer reads official result exports from when `--official-results-path` is not passed.
+- `WORLDFOUNDRY_LIKEPHYS_DATA_ROOT`
+- `WORLDFOUNDRY_GENERATED_ARTIFACT_DIR`: Directory containing the candidate generated artifacts to score or import against.
+
+## Outputs
+
+The run writes into `--output-dir`:
+
+- `scorecard.json`: WorldFoundry scorecard with the metric values recorded above.
+- `benchmark_contract.json`: Benchmark contract record for the run (inputs, mode, provenance).
+- `raw_metric_table.jsonl`: Metric rows backing the scorecard.
+- `misrank_breakdown.json`
+
+Scorecard primary key: `likephys_misrank_rate` (leaderboard key `likephys_misrank_rate`), stored in `scorecard.json`.
+
+## Limitations
+
+- LikePhys scores a diffusion model, not generated videos — there is no candidate-video input.
+- WorldFoundry does not vendor the upstream forked diffusers pipelines/schedulers; the probe requires an official checkout via `WORLDFOUNDRY_LIKEPHYS_EVALUATOR_ROOT`.
+- A full sweep costs one GPU pass per (model, scenario) pair over 920 clips; partial sweeps are not paper-comparable.
+
+[← Benchmark Hub](/docs/evaluation/benchmark-hub)

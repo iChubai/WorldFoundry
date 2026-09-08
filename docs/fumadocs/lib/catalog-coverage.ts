@@ -6,6 +6,8 @@ export type CatalogEntry = {
   status?: string | null;
   /** Variant / catalog ids collapsed into this display row. */
   aliases?: string[];
+  /** Human-readable version labels for a grouped model family. */
+  versions?: string[];
 };
 
 export type CatalogFamily = {

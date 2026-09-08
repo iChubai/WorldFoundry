@@ -1,5 +1,5 @@
 ---
-title: CLI Reference
+title: CLI reference
 description: Complete command map, execution modes, output contracts, and automation conventions for worldfoundry-eval.
 ---
 
@@ -79,9 +79,11 @@ worldfoundry-eval run --help
 
 ![Terminal output of worldfoundry-eval --help](/images/cli/worldfoundry-eval-help.png)
 
-<p className="text-sm text-fd-muted-foreground">
-  Captured from the current CLI. The screenshot can be regenerated with <code>npm run cli:screenshots</code> in <code>docs/fumadocs</code>.
-</p>
+<div className="text-sm text-fd-muted-foreground">
+
+Captured from the current CLI. The screenshot can be regenerated with `npm run cli:screenshots` in `docs/fumadocs`.
+
+</div>
 
 ### Model-specific help
 
@@ -145,7 +147,7 @@ Several commands can reach the evaluation core, but they start from different us
 | Command | Subcommands / role |
 | --- | --- |
 | `task` | `list`, `show`, `validate`, `materialize` filesystem task YAML. |
-| `dataset` | `create`, `show`, `validate`, `materialize` dataset manifests and request rows. |
+| `dataset` | `create`, `show`, `validate`, `materialize` sample manifests; `locate`, `plan` local/HF dataset assets. |
 | `config` | `list`, `run` checked-in workflow templates. |
 | `plan` | `create`, `show`, `validate` stable `worldfoundry-run-plan` JSON. |
 | `metric` | `list`, `show`, `validate` executable metric IDs. |
@@ -306,6 +308,28 @@ Benchmark-specific inputs such as data roots, score directories, prompt manifest
 </Callout>
 
 ## Outputs and reproducibility
+
+Global logging flags are accepted before or after the subcommand. They override
+the corresponding environment values described in
+[Environments → Logging](/docs/reference/environments#logging):
+
+```bash
+worldfoundry-eval --log-level DEBUG --log-json \
+  --log-file tmp/worldfoundry.log zoo models --json
+```
+
+| Flag | Equivalent environment | Notes |
+| --- | --- | --- |
+| `--log-level` | `WORLDFOUNDRY_LOG_LEVEL` | One of `DEBUG`, `INFO`, `WARNING`, `ERROR`, or `CRITICAL`; default `INFO`. |
+| `--log-file` | `WORLDFOUNDRY_LOG_FILE` | Optional rotating file sink. |
+| `--log-json` | `WORLDFOUNDRY_LOG_JSON` | JSON Lines for the file sink; console output stays text. |
+
+Commands that own an output directory create a run id and, unless a file sink
+was selected explicitly, write lifecycle events to a per-run `events.jsonl`.
+This is normally below `<output-dir>/logs/<run-id>/`; commands that exclusively
+claim their output directory use an isolated sibling log directory instead.
+Framework-owned child processes inherit the structured
+`WORLDFOUNDRY_LOG_CONTEXT` value.
 
 Evaluation commands write durable files below `--output-dir`. Exact benchmark-owned extras vary, but the shared run surface uses these artifacts:
 

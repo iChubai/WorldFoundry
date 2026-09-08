@@ -13,13 +13,25 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Model and data parallel groups."""
+"""Model and data parallel process groups: TP, CP, PP, and DP.
+
+``initialize_model_parallel`` builds four orthogonal groups from the world
+mesh. ``get_tp_*`` shards hidden dims (Linear/Attention). ``get_cp_*``
+shards sequence for Ulysses/ring. ``get_pp_*`` finds pipeline neighbors.
+``get_dp_*`` (plus a gloo backup) syncs metrics and EMA — it never shards
+a single sample. Destroy with ``destroy_model_parallel`` before a second
+init; leftover groups break NCCL.
+"""
 
 import warnings
 from datetime import timedelta
 from typing import List, Optional
 
 import torch
+
+# ──────────────────────────────────────────────────────────────────────────
+# Process-group globals — one live set; destroy before a second init
+# ──────────────────────────────────────────────────────────────────────────
 
 # Intra-layer model parallel group that the current rank belongs to.
 _TENSOR_MODEL_PARALLEL_GROUP = None
@@ -62,6 +74,33 @@ _DATA_PARALLEL_GLOBAL_RANKS_WITH_CP = None
 
 # combined parallel group of TP, DP, and CP used for fp8
 _TENSOR_AND_DATA_PARALLEL_GROUP_WITH_CP = None
+
+_PROCESS_GROUP_STATE_NAMES = (
+    "_MODEL_PARALLEL_GROUP",
+    "_TENSOR_MODEL_PARALLEL_GROUP",
+    "_TENSOR_MODEL_PARALLEL_GROUP_WITH_CP",
+    "_PIPELINE_MODEL_PARALLEL_GROUP",
+    "_DATA_PARALLEL_GROUP",
+    "_DATA_PARALLEL_GROUP_GLOO",
+    "_TENSOR_AND_DATA_PARALLEL_GROUP",
+    "_CONTEXT_PARALLEL_GROUP",
+    "_DATA_PARALLEL_GROUP_WITH_CP",
+    "_DATA_PARALLEL_GROUP_WITH_CP_GLOO",
+    "_TENSOR_AND_DATA_PARALLEL_GROUP_WITH_CP",
+)
+_RANK_STATE_NAMES = (
+    "_TENSOR_MODEL_PARALLEL_GLOBAL_RANKS_WITH_CP",
+    "_PIPELINE_GLOBAL_RANKS",
+    "_DATA_PARALLEL_GLOBAL_RANKS",
+    "_TENSOR_MODEL_PARALLEL_GLOBAL_RANKS",
+    "_CONTEXT_PARALLEL_GLOBAL_RANKS",
+    "_DATA_PARALLEL_GLOBAL_RANKS_WITH_CP",
+)
+
+
+# ──────────────────────────────────────────────────────────────────────────
+# Orthogonal rank math — mask selects which axes share a communicator
+# ──────────────────────────────────────────────────────────────────────────
 
 
 def get_nccl_options(pg_name, nccl_comm_cfgs):
@@ -107,9 +146,9 @@ def generate_masked_orthogonal_rank_groups(
         For orthogonal parallelism, such as tp/dp/pp/cp, the global_rank and
         local_rank satisfy the following equation:
             global_rank = tp_rank + dp_rank * tp_size + pp_rank * tp_size * dp_size (1)
-                tp_rank \in [0, tp_size)
-                dp_rank \in [0, dp_size)
-                pp_rank \in [0, pp_size)
+                tp_rank in [0, tp_size)
+                dp_rank in [0, dp_size)
+                pp_rank in [0, pp_size)
 
         If we want to get the `dp_group` (tp_size * pp_size groups of dp_size ranks each.
         For example,  if the gpu size is 8 and order is 'tp-pp-dp', size is '2-2-2', and the
@@ -137,6 +176,8 @@ def generate_masked_orthogonal_rank_groups(
     """
 
     def prefix_product(a: List[int], init=1) -> List[int]:
+        """Exclusive scan of products: strides for a mixed-radix rank encoding."""
+
         r = [init]
         for v in a:
             init = init * v
@@ -144,6 +185,8 @@ def generate_masked_orthogonal_rank_groups(
         return r
 
     def inner_product(a: List[int], b: List[int]) -> int:
+        """Dot product used to reassemble a global rank from per-axis indices."""
+
         return sum([x * y for x, y in zip(a, b)])
 
     def decompose(index, shape, stride=None):
@@ -192,7 +235,16 @@ def generate_masked_orthogonal_rank_groups(
 
 
 class RankGenerator(object):
+    """Expand ``tp/dp/pp/cp`` sizes plus an axis ``order`` into rank lists.
+
+    Axes omitted from ``order`` are appended only when their size is 1;
+    a missing axis with size > 1 is a programming error, not a silent
+    default that would scramble NCCL membership.
+    """
+
     def __init__(self, tp: int, dp: int, pp: int, cp: int, order: str) -> None:
+        """Validate ``order`` against non-unit sizes and cache the stride list."""
+
         self.tp = tp
         self.dp = dp
         self.pp = pp
@@ -203,8 +255,11 @@ class RankGenerator(object):
         order = order.lower()
         for name in self.name_to_size.keys():
             if name not in order and self.name_to_size[name] != 1:
+                # Use the local ``order``: ``self.order`` is only assigned after
+                # this validation loop, so referencing it here raised an
+                # unrelated AttributeError instead of this message (CC-21).
                 raise RuntimeError(
-                    f"The size of ({name}) is ({self.name_to_size[name]}), but you haven't specified the order ({self.order})."
+                    f"The size of ({name}) is ({self.name_to_size[name]}), but you haven't specified the order ({order})."
                 )
             elif name not in order:
                 order = order + "-" + name
@@ -213,6 +268,8 @@ class RankGenerator(object):
         self.ordered_size = [self.name_to_size[token] for token in order.split("-")]
 
     def get_mask(self, order: str, token: str):
+        """Boolean mask: True for each axis named in hyphen-separated ``token``."""
+
         ordered_token = order.split("-")
         token = token.split("-")
         mask = [False] * len(ordered_token)
@@ -233,6 +290,11 @@ class RankGenerator(object):
         mask = self.get_mask(self.order, token)
         ranks = generate_masked_orthogonal_rank_groups(self.world_size, self.ordered_size, mask)
         return ranks
+
+
+# ──────────────────────────────────────────────────────────────────────────
+# initialize_model_parallel — NCCL groups plus a Gloo backup on every DP set
+# ──────────────────────────────────────────────────────────────────────────
 
 
 def initialize_model_parallel(
@@ -349,6 +411,7 @@ def initialize_model_parallel(
 
     for ranks in rank_generator.get_ranks("dp"):
         group = torch.distributed.new_group(ranks, timeout=timeout, pg_options=get_nccl_options("dp", nccl_comm_cfgs))
+        # Gloo backup: metrics / object broadcasts must not ride the NCCL DP group.
         group_gloo = torch.distributed.new_group(ranks, timeout=timeout, backend="gloo")
         if rank in ranks:
             _DATA_PARALLEL_GROUP = group
@@ -432,6 +495,11 @@ def initialize_model_parallel(
         )
         if rank in ranks:
             _TENSOR_AND_DATA_PARALLEL_GROUP = group
+
+
+# ──────────────────────────────────────────────────────────────────────────
+# Group / rank accessors — assert initialized; DP/CP may return 1/0 if dist is down
+# ──────────────────────────────────────────────────────────────────────────
 
 
 def is_initialized():
@@ -617,7 +685,7 @@ def get_dp_world_size(with_context_parallel=False):
     if torch.distributed.is_available() and torch.distributed.is_initialized():
         return torch.distributed.get_world_size(group=get_dp_group(with_context_parallel=with_context_parallel))
     else:
-        return 0
+        return 1
 
 
 def get_dp_rank(with_context_parallel=False):
@@ -633,7 +701,7 @@ def get_cp_world_size():
     if torch.distributed.is_available() and torch.distributed.is_initialized():
         return torch.distributed.get_world_size(group=get_cp_group())
     else:
-        return 0
+        return 1
 
 
 def get_cp_rank():
@@ -644,39 +712,36 @@ def get_cp_rank():
         return 0
 
 
-def destroy_model_parallel():
-    """Set the groups to none."""
-    global _MODEL_PARALLEL_GROUP
-    _MODEL_PARALLEL_GROUP = None
-    global _TENSOR_MODEL_PARALLEL_GROUP
-    _TENSOR_MODEL_PARALLEL_GROUP = None
-    global _TENSOR_MODEL_PARALLEL_GROUP_WITH_CP
-    _TENSOR_MODEL_PARALLEL_GROUP_WITH_CP = None
-    global _TENSOR_MODEL_PARALLEL_GLOBAL_RANKS_WITH_CP
-    _TENSOR_MODEL_PARALLEL_GLOBAL_RANKS_WITH_CP = None
-    global _PIPELINE_MODEL_PARALLEL_GROUP
-    _PIPELINE_MODEL_PARALLEL_GROUP = None
-    global _DATA_PARALLEL_GROUP
-    _DATA_PARALLEL_GROUP = None
-    global _DATA_PARALLEL_GROUP_GLOO
-    _DATA_PARALLEL_GROUP_GLOO = None
-    global _TENSOR_AND_DATA_PARALLEL_GROUP
-    _TENSOR_AND_DATA_PARALLEL_GROUP = None
-    global _PIPELINE_GLOBAL_RANKS
-    _PIPELINE_GLOBAL_RANKS = None
-    global _DATA_PARALLEL_GLOBAL_RANKS
-    _DATA_PARALLEL_GLOBAL_RANKS = None
-    global _TENSOR_MODEL_PARALLEL_GLOBAL_RANKS
-    _TENSOR_MODEL_PARALLEL_GLOBAL_RANKS = None
-    global _CONTEXT_PARALLEL_GROUP
-    _CONTEXT_PARALLEL_GROUP = None
-    global _CONTEXT_PARALLEL_GLOBAL_RANKS
-    _CONTEXT_PARALLEL_GLOBAL_RANKS = None
-    global _DATA_PARALLEL_GROUP_WITH_CP
-    _DATA_PARALLEL_GROUP_WITH_CP = None
-    global _DATA_PARALLEL_GROUP_WITH_CP_GLOO
-    _DATA_PARALLEL_GROUP_WITH_CP_GLOO = None
-    global _DATA_PARALLEL_GLOBAL_RANKS_WITH_CP
-    _DATA_PARALLEL_GLOBAL_RANKS_WITH_CP = None
-    global _TENSOR_AND_DATA_PARALLEL_GROUP_WITH_CP
-    _TENSOR_AND_DATA_PARALLEL_GROUP_WITH_CP = None
+# ──────────────────────────────────────────────────────────────────────────
+# Teardown — never destroy WORLD; collect every subgroup failure then raise
+# ──────────────────────────────────────────────────────────────────────────
+
+
+def destroy_model_parallel(*, destroy_process_groups: bool = True) -> None:
+    """Destroy owned subgroups and clear all model-parallel state.
+
+    The default process group is deliberately left alive; its lifecycle is
+    owned by the distributed launcher.  Set ``destroy_process_groups=False``
+    only when an external framework has already destroyed the subgroups.
+    """
+
+    groups = [globals()[name] for name in _PROCESS_GROUP_STATE_NAMES]
+    errors: list[BaseException] = []
+    if destroy_process_groups and torch.distributed.is_available() and torch.distributed.is_initialized():
+        world = getattr(getattr(torch.distributed, "group", None), "WORLD", None)
+        non_member = getattr(getattr(torch.distributed, "GroupMember", None), "NON_GROUP_MEMBER", None)
+        seen: set[int] = set()
+        for group in groups:
+            if group is None or group is world or group is non_member or id(group) in seen:
+                continue
+            seen.add(id(group))
+            try:
+                torch.distributed.destroy_process_group(group)
+            except BaseException as exc:  # finish releasing the remaining groups before surfacing failure
+                errors.append(exc)
+
+    for name in (*_PROCESS_GROUP_STATE_NAMES, *_RANK_STATE_NAMES):
+        globals()[name] = None
+
+    if errors:
+        raise RuntimeError(f"failed to destroy {len(errors)} model-parallel process group(s)") from errors[0]

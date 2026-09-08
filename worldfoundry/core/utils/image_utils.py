@@ -1,4 +1,20 @@
-"""Image visualization and tensor-to-display conversion helpers."""
+"""Image visualization and tensor-to-display conversion helpers.
+
+Responsibility
+    Letterbox, horizontal view split/compose, PIL load, and a basic
+    ``[0, 255] → normalize`` tensor preprocess for eval UIs.
+
+Boundaries
+    Shared by eval UIs. Model-specific preprocess should stay in the encoder
+    pipeline. ``Cv2Display`` needs a GUI ``DISPLAY``; it is not headless.
+    ``to_image`` assumes 3-channel RGB in ``auto`` mode.
+
+Public surface
+    :func:`to_image`, :func:`load_pil_image`, :func:`materialize_image_input`,
+    :func:`compose_horizontal_views`, :func:`split_horizontal_views`,
+    :func:`resize_and_letterbox`, :func:`imread` / :func:`imsave` / :func:`imshow`,
+    :class:`Cv2Display`, :func:`basic_image_tensor_preprocess`.
+"""
 
 from __future__ import annotations
 
@@ -16,6 +32,11 @@ from PIL import Image
 from .array_tensor_utils import any_describe
 from .misc_utils import global_once
 from .torch_utils import torch_normalize
+
+
+# ──────────────────────────────────────────────────────────────────────────
+# PIL / layout — RGB views for eval UIs; not encoder-specific preprocess
+# ──────────────────────────────────────────────────────────────────────────
 
 
 def to_image(img, channel_order="auto"):
@@ -152,19 +173,27 @@ def split_horizontal_views(
     return views
 
 
+# ──────────────────────────────────────────────────────────────────────────
+# I/O and resize — uint8 HWC for display; center-crop vs letterbox are distinct
+# ──────────────────────────────────────────────────────────────────────────
+
+
 def imshow(img):
+    """Show ``img`` via matplotlib after :func:`to_image` (blocking backend)."""
     import matplotlib.pyplot as plt
 
     plt.imshow(to_image(img))
 
 
 def imsave(img, path):
+    """Write ``img`` as uint8 HWC through imageio; ``~`` in ``path`` is expanded."""
     import imageio
 
     imageio.imsave(os.path.expanduser(path), to_image(img))
 
 
 def resize_and_center_crop(image, target_width, target_height):
+    """Scale HWC uint8 so the target fits, then center-crop (may discard edges)."""
     if target_height == image.shape[0] and target_width == image.shape[1]:
         return image
 
@@ -182,7 +211,32 @@ def resize_and_center_crop(image, target_width, target_height):
     return np.array(cropped_image)
 
 
+def resize_and_letterbox(
+    image,
+    target_width: int,
+    target_height: int,
+    *,
+    fill: tuple[int, int, int] = (255, 255, 255),
+) -> Image.Image:
+    """Fit an RGB image inside a fixed canvas while preserving aspect ratio."""
+
+    if target_width <= 0 or target_height <= 0:
+        raise ValueError("target_width and target_height must be positive")
+    source = load_pil_image(image, first_sequence_item=False)
+    scale = min(target_width / source.width, target_height / source.height)
+    resized_width = max(1, int(source.width * scale))
+    resized_height = max(1, int(source.height * scale))
+    resized = source.resize((resized_width, resized_height), Image.Resampling.LANCZOS)
+    canvas = Image.new("RGB", (target_width, target_height), fill)
+    canvas.paste(
+        resized,
+        ((target_width - resized_width) // 2, (target_height - resized_height) // 2),
+    )
+    return canvas
+
+
 def resize_and_center_crop_pytorch(image, target_width, target_height):
+    """Batched NCHW bilinear resize + center crop; ``align_corners=False``."""
     B, C, H, W = image.shape
 
     if H == target_height and W == target_width:
@@ -204,6 +258,7 @@ def resize_and_center_crop_pytorch(image, target_width, target_height):
 
 
 def resize_without_crop(image, target_width, target_height):
+    """Stretch HWC uint8 to the target size; aspect ratio is not preserved."""
     if target_height == image.shape[0] and target_width == image.shape[1]:
         return image
 
@@ -213,6 +268,7 @@ def resize_without_crop(image, target_width, target_height):
 
 
 def imread(path, channel_order="chw", format="torch"):
+    """Load an image file; default CHW torch tensor (not normalized)."""
     import imageio
 
     assert channel_order in ["hwc", "chw"]
@@ -227,6 +283,8 @@ def imread(path, channel_order="chw", format="torch"):
 
 
 class Cv2Display:
+    """OpenCV window pump for live tensors; no-ops when ``enabled=False``."""
+
     def __init__(
         self,
         window_name="display",
@@ -257,6 +315,7 @@ class Cv2Display:
         self._enabled = enabled
 
     def _resize(self, img):
+        """Area-downsample or linear-upsample to ``image_size``; skip if unset."""
         import cv2
 
         if self._image_size is None:
@@ -270,6 +329,7 @@ class Cv2Display:
         )
 
     def _reorder(self, img):
+        """CHW → HWC when ``auto`` sees a leading 1/3 channel dim."""
         if self._channel_order == "chw":
             return np.transpose(img, (1, 2, 0))
         elif self._channel_order == "hwc":
@@ -281,6 +341,7 @@ class Cv2Display:
                 return img
 
     def __call__(self, img):
+        """Show one frame; invent ``DISPLAY=:0.0`` if unset (IsaacGym segfault guard)."""
         if not self._enabled:
             return
         import cv2
@@ -305,6 +366,7 @@ class Cv2Display:
             os.environ["DISPLAY"] = display_var
 
     def close(self):
+        """Destroy the named OpenCV window; safe when the display was disabled."""
         if not self._enabled:
             return
         import cv2
@@ -312,7 +374,11 @@ class Cv2Display:
         cv2.destroyWindow(self._window_name)
 
 
-# ---------------- Image tensor handling -----------------
+# ──────────────────────────────────────────────────────────────────────────
+# Image tensor handling — catch un-normalized integer inputs before a NN
+# ──────────────────────────────────────────────────────────────────────────
+
+
 def sanity_check_image_tensor(img: torch.Tensor, on_error: Literal["raise", "warn", "ignore"] = "raise"):
     """
     Check if the input image tensor is all integers, which is wrong for any NN input.

@@ -246,7 +246,7 @@ def load_run_plan(path: str | Path) -> RunPlan:
 def write_run_plan(plan: RunPlan, path: str | Path) -> Path:
     """Writes a RunPlan instance to a specified JSON file on disk."""
     destination = Path(path)
-    write_json(destination, plan.to_dict(), atomic=False)
+    write_json(destination, plan.to_dict())
     return destination
 
 

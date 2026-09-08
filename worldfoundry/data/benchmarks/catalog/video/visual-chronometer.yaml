@@ -1,5 +1,7 @@
 id: visual-chronometer
 name: Visual Chronometer
+publisher: Texas A&M University
+publisher_kind: university
 benchmark_kind:
 - video-metric
 - temporal-consistency
@@ -156,6 +158,9 @@ validation_command:
 checkpoint_refs: []
 blockers:
 - Full leaderboard parity requires the complete official assets, generated artifacts, and verified scorecard evidence.
+dataset:
+  not_applicable: true
+  reason: Visual Chronometer is a video metric applied to caller-provided arbitrary or generated videos; Hugging Face hosts only the model checkpoint, not a benchmark dataset.
 artifact_layout:
   generated_artifact_dir_env: WORLDFOUNDRY_GENERATED_ARTIFACT_DIR
   output_artifact: benchmark_scorecard

@@ -13,7 +13,22 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Multi-rank S3 → local-cache sync utility used by examples and recipes."""
+"""Multi-rank S3 → local-cache sync for examples and recipes.
+
+Eval and recipe workers often share a prefix of assets
+(``s3://bucket/examples/...``). :func:`sync_s3_dir_to_local` mirrors
+that prefix into a local cache:
+
+- Rank 0 lists recursively, downloads in a thread pool, and optionally
+  verifies size + FULL_OBJECT SHA256 (one retry on mismatch).
+- Other ranks block on a torch.distributed barrier so they never read
+  a half-written cache. Single-process jobs skip the barrier.
+- Local paths are a no-op (existence is asserted).
+- Disk-space preflights use :mod:`worldfoundry.core.io.disk`.
+
+This is not a filesystem and not a DCP reader — those live in
+:mod:`worldfoundry.core.io.s3_filesystem`.
+"""
 
 import base64
 import hashlib
@@ -31,6 +46,10 @@ from worldfoundry.core.io.disk import (
     raise_if_disk_space_error,
 )
 from worldfoundry.core.io.s3_filesystem import S3FileSystem
+
+# ──────────────────────────────────────────────────────────────────────────
+# Rank-0 prefix mirror — barrier so other ranks never read a half-written cache
+# ──────────────────────────────────────────────────────────────────────────
 
 
 class ValidationError(RuntimeError):

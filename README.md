@@ -1,4 +1,4 @@
-![WorldFoundry teaser](docs/fumadocs/public/teaser.png)
+# WorldFoundry
 
 [![Python](https://img.shields.io/badge/python-3.10%20--%203.13-blue)](pyproject.toml)
 [![License](https://img.shields.io/badge/license-Apache--2.0-green)](LICENSE)
@@ -17,7 +17,19 @@ Day-one workflow:
 
 ## 🤝 Community
 
-Join the **WorldFoundry Community** [Discord](https://discord.gg/ybUQMDA4x) or WeChat for discussions, announcements, technical support, and the latest project updates.
+Join the **WorldFoundry Community** on Slack, [Discord](https://discord.gg/ybUQMDA4x), or WeChat for discussions, announcements, technical support, and the latest project updates.
+
+<p align="center">
+
+<a href="https://join.slack.com/t/worldfoundrycommunity/shared_invite/zt-43nbi9fw4-okYiELzZHp0_1UPa3dh3bQ">
+  <img src="https://img.shields.io/badge/Slack-Join%20Workspace-4A154B?logo=slack&logoColor=white" alt="Join Slack">
+</a>
+
+<a href="https://github.com/WorldFoundry/WorldFoundry/discussions">
+  <img src="https://img.shields.io/badge/GitHub-Discussions-181717?logo=github" alt="GitHub Discussions">
+</a>
+
+</p>
 
 <p align="center">
   <strong>WeChat Community</strong>
@@ -25,60 +37,30 @@ Join the **WorldFoundry Community** [Discord](https://discord.gg/ybUQMDA4x) or W
 
 <table align="center">
   <tr>
-    <td align="center">
-      <strong>Group 1 — Full</strong>
-    </td>
-    <td align="center">
-      <strong>Group 2 — Full</strong>
-    </td>
-    <td align="center">
-      <strong>Group 3 — Open</strong>
-    </td>
+    <td align="center"><strong>Group 1 — Full</strong></td>
+    <td align="center"><strong>Group 2 — Full</strong></td>
+    <td align="center"><strong>Group 3 — Open</strong></td>
   </tr>
   <tr>
-    <td align="center">
-      <img
-        src="docs/fumadocs/public/wechat_qr.png"
-        alt="WorldFoundry WeChat Group 1"
-        width="280"
-      >
-    </td>
-    <td align="center">
-      <img
-        src="docs/fumadocs/public/wechat_qr_2.png"
-        alt="WorldFoundry WeChat Group 2"
-        width="280"
-      >
-    </td>
-    <td align="center">
-      <img
-        src="docs/fumadocs/public/wechat_qr_3.png"
-        alt="WorldFoundry WeChat Group 3"
-        width="280"
-      >
-    </td>
+    <td align="center"><img src="docs/fumadocs/public/wechat_qr.png" alt="WorldFoundry WeChat Group 1" width="280"></td>
+    <td align="center"><img src="docs/fumadocs/public/wechat_qr_2.png" alt="WorldFoundry WeChat Group 2" width="280"></td>
+    <td align="center"><img src="docs/fumadocs/public/wechat_qr_3.png" alt="WorldFoundry WeChat Group 3" width="280"></td>
   </tr>
 </table>
 
 <p align="center">
-  <em>
-    WeChat Groups 1 and 2 are full. Please scan the Group 3 QR code to join the community.<br>
-    The QR codes will be updated if they expire.
-  </em>
+  <em>Groups 1 and 2 are full. Scan the Group 3 QR code to join.<br>
+  QR codes are updated periodically if they expire.</em>
 </p>
 
 ## 📰 News
 
-- **[2026-07-17]** 🔧 **WorldFoundry v0.2.0: Major Infrastructure Overhaul**
-  - **Core Inference Upgrades** – Refactored to inference‑only path with integrated Wan, HunyuanVideo, LTX2, Cosmos, perception & 3D foundation modules. Unified attention backend selection (FlashAttention 2/3, SageAttention, xFormers, SDPA fallback). Triton kernel registration, compilation & inference caching. NVFP4 quantization support. GPU selection driven by actual compute capability (A100, H100). Multi‑GPU Context/Sequence Parallel with advanced memory management.
-  - **World Model Integration** – Incorporated LingBot World 2, Lingbot Video, Helios, Bernini, AlayaWorld, Rolling Forcing, LiveWorld, MinWM, sana streaming, and more.
-  - **Action Policy Integration** – Integrated LingBot VLA/VLA2, Xiaomi Robotics, Hy‑Embodied VLA, Spatial Forcing, X‑VLA, X‑WAM, OpenPI, OpenVLA‑OFT, GROOT, Octo, and more.
-  - **Studio Enhancements** – Refined model discovery, Conda environment isolation, GPU allocation, torchrun distributed launch, Workspace Jobs, visualization, and result presentation.
-  - **Benchmark Expansion** – Added benchmark catalog and runtime profiling, including LaryBench, WorldReasonBench and WRBench.
 - **[2026-07-12]** 🔥 **WorldFoundry reached 100+ stars on its very first day!** Thanks to the community for the incredible support and encouragement. More exciting updates are coming!
 - **[2026-07-11]** 🎉 **WorldFoundry is officially open-sourced.** We welcome ⭐ stars, bug reports, feature requests, and pull requests from the community!
 - **[Coming Soon]** Documentation improvements and additional benchmark integrations.
 
+
+![WorldFoundry teaser](docs/fumadocs/public/teaser.png)
 
 ## Links
 
@@ -95,7 +77,7 @@ Join the **WorldFoundry Community** [Discord](https://discord.gg/ybUQMDA4x) or W
 - [Studio guide](docs/fumadocs/content/docs/guides/studio.mdx)
 - [CLI reference](docs/fumadocs/content/docs/reference/cli.mdx)
 - [Python API reference](docs/fumadocs/content/docs/api-reference/index.mdx)
-- [Supported models](docs/fumadocs/content/docs/guides/supported-models.mdx)
+- [Supported models](docs/fumadocs/content/docs/guides/supported-models/index.mdx)
 - [Benchmark hub](docs/fumadocs/content/docs/evaluation/benchmark-hub/index.mdx)
 - [Contributing](CONTRIBUTING.md)
 
@@ -248,7 +230,28 @@ More curated generated samples are embedded in the Studio docs.
 
 ## From Clone To First Run
 
-WorldFoundry uses conda as the supported open-source runtime path. Start with the unified GPU environment; only use a dedicated environment when a model profile documents a real ABI or simulator conflict. The full day-one path lives in the [Quickstart](docs/fumadocs/content/docs/quickstart.mdx).
+Choose the install track that matches the work you are doing:
+
+| Track | Use it for | Install |
+| --- | --- | --- |
+| **Lightweight / CPU** | Catalog and CLI inspection, TUI use, docs work, and CPU release checks | An editable pip install with only the required extras, for example `python -m pip install -e ".[tui]"` |
+| **GPU runtime** | CUDA inference, Studio model execution, and GPU-backed benchmark runners | `bash scripts/setup/bootstrap_worldfoundry.sh` |
+
+Optional extras declare Python dependencies but do not select a CUDA-specific
+PyTorch wheel index. Do not treat a bare pip install of a GPU-coupled extra as
+the supported CUDA setup; use the bootstrap/conda track instead. Optional native
+kernels must be built inside the exact target PyTorch environment.
+
+For GPU work, start with the unified environment and use a dedicated
+environment only when a model profile documents an ABI or simulator conflict.
+The full day-one path lives in the
+[Quickstart](docs/fumadocs/content/docs/quickstart.mdx).
+
+Install Git LFS before cloning so the optional demo media can be checked out correctly:
+
+```bash
+git lfs install
+```
 
 ```bash
 
@@ -326,6 +329,29 @@ bash scripts/inference/test_nav_video_gen.sh matrix-game-2 \
   --output-dir tmp/matrix_game2_first_run
 ```
 
+Echo-Memory is integrated as eleven independent, immutable model recipes on top
+of the canonical in-tree Wan 2.1 implementation. The public model ID fixes the
+memory architecture and checkpoint path; there is no mutable `memory_method`
+switch. Current upstream weight availability and the extension contract for new
+research memories are documented in the
+[inference guide](docs/fumadocs/content/docs/guides/inference.mdx) and the
+[native Echo integration note](worldfoundry/base_models/diffusion_model/models/networks/echo_memory/README.md).
+The released K=1 checkpoint has exact structural coverage in the native model;
+a fresh post-cutover CUDA artifact, official-sample parity, and benchmark scoring
+remain pending.
+
+Matrix-Game 3.5 is exposed as two separate recipes,
+`matrix-game-3.5-first-person` and `matrix-game-3.5-third-person`; each is
+permanently bound to its matching checkpoint, including its checkpoint-specific
+subject-reference embedding capacity. Camera-NPZ inference, the three
+shared asset repositories, and the memory-research extension points are covered
+in the [inference guide](docs/fumadocs/content/docs/guides/inference.mdx) and
+[local-assets guide](docs/fumadocs/content/docs/guides/local-assets.mdx).
+Its package-data profiles use inference-native names such as
+`num_inference_blocks`, `num_inference_steps`, `guidance_scale`, and
+`inference_seed`; no copied validation runner or diagnostic artifact path is
+part of the model runtime.
+
 If weights already live in a shared checkpoint tree, link them instead of copying:
 
 ```bash
@@ -361,6 +387,257 @@ python -m worldfoundry.studio.workspace_job infer \
 ```
 
 Each successful run should write media, logs, and manifest metadata under the output directory. Treat a file as demo evidence only after visual check and matching runtime-profile assumptions. Details: [Inference guide](docs/fumadocs/content/docs/guides/inference.mdx).
+
+### Opt-in inference acceleration
+
+Native diffusion pipelines accept request-scoped acceleration providers; they
+do not require a process-wide attention environment variable. Every loaded
+module records the requested backend, effective backend, and fallback reason.
+The exact path remains the default.
+
+```python
+from worldfoundry.pipelines.wan.pipeline_wan_2p2 import Wan2p2Pipeline
+
+pipe = Wan2p2Pipeline.from_pretrained(
+    model_path="/checkpoints/wan22",
+    device="cuda",
+    offload_mode="resident",           # aliases: fast/none; async-block when VRAM is tight
+    attention_backend="flash2",       # flash2/flash3/sage/sage3/xformers
+    quantization={"mode": "fp8"},     # runtime report proves kernel vs dense fallback
+    fuse_qkv=True,
+    fused_rope=True,
+    static_cross_kv=True,
+    torch_compile=True,
+    teacache=True,                      # lossy and explicit
+    vae_decode_autocast="bf16",
+    vae_spatial_tiling=True,
+    vae_temporal_chunk_size=4,
+)
+```
+
+Wan2.2 TI2V-5B uses the resident preset by default in Studio on the target H100
+path. `block`/`async-block` now selects the layer-container implementation: it
+primes layer 0 and overlaps the next layer's pinned-host H2D copy with current
+compute. Runtime telemetry requires positive async copies, zero synchronous
+rescue copies, and at most two CUDA-resident layers before calling it effective.
+Quantization plus block offload is rejected until quantized buffer movement has
+its own certified lifecycle; use resident quantization or dense async offload.
+
+FlashAttention and xFormers are numerically equivalent provider choices;
+SageAttention, FP8/NVFP4, STA/VSA/VMoBA, the pinned LightX2V sparse lanes,
+TeaCache, and token pruning are approximate
+and must pass the target model's quality budget. Missing packages, unsupported
+GPU architectures, or unsupported shapes either fall back to a reported exact
+path or fail closed, according to the selected algorithm's public contract.
+
+FastVideo-style VSA additionally requires a model-specific 3D sparse plan and
+checkpoint-trained `gate_compress` VSA-QAT weights. VMoBA is different: it is a
+weight-free FastVideo router and is wired to the real top-level
+`fastvideo_kernel.moba_attn_varlen`, `process_moba_input`, and
+`process_moba_output` provider symbols. It alternates temporal, spatial, and 3D
+chunks by Wan block index. VMoBA therefore requires a complete grid-specific
+chunk/top-k profile, but no learned router checkpoint. Missing symbols,
+incompatible shape/device/dtype, or incomplete routing metadata fail closed;
+there is no dense fallback that can masquerade as VMoBA. Request-window receipts
+must show provider calls and all three chunk routes. GPU quality and full-pipeline
+E2E performance are not yet certified.
+
+The certifying sparse CLI exposes all twelve pinned-LightX2V Wan lanes:
+`dynamic_sparse`, `sparge`, `nbhd`, `lightx2v_sla_mask`, `flexblock`,
+`lightx2v_spas_sage`, `draft_attn`, `radial_attn`, `rainfusion_attn`,
+`svg_attn`, `svg2_attn`, and `lightx2v_svg_mask`. Every provider event must
+match the normalized operator's canonical kernel symbol and `provider_family`,
+come from clean commit `6fb7c1362b89d4908a9ea197bac4fbd7482ee2d5`, and
+carry a matching source fingerprint in the flattened event emitted by the real
+provider call. DraftAttention's warmup layer and RainFusion's scheduled dense
+phase are recorded as `provider_dense`, never as sparse or fallback. SVG2
+reuses a locked 128 MiB `uint8` FlashInfer workspace/wrapper per device and
+backend, replans every dynamic mask, and keeps K-means centroids request-local.
+SLA top-k geometries that truncate to zero selected key blocks are rejected
+before CUDA launch; pinned LightX2V otherwise feeds an empty LUT to the kernel,
+which can return finite but invalid output on short sequences.
+The old nested `provider_receipt` schema is rejected. The explicitly prefixed
+names are LightX2V GeneralSparse mask/operator compositions; they do **not**
+certify FastVideo `SLA_ATTN` or `SAGE_SLA_ATTN`.
+
+LightX2V's upstream “over 50×” headline is tied to the complete Wan2.2 A14B
+profile: a four-step distilled checkpoint, CFG disabled, 480×832×81 output,
+NVFP4 weights, DynamicSparse Sage2 at `sparsity_ratio=0.9`, and one RTX 5090.
+It is not a claim for any one kernel in isolation. This repository's current
+Wan2.2 TI2V-5B, 50-step, CFG-on A/B workload is a different model and workload,
+so it cannot reproduce that number or support a SOTA claim. The upstream
+`sage_attn2_k_int8_v_fp8` registry entry is also intentionally rejected for
+Wan A/B: it accepts pre-quantized K/V tuples, while the Wan generator supplies
+floating K/V and has no audited quantize/cache/invalidation lifecycle.
+
+Those FastVideo algorithms are now independently exposed as `fastvideo_sla`
+and `fastvideo_sagesla`. They execute on Wan self-attention through the pinned
+FastVideo provider and require complete checkpoint-owned learned `proj_l`
+Sparse+Linear weights. The loader keeps `proj_l` in FP32 and fails closed on a
+missing layer, mixed layout, malformed projection, dirty/unpinned provider, or
+dense substitution; request receipts bind every branch/step/layer call to the
+provider source and per-layer/global projection fingerprints. Official dense
+Wan and the currently staged FastVideo CausalWan Preview checkpoints contain no
+`proj_l`, so they cannot run or certify this lane. `fastvideo_sagesla` also
+requires `spas_sage_attn`. Compatibility aliases such as `sla` and `sagesla`
+remain excluded because they are ambiguous with LightX2V mask modes. GPU
+quality and isolated repeated E2E performance are still uncertified.
+
+Native Ulysses SP composes with offset- and padding-aware fused 3D RoPE, with
+runtime call counters required for certification. SP combined with TeaCache,
+AdaCache, MagCache, feature cache, TaylorSeer, approximate attention, or CUDA
+Graph is still rejected at construction time until its rank-synchronization or
+graph-safe collective mechanism exists. INT8 uses a dynamic per-token/per-channel
+W8A8 Triton kernel on qualified CUDA shapes and reports calibrated BF16 dispatch
+separately from true fallback. Its default full-Wan profile currently fails the
+quality gate and remains experimental. INT4/groupwise and GGUF remain
+compressed-storage plus dequantize/dense paths, not claimed low-bit speed
+kernels. See the
+[inference optimization truth matrix](docs/fumadocs/content/docs/guides/inference-optimization.mdx)
+for CPU-contract, GPU-certified, pending, and rejected states.
+
+Wan feature caching distinguishes the compatibility algorithm `taylorseer`
+(one whole-stack residual) from `blocktaylorseer` (the pinned LightX2V
+`[dense, skip, skip, skip]` schedule with independent per-block self-attention,
+cross-attention, and FFN first-order histories). Cache hits still apply the
+current step's modulation gates. `custom` matches LightX2V's calibrated Tea
+decision plus first-order whole-stack residual prediction. Cache ownership is
+keyed by explicit request identity and CFG branch; runner cleanup snapshots a
+bounded immutable receipt and releases tensor history. These are approximate
+CPU/runtime contracts, not GPU video-quality or SOTA performance certification.
+
+Generate new formal SP evidence with the same fused-RoPE/FP64 semantics in the
+single-rank reference and multi-rank candidate:
+
+```bash
+torchrun --nproc_per_node=1 -m benchmarks.inference.wan22_multigpu_e2e \
+  --checkpoint /checkpoints/Wan2.2-TI2V-5B \
+  --output-dir benchmarks/results/wan22-sp1 \
+  --fused-rope --rope-precision fp64 \
+  --save-reference-latents \
+  --warmup-runs 1 --measured-runs 3
+
+torchrun --nproc_per_node=4 -m benchmarks.inference.wan22_multigpu_e2e \
+  --checkpoint /checkpoints/Wan2.2-TI2V-5B \
+  --output-dir benchmarks/results/wan22-sp4 \
+  --sp-degree 4 \
+  --fused-rope --rope-precision fp64 \
+  --warmup-runs 1 --measured-runs 3 \
+  --reference-latents benchmarks/results/wan22-sp1/final-latents.pt \
+  --reference-video benchmarks/results/wan22-sp1/output.mp4 \
+  --fail-on-fallback --profile-collectives
+```
+
+The formal SP gate requires the requested degree and native Ulysses processor,
+positive measured-window all-to-all, fused multi-tensor all-to-all, and output
+all-gather calls, zero unfused multi-tensor all-to-all calls, and—when fused
+RoPE is requested—positive `fused_rope_calls` with zero `complex_rope_calls`.
+An enabled option or lifetime counter alone cannot certify the run.
+
+Use the paired upstream-parity gate on the target GPU before a performance
+claim. It compares the direct provider with the WorldFoundry request-scoped
+adapter on identical tensors and rejects more than 3% median adapter overhead
+in strict mode:
+
+```bash
+python -m benchmarks.operators.attention_adapter_parity \
+  --backend flash2 --strict --out benchmarks/results
+
+python -m benchmarks.operators.attention_adapter_parity \
+  --backend sage --strict --out benchmarks/results
+
+# Broader same-primitive comparison: FA3, FP8, FastVideo VSA and STA.
+python -m benchmarks.operators.vs_reference --out benchmarks/results
+
+# Fused DiT unit comparison against FastVideo and an optional sglang checkout.
+python -m benchmarks.operators.vs_frameworks \
+  --sglang-root tmp/refs/sglang/python --out benchmarks/results
+
+# Order-balanced full Wan2.2 E2E comparison. The same launcher supports
+# REFERENCE_FRAMEWORK=fastvideo or lightx2v in separate Python environments.
+WAN22_AB_WF_APPROXIMATE_ATTENTION=vmoba \
+WAN22_AB_WF_APPROXIMATE_ATTENTION_PROFILE=benchmarks/inference/wan22_ti2v_121x704x1280_vmoba.json \
+WAN22_AB_REFERENCE_FRAMEWORK=fastvideo \
+  bash benchmarks/inference/run_framework_ab_wan22.sh
+
+WAN22_AB_WF_APPROXIMATE_ATTENTION=vmoba \
+WAN22_AB_WF_APPROXIMATE_ATTENTION_PROFILE=benchmarks/inference/wan22_ti2v_121x704x1280_vmoba.json \
+WAN22_AB_REFERENCE_FRAMEWORK=lightx2v \
+WAN22_AB_LX_PYTHON=/envs/lightx2v/bin/python \
+WAN22_AB_OUTPUT_DIR=benchmarks/results/wan22-lightx2v \
+  bash benchmarks/inference/run_framework_ab_wan22.sh
+```
+
+The checked-in profile above is valid only for the default TI2V workload. Its
+`121x704x1280` input maps to the Wan patch grid `(31, 22, 40)`, and every chunk
+dimension divides that grid. Copy and retune the profile for any other frame or
+spatial shape; incompatible geometry fails closed instead of silently using
+dense attention.
+
+Framework A/B schema v4 certifies only repeated, globally sequential,
+order-balanced AB/BA samples on the same physical GPU and UUID, under a
+continuous idle-gate-through-output isolation audit. Its default certifying
+proof is NVIDIA `Exclusive_Process` compute mode; bounded polling and `allow-*`
+escape hatches are diagnostic-only. This container exposes only one `NSpid`
+level and its shared H100s use `Default` compute mode, so release A/B fails
+closed here. Legacy Framework v3 and Wan E2E v4 numbers are superseded
+diagnostics. New multi-GPU evidence must use E2E schema v5 and pass runtime call,
+zero-fallback, latent/video-reference, quality, and isolation gates.
+
+Framework v4 now implements reference-attention runtime gates. FastVideo worker
+RPC records must show consistent accelerated self/cross backends and
+implementations, successful one-shot forward hooks, and direct execution of the
+concrete FA4/FA3/FA2 callable selected by the upstream resolver. LightX2V must resolve
+the requested mode to concrete attention classes and callable kernel symbols,
+then execute successful one-shot self/cross `apply` calls. Both fail closed on
+missing identity, zero calls, unavailable symbols, backend substitution, or
+fallback. WorldFoundry eager attention requires provider
+`attempts == successes > 0`; compiled attention instead requires
+`compiled_graph_traces > 0` and `runtime.compile.calls > 0`, with fallback,
+error, and quarantine counters at zero in both cases.
+
+The WorldFoundry lane also gates each requested primitive on forward-time
+receipts, not installation metadata. Fused QKV requires a positive fused-block
+count and either eager projection calls, or compiled QKV graph traces together
+with an installed, executed compile wrapper whose failures are zero and
+`last_error` is null. Fused RoPE requires a positive installed-block count and
+zero Torch fallback, provider failure, quarantine, or malformed receipt. Its
+eager path must execute the registry-selected
+`triton_hidden_qk_rmsnorm_rope_3d` provider on every fused call; entering the
+public fused operator and falling back to Torch does not pass. Its compiled path
+requires a positive fused-RoPE graph-trace count together with an actually
+executed compile wrapper. Static cross-KV must report request-local `kv-reuse`,
+positive hits/misses/condition hits, and zero processor bypasses. STA/VSA must
+execute the corresponding `fastvideo_kernel` symbol with positive, balanced
+attempt/success counts and zero kernel/dense fallback; scheduled dense calls
+declared by the sparse plan are allowed only when request/branch/step/layer
+receipts account for the complete workload. VMoBA additionally requires a
+finalized request-local receipt, the exact workload grid and 30 wrapped TI2V
+blocks, unique branch/step/layer events, the requested chunk route at every
+layer, and exact agreement between event and counter totals. Quantization requires a positive
+low-precision-kernel count while `packed_weight_calls`, `dense_policy_calls`,
+and `dense_fallback_calls` all remain zero.
+
+Pinned LightX2V sparse receipts additionally require one exact canonical
+provider and provider family for the whole request, clean-source commit and
+fingerprint parity, and one provider receipt for every sparse branch/step/layer
+event. Reported counters are reconciled against the event ledger. The default
+TI2V post-patch grid `(31,22,40)` has no tuned STA plan, so selecting STA for
+that workload fails before CUDA instead of silently running dense.
+
+CUDA Graph and VAE evidence is request-window scoped; lifetime totals are
+diagnostic only. A graph request must replay, have either a new capture or an
+existing captured graph, and record zero eager/capture-failure calls. Spatial
+VAE tiling requires more than one tile, a tiled decode call, and zero
+single-tile calls; temporal streaming likewise requires more than one chunk,
+a chunked call, and zero single-chunk calls. These gates prevent warmup or a
+previous request from certifying the measured request.
+
+These code-level authenticity gates are complete, but fresh v4
+`Exclusive_Process` GPU runs are still pending. They cover the requested
+attention paths, not every upstream cache, sparse, quantization, or parallel
+technique; existing timings therefore remain diagnostic and are not a SOTA
+or complete-parity claim.
 
 ## Launch Studio Workspace
 
@@ -508,7 +785,8 @@ source tmp/worldfoundry_unified_env.sh
 conda activate "${WORLDFOUNDRY_UNIFIED_ENV_PREFIX}"
 
 PYTHONPATH=. python -m compileall -q worldfoundry scripts
-PYTHONPATH=. python -m pytest -m fast_eval_core test/eval_core
+make lint
+make docs-check
 bash scripts/docs/build.sh --skip-bootstrap
 
 worldfoundry-eval zoo model-download --model-id <model-id> --check-local --json
@@ -545,7 +823,6 @@ WorldFoundry
 │  ├─ runtime                            # Runtime paths, assets, jobs, and probes
 │  ├─ studio                             # Workspace and Studio frontends
 │  └─ synthesis                          # In-tree model synthesis/action-generation runtimes
-├─ test                                  # Test suites
 ├─ thirdparty                            # Reviewed vendored/native dependencies
 └─ tools                                 # Maintenance and asset utilities
 ```
@@ -553,6 +830,10 @@ WorldFoundry
 ## Citation
 
 If you use WorldFoundry or its benchmark/model integrations in research, cite this repository and the upstream methods, checkpoints, datasets, and benchmarks that your run depends on. A formal paper citation will be added when the technical report is released.
+
+## License
+
+WorldFoundry-authored code is licensed under the [Apache License 2.0](LICENSE), except where a file or component carries a different license notice. Vendored and adapted upstream components remain subject to their original licenses.
 
 ## Acknowledgment
 

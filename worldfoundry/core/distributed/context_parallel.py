@@ -13,7 +13,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Tensor and object splitting/gathering primitives for context parallelism."""
+"""Tensor and object split/gather primitives for Context Parallel (CP).
+
+Ranks hold a sequence shard. :func:`split_inputs_cp` / :func:`cat_outputs_cp`
+must pair with attention-side Ulysses and RoPE ``shift_t`` CP splits or
+positions misalign. Object-list variants pickle Python payloads (masks,
+metadata) that are not GPU tensors. ``cat_outputs_cp_with_grad`` keeps
+autograd edges for training; inference can use the no-grad cat.
+"""
 
 import math
 from typing import TypeVar
@@ -30,7 +37,8 @@ from torch.distributed import (
 )
 from torch.distributed.utils import _verify_param_shape_across_processes
 
-from worldfoundry.core.distributed import torch_process_group as distributed
+import worldfoundry.core.distributed.torch_process_group as distributed
+from worldfoundry.core.distributed.tensor_collectives import all_gather_concat
 
 try:
     from worldfoundry.core.distributed.megatron_compat import parallel_state
@@ -40,6 +48,10 @@ except ImportError:
     USE_MEGATRON = False
 
 _disable_compile = getattr(getattr(torch, "compiler", None), "disable", lambda fn: fn)
+
+# ──────────────────────────────────────────────────────────────────────────
+# Tensor split / gather — must pair with attention Ulysses and RoPE shift_t
+# ──────────────────────────────────────────────────────────────────────────
 
 
 def split_inputs_cp(x: Tensor, seq_dim: int, cp_group: ProcessGroup | None = None) -> Tensor:
@@ -93,16 +105,10 @@ def cat_outputs_cp(x: Tensor, seq_dim: int, cp_group: ProcessGroup | None = None
     if cp_group is None:
         return x
 
-    x = x.contiguous()
-    world_size = get_world_size(cp_group)
-    gathered_tensors = [torch.zeros_like(x) for _ in range(world_size)]
-
     try:
-        all_gather(gathered_tensors, x, group=cp_group)
+        return all_gather_concat(x, dim=seq_dim, group=cp_group)
     except RuntimeError as e:
         raise RuntimeError("Failed to gather tensors") from e
-
-    return torch.cat(gathered_tensors, dim=seq_dim)
 
 
 def cat_outputs_cp_with_grad(x: Tensor, seq_dim: int, cp_group: ProcessGroup | None = None) -> Tensor:
@@ -124,6 +130,11 @@ def cat_outputs_cp_with_grad(x: Tensor, seq_dim: int, cp_group: ProcessGroup | N
     return torch.cat(gathered_tensors, dim=seq_dim)
 
 
+# ──────────────────────────────────────────────────────────────────────────
+# Shape-tolerant broadcast — non-src ranks may start with a dummy shape
+# ──────────────────────────────────────────────────────────────────────────
+
+
 @_disable_compile
 def robust_broadcast(
     tensor: torch.Tensor,
@@ -134,7 +145,7 @@ def robust_broadcast(
     """Broadcast a tensor even when non-source ranks start with different shapes."""
 
     if tensor.device.type != "cuda" and torch.cuda.is_available():
-        tensor = tensor.cuda()
+        tensor = tensor.to(torch.device("cuda", torch.cuda.current_device()))
 
     if distributed.get_rank() == src:
         shape = torch.tensor(tensor.shape, dtype=torch.long, device=tensor.device)
@@ -211,6 +222,10 @@ def find_split(
 
 
 T = TypeVar("T")
+
+# ──────────────────────────────────────────────────────────────────────────
+# Object-list split / gather — pickle metadata, never large GPU tensors
+# ──────────────────────────────────────────────────────────────────────────
 
 
 def split_inputs_cp_object_list(object_list: list[T], cp_group: ProcessGroup | None = None) -> list[T]:

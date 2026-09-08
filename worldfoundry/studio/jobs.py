@@ -11,9 +11,10 @@ inference jobs in parallel when enough GPUs are available.
 
 from __future__ import annotations
 
+import math
 import traceback
 from collections.abc import Callable, Mapping, Sequence
-from concurrent.futures import Future, ThreadPoolExecutor
+from concurrent.futures import Future, ThreadPoolExecutor, wait
 from dataclasses import dataclass, field
 from html import escape
 from threading import RLock
@@ -21,10 +22,25 @@ from time import monotonic
 from typing import Any
 
 from worldfoundry.core.time import utc_now_iso
+from worldfoundry.evaluation.reporting.run_manifest import redact_secret_text
 from worldfoundry.runtime.jobs import TERMINAL_JOB_STATUSES
 
 
 STUDIO_JOB_TABLE_HEADERS = ["Job ID", "Title", "Model", "Action", "Status", "Created", "Elapsed"]
+DEFAULT_SHUTDOWN_GRACE_SECONDS = 5.0
+MAX_SHUTDOWN_GRACE_SECONDS = 15.0
+
+
+def _bounded_shutdown_grace_seconds(grace_seconds: float) -> float:
+    """Validate and cap the time spent waiting for cooperative job shutdown."""
+
+    try:
+        normalized = float(grace_seconds)
+    except (TypeError, ValueError) as exc:
+        raise ValueError("shutdown grace_seconds must be a finite non-negative number") from exc
+    if not math.isfinite(normalized) or normalized < 0:
+        raise ValueError("shutdown grace_seconds must be a finite non-negative number")
+    return min(normalized, MAX_SHUTDOWN_GRACE_SECONDS)
 
 
 @dataclass
@@ -58,7 +74,9 @@ class StudioJob:
     def append_log(self, stream: str, text: str) -> None:
         """Append a timestamped log line from stdout/stderr/system."""
         if text:
-            self.logs.append({"time": utc_now_iso(), "stream": stream, "text": text})
+            self.logs.append(
+                {"time": utc_now_iso(), "stream": stream, "text": redact_secret_text(text)}
+            )
 
     def log_text(self, *, limit: int | None = None) -> str:
         """Render recent log lines as plain text for the UI log panel."""
@@ -131,6 +149,8 @@ class StudioJobStore:
         self._jobs: dict[str, StudioJob] = {}
         self._lock = RLock()
         self._counter = max(0, initial_counter)
+        self._shutdown_started = False
+        self._shutdown_complete = False
 
     def submit_run(
         self,
@@ -145,6 +165,8 @@ class StudioJobStore:
     ) -> StudioJob:
         """Enqueue a new job and execute ``run_callable(job)`` on the thread pool."""
         with self._lock:
+            if self._shutdown_started:
+                raise RuntimeError("StudioJobStore is shutting down and cannot accept new jobs")
             self._counter += 1
             job_id = f"studio-{self._counter:05d}"
             job = StudioJob(
@@ -160,6 +182,57 @@ class StudioJobStore:
             job._future = self._executor.submit(self._execute, job.job_id, run_callable)
             return job
 
+    def shutdown(
+        self,
+        grace_seconds: float = DEFAULT_SHUTDOWN_GRACE_SECONDS,
+        *,
+        grace: float | None = None,
+    ) -> None:
+        """Stop accepting work and wait briefly for active jobs to cooperate.
+
+        Queued futures are cancelled immediately. Running callables cannot be
+        terminated safely from another thread, so they receive only the
+        ``cancel_requested`` signal and are allowed at most ``grace_seconds``
+        to return before this method releases the executor without waiting.
+        """
+
+        if grace is not None:
+            if grace_seconds != DEFAULT_SHUTDOWN_GRACE_SECONDS:
+                raise TypeError("pass either grace_seconds or the legacy grace alias, not both")
+            grace_seconds = grace
+        bounded_grace = _bounded_shutdown_grace_seconds(grace_seconds)
+        pending_futures: list[Future[Any]] = []
+        with self._lock:
+            if self._shutdown_started:
+                return
+            self._shutdown_started = True
+            for job in self._jobs.values():
+                if job.terminal:
+                    continue
+                job.cancel_requested = True
+                future = job._future
+                if future is not None and future.cancel():
+                    job.status = "cancelled"
+                    job.error = "cancelled before start"
+                    job.completed_at = utc_now_iso()
+                    job._completed_monotonic = monotonic()
+                    job.append_log("system", "cancelled before start during Studio shutdown\n")
+                    continue
+                if future is not None and not future.done():
+                    pending_futures.append(future)
+                job.append_log(
+                    "system",
+                    "Studio shutdown requested; active inference must stop cooperatively\n",
+                )
+
+        try:
+            if pending_futures and bounded_grace > 0:
+                wait(pending_futures, timeout=bounded_grace)
+        finally:
+            self._executor.shutdown(wait=False, cancel_futures=True)
+            with self._lock:
+                self._shutdown_complete = True
+
     def get(self, job_id: str | None) -> StudioJob | None:
         """Return a job by id, or None when id is empty or unknown."""
         if not job_id:
@@ -171,6 +244,23 @@ class StudioJobStore:
         """Return all jobs sorted by creation time (newest first)."""
         with self._lock:
             return sorted(self._jobs.values(), key=lambda job: job.created_at, reverse=True)
+
+    def delete(self, job_id: str | None) -> bool:
+        """Remove a finished job from the in-memory store.
+
+        Running or queued jobs cannot be deleted; cancel them first.
+        """
+
+        if not job_id:
+            return False
+        with self._lock:
+            job = self._jobs.get(job_id)
+            if job is None:
+                return False
+            if not job.terminal:
+                raise ValueError(f"cannot delete a {job.status} job")
+            del self._jobs[job_id]
+            return True
 
     def cancel(self, job_id: str | None) -> tuple[bool, str]:
         """Request cancellation; queued jobs cancel immediately, running jobs stop cooperatively."""

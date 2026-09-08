@@ -1,8 +1,8 @@
 """World Model visual generation pipeline module."""
 
-from ..dreamx_world import DreamXWorld5BARPipeline, DreamXWorld5BCamPipeline
 from .pipeline_runtime_manifest import (
     AdaWorldPipeline,
+    CausalRCMPipeline,
     CtrlWorldPipeline,
     DIAMONDPipeline,
     DinoWMPipeline,
@@ -21,6 +21,7 @@ from .pipeline_runtime_manifest import (
     NWMPipeline,
     Oasis500MPipeline,
     OmniForcingPipeline,
+    OpenDreamerPipeline,
     PointWorldPipeline,
     SanaWMPipeline,
     ShotStreamPipeline,
@@ -40,12 +41,11 @@ from .pipeline_runtime_manifest import (
 
 __all__ = [
     "AdaWorldPipeline",
+    "CausalRCMPipeline",
     "CtrlWorldPipeline",
     "DIAMONDPipeline",
     "DinoWMPipeline",
     "DROIDWPipeline",
-    "DreamXWorld5BARPipeline",
-    "DreamXWorld5BCamPipeline",
     "EgoWMPipeline",
     "GenieEnvisionerPipeline",
     "GigaWorld0Pipeline",
@@ -60,6 +60,7 @@ __all__ = [
     "NWMPipeline",
     "OmniForcingPipeline",
     "Oasis500MPipeline",
+    "OpenDreamerPipeline",
     "PointWorldPipeline",
     "SanaWMPipeline",
     "ShotStreamPipeline",

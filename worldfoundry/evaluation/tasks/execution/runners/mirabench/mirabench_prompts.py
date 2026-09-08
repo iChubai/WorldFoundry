@@ -5,16 +5,16 @@ from __future__ import annotations
 import csv
 import json
 import os
-import shutil
 from pathlib import Path
 from typing import Any
 
+from worldfoundry.core.io.file_utils import materialize_file
 from worldfoundry.evaluation.api import GenerationRequest, GenerationResult
-from worldfoundry.evaluation.utils import write_jsonl
 from worldfoundry.evaluation.tasks.execution.framework.benchmark_assets import (
     bundled_benchmark_asset,
     bundled_benchmark_assets_root,
 )
+from worldfoundry.evaluation.utils import write_jsonl
 
 BENCHMARK_ID = "mirabench"
 IN_TREE_MIRABENCH_ROOT = Path(__file__).resolve().parent / "runtime" / "mirabench"
@@ -23,7 +23,6 @@ META_GT_REL = Path("data/evaluation_example/meta_gt.csv")
 CALCULATE_SCORE_REL = Path("calculate_score.py")
 CANONICAL_PROMPT_COUNT = 150
 
-VIDEO_SUFFIXES = frozenset({".mp4", ".mov", ".mkv", ".webm", ".avi"})
 META_COLUMNS = (
     "video_idx",
     "video_path",
@@ -259,7 +258,7 @@ def copy_mirabench_generated_videos(
         target_path = generated_artifact_dir / video_filename_for_record(
             record_by_id.get(sample_id, {"prompt_id": sample_id})
         )
-        shutil.copy2(source_path, target_path)
+        materialize_file(source_path, target_path, writable=False)
         materialized += 1
         manifest_rows.append({"sample_id": sample_id, "artifact": output_artifact, "path": str(target_path)})
 
@@ -281,7 +280,7 @@ def copy_mirabench_generated_videos(
             target_path = generated_artifact_dir / video_filename_for_record(record)
             if target_path.is_file():
                 continue
-            shutil.copy2(source_path, target_path)
+            materialize_file(source_path, target_path, writable=False)
             materialized += 1
             manifest_rows.append(
                 {"sample_id": result.sample_id, "artifact": output_artifact, "path": str(target_path)}

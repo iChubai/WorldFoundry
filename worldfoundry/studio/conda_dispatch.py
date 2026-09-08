@@ -34,13 +34,25 @@ from pathlib import Path
 from typing import Any, Callable, Mapping
 
 from worldfoundry.core.io.paths import project_root, resolve_worldfoundry_path, worldfoundry_path_tokens
+from worldfoundry.evaluation.reporting import is_sensitive_key, redact_secret_text
 from worldfoundry.runtime.conda import (
     RuntimeCondaEnvSpec,
     apply_unified_env_override,
     load_runtime_conda_env_spec,
     runtime_env_is_usable,
 )
-from worldfoundry.runtime.env import resolve_ckpt_dir, resolve_hf_cache_dir, resolve_hfd_root
+from worldfoundry.runtime.device_pool import (
+    CudaDeviceLease,
+    CudaDeviceLeasePool,
+    discover_cuda_device_tokens,
+)
+from worldfoundry.runtime.env import (
+    apply_hf_endpoint_override,
+    getenv_registered,
+    resolve_ckpt_dir,
+    resolve_hf_cache_dir,
+    resolve_hfd_root,
+)
 
 from .execution import TORCHRUN_DISTRIBUTED_ENV, RunRecord
 from .launch_config import (
@@ -58,7 +70,10 @@ RESIDENT_WORKER_MODELS_ENV = "WORLDFOUNDRY_STUDIO_RESIDENT_WORKER_MODELS"
 RESIDENT_WORKER_MAX_WORKERS_ENV = "WORLDFOUNDRY_STUDIO_RESIDENT_WORKER_MAX_WORKERS"
 RESIDENT_WORKER_IDLE_TTL_ENV = "WORLDFOUNDRY_STUDIO_RESIDENT_WORKER_IDLE_TTL"
 RESIDENT_WORKER_REQUEST_TIMEOUT_ENV = "WORLDFOUNDRY_STUDIO_RESIDENT_WORKER_REQUEST_TIMEOUT"
+DEFAULT_RESIDENT_WORKER_REQUEST_TIMEOUT_SECONDS = 6 * 60 * 60
+AUTO_GPU_PLACEMENT_ENV = "WORLDFOUNDRY_STUDIO_AUTO_GPU_PLACEMENT"
 DISPATCH_API_KEY_ENV = "WORLDFOUNDRY_STUDIO_DISPATCH_API_KEY"
+DISPATCH_SECRET_ENV_PREFIX = "WORLDFOUNDRY_STUDIO_DISPATCH_SECRET"
 CHILD_PYTHONPATH_PREPEND_ENV = "WORLDFOUNDRY_STUDIO_CHILD_PYTHONPATH_PREPEND"
 # Placeholder key in serialized payload; actual secret is passed via env.
 SECRET_ENV_REF_KEY = "__worldfoundry_secret_env__"
@@ -77,6 +92,7 @@ DEFAULT_FORCE_SUBPROCESS_MODELS = frozenset(
         "matrix-game-3",
         "helios",
         "dreamx-world-5b-cam",
+        "wan2.1-vace",
     }
 )
 LINGBOT_WORLD_MODEL_ID = "lingbot-world"
@@ -103,7 +119,25 @@ TORCHRUN_MODEL_NPROC_KEYS: Mapping[str, tuple[str, ...]] = {
         "ulysses_degree",
     ),
     "hunyuan-worldplay": ("torchrun_nproc_per_node", "torchrun_nproc", "nproc_per_node"),
+    "wan2.1-vace": (
+        "torchrun_nproc_per_node",
+        "torchrun_nproc",
+        "nproc_per_node",
+        "ulysses_size",
+        "world_size",
+    ),
 }
+TORCHRUN_DISTRIBUTED_MODELS = frozenset(
+    {
+        "hunyuan-game-craft",
+        "hunyuan-gamecraft",
+        "hunyuan-worldplay",
+        "longvie-2",
+        MATRIX_GAME3_MODEL_ID,
+        "dreamx-world-5b-cam",
+        "wan2.1-vace",
+    }
+)
 DISPATCH_ONLY_LOAD_KWARGS = frozenset(
     {
         "cuda_visible_devices",
@@ -131,6 +165,7 @@ CancelCallback = Callable[[], bool]
 @dataclass
 class _ResidentWorker:
     key: tuple[str, ...]
+    base_key: tuple[str, ...]
     model_id: str
     process: subprocess.Popen[Any]
     lock: threading.RLock
@@ -139,6 +174,7 @@ class _ResidentWorker:
     created_at: float
     last_used_at: float
     in_use: int = 0
+    device_lease: CudaDeviceLease | None = None
 
 
 class _ResidentWorkerUnavailable(RuntimeError):
@@ -151,6 +187,7 @@ class _ResidentRunContext:
     payload_run_kwargs: dict[str, Any]
     env: dict[str, str]
     key: tuple[str, ...]
+    automatic_cuda_device_count: int = 0
 
 
 _RESIDENT_WORKERS: dict[tuple[str, ...], _ResidentWorker] = {}
@@ -159,6 +196,9 @@ _RESIDENT_WORKERS_LIFECYCLE_LOCK = threading.Lock()
 _RESIDENT_WORKERS_REAPER_LOCK = threading.Lock()
 _RESIDENT_WORKERS_REAPER_STOP = threading.Event()
 _RESIDENT_WORKERS_REAPER_THREAD: threading.Thread | None = None
+_AUTO_GPU_POOL_LOCK = threading.Lock()
+_AUTO_GPU_POOL: CudaDeviceLeasePool | None = None
+_AUTO_GPU_POOL_DEVICES: tuple[str, ...] = ()
 
 
 def _env_flag(name: str) -> bool:
@@ -169,6 +209,27 @@ def _env_flag(name: str) -> bool:
 def in_conda_child_process() -> bool:
     """Return True when running inside a Studio-dispatched Conda child process."""
     return _env_flag(STUDIO_CONDA_CHILD_ENV)
+
+
+def _automatic_gpu_placement_enabled() -> bool:
+    """Return whether bare ``device=cuda`` jobs should receive exclusive devices."""
+
+    value = os.getenv(AUTO_GPU_PLACEMENT_ENV, "1").strip().lower()
+    return value not in {"0", "false", "no", "off", "never"}
+
+
+def _automatic_gpu_pool() -> CudaDeviceLeasePool:
+    """Return the process-wide pool used by concurrent Workspace inference jobs."""
+
+    global _AUTO_GPU_POOL, _AUTO_GPU_POOL_DEVICES
+    devices = discover_cuda_device_tokens()
+    if not devices:
+        raise RuntimeError("device=cuda was requested, but no visible CUDA devices were discovered")
+    with _AUTO_GPU_POOL_LOCK:
+        if _AUTO_GPU_POOL is None or _AUTO_GPU_POOL_DEVICES != devices:
+            _AUTO_GPU_POOL = CudaDeviceLeasePool(devices)
+            _AUTO_GPU_POOL_DEVICES = devices
+        return _AUTO_GPU_POOL
 
 
 def _force_subprocess_for_model(model_id: str) -> bool:
@@ -197,9 +258,10 @@ def _resident_workers_enabled_for_model(model_id: str) -> bool:
 
 def _resident_worker_request_timeout() -> float:
     try:
-        return max(float(os.getenv(RESIDENT_WORKER_REQUEST_TIMEOUT_ENV, "3600") or "3600"), 0.0)
+        default = str(DEFAULT_RESIDENT_WORKER_REQUEST_TIMEOUT_SECONDS)
+        return max(float(os.getenv(RESIDENT_WORKER_REQUEST_TIMEOUT_ENV, default) or default), 0.0)
     except ValueError:
-        return 3600.0
+        return float(DEFAULT_RESIDENT_WORKER_REQUEST_TIMEOUT_SECONDS)
 
 
 def _resident_worker_max_workers() -> int:
@@ -299,6 +361,36 @@ def _discover_existing_env_spec(spec: RuntimeCondaEnvSpec) -> RuntimeCondaEnvSpe
     return None
 
 
+def _current_explicit_unified_env_spec(
+    spec: RuntimeCondaEnvSpec,
+) -> RuntimeCondaEnvSpec | None:
+    """Use the active unified interpreter when the user selected it explicitly.
+
+    Static dependency policy intentionally keeps profiles with upper version
+    bounds out of an automatically selected shared environment.  An explicit
+    ``WORLDFOUNDRY_USE_UNIFIED_ENV=1`` request is different: if Codex/Studio is
+    already running from a real ``worldfoundry-unified-*`` prefix, that exact
+    interpreter must remain discoverable so force-subprocess and torchrun
+    models do not silently fall back to same-process, single-GPU execution.
+    Model runtimes still enforce their package-version contracts on load.
+    """
+
+    enabled = os.getenv("WORLDFOUNDRY_USE_UNIFIED_ENV", "").strip().lower()
+    if enabled not in {"1", "true", "yes", "on"}:
+        return None
+    env_prefix = Path(sys.executable).expanduser().absolute().parent.parent
+    if not env_prefix.name.startswith("worldfoundry-unified-"):
+        return None
+    if not runtime_env_is_usable(env_prefix):
+        return None
+    return replace(
+        spec,
+        env_name=env_prefix.name,
+        env_root=env_prefix.parent,
+        notes=spec.notes + (f"studio_explicit_active_unified_env:{env_prefix}",),
+    )
+
+
 @lru_cache(maxsize=None)
 def workspace_runtime_spec(model_id: str) -> RuntimeCondaEnvSpec | None:
     """Resolve the Conda runtime spec for a model, with discovery and unified-env fallback."""
@@ -314,6 +406,9 @@ def workspace_runtime_spec(model_id: str) -> RuntimeCondaEnvSpec | None:
         discovered = _discover_existing_env_spec(unified_fallback)
         if discovered is not None:
             return discovered
+    current_unified = _current_explicit_unified_env_spec(spec or fallback)
+    if current_unified is not None:
+        return current_unified
     return _discover_existing_env_spec(fallback)
 
 
@@ -493,6 +588,24 @@ def _with_lingbot_world_parallelism(
         return updated
 
     load_kwargs = _json_object_from_text(updated.get("load_kwargs_text"))
+    # The official eight-rank recipe shards both T5 and the two DiTs.  On the
+    # four-rank Workspace topology, checkpoint-backed validation showed that
+    # keeping T5 sharded while replicating/offloading the DiTs is the stable
+    # full-quality configuration: it leaves enough room for FP32 VAE
+    # conditioning while preserving Ulysses sequence parallelism.
+    # Restrict the rewrite to the exact catalog-default topology so explicit
+    # user choices remain untouched.
+    catalog_default_fsdp = (
+        normalized_world_size == 4
+        and _truthy_value(load_kwargs.get("t5_fsdp"))
+        and _truthy_value(load_kwargs.get("dit_fsdp"))
+        and not _truthy_value(load_kwargs.get("t5_cpu"))
+    )
+    if catalog_default_fsdp:
+        load_kwargs["dit_fsdp"] = False
+        call_kwargs = _json_object_from_text(updated.get("call_kwargs_text"))
+        call_kwargs["offload_model"] = True
+        updated["call_kwargs_text"] = json.dumps(call_kwargs)
     load_kwargs["ulysses_size"] = normalized_world_size
     for key in (
         "torchrun_nproc_per_node",
@@ -543,11 +656,12 @@ def _with_wan_vace_parallelism(
     *,
     world_size: int,
 ) -> dict[str, Any]:
-    """Keep the in-tree VACE USP topology aligned with its internal torchrun job.
+    """Keep native VACE Ulysses settings aligned with its outer torchrun job.
 
-    The official VACE command always enables DiT/T5 FSDP, so a one-process
-    launch is not a supported fallback.  Ulysses and ring degrees must multiply
-    to WORLD_SIZE, and the 14B checkpoint has 40 attention heads.
+    VACE runs through the native diffusion pipeline, so Workspace must launch
+    every rank and the loader must explicitly install sequence parallelism.
+    The in-tree native implementation currently supports pure Ulysses only
+    (ring size one), and the 14B checkpoint has 40 attention heads.
     """
 
     updated = dict(run_kwargs)
@@ -556,8 +670,8 @@ def _with_wan_vace_parallelism(
     normalized_world_size = int(world_size or 0)
     if normalized_world_size <= 1:
         raise ValueError(
-            "wan2.1-vace requires nproc_per_node > 1 because its in-tree official "
-            "command enables DiT/T5 FSDP."
+            "wan2.1-vace requires nproc_per_node > 1 because its native 14B "
+            "pipeline is configured for distributed sequence parallelism."
         )
     call_kwargs = _json_object_from_text(updated.get("call_kwargs_text"))
     load_kwargs = _json_object_from_text(updated.get("load_kwargs_text"))
@@ -568,12 +682,12 @@ def _with_wan_vace_parallelism(
         raise ValueError(
             f"wan2.1-vace ring_size must be an integer, got {raw_ring_size!r}."
         ) from exc
-    if ring_size <= 0 or normalized_world_size % ring_size:
+    if ring_size != 1:
         raise ValueError(
-            "wan2.1-vace requires ring_size to be a positive divisor of "
-            f"nproc_per_node={normalized_world_size}; got ring_size={ring_size}."
+            "wan2.1-vace native sequence parallelism currently requires "
+            f"ring_size=1; got ring_size={ring_size}."
         )
-    ulysses_size = normalized_world_size // ring_size
+    ulysses_size = normalized_world_size
     if 40 % ulysses_size:
         raise ValueError(
             "wan2.1-vace uses 40 attention heads, which must be divisible by "
@@ -584,6 +698,9 @@ def _with_wan_vace_parallelism(
         ulysses_size=ulysses_size,
         ring_size=ring_size,
     )
+    load_kwargs["sequence_parallel"] = ulysses_size
+    load_kwargs.pop("sp_degree", None)
+    updated["load_kwargs_text"] = json.dumps(load_kwargs)
     updated["call_kwargs_text"] = json.dumps(call_kwargs)
     return updated
 
@@ -720,12 +837,12 @@ def _validate_model_torchrun_nproc(model_id: str, requested: int) -> int:
     """Validate model-specific distributed process-count constraints."""
 
     if model_id in {LINGBOT_WORLD_MODEL_ID, LINGBOT_WORLD_V2_MODEL_ID}:
-        supported = (1, 4, 8)
+        supported = (1, 2, 4, 8)
         if requested not in supported:
             choices = ", ".join(str(value) for value in supported)
             raise ValueError(
                 f"{model_id} Workspace integration supports nproc values {choices}; got {requested}. "
-                "The 8-GPU topology is the official recipe and 4 GPUs are the supported compact topology."
+                "The 8-GPU topology is the official recipe; 2 and 4 GPUs are compact inference topologies."
             )
         return requested
     if model_id == "longvie-2":
@@ -778,7 +895,9 @@ def _matrix_game3_default_torchrun_nproc(run_kwargs: Mapping[str, Any]) -> int:
 
     if str(run_kwargs.get("device") or "").startswith("cuda:"):
         return 1
-    wmfactory_override = os.getenv("WM_MATRIXGAME3_CUDA_VISIBLE_DEVICES", "").strip()
+    wmfactory_override = (
+        getenv_registered("WORLDFOUNDRY_MATRIXGAME3_CUDA_VISIBLE_DEVICES", "") or ""
+    ).strip()
     explicit_visible = _cuda_visible_devices_from_kwargs(run_kwargs) or wmfactory_override
     visible_count = _cuda_visible_device_count(
         explicit_visible or os.getenv("CUDA_VISIBLE_DEVICES")
@@ -867,26 +986,13 @@ def _internal_torchrun_nproc(model_id: str, run_kwargs: Mapping[str, Any]) -> in
     """Return torchrun nproc for models that launch distributed jobs inside their own code."""
     call_kwargs = _json_object_from_text(run_kwargs.get("call_kwargs_text"))
     load_kwargs = _json_object_from_text(run_kwargs.get("load_kwargs_text"))
-    if model_id == "gen3c":
-        requested = call_kwargs.get("num_gpus") or load_kwargs.get("num_gpus") or 1
-    elif model_id == "wan2.1-vace":
+    if model_id == "bernini":
         requested = (
             call_kwargs.get("nproc_per_node")
-            or call_kwargs.get("torchrun_nproc_per_node")
+            or call_kwargs.get("ulysses_size")
             or load_kwargs.get("nproc_per_node")
-            or load_kwargs.get("torchrun_nproc_per_node")
-            or 8
-        )
-    elif model_id == "skyreels-v3":
-        if not _truthy_value(call_kwargs.get("use_usp")):
-            return 0
-        requested = (
-            call_kwargs.get("nproc_per_node")
-            or call_kwargs.get("torchrun_nproc_per_node")
-            or call_kwargs.get("torchrun_nproc")
-            or load_kwargs.get("nproc_per_node")
-            or load_kwargs.get("torchrun_nproc_per_node")
-            or load_kwargs.get("torchrun_nproc")
+            or load_kwargs.get("ulysses_size")
+            or 1
         )
     elif model_id == "kairos-sensenova":
         requested = (
@@ -904,29 +1010,20 @@ def _internal_torchrun_nproc(model_id: str, run_kwargs: Mapping[str, Any]) -> in
             call_kwargs=call_kwargs,
             load_kwargs=load_kwargs,
         )
-        if model_id in {"hunyuanvideo-1.5-t2v", "hunyuanvideo-1.5-i2v"}:
-            supported = (1, 2, 3, 4, 6, 8, 12, 24)
-            if nproc not in supported:
-                choices = ", ".join(str(value) for value in supported)
-                raise ValueError(
-                    f"{model_id} supports nproc values {choices}; got {nproc}. "
-                    "Its sequence-parallel all-to-all requires nproc to divide 24 attention heads."
-                )
         return nproc
     try:
         nproc = int(requested or 0)
     except (TypeError, ValueError) as exc:
         raise ValueError(f"{model_id} nproc must be an integer, got {requested!r}.") from exc
-    if model_id == "wan2.1-vace" and nproc <= 1:
-        raise ValueError(
-            "wan2.1-vace requires nproc_per_node > 1 because its in-tree official "
-            "command enables DiT/T5 FSDP."
-        )
-    if model_id == "gen3c" and nproc not in {1, 2, 4, 8, 16}:
-        raise ValueError(
-            "gen3c supports num_gpus values 1, 2, 4, 8, or 16 for its "
-            f"121-frame context-parallel chunks; got {nproc}."
-        )
+    if model_id == "bernini":
+        if nproc < 1:
+            raise ValueError(f"bernini nproc_per_node must be positive; got {nproc}.")
+        ulysses_size = int(call_kwargs.get("ulysses_size") or nproc)
+        if ulysses_size != nproc:
+            raise ValueError(
+                "Bernini uses one Ulysses group per request, so ulysses_size must equal "
+                f"nproc_per_node; got ulysses_size={ulysses_size}, nproc_per_node={nproc}."
+            )
     if model_id == "kairos-sensenova":
         if nproc < 1 or nproc > 20:
             raise ValueError(
@@ -956,6 +1053,38 @@ def _cuda_visible_device_count(value: str | None) -> int:
     return len([item for item in value.split(",") if item.strip()])
 
 
+def _automatic_cuda_device_count(model_id: str, run_kwargs: Mapping[str, Any]) -> int:
+    """Return the exclusive GPU count for an unpinned Workspace CUDA request."""
+
+    if in_conda_child_process() or not _automatic_gpu_placement_enabled():
+        return 0
+    if str(run_kwargs.get("device") or "").strip().lower() != "cuda":
+        return 0
+    if _cuda_visible_devices_from_kwargs(run_kwargs):
+        return 0
+    requested = max(
+        _lingbot_torchrun_nproc(model_id, run_kwargs),
+        _explicit_torchrun_nproc(model_id, run_kwargs),
+        _default_torchrun_nproc(model_id, run_kwargs),
+        _internal_torchrun_nproc(model_id, run_kwargs),
+        1,
+    )
+    return requested
+
+
+def _run_kwargs_with_cuda_lease(
+    run_kwargs: Mapping[str, Any],
+    lease: CudaDeviceLease,
+) -> dict[str, Any]:
+    """Pin a dispatched job to a lease without leaking allocator kwargs to the model."""
+
+    updated = dict(run_kwargs)
+    load_kwargs = _json_object_from_text(updated.get("load_kwargs_text"))
+    load_kwargs["cuda_visible_devices"] = lease.visible_devices
+    updated["load_kwargs_text"] = json.dumps(load_kwargs)
+    return updated
+
+
 def _parse_nvidia_smi_rows() -> list[dict[str, float]]:
     """Query GPU memory/utilization stats via ``nvidia-smi`` for auto device selection."""
     command = [
@@ -983,12 +1112,16 @@ def _parse_nvidia_smi_rows() -> list[dict[str, float]]:
 def _select_wmfactory_visible_devices(num_devices: int | None = None) -> str:
     """Pick idle GPUs for WMFactory-style models using nvidia-smi heuristics."""
     requested = None if num_devices is None else max(int(num_devices or 1), 1)
-    if os.getenv("WM_AUTO_CUDA_VISIBLE_DEVICES", "1") != "1":
+    if (getenv_registered("WORLDFOUNDRY_AUTO_CUDA_VISIBLE_DEVICES", "1") or "1") != "1":
         return ""
 
     try:
-        max_mem_fraction = float(os.getenv("WM_AUTO_GPU_MAX_MEMORY_FRACTION", "0.5"))
-        max_util_fraction = float(os.getenv("WM_AUTO_GPU_MAX_UTILIZATION_FRACTION", "0.5"))
+        max_mem_fraction = float(
+            getenv_registered("WORLDFOUNDRY_AUTO_GPU_MAX_MEMORY_FRACTION", "0.5") or "0.5"
+        )
+        max_util_fraction = float(
+            getenv_registered("WORLDFOUNDRY_AUTO_GPU_MAX_UTILIZATION_FRACTION", "0.5") or "0.5"
+        )
     except ValueError:
         max_mem_fraction = 0.5
         max_util_fraction = 0.5
@@ -1182,6 +1315,9 @@ def _shutdown_resident_worker(worker: _ResidentWorker, *, force: bool = False) -
             process.stdout.close()
     except Exception:
         pass
+    if worker.device_lease is not None:
+        worker.device_lease.release()
+        worker.device_lease = None
 
 
 def _reap_resident_workers_once(*, now: float | None = None) -> int:
@@ -1320,13 +1456,87 @@ def _json_safe(value: Any) -> Any:
 
 
 def _payload_run_kwargs_with_secret_refs(run_kwargs: Mapping[str, Any]) -> tuple[dict[str, Any], dict[str, str]]:
-    payload_kwargs = dict(run_kwargs)
+    """Move payload credentials into child-only environment references.
+
+    Studio accepts JSON-encoded ``load_kwargs_text`` and ``call_kwargs_text``
+    in addition to ordinary nested mappings. If either JSON blob contains a
+    credential, the whole original blob is carried through the environment so
+    the serialized dispatch payload never contains the secret while the child
+    still receives the exact input string.
+    """
+
     secret_env: dict[str, str] = {}
-    api_key = payload_kwargs.get("api_key")
+    env_name_by_secret: dict[str, str] = {}
+    next_secret_index = 1
+
+    api_key = run_kwargs.get("api_key")
     if isinstance(api_key, str) and api_key:
-        payload_kwargs["api_key"] = {SECRET_ENV_REF_KEY: DISPATCH_API_KEY_ENV}
         secret_env[DISPATCH_API_KEY_ENV] = api_key
-    return payload_kwargs, secret_env
+        env_name_by_secret[api_key] = DISPATCH_API_KEY_ENV
+
+    def secret_ref(secret: str) -> dict[str, str]:
+        nonlocal next_secret_index
+        env_name = env_name_by_secret.get(secret)
+        if env_name is None:
+            while True:
+                env_name = f"{DISPATCH_SECRET_ENV_PREFIX}_{next_secret_index}"
+                next_secret_index += 1
+                if env_name not in secret_env:
+                    break
+            env_name_by_secret[secret] = env_name
+            secret_env[env_name] = secret
+        return {SECRET_ENV_REF_KEY: env_name}
+
+    def contains_secret(value: Any, *, sensitive_context: bool = False) -> bool:
+        if isinstance(value, Mapping):
+            if set(value) == {SECRET_ENV_REF_KEY}:
+                return False
+            return any(
+                contains_secret(
+                    item,
+                    sensitive_context=sensitive_context or is_sensitive_key(str(key)),
+                )
+                for key, item in value.items()
+            )
+        if isinstance(value, (list, tuple)):
+            return any(contains_secret(item, sensitive_context=sensitive_context) for item in value)
+        return isinstance(value, str) and bool(value) and (
+            sensitive_context or redact_secret_text(value) != value
+        )
+
+    def replace_secret_values(value: Any, *, sensitive_context: bool = False) -> Any:
+        if isinstance(value, Mapping):
+            if set(value) == {SECRET_ENV_REF_KEY}:
+                return dict(value)
+            replaced: dict[str, Any] = {}
+            for raw_key, item in value.items():
+                key = str(raw_key)
+                item_is_sensitive = sensitive_context or is_sensitive_key(key)
+                if key in {"load_kwargs_text", "call_kwargs_text"} and isinstance(item, str):
+                    try:
+                        parsed_kwargs = json.loads(item)
+                    except (TypeError, json.JSONDecodeError):
+                        parsed_kwargs = None
+                    if parsed_kwargs is not None and contains_secret(parsed_kwargs):
+                        replaced[key] = secret_ref(item)
+                        continue
+                replaced[key] = replace_secret_values(
+                    item,
+                    sensitive_context=item_is_sensitive,
+                )
+            return replaced
+        if isinstance(value, list):
+            return [replace_secret_values(item, sensitive_context=sensitive_context) for item in value]
+        if isinstance(value, tuple):
+            return tuple(replace_secret_values(item, sensitive_context=sensitive_context) for item in value)
+        if isinstance(value, str) and value and (
+            sensitive_context or redact_secret_text(value) != value
+        ):
+            return secret_ref(value)
+        return value
+
+    payload_kwargs = replace_secret_values(dict(run_kwargs))
+    return dict(payload_kwargs), secret_env
 
 
 def _repo_root() -> Path:
@@ -1476,19 +1686,22 @@ def _runtime_cache_dir(spec: RuntimeCondaEnvSpec, name: str) -> str:
 def _runtime_env(spec: RuntimeCondaEnvSpec, device: str | None = None) -> dict[str, str]:
     """Build the child-process environment: Conda paths, PYTHONPATH, and optional GPU pin."""
     env = os.environ.copy()
-    # Studio inference jobs are expected to resolve missing public/gated model
-    # assets when a token/network is available. Do not let a parent shell's
-    # offline debugging flags silently turn official demo jobs into failures.
-    env.pop("HF_HUB_OFFLINE", None)
-    env.pop("TRANSFORMERS_OFFLINE", None)
-    env.pop("HF_DATASETS_OFFLINE", None)
+    # A dedicated Conda runtime must not import packages from the launching
+    # account's ``~/.local`` tree. Besides violating the selected runtime
+    # contract, a partially installed user package can make an otherwise
+    # complete model environment fail during import (for example, boto3
+    # without its jmespath dependency while Transformers imports Accelerate).
+    env["PYTHONNOUSERSITE"] = "1"
+    # Preserve an explicitly offline parent Workspace. Unset variables still
+    # retain the normal online behavior, while strict local-checkpoint runs do
+    # not unexpectedly download from a child Conda process.
     env[STUDIO_CONDA_CHILD_ENV] = "1"
     env["WORLDFOUNDRY_REPO_ROOT"] = str(_repo_root())
     ckpt_dir = resolve_ckpt_dir(env)
     hfd_root = resolve_hfd_root(env)
     env.setdefault("WORLDFOUNDRY_CKPT_DIR", str(ckpt_dir))
     env.setdefault("WORLDFOUNDRY_HFD_ROOT", str(hfd_root))
-    env.setdefault("HF_ENDPOINT", "https://hf-mirror.com")
+    apply_hf_endpoint_override(env)
     local_hf_home = ckpt_dir / "huggingface"
     if local_hf_home.is_dir():
         env.setdefault("HF_HOME", str(local_hf_home))
@@ -1554,10 +1767,11 @@ def _prepare_resident_run_context(
     kwargs_cuda_visible_devices = _cuda_visible_devices_from_kwargs(run_kwargs)
     device_cuda_visible_devices = _cuda_visible_devices_from_device(run_kwargs)
     parent_cuda_visible_devices = _normalize_cuda_visible_devices(os.getenv("CUDA_VISIBLE_DEVICES", ""))
+    automatic_cuda_device_count = _automatic_cuda_device_count(model_id, run_kwargs)
     explicit_cuda_visible_devices = _expand_visible_devices_for_model_devices(
         kwargs_cuda_visible_devices
         or device_cuda_visible_devices
-        or parent_cuda_visible_devices,
+        or ("" if automatic_cuda_device_count else parent_cuda_visible_devices),
         run_kwargs,
     )
     child_run_kwargs = _run_kwargs_for_child(
@@ -1568,7 +1782,11 @@ def _prepare_resident_run_context(
     if secret_env:
         return None
 
-    wmfactory_visible_devices = "" if explicit_cuda_visible_devices else _wmfactory_visible_devices_for_run(model_id, run_kwargs)
+    wmfactory_visible_devices = (
+        ""
+        if explicit_cuda_visible_devices or automatic_cuda_device_count
+        else _wmfactory_visible_devices_for_run(model_id, run_kwargs)
+    )
     env = _runtime_env(spec, device=None if wmfactory_visible_devices else str(run_kwargs.get("device", "")))
     if explicit_cuda_visible_devices:
         env["CUDA_VISIBLE_DEVICES"] = explicit_cuda_visible_devices
@@ -1591,6 +1809,7 @@ def _prepare_resident_run_context(
         payload_run_kwargs=payload_run_kwargs,
         env=env,
         key=key,
+        automatic_cuda_device_count=automatic_cuda_device_count,
     )
 
 
@@ -1601,6 +1820,8 @@ def _start_resident_worker(
     workspace_root: str,
     context: _ResidentRunContext,
     log_callback: LogCallback | None,
+    base_key: tuple[str, ...] | None = None,
+    device_lease: CudaDeviceLease | None = None,
 ) -> _ResidentWorker:
     command = [
         str(spec.python_executable),
@@ -1638,6 +1859,7 @@ def _start_resident_worker(
         pass
     worker = _ResidentWorker(
         key=context.key,
+        base_key=base_key or context.key,
         model_id=model_id,
         process=process,
         lock=threading.RLock(),
@@ -1645,6 +1867,7 @@ def _start_resident_worker(
         command=command,
         created_at=time.monotonic(),
         last_used_at=time.monotonic(),
+        device_lease=device_lease,
     )
     return worker
 
@@ -1659,7 +1882,14 @@ def _resident_worker_for(
 ) -> _ResidentWorker:
     retired_workers: list[_ResidentWorker] = []
     worker: _ResidentWorker | None = None
+    device_lease: CudaDeviceLease | None = None
     started_worker = False
+    base_key = context.key
+    if context.automatic_cuda_device_count:
+        _retire_idle_resident_workers_for_new_resident_key(
+            base_key,
+            context.automatic_cuda_device_count,
+        )
     with _RESIDENT_WORKERS_LIFECYCLE_LOCK:
         try:
             max_workers = _resident_worker_max_workers()
@@ -1701,7 +1931,10 @@ def _resident_worker_for(
                     _RESIDENT_WORKERS.pop(victim.key, None)
                     retired_workers.append(victim)
 
-                existing = _RESIDENT_WORKERS.get(context.key)
+                existing = next(
+                    (candidate for candidate in _RESIDENT_WORKERS.values() if candidate.base_key == base_key),
+                    None,
+                )
                 if existing is not None:
                     existing.in_use += 1
                     worker = existing
@@ -1725,28 +1958,49 @@ def _resident_worker_for(
                 _shutdown_resident_worker(retired_worker, force=False)
 
         if worker is None:
-            worker = _start_resident_worker(
-                model_id=model_id,
-                spec=spec,
-                workspace_root=workspace_root,
-                context=context,
-                log_callback=log_callback,
-            )
+            if context.automatic_cuda_device_count:
+                device_lease = _automatic_gpu_pool().acquire(context.automatic_cuda_device_count)
+                allocated_env = dict(context.env)
+                allocated_env["CUDA_VISIBLE_DEVICES"] = device_lease.visible_devices
+                context = replace(
+                    context,
+                    env=allocated_env,
+                    key=(*base_key, f"auto-cuda:{device_lease.visible_devices}"),
+                )
+            try:
+                worker = _start_resident_worker(
+                    model_id=model_id,
+                    spec=spec,
+                    workspace_root=workspace_root,
+                    context=context,
+                    log_callback=log_callback,
+                    base_key=base_key,
+                    device_lease=device_lease,
+                )
+            except Exception:
+                if device_lease is not None:
+                    device_lease.release()
+                raise
             started_worker = True
             with _RESIDENT_WORKERS_LOCK:
                 worker.in_use = 1
-                _RESIDENT_WORKERS[context.key] = worker
+                _RESIDENT_WORKERS[worker.key] = worker
 
     if worker is None:  # pragma: no cover - all paths above assign or raise
         raise _ResidentWorkerUnavailable("resident worker allocation failed")
     _ensure_resident_worker_reaper()
     if started_worker:
         try:
+            device_suffix = (
+                f" (CUDA_VISIBLE_DEVICES={worker.device_lease.visible_devices})"
+                if worker.device_lease is not None
+                else ""
+            )
             _append_log(
                 log_callback,
                 "system",
                 f"started resident conda worker for {model_id} in {spec.resolved_env_name}: "
-                f"{spec.python_executable}\n",
+                f"{spec.python_executable}{device_suffix}\n",
             )
         except Exception:
             _release_resident_worker(worker)
@@ -1755,11 +2009,76 @@ def _resident_worker_for(
 
 
 def _release_resident_worker(worker: _ResidentWorker) -> None:
+    retire_for_waiter = False
     with _RESIDENT_WORKERS_LOCK:
         if worker.in_use > 0:
             worker.in_use -= 1
         if worker.in_use == 0:
             worker.last_used_at = time.monotonic()
+            retire_for_waiter = bool(
+                worker.device_lease is not None and worker.device_lease.allocation_waiting
+            )
+    if retire_for_waiter:
+        _drop_resident_worker(worker, force=False)
+
+
+def _retire_idle_resident_workers_for_cuda_request(requested_count: int) -> int:
+    """Release enough idle resident leases for a larger queued CUDA request.
+
+    A worker that became idle before a multi-GPU allocator started waiting will
+    never observe ``allocation_waiting`` in ``_release_resident_worker``.  That
+    left the large request blocked even though every retained worker was idle.
+    Proactively retire the oldest idle lease holders before entering the
+    allocator wait.
+    """
+
+    requested = max(int(requested_count or 0), 0)
+    if requested <= 0:
+        return 0
+    pool = _automatic_gpu_pool()
+    missing = requested - pool.available_count
+    if missing <= 0:
+        return 0
+
+    retired_workers: list[_ResidentWorker] = []
+    released_capacity = 0
+    with _RESIDENT_WORKERS_LIFECYCLE_LOCK:
+        with _RESIDENT_WORKERS_LOCK:
+            candidates = sorted(
+                (
+                    worker
+                    for worker in _RESIDENT_WORKERS.values()
+                    if worker.in_use == 0 and worker.device_lease is not None
+                ),
+                key=lambda worker: worker.last_used_at,
+            )
+            for worker in candidates:
+                if _RESIDENT_WORKERS.get(worker.key) is not worker:
+                    continue
+                _RESIDENT_WORKERS.pop(worker.key, None)
+                retired_workers.append(worker)
+                released_capacity += len(worker.device_lease.tokens)
+                if released_capacity >= missing:
+                    break
+        for worker in retired_workers:
+            _shutdown_resident_worker(worker, force=False)
+    return len(retired_workers)
+
+
+def _retire_idle_resident_workers_for_new_resident_key(
+    base_key: tuple[str, ...],
+    requested_count: int,
+) -> int:
+    """Make CUDA capacity for a new resident key without retiring a reusable worker."""
+
+    with _RESIDENT_WORKERS_LOCK:
+        has_reusable_worker = any(
+            worker.base_key == base_key and worker.process.poll() is None
+            for worker in _RESIDENT_WORKERS.values()
+        )
+    if has_reusable_worker:
+        return 0
+    return _retire_idle_resident_workers_for_cuda_request(requested_count)
 
 
 def _drop_resident_worker(worker: _ResidentWorker, *, force: bool = False) -> None:
@@ -1983,7 +2302,7 @@ def _append_log(log_callback: LogCallback | None, stream: str, text: str) -> Non
         sys.stdout.write(text)
 
 
-def run_manager_payload_in_conda(
+def _run_manager_payload_in_conda_impl(
     *,
     model_id: str,
     spec: RuntimeCondaEnvSpec,
@@ -2050,7 +2369,7 @@ def run_manager_payload_in_conda(
     dispatch_run_kwargs = _with_wan_vace_parallelism(
         model_id,
         dispatch_run_kwargs,
-        world_size=max(internal_torchrun_nproc, 1),
+        world_size=max(torchrun_nproc, 1),
     )
     dispatch_run_kwargs = _with_longvie2_parallelism(
         model_id,
@@ -2132,14 +2451,7 @@ def run_manager_payload_in_conda(
     if torchrun_nproc > 1:
         if model_id in {LINGBOT_WORLD_MODEL_ID, LINGBOT_WORLD_V2_MODEL_ID}:
             env[TORCHRUN_LINGBOT_ENV] = "1"
-        if model_id in {
-            "hunyuan-game-craft",
-            "hunyuan-gamecraft",
-            "hunyuan-worldplay",
-            "longvie-2",
-            MATRIX_GAME3_MODEL_ID,
-            "dreamx-world-5b-cam",
-        }:
+        if model_id in TORCHRUN_DISTRIBUTED_MODELS:
             env[TORCHRUN_DISTRIBUTED_ENV] = "1"
     if torchrun_nproc > 1 or internal_torchrun_nproc > 1:
         requested_nproc = max(torchrun_nproc, internal_torchrun_nproc)
@@ -2220,3 +2532,67 @@ def run_manager_payload_in_conda(
     if not result_path.is_file():
         raise RuntimeError(f"{model_id} conda runtime did not write result payload: {result_path}")
     return run_record_from_manifest(json.loads(result_path.read_text(encoding="utf-8")))
+
+
+def run_manager_payload_in_conda(
+    *,
+    model_id: str,
+    spec: RuntimeCondaEnvSpec,
+    workspace_root: str,
+    run_kwargs: Mapping[str, Any],
+    dispatch_root: str | Path,
+    log_callback: LogCallback | None = None,
+    cancel_requested: CancelCallback | None = None,
+) -> RunRecord:
+    """Dispatch a job with exclusive automatic GPU placement when it cannot be resident."""
+
+    automatic_device_count = _automatic_cuda_device_count(model_id, run_kwargs)
+    resident_nproc = max(
+        _lingbot_torchrun_nproc(model_id, run_kwargs),
+        _explicit_torchrun_nproc(model_id, run_kwargs),
+        _default_torchrun_nproc(model_id, run_kwargs),
+        _internal_torchrun_nproc(model_id, run_kwargs),
+    )
+    resident_eligible = (
+        _resident_workers_enabled_for_model(model_id)
+        and resident_nproc <= 1
+    )
+    if automatic_device_count == 0 or resident_eligible:
+        return _run_manager_payload_in_conda_impl(
+            model_id=model_id,
+            spec=spec,
+            workspace_root=workspace_root,
+            run_kwargs=run_kwargs,
+            dispatch_root=dispatch_root,
+            log_callback=log_callback,
+            cancel_requested=cancel_requested,
+        )
+
+    retired_count = _retire_idle_resident_workers_for_cuda_request(automatic_device_count)
+    if retired_count:
+        _append_log(
+            log_callback,
+            "system",
+            f"retired {retired_count} idle resident worker(s) for {automatic_device_count}-GPU request\n",
+        )
+    lease = _automatic_gpu_pool().acquire(
+        automatic_device_count,
+        cancel_requested=cancel_requested,
+    )
+    _append_log(
+        log_callback,
+        "system",
+        f"assigned CUDA_VISIBLE_DEVICES={lease.visible_devices} for {model_id}\n",
+    )
+    try:
+        return _run_manager_payload_in_conda_impl(
+            model_id=model_id,
+            spec=spec,
+            workspace_root=workspace_root,
+            run_kwargs=_run_kwargs_with_cuda_lease(run_kwargs, lease),
+            dispatch_root=dispatch_root,
+            log_callback=log_callback,
+            cancel_requested=cancel_requested,
+        )
+    finally:
+        lease.release()

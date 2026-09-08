@@ -1,13 +1,14 @@
 """Cut3R visual generation pipeline module."""
 
 from ..pipeline_utils import PipelineABC
+import logging
 import os
 from typing import Optional, List, Union, Dict, Any, Generator
 import numpy as np
 from PIL import Image
 import torch
 
-from worldfoundry.core.io import write_video
+from worldfoundry.core.io import artifact_root_path, write_video
 from worldfoundry.core.io.artifacts import (
     COLORMAP_VIRIDIS,
     depth_to_colormap_pil,
@@ -22,9 +23,13 @@ from ...representations.point_clouds_generation.cut3r.cut3r_representation impor
 from ...base_models.three_dimensions.point_clouds.gaussian_splatting.scene.dataset_readers import (
     storePly,
 )
-from ...base_models.three_dimensions.point_clouds.flash_world.render import (
-    gaussian_render,
-)
+
+logger = logging.getLogger(__name__)
+
+
+def _default_output_dir(name: str = "cut3r_output") -> str:
+    """Resolve a stable default output directory instead of writing to the CWD."""
+    return str(artifact_root_path() / name)
 
 
 class CUT3RResult:
@@ -65,7 +70,7 @@ class CUT3RResult:
             List of saved file paths
         """
         if output_dir is None:
-            output_dir = "./cut3r_output"
+            output_dir = _default_output_dir()
         
         os.makedirs(output_dir, exist_ok=True)
         saved_files: List[str] = []
@@ -92,7 +97,7 @@ class CUT3RResult:
             for i, depth in enumerate(self.depth_maps):
                 depth_2d = squeeze_depth_to_2d(depth)
                 if depth_2d is None:
-                    print(f"Warning: Skipping depth map {i} with unexpected shape: {depth.shape}")
+                    logger.warning("Skipping depth map %d with unexpected shape: %s", i, depth.shape)
                     continue
                 output_path = os.path.join(depth_dir, f"depth_{i:06d}.png")
                 if save_depth_colormap(depth_2d, output_path) is not None:
@@ -318,7 +323,7 @@ class CUT3RPipeline(PipelineABC):
             input_: Input image(s), same formats as ``process``.
             ply_path: Optional output path for the reconstructed PLY. If it is a
                 directory, ``pointcloud.ply`` will be created inside it. If None,
-                ``./cut3r_output/pointcloud.ply`` is used.
+                the artifact-root ``cut3r_output/pointcloud.ply`` is used.
             size: Optional input image size. If None, falls back to the representation
                 model's default.
             vis_threshold: Confidence threshold used when generating the point cloud.
@@ -375,7 +380,7 @@ class CUT3RPipeline(PipelineABC):
             raise RuntimeError("Empty point cloud reconstructed from CUT3R.")
 
         if ply_path is None:
-            output_dir = "./cut3r_output"
+            output_dir = _default_output_dir()
             os.makedirs(output_dir, exist_ok=True)
             ply_path = os.path.join(output_dir, "pointcloud.ply")
         else:
@@ -623,7 +628,7 @@ class CUT3RPipeline(PipelineABC):
         frames_per_interaction: int = 10,
         size: Optional[int] = None,
         vis_threshold: float = 1.5,
-        output_dir: str = "./cut3r_output",
+        output_dir: Optional[str] = None,
         camera_radius: float = 4.0,
         camera_yaw: float = 0.0,
         camera_pitch: float = 0.0,
@@ -655,6 +660,7 @@ class CUT3RPipeline(PipelineABC):
         Returns:
             Absolute or relative path to the rendered MP4 video.
         """
+        output_dir = output_dir or _default_output_dir()
         os.makedirs(output_dir, exist_ok=True)
 
         recon_info = self.reconstruct_ply(
@@ -706,7 +712,7 @@ class CUT3RPipeline(PipelineABC):
     def run_official_export(
         self,
         image_path: Union[str, List[str]],
-        output_dir: str = "./cut3r_output",
+        output_dir: Optional[str] = None,
         size: Optional[int] = None,
         revisit: int = 1,
         update: bool = True,
@@ -726,7 +732,7 @@ class CUT3RPipeline(PipelineABC):
         return _run_official_export(
             input_source=image_path,
             model=self.representation_model.model,
-            output_dir=output_dir,
+            output_dir=output_dir or _default_output_dir(),
             device=self.representation_model.device,
             size=size,
             revisit=revisit,

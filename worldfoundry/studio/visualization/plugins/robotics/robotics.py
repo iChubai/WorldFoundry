@@ -1,10 +1,12 @@
+from __future__ import annotations
+
 import itertools
 
 import matplotlib
 
 matplotlib.use("Agg")
-from dataclasses import dataclass
-from typing import Any, Dict, Optional
+from dataclasses import dataclass, field
+from typing import TYPE_CHECKING, Any, Dict, Optional
 
 import dlimp as dl
 import flax
@@ -792,9 +794,6 @@ def _condition_info(**kwargs):
 """Debug plots for LeRobot async inference action queues."""
 
 
-import matplotlib.pyplot as plt
-
-
 def visualize_action_queue_size(timestamps: list[float], queue_sizes: list[int]) -> None:
     """Plot action queue size over time for debugging."""
     _, ax = plt.subplots()
@@ -952,11 +951,7 @@ import json
 import logging
 import time
 from collections import deque
-from dataclasses import dataclass, field
 from pathlib import Path
-from typing import TYPE_CHECKING
-
-import numpy as np
 
 from lerobot.utils.import_utils import _serial_available, require_package
 
@@ -1397,12 +1392,9 @@ def run_exo_calibration(
 import numbers
 import os
 
-import numpy as np
-
 from lerobot.types import RobotAction, RobotObservation
 
 from .constants import ACTION, ACTION_PREFIX, OBS_PREFIX, OBS_STR
-from .import_utils import require_package
 
 
 def init_rerun(

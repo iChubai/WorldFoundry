@@ -13,9 +13,37 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""SDPA-backed attention with selectable QKV layout and kernel backend."""
+"""Exact SDPA attention with selectable QKV layout and kernel backend.
 
+This is the in-tree precise path used when ``dispatch`` declines a fused
+provider (mask, short sequence, non-half, or ``auto``). :func:`native_sdpa_priority`
+picks cuDNN-first on Blackwell and lets Ampere/Ada/Hopper use PyTorch's
+shape-aware order. :func:`normalize_fully_masked_rows` makes all-false
+boolean rows backend-independent (cuDNN vs math disagree there).
+
+:class:`NativeAttention` can lease torch Context Parallel options (disable
+load-balance, allgather rotate) for the lifetime of a CP group, then restore
+them so other libraries are not stuck with our settings.
+
+Not this module:
+    Fused Flash / Sage / xFormers probing lives in
+    :mod:`worldfoundry.core.attention.backends`. Packed / varlen kernels
+    live in :mod:`.varlen`. Sequence-parallel Ulysses exchange lives in
+    :mod:`.ulysses_attention`.
+
+Public surface:
+
+- :func:`scaled_dot_product_attention` — exact SDPA with backend pin and
+  GQA compatibility for older PyTorch.
+- :func:`flattened_multihead_attention` — ``[B, S, H*D]`` reshape adapter.
+- :func:`native_sdpa_priority` / :func:`normalize_fully_masked_rows` —
+  architecture order and all-false-row quarantine.
+- :class:`NativeAttention` — module wrapper that can lease torch CP.
+"""
+
+import importlib
 import os
+import threading
 from contextlib import nullcontext
 from dataclasses import dataclass
 from typing import Any, Literal
@@ -34,6 +62,74 @@ try:
     from torch.distributed.tensor.experimental import context_parallel as _context_parallel
 except ImportError:
     _context_parallel = None
+
+
+_CP_OPTIONS_LOCK = threading.RLock()
+_CP_OPTIONS_USERS = 0
+_CP_OPTIONS_SNAPSHOT: tuple[Any, Any, Any] | None = None
+
+
+# ──────────────────────────────────────────────────────────────────────────
+# Torch CP option lease — process-global flags must restore after last user
+# ──────────────────────────────────────────────────────────────────────────
+
+
+def _acquire_torch_cp_options() -> bool:
+    """Lease the private torch CP options while NativeAttention needs them."""
+
+    global _CP_OPTIONS_SNAPSHOT, _CP_OPTIONS_USERS
+    try:
+        attention_module = importlib.import_module("torch.distributed.tensor.experimental._attention")
+    except ImportError:
+        return False
+    options = getattr(attention_module, "_cp_options", None)
+    if options is None or not hasattr(options, "enable_load_balance"):
+        # PyTorch 2.4/2.5 does not expose this newer option object.
+        return False
+
+    with _CP_OPTIONS_LOCK:
+        if _CP_OPTIONS_USERS == 0:
+            _CP_OPTIONS_SNAPSHOT = (
+                attention_module,
+                options.enable_load_balance,
+                getattr(options, "rotate_method", None),
+            )
+        _CP_OPTIONS_USERS += 1
+        try:
+            options.enable_load_balance = False
+            set_rotate_method = getattr(attention_module, "set_rotate_method", None)
+            if callable(set_rotate_method):
+                set_rotate_method("allgather")
+        except BaseException:
+            _CP_OPTIONS_USERS -= 1
+            if _CP_OPTIONS_USERS == 0:
+                _CP_OPTIONS_SNAPSHOT = None
+            raise
+    return True
+
+
+def _release_torch_cp_options() -> None:
+    """Release one lease and restore the pre-first-user torch CP options."""
+
+    global _CP_OPTIONS_SNAPSHOT, _CP_OPTIONS_USERS
+    with _CP_OPTIONS_LOCK:
+        if _CP_OPTIONS_USERS <= 0:
+            return
+        _CP_OPTIONS_USERS -= 1
+        if _CP_OPTIONS_USERS != 0 or _CP_OPTIONS_SNAPSHOT is None:
+            return
+        attention_module, enable_load_balance, rotate_method = _CP_OPTIONS_SNAPSHOT
+        options = getattr(attention_module, "_cp_options", None)
+        if options is not None:
+            options.enable_load_balance = enable_load_balance
+            if rotate_method is not None and hasattr(options, "rotate_method"):
+                options.rotate_method = rotate_method
+        _CP_OPTIONS_SNAPSHOT = None
+
+
+# ──────────────────────────────────────────────────────────────────────────
+# Backend metadata and exact SDPA — shared by dispatch and model adapters
+# ──────────────────────────────────────────────────────────────────────────
 
 
 @dataclass(frozen=True)
@@ -69,27 +165,31 @@ def native_sdpa_priority(
 ) -> tuple[str, ...]:
     """Return an exact PyTorch SDPA order for one workload.
 
-    Unmasked CUDA attention uses PyTorch's shape-aware dispatcher: cuDNN and
-    FlashAttention cross over at different sequence/head shapes even on one
-    GPU. Masked attention prefers cuDNN explicitly because PyTorch releases can
-    otherwise choose the slower memory-efficient path despite cuDNN supporting
-    the mask. The environment override remains available for offline tuning.
+    Ampere, Ada, and Hopper use PyTorch's shape-aware dispatcher: cuDNN and
+    FlashAttention cross over at different sequence/head/mask shapes even on
+    one GPU. Blackwell data-center and client targets prefer cuDNN before the
+    generic fallbacks because it is the architecture-native exact path; SM110
+    embedded targets retain PyTorch's automatic choice until physically
+    calibrated. The environment override remains available for offline tuning
+    on a concrete deployment.
     """
 
     configured = os.getenv("WORLDFOUNDRY_NATIVE_SDPA_PRIORITY", "").strip()
     if configured:
         known = {"cudnn", "flash", "efficient", "math"}
         requested = tuple(
-            item.strip().lower().replace("_attention", "")
-            for item in configured.split(",")
-            if item.strip()
+            item.strip().lower().replace("_attention", "") for item in configured.split(",") if item.strip()
         )
         invalid = tuple(item for item in requested if item not in known)
         if invalid:
             raise ValueError(f"Unknown native SDPA backends: {invalid}")
         return requested
 
-    parsed = torch.device("cuda", torch.cuda.current_device()) if device is None and torch.cuda.is_available() else torch.device(device or "cpu")
+    parsed = (
+        torch.device("cuda", torch.cuda.current_device())
+        if device is None and torch.cuda.is_available()
+        else torch.device(device or "cpu")
+    )
     if parsed.type != "cuda":
         return ("math",)
     if getattr(torch.version, "hip", None) is not None:
@@ -101,10 +201,11 @@ def native_sdpa_priority(
     except (AssertionError, RuntimeError, TypeError, ValueError):
         return ()
     if major >= 8:
-        if has_mask or major in {10, 12}:
+        if major in {10, 12}:
             # PyTorch's default order can reach efficient/math before cuDNN on
             # Blackwell even though cuDNN is the architecture-native exact
-            # path. Hopper remains shape-dispatched when no mask is present.
+            # path. Ampere, Ada, Hopper, and SM110 embedded Blackwell retain
+            # shape-dispatched selection for masked and unmasked workloads.
             return ("cudnn", "flash", "efficient", "math")
         return ()
     return ("efficient", "math")
@@ -189,7 +290,12 @@ def scaled_dot_product_attention(
             kwargs["scale"] = float(scale)
         if enable_gqa:
             kwargs["enable_gqa"] = True
-        context = _sdpa_kernel_context(backend=backend, backends=backends)
+        # ``torch.nn.attention.sdpa_kernel`` is a Python context manager and
+        # cannot appear inside a Dynamo fullgraph. Inductor already lowers the
+        # SDPA op to an eligible device kernel, so keep the eager-only provider
+        # constraint outside compiled graphs and trace the operator directly.
+        compiling = torch.compiler.is_compiling()
+        context = nullcontext() if compiling else _sdpa_kernel_context(backend=backend, backends=backends)
         with context:
             try:
                 output = sdpa(query, key, value, **kwargs)
@@ -199,7 +305,7 @@ def scaled_dot_product_attention(
                 key, value = _repeat_key_value_for_gqa(key, value, query)
                 kwargs.pop("enable_gqa", None)
                 output = sdpa(query, key, value, **kwargs)
-        return _zero_fully_masked_rows(output, attn_mask, query, key)
+        return normalize_fully_masked_rows(output, attn_mask, query, key)
 
     if enable_gqa:
         key, value = _repeat_key_value_for_gqa(key, value, query)
@@ -220,10 +326,10 @@ def scaled_dot_product_attention(
     if dropout_p:
         weights = F.dropout(weights, p=float(dropout_p), training=True)
     output = torch.matmul(weights, value)
-    return _zero_fully_masked_rows(output, attn_mask, query, key)
+    return normalize_fully_masked_rows(output, attn_mask, query, key)
 
 
-def _zero_fully_masked_rows(
+def normalize_fully_masked_rows(
     output: Any,
     attn_mask: Any,
     query: Any,
@@ -305,6 +411,12 @@ def flattened_multihead_attention(
 
 
 def _repeat_key_value_for_gqa(key: Any, value: Any, query: Any) -> tuple[Any, Any]:
+    """Expand KV heads so older SDPA that lacks ``enable_gqa`` still matches Q.
+
+    Failure: ``ValueError`` when query heads are not an integer multiple of
+    KV heads — repeating would invent a layout the checkpoint never trained.
+    """
+
     query_heads = int(query.shape[1])
     key_value_heads = int(key.shape[1])
     if key_value_heads == query_heads:
@@ -319,6 +431,15 @@ def _repeat_key_value_for_gqa(key: Any, value: Any, query: Any) -> tuple[Any, An
 
 
 def _sdpa_kernel_context(*, backend: Any = None, backends: Any = None) -> Any:
+    """Return ``sdpa_kernel`` when eager, else ``nullcontext`` inside Dynamo.
+
+    A contextlib selector is not representable in a fullgraph. Compiled
+    callers already lower ``F.scaled_dot_product_attention``; pinning
+    providers there would break the graph rather than change the kernel.
+    Missing ``sdpa_kernel`` or an empty resolved list is a no-op, not an
+    error — the caller still has the math fallback.
+    """
+
     requested = backends if backends is not None else backend
     if requested is None:
         return nullcontext()
@@ -328,6 +449,13 @@ def _sdpa_kernel_context(*, backend: Any = None, backends: Any = None) -> Any:
         return nullcontext()
     resolved = _resolve_sdpa_backends(requested)
     if not resolved:
+        return nullcontext()
+    # A contextlib-based SDPA selector is not representable inside a Dynamo
+    # fullgraph. Compiled callers trace F.scaled_dot_product_attention directly;
+    # eager execution below still preserves the requested provider priority.
+    compiler = getattr(torch, "compiler", None)
+    is_compiling = getattr(compiler, "is_compiling", None) if compiler is not None else None
+    if callable(is_compiling) and is_compiling():
         return nullcontext()
     try:
         return sdpa_kernel(backends=resolved, set_priority=True)
@@ -342,6 +470,12 @@ def _sdpa_kernel_context(*, backend: Any = None, backends: Any = None) -> Any:
 
 
 def _resolve_sdpa_backends(requested: Any) -> list[Any]:
+    """Map string aliases onto ``SDPBackend`` enums; drop unknown names.
+
+    Unknown strings are skipped rather than raised so an env-configured
+    priority list still works on a PyTorch that lacks ``CUDNN_ATTENTION``.
+    """
+
     if isinstance(requested, (str, bytes)) or not isinstance(requested, (list, tuple, set, frozenset)):
         values = [requested]
     else:
@@ -361,6 +495,11 @@ def _resolve_sdpa_backends(requested: Any) -> list[Any]:
         if value is not None:
             resolved.append(value)
     return resolved
+
+
+# ──────────────────────────────────────────────────────────────────────────
+# Module wrapper — optional torch CP lease around the same exact SDPA path
+# ──────────────────────────────────────────────────────────────────────────
 
 
 class NativeAttention(torch.nn.Module):
@@ -384,6 +523,7 @@ class NativeAttention(torch.nn.Module):
         self.qkv_format = qkv_format
         self.backend = backend
         self.device_mesh: DeviceMesh | None = None
+        self._torch_cp_options_leased = False
 
     def set_context_parallel_group(self, cp_group: ProcessGroup | None) -> None:
         """Enable or disable context parallelism for ring attention.
@@ -393,21 +533,23 @@ class NativeAttention(torch.nn.Module):
         """
         if cp_group is None:
             self.device_mesh = None
+            if self._torch_cp_options_leased:
+                _release_torch_cp_options()
+                self._torch_cp_options_leased = False
         else:
             if _context_parallel is None:
                 raise RuntimeError(
                     "NativeAttention context parallel requires torch.distributed.tensor.experimental.context_parallel."
                 )
-            self.device_mesh = DeviceMesh.from_group(cp_group, device_type="cuda")
+            device_mesh = DeviceMesh.from_group(cp_group, device_type="cuda")
+            if not self._torch_cp_options_leased:
+                self._torch_cp_options_leased = _acquire_torch_cp_options()
+            self.device_mesh = device_mesh
 
-            # Need to disable load balance for torch context parallel to work.
-            from torch.distributed.tensor.experimental._attention import (
-                _cp_options,
-                set_rotate_method,
-            )
+    def clear_context_parallel_group(self) -> None:
+        """Disable context parallelism and release its process-global option lease."""
 
-            _cp_options.enable_load_balance = False
-            set_rotate_method("allgather")
+        self.set_context_parallel_group(None)
 
     def is_context_parallel_enabled(self) -> bool:
         """Return True if context parallelism is active."""
@@ -489,5 +631,6 @@ __all__ = [
     "attention_backend_info",
     "flattened_multihead_attention",
     "native_sdpa_priority",
+    "normalize_fully_masked_rows",
     "scaled_dot_product_attention",
 ]

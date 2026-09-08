@@ -8,11 +8,17 @@ from worldfoundry.core.io.paths import checkpoint_root_path, resolve_data_path
 RUNTIME_DIR = Path(__file__).resolve().parent
 OFFICIAL_ENTRYPOINT = RUNTIME_DIR / "play.py"
 CONFIG_DIR = resolve_data_path("models", "runtime", "configs", "diamond", "config")
-DEFAULT_PRETRAINED_DIR = checkpoint_root_path("diamond")
-BLOCKED_REASON = (
-    "DIAMOND official play/inference source is vendored in-tree; execution requires "
-    "a local checkpoint or local pretrained snapshot plus an Atari runtime."
+DEFAULT_PRETRAINED_DIR = next(
+    (
+        path
+        for path in (checkpoint_root_path("eloialonso--diamond"), checkpoint_root_path("diamond"))
+        if path.is_dir()
+    ),
+    checkpoint_root_path("eloialonso--diamond"),
 )
+# The model-specific requirements hook below is authoritative. Keeping a static
+# blocker here would reject execution even after every local asset is present.
+BLOCKED_REASON = ""
 
 
 def missing_requirements(*, options, runtime_root, entrypoint, profile):
@@ -95,6 +101,19 @@ def build_command(context):
         command.append("--store-denoising-trajectory")
     if bool(options.get("store_original_obs", False)):
         command.append("--store-original-obs")
+    headless_steps = int(options.get("headless_steps", options.get("frames", 0)) or 0)
+    if headless_steps:
+        dataset_dir = options.get("dataset_dir") or str(Path(context["output_dir"]) / "initialization_dataset")
+        command.extend(
+            [
+                "--headless-steps",
+                str(headless_steps),
+                "--output-path",
+                context["output_path"],
+                "--dataset-dir",
+                str(dataset_dir),
+            ]
+        )
     return command
 
 

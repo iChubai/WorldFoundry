@@ -15,26 +15,40 @@ import numpy as np
 from PIL import Image
 from tqdm import tqdm
 
+# ──────────────────────────────────────────────────────────────────────────
+# Lazy PIL readers — decode one frame at a time; natural sort for image folders
+# ──────────────────────────────────────────────────────────────────────────
+
 
 class LowMemoryVideo:
     """Lazy video reader that loads frames on demand."""
 
     def __init__(self, file_name: str):
+        """Open an imageio reader; frames stay on disk until ``__getitem__``."""
+
         import imageio
 
         self.reader = imageio.get_reader(file_name)
 
     def __len__(self) -> int:
+        """Frame count from the container; may be expensive on some codecs."""
+
         return self.reader.count_frames()
 
     def __getitem__(self, item: int) -> Image.Image:
+        """Decode frame *item* as RGB PIL (drops alpha)."""
+
         return Image.fromarray(np.array(self.reader.get_data(item))).convert("RGB")
 
     def __del__(self):
+        """Close the imageio reader if the object is collected."""
+
         self.reader.close()
 
 
 def split_file_name(file_name):
+    """Tokenize a name into strings and ints so ``2.png`` sorts before ``10.png``."""
+
     result = []
     number = -1
     for i in file_name:
@@ -68,18 +82,26 @@ class LowMemoryImageFolder:
     """Lazy image-folder reader that loads frames on demand."""
 
     def __init__(self, folder, file_list=None):
+        """Index JPG/PNG paths; *file_list* if given is joined under *folder* as-is."""
+
         if file_list is None:
             self.file_list = search_for_images(folder)
         else:
             self.file_list = [os.path.join(folder, file_name) for file_name in file_list]
 
     def __len__(self):
+        """Number of indexed image files."""
+
         return len(self.file_list)
 
     def __getitem__(self, item):
+        """Open one image as RGB; the file handle is released after convert."""
+
         return Image.open(self.file_list[item]).convert("RGB")
 
     def __del__(self):
+        """No open handles to close; kept for API symmetry with :class:`LowMemoryVideo`."""
+
         pass
 
 
@@ -104,6 +126,8 @@ class VideoData:
     """Lazy video or image-folder dataset with optional resize."""
 
     def __init__(self, video_file=None, image_folder=None, height=None, width=None, **kwargs):
+        """Open exactly one of *video_file* or *image_folder*; raise if both/neither."""
+
         if video_file is not None:
             self.data_type = "video"
             self.data = LowMemoryVideo(video_file, **kwargs)
@@ -116,21 +140,31 @@ class VideoData:
         self.set_shape(height, width)
 
     def raw_data(self):
+        """Materialize every frame (defeats laziness; used by small debug clips)."""
+
         return [self.__getitem__(i) for i in range(self.__len__())]
 
     def set_length(self, length):
+        """Cap or override reported length without truncating the underlying reader."""
+
         self.length = length
 
     def set_shape(self, height, width):
+        """Set the optional crop-resize target; ``None`` keeps native size."""
+
         self.height = height
         self.width = width
 
     def __len__(self):
+        """Override length if set; otherwise the underlying reader length."""
+
         if self.length is None:
             return len(self.data)
         return self.length
 
     def shape(self):
+        """Return ``(H, W)``; probes frame 0 when no explicit size was set."""
+
         if self.height is not None and self.width is not None:
             return self.height, self.width
         frame = self.__getitem__(0)
@@ -141,6 +175,8 @@ class VideoData:
         return height, width
 
     def __getitem__(self, item):
+        """Fetch one PIL frame and crop-resize only when the stored size differs."""
+
         frame = self.data.__getitem__(item)
         width, height = frame.size
         if self.height is not None and self.width is not None:
@@ -149,9 +185,13 @@ class VideoData:
         return frame
 
     def __del__(self):
+        """Underlying readers close themselves; this is a no-op hook."""
+
         pass
 
     def save_images(self, folder):
+        """Dump every frame as ``{i}.png`` (0-based) under *folder*."""
+
         os.makedirs(folder, exist_ok=True)
         for i in tqdm(range(self.__len__()), desc="Saving images"):
             self.__getitem__(i).save(os.path.join(folder, f"{i}.png"))
@@ -175,7 +215,14 @@ def save_frames(frames, save_path):
 
 
 def merge_video_audio(video_path: str, audio_path: str) -> None:
-    """Merge video and audio with ffmpeg; overwrite ``video_path`` on success."""
+    """Merge video and audio with ffmpeg; overwrite ``video_path`` on success.
+
+    Raises on failure (missing inputs, ffmpeg errors). The temporary mux
+    output is always removed, so a failed merge leaves the original video
+    untouched. Historically this function swallowed its own errors and
+    returned normally, which made callers treat missing audio tracks as
+    success.
+    """
     if not os.path.exists(video_path):
         raise FileNotFoundError(f"video file {video_path} does not exist")
     if not os.path.exists(audio_path):
@@ -207,16 +254,12 @@ def merge_video_audio(video_path: str, audio_path: str) -> None:
         ]
         result = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
         if result.returncode != 0:
-            error_msg = f"FFmpeg execute failed: {result.stderr}"
-            print(error_msg)
-            raise RuntimeError(error_msg)
-
+            raise RuntimeError(f"FFmpeg execute failed: {result.stderr}")
         shutil.move(temp_output, video_path)
         print(f"Merge completed, saved to {video_path}")
-    except Exception as e:
+    finally:
         if os.path.exists(temp_output):
             os.remove(temp_output)
-        print(f"merge_video_audio failed with error: {e}")
 
 
 def save_video_with_audio(frames, save_path, audio_path, fps=16, quality=9, ffmpeg_params=None):
@@ -231,9 +274,9 @@ def save_video_with_audio(frames, save_path, audio_path, fps=16, quality=9, ffmp
         ffmpeg_params: Optional ImageIO ffmpeg arguments.
 
     Notes:
-        ``merge_video_audio`` reports ffmpeg failures and removes its temporary
-        file. Use lower-level helpers when the caller needs structured process
-        error handling.
+        ``merge_video_audio`` raises on ffmpeg failures after removing its
+        temporary file, so an exception here means ``save_path`` still holds
+        the silent video.
     """
     save_video(frames, save_path, fps, quality, ffmpeg_params)
     merge_video_audio(save_path, audio_path)

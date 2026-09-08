@@ -5,19 +5,47 @@ import json
 import os
 import re
 import sys
-from dataclasses import dataclass, field
+from contextvars import ContextVar
+from dataclasses import dataclass, field, replace
 from functools import lru_cache
 from pathlib import Path
 from typing import Any, Dict, Iterable, List, Mapping, Sequence
 
 from worldfoundry.core.io.paths import (
+    checkpoint_root_candidates,
     checkpoint_root_path,
     hfd_root_path,
     local_data_root_path,
     official_runtime_repo_path,
+    resolve_local_hf_model_path,
 )
 
 from .runtime_paths import studio_hfd_cache_roots
+
+
+@dataclass
+class _CatalogPathSnapshot:
+    roots: tuple[Path, ...]
+    children: dict[Path, frozenset[str]]
+    exists_cache: dict[Path, bool] = field(default_factory=dict)
+
+    def missing(self, path: Path) -> bool:
+        for root, names in self.children.items():
+            try:
+                parts = path.relative_to(root).parts
+            except ValueError:
+                continue
+            if parts and ".." not in parts and parts[0] not in names:
+                return True
+        return False
+
+    def exists(self, path: Path) -> bool:
+        if path not in self.exists_cache:
+            self.exists_cache[path] = not self.missing(path) and path.exists()
+        return self.exists_cache[path]
+
+
+_CATALOG_CACHE_ROOTS: ContextVar[_CatalogPathSnapshot | None] = ContextVar("studio_catalog_cache_roots", default=None)
 
 PIPELINES_ROOT = Path(__file__).resolve().parents[1] / "pipelines"
 ACTION_SYNTHESIS_ROOT = Path(__file__).resolve().parents[1] / "synthesis" / "action_generation"
@@ -36,13 +64,83 @@ ABSTRACT_RUNTIME_MODEL_IDS: frozenset[str] = frozenset(
         "world-model-runtime",
     }
 )
+_SANA_IMAGE_RUNNERS = frozenset({"image", "sprint", "controlnet"})
+SANA_DEFAULT_IMAGE_VARIANT_ID = "sana-1600m-1024px-bf16"
+COGVIDEOX_STUDIO_PARENT_ID = "cogvideox_5b_t2v"
+COGVIDEOX_DEFAULT_VARIANT_ID = "cogvideox_5b_t2v"
+_COGVIDEOX_VARIANT_IDS = frozenset(
+    {
+        "cogvideox_2b_t2v",
+        "cogvideox_5b_t2v",
+        "cogvideox_5b_i2v",
+    }
+)
+_COGVIDEOX_ALIAS_TO_VARIANT = {
+    "cogvideox": "cogvideox_5b_t2v",
+    "cogvideox_2b": "cogvideox_2b_t2v",
+    "cogvideox_5b": "cogvideox_5b_t2v",
+    "cogvideox_2b_t2v": "cogvideox_2b_t2v",
+    "cogvideox_5b_t2v": "cogvideox_5b_t2v",
+    "cogvideox_5b_i2v": "cogvideox_5b_i2v",
+}
+
+
+@lru_cache(maxsize=1)
+def _sana_folded_studio_model_ids() -> frozenset[str]:
+    """Return image-family Sana checkpoint ids that belong on one Studio card."""
+
+    from worldfoundry.base_models.diffusion_model.recipes.sana_variants import SANA_VARIANTS
+
+    return frozenset(
+        variant.model_id
+        for variant in SANA_VARIANTS.values()
+        if variant.runner in _SANA_IMAGE_RUNNERS
+    )
+
+
+def _cogvideox_canonical_id(model_id: str) -> str:
+    return _normalize_model_id(model_id).replace("-", "_")
+
+
+def _cogvideox_variant_id(model_id: str) -> str | None:
+    key = _cogvideox_canonical_id(model_id)
+    if key in _COGVIDEOX_VARIANT_IDS:
+        return key
+    return _COGVIDEOX_ALIAS_TO_VARIANT.get(key)
+
+
+def _catalog_id_key(model_id: str) -> str:
+    return _normalize_model_id(model_id).replace("-", "_")
+
+
+def _cogvideox_folded_studio_model_ids() -> frozenset[str]:
+    """Return CogVideoX pipeline ids that are variants on the shared Studio card."""
+
+    folded = _COGVIDEOX_VARIANT_IDS - {COGVIDEOX_STUDIO_PARENT_ID}
+    return frozenset(item for model_id in folded for item in (model_id, model_id.replace("_", "-")))
+
+
+def _cogvideox_studio_parent_id(model_id: str) -> str | None:
+    """Return the CogVideoX card id when ``model_id`` is a folded T2V/I2V pipeline."""
+
+    if _cogvideox_variant_id(model_id):
+        return COGVIDEOX_STUDIO_PARENT_ID
+    return None
+
+
+def cogvideox_runtime_model_id(model_id: str, variant_id: str = "") -> str | None:
+    """Return the concrete CogVideoX pipeline id for a Studio card + variant."""
+
+    if _cogvideox_studio_parent_id(model_id) is None:
+        return None
+    return _cogvideox_variant_id(variant_id or model_id) or COGVIDEOX_DEFAULT_VARIANT_ID
+
+
 STUDIO_HIDDEN_CATALOG_MODEL_IDS: frozenset[str] = frozenset(
     {
         # AdaWorld is tracked as source/provenance only until the official env, checkpoints, and task assets are
         # reproducibly runnable from the unified Studio environment.
         "adaworld",
-        # Training-oriented 4D reconstruction repos; tracked as metadata, not release-facing Studio infer jobs.
-        "4d-gs",
         # Internal shared operator/contract surface. Concrete priors such as metric3d-prior,
         # unidepth-v2-prior, dap, and video-depth-anything-prior are the user-facing entries.
         "geometry-prior",
@@ -51,22 +149,33 @@ STUDIO_HIDDEN_CATALOG_MODEL_IDS: frozenset[str] = frozenset(
         "fantasyworld-wan22",
         # Lyra-2 alias; keep lyra-1 / lyra-2 as the canonical Create Job entries.
         "lyra",
+        # Runtime-environment alias for ltx-2.3-i2v. Keeping it as a separate
+        # catalog row duplicates the same pipeline and invents a non-existent
+        # ``Ltx23I2VPipeline`` class name during canonical-entry synthesis.
+        "ltx2_3_i2v",
         # Hidden official weights; keep provenance in the model catalog but do not
         # expose a Studio infer row that cannot return a real artifact.
         "pandora",
         "omnivinci",
         "emu3.5",
         "qwen2.5-omni",
-        "shape-of-motion",
         "spatial-ladder",
         "spatial-reasoner",
-        # The source tree is vendored, but the current wrapper only prepares a
-        # multi-process execution plan and still requires caption/VAE services.
-        # Keep it out of Studio infer until it returns a real video artifact.
-        "step-video-t2v",
         "thinksound",
+        # Image / Sprint / ControlNet checkpoints are variants on the Sana card.
+        # CogVideoX 2B T2V and 5B I2V share the CogVideoX card with 5B T2V.
     }
-)
+) | _sana_folded_studio_model_ids() | _cogvideox_folded_studio_model_ids()
+
+# These Workspace matrix ids intentionally retain underscores while their AST
+# pipeline ids are filename-derived hyphenated slugs. Resolve them through the
+# fast single-entry path so a direct job does not scan and stat the entire
+# checkpoint catalog before importing the requested pipeline.
+FAST_CANONICAL_AST_ALIASES: Mapping[str, str] = {
+    "videocrafter1_i2v": "videocrafter1-i2v",
+    "videocrafter1_t2v": "videocrafter1-t2v",
+    "videocrafter2_t2v": "videocrafter2-t2v",
+}
 
 
 @lru_cache(maxsize=1)
@@ -109,12 +218,17 @@ def _data_path(*parts: str | Path) -> Path:
 
 def _cache_candidates(*repo_dir_names: str) -> list[str]:
     candidates: list[str] = []
-    for root in studio_hfd_cache_roots(project_roots=_project_root_candidates()):
+    snapshot = _CATALOG_CACHE_ROOTS.get()
+    roots = snapshot.roots if snapshot is not None else studio_hfd_cache_roots(project_roots=_project_root_candidates())
+    for root in roots:
         for repo_dir_name in repo_dir_names:
             repo_paths = [root / repo_dir_name]
             if not repo_dir_name.startswith("models--"):
                 repo_paths.append(root / f"models--{repo_dir_name}")
             for repo_path in repo_paths:
+                if snapshot is not None and snapshot.missing(repo_path):
+                    candidates.append(str(repo_path))
+                    continue
                 refs_main = repo_path / "refs" / "main"
                 snapshots_dir = repo_path / "snapshots"
                 if refs_main.is_file():
@@ -317,20 +431,128 @@ def _prefer_existing_model_ref(*candidates: str) -> str:
 
 
 def _checkpoint_model_ref(*repo_dir_names: str, fallback: str = "") -> str:
+    snapshot = _CATALOG_CACHE_ROOTS.get()
     candidates: list[str] = []
     for repo_dir_name in repo_dir_names:
         if not repo_dir_name:
             continue
-        candidates.append(str(checkpoint_root_path(*Path(repo_dir_name).parts)))
+        candidates.extend(
+            str(path)
+            for path in checkpoint_root_candidates(*Path(repo_dir_name).parts)
+        )
         candidates.extend(_cache_candidates(repo_dir_name))
+    for candidate in candidates:
+        if candidate:
+            path = Path(candidate).expanduser()
+            exists = snapshot.exists(path) if snapshot is not None else path.exists()
+            if exists:
+                return str(path)
     if fallback:
-        candidates.append(fallback)
-    return _prefer_existing_model_ref(*candidates)
+        return fallback
+    return next((candidate for candidate in candidates if candidate), "")
+
+
+def _local_root_with_files(
+    candidates: Iterable[str | Path],
+    required_files: Sequence[str | Path],
+) -> str:
+    """Return the first local component root containing every required file."""
+
+    for raw_candidate in candidates:
+        if not raw_candidate:
+            continue
+        candidate = Path(raw_candidate).expanduser()
+        if candidate.is_dir() and all((candidate / Path(name)).is_file() for name in required_files):
+            return str(candidate.resolve())
+    return ""
+
+
+def _hunyuanvideo15_default_load_kwargs(*, image_to_video: bool) -> Dict[str, Any]:
+    """Compose the complete HunyuanVideo 1.5 demo from staged local roles.
+
+    The release checkpoint and the HY-WorldPlay checkout are complementary in
+    common offline installations: the former contains the full non-distilled
+    720p DiTs and materializer-facing text resources, while the latter contains
+    the SigLIP assets. Keep those roles explicit instead of copying tens of
+    gigabytes or silently falling back to the available 480p model.
+    """
+
+    checkpoint_ref = _checkpoint_model_ref(
+        "tencent--HunyuanVideo-1.5",
+        "HunyuanVideo-1.5",
+        fallback="tencent/HunyuanVideo-1.5",
+    )
+    transformer_dir = "720p_i2v" if image_to_video else "720p_t2v"
+    weights_root = _local_root_with_files(
+        (
+            checkpoint_ref,
+            *checkpoint_root_candidates("tencent--HunyuanVideo-1.5"),
+            *checkpoint_root_candidates("HunyuanVideo-1.5"),
+        ),
+        (
+            f"transformer/{transformer_dir}/config.json",
+            f"transformer/{transformer_dir}/diffusion_pytorch_model.safetensors",
+            "vae/config.json",
+            "vae/diffusion_pytorch_model.safetensors",
+        ),
+    )
+
+    resource_ref = _checkpoint_model_ref(
+        "HunyuanVideo-1.5",
+        "tencent--HunyuanVideo-1.5",
+        fallback=checkpoint_ref,
+    )
+    worldplay_root = _project_root().parent / "world_models" / "hy-worldplay" / "HunyuanVideo-1.5"
+    resources_root = _local_root_with_files(
+        (
+            resource_ref,
+            worldplay_root,
+            weights_root,
+        ),
+        (
+            "config.json",
+            "text_encoder/llm/config.json",
+            "text_encoder/byt5-small/config.json",
+            "text_encoder/byt5-small/model.safetensors",
+            "text_encoder/Glyph-SDXL-v2/checkpoints/model.safetensors",
+            "text_encoder/Glyph-SDXL-v2/assets/color_idx.json",
+            "text_encoder/Glyph-SDXL-v2/assets/multilingual_10-lang_idx.json",
+        ),
+    )
+
+    checkpoint_overrides: Dict[str, str] = {}
+    if weights_root:
+        checkpoint_overrides.update({"transformer": weights_root, "vae": weights_root})
+    if resources_root:
+        checkpoint_overrides["resources"] = resources_root
+        if image_to_video:
+            vision_root = _local_root_with_files(
+                (
+                    Path(resource_ref) / "vision_encoder" / "siglip",
+                    worldplay_root / "vision_encoder" / "siglip",
+                    Path(resources_root) / "vision_encoder" / "siglip",
+                ),
+                (
+                    "image_encoder/config.json",
+                    "image_encoder/model.safetensors",
+                    "feature_extractor/preprocessor_config.json",
+                ),
+            )
+            if vision_root:
+                checkpoint_overrides["vision"] = vision_root
+
+    load_kwargs: Dict[str, Any] = {"attention_backend": "flash"}
+    if checkpoint_overrides:
+        load_kwargs["checkpoint_overrides"] = checkpoint_overrides
+    return load_kwargs
 
 
 def _hf_checkpoint_model_ref(repo_dir_name: str, repo_id: str) -> str:
     """Return a local HF cache path only when it exists, otherwise use the repo id."""
-    candidates = [str(checkpoint_root_path(*Path(repo_dir_name).parts)), *_cache_candidates(repo_dir_name)]
+    candidates = [
+        *(str(path) for path in checkpoint_root_candidates(*Path(repo_dir_name).parts)),
+        *_cache_candidates(repo_dir_name),
+    ]
     for candidate in candidates:
         if candidate and Path(candidate).expanduser().exists():
             return str(Path(candidate).expanduser())
@@ -341,8 +563,8 @@ def _hf_checkpoint_model_ref_at_revision(repo_dir_name: str, repo_id: str, revis
     """Return a local checkpoint only when its immutable revision is verifiable."""
 
     candidates = [
-        str(checkpoint_root_path(f"{repo_dir_name}-{revision[:8]}")),
-        str(checkpoint_root_path(*Path(repo_dir_name).parts)),
+        *(str(path) for path in checkpoint_root_candidates(f"{repo_dir_name}-{revision[:8]}")),
+        *(str(path) for path in checkpoint_root_candidates(*Path(repo_dir_name).parts)),
         *_cache_candidates(repo_dir_name, repo_id.replace("/", "--")),
     ]
     for raw_candidate in candidates:
@@ -361,6 +583,118 @@ def _hf_checkpoint_model_ref_at_revision(repo_dir_name: str, repo_id: str, revis
         if str(metadata.get("sha") or "").strip() == revision:
             return str(candidate)
     return repo_id
+
+
+def _gamma_world_default_load_kwargs() -> dict[str, Any]:
+    return {
+        "mode": "causal_few_step",
+        "model_path": _checkpoint_model_ref(
+            "Gamma-World",
+            "chijw--Gamma-World",
+            fallback="chijw/Gamma-World",
+        ),
+        "text_encoder_path": _checkpoint_model_ref(
+            "Cosmos-Reason1-7B",
+            "nvidia--Cosmos-Reason1-7B",
+            fallback="nvidia/Cosmos-Reason1-7B",
+        ),
+    }
+
+
+def _stable_video_infinity_default_ref() -> str:
+    filename = "version-2.0/SVI_Wan2.1-I2V-14B_lora_v2.0.safetensors"
+    return _checkpoint_model_ref(
+        f"vita-video-gen--svi-model/{filename}",
+        f"epfl-vita--svi-model/{filename}",
+        fallback="epfl-vita/svi-model",
+    )
+
+
+def _stable_video_infinity_default_load_kwargs() -> dict[str, Any]:
+    return {
+        "wan_model_dir": _checkpoint_model_ref(
+            "Wan2.1-I2V-14B-480P",
+            "Wan-AI--Wan2.1-I2V-14B-480P",
+            fallback="Wan-AI/Wan2.1-I2V-14B-480P",
+        ),
+        "svi_lora_path": _stable_video_infinity_default_ref(),
+        "dtype": "bfloat16",
+        "enable_vram_management": True,
+    }
+
+
+def _yume_1p5_default_ref() -> str:
+    return _checkpoint_model_ref(
+        "Yume-5B-720P",
+        "stdstu123--Yume-5B-720P",
+        fallback="stdstu123/Yume-5B-720P",
+    )
+
+
+def _yume_default_ref() -> str:
+    return _checkpoint_model_ref(
+        "Yume-I2V-540P",
+        "stdstu123--Yume-I2V-540P",
+        fallback="stdstu123/Yume-I2V-540P",
+    )
+
+
+def _pi3_default_ref() -> str:
+    try:
+        return str(
+            resolve_local_hf_model_path(
+                "yyfz233/Pi3X",
+                required_files=("config.json", "model.safetensors"),
+            )
+        )
+    except FileNotFoundError:
+        return "yyfz233/Pi3X"
+
+
+def _depth_anything_v2_default_ref() -> str:
+    repo_id = "depth-anything/Depth-Anything-V2-Large"
+    try:
+        return str(
+            resolve_local_hf_model_path(
+                repo_id,
+                required_files=("depth_anything_v2_vitl.pth",),
+            )
+        )
+    except FileNotFoundError:
+        return repo_id
+
+
+def _hydra_default_ref() -> str:
+    return _checkpoint_model_ref(
+        "H-EmbodVis--HyDRA/hydra.ckpt",
+        fallback=str(hfd_root_path() / "H-EmbodVis--HyDRA" / "hydra.ckpt"),
+    )
+
+
+def _hydra_default_load_kwargs() -> dict[str, str]:
+    return {
+        "base_model_path": _checkpoint_model_ref(
+            "Wan-AI--Wan2.1-T2V-1.3B",
+            "Wan2.1-T2V-1.3B",
+            fallback=str(checkpoint_root_path() / "Wan2.1-T2V-1.3B"),
+        )
+    }
+
+
+def _magicworld_default_ref() -> str:
+    return _checkpoint_model_ref(
+        "LuckyLiGY--MagicWorld",
+        fallback=str(hfd_root_path() / "LuckyLiGY--MagicWorld"),
+    )
+
+
+def _magicworld_default_load_kwargs() -> dict[str, str]:
+    return {
+        "base_model_path": _checkpoint_model_ref(
+            "alibaba-pai--Wan2.1-Fun-V1.1-1.3B-InP",
+            fallback=str(hfd_root_path() / "alibaba-pai--Wan2.1-Fun-V1.1-1.3B-InP"),
+        )
+    }
 
 
 def _official_repo_ref(*repo_names: str, fallback: str = "") -> str:
@@ -504,6 +838,76 @@ def _matrix_game_3_default_call_kwargs() -> Dict[str, Any]:
     }
 
 
+def _matrix_game_35_third_person_default_camera() -> Dict[str, Any]:
+    """Return a deterministic one-block c2w dolly trajectory for the Studio demo.
+
+    Matrix-Game 3.5 consumes 84 generated poses plus its anchor/padding poses.
+    Keeping the camera payload as JSON lets Workspace expose a complete default
+    without checking a generated binary NPZ file into the source tree; the
+    runtime materializes the mapping as ``camera.npz`` in the run directory.
+    Intrinsics are expressed in pixels of the 1152x1536 portrait demo image.
+    """
+
+    pose_count = 86
+    extrinsics_c2w = []
+    for index in range(pose_count):
+        progress = index / (pose_count - 1)
+        # A gentle right-and-forward camera dolly keeps the reference subject
+        # in frame while exercising non-static third-person camera control.
+        extrinsics_c2w.append(
+            [
+                [1.0, 0.0, 0.0, 0.08 * progress],
+                [0.0, 1.0, 0.0, 0.0],
+                [0.0, 0.0, 1.0, 0.35 * progress],
+                [0.0, 0.0, 0.0, 1.0],
+            ]
+        )
+    return {
+        "extrinsics_c2w": extrinsics_c2w,
+        "intrinsics": [1100.0, 1100.0, 576.0, 768.0],
+    }
+
+
+def _matrix_game_35_third_person_default_call_kwargs() -> Dict[str, Any]:
+    return {
+        "camera": _matrix_game_35_third_person_default_camera(),
+        "num_blocks": 1,
+        "steps": 25,
+        "cfg_scale": 5.0,
+        "seed": 3407,
+        "camera_convention": "c2w",
+        "fps": 16,
+    }
+
+
+def _matrix_game_35_default_ref(person: str) -> str:
+    filename = f"{person}-person.safetensors"
+    return _checkpoint_model_ref(
+        f"RiemannDynamics--Matrix-Game-3.5-Base/{filename}",
+        f"Matrix-Game-3.5/Matrix-Game-3.5-Base/{filename}",
+        f"Matrix-Game-3.5/{filename}",
+        fallback="RiemannDynamics/Matrix-Game-3.5-Base",
+    )
+
+
+def _matrix_game_35_default_load_kwargs() -> Dict[str, Any]:
+    return {
+        "required_components": {
+            "wan_dir": _checkpoint_model_ref(
+                "Wan-AI--Wan2.2-TI2V-5B",
+                "Wan2.2-TI2V-5B",
+                fallback="Wan-AI/Wan2.2-TI2V-5B",
+            ),
+            "da3_dir": _checkpoint_model_ref(
+                "depth-anything--DA3NESTED-GIANT-LARGE-1.1",
+                "DA3NESTED-GIANT-LARGE-1.1",
+                fallback="depth-anything/DA3NESTED-GIANT-LARGE-1.1",
+            ),
+            "python_executable": _worldfoundry_unified_python_executable(),
+        }
+    }
+
+
 def _matrix_game_3_default_load_kwargs() -> Dict[str, Any]:
     return {
         "required_components": {
@@ -531,9 +935,69 @@ def _matrix_game_1_default_load_kwargs() -> Dict[str, Any]:
     return {
         "conda_dir": _prefer_existing_model_ref(
             os.getenv("WORLDFOUNDRY_MATRIX_GAME_1_CONDA_DIR", ""),
+            str(_project_root().parent / "envs" / "matrix-game-1"),
+            str(_project_root().parent / "envs" / "matrix-game-1.0"),
             str(_project_root().parent / "conda" / "envs" / "worldfoundry-unified-cu128"),
             str(_project_root().parent / "conda" / "envs" / "matrix-game-1.0"),
         ),
+    }
+
+
+def _causal_rcm_default_load_kwargs() -> Dict[str, Any]:
+    checkpoint_dir = checkpoint_root_path("rcm")
+    return {
+        "checkpoint_dir": str(checkpoint_dir),
+        "dit_path": str(checkpoint_dir / "Causal_rCM_Wan2.1_T2V_1.3B_480p_TF-dCM-init_SF-DMD_c1-1_step4.pt"),
+        "vae_path": str(checkpoint_dir / "Wan2.1_VAE.pth"),
+        "text_encoder_path": str(checkpoint_dir / "models_t5_umt5-xxl-enc-bf16.pth"),
+    }
+
+
+def _causal_rcm_default_call_kwargs() -> Dict[str, Any]:
+    return {
+        # Frame-wise c1-1 chunks: the lowest-latency streaming schedule in the
+        # Causal-rCM recipe, with the recommended 4-step distilled midpoints.
+        "distilled": True,
+        "first_chunk_t": 1,
+        "chunk_t": 1,
+        "num_steps": 4,
+        "mid_t": ["15/16", "5/6", "5/8"],
+        "num_frames": 81,
+        "resolution": "480p",
+        "aspect_ratio": "16:9",
+        "model_size": "1.3B",
+        "seed": 0,
+        # The checkpoint is not bundled with WorldFoundry, so Studio plans by
+        # default. Set plan_only=False after staging a DiT checkpoint.
+        "plan_only": True,
+        "timeout_seconds": 21600,
+    }
+
+
+def _open_dreamer_default_load_kwargs() -> Dict[str, Any]:
+    load_kwargs: Dict[str, Any] = {"checkpoint_path": str(checkpoint_root_path("open-dreamer"))}
+    # Only pin an interpreter once the checkout's uv venv exists. Otherwise leave
+    # the key unset so the runtime adapter re-probes at call time.
+    venv_python = official_runtime_repo_path("open-dreamer-inference") / ".venv" / "bin" / "python"
+    if venv_python.is_file():
+        load_kwargs["python_executable"] = str(venv_python)
+    return load_kwargs
+
+
+def _open_dreamer_default_call_kwargs() -> Dict[str, Any]:
+    return {
+        # Matches the official larger-rollout example in the upstream inference README.
+        "context_frames": 16,
+        "horizon": 64,
+        "num_steps": 4,
+        "decode_chunk_size": 16,
+        "seed": 0,
+        "use_ema": True,
+        "camera_step_degrees": 5.0,
+        # Upstream publishes no downloadable weights, so Studio plans by default and
+        # only executes once a checkout plus checkpoint are staged.
+        "plan_only": True,
+        "timeout_seconds": 21600,
     }
 
 
@@ -817,10 +1281,10 @@ def _starvla_default_call_kwargs() -> Dict[str, Any]:
 
 
 def _wan_2p1_t2v_default_ref() -> str:
-    return _prefer_existing_model_ref(
-        str(checkpoint_root_path("Wan2.1-T2V-1.3B")),
-        *_cache_candidates("Wan-AI--Wan2.1-T2V-1.3B", "Wan2.1-T2V-1.3B"),
-        "Wan-AI/Wan2.1-T2V-1.3B",
+    return _checkpoint_model_ref(
+        "Wan-AI--Wan2.1-T2V-1.3B",
+        "Wan2.1-T2V-1.3B",
+        fallback="Wan-AI/Wan2.1-T2V-1.3B",
     )
 
 
@@ -829,6 +1293,14 @@ def _wan_2p1_i2v_default_ref() -> str:
         "Wan2.1-I2V-14B-480P",
         "Wan-AI--Wan2.1-I2V-14B-480P",
         fallback="Wan-AI/Wan2.1-I2V-14B-480P",
+    )
+
+
+def _wan_2p1_i2v_720p_default_ref() -> str:
+    return _checkpoint_model_ref(
+        "Wan-AI--Wan2.1-I2V-14B-720P",
+        "Wan2.1-I2V-14B-720P",
+        fallback="Wan-AI/Wan2.1-I2V-14B-720P",
     )
 
 
@@ -866,17 +1338,44 @@ def _dualcamctrl_default_load_kwargs() -> Dict[str, Any]:
     }
     base_model_path = Path(_dualcamctrl_base_default_ref()).expanduser()
     checkpoint_root = checkpoint_root_path()
+    tokenizer_root = Path(
+        _prefer_existing_model_ref(
+            *_cache_candidates("Wan-AI--Wan2.1-T2V-1.3B", "Wan-AI/Wan2.1-T2V-1.3B"),
+            str(checkpoint_root / "Wan-AI" / "Wan2.1-T2V-1.3B"),
+            str(checkpoint_root / "Wan-AI--Wan2.1-T2V-1.3B"),
+        )
+    )
+    clip_root = Path(
+        _prefer_existing_model_ref(
+            *_cache_candidates(
+                "Wan-AI--Wan2.1-I2V-14B-720P",
+                "Wan-AI--Wan2.1-I2V-14B-480P",
+                "alibaba-pai--Wan2.1-Fun-V1.1-1.3B-Control-Camera",
+            ),
+            str(checkpoint_root / "Wan-AI--Wan2.1-I2V-14B-720P"),
+            str(checkpoint_root / "Wan-AI--Wan2.1-I2V-14B-480P"),
+            str(checkpoint_root / "alibaba-pai--Wan2.1-Fun-V1.1-1.3B-Control-Camera"),
+            str(checkpoint_root / "Wan-AI" / "Wan2.1-I2V-14B-480P"),
+        )
+    )
+    dualcam_root = Path(
+        _prefer_existing_model_ref(
+            *_cache_candidates("FayeHongfeiZhang--DualCamCtrl", "FayeHongfeiZhang/DualCamCtrl"),
+            str(checkpoint_root / "FayeHongfeiZhang" / "DualCamCtrl"),
+            str(checkpoint_root / "FayeHongfeiZhang--DualCamCtrl"),
+        )
+    )
     local_files = (
         next(iter(base_model_path.glob("diffusion_pytorch_model*.safetensors")), None)
         if base_model_path.is_dir()
         else None,
-        checkpoint_root / "Wan-AI" / "Wan2.1-T2V-1.3B" / "models_t5_umt5-xxl-enc-bf16.pth",
-        checkpoint_root / "Wan-AI" / "Wan2.1-T2V-1.3B" / "Wan2.1_VAE.pth",
-        checkpoint_root / "Wan-AI" / "Wan2.1-T2V-1.3B" / "google" / "umt5-xxl",
-        checkpoint_root / "Wan-AI" / "Wan2.1-I2V-14B-480P" / "models_clip_open-clip-xlm-roberta-large-vit-huge-14.pth",
-        checkpoint_root / "FayeHongfeiZhang" / "DualCamCtrl" / "checkpoints" / "dualcamctrl_diffusion_transformer.pt",
+        tokenizer_root / "models_t5_umt5-xxl-enc-bf16.pth",
+        tokenizer_root / "Wan2.1_VAE.pth",
+        tokenizer_root / "google" / "umt5-xxl",
+        clip_root / "models_clip_open-clip-xlm-roberta-large-vit-huge-14.pth",
+        dualcam_root / "checkpoints" / "dualcamctrl_diffusion_transformer.pt",
     )
-    if all(path is not None and path.exists() for path in local_files):
+    if all(path is not None and Path(path).exists() for path in local_files):
         load_kwargs.update(
             base_model_path=str(base_model_path),
             local_model_path=str(checkpoint_root),
@@ -908,10 +1407,113 @@ def _dualcamctrl_default_call_kwargs() -> Dict[str, Any]:
 
 def _wan_2p2_default_ref() -> str:
     return _checkpoint_model_ref(
-        "Wan2.2-TI2V-5B",
         "Wan-AI--Wan2.2-TI2V-5B",
+        "Wan2.2-TI2V-5B",
         fallback="Wan-AI/Wan2.2-TI2V-5B",
     )
+
+
+def _wan_2p2_t2v_a14b_default_ref() -> str:
+    return _checkpoint_model_ref(
+        "Wan2.2-T2V-A14B",
+        "Wan-AI--Wan2.2-T2V-A14B",
+        fallback="Wan-AI/Wan2.2-T2V-A14B",
+    )
+
+
+def _wan_2p2_i2v_a14b_default_ref() -> str:
+    return _checkpoint_model_ref(
+        "Wan2.2-I2V-A14B",
+        "Wan-AI--Wan2.2-I2V-A14B",
+        fallback="Wan-AI/Wan2.2-I2V-A14B",
+    )
+
+
+def _ltx23_default_load_kwargs() -> Dict[str, Any]:
+    """Expose every runtime-required LTX-2.3 checkpoint component to Studio."""
+
+    return {
+        "required_components": {
+            "spatial_upsampler_path": _checkpoint_model_ref(
+                "LTX-2.3/ltx-2.3-spatial-upscaler-x2-1.1.safetensors",
+                "Lightricks--LTX-2.3/ltx-2.3-spatial-upscaler-x2-1.1.safetensors",
+                fallback=str(
+                    checkpoint_root_path(
+                        "Lightricks--LTX-2.3",
+                        "ltx-2.3-spatial-upscaler-x2-1.1.safetensors",
+                    )
+                ),
+            ),
+            "gemma_root": _checkpoint_model_ref(
+                "gemma-3-12b-it-qat-q4_0-unquantized",
+                "google--gemma-3-12b-it-qat-q4_0-unquantized",
+                fallback=str(checkpoint_root_path("gemma-3-12b-it-qat-q4_0-unquantized")),
+            ),
+        }
+    }
+
+
+def _ltx25_checkpoint_dir() -> str:
+    return _checkpoint_model_ref(
+        "Lightricks--LTX-2.5",
+        fallback=str(checkpoint_root_path("Lightricks--LTX-2.5")),
+    )
+
+
+def _ltx25_source_root() -> str:
+    return _first_existing_path(
+        _project_root() / "cache" / "generative_taxonomy" / "Lightricks--LTX-2",
+        official_runtime_repo_path("Lightricks--LTX-2"),
+    )
+
+
+def _ltx25_python_executable() -> str:
+    workspace_root = _project_root().parent
+    return _first_existing_path(
+        workspace_root / "conda" / "envs" / "ltx-2.5" / "bin" / "python",
+        workspace_root / "envs" / "ltx-2.5" / "bin" / "python",
+    )
+
+
+def _ltx25_default_load_kwargs() -> Dict[str, Any]:
+    """Map Studio directly to the official split LTX-2.5 runtime assets."""
+
+    checkpoint_dir = Path(_ltx25_checkpoint_dir())
+    return {
+        "required_components": {
+            "checkpoint_dir": str(checkpoint_dir),
+            "source_root": _ltx25_source_root(),
+            "python_executable": _ltx25_python_executable(),
+            "transformer_path": str(
+                checkpoint_dir
+                / "diffusion_models"
+                / "ltx-2.5-22b-distilled-transformer-bf16.safetensors"
+            ),
+            "text_encoder_path": str(
+                checkpoint_dir
+                / "text_encoders"
+                / "gemma4-12b-with-proj-ltx-2.5-bf16.safetensors"
+            ),
+            "video_vae_path": str(
+                checkpoint_dir / "vae" / "ltx-2.5-video-vae-bf16.safetensors"
+            ),
+            "audio_vae_path": str(
+                checkpoint_dir / "vae" / "ltx-2.5-audio-vae-bf16.safetensors"
+            ),
+            "spatial_upsampler_path": str(
+                checkpoint_dir
+                / "latent_upscale_models"
+                / "ltx-2.5-latent-spatial-upscaler-x2-bf16-1.0.safetensors"
+            ),
+            "duration_head_path": str(
+                checkpoint_dir
+                / "model_patches"
+                / "ltx-2.5-duration-head-bf16.safetensors"
+            ),
+            "offload_mode": "cpu",
+            "diffvae_optimization": "chunked_eager",
+        }
+    }
 
 
 def _official_video_load_params() -> tuple[str, ...]:
@@ -1028,6 +1630,72 @@ def _official_video_call_params() -> tuple[str, ...]:
     )
 
 
+def _native_diffusion_video_load_params() -> tuple[str, ...]:
+    return (
+        "model_path",
+        "required_components",
+        "device",
+        "model_id",
+        "checkpoint_path",
+        "checkpoint_overrides",
+        "release_text_encoders_after_encode",
+        "torch_dtype",
+        "weight_dtype",
+        "dtype",
+        "offload_mode",
+        "attention_backend",
+        "quantization",
+        "quantization_compute_dtype",
+        "quantization_exclude",
+        "fp8_min_features",
+        "fp8_scaling",
+        "scaling",
+        "keep_dense_fallback",
+        "use_fast_accum",
+        "fuse_qkv",
+        "qkv_strategy",
+        "qkv_split_threshold",
+        "inplace_residual",
+        "static_cross_kv",
+        "fused_rope",
+        "rope_precision",
+        "rms_norm_precision",
+        "compile",
+        "approximate_attention",
+        "vae_tiling",
+        *DISPATCH_LOAD_PARAMS,
+    )
+
+
+def _native_diffusion_video_call_params() -> tuple[str, ...]:
+    return (
+        "prompt",
+        "images",
+        "image",
+        "image_path",
+        "video",
+        "interactions",
+        "negative_prompt",
+        "output_path",
+        "output_dir",
+        "num_frames",
+        "frames",
+        "frame_num",
+        "height",
+        "width",
+        "num_inference_steps",
+        "infer_steps",
+        "guidance_scale",
+        "cfg_scale",
+        "embedded_guidance_scale",
+        "shift",
+        "seed",
+        "fps",
+        "output_type",
+        "return_dict",
+    )
+
+
 def _echo_infinity_default_ref() -> str:
     return _checkpoint_model_ref(
         "Echo-Infinity/echo_infinity.pt",
@@ -1037,14 +1705,25 @@ def _echo_infinity_default_ref() -> str:
 
 
 def _echo_infinity_default_load_kwargs() -> Dict[str, Any]:
-    wan_root = str(checkpoint_root_path())
+    wan_root = checkpoint_root_path()
+    wan_model_name = "Wan2.1-T2V-1.3B"
+    found = False
+    for candidate_root in checkpoint_root_candidates():
+        for candidate_name in ("Wan-AI--Wan2.1-T2V-1.3B", wan_model_name):
+            if (candidate_root / candidate_name).is_dir():
+                wan_root = candidate_root
+                wan_model_name = candidate_name
+                found = True
+                break
+        if found:
+            break
     return {
-        "wan_root": wan_root,
-        "wan_model_name": "Wan2.1-T2V-1.3B",
+        "wan_root": str(wan_root),
+        "wan_model_name": wan_model_name,
         "generator_ckpt": _echo_infinity_default_ref(),
         "model_kwargs": {
-            "model_name": "Wan2.1-T2V-1.3B",
-            "wan_root": wan_root,
+            "model_name": wan_model_name,
+            "wan_root": str(wan_root),
             "local_attn_size": 12,
             "timestep_shift": 5.0,
             "sink_size": 3,
@@ -1052,14 +1731,135 @@ def _echo_infinity_default_load_kwargs() -> Dict[str, Any]:
     }
 
 
+def _echo_memory_default_ref(checkpoint_file: str) -> str:
+    relative = Path(checkpoint_file)
+    return _checkpoint_model_ref(
+        str(Path("Echo-Team--Echo-Memory") / relative),
+        str(Path("Echo-Memory") / relative),
+        fallback=str(hfd_root_path("Echo-Team--Echo-Memory", *relative.parts)),
+    )
+
+
+def _echo_memory_context_k1_default_ref() -> str:
+    return _echo_memory_default_ref("context_k1/epoch-0.safetensors")
+
+
+def _echo_memory_default_load_kwargs() -> Dict[str, Any]:
+    return {
+        "wan_base_dir": _checkpoint_model_ref(
+            "Wan-AI--Wan2.1-T2V-1.3B",
+            "Wan2.1-T2V-1.3B",
+            fallback=str(hfd_root_path("Wan-AI--Wan2.1-T2V-1.3B")),
+        )
+    }
+
+
+def _echo_memory_context_k1_load_kwargs() -> Dict[str, Any]:
+    return _echo_memory_default_load_kwargs()
+
+
 def _recammaster_default_ref() -> str:
-    return _checkpoint_model_ref("ReCamMaster-Wan2.1", fallback="KlingTeam/ReCamMaster-Wan2.1")
+    return _checkpoint_model_ref(
+        "KlingTeam--ReCamMaster-Wan2.1",
+        "ReCamMaster-Wan2.1",
+        fallback="KlingTeam/ReCamMaster-Wan2.1",
+    )
 
 
 def _recammaster_default_load_kwargs() -> Dict[str, Any]:
     return {
         "wan_model_path": _wan_2p1_t2v_default_ref(),
         "recammaster_ckpt_path": _recammaster_default_ref(),
+    }
+
+
+def _vchitect2_default_ref() -> str:
+    return _checkpoint_model_ref(
+        "Vchitect--Vchitect-2.0-2B",
+        "Vchitect-2.0-2B",
+        fallback="Vchitect/Vchitect-2.0-2B",
+    )
+
+
+def _t2v_turbo_base_ref() -> str:
+    return _checkpoint_model_ref(
+        "VideoCrafter--VideoCrafter2/model.ckpt",
+        "VideoCrafter2/model.ckpt",
+        fallback="VideoCrafter/VideoCrafter2",
+    )
+
+
+def _t2v_turbo_lora_ref() -> str:
+    return _checkpoint_model_ref(
+        "jiachenli-ucsb--T2V-Turbo-VC2/unet_lora.pt",
+        "T2V-Turbo-VC2/unet_lora.pt",
+        fallback="jiachenli-ucsb/T2V-Turbo-VC2",
+    )
+
+
+def _t2v_turbo_default_load_kwargs() -> Dict[str, Any]:
+    return {
+        "base_checkpoint": _t2v_turbo_base_ref(),
+        "lora_checkpoint": _t2v_turbo_lora_ref(),
+    }
+
+
+def _versecrafter_default_ref() -> str:
+    return _checkpoint_model_ref(
+        "TencentARC--VerseCrafter",
+        "VerseCrafter",
+        fallback="TencentARC/VerseCrafter",
+    )
+
+
+def _versecrafter_default_load_kwargs() -> Dict[str, Any]:
+    return {
+        "base_model_path": _checkpoint_model_ref(
+            "Wan-AI--Wan2.1-T2V-14B",
+            "Wan2.1-T2V-14B",
+            fallback="Wan-AI/Wan2.1-T2V-14B",
+        ),
+        "moge_model_path": _checkpoint_model_ref(
+            "moge-2-vitl-normal",
+            "Ruicheng--moge-2-vitl-normal",
+            fallback="Ruicheng/moge-2-vitl-normal",
+        ),
+    }
+
+
+def _cameractrl_default_ref() -> str:
+    return _checkpoint_model_ref(
+        "hehao13--CameraCtrl/CameraCtrl.ckpt",
+        "CameraCtrl/CameraCtrl.ckpt",
+        fallback="hehao13/CameraCtrl",
+    )
+
+
+def _cameractrl_default_load_kwargs() -> Dict[str, Any]:
+    sd15_path = _checkpoint_model_ref(
+        "stable-diffusion-v1-5--stable-diffusion-v1-5",
+        "stable-diffusion-v1-5",
+        fallback="stable-diffusion-v1-5/stable-diffusion-v1-5",
+    )
+    return {
+        "sd15_path": sd15_path,
+        "pose_adaptor_ckpt": _cameractrl_default_ref(),
+        "image_lora_ckpt": _checkpoint_model_ref(
+            "hehao13--CameraCtrl/RealEstate10K_LoRA.ckpt",
+            "CameraCtrl/RealEstate10K_LoRA.ckpt",
+            fallback="hehao13/CameraCtrl",
+        ),
+        "motion_module_ckpt": _checkpoint_model_ref(
+            "guoyww--animatediff/v3_sd15_mm.ckpt",
+            "animatediff/v3_sd15_mm.ckpt",
+            fallback="guoyww/animatediff",
+        ),
+        "motion_adapter_ckpt": _checkpoint_model_ref(
+            "guoyww--animatediff/v3_sd15_adapter.ckpt",
+            "animatediff/v3_sd15_adapter.ckpt",
+            fallback="guoyww/animatediff",
+        ),
+        "unet_subfolder": "unet",
     }
 
 
@@ -1072,14 +1872,35 @@ def _cosmos_predict2p5_default_ref() -> str:
     )
 
 
+def _cosmos_predict2_default_ref() -> str:
+    return _checkpoint_model_ref(
+        "nvidia--Cosmos-Predict2-2B-Video2World",
+        "Cosmos-Predict2-2B-Video2World",
+        fallback="nvidia/Cosmos-Predict2-2B-Video2World",
+    )
+
+
+def _cosmos_predict2_default_load_kwargs() -> Dict[str, Any]:
+    model_root = Path(_cosmos_predict2_default_ref())
+    return {
+        "checkpoint_path": str(model_root),
+        "text_encoder_model_path": str(model_root / "text_encoder"),
+        "text_tokenizer_path": str(model_root / "tokenizer"),
+        "offload_mode": "block",
+    }
+
+
 def _cosmos_predict2p5_default_load_kwargs() -> Dict[str, Any]:
+    model_root = _cosmos_predict2p5_default_ref()
     return {
         "required_components": {
             "text_encoder_model_path": _checkpoint_model_ref(
                 "Cosmos-Reason1-7B",
                 fallback="nvidia/Cosmos-Reason1-7B",
             ),
-            "vae_model_path": _wan_2p1_t2v_default_ref(),
+            # The Cosmos checkpoint ships its own tokenizer.pth VAE. A Wan
+            # checkpoint directory does not satisfy the Cosmos codec contract.
+            "vae_model_path": model_root,
         }
     }
 
@@ -1097,8 +1918,41 @@ def _cosmos_predict2p5_default_call_kwargs() -> Dict[str, Any]:
     }
 
 
+def _cosmos_transfer2p5_default_ref() -> str:
+    return _checkpoint_model_ref(
+        "nvidia--Cosmos-Transfer2.5-2B",
+        "Cosmos-Transfer2.5-2B",
+        fallback="nvidia/Cosmos-Transfer2.5-2B",
+    )
+
+
+def _cosmos_transfer2p5_default_load_kwargs() -> Dict[str, Any]:
+    return {
+        "required_components": {
+            "text_encoder_model_path": _checkpoint_model_ref(
+                "Cosmos-Reason1-7B",
+                fallback="nvidia/Cosmos-Reason1-7B",
+            ),
+            "vae_model_path": _cosmos_predict2p5_default_ref(),
+        }
+    }
+
+
+def _cosmos_transfer2p5_default_call_kwargs() -> Dict[str, Any]:
+    return {
+        **_cosmos_predict2p5_default_call_kwargs(),
+        "controlnet_variant": "edge",
+        "control_context_scale": 1.0,
+        "output_type": "video",
+    }
+
+
 def _longcat_video_default_ref() -> str:
-    return _checkpoint_model_ref("LongCat-Video", fallback="meituan-longcat/LongCat-Video")
+    return _checkpoint_model_ref(
+        "LongCat-Video",
+        "meituan-longcat--LongCat-Video",
+        fallback="meituan-longcat/LongCat-Video",
+    )
 
 
 def _lingbot_video_default_ref() -> str:
@@ -1124,6 +1978,89 @@ def _sana_wm_default_ref() -> str:
     )
 
 
+def _sana_wm_streaming_default_ref() -> str:
+    return _checkpoint_model_ref(
+        "Efficient-Large-Model--SANA-WM_streaming",
+        "SANA-WM_streaming",
+        fallback="Efficient-Large-Model/SANA-WM_streaming",
+    )
+
+
+def _sana_wm_streaming_default_load_kwargs() -> Dict[str, Any]:
+    streaming_root = _sana_wm_streaming_default_ref()
+    gemma_root = _checkpoint_model_ref(
+        "Efficient-Large-Model--gemma-2-2b-it",
+        fallback="Efficient-Large-Model/gemma-2-2b-it",
+    )
+    return {
+        "checkpoint_overrides": {
+            "dit": streaming_root,
+            "text-encoder": gemma_root,
+            "tokenizer": gemma_root,
+            "codec": streaming_root,
+            "refiner": streaming_root,
+            "refiner-connectors": streaming_root,
+            "refiner-text-encoder": streaming_root,
+        }
+    }
+
+
+def _moverse_default_ref() -> str:
+    return _checkpoint_model_ref(
+        "Orange-3DV-Team--MoVerse",
+        fallback="Orange-3DV-Team/MoVerse",
+    )
+
+
+def _moverse_default_load_kwargs() -> Dict[str, Any]:
+    return {
+        "flux_path": _checkpoint_model_ref(
+            "black-forest-labs--FLUX.1-Fill-dev",
+            "FLUX.1-Fill-dev",
+            fallback="black-forest-labs/FLUX.1-Fill-dev",
+        ),
+        "da3_path": _checkpoint_model_ref(
+            "depth-anything--DA3NESTED-GIANT-LARGE-1.1",
+            "DA3NESTED-GIANT-LARGE-1.1",
+            fallback="depth-anything/DA3NESTED-GIANT-LARGE-1.1",
+        ),
+        "wan_path": _checkpoint_model_ref(
+            "Wan-AI--Wan2.1-T2V-1.3B",
+            "Wan2.1-T2V-1.3B",
+            fallback="Wan-AI/Wan2.1-T2V-1.3B",
+        ),
+    }
+
+
+def _dreamdojo_default_ref() -> str:
+    return _checkpoint_model_ref(
+        "nvidia--DreamDojo/2B_GR1_post-train",
+        fallback="nvidia/DreamDojo",
+    )
+
+
+def _dreamdojo_dataset_path() -> str:
+    return str(
+        checkpoint_root_path(
+            "nvidia--PhysicalAI-Robotics-GR00T-Teleop-GR1",
+            "GR1_robot",
+        )
+    )
+
+
+def _dreamdojo_default_load_kwargs() -> Dict[str, Any]:
+    root = Path(_dreamdojo_default_ref())
+    checkpoint_dir = root / "iter_000050000"
+    return {
+        "dataset_path": _dreamdojo_dataset_path(),
+        # Matrix readiness audits these exact DCP members. The runtime ignores
+        # this audit-only option and consumes checkpoints_dir/latest_checkpoint.txt.
+        "checkpoint_shards": [
+            str(checkpoint_dir / "model" / f"__{index}_0.distcp") for index in range(8)
+        ],
+    }
+
+
 def _dreamx_world_default_ref() -> str:
     return _checkpoint_model_ref(
         "DreamX-World-5B-Cam",
@@ -1143,6 +2080,7 @@ def _dreamx_world_ar_default_ref() -> str:
 def _dreamx_world_ar_default_load_kwargs() -> Dict[str, Any]:
     return {
         "wan_model_path": _checkpoint_model_ref(
+            "Wan-AI--Wan2.2-TI2V-5B",
             "Wan2.2-TI2V-5B",
             fallback="Wan-AI/Wan2.2-TI2V-5B",
         ),
@@ -1152,6 +2090,7 @@ def _dreamx_world_ar_default_load_kwargs() -> Dict[str, Any]:
 def _dreamx_world_default_load_kwargs() -> Dict[str, Any]:
     return {
         "wan_model_path": _checkpoint_model_ref(
+            "Wan-AI--Wan2.2-TI2V-5B",
             "Wan2.2-TI2V-5B",
             fallback="Wan-AI/Wan2.2-TI2V-5B",
         ),
@@ -1185,7 +2124,12 @@ def _motionctrl_default_ref() -> str:
 
 
 def _astra_default_ref() -> str:
-    return _checkpoint_model_ref("Astra", "custom--Astra", fallback="EvanEternal/Astra")
+    return _checkpoint_model_ref(
+        "Astra",
+        "custom--Astra",
+        "EvanEternal--Astra",
+        fallback="EvanEternal/Astra",
+    )
 
 
 def _astra_default_load_kwargs() -> Dict[str, Any]:
@@ -1241,25 +2185,231 @@ def _pusa_vidgen_default_load_kwargs() -> Dict[str, Any]:
             "Wan-AI--Wan2.2-T2V-A14B",
             fallback="Wan-AI/Wan2.2-T2V-A14B",
         ),
-        "lightx2v_root": _checkpoint_model_ref("Wan2.2-Lightning", fallback="lightx2v/Wan2.2-Lightning"),
+        "lightx2v_root": _checkpoint_model_ref(
+            "lightx2v--Wan2.2-Lightning",
+            "Wan2.2-Lightning",
+            fallback="lightx2v/Wan2.2-Lightning",
+        ),
         "python_executable": _current_python_executable(),
         "runner_version": "v1",
     }
 
 
 def _sana_checkpoint_ref(repo_dir: str, checkpoint_name: str, repo_id: str) -> str:
+    hfd_repo_dir = repo_id.replace("/", "--")
     return _checkpoint_model_ref(
+        f"{hfd_repo_dir}/checkpoints/{checkpoint_name}",
         f"{repo_dir}/checkpoints/{checkpoint_name}",
         f"{repo_dir}/{checkpoint_name}",
         fallback=f"hf://{repo_id}/checkpoints/{checkpoint_name}",
     )
 
 
+def _sana_variant_default_size(variant: Any) -> tuple[int, int]:
+    if variant.default_height is not None and variant.default_width is not None:
+        return int(variant.default_height), int(variant.default_width)
+    if variant.resolution == "720p":
+        return 720, 1280
+    if variant.resolution == "480p":
+        return 480, 832
+    if str(variant.resolution).endswith("px"):
+        side = int(str(variant.resolution).removesuffix("px"))
+        return side, side
+    return 1024, 1024
+
+
+def _sana_variant_checkpoint_ref(variant: Any) -> str:
+    filename = Path(str(variant.model_path).split("?", 1)[0]).name
+    repo_dir = str(variant.repo_id).rsplit("/", 1)[-1]
+    return _sana_checkpoint_ref(repo_dir, filename, variant.repo_id)
+
+
+@lru_cache(maxsize=1)
+def _sana_image_aliases() -> tuple[str, ...]:
+    from worldfoundry.base_models.diffusion_model.recipes.sana_variants import SANA_ALIASES
+
+    image_ids = _sana_folded_studio_model_ids()
+    aliases = list(sorted(image_ids))
+    for alias, target in SANA_ALIASES.items():
+        if alias != "sana" and target in image_ids:
+            aliases.append(alias)
+    return _coerce_aliases(*aliases)
+
+
+def _sana_studio_parent_id(model_id: str) -> str | None:
+    """Return ``sana`` when ``model_id`` is a folded image-family checkpoint."""
+
+    from worldfoundry.base_models.diffusion_model.recipes.sana_variants import SANA_ALIASES
+
+    key = _normalize_model_id(model_id)
+    folded = _sana_folded_studio_model_ids()
+    if key in folded:
+        return "sana"
+    target = SANA_ALIASES.get(key)
+    if target in folded:
+        return "sana"
+    return None
+
+
+def _sana_default_image_variant() -> Any:
+    from worldfoundry.base_models.diffusion_model.recipes.sana_variants import SANA_VARIANTS
+
+    return SANA_VARIANTS[SANA_DEFAULT_IMAGE_VARIANT_ID]
+
+
+def _sana_image_default_ref() -> str:
+    return _sana_variant_checkpoint_ref(_sana_default_image_variant())
+
+
+def _sana_image_workspace_variants() -> tuple[Dict[str, Any], ...]:
+    from worldfoundry.base_models.diffusion_model.recipes.sana_variants import SANA_VARIANTS
+
+    rows: list[Dict[str, Any]] = []
+    for variant in SANA_VARIANTS.values():
+        if variant.runner not in _SANA_IMAGE_RUNNERS:
+            continue
+        height, width = _sana_variant_default_size(variant)
+        rows.append(
+            {
+                "variant_id": variant.model_id,
+                "label": variant.display_name,
+                "status": "checkpoint-configured",
+                "checkpoints": (
+                    {
+                        "role": "primary",
+                        "uri": _sana_variant_checkpoint_ref(variant),
+                        "required": True,
+                        "status": "checkpoint-configured",
+                    },
+                ),
+                "load_kwargs": {"model_id": variant.model_id},
+                "call_kwargs": {
+                    "height": height,
+                    "width": width,
+                    "num_inference_steps": variant.default_steps or 20,
+                    "guidance_scale": variant.default_cfg_scale or 4.5,
+                    "seed": 42,
+                },
+                "notes": (variant.notes,) if variant.notes else (),
+            }
+        )
+    return tuple(rows)
+
+
+def _cogvideox_variant_specs() -> dict[str, Dict[str, Any]]:
+    return {
+        "cogvideox_2b_t2v": {
+            "generation_type": "t2v",
+            "aliases": ("cogvideox-2b-t2v", "cogvideox-2b"),
+            "label": "2B T2V",
+            "default_prompt": "A futuristic city street at sunset with reflective glass towers, clean motion, and cinematic lighting.",
+            "default_call_kwargs": {
+                "fps": 8,
+                "height": 480,
+                "num_frames": 49,
+                "num_inference_steps": 50,
+                "guidance_scale": 6.0,
+                "seed": 42,
+                "width": 720,
+            },
+            "default_model_ref": lambda: _checkpoint_model_ref(
+                "CogVideoX-2b",
+                "THUDM--CogVideoX-2b",
+                fallback="THUDM/CogVideoX-2b",
+            ),
+        },
+        "cogvideox_5b_i2v": {
+            "generation_type": "i2v",
+            "aliases": ("cogvideox-5b-i2v",),
+            "label": "5B I2V",
+            "default_prompt": (
+                "A young man holding a bright sparkler gently turns his head and smiles as "
+                "sparks scatter through the night air, with a subtle cinematic camera dolly, "
+                "stable facial details, and natural motion."
+            ),
+            "default_input_path": str(_data_path("test_cases", "studio_demo", "00", "image.jpg")),
+            "default_call_kwargs": {
+                "fps": 8,
+                "guidance_scale": 6.0,
+                "height": 480,
+                "num_frames": 49,
+                "num_inference_steps": 50,
+                "seed": 45,
+                "width": 720,
+            },
+            "default_model_ref": lambda: _checkpoint_model_ref(
+                "CogVideoX-5b-I2V",
+                "THUDM--CogVideoX-5b-I2V",
+                fallback="THUDM/CogVideoX-5b-I2V",
+            ),
+        },
+        "cogvideox_5b_t2v": {
+            "generation_type": "t2v",
+            "aliases": ("cogvideox", "cogvideox-5b-t2v", "cogvideox-5b"),
+            "label": "5B T2V",
+            "default_prompt": "A futuristic city street at sunset with reflective glass towers, clean motion, and cinematic lighting.",
+            "default_call_kwargs": {
+                "fps": 8,
+                "height": 480,
+                "num_frames": 49,
+                "num_inference_steps": 50,
+                "guidance_scale": 6.0,
+                "seed": 43,
+                "width": 720,
+            },
+            "default_model_ref": lambda: _checkpoint_model_ref(
+                "CogVideoX-5b",
+                "THUDM--CogVideoX-5b",
+                fallback="THUDM/CogVideoX-5b",
+            ),
+        },
+    }
+
+
+def _cogvideox_aliases() -> tuple[str, ...]:
+    aliases = [COGVIDEOX_STUDIO_PARENT_ID, *sorted(_cogvideox_folded_studio_model_ids())]
+    for spec in _cogvideox_variant_specs().values():
+        aliases.extend(spec.get("aliases") or ())
+    return _coerce_aliases(*aliases)
+
+
+def _cogvideox_workspace_variants() -> tuple[Dict[str, Any], ...]:
+    rows: list[Dict[str, Any]] = []
+    for variant_id, spec in _cogvideox_variant_specs().items():
+        model_ref = str(_resolve_override_value(spec.get("default_model_ref", "")) or "")
+        rows.append(
+            {
+                "variant_id": variant_id,
+                "label": spec.get("label") or variant_id,
+                "status": "checkpoint-configured",
+                "workload_type": spec.get("generation_type") or "t2v",
+                "default_prompt": spec.get("default_prompt") or "",
+                "default_input_path": spec.get("default_input_path") or "",
+                "aliases": tuple(spec.get("aliases") or ()),
+                "checkpoints": (
+                    (
+                        {
+                            "role": "primary",
+                            "uri": model_ref,
+                            "required": True,
+                            "status": "checkpoint-configured",
+                        },
+                    )
+                    if model_ref
+                    else ()
+                ),
+                "load_kwargs": {},
+                "call_kwargs": dict(_resolve_override_value(spec.get("default_call_kwargs", {})) or {}),
+            }
+        )
+    return tuple(rows)
+
+
 def _sana_video_480p_default_ref() -> str:
-    return _checkpoint_model_ref(
-        "Sana-Video_2B_480p_diffusers",
-        "hfd/Efficient-Large-Model--Sana-Video_2B_480p_diffusers",
-        fallback="Efficient-Large-Model/Sana-Video_2B_480p_diffusers",
+    return _sana_checkpoint_ref(
+        "SANA-Video_2B_480p",
+        "SANA_Video_2B_480p.pth",
+        "Efficient-Large-Model/SANA-Video_2B_480p",
     )
 
 
@@ -1269,6 +2419,45 @@ def _sana_video_720p_default_ref() -> str:
         "SANA_Video_2B_720p.pth",
         "Efficient-Large-Model/SANA-Video_2B_720p",
     )
+
+
+def _sana_streaming_default_ref(*, bidirectional: bool) -> str:
+    repo_dir = (
+        "Efficient-Large-Model--SANA-Streaming_bidirectional"
+        if bidirectional
+        else "Efficient-Large-Model--SANA-Streaming"
+    )
+    repo_id = (
+        "Efficient-Large-Model/SANA-Streaming_bidirectional"
+        if bidirectional
+        else "Efficient-Large-Model/SANA-Streaming"
+    )
+    return _checkpoint_model_ref(repo_dir, fallback=repo_id)
+
+
+def _sana_streaming_default_load_kwargs(*, bidirectional: bool) -> Dict[str, Any]:
+    dit_root = _sana_streaming_default_ref(bidirectional=bidirectional)
+    gemma_root = _checkpoint_model_ref(
+        "Efficient-Large-Model--gemma-2-2b-it",
+        fallback="Efficient-Large-Model/gemma-2-2b-it",
+    )
+    codec_root = _checkpoint_model_ref(
+        "Lightricks--LTX-2",
+        fallback="Lightricks/LTX-2",
+    )
+    return {
+        "model_id": (
+            "sana-streaming-bidirectional-2b-720p"
+            if bidirectional
+            else "sana-streaming-2b-720p"
+        ),
+        "checkpoint_overrides": {
+            "dit": dit_root,
+            "text-encoder": gemma_root,
+            "tokenizer": gemma_root,
+            "codec": codec_root,
+        },
+    }
 
 
 def _longsana_video_480p_default_ref() -> str:
@@ -1302,7 +2491,10 @@ def _sana_video_call_params() -> tuple[str, ...]:
 
 
 def _longsana_video_call_params() -> tuple[str, ...]:
-    return tuple(param for param in _sana_video_call_params() if param != "cfg_scale")
+    return (
+        "negative_prompt",
+        *(param for param in _sana_video_call_params() if param != "cfg_scale"),
+    )
 
 
 def _sana_video_load_params() -> tuple[str, ...]:
@@ -1345,6 +2537,7 @@ def _animatediff_default_load_kwargs() -> Dict[str, Any]:
         "motion_module_path": _animatediff_default_ref(),
         "base_model_path": _checkpoint_model_ref(
             "stable-diffusion-v1-5",
+            "stable-diffusion-v1-5--stable-diffusion-v1-5",
             "runwayml--stable-diffusion-v1-5",
             fallback="runwayml/stable-diffusion-v1-5",
         ),
@@ -1372,40 +2565,98 @@ def _skyreels_v3_default_ref() -> str:
 
 
 def _kairos_sensenova_default_ref() -> str:
-    return _checkpoint_model_ref("kairos-sensenova", fallback="Sensenova/kairos-sensenova")
+    return _checkpoint_model_ref(
+        "kairos-agi--kairos-sensenova-4B-480P-pretrained",
+        "kairos-sensenova-4B-480P-pretrained",
+        fallback="kairos-agi/kairos-sensenova-4B-480P-pretrained",
+    )
 
 
 def _kairos_sensenova_default_load_kwargs() -> Dict[str, Any]:
+    model_root = Path(_kairos_sensenova_default_ref())
     return {
         "runtime_root": "",
-        "models_root": _kairos_sensenova_default_ref(),
+        "models_root": str(model_root),
+        "variant": "pretrained",
+        "pretrained_dit": str(model_root / "kairos-common-4B-480P.safetensors"),
+        "text_encoder_path": _checkpoint_model_ref(
+            "Qwen--Qwen2.5-VL-7B-Instruct",
+            fallback="Qwen/Qwen2.5-VL-7B-Instruct",
+        ),
+        "vae_path": _checkpoint_model_ref(
+            "Wan-AI--Wan2.1-T2V-14B/Wan2.1_VAE.pth",
+            fallback="Wan-AI/Wan2.1-T2V-14B",
+        ),
     }
 
 
 def _solaris_default_ref() -> str:
-    return "https://github.com/solaris-wm/solaris"
+    # The GitHub URL identifies the vendored runtime source, not a loadable
+    # checkpoint.  Keep model_ref local so readiness checks and the runtime
+    # both address the official Orbax snapshot.
+    return _checkpoint_model_ref(
+        "nyu-visionx--solaris",
+        "solaris",
+        fallback=str(checkpoint_root_path("nyu-visionx--solaris")),
+    )
 
 
 def _solaris_default_load_kwargs() -> Dict[str, Any]:
-    runtime_root = ""
-    checkpoint_root = str(checkpoint_root_path("solaris"))
+    runtime_root = str(
+        _project_root()
+        / "worldfoundry"
+        / "synthesis"
+        / "visual_generation"
+        / "solaris"
+        / "solaris_runtime"
+    )
+    checkpoint_root = _solaris_default_ref()
+    eval_data_root = _checkpoint_model_ref(
+        "nyu-visionx--solaris-eval-datasets",
+        "solaris/datasets",
+        fallback=str(checkpoint_root_path("nyu-visionx--solaris-eval-datasets")),
+    )
     return {
         "required_components": {
             "runtime_root": runtime_root,
             "pretrained_model_dir": checkpoint_root,
-            "eval_data_dir": str(checkpoint_root_path("solaris", "datasets")),
+            "eval_data_dir": eval_data_root,
             "output_dir": str(_project_root() / "tmp" / "solaris_output"),
             "checkpoint_dir": checkpoint_root,
             "jax_cache_dir": str(_project_root() / "tmp" / "solaris_jax_cache"),
-            "model_weights_path": str(checkpoint_root_path("solaris", "solaris.pt")),
+            "model_weights_path": str(Path(checkpoint_root) / "solaris.pt"),
             "python_executable": _worldfoundry_unified_python_executable(),
         }
     }
 
 
 def _wow_default_ref() -> str:
-    local = checkpoint_root_path("WoW-1-Wan-14B-600k")
-    return str(local) if local.exists() else "WoW-world-model/WoW-1-Wan-14B-600k"
+    return _hf_checkpoint_model_ref(
+        "X-Humanoid--WoW-1-Wan-14B-600k",
+        "X-Humanoid/WoW-1-Wan-14B-600k",
+    )
+
+
+def _minwm_default_ref() -> str:
+    return _hf_checkpoint_model_ref("MIN-Lab--minWM", "MIN-Lab/minWM")
+
+
+def _minwm_hy_default_load_kwargs() -> Dict[str, Any]:
+    return {
+        "base_model_path": _hf_checkpoint_model_ref(
+            "tencent--HunyuanVideo-1.5",
+            "tencent/HunyuanVideo-1.5",
+        )
+    }
+
+
+def _minwm_wan_default_load_kwargs() -> Dict[str, Any]:
+    return {
+        "base_model_path": _hf_checkpoint_model_ref(
+            "Wan-AI--Wan2.1-T2V-1.3B",
+            "Wan-AI/Wan2.1-T2V-1.3B",
+        )
+    }
 
 
 def _gr00t_default_ref() -> str:
@@ -1654,19 +2905,29 @@ def _molmoact2_think_libero_call_kwargs() -> Dict[str, Any]:
 
 
 def _depth_anything_v3_default_ref() -> str:
-    return _checkpoint_model_ref(
-        "DA3-LARGE",
-        "DA3-LARGE-1.1",
-        fallback="depth-anything/DA3-LARGE",
-    )
+    repo_id = "depth-anything/DA3NESTED-GIANT-LARGE-1.1"
+    try:
+        return str(
+            resolve_local_hf_model_path(
+                repo_id,
+                required_files=("config.json", "model.safetensors"),
+            )
+        )
+    except FileNotFoundError:
+        return repo_id
 
 
 def _inspatio_world_default_ref() -> str:
-    return _checkpoint_model_ref(
-        "world/InSpatio-World-1.3B.safetensors",
-        "InSpatio-World-1.3B/InSpatio-World-1.3B.safetensors",
-        fallback="InSpatio-World-1.3B",
-    )
+    repo_id = "inspatio/world"
+    try:
+        return str(
+            resolve_local_hf_model_path(
+                repo_id,
+                required_files=("InSpatio-World-1.3B.safetensors",),
+            )
+        )
+    except FileNotFoundError:
+        return repo_id
 
 
 def _inspatio_world_default_load_kwargs() -> Dict[str, Any]:
@@ -1728,9 +2989,10 @@ def _worldcam_default_call_kwargs() -> Dict[str, Any]:
 
 
 def _neoverse_default_ref() -> str:
-    return _prefer_existing_model_ref(
-        *_cache_candidates("custom--NeoVerse", "NeoVerse"),
-        "Yuppie1204/NeoVerse",
+    return _checkpoint_model_ref(
+        "Yuppie1204--NeoVerse",
+        "NeoVerse",
+        fallback="Yuppie1204/NeoVerse",
     )
 
 
@@ -1752,6 +3014,17 @@ def _neoverse_default_call_kwargs() -> Dict[str, Any]:
         "static_scene": False,
         "num_inference_steps": 4,
         "cfg_scale": 1.0,
+    }
+
+
+def _neoverse_default_load_kwargs() -> Dict[str, Any]:
+    return {
+        "height": 336,
+        "width": 560,
+        "num_inference_steps": 4,
+        "cfg_scale": 1.0,
+        "disable_lora": False,
+        "enable_vram_management": True,
     }
 
 
@@ -1784,10 +3057,14 @@ def lingbot_world_fast_load_kwargs() -> Dict[str, Any]:
 
 
 def _infinite_world_default_ref() -> str:
-    return _prefer_existing_model_ref(
-        *_cache_candidates("MeiGen-AI--Infinite-World", "Infinite-World"),
-        "MeiGen-AI/Infinite-World",
-    )
+    candidates = _cache_candidates("MeiGen-AI--Infinite-World", "Infinite-World")
+    for value in candidates:
+        candidate = Path(value).expanduser()
+        if (candidate / "checkpoints" / "infinite_world_model.ckpt").is_file():
+            return str(candidate.resolve())
+        if candidate.name == "checkpoints" and (candidate / "infinite_world_model.ckpt").is_file():
+            return str(candidate.parent.resolve())
+    return "MeiGen-AI/Infinite-World"
 
 
 def _stream_vggt_default_ref() -> str:
@@ -1962,11 +3239,9 @@ def _lingbot_map_default_ref() -> str:
 
 
 _IN_TREE_REPO_PARTS: dict[str, tuple[str, ...]] = {
-    "4DGaussians": ("base_models", "three_dimensions", "general_3d", "four_d_gaussians", "four_d_gaussians_runtime"),
     "lagernvs": ("base_models", "three_dimensions", "general_3d", "lagernvs", "lagernvs_runtime"),
     "monst3r": ("base_models", "three_dimensions", "general_3d", "monst3r"),
     "MVDiffusion": ("base_models", "three_dimensions", "general_3d", "mvdiffusion", "mvdiffusion_runtime"),
-    "shape-of-motion": ("base_models", "three_dimensions", "general_3d", "shape_of_motion", "shape_of_motion_runtime"),
     "stable-virtual-camera": (
         "base_models",
         "three_dimensions",
@@ -2027,6 +3302,25 @@ def _three_d_four_d_runtime_call_kwargs(**kwargs: Any) -> dict[str, Any]:
     return call_kwargs
 
 
+def _monst3r_default_call_kwargs() -> dict[str, Any]:
+    checkpoint_dir = checkpoint_root_path("MonST3R_PO-TA-S-W_ViTLarge_BaseDecoder_512_dpt")
+    legacy_checkpoint = checkpoint_dir / "MonST3R_PO-TA-S-W_ViTLarge_BaseDecoder_512_dpt.pth"
+    if legacy_checkpoint.is_file():
+        weights = legacy_checkpoint
+    elif (checkpoint_dir / "config.json").is_file() and (checkpoint_dir / "model.safetensors").is_file():
+        weights = checkpoint_dir
+    else:
+        weights = legacy_checkpoint
+    return _three_d_four_d_runtime_call_kwargs(
+        weights=str(weights),
+        seq_name="worldfoundry",
+        niter=300,
+        flow_loss_weight=0.0,
+        skip_pair_dynamic_mask=True,
+        silent=True,
+    )
+
+
 def _geometry_prior_call_params(*model_params: str) -> tuple[str, ...]:
     base_params = (
         "images",
@@ -2075,10 +3369,37 @@ def _geometry_prior_video_fixture() -> str:
 
 
 def _cut3r_default_ref() -> str:
-    return _prefer_existing_model_ref(
-        *_cache_candidates("cut3r", "CUT3R", "CUT3R--cut3r"),
-        "cut3r_512_dpt_4_64",
+    return _checkpoint_model_ref(
+        "cut3r",
+        "CUT3R",
+        "liguang0115--cut3r",
+        "hfd/liguang0115--cut3r",
+        fallback="liguang0115/cut3r",
     )
+
+
+def _show_o_default_ref() -> str:
+    return _checkpoint_model_ref(
+        "showlab--show-o",
+        "show-o",
+        fallback="showlab/show-o",
+    )
+
+
+def _show_o_default_load_kwargs() -> dict[str, Any]:
+    return {
+        "vq_model_path": _checkpoint_model_ref(
+            "showlab--magvitv2",
+            "magvitv2",
+            fallback="showlab/magvitv2",
+        ),
+        "llm_model_path": _checkpoint_model_ref(
+            "microsoft--phi-1_5",
+            "phi-1_5",
+            fallback="microsoft/phi-1_5",
+        ),
+        "resolution": 256,
+    }
 
 
 def _hunyuan_world_voyager_default_ref() -> str:
@@ -2171,22 +3492,50 @@ def _ac3d_default_call_kwargs() -> Dict[str, Any]:
 
 
 def _gen3c_default_ref() -> str:
-    return "gen3c"
+    return _checkpoint_model_ref(
+        "nvidia--GEN3C-Cosmos-7B",
+        "GEN3C-Cosmos-7B",
+        fallback="nvidia/GEN3C-Cosmos-7B",
+    )
 
 
 def _gen3c_default_load_kwargs() -> Dict[str, Any]:
     return {
         "required_components": {
-            "moge_pretrained": "Ruicheng/moge-vitl"
+            "transformer_model_path": _gen3c_default_ref(),
+            "tokenizer_model_path": _checkpoint_model_ref(
+                "nvidia--Cosmos-Tokenize1-CV8x8x8-720p",
+                "Cosmos-Tokenize1-CV8x8x8-720p",
+                fallback="nvidia/Cosmos-Tokenize1-CV8x8x8-720p",
+            ),
+            "text_encoder_model_path": _checkpoint_model_ref(
+                "google-t5--t5-11b",
+                "google-t5/t5-11b",
+                "t5-11b",
+                fallback="google-t5/t5-11b",
+            ),
+            "moge_pretrained": _checkpoint_model_ref(
+                "Ruicheng--moge-vitl",
+                "Ruicheng/moge-vitl",
+                "moge-vitl",
+                fallback="Ruicheng/moge-vitl",
+            ),
         }
     }
 
 
 def _gen3c_default_call_kwargs() -> Dict[str, Any]:
+    """Native GEN3C quality defaults; legacy official-subprocess flags are omitted."""
+
+    from worldfoundry.pipelines.gen3c.constants import (
+        DEFAULT_GEN3C_NEGATIVE_PROMPT,
+    )
+
     return {
         "trajectory": "left",
         "camera_rotation": "center_facing",
         "movement_distance": 0.3,
+        "negative_prompt": DEFAULT_GEN3C_NEGATIVE_PROMPT,
         "guidance": 1.0,
         "num_steps": 35,
         "num_video_frames": 121,
@@ -2194,18 +3543,6 @@ def _gen3c_default_call_kwargs() -> Dict[str, Any]:
         "height": 704,
         "width": 1280,
         "seed": 1,
-        "num_gpus": 8,
-        "noise_aug_strength": 0.0,
-        "filter_points_threshold": 0.05,
-        "foreground_masking": True,
-        "disable_prompt_upsampler": True,
-        "disable_guardrail": True,
-        "disable_prompt_encoder": True,
-        "offload_diffusion_transformer": False,
-        "offload_tokenizer": False,
-        "offload_text_encoder_model": False,
-        "offload_prompt_upsampler": False,
-        "offload_guardrail_models": False,
     }
 
 
@@ -2283,6 +3620,29 @@ def _lyra2_default_load_kwargs() -> Dict[str, Any]:
     return {"required_components": required_components}
 
 
+def _alayaworld_default_load_kwargs() -> Dict[str, Any]:
+    return {
+        "required_components": {
+            "checkpoint_path": _checkpoint_model_ref(
+                "AlayaWorld/merged_infer.safetensors",
+                "AlayaLab--AlayaWorld/merged_infer.safetensors",
+                fallback=str(checkpoint_root_path("AlayaWorld", "merged_infer.safetensors")),
+            ),
+            "gemma_root": _checkpoint_model_ref(
+                "gemma-3-12b-it-qat-q4_0-unquantized",
+                "google--gemma-3-12b-it-qat-q4_0-unquantized",
+                fallback=str(checkpoint_root_path("gemma-3-12b-it-qat-q4_0-unquantized")),
+            ),
+            "da3_path": _checkpoint_model_ref(
+                "DA3NESTED-GIANT-LARGE-1.1",
+                "depth-anything--DA3NESTED-GIANT-LARGE-1.1",
+                "Lyra-2.0/checkpoints/recon/model.pt",
+                fallback=str(checkpoint_root_path("DA3NESTED-GIANT-LARGE-1.1")),
+            ),
+        }
+    }
+
+
 def _hunyuan_worldplay_default_ref() -> str:
     return _checkpoint_model_ref(
         "HY-WorldPlay",
@@ -2327,21 +3687,40 @@ def _forcing_in_tree_runtime_root(model_id: str) -> Path:
     )
 
 
+def _self_forcing_default_ref() -> str:
+    return _checkpoint_model_ref(
+        "gdhe17--Self-Forcing/checkpoints/self_forcing_dmd.pt",
+        "Self-Forcing/checkpoints/self_forcing_dmd.pt",
+        "LongSANA_2B_480p_self_forcing/checkpoints/LongSANA_2B_480p_self_forcing.pt",
+        fallback="gdhe17/Self-Forcing",
+    )
+
+
+def _causal_forcing_default_ref() -> str:
+    return _checkpoint_model_ref(
+        "zhuhz22--Causal-Forcing/chunkwise/causal_forcing.pt",
+        "Causal-Forcing/chunkwise/causal_forcing.pt",
+        fallback="zhuhz22/Causal-Forcing",
+    )
+
+
+def _forcing_wan_default_ref() -> str:
+    return _checkpoint_model_ref(
+        "Wan-AI--Wan2.1-T2V-1.3B",
+        "Wan2.1-T2V-1.3B",
+        fallback="Wan-AI/Wan2.1-T2V-1.3B",
+    )
+
+
 def _self_forcing_default_load_kwargs() -> Dict[str, Any]:
     runtime_root = _forcing_in_tree_runtime_root("self-forcing")
     config_path = _data_path("models", "runtime", "configs", "self_forcing", "self_forcing_dmd.yaml")
-    official_ckpt = checkpoint_root_path("Self-Forcing", "checkpoints", "self_forcing_dmd.pt")
-    longsana_ckpt = checkpoint_root_path(
-        "LongSANA_2B_480p_self_forcing",
-        "checkpoints",
-        "LongSANA_2B_480p_self_forcing.pt",
-    )
     return {
         "required_components": {
             "runtime_root": str(runtime_root),
             "config_path": str(config_path),
-            "checkpoint_path": _first_existing_path(official_ckpt, longsana_ckpt),
-            "wan_models_root": str(checkpoint_root_path()),
+            "checkpoint_path": _self_forcing_default_ref(),
+            "wan_models_root": _forcing_wan_default_ref(),
             "python_executable": _forcing_unified_python_executable(),
             "use_ema": True,
             "save_with_index": True,
@@ -2356,8 +3735,8 @@ def _causal_forcing_default_load_kwargs() -> Dict[str, Any]:
         "required_components": {
             "runtime_root": str(runtime_root),
             "config_path": str(config_path),
-            "checkpoint_path": str(checkpoint_root_path("Causal-Forcing", "chunkwise", "causal_forcing.pt")),
-            "wan_models_root": str(checkpoint_root_path()),
+            "checkpoint_path": _causal_forcing_default_ref(),
+            "wan_models_root": _forcing_wan_default_ref(),
             "python_executable": _forcing_unified_python_executable(),
         }
     }
@@ -2382,8 +3761,32 @@ def _causal_forcing_default_call_kwargs() -> Dict[str, Any]:
     }
 
 
+def _oasis_500m_default_ref() -> str:
+    return _checkpoint_model_ref(
+        "Etched--oasis-500m/oasis500m.safetensors",
+        fallback="Etched/oasis-500m",
+    )
+
+
+def _oasis_500m_default_load_kwargs() -> Dict[str, str]:
+    checkpoint_root = Path(
+        _checkpoint_model_ref(
+            "Etched--oasis-500m",
+            fallback="Etched/oasis-500m",
+        )
+    )
+    return {
+        "checkpoint_path": str(checkpoint_root / "oasis500m.safetensors"),
+        "vae_ckpt": str(checkpoint_root / "vit-l-20.safetensors"),
+        "prompt_path": str(_data_path("test_cases", "oasis", "sample_image_0.png")),
+        "actions_path": str(
+            _data_path("test_cases", "oasis", "forward_4f.one_hot_actions.json")
+        ),
+    }
+
+
 def _multiworld_ittakestwo_default_load_kwargs() -> Dict[str, Any]:
-    runtime_root = _project_root() / "worldfoundry" / "synthesis" / "visual_generation" / "multiworld" / "multiworld_runtime"
+    runtime_root = _project_root() / "worldfoundry" / "synthesis" / "visual_generation" / "multiworld"
     config_path = _data_path(
         "models",
         "runtime",
@@ -2398,6 +3801,30 @@ def _multiworld_ittakestwo_default_load_kwargs() -> Dict[str, Any]:
         "required_components": {
             "runtime_root": str(runtime_root),
             "config_path": str(config_path),
+            "checkpoint_path": _checkpoint_model_ref(
+                "MultiWorld/multiworld_480p_toydata.safetensors",
+                "multiworld/multiworld_480p_toydata.safetensors",
+                "Haoyuwu--MultiWorldCheckpoint/multiworld_480p_toydata.safetensors",
+                "hfd/Haoyuwu--MultiWorldCheckpoint/multiworld_480p_toydata.safetensors",
+                fallback=str(
+                    checkpoint_root_path(
+                        "MultiWorld",
+                        "multiworld_480p_toydata.safetensors",
+                    )
+                ),
+            ),
+            "base_model_root": _checkpoint_model_ref(
+                "Wan-AI--Wan2.2-TI2V-5B",
+                "Wan2.2-TI2V-5B",
+                "hfd/Wan-AI--Wan2.2-TI2V-5B",
+                fallback=str(checkpoint_root_path("Wan-AI--Wan2.2-TI2V-5B")),
+            ),
+            "vggt_root": _checkpoint_model_ref(
+                "VGGT-1B",
+                "facebook--VGGT-1B",
+                "hfd/facebook--VGGT-1B",
+                fallback=str(checkpoint_root_path("facebook--VGGT-1B")),
+            ),
             "python_executable": str(unified_python) if unified_python.is_file() else _worldfoundry_unified_python_executable(),
             "derive_env_obv_from_image": True,
             "num_inference_steps": 35,
@@ -2417,6 +3844,73 @@ def _multiworld_ittakestwo_default_call_kwargs() -> Dict[str, Any]:
         "return_dict": True,
         "save_name": "multiworld_ittakestwo",
         "fps": 60,
+    }
+
+
+def _evoke_default_ref() -> str:
+    return _checkpoint_model_ref(
+        "Evoke",
+        "AlayaLab--Evoke",
+        fallback="AlayaLab/Evoke",
+    )
+
+
+def _evoke_default_load_kwargs() -> Dict[str, Any]:
+    return {
+        "required_components": {
+            "vigeo_path": _checkpoint_model_ref(
+                "Evoke/ViGeo1.1",
+                "pkqbajng--ViGeo1.1",
+                fallback=str(checkpoint_root_path("Evoke", "ViGeo1.1")),
+            ),
+            "python_executable": _worldfoundry_unified_python_executable(),
+        }
+    }
+
+
+def _magi2_default_load_kwargs() -> Dict[str, Any]:
+    return {
+        "required_components": {
+            "python_executable": _worldfoundry_unified_python_executable(),
+            "transformers_overlay": str(
+                _project_root()
+                / "artifacts"
+                / "runtime_overlays"
+                / "magi2-transformers-5.5.0"
+            ),
+        }
+    }
+
+
+def _warp_as_history_default_ref() -> str:
+    return _checkpoint_model_ref(
+        "BestWishYsh--Helios-Distilled",
+        "Helios-Distilled",
+        "helios-distilled",
+        fallback=str(checkpoint_root_path("BestWishYsh--Helios-Distilled")),
+    )
+
+
+def _warp_as_history_default_load_kwargs() -> Dict[str, Any]:
+    return {
+        "required_components": {
+            "lora_path": _checkpoint_model_ref(
+                "yyfz233--warp-as-history/visible_lora_state_step1000.safetensors",
+                "warp-as-history/visible_lora_state_step1000.safetensors",
+                fallback=str(
+                    checkpoint_root_path(
+                        "yyfz233--warp-as-history",
+                        "visible_lora_state_step1000.safetensors",
+                    )
+                ),
+            ),
+            "pi3x_ckpt_path": _checkpoint_model_ref(
+                "yyfz233--Pi3X/model.safetensors",
+                "Pi3X/model.safetensors",
+                fallback=str(checkpoint_root_path("yyfz233--Pi3X", "model.safetensors")),
+            ),
+            "python_executable": _worldfoundry_unified_python_executable(),
+        }
     }
 
 
@@ -2768,6 +4262,188 @@ def _x_wam_workspace_variants() -> tuple[Dict[str, Any], ...]:
     )
 
 
+def _leworldmodel_default_load_kwargs() -> Dict[str, Any]:
+    candidates = checkpoint_root_candidates("leworldmodel", "pusht_worldfoundry_smoke.h5")
+    dataset_path = next((path for path in candidates if path.is_file()), candidates[0])
+    return {
+        "model_id": "leworldmodel",
+        "config_name": "pusht",
+        "policy": "random",
+        "cache_dir": str(dataset_path.parent),
+        "dataset_name": str(dataset_path),
+        "num_eval": 1,
+        "eval_budget": 25,
+        "goal_offset_steps": 5,
+        "seed": 42,
+    }
+
+
+def _shotstream_default_load_kwargs() -> Dict[str, Any]:
+    return {
+        "model_id": "shotstream",
+        "checkpoint_dir": str(checkpoint_root_path("KlingTeam--ShotStream")),
+        "wan_model_dir": str(checkpoint_root_path("Wan-AI--Wan2.1-T2V-1.3B")),
+    }
+
+
+def _egowm_default_load_kwargs() -> Dict[str, Any]:
+    return {
+        "model_id": "egowm",
+        "checkpoint_path": str(checkpoint_root_path("anuragba--egowm", "svd_25dof_nav.pth")),
+        "base_model_dir": str(checkpoint_root_path("stabilityai--stable-video-diffusion-img2vid")),
+    }
+
+
+def _hma_default_load_kwargs() -> Dict[str, Any]:
+    return {
+        "model_id": "hma",
+        "checkpoint_dir": str(checkpoint_root_path("liruiw--hma-base-cont")),
+        "base_model_dir": str(checkpoint_root_path("stabilityai--stable-video-diffusion-img2vid")),
+    }
+
+
+def _tesseract_default_load_kwargs() -> Dict[str, Any]:
+    return {
+        "model_id": "tesseract",
+        "checkpoint_dir": str(checkpoint_root_path("anyeZHY--tesseract", "tesseract_v01e_rgbdn_sft")),
+        "base_model_dir": str(checkpoint_root_path("THUDM--CogVideoX-5b-I2V")),
+    }
+
+
+def _ctrl_world_default_load_kwargs() -> Dict[str, Any]:
+    return {
+        "model_id": "ctrl-world",
+        "checkpoint_path": str(checkpoint_root_path("yjguo--Ctrl-World", "checkpoint-10000.pt")),
+        "base_model_dir": str(checkpoint_root_path("stabilityai--stable-video-diffusion-img2vid")),
+        "clip_model_dir": str(checkpoint_root_path("openai--clip-vit-base-patch32")),
+    }
+
+
+def _genie_envisioner_default_load_kwargs() -> Dict[str, Any]:
+    return {
+        "model_id": "genie-envisioner",
+        "checkpoint_path": str(
+            checkpoint_root_path(
+                "agibot-world--Genie-Envisioner", "GE_base_fast_v0.1.safetensors"
+            )
+        ),
+        "base_model_dir": str(checkpoint_root_path("Lightricks--LTX-Video")),
+    }
+
+
+def _giga_world_0_default_load_kwargs() -> Dict[str, Any]:
+    return {
+        "model_id": "giga-world-0",
+        "transformer_model_dir": str(
+            checkpoint_root_path(
+                "open-gigaai--GigaWorld-0-Video-GR1-2b", "transformer"
+            )
+        ),
+        "text_encoder_model_dir": str(
+            checkpoint_root_path("google-t5--t5-11b-encoder")
+        ),
+        "vae_model_dir": str(
+            checkpoint_root_path("Wan-AI--Wan2.1-T2V-1.3B-Diffusers", "vae")
+        ),
+    }
+
+
+def _spatia_default_ref() -> str:
+    return _checkpoint_model_ref(
+        "Jinjing713--Spatia",
+        fallback="Jinjing713/Spatia",
+    )
+
+
+def _spatia_default_load_kwargs() -> Dict[str, Any]:
+    return {
+        "base_model_path": _checkpoint_model_ref(
+            "Wan-AI--Wan2.2-TI2V-5B",
+            "Wan2.2-TI2V-5B",
+            fallback="Wan-AI/Wan2.2-TI2V-5B",
+        ),
+        "map_model_path": _checkpoint_model_ref(
+            "facebook--map-anything",
+            fallback="facebook/map-anything",
+        ),
+    }
+
+
+def _spatia_default_call_kwargs() -> Dict[str, Any]:
+    return {
+        "w2c_trajectory_file": str(
+            _data_path("test_cases", "spatia", "w2c_pan_right_121.jsonl")
+        ),
+        "intrinsics": [[[768.0, 0.0, 624.0], [0.0, 768.0, 352.0], [0.0, 0.0, 1.0]]],
+        "num_frames": 121,
+        "fps": 24,
+        "width": 1248,
+        "height": 704,
+        "num_inference_steps": 40,
+        "seed": 20917,
+        "return_dict": True,
+    }
+
+
+def _joyai_echo_source_root() -> str:
+    return str(_project_root() / "cache" / "generative_taxonomy" / "jd-opensource--JoyAI-Echo")
+
+
+def _joyai_echo_python_executable(environment_name: str) -> str:
+    workspace_root = _project_root().parent
+    return _first_existing_path(
+        workspace_root / "envs" / environment_name / "bin" / "python",
+        workspace_root / "conda" / "envs" / environment_name / "bin" / "python",
+    )
+
+
+def _joyai_echo_longvideo_default_ref() -> str:
+    return _checkpoint_model_ref(
+        "jdopensource--JoyAI-Echo",
+        fallback="jdopensource/JoyAI-Echo",
+    )
+
+
+def _joyai_echo_longvideo_default_load_kwargs() -> Dict[str, Any]:
+    return {
+        "source_root": _joyai_echo_source_root(),
+        "checkpoint_dir": _joyai_echo_longvideo_default_ref(),
+        "gemma_path": _checkpoint_model_ref(
+            "google--gemma-3-12b-it",
+            fallback="google/gemma-3-12b-it",
+        ),
+        "python_executable": _joyai_echo_python_executable("joyai-echo-longvideo"),
+        "precision": "bf16",
+    }
+
+
+def _joyai_echo_wm_default_ref() -> str:
+    return _checkpoint_model_ref(
+        "Echo-Team--Echo-WM",
+        fallback="Echo-Team/Echo-WM",
+    )
+
+
+def _joyai_echo_wm_default_load_kwargs() -> Dict[str, Any]:
+    return {
+        "source_root": _joyai_echo_source_root(),
+        "checkpoint_dir": _joyai_echo_wm_default_ref(),
+        "gemma_path": _checkpoint_model_ref(
+            "google--gemma-3-12b-it-qat-q4_0-unquantized",
+            fallback="google/gemma-3-12b-it-qat-q4_0-unquantized",
+        ),
+        "python_executable": _joyai_echo_python_executable("joyai-echo-wm"),
+        "variant": "base",
+    }
+
+
+def _hyworld_worldgen_scene_ref() -> str:
+    configured = os.getenv("HYWORLD_SCENE_PATH", "").strip()
+    if configured:
+        return configured
+    return str(_data_path("test_cases", "hyworld_worldgen", "materialized_scene"))
+
+
 CURATED_OVERRIDES: Dict[str, Dict[str, Any]] = {
     "abot-world-0-5b-lf": {
         "display_name": "ABot-World-0-5B-LF",
@@ -2777,8 +4453,8 @@ CURATED_OVERRIDES: Dict[str, Dict[str, Any]] = {
         "default_prompt": "Move forward through the scene while preserving geometry and appearance.",
         "default_input_path": str(_data_path("test_cases", "studio_demo", "00", "image.jpg")),
         "default_call_kwargs": {
-            "num_frames": 9,
-            "num_blocks": 1,
+            "num_frames": 57,
+            "num_blocks": 5,
             "seed": 42,
             "fps": 16,
         },
@@ -2799,25 +4475,70 @@ CURATED_OVERRIDES: Dict[str, Dict[str, Any]] = {
         "default_backend": "from_pretrained",
         "aliases": ("abot-world", "abot"),
         "tags": ("world-model", "action-control", "causal-video", "in-tree-runtime"),
-        "notes": "The Workspace smoke preset emits one complete nine-frame causal block.",
+        "notes": "Uses the released full 57-frame rollout: one nine-frame warmup block followed by four twelve-frame causal blocks.",
+    },
+    "alayaworld": {
+        "default_input_path": str(_data_path("test_cases", "studio_demo", "00", "image.jpg")),
+        "default_load_kwargs": _alayaworld_default_load_kwargs,
+        "default_call_kwargs": {"return_dict": True},
+        "call_params": (
+            "prompt",
+            "images",
+            "output_path",
+            "fps",
+            "return_dict",
+            "num_frames",
+            "rounds",
+            "height",
+            "width",
+            "sampling_steps",
+            "seed",
+            "camera_path",
+            "camera_trajectory",
+            "camera_translation_step",
+            "camera_rotation_step_degrees",
+            "intrinsic",
+            "action_scale",
+            "action_freq_scale",
+            "action_history_memory",
+            "spatial_enabled",
+            "depth_backend",
+            "spatial_num_context_frames",
+            "spatial_retrieval_views",
+            "spatial_downsample",
+            "spatial_maximum_coverage",
+            "spatial_retrieval_depth_threshold",
+            "spatial_constant_depth",
+            "spatial_include_sink",
+            "spatial_require_full_context",
+            "da3_process_res",
+            "context_parallel",
+            "decode_rank0_only",
+            "compile_mode",
+            "compile_backend",
+            "compile_fullgraph",
+            "compile_dynamic",
+        ),
+        "tags": ("world-model", "camera-control", "autoregressive-video", "in-tree-runtime"),
+        "notes": "Uses the released Alaya checkpoint, local Gemma shards, and a compatible nested-giant DA3 checkpoint.",
     },
     "wan21-fun-1p3b-cam": {
         "display_name": "Wan2.1-Fun V1.1 1.3B Control Camera",
         "category": "Video Generation",
         "summary": "In-tree VideoX-Fun image-to-video generation with CameraCtrl pose conditioning.",
         "default_model_ref": lambda: _hf_checkpoint_model_ref(
-            "hfd/alibaba-pai--Wan2.1-Fun-V1.1-1.3B-Control-Camera",
+            "alibaba-pai--Wan2.1-Fun-V1.1-1.3B-Control-Camera",
             "alibaba-pai/Wan2.1-Fun-V1.1-1.3B-Control-Camera",
         ),
         "default_prompt": "Colorful fireworks bloom above a city skyline as the camera moves forward.",
         "default_input_path": str(_data_path("test_cases", "video_x_fun", "firework.png")),
         "default_call_kwargs": {
             "pose_txt": str(_data_path("test_cases", "video_x_fun", "camera_pose.txt")),
-            "width": 672,
-            "height": 384,
-            "num_frames": 9,
+            "width": 832,
+            "height": 480,
+            "num_frames": 49,
             "fps": 16,
-            "num_inference_steps": 4,
+            "num_inference_steps": 50,
             "seed": 43,
         },
         "call_params": (
@@ -2839,7 +4560,127 @@ CURATED_OVERRIDES: Dict[str, Dict[str, Any]] = {
         "default_backend": "from_pretrained",
         "aliases": ("wan2.1-fun-1.3b-camera",),
         "tags": ("camera-control", "i2v", "wan2.1", "in-tree-runtime"),
-        "notes": "Split official transformer/base assets are composed with symlinks inside each run directory; the strict 989-tensor camera schema and nine-frame A100 Workspace output are validated.",
+        "notes": "Split official transformer/base assets are composed with symlinks inside each run directory; the full upstream camera demo uses 49 frames at 832x480 with 50 denoising steps.",
+    },
+    "wan21-fun-14b-cam": {
+        "display_name": "Wan2.1-Fun V1.1 14B Control Camera",
+        "category": "Video Generation",
+        "summary": "In-tree VideoX-Fun 14B image-to-video generation with CameraCtrl pose conditioning.",
+        "default_model_ref": lambda: _hf_checkpoint_model_ref(
+            "alibaba-pai--Wan2.1-Fun-V1.1-14B-Control-Camera",
+            "alibaba-pai/Wan2.1-Fun-V1.1-14B-Control-Camera",
+        ),
+        "default_prompt": "Colorful fireworks bloom above a city skyline as the camera moves forward.",
+        "default_input_path": str(_data_path("test_cases", "video_x_fun", "firework.png")),
+        "default_call_kwargs": {
+            "pose_txt": str(_data_path("test_cases", "video_x_fun", "camera_pose.txt")),
+            "width": 832,
+            "height": 480,
+            "num_frames": 49,
+            "fps": 16,
+            "num_inference_steps": 50,
+            "seed": 43,
+        },
+        "call_params": (
+            "prompt",
+            "images",
+            "image_path",
+            "pose_txt",
+            "width",
+            "height",
+            "num_frames",
+            "fps",
+            "num_inference_steps",
+            "seed",
+            "output_path",
+            "return_dict",
+        ),
+        "supports_stream": False,
+        "supports_from_pretrained": True,
+        "default_backend": "from_pretrained",
+        "aliases": ("wan2.1-fun-14b-camera",),
+        "tags": ("camera-control", "i2v", "wan2.1", "in-tree-runtime"),
+        "notes": "The full upstream Wan2.1 camera demo uses 49 frames at 832x480 with 50 denoising steps.",
+    },
+    "wan22-fun-5b-cam": {
+        "display_name": "Wan2.2-Fun 5B Control Camera",
+        "category": "Video Generation",
+        "summary": "In-tree VideoX-Fun 5B image-to-video generation with CameraCtrl pose conditioning.",
+        "default_model_ref": lambda: _hf_checkpoint_model_ref(
+            "alibaba-pai--Wan2.2-Fun-5B-Control-Camera",
+            "alibaba-pai/Wan2.2-Fun-5B-Control-Camera",
+        ),
+        "default_prompt": "Colorful fireworks bloom above a city skyline as the camera moves forward.",
+        "default_input_path": str(_data_path("test_cases", "video_x_fun", "firework.png")),
+        "default_call_kwargs": {
+            "pose_txt": str(_data_path("test_cases", "video_x_fun", "camera_pose.txt")),
+            "width": 1280,
+            "height": 704,
+            "num_frames": 121,
+            "fps": 24,
+            "num_inference_steps": 50,
+            "seed": 43,
+        },
+        "call_params": (
+            "prompt",
+            "images",
+            "image_path",
+            "pose_txt",
+            "width",
+            "height",
+            "num_frames",
+            "fps",
+            "num_inference_steps",
+            "seed",
+            "output_path",
+            "return_dict",
+        ),
+        "supports_stream": False,
+        "supports_from_pretrained": True,
+        "default_backend": "from_pretrained",
+        "aliases": ("wan2.2-fun-5b-camera",),
+        "tags": ("camera-control", "i2v", "wan2.2", "in-tree-runtime"),
+        "notes": "The full upstream Wan2.2 5B camera demo uses 121 frames at 1280x704 and 24 FPS with 50 denoising steps.",
+    },
+    "wan22-fun-a14b-cam": {
+        "display_name": "Wan2.2-Fun A14B Control Camera",
+        "category": "Video Generation",
+        "summary": "In-tree VideoX-Fun A14B image-to-video generation with CameraCtrl pose conditioning.",
+        "default_model_ref": lambda: _hf_checkpoint_model_ref(
+            "alibaba-pai--Wan2.2-Fun-A14B-Control-Camera",
+            "alibaba-pai/Wan2.2-Fun-A14B-Control-Camera",
+        ),
+        "default_prompt": "Colorful fireworks bloom above a city skyline as the camera moves forward.",
+        "default_input_path": str(_data_path("test_cases", "video_x_fun", "firework.png")),
+        "default_call_kwargs": {
+            "pose_txt": str(_data_path("test_cases", "video_x_fun", "camera_pose.txt")),
+            "width": 832,
+            "height": 480,
+            "num_frames": 81,
+            "fps": 16,
+            "num_inference_steps": 50,
+            "seed": 43,
+        },
+        "call_params": (
+            "prompt",
+            "images",
+            "image_path",
+            "pose_txt",
+            "width",
+            "height",
+            "num_frames",
+            "fps",
+            "num_inference_steps",
+            "seed",
+            "output_path",
+            "return_dict",
+        ),
+        "supports_stream": False,
+        "supports_from_pretrained": True,
+        "default_backend": "from_pretrained",
+        "aliases": ("wan2.2-fun-a14b-camera",),
+        "tags": ("camera-control", "i2v", "wan2.2", "in-tree-runtime"),
+        "notes": "The full upstream Wan2.2 A14B camera demo uses 81 frames at 832x480 with 50 denoising steps.",
     },
     "xiaomi-robotics-0": {
         "display_name": "Xiaomi-Robotics-0",
@@ -3240,9 +5081,72 @@ CURATED_OVERRIDES: Dict[str, Dict[str, Any]] = {
         "display_name": "Stable Video Infinity 2.0",
         "category": "Video Generation",
         "summary": "Generate coherent long video from one image and a segment-level prompt stream.",
-        "default_prompt": "A cinematic forward camera journey through a detailed, coherent world.",
-        "default_input_path": str(_data_path("test_cases", "studio_demo", "00", "image.jpg")),
+        "default_model_ref": _stable_video_infinity_default_ref,
+        "default_load_kwargs": _stable_video_infinity_default_load_kwargs,
+        "default_prompt": (
+            "The water shimmers with dancing caustics as gentle bubbles rise; "
+            "the camera dolly-ins through a blue haze."
+        ),
+        "default_input_path": str(
+            _data_path("test_cases", "stable-video-infinity", "svi-2.0", "frame.jpg")
+        ),
         "default_task_type": "i2v",
+        "default_call_kwargs": {
+            "num_clips": 999,
+            "num_frames": 81,
+            "num_motion_frames": 5,
+            "num_inference_steps": 50,
+            "cfg_scale_text": 5.0,
+            "sigma_shift": 5.0,
+            "prompt_repeat_times": 2,
+            "fps": 24,
+            "base_seed": 0,
+        },
+        "load_params": (
+            "model_path",
+            "required_components",
+            "device",
+            "lazy",
+            "wan_model_dir",
+            "svi_lora_path",
+            "dtype",
+            "enable_vram_management",
+            "num_persistent_param_in_dit",
+            "use_usp",
+            *DISPATCH_LOAD_PARAMS,
+        ),
+        "call_params": (
+            "prompt",
+            "images",
+            "prompt_stream",
+            "output_path",
+            "fps",
+            "return_dict",
+            "num_clips",
+            "num_frames",
+            "num_motion_frames",
+            "num_inference_steps",
+            "cfg_scale_text",
+            "guidance_scale",
+            "sigma_shift",
+            "shift",
+            "ref_pad_cfg",
+            "ref_pad_num",
+            "prompt_repeat_times",
+            "use_first_prompt_only",
+            "repeat_first_clip",
+            "prompt_prefix",
+            "base_seed",
+            "seed",
+            "seed_stride",
+            "max_width",
+            "height",
+            "width",
+            "tiled",
+            "tile_size",
+            "tile_stride",
+            "negative_prompt",
+        ),
         "supports_from_pretrained": True,
         "default_backend": "from_pretrained",
         "aliases": ("svi", "svi-2.0", "stable_video_infinity", "stable-video-infinity-2.0"),
@@ -3733,6 +5637,570 @@ CURATED_OVERRIDES: Dict[str, Dict[str, Any]] = {
         "tags": ("va", "vam", "latent-action"),
         "notes": "Visual-action model profile. It consumes video context but is not categorized as video generation.",
     },
+    "leworldmodel": {
+        "display_name": "LeWorldModel",
+        "category": "Video Generation",
+        "summary": "Official PushT environment evaluation through the in-tree stable-worldmodel wrapper.",
+        "default_task_type": "pusht-eval",
+        "default_load_kwargs": _leworldmodel_default_load_kwargs,
+        "default_call_kwargs": {"plan_only": False, "timeout_seconds": 21600},
+        "call_params": (
+            "prompt",
+            "images",
+            "video",
+            "interactions",
+            "output_path",
+            "fps",
+            "plan_only",
+            "timeout_seconds",
+            "return_dict",
+        ),
+        "load_params": (
+            "model_path",
+            "required_components",
+            "device",
+            "model_id",
+            "config_dir",
+            "config_name",
+            "policy",
+            "cache_dir",
+            "dataset_name",
+            "num_eval",
+            "eval_budget",
+            "goal_offset_steps",
+            "img_size",
+            "seed",
+            "lazy",
+        ),
+        "supports_stream": False,
+        "supports_from_pretrained": True,
+        "default_backend": "from_pretrained",
+        "aliases": ("le-wm", "lewm"),
+        "tags": ("world-model", "pusht", "official-runtime", "in-tree-runtime"),
+        "notes": (
+            "The default demo uses a locally staged PushT trajectory and the official random policy; "
+            "learned-policy evaluation requires a compatible policy checkpoint."
+        ),
+    },
+    "egowm": {
+        "display_name": "EgoWM",
+        "category": "Video Generation",
+        "summary": "Official action/state-conditioned SVD egocentric navigation video generation.",
+        "default_model_ref": lambda: str(checkpoint_root_path("anuragba--egowm", "svd_25dof_nav.pth")),
+        "default_input_path": lambda: str(
+            official_runtime_repo_path("egowm") / "data" / "cmu_clicks" / "realw_0.png"
+        ),
+        "default_task_type": "navigation-video",
+        "default_load_kwargs": _egowm_default_load_kwargs,
+        "default_call_kwargs": {
+            "num_frames": 8,
+            "num_inference_steps": 8,
+            "fps": 7,
+            "seed": 42,
+            "height": 512,
+            "width": 512,
+            "motion_bucket_id": 180,
+            "action_scale": 0.0,
+            "plan_only": False,
+            "timeout_seconds": 21600,
+        },
+        "call_params": (
+            "prompt",
+            "images",
+            "video",
+            "interactions",
+            "output_path",
+            "fps",
+            "image_path",
+            "input_image",
+            "num_frames",
+            "num_inference_steps",
+            "seed",
+            "height",
+            "width",
+            "motion_bucket_id",
+            "action_scale",
+            "plan_only",
+            "timeout_seconds",
+            "return_dict",
+        ),
+        "load_params": (
+            "model_path",
+            "required_components",
+            "device",
+            "model_id",
+            "checkpoint_path",
+            "egowm_checkpoint_path",
+            "base_model_dir",
+            "svd_base_model_dir",
+            "image_path",
+            "input_image",
+            "seed",
+            "lazy",
+        ),
+        "supports_stream": False,
+        "supports_from_pretrained": True,
+        "default_backend": "from_pretrained",
+        "aliases": ("ego-wm", "egowm-svd-25dof"),
+        "tags": ("world-model", "navigation-video", "action-conditioned", "official-runtime"),
+        "notes": (
+            "Runs the official 25-DoF navigation checkpoint with an explicit local SVD base model. The default "
+            "fixture is one of the official CMU real-world images."
+        ),
+    },
+    "hma": {
+        "display_name": "HMA",
+        "category": "Video Generation",
+        "summary": "Official STMAR continuous action-conditioned robot video generation.",
+        "default_model_ref": lambda: str(checkpoint_root_path("liruiw--hma-base-cont")),
+        "default_input_path": lambda: str(
+            official_runtime_repo_path("HMA") / "assets" / "langtable_prompt" / "frame_00.png"
+        ),
+        "default_task_type": "robot-action-video",
+        "default_load_kwargs": _hma_default_load_kwargs,
+        "default_call_kwargs": {
+            "generated_frames": 6,
+            "prompt_horizon": 3,
+            "maskgit_steps": 2,
+            "direction": "right",
+            "action_scale": 0.05,
+            "fps": 2,
+            "seed": 42,
+            "plan_only": False,
+            "timeout_seconds": 21600,
+        },
+        "call_params": (
+            "prompt",
+            "images",
+            "video",
+            "interactions",
+            "output_path",
+            "fps",
+            "image_path",
+            "input_image",
+            "generated_frames",
+            "num_frames",
+            "prompt_horizon",
+            "maskgit_steps",
+            "direction",
+            "action_scale",
+            "seed",
+            "plan_only",
+            "timeout_seconds",
+            "return_dict",
+        ),
+        "load_params": (
+            "model_path",
+            "required_components",
+            "device",
+            "model_id",
+            "checkpoint_dir",
+            "checkpoint_path",
+            "hma_checkpoint_dir",
+            "base_model_dir",
+            "svd_base_model_dir",
+            "image_path",
+            "input_image",
+            "lazy",
+        ),
+        "supports_stream": False,
+        "supports_from_pretrained": True,
+        "default_backend": "from_pretrained",
+        "aliases": ("hma-magvit-362m", "hma-continuous"),
+        "tags": ("world-model", "robot-video", "action-conditioned", "official-runtime"),
+        "notes": (
+            "Runs the official HMA continuous checkpoint with the LangTable prompt image, a two-dimensional "
+            "action, and the local SVD temporal VAE."
+        ),
+    },
+    "giga-world-0": {
+        "display_name": "GigaWorld-0",
+        "category": "Video Generation",
+        "summary": "Released GR1 robot-world image-to-video generation with local T5 and Wan components.",
+        "default_model_ref": lambda: str(
+            checkpoint_root_path(
+                "open-gigaai--GigaWorld-0-Video-GR1-2b", "transformer"
+            )
+        ),
+        "default_input_path": str(
+            _data_path("test_cases", "test_vla_case1", "droid", "exterior_image_1_left.png")
+        ),
+        "default_prompt": "A robot arm moves toward the objects on the workbench.",
+        "default_task_type": "robot-image-to-video",
+        "default_load_kwargs": _giga_world_0_default_load_kwargs,
+        "default_call_kwargs": {
+            "attention_backend": "natten",
+            "height": 480,
+            "width": 640,
+            "num_frames": 61,
+            "num_inference_steps": 30,
+            "guidance_scale": 1.0,
+            "fps": 16,
+            "seed": 6666,
+            "max_text_length": 128,
+            "mixed_precision": "bf16",
+            "plan_only": False,
+            "timeout_seconds": 21600,
+        },
+        "call_params": (
+            "prompt",
+            "images",
+            "video",
+            "interactions",
+            "output_path",
+            "fps",
+            "image_path",
+            "input_image",
+            "attention_backend",
+            "height",
+            "width",
+            "num_frames",
+            "num_inference_steps",
+            "guidance_scale",
+            "seed",
+            "max_text_length",
+            "mixed_precision",
+            "plan_only",
+            "timeout_seconds",
+            "return_dict",
+        ),
+        "load_params": (
+            "model_path",
+            "required_components",
+            "device",
+            "model_id",
+            "transformer_model_dir",
+            "transformer_model_path",
+            "checkpoint_path",
+            "checkpoint",
+            "text_encoder_model_dir",
+            "text_encoder_model_path",
+            "vae_model_dir",
+            "vae_model_path",
+            "image_path",
+            "input_image",
+            "lazy",
+        ),
+        "supports_stream": False,
+        "supports_from_pretrained": True,
+        "default_backend": "from_pretrained",
+        "aliases": ("giga_world_0", "gigaworld-0", "gigaworld0"),
+        "tags": ("world-model", "robot-video", "image-to-video", "official-runtime"),
+        "notes": (
+            "The default uses the released 480x640, 61-frame, 30-step NATTEN sampling settings. "
+            "Use a checkpoint-matched GR1 observation for dataset parity."
+        ),
+    },
+    "genie-envisioner": {
+        "display_name": "Genie Envisioner",
+        "category": "Video Generation",
+        "summary": "Official GE-base multiview robot world-video generation with local LTX components.",
+        "default_model_ref": lambda: str(
+            checkpoint_root_path(
+                "agibot-world--Genie-Envisioner", "GE_base_fast_v0.1.safetensors"
+            )
+        ),
+        "default_input_path": str(
+            _data_path("test_cases", "test_vla_case1", "aloha", "observation_images_cam_high.png")
+        ),
+        "default_prompt": "Move the robot gripper toward the objects on the workbench.",
+        "default_task_type": "robot-multiview-video",
+        "default_load_kwargs": _genie_envisioner_default_load_kwargs,
+        "default_call_kwargs": {
+            "input_mode": "explicit-three-view",
+            "input_views": [
+                str(_data_path("test_cases", "test_vla_case1", "aloha", name))
+                for name in (
+                    "observation_images_cam_high.png",
+                    "observation_images_cam_left_wrist.png",
+                    "observation_images_cam_right_wrist.png",
+                )
+            ],
+            "height": 192,
+            "width": 256,
+            "n_previous": 4,
+            "latent_chunk": 2,
+            "num_inference_steps": 5,
+            "guidance_scale": 1.0,
+            "decode_timestep": 0.03,
+            "decode_noise_scale": 0.025,
+            "fps": 8,
+            "seed": 42,
+            "mixed_precision": "bf16",
+            "plan_only": False,
+            "timeout_seconds": 21600,
+        },
+        "call_params": (
+            "prompt",
+            "images",
+            "video",
+            "interactions",
+            "output_path",
+            "fps",
+            "image_path",
+            "input_image",
+            "input_views",
+            "view_images",
+            "input_mode",
+            "height",
+            "width",
+            "n_previous",
+            "latent_chunk",
+            "num_inference_steps",
+            "guidance_scale",
+            "decode_timestep",
+            "decode_noise_scale",
+            "seed",
+            "mixed_precision",
+            "plan_only",
+            "timeout_seconds",
+            "return_dict",
+        ),
+        "load_params": (
+            "model_path",
+            "required_components",
+            "device",
+            "model_id",
+            "checkpoint_path",
+            "checkpoint",
+            "ckpt_path",
+            "genie_checkpoint_path",
+            "base_model_dir",
+            "ltx_base_model_dir",
+            "image_path",
+            "input_image",
+            "lazy",
+        ),
+        "supports_stream": False,
+        "supports_from_pretrained": True,
+        "default_backend": "from_pretrained",
+        "aliases": ("genie_envisioner", "genieenvisioner"),
+        "tags": ("world-model", "robot-video", "multiview", "official-runtime"),
+        "notes": (
+            "The default uses three synchronized ALOHA camera observations without synthetic shifts. "
+            "Use a checkpoint-matched AgiBot or LeRobot trajectory for action-quality parity."
+        ),
+    },
+    "ctrl-world": {
+        "display_name": "Ctrl-World",
+        "category": "Video Generation",
+        "summary": "Official DROID action-conditioned three-camera robot world-video generation.",
+        "default_model_ref": lambda: str(
+            checkpoint_root_path("yjguo--Ctrl-World", "checkpoint-10000.pt")
+        ),
+        "default_input_path": str(
+            _data_path("test_cases", "test_vla_case1", "aloha", "observation_images_cam_high.png")
+        ),
+        "default_prompt": "Move the robot gripper toward the objects on the workbench.",
+        "default_task_type": "robot-action-video",
+        "default_load_kwargs": _ctrl_world_default_load_kwargs,
+        "default_call_kwargs": {
+            "input_mode": "explicit-three-view",
+            "input_views": [
+                str(_data_path("test_cases", "test_vla_case1", "aloha", name))
+                for name in (
+                    "observation_images_cam_high.png",
+                    "observation_images_cam_left_wrist.png",
+                    "observation_images_cam_right_wrist.png",
+                )
+            ],
+            "action_direction": "right",
+            "action_scale": 0.2,
+            "height": 192,
+            "width": 320,
+            "num_frames": 5,
+            "num_inference_steps": 4,
+            "guidance_scale": 1.0,
+            "motion_bucket_id": 127,
+            "fps": 4,
+            "seed": 42,
+            "mixed_precision": "bf16",
+            "plan_only": False,
+            "timeout_seconds": 21600,
+        },
+        "call_params": (
+            "prompt",
+            "images",
+            "video",
+            "interactions",
+            "output_path",
+            "fps",
+            "image_path",
+            "input_image",
+            "input_views",
+            "view_images",
+            "input_mode",
+            "action_direction",
+            "action_scale",
+            "height",
+            "width",
+            "num_frames",
+            "num_inference_steps",
+            "guidance_scale",
+            "motion_bucket_id",
+            "seed",
+            "mixed_precision",
+            "plan_only",
+            "timeout_seconds",
+            "return_dict",
+        ),
+        "load_params": (
+            "model_path",
+            "required_components",
+            "device",
+            "model_id",
+            "checkpoint_path",
+            "checkpoint",
+            "ckpt_path",
+            "ctrl_world_checkpoint_path",
+            "base_model_dir",
+            "svd_model_path",
+            "clip_model_dir",
+            "clip_model_path",
+            "image_path",
+            "input_image",
+            "lazy",
+        ),
+        "supports_stream": False,
+        "supports_from_pretrained": True,
+        "default_backend": "from_pretrained",
+        "aliases": ("ctrl_world", "ctrlworld"),
+        "tags": ("world-model", "robot-video", "action-conditioned", "official-runtime"),
+        "notes": (
+            "The default uses three synchronized ALOHA camera observations and normalized actions. "
+            "Use a checkpoint-matched DROID three-camera trajectory for action-quality parity."
+        ),
+    },
+    "tesseract": {
+        "display_name": "TesserAct",
+        "category": "Video Generation",
+        "summary": "Official RGB-depth-normal robot world-video generation with local CogVideoX components.",
+        "default_model_ref": lambda: str(
+            checkpoint_root_path("anyeZHY--tesseract", "tesseract_v01e_rgbdn_sft")
+        ),
+        "default_input_path": str(
+            _data_path("test_cases", "test_vla_case1", "droid", "exterior_image_1_left.png")
+        ),
+        "default_prompt": "The robot moves its gripper toward the object on the table.",
+        "default_task_type": "robot-action-video",
+        "default_load_kwargs": _tesseract_default_load_kwargs,
+        "default_call_kwargs": {
+            "geometry_mode": "synthetic-gradient",
+            "height": 256,
+            "width": 320,
+            "num_frames": 49,
+            "num_inference_steps": 4,
+            "guidance_scale": 7.5,
+            "image_guidance_scale": 1.5,
+            "use_dynamic_cfg": False,
+            "fps": 8,
+            "seed": 23,
+            "mixed_precision": "bf16",
+            "memory_efficient": True,
+            "plan_only": False,
+            "timeout_seconds": 21600,
+        },
+        "call_params": (
+            "prompt",
+            "images",
+            "video",
+            "interactions",
+            "output_path",
+            "fps",
+            "image_path",
+            "input_image",
+            "depth_path",
+            "normal_path",
+            "geometry_mode",
+            "height",
+            "width",
+            "num_frames",
+            "num_inference_steps",
+            "guidance_scale",
+            "image_guidance_scale",
+            "use_dynamic_cfg",
+            "seed",
+            "mixed_precision",
+            "memory_efficient",
+            "plan_only",
+            "timeout_seconds",
+            "return_dict",
+        ),
+        "load_params": (
+            "model_path",
+            "required_components",
+            "device",
+            "model_id",
+            "checkpoint_dir",
+            "checkpoint_path",
+            "tesseract_checkpoint_dir",
+            "weights_path",
+            "base_model_dir",
+            "cogvideox_base_model_dir",
+            "image_path",
+            "input_image",
+            "lazy",
+        ),
+        "supports_stream": False,
+        "supports_from_pretrained": True,
+        "default_backend": "from_pretrained",
+        "aliases": ("tesser-act", "tesseract-rgbdn"),
+        "tags": ("world-model", "robot-video", "rgb-depth-normal", "official-runtime"),
+        "notes": (
+            "The default synthetic-gradient geometry is a deterministic checkpoint smoke aid, not an official depth/normal estimate. "
+            "Supply depth_path and normal_path with geometry_mode=files for released-model input parity."
+        ),
+    },
+    "shotstream": {
+        "display_name": "ShotStream",
+        "category": "Video Generation",
+        "summary": "Official 4-step causal multi-shot video generation through a staged ShotStream checkout.",
+        "default_model_ref": lambda: str(checkpoint_root_path("KlingTeam--ShotStream")),
+        "default_prompt": (
+            "A cinematic science-fiction scene in a bioluminescent forest at night. An astronaut in a white "
+            "exploration suit walks between glowing blue plants while soft mist drifts through the trees."
+        ),
+        "default_task_type": "causal-multi-shot-video",
+        "default_load_kwargs": _shotstream_default_load_kwargs,
+        "default_call_kwargs": {"fps": 16, "seed": 42, "plan_only": False, "timeout_seconds": 21600},
+        "call_params": (
+            "prompt",
+            "images",
+            "video",
+            "interactions",
+            "output_path",
+            "fps",
+            "data_path",
+            "input_csv",
+            "seed",
+            "plan_only",
+            "timeout_seconds",
+            "return_dict",
+        ),
+        "load_params": (
+            "model_path",
+            "required_components",
+            "device",
+            "model_id",
+            "checkpoint_dir",
+            "shotstream_checkpoint_dir",
+            "wan_model_dir",
+            "base_model_dir",
+            "data_path",
+            "input_csv",
+            "seed",
+            "lazy",
+        ),
+        "supports_stream": False,
+        "supports_from_pretrained": True,
+        "default_backend": "from_pretrained",
+        "aliases": ("shot-stream", "interactive-video-generation"),
+        "tags": ("world-model", "causal-video", "multi-shot", "official-runtime"),
+        "notes": (
+            "Runs the official ShotStream checkpoint on Wan2.1-T2V-1.3B. A plain prompt produces one 81-frame "
+            "shot; pass an official CSV through data_path/input_csv for multi-shot generation."
+        ),
+    },
     "octo": {
         "display_name": "Octo",
         "category": "Embodied Action",
@@ -3866,7 +6334,10 @@ CURATED_OVERRIDES: Dict[str, Dict[str, Any]] = {
         "default_load_kwargs": {
             "dataset_path": str(local_data_root_path() / "rocket-science" / "test"),
         },
-        "default_prompt": "",
+        "default_prompt": (
+            "A cat and a dog baking a cake together in a cozy sunlit kitchen. The cat carefully measures flour "
+            "while the dog stirs the batter with a wooden spoon, cinematic lighting, detailed natural motion."
+        ),
         "supports_stream": False,
         "supports_from_pretrained": True,
         "default_backend": "from_pretrained",
@@ -3906,6 +6377,45 @@ CURATED_OVERRIDES: Dict[str, Dict[str, Any]] = {
     },
     "oasis-500m": {
         "display_name": "Oasis 500M",
+        "default_model_ref": _oasis_500m_default_ref,
+        "default_input_path": lambda: _oasis_500m_default_load_kwargs()["prompt_path"],
+        "default_load_kwargs": _oasis_500m_default_load_kwargs,
+        "default_call_kwargs": {
+            "num_frames": 32,
+            "fps": 20,
+            "ddim_steps": 10,
+            "return_dict": True,
+        },
+        "supports_from_pretrained": True,
+        "default_backend": "from_pretrained",
+        "call_params": (
+            "prompt",
+            "images",
+            "video",
+            "interactions",
+            "output_path",
+            "fps",
+            "return_dict",
+            "num_frames",
+            "ddim_steps",
+            "prompt_path",
+            "actions_path",
+            "timeout_seconds",
+            "plan_only",
+        ),
+        "load_params": (
+            "model_path",
+            "pretrained_model_path",
+            "required_components",
+            "device",
+            "model_id",
+            "checkpoint_path",
+            "oasis_ckpt",
+            "vae_ckpt",
+            "vae_checkpoint_path",
+            "prompt_path",
+            "actions_path",
+        ),
         "default_interactions": ("forward",),
         "supports_stream": True,
         "aliases": ("open-oasis", "openoasis", "open_oasis"),
@@ -3928,28 +6438,152 @@ CURATED_OVERRIDES: Dict[str, Dict[str, Any]] = {
         "tags": ("interactive-world", "navigation", "minecraft", "wmfactory"),
         "notes": "WMFactory-compatible MineWorld id. Uses the in-tree runtime-manifest route when launched from WorldFoundry.",
     },
+    "causal-rcm": {
+        "display_name": "Causal-rCM",
+        "default_model_ref": lambda: str(checkpoint_root_path("rcm")),
+        "default_load_kwargs": _causal_rcm_default_load_kwargs,
+        "default_call_kwargs": _causal_rcm_default_call_kwargs,
+        "default_prompt": "A cinematic shot of a snowy mountain at sunrise",
+        "supports_stream": False,
+        "supports_from_pretrained": True,
+        "default_backend": "from_pretrained",
+        "default_task_type": "autoregressive-video-generation",
+        "call_params": (
+            "prompt",
+            "negative_prompt",
+            "images",
+            "output_path",
+            "fps",
+            "dit_path",
+            "checkpoint_path",
+            "vae_path",
+            "text_encoder_path",
+            "image_path",
+            "model_size",
+            "distilled",
+            "first_chunk_t",
+            "chunk_t",
+            "num_steps",
+            "steps_per_chunk",
+            "mid_t",
+            "mid_t_schedules",
+            "sigma_max",
+            "guidance_scale",
+            "timestep_shift",
+            "num_frames",
+            "num_samples",
+            "resolution",
+            "aspect_ratio",
+            "adaptive_resolution",
+            "context_from_last_step",
+            "context_from_last_step_start_chunk",
+            "kv_cache_policy",
+            "kv_cache_window_blocks",
+            "kv_cache_sink_blocks",
+            "warmup_iters",
+            "num_runs",
+            "seed",
+            "plan_only",
+            "timeout_seconds",
+            "return_dict",
+        ),
+        "load_params": (
+            "model_path",
+            "required_components",
+            "device",
+            "model_id",
+            "dit_path",
+            "checkpoint_path",
+            "checkpoint_dir",
+            "vae_path",
+            "text_encoder_path",
+        ),
+        "aliases": ("rcm", "causal_rcm", "rcm-causal"),
+        "tags": ("interactive-world", "streaming", "autoregressive-video", "distillation", "wan"),
+        "notes": (
+            "Vendored NVlabs Causal-rCM streaming runtime (Apache-2.0). Block-causal Wan2.1 distilled to "
+            "1-4 steps per chunk; chunk_t selects the streaming schedule. Requires a distilled DiT "
+            "checkpoint plus the Wan2.1 VAE and umT5 text encoder."
+        ),
+    },
+    "open-dreamer": {
+        "display_name": "Open Dreamer",
+        "default_model_ref": lambda: str(checkpoint_root_path("open-dreamer")),
+        "default_load_kwargs": _open_dreamer_default_load_kwargs,
+        "default_call_kwargs": _open_dreamer_default_call_kwargs,
+        "default_prompt": "",
+        "default_interactions": ("forward", "forward_camera_l", "forward", "forward_camera_r"),
+        "supports_stream": False,
+        "supports_from_pretrained": True,
+        "default_backend": "from_pretrained",
+        "default_task_type": "minecraft-world-rollout",
+        "call_params": (
+            "prompt",
+            "images",
+            "video",
+            "interactions",
+            "output_path",
+            "fps",
+            "input_mp4",
+            "actions_path",
+            "checkpoint_path",
+            "context_frames",
+            "horizon",
+            "num_steps",
+            "decode_chunk_size",
+            "seed",
+            "parallel_strategy",
+            "use_ema",
+            "no_kv_cache",
+            "camera_step_degrees",
+            "python_executable",
+            "plan_only",
+            "timeout_seconds",
+            "return_dict",
+        ),
+        "load_params": (
+            "model_path",
+            "required_components",
+            "device",
+            "model_id",
+            "checkpoint_path",
+            "input_mp4",
+            "actions_path",
+            "python_executable",
+        ),
+        "aliases": ("open_dreamer", "opendreamer", "dreamer-4", "dreamer4"),
+        "tags": ("interactive-world", "minecraft", "action-conditioned", "world-model", "jax"),
+        "notes": (
+            "Dreamer 4 rollout route bound to a user-staged official checkout; upstream is all-rights-reserved, "
+            "so no source is vendored. Requires the checkout, its CUDA-12 JAX environment, and a trained Orbax "
+            "checkpoint. WorldFoundry interactions are rendered into Minecraft/VPT action JSONL."
+        ),
+    },
     "longvie-1": {
         "display_name": "LongVie",
         "category": "Video Generation",
-        "default_model_ref": lambda: _checkpoint_model_ref(
-            "LongVie2",
-            "Vchitect--LongVie2",
-            "custom--LongVie2",
-            fallback="Vchitect/LongVie2",
-        ),
+        # Upstream has not published a first-generation checkpoint.  In
+        # particular, Vchitect/LongVie2 must not be used here: its control and
+        # DiT weights describe a different model variant.  Advanced users may
+        # still pass an explicitly staged LongVie-1 control checkpoint.
+        "default_model_ref": "",
         "default_backend": "from_pretrained",
         "supports_from_pretrained": True,
         "default_task_type": "image-to-video",
         "default_prompt": (
-            "First-person cinematic motion through a lush jungle path toward a distant stone castle, "
-            "preserving the reference scene."
+            "A young man holds a bright sparkler at night while the camera moves slowly around him, "
+            "preserving his identity, pose, and the reference scene."
         ),
+        "default_input_path": str(_data_path("test_cases", "studio_demo", "00", "image.jpg")),
         "default_call_kwargs": {
             "execute": True,
-            "num_frames": 5,
+            "dense_video": str(_data_path("test_cases", "longvie", "dense_control.mp4")),
+            "sparse_video": str(_data_path("test_cases", "longvie", "sparse_control.mp4")),
+            "num_frames": 81,
             "height": 352,
             "width": 640,
-            "fps": 8,
+            "fps": 16,
+            "num_inference_steps": 50,
             "seed": 0,
         },
         "call_params": (
@@ -3966,6 +6600,7 @@ CURATED_OVERRIDES: Dict[str, Dict[str, Any]] = {
             "num_frames",
             "height",
             "width",
+            "num_inference_steps",
             "seed",
             "dense_video",
             "sparse_video",
@@ -3993,6 +6628,11 @@ CURATED_OVERRIDES: Dict[str, Dict[str, Any]] = {
         ),
         "aliases": ("longvie", "longvie1", "longvie-v1"),
         "tags": ("image-to-video", "long-video", "depth-controlled-video", "official-runtime", "in-tree-runtime"),
+        "notes": (
+            "The first-generation runtime adapter is available, but upstream has not published a LongVie-1 "
+            "checkpoint. Pass an explicitly staged first-generation control weight; LongVie2 weights are "
+            "rejected to prevent cross-variant demo reuse. Use longvie-2 for the public checkpoint-backed route."
+        ),
     },
     "longvie-2": {
         "display_name": "LongVie 2",
@@ -4007,9 +6647,15 @@ CURATED_OVERRIDES: Dict[str, Dict[str, Any]] = {
         "supports_from_pretrained": True,
         "supports_stream": True,
         "default_task_type": "image-to-video",
-        "default_prompt": "",
+        "default_prompt": (
+            "A young man holds a bright sparkler at night while the camera moves slowly around him, "
+            "preserving his identity, pose, and the reference scene."
+        ),
+        "default_input_path": str(_data_path("test_cases", "studio_demo", "00", "image.jpg")),
         "default_call_kwargs": {
             "execute": True,
+            "dense_video": str(_data_path("test_cases", "longvie", "dense_control.mp4")),
+            "sparse_video": str(_data_path("test_cases", "longvie", "sparse_control.mp4")),
             "num_frames": 81,
             "height": 352,
             "width": 640,
@@ -4027,6 +6673,11 @@ CURATED_OVERRIDES: Dict[str, Dict[str, Any]] = {
             "ring_degree": 1,
             "ulysses_degree": 4,
             "torchrun_nproc_per_node": 4,
+            # The supported A100/H100 80GB quality profile fits the complete
+            # 14B stack per rank. CPU layer swapping otherwise dominates the
+            # four-rank USP path and can leave the first denoise step running
+            # for minutes while every GPU holds less than 8GB.
+            "enable_vram_management": False,
         },
         "call_params": (
             "prompt",
@@ -4105,20 +6756,18 @@ CURATED_OVERRIDES: Dict[str, Dict[str, Any]] = {
     "show-o": {
         "display_name": "Show-O",
         "category": "Video Generation",
-        "default_model_ref": lambda: _checkpoint_model_ref(
-            "show-o-512x512",
-            "showlab--show-o-512x512",
-            fallback="showlab/show-o-512x512",
-        ),
+        "default_model_ref": _show_o_default_ref,
         "default_backend": "from_pretrained",
         "supports_from_pretrained": True,
         "supports_stream": False,
         "default_task_type": "text-to-image",
-        "default_load_kwargs": {
-            "vq_model_path": str(checkpoint_root_path("magvitv2")),
-            "llm_model_path": str(checkpoint_root_path("phi-1_5")),
+        "default_load_kwargs": _show_o_default_load_kwargs,
+        "default_call_kwargs": {
+            "mode": "t2i",
+            "generation_timesteps": 4,
+            "guidance_scale": 1.0,
+            "resolution": 256,
         },
-        "default_call_kwargs": {"mode": "t2i", "generation_timesteps": 4, "guidance_scale": 1.0},
         "call_params": (
             "prompt",
             "images",
@@ -4156,6 +6805,7 @@ CURATED_OVERRIDES: Dict[str, Dict[str, Any]] = {
     "matrix-game-1": {
         "display_name": "Matrix-Game-1",
         "default_model_ref": _matrix_game_1_default_ref,
+        "default_input_path": "worldfoundry/data/test_cases/matrix-game-1/official_initial_image/forest_00.jpg",
         "default_load_kwargs": _matrix_game_1_default_load_kwargs,
         "default_interactions": ("forward", "left", "right", "camera_l", "camera_r"),
         "default_call_kwargs": {
@@ -4210,6 +6860,90 @@ CURATED_OVERRIDES: Dict[str, Dict[str, Any]] = {
         "aliases": ("matrixgame3", "matrix-game3"),
         "tags": ("navigation", "stream", "wmfactory", "state-init", "official-demo"),
         "notes": "Defaults mirror the Matrix-Game-3 README cityscape demo: 12 iterations, 3 denoising steps, seed 42, 704*1280, INT8 LightVAE. Async VAE remains off by default because it fails when CUDA_VISIBLE_DEVICES remaps GPUs.",
+    },
+    "matrix-game-3.5-first-person": {
+        "display_name": "Matrix-Game 3.5 First-Person Base",
+        "default_model_ref": lambda: _matrix_game_35_default_ref("first"),
+        "default_task_type": "camera-controlled-image-to-video",
+        "default_prompt": (
+            "A young man holds a bright sparkler at night while the camera moves gently forward and "
+            "to the right, preserving his face, clothing, and the illuminated architecture."
+        ),
+        "default_input_path": str(_data_path("test_cases", "studio_demo", "00", "image.jpg")),
+        "default_interactions": (),
+        "default_load_kwargs": _matrix_game_35_default_load_kwargs,
+        "default_call_kwargs": _matrix_game_35_third_person_default_call_kwargs,
+        "input_params": ("image_path", "camera"),
+        "call_params": (
+            "prompt",
+            "images",
+            "image",
+            "image_path",
+            "input_path",
+            "camera_path",
+            "camera",
+            "trajectory_npz",
+            "caption_path",
+            "output_path",
+            "fps",
+            "num_blocks",
+            "steps",
+            "cfg_scale",
+            "seed",
+            "camera_convention",
+            "keep_workspace",
+            "timeout_seconds",
+            "return_dict",
+        ),
+        "aliases": ("matrix-game-3.5-fp", "matrix-game-35-first-person"),
+        "tags": ("world-model", "camera-control", "first-person", "official-default-steps"),
+        "notes": (
+            "Studio uses the released one-block 25-step first-person base model and a deterministic "
+            "86-pose c2w dolly trajectory materialized by the runtime."
+        ),
+    },
+    "matrix-game-3.5-third-person": {
+        "display_name": "Matrix-Game 3.5 Third-Person Base",
+        "default_model_ref": lambda: _matrix_game_35_default_ref("third"),
+        "default_task_type": "camera-controlled-image-to-video",
+        "default_prompt": (
+            "A young man holds a bright sparkler at night while the camera moves gently around him, "
+            "preserving his identity, clothing, and the illuminated architecture."
+        ),
+        "default_input_path": str(_data_path("test_cases", "studio_demo", "00", "image.jpg")),
+        "default_interactions": (),
+        "default_load_kwargs": _matrix_game_35_default_load_kwargs,
+        "default_call_kwargs": _matrix_game_35_third_person_default_call_kwargs,
+        "input_params": ("image_path", "camera"),
+        "call_params": (
+            "prompt",
+            "images",
+            "image",
+            "image_path",
+            "input_path",
+            "camera_path",
+            "camera",
+            "trajectory_npz",
+            "refs",
+            "subject_refs",
+            "caption_path",
+            "output_path",
+            "fps",
+            "num_blocks",
+            "steps",
+            "cfg_scale",
+            "seed",
+            "camera_convention",
+            "keep_workspace",
+            "timeout_seconds",
+            "return_dict",
+        ),
+        "aliases": ("matrix-game-3.5-tp", "matrix-game-35-third-person"),
+        "tags": ("world-model", "camera-control", "subject-reference", "official-default-steps"),
+        "notes": (
+            "Studio uses the released one-block 25-step base-model defaults and a deterministic 86-pose "
+            "c2w dolly trajectory materialized by the runtime. Subject references remain optional."
+        ),
     },
     "dualcamctrl": {
         "display_name": "DualCamCtrl",
@@ -4290,8 +7024,47 @@ CURATED_OVERRIDES: Dict[str, Dict[str, Any]] = {
     },
     "warp-as-history": {
         "display_name": "Warp-as-History",
+        "default_model_ref": _warp_as_history_default_ref,
+        "default_load_kwargs": _warp_as_history_default_load_kwargs,
         "default_prompt": "A cyclist riding past a colorful graffiti wall beside trees and tall grass, urban BMX scene, with camera movement.",
         "default_call_kwargs": {"num_frames": 33, "fps": 16, "height": 384, "width": 640},
+        "call_params": (
+            "prompt",
+            "images",
+            "video",
+            "interactions",
+            "output_path",
+            "output_dir",
+            "fps",
+            "num_frames",
+            "height",
+            "width",
+            "seed",
+            "return_dict",
+            "camera_poses",
+            "camera_poses_path",
+            "warp_video",
+            "warp_video_path",
+            "warp_visibility_mask",
+            "warp_visibility_mask_path",
+            "demo_csv_path",
+            "plan_only",
+            "dtype",
+            "lora_path",
+            "no_lora",
+            "enable_optional_attention",
+            "warp_debug_dir",
+        ),
+        "load_params": (
+            "model_path",
+            "required_components",
+            "device",
+            "model_id",
+            "lazy",
+            "lora_path",
+            "pi3x_ckpt_path",
+            "python_executable",
+        ),
         "aliases": ("wah", "warp_as_history", "yyfz233/warp-as-history"),
         "tags": ("image-to-video", "camera-control", "in-tree-runtime"),
         "notes": "In-tree official Warp-as-History runtime. Uses vendored demo conditioning by default; real custom runs should pass a first frame plus camera_poses_path or warp_video_path.",
@@ -4299,6 +7072,7 @@ CURATED_OVERRIDES: Dict[str, Dict[str, Any]] = {
     "self-forcing": {
         "display_name": "Self-Forcing",
         "category": "Video Generation",
+        "default_model_ref": _self_forcing_default_ref,
         "supports_from_pretrained": True,
         "default_backend": "from_pretrained",
         "default_prompt": (
@@ -4352,6 +7126,7 @@ CURATED_OVERRIDES: Dict[str, Dict[str, Any]] = {
     "causal-forcing": {
         "display_name": "Causal-Forcing",
         "category": "Video Generation",
+        "default_model_ref": _causal_forcing_default_ref,
         "supports_from_pretrained": True,
         "default_backend": "from_pretrained",
         "default_prompt": (
@@ -4401,7 +7176,10 @@ CURATED_OVERRIDES: Dict[str, Dict[str, Any]] = {
         "display_name": "GEN3C",
         "default_model_ref": _gen3c_default_ref,
         "default_input_path": "worldfoundry/data/test_cases/gen3c/image.png",
-        "default_prompt": "",
+        "default_prompt": (
+            "A cinematic view of a futuristic science-fiction city with coherent structures, realistic "
+            "lighting, and smooth natural camera motion."
+        ),
         "default_load_kwargs": _gen3c_default_load_kwargs,
         "default_interactions": ("left",),
         "default_call_kwargs": _gen3c_default_call_kwargs,
@@ -4409,9 +7187,16 @@ CURATED_OVERRIDES: Dict[str, Dict[str, Any]] = {
             "images",
             "interactions",
             "prompt",
+            "negative_prompt",
             "trajectory",
+            "camera_path",
+            "region_hint",
             "camera_rotation",
             "movement_distance",
+            "rendered_warp_images",
+            "rendered_warp_masks",
+            "camera_to_world",
+            "camera_intrinsics",
             "scene_name",
             "output_dir",
             "return_dict",
@@ -4436,6 +7221,7 @@ CURATED_OVERRIDES: Dict[str, Dict[str, Any]] = {
             "offload_prompt_upsampler",
             "offload_guardrail_models",
         ),
+        "stream_params": ("camera_path", "prompt", "region_hint", "fps", "seed"),
         "load_params": (
             "model_path",
             "required_components",
@@ -4443,7 +7229,17 @@ CURATED_OVERRIDES: Dict[str, Dict[str, Any]] = {
             "weight_dtype",
             *DISPATCH_LOAD_PARAMS,
         ),
-        "tags": ("navigation", "stream", "camera-control"),
+        "tags": (
+            "navigation",
+            "stream",
+            "camera-control",
+            "world-explorer",
+            "native-imgui",
+        ),
+        "notes": (
+            "The native World Explorer adapter preserves arbitrary authored camera poses and "
+            "renders the resident RGBD cache into GEN3C conditioning buffers."
+        ),
     },
     "ac3d": {
         "display_name": "AC3D",
@@ -4478,17 +7274,6 @@ CURATED_OVERRIDES: Dict[str, Dict[str, Any]] = {
         ),
         "tags": ("camera-control", "text-to-video", "official-runtime"),
         "notes": "Official AC3D inference requires a RealEstate10K-style fixture with annotations/test.json, pose_files, and video_clips.",
-    },
-    "cut3r": {
-        "display_name": "CUT3R",
-        "runtime_kind": "two_stage_3dgs",
-        "category": "3D Scene",
-        "default_model_ref": _cut3r_default_ref,
-        "default_interactions": ("point_cloud",),
-        "default_call_kwargs": {"output_type": "all"},
-        "aliases": ("cut3r-512", "cut3r_512_dpt_4_64"),
-        "tags": ("3d-reconstruction", "point-cloud", "camera-pose"),
-        "notes": "Uses the staged local CUT3R checkpoint when /ckpt/cut3r is present.",
     },
     "lingbot-world": {
         "display_name": "LingBot-World",
@@ -4544,6 +7329,55 @@ CURATED_OVERRIDES: Dict[str, Dict[str, Any]] = {
             "and materializes the output."
         ),
     },
+    "uni3c": {
+        "display_name": "Uni3C",
+        "default_backend": "from_pretrained",
+        "supports_from_pretrained": True,
+        "default_task_type": "image-to-video",
+        "default_prompt": (
+            "A close-up of a wet white cat wearing oversized amber sunglasses in a sunlit swimming pool, "
+            "while the camera smoothly pushes forward toward the cat."
+        ),
+        "default_input_path": str(
+            _data_path("test_cases", "uni3c", "synthetic-forward-9f-768x480", "reference.jpg")
+        ),
+        "default_call_kwargs": {
+            "render_path": str(_data_path("test_cases", "uni3c", "synthetic-forward-9f-768x480")),
+            "mode": "camera",
+            "num_frames": 9,
+            "max_area": 114688,
+            "seed": 0,
+            "fps": 16,
+            "num_gpus": 1,
+        },
+        "call_params": (
+            "prompt",
+            "images",
+            "interactions",
+            "render_path",
+            "mode",
+            "num_frames",
+            "max_area",
+            "seed",
+            "fps",
+            "num_gpus",
+            "output_path",
+            "plan_only",
+            "return_dict",
+        ),
+        "load_params": (
+            "controller_path",
+            "base_model_path",
+            "model_path",
+            "device",
+            *DISPATCH_LOAD_PARAMS,
+        ),
+        "tags": ("image-to-video", "camera-control", "official-stage-two-runtime"),
+        "notes": (
+            "Requires a reference image and the matching official stage-one render bundle containing "
+            "render.mp4, render_mask.mp4, and cam_info.json."
+        ),
+    },
     "sana-wm": {
         "display_name": "SANA-WM",
         "category": "Video Generation",
@@ -4562,7 +7396,7 @@ CURATED_OVERRIDES: Dict[str, Dict[str, Any]] = {
             "seed": 42,
             "return_dict": True,
         },
-        "load_params": ("checkpoint_source", *DISPATCH_LOAD_PARAMS),
+        "load_params": ("checkpoint_source", "checkpoint_overrides", *DISPATCH_LOAD_PARAMS),
         "call_params": (
             "images",
             "prompt",
@@ -4587,8 +7421,11 @@ CURATED_OVERRIDES: Dict[str, Dict[str, Any]] = {
         "default_backend": "from_pretrained",
         "default_model_ref": _dreamx_world_default_ref,
         "default_load_kwargs": _dreamx_world_default_load_kwargs,
-        "default_prompt": "",
-        "default_input_path": "",
+        "default_prompt": (
+            "A blocky coastal cliff overlooks a calm ocean at sunset as the camera glides "
+            "smoothly along the shoreline, with stable terrain, vegetation, and warm lighting."
+        ),
+        "default_input_path": str(_data_path("test_cases", "dreamx_world", "007.jpg")),
         "default_task_type": "image-camera-video",
         "default_interactions": (),
         "default_call_kwargs": {
@@ -4646,8 +7483,11 @@ CURATED_OVERRIDES: Dict[str, Dict[str, Any]] = {
         "default_backend": "from_pretrained",
         "default_model_ref": _dreamx_world_ar_default_ref,
         "default_load_kwargs": _dreamx_world_ar_default_load_kwargs,
-        "default_prompt": "",
-        "default_input_path": "",
+        "default_prompt": (
+            "A blocky coastal cliff overlooks a calm ocean at sunset as the camera glides "
+            "smoothly along the shoreline, with stable terrain, vegetation, and warm lighting."
+        ),
+        "default_input_path": str(_data_path("test_cases", "dreamx_world", "007.jpg")),
         "default_task_type": "image-camera-video",
         "default_interactions": (),
         "default_call_kwargs": {
@@ -4704,7 +7544,7 @@ CURATED_OVERRIDES: Dict[str, Dict[str, Any]] = {
             "sample_shift": 10.0,
             "local_attn_size": 18,
             "sink_size": 6,
-            "nproc_per_node": 8,
+            "nproc_per_node": 1,
             "t5_fsdp": True,
             "dit_fsdp": True,
             "offload_model": False,
@@ -4759,15 +7599,52 @@ CURATED_OVERRIDES: Dict[str, Dict[str, Any]] = {
         ),
         "default_input_path": str(_data_path("test_cases", "studio_demo", "00", "image.jpg")),
         "default_interactions": ("forward", "left", "right", "camera_l", "camera_r"),
-        "default_call_kwargs": {"num_frames": 81, "seed": 42},
+        "default_call_kwargs": {"num_frames": 81, "seed": 42, "fps": 30, "return_dict": True},
+        "call_params": (
+            "images",
+            "prompt",
+            "interactions",
+            "num_chunks",
+            "num_frames",
+            "negative_prompt",
+            "seed",
+            "output_path",
+            "output_dir",
+            "fps",
+            "return_dict",
+        ),
+        "load_params": (
+            "model_path",
+            "required_components",
+            "device",
+            "lazy",
+            "args",
+            "weight_dtype",
+            "config_path",
+            "checkpoint_path",
+            "bucket_config_name",
+            "num_sampling_steps",
+            "shift",
+            "guidance_scale",
+            "negative_prompt",
+            "seed",
+        ),
         "aliases": ("infiniteworld", "infinite_world"),
         "tags": ("navigation", "stream", "camera-control", "interaction-heavy", "wmfactory", "state-init"),
         "notes": "Supports action-conditioned stream continuation in Studio. Start from an image-conditioned first turn, then continue with short navigation tokens.",
     },
     "yume": {
         "display_name": "YUME",
+        "default_model_ref": _yume_default_ref,
+        "default_prompt": (
+            "A first-person journey follows the stone path toward an arched bridge beside a calm lake, "
+            "with coherent forward motion and stable natural scenery."
+        ),
+        "default_input_path": str(_data_path("test_cases", "hunyuan_worldplay", "test.png")),
         "default_interactions": ("forward", "camera_l"),
+        "default_load_kwargs": {"fsdp": False, "t5_cpu": True},
         "default_call_kwargs": {
+            "interactions": ["forward", "camera_l"],
             "task_type": "i2v",
             "size": "544*960",
             "sampling_method": "ode",
@@ -4781,12 +7658,21 @@ CURATED_OVERRIDES: Dict[str, Dict[str, Any]] = {
     },
     "yume-1p5": {
         "display_name": "YUME-1.5",
+        "default_model_ref": _yume_1p5_default_ref,
+        "default_prompt": (
+            "A cinematic first-person journey follows the sunlit stone path toward an arched bridge beside "
+            "reflective water, with stable forward motion and detailed natural scenery."
+        ),
+        "default_input_path": str(_data_path("test_cases", "hunyuan_worldplay", "test.png")),
         "default_interactions": ("forward", "left", "camera_r"),
+        "default_load_kwargs": {"fsdp": False},
         "default_call_kwargs": {
+            "interactions": ["forward", "left", "camera_r"],
             "task_type": "i2v",
             "size": "704*1280",
             "interaction_speeds": [100, 100, 4],
             "interaction_distances": [4, 4, None],
+            "num_euler_timesteps": 4,
             "seed": 42,
         },
         "aliases": ("yume1.5", "yume-1.5"),
@@ -4858,21 +7744,15 @@ CURATED_OVERRIDES: Dict[str, Dict[str, Any]] = {
         ),
         "aliases": ("wow-world-model", "world-omniscient-world-model", "wow-world-model/wow-1-wan-14b-600k"),
         "tags": ("world-model", "image-to-video", "robotics", "official-runtime"),
-        "notes": "Defaults match the official WoW Wan demo checkpoint WoW-world-model/WoW-1-Wan-14B-600k. Use a local Hugging Face cache or repo id with image conditioning, prompt text, seed 42, and video generation.",
+        "notes": "Defaults match the official WoW Wan demo checkpoint X-Humanoid/WoW-1-Wan-14B-600k. Use a local Hugging Face cache or repo id with image conditioning, prompt text, seed 42, and video generation.",
     },
     "cameractrl": {
         "display_name": "CameraCtrl",
-        "default_model_ref": _checkpoint_model_ref("CameraCtrl/CameraCtrl.ckpt", fallback="hehao13/CameraCtrl"),
-        "default_load_kwargs": {
-            "sd15_path": str(checkpoint_root_path("stable-diffusion-v1-5")),
-            "pose_adaptor_ckpt": str(checkpoint_root_path("CameraCtrl", "CameraCtrl.ckpt")),
-            "image_lora_ckpt": str(checkpoint_root_path("CameraCtrl", "RealEstate10K_LoRA.ckpt")),
-            "motion_module_ckpt": str(checkpoint_root_path("animatediff", "v3_sd15_mm.ckpt")),
-            "unet_subfolder": "unet_webvidlora_v3",
-        },
+        "default_model_ref": _cameractrl_default_ref,
+        "default_load_kwargs": _cameractrl_default_load_kwargs,
         "default_interactions": ("camera_path",),
         "default_call_kwargs": {
-            "trajectory_file": str(_data_path("test_cases", "cameractrl", "pose_files", "0f47577ab3441480.txt"))
+            "trajectory_file": "worldfoundry/data/test_cases/cameractrl/pose_files/0f47577ab3441480.txt"
         },
         "call_params": (
             "prompt",
@@ -4977,6 +7857,8 @@ CURATED_OVERRIDES: Dict[str, Dict[str, Any]] = {
         "display_name": "Lyra-1",
         "category": "3D Scene",
         "default_task_type": "novel-view-synthesis",
+        "default_model_ref": lambda: str(checkpoint_root_path()),
+        "default_input_path": str(_data_path("test_cases", "lyra", "Lyra-1", "00172.png")),
         "default_prompt": "",
         "default_interactions": ("zoom_in", "left", "right"),
         "default_call_kwargs": _lyra1_default_call_kwargs,
@@ -5042,7 +7924,9 @@ CURATED_OVERRIDES: Dict[str, Dict[str, Any]] = {
         "call_params": (
             "images",
             "interactions",
+            "camera_path",
             "prompt",
+            "region_hint",
             "fps",
             "resolution",
             "reconstruct_3d",
@@ -5057,6 +7941,8 @@ CURATED_OVERRIDES: Dict[str, Dict[str, Any]] = {
             "offload",
             "offload_when_prompt",
         ),
+        "supports_stream": True,
+        "stream_params": ("camera_path", "prompt", "region_hint", "fps", "seed"),
         "load_params": (
             "model_path",
             "required_components",
@@ -5069,7 +7955,13 @@ CURATED_OVERRIDES: Dict[str, Dict[str, Any]] = {
             *DISPATCH_LOAD_PARAMS,
         ),
         "aliases": ("lyra2", "nvidia/lyra"),
-        "tags": ("novel-view", "camera-control", "official-runtime"),
+        "tags": (
+            "novel-view",
+            "camera-control",
+            "official-runtime",
+            "world-explorer",
+            "native-imgui",
+        ),
     },
     "lyra-2": {
         "display_name": "Lyra-2",
@@ -5084,7 +7976,9 @@ CURATED_OVERRIDES: Dict[str, Dict[str, Any]] = {
         "call_params": (
             "images",
             "interactions",
+            "camera_path",
             "prompt",
+            "region_hint",
             "fps",
             "resolution",
             "reconstruct_3d",
@@ -5099,6 +7993,8 @@ CURATED_OVERRIDES: Dict[str, Dict[str, Any]] = {
             "offload",
             "offload_when_prompt",
         ),
+        "supports_stream": True,
+        "stream_params": ("camera_path", "prompt", "region_hint", "fps", "seed"),
         "load_params": (
             "model_path",
             "required_components",
@@ -5111,7 +8007,13 @@ CURATED_OVERRIDES: Dict[str, Dict[str, Any]] = {
             *DISPATCH_LOAD_PARAMS,
         ),
         "aliases": ("lyra2",),
-        "tags": ("novel-view", "camera-control", "official-runtime"),
+        "tags": (
+            "novel-view",
+            "camera-control",
+            "official-runtime",
+            "world-explorer",
+            "native-imgui",
+        ),
     },
     "hunyuanvideo-t2v": {
         "display_name": "HunyuanVideo T2V",
@@ -5123,7 +8025,7 @@ CURATED_OVERRIDES: Dict[str, Dict[str, Any]] = {
         "default_backend": "from_pretrained",
         "supports_from_pretrained": True,
         "default_prompt": "A cat walks on the grass, realistic style.",
-        "call_params": _official_video_call_params(),
+        "call_params": _native_diffusion_video_call_params(),
         "input_params": (
             "prompt",
             "num_frames",
@@ -5131,29 +8033,23 @@ CURATED_OVERRIDES: Dict[str, Dict[str, Any]] = {
             "width",
             "num_inference_steps",
             "fps",
-            "flow_shift",
-            "embedded_cfg_scale",
+            "guidance_scale",
+            "embedded_guidance_scale",
             "seed",
-            "nproc_per_node",
-            "ulysses_degree",
-            "ring_degree",
         ),
-        "load_params": _official_video_load_params(),
+        "load_params": _native_diffusion_video_load_params(),
         "default_call_kwargs": {
             "num_frames": 129,
             "height": 720,
             "width": 1280,
             "num_inference_steps": 50,
             "fps": 24,
-            "flow_shift": 7.0,
-            "embedded_cfg_scale": 6.0,
+            "guidance_scale": 6.0,
+            "embedded_guidance_scale": 6.0,
             "seed": 42,
-            "nproc_per_node": 8,
-            "ulysses_degree": 8,
-            "ring_degree": 1,
         },
         "aliases": ("hunyuanvideo", "hunyuan-video", "hunyuanvideo-t2v"),
-        "tags": ("text-to-video", "official-runtime", "local-checkpoint"),
+        "tags": ("text-to-video", "native-diffusion", "local-checkpoint"),
     },
     "hunyuanvideo-i2v": {
         "display_name": "HunyuanVideo I2V",
@@ -5166,7 +8062,7 @@ CURATED_OVERRIDES: Dict[str, Dict[str, Any]] = {
         "supports_from_pretrained": True,
         "default_task_type": "image-to-video",
         "default_prompt": "An Asian man with short hair in black tactical uniform and white clothes waves a firework stick.",
-        "call_params": _official_video_call_params(),
+        "call_params": _native_diffusion_video_call_params(),
         "input_params": (
             "prompt",
             "image_path",
@@ -5175,16 +8071,11 @@ CURATED_OVERRIDES: Dict[str, Dict[str, Any]] = {
             "width",
             "num_inference_steps",
             "fps",
-            "flow_shift",
-            "embedded_cfg_scale",
+            "guidance_scale",
+            "embedded_guidance_scale",
             "seed",
-            "nproc_per_node",
-            "ulysses_degree",
-            "ring_degree",
-            "i2v_resolution",
-            "i2v_stability",
         ),
-        "load_params": _official_video_load_params(),
+        "load_params": _native_diffusion_video_load_params(),
         "default_call_kwargs": {
             "image_path": str(_data_path("test_cases", "hunyuanvideo_i2v", "0.jpg")),
             "num_frames": 129,
@@ -5192,17 +8083,12 @@ CURATED_OVERRIDES: Dict[str, Dict[str, Any]] = {
             "width": 1280,
             "num_inference_steps": 50,
             "fps": 24,
-            "flow_shift": 7.0,
-            "embedded_cfg_scale": 6.0,
+            "guidance_scale": 6.0,
+            "embedded_guidance_scale": 6.0,
             "seed": 0,
-            "nproc_per_node": 8,
-            "ulysses_degree": 8,
-            "ring_degree": 1,
-            "i2v_resolution": "720p",
-            "i2v_stability": True,
         },
         "aliases": ("hunyuanvideo-i2v", "hunyuan-video-i2v"),
-        "tags": ("image-to-video", "official-runtime", "local-checkpoint"),
+        "tags": ("image-to-video", "native-diffusion", "local-checkpoint"),
     },
     "framepack": {
         "display_name": "FramePack",
@@ -5214,12 +8100,21 @@ CURATED_OVERRIDES: Dict[str, Dict[str, Any]] = {
         ),
         "default_backend": "from_pretrained",
         "supports_from_pretrained": True,
+        "default_load_kwargs": {"torch_dtype": "bfloat16"},
         "default_prompt": (
-            "First-person cinematic motion through a lush jungle path toward a distant stone castle, "
-            "preserving the reference scene."
+            "A young man holds a bright sparkler at night while the camera moves slowly around him, "
+            "preserving his identity, pose, and the reference scene."
         ),
+        "default_input_path": str(_data_path("test_cases", "studio_demo", "00", "image.jpg")),
         "default_interactions": ("camera_path",),
-        "call_params": _official_video_call_params(),
+        "call_params": (
+            *_official_video_call_params(),
+            "cfg",
+            "gs",
+            "rs",
+            "use_teacache",
+            "mp4_crf",
+        ),
         "load_params": _official_video_load_params(),
         "aliases": ("frame-pack", "framepack-i2v"),
         "tags": ("image-to-video", "official-runtime"),
@@ -5227,42 +8122,33 @@ CURATED_OVERRIDES: Dict[str, Dict[str, Any]] = {
     "hunyuanvideo-1.5-t2v": {
         "display_name": "HunyuanVideo 1.5 T2V",
         "default_model_ref": lambda: _checkpoint_model_ref(
-            "HunyuanVideo-1.5",
             "tencent--HunyuanVideo-1.5",
+            "HunyuanVideo-1.5",
             fallback="tencent/HunyuanVideo-1.5",
         ),
         "default_backend": "from_pretrained",
         "supports_from_pretrained": True,
         "default_prompt": "A cat walks on a snowy street, cinematic, high quality.",
-        "call_params": _official_video_call_params(),
-        "load_params": _official_video_load_params(),
+        "call_params": _native_diffusion_video_call_params(),
+        "load_params": _native_diffusion_video_load_params(),
+        "default_load_kwargs": lambda: _hunyuanvideo15_default_load_kwargs(image_to_video=False),
         "default_call_kwargs": {
-            "resolution": "480p",
-            "aspect_ratio": "16:9",
-            "num_frames": 9,
-            "video_length": 9,
-            "num_inference_steps": 8,
+            "height": 720,
+            "width": 1280,
+            "num_frames": 121,
+            "num_inference_steps": 50,
+            "guidance_scale": 6.0,
             "fps": 24,
             "seed": 42,
-            "nproc_per_node": 8,
-            "rewrite": False,
-            "cfg_distilled": True,
-            "enable_step_distill": False,
-            "sparse_attn": False,
-            "use_sageattn": False,
-            "enable_cache": False,
-            "sr": False,
-            "save_pre_sr_video": False,
-            "overlap_group_offloading": False,
         },
         "aliases": ("hunyuanvideo-1.5", "hunyuanvideo15", "hunyuanvideo15-t2v"),
-        "tags": ("text-to-video", "official-runtime", "local-checkpoint"),
+        "tags": ("text-to-video", "native-diffusion", "local-checkpoint"),
     },
     "hunyuanvideo-1.5-i2v": {
         "display_name": "HunyuanVideo 1.5 I2V",
         "default_model_ref": lambda: _checkpoint_model_ref(
-            "HunyuanVideo-1.5",
             "tencent--HunyuanVideo-1.5",
+            "HunyuanVideo-1.5",
             fallback="tencent/HunyuanVideo-1.5",
         ),
         "default_backend": "from_pretrained",
@@ -5270,30 +8156,21 @@ CURATED_OVERRIDES: Dict[str, Dict[str, Any]] = {
         "default_task_type": "image-to-video",
         "default_prompt": "A young man holds a sparkling firework at night, cinematic lighting, realistic motion.",
         "default_input_path": str(_data_path("test_cases", "hunyuanvideo_i2v", "0.jpg")),
-        "call_params": _official_video_call_params(),
-        "load_params": _official_video_load_params(),
+        "call_params": _native_diffusion_video_call_params(),
+        "load_params": _native_diffusion_video_load_params(),
+        "default_load_kwargs": lambda: _hunyuanvideo15_default_load_kwargs(image_to_video=True),
         "default_call_kwargs": {
             "image_path": str(_data_path("test_cases", "hunyuanvideo_i2v", "0.jpg")),
-            "resolution": "480p",
-            "aspect_ratio": "16:9",
-            "num_frames": 9,
-            "video_length": 9,
-            "num_inference_steps": 8,
+            "height": 720,
+            "width": 544,
+            "num_frames": 121,
+            "num_inference_steps": 50,
+            "guidance_scale": 6.0,
             "fps": 24,
             "seed": 0,
-            "nproc_per_node": 8,
-            "rewrite": False,
-            "cfg_distilled": True,
-            "enable_step_distill": True,
-            "sparse_attn": False,
-            "use_sageattn": False,
-            "enable_cache": False,
-            "sr": False,
-            "save_pre_sr_video": False,
-            "overlap_group_offloading": False,
         },
         "aliases": ("hunyuanvideo-1.5-i2v", "hunyuanvideo15-i2v"),
-        "tags": ("image-to-video", "official-runtime", "local-checkpoint"),
+        "tags": ("image-to-video", "native-diffusion", "local-checkpoint"),
     },
     "i2vgen-xl": {
         "display_name": "I2VGen-XL",
@@ -5340,6 +8217,52 @@ CURATED_OVERRIDES: Dict[str, Dict[str, Any]] = {
         "aliases": ("magi", "magi1"),
         "tags": ("image-to-video", "official-runtime"),
     },
+    "magi2-preview": {
+        "display_name": "MAGI-2 Preview",
+        "category": "Video Generation",
+        "default_backend": "from_pretrained",
+        "supports_from_pretrained": True,
+        "default_model_ref": lambda: _checkpoint_model_ref(
+            "magi2-preview",
+            "sand-ai--MAGI-2-preview",
+            fallback="sand-ai/MAGI-2-preview",
+        ),
+        "default_load_kwargs": _magi2_default_load_kwargs,
+        "default_prompt": (
+            "A cinematic tracking shot follows a red fox running through a snowy forest, "
+            "with coherent motion, stable anatomy, and natural ambient sound."
+        ),
+        "default_call_kwargs": {
+            "short_edge": 512,
+            "aspect_ratio": "16:9",
+            "duration_seconds": 10.0,
+            "num_inference_steps": 100,
+            "seed": 0,
+            "use_refiner": False,
+        },
+        "call_params": (
+            "prompt",
+            "negative_prompt",
+            "short_edge",
+            "aspect_ratio",
+            "duration_seconds",
+            "num_inference_steps",
+            "seed",
+            "use_refiner",
+            "output_path",
+        ),
+        "load_params": (
+            "model_path",
+            "required_components",
+            "checkpoint_path",
+            "device",
+            "model_id",
+            *DISPATCH_LOAD_PARAMS,
+        ),
+        "aliases": ("magi2", "magi2_preview", "magi-2-preview", "sand-ai/MAGI-2-preview"),
+        "tags": ("text-to-video", "audio-video", "moe", "in-tree-runtime", "local-checkpoint"),
+        "notes": "114B MoE preview runtime using sequential CPU residency and per-layer GPU offload; the optional refiner is disabled by default.",
+    },
     "mochi-1-preview-t2v": {
         "display_name": "Mochi-1 Preview T2V",
         "default_model_ref": lambda: _checkpoint_model_ref(
@@ -5349,6 +8272,19 @@ CURATED_OVERRIDES: Dict[str, Dict[str, Any]] = {
         ),
         "default_backend": "from_pretrained",
         "supports_from_pretrained": True,
+        "default_prompt": (
+            "Close-up of a chameleon's eye as its detailed scaly skin slowly changes color, "
+            "photorealistic natural motion, shallow depth of field, ultra high resolution 4K."
+        ),
+        "default_call_kwargs": {
+            "height": 480,
+            "width": 848,
+            "num_frames": 84,
+            "num_inference_steps": 64,
+            "guidance_scale": 4.5,
+            "fps": 30,
+            "seed": 12345,
+        },
         "call_params": _official_video_call_params(),
         "load_params": _official_video_load_params(),
         "aliases": ("mochi-1", "mochi", "mochi-1-preview"),
@@ -5442,6 +8378,19 @@ CURATED_OVERRIDES: Dict[str, Dict[str, Any]] = {
             "aes": 6.5,
             "seed": 1024,
         },
+        "default_load_kwargs": lambda: {
+            "required_components": {
+                "vae_path": _checkpoint_model_ref(
+                    "hpcai-tech--OpenSora-VAE-v1.2",
+                    "OpenSora-VAE-v1.2",
+                    fallback="hpcai-tech/OpenSora-VAE-v1.2",
+                ),
+                "text_encoder_path": _checkpoint_model_ref(
+                    "DeepFloyd--t5-v1_1-xxl",
+                    fallback="DeepFloyd/t5-v1_1-xxl",
+                ),
+            }
+        },
         "call_params": _official_video_call_params(),
         "load_params": _official_video_load_params(),
         "aliases": ("opensora", "open-sora-v3"),
@@ -5467,27 +8416,38 @@ CURATED_OVERRIDES: Dict[str, Dict[str, Any]] = {
             "小女孩欢快地用手轻轻抚摸着蛇的头部，共同享受着这温馨的时刻。"
             "周围五彩斑斓的灯笼和彩带装饰着环境，阳光透过洒在她们身上，营造出一个充满友爱与幸福的新年氛围。"
         ),
-        "call_params": _official_video_call_params(),
+        "call_params": _official_video_call_params()
+        + (
+            "src_ref_images",
+            "src_video",
+            "src_mask",
+            "vace_context_scale",
+        ),
         "input_params": (
             "prompt",
+            "src_ref_images",
+            "src_video",
+            "src_mask",
             "num_frames",
             "size",
             "num_inference_steps",
             "guidance_scale",
+            "vace_context_scale",
             "seed",
             "nproc_per_node",
             "ulysses_size",
             "ring_size",
         ),
         "load_params": _official_video_load_params(),
+        "default_load_kwargs": {"torch_dtype": "bfloat16"},
         "default_call_kwargs": {
             "num_frames": 81,
             "size": "1280*720",
             "num_inference_steps": 50,
             "guidance_scale": 5.0,
             "seed": -1,
-            "nproc_per_node": 8,
-            "ulysses_size": 8,
+            "nproc_per_node": 1,
+            "ulysses_size": 1,
             "ring_size": 1,
         },
         "aliases": ("wan-vace", "wan2.1-vace-14b", "wan-vace-14b"),
@@ -5579,34 +8539,41 @@ CURATED_OVERRIDES: Dict[str, Dict[str, Any]] = {
             "prompt",
             "images",
             "video",
-            "interactions",
+            "negative_prompt",
             "output_path",
             "return_dict",
             "fps",
             "num_frames",
             "height",
             "width",
-            "infer_steps",
-            "cfg_scale",
+            "num_inference_steps",
+            "guidance_scale",
             "time_shift",
-            "parallel",
-            "tensor_parallel_degree",
-            "ulysses_degree",
+            "positive_magic",
+            "negative_magic",
+            "seed",
+            "output_type",
         ),
         "load_params": (
             "model_path",
-            "pretrained_model_path",
             "checkpoint_dir",
             "device",
-            "parallel",
-            "tensor_parallel_degree",
-            "ulysses_degree",
+            "torch_dtype",
+            "offload_mode",
             *DISPATCH_LOAD_PARAMS,
         ),
-        "default_load_kwargs": {"parallel": 4, "tensor_parallel_degree": 2, "ulysses_degree": 2},
-        "default_call_kwargs": {"fps": 24},
+        "default_load_kwargs": {"offload_mode": "block"},
+        "default_call_kwargs": {
+            "fps": 25,
+            "num_frames": 204,
+            "height": 544,
+            "width": 992,
+            "num_inference_steps": 50,
+            "guidance_scale": 9.0,
+            "time_shift": 13.0,
+        },
         "aliases": ("stepvideo", "step-video"),
-        "tags": ("text-to-video", "in-tree-runtime", "local-checkpoint"),
+        "tags": ("text-to-video", "native-diffusion", "local-checkpoint"),
     },
     "skyreels-v2": {
         "display_name": "SkyReels-V2",
@@ -5624,39 +8591,62 @@ CURATED_OVERRIDES: Dict[str, Dict[str, Any]] = {
         "default_backend": "from_pretrained",
         "supports_from_pretrained": True,
         "default_call_kwargs": {
-            "task": "df",
             "num_frames": 97,
             "num_inference_steps": 30,
-            "base_num_frames": 97,
-            "ar_step": 0,
-            "causal_block_size": 1,
-            "addnoise_condition": 0,
             "guidance_scale": 6.0,
             "shift": 8.0,
             "fps": 24,
             "seed": 42,
         },
-        "call_params": _official_video_call_params(),
-        "load_params": _official_video_load_params(),
+        "call_params": (
+            "prompt",
+            "negative_prompt",
+            "output_path",
+            "return_dict",
+            "fps",
+            "num_frames",
+            "height",
+            "width",
+            "num_inference_steps",
+            "guidance_scale",
+            "shift",
+            "seed",
+            "output_type",
+        ),
+        "load_params": (
+            "model_path",
+            "checkpoint_dir",
+            "device",
+            "torch_dtype",
+            "offload_mode",
+            *DISPATCH_LOAD_PARAMS,
+        ),
+        "default_load_kwargs": {"offload_mode": "block"},
         "aliases": ("skyreels2", "skyreels-v2-t2v"),
-        "tags": ("text-to-video", "official-runtime"),
+        "tags": ("text-to-video", "native-diffusion", "local-checkpoint"),
     },
     "helios": {
         "display_name": "Helios",
         "default_model_ref": lambda: _checkpoint_model_ref(
+            "BestWishYsh--Helios-Distilled",
             "Helios-Distilled",
             fallback="BestWishYsh/Helios-Distilled",
         ),
-        "default_prompt": "",
+        "default_prompt": (
+            "A cat and a dog baking a cake together in a cozy sunlit kitchen. The cat carefully measures flour "
+            "while the dog stirs the batter with a wooden spoon, cinematic lighting, detailed natural motion."
+        ),
         "default_task_type": "t2v",
         "default_backend": "from_pretrained",
         "supports_from_pretrained": True,
         "supports_stream": True,
         "default_call_kwargs": {
-            "num_frames": 33,
+            "num_frames": 240,
             "height": 384,
             "width": 640,
-            "fps": 12,
+            "fps": 24,
+            "num_inference_steps": 50,
+            "guidance_scale": "auto",
             "seed": 42,
         },
         "call_params": (
@@ -5683,10 +8673,17 @@ CURATED_OVERRIDES: Dict[str, Dict[str, Any]] = {
     "sana-streaming-2b-720p": {
         "display_name": "SANA-Streaming 2B 720p",
         "category": "Video Generation",
+        "default_model_ref": lambda: _sana_streaming_default_ref(bidirectional=False),
+        "default_prompt": (
+            "A man in a dark suit sits at a table beside a bright window in a dim room, lowers his gaze, "
+            "touches his forehead, and gestures with his hands; preserve his identity, the fixed camera, "
+            "stable geometry, and consistent lighting."
+        ),
         "default_task_type": "video-to-video",
         "default_backend": "from_pretrained",
         "supports_from_pretrained": True,
         "default_input_path": str(_data_path("test_cases", "neoverse", "videos", "movie.mp4")),
+        "default_load_kwargs": lambda: _sana_streaming_default_load_kwargs(bidirectional=False),
         "default_call_kwargs": {
             "num_frames": 81,
             "height": 704,
@@ -5713,10 +8710,17 @@ CURATED_OVERRIDES: Dict[str, Dict[str, Any]] = {
     "sana-streaming-bidirectional-2b-720p": {
         "display_name": "SANA-Streaming Bidirectional 2B 720p",
         "category": "Video Generation",
+        "default_model_ref": lambda: _sana_streaming_default_ref(bidirectional=True),
+        "default_prompt": (
+            "A man in a dark suit sits at a table beside a bright window in a dim room, lowers his gaze, "
+            "touches his forehead, and gestures with his hands; preserve his identity, the fixed camera, "
+            "stable geometry, and consistent lighting."
+        ),
         "default_task_type": "video-to-video",
         "default_backend": "from_pretrained",
         "supports_from_pretrained": True,
         "default_input_path": str(_data_path("test_cases", "neoverse", "videos", "movie.mp4")),
+        "default_load_kwargs": lambda: _sana_streaming_default_load_kwargs(bidirectional=True),
         "default_call_kwargs": {
             "num_frames": 81,
             "height": 704,
@@ -5757,8 +8761,11 @@ CURATED_OVERRIDES: Dict[str, Dict[str, Any]] = {
             "num_inference_steps": 50,
             "fps": 16,
             "seed": 42,
-            "nproc_per_node": 8,
-            "ulysses_size": 8,
+            # The complete 81-frame/50-step profile fits one H100, while two
+            # ranks duplicate roughly 179 GiB of host weights and leave too
+            # little cgroup headroom for transient planner/renderer buffers.
+            "nproc_per_node": 1,
+            "ulysses_size": 1,
         },
         "call_params": (
             *_official_video_call_params(),
@@ -5784,7 +8791,12 @@ CURATED_OVERRIDES: Dict[str, Dict[str, Any]] = {
             "ulysses_size",
         ),
         "load_params": _official_video_load_params(),
-        "aliases": ("bernini-diffusers", "bernini-7b-14b"),
+        "aliases": (
+            "bernini-diffusers",
+            "bernini-7b-14b",
+            "bernini-r-14b",
+            "bernini-r-1.3b",
+        ),
         "tags": ("text-to-video", "multi-task", "ulysses", "official-runtime", "in-tree-runtime"),
     },
     "wan-2p1-t2v": {
@@ -5792,52 +8804,262 @@ CURATED_OVERRIDES: Dict[str, Dict[str, Any]] = {
         "default_model_ref": _wan_2p1_t2v_default_ref,
         "default_backend": "from_pretrained",
         "supports_from_pretrained": True,
+        "default_load_kwargs": {"offload_mode": "block"},
+        "default_call_kwargs": {
+            "height": 480,
+            "width": 832,
+            "num_frames": 81,
+            "num_inference_steps": 50,
+            "guidance_scale": 6.0,
+            "fps": 16,
+            "seed": 42,
+        },
+        "call_params": _native_diffusion_video_call_params(),
+        "load_params": _native_diffusion_video_load_params(),
         "aliases": ("wan2.1", "wan-2.1", "wan2p1", "wan2.1-t2v", "wan2p1-t2v"),
-        "tags": ("text-to-video", "wan2.1", "official-runtime", "local-checkpoint"),
+        "tags": ("text-to-video", "wan2.1", "native-diffusion", "local-checkpoint"),
     },
     "wan-2p1-i2v": {
         "display_name": "Wan 2.1 I2V",
         "default_model_ref": _wan_2p1_i2v_default_ref,
         "default_backend": "from_pretrained",
         "supports_from_pretrained": True,
+        "default_load_kwargs": {"offload_mode": "block"},
+        "default_call_kwargs": {
+            "height": 480,
+            "width": 832,
+            "num_frames": 81,
+            "num_inference_steps": 40,
+            "guidance_scale": 5.0,
+            "fps": 16,
+            "seed": 42,
+        },
+        "call_params": _native_diffusion_video_call_params(),
+        "load_params": _native_diffusion_video_load_params(),
         "aliases": ("wan-2.1-i2v", "wan2p1-i2v", "wan2.1-i2v"),
-        "tags": ("image-to-video", "wan2.1", "official-runtime", "local-checkpoint"),
+        "tags": ("image-to-video", "wan2.1", "native-diffusion", "local-checkpoint"),
     },
-    "wan-2p2": {
+    "wan2.2-t2v-a14b": {
+        "display_name": "Wan2.2 T2V A14B",
+        "default_model_ref": _wan_2p2_t2v_a14b_default_ref,
+        "default_backend": "from_pretrained",
+        "supports_from_pretrained": True,
+        "default_prompt": "A cinematic white cat runs through a sunlit field, realistic motion.",
+        "default_load_kwargs": {"offload_mode": "block"},
+        "default_call_kwargs": {
+            "height": 480,
+            "width": 832,
+            "num_frames": 81,
+            "num_inference_steps": 40,
+            "guidance_scale": 4.0,
+            "low_noise_guidance_scale": 3.0,
+            "high_noise_guidance_scale": 4.0,
+            "shift": 12.0,
+            "fps": 16,
+            "seed": 42,
+        },
+        "call_params": _native_diffusion_video_call_params()
+        + ("low_noise_guidance_scale", "high_noise_guidance_scale"),
+        "load_params": _native_diffusion_video_load_params(),
+        "aliases": ("wan22-t2v-a14b", "Wan-AI/Wan2.2-T2V-A14B"),
+        "tags": ("text-to-video", "wan2.2", "dual-expert", "native-diffusion"),
+    },
+    "wan2.2-i2v-a14b": {
+        "display_name": "Wan2.2 I2V A14B",
+        "default_model_ref": _wan_2p2_i2v_a14b_default_ref,
+        "default_backend": "from_pretrained",
+        "supports_from_pretrained": True,
+        "default_task_type": "image-to-video",
+        "default_prompt": "The subject turns toward the camera as the scene moves naturally.",
+        "default_input_path": str(_data_path("test_cases", "studio_demo", "00", "image.jpg")),
+        "default_load_kwargs": {"offload_mode": "block"},
+        "default_call_kwargs": {
+            "height": 480,
+            "width": 832,
+            "num_frames": 81,
+            "num_inference_steps": 40,
+            "guidance_scale": 3.5,
+            "low_noise_guidance_scale": 3.5,
+            "high_noise_guidance_scale": 3.5,
+            "shift": 5.0,
+            "fps": 16,
+            "seed": 42,
+        },
+        "call_params": _native_diffusion_video_call_params()
+        + ("low_noise_guidance_scale", "high_noise_guidance_scale"),
+        "load_params": _native_diffusion_video_load_params(),
+        "aliases": ("wan22-i2v-a14b", "Wan-AI/Wan2.2-I2V-A14B"),
+        "tags": ("image-to-video", "wan2.2", "dual-expert", "native-diffusion"),
+    },
+    "wan2.2-ti2v-5b": {
         "display_name": "Wan 2.2",
         "default_model_ref": _wan_2p2_default_ref,
-        "default_load_kwargs": {"mode": "ti2v-5B"},
-        "default_call_kwargs": {"size": "1280*704"},
+        "default_backend": "from_pretrained",
+        "supports_from_pretrained": True,
+        # The 5B DiT fits comfortably on the Studio target H100.  Keep it
+        # resident by default so the browser path does not pay one H2D copy
+        # per transformer layer.  Lower-memory deployments can explicitly
+        # select ``async-block``/``block`` and receive audited prefetch.
+        "default_load_kwargs": {
+            "offload_mode": "resident",
+            # Exact production profile established by the Wan2.2 TI2V
+            # framework A/B harness. Every acceleration remains explicitly
+            # overrideable from the Studio runtime controls/load JSON.
+            "fuse_qkv": False,
+            "qkv_strategy": "auto",
+            "qkv_split_threshold": 8192,
+            "inplace_residual": False,
+            "static_cross_kv": True,
+            "fused_rope": False,
+            "rope_precision": "fp32",
+            "rms_norm_precision": "input",
+        },
+        "default_call_kwargs": {
+            "height": 704,
+            "width": 1280,
+            "num_frames": 121,
+            "num_inference_steps": 50,
+            "guidance_scale": 5.0,
+            "fps": 24,
+            "seed": 42,
+        },
         "suggested_task_types": ("ti2v-5b", "interactive-video"),
-        "call_params": (
-            "prompt",
-            "images",
-            "size",
-            "frame_num",
-            "sample_solver",
-            "sample_steps",
-            "sample_shift",
-            "sample_guide_scale",
-            "base_seed",
-            "offload_model",
-            "use_prompt_extend",
-            "prompt_extend_method",
-            "prompt_extend_model",
-            "prompt_extend_target_lang",
-        ),
+        "call_params": _native_diffusion_video_call_params(),
+        "load_params": _native_diffusion_video_load_params(),
         "aliases": ("wan2.2", "wan-2.2", "wan2p2"),
-        "tags": ("video", "image-to-video", "text-to-video"),
+        "tags": ("video", "image-to-video", "text-to-video", "native-diffusion"),
     },
     "echo-infinity": {
         "display_name": "Echo-Infinity",
         "default_model_ref": _echo_infinity_default_ref,
         "default_load_kwargs": _echo_infinity_default_load_kwargs,
         "default_call_kwargs": {"fps": 16},
+        "load_params": (
+            "model_path",
+            "required_components",
+            "device",
+            "lazy",
+            "model_name",
+            "wan_root",
+            "generator_ckpt",
+            "wan_model_name",
+            "lora_ckpt",
+            "adapter",
+            "use_ema",
+            "seed",
+            "num_samples",
+            "num_output_frames",
+            "denoising_step_list",
+            "warp_denoising_step",
+            "num_frame_per_block",
+            "context_noise",
+            "global_sink",
+            "model_kwargs",
+            "memory_kwargs",
+            "dtype",
+            "low_memory",
+        ),
         "tags": ("text-to-video", "in-tree-runtime"),
+    },
+    "echo-memory-context-k1": {
+        "display_name": "Echo-Memory Context K=1",
+        "category": "Video Generation",
+        "default_backend": "from_pretrained",
+        "supports_from_pretrained": True,
+        "default_model_ref": _echo_memory_context_k1_default_ref,
+        "default_load_kwargs": _echo_memory_context_k1_load_kwargs,
+        "default_task_type": "i2v",
+        "default_input_path": str(_data_path("test_cases", "studio_demo", "00", "image.jpg")),
+        "default_prompt": (
+            "A young man holding a bright sparkler gently turns his head as sparks scatter through the night air; "
+            "preserve his identity, stable architecture, coherent lighting, and smooth forward camera motion."
+        ),
+        "default_call_kwargs": {
+            "num_frames": 81,
+            "fps": 15,
+            "width": 640,
+            "height": 352,
+            "num_chunks": 2,
+            "steps": 50,
+            "guidance_scale": 5.0,
+            "seed": 42,
+            "camera_trajectory": "z*80",
+            "return_dict": True,
+        },
+        "tags": ("image-to-video", "memory", "native-diffusion", "public-checkpoint"),
+    },
+    "evoke": {
+        "display_name": "Evoke",
+        "category": "Video Generation",
+        "default_backend": "from_pretrained",
+        "supports_from_pretrained": True,
+        "default_model_ref": _evoke_default_ref,
+        "default_load_kwargs": _evoke_default_load_kwargs,
+        "default_prompt": (
+            "A cinematic camera glides through a sunlit forest trail while leaves move gently "
+            "and the scene geometry remains stable."
+        ),
+        "default_call_kwargs": {
+            "mode": "t2v",
+            "width": 640,
+            "height": 384,
+            "num_frames": 33,
+            "num_chunks": 1,
+            "fps": 24,
+            "num_inference_steps": 3,
+            "guidance_scale": 1.0,
+            "seed": 42,
+        },
+        "call_params": (
+            "prompt",
+            "images",
+            "image_path",
+            "video",
+            "video_path",
+            "output_path",
+            "return_dict",
+            "trajectory_npz",
+            "pose_path",
+            "camera_trajectory",
+            "mode",
+            "sample_type",
+            "use_geometric_state",
+            "width",
+            "height",
+            "num_chunks",
+            "num_frames",
+            "fps",
+            "seed",
+            "num_inference_steps",
+            "guidance_scale",
+            "ref_seconds",
+            "start_seconds",
+            "lingbot_pose_source_fps",
+            "lingbot_pose_source_resolution",
+        ),
+        "load_params": (
+            "model_path",
+            "required_components",
+            "checkpoint_path",
+            "base_model_path",
+            "transformer_path",
+            "vigeo_path",
+            "runtime_root",
+            "python_executable",
+            "device",
+            *DISPATCH_LOAD_PARAMS,
+        ),
+        "aliases": ("alayalab/evoke", "evoke-world-model"),
+        "tags": ("world-model", "text-to-video", "image-to-video", "video-to-video", "in-tree-runtime"),
+        "notes": "Uses the local post-distillation Evoke checkpoint and the shared WorldFoundry Python environment; camera-trajectory runs additionally use local ViGeo1.1 weights.",
     },
     "recammaster": {
         "display_name": "ReCamMaster",
         "category": "Video-to-Video",
+        "default_prompt": (
+            "A first-person motorcycle ride along an elevated highway bridge, preserving "
+            "the rider, road, guardrails, and distant landscape with smooth camera motion."
+        ),
         "default_model_ref": _recammaster_default_ref,
         "default_load_kwargs": _recammaster_default_load_kwargs,
         "default_task_type": "video-to-video",
@@ -5845,7 +9067,10 @@ CURATED_OVERRIDES: Dict[str, Dict[str, Any]] = {
         "default_call_kwargs": {
             "camera_trajectory": [100, 100, 0, 0, 30],
             "num_frames": 81,
-            "video_path": str(_project_root() / "worldfoundry/data/test_cases/longcat_video/motorcycle.mp4"),
+            "num_inference_steps": 50,
+            "cfg_scale": 5.0,
+            "fps": 8,
+            "video_path": "worldfoundry/data/test_cases/longcat_video/motorcycle.mp4",
         },
         "call_params": (
             "prompt",
@@ -5853,13 +9078,40 @@ CURATED_OVERRIDES: Dict[str, Dict[str, Any]] = {
             "output_path",
             "camera_trajectory",
             "num_frames",
+            "num_inference_steps",
+            "cfg_scale",
+            "fps",
             "max_num_frames",
             "frame_interval",
             "size",
         ),
         "tags": ("video-to-video", "camera-control", "official-runtime"),
     },
-    "cosmos-predict2p5": {
+    "cosmos-predict2": {
+        "display_name": "Cosmos Predict2 2B Video2World",
+        "default_model_ref": _cosmos_predict2_default_ref,
+        "default_load_kwargs": _cosmos_predict2_default_load_kwargs,
+        "default_input_path": str(_data_path("test_cases", "studio_demo", "00", "image.jpg")),
+        "default_prompt": (
+            "A young man holding a bright sparkler gently turns his head as sparks scatter through the night air, "
+            "with coherent motion, stable facial details, and consistent nighttime architecture."
+        ),
+        "default_task_type": "image-to-world",
+        "default_call_kwargs": {
+            "guidance_scale": 7.0,
+            "num_inference_steps": 35,
+            "fps": 16,
+            "num_frames": 93,
+            "height": 704,
+            "width": 1280,
+            "seed": 0,
+            "num_latent_conditional_frames": 1,
+            "output_type": "video",
+            "return_dict": True,
+        },
+        "tags": ("image-to-world", "video-to-world", "cosmos", "native-diffusion"),
+    },
+    "cosmos-predict2.5": {
         "display_name": "Cosmos Predict2.5",
         "default_model_ref": _cosmos_predict2p5_default_ref,
         "default_load_kwargs": _cosmos_predict2p5_default_load_kwargs,
@@ -5871,6 +9123,22 @@ CURATED_OVERRIDES: Dict[str, Dict[str, Any]] = {
         "default_call_kwargs": _cosmos_predict2p5_default_call_kwargs,
         "aliases": ("cosmos-predict2.5", "cosmos-predict-2.5"),
         "tags": ("text-to-world", "image-to-world", "video", "cosmos"),
+    },
+    "cosmos-transfer-2.5": {
+        "display_name": "Cosmos Transfer2.5",
+        "default_model_ref": _cosmos_transfer2p5_default_ref,
+        "default_load_kwargs": _cosmos_transfer2p5_default_load_kwargs,
+        "default_input_path": str(
+            _data_path("test_cases", "longcat_video", "motorcycle.mp4")
+        ),
+        "default_prompt": (
+            "A cinematic night scene follows the control video edges with stable geometry, "
+            "realistic lighting, and smooth coherent motion."
+        ),
+        "default_task_type": "video-to-world",
+        "default_call_kwargs": _cosmos_transfer2p5_default_call_kwargs,
+        "aliases": ("cosmos-transfer2.5", "cosmos-transfer2p5"),
+        "tags": ("video-to-world", "controlled-video", "edge-control", "cosmos"),
     },
     "cosmos3": {
         "display_name": "Cosmos3",
@@ -5957,7 +9225,7 @@ CURATED_OVERRIDES: Dict[str, Dict[str, Any]] = {
         "default_model_ref": _lingbot_video_default_ref,
         "default_load_kwargs": {"variant": "dense"},
         "default_prompt": (
-            '{"comprehensive_description":"A humanoid robot carefully places a red block into a matching tray on a '
+            '{"comprehensive_description":"A worker carefully places a red block into a matching tray on a '
             'clean workbench while the camera remains stable.","camera_info":{"frame_size":"Medium Shot",'
             '"shot_type_angle":"Eye Level","lighting_type":"Daylight"},"world_knowledge":[]}'
         ),
@@ -6019,7 +9287,10 @@ CURATED_OVERRIDES: Dict[str, Dict[str, Any]] = {
         "display_name": "LongCat-Video",
         "default_model_ref": _longcat_video_default_ref,
         "default_load_kwargs": _longcat_video_default_load_kwargs,
-        "default_call_kwargs": {"task_type": "t2v"},
+        "default_call_kwargs": {
+            "task_type": "t2v",
+            "cpu_offload": True,
+        },
         "load_params": ("python_executable", *DISPATCH_LOAD_PARAMS),
         "call_params": (
             "prompt",
@@ -6035,6 +9306,11 @@ CURATED_OVERRIDES: Dict[str, Dict[str, Any]] = {
             "fps",
             "context_parallel_size",
             "enable_compile",
+            "cpu_offload",
+            "run_base",
+            "run_distill",
+            "run_refiner",
+            "max_sequence_length",
             "execute",
             "timeout_seconds",
             "return_dict",
@@ -6049,9 +9325,9 @@ CURATED_OVERRIDES: Dict[str, Dict[str, Any]] = {
         "default_load_kwargs": _pusa_vidgen_default_load_kwargs,
         "default_call_kwargs": {
             "mode": "t2v",
-            "height": 480,
-            "width": 832,
-            "num_frames": 7,
+            "height": 720,
+            "width": 1280,
+            "num_frames": 81,
             "num_inference_steps": 4,
             "guidance_scale": 1.0,
             "lightx2v": True,
@@ -6091,6 +9367,72 @@ CURATED_OVERRIDES: Dict[str, Dict[str, Any]] = {
             "timeout_seconds",
         ),
         "tags": ("text-to-video", "image-to-video", "official-runtime"),
+    },
+    "sana": {
+        "display_name": "Sana",
+        "default_model_ref": _sana_image_default_ref,
+        "default_backend": "from_pretrained",
+        "supports_from_pretrained": True,
+        "default_task_type": "text-to-image",
+        "default_prompt": (
+            "A photorealistic still of a sunlit ceramic bowl of citrus on a wooden table, "
+            "sharp focus, natural lighting."
+        ),
+        "default_load_kwargs": {"model_id": SANA_DEFAULT_IMAGE_VARIANT_ID},
+        "default_call_kwargs": {
+            "height": 1024,
+            "width": 1024,
+            "num_inference_steps": 20,
+            "guidance_scale": 4.5,
+            "seed": 42,
+        },
+        "load_params": _sana_video_load_params(),
+        "extra_variants": _sana_image_workspace_variants,
+        "aliases": _sana_image_aliases(),
+        "tags": ("text-to-image", "controlnet", "sprint", "official-runtime", "local-checkpoint"),
+        "notes": (
+            "Image, Sprint, and ControlNet checkpoints share this Studio card. "
+            "Pick a variant for size, resolution, few-step Sprint, or HED ControlNet. "
+            "Sana Video, LongSANA, and SANA-Streaming stay on their own cards."
+        ),
+        "summary": (
+            "Sana text-to-image family. Select a checkpoint variant for parameter "
+            "size, resolution, Sprint, or ControlNet."
+        ),
+    },
+    "cogvideox_5b_t2v": {
+        "display_name": "CogVideoX",
+        "default_backend": "from_pretrained",
+        "supports_from_pretrained": True,
+        "default_task_type": "t2v",
+        "default_prompt": (
+            "A futuristic city street at sunset with reflective glass towers, clean motion, and cinematic lighting."
+        ),
+        "default_call_kwargs": {
+            "fps": 8,
+            "height": 480,
+            "num_frames": 49,
+            "num_inference_steps": 50,
+            "guidance_scale": 6.0,
+            "seed": 43,
+            "width": 720,
+        },
+        "default_model_ref": lambda: _checkpoint_model_ref(
+            "CogVideoX-5b",
+            "THUDM--CogVideoX-5b",
+            fallback="THUDM/CogVideoX-5b",
+        ),
+        "extra_variants": _cogvideox_workspace_variants,
+        "aliases": _cogvideox_aliases(),
+        "tags": ("video", "t2v", "i2v", "official-runtime", "local-checkpoint"),
+        "notes": (
+            "2B T2V, 5B T2V, and 5B I2V share this Studio card. "
+            "Pick a variant for size and text-to-video vs image-to-video."
+        ),
+        "summary": (
+            "CogVideoX text-to-video and image-to-video family. "
+            "Select 2B T2V, 5B T2V, or 5B I2V."
+        ),
     },
     "sana-video-2b-480p": {
         "display_name": "Sana Video 2B 480p",
@@ -6142,12 +9484,82 @@ CURATED_OVERRIDES: Dict[str, Dict[str, Any]] = {
         "default_backend": "from_pretrained",
         "supports_from_pretrained": True,
         "default_task_type": "t2v",
-        "default_call_kwargs": {"cfg_scale": 1.0},
+        "default_prompt": (
+            "Evening backlight and soft side lighting in a forest. A young man in a light shirt stands among the "
+            "trees while golden sunlight filters through the leaves; wind gently moves his hair and collar, the "
+            "camera holds a clean emotional mid-shot with a softly blurred background."
+        ),
+        "default_call_kwargs": {
+            "negative_prompt": (
+                "Bright tones, overexposed, static, blurred details, subtitles, paintings, overall gray, worst "
+                "quality, low quality, JPEG artifacts, deformed limbs, fused fingers, messy background, walking backwards"
+            ),
+            "num_frames": 161,
+            "height": 480,
+            "width": 832,
+            "num_inference_steps": 50,
+            "guidance_scale": 1.0,
+            "fps": 16,
+            "seed": 42,
+        },
         "call_params": _longsana_video_call_params(),
         "stream_params": _longsana_video_call_params(),
         "load_params": _sana_video_load_params(),
         "aliases": ("longsana-video", "sana-video-longlive"),
         "tags": ("text-to-video", "official-runtime", "local-checkpoint"),
+    },
+    "wan2.1-t2v-14b": {
+        "display_name": "Wan2.1 T2V 14B",
+        "default_model_ref": lambda: _checkpoint_model_ref(
+            "Wan2.1-T2V-14B",
+            "Wan-AI--Wan2.1-T2V-14B",
+            fallback="Wan-AI/Wan2.1-T2V-14B",
+        ),
+        "default_backend": "from_pretrained",
+        "supports_from_pretrained": True,
+        "default_task_type": "t2v",
+        "default_prompt": (
+            "Two anthropomorphic cats in comfortable boxing gear and bright gloves fight intensely on a "
+            "spotlighted stage, cinematic motion, detailed fur, stable anatomy."
+        ),
+        "default_call_kwargs": {
+            "num_frames": 81,
+            "height": 720,
+            "width": 1280,
+            "num_inference_steps": 50,
+            "guidance_scale": 6.0,
+            "shift": 5.0,
+            "fps": 16,
+            "seed": 42,
+        },
+        "call_params": _native_diffusion_video_call_params(),
+        "load_params": _native_diffusion_video_load_params(),
+        "aliases": ("wan2.1-t2v-14b-720p",),
+        "tags": ("text-to-video", "native-diffusion", "local-checkpoint", "720p"),
+    },
+    "wan2.1-i2v-14b-720p": {
+        "display_name": "Wan2.1 I2V 14B 720P",
+        "default_model_ref": _wan_2p1_i2v_720p_default_ref,
+        "default_backend": "from_pretrained",
+        "supports_from_pretrained": True,
+        "default_task_type": "image-to-video",
+        "default_prompt": "The subject gently turns toward the camera while the scene moves naturally.",
+        "default_input_path": str(_data_path("test_cases", "studio_demo", "00", "image.jpg")),
+        "default_load_kwargs": {"offload_mode": "block"},
+        "default_call_kwargs": {
+            "num_frames": 81,
+            "height": 720,
+            "width": 1280,
+            "num_inference_steps": 40,
+            "guidance_scale": 5.0,
+            "shift": 5.0,
+            "fps": 16,
+            "seed": 42,
+        },
+        "call_params": _native_diffusion_video_call_params(),
+        "load_params": _native_diffusion_video_load_params(),
+        "aliases": ("Wan-AI/Wan2.1-I2V-14B-720P",),
+        "tags": ("image-to-video", "native-diffusion", "local-checkpoint", "720p"),
     },
     "zeroscope": {
         "display_name": "ZeroScope",
@@ -6157,11 +9569,12 @@ CURATED_OVERRIDES: Dict[str, Dict[str, Any]] = {
         "default_task_type": "t2v",
         "default_prompt": "research rover red desert under dusty sunset, slow cinematic pan, stable vehicle geometry",
         "default_call_kwargs": {
-            "num_frames": 8,
+            "num_frames": 24,
             "fps": 8,
-            "height": 256,
-            "width": 448,
-            "num_inference_steps": 8,
+            "height": 320,
+            "width": 576,
+            "num_inference_steps": 40,
+            "guidance_scale": 9.0,
             "seed": 301,
         },
         "default_load_kwargs": lambda: {"model_path": _zeroscope_default_ref()},
@@ -6200,11 +9613,12 @@ CURATED_OVERRIDES: Dict[str, Dict[str, Any]] = {
         "default_task_type": "t2v",
         "default_prompt": "snowy street market at night with lanterns, cinematic camera movement, detailed people silhouettes",
         "default_call_kwargs": {
-            "num_frames": 8,
+            "num_frames": 16,
             "fps": 8,
             "height": 256,
-            "width": 448,
-            "num_inference_steps": 8,
+            "width": 256,
+            "num_inference_steps": 25,
+            "guidance_scale": 8.0,
             "seed": 303,
         },
         "default_load_kwargs": _animatediff_default_load_kwargs,
@@ -6302,46 +9716,44 @@ CURATED_OVERRIDES: Dict[str, Dict[str, Any]] = {
         "supports_from_pretrained": True,
         "default_task_type": "reference_to_video",
         "default_prompt": (
-            "First-person cinematic motion through a lush jungle path toward a distant stone castle, "
-            "preserving the reference scene."
+            "A young man holds a bright sparkler at night while the camera moves slowly around him, "
+            "preserving his identity, pose, and the reference scene."
         ),
+        "default_input_path": str(_data_path("test_cases", "studio_demo", "00", "image.jpg")),
         "default_call_kwargs": {
             "task_type": "reference_to_video",
             "duration": 5,
             "resolution": "720P",
             "seed": 42,
-            "use_usp": True,
-            "nproc_per_node": 8,
-            "torchrun_nproc_per_node": 8,
         },
         "call_params": (
             "prompt",
             "images",
-            "video",
-            "audio",
             "output_path",
             "return_dict",
             "task_type",
             "duration",
             "seed",
             "resolution",
-            "use_usp",
-            "nproc_per_node",
-            "torchrun_nproc_per_node",
-            "torchrun_nproc",
-            "offload",
-            "low_vram",
+            "height",
+            "width",
+            "num_frames",
+            "num_inference_steps",
+            "guidance_scale",
+            "image_guidance_scale",
+            "negative_prompt",
+            "fps",
+            "output_type",
+            "shift",
         ),
         "load_params": (
             "model_path",
             "required_components",
             "device",
-            "task_type",
-            "load_engine",
             *DISPATCH_LOAD_PARAMS,
         ),
         "aliases": ("skyreels-v3-r2v", "skyreels-v3-reference-to-video"),
-        "tags": ("reference-to-video", "official-runtime", "local-checkpoint"),
+        "tags": ("reference-to-video", "native-diffusion", "local-checkpoint"),
     },
     "kairos-sensenova": {
         "display_name": "Kairos Sensenova",
@@ -6386,7 +9798,7 @@ CURATED_OVERRIDES: Dict[str, Dict[str, Any]] = {
             "num_frames": 81,
             "cfg_scale": 5,
             "use_prompt_rewriter": False,
-            "nproc_per_node": 8,
+            "nproc_per_node": 1,
         },
         "call_params": (
             "prompt",
@@ -6408,15 +9820,13 @@ CURATED_OVERRIDES: Dict[str, Dict[str, Any]] = {
     },
     "hydra": {
         "display_name": "HyDRA",
-        "default_model_ref": lambda: str(hfd_root_path() / "H-EmbodVis--HyDRA" / "hydra.ckpt"),
+        "default_model_ref": _hydra_default_ref,
         "default_input_path": str(_data_path("test_cases", "hydra", "condition.mp4")),
         "default_prompt": (
             "The video begins with a close-up of an individual clad in black armor with red and yellow lights, "
             "walking toward the camera on a city street."
         ),
-        "default_load_kwargs": lambda: {
-            "base_model_path": str(checkpoint_root_path() / "Wan2.1-T2V-1.3B"),
-        },
+        "default_load_kwargs": _hydra_default_load_kwargs,
         "default_call_kwargs": lambda: {
             "video_path": str(_data_path("test_cases", "hydra", "condition.mp4")),
             "camera_json": str(_data_path("test_cases", "hydra", "camera.json")),
@@ -6439,12 +9849,13 @@ CURATED_OVERRIDES: Dict[str, Dict[str, Any]] = {
     },
     "minwm-hy-action2v": {
         "display_name": "minWM HY Action2V",
-        "default_model_ref": lambda: str(hfd_root_path() / "MIN-Lab--minWM"),
+        "default_model_ref": _minwm_default_ref,
         "default_input_path": str(_data_path("test_cases", "minwm", "first_frame.png")),
-        "default_prompt": "A serene garden path winds through manicured greenery under a soft overcast sky.",
-        "default_load_kwargs": lambda: {
-            "base_model_path": str(checkpoint_root_path() / "HunyuanVideo-1.5"),
-        },
+        "default_prompt": (
+            "A rain-soaked brick path runs beside a long wooden aviary building as the camera "
+            "moves smoothly forward, with wet reflections and stable geometry."
+        ),
+        "default_load_kwargs": _minwm_hy_default_load_kwargs,
         "default_call_kwargs": {
             "trajectory": "a*4,w*8,s*7",
             "num_frames": 77,
@@ -6466,11 +9877,9 @@ CURATED_OVERRIDES: Dict[str, Dict[str, Any]] = {
     },
     "minwm-wan-action2v": {
         "display_name": "minWM Wan Action2V",
-        "default_model_ref": lambda: str(hfd_root_path() / "MIN-Lab--minWM"),
+        "default_model_ref": _minwm_default_ref,
         "default_prompt": "A serene garden path winds through manicured greenery under a soft overcast sky.",
-        "default_load_kwargs": lambda: {
-            "base_model_path": str(checkpoint_root_path() / "Wan2.1-T2V-1.3B"),
-        },
+        "default_load_kwargs": _minwm_wan_default_load_kwargs,
         "default_call_kwargs": {
             "trajectory": "a*4,w*8,s*7",
             "num_output_frames": 20,
@@ -6488,17 +9897,18 @@ CURATED_OVERRIDES: Dict[str, Dict[str, Any]] = {
     },
     "magicworld": {
         "display_name": "MagicWorld",
-        "default_model_ref": lambda: str(hfd_root_path() / "LuckyLiGY--MagicWorld"),
+        "default_model_ref": _magicworld_default_ref,
         "default_input_path": str(_data_path("test_cases", "minwm", "first_frame.png")),
-        "default_prompt": "A serene garden path with a smooth forward camera move.",
-        "default_load_kwargs": lambda: {
-            "base_model_path": str(hfd_root_path() / "alibaba-pai--Wan2.1-Fun-V1.1-1.3B-InP"),
-        },
+        "default_prompt": (
+            "A rain-soaked brick path beside a long wooden aviary building, viewed with a "
+            "smooth forward camera move and stable wet-weather geometry."
+        ),
+        "default_load_kwargs": _magicworld_default_load_kwargs,
         "default_call_kwargs": lambda: {
             "native_rows": str(
                 _data_path(
                     "benchmarks", "assets", "iworld-bench", "camera_trajectories",
-                    "inference_txt", "camera_1_2_0.txt",
+                    "inference_txt", "camera_1_1_0.txt",
                 )
             ),
             "num_frames": 81,
@@ -6514,14 +9924,105 @@ CURATED_OVERRIDES: Dict[str, Dict[str, Any]] = {
         ),
         "tags": ("world-model", "image-to-video", "camera-control"),
     },
+    "videocrafter1-i2v": {
+        "display_name": "VideoCrafter1 I2V",
+        "category": "Video Generation",
+        "summary": "In-tree VideoCrafter1 image-to-video inference runtime.",
+        "supports_from_pretrained": True,
+        "supports_stream": True,
+        "default_backend": "from_pretrained",
+        "default_model_ref": lambda: _checkpoint_model_ref(
+            "VideoCrafter--Image2Video-512/model.ckpt",
+            "VideoCrafter/videocrafter_i2v_512_v1.ckpt",
+            "video_models/videocrafter_i2v_512_v1.ckpt",
+        ),
+        "default_prompt": "horses are walking on the grassland",
+        "default_input_path": str(_data_path("test_cases", "videocrafter", "i2v_prompts", "horse.png")),
+        "default_call_kwargs": {
+            "num_frames": 16,
+            "fps": 8,
+            "num_inference_steps": 50,
+            "height": 320,
+            "width": 512,
+            "seed": 123,
+        },
+        "call_params": (
+            "prompt", "images", "output_path", "fps", "return_dict", "frames", "num_frames",
+            "frame_num", "ddim_steps", "num_inference_steps", "steps", "sample_steps", "infer_steps",
+            "sampling_steps", "ddim_eta", "height", "width", "seed", "unconditional_guidance_scale",
+        ),
+        "load_params": ("model_path", "required_components", "device", "lazy"),
+        "aliases": ("videocrafter1_i2v",),
+        "tags": ("video-generation", "image-to-video", "official-runtime"),
+    },
+    "videocrafter1-t2v": {
+        "display_name": "VideoCrafter1 T2V",
+        "category": "Video Generation",
+        "summary": "In-tree VideoCrafter1 text-to-video inference runtime.",
+        "supports_from_pretrained": True,
+        "supports_stream": True,
+        "default_backend": "from_pretrained",
+        "default_model_ref": lambda: _checkpoint_model_ref(
+            "VideoCrafter--Text2Video-1024/model.ckpt",
+            "VideoCrafter/videocrafter_t2v_1024_v1.ckpt",
+            "video_models/videocrafter_t2v_1024_v1.ckpt",
+        ),
+        "default_prompt": "A tiger walks in the forest, photorealistic, 4k, high definition",
+        "default_call_kwargs": {
+            "num_frames": 16,
+            "fps": 8,
+            "num_inference_steps": 50,
+            "height": 576,
+            "width": 1024,
+            "seed": 123,
+        },
+        "call_params": (
+            "prompt", "output_path", "fps", "return_dict", "frames", "num_frames", "frame_num",
+            "ddim_steps", "num_inference_steps", "steps", "sample_steps", "infer_steps", "sampling_steps",
+            "ddim_eta", "height", "width", "seed", "unconditional_guidance_scale",
+        ),
+        "load_params": ("model_path", "required_components", "device", "lazy"),
+        "aliases": ("videocrafter1_t2v",),
+        "tags": ("video-generation", "text-to-video", "official-runtime"),
+    },
+    "videocrafter2-t2v": {
+        "display_name": "VideoCrafter2 T2V",
+        "category": "Video Generation",
+        "summary": "In-tree VideoCrafter2 text-to-video inference runtime.",
+        "supports_from_pretrained": True,
+        "supports_stream": True,
+        "default_backend": "from_pretrained",
+        "default_model_ref": lambda: _checkpoint_model_ref(
+            "VideoCrafter--VideoCrafter2/model.ckpt",
+            "VideoCrafter/videocrafter_t2v_512_v2.ckpt",
+            "video_models/videocrafter_t2v_512_v2.ckpt",
+        ),
+        "default_prompt": "A tiger walks in the forest, photorealistic, 4k, high definition",
+        "default_call_kwargs": {
+            "num_frames": 16,
+            "fps": 28,
+            "num_inference_steps": 50,
+            "height": 320,
+            "width": 512,
+            "seed": 123,
+        },
+        "call_params": (
+            "prompt", "output_path", "fps", "return_dict", "frames", "num_frames", "frame_num",
+            "ddim_steps", "num_inference_steps", "steps", "sample_steps", "infer_steps", "sampling_steps",
+            "ddim_eta", "height", "width", "seed", "unconditional_guidance_scale",
+        ),
+        "load_params": ("model_path", "required_components", "device", "lazy"),
+        "aliases": ("videocrafter", "videocrafter2_t2v"),
+        "tags": ("video-generation", "text-to-video", "official-runtime"),
+    },
     "gamma-world": {
         "display_name": "Gamma-World",
         "default_input_path": str(
             _data_path("test_cases", "gamma_world", "buildTower_normal")
         ),
         "default_prompt": "Two Minecraft players buildTower in normal world",
+        "default_load_kwargs": _gamma_world_default_load_kwargs,
         "default_call_kwargs": {
-            "mode": "causal_few_step",
             "n_players": 2,
             "num_frames": 189,
             "num_conditional_frames": 1,
@@ -6531,13 +10032,27 @@ CURATED_OVERRIDES: Dict[str, Dict[str, Any]] = {
             "seed": 1,
             "fps": 16,
         },
+        "call_params": (
+            "prompt", "images", "video", "interactions", "guidance", "guidance_scale",
+            "actions", "action_paths", "eval_dir", "n_players", "num_frames", "frames",
+            "num_conditional_frames", "height", "width", "num_inference_steps", "infer_steps",
+            "negative_prompt", "seed", "fps", "output_path", "return_dict",
+        ),
+        "load_params": (
+            "model_path", "required_components", "device", "mode", "checkpoint_overrides",
+            "text_encoder_path", "reason1_path", "torch_dtype", "weight_dtype", "dtype", "offload_mode",
+        ),
         "tags": ("multi-agent-world-model", "action-conditioned-video", "official-runtime"),
     },
     "solaris": {
         "display_name": "Solaris",
         "default_model_ref": _solaris_default_ref,
         "default_load_kwargs": _solaris_default_load_kwargs,
-        "default_call_kwargs": {"eval_types": "translation", "eval_num_samples": 8},
+        # Leave eval_num_samples unset so Solaris derives it inside the leased
+        # worker from CUDA_VISIBLE_DEVICES. Hard-coding the host's eight-sample
+        # upstream batch on a one-GPU Workspace lease exhausts the card during
+        # the first 257-frame evaluation step.
+        "default_call_kwargs": {"eval_types": "translation"},
         "call_params": (
             "eval_types",
             "experiment_name",
@@ -6553,6 +10068,192 @@ CURATED_OVERRIDES: Dict[str, Dict[str, Any]] = {
             "show_progress",
         ),
         "tags": ("world-model", "official-runtime"),
+    },
+    "spatia": {
+        "display_name": "Spatia",
+        "category": "Video Generation",
+        "default_task_type": "image-to-video",
+        "default_backend": "from_pretrained",
+        "supports_from_pretrained": True,
+        "default_model_ref": _spatia_default_ref,
+        "default_load_kwargs": _spatia_default_load_kwargs,
+        "default_input_path": str(_data_path("test_cases", "neoverse", "videos", "jungle.png")),
+        "default_prompt": (
+            "A smooth lateral camera move through a dense jungle, preserving the trees, rocks, foliage, "
+            "lighting, and scene geometry across the full trajectory."
+        ),
+        "default_call_kwargs": _spatia_default_call_kwargs,
+        "input_params": ("image_path",),
+        "call_params": (
+            "prompt",
+            "images",
+            "video",
+            "image_path",
+            "video_path",
+            "w2c_trajectory_file",
+            "intrinsics",
+            "num_frames",
+            "fps",
+            "width",
+            "height",
+            "num_inference_steps",
+            "seed",
+            "output_path",
+            "return_dict",
+        ),
+        "load_params": (
+            "model_path",
+            "required_components",
+            "base_model_path",
+            "lora_path",
+            "map_model_path",
+            "python_executable",
+            "device",
+        ),
+        "tags": ("camera-control", "image-to-video", "world-model", "in-tree-runtime"),
+    },
+    "joyai-echo-longvideo": {
+        "display_name": "JoyAI-Echo 1.5 / Echo-LongVideo",
+        "category": "Video Generation",
+        "default_task_type": "image-to-video",
+        "default_backend": "from_pretrained",
+        "supports_from_pretrained": True,
+        "default_model_ref": _joyai_echo_longvideo_default_ref,
+        "default_load_kwargs": _joyai_echo_longvideo_default_load_kwargs,
+        "default_input_path": lambda: str(
+            Path(_joyai_echo_longvideo_default_ref()) / "assets" / "image.png"
+        ),
+        "default_prompt": (
+            "A cinematic live-action traveler crosses a windswept coastal platform at golden hour while the "
+            "camera tracks smoothly; preserve identity, clothing, environmental sound, and temporal continuity."
+        ),
+        "default_call_kwargs": {
+            "execute": True,
+            "num_frames": 241,
+            "width": 1280,
+            "height": 736,
+            "seed": 42,
+            "fps": 25,
+            "return_dict": True,
+            "timeout_seconds": 21600,
+        },
+        "call_params": (
+            "prompt",
+            "images",
+            "interactions",
+            "memory_slots",
+            "request_path",
+            "num_frames",
+            "width",
+            "height",
+            "seed",
+            "fps",
+            "output_path",
+            "output_dir",
+            "execute",
+            "timeout_seconds",
+            "return_dict",
+        ),
+        "load_params": (
+            "model_path",
+            "required_components",
+            "source_root",
+            "checkpoint_dir",
+            "gemma_path",
+            "python_executable",
+            "precision",
+            "consumer",
+            "low_vram",
+            "device",
+        ),
+        "tags": ("audio-video", "long-video", "reference-to-video", "official-runtime"),
+    },
+    "joyai-echo-wm": {
+        "display_name": "Echo-WM",
+        "category": "Video Generation",
+        "default_task_type": "image-to-video",
+        "default_backend": "from_pretrained",
+        "supports_from_pretrained": True,
+        "default_model_ref": _joyai_echo_wm_default_ref,
+        "default_load_kwargs": _joyai_echo_wm_default_load_kwargs,
+        "default_input_path": lambda: str(
+            Path(_joyai_echo_source_root()) / "echo_wm" / "examples" / "wm_cases" / "0004" / "input.png"
+        ),
+        "default_interactions": ("w-60", "a-60"),
+        "default_prompt": (
+            "Environment: A warm fantasy workshop with arched windows, hanging lanterns, herbs, and glass "
+            "flasks. Character: One woman in a lavender dress reads at a wooden workbench. Style: whimsical "
+            "hand-painted fantasy. Perspective: wide third-person interior view. Sounds: paper rustle, soft "
+            "lantern chimes, and quiet room ambience. Speech: no dialogue."
+        ),
+        "default_call_kwargs": {
+            "action_str": "w-60,a-60",
+            "execute": True,
+            "num_frames": 241,
+            "width": 1280,
+            "height": 704,
+            "fps": 24,
+            "seed": 4,
+            "return_dict": True,
+            "timeout_seconds": 21600,
+        },
+        "call_params": (
+            "prompt",
+            "images",
+            "interactions",
+            "action_str",
+            "num_frames",
+            "width",
+            "height",
+            "fps",
+            "seed",
+            "output_path",
+            "output_dir",
+            "execute",
+            "timeout_seconds",
+            "return_dict",
+        ),
+        "load_params": (
+            "model_path",
+            "required_components",
+            "source_root",
+            "checkpoint_dir",
+            "gemma_path",
+            "python_executable",
+            "variant",
+            "device",
+        ),
+        "tags": ("action-control", "audio-video", "camera-control", "world-model", "official-runtime"),
+    },
+    "hyworld-worldgen": {
+        "display_name": "HY-World 2.0 Trajectory Renderer",
+        "category": "Video Generation",
+        "default_task_type": "image-to-video",
+        "default_backend": "from_pretrained",
+        "supports_from_pretrained": True,
+        "default_model_ref": _hyworld_worldgen_scene_ref,
+        "default_load_kwargs": lambda: {"scene_path": _hyworld_worldgen_scene_ref()},
+        "default_input_path": str(_data_path("test_cases", "hunyuan_worldplay", "test.png")),
+        "default_prompt": "Render the materialized HY-World scene along the supplied camera trajectory.",
+        "default_call_kwargs": {
+            "camera_json": str(_data_path("test_cases", "hydra", "camera.json")),
+            "width": 832,
+            "height": 480,
+            "seed": 1024,
+            "return_dict": True,
+        },
+        "call_params": (
+            "images",
+            "image_path",
+            "camera_json",
+            "width",
+            "height",
+            "seed",
+            "output_path",
+            "return_dict",
+        ),
+        "load_params": ("model_path", "required_components", "scene_path", "python_executable", "device"),
+        "tags": ("camera-control", "point-cloud-rendering", "world-model", "in-tree-runtime"),
     },
     "inspatio-world": {
         "display_name": "InSpatio-World",
@@ -6640,6 +10341,13 @@ CURATED_OVERRIDES: Dict[str, Dict[str, Any]] = {
         "display_name": "VMem",
         "default_model_ref": _vmem_default_ref,
         "default_load_kwargs": _vmem_default_load_kwargs,
+        "default_prompt": (
+            "Move forward along an empty Route 66 highway at sunset while preserving the road, "
+            "horizon, and desert geometry."
+        ),
+        "default_input_path": str(
+            _data_path("test_cases", "dualcamctrl", "demo_pic", "route66.jpg")
+        ),
         "default_interactions": ("forward",),
         "tags": ("stream", "memory"),
     },
@@ -6649,7 +10357,11 @@ CURATED_OVERRIDES: Dict[str, Dict[str, Any]] = {
         "default_task_type": "video-to-video",
         "suggested_task_types": ("video-to-video",),
         "default_model_ref": _neoverse_default_ref,
+        "default_load_kwargs": _neoverse_default_load_kwargs,
         "default_prompt": NEOVERSE_OFFICIAL_PROMPT,
+        "default_input_path": str(
+            _data_path("test_cases", "neoverse", "videos", "robot.mp4")
+        ),
         "default_interactions": ("forward", "left", "camera_r"),
         "default_call_kwargs": _neoverse_default_call_kwargs,
         "call_params": (
@@ -6677,7 +10389,15 @@ CURATED_OVERRIDES: Dict[str, Dict[str, Any]] = {
             "alpha_threshold",
             "use_first_frame",
             "static_scene",
-            "low_vram",
+        ),
+        "load_params": (
+            "height",
+            "width",
+            "num_inference_steps",
+            "cfg_scale",
+            "disable_lora",
+            "enable_vram_management",
+            *DISPATCH_LOAD_PARAMS,
         ),
         "tags": ("stream", "camera-control"),
     },
@@ -7121,21 +10841,6 @@ CURATED_OVERRIDES: Dict[str, Dict[str, Any]] = {
         "tags": ("3dgs", "reconstruction", "camera-control", "omega"),
         "notes": "Uses the official VGGT-Omega scene-export path and emits GLB artifacts from local checkpoint trees.",
     },
-    "4d-gs": {
-        "display_name": "4D-GS",
-        "category": "3D Scene",
-        "default_backend": "from_pretrained",
-        "default_model_ref": lambda: _in_tree_repo_ref("4DGaussians"),
-        "supports_from_pretrained": True,
-        "supports_stream": False,
-        "default_task_type": "unsupported_inference",
-        "default_call_kwargs": _three_d_four_d_runtime_call_kwargs(plan_only=True),
-        "call_params": _three_d_four_d_runtime_call_params("plan_only"),
-        "load_params": _three_d_four_d_runtime_load_params(),
-        "aliases": ("4dgs", "4DGaussians"),
-        "tags": ("4d", "gaussian-splatting", "dynamic-scene"),
-        "notes": "Official reconstruction uses a training entrypoint, so this item is disabled until an infer-only runtime is integrated.",
-    },
     "lagernvs": {
         "display_name": "LagrNVS",
         "category": "3D Scene",
@@ -7171,14 +10876,7 @@ CURATED_OVERRIDES: Dict[str, Dict[str, Any]] = {
         "supports_from_pretrained": True,
         "supports_stream": False,
         "default_task_type": "monst3r_demo",
-        "default_call_kwargs": _three_d_four_d_runtime_call_kwargs(
-            weights=str(checkpoint_root_path("MonST3R_PO-TA-S-W_ViTLarge_BaseDecoder_512_dpt", "MonST3R_PO-TA-S-W_ViTLarge_BaseDecoder_512_dpt.pth")),
-            seq_name="worldfoundry",
-            niter=300,
-            flow_loss_weight=0.0,
-            skip_pair_dynamic_mask=True,
-            silent=True,
-        ),
+        "default_call_kwargs": _monst3r_default_call_kwargs,
         "call_params": _three_d_four_d_runtime_call_params(
             "images",
             "video",
@@ -7225,38 +10923,18 @@ CURATED_OVERRIDES: Dict[str, Dict[str, Any]] = {
         "default_task_type": "mvdiffusion_demo",
         "default_call_kwargs": _three_d_four_d_runtime_call_kwargs(
             gen_video=True,
-            text_path="assets/prompts.txt",
+            steps=20,
         ),
         "call_params": _three_d_four_d_runtime_call_params(
             "prompt",
             "images",
             "text_path",
             "gen_video",
+            "steps",
         ),
         "load_params": _three_d_four_d_runtime_load_params(),
         "tags": ("multi-view", "diffusion", "3d"),
-        "notes": "Runs the official MVDiffusion demo.py entrypoint from the local official repo.",
-    },
-    "shape-of-motion": {
-        "display_name": "Shape of Motion",
-        "category": "3D Scene",
-        "default_backend": "from_pretrained",
-        "default_model_ref": lambda: _in_tree_repo_ref("shape-of-motion"),
-        "supports_from_pretrained": True,
-        "supports_stream": False,
-        "default_task_type": "shape_of_motion_preview",
-        "default_call_kwargs": _three_d_four_d_runtime_call_kwargs(),
-        "call_params": _three_d_four_d_runtime_call_params(
-            "data_dir",
-            "source_path",
-            "dataset_path",
-            "data_root",
-            "shape_preview_frames",
-            "shape_preview_max_points",
-        ),
-        "load_params": _three_d_four_d_runtime_load_params(),
-        "tags": ("4d", "tracking", "dynamic-scene"),
-        "notes": "Requires a Shape-of-Motion preprocessed data_dir; Studio exports a geometry preview from the official depth/camera bundle.",
+        "notes": "Runs the official MVDiffusion demo.py entrypoint from the local official repo. The 20-step default produces a visually structured panorama; one step is suitable only for runtime smoke testing.",
     },
     "stable-virtual-camera": {
         "display_name": "Stable Virtual Camera",
@@ -7266,11 +10944,19 @@ CURATED_OVERRIDES: Dict[str, Dict[str, Any]] = {
         "supports_from_pretrained": True,
         "supports_stream": False,
         "default_task_type": "stable_virtual_camera_demo",
+        "default_input_path": str(
+            _data_path("test_cases", "stable_virtual_camera", "basic", "blue-car.jpg")
+        ),
         "default_call_kwargs": _three_d_four_d_runtime_call_kwargs(
             version="1.1",
             task="img2trajvid_s-prob",
             pretrained_model_name_or_path=str(checkpoint_root_path("stable-virtual-camera")),
             weight_name="modelv1.1.safetensors",
+            H=576,
+            W=576,
+            T=21,
+            num_steps=50,
+            seed=23,
         ),
         "call_params": _three_d_four_d_runtime_call_params(
             "images",
@@ -7297,7 +10983,7 @@ CURATED_OVERRIDES: Dict[str, Dict[str, Any]] = {
         "supports_stream": False,
         "default_prompt": "a village landscape",
         "default_task_type": "wonderjourney_run",
-        "default_call_kwargs": _three_d_four_d_runtime_call_kwargs(config="config/village.yaml"),
+        "default_call_kwargs": _three_d_four_d_runtime_call_kwargs(config=str(_data_path("models", "runtime", "configs", "wonderjourney", "village.yaml"))),
         "call_params": _three_d_four_d_runtime_call_params(
             "prompt",
             "config",
@@ -7321,7 +11007,7 @@ CURATED_OVERRIDES: Dict[str, Dict[str, Any]] = {
         "supports_stream": False,
         "default_prompt": "a village landscape",
         "default_task_type": "wonderworld_run",
-        "default_call_kwargs": _three_d_four_d_runtime_call_kwargs(config="config/inference.yaml"),
+        "default_call_kwargs": _three_d_four_d_runtime_call_kwargs(config=str(_data_path("models", "runtime", "configs", "wonderworld", "inference.yaml"))),
         "call_params": _three_d_four_d_runtime_call_params(
             "prompt",
             "config",
@@ -7353,6 +11039,7 @@ CURATED_OVERRIDES: Dict[str, Dict[str, Any]] = {
         "call_params": _three_d_four_d_runtime_call_params(
             "prompt",
             "images",
+            "pano_image",
             "viewer",
             "use_sharp",
             "return_mesh",
@@ -7368,6 +11055,7 @@ CURATED_OVERRIDES: Dict[str, Dict[str, Any]] = {
         "runtime_kind": "two_stage_3dgs",
         "category": "3D Scene",
         "default_model_ref": _cut3r_default_ref,
+        "aliases": ("cut3r-512", "cut3r_512_dpt_4_64"),
         "default_task_type": "cut3r_two_stage_3dgs",
         "suggested_task_types": ("cut3r_two_stage_3dgs", "cut3r_base", "cut3r_official_export"),
         "default_interactions": ("forward", "left", "camera_zoom_in"),
@@ -7397,7 +11085,7 @@ CURATED_OVERRIDES: Dict[str, Dict[str, Any]] = {
         "display_name": "Pi3",
         "runtime_kind": "pointcloud_nav",
         "category": "3D Scene",
-        "default_model_ref": "yyfz233/Pi3X",
+        "default_model_ref": _pi3_default_ref,
         "default_task_type": "reconstruction",
         "suggested_task_types": ("reconstruction", "render_view", "render_trajectory"),
         "default_interactions": ("forward", "left", "camera_r"),
@@ -7450,7 +11138,7 @@ CURATED_OVERRIDES: Dict[str, Dict[str, Any]] = {
     "depth-anything-v2": {
         "display_name": "Depth Anything 2",
         "category": "Depth / Geometry",
-        "default_model_ref": "depth-anything/Depth-Anything-V2-Large",
+        "default_model_ref": _depth_anything_v2_default_ref,
         "aliases": ("da2", "depth-anything-2", "depth-anything2", "depthanything2"),
         "tags": ("depth", "geometry"),
         "notes": "Relative depth wrapper around the vendored official Depth-Anything-V2 runtime.",
@@ -7615,6 +11303,7 @@ CURATED_OVERRIDES: Dict[str, Dict[str, Any]] = {
         "display_name": "HY-WorldPlay",
         "category": "Video Generation",
         "default_model_ref": _hunyuan_worldplay_default_ref,
+        "default_input_path": str(_data_path("test_cases", "hunyuan_worldplay", "test.png")),
         "default_prompt": (
             "A paved pathway leads towards a stone arch bridge spanning a calm body of water.  "
             "Lush green trees and foliage line the path and the far bank of the water. "
@@ -7625,8 +11314,21 @@ CURATED_OVERRIDES: Dict[str, Dict[str, Any]] = {
             "composition emphasizes the peaceful and harmonious nature of the landscape."
         ),
         "default_interactions": ("w-31",),
+        "default_load_kwargs": {
+            "enable_offloading": True,
+            "enable_group_offloading": True,
+            "overlap_group_offloading": False,
+        },
         "default_call_kwargs": _hunyuan_worldplay_default_call_kwargs,
-        "load_params": ("torchrun_nproc_per_node", "torchrun_nproc", "nproc_per_node", *DISPATCH_LOAD_PARAMS),
+        "load_params": (
+            "enable_offloading",
+            "enable_group_offloading",
+            "overlap_group_offloading",
+            "torchrun_nproc_per_node",
+            "torchrun_nproc",
+            "nproc_per_node",
+            *DISPATCH_LOAD_PARAMS,
+        ),
         "supports_stream": True,
         "stream_params": (),
         "call_params": (
@@ -7655,6 +11357,8 @@ CURATED_OVERRIDES: Dict[str, Dict[str, Any]] = {
             "forward_speed",
             "yaw_speed_deg",
             "pitch_speed_deg",
+            "output_path",
+            "return_dict",
         ),
         "aliases": ("worldplay", "hy-worldplay", "hyworldplay", "tencent/HY-WorldPlay"),
         "tags": ("interactive-world", "camera-control", "image-to-video", "wmfactory"),
@@ -7691,6 +11395,8 @@ CURATED_OVERRIDES: Dict[str, Dict[str, Any]] = {
             "runtime_root",
             "config_path",
             "checkpoint_path",
+            "base_model_root",
+            "vggt_root",
             "python_executable",
             "derive_env_obv_from_image",
             "num_inference_steps",
@@ -7755,6 +11461,176 @@ CURATED_OVERRIDES: Dict[str, Dict[str, Any]] = {
         "default_backend": "api_init",
         "tags": ("api", "t2v", "i2v"),
     },
+    "ltx-2.3-t2v": {
+        "display_name": "LTX-2.3 T2V",
+        "category": "Video Generation",
+        "supports_from_pretrained": True,
+        "supports_stream": True,
+        "default_backend": "from_pretrained",
+        "default_task_type": "t2v",
+        "default_prompt": "Ocean waves break against black rocks at sunset with coherent water motion and cinematic light.",
+        "default_model_ref": lambda: _checkpoint_model_ref(
+            "LTX-2.3/ltx-2.3-22b-distilled-1.1.safetensors",
+            "Lightricks--LTX-2.3/ltx-2.3-22b-distilled-1.1.safetensors",
+            fallback="Lightricks/LTX-2.3",
+        ),
+        "default_load_kwargs": _ltx23_default_load_kwargs,
+        "default_call_kwargs": {
+            "num_frames": 121,
+            "fps": 24,
+            "height": 512,
+            "width": 768,
+            "num_inference_steps": 11,
+            "guidance_scale": 1.0,
+            "seed": 42,
+        },
+        "call_params": (
+            "prompt",
+            "output_path",
+            "return_dict",
+            "fps",
+            "num_frames",
+            "num_inference_steps",
+            "height",
+            "width",
+            "guidance_scale",
+            "seed",
+        ),
+        "load_params": (
+            "model_path",
+            "required_components",
+            "device",
+            "lazy",
+            "height",
+            "width",
+            "num_frames",
+            "frame_rate",
+            "num_inference_steps",
+            "guidance_scale",
+            "seed",
+            "offload_mode",
+            "quantization",
+        ),
+        "aliases": ("ltx2.3-t2v", "ltx2_3_t2v"),
+        "tags": ("text-to-video", "joint-audio-video", "native-diffusion", "local-checkpoint"),
+    },
+    "ltx-2.3-i2v": {
+        "display_name": "LTX-2.3 I2V",
+        "category": "Video Generation",
+        "supports_from_pretrained": True,
+        "supports_stream": True,
+        "default_backend": "from_pretrained",
+        "default_task_type": "i2v",
+        "default_prompt": "A young man holding a bright sparkler gently turns his head as sparks scatter through the night air, with natural motion and stable facial details.",
+        "default_input_path": str(_data_path("test_cases", "studio_demo", "00", "image.jpg")),
+        "default_model_ref": lambda: _checkpoint_model_ref(
+            "LTX-2.3/ltx-2.3-22b-distilled-1.1.safetensors",
+            "Lightricks--LTX-2.3/ltx-2.3-22b-distilled-1.1.safetensors",
+            fallback="Lightricks/LTX-2.3",
+        ),
+        "default_load_kwargs": _ltx23_default_load_kwargs,
+        "default_call_kwargs": {
+            "num_frames": 121,
+            "fps": 24,
+            "height": 512,
+            "width": 768,
+            "num_inference_steps": 11,
+            "guidance_scale": 1.0,
+            "seed": 0,
+        },
+        "call_params": (
+            "prompt",
+            "images",
+            "output_path",
+            "return_dict",
+            "fps",
+            "num_frames",
+            "num_inference_steps",
+            "height",
+            "width",
+            "guidance_scale",
+            "seed",
+        ),
+        "load_params": (
+            "model_path",
+            "required_components",
+            "device",
+            "lazy",
+            "height",
+            "width",
+            "num_frames",
+            "frame_rate",
+            "num_inference_steps",
+            "guidance_scale",
+            "seed",
+            "offload_mode",
+            "quantization",
+        ),
+        "aliases": ("ltx-2.x", "ltx2.3", "ltx-2.3", "ltx2.3-i2v", "ltx2_3_i2v"),
+        "tags": ("image-to-video", "joint-audio-video", "native-diffusion", "local-checkpoint"),
+    },
+    "ltx-2.5": {
+        "display_name": "LTX-2.5 Distilled",
+        "category": "Video Generation",
+        "supports_from_pretrained": True,
+        "supports_stream": True,
+        "default_backend": "from_pretrained",
+        "default_task_type": "t2v",
+        "default_prompt": "Ocean waves break against black rocks at sunset with coherent water motion, synchronized natural audio, and cinematic light.",
+        "default_model_ref": _ltx25_checkpoint_dir,
+        "default_load_kwargs": _ltx25_default_load_kwargs,
+        "default_call_kwargs": {
+            "num_frames": 121,
+            "fps": 24,
+            "height": 512,
+            "width": 768,
+            "seed": 42,
+            "execute": True,
+            "timeout_seconds": 7200,
+            "return_dict": True,
+        },
+        "call_params": (
+            "prompt",
+            "images",
+            "output_path",
+            "return_dict",
+            "execute",
+            "timeout_seconds",
+            "fps",
+            "num_frames",
+            "height",
+            "width",
+            "seed",
+            "offload_mode",
+            "quantization",
+            "diffvae_optimization",
+            "auto_duration",
+            "num_generated_keyframes",
+            "enhance_prompt",
+        ),
+        "load_params": (
+            "model_path",
+            "required_components",
+            "device",
+            "model_id",
+            "checkpoint_dir",
+            "source_root",
+            "python_executable",
+            "transformer_path",
+            "text_encoder_path",
+            "video_vae_path",
+            "audio_vae_path",
+            "spatial_upsampler_path",
+            "duration_head_path",
+            "prompt_enhancer_gemma_root",
+            "offload_mode",
+            "quantization",
+            "diffvae_optimization",
+        ),
+        "aliases": ("ltx2.5", "ltx25", "ltx-2.5-distilled"),
+        "tags": ("text-to-video", "image-to-video", "joint-audio-video", "official-runtime"),
+        "notes": "Runs the pinned official LTX-2.5 DistilledPipeline in its dedicated environment.",
+    },
     "sora2": {
         "display_name": "Sora2",
         "category": "Remote API",
@@ -7771,6 +11647,198 @@ CURATED_OVERRIDES: Dict[str, Dict[str, Any]] = {
 
 CURATED_OVERRIDES.update(
     {
+        "dreamdojo": {
+            "display_name": "DreamDojo",
+            "category": "Video Generation",
+            "default_backend": "from_pretrained",
+            "supports_from_pretrained": True,
+            "default_model_ref": _dreamdojo_default_ref,
+            "default_load_kwargs": _dreamdojo_default_load_kwargs,
+            "default_task_type": "robot-world-generation",
+            "default_prompt": "Predict the next GR-1 robot-view sequence from the recorded action trajectory.",
+            "default_call_kwargs": {"num_samples": 1, "return_dict": True},
+            "load_params": (
+                "model_path",
+                "required_components",
+                "device",
+                "checkpoints_dir",
+                "dataset_path",
+                "experiment",
+                "checkpoint_interval",
+                "checkpoint_shards",
+                *DISPATCH_LOAD_PARAMS,
+            ),
+            "call_params": (
+                "prompt",
+                "images",
+                "video",
+                "interactions",
+                "output_path",
+                "num_samples",
+                "return_dict",
+            ),
+            "tags": ("robot-world-model", "action-conditioned-video", "in-tree-runtime"),
+        },
+        "moverse": {
+            "display_name": "MoVerse",
+            "category": "Video Generation",
+            "default_backend": "from_pretrained",
+            "supports_from_pretrained": True,
+            "default_model_ref": _moverse_default_ref,
+            "default_load_kwargs": _moverse_default_load_kwargs,
+            "default_task_type": "image-to-navigable-world",
+            "default_input_path": str(_data_path("test_cases", "images", "000.png")),
+            "default_prompt": (
+                "Move forward through the scene while preserving geometry, appearance, and coherent camera motion."
+            ),
+            "default_call_kwargs": {"num_frames": 161, "fps": 16, "return_dict": True},
+            "load_params": (
+                "model_path",
+                "required_components",
+                "device",
+                "moverse_path",
+                "flux_path",
+                "da3_path",
+                "wan_path",
+                "python_executable",
+                *DISPATCH_LOAD_PARAMS,
+            ),
+            "call_params": (
+                "prompt",
+                "images",
+                "interactions",
+                "output_path",
+                "num_frames",
+                "fps",
+                "trajectory_path",
+                "return_dict",
+            ),
+            "tags": ("image-to-world", "camera-control", "gaussian-splat", "in-tree-runtime"),
+        },
+        "sana-wm-streaming": {
+            "display_name": "SANA-WM Streaming",
+            "category": "Video Generation",
+            "default_backend": "from_pretrained",
+            "supports_from_pretrained": True,
+            "supports_stream": True,
+            "default_model_ref": _sana_wm_streaming_default_ref,
+            "default_load_kwargs": _sana_wm_streaming_default_load_kwargs,
+            "default_task_type": "image-camera-video",
+            "default_input_path": str(_data_path("test_cases", "sana_wm", "example_image.png")),
+            "default_prompt": (
+                "Move forward through a coherent scene with stable geometry and natural camera motion."
+            ),
+            "default_interactions": ("forward",),
+            "default_call_kwargs": {
+                "window_frames": 241,
+                "fps": 16,
+                "step": 4,
+                "cfg_scale": 1.0,
+                "seed": 42,
+                "return_dict": True,
+            },
+            "load_params": (
+                "model_path",
+                "required_components",
+                "device",
+                "checkpoint_overrides",
+                "gemma_path",
+                *DISPATCH_LOAD_PARAMS,
+            ),
+            "call_params": (
+                "images",
+                "prompt",
+                "interactions",
+                "window_frames",
+                "fps",
+                "step",
+                "cfg_scale",
+                "seed",
+                "return_dict",
+            ),
+            "tags": ("world-model", "image-to-video", "camera-control", "stream", "in-tree-runtime"),
+        },
+    }
+)
+
+CURATED_OVERRIDES.update(
+    {
+        "versecrafter": {
+            "display_name": "VerseCrafter",
+            "category": "Video Generation",
+            "default_task_type": "i2v",
+            "default_model_ref": _versecrafter_default_ref,
+            "default_load_kwargs": _versecrafter_default_load_kwargs,
+            "default_prompt": "A cinematic mountain valley with a gently moving camera and stable natural geometry.",
+            "default_input_path": str(_data_path("test_cases", "studio_demo", "00", "image.jpg")),
+            "default_call_kwargs": {
+                "width": 832,
+                "height": 480,
+                "num_frames": 81,
+                "fps": 16,
+                "num_inference_steps": 30,
+                "guidance_scale": 5.0,
+                "seed": 2025,
+                "return_dict": True,
+            },
+            "call_params": (
+                "prompt",
+                "images",
+                "image_path",
+                "trajectory_npz",
+                "output_path",
+                "width",
+                "height",
+                "num_frames",
+                "fps",
+                "num_inference_steps",
+                "guidance_scale",
+                "seed",
+                "return_dict",
+            ),
+            "load_params": (
+                "model_path",
+                "required_components",
+                "device",
+                "checkpoint_path",
+                "base_model_path",
+                "moge_model_path",
+                "python_executable",
+                "env",
+            ),
+            "aliases": ("verse-crafter", "TencentARC/VerseCrafter"),
+            "tags": ("image-to-video", "camera-control", "4d-control", "in-tree-runtime"),
+        },
+        "t2v_turbo_t2v": {
+            "generation_type": "t2v",
+            "aliases": ("t2v-turbo-t2v", "t2v-turbo"),
+            "default_prompt": "An astronaut riding a horse.",
+            "default_model_ref": _t2v_turbo_base_ref,
+            "default_load_kwargs": _t2v_turbo_default_load_kwargs,
+            "load_params": (
+                "model_path",
+                "required_components",
+                "device",
+                "base_checkpoint",
+                "model_ckpt",
+                "lora_checkpoint",
+                "lora_path",
+                "torch_dtype",
+                "weight_dtype",
+                "dtype",
+                "offload_mode",
+            ),
+            "default_call_kwargs": {
+                "height": 320,
+                "width": 512,
+                "num_frames": 16,
+                "fps": 8,
+                "num_inference_steps": 8,
+                "guidance_scale": 7.5,
+                "seed": 0,
+                "lcm_origin_steps": 200,
+            },
+        },
         "dap": {
             "display_name": "Depth Any Panoramas",
             "category": "Depth / Geometry",
@@ -8022,72 +12090,14 @@ def _canonical_runtime_entries() -> Iterable[CatalogEntry]:
                 fallback="rhymes-ai/Allegro-TI2V",
             ),
         },
-        "cogvideox_2b_t2v": {
-            "generation_type": "t2v",
-            "aliases": ("cogvideox-2b-t2v", "cogvideox-2b"),
-            "default_prompt": "A futuristic city street at sunset with reflective glass towers, clean motion, and cinematic lighting.",
-            "default_call_kwargs": {
-                "fps": 8,
-                "height": 480,
-                "num_frames": 17,
-                "num_inference_steps": 10,
-                "seed": 42,
-                "width": 720,
-            },
-            "default_model_ref": lambda: _checkpoint_model_ref(
-                "CogVideoX-2b",
-                "THUDM--CogVideoX-2b",
-                fallback="THUDM/CogVideoX-2b",
-            ),
-        },
-        "cogvideox_5b_i2v": {
-            "generation_type": "i2v",
-            "aliases": ("cogvideox-5b-i2v",),
-            "default_prompt": (
-                "First-person cinematic flight on a dragon through a lush jungle toward "
-                "a towering ancient stone castle, with smooth forward camera motion, "
-                "detailed fantasy world, natural lighting."
-            ),
-            "default_input_path": str(_data_path("test_cases", "studio_demo", "00", "image.jpg")),
-            "default_call_kwargs": {
-                "fps": 8,
-                "guidance_scale": 6.0,
-                "height": 480,
-                "num_frames": 49,
-                "num_inference_steps": 50,
-                "seed": 45,
-                "width": 720,
-            },
-            "default_model_ref": lambda: _checkpoint_model_ref(
-                "CogVideoX-5b-I2V",
-                "THUDM--CogVideoX-5b-I2V",
-                fallback="THUDM/CogVideoX-5b-I2V",
-            ),
-        },
-        "cogvideox_5b_t2v": {
-            "generation_type": "t2v",
-            "aliases": ("cogvideox", "cogvideox-5b-t2v", "cogvideox-5b"),
-            "default_prompt": "A futuristic city street at sunset with reflective glass towers, clean motion, and cinematic lighting.",
-            "default_call_kwargs": {
-                "fps": 8,
-                "height": 480,
-                "num_frames": 17,
-                "num_inference_steps": 10,
-                "seed": 43,
-                "width": 720,
-            },
-            "default_model_ref": lambda: _checkpoint_model_ref(
-                "CogVideoX-5b",
-                "THUDM--CogVideoX-5b",
-                fallback="THUDM/CogVideoX-5b",
-            ),
-        },
+        **_cogvideox_variant_specs(),
         "dynamicrafter_1024_i2v": {
             "generation_type": "i2v",
             "aliases": ("dynamicrafter-1024-i2v",),
-            "default_prompt": "A first-person cinematic flight toward an ancient stone castle through a lush jungle, smooth camera motion.",
+            "default_prompt": "A young man holding a bright sparkler gently turns his head as sparks scatter through the night air, with natural motion and stable facial details.",
             "default_input_path": str(_data_path("test_cases", "studio_demo", "00", "image.jpg")),
             "default_model_ref": lambda: _checkpoint_model_ref(
+                "Doubiiu--DynamiCrafter_1024/model.ckpt",
                 "DynamiCrafter_1024/model.ckpt",
                 "AliVideo--DynamiCrafter_1024/model.ckpt",
             ),
@@ -8095,9 +12105,10 @@ def _canonical_runtime_entries() -> Iterable[CatalogEntry]:
         "dynamicrafter_512_i2v": {
             "generation_type": "i2v",
             "aliases": ("dynamicrafter", "dynamicrafter-512-i2v"),
-            "default_prompt": "A first-person cinematic flight toward an ancient stone castle through a lush jungle, smooth camera motion.",
+            "default_prompt": "A young man holding a bright sparkler gently turns his head as sparks scatter through the night air, with natural motion and stable facial details.",
             "default_input_path": str(_data_path("test_cases", "studio_demo", "00", "image.jpg")),
             "default_model_ref": lambda: _checkpoint_model_ref(
+                "Doubiiu--DynamiCrafter_512/model.ckpt",
                 "DynamiCrafter_512/model.ckpt",
                 "AliVideo--DynamiCrafter_512/model.ckpt",
             ),
@@ -8105,6 +12116,11 @@ def _canonical_runtime_entries() -> Iterable[CatalogEntry]:
         "easyanimate_i2v": {
             "generation_type": "i2v",
             "aliases": ("easyanimate-i2v", "easyanimate"),
+            "default_prompt": (
+                "A young man holding a bright sparkler gently turns his head and smiles as sparks scatter "
+                "through the night air, with natural motion, stable facial details, and a steady camera."
+            ),
+            "default_input_path": str(_data_path("test_cases", "studio_demo", "00", "image.jpg")),
             "default_model_ref": lambda: _checkpoint_model_ref(
                 "hfd/alibaba-pai--EasyAnimateV5.1-7b-zh-InP",
                 "alibaba-pai--EasyAnimateV5.1-7b-zh-InP",
@@ -8120,7 +12136,7 @@ def _canonical_runtime_entries() -> Iterable[CatalogEntry]:
         "ltx_video_i2v": {
             "generation_type": "i2v",
             "aliases": ("ltx-video-i2v", "ltx-video"),
-            "default_prompt": "A first-person cinematic flight toward an ancient stone castle through a lush jungle, smooth camera motion.",
+            "default_prompt": "A young man holding a bright sparkler gently turns his head as sparks scatter through the night air, with natural motion and stable facial details.",
             "default_input_path": str(_data_path("test_cases", "studio_demo", "00", "image.jpg")),
             "default_model_ref": lambda: _checkpoint_model_ref(
                 "LTX-Video",
@@ -8131,14 +12147,14 @@ def _canonical_runtime_entries() -> Iterable[CatalogEntry]:
         "ltx2_i2v": {
             "generation_type": "i2v",
             "aliases": ("ltx2-i2v", "ltx2", "ltx-2", "ltx-2-i2v"),
-            "default_prompt": "A first-person cinematic flight toward an ancient stone castle through a lush jungle, smooth camera motion.",
+            "default_prompt": "A young man holding a bright sparkler gently turns his head as sparks scatter through the night air, with natural motion and stable facial details.",
             "default_input_path": str(_data_path("test_cases", "studio_demo", "00", "image.jpg")),
             "default_call_kwargs": {
                 "num_frames": 121,
                 "fps": 24,
                 "height": 512,
                 "width": 768,
-                "num_inference_steps": 8,
+                "num_inference_steps": 11,
                 "guidance_scale": 1.0,
                 "seed": 171198,
             },
@@ -8179,14 +12195,14 @@ def _canonical_runtime_entries() -> Iterable[CatalogEntry]:
         "ltx2_3_i2v": {
             "generation_type": "i2v",
             "aliases": ("ltx-2.x", "ltx2.3", "ltx-2.3", "ltx2.3-i2v", "ltx-2.3-i2v"),
-            "default_prompt": "A first-person cinematic flight toward an ancient stone castle through a lush jungle, smooth camera motion.",
+            "default_prompt": "A young man holding a bright sparkler gently turns his head as sparks scatter through the night air, with natural motion and stable facial details.",
             "default_input_path": str(_data_path("test_cases", "studio_demo", "00", "image.jpg")),
             "default_call_kwargs": {
                 "num_frames": 121,
                 "fps": 24,
                 "height": 512,
                 "width": 768,
-                "num_inference_steps": 30,
+                "num_inference_steps": 11,
                 "guidance_scale": 1.0,
                 "seed": 0,
             },
@@ -8234,15 +12250,29 @@ def _canonical_runtime_entries() -> Iterable[CatalogEntry]:
             "generation_type": "t2v",
             "aliases": ("t2v-turbo-t2v", "t2v-turbo"),
             "default_prompt": "An astronaut riding a horse.",
+            "default_model_ref": _t2v_turbo_base_ref,
+            "default_load_kwargs": _t2v_turbo_default_load_kwargs,
+            "load_params": (
+                "model_path",
+                "required_components",
+                "device",
+                "base_checkpoint",
+                "model_ckpt",
+                "lora_checkpoint",
+                "lora_path",
+                "torch_dtype",
+                "weight_dtype",
+                "dtype",
+                "offload_mode",
+            ),
             "default_call_kwargs": {
+                "height": 320,
+                "width": 512,
                 "num_frames": 16,
                 "fps": 8,
                 "num_inference_steps": 8,
                 "guidance_scale": 7.5,
                 "seed": 0,
-                "motion_gs": 0.05,
-                "use_motion_cond": False,
-                "percentage": 0.3,
                 "lcm_origin_steps": 200,
             },
         },
@@ -8250,6 +12280,24 @@ def _canonical_runtime_entries() -> Iterable[CatalogEntry]:
             "generation_type": "t2v",
             "aliases": ("vchitect-2-t2v", "vchitect2-t2v", "vchitect-2"),
             "default_prompt": "A tiger walks in the forest, photorealistic, 4k, high definition",
+            "default_model_ref": _vchitect2_default_ref,
+            "load_params": (
+                "model_path",
+                "required_components",
+                "device",
+                "torch_dtype",
+                "dtype",
+                "offload_mode",
+            ),
+            "default_call_kwargs": {
+                "height": 432,
+                "width": 768,
+                "num_frames": 40,
+                "num_inference_steps": 100,
+                "guidance_scale": 7.5,
+                "fps": 8,
+                "seed": 0,
+            },
         },
         "videocrafter1_i2v": {
             "generation_type": "i2v",
@@ -8257,163 +12305,107 @@ def _canonical_runtime_entries() -> Iterable[CatalogEntry]:
             "default_prompt": "horses are walking on the grassland",
             "default_input_path": str(_data_path("test_cases", "videocrafter", "i2v_prompts", "horse.png")),
             "default_model_ref": lambda: _checkpoint_model_ref(
+                "VideoCrafter--Image2Video-512/model.ckpt",
                 "VideoCrafter/videocrafter_i2v_512_v1.ckpt",
                 "video_models/videocrafter_i2v_512_v1.ckpt",
             ),
+            "default_call_kwargs": {
+                "num_frames": 16,
+                "fps": 8,
+                "num_inference_steps": 50,
+                "height": 320,
+                "width": 512,
+                "seed": 123,
+            },
         },
         "videocrafter1_t2v": {
             "generation_type": "t2v",
             "aliases": ("videocrafter1-t2v",),
             "default_prompt": "A tiger walks in the forest, photorealistic, 4k, high definition",
             "default_model_ref": lambda: _checkpoint_model_ref(
+                "VideoCrafter--Text2Video-1024/model.ckpt",
                 "VideoCrafter/videocrafter_t2v_1024_v1.ckpt",
                 "video_models/videocrafter_t2v_1024_v1.ckpt",
             ),
+            "default_call_kwargs": {
+                "num_frames": 16,
+                "fps": 8,
+                "num_inference_steps": 50,
+                "height": 576,
+                "width": 1024,
+                "seed": 123,
+            },
         },
         "videocrafter2_t2v": {
             "generation_type": "t2v",
             "aliases": ("videocrafter", "videocrafter2-t2v"),
             "default_prompt": "A tiger walks in the forest, photorealistic, 4k, high definition",
             "default_model_ref": lambda: _checkpoint_model_ref(
+                "VideoCrafter--VideoCrafter2/model.ckpt",
                 "VideoCrafter/videocrafter_t2v_512_v2.ckpt",
                 "video_models/videocrafter_t2v_512_v2.ckpt",
             ),
+            "default_call_kwargs": {
+                "num_frames": 16,
+                "fps": 28,
+                "num_inference_steps": 50,
+                "height": 320,
+                "width": 512,
+                "seed": 123,
+            },
         },
         "wan2.1_i2v": {
             "generation_type": "i2v",
-            "ast_slug": "wan-2p1-i2v",
+            "ast_slug": "wan2.1-i2v-14b-480p",
             "display_name": "Wan2.1 I2V",
             "aliases": ("wan2.1-i2v", "wan2p1-i2v", "wan2-1-i2v"),
             "default_model_ref": _wan_2p1_i2v_default_ref,
-            "default_prompt": "A first-person cinematic flight toward an ancient stone castle through a lush jungle, smooth camera motion.",
+            "default_prompt": "A young man holding a bright sparkler gently turns his head as sparks scatter through the night air, with natural motion and stable facial details.",
             "default_input_path": str(_data_path("test_cases", "studio_demo", "00", "image.jpg")),
             "default_call_kwargs": {
-                "task": "i2v-14B",
-                "size": "832*480",
-                "frames": 81,
+                "height": 480,
+                "width": 832,
+                "num_frames": 81,
                 "fps": 16,
-                "sample_steps": 40,
-                "sample_shift": 3.0,
-                "sample_guide_scale": 5.0,
-                "base_seed": 42,
-                "offload_model": True,
-                "t5_cpu": True,
+                "num_inference_steps": 40,
+                "shift": 3.0,
+                "guidance_scale": 5.0,
+                "seed": 42,
             },
-            "call_params": (
-                "prompt",
-                "images",
-                "output_path",
-                "fps",
-                "return_dict",
-                "task",
-                "size",
-                "frames",
-                "num_frames",
-                "frame_num",
-                "sample_steps",
-                "steps",
-                "num_inference_steps",
-                "sample_shift",
-                "shift",
-                "time_shift",
-                "sample_guide_scale",
-                "guidance_scale",
-                "base_seed",
-                "seed",
-                "sample_solver",
-                "offload_model",
-                "t5_cpu",
-            ),
-            "load_params": (
-                "model_path",
-                "required_components",
-                "device",
-                "lazy",
-                "task",
-                "size",
-                "frames",
-                "fps",
-                "sample_steps",
-                "sample_shift",
-                "sample_guide_scale",
-                "base_seed",
-                "sample_solver",
-                "offload_model",
-                "t5_cpu",
-                "t5_fsdp",
-                "dit_fsdp",
-                "ulysses_size",
-                "ring_size",
-                *DISPATCH_LOAD_PARAMS,
-            ),
+            "call_params": _native_diffusion_video_call_params(),
+            "load_params": _native_diffusion_video_load_params(),
         },
         "wan2.1_t2v": {
             "generation_type": "t2v",
-            "ast_slug": "wan-2p1-t2v",
+            "ast_slug": "wan2.1-t2v-1.3b",
             "display_name": "Wan2.1 T2V",
             "aliases": ("wan2.1", "wan2.1-t2v", "wan2p1-t2v", "wan2-1-t2v"),
             "default_model_ref": _wan_2p1_t2v_default_ref,
             "default_prompt": "Two anthropomorphic cats in comfy boxing gear and bright gloves fight intensely on a spotlighted stage.",
             "default_call_kwargs": {
-                "task": "t2v-1.3B",
-                "size": "832*480",
-                "frames": 81,
+                "height": 480,
+                "width": 832,
+                "num_frames": 81,
                 "fps": 16,
-                "sample_steps": 50,
-                "sample_shift": 8.0,
-                "sample_guide_scale": 6.0,
-                "base_seed": 42,
-                "offload_model": True,
-                "t5_cpu": True,
+                "num_inference_steps": 50,
+                "shift": 8.0,
+                "guidance_scale": 6.0,
+                "seed": 42,
             },
-            "call_params": (
-                "prompt",
-                "images",
-                "output_path",
-                "fps",
-                "return_dict",
-                "task",
-                "size",
-                "frames",
-                "num_frames",
-                "frame_num",
-                "sample_steps",
-                "steps",
-                "num_inference_steps",
-                "sample_shift",
-                "shift",
-                "time_shift",
-                "sample_guide_scale",
-                "guidance_scale",
-                "base_seed",
-                "seed",
-                "sample_solver",
-                "offload_model",
-                "t5_cpu",
-            ),
-            "load_params": (
-                "model_path",
-                "required_components",
-                "device",
-                "lazy",
-                "task",
-                "size",
-                "frames",
-                "fps",
-                "sample_steps",
-                "sample_shift",
-                "sample_guide_scale",
-                "base_seed",
-                "sample_solver",
-                "offload_model",
-                "t5_cpu",
-                "t5_fsdp",
-                "dit_fsdp",
-                "ulysses_size",
-                "ring_size",
-                *DISPATCH_LOAD_PARAMS,
-            ),
+            "call_params": _native_diffusion_video_call_params(),
+            "load_params": _native_diffusion_video_load_params(),
         },
+    }
+    runtime_specs[COGVIDEOX_STUDIO_PARENT_ID] = {
+        **runtime_specs[COGVIDEOX_STUDIO_PARENT_ID],
+        "display_name": "CogVideoX",
+        "summary": (
+            "CogVideoX text-to-video and image-to-video family. "
+            "Select 2B T2V, 5B T2V, or 5B I2V."
+        ),
+        "aliases": _cogvideox_aliases(),
+        "extra_variants": _cogvideox_workspace_variants,
+        "tags": ("video", "t2v", "i2v"),
     }
 
     ast_by_slug: Dict[str, _AstPipelineInfo] = {}
@@ -8429,7 +12421,7 @@ def _canonical_runtime_entries() -> Iterable[CatalogEntry]:
         family = matched.family if matched is not None else canonical_name.split("_", maxsplit=1)[0]
         display_name = str(spec.get("display_name") or _display_name_from_slug(slug.replace("_", "-")))
         generation_type = spec.get("generation_type", "i2v")
-        summary = f"Independent {generation_type.upper()} video pipeline for this model."
+        summary = str(spec.get("summary") or f"Independent {generation_type.upper()} video pipeline for this model.")
         if "call_params" in spec:
             call_params = tuple(_resolve_override_value(spec.get("call_params")) or ())
         else:
@@ -8465,12 +12457,12 @@ def _canonical_runtime_entries() -> Iterable[CatalogEntry]:
             if generation_type == "i2v":
                 call_params = ("prompt", "images", *call_params[1:])
             stream_params = call_params
-            official_fps = 28 if generation_type == "t2v" else 8
-            default_call_kwargs = {
-                "fps": official_fps,
-                "ddim_eta": 1.0,
-                "unconditional_guidance_scale": 12.0,
-            }
+            default_call_kwargs.update(
+                {
+                    "ddim_eta": 1.0,
+                    "unconditional_guidance_scale": 12.0,
+                }
+            )
         yield CatalogEntry(
             model_id=slug,
             display_name=display_name,
@@ -8504,8 +12496,9 @@ def _canonical_runtime_entries() -> Iterable[CatalogEntry]:
             default_load_kwargs=dict(_resolve_override_value(spec.get("default_load_kwargs", {})) or {}),
             default_interactions=(),
             default_call_kwargs=default_call_kwargs,
+            extra_variants=_resolve_extra_variants(spec.get("extra_variants", ())),
             aliases=tuple(spec.get("aliases", [])),
-            tags=("video", generation_type),
+            tags=tuple(spec.get("tags") or ("video", generation_type)),
             notes="Integrated runtime modules are expected under worldfoundry.pipelines; pass only WorldFoundry checkpoint/cache paths or HF repo ids as model refs.",
         )
 
@@ -8555,6 +12548,41 @@ def _resolve_class_methods(
     return dict(methods)
 
 
+def _class_inherits_any(
+    class_nodes: Mapping[str, ast.ClassDef],
+    class_name: str,
+    expected_bases: frozenset[str],
+    seen: frozenset[str] = frozenset(),
+) -> bool:
+    """Resolve local inheritance far enough to recognize shared infra bases.
+
+    Catalog discovery deliberately parses pipeline modules without importing
+    heavyweight model dependencies.  Model-specific native pipelines commonly
+    inherit their implementation from a base imported from another module, and
+    variants then inherit from that local model class.  Looking only at methods
+    declared in the leaf class therefore produced empty Workspace contracts.
+    """
+
+    if class_name in seen:
+        return False
+    node = class_nodes.get(class_name)
+    if node is None:
+        return class_name in expected_bases
+    next_seen = seen | {class_name}
+    for base in node.bases:
+        base_name = base.id if isinstance(base, ast.Name) else getattr(base, "attr", "")
+        if base_name in expected_bases:
+            return True
+        if base_name in class_nodes and _class_inherits_any(
+            class_nodes,
+            base_name,
+            expected_bases,
+            next_seen,
+        ):
+            return True
+    return False
+
+
 def _class_string_constant(node: ast.ClassDef, name: str) -> str | None:
     for item in node.body:
         if not isinstance(item, ast.Assign):
@@ -8562,6 +12590,17 @@ def _class_string_constant(node: ast.ClassDef, name: str) -> str | None:
         if not any(isinstance(target, ast.Name) and target.id == name for target in item.targets):
             continue
         if isinstance(item.value, ast.Constant) and isinstance(item.value.value, str):
+            return item.value.value
+    return None
+
+
+def _class_bool_constant(node: ast.ClassDef, name: str) -> bool | None:
+    for item in node.body:
+        if not isinstance(item, ast.Assign):
+            continue
+        if not any(isinstance(target, ast.Name) and target.id == name for target in item.targets):
+            continue
+        if isinstance(item.value, ast.Constant) and isinstance(item.value.value, bool):
             return item.value.value
     return None
 
@@ -8727,6 +12766,8 @@ def _discover_ast_pipelines() -> tuple[_AstPipelineInfo, ...]:
                 continue
             if not node.name.endswith("Pipeline"):
                 continue
+            if _class_bool_constant(node, "ABSTRACT_PIPELINE") is True:
+                continue
             methods = _resolve_class_methods(class_nodes, node.name, method_cache)
 
             slug = _normalize_model_id(_class_string_constant(node, "MODEL_ID") or _slug_from_filename(path))
@@ -8736,8 +12777,19 @@ def _discover_ast_pipelines() -> tuple[_AstPipelineInfo, ...]:
                 for base in node.bases
             )
             inherits_official_video = "OfficialVideoPipeline" in base_names
+            inherits_native_diffusion = _class_inherits_any(
+                class_nodes,
+                node.name,
+                frozenset({"NativeVisualDiffusionPipeline", "NativeTextToVideoPipeline"}),
+            )
             inherited_official_call = _official_video_call_params() if inherits_official_video else tuple()
             inherited_official_load = _official_video_load_params() if inherits_official_video else tuple()
+            inherited_native_call = (
+                _native_diffusion_video_call_params() if inherits_native_diffusion else tuple()
+            )
+            inherited_native_load = (
+                _native_diffusion_video_load_params() if inherits_native_diffusion else tuple()
+            )
             discovered.append(
                 _AstPipelineInfo(
                     model_id=slug,
@@ -8745,11 +12797,16 @@ def _discover_ast_pipelines() -> tuple[_AstPipelineInfo, ...]:
                     module_path=module_path,
                     class_name=node.name,
                     family=family,
-                    call_params=methods.get("__call__", inherited_official_call),
-                    stream_params=methods.get("stream", inherited_official_call),
-                    load_params=methods.get("from_pretrained", methods.get("api_init", inherited_official_load)),
-                    supports_stream="stream" in methods or inherits_official_video,
-                    supports_from_pretrained="from_pretrained" in methods or inherits_official_video,
+                    call_params=methods.get("__call__", inherited_native_call or inherited_official_call),
+                    stream_params=methods.get("stream", inherited_native_call or inherited_official_call),
+                    load_params=methods.get(
+                        "from_pretrained",
+                        methods.get("api_init", inherited_native_load or inherited_official_load),
+                    ),
+                    supports_stream="stream" in methods or inherits_official_video or inherits_native_diffusion,
+                    supports_from_pretrained=(
+                        "from_pretrained" in methods or inherits_official_video or inherits_native_diffusion
+                    ),
                     supports_api_init="api_init" in methods,
                     base_names=base_names,
                 )
@@ -8763,7 +12820,7 @@ def _discover_catalog_infos() -> tuple[_AstPipelineInfo, ...]:
 
 
 def _build_entry(info: _AstPipelineInfo) -> CatalogEntry:
-    override = CURATED_OVERRIDES.get(info.model_id, {})
+    override = CURATED_OVERRIDES.get(info.model_id) or CURATED_OVERRIDES.get(_catalog_id_key(info.model_id), {})
     inferred_category = _category_from_family(info.family, info.class_name, info.call_params)
     if (
         inferred_category == "Video Generation"
@@ -8844,6 +12901,25 @@ def _build_entry(info: _AstPipelineInfo) -> CatalogEntry:
 
 @lru_cache(maxsize=1)
 def discover_catalog() -> tuple[CatalogEntry, ...]:
+    """Resolve shared checkpoint roots once per catalog build."""
+    roots = studio_hfd_cache_roots(project_roots=_project_root_candidates())
+    children: dict[Path, frozenset[str]] = {}
+    for root in roots:
+        try:
+            children[root] = frozenset(path.name for path in root.iterdir())
+        except (FileNotFoundError, NotADirectoryError):
+            children[root] = frozenset()
+        except OSError:
+            # Fall back to individual checks when a root cannot be enumerated.
+            continue
+    token = _CATALOG_CACHE_ROOTS.set(_CatalogPathSnapshot(roots, children))
+    try:
+        return _discover_catalog_entries()
+    finally:
+        _CATALOG_CACHE_ROOTS.reset(token)
+
+
+def _discover_catalog_entries() -> tuple[CatalogEntry, ...]:
     by_module: Dict[tuple[str, str], CatalogEntry] = {}
     for info in _discover_catalog_infos():
         entry = _build_entry(info)
@@ -8889,7 +12965,7 @@ def discover_catalog() -> tuple[CatalogEntry, ...]:
                 default_interactions=entry.default_interactions,
                 default_load_kwargs=entry.default_load_kwargs,
                 default_call_kwargs=entry.default_call_kwargs,
-                extra_variants=entry.extra_variants,
+                extra_variants=entry.extra_variants or previous.extra_variants,
                 suggested_task_types=entry.suggested_task_types,
                 aliases=merged_aliases,
                 tags=entry.tags,
@@ -8933,14 +13009,49 @@ def _find_exact_entry_without_full_catalog(model_id: str) -> CatalogEntry | None
     normalized = _normalize_model_id(model_id)
     if not normalized:
         return None
+    parent_id = _sana_studio_parent_id(normalized) or _cogvideox_studio_parent_id(normalized)
+    ast_model_id = FAST_CANONICAL_AST_ALIASES.get(parent_id or normalized, parent_id or normalized)
     for info in _discover_catalog_infos():
         if info.model_id in ABSTRACT_RUNTIME_MODEL_IDS:
             continue
         if info.model_id in STUDIO_HIDDEN_CATALOG_MODEL_IDS:
             continue
-        if _normalize_model_id(info.model_id) == normalized:
-            return _build_entry(info)
+        if _catalog_id_key(info.model_id) == _catalog_id_key(ast_model_id):
+            entry = _build_entry(info)
+            if parent_id is not None:
+                entry = replace(
+                    entry,
+                    model_id=parent_id,
+                    aliases=_coerce_aliases(*entry.aliases, normalized, info.model_id),
+                )
+            elif normalized != ast_model_id:
+                entry = replace(
+                    entry,
+                    model_id=normalized,
+                    aliases=_coerce_aliases(*entry.aliases, ast_model_id),
+                )
+            return entry
     return None
+
+
+def find_runtime_entry(model_id: str) -> CatalogEntry:
+    """Resolve the concrete pipeline entry, ignoring Studio family folding."""
+
+    requested = _cogvideox_variant_id(model_id) or _catalog_id_key(model_id)
+    if not requested:
+        raise KeyError(f"Unknown Studio model id: {model_id}")
+    ast_model_id = FAST_CANONICAL_AST_ALIASES.get(requested, requested)
+    for info in _discover_catalog_infos():
+        if _catalog_id_key(info.model_id) == _catalog_id_key(ast_model_id):
+            entry = _build_entry(info)
+            if entry.model_id != requested:
+                entry = replace(
+                    entry,
+                    model_id=requested,
+                    aliases=_coerce_aliases(*entry.aliases, entry.model_id),
+                )
+            return entry
+    raise KeyError(f"Unknown Studio model id: {model_id}")
 
 
 def find_entry(model_id: str) -> CatalogEntry:

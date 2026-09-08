@@ -16,14 +16,6 @@ from functools import lru_cache
 from pathlib import Path
 from typing import Any, Iterable, Mapping, Sequence
 
-from worldfoundry.core.inference import (
-    LINGBOT_VARIANT_BASE_ACT_PREVIEW,
-    LINGBOT_VARIANT_BASE_CAM,
-    LINGBOT_VARIANT_FAST,
-    LINGBOT_WORLD_MODEL_ID,
-    get_model_inference_spec,
-    model_inference_spec,
-)
 from worldfoundry.evaluation.utils import (
     BENCHMARK_ZOO_DIR,
     MODEL_RUNTIME_ENVIRONMENTS_ROOT,
@@ -33,6 +25,16 @@ from worldfoundry.evaluation.utils import (
     load_manifest_collection,
 )
 from worldfoundry.runtime.env import resolve_cache_dir
+from worldfoundry.runtime.inference_catalog import (
+    LINGBOT_VARIANT_BASE_ACT_PREVIEW,
+    LINGBOT_VARIANT_BASE_CAM,
+    LINGBOT_VARIANT_FAST,
+    LINGBOT_WORLD_MODEL_ID,
+    get_model_inference_spec,
+    model_inference_spec,
+)
+
+from .utils import append_optional_arg
 
 # ── Default directories ──────────────────────────────────────────
 DEFAULT_MODEL_ZOO_DIR = MODEL_ZOO_DIR
@@ -2344,16 +2346,10 @@ def format_shell_command(command: Sequence[str]) -> str:
     return shlex.join([str(item) for item in command])
 
 
-def _append_optional(command: list[str], flag: str, value: object | None) -> None:
-    """Append *flag* and *value* to *command* when *value* is not ``None``."""
-    if value is not None:
-        command.extend([flag, str(value)])
-
-
-def _append_optional_path(command: list[str], flag: str, value: str | Path | None) -> None:
-    """Append *flag* and *value* to *command* when *value* is not ``None``, converting to a string."""
-    if value is not None:
-        command.extend([flag, str(value)])
+# Both legacy names bind to the shared helper in ``cli.utils`` (CM-24); the
+# path variant existed only for type-hint readability at call sites.
+_append_optional = append_optional_arg
+_append_optional_path = append_optional_arg
 
 
 def _truthy(value: object | None) -> bool:

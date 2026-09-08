@@ -16,6 +16,15 @@ Layering rules
 ``worldfoundry.base_models``
     Model-specific ``Attention`` subclasses (e.g. ``MemEffAttention``,
     ``NestedTensorBlock``) that extend or wrap the shared blocks here.
+
+Not this module:
+    Attention kernels and RoPE tables live in sibling modules. Generic
+    MLP / PatchEmbed live in :mod:`worldfoundry.core.nn`.
+
+Public surface:
+
+- :class:`QKVSelfAttention` — linear QKV + exact SDPA + out-proj.
+- :class:`QKNormRopeSelfAttention` — optional Q/K norm and 2D RoPE.
 """
 
 from __future__ import annotations
@@ -25,6 +34,11 @@ from typing import Any, Optional
 from torch import Tensor, nn
 
 from worldfoundry.core.attention.native import scaled_dot_product_attention
+
+
+# ──────────────────────────────────────────────────────────────────────────
+# Shared ViT blocks — projections stay here; kernels stay in native SDPA
+# ──────────────────────────────────────────────────────────────────────────
 
 
 class QKVSelfAttention(nn.Module):
@@ -39,6 +53,8 @@ class QKVSelfAttention(nn.Module):
         attn_drop: float = 0.0,
         proj_drop: float = 0.0,
     ) -> None:
+        """Build fused QKV and output projections; dropout is training-only."""
+
         super().__init__()
         self.num_heads = num_heads
         head_dim = dim // num_heads
@@ -50,6 +66,8 @@ class QKVSelfAttention(nn.Module):
         self.proj_drop = nn.Dropout(proj_drop)
 
     def forward(self, x: Tensor, attn_bias: Any = None) -> Tensor:
+        """Self-attend ``[B, N, C]`` tokens; ``attn_bias`` is the SDPA mask slot."""
+
         b, n, c = x.shape
         qkv = self.qkv(x).reshape(b, n, 3, self.num_heads, c // self.num_heads).permute(2, 0, 3, 1, 4)
 
@@ -85,6 +103,8 @@ class QKNormRopeSelfAttention(QKVSelfAttention):
         fused_attn: bool = True,
         rope: Optional[nn.Module] = None,
     ) -> None:
+        """Optionally attach per-head Q/K norm and a 2D RoPE module."""
+
         super().__init__(
             dim=dim,
             num_heads=num_heads,
@@ -101,6 +121,12 @@ class QKNormRopeSelfAttention(QKVSelfAttention):
         self.rope = rope
 
     def forward(self, x: Tensor, pos: Any = None, attn_mask: Any = None) -> Tensor:
+        """Self-attend with optional RoPE; ``fused_attn=False`` keeps the matmul path.
+
+        The mask is repeated over heads because callers pass a 2-D token
+        mask, not a 4-D score tensor.
+        """
+
         b, n, c = x.shape
         qkv = self.qkv(x).reshape(b, n, 3, self.num_heads, c // self.num_heads).permute(2, 0, 3, 1, 4)
         q, k, v = qkv[0], qkv[1], qkv[2]

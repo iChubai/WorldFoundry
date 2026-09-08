@@ -1,14 +1,24 @@
-"""Sharded safetensors loading helpers."""
+"""Sharded safetensors loading helpers for Hugging Face-style checkpoints.
+
+Large models ship as ``model.safetensors.index.json`` plus shards
+(optionally ``.zst``-compressed).
+:func:`load_sharded_safetensors_parallel_with_progress` merges shards
+concurrently. :func:`load_safetensors_into_model_streaming` applies one
+shard at a time so peak host memory stays bounded by the largest shard,
+including meta-device assignment. :func:`safetensor_checkpoint_files`
+resolves the unique shard set; :func:`unwrap_model` strips DDP wrappers.
+
+This is not the URL dispatcher in :mod:`worldfoundry.core.checkpoint.load`.
+"""
 
 from __future__ import annotations
 
-import io
 import json
 import os
 import subprocess
 from concurrent.futures import ThreadPoolExecutor
-from datetime import datetime
 from pathlib import Path
+from time import perf_counter
 from typing import Any
 
 import torch
@@ -19,39 +29,62 @@ from tqdm.auto import tqdm
 
 from worldfoundry.core.distributed.logging import print_per_rank
 
+# ──────────────────────────────────────────────────────────────────────────
+# Shard I/O — optional .zst sibling; zstd must not deadlock on stderr
+# ──────────────────────────────────────────────────────────────────────────
+
 
 def _load_shard(shard_path: str, param_names: list[str], num_threads: int | None = None):
+    """Load one shard, decompressing a sibling ``.zst`` through the system binary.
+
+    Only the names listed in the index are returned so a shard that also
+    carries unused tensors does not inflate the merged state dict.
+    ``zstd -T{n}`` is attached (not a separate argv token) because the
+    CLI treats a following ``4`` as a filename.
+    """
+
     zstd_path = shard_path + ".zst"
     if os.path.exists(zstd_path):
-        start_time = datetime.now()
+        start_time = perf_counter()
         print_per_rank(f"Decompressing {zstd_path} with {num_threads} threads")
         cmd = ["zstd", "-d"]
         if num_threads:
-            cmd.extend(["-T", str(num_threads)])
+            # zstd only accepts the attached spelling (-T4 / --threads=4); a
+            # separated "-T", "4" pair is parsed as a file operand.
+            cmd.append(f"-T{num_threads}")
+        cmd.extend(["-c", zstd_path])
 
-        process = subprocess.Popen(cmd + ["-c", zstd_path], stdout=subprocess.PIPE, stderr=subprocess.PIPE, bufsize=-1)
-        decompressed_data = process.stdout.read()
-        process.stdout.close()
-
-        retcode = process.wait()
-        if retcode != 0:
-            raise RuntimeError(f"Decompression failed: {process.stderr.read().decode()}")
+        try:
+            process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        except FileNotFoundError as exc:
+            raise RuntimeError(
+                f"zstd binary not found while decompressing {zstd_path}; "
+                "install zstd or decompress the shard manually"
+            ) from exc
+        # communicate() drains stdout and stderr concurrently; reading stdout
+        # alone can deadlock once zstd fills the stderr pipe buffer.
+        decompressed_data, stderr_data = process.communicate()
+        if process.returncode != 0:
+            raise RuntimeError(f"Decompression failed: {stderr_data.decode(errors='replace')}")
         print_per_rank(
-            f"Decompressed {zstd_path} with {num_threads} threads, duration: {(datetime.now() - start_time).total_seconds()}s"
+            f"Decompressed {zstd_path} with {num_threads} threads, duration: {perf_counter() - start_time:.3f}s"
         )
 
-        buffer = io.BytesIO(decompressed_data)
-        start_time = datetime.now()
-        print_per_rank(f"Loading {shard_path} from zstd file, start time: {start_time}")
-        weights = load_from_bytes(buffer.getvalue())
+        start_time = perf_counter()
+        print_per_rank(f"Loading {shard_path} from zstd file")
+        weights = load_from_bytes(decompressed_data)
         print_per_rank(
-            f"Loaded {shard_path} from zstd file, duration: {(datetime.now() - start_time).total_seconds()}s"
+            f"Loaded {shard_path} from zstd file, duration: {perf_counter() - start_time:.3f}s"
         )
-        buffer.close()
     else:
         weights = load_file(shard_path)
 
     return {name: weights[name] for name in param_names}
+
+
+# ──────────────────────────────────────────────────────────────────────────
+# Parallel merge — peak RAM is the sum of shards; prefer streaming for 7B+
+# ──────────────────────────────────────────────────────────────────────────
 
 
 def load_sharded_safetensors_parallel_with_progress(checkpoint_dir: str):
@@ -95,7 +128,13 @@ def load_sharded_safetensors_parallel_with_progress(checkpoint_dir: str):
     return state_dict
 
 
+# ──────────────────────────────────────────────────────────────────────────
+# DDP unwrap + unique shard set — reject ambiguous index / glob matches
+# ──────────────────────────────────────────────────────────────────────────
+
+
 def unwrap_model(model):
+    """Strip nested ``.module`` wrappers from one model or a list of models."""
     return_list = True
     if not isinstance(model, list):
         model = [model]
@@ -152,6 +191,11 @@ def safetensor_checkpoint_files(checkpoint_dir: str | os.PathLike[str]) -> list[
     return files
 
 
+# ──────────────────────────────────────────────────────────────────────────
+# Streaming assign — peak host memory bounded by the largest shard
+# ──────────────────────────────────────────────────────────────────────────
+
+
 def load_safetensors_into_model_streaming(
     model: Any,
     checkpoint_dir: str | os.PathLike[str],
@@ -187,12 +231,16 @@ def load_safetensors_into_model_streaming(
     buffer_slots = dict(model.named_buffers(remove_duplicate=False)) if assign else {}
 
     def convert_tensor(tensor: torch.Tensor) -> torch.Tensor:
+        """Cast only floating tensors so integer index buffers keep their dtype."""
+
         target_dtype = dtype if dtype is not None and tensor.is_floating_point() else tensor.dtype
         if tensor.device == torch.device(device) and tensor.dtype == target_dtype:
             return tensor
         return tensor.to(device=device, dtype=target_dtype)
 
     def assign_tensor(key: str, tensor: Any) -> None:
+        """Replace one meta (or live) slot in place; reject duplicate shard keys."""
+
         if key in loaded:
             raise RuntimeError(f"duplicate tensor across safetensors shards: {key}")
         old_parameter = parameter_slots.get(key)
@@ -213,6 +261,8 @@ def load_safetensors_into_model_streaming(
         loaded.add(key)
 
     def apply_tensors(tensors: dict[str, Any]) -> None:
+        """Apply one shard via ``load_state_dict`` when the module is already materialized."""
+
         if not tensors:
             return
         duplicate = loaded.intersection(tensors)

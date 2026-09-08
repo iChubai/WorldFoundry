@@ -67,7 +67,7 @@ else:
     pipeline = CausalDiffusionInferencePipeline(config, device=device)
 
 if args.checkpoint_path:
-    state_dict = torch.load(args.checkpoint_path, map_location="cpu")
+    state_dict = torch.load(args.checkpoint_path, map_location="cpu", weights_only=True)
     if args.use_ema:
         state_dict_to_load = state_dict['generator_ema']
         def remove_fsdp_prefix(state_dict):

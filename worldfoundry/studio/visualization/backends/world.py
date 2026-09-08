@@ -28,7 +28,10 @@ from urllib.parse import parse_qs, quote, unquote, urlparse
 
 from PIL import Image
 
-from worldfoundry.core.inference import LINGBOT_VARIANT_BASE_ACT_PREVIEW, LINGBOT_VARIANT_BASE_CAM
+from worldfoundry.runtime.inference_catalog import (
+    LINGBOT_VARIANT_BASE_ACT_PREVIEW,
+    LINGBOT_VARIANT_BASE_CAM,
+)
 from worldfoundry.studio.catalog import CatalogEntry, lingbot_world_fast_load_kwargs
 from worldfoundry.studio.execution import (
     IMAGE_EXTS,

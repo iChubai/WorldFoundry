@@ -154,7 +154,11 @@ def studio_hfd_cache_roots(
     hfd_root = resolve_hfd_root(environ)
     hf_cache_dir = resolve_hf_cache_dir(environ)
     project_cache_roots = [root / "cache" / "hfd" for root in _mirror_project_roots(project_roots)]
-    project_ckpt_roots = [root.parent / "ckpt" for root in _mirror_project_roots(project_roots)]
+    project_ckpt_roots = [
+        root.parent / directory
+        for root in _mirror_project_roots(project_roots)
+        for directory in ("ckpt", "ckpts")
+    ]
     return _dedupe_paths(
         (
             explicit_hf_cache_dir,

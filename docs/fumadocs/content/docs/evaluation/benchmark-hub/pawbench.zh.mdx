@@ -1,0 +1,68 @@
+---
+title: PAWBench
+description: 通过视频世界模型的重复 rollout，评估物理结果分布的概率校准与覆盖率。
+---
+
+## 简介
+
+**发布机构：** 上海交通大学、上海人工智能实验室、Krea AI、Hugging Face、
+上海创智学院、通义实验室和香港大学。
+
+PAWBench 关注重复生成是否恢复物理上有效未来的**分布**，而不只是单个视频是否
+看起来合理。它包含 50 个场景：25 个带参考概率的 calibration 场景和 25 个
+coverage 场景。完整官方运行需要每个场景生成 50 次独立 rollout，共 2,500 个视频。
+
+官方来源：
+
+- [论文](https://arxiv.org/abs/2608.27345)
+- [项目主页](https://pawbench.github.io/)
+- [官方仓库](https://github.com/Andrew0613/PAWBench)
+- [数据集](https://huggingface.co/datasets/Andrew613/PAWBench)
+
+## 指标
+
+PAWBench 刻意保留两个独立 track，不定义合并后的 leaderboard 标量。
+
+| 指标 | 含义 | 方向 |
+| --- | --- | --- |
+| `calibration_tvd_percent` | 生成结果分布与参考分布之间的总变差距离。 | 越低越好 |
+| `coverage_percent` | 重复 rollout 覆盖官方物理结果 support 的比例。 | 越高越好 |
+
+## 运行或导入结果
+
+准备官方数据集和完整 rollout 目录，并配置官方 PAWEval judge：
+
+```bash
+hf download Andrew613/PAWBench --repo-type dataset --local-dir /data/pawbench
+export OPENROUTER_API_KEY=<your-key>
+
+worldfoundry-eval zoo benchmark-run \
+  --benchmark-id pawbench \
+  --mode official-run \
+  --benchmark-data-root /data/pawbench \
+  --generated-artifact-dir /data/my-model-rollouts \
+  --output-dir tmp/pawbench/official-run \
+  --json
+```
+
+仓内 runtime vendored 了官方 evaluator。新评分默认通过 OpenRouter 调用 Gemini
+3.5 Flash；其他 OpenAI-compatible judge 可用于分析，但不能与官方设置直接比较。
+已有 `metrics.json` 或运行目录可在不联网的情况下归一化：
+
+```bash
+worldfoundry-eval zoo benchmark-run \
+  --benchmark-id pawbench \
+  --mode official-validation \
+  --official-results-path /path/to/pawbench/run \
+  --output-dir tmp/pawbench/imported \
+  --json
+```
+
+## 输出与限制
+
+运行输出 `scorecard.json`、`raw_metric_table.jsonl`、
+`per_sample_scores.jsonl` 和 `benchmark_contract.json`。仓内 sample 只用于
+normalizer 测试。完整数据集执行、hosted judge 可复现性和 leaderboard parity
+仍未验证；rollout 不完整会被记录为 blocker，不会静默求平均。
+
+[← Benchmark Hub](/zh/docs/evaluation/benchmark-hub)

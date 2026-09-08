@@ -1,10 +1,20 @@
-"""Logging, formatting, and debug-print helpers for training and evaluation runs."""
+"""Logging, formatting, and debug-print helpers for training and evaluation runs.
 
+Human-facing counters, timestamps, and pretty ``__repr__`` strings live
+here so recipes and eval loops do not reimplement them. Also includes
+stdout/stderr redirection context managers, a ``watch``-style decorator,
+and logging filters that drop or rewrite noisy third-party messages.
+
+This is not the distributed rank logger
+(:mod:`worldfoundry.core.distributed.logging`).
+"""
+
+import ast
 import io
 import logging
 import os
 import pprint
-import shlex
+import re
 import string
 import sys
 import textwrap
@@ -19,8 +29,13 @@ from typing_extensions import Literal
 from ..utils.functional_utils import meta_decorator
 from ..utils.misc_utils import match_patterns
 
+# ──────────────────────────────────────────────────────────────────────────
+# Human-facing numbers, timestamps, and pretty reprs (not rank loggers)
+# ──────────────────────────────────────────────────────────────────────────
+
 
 def to_readable_count_str(value: int, precision: int = 2) -> str:
+    """Format a non-negative integer with ``K`` / ``M`` / ``B`` / ``T`` suffixes."""
     assert value >= 0
     labels = [" ", "K", "M", "B", "T"]
     num_digits = int(np.floor(np.log10(value)) + 1 if value > 0 else 1)
@@ -57,15 +72,47 @@ def print_str(*args, **kwargs):
     return sstream.getvalue()
 
 
+def _eval_simple_format_node(node: ast.AST, env: dict) -> object:
+    """Evaluate a name or integer arithmetic AST node against *env* only."""
+    if isinstance(node, ast.Name):
+        if node.id not in env:
+            raise NameError(node.id)
+        return env[node.id]
+    if isinstance(node, ast.Constant) and isinstance(node.value, (int, float)):
+        return node.value
+    if isinstance(node, ast.UnaryOp) and isinstance(node.op, (ast.UAdd, ast.USub)):
+        value = _eval_simple_format_node(node.operand, env)
+        return value if isinstance(node.op, ast.UAdd) else -value
+    if isinstance(node, ast.BinOp) and isinstance(node.op, (ast.Add, ast.Sub, ast.Mult)):
+        left = _eval_simple_format_node(node.left, env)
+        right = _eval_simple_format_node(node.right, env)
+        if isinstance(node.op, ast.Add):
+            return left + right
+        if isinstance(node.op, ast.Sub):
+            return left - right
+        return left * right
+    raise ValueError(f"unsupported format expression: {ast.dump(node)}")
+
+
 def fstring(fmt_str, **kwargs):
+    """Format ``{name}`` / ``{name+1}`` placeholders without ``eval``.
+
+    Call sites only use index-style templates (``{i}``, ``{i+1}``). Names
+    must be bound in *kwargs*; only integer ``+`` / ``-`` / ``*`` is
+    allowed inside braces.
     """
-    Simulate python f-string but without `f`
-    """
-    locals().update(kwargs)
-    return eval("f" + shlex.quote(fmt_str))
+
+    def substitute(match):
+        """Replace one ``{...}`` group using the restricted arithmetic evaluator."""
+
+        tree = ast.parse(match.group(1), mode="eval")
+        return str(_eval_simple_format_node(tree.body, kwargs))
+
+    return re.sub(r"\{([^{}]+)\}", substitute, fmt_str)
 
 
 def get_format_keys(fmt_str):
+    """Return field names referenced by a :class:`string.Formatter` template."""
     keys = []
     for literal, field_name, fmt_spec, conversion in string.Formatter().parse(fmt_str):
         if field_name:
@@ -74,6 +121,7 @@ def get_format_keys(fmt_str):
 
 
 def get_timestamp(milli_precision: int = 3):
+    """Return the local clock as ``yy-mm-dd HH:MM:SS`` with optional milliseconds."""
     fmt = "%y-%m-%d %H:%M:%S"
     if milli_precision > 0:
         fmt += ".%f"
@@ -143,12 +191,15 @@ class DebugPrinter:
         self.tensor_summary = tensor_summary
 
     def __call__(self, *args, **kwargs):
+        """Pretty-print arguments when enabled, summarizing tensors by shape."""
         if not self.enabled:
             return
         args = [self._process_arg(a) for a in args]
         pprint_(*args, **kwargs)
 
     def _process_arg(self, arg):
+        """Collapse tensors/arrays to shape (and dtype/device) so dumps stay readable."""
+
         import numpy as np
         import torch
 
@@ -181,6 +232,8 @@ def watch(func, seconds: int = 5, max_times: int = 0, keep_returns: bool = False
     from blessings import Terminal
 
     def _wrapped(*args, **kwargs):
+        """Fullscreen refresh loop; ``KeyboardInterrupt`` exits without re-raising."""
+
         term = Terminal()
         N = 0
         returns = []
@@ -203,6 +256,11 @@ def watch(func, seconds: int = 5, max_times: int = 0, keep_returns: bool = False
     return _wrapped
 
 
+# ──────────────────────────────────────────────────────────────────────────
+# Stdout/stderr redirection — restore on exit even when the body raises
+# ──────────────────────────────────────────────────────────────────────────
+
+
 class PrintRedirection(object):
     """
     Context manager: temporarily redirects stdout and stderr
@@ -221,6 +279,8 @@ class PrintRedirection(object):
         self._stdout, self._stderr = stdout, stderr
 
     def __enter__(self):
+        """Swap stdout/stderr after flushing the previous streams."""
+
         self._old_out, self._old_err = sys.stdout, sys.stderr
         self._old_out.flush()
         self._old_err.flush()
@@ -228,6 +288,8 @@ class PrintRedirection(object):
         return self
 
     def __exit__(self, exc_type, exc_value, traceback):
+        """Restore the original streams after flushing the replacements."""
+
         self.flush()
         # restore the normal stdout and stderr
         sys.stdout, sys.stderr = self._old_out, self._old_err
@@ -250,23 +312,27 @@ class PrintToFile(PrintRedirection):
           err_file: file path. If the same as out_file, print both stdout
               and stderr to one file in order.
         """
-        self.out_file, self.err_file = out_file, err_file
+        self.out_file = None
+        self.err_file = None
+        out_path = None
         if out_file:
-            out_file = os.path.expanduser(out_file)
-            self.out_file = open(out_file, "w")
+            out_path = os.path.expanduser(out_file)
+            self.out_file = open(out_path, "w")
         if err_file:
-            err_file = os.path.expanduser(out_file)
-            if err_file == out_file:  # redirect both stdout/err to one file
+            err_path = os.path.expanduser(err_file)
+            if out_path is not None and err_path == out_path:  # redirect both stdout/err to one file
                 self.err_file = self.out_file
             else:
-                self.err_file = open(os.path.expanduser(out_file), "w")
+                self.err_file = open(err_path, "w")
         super().__init__(stdout=self.out_file, stderr=self.err_file)
 
     def __exit__(self, *args):
+        """Restore streams, then close file handles (shared out/err is closed once)."""
+
         super().__exit__(*args)
         if self.out_file:
             self.out_file.close()
-        if self.err_file:
+        if self.err_file and self.err_file is not self.out_file:
             self.err_file.close()
 
 
@@ -287,6 +353,7 @@ class PrintString(PrintRedirection):
     """
 
     def __init__(self):
+        """Capture both streams into in-memory string buffers."""
         self.out_stream = io.StringIO()
         self.err_stream = io.StringIO()
         super().__init__(stdout=self.out_stream, stderr=self.err_stream)
@@ -308,7 +375,11 @@ class PrintString(PrintRedirection):
         return self.stderr().rstrip().split("\n")
 
 
-# ==================== Logging filters ====================
+# ──────────────────────────────────────────────────────────────────────────
+# Logging filters — drop or rewrite third-party noise without changing rank loggers
+# ──────────────────────────────────────────────────────────────────────────
+
+
 class ExcludeLoggingFilter(logging.Filter):
     """
     Usage: logging.getLogger('name').addFilter(
@@ -319,10 +390,12 @@ class ExcludeLoggingFilter(logging.Filter):
     """
 
     def __init__(self, patterns):
+        """Drop records whose message matches any wildcard in ``patterns``."""
         super().__init__()
         self._patterns = patterns
 
     def filter(self, record):
+        """Return False when ``record.msg`` matches an exclude pattern."""
         if match_patterns(record.msg, include=self._patterns):
             return False
         else:
@@ -330,15 +403,20 @@ class ExcludeLoggingFilter(logging.Filter):
 
 
 class ReplaceStringLoggingFilter(logging.Filter):
+    """Rewrite log records whose message matches any of ``patterns``."""
+
     def __init__(self, patterns, replacer: Callable):
+        """Rewrite matching messages with ``replacer``; all records still pass."""
         super().__init__()
         self._patterns = patterns
         assert callable(replacer)
         self._replacer = replacer
 
     def filter(self, record):
+        """Apply ``replacer`` to matching messages and always keep the record."""
         if match_patterns(record.msg, include=self._patterns):
             record.msg = self._replacer(record.msg)
+        return True
 
 
 def logging_exclude_pattern(

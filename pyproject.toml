@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools", "wheel", "setuptools-scm[toml]"]
+requires = ["setuptools>=77", "wheel", "setuptools-scm[toml]"]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -8,7 +8,7 @@ dynamic = ["version"]
 description = "WorldFoundry: unified world-model repository and WorldFoundry benchmark framework."
 readme = "README.md"
 license = "Apache-2.0"
-license-files = ["LICENSE"]
+license-files = ["LICENSE", "THIRD-PARTY-NOTICES"]
 requires-python = ">=3.10,<3.14"
 authors = [
     { name = "OpenEnvision" },
@@ -50,6 +50,13 @@ api = [
     "qwen-vl-utils",
     "requests>=2.32.0,<3.0.0",
 ]
+apple_pi = [
+    "google-genai>=1.60.0,<2",
+    "huggingface-hub[cli]",
+    "numpy",
+    "opencv-python",
+    "pillow",
+]
 hf = [
     "huggingface-hub[cli]",
     "modelscope",
@@ -64,6 +71,7 @@ video = [
     "dm-tree",
     "easydict",
     "einops",
+    "flash-linear-attention @ git+https://github.com/fla-org/flash-linear-attention.git@2e0f6c31f9db50f010cb157c712c048b8a3a89d2",
     "ftfy",
     "h5py",
     "hydra-core",
@@ -97,6 +105,7 @@ video = [
     "submitit",
     "termcolor",
     "trimesh",
+    "video-reader-rs",
 ]
 vipe = [
     "einops",
@@ -198,8 +207,10 @@ ui = [
     "fastapi",
     "flask",
     "flask-socketio",
-    "gradio",
+    "gradio>=5.50,<6",
     "gradio-imageslider",
+    "numpy>=1.26,<3",
+    "pillow>=10",
     "pydantic",
     "textual",
     "uvicorn",
@@ -210,6 +221,12 @@ studio_realtime = [
     "av>=12",
     "numpy>=1.26,<3",
     "pillow>=10",
+]
+rtx_postprocess = [
+    # Proprietary NVIDIA VFX bindings. Keep this out of `all` so installation
+    # is always an explicit opt-in to NVIDIA's license and platform contract.
+    "nvidia-vfx==0.1.0.1",
+    "torch>=2.7,<2.12.0",
 ]
 tui = [
     "pillow",
@@ -223,6 +240,13 @@ optimized_core = [
     "loguru",
     "safetensors>=0.4",
     "torch>=2.7,<2.12.0",
+]
+lora = [
+    "peft>=0.14,<1",
+    "safetensors>=0.4",
+]
+profiling = [
+    "torchprofile>=0.1.0,<0.2",
 ]
 web = [
     "fastapi",
@@ -247,7 +271,6 @@ worldscore = [
     "loguru",
     "mmengine",
     "open3d",
-    "openai-clip",
     "pyfiglet",
     "pycocotools",
     "pyiqa",
@@ -287,8 +310,16 @@ studio_plot = [
 dev = [
     "build",
     "pre-commit>=4.0",
-    "pytest",
-    "ruff>=0.12.7",
+    "pytest>=8",
+    "ruff==0.12.7",
+]
+eval_core = [
+    "numpy>=1.26,<3",
+    "pytest>=8,<9",
+    "setuptools>=77",
+    "tomli>=2; python_version < '3.11'",
+    "torch>=2.7,<2.12.0",
+    "torchvision>=0.22,<0.27.0",
 ]
 all = [
     "accelerate",
@@ -309,11 +340,13 @@ all = [
     "evo",
     "fastapi",
     "filelock",
+    "flash-linear-attention @ git+https://github.com/fla-org/flash-linear-attention.git@2e0f6c31f9db50f010cb157c712c048b8a3a89d2",
     "flask",
     "flask-socketio",
     "ftfy",
     "gdown",
-    "gradio",
+    "google-genai>=1.60.0,<2",
+    "gradio>=5.50,<6",
     "gradio-imageslider",
     "h5py",
     "hf-transfer",
@@ -339,7 +372,6 @@ all = [
     "onnxruntime",
     "open3d",
     "openai",
-    "openai-clip",
     "opencv-python",
     "pandas",
     "pillow",
@@ -385,12 +417,9 @@ Repository = "https://github.com/OpenEnvision/WorldFoundry"
 Issues = "https://github.com/OpenEnvision/WorldFoundry/issues"
 
 [dependency-groups]
-test = [
-    "pytest",
-]
 lint = [
     "pre-commit>=4.0",
-    "ruff>=0.12.7",
+    "ruff==0.12.7",
 ]
 flash_attn_fa25 = [
     "flash-attn",
@@ -402,7 +431,6 @@ runtime_clip_bundle = [
     "easydict",
     "moviepy==1.0.3",
     "omegaconf",
-    "openai-clip",
     "open-clip-torch",
     "scipy<1.16",
     "setuptools<81",
@@ -427,7 +455,7 @@ three_d_core = [
     "roma",
 ]
 transformers_high = [
-    "diffusers>=0.37.0",
+    "diffusers>=0.39.0",
     "peft",
     "tokenizers",
     "transformers>=4.57.0,<5",
@@ -459,6 +487,13 @@ extend-exclude = [
     "worldfoundry/base_models",
     "worldfoundry/synthesis",
     "worldfoundry/representations",
+    "worldfoundry/evaluation/tasks/execution/runners/*/runtime",
+    "worldfoundry/evaluation/tasks/metrics/*/vendor",
+    # Apache-2.0 native GUI sources preserve upstream formatting.
+    "worldfoundry/studio/native/world_explorer",
+    "worldfoundry/evaluation/tasks/execution/runners/*/runtime",
+    "worldfoundry/evaluation/tasks/execution/runners/*/official",
+    "worldfoundry/evaluation/tasks/metrics/*/vendor",
 ]
 
 [tool.ruff.lint]
@@ -473,64 +508,74 @@ ignore = [
     "E501",
 ]
 
-[tool.pytest.ini_options]
-testpaths = [
-    "test/eval_core/test_api_contracts.py",
-    "test/eval_core/test_metric_registry.py",
-    "test/eval_core/test_task_yaml.py",
-    "test/eval_core/test_run_manifest.py",
-    "test/eval_core/test_public_namespace.py",
-    "test/eval_core/test_video_quality_local_evaluator.py",
-    "tests/evaluation/test_mcp_server.py",
-    "tests/evaluation/test_tui.py",
-]
-addopts = [
-    "--strict-markers",
-]
-markers = [
-    "unit: pure unit tests for deterministic local code paths without checkpoint, dataset, network, or external service dependencies.",
-    "fast_eval_core: fast deterministic eval-core contract fixtures without checkpoint or external API dependencies.",
-    "gpu: tests that require CUDA devices, model checkpoints, or GPU-backed inference runtimes.",
-    "gated: tests that require private credentials, gated datasets, accepted licenses, or manually provisioned services.",
-]
-
 [tool.setuptools]
-packages = { find = { where = ["."], include = ["worldfoundry*"], exclude = [
-    "worldfoundry.pipelines.*.runtime*",
+# Package discovery deliberately uses setuptools namespace semantics: every
+# directory below worldfoundry/ is a candidate, even without __init__.py.
+# `make packaging-check` rejects dead excludes and any license-gated package
+# that reaches the final wheel set.
+packages = { find = { where = ["."], namespaces = true, include = ["worldfoundry*"], exclude = [
+
+    # Reserved public-distribution boundaries; these stay excluded even when absent.
+    "worldfoundry.training",
+    "worldfoundry.training.*",
+    "worldfoundry.cli.training_commands",
+    "worldfoundry.cli.training_commands.*",
+    "*.tests",
+    "*.tests.*",
+    "*.test",
+    "*.test.*",
+    "*.testing",
+    "*.testing.*",
+    # Structural: upstream runtime mirrors and inner checkouts never ship.
     "worldfoundry.synthesis.visual_generation.*.runtime*",
     "worldfoundry.synthesis.visual_generation.*.*_runtime*",
-    "worldfoundry.synthesis.action_generation.*.runtime*",
-    "worldfoundry.synthesis.action_generation.*.*_runtime*",
-    "worldfoundry.representations.*.*_official*",
-    "worldfoundry.base_models.*.*.third_party*",
-    "worldfoundry.base_models.*.*.*_runtime.third_party*",
-    "worldfoundry.base_models.*.*.*_runtime.submodules*",
     "worldfoundry.base_models.*.*.*_runtime.src*",
     "worldfoundry.base_models.*.*.*_runtime.*.src*",
     "worldfoundry.base_models.*.depth_anything",
     "worldfoundry.base_models.*.depth_anything.*",
-    "worldfoundry.base_models.*.*.dvlt_runtime.src*",
     "worldfoundry.base_models.*.*.pixelsplat.src*",
     "worldfoundry.base_models.*.vggt.vggt",
     "worldfoundry.base_models.*.vggt.vggt.*",
     "worldfoundry.base_models.*.vggt_omega.vggt_omega",
     "worldfoundry.base_models.*.vggt_omega.vggt_omega.*",
-    "worldfoundry.base_models.*.vggt_fantasy_world.vggt",
-    "worldfoundry.base_models.*.vggt_fantasy_world.vggt.*",
     "worldfoundry.base_models.*.pixelsplat",
-    "worldfoundry.base_models.*.gaussian_splatting.arguments",
-    "worldfoundry.base_models.*.gaussian_splatting.scene",
-    "worldfoundry.base_models.*.gaussian_splatting.gaussian_renderer",
     "worldfoundry.base_models.*.eastern_journalist.utils3d",
     "worldfoundry.base_models.*.eastern_journalist.utils3d.*",
     "worldfoundry.base_models.*.*_runtime",
     "worldfoundry.base_models.*.*_runtime.*",
+    # License-gated vendored trees (local checkouts only; see MANIFEST.in).
+    "worldfoundry.base_models.three_dimensions.depth.unidepth",
+    "worldfoundry.base_models.three_dimensions.depth.unidepth.*",
+    "worldfoundry.base_models.three_dimensions.depth.unik3d",
+    "worldfoundry.base_models.three_dimensions.depth.unik3d.*",
+    "worldfoundry.base_models.three_dimensions.general_3d.dust3r",
+    "worldfoundry.base_models.three_dimensions.general_3d.dust3r.*",
+    "worldfoundry.base_models.three_dimensions.general_3d.four_d_gaussians",
+    "worldfoundry.base_models.three_dimensions.general_3d.four_d_gaussians.*",
+    "worldfoundry.base_models.three_dimensions.general_3d.mast3r",
+    "worldfoundry.base_models.three_dimensions.general_3d.mast3r.*",
+    "worldfoundry.base_models.three_dimensions.general_3d.monst3r",
+    "worldfoundry.base_models.three_dimensions.general_3d.monst3r.*",
+    "worldfoundry.base_models.three_dimensions.general_3d.stable_virtual_camera",
+    "worldfoundry.base_models.three_dimensions.general_3d.stable_virtual_camera.*",
+    "worldfoundry.base_models.three_dimensions.point_clouds.cut3r",
+    "worldfoundry.base_models.three_dimensions.point_clouds.cut3r.*",
+    "worldfoundry.base_models.three_dimensions.point_clouds.gaussian_splatting",
+    "worldfoundry.base_models.three_dimensions.point_clouds.gaussian_splatting.*",
+    "worldfoundry.base_models.three_dimensions.point_clouds.pi3",
+    "worldfoundry.base_models.three_dimensions.point_clouds.pi3.*",
+    "worldfoundry.synthesis.visual_generation.hunyuan_world.hunyuan_game_craft",
+    "worldfoundry.synthesis.visual_generation.hunyuan_world.hunyuan_game_craft.*",
+    "worldfoundry.synthesis.visual_generation.hunyuan_world.hunyuan_world_voyager",
+    "worldfoundry.synthesis.visual_generation.hunyuan_world.hunyuan_world_voyager.*",
+    "worldfoundry.synthesis.visual_generation.hunyuan_world.hunyuan_worldplay",
+    "worldfoundry.synthesis.visual_generation.hunyuan_world.hunyuan_worldplay.*",
 ] } }
 include-package-data = true
 
 [tool.setuptools.package-data]
+"*" = ["*.npy", "*.npz"]
 "worldfoundry.cli" = [
-    "assets/openenvision_logo.png",
     "tui_app.tcss",
 ]
 "worldfoundry.data" = [
@@ -545,47 +590,46 @@ include-package-data = true
     "models/**/*.yaml",
     "models/**/*.yml",
     "models/**/*.json",
+    "models/runtime/configs/**/*.py",
+    "models/runtime/configs/**/*.md",
 ]
 "worldfoundry.evaluation.tasks.execution.runners" = [
     "chronomagic_bench/runtime/chronomagic_bench/MTScore/configs/*.json",
     "devil_dynamics/runtime/official/*.sh",
     "ewmbench/runtime/ewmbench/*.yaml",
     "fetv/runtime/fetv_eval/**/*",
+    "pawbench/runtime/**/*",
     "phyfps_bench_gen/runtime/visual_chronometer/inference/configs/*.yaml",
     "t2v_compbench/runtime/t2v_compbench/dot/configs/*.json",
     "vbench_plus_plus/runtime/vbench2_beta_long/configs/*.yaml",
     "vmbench/runtime/official/**/*",
-    "wbench/runtime/wbench/LICENSE*",
     "wbench/runtime/wbench/src/*.yaml",
     "world_in_world/runtime/official/**/*",
     "worldarena/runtime/video_quality/*.yaml",
+    "worldatlas_arena/runtime/**/*",
     "wrbench/runtime/**/*",
 ]
 "worldfoundry.base_models" = [
-    "diffusion_model/diffsynth/tokenizer_configs/**/*",
     "perception_core/video_text/fetv_blip/**/*",
     "perception_core/video_quality/fetv_stylegan_v/**/*",
-    "perception_core/general_perception/open_clip/bpe_simple_vocab_16e6.txt.gz",
-    "perception_core/segment/sam3/assets/bpe_simple_vocab_16e6.txt.gz",
-    "diffusion_model/video/cosmos3/UPSTREAM*.txt",
+    "diffusion_model/models/networks/cosmos3/README.md",
     "three_dimensions/general_3d/vipe/csrc/**/*",
-    "three_dimensions/general_3d/vipe/LICENSE",
     "three_dimensions/general_3d/vipe/THIRD_PARTY_LICENSES.md",
-    "three_dimensions/general_3d/vipe/UPSTREAM.md",
 ]
 "worldfoundry.studio" = [
     "assets/**/*",
+    "native/world_explorer/**/*",
 ]
 "worldfoundry.synthesis.visual_generation.lingbot_video" = [
     "default_negative_prompt*.json",
 ]
-"worldfoundry.synthesis.visual_generation.rolling_forcing" = [
-    "LICENSE*",
-    "LEGAL.md",
-    "UPSTREAM.md",
+"worldfoundry.synthesis.visual_generation.evoke" = [
+    "evoke_runtime/**/*",
+]
+"worldfoundry.synthesis.visual_generation.matrix_game" = [
+    "matrix_game_3p5_runtime/**/*",
 ]
 "worldfoundry.synthesis.visual_generation.moverse" = [
-    "UPSTREAM.md",
     "moverse_runtime/**/*",
 ]
 "worldfoundry.synthesis.visual_generation.uni3c" = [
@@ -593,8 +637,65 @@ include-package-data = true
 ]
 
 [tool.setuptools.exclude-package-data]
+"worldfoundry.synthesis.visual_generation" = ["open_sora/open_sora_runtime/**/*", "wonderworld/wonderworld_runtime/**/*"]
+"worldfoundry" = ["training/*", "training/**/*"]
+"worldfoundry.cli" = ["training.py", "training_commands/*", "training_commands/**/*"]
 "*" = [
+    "**/test_*.py", "**/*_test.py", "**/test_*.cpp", "**/*_test.cpp",
+    "**/test/*", "**/test/**/*", "**/tests/*", "**/tests/**/*",
+    "**/testing/*", "**/testing/**/*", "**/conftest.py", "**/pytest.ini",
+    "assets/vendor/**/*",
     "**/__pycache__/*",
     "**/*.pyc",
     "**/*.pyo",
+    "native/world_explorer/build/**/*",
+    "native/world_explorer/dependencies/fmt/**/*",
+    "native/world_explorer/dependencies/glfw/**/*",
+    "native/world_explorer/dependencies/imgui/**/*",
+    "native/world_explorer/dependencies/pybind11/**/*",
+    "native/world_explorer/dependencies/tinylogger/**/*",
+]
+# Package excludes do not stop include-package-data from treating files below
+# excluded namespace packages as data of the nearest retained parent. Keep a
+# second, per-parent barrier for every MANIFEST.in license-gated subtree.
+"worldfoundry.base_models.three_dimensions.depth" = [
+    "unidepth/**/*",
+    "unik3d/**/*",
+]
+"worldfoundry.base_models.three_dimensions.depth.dvlt" = [
+    "dvlt_runtime/**/*",
+]
+"worldfoundry.base_models.three_dimensions.general_3d" = [
+    "dust3r/**/*",
+    "four_d_gaussians/**/*",
+    "mast3r/**/*",
+    "monst3r/**/*",
+    "stable_virtual_camera/**/*",
+]
+"worldfoundry.base_models.three_dimensions.point_clouds" = [
+    "cut3r/**/*",
+    "gaussian_splatting/**/*",
+    "pi3/**/*",
+]
+"worldfoundry.base_models.three_dimensions.slam" = [
+    "mega_sam_runtime/UniDepth/**/*",
+]
+"worldfoundry.synthesis.visual_generation.hunyuan_world" = [
+    "hunyuan_game_craft/**/*",
+    "hunyuan_world_voyager/**/*",
+    "hunyuan_worldplay/**/*",
+    "hy_world_2p0_panogen_runtime/**/*",
+    "hy_world_2p0_worldgen_runtime/**/*",
+]
+"worldfoundry.synthesis.visual_generation.krea_realtime" = [
+    "realtime_video_runtime/**/*",
+]
+"worldfoundry.synthesis.visual_generation.open_sora" = [
+    "open_sora_runtime/**/*",
+]
+"worldfoundry.synthesis.visual_generation.vmem" = [
+    "vmem_runtime/**/*",
+]
+"worldfoundry.synthesis.visual_generation.wonderworld" = [
+    "wonderworld_runtime/**/*",
 ]

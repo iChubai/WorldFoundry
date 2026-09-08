@@ -13,11 +13,27 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Regex-based renaming of checkpoint state-dict keys."""
+"""Regex-based renaming of checkpoint state-dict keys.
+
+Released weights sometimes use a different parameter-name layout than
+the in-tree module. :func:`remap_checkpoint_keys` applies the first
+matching regex per key; tensors are not copied.
+:func:`submodule_state_dict` selects keys under a prefix and strips
+that prefix.
+
+This is a rename pass only — it does not convert dtypes, merge LoRA,
+or validate shapes against a model.
+"""
 
 import re
+from collections import OrderedDict
+from collections.abc import Mapping
 
 from torch import Tensor
+
+# ──────────────────────────────────────────────────────────────────────────
+# First-match rename — insertion order wins; unmatched keys pass through
+# ──────────────────────────────────────────────────────────────────────────
 
 
 def remap_checkpoint_keys(state_dict: dict[str, Tensor], mapping: dict[str, str]) -> dict[str, Tensor]:
@@ -50,3 +66,21 @@ def remap_checkpoint_keys(state_dict: dict[str, Tensor], mapping: dict[str, str]
         if not matched:
             new_state_dict[k] = v
     return new_state_dict
+
+
+# ──────────────────────────────────────────────────────────────────────────
+# Prefix strip — select a nested module without copying tensor storage
+# ──────────────────────────────────────────────────────────────────────────
+
+
+def submodule_state_dict(state_dict: Mapping[str, Tensor], prefix: str) -> OrderedDict[str, Tensor]:
+    """Select checkpoint tensors below a prefix and remove that prefix."""
+
+    return OrderedDict(
+        (key[len(prefix) :], value)
+        for key, value in state_dict.items()
+        if key.startswith(prefix)
+    )
+
+
+__all__ = ["remap_checkpoint_keys", "submodule_state_dict"]

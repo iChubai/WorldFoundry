@@ -1,4 +1,11 @@
-"""FSDP runtime helpers for checkpointing, scoped unsharding, and device meshes."""
+"""FSDP1 runtime: checkpointing, scoped unsharding, and device meshes.
+
+FSDP shards parameters and all-gathers them for forward. Inference can
+unshard a block only for that forward and reshard immediately to cut
+peak VRAM. This module is FSDP1 (flat params). Prefer
+:mod:`worldfoundry.core.distributed.fsdp2_sharding` (DTensor / FSDP2)
+for new Wan-style block models. Do not wrap the same module with both.
+"""
 
 from __future__ import annotations
 
@@ -23,9 +30,13 @@ from torch.distributed.fsdp._runtime_utils import (
 )
 from torch.distributed.utils import _p_assert
 
-from worldfoundry.core.distributed import torch_process_group as distributed
+import worldfoundry.core.distributed.torch_process_group as distributed
 
 logger = logging.getLogger(__name__)
+
+# ──────────────────────────────────────────────────────────────────────────
+# Activation checkpointing and scoped unshard — FSDP1 flat-param only
+# ──────────────────────────────────────────────────────────────────────────
 
 
 def apply_fsdp_checkpointing(model, list_block_cls) -> None:
@@ -38,6 +49,8 @@ def apply_fsdp_checkpointing(model, list_block_cls) -> None:
     )
 
     def check_fn(submodule):
+        """Wrap only transformer-block classes listed by the caller."""
+
         return any(isinstance(submodule, block_cls) for block_cls in list_block_cls)
 
     apply_activation_checkpointing(
@@ -111,5 +124,9 @@ def hsdp_device_mesh(replica_group_size=None, sharding_group_size=None, device=N
     )
     return device_mesh
 
+
+# ──────────────────────────────────────────────────────────────────────────
+# Public surface
+# ──────────────────────────────────────────────────────────────────────────
 
 __all__ = ["apply_fsdp_checkpointing", "hsdp_device_mesh", "possible_fsdp_scope"]

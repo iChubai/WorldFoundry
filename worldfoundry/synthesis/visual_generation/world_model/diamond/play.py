@@ -62,6 +62,19 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--fps", type=int, default=15, help="Frame rate.")
     parser.add_argument("--size", type=int, default=640, help="Window size.")
     parser.add_argument("--no-header", action="store_true")
+    parser.add_argument(
+        "--headless-steps",
+        type=int,
+        default=0,
+        help="Run a finite policy-controlled world-model rollout without opening a Pygame window.",
+    )
+    parser.add_argument("--output-path", type=str, default=None, help="MP4 destination for a headless rollout.")
+    parser.add_argument(
+        "--dataset-dir",
+        type=str,
+        default=None,
+        help="Directory for the short real-environment initialization dataset.",
+    )
     return parser.parse_args()
 
 
@@ -78,6 +91,12 @@ def check_args(args: argparse.Namespace) -> None:
     else:
         if not args.record and (args.store_denoising_trajectory or args.store_original_obs):
             print("Warning: not in recording mode, ignoring --store* options")
+        if args.headless_steps < 0:
+            print("Error: --headless-steps must be non-negative.")
+            return False
+        if args.headless_steps and not args.output_path:
+            print("Error: --output-path is required with --headless-steps.")
+            return False
     return True
 
 
@@ -122,7 +141,8 @@ def prepare_play_mode(cfg: DictConfig, args: argparse.Namespace) -> Tuple[PlayEn
 
     # Collect for imagination's initialization
     n = args.num_steps_initial_collect
-    dataset = Dataset(Path(f"dataset/{path_ckpt.stem}_{n}"))
+    dataset_root = Path(args.dataset_dir).expanduser() if args.dataset_dir else Path("dataset")
+    dataset = Dataset(dataset_root / f"{path_ckpt.stem}_{n}")
     dataset.load_from_default_path()
     if len(dataset) == 0:
         print(f"Collecting {n} steps in real environment for world model initialization.")
@@ -156,6 +176,53 @@ def prepare_play_mode(cfg: DictConfig, args: argparse.Namespace) -> Tuple[PlayEn
     return play_env, env_keymap
 
 
+def run_headless(play_env: PlayEnv, output_path: str, *, num_steps: int, fps: int) -> None:
+    """Run a finite imagined rollout and encode its observations as MP4."""
+
+    import cv2
+    import numpy as np
+
+    destination = Path(output_path).expanduser().resolve()
+    destination.parent.mkdir(parents=True, exist_ok=True)
+
+    def to_rgb(observation: torch.Tensor) -> np.ndarray:
+        if observation.ndim != 4 or observation.size(0) != 1:
+            raise ValueError(f"Expected one BCHW observation, got {tuple(observation.shape)}")
+        return (
+            observation[0]
+            .detach()
+            .clamp(-1, 1)
+            .add(1)
+            .div(2)
+            .mul(255)
+            .byte()
+            .permute(1, 2, 0)
+            .cpu()
+            .numpy()
+        )
+
+    observation, _ = play_env.reset()
+    frames = [to_rgb(observation)]
+    for _ in range(num_steps):
+        next_observation, _, end, trunc, _ = play_env.step(0)
+        frames.append(to_rgb(next_observation))
+        if bool(end) or bool(trunc):
+            observation, _ = play_env.reset()
+        else:
+            observation = next_observation
+
+    height, width = frames[0].shape[:2]
+    writer = cv2.VideoWriter(str(destination), cv2.VideoWriter_fourcc(*"mp4v"), float(fps), (width, height))
+    if not writer.isOpened():
+        raise RuntimeError(f"Could not open MP4 writer: {destination}")
+    try:
+        for frame in frames:
+            writer.write(cv2.cvtColor(frame, cv2.COLOR_RGB2BGR))
+    finally:
+        writer.release()
+    print(f"Saved {len(frames)} DIAMOND world-model frames to {destination}")
+
+
 @torch.no_grad()
 def main():
     args = parse_args()
@@ -168,9 +235,12 @@ def main():
         cfg = compose(config_name="trainer")
 
     env, keymap = prepare_dataset_mode(cfg) if args.dataset_mode else prepare_play_mode(cfg, args)
-    size = (args.size // cfg.env.train.size) * cfg.env.train.size  # window size
-    game = Game(env, keymap, (size, size), fps=args.fps, verbose=not args.no_header)
-    game.run()
+    if args.headless_steps:
+        run_headless(env, args.output_path, num_steps=args.headless_steps, fps=args.fps)
+    else:
+        size = (args.size // cfg.env.train.size) * cfg.env.train.size  # window size
+        game = Game(env, keymap, (size, size), fps=args.fps, verbose=not args.no_header)
+        game.run()
 
 
 if __name__ == "__main__":

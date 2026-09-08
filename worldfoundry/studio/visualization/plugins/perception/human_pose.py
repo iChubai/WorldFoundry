@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from typing import Dict, List
 import random
-from worldfoundry.base_models.diffusion_model.video.wan.wan_2p2.modules.animate.preprocess.pose2d_utils import (
+from worldfoundry.base_models.diffusion_model.models.encoders.wan.variants.animate.pose2d import (
     AAPoseMeta,
 )
 
@@ -114,6 +114,8 @@ def draw_handpose_new(canvas, keypoints, stickwidth_type='v2', hand_score_th=0.6
         stickwidth = max(int(min(H, W) / 200), 1)
     elif stickwidth_type == 'v2':
         stickwidth = max(max(int(min(H, W) / 200) - 1, 1) // 2, 1)
+    else:
+        raise ValueError(f"Unknown stickwidth_type {stickwidth_type!r}; expected 'v1' or 'v2'.")
 
     edges = [
         [0, 1],
@@ -855,14 +857,13 @@ def draw_aapose_new(
     ]
 
     H, W, C = img.shape
-    H, W, C = img.shape
 
     if stickwidth_type == 'v1':
         stickwidth = max(int(min(H, W) / 200), 1)
     elif stickwidth_type == 'v2':
         stickwidth = max(int(min(H, W) / 200) - 1, 1)
     else:
-        raise
+        raise ValueError(f"Unknown stickwidth_type {stickwidth_type!r}; expected 'v1' or 'v2'.")
 
     for _idx, ((k1_index, k2_index), color) in enumerate(zip(limbSeq, colors)):
         keypoint1 = kp2ds_body[k1_index - 1]
@@ -1022,13 +1023,29 @@ def draw_kp2ds(img, kp2ds, threshold=0, color=(255, 0, 0), skeleton=None, revers
 
 
 def draw_mask(img, mask, background=0, return_rgba=False):
+    """Composite ``img`` over ``background`` using ``mask`` as an alpha channel.
+
+    ``mask`` may use the normalized or 8-bit alpha convention; boolean masks
+    are also accepted. When ``return_rgba`` is True the normalized mask is
+    appended as an 8-bit alpha channel of the returned image.
+    """
     img = load_image(img)
     h, w, _ = img.shape
-    if type(background) == int:
-        background = np.ones((h, w, 3)).astype(np.uint8) * 255 * background
-    backgournd = cv2.resize(background, (w, h))
-    img_rgba = np.concatenate([img, mask], -1)
-    return alphaMerge(img_rgba, background, 0, 0, return_rgba=True)
+    if isinstance(background, (int, np.integer)):
+        background = np.ones((h, w, 3), dtype=np.uint8) * 255 * int(background)
+    background = cv2.resize(np.asarray(background), (w, h))[:, :, :3]
+    mask_arr = np.asarray(mask)
+    if mask_arr.ndim == 3:
+        alpha = mask_arr[..., -1].astype(np.float32)
+    else:
+        alpha = mask_arr.astype(np.float32)
+    if alpha.size and float(np.max(alpha)) > 1.0:
+        alpha = alpha / 255.0
+    alpha = np.clip(alpha, 0.0, 1.0)[..., None]
+    blended = (img.astype(np.float32) * alpha + background.astype(np.float32) * (1.0 - alpha)).astype(np.uint8)
+    if return_rgba:
+        return np.concatenate([blended, (alpha[..., 0] * 255.0).astype(np.uint8)[..., None]], axis=-1)
+    return blended
 
 
 def draw_pcd(pcd_list, save_path=None):

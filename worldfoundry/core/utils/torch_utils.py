@@ -1,4 +1,19 @@
-"""PyTorch training utilities: seeds, optimizers, checkpoints, and module helpers."""
+"""PyTorch utilities: seeds, checkpoints, DDP unwrap, and module helpers.
+
+Responsibility
+    Process-wide seeds / determinism, checkpoint load/save, DDP unwrap,
+    freeze/clip, and small training meters.
+
+Boundaries
+    Training-oriented. Inference Graph capture is ``inference_graph``;
+    device placement for VRAM is ``worldfoundry.core.vram``. Nested
+    device / state-dict walks require ``dm_tree``.
+
+Public surface
+    Seed helpers, :class:`eval_mode`, :class:`DDPMethodWrapper`,
+    :func:`to_state_dict` / :func:`load_state_dict`, :class:`RunningMeanStd`,
+    :class:`AverageMeter`, and the other names in this module's callers.
+"""
 
 from __future__ import annotations
 
@@ -15,8 +30,13 @@ from typing_extensions import Literal
 
 from ..io.file_utils import f_join
 from ..io.print_utils import to_readable_count_str
-from ..structures.tree_utils import _require_tree, tree_value_at_path
 from .functional_utils import assert_implements_method, implements_method
+from .tree_utils import _require_tree, tree_value_at_path
+
+
+# ──────────────────────────────────────────────────────────────────────────
+# Init / seeds — process-wide; PYTHONHASHSEED only affects child processes
+# ──────────────────────────────────────────────────────────────────────────
 
 
 def weight_init(m):
@@ -81,11 +101,18 @@ def get_seed(
         return seed
 
 
+def _env_truthy(name: str) -> bool:
+    """True for ``1`` / ``true`` / ``yes`` / ``on``; missing or other spellings are False."""
+    return os.environ.get(name, "").strip().lower() in {"1", "true", "yes", "on"}
+
+
 def set_deterministic(flag: bool = True):
     """Enforces absolute reproducibility / determinism across PyTorch and CuDNN layers.
 
     Sets system environment flags for CUBLAS workspace caching and disables CuDNN auto-benchmarking
     to avoid non-deterministic execution paths during policy rollout evaluation.
+
+    Also honoured process-wide via ``WORLDFOUNDRY_DETERMINISTIC=1`` (XC-23).
     """
     if not flag:
         return
@@ -102,6 +129,15 @@ def set_deterministic(flag: bool = True):
     elif hasattr(torch, "set_deterministic"):
         # only available in PyTorch >= 1.7
         torch.set_deterministic(True)
+
+
+def apply_deterministic_from_env() -> bool:
+    """Enable :func:`set_deterministic` when ``WORLDFOUNDRY_DETERMINISTIC`` is set."""
+
+    if not _env_truthy("WORLDFOUNDRY_DETERMINISTIC"):
+        return False
+    set_deterministic(True)
+    return True
 
 
 def set_seed_everywhere(
@@ -127,12 +163,17 @@ def set_seed_everywhere(
         set_tensorflow: If True, attempts to seed active TF runtimes.
         handle_invalid_seed: Strategy for resolving invalid/None seeds.
     """
+    if not deterministic:
+        deterministic = _env_truthy("WORLDFOUNDRY_DETERMINISTIC")
     set_deterministic(deterministic)
 
     seed = get_seed(seed, handle_invalid_seed=handle_invalid_seed)
     if seed is None:
         return None
 
+    # Note: PYTHONHASHSEED cannot change str/bytes hashing for the *current*
+    # interpreter (it is read once at startup); setting it here only makes
+    # child processes inherit the seed.
     os.environ["PYTHONHASHSEED"] = str(seed)
     random.seed(seed)
     np.random.seed(seed)
@@ -150,16 +191,20 @@ def set_seed_everywhere(
 
 
 def set_random_seed(seed: int, by_rank: bool = False) -> int:
-    """Set Python, NumPy, and PyTorch seeds with optional distributed-rank offset."""
+    """Set Python, NumPy, and PyTorch seeds with optional distributed-rank offset.
+
+    Thin wrapper over :func:`set_seed_everywhere` (the canonical entry point).
+    When the process group is unavailable, ``by_rank`` silently falls back to
+    the unoffset seed.
+    """
 
     resolved_seed = int(seed)
-    if by_rank:
-        try:
-            from worldfoundry.core.distributed import torch_process_group as distributed
-
-            resolved_seed += int(distributed.get_rank())
-        except Exception:
-            pass
+    if (
+        by_rank
+        and torch.distributed.is_available()
+        and torch.distributed.is_initialized()
+    ):
+        resolved_seed += int(torch.distributed.get_rank())
     set_seed_everywhere(resolved_seed)
     return resolved_seed
 
@@ -170,17 +215,39 @@ def mean_flat(tensor: torch.Tensor) -> torch.Tensor:
     return tensor.mean(dim=list(range(1, tensor.ndim)))
 
 
+def temporal_feature_consistency(features: torch.Tensor) -> torch.Tensor:
+    """Average non-negative adjacent/first-frame cosine consistency on device."""
+
+    if features.ndim != 2:
+        raise ValueError(f"features must have shape [frames, channels], got {tuple(features.shape)}")
+    if features.shape[0] < 2:
+        raise ValueError("at least two frame features are required")
+    adjacent = torch.nn.functional.cosine_similarity(features[:-1], features[1:], dim=-1).clamp_min_(0)
+    first = torch.nn.functional.cosine_similarity(features[0:1], features[1:], dim=-1).clamp_min_(0)
+    return ((adjacent + first) * 0.5).mean()
+
+
+# ──────────────────────────────────────────────────────────────────────────
+# Eval / device / IO — restore train flags; default map_location is CPU
+# ──────────────────────────────────────────────────────────────────────────
+
+
 class eval_mode(object):
+    """Temporarily ``train(False)`` one or more modules; restore on exit."""
+
     def __init__(self, *models):
+        """Record modules; flags are snapshotted on enter, not here."""
         self.models = models
 
     def __enter__(self):
+        """Switch each module to eval; remember prior ``training`` bits."""
         self.prev_states = []
         for model in self.models:
             self.prev_states.append(model.training)
             model.train(False)
 
     def __exit__(self, *args):
+        """Restore prior flags; never suppress exceptions."""
         for model, state in zip(self.models, self.prev_states):
             model.train(state)
         return False
@@ -196,6 +263,7 @@ def get_device(x, strict: bool = False) -> int:
     xs = tree.flatten(x)
 
     def _get_device(x):
+        """Tensor device, first-parameter device for modules, else ``None``."""
         if torch.is_tensor(x):
             return x.device
         elif isinstance(x, nn.Module):
@@ -230,7 +298,11 @@ def save_torch(D, *fpath):
     """
     if isinstance(D, str):
         assert not isinstance(fpath, str), "Either torch_save(D, fpath) or torch_save(fpath, D)"
-        fpath, D = D, fpath
+        # ``fpath`` is a varargs tuple here; unwrap the payload so the swapped
+        # call order saves the object itself instead of a 1-tuple.
+        if len(fpath) != 1:
+            raise ValueError("save_torch(fpath, D) expects exactly one object to save")
+        fpath, D = (D,), fpath[0]
     torch.save(D, str(f_join(fpath)))
 
 
@@ -241,6 +313,7 @@ dump_torch = save_torch
 
 
 def torch_compute_stats(x, precision: int = 2):
+    """Human-readable mean/std/median/min/max after a float32 cast."""
     x = x.to(dtype=torch.float32)
     return (
         f"mean|std: {torch.mean(x):.{precision}f} +/- {torch.std(x):.{precision}f}, "
@@ -250,6 +323,7 @@ def torch_compute_stats(x, precision: int = 2):
 
 
 def tensor_hash(x: torch.Tensor, mode: str = "mean"):
+    """Cheap abs-mean or abs-sum fingerprint for debug equality, not a crypto hash."""
     if isinstance(x, np.ndarray):
         x = torch.from_numpy(x)
     x = x.float().abs()
@@ -301,8 +375,13 @@ def torch_multi_index_select(x: torch.Tensor, indices: torch.Tensor):
     return selected
 
 
-# ========== module operations =========
+# ──────────────────────────────────────────────────────────────────────────
+# Module ops — freeze / clip / DDP unwrap; first parameter defines device
+# ──────────────────────────────────────────────────────────────────────────
+
+
 def set_requires_grad(model, requires_grad):
+    """Set ``requires_grad`` on a tensor or every parameter of a module."""
     if torch.is_tensor(model):
         model.requires_grad = requires_grad
     else:
@@ -311,18 +390,21 @@ def set_requires_grad(model, requires_grad):
 
 
 def freeze_params(model):
+    """Disable grads and, for modules, switch to eval (BN / dropout off)."""
     set_requires_grad(model, False)
     if not torch.is_tensor(model):
         model.eval()
 
 
 def unfreeze_params(model):
+    """Enable grads and, for modules, switch to train."""
     set_requires_grad(model, True)
     if not torch.is_tensor(model):
         model.train()
 
 
 def clip_grad_value(model, max_value):
+    """Clamp per-element grads in place; no return value."""
     with torch.no_grad():
         nn.utils.clip_grad_value_(model.parameters(), max_value)
 
@@ -337,6 +419,7 @@ def clip_grad_norm(model, max_norm, norm_type=2):
 
 
 def implements_state_dict(object, requires_load_method: bool = False):
+    """True if ``state_dict`` exists; optionally also require ``load_state_dict``."""
     cond = implements_method(object, "state_dict")
     if requires_load_method:
         return cond and implements_method(object, "load_state_dict")
@@ -345,6 +428,7 @@ def implements_state_dict(object, requires_load_method: bool = False):
 
 
 def unwrap_ddp_model(model):
+    """Peel one DDP/wrapper ``.module`` when it is the sole child."""
     if hasattr(model, "module") and len(list(model.children())) == 1:
         model = model.module
     return model
@@ -358,15 +442,18 @@ class DDPMethodWrapper(nn.Module):
     """
 
     def __init__(self, net: nn.Module, method_name: str):
+        """Bind ``net.method_name``; the method must already exist."""
         super().__init__()
         self.net = net
         assert_implements_method(net, method_name)
         self._method_name = method_name
 
     def forward(self, *args, **kwargs):
+        """Dispatch to the wrapped method so DDP can allreduce that path."""
         return getattr(self.net, self._method_name)(*args, **kwargs)
 
     def state_dict(self):
+        """Empty on purpose — the inner module owns the real weights."""
         return {}
 
 
@@ -380,6 +467,7 @@ def to_state_dict(objects, to_cpu: bool = False, copy: bool = False, unwrap_ddp:
     """
 
     def _transfer(x):
+        """Detach tensors and optionally copy to CPU or clone on-device."""
         if torch.is_tensor(x):
             x = x.detach()
             if to_cpu:
@@ -389,11 +477,15 @@ def to_state_dict(objects, to_cpu: bool = False, copy: bool = False, unwrap_ddp:
         return x
 
     def _to_state_dict(m):
+        """Call ``state_dict`` when present; otherwise treat ``m`` as a leaf tensor."""
         if implements_state_dict(m):
+            # DDP unwrapping is just a preprocessing step; every object with a
+            # state_dict() method (Optimizer, LRScheduler, plain nn.Module)
+            # goes through the same transfer path.
             if isinstance(m, nn.Module) and unwrap_ddp:
                 m = unwrap_ddp_model(m)
-                tree = _require_tree()
-                return tree.map_structure(_transfer, m.state_dict())
+            tree = _require_tree()
+            return tree.map_structure(_transfer, m.state_dict())
         else:
             return _transfer(m)
 
@@ -409,6 +501,7 @@ def load_state_dict(objects, states, strip_prefix=None, strict=False):
     """
 
     def _load(paths, obj):
+        """Load the matching subtree; skip missing paths unless ``strict``."""
         if not implements_method(obj, "load_state_dict"):
             raise ValueError(f"Object {type(obj)} does not support load_state_dict() method")
         try:
@@ -431,7 +524,7 @@ def load_state_dict(objects, states, strip_prefix=None, strict=False):
 
 
 def count_parameters(model, verbose: bool = False):
-    count = sum(x.numel() for x in model.parameters())
+    """Sum ``numel`` over parameters (includes frozen); optionally log the count."""
     if verbose:
         from worldfoundry.core.distributed.logging import log
 
@@ -440,6 +533,7 @@ def count_parameters(model, verbose: bool = False):
 
 
 def readable_count_parameters(model, precision: int = 2):
+    """Human-readable parameter count (e.g. ``12.3M``)."""
     return to_readable_count_str(count_parameters(model), precision=precision)
 
 
@@ -471,6 +565,7 @@ def maybe_transfer_module(model, device):
 
 
 def clone_model(model):
+    """Deep-copy a module onto its current device without sharing storage."""
     with torch.no_grad():
         new_model = deepcopy(model).to(get_module_device(model))
     # new_model.load_state_dict(model.state_dict())
@@ -478,11 +573,13 @@ def clone_model(model):
 
 
 def update_soft_params(net, target_net, tau):
+    """Polyak average ``target = tau * net + (1-tau) * target`` in place."""
     for param, target_param in zip(net.parameters(), target_net.parameters()):
         target_param.data.copy_(tau * param.data + (1 - tau) * target_param.data)
 
 
 def tie_weights(src, trg):
+    """Alias ``trg.weight`` / ``bias`` to ``src`` (same type required). Deprecated."""
     # TODO deprecate this
     assert type(src) is type(trg)
     trg.weight = src.weight
@@ -529,6 +626,7 @@ def torch_normalize(tensor: torch.Tensor, mean, std, inplace=False):
 
 
 def contains_rnn(net: nn.Module) -> bool:
+    """True if any submodule is an ``nn.RNNBase`` (LSTM / GRU / RNN)."""
     for m in net.modules():
         if isinstance(m, nn.RNNBase):
             return True
@@ -559,6 +657,7 @@ def multi_one_hot(x, num_classes: List[int], to_float=True):
 
 
 def _random_derangement(n):
+    """Sattolo-style rejection sample of a permutation with no fixed points."""
     while True:
         v = [i for i in range(n)]
         for j in range(n - 1, -1, -1):
@@ -584,7 +683,7 @@ def random_derangement(n, format: Literal["list", "numpy", "torch"] = "torch"):
     if format == "list":
         return D
     elif format == "numpy":
-        return np.array(D, dtype=np.long)
+        return np.array(D, dtype=np.int64)
     elif format == "torch":
         return torch.tensor(D, dtype=torch.long)
     else:
@@ -660,6 +759,11 @@ def classify_accuracy(
 
 
 def merge_dict_list(dict_list):
+    """Stack 0-D tensors and cat N-D tensors across a list of homogeneous dicts.
+
+    Non-tensor values are taken from the first item only. A single-item list
+    is returned unchanged.
+    """
     if len(dict_list) == 1:
         return dict_list[0]
 
@@ -701,25 +805,32 @@ def sequential_split_dataset(dataset: torch.utils.data.Dataset, split_portions: 
 
 
 class RunningMeanStd:
+    """Welford / parallel variance over a stream of numpy or torch batches.
+
+    https://en.wikipedia.org/wiki/Algorithms_for_calculating_variance#Parallel_algorithm
+    Variance is always the biased (``unbiased=False``) estimator so numpy and
+    torch stay aligned.
+    """
+
     def __init__(self):
-        """
-        Calulates the running mean and std of a data stream
-        https://en.wikipedia.org/wiki/Algorithms_for_calculating_variance#Parallel_algorithm
-        """
+        """Start empty; first :meth:`update` allocates mean/var like the batch."""
         self._mean = None
         self._var = None
         self._count = 0
 
     @property
     def mean(self):
+        """Running mean, or ``None`` before the first update."""
         return self._mean
 
     @property
     def var(self):
+        """Running biased variance, or ``None`` before the first update."""
         return self._var
 
     @property
     def std(self):
+        """``sqrt(var)`` on the same array/tensor type as the stream."""
         if isinstance(self._var, np.ndarray):
             return np.sqrt(self._var)
         else:
@@ -727,9 +838,11 @@ class RunningMeanStd:
 
     @property
     def count(self):
+        """Number of samples absorbed so far (leading-dim sum)."""
         return self._count
 
     def update(self, values: np.ndarray | torch.Tensor) -> None:
+        """Fold a batch via its mean/var; leading dim is the sample axis."""
         from .array_tensor_utils import any_mean, any_variance, get_batch_size
 
         batch_mean = any_mean(values, dim=0)
@@ -744,7 +857,7 @@ class RunningMeanStd:
         batch_var: np.ndarray | torch.Tensor,
         batch_count: int,
     ) -> None:
-        from .array_tensor_utils import any_get_shape
+        """Combine precomputed moments; ``batch_count`` must be positive after add."""
 
         is_tensor = torch.is_tensor(batch_mean)
         _zeros = batch_mean.new_zeros if is_tensor else np.zeros
@@ -768,12 +881,15 @@ class RunningMeanStd:
         self._count = tot_count
 
 
+# ──────────────────────────────────────────────────────────────────────────
+# Compatibility wrappers — prefer set_seed_everywhere / has_batchnorms
+# ──────────────────────────────────────────────────────────────────────────
+
+
 def fix_random_seeds(seed=31):
-    """Fix random seeds for reproducibility."""
-    torch.manual_seed(seed)
-    torch.cuda.manual_seed_all(seed)
-    np.random.seed(seed)
-    random.seed(seed)
+    """Compatibility wrapper for the canonical :func:`set_seed_everywhere`."""
+
+    return set_seed_everywhere(int(seed))
 
 
 def has_batchnorms(model):
@@ -789,16 +905,19 @@ class AverageMeter:
     """Computes and stores the average and current value"""
 
     def __init__(self, name="", fmt="f"):
+        """Optional ``name`` prefixes ``str()``; ``fmt`` is a format spec or empty."""
         self._name = name
         self._fmt = fmt
         self.reset()
 
     def reset(self):
+        """Clear sum and count so a new epoch does not inherit the last."""
         self._sum = 0.0
         self._count = 0.0
 
     @torch.no_grad()
     def update(self, value, n=1):
+        """Add ``value * n``; tensors are detached so the meter stays off-graph."""
         if torch.is_tensor(value):
             value = value.detach()
         self._sum += value * n
@@ -806,12 +925,15 @@ class AverageMeter:
 
     @torch.no_grad()
     def compute(self):
+        """Mean so far; divide-by-zero if ``update`` was never called."""
         return float(self._sum / self._count)
 
     def __float__(self):
+        """Same as :meth:`compute` for ``float(meter)``."""
         return self.compute()
 
     def __str__(self):
+        """Format the current mean; include ``name`` when set."""
         if self._fmt:
             s = f"{float(self):{self._fmt}}"
         else:

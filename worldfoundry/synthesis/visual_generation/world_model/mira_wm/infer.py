@@ -183,9 +183,9 @@ def main() -> int:
 
     import numpy as np
     import torch
-    from mira.data.training_loader import create_loader
+    from mira.data.inference_loader import create_loader
     from mira.inference.loading import load_world_model
-    from mira.training.visualization import videos_to_grid, write_video_ffmpeg
+    from mira.inference_support.visualization import videos_to_grid, write_video_ffmpeg
     from mira.world_model.config import WorldModelInferenceConfig
 
     device_text = args.device

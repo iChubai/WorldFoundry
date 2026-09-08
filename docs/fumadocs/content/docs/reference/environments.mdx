@@ -17,7 +17,60 @@ WorldFoundry uses conda as the single supported environment path. The documented
 4. Switch to a dedicated env only when `runtime/environments/<category>/<model-id>.yaml` records an ABI or simulator constraint.
 5. Use benchmark-specific scripts only for official metrics, reference metrics, or physics stacks.
 
-## Clone-to-run Setup Scripts
+## Python install surfaces
+
+`pyproject.toml` exposes two intentionally different dependency surfaces:
+
+- **Optional dependencies (extras)** are the public, wheel-visible install surface for users and contributors. Install the smallest extra that matches the feature you need, for example `python -m pip install -e ".[ui]"`.
+- **Dependency groups** are source-checkout tooling and resolver buckets. They are not wheel extras and are not selected with `.[name]`. With a PEP 735-capable pip, use a command such as `python -m pip install --group lint`; environment tooling may consume the same groups directly.
+
+`all` is a curated general-runtime bundle, not the literal union of every extra. It deliberately excludes development tools, proprietary NVIDIA VFX bindings, training stacks, and model-specific ABI islands. In the table below, “In `all`” means that every package name declared by that extra is represented in `all`; install the named extra as well when its tighter version constraints are part of the runtime contract.
+
+| Extra | Purpose | In `all` | Editable install |
+| --- | --- | --- | --- |
+| `api` | Hosted model API clients and image/request helpers. | Yes | `.[api]` |
+| `apple_pi` | Apple-PI evaluation runtime, judge clients, and media helpers. | Yes | `.[apple_pi]` |
+| `hf` | Hugging Face and ModelScope asset download support. | Yes | `.[hf]` |
+| `video` | Broad video, media, data, and 3D runtime dependencies. | No | `.[video]` |
+| `vipe` | ViPE geometry/depth runtime and visualization stack. | No | `.[vipe]` |
+| `molmoact2` | MolmoAct2 model serving stack with its narrow Transformers contract. | No | `.[molmoact2]` |
+| `metrics` | General evaluation metrics and dataset I/O. | No | `.[metrics]` |
+| `distribution_metrics` | Perceptual and distribution metric models. | No | `.[distribution_metrics]` |
+| `dvlt` | DVLT 3D/visualization runtime. | No | `.[dvlt]` |
+| `ui` | Complete Studio/browser UI, including realtime transport dependencies. | Yes | `.[ui]` |
+| `studio_realtime` | Minimal WebRTC/realtime Studio transport stack. | Yes | `.[studio_realtime]` |
+| `rtx_postprocess` | Proprietary NVIDIA VFX post-processing; explicit opt-in only. | No | `.[rtx_postprocess]` |
+| `tui` | Textual terminal UI. | Yes | `.[tui]` |
+| `optimized_core` | Optional Torch-based core acceleration dependencies. | Yes | `.[optimized_core]` |
+| `lora` | Load and merge released PEFT LoRA adapters for inference. | No | `.[lora]` |
+| `profiling` | Model profiling helpers. | No | `.[profiling]` |
+| `web` | Minimal FastAPI web service surface. | Yes | `.[web]` |
+| `mcp` | Model Context Protocol server/client support. | Yes | `.[mcp]` |
+| `worldscore` | WorldScore evaluation runtime. | Yes | `.[worldscore]` |
+| `studio_pointcloud` | Point-cloud Studio visualization. | Yes | `.[studio_pointcloud]` |
+| `studio_rerun` | Rerun-based Studio visualization. | Yes | `.[studio_rerun]` |
+| `studio_geometry` | Geometry and Open3D Studio visualization. | Yes | `.[studio_geometry]` |
+| `studio_plot` | Plotting and color utilities for Studio. | No | `.[studio_plot]` |
+| `dev` | Build, pre-commit, and repository-pinned lint tooling. | No | `.[dev]` |
+| `eval_core` | Optional CPU evaluation dependencies. | No | `.[eval_core]` |
+| `all` | Curated general runtime bundle described above. | — | `.[all]` |
+
+The source-only dependency groups are narrower resolver building blocks:
+
+| Group | Intended use |
+| --- | --- |
+| `lint` | Repository-pinned pre-commit and Ruff toolchain. |
+| `flash_attn_fa25` | Flash-attention bucket for FA 2.5-compatible environments. |
+| `flash_attn_fa28` | Flash-attention bucket for FA 2.8-compatible environments. |
+| `runtime_clip_bundle` | CLIP-oriented runtime compatibility bundle. |
+| `runtime_timm_bundle` | Timm/Torch runtime compatibility bundle. |
+| `three_d_core` | Shared point-cloud and 3D geometry packages. |
+| `transformers_high` | Current Transformers/Diffusers compatibility bucket. |
+| `transformers_low` | Legacy or model-constrained Transformers compatibility bucket. |
+
+These groups select Python requirements only. CUDA/Torch wheel selection, native extension builds, and isolated model environments still go through the setup scripts and runtime profiles documented below.
+
+## Clone-to-run setup scripts
 
 Run these scripts from the repository root. They are part of the public release
 surface, not local machine notes.
@@ -27,6 +80,18 @@ surface, not local machine notes.
 - **`scripts/setup/model_env_install.sh`** — Per-model environment resolution. Reads `worldfoundry/data/models/runtime/environments/**`; routes compatible profiles back to the unified env and creates dedicated envs only for hard ABI conflicts.
 - **`scripts/inference/prepare_model_infer.sh`** — Checkpoint/Hugging Face preparation per model. Defaults to a plan/check-local flow. Add `--download` only after reviewing license, gated access, and storage requirements.
 - **`scripts/workspace/run_workspace.sh`** — Start the browser Workspace from an activated runtime. Keeps `PYTHONPATH=.`, `WORLDFOUNDRY_WORKSPACE_MAX_JOBS`, and `WORLDFOUNDRY_CKPT_DIR` explicit.
+
+The unified installer selects a Torch range that exists on the resolved wheel
+index: cu121 uses Torch 2.4–2.5, cu124 uses 2.4–2.6, and cu128 uses 2.7 or
+newer within the repository upper bound. After the CUDA-index install, the
+exact Torch/Torchvision/Torchaudio versions constrain the remaining PyPI pass
+so indirect dependencies cannot replace the selected CUDA build. On hosts
+without `nvidia-smi`, bootstrap explicitly uses the cu128 wheel index while
+enabling `--allow-no-cuda` and skipping flash-attn; direct installer calls with
+`--cuda auto` instead fail fast and ask for an explicit tier. If another
+selected extra requires a newer Torch than that tier publishes, dependency
+resolution fails explicitly instead of falling back to a PyPI CPU/different
+CUDA wheel.
 
 Recommended fresh-clone path:
 
@@ -97,7 +162,7 @@ bash scripts/setup/bootstrap_worldfoundry.sh \
   --model-root /path/to/worldfoundry-models
 ```
 
-## Runtime Variables
+## Runtime variables
 
 `bootstrap_worldfoundry.sh` and `unified_install.sh` write the same sourceable env
 file. Keep this file local to the machine; it contains paths but no secrets.
@@ -122,7 +187,69 @@ standard HF cache variables) for public checkpoints. Use `WORLDFOUNDRY_CKPT_DIR`
 for upstream runtimes that require a fixed directory layout or for local soft
 links that preserve official paths without duplicating large files.
 
-## Dedicated Model Environment Exceptions
+### Benchmark dataset layouts
+
+`worldfoundry-eval dataset locate <org/name>` resolves an existing dataset
+without network access. It checks the per-dataset environment override first,
+then local asset/data manifests, a direct data root, and finally Hugging Face
+cache snapshots. Direct roots accept `org/name`, `org--name`, and nested
+`hfd_datasets` layouts; hub caches use the standard
+`datasets--org--name/snapshots/<revision>` layout. Use
+`worldfoundry-eval dataset plan <org/name> [...]` to print deduplicated download
+commands without executing them.
+
+## Compiler caches
+
+`worldfoundry.core.compile_cache` configures persistent `torch.compile` caches
+for Inductor, Triton, the CUDA driver JIT, and torch C++/CUDA extensions. The
+compatibility import `worldfoundry.runtime.compile_cache` exposes the same API.
+The root is `WORLDFOUNDRY_COMPILE_CACHE_DIR` when set, otherwise
+`${WORLDFOUNDRY_CACHE_DIR}/compile`. Generated-code caches are partitioned by a
+Torch/Triton/cuDNN/Python/accelerator fingerprint. Explicit
+`TORCHINDUCTOR_CACHE_DIR`, `TRITON_CACHE_DIR`, `TORCH_EXTENSIONS_DIR`, and
+`CUDA_CACHE_PATH` values take precedence when writable; an unwritable cache
+falls back to a process-local temporary directory with a warning.
+
+On a multi-node cluster, use node-local storage rather than a shared NFS or
+project mount. The fingerprint separates incompatible software and accelerator
+stacks, but it does not isolate concurrent writers on different nodes:
+
+```bash
+export WORLDFOUNDRY_COMPILE_CACHE_DIR=/local-ssd/${USER}/worldfoundry-compile
+```
+
+Autotune defaults are applied with `setdefault`, so values exported before
+launch win. WorldFoundry defaults to
+`TORCHINDUCTOR_AUTOTUNE_LOCAL_CACHE=1` and
+`TORCHINDUCTOR_AUTOTUNE_REMOTE_CACHE=0`; opt in to a remote autotune cache only
+when the cluster provides a compatible service.
+
+## Logging
+
+The CLI flags and environment variables below feed the same opt-in logging
+pipeline, `worldfoundry.core.logging_setup.configure_logging`. Explicit CLI
+flags take precedence over inherited environment values.
+
+| Setting | CLI | Environment | Behavior |
+| --- | --- | --- | --- |
+| Level | `--log-level` | `WORLDFOUNDRY_LOG_LEVEL` | Console and file threshold; the CLI accepts `DEBUG`, `INFO`, `WARNING`, `ERROR`, or `CRITICAL`. |
+| File sink | `--log-file` | `WORLDFOUNDRY_LOG_FILE` | Optional rotating file path. Output-owning CLI commands create a per-run `events.jsonl` when neither is set. |
+| JSON Lines | `--log-json` | `WORLDFOUNDRY_LOG_JSON` | Makes the file sink JSON Lines; console output remains text. |
+| Child context | — | `WORLDFOUNDRY_LOG_CONTEXT` | JSON object containing structured correlation fields such as `run_id`, `job_id`, `benchmark_id`, and `model_id`. |
+
+Framework-owned workers receive structured context through
+`log_context_environment()`. `WORLDFOUNDRY_RUN_ID` is also exported by
+output-owning CLI operations for operator visibility, but it is not a
+replacement for `WORLDFOUNDRY_LOG_CONTEXT`.
+
+Structured log messages and fields redact sensitive key names, bearer tokens,
+common OpenAI/Hugging Face/GitHub/Slack/AWS token formats, and compact JWTs.
+Raw stdout/stderr capture remains fidelity-preserving and may use a separate
+line or argument scrubber; do not assume every captured byte passed through the
+structured logger. Loguru keeps native time/count retention semantics, while
+the stdlib fallback interprets retention as a rotated backup-file count.
+
+## Dedicated model environment exceptions
 
 Start from `worldfoundry-unified-<cuda-tier>` for every model. Create a
 dedicated environment only for the profiles below, where the upstream runtime
@@ -144,13 +271,12 @@ conda env without touching checkpoints.
 | Model | Dedicated env | Setup command | Notes |
 | --- | --- | --- | --- |
 | `ac3d` | `ac3d` | `bash scripts/inference/prepare_model_infer.sh ac3d --download` | Official runtime pins Python 3.10, PyTorch 2.4, and CUDA 12.4. Runtime code is in tree under `worldfoundry/synthesis/visual_generation/ac3d/ac3d_runtime`; only checkpoints/assets are external. |
-| `cosmos3` | `worldfoundry-cosmos3-cu128` | `bash scripts/inference/prepare_model_infer.sh cosmos3 --download` | Cosmos3 needs torch 2.10, torchvision 0.25, Diffusers 0.39, and Cosmos Guardrail. The exact Cosmos3 pipeline/transformer/AVAE inference delta is in tree; setup installs released packages and never clones source repositories. |
+| `cosmos3` | `worldfoundry-cosmos3-cu128` | `bash scripts/inference/prepare_model_infer.sh cosmos3 --download` | Cosmos3 uses the native diffusion runner, checkpoint-shaped transformer, Wan VAE38, AVAE decoder, and core runtime policies. Guardrails remain an optional orchestration layer; Diffusers is not an inference backend. |
 | `gen3c` | `gen3c` | `bash scripts/inference/prepare_model_infer.sh gen3c --download` | Inference-only Cosmos Predict1 stack with Python 3.10, CUDA 12.4, torch 2.6, Transformer Engine, and MoGe. Setup applies the Transformer Engine link patch from released packages; it does not clone or build the training-only Apex repository. |
 | `lyra-1` | `lyra` | `bash scripts/inference/prepare_model_infer.sh lyra-1 --download` | Uses the same inference-only Cosmos Predict1 / Transformer Engine family as GEN3C. |
 | `magi-1` | `magi-official-cu124` | `bash scripts/inference/prepare_model_infer.sh magi-1 --download` | Official stack is Python 3.10.12 with PyTorch 2.4 / CUDA 12.4. Keep flash-attn and flashinfer in this env because their wheels are ABI-sensitive. |
 | `warp-as-history` | `warp-as-history` | `bash scripts/inference/prepare_model_infer.sh warp-as-history --download` | Pins Python 3.10, torch 2.5.0+cu121, diffusers 0.36, transformers 4.51, and peft 0.17. |
-| `hunyuanvideo-t2v` | `HunyuanVideo` | `bash scripts/inference/prepare_model_infer.sh hunyuanvideo-t2v --download` | Original HunyuanVideo T2V CLI stack with older diffusers/xfuser compatibility. HunyuanVideo-1.5 is not part of this exception and runs in the unified env. |
-| `hunyuanvideo-i2v` | `HunyuanVideo` | `bash scripts/inference/prepare_model_infer.sh hunyuanvideo-i2v --download` | Shares the original HunyuanVideo env with T2V. The I2V runtime uses the in-tree official image-to-video script and its own I2V checkpoint layout. |
+| `hunyuanvideo-t2v`, `hunyuanvideo-i2v`, `hunyuanvideo-1.5-t2v`, `hunyuanvideo-1.5-i2v` | `worldfoundry-unified-cu128` | `bash scripts/inference/prepare_model_infer.sh hunyuanvideo-t2v --download` | All four IDs use the shared native diffusion runner and role-based Hunyuan components. The former Diffusers/xFuser CLI environment is no longer an inference backend. |
 | `kairos-sensenova` | `kairos-sensenova` | `bash scripts/inference/prepare_model_infer.sh kairos-sensenova --download` | Uses the official torch/CUDA 12.6-class stack and native attention packages such as SageAttention. Use this env when unified CUDA does not provide the Kairos attention stack. |
 | `lingbot-world`, `lingbot-world-act` | `lingbot-world` | `bash scripts/inference/prepare_model_infer.sh lingbot-world --download` | Base-Cam and the independently cataloged public Base-Act checkpoint share the in-tree runtime. Parity requires exact torch and flash-attn pins; the unified env produced invalid near-black act2cam output in upstream-style tests. |
 | `wonderworld` | `wonderworld` | `bash scripts/inference/prepare_model_infer.sh wonderworld --download` | Inference imports PyTorch3D CUDA extensions. Build or install PyTorch3D wheels compatible with this env before running the official path. |
@@ -170,7 +296,7 @@ EvalCrafter is the only benchmark with a WorldFoundry-managed dedicated metric
 profile. Other benchmark-specific native stacks are listed below and are not
 claimed as configured until their own preflight passes.
 
-## Unified Environment With Extra Runtime Requirements
+## Unified environment with extra runtime requirements
 
 The models below should still use `worldfoundry-unified-<cuda-tier>`, but their
 docs should call out extra local assets, compiled wheels, or external services.
@@ -187,7 +313,7 @@ These are not reasons to clone an external repository; the code path is in-tree.
 | OpenPI / MME-VLA | JAX policy dependencies, `gsutil` for some OpenPI checkpoint shards, and optional OpenPI-style websocket or robot-simulator services for full policy rollout. | WorldFoundry keeps code in tree; these requirements are runtime services or checkpoint-transfer tools, not external repo clones. LAPA uses the isolated environment listed above. |
 | Solaris | JAX/Orbax checkpoint loading and official HF evaluation fixtures. | Uses the unified env in WorldFoundry; document the dataset/checkpoint layout rather than a separate conda env. |
 
-## Benchmark Metric Environments
+## Benchmark metric environments
 
 Most benchmark official validation runs and official-result normalizers run in the
 unified environment. Full official metric suites can require a separate conda
@@ -246,7 +372,7 @@ for the no-proxy download and smoke command. The complete upstream suite also
 expects direct `0000.mp4` through `0699.mp4` files, but WorldFoundry does not
 currently claim that full path.
 
-## Embodied Simulator Environments
+## Embodied simulator environments
 
 The host setup is Docker plus the unified WorldFoundry environment:
 
@@ -270,20 +396,20 @@ endpoint.
 
 When working with complex setups involving CUDA, simulators, or external evaluators, you may encounter environment issues:
 
-### 1. CUDA Mismatch
+### 1. CUDA mismatch
 **Symptom**: `CUDA error: no kernel image is available for execution on the device` or PyTorch cannot find a GPU.
 **Solution**: Ensure your NVIDIA driver is up-to-date and supports the CUDA version installed by Conda. If you are on an older driver, you can force the installation script to use an older CUDA wheel bucket:
 ```bash
 bash scripts/setup/unified_install.sh --cuda cu121
 ```
 
-### 2. Missing System Dependencies (e.g., for OpenGL/3D)
+### 2. Missing system dependencies (e.g., for OpenGL/3D)
 **Symptom**: Errors relating to `libGL.so.1`, `EGL`, or headless rendering failures when running embodied simulators or 3D benchmarks.
 **Solution**: Install the required system-level graphics libraries. On Ubuntu/Debian:
 ```bash
 sudo apt-get update && sudo apt-get install -y libgl1-mesa-glx libglib2.0-0
 ```
 
-### 3. Flash Attention Installation Fails
+### 3. Flash Attention installation fails
 **Symptom**: The unified install script hangs or fails during `flash-attn` compilation.
 **Solution**: `flash-attn` is extremely sensitive to mismatched CUDA compiler (`nvcc`) versions. Ensure your `nvcc --version` matches the PyTorch CUDA version. Alternatively, you can disable `flash-attn` installation by passing `--skip-flash-attn` (if supported by your environment) or installing a pre-compiled wheel from the official release page.

@@ -1,0 +1,27 @@
+---
+title: "Infinite VGGT"
+description: "Infinite VGGT (StreamVGGT) turns the feed-forward VGGT reconstructor into a streaming model: it processes incoming frames causally with cached tokens, so reconstruction extends indefinitely instead of being bounded by a fixed window. The i…"
+pageSource: generated
+---
+
+**发表机构:** 清华大学 · 高校
+[Streaming 4D Visual Geometry Transformer](https://arxiv.org/abs/2507.11539) (2025)
+
+Infinite VGGT（StreamVGGT）把前馈重建器 VGGT 改造成流式模型：用缓存 token 因果地处理到来的帧，使重建可以无限延伸而不受固定窗口限制。树内 pipeline 已按流式 3D 重建注册。
+
+<figure className="wf-recipe-media is-diagram">
+  <img src="/models/infinite-vggt/paper.png" alt="Streaming 4D Visual Geometry Transformer" />
+  <figcaption>Streaming 4D Visual Geometry Transformer</figcaption>
+</figure>
+
+<ModelCommandBuilder modelId="infinite-vggt" locale="zh" />
+
+## 架构
+
+带缓存 token 的因果 Transformer，从 VGGT 进行知识蒸馏（见 arXiv 2507.11539）。许可为 CC-BY-NC-4.0——非商用。
+
+## 使用要点
+
+runner parity 为 pending：checkpoint 加载推理依赖就位的 StreamVGGT 权重。离线重建请用 vggt 条目；帧以流形式到达时用本条目。
+
+<ModelRelatedRecipes modelId="infinite-vggt" locale="zh" />

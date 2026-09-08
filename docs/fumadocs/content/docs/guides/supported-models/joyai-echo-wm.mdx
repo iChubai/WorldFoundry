@@ -1,0 +1,28 @@
+---
+title: "Echo-WM"
+description: "Echo-WM is an omnimodal world model that jointly evolves video, environmental sound, music, and speech under continuous navigation. Base generates about ten seconds; Flash Preview uses four denoising steps and bounded sink-plus-FIFO caches…"
+pageSource: generated
+---
+
+**Publisher:** JD.com (JoyAI / Echo Team) · Company
+image → world state · video
+
+Echo-WM is an omnimodal world model that jointly evolves video, environmental sound, music, and speech under continuous navigation. Base generates about ten seconds; Flash Preview uses four denoising steps and bounded sink-plus-FIFO caches for autoregressive rollout.
+
+<ModelCommandBuilder modelId="joyai-echo-wm" locale="en" />
+
+## Architecture
+
+Both public variants use an LTX-2.3 audio-visual backbone with UCPE camera conditioning. Base is bidirectional with separate video/audio CFG, while Flash distills guidance with DMD and maintains bounded video, audio, cross-modal, and camera-attention caches.
+
+## Usage notes
+
+Supply a first-frame image, prompt, and Action DSL such as w-60,a-60. Select variant=base or variant=flash at load time. The official source checkout, dedicated CUDA environment, Echo checkpoint, and gated unquantized Gemma encoder must be staged before execute=True.
+
+## Evaluation benchmarks
+
+- [CameraBench](/docs/evaluation/benchmark-hub/camerabench) — Camera and navigation action adherence.
+- [WorldModelBench](/docs/evaluation/benchmark-hub/worldmodelbench) — General action-conditioned world-rollout quality.
+- [WBench](/docs/evaluation/benchmark-hub/wbench) — The upstream Flash examples use WBench camera-control cases.
+
+<ModelRelatedRecipes modelId="joyai-echo-wm" locale="en" />

@@ -1,0 +1,22 @@
+---
+title: "Depth Anything V1"
+description: "Depth Anything V1 is the foundation model for relative monocular depth that popularized large-scale unlabeled-data depth training."
+pageSource: generated
+---
+
+**发表机构:** TikTok / 香港大学 · 企业
+image → depth
+
+Depth Anything V1 是让「大规模无标注数据训练深度」流行起来的相对单目深度基础模型。本 catalog 中其集成与 runner 状态均为 verified：树内 pipeline 导出相对深度与几何产物，Studio 路径已于 2026-07-10 产出并通过视觉验证的非空深度图。
+
+<ModelCommandBuilder modelId="depth-anything-v1" locale="zh" />
+
+## 架构
+
+DINOv2 ViT 主干加 DPT 式深度头，用约 6200 万张无标注图像以师生方案训练（见论文）。本条目提供相对深度；米制版本是独立的 *-prior 条目。
+
+## 使用要点
+
+已验证、可信赖的先验——相对深度的默认选择。需要米制深度时请改用 depth-anything-v2-prior 或 depth-anything-v3-prior。
+
+<ModelRelatedRecipes modelId="depth-anything-v1" locale="zh" />

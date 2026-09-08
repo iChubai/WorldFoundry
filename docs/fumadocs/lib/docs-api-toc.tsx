@@ -1,6 +1,6 @@
-import apiReference from '@/generated/python-api.json';
 import { createElement, type ReactNode } from 'react';
 import type { TOCItemType } from 'fumadocs-core/toc';
+import { readSiteJson } from '@/lib/read-site-json';
 
 type ApiSymbol = {
   name: string;
@@ -13,7 +13,7 @@ type ApiReferenceData = {
   symbols: Record<string, ApiSymbol>;
 };
 
-const data = apiReference as ApiReferenceData;
+const data = readSiteJson<ApiReferenceData>('generated/python-api.json');
 
 const KIND_ABBR: Record<string, string> = {
   class: 'cls',

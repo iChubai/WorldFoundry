@@ -1,0 +1,40 @@
+---
+title: "CogVideoX"
+description: "CogVideoX is Zhipu AI's open video generation family, one of the most widely used open T2V/I2V baselines. This catalog entry serves three runnable variants — 2B text-to-video, 5B text-to-video, and 5B image-to-video — through in-tree runti…"
+pageSource: generated
+---
+
+**Publisher:** Zhipu AI (THUDM) · Company
+text · image → video
+
+CogVideoX is Zhipu AI's open video generation family, one of the most widely used open T2V/I2V baselines. This catalog entry serves three runnable variants — 2B text-to-video, 5B text-to-video, and 5B image-to-video — through in-tree runtimes, and runner parity is verified. Weights load natively from Hugging Face (THUDM/CogVideoX-5b) or from a local mirror via model_path.
+
+<figure className="wf-recipe-media">
+  <Video src="/demos/cogvideo_01.mp4" autoPlay loop muted playsInline />
+  <figcaption>Text-to-video sample</figcaption>
+</figure>
+
+<ModelCommandBuilder modelId="cogvideox" locale="en" />
+
+## Architecture
+
+CogVideoX uses a diffusion transformer over a 3D causal VAE latent space with an expert transformer conditioning design (per the upstream publication). In this repository, the recorded contract exposes num_inference_steps, num_frames, height, width, and fps on T2V, plus guidance_scale on I2V.
+
+## Usage notes
+
+Pick the variant by size and task: 2B T2V for fast iterations, 5B T2V for quality, 5B I2V for animating an image. Runner parity is verified; per-run visual QA is tracked outside the catalog. Note the recorded license nuance: HF metadata reports Apache-2.0 for 2B but 'other' for several larger variants — review before commercial use.
+
+## Variants & pipeline bindings
+
+| Variant | Task | Runtime profile | Pipeline binding | Status |
+| --- | --- | --- | --- | --- |
+| `cogvideox-2b-t2v` | text-to-video | `cogvideox-2b-t2v` | `cogvideox-2b-t2v` | verified |
+| `cogvideox-5b-t2v` | text-to-video | `cogvideox-5b-t2v` | `cogvideox-5b-t2v` | verified |
+| `cogvideox-5b-i2v` | image-to-video | `cogvideox-5b-i2v` | `cogvideox-5b-i2v` | verified |
+
+## Evaluation benchmarks
+
+- [VBench](/docs/evaluation/benchmark-hub/vbench) — The de-facto open benchmark CogVideoX results are usually reported on.
+- [T2V-CompBench](/docs/evaluation/benchmark-hub/t2v-compbench) — Compositional prompt suite for the T2V variants.
+
+<ModelRelatedRecipes modelId="cogvideox" locale="en" />

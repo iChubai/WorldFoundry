@@ -1,0 +1,26 @@
+---
+title: "Cosmos Transfer 2.5"
+description: "Cosmos Transfer 2.5 does controlled world-to-world translation: it takes structured control inputs (e.g. edge maps or simulation renders) and generates photoreal world video that follows them — the sim-to-real arm of the Cosmos family."
+pageSource: generated
+---
+
+**Publisher:** NVIDIA · Company
+
+Cosmos Transfer 2.5 does controlled world-to-world translation: it takes structured control inputs (e.g. edge maps or simulation renders) and generates photoreal world video that follows them — the sim-to-real arm of the Cosmos family. In this catalog it reuses the same native runner, Reason1 conditioner, flow-UniPC scheduler, and Wan VAE as Predict 2.5, adding only the checkpoint-shaped VACE control branch.
+
+<ModelCommandBuilder modelId="cosmos-transfer-2.5" locale="en" />
+
+## Architecture
+
+The native VACE network adds a four-block control branch at base layers 0/7/14/21 plus an 8-modality control embedder over the 28-layer base; control and conditional video encoding reuse the same framework-owned Wan VAE instance. No Diffusers, ControlNet backend, or model-specific runner is retained.
+
+## Usage notes
+
+Stage the official 2B edge checkpoint plus the Predict2.5 VAE and Reason1 text encoder, then provide a raw RGB control video. The native route extracts Canny edges automatically; set control_is_preprocessed only when supplying edge maps directly.
+
+## Evaluation benchmarks
+
+- [WorldModelBench](/docs/evaluation/benchmark-hub/worldmodelbench) — World-generation quality under control conditions.
+- [Physics-IQ Original](/docs/evaluation/benchmark-hub/physics-iq) — Physical plausibility of transferred world video.
+
+<ModelRelatedRecipes modelId="cosmos-transfer-2.5" locale="en" />

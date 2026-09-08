@@ -1,0 +1,32 @@
+---
+title: "SCOPE"
+description: "SCOPE is an interactive game world model over a Wan backbone: image plus per-step actions in, game-world video out (paper arXiv 2605.23345)."
+pageSource: generated
+---
+
+**Publisher:** Open-source research release (institution not recorded) · Research lab
+image → video
+[SCOPE: Simulating Cross-game Operations in Playable Environments for FPS World Models](https://arxiv.org/abs/2605.23345) (2026)
+
+SCOPE is an interactive game world model over a Wan backbone: image plus per-step actions in, game-world video out (paper arXiv 2605.23345). In this catalog both integration and runner are verified — the image-action-to-video demo runs through the Workspace infer path with staged zizhaotong/SCOPE weights, the in-tree example image, and an action parquet.
+
+<figure className="wf-recipe-media is-diagram">
+  <img src="/models/scope/paper.png" alt="SCOPE: Simulating Cross-game Operations in Playable Environments for FPS World Models" />
+  <figcaption>SCOPE: Simulating Cross-game Operations in Playable Environments for FPS World Models</figcaption>
+</figure>
+
+<ModelCommandBuilder modelId="scope" locale="en" />
+
+## Architecture
+
+SCOPE-specific action conditioning is integrated as a canonical Wan network variant, assembled with shared Wan encoders, VAE, loaders, and staged execution (apache-2.0). Only the checkpoint-shaped action-conditioned network remains model-specific.
+
+## Usage notes
+
+SCOPEPipeline fails fast unless execute=True is supplied, then invokes the in-tree native assembly. Weights stay external HF assets injected through model_dir/checkpoint_root or SCOPE_MODEL_DIR.
+
+## Evaluation benchmarks
+
+- [WorldModelBench](/docs/evaluation/benchmark-hub/worldmodelbench) — Action-conditioned game-world rollout quality.
+
+<ModelRelatedRecipes modelId="scope" locale="en" />

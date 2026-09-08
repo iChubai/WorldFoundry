@@ -1,0 +1,27 @@
+---
+title: "Hailuo 2.3"
+description: "Hailuo 2.3 is MiniMax's hosted video generation service, recorded in this catalog for image-to-video and joint audio-video generation. You hand it a start image (plus an optional prompt) and it returns a finished clip rendered on MiniMax's…"
+pageSource: generated
+---
+
+**Publisher:** MiniMax · Company
+image → video
+
+Hailuo 2.3 is MiniMax's hosted video generation service, recorded in this catalog for image-to-video and joint audio-video generation. You hand it a start image (plus an optional prompt) and it returns a finished clip rendered on MiniMax's infrastructure — WorldFoundry never runs the model itself. The catalog also lists the aliases minimax-i2v and minimax_i2v for this entry, so older configs keep resolving. Use it when you want MiniMax's production quality inside WorldFoundry's Studio workflow without managing GPUs.
+
+<ModelCommandBuilder modelId="hailuo-2p3" locale="en" />
+
+## Architecture
+
+This is a hosted, provider-operated model: the vendor has not published its architecture, parameter count, or training recipe, and this repository does not record them. What WorldFoundry records is the integration surface only — a Studio pipeline that submits requests to the provider endpoint and collects the returned video artifacts.
+
+## Usage notes
+
+The catalog marks this entry as integrated: the hosted-API Studio pipeline is available, but you must supply your own provider API key and account. No weights are downloaded and no GPU environment is provisioned locally — generation happens on the provider side, so cost, quota, and content policy follow your provider account. Point the pipeline at your MiniMax platform key before launching jobs.
+
+## Evaluation benchmarks
+
+- [VBench](/docs/evaluation/benchmark-hub/vbench) — Standard multi-dimension quality suite for comparing hosted text/image-to-video outputs.
+- [Physics-IQ Original](/docs/evaluation/benchmark-hub/physics-iq) — Probes whether provider-side video models respect basic physical plausibility.
+
+<ModelRelatedRecipes modelId="hailuo-2p3" locale="en" />

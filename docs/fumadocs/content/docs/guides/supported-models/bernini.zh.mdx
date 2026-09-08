@@ -1,0 +1,33 @@
+---
+title: "Bernini"
+description: "Bernini is ByteDance's unified any-to-any visual generation model: one checkpoint covers text-to-image, image editing, text-to-video, video-to-video, and reference-guided video. This flagship entry serves the full ByteDance/Bernini-Diffuse…"
+pageSource: generated
+---
+
+**发表机构:** 字节跳动（ByteDance） · 企业
+text · image · video → image · video
+[Bernini: Latent Semantic Planning for Video Diffusion](https://arxiv.org/abs/2605.22344) (2026)
+
+Bernini 是字节跳动的统一「任意到任意」视觉生成模型：一个 checkpoint 同时覆盖文生图、图像编辑、文生视频、视频到视频与参考引导视频。本旗舰条目对应完整的 ByteDance/Bernini-Diffusers checkpoint，内含 7B 语义规划器与 14B 渲染器。WorldFoundry 将官方推理源码内置于树内，直接加载自包含的 Diffusers checkpoint——不依赖外部 Bernini 检出。
+
+<figure className="wf-recipe-media is-diagram">
+  <img src="/models/bernini/paper.png" alt="Bernini: Latent Semantic Planning for Video Diffusion" />
+  <figcaption>Bernini: Latent Semantic Planning for Video Diffusion</figcaption>
+</figure>
+
+<ModelCommandBuilder modelId="bernini" locale="zh" />
+
+## 架构
+
+manifest 记录的是两段式设计：7B 语义规划器先产出中间规划，14B 渲染器再合成最终像素。官方配方使用单请求 8 路 Ulysses 序列并行推理（nproc_per_node=8、ulysses_size=8）。请求时通过 task_type 输入在六类已记录任务间切换。
+
+## 使用要点
+
+集成已完成，但 runner parity 为 pending_gpu_validation：官方 8 卡 Ulysses 调度已实现，产物一致性仍需就位权重并使用 H100 级 GPU 验证。如果没有 8 卡节点，请改用 Bernini-R 渲染器条目——其中 1.3B 版单卡可跑。
+
+## 评测 Benchmark
+
+- [VBench](/zh/docs/evaluation/benchmark-hub/vbench) — 覆盖 Bernini 统一任务空间中的文生视频部分。
+- [T2V-CompBench](/zh/docs/evaluation/benchmark-hub/t2v-compbench) — 组合式提示词可检验语义规划阶段的能力。
+
+<ModelRelatedRecipes modelId="bernini" locale="zh" />

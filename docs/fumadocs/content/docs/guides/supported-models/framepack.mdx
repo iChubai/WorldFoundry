@@ -1,0 +1,26 @@
+---
+title: "FramePack"
+description: "FramePack is a low-memory approach to long image-to-video generation: it packs input frame context into fixed-length representations so generation cost stays roughly constant as the video grows. WorldFoundry vendors a minimal infer-only Fr…"
+pageSource: generated
+---
+
+**Publisher:** Stanford University · University
+image → video
+
+FramePack is a low-memory approach to long image-to-video generation: it packs input frame context into fixed-length representations so generation cost stays roughly constant as the video grows. WorldFoundry vendors a minimal infer-only FramePack runtime in-tree, and the integration itself is marked verified — the route materializes official outputs through the shared pipeline contract.
+
+<ModelCommandBuilder modelId="framepack" locale="en" />
+
+## Architecture
+
+FramePack (from the authors of ControlNet at Stanford) wraps a video diffusion backbone with a frame-context packing scheme that keeps a constant-length conditioning window, enabling minute-scale clips on modest VRAM. This repository records the infer-only runtime under synthesis/visual_generation/framepack and the prompt+image input contract.
+
+## Usage notes
+
+The I2V route is wired for image-conditioned generation; official long-video parity remains pending, and the manifest flags that license and runtime parity must be reviewed before promotion. Best used when you need long clips on a single consumer-class GPU.
+
+## Evaluation benchmarks
+
+- [ChronoMagic-Bench](/docs/evaluation/benchmark-hub/chronomagic-bench) — Long-horizon generation suite matching FramePack's long-video focus.
+
+<ModelRelatedRecipes modelId="framepack" locale="en" />

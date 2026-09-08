@@ -1,0 +1,26 @@
+---
+title: "DreamX-World 5B"
+description: "DreamX-World 5B AR is the causal autoregressive profile of Amap's DreamX-World: a resident runtime with latent, attention, cross-attention, and VAE caches that rolls world video forward block by block under action control. A 2026-07-28 sin…"
+pageSource: generated
+---
+
+**发表机构:** 阿里巴巴（高德地图 AMAP-ML） · 企业
+
+DreamX-World 5B AR 是高德 DreamX-World 的因果自回归档案：常驻运行时带潜变量、注意力、交叉注意力与 VAE 缓存，在动作控制下逐块向前滚动世界视频。2026-07-28 的单 A100 运行从官方示例图生成有限、可解码的原生九帧 1280x704 块。
+
+<ModelCommandBuilder modelId="dreamx-world-5b" locale="zh" />
+
+## 架构
+
+因果三潜块使用发布的 causal checkpoint 与蒸馏的四步 AR-Forcing 调度，且无 RGB 回灌：注意力 KV、交叉注意力、潜变量与因果 VAE 状态跨控制常驻，解码的 RGB 仅作输出——绝不回用为条件。
+
+## 使用要点
+
+Workspace 默认包含就位的 fixture 与非空提示词。已验证的两次控制滚动确认了常驻 AR 路径——这不是长时程质量一致性声明，依赖长滚动前请自行评估。
+
+## 评测 Benchmark
+
+- [WorldModelBench](/zh/docs/evaluation/benchmark-hub/worldmodelbench) — 世界滚动生成的总体质量。
+- [MemoBench](/zh/docs/evaluation/benchmark-hub/memobench) — 自回归滚动生成的长时程一致性。
+
+<ModelRelatedRecipes modelId="dreamx-world-5b" locale="zh" />

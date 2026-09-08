@@ -16,15 +16,20 @@ import { DedicatedEnvCatalog } from '@/components/dedicated-env-catalog';
 import { ArchDiagram } from '@/components/arch-diagram';
 import { CallChainDiagram } from '@/components/call-chain-diagram';
 import { MetricQuickNav } from '@/components/metric-quick-nav';
+import { ModelCommandBuilder, ModelRelatedRecipes } from '@/components/model-page-widgets';
 import { ModelRecipeCatalog } from '@/components/model-recipe-catalog';
+import { RecipeRecords } from '@/components/recipe-records';
 import { ModelRecipeHeader } from '@/components/model-recipe-header';
 import {
   PythonApiCatalog,
   PythonApiGroupReference,
   PythonApiReference,
 } from '@/components/python-api-reference';
+import { StudioRealtimeEnvVars } from '@/components/studio-realtime-env-vars';
 import { StudioVisualizerGallery } from '@/components/studio-visualizer-gallery';
 import { TeaserImage } from '@/components/teaser-image';
+import { MathBlock, MathInline } from '@/components/math';
+import { WorldModelProgression } from '@/components/world-model-progression';
 import {
   WorldFoundryArchitecture,
   WorldFoundryWorkflow,
@@ -77,8 +82,14 @@ function DocsImage({ src, alt, ...props }: DocsImageProps) {
   return <DocsZoomImage {...props} {...dimensions} alt={alt} src={resolved} />;
 }
 
-function DocsVideo({ src, ...props }: ComponentPropsWithoutRef<'video'>) {
-  return <video {...props} src={typeof src === 'string' ? withMediaPath(src) : src} />;
+function DocsVideo({ src, poster, ...props }: ComponentPropsWithoutRef<'video'>) {
+  return (
+    <video
+      {...props}
+      src={typeof src === 'string' ? withMediaPath(src) : src}
+      poster={typeof poster === 'string' ? withBasePath(poster) : poster}
+    />
+  );
 }
 
 export function getMDXComponents(components?: MDXComponents) {
@@ -100,19 +111,26 @@ export function getMDXComponents(components?: MDXComponents) {
     DedicatedEnvCatalog,
     CallChainDiagram,
     DocsWelcomeAcknowledgements,
+    MathBlock,
+    MathInline,
     MetricQuickNav,
+    ModelCommandBuilder,
     ModelRecipeCatalog,
     ModelRecipeHeader,
+    RecipeRecords,
+    ModelRelatedRecipes,
     PythonApiCatalog,
     PythonApiGroupReference,
     PythonApiReference,
     img: DocsImage,
+    StudioRealtimeEnvVars,
     StudioVisualizerGallery,
     TeaserImage,
     TypeTable,
     Video: DocsVideo,
     WorldFoundryArchitecture,
     WorldFoundryWorkflow,
+    WorldModelProgression,
     video: DocsVideo,
     ...components,
   } satisfies MDXComponents;

@@ -1,0 +1,21 @@
+---
+title: "LagrNVS"
+description: "LagrNVS is Meta's novel-view-synthesis model for rendering new camera paths through a scene (facebook/lagernvs_general_512). WorldFoundry wraps the upstream minimal_inference.py command with an in-tree adapter; the checkpoint is gated on H…"
+pageSource: generated
+---
+
+**发表机构:** Meta AI（FAIR） · 企业
+
+LagrNVS 是 Meta 的新视角合成模型，用于沿新的相机路径渲染场景（facebook/lagernvs_general_512）。 WorldFoundry 用树内适配器封装上游 minimal_inference.py 命令；checkpoint 在 Hugging Face 上为 gated， HF_TOKEN 缺失会在推理时报告。
+
+<ModelCommandBuilder modelId="lagernvs" locale="zh" />
+
+## 架构
+
+catalog 记录其为 512 分辨率的新视角/相机路径渲染模型；内部细节仓库未记录。许可为 FAIR 非商用研究许可。
+
+## 使用要点
+
+runner parity 为 pending：pipeline 导入与 plan-only 推理已接好，完整产物一致性需要 gated checkpoint 与 CUDA。运行前请先接受 gated 条款并设置 HF_TOKEN。
+
+<ModelRelatedRecipes modelId="lagernvs" locale="zh" />

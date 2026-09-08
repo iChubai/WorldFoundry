@@ -1,0 +1,26 @@
+---
+title: "I2VGen-XL"
+description: "I2VGen-XL is Alibaba ali-vilab's cascaded image-to-video model, one of the earlier high-resolution open I2V releases. It turns a still image (with optional text) into a short video through a two-stage generate-then-refine cascade. The Worl…"
+pageSource: generated
+---
+
+**Publisher:** Alibaba (Tongyi Lab) · Company
+image · text → video
+
+I2VGen-XL is Alibaba ali-vilab's cascaded image-to-video model, one of the earlier high-resolution open I2V releases. It turns a still image (with optional text) into a short video through a two-stage generate-then-refine cascade. The WorldFoundry route is complete and reports missing checkpoint assets at runtime.
+
+<ModelCommandBuilder modelId="i2vgen-xl" locale="en" />
+
+## Architecture
+
+Per the upstream publication, I2VGen-XL uses a base stage for semantic coherence and a refinement stage for detail/resolution, both latent diffusion models. This repository records the prompt+image contract and environment/checkpoint assumptions in the runtime profile; run readiness is kept in release run manifests, not here.
+
+## Usage notes
+
+Integration is complete; no runner parity record exists yet in this manifest. Both the official GitHub and ali-vilab HF repos are confirmed reachable. Treat it as a legacy-quality baseline next to newer DiT-based I2V models in this catalog.
+
+## Evaluation benchmarks
+
+- [AIGCBench](/docs/evaluation/benchmark-hub/aigcbench) — I2V-focused benchmark suite.
+
+<ModelRelatedRecipes modelId="i2vgen-xl" locale="en" />

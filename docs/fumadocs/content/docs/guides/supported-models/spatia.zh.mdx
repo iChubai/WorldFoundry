@@ -1,0 +1,26 @@
+---
+title: "Spatia"
+description: "Spatia is a camera-controlled video-to-video world model: given source video and a target camera trajectory it re-renders the scene along the new viewpoint path. WorldFoundry vendors the official source in-tree (revision f75b10c9) and expo…"
+pageSource: generated
+---
+
+**发表机构:** 开源研究发布（仓库未记录正式机构） · 研究机构
+video → video
+
+Spatia 是相机控制的 video-to-video 世界模型：给定源视频与目标相机轨迹，沿新视角路径重新渲染场景。WorldFoundry 已将官方源码内置树内（revision f75b10c9），通过共享 pipeline runner 暴露， checkpoint 引用为 Jinjing713/Spatia，以 Apache-2.0 许可发布。
+
+<ModelCommandBuilder modelId="spatia" locale="zh" />
+
+## 架构
+
+树内路由接入 Spatia 推理与稠密 world-to-camera（W2C）轨迹输入：逐帧相机外参驱动重渲染。除内置源码外的架构内部细节仓库未记录。
+
+## 使用要点
+
+需提供源视频与逐帧稠密 W2C 相机轨迹；树内路由在执行前会校验二者。runner parity 仍为 pending，在记录 parity 运行前请将输出视为未验证。
+
+## 评测 Benchmark
+
+- [CameraBench](/zh/docs/evaluation/benchmark-hub/camerabench) — 相机轨迹跟随与受控重渲染质量。
+
+<ModelRelatedRecipes modelId="spatia" locale="zh" />

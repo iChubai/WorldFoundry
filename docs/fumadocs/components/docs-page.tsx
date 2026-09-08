@@ -2,10 +2,13 @@ import { getPageMarkdownUrl, source } from '@/lib/source';
 import { SiteHeader } from '@/components/site-header';
 import { notFound } from 'next/navigation';
 import { getMDXComponents } from '@/components/mdx';
+import { enrichApiReferenceToc } from '@/lib/docs-api-toc';
 import { createRelativeLink } from 'fumadocs-ui/mdx';
 import { getBenchmarkCatalogEntry } from '@/lib/benchmark-catalog';
-import { BenchmarkIdentityMark } from '@/components/benchmark-identity-mark';
+import { getModelRecipeIndexEntry } from '@/lib/model-recipe-index';
 import { BenchmarkBadge } from '@/components/benchmark-badge';
+import { BenchmarkIdentityMark } from '@/components/benchmark-identity-mark';
+import { ModelIdentityMark } from '@/components/model-identity-mark';
 import { getDocsBreadcrumbs } from '@/lib/docs-breadcrumb';
 import {
   docsLabels,
@@ -79,7 +82,7 @@ export async function DocsPage({ slug, locale }: { slug: string[] | undefined; l
   const apiHubPage = isApiReferenceHubDocsPage(page.slugs);
   const usesWideTableLayout = isTableDenseDocsPage(page.slugs) || benchmarkHubPage;
 
-  const toc = page.data.toc ?? [];
+  const toc = enrichApiReferenceToc(page.slugs, page.data.toc ?? []);
   const metricNav = resolveMetricQuickNavFromSlugs(page.slugs);
   const pagination = getDocsPagination(page.slugs, normalized);
   const relatedLinks = getDocsRelatedLinks(page.slugs, normalized);
@@ -89,6 +92,11 @@ export async function DocsPage({ slug, locale }: { slug: string[] | undefined; l
       ? page.slugs[2]
       : undefined;
   const benchmarkEntry = benchmarkId ? getBenchmarkCatalogEntry(benchmarkId) : undefined;
+  const modelId =
+    page.slugs[0] === 'guides' && page.slugs[1] === 'supported-models' && page.slugs.length === 3
+      ? page.slugs[2]
+      : undefined;
+  const modelEntry = modelId ? getModelRecipeIndexEntry(modelId) : undefined;
   const lastUpdated = getDocsLastUpdated(page.path, normalized);
   const isWelcomePage = page.slugs.length === 0;
   const showToc = !isWelcomePage && toc.length > 0;
@@ -109,6 +117,7 @@ export async function DocsPage({ slug, locale }: { slug: string[] | undefined; l
         isWelcomePage ? 'pi-doc-shell-welcome' : '',
         usesWideTableLayout ? 'pi-doc-shell-table-wide' : '',
         usesWideTableLayout && showRail ? 'pi-doc-shell-table-wide-has-toc' : '',
+        benchmarkId ? 'pi-doc-shell-benchmark-detail' : '',
         apiHubPage ? 'pi-doc-shell-api-hub' : '',
         metricNav ? 'pi-doc-shell-has-metric-nav' : '',
       ]
@@ -254,7 +263,11 @@ export async function DocsPage({ slug, locale }: { slug: string[] | undefined; l
         </aside>
 
         <div className="pi-doc-main">
-          <article className="pi-doc-article">
+          <article
+            className={['pi-doc-article', benchmarkId ? 'wf-benchmark-detail' : '']
+              .filter(Boolean)
+              .join(' ')}
+          >
             {isWelcomePage ? (
               <>
                 <DocsWelcomeHero
@@ -290,6 +303,14 @@ export async function DocsPage({ slug, locale }: { slug: string[] | undefined; l
                         name={benchmarkEntry.name}
                         category={benchmarkEntry.category}
                         logoKey={benchmarkEntry.logoKey}
+                        size="large"
+                      />
+                    ) : modelEntry ? (
+                      <ModelIdentityMark
+                        id={modelEntry.id}
+                        name={modelEntry.name}
+                        provider={modelEntry.provider}
+                        category={modelEntry.category}
                         size="large"
                       />
                     ) : null}

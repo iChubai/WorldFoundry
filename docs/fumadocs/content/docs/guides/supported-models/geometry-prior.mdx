@@ -1,0 +1,21 @@
+---
+title: "Geometry"
+description: "Geometry is not an upstream model — it is WorldFoundry's shared geometry-prior contract surface. Individual priors (DUSt3R, Depth Anything, Metric3D, GeoCalib, UniDepth, and others) register as separate catalog entries with their own prove…"
+pageSource: generated
+---
+
+**Publisher:** WorldFoundry (this repository) · Research lab
+
+Geometry is not an upstream model — it is WorldFoundry's shared geometry-prior contract surface. Individual priors (DUSt3R, Depth Anything, Metric3D, GeoCalib, UniDepth, and others) register as separate catalog entries with their own provenance, and all of them are consumed through the pipeline/ operator contract this entry documents.
+
+<ModelCommandBuilder modelId="geometry-prior" locale="en" />
+
+## Architecture
+
+A contract, not a network: it defines how geometry priors are constructed, invoked, and how their artifacts are exported, so that higher-level pipelines can swap priors through configuration alone.
+
+## Usage notes
+
+Do not run this entry directly; pick a concrete prior entry instead. Per-prior parity evidence lives on the specific prior catalog entries.
+
+<ModelRelatedRecipes modelId="geometry-prior" locale="en" />

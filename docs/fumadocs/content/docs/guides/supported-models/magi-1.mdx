@@ -1,0 +1,26 @@
+---
+title: "MAGI-1"
+description: "MAGI-1 is Sand AI's open autoregressive video generation model, cataloged for image-to-video and general video generation and tracked as a high-priority open candidate with Apache-2.0 HF metadata. The WorldFoundry route is complete and rep…"
+pageSource: generated
+---
+
+**Publisher:** Sand AI · Company
+image → video
+
+MAGI-1 is Sand AI's open autoregressive video generation model, cataloged for image-to-video and general video generation and tracked as a high-priority open candidate with Apache-2.0 HF metadata. The WorldFoundry route is complete and reports missing checkpoint assets at runtime.
+
+<ModelCommandBuilder modelId="magi-1" locale="en" />
+
+## Architecture
+
+Upstream describes MAGI-1 as a large autoregressive video model generating chunk-by-chunk with causal attention, enabling streaming-style continuation. This repository records only the prompt+image input contract and the generated_video artifact; scale and internals are not recorded here.
+
+## Usage notes
+
+No runner-parity record exists yet — treat GPU validation as not done. Stage the MAGI-1 weights first; the route fails informatively when they are missing.
+
+## Evaluation benchmarks
+
+- [VBench](/docs/evaluation/benchmark-hub/vbench) — Baseline video generation quality suite.
+
+<ModelRelatedRecipes modelId="magi-1" locale="en" />

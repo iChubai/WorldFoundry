@@ -1,0 +1,25 @@
+---
+title: "Oasis 500M"
+description: "Oasis 500M (open-oasis) is the open release of the famous playable-Minecraft world model: an action-conditioned diffusion transformer that renders the next game frame from context frames and keyboard/mouse actions."
+pageSource: generated
+---
+
+**发表机构:** Etched / Decart · 企业
+
+Oasis 500M（open-oasis）是著名「可游玩 Minecraft」世界模型的开源版本：动作条件扩散 Transformer，从上下文帧与键鼠动作渲染下一游戏帧。本 catalog 中源码已内置树内；执行待 Etched/oasis-500m checkpoint 及提示图像/视频与动作张量就位。
+
+<ModelCommandBuilder modelId="oasis-500m" locale="zh" />
+
+## 架构
+
+按上游发布，ViT VAE 压缩帧，500M 扩散 Transformer 以历史帧与动作为条件生成下一帧（MIT 许可）。除此之外的内部细节此处未记录。
+
+## 使用要点
+
+pipeline 解析官方 generate 入口，在 checkpoint 与动作资产就位前返回 blocked 诊断。请按官方格式提供动作张量。
+
+## 评测 Benchmark
+
+- [WorldModelBench](/zh/docs/evaluation/benchmark-hub/worldmodelbench) — 动作条件游戏世界滚动生成质量。
+
+<ModelRelatedRecipes modelId="oasis-500m" locale="zh" />

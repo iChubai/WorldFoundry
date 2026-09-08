@@ -1,0 +1,21 @@
+---
+title: "RISE"
+description: "RISE from OpenDriveLab is a Pi0.5-architecture action policy line (Apache-2.0): the official deployment transform, three-camera mapping, Pi0.5 action architecture, normalization, and 50x14 output contract all execute in process in-tree. Th…"
+pageSource: generated
+---
+
+**发表机构:** 上海人工智能实验室（OpenDriveLab） · 研究机构
+
+OpenDriveLab 的 RISE 是 Pi0.5 架构的动作策略线（Apache-2.0）：官方部署变换、三相机映射、Pi0.5 动作架构、归一化与 50x14 输出契约全部在树内进程内执行。公开的 OpenDriveLab-org/RISE_Assets 仓库目前仅提供动力学模型与样例数据——不含训练好的动作策略 checkpoint。
+
+<ModelCommandBuilder modelId="rise" locale="zh" />
+
+## 架构
+
+RISE 复用 Pi0.5 动作架构，配三相机观测映射与 50 步、14 维动作输出契约。接受的本地 checkpoint 格式为 PyTorch safetensors 与 JAX Orbax 参数。
+
+## 使用要点
+
+在就位训练好的 Pi0.5 动作策略权重、分位数 norm_stats.json 与本地 PaliGemma SentencePiece tokenizer 前，运行时构建会尽早失败。不使用源码 checkout、远程代码或运行时网络访问。
+
+<ModelRelatedRecipes modelId="rise" locale="zh" />

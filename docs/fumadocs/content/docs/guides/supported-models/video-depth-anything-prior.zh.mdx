@@ -1,0 +1,22 @@
+---
+title: "Video Depth Anything"
+description: "Video Depth Anything brings temporal consistency to the Depth Anything family: it estimates depth over arbitrarily long videos without the flicker of frame-by-frame estimation."
+pageSource: generated
+---
+
+**发表机构:** 字节跳动 · 企业
+image → depth
+
+Video Depth Anything 为 Depth Anything 家族带来时序一致性：在任意长度的视频上估计深度，避免逐帧估计的闪烁。本 catalog 中它是独立的时序深度先验，VIPE pipeline 档案可通过共享运行时配置选用它，而无需持有其代码。
+
+<ModelCommandBuilder modelId="video-depth-anything-prior" locale="zh" />
+
+## 架构
+
+按上游发布，时空头加时间梯度一致性目标把 Depth Anything V2 扩展到视频，并用关键帧策略处理长序列。记录的 checkpoint 为 depth-anything/Video-Depth-Anything-Large（apache-2.0）；注册于 base_models/three_dimensions/depth/videodepthanything。
+
+## 使用要点
+
+它作为独立几何先验集成在 worldfoundry/base_models 下，通过共享的 geometry-prior pipeline/operator 契约对外暴露。上层管线（如 ViPE）从这一规范位置导入它，而不是各自保留私有副本。配置解析与 pipeline/operator 导入预期可通过；真实先验推理仍受 checkpoint 限制。
+
+<ModelRelatedRecipes modelId="video-depth-anything-prior" locale="zh" />

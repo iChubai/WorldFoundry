@@ -1,0 +1,33 @@
+---
+title: "Lyra"
+description: "Lyra is NVIDIA's generative world model family for exploration: from an image or video (Lyra-1) or from actions (Lyra-2) it produces an explorable world video."
+pageSource: generated
+---
+
+**Publisher:** NVIDIA · Company
+
+Lyra is NVIDIA's generative world model family for exploration: from an image or video (Lyra-1) or from actions (Lyra-2) it produces an explorable world video. In this catalog both variants run through in-tree pipelines backed by vendored runtime adapters, the default runner targets Lyra-2, and runner status is verified. A native World Explorer vendors the upstream CUDA/C++/ImGui interaction and rendering stack behind a model-neutral inference adapter.
+
+<ModelCommandBuilder modelId="lyra" locale="en" />
+
+## Architecture
+
+The catalog records two generations: Lyra-1 for image-or-video-to-world-video and Lyra-2 for action-conditioned world video (paper on OpenReview; project page at NVIDIA Research). Runtime execution requires local Lyra checkpoints, text-encoder assets, DA3 (Depth Anything 3) assets, and CUDA dependencies; internals beyond the recorded structure are not stored in this repository.
+
+## Usage notes
+
+Pick the variant by input: lyra-1 when you start from an image or video, lyra-2 when you drive the world with actions. The default catalog runner resolves to Lyra-2. Stage all recorded assets before submitting Studio jobs; per-run validation evidence is tracked outside the catalog.
+
+## Variants & pipeline bindings
+
+| Variant | Task | Runtime profile | Pipeline binding | Status |
+| --- | --- | --- | --- | --- |
+| `lyra-1` | image-or-video-to-world-video | `lyra-1` | `lyra-1` | verified |
+| `lyra-2` | action-conditioned-world-video | `lyra-2` | `lyra-2` | verified |
+
+## Evaluation benchmarks
+
+- [WorldScore](/docs/evaluation/benchmark-hub/worldscore) — Standard scoring for explorable generated worlds.
+- [CameraBench](/docs/evaluation/benchmark-hub/camerabench) — Evaluates camera/viewpoint control quality during exploration.
+
+<ModelRelatedRecipes modelId="lyra" locale="en" />

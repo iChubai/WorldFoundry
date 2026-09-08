@@ -1,0 +1,21 @@
+---
+title: "AdaWorld"
+description: "AdaWorld learns adaptable world models with latent actions: by extracting actions from unlabeled videos it can transfer control across domains with minimal finetuning."
+pageSource: generated
+---
+
+**Publisher:** The Hong Kong University of Science and Technology / MIT · University
+
+AdaWorld learns adaptable world models with latent actions: by extracting actions from unlabeled videos it can transfer control across domains with minimal finetuning. In this catalog it is retained as open-source provenance/source-only metadata and hidden from the formal Studio infer catalog.
+
+<ModelCommandBuilder modelId="adaworld" locale="en" />
+
+## Architecture
+
+Per the upstream project, a latent action autoencoder extracts transferable action representations that condition an autoregressive world model. The official source is vendored in-tree under synthesis/visual_generation/world_model/adaworld; public checkpoints exist upstream.
+
+## Usage notes
+
+Blocked for release-facing inference: the official runner still requires AdaWorld-specific dependencies and task/demo video assets that are not reproducibly available in the unified Studio environment. Use the upstream repository directly until parity is restored.
+
+<ModelRelatedRecipes modelId="adaworld" locale="en" />

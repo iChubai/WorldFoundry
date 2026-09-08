@@ -1,0 +1,27 @@
+---
+title: "Echo-Infinity"
+description: "Echo-Infinity is JD's autoregressive long-video generator: text in, arbitrarily long video out, generated block by block."
+pageSource: generated
+---
+
+**发表机构:** 京东（Joy Future Academy） · 企业
+text → video
+
+Echo-Infinity 是京东的自回归长视频生成器：输入文本，逐块生成任意长度的视频。本 catalog 中其推理路径以仅推理运行时形式内置树内；完整一致性待本地 Echo-Infinity 与 Wan2.1 权重就位于 WORLDFOUNDRY_CKPT_DIR。
+
+<ModelCommandBuilder modelId="echo-infinity" locale="zh" />
+
+## 架构
+
+记录的结构为基于 Wan2.1 的自回归文生视频设计，与 Echo-Memory 出自同一京东团队。训练、提示词数据集、demo 脚本与 checkpoint 下载辅助有意不打包；权重绝不入 git。
+
+## 使用要点
+
+运行时资产为 WORLDFOUNDRY_CKPT_DIR 下的本地路径——运行前请把 Echo-Infinity 与 Wan2.1 权重就位于该目录。完整 GPU 一致性待验证。
+
+## 评测 Benchmark
+
+- [VBench](/zh/docs/evaluation/benchmark-hub/vbench) — 长文生视频的质量评测。
+- [ChronoMagic-Bench](/zh/docs/evaluation/benchmark-hub/chronomagic-bench) — 长时程时间连贯性评测。
+
+<ModelRelatedRecipes modelId="echo-infinity" locale="zh" />

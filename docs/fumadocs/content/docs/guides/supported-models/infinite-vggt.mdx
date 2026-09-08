@@ -1,0 +1,27 @@
+---
+title: "Infinite VGGT"
+description: "Infinite VGGT (StreamVGGT) turns the feed-forward VGGT reconstructor into a streaming model: it processes incoming frames causally with cached tokens, so reconstruction extends indefinitely instead of being bounded by a fixed window. The i…"
+pageSource: generated
+---
+
+**Publisher:** Tsinghua University · University
+[Streaming 4D Visual Geometry Transformer](https://arxiv.org/abs/2507.11539) (2025)
+
+Infinite VGGT (StreamVGGT) turns the feed-forward VGGT reconstructor into a streaming model: it processes incoming frames causally with cached tokens, so reconstruction extends indefinitely instead of being bounded by a fixed window. The in-tree pipeline is registered for streaming 3D reconstruction.
+
+<figure className="wf-recipe-media is-diagram">
+  <img src="/models/infinite-vggt/paper.png" alt="Streaming 4D Visual Geometry Transformer" />
+  <figcaption>Streaming 4D Visual Geometry Transformer</figcaption>
+</figure>
+
+<ModelCommandBuilder modelId="infinite-vggt" locale="en" />
+
+## Architecture
+
+A causal transformer with cached-token knowledge distillation from VGGT (per arXiv 2507.11539). License is CC-BY-NC-4.0 — non-commercial.
+
+## Usage notes
+
+Runner parity is pending: checkpoint-backed inference depends on staged StreamVGGT weights. Use the vggt entry for offline reconstruction and this one when frames arrive as a stream.
+
+<ModelRelatedRecipes modelId="infinite-vggt" locale="en" />

@@ -1,0 +1,25 @@
+---
+title: "MME-VLA"
+description: "MME-VLA is the policy-learning line of the RoboMME project, centered on perceptual frame sampling for memory-heavy manipulation. Four Apache-2.0 checkpoint repos are confirmed from the README — the best perceptual-framesamp module, the mme…"
+pageSource: generated
+---
+
+**发表机构:** 开源研究发布（仓库未记录正式机构） · 研究机构
+
+MME-VLA 是 RoboMME 项目的策略学习线，核心是面向重记忆操作的感知帧采样。README 确认四个 Apache-2.0 checkpoint 仓库——最佳感知帧采样模块、mme_vla_suite 集合、pi05 基线与 VLM 子目标预测器。 WorldFoundry 从内置子集在进程内调用 create_trained_policy(...).infer。
+
+<ModelCommandBuilder modelId="mme-vla" locale="zh" />
+
+## 架构
+
+仓库记录的设计将感知帧采样模块与策略学习及可选的 VLM 子目标预测器结合。解析器、运行时导入与 compileall 检查无需外部 checkout 即通过；更多内部细节仓库未记录。
+
+## 使用要点
+
+在声称 demo parity 前仍需 checkpoint 驱动的动作块验证；请先就位帧采样模块 checkpoint。
+
+## 评测 Benchmark
+
+- [RoboMME](/zh/docs/evaluation/benchmark-hub/robomme) — RoboMME 项目的原生基准。
+
+<ModelRelatedRecipes modelId="mme-vla" locale="zh" />

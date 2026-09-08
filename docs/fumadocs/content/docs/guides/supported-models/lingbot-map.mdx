@@ -1,0 +1,28 @@
+---
+title: "LingBot-Map"
+description: "LingBot-Map is Robbyant's streaming 3D reconstruction model: it consumes image streams and produces camera poses, depth, and point clouds through the GCTStream runtime, supporting both streaming and windowed reconstruction via LingBotMapPi…"
+pageSource: generated
+---
+
+**Publisher:** Robbyant (Ant Group) · Company
+image → depth
+[Geometric Context Transformer for Streaming 3D Reconstruction](https://arxiv.org/abs/2604.14141) (2026)
+
+LingBot-Map is Robbyant's streaming 3D reconstruction model: it consumes image streams and produces camera poses, depth, and point clouds through the GCTStream runtime, supporting both streaming and windowed reconstruction via LingBotMapPipeline. The official runtime is vendored in-tree; checkpoints stay external cache assets.
+
+<figure className="wf-recipe-media is-diagram">
+  <img src="/models/lingbot-map/paper.png" alt="Geometric Context Transformer for Streaming 3D Reconstruction" />
+  <figcaption>Geometric Context Transformer for Streaming 3D Reconstruction</figcaption>
+</figure>
+
+<ModelCommandBuilder modelId="lingbot-map" locale="en" />
+
+## Architecture
+
+The vendored GCTStream runtime implements the streaming transformer described in the upstream release (paper arXiv 2604.14141); the wrapper defaults to SDPA attention so FlashInfer is not required for baseline execution (pass use_sdpa=false when FlashInfer is available).
+
+## Usage notes
+
+Runner status is implemented_pending_gpu_parity: import and dispatch are in-tree, and full GPU parity needs staged robbyant/lingbot-map checkpoints (apache-2.0). The pipeline accepts a checkpoint file or a local HF snapshot directory.
+
+<ModelRelatedRecipes modelId="lingbot-map" locale="en" />

@@ -1,0 +1,27 @@
+---
+title: "HyDRA"
+description: "HyDRA is a camera-controlled video-to-video world model: it re-renders an input video along new camera behavior described by a camera JSON."
+pageSource: generated
+---
+
+**Publisher:** Open-source research release (institution not recorded) · Research lab
+video → video
+
+HyDRA is a camera-controlled video-to-video world model: it re-renders an input video along new camera behavior described by a camera JSON. In this catalog the official source is vendored at a pinned revision and the in-tree runtime plus WRBench camera JSON route are wired; GPU artifact validation waits on checkpoints.
+
+<ModelCommandBuilder modelId="hydra" locale="en" />
+
+## Architecture
+
+Architecture internals are not recorded in this repository. The pinned public revision has no LICENSE file, so license review remains required before downstream use.
+
+## Usage notes
+
+Bundled source is mandatory — external source checkouts are rejected. Inputs are prompt, video, and camera_json; stage checkpoints before expecting artifacts.
+
+## Evaluation benchmarks
+
+- [CameraBench](/docs/evaluation/benchmark-hub/camerabench) — Camera-behavior adherence of re-rendered video.
+- [WRBench](/docs/evaluation/benchmark-hub/wrbench) — Referenced in this model's manifest evidence notes.
+
+<ModelRelatedRecipes modelId="hydra" locale="en" />

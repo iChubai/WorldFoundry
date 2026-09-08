@@ -1,0 +1,27 @@
+---
+title: "DB-CogACT / Dexbotic"
+description: "DB-CogACT is the CogACT recipe rebuilt inside Dexmal's Dexbotic framework, with an unusually complete released checkpoint zoo: single-arm and dual-arm foundations plus task checkpoints for LIBERO, CALVIN, and SimplerEnv, all Apache-2.0. Wo…"
+pageSource: generated
+---
+
+**Publisher:** Dexmal · Company
+
+DB-CogACT is the CogACT recipe rebuilt inside Dexmal's Dexbotic framework, with an unusually complete released checkpoint zoo: single-arm and dual-arm foundations plus task checkpoints for LIBERO, CALVIN, and SimplerEnv, all Apache-2.0. WorldFoundry constructs the official Dexbotic policy in-process from a vendored inference subset and emits LIBERO action traces without an external checkout.
+
+<ModelCommandBuilder modelId="db-cogact" locale="en" />
+
+## Architecture
+
+The Dexbotic v1 inference contract is recorded: requests carry observation.prompt and observation images, and the policy follows the CogACT VLM-plus-DiT-action design re-implemented in Dexbotic. The vendored infer subset lives under worldfoundry/synthesis/action_generation/db_cogact/db_cogact_runtime.
+
+## Usage notes
+
+Pick the checkpoint matching your benchmark: libero-db-cogact, calvin-db-cogact, or simpler-db-cogact; SArm/HArm foundations serve fine-tuning. Integration status is checkpoint_backed_runtime_ready.
+
+## Evaluation benchmarks
+
+- [LIBERO](/docs/evaluation/benchmark-hub/libero) — Dedicated libero-db-cogact checkpoint.
+- [CALVIN](/docs/evaluation/benchmark-hub/calvin) — Dedicated calvin-db-cogact checkpoint.
+- [SimplerEnv](/docs/evaluation/benchmark-hub/simpler-env) — Dedicated simpler-db-cogact checkpoint.
+
+<ModelRelatedRecipes modelId="db-cogact" locale="en" />

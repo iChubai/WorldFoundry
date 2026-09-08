@@ -1,0 +1,26 @@
+---
+title: "LTX-2.5 Distilled"
+description: "LTX-2.5 is a 22B joint audio-video model. This inference-only integration exposes the official fast two-stage DistilledPipeline for text-to-video and image-to-video, including synchronized audio generation."
+pageSource: generated
+---
+
+**Publisher:** Lightricks · Company
+text · image → video
+
+LTX-2.5 is a 22B joint audio-video model. This inference-only integration exposes the official fast two-stage DistilledPipeline for text-to-video and image-to-video, including synchronized audio generation.
+
+<ModelCommandBuilder modelId="ltx-2.5" locale="en" />
+
+## Architecture
+
+The official distilled path encodes prompts with the bundled Gemma 4 12B text encoder, jointly denoises video and audio at half resolution, applies the LTX-2.5 latent spatial upscaler, performs the short second-stage refinement, and decodes through separate video and audio VAEs. WorldFoundry calls that source directly instead of adapting the incompatible LTX-2.3 monolithic loader.
+
+## Usage notes
+
+Accept the Hugging Face model terms, download the five required split components while preserving their repository folders, clone the recorded source revision, install its ltx-core and ltx-pipelines dependencies in the dedicated environment, and pass execute=True. The optional duration head enables prompt-based automatic duration.
+
+## Evaluation benchmarks
+
+- [VBench](/docs/evaluation/benchmark-hub/vbench) — Baseline text/image-to-video quality and motion evaluation.
+
+<ModelRelatedRecipes modelId="ltx-2.5" locale="en" />

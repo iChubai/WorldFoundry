@@ -45,7 +45,6 @@ const copy = {
     tasks: 'Tasks',
     python: 'Python',
     cuda: 'CUDA',
-    checkpoint: 'Checkpoint',
     none: 'No recipes matched these filters.',
     more: 'Show more recipes',
   },
@@ -68,7 +67,6 @@ const copy = {
     tasks: '任务',
     python: 'Python',
     cuda: 'CUDA',
-    checkpoint: 'Checkpoint',
     none: '没有符合当前筛选条件的模型配方。',
     more: '显示更多模型配方',
   },
@@ -94,10 +92,12 @@ function recipeHref(recipe: ModelRecipeIndexEntry, locale: Locale) {
   return `${prefix}/docs/guides/supported-models/${recipe.id}`;
 }
 
-function revisionLabel(recipe: ModelRecipeIndexEntry) {
-  if (!recipe.checkpoint) return '—';
-  if (recipe.checkpoint.revision) return recipe.checkpoint.revision.slice(0, 9);
-  return recipe.checkpoint.id;
+const VISIBLE_TASK_CHIPS = 2;
+
+function taskChipLabel(task: string) {
+  const spaced = task.replace(/[-_]+/g, ' ').replace(/\s+/g, ' ').trim();
+  if (!spaced) return task;
+  return spaced.charAt(0).toUpperCase() + spaced.slice(1);
 }
 
 export function ModelRecipeCatalog({ locale = 'en' }: { locale?: Locale }) {
@@ -237,7 +237,6 @@ export function ModelRecipeCatalog({ locale = 'en' }: { locale?: Locale }) {
           <span role="columnheader">{t.tasks}</span>
           <span role="columnheader">{t.python}</span>
           <span role="columnheader">{t.cuda}</span>
-          <span role="columnheader">{t.checkpoint}</span>
           <span aria-hidden="true" />
         </div>
 
@@ -268,16 +267,28 @@ export function ModelRecipeCatalog({ locale = 'en' }: { locale?: Locale }) {
                   </span>
                 </span>
                 <span className="wf-recipe-row-tasks" role="cell">
-                  {recipe.tasks.slice(0, 2).map((task) => (
-                    <code key={task}>{task}</code>
-                  ))}
-                  {recipe.tasks.length > 2 ? <small>+{recipe.tasks.length - 2}</small> : null}
+                  {recipe.tasks.length > 0 ? (
+                    <>
+                      {recipe.tasks.slice(0, VISIBLE_TASK_CHIPS).map((task) => (
+                        <span className="wf-recipe-task-chip" key={task} title={task}>
+                          {taskChipLabel(task)}
+                        </span>
+                      ))}
+                      {recipe.tasks.length > VISIBLE_TASK_CHIPS ? (
+                        <span
+                          className="wf-recipe-task-chip is-more"
+                          title={recipe.tasks.slice(VISIBLE_TASK_CHIPS).map(taskChipLabel).join(', ')}
+                        >
+                          +{recipe.tasks.length - VISIBLE_TASK_CHIPS}
+                        </span>
+                      ) : null}
+                    </>
+                  ) : (
+                    <span className="wf-recipe-task-empty">—</span>
+                  )}
                 </span>
                 <code role="cell">{recipe.runtime.python ?? '—'}</code>
                 <code role="cell">{recipe.runtime.cudaLabel?.replace('CUDA ', '') ?? '—'}</code>
-                <code className="wf-recipe-row-revision" role="cell" title={recipe.checkpoint?.id}>
-                  {revisionLabel(recipe)}
-                </code>
                 <ArrowRight aria-hidden="true" role="cell" size={17} strokeWidth={1.5} />
               </Link>
             ))}

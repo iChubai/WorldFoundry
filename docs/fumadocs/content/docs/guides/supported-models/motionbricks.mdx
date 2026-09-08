@@ -1,0 +1,27 @@
+---
+title: "MotionBricks"
+description: "MotionBricks is part of NVIDIA's GR00T-WholeBodyControl stack: it generates humanoid whole-body motion — the action side of embodied world modeling, emitting action traces rather than video (paper arXiv 2604.24833)."
+pageSource: generated
+---
+
+**Publisher:** NVIDIA · Company
+[MotionBricks: Scalable Real-Time Motions with Modular Latent Generative Model and Smart Primitives](https://arxiv.org/abs/2604.24833) (SIGGRAPH 2026, 2026)
+
+MotionBricks is part of NVIDIA's GR00T-WholeBodyControl stack: it generates humanoid whole-body motion — the action side of embodied world modeling, emitting action traces rather than video (paper arXiv 2604.24833). In this catalog the official source route is registered; motion/robot assets stay runtime-gated.
+
+<figure className="wf-recipe-media is-diagram">
+  <img src="/models/motionbricks/paper.png" alt="MotionBricks: Scalable Real-Time Motions with Modular Latent Generative Model and Smart Primitives" />
+  <figcaption>MotionBricks: Scalable Real-Time Motions with Modular Latent Generative Model and Smart Primitives</figcaption>
+</figure>
+
+<ModelCommandBuilder modelId="motionbricks" locale="en" />
+
+## Architecture
+
+Architecture internals beyond the recorded tasks are not stored in this repository (apache-2.0); the source is bound from the GR00T-WholeBodyControl repository at a pinned commit. The recorded artifact type is action_trace.
+
+## Usage notes
+
+Config resolution and pipeline import are expected to pass; real generation emits a runtime plan until required checkpoints/assets are staged. Missing assets are reported by the plan and are not treated as catalog blockers.
+
+<ModelRelatedRecipes modelId="motionbricks" locale="en" />

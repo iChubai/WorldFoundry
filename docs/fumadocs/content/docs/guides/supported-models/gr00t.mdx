@@ -1,0 +1,32 @@
+---
+title: "NVIDIA GR00T"
+description: "NVIDIA GR00T is the Isaac GR00T humanoid/manipulation foundation policy line (N1 through N1.7). WorldFoundry executes the model, processor, transforms, and policy runtime from a flattened in-tree package with checkpoint-hosted Python disab…"
+pageSource: generated
+---
+
+**Publisher:** NVIDIA · Company
+
+NVIDIA GR00T is the Isaac GR00T humanoid/manipulation foundation policy line (N1 through N1.7). WorldFoundry executes the model, processor, transforms, and policy runtime from a flattened in-tree package with checkpoint-hosted Python disabled; checkpoint-backed predict is verified with local Cosmos-Reason2-2B and GR00T-N1.7-LIBERO/libero_10 assets on CUDA 11.8.
+
+<ModelCommandBuilder modelId="gr00t" locale="en" />
+
+## Architecture
+
+GR00T couples a reasoner VLM (Cosmos-Reason2-2B in the verified N1.7 path) with an action policy head; recorded checkpoints span GR00T-N1-2B and GR00T-N1.7-LIBERO. Weights are under the NVIDIA Open Model License and several repos require Hugging Face auth.
+
+## Usage notes
+
+Authenticate for the gated NVIDIA repos, stage the pinned revisions locally, and start from the verified N1.7 LIBERO path. Simulator rollout validation remains separate from the verified predict path.
+
+## Variants & pipeline bindings
+
+| Variant | Task | Runtime profile | Pipeline binding | Status |
+| --- | --- | --- | --- | --- |
+| `gr00t-n1-2b` | vla.policy_rollout | `gr00t` | `gr00t` | integrated |
+| `gr00t-n1.7-libero` | vla.policy_rollout | `gr00t` | `gr00t` | integrated |
+
+## Evaluation benchmarks
+
+- [LIBERO](/docs/evaluation/benchmark-hub/libero) — Verified predict path uses GR00T-N1.7-LIBERO/libero_10.
+
+<ModelRelatedRecipes modelId="gr00t" locale="en" />

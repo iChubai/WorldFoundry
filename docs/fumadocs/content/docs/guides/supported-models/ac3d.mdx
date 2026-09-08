@@ -1,0 +1,38 @@
+---
+title: "AC3D"
+description: "AC3D analyzes and improves camera control in video diffusion: it is a ControlNet-style plugin that gives CogVideoX precise 3D camera control."
+pageSource: generated
+---
+
+**Publisher:** Snap Inc. (Snap Research) · Company
+text → video
+[AC3D: Analyzing and Improving 3D Camera Control in Video Diffusion Transformers](https://arxiv.org/abs/2411.18673) (CVPR 2025, 2024)
+
+AC3D analyzes and improves camera control in video diffusion: it is a ControlNet-style plugin that gives CogVideoX precise 3D camera control. In this catalog the runner is verified — the RealEstate10K camera-control demo runs through the Workspace infer path with local CogVideoX-2B and AC3D ControlNet weights, preserving the official inference/cli_demo_camera.py generation path.
+
+<figure className="wf-recipe-media is-diagram">
+  <img src="/models/ac3d/paper.png" alt="AC3D: Analyzing and Improving 3D Camera Control in Video Diffusion Transformers" />
+  <figcaption>AC3D: Analyzing and Improving 3D Camera Control in Video Diffusion Transformers</figcaption>
+</figure>
+
+<ModelCommandBuilder modelId="ac3d" locale="en" />
+
+## Architecture
+
+Per the paper (arXiv 2411.18673), AC3D locates camera-motion information in low-frequency early-timestep components and conditions only a subset of layers, improving control precision and visual quality. Both 2B and 5B ControlNet checkpoints are recorded; the adapter preserves official 2B ControlNet shape settings.
+
+<figure className="wf-recipe-media">
+  <Video src="/demos/ac3d_01.mp4" autoPlay loop muted playsInline />
+  <figcaption>Camera-controlled video</figcaption>
+</figure>
+
+## Usage notes
+
+AC3D stays in its dedicated environment because the official torch 2.4/CUDA 12.4 stack is not ABI-compatible with the unified environment. Inputs accept either a RealEstate10K-style root or a direct source video plus 19-column camera pose rows.
+
+## Evaluation benchmarks
+
+- [CameraBench](/docs/evaluation/benchmark-hub/camerabench) — Directly measures camera-control precision in generated video.
+- [WRBench](/docs/evaluation/benchmark-hub/wrbench) — Referenced in this model's manifest evidence notes.
+
+<ModelRelatedRecipes modelId="ac3d" locale="en" />

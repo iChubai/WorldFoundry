@@ -1,0 +1,21 @@
+---
+title: "Geometry"
+description: "Geometry is not an upstream model — it is WorldFoundry's shared geometry-prior contract surface. Individual priors (DUSt3R, Depth Anything, Metric3D, GeoCalib, UniDepth, and others) register as separate catalog entries with their own prove…"
+pageSource: generated
+---
+
+**发表机构:** WorldFoundry（本仓库） · 研究机构
+
+Geometry 不是上游模型——它是 WorldFoundry 的共享几何先验契约面。各个先验（DUSt3R、 Depth Anything、Metric3D、GeoCalib、UniDepth 等）以独立 catalog 条目注册并各自携带溯源，全部通过本条目所描述的 pipeline/operator 契约被调用。
+
+<ModelCommandBuilder modelId="geometry-prior" locale="zh" />
+
+## 架构
+
+这是契约而非网络：定义几何先验如何构造、如何调用、产物如何导出，使上层管线仅靠配置即可更换先验。
+
+## 使用要点
+
+不要直接运行本条目；请选择具体的先验条目。每个先验的一致性证据都在其各自的 catalog 条目上。
+
+<ModelRelatedRecipes modelId="geometry-prior" locale="zh" />

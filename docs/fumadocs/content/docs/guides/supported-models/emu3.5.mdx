@@ -1,0 +1,21 @@
+---
+title: "Emu3.5"
+description: "Emu3.5 is BAAI's native multimodal generation model: a single autoregressive model that reads and writes interleaved text and images. The catalog records it for multimodal generation, image generation, and VLA-style reasoning. The WorldFou…"
+pageSource: generated
+---
+
+**Publisher:** Beijing Academy of Artificial Intelligence (BAAI) · Research lab
+
+Emu3.5 is BAAI's native multimodal generation model: a single autoregressive model that reads and writes interleaved text and images. The catalog records it for multimodal generation, image generation, and VLA-style reasoning. The WorldFoundry route is complete and reports missing checkpoint/assets at runtime; outputs land as model_response artifacts rather than video files.
+
+<ModelCommandBuilder modelId="emu3.5" locale="en" />
+
+## Architecture
+
+The Emu series treats images and text as one token stream for next-token prediction — no separate diffusion decoder in the loop, per BAAI's public releases. This repository records the prompt+image input contract and the model_response artifact; parameter counts and internals of the 3.5 revision are not recorded here.
+
+## Usage notes
+
+Runner parity is pending — checkpoint-backed artifact parity has not been run in this workspace. Stage the BAAI/Emu3.5 weights first; the route fails informatively when assets are missing. Expect text/image responses, not video.
+
+<ModelRelatedRecipes modelId="emu3.5" locale="en" />

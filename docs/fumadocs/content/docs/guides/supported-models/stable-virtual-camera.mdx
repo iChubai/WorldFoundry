@@ -1,0 +1,31 @@
+---
+title: "Stable Virtual Camera"
+description: "Stable Virtual Camera (SEVA) turns one or a few 2D images into a novel-view video along a user-defined camera path."
+pageSource: generated
+---
+
+**Publisher:** Stability AI · Company
+[Stable Virtual Camera: Generative View Synthesis with Diffusion Models](https://arxiv.org/abs/2503.14489) (2025)
+
+Stable Virtual Camera (SEVA) turns one or a few 2D images into a novel-view video along a user-defined camera path. In this catalog WorldFoundry wraps the upstream demo.py entrypoint with an in-tree adapter; runner parity is pending because the Stability AI checkpoint is gated and a reviewed official demo run is still needed.
+
+<figure className="wf-recipe-media is-diagram">
+  <img src="/models/stable-virtual-camera/paper.png" alt="Stable Virtual Camera: Generative View Synthesis with Diffusion Models" />
+  <figcaption>Stable Virtual Camera: Generative View Synthesis with Diffusion Models</figcaption>
+</figure>
+
+<ModelCommandBuilder modelId="stable-virtual-camera" locale="en" />
+
+## Architecture
+
+Per the paper (arXiv 2503.14489), a multi-view diffusion model generates target views at sampled camera poses in a two-pass procedural manner, trading generality across trajectories for consistency. Details beyond the recorded tasks are not stored in this repository.
+
+## Usage notes
+
+Accept the gated checkpoint terms on Hugging Face and set HF_TOKEN before running; missing gated access is reported at inference time. The adapter drives the upstream demo.py Fire entrypoint.
+
+## Evaluation benchmarks
+
+- [CameraBench](/docs/evaluation/benchmark-hub/camerabench) — Evaluates camera-path control quality of generated views.
+
+<ModelRelatedRecipes modelId="stable-virtual-camera" locale="en" />

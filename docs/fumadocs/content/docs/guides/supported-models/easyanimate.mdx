@@ -1,0 +1,27 @@
+---
+title: "EasyAnimate"
+description: "EasyAnimate is Alibaba PAI's DiT-based video generation project, covering text-to-video, image-to-video, and video-to-video. WorldFoundry wraps the V5.1 image-to-video runtime in-tree; the same independent runtime is reused by WRBench came…"
+pageSource: generated
+---
+
+**Publisher:** Alibaba (PAI) · Company
+text · image · video → video
+
+EasyAnimate is Alibaba PAI's DiT-based video generation project, covering text-to-video, image-to-video, and video-to-video. WorldFoundry wraps the V5.1 image-to-video runtime in-tree; the same independent runtime is reused by WRBench camera-control evaluation, so it never resolves an external source checkout. Aliases easyanimate_i2v and easyanimate-i2v resolve here.
+
+<ModelCommandBuilder modelId="easyanimate" locale="en" />
+
+## Architecture
+
+The recorded route uses the official V5.1 Flow scheduler with the InP (inpainting-style image-conditioned) checkpoint family and a height/width-to-sample_size mapping. The manifest notes the distinction explicitly: `*-InP` checkpoints are the I2V demos, while the non-InP EasyAnimateV5.1-7b-zh checkpoint is the text-to-video model.
+
+## Usage notes
+
+Integration is complete; runner parity is pending with per-run visual QA tracked outside the catalog. When picking checkpoints, remember the InP/non-InP distinction above — using the wrong family is the most common configuration mistake. Official code lives at aigc-apps/EasyAnimate with checkpoints under the alibaba-pai HF org.
+
+## Evaluation benchmarks
+
+- [VBench](/docs/evaluation/benchmark-hub/vbench) — General video generation quality suite.
+- [CameraBench](/docs/evaluation/benchmark-hub/camerabench) — Relevant because WRBench camera control reuses this runtime.
+
+<ModelRelatedRecipes modelId="easyanimate" locale="en" />

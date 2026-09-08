@@ -60,7 +60,7 @@
   border-bottom: 1px solid color-mix(in srgb, var(--pi-line) 65%, transparent);
   position: sticky;
   top: 0;
-  z-index: 40;
+  z-index: 41;
 }
 
 .dark .pi-doc-header {
@@ -551,6 +551,38 @@
   }
 }
 
+/* Shared header tools must wrap on docs pages as well as the homepage. */
+@media (max-width: 900px) {
+  .wf-home-site-header .wf-home-site-header-tools {
+    flex: 1 1 100%;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    justify-content: flex-start;
+    margin-left: 0;
+    max-width: 100%;
+    min-width: 0;
+  }
+
+  .wf-home-site-header .pi-nav {
+    flex: 1 1 100%;
+    flex-wrap: wrap;
+    justify-content: center;
+    order: 2;
+    width: 100%;
+  }
+
+  .wf-home-site-header .pi-site-search-trigger {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+}
+
+@media (max-width: 560px) {
+  .wf-home-site-header .pi-site-search-trigger kbd {
+    display: none;
+  }
+}
+
 /* ---------- Theme toggle (single light/dark button) ---------- */
 .pi-github-link {
   align-items: center;
@@ -885,6 +917,17 @@
   color: var(--pi-ink);
 }
 
+.dark .pi-doc-content .wf-recipe-task-chip {
+  background: color-mix(in srgb, var(--pi-elevated) 82%, var(--pi-paper));
+  border-color: var(--pi-line);
+  color: var(--pi-ink);
+}
+
+.dark .pi-doc-content .wf-recipe-task-chip.is-more {
+  background: color-mix(in srgb, var(--pi-brand-accent) 16%, var(--pi-elevated));
+  border-color: color-mix(in srgb, var(--pi-brand-accent) 40%, var(--pi-line));
+}
+
 .dark .pi-doc-content .wf-command-builder,
 .dark .wf-recipe-shell .wf-command-builder {
   background: var(--pi-elevated);
@@ -907,6 +950,33 @@
   background: color-mix(in srgb, var(--pi-paper) 55%, transparent);
 }
 
+.dark .pi-doc-content .wf-command-builder-contracts,
+.dark .wf-recipe-shell .wf-command-builder-contracts {
+  background: color-mix(in srgb, var(--pi-paper) 68%, var(--pi-elevated));
+}
+
+.dark .pi-doc-content .wf-command-builder-contract,
+.dark .wf-recipe-shell .wf-command-builder-contract,
+.dark .pi-doc-content .wf-command-builder-fields > li,
+.dark .pi-doc-content .wf-command-builder-knobs > li,
+.dark .pi-doc-content .wf-command-builder-artifacts > li,
+.dark .wf-recipe-shell .wf-command-builder-fields > li,
+.dark .wf-recipe-shell .wf-command-builder-knobs > li,
+.dark .wf-recipe-shell .wf-command-builder-artifacts > li {
+  background: color-mix(in srgb, var(--pi-paper) 62%, var(--pi-elevated));
+  border-color: var(--pi-line);
+}
+
+.dark .pi-doc-content .wf-command-builder-contracts .wf-command-builder-disclosure code,
+.dark .wf-recipe-shell .wf-command-builder-contracts .wf-command-builder-disclosure code {
+  background: color-mix(in srgb, var(--pi-elevated) 88%, transparent);
+}
+
+.dark .pi-doc-content .wf-command-builder-profile-chip,
+.dark .wf-recipe-shell .wf-command-builder-profile-chip {
+  background: color-mix(in srgb, var(--pi-elevated) 88%, transparent);
+}
+
 .dark .pi-doc-content .wf-command-builder-terminal,
 .dark .wf-recipe-shell .wf-command-builder-terminal {
   background: color-mix(in srgb, var(--pi-paper) 88%, var(--pi-ink));
@@ -915,7 +985,9 @@
 .dark .pi-doc-content .wf-command-builder-tabs button.is-active,
 .dark .wf-recipe-shell .wf-command-builder-tabs button.is-active,
 .dark .pi-doc-content .wf-command-builder-command,
-.dark .wf-recipe-shell .wf-command-builder-command {
+.dark .wf-recipe-shell .wf-command-builder-command,
+.dark .pi-doc-content .wf-command-builder-code,
+.dark .wf-recipe-shell .wf-command-builder-code {
   background: color-mix(in srgb, var(--pi-elevated) 92%, transparent);
 }
 
@@ -927,8 +999,8 @@
   color: var(--pi-ink);
 }
 
-.dark .pi-doc-content .wf-command-builder-command summary button:hover,
-.dark .wf-recipe-shell .wf-command-builder-command summary button:hover {
+.dark .pi-doc-content .wf-command-builder-copy:hover,
+.dark .wf-recipe-shell .wf-command-builder-copy:hover {
   background: var(--pi-elevated);
   border-color: color-mix(in srgb, var(--pi-brand-accent) 40%, var(--pi-line));
   color: var(--pi-ink);
@@ -940,12 +1012,14 @@
 }
 
 .dark .pi-doc-content .pi-studio-viz-overview,
-.dark .pi-doc-content .pi-studio-viz-card {
+.dark .pi-doc-content .pi-studio-viz-card,
+.dark .pi-doc-content .pi-kv-catalog {
   background: color-mix(in srgb, var(--pi-paper) 86%, var(--pi-elevated));
   border-color: var(--pi-line);
 }
 
-.dark .pi-doc-content .pi-studio-viz-overview-caption {
+.dark .pi-doc-content .pi-studio-viz-overview-caption,
+.dark .pi-doc-content .pi-kv-group > h3 {
   background: color-mix(in srgb, var(--pi-paper) 92%, var(--pi-elevated));
   color: var(--pi-muted);
 }
@@ -1022,6 +1096,18 @@
   background: var(--pi-elevated);
   border-color: var(--pi-line);
   box-shadow: 4px 4px 0 color-mix(in srgb, var(--pi-ink) 18%, transparent);
+}
+
+/* Keep publisher marks full-color on a neutral plate in dark mode. */
+.dark .wf-model-mark.has-logo {
+  background: #fff;
+  border-color: var(--pi-line);
+}
+
+.dark .wf-model-mark.has-logo .wf-model-mark-image {
+  filter: none;
+  mix-blend-mode: normal;
+  opacity: 1;
 }
 
 /* ---------- Dark: docs welcome / intro page ---------- */
@@ -1496,10 +1582,13 @@
     sans-serif;
   font-size: 0.8125rem;
   font-weight: 600;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.06em;
+  line-height: 1.45;
   margin: 0 0 0.75rem;
+  max-width: 34em;
   text-shadow: 0 1px 10px rgba(0, 0, 0, 0.35);
   text-transform: uppercase;
+  text-wrap: balance;
 }
 
 .wf-home-main {

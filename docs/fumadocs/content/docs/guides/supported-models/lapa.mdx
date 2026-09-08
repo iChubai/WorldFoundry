@@ -1,0 +1,21 @@
+---
+title: "Latent Action Pretraining"
+description: "LAPA (Latent Action Pretraining) learns actions without action labels: it pretrains a video-action model on unlabeled video by discovering latent actions, then transfers to real robot control. The MIT-licensed LAPA-7B-openx checkpoint is c…"
+pageSource: generated
+---
+
+**Publisher:** Open-source research release (institution not recorded) · Research lab
+
+LAPA (Latent Action Pretraining) learns actions without action labels: it pretrains a video-action model on unlabeled video by discovering latent actions, then transfers to real robot control. The MIT-licensed LAPA-7B-openx checkpoint is confirmed and pinned; WorldFoundry vendors the latent-action inference runtime in-tree.
+
+<ModelCommandBuilder modelId="lapa" locale="en" />
+
+## Architecture
+
+A 7B video-action model trained on Open X-Embodiment scale data with latent action quantization. The in-tree runtime passed py_compile, from_pretrained, plan-only execution, and alias validation.
+
+## Usage notes
+
+Real 7B inference is currently blocked by environment issues: the prepare environment lacks tux and the gpu-jax0325 environment has incompatible JAX. Plan-only execution works; full inference needs a compatible JAX environment.
+
+<ModelRelatedRecipes modelId="lapa" locale="en" />

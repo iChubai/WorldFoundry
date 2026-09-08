@@ -1,0 +1,25 @@
+---
+title: "InSpatio-World"
+description: "InSpatio-World is a 1.3B video-conditioned world generator: given a video and a target trajectory it synthesizes trajectory-conditioned novel views of the same world."
+pageSource: generated
+---
+
+**Publisher:** InSpatio (formal institution not recorded) · Research lab
+
+InSpatio-World is a 1.3B video-conditioned world generator: given a video and a target trajectory it synthesizes trajectory-conditioned novel views of the same world. In this catalog it is fully verified — the in-tree pipeline generated and visually validated a 297-frame video through the Workspace on 2026-07-10, with every default component resolving from local checkpoint storage.
+
+<ModelCommandBuilder modelId="inspatio-world" locale="en" />
+
+## Architecture
+
+The recorded checkpoint is inspatio/world (apache-2.0); official inference source is retained in-tree. An optional use_tae path resolves taew2_1.pth from the shared checkpoint root but is not required for the default Wan VAE path.
+
+## Usage notes
+
+Every default component resolves from local checkpoint storage only — stage the inspatio/world weights first, then run the standard pipeline.
+
+## Evaluation benchmarks
+
+- [CameraBench](/docs/evaluation/benchmark-hub/camerabench) — Trajectory-following accuracy of generated views.
+
+<ModelRelatedRecipes modelId="inspatio-world" locale="en" />

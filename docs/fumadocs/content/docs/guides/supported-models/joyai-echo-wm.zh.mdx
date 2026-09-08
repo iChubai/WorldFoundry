@@ -1,0 +1,28 @@
+---
+title: "Echo-WM"
+description: "Echo-WM is an omnimodal world model that jointly evolves video, environmental sound, music, and speech under continuous navigation. Base generates about ten seconds; Flash Preview uses four denoising steps and bounded sink-plus-FIFO caches…"
+pageSource: generated
+---
+
+**发表机构:** 京东（JoyAI / Echo 团队） · 企业
+image → world state · video
+
+Echo-WM 是在连续导航控制下联合演化视频、环境音、音乐与语音的全模态世界模型。Base 生成约十秒内容；Flash Preview 使用四步去噪与有界 sink-plus-FIFO 缓存进行自回归滚动。
+
+<ModelCommandBuilder modelId="joyai-echo-wm" locale="zh" />
+
+## 架构
+
+两个公开变体均使用带 UCPE 相机条件的 LTX-2.3 音视频骨干。Base 为双向模型并分别使用视频/音频 CFG；Flash 以 DMD 蒸馏 guidance，并维护有界的视频、音频、跨模态及相机注意力缓存。
+
+## 使用要点
+
+需提供首帧图像、提示词与形如 w-60,a-60 的 Action DSL。加载时选择 variant=base 或 variant=flash。执行 execute=True 前必须准备官方源码检出、专用 CUDA 环境、Echo checkpoint 与受限访问的未量化 Gemma 编码器。
+
+## 评测 Benchmark
+
+- [CameraBench](/zh/docs/evaluation/benchmark-hub/camerabench) — 相机与导航动作遵循度。
+- [WorldModelBench](/zh/docs/evaluation/benchmark-hub/worldmodelbench) — 通用动作条件世界滚动生成质量。
+- [WBench](/zh/docs/evaluation/benchmark-hub/wbench) — 上游 Flash 示例采用 WBench 相机控制案例。
+
+<ModelRelatedRecipes modelId="joyai-echo-wm" locale="zh" />

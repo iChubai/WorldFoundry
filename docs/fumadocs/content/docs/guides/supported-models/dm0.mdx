@@ -1,0 +1,25 @@
+---
+title: "DM0"
+description: "DM0 is Dexmal's Dexbotic-family flow-matching VLA: a Qwen3 flow action expert with merged prefix/suffix attention and triple-view preprocessing. Base and LIBERO checkpoints are recorded (Dexmal/DM0-base, Dexmal/DM0-libero, CC license) and…"
+pageSource: generated
+---
+
+**Publisher:** Dexmal · Company
+
+DM0 is Dexmal's Dexbotic-family flow-matching VLA: a Qwen3 flow action expert with merged prefix/suffix attention and triple-view preprocessing. Base and LIBERO checkpoints are recorded (Dexmal/DM0-base, Dexmal/DM0-libero, CC license) and the full inference loop — normalization plus Euler sampler — runs in process from local checkpoints.
+
+<ModelCommandBuilder modelId="dm0" locale="en" />
+
+## Architecture
+
+A Qwen3-based flow action expert decodes actions with an Euler sampler; the Perception Encoder and multimodal base are reused from the compatible in-tree DB-CogACT implementation, keeping the Dexbotic family consistent.
+
+## Usage notes
+
+Use DM0-libero for LIBERO evaluation and DM0-base for initialization. Training, datasets, servers, benchmark launchers, and the optional Triton realtime backend are excluded.
+
+## Evaluation benchmarks
+
+- [LIBERO](/docs/evaluation/benchmark-hub/libero) — Dedicated DM0-libero policy checkpoint.
+
+<ModelRelatedRecipes modelId="dm0" locale="en" />

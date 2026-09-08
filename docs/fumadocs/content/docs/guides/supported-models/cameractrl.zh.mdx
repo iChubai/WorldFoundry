@@ -1,0 +1,26 @@
+---
+title: "CameraCtrl"
+description: "CameraCtrl pioneered plug-and-play camera control for text-to-video diffusion: it trains a camera encoder over Plücker embeddings so trajectories can steer generation without retraining the base model."
+pageSource: generated
+---
+
+**发表机构:** 香港中文大学 / 上海人工智能实验室 · 高校
+video
+
+CameraCtrl 开创了文生视频扩散的即插即用相机控制：基于 Plücker 嵌入训练相机编码器，让轨迹无需重训基座即可操控生成。本 catalog 中集成与 runner 均已验证——树内合成后端在统一环境档案中遵循官方轨迹文生视频 demo 契约。
+
+<ModelCommandBuilder modelId="cameractrl" locale="zh" />
+
+## 架构
+
+按论文（arXiv 2404.02101），相机位姿编码为 Plücker 嵌入，通过可训练的相机编码器注入冻结的视频扩散基座（官方版基于 AnimateDiff）。WorldFoundry 将运行时内置于 synthesis/visual_generation/cameractrl/cameractrl_runtime；checkpoint 保存在常规 hfd/ckpt 缓存。
+
+## 使用要点
+
+runner 遵循官方 demo 轨迹契约——提供相机轨迹文件与文本提示词即可。每次运行的产物检查在 catalog 外跟踪。
+
+## 评测 Benchmark
+
+- [CameraBench](/zh/docs/evaluation/benchmark-hub/camerabench) — 相机轨迹贴合度的标准评测。
+
+<ModelRelatedRecipes modelId="cameractrl" locale="zh" />

@@ -1,0 +1,26 @@
+---
+title: "ZeroScope"
+description: "ZeroScope is a community fine-tune of ModelScopeT2V optimized for watermark-free 16:9 video, released in 576w and XL upscale checkpoints by the creator cerspense."
+pageSource: generated
+---
+
+**Publisher:** Open-source community (cerspense) · Research lab
+text → video
+
+ZeroScope is a community fine-tune of ModelScopeT2V optimized for watermark-free 16:9 video, released in 576w and XL upscale checkpoints by the creator cerspense. In this catalog it is a verified legacy route: WorldFoundry output matched the official Diffusers route for the selected configuration.
+
+<ModelCommandBuilder modelId="zeroscope" locale="en" />
+
+## Architecture
+
+A legacy U-Net latent video diffusion model (the ModelScopeT2V architecture) fine-tuned on watermark-free data; the 576w checkpoint generates at 576x320 and zeroscope_v2_XL upscales. The task list marks it legacy-unet-diffusion.
+
+## Usage notes
+
+Runner parity is verified and the Studio/API route uses the unified environment — an easy, reliable smoke-test model. Mind the license: CC-BY-NC-4.0 requires benchmark policy review before commercial or automated benchmark use (recorded twice in the manifest).
+
+## Evaluation benchmarks
+
+- [FETV](/docs/evaluation/benchmark-hub/fetv) — Fine-grained legacy T2V evaluation.
+
+<ModelRelatedRecipes modelId="zeroscope" locale="en" />

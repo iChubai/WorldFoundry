@@ -1,0 +1,26 @@
+---
+title: "TesserAct"
+description: "TesserAct is an embodied 4D world model for robotics: it predicts action-conditioned video of manipulation scenes with temporally consistent geometry. The official WorldArena-listed source is vendored in-tree, WorldFoundry registers a runt…"
+pageSource: generated
+---
+
+**发表机构:** 马萨诸塞大学阿默斯特分校（Embodied AGI 实验室） · 高校
+
+TesserAct 是面向机器人的具身 4D 世界模型：预测操作场景的动作条件视频，并保持时序一致的几何。官方 WorldArena 收录源码已内置树内，WorldFoundry 为其注册了运行时 manifest pipeline，并引用 Hugging Face 上已确认的 anyeZHY/tesseract checkpoint。
+
+<ModelCommandBuilder modelId="tesseract" locale="zh" />
+
+## 架构
+
+内置运行时位于 synthesis/visual_generation/tesseract/tesseract_runtime，解析官方推理入口。除内置源码外的架构内部细节仓库未记录。
+
+## 使用要点
+
+在 checkpoint 与具身任务资产本地就位前，pipeline 返回 blocked 运行时诊断。请先就位 anyeZHY/tesseract 与任务资产，再重新运行。
+
+## 评测 Benchmark
+
+- [EWMBench](/zh/docs/evaluation/benchmark-hub/ewmbench) — 具身操作世界模型质量。
+- [WorldArena](/zh/docs/evaluation/benchmark-hub/worldarena) — WorldArena 开源世界模型榜单收录。
+
+<ModelRelatedRecipes modelId="tesseract" locale="zh" />

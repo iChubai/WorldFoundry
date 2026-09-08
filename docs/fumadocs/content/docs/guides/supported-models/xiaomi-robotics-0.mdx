@@ -1,0 +1,38 @@
+---
+title: "Xiaomi-Robotics-0"
+description: "Xiaomi-Robotics-0 is Xiaomi's open VLA policy line with an unusually complete Apache-2.0 benchmark zoo: confirmed checkpoints for LIBERO, CALVIN ABCD-D, CALVIN ABC-D, SimplerEnv Google Robot, and SimplerEnv WidowX, all revision-pinned. The…"
+pageSource: generated
+---
+
+**Publisher:** Xiaomi Robotics · Company
+
+Xiaomi-Robotics-0 is Xiaomi's open VLA policy line with an unusually complete Apache-2.0 benchmark zoo: confirmed checkpoints for LIBERO, CALVIN ABCD-D, CALVIN ABC-D, SimplerEnv Google Robot, and SimplerEnv WidowX, all revision-pinned. The LIBERO checkpoint is the catalog default.
+
+<ModelCommandBuilder modelId="xiaomi-robotics-0" locale="en" />
+
+## Architecture
+
+Architecture internals are not recorded in this repository beyond the official repository pointer (XiaomiRobotics/Xiaomi-Robotics-0); the released checkpoints share one policy design fine-tuned per benchmark.
+
+## Usage notes
+
+Pick the checkpoint matching your benchmark: LIBERO, either CALVIN split, or the SimplerEnv embodiments. For the newer generation see xiaomi-robotics-1.
+
+## Variants & pipeline bindings
+
+| Variant | Task | Runtime profile | Pipeline binding | Status |
+| --- | --- | --- | --- | --- |
+| `xiaomi-robotics-0-libero` | vla.policy_rollout | `xiaomi-robotics-0` | `xiaomi-robotics-0` | all released checkpoints gpu validated |
+| `xiaomi-robotics-0-calvin-abcd` | vla.policy_rollout | `xiaomi-robotics-0` | `xiaomi-robotics-0` | all released checkpoints gpu validated |
+| `xiaomi-robotics-0-calvin-abc` | vla.policy_rollout | `xiaomi-robotics-0` | `xiaomi-robotics-0` | all released checkpoints gpu validated |
+| `xiaomi-robotics-0-simplerenv-google` | vla.policy_rollout | `xiaomi-robotics-0` | `xiaomi-robotics-0` | all released checkpoints gpu validated |
+| `xiaomi-robotics-0-simplerenv-widowx` | vla.policy_rollout | `xiaomi-robotics-0` | `xiaomi-robotics-0` | all released checkpoints gpu validated |
+| `xiaomi-robotics-0-pretrain` | vla.action_prediction | `xiaomi-robotics-0` | `xiaomi-robotics-0` | all released checkpoints gpu validated |
+
+## Evaluation benchmarks
+
+- [LIBERO](/docs/evaluation/benchmark-hub/libero) — Dedicated LIBERO policy checkpoint.
+- [CALVIN](/docs/evaluation/benchmark-hub/calvin) — Dedicated CALVIN ABCD-D and ABC-D checkpoints.
+- [SimplerEnv](/docs/evaluation/benchmark-hub/simpler-env) — Dedicated Google Robot and WidowX checkpoints.
+
+<ModelRelatedRecipes modelId="xiaomi-robotics-0" locale="en" />

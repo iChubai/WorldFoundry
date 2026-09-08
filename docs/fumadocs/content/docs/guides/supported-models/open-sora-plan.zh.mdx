@@ -1,0 +1,31 @@
+---
+title: "Open-Sora-Plan"
+description: "Open-Sora-Plan is Peking University Yuan Group's open text-to-video effort (HF releases under the LanguageBind org), developed independently from HPC-AI Tech's Open-Sora despite the similar name. The WorldFoundry route is complete and repo…"
+pageSource: generated
+---
+
+**发表机构:** 北京大学（袁粒课题组） · 高校
+text → video
+
+Open-Sora-Plan 是北京大学袁粒课题组的开源文生视频项目（HF 发布在 LanguageBind 组织下），虽与潞晨的 Open-Sora 同名相近，但相互独立。WorldFoundry 路径已完备，checkpoint 缺失会在运行时报告。
+
+<figure className="wf-recipe-media">
+  <Video src="/demos/studio/open-sora-plan-tokyo-street.mp4" autoPlay loop muted playsInline />
+  <figcaption>Open-Sora Plan 样例</figcaption>
+</figure>
+
+<ModelCommandBuilder modelId="open-sora-plan" locale="zh" />
+
+## 架构
+
+该项目将视频 VAE（后期版本为 WF-VAE）与扩散 Transformer 去噪器配对，见上游发布。本仓库记录仅 prompt 的契约与 generated_video 产物；具体版本内部细节仓库未记录。
+
+## 使用要点
+
+尚无 runner parity 记录。官方 GitHub 为 PKU-YuanGroup；checkpoint 在 Hugging Face 的 LanguageBind 组织下——就位权重时请使用这两个准确的组织名。
+
+## 评测 Benchmark
+
+- [VBench](/zh/docs/evaluation/benchmark-hub/vbench) — 标准开源文生视频质量评测。
+
+<ModelRelatedRecipes modelId="open-sora-plan" locale="zh" />

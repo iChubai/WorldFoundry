@@ -1,0 +1,32 @@
+---
+title: "Bernini-R 14B"
+description: "Bernini-R 14B is the renderer-only release of ByteDance's Bernini family: the 14B rendering model packaged without the 7B semantic planner. It keeps the same six-task surface (text-to-image, image editing, text/video/reference-to-video) bu…"
+pageSource: generated
+---
+
+**发表机构:** 字节跳动（ByteDance） · 企业
+text · image · video → image · video
+[Bernini: Latent Semantic Planning for Video Diffusion](https://arxiv.org/abs/2605.22344) (2026)
+
+Bernini-R 14B 是字节 Bernini 系列的「仅渲染器」发布：14B 渲染模型单独打包，不含 7B 语义规划器。它保留同样的六类任务（文生图、图像编辑、文/视频/参考生视频），但直接使用你的输入，不经过规划阶段。 WorldFoundry 树内内置官方渲染器推理代码，加载 ByteDance/Bernini-R-Diffusers。
+
+<figure className="wf-recipe-media is-diagram">
+  <img src="/models/bernini-r-14b/paper.png" alt="Bernini: Latent Semantic Planning for Video Diffusion" />
+  <figcaption>Bernini: Latent Semantic Planning for Video Diffusion</figcaption>
+</figure>
+
+<ModelCommandBuilder modelId="bernini-r-14b" locale="zh" />
+
+## 架构
+
+即 Bernini 两段式设计中的 14B 渲染网络，单独运行。manifest 记录：图像配方单卡可跑，视频配方可显式启用 Ulysses 序列并行加速。
+
+## 使用要点
+
+Runner parity 为 pending_gpu_validation。用 task_type 选择任务；先在本地就位 Bernini-R-Diffusers checkpoint（apache-2.0）。快速实验建议用 1.3B 兄弟条目；需要规划器+渲染器全流程时用旗舰 bernini 条目。
+
+## 评测 Benchmark
+
+- [VBench](/zh/docs/evaluation/benchmark-hub/vbench) — 检验渲染器本身的文生视频质量。
+
+<ModelRelatedRecipes modelId="bernini-r-14b" locale="zh" />

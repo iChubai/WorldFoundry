@@ -1,0 +1,27 @@
+---
+title: "MVDiffusion"
+description: "MVDiffusion generates consistent multi-view images in one shot — panoramas from text or perspective views, and texture views for scenes — by letting diffusion branches attend to each other."
+pageSource: generated
+---
+
+**发表机构:** 西蒙菲莎大学（Simon Fraser University） · 高校
+[MVDiffusion: Enabling Holistic Multi-view Image Generation with Correspondence-Aware Diffusion](https://arxiv.org/abs/2307.01097) (NeurIPS 2023 (spotlight), 2023)
+
+MVDiffusion 一次性生成一致的多视角图像——从文本或透视图生成全景，或为场景生成纹理视图——方法是让多个扩散分支相互注意。本 catalog 中它经树内运行时子进程适配器运行；runner parity 待运行时资产就位。
+
+<figure className="wf-recipe-media is-diagram">
+  <img src="/models/mvdiffusion/paper.png" alt="MVDiffusion: Enabling Holistic Multi-view Image Generation with Correspondence-Aware Diffusion" />
+  <figcaption>MVDiffusion: Enabling Holistic Multi-view Image Generation with Correspondence-Aware Diffusion</figcaption>
+</figure>
+
+<ModelCommandBuilder modelId="mvdiffusion" locale="zh" />
+
+## 架构
+
+按 NeurIPS 2023 论文（arXiv 2307.01097），多个并行扩散分支借助「对应感知注意力」同时生成所有视图并保持全局一致。源码、checkpoint 或 CUDA 依赖缺失会在推理时报告。
+
+## 使用要点
+
+当前集成已接通 plan-only 推理；完整产物一致性需要本地就位上游源码与 checkpoint。期望得到真实多视角输出前请先完成资产就位。
+
+<ModelRelatedRecipes modelId="mvdiffusion" locale="zh" />

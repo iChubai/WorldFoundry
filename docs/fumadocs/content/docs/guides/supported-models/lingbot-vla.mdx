@@ -1,0 +1,33 @@
+---
+title: "LingBot-VLA"
+description: "LingBot-VLA is Robbyant's 4B vision-language-action policy line: a pretrained base plus RoboTwin post-trained and depth-enhanced RoboTwin variants, all Apache-2.0 with pinned revisions on Hugging Face and ModelScope. WorldFoundry integrate…"
+pageSource: generated
+---
+
+**Publisher:** Robbyant (Ant Group) · Company
+
+LingBot-VLA is Robbyant's 4B vision-language-action policy line: a pretrained base plus RoboTwin post-trained and depth-enhanced RoboTwin variants, all Apache-2.0 with pinned revisions on Hugging Face and ModelScope. WorldFoundry integrates the official policy, feature transforms, robot mapping, and normalization assets directly in-tree as an in-process runtime.
+
+<ModelCommandBuilder modelId="lingbot-vla" locale="en" />
+
+## Architecture
+
+A 4B policy backbone with feature transforms and per-robot mappings; the runtime uses shared WorldFoundry core device selection, compile dispatch, Hugging Face snapshot coordination, and streaming safetensors loading. Further internals are not recorded in this repository.
+
+## Usage notes
+
+Use the RoboTwin post-train for simulator benchmarks (the depth variant adds depth input) and the base for fine-tuning. For the newer 6B generation see lingbot-vla-v2.
+
+## Variants & pipeline bindings
+
+| Variant | Task | Runtime profile | Pipeline binding | Status |
+| --- | --- | --- | --- | --- |
+| `lingbot-vla-4b` | vla.pretraining | `lingbot-vla` | `lingbot-vla` | integrated |
+| `lingbot-vla-4b-posttrain-robotwin` | vla.policy_rollout | `lingbot-vla` | `lingbot-vla` | integrated |
+| `lingbot-vla-4b-depth-posttrain-robotwin` | vla.policy_rollout | `lingbot-vla` | `lingbot-vla` | integrated |
+
+## Evaluation benchmarks
+
+- [RoboTwin 2.0](/docs/evaluation/benchmark-hub/robotwin) — Dedicated RoboTwin post-trained checkpoints.
+
+<ModelRelatedRecipes modelId="lingbot-vla" locale="en" />

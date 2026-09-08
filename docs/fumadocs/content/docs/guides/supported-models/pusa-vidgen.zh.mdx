@@ -1,0 +1,26 @@
+---
+title: "Pusa VidGen"
+description: "Pusa VidGen (Pusa V1) demonstrates vectorized timestep adaptation: instead of one shared diffusion timestep for the whole video, each frame gets its own, which unlocks image-to-video, text-to-video, and video extension from one cheap LoRA…"
+pageSource: generated
+---
+
+**发表机构:** 香港城市大学 · 高校
+image · text → video
+
+Pusa VidGen（Pusa V1）展示了向量化时间步适配：不再让整段视频共享一个扩散时间步，而是每帧独立时间步，从而用一次低成本的 Wan2.2 LoRA 训练同时解锁图生视频、文生视频与视频延展。WorldFoundry 完全用规范化 Wan2.2 组件装配它——推理时不需要外部运行时检出。
+
+<ModelCommandBuilder modelId="pusa-vidgen" locale="zh" />
+
+## 架构
+
+Pusa V1 = Wan2.2 基座（规范化去噪器、条件器、VAE、加载器与共享分段 runner）+ 官方 Pusa V1 LoRA checkpoint（RaphaelLiu/Pusa-Wan2.2-V1）。向量化时间步行为来自 LoRA；不涉及其它扩散后端。
+
+## 使用要点
+
+runner 状态为 configured：模型专属 pipeline 通过 execute=True 暴露 generated_video，默认调用不再产生请求计划产物。每次运行的视觉 QA 在验证参考中跟踪。运行前请同时就位 Wan2.2 基座权重与 Pusa LoRA。
+
+## 评测 Benchmark
+
+- [VBench](/zh/docs/evaluation/benchmark-hub/vbench) — 通用文生/图生视频质量评测。
+
+<ModelRelatedRecipes modelId="pusa-vidgen" locale="zh" />

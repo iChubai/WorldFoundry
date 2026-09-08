@@ -1,0 +1,26 @@
+---
+title: "MAGI-1"
+description: "MAGI-1 is Sand AI's open autoregressive video generation model, cataloged for image-to-video and general video generation and tracked as a high-priority open candidate with Apache-2.0 HF metadata. The WorldFoundry route is complete and rep…"
+pageSource: generated
+---
+
+**发表机构:** Sand AI · 企业
+image → video
+
+MAGI-1 是 Sand AI 开源的自回归视频生成模型，catalog 记录其图生视频与通用视频生成任务，并作为 Apache-2.0 元数据的高优先级开源候选跟踪。WorldFoundry 路径已完备，checkpoint 缺失会在运行时报告。
+
+<ModelCommandBuilder modelId="magi-1" locale="zh" />
+
+## 架构
+
+上游将 MAGI-1 描述为按块自回归生成、使用因果注意力的大型视频模型，支持流式续写。本仓库仅记录 prompt+image 输入契约与 generated_video 产物；规模与内部细节仓库未记录。
+
+## 使用要点
+
+尚无 runner parity 记录——应视为未完成 GPU 验证。先就位 MAGI-1 权重；缺失时路径会给出明确报错。
+
+## 评测 Benchmark
+
+- [VBench](/zh/docs/evaluation/benchmark-hub/vbench) — 基础视频生成质量评测。
+
+<ModelRelatedRecipes modelId="magi-1" locale="zh" />

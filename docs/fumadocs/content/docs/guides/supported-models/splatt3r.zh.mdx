@@ -1,0 +1,27 @@
+---
+title: "Splatt3R"
+description: "Splatt3R predicts a 3D Gaussian splat scene directly from an uncalibrated image pair — zero shot, no camera parameters, no per-scene optimization."
+pageSource: generated
+---
+
+**发表机构:** 牛津大学（Active Vision Lab） · 高校
+[Splatt3R: Zero-shot Gaussian Splatting from Uncalibrated Image Pairs](https://arxiv.org/abs/2408.13912) (2024)
+
+Splatt3R 直接从未标定的图像对预测 3D 高斯泼溅场景——零样本、无需相机参数、无需逐场景优化。本 catalog 中它已完整验证：checkpoint 加载的 GPU 推理从内置官方风格视图产出含 344,064 个高斯的有限 PLY，证据记录在 inference_evidence.yaml。
+
+<figure className="wf-recipe-media is-diagram">
+  <img src="/models/splatt3r/paper.png" alt="Splatt3R: Zero-shot Gaussian Splatting from Uncalibrated Image Pairs" />
+  <figcaption>Splatt3R: Zero-shot Gaussian Splatting from Uncalibrated Image Pairs</figcaption>
+</figure>
+
+<ModelCommandBuilder modelId="splatt3r" locale="zh" />
+
+## 架构
+
+按论文（arXiv 2408.13912），Splatt3R 在 MASt3R 的双视图几何主干上增加高斯参数头。 WorldFoundry 将运行时放在 base_models/three_dimensions/general_3d/splatt3r/splatt3r_runtime，并从规范兄弟路径导入 MASt3R/DUSt3R；打包的运行时仅含推理（训练加载器与 demo 代码已裁剪）。
+
+## 使用要点
+
+Splatt3RSynthesis 在进程内加载树内运行时，输出 PLY 高斯泼溅产物。checkpoint 保持为外部资产（brandonsmart/splatt3r_v1.0）——运行前请先就位。
+
+<ModelRelatedRecipes modelId="splatt3r" locale="zh" />

@@ -1,0 +1,32 @@
+---
+title: "Hy-Embodied-0.5-VLA"
+description: "Hy-Embodied-0.5-VLA is Tencent Hunyuan's bimanual manipulation VLA, GPU-validated in this catalog: the RoboTwin checkpoint restored strictly and produced finite 20x20 decoded actions from the official six-frame, three-camera input on an A1…"
+pageSource: generated
+---
+
+**Publisher:** Tencent Hunyuan · Company
+
+Hy-Embodied-0.5-VLA is Tencent Hunyuan's bimanual manipulation VLA, GPU-validated in this catalog: the RoboTwin checkpoint restored strictly and produced finite 20x20 decoded actions from the official six-frame, three-camera input on an A100, and the UMI checkpoint produced a finite 50x20 relative-action chunk in BF16. Both Apache-2.0 checkpoints are pinned on Hugging Face and ModelScope.
+
+<ModelCommandBuilder modelId="hy-embodied-vla" locale="en" />
+
+## Architecture
+
+An inference-only mixture-of-transformers (MoT) backbone with in-tree preprocessing and action decoding. The official input contract is six frames from three cameras; RoboTwin decodes absolute joint actions while UMI decodes relative actions.
+
+## Usage notes
+
+Choose the RoboTwin checkpoint for simulator benchmark work and the UMI checkpoint for UMI-style relative-action deployments; both run through the same in-tree runtime.
+
+## Variants & pipeline bindings
+
+| Variant | Task | Runtime profile | Pipeline binding | Status |
+| --- | --- | --- | --- | --- |
+| `hy-embodied-vla-umi` | vla.policy_rollout | `hy-embodied-vla` | `hy-embodied-vla` | integrated |
+| `hy-embodied-vla-robotwin` | vla.policy_rollout | `hy-embodied-vla` | `hy-embodied-vla` | integrated |
+
+## Evaluation benchmarks
+
+- [RoboTwin 2.0](/docs/evaluation/benchmark-hub/robotwin) — GPU-validated RoboTwin policy checkpoint.
+
+<ModelRelatedRecipes modelId="hy-embodied-vla" locale="en" />

@@ -13,9 +13,8 @@ description: 用 benchmark、metric 与可复现 scorecard 对生成产物打分
 | --- | --- |
 | 用完整 benchmark protocol 给一个目录打分 | `worldfoundry-eval score --benchmark <id> --artifacts <dir> ...` |
 | 从 dataset manifest 生成，再按 metric ID 打分 | `worldfoundry-eval generate-score --model <id> --dataset-manifest <file> ...` |
-| 复现已知的 model × benchmark 配置 | `worldfoundry-eval reproduce --benchmark <id> ...` |
+| 复现已知的 model × benchmark 配置 | `worldfoundry-eval reproduce --recipe <recipe.yaml> ...` |
 | 用新模型或自定义模型跑已有 benchmark | `worldfoundry-eval run --model <id> --model-manifest-dir <dir> --benchmark <id> ...` |
-| 修改已知的模型或 benchmark 配置 | `worldfoundry-eval reproduce --recipe <recipe.yaml> ...` |
 | 对已有 JSON/JSONL 结果打分 | `worldfoundry-eval evaluate --mode existing-results ...` |
 | 从 task 物化 request ledger | `worldfoundry-eval task materialize ...` |
 | 跑单个 benchmark × model | `worldfoundry-eval run --benchmark <id> --model <id> ...` |
@@ -109,21 +108,7 @@ Preflight 报告 `ready: true` 之后，再去掉 `--plan-only`。
 
 ## 复现配方
 
-仓内的复现 profile 已经绑定了生成模型、checkpoint、生成参数、官方 prompt 与 benchmark runtime，用户不必再逐项填写。某个 benchmark 有多个已发布 cell 时用显式 profile；只声明了一个默认 profile 时，直接用 benchmark ID：
-
-```bash
-worldfoundry-eval reproduce \
-  --profile vbench-zeroscope-aesthetic \
-  --output-dir tmp/reproduce \
-  --plan-only \
-  --json
-
-worldfoundry-eval reproduce --benchmark vbench --output-dir tmp/reproduce --plan-only --json
-```
-
-仓内的 VBench profile 是一个 bounded 的单样本 `aesthetic_quality` 验证 profile，明确不具备 leaderboard 资格。Profile 的范围与资格写在 prepared plan 里，不会从“进程正常退出”推断出来。
-
-自定义或新发布的模型 cell 用 `--recipe`。复现 recipe 把上游模型设置与 benchmark 设置分开，因此 benchmark 参数无法静默覆盖由 orchestrator 拥有的路径或 mode。
+用 `--recipe` 提供一份不可变的 model × benchmark 配方。复现 recipe 把上游模型设置与 benchmark 设置分开，因此 benchmark 参数无法静默覆盖由 orchestrator 拥有的路径或 mode。范围与资格写在 prepared plan 里，不会从“进程正常退出”推断出来。
 
 ```yaml
 schema_version: worldfoundry-reproduction-recipe-v1

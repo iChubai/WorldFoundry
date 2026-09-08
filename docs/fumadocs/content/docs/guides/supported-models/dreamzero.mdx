@@ -1,0 +1,32 @@
+---
+title: "NVIDIA DreamZero"
+description: "NVIDIA DreamZero is a world-action model (WAM) that couples video prediction with robot control: DROID and AgiBot checkpoints are released under Apache-2.0 (GEAR-Dreams org). WorldFoundry keeps the inference-only model, preprocessing, dist…"
+pageSource: generated
+---
+
+**Publisher:** NVIDIA (GEAR Lab) · Company
+
+NVIDIA DreamZero is a world-action model (WAM) that couples video prediction with robot control: DROID and AgiBot checkpoints are released under Apache-2.0 (GEAR-Dreams org). WorldFoundry keeps the inference-only model, preprocessing, distributed server, WebSocket client, and a pickle-free NumPy msgpack protocol in-tree; both checkpoints passed GPU probes on a CUDA 12.9 runtime.
+
+<ModelCommandBuilder modelId="dreamzero" locale="en" />
+
+## Architecture
+
+The default 14B server uses two CUDA ranks while the Wan2.2 5B entrypoint can run on one. Checkpoint-controlled Hydra targets are rewritten to and allowlisted within in-tree inference modules, so checkpoint Python is never executed.
+
+## Usage notes
+
+Stage DreamZero-DROID or DreamZero-AgiBot under WORLDFOUNDRY_HFD_ROOT; a CUDA 12.9 runtime is required. Choose DROID for real-robot arm data distribution and AgiBot for the AgiBot embodiment.
+
+## Variants & pipeline bindings
+
+| Variant | Task | Runtime profile | Pipeline binding | Status |
+| --- | --- | --- | --- | --- |
+| `dreamzero-droid` | wam.world_action_modeling | `dreamzero` | `dreamzero` | integrated |
+| `dreamzero-agibot` | wam.post_training_base | `dreamzero` | `dreamzero` | integrated |
+
+## Evaluation benchmarks
+
+- [EWMBench](/docs/evaluation/benchmark-hub/ewmbench) — World-action modeling quality for embodied control.
+
+<ModelRelatedRecipes modelId="dreamzero" locale="en" />

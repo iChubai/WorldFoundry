@@ -1,0 +1,27 @@
+---
+title: "MoVerse"
+description: "MoVerse turns one image into a navigable world: it builds a panoramic Gaussian scaffold from the input and generates camera-controlled video as you move through it."
+pageSource: generated
+---
+
+**发表机构:** 开源研究发布（仓库未记录正式机构） · 研究机构
+image → world state
+
+MoVerse 把一张图变成可游走的世界：从输入构建全景高斯脚手架，并在移动过程中生成相机可控视频。本 catalog 中其无头推理闭包已在树内、checkpoint 仅本地解析；完整 GPU 一致性待 checkpoint、FLUX 权限、CUDA 内核与至少 24 GB 显存就位。
+
+<ModelCommandBuilder modelId="moverse" locale="zh" />
+
+## 架构
+
+记录的组装复用 WorldFoundry 共享的 GeoCalib AutoLevel、Depth Anything 3、SHARP 全景、 Wan（视频基座 Wan2.1-T2V-1.3B）与 TAEHV 组件，另加作为全景基座的 FLUX.1-Fill-dev 与 MoVerse 自有组件权重。上游无许可文件——下游使用前请审查。
+
+## 使用要点
+
+执行为离线模式，需要预先就位四个 Hugging Face snapshot，另加 ffmpeg、gsplat 与兼容的 CUDA 内核。运行时规划与缺失资产诊断无需导入重量级模型栈。
+
+## 评测 Benchmark
+
+- [WorldScore](/zh/docs/evaluation/benchmark-hub/worldscore) — 可游走生成世界的质量。
+- [CameraBench](/zh/docs/evaluation/benchmark-hub/camerabench) — 游走过程的相机控制贴合度。
+
+<ModelRelatedRecipes modelId="moverse" locale="zh" />

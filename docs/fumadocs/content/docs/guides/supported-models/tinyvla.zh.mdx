@@ -1,0 +1,21 @@
+---
+title: "TinyVLA"
+description: "TinyVLA targets fast, data-efficient VLA at sub-billion scale: LLaVA-Pythia backbones (400M / 700M / 1.3B released on the Hub) with ACT or conditional 1D-diffusion action heads. The published Hub models are VLM backbones for policy trainin…"
+pageSource: generated
+---
+
+**发表机构:** 开源研究发布（仓库未记录正式机构） · 研究机构
+
+TinyVLA 追求亚十亿级的快速、数据高效 VLA：LLaVA-Pythia 骨干（Hub 上发布 400M / 700M / 1.3B）配 ACT 或条件 1D 扩散动作头。Hub 上发布的模型是用于策略训练的 VLM 骨干——并非任务训练好的机器人 checkpoint——因此树内运行时为 checkpoint 门控，需自行就位训练好的任务策略。
+
+<ModelCommandBuilder modelId="tinyvla" locale="zh" />
+
+## 架构
+
+LLaVA-Pythia 多模态骨干配 CLIP/SigLIP 视觉融合与可换动作头（ACT 或条件 1D 扩散），全部进程内执行。支持合并权重与本地 LoRA 加非 LoRA 动作张量两种形式。
+
+## 使用要点
+
+在本地就位兼容的任务 checkpoint、含动作维度与头类型的 config.json 及数据集统计前，运行时构建会尽早失败。
+
+<ModelRelatedRecipes modelId="tinyvla" locale="zh" />

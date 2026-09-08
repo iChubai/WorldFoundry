@@ -1,0 +1,25 @@
+---
+title: "pi0"
+description: "pi0 is Physical Intelligence's flagship flow-matching VLA: a PaliGemma-based backbone with an action expert that decodes continuous action chunks via flow matching. This catalog entry is the concrete pi0 algorithm route, reusing the flatte…"
+pageSource: generated
+---
+
+**Publisher:** Physical Intelligence · Company
+
+pi0 is Physical Intelligence's flagship flow-matching VLA: a PaliGemma-based backbone with an action expert that decodes continuous action chunks via flow matching. This catalog entry is the concrete pi0 algorithm route, reusing the flattened in-tree OpenPI runtime with pi0-specific configuration.
+
+<ModelCommandBuilder modelId="pi0" locale="en" />
+
+## Architecture
+
+A PaliGemma VLM backbone plus a flow-matching action expert producing action chunks; the model graph, transforms, local checkpoint loader, and action sampler are in-tree. Checkpoints are GCS-hosted (gs://openpi-assets).
+
+## Usage notes
+
+Stage GCS checkpoints with gsutil/gcloud (not Hugging Face). Numerical parity remains gated only by staged checkpoint assets; the shared runtime infrastructure is validated under the openpi entry.
+
+## Evaluation benchmarks
+
+- [LIBERO](/docs/evaluation/benchmark-hub/libero) — The openpi family validates pi05_libero in-tree.
+
+<ModelRelatedRecipes modelId="pi0" locale="en" />

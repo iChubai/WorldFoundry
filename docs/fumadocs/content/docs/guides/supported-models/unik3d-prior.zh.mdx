@@ -1,0 +1,22 @@
+---
+title: "UniK3D"
+description: "UniK3D generalizes metric 3D estimation to any camera — pinhole, fisheye, even full panoramas — with one model."
+pageSource: generated
+---
+
+**发表机构:** 苏黎世联邦理工学院（ETH Zurich） · 高校
+image → depth
+
+UniK3D 把米制 3D 估计推广到任意相机——针孔、鱼眼、乃至完整全景——单一模型通吃。本 catalog 中它是 checkpoint 已验证的通用相机几何先验：真实 checkpoint 推理已通过共享契约验证并支持自动相机估计，针孔与全景相机覆盖保持显式配置。
+
+<ModelCommandBuilder modelId="unik3d-prior" locale="zh" />
+
+## 架构
+
+按上游论文，UniK3D 用学习到的球谐基相机模型表示相机，把射线方向与径向深度解耦，无需针对畸变单独调参。默认 checkpoint 从 lpiccinelli/unik3d-vitl 解析；注册于 base_models/three_dimensions/depth/unik3d。
+
+## 使用要点
+
+它作为独立几何先验集成在 worldfoundry/base_models 下，通过共享的 geometry-prior pipeline/operator 契约对外暴露。上层管线（如 ViPE）从这一规范位置导入它，而不是各自保留私有副本。当输入包含鱼眼或全景图像时，优先选它而非仅支持针孔的先验。上游发布为CC-BY-NC-4.0。
+
+<ModelRelatedRecipes modelId="unik3d-prior" locale="zh" />

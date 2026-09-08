@@ -1,0 +1,26 @@
+---
+title: "LingBot-World"
+description: "LingBot-World is Robbyant's camera-controlled world video model."
+pageSource: generated
+---
+
+**Publisher:** Robbyant (Ant Group) · Company
+
+LingBot-World is Robbyant's camera-controlled world video model. In this catalog it is fully verified: the base-cam checkpoint completed full-quality artifact validation on 2026-07-28 using the official 161-frame, 70-step camera-control demo — including a four-A100 compact topology that adapted FSDP/Ulysses settings and produced a coherent artifact.
+
+<ModelCommandBuilder modelId="lingbot-world" locale="en" />
+
+## Architecture
+
+The official base-cam recipe uses eight GPUs with DiT/T5 FSDP plus Ulysses sequence parallelism; Workspace also supports a four-GPU compact topology (both 4 and 8 divide the model's 40 attention heads). A shared timestep embedding preserves floating precision for integer scheduler timesteps, preventing distributed sequence-parallel output corruption.
+
+## Usage notes
+
+The wrapper resolves only local HFD or explicit checkpoint directories — no runtime downloads. Base-cam runs in the dedicated lingbot-world conda environment profile; Base-Act is separately cataloged, and only the Fast checkpoint remains unavailable.
+
+## Evaluation benchmarks
+
+- [CameraBench](/docs/evaluation/benchmark-hub/camerabench) — Camera-control adherence of world rollouts.
+- [WorldModelBench](/docs/evaluation/benchmark-hub/worldmodelbench) — General world-rollout quality.
+
+<ModelRelatedRecipes modelId="lingbot-world" locale="en" />

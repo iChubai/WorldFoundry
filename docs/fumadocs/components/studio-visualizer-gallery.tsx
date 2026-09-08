@@ -10,7 +10,6 @@ type StudioVisualizerDemo = {
   image?: string;
   embedUrl?: string;
   demoUrl?: string;
-  status?: Record<StudioGalleryLocale, string>;
   port: string;
   artifacts: string;
   command: string;
@@ -115,29 +114,6 @@ const demos = [
     artifacts: 'splat, spz, ksplat, sog, splat-ply',
     command: 'python -m worldfoundry.studio.app vggt --frontend spark --asset /path/to/scene.splat',
   },
-  {
-    id: 'embodied',
-    title: {
-      en: 'Embodied Simulator Bridge',
-      zh: '具身仿真器 Bridge',
-    },
-    status: {
-      en: 'Planned',
-      zh: '计划中',
-    },
-    subtitle: {
-      en: 'Planned integration. Studio only registers an external simulator URL and tunnel hints today; there is no in-tree embodied viewer yet. Start the simulator separately, then paste its URL in Visualizers.',
-      zh: '仍处于计划/早期集成阶段。当前 Studio 只会登记外部 simulator URL 并给出 tunnel 提示，还没有仓内 embodied viewer。请先单独启动 simulator，再把 URL 填到 Visualizers。',
-    },
-    aliases: {
-      en: 'sim, simulator',
-      zh: 'sim, simulator',
-    },
-    image: '/images/studio/visualizers/live/embodied-simulator.png',
-    port: '18610',
-    artifacts: 'action_trace, trajectory, simulator_url',
-    command: 'python -m worldfoundry.studio.app openvla --frontend embodied --simulator-url http://127.0.0.1:18610',
-  },
 ] satisfies StudioVisualizerDemo[];
 
 export function StudioVisualizerGallery({ locale = 'en' }: { locale?: StudioGalleryLocale }) {
@@ -178,12 +154,7 @@ export function StudioVisualizerGallery({ locale = 'en' }: { locale?: StudioGall
           );
 
           return (
-          <article
-            className={['pi-studio-viz-card', demo.status ? 'pi-studio-viz-card-planned' : '']
-              .filter(Boolean)
-              .join(' ')}
-            key={demo.id}
-          >
+          <article className="pi-studio-viz-card" key={demo.id}>
             <div className="pi-studio-viz-card-media">
               {demo.demoUrl ? (
                 <a
@@ -203,9 +174,6 @@ export function StudioVisualizerGallery({ locale = 'en' }: { locale?: StudioGall
               <div className="pi-studio-viz-card-head">
                 <div className="pi-studio-viz-card-title-row">
                   <h3 className="pi-studio-viz-card-title">{demo.title[locale]}</h3>
-                  {demo.status ? (
-                    <span className="pi-studio-viz-card-status">{demo.status[locale]}</span>
-                  ) : null}
                 </div>
                 <ul className="pi-studio-viz-card-facts">
                   <li>

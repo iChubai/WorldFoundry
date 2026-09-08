@@ -1,6 +1,6 @@
 import { ApiCopyButton } from '@/components/api-copy-button';
-import apiReference from '@/generated/python-api.json';
 import { methodAnchor, symbolAnchor } from '@/lib/docs-api-toc';
+import { readSiteJson } from '@/lib/read-site-json';
 import { withBasePath } from '@/lib/site-path';
 import type { ReactNode } from 'react';
 
@@ -80,7 +80,7 @@ type ApiReferenceData = {
 
 type Locale = 'en' | 'zh';
 
-const data = apiReference as ApiReferenceData;
+const data = readSiteJson<ApiReferenceData>('generated/python-api.json');
 
 const labels = {
   en: {

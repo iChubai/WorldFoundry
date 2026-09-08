@@ -9,13 +9,11 @@ WorldFoundry Studio is a thin visual entrypoint around repo pipelines. The model
 
 Studio exposes multiple frontends:
 
-| Frontend | Best for | Notes |
-| --- | --- | --- |
-| `world` | Interactive world models | Standalone WebRTC console with a resident model runtime, reliable input-edge DataChannel, bounded in-memory frame queue, one persistent video track, immersive fullscreen, and a live runtime log. It does not render through Gradio or materialize an MP4 per control step. |
-| `points` | Viser point clouds / meshes | Starts native Viser directly instead of embedding it in the console shell. |
-| `embodied` | Embodied simulators | **Planned.** URL bridge only: Studio registers an external simulator URL and tunnel hints; no in-tree embodied viewer yet. |
-| `spark` | 3DGS | Starts the standalone Spark 3DGS viewer with repository-local Spark assets. |
-| `auto` | Default | Routes interactive worlds to `world`, 3D scenes to `spark`, point/depth workflows to `points`, and embodied policies to `embodied`. |
+- **`world`** — Interactive world models. Standalone WebRTC console with a resident model runtime, reliable input-edge DataChannel, bounded in-memory frame queue, one persistent video track, immersive fullscreen, and a live runtime log. It does not render through Gradio or materialize an MP4 per control step.
+- **`points`** — Viser point clouds / meshes. Starts native Viser directly instead of embedding it in the console shell.
+- **`embodied`** — Embodied simulators. **Planned.** URL bridge only: Studio registers an external simulator URL and tunnel hints; no in-tree embodied viewer yet.
+- **`spark`** — 3DGS. Starts the standalone Spark 3DGS viewer with repository-local Spark assets.
+- **`auto`** — Default. Routes interactive worlds to `world`, 3D scenes to `spark`, point/depth workflows to `points`, and embodied policies to `embodied`.
 
 ## What it shows
 
@@ -192,9 +190,11 @@ links. Before making release claims, check the run against the release gates in
 The `7870` Workspace is the browser entrypoint for the visualization stack.
 Open the **Visualizers** tab, then use each card's **Launch**, **Open**, and
 **Stop** buttons. The iframe under each card embeds the live viewer, so users
-do not need to copy URLs during normal QA. The **Embodied Simulator Bridge**
-card is marked **Planned**: unlike Viser, Spark, Rerun, and World Rollout, it
-does not yet launch an in-tree embodied viewer.
+do not need to copy URLs during normal QA.
+
+Embodied simulators are not a Workspace visualizer. `--frontend embodied` only
+registers an external simulator URL and prints tunnel hints; start the
+simulator yourself and pass `--simulator-url`.
 
 <StudioVisualizerGallery locale="en" />
 
@@ -212,32 +212,7 @@ and are intentionally absent from the control-to-frame hot path.
 Latency-oriented defaults can be tuned without changing model catalog quality
 profiles:
 
-| Environment variable | Default | Effect |
-| --- | --- | --- |
-| `WORLDFOUNDRY_REALTIME_FPS` | `16` | WebRTC video pacing and input-resampler rate. |
-| `WORLDFOUNDRY_REALTIME_CHUNK_FRAMES` | `9` | Target frames per generated chunk; known model temporal contracts may override it. |
-| `WORLDFOUNDRY_REALTIME_INFERENCE_STEPS` | model default; LingBot Fast `4` | Explicit latency/quality override. Non-distilled models are not silently reduced to four steps. |
-| `WORLDFOUNDRY_REALTIME_FRAME_QUEUE` | `max(chunk, 8)` | One steady-state chunk of bounded playback buffering. |
-| `WORLDFOUNDRY_REALTIME_FRAME_QUEUE_POLICY` | `latest-interactive` | Use `latest-interactive` to bound latency under congestion or `ordered-quality` to preserve every frame. Count-exact prompt/segment sessions always enforce `ordered-quality`. |
-| `WORLDFOUNDRY_REALTIME_PRESENTATION_MODE` | `hold-last` | WebRTC A/B switch. `hold-last` preserves the compatible constant clock; `real-frames` gives pacing to the chunk presentation manager and sends no repeated frames through its two-frame mailbox. |
-| `WORLDFOUNDRY_REALTIME_PRESENTATION_MAX_FPS` | `2 × model FPS` | Maximum active-chunk drain rate while a pending chunk is waiting in `real-frames` mode. |
-| `WORLDFOUNDRY_REALTIME_SOCKET_PACING_MODE` | `legacy-dual` | WebSocket A/B switch. `client-only` disables server-side frame sleeps and leaves the existing browser presentation clock as the sole pacing owner. |
-| `WORLDFOUNDRY_REALTIME_BACKPRESSURE_MS` | half a chunk | Preserve every frame during normal playback; evict stale frames only after this congestion budget expires. |
-| `WORLDFOUNDRY_REALTIME_WARMUP_CHUNKS` | `1` | Background stream warmup; set `0` to disable or raise it for compile/autotune experiments. |
-| `WORLDFOUNDRY_REALTIME_PREWARM_TIMEOUT_SECONDS` | unset | Optional deadline for configure plus warmup chunks. The server reports an overrun after the current non-cancellable model call returns; `0` disables it. |
-| `WORLDFOUNDRY_REALTIME_POSTPROCESS_PRESET` | `identity` | Select `identity`, `rtx-super-resolution`, `rtx-super-resolution-ultra`, or `rtx-deblur-ultra`. RTX choices are explicit opt-ins and fail before serving if their runtime is unavailable. |
-| `WORLDFOUNDRY_REALTIME_RTX_SCALE` | preset default (`2`, or `1` for deblur) | Spatial VSR scale. NVIDIA VFX supports up to 4x; same-resolution denoise/deblur modes require `1`. |
-| `WORLDFOUNDRY_REALTIME_RTX_OUTPUT_WIDTH` / `WORLDFOUNDRY_REALTIME_RTX_OUTPUT_HEIGHT` | unset | Optional explicit RTX output dimensions. Set both or neither. |
-| `WORLDFOUNDRY_REALTIME_RTX_QUALITY` | preset default | Override the NVIDIA VFX quality enum, for example `HIGH`, `ULTRA`, `DEBLUR_ULTRA`, or `HIGHBITRATE_HIGH`. |
-| `WORLDFOUNDRY_REALTIME_RTX_DEVICE` | index from Studio device, otherwise `0` | CUDA device index owned by the VFX effect. |
-| `WORLDFOUNDRY_REALTIME_RTX_NON_BLOCKING` | `false` | Request asynchronous VFX execution. WorldFoundry still synchronizes before cloning the borrowed DLPack output, so this does not weaken memory safety. |
-| `WORLDFOUNDRY_REALTIME_RTX_USE_CURRENT_STREAM` | `true` | Pass the current PyTorch CUDA stream pointer to NVIDIA VFX; disable only when diagnosing stream interop. |
-| `WORLDFOUNDRY_REALTIME_PERF_LOG_INTERVAL_CHUNKS` | `5` | Emit a structured timing summary with stage p50/p90 values every N chunks; set `0` to disable periodic summaries. |
-| `WORLDFOUNDRY_REALTIME_PERF_WARMUP_CHUNKS` | `0` | Mark and exclude the first N session chunks from timing summaries. Raw JSONL events retain the warmup marker. |
-| `WORLDFOUNDRY_REALTIME_PERF_JSONL` | unset | Optional path for one canonical `realtime.chunk_timing` JSONL event per chunk. Use only while profiling to avoid hot-path file I/O. |
-| `WORLDFOUNDRY_REALTIME_LIVENESS_TIMEOUT_SECONDS` | `30` | Reclaim a session whose browser heartbeats disappear without killing a slow in-flight chunk. |
-| `WORLDFOUNDRY_REALTIME_SHUTDOWN_TIMEOUT_SECONDS` | `5` | Total deadline for cooperative async teardown of preload, session workers, transports, and runtime reset. It bounds the shutdown handler but does not force-kill a running model thread. |
-| `WORLDFOUNDRY_REALTIME_ICE_SERVERS_JSON` | unset | Optional browser-compatible STUN/TURN `iceServers` JSON for hosts that are not directly reachable. |
+<StudioRealtimeEnvVars locale="en" />
 
 ### Optional NVIDIA RTX post-processing
 

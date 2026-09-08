@@ -1,0 +1,32 @@
+---
+title: "Bernini-R 1.3B"
+description: "Bernini-R 1.3B is the small renderer-only member of ByteDance's Bernini family — a 1.3B rendering checkpoint fine-tuned from Wan2.1 1.3B, covering the same six task types as its larger siblings. It is the practical single-GPU way to try th…"
+pageSource: generated
+---
+
+**发表机构:** 字节跳动（ByteDance） · 企业
+text · image · video → image · video
+[Bernini: Latent Semantic Planning for Video Diffusion](https://arxiv.org/abs/2605.22344) (2026)
+
+Bernini-R 1.3B 是字节 Bernini 系列中的小型「仅渲染器」成员——由 Wan2.1 1.3B 微调而来的 1.3B 渲染 checkpoint，覆盖与大模型相同的六类任务。它是单卡体验 Bernini 任务面的实用选择。WorldFoundry 树内内置渲染器推理代码，加载 ByteDance/Bernini-R-1.3B-Diffusers。
+
+<figure className="wf-recipe-media is-diagram">
+  <img src="/models/bernini-r-1.3b/paper.png" alt="Bernini: Latent Semantic Planning for Video Diffusion" />
+  <figcaption>Bernini: Latent Semantic Planning for Video Diffusion</figcaption>
+</figure>
+
+<ModelCommandBuilder modelId="bernini-r-1.3b" locale="zh" />
+
+## 架构
+
+manifest 明确记录：这是一个由 Wan2.1 1.3B 扩散 Transformer 基座微调而来的 1.3B 纯渲染 checkpoint；完整 Bernini 设计中的 7B 规划阶段不包含在内。
+
+## 使用要点
+
+Runner parity 为 pending_gpu_validation，但小体量使它成为 Bernini 系列的推荐起点。通过 task_type 选择任务；checkpoint 为 apache-2.0，需在本地就位。
+
+## 评测 Benchmark
+
+- [VBench](/zh/docs/evaluation/benchmark-hub/vbench) — 小渲染器的快速质量标尺。
+
+<ModelRelatedRecipes modelId="bernini-r-1.3b" locale="zh" />

@@ -1,0 +1,21 @@
+---
+title: "MonST3R"
+description: "MonST3R extends the DUSt3R pointmap approach to dynamic scenes: it estimates per-timestep geometry directly from video, recovering shape and motion without a static-scene assumption."
+pageSource: generated
+---
+
+**Publisher:** Google DeepMind / UC Berkeley · Company
+
+MonST3R extends the DUSt3R pointmap approach to dynamic scenes: it estimates per-timestep geometry directly from video, recovering shape and motion without a static-scene assumption. In this catalog it is fully verified — the CUDA Studio job produced a valid GLB v2 scene with 51 geometries and finite point data on 2026-07-10 through the in-tree demo.py subprocess adapter.
+
+<ModelCommandBuilder modelId="monst3r" locale="en" />
+
+## Architecture
+
+Per the upstream publication, MonST3R fine-tunes the DUSt3R pointmap regressor on dynamic data so that pointmaps are estimated per timestep; downstream optimization aligns them into a 4D scene. WorldFoundry vendors the infer-time components in-tree and materializes a GLB scene artifact.
+
+## Usage notes
+
+The Studio default disables the optional flow loss so missing RAFT2/SAM2 assets do not block preview output. For full official dynamic-mask parity, configure the MonST3R, RAFT, and SAM2 assets in the runtime environment.
+
+<ModelRelatedRecipes modelId="monst3r" locale="en" />

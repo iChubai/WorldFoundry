@@ -1,0 +1,21 @@
+---
+title: "HY-Embodied"
+description: "HY-Embodied is Tencent Hunyuan's embodied policy line, recorded here against the confirmed tencent/HY-Embodied-0.5 checkpoint. WorldFoundry routes it through an in-tree official Transformers image-text runtime adapter; weights are not yet…"
+pageSource: generated
+---
+
+**Publisher:** Tencent Hunyuan · Company
+
+HY-Embodied is Tencent Hunyuan's embodied policy line, recorded here against the confirmed tencent/HY-Embodied-0.5 checkpoint. WorldFoundry routes it through an in-tree official Transformers image-text runtime adapter; weights are not yet staged, so runs emit a runtime plan.
+
+<ModelCommandBuilder modelId="hy-embodied" locale="en" />
+
+## Architecture
+
+The runtime contract is a Transformers image-text interface over the HY-Embodied-0.5 checkpoint. Architecture internals beyond the official repository pointer (Tencent-Hunyuan/HY-Embodied, pinned head c9b3530e) are not recorded in this repository.
+
+## Usage notes
+
+Checkpoint absence is reported by runtime missing_assets and is not a catalog blocker; runs emit a runtime plan until weights are staged. For a GPU-validated Hunyuan policy, see the sibling hy-embodied-vla entry.
+
+<ModelRelatedRecipes modelId="hy-embodied" locale="en" />

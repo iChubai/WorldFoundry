@@ -1,0 +1,32 @@
+---
+title: "Causal-Forcing"
+description: "Causal-Forcing distills bidirectional video diffusion into a causal, autoregressive generator — including Causal-Forcing++ few-step variants — so video can be generated chunk by chunk or frame by frame."
+pageSource: generated
+---
+
+**发表机构:** 清华大学（thu-ml） · 高校
+text · image → video
+[Causal Forcing: Autoregressive Diffusion Distillation Done Right for High-Quality Real-Time Interactive Video Generation](https://arxiv.org/abs/2602.02214) (ICML 2026, 2026)
+
+Causal-Forcing 把双向视频扩散蒸馏为因果自回归生成器——包括 Causal-Forcing++ 少步 variant——使视频可以逐 chunk 或逐帧生成。本 catalog 中官方仅推理运行时已内置树内，chunk-wise checkpoint 为本地默认，frame-wise 与 ++ variant 可通过配置覆盖选择。
+
+<figure className="wf-recipe-media is-diagram">
+  <img src="/models/causal-forcing/paper.png" alt="Causal Forcing: Autoregressive Diffusion Distillation Done Right for High-Quality Real-Time Interactive Video Generation" />
+  <figcaption>Causal Forcing: Autoregressive Diffusion Distillation Done Right for High-Quality Real-Time Interactive Video Generation</figcaption>
+</figure>
+
+<ModelCommandBuilder modelId="causal-forcing" locale="zh" />
+
+## 架构
+
+按论文（arXiv 2602.02214），基于 Wan2.1 的教师被蒸馏为 chunk-wise 或 frame-wise 注意力的因果学生；++ variant 进一步压缩到 1-2 步采样。记录的 checkpoint 包括 chunk-wise，以及 zhuhz22/Causal-Forcing 下的 frame-wise 与两个 ++ 少步 variant。
+
+## 使用要点
+
+适配器执行内置的官方 inference.py 路径；完整一致性需要本地 Wan2.1 权重与所选 Causal-Forcing checkpoint/config 配对。benchmark 提示词列表需自行准备，并通过本地输入配置提供。
+
+## 评测 Benchmark
+
+- [VBench](/zh/docs/evaluation/benchmark-hub/vbench) — 文/图生视频的标准多维质量评测。
+
+<ModelRelatedRecipes modelId="causal-forcing" locale="zh" />

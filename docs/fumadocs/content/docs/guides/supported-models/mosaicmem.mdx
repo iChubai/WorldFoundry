@@ -1,0 +1,26 @@
+---
+title: "MosaicMem"
+description: "MosaicMem is a memory-augmented world-model component: it ingests keyframe patches, retrieves target views, summarizes coverage, and composes latent canvases — producing a memory index rather than video."
+pageSource: generated
+---
+
+**Publisher:** Open-source research release (institution not recorded) · Research lab
+video
+
+MosaicMem is a memory-augmented world-model component: it ingests keyframe patches, retrieves target views, summarizes coverage, and composes latent canvases — producing a memory index rather than video. In this catalog the source route is registered for memory-plan artifacts and is exposed through worldfoundry.core.memory; generator assets stay runtime-gated.
+
+<ModelCommandBuilder modelId="mosaicmem" locale="en" />
+
+## Architecture
+
+Architecture internals are not recorded in this repository (MIT license); the source is bound at a pinned commit. The recorded artifact type is memory_index.
+
+## Usage notes
+
+Config resolution and pipeline import are expected to pass; real generation emits a runtime plan until required checkpoints/assets are staged. Missing assets are reported by the plan and are not treated as catalog blockers. Use it as the memory side of a world-model stack, not as a standalone generator.
+
+## Evaluation benchmarks
+
+- [MemoBench](/docs/evaluation/benchmark-hub/memobench) — Long-horizon memory consistency evaluation.
+
+<ModelRelatedRecipes modelId="mosaicmem" locale="en" />

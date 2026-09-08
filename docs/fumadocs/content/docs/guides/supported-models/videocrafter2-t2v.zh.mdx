@@ -1,0 +1,32 @@
+---
+title: "VideoCrafter2 T2V"
+description: "VideoCrafter2 T2V is the improved text-to-video model of the VideoCrafter family, trained to overcome low-quality video data by combining it with high-quality image data. It is Apache-2.0 on its HF card, making it the license-cleanest memb…"
+pageSource: generated
+---
+
+**发表机构:** 腾讯 AI Lab · 企业
+text → video
+
+VideoCrafter2 T2V 是 VideoCrafter 系列中改进版的文生视频模型，通过将低质量视频数据与高质量图像数据结合训练来突破数据瓶颈。其 HF 卡片为 Apache-2.0，是系列中许可最干净的成员。树内仅推理运行时暴露本地 checkpoint、fps、帧数与 seed 控制。
+
+<figure className="wf-recipe-media">
+  <Video src="/demos/studio/videocrafter2-t2v.mp4" autoPlay loop muted playsInline />
+  <figcaption>文本生成视频</figcaption>
+</figure>
+
+<ModelCommandBuilder modelId="videocrafter2-t2v" locale="zh" />
+
+## 架构
+
+U-Net 潜空间视频扩散模型，训练时将运动（来自视频）与外观（来自图像）解耦学习，见上游论文。checkpoint 溯源在系列条目跟踪。
+
+## 使用要点
+
+Runner parity 为 pending。这是推荐的 VideoCrafter variant：质量优于 V1，许可为干净的 Apache-2.0。
+
+## 评测 Benchmark
+
+- [EvalCrafter](/zh/docs/evaluation/benchmark-hub/evalcrafter) — VideoCrafter 项目的配套评测。
+- [VBench](/zh/docs/evaluation/benchmark-hub/vbench) — 标准文生视频评测。
+
+<ModelRelatedRecipes modelId="videocrafter2-t2v" locale="zh" />

@@ -1,0 +1,28 @@
+---
+title: "DIAMOND"
+description: "DIAMOND (DIffusion As a Model Of eNvironment Dreams) trains reinforcement-learning agents entirely inside a diffusion world model — its Atari agents and playable CS:GO world model made diffusion world models famous (NeurIPS 2024)."
+pageSource: generated
+---
+
+**发表机构:** 日内瓦大学 / 爱丁堡大学 / 微软研究院 · 高校
+
+DIAMOND（DIffusion As a Model Of eNvironment Dreams）让强化学习智能体完全在扩散世界模型内训练——其 Atari 智能体与可游玩的 CS:GO 世界模型让扩散世界模型声名大噪（NeurIPS 2024）。本 catalog 中官方 play/推理栈已内置树内，含 diamond-atari 与 diamond-csgo 两个 variant。
+
+<ModelCommandBuilder modelId="diamond" locale="zh" />
+
+## 架构
+
+按论文，帧预测使用基于近期帧与动作的 EDM 式扩散模型，保留了潜空间世界模型会丢失的视觉细节。运行时配置打包于 data/models/runtime/configs/diamond/config；MIT 许可的上游按需下载 Atari 资产（此处已禁用——运行时网络下载关闭）。
+
+## 使用要点
+
+任务可用本地 checkpoint 运行，或用 pretrained=true 加固定本地 snapshot 中的非交互 pretrained_game 值。完整生成一致性需要就位 Atari 资产/checkpoint。
+
+## 变体与 Pipeline Binding
+
+| Variant | 任务 | Runtime profile | Pipeline Binding | 状态 |
+| --- | --- | --- | --- | --- |
+| `diamond-atari` | atari-world-model | `diamond` | `diamond` | planned |
+| `diamond-csgo` | game-world-model | `diamond` | `diamond` | planned |
+
+<ModelRelatedRecipes modelId="diamond" locale="zh" />

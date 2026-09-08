@@ -1,0 +1,26 @@
+---
+title: "Step-Video-T2V"
+description: "Step-Video-T2V is StepFun's large open text-to-video model (30B parameters upstream, MIT weights at stepfun-ai/stepvideo-t2v). In WorldFoundry the public pipeline is assembled from native role-based components with the shared diffusion run…"
+pageSource: generated
+---
+
+**Publisher:** StepFun · Company
+text → video
+
+Step-Video-T2V is StepFun's large open text-to-video model (30B parameters upstream, MIT weights at stepfun-ai/stepvideo-t2v). In WorldFoundry the public pipeline is assembled from native role-based components with the shared diffusion runner — DiT, Step-LLM text encoder, CLIP, scheduler, latent initialization, and VAE decoding all execute in-process.
+
+<ModelCommandBuilder modelId="step-video-t2v" locale="en" />
+
+## Architecture
+
+Upstream: a 30B DiT with a deeply compressed Video-VAE (16x16 spatial, 8x temporal) and bilingual text encoders. In this repository the notable engineering fact is the native re-assembly: the former xFuser and caption/VAE HTTP-service runtime is not a backend — runner status records the native checkpoint layout as validated.
+
+## Usage notes
+
+Native checkpoint layout is validated; full GPU artifact parity is not yet recorded. Use id step-video-t2v. At 30B scale plan for serious VRAM or multi-GPU setups.
+
+## Evaluation benchmarks
+
+- [VBench](/docs/evaluation/benchmark-hub/vbench) — Standard open T2V quality suite.
+
+<ModelRelatedRecipes modelId="step-video-t2v" locale="en" />

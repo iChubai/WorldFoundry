@@ -1,0 +1,34 @@
+---
+title: "LingBot-VA"
+description: "LingBot-VA is Robbyant's video-action model served through a vendored server/client runtime: base plus RoboTwin and LIBERO-Long post-trained checkpoints are staged (Apache-2.0). On an 80GB CUDA GPU the base transformer passed CUDA forward,…"
+pageSource: generated
+---
+
+**Publisher:** Robbyant (Ant Group) · Company
+
+LingBot-VA is Robbyant's video-action model served through a vendored server/client runtime: base plus RoboTwin and LIBERO-Long post-trained checkpoints are staged (Apache-2.0). On an 80GB CUDA GPU the base transformer passed CUDA forward, post-train checkpoints passed tensor probes, and libero-long server init reached websocket listen — full client rollout remains unverified.
+
+<ModelCommandBuilder modelId="lingbot-va" locale="en" />
+
+## Architecture
+
+A transformer video-action backbone; staged configs set attn_mode=torch and build_server_command passes --checkpoint-dir to the vendored server. Architecture internals beyond the official repository pointer are not recorded in this repository.
+
+## Usage notes
+
+Runs use a server/client split: server init is verified with staged checkpoints, but official demo parity is not claimed until client rollout and action decoding are validated.
+
+## Variants & pipeline bindings
+
+| Variant | Task | Runtime profile | Pipeline binding | Status |
+| --- | --- | --- | --- | --- |
+| `lingbot-va-base` | vam.video_action_modeling | `lingbot-va` | `lingbot-va` | in tree checkpoint runtime gpu server init verified rollout pending |
+| `lingbot-va-posttrain-robotwin` | vla.policy_rollout | `lingbot-va` | `lingbot-va` | in tree checkpoint runtime gpu server init verified rollout pending |
+| `lingbot-va-posttrain-libero-long` | vla.policy_rollout | `lingbot-va` | `lingbot-va` | in tree checkpoint runtime gpu server init verified rollout pending |
+
+## Evaluation benchmarks
+
+- [LIBERO](/docs/evaluation/benchmark-hub/libero) — Post-trained libero-long checkpoint is staged.
+- [RoboTwin 2.0](/docs/evaluation/benchmark-hub/robotwin) — Post-trained RoboTwin checkpoint is staged.
+
+<ModelRelatedRecipes modelId="lingbot-va" locale="en" />

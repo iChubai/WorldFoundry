@@ -1,0 +1,28 @@
+---
+title: "Pi3"
+description: "Pi3 (π³) is a feed-forward visual-geometry model that reconstructs 3D scenes, camera trajectories, and point clouds without relying on a fixed reference view — its permutation-equivariant design treats all input views symmetrically."
+pageSource: generated
+---
+
+**Publisher:** Open-source research release (institution not recorded) · Research lab
+point cloud
+[$π^3$: Permutation-Equivariant Visual Geometry Learning](https://arxiv.org/abs/2507.13347) (2025)
+
+Pi3 (π³) is a feed-forward visual-geometry model that reconstructs 3D scenes, camera trajectories, and point clouds without relying on a fixed reference view — its permutation-equivariant design treats all input views symmetrically. In this catalog the in-tree point-cloud navigation pipeline is registered for reconstruction and trajectory rendering.
+
+<figure className="wf-recipe-media is-diagram">
+  <img src="/models/pi3/paper.png" alt="$π^3$: Permutation-Equivariant Visual Geometry Learning" />
+  <figcaption>$π^3$: Permutation-Equivariant Visual Geometry Learning</figcaption>
+</figure>
+
+<ModelCommandBuilder modelId="pi3" locale="en" />
+
+## Architecture
+
+Per the paper (arXiv 2507.13347), Pi3 predicts affine-invariant camera poses and scale-invariant local pointmaps with a permutation-equivariant transformer, removing the need for a reference-view heuristic. Weights are apache-2.0; internals beyond the recorded tasks are not stored here.
+
+## Usage notes
+
+Integration is runtime_ported with runner parity pending; per-run validation evidence is tracked outside the catalog. Stage the upstream Pi3 weights before expecting real reconstruction output.
+
+<ModelRelatedRecipes modelId="pi3" locale="en" />

@@ -1,0 +1,26 @@
+---
+title: "MosaicMem"
+description: "MosaicMem is a memory-augmented world-model component: it ingests keyframe patches, retrieves target views, summarizes coverage, and composes latent canvases — producing a memory index rather than video."
+pageSource: generated
+---
+
+**发表机构:** 开源研究发布（仓库未记录正式机构） · 研究机构
+video
+
+MosaicMem 是记忆增强的世界模型组件：摄取关键帧 patch、检索目标视图、汇总覆盖度并组合潜空间画布——产物是记忆索引而非视频。本 catalog 中其源码路径按记忆计划产物注册，并通过 worldfoundry.core.memory 暴露；生成器资产保持运行时限制。
+
+<ModelCommandBuilder modelId="mosaicmem" locale="zh" />
+
+## 架构
+
+架构内部细节仓库未记录（MIT 许可）；源码绑定在固定 commit。记录的产物类型为 memory_index。
+
+## 使用要点
+
+配置解析与 pipeline 导入预期可通过；在所需 checkpoint/资产就位前，真实生成会输出运行时计划。缺失资产由计划报告，不视为 catalog 阻塞。请把它当作世界模型栈的记忆侧组件使用，而非独立生成器。
+
+## 评测 Benchmark
+
+- [MemoBench](/zh/docs/evaluation/benchmark-hub/memobench) — 长时程记忆一致性评测。
+
+<ModelRelatedRecipes modelId="mosaicmem" locale="zh" />

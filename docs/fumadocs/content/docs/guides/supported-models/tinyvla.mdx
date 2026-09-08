@@ -1,0 +1,21 @@
+---
+title: "TinyVLA"
+description: "TinyVLA targets fast, data-efficient VLA at sub-billion scale: LLaVA-Pythia backbones (400M / 700M / 1.3B released on the Hub) with ACT or conditional 1D-diffusion action heads. The published Hub models are VLM backbones for policy trainin…"
+pageSource: generated
+---
+
+**Publisher:** Open-source research release (institution not recorded) · Research lab
+
+TinyVLA targets fast, data-efficient VLA at sub-billion scale: LLaVA-Pythia backbones (400M / 700M / 1.3B released on the Hub) with ACT or conditional 1D-diffusion action heads. The published Hub models are VLM backbones for policy training — not task-trained robot checkpoints — so the in-tree runtime is checkpoint-gated until you stage a trained task policy.
+
+<ModelCommandBuilder modelId="tinyvla" locale="en" />
+
+## Architecture
+
+LLaVA-Pythia multimodal backbones with CLIP/SigLIP vision fusion and swappable action heads (ACT or conditional 1D diffusion), executed fully in process. Both merged weights and local LoRA plus non-LoRA action tensors are supported.
+
+## Usage notes
+
+Runtime construction fails early until a compatible task checkpoint, its config.json (action dimensions and head type), and dataset statistics are staged locally.
+
+<ModelRelatedRecipes modelId="tinyvla" locale="en" />

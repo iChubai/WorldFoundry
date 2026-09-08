@@ -1,0 +1,27 @@
+---
+title: "LingBot-World-V2"
+description: "LingBot-World-V2 (also aliased lingbot-world-infinity) is the second generation of Robbyant's world model: a 14B causal-fast model for image-to-world video with camera control."
+pageSource: generated
+---
+
+**发表机构:** 蚂蚁灵波科技（Robbyant，蚂蚁集团） · 企业
+image → world state · video
+
+LingBot-World-V2（别名 lingbot-world-infinity）是蚂蚁灵波世界模型的第二代：14B 的 causal-fast 模型，做带相机控制的图到世界视频。本 catalog 中仅集成已发布的 causal-fast 推理路径；官方 8 卡产物一致性待 14B checkpoint 就位与 CUDA 运行。
+
+<ModelCommandBuilder modelId="lingbot-world-v2" locale="zh" />
+
+## 架构
+
+通用的 Wan、T5、VAE、调度器、FSDP、集合通信、几何与媒体代码从 WorldFoundry 复用；训练、示例资产与未发布的 causal-pretrain/双向路径被排除。记录的 checkpoint 为 robbyant/lingbot-world-v2-14b-causal-fast。
+
+## 使用要点
+
+执行为离线优先、无运行时下载。官方 causal-fast 配方为八卡；Workspace 亦提供四卡紧凑拓扑。当 Workspace 已持有 torchrun 进程组时，推理直接在该组内运行、不再嵌套启动 torchrun。注意许可：集成代码为 CC BY-NC-SA 4.0——不可商用。
+
+## 评测 Benchmark
+
+- [CameraBench](/zh/docs/evaluation/benchmark-hub/camerabench) — 世界滚动生成的相机控制贴合度。
+- [WorldModelBench](/zh/docs/evaluation/benchmark-hub/worldmodelbench) — 世界滚动生成的总体质量。
+
+<ModelRelatedRecipes modelId="lingbot-world-v2" locale="zh" />

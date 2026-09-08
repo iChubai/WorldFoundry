@@ -1,0 +1,37 @@
+---
+title: "Astra"
+description: "Astra is an interactive world model with camera control built over a Wan2.1 backbone: from a single image it rolls out navigable world video following camera actions."
+pageSource: generated
+---
+
+**Publisher:** Open-source research release (institution not recorded) · Research lab
+image → video
+[Astra: General Interactive World Model with Autoregressive Denoising](https://arxiv.org/abs/2512.08931) (ICLR 2026, 2025)
+
+Astra is an interactive world model with camera control built over a Wan2.1 backbone: from a single image it rolls out navigable world video following camera actions. In this catalog it is verified — the official garden_1 Sekai demo runs through the in-tree Studio/API path with forward_left camera control, emitting 97 frames at 832x480 and 20 fps.
+
+<figure className="wf-recipe-media is-diagram">
+  <img src="/models/astra/paper.png" alt="Astra: General Interactive World Model with Autoregressive Denoising" />
+  <figcaption>Astra: General Interactive World Model with Autoregressive Denoising</figcaption>
+</figure>
+
+<ModelCommandBuilder modelId="astra" locale="en" />
+
+## Architecture
+
+The catalog records a Wan2.1-T2V-1.3B-backed camera-control rollout (checkpoints EvanEternal/Astra plus Wan-AI/Wan2.1-T2V-1.3B, apache-2.0; paper arXiv 2512.08931). The inference-only Astra runtime and Wan-backed camera-control pipeline are vendored in-tree under the Kling namespace.
+
+<figure className="wf-recipe-media">
+  <Video src="/demos/astra_01.mp4" autoPlay loop muted playsInline />
+  <figcaption>Interactive camera control</figcaption>
+</figure>
+
+## Usage notes
+
+Studio defaults mirror the official Wan2.1-backed Sekai image rollout — start from those before customizing camera trajectories. Stage the Astra and Wan2.1 checkpoints locally first.
+
+## Evaluation benchmarks
+
+- [CameraBench](/docs/evaluation/benchmark-hub/camerabench) — Camera-following accuracy of interactive rollouts.
+
+<ModelRelatedRecipes modelId="astra" locale="en" />

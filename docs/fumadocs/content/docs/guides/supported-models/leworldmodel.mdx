@@ -1,0 +1,26 @@
+---
+title: "LeWorldModel"
+description: "LeWorldModel (le-wm) studies latent world models: JEPA-style and pixel-space world models trained and evaluated on control tasks such as PushT."
+pageSource: generated
+---
+
+**Publisher:** Mila – Quebec AI Institute / Université de Montréal · University
+
+LeWorldModel (le-wm) studies latent world models: JEPA-style and pixel-space world models trained and evaluated on control tasks such as PushT. In this catalog an infer-only wrapper for the official eval route is registered; execution needs stable-worldmodel packages, task datasets, and policy checkpoints when the policy is not random.
+
+<figure className="wf-recipe-media">
+  <Video src="/demos/studio/leworldmodel-pusht.mp4" autoPlay loop muted playsInline />
+  <figcaption>PushT world-model rollout</figcaption>
+</figure>
+
+<ModelCommandBuilder modelId="leworldmodel" locale="en" />
+
+## Architecture
+
+The recorded structure spans latent (JEPA) and pixel world-model variants (checkpoints at eren23/lewm-models). Runtime eval configs live under data/models/runtime/configs/le_wm/config/eval; train configs are not required for inference.
+
+## Usage notes
+
+The route matches the official eval.py config flow and reports missing stable-worldmodel packages, task datasets, or non-random policy checkpoints before execution. Official PushT evaluation parity remains pending.
+
+<ModelRelatedRecipes modelId="leworldmodel" locale="en" />

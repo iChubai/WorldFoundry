@@ -1,0 +1,25 @@
+---
+title: "RoboFlamingo"
+description: "RoboFlamingo adapts the OpenFlamingo vision-language model into a robot imitation policy: a lightweight policy head turns the VLM's visual-language features into actions."
+pageSource: generated
+---
+
+**Publisher:** Open-source research release (institution not recorded) · Research lab
+
+RoboFlamingo adapts the OpenFlamingo vision-language model into a robot imitation policy: a lightweight policy head turns the VLM's visual-language features into actions. In this catalog it is GPU-validated — the vendored architecture passed public pipeline CUDA action_trace validation with staged RoboFlamingo, OpenFlamingo, and MPT checkpoints, and runner parity is verified.
+
+<ModelCommandBuilder modelId="roboflamingo" locale="en" />
+
+## Architecture
+
+An OpenFlamingo backbone (MPT language model with cross-attention vision fusion) plus a recurrent policy head for action prediction. The full architecture and inference source are vendored in-tree.
+
+## Usage notes
+
+Stage the RoboFlamingo policy, OpenFlamingo backbone, and MPT language model checkpoints locally. Per-run action trace evidence is tracked outside the model catalog.
+
+## Evaluation benchmarks
+
+- [CALVIN](/docs/evaluation/benchmark-hub/calvin) — RoboFlamingo's standard long-horizon evaluation suite.
+
+<ModelRelatedRecipes modelId="roboflamingo" locale="en" />

@@ -1,0 +1,32 @@
+---
+title: "WonderJourney"
+description: "WonderJourney generates a journey: starting from text or an image, it produces a sequence of connected 3D scenes you travel through — perpetual 3D scene generation rather than a single clip."
+pageSource: generated
+---
+
+**发表机构:** 斯坦福大学 / Google · 高校
+image → 3D scene · world state
+[WonderJourney: Going from Anywhere to Everywhere](https://arxiv.org/abs/2312.03884) (2023)
+
+WonderJourney 生成一段「旅程」：从文本或一张图出发，产出一串相互衔接、可穿行的 3D 场景——是持续的 3D 场景生成而非单个片段。本 catalog 中 WorldFoundry 通过树内适配器运行上游 run.py/example_config 流程；runner parity 待运行时资产就位。
+
+<figure className="wf-recipe-media is-diagram">
+  <img src="/models/wonderjourney/paper.png" alt="WonderJourney: Going from Anywhere to Everywhere" />
+  <figcaption>WonderJourney: Going from Anywhere to Everywhere</figcaption>
+</figure>
+
+<ModelCommandBuilder modelId="wonderjourney" locale="zh" />
+
+## 架构
+
+按论文（arXiv 2312.03884），LLM 提议后续场景描述，点云加图像修复的视觉模块从上一场景渲染新场景，VLM 负责校验结果。资产或运行时依赖缺失会在推理时报告。
+
+## 使用要点
+
+pipeline 导入与 plan-only 推理已接通；完整产物一致性需要本地就位上游资产（深度、修复、LLM 访问）之后才能生成真实旅程。
+
+## 评测 Benchmark
+
+- [WorldScore](/zh/docs/evaluation/benchmark-hub/worldscore) — 生成可游走场景序列的标准评分。
+
+<ModelRelatedRecipes modelId="wonderjourney" locale="zh" />

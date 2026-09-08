@@ -1,0 +1,25 @@
+---
+title: "Real-Time Chunking"
+description: "Real-Time Chunking (RTC) is not a model but an inference-time algorithm from Physical Intelligence: it lets flow-based VLA policies re-plan action chunks asynchronously so control stays smooth under real-time constraints. WorldFoundry rout…"
+pageSource: generated
+---
+
+**Publisher:** Physical Intelligence · Company
+
+Real-Time Chunking (RTC) is not a model but an inference-time algorithm from Physical Intelligence: it lets flow-based VLA policies re-plan action chunks asynchronously so control stays smooth under real-time constraints. WorldFoundry routes RTC through an in-tree action runtime adapter — no checkpoint is required for chunk-context processing.
+
+<ModelCommandBuilder modelId="real-time-chunking" locale="en" />
+
+## Architecture
+
+RTC treats chunk switching as an inpainting problem: the start of the next chunk is constrained to agree with actions already executing, removing pauses and discontinuities at chunk boundaries. The reference implementation targets the Kinetix environment suite.
+
+## Usage notes
+
+Apply RTC as runtime behavior on top of a flow VLA policy (e.g. the pi0 family) rather than loading it as a standalone policy.
+
+## Evaluation benchmarks
+
+- [Kinetix](/docs/evaluation/benchmark-hub/kinetix) — The official reference implementation targets Kinetix.
+
+<ModelRelatedRecipes modelId="real-time-chunking" locale="en" />

@@ -1,0 +1,31 @@
+---
+title: "FlashWorld"
+description: "FlashWorld generates 3D scenes in seconds: from one image (plus optional prompt) it produces a camera-navigable 3D scene rather than a flat clip."
+pageSource: generated
+---
+
+**Publisher:** Xiamen University / Tencent · University
+[FlashWorld: High-quality 3D Scene Generation within Seconds](https://arxiv.org/abs/2510.13678) (2025)
+
+FlashWorld generates 3D scenes in seconds: from one image (plus optional prompt) it produces a camera-navigable 3D scene rather than a flat clip. In this catalog the in-tree pipeline, operator, and representation runtime are exposed and runner status is verified for the image-conditioned camera-scene demo with local FlashWorld/Wan assets.
+
+<figure className="wf-recipe-media is-diagram">
+  <img src="/models/flashworld/paper.png" alt="FlashWorld: High-quality 3D Scene Generation within Seconds" />
+  <figcaption>FlashWorld: High-quality 3D Scene Generation within Seconds</figcaption>
+</figure>
+
+<ModelCommandBuilder modelId="flashworld" locale="en" />
+
+## Architecture
+
+FlashWorld distills a Wan-based video generator into a fast 3D-scene generator with Gaussian-style scene representations (per arXiv 2510.13678). Execution requires FlashWorld, Wan2.2, diffusers/transformers, and CUDA assets; no empty runner shim is registered.
+
+## Usage notes
+
+Verified for the image-conditioned demo; per-run visual QA is tracked outside the catalog. Execution remains checkpoint/GPU/dependency gated — stage all recorded assets first.
+
+## Evaluation benchmarks
+
+- [WorldScore](/docs/evaluation/benchmark-hub/worldscore) — Standard scoring for navigable generated scenes.
+
+<ModelRelatedRecipes modelId="flashworld" locale="en" />

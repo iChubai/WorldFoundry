@@ -1,0 +1,31 @@
+---
+title: "SkyReels V3"
+description: "SkyReels V3 is Skywork's newer generation, recorded for reference-to-video, audio-guided video, and video-to-video. The catalog route loads the SkyReels-V3-R2V-14B checkpoint into the shared native Wan graph with reference-image latent con…"
+pageSource: generated
+---
+
+**发表机构:** 昆仑万维（Skywork AI） · 企业
+image · video → video
+
+SkyReels V3 是 Skywork 的更新一代，记录任务为参考图生视频、音频引导视频与视频到视频。 catalog 路径把 SkyReels-V3-R2V-14B checkpoint 加载进共享原生 Wan 图，参考图潜变量拼接与文本/图像双引导被实现为可复用的初始化器与执行策略能力，而非专属运行时。
+
+<figure className="wf-recipe-media">
+  <Video src="/demos/studio/skyreels-v3-reference-to-video.mp4" autoPlay loop muted playsInline />
+  <figcaption>参考图生成视频</figcaption>
+</figure>
+
+<ModelCommandBuilder modelId="skyreels-v3" locale="zh" />
+
+## 架构
+
+Transformer、UMT5 文本编码器与 VAE 的 checkpoint schema 与原生 Wan 图精确对应（已记录验证）。参考条件通过拼接参考图潜变量实现；引导以文本/图像双通道经 UniPC 调度器与双条件 runner 执行。
+
+## 使用要点
+
+runner 状态为 partial：checkpoint schema 映射精确、此前官方运行时的视觉产物有存档，但原生视觉一致性仍需一次 GPU 推理运行。不涉及 Diffusers 或模型自有的子进程运行时。
+
+## 评测 Benchmark
+
+- [VBench](/zh/docs/evaluation/benchmark-hub/vbench) — 基础质量评测。
+
+<ModelRelatedRecipes modelId="skyreels-v3" locale="zh" />

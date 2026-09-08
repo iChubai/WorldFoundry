@@ -1,0 +1,22 @@
+---
+title: "Depth Anything 3"
+description: "Depth Anything 3 is ByteDance Seed's geometry foundation model: beyond monocular depth it predicts consistent geometry from multiple views. This entry registers the in-tree official SOH export route, separate from the depth-anything-v3-pri…"
+pageSource: generated
+---
+
+**Publisher:** ByteDance (Seed) · Company
+image → depth
+
+Depth Anything 3 is ByteDance Seed's geometry foundation model: beyond monocular depth it predicts consistent geometry from multiple views. This entry registers the in-tree official SOH export route, separate from the depth-anything-v3-prior geometry-prior profile.
+
+<ModelCommandBuilder modelId="depth-anything-v3" locale="en" />
+
+## Architecture
+
+DA3 uses a plain-transformer backbone with a depth-ray prediction target, spanning monocular depth through multi-view geometry (per the upstream release). Weights are apache-2.0; this entry's runtime specifics live in its recorded route.
+
+## Usage notes
+
+Integration is runtime_ported with runner parity pending. If you only need a depth prior for another pipeline, use depth-anything-v3-prior; this entry is for the full export route.
+
+<ModelRelatedRecipes modelId="depth-anything-v3" locale="en" />

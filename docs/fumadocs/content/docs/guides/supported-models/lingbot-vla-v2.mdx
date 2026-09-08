@@ -1,0 +1,21 @@
+---
+title: "LingBot-VLA 2.0"
+description: "LingBot-VLA 2.0 is Robbyant's 6B second-generation VLA built on a Qwen3-VL mixture-of-experts policy, released as robbyant/lingbot-vla-v2-6b under Apache-2.0. WorldFoundry runs official policy inference in-process and in-tree — batching, f…"
+pageSource: generated
+---
+
+**Publisher:** Robbyant (Ant Group) · Company
+
+LingBot-VLA 2.0 is Robbyant's 6B second-generation VLA built on a Qwen3-VL mixture-of-experts policy, released as robbyant/lingbot-vla-v2-6b under Apache-2.0. WorldFoundry runs official policy inference in-process and in-tree — batching, feature transforms, robot mappings, and normalization included — with static checkpoint validation complete.
+
+<ModelCommandBuilder modelId="lingbot-vla-v2" locale="en" />
+
+## Architecture
+
+A Qwen3-VL/MoE policy with a 55-dimensional internal representation, denoising action decoding, image_grid_thw handling, and optional torch.compile paths. Training-only perception teachers are excluded; inference consumes their distilled representations from the trained weights.
+
+## Usage notes
+
+The public 6B checkpoint uses the bundled official-derived inference config; robot-specific downstream checkpoints may override it with their own lingbotvla_cli.yaml.
+
+<ModelRelatedRecipes modelId="lingbot-vla-v2" locale="en" />

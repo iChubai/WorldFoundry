@@ -1,0 +1,28 @@
+---
+title: "MolmoBot"
+description: "MolmoBot is AI2's robot policy family around the Molmo VLM, with Apache-2.0 checkpoints for Franka DROID, image-conditioned DROID, RBY1 multitask, and a Pi0-based DROID variant. WorldFoundry records the OLMo/MolmoBot-Pi0 action inference c…"
+pageSource: generated
+---
+
+**Publisher:** Allen Institute for AI (AI2) · Research lab
+
+MolmoBot is AI2's robot policy family around the Molmo VLM, with Apache-2.0 checkpoints for Franka DROID, image-conditioned DROID, RBY1 multitask, and a Pi0-based DROID variant. WorldFoundry records the OLMo/MolmoBot-Pi0 action inference contracts and calls a flattened in-tree inference wrapper.
+
+<ModelCommandBuilder modelId="molmobot" locale="en" />
+
+## Architecture
+
+Two inference contracts are recorded: an OLMo-based MolmoBot path and a MolmoBot-Pi0 path. Resolver, runtime import, and compileall checks pass without an external checkout; further internals are not recorded in this repository.
+
+## Usage notes
+
+Checkpoint-backed action-chunk validation remains required before demo parity is claimed. Choose MolmoBot-DROID for Franka, RBY1Multitask for the RBY1 humanoid platform.
+
+## Variants & pipeline bindings
+
+| Variant | Task | Runtime profile | Pipeline binding | Status |
+| --- | --- | --- | --- | --- |
+| `molmobot-droid` | vla.policy_rollout | `molmobot` | `molmobot` | in tree import verification in progress |
+| `molmobot-pi0-droid` | vla.policy_rollout | `molmobot` | `molmobot` | in tree import verification in progress |
+
+<ModelRelatedRecipes modelId="molmobot" locale="en" />

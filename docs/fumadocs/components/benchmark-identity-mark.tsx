@@ -1,6 +1,6 @@
 import { withBasePath } from '@/lib/site-path';
 
-import logoMap from '@/lib/model-logo-map.json';
+import { resolveBenchmarkOrg } from '@/lib/model-org-identity';
 
 type BenchmarkIdentityMarkProps = {
   id: string;
@@ -9,16 +9,6 @@ type BenchmarkIdentityMarkProps = {
   logoKey?: string;
   size?: 'small' | 'medium' | 'large';
 };
-
-type OrgIdentity = {
-  key: string;
-  name: string;
-  abbr: string;
-  src?: string;
-};
-
-const orgs = logoMap.orgs as Record<string, OrgIdentity>;
-const benchmarkLogos = (logoMap.benchmarkLogos ?? {}) as Record<string, string>;
 
 function initials(name: string) {
   const cleaned = name.replace(/[^a-zA-Z0-9]+/g, ' ').trim();
@@ -41,11 +31,6 @@ function initials(name: string) {
   return word.slice(0, 2).toUpperCase();
 }
 
-function orgFor(id: string, logoKey?: string) {
-  const key = logoKey || benchmarkLogos[id];
-  return key ? orgs[key] : undefined;
-}
-
 export function BenchmarkIdentityMark({
   id,
   name,
@@ -53,7 +38,7 @@ export function BenchmarkIdentityMark({
   logoKey,
   size = 'medium',
 }: BenchmarkIdentityMarkProps) {
-  const org = orgFor(id, logoKey);
+  const org = resolveBenchmarkOrg(id, logoKey);
   const hasLogo = Boolean(org?.src);
 
   return (

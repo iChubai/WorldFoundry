@@ -1,0 +1,36 @@
+---
+title: "X-WAM"
+description: "X-WAM is a GPU-validated world-action model: one Wan 2.2 joint flow process predicts future RGB/depth, proprioception, and robot actions together. The 38.9 GB RoboCasa-SFT checkpoint restored strictly and passed both the official 10-step a…"
+pageSource: generated
+---
+
+**发表机构:** 开源研究发布（仓库未记录正式机构） · 研究机构
+image → depth
+
+X-WAM 是 GPU 已验证的世界-动作模型：单个 Wan 2.2 联合 flow 过程同时预测未来 RGB/深度、本体感知与机器人动作。38.9 GB 的 RoboCasa-SFT checkpoint 严格恢复，并在 A100 上通过官方 10 步动作/本体感知路径与完整 50 步未来 RGB 解码（Apache-2.0）。
+
+<ModelCommandBuilder modelId="x-wam" locale="zh" />
+
+## 架构
+
+构建于 Wan2.2-TI2V-5B：对视觉未来与动作流的联合 flow 模型。官方部署策略在 10 个动作步后异步提前停止并返回 32 步动作块；可选的完整世界解码持续到 50 步。两个 Hub 仓库均锁定 revision。
+
+## 使用要点
+
+需就位 X-WAM checkpoint 状态与 Wan2.2-TI2V-5B 基座。运行时树内自足，绝不导入外部 X-WAM checkout；训练、模拟器、ZeroMQ 服务、Lightning 与 DeepSpeed 编排均被排除。
+
+## 变体与 Pipeline Binding
+
+| Variant | 任务 | Runtime profile | Pipeline Binding | 状态 |
+| --- | --- | --- | --- | --- |
+| `x-wam-robocasa-sft` | wam.world_action_modeling | `x-wam` | `x-wam` | in tree runtime selected checkpoint gpu validated |
+| `x-wam-robotwin-sft` | wam.world_action_modeling | `x-wam` | `x-wam` | in tree runtime selected checkpoint gpu validated |
+| `x-wam-pretrained` | wam.post_training_base | `x-wam` | `x-wam` | in tree runtime selected checkpoint gpu validated |
+
+## 评测 Benchmark
+
+- [RoboCasa](/zh/docs/evaluation/benchmark-hub/robocasa) — GPU 已验证的 checkpoint 为 RoboCasa-SFT。
+- [EWMBench](/zh/docs/evaluation/benchmark-hub/ewmbench) — 联合世界-动作预测质量。
+- [RoboTwin 2.0](/zh/docs/evaluation/benchmark-hub/robotwin) — 该模型 manifest 的证据记录中提到了这一评测。
+
+<ModelRelatedRecipes modelId="x-wam" locale="zh" />

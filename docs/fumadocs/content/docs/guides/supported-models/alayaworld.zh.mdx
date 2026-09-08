@@ -1,0 +1,33 @@
+---
+title: "AlayaWorld"
+description: "AlayaWorld is a camera-controlled interactive world model for long video: from an image it rolls out world video autoregressively with action control and DA3-backed spatial memory."
+pageSource: generated
+---
+
+**发表机构:** 开源研究发布（仓库未记录正式机构） · 研究机构
+image → video
+[AlayaWorld: Long-Horizon and Playable Video World Generation](https://arxiv.org/abs/2607.06291) (2026)
+
+AlayaWorld 是面向长视频的相机可控交互式世界模型：从一张图出发，带动作控制与 DA3 空间记忆自回归滚动生成世界视频。本 catalog 中它已通过 checkpoint/GPU 验证——发布的 33.6 GB 合并 checkpoint 通过精确字节数与 SHA-256 校验，统一树内 pipeline 在 A100 上开启 DA3 空间记忆生成官方 case1 首个 chunk （544x960、24 fps 的 32 帧 H.264）。
+
+<figure className="wf-recipe-media is-diagram">
+  <img src="/models/alayaworld/paper.png" alt="AlayaWorld: Long-Horizon and Playable Video World Generation" />
+  <figcaption>AlayaWorld: Long-Horizon and Playable Video World Generation</figcaption>
+</figure>
+
+<ModelCommandBuilder modelId="alayaworld" locale="zh" />
+
+## 架构
+
+运行时是 WorldFoundry 规范树内 LTX-2.3 模型的轻量扩展——Transformer、VAE、Gemma 连接器、RoPE、patchifier、注意力分发器与分布式辅助全部复用；Alaya 专属张量仅映射到动作 AdaLN 与时间历史编码器。空间记忆复用树内 Depth Anything 3 模型（论文 arXiv 2607.06291）。
+
+## 使用要点
+
+注意力分发按硬件能力选择；多卡 Ulysses 上下文并行使用 WorldFoundry 核心集合通信。多 rank Ulysses 张量一致性已验证，但真正的 NCCL 多卡产物运行仍待多 GPU 环境。
+
+## 评测 Benchmark
+
+- [CameraBench](/zh/docs/evaluation/benchmark-hub/camerabench) — 交互滚动生成的相机控制质量。
+- [MemoBench](/zh/docs/evaluation/benchmark-hub/memobench) — 长时程空间记忆一致性评测。
+
+<ModelRelatedRecipes modelId="alayaworld" locale="zh" />

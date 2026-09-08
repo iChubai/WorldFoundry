@@ -1,0 +1,25 @@
+---
+title: "CogACT"
+description: "CogACT from Microsoft is a componentized VLA: a Prismatic-style Llama-2 VLM handles cognition while a dedicated DiT action module handles control, released in Small/Base/Large variants under MIT. WorldFoundry has an independent in-tree syn…"
+pageSource: generated
+---
+
+**Publisher:** Microsoft · Company
+
+CogACT from Microsoft is a componentized VLA: a Prismatic-style Llama-2 VLM handles cognition while a dedicated DiT action module handles control, released in Small/Base/Large variants under MIT. WorldFoundry has an independent in-tree synthesis entrypoint with a strict local checkpoint mapper; checkpoint-backed workspace inference passes without an external checkout.
+
+<ModelCommandBuilder modelId="cogact" locale="en" />
+
+## Architecture
+
+Cognition and action are separated: the VLM encodes image+instruction, then a DiT (diffusion transformer) action model predicts a 16x7 action chunk. The official demo contract is load_vla(...).predict_action(image, prompt, unnorm_key, cfg_scale, use_ddim, num_ddim_steps).
+
+## Usage notes
+
+Default SimplerEnv setups use bridge_orig or fractal20220817_data normalization keys. The inference-only loader reuses an installed OpenVLA Llama tokenizer when a gated Llama 2 mirror is unavailable. FSDP training, RLDS loaders, deployment server, and SimplerEnv adapters are excluded.
+
+## Evaluation benchmarks
+
+- [SimplerEnv](/docs/evaluation/benchmark-hub/simpler-env) — Official normalization targets SimplerEnv setups.
+
+<ModelRelatedRecipes modelId="cogact" locale="en" />

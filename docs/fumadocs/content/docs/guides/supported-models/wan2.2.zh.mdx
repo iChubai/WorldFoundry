@@ -1,0 +1,38 @@
+---
+title: "Wan2.2"
+description: "Wan2.2 is the next Wan generation, tracked separately from Wan2.1 because upstream versions code and checkpoints separately. The recorded runnable surface is the TI2V 5B variant — a compact text+image-to-video model. WorldFoundry wraps the…"
+pageSource: generated
+---
+
+**发表机构:** 阿里巴巴（通义实验室） · 企业
+text · image → video
+
+Wan2.2 是 Wan 的下一代，因上游代码与 checkpoint 独立版本化而与 Wan2.1 分开跟踪。记录的可运行面是 TI2V 5B variant——紧凑的图文生视频模型。WorldFoundry 封装了树内 Wan2.2 TI2V 运行时。
+
+<ModelCommandBuilder modelId="wan2.2" locale="zh" />
+
+## 架构
+
+上游 Wan2.2 在大 variant 中引入 MoE 去噪、在 TI2V 5B 中使用高压缩 VAE；本 catalog 记录的路径是 5B 稠密 TI2V 模型。契约：输入 prompt/image/video/actions，输出 generated_video。
+
+## 使用要点
+
+默认 TI2V 5B 路径已按 1280x704、24 FPS、121 帧、50 步完成验证。运行前请在本地准备官方 checkpoint；A14B variants 需要各自的 checkpoint 与验证。
+
+## 硬件建议
+
+- **最低显存:** 80 GB
+
+## 变体与 Pipeline Binding
+
+| Variant | 任务 | Runtime profile | Pipeline Binding | 状态 |
+| --- | --- | --- | --- | --- |
+| `wan2.2-t2v-a14b` | text-to-video | `wan2.2-t2v-a14b` | `wan2.2-t2v-a14b` | integrated |
+| `wan2.2-i2v-a14b` | image-to-video | `wan2.2-i2v-a14b` | `wan2.2-i2v-a14b` | integrated |
+| `wan2.2-ti2v-5b` | text-image-to-video | `wan2.2-ti2v-5b-1280x704-121f` | `wan2.2-ti2v-5b` | integrated |
+
+## 评测 Benchmark
+
+- [VBench](/zh/docs/evaluation/benchmark-hub/vbench) — 标准质量评测。
+
+<ModelRelatedRecipes modelId="wan2.2" locale="zh" />

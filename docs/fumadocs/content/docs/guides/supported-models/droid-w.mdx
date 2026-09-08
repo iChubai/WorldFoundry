@@ -1,0 +1,26 @@
+---
+title: "DROID-W"
+description: "DROID-W is a robot world model oriented around the DROID robot-manipulation data ecosystem: it generates robot-view video for evaluation on DROID-style tasks."
+pageSource: generated
+---
+
+**Publisher:** Open-source research release (institution not recorded) · Research lab
+video
+
+DROID-W is a robot world model oriented around the DROID robot-manipulation data ecosystem: it generates robot-view video for evaluation on DROID-style tasks. In this catalog the official source route is registered with the source pinned at a recorded commit; checkpoints and data remain runtime-gated.
+
+<ModelCommandBuilder modelId="droid-w" locale="en" />
+
+## Architecture
+
+Architecture internals are not recorded in this repository (upstream: MoyangLi00/DROID-W, apache-2.0). The official source is bound from $\{WORLDFOUNDRY_MODEL_SOURCE_DIR\}/DROID-W at commit c3414af6.
+
+## Usage notes
+
+Config resolution and pipeline import are expected to pass; real generation emits a runtime plan until required checkpoints/assets are staged. Missing assets are reported by the plan, not treated as catalog blockers.
+
+## Evaluation benchmarks
+
+- [EWMBench](/docs/evaluation/benchmark-hub/ewmbench) — Embodied world-model evaluation for robot video prediction.
+
+<ModelRelatedRecipes modelId="droid-w" locale="en" />

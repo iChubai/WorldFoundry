@@ -1,0 +1,31 @@
+---
+title: "Open-Sora-Plan"
+description: "Open-Sora-Plan is Peking University Yuan Group's open text-to-video effort (HF releases under the LanguageBind org), developed independently from HPC-AI Tech's Open-Sora despite the similar name. The WorldFoundry route is complete and repo…"
+pageSource: generated
+---
+
+**Publisher:** Peking University (Yuan Group) · University
+text → video
+
+Open-Sora-Plan is Peking University Yuan Group's open text-to-video effort (HF releases under the LanguageBind org), developed independently from HPC-AI Tech's Open-Sora despite the similar name. The WorldFoundry route is complete and reports missing checkpoints at runtime.
+
+<figure className="wf-recipe-media">
+  <Video src="/demos/studio/open-sora-plan-tokyo-street.mp4" autoPlay loop muted playsInline />
+  <figcaption>Open-Sora Plan sample</figcaption>
+</figure>
+
+<ModelCommandBuilder modelId="open-sora-plan" locale="en" />
+
+## Architecture
+
+The project pairs a video VAE (WF-VAE in later versions) with a diffusion transformer denoiser, per upstream releases. This repository records the prompt-only contract and generated_video artifact; the specific version internals are not recorded here.
+
+## Usage notes
+
+No runner-parity record exists yet. Official GitHub is PKU-YuanGroup; checkpoints live under LanguageBind on Hugging Face — use those exact orgs when staging weights.
+
+## Evaluation benchmarks
+
+- [VBench](/docs/evaluation/benchmark-hub/vbench) — Standard open T2V quality suite.
+
+<ModelRelatedRecipes modelId="open-sora-plan" locale="en" />

@@ -1,0 +1,32 @@
+---
+title: "VideoCrafter2 T2V"
+description: "VideoCrafter2 T2V is the improved text-to-video model of the VideoCrafter family, trained to overcome low-quality video data by combining it with high-quality image data. It is Apache-2.0 on its HF card, making it the license-cleanest memb…"
+pageSource: generated
+---
+
+**Publisher:** Tencent AI Lab · Company
+text → video
+
+VideoCrafter2 T2V is the improved text-to-video model of the VideoCrafter family, trained to overcome low-quality video data by combining it with high-quality image data. It is Apache-2.0 on its HF card, making it the license-cleanest member of the family. The in-tree infer-only runtime exposes local checkpoint, fps, frame count, and seed controls.
+
+<figure className="wf-recipe-media">
+  <Video src="/demos/studio/videocrafter2-t2v.mp4" autoPlay loop muted playsInline />
+  <figcaption>Text-to-video</figcaption>
+</figure>
+
+<ModelCommandBuilder modelId="videocrafter2-t2v" locale="en" />
+
+## Architecture
+
+A U-Net latent video diffusion model whose training decouples motion (from video) and appearance (from images), per the upstream publication. Checkpoint provenance is tracked on the family entry.
+
+## Usage notes
+
+Runner parity is pending. This is the recommended VideoCrafter variant: better quality than V1 and a clean Apache-2.0 license.
+
+## Evaluation benchmarks
+
+- [EvalCrafter](/docs/evaluation/benchmark-hub/evalcrafter) — Companion benchmark of the VideoCrafter effort.
+- [VBench](/docs/evaluation/benchmark-hub/vbench) — Standard T2V suite.
+
+<ModelRelatedRecipes modelId="videocrafter2-t2v" locale="en" />

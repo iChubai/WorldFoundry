@@ -1,0 +1,32 @@
+---
+title: "WorldMem"
+description: "WorldMem targets the core weakness of interactive world models — forgetting: it equips a Minecraft-style interactive world model with an explicit memory so revisited places stay consistent over long horizons (paper: arXiv 2504.12369). Worl…"
+pageSource: generated
+---
+
+**发表机构:** 开源研究发布（仓库未记录正式机构） · 研究机构
+[WorldMem: Long-term Consistent World Simulation with Memory](https://arxiv.org/abs/2504.12369) (2025)
+
+WorldMem 针对交互式世界模型的核心弱点——遗忘：为 Minecraft 式交互世界模型加装显式记忆，使重访地点在长时程下保持一致（论文：arXiv 2504.12369）。WorldFoundry 树内注册了路由；上游推理模型与数据资产为运行时门控。
+
+<figure className="wf-recipe-media is-diagram">
+  <img src="/models/worldmem/paper.png" alt="WorldMem: Long-term Consistent World Simulation with Memory" />
+  <figcaption>WorldMem: Long-term Consistent World Simulation with Memory</figcaption>
+</figure>
+
+<ModelCommandBuilder modelId="worldmem" locale="zh" />
+
+## 架构
+
+仓库记录的设计主题是基于记忆的长期一致性：存储并检索历史观测以条件化后续滚动生成。官方仓库与论文指针之外的架构内部细节仓库未记录。
+
+## 使用要点
+
+配置解析与 pipeline 导入预期可通过；在所需 checkpoint/资产就位前，真实生成会输出运行时计划。缺失资产由计划报告，不视为 catalog 阻塞。
+
+## 评测 Benchmark
+
+- [MemoBench](/zh/docs/evaluation/benchmark-hub/memobench) — 世界滚动生成的长期记忆一致性。
+- [WorldModelBench](/zh/docs/evaluation/benchmark-hub/worldmodelbench) — 动作条件交互滚动生成质量。
+
+<ModelRelatedRecipes modelId="worldmem" locale="zh" />

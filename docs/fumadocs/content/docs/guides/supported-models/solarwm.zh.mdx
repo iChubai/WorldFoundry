@@ -1,0 +1,35 @@
+---
+title: "SolarWM"
+description: "SolarWM is an open data and scalable training foundation for camera-controlled, long-horizon video world models. It supports Wan2.2 5B/14B, LTX-2.5 22B, and MiniMax-H3 33B backbones; the 5B line releases the full bidirectional FM, TF-AnyFl…"
+pageSource: generated
+---
+
+**发表机构:** SolarWM 作者团队 · 研究机构
+video
+
+SolarWM 是面向相机控制、长时程视频世界模型的开放数据与可扩展训练基础设施，覆盖 Wan2.2 5B/14B、LTX-2.5 22B 与 MiniMax-H3 33B；其中 5B 路线完整发布了双向 FM、TF-AnyFlow 与 SGF 三阶段流程。
+
+<ModelCommandBuilder modelId="solarwm" locale="zh" />
+
+## 架构
+
+完整 5B 路线以 Wan2.2 为基座，依次进行 Stage0.5 双向流匹配、Stage1 teacher-forced AnyFlow，以及 Stage2 基于 self-gradient forcing 的分布匹配；最终因果模型以四步自回归方式执行相机条件滚动生成。
+
+## 使用要点
+
+请先就位锁定版本的 SolarWM checkout，接受 Hugging Face gated 仓库条款并下载 Wan2.2-5B 权重包与 SolarWM-Data；若目录不同于 WorldFoundry 默认值，再显式设置源码、基座、checkpoint 与数据路径。推理消费 SolarWM 数据行和相机轨迹，并非纯 prompt 文生视频接口。
+
+## 变体与 Pipeline Binding
+
+| Variant | 任务 | Runtime profile | Pipeline Binding | 状态 |
+| --- | --- | --- | --- | --- |
+| `solarwm-wan2.2-5b` | camera-conditioned-long-horizon-video | `solarwm` | `solarwm` | integrated |
+| `solarwm-wan2.2-14b` | camera-conditioned-video | `solarwm` | `solarwm` | planned |
+| `solarwm-ltx-22b` | camera-conditioned-video | `solarwm` | `solarwm` | planned |
+| `solarwm-h3-33b` | camera-conditioned-video | `solarwm` | `solarwm` | planned |
+
+## 评测 Benchmark
+
+- [WorldModelBench](/zh/docs/evaluation/benchmark-hub/worldmodelbench) — 长时程相机控制下的世界一致性。
+
+<ModelRelatedRecipes modelId="solarwm" locale="zh" />

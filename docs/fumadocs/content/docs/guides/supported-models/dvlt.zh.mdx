@@ -1,0 +1,28 @@
+---
+title: "Déjà View Looping Transformer"
+description: "Déjà View Looping Transformer (DVLT) is an NVIDIA multi-view reconstruction model covering 3D reconstruction, camera pose estimation, and depth from image collections, exporting GLB scenes. The WorldFoundry wrapper is lazy: it runs the ext…"
+pageSource: generated
+---
+
+**发表机构:** 英伟达（NVIDIA） · 企业
+image → depth
+[Déjà View: Looping Transformers for Multi-View 3D Reconstruction](https://arxiv.org/abs/2605.30215) (2026)
+
+Déjà View Looping Transformer（DVLT）是英伟达的多视图重建模型，覆盖 3D 重建、相机位姿估计与深度估计，输出 GLB 场景。WorldFoundry 的封装是惰性的：仅当 CUDA、依赖、源码、输入与权重全部本地就位时，才运行外部 DVLT 的 GLB 导出路径。
+
+<figure className="wf-recipe-media is-diagram">
+  <img src="/models/dvlt/paper.png" alt="Déjà View: Looping Transformers for Multi-View 3D Reconstruction" />
+  <figcaption>Déjà View: Looping Transformers for Multi-View 3D Reconstruction</figcaption>
+</figure>
+
+<ModelCommandBuilder modelId="dvlt" locale="zh" />
+
+## 架构
+
+catalog 记录其为面向多视图几何的 looping-transformer 设计（论文 arXiv 2605.30215）；运行时源码不在公开发布树内，除已记录任务外的架构细节此处未存。
+
+## 使用要点
+
+runner 注册已接好；GPU 一致性待 checkpoint 与环境验证。nvidia/dvlt checkpoint 使用英伟达非商用研究/评估许可——使用前请核对条款。DVLTSynthesis 在前置条件缺失时快速失败。
+
+<ModelRelatedRecipes modelId="dvlt" locale="zh" />

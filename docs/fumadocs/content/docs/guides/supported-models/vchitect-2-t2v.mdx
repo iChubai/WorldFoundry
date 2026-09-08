@@ -1,0 +1,26 @@
+---
+title: "Vchitect-2.0 T2V"
+description: "Vchitect-2.0 is Shanghai AI Lab's open text-to-video diffusion transformer; this entry serves the 2B checkpoint through a fully native assembly. It carries an unusually strong structural guarantee: the native DiT matches all 1019 checkpoin…"
+pageSource: generated
+---
+
+**Publisher:** Shanghai AI Laboratory (Vchitect) · Research lab
+text → video
+
+Vchitect-2.0 is Shanghai AI Lab's open text-to-video diffusion transformer; this entry serves the 2B checkpoint through a fully native assembly. It carries an unusually strong structural guarantee: the native DiT matches all 1019 checkpoint tensors and the native SD3 decoder matches all 138 decoder tensors. Aliases include vchitect, vchitect-2, and vchitect2-t2v.
+
+<ModelCommandBuilder modelId="vchitect-2-t2v" locale="en" />
+
+## Architecture
+
+A parallel diffusion transformer paired with an SD3-family VAE decoder, assembled from role-based DiT, conditioner, scheduler, initializer, and decoder components. The pinned official source revision is recorded in the profile (Vchitect-2.0 @ be56767f).
+
+## Usage notes
+
+Runner status is native_checkpoint_validated: the default path loads the shared native pipeline and does not emit blocked plan artifacts. Weights are apache-2.0 at Vchitect/Vchitect-2.0-2B. Use id vchitect-2-t2v.
+
+## Evaluation benchmarks
+
+- [VBench](/docs/evaluation/benchmark-hub/vbench) — Standard T2V quality suite.
+
+<ModelRelatedRecipes modelId="vchitect-2-t2v" locale="en" />

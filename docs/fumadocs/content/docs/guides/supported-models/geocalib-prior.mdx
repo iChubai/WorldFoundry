@@ -1,0 +1,21 @@
+---
+title: "GeoCalib"
+description: "GeoCalib estimates camera calibration and the gravity direction from a single image by combining geometric optimization with deep learning."
+pageSource: generated
+---
+
+**Publisher:** ETH Zurich (CVG) · University
+
+GeoCalib estimates camera calibration and the gravity direction from a single image by combining geometric optimization with deep learning. In this catalog it is a verified camera-calibration prior consumed by higher-level pipelines (notably VIPE) through the shared geometry-prior contract.
+
+<ModelCommandBuilder modelId="geocalib-prior" locale="en" />
+
+## Architecture
+
+A neural network predicts geometric cues which a differentiable optimization layer turns into focal length and gravity estimates (per the upstream ECCV 2024 release). Registered at base_models/three_dimensions/general_3d/geocalib; apache-2.0.
+
+## Usage notes
+
+It is integrated as an independent geometry prior under worldfoundry/base_models and exposed through the shared geometry-prior pipeline/operator contract. Higher-level pipelines (e.g. ViPE) import it from this canonical owner instead of keeping private copies. Runner parity is verified through the shared contract.
+
+<ModelRelatedRecipes modelId="geocalib-prior" locale="en" />

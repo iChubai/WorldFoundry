@@ -1,0 +1,27 @@
+---
+title: "LongCat-Video"
+description: "LongCat-Video is Meituan's open video generation model focused on long-video generation: text-to-video, image-to-video, and native video continuation in one model. WorldFoundry registers a model-specific pipeline that runs the vendored in-…"
+pageSource: generated
+---
+
+**Publisher:** Meituan (LongCat) · Company
+text · image → video
+
+LongCat-Video is Meituan's open video generation model focused on long-video generation: text-to-video, image-to-video, and native video continuation in one model. WorldFoundry registers a model-specific pipeline that runs the vendored in-tree demo scripts — with the deliberate safety that nothing executes unless you pass execute=True. Weights are MIT-licensed at meituan-longcat/LongCat-Video.
+
+<ModelCommandBuilder modelId="longcat-video" locale="en" />
+
+## Architecture
+
+Upstream positions LongCat-Video as a unified DiT-based generator where continuation is a first-class task, enabling minutes-long videos. This repository records the unified-environment route with local checkpoints and the image/prompt/video input contract; layer-level details are not recorded here.
+
+## Usage notes
+
+Runner parity is pending — full official 93-frame / 50-step quality parity has not been recorded. Remember the execute=True gate: default calls fail fast by design. Stage the LongCat checkpoints locally before running.
+
+## Evaluation benchmarks
+
+- [VBench](/docs/evaluation/benchmark-hub/vbench) — Baseline T2V quality suite.
+- [ChronoMagic-Bench](/docs/evaluation/benchmark-hub/chronomagic-bench) — Long-horizon generation matches LongCat's continuation focus.
+
+<ModelRelatedRecipes modelId="longcat-video" locale="en" />

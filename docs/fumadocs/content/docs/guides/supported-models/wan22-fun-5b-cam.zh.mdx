@@ -1,0 +1,27 @@
+---
+title: "Wan2.2-Fun 5B Control Camera"
+description: "Wan2.2-Fun 5B Control Camera brings the VideoX-Fun camera-control pathway to the Wan2.2 generation at 5B scale: image-to-video steered by explicit camera poses, with an upstream native profile of 121 frames at 24 FPS. WorldFoundry vendors…"
+pageSource: generated
+---
+
+**发表机构:** 阿里云 PAI（VideoX-Fun） · 企业
+image → video
+
+Wan2.2-Fun 5B Control Camera 将 VideoX-Fun 相机控制通路带入 Wan2.2 世代的 5B 规模：由显式相机位姿操控的图生视频，上游原生规格为 121 帧、24 FPS。WorldFoundry 将 VideoX-Fun 内置树内（revision 403f1f7b），并为 alibaba-pai/Wan2.2-Fun-5B-Control-Camera 接通专用路由，Apache-2.0 许可。
+
+<ModelCommandBuilder modelId="wan22-fun-5b-cam" locale="zh" />
+
+## 架构
+
+5B 参数的 Wan2.2 扩散 Transformer，叠加 VideoX-Fun Control-Camera 条件通路。更多内部细节仓库未记录。
+
+## 使用要点
+
+上游原生规格为 121 帧、24 FPS；WRBench 请求值保持显式，请主动设置帧数与 FPS 而非依赖默认。 runner parity 仍为 pending。
+
+## 评测 Benchmark
+
+- [CameraBench](/zh/docs/evaluation/benchmark-hub/camerabench) — 受控图生视频的相机位姿跟随。
+- [WRBench](/zh/docs/evaluation/benchmark-hub/wrbench) — 原生 121 帧/24FPS 规格适配 WRBench 式请求。
+
+<ModelRelatedRecipes modelId="wan22-fun-5b-cam" locale="zh" />

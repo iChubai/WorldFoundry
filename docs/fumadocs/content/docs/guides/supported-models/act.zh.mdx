@@ -1,0 +1,21 @@
+---
+title: "Action Chunking Transformer"
+description: "ACT (Action Chunking Transformer) is the classic imitation-learning policy behind the ALOHA line of work: instead of predicting one action at a time it predicts chunks of future actions, smoothing control and reducing compounding error. Wo…"
+pageSource: generated
+---
+
+**发表机构:** 开源研究发布（仓库未记录正式机构） · 研究机构
+
+ACT（Action Chunking Transformer）是 ALOHA 系列工作背后的经典模仿学习策略：不逐步预测单个动作，而是预测未来动作块，使控制更平滑并降低误差累积。WorldFoundry 从扁平化树内包完整执行该策略——DETR-VAE、transformer、ResNet 骨干、预处理与动作块聚合。
+
+<ModelCommandBuilder modelId="act" locale="zh" />
+
+## 架构
+
+DETR 风格的 transformer 加 CVAE 目标：ResNet 视觉骨干馈入 transformer 编解码器并输出动作块；VAE 隐变量捕捉示范的多模态性。
+
+## 使用要点
+
+checkpoint 驱动的预测需调用方就位 policy_best.ckpt 与匹配的 dataset_stats.pkl。checkpoint 张量采用 weights-only 反序列化，统计文件使用受限的仅 NumPy 读取器，不执行上游 pickle。
+
+<ModelRelatedRecipes modelId="act" locale="zh" />

@@ -1,6 +1,8 @@
 import { withBasePath } from '@/lib/site-path';
 
-import logoMap from '@/lib/model-logo-map.json';
+import { resolveModelOrg } from '@/lib/model-org-identity';
+
+export { resolveModelOrgKey } from '@/lib/model-org-identity';
 
 type ModelIdentityMarkProps = {
   id: string;
@@ -9,16 +11,6 @@ type ModelIdentityMarkProps = {
   category: string;
   size?: 'small' | 'medium' | 'large';
 };
-
-type OrgIdentity = {
-  key: string;
-  name: string;
-  abbr: string;
-  src?: string;
-};
-
-const orgs = logoMap.orgs as Record<string, OrgIdentity>;
-const modelLogos = logoMap.modelLogos as Record<string, string>;
 
 function initials(value: string) {
   const normalized = value
@@ -38,18 +30,14 @@ function initials(value: string) {
   return (normalized[0] ?? 'M').slice(0, 2).toUpperCase();
 }
 
-function orgFor(id: string) {
-  const key = modelLogos[id];
-  return key ? orgs[key] : undefined;
-}
-
 export function ModelIdentityMark({
   id,
   name,
+  provider,
   category,
   size = 'medium',
 }: ModelIdentityMarkProps) {
-  const org = orgFor(id);
+  const org = resolveModelOrg(id, provider);
   const hasLogo = Boolean(org?.src);
 
   return (

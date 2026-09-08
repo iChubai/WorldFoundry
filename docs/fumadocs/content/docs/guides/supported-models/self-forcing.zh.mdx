@@ -1,0 +1,32 @@
+---
+title: "Self-Forcing"
+description: "Self-Forcing bridges the train-test gap in autoregressive video diffusion: by simulating the inference process during training — conditioning each frame on its own previously generated frames — it enables real-time streaming text-to-video…"
+pageSource: generated
+---
+
+**发表机构:** Adobe 研究院 / 得克萨斯大学奥斯汀分校 · 企业
+text · image → video
+[Self Forcing: Bridging the Train-Test Gap in Autoregressive Video Diffusion](https://arxiv.org/abs/2506.08009) (NeurIPS 2025 spotlight, 2025)
+
+Self-Forcing 弥合了自回归视频扩散的训练-推理差距：在训练时模拟推理过程——让每帧以自己先前生成的帧为条件——从而在单卡上实现实时流式文生视频（arXiv 2506.08009）。本 catalog 中官方仅推理运行时已内置树内；一致性待 Self-Forcing DMD checkpoint 与 Wan2.1 权重就位。
+
+<figure className="wf-recipe-media is-diagram">
+  <img src="/models/self-forcing/paper.png" alt="Self Forcing: Bridging the Train-Test Gap in Autoregressive Video Diffusion" />
+  <figcaption>Self Forcing: Bridging the Train-Test Gap in Autoregressive Video Diffusion</figcaption>
+</figure>
+
+<ModelCommandBuilder modelId="self-forcing" locale="zh" />
+
+## 架构
+
+按论文，基于 Wan2.1 的因果学生在自生成滚动上做整体分布匹配训练，并用 KV 缓存实现流式。runner 在树内负责提示词/i2v 数据物化、Wan 权重软链、命令构造与输出加载（checkpoint： gdhe17/Self-Forcing）。
+
+## 使用要点
+
+默认 checkpoint 路径遵循 $\{WORLDFOUNDRY_CKPT_DIR\}/Self-Forcing 的官方 HF 布局——另行就位时请覆盖 checkpoint_path。完整一致性需要 wan_models 兼容布局下的 Wan2.1 权重；benchmark 提示词列表需自行准备，并通过本地输入配置提供。
+
+## 评测 Benchmark
+
+- [VBench](/zh/docs/evaluation/benchmark-hub/vbench) — 流式文生视频的质量评测。
+
+<ModelRelatedRecipes modelId="self-forcing" locale="zh" />

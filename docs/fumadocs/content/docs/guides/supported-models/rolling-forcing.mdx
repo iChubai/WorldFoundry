@@ -1,0 +1,33 @@
+---
+title: "RollingForcing"
+description: "RollingForcing streams minutes-long video autoregressively: rolling-window denoising with an attention sink lets it generate long text-to-video without the drift that kills naive streaming (paper arXiv 2509.25161)."
+pageSource: generated
+---
+
+**Publisher:** Tencent (ARC Lab) / Nanyang Technological University · Company
+text → video
+[Rolling Forcing: Autoregressive Long Video Diffusion in Real Time](https://arxiv.org/abs/2509.25161) (2025)
+
+RollingForcing streams minutes-long video autoregressively: rolling-window denoising with an attention sink lets it generate long text-to-video without the drift that kills naive streaming (paper arXiv 2509.25161). In this catalog the runner reached full_demo_verified — a full Workspace inference with the exact released checkpoint decoded 126 latent frames to 501 H.264 frames at 832x480, 16 fps, 31.31 seconds on A100.
+
+<figure className="wf-recipe-media is-diagram">
+  <img src="/models/rolling-forcing/paper.png" alt="Rolling Forcing: Autoregressive Long Video Diffusion in Real Time" />
+  <figcaption>Rolling Forcing: Autoregressive Long Video Diffusion in Real Time</figcaption>
+</figure>
+
+<ModelCommandBuilder modelId="rolling-forcing" locale="en" />
+
+## Architecture
+
+The in-tree inference-only runner reuses the existing forcing pipeline, causal Wan variant, attention sink/KV cache, core scheduler, attention dispatch, distributed helpers, and video I/O; execution never imports an external RollingForcing repository. The static integration follows the official five-step, three-latent-frame block configuration.
+
+## Usage notes
+
+The released route is text-to-video only — unverified I2V behavior is not advertised. BF16 and memory capacity are hardware requirements; the official 126 latent frames decode to a long 16 fps video, and smaller multiples of three are valid smoke runs. Upstream terms allow academic use only.
+
+## Evaluation benchmarks
+
+- [VBench](/docs/evaluation/benchmark-hub/vbench) — Video quality for long text-to-video output.
+- [ChronoMagic-Bench](/docs/evaluation/benchmark-hub/chronomagic-bench) — Long-horizon temporal coherence.
+
+<ModelRelatedRecipes modelId="rolling-forcing" locale="en" />

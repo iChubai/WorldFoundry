@@ -1,0 +1,25 @@
+---
+title: "EventVLA"
+description: "EventVLA from InternRobotics is a long-horizon-memory VLA: on top of a Qwen3-VL-4B base it adds an event head, temporal anchors, and a raw keyframe-image memory so the policy remembers what already happened in long tasks. The Apache-2.0 ga…"
+pageSource: generated
+---
+
+**Publisher:** Shanghai AI Laboratory (InternRobotics) · Research lab
+
+EventVLA from InternRobotics is a long-horizon-memory VLA: on top of a Qwen3-VL-4B base it adds an event head, temporal anchors, and a raw keyframe-image memory so the policy remembers what already happened in long tasks. The Apache-2.0 ganlinyang/EventVLA checkpoint collection is recorded with the RoboTwin-MeM subfolder as the default policy.
+
+<ModelCommandBuilder modelId="eventvla" locale="en" />
+
+## Architecture
+
+Qwen3-VL encoding feeds action-token gathering and a checkpoint-compatible MLP action head; the event head plus temporal anchors maintain episodic structure while keyframe images form the memory. All of it runs in process in-tree.
+
+## Usage notes
+
+Stage the EventVLA checkpoint (subfolder RoboTwin-MeM) and the Qwen3-VL-4B-Instruct base locally. Training, datasets, simulators, benchmark launchers, and WebSocket transport are excluded.
+
+## Evaluation benchmarks
+
+- [RoboTwin 2.0](/docs/evaluation/benchmark-hub/robotwin) — The RoboTwin-MeM checkpoint targets RoboTwin memory tasks.
+
+<ModelRelatedRecipes modelId="eventvla" locale="en" />

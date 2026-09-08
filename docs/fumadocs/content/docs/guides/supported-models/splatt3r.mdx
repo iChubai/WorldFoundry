@@ -1,0 +1,27 @@
+---
+title: "Splatt3R"
+description: "Splatt3R predicts a 3D Gaussian splat scene directly from an uncalibrated image pair — zero shot, no camera parameters, no per-scene optimization."
+pageSource: generated
+---
+
+**Publisher:** University of Oxford (Active Vision Lab) · University
+[Splatt3R: Zero-shot Gaussian Splatting from Uncalibrated Image Pairs](https://arxiv.org/abs/2408.13912) (2024)
+
+Splatt3R predicts a 3D Gaussian splat scene directly from an uncalibrated image pair — zero shot, no camera parameters, no per-scene optimization. In this catalog it is fully verified: checkpoint-backed GPU inference produced a finite 344,064-Gaussian PLY from the bundled official-style views, with evidence in inference_evidence.yaml.
+
+<figure className="wf-recipe-media is-diagram">
+  <img src="/models/splatt3r/paper.png" alt="Splatt3R: Zero-shot Gaussian Splatting from Uncalibrated Image Pairs" />
+  <figcaption>Splatt3R: Zero-shot Gaussian Splatting from Uncalibrated Image Pairs</figcaption>
+</figure>
+
+<ModelCommandBuilder modelId="splatt3r" locale="en" />
+
+## Architecture
+
+Per the paper (arXiv 2408.13912), Splatt3R builds on MASt3R's two-view geometry backbone and adds a Gaussian-parameter head. WorldFoundry keeps the runtime under base_models/three_dimensions/general_3d/splatt3r/splatt3r_runtime, importing MASt3R/DUSt3R from their canonical sibling paths; the packaged runtime is inference-only (training loaders and demo code are pruned).
+
+## Usage notes
+
+Splatt3RSynthesis loads the in-tree runtime in-process and emits a PLY Gaussian-splat artifact. Checkpoints stay external assets (brandonsmart/splatt3r_v1.0) — stage them before running.
+
+<ModelRelatedRecipes modelId="splatt3r" locale="en" />

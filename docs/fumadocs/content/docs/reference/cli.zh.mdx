@@ -116,7 +116,7 @@ worldfoundry-eval run self-forcing --print-config --json
 | 执行已经物化的 run plan，或直接使用 eval-core 字段 | `evaluate`（别名 `eval`） | 面向 requests/results ledger 与 model-mode evaluation 的底层确定性路径。 |
 | 从 dataset manifest 生成再评分 | `generate-score` | 一个 intent 统一负责 dataset 物化、生成、cache 与 metric。 |
 | 导入或执行某个 benchmark 的官方界面 | `zoo benchmark-run` | 暴露 benchmark 专属 mode 与参数；应配合对应 Benchmark Hub 页面。 |
-| 复现仓内 profile 或 recipe | `reproduce` | 解析命名 profile、benchmark 默认配置或 recipe YAML。 |
+| 复现钉死的 model × benchmark 配方 | `reproduce` | 解析 recipe YAML；若提供了命名 profile 也可解析。 |
 | 创建索引、比较或做契约检查 | `index-runs`、`compare-runs`、`validate-artifact` | 对持久化 run 输出操作，不重新运行模型。 |
 
 ## 完整命令地图
@@ -138,7 +138,7 @@ worldfoundry-eval run self-forcing --print-config --json
 | `run` | 直接强类型推理、单个 model × benchmark cell，或 suite / matrix。 |
 | `score` | 用 benchmark 评估 artifact 目录，或用指定 metric 评估 result rows。 |
 | `generate-score` | 在 dataset manifest 上运行仓内模型并为结果打分。 |
-| `reproduce` | 执行仓内 profile、benchmark 默认 profile 或自定义 recipe YAML。 |
+| `reproduce` | 执行 recipe YAML；若存在命名 / benchmark 默认 profile 也可执行。 |
 | `evaluate` / `eval` | 对物化结果、run plan 或 model mode 执行确定性 eval-core。 |
 | `embodied` | `plan`、`run`、`serve`、`merge`，用于 simulator-backed closed-loop evaluation。 |
 

@@ -1,0 +1,25 @@
+---
+title: "WorldGrow"
+description: "WorldGrow generates worlds by expansion: starting from a seed scene it progressively grows coherent 3D world blocks, targeting interactive world generation and scene extension. The UranusITS/WorldGrow checkpoint is confirmed on Hugging Fac…"
+pageSource: generated
+---
+
+**Publisher:** Open-source research release (institution not recorded) · Research lab
+
+WorldGrow generates worlds by expansion: starting from a seed scene it progressively grows coherent 3D world blocks, targeting interactive world generation and scene extension. The UranusITS/WorldGrow checkpoint is confirmed on Hugging Face; WorldFoundry registers the official source route in-tree with checkpoints and TRELLIS assets runtime-gated.
+
+<ModelCommandBuilder modelId="worldgrow" locale="en" />
+
+## Architecture
+
+The runtime dependency on TRELLIS assets indicates a structured-3D-latent generation backbone extended with block-wise scene growth. Architecture internals beyond the official repository pointer (world-grow/WorldGrow, pinned head 1f2ac49c) are not recorded in this repository.
+
+## Usage notes
+
+Config resolution and pipeline import are expected to pass; real generation emits a runtime plan until required checkpoints/assets are staged. Missing assets are reported by the plan and are not treated as catalog blockers. Stage both the WorldGrow checkpoint and TRELLIS assets before real runs.
+
+## Evaluation benchmarks
+
+- [WorldScore](/docs/evaluation/benchmark-hub/worldscore) — Growable 3D world coherence and quality.
+
+<ModelRelatedRecipes modelId="worldgrow" locale="en" />

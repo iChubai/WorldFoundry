@@ -1,0 +1,27 @@
+---
+title: "Echo-Infinity"
+description: "Echo-Infinity is JD's autoregressive long-video generator: text in, arbitrarily long video out, generated block by block."
+pageSource: generated
+---
+
+**Publisher:** JD.com (Joy Future Academy) · Company
+text → video
+
+Echo-Infinity is JD's autoregressive long-video generator: text in, arbitrarily long video out, generated block by block. In this catalog the inference path is vendored in-tree as an infer-only runtime; full parity waits on local Echo-Infinity and Wan2.1 weights staged under WORLDFOUNDRY_CKPT_DIR.
+
+<ModelCommandBuilder modelId="echo-infinity" locale="en" />
+
+## Architecture
+
+The recorded structure is a Wan2.1-based autoregressive text-to-video design from the same JD team as Echo-Memory. Training, prompt datasets, demo scripts, and checkpoint download helpers are intentionally not packaged; weights are never tracked in git.
+
+## Usage notes
+
+Runtime assets are local paths under WORLDFOUNDRY_CKPT_DIR — stage Echo-Infinity plus Wan2.1 weights there before running. Full GPU parity is pending.
+
+## Evaluation benchmarks
+
+- [VBench](/docs/evaluation/benchmark-hub/vbench) — Video quality evaluation for long text-to-video generation.
+- [ChronoMagic-Bench](/docs/evaluation/benchmark-hub/chronomagic-bench) — Long-horizon temporal coherence evaluation.
+
+<ModelRelatedRecipes modelId="echo-infinity" locale="en" />

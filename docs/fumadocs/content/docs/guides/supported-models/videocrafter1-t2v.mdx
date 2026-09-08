@@ -1,0 +1,31 @@
+---
+title: "VideoCrafter1 T2V"
+description: "VideoCrafter1 T2V is the text-to-video member of the VideoCrafter1 release, generating clips up to 1024x576 from a prompt. The in-tree infer-only runtime wraps the official text-to-video 1024 path with local checkpoint, fps, frame count, a…"
+pageSource: generated
+---
+
+**Publisher:** Tencent AI Lab · Company
+text → video
+
+VideoCrafter1 T2V is the text-to-video member of the VideoCrafter1 release, generating clips up to 1024x576 from a prompt. The in-tree infer-only runtime wraps the official text-to-video 1024 path with local checkpoint, fps, frame count, and seed controls.
+
+<figure className="wf-recipe-media">
+  <Video src="/demos/studio/videocrafter1-t2v.mp4" autoPlay loop muted playsInline />
+  <figcaption>Text-to-video</figcaption>
+</figure>
+
+<ModelCommandBuilder modelId="videocrafter1-t2v" locale="en" />
+
+## Architecture
+
+U-Net latent video diffusion at up to 1024x576 (per the upstream release). Checkpoint provenance is tracked on the family entry; training and download scripts are excluded.
+
+## Usage notes
+
+Runner parity is pending. Prefer VideoCrafter2 T2V for better visual quality from the same family, or the DiT entries for current-generation quality.
+
+## Evaluation benchmarks
+
+- [EvalCrafter](/docs/evaluation/benchmark-hub/evalcrafter) — Companion benchmark of the VideoCrafter effort.
+
+<ModelRelatedRecipes modelId="videocrafter1-t2v" locale="en" />

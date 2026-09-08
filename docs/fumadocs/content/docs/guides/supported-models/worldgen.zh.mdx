@@ -1,0 +1,32 @@
+---
+title: "WorldGen"
+description: "WorldGen turns a text prompt or an image into a full 3D world — text-to-3D-world and image-to-3D-world generation in one project."
+pageSource: generated
+---
+
+**发表机构:** 开源研究发布（仓库未记录正式机构） · 研究机构
+text · image → 3D scene · world state
+[WorldGen: From Text to Traversable and Interactive 3D Worlds](https://arxiv.org/abs/2511.16825) (2025)
+
+WorldGen 把文本提示或一张图变成完整 3D 世界——文本到 3D 世界与图像到 3D 世界生成合于一个项目。本 catalog 中 WorldFoundry 暴露树内适配器，在资产就位时执行 WorldGen 推理流程；runner parity 为 pending，gated 基础模型缺失会在推理时报告。
+
+<figure className="wf-recipe-media is-diagram">
+  <img src="/models/worldgen/paper.png" alt="WorldGen: From Text to Traversable and Interactive 3D Worlds" />
+  <figcaption>WorldGen: From Text to Traversable and Interactive 3D Worlds</figcaption>
+</figure>
+
+<ModelCommandBuilder modelId="worldgen" locale="zh" />
+
+## 架构
+
+catalog 记录其生成栈依赖 gated 的 FLUX 基础模型与 WorldGen 自身资产（WorldGen 本体为 apache-2.0，论文 arXiv 2511.16825）。除已记录任务外的架构内部细节仓库未存。
+
+## 使用要点
+
+运行前请接受 gated FLUX 条款并就位 WorldGen 资产；树内适配器随后即可执行推理流程。完整的官方场景质量一致性仍为 pending，每次运行的产物检查在 catalog 外跟踪。
+
+## 评测 Benchmark
+
+- [WorldScore](/zh/docs/evaluation/benchmark-hub/worldscore) — 生成 3D 世界的标准评分。
+
+<ModelRelatedRecipes modelId="worldgen" locale="zh" />

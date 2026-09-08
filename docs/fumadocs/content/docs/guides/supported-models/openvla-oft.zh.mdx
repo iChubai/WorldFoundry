@@ -1,0 +1,35 @@
+---
+title: "OpenVLA-OFT"
+description: "OpenVLA-OFT applies optimized fine-tuning to OpenVLA — parallel decoding, continuous action heads, and chunking — and is fully GPU-validated in this catalog: an A100 restored all 7.54B parameters, produced deterministic finite 8x7 action c…"
+pageSource: generated
+---
+
+**发表机构:** 开源研究发布（仓库未记录正式机构） · 研究机构
+
+OpenVLA-OFT 对 OpenVLA 施加优化微调——并行解码、连续动作头与动作分块——并在本 catalog 中完成 GPU 验证：A100 恢复全部 75.4 亿参数，对多组输入产出确定性的有限 8x7 动作块，峰值显存 14.47 GiB，五个声明的 LIBERO checkpoint 全部完成真实推理（MIT 许可）。
+
+<ModelCommandBuilder modelId="openvla-oft" locale="zh" />
+
+## 架构
+
+OFT 配方在 7B OpenVLA 骨干上以并行解码替换自回归 token 解码，加 L1 连续动作头与 8 步分块，本体感知与噪声动作投影器内置树内。注意力按硬件解析：Ampere/Ada/Hopper 用 FlashAttention 2，其他架构（含 Blackwell）回退 PyTorch SDPA。
+
+## 使用要点
+
+按评测子集选择 LIBERO checkpoint（spatial、object、goal 等）；直接支持官方 LIBERO 观测输入。训练、RLDS 处理、TensorFlow 工具与 LIBERO 基准循环被排除。
+
+## 变体与 Pipeline Binding
+
+| Variant | 任务 | Runtime profile | Pipeline Binding | 状态 |
+| --- | --- | --- | --- | --- |
+| `openvla-oft-libero-spatial` | vla.policy_rollout | `openvla-oft` | `openvla-oft` | checkpoint gpu validated |
+| `openvla-oft-libero-object` | vla.policy_rollout | `openvla-oft` | `openvla-oft` | checkpoint gpu validated |
+| `openvla-oft-libero-goal` | vla.policy_rollout | `openvla-oft` | `openvla-oft` | checkpoint gpu validated |
+| `openvla-oft-libero-10` | vla.policy_rollout | `openvla-oft` | `openvla-oft` | checkpoint gpu validated |
+| `openvla-oft-libero-spatial-object-goal-10` | vla.policy_rollout | `openvla-oft` | `openvla-oft` | checkpoint gpu validated |
+
+## 评测 Benchmark
+
+- [LIBERO](/zh/docs/evaluation/benchmark-hub/libero) — 五个 LIBERO checkpoint 全部通过 GPU 验证。
+
+<ModelRelatedRecipes modelId="openvla-oft" locale="zh" />

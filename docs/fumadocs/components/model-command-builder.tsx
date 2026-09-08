@@ -13,19 +13,25 @@ const labels = {
     title: 'Build your run',
     variant: 'Variant',
     task: 'Task',
-    taskProfile: 'Task profile',
     pipeline: 'Inference pipeline',
     loading: 'Loading',
     invocation: 'Invocation',
     runner: 'Runner',
     environment: 'Environment',
     device: 'Device',
-    taskContract: 'Task-specific contract',
+    taskContract: 'Task contract',
+    taskProfile: 'Profile',
     inputs: 'Inputs',
     artifacts: 'Artifacts',
-    recordedContract: 'Recorded contract',
-    artifactKind: 'Artifact kind',
-    filename: 'Filename / path',
+    required: 'Required',
+    optional: 'Optional',
+    defaultValue: 'Default',
+    more: 'Show more',
+    less: 'Show less',
+    inputSingular: 'input',
+    inputPlural: 'inputs',
+    artifactSingular: 'artifact',
+    artifactPlural: 'artifacts',
     noPipeline: 'No runnable inference pipeline is recorded for this model.',
     noContract: 'No contract is recorded for this variant.',
     noArtifacts: 'No artifact contract is recorded for this task.',
@@ -43,19 +49,25 @@ const labels = {
     title: '构建运行命令',
     variant: 'Variant',
     task: '任务',
-    taskProfile: '任务 Profile',
     pipeline: '推理 Pipeline',
     loading: '加载方式',
     invocation: '调用方式',
     runner: 'Runner',
     environment: '环境',
     device: '设备',
-    taskContract: 'Task 专属契约',
+    taskContract: '任务契约',
+    taskProfile: 'Profile',
     inputs: '输入',
-    artifacts: '输出 Artifact',
-    recordedContract: '已记录契约',
-    artifactKind: 'Artifact 类型',
-    filename: '文件名 / 路径',
+    artifacts: '输出',
+    required: '必填',
+    optional: '可选',
+    defaultValue: '默认值',
+    more: '展开',
+    less: '收起',
+    inputSingular: '项输入',
+    inputPlural: '项输入',
+    artifactSingular: '项输出',
+    artifactPlural: '项输出',
     noPipeline: '该模型没有记录可运行的推理 Pipeline。',
     noContract: '该 variant 没有记录契约。',
     noArtifacts: '该 task 没有记录 Artifact 契约。',
@@ -70,6 +82,45 @@ const labels = {
     notRecorded: '未记录',
   },
 } as const;
+
+type Copy = (typeof labels)[Locale];
+
+const PRIMARY_FIELD_NAMES = new Set([
+  'prompt',
+  'negative_prompt',
+  'instruction',
+  'text',
+  'caption',
+  'input_path',
+  'image',
+  'video',
+  'audio',
+  'images',
+  'input',
+]);
+
+const PRIMARY_FIELD_KINDS = new Set(['json', 'interaction_tokens', 'image', 'video', 'audio', 'path']);
+
+const GENERIC_COPY = new Set([
+  'Catalog task profile used by the model runtime.',
+  'Recorded input field from the runtime profile.',
+]);
+
+type ContractInput = {
+  field?: string;
+  detail?: string;
+  kind?: string;
+  target?: string;
+  required?: boolean;
+  default?: unknown;
+  choices?: string[];
+  description?: string;
+};
+
+type FormattedDefault = {
+  display: 'empty' | 'scalar' | 'text' | 'json';
+  text: string;
+};
 
 function commandPlaceholder(field: { field: string; required?: boolean; default?: unknown; kind?: string }) {
   if (!field.required || (field.default !== undefined && field.default !== null && field.default !== '')) {
@@ -133,44 +184,307 @@ function variantLabel(value: { id: string; pipelineTarget: string | null; status
   return `${value.id} — ${status}`;
 }
 
-function ContractTable({
-  title,
-  items,
-  empty,
-  fieldLabel,
-  valueLabel,
-  artifactTable = false,
+function parseDetail(detail?: string) {
+  if (!detail) {
+    return { required: undefined as boolean | undefined, defaultText: undefined as string | undefined, choices: [] as string[] };
+  }
+  const parts = detail.split(';').map((part) => part.trim()).filter(Boolean);
+  let required: boolean | undefined;
+  let defaultText: string | undefined;
+  const choices: string[] = [];
+  const leftovers: string[] = [];
+  for (const part of parts) {
+    if (part === 'Required') required = true;
+    else if (part === 'Optional') required = false;
+    else if (part.startsWith('default=')) defaultText = part.slice('default='.length);
+    else if (part.startsWith('choices=')) {
+      choices.push(...part.slice('choices='.length).split(',').map((item) => item.trim()).filter(Boolean));
+    } else {
+      leftovers.push(part);
+    }
+  }
+  if (defaultText === undefined && leftovers.length > 0) {
+    defaultText = leftovers.join('; ');
+  }
+  return { required, defaultText, choices };
+}
+
+function formatDefault(value: unknown): FormattedDefault {
+  if (value === undefined || value === null || value === '') {
+    return { display: 'empty', text: '' };
+  }
+  if (typeof value === 'boolean') {
+    return { display: 'scalar', text: value ? 'true' : 'false' };
+  }
+  if (typeof value === 'object') {
+    return { display: 'json', text: JSON.stringify(value, null, 2) };
+  }
+  const text = String(value);
+  if ((text.startsWith('{') && text.endsWith('}')) || (text.startsWith('[') && text.endsWith(']'))) {
+    try {
+      const parsed = JSON.parse(text) as unknown;
+      if (parsed && typeof parsed === 'object') {
+        return { display: 'json', text: JSON.stringify(parsed, null, 2) };
+      }
+    } catch {
+      // Keep the original string when it only looks like JSON.
+    }
+  }
+  const looksLikeProse =
+    text.includes(' ') &&
+    /[A-Za-z\u4e00-\u9fff]/.test(text) &&
+    !text.startsWith('/') &&
+    !text.startsWith('${') &&
+    !text.startsWith('http');
+  if (text.includes('\n') || (text.length > 42 && looksLikeProse)) {
+    return { display: 'text', text };
+  }
+  return { display: 'scalar', text };
+}
+
+function normalizeInput(item: ContractInput) {
+  const parsed = parseDetail(item.detail);
+  const defaultValue = item.default !== undefined ? item.default : parsed.defaultText;
+  return {
+    field: item.field ?? '',
+    kind: item.kind,
+    target: item.target,
+    required: item.required ?? parsed.required ?? false,
+    formatted: formatDefault(defaultValue),
+    choices: item.choices?.length ? item.choices : parsed.choices,
+    description: visibleCopy(item.description),
+  };
+}
+
+function visibleCopy(value?: string) {
+  const text = value?.trim() ?? '';
+  return text && !GENERIC_COPY.has(text) ? text : '';
+}
+
+function isPrimaryField(field: ReturnType<typeof normalizeInput>) {
+  if (PRIMARY_FIELD_NAMES.has(field.field)) return true;
+  if (field.kind && PRIMARY_FIELD_KINDS.has(field.kind)) return true;
+  return field.formatted.display === 'text' || field.formatted.display === 'json';
+}
+
+function countPhrase(count: number, singular: string, plural: string) {
+  return `${count} ${count === 1 ? singular : plural}`;
+}
+
+function ExpandableValue({
+  text,
+  more,
+  less,
+  variant,
+  label,
 }: {
-  title: string;
-  items: Array<{ field?: string; detail?: string; kind?: string; filename?: string }>;
-  empty: string;
-  fieldLabel: string;
-  valueLabel: string;
-  artifactTable?: boolean;
+  text: string;
+  more: string;
+  less: string;
+  variant: 'text' | 'json';
+  label?: string;
 }) {
+  const [expanded, setExpanded] = useState(false);
+  const long = text.length > 96 || text.split('\n').length > 3;
   return (
-    <div className="wf-command-builder-contract">
-      <h3>{title}</h3>
-      {items.length > 0 ? (
-        <table>
-          <thead>
-            <tr>
-              <th>{fieldLabel}</th>
-              <th>{valueLabel}</th>
-            </tr>
-          </thead>
-          <tbody>
-            {items.map((item, index) => (
-              <tr key={`${item.field ?? item.kind}:${item.detail ?? item.filename}:${index}`}>
-                <td><code>{item.field ?? item.kind}</code></td>
-                <td>{item.detail ?? item.filename ?? '—'}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      ) : (
-        <p>{empty}</p>
-      )}
+    <div className={`wf-command-builder-value is-${variant}${expanded ? ' is-expanded' : ''}`}>
+      {label ? <span className="wf-command-builder-field-label">{label}</span> : null}
+      {variant === 'json' ? <pre><code>{text}</code></pre> : <p>{text}</p>}
+      {long ? (
+        <button type="button" onClick={() => setExpanded((open) => !open)}>
+          {expanded ? less : more}
+        </button>
+      ) : null}
+    </div>
+  );
+}
+
+function FieldDefault({
+  t,
+  formatted,
+}: {
+  t: Copy;
+  formatted: FormattedDefault;
+}) {
+  if (formatted.display === 'empty') return null;
+  if (formatted.display === 'scalar') {
+    return (
+      <div className="wf-command-builder-field-default">
+        <span className="wf-command-builder-field-label">{t.defaultValue}</span>
+        <code>{formatted.text}</code>
+      </div>
+    );
+  }
+  return (
+    <ExpandableValue
+      text={formatted.text}
+      more={t.more}
+      less={t.less}
+      variant={formatted.display}
+      label={t.defaultValue}
+    />
+  );
+}
+
+function ContractField({
+  t,
+  field,
+  compact = false,
+}: {
+  t: Copy;
+  field: ReturnType<typeof normalizeInput>;
+  compact?: boolean;
+}) {
+  if (compact) {
+    return (
+      <li title={field.formatted.text || undefined}>
+        <div className="wf-command-builder-field-head">
+          <span className="wf-command-builder-knob-name">{field.field}</span>
+          <div>
+            <span className={`wf-command-builder-pill${field.required ? ' is-required' : ''}`}>
+              {field.required ? t.required : t.optional}
+            </span>
+            {field.kind ? <span className="wf-command-builder-pill">{field.kind}</span> : null}
+          </div>
+        </div>
+        {field.formatted.display === 'empty' ? (
+          <span className="wf-command-builder-knob-empty">—</span>
+        ) : field.formatted.display === 'scalar' ? (
+          <div className="wf-command-builder-field-default is-compact">
+            <span className="wf-command-builder-field-label">{t.defaultValue}</span>
+            <code>{field.formatted.text}</code>
+          </div>
+        ) : (
+          <FieldDefault t={t} formatted={field.formatted} />
+        )}
+      </li>
+    );
+  }
+
+  return (
+    <li>
+      <div className="wf-command-builder-field-head">
+        <code>{field.field}</code>
+        <div>
+          <span className={`wf-command-builder-pill${field.required ? ' is-required' : ''}`}>
+            {field.required ? t.required : t.optional}
+          </span>
+          {field.kind ? <span className="wf-command-builder-pill">{field.kind}</span> : null}
+        </div>
+      </div>
+      {field.description ? <p className="wf-command-builder-field-note">{field.description}</p> : null}
+      <FieldDefault t={t} formatted={field.formatted} />
+      {field.choices.length > 0 ? (
+        <div className="wf-command-builder-choices" aria-label={t.optional}>
+          {field.choices.map((choice) => (
+            <span key={choice}>{choice}</span>
+          ))}
+        </div>
+      ) : null}
+    </li>
+  );
+}
+
+function ContractPanel({
+  t,
+  taskId,
+  taskLabel,
+  description,
+  inputs,
+  artifacts,
+}: {
+  t: Copy;
+  taskId: string;
+  taskLabel: string;
+  description: string;
+  inputs: ContractInput[];
+  artifacts: Array<{ kind?: string; filename?: string; description?: string }>;
+}) {
+  const fields = inputs.map(normalizeInput).filter((field) => field.field);
+  const primary = fields.filter(isPrimaryField);
+  const knobs = fields.filter((field) => !isPrimaryField(field));
+  const outputItems = artifacts.filter((item) => item.kind || item.filename);
+  const splitColumns = fields.length > 0 && outputItems.length > 0;
+  const lead = visibleCopy(description);
+  const [open, setOpen] = useState(false);
+
+  return (
+    <div className={`wf-command-builder-contracts${open ? ' is-open' : ''}`}>
+      <button
+        type="button"
+        className="wf-command-builder-disclosure"
+        aria-expanded={open}
+        onClick={() => setOpen((value) => !value)}
+      >
+        <span className="wf-command-builder-contracts-title">{t.taskContract}</span>
+        <span className="wf-command-builder-contracts-meta">
+          <span className="wf-command-builder-profile-chip">
+            <span className="wf-command-builder-field-label">{t.taskProfile}</span>
+            <code title={taskId}>{taskLabel || taskId}</code>
+          </span>
+          <span className="wf-command-builder-contracts-counts">
+            {countPhrase(fields.length, t.inputSingular, t.inputPlural)}
+            {' · '}
+            {countPhrase(outputItems.length, t.artifactSingular, t.artifactPlural)}
+          </span>
+        </span>
+      </button>
+      {open ? (
+      <div className="wf-command-builder-contracts-body">
+        {lead ? <p className="wf-command-builder-contracts-lead">{lead}</p> : null}
+        <div className={`wf-command-builder-contracts-grid${splitColumns ? '' : ' is-single'}`}>
+          <section className="wf-command-builder-contract">
+            <header>
+              <h3>{t.inputs}</h3>
+              <b>{fields.length}</b>
+            </header>
+            {fields.length ? (
+              <>
+                {primary.length > 0 ? (
+                  <ul className="wf-command-builder-fields">
+                    {primary.map((field) => (
+                      <ContractField key={field.field} t={t} field={field} />
+                    ))}
+                  </ul>
+                ) : null}
+                {knobs.length > 0 ? (
+                  <ul className="wf-command-builder-knobs">
+                    {knobs.map((field) => (
+                      <ContractField key={field.field} t={t} field={field} compact />
+                    ))}
+                  </ul>
+                ) : null}
+              </>
+            ) : (
+              <p>{t.noContract}</p>
+            )}
+          </section>
+          {outputItems.length > 0 || fields.length === 0 ? (
+            <section className="wf-command-builder-contract">
+              <header>
+                <h3>{t.artifacts}</h3>
+                <b>{outputItems.length}</b>
+              </header>
+              {outputItems.length ? (
+                <ul className="wf-command-builder-artifacts">
+                  {outputItems.map((item, index) => (
+                    <li key={`${item.kind ?? 'artifact'}:${item.filename ?? ''}:${index}`}>
+                      <div className="wf-command-builder-field-head">
+                        <code>{item.filename || '—'}</code>
+                        {item.kind ? <span className="wf-command-builder-pill">{item.kind}</span> : null}
+                      </div>
+                      {item.description ? <p className="wf-command-builder-field-note">{item.description}</p> : null}
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p>{t.noArtifacts}</p>
+              )}
+            </section>
+          ) : null}
+        </div>
+      </div>
+      ) : null}
     </div>
   );
 }
@@ -315,6 +629,7 @@ export function ModelCommandBuilder({ recipe, locale = 'en' }: { recipe: ModelRe
             <span>{t.task}</span>
             {taskChoices.length > 1 ? (
               <select
+                aria-label={t.task}
                 value={selectedTask.id}
                 onChange={(event) => {
                   const nextTask = taskChoices.find((task) => task.id === event.target.value) ?? taskChoices[0];
@@ -374,76 +689,65 @@ export function ModelCommandBuilder({ recipe, locale = 'en' }: { recipe: ModelRe
       </div>
 
       {taskChoices.length > 0 ? (
-        <details className="wf-command-builder-contracts">
-          <summary>
-            {t.taskContract} <code>{selectedTask.id}</code>
-          </summary>
-          <div>
-            <ContractTable
-              title={t.inputs}
-              items={selectedInputContract}
-              empty={t.noContract}
-              fieldLabel={t.taskProfile}
-              valueLabel={t.recordedContract}
-            />
-            <ContractTable
-              title={t.artifacts}
-              items={selectedArtifacts}
-              empty={t.noArtifacts}
-              fieldLabel={t.artifactKind}
-              valueLabel={t.filename}
-              artifactTable
-            />
-          </div>
-        </details>
+        <ContractPanel
+          t={t}
+          taskId={selectedTask.id}
+          taskLabel={selectedTask.label}
+          description={selectedTask.description}
+          inputs={selectedInputContract}
+          artifacts={selectedArtifacts}
+        />
       ) : null}
 
       <div className="wf-command-builder-terminal">
-        <div className="wf-command-builder-tabs" role="tablist" aria-label={t.title}>
-          {tabs.map((item) => (
-            <button
-              type="button"
-              role="tab"
-              aria-selected={tab === item}
-              className={tab === item ? 'is-active' : undefined}
-              key={item}
-              onClick={() => {
-                setTab(item);
-                setCopied(false);
-              }}
-            >
-              {t[item]}
-            </button>
-          ))}
-        </div>
-        <details className="wf-command-builder-command">
-          <summary>
-            {t.command}
-            {runUnavailable ? null : (
+        <div className="wf-command-builder-toolbar">
+          <div className="wf-command-builder-tabs" role="tablist" aria-label={t.title}>
+            {tabs.map((item) => (
               <button
                 type="button"
-                aria-live="polite"
-                onClick={(event) => {
-                  event.preventDefault();
-                  event.stopPropagation();
-                  void copyCommand();
+                role="tab"
+                aria-selected={tab === item}
+                aria-controls="wf-command-builder-panel"
+                className={tab === item ? 'is-active' : undefined}
+                id={`wf-command-builder-tab-${item}`}
+                key={item}
+                onClick={() => {
+                  setTab(item);
+                  setCopied(false);
                 }}
               >
-                {copied ? <Check aria-hidden="true" size={13} /> : <Copy aria-hidden="true" size={13} />}
-                {copied ? t.copied : t.copy}
+                {t[item]}
               </button>
-            )}
-          </summary>
-          <div className="wf-command-builder-code">
-            {runUnavailable ? (
-              <p className="wf-command-builder-unavailable">{t.noPipeline}</p>
-            ) : (
-              <pre key={`${selectedId}:${tab}`}>
-                <code>{command}</code>
-              </pre>
-            )}
+            ))}
           </div>
-        </details>
+          {runUnavailable ? null : (
+            <button
+              type="button"
+              className="wf-command-builder-copy"
+              aria-live="polite"
+              onClick={() => {
+                void copyCommand();
+              }}
+            >
+              {copied ? <Check aria-hidden="true" size={13} /> : <Copy aria-hidden="true" size={13} />}
+              {copied ? t.copied : t.copy}
+            </button>
+          )}
+        </div>
+        <div
+          className="wf-command-builder-code"
+          id="wf-command-builder-panel"
+          role="tabpanel"
+          aria-labelledby={`wf-command-builder-tab-${tab}`}
+        >
+          {runUnavailable ? (
+            <p className="wf-command-builder-unavailable">{t.noPipeline}</p>
+          ) : (
+            <pre key={`${selectedId}:${tab}`}>
+              <code>{command}</code>
+            </pre>
+          )}
+        </div>
       </div>
     </section>
   );

@@ -1,0 +1,31 @@
+---
+title: "Wan2.1 VACE"
+description: "Wan2.1 VACE is the all-in-one video creation and editing member of the Wan2.1 family: reference-image guidance, video-to-video editing, and mask/control-conditioned generation in one checkpoint. WorldFoundry assembles it from canonical Wan…"
+pageSource: generated
+---
+
+**Publisher:** Alibaba (Tongyi Lab) · Company
+video · image → video
+
+Wan2.1 VACE is the all-in-one video creation and editing member of the Wan2.1 family: reference-image guidance, video-to-video editing, and mask/control-conditioned generation in one checkpoint. WorldFoundry assembles it from canonical Wan roles; image references, source video/mask conditions, and precomputed VACE context tensors are all supported without an official-runtime backend.
+
+<figure className="wf-recipe-media">
+  <Video src="/demos/studio/wan2-1-vace-girl-snake.mp4" autoPlay loop muted playsInline />
+  <figcaption>VACE-controlled generation</figcaption>
+</figure>
+
+<ModelCommandBuilder modelId="wan2.1-vace" locale="en" />
+
+## Architecture
+
+VACE adds a video-condition-and-editing context branch to the Wan2.1 DiT. Native defaults preserve the official VACE-14B inference shape: 1280x720, 81 frames, 50 steps, guidance scale 5.0. Both the 14B checkpoint and the 1.3B diffusers variant are recorded.
+
+## Usage notes
+
+Runner status is 'integrated': loading, placement, offload, sampling, and artifact writing are owned by shared infra, and full checkpoint visual parity remains a GPU validation task. Prepare reference images or source video + mask pairs depending on the editing mode you want.
+
+## Evaluation benchmarks
+
+- [VBench](/docs/evaluation/benchmark-hub/vbench) — Baseline generation quality.
+
+<ModelRelatedRecipes modelId="wan2.1-vace" locale="en" />

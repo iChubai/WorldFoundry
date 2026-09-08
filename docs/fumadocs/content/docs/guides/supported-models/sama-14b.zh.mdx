@@ -1,0 +1,21 @@
+---
+title: "SAMA"
+description: "SAMA 14B is an open 14B video editing model recorded for reference-guided and mask-conditioned video editing: you supply a source video plus a mask or reference and it rewrites the masked content. The WorldFoundry route is complete and rep…"
+pageSource: generated
+---
+
+**发表机构:** 开源研究发布（仓库未记录正式机构） · 研究机构
+
+SAMA 14B 是开源的 14B 视频编辑模型，记录任务为参考引导与掩码条件的视频编辑：提供源视频加掩码或参考图，它重写被掩码的内容。WorldFoundry 路径已完备，checkpoint 缺失会在运行时报告；权重为 apache-2.0，位于 syxbb/SAMA-14B。
+
+<ModelCommandBuilder modelId="sama-14b" locale="zh" />
+
+## 架构
+
+catalog 记录这是一个 14B 参数的编辑模型，输入契约为 prompt/image/video；发表机构与架构内部细节仓库未记录——详情请查阅上游 GitHub（Cynthiazxy123/SAMA）。
+
+## 使用要点
+
+在完成一次 checkpoint 加载运行前，runner parity 保持 pending。启动前请准备源视频、掩码与参考资产；路径会明确报告缺失资产。
+
+<ModelRelatedRecipes modelId="sama-14b" locale="zh" />

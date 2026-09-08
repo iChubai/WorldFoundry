@@ -5,6 +5,8 @@ description: WorldFoundry 的分层、契约、数据流与设计取舍。
 
 WorldFoundry 遵循一条最重要的设计规则：**把模型执行与 benchmark 评测分开，再用显式 artifact 和证据连接两侧**。这样可以让差异很大的系统共享一条研究工作流，而不会把模型加载代码塞进 metric，也不会把 benchmark 假设写进模型 pipeline。
 
+下面的契约对齐的是[世界模型的操作定义](/zh/docs/overview/world-models)：持久状态、受干预条件化的动力学，以及由反馈驱动的更新。WorldFoundry 标准化的是发现、执行、artifact 与证据，而不是单一模型接口或无差别排名。
+
 ## Artifact 边界
 
 把这条最重要规则画成一张图：模型执行与 benchmark 评测只通过归一化 artifact 接触。模型产出 `GenerationResult` 行，benchmark 消费它；两侧都不越过边界去碰对方的内部实现。
@@ -43,47 +45,11 @@ WorldFoundry 遵循一条最重要的设计规则：**把模型执行与 benchma
 
 ### 例子：Matrix-Game 2 输出跨过边界
 
-仓库中的 Matrix-Game 2 universal 示例使用初始图像 `worldfoundry/data/test_cases/matrix-game-2/universal/0000.png` 和动作条件配置。Operator 会把这些输入转换成模型原生调用，pipeline 负责 checkpoint 与推理，输出端再写出视频和 metadata。
+Matrix-Game 2 universal 运行使用用户提供的初始图像和动作条件配置。配置运行时请显式传入图像路径。Operator 会把这些输入转换成模型原生调用，pipeline 负责 checkpoint 与推理，输出端再写出视频和 metadata。
 
 <ArchDiagram id="matrix-game" locale="zh" />
 
 评测端只需知道 artifact 的 kind、URI 与 sample identity，不需要知道 Matrix-Game 2 怎样加载权重。反过来，pipeline 也从不 import 某个 benchmark 的 evaluator。若生成成功但 benchmark 所需的 prompt set 不完整，`GenerationResult` 仍然有效，而 scorecard 中的 leaderboard eligibility 仍然为 false。
-
-## 连接系统的核心契约
-
-### Manifest 描述意图与要求
-
-模型和 benchmark manifest 回答条目是什么、来自哪里、有哪些 alias 与能力、需要哪些资产、由哪个 runtime 处理。它们是可 review 的声明，而不是“声明的路径能在每台机器上跑通”的证明。
-
-### Request 与 result 归一化执行边界
-
-`GenerationRequest` 携带 sample 身份、输入媒体、文本或任务条件与参数。`GenerationResult` 记录该 sample 实际发生了什么，并指向输出。本地 checkpoint、托管 API 和 simulator-facing policy 因此可以保留原生实现，同时向评测与报告提供稳定结果形态。
-
-### Artifact 让结果持久化
-
-Artifact manifest 与 request/result ledger 记录哪些文件或 URI 属于本次 run。Artifact 可以脱离生成进程存在，之后仍然能够被 review、转换为官方 layout、重新打分、比较或审计。
-
-### Scorecard 与结果声明范围
-
-Metric summary 回答怎样打分，scorecard 则进一步加入覆盖率、provenance、blocker、validation 状态和 eligibility。这样，framework 成功、导入官方形态文件和完整复现官方 benchmark 不会被当成同一种成就。
-
-## Pipeline 与 operator 拆分
-
-**Pipeline** 负责模型构建、checkpoint 加载、设备放置与原生 inference call。**Operator** 把归一化 WorldFoundry 输入适配到 pipeline，再把原生输出转换为持久 artifact。
-
-这个拆分避免 Studio、CLI、脚本与评测 job 重复实现输入整形、输出命名和结果归一化。它也保留模型的原生行为：camera-conditioned 世界模型、diffusion 视频模型和 robot policy 不该为了迁就某个抽象，就假装接受完全相同的参数。
-
-## Catalog 与 runtime 拆分
-
-即使完整 runtime 尚未接入，catalog 条目仍然可以保存稳定 ID、上游来源、许可证、checkpoint 引用、任务家族和已知要求。但 metadata 不能被误读为执行证据。
-
-因此，WorldFoundry 分别跟踪 catalog 状态、runner binding、本地资产 readiness、bounded validation、official runtime evidence 与 leaderboard eligibility。CLI 会从这些字段推导下一步，而不是把它们压成一个含糊的 “supported” 值。
-
-## 资产放在 git 外
-
-模型权重、dataset、metric checkpoint、凭据、生成媒体和 simulator 资产通常体积很大，或受到许可证、隐私和机器配置约束。仓库只保留代码、manifest、小型 fixture 和文档。Bootstrap 脚本会定义明确的本地根目录，使不同 run 复用外部资产，而不需要把资产复制进每一个上游项目。
-
-这个设计也让缺失状态可见。Run 应该报告具体缺少的 checkpoint、dataset、metric 权重、凭据或 simulator，而不是静默切换到另一种实现。
 
 ## 各层在仓库中的位置
 

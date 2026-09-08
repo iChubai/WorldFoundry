@@ -1,0 +1,21 @@
+---
+title: "VQ-BeT"
+description: "VQ-BeT (Vector-Quantized Behavior Transformer) generates behavior by tokenizing continuous actions with a hierarchical VQ-VAE and predicting those tokens with a transformer — capturing multimodal demonstrations without diffusion sampling c…"
+pageSource: generated
+---
+
+**发表机构:** 开源研究发布（仓库未记录正式机构） · 研究机构
+
+VQ-BeT（向量量化行为 Transformer）用分层 VQ-VAE 将连续动作 token 化，再以 transformer 预测这些 token 来生成行为——无需扩散采样开销即可捕捉多模态示范。catalog 以官方仓库为源，经树内动作运行时适配器路由。
+
+<ModelCommandBuilder modelId="vqbet" locale="zh" />
+
+## 架构
+
+残差 VQ-VAE 动作 tokenizer 加 GPT 式行为 token transformer，偏移头恢复连续动作。更多内部细节仓库未记录。
+
+## 使用要点
+
+checkpoint 缺失由运行时 missing_assets 报告，不视为 catalog 阻塞；权重就位前运行输出运行时计划。运行前需用官方代码训练自己的任务 checkpoint。
+
+<ModelRelatedRecipes modelId="vqbet" locale="zh" />

@@ -1,0 +1,27 @@
+---
+title: "Genie Envisioner"
+description: "Genie Envisioner is AgiBot's robotics world model platform: a video-generative backbone that predicts action-conditioned robot manipulation futures, usable for policy learning and evaluation."
+pageSource: generated
+---
+
+**Publisher:** AgiBot · Company
+image → video
+
+Genie Envisioner is AgiBot's robotics world model platform: a video-generative backbone that predicts action-conditioned robot manipulation futures, usable for policy learning and evaluation. In this catalog the official WorldArena-listed source is vendored in-tree; execution waits on the Genie-Envisioner and LTX-Video checkpoints plus robot task assets.
+
+<ModelCommandBuilder modelId="genie-envisioner" locale="en" />
+
+## Architecture
+
+The recorded checkpoints reveal an LTX-Video-based video backbone (Lightricks/LTX-Video) with AgiBot's own world-model weights (agibot-world/Genie-Envisioner). The runtime is vendored under synthesis/visual_generation/genie_envisioner/genie_envisioner_runtime.
+
+## Usage notes
+
+The pipeline resolves the vendored inference entrypoint and returns blocked runtime diagnostics until checkpoints and task assets are staged. Stage both recorded checkpoint sets before submitting jobs.
+
+## Evaluation benchmarks
+
+- [WorldArena](/docs/evaluation/benchmark-hub/worldarena) — The entry is listed on WorldArena for robot world-model evaluation.
+- [EWMBench](/docs/evaluation/benchmark-hub/ewmbench) — Embodied world-model video prediction quality.
+
+<ModelRelatedRecipes modelId="genie-envisioner" locale="en" />

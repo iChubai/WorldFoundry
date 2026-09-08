@@ -1,0 +1,21 @@
+---
+title: "Galaxea G0Plus"
+description: "Galaxea G0Plus is Galaxea AI's open VLA policy, released with the OpenGalaxea/G0-VLA checkpoint on a PaliGemma-3B base. WorldFoundry keeps the full inference path in-tree — model architecture, KV cache, flow sampler, strict checkpoint load…"
+pageSource: generated
+---
+
+**Publisher:** Galaxea AI · Company
+
+Galaxea G0Plus is Galaxea AI's open VLA policy, released with the OpenGalaxea/G0-VLA checkpoint on a PaliGemma-3B base. WorldFoundry keeps the full inference path in-tree — model architecture, KV cache, flow sampler, strict checkpoint loader, tokenizer adapter, preprocessing, and normalization — with static runtime verification complete.
+
+<ModelCommandBuilder modelId="galaxea-vla" locale="en" />
+
+## Architecture
+
+A PaliGemma-3B vision-language base with a flow-matching action sampler and KV-cached decoding. Parameter names preserve the official checkpoint contract; restoration is strict.
+
+## Usage notes
+
+Note the non-commercial G0-Plus community license before deployment. Runtime accepts only staged local assets; dataset, training, evaluation harness, deployment server, and robot-control code are excluded.
+
+<ModelRelatedRecipes modelId="galaxea-vla" locale="en" />

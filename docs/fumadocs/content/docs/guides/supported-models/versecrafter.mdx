@@ -1,0 +1,26 @@
+---
+title: "VerseCrafter"
+description: "VerseCrafter from Tencent ARC is a camera-controlled image-to-video world model built on 4D control: a geometry-aware rendering stage produces 4D control signals that guide the diffusion stage along the requested camera path. WorldFoundry…"
+pageSource: generated
+---
+
+**Publisher:** Tencent ARC Lab · Company
+image → video
+
+VerseCrafter from Tencent ARC is a camera-controlled image-to-video world model built on 4D control: a geometry-aware rendering stage produces 4D control signals that guide the diffusion stage along the requested camera path. WorldFoundry vendors the official source (revision 008693b5) plus the exact VideoX-Fun submodule (revision 246a0e3a) in-tree, with the sxzheng/VerseCrafter checkpoint reference.
+
+<ModelCommandBuilder modelId="versecrafter" locale="en" />
+
+## Architecture
+
+Two stages are wired in-tree: camera-only 4D-control rendering followed by the diffusion stage. The diffusion backbone comes from the pinned VideoX-Fun submodule. Further architecture internals are not recorded in this repository.
+
+## Usage notes
+
+Note the license before any deployment: upstream is research-only, non-commercial, and excludes intended EU use. Runner parity is pending, so treat outputs as unverified until a parity run is recorded.
+
+## Evaluation benchmarks
+
+- [CameraBench](/docs/evaluation/benchmark-hub/camerabench) — Camera-path adherence for 4D-controlled generation.
+
+<ModelRelatedRecipes modelId="versecrafter" locale="en" />

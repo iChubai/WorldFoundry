@@ -1,0 +1,21 @@
+---
+title: "LagrNVS"
+description: "LagrNVS is Meta's novel-view-synthesis model for rendering new camera paths through a scene (facebook/lagernvs_general_512). WorldFoundry wraps the upstream minimal_inference.py command with an in-tree adapter; the checkpoint is gated on H…"
+pageSource: generated
+---
+
+**Publisher:** Meta AI (FAIR) · Company
+
+LagrNVS is Meta's novel-view-synthesis model for rendering new camera paths through a scene (facebook/lagernvs_general_512). WorldFoundry wraps the upstream minimal_inference.py command with an in-tree adapter; the checkpoint is gated on Hugging Face and missing HF_TOKEN access is reported at inference time.
+
+<ModelCommandBuilder modelId="lagernvs" locale="en" />
+
+## Architecture
+
+The catalog records a novel-view/camera-path rendering model at 512 resolution; internals are not recorded in this repository. License is the FAIR non-commercial research license.
+
+## Usage notes
+
+Runner parity is pending: pipeline imports and plan-only inference are wired, and full artifact parity needs the gated checkpoint plus CUDA. Accept the gated terms and set HF_TOKEN before running.
+
+<ModelRelatedRecipes modelId="lagernvs" locale="en" />

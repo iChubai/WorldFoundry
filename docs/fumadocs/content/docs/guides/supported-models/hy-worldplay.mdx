@@ -1,0 +1,32 @@
+---
+title: "HY-WorldPlay"
+description: "HY-WorldPlay is Tencent's real-time interactive world video model: starting from an image, it follows pose/action input to roll the world forward — the interactive arm of the Hunyuan world stack."
+pageSource: generated
+---
+
+**Publisher:** Tencent (Hunyuan) · Company
+video
+
+HY-WorldPlay is Tencent's real-time interactive world video model: starting from an image, it follows pose/action input to roll the world forward — the interactive arm of the Hunyuan world stack. In this catalog the runner is verified for the official image-pose-video route with the official 8-GPU execution profile.
+
+<figure className="wf-recipe-media">
+  <Video src="/demos/studio/hy-worldplay-official-8gpu.mp4" autoPlay loop muted playsInline />
+  <figcaption>Interactive world play</figcaption>
+</figure>
+
+<ModelCommandBuilder modelId="hy-worldplay" locale="en" />
+
+## Architecture
+
+The recorded checkpoint set tells the assembly: tencent/HY-WorldPlay action weights over tencent/HunyuanVideo-1.5 video-model support assets, with Qwen2.5-VL-7B-Instruct, byt5-small, and FLUX.1-Redux-dev as support components. The in-tree pipeline follows the official demo contract.
+
+## Usage notes
+
+The official route uses 8 torchrun ranks — plan for a multi-GPU host and stage all five recorded checkpoint sets. Full benchmark scoring and longer interaction suites remain separate work.
+
+## Evaluation benchmarks
+
+- [WorldModelBench](/docs/evaluation/benchmark-hub/worldmodelbench) — Interactive world-rollout quality.
+- [CameraBench](/docs/evaluation/benchmark-hub/camerabench) — Pose/camera-following accuracy.
+
+<ModelRelatedRecipes modelId="hy-worldplay" locale="en" />

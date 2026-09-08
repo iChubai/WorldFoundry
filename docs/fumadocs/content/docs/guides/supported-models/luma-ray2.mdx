@@ -1,0 +1,27 @@
+---
+title: "Luma Ray2"
+description: "Luma Ray2 is Luma AI's hosted video generation model, cataloged for text-to-video and image-to-video. WorldFoundry's Studio pipeline wraps the Luma API so a prompt or a start frame turns into a downloadable clip inside the normal WorldFoun…"
+pageSource: generated
+---
+
+**Publisher:** Luma AI · Company
+text · image → video
+
+Luma Ray2 is Luma AI's hosted video generation model, cataloged for text-to-video and image-to-video. WorldFoundry's Studio pipeline wraps the Luma API so a prompt or a start frame turns into a downloadable clip inside the normal WorldFoundry result layout. Nothing about the model runs locally; this entry is the bookkeeping and plumbing for the hosted route.
+
+<ModelCommandBuilder modelId="luma-ray2" locale="en" />
+
+## Architecture
+
+This is a hosted, provider-operated model: the vendor has not published its architecture, parameter count, or training recipe, and this repository does not record them. What WorldFoundry records is the integration surface only — a Studio pipeline that submits requests to the provider endpoint and collects the returned video artifacts.
+
+## Usage notes
+
+The catalog marks this entry as integrated: the hosted-API Studio pipeline is available, but you must supply your own provider API key and account. No weights are downloaded and no GPU environment is provisioned locally — generation happens on the provider side, so cost, quota, and content policy follow your provider account. Keys are issued through Luma's developer platform (lumalabs.ai).
+
+## Evaluation benchmarks
+
+- [VBench](/docs/evaluation/benchmark-hub/vbench) — Standard multi-dimension quality suite for comparing hosted text/image-to-video outputs.
+- [Physics-IQ Original](/docs/evaluation/benchmark-hub/physics-iq) — Probes whether provider-side video models respect basic physical plausibility.
+
+<ModelRelatedRecipes modelId="luma-ray2" locale="en" />

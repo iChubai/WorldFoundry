@@ -76,8 +76,8 @@ docs:
   overview_zh: Causal-Forcing 把双向视频扩散蒸馏为因果自回归生成器——包括 Causal-Forcing++ 少步 variant——使视频可以逐 chunk 或逐帧生成。本 catalog 中官方仅推理运行时已内置树内，chunk-wise checkpoint 为本地默认，frame-wise 与 ++ variant 可通过配置覆盖选择。
   architecture: Per the paper (arXiv 2602.02214), a Wan2.1-based teacher is distilled into causal students with chunk-wise or frame-wise attention; the ++ variants push to 1-2 step sampling. Recorded checkpoints include chunk-wise plus frame-wise and two ++ few-step variants under zhuhz22/Causal-Forcing.
   architecture_zh: 按论文（arXiv 2602.02214），基于 Wan2.1 的教师被蒸馏为 chunk-wise 或 frame-wise 注意力的因果学生；++ variant 进一步压缩到 1-2 步采样。记录的 checkpoint 包括 chunk-wise，以及 zhuhz22/Causal-Forcing 下的 frame-wise 与两个 ++ 少步 variant。
-  usage_notes: The adapter executes the vendored official inference.py path; full parity requires local Wan2.1 weights plus the selected Causal-Forcing checkpoint/config pair. Benchmark prompt lists live under worldfoundry/data/test_cases/forcing/prompts/.
-  usage_notes_zh: 适配器执行内置的官方 inference.py 路径；完整一致性需要本地 Wan2.1 权重与所选 Causal-Forcing checkpoint/config 配对。benchmark 提示词列表位于 worldfoundry/data/test_cases/forcing/prompts/。
+  usage_notes: The adapter executes the vendored official inference.py path; full parity requires local Wan2.1 weights plus the selected Causal-Forcing checkpoint/config pair. Supply benchmark prompt lists separately through your local input configuration.
+  usage_notes_zh: 适配器执行内置的官方 inference.py 路径；完整一致性需要本地 Wan2.1 权重与所选 Causal-Forcing checkpoint/config 配对。benchmark 提示词列表需自行准备，并通过本地输入配置提供。
   limitations:
   - Runner parity is pending staged Wan2.1 weights and the chosen checkpoint/config pair.
   - Distilled causal students trade some quality for autoregressive speed versus the bidirectional teacher.

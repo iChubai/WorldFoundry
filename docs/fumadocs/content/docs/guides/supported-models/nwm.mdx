@@ -1,0 +1,33 @@
+---
+title: "Navigation World Models"
+description: "Navigation World Models (NWM) is Meta's navigation world model (CVPR 2025 highlight): a conditional diffusion transformer that predicts egocentric future video from past frames and navigation actions, and can plan trajectories by imagining…"
+pageSource: generated
+---
+
+**Publisher:** Meta AI (FAIR) · Company
+video
+
+Navigation World Models (NWM) is Meta's navigation world model (CVPR 2025 highlight): a conditional diffusion transformer that predicts egocentric future video from past frames and navigation actions, and can plan trajectories by imagining them. Recorded variants cover RECON and SCAND dataset checkpoints. In this catalog the source is vendored in-tree; execution stays checkpoint/dataset gated.
+
+<ModelCommandBuilder modelId="nwm" locale="en" />
+
+## Architecture
+
+Per the upstream release, a Conditional Diffusion Transformer (CDiT) scales to 1B parameters and conditions on action and time embeddings for egocentric prediction (checkpoints at facebook/nwm, CC-BY-NC-4.0).
+
+## Usage notes
+
+The pipeline resolves the official NWM inference entrypoint and returns blocked diagnostics until checkpoints and evaluation datasets are staged. It is the recorded candidate for non-driving navigation video evaluation.
+
+## Variants & pipeline bindings
+
+| Variant | Task | Runtime profile | Pipeline binding | Status |
+| --- | --- | --- | --- | --- |
+| `nwm-recon` | navigation-world-model | `nwm` | `nwm` | planned |
+| `nwm-scand` | navigation-world-model | `nwm` | `nwm` | planned |
+
+## Evaluation benchmarks
+
+- [WorldModelBench](/docs/evaluation/benchmark-hub/worldmodelbench) — Navigation world-rollout quality.
+
+<ModelRelatedRecipes modelId="nwm" locale="en" />

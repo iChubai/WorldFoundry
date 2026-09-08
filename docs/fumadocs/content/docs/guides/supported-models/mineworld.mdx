@@ -1,0 +1,31 @@
+---
+title: "MineWorld"
+description: "MineWorld is Microsoft's real-time open-source interactive world model for Minecraft: an autoregressive transformer that plays forward Minecraft scenes from image/video context and actions (arXiv 2504.08388, MIT license)."
+pageSource: generated
+---
+
+**Publisher:** Microsoft · Company
+[MineWorld: a Real-Time and Open-Source Interactive World Model on Minecraft](https://arxiv.org/abs/2504.08388) (2025)
+
+MineWorld is Microsoft's real-time open-source interactive world model for Minecraft: an autoregressive transformer that plays forward Minecraft scenes from image/video context and actions (arXiv 2504.08388, MIT license). In this catalog the source is vendored in-tree; runnable execution still needs the official dependency environment, checkpoints, and validation/demo data.
+
+<figure className="wf-recipe-media is-diagram">
+  <img src="/models/mineworld/paper.png" alt="MineWorld: a Real-Time and Open-Source Interactive World Model on Minecraft" />
+  <figcaption>MineWorld: a Real-Time and Open-Source Interactive World Model on Minecraft</figcaption>
+</figure>
+
+<ModelCommandBuilder modelId="mineworld" locale="en" />
+
+## Architecture
+
+Per the paper, a visual tokenizer plus an autoregressive transformer over interleaved state-action tokens, with parallel decoding for real-time speed. Internals beyond this are not recorded here.
+
+## Usage notes
+
+The pipeline resolves the official inference entrypoint and returns blocked runtime diagnostics until checkpoints and validation data are staged.
+
+## Evaluation benchmarks
+
+- [WorldModelBench](/docs/evaluation/benchmark-hub/worldmodelbench) — Action-conditioned game-world rollout quality.
+
+<ModelRelatedRecipes modelId="mineworld" locale="en" />

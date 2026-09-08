@@ -1,0 +1,27 @@
+---
+title: "HyDRA"
+description: "HyDRA is a camera-controlled video-to-video world model: it re-renders an input video along new camera behavior described by a camera JSON."
+pageSource: generated
+---
+
+**发表机构:** 开源研究发布（仓库未记录正式机构） · 研究机构
+video → video
+
+HyDRA 是相机可控的视频到视频世界模型：按 camera JSON 描述的新相机行为重新渲染输入视频。本 catalog 中官方源码以固定 revision 内置，树内运行时与 WRBench camera JSON 路径已接通；GPU 产物验证待 checkpoint 就位。
+
+<ModelCommandBuilder modelId="hydra" locale="zh" />
+
+## 架构
+
+架构内部细节仓库未记录。固定的公开 revision 无 LICENSE 文件，下游使用前必须先做许可审查。
+
+## 使用要点
+
+必须使用内置源码——外部源码检出会被拒绝。输入为提示词、视频与 camera_json；期望得到产物前请先就位 checkpoint。
+
+## 评测 Benchmark
+
+- [CameraBench](/zh/docs/evaluation/benchmark-hub/camerabench) — 重渲染视频的相机行为贴合度。
+- [WRBench](/zh/docs/evaluation/benchmark-hub/wrbench) — 该模型 manifest 的证据记录中提到了这一评测。
+
+<ModelRelatedRecipes modelId="hydra" locale="zh" />

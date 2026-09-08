@@ -1,0 +1,21 @@
+---
+title: "Action Chunking Transformer"
+description: "ACT (Action Chunking Transformer) is the classic imitation-learning policy behind the ALOHA line of work: instead of predicting one action at a time it predicts chunks of future actions, smoothing control and reducing compounding error. Wo…"
+pageSource: generated
+---
+
+**Publisher:** Open-source research release (institution not recorded) · Research lab
+
+ACT (Action Chunking Transformer) is the classic imitation-learning policy behind the ALOHA line of work: instead of predicting one action at a time it predicts chunks of future actions, smoothing control and reducing compounding error. WorldFoundry executes the full policy — DETR-VAE, transformer, ResNet backbone, preprocessing, and action-chunk aggregation — from a flattened in-tree package.
+
+<ModelCommandBuilder modelId="act" locale="en" />
+
+## Architecture
+
+A DETR-style transformer with a CVAE objective: a ResNet visual backbone feeds a transformer encoder-decoder that emits an action chunk; the VAE latent captures demonstration multimodality.
+
+## Usage notes
+
+Checkpoint-backed prediction requires a caller-staged policy_best.ckpt and matching dataset_stats.pkl. Checkpoint tensors use weights-only deserialization and statistics use a restricted NumPy-only reader, so no upstream pickle execution occurs.
+
+<ModelRelatedRecipes modelId="act" locale="en" />

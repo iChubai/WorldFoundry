@@ -1,0 +1,27 @@
+---
+title: "LongCat-Video"
+description: "LongCat-Video is Meituan's open video generation model focused on long-video generation: text-to-video, image-to-video, and native video continuation in one model. WorldFoundry registers a model-specific pipeline that runs the vendored in-…"
+pageSource: generated
+---
+
+**发表机构:** 美团（LongCat 团队） · 企业
+text · image → video
+
+LongCat-Video 是美团开源的视频生成模型，主打长视频：文生视频、图生视频与原生视频续写集于一个模型。WorldFoundry 注册了模型专属 pipeline，运行树内内置的 demo 脚本——并有一个刻意的安全设计：不显式传入 execute=True 就不会执行。权重为 MIT 许可，位于 meituan-longcat/LongCat-Video。
+
+<ModelCommandBuilder modelId="longcat-video" locale="zh" />
+
+## 架构
+
+上游将 LongCat-Video 定位为统一的 DiT 系生成器，视频续写是一等任务，可生成分钟级视频。本仓库记录了使用本地 checkpoint 的统一环境路径与 image/prompt/video 输入契约；层级细节仓库未记录。
+
+## 使用要点
+
+Runner parity 为 pending——官方 93 帧 / 50 步的完整质量一致性尚未记录。记住 execute=True 这道门：默认调用会按设计快速失败。运行前先在本地就位 LongCat checkpoint。
+
+## 评测 Benchmark
+
+- [VBench](/zh/docs/evaluation/benchmark-hub/vbench) — 基础文生视频质量评测。
+- [ChronoMagic-Bench](/zh/docs/evaluation/benchmark-hub/chronomagic-bench) — 长时程生成评测，契合其续写定位。
+
+<ModelRelatedRecipes modelId="longcat-video" locale="zh" />

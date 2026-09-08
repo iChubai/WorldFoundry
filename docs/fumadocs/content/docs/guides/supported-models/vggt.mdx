@@ -1,0 +1,22 @@
+---
+title: "VGGT"
+description: "VGGT (Visual Geometry Grounded Transformer, CVPR 2025) is a feed-forward network that infers cameras, depth maps, point maps, and 3D point tracks from one to hundreds of views in a single pass — no per-scene optimization."
+pageSource: generated
+---
+
+**Publisher:** Meta AI (FAIR) / University of Oxford (VGG) · Company
+point cloud
+
+VGGT (Visual Geometry Grounded Transformer, CVPR 2025) is a feed-forward network that infers cameras, depth maps, point maps, and 3D point tracks from one to hundreds of views in a single pass — no per-scene optimization. In this catalog the in-tree two-stage 3DGS pipeline is registered, distinct from the vggt-omega and vggt-world entries.
+
+<ModelCommandBuilder modelId="vggt" locale="en" />
+
+## Architecture
+
+Per the CVPR 2025 paper, a large transformer alternates frame-wise and global attention over image tokens, with task-specific heads for cameras, depth, pointmaps, and tracking. Weights are apache-2.0 (facebookresearch/vggt); the recorded route builds 3DGS from VGGT geometry in two stages.
+
+## Usage notes
+
+Integration is runtime_ported with runner parity pending. For the verified scene-export route use vggt-omega; use this entry when you want the two-stage 3DGS pipeline over base VGGT geometry.
+
+<ModelRelatedRecipes modelId="vggt" locale="en" />

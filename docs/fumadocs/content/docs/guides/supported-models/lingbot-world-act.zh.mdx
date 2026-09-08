@@ -1,0 +1,25 @@
+---
+title: "LingBot-World Base Act"
+description: "LingBot-World Base Act is the action-conditioned sibling of LingBot-World: instead of camera poses it consumes an action matrix, making it the interactive-control profile of the family. It is independently cataloged and resolves the offici…"
+pageSource: generated
+---
+
+**发表机构:** 蚂蚁灵波科技（Robbyant，蚂蚁集团） · 企业
+
+LingBot-World Base Act 是 LingBot-World 的动作条件同门：它消费动作矩阵而非相机位姿，是该家族的交互控制档案。它独立记录，并解析官方 Base-Act 预览 checkpoint——绝不以 Base-Cam 顶替。
+
+<ModelCommandBuilder modelId="lingbot-world-act" locale="zh" />
+
+## 架构
+
+推理路径复用树内 LingBot 运行时与中央 Wan 基座模块（apache-2.0）。输入为提示词、图像、位姿与 action_matrix。
+
+## 使用要点
+
+树内动作负载路由已接通；完整 GPU 产物一致性需要本地就位权重。保留专属 LingBot 环境是因为统一环境下的 act2cam 一致性测试产出接近全黑的输出——请勿更换环境。
+
+## 评测 Benchmark
+
+- [WorldModelBench](/zh/docs/evaluation/benchmark-hub/worldmodelbench) — 动作条件世界滚动生成质量。
+
+<ModelRelatedRecipes modelId="lingbot-world-act" locale="zh" />

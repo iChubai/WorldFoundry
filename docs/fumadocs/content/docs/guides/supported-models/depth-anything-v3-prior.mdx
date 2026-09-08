@@ -1,0 +1,22 @@
+---
+title: "Depth Anything 3 Metric Prior"
+description: "Depth Anything 3 Metric Prior is the metric-depth head of ByteDance Seed's Depth Anything 3, integrated as an independent geometry prior with verified runner status. The recorded checkpoint is depth-anything/DA3METRIC-LARGE, and it is the…"
+pageSource: generated
+---
+
+**Publisher:** ByteDance (Seed) · Company
+image → depth
+
+Depth Anything 3 Metric Prior is the metric-depth head of ByteDance Seed's Depth Anything 3, integrated as an independent geometry prior with verified runner status. The recorded checkpoint is depth-anything/DA3METRIC-LARGE, and it is the depth prior the Prior-Depth-Anything refiner was verified against in this repository.
+
+<ModelCommandBuilder modelId="depth-anything-v3-prior" locale="en" />
+
+## Architecture
+
+DA3 scales the Depth Anything recipe and adds metric and geometry heads. This prior entry wires the metric-large checkpoint; runtime configs live under runtime/configs/depth_anything_v3, separate from VIPE configs.
+
+## Usage notes
+
+It is integrated as an independent geometry prior under worldfoundry/base_models and exposed through the shared geometry-prior pipeline/operator contract. Higher-level pipelines (e.g. ViPE) import it from this canonical owner instead of keeping private copies. Use the sibling depth-anything-v3 entry for the official SOH export route.
+
+<ModelRelatedRecipes modelId="depth-anything-v3-prior" locale="en" />

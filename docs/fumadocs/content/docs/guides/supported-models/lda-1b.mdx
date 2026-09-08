@@ -1,0 +1,25 @@
+---
+title: "LDA-1B"
+description: "LDA-1B is a 1B-scale VLA policy combining Qwen3-VL language-vision assembly with a DINOv3-ViT compatibility model and an MMDiT action sampler, released for RoboCasa (Wayer2/LDA-robocasa, CC-BY-NC-4.0). WorldFoundry keeps the full inference…"
+pageSource: generated
+---
+
+**Publisher:** Open-source research release (institution not recorded) · Research lab
+
+LDA-1B is a 1B-scale VLA policy combining Qwen3-VL language-vision assembly with a DINOv3-ViT compatibility model and an MMDiT action sampler, released for RoboCasa (Wayer2/LDA-robocasa, CC-BY-NC-4.0). WorldFoundry keeps the full inference path in-tree with static runtime verification complete.
+
+<ModelCommandBuilder modelId="lda-1b" locale="en" />
+
+## Architecture
+
+Qwen3-VL provides multimodal encoding, DINOv3-ViT adds visual features, and an MMDiT (multimodal diffusion transformer) samples actions, with state packing and action unnormalization in-tree. Model and parameter names preserve the released checkpoint contract.
+
+## Usage notes
+
+The runtime loads only a locally staged tensor state dict with weights_only=true. Exact checkpoint-key and numerical rollout validation require the unstaged 14.4 GB artifact — stage it before real runs.
+
+## Evaluation benchmarks
+
+- [RoboCasa](/docs/evaluation/benchmark-hub/robocasa) — The released checkpoint targets RoboCasa.
+
+<ModelRelatedRecipes modelId="lda-1b" locale="en" />

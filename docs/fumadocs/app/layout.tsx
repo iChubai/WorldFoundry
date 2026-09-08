@@ -19,7 +19,7 @@ export const metadata: Metadata = {
     template: '%s | WorldFoundry',
   },
   description:
-    'Open-source infrastructure to discover, run, inspect, and evaluate video, 3D/4D, interactive-world, and embodied models.',
+    'Open-source infrastructure for world intelligence: discover, run, inspect, and evaluate video, 3D/4D, interactive-world, and embodied models under shared contracts.',
   icons: {
     icon: [{ url: faviconPath, type: 'image/svg+xml' }],
     shortcut: faviconPath,

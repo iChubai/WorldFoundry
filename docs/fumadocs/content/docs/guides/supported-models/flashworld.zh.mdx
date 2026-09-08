@@ -1,0 +1,31 @@
+---
+title: "FlashWorld"
+description: "FlashWorld generates 3D scenes in seconds: from one image (plus optional prompt) it produces a camera-navigable 3D scene rather than a flat clip."
+pageSource: generated
+---
+
+**发表机构:** 厦门大学 / 腾讯 · 高校
+[FlashWorld: High-quality 3D Scene Generation within Seconds](https://arxiv.org/abs/2510.13678) (2025)
+
+FlashWorld 数秒内生成 3D 场景：从一张图（可附提示词）产出可相机游走的 3D 场景，而非平面视频。本 catalog 中其树内 pipeline、operator 与表示运行时均已暴露，图像条件的相机场景 demo 在本地 FlashWorld/Wan 资产下 runner 状态为 verified。
+
+<figure className="wf-recipe-media is-diagram">
+  <img src="/models/flashworld/paper.png" alt="FlashWorld: High-quality 3D Scene Generation within Seconds" />
+  <figcaption>FlashWorld: High-quality 3D Scene Generation within Seconds</figcaption>
+</figure>
+
+<ModelCommandBuilder modelId="flashworld" locale="zh" />
+
+## 架构
+
+FlashWorld 将基于 Wan 的视频生成器蒸馏为快速 3D 场景生成器，使用高斯式场景表示（见 arXiv 2510.13678）。运行需要 FlashWorld、Wan2.2、diffusers/transformers 与 CUDA 资产；不注册空的 runner 壳。
+
+## 使用要点
+
+图像条件 demo 已验证；每次运行的视觉 QA 在 catalog 外跟踪。执行仍受 checkpoint/GPU/依赖限制——请先就位所有记录资产。
+
+## 评测 Benchmark
+
+- [WorldScore](/zh/docs/evaluation/benchmark-hub/worldscore) — 可游走生成场景的标准评分。
+
+<ModelRelatedRecipes modelId="flashworld" locale="zh" />

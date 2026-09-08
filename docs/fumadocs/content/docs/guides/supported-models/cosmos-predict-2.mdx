@@ -1,0 +1,34 @@
+---
+title: "Cosmos Predict 2"
+description: "Cosmos Predict 2 is the previous generation of NVIDIA's world foundation model, covering image-to-video and video-to-world generation with 2B and 14B video2world variants."
+pageSource: generated
+---
+
+**Publisher:** NVIDIA · Company
+image · video → video
+
+Cosmos Predict 2 is the previous generation of NVIDIA's world foundation model, covering image-to-video and video-to-world generation with 2B and 14B video2world variants. In this catalog it is assembled from the framework-owned denoiser, T5 conditioner, Rectified Flow AB2 scheduler, Wan codec, and standard runner — no NVIDIA runtime package or Diffusers pipeline is invoked.
+
+<ModelCommandBuilder modelId="cosmos-predict-2" locale="en" />
+
+## Architecture
+
+Predict2 and Predict2.5 share one checkpoint-shaped transformer implementation in WorldFoundry; only version-specific architecture and sampling values live in recipes. The native 2B architecture contains 567 checkpoint-owned tensors with no synthetic cross-attention projection.
+
+## Usage notes
+
+Registry, component contracts, architecture construction, conditioning masks, and AB2 scheduler numerics are validated locally; gated checkpoint access and GPU parity are separate steps. Prefer cosmos-predict-2.5 for new work unless you need the T5-conditioned v2 recipe.
+
+## Variants & pipeline bindings
+
+| Variant | Task | Runtime profile | Pipeline binding | Status |
+| --- | --- | --- | --- | --- |
+| `cosmos-predict2-2b-video2world` | image/video-to-world | `cosmos-predict2-2b-video2world` | `cosmos-predict2-2b-video2world` | integrated |
+| `cosmos-predict2-14b-video2world` | image/video-to-world | `cosmos-predict2-14b-video2world` | `cosmos-predict2-14b-video2world` | integrated |
+
+## Evaluation benchmarks
+
+- [WorldModelBench](/docs/evaluation/benchmark-hub/worldmodelbench) — World-generation quality across conditions.
+- [Physics-IQ Original](/docs/evaluation/benchmark-hub/physics-iq) — Physical plausibility of predicted world video.
+
+<ModelRelatedRecipes modelId="cosmos-predict-2" locale="en" />

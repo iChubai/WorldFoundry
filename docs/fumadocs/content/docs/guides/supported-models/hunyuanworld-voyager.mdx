@@ -1,0 +1,27 @@
+---
+title: "HunyuanWorld-Voyager"
+description: "HunyuanWorld-Voyager generates world-consistent RGB-D video along user-defined camera paths — walk a camera through the scene implied by one image and get aligned color and depth for 3D reconstruction."
+pageSource: generated
+---
+
+**Publisher:** Tencent (Hunyuan) · Company
+video
+
+HunyuanWorld-Voyager generates world-consistent RGB-D video along user-defined camera paths — walk a camera through the scene implied by one image and get aligned color and depth for 3D reconstruction. In this catalog the runner is verified against the official case1 conditioned-video demo with the upstream single-GPU command shape.
+
+<ModelCommandBuilder modelId="hunyuanworld-voyager" locale="en" />
+
+## Architecture
+
+Per the upstream release, Voyager combines a HunyuanVideo-based generator with joint RGB-D output and a world-cache mechanism for long-range consistency. The official case1 defaults are recorded in the runtime profile: num_frames=49, infer_steps=50, flow_shift=7.0, embedded_cfg_scale=6.0, i2v_stability=true.
+
+## Usage notes
+
+HunyuanWorldVoyagerPipeline wraps the in-tree runtime — no external checkout at import or inference time. Per-run visual QA is tracked outside the catalog.
+
+## Evaluation benchmarks
+
+- [WorldScore](/docs/evaluation/benchmark-hub/worldscore) — Scoring for camera-navigable generated worlds.
+- [CameraBench](/docs/evaluation/benchmark-hub/camerabench) — Camera-path adherence evaluation.
+
+<ModelRelatedRecipes modelId="hunyuanworld-voyager" locale="en" />

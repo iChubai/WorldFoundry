@@ -1,0 +1,25 @@
+---
+title: "StarWM"
+description: "StarWM is a multi-agent world model for StarCraft-style environments: it predicts action-conditioned game video across many interacting units. WorldFoundry exposes the official offline inference client in-tree; jobs talk to an OpenAI-compa…"
+pageSource: generated
+---
+
+**Publisher:** Open-source research release (institution not recorded) · Research lab
+
+StarWM is a multi-agent world model for StarCraft-style environments: it predicts action-conditioned game video across many interacting units. WorldFoundry exposes the official offline inference client in-tree; jobs talk to an OpenAI-compatible StarWM endpoint using the official prompt fixture format, with the confirmed yxzhang2024/StarWM checkpoint on Hugging Face.
+
+<ModelCommandBuilder modelId="starwm" locale="en" />
+
+## Architecture
+
+The runtime is an endpoint-client design: the route builds the official run_inference_client.py command and validates input_file, mode, and served_model_id/api_model_id before execution. Model architecture internals are not recorded in this repository.
+
+## Usage notes
+
+Actual generation requires a running OpenAI-compatible StarWM endpoint; the catalog route only prepares and validates the client command. Per-run validation evidence is tracked outside the model catalog.
+
+## Evaluation benchmarks
+
+- [WorldModelBench](/docs/evaluation/benchmark-hub/worldmodelbench) — Action-conditioned game-world rollout quality.
+
+<ModelRelatedRecipes modelId="starwm" locale="en" />

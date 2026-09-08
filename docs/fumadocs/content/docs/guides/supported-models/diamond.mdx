@@ -1,0 +1,28 @@
+---
+title: "DIAMOND"
+description: "DIAMOND (DIffusion As a Model Of eNvironment Dreams) trains reinforcement-learning agents entirely inside a diffusion world model — its Atari agents and playable CS:GO world model made diffusion world models famous (NeurIPS 2024)."
+pageSource: generated
+---
+
+**Publisher:** University of Geneva / University of Edinburgh / Microsoft Research · University
+
+DIAMOND (DIffusion As a Model Of eNvironment Dreams) trains reinforcement-learning agents entirely inside a diffusion world model — its Atari agents and playable CS:GO world model made diffusion world models famous (NeurIPS 2024). In this catalog the official play/inference stack is vendored in-tree with diamond-atari and diamond-csgo variants.
+
+<ModelCommandBuilder modelId="diamond" locale="en" />
+
+## Architecture
+
+Per the publication, frame prediction uses an EDM-style diffusion model over recent frames and actions, keeping visual detail that latent world models lose. Runtime configs are packaged under data/models/runtime/configs/diamond/config; the MIT-licensed upstream downloads Atari assets on demand (disabled here — runtime network downloads are off).
+
+## Usage notes
+
+Jobs run with a local checkpoint or pretrained=true plus a non-interactive pretrained_game value from the pinned local snapshot. Full generation parity requires staged Atari assets/checkpoints.
+
+## Variants & pipeline bindings
+
+| Variant | Task | Runtime profile | Pipeline binding | Status |
+| --- | --- | --- | --- | --- |
+| `diamond-atari` | atari-world-model | `diamond` | `diamond` | planned |
+| `diamond-csgo` | game-world-model | `diamond` | `diamond` | planned |
+
+<ModelRelatedRecipes modelId="diamond" locale="en" />

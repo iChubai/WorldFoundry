@@ -1,0 +1,32 @@
+---
+title: "WorldGen"
+description: "WorldGen turns a text prompt or an image into a full 3D world — text-to-3D-world and image-to-3D-world generation in one project."
+pageSource: generated
+---
+
+**Publisher:** Open-source research release (institution not recorded) · Research lab
+text · image → 3D scene · world state
+[WorldGen: From Text to Traversable and Interactive 3D Worlds](https://arxiv.org/abs/2511.16825) (2025)
+
+WorldGen turns a text prompt or an image into a full 3D world — text-to-3D-world and image-to-3D-world generation in one project. In this catalog WorldFoundry exposes an in-tree adapter that executes the WorldGen inference flow when assets are staged; runner parity is pending, and missing gated foundation models are reported at inference time.
+
+<figure className="wf-recipe-media is-diagram">
+  <img src="/models/worldgen/paper.png" alt="WorldGen: From Text to Traversable and Interactive 3D Worlds" />
+  <figcaption>WorldGen: From Text to Traversable and Interactive 3D Worlds</figcaption>
+</figure>
+
+<ModelCommandBuilder modelId="worldgen" locale="en" />
+
+## Architecture
+
+The catalog records a generation stack that depends on gated FLUX foundation models plus WorldGen's own assets (apache-2.0 for the WorldGen release itself, paper arXiv 2511.16825). Architecture internals beyond the recorded tasks are not stored in this repository.
+
+## Usage notes
+
+Accept the gated FLUX terms and stage the WorldGen assets before running; the in-tree adapter can then execute the inference flow. Full official scene-quality parity remains pending, with per-run artifact checks tracked outside the catalog.
+
+## Evaluation benchmarks
+
+- [WorldScore](/docs/evaluation/benchmark-hub/worldscore) — Standard scoring for generated 3D worlds.
+
+<ModelRelatedRecipes modelId="worldgen" locale="en" />

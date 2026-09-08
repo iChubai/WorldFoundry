@@ -1,0 +1,28 @@
+---
+title: "EgoWM"
+description: "EgoWM is an egocentric navigation world model: from a first-person view and navigation actions it predicts the video a moving agent would see, with 3-DoF and 25-DoF action variants recorded (egowm-svd-3dof / egowm-svd-25dof)."
+pageSource: generated
+---
+
+**Publisher:** Open-source research release (institution not recorded) · Research lab
+
+EgoWM is an egocentric navigation world model: from a first-person view and navigation actions it predicts the video a moving agent would see, with 3-DoF and 25-DoF action variants recorded (egowm-svd-3dof / egowm-svd-25dof). In this catalog the official source route is registered with the source pinned at a recorded commit; checkpoints stay runtime-gated.
+
+<ModelCommandBuilder modelId="egowm" locale="en" />
+
+## Architecture
+
+The variant names record a Stable Video Diffusion backbone conditioned on 3-DoF or 25-DoF action spaces (checkpoint anuragba/egowm). Architecture internals beyond the recorded tasks are not stored in this repository.
+
+## Usage notes
+
+Config resolution and pipeline import are expected to pass; real generation emits a runtime plan until required checkpoints/assets are staged. Missing assets are reported by the plan and are not treated as catalog blockers.
+
+## Variants & pipeline bindings
+
+| Variant | Task | Runtime profile | Pipeline binding | Status |
+| --- | --- | --- | --- | --- |
+| `egowm-svd-3dof` | egocentric-navigation-video | `egowm` | `egowm` | planned |
+| `egowm-svd-25dof` | egocentric-navigation-video | `egowm` | `egowm` | planned |
+
+<ModelRelatedRecipes modelId="egowm" locale="en" />

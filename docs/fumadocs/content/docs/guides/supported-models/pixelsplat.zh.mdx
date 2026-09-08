@@ -1,0 +1,21 @@
+---
+title: "pixelSplat"
+description: "pixelSplat reconstructs a 3D Gaussian-splat scene from just two images in a single forward pass — feed-forward 3DGS rather than per-scene optimization (CVPR 2024)."
+pageSource: generated
+---
+
+**发表机构:** 麻省理工学院（MIT） · 高校
+
+pixelSplat 仅凭两张图像即可在单次前向中重建 3D 高斯泼溅场景——前馈式 3DGS，而非逐场景优化（CVPR 2024）。本 catalog 中其运行时源码已内置树内，但在本地提供高斯光栅化扩展并就位 re10k.ckpt checkpoint 之前，推理保持受限。
+
+<ModelCommandBuilder modelId="pixelsplat" locale="zh" />
+
+## 架构
+
+按论文，极线 Transformer 消解两视图间的尺度歧义，网络预测高斯参数的概率分布。 WorldFoundry 将源码内置于 base_models/three_dimensions/point_clouds/pixelsplat，并对官方测试入口做惰性封装（MIT 许可；checkpoint 镜像 dylanebert/pixelSplat）。
+
+## 使用要点
+
+PixelSplatSynthesis 封装官方测试入口，但缺少本地高斯光栅化扩展与就位的 re10k.ckpt 时会快速失败。提交任务前请先编译/就位两者。
+
+<ModelRelatedRecipes modelId="pixelsplat" locale="zh" />

@@ -1,0 +1,31 @@
+---
+title: "ModelScopeT2V"
+description: "ModelScopeT2V is Alibaba DAMO Academy's original open text-to-video diffusion model — the 1.7B model that kicked off much of the open T2V ecosystem (ZeroScope in this catalog is a fine-tune of it). The WorldFoundry route is complete and re…"
+pageSource: generated
+---
+
+**发表机构:** 阿里巴巴（达摩院 / ModelScope） · 企业
+text → video
+
+ModelScopeT2V 是阿里达摩院最早开源的文生视频扩散模型——那个带动了开源 T2V 生态的 1.7B 模型（本 catalog 中的 ZeroScope 就是它的微调版）。WorldFoundry 路径已完备，checkpoint 缺失会在运行时报告。它主要作为历史基线保留。
+
+<figure className="wf-recipe-media">
+  <Video src="/demos/studio/modelscope-t2v.mp4" autoPlay loop muted playsInline />
+  <figcaption>文本生成视频</figcaption>
+</figure>
+
+<ModelCommandBuilder modelId="modelscope-t2v" locale="zh" />
+
+## 架构
+
+U-Net 潜空间视频扩散模型，在文生图基座中插入时序注意力层（见上游论文）。本仓库记录仅 prompt 的输入契约与 generated_video 产物。
+
+## 使用要点
+
+HF cardData 记录其许可为非商用——manifest 明确要求不要当作无限制开源使用。仅建议用于研究对比；生产级文生视频请用基于 DiT 的条目。
+
+## 评测 Benchmark
+
+- [FETV](/zh/docs/evaluation/benchmark-hub/fetv) — 细粒度文生视频评测，适合老基线。
+
+<ModelRelatedRecipes modelId="modelscope-t2v" locale="zh" />

@@ -1,0 +1,22 @@
+---
+title: "ThinkSound"
+description: "ThinkSound is Alibaba FunAudioLLM's video-to-audio generation model that uses chain-of-thought style reasoning to decide what a scene should sound like before synthesizing audio."
+pageSource: generated
+---
+
+**Publisher:** Alibaba (Tongyi FunAudioLLM) · Company
+video → audio
+
+ThinkSound is Alibaba FunAudioLLM's video-to-audio generation model that uses chain-of-thought style reasoning to decide what a scene should sound like before synthesizing audio. In this catalog it is currently metadata_only: the entry is hidden from Studio until the infer-only runtime and the ThinkSound diffusion checkpoint are both available.
+
+<ModelCommandBuilder modelId="thinksound" locale="en" />
+
+## Architecture
+
+Upstream describes a reasoning stage (audio-focused chain of thought) feeding a flow/ diffusion audio generator. This repository records only the prompt/video contract and the generated_audio artifact — internals are not recorded here.
+
+## Usage notes
+
+Not runnable yet: checkpoint-backed parity is blocked by the missing thinksound.ckpt diffusion checkpoint. Watch the integration status before planning any runs; MMAudio is the runnable video-to-audio alternative in this catalog.
+
+<ModelRelatedRecipes modelId="thinksound" locale="en" />

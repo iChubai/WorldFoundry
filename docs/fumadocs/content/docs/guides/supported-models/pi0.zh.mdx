@@ -1,0 +1,25 @@
+---
+title: "pi0"
+description: "pi0 is Physical Intelligence's flagship flow-matching VLA: a PaliGemma-based backbone with an action expert that decodes continuous action chunks via flow matching. This catalog entry is the concrete pi0 algorithm route, reusing the flatte…"
+pageSource: generated
+---
+
+**发表机构:** Physical Intelligence（PI） · 企业
+
+pi0 是 Physical Intelligence 的旗舰 flow-matching VLA：基于 PaliGemma 的骨干加动作专家，经 flow matching 解码连续动作块。本 catalog 条目是具体的 pi0 算法路由，复用扁平化树内 OpenPI 运行时与 pi0 专用配置。
+
+<ModelCommandBuilder modelId="pi0" locale="zh" />
+
+## 架构
+
+PaliGemma VLM 骨干加 flow-matching 动作专家，输出动作块；模型图、变换、本地 checkpoint 加载器与动作采样器内置树内。checkpoint 托管于 GCS（gs://openpi-assets）。
+
+## 使用要点
+
+用 gsutil/gcloud 就位 GCS checkpoint（非 Hugging Face）。数值 parity 仅受 checkpoint 资产就位限制；共享运行时基础设施已在 openpi 条目下验证。
+
+## 评测 Benchmark
+
+- [LIBERO](/zh/docs/evaluation/benchmark-hub/libero) — openpi 家族在树内验证了 pi05_libero。
+
+<ModelRelatedRecipes modelId="pi0" locale="zh" />

@@ -1,0 +1,32 @@
+---
+title: "NeoVerse"
+description: "NeoVerse is a 4D world model built as a native assembly over canonical Wan components plus model-specific control and reconstruction roles: it enhances world generation with 4D-aware conditioning."
+pageSource: generated
+---
+
+**Publisher:** CreateAI (formerly TuSimple) · Company
+[NeoVerse: Enhancing 4D World Model with in-the-wild Monocular Videos](https://arxiv.org/abs/2601.00393) (CVPR 2026, 2026)
+
+NeoVerse is a 4D world model built as a native assembly over canonical Wan components plus model-specific control and reconstruction roles: it enhances world generation with 4D-aware conditioning. In this catalog the runner is verified for the README-style tilt_up video demo with local NeoVerse assets; the official video-input path uses static_scene=false.
+
+<figure className="wf-recipe-media">
+  <Video src="/demos/studio/neoverse-robot-tabletop.mp4" poster="/images/hero/neoverse.webp" autoPlay loop muted playsInline />
+  <figcaption>Tabletop manipulation trajectories</figcaption>
+</figure>
+
+<ModelCommandBuilder modelId="neoverse" locale="en" />
+
+## Architecture
+
+Per the upstream release (arXiv 2601.00393), NeoVerse layers 4D reconstruction and control roles over a Wan video backbone. WorldFoundry expresses this as a native assembly over shared Wan infrastructure — real inference stays checkpoint/GPU gated with no metadata-only runner shim.
+
+## Usage notes
+
+Runtime execution requires NeoVerse, Wan, reconstructor, LoRA, and CUDA assets. For video input follow the official path with static_scene=false; per-run visual QA and artifact checks are tracked outside the catalog.
+
+## Evaluation benchmarks
+
+- [WorldScore](/docs/evaluation/benchmark-hub/worldscore) — Scores navigable generated worlds.
+- [4DWorldBench](/docs/evaluation/benchmark-hub/4dworldbench) — Matches the entry's 4D world-model focus.
+
+<ModelRelatedRecipes modelId="neoverse" locale="en" />

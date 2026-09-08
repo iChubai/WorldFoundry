@@ -1,0 +1,37 @@
+---
+title: "YUME"
+description: "YUME is an interactive world-video generator: from an image (and for YUME-1.5, text) it produces explorable first-person world videos that respond to keyboard-style motion input. Both recorded variants are verified in this catalog — YUME I…"
+pageSource: generated
+---
+
+**发表机构:** 开源研究发布（仓库未记录正式机构） · 研究机构
+
+YUME 是交互式世界视频生成器：从一张图（YUME-1.5 还支持文本）生成可探索的第一人称世界视频，响应键盘式运动输入。本 catalog 记录的两个变体均为 verified——YUME I2V 使用官方 Yume-I2V-540P checkpoint，YUME-1.5 使用 Yume-5B-720P——经树内内置运行时适配器运行，Apache-2.0 许可。
+
+<figure className="wf-recipe-media">
+  <Video src="/demos/studio/yume-1p5-jungle-castle.mp4" autoPlay loop muted playsInline />
+  <figcaption>第一人称世界探索</figcaption>
+</figure>
+
+<ModelCommandBuilder modelId="yume" locale="zh" />
+
+## 架构
+
+仓库记录两条 checkpoint 线：面向图像条件世界视频的 Yume-I2V-540P，与 1.5 世代 5B 参数、支持图/视频/文本条件、720P 输出的 Yume-5B-720P。内置适配器之外的架构内部细节仓库未记录。
+
+## 使用要点
+
+两个变体共享 pipeline runner 与统一环境 profile；checkpoint 就位于 WORLDFOUNDRY_CKPT_DIR。需要文本条件与 720P 输出时优先选 yume-1p5。每次运行的视觉 QA 在 catalog 外跟踪。
+
+## 变体与 Pipeline Binding
+
+| Variant | 任务 | Runtime profile | Pipeline Binding | 状态 |
+| --- | --- | --- | --- | --- |
+| `yume` | image/video-to-world-video | `yume` | `yume` | integrated |
+| `yume-1p5` | image/video/text-to-world-video | `yume-1p5` | `yume-1p5` | integrated |
+
+## 评测 Benchmark
+
+- [WorldModelBench](/zh/docs/evaluation/benchmark-hub/worldmodelbench) — 交互式第一人称世界滚动生成质量。
+
+<ModelRelatedRecipes modelId="yume" locale="zh" />

@@ -1,0 +1,26 @@
+---
+title: "Pandora"
+description: "Pandora is an early general world model with natural-language actions and video states: it simulates world states as video and lets you steer the simulation with free-text actions at any step."
+pageSource: generated
+---
+
+**Publisher:** Maitrix.org (UC San Diego / MBZUAI) · Research lab
+text → video
+
+Pandora is an early general world model with natural-language actions and video states: it simulates world states as video and lets you steer the simulation with free-text actions at any step. In this catalog the model, ChatUniVi, and DynamiCrafter runtime modules are vendored in-tree; full generation stays blocked because the official weights are hidden by data-license constraints.
+
+<ModelCommandBuilder modelId="pandora" locale="en" />
+
+## Architecture
+
+Per the upstream release, an autoregressive LLM backbone (ChatUniVi-family) connects to a video diffusion decoder (DynamiCrafter-family) so language actions steer video-state rollouts. The vendored runtime lives under synthesis/visual_generation/pandora/pandora_runtime.
+
+## Usage notes
+
+PandoraSynthesis provides a runtime-plan wrapper; real generation requires caller-provided official-compatible checkpoints, since official weights are hidden or unavailable.
+
+## Evaluation benchmarks
+
+- [WorldModelBench](/docs/evaluation/benchmark-hub/worldmodelbench) — Language-action world-rollout quality.
+
+<ModelRelatedRecipes modelId="pandora" locale="en" />

@@ -1,0 +1,27 @@
+---
+title: "Wan2.2-Fun 5B Control Camera"
+description: "Wan2.2-Fun 5B Control Camera brings the VideoX-Fun camera-control pathway to the Wan2.2 generation at 5B scale: image-to-video steered by explicit camera poses, with an upstream native profile of 121 frames at 24 FPS. WorldFoundry vendors…"
+pageSource: generated
+---
+
+**Publisher:** Alibaba PAI (VideoX-Fun) · Company
+image → video
+
+Wan2.2-Fun 5B Control Camera brings the VideoX-Fun camera-control pathway to the Wan2.2 generation at 5B scale: image-to-video steered by explicit camera poses, with an upstream native profile of 121 frames at 24 FPS. WorldFoundry vendors VideoX-Fun in-tree (revision 403f1f7b) and wires a dedicated route for alibaba-pai/Wan2.2-Fun-5B-Control-Camera under Apache-2.0.
+
+<ModelCommandBuilder modelId="wan22-fun-5b-cam" locale="en" />
+
+## Architecture
+
+A 5B-parameter Wan2.2 diffusion transformer with the VideoX-Fun Control-Camera conditioning pathway. Further internals are not recorded in this repository.
+
+## Usage notes
+
+The upstream native profile is 121 frames at 24 FPS; WRBench request values remain explicit, so set frame count and FPS deliberately rather than relying on defaults. Runner parity is pending.
+
+## Evaluation benchmarks
+
+- [CameraBench](/docs/evaluation/benchmark-hub/camerabench) — Camera-pose adherence for controlled i2v generation.
+- [WRBench](/docs/evaluation/benchmark-hub/wrbench) — Native 121-frame/24FPS profile suits WRBench-style requests.
+
+<ModelRelatedRecipes modelId="wan22-fun-5b-cam" locale="en" />

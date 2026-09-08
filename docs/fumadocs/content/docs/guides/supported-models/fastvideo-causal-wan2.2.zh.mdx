@@ -1,0 +1,22 @@
+---
+title: "FastVideo CausalWan2.2"
+description: "FastVideo CausalWan2.2 is an eight-step causal Wan2.2 rollout that emits video in three-latent-frame blocks while routing between high- and low-noise experts."
+pageSource: generated
+---
+
+**发表机构:** 英伟达 / FastVideo · 企业
+text → video
+
+FastVideo CausalWan2.2 是八步因果 Wan2.2 生成模型，以每块三个潜帧推进，并在高、低噪声专家之间切换。
+
+<ModelCommandBuilder modelId="fastvideo-causal-wan2.2" locale="zh" />
+
+## 架构
+
+WorldFoundry 独立维护两个专家的 KV/交叉注意力缓存，并在固定移位 flow schedule 上执行确定性的 self-forcing 重加噪。
+
+## 使用要点
+
+默认配置为 832x480、717 帧、八步、guidance 1、16 FPS。
+
+<ModelRelatedRecipes modelId="fastvideo-causal-wan2.2" locale="zh" />

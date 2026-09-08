@@ -1,0 +1,26 @@
+---
+title: "FramePack"
+description: "FramePack is a low-memory approach to long image-to-video generation: it packs input frame context into fixed-length representations so generation cost stays roughly constant as the video grows. WorldFoundry vendors a minimal infer-only Fr…"
+pageSource: generated
+---
+
+**发表机构:** 斯坦福大学 · 高校
+image → video
+
+FramePack 是面向长视频图生视频的低显存方案：它把输入帧上下文压缩进定长表示，使生成成本不随视频变长而显著增长。WorldFoundry 在树内内置了最小化的仅推理 FramePack 运行时，集成状态标记为 verified——该路径通过共享 pipeline 契约产出官方风格输出。
+
+<ModelCommandBuilder modelId="framepack" locale="zh" />
+
+## 架构
+
+FramePack（作者来自斯坦福，ControlNet 团队）在视频扩散基座外包了一层帧上下文打包机制，维持定长条件窗口，使得在有限显存上也能生成分钟级视频。本仓库记录了位于 synthesis/visual_generation/framepack 的仅推理运行时与 prompt+image 输入契约。
+
+## 使用要点
+
+I2V 路径已按图像条件生成接通；官方长视频一致性仍在等待，且 manifest 标注在晋级前需审阅许可与运行时一致性。最适合在单张消费级 GPU 上生成较长视频的场景。
+
+## 评测 Benchmark
+
+- [ChronoMagic-Bench](/zh/docs/evaluation/benchmark-hub/chronomagic-bench) — 长时程生成评测，契合 FramePack 的长视频定位。
+
+<ModelRelatedRecipes modelId="framepack" locale="zh" />

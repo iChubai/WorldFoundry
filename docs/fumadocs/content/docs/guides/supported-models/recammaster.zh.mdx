@@ -1,0 +1,31 @@
+---
+title: "ReCamMaster"
+description: "ReCamMaster re-renders an existing video along a new camera trajectory — camera-controlled generative rendering from a single video."
+pageSource: generated
+---
+
+**发表机构:** 快手（可灵团队） · 企业
+[ReCamMaster: Camera-Controlled Generative Rendering from A Single Video](https://arxiv.org/abs/2503.11647) (2025)
+
+ReCamMaster 让已有视频沿新的相机轨迹重新渲染——从单个视频出发的相机可控生成式渲染。本 catalog 中其树内 pipeline、operator 与合成运行时位于 Kling 命名空间下，runner 已针对官方相机轨迹 video-to-video demo（使用本地 ReCamMaster/Wan 资产）验证。
+
+<figure className="wf-recipe-media is-diagram">
+  <img src="/models/recammaster/paper.png" alt="ReCamMaster: Camera-Controlled Generative Rendering from A Single Video" />
+  <figcaption>ReCamMaster: Camera-Controlled Generative Rendering from A Single Video</figcaption>
+</figure>
+
+<ModelCommandBuilder modelId="recammaster" locale="zh" />
+
+## 架构
+
+按论文（arXiv 2503.11647），ReCamMaster 通过帧维度条件化把源视频注入预训练文生视频模型（开源版基于 Wan 系），从而在生成时更换相机轨迹。运行需要本地 Wan2.1、ReCamMaster checkpoint、torchvision 与 CUDA 资产。
+
+## 使用要点
+
+开源参考运行时受 checkpoint/GPU 限制——不注册空 runner 壳。提交任务前请就位 Wan2.1 与 ReCamMaster checkpoint；每次运行的视觉 QA 在 catalog 外跟踪。
+
+## 评测 Benchmark
+
+- [CameraBench](/zh/docs/evaluation/benchmark-hub/camerabench) — 直接评估相机轨迹控制质量。
+
+<ModelRelatedRecipes modelId="recammaster" locale="zh" />

@@ -1,0 +1,38 @@
+---
+title: "HunyuanVideo 1.5"
+description: "HunyuanVideo 1.5 is the newer revision of Tencent's open video family, again recorded with independent T2V and I2V recipes on one shared native infrastructure. The notable difference from the original: the I2V conditioner declares FLUX.1-R…"
+pageSource: generated
+---
+
+**Publisher:** Tencent (Hunyuan) · Company
+text · image → video
+
+HunyuanVideo 1.5 is the newer revision of Tencent's open video family, again recorded with independent T2V and I2V recipes on one shared native infrastructure. The notable difference from the original: the I2V conditioner declares FLUX.1-Redux-dev as an independent gated vision checkpoint instead of inferring a sibling path.
+
+<figure className="wf-recipe-media">
+  <Video src="/demos/studio/hunyuanvideo-1-5-t2v-cat.mp4" autoPlay loop muted playsInline />
+  <figcaption>HunyuanVideo 1.5 text-to-video</figcaption>
+</figure>
+
+<ModelCommandBuilder modelId="hunyuanvideo-1.5" locale="en" />
+
+## Architecture
+
+Same shared-native-runner design as the hunyuanvideo entry: HunyuanVideo 1.5 owns only model-specific network, codec, and conditioning behavior, while assembly, loading, and scheduling come from the shared diffusion infrastructure. generate.py is not retained as a second inference architecture.
+
+## Usage notes
+
+Registry resolution is verified; native checkpoint-backed CUDA parity is pending. Two gates to clear before running I2V: the main checkpoints carry 'other' HF license metadata, and FLUX.1-Redux-dev is gated with a non-commercial license that the manifest says needs review — accept its terms on Hugging Face first.
+
+## Variants & pipeline bindings
+
+| Variant | Task | Runtime profile | Pipeline binding | Status |
+| --- | --- | --- | --- | --- |
+| `hunyuanvideo-1.5-t2v` | text-to-video | `hunyuanvideo-1.5-t2v` | `hunyuanvideo-1.5-t2v` | integrated |
+| `hunyuanvideo-1.5-i2v` | image-to-video | `hunyuanvideo-1.5-i2v` | `hunyuanvideo-1.5-i2v` | integrated |
+
+## Evaluation benchmarks
+
+- [VBench](/docs/evaluation/benchmark-hub/vbench) — Standard open T2V quality suite.
+
+<ModelRelatedRecipes modelId="hunyuanvideo-1.5" locale="en" />

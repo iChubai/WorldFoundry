@@ -1,0 +1,42 @@
+---
+title: "LTX-2.x"
+description: "LTX-2.x is Lightricks' current-generation video model family in this catalog, integrated natively for the distilled LTX-2 and LTX-2.3 image-to-video paths. The native route uses the official spatial upscaler between two denoising stages. S…"
+pageSource: generated
+---
+
+**Publisher:** Lightricks · Company
+text · image · video → video
+
+LTX-2.x is Lightricks' current-generation video model family in this catalog, integrated natively for the distilled LTX-2 and LTX-2.3 image-to-video paths. The native route uses the official spatial upscaler between two denoising stages. Six variants are recorded (T2V/I2V/V2V for both 2 and 2.3), but only the two I2V routes are runnable today — the others are upstream capability profiles.
+
+<figure className="wf-recipe-media">
+  <Video src="/demos/studio/ltx2-3-i2v-penguin.mp4" autoPlay loop muted playsInline />
+  <figcaption>LTX-2.3 image-to-video</figcaption>
+</figure>
+
+<ModelCommandBuilder modelId="ltx-2.x" locale="en" />
+
+## Architecture
+
+The I2V route is a two-stage denoise with the official Spatial Upscaler as the boundary, loaded automatically from spatial_upsampler_path (not a separate Studio refiner toggle). Assembly uses the shared NativeDiffusionPipeline, joint multi-stage runner, and optimization policies — no Diffusers pipeline or copied upstream pipeline. Note the recorded schedule caveat: the native distilled schedule is 8+3 steps while upstream documents 8+4, so exact upstream parity must not be claimed until reconciled.
+
+## Usage notes
+
+Runner status is partial_studio_visual_validation_verified: both the LTX-2 and LTX-2.3 I2V targets produced recorded nonblank Studio demo artifacts. T2V/V2V still need scoped wrappers and validation — don't select those variants expecting output. This entry is tracked separately from LTX-Video 0.9.x because upstream ships distinct HF repository ids.
+
+## Variants & pipeline bindings
+
+| Variant | Task | Runtime profile | Pipeline binding | Status |
+| --- | --- | --- | --- | --- |
+| `ltx-2-t2v` | text-to-video | `ltx-2-t2v` | `ltx-2.x` | planned |
+| `ltx-2-i2v` | image-to-video | `ltx-2-i2v` | `ltx-2-i2v` | integrated |
+| `ltx-2-v2v` | video-to-video | `ltx-2-v2v` | `ltx-2.x` | planned |
+| `ltx-2.3-t2v` | text-to-video | `ltx-2.3-t2v` | `ltx-2.3-t2v` | integrated |
+| `ltx-2.3-i2v` | image-to-video | `ltx-2.3-i2v` | `ltx-2.3-i2v` | integrated |
+| `ltx-2.3-v2v` | video-to-video | `ltx-2.3-v2v` | `ltx-2.x` | planned |
+
+## Evaluation benchmarks
+
+- [AIGCBench](/docs/evaluation/benchmark-hub/aigcbench) — I2V-focused benchmark for the runnable routes.
+
+<ModelRelatedRecipes modelId="ltx-2.x" locale="en" />

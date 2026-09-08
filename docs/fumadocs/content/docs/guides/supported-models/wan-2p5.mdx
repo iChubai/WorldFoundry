@@ -1,0 +1,27 @@
+---
+title: "Wan 2.5 API"
+description: "Wan 2.5 API is the hosted DashScope endpoint for Alibaba's Wan 2.5 video generation model, recorded for text-to-video and image-to-video. Unlike the open-weight Wan releases that WorldFoundry runs locally elsewhere in this catalog, this en…"
+pageSource: generated
+---
+
+**Publisher:** Alibaba (Tongyi Lab) · Company
+text · image → video
+
+Wan 2.5 API is the hosted DashScope endpoint for Alibaba's Wan 2.5 video generation model, recorded for text-to-video and image-to-video. Unlike the open-weight Wan releases that WorldFoundry runs locally elsewhere in this catalog, this entry covers the provider-hosted generation path: requests go to Alibaba Cloud DashScope and finished clips come back as artifacts. Aliases wan2.5 and wan-2.5 also resolve here.
+
+<ModelCommandBuilder modelId="wan-2p5" locale="en" />
+
+## Architecture
+
+The hosted Wan 2.5 shares the Wan family lineage (diffusion-transformer video generation developed by Alibaba's Tongyi Lab), but Alibaba has not published the exact architecture or scale of the API-served revision, and this repository records only the endpoint integration.
+
+## Usage notes
+
+The catalog marks this entry as integrated: the hosted-API Studio pipeline is available, but you must supply your own provider API key and account. No weights are downloaded and no GPU environment is provisioned locally — generation happens on the provider side, so cost, quota, and content policy follow your provider account. Keys are issued via Alibaba Cloud DashScope (dashscope.aliyun.com).
+
+## Evaluation benchmarks
+
+- [VBench](/docs/evaluation/benchmark-hub/vbench) — Standard multi-dimension quality suite for comparing hosted text/image-to-video outputs.
+- [Physics-IQ Original](/docs/evaluation/benchmark-hub/physics-iq) — Probes whether provider-side video models respect basic physical plausibility.
+
+<ModelRelatedRecipes modelId="wan-2p5" locale="en" />

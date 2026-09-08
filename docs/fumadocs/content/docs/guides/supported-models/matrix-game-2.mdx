@@ -1,0 +1,36 @@
+---
+title: "Matrix-Game 2.0"
+description: "Matrix-Game 2.0 is Skywork's real-time-oriented interactive world model generation: an auto-regressive diffusion design that follows keyboard/mouse actions across game scenes."
+pageSource: generated
+---
+
+**Publisher:** Skywork AI (Kunlun Tech) · Company
+
+Matrix-Game 2.0 is Skywork's real-time-oriented interactive world model generation: an auto-regressive diffusion design that follows keyboard/mouse actions across game scenes. In this catalog the runner is verified with the official inference_universal defaults — 150 frames at 12 fps, 352x640, official bench actions — through the in-tree runtime.
+
+<figure className="wf-recipe-media">
+  <Video src="/demos/studio/matrix-game-2-official-universal.mp4" poster="/images/hero/matrix-game-2.webp" autoPlay loop muted playsInline />
+  <figcaption>Keyboard-controlled interactive world</figcaption>
+</figure>
+
+<ModelCommandBuilder modelId="matrix-game-2" locale="en" />
+
+## Architecture
+
+The in-tree runtime has no external repo_root dependency, and the WorldFoundry runner uses the official defaults plus the in-tree Bench_actions_* condition generator. A universal-action-validation variant is recorded for benchmarking action fidelity.
+
+## Usage notes
+
+Start from the verified official defaults (num_frames=150, fps=12, seed=42, size 352x640, official_bench_actions=true) before customizing. Per-run artifact checks are tracked outside the catalog.
+
+## Hardware guidance
+
+- **Minimum VRAM:** 24 GB
+
+## Evaluation benchmarks
+
+- [WorldModelBench](/docs/evaluation/benchmark-hub/worldmodelbench) — Action-conditioned game-world rollout quality.
+- [VBench](/docs/evaluation/benchmark-hub/vbench) — Referenced in this model's manifest evidence notes.
+- [WorldScore](/docs/evaluation/benchmark-hub/worldscore) — Referenced in this model's manifest evidence notes.
+
+<ModelRelatedRecipes modelId="matrix-game-2" locale="en" />

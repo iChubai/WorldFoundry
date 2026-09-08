@@ -1,0 +1,26 @@
+---
+title: "Krea Realtime Video 14B"
+description: "Krea Realtime Video 14B is Krea AI's open realtime/streaming video generation model. Unlike the batch T2V models in this catalog, it targets low-latency streaming generation: text-to-video and video-to-video in a streaming regime. The in-t…"
+pageSource: generated
+---
+
+**发表机构:** Krea AI · 企业
+text · video → video
+
+Krea Realtime Video 14B 是 Krea AI 开源的实时/流式视频生成模型。与 catalog 中的批式 T2V 不同，它面向低延迟流式生成：以流式方式做文生视频与视频到视频。树内运行时位于 synthesis/visual_generation/krea_realtime，路径暴露 num_blocks、分辨率、fps 与 seed 控制。别名 krea-rt-14b 解析到本条目。
+
+<ModelCommandBuilder modelId="krea-realtime-video" locale="zh" />
+
+## 架构
+
+上游将其描述为面向实时块式生成蒸馏的 14B 自回归/流式视频模型（权重在 krea/krea-realtime-video，apache-2.0）。本仓库记录了基于块的生成控制（num_blocks）与 prompt/video 输入契约；更深的内部细节仓库未记录。
+
+## 使用要点
+
+Runner parity 为 pending：路径已接通、控制项已暴露，但更长时段的官方实时一致性还没有记录。实时吞吐高度依赖你的 GPU——14B 规模要达到真正实时帧率需要数据中心级硬件。
+
+## 评测 Benchmark
+
+- [VBench](/zh/docs/evaluation/benchmark-hub/vbench) — 流式文生视频输出的基础质量检查。
+
+<ModelRelatedRecipes modelId="krea-realtime-video" locale="zh" />

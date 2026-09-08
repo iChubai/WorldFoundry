@@ -1,0 +1,26 @@
+---
+title: "ABot-World-0-5B-LF"
+description: "ABot-World-0-5B-LF is Amap's interactive world model: give it an image plus actions and it rolls out world video block by block, keeping causal KV state resident between action blocks."
+pageSource: generated
+---
+
+**发表机构:** 阿里巴巴（高德地图 AMAP-CVLab） · 企业
+image → world state · video
+
+ABot-World-0-5B-LF 是高德的交互式世界模型：输入一张图加动作序列，它逐块滚动生成世界视频，并在动作块之间保持因果 KV 状态常驻。本 catalog 中它已通过 checkpoint/GPU 验证——真实 A100 Workspace 推理用公开的 0.5B-LF checkpoint 在官方 1280x704 分辨率下产出完全可解码的九帧 H.264 产物。
+
+<ModelCommandBuilder modelId="abot-world-0-5b-lf" locale="zh" />
+
+## 架构
+
+仅集成因果推理与常驻交互滚动；Wan 注意力、T5、Wan2.2 VAE、调度器、媒体 I/O 与 FP8 支持在树内复用，训练、Gradio、benchmark 与实验性量化器源码被排除。记录的 checkpoint 为 acvlab/ABot-World-0-5B-LF（causal student）。
+
+## 使用要点
+
+运行为离线优先，需要本地 checkpoint 目录。常驻 API 在动作块之间保持因果 KV 状态；首个块返回 9 帧 RGB，后续块返回 12 帧——客户端缓冲请按此规划。
+
+## 评测 Benchmark
+
+- [WorldModelBench](/zh/docs/evaluation/benchmark-hub/worldmodelbench) — 世界模型滚动生成质量的通用评测。
+
+<ModelRelatedRecipes modelId="abot-world-0-5b-lf" locale="zh" />

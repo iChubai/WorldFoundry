@@ -1,0 +1,33 @@
+---
+title: "AlayaWorld"
+description: "AlayaWorld is a camera-controlled interactive world model for long video: from an image it rolls out world video autoregressively with action control and DA3-backed spatial memory."
+pageSource: generated
+---
+
+**Publisher:** Open-source research release (institution not recorded) · Research lab
+image → video
+[AlayaWorld: Long-Horizon and Playable Video World Generation](https://arxiv.org/abs/2607.06291) (2026)
+
+AlayaWorld is a camera-controlled interactive world model for long video: from an image it rolls out world video autoregressively with action control and DA3-backed spatial memory. In this catalog it is checkpoint/GPU validated — the released 33.6 GB merged checkpoint passed exact size and SHA-256 validation, and the unified in-tree pipeline generated the official case1 first chunk (32 H.264 frames at 544x960, 24 fps) on an A100 with spatial memory enabled.
+
+<figure className="wf-recipe-media is-diagram">
+  <img src="/models/alayaworld/paper.png" alt="AlayaWorld: Long-Horizon and Playable Video World Generation" />
+  <figcaption>AlayaWorld: Long-Horizon and Playable Video World Generation</figcaption>
+</figure>
+
+<ModelCommandBuilder modelId="alayaworld" locale="en" />
+
+## Architecture
+
+The runtime is a thin extension of WorldFoundry's canonical in-tree LTX-2.3 model — Transformer, VAE, Gemma connector, RoPE, patchifier, attention dispatcher, and distributed helpers are all reused; Alaya-specific tensors map only to action AdaLN and the temporal-history encoder. Spatial memory reuses the in-tree Depth Anything 3 model (paper arXiv 2607.06291).
+
+## Usage notes
+
+Attention dispatch is capability-based; multi-GPU Ulysses context parallelism uses WorldFoundry core collectives. Multi-rank Ulysses tensor parity is validated, but a true NCCL multi-GPU artifact run remains pending multi-GPU availability.
+
+## Evaluation benchmarks
+
+- [CameraBench](/docs/evaluation/benchmark-hub/camerabench) — Camera-control quality of interactive rollouts.
+- [MemoBench](/docs/evaluation/benchmark-hub/memobench) — Long-horizon spatial-memory consistency evaluation.
+
+<ModelRelatedRecipes modelId="alayaworld" locale="en" />

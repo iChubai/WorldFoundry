@@ -1,0 +1,27 @@
+---
+title: "VideoCrafter"
+description: "VideoCrafter is Tencent AI Lab's open video generation toolbox; this family entry aggregates the in-tree infer-only runtimes for VideoCrafter1 I2V, VideoCrafter1 T2V, and VideoCrafter2 T2V. The per-variant entries (videocrafter1-i2v, video…"
+pageSource: generated
+---
+
+**Publisher:** Tencent AI Lab · Company
+text · image → video
+
+VideoCrafter is Tencent AI Lab's open video generation toolbox; this family entry aggregates the in-tree infer-only runtimes for VideoCrafter1 I2V, VideoCrafter1 T2V, and VideoCrafter2 T2V. The per-variant entries (videocrafter1-i2v, videocrafter1-t2v, videocrafter2-t2v) hold the individual routes; checkpoint provenance is tracked here at the family level to avoid duplicate HF aliases.
+
+<ModelCommandBuilder modelId="videocrafter" locale="en" />
+
+## Architecture
+
+U-Net latent video diffusion models: VideoCrafter1 offers T2V (up to 1024x576) and I2V; VideoCrafter2 improves the T2V model by decoupling appearance learning (low-quality video + high-quality image data). Training, dataset, and download helpers are intentionally excluded from the in-tree packages.
+
+## Usage notes
+
+Runner parity is pending; exhaustive upstream benchmark parity is recorded as a longer validation stage. License note from the manifest: the VideoCrafter2 HF card exposes Apache-2.0, but the older Text2Video/Image2Video cards need license review.
+
+## Evaluation benchmarks
+
+- [EvalCrafter](/docs/evaluation/benchmark-hub/evalcrafter) — The benchmark developed alongside the VideoCrafter effort.
+- [VBench](/docs/evaluation/benchmark-hub/vbench) — Standard T2V suite.
+
+<ModelRelatedRecipes modelId="videocrafter" locale="en" />

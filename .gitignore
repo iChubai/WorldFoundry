@@ -1,4 +1,4 @@
-# Test source is versioned. Generated test artifacts are ignored below.
+# Public branch excludes local test source and generated test artifacts below.
 
 # Project-specific local files
 .develop_references.py

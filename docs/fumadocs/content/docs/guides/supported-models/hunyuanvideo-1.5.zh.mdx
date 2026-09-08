@@ -1,0 +1,38 @@
+---
+title: "HunyuanVideo 1.5"
+description: "HunyuanVideo 1.5 is the newer revision of Tencent's open video family, again recorded with independent T2V and I2V recipes on one shared native infrastructure. The notable difference from the original: the I2V conditioner declares FLUX.1-R…"
+pageSource: generated
+---
+
+**发表机构:** 腾讯（混元） · 企业
+text · image → video
+
+HunyuanVideo 1.5 是腾讯开源视频系列的较新版本，同样以独立的 T2V 与 I2V 配方共享一套原生基础设施。与初代的显著差异：I2V 条件器将 FLUX.1-Redux-dev 声明为独立的 gated 视觉 checkpoint，而不是推断同级路径。
+
+<figure className="wf-recipe-media">
+  <Video src="/demos/studio/hunyuanvideo-1-5-t2v-cat.mp4" autoPlay loop muted playsInline />
+  <figcaption>HunyuanVideo 1.5 文本生成视频</figcaption>
+</figure>
+
+<ModelCommandBuilder modelId="hunyuanvideo-1.5" locale="zh" />
+
+## 架构
+
+与 hunyuanvideo 条目相同的共享原生 runner 设计：HunyuanVideo 1.5 只拥有模型特有的网络、编解码与条件行为，装配、加载与调度均来自共享扩散基础设施。generate.py 没有被保留为第二套推理架构。
+
+## 使用要点
+
+注册表解析已验证；原生 checkpoint 加载的 CUDA 一致性仍在等待。运行 I2V 前有两道门槛：主 checkpoint 的 HF 许可元数据为“other”；FLUX.1-Redux-dev 为 gated 且许可为非商用（manifest 要求审阅）——请先在 Hugging Face 接受其条款。
+
+## 变体与 Pipeline Binding
+
+| Variant | 任务 | Runtime profile | Pipeline Binding | 状态 |
+| --- | --- | --- | --- | --- |
+| `hunyuanvideo-1.5-t2v` | text-to-video | `hunyuanvideo-1.5-t2v` | `hunyuanvideo-1.5-t2v` | integrated |
+| `hunyuanvideo-1.5-i2v` | image-to-video | `hunyuanvideo-1.5-i2v` | `hunyuanvideo-1.5-i2v` | integrated |
+
+## 评测 Benchmark
+
+- [VBench](/zh/docs/evaluation/benchmark-hub/vbench) — 标准开源文生视频质量评测。
+
+<ModelRelatedRecipes modelId="hunyuanvideo-1.5" locale="zh" />

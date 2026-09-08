@@ -1,0 +1,33 @@
+---
+title: "DynamiCrafter"
+description: "DynamiCrafter animates open-domain still images by leveraging video diffusion priors — you give it a picture (optionally a prompt) and it produces a plausible motion clip. The catalog records two runnable variants at different resolutions:…"
+pageSource: generated
+---
+
+**Publisher:** Tencent AI Lab / CUHK · Company
+image → video
+
+DynamiCrafter animates open-domain still images by leveraging video diffusion priors — you give it a picture (optionally a prompt) and it produces a plausible motion clip. The catalog records two runnable variants at different resolutions: dynamicrafter-512-i2v and dynamicrafter-1024-i2v, both wrapped as in-tree WorldFoundry runtimes with staged checkpoint environments.
+
+<ModelCommandBuilder modelId="dynamicrafter" locale="en" />
+
+## Architecture
+
+DynamiCrafter is a U-Net-era latent video diffusion model with a dual-stream image conditioning design (CLIP image features plus VAE-encoded image latents), per its publication. This repository records the two resolution profiles and the standard prompt/image/video/actions input schema; finer internals are not recorded here.
+
+## Usage notes
+
+Both variants are wired but official long-config parity remains pending. Start with the 512 variant for speed; switch to 1024 for final quality. The manifest asks to keep redistribution gated until the upstream license is manually reviewed — treat outputs accordingly.
+
+## Variants & pipeline bindings
+
+| Variant | Task | Runtime profile | Pipeline binding | Status |
+| --- | --- | --- | --- | --- |
+| `dynamicrafter-512-i2v` | image-to-video | `dynamicrafter-512-i2v` | `dynamicrafter-512-i2v` | integrated |
+| `dynamicrafter-1024-i2v` | image-to-video | `dynamicrafter-1024-i2v` | `dynamicrafter-1024-i2v` | integrated |
+
+## Evaluation benchmarks
+
+- [AIGCBench](/docs/evaluation/benchmark-hub/aigcbench) — Image-to-video benchmark aligned with DynamiCrafter's task.
+
+<ModelRelatedRecipes modelId="dynamicrafter" locale="en" />

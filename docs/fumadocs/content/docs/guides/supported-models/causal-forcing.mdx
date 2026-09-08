@@ -1,0 +1,32 @@
+---
+title: "Causal-Forcing"
+description: "Causal-Forcing distills bidirectional video diffusion into a causal, autoregressive generator — including Causal-Forcing++ few-step variants — so video can be generated chunk by chunk or frame by frame."
+pageSource: generated
+---
+
+**Publisher:** Tsinghua University (thu-ml) · University
+text · image → video
+[Causal Forcing: Autoregressive Diffusion Distillation Done Right for High-Quality Real-Time Interactive Video Generation](https://arxiv.org/abs/2602.02214) (ICML 2026, 2026)
+
+Causal-Forcing distills bidirectional video diffusion into a causal, autoregressive generator — including Causal-Forcing++ few-step variants — so video can be generated chunk by chunk or frame by frame. In this catalog the official infer-only runtime is vendored in-tree, with the chunk-wise checkpoint staged as the local default and frame-wise/++ variants selectable by config override.
+
+<figure className="wf-recipe-media is-diagram">
+  <img src="/models/causal-forcing/paper.png" alt="Causal Forcing: Autoregressive Diffusion Distillation Done Right for High-Quality Real-Time Interactive Video Generation" />
+  <figcaption>Causal Forcing: Autoregressive Diffusion Distillation Done Right for High-Quality Real-Time Interactive Video Generation</figcaption>
+</figure>
+
+<ModelCommandBuilder modelId="causal-forcing" locale="en" />
+
+## Architecture
+
+Per the paper (arXiv 2602.02214), a Wan2.1-based teacher is distilled into causal students with chunk-wise or frame-wise attention; the ++ variants push to 1-2 step sampling. Recorded checkpoints include chunk-wise plus frame-wise and two ++ few-step variants under zhuhz22/Causal-Forcing.
+
+## Usage notes
+
+The adapter executes the vendored official inference.py path; full parity requires local Wan2.1 weights plus the selected Causal-Forcing checkpoint/config pair. Supply benchmark prompt lists separately through your local input configuration.
+
+## Evaluation benchmarks
+
+- [VBench](/docs/evaluation/benchmark-hub/vbench) — Standard multi-dimension quality suite for text/image-to-video.
+
+<ModelRelatedRecipes modelId="causal-forcing" locale="en" />

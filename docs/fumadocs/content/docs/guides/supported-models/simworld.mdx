@@ -1,0 +1,21 @@
+---
+title: "SimWorld"
+description: "SimWorld is a simulator-control entry rather than a video generator: it drives multi-agent embodied simulation (policy rollouts, world state) through a simulator server."
+pageSource: generated
+---
+
+**Publisher:** Open-source research release (institution not recorded) · Research lab
+
+SimWorld is a simulator-control entry rather than a video generator: it drives multi-agent embodied simulation (policy rollouts, world state) through a simulator server. In this catalog the route is registered; the simulator server and assets stay runtime-gated, and the recorded artifact type is world_state.
+
+<ModelCommandBuilder modelId="simworld" locale="en" />
+
+## Architecture
+
+Architecture internals are not recorded in this repository — this entry catalogs a simulation platform surface, not a neural network.
+
+## Usage notes
+
+Config resolution and pipeline import are expected to pass; real generation emits a runtime plan until required checkpoints/assets are staged. Missing assets are reported by the plan and are not treated as catalog blockers. A running simulator server is the key prerequisite.
+
+<ModelRelatedRecipes modelId="simworld" locale="en" />

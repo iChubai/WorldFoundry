@@ -1,0 +1,25 @@
+---
+title: "Vid2World"
+description: "Vid2World from Tsinghua's THUML group turns pretrained video diffusion models into interactive world models: it adapts a passive video generator into an action-conditioned, autoregressive predictor. WorldFoundry registers the official eval…"
+pageSource: generated
+---
+
+**Publisher:** Tsinghua University (THUML) · University
+
+Vid2World from Tsinghua's THUML group turns pretrained video diffusion models into interactive world models: it adapts a passive video generator into an action-conditioned, autoregressive predictor. WorldFoundry registers the official evaluation route in-tree; checkpoints and config assets are runtime-gated.
+
+<ModelCommandBuilder modelId="vid2world" locale="en" />
+
+## Architecture
+
+The core idea recorded here is video-diffusion adaptation: converting a full-sequence diffusion model to causal, action-conditioned rollout. Architecture internals beyond the official repository pointer (thuml/Vid2World, pinned head ae24077a) are not recorded in this repository.
+
+## Usage notes
+
+Config resolution and pipeline import are expected to pass; real generation emits a runtime plan until required checkpoints/assets are staged. Missing assets are reported by the plan and are not treated as catalog blockers.
+
+## Evaluation benchmarks
+
+- [WorldModelBench](/docs/evaluation/benchmark-hub/worldmodelbench) — Action-conditioned interactive rollout quality.
+
+<ModelRelatedRecipes modelId="vid2world" locale="en" />

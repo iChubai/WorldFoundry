@@ -1,0 +1,34 @@
+---
+title: "Cosmos3"
+description: "Cosmos3 is the newest, broadest Cosmos generation recorded here: one joint-modality model covering text-to-image/video, image/video-to-video, synchronized sound, and structured action inference (policy, forward and inverse dynamics), in Na…"
+pageSource: generated
+---
+
+**Publisher:** NVIDIA · Company
+text · image · video → image · video
+
+Cosmos3 is the newest, broadest Cosmos generation recorded here: one joint-modality model covering text-to-image/video, image/video-to-video, synchronized sound, and structured action inference (policy, forward and inverse dynamics), in Nano and Super variants. In this catalog it runs through the shared loader, joint-modality runner, native Karras flow-UniPC scheduler, shared Wan VAE38, and an inference-only AVAE sound decoder.
+
+<ModelCommandBuilder modelId="cosmos3" locale="en" />
+
+## Architecture
+
+Nano structural checks match 814 transformer, 196 VAE, and 182 AVAE checkpoint tensors, and the 35-step schedule matches the official scheduler numerically. Guardrails and reasoner/serving stacks are orchestration extensions, intentionally outside this infer-only recipe.
+
+## Usage notes
+
+Base selection routes to Nano; pick the cosmos3-super variant for the Super checkpoint. Current-revision evidence requires the exact variant SHA — the prepare script emits a structured checkpoint report and pinned snapshot model-ref so an older local directory is not silently described as current. End-to-end GPU output parity must be rerun for this native path.
+
+## Variants & pipeline bindings
+
+| Variant | Task | Runtime profile | Pipeline binding | Status |
+| --- | --- | --- | --- | --- |
+| `cosmos3-nano` | world-generation | `cosmos3-nano` | `cosmos3-nano` | integrated |
+| `cosmos3-super` | world-generation | `cosmos3-super` | `cosmos3-super` | integrated |
+
+## Evaluation benchmarks
+
+- [WorldModelBench](/docs/evaluation/benchmark-hub/worldmodelbench) — World-generation quality across conditions.
+- [Physics-IQ Original](/docs/evaluation/benchmark-hub/physics-iq) — Physical plausibility of generated world video.
+
+<ModelRelatedRecipes modelId="cosmos3" locale="en" />

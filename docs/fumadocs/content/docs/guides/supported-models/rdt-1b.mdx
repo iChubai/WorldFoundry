@@ -1,0 +1,21 @@
+---
+title: "RDT-1B"
+description: "RDT-1B from Tsinghua's thu-ml group is the Robotics Diffusion Transformer: a 1B diffusion policy pretrained on large multi-robot data with a native 128-dimensional unified action space covering many embodiments. The confirmed robotics-diff…"
+pageSource: generated
+---
+
+**Publisher:** Tsinghua University (thu-ml) · University
+
+RDT-1B from Tsinghua's thu-ml group is the Robotics Diffusion Transformer: a 1B diffusion policy pretrained on large multi-robot data with a native 128-dimensional unified action space covering many embodiments. The confirmed robotics-diffusion-transformer/rdt-1b pretrained policy is recorded, and the unified action model, two-frame three-camera preprocessing, and DPM inference run in-tree.
+
+<ModelCommandBuilder modelId="rdt-1b" locale="en" />
+
+## Architecture
+
+A diffusion transformer over a 128D unified action encoding that maps heterogeneous robot action spaces into one vocabulary; prompt encoding uses the official T5 checkpoint, and precomputed embeddings are accepted to lower peak memory.
+
+## Usage notes
+
+The released checkpoint is a pretraining checkpoint and may require embodiment/task fine-tuning for deployment. Use precomputed T5 embeddings on memory-constrained hosts.
+
+<ModelRelatedRecipes modelId="rdt-1b" locale="en" />

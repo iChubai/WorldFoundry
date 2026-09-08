@@ -1,0 +1,21 @@
+---
+title: "GO-1"
+description: "GO-1 is the flagship policy of the AgiBot World project (AgiBot with OpenDriveLab): a generalist robot policy trained on the large-scale AgiBot World dataset, released as agibot-world/GO-1 under CC-BY-NC-SA-4.0. WorldFoundry keeps the full…"
+pageSource: generated
+---
+
+**Publisher:** AgiBot (with OpenDriveLab) · Company
+
+GO-1 is the flagship policy of the AgiBot World project (AgiBot with OpenDriveLab): a generalist robot policy trained on the large-scale AgiBot World dataset, released as agibot-world/GO-1 under CC-BY-NC-SA-4.0. WorldFoundry keeps the full stack in-tree — InternVision, InternLM2, latent planner, action expert, diffusion sampler, tokenizer, and preprocessing — with static runtime verification complete.
+
+<ModelCommandBuilder modelId="go1" locale="en" />
+
+## Architecture
+
+A ViLLA-style design: InternVision plus InternLM2 form the VLM, a latent planner predicts intermediate latent actions, and a diffusion action expert decodes executable control. Model and parameter names preserve the official checkpoint contract.
+
+## Usage notes
+
+The pinned pretrained foundation checkpoint and released statistics are staged. Any downstream fine-tune must remain paired with the exact statistics emitted during that fine-tune. Note the non-commercial license.
+
+<ModelRelatedRecipes modelId="go1" locale="en" />

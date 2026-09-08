@@ -1,0 +1,31 @@
+---
+title: "Hunyuan Game Craft"
+description: "Hunyuan GameCraft turns a single game scene image into interactive world video: send keyboard-style actions (forward/backward/left/right) and it generates high-dynamic game footage that follows them."
+pageSource: generated
+---
+
+**Publisher:** Tencent (Hunyuan) · Company
+image → video
+
+Hunyuan GameCraft turns a single game scene image into interactive world video: send keyboard-style actions (forward/backward/left/right) and it generates high-dynamic game footage that follows them. In this catalog the runner is verified — the official village image-conditioned demo runs with 129 frames at 704x1216, 50 steps, CFG 2.0, over 8 torchrun ranks.
+
+<figure className="wf-recipe-media">
+  <Video src="/demos/studio/hunyuan-game-craft-village.mp4" autoPlay loop muted playsInline />
+  <figcaption>Village-scale game world</figcaption>
+</figure>
+
+<ModelCommandBuilder modelId="hunyuan-game-craft" locale="en" />
+
+## Architecture
+
+Per the upstream release, GameCraft builds on HunyuanVideo with unified continuous action-space injection and history-conditioned autoregressive extension. The infer-only runtime is retained in-tree and rejects external source roots; its Python 3.10 / torch 2.5.1 stack stays isolated in the documented HYGameCraft environment (license: tencent-hunyuan-community).
+
+## Usage notes
+
+Official inference uses the HYGameCraft conda profile and torchrun dispatch — plan for a multi-GPU host. Per-run visual QA is tracked outside the catalog.
+
+## Evaluation benchmarks
+
+- [WorldModelBench](/docs/evaluation/benchmark-hub/worldmodelbench) — Action-following world-rollout quality.
+
+<ModelRelatedRecipes modelId="hunyuan-game-craft" locale="en" />

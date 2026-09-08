@@ -1,0 +1,27 @@
+---
+title: "MoVerse"
+description: "MoVerse turns one image into a navigable world: it builds a panoramic Gaussian scaffold from the input and generates camera-controlled video as you move through it."
+pageSource: generated
+---
+
+**Publisher:** Open-source research release (institution not recorded) · Research lab
+image → world state
+
+MoVerse turns one image into a navigable world: it builds a panoramic Gaussian scaffold from the input and generates camera-controlled video as you move through it. In this catalog the headless inference closure is in-tree with local-only checkpoint resolution; full GPU parity waits on staged checkpoints, FLUX access, CUDA kernels, and at least 24 GB VRAM.
+
+<ModelCommandBuilder modelId="moverse" locale="en" />
+
+## Architecture
+
+The recorded assembly reuses WorldFoundry's shared GeoCalib AutoLevel, Depth Anything 3, SHARP panorama, Wan (Wan2.1-T2V-1.3B video base), and TAEHV components, plus FLUX.1-Fill-dev as panorama base and MoVerse's own component weights. Upstream has no license file — review before downstream use.
+
+## Usage notes
+
+Execution is offline and needs four pre-staged Hugging Face snapshots plus ffmpeg, gsplat, and compatible CUDA kernels. Runtime planning and missing-asset diagnostics work without importing the heavy model stack.
+
+## Evaluation benchmarks
+
+- [WorldScore](/docs/evaluation/benchmark-hub/worldscore) — Navigable generated-world quality.
+- [CameraBench](/docs/evaluation/benchmark-hub/camerabench) — Camera-control adherence during navigation.
+
+<ModelRelatedRecipes modelId="moverse" locale="en" />

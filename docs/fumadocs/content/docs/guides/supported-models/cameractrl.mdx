@@ -1,0 +1,26 @@
+---
+title: "CameraCtrl"
+description: "CameraCtrl pioneered plug-and-play camera control for text-to-video diffusion: it trains a camera encoder over Plücker embeddings so trajectories can steer generation without retraining the base model."
+pageSource: generated
+---
+
+**Publisher:** The Chinese University of Hong Kong / Shanghai AI Laboratory · University
+video
+
+CameraCtrl pioneered plug-and-play camera control for text-to-video diffusion: it trains a camera encoder over Plücker embeddings so trajectories can steer generation without retraining the base model. In this catalog both integration and runner are verified — the in-tree synthesis backend follows the official trajectory text-to-video demo contract in the unified environment profile.
+
+<ModelCommandBuilder modelId="cameractrl" locale="en" />
+
+## Architecture
+
+Per the publication (arXiv 2404.02101), camera poses are encoded as Plücker embeddings and injected through a trainable camera encoder attached to a frozen video diffusion base (AnimateDiff in the official release). WorldFoundry vendors the runtime under synthesis/visual_generation/cameractrl/cameractrl_runtime; checkpoints stay in the normal hfd/ckpt cache.
+
+## Usage notes
+
+The runner follows the official demo trajectory contract — supply a camera trajectory file and a text prompt. Per-run artifact checks are tracked outside the catalog.
+
+## Evaluation benchmarks
+
+- [CameraBench](/docs/evaluation/benchmark-hub/camerabench) — The standard camera-trajectory adherence evaluation.
+
+<ModelRelatedRecipes modelId="cameractrl" locale="en" />

@@ -1,0 +1,40 @@
+---
+title: "Wan2.1"
+description: "Wan2.1 is Alibaba Tongyi Lab's open video generation family and the backbone of a large part of this catalog — many world-model and control entries build on it. Four variants are recorded here: T2V 1.3B, T2V 14B, and I2V 14B at 480p and 72…"
+pageSource: generated
+---
+
+**Publisher:** Alibaba (Tongyi Lab) · Company
+text · image → video
+
+Wan2.1 is Alibaba Tongyi Lab's open video generation family and the backbone of a large part of this catalog — many world-model and control entries build on it. Four variants are recorded here: T2V 1.3B, T2V 14B, and I2V 14B at 480p and 720p. Only official Wan-Video GitHub and Wan-AI Hugging Face repositories are listed as sources.
+
+<ModelCommandBuilder modelId="wan2.1" locale="en" />
+
+## Architecture
+
+Wan2.1 is a diffusion transformer with a spatio-temporal Wan-VAE and UMT5 text encoding (per the upstream release). In this repository the 1.3B T2V has an independent canonical native diffusion recipe; the recorded contract exposes prompt/image/video/actions inputs and a generated_video artifact.
+
+## Usage notes
+
+Read the status carefully: the runner-parity field says verified for the registered pipeline target, but the manifest notes that family-level integration remains planned because T2V-14B and the I2V variants have not passed checkpoint, official-demo, and runner parity. The 1.3B route is the safest starting point; its public binding stays unchanged until CUDA artifact parity passes.
+
+## Hardware guidance
+
+- **Minimum VRAM:** 8 GB
+
+## Variants & pipeline bindings
+
+| Variant | Task | Runtime profile | Pipeline binding | Status |
+| --- | --- | --- | --- | --- |
+| `wan2.1-t2v-1.3b` | text-to-video | `wan2.1-t2v-1.3b-832x480-81f` | `wan2.1-t2v-1.3b` | integrated |
+| `wan2.1-t2v-14b` | text-to-video | `wan2.1-t2v-14b` | `wan2.1-t2v-14b` | integrated |
+| `wan2.1-i2v-14b-480p` | image-to-video | `wan2.1-i2v-14b-480p` | `wan2.1-i2v-14b-480p` | integrated |
+| `wan2.1-i2v-14b-720p` | image-to-video | `wan2.1-i2v-14b-720p` | `wan2.1-i2v-14b-720p` | integrated |
+
+## Evaluation benchmarks
+
+- [VBench](/docs/evaluation/benchmark-hub/vbench) — The suite Wan releases are commonly compared on.
+- [Physics-IQ Original](/docs/evaluation/benchmark-hub/physics-iq) — Physical plausibility probe.
+
+<ModelRelatedRecipes modelId="wan2.1" locale="en" />

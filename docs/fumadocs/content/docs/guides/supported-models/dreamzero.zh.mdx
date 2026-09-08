@@ -1,0 +1,32 @@
+---
+title: "NVIDIA DreamZero"
+description: "NVIDIA DreamZero is a world-action model (WAM) that couples video prediction with robot control: DROID and AgiBot checkpoints are released under Apache-2.0 (GEAR-Dreams org). WorldFoundry keeps the inference-only model, preprocessing, dist…"
+pageSource: generated
+---
+
+**发表机构:** 英伟达（GEAR 实验室） · 企业
+
+英伟达 DreamZero 是将视频预测与机器人控制耦合的世界-动作模型（WAM）：DROID 与 AgiBot checkpoint 以 Apache-2.0 发布（GEAR-Dreams 组织）。WorldFoundry 将推理专用模型、预处理、分布式服务、 WebSocket 客户端与无 pickle 的 NumPy msgpack 协议内置树内；两个 checkpoint 均在 CUDA 12.9 运行时通过 GPU 探针。
+
+<ModelCommandBuilder modelId="dreamzero" locale="zh" />
+
+## 架构
+
+默认 14B 服务使用两个 CUDA rank，Wan2.2 5B 入口可单 rank 运行。checkpoint 控制的 Hydra target 被重写并限定在树内推理模块白名单内，绝不执行 checkpoint Python。
+
+## 使用要点
+
+将 DreamZero-DROID 或 DreamZero-AgiBot 就位于 WORLDFOUNDRY_HFD_ROOT；需要 CUDA 12.9 运行时。DROID 面向真实机械臂数据分布，AgiBot 面向 AgiBot 本体。
+
+## 变体与 Pipeline Binding
+
+| Variant | 任务 | Runtime profile | Pipeline Binding | 状态 |
+| --- | --- | --- | --- | --- |
+| `dreamzero-droid` | wam.world_action_modeling | `dreamzero` | `dreamzero` | integrated |
+| `dreamzero-agibot` | wam.post_training_base | `dreamzero` | `dreamzero` | integrated |
+
+## 评测 Benchmark
+
+- [EWMBench](/zh/docs/evaluation/benchmark-hub/ewmbench) — 具身控制的世界-动作建模质量。
+
+<ModelRelatedRecipes modelId="dreamzero" locale="zh" />

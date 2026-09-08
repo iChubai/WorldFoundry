@@ -1,0 +1,31 @@
+---
+title: "Stable Virtual Camera"
+description: "Stable Virtual Camera (SEVA) turns one or a few 2D images into a novel-view video along a user-defined camera path."
+pageSource: generated
+---
+
+**发表机构:** Stability AI · 企业
+[Stable Virtual Camera: Generative View Synthesis with Diffusion Models](https://arxiv.org/abs/2503.14489) (2025)
+
+Stable Virtual Camera（SEVA）把一张或几张 2D 图像变成沿用户自定义相机路径的新视角视频。本 catalog 中 WorldFoundry 用树内适配器封装上游 demo.py 入口；由于 Stability AI checkpoint 为 gated 且官方 demo 运行尚待复核，runner parity 为 pending。
+
+<figure className="wf-recipe-media is-diagram">
+  <img src="/models/stable-virtual-camera/paper.png" alt="Stable Virtual Camera: Generative View Synthesis with Diffusion Models" />
+  <figcaption>Stable Virtual Camera: Generative View Synthesis with Diffusion Models</figcaption>
+</figure>
+
+<ModelCommandBuilder modelId="stable-virtual-camera" locale="zh" />
+
+## 架构
+
+按论文（arXiv 2503.14489），多视角扩散模型以两阶段程序化方式在采样相机位姿处生成目标视图，在轨迹通用性与一致性之间取得平衡。除已记录任务外的细节仓库未存。
+
+## 使用要点
+
+运行前请在 Hugging Face 接受 gated checkpoint 条款并设置 HF_TOKEN；gated 权限缺失会在推理时报告。适配器驱动上游 demo.py 的 Fire 入口。
+
+## 评测 Benchmark
+
+- [CameraBench](/zh/docs/evaluation/benchmark-hub/camerabench) — 评估生成视图的相机路径控制质量。
+
+<ModelRelatedRecipes modelId="stable-virtual-camera" locale="zh" />

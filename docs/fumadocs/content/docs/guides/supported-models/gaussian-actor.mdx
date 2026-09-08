@@ -1,0 +1,21 @@
+---
+title: "Gaussian Actor"
+description: "Gaussian Actor is a reinforcement-learning actor policy recorded against the concrete LeRobot gaussian_actor implementation — no separate official repository was identified upstream. WorldFoundry routes it through an in-tree action runtime…"
+pageSource: generated
+---
+
+**Publisher:** Hugging Face (LeRobot reference) · Company
+
+Gaussian Actor is a reinforcement-learning actor policy recorded against the concrete LeRobot gaussian_actor implementation — no separate official repository was identified upstream. WorldFoundry routes it through an in-tree action runtime adapter; checkpoints are not recorded, so runs emit a runtime plan.
+
+<ModelCommandBuilder modelId="gaussian-actor" locale="en" />
+
+## Architecture
+
+A Gaussian policy head for continuous control: the actor outputs mean and variance of an action distribution, following the LeRobot reference implementation. Further internals are not recorded in this repository.
+
+## Usage notes
+
+Checkpoint absence is reported by runtime missing_assets and is not a catalog blocker; stage a trained actor checkpoint to run real predictions.
+
+<ModelRelatedRecipes modelId="gaussian-actor" locale="en" />

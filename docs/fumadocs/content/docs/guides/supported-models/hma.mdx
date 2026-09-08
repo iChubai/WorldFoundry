@@ -1,0 +1,38 @@
+---
+title: "HMA"
+description: "HMA (Heterogeneous Masked Autoregression) models robot action-video dynamics across heterogeneous embodiments and datasets, fast enough for real-time interaction. Recorded variants cover a MAGVIT-style 362M discrete model and a 1B MAR cont…"
+pageSource: generated
+---
+
+**Publisher:** Massachusetts Institute of Technology (MIT) · University
+[Learning Real-World Action-Video Dynamics with Heterogeneous Masked Autoregression](https://arxiv.org/abs/2502.04296) (2025)
+
+HMA (Heterogeneous Masked Autoregression) models robot action-video dynamics across heterogeneous embodiments and datasets, fast enough for real-time interaction. Recorded variants cover a MAGVIT-style 362M discrete model and a 1B MAR continuous model. In this catalog the official generator route is registered; checkpoints and robot assets stay runtime-gated.
+
+<figure className="wf-recipe-media is-diagram">
+  <img src="/models/hma/paper.png" alt="Learning Real-World Action-Video Dynamics with Heterogeneous Masked Autoregression" />
+  <figcaption>Learning Real-World Action-Video Dynamics with Heterogeneous Masked Autoregression</figcaption>
+</figure>
+
+<ModelCommandBuilder modelId="hma" locale="en" />
+
+## Architecture
+
+Per the paper (arXiv 2502.04296), masked autoregression over video tokens handles heterogeneous action spaces through modality-specific heads; discrete (hma-base-disc) and continuous (hma-base-cont) checkpoints are recorded under liruiw (apache-2.0). Source is pinned at a recorded commit.
+
+## Usage notes
+
+Config resolution and pipeline import are expected to pass; real generation emits a runtime plan until required checkpoints/assets are staged. Missing assets are reported by the plan and are not treated as catalog blockers.
+
+## Variants & pipeline bindings
+
+| Variant | Task | Runtime profile | Pipeline binding | Status |
+| --- | --- | --- | --- | --- |
+| `hma-magvit-362m` | robot-action-video | `hma` | `hma` | planned |
+| `hma-mar-1b` | robot-action-video | `hma` | `hma` | planned |
+
+## Evaluation benchmarks
+
+- [EWMBench](/docs/evaluation/benchmark-hub/ewmbench) — Embodied world-model video prediction quality.
+
+<ModelRelatedRecipes modelId="hma" locale="en" />

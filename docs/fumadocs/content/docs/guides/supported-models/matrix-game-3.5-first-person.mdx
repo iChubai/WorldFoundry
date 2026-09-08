@@ -1,0 +1,27 @@
+---
+title: "Matrix-Game 3.5"
+description: "Matrix-Game 3.5 First-Person Base is the first-person profile of the Matrix-Game 3.5 release: long-horizon interactive world video at 1280x704, generated block by block (84 new frames per block) under camera-NPZ control. This model id is p…"
+pageSource: generated
+---
+
+**Publisher:** Riemann Dynamics · Company
+image → video
+
+Matrix-Game 3.5 First-Person Base is the first-person profile of the Matrix-Game 3.5 release: long-horizon interactive world video at 1280x704, generated block by block (84 new frames per block) under camera-NPZ control. This model id is permanently bound to first-person.safetensors. A default 25-step one-block A100 run exported 85 non-empty frames on 2026-07-20; official sample parity is still pending.
+
+<ModelCommandBuilder modelId="matrix-game-3.5-first-person" locale="en" />
+
+## Architecture
+
+The recorded stack builds on Wan2.2-TI2V-5B (apache-2.0) with the Matrix-Game-3.5-Base weights and a DA3NESTED-GIANT-LARGE-1.1 depth dependency (CC-BY-NC-4.0 — separate non-commercial terms). Inference is integrated through the canonical NativeDiffusionPipeline with no DiffSynth pipeline remaining; the released checkpoint is the 25-step bidirectional 5B base, not the announced few-step real-time distilled model.
+
+## Usage notes
+
+Each block consumes 84 camera poses and generates 84 new frames (exports include the anchor frame). The shared resolver prefers staged local checkpoints and can materialize missing Hub files. The recorded A100 artifact predates the NativeDiffusionPipeline cutover — regenerate before claiming native parity.
+
+## Evaluation benchmarks
+
+- [WorldModelBench](/docs/evaluation/benchmark-hub/worldmodelbench) — Long-horizon interactive world-rollout quality.
+- [CameraBench](/docs/evaluation/benchmark-hub/camerabench) — Camera-NPZ trajectory adherence.
+
+<ModelRelatedRecipes modelId="matrix-game-3.5-first-person" locale="en" />

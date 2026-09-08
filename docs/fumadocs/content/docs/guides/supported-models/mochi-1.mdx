@@ -1,0 +1,26 @@
+---
+title: "Mochi-1"
+description: "Mochi-1 is Genmo's open text-to-video model, released as a preview checkpoint and known for strong motion quality among open models at its release. The catalog records one runnable variant, mochi-1-preview-t2v; the WorldFoundry runner path…"
+pageSource: generated
+---
+
+**Publisher:** Genmo · Company
+text → video
+
+Mochi-1 is Genmo's open text-to-video model, released as a preview checkpoint and known for strong motion quality among open models at its release. The catalog records one runnable variant, mochi-1-preview-t2v; the WorldFoundry runner path is wired for the official preview checkpoint.
+
+<ModelCommandBuilder modelId="mochi-1" locale="en" />
+
+## Architecture
+
+Upstream describes Mochi-1 as a 10B-parameter Asymmetric Diffusion Transformer (AsymmDiT) with a dedicated video VAE. This repository records the runner wiring and the standard prompt/image/video/actions input schema; further internals are not recorded here.
+
+## Usage notes
+
+Runner parity is pending — the path is wired but full official parity has not been recorded. Note the org naming: GitHub is genmoai, Hugging Face is genmo. Stage the preview checkpoint before running.
+
+## Evaluation benchmarks
+
+- [VBench](/docs/evaluation/benchmark-hub/vbench) — Standard T2V quality suite.
+
+<ModelRelatedRecipes modelId="mochi-1" locale="en" />

@@ -1,0 +1,34 @@
+---
+title: "Cosmos Predict 2"
+description: "Cosmos Predict 2 is the previous generation of NVIDIA's world foundation model, covering image-to-video and video-to-world generation with 2B and 14B video2world variants."
+pageSource: generated
+---
+
+**发表机构:** 英伟达（NVIDIA） · 企业
+image · video → video
+
+Cosmos Predict 2 是英伟达世界基础模型的上一代，覆盖图生视频与视频到世界生成，含 2B 与 14B 两个 video2world variant。本 catalog 中它由框架自有的去噪器、T5 条件器、Rectified Flow AB2 调度器、 Wan 编解码器与标准 runner 组装——不调用英伟达运行时包或 Diffusers pipeline。
+
+<ModelCommandBuilder modelId="cosmos-predict-2" locale="zh" />
+
+## 架构
+
+在 WorldFoundry 中，Predict2 与 Predict2.5 共享同一按 checkpoint 形状实现的 transformer；只有版本差异的架构与采样值放在配方里。原生 2B 架构含 567 个 checkpoint 张量，无合成的交叉注意力投影。
+
+## 使用要点
+
+注册表、组件契约、架构构建、条件掩码与 AB2 调度器数值已本地验证；gated checkpoint 权限与 GPU 一致性是独立步骤。除非需要 T5 条件的 v2 配方，新工作建议优先使用 cosmos-predict-2.5。
+
+## 变体与 Pipeline Binding
+
+| Variant | 任务 | Runtime profile | Pipeline Binding | 状态 |
+| --- | --- | --- | --- | --- |
+| `cosmos-predict2-2b-video2world` | image/video-to-world | `cosmos-predict2-2b-video2world` | `cosmos-predict2-2b-video2world` | integrated |
+| `cosmos-predict2-14b-video2world` | image/video-to-world | `cosmos-predict2-14b-video2world` | `cosmos-predict2-14b-video2world` | integrated |
+
+## 评测 Benchmark
+
+- [WorldModelBench](/zh/docs/evaluation/benchmark-hub/worldmodelbench) — 各条件下世界生成质量评测。
+- [Physics-IQ Original](/zh/docs/evaluation/benchmark-hub/physics-iq) — 预测世界视频的物理合理性。
+
+<ModelRelatedRecipes modelId="cosmos-predict-2" locale="zh" />

@@ -1,0 +1,21 @@
+---
+title: "Xiaomi-Robotics-1"
+description: "Xiaomi-Robotics-1 is Xiaomi's next-generation VLA (Apache-2.0): a Qwen3-VL policy-token graph with a rectified-flow DiT action decoder emitting relative actions. The public repository at the pinned revision carries the report and release a…"
+pageSource: generated
+---
+
+**Publisher:** Xiaomi Robotics · Company
+
+Xiaomi-Robotics-1 is Xiaomi's next-generation VLA (Apache-2.0): a Qwen3-VL policy-token graph with a rectified-flow DiT action decoder emitting relative actions. The public repository at the pinned revision carries the report and release announcement; the inference source snapshot used here is integrated in-tree, and checkpoints stage into WORLDFOUNDRY_CKPT_DIR.
+
+<ModelCommandBuilder modelId="xiaomi-robotics-1" locale="en" />
+
+## Architecture
+
+A Qwen3-VL backbone produces policy tokens consumed by a rectified-flow DiT that decodes relative actions; preprocessing and normalization extraction are in-tree. Checkpoint-side Python is parsed only as literal normalization metadata and never executed.
+
+## Usage notes
+
+Stage checkpoints under $\{WORLDFOUNDRY_CKPT_DIR\}/embodied_action/xiaomi-robotics-1. Model, processor, device, dtype, attention backend, and checkpoint loading are local-only.
+
+<ModelRelatedRecipes modelId="xiaomi-robotics-1" locale="en" />

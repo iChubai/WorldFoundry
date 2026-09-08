@@ -1,0 +1,33 @@
+---
+title: "Bernini"
+description: "Bernini is ByteDance's unified any-to-any visual generation model: one checkpoint covers text-to-image, image editing, text-to-video, video-to-video, and reference-guided video. This flagship entry serves the full ByteDance/Bernini-Diffuse…"
+pageSource: generated
+---
+
+**Publisher:** ByteDance · Company
+text · image · video → image · video
+[Bernini: Latent Semantic Planning for Video Diffusion](https://arxiv.org/abs/2605.22344) (2026)
+
+Bernini is ByteDance's unified any-to-any visual generation model: one checkpoint covers text-to-image, image editing, text-to-video, video-to-video, and reference-guided video. This flagship entry serves the full ByteDance/Bernini-Diffusers checkpoint, which pairs a 7B semantic planner with a 14B renderer. WorldFoundry vendors the official inference source in-tree and loads the self-contained Diffusers checkpoint directly — no external Bernini checkout is used.
+
+<figure className="wf-recipe-media is-diagram">
+  <img src="/models/bernini/paper.png" alt="Bernini: Latent Semantic Planning for Video Diffusion" />
+  <figcaption>Bernini: Latent Semantic Planning for Video Diffusion</figcaption>
+</figure>
+
+<ModelCommandBuilder modelId="bernini" locale="en" />
+
+## Architecture
+
+Two-stage design recorded in the manifest: a 7B semantic planner produces an intermediate plan and a 14B renderer synthesizes the final pixels. Official recipes run single-request inference with 8-way Ulysses sequence parallelism (nproc_per_node=8, ulysses_size=8). The task_type input selects among the six recorded task families at request time.
+
+## Usage notes
+
+Integration is complete but runner parity is pending_gpu_validation: the official 8-GPU Ulysses dispatch is implemented, and artifact parity still requires staged weights plus H100-class GPUs. If you do not have an 8-GPU node, use the Bernini-R renderer-only entries instead — the 1.3B one runs on a single GPU.
+
+## Evaluation benchmarks
+
+- [VBench](/docs/evaluation/benchmark-hub/vbench) — Covers the T2V half of Bernini's unified task space.
+- [T2V-CompBench](/docs/evaluation/benchmark-hub/t2v-compbench) — Compositional prompts stress the semantic-planner stage.
+
+<ModelRelatedRecipes modelId="bernini" locale="en" />

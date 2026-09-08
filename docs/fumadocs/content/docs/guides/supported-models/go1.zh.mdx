@@ -1,0 +1,21 @@
+---
+title: "GO-1"
+description: "GO-1 is the flagship policy of the AgiBot World project (AgiBot with OpenDriveLab): a generalist robot policy trained on the large-scale AgiBot World dataset, released as agibot-world/GO-1 under CC-BY-NC-SA-4.0. WorldFoundry keeps the full…"
+pageSource: generated
+---
+
+**发表机构:** 智元机器人（AgiBot，联合 OpenDriveLab） · 企业
+
+GO-1 是 AgiBot World 项目（智元机器人联合 OpenDriveLab）的旗舰策略：在大规模 AgiBot World 数据集上训练的通用机器人策略，以 agibot-world/GO-1 发布，CC-BY-NC-SA-4.0 许可。WorldFoundry 将完整栈内置树内——InternVision、InternLM2、隐式规划器、动作专家、扩散采样器、tokenizer 与预处理——静态运行时验证已完成。
+
+<ModelCommandBuilder modelId="go1" locale="zh" />
+
+## 架构
+
+ViLLA 式设计：InternVision 加 InternLM2 组成 VLM，隐式规划器预测中间隐式动作，扩散动作专家解码可执行控制。模型与参数名保持官方 checkpoint 契约。
+
+## 使用要点
+
+锁定的预训练基础 checkpoint 与发布统计已就位。任何下游微调必须与该次微调产出的精确统计配对使用。注意非商用许可。
+
+<ModelRelatedRecipes modelId="go1" locale="zh" />

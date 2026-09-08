@@ -1,0 +1,26 @@
+---
+title: "InSpatio-WorldFM"
+description: "InSpatio-WorldFM is a 3D world foundation model for spatial intelligence and frame generation, released with confirmed code and weights (inspatio/WorldFM on Hugging Face, Apache-2.0)."
+pageSource: generated
+---
+
+**Publisher:** InSpatio · Company
+video
+
+InSpatio-WorldFM is a 3D world foundation model for spatial intelligence and frame generation, released with confirmed code and weights (inspatio/WorldFM on Hugging Face, Apache-2.0). In this catalog the integration is verified: the WorldFoundry runner supports the official meta.json demo in the unified environment profile with local WorldFM assets, and emits the official video and panorama artifact structure.
+
+<ModelCommandBuilder modelId="worldfm" locale="en" />
+
+## Architecture
+
+Outputs cover both video and panorama artifacts, reflecting a world-generation design that renders beyond a single fixed viewport. Architecture internals beyond the official repository and checkpoint pointers are not recorded in this repository.
+
+## Usage notes
+
+Drive runs through the official meta.json demo format with local WorldFM assets staged. Per-run artifact checks are tracked outside the model catalog.
+
+## Evaluation benchmarks
+
+- [WorldScore](/docs/evaluation/benchmark-hub/worldscore) — Unified world-generation quality for 3D world output.
+
+<ModelRelatedRecipes modelId="worldfm" locale="en" />

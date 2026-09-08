@@ -1,0 +1,33 @@
+---
+title: "Stable Video Infinity 2.0"
+description: "Stable Video Infinity 2.0 (SVI) generates arbitrarily long videos by chaining clips with five-frame continuation and per-clip seed changes, driven by prompt streams. This is one of the strongest evidence entries in the catalog: runner stat…"
+pageSource: generated
+---
+
+**Publisher:** EPFL (VITA lab) · University
+image → video
+[Stable Video Infinity: Infinite-Length Video Generation with Error Recycling](https://arxiv.org/abs/2510.09212) (2025)
+
+Stable Video Infinity 2.0 (SVI) generates arbitrarily long videos by chaining clips with five-frame continuation and per-clip seed changes, driven by prompt streams. This is one of the strongest evidence entries in the catalog: runner status is full_default_gpu_parity_verified, with a recorded A100 run producing two linked 81-frame clips at 832x544 and a 157-frame H.264 artifact, plus 31.03 dB PSNR exact-setting parity against the pinned official runtime.
+
+<figure className="wf-recipe-media is-diagram">
+  <img src="/models/stable-video-infinity/paper.png" alt="Stable Video Infinity: Infinite-Length Video Generation with Error Recycling" />
+  <figcaption>Stable Video Infinity: Infinite-Length Video Generation with Error Recycling</figcaption>
+</figure>
+
+<ModelCommandBuilder modelId="stable-video-infinity" locale="en" />
+
+## Architecture
+
+SVI 2.0 is a LoRA on top of Wan2.1-I2V-14B-480P: the adapter reuses WorldFoundry's canonical Wan components and staged runner, preserving five-frame continuation, reference-frame padding, and prompt-stream repetition. Released training-pipeline LoRA keys are normalized to bare Wan DiT module names, and loading fails unless every discovered LoRA pair merges.
+
+## Usage notes
+
+Defaults follow the official recipe: five-motion-frame continuation, full reference padding, each clip a distinct seed, prompts repeated twice before advancing. The official 999-clip cap is bounded to two clips per prompt unless use_first_prompt_only is enabled. Stage both the SVI LoRA (vita-video-gen/svi-model, MIT) and the Wan2.1 base.
+
+## Evaluation benchmarks
+
+- [ChronoMagic-Bench](/docs/evaluation/benchmark-hub/chronomagic-bench) — Long-horizon suite matching SVI's infinite-video goal.
+- [VBench](/docs/evaluation/benchmark-hub/vbench) — Per-clip quality yardstick.
+
+<ModelRelatedRecipes modelId="stable-video-infinity" locale="en" />

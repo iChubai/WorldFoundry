@@ -1,0 +1,31 @@
+---
+title: "VideoCrafter1 I2V"
+description: "VideoCrafter1 I2V is the image-to-video member of Tencent AI Lab's VideoCrafter1 release: it animates a still image while preserving its content, style, and structure. The in-tree infer-only runtime wraps the official path with local check…"
+pageSource: generated
+---
+
+**Publisher:** Tencent AI Lab · Company
+image → video
+
+VideoCrafter1 I2V is the image-to-video member of Tencent AI Lab's VideoCrafter1 release: it animates a still image while preserving its content, style, and structure. The in-tree infer-only runtime wraps the official path with local checkpoint, fps, frame count, and seed controls.
+
+<figure className="wf-recipe-media">
+  <Video src="/demos/studio/videocrafter1-i2v.mp4" autoPlay loop muted playsInline />
+  <figcaption>Image-to-video</figcaption>
+</figure>
+
+<ModelCommandBuilder modelId="videocrafter1-i2v" locale="en" />
+
+## Architecture
+
+A U-Net latent video diffusion model conditioned on the input image embedding (per the upstream release). Checkpoint provenance lives on the family-level videocrafter entry; training and download scripts are intentionally not packaged.
+
+## Usage notes
+
+Runner parity is pending. Expect 2023-era quality: short clips, modest motion. For higher fidelity image animation use DynamiCrafter or the DiT-based I2V entries.
+
+## Evaluation benchmarks
+
+- [EvalCrafter](/docs/evaluation/benchmark-hub/evalcrafter) — Companion benchmark of the VideoCrafter effort.
+
+<ModelRelatedRecipes modelId="videocrafter1-i2v" locale="en" />

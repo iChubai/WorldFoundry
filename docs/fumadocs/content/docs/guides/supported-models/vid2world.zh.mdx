@@ -1,0 +1,25 @@
+---
+title: "Vid2World"
+description: "Vid2World from Tsinghua's THUML group turns pretrained video diffusion models into interactive world models: it adapts a passive video generator into an action-conditioned, autoregressive predictor. WorldFoundry registers the official eval…"
+pageSource: generated
+---
+
+**发表机构:** 清华大学（THUML 机器学习组） · 高校
+
+清华大学 THUML 组的 Vid2World 将预训练视频扩散模型改造为交互式世界模型：把被动的视频生成器适配成动作条件的自回归预测器。WorldFoundry 树内注册了官方评测路由；checkpoint 与配置资产为运行时门控。
+
+<ModelCommandBuilder modelId="vid2world" locale="zh" />
+
+## 架构
+
+仓库记录的核心思想是视频扩散适配：将全序列扩散模型改造成因果、动作条件的滚动生成。官方仓库指针（thuml/Vid2World，锁定 head ae24077a）之外的架构内部细节仓库未记录。
+
+## 使用要点
+
+配置解析与 pipeline 导入预期可通过；在所需 checkpoint/资产就位前，真实生成会输出运行时计划。缺失资产由计划报告，不视为 catalog 阻塞。
+
+## 评测 Benchmark
+
+- [WorldModelBench](/zh/docs/evaluation/benchmark-hub/worldmodelbench) — 动作条件交互滚动生成质量。
+
+<ModelRelatedRecipes modelId="vid2world" locale="zh" />

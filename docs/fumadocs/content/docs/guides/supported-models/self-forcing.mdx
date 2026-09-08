@@ -1,0 +1,32 @@
+---
+title: "Self-Forcing"
+description: "Self-Forcing bridges the train-test gap in autoregressive video diffusion: by simulating the inference process during training — conditioning each frame on its own previously generated frames — it enables real-time streaming text-to-video…"
+pageSource: generated
+---
+
+**Publisher:** Adobe Research / The University of Texas at Austin · Company
+text · image → video
+[Self Forcing: Bridging the Train-Test Gap in Autoregressive Video Diffusion](https://arxiv.org/abs/2506.08009) (NeurIPS 2025 spotlight, 2025)
+
+Self-Forcing bridges the train-test gap in autoregressive video diffusion: by simulating the inference process during training — conditioning each frame on its own previously generated frames — it enables real-time streaming text-to-video on a single GPU (arXiv 2506.08009). In this catalog the official infer-only runtime is vendored in-tree; parity waits on the Self-Forcing DMD checkpoint plus Wan2.1 weights.
+
+<figure className="wf-recipe-media is-diagram">
+  <img src="/models/self-forcing/paper.png" alt="Self Forcing: Bridging the Train-Test Gap in Autoregressive Video Diffusion" />
+  <figcaption>Self Forcing: Bridging the Train-Test Gap in Autoregressive Video Diffusion</figcaption>
+</figure>
+
+<ModelCommandBuilder modelId="self-forcing" locale="en" />
+
+## Architecture
+
+Per the paper, a Wan2.1-based causal student is trained with holistic distribution matching over self-generated rollouts, plus KV caching for streaming. The runner owns prompt/i2v data materialization, Wan weight symlinks, command construction, and output loading in-tree (checkpoint: gdhe17/Self-Forcing).
+
+## Usage notes
+
+The default checkpoint path follows the official HF layout under $\{WORLDFOUNDRY_CKPT_DIR\}/Self-Forcing — override checkpoint_path if staged elsewhere. Full parity needs Wan2.1 weights under a wan_models-compatible layout; supply benchmark prompt lists separately through your local input configuration.
+
+## Evaluation benchmarks
+
+- [VBench](/docs/evaluation/benchmark-hub/vbench) — Video quality for streaming text-to-video.
+
+<ModelRelatedRecipes modelId="self-forcing" locale="en" />

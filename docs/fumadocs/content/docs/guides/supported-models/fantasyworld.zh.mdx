@@ -1,0 +1,39 @@
+---
+title: "FantasyWorld"
+description: "FantasyWorld does geometry-consistent world modeling by unifying video and 3D prediction: from an image it produces camera-controllable world video that stays geometrically coherent. Two variants are recorded — the verified Wan2.1 pipeline…"
+pageSource: generated
+---
+
+**发表机构:** 阿里巴巴（高德 Fantasy-AMAP 团队） · 企业
+[FantasyWorld: Geometry-Consistent World Modeling via Unified Video and 3D Prediction](https://arxiv.org/abs/2509.21657) (2025)
+
+FantasyWorld 通过统一视频与 3D 预测实现几何一致的世界建模：从一张图生成相机可控、几何连贯的世界视频。记录两个 variant——已验证的 Wan2.1 pipeline（面向发布的默认路径），以及在官方显存策略验证前对 Studio 隐藏的 Wan2.2 pipeline。
+
+<figure className="wf-recipe-media is-diagram">
+  <img src="/models/fantasyworld/paper.png" alt="FantasyWorld: Geometry-Consistent World Modeling via Unified Video and 3D Prediction" />
+  <figcaption>FantasyWorld: Geometry-Consistent World Modeling via Unified Video and 3D Prediction</figcaption>
+</figure>
+
+<ModelCommandBuilder modelId="fantasyworld" locale="zh" />
+
+## 架构
+
+FantasyWorld 在 Wan 视频基座上增加统一的 3D 预测分支，使生成帧遵守场景几何（见 arXiv 2509.21657）。运行需要本地 FantasyWorld Wan2.1、Wan2.1 I2V、MoGe 与 CUDA 资产。
+
+## 使用要点
+
+默认行解析到已验证的树内 Wan2.1 runner——请使用该路径。Wan2.2 variant 因官方单卡运行需要认可的显存策略而保持 pending。
+
+## 变体与 Pipeline Binding
+
+| Variant | 任务 | Runtime profile | Pipeline Binding | 状态 |
+| --- | --- | --- | --- | --- |
+| `fantasyworld-wan21` | image-to-world-video | `fantasyworld-wan21` | `fantasyworld-wan21` | verified |
+| `fantasyworld-wan22` | camera-controlled-world-video | `fantasyworld-wan22` | `fantasyworld-wan22` | checkpoint assets staged cpu schema validated gpu pending |
+
+## 评测 Benchmark
+
+- [WorldScore](/zh/docs/evaluation/benchmark-hub/worldscore) — 评估几何一致的生成世界。
+- [CameraBench](/zh/docs/evaluation/benchmark-hub/camerabench) — 相机控制质量评测。
+
+<ModelRelatedRecipes modelId="fantasyworld" locale="zh" />

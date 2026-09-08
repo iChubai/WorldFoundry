@@ -1,0 +1,26 @@
+---
+title: "Uni3C"
+description: "Uni3C from Alibaba DAMO Academy unifies camera control and human-motion control for image-to-video generation: the PCDController stage steers the camera while the unified stage combines camera plus human motion (RealisDance-DiT). WorldFoun…"
+pageSource: generated
+---
+
+**Publisher:** Alibaba DAMO Academy · Company
+image → video
+
+Uni3C from Alibaba DAMO Academy unifies camera control and human-motion control for image-to-video generation: the PCDController stage steers the camera while the unified stage combines camera plus human motion (RealisDance-DiT). WorldFoundry vendors both official stage-two inference paths in-tree, with public Apache-2.0 checkpoints (ewrfcas/Uni3C, theFoxofSky/RealisDance-DiT) on top of the Wan2.1-I2V-14B-720P base.
+
+<ModelCommandBuilder modelId="uni3c" locale="en" />
+
+## Architecture
+
+Three checkpoint roles are recorded: ewrfcas/Uni3C as pcd_controller, Wan-AI/Wan2.1-I2V-14B-720P-Diffusers as camera_base, and theFoxofSky/RealisDance-DiT as the unified camera-plus-human model. Pre-rendered control bundles stay explicit runtime inputs; preprocessing is not silently substituted.
+
+## Usage notes
+
+Choose the camera-only or unified camera-plus-human route and provide the matching pre-rendered control bundle. The default PCDController camera route is checkpoint-backed and GPU-validated on H100; the unified camera-plus-human route still requires its own checkpoint-backed validation.
+
+## Evaluation benchmarks
+
+- [CameraBench](/docs/evaluation/benchmark-hub/camerabench) — Camera-trajectory adherence under explicit control.
+
+<ModelRelatedRecipes modelId="uni3c" locale="en" />

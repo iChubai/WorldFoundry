@@ -4,6 +4,7 @@ import { Check, Copy } from 'lucide-react';
 import { useMemo, useState } from 'react';
 
 import type { ModelRecipe, ModelRecipeTask } from '@/lib/model-recipe-types';
+import { readerStatusLabel } from '@/lib/model-status-label';
 
 type Locale = 'en' | 'zh';
 type CommandTab = 'prepare' | 'install' | 'check' | 'run';
@@ -13,7 +14,7 @@ const labels = {
     title: 'Build your run',
     variant: 'Variant',
     task: 'Task',
-    pipeline: 'Inference pipeline',
+    pipeline: 'Pipeline',
     loading: 'Loading',
     invocation: 'Invocation',
     runner: 'Runner',
@@ -47,7 +48,7 @@ const labels = {
   },
   zh: {
     title: '构建运行命令',
-    variant: 'Variant',
+    variant: '变体',
     task: '任务',
     pipeline: '推理 Pipeline',
     loading: '加载方式',
@@ -56,7 +57,7 @@ const labels = {
     environment: '环境',
     device: '设备',
     taskContract: '任务契约',
-    taskProfile: 'Profile',
+    taskProfile: '配置',
     inputs: '输入',
     artifacts: '输出',
     required: '必填',
@@ -84,22 +85,6 @@ const labels = {
 } as const;
 
 type Copy = (typeof labels)[Locale];
-
-const PRIMARY_FIELD_NAMES = new Set([
-  'prompt',
-  'negative_prompt',
-  'instruction',
-  'text',
-  'caption',
-  'input_path',
-  'image',
-  'video',
-  'audio',
-  'images',
-  'input',
-]);
-
-const PRIMARY_FIELD_KINDS = new Set(['json', 'interaction_tokens', 'image', 'video', 'audio', 'path']);
 
 const GENERIC_COPY = new Set([
   'Catalog task profile used by the model runtime.',
@@ -176,12 +161,91 @@ function isRunnableVariant(value: { pipelineTarget: string | null; status: strin
   return Boolean(value.pipelineTarget) && !unavailable.some((marker) => status.includes(marker));
 }
 
-function variantLabel(value: { id: string; pipelineTarget: string | null; status: string }, fallback: string) {
+function variantLabel(
+  value: { id: string; pipelineTarget: string | null; status: string },
+  fallback: string,
+  locale: Locale,
+) {
   if (isRunnableVariant(value)) return value.id;
-  const status = value.status && value.status !== 'not_recorded'
-    ? value.status.replaceAll('_', ' ').replaceAll('-', ' ')
-    : fallback;
+  const status = readerStatusLabel(value.status, locale, fallback);
   return `${value.id} — ${status}`;
+}
+
+type PipelineTargetParts = {
+  modulePath: string | null;
+  className: string;
+  full: string;
+};
+
+function parsePipelineTarget(target: string): PipelineTargetParts {
+  const colon = target.lastIndexOf(':');
+  if (colon <= 0) {
+    return { modulePath: null, className: target, full: target };
+  }
+  return {
+    modulePath: target.slice(0, colon),
+    className: target.slice(colon + 1),
+    full: target,
+  };
+}
+
+function PipelineTargetRoute({
+  target,
+  pipelineLabel,
+  emptyLabel,
+  copyLabel,
+  copiedLabel,
+}: {
+  target: string | null;
+  pipelineLabel: string;
+  emptyLabel: string;
+  copyLabel: string;
+  copiedLabel: string;
+}) {
+  const [copied, setCopied] = useState(false);
+  const parts = target ? parsePipelineTarget(target) : null;
+
+  async function copyTarget() {
+    if (!parts) return;
+    try {
+      await navigator.clipboard.writeText(parts.full);
+      setCopied(true);
+      window.setTimeout(() => setCopied(false), 1400);
+    } catch {
+      setCopied(false);
+    }
+  }
+
+  return (
+    <div className="wf-command-builder-heading-route">
+      <span className="wf-command-builder-heading-route-label">{pipelineLabel}</span>
+      {parts ? (
+        <div className="wf-command-builder-heading-route-body">
+          <div className="wf-command-builder-heading-route-id">
+            <code className="wf-command-builder-heading-route-class">{parts.className}</code>
+            {parts.modulePath ? (
+              <code className="wf-command-builder-heading-route-module" title={parts.modulePath}>
+                {parts.modulePath}
+              </code>
+            ) : null}
+          </div>
+          <button
+            type="button"
+            className={`wf-command-builder-heading-route-copy${copied ? ' is-copied' : ''}`}
+            aria-label={copied ? copiedLabel : copyLabel}
+            title={parts.full}
+            onClick={() => {
+              void copyTarget();
+            }}
+          >
+            {copied ? <Check aria-hidden="true" size={13} /> : <Copy aria-hidden="true" size={13} />}
+          </button>
+        </div>
+      ) : (
+        <span className="wf-command-builder-heading-route-empty">{emptyLabel}</span>
+      )}
+    </div>
+  );
 }
 
 function parseDetail(detail?: string) {
@@ -261,12 +325,6 @@ function visibleCopy(value?: string) {
   return text && !GENERIC_COPY.has(text) ? text : '';
 }
 
-function isPrimaryField(field: ReturnType<typeof normalizeInput>) {
-  if (PRIMARY_FIELD_NAMES.has(field.field)) return true;
-  if (field.kind && PRIMARY_FIELD_KINDS.has(field.kind)) return true;
-  return field.formatted.display === 'text' || field.formatted.display === 'json';
-}
-
 function countPhrase(count: number, singular: string, plural: string) {
   return `${count} ${count === 1 ? singular : plural}`;
 }
@@ -326,46 +384,18 @@ function FieldDefault({
   );
 }
 
-function ContractField({
+function ContractFieldRow({
   t,
   field,
-  compact = false,
 }: {
   t: Copy;
   field: ReturnType<typeof normalizeInput>;
-  compact?: boolean;
 }) {
-  if (compact) {
-    return (
-      <li title={field.formatted.text || undefined}>
-        <div className="wf-command-builder-field-head">
-          <span className="wf-command-builder-knob-name">{field.field}</span>
-          <div>
-            <span className={`wf-command-builder-pill${field.required ? ' is-required' : ''}`}>
-              {field.required ? t.required : t.optional}
-            </span>
-            {field.kind ? <span className="wf-command-builder-pill">{field.kind}</span> : null}
-          </div>
-        </div>
-        {field.formatted.display === 'empty' ? (
-          <span className="wf-command-builder-knob-empty">—</span>
-        ) : field.formatted.display === 'scalar' ? (
-          <div className="wf-command-builder-field-default is-compact">
-            <span className="wf-command-builder-field-label">{t.defaultValue}</span>
-            <code>{field.formatted.text}</code>
-          </div>
-        ) : (
-          <FieldDefault t={t} formatted={field.formatted} />
-        )}
-      </li>
-    );
-  }
-
   return (
-    <li>
-      <div className="wf-command-builder-field-head">
-        <code>{field.field}</code>
-        <div>
+    <li className="wf-command-builder-contract-row">
+      <div className="wf-command-builder-contract-row-top">
+        <code className="wf-command-builder-contract-row-name">{field.field}</code>
+        <div className="wf-command-builder-contract-row-badges">
           <span className={`wf-command-builder-pill${field.required ? ' is-required' : ''}`}>
             {field.required ? t.required : t.optional}
           </span>
@@ -401,10 +431,9 @@ function ContractPanel({
   artifacts: Array<{ kind?: string; filename?: string; description?: string }>;
 }) {
   const fields = inputs.map(normalizeInput).filter((field) => field.field);
-  const primary = fields.filter(isPrimaryField);
-  const knobs = fields.filter((field) => !isPrimaryField(field));
   const outputItems = artifacts.filter((item) => item.kind || item.filename);
   const splitColumns = fields.length > 0 && outputItems.length > 0;
+  const denseInputGrid = fields.length >= 4;
   const lead = visibleCopy(description);
   const [open, setOpen] = useState(false);
 
@@ -420,7 +449,12 @@ function ContractPanel({
         <span className="wf-command-builder-contracts-meta">
           <span className="wf-command-builder-profile-chip">
             <span className="wf-command-builder-field-label">{t.taskProfile}</span>
-            <code title={taskId}>{taskLabel || taskId}</code>
+            <span className="wf-command-builder-profile-text">
+              {taskLabel && taskLabel !== taskId ? (
+                <span className="wf-command-builder-profile-name">{taskLabel}</span>
+              ) : null}
+              <code>{taskId}</code>
+            </span>
           </span>
           <span className="wf-command-builder-contracts-counts">
             {countPhrase(fields.length, t.inputSingular, t.inputPlural)}
@@ -439,22 +473,11 @@ function ContractPanel({
               <b>{fields.length}</b>
             </header>
             {fields.length ? (
-              <>
-                {primary.length > 0 ? (
-                  <ul className="wf-command-builder-fields">
-                    {primary.map((field) => (
-                      <ContractField key={field.field} t={t} field={field} />
-                    ))}
-                  </ul>
-                ) : null}
-                {knobs.length > 0 ? (
-                  <ul className="wf-command-builder-knobs">
-                    {knobs.map((field) => (
-                      <ContractField key={field.field} t={t} field={field} compact />
-                    ))}
-                  </ul>
-                ) : null}
-              </>
+              <ul className={`wf-command-builder-contract-rows${denseInputGrid ? ' is-dense-grid' : ''}`}>
+                {fields.map((field) => (
+                  <ContractFieldRow key={field.field} t={t} field={field} />
+                ))}
+              </ul>
             ) : (
               <p>{t.noContract}</p>
             )}
@@ -466,12 +489,19 @@ function ContractPanel({
                 <b>{outputItems.length}</b>
               </header>
               {outputItems.length ? (
-                <ul className="wf-command-builder-artifacts">
+                <ul className="wf-command-builder-contract-rows">
                   {outputItems.map((item, index) => (
-                    <li key={`${item.kind ?? 'artifact'}:${item.filename ?? ''}:${index}`}>
-                      <div className="wf-command-builder-field-head">
-                        <code>{item.filename || '—'}</code>
-                        {item.kind ? <span className="wf-command-builder-pill">{item.kind}</span> : null}
+                    <li
+                      className="wf-command-builder-contract-row"
+                      key={`${item.kind ?? 'artifact'}:${item.filename ?? ''}:${index}`}
+                    >
+                      <div className="wf-command-builder-contract-row-top">
+                        <code className="wf-command-builder-contract-row-name">{item.filename || '—'}</code>
+                        {item.kind ? (
+                          <div className="wf-command-builder-contract-row-badges">
+                            <span className="wf-command-builder-pill">{item.kind}</span>
+                          </div>
+                        ) : null}
                       </div>
                       {item.description ? <p className="wf-command-builder-field-note">{item.description}</p> : null}
                     </li>
@@ -594,10 +624,13 @@ export function ModelCommandBuilder({ recipe, locale = 'en' }: { recipe: ModelRe
     <section className="wf-command-builder" id="use" aria-labelledby="wf-command-builder-title">
       <header className="wf-command-builder-heading">
         <h2 id="wf-command-builder-title">{t.title}</h2>
-        <p className="wf-command-builder-heading-route">
-          <span>{t.pipeline}</span>
-          <code>{selectedPipeline ?? t.noPipeline}</code>
-        </p>
+        <PipelineTargetRoute
+          target={selectedPipeline}
+          pipelineLabel={t.pipeline}
+          emptyLabel={t.noPipeline}
+          copyLabel={t.copy}
+          copiedLabel={t.copied}
+        />
       </header>
 
       <div className="wf-command-builder-panel">
@@ -605,6 +638,7 @@ export function ModelCommandBuilder({ recipe, locale = 'en' }: { recipe: ModelRe
           <label>
             <span>{t.variant}</span>
             <select
+              title={selected ? variantLabel(selected, t.notRecorded, locale) : t.notRecorded}
               value={selectedId}
               onChange={(event) => {
                 const nextId = event.target.value;
@@ -620,7 +654,7 @@ export function ModelCommandBuilder({ recipe, locale = 'en' }: { recipe: ModelRe
             >
               {choices.map((choice) => (
                 <option value={choice.id} key={choice.id}>
-                  {variantLabel(choice, t.notRecorded)}
+                  {variantLabel(choice, t.notRecorded, locale)}
                 </option>
               ))}
             </select>
@@ -630,6 +664,7 @@ export function ModelCommandBuilder({ recipe, locale = 'en' }: { recipe: ModelRe
             {taskChoices.length > 1 ? (
               <select
                 aria-label={t.task}
+                title={`${selectedTask.label} (${selectedTask.id})`}
                 value={selectedTask.id}
                 onChange={(event) => {
                   const nextTask = taskChoices.find((task) => task.id === event.target.value) ?? taskChoices[0];
@@ -655,21 +690,25 @@ export function ModelCommandBuilder({ recipe, locale = 'en' }: { recipe: ModelRe
               </strong>
             )}
           </div>
+        </div>
+        {selectedEnvironment || selectedDevice || selectedRunner || selected?.loadingMethod || recipe.runtime.loadingMethod || selected?.invocationMode || recipe.runtime.invocationMode ? (
+        <div className="wf-command-builder-runtime">
+          {selectedEnvironment ? (
           <div>
             <span>{t.environment}</span>
-            <strong>{selectedEnvironment ?? t.notRecorded}</strong>
+            <strong title={selectedEnvironment}>{selectedEnvironment}</strong>
           </div>
+          ) : null}
+          {selectedDevice ? (
           <div>
             <span>{t.device}</span>
-            <strong>{selectedDevice ?? t.notRecorded}</strong>
+            <strong title={selectedDevice}>{selectedDevice}</strong>
           </div>
-        </div>
-        {selectedRunner || selected?.loadingMethod || recipe.runtime.loadingMethod || selected?.invocationMode || recipe.runtime.invocationMode ? (
-        <div className="wf-command-builder-runtime">
+          ) : null}
           {selectedRunner ? (
           <div>
             <span>{t.runner}</span>
-            <code>{selectedRunner}</code>
+            <code title={selectedRunner}>{selectedRunner}</code>
           </div>
           ) : null}
           {selected?.loadingMethod || recipe.runtime.loadingMethod ? (
@@ -730,7 +769,7 @@ export function ModelCommandBuilder({ recipe, locale = 'en' }: { recipe: ModelRe
               }}
             >
               {copied ? <Check aria-hidden="true" size={13} /> : <Copy aria-hidden="true" size={13} />}
-              {copied ? t.copied : t.copy}
+              <span className="wf-command-builder-copy-label">{copied ? t.copied : t.copy}</span>
             </button>
           )}
         </div>

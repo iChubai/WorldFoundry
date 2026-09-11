@@ -1,75 +1,33 @@
 ---
 title: Physics-IQ Original
-description: Physical-understanding benchmark scoring 5-second continuations of real physics scenarios.
+description: "DeepMind physical-understanding bench: continue a real filmed scene for 5 seconds. WorldFoundry ships the scorer; it does not invent a board."
 ---
 
-## About
+Physics-IQ (Google DeepMind) asks whether a video model **continues real physics**, not whether the pixels look pretty. Each item shows a filmed scene; the model must generate the next **5 seconds**. The published protocol has **66 scenarios × 2 views** (396 items). WorldFoundry's contract tracks a **198-video single-pass** split. Scoring compares the continuation to the real future with motion-mask **spatial / spatiotemporal** agreement and an **MSE** penalty, then aggregates into `physics_iq_score` (official `final_score_orig`). The current official code also emits a component-clipped `physics_iq_stable_score`.
 
-**Publisher:** Google DeepMind
+Paper: [Physics-IQ](https://arxiv.org/abs/2501.09038). Project: [physics-iq.github.io](https://physics-iq.github.io/). Code: [google-deepmind/physics-IQ-benchmark](https://github.com/google-deepmind/physics-IQ-benchmark).
 
-Physics-IQ tests whether video generation models understand physics rather than merely rendering plausible textures. Each of the 396 test items (66 scenarios × 2 views in the released protocol; the WorldFoundry contract tracks the 198-video single-pass split) shows a real recorded scene and asks the model to continue the next 5 seconds. Scoring compares the generated continuation against the real continuation using motion-mask-based spatial/spatiotemporal agreement and an MSE penalty, aggregated into the Physics-IQ score.
+Unlike the manipulation importers on this hub, WorldFoundry **ships the scoring runtime** in tree (`run_physics_iq_official_runner.py`, shared with `physics-iq-verified` via `--protocol`) plus prompt/scenario metadata under `worldfoundry/data/benchmarks/assets/physics-iq`. Official **media** (real videos, masks, conditioning frames) still download from DeepMind — they are not in the repo. [Physics-IQ Verified](/docs/evaluation/benchmark-hub/physics-iq-verified) uses a different dataset; the two are **not interchangeable**.
 
-WorldFoundry ships the scoring runtime in tree behind `run_physics_iq_official_runner.py` (shared between the `physics-iq` and `physics-iq-verified` protocols via `--protocol`), plus bundled prompt/scenario metadata under `worldfoundry/data/benchmarks/assets/physics-iq`.
+<BenchmarkPageSections id="physics-iq" locale="en" />
 
-Official references:
+## How to run
 
-- Paper: [arxiv.org/abs/2501.09038](https://arxiv.org/abs/2501.09038)
-- Project page: [physics-iq.github.io](https://physics-iq.github.io/)
-- Official repository: [google-deepmind/physics-IQ-benchmark](https://github.com/google-deepmind/physics-IQ-benchmark)
-
-## Evaluation protocol
-
-The runner supports three paths: `--run-official` recomputes raw metrics from generated continuations against the official media directory (`--dataset-root`), `--official-results-path` imports an existing `raw_metrics.csv`, and `--from-upstream-results` accepts upstream result exports. Masks are computed from the real videos; `--generated-mask-dir` allows precomputed masks, and `--strict` fails the run on missing scenario videos.
-
-Primary metric: `physics_iq_score`.
-
-| Metric | Meaning | Direction |
-| --- | --- | --- |
-| `physics_iq_score` | Original global-aggregation score (official final_score_orig). | Higher is better |
-| `physics_iq_stable_score` | Component-clipped stable score emitted by the current official implementation. | Higher is better |
-| `physics_iq_spatiotemporal` | Spatiotemporal IoU: where and when motion happens vs. the real continuation. | Higher is better |
-| `physics_iq_spatial` | Spatial IoU: where action happens, regardless of timing. | Higher is better |
-| `physics_iq_weighted_spatial` | Weighted spatial IoU: where and how much action happens. | Higher is better |
-| `physics_iq_mse_penalty` | Pixel-wise MSE penalty against the real continuation. | Lower is better |
-
-## Data and artifact layout
-
-In-tree paths:
-
-```text
-worldfoundry/data/benchmarks/tasks/external/physics-iq.yaml
-worldfoundry/data/benchmarks/assets/physics-iq
-worldfoundry/evaluation/tasks/execution/runners/physics_iq
-```
-
-Download the official media (real videos, masks, conditioning frames) following the google-deepmind/physics-IQ-benchmark instructions, then stage 198 generated five-second continuations named after the official scenario ids:
-
-```bash
-export WORLDFOUNDRY_GENERATED_ARTIFACT_DIR=/path/to/physics-iq/generated_videos
-```
-
-```text
-/path/to/physics-iq/generated_videos/
-  <scenario_id>.mp4
-  ...
-```
-
-## Run the benchmark
-
-Catalog-recorded validation command:
+Import an existing `raw_metrics.csv`:
 
 ```bash
 worldfoundry-eval zoo benchmark-run \
   --benchmark-id physics-iq \
   --mode official-validation \
   --official-results-path <raw_metrics.csv> \
-  --output-dir <out> \
+  --output-dir tmp/physics-iq/official-validation \
   --json
 ```
 
-Recompute metrics from generated continuations:
+Recompute from 198 generated continuations named by official scenario ids:
 
 ```bash
+export WORLDFOUNDRY_GENERATED_ARTIFACT_DIR=/path/to/physics-iq/generated_videos
 ${WORLDFOUNDRY_UNIFIED_PYTHON} \
   worldfoundry/evaluation/tasks/execution/runners/physics_iq/run_physics_iq_official_runner.py \
   --protocol physics-iq \
@@ -81,28 +39,6 @@ ${WORLDFOUNDRY_UNIFIED_PYTHON} \
   --json
 ```
 
-## Checkpoints and environment variables
-
-- `WORLDFOUNDRY_GENERATED_ARTIFACT_DIR`: Directory of the 198 generated continuation videos.
-
-## Outputs
-
-The run writes into `--output-dir`:
-
-- `scorecard.json`: WorldFoundry scorecard with the metric values recorded above.
-- `benchmark_contract.json`: Benchmark contract record for the run (inputs, mode, provenance).
-- `raw_metrics.csv`
-- `official_metrics.json`
-- `results_summary.csv`
-- `raw_metric_table.jsonl`: Metric rows backing the scorecard.
-- `per_sample_scores.jsonl`: Per-sample rows when the result source exposes sample-level values.
-
-Scorecard primary key: `physics_iq_score` (leaderboard key `physics_iq_score`), stored in `scorecard.json`.
-
-## Limitations
-
-- Official media (real videos and masks) must be downloaded separately and are not redistributed in tree.
-- Single-pass runs cover 198 videos; the published protocol averages multiple runs, so one local pass understates protocol variance.
-- A local Physics-IQ score is not a Google DeepMind leaderboard entry.
+`--strict` fails on missing scenario videos. `--generated-mask-dir` can supply precomputed masks; otherwise masks come from the real videos. Outputs include `scorecard.json` (primary `physics_iq_score`), `raw_metrics.csv`, `official_metrics.json`, and per-sample rows when the source exposes them.
 
 [← Benchmark Hub](/docs/evaluation/benchmark-hub)

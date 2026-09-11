@@ -1,26 +1,43 @@
 ---
 title: "DreamX-World 5B"
-description: "DreamX-World 5B AR is the causal autoregressive profile of Amap's DreamX-World: a resident runtime with latent, attention, cross-attention, and VAE caches that rolls world video forward block by block under action control. A 2026-07-28 sin…"
-pageSource: generated
+description: "Amap causal AR world: resident KV/VAE caches, 4-step AR-Forcing. A100 validated one 1280×704 nine-frame block. Apache-2.0. Not a long-horizon scorecard."
+modelId: "dreamx-world-5b"
+pageSource: authored
 ---
 
-**Publisher:** Alibaba (Amap, AMAP-ML) · Company
+DreamX-World 5B AR is Amap's **causal autoregressive** world: latent, attention, cross-attention, and VAE caches stay **resident** while video rolls forward in **three-latent** blocks under camera actions. Decoded RGB is **output-only** — never fed back as conditioning. Distilled **four-step AR-Forcing**. Pipeline: `DreamXWorld5BARPipeline`. Alias `dreamx-world-5b-ar` resolves here.
 
-DreamX-World 5B AR is the causal autoregressive profile of Amap's DreamX-World: a resident runtime with latent, attention, cross-attention, and VAE caches that rolls world video forward block by block under action control. A 2026-07-28 single-A100 run generated a finite, decodable native nine-frame 1280x704 block from the official example image.
+<ModelPaperFigures modelId="dreamx-world-5b" locale="en" />
+
+Paper: [arXiv 2606.16993](https://arxiv.org/abs/2606.16993). Project: [amap-ml.github.io/DreamX_World](https://amap-ml.github.io/DreamX_World). Code: [AMAP-ML/DreamX-World](https://github.com/AMAP-ML/DreamX-World). License: **apache-2.0**.
+
+A **2026-07-28** single-A100 run produced a finite, decodable **nine-frame 1280×704** block from the official example image (Verified). That is a **two-control** resident-path check, not long-horizon quality parity.
 
 <ModelCommandBuilder modelId="dreamx-world-5b" locale="en" />
 
-## Architecture
+## What it is for
 
-Causal three-latent blocks use the released causal checkpoint with a distilled four-step AR-Forcing schedule and no RGB feedback: attention KV, cross-attention, latent, and causal VAE state stay resident across controls, and decoded RGB is output-only — never reused as conditioning.
+Roll a resident causal AR world block, not a long-horizon scorecard.
 
-## Usage notes
+Launch `worldfoundry-eval run dreamx-world-5b` with `--pipeline.task-profile world_model`.
 
-The Workspace default includes a staged fixture and non-empty prompt. The validated two-control rollout confirms the resident AR path — it is not a long-horizon quality-parity claim, so evaluate long rollouts yourself before relying on them.
+Score on [WorldModelBench](/docs/evaluation/benchmark-hub/worldmodelbench) — general world-rollout quality.
 
-## Evaluation benchmarks
+## Runtime contract
 
-- [WorldModelBench](/docs/evaluation/benchmark-hub/worldmodelbench) — General world-rollout quality.
-- [MemoBench](/docs/evaluation/benchmark-hub/memobench) — Long-horizon consistency of autoregressive rollouts.
+Required: `image` and `prompt`; optional: `video`; `actions`: camera_navigation; artifacts: `generated_world` and `dreamx-world-5b.mp4`.
+
+| Knob | Recorded |
+| --- | --- |
+| Validated block | **1280×704**, **9** frames, single A100 on **2026-07-28** |
+| Schedule | distilled **4-step** AR-Forcing |
+| Block | **three** latents; KV / cross-attn / VAE caches stay resident |
+| RGB | output-only — never fed back |
+| Causal ckpt | `GD-ML/DreamX-World-5B` (`config.json`, `model.safetensors`) |
+| Support | `Wan-AI/Wan2.2-TI2V-5B` (VAE, T5, tokenizer) |
+
+## Run in WorldFoundry
+
+Status: **Verified**. Unified environment `worldfoundry-unified-cu128` (Python 3.11, CUDA 12.8). Stage `GD-ML/DreamX-World-5B` and `Wan-AI/Wan2.2-TI2V-5B` locally — missing files fail at load, nothing is downloaded. Run `worldfoundry-eval run dreamx-world-5b` with `--pipeline.task-profile world_model`. Catalog VRAM is unset.
 
 <ModelRelatedRecipes modelId="dreamx-world-5b" locale="en" />

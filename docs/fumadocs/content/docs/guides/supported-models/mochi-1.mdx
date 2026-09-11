@@ -1,26 +1,48 @@
 ---
 title: "Mochi-1"
-description: "Mochi-1 is Genmo's open text-to-video model, released as a preview checkpoint and known for strong motion quality among open models at its release. The catalog records one runnable variant, mochi-1-preview-t2v; the WorldFoundry runner path…"
+description: "Mochi-1 from Genmo: text-to-video; Runner parity pending."
+modelId: "mochi-1"
 pageSource: generated
 ---
 
-**Publisher:** Genmo · Company
-text → video
-
 Mochi-1 is Genmo's open text-to-video model, released as a preview checkpoint and known for strong motion quality among open models at its release. The catalog records one runnable variant, mochi-1-preview-t2v; the WorldFoundry runner path is wired for the official preview checkpoint.
+
+<ModelPaperFigures modelId="mochi-1" locale="en" />
+
+Project page: [genmo.ai/blog](https://www.genmo.ai/blog). Code: [genmoai/models](https://github.com/genmoai/models).
 
 <ModelCommandBuilder modelId="mochi-1" locale="en" />
 
-## Architecture
+## What it is for
+
+`mochi-1-preview-t2v` is the recorded prompt-to-video route — not image editing and not a policy. Start here when the job is a clip from text.
 
 Upstream describes Mochi-1 as a 10B-parameter Asymmetric Diffusion Transformer (AsymmDiT) with a dedicated video VAE. This repository records the runner wiring and the standard prompt/image/video/actions input schema; further internals are not recorded here.
 
-## Usage notes
+Catalog tasks include text-to-video. Documented modalities: text in, video out.
 
-Runner parity is pending — the path is wired but full official parity has not been recorded. Note the org naming: GitHub is genmoai, Hugging Face is genmo. Stage the preview checkpoint before running.
+Recorded evaluation entry points include [VBench](/docs/evaluation/benchmark-hub/vbench) (Standard T2V quality suite).
 
-## Evaluation benchmarks
+## Runtime contract
 
-- [VBench](/docs/evaluation/benchmark-hub/vbench) — Standard T2V quality suite.
+Required `prompt`; optional `image`, `video`, and `actions` (seed); artifacts `mochi-1-preview-t2v.mp4`.
+
+Recorded task profiles: `text-to-video`. WorldFoundry binds `Mochi1PreviewT2VPipeline`.
+
+Family status: **Runner parity pending**.
+
+Note the org naming: GitHub is genmoai, Hugging Face is genmo. Stage the preview checkpoint before running.
+
+Official GitHub org is genmoai; official HF org is genmo.
+
+## Running in WorldFoundry
+
+Launch `worldfoundry-eval run mochi-1-preview-t2v --pipeline.task-profile text-to-video` to sample the clip. The command builder above switches `--pipeline.task-profile` among recorded tasks and still emits `worldfoundry-eval run`.
+
+It runs in the unified environment `worldfoundry-unified-cu128` (Python 3.11, CUDA 12.8).
+
+Recorded weight repositories include `genmo/mochi-1-preview`. Stage assets with `bash scripts/inference/prepare_model_infer.sh mochi-1-preview-t2v`.
+
+Recorded licenses include apache-2.0; status: **Runner parity pending**.
 
 <ModelRelatedRecipes modelId="mochi-1" locale="en" />

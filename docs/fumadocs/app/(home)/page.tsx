@@ -28,6 +28,7 @@ import {
   WORLDFOUNDRY_WECHAT_QR,
 } from '@/lib/site-links';
 import { modelRecipeIndex } from '@/lib/model-recipe-index';
+import { catalogReadinessLabel } from '@/lib/model-recipe-types';
 import { withBasePath } from '@/lib/site-path';
 
 const pillars = [
@@ -57,7 +58,7 @@ const capabilities = [
     title: 'Know what exists',
     description:
       'Manifests expose stable IDs, sources, capabilities, assets, runtime bindings, readiness, and blockers before compute is allocated.',
-    href: '/docs/overview/capabilities',
+    href: '/docs/overview/design',
     link: 'See what is included',
   },
   {
@@ -113,7 +114,7 @@ const featuredModels: HomeRecipeOption[] = [
     provider: recipe.provider,
     category: recipe.category,
     tasks: recipe.tasks,
-    status: recipe.status.label,
+    status: catalogReadinessLabel(recipe.status.group),
     environment: recipe.runtime.environmentName,
     python: recipe.runtime.python,
     cuda: recipe.runtime.cudaLabel,
@@ -216,7 +217,7 @@ export default function HomePage() {
                     <span>Explore model recipes</span>
                     <ArrowRight aria-hidden="true" size={16} strokeWidth={1.8} />
                   </Link>
-                  <Link href="/docs/overview/world-models" className="wf-home-button wf-home-button-secondary">
+                  <Link href="/docs#operational-definition" className="wf-home-button wf-home-button-secondary">
                     <span>Read the definition</span>
                   </Link>
                 </div>
@@ -231,6 +232,10 @@ export default function HomePage() {
       </div>
 
       <div className="wf-home-main">
+        <p className="wf-home-bridge">
+          World models stay heterogeneous. Shared catalogs, artifacts, and scorecards are what make
+          them comparable.
+        </p>
         <HomeConfigureSection models={featuredModels} />
 
         <section className="wf-home-pillars wf-home-reveal" aria-labelledby="wf-pillars-title">
@@ -306,7 +311,7 @@ export default function HomePage() {
           </header>
           <WorldModelProgression locale="en" />
           <div className="wf-home-center-action">
-            <Link href="/docs/overview/world-models" className="wf-home-text-link">
+            <Link href="/docs#operational-definition" className="wf-home-text-link">
               Read the operational definition
               <ArrowRight aria-hidden="true" size={15} strokeWidth={1.8} />
             </Link>
@@ -366,7 +371,11 @@ export default function HomePage() {
               <span className="wf-home-workflow-rail-progress" />
               <ol>
                 {workflowRail.map((label, index) => (
-                  <li key={label} style={{ '--wf-rail-index': index } as React.CSSProperties}>
+                  <li
+                    key={label}
+                    data-wf-stage={index}
+                    style={{ '--wf-rail-index': index } as React.CSSProperties}
+                  >
                     <span />
                     <strong>{label}</strong>
                   </li>

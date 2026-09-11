@@ -1,103 +1,50 @@
 ---
 title: Physics-IQ Verified
-description: Recommended Physics-IQ protocol with verified prompts, verified masks, and per-view scoring.
+description: "Anates Labs revision of Physics-IQ: same 5-second continuation task, different Hugging Face media and per-view scoring. Not interchangeable with Original."
 ---
 
-## About
+Physics-IQ Verified is the **recommended revision** of DeepMind's continuation protocol, packaged by Anates Labs. The *task* is the same as [Physics-IQ Original](/docs/evaluation/benchmark-hub/physics-iq): continue a filmed scene for **5 seconds**. The *dataset and score adapter are not*. Verified ships repaired prompts/masks and Hugging Face media (`Anates-Labs-Research/Physics-IQ-Verified`), then scores **per view** before aggregation (`physics_iq_verified_score` = official `final_score_view`). Original uses GCS media and global `final_score_orig`. Do not mix the two.
 
-**Publisher:** Google DeepMind (verified protocol packaged by Anates Labs)
+Paper: [Physics-IQ Verified](https://arxiv.org/abs/2606.18943). Project: [physics-iq-verified.anates.ai](https://physics-iq-verified.anates.ai/). Shared engine provenance: [google-deepmind/physics-IQ-benchmark](https://github.com/google-deepmind/physics-IQ-benchmark).
 
-Physics-IQ-Verified is the recommended revision of the Physics-IQ protocol. It fixes prompt/mask inconsistencies found in the original release, ships verified conditioning frames and switch-view metadata as a Hugging Face dataset (`Anates-Labs-Research/Physics-IQ-Verified`), and scores per view before aggregation. The underlying physical-understanding methodology is unchanged from Google DeepMind's Physics-IQ.
+WorldFoundry **ships the scoring runtime** in tree (`run_physics_iq_official_runner.py --protocol verified`) plus prompt metadata under `worldfoundry/data/benchmarks/assets/physics-iq-verified`. Official **media** (396 reference videos + 396 masks) still download from Hugging Face — they are not in the repo. One run covers **198** generated continuations; maintainers recommend averaging **four** runs for leaderboard claims.
 
-WorldFoundry runs it through the same in-tree runner as Physics-IQ with `--protocol physics-iq-verified`, with verified assets tracked under `worldfoundry/data/benchmarks/assets/physics-iq-verified`.
+<BenchmarkPageSections id="physics-iq-verified" locale="en" />
 
-Official references:
+## How to run
 
-- Paper: [arxiv.org/abs/2606.18943](https://arxiv.org/abs/2606.18943)
-- Project page: [physics-iq-verified.anates.ai](https://physics-iq-verified.anates.ai/)
-- Official repository: [google-deepmind/physics-IQ-benchmark](https://github.com/google-deepmind/physics-IQ-benchmark)
-
-## Evaluation protocol
-
-Per run, 198 generated five-second videos are scored against verified real continuations with per-view masks; the maintainers recommend averaging four runs for leaderboard claims. Import (`--official-results-path raw_metrics.csv`) and recompute (`--run-official`) paths mirror the base protocol.
-
-Primary metric: `physics_iq_verified_score`.
-
-| Metric | Meaning | Direction |
-| --- | --- | --- |
-| `physics_iq_verified_score` | Arithmetic mean after per-scenario, per-view physical-variance normalization. | Higher is better |
-| `physics_iq_verified_spatiotemporal` | Spatiotemporal IoU: where and when motion happens vs. the verified real continuation. | Higher is better |
-| `physics_iq_verified_spatial` | Spatial IoU: where action happens, regardless of timing. | Higher is better |
-| `physics_iq_verified_weighted_spatial` | Weighted spatial IoU: where and how much action happens. | Higher is better |
-| `physics_iq_verified_mse` | Pixel-wise MSE against the verified real continuation. | Higher is better |
-
-## Data and artifact layout
-
-In-tree paths:
-
-```text
-worldfoundry/data/benchmarks/tasks/external/physics-iq-verified.yaml
-worldfoundry/data/benchmarks/assets/physics-iq-verified
-worldfoundry/evaluation/tasks/execution/runners/physics_iq
-```
-
-Download the verified dataset and stage generated continuations by scenario id:
-
-```bash
-hf download Anates-Labs-Research/Physics-IQ-Verified \
-  --repo-type dataset \
-  --local-dir /path/to/physics-iq-verified
-
-export WORLDFOUNDRY_GENERATED_ARTIFACT_DIR=/path/to/physics-iq-verified/generated_videos
-```
-
-## Run the benchmark
-
-Catalog-recorded validation command:
+Import an existing `raw_metrics.csv`:
 
 ```bash
 worldfoundry-eval zoo benchmark-run \
   --benchmark-id physics-iq-verified \
   --mode official-validation \
   --official-results-path <raw_metrics.csv> \
-  --output-dir <out> \
+  --output-dir tmp/physics-iq-verified/official-validation \
   --json
 ```
 
-Recompute verified metrics from generated continuations:
+Recompute from 198 generated continuations named by official scenario ids (`--protocol` is `verified`, not `physics-iq-verified`):
 
 ```bash
+hf download Anates-Labs-Research/Physics-IQ-Verified \
+  --repo-type dataset \
+  --local-dir /path/to/physics-iq-verified
+
+export WORLDFOUNDRY_PHYSICS_IQ_VERIFIED_ROOT=/path/to/physics-iq-verified
+export WORLDFOUNDRY_GENERATED_ARTIFACT_DIR=/path/to/physics-iq-verified/generated_videos
 ${WORLDFOUNDRY_UNIFIED_PYTHON} \
   worldfoundry/evaluation/tasks/execution/runners/physics_iq/run_physics_iq_official_runner.py \
-  --protocol physics-iq-verified \
+  --benchmark-id physics-iq-verified \
+  --protocol verified \
   --run-official \
-  --dataset-root /path/to/physics-iq-verified \
+  --dataset-root "${WORLDFOUNDRY_PHYSICS_IQ_VERIFIED_ROOT}" \
   --generated-artifact-dir "${WORLDFOUNDRY_GENERATED_ARTIFACT_DIR}" \
   --output-dir tmp/physics-iq-verified/official-run \
   --strict \
   --json
 ```
 
-## Checkpoints and environment variables
-
-## Outputs
-
-The run writes into `--output-dir`:
-
-- `scorecard.json`: WorldFoundry scorecard with the metric values recorded above.
-- `benchmark_contract.json`: Benchmark contract record for the run (inputs, mode, provenance).
-- `raw_metrics.csv`
-- `official_metrics.json`
-- `results_summary.csv`
-- `raw_metric_table.jsonl`: Metric rows backing the scorecard.
-- `per_sample_scores.jsonl`: Per-sample rows when the result source exposes sample-level values.
-
-Scorecard primary key: `physics_iq_verified_score` (leaderboard key `physics_iq_verified_score`), stored in `scorecard.json`.
-
-## Limitations
-
-- Verified media must be pulled from the Hugging Face dataset; nothing is redistributed in tree.
-- One run covers 198 videos; leaderboard-grade claims require the recommended four-run average.
-- Verified scores are not comparable with original-protocol Physics-IQ scores and are not official leaderboard entries.
+`--strict` fails on missing scenario videos. Outputs include `scorecard.json` (primary `physics_iq_verified_score`), `raw_metrics.csv`, and `official_metrics.json`. `physics_iq_verified_mse` is official `score_mse_view` (higher is better after variance normalization), not Original's `physics_iq_mse_penalty`.
 
 [← Benchmark Hub](/docs/evaluation/benchmark-hub)

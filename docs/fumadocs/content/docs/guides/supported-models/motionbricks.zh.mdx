@@ -1,27 +1,52 @@
 ---
 title: "MotionBricks"
-description: "MotionBricks is part of NVIDIA's GR00T-WholeBodyControl stack: it generates humanoid whole-body motion — the action side of embodied world modeling, emitting action traces rather than video (paper arXiv 2604.24833)."
-pageSource: generated
+description: "MotionBricks（NVIDIA）：motion-generation、世界模型；Runner 一致性待确认。"
+modelId: "motionbricks"
+pageSource: authored
 ---
-
-**发表机构:** 英伟达（NVIDIA） · 企业
-[MotionBricks: Scalable Real-Time Motions with Modular Latent Generative Model and Smart Primitives](https://arxiv.org/abs/2604.24833) (SIGGRAPH 2026, 2026)
 
 MotionBricks 属于英伟达 GR00T-WholeBodyControl 栈：生成人形机器人全身运动——具身世界建模的动作侧，产物是动作轨迹而非视频（论文 arXiv 2604.24833）。本 catalog 中官方源码路径已注册；运动/机器人资产保持运行时限制。
 
-<figure className="wf-recipe-media is-diagram">
-  <img src="/models/motionbricks/paper.png" alt="MotionBricks: Scalable Real-Time Motions with Modular Latent Generative Model and Smart Primitives" />
-  <figcaption>MotionBricks: Scalable Real-Time Motions with Modular Latent Generative Model and Smart Primitives</figcaption>
-</figure>
+<ModelPaperFigures modelId="motionbricks" locale="zh" />
+
+记录论文为[MotionBricks: Scalable Real-Time Motions with Modular Latent Generative Model and Smart Primitives](https://arxiv.org/abs/2604.24833)（SIGGRAPH 2026, 2026）。
+
+项目页：[nvlabs.github.io/motionbricks](https://nvlabs.github.io/motionbricks/)。代码：[NVlabs/GR00T-WholeBodyControl](https://github.com/NVlabs/GR00T-WholeBodyControl)。
+
+论文是 [MotionBricks: Scalable Real-Time Motions with Modular Latent Generative Model and Smart Primitives](https://arxiv.org/pdf/2604.24833)。项目页：[nvlabs.github.io/motionbricks](https://nvlabs.github.io/motionbricks)。代码：[NVlabs/GR00T-WholeBodyControl](https://github.com/NVlabs/GR00T-WholeBodyControl)。
 
 <ModelCommandBuilder modelId="motionbricks" locale="zh" />
 
-## 架构
+## 用来做什么
 
-除已记录任务外的架构内部细节仓库未存（apache-2.0）；源码从 GR00T-WholeBodyControl 仓库以固定 commit 绑定。记录的产物类型为 action_trace。
+`motionbricks` 是记录的交互世界线。要用动作推进世界时从这里起步。
 
-## 使用要点
+除已记录任务外的架构内部细节仓库未存（apache-2.0）；源码从 GR00T-WholeBodyControl 仓库以固定 commit 绑定。记录的产物类型为 action_trace。该模型由英伟达（NVIDIA）发布。
 
-配置解析与 pipeline 导入预期可通过；在所需 checkpoint/资产就位前，真实生成会输出运行时计划。缺失资产由计划报告，不视为 catalog 阻塞。
+catalog 记录的任务包括 human-action-generation、motion-generation、世界模型。
+
+## 运行时契约
+
+必填 `prompt`、`video`；可选 `actions` (whole_body_motion, control_sequence)、`image`；产物 `action_trace`、`motionbricks_runtime_plan.json`。
+
+记录的任务 profile：`human-action-generation`、`motion-generation`、`world-model`。绑定的 pipeline 类是 `MotionBricksPipeline`。
+
+系列状态：**Runner 一致性待确认**。
+
+配置解析与 pipeline 导入预期可通过；在所需 checkpoint/资产就位前，真实生成会输出运行时计划。 缺失资产由计划报告，不视为 catalog 阻塞。
+
+WorldFoundry tracks upstream source and checkpoint 计划中; no runnable pipeline is registered.
+
+必填 `prompt`、`video`；可选 `image`；`actions`：whole_body_motion, control_sequence；产物 `action_trace`、`motionbricks_runtime_plan.json`。
+
+## 在 WorldFoundry 中运行
+
+启动 `worldfoundry-eval run motionbricks --pipeline.task-profile human-action-generation` 推进世界。上方命令构建器按已记录任务切换 `--pipeline.task-profile`，发出的仍是 `worldfoundry-eval run`。
+
+运行环境是统一 profile `worldfoundry-unified-cu128`（Python 3.11，CUDA 12.8）。
+
+本卡片未记录公开 checkpoint id；按使用说明就位权重。就位权重用 `bash scripts/inference/prepare_model_infer.sh motionbricks`。
+
+状态：**Runner 一致性待确认**。
 
 <ModelRelatedRecipes modelId="motionbricks" locale="zh" />

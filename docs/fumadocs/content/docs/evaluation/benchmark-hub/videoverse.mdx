@@ -1,57 +1,17 @@
 ---
 title: VideoVerse
-description: "World-model capability benchmark for T2V: 300 event-decomposed prompts judged for temporal causality and world knowledge."
+description: "OPPO 300-prompt world-model T2V bench: event-LCS plus binary QA. WorldFoundry runs Gemini / URL / local VLM judges; it does not invent a board."
 ---
 
-## About
+VideoVerse (OPPO Research Institute, with Sun Yat-sen and HK PolyU) asks how far a text-to-video generator is from a **world model**. Official size: **300 prompts**, each decomposed into ordered events with binary evaluation questions across **ten dimensions**. Families include QA accuracy, event coverage, temporal causality, world-knowledge consistency, and static / dynamic scene consistency. Judging combines **event-LCS** over detected event order with per-question verification.
 
-**Publisher:** OPPO Research Institute (with Sun Yat-sen University & HK PolyU)
+Paper: [VideoVerse](https://arxiv.org/abs/2510.08398). Project: [naptmn.cn/Homepage_of_VideoVerse](https://www.naptmn.cn/Homepage_of_VideoVerse/). Code: [Zeqing-Wang/VideoVerse](https://github.com/Zeqing-Wang/VideoVerse). License: Apache-2.0.
 
-VideoVerse asks how far a text-to-video generator is from a world model. Each of its 300 prompts is decomposed into ordered events with binary evaluation questions spanning ten dimensions, grouped into families such as QA accuracy, event coverage, temporal causality, world-knowledge consistency, and static/dynamic scene consistency. Judging combines an event-LCS (longest-common-subsequence) check over detected event order with per-question verification.
+WorldFoundry **runs the judge in tree** (Gemini default, URL, or local VLM) and normalizes `eval_res.json` through official event-LCS / verification logic. Prompt manifests are bundled. `--strict` enforces the canonical 300-prompt suite. Official path is integrated; a full credentialed suite is **not** release-verified.
 
-WorldFoundry runs the VideoVerse judge in tree — Gemini, URL, or local VLM backend — and normalizes `eval_res.json` through the official event-LCS and verification-check logic. Official prompt manifests are bundled in tree; the runner validates prompt/result/video coverage and records whether the canonical 300-prompt suite is complete.
+<BenchmarkPageSections id="videoverse" locale="en" />
 
-Official references:
-
-- Paper: [arxiv.org/abs/2510.08398](https://arxiv.org/abs/2510.08398)
-- Project page: [www.naptmn.cn/Homepage_of_VideoVerse](https://www.naptmn.cn/Homepage_of_VideoVerse/)
-- Official repository: [Zeqing-Wang/VideoVerse](https://github.com/Zeqing-Wang/VideoVerse)
-
-## Evaluation protocol
-
-`--run-official` judges generated videos against the bundled prompt manifests (`prompts_of_VideoVerse.json`, decomposed variant), using the Gemini backend by default (`GEMINI_API_KEY`). `official-validation` normalizes an existing `eval_res.json`. Use `--prompt-manifest` / `--decomposed-prompt-manifest` only for non-standard prompt assets; `--strict` enforces full-suite coverage.
-
-Primary metric: `videoverse_average`.
-
-| Metric | Meaning | Direction |
-| --- | --- | --- |
-| `qa_accuracy` | VideoVerse binary/question-answer judging accuracy. | Higher is better |
-| `event_coverage` | Coverage of required events. | Higher is better |
-| `temporal_causality` | Temporal causality consistency score. | Higher is better |
-| `world_knowledge_consistency` | World-knowledge consistency score. | Higher is better |
-| `static_scene_consistency` | Static scene consistency score. | Higher is better |
-| `dynamic_event_consistency` | Dynamic event consistency score. | Higher is better |
-| `videoverse_average` | Mean over available VideoVerse score families. | Higher is better |
-
-## Data and artifact layout
-
-In-tree paths:
-
-```text
-worldfoundry/data/benchmarks/tasks/external/videoverse.yaml
-```
-
-```text
-worldfoundry/data/benchmarks/assets/videoverse/prompt/prompts_of_VideoVerse.json
-worldfoundry/data/benchmarks/assets/videoverse/prompt/prompts_of_VideoVerse_decomposed.json
-${WORLDFOUNDRY_GENERATED_ARTIFACT_DIR}/          # candidate videos named per prompt id
-<out>/eval_res.json                              # judge outputs
-<out>/judge_responses.jsonl                      # raw judge transcript
-```
-
-## Run the benchmark
-
-Catalog-recorded validation command:
+## How to run
 
 ```bash
 worldfoundry-eval zoo benchmark-run \
@@ -59,34 +19,14 @@ worldfoundry-eval zoo benchmark-run \
   --mode official-validation \
   --official-results-path <official_results.json> \
   --generated-artifact-dir <generated_videos> \
-  --output-dir <out> \
+  --output-dir tmp/videoverse/official-validation \
   --json
 ```
 
-## Checkpoints and environment variables
+`--run-official` judges generated videos against bundled `prompts_of_VideoVerse.json` / decomposed variant (`GEMINI_API_KEY` or `WORLDFOUNDRY_VIDEOVERSE_GEMINI_API_KEY`). Use `--prompt-manifest` only for non-standard assets. Default import: `WORLDFOUNDRY_VIDEOVERSE_RESULTS_PATH`. Shared asset: `videoverse_dataset_assets`.
 
-- `WORLDFOUNDRY_VIDEOVERSE_RESULTS_PATH`: Default path the importer reads official result exports from when `--official-results-path` is not passed.
-- `WORLDFOUNDRY_GENERATED_ARTIFACT_DIR`: Directory containing the candidate generated artifacts to score or import against.
-- `GEMINI_API_KEY`: Required for the Gemini judge backend (WORLDFOUNDRY_VIDEOVERSE_GEMINI_API_KEY also accepted).
+In-tree pointers: `worldfoundry/data/benchmarks/tasks/external/videoverse.yaml`, `worldfoundry/data/benchmarks/assets/videoverse/prompt/`.
 
-This benchmark reuses the shared base-model dependency stack: `videoverse_dataset_assets`.
-
-## Outputs
-
-The run writes into `--output-dir`:
-
-- `scorecard.json`: WorldFoundry scorecard with the metric values recorded above.
-- `benchmark_contract.json`: Benchmark contract record for the run (inputs, mode, provenance).
-- `raw_metric_table.jsonl`: Metric rows backing the scorecard.
-- `eval_res.json`
-- `judge_responses.jsonl`
-
-Scorecard primary key: `videoverse_average` (leaderboard key `videoverse_average`), stored in `scorecard.json`.
-
-## Limitations
-
-- Framework integration is complete when strict full-suite coverage passes and all seven metric families are available.
-- Leaderboard parity still requires source-audited Gemini/API judge execution and submission-protocol evidence for the complete official suite.
-- Partial-prompt judge runs are development signals, not official VideoVerse numbers.
+Outputs include `scorecard.json` (primary `videoverse_average`), `eval_res.json`, and `judge_responses.jsonl`.
 
 [← Benchmark Hub](/docs/evaluation/benchmark-hub)

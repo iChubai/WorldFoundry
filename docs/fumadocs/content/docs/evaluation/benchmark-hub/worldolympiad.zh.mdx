@@ -1,101 +1,35 @@
 ---
 title: WorldOlympiad
-description: 长视频世界模型“铁人三项”：物理忠实度、长时程交互保真与 3D 几何一致性。
+description: "阿里达摩院长视频世界模型三项赛：物理、交互、3D。WorldFoundry 检入批量评测器；dry-run 已验证，1000 视频计分运行未验证。"
 ---
 
-## 简介
+WorldOlympiad（阿里达摩院）是长视频世界模型的 **三项赛**。主键 `combined_score` 在单位区间上平均三条赛道：
 
-**发表机构：** Alibaba DAMO Academy（阿里巴巴达摩院）
+- **物理** — Qwen3-VL 置信加权物理问答，覆盖力学、热学、材料
+- **交互** — 逐 chunk 指令跟随、过渡平滑、全局一致性（原生 0–5，再归一化）
+- **几何** — Depth Anything 3 重建（高斯溅射、元视角、相机轨迹对齐；原生 0–3）
 
-WorldOlympiad 沿三条赛道评测长视频世界模型。物理赛道由 MLLM judge（Qwen3-VL）在力学、热学、材料属性上回答置信度加权的物理问题；交互赛道对长的多 chunk rollout 评审逐 chunk 指令遵循、过渡平滑度与全局一致性；几何赛道用 Depth Anything 3 重建视频（高斯泼溅、meta-view 一致性、相机轨迹对齐）。主指标 `combined_score` 是三条赛道在单位区间上的均值。
+论文：[WorldOlympiad](https://arxiv.org/abs/2606.11129)。项目：[alibaba-damo-academy.github.io/WorldOlympiad](https://alibaba-damo-academy.github.io/WorldOlympiad)。代码：[alibaba-damo-academy/WorldOlympiad](https://github.com/alibaba-damo-academy/WorldOlympiad)。数据：[`ziplab/WorldOlympiad`](https://huggingface.co/datasets/ziplab/WorldOlympiad)。钉选修订 **没有 LICENSE**。
 
-WorldFoundry 已入库官方批量 evaluator，`--run-official` 无需外部 checkout；权重通过 `--weights-dir` 显式传入，DA3 源码树通过 `--da3-src` 传入，默认解析共享的 `worldfoundry/base_models` 资产。
+WorldFoundry **检入官方批量评测器**——不需要外部 checkout。计分运行需要 `--da3-src`、`--weights-dir`（DA3 / SAM3 / QwenVL / CLIP），以及正在运行的 QwenVL、SAM3、DA3 reward 服务。**`--run-official --dry-run` 与裁判输出归一化已验证；不声称已做计分三项赛。**
 
-官方参考：
+<BenchmarkPageSections id="worldolympiad" locale="zh" />
 
-- Paper: [arxiv.org/abs/2606.11129](https://arxiv.org/abs/2606.11129)
-- 项目主页: [alibaba-damo-academy.github.io/WorldOlympiad](https://alibaba-damo-academy.github.io/WorldOlympiad)
-- 官方仓库: [alibaba-damo-academy/WorldOlympiad](https://github.com/alibaba-damo-academy/WorldOlympiad)
-- License: `{'status': 'unlicensed_upstream', 'notes': 'The upstream repository publishes no LICENSE file at the pinned revision, so no redistribution terms are stated. Confirm terms with the upstream authors before redistributing the vendored runtime.'}`
-
-## 评测协议
-
-计分执行需要在跑的 QwenVL、SAM3 与 DA3 reward 服务（`--qwen-server-urls`、`--sam3-server-urls`、`--reward-3d-server-urls`）；各赛道可单独跳过（`--skip-physical`、`--skip-interaction`、`--skip-3d`）。`--run-official --dry-run` 在无 GPU、无权重的情况下走真实的 manifest、调度器与汇总管线——这是当前已验证的范围。`--official-results-path` 接受 case 根目录、单个 judge JSON、`summary.jsonl` 或聚合 JSON。
-
-主指标是 `combined_score`。
-
-| Metric | 含义 | 方向 |
-| --- | --- | --- |
-| `combined_score` | 物理、交互与几何赛道得分在单位区间上的均值。 | 越高越好 |
-| `physical_score` | MLLM judge 判定相关的物理问题上的置信度加权符合度。 | 越高越好 |
-| `physical_mechanics` | 限定力学问题的物理得分。 | 越高越好 |
-| `physical_thermotics` | 限定热学问题的物理得分。 | 越高越好 |
-| `physical_material` | 限定材料属性问题的物理得分。 | 越高越好 |
-| `physical_compliance_rate` | 全语料符合问题数除以相关问题数。 | 越高越好 |
-| `three_d_score` | 由原生 0-3 范围归一化的 DA3 几何得分。 | 越高越好 |
-| `three_d_raw` | 高斯泼溅、meta-view 与相机运动三组件在 0-3 分制上的加和。 | 越高越好 |
-| `gs_score` | DA3 高斯泼溅重建质量组件分。 | 越高越好 |
-| `meta_view_score` | 几何赛道的诊断性 meta-view 一致性组件。 | 越高越好 |
-| `camera_motion_score` | 恢复的 DA3 相机轨迹与参考轨迹的对齐度。 | 越高越好 |
-| `interaction_score` | 由原生 0-5 分制归一化的 VLM 交互得分。 | 越高越好 |
-| `interaction_raw` | chunk、过渡与全局交互判定在 0-5 分制上的均值。 | 越高越好 |
-| `chunk_instruction_following` | 按生成 chunk 时间戳判定的逐 chunk prompt 遵循度。 | 越高越好 |
-| `transition_smoothness` | 相邻生成 chunk 边界处的平滑度。 | 越高越好 |
-| `global_consistency` | 全视频一致性与全局文本对齐。 | 越高越好 |
-| `clip_semantic_adherence` | 采样 chunk 帧与其 caption 间的 CLIP 相似度。 | 越高越好 |
-
-## 数据与产物布局
-
-WorldFoundry 仓内路径：
-
-```text
-worldfoundry/data/benchmarks/tasks/external/worldolympiad.yaml
-worldfoundry/evaluation/tasks/execution/runners/worldolympiad
-```
-
-```text
-worldfoundry/evaluation/tasks/execution/runners/worldolympiad/runtime/worldolympiad   # 官方 evaluator
-worldfoundry/data/benchmarks/assets/worldolympiad                                     # fixture
-${WORLDFOUNDRY_GENERATED_ARTIFACT_DIR}/<case_id>/...                                  # 官方 case 布局
-```
-
-benchmark 数据集托管在 Hugging Face `ziplab/WorldOlympiad`。所有可变产物（批量 manifest、日志）写在 `--output-dir` 下；runner 拒绝把输出或权重目录放进入库 runtime。
-
-## 运行评测
-
-目录 manifest 记录的 validation 命令：
+## 如何运行
 
 ```bash
-w o r l d f o u n d r y - e v a l   z o o   b e n c h m a r k - r u n   - - b e n c h m a r k - i d   w o r l d o l y m p i a d   - - m o d e   o f f i c i a l - v a l i d a t i o n   - - o f f i c i a l - r e s u l t s - p a t h   < c a s e _ r o o t _ o r _ j u d g e _ j s o n >   - - o u t p u t - d i r   < o u t >   - - j s o n
+worldfoundry-eval zoo benchmark-run \
+  --benchmark-id worldolympiad \
+  --mode official-validation \
+  --official-results-path <case_root_or_judge_json> \
+  --output-dir tmp/worldolympiad/official-validation \
+  --json
 ```
 
-## 权重与环境变量
+`--official-results-path` 接受案例根、单个裁判 JSON、`summary.jsonl` 或汇总 JSON。用 `--skip-physical`、`--skip-interaction`、`--skip-3d` 跳过赛道。环境变量：`WORLDFOUNDRY_WORLDOLYMPIAD_RESULTS_PATH`、`WORLDFOUNDRY_WORLDOLYMPIAD_WEIGHTS_DIR`、`WORLDFOUNDRY_WORLDOLYMPIAD_DA3_SRC`。runner 拒绝把输出 / 权重路径放进已检入 runtime。
 
-权重：几何用 DA3（`depth-anything/DA3NESTED-GIANT-LARGE-1.1`），物理分割用 `facebook/sam3`，多模态 judge 用 `Qwen/Qwen3-VL-8B-Instruct`，另需 CLIP。
+仓内指针：`worldfoundry/data/benchmarks/tasks/external/worldolympiad.yaml`，`worldfoundry/evaluation/tasks/execution/runners/worldolympiad`。
 
-- `WORLDFOUNDRY_WORLDOLYMPIAD_ROOT`: 可选覆盖项，指向本地 benchmark runtime / 仓库根目录。
-- `WORLDFOUNDRY_WORLDOLYMPIAD_RESULTS_PATH`: 未显式传 `--official-results-path` 时，导入器默认从该路径读取官方结果导出文件。
-- `WORLDFOUNDRY_GENERATED_ARTIFACT_DIR`: 存放待评测生成产物（候选视频/rollout）的目录。
-- `WORLDFOUNDRY_WORLDOLYMPIAD_WEIGHTS_DIR`
-- `WORLDFOUNDRY_WORLDOLYMPIAD_DA3_SRC`
-
-共享 checkpoint 资产：`depth-anything/DA3NESTED-GIANT-LARGE-1.1`（geometry_reconstruction）, `facebook/sam3`（physical_segmentation）, `Qwen/Qwen3-VL-8B-Instruct`（multimodal_judge）。
-
-## 输出文件
-
-运行会在 `--output-dir` 下写出：
-
-- `scorecard.json`: WorldFoundry 统一 scorecard，记录上表中的指标值。
-- `raw_metric_table.jsonl`: 支撑 scorecard 的原始 metric 行。
-- `per_case_metrics.jsonl`
-- `benchmark_contract.json`: 本次运行的 benchmark contract 记录（输入、模式、来源信息）。
-
-Scorecard 主键：`combined_score`（leaderboard key `combined_score`），写入 `scorecard.json`。
-
-## 边界与限制
-
-- 尚未通过本集成对 1,000 视频分割执行计分运行；目前只验证了批量计划。
-- 上游仓库在锁定版本下未发布 LICENSE；再分发内置 runtime 前需与上游确认条款。
-- dry-run 的管线验证不构成 benchmark 证据。
+产物包括 `scorecard.json`（主键 `combined_score`）与 `per_case_metrics.jsonl`。
 
 [← 返回 Benchmark Hub](/zh/docs/evaluation/benchmark-hub)

@@ -1,79 +1,37 @@
 ---
 title: LIBERO-Plus
-description: 在 LIBERO 之上扩展的鲁棒性评测：七类扰动因子共 10,030 个任务实例（CVPR 2026）。
+description: "CVPR 2026 鲁棒性套件：七个因子上 10,030 个扰动后的 LIBERO 实例。WorldFoundry 导入官方 rollout——不跑该 fork。"
 ---
 
-## 简介
+LIBERO-Plus（CVPR 2026，复旦 / FudanNLP）是叠在原始 LIBERO Spatial / Object / Goal / Long 任务上的**仅评测**鲁棒性层——不是第五个终身学习套件，也不是 [LIBERO-Para](/zh/docs/evaluation/benchmark-hub/libero-para) 的纯语言网格。作者用受控扰动生成 **10,030** 个实例，覆盖 **七** 个因子（**21** 个子维）：
 
-**发表机构：** Fudan University（复旦大学，联合同济大学、上海创智学院与新加坡国立大学）
+- **物体布局** — 目标位移、干扰物（1,525）。
+- **相机视角** — 位姿与视场（1,599）。
+- **机器人初始状态** — 起始位姿（1,550）。
+- **语言指令** — LLM 改写（1,537）。
+- **光照** — 强度、方向、颜色、阴影（1,142）。
+- **背景纹理** — 场景 / 表面外观（1,076）。
+- **传感器噪声** — 光度退化（1,601）。
 
-LIBERO-Plus（CVPR 2026）通过在 LIBERO 上扩展 10,030 个受控扰动任务实例系统性压测 VLA 模型，扰动覆盖七个维度——物体布局、相机视角、机器人初始状态、语言指令、光照、背景纹理与传感器噪声——组织为 21 个子维度与五个难度级别。其结论显示：在中等程度的相机/初始状态扰动下，模型成功率从约 95% 跌至 30% 以下。
+实例按四个参考模型做成几个，分成 **L1–L5**（L1 = 四个都能做，L5 = 四个都不能）。论文对十个 VLA 的扫描报告：干净 LIBERO 约 **95%**，在不大的相机或初始状态扰动下掉到 **30% 以下**——这是上游结论，不是 Hub 分数。
 
-WorldFoundry 以官方结果 runner 集成 LIBERO-Plus：上游 rollout 导出被归一化为统一 scorecard。
+论文：[LIBERO-Plus](https://arxiv.org/abs/2510.13626)。项目：[sylvestf.github.io/LIBERO-plus](https://sylvestf.github.io/LIBERO-plus/)。代码：[sylvestf/LIBERO-plus](https://github.com/sylvestf/LIBERO-plus)（MIT；可替换的 `libero` fork）。
 
-官方参考：
+WorldFoundry **只导入官方结果**。你在上游跑该 fork，再经 `official-validation` 归一化导出。仓内不跑 robosuite，也不带 Plus 资产。[基础 LIBERO](/zh/docs/evaluation/benchmark-hub/libero) 可以接线闭环；本页不行。
 
-- 官方仓库: [Lifelong-Robot-Learning/LIBERO](https://github.com/Lifelong-Robot-Learning/LIBERO)
-- License: `mit`
+<BenchmarkPageSections id="libero-plus" locale="zh" />
 
-## 评测协议
-
-WorldFoundry 通过统一的结果导入路径集成该 benchmark：`worldfoundry-eval zoo benchmark-run --mode official-validation` 把调用方提供的官方结果导出（JSON/CSV rollout 汇总）归一化为 WorldFoundry scorecard，不执行模拟器。模拟器执行、策略加载与 rollout 采集仍是使用官方工具完成的显式上游步骤。
-
-主指标是 `success_rate`。
-
-| Metric | 含义 | 方向 |
-| --- | --- | --- |
-| `success_rate` | 评测 rollout 上的主成功率（逐 episode 成功比例）。 | 越高越好 |
-| `task_success` | 按任务聚合的成功率。 | 越高越好 |
-| `episode_success` | 逐 episode 成功指示的聚合值。 | 越高越好 |
-| `action_accuracy` | 相对参考动作的离线动作预测准确率。 | 越高越好 |
-
-## 数据与产物布局
-
-WorldFoundry 仓内路径：
-
-```text
-worldfoundry/data/benchmarks/tasks/external/libero-plus.yaml
-```
-
-```text
-<official_results.json>                 # 官方工具产出的 rollout 汇总导出
-${WORLDFOUNDRY_LIBERO_PLUS_RESULTS_PATH}   # 默认导入路径
-```
-
-## 运行评测
-
-目录 manifest 记录的 validation 命令：
+## 如何运行
 
 ```bash
 worldfoundry-eval zoo benchmark-run \
   --benchmark-id libero-plus \
   --mode official-validation \
   --official-results-path <official_results.json> \
-  --output-dir <out> \
+  --output-dir tmp/libero-plus/official-validation \
   --json
 ```
 
-## 权重与环境变量
-
-- `WORLDFOUNDRY_LIBERO_PLUS_ROOT`: 可选覆盖项，指向本地 benchmark runtime / 仓库根目录。
-- `WORLDFOUNDRY_LIBERO_PLUS_RESULTS_PATH`: 未显式传 `--official-results-path` 时，导入器默认从该路径读取官方结果导出文件。
-
-## 输出文件
-
-运行会在 `--output-dir` 下写出：
-
-- `scorecard.json`: WorldFoundry 统一 scorecard，记录上表中的指标值。
-- `raw_results.jsonl`: 从官方结果导出解析出的归一化行。
-- `evaluation/summary.json`: 聚合评测摘要。
-
-Scorecard 主键：`success_rate`（leaderboard key `success_rate`），写入 `scorecard.json`。
-
-## 边界与限制
-
-- WorldFoundry 只归一化所提供的 rollout 结果；不在仓内运行官方模拟器或策略。
-- 在用就位的模拟器资产与策略权重执行官方 rollout 并导入之前，不声称完整 leaderboard 对齐。
-- 导入的 scorecard 是集成证据，不是 leaderboard 提交。
+可选 `WORLDFOUNDRY_LIBERO_PLUS_ROOT` 指向 `sylvestf/LIBERO-plus` 检出。默认导入路径：`WORLDFOUNDRY_LIBERO_PLUS_RESULTS_PATH`。清单：`worldfoundry/data/benchmarks/tasks/external/libero-plus.yaml`。输出：`scorecard.json`（主键 `success_rate`）、`raw_results.jsonl`、`evaluation/summary.json`。
 
 [← 返回 Benchmark Hub](/zh/docs/evaluation/benchmark-hub)

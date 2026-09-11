@@ -25,33 +25,33 @@ INT8 全链 smoke 明确**没有认证通过**。开启 expandable CUDA segments
 
 ## 能力矩阵
 
-| 能力 | 状态 | 语义 / 验证 | 限制与 fallback |
-|---|---|---|---|
-| BF16 常驻 DiT | 主链完成 | 数值近似；单 H100 E2E 有记录 | FP32 checkpoint 转 BF16 |
-| 蒸馏 PEFT LoRA / 低步数 schedule | Wan2.2 公开加载边界完成 | merge 前校验基模、架构与 target | 需要匹配的蒸馏权重；质量归属于该 checkpoint |
-| FA2/3/4、xFormers、Sage | dispatcher 完成 | exact/数值近似；CPU 合同 | provider 不可用时报告 SDPA fallback |
-| QKV fusion、静态 cross-KV、RoPE cache/fusion | 主链完成 | exact/数值等价；forward receipt + CPU 合同 | QKV 必须执行；static-KV 必须命中且无 bypass；SP 下 fused RoPE 感知 offset/padding |
-| compile / CUDA Graph | 合格单 rank 路径完成 | exact/等价；请求窗口 receipt + CPU 合同 | compile 需成功 wrapper call/graph trace；Graph 需 replay 且无 eager/failure；SP + CUDA Graph 拒绝 |
-| TeaCache、AdaCache | 合格单 rank 路径完成 | 算法近似；CPU 算法/接线合同 | CFG 分支独立，报告 dense/hit；与 SP 的组合拒绝 |
-| MagCache | 合格单 rank 路径完成 | 算法近似；CPU 合同 | 必须提供校准 ratios；未校准 Wan2.2 及 SP 组合拒绝 |
-| `taylorseer`（兼容旧名） | whole-stack residual 外推 | 算法近似；CPU 合同 | 不是 LightX2V 的逐 block 算法 |
-| `blocktaylorseer` | pinned LightX2V Wan 逐 block self/cross/FFN 外推 | 算法近似；phase、当前 step gate、CFG/request 隔离与 receipt 合同 | 默认 dense pattern 为 `[true,false,false,false]`；仍需 GPU 视频质量/E2E 认证；与 SP 组合拒绝 |
-| `custom` | pinned LightX2V Tea 判定 + 一阶 whole-stack residual 外推 | 算法近似；校准多项式与 request-local receipt 合同 | 需要公开或显式提供的 Tea 系数；仍需 GPU 视频质量/E2E 认证；与 SP 组合拒绝 |
-| FP8 / NVFP4 | packed wrapper、kernel 与逐层计数完成 | 数值近似；CPU fallback 合同 | build 只报 pending；不合格 workload 明确 dense |
-| INT8 / INT4 | INT8 动态 W8A8 Triton + INT4/groupwise 压缩存储 | kernel 命中已证明；默认全 INT8 质量失败 | 实验性 opt-in；小 shape 走 BF16；INT4/groupwise 反量化+dense |
-| GGUF | 真实 tensor loader 与压缩 runtime storage 完成 | synthetic loader/storage 合同 | 无 GGUF 低比特 GEMM，且缺本地真实 Wan GGUF 认证 |
-| native Ulysses SP | 融合 multi-tensor all-to-all/gather 及 fused 3D RoPE 组合完成 | 旧完整尺寸 SP1/SP4 输出相同；v5 要求 runtime 计数 | cache、近似 attention、CUDA Graph 组合拒绝；隔离 scaling 待认证 |
-| CFG parallel / SP×CFG | 分支分 rank 与 mesh 完成 | 数值等价；CPU/mock 合同 | CFG degree=2；world size 必须匹配 |
-| VAE mixed precision / 空间 tile | 主链完成 | 数值近似；最后一次 decode 窗口 CPU 合同 | 认证要求 tile>1 且 single-tile calls=0 |
-| VAE 因果时间 streaming | 主链完成 | exact；最后一次 decode 窗口因果合同 | 认证要求 chunk>1；chunk 间不重置 convolution cache |
-| VAE rank-parallel tile | 分片 + typed all-gather 完成 | 2-rank Gloo 合同 | degree 必须等于完整 world size；完整尺寸 GPU 待认证 |
-| TAEW2.2 tiny decoder | 可选 preview 主链完成 | 算法近似；layout/range/runtime 合同 | 只解码 preview；官方 VAE 仍是最终质量默认项 |
-| resident / block / component 放置 | 提供 `fast`/`resident` 常驻预设、异步 block 预取和 component wrapper | block 模式保留 CPU master，预取第 0 层，并以当前层计算覆盖下一层 H2D；request receipt 要求真实 async copy、同步补拷贝为 0、CPU 源已 pin，且最多两层驻留 | Studio 中 Wan2.2 TI2V-5B 默认 resident；仅在显存不足时使用 block；quantization + block 在量化 buffer 的 offload 生命周期完成认证前会显式拒绝 |
-| STA | tuned-shape adapter | 算法近似；严格请求 receipt | 默认 121×704×1280 的 post-patch grid `(31,22,40)` 未调优，benchmark CLI 会在 CUDA 前拒绝；只接受 `(36,48,48)` 与 `(18,48,80)` |
-| FastVideo 风格 VSA | 已注册的模型专用系统；通用 Wan 未认证 | 算法近似；必须审计 metadata/权重 | 需要 3D sparse plan 与训练过的 `gate_compress` VSA-QAT 权重；缺 capability/shape/metadata 时降级为已记录的 exact 路径且认证 fail-closed，模型/provider 合同畸形则 fail-fast |
-| V-MoBA | 无权重 FastVideo router 与 Wan processor 已完成 | 算法近似；CPU fake-provider 合同 + 请求窗口逐层/chunk receipt | 需要与当前 grid 匹配的完整 temporal/spatial/3D chunk 与 top-k profile，并命中三个真实 `fastvideo_kernel` MoBA symbol；provider/shape/device/dtype 不匹配时 fail-closed；GPU 质量与全链 E2E 性能尚未认证 |
-| pinned LightX2V sparse lanes | 十二个 canonical CLI kind：`dynamic_sparse`、`sparge`、`nbhd`、`lightx2v_sla_mask`、`flexblock`、`lightx2v_spas_sage`、`draft_attn`、`radial_attn`、`rainfusion_attn`、`svg_attn`、`svg2_attn`、`lightx2v_svg_mask` | 算法近似；完整 request/CFG/step/layer 与上游身份 receipt | 每个 provider event 必须从 clean、pinned LightX2V commit 命中唯一 kernel symbol，并匹配 `provider_family`；Draft/RainFusion 自身调度的 dense phase 单独标为 `provider_dense`；SVG2 按 device/backend 复用带锁的 128 MiB `uint8` FlashInfer workspace/wrapper、对动态 mask 重新 plan，并保持 centroid request-local；GPU 质量/E2E 速度尚未认证 |
-| FastVideo SLA_ATTN / SAGE_SLA_ATTN | 独立 opt-in kind `fastvideo_sla` / `fastvideo_sagesla` 已进入 Wan self-attention 主链 | `proj_l` 只拆分一次、保持 FP32、逐层放置，并严格审计 provider/source/checkpoint/projection/call/step/layer receipt | 必须使用含完整 `proj_l` 的 SLA 训练 checkpoint；官方 dense Wan 与当前 FastVideo CausalWan Preview checkpoint 均不含该权重，会 fail closed；SageSLA 还依赖 `spas_sage_attn`；GPU 质量/E2E 速度尚未认证 |
+<KvCatalog heading="能力" vars rows={[
+    { name: "BF16 常驻 DiT", hintLabel: "状态", hint: "主链完成", description: "数值近似；单 H100 E2E 有记录", reads: [{ label: "限制与 fallback", value: "FP32 checkpoint 转 BF16" }] },
+    { name: "蒸馏 PEFT LoRA / 低步数 schedule", hintLabel: "状态", hint: "Wan2.2 公开加载边界完成", description: "merge 前校验基模、架构与 target", reads: [{ label: "限制与 fallback", value: "需要匹配的蒸馏权重；质量归属于该 checkpoint" }] },
+    { name: "FA2/3/4、xFormers、Sage", hintLabel: "状态", hint: "dispatcher 完成", description: "exact/数值近似；CPU 合同", reads: [{ label: "限制与 fallback", value: "provider 不可用时报告 SDPA fallback" }] },
+    { name: "QKV fusion、静态 cross-KV、RoPE cache/fusion", hintLabel: "状态", hint: "主链完成", description: "exact/数值等价；forward receipt + CPU 合同", reads: [{ label: "限制与 fallback", value: "QKV 必须执行；static-KV 必须命中且无 bypass；SP 下 fused RoPE 感知 offset/padding" }] },
+    { name: "compile / CUDA Graph", hintLabel: "状态", hint: "合格单 rank 路径完成", description: "exact/等价；请求窗口 receipt + CPU 合同", reads: [{ label: "限制与 fallback", value: "compile 需成功 wrapper call/graph trace；Graph 需 replay 且无 eager/failure；SP + CUDA Graph 拒绝" }] },
+    { name: "TeaCache、AdaCache", hintLabel: "状态", hint: "合格单 rank 路径完成", description: "算法近似；CPU 算法/接线合同", reads: [{ label: "限制与 fallback", value: "CFG 分支独立，报告 dense/hit；与 SP 的组合拒绝" }] },
+    { name: "MagCache", hintLabel: "状态", hint: "合格单 rank 路径完成", description: "算法近似；CPU 合同", reads: [{ label: "限制与 fallback", value: "必须提供校准 ratios；未校准 Wan2.2 及 SP 组合拒绝" }] },
+    { name: <><code>taylorseer</code>{"（兼容旧名）"}</>, hintLabel: "状态", hint: "whole-stack residual 外推", description: "算法近似；CPU 合同", reads: [{ label: "限制与 fallback", value: "不是 LightX2V 的逐 block 算法" }] },
+    { name: <><code>blocktaylorseer</code></>, hintLabel: "状态", hint: "pinned LightX2V Wan 逐 block self/cross/FFN 外推", description: "算法近似；phase、当前 step gate、CFG/request 隔离与 receipt 合同", reads: [{ label: "限制与 fallback", value: <>{"默认 dense pattern 为 "}<code>[true,false,false,false]</code>{"；仍需 GPU 视频质量/E2E 认证；与 SP 组合拒绝"}</> }] },
+    { name: <><code>custom</code></>, hintLabel: "状态", hint: "pinned LightX2V Tea 判定 + 一阶 whole-stack residual 外推", description: "算法近似；校准多项式与 request-local receipt 合同", reads: [{ label: "限制与 fallback", value: "需要公开或显式提供的 Tea 系数；仍需 GPU 视频质量/E2E 认证；与 SP 组合拒绝" }] },
+    { name: "FP8 / NVFP4", hintLabel: "状态", hint: "packed wrapper、kernel 与逐层计数完成", description: "数值近似；CPU fallback 合同", reads: [{ label: "限制与 fallback", value: "build 只报 pending；不合格 workload 明确 dense" }] },
+    { name: "INT8 / INT4", hintLabel: "状态", hint: "INT8 动态 W8A8 Triton + INT4/groupwise 压缩存储", description: "kernel 命中已证明；默认全 INT8 质量失败", reads: [{ label: "限制与 fallback", value: "实验性 opt-in；小 shape 走 BF16；INT4/groupwise 反量化+dense" }] },
+    { name: "GGUF", hintLabel: "状态", hint: "真实 tensor loader 与压缩 runtime storage 完成", description: "synthetic loader/storage 合同", reads: [{ label: "限制与 fallback", value: "无 GGUF 低比特 GEMM，且缺本地真实 Wan GGUF 认证" }] },
+    { name: "native Ulysses SP", hintLabel: "状态", hint: "融合 multi-tensor all-to-all/gather 及 fused 3D RoPE 组合完成", description: "旧完整尺寸 SP1/SP4 输出相同；v5 要求 runtime 计数", reads: [{ label: "限制与 fallback", value: "cache、近似 attention、CUDA Graph 组合拒绝；隔离 scaling 待认证" }] },
+    { name: "CFG parallel / SP×CFG", hintLabel: "状态", hint: "分支分 rank 与 mesh 完成", description: "数值等价；CPU/mock 合同", reads: [{ label: "限制与 fallback", value: "CFG degree=2；world size 必须匹配" }] },
+    { name: "VAE mixed precision / 空间 tile", hintLabel: "状态", hint: "主链完成", description: "数值近似；最后一次 decode 窗口 CPU 合同", reads: [{ label: "限制与 fallback", value: "认证要求 tile>1 且 single-tile calls=0" }] },
+    { name: "VAE 因果时间 streaming", hintLabel: "状态", hint: "主链完成", description: "exact；最后一次 decode 窗口因果合同", reads: [{ label: "限制与 fallback", value: "认证要求 chunk>1；chunk 间不重置 convolution cache" }] },
+    { name: "VAE rank-parallel tile", hintLabel: "状态", hint: "分片 + typed all-gather 完成", description: "2-rank Gloo 合同", reads: [{ label: "限制与 fallback", value: "degree 必须等于完整 world size；完整尺寸 GPU 待认证" }] },
+    { name: "TAEW2.2 tiny decoder", hintLabel: "状态", hint: "可选 preview 主链完成", description: "算法近似；layout/range/runtime 合同", reads: [{ label: "限制与 fallback", value: "只解码 preview；官方 VAE 仍是最终质量默认项" }] },
+    { name: "resident / block / component 放置", hintLabel: "状态", hint: <>{"提供 "}<code>fast</code>{"/"}<code>resident</code>{" 常驻预设、异步 block 预取和 component wrapper"}</>, description: "block 模式保留 CPU master，预取第 0 层，并以当前层计算覆盖下一层 H2D；request receipt 要求真实 async copy、同步补拷贝为 0、CPU 源已 pin，且最多两层驻留", reads: [{ label: "限制与 fallback", value: "Studio 中 Wan2.2 TI2V-5B 默认 resident；仅在显存不足时使用 block；quantization + block 在量化 buffer 的 offload 生命周期完成认证前会显式拒绝" }] },
+    { name: "STA", hintLabel: "状态", hint: "tuned-shape adapter", description: "算法近似；严格请求 receipt", reads: [{ label: "限制与 fallback", value: <>{"默认 121×704×1280 的 post-patch grid "}<code>(31,22,40)</code>{" 未调优，benchmark CLI 会在 CUDA 前拒绝；只接受 "}<code>(36,48,48)</code>{" 与 "}<code>(18,48,80)</code></> }] },
+    { name: "FastVideo 风格 VSA", hintLabel: "状态", hint: "已注册的模型专用系统；通用 Wan 未认证", description: "算法近似；必须审计 metadata/权重", reads: [{ label: "限制与 fallback", value: <>{"需要 3D sparse plan 与训练过的 "}<code>gate_compress</code>{" VSA-QAT 权重；缺 capability/shape/metadata 时降级为已记录的 exact 路径且认证 fail-closed，模型/provider 合同畸形则 fail-fast"}</> }] },
+    { name: "V-MoBA", hintLabel: "状态", hint: "无权重 FastVideo router 与 Wan processor 已完成", description: "算法近似；CPU fake-provider 合同 + 请求窗口逐层/chunk receipt", reads: [{ label: "限制与 fallback", value: <>{"需要与当前 grid 匹配的完整 temporal/spatial/3D chunk 与 top-k profile，并命中三个真实 "}<code>fastvideo_kernel</code>{" MoBA symbol；provider/shape/device/dtype 不匹配时 fail-closed；GPU 质量与全链 E2E 性能尚未认证"}</> }] },
+    { name: "pinned LightX2V sparse lanes", hintLabel: "状态", hint: <>{"十二个 canonical CLI kind："}<code>dynamic_sparse</code>{"、"}<code>sparge</code>{"、"}<code>nbhd</code>{"、"}<code>lightx2v_sla_mask</code>{"、"}<code>flexblock</code>{"、"}<code>lightx2v_spas_sage</code>{"、"}<code>draft_attn</code>{"、"}<code>radial_attn</code>{"、"}<code>rainfusion_attn</code>{"、"}<code>svg_attn</code>{"、"}<code>svg2_attn</code>{"、"}<code>lightx2v_svg_mask</code></>, description: "算法近似；完整 request/CFG/step/layer 与上游身份 receipt", reads: [{ label: "限制与 fallback", value: <>{"每个 provider event 必须从 clean、pinned LightX2V commit 命中唯一 kernel symbol，并匹配 "}<code>provider_family</code>{"；Draft/RainFusion 自身调度的 dense phase 单独标为 "}<code>provider_dense</code>{"；SVG2 按 device/backend 复用带锁的 128 MiB "}<code>uint8</code>{" FlashInfer workspace/wrapper、对动态 mask 重新 plan，并保持 centroid request-local；GPU 质量/E2E 速度尚未认证"}</> }] },
+    { name: "FastVideo SLA_ATTN / SAGE_SLA_ATTN", hintLabel: "状态", hint: <>{"独立 opt-in kind "}<code>fastvideo_sla</code>{" / "}<code>fastvideo_sagesla</code>{" 已进入 Wan self-attention 主链"}</>, description: <><code>proj_l</code>{" 只拆分一次、保持 FP32、逐层放置，并严格审计 provider/source/checkpoint/projection/call/step/layer receipt"}</>, reads: [{ label: "限制与 fallback", value: <>{"必须使用含完整 "}<code>proj_l</code>{" 的 SLA 训练 checkpoint；官方 dense Wan 与当前 FastVideo CausalWan Preview checkpoint 均不含该权重，会 fail closed；SageSLA 还依赖 "}<code>spas_sage_attn</code>{"；GPU 质量/E2E 速度尚未认证"}</> }] }
+  ]} />
 
 SP 已能与 fused 3D RoPE 组合：kernel 接收当前 rank 的全局 sequence offset 和 padding 边界，认证还要求 `fused_rope_calls > 0`。SP 与 TeaCache、AdaCache、MagCache、feature cache、TaylorSeer、近似 attention 或 CUDA Graph 仍会在构建期拒绝，直至具备跨 rank 同步的 cache 决策、shard 一致的历史/路由，或 graph-safe collective 生命周期。
 

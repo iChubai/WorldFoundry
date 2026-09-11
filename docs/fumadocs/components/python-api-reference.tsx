@@ -935,9 +935,11 @@ export function PythonApiGroupReference({
   );
 }
 
+const VISIBLE_CATALOG_CHIPS = 2;
+
 function catalogPreviewNames(page: CatalogPage) {
   const qualified = page.symbols.length > 0 ? page.symbols : (data.groups[page.slug] ?? []);
-  return qualified.slice(0, 4).map((symbol) => data.symbols[symbol]?.name ?? symbol.split('.').pop() ?? symbol);
+  return qualified.map((symbol) => data.symbols[symbol]?.name ?? symbol.split('.').pop() ?? symbol);
 }
 
 export function PythonApiCatalog({ locale = 'en' }: { locale?: Locale }) {
@@ -950,40 +952,43 @@ export function PythonApiCatalog({ locale = 'en' }: { locale?: Locale }) {
             <h2>{section.title[locale]}</h2>
             <p>{section.description[locale]}</p>
           </header>
-          <div className="wf-api-catalog-grid">
-            {section.pages.map((page) => {
-              const href =
-                withBasePath(`${docsPrefix(locale)}/api-reference/${page.slug}`) ??
-                `${docsPrefix(locale)}/api-reference/${page.slug}`;
-              const preview = catalogPreviewNames(page);
-              const count = page.symbol_count ?? page.symbols.length;
-              const blurb = catalogBlurbs[page.slug]?.[locale];
+          <div className="pi-kv-catalog wf-api-catalog-list">
+            <ul>
+              {section.pages.map((page) => {
+                const href =
+                  withBasePath(`${docsPrefix(locale)}/api-reference/${page.slug}`) ??
+                  `${docsPrefix(locale)}/api-reference/${page.slug}`;
+                const names = catalogPreviewNames(page);
+                const preview = names.slice(0, VISIBLE_CATALOG_CHIPS);
+                const count = page.symbol_count ?? page.symbols.length;
+                const extra = Math.max(0, count - preview.length);
+                const blurb = catalogBlurbs[page.slug]?.[locale];
 
-              return (
-                <a
-                  className={['pi-doc-hub-card', 'wf-api-catalog-card', page.kind === 'guide' ? 'is-guide' : '']
-                    .filter(Boolean)
-                    .join(' ')}
-                  href={href}
-                  key={page.slug}
-                >
-                  <strong>{page.title[locale]}</strong>
-                  {blurb ? <p className="pi-doc-hub-card-desc">{blurb}</p> : null}
-                  {preview.length > 0 ? (
-                    <ul className="wf-api-catalog-chips">
-                      {preview.map((name) => (
-                        <li key={name}>
-                          <code>{name}</code>
-                        </li>
-                      ))}
-                    </ul>
-                  ) : null}
-                  <span className="wf-api-catalog-meta">
-                    {page.kind === 'guide' ? t.guide : `${count} ${t.symbols}`}
-                  </span>
-                </a>
-              );
-            })}
+                return (
+                  <li key={page.slug}>
+                    <a
+                      className={['pi-kv-row', 'wf-api-catalog-card', page.kind === 'guide' ? 'is-guide' : '']
+                        .filter(Boolean)
+                        .join(' ')}
+                      href={href}
+                    >
+                      <div className="pi-kv-head">
+                        <div className="pi-kv-names">
+                          <strong>{page.title[locale]}</strong>
+                        </div>
+                      </div>
+                      {blurb ? <p>{blurb}</p> : page.kind === 'guide' ? <p>{t.guide}</p> : null}
+                      {preview.length > 0 ? (
+                        <p className="pi-kv-read wf-api-catalog-symbols">
+                          {preview.join(', ')}
+                          {extra > 0 ? ` +${extra}` : ''}
+                        </p>
+                      ) : null}
+                    </a>
+                  </li>
+                );
+              })}
+            </ul>
           </div>
         </section>
       ))}

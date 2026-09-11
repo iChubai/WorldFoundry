@@ -1,21 +1,48 @@
 ---
 title: "VQ-BeT"
-description: "VQ-BeT (Vector-Quantized Behavior Transformer) generates behavior by tokenizing continuous actions with a hierarchical VQ-VAE and predicting those tokens with a transformer — capturing multimodal demonstrations without diffusion sampling c…"
+description: "VQ-BeT: behavior generation and imitation learning; Runner parity pending."
+modelId: "vqbet"
 pageSource: generated
 ---
 
-**Publisher:** Open-source research release (institution not recorded) · Research lab
-
 VQ-BeT (Vector-Quantized Behavior Transformer) generates behavior by tokenizing continuous actions with a hierarchical VQ-VAE and predicting those tokens with a transformer — capturing multimodal demonstrations without diffusion sampling costs. The catalog sources the official repository and routes it through an in-tree action runtime adapter.
+
+<ModelPaperFigures modelId="vqbet" locale="en" />
+
+The recorded paper is [arXiv 2403.03181](https://arxiv.org/abs/2403.03181).
+
+Project page: [sjlee.cc/vq-bet](https://sjlee.cc/vq-bet/). Code: [jayLEE0301/vq_bet_official](https://github.com/jayLEE0301/vq_bet_official).
 
 <ModelCommandBuilder modelId="vqbet" locale="en" />
 
-## Architecture
+## What it is for
+
+Pick `vqbet` when you want the catalog VLA policy: instruction and observation in, an action trace out. Use it to roll the recorded policy, not to train a new one.
 
 A residual VQ-VAE action tokenizer plus a GPT-style transformer over behavior tokens, with offset heads recovering continuous actions. Further internals are not recorded in this repository.
 
-## Usage notes
+Catalog tasks include behavior generation, imitation learning, robot policy, and policy rollout. Catalog aliases include `vq-bet` and `vector-quantized-behavior-transformer`.
+
+## Runtime contract
+
+Required `image`, `prompt`, and `state`; optional `model_id` (vqbet), `policy_family`, and `action_representation`; artifacts `action_trace` and `vqbet_action_trace.json`.
+
+Recorded task profiles: `behavior_generation`, `imitation_learning`, `robot_policy`, and `policy_rollout`. WorldFoundry binds `VQBeTPipeline`.
+
+Family status: **Runner parity pending**.
 
 Checkpoint absence is reported by runtime missing_assets and is not a catalog blocker; runs emit a runtime plan until weights are staged. Train your own task checkpoint with the official code before running.
+
+Concrete algorithm entry sourced from the official VQ-BeT repository.
+
+## Running in WorldFoundry
+
+Launch `worldfoundry-eval run vqbet --pipeline.task-profile behavior_generation` to execute the policy. The command builder above switches `--pipeline.task-profile` among recorded tasks and still emits `worldfoundry-eval run`.
+
+It runs in the unified environment `worldfoundry-unified-cu128` (Python 3.11, CUDA 12.8).
+
+Recorded weight repositories include `lerobot/vqbet`. Stage assets with `bash scripts/inference/prepare_model_infer.sh vqbet`.
+
+Status: **Runner parity pending**.
 
 <ModelRelatedRecipes modelId="vqbet" locale="en" />

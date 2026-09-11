@@ -1,21 +1,21 @@
 import { getPageMarkdownUrl, source } from '@/lib/source';
 import { SiteHeader } from '@/components/site-header';
-import { notFound } from 'next/navigation';
+import { notFound, redirect } from 'next/navigation';
 import { getMDXComponents } from '@/components/mdx';
-import { enrichApiReferenceToc } from '@/lib/docs-api-toc';
+import { ModelPageFigure, ModelPageNoDemoVideo } from '@/components/docs-video';
+import { enrichApiReferenceToc, isApiReferenceDocsPage } from '@/lib/docs-api-toc';
+import { enrichBenchmarkToc } from '@/lib/docs-benchmark-toc';
 import { createRelativeLink } from 'fumadocs-ui/mdx';
 import { getBenchmarkCatalogEntry } from '@/lib/benchmark-catalog';
 import { getModelRecipeIndexEntry } from '@/lib/model-recipe-index';
 import { BenchmarkBadge } from '@/components/benchmark-badge';
 import { BenchmarkIdentityMark } from '@/components/benchmark-identity-mark';
 import { ModelIdentityMark } from '@/components/model-identity-mark';
+import { ModelPaperThumb } from '@/components/model-paper-thumb';
+import { getModelPaperThumbSrc } from '@/lib/model-arch-diagrams';
 import { getDocsBreadcrumbs } from '@/lib/docs-breadcrumb';
-import {
-  docsLabels,
-  isApiReferenceHubDocsPage,
-  isBenchmarkHubDocsPage,
-  isTableDenseDocsPage,
-} from '@/lib/docs-navigation';
+import { movedDocsDestination } from '@/lib/docs-moved';
+import { docsLabels } from '@/lib/docs-navigation';
 import { DocsBreadcrumb } from '@/components/docs-breadcrumb';
 import { DocsPagination } from '@/components/docs-pagination';
 import { DocsRelatedLinks } from '@/components/docs-related-links';
@@ -43,7 +43,7 @@ import {
   isSidebarGroupActive,
   isSidebarItemActive,
 } from '@/lib/docs-sidebar';
-import { gitConfig } from '@/lib/shared';
+import { getGithubContentUrls } from '@/lib/shared';
 import Link from 'next/link';
 import { defaultLocale, i18n, isLocale, localeNames, type Locale } from '@/lib/i18n';
 
@@ -67,8 +67,16 @@ function getNavGroups(locale: Locale) {
   return getDocsSidebarGroups(locale);
 }
 
+function redirectMovedDocsPage(slugs: string[] | undefined, locale: Locale) {
+  const destination = movedDocsDestination(slugs, locale);
+  if (destination) {
+    redirect(destination);
+  }
+}
+
 export async function DocsPage({ slug, locale }: { slug: string[] | undefined; locale: string }) {
   const normalized = normalizeLocale(locale);
+  redirectMovedDocsPage(slug, normalized);
   const page = source.getPage(slug, normalized);
   if (!page) notFound();
 
@@ -76,13 +84,15 @@ export async function DocsPage({ slug, locale }: { slug: string[] | undefined; l
   const MDX = page.data.body;
   const markdownUrl = getPageMarkdownUrl(page).url;
   const sidebarGroups = getNavGroups(normalized);
-  const githubUrl = `https://github.com/${gitConfig.user}/${gitConfig.repo}/blob/${gitConfig.branch}/docs/fumadocs/content/docs/${page.path}`;
+  const githubUrl = getGithubContentUrls(page.path).blob;
   const docsHref = getPageUrl([], normalized);
-  const benchmarkHubPage = isBenchmarkHubDocsPage(page.slugs);
-  const apiHubPage = isApiReferenceHubDocsPage(page.slugs);
-  const usesWideTableLayout = isTableDenseDocsPage(page.slugs) || benchmarkHubPage;
+  const apiHubPage = isApiReferenceDocsPage(page.slugs);
 
-  const toc = enrichApiReferenceToc(page.slugs, page.data.toc ?? []);
+  const toc = enrichBenchmarkToc(
+    page.slugs,
+    enrichApiReferenceToc(page.slugs, page.data.toc ?? []),
+    normalized,
+  );
   const metricNav = resolveMetricQuickNavFromSlugs(page.slugs);
   const pagination = getDocsPagination(page.slugs, normalized);
   const relatedLinks = getDocsRelatedLinks(page.slugs, normalized);
@@ -99,8 +109,9 @@ export async function DocsPage({ slug, locale }: { slug: string[] | undefined; l
   const modelEntry = modelId ? getModelRecipeIndexEntry(modelId) : undefined;
   const lastUpdated = getDocsLastUpdated(page.path, normalized);
   const isWelcomePage = page.slugs.length === 0;
-  const showToc = !isWelcomePage && toc.length > 0;
-  const showRail = showToc || Boolean(metricNav);
+  const isModelRecipePage = Boolean(modelEntry);
+  const showToc = !isWelcomePage && !isModelRecipePage && toc.length > 0;
+  const showRail = !isModelRecipePage && (showToc || Boolean(metricNav));
   const metricQuickNav = metricNav ? (
     <MetricQuickNav
       locale={normalized}
@@ -115,9 +126,8 @@ export async function DocsPage({ slug, locale }: { slug: string[] | undefined; l
       className={[
         'pi-doc-shell',
         isWelcomePage ? 'pi-doc-shell-welcome' : '',
-        usesWideTableLayout ? 'pi-doc-shell-table-wide' : '',
-        usesWideTableLayout && showRail ? 'pi-doc-shell-table-wide-has-toc' : '',
         benchmarkId ? 'pi-doc-shell-benchmark-detail' : '',
+        isModelRecipePage ? 'pi-doc-shell-model-detail' : '',
         apiHubPage ? 'pi-doc-shell-api-hub' : '',
         metricNav ? 'pi-doc-shell-has-metric-nav' : '',
       ]
@@ -139,7 +149,11 @@ export async function DocsPage({ slug, locale }: { slug: string[] | undefined; l
         docsHref={docsHref}
         docsLabel={t.docs}
         homeLabel={t.home}
+        blogLabel={t.blog}
+        eventsLabel={t.events}
+        communityLabel={t.community}
         openEnvisionLabel={t.openEnvision}
+        searchLabel={t.search}
         languageAriaLabel={t.language}
         beforeInner={<DocsReadingProgress />}
         brandLeading={
@@ -295,7 +309,14 @@ export async function DocsPage({ slug, locale }: { slug: string[] | undefined; l
               <div className="pi-doc-article-inner">
                 {breadcrumbs.length > 1 ? <DocsBreadcrumb items={breadcrumbs} /> : null}
 
-                <div className="pi-doc-title-row">
+                <div
+                  className={[
+                    'pi-doc-title-row',
+                    modelId && getModelPaperThumbSrc(modelId) ? 'has-paper-thumb' : '',
+                  ]
+                    .filter(Boolean)
+                    .join(' ')}
+                >
                   <div className="pi-doc-title-heading">
                     {benchmarkId && benchmarkEntry ? (
                       <BenchmarkIdentityMark
@@ -316,6 +337,7 @@ export async function DocsPage({ slug, locale }: { slug: string[] | undefined; l
                     ) : null}
                     <h1>{page.data.title}</h1>
                   </div>
+                  {modelId ? <ModelPaperThumb modelId={modelId} locale={normalized} /> : null}
                 </div>
 
                 {benchmarkId || !page.data.description ? null : (
@@ -342,6 +364,13 @@ export async function DocsPage({ slug, locale }: { slug: string[] | undefined; l
                   <MDX
                     components={getMDXComponents({
                       a: createRelativeLink(source, page),
+                      ...(modelId
+                        ? {
+                            Video: ModelPageNoDemoVideo,
+                            video: ModelPageNoDemoVideo,
+                            figure: ModelPageFigure,
+                          }
+                        : {}),
                     })}
                   />
                 </div>

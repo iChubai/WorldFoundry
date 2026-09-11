@@ -1,21 +1,50 @@
 ---
 title: "EO-1"
-description: "EO-1 (Embodied One) is an embodied VLA policy from the EO-Robotics project. WorldFoundry routes it through an in-tree Transformers processor.select_action runtime adapter sourced from the official EO repository; checkpoints are not yet rec…"
-pageSource: generated
+description: "EO-1: vla and embodied vla; Runner parity pending."
+modelId: "eo1"
+pageSource: authored
 ---
-
-**Publisher:** Open-source research release (institution not recorded) · Research lab
 
 EO-1 (Embodied One) is an embodied VLA policy from the EO-Robotics project. WorldFoundry routes it through an in-tree Transformers processor.select_action runtime adapter sourced from the official EO repository; checkpoints are not yet recorded, so runs emit a runtime plan.
 
+<ModelPaperFigures modelId="eo1" locale="en" />
+
+The recorded paper is [arXiv 2508.21112](https://arxiv.org/abs/2508.21112).
+
+Code: [EO-Robotics/EO](https://github.com/EO-Robotics/EO).
+
+Paper: [arXiv 2508.21112](https://arxiv.org/abs/2508.21112). The recorded expected weight is `IPEC-COMMUNITY/EO-1-3B` at `$WORLDFOUNDRY_CKPT_DIR/IPEC-COMMUNITY--EO-1-3B`. Until that tree is staged, runs emit a **runtime plan**; missing assets are reported and are not catalog blockers. License and institution are unset.
+
 <ModelCommandBuilder modelId="eo1" locale="en" />
 
-## Architecture
+## What it is for
+
+Pick `eo1` when you want the catalog VLA policy: instruction and observation in, an action trace out. Use it to roll the recorded policy, not to train a new one.
 
 The runtime contract is a Hugging Face Transformers processor with a select_action interface. Architecture internals beyond the official repository pointer (EO-Robotics/EO, pinned head 451c363d) are not recorded in this repository.
 
-## Usage notes
+Catalog tasks include vla, embodied vla, vla policy rollout, and robot policy. Catalog aliases include `eo-1` and `embodied-one`.
+
+## Runtime contract
+
+Required `image`, `prompt`, and `state`; optional `model_id` (eo1), `policy_family`, and `action_representation`; artifacts `action_trace` and `eo1_action_trace.json`.
+
+Recorded task profiles: `vla`, `embodied_vla`, `vla.policy_rollout`, and `robot_policy`. WorldFoundry binds `EO1Pipeline`.
+
+Family status: **Runner parity pending**.
 
 Checkpoint absence is reported by runtime missing_assets and is not a catalog blocker; stage official weights when available.
+
+Concrete EO-1 algorithm entry sourced from the EO official repository.
+
+## Running in WorldFoundry
+
+The catalog launch is `worldfoundry-eval run eo1 --pipeline.task-profile vla`. The command builder above switches `--pipeline.task-profile` among recorded tasks and still emits `worldfoundry-eval run`.
+
+It runs in the unified environment `worldfoundry-unified-cu128` (Python 3.11, CUDA 12.8).
+
+Recorded weight repositories include `IPEC-COMMUNITY/EO-1-3B`. Stage assets with `bash scripts/inference/prepare_model_infer.sh eo1`.
+
+Status: **Runner parity pending**.
 
 <ModelRelatedRecipes modelId="eo1" locale="en" />

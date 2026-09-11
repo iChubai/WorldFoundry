@@ -1,21 +1,50 @@
 ---
 title: "Latent Action Pretraining"
-description: "LAPA (Latent Action Pretraining) learns actions without action labels: it pretrains a video-action model on unlabeled video by discovering latent actions, then transfers to real robot control. The MIT-licensed LAPA-7B-openx checkpoint is c…"
-pageSource: generated
+description: "Latent Action Pretraining：va、vam；Runner 一致性待确认; 独立环境 `worldfoundry-lapa-jax-cu118`。"
+modelId: "lapa"
+pageSource: authored
 ---
-
-**发表机构:** 开源研究发布（仓库未记录正式机构） · 研究机构
 
 LAPA（Latent Action Pretraining）无需动作标签学习动作：在无标注视频上通过发现隐式动作预训练视频-动作模型，再迁移到真实机器人控制。MIT 许可的 LAPA-7B-openx checkpoint 已确认并锁定 revision；WorldFoundry 将隐式动作推理运行时内置树内。
 
+<ModelPaperFigures modelId="lapa" locale="zh" />
+
+记录论文为[arXiv 2410.11758](https://arxiv.org/abs/2410.11758)。
+
+代码：[LatentActionPretraining/LAPA](https://github.com/LatentActionPretraining/LAPA)。
+
 <ModelCommandBuilder modelId="lapa" locale="zh" />
 
-## 架构
+## 用来做什么
+
+需要 catalog 上的 VLA 策略时选 `lapa-7b-openx`：指令与观测进、动作轨迹出。用来滚动已记录策略，不是用来训练新策略。
 
 7B 视频-动作模型，在 Open X-Embodiment 规模数据上以隐式动作量化训练。树内运行时通过了 py_compile、from_pretrained、仅计划执行与别名校验。
 
-## 使用要点
+catalog 记录的任务包括 va、vam、latent_action、video_action_modeling。别名包括 `LAPA`、`LAPA-7B-openx`。
 
-真实 7B 推理目前受环境限制：prepare 环境缺少 tux，gpu-jax0325 环境的 JAX 不兼容。仅计划执行可用；完整推理需要兼容的 JAX 环境。
+从视频上下文吐出潜动作 token，不是 RGB 控制。
+
+## 运行时契约
+
+必填 `image`、`instruction`、`prompt`、`video`；可选 `actions` (latent_action_tokens, video_context)；产物 `lapa_action_tokens.json`。
+
+记录的任务 profile：`va`、`vam`、`latent_action`、`video_action_modeling`、`vam.video_action_modeling`。绑定的 pipeline 类是 `LAPAPipeline`。
+
+系列状态：**Runner 一致性待确认**。
+
+真实 7B 推理目前受环境限制：prepare 环境缺少 tux，gpu-jax0325 环境的 JAX 不兼容。 仅计划执行可用；完整推理需要兼容的 JAX 环境。
+
+LAPA latent action runtime is vendored in-tree; py_compile, from_pretrained, plan-only execution, and alias validation passed.
+
+## 在 WorldFoundry 中运行
+
+启动 `worldfoundry-eval run lapa-7b-openx --pipeline.task-profile vam.video_action_modeling` 执行策略。上方命令构建器按已记录任务切换 `--pipeline.task-profile`，发出的仍是 `worldfoundry-eval run`。
+
+运行环境是独立 profile `worldfoundry-lapa-jax-cu118`（Python 3.10，CUDA 11.8）。
+
+记录的权重仓库包括 `latent-action-pretraining/LAPA-7B-openx`、`latent-action-pretraining/LAPA-7B-openx`。就位权重用 `bash scripts/inference/prepare_model_infer.sh lapa-7b-openx`。
+
+记录 license 为 mit；状态：**Runner 一致性待确认**。
 
 <ModelRelatedRecipes modelId="lapa" locale="zh" />

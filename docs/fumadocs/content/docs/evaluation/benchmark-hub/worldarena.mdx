@@ -1,93 +1,36 @@
 ---
 title: WorldArena
-description: "Perceptual and functional evaluation for embodied world models: video quality dimensions plus data-engine / policy / planner utility."
+description: "Tsinghua FIB Lab embodied world-model bench: perceptual quality plus data-engine / policy / planner utility. Distinct from WorldAtlas Arena."
 ---
 
-## About
+WorldArena (Tsinghua FIB Lab) evaluates embodied world models on two axes. Primary `ewm_score` aggregates the embodied-world-model surface. This catalog id is **`worldarena`**. It is **not** [WorldAtlas Arena](/docs/evaluation/benchmark-hub/worldatlas-arena) (`worldatlas-arena`).
 
-**Publisher:** Tsinghua University (FIB Lab)
+- **Perceptual** — visual quality, motion quality, content consistency, physics adherence, 3D accuracy, controllability, human quality.
+- **Functional** — utility as a data engine (`data_engine_success`), policy evaluator (`policy_evaluator_correlation`), and action planner (`action_planner_success`).
 
-WorldArena evaluates embodied world models on two axes: perceptual quality (visual quality, motion quality, content consistency, physics adherence, 3D accuracy, controllability, human quality) and functional utility — whether the model is useful as a data engine (`data_engine_success`), as a policy evaluator (`policy_evaluator_correlation`), and as an action planner (`action_planner_success`). The primary `ewm_score` aggregates the embodied-world-model surface.
+Paper: [WorldArena](https://arxiv.org/abs/2602.08971). Project: [world-arena.ai](https://world-arena.ai/). Code: [tsinghua-fib-lab/WorldArena](https://github.com/tsinghua-fib-lab/WorldArena).
 
-WorldFoundry integrates the official video-quality metric runtime in tree under `runners/worldarena/runtime/video_quality` and can execute it dimension-by-dimension or normalize existing result files.
+WorldFoundry **integrates the official video-quality metric runtime** (`runners/worldarena/runtime/video_quality`) and can score one `--dimension` at a time (catalog-bounded example: `action_following`). **One real prepared-data PSNR component is verified. Full Track 1 and the embodied tracks are not.** Functional-utility metrics need embodied task evidence outside the video-quality runtime.
 
-Official references:
+<BenchmarkPageSections id="worldarena" locale="en" />
 
-- Paper: [arxiv.org/abs/2602.08971](https://arxiv.org/abs/2602.08971)
-- Project page: [world-arena.ai](https://world-arena.ai/)
-- Official repository: [tsinghua-fib-lab/WorldArena](https://github.com/tsinghua-fib-lab/WorldArena)
-
-## Evaluation protocol
-
-`--run-official` executes one dimension at a time (`--dimension`, e.g. `action_following`) against a config file (`--config-path`) plus generated videos; ground-truth comparisons take `--gt-data-dir` / `--action-gt-data-dir`, and model weights resolve from `--ckpt-root`. `--official-results-path` normalizes an existing WorldArena result file instead.
-
-Primary metric: `ewm_score`.
-
-| Metric | Meaning | Direction |
-| --- | --- | --- |
-| `visual_quality` | Perceptual visual quality of generated embodied videos. | Higher is better |
-| `motion_quality` | Motion quality and smoothness dimension. | Higher is better |
-| `content_consistency` | Content consistency across the rollout. | Higher is better |
-| `physics_adherence` | Physical plausibility of generated dynamics. | Higher is better |
-| `three_d_accuracy` | 3D structural accuracy of the generated scene. | Higher is better |
-| `controllability` | Adherence to conditioning/action controls. | Higher is better |
-| `data_engine_success` | Utility as a synthetic-data engine for downstream policies. | Higher is better |
-| `policy_evaluator_correlation` | Correlation between in-model policy evaluation and real rollout outcomes. | Higher is better |
-| `action_planner_success` | Task success when the world model serves as an action planner. | Higher is better |
-| `human_quality` | Human-subject generation quality dimension. | Higher is better |
-| `ewm_score` | Primary embodied-world-model aggregate score. | Higher is better |
-
-## Data and artifact layout
-
-In-tree paths:
-
-```text
-worldfoundry/data/benchmarks/tasks/external/worldarena.yaml
-worldfoundry/evaluation/tasks/execution/runners/worldarena
-```
-
-```text
-worldfoundry/evaluation/tasks/execution/runners/worldarena/runtime/video_quality   # in-tree metric runtime
-<worldarena_config.yaml>                                                           # dimension config
-${WORLDFOUNDRY_GENERATED_ARTIFACT_DIR}/                                            # generated videos
-```
-
-Official benchmark assets come from the source repository; no Hugging Face dataset is required for the contract entry.
-
-## Run the benchmark
-
-Catalog-recorded validation command:
+## How to run
 
 ```bash
-python worldfoundry/evaluation/tasks/execution/runners/worldarena/run_worldarena_official_runner.py \
+${WORLDFOUNDRY_UNIFIED_PYTHON} \
+  worldfoundry/evaluation/tasks/execution/runners/worldarena/run_worldarena_official_runner.py \
   --run-official \
   --dimension action_following \
   --config-path <worldarena_config.yaml> \
   --generated-artifact-dir <generated_videos> \
-  --output-dir <out> \
+  --output-dir tmp/worldarena/official \
   --json
 ```
 
-## Checkpoints and environment variables
+Ground-truth comparisons take `--gt-data-dir` / `--action-gt-data-dir`. Weights resolve from `--ckpt-root`. `--official-results-path` imports an existing result file. Env: `WORLDFOUNDRY_WORLDARENA_RESULTS_PATH`, `WORLDFOUNDRY_WORLDARENA_ROOT`. No Hugging Face dataset is required by the contract.
 
-- `WORLDFOUNDRY_WORLDARENA_ROOT`: Optional override pointing at an external runtime checkout.
-- `WORLDFOUNDRY_WORLDARENA_RESULTS_PATH`: Default path the importer reads official result exports from when `--official-results-path` is not passed.
-- `WORLDFOUNDRY_GENERATED_ARTIFACT_DIR`: Directory containing the candidate generated artifacts to score or import against.
+In-tree pointers: `worldfoundry/data/benchmarks/tasks/external/worldarena.yaml`, `worldfoundry/evaluation/tasks/execution/runners/worldarena`.
 
-## Outputs
-
-The run writes into `--output-dir`:
-
-- `scorecard.json`: WorldFoundry scorecard with the metric values recorded above.
-- `benchmark_contract.json`: Benchmark contract record for the run (inputs, mode, provenance).
-- `raw_metric_table.jsonl`: Metric rows backing the scorecard.
-
-Scorecard primary key: `ewm_score` (leaderboard key `ewm_score`), stored in `scorecard.json`.
-
-## Limitations
-
-- Full validation requires generated videos or rollouts for the official prompt/task suite.
-- Leaderboard parity requires official judge/checkpoint/API assets and normalized full-suite result files.
-- Functional-utility metrics (data engine, policy evaluator, planner) depend on embodied task evidence outside the video-quality runtime.
+Outputs include `scorecard.json` (primary `ewm_score`).
 
 [← Benchmark Hub](/docs/evaluation/benchmark-hub)

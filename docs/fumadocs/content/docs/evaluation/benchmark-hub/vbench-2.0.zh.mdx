@@ -1,66 +1,23 @@
 ---
 title: VBench-2.0
-description: VBench 的 intrinsic faithfulness 续作：创造力、常识、可控性、人体保真与物理五大维度。
+description: "NTU / 上海 AI Lab 的忠实度套件：五柱 18 项能力。WorldFoundry 内置 runtime，不编造榜单。与 VBench 不可互换。"
 ---
 
-## 简介
+VBench-2.0（S-Lab、南洋理工与上海人工智能实验室）是 [VBench](/zh/docs/evaluation/benchmark-hub/vbench) 的 **内在忠实度** 后继。它与 16 维质量套件 **不可互换**。**18 项细粒度能力** 归入五柱，再平均成 `vbench2_total`：
 
-**发表机构：** S-Lab（南洋理工大学）与上海人工智能实验室
+- **创造性** — 构图、多样性。
+- **常识** — 实例保持、运动合理性。
+- **可控性** — 相机、景观、情节、动态、交互、运动顺序。
+- **人体保真** — 解剖、服饰、身份。
+- **物理** — 材料、力学、多视角一致性、热学。
 
-VBench-2.0 从逐帧质量转向 intrinsic faithfulness：生成视频是否遵守常识、物理规律、人体结构、可控性与创造力。它定义 18 项细粒度能力，归入五大支柱（`creativity`、`commonsense`、`controllability`、`human_fidelity`、`physics`），由 VLM judge、检测器和专用模型混合打分。
+论文：[VBench-2.0](https://arxiv.org/abs/2503.21755)。项目：[vchitect.github.io/VBench-2.0-project](https://vchitect.github.io/VBench-2.0-project/)。代码：[Vchitect/VBench](https://github.com/Vchitect/VBench)。快照：`Vchitect/VBench-2.0_sampled_videos`、`_human_annotation`、`_human_anomaly`。
 
-WorldFoundry 把 VBench-2.0 runtime 内置在 `worldfoundry/evaluation/tasks/execution/runners/vbench_2_0/runtime`，由 `run_vbench_2_0_official_runner.py` 驱动，同时负责数据集快照发现、逐维度调度、覆盖率 manifest 与 scorecard 转换。
+WorldFoundry **仓内内置 VBench-2.0 runtime**。调度评测器前会检查 prompt 套件覆盖（`vbench2_dataset_manifest.json`、`vbench2_video_coverage.json`）。有界 **diversity** 组件已验证；全套未验证。部分维度需要 RetinaFace 或其他重量级裁判。
 
-官方参考：
+<BenchmarkPageSections id="vbench-2.0" locale="zh" />
 
-- Paper: [arxiv.org/abs/2503.21755](https://arxiv.org/abs/2503.21755)
-- 项目主页: [vchitect.github.io/VBench-2.0-project](https://vchitect.github.io/VBench-2.0-project/)
-- 官方仓库: [Vchitect/VBench](https://github.com/Vchitect/VBench)
-
-## 评测协议
-
-runner 在调度 evaluator 之前会先按官方 VBench-2.0 prompt suite 校验视频覆盖率，并写出 `vbench2_dataset_manifest.json` 与 `vbench2_video_coverage.json`，让不完整的运行显式可见而不是被悄悄低估。可用 `--dimension` 单独选择维度；官方总分聚合五大支柱。
-
-主指标是 `vbench2_total`。
-
-| Metric | 含义 | 方向 |
-| --- | --- | --- |
-| `vbench2_creativity` | 官方 VBench-2.0 创造力组：由构图与多样性维度聚合。 | 越高越好 |
-| `vbench2_commonsense` | 官方 VBench-2.0 常识组：由实例保持与运动合理性聚合。 | 越高越好 |
-| `vbench2_controllability` | 官方 VBench-2.0 可控性组：由相机、景观、情节、动态、交互与运动顺序维度聚合。 | 越高越好 |
-| `vbench2_human_fidelity` | 官方 VBench-2.0 人体保真组：由人体结构、服饰与身份维度聚合。 | 越高越好 |
-| `vbench2_physics` | 官方 VBench-2.0 物理组：由材料、力学、多视角一致性与热学维度聚合。 | 越高越好 |
-| `vbench2_total` | VBench-2.0 创造力、常识、可控性、人体保真与物理五组分的均值。 | 越高越好 |
-
-## 数据与产物布局
-
-WorldFoundry 仓内路径：
-
-```text
-worldfoundry/data/benchmarks/tasks/external/vbench-2.0.yaml
-worldfoundry/evaluation/tasks/execution/runners/vbench_2_0/runtime
-```
-
-准备官方 sampled-videos / annotation 快照（Hugging Face `Vchitect/VBench-2.0_*`）并让 runner 指向它：
-
-```bash
-export WORLDFOUNDRY_VBENCH2_DATASET_ROOT=/path/to/vbench2_datasets
-export WORLDFOUNDRY_GENERATED_ARTIFACT_DIR=/path/to/generated_videos
-```
-
-生成视频需遵守 VBench-2.0 suite 的官方 prompt 命名约定。未设置 dataset root 时会通过 `WORLDFOUNDRY_HF_CACHE_DIR` 做快照发现。
-
-## 运行评测
-
-目录 manifest 记录的 validation 命令：
-
-```bash
-${WORLDFOUNDRY_UNIFIED_PYTHON} worldfoundry/evaluation/tasks/execution/runners/vbench_2_0/run_vbench_2_0_official_runner.py \
-  --benchmark-id vbench-2.0 \
-  --variant vbench2
-```
-
-对已准备的视频运行指定维度：
+## 如何运行
 
 ```bash
 ${WORLDFOUNDRY_UNIFIED_PYTHON} \
@@ -74,35 +31,10 @@ ${WORLDFOUNDRY_UNIFIED_PYTHON} \
   --json
 ```
 
-## 权重与环境变量
+环境变量：`WORLDFOUNDRY_VBENCH2_DATASET_ROOT`、`WORLDFOUNDRY_VBENCH2_RESULTS_PATH`、`WORLDFOUNDRY_VBENCH2_ROOT`、`WORLDFOUNDRY_HF_CACHE_DIR`。共享栈：`vbench_perception_metric_stack`。
 
-- `WORLDFOUNDRY_VBENCH2_ROOT`: 可选覆盖项，用外部 runtime checkout 替换仓内副本。
-- `WORLDFOUNDRY_VBENCH2_RESULTS_PATH`: 未显式传 `--official-results-path` 时，导入器默认从该路径读取官方结果导出文件。
-- `WORLDFOUNDRY_GENERATED_ARTIFACT_DIR`: 存放待评测生成产物（候选视频/rollout）的目录。
-- `WORLDFOUNDRY_VBENCH2_DATASET_ROOT`: 本地官方数据集根目录。
-- `WORLDFOUNDRY_HF_CACHE_DIR`: 用于发现数据集快照的 Hugging Face 缓存目录。
+仓内指针：`worldfoundry/data/benchmarks/tasks/external/vbench-2.0.yaml`，`worldfoundry/evaluation/tasks/execution/runners/vbench_2_0/runtime`。
 
-该 benchmark 复用共享 base-model 依赖栈：`vbench_perception_metric_stack`。
-
-## 输出文件
-
-运行会在 `--output-dir` 下写出：
-
-- `scorecard.json`: WorldFoundry 统一 scorecard，记录上表中的指标值。
-- `raw_metric_table.jsonl`: 支撑 scorecard 的原始 metric 行。
-- `dimension_scores.json`: 逐维度得分明细。
-- `vbench2_dataset_manifest.json`
-- `vbench2_video_coverage.json`
-- `vbench2_benchmark_contract.json`
-- `upstream_stdout.log`: 上游官方 scorer 的 stdout 日志。
-- `upstream_stderr.log`: 上游官方 scorer 的 stderr 日志。
-
-Scorecard 主键：`vbench2_total`（leaderboard key `total score`），写入 `scorecard.json`。
-
-## 边界与限制
-
-- 多个维度依赖重量级 judge/backbone 权重（VLM judge、检测器）；部分维度运行的得分不能与官方 VBench-2.0 总分比较。
-- 覆盖率 manifest 会记录缺失的 prompt 视频；覆盖不完整的运行不能作为 leaderboard 数字引用。
-- 本地 scorecard 不是官方 VBench-2.0 leaderboard 条目。
+产物包括 `scorecard.json`（主键 `vbench2_total`）、`dimension_scores.json` 与覆盖清单。
 
 [← 返回 Benchmark Hub](/zh/docs/evaluation/benchmark-hub)

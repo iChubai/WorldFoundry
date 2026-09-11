@@ -18,22 +18,25 @@ and are not overwritten. The article source of truth is the MDX file.
 conflicts). All keys are optional. Schema::
 
     docs:
-      # 2-5 plain-language sentences: what the model is, what it takes in,
-      # what it produces. English required if the block is used; the *_zh
-      # mirror keeps the Chinese page in sync.
+      # 2-5 plain-language sentences: what the model is at *inference* time,
+      # what it takes in, what it produces. Do not lead with pretraining
+      # hours, datasets, optimizer, or the authors' training recipe.
+      # English required if the block is used; the *_zh mirror keeps the
+      # Chinese page in sync.
       overview: >-
         ...
       overview_zh: >-
         ...
-      # How the model works internally (backbone, conditioning, decoding).
+      # Runtime internals (backbone, conditioning, decoding, controls).
       # Only recorded facts — write "Not recorded in this repository" when
       # the manifest and official sources do not describe a detail.
+      # Training recipes stay out unless one clause is needed to name a checkpoint.
       architecture: >-
         ...
       architecture_zh: >-
         ...
-      # Practical notes for running or reading this entry (assets, keys,
-      # environment quirks, what the WorldFoundry route actually does).
+      # Practical notes for running this entry (assets, keys, environment
+      # quirks, resolution/frames/steps, what the WorldFoundry route does).
       usage_notes: >-
         ...
       usage_notes_zh: >-
@@ -325,7 +328,7 @@ def status_data(item: dict[str, Any], profile: dict[str, Any] | None) -> dict[st
         label = "Runner verified"
     elif "blocked" in normalized or normalized in {"unavailable", "missing"}:
         group = "blocked"
-        label = humanize(integration)
+        label = "Blocked"
     elif normalized in {"planned", "todo", "proposed"}:
         group = "planned"
         label = "Planned"
@@ -334,10 +337,10 @@ def status_data(item: dict[str, Any], profile: dict[str, Any] | None) -> dict[st
         label = "Integrated"
     elif "ported" in normalized or "runtime" in normalized:
         group = "runtime_ported"
-        label = humanize(integration)
+        label = "Runtime ported"
     else:
         group = "profile"
-        label = humanize(integration) if integration else "Profile only"
+        label = "Profile only"
 
     return {
         "group": group,
@@ -651,11 +654,18 @@ def variant_data(
 def cuda_label(value: str | None) -> str | None:
     if not value:
         return None
-    normalized = value.lower()
-    match = re.fullmatch(r"cu(\d{2,3})", normalized)
+    normalized = value.lower().replace("-", "_")
+    if normalized == "cpu":
+        return "CPU"
+    if normalized == "prepare_only":
+        return "Prepare-only"
+    match = re.fullmatch(r"cu(\d{2,3})(_or_newer|_recommended)?", normalized)
     if match:
         digits = match.group(1)
-        return f"CUDA {digits[:-1]}.{digits[-1]}"
+        version = f"{digits[:-1]}.{digits[-1]}"
+        if match.group(2) == "_or_newer":
+            return f"CUDA {version}+"
+        return f"CUDA {version}"
     if normalized.startswith("cuda"):
         return value.upper().replace("CUDA", "CUDA ").replace("  ", " ").strip()
     return humanize(value)
@@ -1068,7 +1078,14 @@ def paper_media_for(model_id: str, docs: dict[str, Any]) -> tuple[dict[str, Any]
     curated_figures = docs.get("figures") if isinstance(docs.get("figures"), list) else []
     if curated_figures:
         figures = curated_figures
-    cleaned_figures = [item for item in figures if isinstance(item, dict) and item.get("src")]
+    cleaned_figures = [
+        item
+        for item in figures
+        if isinstance(item, dict)
+        and item.get("src")
+        and item.get("kind") != "video"
+        and not str(item.get("src") or "").lower().endswith((".mp4", ".webm", ".mov", ".m4v"))
+    ]
     return paper, cleaned_figures
 
 

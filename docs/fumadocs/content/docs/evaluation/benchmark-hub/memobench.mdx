@@ -1,63 +1,23 @@
 ---
 title: MemoBench
-description: "Visual-memory benchmark for world generation: 360 clips under the Visible → Disappeared → Reappear paradigm with automated + VQA scoring."
+description: "Harvard / MIT visual-memory bench: 360 V-D-R clips, automated metrics plus SAM-3 ORS and VQA. WorldFoundry vendors Step 1; it does not invent a board."
 ---
 
-## About
+MemoBench (Harvard, with MIT and MIT-IBM Watson AI Lab) diagnoses **visual memory** in world generators with a Visible → Disappeared → Reappear paradigm: the target is visible while a physical process runs (V), the camera pans away while the process continues off-screen (D), then the camera returns and the model must regenerate the object in its **updated** state (R). The suite is **360 ground-truth clips** (196 synthetic + 164 real) with camera trajectories and depth.
 
-**Publisher:** Harvard University (with MIT & MIT-IBM Watson AI Lab)
+Scoring has three layers:
 
-MemoBench diagnoses visual memory in world generation models through a disappear-and-reappear paradigm: a target object is visible and undergoing a physical process (V), the camera pans away while the process continues off-screen (D), and the camera returns — the model must regenerate the object in its correctly *updated* state (R). The suite curates 360 ground-truth clips (196 synthetic + 164 real-world) with camera trajectories and depth maps, and scores models with automated metrics (quality, motion, DINOv2 identity, geometric consistency, camera controllability, ground-truth PSNR/SSIM/LPIPS), a SAM-3-based Object Revisit Score, and VQA-based reasoning pillars.
+- **Step 1 automated** — CLIP-IQA+ / LAION aesthetic, optical-flow smoothness, DINOv2 identity, geometric consistency, camera controllability, ImageReward, GT PSNR/SSIM/LPIPS.
+- **ORS** — SAM-3 Object Revisit Score.
+- **VQA** — instruction following, object/background, continuity of memory, physics adherence (Gemini or a compatible VLM).
 
-WorldFoundry vendors the MemoBench runtime in tree; the runner can execute the vendored Step 1 automated-metric script over generated frames, while ORS (SAM-3) and VQA (Gemini or compatible VLM) remain explicit external stages. Caller-provided Step 1 / ORS / VQA / leaderboard outputs are normalized into the unified scorecard.
+`memobench_average` is the mean over available normalized components. Code: [MemoBench-Team/MemoBench](https://github.com/MemoBench-Team/MemoBench).
 
-Official references:
+WorldFoundry **vendors the runtime** and can run Step 1 over `--generated-synthetic-dir` / `--generated-real-dir`. ORS and VQA stay explicit external stages. Official CSV (`eval_csv`, `ors_scores.csv`, VQA, `leaderboard.csv`) can be imported.
 
-- Official repository: [MemoBench-Team/MemoBench](https://github.com/MemoBench-Team/MemoBench)
+<BenchmarkPageSections id="memobench" locale="en" />
 
-## Evaluation protocol
-
-Three-phase clips define per-clip V-D-R boundaries that are rescaled to the generated video's frame count at evaluation time. `--run-official` executes the vendored Step 1 automated metrics over `--generated-synthetic-dir` / `--generated-real-dir` (or a single `--generated-artifact-dir`), with `--mode both|synthetic|real`. `official-validation` instead normalizes existing MemoBench CSV outputs (Step 1 metrics, `ors_scores.csv`, VQA, or `leaderboard.csv`).
-
-Primary metric: `memobench_average`.
-
-| Metric | Meaning | Direction |
-| --- | --- | --- |
-| `visual_quality` | CLIP-IQA+ and LAION aesthetic quality over the full video. | Higher is better |
-| `motion_smoothness` | Optical-flow temporal coherence over visible and reappear phases. | Higher is better |
-| `object_identity_consistency` | DINOv2 object-centric identity consistency after reappearance. | Higher is better |
-| `geo3d_consistency` | Depth-based geometric consistency across visible and reappear phases. | Higher is better |
-| `camera_controllability` | Alignment between generated and target camera motion. | Higher is better |
-| `image_reward_score` | Human-preference alignment score from the ImageReward path. | Higher is better |
-| `object_revisit_score` | SAM-3 text-prompted detection score for target-object reappearance. | Higher is better |
-| `gt_all_psnr` | PSNR against ground-truth frames across all phases. | Higher is better |
-| `gt_all_ssim` | SSIM against ground-truth frames across all phases. | Higher is better |
-| `gt_all_lpips` | LPIPS against ground-truth frames across all phases. | Lower is better |
-| `instruction_following` | VQA pass rate for requested camera movements and events. | Higher is better |
-| `object_background` | VQA pass rate for object identity and background consistency. | Higher is better |
-| `continuity_of_memory` | VQA pass rate for preserving target-object state while out of frame. | Higher is better |
-| `physics_adherence` | VQA pass rate for plausible lighting, shadows, and motion. | Higher is better |
-| `memobench_average` | Mean over available normalized MemoBench component metrics. | Higher is better |
-
-## Data and artifact layout
-
-In-tree paths:
-
-```text
-worldfoundry/data/benchmarks/tasks/external/memobench.yaml
-worldfoundry/evaluation/tasks/execution/runners/memobench/runtime/memobench
-```
-
-```text
-.../runners/memobench/runtime/memobench                     # vendored runtime
-worldfoundry/data/benchmarks/assets/memobench/sample_results.csv   # bundled sample results
-${WORLDFOUNDRY_MEMOBENCH_GENERATED_SYNTHETIC_DIR}/          # generated frames, synthetic suite
-${WORLDFOUNDRY_MEMOBENCH_GENERATED_REAL_DIR}/               # generated frames, real-world suite
-```
-
-## Run the benchmark
-
-Catalog-recorded validation command:
+## How to run
 
 ```bash
 worldfoundry-eval zoo benchmark-run \
@@ -65,37 +25,14 @@ worldfoundry-eval zoo benchmark-run \
   --mode official-validation \
   --official-results-path <official_results.csv> \
   --generated-artifact-dir <generated_frames> \
-  --output-dir <out> \
+  --output-dir tmp/memobench/official-validation \
   --json
 ```
 
-## Checkpoints and environment variables
+`--run-official` executes vendored Step 1 (`--mode both|synthetic|real`). V-D-R boundaries rescale to the generated frame count. Env: `WORLDFOUNDRY_MEMOBENCH_RESULTS_PATH`, `WORLDFOUNDRY_MEMOBENCH_GENERATED_SYNTHETIC_DIR`, `WORLDFOUNDRY_MEMOBENCH_GENERATED_REAL_DIR`. Shared stack: `video_quality_dino_motion_stack`.
 
-- `WORLDFOUNDRY_MEMOBENCH_ROOT`: Optional override pointing at a local benchmark runtime/repository root.
-- `WORLDFOUNDRY_MEMOBENCH_RESULTS_PATH`: Default path the importer reads official result exports from when `--official-results-path` is not passed.
-- `WORLDFOUNDRY_GENERATED_ARTIFACT_DIR`: Directory containing the candidate generated artifacts to score or import against.
-- `WORLDFOUNDRY_MEMOBENCH_GENERATED_SYNTHETIC_DIR`: Generated frames for the synthetic suite.
-- `WORLDFOUNDRY_MEMOBENCH_GENERATED_REAL_DIR`: Generated frames for the real-world suite.
+In-tree pointers: `worldfoundry/data/benchmarks/tasks/external/memobench.yaml`, `worldfoundry/evaluation/tasks/execution/runners/memobench/runtime/memobench`.
 
-This benchmark reuses the shared base-model dependency stack: `video_quality_dino_motion_stack`.
-
-## Outputs
-
-The run writes into `--output-dir`:
-
-- `scorecard.json`: WorldFoundry scorecard with the metric values recorded above.
-- `raw_metric_table.jsonl`: Metric rows backing the scorecard.
-- `per_sample_scores.jsonl`: Per-sample rows when the result source exposes sample-level values.
-- `eval_csv`
-- `ors_scores.csv`
-- `leaderboard.csv`
-
-Scorecard primary key: `memobench_average` (leaderboard key `memobench_average`), stored in `scorecard.json`.
-
-## Limitations
-
-- ORS requires SAM-3 assets and VQA requires Gemini or compatible VLM credentials; both are external stages, never mocked into evidence.
-- Leaderboard parity requires generated frames for the complete synthetic and real suites plus Step 1, ORS, VQA, and leaderboard evidence.
-- Partial-suite automated runs are development signals, not MemoBench leaderboard numbers.
+Outputs include `scorecard.json` (primary `memobench_average`), `eval_csv`, `ors_scores.csv`, and `leaderboard.csv` when present.
 
 [← Benchmark Hub](/docs/evaluation/benchmark-hub)

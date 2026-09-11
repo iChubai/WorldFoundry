@@ -1,32 +1,46 @@
 ---
 title: "Echo-Memory"
-description: "Echo-Memory Context K=1 is one identity in JD's Echo-Memory family — a controlled study of how memory mechanisms affect interactive, action-conditioned world models. This identity is permanently bound to the context_k1/epoch-0.safetensors…"
-pageSource: generated
+description: "JD Echo-Memory identity permanently pinned to context_k1 (K=1). Wan2.1-1.3B. CC-BY-4.0. 2026-07-20 A100 clip is historical — native CUDA artifact pending."
+modelId: "echo-memory-context-k1"
+pageSource: authored
 ---
 
-**Publisher:** JD.com (Joy Future Academy) · Company
-image → video
-[Echo-Memory: A Controlled Study of Memory in Action World Models](https://arxiv.org/abs/2606.09803) (2026)
+Echo-Memory Context K=1 is **one identity** in JD's Echo-Memory family: a Wan2.1-T2V-1.3B interactive world that differs from siblings **only** in memory. This card is permanently bound to `context_k1/epoch-0.safetensors` — each new chunk conditions on **K=1** context frame. You do **not** pick a memory method at runtime. Pipeline: `EchoMemoryContextK1Pipeline`. Aliases `echo-context-k1` and `echo-memory` resolve here.
 
-Echo-Memory Context K=1 is one identity in JD's Echo-Memory family — a controlled study of how memory mechanisms affect interactive, action-conditioned world models. This identity is permanently bound to the context_k1/epoch-0.safetensors checkpoint in the paper-primary release tier: it is the minimal context baseline — each new chunk conditions on only K=1 context frame. In this catalog it is the one Echo-Memory identity whose checkpoint is served from the official Hugging Face main branch; native structural loading covers the released 1185-tensor DiT, and a fresh two-chunk CUDA artifact remains pending after the NativeDiffusionPipeline cutover.
+<ModelPaperFigures modelId="echo-memory-context-k1" locale="en" />
 
-<figure className="wf-recipe-media is-diagram">
-  <img src="/models/echo-memory-context-k1/paper.png" alt="Echo-Memory: A Controlled Study of Memory in Action World Models" />
-  <figcaption>Echo-Memory: A Controlled Study of Memory in Action World Models</figcaption>
-</figure>
+Paper: [arXiv 2606.09803](https://arxiv.org/abs/2606.09803). Project: [echo-team-joy-future-academy-jd.github.io/Echo-Memory](https://echo-team-joy-future-academy-jd.github.io/Echo-Memory/). Code: [Echo-Team-Joy-Future-Academy-JD/Echo-Memory](https://github.com/Echo-Team-Joy-Future-Academy-JD/Echo-Memory). Weights: `Echo-Team/Echo-Memory` (**cc-by-4.0**) plus `Wan-AI/Wan2.1-T2V-1.3B` (**apache-2.0**).
+
+A **2026-07-20** A100 artifact **predates** the NativeDiffusionPipeline cutover and is **historical only**. Fresh CUDA artifact, official sample parity, and bench scoring are **pending**. Visual quality is research-preview (1.3B).
 
 <ModelCommandBuilder modelId="echo-memory-context-k1" locale="en" />
 
-## Architecture
+## What it is for
 
-Per the Echo-Memory release (arXiv 2606.09803), every variant is a Wan2.1-T2V-1.3B-based interactive world model that differs only in its memory mechanism. In WorldFoundry each variant is an independent model identity pinned to one checkpoint: the recipe is assembled by NativeDiffusionPipeline from shared Wan components plus the framework-owned frozen-context strategy — no external backend. The sampler uses target-noise plus clean-context suffix, target-only CFG, context relocking after every solver step, and target-only decode.
+Echo memory-context K1 slots, not the Infinity long-video card.
 
-## Usage notes
+Launch `worldfoundry-eval run echo-memory-context-k1` with `--pipeline.task-profile image-to-video`.
 
-The checkpoint downloads from Echo-Team/Echo-Memory (cc-by-4.0) with the Wan2.1-T2V-1.3B base (apache-2.0). The 2026-07-20 A100 artifact predates the NativeDiffusionPipeline cutover and is retained as historical evidence only — treat fresh CUDA artifact validation as pending. Users do not select a memory method at runtime — each method is its own catalog identity.
+Score on [MemoBench](/docs/evaluation/benchmark-hub/memobench) — purpose-built for evaluating long-horizon memory in interactive world models.
 
-## Evaluation benchmarks
+## Runtime contract
 
-- [MemoBench](/docs/evaluation/benchmark-hub/memobench) — Purpose-built for evaluating long-horizon memory in interactive world models.
+Required: `prompt` and `image`; optional: `video`; `actions`: camera_trajectory; artifacts: `generated_world_video` and `echo-memory-context-k1.mp4`.
+
+| Knob | Default |
+| --- | --- |
+| Size | **640×352** |
+| Frames | **81** |
+| FPS | **15** |
+| Chunks | **2** |
+| Context frames | **1** |
+| Sample steps | **50** |
+| Sample shift | **5.0** |
+| Finetune | `Echo-Team/Echo-Memory` (`cc-by-4.0`) |
+| Backbone | `Wan-AI/Wan2.1-T2V-1.3B` (`apache-2.0`) |
+
+## Run in WorldFoundry
+
+Status: **Runner parity pending**. Unified environment `worldfoundry-unified-cu128` (Python 3.11, CUDA 12.8). Stage `Echo-Team/Echo-Memory`, `Wan-AI/Wan2.1-T2V-1.3B`, and `Echo-Team/Echo-Memory` among others locally — missing files fail at load, nothing is downloaded. Run `worldfoundry-eval run echo-memory-context-k1` with `--pipeline.task-profile image-to-video`. License: CC-BY-4.0 and apache-2.0. Catalog VRAM is unset.
 
 <ModelRelatedRecipes modelId="echo-memory-context-k1" locale="en" />

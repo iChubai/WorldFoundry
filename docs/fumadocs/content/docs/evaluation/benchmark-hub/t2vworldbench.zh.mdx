@@ -1,56 +1,19 @@
 ---
 title: T2VWorldBench
-description: WACV 2026 世界知识 T2V 评测：1,200 条 prompt 覆盖物理、自然、活动、文化、因果与物体六大知识类。
+description: "WACV 2026 的世界知识 T2V 评测：6 类 1,200 条 prompt。WorldFoundry 导入官方行；VLM 裁判仍在上游。"
 ---
 
-## 简介
+T2VWorldBench（圣何塞州立大学，联合 UC Berkeley、UW-Madison、UW 与桂林电子科大；WACV 2026）问的是文本生成视频模型能否用 **世界知识** 做事实生成。官方规模：**6 大类、60 子类、1,200 条 prompt** — 物理、自然、活动、文化、因果、物体知识。打分混合人工与 VLM。论文对 10 个前沿系统的评估发现，多数模型无法生成真正知识正确的视频。
 
-**发表机构：** San Jose State University（圣何塞州立大学，联合 UC Berkeley、UW-Madison、UW、桂林电子科技大学）
+`world_knowledge_average` 是已有类别分的均值。
 
-T2VWorldBench（WACV 2026）是第一个系统性评测文生视频模型能否利用世界知识进行事实性生成的框架。它覆盖 6 大类、60 个子类、1,200 条 prompt，涉及物理、自然、活动、文化、因果与物体知识，采用人工评估与 VLM 自动评审混合打分。对 10 个前沿 T2V 系统的评测发现多数模型无法生成真正知识正确的视频。
+论文：[T2VWorldBench](https://arxiv.org/abs/2507.18107)。代码：[magiclinux/world_knowledge](https://github.com/magiclinux/world_knowledge)。Prompt CSV 已内置；完整元数据 / 样例视频在 Drive。
 
-WorldFoundry 在仓内内置 runtime 源码，并归一化调用方提供的官方结果文件；完整官方 VLM 评测还需要上游 LLaVA runtime 与 Drive 托管的元数据。
+WorldFoundry **内置 runtime 源码并归一化官方结果文件**。完整官方 VLM 评测仍需上游 LLaVA runtime 与已就位的 Drive 资产。
 
-官方参考：
+<BenchmarkPageSections id="t2vworldbench" locale="zh" />
 
-- Paper: [arxiv.org/abs/2507.18107](https://arxiv.org/abs/2507.18107)
-- 官方仓库: [magiclinux/world_knowledge](https://github.com/magiclinux/world_knowledge)
-
-## 评测协议
-
-`official-validation` 把官方结果导出归一化为逐类别知识分与 `world_knowledge_average`（对可用类别求均值）。完整官方 runtime 执行需要 prompt 文件或仓内 prompt 元数据、生成视频与上游 LLaVA judge。
-
-主指标是 `world_knowledge_average`。
-
-| Metric | 含义 | 方向 |
-| --- | --- | --- |
-| `physics_knowledge` | T2VWorldBench physics（物理）世界知识得分。 | 越高越好 |
-| `nature_knowledge` | T2VWorldBench nature（自然）世界知识得分。 | 越高越好 |
-| `activity_knowledge` | T2VWorldBench activity（活动）世界知识得分。 | 越高越好 |
-| `culture_knowledge` | T2VWorldBench culture（文化）世界知识得分。 | 越高越好 |
-| `causality_knowledge` | T2VWorldBench causality（因果）世界知识得分。 | 越高越好 |
-| `object_knowledge` | T2VWorldBench object（物体）世界知识得分。 | 越高越好 |
-| `world_knowledge_average` | 可用世界知识类别的均值。 | 越高越好 |
-
-## 数据与产物布局
-
-WorldFoundry 仓内路径：
-
-```text
-worldfoundry/data/benchmarks/tasks/external/t2vworldbench.yaml
-worldfoundry/evaluation/tasks/execution/runners/t2vworldbench/runtime/t2vworldbench
-```
-
-```text
-worldfoundry/evaluation/tasks/execution/runners/t2vworldbench/runtime/t2vworldbench   # 内置 runtime
-${WORLDFOUNDRY_GENERATED_ARTIFACT_DIR}/                                                # 候选视频
-```
-
-官方 prompt CSV 已随公开仓库内置；完整元数据/样例视频托管在 Drive，需手工就位。
-
-## 运行评测
-
-目录 manifest 记录的 validation 命令：
+## 如何运行
 
 ```bash
 worldfoundry-eval zoo benchmark-run \
@@ -58,30 +21,14 @@ worldfoundry-eval zoo benchmark-run \
   --mode official-validation \
   --official-results-path <official_results.json> \
   --generated-artifact-dir <generated_videos> \
-  --output-dir <out> \
+  --output-dir tmp/t2vworldbench/official-validation \
   --json
 ```
 
-## 权重与环境变量
+默认导入：`WORLDFOUNDRY_T2VWORLDBENCH_RESULTS_PATH`。可选根：`WORLDFOUNDRY_T2VWORLDBENCH_ROOT`。仓内 prompt：`worldfoundry/data/benchmarks/assets/t2vworldbench/prompt/prompt.csv`。
 
-- `WORLDFOUNDRY_T2VWORLDBENCH_ROOT`: 可选覆盖项，指向本地 benchmark runtime / 仓库根目录。
-- `WORLDFOUNDRY_T2VWORLDBENCH_RESULTS_PATH`: 未显式传 `--official-results-path` 时，导入器默认从该路径读取官方结果导出文件。
-- `WORLDFOUNDRY_GENERATED_ARTIFACT_DIR`: 存放待评测生成产物（候选视频/rollout）的目录。
+仓内指针：`worldfoundry/data/benchmarks/tasks/external/t2vworldbench.yaml`，`worldfoundry/evaluation/tasks/execution/runners/t2vworldbench/runtime/t2vworldbench`。
 
-## 输出文件
-
-运行会在 `--output-dir` 下写出：
-
-- `scorecard.json`: WorldFoundry 统一 scorecard，记录上表中的指标值。
-- `benchmark_contract.json`: 本次运行的 benchmark contract 记录（输入、模式、来源信息）。
-- `raw_metric_table.jsonl`: 支撑 scorecard 的原始 metric 行。
-
-Scorecard 主键：`world_knowledge_average`（leaderboard key `world_knowledge_average`），写入 `scorecard.json`。
-
-## 边界与限制
-
-- 完整验证需要生成视频与手工就位的官方 Drive 元数据/样例资产。
-- 与 leaderboard 对齐需要上游 VLM runtime 与归一化官方结果文件。
-- 在完整官方 runtime 对齐验证之前，scorecard 只是非 leaderboard 的搭建证据。
+产物包括 `scorecard.json`（主键 `world_knowledge_average`）与 `raw_metric_table.jsonl`。
 
 [← 返回 Benchmark Hub](/zh/docs/evaluation/benchmark-hub)

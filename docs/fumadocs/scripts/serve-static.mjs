@@ -2,6 +2,7 @@ import { createReadStream } from 'node:fs';
 import { stat } from 'node:fs/promises';
 import { createServer } from 'node:http';
 import { extname, resolve, sep } from 'node:path';
+import { docsMovedRedirects } from '../lib/docs-moved-redirects.mjs';
 
 const root = resolve(process.cwd(), 'out');
 const args = process.argv.slice(2);
@@ -131,6 +132,8 @@ function sendFile(request, response, file, statusCode = 200) {
   else createReadStream(absolute).pipe(response);
 }
 
+const staticRedirects = new Map(docsMovedRedirects);
+
 const server = createServer(async (request, response) => {
   if (request.method !== 'GET' && request.method !== 'HEAD') {
     response.writeHead(405, { Allow: 'GET, HEAD' });
@@ -147,6 +150,13 @@ const server = createServer(async (request, response) => {
   } catch {
     response.writeHead(400);
     response.end('Bad Request');
+    return;
+  }
+
+  const redirectTo = staticRedirects.get(pathname.replace(/\/$/, '') || '/');
+  if (redirectTo) {
+    response.writeHead(308, { Location: redirectTo });
+    response.end();
     return;
   }
 

@@ -38,7 +38,7 @@ Most runs follow the same shape even when the model or benchmark changes: make t
 ## Prerequisites
 
 - **OS:** Linux recommended for GPU inference and most benchmark runners
-- **Install track:** use `python -m pip install -e ".[tui]"` for lightweight CPU catalog/CLI/TUI work; use `bash scripts/setup/bootstrap_worldfoundry.sh` for the CUDA conda runtime. Optional extras do not select a CUDA PyTorch wheel index.
+- **Install track:** use `python -m pip install -e ".[tui]"` for lightweight CPU catalog/CLI/TUI work; use `bash scripts/setup/bootstrap_worldfoundry.sh` for the CUDA conda runtime. That bootstrap is the official first-clone script; it already calls `scripts/setup/unified_install.sh` to create the unified GPU env, so you do not start from `unified_install.sh` unless you are only refreshing that env. Optional extras do not select a CUDA PyTorch wheel index.
 - **Optional native kernels:** `packages/worldfoundry-native-kernels` is a separate, ABI-sensitive wheel. CPU-only hosts should skip it; GPU hosts must build it with `--no-isolation` inside the target PyTorch environment.
 - **Python:** 3.10+; the GPU path manages it through the WorldFoundry unified conda environment
 - **Optional:** CUDA-capable GPU, Hugging Face token for gated checkpoints
@@ -49,15 +49,15 @@ Most runs follow the same shape even when the model or benchmark changes: make t
 
 ## 1. Environment
 
-The commands below describe the GPU runtime path. The bootstrap step creates the default WorldFoundry runtime and writes a local shell file with the paths used by the CLI, Studio, and evaluation runners. Always source that file before running commands in a new shell.
+The commands below describe the GPU runtime path. The official first-clone command is `bash scripts/setup/bootstrap_worldfoundry.sh`. It creates the default WorldFoundry runtime and writes a local shell file with the paths used by the CLI, Studio, and evaluation runners. Always source that file before running commands in a new shell.
 
 <Tabs items={['Default', 'Shared paths', 'Verify']}>
   <Tab>
 
-Start from the repository root:
+Start from the repository root. Model demo videos are served from GitHub CDN; docs development does not need `git lfs pull`.
 
 ```bash
-git clone https://github.com/OpenEnvision/WorldFoundry.git
+GIT_LFS_SKIP_SMUDGE=1 git clone https://github.com/OpenEnvision/WorldFoundry.git
 cd WorldFoundry
 
 bash scripts/setup/bootstrap_worldfoundry.sh
@@ -173,7 +173,17 @@ worldfoundry-eval zoo benchmarks --json
 worldfoundry-eval zoo model-download --model-id <model-id> --check-local --json
 ```
 
-Run model inference from the command line:
+The canonical first inference command for reproducible and documented runs is `worldfoundry-eval run <id> --pipeline.task-profile …`. Copy `<id>` and the task profile from the model page; `worldfoundry-eval run <id> --help` lists the typed flags.
+
+```bash
+worldfoundry-eval run <model-id> \
+  --pipeline.task-profile <task-profile> \
+  --output-dir tmp/worldfoundry_infer/<model-id>
+```
+
+**Which command.** Everyday reproducible runs and the commands on model pages use `worldfoundry-eval run`. Use `python -m worldfoundry.studio.workspace_job infer` only for Workspace visual smoke. See [CLI entrypoints](/docs/reference/cli#entrypoints).
+
+Workspace visual smoke (the same job path the Studio UI submits):
 
 ```bash
 python -m worldfoundry.studio.workspace_job infer \
@@ -183,20 +193,7 @@ python -m worldfoundry.studio.workspace_job infer \
   --device cuda
 ```
 
-For image-to-video or other conditioned models:
-
-```bash
-python -m worldfoundry.studio.workspace_job infer \
-  --model-id <model-id> \
-  --input-path /path/to/input.png \
-  --prompt "camera moves forward through the scene" \
-  --frames 81 \
-  --steps 30 \
-  --seed 42 \
-  --output-dir tmp/worldfoundry_infer/<model-id>
-```
-
-The full command map is in [CLI](/docs/reference/cli).
+The full command map is in [CLI](/docs/reference/cli). Run-status labels are in [Run status](/docs/guides/run-status).
 
 ## 5. Inference
 
@@ -226,11 +223,9 @@ More details: [Run inference](/docs/guides/inference) and [Studio](/docs/guides/
 
 A benchmark run needs three concrete inputs. If any one is missing, the runner should stop with a blocked scorecard rather than silently producing a leaderboard-looking number.
 
-| Input | Meaning |
-| --- | --- |
-| Benchmark assets | Prompt/task metadata, reference files, official result files, judge credentials, simulator assets, or metric checkpoints. |
-| Candidate artifacts | Videos, frames, rollouts, traces, or official-shaped result dumps produced by the model. |
-| Runner mode | `official-validation` imports existing official-shaped results; `official-run` computes scores from generated artifacts. |
+- **Benchmark assets** — Prompt/task metadata, reference files, official result files, judge credentials, simulator assets, or metric checkpoints.
+- **Candidate artifacts** — Videos, frames, rollouts, traces, or official-shaped result dumps produced by the model.
+- **Runner mode** — `official-validation` imports existing official-shaped results; `official-run` computes scores from generated artifacts.
 
 <Tabs items={['Official validation', 'Official run', 'One-shot run']}>
   <Tab>
@@ -289,5 +284,6 @@ worldfoundry-eval run \
   <Card title="Local assets" description="Checkpoint sources, Hugging Face cache paths, and readiness checks." href="/docs/guides/local-assets" />
   <Card title="TUI" description="Interactive model and benchmark picker that prints runnable commands." href="/docs/guides/tui" />
   <Card title="CLI" description="Full command reference for discovery, inference, scoring, and reporting." href="/docs/reference/cli" />
+  <Card title="Run status" description="Reader labels for Verified, Runner parity pending, Static load only, and Planned." href="/docs/guides/run-status" />
   <Card title="Benchmark Hub" description="Benchmark-specific data layouts, metric assets, and run commands." href="/docs/evaluation/benchmark-hub" />
 </Cards>

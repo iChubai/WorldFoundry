@@ -21,10 +21,8 @@ worldfoundry-eval metric validate fid clip_score has_artifact:generated_artifact
 
 Registry key 大小写不敏感，下划线会归一化为连字符（`clip_score`、`clip-score`、`clipscore` 等价）。参数化 id 使用前缀：
 
-| 模式 | 示例 | 含义 |
-| --- | --- | --- |
-| `has_artifact:<name>` | `has_artifact:generated_artifact` | 指定 artifact 存在时返回 1。 |
-| `numeric:<name>` | `numeric:reward` | 从 result metadata/scores 读取名为 `<name>` 的数值字段。 |
+- `has_artifact:<name>` — 示例：`has_artifact:generated_artifact`。指定 artifact 存在时返回 1。
+- `numeric:<name>` — 示例：`numeric:reward`。从 result metadata/scores 读取名为 `<name>` 的数值字段。
 
 ### Python API
 
@@ -60,40 +58,40 @@ metric = create_existing_results_metric(
 
 比较 reference 与 generated 图像集合的 set-level 指标。Torch-fidelity 系列（`fid/`、`kid/`、`inception_score/` 等）共用 `_shared/vendor/torch_fidelity/`；独立实现包括 Clean-FID、CMMD、IPR、Vendi、Rarity 以及 `fwd/vendor/pytorchfwd`。
 
-| 指标 | 别名 | 方向 | 主要 API |
-| --- | --- | --- | --- |
-| inception_score | is, isc | ↑ | `compute_inception_score(images_dir)` |
-| fid | frechet-inception-distance, clip-fid, clip_fid, fid-vid, fid_vid, fvid, swav-fid, swav_fid, scene-fid, scene_fid, object-crop-fid | ↓ | `compute_fid(...)`；变体通过 `feature_extractor` 或 `compute_scene_fid` |
-| kid | kernel-inception-distance | ↓ | `compute_kid(...)` |
-| precision_recall | prc, precision-recall | ↑ | `compute_precision_recall(...)` |
-| fwd | frechet-wavelet-distance | ↓ | `compute_fwd(...)` |
-| cmmd | clip-mmd, clip_mmd | ↓ | `compute_cmmd(reference_dir, eval_dir)` |
-| ppl | perceptual-path-length, perceptual_path_length | ↓ | `compute_ppl(...)` |
-| mind | mid, monge-inception-distance, monge_inception_distance | ↓ | `compute_mind(...)` |
-| clean_fid | clean-fid, improved-fid | ↓ | `compute_clean_fid(reference, generated)` |
-| vendi_score | vendi-score, vendi | ↑ | `compute_vendi_score(...)` |
-| improved_precision_recall | ipr, alpha-precision, beta-recall, realism_score, ipr-realism, realism | ↑ | `compute_improved_precision_recall(...)`、`compute_realism_score(...)` |
-| rarity_score | rarity-score, rs | ↑ | `compute_mean_rarity_score(...)` |
-| facescore | face-score, face_score | ↑ | `compute_facescore(...)` |
-| facesim_cur | face-sim-cur, facesim-curricular | ↑ | `compute_facesim_cur(...)`（OpenS2V） |
-| gme_score | gmescore, gme-score | ↑ | `compute_gme_score(...)`（OpenS2V） |
-| nexus_score | nexusscore, nexus-score | ↑ | `compute_nexus_score(...)`（OpenS2V） |
-| natural_score | naturalscore, natural-score | ↑ | `compute_natural_score(...)`（OpenS2V；需 GPT API） |
-| artscore | art-score, art_score | ↑ | `load_artscore_model(...)` |
-| trend | trend-jsd | ↓ | `compute_trend(...)` |
-| fld | feature-likelihood-divergence, fls | ↓ | `compute_fld(...)` |
-| multimodal_mid | mid-metric, mutual-information-divergence | ↑ | `compute_multimodal_mid(...)` |
-| fjd | frechet-joint-distance | ↓ | `compute_fjd_from_joint_embeddings(...)` |
-| crosslid | cross-lid | ↓ | `compute_crosslid(...)` |
-| cfid | conditional-fid | ↓ | `compute_cfid(...)` |
-| ssd | semantic-similarity-distance | ↓ | `compute_ssd(...)` |
-| linear_separability | linear-separability, stylegan-ls | ↑ | `compute_linear_separability(...)` |
-| rke | renyi-kernel-entropy, rke-mc | ↑ | `compute_rke(features)`, `compute_rrke(ref, gen)` |
-| fdd | frechet-denoised-distance | ↓ | `compute_fdd(reference_dir, generated_dir)` |
-| cis | conditional-inception-score, bcis, wcis | ↑ | `compute_cis(class_probs)` |
-| rnd | rnd-score, random-network-distillation | ↑ | `compute_rnd(features)` |
-| attribute_sad | sad, attribute-sad | ↓ | `compute_attribute_sad(hcs_real, hcs_gen, text_list)` |
-| attribute_pad | pad, attribute-pad | ↓ | `compute_attribute_pad(hcs_real, hcs_gen, text_list)` |
+<KvCatalog heading="指标" vars rows={[
+    { name: "inception_score", hintLabel: "方向", hint: "↑", description: <><code>compute_inception_score(images_dir)</code></>, reads: [{ label: "别名", value: "is, isc" }] },
+    { name: "fid", hintLabel: "方向", hint: "↓", description: <><code>compute_fid(...)</code>{"；变体通过 "}<code>feature_extractor</code>{" 或 "}<code>compute_scene_fid</code></>, reads: [{ label: "别名", value: "frechet-inception-distance, clip-fid, clip_fid, fid-vid, fid_vid, fvid, swav-fid, swav_fid, scene-fid, scene_fid, object-crop-fid" }] },
+    { name: "kid", hintLabel: "方向", hint: "↓", description: <><code>compute_kid(...)</code></>, reads: [{ label: "别名", value: "kernel-inception-distance" }] },
+    { name: "precision_recall", hintLabel: "方向", hint: "↑", description: <><code>compute_precision_recall(...)</code></>, reads: [{ label: "别名", value: "prc, precision-recall" }] },
+    { name: "fwd", hintLabel: "方向", hint: "↓", description: <><code>compute_fwd(...)</code></>, reads: [{ label: "别名", value: "frechet-wavelet-distance" }] },
+    { name: "cmmd", hintLabel: "方向", hint: "↓", description: <><code>compute_cmmd(reference_dir, eval_dir)</code></>, reads: [{ label: "别名", value: "clip-mmd, clip_mmd" }] },
+    { name: "ppl", hintLabel: "方向", hint: "↓", description: <><code>compute_ppl(...)</code></>, reads: [{ label: "别名", value: "perceptual-path-length, perceptual_path_length" }] },
+    { name: "mind", hintLabel: "方向", hint: "↓", description: <><code>compute_mind(...)</code></>, reads: [{ label: "别名", value: "mid, monge-inception-distance, monge_inception_distance" }] },
+    { name: "clean_fid", hintLabel: "方向", hint: "↓", description: <><code>compute_clean_fid(reference, generated)</code></>, reads: [{ label: "别名", value: "clean-fid, improved-fid" }] },
+    { name: "vendi_score", hintLabel: "方向", hint: "↑", description: <><code>compute_vendi_score(...)</code></>, reads: [{ label: "别名", value: "vendi-score, vendi" }] },
+    { name: "improved_precision_recall", hintLabel: "方向", hint: "↑", description: <><code>compute_improved_precision_recall(...)</code>{"、"}<code>compute_realism_score(...)</code></>, reads: [{ label: "别名", value: "ipr, alpha-precision, beta-recall, realism_score, ipr-realism, realism" }] },
+    { name: "rarity_score", hintLabel: "方向", hint: "↑", description: <><code>compute_mean_rarity_score(...)</code></>, reads: [{ label: "别名", value: "rarity-score, rs" }] },
+    { name: "facescore", hintLabel: "方向", hint: "↑", description: <><code>compute_facescore(...)</code></>, reads: [{ label: "别名", value: "face-score, face_score" }] },
+    { name: "facesim_cur", hintLabel: "方向", hint: "↑", description: <><code>compute_facesim_cur(...)</code>{"（OpenS2V）"}</>, reads: [{ label: "别名", value: "face-sim-cur, facesim-curricular" }] },
+    { name: "gme_score", hintLabel: "方向", hint: "↑", description: <><code>compute_gme_score(...)</code>{"（OpenS2V）"}</>, reads: [{ label: "别名", value: "gmescore, gme-score" }] },
+    { name: "nexus_score", hintLabel: "方向", hint: "↑", description: <><code>compute_nexus_score(...)</code>{"（OpenS2V）"}</>, reads: [{ label: "别名", value: "nexusscore, nexus-score" }] },
+    { name: "natural_score", hintLabel: "方向", hint: "↑", description: <><code>compute_natural_score(...)</code>{"（OpenS2V；需 GPT API）"}</>, reads: [{ label: "别名", value: "naturalscore, natural-score" }] },
+    { name: "artscore", hintLabel: "方向", hint: "↑", description: <><code>load_artscore_model(...)</code></>, reads: [{ label: "别名", value: "art-score, art_score" }] },
+    { name: "trend", hintLabel: "方向", hint: "↓", description: <><code>compute_trend(...)</code></>, reads: [{ label: "别名", value: "trend-jsd" }] },
+    { name: "fld", hintLabel: "方向", hint: "↓", description: <><code>compute_fld(...)</code></>, reads: [{ label: "别名", value: "feature-likelihood-divergence, fls" }] },
+    { name: "multimodal_mid", hintLabel: "方向", hint: "↑", description: <><code>compute_multimodal_mid(...)</code></>, reads: [{ label: "别名", value: "mid-metric, mutual-information-divergence" }] },
+    { name: "fjd", hintLabel: "方向", hint: "↓", description: <><code>compute_fjd_from_joint_embeddings(...)</code></>, reads: [{ label: "别名", value: "frechet-joint-distance" }] },
+    { name: "crosslid", hintLabel: "方向", hint: "↓", description: <><code>compute_crosslid(...)</code></>, reads: [{ label: "别名", value: "cross-lid" }] },
+    { name: "cfid", hintLabel: "方向", hint: "↓", description: <><code>compute_cfid(...)</code></>, reads: [{ label: "别名", value: "conditional-fid" }] },
+    { name: "ssd", hintLabel: "方向", hint: "↓", description: <><code>compute_ssd(...)</code></>, reads: [{ label: "别名", value: "semantic-similarity-distance" }] },
+    { name: "linear_separability", hintLabel: "方向", hint: "↑", description: <><code>compute_linear_separability(...)</code></>, reads: [{ label: "别名", value: "linear-separability, stylegan-ls" }] },
+    { name: "rke", hintLabel: "方向", hint: "↑", description: <><code>compute_rke(features)</code>{", "}<code>compute_rrke(ref, gen)</code></>, reads: [{ label: "别名", value: "renyi-kernel-entropy, rke-mc" }] },
+    { name: "fdd", hintLabel: "方向", hint: "↓", description: <><code>compute_fdd(reference_dir, generated_dir)</code></>, reads: [{ label: "别名", value: "frechet-denoised-distance" }] },
+    { name: "cis", hintLabel: "方向", hint: "↑", description: <><code>compute_cis(class_probs)</code></>, reads: [{ label: "别名", value: "conditional-inception-score, bcis, wcis" }] },
+    { name: "rnd", hintLabel: "方向", hint: "↑", description: <><code>compute_rnd(features)</code></>, reads: [{ label: "别名", value: "rnd-score, random-network-distillation" }] },
+    { name: "attribute_sad", hintLabel: "方向", hint: "↓", description: <><code>compute_attribute_sad(hcs_real, hcs_gen, text_list)</code></>, reads: [{ label: "别名", value: "sad, attribute-sad" }] },
+    { name: "attribute_pad", hintLabel: "方向", hint: "↓", description: <><code>compute_attribute_pad(hcs_real, hcs_gen, text_list)</code></>, reads: [{ label: "别名", value: "pad, attribute-pad" }] }
+  ]} />
 
 ```python
 from worldfoundry.evaluation.tasks.metrics import (
@@ -127,11 +125,11 @@ vendi = compute_vendi_score(feature_matrix)
 
 ### 视频分布（`family=distribution`，video tags）
 
-| 指标 | 别名 | 方向 | 主要 API |
-| --- | --- | --- | --- |
-| fvd | frechet-video-distance | ↓ | `compute_fvd_from_numpy(...)`、`compute_fvd_from_frame_dirs(...)` |
-| fvmd | frechet-video-motion-distance | ↓ | `compute_fvmd(reference_videos, generated_videos)` |
-| jedi | jedi-mmd, video-jedi | ↓ | `compute_jedi_from_features(...)`、`JEDiMetric(...)` |
+<KvCatalog heading="指标" vars rows={[
+    { name: "fvd", hintLabel: "方向", hint: "↓", description: <><code>compute_fvd_from_numpy(...)</code>{"、"}<code>compute_fvd_from_frame_dirs(...)</code></>, reads: [{ label: "别名", value: "frechet-video-distance" }] },
+    { name: "fvmd", hintLabel: "方向", hint: "↓", description: <><code>compute_fvmd(reference_videos, generated_videos)</code></>, reads: [{ label: "别名", value: "frechet-video-motion-distance" }] },
+    { name: "jedi", hintLabel: "方向", hint: "↓", description: <><code>compute_jedi_from_features(...)</code>{"、"}<code>JEDiMetric(...)</code></>, reads: [{ label: "别名", value: "jedi-mmd, video-jedi" }] }
+  ]} />
 
 ```python
 import numpy as np
@@ -161,19 +159,19 @@ jedi = compute_jedi_from_features(train_features, test_features)
 
 reference 与 generated 图像之间的成对相似度（条件一致性、重建质量）。
 
-| 指标 | 别名 | 方向 | 主要 API |
-| --- | --- | --- | --- |
-| lpips | — | ↓ | `compute_lpips(ref_image, gen_image)` |
-| ssim | — | ↑ | `compute_ssim(...)` |
-| ms_ssim | ms-ssim | ↑ | `compute_ms_ssim(...)` |
-| psnr | — | ↑ | `compute_psnr(...)` |
-| dino_similarity | dino-similarity, dino_sim | ↑ | `compute_dino_similarity(...)` |
-| dreamsim | dream-sim | ↓ | `compute_dreamsim(...)` |
-| cpbd | cpbd-sharpness | ↑ | `compute_cpbd(image)` |
-| fsim | feature-similarity-index, fsimc | ↑ | `compute_fsim(ref_image, gen_image)` |
-| mask_accuracy | mask-accuracy | ↑ | `compute_mask_accuracy(...)` |
-| object_detection | object-detection | ↑ | `compute_object_detection_success_rate(...)` |
-| lqs | layout-quality-score | ↑ | `compute_lqs(groundtruth_layout, predicted_layout)` |
+<KvCatalog heading="指标" vars rows={[
+    { name: "lpips", hintLabel: "方向", hint: "↓", description: <><code>compute_lpips(ref_image, gen_image)</code></> },
+    { name: "ssim", hintLabel: "方向", hint: "↑", description: <><code>compute_ssim(...)</code></> },
+    { name: "ms_ssim", hintLabel: "方向", hint: "↑", description: <><code>compute_ms_ssim(...)</code></>, reads: [{ label: "别名", value: "ms-ssim" }] },
+    { name: "psnr", hintLabel: "方向", hint: "↑", description: <><code>compute_psnr(...)</code></> },
+    { name: "dino_similarity", hintLabel: "方向", hint: "↑", description: <><code>compute_dino_similarity(...)</code></>, reads: [{ label: "别名", value: "dino-similarity, dino_sim" }] },
+    { name: "dreamsim", hintLabel: "方向", hint: "↓", description: <><code>compute_dreamsim(...)</code></>, reads: [{ label: "别名", value: "dream-sim" }] },
+    { name: "cpbd", hintLabel: "方向", hint: "↑", description: <><code>compute_cpbd(image)</code></>, reads: [{ label: "别名", value: "cpbd-sharpness" }] },
+    { name: "fsim", hintLabel: "方向", hint: "↑", description: <><code>compute_fsim(ref_image, gen_image)</code></>, reads: [{ label: "别名", value: "feature-similarity-index, fsimc" }] },
+    { name: "mask_accuracy", hintLabel: "方向", hint: "↑", description: <><code>compute_mask_accuracy(...)</code></>, reads: [{ label: "别名", value: "mask-accuracy" }] },
+    { name: "object_detection", hintLabel: "方向", hint: "↑", description: <><code>compute_object_detection_success_rate(...)</code></>, reads: [{ label: "别名", value: "object-detection" }] },
+    { name: "lqs", hintLabel: "方向", hint: "↑", description: <><code>compute_lqs(groundtruth_layout, predicted_layout)</code></>, reads: [{ label: "别名", value: "layout-quality-score" }] }
+  ]} />
 
 ```python
 import numpy as np
@@ -197,13 +195,11 @@ dreamsim_dist = compute_dreamsim(ref, gen)
 
 ## CLI 接口
 
-| 命令 | 范围 |
-| --- | --- |
-| `worldfoundry-eval metric list` | 列出或 JSON 导出全部 registry 条目。 |
-| `worldfoundry-eval metric show <id>` | 查看单条 entry、别名、参数化前缀。 |
-| `worldfoundry-eval metric validate <id>...` | 批量解析 id；未知 id 时 exit 1。 |
-| `worldfoundry-eval evaluate --metric ...` | **仅内置 existing-results 指标**（`artifact_count`、`required_artifacts_present`、`has_artifact:<name>`、`numeric`、`numeric:<name>`）。 |
-| `worldfoundry-eval plan create --metric ...` | 构造 run plan JSON 时使用相同内置 metric ID。 |
+- `worldfoundry-eval metric list` — 列出或 JSON 导出全部 registry 条目。
+- `worldfoundry-eval metric show <id>` — 查看单条 entry、别名、参数化前缀。
+- `worldfoundry-eval metric validate <id>...` — 批量解析 id；未知 id 时 exit 1。
+- `worldfoundry-eval evaluate --metric ...` — **仅内置 existing-results 指标**（`artifact_count`、`required_artifacts_present`、`has_artifact:<name>`、`numeric`、`numeric:<name>`）。
+- `worldfoundry-eval plan create --metric ...` — 构造 run plan JSON 时使用相同内置 metric ID。
 
 分布与感知类指标目前通过 Python 调用。Benchmark runner 在计算官方 metric stack 时可能复用相同底层实现（EvalCrafter IS/FID、MiraBench FVD 等）。多模态 scorer（CLIPScore、VQAScore、ITMScore）通过 `worldfoundry.evaluation.tasks.metrics.get_score_model(...)` 暴露，实现位于 `execution/runners/_scorers/`。
 
@@ -221,24 +217,157 @@ pip install -e ".[distribution_metrics]"
 
 ## Checkpoint 与环境变量
 
-| 变量 | 使用者 | 用途 |
-| --- | --- | --- |
-| `WORLDFOUNDRY_HFD_ROOT` | Hugging Face based metrics 与 scorers | 共享 HF cache 根目录或本地 staged model 根目录。 |
-| `WORLDFOUNDRY_T2V_METRICS_CACHE_DIR` | CLIPScore、ITMScore、VQAScore | 多模态 scorer 模型的优先 cache；未设置时回退到 `WORLDFOUNDRY_HFD_ROOT`。 |
-| `WORLDFOUNDRY_CKPT_DIR` | FVD、ArtScore、共享 standalone 文件 | `.pt`、`.pth`、`.bin` 等非 HF 文件的默认准备目录。 |
-| `WORLDFOUNDRY_FVD_I3D_CKPT` | FVD | Inception I3D 特征权重 `i3d_pretrained_400.pt`。 |
-| `WORLDFOUNDRY_MIRABENCH_FVD_I3D_CKPT` | FVD（MiraBench 回退） | 备用 I3D checkpoint 路径。 |
-| `WORLDFOUNDRY_JEDI_MODEL_DIR` / `WORLDFOUNDRY_JEDI_VJEPA_DIR` / `WORLDFOUNDRY_VJEPA_MODEL_DIR` | JEDi | V-JEPA 模型目录。 |
-| `WORLDFOUNDRY_JEDI_CONFIG_PATH` | JEDi | YAML 配置；bundled 资产见 `worldfoundry/data/benchmarks/assets/jedi/vith16_ssv2_16x2x3.yaml`。 |
-| `WORLDFOUNDRY_JEDI_FEATURE_PATH` | JEDi | 可选预计算 feature 归档。 |
-| `WORLDFOUNDRY_FDD_DAE_CKPT` | FDD | Frechet Denoised Distance 预训练 DAE 权重。 |
-| `WORLDFOUNDRY_DINOV2_BASE_MODEL_DIR` | DINO similarity | 本地 `facebook/dinov2-base` 模型目录。 |
-| `WORLDFOUNDRY_DINO_VITB16_MODEL_DIR` | DINO-family metrics | 本地 `facebook/dino-vitb16` 模型目录。 |
-| `WORLDFOUNDRY_OPENS2V_WEIGHT_DIR` | FaceSim-Cur | OpenS2V InsightFace + CurricularFace 权重目录。 |
-| `WORLDFOUNDRY_GME_MODEL_PATH` | GmeScore、NexusScore | GME-Qwen2-VL 模型路径。 |
-| `WORLDFOUNDRY_YOLO_WORLD_CKPT` | NexusScore | YOLO-World image-prompt adapter checkpoint。 |
-| `WORLDFOUNDRY_YOLO_CLIP_MODEL` | NexusScore | YOLO-World 评估用 CLIP backbone。 |
-| `OPENAI_API_KEY` | NaturalScore | OpenS2V 自然度 GPT 评分 API key。 |
+<div className="pi-kv-catalog is-vars not-prose">
+  <section className="pi-kv-group">
+    <h3>变量</h3>
+    <ul>
+      <li className="pi-kv-row">
+        <div className="pi-kv-head">
+          <div className="pi-kv-names">
+            <code>WORLDFOUNDRY_HFD_ROOT</code>
+          </div>
+        </div>
+        <p>共享 HF cache 根目录或本地 staged model 根目录。</p>
+        <p className="pi-kv-read"><span>使用者</span> Hugging Face based metrics 与 scorers</p>
+      </li>
+      <li className="pi-kv-row">
+        <div className="pi-kv-head">
+          <div className="pi-kv-names">
+            <code>WORLDFOUNDRY_T2V_METRICS_CACHE_DIR</code>
+          </div>
+        </div>
+        <p>多模态 scorer 模型的优先 cache；未设置时回退到 <code>WORLDFOUNDRY_HFD_ROOT</code>。</p>
+        <p className="pi-kv-read"><span>使用者</span> CLIPScore、ITMScore、VQAScore</p>
+      </li>
+      <li className="pi-kv-row">
+        <div className="pi-kv-head">
+          <div className="pi-kv-names">
+            <code>WORLDFOUNDRY_CKPT_DIR</code>
+          </div>
+        </div>
+        <p><code>.pt</code>、<code>.pth</code>、<code>.bin</code> 等非 HF 文件的默认准备目录。</p>
+        <p className="pi-kv-read"><span>使用者</span> FVD、ArtScore、共享 standalone 文件</p>
+      </li>
+      <li className="pi-kv-row">
+        <div className="pi-kv-head">
+          <div className="pi-kv-names">
+            <code>WORLDFOUNDRY_FVD_I3D_CKPT</code>
+          </div>
+        </div>
+        <p>Inception I3D 特征权重 <code>i3d_pretrained_400.pt</code>。</p>
+        <p className="pi-kv-read"><span>使用者</span> FVD</p>
+      </li>
+      <li className="pi-kv-row">
+        <div className="pi-kv-head">
+          <div className="pi-kv-names">
+            <code>WORLDFOUNDRY_MIRABENCH_FVD_I3D_CKPT</code>
+          </div>
+        </div>
+        <p>备用 I3D checkpoint 路径。</p>
+        <p className="pi-kv-read"><span>使用者</span> FVD（MiraBench 回退）</p>
+      </li>
+      <li className="pi-kv-row">
+        <div className="pi-kv-head">
+          <div className="pi-kv-names">
+            <code>WORLDFOUNDRY_JEDI_MODEL_DIR</code> / <code>WORLDFOUNDRY_JEDI_VJEPA_DIR</code> / <code>WORLDFOUNDRY_VJEPA_MODEL_DIR</code>
+          </div>
+        </div>
+        <p>V-JEPA 模型目录。</p>
+        <p className="pi-kv-read"><span>使用者</span> JEDi</p>
+      </li>
+      <li className="pi-kv-row">
+        <div className="pi-kv-head">
+          <div className="pi-kv-names">
+            <code>WORLDFOUNDRY_JEDI_CONFIG_PATH</code>
+          </div>
+        </div>
+        <p>YAML 配置；bundled 资产见 <code>worldfoundry/data/benchmarks/assets/jedi/vith16_ssv2_16x2x3.yaml</code>。</p>
+        <p className="pi-kv-read"><span>使用者</span> JEDi</p>
+      </li>
+      <li className="pi-kv-row">
+        <div className="pi-kv-head">
+          <div className="pi-kv-names">
+            <code>WORLDFOUNDRY_JEDI_FEATURE_PATH</code>
+          </div>
+        </div>
+        <p>可选预计算 feature 归档。</p>
+        <p className="pi-kv-read"><span>使用者</span> JEDi</p>
+      </li>
+      <li className="pi-kv-row">
+        <div className="pi-kv-head">
+          <div className="pi-kv-names">
+            <code>WORLDFOUNDRY_FDD_DAE_CKPT</code>
+          </div>
+        </div>
+        <p>Frechet Denoised Distance 预训练 DAE 权重。</p>
+        <p className="pi-kv-read"><span>使用者</span> FDD</p>
+      </li>
+      <li className="pi-kv-row">
+        <div className="pi-kv-head">
+          <div className="pi-kv-names">
+            <code>WORLDFOUNDRY_DINOV2_BASE_MODEL_DIR</code>
+          </div>
+        </div>
+        <p>本地 <code>facebook/dinov2-base</code> 模型目录。</p>
+        <p className="pi-kv-read"><span>使用者</span> DINO similarity</p>
+      </li>
+      <li className="pi-kv-row">
+        <div className="pi-kv-head">
+          <div className="pi-kv-names">
+            <code>WORLDFOUNDRY_DINO_VITB16_MODEL_DIR</code>
+          </div>
+        </div>
+        <p>本地 <code>facebook/dino-vitb16</code> 模型目录。</p>
+        <p className="pi-kv-read"><span>使用者</span> DINO-family metrics</p>
+      </li>
+      <li className="pi-kv-row">
+        <div className="pi-kv-head">
+          <div className="pi-kv-names">
+            <code>WORLDFOUNDRY_OPENS2V_WEIGHT_DIR</code>
+          </div>
+        </div>
+        <p>OpenS2V InsightFace + CurricularFace 权重目录。</p>
+        <p className="pi-kv-read"><span>使用者</span> FaceSim-Cur</p>
+      </li>
+      <li className="pi-kv-row">
+        <div className="pi-kv-head">
+          <div className="pi-kv-names">
+            <code>WORLDFOUNDRY_GME_MODEL_PATH</code>
+          </div>
+        </div>
+        <p>GME-Qwen2-VL 模型路径。</p>
+        <p className="pi-kv-read"><span>使用者</span> GmeScore、NexusScore</p>
+      </li>
+      <li className="pi-kv-row">
+        <div className="pi-kv-head">
+          <div className="pi-kv-names">
+            <code>WORLDFOUNDRY_YOLO_WORLD_CKPT</code>
+          </div>
+        </div>
+        <p>YOLO-World image-prompt adapter checkpoint。</p>
+        <p className="pi-kv-read"><span>使用者</span> NexusScore</p>
+      </li>
+      <li className="pi-kv-row">
+        <div className="pi-kv-head">
+          <div className="pi-kv-names">
+            <code>WORLDFOUNDRY_YOLO_CLIP_MODEL</code>
+          </div>
+        </div>
+        <p>YOLO-World 评估用 CLIP backbone。</p>
+        <p className="pi-kv-read"><span>使用者</span> NexusScore</p>
+      </li>
+      <li className="pi-kv-row">
+        <div className="pi-kv-head">
+          <div className="pi-kv-names">
+            <code>OPENAI_API_KEY</code>
+          </div>
+        </div>
+        <p>OpenS2V 自然度 GPT 评分 API key。</p>
+        <p className="pi-kv-read"><span>使用者</span> NaturalScore</p>
+      </li>
+    </ul>
+  </section>
+</div>
 
 FVD 解析顺序见 `fvd/fvd_core.py`：显式 `i3d_checkpoint` → `WORLDFOUNDRY_FVD_I3D_CKPT` → `WORLDFOUNDRY_MIRABENCH_FVD_I3D_CKPT` → `WORLDFOUNDRY_CKPT_DIR` 下路径。
 
@@ -262,12 +391,10 @@ worldfoundry/evaluation/tasks/metrics/
 
 每个已迁移的 metric 文件夹导出统一接口：
 
-| 导出 | 用途 |
-| --- | --- |
-| `METRIC_ID`、`ALIASES`、`HIGHER_IS_BETTER`、`FAMILY`、`TAGS` | Registry 元数据 |
-| `METRIC_MODULE` | 供 auto-discovery 的 :class:`MetricModuleSpec` |
-| `compute(...)` / `compute_<name>(...)` | 按 metric family 的稳定 compute API |
-| 论文 / 仓库链接 | 见 [指标配方子页面](/zh/docs/evaluation/metrics) 各 metric 小节内联说明 |
+- `METRIC_ID`、`ALIASES`、`HIGHER_IS_BETTER`、`FAMILY`、`TAGS` — Registry 元数据
+- `METRIC_MODULE` — 供 auto-discovery 的 :class:`MetricModuleSpec`
+- `compute(...)` / `compute_<name>(...)` — 按 metric family 的稳定 compute API
+- 论文 / 仓库链接 — 见 [指标配方子页面](/zh/docs/evaluation/metrics) 各 metric 小节内联说明
 
 已迁移 metric 的 registry entry 通过 `_discover.discover_metric_registry_entries()` 注册，而非在 `registry.py` 中硬编码重复项。
 

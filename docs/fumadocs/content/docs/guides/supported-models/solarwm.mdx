@@ -1,35 +1,50 @@
 ---
 title: "SolarWM"
-description: "SolarWM is an open data and scalable training foundation for camera-controlled, long-horizon video world models. It supports Wan2.2 5B/14B, LTX-2.5 22B, and MiniMax-H3 33B backbones; the 5B line releases the full bidirectional FM, TF-AnyFl…"
+description: "SolarWM from SolarWM authors: camera-conditioned-world-model and long-horizon-video-generation; Runner parity pending; 4 variants."
+modelId: "solarwm"
 pageSource: generated
 ---
 
-**Publisher:** SolarWM authors · Research lab
-video
-
 SolarWM is an open data and scalable training foundation for camera-controlled, long-horizon video world models. It supports Wan2.2 5B/14B, LTX-2.5 22B, and MiniMax-H3 33B backbones; the 5B line releases the full bidirectional FM, TF-AnyFlow, and SGF progression.
+
+<ModelPaperFigures modelId="solarwm" locale="en" />
+
+The recorded paper is [arXiv 2609.02886](https://arxiv.org/abs/2609.02886).
+
+Project page: [junchao-cs.github.io/SolarWM-Web](https://junchao-cs.github.io/SolarWM-Web/). Code: [Junchao-cs/SolarWM](https://github.com/Junchao-cs/SolarWM).
 
 <ModelCommandBuilder modelId="solarwm" locale="en" />
 
-## Architecture
+## What it is for
 
-The complete 5B route adapts Wan2.2 through Stage0.5 bidirectional flow matching, Stage1 teacher-forced AnyFlow, and Stage2 distribution matching via self-gradient forcing. The final causal model performs four-step autoregressive camera-conditioned rollout from short training clips.
+Use `solarwm-wan2.2-5b` for catalog world-model inference. Choose it when you need action-conditioned future frames rather than a standalone clip generator.
 
-## Usage notes
+The complete 5B route adapts Wan2.2 through Stage0.5 bidirectional flow matching, Stage1 teacher-forced AnyFlow, and Stage2 distribution matching via self-gradient forcing. The final causal model performs four-step autoregressive camera-conditioned rollout from short training clips. It is published by SolarWM authors.
+
+Catalog tasks include camera-conditioned-world-model, long-horizon-video-generation, interactive-video-generation, and camera-conditioned-long-horizon-video. Catalog aliases include `solar-wm`, `solarwm-wan2.2-5b`, and `solarwm-wan22-5b`. Documented outputs include video. Also recorded: `solarwm-wan2.2-14b`, `solarwm-ltx-22b`, `solarwm-h3-33b`.
+
+Recorded evaluation entry points include [WorldModelBench](/docs/evaluation/benchmark-hub/worldmodelbench) (Long-horizon camera-controlled world consistency).
+
+## Runtime contract
+
+Required `video`; optional `required`, `optional` (config_path, base_model_dir, checkpoint_dir, test_index, sample_count), `prompt`, `image`, and `actions`; artifacts `generated_world` and `solarwm.mp4`.
+
+Recorded task profiles: `camera-conditioned-world-model`, `long-horizon-video-generation`, `interactive-video-generation`, `camera-conditioned-long-horizon-video`, and `camera-conditioned-video`. WorldFoundry binds `SolarWMPipeline`.
+
+Start on `solarwm-wan2.2-5b`. The family registers 4 catalog variants (cards above): `solarwm-wan2.2-5b` (`camera-conditioned-long-horizon-video`) — Runner parity pending; `solarwm-wan2.2-14b` (`camera-conditioned-video`) — Runner parity pending; `solarwm-ltx-22b` (`camera-conditioned-video`) — Runner parity pending; `solarwm-h3-33b` (`camera-conditioned-video`) — Runner parity pending. Family status: **Runner parity pending**.
 
 Stage the pinned SolarWM checkout, accept the gated Hugging Face repositories, download the Wan2.2-5B bundle and SolarWM-Data, then set source/base/checkpoint/data paths if they differ from WorldFoundry defaults. Inference consumes SolarWM dataset rows and camera trajectories; it is not a prompt-only T2V route.
 
-## Variants & pipeline bindings
+WorldFoundry binds the official Wan2.2-5B Stage2 inference CLI through a user-staged source checkout.
 
-| Variant | Task | Runtime profile | Pipeline binding | Status |
-| --- | --- | --- | --- | --- |
-| `solarwm-wan2.2-5b` | camera-conditioned-long-horizon-video | `solarwm` | `solarwm` | integrated |
-| `solarwm-wan2.2-14b` | camera-conditioned-video | `solarwm` | `solarwm` | planned |
-| `solarwm-ltx-22b` | camera-conditioned-video | `solarwm` | `solarwm` | planned |
-| `solarwm-h3-33b` | camera-conditioned-video | `solarwm` | `solarwm` | planned |
+## Running in WorldFoundry
 
-## Evaluation benchmarks
+The catalog launch is `worldfoundry-eval run solarwm-wan2.2-5b --pipeline.task-profile camera-conditioned-long-horizon-video`. The command builder above switches `--pipeline.task-profile` among recorded tasks and still emits `worldfoundry-eval run`.
 
-- [WorldModelBench](/docs/evaluation/benchmark-hub/worldmodelbench) — Long-horizon camera-controlled world consistency.
+It runs in the dedicated environment `worldfoundry-solarwm-wan22-cu124` (Python 3.10, CUDA 12.4, torch==2.5.1+cu124).
+
+Recorded weight repositories include `junchaoh-cs/SolarWM-Wan2.2-5B`, `junchaoh-cs/SolarWM-Wan2.2-14B`, and `junchaoh-cs/SolarWM-LTX-22B` among others. Stage assets with `bash scripts/inference/prepare_model_infer.sh solarwm-wan2.2-5b`.
+
+Recorded licenses include apache-2.0; status: **Runner parity pending**.
 
 <ModelRelatedRecipes modelId="solarwm" locale="en" />

@@ -1,25 +1,32 @@
 ---
 title: "Matrix-Game 1.0"
-description: "Matrix-Game 1.0 is the first generation of Skywork's interactive game world model: from an image and keyboard/mouse-style actions it generates playable game-world video."
-pageSource: generated
+description: "Matrix-Game 1.0 from Skywork AI (Kunlun Tech): `image` and `prompt` in; `world.mp4` out."
+modelId: "matrix-game-1"
+pageSource: authored
 ---
-
-**Publisher:** Skywork AI (Kunlun Tech) · Company
 
 Matrix-Game 1.0 is the first generation of Skywork's interactive game world model: from an image and keyboard/mouse-style actions it generates playable game-world video. In this catalog it is registered as its own model id and never routes through Matrix-Game-2; the minimal official Python runtime closure is vendored in-tree.
 
+<ModelPaperFigures modelId="matrix-game-1" locale="en" />
+
 <ModelCommandBuilder modelId="matrix-game-1" locale="en" />
 
-## Architecture
+## What it is for
 
-The local cache layout records the checkpoint scale: seven DiT shards, four text_encoder_i2v shards, a VAE weight, configs, and assets under Skywork--Matrix-Game. Architecture internals beyond this are not recorded in this repository.
+Drive Matrix-Game 1 with keyboard/mouse tokens. Not the 2.0 or 3.x runtimes.
 
-## Usage notes
+Launch `worldfoundry-eval run matrix-game-1` with `--pipeline.task-profile default`.
 
-Matrix-Game-1 uses torch 2.5.1+cu124; prefer the worldfoundry-unified-cu128 environment on modern NVIDIA hosts. For newer quality and verified runners see matrix-game-2 and matrix-game-3.
+Score on [WorldModelBench](/docs/evaluation/benchmark-hub/worldmodelbench) — action-conditioned game-world rollout quality.
 
-## Evaluation benchmarks
+## Runtime contract
 
-- [WorldModelBench](/docs/evaluation/benchmark-hub/worldmodelbench) — Action-conditioned game-world rollout quality.
+Required: `image` and `prompt`; `actions`: keyboard, mouse, navigation_token; artifacts: `world.mp4`.
+
+WorldFoundry vendors the minimal Matrix-Game-1 official Python runtime closure under worldfoundry/synthesis/visual_generation/matrix_game/matrix_game_1_runtime.
+
+## Run in WorldFoundry
+
+Status: **Runner parity pending**. Unified environment `worldfoundry-unified-cu128` (Python 3.11, CUDA 12.8). Stage `Skywork/Matrix-Game` locally — missing files fail at load, nothing is downloaded. Run `worldfoundry-eval run matrix-game-1` with `--pipeline.task-profile default`. Catalog VRAM is unset.
 
 <ModelRelatedRecipes modelId="matrix-game-1" locale="en" />

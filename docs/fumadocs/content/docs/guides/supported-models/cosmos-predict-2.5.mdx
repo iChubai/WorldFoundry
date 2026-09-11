@@ -1,39 +1,34 @@
 ---
 title: "Cosmos Predict 2.5"
-description: "Cosmos Predict 2.5 is NVIDIA's world foundation model for physical AI: text, image, or video in — world video out, with 2B and 14B variants."
-pageSource: generated
+description: "NVIDIA world foundation model: text/image/video in, world video out. Native 2B/14B recipes; gated checkpoints. 2B text-to-world is the verified route."
+modelId: "cosmos-predict-2.5"
+pageSource: authored
 ---
 
-**Publisher:** NVIDIA · Company
-text · image · video → video
+Cosmos Predict 2.5 is NVIDIA's **world foundation model** for physical AI: text, image, or video in, world video out. The paper is [Cosmos Predict 2.5](https://arxiv.org/abs/2511.00062) (see also [research.nvidia.com/labs/dir/cosmos-predict2.5](https://research.nvidia.com/labs/dir/cosmos-predict2.5)). This catalog entry assembles the model from WorldFoundry's canonical denoiser, conditioner, scheduler, decoder, and loader roles **without Diffusers**.
 
-Cosmos Predict 2.5 is NVIDIA's world foundation model for physical AI: text, image, or video in — world video out, with 2B and 14B variants. In this catalog it is assembled natively from WorldFoundry's canonical denoiser, conditioner, scheduler, decoder, and loader roles without Diffusers; official EMA transformer structures match 569/569 (2B) and 729/729 (14B) tensors, Reason1 language weights match 338/338, and the shared Wan VAE matches 194/194.
+<ModelPaperFigures modelId="cosmos-predict-2.5" locale="en" />
 
-<figure className="wf-recipe-media">
-  <Video src="/demos/cosmos_01.mp4" autoPlay loop muted playsInline />
-  <figcaption>World-video prediction</figcaption>
-</figure>
+Two sizes are recorded: **2B** and **14B**. Structural checks in this repository match the official EMA transformer **569/569** (2B) and **729/729** (14B) tensors, Reason1 language weights **338/338**, and the shared **Wan VAE** **194/194**. Image/video conditioning and positive classifier-free guidance go through those shared runner contracts, not a model-private backend. NVIDIA access is **gated**; the recorded license is `other:nvidia-open-model-license`.
+
+The verified WorldFoundry recipe is the **2B text-to-world** route at **1280×704, 93 frames, 35 steps, 16 fps**, flow-UniPC scheduling. The 14B route still needs end-to-end GPU output validation. Aliases `cosmos-predict2p5` and `cosmos-predict-2p5` resolve here.
 
 <ModelCommandBuilder modelId="cosmos-predict-2.5" locale="en" />
 
-## Architecture
+## What it is for
 
-Predict 2.5 unifies text/image/video-to-world generation in one flow-based model with a Reason1 language conditioner and shared Wan VAE. Image/video conditioning and positive classifier-free guidance are expressed through shared runner contracts rather than a model-specific runtime.
+Predict future world video from text, a first frame, or a video prefix. Variants are `cosmos-predict-2.5-2b` and `cosmos-predict-2.5-14b`. Default artifact: `cosmos-predict2.5-2b.mp4` (14B writes `cosmos-predict2.5-14b.mp4`). Score world-generation quality on [WorldModelBench](/docs/evaluation/benchmark-hub/worldmodelbench) and physical plausibility on [Physics-IQ](/docs/evaluation/benchmark-hub/physics-iq). NVIDIA has since pointed new work at Cosmos 3; this page stays on the 2.5 card that is actually wired.
 
-## Usage notes
+## Runtime contract
 
-The public CosmosPredict2p5Pipeline invokes the native recipes directly. The 2B text-to-world route is verified at 1280x704 for 93 frames and 35 steps; the 14B route still requires end-to-end GPU output validation. NVIDIA checkpoint access remains gated.
+`CosmosPredict2p5Pipeline` unifies text/image/video-to-world in one **rectified-flow** model with a **Reason1** language conditioner and a shared Wan VAE. Prompt conditioning, positive guidance, image/video latent conditioning, and decoding all run through the shared native diffusion roles. Upstream NVIDIA cookbooks also mention robot / action-conditioned and policy variants (RoboCasa, LIBERO); those are not extra WorldFoundry variants on this card.
 
-## Variants & pipeline bindings
+## Running in WorldFoundry
 
-| Variant | Task | Runtime profile | Pipeline binding | Status |
-| --- | --- | --- | --- | --- |
-| `cosmos-predict-2.5-2b` | world-generation | `cosmos-predict2.5-2b` | `cosmos-predict2.5-2b` | integrated |
-| `cosmos-predict-2.5-14b` | world-generation | `cosmos-predict2.5-14b` | `cosmos-predict2.5-14b` | integrated |
+The pipeline invokes the native recipes directly in `worldfoundry-unified-cu128`. Launch `worldfoundry-eval run cosmos-predict-2.5-2b` with `--pipeline.task-profile text-to-world-validation`. Stage `nvidia/Cosmos-Predict2.5-2B` (and 14B if you are testing that line) under NVIDIA's access rules. Structural tensor match is not the same as GPU output parity — 14B still pending.
 
-## Evaluation benchmarks
+## Minimal eval
 
-- [WorldModelBench](/docs/evaluation/benchmark-hub/worldmodelbench) — World-generation quality across conditions.
-- [Physics-IQ Original](/docs/evaluation/benchmark-hub/physics-iq) — Physical plausibility of predicted world video.
+The 2B text-to-world route is verified. Import [WorldModelBench](/docs/evaluation/benchmark-hub/worldmodelbench) official-shaped results and read `world_model_average`. `official-run` needs `WORLDFOUNDRY_WORLDMODELBENCH_JUDGE`; full judge execution is not verified. Full cell: [Model → benchmark recipes](/docs/evaluation/model-benchmark-recipes).
 
 <ModelRelatedRecipes modelId="cosmos-predict-2.5" locale="en" />

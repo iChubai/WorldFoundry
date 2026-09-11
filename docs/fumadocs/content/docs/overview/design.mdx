@@ -1,11 +1,11 @@
 ---
 title: Design
-description: The layers, contracts, data flow, and design choices that make WorldFoundry extensible and auditable.
+description: The layers, contracts, catalogs, data flow, and design choices that make WorldFoundry extensible and auditable.
 ---
 
 WorldFoundry follows one primary design rule: **separate model execution from benchmark evaluation, and connect them with explicit artifacts and evidence**. That lets very different systems share one research workflow without putting model-loading code inside metrics, or benchmark assumptions inside model pipelines.
 
-The contracts below are accountable to the [operational definition of a world model](/docs/overview/world-models): persistent state, intervention-conditioned dynamics, and feedback-driven updating. WorldFoundry standardizes discovery, execution, artifacts, and evidence — not a single model interface or undifferentiated ranking.
+The contracts below are accountable to the [operational definition of a world model](/docs#operational-definition): persistent state, intervention-conditioned dynamics, and feedback-driven updating. WorldFoundry standardizes discovery, execution, artifacts, and evidence — not a single model interface or undifferentiated ranking.
 
 ## The artifact boundary
 
@@ -23,13 +23,49 @@ The four-layer diagram below is a coarse overview of how the system is grouped. 
 
 The four layers have different responsibilities and different rates of change.
 
-The **surface layer** is how people and agents operate the system. TUI supports guided discovery, CLI supports automation, Studio supports visual job creation and review, and Python or MCP supports programmatic orchestration. These surfaces may collect different inputs, but they should not contain private model implementations or scoring logic.
+The **surface layer** is how people and agents operate the system. Six surfaces share the same catalogs and run contracts; they differ by who drives the work.
+
+- **TUI** — guided entry. Reads the same manifests as the CLI, helps select IDs, and can print the final command before launching expensive work.
+- **CLI** — automation surface. Covers discovery, asset checks, task and dataset materialization, run planning, inference and evaluation, reporting, comparison, validation, and machine-readable JSON output.
+- **Studio** — browser workspace. Provides model-aware job forms, inference history, galleries, and visualizers for media, geometry, timelines, simulators, and interactive model output. Jobs write durable outputs that can be evaluated later; results are not trapped in the UI.
+- **Python API** — research contracts. Exposes public request, result, run, metric, and reporting types for in-process research code.
+- **MCP server** — agent tools. Exposes bounded discovery and evaluation tools for agent-driven workflows.
+- **Shell helpers** — escape hatch. Stay available for model families or environments whose upstream details do not fit cleanly into a generic command.
+
+These surfaces may collect different inputs, but they should not contain private model implementations or scoring logic.
 
 The **control plane** answers what exists, what can run, what it needs, and how it should be dispatched. Model and benchmark catalogs, aliases, asset declarations, runtime profiles, readiness fields, and run plans live here. This layer describes and routes work; it does not execute GPU kernels or compute benchmark scores.
 
 The **execution layer** contains model pipelines and operators on one side, and benchmark runners and metrics on the other. Model code owns checkpoint loading and generation. Benchmark code owns protocol-specific scoring and result normalization. Neither side should reach through the artifact boundary and take over the other side's responsibility.
 
 The **contract and evidence layer** is what survives the process. Requests, results, artifact references, manifests, reports, and scorecards are serializable. They keep a run understandable after the Python process has exited, and let generation and scoring happen in different environments, on different machines, or at different times.
+
+## Catalogs: knowing what exists
+
+The **Model Zoo** assigns stable IDs and aliases to world-model systems. A model manifest can record tasks, upstream sources, checkpoint references, variants, runtime bindings, install profiles, hardware expectations, validation notes, and known blockers. The catalog currently spans 270 models, but that number describes catalog coverage rather than uniform runtime maturity.
+
+Those entries are organized around five operational families. The video catalog covers text-, image-, and video-conditioned generation, editing, animation, and audio-video systems. The world-model catalog focuses on interactive worlds, navigation, action or camera conditioning, and simulators. The 3D/4D catalog includes reconstruction, depth, point clouds, scene representations, and dynamic geometry. The VLA/VA/WAM catalog covers embodied policies and world-action systems. A separate hosted-API catalog covers provider-backed systems whose weights are never loaded locally.
+
+The **Benchmark Zoo** plays the same role for evaluation protocols. Together with reusable metrics, the current release covers nearly 100 benchmark and metric implementations: generated-video quality, physical and dynamic consistency, camera and 3D/4D behavior, world-model capability, safety, memory, and embodied control. A benchmark manifest can declare datasets, generated-output layouts, metric assets, official commands, normalizers, runtime profiles, eligibility conditions, and blockers.
+
+Query the catalogs before downloading anything:
+
+```bash
+worldfoundry-eval zoo models --json
+worldfoundry-eval zoo benchmarks --json
+worldfoundry-eval zoo model-show --model-id <model-id> --include-manifest --json
+worldfoundry-eval zoo benchmark-show --benchmark-id <benchmark-id> --json
+```
+
+The detailed model index lives in [Models](/docs/guides/supported-models). Benchmark requirements and current execution paths live in the [Benchmark Hub](/docs/evaluation/benchmark-hub).
+
+## Runtimes: turning declarations into work
+
+Model execution runs through in-tree pipelines and operators, local checkpoint loaders, hosted API adapters, subprocess launchers, and dedicated-environment dispatch. A pipeline stays close to the model's native implementation; an operator adapts that implementation to WorldFoundry requests and artifacts.
+
+So WorldFoundry can support models with very different inputs and outputs without flattening them into an artificial lowest-common-denominator interface. A text-to-video model can expose prompt and sampling controls, a camera-conditioned model can accept trajectories, a 3D system can emit geometry, and a robot policy can produce actions or traces. Their native differences stay visible, while their execution status and outputs enter the same reporting system.
+
+Some runtimes work inside the unified environment. Others require a dedicated conda profile, an official upstream environment, a simulator container, or an API credential. The [environment reference](/docs/reference/environments) explains how these profiles are selected; the [local assets guide](/docs/guides/local-assets) explains where checkpoints, datasets, and metric weights live.
 
 ## End-to-end data flow
 
@@ -39,7 +75,7 @@ A run begins with declarative identities. A model manifest and benchmark manifes
 
 A `WorldModelRunner` resolves the requested model and dispatches to the correct pipeline/operator or external runtime. The runner returns a `GenerationResult` that describes status, timing, errors, metadata, and durable outputs. Those outputs may be videos, images, frames, geometry, point clouds, actions, trajectories, traces, or structured data.
 
-Evaluation consumes the result rather than the checkpoint. Reusable metrics or benchmark-specific runners read the generated artifacts, produce per-sample metric rows, and aggregate them according to the selected protocol. Reporting then consolidates run identity, provenance, coverage, blockers, and scores into artifacts such as `run_manifest.json`, `report.md`, and `scorecard.json`.
+Evaluation consumes the result rather than the checkpoint. Reusable metrics or benchmark-specific runners read the generated artifacts, produce per-sample metric rows, and aggregate them according to the selected protocol. Reporting then consolidates run identity, provenance, coverage, blockers, and scores into the run record.
 
 The file boundary is intentional. A costly generation job can finish once, be visually inspected, and later be evaluated by a new metric without loading the model again. A benchmark can also run in a dedicated environment without forcing its dependencies into every model runtime.
 
@@ -50,6 +86,28 @@ A Matrix-Game 2 universal run uses a user-provided initial image together with a
 <ArchDiagram id="matrix-game" />
 
 Evaluation only needs the artifact kind, URI, and sample identity; it does not need to know how Matrix-Game 2 loads its weights. Conversely, the pipeline never imports a benchmark evaluator. If generation succeeds but the benchmark's required prompt set is incomplete, the `GenerationResult` can still be valid while leaderboard eligibility in the scorecard stays false.
+
+## Evaluation: from artifact to evidence
+
+The evaluation core can score existing result ledgers, run registered models over materialized requests, execute a model × benchmark cell, resume or cache selected work, compare runs, and build suite-level reports. Reusable metrics are kept separate from full benchmark protocols, so a scorer can be applied to compatible artifacts without claiming that the entire official benchmark was reproduced.
+
+Benchmark integrations mature in stages. Some provide metadata and an asset plan. Some can normalize an existing official-shaped result. Some expose in-tree metric execution or an official runner facade. A smaller subset has bounded runtime evidence, and full leaderboard eligibility requires the protocol-specific data, coverage, credentials, and validation gates to be satisfied together.
+
+That staged model is deliberate. It lets useful catalog and normalization work land without overstating what is runnable or official.
+
+## Reporting: what remains after a run
+
+WorldFoundry treats the run directory as a research record, not a disposable cache. A typical run preserves a manifest describing identity and configuration, a request ledger showing the samples or conditions that were asked for, and a result ledger recording per-sample status, timing, errors, and artifact references.
+
+The generated artifacts themselves may include videos, frames, images, geometry, point clouds, trajectories, actions, traces, or structured rows. Metric summaries retain machine-readable aggregates, while `report.md` and `summary.json` provide human and compact programmatic views. `scorecard.json` adds coverage, provenance, blockers, validation state, and eligibility to the scores.
+
+Exact files depend on the run mode and integration. The contract is that unavailable work stays unavailable: a scorecard must not turn a missing dataset, skipped sample, or unverified official path into apparent success.
+
+## What is intentionally not bundled
+
+WorldFoundry does not redistribute model checkpoints, gated weights, full benchmark datasets, simulator assets, API keys, private endpoints, or normal user outputs. It also does not vendor every upstream training stack, or guarantee that every model × benchmark pair is meaningful.
+
+Those boundaries keep the repository reviewable and respect upstream licenses. The checked-in code describes how external assets connect to a run and reports when they are missing; it never silently downloads or substitutes protected resources. License names and official texts for in-tree `base_models` copies are listed under [Vendored licenses](/docs/reference/vendored-licenses).
 
 ## Where the layers live
 
@@ -72,3 +130,7 @@ For source-level call chains and extension boundaries, continue to the [maintain
 **Model differences are preserved.** WorldFoundry normalizes subsystem boundaries and evidence, not every native parameter or representation.
 
 **Official validation is not official reproduction.** Importing official-shaped results proves the normalization path; it does not prove full benchmark parity.
+
+## Where to go next
+
+To browse available systems, continue to [Models](/docs/guides/supported-models) and the [Benchmark Hub](/docs/evaluation/benchmark-hub). To generate an artifact, follow [Run inference](/docs/guides/inference). To score existing or newly generated output, read the [Evaluation overview](/docs/evaluation). To add coverage, use [Add a model](/docs/guides/add-model) or [Add a benchmark](/docs/guides/add-benchmark).

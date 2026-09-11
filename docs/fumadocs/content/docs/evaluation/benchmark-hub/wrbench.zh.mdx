@@ -1,84 +1,39 @@
 ---
 title: WRBench
-description: 持久状态诊断：相机移开时世界是否继续演化。在 Natural-25 套件上执行 D1-D6 诊断链。
+description: "中科大 / X-Humanoid 持久状态评测：Natural-25，D1–D6 相机转开链。WorldFoundry 检入整包；完整 D1–D6 未验证。"
 ---
 
-## 简介
+WRBench（“Current World Models Lack a Persistent State Core”；中科大与 X-Humanoid / 北京人形机器人创新中心）把相机运动当成 **可观测性干预**：事件开始，相机转开，回来时问目标是 **推进到终点还是冻在离开时的状态**。**Natural-25** 交叉 25 个场景族与四级事件设计（空间变化 × 状态变化）。标准相机轨把 **100 个语义变体 × 五种相机控制** 展开成 **500 条请求**。
 
-**发表机构：** 中国科学技术大学与北京人形机器人创新中心（X-Humanoid）
+分层 **D1–D6**：
 
-WRBench（论文 "Current World Models Lack a Persistent State Core"）把相机运动当作对可观测性的干预：事件启动后相机移开，回来时 benchmark 检验目标是推进到了事件终点、还是冻结在离开时的状态。Natural-25 将 25 个场景族与四级事件设计（空间变化 × 状态变化）交叉；规范相机赛道把 100 个语义变体在五种相机控制上展开为 500 条请求。层级化的 D1-D6 诊断链分离出请求相机精度、prompt 相机对齐、视觉完整性、可见空间/状态一致性、重观测支持与重观测空间/状态一致性；D5/D6 只在可判定的“隐藏后返回”证据子集上条件聚合。
+- **D1** — 请求相机精度 / prompt-相机对齐
+- **D2** — 视觉完整性
+- **D3 / D4** — 可见时的空间 / 状态一致性
+- **D5 / D6** — 再观察时的空间 / 状态一致性（**只**在可判定的隐藏-返回证据上聚合）
 
-WorldFoundry 把完整 WRBench 包与 Natural-25 资产入库在 runner runtime 下；官方结果归一化是轻量路径，完整 D1-D6 执行需要配置好 scorer 模型资产。
+`wrbench_average` 汇总 D1–D6。论文：[WRBench](https://arxiv.org/abs/2606.20545)。项目：[jinplu.github.io/WRBench](https://jinplu.github.io/WRBench/)。代码：[JinPLu/WRBench](https://github.com/JinPLu/WRBench)。数据：[`WRBench/wrbench-natural25`](https://huggingface.co/datasets/WRBench/wrbench-natural25)。
 
-官方参考：
+WorldFoundry **检入完整包装与 Natural-25 资产**。Natural-25 请求物化与结果归一化可用；**完整 D1–D6 执行未验证**。打分器：VGGT-Omega、DINOv2、Qwen3.5、Qwen3-VL。
 
-- Paper: [arxiv.org/abs/2606.20545](https://arxiv.org/abs/2606.20545)
-- 项目主页: [jinplu.github.io/WRBench](https://jinplu.github.io/WRBench/)
-- 官方仓库: [JinPLu/WRBench](https://github.com/JinPLu/WRBench)
+<BenchmarkPageSections id="wrbench" locale="zh" />
 
-## 评测协议
+## 如何运行
 
-`--run-official` 对生成视频加相机 sidecar 按 Natural-25 请求打分，`--scorer-profile` 选择 scorer 栈，`--sidecar-profile-gate` 控制 sidecar 来源门控。缺少重观测支持的行会从 D5/D6 中剔除而不是计为失败。`--official-results-path` 归一化已有的 WRBench 分数导出。
-
-主指标是 `wrbench_average`。
-
-| Metric | 含义 | 方向 |
-| --- | --- | --- |
-| `d1_cam_prec` | D1-CamPrec：存在显式目标轨迹时的请求相机轨迹精度。 | 越高越好 |
-| `d1_cam_align_common_yaw` | D1-CamAlign（common yaw）：prompt/API 相机控制的意图对齐。 | 越高越好 |
-| `d1_cam_align_static_hold` | D1-CamAlign（static hold）：保持静止相机请求上的对齐。 | 越高越好 |
-| `d2_visual_integrity` | D2：生成帧的视觉完整性。 | 越高越好 |
-| `d3_visible_spatial_consistency` | D3：内容可见期间的空间一致性。 | 越高越好 |
-| `d4_visible_state_consistency` | D4：内容可见期间的事件状态一致性。 | 越高越好 |
-| `d5_reobservation_spatial_consistency` | D5：隐藏内容重新入画时的空间一致性。 | 越高越好 |
-| `d6_reobservation_state_consistency` | D6：返回目标的事件状态一致性（事件是否推进了）。 | 越高越好 |
-| `wrbench_average` | D1-D6 诊断维度的聚合分。 | 越高越好 |
-
-## 数据与产物布局
-
-WorldFoundry 仓内路径：
-
-```text
-worldfoundry/data/benchmarks/tasks/external/wrbench.yaml
-worldfoundry/data/benchmarks/assets/wrbench
-worldfoundry/evaluation/tasks/execution/runners/wrbench/runtime/wrbench
+```bash
+worldfoundry-eval zoo benchmark-run \
+  --benchmark-id wrbench \
+  --mode official-validation \
+  --official-results-path <official_results.json_or_csv> \
+  --generated-artifact-dir <generated_videos> \
+  --output-dir tmp/wrbench/official-validation \
+  --json
 ```
 
-```text
-worldfoundry/evaluation/tasks/execution/runners/wrbench/runtime/wrbench   # 入库 WRBench 包
-worldfoundry/data/benchmarks/assets/wrbench                               # Natural-25 资产
-${WORLDFOUNDRY_GENERATED_ARTIFACT_DIR}/                                   # 视频 + 相机 sidecar
-```
+`--run-official` 对照 Natural-25 给生成视频加相机 sidecar 打分（`--scorer-profile`、`--sidecar-profile-gate`）。没有再观察支持的行从 D5/D6 **排除**，不记失败。环境变量：`WORLDFOUNDRY_WRBENCH_RESULTS_PATH`、`WORLDFOUNDRY_WRBENCH_ROOT`。共享栈：`vggt_omega`、`dinov2`、`qwen3_5_vl`、`qwen3_vl`。
 
-Natural-25 亦发布为 Hugging Face 数据集 `WRBench/wrbench-natural25`。
+仓内指针：`worldfoundry/data/benchmarks/tasks/external/wrbench.yaml`，`worldfoundry/data/benchmarks/assets/wrbench`，`worldfoundry/evaluation/tasks/execution/runners/wrbench/runtime/wrbench`。
 
-## 运行评测
-
-## 权重与环境变量
-
-- `WORLDFOUNDRY_WRBENCH_ROOT`: 可选覆盖项，指向本地 benchmark runtime / 仓库根目录。
-- `WORLDFOUNDRY_WRBENCH_RESULTS_PATH`: 未显式传 `--official-results-path` 时，导入器默认从该路径读取官方结果导出文件。
-- `WORLDFOUNDRY_GENERATED_ARTIFACT_DIR`: 存放待评测生成产物（候选视频/rollout）的目录。
-
-该 benchmark 复用共享 base-model 依赖栈：`vggt_omega`, `dinov2`, `qwen3_5_vl`, `qwen3_vl`。
-
-## 输出文件
-
-运行会在 `--output-dir` 下写出：
-
-- `scorecard.json`: WorldFoundry 统一 scorecard，记录上表中的指标值。
-- `benchmark_contract.json`: 本次运行的 benchmark contract 记录（输入、模式、来源信息）。
-- `raw_metric_table.jsonl`: 支撑 scorecard 的原始 metric 行。
-- `per_sample_scores.jsonl`: 当结果源包含逐样本数值时写出的逐样本行。
-- `generation_requests.jsonl`
-
-Scorecard 主键：`wrbench_average`（leaderboard key `Avg`），写入 `scorecard.json`。
-
-## 边界与限制
-
-- 与 leaderboard 对齐需要完整的 Natural-25 生成，以及 VGGT-Omega、DINOv2、Qwen3.5、Qwen3-VL 权重。
-- D5/D6 是条件指标；跨模型比较时必须对齐重观测支持的分母。
-- 轻量结果归一化不审计上游分数的产生过程。
+产物包括 `scorecard.json`（主键 `wrbench_average`，榜单键 `Avg`）与 `generation_requests.jsonl`。
 
 [← 返回 Benchmark Hub](/zh/docs/evaluation/benchmark-hub)

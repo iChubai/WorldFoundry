@@ -1,26 +1,50 @@
 ---
 title: "VerseCrafter"
-description: "VerseCrafter from Tencent ARC is a camera-controlled image-to-video world model built on 4D control: a geometry-aware rendering stage produces 4D control signals that guide the diffusion stage along the requested camera path. WorldFoundry…"
+description: "VerseCrafter from Tencent ARC Lab: camera-controlled-video and image-to-video; Runner parity pending."
+modelId: "versecrafter"
 pageSource: generated
 ---
 
-**Publisher:** Tencent ARC Lab · Company
-image → video
-
 VerseCrafter from Tencent ARC is a camera-controlled image-to-video world model built on 4D control: a geometry-aware rendering stage produces 4D control signals that guide the diffusion stage along the requested camera path. WorldFoundry vendors the official source (revision 008693b5) plus the exact VideoX-Fun submodule (revision 246a0e3a) in-tree, with the sxzheng/VerseCrafter checkpoint reference.
+
+<ModelPaperFigures modelId="versecrafter" locale="en" />
+
+The recorded paper is [arXiv 2601.05138](https://arxiv.org/abs/2601.05138).
+
+Project page: [sixiaozheng.github.io/VerseCrafter_page](https://sixiaozheng.github.io/VerseCrafter_page/). Code: [TencentARC/VerseCrafter](https://github.com/TencentARC/VerseCrafter).
 
 <ModelCommandBuilder modelId="versecrafter" locale="en" />
 
-## Architecture
+## What it is for
 
-Two stages are wired in-tree: camera-only 4D-control rendering followed by the diffusion stage. The diffusion backbone comes from the pinned VideoX-Fun submodule. Further architecture internals are not recorded in this repository.
+Use `versecrafter` for camera-conditioned video inference. The recipe binds the recorded camera-control profile.
 
-## Usage notes
+Two stages are wired in-tree: camera-only 4D-control rendering followed by the diffusion stage. The diffusion backbone comes from the pinned VideoX-Fun submodule. Further architecture internals are not recorded in this repository. It is published by Tencent ARC Lab.
 
-Note the license before any deployment: upstream is research-only, non-commercial, and excludes intended EU use. Runner parity is pending, so treat outputs as unverified until a parity run is recorded.
+Catalog tasks include camera-controlled-video, image-to-video, and world-model. Documented modalities: image in, video out.
 
-## Evaluation benchmarks
+Recorded evaluation entry points include [CameraBench](/docs/evaluation/benchmark-hub/camerabench) (Camera-path adherence for 4D-controlled generation).
 
-- [CameraBench](/docs/evaluation/benchmark-hub/camerabench) — Camera-path adherence for 4D-controlled generation.
+## Runtime contract
+
+Required `prompt`, `image`, and `trajectory_npz`; artifacts `versecrafter.mp4`.
+
+Recorded task profiles: `camera-controlled-video`, `image-to-video`, and `world-model`. WorldFoundry binds `VerseCrafterPipeline`.
+
+Family status: **Runner parity pending**.
+
+Note the license before any deployment: upstream is research-only, non-commercial, and excludes intended EU use.
+
+Official source is vendored at revision 008693b52aa74367afb34d183046fecf88100bdc.
+
+## Running in WorldFoundry
+
+Launch `worldfoundry-eval run versecrafter --pipeline.task-profile camera-controlled-video` to follow the camera path. The command builder above switches `--pipeline.task-profile` among recorded tasks and still emits `worldfoundry-eval run`.
+
+It runs in the unified environment `worldfoundry-unified-cu128` (Python 3.11, CUDA 12.8).
+
+Recorded weight repositories include `TencentARC/VerseCrafter`, `Wan-AI/Wan2.1-T2V-14B`, and `Ruicheng/moge-2-vitl-normal`. Stage assets with `bash scripts/inference/prepare_model_infer.sh versecrafter`.
+
+Status: **Runner parity pending**.
 
 <ModelRelatedRecipes modelId="versecrafter" locale="en" />

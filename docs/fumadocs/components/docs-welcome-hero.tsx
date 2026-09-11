@@ -6,7 +6,7 @@ import { WORLDFOUNDRY_GITHUB_REPO } from '@/lib/site-links';
 type GithubStats = {
   stars: number;
   forks: number;
-  watchers: number;
+  watchers?: number;
 };
 
 type BadgeKind = 'star' | 'watch' | 'fork';
@@ -89,7 +89,7 @@ async function fetchGithubStats(): Promise<GithubStats | null> {
     return {
       stars: data.stargazers_count ?? 0,
       forks: data.forks_count ?? 0,
-      watchers: data.subscribers_count ?? 0,
+      watchers: data.subscribers_count,
     };
   } catch {
     return null;
@@ -187,12 +187,14 @@ export async function DocsWelcomeHero({
           kind="star"
           label={labels.star}
         />
-        <GithubBadge
-          count={stats?.watchers}
-          href={`${WORLDFOUNDRY_GITHUB_REPO}/subscription`}
-          kind="watch"
-          label={labels.watch}
-        />
+        {stats?.watchers ? (
+          <GithubBadge
+            count={stats.watchers}
+            href={`${WORLDFOUNDRY_GITHUB_REPO}/subscription`}
+            kind="watch"
+            label={labels.watch}
+          />
+        ) : null}
         <GithubBadge
           count={stats?.forks}
           href={`${WORLDFOUNDRY_GITHUB_REPO}/fork`}

@@ -1,55 +1,23 @@
 ---
 title: DEVIL Dynamics
-description: "Dynamics-centric T2V evaluation: dynamics range, controllability, and dynamics-conditioned quality."
+description: "NeurIPS 2024 dynamics-centric T2V bench: range, controllability, dynamics-conditioned quality. WorldFoundry imports official rows or artifact scores; it does not invent a board."
 ---
 
-## About
+DEVIL (UCAS and Baidu; NeurIPS 2024) evaluates text-to-video models on **dynamics**, not beauty. Prompts are stratified by dynamics grade; scores at several temporal granularities become three protocol metrics that the paper reports at **>90% human correlation**:
 
-**Publisher:** University of Chinese Academy of Sciences & Baidu (NeurIPS 2024)
+- **Dynamics range** — how much content variation the model can produce.
+- **Dynamics controllability** — whether prompted dynamics levels are respected.
+- **Dynamics quality** — quality conditioned on the dynamics grade.
 
-DEVIL evaluates text-to-video models on the dynamics dimension. It builds a prompt benchmark stratified by dynamics grades and defines dynamics scores at multiple temporal granularities, from which three protocol metrics are derived: dynamics range (how much content variation a model can produce), dynamics controllability (whether prompted dynamics levels are respected), and dynamics-based quality. The official protocol reports >90% correlation with human ratings.
+`devil_dynamics_average` is the mean of those three.
 
-WorldFoundry provides an in-tree runtime entry that materializes DEVIL metric rows from WorldFoundry artifact-score outputs, plus a normalizer for caller-provided official result files.
+Paper: [DEVIL](https://arxiv.org/abs/2407.01094). Code: [MingXiangL/DEVIL](https://github.com/MingXiangL/DEVIL).
 
-Official references:
+WorldFoundry **materializes metric rows from staged artifact scores** (`WORLDFOUNDRY_DEVIL_DYNAMICS_ARTIFACT_SCORE_DIR`) or **imports official JSON**. Full recomputation still needs upstream checkpoints (RAFT, CLIP ViT-L/14 and ViT-B/32, ViCLIP, DINOv2, AMT, dynamics regression). The Gemini naturalness component is not part of local recomputation.
 
-- Paper: [arxiv.org/abs/2407.01094](https://arxiv.org/abs/2407.01094)
-- Project page: [huggingface.co/papers/2407.01094](https://huggingface.co/papers/2407.01094)
-- Official repository: [MingXiangL/DEVIL](https://github.com/MingXiangL/DEVIL)
+<BenchmarkPageSections id="devil-dynamics" locale="en" />
 
-## Evaluation protocol
-
-Two paths: import official DEVIL result JSON via `--official-results-path`, or compute metric rows from staged artifact scores via `WORLDFOUNDRY_DEVIL_DYNAMICS_ARTIFACT_SCORE_DIR`. Full official recomputation depends on the upstream scorer checkpoints (RAFT, CLIP ViT-L/14 and ViT-B/32, ViCLIP, DINOv2, AMT, dynamics regression checkpoint) surfaced through the runner's checkpoint flags.
-
-Primary metric: `devil_dynamics_average`.
-
-| Metric | Meaning | Direction |
-| --- | --- | --- |
-| `dynamics_range` | Dynamics Range normalized benchmark score. | Higher is better |
-| `dynamics_controllability` | Dynamics Controllability normalized benchmark score. | Higher is better |
-| `dynamics_quality` | Dynamics Quality normalized benchmark score. | Higher is better |
-| `devil_dynamics_average` | DEVIL Dynamics Average normalized benchmark score. | Higher is better |
-
-## Data and artifact layout
-
-In-tree paths:
-
-```text
-worldfoundry/data/benchmarks/tasks/external/devil-dynamics.yaml
-worldfoundry/evaluation/tasks/execution/runners/devil_dynamics
-```
-
-```bash
-export WORLDFOUNDRY_GENERATED_ARTIFACT_DIR=/path/to/devil/generated_videos
-export WORLDFOUNDRY_DEVIL_DYNAMICS_ARTIFACT_SCORE_DIR=/path/to/artifact_scores   # runtime execution
-export WORLDFOUNDRY_DEVIL_DYNAMICS_RESULTS_PATH=/path/to/devil_results.json      # import runs
-```
-
-Generate one video per official DEVIL prompt; the dynamics-grade stratification comes from the official prompt metadata.
-
-## Run the benchmark
-
-Catalog-recorded validation command:
+## How to run
 
 ```bash
 worldfoundry-eval zoo benchmark-run \
@@ -57,30 +25,14 @@ worldfoundry-eval zoo benchmark-run \
   --mode official-validation \
   --official-results-path <official_results.json> \
   --generated-artifact-dir <generated_videos> \
-  --output-dir <out> \
+  --output-dir tmp/devil-dynamics/official-validation \
   --json
 ```
 
-## Checkpoints and environment variables
+Generate one video per official DEVIL prompt; grade stratification comes from official prompt metadata. Default import: `WORLDFOUNDRY_DEVIL_DYNAMICS_RESULTS_PATH`. Runtime scores: `WORLDFOUNDRY_DEVIL_DYNAMICS_ARTIFACT_SCORE_DIR`.
 
-- `WORLDFOUNDRY_DEVIL_DYNAMICS_ARTIFACT_SCORE_DIR`
-- `WORLDFOUNDRY_DEVIL_DYNAMICS_RESULTS_PATH`: Default path the importer reads official result exports from when `--official-results-path` is not passed.
-- `WORLDFOUNDRY_GENERATED_ARTIFACT_DIR`: Directory containing the candidate generated artifacts to score or import against.
+In-tree pointers: `worldfoundry/data/benchmarks/tasks/external/devil-dynamics.yaml`, `worldfoundry/evaluation/tasks/execution/runners/devil_dynamics`.
 
-## Outputs
-
-The run writes into `--output-dir`:
-
-- `scorecard.json`: WorldFoundry scorecard with the metric values recorded above.
-- `benchmark_contract.json`: Benchmark contract record for the run (inputs, mode, provenance).
-- `raw_metric_table.jsonl`: Metric rows backing the scorecard.
-
-Scorecard primary key: `devil_dynamics_average` (leaderboard key `devil_dynamics_average`), stored in `scorecard.json`.
-
-## Limitations
-
-- The Gemini-based naturalness component requires an external API key and is not part of local recomputation.
-- Full protocol parity requires the complete upstream checkpoint set (RAFT/CLIP/ViCLIP/DINOv2/AMT plus the dynamics regression checkpoint).
-- A local scorecard is not an official DEVIL leaderboard result.
+Outputs include `scorecard.json` (primary `devil_dynamics_average`) and `raw_metric_table.jsonl`.
 
 [← Benchmark Hub](/docs/evaluation/benchmark-hub)

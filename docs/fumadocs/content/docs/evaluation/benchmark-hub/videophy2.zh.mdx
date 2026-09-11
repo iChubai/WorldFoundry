@@ -1,54 +1,17 @@
 ---
 title: VideoPhy2
-description: VideoPhy 的动作中心续作：更难的物理常识 prompt，并加入规则级物理定律判定。
+description: "VideoPhy 的动作向后继：200 条更难 prompt，加规则级 AutoEval。WorldFoundry 提供裁判路径，不编造榜单。"
 ---
 
-## 简介
+VideoPhy2（UCLA 与 Google DeepMind）是 [VideoPhy](/zh/docs/evaluation/benchmark-hub/videophy) 的 **动作向** 后继。Prompt 套件聚焦更难的物理活动与物体交互（**宣称 200 个动作**）。AutoEval 增加 **规则级** 判断：哪些物理规则适用、每条是遵守还是违反（`rule_followed_rate`），同时报语义遵守、物理常识，以及主键 **联合分**。
 
-**发表机构：** UCLA 与 Google DeepMind
+论文：[VideoPhy-2](https://arxiv.org/abs/2503.06800)。项目：[videophy2.github.io](https://videophy2.github.io/)。代码：[Hritikbansal/videophy](https://github.com/Hritikbansal/videophy)。
 
-VideoPhy2 是 VideoPhy 的动作中心续作。其 prompt 套件聚焦对当前生成模型系统性更难的身体活动与物体交互，并在评审中加入规则级分析：AutoEval judge 对每个视频判定哪些候选物理规则适用、各规则被遵守还是被违反，从而在 Semantic Adherence、Physical Commonsense 与主指标 Joint Score 之外给出 `rule_followed_rate`。
+WorldFoundry **捆绑 prompt 列表** 并驱动仓内 AutoEval 裁判（`--autoeval-checkpoint`，可选 `--autoeval-lora-checkpoint`）。官方打分路径存在；**完整 200 条 prompt 复现仍待完成**。权重要调用方提供。
 
-WorldFoundry 捆绑官方 prompt 列表，并通过共享 runner 驱动仓内 VideoPhy2 AutoEval judge，支持 LoRA adapter 权重加载。
+<BenchmarkPageSections id="videophy2" locale="zh" />
 
-官方参考：
-
-- Paper: [arxiv.org/abs/2503.06800](https://arxiv.org/abs/2503.06800)
-- 项目主页: [videophy2.github.io](https://videophy2.github.io/)
-- 官方仓库: [Hritikbansal/videophy](https://github.com/Hritikbansal/videophy)
-
-## 评测协议
-
-`official-validation` 归一化官方结果导出。`--run-official` 执行仓内 VideoPhy2 AutoEval judge，需传 `--autoeval-checkpoint`（可选 `--autoeval-lora-checkpoint`），每个视频采样 `--num-frames` 帧。Joint Score 是 scorecard 主键；规则级判定汇入 `rule_followed_rate`。
-
-主指标是 `joint_score`。
-
-| Metric | 含义 | 方向 |
-| --- | --- | --- |
-| `semantic_adherence` | Semantic Adherence（语义符合度）归一化基准分。 | 越高越好 |
-| `physical_commonsense` | Physical Commonsense（物理常识）归一化基准分。 | 越高越好 |
-| `joint_score` | Joint Score（联合分）归一化基准分。 | 越高越好 |
-| `rule_followed_rate` | 判定适用的物理规则中被遵守（而非违反）的比例。 | 越高越好 |
-
-## 数据与产物布局
-
-WorldFoundry 仓内路径：
-
-```text
-worldfoundry/data/benchmarks/tasks/external/videophy2.yaml
-worldfoundry/evaluation/tasks/execution/runners/videophy2
-```
-
-```text
-worldfoundry/data/benchmarks/assets/videophy2/prompts.json   # 官方 prompt 列表
-${WORLDFOUNDRY_GENERATED_ARTIFACT_DIR}/                      # 按 prompt id 命名的候选视频
-```
-
-AutoEval judge 权重（基座 + 可选 LoRA）由调用方提供。
-
-## 运行评测
-
-目录 manifest 记录的 validation 命令：
+## 如何运行
 
 ```bash
 worldfoundry-eval zoo benchmark-run \
@@ -56,11 +19,9 @@ worldfoundry-eval zoo benchmark-run \
   --mode official-validation \
   --official-results-path <official_results.json> \
   --generated-artifact-dir <generated_videos> \
-  --output-dir <out> \
+  --output-dir tmp/videophy2/official-validation \
   --json
 ```
-
-执行仓内 VideoPhy2 AutoEval judge：
 
 ```bash
 ${WORLDFOUNDRY_UNIFIED_PYTHON} \
@@ -72,29 +33,10 @@ ${WORLDFOUNDRY_UNIFIED_PYTHON} \
   --json
 ```
 
-## 权重与环境变量
+环境变量：`WORLDFOUNDRY_VIDEOPHY2_RESULTS_PATH`、`WORLDFOUNDRY_VIDEOPHY2_JUDGE_BACKEND`。Prompt 列表：`worldfoundry/data/benchmarks/assets/videophy2/prompts.json`。共享资源：`videophy2_dataset_assets`。
 
-- `WORLDFOUNDRY_VIDEOPHY2_ROOT`: 可选覆盖项，指向本地 benchmark runtime / 仓库根目录。
-- `WORLDFOUNDRY_VIDEOPHY2_JUDGE_BACKEND`: 选择 `--run-official` 使用的 judge 后端。
-- `WORLDFOUNDRY_VIDEOPHY2_RESULTS_PATH`: 未显式传 `--official-results-path` 时，导入器默认从该路径读取官方结果导出文件。
-- `WORLDFOUNDRY_GENERATED_ARTIFACT_DIR`: 存放待评测生成产物（候选视频/rollout）的目录。
+仓内指针：`worldfoundry/data/benchmarks/tasks/external/videophy2.yaml`，`worldfoundry/evaluation/tasks/execution/runners/videophy2`。
 
-该 benchmark 复用共享 base-model 依赖栈：`videophy2_dataset_assets`。
-
-## 输出文件
-
-运行会在 `--output-dir` 下写出：
-
-- `scorecard.json`: WorldFoundry 统一 scorecard，记录上表中的指标值。
-- `benchmark_contract.json`: 本次运行的 benchmark contract 记录（输入、模式、来源信息）。
-- `raw_metric_table.jsonl`: 支撑 scorecard 的原始 metric 行。
-
-Scorecard 主键：`joint_score`（leaderboard key `joint_score`），写入 `scorecard.json`。
-
-## 边界与限制
-
-- 完整官方 runtime 仍在上游；仓内 fixture 只记录期望的输入/输出形状。
-- 与 leaderboard 对齐需要官方 AutoEval 权重（含 LoRA adapter）、完整 prompt 套件与上游结果归一化。
-- 使用非官方权重得到的规则级判定不可与已发表 VideoPhy2 数字比较。
+产物包括 `scorecard.json`（主键 `joint_score`）。
 
 [← 返回 Benchmark Hub](/zh/docs/evaluation/benchmark-hub)

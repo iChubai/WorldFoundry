@@ -1,63 +1,23 @@
 ---
 title: MemoBench
-description: 世界生成的视觉记忆评测：360 个片段遵循“可见 → 消失 → 重现”范式，自动指标与 VQA 双路打分。
+description: "哈佛 / MIT 视觉记忆评测：360 条 V-D-R 片段，自动指标加 SAM-3 ORS 与 VQA。WorldFoundry 内置 Step 1，不编造榜单。"
 ---
 
-## 简介
+MemoBench（哈佛，联合 MIT 与 MIT-IBM Watson AI Lab）用 Visible → Disappeared → Reappear 范式诊断世界生成器的 **视觉记忆**：目标可见且物理过程在进行（V），相机转开而过程在画外继续（D），相机回来后模型必须把物体生成在 **已更新** 的状态（R）。套件是 **360 条真值片段**（196 合成 + 164 真实），带相机轨迹与深度。
 
-**发表机构：** Harvard University（哈佛大学，联合 MIT 与 MIT-IBM Watson AI Lab）
+打分分三层：
 
-MemoBench 通过“消失-重现”范式诊断世界生成模型的视觉记忆：目标物体先可见并经历某个物理过程（V），随后相机移开、过程在画面外继续（D），最后相机转回——模型必须以正确*更新后*的状态重新生成该物体（R）。套件策划了 360 个真值片段（196 合成 + 164 真实），附带相机轨迹与深度图，并用自动指标（质量、运动、DINOv2 身份、几何一致性、相机可控性、真值 PSNR/SSIM/LPIPS）、基于 SAM-3 的 Object Revisit Score，以及 VQA 推理支柱共同打分。
+- **Step 1 自动** — CLIP-IQA+ / LAION 美学、光流平滑、DINOv2 身份、几何一致性、相机可控、ImageReward、真值 PSNR/SSIM/LPIPS。
+- **ORS** — SAM-3 Object Revisit Score。
+- **VQA** — 指令跟随、物体/背景、记忆连续性、物理遵守（Gemini 或兼容 VLM）。
 
-WorldFoundry 在仓内内置 MemoBench runtime；runner 可对生成帧执行入库的 Step 1 自动指标脚本，而 ORS（SAM-3）与 VQA（Gemini 或兼容 VLM）仍是显式外部阶段。调用方提供的 Step 1 / ORS / VQA / leaderboard 输出可归一化为统一 scorecard。
+`memobench_average` 是已有归一化组件的均值。代码：[MemoBench-Team/MemoBench](https://github.com/MemoBench-Team/MemoBench)。
 
-官方参考：
+WorldFoundry **仓内内置 runtime**，可对 `--generated-synthetic-dir` / `--generated-real-dir` 跑 Step 1。ORS 与 VQA 仍是显式外部阶段。可导入官方 CSV（`eval_csv`、`ors_scores.csv`、VQA、`leaderboard.csv`）。
 
-- 官方仓库: [MemoBench-Team/MemoBench](https://github.com/MemoBench-Team/MemoBench)
+<BenchmarkPageSections id="memobench" locale="zh" />
 
-## 评测协议
-
-三阶段片段定义了逐片段的 V-D-R 边界，评测时会按生成视频的帧数重新缩放。`--run-official` 对 `--generated-synthetic-dir` / `--generated-real-dir`（或单个 `--generated-artifact-dir`）执行入库 Step 1 自动指标，`--mode both|synthetic|real` 选择范围。`official-validation` 则归一化已有的 MemoBench CSV 输出（Step 1 指标、`ors_scores.csv`、VQA 或 `leaderboard.csv`）。
-
-主指标是 `memobench_average`。
-
-| Metric | 含义 | 方向 |
-| --- | --- | --- |
-| `visual_quality` | 全视频的 CLIP-IQA+ 与 LAION 美学质量。 | 越高越好 |
-| `motion_smoothness` | 可见与重现阶段上的光流时序连贯性。 | 越高越好 |
-| `object_identity_consistency` | 物体重现后的 DINOv2 物体中心身份一致性。 | 越高越好 |
-| `geo3d_consistency` | 可见与重现阶段间基于深度的几何一致性。 | 越高越好 |
-| `camera_controllability` | 生成相机运动与目标相机运动的对齐度。 | 越高越好 |
-| `image_reward_score` | ImageReward 路径给出的人类偏好对齐得分。 | 越高越好 |
-| `object_revisit_score` | 目标物体重现的 SAM-3 文本提示检测得分。 | 越高越好 |
-| `gt_all_psnr` | 所有阶段相对真值帧的 PSNR。 | 越高越好 |
-| `gt_all_ssim` | 所有阶段相对真值帧的 SSIM。 | 越高越好 |
-| `gt_all_lpips` | 所有阶段相对真值帧的 LPIPS；越低越好。 | 越低越好 |
-| `instruction_following` | 指定相机运动与事件执行的 VQA 通过率。 | 越高越好 |
-| `object_background` | 物体身份与背景一致性的 VQA 通过率。 | 越高越好 |
-| `continuity_of_memory` | 目标物体出画期间状态保持的 VQA 通过率。 | 越高越好 |
-| `physics_adherence` | 光照、阴影与运动合理性的 VQA 通过率。 | 越高越好 |
-| `memobench_average` | 可用归一化 MemoBench 组件指标的均值。 | 越高越好 |
-
-## 数据与产物布局
-
-WorldFoundry 仓内路径：
-
-```text
-worldfoundry/data/benchmarks/tasks/external/memobench.yaml
-worldfoundry/evaluation/tasks/execution/runners/memobench/runtime/memobench
-```
-
-```text
-.../runners/memobench/runtime/memobench                     # 仓内 runtime
-worldfoundry/data/benchmarks/assets/memobench/sample_results.csv   # 捆绑示例结果
-${WORLDFOUNDRY_MEMOBENCH_GENERATED_SYNTHETIC_DIR}/          # 合成套件生成帧
-${WORLDFOUNDRY_MEMOBENCH_GENERATED_REAL_DIR}/               # 真实套件生成帧
-```
-
-## 运行评测
-
-目录 manifest 记录的 validation 命令：
+## 如何运行
 
 ```bash
 worldfoundry-eval zoo benchmark-run \
@@ -65,37 +25,14 @@ worldfoundry-eval zoo benchmark-run \
   --mode official-validation \
   --official-results-path <official_results.csv> \
   --generated-artifact-dir <generated_frames> \
-  --output-dir <out> \
+  --output-dir tmp/memobench/official-validation \
   --json
 ```
 
-## 权重与环境变量
+`--run-official` 执行仓内 Step 1（`--mode both|synthetic|real`）。V-D-R 边界会按生成视频帧数缩放。环境变量：`WORLDFOUNDRY_MEMOBENCH_RESULTS_PATH`、`WORLDFOUNDRY_MEMOBENCH_GENERATED_SYNTHETIC_DIR`、`WORLDFOUNDRY_MEMOBENCH_GENERATED_REAL_DIR`。共享栈：`video_quality_dino_motion_stack`。
 
-- `WORLDFOUNDRY_MEMOBENCH_ROOT`: 可选覆盖项，指向本地 benchmark runtime / 仓库根目录。
-- `WORLDFOUNDRY_MEMOBENCH_RESULTS_PATH`: 未显式传 `--official-results-path` 时，导入器默认从该路径读取官方结果导出文件。
-- `WORLDFOUNDRY_GENERATED_ARTIFACT_DIR`: 存放待评测生成产物（候选视频/rollout）的目录。
-- `WORLDFOUNDRY_MEMOBENCH_GENERATED_SYNTHETIC_DIR`: 合成套件的生成帧目录。
-- `WORLDFOUNDRY_MEMOBENCH_GENERATED_REAL_DIR`: 真实套件的生成帧目录。
+仓内指针：`worldfoundry/data/benchmarks/tasks/external/memobench.yaml`，`worldfoundry/evaluation/tasks/execution/runners/memobench/runtime/memobench`。
 
-该 benchmark 复用共享 base-model 依赖栈：`video_quality_dino_motion_stack`。
-
-## 输出文件
-
-运行会在 `--output-dir` 下写出：
-
-- `scorecard.json`: WorldFoundry 统一 scorecard，记录上表中的指标值。
-- `raw_metric_table.jsonl`: 支撑 scorecard 的原始 metric 行。
-- `per_sample_scores.jsonl`: 当结果源包含逐样本数值时写出的逐样本行。
-- `eval_csv`
-- `ors_scores.csv`
-- `leaderboard.csv`
-
-Scorecard 主键：`memobench_average`（leaderboard key `memobench_average`），写入 `scorecard.json`。
-
-## 边界与限制
-
-- ORS 需要 SAM-3 资产，VQA 需要 Gemini 或兼容 VLM 凭据；两者都是外部阶段，绝不以 mock 充当证据。
-- leaderboard 对齐需要完整合成与真实套件的生成帧，以及 Step 1、ORS、VQA 与 leaderboard 证据。
-- 部分套件的自动指标运行只是开发信号，不是 MemoBench leaderboard 成绩。
+产物包括 `scorecard.json`（主键 `memobench_average`），以及存在时的 `eval_csv`、`ors_scores.csv`、`leaderboard.csv`。
 
 [← 返回 Benchmark Hub](/zh/docs/evaluation/benchmark-hub)

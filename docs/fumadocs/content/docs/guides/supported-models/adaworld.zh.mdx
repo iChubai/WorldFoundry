@@ -1,21 +1,50 @@
 ---
 title: "AdaWorld"
-description: "AdaWorld learns adaptable world models with latent actions: by extracting actions from unlabeled videos it can transfer control across domains with minimal finetuning."
-pageSource: generated
+description: "AdaWorld（The Hong Kong University of Science and Technology / MIT）：动作条件视频；计划中。"
+modelId: "adaworld"
+pageSource: authored
 ---
-
-**发表机构:** 香港科技大学 / 麻省理工学院 · 高校
 
 AdaWorld 用潜在动作学习可适配的世界模型：从无标注视频中提取动作，使控制能力以极少微调迁移到新领域。本 catalog 中它作为开源溯源/仅源码元数据保留，并在正式的 Studio 推理 catalog 中隐藏。
 
+<ModelPaperFigures modelId="adaworld" locale="zh" />
+
+记录论文为[arXiv 2503.18938](https://arxiv.org/abs/2503.18938)。
+
+项目页：[adaptable-world-model.github.io](https://adaptable-world-model.github.io/)。代码：[Little-Podi/AdaWorld](https://github.com/Little-Podi/AdaWorld)。
+
+这张卡片对面向发布的推理是 **blocked**。官方源码在 `worldfoundry/synthesis/visual_generation/world_model/adaworld`，上游也有公开 checkpoint，但官方 runner 仍要 AdaWorld 专属依赖和任务/demo 视频资产，这些在统一 Studio 环境里**无法复现**。WorldFoundry 把它从正式 Studio 推理 catalog 里藏起来。在一致性恢复之前，**没有**对外宣传的 `worldfoundry-eval` 路径。
+
 <ModelCommandBuilder modelId="adaworld" locale="zh" />
 
-## 架构
+## 用来做什么
 
-按上游项目，潜在动作自编码器提取可迁移的动作表示，用于条件化自回归世界模型。官方源码已内置于 synthesis/visual_generation/world_model/adaworld；上游存在公开 checkpoint。
+需要动作条件世界步进时选 `adaworld`：记录动作与帧进、滚动生成出。用来做交互世界推理，不是把 prompt 倒进文生视频。
 
-## 使用要点
+按上游项目，潜在动作自编码器提取可迁移的动作表示，用于条件化自回归世界模型。官方源码已内置于 synthesis/visual_generation/world_model/adaworld；上游存在公开 checkpoint。该模型由香港科技大学 / 麻省理工学院发布。
 
-面向发布的推理被 blocked：官方 runner 仍需要 AdaWorld 专属依赖与任务/demo 视频资产，而这些在统一 Studio 环境中无法可复现地获得。在一致性恢复之前请直接使用上游仓库。
+catalog 记录的任务包括 latent-action-world-model、动作条件视频、multi-domain-world-model。
+
+## 运行时契约
+
+必填 `prompt`、`image`、`video`；可选 `actions` (world_action, robot_action)；产物 `adaworld.mp4`。
+
+记录的任务 profile：`latent-action-world-model`、`action-conditioned-video`、`multi-domain-world-model`。
+
+系列状态：**计划中**。
+
+面向发布的推理被 blocked：官方 runner 仍需要 AdaWorld 专属依赖与任务/demo 视频资产，而这些在统一 Studio 环境中无法可复现地获得。 在一致性恢复之前请直接使用上游仓库。
+
+AdaWorld is retained as open-source provenance/source-only metadata and hidden from the formal Studio infer catalog.
+
+## 在 WorldFoundry 中运行
+
+启动 `worldfoundry-eval run adaworld --pipeline.task-profile latent-action-world-model` 推进世界。上方命令构建器按已记录任务切换 `--pipeline.task-profile`，发出的仍是 `worldfoundry-eval run`。
+
+运行环境是统一 profile `worldfoundry-unified-cu128`（Python 3.11，CUDA 12.8）。
+
+本卡片未记录公开 checkpoint id；按使用说明就位权重。就位权重用 `bash scripts/inference/prepare_model_infer.sh adaworld`。
+
+状态：**计划中**。
 
 <ModelRelatedRecipes modelId="adaworld" locale="zh" />

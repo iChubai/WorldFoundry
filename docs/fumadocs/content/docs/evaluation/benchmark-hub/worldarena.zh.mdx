@@ -1,93 +1,36 @@
 ---
 title: WorldArena
-description: 具身世界模型的感知与功能双重评测：视频质量维度加数据引擎/策略评估/动作规划三类功能效用。
+description: "清华 FIB Lab 具身世界模型评测：感知质量加数据引擎 / 策略 / 规划器效用。与 WorldAtlas Arena 不同。"
 ---
 
-## 简介
+WorldArena（清华 FIB Lab）从两个轴评具身世界模型。主键 `ewm_score` 汇总具身世界模型表面。本目录 id 是 **`worldarena`**。它 **不是** [WorldAtlas Arena](/zh/docs/evaluation/benchmark-hub/worldatlas-arena)（`worldatlas-arena`）。
 
-**发表机构：** Tsinghua University（清华大学 FIB Lab）
+- **感知** — 视觉质量、运动质量、内容一致性、物理遵守、3D 精度、可控性、人体质量。
+- **功能** — 作为数据引擎（`data_engine_success`）、策略评估器（`policy_evaluator_correlation`）、动作规划器（`action_planner_success`）的效用。
 
-WorldArena 从两个维度评测具身世界模型：感知质量（视觉质量、运动质量、内容一致性、物理符合度、3D 准确性、可控性、人体质量）与功能效用——模型作为数据引擎（`data_engine_success`）、策略评估器（`policy_evaluator_correlation`）与动作规划器（`action_planner_success`）是否有用。主指标 `ewm_score` 聚合具身世界模型指标面。
+论文：[WorldArena](https://arxiv.org/abs/2602.08971)。项目：[world-arena.ai](https://world-arena.ai/)。代码：[tsinghua-fib-lab/WorldArena](https://github.com/tsinghua-fib-lab/WorldArena)。
 
-WorldFoundry 在 `runners/worldarena/runtime/video_quality` 内置官方视频质量指标 runtime，可逐维度执行或归一化已有结果文件。
+WorldFoundry **接入官方视频质量指标 runtime**（`runners/worldarena/runtime/video_quality`），可一次评一个 `--dimension`（目录有界示例：`action_following`）。**一个真实已准备数据的 PSNR 组件已验证。完整 Track 1 与具身赛道未验证。** 功能效用指标需要视频质量 runtime 之外的具身任务证据。
 
-官方参考：
+<BenchmarkPageSections id="worldarena" locale="zh" />
 
-- Paper: [arxiv.org/abs/2602.08971](https://arxiv.org/abs/2602.08971)
-- 项目主页: [world-arena.ai](https://world-arena.ai/)
-- 官方仓库: [tsinghua-fib-lab/WorldArena](https://github.com/tsinghua-fib-lab/WorldArena)
-
-## 评测协议
-
-`--run-official` 每次执行一个维度（`--dimension`，如 `action_following`），需要配置文件（`--config-path`）与生成视频；真值对比通过 `--gt-data-dir` / `--action-gt-data-dir` 提供，模型权重从 `--ckpt-root` 解析。`--official-results-path` 则改为归一化已有的 WorldArena 结果文件。
-
-主指标是 `ewm_score`。
-
-| Metric | 含义 | 方向 |
-| --- | --- | --- |
-| `visual_quality` | 生成具身视频的感知视觉质量。 | 越高越好 |
-| `motion_quality` | 运动质量与平滑度维度。 | 越高越好 |
-| `content_consistency` | rollout 全程的内容一致性。 | 越高越好 |
-| `physics_adherence` | 生成动态的物理合理性。 | 越高越好 |
-| `three_d_accuracy` | 生成场景的 3D 结构准确性。 | 越高越好 |
-| `controllability` | 对条件/动作控制的遵循程度。 | 越高越好 |
-| `data_engine_success` | 作为下游策略合成数据引擎的效用。 | 越高越好 |
-| `policy_evaluator_correlation` | 模型内策略评估与真实 rollout 结果的相关性。 | 越高越好 |
-| `action_planner_success` | 世界模型充当动作规划器时的任务成功率。 | 越高越好 |
-| `human_quality` | 人体主体生成质量维度。 | 越高越好 |
-| `ewm_score` | 具身世界模型主聚合分。 | 越高越好 |
-
-## 数据与产物布局
-
-WorldFoundry 仓内路径：
-
-```text
-worldfoundry/data/benchmarks/tasks/external/worldarena.yaml
-worldfoundry/evaluation/tasks/execution/runners/worldarena
-```
-
-```text
-worldfoundry/evaluation/tasks/execution/runners/worldarena/runtime/video_quality   # 仓内指标 runtime
-<worldarena_config.yaml>                                                           # 维度配置
-${WORLDFOUNDRY_GENERATED_ARTIFACT_DIR}/                                            # 生成视频
-```
-
-官方 benchmark 资产来自源码仓库；该 contract 条目不需要 Hugging Face 数据集。
-
-## 运行评测
-
-目录 manifest 记录的 validation 命令：
+## 如何运行
 
 ```bash
-python worldfoundry/evaluation/tasks/execution/runners/worldarena/run_worldarena_official_runner.py \
+${WORLDFOUNDRY_UNIFIED_PYTHON} \
+  worldfoundry/evaluation/tasks/execution/runners/worldarena/run_worldarena_official_runner.py \
   --run-official \
   --dimension action_following \
   --config-path <worldarena_config.yaml> \
   --generated-artifact-dir <generated_videos> \
-  --output-dir <out> \
+  --output-dir tmp/worldarena/official \
   --json
 ```
 
-## 权重与环境变量
+真值比较用 `--gt-data-dir` / `--action-gt-data-dir`。权重从 `--ckpt-root` 解析。`--official-results-path` 导入已有结果文件。环境变量：`WORLDFOUNDRY_WORLDARENA_RESULTS_PATH`、`WORLDFOUNDRY_WORLDARENA_ROOT`。合同条目不要求 Hugging Face 数据集。
 
-- `WORLDFOUNDRY_WORLDARENA_ROOT`: 可选覆盖项，指向外部 runtime checkout。
-- `WORLDFOUNDRY_WORLDARENA_RESULTS_PATH`: 未显式传 `--official-results-path` 时，导入器默认从该路径读取官方结果导出文件。
-- `WORLDFOUNDRY_GENERATED_ARTIFACT_DIR`: 存放待评测生成产物（候选视频/rollout）的目录。
+仓内指针：`worldfoundry/data/benchmarks/tasks/external/worldarena.yaml`，`worldfoundry/evaluation/tasks/execution/runners/worldarena`。
 
-## 输出文件
-
-运行会在 `--output-dir` 下写出：
-
-- `scorecard.json`: WorldFoundry 统一 scorecard，记录上表中的指标值。
-- `benchmark_contract.json`: 本次运行的 benchmark contract 记录（输入、模式、来源信息）。
-- `raw_metric_table.jsonl`: 支撑 scorecard 的原始 metric 行。
-
-Scorecard 主键：`ewm_score`（leaderboard key `ewm_score`），写入 `scorecard.json`。
-
-## 边界与限制
-
-- 完整验证需要官方 prompt/任务套件的生成视频或 rollout。
-- 与 leaderboard 对齐需要官方 judge/权重/API 资产与归一化的全套结果文件。
-- 功能效用类指标（数据引擎、策略评估、规划器）依赖视频质量 runtime 之外的具身任务证据。
+产物包括 `scorecard.json`（主键 `ewm_score`）。
 
 [← 返回 Benchmark Hub](/zh/docs/evaluation/benchmark-hub)

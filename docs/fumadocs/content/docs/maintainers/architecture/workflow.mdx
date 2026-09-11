@@ -51,10 +51,10 @@ The facade is intentionally small. `run_evaluate()` validates the request, choos
 
 Mode selection is the first branch that changes cost and requirements. `existing-results` never loads weights—it only scores what is already on disk, which is why hosted API batches and offline demos use it. `model` resolves a runner and calls `generate()` first; the metrics you pass then decide whether scoring stays in-process (`ContractRunner`) or reuses the existing-results path (`ExistingResultsRunner`).
 
-| Mode | Input required | Model loaded? | Metrics path | Use it when |
-| --- | --- | --- | --- | --- |
-| `existing-results` | `results` or `results_path`; optional requests | No | Built-in metric IDs or artifact checks | A demo, hosted job, or offline process already generated artifacts. |
-| `model` | Requests plus runner config or model-zoo id | Yes | Either object metrics through `ContractRunner`, or built-in metrics through `ExistingResultsRunner` | You want model execution in the framework. |
+<KvCatalog heading="Mode" vars rows={[
+    { name: <><code>existing-results</code></>, description: "A demo, hosted job, or offline process already generated artifacts.", reads: [{ label: "Input", value: <><code>results</code>{" or "}<code>results_path</code>{"; optional requests"}</> }, { label: "Model loaded", value: "No" }, { label: "Metrics", value: "Built-in metric IDs or artifact checks" }] },
+    { name: <><code>model</code></>, description: "You want model execution in the framework.", reads: [{ label: "Input", value: "Requests plus runner config or model-zoo id" }, { label: "Model loaded", value: "Yes" }, { label: "Metrics", value: <>{"Either object metrics through "}<code>ContractRunner</code>{", or built-in metrics through "}<code>ExistingResultsRunner</code></> }] }
+  ]} />
 
 ## Model mode detail
 
@@ -98,18 +98,103 @@ Generation is the expensive stage: runner exceptions become failed samples, and 
 
 These files form the audit trail described in the [Evaluation guide](/docs/evaluation#outputs). They are stable across run modes: an `existing-results` run still writes `sample_ledger.jsonl` and `scorecard.json` so reviewers can compare it with a full model run on the same benchmark. Paths are relative to the run output directory recorded in `run_manifest.json`.
 
-| File | Producer | Meaning |
-| --- | --- | --- |
-| `run_manifest.json` | Runner | Run identity, status, model, benchmark, dataset, context metadata, output paths. |
-| `execution_plan.json` | Runner or `RunPlan` | Planned stages, sample IDs, materialization details, output files. |
-| `requests.jsonl` | Runner | One normalized `GenerationRequest` per sample. |
-| `results.jsonl` | Model runner through evaluation runner | One normalized `GenerationResult` per sample. |
-| `sample_ledger.jsonl` | Runner | Per-sample pass/fail status with stage-level errors. |
-| `artifacts.jsonl` | Runner | Flattened artifact refs enriched relative to the output directory. |
-| `metrics/per_sample.jsonl` | Metrics layer | Per-sample metric outputs or skipped state. |
-| `metrics/summary.json` | Metrics layer | Aggregates, failed ids, skipped ids, leaderboard fields. |
-| `scorecard.json` | Reporting layer | Release/review surface consumed by validation and docs. |
-| `report.md` | Reporting layer | Human-readable summary derived from scorecard. |
+<div className="pi-kv-catalog not-prose">
+  <section className="pi-kv-group">
+    <h3>File</h3>
+    <ul>
+      <li className="pi-kv-row">
+        <div className="pi-kv-head">
+          <div className="pi-kv-names">
+            <code>run_manifest.json</code>
+          </div>
+        </div>
+        <p>Run identity, status, model, benchmark, dataset, context metadata, output paths.</p>
+        <p className="pi-kv-read"><span>Producer</span> Runner</p>
+      </li>
+      <li className="pi-kv-row">
+        <div className="pi-kv-head">
+          <div className="pi-kv-names">
+            <code>execution_plan.json</code>
+          </div>
+        </div>
+        <p>Planned stages, sample IDs, materialization details, output files.</p>
+        <p className="pi-kv-read"><span>Producer</span> Runner or <code>RunPlan</code></p>
+      </li>
+      <li className="pi-kv-row">
+        <div className="pi-kv-head">
+          <div className="pi-kv-names">
+            <code>requests.jsonl</code>
+          </div>
+        </div>
+        <p>One normalized <code>GenerationRequest</code> per sample.</p>
+        <p className="pi-kv-read"><span>Producer</span> Runner</p>
+      </li>
+      <li className="pi-kv-row">
+        <div className="pi-kv-head">
+          <div className="pi-kv-names">
+            <code>results.jsonl</code>
+          </div>
+        </div>
+        <p>One normalized <code>GenerationResult</code> per sample.</p>
+        <p className="pi-kv-read"><span>Producer</span> Model runner through evaluation runner</p>
+      </li>
+      <li className="pi-kv-row">
+        <div className="pi-kv-head">
+          <div className="pi-kv-names">
+            <code>sample_ledger.jsonl</code>
+          </div>
+        </div>
+        <p>Per-sample pass/fail status with stage-level errors.</p>
+        <p className="pi-kv-read"><span>Producer</span> Runner</p>
+      </li>
+      <li className="pi-kv-row">
+        <div className="pi-kv-head">
+          <div className="pi-kv-names">
+            <code>artifacts.jsonl</code>
+          </div>
+        </div>
+        <p>Flattened artifact refs enriched relative to the output directory.</p>
+        <p className="pi-kv-read"><span>Producer</span> Runner</p>
+      </li>
+      <li className="pi-kv-row">
+        <div className="pi-kv-head">
+          <div className="pi-kv-names">
+            <code>metrics/per_sample.jsonl</code>
+          </div>
+        </div>
+        <p>Per-sample metric outputs or skipped state.</p>
+        <p className="pi-kv-read"><span>Producer</span> Metrics layer</p>
+      </li>
+      <li className="pi-kv-row">
+        <div className="pi-kv-head">
+          <div className="pi-kv-names">
+            <code>metrics/summary.json</code>
+          </div>
+        </div>
+        <p>Aggregates, failed ids, skipped ids, leaderboard fields.</p>
+        <p className="pi-kv-read"><span>Producer</span> Metrics layer</p>
+      </li>
+      <li className="pi-kv-row">
+        <div className="pi-kv-head">
+          <div className="pi-kv-names">
+            <code>scorecard.json</code>
+          </div>
+        </div>
+        <p>Release/review surface consumed by validation and docs.</p>
+        <p className="pi-kv-read"><span>Producer</span> Reporting layer</p>
+      </li>
+      <li className="pi-kv-row">
+        <div className="pi-kv-head">
+          <div className="pi-kv-names">
+            <code>report.md</code>
+          </div>
+        </div>
+        <p>Human-readable summary derived from scorecard.</p>
+        <p className="pi-kv-read"><span>Producer</span> Reporting layer</p>
+      </li>
+    </ul>
+  </section>
+</div>
 
 ## Task materialization
 

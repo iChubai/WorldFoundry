@@ -28,6 +28,10 @@ export type DocsChromeLabels = {
   nav: string;
   navGroups: Record<DocsNavGroupId, string>;
   openEnvision: string;
+  blog: string;
+  events: string;
+  community: string;
+  search: string;
   onThisPage: string;
   askAi: string;
   askAiCopy: string;
@@ -75,17 +79,18 @@ export const docsNavPageLabels: Record<Locale, DocsNavPageLabels> = {
     'api-reference/reporting': 'Reporting',
     'api-reference/runtime': 'Runtime & assets',
     '': 'Introduction',
-    'overview/world-models': 'World models',
     'overview/design': 'Design',
-    'overview/capabilities': "What's included",
     'reference/environments': 'Environment',
     'guides/inference': 'Run inference',
+    'guides/inference-optimization': 'Inference optimization',
+    'guides/run-status': 'Run status',
     'guides/supported-models': 'Models',
     'guides/local-assets': 'Local assets',
     'guides/tui': 'TUI',
     'reference/cli': 'CLI',
     'guides/studio': 'Studio',
     evaluation: 'Overview',
+    'evaluation/model-benchmark-recipes': 'Model → benchmark',
     'evaluation/benchmark-hub': 'Benchmark Hub',
     'evaluation/benchmark-hub/runtime-environments': 'Runtime environments',
     'evaluation/metrics': 'Metrics',
@@ -116,17 +121,18 @@ export const docsNavPageLabels: Record<Locale, DocsNavPageLabels> = {
     'api-reference/reporting': '报告与证据',
     'api-reference/runtime': 'Runtime 与资产',
     '': '简介',
-    'overview/world-models': '世界模型',
     'overview/design': '设计',
-    'overview/capabilities': '包含什么',
     'reference/environments': '环境配置',
     'guides/inference': '运行推理',
+    'guides/inference-optimization': '推理优化',
+    'guides/run-status': '运行状态',
     'guides/supported-models': '模型',
     'guides/local-assets': '本地资产',
     'guides/tui': 'TUI',
     'reference/cli': 'CLI',
     'guides/studio': 'Studio',
     evaluation: '概览',
+    'evaluation/model-benchmark-recipes': '模型 → 评测',
     'evaluation/benchmark-hub': 'Benchmark Hub',
     'evaluation/benchmark-hub/runtime-environments': '运行环境矩阵',
     'evaluation/metrics': '指标',
@@ -150,9 +156,7 @@ export const docsNavGroups = [
     id: 'overview',
     slugs: [
       [],
-      ['overview', 'world-models'],
       ['overview', 'design'],
-      ['overview', 'capabilities'],
     ],
   },
   {
@@ -163,12 +167,14 @@ export const docsNavGroups = [
       ['guides', 'local-assets'],
       ['guides', 'tui'],
       ['reference', 'cli'],
+      ['guides', 'run-status'],
     ],
   },
   {
     id: 'inference',
     slugs: [
       ['guides', 'inference'],
+      ['guides', 'inference-optimization'],
       ['guides', 'supported-models'],
       ['guides', 'studio'],
     ],
@@ -178,6 +184,7 @@ export const docsNavGroups = [
     id: 'evaluation',
     slugs: [
       ['evaluation'],
+      ['evaluation', 'model-benchmark-recipes'],
       ['evaluation', 'benchmark-hub'],
       ['evaluation', 'benchmark-hub', 'runtime-environments'],
       ['evaluation', 'metrics'],
@@ -251,6 +258,10 @@ export const docsLabels: Record<Locale, DocsChromeLabels> = {
       training: 'Training',
     },
     openEnvision: 'OpenEnvision',
+    blog: 'Blog',
+    events: 'Events',
+    community: 'Community',
+    search: 'Search',
     onThisPage: 'On this page',
     askAi: 'Ask AI',
     askAiCopy: 'Copy page markdown',
@@ -295,6 +306,10 @@ export const docsLabels: Record<Locale, DocsChromeLabels> = {
       training: '训练',
     },
     openEnvision: 'OpenEnvision',
+    blog: '博客',
+    events: '活动',
+    community: '社区',
+    search: '搜索',
     onThisPage: '本页内容',
     askAi: 'Ask AI',
     askAiCopy: '复制本页 Markdown',

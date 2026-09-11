@@ -1,80 +1,27 @@
 ---
 title: MolmoSpaces-Bench
-description: Spatial-understanding embodied benchmark from the Ai2 MolmoBot project; WorldFoundry normalizes official result exports.
+description: "Ai2 MolmoBot eval ladder: 1,000-episode pick and pick-and-place. WorldFoundry imports rollouts; it does not ingest the official board."
 ---
 
-## About
+MolmoSpaces-Bench is Allen Institute for AI's **simulation eval** for MolmoBot / MolmoSpaces spatial-language manipulation. The paper's training dump (**MolmoBot-Data**) is **1.7 million** expert trajectories in an ecosystem cited as **232k** environments and **48k** manipulable objects — that is **not** the bench. The bench is a **1,000-episode** ladder: Pick MSProc / Classic / photorealistic Pick / Pick Random-Cam (20 s), then Pick&Place, PnP Next-To (5 cm), PnP Color (40 s). Official tables split **pick-stage** success from **final** / oracle success. A public board lives at [molmospaces.allen.ai/leaderboard](https://molmospaces.allen.ai/leaderboard); this hub has **not** ingested its rows.
 
-**Publisher:** Allen Institute for AI (Ai2)
+Paper: [MolmoBot](https://arxiv.org/abs/2603.16861). Project: [allenai.github.io/MolmoBot](https://allenai.github.io/MolmoBot/). Code: [allenai/MolmoBot](https://github.com/allenai/MolmoBot). WorldFoundry's contract split name is `pick_and_place`.
 
-MolmoSpaces-Bench accompanies the Allen Institute for AI's MolmoBot line of work on spatially grounded robot policies: it evaluates whether policies grounded in the Molmo vision-language family can execute spatial-language manipulation, with pick-stage success tracked separately from full-task success.
+WorldFoundry **imports** official rollout exports. It does **not** run MolmoSpaces, generate the 1.7M set, or copy the Ai2 board into this page.
 
-WorldFoundry integrates MolmoSpaces-Bench as an official-results runner: upstream rollout exports are normalized into the unified scorecard.
+<BenchmarkPageSections id="molmospaces" locale="en" />
 
-Official references:
-
-- Paper: [arxiv.org/abs/2603.16861](https://arxiv.org/abs/2603.16861)
-- Official repository: [allenai/MolmoBot](https://github.com/allenai/MolmoBot)
-- License: `upstream_terms`
-
-## Evaluation protocol
-
-WorldFoundry integrates this benchmark through the unified result-import path: `worldfoundry-eval zoo benchmark-run --mode official-validation` normalizes a caller-provided official result export (JSON/CSV rollout summaries) into the WorldFoundry scorecard without executing the simulator. Simulator execution, policy loading, and rollout collection remain explicit upstream steps performed with the official tooling.
-
-Primary metric: `success_rate`.
-
-| Metric | Meaning | Direction |
-| --- | --- | --- |
-| `success_rate` | Primary episode success rate over evaluated rollouts. | Higher is better |
-| `pick_success_rate` | Success rate of the pick stage. | Higher is better |
-| `task_success` | Per-task success aggregate. | Higher is better |
-| `reward` | Mean episode reward / return. | Higher is better |
-
-## Data and artifact layout
-
-In-tree paths:
-
-```text
-worldfoundry/data/benchmarks/tasks/external/molmospaces.yaml
-```
-
-```text
-<official_results.json>                 # rollout summary export from the official tooling
-${WORLDFOUNDRY_MOLMOSPACES_RESULTS_PATH}   # default import path
-```
-
-## Run the benchmark
-
-Catalog-recorded validation command:
+## How to run
 
 ```bash
 worldfoundry-eval zoo benchmark-run \
   --benchmark-id molmospaces \
   --mode official-validation \
   --official-results-path <official_results.json> \
-  --output-dir <out> \
+  --output-dir tmp/molmospaces/official-validation \
   --json
 ```
 
-## Checkpoints and environment variables
-
-- `WORLDFOUNDRY_MOLMOSPACES_ROOT`: Optional override pointing at a local benchmark runtime/repository root.
-- `WORLDFOUNDRY_MOLMOSPACES_RESULTS_PATH`: Default path the importer reads official result exports from when `--official-results-path` is not passed.
-
-## Outputs
-
-The run writes into `--output-dir`:
-
-- `scorecard.json`: WorldFoundry scorecard with the metric values recorded above.
-- `raw_results.jsonl`: Normalized rows parsed from the official result export.
-- `evaluation/summary.json`: Aggregated evaluation summary.
-
-Scorecard primary key: `success_rate` (leaderboard key `success_rate`), stored in `scorecard.json`.
-
-## Limitations
-
-- WorldFoundry normalizes supplied rollout results; it does not run the official simulator or policies in tree.
-- Full leaderboard parity is not claimed until official rollouts are executed with staged simulator assets and policy checkpoints, then imported.
-- Imported scorecards are integration evidence, not leaderboard submissions.
+Optional `WORLDFOUNDRY_MOLMOSPACES_ROOT` points at a local runtime/repo. Default import path: `WORLDFOUNDRY_MOLMOSPACES_RESULTS_PATH`. Manifest: `worldfoundry/data/benchmarks/tasks/external/molmospaces.yaml`. Outputs: `scorecard.json` (primary `success_rate`; also `pick_success_rate`), `raw_results.jsonl`, `evaluation/summary.json`.
 
 [← Benchmark Hub](/docs/evaluation/benchmark-hub)

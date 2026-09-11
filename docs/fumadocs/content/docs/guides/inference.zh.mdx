@@ -12,15 +12,16 @@ bash scripts/setup/bootstrap_worldfoundry.sh
 source tmp/worldfoundry_unified_env.sh
 conda activate "${WORLDFOUNDRY_UNIFIED_ENV_PREFIX}"
 
-bash scripts/inference/test_nav_video_gen.sh matrix-game-2 \
-  --output-dir tmp/matrix_game2_first_run
+worldfoundry-eval run <model-id> \
+  --pipeline.task-profile <task-profile> \
+  --output-dir tmp/worldfoundry_infer/<model-id>
 ```
 
-在 `tmp/matrix_game2_first_run` 下检查生成的视频和运行元数据。该产物只是推理证据，不是 benchmark 或 leaderboard 证据。Checkpoint 与 cache 布局见 [本地资产](/zh/docs/guides/local-assets)；Web workspace 见 [Studio](/zh/docs/guides/studio)。
+`<model-id>` 和 `<task-profile>` 从模型页复制。在 `tmp/worldfoundry_infer/<model-id>` 下检查生成产物。该产物只是推理证据，不是 benchmark 或 leaderboard 证据。Checkpoint 与 cache 布局见 [本地资产](/zh/docs/guides/local-assets)；Web workspace 见 [Studio](/zh/docs/guides/studio)。状态用词见 [运行状态](/zh/docs/guides/run-status)。
 
 ## 环境
 
-创建并激活统一推理环境：
+创建并激活统一推理环境。官方首次 clone 命令是 `bash scripts/setup/bootstrap_worldfoundry.sh`（与[快速开始](/zh/docs/quickstart)相同）：
 
 ```bash
 bash scripts/setup/bootstrap_worldfoundry.sh
@@ -96,7 +97,17 @@ repo ID、原生 HF cache 位置，或文档明确声明的 `WORLDFOUNDRY_CKPT_D
 
 ## CLI 推理
 
-共享命令行推理入口是 Studio workspace job runner：
+日常可复现、写进文档的标准命令是 `worldfoundry-eval run`，与模型页上的命令同一形状：
+
+```bash
+worldfoundry-eval run <model-id> \
+  --pipeline.task-profile <task-profile> \
+  --output-dir tmp/worldfoundry_infer/<model-id>
+```
+
+**选哪条命令。** 日常可复现 / 模型页命令用 `worldfoundry-eval run`。只有 Workspace 视觉冒烟才用 `python -m worldfoundry.studio.workspace_job infer`。入口对照见 [CLI 命令入口](/zh/docs/reference/cli#命令入口)。
+
+Workspace 视觉冒烟（与 Studio UI 提交的是同一条 job 路径）：
 
 ```bash
 python -m worldfoundry.studio.workspace_job infer \
@@ -345,12 +356,10 @@ Create Job 字段、runtime checks、默认值，以及可选的持久化默认�
 
 每次推理应产生一个 manifest-like JSON record 和一个或多个 artifact：
 
-| 输出 | 期望用途 |
-| --- | --- |
-| 生成的视频/图像/3D/action artifact | 需要人工视觉或结构检查的主要 demo 输出。 |
-| Job manifest 或 run record | 记录 model ID、variant、backend、参数、路径、耗时、状态和错误。 |
-| Logs | Runtime import、checkpoint、CUDA 和模型调用细节。 |
-| Studio 的 Gallery/Files 条目 | 发布验证时的人类 review surface。 |
+- **生成的视频/图像/3D/action artifact** — 需要人工视觉或结构检查的主要 demo 输出。
+- **Job manifest 或 run record** — 记录 model ID、variant、backend、参数、路径、耗时、状态和错误。
+- **Logs** — Runtime import、checkpoint、CUDA 和模型调用细节。
+- **Studio 的 Gallery/Files 条目** — 发布验证时的人类 review surface。
 
 “生成了视频文件”本身不算成功。还要检查输入契约、prompt/camera/action 控制、
 帧数、分辨率与 artifact 内容，是否匹配目标官方 demo 或模型 profile。

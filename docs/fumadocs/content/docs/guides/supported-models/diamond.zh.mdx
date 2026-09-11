@@ -1,28 +1,48 @@
 ---
 title: "DIAMOND"
-description: "DIAMOND (DIffusion As a Model Of eNvironment Dreams) trains reinforcement-learning agents entirely inside a diffusion world model — its Atari agents and playable CS:GO world model made diffusion world models famous (NeurIPS 2024)."
+description: "DIAMOND（University of Geneva / University of Edinburgh / Microsoft Research）：游戏世界模型；Runner 一致性待确认; 2 个 variant。"
+modelId: "diamond"
 pageSource: generated
 ---
 
-**发表机构:** 日内瓦大学 / 爱丁堡大学 / 微软研究院 · 高校
-
 DIAMOND（DIffusion As a Model Of eNvironment Dreams）让强化学习智能体完全在扩散世界模型内训练——其 Atari 智能体与可游玩的 CS:GO 世界模型让扩散世界模型声名大噪（NeurIPS 2024）。本 catalog 中官方 play/推理栈已内置树内，含 diamond-atari 与 diamond-csgo 两个 variant。
+
+<ModelPaperFigures modelId="diamond" locale="zh" />
+
+记录论文为[arXiv 2405.12399](https://arxiv.org/abs/2405.12399)。
+
+项目页：[diamond-wm.github.io](https://diamond-wm.github.io/)。代码：[eloialonso/diamond](https://github.com/eloialonso/diamond)。
 
 <ModelCommandBuilder modelId="diamond" locale="zh" />
 
-## 架构
+## 用来做什么
 
-按论文，帧预测使用基于近期帧与动作的 EDM 式扩散模型，保留了潜空间世界模型会丢失的视觉细节。运行时配置打包于 data/models/runtime/configs/diamond/config；MIT 许可的上游按需下载 Atari 资产（此处已禁用——运行时网络下载关闭）。
+需要动作条件世界步进时选 `diamond-atari`：记录动作与帧进、滚动生成出。用来做交互世界推理，不是把 prompt 倒进文生视频。
 
-## 使用要点
+按论文，帧预测使用基于近期帧与动作的 EDM 式扩散模型，保留了潜空间世界模型会丢失的视觉细节。运行时配置打包于 data/models/runtime/configs/diamond/config；MIT 许可的上游按需下载 Atari 资产（此处已禁用——运行时网络下载关闭）。该模型由日内瓦大学 / 爱丁堡大学 / 微软研究院发布。
 
-任务可用本地 checkpoint 运行，或用 pretrained=true 加固定本地 snapshot 中的非交互 pretrained_game 值。完整生成一致性需要就位 Atari 资产/checkpoint。
+catalog 记录的任务包括 diffusion-world-model、reinforcement-learning-world-model、游戏世界模型、runtime-plan。别名包括 `diamond-atari`、`diamond-csgo`。同系列还有 `diamond-csgo`。
 
-## 变体与 Pipeline Binding
+## 运行时契约
 
-| Variant | 任务 | Runtime profile | Pipeline Binding | 状态 |
-| --- | --- | --- | --- | --- |
-| `diamond-atari` | atari-world-model | `diamond` | `diamond` | planned |
-| `diamond-csgo` | game-world-model | `diamond` | `diamond` | planned |
+必填 `prompt`、`image`、`video`；可选 `actions` (game_action, atari_action)；产物 `generated_video`、`diamond.mp4`。
+
+记录的任务 profile：`diffusion-world-model`、`reinforcement-learning-world-model`、`game-world-model`、`runtime-plan`。绑定的 pipeline 类是 `DIAMONDPipeline`。
+
+起步 variant 是 `diamond-atari`。catalog 登记了 2 个 variant（上方卡片）：`diamond-atari`（`atari-world-model`）：Runner 一致性待确认、`diamond-csgo`（`game-world-model`）：Runner 一致性待确认。系列状态：**Runner 一致性待确认**。
+
+`runtime-plan` 记录默认值：frames=16, fps=15, seed=42, size=640。
+
+任务可用本地 checkpoint 运行，或用 pretrained=true 加固定本地 snapshot 中的非交互 pretrained_game 值。 完整生成一致性需要就位 Atari 资产/checkpoint。
+
+## 在 WorldFoundry 中运行
+
+启动 `worldfoundry-eval run diamond-atari --pipeline.task-profile runtime-plan` 推进世界。上方命令构建器按已记录任务切换 `--pipeline.task-profile`，发出的仍是 `worldfoundry-eval run`。
+
+运行环境是统一 profile `worldfoundry-unified-cu128`（Python 3.11，CUDA 12.8）。
+
+记录的权重仓库包括 `eloialonso/diamond`。就位权重用 `bash scripts/inference/prepare_model_infer.sh diamond-atari`。
+
+状态：**Runner 一致性待确认**。
 
 <ModelRelatedRecipes modelId="diamond" locale="zh" />

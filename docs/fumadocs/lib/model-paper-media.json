@@ -13,12 +13,6 @@
         "src": "/models/ac3d/paper.png",
         "caption": "AC3D: Analyzing and Improving 3D Camera Control in Video Diffusion Transformers",
         "captionZh": "AC3D: Analyzing and Improving 3D Camera Control in Video Diffusion Transformers"
-      },
-      {
-        "kind": "video",
-        "src": "/demos/ac3d_01.mp4",
-        "caption": "Camera-controlled video",
-        "captionZh": "相机控制视频"
       }
     ]
   },
@@ -36,22 +30,24 @@
         "src": "/models/astra/paper.png",
         "caption": "Astra: General Interactive World Model with Autoregressive Denoising",
         "captionZh": "Astra: General Interactive World Model with Autoregressive Denoising"
-      },
-      {
-        "kind": "video",
-        "src": "/demos/astra_01.mp4",
-        "caption": "Interactive camera control",
-        "captionZh": "交互式相机控制"
       }
     ]
   },
   "cogvideox": {
     "figures": [
       {
-        "kind": "video",
-        "src": "/demos/cogvideo_01.mp4",
-        "caption": "Text-to-video sample",
-        "captionZh": "文本生成视频"
+        "kind": "image",
+        "role": "teaser",
+        "src": "/models/cogvideox/teaser.webp",
+        "caption": "Paper teaser — CogVideoX generation collage",
+        "captionZh": "论文 Teaser：CogVideoX 生成拼图"
+      },
+      {
+        "kind": "image",
+        "role": "overview",
+        "src": "/models/cogvideox/overview.jpg",
+        "caption": "Method overview — expert Transformer with 3D causal VAE",
+        "captionZh": "方法总览：专家 Transformer 与 3D 因果 VAE"
       }
     ]
   },
@@ -107,55 +103,19 @@
     ]
   },
   "hunyuan-game-craft": {
-    "figures": [
-      {
-        "kind": "video",
-        "src": "/demos/studio/hunyuan-game-craft-village.mp4",
-        "caption": "Village-scale game world",
-        "captionZh": "村落尺度游戏世界"
-      }
-    ]
+    "figures": []
   },
   "hy-worldplay": {
-    "figures": [
-      {
-        "kind": "video",
-        "src": "/demos/studio/hy-worldplay-official-8gpu.mp4",
-        "caption": "Interactive world play",
-        "captionZh": "交互式世界漫游"
-      }
-    ]
+    "figures": []
   },
   "longvie-2": {
-    "figures": [
-      {
-        "kind": "video",
-        "src": "/demos/studio/longvie-2-control-video.mp4",
-        "caption": "Queued long-video segments",
-        "captionZh": "分段衔接的长视频"
-      }
-    ]
+    "figures": []
   },
   "matrix-game-2": {
-    "figures": [
-      {
-        "kind": "video",
-        "src": "/demos/studio/matrix-game-2-official-universal.mp4",
-        "poster": "/images/hero/matrix-game-2.webp",
-        "caption": "Keyboard-controlled interactive world",
-        "captionZh": "键鼠控制的交互世界"
-      }
-    ]
+    "figures": []
   },
   "matrix-game-3": {
-    "figures": [
-      {
-        "kind": "video",
-        "src": "/demos/studio/matrix-game-3-cityscape.mp4",
-        "caption": "Cityscape interactive world",
-        "captionZh": "城市场景交互世界"
-      }
-    ]
+    "figures": []
   },
   "neoverse": {
     "paper": {
@@ -165,15 +125,7 @@
       "arxivId": "2601.00393",
       "abstract": "In this paper, we propose NeoVerse, a versatile 4D world model that is capable of 4D reconstruction, novel-trajectory video generation, and rich downstream applications. We first identify a common limitation of scalability in current 4D world modeling methods, caused either by expensive and specialized multi-view 4D data or by cumbersome training pre-processing. In contrast, our NeoVerse is built upon a core philosophy that makes the full pipeline scalable to diverse in-the-wild monocular videos. Specifically, NeoVerse features pose-free feed-forward 4D reconstruction, online monocular degradation pattern simulation, and other well-aligned techniques. These designs empower NeoVerse with versatility and generalization to various domains. Meanwhile, NeoVerse achieves state-of-the-art performance in standard reconstruction and generation benchmarks. Our project page is available at https://"
     },
-    "figures": [
-      {
-        "kind": "video",
-        "src": "/demos/studio/neoverse-robot-tabletop.mp4",
-        "poster": "/images/hero/neoverse.webp",
-        "caption": "Tabletop manipulation trajectories",
-        "captionZh": "桌面操作轨迹"
-      }
-    ]
+    "figures": []
   },
   "recammaster": {
     "paper": {
@@ -278,24 +230,10 @@
     ]
   },
   "worldcam": {
-    "figures": [
-      {
-        "kind": "video",
-        "src": "/demos/studio/worldcam-industrial.mp4",
-        "caption": "Industrial camera-controlled world",
-        "captionZh": "工业场景相机控制"
-      }
-    ]
+    "figures": []
   },
   "yume": {
-    "figures": [
-      {
-        "kind": "video",
-        "src": "/demos/studio/yume-1p5-jungle-castle.mp4",
-        "caption": "First-person world exploration",
-        "captionZh": "第一人称世界探索"
-      }
-    ]
+    "figures": []
   },
   "alayaworld": {
     "paper": {
@@ -383,14 +321,7 @@
     ]
   },
   "cosmos-predict-2.5": {
-    "figures": [
-      {
-        "kind": "video",
-        "src": "/demos/cosmos_01.mp4",
-        "caption": "World-video prediction",
-        "captionZh": "世界视频预测"
-      }
-    ]
+    "figures": []
   },
   "dvlt": {
     "paper": {
@@ -429,24 +360,11 @@
   "hunyuanvideo": {
     "figures": [
       {
-        "kind": "video",
-        "src": "/demos/studio/hunyuanvideo-t2v-cat-grass-official.mp4",
-        "poster": "/models/hunyuanvideo/video_poster.png",
-        "caption": "Official HunyuanVideo text-to-video demo (README teaser poster)",
-        "captionZh": "HunyuanVideo 官方文生视频演示（README 作品展示海报）"
-      },
-      {
-        "kind": "video",
-        "src": "/demos/studio/hunyuanvideo-i2v-firework-official.mp4",
-        "poster": "/models/hunyuanvideo/i2v_video_poster.jpg",
-        "caption": "HunyuanVideo-I2V image-to-video demo",
-        "captionZh": "HunyuanVideo-I2V 图生视频演示"
-      },
-      {
         "kind": "image",
+        "role": "overview",
         "src": "/models/hunyuanvideo/overall.png",
-        "caption": "HunyuanVideo overall architecture — Causal 3D VAE, LLM text encoder, and latent diffusion",
-        "captionZh": "HunyuanVideo 整体架构：因果 3D VAE、大语言模型文本编码与潜空间扩散"
+        "caption": "Method overview — Causal 3D VAE, LLM text encoder, and latent diffusion",
+        "captionZh": "方法总览：因果 3D VAE、大语言模型文本编码与潜空间扩散"
       },
       {
         "kind": "image",
@@ -477,10 +395,11 @@
   "hunyuanvideo-1.5": {
     "figures": [
       {
-        "kind": "video",
-        "src": "/demos/studio/hunyuanvideo-1-5-t2v-cat.mp4",
-        "caption": "HunyuanVideo 1.5 text-to-video",
-        "captionZh": "HunyuanVideo 1.5 文本生成视频"
+        "kind": "image",
+        "role": "overview",
+        "src": "/models/hunyuanvideo-1.5/overview.webp",
+        "caption": "Method overview — HunyuanVideo 1.5 DiT",
+        "captionZh": "方法总览：HunyuanVideo 1.5 DiT"
       }
     ]
   },
@@ -502,34 +421,13 @@
     ]
   },
   "longvie-1": {
-    "figures": [
-      {
-        "kind": "video",
-        "src": "/demos/studio/longvie-1-control-video.mp4",
-        "caption": "Long controllable video",
-        "captionZh": "可控长视频"
-      }
-    ]
+    "figures": []
   },
   "ltx-2.x": {
-    "figures": [
-      {
-        "kind": "video",
-        "src": "/demos/studio/ltx2-3-i2v-penguin.mp4",
-        "caption": "LTX-2.3 image-to-video",
-        "captionZh": "LTX-2.3 图生视频"
-      }
-    ]
+    "figures": []
   },
   "ltx-video": {
-    "figures": [
-      {
-        "kind": "video",
-        "src": "/demos/studio/ltx-video-i2v-penguin.mp4",
-        "caption": "Image-to-video",
-        "captionZh": "图生视频"
-      }
-    ]
+    "figures": []
   },
   "mira": {
     "paper": {
@@ -551,10 +449,11 @@
   "modelscope-t2v": {
     "figures": [
       {
-        "kind": "video",
-        "src": "/demos/studio/modelscope-t2v.mp4",
-        "caption": "Text-to-video",
-        "captionZh": "文本生成视频"
+        "kind": "image",
+        "role": "overview",
+        "src": "/models/modelscope-t2v/overview.jpg",
+        "caption": "Method overview — ModelScopeT2V U-Net with temporal attention",
+        "captionZh": "方法总览：带时间注意力的 ModelScopeT2V U-Net"
       }
     ]
   },
@@ -576,14 +475,7 @@
     ]
   },
   "open-sora-plan": {
-    "figures": [
-      {
-        "kind": "video",
-        "src": "/demos/studio/open-sora-plan-tokyo-street.mp4",
-        "caption": "Open-Sora Plan sample",
-        "captionZh": "Open-Sora Plan 样例"
-      }
-    ]
+    "figures": []
   },
   "rolling-forcing": {
     "paper": {
@@ -637,14 +529,7 @@
     ]
   },
   "skyreels-v3": {
-    "figures": [
-      {
-        "kind": "video",
-        "src": "/demos/studio/skyreels-v3-reference-to-video.mp4",
-        "caption": "Reference-to-video",
-        "captionZh": "参考图生成视频"
-      }
-    ]
+    "figures": []
   },
   "stable-video-infinity": {
     "paper": {
@@ -698,52 +583,25 @@
     ]
   },
   "unianimate-dit": {
-    "figures": [
-      {
-        "kind": "video",
-        "src": "/demos/studio/unianimate-dit-human-animation.mp4",
-        "caption": "Human animation",
-        "captionZh": "人物动画"
-      }
-    ]
+    "figures": []
   },
   "videocrafter1-i2v": {
-    "figures": [
-      {
-        "kind": "video",
-        "src": "/demos/studio/videocrafter1-i2v.mp4",
-        "caption": "Image-to-video",
-        "captionZh": "图生视频"
-      }
-    ]
+    "figures": []
   },
   "videocrafter1-t2v": {
-    "figures": [
-      {
-        "kind": "video",
-        "src": "/demos/studio/videocrafter1-t2v.mp4",
-        "caption": "Text-to-video",
-        "captionZh": "文本生成视频"
-      }
-    ]
+    "figures": []
   },
   "videocrafter2-t2v": {
-    "figures": [
-      {
-        "kind": "video",
-        "src": "/demos/studio/videocrafter2-t2v.mp4",
-        "caption": "Text-to-video",
-        "captionZh": "文本生成视频"
-      }
-    ]
+    "figures": []
   },
   "wan2.1-vace": {
     "figures": [
       {
-        "kind": "video",
-        "src": "/demos/studio/wan2-1-vace-girl-snake.mp4",
-        "caption": "VACE-controlled generation",
-        "captionZh": "VACE 可控生成"
+        "kind": "image",
+        "role": "teaser",
+        "src": "/models/wan2.1-vace/teaser.webp",
+        "caption": "Paper teaser — VACE all-in-one video creation and editing",
+        "captionZh": "论文 Teaser：VACE 一体化视频创作与编辑"
       }
     ]
   },
@@ -868,14 +726,7 @@
     ]
   },
   "leworldmodel": {
-    "figures": [
-      {
-        "kind": "video",
-        "src": "/demos/studio/leworldmodel-pusht.mp4",
-        "caption": "PushT world-model rollout",
-        "captionZh": "PushT 世界模型滚动"
-      }
-    ]
+    "figures": []
   },
   "libero-para": {
     "paper": {
@@ -888,9 +739,10 @@
     "figures": [
       {
         "kind": "image",
-        "src": "/models/libero-para/paper.png",
-        "caption": "LIBERO-Para: A Diagnostic Benchmark and Metrics for Paraphrase Robustness in VLA Models",
-        "captionZh": "LIBERO-Para: A Diagnostic Benchmark and Metrics for Paraphrase Robustness in VLA Models"
+        "role": "teaser",
+        "src": "/models/libero-para/teaser.webp",
+        "caption": "Paper teaser — paraphrase robustness diagnostic for VLA models",
+        "captionZh": "论文 Teaser：VLA 改写鲁棒性诊断"
       }
     ]
   },
@@ -1197,6 +1049,252 @@
         "src": "/models/echo-memory-videossm-hybrid/paper.png",
         "caption": "Echo-Memory: A Controlled Study of Memory in Action World Models",
         "captionZh": "Echo-Memory: A Controlled Study of Memory in Action World Models"
+      }
+    ]
+  },
+  "animatediff": {
+    "figures": [
+      {
+        "kind": "image",
+        "role": "overview",
+        "src": "/models/animatediff/overview.png",
+        "caption": "Method overview — AnimateDiff motion module on a T2I backbone",
+        "captionZh": "方法总览：AnimateDiff 在文生图骨干上的运动模块"
+      }
+    ]
+  },
+  "being-h05": {
+    "figures": [
+      {
+        "kind": "image",
+        "role": "teaser",
+        "src": "/models/being-h05/teaser.jpg",
+        "caption": "Paper teaser — Being-H0.5 at a glance",
+        "captionZh": "论文 Teaser：Being-H0.5 一览"
+      },
+      {
+        "kind": "image",
+        "role": "overview",
+        "src": "/models/being-h05/overview.jpg",
+        "caption": "Method overview — Mixture-of-Transformers with unified action space",
+        "captionZh": "方法总览：混合 Transformer 与统一动作空间"
+      }
+    ]
+  },
+  "cosmos-predict-2": {
+    "figures": [
+      {
+        "kind": "image",
+        "role": "overview",
+        "src": "/models/cosmos-predict-2/overview.png",
+        "caption": "Method overview — Cosmos Predict2 world-model stack",
+        "captionZh": "方法总览：Cosmos Predict2 世界模型栈"
+      }
+    ]
+  },
+  "dap": {
+    "figures": [
+      {
+        "kind": "image",
+        "role": "teaser",
+        "src": "/models/dap/teaser.jpg",
+        "caption": "Paper teaser — metric panoramic depth from diverse 360° inputs",
+        "captionZh": "论文 Teaser：多样 360° 输入上的度量全景深度"
+      },
+      {
+        "kind": "image",
+        "role": "overview",
+        "src": "/models/dap/overview.jpg",
+        "caption": "Method overview — DAP network with distortion-aware decoder",
+        "captionZh": "方法总览：带畸变感知解码器的 DAP 网络"
+      }
+    ]
+  },
+  "diffusion-policy": {
+    "figures": [
+      {
+        "kind": "image",
+        "role": "teaser",
+        "src": "/models/diffusion-policy/teaser.png",
+        "caption": "Paper teaser — visuomotor policy via diffusion",
+        "captionZh": "论文 Teaser：扩散视觉运动策略"
+      }
+    ]
+  },
+  "easyanimate": {
+    "figures": [
+      {
+        "kind": "image",
+        "role": "overview",
+        "src": "/models/easyanimate/overview.jpg",
+        "caption": "Method overview — EasyAnimate transformer pipeline",
+        "captionZh": "方法总览：EasyAnimate Transformer 流程"
+      }
+    ]
+  },
+  "gr00t": {
+    "figures": [
+      {
+        "kind": "image",
+        "role": "overview",
+        "src": "/models/gr00t/overview.webp",
+        "caption": "Method overview — GR00T dual-system architecture",
+        "captionZh": "方法总览：GR00T 双系统架构"
+      }
+    ]
+  },
+  "helios": {
+    "figures": [
+      {
+        "kind": "image",
+        "role": "overview",
+        "src": "/models/helios/overview.jpg",
+        "caption": "Method overview — Helios autoregressive diffusion",
+        "captionZh": "方法总览：Helios 自回归扩散"
+      }
+    ]
+  },
+  "octo": {
+    "figures": [
+      {
+        "kind": "image",
+        "role": "teaser",
+        "src": "/models/octo/teaser.jpg",
+        "caption": "Paper teaser — Octo generalist robot policy",
+        "captionZh": "论文 Teaser：Octo 通用机器人策略"
+      }
+    ]
+  },
+  "open-sora": {
+    "figures": []
+  },
+  "openvla": {
+    "figures": [
+      {
+        "kind": "image",
+        "role": "overview",
+        "src": "/models/openvla/overview.png",
+        "caption": "Method overview — Prismatic VLM backbone with action decoding",
+        "captionZh": "方法总览：Prismatic VLM 骨干与动作解码"
+      }
+    ]
+  },
+  "pi0": {
+    "figures": [
+      {
+        "kind": "image",
+        "role": "teaser",
+        "src": "/models/pi0/teaser.jpg",
+        "caption": "Paper teaser — π0 VLA with flow-matching action expert",
+        "captionZh": "论文 Teaser：带 flow matching 动作专家的 π0 VLA"
+      },
+      {
+        "kind": "image",
+        "role": "overview",
+        "src": "/models/pi0/overview.jpg",
+        "caption": "Method overview — VLM backbone plus action expert",
+        "captionZh": "方法总览：VLM 骨干与动作专家"
+      }
+    ]
+  },
+  "pi05": {
+    "figures": [
+      {
+        "kind": "image",
+        "role": "teaser",
+        "src": "/models/pi05/teaser.webp",
+        "caption": "Paper teaser — π0.5 open-world generalization",
+        "captionZh": "论文 Teaser：π0.5 开放世界泛化"
+      },
+      {
+        "kind": "image",
+        "role": "overview",
+        "src": "/models/pi05/overview.webp",
+        "caption": "Method overview — π0.5 pre-training and action expert",
+        "captionZh": "方法总览：π0.5 预训练与动作专家"
+      }
+    ]
+  },
+  "wan2.1": {
+    "figures": [
+      {
+        "kind": "image",
+        "role": "teaser",
+        "src": "/models/wan2.1/teaser.jpg",
+        "caption": "Paper teaser — Wan2.1 text-to-video samples",
+        "captionZh": "论文 Teaser：Wan2.1 文生视频样例"
+      },
+      {
+        "kind": "image",
+        "role": "overview",
+        "src": "/models/wan2.1/overview.jpg",
+        "caption": "Method overview — Wan DiT architecture",
+        "captionZh": "方法总览：Wan DiT 架构"
+      }
+    ]
+  },
+  "wan2.2": {
+    "figures": [
+      {
+        "kind": "image",
+        "role": "overview",
+        "src": "/models/wan2.2/overview.png",
+        "caption": "Method overview — Wan2.2 Mixture-of-Experts architecture",
+        "captionZh": "方法总览：Wan2.2 混合专家架构"
+      }
+    ]
+  },
+  "being-h07": {
+    "figures": [
+      {
+        "kind": "image",
+        "role": "teaser",
+        "src": "/models/being-h05/teaser.jpg",
+        "caption": "Paper teaser — Being-H0.5 at a glance",
+        "captionZh": "论文 Teaser：Being-H0.5 一览"
+      },
+      {
+        "kind": "image",
+        "role": "overview",
+        "src": "/models/being-h05/overview.jpg",
+        "caption": "Method overview — Mixture-of-Transformers with unified action space",
+        "captionZh": "方法总览：混合 Transformer 与统一动作空间"
+      }
+    ]
+  },
+  "openpi": {
+    "figures": [
+      {
+        "kind": "image",
+        "role": "teaser",
+        "src": "/models/pi05/teaser.webp",
+        "caption": "Paper teaser — π0.5 open-world generalization",
+        "captionZh": "论文 Teaser：π0.5 开放世界泛化"
+      },
+      {
+        "kind": "image",
+        "role": "overview",
+        "src": "/models/pi05/overview.webp",
+        "caption": "Method overview — π0.5 pre-training and action expert",
+        "captionZh": "方法总览：π0.5 预训练与动作专家"
+      }
+    ]
+  },
+  "pi0-fast": {
+    "figures": [
+      {
+        "kind": "image",
+        "role": "teaser",
+        "src": "/models/pi0/teaser.jpg",
+        "caption": "Paper teaser — π0 VLA with flow-matching action expert",
+        "captionZh": "论文 Teaser：带 flow matching 动作专家的 π0 VLA"
+      },
+      {
+        "kind": "image",
+        "role": "overview",
+        "src": "/models/pi0/overview.jpg",
+        "caption": "Method overview — VLM backbone plus action expert",
+        "captionZh": "方法总览：VLM 骨干与动作专家"
       }
     ]
   }

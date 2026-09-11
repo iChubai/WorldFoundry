@@ -1,27 +1,52 @@
 ---
 title: "HunyuanWorld-Voyager"
-description: "HunyuanWorld-Voyager generates world-consistent RGB-D video along user-defined camera paths — walk a camera through the scene implied by one image and get aligned color and depth for 3D reconstruction."
-pageSource: generated
+description: "HunyuanWorld-Voyager（Tencent (Hunyuan)）：世界模型、video；已验证。"
+modelId: "hunyuanworld-voyager"
+pageSource: authored
 ---
-
-**发表机构:** 腾讯（混元） · 企业
-video
 
 HunyuanWorld-Voyager 沿用户定义的相机路径生成世界一致的 RGB-D 视频——让相机在一张图所暗示的场景中游走，得到对齐的彩色与深度，可用于 3D 重建。本 catalog 中 runner 已按官方 case1 条件视频 demo 与上游单卡命令形状验证。
 
+<ModelPaperFigures modelId="hunyuanworld-voyager" locale="zh" />
+
+记录论文为[arXiv 2405.07719](https://arxiv.org/abs/2405.07719)。
+
+项目页：[3d-models.hunyuan.tencent.com/world](https://3d-models.hunyuan.tencent.com/world/)。代码：[Tencent-Hunyuan/HunyuanWorld-Voyager](https://github.com/Tencent-Hunyuan/HunyuanWorld-Voyager)。
+
 <ModelCommandBuilder modelId="hunyuanworld-voyager" locale="zh" />
 
-## 架构
+## 用来做什么
 
-按上游发布，Voyager 将基于 HunyuanVideo 的生成器与 RGB-D 联合输出及世界缓存机制结合，实现长程一致性。运行时档案记录官方 case1 默认值：num_frames=49、infer_steps=50、flow_shift=7.0、 embedded_cfg_scale=6.0、i2v_stability=true。
+用 `hunyuanworld-voyager` 做 catalog 世界模型推理。需要动作条件未来帧、而不是独立片段生成器时选它。
 
-## 使用要点
+按上游发布，Voyager 将基于 HunyuanVideo 的生成器与 RGB-D 联合输出及世界缓存机制结合，实现长程一致性。运行时档案记录官方 case1 默认值：num_frames=49、infer_steps=50、flow_shift=7.0、 embedded_cfg_scale=6.0、i2v_stability=true。该模型由腾讯（混元）发布。
 
-HunyuanWorldVoyagerPipeline 封装树内运行时——导入与推理时都不需要外部检出。每次运行的视觉 QA 在 catalog 外跟踪。
+catalog 记录的任务包括 世界模型、video。输出模态为视频。
 
-## 评测 Benchmark
+记录的评测入口包括[WorldScore](/zh/docs/evaluation/benchmark-hub/worldscore)（相机可游走生成世界的评分）、[CameraBench](/zh/docs/evaluation/benchmark-hub/camerabench)（相机路径贴合度评测）。
 
-- [WorldScore](/zh/docs/evaluation/benchmark-hub/worldscore) — 相机可游走生成世界的评分。
-- [CameraBench](/zh/docs/evaluation/benchmark-hub/camerabench) — 相机路径贴合度评测。
+沿相机路径漫游 HunyuanWorld。不是 Mirror，也不是 World-1。
+
+## 运行时契约
+
+必填 `image`；可选 `prompt`、`video`、`actions` (camera_path, navigation_action)；产物 `hunyuanworld-voyager.mp4`。
+
+记录的任务 profile：`world`、`video`、`world_model`。绑定的 pipeline 类是 `HunyuanWorldVoyagerPipeline`。
+
+系列状态：**已验证**。
+
+HunyuanWorldVoyagerPipeline 封装树内运行时——导入与推理时都不需要外部检出。
+
+Existing in-tree runtime is now exposed through a BaseSynthesis subclass.
+
+## 在 WorldFoundry 中运行
+
+启动 `worldfoundry-eval run hunyuanworld-voyager --pipeline.task-profile world` 推进世界。上方命令构建器按已记录任务切换 `--pipeline.task-profile`，发出的仍是 `worldfoundry-eval run`。
+
+运行环境是统一 profile `worldfoundry-unified-cu128`（Python 3.11，CUDA 12.8）。
+
+记录的权重仓库包括 `tencent/HunyuanWorld-Voyager`。就位权重用 `bash scripts/inference/prepare_model_infer.sh hunyuanworld-voyager`。
+
+状态：**已验证**。
 
 <ModelRelatedRecipes modelId="hunyuanworld-voyager" locale="zh" />

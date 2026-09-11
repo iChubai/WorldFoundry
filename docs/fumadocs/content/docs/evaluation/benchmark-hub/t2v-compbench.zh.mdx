@@ -1,57 +1,25 @@
 ---
 title: T2V-CompBench
-description: 组合性 T2V 评测（CVPR 2025）：1,400 条 prompt 覆盖七大类别，用 MLLM、检测与跟踪三类指标打分。
+description: "CVPR 2025 组合式 T2V 评测：1,400 条 prompt、七个绑定轴。WorldFoundry 内置 runtime，不编造榜单。"
 ---
 
-## 简介
+T2V-CompBench（港大，联合港中文与华为诺亚）问的是文生视频模型会不会把**正确的属性、动作和运动绑到正确的物体上**。这是组合能力，不是单一美学分。官方套件 **1,400 条 prompt**（7 × 200）：
 
-**发表机构：** The University of Hong Kong（香港大学，联合香港中文大学与华为诺亚方舟实验室）
+- **一致 / 动态属性绑定** — 先测静态属性，再测时变属性，是否落在正确物体上。
+- **空间关系** — 二维 / 三维布局（检测 + 深度 / SAM）。
+- **运动绑定** — 前景 vs 背景运动（DOT 跟踪）。
+- **动作绑定** 与 **物体交互** — MLLM（LLaVA 风格）评判。
+- **生成计数** — GroundingDINO 数物体。这是 WorldFoundry 已在真实 MP4 上跑过的有界官方分量。
 
-T2V-CompBench 是首个专注*组合性*文生视频的评测：把正确的属性、动作与运动绑定到正确的物体上。1,400 条 prompt（每类 200 条）覆盖一致属性绑定、动态属性绑定、空间关系、运动绑定、动作绑定、物体交互与生成计数七类。各类别由三种经人工校验的指标打分：MLLM 型（LLaVA 风格视频评审）、检测型（GroundingDINO 加深度/SAM，用于空间与计数类）与跟踪型（DOT，用于运动绑定）。
+论文：[T2V-CompBench](https://arxiv.org/abs/2407.14505)。项目：[t2v-compbench-2025.github.io](https://t2v-compbench-2025.github.io/)。代码：[KaiyueSun98/T2V-CompBench](https://github.com/KaiyueSun98/T2V-CompBench)。参考视频：[`Kaiyue/T2V-CompBench-Videos`](https://huggingface.co/datasets/Kaiyue/T2V-CompBench-Videos)（25,200 行）。
 
-WorldFoundry 在仓内内置 T2V-CompBench runtime。严格的模型产物 manifest 桥接把生成视频就位为官方 `category/NNNN.mp4` 布局；仓内官方 `generative_numeracy` evaluator 已在真实 MP4 上执行（scorecard 记录 `official_component_verified=true`）；runner 也可归一化官方 CSV 输出，或在指标资产就绪时执行其他类别。
+WorldFoundry **内置官方 runtime**，并用严格的 manifest 桥把生成视频排成 `category/NNNN.mp4`。可导入官方 CSV / JSON，或在度量资源就位后跑单个类别。只有七个类别分齐备时才写出 `t2v_compbench_average`。
 
-官方参考：
+<BenchmarkPageSections id="t2v-compbench" locale="zh" />
 
-- Paper: [arxiv.org/abs/2407.14505](https://arxiv.org/abs/2407.14505)
-- 项目主页: [t2v-compbench-2025.github.io](https://t2v-compbench-2025.github.io/)
-- 官方仓库: [KaiyueSun98/T2V-CompBench](https://github.com/KaiyueSun98/T2V-CompBench)
+## 如何运行
 
-## 评测协议
-
-生成视频需要持久化的 generation manifest（或精确的官方 `category/NNNN.mp4` 布局）。`--category` 选择单一类别；`generative_numeracy` 需要本地 GroundingDINO 权重加 BERT 兼容文本编码器；四个 MLLM 类别需要 LLaVA 兼容权重；`motion_binding` 需要 DOT 与 `--run-motion-two-stage`；空间类需要 Depth-Anything/SAM 资产。`--preflight` 可在执行前校验资产。
-
-主指标是 `t2v_compbench_average`。
-
-| Metric | 含义 | 方向 |
-| --- | --- | --- |
-| `consistent_attribute_binding` | T2V-CompBench MLLM 得分：静态属性与正确物体的绑定。 | 越高越好 |
-| `dynamic_attribute_binding` | T2V-CompBench MLLM 得分：时变属性变化与绑定。 | 越高越好 |
-| `spatial_relationships` | T2V-CompBench 检测/深度得分：2D 与 3D 空间关系。 | 越高越好 |
-| `motion_binding` | T2V-CompBench 跟踪得分：前景/背景运动绑定。 | 越高越好 |
-| `action_binding` | T2V-CompBench MLLM 得分：动作-物体绑定。 | 越高越好 |
-| `object_interactions` | T2V-CompBench MLLM 得分：物体间交互一致性。 | 越高越好 |
-| `generative_numeracy` | T2V-CompBench 检测得分：生成物体计数。 | 越高越好 |
-| `t2v_compbench_average` | 仅当七个官方 T2V-CompBench 类别分齐备时输出的均值。 | 越高越好 |
-
-## 数据与产物布局
-
-WorldFoundry 仓内路径：
-
-```text
-worldfoundry/data/benchmarks/tasks/external/t2v-compbench.yaml
-worldfoundry/evaluation/tasks/execution/runners/t2v_compbench/runtime/t2v_compbench
-```
-
-```text
-.../runners/t2v_compbench/runtime/t2v_compbench             # 仓内官方 runtime
-cache/worldfoundry/data/hfd_datasets/Kaiyue/T2V-CompBench-Videos   # 官方参考视频
-<generated>/<category>/NNNN.mp4                             # 已就位的官方布局
-```
-
-## 运行评测
-
-目录 manifest 记录的 validation 命令：
+导入官方类别分：
 
 ```bash
 worldfoundry-eval zoo benchmark-run \
@@ -59,39 +27,30 @@ worldfoundry-eval zoo benchmark-run \
   --mode official-validation \
   --official-results-path <official_results.json> \
   --generated-artifact-dir <generated_videos> \
-  --output-dir <out> \
+  --output-dir tmp/t2v-compbench/official-validation \
   --json
 ```
 
-## 权重与环境变量
+从已就位视频重算一个类别（计数需要 GroundingDINO 与 BERT 兼容编码器）：
 
-- `WORLDFOUNDRY_T2V_COMPBENCH_ROOT`: 可选覆盖项，指向本地 benchmark runtime / 仓库根目录。
-- `WORLDFOUNDRY_T2V_COMPBENCH_RESULTS_PATH`: 未显式传 `--official-results-path` 时，导入器默认从该路径读取官方结果导出文件。
-- `WORLDFOUNDRY_T2V_COMPBENCH_GROUNDINGDINO_CKPT`: 检测型类别使用的 GroundingDINO 权重。
-- `WORLDFOUNDRY_T2V_COMPBENCH_LLAVA_MODEL_PATH`: 四个 MLLM 类别使用的 LLaVA 兼容权重。
-- `WORLDFOUNDRY_T2V_COMPBENCH_SAM_CKPT`: 空间类分割使用的 SAM 权重。
+```bash
+${WORLDFOUNDRY_UNIFIED_PYTHON} \
+  worldfoundry/evaluation/tasks/execution/runners/t2v_compbench/run_t2v_compbench_official_runner.py \
+  --generated-video-dir <generated_videos_with_t2v_compbench_generation_manifest.jsonl> \
+  --category generative_numeracy \
+  --output-dir tmp/t2v-compbench/numeracy \
+  --json
+```
 
-该 benchmark 复用共享 base-model 依赖栈：`grounded_depth_segmentation_stack`。
+`--preflight` 会在开跑前检查资源。MLLM 类别需要 `WORLDFOUNDRY_T2V_COMPBENCH_LLAVA_MODEL_PATH`；运动绑定需要 DOT；空间类别需要 Depth-Anything / SAM（`WORLDFOUNDRY_T2V_COMPBENCH_SAM_CKPT`）。共享栈：`grounded_depth_segmentation_stack`。默认导入路径：`WORLDFOUNDRY_T2V_COMPBENCH_RESULTS_PATH`。可选 runtime 根：`WORLDFOUNDRY_T2V_COMPBENCH_ROOT`。
 
-## 输出文件
+仓内指针：
 
-运行会在 `--output-dir` 下写出：
+```text
+worldfoundry/data/benchmarks/tasks/external/t2v-compbench.yaml
+worldfoundry/evaluation/tasks/execution/runners/t2v_compbench/runtime/t2v_compbench
+```
 
-- `scorecard.json`: WorldFoundry 统一 scorecard，记录上表中的指标值。
-- `per_sample_scores.jsonl`: 当结果源包含逐样本数值时写出的逐样本行。
-- `raw_metric_table.jsonl`: 支撑 scorecard 的原始 metric 行。
-- `leaderboard_csv_manifest.json`
-- `generated_video_manifest.json`
-- `dataset_manifest.json`
-- `upstream_stdout.log`: 上游官方 scorer 的 stdout 日志。
-- `upstream_stderr.log`: 上游官方 scorer 的 stderr 日志。
-
-Scorecard 主键：`t2v_compbench_average`（leaderboard key `t2v_compbench_average`），写入 `scorecard.json`。
-
-## 边界与限制
-
-- 全套验证需要全部 1,400 个生成视频（7 类 × 200），有界的单视频组件运行不算。
-- MLLM 类别需要兼容的 LLaVA runtime/权重；motion_binding 需要 DOT；其余检测路径需要类别专属的深度/SAM 资产。
-- 只有七个官方类别得分齐备时才输出 `t2v_compbench_average`；完整官方 benchmark 与 leaderboard 对齐尚未执行。
+产物包括 `scorecard.json`（齐备时主键 `t2v_compbench_average`）、`raw_metric_table.jsonl`，以及来源提供时的逐样本行。
 
 [← 返回 Benchmark Hub](/zh/docs/evaluation/benchmark-hub)

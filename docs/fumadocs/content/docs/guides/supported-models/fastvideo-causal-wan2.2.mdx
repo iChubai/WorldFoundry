@@ -1,22 +1,39 @@
 ---
 title: "FastVideo CausalWan2.2"
-description: "FastVideo CausalWan2.2 is an eight-step causal Wan2.2 rollout that emits video in three-latent-frame blocks while routing between high- and low-noise experts."
-pageSource: generated
+description: "NVIDIA / FastVideo eight-step causal Wan2.2: 832×480, 717 frames, guidance 1, 16 fps, three-latent blocks. Native recipe; A14B GPU required. Runner pending."
+modelId: "fastvideo-causal-wan2.2"
+pageSource: authored
 ---
 
-**Publisher:** NVIDIA / FastVideo · Company
-text → video
+FastVideo CausalWan2.2 is an **eight-step causal** Wan2.2 rollout: video comes out in **three-latent-frame** blocks while the stack routes between high- and low-noise experts. WorldFoundry keeps expert KV / cross-attention caches independent and owns deterministic **self-forcing re-noise** on a fixed shifted flow schedule. Native roles cover both Wan2.2 experts, T5, VAE, and cache traversal. Pipeline: `FastVideoCausalWanPipeline`. Alias `fastvideo-causal-wan` resolves here. Related HF id: `FastVideo/CausalWan2.2-I2V-A14B-Preview-Diffusers`.
 
-FastVideo CausalWan2.2 is an eight-step causal Wan2.2 rollout that emits video in three-latent-frame blocks while routing between high- and low-noise experts.
+<ModelPaperFigures modelId="fastvideo-causal-wan2.2" locale="en" />
+
+Paper: [arXiv 2606.03159](https://arxiv.org/abs/2606.03159). Project: [nvidia.github.io/flashdreams](https://nvidia.github.io/flashdreams/main/index.html). Code: [NVIDIA/FlashDreams](https://github.com/NVIDIA/FlashDreams). Preview weights: `FastVideo/CausalWan2.2-I2V-A14B-Preview-Diffusers` (**Apache-2.0**).  Status: Runner 一致性待验证.
 
 <ModelCommandBuilder modelId="fastvideo-causal-wan2.2" locale="en" />
 
-## Architecture
+## What it is for
 
-WorldFoundry keeps expert KV/cross-attention caches independent and owns deterministic self-forcing re-noise on the fixed shifted flow schedule.
+Causal Wan2.2 fast video. Not the full Wan2.2 family card.
 
-## Usage notes
+Launch `worldfoundry-eval run fastvideo-causal-wan2.2-t2v-14b` with `--pipeline.task-profile text-to-video`.
 
-Defaults are 832x480, 717 frames, eight steps, guidance 1, and 16 FPS.
+## Runtime contract
+
+Required: `prompt`; optional: `image` and `video`; artifacts: `fastvideo-causal-wan2.2-t2v-14b.mp4`.
+
+| Knob | Default |
+| --- | --- |
+| Size | **832×480** |
+| Frames | **717** |
+| Steps | **8** |
+| Guidance | **1** |
+| FPS | **16** |
+| Block | **3** latent frames |
+
+## Run in WorldFoundry
+
+Status: **Runner parity pending**. Unified environment `worldfoundry-unified-cu128` (Python 3.11, CUDA 12.8). Stage `FastVideo/CausalWan2.2-I2V-A14B-Preview-Diffusers` locally — missing files fail at load, nothing is downloaded. Run `worldfoundry-eval run fastvideo-causal-wan2.2-t2v-14b` with `--pipeline.task-profile text-to-video`. License: Apache-2.0. Catalog VRAM is unset.
 
 <ModelRelatedRecipes modelId="fastvideo-causal-wan2.2" locale="en" />

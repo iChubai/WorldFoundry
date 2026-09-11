@@ -1,92 +1,37 @@
 ---
 title: RoboTwin 2.0
-description: Scalable bimanual-manipulation benchmark with strong domain randomization; WorldFoundry imports official eval_result exports.
+description: "50 dual-arm tasks, 731 objects, five embodiments, strong domain randomization. WorldFoundry imports official eval_result files — it does not claim the public board."
 ---
 
-## About
+RoboTwin 2.0 (The University of Hong Kong and Shanghai AI Laboratory, with AgileX) is a **bimanual** SAPIEN benchmark, not a video-generation suite. The paper instantiates **50** dual-arm tasks on **RoboTwin-OD** (**731** objects, **147** categories) across **five** embodiments: Aloha-AgileX, ARX-X5, Piper, Franka Panda, and UR5-WSG. Domain randomization is five axes — clutter, lighting, background, tabletop height, language — and **clean** vs **randomized** success are reported separately. The companion dump is **100k+** expert trajectories (`TianxingChen/RoboTwin2.0`).
 
-**Publisher:** The University of Hong Kong & Shanghai AI Laboratory (with AgileX Robotics)
+Paper: [RoboTwin 2.0](https://arxiv.org/abs/2506.18088). Project: [robotwin-platform.github.io](https://robotwin-platform.github.io/). Docs: [usage / configurations](https://robotwin-platform.github.io/doc/). Code: [RoboTwin-Platform/RoboTwin](https://github.com/RoboTwin-Platform/RoboTwin). Official board: [leaderboard](https://robotwin-platform.github.io/leaderboard) — **not ingested** here.
 
-RoboTwin 2.0 is a scalable simulation benchmark for bimanual robotic manipulation: 50 dual-arm tasks over 731 objects across five embodiments, with an automated expert-data generator and systematic domain randomization (clutter, lighting, backgrounds, tabletop heights, language instructions) designed to measure robustness — clean vs. randomized success are tracked separately. The companion pre-collected dataset exceeds 100k trajectories.
+WorldFoundry **imports** official `eval_result/_result.txt` (layout `eval_result/{task}/{policy}/{config}/{ckpt}/{timestamp}/_result.txt`) or structured JSON/CSV. Offline normalization needs no simulator. Real parity still needs the upstream **SAPIEN / Curobo** stack and the official `policy/*/eval.sh` scripts. A 2026-05-25 bounded local check reached CUDA allocation; `script/test_render.py` hit the timeout, so rendering is **not** claimed green. Shared stack: `robotwin_dataset_assets`.
 
-WorldFoundry imports official `eval_result/_result.txt` and structured JSON/CSV exports into scorecard artifacts, including a task manifest, official command manifest, and simulator-validation record. Offline normalization needs no simulator; real parity requires the upstream SAPIEN/Curobo stack.
+<BenchmarkPageSections id="robotwin" locale="en" />
 
-Official references:
-
-- Paper: [arxiv.org/abs/2506.18088](https://arxiv.org/abs/2506.18088)
-- Project page: [robotwin-platform.github.io](https://robotwin-platform.github.io/)
-- Official repository: [RoboTwin-Platform/RoboTwin](https://github.com/RoboTwin-Platform/RoboTwin)
-
-## Evaluation protocol
-
-Offline normalization accepts explicit official `eval_result/_result.txt` or structured exports via `--official-results-path` / `WORLDFOUNDRY_ROBOTWIN_RESULTS_PATH`. Real simulator/policy parity requires upstream SAPIEN/Curobo assets and policy checkpoints executed with the official scripts.
-
-Primary metric: `success_rate`.
-
-| Metric | Meaning | Direction |
-| --- | --- | --- |
-| `success_rate` | Primary episode success rate over evaluated rollouts. | Higher is better |
-| `task_success` | Per-task success aggregate. | Higher is better |
-| `episode_success` | Per-episode success indicator aggregate. | Higher is better |
-| `bimanual_task_success` | Success aggregate over dual-arm coordination tasks. | Higher is better |
-| `domain_randomization_success` | Success under the official domain-randomized condition. | Higher is better |
-| `clean_success` | Success under the clean (non-randomized) condition. | Higher is better |
-| `randomized_success` | Success under randomized clutter/lighting/background conditions. | Higher is better |
-| `reward` | Mean episode reward / return. | Higher is better |
-
-## Data and artifact layout
-
-In-tree paths:
-
-```text
-worldfoundry/data/benchmarks/tasks/external/robotwin.yaml
-```
-
-```text
-cache/worldfoundry/data/hfd_datasets/TianxingChen__RoboTwin2.0        # official 100k+ trajectory dataset
-cache/worldfoundry/data/hfd_datasets/lerobot__robotwin_unified        # LeRobot unified conversion
-cache/vla_va_wam/repos/RoboTwin-Platform--RoboTwin                    # upstream repo mirror
-<official eval_result/_result.txt>                                    # import source
-```
-
-## Run the benchmark
-
-Catalog-recorded validation command:
+## How to run
 
 ```bash
 worldfoundry-eval zoo benchmark-run \
   --benchmark-id robotwin \
   --mode official-validation \
   --official-results-path <official_results.json> \
-  --output-dir <out> \
+  --output-dir tmp/robotwin/official-validation \
   --json
 ```
 
-## Checkpoints and environment variables
+`--official-results-path` may point at a `_result.txt` tree or a JSON/CSV export. Optional `WORLDFOUNDRY_ROBOTWIN_ROOT` overrides the runtime/repo root. Default import path: `WORLDFOUNDRY_ROBOTWIN_RESULTS_PATH`. Manifest: `worldfoundry/data/benchmarks/tasks/external/robotwin.yaml`.
 
-- `WORLDFOUNDRY_ROBOTWIN_ROOT`: Optional override pointing at a local benchmark runtime/repository root.
-- `WORLDFOUNDRY_ROBOTWIN_RESULTS_PATH`: Default path the importer reads official result exports from when `--official-results-path` is not passed.
+In-tree pointers:
 
-This benchmark reuses the shared base-model dependency stack: `robotwin_dataset_assets`.
+```text
+cache/worldfoundry/data/hfd_datasets/TianxingChen__RoboTwin2.0
+cache/worldfoundry/data/hfd_datasets/lerobot__robotwin_unified
+cache/vla_va_wam/repos/RoboTwin-Platform--RoboTwin
+```
 
-## Outputs
-
-The run writes into `--output-dir`:
-
-- `scorecard.json`: WorldFoundry scorecard with the metric values recorded above.
-- `benchmark_contract.json`: Benchmark contract record for the run (inputs, mode, provenance).
-- `task_manifest.json`
-- `official_command_manifest.json`
-- `simulator_validation.json`
-- `raw_metric_table.jsonl`: Metric rows backing the scorecard.
-- `evaluation/per_sample_metrics.jsonl`
-
-Scorecard primary key: `success_rate` (leaderboard key `success_rate`), stored in `scorecard.json`.
-
-## Limitations
-
-- Result import is normalizer-only; full leaderboard parity requires executing the upstream SAPIEN/Curobo simulator and policy scripts with staged assets and checkpoints.
-- A 2026-05-25 bounded simulator validation reached CUDA driver allocation locally, but upstream `script/test_render.py` exceeded the hard timeout; SAPIEN/Vulkan rendering remains blocked in this environment.
-- RoboTwin 2.0 is an embodied bimanual-manipulation benchmark, not a video-generation benchmark.
+Outputs: `scorecard.json` (primary `success_rate`), `benchmark_contract.json`, `task_manifest.json`, `official_command_manifest.json`, `simulator_validation.json`, `raw_metric_table.jsonl`, and `evaluation/per_sample_metrics.jsonl`.
 
 [← Benchmark Hub](/docs/evaluation/benchmark-hub)

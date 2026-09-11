@@ -1,39 +1,54 @@
 ---
 title: "FantasyWorld"
-description: "FantasyWorld does geometry-consistent world modeling by unifying video and 3D prediction: from an image it produces camera-controllable world video that stays geometrically coherent. Two variants are recorded — the verified Wan2.1 pipeline…"
-pageSource: generated
+description: "FantasyWorld（Alibaba (Amap, Fantasy-AMAP)）：3D 与 4D；已验证; 2 个 variant。"
+modelId: "fantasyworld"
+pageSource: authored
 ---
-
-**发表机构:** 阿里巴巴（高德 Fantasy-AMAP 团队） · 企业
-[FantasyWorld: Geometry-Consistent World Modeling via Unified Video and 3D Prediction](https://arxiv.org/abs/2509.21657) (2025)
 
 FantasyWorld 通过统一视频与 3D 预测实现几何一致的世界建模：从一张图生成相机可控、几何连贯的世界视频。记录两个 variant——已验证的 Wan2.1 pipeline（面向发布的默认路径），以及在官方显存策略验证前对 Studio 隐藏的 Wan2.2 pipeline。
 
-<figure className="wf-recipe-media is-diagram">
-  <img src="/models/fantasyworld/paper.png" alt="FantasyWorld: Geometry-Consistent World Modeling via Unified Video and 3D Prediction" />
-  <figcaption>FantasyWorld: Geometry-Consistent World Modeling via Unified Video and 3D Prediction</figcaption>
-</figure>
+<ModelPaperFigures modelId="fantasyworld" locale="zh" />
+
+记录论文为[FantasyWorld: Geometry-Consistent World Modeling via Unified Video and 3D Prediction](https://arxiv.org/abs/2509.21657)（2025）。
+
+项目页：[fantasy-amap.github.io/fantasy-world](https://fantasy-amap.github.io/fantasy-world/)。代码：[Fantasy-AMAP/fantasy-world](https://github.com/Fantasy-AMAP/fantasy-world)。
+
+论文：[FantasyWorld: Geometry-Consistent World Modeling via Unified Video and 3D Prediction](https://arxiv.org/abs/2509.21657)（arXiv 2509.21657）。项目页：[fantasy-amap.github.io/fantasy-world](https://fantasy-amap.github.io/fantasy-world/)。代码：[Fantasy-AMAP/fantasy-world](https://github.com/Fantasy-AMAP/fantasy-world)。发布方：阿里高德（Fantasy-AMAP），作者含北邮。catalog 把源码标成 **source_available**——没找到 LICENSE，因此**没有**记成 open_source。
+
+运行时需要本地 FantasyWorld Wan2.1（`acvlab/FantasyWorld-Wan2.1-I2V-14B-480P`）、Wan2.1 I2V（`Wan-AI/Wan2.1-I2V-14B-480P`）、**MoGe**（`Ruicheng/moge-2-vitl-normal`）和 CUDA 资产。Runner 按官方相机世界契约**已验证**。
 
 <ModelCommandBuilder modelId="fantasyworld" locale="zh" />
 
-## 架构
+## 用来做什么
 
-FantasyWorld 在 Wan 视频基座上增加统一的 3D 预测分支，使生成帧遵守场景几何（见 arXiv 2509.21657）。运行需要本地 FantasyWorld Wan2.1、Wan2.1 I2V、MoGe 与 CUDA 资产。
+用 `fantasyworld-wan21` 做 catalog 几何推理。产物是重建而不是生成视频时选它。
 
-## 使用要点
+FantasyWorld 在 Wan 视频基座上增加统一的 3D 预测分支，使生成帧遵守场景几何（见 arXiv 2509.21657）。运行需要本地 FantasyWorld Wan2.1、Wan2.1 I2V、MoGe 与 CUDA 资产。该模型由阿里巴巴（高德 Fantasy-AMAP 团队）发布。
 
-默认行解析到已验证的树内 Wan2.1 runner——请使用该路径。Wan2.2 variant 因官方单卡运行需要认可的显存策略而保持 pending。
+catalog 记录的任务包括 geometry-consistent world modeling、official-camera-world。别名包括 `Geometry-Consistent World Modeling via Unified Video and 3D Prediction`。同系列还有 `fantasyworld-wan22`。
 
-## 变体与 Pipeline Binding
+记录的评测入口包括[WorldScore](/zh/docs/evaluation/benchmark-hub/worldscore)（评估几何一致的生成世界）、[CameraBench](/zh/docs/evaluation/benchmark-hub/camerabench)（相机控制质量评测）。
 
-| Variant | 任务 | Runtime profile | Pipeline Binding | 状态 |
-| --- | --- | --- | --- | --- |
-| `fantasyworld-wan21` | image-to-world-video | `fantasyworld-wan21` | `fantasyworld-wan21` | verified |
-| `fantasyworld-wan22` | camera-controlled-world-video | `fantasyworld-wan22` | `fantasyworld-wan22` | checkpoint assets staged cpu schema validated gpu pending |
+## 运行时契约
 
-## 评测 Benchmark
+必填 `prompt`、`image`；可选 `video`、`actions` (camera_path, camera_pose_sequence)；产物 `generated_world`、`fantasyworld.mp4`。
 
-- [WorldScore](/zh/docs/evaluation/benchmark-hub/worldscore) — 评估几何一致的生成世界。
-- [CameraBench](/zh/docs/evaluation/benchmark-hub/camerabench) — 相机控制质量评测。
+记录的任务 profile：`geometry-consistent world modeling`、`official-camera-world`。绑定的 pipeline 类是 `FantasyWorldPipeline`。
+
+起步 variant 是 `fantasyworld-wan21`。catalog 登记了 2 个 variant（上方卡片）：`fantasyworld-wan21`（`image-to-world-video`）：Runner 一致性待确认、`fantasyworld-wan22`（`camera-controlled-world-video`）：Runner 一致性待确认。系列状态：**已验证**。
+
+`official-camera-world` 记录默认值：fps=16, seed=1024。
+
+默认行解析到已验证的树内 Wan2.1 runner——请使用该路径。 Wan2.2 variant 因官方单卡运行需要认可的显存策略而保持 pending。
+
+## 在 WorldFoundry 中运行
+
+启动 `worldfoundry-eval run fantasyworld-wan21 --pipeline.task-profile official-camera-world` 写出几何。上方命令构建器按已记录任务切换 `--pipeline.task-profile`，发出的仍是 `worldfoundry-eval run`。
+
+运行环境是统一 profile `worldfoundry-unified-cu128`（Python 3.11，CUDA 12.8）。
+
+记录的权重仓库包括 `acvlab/FantasyWorld-Wan2.1-I2V-14B-480P`、`Wan-AI/Wan2.1-I2V-14B-480P`、`Ruicheng/moge-2-vitl-normal`。就位权重用 `bash scripts/inference/prepare_model_infer.sh fantasyworld-wan21`。
+
+状态：**已验证**。
 
 <ModelRelatedRecipes modelId="fantasyworld" locale="zh" />

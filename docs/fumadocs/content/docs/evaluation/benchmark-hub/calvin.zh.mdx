@@ -1,80 +1,27 @@
 ---
 title: CALVIN
-description: 长时程语言条件操作评测（RA-L 2022）；WorldFoundry 归一化官方序列评测导出。
+description: "长时程语言条件桌面评测（RA-L 2022）。官方协议是在 A/B/C 上训练、在 D 上测试后，报告链长度 1–5 的成功率。"
 ---
 
-## 简介
+CALVIN（Composing Actions from Language and Vision）是弗莱堡大学的长时程、语言条件操作评测（IEEE RA-L 2022）。策略在 **PyBullet** 桌面上必须串起最多**五条**语言指令。四个环境配置 **A/B/C/D** 测零样本迁移：标志性划分是在 A/B/C 上训练，在未见过的 **D** 上评测。论文报告的是每个链长度的成功率，以及**平均完成的指令数**，不是单一的 episode 成败比特。
 
-**发表机构：** University of Freiburg（弗莱堡大学）
+论文：[CALVIN](https://ieeexplore.ieee.org/document/9788026)（项目 [calvin.cs.uni-freiburg.de](http://calvin.cs.uni-freiburg.de/)）。代码：[mees/calvin](https://github.com/mees/calvin)（MIT）。
 
-CALVIN（Composing Actions from Language and Vision）由弗莱堡大学发布，评测长时程语言条件操作：策略在 PyBullet 桌面环境中需按顺序串联最多五条语言指令，并跨 A/B/C/D 四种环境配置检验零样本迁移。标志性协议报告各链长的成功率与平均完成指令数。
+WorldFoundry 是**官方结果导入器**。你在上游跑序列评测器，再归一化导出。模拟器、数据集根目录和策略权重遵循官方 CALVIN 文档。仓库镜像：`cache/vla_va_wam/repos/mees--calvin`。
 
-WorldFoundry 以官方结果 runner 集成 CALVIN：官方长时程序列评测器的导出被归一化为统一 scorecard。
+<BenchmarkPageSections id="calvin" locale="zh" />
 
-官方参考：
-
-- Paper: [ieeexplore.ieee.org/document/9788026](https://ieeexplore.ieee.org/document/9788026)
-- 项目主页: [calvin.cs.uni-freiburg.de](http://calvin.cs.uni-freiburg.de/)
-- 官方仓库: [mees/calvin](https://github.com/mees/calvin)
-- License: `mit`
-
-## 评测协议
-
-WorldFoundry 通过统一的结果导入路径集成该 benchmark：`worldfoundry-eval zoo benchmark-run --mode official-validation` 把调用方提供的官方结果导出（JSON/CSV rollout 汇总）归一化为 WorldFoundry scorecard，不执行模拟器。模拟器执行、策略加载与 rollout 采集仍是使用官方工具完成的显式上游步骤。
-
-主指标是 `success_rate`。
-
-| Metric | 含义 | 方向 |
-| --- | --- | --- |
-| `success_rate` | 评测 rollout 上的主成功率（逐 episode 成功比例）。 | 越高越好 |
-| `sequence_success` | 五指令链的成功率（长时程协议）。 | 越高越好 |
-| `task_success` | 按任务聚合的成功率。 | 越高越好 |
-| `completion` | 每条序列平均完成的指令数。 | 越高越好 |
-
-## 数据与产物布局
-
-WorldFoundry 仓内路径：
-
-```text
-worldfoundry/data/benchmarks/tasks/external/calvin.yaml
-```
-
-```text
-<official_results.json>                 # 官方工具产出的 rollout 汇总导出
-${WORLDFOUNDRY_CALVIN_RESULTS_PATH}   # 默认导入路径
-```
-上游 checkout 镜像在 `cache/vla_va_wam/repos/mees--calvin`；数据集根与策略权重遵循 CALVIN 官方文档。
-
-## 运行评测
-
-目录 manifest 记录的 validation 命令：
+## 如何运行
 
 ```bash
 worldfoundry-eval zoo benchmark-run \
   --benchmark-id calvin \
   --mode official-validation \
   --official-results-path <official_results.json> \
-  --output-dir <out> \
+  --output-dir tmp/calvin/official-validation \
   --json
 ```
 
-## 权重与环境变量
-
-- `WORLDFOUNDRY_CALVIN_RESULTS_PATH`: 未显式传 `--official-results-path` 时，导入器默认从该路径读取官方结果导出文件。
-
-## 输出文件
-
-运行会在 `--output-dir` 下写出：
-
-- `scorecard.json`: WorldFoundry 统一 scorecard，记录上表中的指标值。
-- `raw_results.jsonl`: 从官方结果导出解析出的归一化行。
-
-Scorecard 主键：`success_rate`（leaderboard key `success_rate`），写入 `scorecard.json`。
-
-## 边界与限制
-
-- WorldFoundry 只归一化所提供的 rollout 结果；不在仓内运行官方模拟器或策略。
-- 在用就位的模拟器资产与策略权重执行官方 rollout 并导入之前，不声称完整 leaderboard 对齐。
-- 导入的 scorecard 是集成证据，不是 leaderboard 提交。
+默认导入路径：`WORLDFOUNDRY_CALVIN_RESULTS_PATH`。清单：`worldfoundry/data/benchmarks/tasks/external/calvin.yaml`。产物：`scorecard.json`（主键 `success_rate`；另有 `sequence_success`、`completion`）与 `raw_results.jsonl`。
 
 [← 返回 Benchmark Hub](/zh/docs/evaluation/benchmark-hub)

@@ -23,6 +23,7 @@ export function HomeHeroMedia({ children }: { children?: ReactNode }) {
   const [pageVisible, setPageVisible] = useState(true);
   const [carouselVisible, setCarouselVisible] = useState(true);
   const [videoReady, setVideoReady] = useState(false);
+  const mountedRef = useRef(false);
 
   const isCarousel = homeHeroSlides.length > 1;
   const visibleSlides = useMemo(() => {
@@ -40,6 +41,13 @@ export function HomeHeroMedia({ children }: { children?: ReactNode }) {
 
   const activeSlide = homeHeroSlides[activeIndex];
   const showVideo = activeSlide.kind === 'video' && videoAllowed && motionAllowed;
+
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => {
+      mountedRef.current = false;
+    };
+  }, []);
 
   useEffect(() => {
     const preference = window.matchMedia('(prefers-reduced-motion: reduce)');
@@ -114,6 +122,10 @@ export function HomeHeroMedia({ children }: { children?: ReactNode }) {
     const video = videoRef.current;
     if (!video) return;
 
+    if (video.readyState >= HTMLMediaElement.HAVE_FUTURE_DATA) {
+      setVideoReady(true);
+    }
+
     if (!motionAllowed || !pageVisible || !carouselVisible || !showVideo) {
       video.pause();
       return;
@@ -152,7 +164,9 @@ export function HomeHeroMedia({ children }: { children?: ReactNode }) {
               preload="auto"
               aria-hidden="true"
               tabIndex={-1}
-              onCanPlay={() => setVideoReady(true)}
+              onCanPlay={() => {
+                if (mountedRef.current) setVideoReady(true);
+              }}
             />
           ) : null}
         </>

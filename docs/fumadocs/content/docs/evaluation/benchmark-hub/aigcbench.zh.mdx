@@ -1,63 +1,24 @@
 ---
 title: AIGCBench
-description: 系统化的图生视频评测，覆盖参考对齐、运动效果与时序一致性。
+description: "BenchCouncil 图生视频质量评测：首帧保真、对齐、运动、时序、DOVER。WorldFoundry 导入官方指标，不编造榜单。"
 ---
 
-## 简介
+AIGCBench（BenchCouncil，中科院计算所）评的是**图生视频**：给定条件图像和 prompt，片段是否保真、是否有运动、时序是否连贯？指标族：
 
-**发表机构：** BenchCouncil（中国科学院计算技术研究所）
+- **首帧保真** — 相对条件图像的 `mse_first` / `ssim_first`。
+- **对齐** — 图像-视频与文本-视频 CLIP。
+- **参考视频对齐** — 关键帧 / 对应帧 CLIP 与 SSIM（需要官方参考）。
+- **运动** — 光流平方均值。
+- **时序** — 相邻帧 CLIP。
+- **感知质量** — DOVER。也会记录 `frame_count`。
 
-AIGCBench 评测图生视频，指标族覆盖首帧保真（与条件图像的 MSE/SSIM）、图-视频与文-视频 CLIP 对齐、参考视频对比（关键帧与对应帧 CLIP、SSIM）、运动强度（光流平方均值）、时序连贯（相邻帧 CLIP）与感知质量（DOVER）。
+论文：[AIGCBench](https://arxiv.org/abs/2401.01651)。项目：[benchcouncil.org/AIGCBench](https://www.benchcouncil.org/AIGCBench)。代码：[BenchCouncil/AIGCBench](https://github.com/BenchCouncil/AIGCBench)（Apache-2.0）。数据集：[`stevenfan/AIGCBench_v1.0`](https://huggingface.co/datasets/stevenfan/AIGCBench_v1.0)。
 
-WorldFoundry 从官方 Hugging Face 数据集 materialize AIGCBench prompt 列表，通过自有模型集成生成候选视频，再由仓内 runner 导入指标产物并写出标准 scorecard。内置资产位于 `worldfoundry/data/benchmarks/assets/aigcbench`。
+WorldFoundry **导入官方指标 CSV / TSV**（或流水线分数转储）。`worldfoundry/data/benchmarks/assets/aigcbench` 里的 `prompt_suite.json` 可在不下载完整 Hugging Face 数据的情况下物化请求。CLIP、DOVER 与光流打分器仍由调用方提供。官方导出提供时，主键为 `aigcbench_average`。
 
-官方参考：
+<BenchmarkPageSections id="aigcbench" locale="zh" />
 
-- Paper: [arxiv.org/abs/2401.01651](https://arxiv.org/abs/2401.01651)
-- 项目主页: [huggingface.co/papers/2401.01651](https://huggingface.co/papers/2401.01651)
-- 官方仓库: [BenchCouncil/AIGCBench](https://github.com/BenchCouncil/AIGCBench)
-- License: `apache-2.0`
-
-## 评测协议
-
-runner 可导入官方指标 CSV 导出（`--official-results-path`），或导入 WorldFoundry 评测管线产出的指标（`--run-official` 处理已准备的 artifact scores）。参考图像/参考视频指标族需要相应官方资产；`--prompt-manifest` 可将打分限制到指定 prompt 子集，`--strict` 在覆盖缺口时直接失败。
-
-主指标是 `aigcbench_average`。
-
-| Metric | 含义 | 方向 |
-| --- | --- | --- |
-| `mse_first` | AIGCBench：条件图像与生成首帧间的 MSE；越低越好。 | 越低越好 |
-| `ssim_first` | AIGCBench：条件图像与生成首帧间的 SSIM。 | 越高越好 |
-| `image_genvideo_clip` | AIGCBench：条件图像与生成视频间的 CLIP 相似度。 | 越高越好 |
-| `genvideo_text_clip` | AIGCBench：生成视频与文本 prompt 间的 CLIP 相似度。 | 越高越好 |
-| `genvideo_refvideo_clip_keyframes` | AIGCBench：生成视频与参考视频关键帧间的 CLIP 相似度。 | 越高越好 |
-| `flow_square_mean` | AIGCBench：生成视频运动效果的光流平方均值。 | 越高越好 |
-| `genvideo_refvideo_clip_corresponding_frames` | AIGCBench：生成视频与参考视频对应帧间的 CLIP 相似度。 | 越高越好 |
-| `genvideo_clip_adjacent_frames` | AIGCBench：相邻帧 CLIP 相似度（时序一致性）。 | 越高越好 |
-| `frame_count` | AIGCBench：生成视频帧数。 | 越高越好 |
-| `dover` | AIGCBench：DOVER 视频质量分。 | 越高越好 |
-| `genvideo_refvideo_ssim` | AIGCBench：生成视频与参考视频间的 SSIM。 | 越高越好 |
-| `aigcbench_average` | AIGCBench：由官方 scorer 或归一化输出提供的官方聚合分。 | 越高越好 |
-
-## 数据与产物布局
-
-WorldFoundry 仓内路径：
-
-```text
-worldfoundry/data/benchmarks/tasks/external/aigcbench.yaml
-worldfoundry/data/benchmarks/assets/aigcbench
-```
-
-```bash
-export WORLDFOUNDRY_GENERATED_ARTIFACT_DIR=/path/to/aigcbench/generated_videos
-export WORLDFOUNDRY_AIGCBENCH_RESULTS_PATH=/path/to/aigcbench_metrics.csv
-```
-
-内置 `prompt_suite.json` 支持不下载完整数据集即可 materialize 生成请求；leaderboard 对齐仍需官方数据集资产。
-
-## 运行评测
-
-目录 manifest 记录的 validation 命令：
+## 如何运行
 
 ```bash
 worldfoundry-eval zoo benchmark-run \
@@ -65,31 +26,19 @@ worldfoundry-eval zoo benchmark-run \
   --mode official-validation \
   --official-results-path <official_results.csv> \
   --generated-artifact-dir <generated_videos> \
-  --output-dir <out> \
+  --output-dir tmp/aigcbench/official-validation \
   --json
 ```
 
-## 权重与环境变量
+`--strict` 会在覆盖缺口处失败；`--prompt-manifest` 可限制 prompt 子集。首帧 / 参考视频指标族需要官方资源就位。默认导入路径：`WORLDFOUNDRY_AIGCBENCH_RESULTS_PATH`。共享栈：`video_quality_motion_stack`。
 
-- `WORLDFOUNDRY_AIGCBENCH_RESULTS_PATH`: 未显式传 `--official-results-path` 时，导入器默认从该路径读取官方结果导出文件。
-- `WORLDFOUNDRY_GENERATED_ARTIFACT_DIR`: 存放待评测生成产物（候选视频/rollout）的目录。
+仓内指针：
 
-该 benchmark 复用共享 base-model 依赖栈：`video_quality_motion_stack`。
+```text
+worldfoundry/data/benchmarks/tasks/external/aigcbench.yaml
+worldfoundry/data/benchmarks/assets/aigcbench
+```
 
-## 输出文件
-
-运行会在 `--output-dir` 下写出：
-
-- `scorecard.json`: WorldFoundry 统一 scorecard，记录上表中的指标值。
-- `benchmark_contract.json`: 本次运行的 benchmark contract 记录（输入、模式、来源信息）。
-- `raw_metric_table.jsonl`: 支撑 scorecard 的原始 metric 行。
-
-Scorecard 主键：`aigcbench_average`（leaderboard key `aigcbench_average`），写入 `scorecard.json`。
-
-## 边界与限制
-
-- 依赖参考的指标（首帧保真、参考视频 CLIP/SSIM）只有在准备了官方参考资产时才有意义。
-- Leaderboard 对齐需要官方 prompt suite 的生成视频，以及 CLIP/DOVER/光流指标输出。
-- 本地 scorecard 不是官方 AIGCBench leaderboard 结果。
+产物包括 `scorecard.json`（主键 `aigcbench_average`）、`benchmark_contract.json`、`raw_metric_table.jsonl`。
 
 [← 返回 Benchmark Hub](/zh/docs/evaluation/benchmark-hub)

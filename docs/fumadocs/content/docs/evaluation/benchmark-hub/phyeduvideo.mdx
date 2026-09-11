@@ -1,57 +1,19 @@
 ---
 title: PhyEduVideo
-description: "WACV 2026 physics-education T2V benchmark: curriculum-aligned teaching-point prompts scored on semantics, physics, and temporal quality."
+description: "WACV 2026 physics-education T2V: 60 concepts, 205 teaching-point prompts. WorldFoundry imports judge files and checks coverage — it does not run InternVL."
 ---
 
-## About
+PhyEduVideo (IIIT Hyderabad, Adobe, IISER Thiruvananthapuram; WACV 2026) asks whether a T2V model can **illustrate a teaching point**, not whether it obeys a law taxonomy. The bundled `Prompts/Prompts.json` has **60 concepts** in **6 categories** (mechanics, oscillations and waves, fluids, thermodynamics, electromagnetism, optics), split into **205** visually descriptive teaching-point prompts.
 
-**Publisher:** IIIT Hyderabad, Adobe & IISER Thiruvananthapuram
+That is **education**, not [PhyGenBench](/docs/evaluation/benchmark-hub/phygenbench) (27-law commonsense generation), not [PhyGround](/docs/evaluation/benchmark-hub/phyground) (13-law criteria on TI2V), and not [PhyFPS-Bench-Gen](/docs/evaluation/benchmark-hub/phyfps-bench-gen) (frame-rate audit).
 
-PhyEduVideo (WACV 2026) evaluates whether text-to-video models can produce accurate educational physics illustrations. Sixty core concepts from seven classical-physics domains (mechanics, waves, thermodynamics, electromagnetism, fluids, optics) are decomposed into granular teaching points, each with a visually descriptive prompt. Upstream scoring combines an InternVL/CLIP/VQA judging stack over the generated videos.
+Paper: [PhyEduVideo](https://arxiv.org/abs/2601.00943). Project: [meghamariamkm.github.io/phyeduvideo26](https://meghamariamkm.github.io/phyeduvideo26/). Code: [meghamariamkm/PhyEduVideo](https://github.com/meghamariamkm/PhyEduVideo).
 
-WorldFoundry bundles the prompt manifests and provides a result importer: it normalizes caller-provided PhyEduVideo result files, checks prompt/video coverage, and emits per-sample rows plus the aggregate scorecard.
+WorldFoundry **imports** caller-supplied result files (JSON / JSONL / CSV), checks prompt/video coverage against the bundled manifests, and writes a scorecard. The InternVL / CLIP / VQA judge stack is **not** run in tree.
 
-Official references:
+<BenchmarkPageSections id="phyeduvideo" locale="en" />
 
-- Paper: [arxiv.org/abs/2601.00943](https://arxiv.org/abs/2601.00943)
-- Project page: [meghamariamkm.github.io/phyeduvideo26](https://meghamariamkm.github.io/phyeduvideo26/)
-- Official repository: [meghamariamkm/PhyEduVideo](https://github.com/meghamariamkm/PhyEduVideo)
-
-## Evaluation protocol
-
-The in-tree runner is import-only for scoring: `official-validation` (or `--run-official`, which imports a results file for WorldFoundry-generated artifacts) normalizes upstream result exports into the five metric families and verifies coverage against the bundled `Prompts/*.json`. The raw-video InternVL/CLIP/VQA judging stack is not executed in tree.
-
-Primary metric: `phyeduvideo_average`.
-
-| Metric | Meaning | Direction |
-| --- | --- | --- |
-| `semantic_adherence` | semantic_adherence normalized benchmark score. | Higher is better |
-| `physics_commonsense` | physics_commonsense normalized benchmark score. | Higher is better |
-| `motion_smoothness` | motion_smoothness normalized benchmark score. | Higher is better |
-| `temporal_flickering` | temporal_flickering normalized benchmark score. | Higher is better |
-| `phyeduvideo_average` | phyeduvideo_average normalized benchmark score. | Higher is better |
-
-## Data and artifact layout
-
-In-tree paths:
-
-```text
-worldfoundry/data/benchmarks/tasks/external/phyeduvideo.yaml
-worldfoundry/data/benchmarks/assets/phyeduvideo
-worldfoundry/evaluation/tasks/execution/runners/phyeduvideo
-```
-
-```text
-worldfoundry/data/benchmarks/assets/phyeduvideo/          # bundled Prompts/*.json manifests
-worldfoundry/evaluation/tasks/execution/runners/phyeduvideo/
-${WORLDFOUNDRY_GENERATED_ARTIFACT_DIR}/                   # candidate videos for coverage checks
-```
-
-Result files are caller-supplied; no Hugging Face dataset is required.
-
-## Run the benchmark
-
-Catalog-recorded validation command:
+## How to run
 
 ```bash
 worldfoundry-eval zoo benchmark-run \
@@ -59,32 +21,10 @@ worldfoundry-eval zoo benchmark-run \
   --mode official-validation \
   --official-results-path <official_results.json> \
   --generated-artifact-dir <generated_videos> \
-  --output-dir <out> \
+  --output-dir tmp/phyeduvideo/official-validation \
   --json
 ```
 
-## Checkpoints and environment variables
-
-- `WORLDFOUNDRY_PHYEDUVIDEO_ROOT`: Optional override pointing at a local benchmark runtime/repository root.
-- `WORLDFOUNDRY_PHYEDUVIDEO_RESULTS_PATH`: Default path the importer reads official result exports from when `--official-results-path` is not passed.
-- `WORLDFOUNDRY_GENERATED_ARTIFACT_DIR`: Directory containing the candidate generated artifacts to score or import against.
-
-## Outputs
-
-The run writes into `--output-dir`:
-
-- `scorecard.json`: WorldFoundry scorecard with the metric values recorded above.
-- `benchmark_contract.json`: Benchmark contract record for the run (inputs, mode, provenance).
-- `raw_metric_table.jsonl`: Metric rows backing the scorecard.
-- `results_summary.csv`
-- `per_sample_scores.jsonl`: Per-sample rows when the result source exposes sample-level values.
-
-Scorecard primary key: `phyeduvideo_average` (leaderboard key `phyeduvideo_average`), stored in `scorecard.json`.
-
-## Limitations
-
-- Raw-video scoring requires the upstream InternVL/CLIP/VQA judge assets and protocol, which are not run in tree.
-- Result import is not official benchmark or leaderboard evidence.
-- Coverage checks confirm prompt/video pairing only; they do not validate how upstream scores were produced.
+`--run-official` on the dedicated runner is the same import path for WorldFoundry-generated artifacts. Outputs include `scorecard.json` (primary `phyeduvideo_average`), `results_summary.csv`, and per-sample rows when the file exposes them.
 
 [← Benchmark Hub](/docs/evaluation/benchmark-hub)

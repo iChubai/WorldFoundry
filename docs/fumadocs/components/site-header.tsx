@@ -22,7 +22,11 @@ export type SiteHeaderProps = {
   docsHref?: string;
   docsLabel?: string;
   homeLabel?: string;
+  blogLabel?: string;
+  eventsLabel?: string;
+  communityLabel?: string;
   openEnvisionLabel?: string;
+  searchLabel?: string;
   brandLeading?: ReactNode;
   beforeInner?: ReactNode;
   wordmarkClassName?: string;
@@ -42,7 +46,11 @@ export function SiteHeader({
   docsHref,
   docsLabel,
   homeLabel,
+  blogLabel,
+  eventsLabel,
+  communityLabel,
   openEnvisionLabel,
+  searchLabel,
   brandLeading,
   beforeInner,
   wordmarkClassName,
@@ -76,9 +84,12 @@ export function SiteHeader({
             docsHref={docsHref}
             docsLabel={docsLabel}
             homeLabel={homeLabel}
+            blogLabel={blogLabel}
+            eventsLabel={eventsLabel}
+            communityLabel={communityLabel}
             openEnvisionLabel={openEnvisionLabel}
           />
-          <SiteSearchTrigger />
+          <SiteSearchTrigger label={searchLabel} />
           <SiteGitHubLink />
           <SiteThemeSwitch />
           <div className="pi-language-switch" aria-label={languageAriaLabel}>

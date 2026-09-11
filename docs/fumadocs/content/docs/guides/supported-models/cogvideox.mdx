@@ -1,40 +1,28 @@
 ---
 title: "CogVideoX"
-description: "CogVideoX is Zhipu AI's open video generation family, one of the most widely used open T2V/I2V baselines. This catalog entry serves three runnable variants — 2B text-to-video, 5B text-to-video, and 5B image-to-video — through in-tree runti…"
-pageSource: generated
+description: "Zhipu THUDM open T2V/I2V family. 2B T2V, 5B T2V, and 5B I2V routes are runner-verified in-tree."
+modelId: "cogvideox"
+pageSource: authored
 ---
 
-**Publisher:** Zhipu AI (THUDM) · Company
-text · image → video
+CogVideoX is Zhipu AI / THUDM's open video family and still one of the most cited open T2V/I2V baselines. The paper is [CogVideoX: Text-to-Video Diffusion Models with An Expert Transformer](https://arxiv.org/abs/2408.06072). This catalog card serves three runnable variants through in-tree runtimes: **2B text-to-video**, **5B text-to-video**, and **5B image-to-video**. Runner and demo parity are **verified**.
 
-CogVideoX is Zhipu AI's open video generation family, one of the most widely used open T2V/I2V baselines. This catalog entry serves three runnable variants — 2B text-to-video, 5B text-to-video, and 5B image-to-video — through in-tree runtimes, and runner parity is verified. Weights load natively from Hugging Face (THUDM/CogVideoX-5b) or from a local mirror via model_path.
+<ModelPaperFigures modelId="cogvideox" locale="en" />
 
-<figure className="wf-recipe-media">
-  <Video src="/demos/cogvideo_01.mp4" autoPlay loop muted playsInline />
-  <figcaption>Text-to-video sample</figcaption>
-</figure>
+The generator is a diffusion Transformer over a **3D causal VAE** latent, with an **expert Transformer** for text (and image) conditioning. T2V exposes `num_inference_steps`, `num_frames`, `height`, `width`, and `fps`; I2V adds `guidance_scale`. The I2V configuration follows the official-style **49-frame, 50-step** Diffusers recipe. Weights load from THUDM Hugging Face repos (`THUDM/CogVideoX-2b`, `CogVideoX-5b`, `CogVideoX-5b-I2V`) or a local `model_path`. License metadata is **Apache-2.0** on 2B and `other` on several 5B cards — review before commercial use. Routes are **offline batch** only: no streaming or interactive control.
 
 <ModelCommandBuilder modelId="cogvideox" locale="en" />
 
-## Architecture
+## What it is for
 
-CogVideoX uses a diffusion transformer over a 3D causal VAE latent space with an expert transformer conditioning design (per the upstream publication). In this repository, the recorded contract exposes num_inference_steps, num_frames, height, width, and fps on T2V, plus guidance_scale on I2V.
+Use `cogvideox-2b-t2v` to iterate prompts, `cogvideox-5b-t2v` when you want the larger T2V card, and `cogvideox-5b-i2v` to animate a still. Required: `prompt` (T2V) or `prompt` + `image` (I2V). Optional: `video`. `actions` is seed. Default artifact on the 5B T2V card: `cogvideox-5b-t2v.mp4`. Compare clip quality on [VBench](/docs/evaluation/benchmark-hub/vbench) and compositional prompts on [T2V-CompBench](/docs/evaluation/benchmark-hub/t2v-compbench). Those are the suites CogVideoX results are usually reported on — not ingested WorldFoundry ranks.
 
-## Usage notes
+## Runtime contract
 
-Pick the variant by size and task: 2B T2V for fast iterations, 5B T2V for quality, 5B I2V for animating an image. Runner parity is verified; per-run visual QA is tracked outside the catalog. Note the recorded license nuance: HF metadata reports Apache-2.0 for 2B but 'other' for several larger variants — review before commercial use.
+`CogVideoX5bT2VPipeline` is the default 5B T2V class; 2B T2V and 5B I2V have sibling pipelines. The expert-conditioning design is the paper's main architectural claim versus a plain T5-conditioned U-Net — at run time that means text (and image) tokens steer the DiT in the 3D VAE latent. `THUDM/CogVideoX1.5-5B` and `CogVideoX1.5-5B-I2V` are listed as extra checkpoints, not as the verified Studio routes.
 
-## Variants & pipeline bindings
+## Running in WorldFoundry
 
-| Variant | Task | Runtime profile | Pipeline binding | Status |
-| --- | --- | --- | --- | --- |
-| `cogvideox-2b-t2v` | text-to-video | `cogvideox-2b-t2v` | `cogvideox-2b-t2v` | verified |
-| `cogvideox-5b-t2v` | text-to-video | `cogvideox-5b-t2v` | `cogvideox-5b-t2v` | verified |
-| `cogvideox-5b-i2v` | image-to-video | `cogvideox-5b-i2v` | `cogvideox-5b-i2v` | verified |
-
-## Evaluation benchmarks
-
-- [VBench](/docs/evaluation/benchmark-hub/vbench) — The de-facto open benchmark CogVideoX results are usually reported on.
-- [T2V-CompBench](/docs/evaluation/benchmark-hub/t2v-compbench) — Compositional prompt suite for the T2V variants.
+Default launch is `worldfoundry-eval run cogvideox-2b-t2v --pipeline.task-profile text-to-video` in `worldfoundry-unified-cu128` (Python 3.11, CUDA 12.8). Swap the run id for `cogvideox-5b-t2v` or `cogvideox-5b-i2v`. Runner parity is verified; per-run visual QA stays outside the catalog.
 
 <ModelRelatedRecipes modelId="cogvideox" locale="en" />

@@ -1,39 +1,52 @@
 ---
 title: "FantasyWorld"
-description: "FantasyWorld does geometry-consistent world modeling by unifying video and 3D prediction: from an image it produces camera-controllable world video that stays geometrically coherent. Two variants are recorded — the verified Wan2.1 pipeline…"
-pageSource: generated
+description: "FantasyWorld from Alibaba (Amap, Fantasy-AMAP): geometry-consistent world modeling; Verified; 2 variants."
+modelId: "fantasyworld"
+pageSource: authored
 ---
-
-**Publisher:** Alibaba (Amap, Fantasy-AMAP) · Company
-[FantasyWorld: Geometry-Consistent World Modeling via Unified Video and 3D Prediction](https://arxiv.org/abs/2509.21657) (2025)
 
 FantasyWorld does geometry-consistent world modeling by unifying video and 3D prediction: from an image it produces camera-controllable world video that stays geometrically coherent. Two variants are recorded — the verified Wan2.1 pipeline (the release-facing default) and a Wan2.2 pipeline that stays hidden from Studio until its official memory strategy is verified.
 
-<figure className="wf-recipe-media is-diagram">
-  <img src="/models/fantasyworld/paper.png" alt="FantasyWorld: Geometry-Consistent World Modeling via Unified Video and 3D Prediction" />
-  <figcaption>FantasyWorld: Geometry-Consistent World Modeling via Unified Video and 3D Prediction</figcaption>
-</figure>
+<ModelPaperFigures modelId="fantasyworld" locale="en" />
+
+Project page: [fantasy-amap.github.io/fantasy-world](https://fantasy-amap.github.io/fantasy-world/). Code: [Fantasy-AMAP/fantasy-world](https://github.com/Fantasy-AMAP/fantasy-world).
+
+Paper: [FantasyWorld: Geometry-Consistent World Modeling via Unified Video and 3D Prediction](https://arxiv.org/abs/2509.21657) (arXiv 2509.21657). Project: [fantasy-amap.github.io/fantasy-world](https://fantasy-amap.github.io/fantasy-world/). Code: [Fantasy-AMAP/fantasy-world](https://github.com/Fantasy-AMAP/fantasy-world). Publisher: Alibaba Amap (Fantasy-AMAP) with BUPT authors. Catalog marks the source **source_available** — no LICENSE file was found, so it is **not** recorded as open_source.
+
+Runtime needs local FantasyWorld Wan2.1 (`acvlab/FantasyWorld-Wan2.1-I2V-14B-480P`), Wan2.1 I2V (`Wan-AI/Wan2.1-I2V-14B-480P`), **MoGe** (`Ruicheng/moge-2-vitl-normal`), and CUDA assets. Runner: **verified** on the official camera-world contract.
 
 <ModelCommandBuilder modelId="fantasyworld" locale="en" />
 
-## Architecture
+## What it is for
 
-FantasyWorld augments a Wan video backbone with a unified 3D-prediction branch so that generated frames respect scene geometry (per arXiv 2509.21657). Runtime execution requires local FantasyWorld Wan2.1, Wan2.1 I2V, MoGe, and CUDA assets.
+Use `fantasyworld-wan21` for catalog geometry inference. Choose it when the artifact is a reconstruction, not a generated video.
 
-## Usage notes
+FantasyWorld augments a Wan video backbone with a unified 3D-prediction branch so that generated frames respect scene geometry (per arXiv 2509.21657). Runtime execution requires local FantasyWorld Wan2.1, Wan2.1 I2V, MoGe, and CUDA assets. It is published by Alibaba (Amap, Fantasy-AMAP).
+
+Catalog tasks include geometry-consistent world modeling and official-camera-world. Catalog aliases include `Geometry-Consistent World Modeling via Unified Video and 3D Prediction`. Also recorded: `fantasyworld-wan22`.
+
+Recorded evaluation entry points include [WorldScore](/docs/evaluation/benchmark-hub/worldscore) (Scores geometry-consistent generated worlds), [CameraBench](/docs/evaluation/benchmark-hub/camerabench) (Camera-control quality evaluation).
+
+## Runtime contract
+
+Required `prompt` and `image`; optional `video` and `actions` (camera_path, camera_pose_sequence); artifacts `generated_world` and `fantasyworld.mp4`.
+
+Recorded task profiles: `geometry-consistent world modeling` and `official-camera-world`. WorldFoundry binds `FantasyWorldPipeline`.
+
+Start on `fantasyworld-wan21`. The family registers 2 catalog variants (cards above): `fantasyworld-wan21` (`image-to-world-video`) — Runner parity pending; `fantasyworld-wan22` (`camera-controlled-world-video`) — Runner parity pending. Family status: **Verified**.
+
+Recorded `official-camera-world` defaults: fps=16, seed=1024.
 
 The default row resolves to the verified in-tree Wan2.1 runner — that is the route to use. The Wan2.2 variant remains pending because the official single-GPU run requires an accepted memory strategy.
 
-## Variants & pipeline bindings
+## Running in WorldFoundry
 
-| Variant | Task | Runtime profile | Pipeline binding | Status |
-| --- | --- | --- | --- | --- |
-| `fantasyworld-wan21` | image-to-world-video | `fantasyworld-wan21` | `fantasyworld-wan21` | verified |
-| `fantasyworld-wan22` | camera-controlled-world-video | `fantasyworld-wan22` | `fantasyworld-wan22` | checkpoint assets staged cpu schema validated gpu pending |
+Launch `worldfoundry-eval run fantasyworld-wan21 --pipeline.task-profile official-camera-world` to write geometry. The command builder above switches `--pipeline.task-profile` among recorded tasks and still emits `worldfoundry-eval run`.
 
-## Evaluation benchmarks
+It runs in the unified environment `worldfoundry-unified-cu128` (Python 3.11, CUDA 12.8).
 
-- [WorldScore](/docs/evaluation/benchmark-hub/worldscore) — Scores geometry-consistent generated worlds.
-- [CameraBench](/docs/evaluation/benchmark-hub/camerabench) — Camera-control quality evaluation.
+Recorded weight repositories include `acvlab/FantasyWorld-Wan2.1-I2V-14B-480P`, `Wan-AI/Wan2.1-I2V-14B-480P`, and `Ruicheng/moge-2-vitl-normal`. Stage assets with `bash scripts/inference/prepare_model_infer.sh fantasyworld-wan21`.
+
+Status: **Verified**.
 
 <ModelRelatedRecipes modelId="fantasyworld" locale="en" />

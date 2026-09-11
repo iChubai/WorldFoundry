@@ -1,33 +1,50 @@
 ---
 title: "Lyra"
-description: "Lyra is NVIDIA's generative world model family for exploration: from an image or video (Lyra-1) or from actions (Lyra-2) it produces an explorable world video."
-pageSource: generated
+description: "Lyra（NVIDIA）：3D 与 4D；已验证; 2 个 variant。"
+modelId: "lyra"
+pageSource: authored
 ---
 
-**发表机构:** 英伟达（NVIDIA） · 企业
+Lyra 是英伟达面向探索的生成式世界模型家族：Lyra-1 从图像或视频、Lyra-2 从动作输入生成可探索的世界视频。本 catalog 中两个 variant 都经由内置运行时适配器支撑的树内 pipeline 运行，默认 runner 指向 Lyra-2，runner 状态为 已验证。原生 World Explorer 将上游 CUDA/C++/ImGui 交互与渲染实现内置在模型无关的推理适配器之后。
 
-Lyra 是英伟达面向探索的生成式世界模型家族：Lyra-1 从图像或视频、Lyra-2 从动作输入生成可探索的世界视频。本 catalog 中两个 variant 都经由内置运行时适配器支撑的树内 pipeline 运行，默认 runner 指向 Lyra-2，runner 状态为 verified。原生 World Explorer 将上游 CUDA/C++/ImGui 交互与渲染实现内置在模型无关的推理适配器之后。
+<ModelPaperFigures modelId="lyra" locale="zh" />
+
+项目页：[research.nvidia.com/labs/sil/projects/lyra2](https://research.nvidia.com/labs/sil/projects/lyra2/)。代码：[nv-tlabs/lyra](https://github.com/nv-tlabs/lyra)。
+
+论文是 [Paper](https://openreview.net/forum?id=tIVCfVnIHo)。项目页：[research.nvidia.com/labs/sil/projects/lyra2](https://research.nvidia.com/labs/sil/projects/lyra2)。代码：[nv-tlabs/lyra](https://github.com/nv-tlabs/lyra)。
 
 <ModelCommandBuilder modelId="lyra" locale="zh" />
 
-## 架构
+## 用来做什么
 
-catalog 记录两代模型：Lyra-1 做图像/视频到世界视频，Lyra-2 做动作条件世界视频（论文见 OpenReview，项目页在 NVIDIA Research）。运行需要本地 Lyra checkpoint、文本编码器资产、DA3（Depth Anything 3）资产与 CUDA 依赖；除已记录结构外的内部细节仓库未存。
+用 `lyra-1` 做 catalog 世界模型推理。需要动作条件未来帧、而不是独立片段生成器时选它。
 
-## 使用要点
+catalog 记录两代模型：Lyra-1 做图像/视频到世界视频，Lyra-2 做动作条件世界视频（论文见 OpenReview，项目页在 NVIDIA Research）。运行需要本地 Lyra checkpoint、文本编码器资产、DA3（Depth Anything 3）资产与 CUDA 依赖；除已记录结构外的内部细节仓库未存。该模型由英伟达（NVIDIA）发布。
 
-按输入选 variant：从图像或视频出发用 lyra-1，用动作驱动世界用 lyra-2。默认 catalog runner 解析到 Lyra-2。提交 Studio 任务前请就位所有记录资产；每次运行的验证证据在 catalog 外跟踪。
+catalog 记录的任务包括 open generative 3D and 4D world models、official-zoomgs。别名包括 `Project Lyra`、`Lyra 1.0`、`Lyra 2.0`。同系列还有 `lyra-2`。
 
-## 变体与 Pipeline Binding
+记录的评测入口包括[WorldScore](/zh/docs/evaluation/benchmark-hub/worldscore)（可探索生成世界的标准评分）、[CameraBench](/zh/docs/evaluation/benchmark-hub/camerabench)（评估探索过程中的相机/视角控制质量）。
 
-| Variant | 任务 | Runtime profile | Pipeline Binding | 状态 |
-| --- | --- | --- | --- | --- |
-| `lyra-1` | image-or-video-to-world-video | `lyra-1` | `lyra-1` | verified |
-| `lyra-2` | action-conditioned-world-video | `lyra-2` | `lyra-2` | verified |
+## 运行时契约
 
-## 评测 Benchmark
+必填 `prompt`、`image`、`video`；可选 `actions` (navigation_actions, camera_trajectory)；产物 `generated_world`、`generated_3d_asset`、`lyra.mp4`。
 
-- [WorldScore](/zh/docs/evaluation/benchmark-hub/worldscore) — 可探索生成世界的标准评分。
-- [CameraBench](/zh/docs/evaluation/benchmark-hub/camerabench) — 评估探索过程中的相机/视角控制质量。
+记录的任务 profile：`open generative 3D and 4D world models`、`official-zoomgs`。绑定的 pipeline 类是 `LyraPipeline`。
+
+起步 variant 是 `lyra-1`。catalog 登记了 2 个 variant（上方卡片）：`lyra-1`（`image-or-video-to-world-video`）：Runner 一致性待确认、`lyra-2`（`action-conditioned-world-video`）：Runner 一致性待确认。系列状态：**已验证**。
+
+`official-zoomgs` 记录默认值：fps=16, seed=1。
+
+按输入选 variant：从图像或视频出发用 lyra-1，用动作驱动世界用 lyra-2。 默认 catalog runner 解析到 Lyra-2。
+
+必填 `prompt`、`image`、`video`；`actions`：navigation_actions, camera_trajectory；产物 `generated_world`、`generated_3d_asset`、`lyra.mp4`。
+
+## 在 WorldFoundry 中运行
+
+启动 `worldfoundry-eval run lyra-1 --pipeline.task-profile official-zoomgs` 推进世界。上方命令构建器按已记录任务切换 `--pipeline.task-profile`，发出的仍是 `worldfoundry-eval run`。
+
+记录的权重仓库包括 `depth-anything/DA3NESTED-GIANT-LARGE-1.1`。就位权重用 `bash scripts/inference/prepare_model_infer.sh lyra-1`。
+
+状态：**已验证**。
 
 <ModelRelatedRecipes modelId="lyra" locale="zh" />

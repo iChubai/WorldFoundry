@@ -1,26 +1,52 @@
 ---
 title: "LingBot-Video"
-description: "LingBot-Video is Robbyant's video generation family, recorded for text-to-image, text-to-video, text+image-to-video, and video refinement. Two checkpoint lines are recorded: a dense 1.3B model and a MoE 30B-A3B model that ships with a refi…"
-pageSource: generated
+description: "LingBot-Video（Robbyant (Ant Group)）：文生图、文生视频；Runner 一致性待确认。"
+modelId: "lingbot-video"
+pageSource: authored
 ---
-
-**发表机构:** 蚂蚁灵波科技（Robbyant，蚂蚁集团） · 企业
-text · image → image · video
 
 LingBot-Video 是蚂蚁灵波（Robbyant）的视频生成系列，记录了文生图、文生视频、图文生视频与视频细化四类任务。catalog 记录两条 checkpoint 线：稠密 1.3B 模型与带细化器的 MoE 30B-A3B 模型。WorldFoundry 将推理包平铺在树内 synthesis/visual_generation/lingbot_video 下，并有意排除了提示词改写、训练与评测源码。
 
+<ModelPaperFigures modelId="lingbot-video" locale="zh" />
+
+记录论文为[arXiv 2607.07675](https://arxiv.org/abs/2607.07675)。
+
+项目页：[technology.robbyant.com/lingbot-video](https://technology.robbyant.com/lingbot-video)。代码：[Robbyant/lingbot-video](https://github.com/Robbyant/lingbot-video)。
+
 <ModelCommandBuilder modelId="lingbot-video" locale="zh" />
 
-## 架构
+## 用来做什么
 
-稠密 1.3B 与 MoE 30B-A3B（激活 3B）两个 checkpoint 共享同一推理面；MoE 线增加了细化阶段。保留的代码路径包括直连 Diffusers、可选 SGLang、FSDP、上下文并行与 CFG 并行。上游推荐栈要求专用的 Transformers 5 / Diffusers 0.39 环境。
+用 `lingbot-video` 跑本系列联合 T2V/I2V 推理路径。本页记录了这两种任务 profile。
 
-## 使用要点
+稠密 1.3B 与 MoE 30B-A3B（激活 3B）两个 checkpoint 共享同一推理面；MoE 线增加了细化阶段。保留的代码路径包括直连 Diffusers、可选 SGLang、FSDP、上下文并行与 CFG 并行。上游推荐栈要求专用的 Transformers 5 / Diffusers 0.39 环境。该模型由蚂蚁灵波科技（Robbyant，蚂蚁集团）发布。
 
-完整的 checkpoint 加载产物与视觉一致性仍在等待。已发布的稠密 1.3B checkpoint 已有一次记录在案的 121 帧、832x480 质量导向 Workspace 产物。注意 profile 中的一个细节：即使默认产物类型是 T2V 视频路径， T2I 也会产出图像。稠密与 MoE 权重均为外部资产（apache-2.0），不入 git。
+catalog 记录的任务包括 文生图、文生视频、text-image-to-video、video-refinement。别名包括 `lingbot-video-dense`、`lingbot-video-moe`。模态上，它接受文本、图像，输出图像、视频。
 
-## 评测 Benchmark
+记录的评测入口包括[VBench](/zh/docs/evaluation/benchmark-hub/vbench)（两条 checkpoint 线通用的文生视频质量评测）。
 
-- [VBench](/zh/docs/evaluation/benchmark-hub/vbench) — 两条 checkpoint 线通用的文生视频质量评测。
+LingBot 文/图生视频家族，不是世界卡。
+
+## 运行时契约
+
+必填 `prompt`、`image`、`prompt_json`；产物 `generated_image`、`generated_video`、`lingbot_video.mp4`。
+
+记录的任务 profile：`text-to-image`、`text-to-video`、`text-image-to-video`、`video-refinement`、`t2v`、`ti2v` 等。绑定的 pipeline 类是 `LingBotVideoGenerationPipeline`。
+
+系列状态：**Runner 一致性待确认**。
+
+`t2v` 记录默认值：height=480, width=832, num_frames=121, num_inference_steps=40, guidance_scale=3.0, seed=42；`ti2v` 记录默认值：height=480, width=832, num_frames=121, num_inference_steps=40, guidance_scale=3.0, seed=42。
+
+完整的 checkpoint 加载产物与视觉一致性仍在等待。 已发布的稠密 1.3B checkpoint 已有一次记录在案的 121 帧、832x480 质量导向 Workspace 产物。 注意 profile 中的一个细节：即使默认产物类型是 T2V 视频路径， T2I 也会产出图像。 稠密与 MoE 权重均为外部资产（apache-2.0），不入 git。
+
+## 在 WorldFoundry 中运行
+
+catalog 启动命令是 `worldfoundry-eval run lingbot-video --pipeline.task-profile t2v`。上方命令构建器按已记录任务切换 `--pipeline.task-profile`，发出的仍是 `worldfoundry-eval run`。
+
+运行环境是统一 profile `worldfoundry-unified-cu128`（Python 3.11，CUDA 12.8，torch==2.11.0+cu128）。
+
+记录的权重仓库包括 `robbyant/lingbot-video-dense-1.3b`、`robbyant/lingbot-video-moe-30b-a3b`、`robbyant/lingbot-video-dense-1.3b` 等。就位权重用 `bash scripts/inference/prepare_model_infer.sh lingbot-video`。
+
+记录 license 为 apache-2.0；状态：**Runner 一致性待确认**。
 
 <ModelRelatedRecipes modelId="lingbot-video" locale="zh" />

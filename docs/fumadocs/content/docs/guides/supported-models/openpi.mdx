@@ -1,34 +1,26 @@
 ---
 title: "OpenPI"
-description: "OpenPI is Physical Intelligence's official open-source release of the pi-series robot policies (Apache-2.0). WorldFoundry flattens the inference runtime in-tree and validates it end to end: py_compile, import/from_pretrained, plan-only pre…"
-pageSource: generated
+description: "Physical Intelligence OpenPI runtime (Apache-2.0): shared in-tree infra for pi0 / pi0-FAST / pi0.5, GCS weights."
+modelId: "openpi"
+pageSource: authored
 ---
-
-**Publisher:** Physical Intelligence · Company
 
 OpenPI is Physical Intelligence's official open-source release of the pi-series robot policies (Apache-2.0). WorldFoundry flattens the inference runtime in-tree and validates it end to end: py_compile, import/from_pretrained, plan-only predict, and checkpoint-backed pi05_libero policy inference all passed, emitting the configured action schema.
 
+<ModelPaperFigures modelId="openpi" locale="en" />
+
 <ModelCommandBuilder modelId="openpi" locale="en" />
 
-## Architecture
+## What it is for
 
-The runtime is the shared infrastructure for the pi0 / pi0-FAST / pi0.5 family: PaliGemma-based VLA backbones with flow-matching or FAST-token action decoding. The local pi05_libero route uses backend worldfoundry.openpi.in_tree_runtime.create_trained_policy_infer.
+Use this page for shared OpenPI infra — variants `pi0-base`, `pi05-libero`, `pi0-fast-base`, `pi0-fast-droid`. Jump to the π0 / π0-FAST / π0.5 cards for a specific algorithm. Checkpoint-backed `pi05_libero` on [LIBERO](/docs/evaluation/benchmark-hub/libero) is the validated path.
 
-## Usage notes
+## Runtime contract
 
-Checkpoints come from GCS (gs://openpi-assets), not Hugging Face — use gsutil or gcloud to stage. For specific model generations use the dedicated pi0, pi0-fast, and pi05 catalog entries.
+Required `image`, `instruction`, and `prompt`. `actions`: `robot_action`, `proprio`, `action_space`. Artifact: `openpi_action_trace.json`. Action schema is emitted via `create_trained_policy_infer`. Runtime lives under `worldfoundry/synthesis/action_generation/openpi`.
 
-## Variants & pipeline bindings
+## Running in WorldFoundry
 
-| Variant | Task | Runtime profile | Pipeline binding | Status |
-| --- | --- | --- | --- | --- |
-| `pi0-base` | vla.policy_rollout | `openpi` | `openpi` | integrated |
-| `pi05-libero` | vla.policy_rollout | `openpi` | `openpi` | integrated |
-| `pi0-fast-base` | vla.policy_rollout | `openpi` | `openpi` | integrated |
-| `pi0-fast-droid` | vla.policy_rollout | `openpi` | `openpi` | integrated |
-
-## Evaluation benchmarks
-
-- [LIBERO](/docs/evaluation/benchmark-hub/libero) — Checkpoint-backed pi05_libero inference is validated.
+Dedicated `worldfoundry-openpi-cu12` (Python 3.11, CUDA 12.4 or newer). Stage `gs://openpi-assets` with gsutil. License Apache-2.0. Status: **Verified** on shared infra / `pi05_libero`. Launch `worldfoundry-eval run pi0-base --pipeline.task-profile vla.policy_rollout` for the family default.
 
 <ModelRelatedRecipes modelId="openpi" locale="en" />

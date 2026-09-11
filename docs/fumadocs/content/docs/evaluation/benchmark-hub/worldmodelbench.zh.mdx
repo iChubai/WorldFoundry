@@ -1,97 +1,44 @@
 ---
 title: WorldModelBench
-description: NeurIPS 2025 世界模型评审套件：350 个实例上评指令遵循、常识与物理符合度，由微调 VILA judge 打分。
+description: "NeurIPS 2025 世界模型裁判套件：350 条实例，VILA 裁判。WorldFoundry 检入 evaluation.py；完整裁判执行未验证。"
 ---
 
-## 简介
+WorldModelBench（NVIDIA、UC Berkeley、UC San Diego、MIT；NeurIPS 2025）把视频生成器当世界模型来评，覆盖 **7 个应用域 / 56 个子域**。官方规模：**350 条实例**，对照 **6.7 万条众包人类标注** 校准。三个分面：
 
-**发表机构：** NVIDIA（联合 UC Berkeley、UC San Diego、MIT）
+- 指令跟随
+- 常识推理
+- 物理遵守（例如不规则尺寸变化这类质量守恒违规）
 
-WorldModelBench（NeurIPS 2025）把视频生成模型当作世界模型来评审，覆盖 7 个应用领域、56 个子领域。其 350 实例套件从指令遵循、常识推理与物理符合度（如物体尺寸异常变化违反质量守恒）三方面打分，并用 6.7 万条众包人工标注校准。官方 judge 是微调的 2B 多模态模型（VILA 系列），在检测世界建模违规上优于 GPT-4o。
+官方裁判是微调的 **2B VILA 系** 多模态模型，论文报告在检测世界建模违规上优于 GPT-4o。`world_model_average` 汇总公开分面。
 
-WorldFoundry 入库了上游 `evaluation.py` 与 350 实例 manifest，从本地 Hugging Face 快照（`Efficient-Large-Model/worldmodelbench`）解析数据集；提供 VILA 权重或 HF 模型 id 后即可执行官方 judge 路径。
+论文：[WorldModelBench](https://arxiv.org/abs/2502.20694)。项目：[worldmodelbench-team.github.io](https://worldmodelbench-team.github.io/)。代码：[WorldModelBench-Team/WorldModelBench](https://github.com/WorldModelBench-Team/WorldModelBench)。数据：[`Efficient-Large-Model/worldmodelbench`](https://huggingface.co/datasets/Efficient-Large-Model/worldmodelbench)。
 
-官方参考：
+WorldFoundry **检入上游 `evaluation.py` 与 350 条实例清单**。结果导入与清单覆盖检查已验证；**完整裁判权重执行未验证**。榜单答案在上游扣留。
 
-- Paper: [arxiv.org/abs/2502.20694](https://arxiv.org/abs/2502.20694)
-- 项目主页: [worldmodelbench-team.github.io](https://worldmodelbench-team.github.io/)
-- 官方仓库: [WorldModelBench-Team/WorldModelBench](https://github.com/WorldModelBench-Team/WorldModelBench)
+<BenchmarkPageSections id="worldmodelbench" locale="zh" />
 
-## 评测协议
-
-official-run 通过 `WORLDFOUNDRY_WORLDMODELBENCH_JUDGE`（VILA 权重或 HF 模型 id）选定 judge 后驱动上游 `evaluation.py`；包装器按 N、2N、5N 的类别长度校验 accs/preds 形状，并在 `scorecard.validation` 中记录 350 实例的视频覆盖率。official-validation 模式则归一化调用方提供的官方形状结果文件。
-
-主指标是 `world_model_average`。
-
-| Metric | 含义 | 方向 |
-| --- | --- | --- |
-| `instruction_following` | WorldModelBench 指令遵循得分。 | 越高越好 |
-| `common_sense` | WorldModelBench 常识推理得分。 | 越高越好 |
-| `physical_adherence` | WorldModelBench 物理符合度得分。 | 越高越好 |
-| `world_model_average` | 公开 WorldModelBench 指标族的归一化聚合分。 | 越高越好 |
-
-## 数据与产物布局
-
-WorldFoundry 仓内路径：
-
-```text
-worldfoundry/data/benchmarks/tasks/external/worldmodelbench.yaml
-worldfoundry/evaluation/tasks/execution/runners/worldmodelbench/runtime/evaluation.py
-worldfoundry/data/benchmarks/assets/worldmodelbench/worldmodelbench.json
-```
-
-```text
-worldfoundry/evaluation/tasks/execution/runners/worldmodelbench/runtime/evaluation.py
-worldfoundry/data/benchmarks/assets/worldmodelbench/worldmodelbench.json   # 350 实例 manifest
-cache/worldfoundry/data/hfd_datasets/Efficient-Large-Model/worldmodelbench # 数据集快照
-${WORLDFOUNDRY_GENERATED_ARTIFACT_DIR}/                                    # 与 manifest 对应的生成视频
-```
+## 如何运行
 
 ```bash
 hf download Efficient-Large-Model/worldmodelbench --repo-type dataset \
   --local-dir cache/worldfoundry/data/hfd_datasets/Efficient-Large-Model/worldmodelbench
-```
 
-## 运行评测
-
-目录 manifest 记录的 validation 命令：
-
-```bash
 worldfoundry-eval zoo benchmark-run \
   --benchmark-id worldmodelbench \
   --mode official-validation \
   --official-results-path <official_results.json> \
   --benchmark-data-root <worldmodelbench_data_root> \
   --generated-artifact-dir <generated_videos> \
-  --output-dir <out> \
+  --output-dir tmp/worldmodelbench/official-validation \
   --json
 ```
 
-## 权重与环境变量
+official-run 用 `WORLDFOUNDRY_WORLDMODELBENCH_JUDGE`（VILA 权重或 HF 模型 id）驱动 `evaluation.py`。封装会按 N、2N、5N 类别长度校验 accs/preds 形状，并记录 350 条视频覆盖。环境变量：`WORLDFOUNDRY_WORLDMODELBENCH_RESULTS_PATH`、`WORLDFOUNDRY_WORLDMODELBENCH_DATA_ROOT`。共享资源：`worldmodelbench_dataset_assets`。清单：`worldfoundry/data/benchmarks/assets/worldmodelbench/worldmodelbench.json`。
 
-- `WORLDFOUNDRY_WORLDMODELBENCH_ROOT`: 可选覆盖项，指向本地 benchmark runtime / 仓库根目录。
-- `WORLDFOUNDRY_GENERATED_ARTIFACT_DIR`: 存放待评测生成产物（候选视频/rollout）的目录。
-- `WORLDFOUNDRY_WORLDMODELBENCH_RESULTS_PATH`: 未显式传 `--official-results-path` 时，导入器默认从该路径读取官方结果导出文件。
-- `WORLDFOUNDRY_WORLDMODELBENCH_JUDGE`: official-run 时 evaluation.py 使用的 VILA 权重路径或 HF 模型 id。
-- `WORLDFOUNDRY_WORLDMODELBENCH_DATA_ROOT`: 不用默认快照时，包含 worldmodelbench.json 的数据根。
+仓内指针：`worldfoundry/data/benchmarks/tasks/external/worldmodelbench.yaml`，`worldfoundry/evaluation/tasks/execution/runners/worldmodelbench/runtime/evaluation.py`。
 
-该 benchmark 复用共享 base-model 依赖栈：`worldmodelbench_dataset_assets`。
+产物包括 `scorecard.json`（主键 `world_model_average`）与 `judge_responses.jsonl`。
 
-## 输出文件
-
-运行会在 `--output-dir` 下写出：
-
-- `scorecard.json`: WorldFoundry 统一 scorecard，记录上表中的指标值。
-- `runner_runtime_report.json`
-- `judge_responses.jsonl`
-- `raw_metric_table.jsonl`: 支撑 scorecard 的原始 metric 行。
-
-Scorecard 主键：`world_model_average`（leaderboard key `world_model_average`），写入 `scorecard.json`。
-
-## 边界与限制
-
-- 上游保留 leaderboard 答案；本地回归只能用公开输出或调用方提供的官方形状结果文件。
-- 完整 leaderboard 对齐需要在全部 350 个实例上完成 judge 运行并保留上游提交证据。
-- 导入的结果文件始终是非 leaderboard 证据。
+最小 Cosmos Predict 2.5 单元格（先导入；judge 未验证）：[模型 → 评测配方](/zh/docs/evaluation/model-benchmark-recipes)。
 
 [← 返回 Benchmark Hub](/zh/docs/evaluation/benchmark-hub)

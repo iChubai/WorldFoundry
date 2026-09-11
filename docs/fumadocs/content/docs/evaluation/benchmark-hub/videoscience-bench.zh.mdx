@@ -1,58 +1,23 @@
 ---
 title: VideoScience-Bench
-description: 视频生成的科学理解评测：以科学实验为锚的 prompt，按五维度 1-4 评分细则由 VLM judge 打分。
+description: "UCSD Hao AI Lab 的科学理解 T2V 评测：五维 1-4 量表。WorldFoundry 接好 VLM 裁判，不编造榜单。"
 ---
 
-## 简介
+VideoScience-Bench（加州大学圣地亚哥分校 Hao AI Lab）问的是视频生成器是否 **理解科学**。Prompt 描述真实实验与现象。VLM 裁判按 **1–4 量表** 打五个维度；官方加权总分归一化到单位区间，即 `videoscience_average`：
 
-**发表机构：** Hao AI Lab（加州大学圣迭戈分校 UCSD）
+- **Prompt 一致性**
+- **现象一致性** — 描绘的结果是否符合真实科学？
+- **正确动态**
+- **不变性** — 不变量是否保持不变？
+- **时空连贯**
 
-VideoScience-Bench 评测视频生成模型是否理解科学：prompt 描述真实科学实验与现象，生成视频按五个维度评判——prompt 一致性、现象吻合度（呈现的结果是否符合真实科学）、正确动态性、不变性（不变属性是否保持不变）与时空连贯性。VLM judge 按 1-4 评分细则逐维度打分；官方加权总分归一化到单位区间即 `videoscience_average`。
+论文：[VideoScience-Bench](https://arxiv.org/abs/2512.02942)。空间：[lmgame/videoscience-bench](https://huggingface.co/spaces/lmgame/videoscience-bench/blob/main/README.md)。代码：[hao-ai-lab/VideoScience](https://github.com/hao-ai-lab/VideoScience)。目录发布状态：experimental。合同条目不要求 Hugging Face 数据集。
 
-WorldFoundry 以仓内 runtime 集成 VideoScience-Bench：统一 `benchmark-run` 入口归一化调用方提供的官方结果文件；runtime CLI 可基于 experiments CSV 与配置好的 judge provider/model 驱动评审运行。
+WorldFoundry **归一化官方结果文件**，并在配置好提供方 / 模型 / 凭证时可对 experiments CSV 跑裁判。不声称已完成带凭证的完整上游运行。
 
-官方参考：
+<BenchmarkPageSections id="videoscience-bench" locale="zh" />
 
-- Paper: [arxiv.org/abs/2512.02942](https://arxiv.org/abs/2512.02942)
-- 项目主页: [huggingface.co/spaces/lmgame/videoscience-bench/blob/main/README.md](https://huggingface.co/spaces/lmgame/videoscience-bench/blob/main/README.md)
-- 官方仓库: [hao-ai-lab/VideoScience](https://github.com/hao-ai-lab/VideoScience)
-
-## 评测协议
-
-`official-validation` 归一化官方结果导出。runtime CLI 接受 `--experiments-csv`、`--evaluation-results-dir`、可选 `--reference-videos-dir` 以及 judge 配置（`--judge-provider`、`--judge-model`、`--judge-max-runs`、`--max-frames`、`--judge-fps`）；`--ready-only` 只对产物齐备的实验打分。
-
-主指标是 `videoscience_average`。
-
-| Metric | 含义 | 方向 |
-| --- | --- | --- |
-| `prompt_consistency` | prompt 一致性（归一化基准分）。 | 越高越好 |
-| `phenomenon_congruency` | 现象一致性（归一化基准分）。 | 越高越好 |
-| `correct_dynamism` | 动态正确性（归一化基准分）。 | 越高越好 |
-| `immutability` | 不变性（归一化基准分）。 | 越高越好 |
-| `spatio_temporal_coherence` | 时空连贯性（归一化基准分）。 | 越高越好 |
-| `videoscience_average` | 由 1-4 rubric 归一化到单位区间的官方加权总分。 | 越高越好 |
-
-## 数据与产物布局
-
-WorldFoundry 仓内路径：
-
-```text
-worldfoundry/data/benchmarks/tasks/external/videoscience-bench.yaml
-worldfoundry/evaluation/tasks/execution/runners/videoscience_bench/runtime/videoscience_bench
-```
-
-```text
-.../runners/videoscience_bench/runtime/videoscience_bench   # 仓内 runtime
-<experiments.csv>                                            # 实验 / prompt 表
-<evaluation_results_dir>/                                    # 逐实验 judge 输出
-${WORLDFOUNDRY_GENERATED_ARTIFACT_DIR}/                      # 生成视频
-```
-
-官方 benchmark 资产来自源仓库与 leaderboard space；契约条目不要求 Hugging Face 数据集。
-
-## 运行评测
-
-目录 manifest 记录的 validation 命令：
+## 如何运行
 
 ```bash
 worldfoundry-eval zoo benchmark-run \
@@ -60,30 +25,14 @@ worldfoundry-eval zoo benchmark-run \
   --mode official-validation \
   --official-results-path <official_results.json> \
   --generated-artifact-dir <generated_videos> \
-  --output-dir <out> \
+  --output-dir tmp/videoscience-bench/official-validation \
   --json
 ```
 
-## 权重与环境变量
+运行时 CLI 接受 `--experiments-csv`、`--evaluation-results-dir`、可选 `--reference-videos-dir`，以及裁判标志（`--judge-provider`、`--judge-model`、`--judge-max-runs`、`--max-frames`、`--judge-fps`）。`--ready-only` 只评产物齐全的实验。默认导入：`WORLDFOUNDRY_VIDEOSCIENCE_BENCH_RESULTS_PATH`。
 
-- `WORLDFOUNDRY_VIDEOSCIENCE_BENCH_ROOT`: 可选覆盖项，指向本地 benchmark runtime / 仓库根目录。
-- `WORLDFOUNDRY_VIDEOSCIENCE_BENCH_RESULTS_PATH`: 未显式传 `--official-results-path` 时，导入器默认从该路径读取官方结果导出文件。
-- `WORLDFOUNDRY_GENERATED_ARTIFACT_DIR`: 存放待评测生成产物（候选视频/rollout）的目录。
+仓内指针：`worldfoundry/data/benchmarks/tasks/external/videoscience-bench.yaml`，`worldfoundry/evaluation/tasks/execution/runners/videoscience_bench/runtime/videoscience_bench`。
 
-## 输出文件
-
-运行会在 `--output-dir` 下写出：
-
-- `scorecard.json`: WorldFoundry 统一 scorecard，记录上表中的指标值。
-- `benchmark_contract.json`: 本次运行的 benchmark contract 记录（输入、模式、来源信息）。
-- `raw_metric_table.jsonl`: 支撑 scorecard 的原始 metric 行。
-
-Scorecard 主键：`videoscience_average`（leaderboard key `videoscience_average`），写入 `scorecard.json`。
-
-## 边界与限制
-
-- 由导入结果生成的 scorecard 只是非 leaderboard 的集成证据；官方 runtime 执行与 judge 资产仍待补齐。
-- 完整 official-run 模式需要配置好的 VLM judge provider / API key。
-- leaderboard 对齐需要官方 judge/权重/API 资产与归一化后的上游结果文件。
+产物包括 `scorecard.json`（主键 `videoscience_average`）。
 
 [← 返回 Benchmark Hub](/zh/docs/evaluation/benchmark-hub)

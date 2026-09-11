@@ -1,54 +1,23 @@
 ---
 title: VideoPhy
-description: Physical-commonsense benchmark for T2V with VideoCon-Physics judged semantic adherence, physical commonsense, and joint score.
+description: "UCLA / Google T2V physical-commonsense bench: VideoCon-Physics judges SA, PC, and Joint. WorldFoundry ships the judge path; it does not invent a board."
 ---
 
-## About
+VideoPhy (UCLA and Google Research) tests whether text-to-video models obey **physical commonsense** in material interactions (solid-solid, solid-fluid, fluid-fluid). Each prompt describes a physical interaction. The official judge is **VideoCon-Physics**, a fine-tuned video-language model. Three scores:
 
-**Publisher:** UCLA & Google Research
+- **Semantic Adherence** — does the clip match the prompt?
+- **Physical Commonsense** — does the motion obey physics?
+- **Joint Score** — both together.
 
-VideoPhy tests whether text-to-video models generate videos that follow real-world physical commonsense in material interactions (solid-solid, solid-fluid, fluid-fluid). Each prompt describes a physical interaction; generated videos are judged for Semantic Adherence (does the video match the prompt) and Physical Commonsense (does the motion obey physics), combined into a Joint Score. The official judge is VideoCon-Physics, a fine-tuned video-language model released by the authors.
+`videophy_average` is the WorldFoundry mean over available families. The official scoring path is in tree; **full 688-prompt reproduction is pending**.
 
-WorldFoundry bundles the official prompt list and hosts the runner with two paths: normalizing caller-provided official result files, and executing the in-tree VideoCon-Physics AutoEvaluator judge via `--run-official`.
+Paper: [VideoPhy](https://arxiv.org/abs/2406.03520). Project: [videophy.github.io](https://videophy.github.io/). Code: [Hritikbansal/videophy](https://github.com/Hritikbansal/videophy).
 
-Official references:
+WorldFoundry **bundles the prompt list** and can run the in-tree VideoCon-Physics AutoEvaluator (`--videocon-checkpoint`, `--sa-threshold` / `--pc-threshold`) or import official JSON. The checkpoint is caller-supplied, not vendored.
 
-- Paper: [arxiv.org/abs/2406.03520](https://arxiv.org/abs/2406.03520)
-- Project page: [videophy.github.io](https://videophy.github.io/)
-- Official repository: [Hritikbansal/videophy](https://github.com/Hritikbansal/videophy)
+<BenchmarkPageSections id="videophy" locale="en" />
 
-## Evaluation protocol
-
-`official-validation` normalizes an official result export. `--run-official` drives the VideoCon-Physics judge over candidate videos: key flags include `--videocon-checkpoint` (judge weights), `--num-frames`, `--batch-size`, and the binarization thresholds `--sa-threshold` / `--pc-threshold` used to convert judge probabilities into per-video adherence decisions before aggregation.
-
-Primary metric: `videophy_average`.
-
-| Metric | Meaning | Direction |
-| --- | --- | --- |
-| `semantic_adherence` | Semantic Adherence normalized benchmark score. | Higher is better |
-| `physical_commonsense` | Physical Commonsense normalized benchmark score. | Higher is better |
-| `joint_score` | Joint Score normalized benchmark score. | Higher is better |
-| `videophy_average` | VideoPhy Average normalized benchmark score. | Higher is better |
-
-## Data and artifact layout
-
-In-tree paths:
-
-```text
-worldfoundry/data/benchmarks/tasks/external/videophy.yaml
-worldfoundry/evaluation/tasks/execution/runners/videophy
-```
-
-```text
-worldfoundry/data/benchmarks/assets/videophy/prompts.json    # official prompt list
-${WORLDFOUNDRY_GENERATED_ARTIFACT_DIR}/                      # candidate videos named per prompt id
-```
-
-The VideoCon-Physics judge checkpoint is caller-supplied (`--videocon-checkpoint`); it is not vendored in tree.
-
-## Run the benchmark
-
-Catalog-recorded validation command:
+## How to run
 
 ```bash
 worldfoundry-eval zoo benchmark-run \
@@ -56,11 +25,9 @@ worldfoundry-eval zoo benchmark-run \
   --mode official-validation \
   --official-results-path <official_results.json> \
   --generated-artifact-dir <generated_videos> \
-  --output-dir <out> \
+  --output-dir tmp/videophy/official-validation \
   --json
 ```
-
-Execute the in-tree VideoCon-Physics judge over candidate videos:
 
 ```bash
 ${WORLDFOUNDRY_UNIFIED_PYTHON} \
@@ -72,27 +39,10 @@ ${WORLDFOUNDRY_UNIFIED_PYTHON} \
   --json
 ```
 
-## Checkpoints and environment variables
+Env: `WORLDFOUNDRY_VIDEOPHY_RESULTS_PATH`, `WORLDFOUNDRY_VIDEOPHY_JUDGE_BACKEND`. Prompt list: `worldfoundry/data/benchmarks/assets/videophy/prompts.json`.
 
-- `WORLDFOUNDRY_VIDEOPHY_ROOT`: Optional override pointing at a local benchmark runtime/repository root.
-- `WORLDFOUNDRY_VIDEOPHY_JUDGE_BACKEND`: Selects the judge backend for --run-official.
-- `WORLDFOUNDRY_VIDEOPHY_RESULTS_PATH`: Default path the importer reads official result exports from when `--official-results-path` is not passed.
-- `WORLDFOUNDRY_GENERATED_ARTIFACT_DIR`: Directory containing the candidate generated artifacts to score or import against.
+In-tree pointers: `worldfoundry/data/benchmarks/tasks/external/videophy.yaml`, `worldfoundry/evaluation/tasks/execution/runners/videophy`.
 
-## Outputs
-
-The run writes into `--output-dir`:
-
-- `scorecard.json`: WorldFoundry scorecard with the metric values recorded above.
-- `benchmark_contract.json`: Benchmark contract record for the run (inputs, mode, provenance).
-- `raw_metric_table.jsonl`: Metric rows backing the scorecard.
-
-Scorecard primary key: `videophy_average` (leaderboard key `videophy_average`), stored in `scorecard.json`.
-
-## Limitations
-
-- The full official runtime remains upstream; the in-tree contract fixture records input/output shape only.
-- Leaderboard parity requires the official VideoCon-Physics checkpoint, the full official prompt suite, and normalized upstream result files.
-- Local judge runs over partial prompt sets are development signals, not official VideoPhy numbers.
+Outputs include `scorecard.json` (primary `videophy_average`).
 
 [← Benchmark Hub](/docs/evaluation/benchmark-hub)

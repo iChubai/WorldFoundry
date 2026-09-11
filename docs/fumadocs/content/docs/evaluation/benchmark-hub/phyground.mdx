@@ -1,97 +1,35 @@
 ---
 title: PhyGround
-description: "Criteria-grounded physical-reasoning benchmark: 250 ti2v prompts over 13 physical laws, judged by PhyJudge-9B or human annotation."
+description: "Criteria-grounded TI2V: 250 prompts over 13 laws, judged 1–5 by PhyJudge or humans. WorldFoundry imports scores.json; it does not run the judge."
 ---
 
-## About
+PhyGround (Northeastern University) is **criteria grounding**, not filmed continuation and not PhyGenEval. Each of **250** text+image-to-video prompts names an expected physical outcome and **2–4** applicable laws from a **13-law** taxonomy (solid-body, fluids, optics). A judge (PhyJudge-9B or humans) rates the generated video **1–5** on semantic adherence, physical temporal validity, persistence, and each applicable law. That is closer to a rubric than to [Physics-IQ](/docs/evaluation/benchmark-hub/physics-iq) mask IoU.
 
-**Publisher:** Northeastern University
+[PhyGenBench](/docs/evaluation/benchmark-hub/phygenbench) is the T2V *generation* commonsense suite (160 prompts / 27 laws / PhyGenEval). PhyGround is TI2V *law-criteria* scoring on 250 prompts / 13 laws.
 
-PhyGround diagnoses law-specific physical-reasoning failures in generative world models. It curates 250 text+image-to-video prompts, each with an expected physical outcome and 2-4 applicable laws from a 13-law taxonomy spanning solid-body mechanics, fluid dynamics, and optics. Videos are rated 1-5 on semantic alignment, physical temporal validity, and persistence, plus each applicable law. The release includes 459-annotator human studies and PhyJudge-9B, an open physics-specialized VLM judge (Qwen3.5-9B LoRA).
+Paper: [PhyGround](https://arxiv.org/abs/2605.10806). Project: [phyground.github.io](https://phyground.github.io/). Code: [NU-World-Model-Embodied-AI/PhyGround](https://github.com/NU-World-Model-Embodied-AI/PhyGround). Data: [NU-World-Model-Embodied-AI/phyground](https://huggingface.co/datasets/NU-World-Model-Embodied-AI/phyground).
 
-WorldFoundry's in-tree runner imports `scores.json` judge outputs produced by PhyJudge/vLLM or cloud-API judge infrastructure, auto-discovering prompts, first frames, and per-model videos under a standard PhyGround data root.
+WorldFoundry **imports** `scores.json` from PhyJudge/vLLM or a cloud judge. It does **not** execute PhyJudge-9B over candidate videos.
 
-Official references:
+<BenchmarkPageSections id="phyground" locale="en" />
 
-- Paper: [arxiv.org/abs/2605.10806](https://arxiv.org/abs/2605.10806)
-- Project page: [phyground.github.io](https://phyground.github.io/)
-- Official repository: [NU-World-Model-Embodied-AI/PhyGround](https://github.com/NU-World-Model-Embodied-AI/PhyGround)
+## How to run
 
-## Evaluation protocol
-
-The runner imports judge outputs rather than executing judges: point `--benchmark-data-root` at a PhyGround data root containing `annotations/` (or pass `--official-results-path`), select the model with `--result-model-id` when annotations hold several model ids, and optionally validate prompt coverage with `--prompt-manifest`. Scores aggregate into the three general dimensions, three domain scores, and `phyground_overall`.
-
-Primary metric: `phyground_overall`.
-
-| Metric | Meaning | Direction |
-| --- | --- | --- |
-| `semantic_adherence` | Semantic Adherence normalized benchmark score. | Higher is better |
-| `physical_temporal_validity` | Physical Temporal Validity normalized benchmark score. | Higher is better |
-| `persistence` | Persistence normalized benchmark score. | Higher is better |
-| `solid_body_score` | Solid-Body Score normalized benchmark score. | Higher is better |
-| `fluid_dynamics_score` | Fluid Dynamics Score normalized benchmark score. | Higher is better |
-| `optics_score` | Optics Score normalized benchmark score. | Higher is better |
-| `phyground_overall` | PhyGround Overall normalized benchmark score. | Higher is better |
-
-## Data and artifact layout
-
-In-tree paths:
-
-```text
-worldfoundry/data/benchmarks/tasks/external/phyground.yaml
-worldfoundry/evaluation/tasks/execution/runners/phyground/runtime/phyground
-```
-
-Standard PhyGround data root (Hugging Face `NU-World-Model-Embodied-AI/phyground`):
-
-```text
-<phyground_data_root>/prompts/phyground.json      # 250 prompts + applicable laws
-<phyground_data_root>/first_images/               # first-frame conditioning images
-<phyground_data_root>/annotations/                # judge/human scores.json
-<phyground_data_root>/videos/<model_id>/          # generated videos per model
-```
+Stage the data root (`prompts/`, `first_images/`, `annotations/`, `videos/<model_id>/`) and import judge outputs:
 
 ```bash
 hf download NU-World-Model-Embodied-AI/phyground --repo-type dataset --local-dir <phyground_data_root>
-```
 
-## Run the benchmark
-
-Catalog-recorded validation command:
-
-```bash
 worldfoundry-eval zoo benchmark-run \
   --benchmark-id phyground \
   --mode official-validation \
   --benchmark-data-root <phyground_data_root> \
   --generated-artifact-dir <phyground_data_root>/videos/<model_id> \
   --result-model-id <model_id> \
-  --output-dir <out> \
+  --output-dir tmp/phyground/official-validation \
   --json
 ```
 
-## Checkpoints and environment variables
-
-- `WORLDFOUNDRY_PHYGROUND_ROOT`: Optional override pointing at a local benchmark runtime/repository root.
-- `WORLDFOUNDRY_PHYGROUND_RESULTS_PATH`: Default path the importer reads official result exports from when `--official-results-path` is not passed.
-- `WORLDFOUNDRY_GENERATED_ARTIFACT_DIR`: Directory containing the candidate generated artifacts to score or import against.
-
-This benchmark reuses the shared base-model dependency stack: `phyground_dataset_assets`.
-
-## Outputs
-
-The run writes into `--output-dir`:
-
-- `scorecard.json`: WorldFoundry scorecard with the metric values recorded above.
-- `benchmark_contract.json`: Benchmark contract record for the run (inputs, mode, provenance).
-- `raw_metric_table.jsonl`: Metric rows backing the scorecard.
-
-Scorecard primary key: `phyground_overall` (leaderboard key `phyground_overall`), stored in `scorecard.json`.
-
-## Limitations
-
-- The in-tree path does not execute PhyJudge-9B or any cloud judge over candidate videos; it imports prepared judge outputs only.
-- Imported scores are not official benchmark evidence; official numbers come from the upstream judging protocol.
-- `--result-model-id` selection is required for multi-model annotation files; mixing models invalidates aggregation.
+Or pass `--official-results-path` at the `scores.json` / `annotations/` file. `--prompt-manifest` optionally checks prompt coverage. Outputs include `scorecard.json` (primary `phyground_overall`).
 
 [← Benchmark Hub](/docs/evaluation/benchmark-hub)

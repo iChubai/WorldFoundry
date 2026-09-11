@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 
 import { ApiCopyButton } from '@/components/api-copy-button';
 import { ModelIdentityMark } from '@/components/model-identity-mark';
@@ -128,6 +128,11 @@ export function DedicatedEnvCatalog({ locale = 'en' }: { locale?: Locale }) {
   const t = copy[locale];
   const [group, setGroup] = useState<GroupFilter>('all');
   const [openIds, setOpenIds] = useState<Set<string>>(() => new Set());
+  const mountedRef = useRef(false);
+
+  useEffect(() => {
+    mountedRef.current = true;
+  }, []);
 
   const visible = useMemo(
     () =>
@@ -139,6 +144,7 @@ export function DedicatedEnvCatalog({ locale = 'en' }: { locale?: Locale }) {
   const allOpen = visible.every((entry) => openIds.has(entry.id));
 
   function setOpen(id: string, nextOpen: boolean) {
+    if (!mountedRef.current) return;
     setOpenIds((current) => {
       const already = current.has(id);
       if (already === nextOpen) return current;

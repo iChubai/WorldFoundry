@@ -1,55 +1,23 @@
 ---
 title: DEVIL Dynamics
-description: 以动态性为核心的文生视频评测：dynamics range、controllability 与动态条件下的质量。
+description: "NeurIPS 2024 的动力学导向 T2V 评测：动态范围、可控性、动态条件质量。WorldFoundry 导入官方行或 artifact 分数，不编造榜单。"
 ---
 
-## 简介
+DEVIL（国科大与百度；NeurIPS 2024）评的是文本生成视频的 **动力学**，不是好看不好看。Prompt 按动力学等级分层；多个时间粒度的分数汇总成三个协议指标，论文报告与人类评分 **>90% 相关**：
 
-**发表机构：** 中国科学院大学与百度（NeurIPS 2024）
+- **动态范围** — 模型能产生多少内容变化。
+- **动态可控性** — 是否遵守所提示的动力学等级。
+- **动态质量** — 在该动力学等级下的质量。
 
-DEVIL 从动态性维度评测文生视频模型。它构建了按 dynamics 等级分层的 prompt benchmark，并在多个时间粒度上定义 dynamics scores，进而导出三个协议指标：dynamics range（模型能产生的内容变化幅度）、dynamics controllability（是否遵循 prompt 指定的动态等级）与 dynamics-based quality。官方协议与人工评分相关性超过 90%。
+`devil_dynamics_average` 是这三项的均值。
 
-WorldFoundry 提供仓内 runtime 入口，可从 WorldFoundry artifact-score 输出 materialize DEVIL 指标行，也可归一化调用方提供的官方结果文件。
+论文：[DEVIL](https://arxiv.org/abs/2407.01094)。代码：[MingXiangL/DEVIL](https://github.com/MingXiangL/DEVIL)。
 
-官方参考：
+WorldFoundry **从已就位的 artifact 分数物化指标行**（`WORLDFOUNDRY_DEVIL_DYNAMICS_ARTIFACT_SCORE_DIR`），或 **导入官方 JSON**。完整重算仍需上游权重（RAFT、CLIP ViT-L/14 与 ViT-B/32、ViCLIP、DINOv2、AMT、动力学回归）。Gemini 自然度组件不在本地重算范围内。
 
-- Paper: [arxiv.org/abs/2407.01094](https://arxiv.org/abs/2407.01094)
-- 项目主页: [huggingface.co/papers/2407.01094](https://huggingface.co/papers/2407.01094)
-- 官方仓库: [MingXiangL/DEVIL](https://github.com/MingXiangL/DEVIL)
+<BenchmarkPageSections id="devil-dynamics" locale="zh" />
 
-## 评测协议
-
-两条路径：用 `--official-results-path` 导入官方 DEVIL 结果 JSON；或通过 `WORLDFOUNDRY_DEVIL_DYNAMICS_ARTIFACT_SCORE_DIR` 从已准备的 artifact scores 计算指标行。完整官方重算依赖上游 scorer 权重（RAFT、CLIP ViT-L/14 与 ViT-B/32、ViCLIP、DINOv2、AMT、dynamics 回归权重），这些通过 runner 的权重 flag 传入。
-
-主指标是 `devil_dynamics_average`。
-
-| Metric | 含义 | 方向 |
-| --- | --- | --- |
-| `dynamics_range` | Dynamics Range（动态范围）归一化基准分。 | 越高越好 |
-| `dynamics_controllability` | Dynamics Controllability（动态可控性）归一化基准分。 | 越高越好 |
-| `dynamics_quality` | Dynamics Quality（动态质量）归一化基准分。 | 越高越好 |
-| `devil_dynamics_average` | DEVIL Dynamics 平均分（归一化基准分）。 | 越高越好 |
-
-## 数据与产物布局
-
-WorldFoundry 仓内路径：
-
-```text
-worldfoundry/data/benchmarks/tasks/external/devil-dynamics.yaml
-worldfoundry/evaluation/tasks/execution/runners/devil_dynamics
-```
-
-```bash
-export WORLDFOUNDRY_GENERATED_ARTIFACT_DIR=/path/to/devil/generated_videos
-export WORLDFOUNDRY_DEVIL_DYNAMICS_ARTIFACT_SCORE_DIR=/path/to/artifact_scores   # runtime 执行
-export WORLDFOUNDRY_DEVIL_DYNAMICS_RESULTS_PATH=/path/to/devil_results.json      # 导入模式
-```
-
-按官方 DEVIL prompt 逐条生成视频；dynamics 等级分层来自官方 prompt 元数据。
-
-## 运行评测
-
-目录 manifest 记录的 validation 命令：
+## 如何运行
 
 ```bash
 worldfoundry-eval zoo benchmark-run \
@@ -57,30 +25,14 @@ worldfoundry-eval zoo benchmark-run \
   --mode official-validation \
   --official-results-path <official_results.json> \
   --generated-artifact-dir <generated_videos> \
-  --output-dir <out> \
+  --output-dir tmp/devil-dynamics/official-validation \
   --json
 ```
 
-## 权重与环境变量
+每个官方 DEVIL prompt 生成一条视频；等级分层来自官方 prompt 元数据。默认导入：`WORLDFOUNDRY_DEVIL_DYNAMICS_RESULTS_PATH`。运行时分数：`WORLDFOUNDRY_DEVIL_DYNAMICS_ARTIFACT_SCORE_DIR`。
 
-- `WORLDFOUNDRY_DEVIL_DYNAMICS_ARTIFACT_SCORE_DIR`
-- `WORLDFOUNDRY_DEVIL_DYNAMICS_RESULTS_PATH`: 未显式传 `--official-results-path` 时，导入器默认从该路径读取官方结果导出文件。
-- `WORLDFOUNDRY_GENERATED_ARTIFACT_DIR`: 存放待评测生成产物（候选视频/rollout）的目录。
+仓内指针：`worldfoundry/data/benchmarks/tasks/external/devil-dynamics.yaml`，`worldfoundry/evaluation/tasks/execution/runners/devil_dynamics`。
 
-## 输出文件
-
-运行会在 `--output-dir` 下写出：
-
-- `scorecard.json`: WorldFoundry 统一 scorecard，记录上表中的指标值。
-- `benchmark_contract.json`: 本次运行的 benchmark contract 记录（输入、模式、来源信息）。
-- `raw_metric_table.jsonl`: 支撑 scorecard 的原始 metric 行。
-
-Scorecard 主键：`devil_dynamics_average`（leaderboard key `devil_dynamics_average`），写入 `scorecard.json`。
-
-## 边界与限制
-
-- 基于 Gemini 的 naturalness 组件需要外部 API key，不属于本地重算范围。
-- 协议级对齐需要完整上游权重集（RAFT/CLIP/ViCLIP/DINOv2/AMT 及 dynamics 回归权重）。
-- 本地 scorecard 不是官方 DEVIL leaderboard 结果。
+产物包括 `scorecard.json`（主键 `devil_dynamics_average`）与 `raw_metric_table.jsonl`。
 
 [← 返回 Benchmark Hub](/zh/docs/evaluation/benchmark-hub)

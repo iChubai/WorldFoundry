@@ -1,27 +1,50 @@
 ---
 title: "HyDRA"
-description: "HyDRA is a camera-controlled video-to-video world model: it re-renders an input video along new camera behavior described by a camera JSON."
+description: "HyDRA：相机可控视频、视频到视频；Runner 一致性待确认。"
+modelId: "hydra"
 pageSource: generated
 ---
 
-**发表机构:** 开源研究发布（仓库未记录正式机构） · 研究机构
-video → video
-
 HyDRA 是相机可控的视频到视频世界模型：按 camera JSON 描述的新相机行为重新渲染输入视频。本 catalog 中官方源码以固定 revision 内置，树内运行时与 WRBench camera JSON 路径已接通；GPU 产物验证待 checkpoint 就位。
+
+<ModelPaperFigures modelId="hydra" locale="zh" />
+
+记录论文为[arXiv 2603.25716](https://arxiv.org/abs/2603.25716)。
+
+项目页：[kj-chen666.github.io/Hybrid-Memory-in-Video-World-Models](https://kj-chen666.github.io/Hybrid-Memory-in-Video-World-Models/)。代码：[H-EmbodVis/HyDRA](https://github.com/H-EmbodVis/HyDRA)。
 
 <ModelCommandBuilder modelId="hydra" locale="zh" />
 
-## 架构
+## 用来做什么
+
+用 `hydra` 做相机条件视频推理。配方绑定了已记录的相机控制 profile。
 
 架构内部细节仓库未记录。固定的公开 revision 无 LICENSE 文件，下游使用前必须先做许可审查。
 
-## 使用要点
+catalog 记录的任务包括 相机可控视频、视频到视频、世界模型。别名包括 `h-embodvis-hydra`。模态上，它接受视频，输出视频。
 
-必须使用内置源码——外部源码检出会被拒绝。输入为提示词、视频与 camera_json；期望得到产物前请先就位 checkpoint。
+记录的评测入口包括[CameraBench](/zh/docs/evaluation/benchmark-hub/camerabench)（重渲染视频的相机行为贴合度）、[WRBench](/zh/docs/evaluation/benchmark-hub/wrbench)（该模型 manifest 的证据记录中提到了这一评测）。
 
-## 评测 Benchmark
+## 运行时契约
 
-- [CameraBench](/zh/docs/evaluation/benchmark-hub/camerabench) — 重渲染视频的相机行为贴合度。
-- [WRBench](/zh/docs/evaluation/benchmark-hub/wrbench) — 该模型 manifest 的证据记录中提到了这一评测。
+必填 `prompt`、`video`、`camera_json`；产物 `hydra.mp4`。
+
+记录的任务 profile：`camera-controlled-video`、`video-to-video`、`world-model`。绑定的 pipeline 类是 `HydraPipeline`。
+
+系列状态：**Runner 一致性待确认**。
+
+必须使用内置源码——外部源码检出会被拒绝。 输入为提示词、视频与 camera_json；期望得到产物前请先就位 checkpoint。
+
+固定上游 revision 无 LICENSE：需要法律审查。
+
+## 在 WorldFoundry 中运行
+
+启动 `worldfoundry-eval run hydra --pipeline.task-profile camera-controlled-video` 跟随相机路径。上方命令构建器按已记录任务切换 `--pipeline.task-profile`，发出的仍是 `worldfoundry-eval run`。
+
+运行环境是统一 profile `worldfoundry-unified-cu128`（Python 3.11，CUDA 12.8）。
+
+记录的权重仓库包括 `H-EmbodVis/HyDRA`、`Wan-AI/Wan2.1-T2V-1.3B`。就位权重用 `bash scripts/inference/prepare_model_infer.sh hydra`。
+
+状态：**Runner 一致性待确认**。
 
 <ModelRelatedRecipes modelId="hydra" locale="zh" />

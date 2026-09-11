@@ -1,32 +1,29 @@
 ---
 title: "LIBERO-Para"
-description: "LIBERO-Para is a paraphrase-robustness evaluation line around the LIBERO benchmark: it tests how VLA policies behave when task instructions are reworded (paper: hf.co/papers/2603.28301, MIT license). The HAI-Lab/LIBERO-Para dataset is conf…"
-pageSource: generated
+description: "围绕 LIBERO 的指令改写鲁棒性配方：把已就位的 VLA 配上改写指令。MIT 数据集；不是新的策略架构。"
+modelId: "libero-para"
+pageSource: authored
 ---
 
-**发表机构:** 开源研究发布（仓库未记录正式机构） · 研究机构
-[LIBERO-Para: A Diagnostic Benchmark and Metrics for Paraphrase Robustness in VLA Models](https://arxiv.org/abs/2603.28301) (2026)
+LIBERO-Para 是围绕 LIBERO 套件的**指令改写鲁棒性评测配方**，不是新的视觉-语言-动作架构。论文是 [LIBERO-Para: A Diagnostic Benchmark and Metrics for Paraphrase Robustness in VLA Models](https://arxiv.org/abs/2603.28301)（arXiv 2603.28301；亦见 [hf.co/papers/2603.28301](https://huggingface.co/papers/2603.28301)）。项目页 [cau-hai-lab.github.io/LIBERO-Para](https://cau-hai-lab.github.io/LIBERO-Para/)；代码 [cau-hai-lab/LIBERO-Para](https://github.com/cau-hai-lab/LIBERO-Para)（**MIT**）。持出指令集是已确认的 Hugging Face 数据集 [HAI-Lab/LIBERO-Para](https://huggingface.co/HAI-Lab/LIBERO-Para)。
 
-LIBERO-Para 是围绕 LIBERO 基准的指令改写鲁棒性评测线：测试 VLA 策略在任务指令被改写时的表现（论文：hf.co/papers/2603.28301，MIT 许可）。HAI-Lab/LIBERO-Para 数据集已在 Hugging Face 确认； WorldFoundry 通过树内官方策略运行时适配器路由动作评测。
+<ModelPaperFigures modelId="libero-para" locale="zh" />
 
-<figure className="wf-recipe-media is-diagram">
-  <img src="/models/libero-para/paper.png" alt="LIBERO-Para: A Diagnostic Benchmark and Metrics for Paraphrase Robustness in VLA Models" />
-  <figcaption>LIBERO-Para: A Diagnostic Benchmark and Metrics for Paraphrase Robustness in VLA Models</figcaption>
-</figure>
+WorldFoundry 通过树内官方策略适配器（`LiberoParaPipeline`）路由动作评测。你提供一个能跑 LIBERO 的策略；本卡片把 `lerobot/xvla-libero` 记为权重指针。必填输入是 RGB `image`、语言 `prompt` 与机器人 `state`。产物是 `libero-para_action_trace.json`。本页是**模型 / 配方**条目。scorecard 与官方结果导入在单独的评测页 [LIBERO-Para](/zh/docs/evaluation/benchmark-hub/libero-para)，构建于父套件 [LIBERO](/zh/docs/evaluation/benchmark-hub/libero) 之上。
 
 <ModelCommandBuilder modelId="libero-para" locale="zh" />
 
-## 架构
+## 用来做什么
 
-这是以评测/数据集为中心的条目，而非新策略架构；记录的工件为指令改写数据集与评测路由。更多内部细节仓库未记录。
+衡量已就位的 VLA 在 LIBERO-Goal 指令被改写、场景保持不变时的表现。官方材料沿**动作**与**物体**两轴给出持出改写（十个 LIBERO-Goal 场景、数千条指令），以及按难度加权的 **PRIDE** 指标。把它们当作上游协议——本 catalog 不收录排行榜。
 
-## 使用要点
+把配方与能跑 LIBERO 的 checkpoint 配对。缺失权重以运行时 `missing_assets` 报告，不是 catalog 阻塞项；权重就位前运行停在 runtime plan。任务 profile 为 `vla`（默认）、`policy_rollout`、`embodied_benchmark`。
 
-checkpoint 缺失由运行时 missing_assets 报告，不视为 catalog 阻塞；权重就位前运行输出运行时计划。与支持 LIBERO 的策略搭配即可测量指令改写鲁棒性。
+## 运行时契约
+`policy_family` 记录为 `libero_para_policy_eval`；`action_representation` 为 `libero_para_action_trace`。集成为 **Runner 一致性待确认**。runner / demo 为 **未记录**，本卡片也没有已验证的端到端 GPU 产物。本条目**自身没有策略 checkpoint**。
 
-## 评测 Benchmark
+## 在 WorldFoundry 中运行
 
-- [LIBERO-Para](/zh/docs/evaluation/benchmark-hub/libero-para) — 本条目即 LIBERO-Para 评测本身。
-- [LIBERO](/zh/docs/evaluation/benchmark-hub/libero) — 构建于 LIBERO 任务套件之上。
+在统一环境 `worldfoundry-unified-cu128`（Python 3.11，CUDA 12.8）里运行 `worldfoundry-eval run libero-para --pipeline.task-profile vla`。先在本地就位 `lerobot/xvla-libero`（或其它能跑 LIBERO 的策略）。官方代码树与数据集许可为 **MIT**。
 
 <ModelRelatedRecipes modelId="libero-para" locale="zh" />

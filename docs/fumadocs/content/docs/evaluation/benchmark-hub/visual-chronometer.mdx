@@ -1,53 +1,19 @@
 ---
 title: Visual Chronometer
-description: "PhyFPS prediction over arbitrary videos: measure the physical frame rate implied by visual motion, independent of metadata."
+description: "TACO PhyFPS predictor over arbitrary videos. All consistency metrics are lower-is-better. WorldFoundry shares the runtime with PhyFPS-Bench-Gen; it does not invent a board."
 ---
 
-## About
+Visual Chronometer (TACO Group, Texas A&M) predicts **Physical Frames Per Second (PhyFPS)** — the temporal scale implied by visual motion — ignoring container metadata. It is trained with controlled temporal resampling and physics-grounded augmentations (motion blur, rolling shutter). As a WorldFoundry benchmark it scores a **directory of arbitrary videos** (not a fixed prompt suite) with mean PhyFPS plus intra- / inter-video coefficients of variation. **Lower values mean steadier temporal behavior.**
 
-**Publisher:** TACO Group, Texas A&M University
+Sibling generation audit: [PhyFPS-Bench-Gen](/docs/evaluation/benchmark-hub/phyfps-bench-gen) (100-prompt Meta-vs-PhyFPS).
 
-Visual Chronometer predicts the Physical Frames Per Second (PhyFPS) of a video — the true temporal scale implied by its visual dynamics — bypassing unreliable container metadata. Trained via controlled temporal resampling with physics-grounded augmentations (motion blur, rolling shutter), it exposes temporal instability in both real and generated footage. As a WorldFoundry benchmark it scores a directory of videos with mean PhyFPS plus intra-/inter-video coefficients of variation; lower values indicate steadier, more consistent temporal behavior.
+Code: [taco-group/Visual_Chronometer](https://github.com/taco-group/Visual_Chronometer). Checkpoint: [`xiangbog/Visual_Chronometer`](https://huggingface.co/xiangbog/Visual_Chronometer) (`vc_common_10_60fps.ckpt`, 10–60 FPS).
 
-WorldFoundry runs PhyFPS prediction in-process through the checked-in runtime wrapper shared with PhyFPS-Bench-Gen.
+WorldFoundry runs `predict.py` in-process through the shared PhyFPS-Bench-Gen wrapper, or imports `results.csv`. Runtime / normalizer surfaces exist; **no release-verified full official run is claimed**.
 
-Official references:
+<BenchmarkPageSections id="visual-chronometer" locale="en" />
 
-- Official repository: [taco-group/Visual_Chronometer](https://github.com/taco-group/Visual_Chronometer)
-
-## Evaluation protocol
-
-Point `--generated-artifact-dir` at any directory of videos; the runner slides windows over each clip, predicts per-window PhyFPS, and aggregates. `WORLDFOUNDRY_VISUAL_CHRONOMETER_PREDICT_BACKEND` selects the local prediction backend. `official-validation` mode normalizes an existing `results.csv` instead of re-predicting.
-
-Primary metric: `visual_chronometer_average`.
-
-| Metric | Meaning | Direction |
-| --- | --- | --- |
-| `mean_phyfps` | Mean average PhyFPS across evaluated videos. | Lower is better |
-| `inter_video_cv` | Cross-video coefficient of variation over average PhyFPS. | Lower is better |
-| `intra_video_cv` | Mean within-video coefficient of variation over sliding-window clips. | Lower is better |
-| `visual_chronometer_average` | Mean over available Visual Chronometer consistency score families. | Lower is better |
-
-## Data and artifact layout
-
-In-tree paths:
-
-```text
-worldfoundry/data/benchmarks/tasks/external/visual-chronometer.yaml
-worldfoundry/evaluation/tasks/execution/runners/phyfps_bench_gen/runtime/visual_chronometer
-```
-
-```text
-.../runners/phyfps_bench_gen/runtime/visual_chronometer/   # shared in-tree runtime
-${WORLDFOUNDRY_GENERATED_ARTIFACT_DIR}/*.mp4               # videos to score
-<out>/results.csv                                          # per-clip PhyFPS predictions
-```
-
-The VC-Common checkpoint (`xiangbog/Visual_Chronometer`, 10-60 FPS range) is required for real predictions.
-
-## Run the benchmark
-
-Catalog-recorded validation command:
+## How to run
 
 ```bash
 worldfoundry-eval zoo benchmark-run \
@@ -55,33 +21,14 @@ worldfoundry-eval zoo benchmark-run \
   --mode official-validation \
   --official-results-path <results.csv> \
   --generated-artifact-dir <generated_videos> \
-  --output-dir <out> \
+  --output-dir tmp/visual-chronometer/official-validation \
   --json
 ```
 
-## Checkpoints and environment variables
+`--generated-artifact-dir` plus `WORLDFOUNDRY_VISUAL_CHRONOMETER_PREDICT_BACKEND` selects local prediction. Env: `WORLDFOUNDRY_VISUAL_CHRONOMETER_RESULTS_PATH`, `WORLDFOUNDRY_VISUAL_CHRONOMETER_ROOT`.
 
-- `WORLDFOUNDRY_VISUAL_CHRONOMETER_ROOT`: Optional override pointing at an external runtime checkout.
-- `WORLDFOUNDRY_VISUAL_CHRONOMETER_RESULTS_PATH`: Default path the importer reads official result exports from when `--official-results-path` is not passed.
-- `WORLDFOUNDRY_GENERATED_ARTIFACT_DIR`: Directory containing the candidate generated artifacts to score or import against.
-- `WORLDFOUNDRY_VISUAL_CHRONOMETER_PREDICT_BACKEND`: Selects the local PhyFPS prediction backend.
+In-tree pointers: `worldfoundry/data/benchmarks/tasks/external/visual-chronometer.yaml`, `worldfoundry/evaluation/tasks/execution/runners/phyfps_bench_gen/runtime/visual_chronometer`.
 
-## Outputs
-
-The run writes into `--output-dir`:
-
-- `scorecard.json`: WorldFoundry scorecard with the metric values recorded above.
-- `benchmark_contract.json`: Benchmark contract record for the run (inputs, mode, provenance).
-- `raw_metric_table.jsonl`: Metric rows backing the scorecard.
-- `results.csv`
-- `per_sample_scores.jsonl`: Per-sample rows when the result source exposes sample-level values.
-
-Scorecard primary key: `visual_chronometer_average` (leaderboard key `visual_chronometer_average`), stored in `scorecard.json`.
-
-## Limitations
-
-- Full leaderboard parity requires the complete official checkpoint assets and verified scorecard evidence.
-- The released VC-Common checkpoint covers 10-60 FPS and is not the authors' strongest internal model.
-- Mock prediction backends are wiring-only and never benchmark evidence.
+Outputs include `scorecard.json` (primary `visual_chronometer_average`) and `results.csv`.
 
 [← Benchmark Hub](/docs/evaluation/benchmark-hub)

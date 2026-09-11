@@ -1,41 +1,22 @@
 ---
 title: PAWBench
-description: Distributional evaluation of probability calibration and physical-outcome coverage across repeated video-world-model rollouts.
+description: "Distributional physics bench: 50 scenes × 50 rollouts. Calibration TVD and coverage stay separate. WorldFoundry vendors PAWEval; it does not invent a combined board."
 ---
 
-## About
+PAWBench (SJTU, Shanghai AI Lab, Krea AI, Hugging Face, Shanghai Innovation Institute, Tongyi Lab, HKU) asks whether repeated generations recover the **distribution** of physically valid futures — not whether one clip looks plausible. Official size: **50 scenes** (25 calibration with reference outcome probabilities, 25 coverage). A complete run generates **50 independent rollouts per scene = 2,500 videos**.
 
-**Publishers:** Shanghai Jiao Tong University, Shanghai AI Laboratory, Krea AI,
-Hugging Face, Shanghai Innovation Institute, Tongyi Lab, and the University of
-Hong Kong.
+The two tracks stay separate. Upstream defines **no combined scalar**.
 
-PAWBench asks whether repeated generations recover the **distribution** of
-physically valid futures, rather than whether one video looks plausible. It
-contains 50 scenes: 25 calibration scenes with reference outcome probabilities
-and 25 coverage scenes. A complete official run generates 50 independent
-rollouts per scene, for 2,500 videos in total.
+- **Calibration** — `calibration_tvd_percent` (lower is better): total-variation distance to the reference outcome distribution.
+- **Coverage** — `coverage_percent`: share of the official physical-outcome support seen across rollouts.
 
-Official sources:
+Paper: [PAWBench](https://arxiv.org/abs/2608.27345). Project: [pawbench.github.io](https://pawbench.github.io/). Code: [Andrew0613/PAWBench](https://github.com/Andrew0613/PAWBench) (Apache-2.0). Data: [`Andrew613/PAWBench`](https://huggingface.co/datasets/Andrew613/PAWBench).
 
-- [Paper](https://arxiv.org/abs/2608.27345)
-- [Project page](https://pawbench.github.io/)
-- [Official repository](https://github.com/Andrew0613/PAWBench)
-- [Dataset](https://huggingface.co/datasets/Andrew613/PAWBench)
+WorldFoundry **vendors the official PAWEval judge**. Fresh judging defaults to Gemini 3.5 Flash through OpenRouter; other OpenAI-compatible judges are analysis-only. Existing `metrics.json` or run directories import without network.
 
-## Metrics
+<BenchmarkPageSections id="pawbench" locale="en" />
 
-PAWBench intentionally keeps its two tracks separate; it does not define one
-combined leaderboard scalar.
-
-| Metric | Meaning | Direction |
-| --- | --- | --- |
-| `calibration_tvd_percent` | Total-variation distance between generated and reference outcome distributions. | Lower is better |
-| `coverage_percent` | Fraction of the official physical-outcome support observed in repeated rollouts. | Higher is better |
-
-## Run or import results
-
-Stage the official dataset and a complete rollout tree, then configure the
-official PAWEval judge:
+## How to run
 
 ```bash
 hf download Andrew613/PAWBench --repo-type dataset --local-dir /data/pawbench
@@ -50,11 +31,7 @@ worldfoundry-eval zoo benchmark-run \
   --json
 ```
 
-The in-tree runtime vendors the official evaluator. Fresh judging uses Gemini
-3.5 Flash through OpenRouter by default; alternate OpenAI-compatible judges are
-useful for analysis but are not directly comparable with the official setup.
-Existing `metrics.json` files or run directories can be normalized without
-network access:
+Import a prepared run:
 
 ```bash
 worldfoundry-eval zoo benchmark-run \
@@ -65,12 +42,6 @@ worldfoundry-eval zoo benchmark-run \
   --json
 ```
 
-## Outputs and limits
-
-Runs write `scorecard.json`, `raw_metric_table.jsonl`,
-`per_sample_scores.jsonl`, and `benchmark_contract.json`. The checked-in sample
-is only a result-normalizer fixture. Full-dataset execution, hosted-judge
-reproducibility, and leaderboard parity remain unverified; incomplete rollout
-coverage is reported as a blocker rather than silently averaged.
+Outputs include `scorecard.json`, `raw_metric_table.jsonl`, `per_sample_scores.jsonl`, and `benchmark_contract.json`. The checked-in sample is a normalizer fixture only.
 
 [← Benchmark Hub](/docs/evaluation/benchmark-hub)

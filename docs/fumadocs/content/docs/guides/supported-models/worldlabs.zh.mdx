@@ -1,25 +1,50 @@
 ---
 title: "World Labs API"
-description: "World Labs API is the hosted entry for World Labs' generative world service, recorded for world-generation and asset outputs rather than flat video. Instead of returning a clip, the service produces explorable 3D world content on World Lab…"
-pageSource: generated
+description: "World Labs API（World Labs）：世界生成、assets；Runner 一致性待确认。"
+modelId: "worldlabs"
+pageSource: authored
 ---
-
-**发表机构:** World Labs · 企业
 
 World Labs API 是 World Labs 生成式世界服务的托管条目，记录的任务是世界生成与资产输出，而非普通视频。服务在 World Labs 的基础设施上生成可探索的 3D 世界内容，WorldFoundry 将 API 返回的内容归档为产物。这是 catalog 中唯一面向世界生成（而非视频生成）的 hosted_api 条目。
 
+<ModelPaperFigures modelId="worldlabs" locale="zh" />
+
+项目页：[worldlabs.ai](https://www.worldlabs.ai/)。
+
 <ModelCommandBuilder modelId="worldlabs" locale="zh" />
 
-## 架构
+## 用来做什么
+
+`worldlabs` 是托管推理线。卡片上没有本地 checkpoint 时从这里起步。
 
 World Labs 未公开其世界生成服务背后的架构；本仓库仅记录托管端点的集成方式及其返回的产物类型。
 
-## 使用要点
+catalog 记录的任务包括 世界生成、assets、托管 API。
 
-Catalog 将该条目标记为 integrated：托管 API 的 Studio pipeline 已可用，但你必须自备服务方的 API key 与账号。本地不会下载任何权重、也不会创建 GPU 环境——生成在服务方完成，费用、配额与内容政策均以你的服务方账号为准。访问权限通过 World Labs 平台（worldlabs.ai）开通。
+记录的评测入口包括[WorldScore](/zh/docs/evaluation/benchmark-hub/worldscore)（评估可探索生成世界的统一基准）。
 
-## 评测 Benchmark
+不是 [Marble 1.1](/zh/docs/guides/supported-models/worldlabs-marble-1.1)。 评测看 [WorldScore](/zh/docs/evaluation/benchmark-hub/worldscore)。
 
-- [WorldScore](/zh/docs/evaluation/benchmark-hub/worldscore) — 评估可探索生成世界的统一基准。
+## 运行时契约
+
+本卡片未记录输入、旋钮或产物。
+
+记录的任务 profile：`world-generation`、`assets`、`hosted-api`。绑定的 pipeline 类是 `WorldLabsPipeline`。
+
+系列状态：**Runner 一致性待确认**。
+
+Catalog 将该条目标记为 integrated：托管 API 的 Studio pipeline 已可用，但你必须自备服务方的 API key 与账号。 本地不会下载任何权重、也不会创建 GPU 环境——生成在服务方完成，费用、配额与内容政策均以你的服务方账号为准。 访问权限通过 World Labs 平台（worldlabs.ai）开通。
+
+Hosted API Studio pipeline is available; users must provide their own provider API key.
+
+## 在 WorldFoundry 中运行
+
+启动 `worldfoundry-eval run worldlabs --pipeline.task-profile world-generation` 调托管接口。上方命令构建器按已记录任务切换 `--pipeline.task-profile`，发出的仍是 `worldfoundry-eval run`。
+
+运行环境未记录。
+
+就位权重用 `bash scripts/inference/prepare_model_infer.sh worldlabs`。
+
+状态：**Runner 一致性待确认**。
 
 <ModelRelatedRecipes modelId="worldlabs" locale="zh" />

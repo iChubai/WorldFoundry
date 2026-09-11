@@ -1,26 +1,39 @@
 ---
 title: "DualCamCtrl"
-description: "DualCamCtrl controls video generation with a camera trajectory plus a depth image: the RGB and depth conditions together pin down scene geometry so the generated camera move stays physically grounded."
-pageSource: generated
+description: "港科大广州 EnVision：RGB + 深度 + 相机 .torch。官方 demo 已验证：320×480、61 帧、50 步。许可证 unknown。期望产物 seaside.mp4。"
+modelId: "dualcamctrl"
+pageSource: authored
 ---
 
-**发表机构:** 香港科技大学（广州）EnVision 实验室 · 高校
-image → video · depth
+DualCamCtrl 用**相机轨迹加深度图**控制视频：RGB 和深度一起钉住几何，让相机运动落地。WorldFoundry 把推理放在 `worldfoundry/synthesis/visual_generation/dualcamctrl`，对外是 `DualCamCtrlPipeline`。Runner **和** demo 都按官方 RGB / 深度 / 相机契约**已验证**。
 
-DualCamCtrl 用「相机轨迹 + 深度图」控制视频生成：RGB 与深度条件共同确定场景几何，使生成的相机运动保持物理可信。本 catalog 中 runner 已验证，遵循官方 RGB/深度/相机 demo 契约。
+<ModelPaperFigures modelId="dualcamctrl" locale="zh" />
+
+论文：[arXiv 2511.23127](https://arxiv.org/abs/2511.23127)。项目页：[soyouthinkyoucantell.github.io/dualcamctrl-page](https://soyouthinkyoucantell.github.io/dualcamctrl-page/)。代码：[EnVision-Research/DualCamCtrl](https://github.com/EnVision-Research/DualCamCtrl)。发布方：港科大（广州）EnVision Lab。catalog 许可证：**unknown**。
 
 <ModelCommandBuilder modelId="dualcamctrl" locale="zh" />
 
-## 架构
+## 用来做什么
 
-默认 demo 契约遵循官方配方：一张图、一张深度图、一个相机 .torch 轨迹文件，61 帧 320x480、50 步。树内推理运行时位于 synthesis/visual_generation/dualcamctrl；除记录契约外的内部细节此处未存。
+双相机控制，面向立体风格成对输入。
 
-## 使用要点
+启动 `worldfoundry-eval run dualcamctrl --pipeline.task-profile world`。
 
-开源用户默认使用 Hugging Face 缓存/下载路径；已就位的本地资产可通过 checkpoint_path、 base_model_path 或 WORLDFOUNDRY_MODEL_DIR 传入。
+评测入口：[CameraBench](/zh/docs/evaluation/benchmark-hub/camerabench)（受控生成的相机轨迹贴合度）。
 
-## 评测 Benchmark
+## 运行时契约
 
-- [CameraBench](/zh/docs/evaluation/benchmark-hub/camerabench) — 受控生成的相机轨迹贴合度。
+必填 `prompt`、`image`；可选 `video`；`actions`：camera_trajectory, depth_image；产物 `dualcamctrl.mp4`、`seaside.mp4`。
+
+| 旋钮 | 官方 demo |
+| --- | --- |
+| 尺寸 | **320×480** |
+| 帧数 | **61** |
+| 步数 | **50** |
+| 轨迹 | `.torch` 相机文件 |
+
+## 在 WorldFoundry 中运行
+
+状态：**已验证**。统一环境 `worldfoundry-unified-cu128`（Python 3.11, CUDA 12.8）。先把 `FayeHongfeiZhang/DualCamCtrl`、`alibaba-pai/Wan2.1-Fun-V1.1-1.3B-Control-Camera`、`Wan-AI/Wan2.1-T2V-1.3B` 等就位到本地，缺文件加载失败，运行时不下载。在该环境执行 `worldfoundry-eval run dualcamctrl --pipeline.task-profile world`。catalog 未记录 VRAM。
 
 <ModelRelatedRecipes modelId="dualcamctrl" locale="zh" />

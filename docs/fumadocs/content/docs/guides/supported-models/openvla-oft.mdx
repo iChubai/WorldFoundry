@@ -1,35 +1,34 @@
 ---
 title: "OpenVLA-OFT"
-description: "OpenVLA-OFT applies optimized fine-tuning to OpenVLA — parallel decoding, continuous action heads, and chunking — and is fully GPU-validated in this catalog: an A100 restored all 7.54B parameters, produced deterministic finite 8x7 action c…"
-pageSource: generated
+description: "OpenVLA-OFT: `image`, `prompt`, and `state` in; `action_trace` and `openvla-oft_action_trace.json` out; 5 variants; dedicated `worldfoundry-vla-openvla-compat-cu121`."
+modelId: "openvla-oft"
+pageSource: authored
 ---
-
-**Publisher:** Open-source research release (institution not recorded) · Research lab
 
 OpenVLA-OFT applies optimized fine-tuning to OpenVLA — parallel decoding, continuous action heads, and chunking — and is fully GPU-validated in this catalog: an A100 restored all 7.54B parameters, produced deterministic finite 8x7 action chunks across multiple inputs at 14.47 GiB peak VRAM, and all five declared LIBERO checkpoints completed real inference (MIT license).
 
+<ModelPaperFigures modelId="openvla-oft" locale="en" />
+
+The paper is [arXiv 2502.19645](https://arxiv.org/abs/2502.19645). Project page: [openvla-oft.github.io](https://openvla-oft.github.io). Code: [moojink/openvla-oft](https://github.com/moojink/openvla-oft).
+
+Catalog aliases include `openvla_oft` and `openvla-oft-libero`.
+
 <ModelCommandBuilder modelId="openvla-oft" locale="en" />
 
-## Architecture
+## What it is for
 
-The OFT recipe replaces autoregressive token decoding with parallel decoding plus an L1 continuous action head and 8-step chunking over the 7B OpenVLA backbone, with proprio and noisy-action projectors in-tree. Attention is hardware-resolved: FlashAttention 2 on Ampere/Ada/Hopper, PyTorch SDPA fallback elsewhere including Blackwell.
+Use the OFT LIBERO specialists when you want parallel-decoded 8×7 action chunks on the OpenVLA 7B backbone — not the base [OpenVLA](/docs/guides/supported-models/openvla) card.
 
-## Usage notes
+Launch `worldfoundry-eval run openvla-oft-libero-spatial` with `--pipeline.task-profile vla.policy_rollout`. Required: `image`, `prompt`, `state`. Artifacts: `action_trace` and `openvla-oft_action_trace.json`. Swap `openvla-oft-libero-object`, `-goal`, `-10`, or the combined spatial-object-goal-10 card for the other splits.
 
-Pick the LIBERO suite checkpoint matching your split (spatial, object, goal, etc.); official LIBERO observation inputs are supported directly. Training, RLDS processing, TensorFlow tooling, and LIBERO benchmark loops are excluded.
+Related suite: [LIBERO](/docs/evaluation/benchmark-hub/libero).
 
-## Variants & pipeline bindings
+## Runtime contract
 
-| Variant | Task | Runtime profile | Pipeline binding | Status |
-| --- | --- | --- | --- | --- |
-| `openvla-oft-libero-spatial` | vla.policy_rollout | `openvla-oft` | `openvla-oft` | checkpoint gpu validated |
-| `openvla-oft-libero-object` | vla.policy_rollout | `openvla-oft` | `openvla-oft` | checkpoint gpu validated |
-| `openvla-oft-libero-goal` | vla.policy_rollout | `openvla-oft` | `openvla-oft` | checkpoint gpu validated |
-| `openvla-oft-libero-10` | vla.policy_rollout | `openvla-oft` | `openvla-oft` | checkpoint gpu validated |
-| `openvla-oft-libero-spatial-object-goal-10` | vla.policy_rollout | `openvla-oft` | `openvla-oft` | checkpoint gpu validated |
+Required: `image`, `prompt`, `state`. Cameras: `full_image` and `wrist_image`. Proprio is 8-D; action chunk is **8×7**. Official demo observation: `experiments/robot/libero/sample_libero_spatial_observation.pkl`. Status: **Verified** — all five declared LIBERO checkpoints completed A100 inference. Upstream memory hint is about **16 GB** for LIBERO.
 
-## Evaluation benchmarks
+## Running in WorldFoundry
 
-- [LIBERO](/docs/evaluation/benchmark-hub/libero) — All five LIBERO checkpoints are GPU-validated.
+Dedicated environment `worldfoundry-vla-openvla-compat-cu121` (Python 3.10, CUDA 12.1). Stage the matching `moojink/openvla-7b-oft-finetuned-libero-*` snapshot — the runtime does not download weights. Launch `worldfoundry-eval run openvla-oft-libero-spatial` with `--pipeline.task-profile vla.policy_rollout`. License: MIT.
 
 <ModelRelatedRecipes modelId="openvla-oft" locale="en" />

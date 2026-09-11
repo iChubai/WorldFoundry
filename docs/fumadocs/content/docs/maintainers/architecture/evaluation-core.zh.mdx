@@ -97,10 +97,8 @@ CLI/TUI/MCP 如何把用户意图编译为这些 runner 消费的 `EvaluateRunRe
 
 改 evaluation 内部代码前先看此表。它列出其他团队与自动化依赖的兼容面；破坏它们需同步更新 validation、docs export 与示例 scorecard。
 
-| 如果改这里 | 必须保持 |
-| --- | --- |
-| `api/*` dataclasses | `to_dict()` / `from_dict()` JSON-safe payloads。 |
-| `evaluation/tasks/run_*` output writing | 文件名、JSONL row shape、`sample_id` 对齐、final manifest status。 |
-| `models/resolver.py` | Error messages、runner resolution、model-zoo variant selection。 |
-| `evaluation/tasks/official/*` schema | Manifest parsing 和 alias lookup behavior。 |
-| `reporting*.py` and `scorecard.py` | Validation、docs 和 release reports 使用的 scorecard fields。 |
+- `api/*` dataclasses — `to_dict()` / `from_dict()` JSON-safe payloads。
+- `evaluation/tasks/run_*` output writing — 文件名、JSONL row shape、`sample_id` 对齐、final manifest status。
+- `models/resolver.py` — Error messages、runner resolution、model-zoo variant selection。
+- `evaluation/tasks/official/*` schema — Manifest parsing 和 alias lookup behavior。
+- `reporting*.py` and `scorecard.py` — Validation、docs 和 release reports 使用的 scorecard fields。

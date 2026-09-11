@@ -1,58 +1,21 @@
 ---
 title: PhyGenBench
-description: Physical-commonsense T2V benchmark with 160 prompts over 27 physical laws, scored by the PhyGenEval pipeline.
+description: "T2V physical-commonsense generation: 160 prompts over 27 laws, scored by PhyGenEval. WorldFoundry imports results or runs overall.py — not the stage judges."
 ---
 
-## About
+PhyGenBench (Shanghai AI Lab / OpenGVLab) asks whether a **text-to-video generator** respects physical commonsense. It ships **160 prompts** spanning **27 claimed laws** in four domains (mechanics, optics, thermal, materials). Upstream scoring is **PhyGenEval**: VQAScore, GPT-4o/LLaVA-style order checks, and InternVideo2 naturalness, then `overall.py`.
 
-**Publisher:** Shanghai AI Laboratory (OpenGVLab)
+This is **generation + hierarchical judges**, not [PhyGround](/docs/evaluation/benchmark-hub/phyground) (TI2V law-criteria 1–5), not [PhysVidBench](/docs/evaluation/benchmark-hub/physvidbench) (caption QA), and not [Physics-IQ](/docs/evaluation/benchmark-hub/physics-iq) (filmed continuation).
 
-PhyGenBench probes whether text-to-video models respect physical commonsense. It ships 160 prompts spanning 27 physical laws across four domains (mechanics, optics, thermal, material properties), and evaluates generated videos with the PhyGenEval hierarchy: per-stage judges (VQAScore, GPT-4o/LLaVA-style VLM judgment, InternVideo2) feed an `overall.py` aggregation that produces Physical Commonsense and Semantic Adherence scores.
+Paper: [PhyGenBench](https://arxiv.org/abs/2410.05363). Project: [phygenbench123.github.io](https://phygenbench123.github.io/). Code: [OpenGVLab/PhyGenBench](https://github.com/OpenGVLab/PhyGenBench).
 
-WorldFoundry bundles the official prompt list and the PhyGenEval `overall.py` aggregation in tree. The in-tree runner covers two supported paths: importing a caller-supplied official result file, and running the bounded `overall.py` aggregation over already-prepared stage outputs.
+WorldFoundry bundles `prompts.json` and PhyGenEval `overall.py`. It **imports** an official result file, or runs **bounded** `overall.py` over already-prepared stage outputs. It does **not** run VQAScore, GPT-4o/LLaVA, or InternVideo2.
 
-Official references:
+<BenchmarkPageSections id="phygenbench" locale="en" />
 
-- Paper: [arxiv.org/abs/2410.05363](https://arxiv.org/abs/2410.05363)
-- Project page: [phygenbench123.github.io](https://phygenbench123.github.io/)
-- Official repository: [OpenGVLab/PhyGenBench](https://github.com/OpenGVLab/PhyGenBench)
+## How to run
 
-## Evaluation protocol
-
-Official-validation mode normalizes an official PhyGenBench result export into the WorldFoundry metric surface. The bounded `--run-official` path only executes the PhyGenEval `overall.py` aggregation over prepared stage outputs — it does not run the VQAScore, GPT-4o/LLaVA, or InternVideo2 stage judges, so aggregation alone is not official benchmark evidence.
-
-Primary metric: `phygenbench_average`.
-
-| Metric | Meaning | Direction |
-| --- | --- | --- |
-| `physical_commonsense` | Physical Commonsense normalized benchmark score. | Higher is better |
-| `physical_law_adherence` | Physical Law Adherence normalized benchmark score. | Higher is better |
-| `semantic_adherence` | Semantic Adherence normalized benchmark score. | Higher is better |
-| `phygenbench_average` | PhyGenBench Average normalized benchmark score. | Higher is better |
-
-## Data and artifact layout
-
-In-tree paths:
-
-```text
-worldfoundry/data/benchmarks/tasks/external/phygenbench.yaml
-worldfoundry/data/benchmarks/assets/phygenbench/PhyGenBench/prompts.json
-worldfoundry/evaluation/tasks/execution/runners/phygenbench/runtime/phygenbench/PhyGenEval/overall.py
-```
-
-Bundled assets and the runtime aggregation live in tree; generated candidate videos are supplied by the caller:
-
-```text
-worldfoundry/data/benchmarks/assets/phygenbench/PhyGenBench/prompts.json   # official 160-prompt list
-.../runners/phygenbench/runtime/phygenbench/PhyGenEval/overall.py          # bounded aggregation entry
-${WORLDFOUNDRY_GENERATED_ARTIFACT_DIR}/                                    # candidate videos
-```
-
-No Hugging Face dataset is required: prompt assets are bundled, and result import / prepared-stage aggregation are file-based.
-
-## Run the benchmark
-
-Catalog-recorded validation command:
+Import an official result export:
 
 ```bash
 worldfoundry-eval zoo benchmark-run \
@@ -60,11 +23,11 @@ worldfoundry-eval zoo benchmark-run \
   --mode official-validation \
   --official-results-path <official_results.json> \
   --generated-artifact-dir <generated_videos> \
-  --output-dir <out> \
+  --output-dir tmp/phygenbench/official-validation \
   --json
 ```
 
-Run the bounded PhyGenEval overall aggregation over prepared stage outputs:
+Aggregate prepared stage outputs with in-tree `overall.py` (not a substitute for the full judge stack):
 
 ```bash
 ${WORLDFOUNDRY_UNIFIED_PYTHON} \
@@ -75,26 +38,6 @@ ${WORLDFOUNDRY_UNIFIED_PYTHON} \
   --json
 ```
 
-## Checkpoints and environment variables
-
-- `WORLDFOUNDRY_PHYGENBENCH_ROOT`: Optional override pointing at a local benchmark runtime/repository root.
-- `WORLDFOUNDRY_PHYGENBENCH_RESULTS_PATH`: Default path the importer reads official result exports from when `--official-results-path` is not passed.
-- `WORLDFOUNDRY_GENERATED_ARTIFACT_DIR`: Directory containing the candidate generated artifacts to score or import against.
-
-## Outputs
-
-The run writes into `--output-dir`:
-
-- `scorecard.json`: WorldFoundry scorecard with the metric values recorded above.
-- `benchmark_contract.json`: Benchmark contract record for the run (inputs, mode, provenance).
-- `raw_metric_table.jsonl`: Metric rows backing the scorecard.
-
-Scorecard primary key: `phygenbench_average` (leaderboard key `phygenbench_average`), stored in `scorecard.json`.
-
-## Limitations
-
-- WorldFoundry does not execute the PhyGenEval stage judges (VQAScore, GPT-4o/LLaVA, InternVideo2); bounded overall aggregation alone is not official benchmark evidence.
-- Mock backend output is deterministic wiring data and must never be reported as benchmark evidence.
-- Leaderboard-comparable numbers require the full upstream PhyGenEval pipeline on the official 160-prompt suite.
+Outputs include `scorecard.json` (primary `phygenbench_average`).
 
 [← Benchmark Hub](/docs/evaluation/benchmark-hub)

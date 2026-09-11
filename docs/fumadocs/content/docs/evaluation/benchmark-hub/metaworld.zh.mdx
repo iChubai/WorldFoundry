@@ -1,80 +1,39 @@
 ---
 title: Meta-World
-description: 面向多任务与元强化学习的 50 任务 MuJoCo 操作套件；WorldFoundry 归一化官方结果导出。
+description: "CoRL 2019 的 Sawyer / MuJoCo 套件：50 个技能，MT 与 ML 划分。WorldFoundry 导入官方结果导出——不跑 MuJoCo。"
 ---
 
-## 简介
+Meta-World（CoRL 2019）是斯坦福、加州大学伯克利分校与南加州大学的多任务与**元强化学习**操作评测，现由 **Farama Foundation** 维护。**Sawyer** 臂在 **MuJoCo** 里要完成 **50** 个不同的桌面技能（reach、push、抽屉、装配……）。官方评测**不是**一个数字：你必须点名套件。
 
-**发表机构：** Stanford、UC Berkeley 与 USC（现由 Farama Foundation 维护）
+多任务（同一策略，共享训练）：
 
-Meta-World（CoRL 2019）是操作领域多任务与元强化学习的标准评测：50 个不同的 MuJoCo 桌面任务（Sawyer 机械臂），组织为 MT1/MT10/MT50 多任务套件与 ML1/ML10/ML45 元学习套件。它最初由斯坦福/伯克利/USC 研究者发布，现由 Farama Foundation 维护。
+- **MT1** — 一个技能。
+- **MT10** — 十个技能；报告平均成功。
+- **MT50** — 全部五十个。
 
-WorldFoundry 以官方结果 runner 集成 Meta-World：结果 JSON/CSV 导出按调用方声明的 MT/ML 套件映射归一化为统一 scorecard。
+元学习（适应留出任务 / 目标）：
 
-官方参考：
+- **ML1** — 一个技能，目标留出。
+- **ML10** — 10 个元训练 / 5 个元测试技能。
+- **ML45** — 45 个元训练 / 5 个元测试技能。
 
-- Paper: [arxiv.org/abs/1910.10897](https://arxiv.org/abs/1910.10897)
-- 项目主页: [meta-world.github.io](https://meta-world.github.io/)
-- 官方仓库: [Farama-Foundation/Metaworld](https://github.com/Farama-Foundation/Metaworld)
-- License: `mit`
+常用成绩单是**二值成功率**，不是原始回报。论文：[Meta-World: A Benchmark and Evaluation for Multi-Task and Meta Reinforcement Learning](https://arxiv.org/abs/1910.10897)。项目：[meta-world.github.io](https://meta-world.github.io/)。代码：[Farama-Foundation/Metaworld](https://github.com/Farama-Foundation/Metaworld)（MIT）。
 
-## 评测协议
+WorldFoundry **只导入官方结果**。你在上游跑 Farama Metaworld / MuJoCo，再经 `official-validation` 归一化 JSON/CSV。仓内无模拟器。导出须声明 MT/ML 套件，否则行不可比。
 
-WorldFoundry 通过统一的结果导入路径集成该 benchmark：`worldfoundry-eval zoo benchmark-run --mode official-validation` 把调用方提供的官方结果导出（JSON/CSV rollout 汇总）归一化为 WorldFoundry scorecard，不执行模拟器。模拟器执行、策略加载与 rollout 采集仍是使用官方工具完成的显式上游步骤。
+<BenchmarkPageSections id="metaworld" locale="zh" />
 
-主指标是 `success_rate`。
-
-| Metric | 含义 | 方向 |
-| --- | --- | --- |
-| `success_rate` | 评测 rollout 上的主成功率（逐 episode 成功比例）。 | 越高越好 |
-| `task_success` | 按任务聚合的成功率。 | 越高越好 |
-| `reward` | 平均 episode 奖励 / 回报。 | 越高越好 |
-| `normalized_return` | 归一化 episode 回报。 | 越高越好 |
-
-## 数据与产物布局
-
-WorldFoundry 仓内路径：
-
-```text
-worldfoundry/data/benchmarks/tasks/external/metaworld.yaml
-```
-
-```text
-<official_results.json>                 # 官方工具产出的 rollout 汇总导出
-${WORLDFOUNDRY_METAWORLD_RESULTS_PATH}   # 默认导入路径
-```
-上游 rollout 需要官方 Meta-World 包与 MuJoCo 兼容 runtime。
-
-## 运行评测
-
-目录 manifest 记录的 validation 命令：
+## 如何运行
 
 ```bash
 worldfoundry-eval zoo benchmark-run \
   --benchmark-id metaworld \
   --mode official-validation \
   --official-results-path <official_results.json> \
-  --output-dir <out> \
+  --output-dir tmp/metaworld/official-validation \
   --json
 ```
 
-## 权重与环境变量
-
-- `WORLDFOUNDRY_METAWORLD_RESULTS_PATH`: 未显式传 `--official-results-path` 时，导入器默认从该路径读取官方结果导出文件。
-
-## 输出文件
-
-运行会在 `--output-dir` 下写出：
-
-- `scorecard.json`: WorldFoundry 统一 scorecard，记录上表中的指标值。
-- `raw_results.jsonl`: 从官方结果导出解析出的归一化行。
-
-Scorecard 主键：`success_rate`（leaderboard key `success_rate`），写入 `scorecard.json`。
-
-## 边界与限制
-
-- WorldFoundry 只归一化所提供的 rollout 结果；不在仓内运行官方模拟器或策略。
-- 在用就位的模拟器资产与策略权重执行官方 rollout 并导入之前，不声称完整 leaderboard 对齐。
-- 导入的 scorecard 是集成证据，不是 leaderboard 提交。
+省略 `--official-results-path` 时，默认导入路径是 `WORLDFOUNDRY_METAWORLD_RESULTS_PATH`。清单：`worldfoundry/data/benchmarks/tasks/external/metaworld.yaml`。输出：`scorecard.json`（主键 `success_rate`）与 `raw_results.jsonl`。
 
 [← 返回 Benchmark Hub](/zh/docs/evaluation/benchmark-hub)

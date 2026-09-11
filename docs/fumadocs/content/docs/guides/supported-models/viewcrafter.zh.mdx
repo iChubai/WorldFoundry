@@ -1,25 +1,50 @@
 ---
 title: "ViewCrafter"
-description: "ViewCrafter is a novel-view-synthesis world model: from one or a few input images it synthesizes high-fidelity videos along new camera trajectories, using point-cloud priors from DUSt3R to anchor geometry. Four official Apache-2.0 checkpoi…"
+description: "ViewCrafter：世界模型；Runner 一致性待确认。"
+modelId: "viewcrafter"
 pageSource: generated
 ---
 
-**发表机构:** 开源研究发布（仓库未记录正式机构） · 研究机构
-
 ViewCrafter 是新视角合成方向的世界模型：从单张或少量输入图像出发，沿新的相机轨迹合成高保真视频，并用 DUSt3R 点云先验锚定几何。Hugging Face 上确认了四个官方 Apache-2.0 checkpoint（ViewCrafter_25、_25_sparse、_16、_25_512）与官方演示 Space；WorldFoundry 树内注册了官方源码路由。
+
+<ModelPaperFigures modelId="viewcrafter" locale="zh" />
+
+记录论文为[arXiv 2409.02048](https://arxiv.org/abs/2409.02048)。
+
+项目页：[drexubery.github.io/ViewCrafter](https://drexubery.github.io/ViewCrafter/)。代码：[Drexubery/ViewCrafter](https://github.com/Drexubery/ViewCrafter)。
 
 <ModelCommandBuilder modelId="viewcrafter" locale="zh" />
 
-## 架构
+## 用来做什么
+
+`viewcrafter` 是记录的交互世界线。要用动作推进世界时从这里起步。
 
 设计将点云重建先验（DUSt3R）与视频扩散渲染器耦合：沿目标轨迹重投影重建几何，再由扩散模型补全照片级细节。checkpoint 变体覆盖 25 帧、稀疏视角、16 帧与 512 分辨率配置。
 
-## 使用要点
+catalog 记录的任务包括 世界模型。
 
-按帧数与分辨率需求选择 checkpoint 变体；DUSt3R 与视角资产同 checkpoint 一样为运行时门控。配置解析与 pipeline 导入预期可通过；在所需 checkpoint/资产就位前，真实生成会输出运行时计划。缺失资产由计划报告，不视为 catalog 阻塞。
+记录的评测入口包括[CameraBench](/zh/docs/evaluation/benchmark-hub/camerabench)（新视角轨迹跟随与视图质量）。
 
-## 评测 Benchmark
+## 运行时契约
 
-- [CameraBench](/zh/docs/evaluation/benchmark-hub/camerabench) — 新视角轨迹跟随与视图质量。
+产物 `generated_video`、`viewcrafter_runtime_plan.json`。
+
+记录的任务 profile：`world_model`。绑定的 pipeline 类是 `ViewCrafterPipeline`。
+
+系列状态：**Runner 一致性待确认**。
+
+按帧数与分辨率需求选择 checkpoint 变体；DUSt3R 与视角资产同 checkpoint 一样为运行时门控。 配置解析与 pipeline 导入预期可通过；在所需 checkpoint/资产就位前，真实生成会输出运行时计划。 缺失资产由计划报告，不视为 catalog 阻塞。
+
+checkpoint 与 DUSt3R/视角资产为运行时门控；仓库未记录 GPU 验证。
+
+## 在 WorldFoundry 中运行
+
+启动 `worldfoundry-eval run viewcrafter --pipeline.task-profile world_model` 推进世界。上方命令构建器按已记录任务切换 `--pipeline.task-profile`，发出的仍是 `worldfoundry-eval run`。
+
+运行环境是统一 profile `worldfoundry-unified-cu128`（Python 3.11，CUDA 12.8）。
+
+记录的权重仓库包括 `Drexubery/ViewCrafter_25`、`Drexubery/ViewCrafter_25_sparse`、`Drexubery/ViewCrafter_16` 等。就位权重用 `bash scripts/inference/prepare_model_infer.sh viewcrafter`。
+
+状态：**Runner 一致性待确认**。
 
 <ModelRelatedRecipes modelId="viewcrafter" locale="zh" />

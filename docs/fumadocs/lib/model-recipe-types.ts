@@ -6,6 +6,19 @@ export type ModelRecipeStatusGroup =
   | 'planned'
   | 'blocked';
 
+export const catalogReadinessLabels: Record<ModelRecipeStatusGroup, string> = {
+  verified: 'Runner verified',
+  integrated: 'Integrated',
+  runtime_ported: 'Runtime ported',
+  profile: 'Profile only',
+  planned: 'Planned',
+  blocked: 'Blocked',
+};
+
+export function catalogReadinessLabel(group: ModelRecipeStatusGroup): string {
+  return catalogReadinessLabels[group];
+}
+
 export type ModelRecipeStatus = {
   group: ModelRecipeStatusGroup;
   label: string;

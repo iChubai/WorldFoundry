@@ -1,58 +1,22 @@
 ---
 title: IPV-Bench
-description: “不可能视频”评测：从 IPV-Txt prompt 生成到 IPV-Vid 问答，考察对物理上不可能事件的生成与理解。
+description: "NUS Show Lab 的不可能视频评测：生成并识别物理上不可能的事件。WorldFoundry 归一化官方 CSV/JSON，不编造榜单。"
 ---
 
-## 简介
+IPV-Bench（Impossible Videos；新加坡国立大学 Show Lab）把常见物理问题反过来问：模型能否 **描绘** 反事实、物理上不可能的事件，以及视频理解模型能否 **识别** 它们。分类覆盖物理、生物、地理与社会不可能性。两条赛道：
 
-**发表机构：** Show Lab（新加坡国立大学 NUS）
+- **生成（IPV-Txt）** — 视觉质量与 prompt 跟随；`impossible_video_score` 是同时高质量且忠实 prompt 的片段比例。
+- **理解（IPV-Vid）** — 判断、多选 QA、开放 QA，对照官方标签。
 
-IPV-Bench（Impossible Videos）反转了常规的物理性问题：它不问模型是否遵守物理定律，而问模型能否刻意生成反事实、物理上不可能的事件——以及视频理解模型能否识别它们。benchmark 覆盖物理、生物、地理与社会四类不可能性分类体系，含生成赛道（prompt 套件 IPV-Txt，按视觉质量与 prompt 遵循评判）与理解赛道（IPV-Vid 判断题、多选 QA 与开放 QA）。
+`ipv_bench_average` 汇总你提供的官方分面。
 
-WorldFoundry 提供仓内归一化器，接受两条赛道的官方 CSV/JSON 导出并聚合为统一 scorecard；`--run-fixture` 可在无外部资产时验证接线。
+论文：[Impossible Videos](https://arxiv.org/abs/2503.14378)。代码：[showlab/Impossible-Videos](https://github.com/showlab/Impossible-Videos)。
 
-官方参考：
+WorldFoundry **归一化两条赛道的官方 CSV/JSON 导出**。仓内不跑官方 judge 或理解模型。`--run-fixture` 只是接线。
 
-- Paper: [arxiv.org/abs/2503.14378](https://arxiv.org/abs/2503.14378)
-- 项目主页: [huggingface.co/papers/2503.14378](https://huggingface.co/papers/2503.14378)
-- 官方仓库: [showlab/Impossible-Videos](https://github.com/showlab/Impossible-Videos)
+<BenchmarkPageSections id="ipv-bench" locale="zh" />
 
-## 评测协议
-
-生成赛道的行需要 `visual_quality` 与 `prompt_following` 标注（人工或官方 judge）；`impossible_video_score` 是官方协议下同时满足高质量与忠实 prompt 的视频占比。理解赛道的行需要官方标签，以及判断题、多选 QA 与开放 QA 任务的预测/模型答案。`ipv_bench_average` 对已提供的官方指标族聚合。
-
-主指标是 `ipv_bench_average`。
-
-| Metric | 含义 | 方向 |
-| --- | --- | --- |
-| `visual_quality` | IPV-Bench 生成视频视觉质量的人工或官方 judge 标注。 | 越高越好 |
-| `prompt_following` | IPV-Bench prompt 遵循度的人工或官方 judge 标注。 | 越高越好 |
-| `impossible_video_score` | IPV-Bench 协议下同时满足高质量与良好 prompt 遵循的生成视频占比。 | 越高越好 |
-| `judgement_accuracy` | IPV-Bench 视频理解判断任务相对官方标签的准确率。 | 越高越好 |
-| `mcqa_accuracy` | IPV-Bench 多选 QA 相对官方标签的准确率。 | 越高越好 |
-| `open_qa_score` | IPV-Bench 开放式 QA 得分（来自官方 evaluator 或 judge 输出）。 | 越高越好 |
-| `ipv_bench_average` | 由官方标注、judge 输出或归一化结果文件提供的 IPV-Bench 聚合分。 | 越高越好 |
-
-## 数据与产物布局
-
-WorldFoundry 仓内路径：
-
-```text
-worldfoundry/data/benchmarks/tasks/external/ipv-bench.yaml
-worldfoundry/evaluation/tasks/execution/runners/ipv_bench
-```
-
-```text
-worldfoundry/evaluation/tasks/execution/runners/ipv_bench    # 仓内官方 runner
-${WORLDFOUNDRY_GENERATED_ARTIFACT_DIR}/                      # 生成的不可能视频
-<official_results.csv|json>                                  # 标注 / judge / 预测导出
-```
-
-官方 benchmark 资产来自源仓库（[showlab/Impossible-Videos](https://github.com/showlab/Impossible-Videos)）；契约条目不要求 Hugging Face 数据集。
-
-## 运行评测
-
-目录 manifest 记录的 validation 命令：
+## 如何运行
 
 ```bash
 worldfoundry-eval zoo benchmark-run \
@@ -60,31 +24,14 @@ worldfoundry-eval zoo benchmark-run \
   --mode official-validation \
   --official-results-path <official_results.csv> \
   --generated-artifact-dir <generated_videos> \
-  --output-dir <out> \
+  --output-dir tmp/ipv-bench/official-validation \
   --json
 ```
 
-## 权重与环境变量
+默认导入：`WORLDFOUNDRY_IPV_BENCH_RESULTS_PATH`。可选根 / 后端：`WORLDFOUNDRY_IPV_BENCH_ROOT`、`WORLDFOUNDRY_IPV_BENCH_RUNTIME_BACKEND`。合同条目不要求 Hugging Face 数据集。
 
-- `WORLDFOUNDRY_IPV_BENCH_ROOT`: 可选覆盖项，指向本地 benchmark runtime / 仓库根目录。
-- `WORLDFOUNDRY_IPV_BENCH_RESULTS_PATH`: 未显式传 `--official-results-path` 时，导入器默认从该路径读取官方结果导出文件。
-- `WORLDFOUNDRY_GENERATED_ARTIFACT_DIR`: 存放待评测生成产物（候选视频/rollout）的目录。
-- `WORLDFOUNDRY_IPV_BENCH_RUNTIME_BACKEND`: 选择仓内 runner 使用的 runtime 后端。
+仓内指针：`worldfoundry/data/benchmarks/tasks/external/ipv-bench.yaml`，`worldfoundry/evaluation/tasks/execution/runners/ipv_bench`。
 
-## 输出文件
-
-运行会在 `--output-dir` 下写出：
-
-- `scorecard.json`: WorldFoundry 统一 scorecard，记录上表中的指标值。
-- `benchmark_contract.json`: 本次运行的 benchmark contract 记录（输入、模式、来源信息）。
-- `raw_metric_table.jsonl`: 支撑 scorecard 的原始 metric 行。
-
-Scorecard 主键：`ipv_bench_average`（leaderboard key `ipv_bench_average`），写入 `scorecard.json`。
-
-## 边界与限制
-
-- WorldFoundry 只归一化所提供的标注与 judge 输出；不在仓内运行官方 judge 或理解模型。
-- 完整 leaderboard 验证需要官方标注、judge 输出或理解侧预测，外加生成视频。
-- fixture 运行仅验证接线，绝不构成 benchmark 证据。
+产物包括 `scorecard.json`（主键 `ipv_bench_average`）与 `raw_metric_table.jsonl`。
 
 [← 返回 Benchmark Hub](/zh/docs/evaluation/benchmark-hub)

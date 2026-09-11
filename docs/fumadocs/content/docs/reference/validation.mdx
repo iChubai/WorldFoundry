@@ -9,15 +9,13 @@ Validation evidence should be proportional to the changed surface: small enough 
 
 ## Evidence by change type
 
-| Change | Minimum evidence | Extra evidence when promoted |
-| --- | --- | --- |
-| Docs only | `npm run types:check`, `npm run build`, affected route returns 200 | Browser screenshot for layout or interaction changes. |
-| CLI or runner | Public CLI discovery plus a representative evaluate command | Existing-results and model-mode runs if output contracts changed. |
-| Model manifest | `zoo model-show`, `zoo model-download --check-local` | Clone, checkpoint, demo parity, runner parity, benchmark run. |
-| Model runtime integration | In-tree runtime import, no machine-local source checkout dependency, runtime profile with `backend_stage`, and focused regression | Checkpoint-backed run and one normalized benchmark scorecard. |
-| Benchmark manifest | `zoo benchmark-show`, `preflight runtime --profile <benchmark-id>` | Clone, dataset, official runtime, normalized scorecard. |
-| Benchmark runner | `zoo benchmark-run --mode official-validation` or `--mode official-run` | Official result import, official runtime, and full-suite fairness gate. |
-| Suite or matrix | `run --all-benchmarks --plan-only --json` | Plan selected cells, then validate artifacts with runnable benchmark paths. |
+- **Docs only** — `npm run types:check`, `npm run build`, affected route returns 200. Extra when promoted: Browser screenshot for layout or interaction changes.
+- **CLI or runner** — Public CLI discovery plus a representative evaluate command. Extra when promoted: Existing-results and model-mode runs if output contracts changed.
+- **Model manifest** — `zoo model-show`, `zoo model-download --check-local`. Extra when promoted: Clone, checkpoint, demo parity, runner parity, benchmark run.
+- **Model runtime integration** — In-tree runtime import, no machine-local source checkout dependency, runtime profile with `backend_stage`, and focused regression. Extra when promoted: Checkpoint-backed run and one normalized benchmark scorecard.
+- **Benchmark manifest** — `zoo benchmark-show`, `preflight runtime --profile <benchmark-id>`. Extra when promoted: Clone, dataset, official runtime, normalized scorecard.
+- **Benchmark runner** — `zoo benchmark-run --mode official-validation` or `--mode official-run`. Extra when promoted: Official result import, official runtime, and full-suite fairness gate.
+- **Suite or matrix** — `run --all-benchmarks --plan-only --json`. Extra when promoted: Plan selected cells, then validate artifacts with runnable benchmark paths.
 
 ## Preparing the CPU eval-core gate
 
@@ -87,15 +85,13 @@ conda run -p "${WORLDFOUNDRY_UNIFIED_ENV_PREFIX}" worldfoundry-eval zoo benchmar
 
 ## Artifact acceptance
 
-| Artifact | Required for | Accept when |
-| --- | --- | --- |
-| `run_manifest.json` | Any evaluation run | Command, ids, status, timestamps, counts, and output paths match the run. |
-| `execution_plan.json` | Runner or suite changes | Resolved model, benchmark, metrics, and requests are deterministic. |
-| `sample_ledger.jsonl` | Partial-failure review | Failed/skipped samples include visible reasons. |
-| `metrics/summary.json` | Metric changes | Aggregates, failed counts, and metric keys match the expected schema. |
-| `scorecard.json` | Publishable evaluation evidence | Eligibility, leaderboard state, metrics, and blockers are present. |
-| `report.json` | Model/benchmark validation | Stage status, command, repo/checkpoint/dataset refs, and blockers are recorded. |
-| `suite_report.json` | Suite or matrix changes | Every selected cell is pass, fail, or skipped with a reason. |
+- **`run_manifest.json`** — Any evaluation run. Accept when: Command, ids, status, timestamps, counts, and output paths match the run.
+- **`execution_plan.json`** — Runner or suite changes. Accept when: Resolved model, benchmark, metrics, and requests are deterministic.
+- **`sample_ledger.jsonl`** — Partial-failure review. Accept when: Failed/skipped samples include visible reasons.
+- **`metrics/summary.json`** — Metric changes. Accept when: Aggregates, failed counts, and metric keys match the expected schema.
+- **`scorecard.json`** — Publishable evaluation evidence. Accept when: Eligibility, leaderboard state, metrics, and blockers are present.
+- **`report.json`** — Model/benchmark validation. Accept when: Stage status, command, repo/checkpoint/dataset refs, and blockers are recorded.
+- **`suite_report.json`** — Suite or matrix changes. Accept when: Every selected cell is pass, fail, or skipped with a reason.
 
 ## Integration claim rule
 
@@ -105,37 +101,32 @@ Do not use `integrated` as a leaderboard synonym. Normalizer-only benchmark inte
 
 ## Runner evidence
 
-<TypeTable
-  type={{
-    runnerRun: {
-      type: 'required',
-      description: 'Runner command, generated output, scorecard, and focused regression test.',
-      required: true,
-    },
-    demoVerified: {
-      type: 'optional gate',
-      description: 'Official command, environment notes, generated sample, raw logs, and parity notes.',
-    },
-    checkpointVerified: {
-      type: 'optional gate',
-      description: 'Pinned checkpoint source, revision or hash, local cache path, device, command, and expected output checks.',
-    },
-    benchmarkReady: {
-      type: 'release evidence',
-      description: 'Normalized benchmark run with run manifest, metrics summary, report, scorecard, and no hidden sample failures.',
-    },
-  }}
-/>
+<RecipeRecords items={[
+  {
+    term: 'runnerRun',
+    detail: 'Required. Runner command, generated output, scorecard, and focused regression test.',
+  },
+  {
+    term: 'demoVerified',
+    detail: 'Optional gate. Official command, environment notes, generated sample, raw logs, and parity notes.',
+  },
+  {
+    term: 'checkpointVerified',
+    detail: 'Optional gate. Pinned checkpoint source, revision or hash, local cache path, device, command, and expected output checks.',
+  },
+  {
+    term: 'benchmarkReady',
+    detail: 'Release evidence. Normalized benchmark run with run manifest, metrics summary, report, scorecard, and no hidden sample failures.',
+  },
+]} />
 
 ## Failure policy
 
-| State | Meaning | Release treatment |
-| --- | --- | --- |
-| Pass | Required stages ran and produced expected artifacts. | Can support the matching claim. |
-| Partial | Some stages were skipped because they require network, credentials, data, GPU, or license review. | Usable for development, not for stronger public claims. |
-| Blocked | A required source, dataset, license, dependency, checkpoint, or API condition is unavailable. | Keep the manifest blocked or planned. |
-| Stale | Report hash, manifest hash, git commit, validator script, or timestamp no longer matches. | Rerun validation before counting it. |
-| Runner-only | Schema and runner path pass, but official runtime did not run. | Not leaderboard evidence. |
+- **Pass** — Required stages ran and produced expected artifacts. Release treatment: Can support the matching claim.
+- **Partial** — Some stages were skipped because they require network, credentials, data, GPU, or license review. Release treatment: Usable for development, not for stronger public claims.
+- **Blocked** — A required source, dataset, license, dependency, checkpoint, or API condition is unavailable. Release treatment: Keep the manifest blocked or planned.
+- **Stale** — Report hash, manifest hash, git commit, validator script, or timestamp no longer matches. Release treatment: Rerun validation before counting it.
+- **Runner-only** — Schema and runner path pass, but official runtime did not run. Release treatment: Not leaderboard evidence.
 
 ## Validation matrix
 
@@ -155,17 +146,15 @@ conda run -p "${WORLDFOUNDRY_UNIFIED_ENV_PREFIX}" worldfoundry-eval validate-art
   --json
 ```
 
-| Gate status | Meaning | Maintainer action |
-| --- | --- | --- |
-| `accepted_integrated` | Fresh report passes every required stage and manifest says integrated. | Keep evidence current. |
-| `accepted_variant_integrated` | One or more scoped variants pass while the parent family remains planned. | Continue validating remaining variants. |
-| `validated_but_manifest_not_promoted` | Report passes, manifest still says planned or blocked. | Promote only after artifact review. |
-| `manifest_integrated_without_report` | Manifest says integrated, but no fresh validation report exists. | Run staged validation or downgrade. |
-| `manifest_overclaims_integration` | Manifest says integrated but computed stages do not pass. | Downgrade or rerun full validation. |
-| `report_overclaims_integration` | Report claims integrated but staged evidence is incomplete. | Discard or rerun report. |
-| `stale_report` | Report hash, script, git commit, schema, or manifest entry changed. | Rerun validation. |
-| `partial_or_blocked` | Report exists but stages failed or were skipped. | Follow `next_action`. |
-| `not_validated` | Manifest entry has no report. | Run the matching runtime preflight and official validation run. |
+- **`accepted_integrated`** — Fresh report passes every required stage and manifest says integrated. Maintainer action: Keep evidence current.
+- **`accepted_variant_integrated`** — One or more scoped variants pass while the parent family remains planned. Maintainer action: Continue validating remaining variants.
+- **`validated_but_manifest_not_promoted`** — Report passes, manifest still says planned or blocked. Maintainer action: Promote only after artifact review.
+- **`manifest_integrated_without_report`** — Manifest says integrated, but no fresh validation report exists. Maintainer action: Run staged validation or downgrade.
+- **`manifest_overclaims_integration`** — Manifest says integrated but computed stages do not pass. Maintainer action: Downgrade or rerun full validation.
+- **`report_overclaims_integration`** — Report claims integrated but staged evidence is incomplete. Maintainer action: Discard or rerun report.
+- **`stale_report`** — Report hash, script, git commit, schema, or manifest entry changed. Maintainer action: Rerun validation.
+- **`partial_or_blocked`** — Report exists but stages failed or were skipped. Maintainer action: Follow `next_action`.
+- **`not_validated`** — Manifest entry has no report. Maintainer action: Run the matching runtime preflight and official validation run.
 
 ## Checklist
 

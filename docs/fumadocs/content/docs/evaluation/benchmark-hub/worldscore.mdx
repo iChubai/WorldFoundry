@@ -1,97 +1,40 @@
 ---
 title: WorldScore
-description: Unified world-generation benchmark scoring controllability, quality, and dynamics over camera-specified scene rollouts.
+description: "Stanford unified world-generation bench: controllability, quality, dynamics on camera-specified rollouts. WorldFoundry vendors the runtime; a bounded dynamic component is verified."
 ---
 
-## About
+WorldScore (Stanford) unifies evaluation of **3D/4D scene generation and video world models**. A model receives a starting scene plus a sequence of **camera-specified layout instructions**. Three families normalize into `worldscore_average`:
 
-**Publisher:** Stanford University
+- **Controllability** — camera and object / condition control
+- **Quality** — visual and reconstruction fidelity
+- **Dynamics** — temporal behavior
 
-WorldScore unifies the evaluation of world generation — 3D/4D scene generation and video-based world models — into one protocol: a model receives a starting scene and a sequence of camera-specified layout instructions, and its rollouts are scored on controllability (camera and object control), quality (visual and reconstruction fidelity), and dynamics (temporal behavior). The official aggregate `worldscore_average` normalizes these families onto one scale.
+Paper: [WorldScore](https://arxiv.org/abs/2504.00983). Project: [haoyi-duan.github.io/WorldScore](https://haoyi-duan.github.io/WorldScore/). Code: [haoyi-duan/WorldScore](https://github.com/haoyi-duan/WorldScore) (MIT). Data: [`Howieeeee/WorldScore`](https://huggingface.co/datasets/Howieeeee/WorldScore) (revision `42c4e267e1cc0529af1b0284ce018e04d43906e3`).
 
-WorldFoundry vendors the WorldScore core runtime in tree and drives it through `run_worldscore_official_runner.py`, which resolves the dataset (`Howieeeee/WorldScore` on Hugging Face), stages generated output trees, dispatches the upstream metric stack, and converts `evaluation.json` trees into scorecards.
+WorldFoundry **vendors the core runtime** and converts `evaluation.json` trees into scorecards. A **bounded dynamic component is verified**; **full metric-tree execution is not**. Full metrics need DROID / `lietorch`, GroundingDINO, SAM, optical-flow / interpolation, Mamba, and matching checkpoints.
 
-Official references:
+<BenchmarkPageSections id="worldscore" locale="en" />
 
-- Paper: [arxiv.org/abs/2504.00983](https://arxiv.org/abs/2504.00983)
-- Project page: [haoyi-duan.github.io/WorldScore](https://haoyi-duan.github.io/WorldScore/)
-- Official repository: [haoyi-duan/WorldScore](https://github.com/haoyi-duan/WorldScore)
-- License: `mit`
-
-## Evaluation protocol
-
-Two paths: normalize existing WorldScore result artifacts via `--official-results-path` / `WORLDFOUNDRY_WORLDSCORE_RESULTS_PATH`, or evaluate a staged generated-output tree with the vendored GPU metric runtime (`--generated-root`, `--data-path`, `--num-jobs`). Dataset resolution falls back to a local Hugging Face cache snapshot when `--data-path` is not given. Staging helpers (`--stage-dynamic-source`, `--stage-sample-index`, `--stage-target-frames`) prepare dynamic samples.
-
-Primary metric: `worldscore_average`.
-
-| Metric | Meaning | Direction |
-| --- | --- | --- |
-| `controllability` | WorldScore camera and condition controllability metric family. | Higher is better |
-| `quality` | WorldScore visual and reconstruction quality metric family. | Higher is better |
-| `dynamics` | WorldScore temporal dynamics metric family. | Higher is better |
-| `worldscore_average` | Normalized aggregate across WorldScore metric families. | Higher is better |
-
-## Data and artifact layout
-
-In-tree paths:
-
-```text
-worldfoundry/data/benchmarks/tasks/external/worldscore.yaml
-worldfoundry/evaluation/tasks/execution/runners/worldscore/runtime/worldscore
-```
-
-```text
-cache/worldfoundry/data/hfd_datasets/Howieeeee/WorldScore   # dataset snapshot (mit)
-<generated_root>/<model_name>/...                           # staged rollout trees
-<worldscore_output_dir>/.../evaluation.json                 # upstream metric outputs
-```
+## How to run
 
 ```bash
 hf download Howieeeee/WorldScore --repo-type dataset \
   --revision 42c4e267e1cc0529af1b0284ce018e04d43906e3 \
   --local-dir cache/worldfoundry/data/hfd_datasets/Howieeeee/WorldScore
-```
 
-## Run the benchmark
-
-Catalog-recorded validation command:
-
-```bash
 worldfoundry-eval zoo benchmark-run \
   --benchmark-id worldscore \
   --mode official-validation \
   --official-results-path <official_results.json> \
   --generated-artifact-dir <generated_videos> \
-  --output-dir <out> \
+  --output-dir tmp/worldscore/official-validation \
   --json
 ```
 
-## Checkpoints and environment variables
+GPU path: `--generated-root`, `--data-path`, `--num-jobs`. Staging helpers: `--stage-dynamic-source`, `--stage-sample-index`, `--stage-target-frames`. Env: `WORLDFOUNDRY_WORLDSCORE_RESULTS_PATH`, `WORLDFOUNDRY_WORLDSCORE_OUTPUT_DIR`, `WORLDFOUNDRY_WORLDSCORE_CONFIG_ROOT`. Shared stack: `worldscore_spatial_metric_stack`.
 
-- `WORLDFOUNDRY_WORLDSCORE_ROOT`: Optional override pointing at a local benchmark runtime/repository root.
-- `WORLDFOUNDRY_GENERATED_ARTIFACT_DIR`: Directory containing the candidate generated artifacts to score or import against.
-- `WORLDFOUNDRY_WORLDSCORE_RESULTS_PATH`
-- `WORLDFOUNDRY_WORLDSCORE_OUTPUT_DIR`
-- `WORLDFOUNDRY_WORLDSCORE_CONFIG_ROOT`: Optional override for bundled WorldScore config assets.
+In-tree pointers: `worldfoundry/data/benchmarks/tasks/external/worldscore.yaml`, `worldfoundry/evaluation/tasks/execution/runners/worldscore/runtime/worldscore`.
 
-This benchmark reuses the shared base-model dependency stack: `worldscore_spatial_metric_stack`.
-
-## Outputs
-
-The run writes into `--output-dir`:
-
-- `scorecard.json`: WorldFoundry scorecard with the metric values recorded above.
-- `per_sample_metrics.jsonl`
-- `raw_metric_table.jsonl`: Metric rows backing the scorecard.
-- `official_stdout.log`
-- `official_stderr.log`
-
-Scorecard primary key: `worldscore_average` (leaderboard key `worldscore_average`), stored in `scorecard.json`.
-
-## Limitations
-
-- Bounded official GPU validation covered one dynamic sample; full-suite validation is pending, so `official_benchmark_verified` remains false.
-- Leaderboard parity requires complete `evaluation.json` trees under the official metric definitions; partial trees aggregate into non-leaderboard scorecards.
-- The spatial metric stack (DROID, GroundingDINO, SAM, RAFT/SEA-RAFT) needs its shared checkpoints staged locally.
+Outputs include `scorecard.json` (primary `worldscore_average`) and `per_sample_metrics.jsonl`.
 
 [← Benchmark Hub](/docs/evaluation/benchmark-hub)

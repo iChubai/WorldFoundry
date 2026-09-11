@@ -1,21 +1,48 @@
 ---
 title: "OpenPIE 0.6"
-description: "OpenPIE 0.6 is Exla AI's open-weights pi-0.6-style policy, tracked as its own catalog entry separate from OpenPI pi0/pi0.5. The exla-ai/openpie-0.6 checkpoint is confirmed on Hugging Face; WorldFoundry routes it through the in-tree officia…"
+description: "OpenPIE 0.6（Exla AI）：视觉-语言-动作（VLA）、机器人策略；Runner 一致性待确认。"
+modelId: "openpie-0.6"
 pageSource: generated
 ---
 
-**发表机构:** Exla AI · 企业
-
 OpenPIE 0.6 是 Exla AI 的开放权重 pi-0.6 风格策略，作为独立 catalog 条目跟踪，与 OpenPI pi0/pi0.5 分开。exla-ai/openpie-0.6 checkpoint 已在 Hugging Face 确认；WorldFoundry 通过树内官方策略运行时以 FLA 策略工厂路由。
+
+<ModelPaperFigures modelId="openpie-0.6" locale="zh" />
+
+记录论文为[arXiv 2106.09685](https://arxiv.org/abs/2106.09685)。
+
+代码：[exla-ai/fla](https://github.com/exla-ai/fla)。
 
 <ModelCommandBuilder modelId="openpie-0.6" locale="zh" />
 
-## 架构
+## 用来做什么
+
+需要 catalog 上的 VLA 策略时选 `openpie-0.6`：指令与观测进、动作轨迹出。用来滚动已记录策略，不是用来训练新策略。
 
 运行时契约为 exla-ai/fla 仓库的 FLA 策略工厂（锁定 head 1ac45102）。架构内部细节仓库未记录。
 
-## 使用要点
+catalog 记录的任务包括 视觉-语言-动作（VLA）、机器人策略、策略执行。别名包括 `pi-0.6`、`openpie0.6`。
+
+## 运行时契约
+
+必填 `image`、`prompt`、`state`；可选 `model_id` (openpie-0.6)、`policy_family`、`action_representation`；产物 `action_trace`、`openpie-0.6_action_trace.json`。
+
+记录的任务 profile：`vla`、`robot_policy`、`policy_rollout`。绑定的 pipeline 类是 `OpenPIE06Pipeline`。
+
+系列状态：**Runner 一致性待确认**。
 
 checkpoint 缺失由运行时 missing_assets 报告，不视为 catalog 阻塞；权重就位前运行输出运行时计划。
+
+仅开放权重——可用性状态为 open_weights 而非完整开源。
+
+## 在 WorldFoundry 中运行
+
+catalog 启动命令是 `worldfoundry-eval run openpie-0.6 --pipeline.task-profile vla`。上方命令构建器按已记录任务切换 `--pipeline.task-profile`，发出的仍是 `worldfoundry-eval run`。
+
+运行环境是统一 profile `worldfoundry-unified-cu128`（Python 3.11，CUDA 12.8）。
+
+记录的权重仓库包括 `exla-ai/openpie-0.6`。就位权重用 `bash scripts/inference/prepare_model_infer.sh openpie-0.6`。
+
+状态：**Runner 一致性待确认**。
 
 <ModelRelatedRecipes modelId="openpie-0.6" locale="zh" />

@@ -1,80 +1,34 @@
 ---
 title: LIBERO-Mem
-description: Non-Markovian LIBERO task suite stress-testing object-level memory under partial observability.
+description: "Non-Markovian LIBERO suite: 10 object-memory tasks (OM / OS / OR / OO). WorldFoundry imports official rollouts — it does not run the simulator."
 ---
 
-## About
+LIBERO-Mem (AAAI 2026) is **not** the Spatial / Object / Goal / LIBERO-100 lifelong suites. FPT Software AI Center (with Arkansas, Stuttgart, CMU, Aalborg, and Liverpool) added **10 new** tabletop tasks on the LIBERO / robosuite stack so a policy cannot succeed from the current frame. Cues live in **object history**: what moved, how many times, in what order, or behind an occlusion. The four official memory axes:
 
-**Publisher:** FPT Software AI Center (with U. Arkansas, CMU & U. Liverpool)
+- **Object Motion (OM)** — recall the last pick / place on an aliased scene.
+- **Object Sequence (OS)** — count repeated pick-and-place (3× / 5× / 7×).
+- **Object Relations (OR)** — swap or rotate identical bowls across plates.
+- **Object Occlusion (OO)** — remember which basket hid which object.
 
-LIBERO-Mem stress-tests robotic manipulation under object-level partial observability: tasks combine short- and long-horizon object tracking with temporally sequenced subgoals — occluded-object recall, sequence-dependent pick-and-place — so key decision cues live in object histories rather than the current frame. It was introduced alongside the Embodied-SlotSSM slot-centric VLA framework.
+Each task ships **120** trajectories (100 train / 20 val), **200–700** frames, instance IDs, masks, and symbolic subgoals (`→`, `∨`). Official scoring reports **task success** and **subgoal completion**. Embodied-SlotSSM is the authors' companion VLA — a model-card fact, not a WorldFoundry board row.
 
-WorldFoundry integrates LIBERO-Mem as an official-results runner: rollout exports from the upstream evaluation are normalized into the unified scorecard, with `memory_success_rate` tracked next to the overall success rate.
+Paper: [Rethinking Progression of Memory State in Robotic Manipulation](https://arxiv.org/abs/2511.11478). Project: [libero-mem.github.io](https://libero-mem.github.io/). Code: [libero-mem/libero-mem](https://github.com/libero-mem/libero-mem).
 
-Official references:
+WorldFoundry is **official-results only**. You run the upstream evaluator, then `official-validation` normalizes JSON/CSV into the scorecard. No in-tree simulator, no Embodied-SlotSSM weights. That is different from [base LIBERO](/docs/evaluation/benchmark-hub/libero), which can also wire closed-loop execution.
 
-- Paper: [arxiv.org/abs/2310.07899](https://arxiv.org/abs/2310.07899)
-- Official repository: [Lifelong-Robot-Learning/LIBERO](https://github.com/Lifelong-Robot-Learning/LIBERO)
-- License: `mit`
+<BenchmarkPageSections id="libero-mem" locale="en" />
 
-## Evaluation protocol
-
-WorldFoundry integrates this benchmark through the unified result-import path: `worldfoundry-eval zoo benchmark-run --mode official-validation` normalizes a caller-provided official result export (JSON/CSV rollout summaries) into the WorldFoundry scorecard without executing the simulator. Simulator execution, policy loading, and rollout collection remain explicit upstream steps performed with the official tooling.
-
-Primary metric: `success_rate`.
-
-| Metric | Meaning | Direction |
-| --- | --- | --- |
-| `success_rate` | Primary episode success rate over evaluated rollouts. | Higher is better |
-| `memory_success_rate` | Success rate restricted to memory-critical task instances. | Higher is better |
-| `task_success` | Per-task success aggregate. | Higher is better |
-| `action_accuracy` | Offline action-prediction accuracy against reference actions. | Higher is better |
-
-## Data and artifact layout
-
-In-tree paths:
-
-```text
-worldfoundry/data/benchmarks/tasks/external/libero-mem.yaml
-```
-
-```text
-<official_results.json>                 # rollout summary export from the official tooling
-${WORLDFOUNDRY_LIBERO_MEM_RESULTS_PATH}   # default import path
-```
-
-## Run the benchmark
-
-Catalog-recorded validation command:
+## How to run
 
 ```bash
 worldfoundry-eval zoo benchmark-run \
   --benchmark-id libero-mem \
   --mode official-validation \
   --official-results-path <official_results.json> \
-  --output-dir <out> \
+  --output-dir tmp/libero-mem/official-validation \
   --json
 ```
 
-## Checkpoints and environment variables
-
-- `WORLDFOUNDRY_LIBERO_MEM_ROOT`: Optional override pointing at a local benchmark runtime/repository root.
-- `WORLDFOUNDRY_LIBERO_MEM_RESULTS_PATH`: Default path the importer reads official result exports from when `--official-results-path` is not passed.
-
-## Outputs
-
-The run writes into `--output-dir`:
-
-- `scorecard.json`: WorldFoundry scorecard with the metric values recorded above.
-- `raw_results.jsonl`: Normalized rows parsed from the official result export.
-- `evaluation/summary.json`: Aggregated evaluation summary.
-
-Scorecard primary key: `success_rate` (leaderboard key `success_rate`), stored in `scorecard.json`.
-
-## Limitations
-
-- WorldFoundry normalizes supplied rollout results; it does not run the official simulator or policies in tree.
-- Full leaderboard parity is not claimed until official rollouts are executed with staged simulator assets and policy checkpoints, then imported.
-- Imported scorecards are integration evidence, not leaderboard submissions.
+Optional `WORLDFOUNDRY_LIBERO_MEM_ROOT` points at a local toolkit / repo root. Default import path when you omit `--official-results-path` is `WORLDFOUNDRY_LIBERO_MEM_RESULTS_PATH`. Manifest: `worldfoundry/data/benchmarks/tasks/external/libero-mem.yaml`. Outputs: `scorecard.json` (primary `success_rate`; also `memory_success_rate` when the export has it), `raw_results.jsonl`, and `evaluation/summary.json`.
 
 [← Benchmark Hub](/docs/evaluation/benchmark-hub)

@@ -1,33 +1,52 @@
 ---
 title: "Navigation World Models"
-description: "Navigation World Models (NWM) is Meta's navigation world model (CVPR 2025 highlight): a conditional diffusion transformer that predicts egocentric future video from past frames and navigation actions, and can plan trajectories by imagining…"
-pageSource: generated
+description: "Navigation World Models from Meta AI (FAIR): navigation-world-model and action-conditioned-video; Runner parity pending; 2 variants."
+modelId: "nwm"
+pageSource: authored
 ---
-
-**Publisher:** Meta AI (FAIR) · Company
-video
 
 Navigation World Models (NWM) is Meta's navigation world model (CVPR 2025 highlight): a conditional diffusion transformer that predicts egocentric future video from past frames and navigation actions, and can plan trajectories by imagining them. Recorded variants cover RECON and SCAND dataset checkpoints. In this catalog the source is vendored in-tree; execution stays checkpoint/dataset gated.
 
+<ModelPaperFigures modelId="nwm" locale="en" />
+
+The recorded paper is [arXiv 2412.03572](https://arxiv.org/abs/2412.03572).
+
+Project page: [amirbar.net/nwm](https://www.amirbar.net/nwm/). Code: [facebookresearch/nwm](https://github.com/facebookresearch/nwm).
+
 <ModelCommandBuilder modelId="nwm" locale="en" />
 
-## Architecture
+## What it is for
 
-Per the upstream release, a Conditional Diffusion Transformer (CDiT) scales to 1B parameters and conditions on action and time embeddings for egocentric prediction (checkpoints at facebook/nwm, CC-BY-NC-4.0).
+Use `nwm-recon` for catalog world-model inference. Choose it when you need action-conditioned future frames rather than a standalone clip generator.
 
-## Usage notes
+Per the upstream release, a Conditional Diffusion Transformer (CDiT) scales to 1B parameters and conditions on action and time embeddings for egocentric prediction (checkpoints at facebook/nwm, CC-BY-NC-4.0). It is published by Meta AI (FAIR).
+
+Catalog tasks include navigation-world-model, action-conditioned-video, and egocentric-video-generation. Catalog aliases include `navigation-world-models`, `nwm-recon`, and `nwm-scand`. Documented outputs include video. Also recorded: `nwm-scand`.
+
+Recorded evaluation entry points include [WorldModelBench](/docs/evaluation/benchmark-hub/worldmodelbench) (Navigation world-rollout quality).
+
+Imagine egocentric future video from past frames plus navigation actions. Pick `nwm-recon` for RECON weights, or `nwm-scand` for SCAND.
+
+## Runtime contract
+
+Required `prompt`, `image`, and `video`; optional `actions` (navigation_action, world_action); artifacts `nwm.mp4`.
+
+Recorded task profiles: `navigation-world-model`, `action-conditioned-video`, and `egocentric-video-generation`. WorldFoundry binds `NWMPipeline`.
+
+Start on `nwm-recon`. The family registers 2 catalog variants (cards above): `nwm-recon` (`navigation-world-model`) — Runner parity pending; `nwm-scand` (`navigation-world-model`) — Runner parity pending. Family status: **Runner parity pending**.
 
 The pipeline resolves the official NWM inference entrypoint and returns blocked diagnostics until checkpoints and evaluation datasets are staged. It is the recorded candidate for non-driving navigation video evaluation.
 
-## Variants & pipeline bindings
+WorldFoundry registers an in-tree runtime manifest pipeline for the vendored NWM source.
 
-| Variant | Task | Runtime profile | Pipeline binding | Status |
-| --- | --- | --- | --- | --- |
-| `nwm-recon` | navigation-world-model | `nwm` | `nwm` | planned |
-| `nwm-scand` | navigation-world-model | `nwm` | `nwm` | planned |
+## Running in WorldFoundry
 
-## Evaluation benchmarks
+Launch `worldfoundry-eval run nwm-recon --pipeline.task-profile navigation-world-model` to step the world. The command builder above switches `--pipeline.task-profile` among recorded tasks and still emits `worldfoundry-eval run`.
 
-- [WorldModelBench](/docs/evaluation/benchmark-hub/worldmodelbench) — Navigation world-rollout quality.
+It runs in the unified environment `worldfoundry-unified-cu128` (Python 3.11, CUDA 12.8).
+
+Recorded weight repositories include `facebook/nwm`. Stage assets with `bash scripts/inference/prepare_model_infer.sh nwm-recon`.
+
+Status: **Runner parity pending**.
 
 <ModelRelatedRecipes modelId="nwm" locale="en" />

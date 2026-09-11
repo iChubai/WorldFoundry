@@ -11,23 +11,148 @@ This is the layer to read when you are about to copy a utility into a model dire
 
 ## Subpackage responsibilities
 
-| Subpackage | Owns | Key symbols |
-| --- | --- | --- |
-| `model_loading` | Checkpoint materialization, state-dict loading, LoRA merge, inference network construction. | `load_state_dict_from_safetensors` `model_loading/file.py:110`; `instantiate_inference_network` `inference_model.py:23`; `GeneralLoRAoader` `lora.py:15` |
-| `checkpoint` | State-dict assignment, remap, distributed checkpoint (DCP), safe loading. | `checkpoint/{assignment,remap,dcp,safe_loading,load}.py` |
-| `vram` | Disk-backed state maps, meta initialization, staged placement, layerwise CPU offload, memory accounting. | `vram/{disk_map,initialization,layers,layerwise_offload,memory}.py` |
-| `attention` | Backend probing, dense SDPA, packed variable-length, sparse 3D, n-D/complex/projective RoPE, sequence-parallel composition. | `AttentionKernelCapability` `attention/backends.py:32`; `probe_attention_backends` `backends.py:144`; `complex_rope.py`, `causal_ulysses_attention.py` |
-| `distributed` | NCCL options, masked orthogonal rank groups, model-parallel init, context/block FSDP, device-mesh collectives. | `initialize_model_parallel` `distributed/model_parallel_groups.py:238`; `RankGenerator` `:194`; `block_fsdp.py`, `context_parallel.py` |
-| `nn` | Reusable transformer math: RMSNorm, shared MLPs, timestep/AdaLN/final-layer modulation, prefix gating, activation checkpointing, classic-diffusion blocks. | `nn/{activation_checkpointing,diffusion_schedulers,convolutional_mlp,...}.py` |
-| `kernels` | Autotune cache, capability probing, diffusion kernels, MoE, quantized GEMM. | `kernels/{capabilities,autotune_cache,diffusion,moe,quantized_gemm}.py` |
-| `memory` | Multi-modal, streaming, and multi-turn memory contracts. | `BaseMemory` `memory/base.py:9`; `conditioning.py`, `media.py`, `mosaic.py`, `retrieval.py` |
-| `acceleration` | FP8 tensorwise quantization, low-precision gating, acceleration-technology reporting, NVFP4, token pruning. | `Float8Linear` `acceleration/quantization.py:47`; `AccelerationTechnology` `technology.py:15` |
-| `configuration` | Hydra integration, model config, flags, Cosmos-style config. | `configuration/{hydra,model_config,flags,cosmos_config}.py` |
-| `io` | Media and artifact IO: audio, video, depth-to-colormap, action tracks, cache, config utils. | `io/{artifacts,audio,action_tracks,cache}.py`; `save_depth_colormap` `io/artifacts.py:82` |
-| `safety` | Video IO guardrails and safety filters. | `safety/{guardrails,video_io}.py` |
-| `structures` | Typed validators, shape slicing, tree utils, predicates. | `Validator` `structures/validator.py:10`; `ShapeSlice` `shape_utils.py:63` |
-| `utils` | Cross-cutting helpers: array/tensor, batch ops, CUDA graphs, feature extraction, functional utils. | `utils/{array_tensor_utils,batch_ops,cuda_graph,functional_utils}.py` |
-| `visualization` | Action overlays and shared visualization helpers. | `visualization/action_overlay.py` |
+<div className="pi-kv-catalog not-prose">
+  <section className="pi-kv-group">
+    <h3>Subpackage</h3>
+    <ul>
+      <li className="pi-kv-row">
+        <div className="pi-kv-head">
+          <div className="pi-kv-names">
+            <code>model_loading</code>
+          </div>
+        </div>
+        <p>Checkpoint materialization, state-dict loading, LoRA merge, inference network construction.</p>
+        <p className="pi-kv-read"><span>First file</span> <code>load_state_dict_from_safetensors</code> <code>model_loading/file.py:110</code>; <code>instantiate_inference_network</code> <code>inference_model.py:23</code>; <code>GeneralLoRAoader</code> <code>lora.py:15</code></p>
+      </li>
+      <li className="pi-kv-row">
+        <div className="pi-kv-head">
+          <div className="pi-kv-names">
+            <code>checkpoint</code>
+          </div>
+        </div>
+        <p>State-dict assignment, remap, distributed checkpoint (DCP), safe loading.</p>
+        <p className="pi-kv-read"><span>First file</span> <code>{"checkpoint/{assignment,remap,dcp,safe_loading,load}.py"}</code></p>
+      </li>
+      <li className="pi-kv-row">
+        <div className="pi-kv-head">
+          <div className="pi-kv-names">
+            <code>vram</code>
+          </div>
+        </div>
+        <p>Disk-backed state maps, meta initialization, staged placement, layerwise CPU offload, memory accounting.</p>
+        <p className="pi-kv-read"><span>First file</span> <code>{"vram/{disk_map,initialization,layers,layerwise_offload,memory}.py"}</code></p>
+      </li>
+      <li className="pi-kv-row">
+        <div className="pi-kv-head">
+          <div className="pi-kv-names">
+            <code>attention</code>
+          </div>
+        </div>
+        <p>Backend probing, dense SDPA, packed variable-length, sparse 3D, n-D/complex/projective RoPE, sequence-parallel composition.</p>
+        <p className="pi-kv-read"><span>First file</span> <code>AttentionKernelCapability</code> <code>attention/backends.py:32</code>; <code>probe_attention_backends</code> <code>backends.py:144</code>; <code>complex_rope.py</code>, <code>causal_ulysses_attention.py</code></p>
+      </li>
+      <li className="pi-kv-row">
+        <div className="pi-kv-head">
+          <div className="pi-kv-names">
+            <code>distributed</code>
+          </div>
+        </div>
+        <p>NCCL options, masked orthogonal rank groups, model-parallel init, context/block FSDP, device-mesh collectives.</p>
+        <p className="pi-kv-read"><span>First file</span> <code>initialize_model_parallel</code> <code>distributed/model_parallel_groups.py:238</code>; <code>RankGenerator</code> <code>:194</code>; <code>block_fsdp.py</code>, <code>context_parallel.py</code></p>
+      </li>
+      <li className="pi-kv-row">
+        <div className="pi-kv-head">
+          <div className="pi-kv-names">
+            <code>nn</code>
+          </div>
+        </div>
+        <p>Reusable transformer math: RMSNorm, shared MLPs, timestep/AdaLN/final-layer modulation, prefix gating, activation checkpointing, classic-diffusion blocks.</p>
+        <p className="pi-kv-read"><span>First file</span> <code>{"nn/{activation_checkpointing,diffusion_schedulers,convolutional_mlp,...}.py"}</code></p>
+      </li>
+      <li className="pi-kv-row">
+        <div className="pi-kv-head">
+          <div className="pi-kv-names">
+            <code>kernels</code>
+          </div>
+        </div>
+        <p>Autotune cache, capability probing, diffusion kernels, MoE, quantized GEMM.</p>
+        <p className="pi-kv-read"><span>First file</span> <code>{"kernels/{capabilities,autotune_cache,diffusion,moe,quantized_gemm}.py"}</code></p>
+      </li>
+      <li className="pi-kv-row">
+        <div className="pi-kv-head">
+          <div className="pi-kv-names">
+            <code>memory</code>
+          </div>
+        </div>
+        <p>Multi-modal, streaming, and multi-turn memory contracts.</p>
+        <p className="pi-kv-read"><span>First file</span> <code>BaseMemory</code> <code>memory/base.py:9</code>; <code>conditioning.py</code>, <code>media.py</code>, <code>mosaic.py</code>, <code>retrieval.py</code></p>
+      </li>
+      <li className="pi-kv-row">
+        <div className="pi-kv-head">
+          <div className="pi-kv-names">
+            <code>acceleration</code>
+          </div>
+        </div>
+        <p>FP8 tensorwise quantization, low-precision gating, acceleration-technology reporting, NVFP4, token pruning.</p>
+        <p className="pi-kv-read"><span>First file</span> <code>Float8Linear</code> <code>acceleration/quantization.py:47</code>; <code>AccelerationTechnology</code> <code>technology.py:15</code></p>
+      </li>
+      <li className="pi-kv-row">
+        <div className="pi-kv-head">
+          <div className="pi-kv-names">
+            <code>configuration</code>
+          </div>
+        </div>
+        <p>Hydra integration, model config, flags, Cosmos-style config.</p>
+        <p className="pi-kv-read"><span>First file</span> <code>{"configuration/{hydra,model_config,flags,cosmos_config}.py"}</code></p>
+      </li>
+      <li className="pi-kv-row">
+        <div className="pi-kv-head">
+          <div className="pi-kv-names">
+            <code>io</code>
+          </div>
+        </div>
+        <p>Media and artifact IO: audio, video, depth-to-colormap, action tracks, cache, config utils.</p>
+        <p className="pi-kv-read"><span>First file</span> <code>{"io/{artifacts,audio,action_tracks,cache}.py"}</code>; <code>save_depth_colormap</code> <code>io/artifacts.py:82</code></p>
+      </li>
+      <li className="pi-kv-row">
+        <div className="pi-kv-head">
+          <div className="pi-kv-names">
+            <code>safety</code>
+          </div>
+        </div>
+        <p>Video IO guardrails and safety filters.</p>
+        <p className="pi-kv-read"><span>First file</span> <code>{"safety/{guardrails,video_io}.py"}</code></p>
+      </li>
+      <li className="pi-kv-row">
+        <div className="pi-kv-head">
+          <div className="pi-kv-names">
+            <code>structures</code>
+          </div>
+        </div>
+        <p>Typed validators, shape slicing, tree utils, predicates.</p>
+        <p className="pi-kv-read"><span>First file</span> <code>Validator</code> <code>structures/validator.py:10</code>; <code>ShapeSlice</code> <code>shape_utils.py:63</code></p>
+      </li>
+      <li className="pi-kv-row">
+        <div className="pi-kv-head">
+          <div className="pi-kv-names">
+            <code>utils</code>
+          </div>
+        </div>
+        <p>Cross-cutting helpers: array/tensor, batch ops, CUDA graphs, feature extraction, functional utils.</p>
+        <p className="pi-kv-read"><span>First file</span> <code>{"utils/{array_tensor_utils,batch_ops,cuda_graph,functional_utils}.py"}</code></p>
+      </li>
+      <li className="pi-kv-row">
+        <div className="pi-kv-head">
+          <div className="pi-kv-names">
+            <code>visualization</code>
+          </div>
+        </div>
+        <p>Action overlays and shared visualization helpers.</p>
+        <p className="pi-kv-read"><span>First file</span> <code>visualization/action_overlay.py</code></p>
+      </li>
+    </ul>
+  </section>
+</div>
 
 ## Dependency rule
 

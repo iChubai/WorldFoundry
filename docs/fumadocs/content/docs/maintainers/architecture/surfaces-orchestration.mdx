@@ -38,15 +38,60 @@ Because every tool resolves through the same catalog and orchestration service, 
 
 The orchestration service is the single compile boundary between a surface and execution. It lives in `evaluation/tasks/execution/orchestration/service.py`. It validates one of five intent dataclasses and returns a `PreparedEvaluation` that the execution layer can run.
 
-| Intent | File:line | Compiles to |
-| --- | --- | --- |
-| `ModelBenchmarkIntent` | `service.py:60` | `ModelBenchmarkRunRequest` (model + benchmark) |
-| `ScoreArtifactsIntent` | `service.py:85` | scores existing artifacts |
-| `GenerateAndScoreIntent` | `service.py:101` | generate then score |
-| `ScoreResultsIntent` | `service.py:125` | score results on disk |
-| `ReproduceIntent` | `service.py:139` | reproduction profile |
+<div className="pi-kv-catalog not-prose">
+  <section className="pi-kv-group">
+    <h3>Intent</h3>
+    <ul>
+      <li className="pi-kv-row">
+        <div className="pi-kv-head">
+          <div className="pi-kv-names">
+            <code>ModelBenchmarkIntent</code>
+          </div>
+        </div>
+        <p><code>ModelBenchmarkRunRequest</code> (model + benchmark)</p>
+        <p className="pi-kv-read"><span>First file</span> <code>service.py:60</code></p>
+      </li>
+      <li className="pi-kv-row">
+        <div className="pi-kv-head">
+          <div className="pi-kv-names">
+            <code>ScoreArtifactsIntent</code>
+          </div>
+        </div>
+        <p>scores existing artifacts</p>
+        <p className="pi-kv-read"><span>First file</span> <code>service.py:85</code></p>
+      </li>
+      <li className="pi-kv-row">
+        <div className="pi-kv-head">
+          <div className="pi-kv-names">
+            <code>GenerateAndScoreIntent</code>
+          </div>
+        </div>
+        <p>generate then score</p>
+        <p className="pi-kv-read"><span>First file</span> <code>service.py:101</code></p>
+      </li>
+      <li className="pi-kv-row">
+        <div className="pi-kv-head">
+          <div className="pi-kv-names">
+            <code>ScoreResultsIntent</code>
+          </div>
+        </div>
+        <p>score results on disk</p>
+        <p className="pi-kv-read"><span>First file</span> <code>service.py:125</code></p>
+      </li>
+      <li className="pi-kv-row">
+        <div className="pi-kv-head">
+          <div className="pi-kv-names">
+            <code>ReproduceIntent</code>
+          </div>
+        </div>
+        <p>reproduction recipe</p>
+        <p className="pi-kv-read"><span>First file</span> <code>service.py:135</code></p>
+      </li>
+    </ul>
+  </section>
+</div>
 
-Each intent has a matching `_prepare_*` function (`service.py:421`–`:649`). The public entry points are `prepare_evaluation(intent)` at `service.py:759` and `execute_prepared_evaluation(prepared)` at `service.py:775`. A surface's job is to produce one of these intents; it must not duplicate generation, dispatch, or metric execution.
+Each intent has a matching `_prepare_*` function (`service.py:414`–`:642`). The public entry points are `prepare_evaluation(intent)` at `service.py:737` and `execute_prepared_evaluation(prepared)` at `service.py:753`. A surface's job is to produce one of these intents; it must not duplicate generation, dispatch, or metric execution.
 
 <ArchDiagram id="surfaces" />
 
@@ -54,11 +99,40 @@ Each intent has a matching `_prepare_*` function (`service.py:421`–`:649`). Th
 
 WorldFoundry keeps three planning types distinct. Do not wrap them in a fourth recipe executor.
 
-| Boundary | File:line | Owns |
-| --- | --- | --- |
-| `PreparedEvaluation` | `service.py:198` | User-facing compiler result: preflight diagnostics, protocol-fidelity policy, claim level derived from generation/data/evaluation/runtime/reference provenance. |
-| `RunPlan` | `orchestration/plan.py:113` | Lower-level plan for one generation/evaluate stage; fingerprinted for reproducible reruns and cache reuse. |
-| `EvaluateRunRequest` / `ModelBenchmarkRunRequest` | `orchestration/evaluate.py:41` / `orchestration/model_benchmark.py:64` | The actual request types the runners consume. |
+<div className="pi-kv-catalog not-prose">
+  <section className="pi-kv-group">
+    <h3>Boundary</h3>
+    <ul>
+      <li className="pi-kv-row">
+        <div className="pi-kv-head">
+          <div className="pi-kv-names">
+            <code>PreparedEvaluation</code>
+          </div>
+        </div>
+        <p>User-facing compiler result: preflight diagnostics, protocol-fidelity policy, claim level derived from generation/data/evaluation/runtime/reference provenance.</p>
+        <p className="pi-kv-read"><span>First file</span> <code>service.py:198</code></p>
+      </li>
+      <li className="pi-kv-row">
+        <div className="pi-kv-head">
+          <div className="pi-kv-names">
+            <code>RunPlan</code>
+          </div>
+        </div>
+        <p>Lower-level plan for one generation/evaluate stage; fingerprinted for reproducible reruns and cache reuse.</p>
+        <p className="pi-kv-read"><span>First file</span> <code>orchestration/plan.py:113</code></p>
+      </li>
+      <li className="pi-kv-row">
+        <div className="pi-kv-head">
+          <div className="pi-kv-names">
+            <code>EvaluateRunRequest</code> / <code>ModelBenchmarkRunRequest</code>
+          </div>
+        </div>
+        <p>The actual request types the runners consume.</p>
+        <p className="pi-kv-read"><span>First file</span> <code>orchestration/evaluate.py:41</code> / <code>orchestration/model_benchmark.py:64</code></p>
+      </li>
+    </ul>
+  </section>
+</div>
 
 A caller flag can only *narrow* the claim level, never promote a diagnostic run to an official one. `score_valid` records whether the evaluator produced a usable score; `leaderboard_valid` additionally requires comparable provenance and benchmark-runner evidence. See [Evaluation core](/docs/maintainers/architecture/evaluation-core) for how claim level flows into the scorecard.
 

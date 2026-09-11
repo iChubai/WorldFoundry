@@ -1,106 +1,39 @@
 ---
 title: 4DWorldBench
-description: CVPR 2026 3D/4D 世界生成评测：感知质量、Condition-4D 对齐、物理真实感与 4D 一致性四大维度。
+description: "CVPR 2026 的 3D/4D 世界生成评测：感知质量、Condition-4D 对齐、物理、4D 一致性。WorldFoundry 内置官方 runtime，不编造榜单。"
 ---
 
-## 简介
+4DWorldBench（中科大，联合浙大与北京中关村学院；CVPR 2026）评的是 **3D/4D 世界生成器**——图像转 3D/4D、视频转 4D、文本转 3D/4D——把各种条件模态映射到同一评测空间。四个轴汇总为 `four_d_worldbench_average`：
 
-**发表机构：** University of Science and Technology of China（中国科学技术大学，联合浙江大学、北京中关村学院）
+- **感知质量** — CLIP-IQA、CLIP-aesthetic、FastVQA。
+- **Condition-4D 对齐** — Keye-VL 是/否 judge 覆盖属性 / 关系 / 运动 / 事件 / 场景控制，外加 DROID-SLAM 相机误差（原始误差越低越好，再反向归一化）。
+- **物理真实感** — LLM 辅助物理推理。
+- **4D 一致性** — DROID-SLAM 重投影、VFIMamba 插帧、运动 QA、VGG 风格。
 
-4DWorldBench（CVPR 2026）评测 3D/4D 世界生成模型——图像转 3D/4D、视频转 4D、文本转 3D/4D——把所有条件模态映射到统一评测空间，并打分四个维度：感知质量（CLIP-IQA、CLIP-aesthetic、FastVQA）、Condition-4D 对齐（Keye-VL 是/否 judge 覆盖属性/关系/运动/事件/场景控制，加 DROID-SLAM 相机误差）、物理真实感（LLM 辅助物理推理）与 4D 一致性（DROID-SLAM 重投影、VFIMamba 插帧、运动 QA、VGG 风格）。
+论文：[4DWorldBench](https://arxiv.org/pdf/2511.19836)。项目：[yeppp27.github.io/4DWorldBench.github.io](https://yeppp27.github.io/4DWorldBench.github.io/)。代码：[yeppp27/4dworldbench_code](https://github.com/yeppp27/4dworldbench_code)。
 
-WorldFoundry 在仓内托管官方 runtime（`run_four_d_worldbench_official_runner.py`），按官方 schema 的数据集 JSON 逐维度调度。
+WorldFoundry **仓内托管官方 runtime**（`run_four_d_worldbench_official_runner.py`），按官方 schema 的数据集 JSON 一次评一个 `--dimension`。官方数据集下载尚未发布；需自行提供 JSON 与生成视频。
 
-官方参考：
+<BenchmarkPageSections id="4dworldbench" locale="zh" />
 
-- Paper: [arxiv.org/pdf/2511.19836](https://arxiv.org/pdf/2511.19836)
-- 项目主页: [yeppp27.github.io/4DWorldBench.github.io](https://yeppp27.github.io/4DWorldBench.github.io/)
-- 官方仓库: [yeppp27/4dworldbench_code](https://github.com/yeppp27/4dworldbench_code)
-
-## 评测协议
-
-每次调用对一个 `--model-name` 在 `--dataset-json` 及其引用的生成视频上评一个 `--dimension`。模型支撑的维度从环境变量解析资产（`WORLDFOUNDRY_4DWORLDBENCH_KEYE_MODEL`、`WORLDFOUNDRY_4DWORLDBENCH_DROID_CKPT`、`OPENAI_API_KEY`）；像素级维度无需这些资产。相机误差与视角类指标因原始误差越低越好而做反向归一化。
-
-主指标是 `four_d_worldbench_average`。
-
-| Metric | 含义 | 方向 |
-| --- | --- | --- |
-| `perceptual_clip_iqa_metrics` | 官方 4DWorldBench 帧级 CLIP-IQA 感知质量得分。 | 越高越好 |
-| `perceptual_clip_aesthetic_metrics` | 官方 4DWorldBench CLIP-aesthetic 感知质量得分。 | 越高越好 |
-| `perceptual_fastvqa` | 官方 4DWorldBench 时序视频质量得分。 | 越高越好 |
-| `alignment_attribute_control` | Keye-VL 是/否 judge：动态属性控制。 | 越高越好 |
-| `alignment_relationship_control` | Keye-VL 是/否 judge：动态空间关系控制。 | 越高越好 |
-| `alignment_motion_control` | Keye-VL 是/否 judge：运动顺序对齐。 | 越高越好 |
-| `alignment_event_control` | Keye-VL 是/否 judge：复杂情节/事件对齐。 | 越高越好 |
-| `alignment_scene_control` | Keye-VL 是/否 judge：复杂景观/场景对齐。 | 越高越好 |
-| `alignment_camera_error_metrics` | 用于相机控制对齐的 DROID-SLAM 相机轨迹误差；原始误差越低越好，反向归一化。 | 越低越好 |
-| `physics_realism` | 官方 LLM 辅助物理推理得分。 | 越高越好 |
-| `consistency_viewpoint` | 用于多视角一致性的 DROID-SLAM 重投影误差；原始误差越低越好，反向归一化。 | 越低越好 |
-| `consistency_motion_smoothness` | VFIMamba 插帧一致性得分。 | 越高越好 |
-| `consistency_motion_qa` | Keye-VL 是/否 judge：运动一致性问题。 | 越高越好 |
-| `consistency_style` | VGG Gram 矩阵风格一致性得分。 | 越高越好 |
-| `perceptual_quality` | 归一化感知质量组件均值。 | 越高越好 |
-| `condition_4d_alignment` | 归一化 Condition-4D 对齐组件均值。 | 越高越好 |
-| `physical_realism_score` | 归一化物理真实感组件。 | 越高越好 |
-| `four_d_consistency` | 归一化 4D 一致性组件均值。 | 越高越好 |
-| `four_d_worldbench_average` | 可用 4DWorldBench 组件的归一化均分。 | 越高越好 |
-
-## 数据与产物布局
-
-WorldFoundry 仓内路径：
-
-```text
-worldfoundry/data/benchmarks/tasks/external/4dworldbench.yaml
-worldfoundry/evaluation/tasks/execution/runners/four_d_worldbench
-```
-
-```text
-<dataset.json>                              # 官方 4DWorldBench schema（用例 + 视频引用）
-${WORLDFOUNDRY_GENERATED_ARTIFACT_DIR}/     # dataset.json 引用的生成视频
-worldfoundry/data/benchmarks/tasks/external/4dworldbench.yaml
-```
-
-## 运行评测
-
-目录 manifest 记录的 validation 命令：
+## 如何运行
 
 ```bash
-python worldfoundry/evaluation/tasks/execution/runners/four_d_worldbench/run_four_d_worldbench_official_runner.py \
+${WORLDFOUNDRY_UNIFIED_PYTHON} \
+  worldfoundry/evaluation/tasks/execution/runners/four_d_worldbench/run_four_d_worldbench_official_runner.py \
   --run-official \
   --dataset-json <dataset.json> \
   --model-name <model_name> \
   --dimension perceptual_clip_iqa_metrics \
   --generated-video-dir <generated_artifacts> \
-  --output-dir <out> \
+  --output-dir tmp/4dworldbench/official \
   --json
 ```
 
-## 权重与环境变量
+依赖模型的维度会解析 `WORLDFOUNDRY_4DWORLDBENCH_KEYE_MODEL`、`WORLDFOUNDRY_4DWORLDBENCH_DROID_CKPT`、`OPENAI_API_KEY`。像素级维度不需要它们。共享栈：`keye_vl`、`droid_slam`、`vfimamba`、`fastvqa`。默认导入路径：`WORLDFOUNDRY_4DWORLDBENCH_RESULTS_PATH`。
 
-Keye-VL、DROID-SLAM、VFIMamba、FastVQA 与 OpenAI/API 资产只在使用它们的维度中需要。
+仓内指针：`worldfoundry/data/benchmarks/tasks/external/4dworldbench.yaml`，`worldfoundry/evaluation/tasks/execution/runners/four_d_worldbench`。
 
-- `WORLDFOUNDRY_4DWORLDBENCH_ROOT`: 可选覆盖项，指向本地 benchmark runtime / 仓库根目录。
-- `WORLDFOUNDRY_4DWORLDBENCH_RESULTS_PATH`: 未显式传 `--official-results-path` 时，导入器默认从该路径读取官方结果导出文件。
-- `WORLDFOUNDRY_GENERATED_ARTIFACT_DIR`: 存放待评测生成产物（候选视频/rollout）的目录。
-
-共享 checkpoint 资产：`keye_vl`, `droid_slam`, `openai`。
-
-该 benchmark 复用共享 base-model 依赖栈：`keye_vl`, `droid_slam`, `vfimamba`, `fastvqa`。
-
-## 输出文件
-
-运行会在 `--output-dir` 下写出：
-
-- `scorecard.json`: WorldFoundry 统一 scorecard，记录上表中的指标值。
-- `raw_metric_table.jsonl`: 支撑 scorecard 的原始 metric 行。
-- `per_sample_scores.jsonl`: 当结果源包含逐样本数值时写出的逐样本行。
-
-Scorecard 主键：`four_d_worldbench_average`（leaderboard key `four_d_worldbench_average`），写入 `scorecard.json`。
-
-## 边界与限制
-
-- 用替代 judge 或缺失权重算出的维度分不可与官方数字比较。
-- 平均分只对可用组件求均值；部分维度运行不是完整 4DWorldBench 结果。
-- LLM 辅助物理推理依赖所配 API 模型与 prompt 版本。
+产物包括 `scorecard.json`（主键 `four_d_worldbench_average`）与 `raw_metric_table.jsonl`。
 
 [← 返回 Benchmark Hub](/zh/docs/evaluation/benchmark-hub)

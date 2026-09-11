@@ -94,11 +94,9 @@ bash scripts/workspace/run_workspace.sh \
 
 ### 路径命名约定
 
-| 来源 | 本地目录名规则 | 示例 |
-| --- | --- | --- |
-| HF 模型 `org/name` | `org--name` | `Skywork/Matrix-Game-2.0` → `Skywork--Matrix-Game-2.0` |
-| HF 数据集 `org/name` | `org__name` | `lerobot/libero` → `lerobot__libero` |
-| GitHub `owner/repo` | 常见为 `owner--repo` | `Lifelong-Robot-Learning/LIBERO` → `Lifelong-Robot-Learning--LIBERO` |
+- **HF 模型 `org/name`** — 本地目录 `org--name`。示例：`Skywork/Matrix-Game-2.0` → `Skywork--Matrix-Game-2.0`。
+- **HF 数据集 `org/name`** — 本地目录 `org__name`。示例：`lerobot/libero` → `lerobot__libero`。
+- **GitHub `owner/repo`** — 常见为 `owner--repo`。示例：`Lifelong-Robot-Learning/LIBERO` → `Lifelong-Robot-Learning--LIBERO`。
 
 **以 catalog 或 `local_assets.example.yaml` 里的 `path` 为准。** 部分具身 benchmark 仍引用 legacy 路径如 `cache/vla_va_wam/hf_datasets/org--name`，可按同样结构放置，或在 manifest 里改路径。
 
@@ -192,14 +190,91 @@ python scripts/setup/prepare_benchmark_assets.py \
 
 以下仓内 runtime 通过统一 base-model asset registry 解析 checkpoint；源码不依赖某台机器的绝对路径。
 
-| Capability | 官方来源 | 文件名 | 默认位置 | 覆盖变量 |
-| --- | --- | --- | --- | --- |
-| `sam2` | HF [`facebook/sam2.1-hiera-base-plus`](https://huggingface.co/facebook/sam2.1-hiera-base-plus) | `sam2.1_hiera_base_plus.pt` | `${WORLDFOUNDRY_HFD_ROOT}/facebook--sam2.1-hiera-base-plus/` | `WORLDFOUNDRY_SAM2_CKPT` |
-| `mobile_sam` | GitHub [`ChaoningZhang/MobileSAM` 的 `weights/`](https://github.com/ChaoningZhang/MobileSAM/tree/master/weights) | `mobile_sam.pt` | `${WORLDFOUNDRY_CKPT_DIR}/MobileSAM/` | `WORLDFOUNDRY_MOBILE_SAM_CKPT` |
-| `repvit_sam` | GitHub [`THU-MIG/RepViT` 的 `v1.0` release](https://github.com/THU-MIG/RepViT/releases/tag/v1.0) | `repvit_sam.pt` | `${WORLDFOUNDRY_CKPT_DIR}/RepViT/` | `WORLDFOUNDRY_REPVIT_SAM_CKPT` |
-| `midas_v21_small_256` | GitHub [`isl-org/MiDaS` 的 `v2_1` release](https://github.com/isl-org/MiDaS/releases/tag/v2_1) | `midas_v21_small_256.pt` | `${WORLDFOUNDRY_CKPT_DIR}/` | `WORLDFOUNDRY_MIDAS_V21_SMALL_CKPT` |
-| `unidepth_v2_vitl14` | HF [`lpiccinelli/unidepth-v2-vitl14`](https://huggingface.co/lpiccinelli/unidepth-v2-vitl14) | `config.json`、`model.safetensors` | `${WORLDFOUNDRY_HFD_ROOT}/lpiccinelli--unidepth-v2-vitl14/` | `WORLDFOUNDRY_UNIDEPTH_V2_VITL14_MODEL_DIR` |
-| `unik3d_vitl` | HF [`lpiccinelli/unik3d-vitl`](https://huggingface.co/lpiccinelli/unik3d-vitl) | `config.json`、`model.safetensors` | `${WORLDFOUNDRY_HFD_ROOT}/lpiccinelli--unik3d-vitl/` | `WORLDFOUNDRY_UNIK3D_VITL_MODEL_DIR` |
+<div className="pi-kv-catalog is-vars not-prose">
+  <section className="pi-kv-group">
+    <h3>能力</h3>
+    <ul>
+      <li className="pi-kv-row">
+        <div className="pi-kv-head">
+          <div className="pi-kv-names">
+            <code>sam2</code>
+          </div>
+          <span className="pi-kv-default">
+            <span>覆盖变量</span>
+            <code>WORLDFOUNDRY_SAM2_CKPT</code>
+          </span>
+        </div>
+        <p>官方来源：HF <a href="https://huggingface.co/facebook/sam2.1-hiera-base-plus">facebook/sam2.1-hiera-base-plus</a>。文件名：<code>sam2.1_hiera_base_plus.pt</code></p>
+        <p className="pi-kv-read"><span>默认位置</span> <code>{'${WORLDFOUNDRY_HFD_ROOT}/facebook--sam2.1-hiera-base-plus/'}</code></p>
+      </li>
+      <li className="pi-kv-row">
+        <div className="pi-kv-head">
+          <div className="pi-kv-names">
+            <code>mobile_sam</code>
+          </div>
+          <span className="pi-kv-default">
+            <span>覆盖变量</span>
+            <code>WORLDFOUNDRY_MOBILE_SAM_CKPT</code>
+          </span>
+        </div>
+        <p>官方来源：GitHub <a href="https://github.com/ChaoningZhang/MobileSAM/tree/master/weights">ChaoningZhang/MobileSAM</a> 的 <code>weights/</code>。文件名：<code>mobile_sam.pt</code></p>
+        <p className="pi-kv-read"><span>默认位置</span> <code>{'${WORLDFOUNDRY_CKPT_DIR}/MobileSAM/'}</code></p>
+      </li>
+      <li className="pi-kv-row">
+        <div className="pi-kv-head">
+          <div className="pi-kv-names">
+            <code>repvit_sam</code>
+          </div>
+          <span className="pi-kv-default">
+            <span>覆盖变量</span>
+            <code>WORLDFOUNDRY_REPVIT_SAM_CKPT</code>
+          </span>
+        </div>
+        <p>官方来源：GitHub <a href="https://github.com/THU-MIG/RepViT/releases/tag/v1.0">THU-MIG/RepViT</a> 的 <code>v1.0</code> release。文件名：<code>repvit_sam.pt</code></p>
+        <p className="pi-kv-read"><span>默认位置</span> <code>{'${WORLDFOUNDRY_CKPT_DIR}/RepViT/'}</code></p>
+      </li>
+      <li className="pi-kv-row">
+        <div className="pi-kv-head">
+          <div className="pi-kv-names">
+            <code>midas_v21_small_256</code>
+          </div>
+          <span className="pi-kv-default">
+            <span>覆盖变量</span>
+            <code>WORLDFOUNDRY_MIDAS_V21_SMALL_CKPT</code>
+          </span>
+        </div>
+        <p>官方来源：GitHub <a href="https://github.com/isl-org/MiDaS/releases/tag/v2_1">isl-org/MiDaS</a> 的 <code>v2_1</code> release。文件名：<code>midas_v21_small_256.pt</code></p>
+        <p className="pi-kv-read"><span>默认位置</span> <code>{'${WORLDFOUNDRY_CKPT_DIR}/'}</code></p>
+      </li>
+      <li className="pi-kv-row">
+        <div className="pi-kv-head">
+          <div className="pi-kv-names">
+            <code>unidepth_v2_vitl14</code>
+          </div>
+          <span className="pi-kv-default">
+            <span>覆盖变量</span>
+            <code>WORLDFOUNDRY_UNIDEPTH_V2_VITL14_MODEL_DIR</code>
+          </span>
+        </div>
+        <p>官方来源：HF <a href="https://huggingface.co/lpiccinelli/unidepth-v2-vitl14">lpiccinelli/unidepth-v2-vitl14</a>。文件名：<code>config.json</code>、<code>model.safetensors</code></p>
+        <p className="pi-kv-read"><span>默认位置</span> <code>{'${WORLDFOUNDRY_HFD_ROOT}/lpiccinelli--unidepth-v2-vitl14/'}</code></p>
+      </li>
+      <li className="pi-kv-row">
+        <div className="pi-kv-head">
+          <div className="pi-kv-names">
+            <code>unik3d_vitl</code>
+          </div>
+          <span className="pi-kv-default">
+            <span>覆盖变量</span>
+            <code>WORLDFOUNDRY_UNIK3D_VITL_MODEL_DIR</code>
+          </span>
+        </div>
+        <p>官方来源：HF <a href="https://huggingface.co/lpiccinelli/unik3d-vitl">lpiccinelli/unik3d-vitl</a>。文件名：<code>config.json</code>、<code>model.safetensors</code></p>
+        <p className="pi-kv-read"><span>默认位置</span> <code>{'${WORLDFOUNDRY_HFD_ROOT}/lpiccinelli--unik3d-vitl/'}</code></p>
+      </li>
+    </ul>
+  </section>
+</div>
 
 UniDepth V2 与 UniK3D 权重采用 CC-BY-NC-4.0；下载或再分发前需要核对上游的非商业使用条款。
 
@@ -466,12 +541,10 @@ cp worldfoundry/data/benchmarks/local_assets.example.yaml \
 export WORLDFOUNDRY_LOCAL_ASSET_MANIFEST="${WORLDFOUNDRY_HOME}/local_assets.yaml"
 ```
 
-| `kind` | 你要准备 | 典型命令 |
-| --- | --- | --- |
-| `repo` | 已有 source/runtime root | 设置 `WORLDFOUNDRY_<BENCHMARK>_ROOT=<path>` |
-| `dataset` | HF dataset snapshot | `hf download <id> --repo-type dataset --local-dir <path>` |
-| `checkpoint` | 模型权重 | `hf download <id> --local-dir <path>` |
-| `simulator_asset` | 仿真器文件 | 按各 benchmark 文档手动安装 |
-| `result_dump` | 上游官方结果 | 跑完上游 evaluator 后拷贝 |
+- **`repo`** — 已有 source/runtime root。典型命令：设置 `WORLDFOUNDRY_<BENCHMARK>_ROOT=<path>`。
+- **`dataset`** — HF dataset snapshot。典型命令：`hf download <id> --repo-type dataset --local-dir <path>`。
+- **`checkpoint`** — 模型权重。典型命令：`hf download <id> --local-dir <path>`。
+- **`simulator_asset`** — 仿真器文件。典型命令：按各 benchmark 文档手动安装。
+- **`result_dump`** — 上游官方结果。典型命令：跑完上游 evaluator 后拷贝。
 
 具身仿真器 root 与 helper 脚本见 [Embodied official runtime](/zh/docs/evaluation/embodied-official-runtime)。

@@ -1,68 +1,30 @@
 ---
 title: VideoScore
-description: VideoScore 奖励模型对生成视频五个维度打分，VideoFeedback 数据栈在仓内。
+description: "TIGER-Lab 奖励模型：在 VideoFeedback 3.76 万条上训练的五个 1-4 分面。WorldFoundry 内置打分器，不编造榜单。"
 ---
 
-## 简介
+VideoScore（滑铁卢大学 TIGER-Lab）是 **学出来的奖励模型**，不是 prompt 套件。它在 **VideoFeedback（3.76 万条人工标注视频）** 上训练，对任意生成片段预测五个分面（官方 **1–4** 量表）：
 
-**发表机构：** TIGER-Lab（滑铁卢大学）
+- 视觉质量
+- 时间一致性
+- 动态程度
+- 文本-视频对齐
+- 事实一致性
 
-VideoScore 是在 VideoFeedback（37.6K 人工标注视频）上训练的视频质量打分器。它不是 prompt suite，而是一个奖励模型，对任意生成视频预测五个维度分：visual quality、temporal consistency、dynamic degree、text-to-video alignment 与 factual consistency。VideoScore-Bench 评估打分器与人工评分的相关性。
+`videoscore_average` 是五者均值。VideoScore-Bench 评估打分器与人类的相关（SPCC / 成对）。许可证：MIT（runtime）；数据集栈为 Apache-2.0 / MIT。
 
-WorldFoundry 把 VideoScore runtime 内置在仓内（`runtime/videoscore`），把五维输出映射进 scorecard，支持有界的 in-process 打分做验证，也可包裹上游 `benchmark/eval_videoscore.py` 并归一化其 `eval_*_videoscore.json` 输出。
+论文：[VideoScore](https://arxiv.org/abs/2406.15252)。项目：[tiger-ai-lab.github.io/VideoScore](https://tiger-ai-lab.github.io/VideoScore/)。代码：[TIGER-AI-Lab/VideoScore](https://github.com/TIGER-AI-Lab/VideoScore)。Bench 数据：[`TIGER-Lab/VideoScore-Bench`](https://huggingface.co/datasets/TIGER-Lab/VideoScore-Bench)。
 
-官方参考：
+WorldFoundry **仓内内置 runtime**，支持有界进程内 GPU 打分，并封装 `benchmark/eval_videoscore.py`。有界官方打分器 GPU 运行已验证；**SPCC / 成对全套对齐未验证**。
 
-- Paper: [arxiv.org/abs/2406.15252](https://arxiv.org/abs/2406.15252)
-- 项目主页: [tiger-ai-lab.github.io/VideoScore](https://tiger-ai-lab.github.io/VideoScore/)
-- 官方仓库: [TIGER-AI-Lab/VideoScore](https://github.com/TIGER-AI-Lab/VideoScore)
-- License: `mit`
+<BenchmarkPageSections id="videoscore" locale="zh" />
 
-## 评测协议
-
-模式：用 `--bounded-sample-count` 做有限样本的 in-process 打分（GPU 验证）；通过被包裹的官方脚本执行完整上游 benchmark；或用 `--official-results-path`/`--from-upstream-results` 导入上游结果 JSON。从数据集行运行时会从 VideoScore-Bench zip 包中 materialize 帧。
-
-主指标是 `videoscore_average`。
-
-| Metric | 含义 | 方向 |
-| --- | --- | --- |
-| `visual_quality` | VideoScore 视觉质量方面分（1-4 分制）。 | 越高越好 |
-| `temporal_consistency` | VideoScore 时序一致性方面分（1-4 分制）。 | 越高越好 |
-| `dynamic_degree` | VideoScore 动态度方面分（1-4 分制）。 | 越高越好 |
-| `text_to_video_alignment` | VideoScore 文生视频对齐方面分（1-4 分制）。 | 越高越好 |
-| `factual_consistency` | VideoScore 事实一致性方面分（1-4 分制）。 | 越高越好 |
-| `videoscore_average` | 五个 VideoScore 方面分的均值。 | 越高越好 |
-
-## 数据与产物布局
-
-WorldFoundry 仓内路径：
-
-```text
-worldfoundry/data/benchmarks/tasks/external/videoscore.yaml
-worldfoundry/evaluation/tasks/execution/runners/videoscore/runtime/videoscore
-```
-
-准备 TIGER-Lab 数据集与打分器权重：
+## 如何运行
 
 ```bash
 hf download TIGER-Lab/VideoScore-Bench --repo-type dataset --local-dir /path/to/VideoScore-Bench
 export WORLDFOUNDRY_VIDEOFEEDBACK_DATASET_ROOT=/path/to/VideoScore-Bench
-export WORLDFOUNDRY_VIDEOSCORE_MODEL_DIR=/path/to/VideoScore-v1.1   # 可选本地权重
-export WORLDFOUNDRY_VIDEOSCORE_FRAMES_DIR=/path/to/frames_cache
-```
 
-## 运行评测
-
-目录 manifest 记录的 validation 命令：
-
-```bash
-${WORLDFOUNDRY_UNIFIED_PYTHON} worldfoundry/evaluation/tasks/execution/runners/videoscore/run_videoscore_official_runner.py \
-  --json
-```
-
-有界 in-process 打分（验证用）：
-
-```bash
 ${WORLDFOUNDRY_UNIFIED_PYTHON} \
   worldfoundry/evaluation/tasks/execution/runners/videoscore/run_videoscore_official_runner.py \
   --bench-name video_feedback \
@@ -72,33 +34,10 @@ ${WORLDFOUNDRY_UNIFIED_PYTHON} \
   --json
 ```
 
-## 权重与环境变量
+通过 `--official-results-path` / `--from-upstream-results` 导入上游 `eval_*_videoscore.json`。环境变量：`WORLDFOUNDRY_VIDEOSCORE_MODEL_DIR`、`WORLDFOUNDRY_VIDEOSCORE_FRAMES_DIR`、`WORLDFOUNDRY_VIDEOSCORE_ROOT`。共享栈：`videoscore_reward_metric_stack`。
 
-- `WORLDFOUNDRY_VIDEOSCORE_ROOT`: 可选覆盖项，指向外部 runtime checkout。
-- `WORLDFOUNDRY_VIDEOSCORE_FRAMES_DIR`: 数据集驱动打分时的帧缓存目录。
-- `WORLDFOUNDRY_VIDEOFEEDBACK_DATASET_ROOT`: 本地 VideoFeedback / VideoScore-Bench 数据集根目录。
-- `WORLDFOUNDRY_VIDEOSCORE_MODEL_DIR`: 本地 VideoScore 打分器权重；未设置时走 Hugging Face 默认加载。
+仓内指针：`worldfoundry/data/benchmarks/tasks/external/videoscore.yaml`，`worldfoundry/evaluation/tasks/execution/runners/videoscore/runtime/videoscore`。
 
-该 benchmark 复用共享 base-model 依赖栈：`videoscore_reward_metric_stack`。
-
-## 输出文件
-
-运行会在 `--output-dir` 下写出：
-
-- `scorecard.json`: WorldFoundry 统一 scorecard，记录上表中的指标值。
-- `per_sample_scores.jsonl`: 当结果源包含逐样本数值时写出的逐样本行。
-- `raw_metric_table.jsonl`: 支撑 scorecard 的原始 metric 行。
-- `generated_video_manifest.json`
-- `dataset_manifest.json`
-- `upstream_stdout.log`: 上游官方 scorer 的 stdout 日志。
-- `upstream_stderr.log`: 上游官方 scorer 的 stderr 日志。
-
-Scorecard 主键：`videoscore_average`（leaderboard key `videoscore_average`），写入 `scorecard.json`。
-
-## 边界与限制
-
-- 有界验证运行只是 wiring 信号；完整 SPCC/pairwise 协议需要完整的上游生成帧树。
-- runner 在本地 patch 了 transformers DynamicCache API 差异；其他 transformers 版本下的行为不保证。
-- 本地 scorecard 不是 VideoScore-Bench leaderboard 条目。
+产物包括 `scorecard.json`（主键 `videoscore_average`）。
 
 [← 返回 Benchmark Hub](/zh/docs/evaluation/benchmark-hub)

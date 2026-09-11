@@ -1,80 +1,27 @@
 ---
 title: SimplerEnv
-description: 真实机器人操作策略的 real-to-sim 评测（SIMPLER）；WorldFoundry 归一化官方 rollout 导出。
+description: "真机策略的 real-to-sim 评测（SIMPLER）。Google Robot 与 WidowX/Bridge 场景；WorldFoundry 导入官方 rollout。"
 ---
 
-## 简介
+SimplerEnv（SIMPLER — Simulated Manipulation Policy Evaluation for Real Robot Setups）是加州大学圣迭戈分校与 Google DeepMind（联合斯坦福、伯克利）的 **real-to-sim** 评测。ManiSkill2 / SAPIEN 场景经过标定，让 **RT-1**、**RT-1-X**、**Octo** 等策略在仿真里的排序，尽量对上对应的 **Google Robot** 与 **WidowX / Bridge** 真机排序。套件的要点是那份相关性，不是又一套厨房资产。
 
-**发表机构：** UC San Diego 与 Google DeepMind（联合斯坦福与 UC Berkeley）
+论文：[OpenReview](https://openreview.net/forum?id=LZh48DTg71)。项目：[simpler-env.github.io](https://simpler-env.github.io/)。代码：[simpler-env/SimplerEnv](https://github.com/simpler-env/SimplerEnv)（MIT）。
 
-SimplerEnv（SIMPLER——面向真实机器人配置的仿真操作策略评测）在仿真中评测真实机器人操作策略，并验证了 real-to-sim 相关性：精心标定的 ManiSkill2/SAPIEN 场景复刻 Google Robot 与 WidowX/Bridge 配置，使 RT-1、RT-1-X、Octo 等策略在仿真中的排名与真实表现一致。
+WorldFoundry **不跑**这些场景。它把官方 rollout 导出归一进 scorecard。上游 rollout 仍需要 ManiSkill2/SAPIEN 栈和本体资产。仓库镜像：`cache/vla_va_wam/repos/simpler-env--SimplerEnv`。
 
-WorldFoundry 以官方结果 runner 集成 SimplerEnv：rollout 导出被归一化为统一 scorecard；模拟器 rollout 与策略包装保持在上游完成。
+<BenchmarkPageSections id="simpler-env" locale="zh" />
 
-官方参考：
-
-- Paper: [openreview.net/forum?id=LZh48DTg71](https://openreview.net/forum?id=LZh48DTg71)
-- 项目主页: [simpler-env.github.io](https://simpler-env.github.io/)
-- 官方仓库: [simpler-env/SimplerEnv](https://github.com/simpler-env/SimplerEnv)
-- License: `mit`
-
-## 评测协议
-
-WorldFoundry 通过统一的结果导入路径集成该 benchmark：`worldfoundry-eval zoo benchmark-run --mode official-validation` 把调用方提供的官方结果导出（JSON/CSV rollout 汇总）归一化为 WorldFoundry scorecard，不执行模拟器。模拟器执行、策略加载与 rollout 采集仍是使用官方工具完成的显式上游步骤。
-
-主指标是 `success_rate`。
-
-| Metric | 含义 | 方向 |
-| --- | --- | --- |
-| `success_rate` | 评测 rollout 上的主成功率（逐 episode 成功比例）。 | 越高越好 |
-| `task_success` | 按任务聚合的成功率。 | 越高越好 |
-| `episode_success` | 逐 episode 成功指示的聚合值。 | 越高越好 |
-| `reward` | 平均 episode 奖励 / 回报。 | 越高越好 |
-
-## 数据与产物布局
-
-WorldFoundry 仓内路径：
-
-```text
-worldfoundry/data/benchmarks/tasks/external/simpler-env.yaml
-```
-
-```text
-<official_results.json>                 # 官方工具产出的 rollout 汇总导出
-${WORLDFOUNDRY_SIMPLERENV_RESULTS_PATH}   # 默认导入路径
-```
-上游 checkout 镜像在 `cache/vla_va_wam/repos/simpler-env--SimplerEnv`；上游 rollout 需要 ManiSkill2/SAPIEN 栈与机器人形态资产。
-
-## 运行评测
-
-目录 manifest 记录的 validation 命令：
+## 如何运行
 
 ```bash
 worldfoundry-eval zoo benchmark-run \
   --benchmark-id simpler-env \
   --mode official-validation \
   --official-results-path <official_results.json> \
-  --output-dir <out> \
+  --output-dir tmp/simpler-env/official-validation \
   --json
 ```
 
-## 权重与环境变量
-
-- `WORLDFOUNDRY_SIMPLERENV_RESULTS_PATH`: 未显式传 `--official-results-path` 时，导入器默认从该路径读取官方结果导出文件。
-
-## 输出文件
-
-运行会在 `--output-dir` 下写出：
-
-- `scorecard.json`: WorldFoundry 统一 scorecard，记录上表中的指标值。
-- `raw_results.jsonl`: 从官方结果导出解析出的归一化行。
-
-Scorecard 主键：`success_rate`（leaderboard key `success_rate`），写入 `scorecard.json`。
-
-## 边界与限制
-
-- WorldFoundry 只归一化所提供的 rollout 结果；不在仓内运行官方模拟器或策略。
-- 在用就位的模拟器资产与策略权重执行官方 rollout 并导入之前，不声称完整 leaderboard 对齐。
-- 导入的 scorecard 是集成证据，不是 leaderboard 提交。
+默认导入路径：`WORLDFOUNDRY_SIMPLERENV_RESULTS_PATH`。清单：`worldfoundry/data/benchmarks/tasks/external/simpler-env.yaml`。产物：`scorecard.json`（主键 `success_rate`）与 `raw_results.jsonl`。
 
 [← 返回 Benchmark Hub](/zh/docs/evaluation/benchmark-hub)

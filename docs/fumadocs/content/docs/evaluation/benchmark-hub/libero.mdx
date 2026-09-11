@@ -1,85 +1,47 @@
 ---
 title: LIBERO
-description: Lifelong robot-learning benchmark with four task suites; WorldFoundry supports closed-loop execution wiring and official result import.
+description: "Lifelong robot-learning benchmark with four tabletop suites. WorldFoundry can import official results or wire closed-loop execution — no invented ranks."
 ---
 
-## About
+LIBERO (NeurIPS 2023 Datasets & Benchmarks) is the University of Texas at Austin's lifelong manipulation benchmark, with Tsinghua and Sony AI. A Franka on a **robosuite / MuJoCo** table must transfer **declarative** and **procedural** knowledge across tasks. The four official suites isolate what transfers:
 
-**Publisher:** The University of Texas at Austin (with Tsinghua & Sony AI)
+- **LIBERO-Spatial** — same objects, different spatial relations / layouts.
+- **LIBERO-Object** — same skills, different object identities.
+- **LIBERO-Goal** — same scene, different goal language.
+- **LIBERO-100** — LIBERO-10 short plus LIBERO-90 longer-horizon mix.
 
-LIBERO (NeurIPS 2023 D&B) benchmarks knowledge transfer in lifelong robot learning: four task suites — LIBERO-Spatial, LIBERO-Object, LIBERO-Goal, and LIBERO-100 — probe how manipulation policies transfer declarative and procedural knowledge across tasks in a robosuite/MuJoCo tabletop setting. It has become the de-facto evaluation target for vision-language-action models.
+It has become the default VLA report card. The paper is [LIBERO: Benchmarking Knowledge Transfer for Lifelong Robot Learning](https://arxiv.org/abs/2306.03310). Project: [libero-project.github.io](https://libero-project.github.io/). Code: [Lifelong-Robot-Learning/LIBERO](https://github.com/Lifelong-Robot-Learning/LIBERO) (MIT).
 
-WorldFoundry supports both paths: normalizer-first scorecards through `worldfoundry.evaluation.tasks.embodied.normalizer` (official result import), and native closed-loop execution wired through `worldfoundry-eval embodied run`. LIBERO dataset snapshots (`yifengzhu-hf/LIBERO-datasets`, `lerobot/libero`) and the upstream repo are tracked as staged assets.
+WorldFoundry supports **two** paths. Official `eval_result` trees (or structured exports) go through `worldfoundry.evaluation.tasks.embodied.normalizer`. Closed-loop execution is wired via `worldfoundry-eval embodied run` and needs the upstream simulator, suite assets, and the policy the official script expects. Dataset snapshots `yifengzhu-hf/LIBERO-datasets` and `lerobot/libero` are tracked as staged assets. Models such as [Being-H0.5](/docs/guides/supported-models/being-h05) expose a LIBERO specialist checkpoint; that is a model-card fact, not a hub leaderboard row.
 
-Official references:
+<BenchmarkPageSections id="libero" locale="en" />
 
-- Paper: [arxiv.org/abs/2306.03310](https://arxiv.org/abs/2306.03310)
-- Project page: [libero-project.github.io](https://libero-project.github.io/)
-- Official repository: [Lifelong-Robot-Learning/LIBERO](https://github.com/Lifelong-Robot-Learning/LIBERO)
-- License: `mit`
+## How to run
 
-## Evaluation protocol
-
-Result import normalizes an official eval_result tree or structured export via `--official-results-path` / `WORLDFOUNDRY_LIBERO_RESULTS_PATH`. Closed-loop execution needs the upstream simulator runtime, task-suite assets, and a policy checkpoint for the selected upstream eval script.
-
-Primary metric: `success_rate`.
-
-| Metric | Meaning | Direction |
-| --- | --- | --- |
-| `success_rate` | Primary episode success rate over evaluated rollouts. | Higher is better |
-| `task_success` | Per-task success aggregate. | Higher is better |
-| `episode_success` | Per-episode success indicator aggregate. | Higher is better |
-| `action_accuracy` | Offline action-prediction accuracy against reference actions. | Higher is better |
-
-## Data and artifact layout
-
-In-tree paths:
-
-```text
-worldfoundry/data/benchmarks/tasks/external/libero.yaml
-```
-
-```text
-cache/worldfoundry/data/hfd_datasets/yifengzhu-hf__LIBERO-datasets   # official demo datasets
-cache/worldfoundry/data/hfd_datasets/lerobot__libero                 # LeRobot conversion
-cache/vla_va_wam/repos/Lifelong-Robot-Learning--LIBERO               # upstream repo mirror
-```
-
-## Run the benchmark
-
-Catalog-recorded validation command:
+Import an official result tree (no simulator):
 
 ```bash
 worldfoundry-eval zoo benchmark-run \
   --benchmark-id libero \
   --mode official-validation \
   --official-results-path <official_results.json> \
-  --output-dir <out> \
+  --output-dir tmp/libero/official-validation \
   --json
 ```
 
-## Checkpoints and environment variables
+Closed-loop execution needs `WORLDFOUNDRY_LIBERO_ROOT` (optional override of the runtime/repo root), suite assets, and a matching policy. Default import path when you omit `--official-results-path` is `WORLDFOUNDRY_LIBERO_RESULTS_PATH`. Shared asset stacks: `libero_source_assets`, `libero_dataset_assets`.
 
-- `WORLDFOUNDRY_LIBERO_ROOT`: Optional override pointing at a local benchmark runtime/repository root.
-- `WORLDFOUNDRY_LIBERO_RESULTS_PATH`: Default path the importer reads official result exports from when `--official-results-path` is not passed.
+In-tree pointers:
 
-This benchmark reuses the shared base-model dependency stack: `libero_source_assets`, `libero_dataset_assets`.
+```text
+worldfoundry/data/benchmarks/tasks/external/libero.yaml
+cache/worldfoundry/data/hfd_datasets/yifengzhu-hf__LIBERO-datasets
+cache/worldfoundry/data/hfd_datasets/lerobot__libero
+cache/vla_va_wam/repos/Lifelong-Robot-Learning--LIBERO
+```
 
-## Outputs
+Outputs under `--output-dir` include `scorecard.json` (primary key `success_rate`), `run_manifest.json`, `results.jsonl`, and `metrics/summary.json`.
 
-The run writes into `--output-dir`:
-
-- `scorecard.json`: WorldFoundry scorecard with the metric values recorded above.
-- `run_manifest.json`: Manifest of the executed rollout run.
-- `results.jsonl`: Per-episode rollout records.
-- `metrics/summary.json`: Aggregated metric summary for the run.
-
-Scorecard primary key: `success_rate` (leaderboard key `success_rate`), stored in `scorecard.json`.
-
-## Limitations
-
-- Full leaderboard parity requires a recorded LIBERO/OpenVLA parity run with simulator assets and policy checkpoints.
-- Imported scorecards are integration evidence, not leaderboard submissions.
-- Suite selection and evaluation seeds must match the upstream protocol for comparability.
+Minimal import cells (Being-H0.5, pi0.5, GR00T): [Model → benchmark recipes](/docs/evaluation/model-benchmark-recipes).
 
 [← Benchmark Hub](/docs/evaluation/benchmark-hub)

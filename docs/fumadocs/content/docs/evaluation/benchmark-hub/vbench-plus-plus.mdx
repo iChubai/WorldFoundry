@@ -1,91 +1,41 @@
 ---
 title: VBench++
-description: VBench++ image-to-video, long-video, and trustworthiness extensions with in-tree runtime.
+description: "VBench extensions: I2V, long-video, trustworthiness. WorldFoundry vendors the runtime; it does not invent a board. Distinct from VBench and VBench-2.0."
 ---
 
-## About
+VBench++ (S-Lab, NTU and Shanghai AI Laboratory) extends [VBench](/docs/evaluation/benchmark-hub/vbench) with three tracks. It is **not** [VBench-2.0](/docs/evaluation/benchmark-hub/vbench-2.0). Same upstream repo: [Vchitect/VBench](https://github.com/Vchitect/VBench) (Apache-2.0).
 
-**Publisher:** S-Lab, Nanyang Technological University & Shanghai AI Laboratory
+- **Image-to-video** — I2V subject / background consistency and camera motion on the official crop-ready image suite.
+- **Long-video** — temporal-window scoring; the catalog-bounded command uses `temporal_flickering` / `long_custom_input`.
+- **Trustworthiness** — fairness, bias, safety probes (some need extra face / attribute models).
 
-VBench++ extends VBench with three tracks: image-to-video evaluation (I2V subject/background consistency and camera motion on the official crop-ready image suite), long-video evaluation with temporal-window scoring, and trustworthiness (fairness, bias, safety) probes. The upstream code lives in the same Vchitect/VBench repository.
+`--variant` selects `i2v`, `long`, or `trustworthiness`. Per-variant averages plus `vbench_plus_plus_average` (WorldFoundry mean over available dims).
 
-WorldFoundry vendors the VBench++ runtime at `worldfoundry/evaluation/tasks/execution/runners/vbench_plus_plus/runtime` behind `run_vbench_plus_plus_official_runner.py`; `--variant` selects `i2v`, `long`, or `trustworthiness`.
+Paper: [VBench++](https://arxiv.org/abs/2411.13503). Project: [vchitect.github.io/VBench-project](https://vchitect.github.io/VBench-project/).
 
-Official references:
+WorldFoundry **vendors the VBench++ runtime**. A bounded long-video component is verified; the complete suite is not.
 
-- Paper: [arxiv.org/abs/2411.13503](https://arxiv.org/abs/2411.13503)
-- Project page: [vchitect.github.io/VBench-project](https://vchitect.github.io/VBench-project/)
-- Official repository: [Vchitect/VBench](https://github.com/Vchitect/VBench)
-- License: `apache-2.0`
+<BenchmarkPageSections id="vbench-plus-plus" locale="en" />
 
-## Evaluation protocol
-
-Each variant defines its own dimension set and prompt/image suites (packaged in the public VBench repository). The runner dispatches per-dimension evaluators, writes `dimension_scores.json`, and averages available dimensions into per-variant aggregates plus the overall `vbench_plus_plus_average`.
-
-Primary metric: `vbench_plus_plus_average`.
-
-| Metric | Meaning | Direction |
-| --- | --- | --- |
-| `vbench_plus_plus_i2v_average` | Mean of available official VBench++ image-to-video dimensions. | Higher is better |
-| `vbench_plus_plus_long_average` | Mean of available official VBench++ long-video dimensions. | Higher is better |
-| `vbench_plus_plus_trustworthiness_average` | Mean of available official VBench++ trustworthiness dimensions. | Higher is better |
-| `vbench_plus_plus_average` | Mean of available official VBench++ variant dimensions normalized by the WorldFoundry wrapper. | Higher is better |
-
-## Data and artifact layout
-
-In-tree paths:
-
-```text
-worldfoundry/data/benchmarks/tasks/external/vbench-plus-plus.yaml
-worldfoundry/evaluation/tasks/execution/runners/vbench_plus_plus/runtime
-```
-
-Stage generated videos per variant convention (I2V uses the official image-suite naming; long-video mode accepts a custom directory):
+## How to run
 
 ```bash
-export WORLDFOUNDRY_GENERATED_ARTIFACT_DIR=/path/to/generated_videos
-export WORLDFOUNDRY_VBENCH_PLUS_PLUS_ROOT=/optional/external/checkout
-```
-
-## Run the benchmark
-
-Catalog-recorded validation command:
-
-```bash
-${WORLDFOUNDRY_UNIFIED_PYTHON} worldfoundry/evaluation/tasks/execution/runners/vbench_plus_plus/run_vbench_plus_plus_official_runner.py \
+${WORLDFOUNDRY_UNIFIED_PYTHON} \
+  worldfoundry/evaluation/tasks/execution/runners/vbench_plus_plus/run_vbench_plus_plus_official_runner.py \
   --benchmark-id vbench-plus-plus \
   --variant long \
-  --videos-path ${WORLDFOUNDRY_GENERATED_ARTIFACT_DIR} \
+  --videos-path "${WORLDFOUNDRY_GENERATED_ARTIFACT_DIR}" \
   --dimension temporal_flickering \
   --mode long_custom_input \
-  --python ${WORLDFOUNDRY_UNIFIED_PYTHON} \
-  --output-dir <out> \
+  --python "${WORLDFOUNDRY_UNIFIED_PYTHON}" \
+  --output-dir tmp/vbench-plus-plus/long \
   --json
 ```
 
-## Checkpoints and environment variables
+I2V uses official image-suite naming. Optional checkout override: `WORLDFOUNDRY_VBENCH_PLUS_PLUS_ROOT`. Shared stack: `vbench_perception_metric_stack`. Prompt / image suites live in the public VBench repo.
 
-- `WORLDFOUNDRY_VBENCH_PLUS_PLUS_ROOT`: Optional override pointing at an external runtime checkout instead of the in-tree copy.
-- `WORLDFOUNDRY_GENERATED_ARTIFACT_DIR`: Directory containing the candidate generated artifacts to score or import against.
+In-tree pointers: `worldfoundry/data/benchmarks/tasks/external/vbench-plus-plus.yaml`, `worldfoundry/evaluation/tasks/execution/runners/vbench_plus_plus/runtime`.
 
-This benchmark reuses the shared base-model dependency stack: `vbench_perception_metric_stack`.
-
-## Outputs
-
-The run writes into `--output-dir`:
-
-- `scorecard.json`: WorldFoundry scorecard with the metric values recorded above.
-- `raw_metric_table.jsonl`: Metric rows backing the scorecard.
-- `dimension_scores.json`: Per-dimension score breakdown.
-- `upstream_stdout.log`: Captured stdout of the upstream official scorer.
-- `upstream_stderr.log`: Captured stderr of the upstream official scorer.
-
-Scorecard primary key: `vbench_plus_plus_average` (leaderboard key `vbench_plus_plus_average`), stored in `scorecard.json`.
-
-## Limitations
-
-- Requirements are dimension-dependent; some trustworthiness probes need additional face/attribute models.
-- Per-variant partial runs are not comparable with official VBench++ leaderboard aggregates.
-- A local scorecard is not an official VBench++ leaderboard entry.
+Outputs include `scorecard.json` (primary `vbench_plus_plus_average`) and `dimension_scores.json`.
 
 [← Benchmark Hub](/docs/evaluation/benchmark-hub)

@@ -1,66 +1,19 @@
 ---
 title: FETV
-description: Fine-grained open-domain T2V evaluation over categorized prompts with CLIP/BLIP/FID/FVD metrics.
+description: "NeurIPS 2023 fine-grained T2V bench: 619 prompts on content, attributes, and complexity. WorldFoundry ships CLIPScore plus an importer; no invented board."
 ---
 
-## About
+FETV (Peking University and Huawei Noah's Ark Lab) is a **fine-grained** open-domain text-to-video bench. **619 prompts** sit on three orthogonal axes: **major content**, **attribute control** (color, count, style), and **prompt complexity** (simple vs compositional). Scoring mixes human ratings (static quality, temporal quality, overall / fine-grained alignment) with automatic metrics (CLIPScore, BLIPScore, FID, FVD). `fetv_average` is emitted only when every declared component is present.
 
-**Publisher:** Peking University & Huawei Noah's Ark Lab (NeurIPS 2023)
+Paper: [FETV (NeurIPS 2023 D&B)](https://proceedings.neurips.cc/paper_files/paper/2023/hash/c481049f7410f38e788f67c171c64ad5-Abstract-Datasets_and_Benchmarks.html). Prompts: [llyx97/FETV](https://github.com/llyx97/FETV). Scorer: [llyx97/FETV-EVAL](https://github.com/llyx97/FETV-EVAL). Dataset: [`lyx97/FETV`](https://huggingface.co/datasets/lyx97/FETV) (CC-BY-4.0).
 
-FETV is a fine-grained text-to-video benchmark whose 619 prompts are categorized along three orthogonal axes: major content, attribute control, and prompt complexity. Its evaluation combines human ratings (static quality, temporal quality, overall/fine-grained alignment) with automatic metrics — CLIPScore variants, BLIP-based alignment, and FID/FVD distribution distances computed per category (FETV-EVAL).
+WorldFoundry **vendors FETV-EVAL**, joins generated videos to the official prompt index (official 16-frame layout), runs the **CLIPScore** component through shared base-model assets, and normalizes FETV-EVAL result directories or CSV dumps. Human ratings cannot be recomputed. BLIP / FID / FVD need their packages and reference frames.
 
-WorldFoundry vendors the FETV-EVAL runtime in tree (`runtime/fetv_eval`), joins generated videos to the official prompt index with strict frame-layout decoding, runs the CLIPScore component through shared base-model assets, and normalizes official FETV-EVAL result directories.
+<BenchmarkPageSections id="fetv" locale="en" />
 
-Official references:
+## How to run
 
-- Paper: [proceedings.neurips.cc/paper_files/paper/2023/hash/c481049f7410f38e788f67c171c64ad5-Abstract-Datasets_and_Benchmarks.html](https://proceedings.neurips.cc/paper_files/paper/2023/hash/c481049f7410f38e788f67c171c64ad5-Abstract-Datasets_and_Benchmarks.html)
-- Project page: [github.com/llyx97/FETV](https://github.com/llyx97/FETV)
-- Official repository: [llyx97/FETV-EVAL](https://github.com/llyx97/FETV-EVAL)
-- Official repository: [llyx97/FETV](https://github.com/llyx97/FETV)
-- License: `cc-by-4.0`
-
-## Evaluation protocol
-
-Runner paths: import an official results CSV or a FETV-EVAL auto/manual result directory via `--official-results-path`; or recompute supported metric families in tree, selecting them with `--fetv-metrics` (e.g. `clip_score`, `blip_score`, `fid`, `fvd`). FID/FVD need reference frame directories (`--fetv-fid-real-video-dir`, `--fetv-fvd-real-video-dir`); videos are decoded to the official 16-frame layout before scoring.
-
-Primary metric: `fetv_average`.
-
-| Metric | Meaning | Direction |
-| --- | --- | --- |
-| `static_quality` | FETV manual static-quality score. | Higher is better |
-| `temporal_quality` | FETV manual temporal-quality score. | Higher is better |
-| `overall_alignment` | FETV overall text-video alignment score. | Higher is better |
-| `fine_grained_alignment` | FETV fine-grained prompt-aspect alignment score. | Higher is better |
-| `clip_score` | FETV automatic CLIPScore component. | Higher is better |
-| `blip_score` | FETV automatic BLIPScore component. | Higher is better |
-| `fid` | FETV Fréchet Inception Distance component. | Lower is better |
-| `fvd` | FETV Fréchet Video Distance component. | Lower is better |
-| `fetv_average` | Mean emitted only when every declared FETV component score is available. | Higher is better |
-
-## Data and artifact layout
-
-In-tree paths:
-
-```text
-worldfoundry/data/benchmarks/tasks/external/fetv.yaml
-worldfoundry/evaluation/tasks/execution/runners/fetv/run_fetv_official_runner.py
-worldfoundry/evaluation/tasks/execution/runners/fetv/fetv_official_runtime.py
-worldfoundry/evaluation/tasks/execution/runners/fetv/runtime/fetv_eval/auto_eval.py
-worldfoundry/evaluation/tasks/execution/runners/fetv/runtime/fetv_eval/compute_fid.py
-worldfoundry/base_models/perception_core/video_quality/fetv_stylegan_v/src/scripts/calc_metrics_for_dataset.py
-worldfoundry/base_models/perception_core/video_text/fetv_blip/models/blip_retrieval.py
-```
-
-Download the FETV dataset (`lyx97/FETV` on Hugging Face) for prompts and reference-video links, generate one video per prompt index, then:
-
-```bash
-export WORLDFOUNDRY_GENERATED_ARTIFACT_DIR=/path/to/fetv/generated_videos
-export WORLDFOUNDRY_FETV_RESULTS_PATH=/path/to/fetv_eval_results   # for import runs
-```
-
-## Run the benchmark
-
-Catalog-recorded validation command:
+Import a FETV-EVAL directory or official CSV:
 
 ```bash
 worldfoundry-eval zoo benchmark-run \
@@ -68,33 +21,22 @@ worldfoundry-eval zoo benchmark-run \
   --mode official-validation \
   --official-results-path <official_results.csv-or-FETV-EVAL-dir> \
   --generated-artifact-dir <generated_videos> \
-  --output-dir <out> \
+  --output-dir tmp/fetv/official-validation \
   --json
 ```
 
-## Checkpoints and environment variables
+Select automatic families with `--fetv-metrics` (`clip_score`, `blip_score`, `fid`, `fvd`). FID / FVD need `--fetv-fid-real-video-dir` / `--fetv-fvd-real-video-dir`. Default import path: `WORLDFOUNDRY_FETV_RESULTS_PATH`. Optional: `WORLDFOUNDRY_FETV_RUNTIME_ROOT`, `WORLDFOUNDRY_FETV_ARTIFACT_SCORE_DIR`. Shared stacks: `video_quality_motion_stack`, `fetv_blip_retrieval_source`, `fetv_stylegan_v_fvd_source`.
 
-- `WORLDFOUNDRY_FETV_RUNTIME_ROOT`: Optional external FETV-EVAL checkout override.
-- `WORLDFOUNDRY_FETV_ARTIFACT_SCORE_DIR`: Directory of precomputed WorldFoundry artifact scores to convert.
-- `WORLDFOUNDRY_FETV_RESULTS_PATH`: Default path the importer reads official result exports from when `--official-results-path` is not passed.
-- `WORLDFOUNDRY_GENERATED_ARTIFACT_DIR`: Directory containing the candidate generated artifacts to score or import against.
+In-tree pointers:
 
-This benchmark reuses the shared base-model dependency stack: `video_quality_motion_stack`, `fetv_blip_retrieval_source`, `fetv_stylegan_v_fvd_source`.
+```text
+worldfoundry/data/benchmarks/tasks/external/fetv.yaml
+worldfoundry/evaluation/tasks/execution/runners/fetv/runtime/fetv_eval
+worldfoundry/data/benchmarks/assets/fetv/fetv_data.json
+```
 
-## Outputs
+Outputs include `scorecard.json` (primary `fetv_average` when complete), `benchmark_contract.json`, and `raw_metric_table.jsonl`.
 
-The run writes into `--output-dir`:
-
-- `scorecard.json`: WorldFoundry scorecard with the metric values recorded above.
-- `benchmark_contract.json`: Benchmark contract record for the run (inputs, mode, provenance).
-- `raw_metric_table.jsonl`: Metric rows backing the scorecard.
-
-Scorecard primary key: `fetv_average` (leaderboard key `fetv_average`), stored in `scorecard.json`.
-
-## Limitations
-
-- Human-rating metrics (`static_quality`, `temporal_quality`, alignment ratings) can only be imported, never recomputed automatically.
-- Full automatic-metric parity needs BLIP/FID/FVD packages and reference frame assets staged locally.
-- A local scorecard is not an official FETV leaderboard result.
+Minimal ZeroScope cell (bounded `clip_score`): [Model → benchmark recipes](/docs/evaluation/model-benchmark-recipes).
 
 [← Benchmark Hub](/docs/evaluation/benchmark-hub)

@@ -1,53 +1,19 @@
 ---
 title: Visual Chronometer
-description: 对任意视频预测 PhyFPS：测量视觉运动隐含的物理帧率，与容器元数据无关。
+description: "TACO 的任意视频 PhyFPS 预测器。一致性指标全部越低越好。WorldFoundry 与 PhyFPS-Bench-Gen 共用 runtime，不编造榜单。"
 ---
 
-## 简介
+Visual Chronometer（德州农工 TACO Group）预测 **物理帧率（PhyFPS）**——视觉运动暗示的时间尺度——忽略容器元数据。训练用受控时间重采样与物理增强（运动模糊、卷帘快门）。作为 WorldFoundry benchmark，它给 **任意视频目录** 打分（不是固定 prompt 套件）：平均 PhyFPS 加上视频内 / 视频间变异系数。**越低表示时间行为越稳。**
 
-**发表机构：** TACO Group（Texas A&M University，德州农工大学）
+生成侧审计见 [PhyFPS-Bench-Gen](/zh/docs/evaluation/benchmark-hub/phyfps-bench-gen)（100 prompt 的 Meta-vs-PhyFPS）。
 
-Visual Chronometer 预测视频的物理帧率（PhyFPS）——由视觉动态隐含的真实时间刻度——从而绕开不可靠的容器元数据。它通过受控时间重采样训练，并加入物理化增广（运动模糊、卷帘快门），能暴露真实与生成视频中的时间不稳定性。作为 WorldFoundry benchmark，它对一个视频目录输出平均 PhyFPS 以及片段内/片段间变异系数；数值越低表示时间行为越平稳一致。
+代码：[taco-group/Visual_Chronometer](https://github.com/taco-group/Visual_Chronometer)。权重：[`xiangbog/Visual_Chronometer`](https://huggingface.co/xiangbog/Visual_Chronometer)（`vc_common_10_60fps.ckpt`，10–60 FPS）。
 
-WorldFoundry 通过与 PhyFPS-Bench-Gen 共享的入库 runtime 包装器在进程内运行 PhyFPS 预测。
+WorldFoundry 通过与 PhyFPS-Bench-Gen 共享的封装在进程内跑 `predict.py`，或导入 `results.csv`。运行时 / 归一化表面存在；**不声称已做发布级完整官方运行**。
 
-官方参考：
+<BenchmarkPageSections id="visual-chronometer" locale="zh" />
 
-- 官方仓库: [taco-group/Visual_Chronometer](https://github.com/taco-group/Visual_Chronometer)
-
-## 评测协议
-
-把 `--generated-artifact-dir` 指向任意视频目录；runner 在每个片段上滑窗预测逐窗 PhyFPS 并聚合。`WORLDFOUNDRY_VISUAL_CHRONOMETER_PREDICT_BACKEND` 选择本地预测后端。`official-validation` 模式改为归一化已有的 `results.csv` 而不重新预测。
-
-主指标是 `visual_chronometer_average`。
-
-| Metric | 含义 | 方向 |
-| --- | --- | --- |
-| `mean_phyfps` | 受评视频的平均 PhyFPS 均值。 | 越低越好 |
-| `inter_video_cv` | 逐视频平均 PhyFPS 的跨视频变异系数。 | 越低越好 |
-| `intra_video_cv` | 滑动窗口片段上视频内变异系数的均值。 | 越低越好 |
-| `visual_chronometer_average` | 可用 Visual Chronometer 一致性得分族的均值。 | 越低越好 |
-
-## 数据与产物布局
-
-WorldFoundry 仓内路径：
-
-```text
-worldfoundry/data/benchmarks/tasks/external/visual-chronometer.yaml
-worldfoundry/evaluation/tasks/execution/runners/phyfps_bench_gen/runtime/visual_chronometer
-```
-
-```text
-.../runners/phyfps_bench_gen/runtime/visual_chronometer/   # 共享仓内 runtime
-${WORLDFOUNDRY_GENERATED_ARTIFACT_DIR}/*.mp4               # 待评测视频
-<out>/results.csv                                          # 逐片段 PhyFPS 预测
-```
-
-真实预测需要 VC-Common 权重（`xiangbog/Visual_Chronometer`，适用 10-60 FPS）。
-
-## 运行评测
-
-目录 manifest 记录的 validation 命令：
+## 如何运行
 
 ```bash
 worldfoundry-eval zoo benchmark-run \
@@ -55,33 +21,14 @@ worldfoundry-eval zoo benchmark-run \
   --mode official-validation \
   --official-results-path <results.csv> \
   --generated-artifact-dir <generated_videos> \
-  --output-dir <out> \
+  --output-dir tmp/visual-chronometer/official-validation \
   --json
 ```
 
-## 权重与环境变量
+`--generated-artifact-dir` 加 `WORLDFOUNDRY_VISUAL_CHRONOMETER_PREDICT_BACKEND` 选择本地预测。环境变量：`WORLDFOUNDRY_VISUAL_CHRONOMETER_RESULTS_PATH`、`WORLDFOUNDRY_VISUAL_CHRONOMETER_ROOT`。
 
-- `WORLDFOUNDRY_VISUAL_CHRONOMETER_ROOT`: 可选覆盖项，指向外部 runtime checkout。
-- `WORLDFOUNDRY_VISUAL_CHRONOMETER_RESULTS_PATH`: 未显式传 `--official-results-path` 时，导入器默认从该路径读取官方结果导出文件。
-- `WORLDFOUNDRY_GENERATED_ARTIFACT_DIR`: 存放待评测生成产物（候选视频/rollout）的目录。
-- `WORLDFOUNDRY_VISUAL_CHRONOMETER_PREDICT_BACKEND`: 选择本地 PhyFPS 预测后端。
+仓内指针：`worldfoundry/data/benchmarks/tasks/external/visual-chronometer.yaml`，`worldfoundry/evaluation/tasks/execution/runners/phyfps_bench_gen/runtime/visual_chronometer`。
 
-## 输出文件
-
-运行会在 `--output-dir` 下写出：
-
-- `scorecard.json`: WorldFoundry 统一 scorecard，记录上表中的指标值。
-- `benchmark_contract.json`: 本次运行的 benchmark contract 记录（输入、模式、来源信息）。
-- `raw_metric_table.jsonl`: 支撑 scorecard 的原始 metric 行。
-- `results.csv`
-- `per_sample_scores.jsonl`: 当结果源包含逐样本数值时写出的逐样本行。
-
-Scorecard 主键：`visual_chronometer_average`（leaderboard key `visual_chronometer_average`），写入 `scorecard.json`。
-
-## 边界与限制
-
-- 完整 leaderboard 对齐需要全部官方权重资产与经验证的 scorecard 证据。
-- 官方发布的 VC-Common 权重覆盖 10-60 FPS，并非作者最强内部模型。
-- mock 预测后端仅用于接线检查，绝不构成 benchmark 证据。
+产物包括 `scorecard.json`（主键 `visual_chronometer_average`）与 `results.csv`。
 
 [← 返回 Benchmark Hub](/zh/docs/evaluation/benchmark-hub)

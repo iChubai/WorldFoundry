@@ -1,21 +1,26 @@
 ---
 title: "Being-H0.7"
-description: "Being-H0.7 is the successor line in BeingBeyond's Being-H family, recorded here as a latent world-action model (WAM) plus robot policy. WorldFoundry routes it through the in-tree official-policy action runtime from the Being-H07 subdirecto…"
-pageSource: generated
+description: "Being-H0.7（BeingBeyond）：视觉-语言-动作（VLA）、wam。"
+modelId: "being-h07"
+pageSource: authored
 ---
-
-**发表机构:** BeingBeyond（北京智在无界） · 企业
 
 Being-H0.7 是 BeingBeyond Being-H 家族的后继线，在本 catalog 中记录为隐式世界-动作模型（WAM）加机器人策略。WorldFoundry 经树内官方策略动作运行时路由，源码来自官方仓库的 Being-H07 子目录；尚未记录 checkpoint。
 
+<ModelPaperFigures modelId="being-h07" locale="zh" />
+
 <ModelCommandBuilder modelId="being-h07" locale="zh" />
 
-## 架构
+## 用来做什么
 
-任务标签记录其为隐式世界-动作模型设计——策略在学习到的隐式世界空间而非原始像素中预测。官方仓库子目录指针之外的架构内部细节仓库未记录。
+从 `being-h07` 开始。启动 `worldfoundry-eval run being-h07 --pipeline.task-profile vla`。需要 GPU 已验证的 BeingBeyond 路径时改走 [Being-H0.5](/zh/docs/guides/supported-models/being-h05)。
 
-## 使用要点
+## 运行时契约
 
-checkpoint 缺失由运行时 missing_assets 计划报告，不视为 catalog 阻塞；待 BeingBeyond 发布权重后就位即可，期间可先用 GPU 已验证的 being-h05 条目。
+必填 `image`、`prompt`、`state`。产物：`action_trace`、`being-h07_action_trace.json`。
+
+## 在 WorldFoundry 中运行
+
+统一环境 `worldfoundry-unified-cu128`（Python 3.11，CUDA 12.8）。权重 `BeingBeyond/Being-H07` 就位前运行只出 runtime plan，不是 catalog 阻塞。未记录 license。状态：**Runner 一致性待确认**。
 
 <ModelRelatedRecipes modelId="being-h07" locale="zh" />

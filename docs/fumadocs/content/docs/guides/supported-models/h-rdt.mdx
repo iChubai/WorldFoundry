@@ -1,22 +1,50 @@
 ---
 title: "H-RDT"
-description: "H-RDT (Human-to-Robotics Diffusion Transformer) pretrains a diffusion-transformer policy on large-scale human manipulation data before robot fine-tuning (paper: arXiv 2506.23503, MPL-2.0). The official release is the 48-dimensional human-m…"
-pageSource: generated
+description: "H-RDT: vla and human motion policy; Static load only; dedicated `worldfoundry-vla-h-rdt`."
+modelId: "h-rdt"
+pageSource: authored
 ---
-
-**Publisher:** Open-source research release (institution not recorded) · Research lab
-[Data Augmentation for Cognitive Behavioral Therapy: Leveraging ERNIE Language Models using Artificial Intelligence](https://arxiv.org/abs/2506.23503) (2025)
 
 H-RDT (Human-to-Robotics Diffusion Transformer) pretrains a diffusion-transformer policy on large-scale human manipulation data before robot fine-tuning (paper: arXiv 2506.23503, MPL-2.0). The official release is the 48-dimensional human-motion pretraining checkpoint (embodiedfoundation/H-RDT); WorldFoundry keeps the transformer, flow-matching sampler, DINOv2+SigLIP vision path, and optional T5 language path in-tree.
 
+<ModelPaperFigures modelId="h-rdt" locale="en" />
+
+The recorded paper is [Data Augmentation for Cognitive Behavioral Therapy: Leveraging ERNIE Language Models using Artificial Intelligence](https://arxiv.org/abs/2506.23503) (2025).
+
+Project page: [embodiedfoundation.github.io/hrdt](https://embodiedfoundation.github.io/hrdt/). Code: [HongzheBi/H_RDT](https://github.com/HongzheBi/H_RDT).
+
+The paper is [Data Augmentation for Cognitive Behavioral Therapy: Leveraging ERNIE Language Models using Artificial Intelligence](https://arxiv.org/abs/2506.23503). Project page: [embodiedfoundation.github.io/hrdt](https://embodiedfoundation.github.io/hrdt). Code: [HongzheBi/H_RDT](https://github.com/HongzheBi/H_RDT).
+
 <ModelCommandBuilder modelId="h-rdt" locale="en" />
 
-## Architecture
+## What it is for
+
+Use `h-rdt` for vision-language-action inference on this card. The recipe exists so you can launch the recorded policy profile.
 
 A diffusion transformer with flow-matching sampling; vision uses DINOv2 plus SigLIP and language optionally uses T5. Module and parameter names preserve the official checkpoint contract with strict restoration.
 
-## Usage notes
+Catalog tasks include vla, human motion policy, vla policy rollout, and robot policy finetune. Catalog aliases include `h_rdt` and `embodiedfoundation/h-rdt`.
 
-The released checkpoint is the human-motion pretraining stage (48-DoF), not the unreleased 14-dimensional robot fine-tune — plan your own fine-tuning for robot deployment. Training, datasets, ROS, robot drivers, simulator clients, and hub mixins are excluded.
+## Runtime contract
+
+Required `image`, `prompt`, `state`, `precomputed_image_tokens`, and `precomputed_language_tokens`; optional `model_id` (h-rdt), `camera_keys` (head_cam, right_cam, left_cam), `policy_family`, and `action_representation`; artifacts `action_trace` and `h_rdt_action_trace.json`.
+
+Recorded task profiles: `vla`, `human_motion_policy`, `vla.policy_rollout`, and `robot_policy_finetune`. WorldFoundry binds `HRDTSynthesis`.
+
+Family status: **Static load only**.
+
+The transformer, flow-matching sampler, DINOv2 plus SigLIP vision path, and optional T5 language path are in-tree.
+
+Runtime code never imports a source checkout or executes checkpoint-provided Python.
+
+## Running in WorldFoundry
+
+The catalog launch is `worldfoundry-eval run h-rdt --pipeline.task-profile vla`. The command builder above switches `--pipeline.task-profile` among recorded tasks and still emits `worldfoundry-eval run`.
+
+It runs in the dedicated environment `worldfoundry-vla-h-rdt` (Python 3.10, Cu121 Or Newer, torch>=2.2).
+
+Recorded weight repositories include `embodiedfoundation/H-RDT` and `google/t5-v1_1-xxl`. Stage assets with `bash scripts/inference/prepare_model_infer.sh h-rdt`.
+
+Status: **Static load only**.
 
 <ModelRelatedRecipes modelId="h-rdt" locale="en" />

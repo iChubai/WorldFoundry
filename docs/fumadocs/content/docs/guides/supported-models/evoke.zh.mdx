@@ -1,21 +1,44 @@
 ---
 title: "Evoke"
-description: "Official source is bundled at revision 74d268516d95c8fceadd2378f91a73f9f187042b."
-pageSource: generated
+description: "AlayaLab 的相机可控世界 / 文生-图生-视频到视频。官方源码打在 revision 74d26851。独立树内运行时；checkpoint GPU 一致性待验证。"
+modelId: "evoke"
+pageSource: authored
 ---
 
-text · image · video → video
+Evoke 在 catalog 里是**相机可控世界**，同时列出文生视频、图生视频和视频到视频。WorldFoundry 把官方源码打在 revision `74d268516d95c8fceadd2378f91a73f9f187042b`，独立树内运行时对外是 `EvokePipeline`。外部源码 checkout 会被拒绝；checkpoint 只从本地 WorldFoundry / Hugging Face 存储解析，Hub 客户端离线。
 
-Evoke 是来自 Alayalab 的世界模型。Catalog 将它记录为文生视频、图生视频、视频到视频转换、相机可控视频生成任务。
+<ModelPaperFigures modelId="evoke" locale="zh" />
 
-WorldFoundry 将它绑定到 worldfoundry.pipelines.evoke.pipeline_evoke:EvokePipeline pipeline（runner：worldfoundry.pipeline）。
+已发布的**后蒸馏** checkpoint 是按 **v2v** 条件训练的。catalog 里的 i2v / t2v 是上游写明的**零样本**能力，不是说这两条路径已经对齐训练过的 v2v。传入相机轨迹会打开几何状态，并且**必须另备 ViGeo1.1**（`pkqbajng/ViGeo1.1`，CC-BY-NC-4.0）。这是共享环境下的推理兼容移植，不是 Evoke 锁定训练栈的 parity。
 
-它运行在统一环境 worldfoundry-unified-cu128 中（Python 3.11，CUDA 12.8）。
-
-权重来自 Hugging Face 仓库 AlayaLab/Evoke，固定在 revision 7fa34ecef，另有 1 个已记录仓库。
-
-当前 runner parity 为“Pending”，原生 demo parity 为“Not Recorded”；端到端 GPU 证据应视为尚未记录。
+论文：[arXiv 2608.13546](https://arxiv.org/abs/2608.13546)。项目页：[evoke-world.github.io/Evoke](https://evoke-world.github.io/Evoke/)。代码：[AlayaLab/Evoke](https://github.com/AlayaLab/Evoke)。权重：`AlayaLab/Evoke`（revision `7fa34ecef`）。源码许可：**Apache-2.0**。状态：**Runner 一致性待验证**。官方三步后蒸馏命令已接通；本树**没有**验证过 H200 级 checkpoint 执行。
 
 <ModelCommandBuilder modelId="evoke" locale="zh" />
+
+## 用来做什么
+
+走已接通的三步后蒸馏路径。这不是 AlayaWorld。
+
+启动 `worldfoundry-eval run evoke --pipeline.task-profile text-to-video`。
+
+## 运行时契约
+
+必填 `prompt`、`image`、`video`；`actions`：trajectory_npz, pose_path, camera_trajectory；产物 `evoke.mp4`。
+
+| 旋钮 | 默认 |
+| --- | --- |
+| 模式 | **auto** |
+| 尺寸 | **640×384** |
+| Chunk 数 | **4** |
+| FPS | **24** |
+| 步数 | **3**（后蒸馏） |
+| Guidance | **1.0** |
+| 源码 | 捆绑 revision `74d268516d95c8fceadd2378f91a73f9f187042b`（拒绝外部 checkout） |
+| 权重 | `AlayaLab/Evoke` revision `7fa34ecef` — `evoke-base/{vae,scheduler,text_encoder,tokenizer}` 以及 `evoke/stage3_post_distillation/transformer` |
+| 相机几何 | 另备 `pkqbajng/ViGeo1.1`（`vigeo.pt`，CC-BY-NC-4.0） |
+
+## 在 WorldFoundry 中运行
+
+状态：**Runner 一致性待验证**。统一环境 `worldfoundry-unified-cu128`（Python 3.11, CUDA 12.8）。先把 `AlayaLab/Evoke`、`pkqbajng/ViGeo1.1` 就位到本地，缺文件加载失败，运行时不下载。在该环境执行 `worldfoundry-eval run evoke --pipeline.task-profile text-to-video`。许可证：CC-BY-NC-4.0。catalog 未记录 VRAM。
 
 <ModelRelatedRecipes modelId="evoke" locale="zh" />

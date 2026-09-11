@@ -1,27 +1,45 @@
 ---
 title: "Echo-Infinity"
-description: "Echo-Infinity is JD's autoregressive long-video generator: text in, arbitrarily long video out, generated block by block."
-pageSource: generated
+description: "京东 Joy Future Academy 基于 Wan2.1 的自回归长文生视频。仅推理运行时已内置。GPU 一致性待 WORLDFOUNDRY_CKPT_DIR 下的 Echo-Infinity + Wan2.1。许可证 unknown。"
+modelId: "echo-infinity"
+pageSource: authored
 ---
 
-**发表机构:** 京东（Joy Future Academy） · 企业
-text → video
+Echo-Infinity 是京东的**自回归长视频**生成器：文本进去，任意长视频**按块**出来。WorldFoundry 把仅推理路径封成 `EchoInfinityPipeline`。训练、提示词数据集、demo 和下载助手**不**打包。与 [Echo-Memory](/zh/docs/guides/supported-models/echo-memory-context-k1) 是同一团队。别名 `EchoInfinity`、`echo_infinity` 解析到这里。
 
-Echo-Infinity 是京东的自回归长视频生成器：输入文本，逐块生成任意长度的视频。本 catalog 中其推理路径以仅推理运行时形式内置树内；完整一致性待本地 Echo-Infinity 与 Wan2.1 权重就位于 WORLDFOUNDRY_CKPT_DIR。
+<ModelPaperFigures modelId="echo-infinity" locale="zh" />
+
+论文：[arXiv 2606.04527](https://arxiv.org/abs/2606.04527)。项目页：[echo-team-joy-future-academy-jd.github.io/Echo-Infinity](https://echo-team-joy-future-academy-jd.github.io/Echo-Infinity/)。代码：[Echo-Team-Joy-Future-Academy-JD/Echo-Infinity](https://github.com/Echo-Team-Joy-Future-Academy-JD/Echo-Infinity)。catalog 许可证：**unknown**。基座是 Wan2.1——研究预览级画质。
+
+完整 GPU 一致性要等 `$WORLDFOUNDRY_CKPT_DIR` 下本地 Echo-Infinity **和** Wan2.1 权重。Runner：Runner 一致性待验证。
 
 <ModelCommandBuilder modelId="echo-infinity" locale="zh" />
 
-## 架构
+## 用来做什么
 
-记录的结构为基于 Wan2.1 的自回归文生视频设计，与 Echo-Memory 出自同一京东团队。训练、提示词数据集、demo 脚本与 checkpoint 下载辅助有意不打包；权重绝不入 git。
+在 Wan2.1 权重上跑 Echo-Infinity 长视频。
 
-## 使用要点
+启动 `worldfoundry-eval run echo-infinity --pipeline.task-profile text-to-video`。
 
-运行时资产为 WORLDFOUNDRY_CKPT_DIR 下的本地路径——运行前请把 Echo-Infinity 与 Wan2.1 权重就位于该目录。完整 GPU 一致性待验证。
+评测入口：[VBench](/zh/docs/evaluation/benchmark-hub/vbench)（长文生视频的质量评测）。
 
-## 评测 Benchmark
+## 运行时契约
 
-- [VBench](/zh/docs/evaluation/benchmark-hub/vbench) — 长文生视频的质量评测。
-- [ChronoMagic-Bench](/zh/docs/evaluation/benchmark-hub/chronomagic-bench) — 长时程时间连贯性评测。
+必填 `prompt`；可选 `image`、`video`；`actions`：seed；产物 `echo-infinity.mp4`。
+
+| 旋钮 | 默认 |
+| --- | --- |
+| 主干 | `Wan-AI/Wan2.1-T2V-1.3B` |
+| 学生 | `$WORLDFOUNDRY_CKPT_DIR/Echo-Infinity/echo_infinity.pt` |
+| 潜帧 | **21**（`num_output_frames`） |
+| 步数 | **4** — `[1000, 750, 500, 250]`，`warp_denoising_step` |
+| 块 | **3** 帧（`num_frame_per_block`） |
+| Seed | **0** |
+| 局部注意力 | **12** |
+| EMA | **关** |
+
+## 在 WorldFoundry 中运行
+
+状态：**Runner 一致性待验证**。统一环境 `worldfoundry-unified-cu128`（Python 3.11, CUDA 12.8）。权重必须本地就位——运行时不下载。在该环境执行 `worldfoundry-eval run echo-infinity --pipeline.task-profile text-to-video`。catalog 未记录 VRAM。
 
 <ModelRelatedRecipes modelId="echo-infinity" locale="zh" />

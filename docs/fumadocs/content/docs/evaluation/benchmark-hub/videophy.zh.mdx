@@ -1,54 +1,23 @@
 ---
 title: VideoPhy
-description: T2V 物理常识评测：VideoCon-Physics judge 输出语义符合度、物理常识与联合分。
+description: "UCLA / Google 的 T2V 物理常识评测：VideoCon-Physics 打 SA、PC 与 Joint。WorldFoundry 提供裁判路径，不编造榜单。"
 ---
 
-## 简介
+VideoPhy（UCLA 与 Google Research）检验文本生成视频模型在材料交互（固-固、固-流、流-流）上是否遵守 **物理常识**。每条 prompt 描述一种物理交互。官方裁判是微调的视频语言模型 **VideoCon-Physics**。三个分数：
 
-**发表机构：** UCLA 与 Google Research
+- **语义遵守** — 片段是否匹配 prompt？
+- **物理常识** — 运动是否服从物理？
+- **联合分** — 两者同时成立。
 
-VideoPhy 检验文生视频模型能否在材料交互（固-固、固-流、流-流）中生成符合真实物理常识的视频。每条 prompt 描述一次物理交互；生成视频按 Semantic Adherence（视频是否符合 prompt）与 Physical Commonsense（运动是否符合物理规律）打分，并合成 Joint Score。官方 judge 是作者发布的微调视频-语言模型 VideoCon-Physics。
+`videophy_average` 是 WorldFoundry 对已有分面的均值。官方打分路径在仓内；**完整 688 条 prompt 复现仍待完成**。
 
-WorldFoundry 捆绑官方 prompt 列表，runner 支持两条路径：归一化调用方提供的官方结果文件；或通过 `--run-official` 执行仓内 VideoCon-Physics AutoEvaluator judge。
+论文：[VideoPhy](https://arxiv.org/abs/2406.03520)。项目：[videophy.github.io](https://videophy.github.io/)。代码：[Hritikbansal/videophy](https://github.com/Hritikbansal/videophy)。
 
-官方参考：
+WorldFoundry **捆绑 prompt 列表**，可跑仓内 VideoCon-Physics AutoEvaluator（`--videocon-checkpoint`、`--sa-threshold` / `--pc-threshold`），或导入官方 JSON。权重要调用方提供，不内置。
 
-- Paper: [arxiv.org/abs/2406.03520](https://arxiv.org/abs/2406.03520)
-- 项目主页: [videophy.github.io](https://videophy.github.io/)
-- 官方仓库: [Hritikbansal/videophy](https://github.com/Hritikbansal/videophy)
+<BenchmarkPageSections id="videophy" locale="zh" />
 
-## 评测协议
-
-`official-validation` 归一化官方结果导出。`--run-official` 驱动 VideoCon-Physics judge 评测候选视频：关键参数包括 `--videocon-checkpoint`（judge 权重）、`--num-frames`、`--batch-size`，以及二值化阈值 `--sa-threshold` / `--pc-threshold`——聚合前用它们把 judge 概率转换为逐视频的符合/不符合判定。
-
-主指标是 `videophy_average`。
-
-| Metric | 含义 | 方向 |
-| --- | --- | --- |
-| `semantic_adherence` | Semantic Adherence（语义符合度）归一化基准分。 | 越高越好 |
-| `physical_commonsense` | Physical Commonsense（物理常识）归一化基准分。 | 越高越好 |
-| `joint_score` | Joint Score（联合分）归一化基准分。 | 越高越好 |
-| `videophy_average` | VideoPhy 平均分（归一化基准分）。 | 越高越好 |
-
-## 数据与产物布局
-
-WorldFoundry 仓内路径：
-
-```text
-worldfoundry/data/benchmarks/tasks/external/videophy.yaml
-worldfoundry/evaluation/tasks/execution/runners/videophy
-```
-
-```text
-worldfoundry/data/benchmarks/assets/videophy/prompts.json    # 官方 prompt 列表
-${WORLDFOUNDRY_GENERATED_ARTIFACT_DIR}/                      # 按 prompt id 命名的候选视频
-```
-
-VideoCon-Physics judge 权重由调用方提供（`--videocon-checkpoint`），不在仓内内置。
-
-## 运行评测
-
-目录 manifest 记录的 validation 命令：
+## 如何运行
 
 ```bash
 worldfoundry-eval zoo benchmark-run \
@@ -56,11 +25,9 @@ worldfoundry-eval zoo benchmark-run \
   --mode official-validation \
   --official-results-path <official_results.json> \
   --generated-artifact-dir <generated_videos> \
-  --output-dir <out> \
+  --output-dir tmp/videophy/official-validation \
   --json
 ```
-
-对候选视频执行仓内 VideoCon-Physics judge：
 
 ```bash
 ${WORLDFOUNDRY_UNIFIED_PYTHON} \
@@ -72,27 +39,10 @@ ${WORLDFOUNDRY_UNIFIED_PYTHON} \
   --json
 ```
 
-## 权重与环境变量
+环境变量：`WORLDFOUNDRY_VIDEOPHY_RESULTS_PATH`、`WORLDFOUNDRY_VIDEOPHY_JUDGE_BACKEND`。Prompt 列表：`worldfoundry/data/benchmarks/assets/videophy/prompts.json`。
 
-- `WORLDFOUNDRY_VIDEOPHY_ROOT`: 可选覆盖项，指向本地 benchmark runtime / 仓库根目录。
-- `WORLDFOUNDRY_VIDEOPHY_JUDGE_BACKEND`: 选择 `--run-official` 使用的 judge 后端。
-- `WORLDFOUNDRY_VIDEOPHY_RESULTS_PATH`: 未显式传 `--official-results-path` 时，导入器默认从该路径读取官方结果导出文件。
-- `WORLDFOUNDRY_GENERATED_ARTIFACT_DIR`: 存放待评测生成产物（候选视频/rollout）的目录。
+仓内指针：`worldfoundry/data/benchmarks/tasks/external/videophy.yaml`，`worldfoundry/evaluation/tasks/execution/runners/videophy`。
 
-## 输出文件
-
-运行会在 `--output-dir` 下写出：
-
-- `scorecard.json`: WorldFoundry 统一 scorecard，记录上表中的指标值。
-- `benchmark_contract.json`: 本次运行的 benchmark contract 记录（输入、模式、来源信息）。
-- `raw_metric_table.jsonl`: 支撑 scorecard 的原始 metric 行。
-
-Scorecard 主键：`videophy_average`（leaderboard key `videophy_average`），写入 `scorecard.json`。
-
-## 边界与限制
-
-- 完整官方 runtime 仍在上游；仓内 contract fixture 只记录输入/输出形状。
-- 与 leaderboard 对齐需要官方 VideoCon-Physics 权重、完整官方 prompt 套件以及归一化后的上游结果文件。
-- 对部分 prompt 集的本地 judge 运行只是开发信号，不是官方 VideoPhy 成绩。
+产物包括 `scorecard.json`（主键 `videophy_average`）。
 
 [← 返回 Benchmark Hub](/zh/docs/evaluation/benchmark-hub)

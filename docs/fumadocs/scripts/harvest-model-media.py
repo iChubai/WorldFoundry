@@ -1,21 +1,31 @@
 #!/usr/bin/env python3
-"""Collect paper titles and teaser media for model homepages.
+"""Collect paper titles and teaser images for model homepages.
 
-Reads the generated recipe JSON, pulls arXiv metadata, attaches in-repo demo
-clips, and downloads Hugging Face paper thumbnails when they exist. Writes
-``lib/model-paper-media.json`` and patches recipe/index JSON in place so the
-pages pick up figures without a full catalog regenerate.
+Reads the generated recipe JSON, pulls arXiv metadata, and downloads Hugging
+Face paper thumbnails when they exist. Writes ``lib/model-paper-media.json``
+and patches recipe/index JSON in place so the pages pick up paper figures
+without a full catalog regenerate.
+
+Never attach catalog / Studio demo clips (``kind: video``, ``/demos/*.mp4``)
+to model homepages. Home, Studio gallery, and welcome still use those files
+on disk — this harvest just must not emit them into model-page media.
 """
 
 from __future__ import annotations
 
+import argparse
 import json
 import re
+import shutil
+import subprocess
+import tempfile
 import time
 import urllib.error
 import urllib.request
 import xml.etree.ElementTree as ET
 from pathlib import Path
+
+from model_paper_figures import figure_records
 
 DOCS_ROOT = Path(__file__).resolve().parents[1]
 RECIPES = DOCS_ROOT / "lib" / "model-recipes-data.json"
@@ -32,28 +42,780 @@ ARXIV_ID_RE = re.compile(
 )
 GITHUB_RE = re.compile(r"https?://(?:www\.)?github\.com/([^/]+)/([^/?#]+)", re.I)
 
-# In-tree Studio / demo clips already checked into public/.
+# Official paper teaser / overview figures. Download only these author-published
+# assets; never a PDF page-1 render (that stays paper.png beside the title).
+CURATED_FIGURES: dict[str, dict[str, str]] = {
+    "a1": {
+        "overview": "https://arxiv.org/html/2604.05672v3/framework.png",
+    },
+    "abot-m0": {
+        "teaser": "https://arxiv.org/html/2607.00678v2/teaser.png",
+        "overview": "https://arxiv.org/html/2607.00678v2/model.png",
+    },
+    "abot-world-0-5b-lf": {
+        "teaser": "https://arxiv.org/html/2607.19191v1/Figs/abot-world-0.png",
+        "overview": "https://arxiv.org/html/2607.19191v1/abot_pipeline_new_ppt_editable.png",
+    },
+    "ac3d": {
+        "teaser": "https://raw.githubusercontent.com/snap-research/ac3d/main/assets/teaser.png",
+        "overview": "https://arxiv.org/html/2411.18673v4/architecture.png",
+    },
+    "adaworld": {
+        "teaser": "https://arxiv.org/html/2503.18938v4/figs/teaser-min.jpg",
+        "overview": "https://arxiv.org/html/2503.18938v4/wm_compressed.png",
+    },
+    "ahawam": {
+        "teaser": "https://arxiv.org/html/2606.09811v1/teaser.png",
+        "overview": "https://arxiv.org/html/2606.09811v1/model_arch.png",
+    },
+    "alayaworld": {
+        "teaser": "https://arxiv.org/html/2607.06291v1/fig1.png",
+    },
+    "allegro": {
+        "teaser": "https://arxiv.org/html/2410.15458v1/teaser.png",
+    },
+    "animatediff": {
+        "overview": "https://raw.githubusercontent.com/guoyww/AnimateDiff/main/__assets__/figs/adapter_explain.png",
+    },
+    "astra": {
+        "overview": "https://arxiv.org/html/2512.08931v3/diagram-v4.png",
+    },
+    "being-h05": {
+        "teaser": "https://arxiv.org/html/2601.12993/x1.png",
+        "overview": "https://arxiv.org/html/2601.12993/x5.png",
+    },
+    "bernini": {
+        "teaser": "https://arxiv.org/html/2605.22344v2/figure0_0521.png",
+        "overview": "https://arxiv.org/html/2605.22344v2/framework.png",
+    },
+    "cameractrl": {
+        "teaser": "https://arxiv.org/html/2404.02101v2/teaser.png",
+        "overview": "https://arxiv.org/html/2404.02101v2/fig2.png",
+    },
+    "causal-forcing": {
+        "teaser": "https://arxiv.org/html/2602.02214v5/Fig2.png",
+        "overview": "https://arxiv.org/html/2602.02214v5/qualitive.png",
+    },
+    "causal-rcm": {
+        "teaser": "https://arxiv.org/html/2510.08431v3/t2v-crop.png",
+        "overview": "https://arxiv.org/html/2510.08431v3/pipeline-crop.png",
+    },
+    "cogact": {
+        "overview": "https://arxiv.org/html/2411.19650v1/method-V3.png",
+    },
+    "cogvideox": {
+        "teaser": "https://raw.githubusercontent.com/THUDM/CogVideo/CogVideo/assets/intro-image.png",
+    },
+    "cosmos-predict-2": {
+        "overview": "https://raw.githubusercontent.com/nvidia-cosmos/cosmos-predict2/main/assets/cosmos-predict-diagram.png",
+    },
+    "cosmos-predict-2.5": {
+        "teaser": "https://arxiv.org/html/2511.00062/x1.png",
+        "overview": "https://arxiv.org/html/2511.00062/x2.png",
+    },
+    "cosmos3": {
+        "teaser": "https://arxiv.org/html/2606.02800/x1.png",
+        "overview": "https://arxiv.org/html/2606.02800/x2.png",
+    },
+    "cut3r": {
+        "overview": "https://arxiv.org/html/2501.12387v1/v6.png",
+    },
+    "dap": {
+        "teaser": "https://raw.githubusercontent.com/Insta360-Research-Team/DAP/main/assets/depth_teaser2_00.png",
+        "overview": "https://arxiv.org/html/2512.16913/x3.png",
+    },
+    "depth-anything-v1": {
+        "teaser": "https://raw.githubusercontent.com/LiheYoung/Depth-Anything/main/assets/teaser.png",
+    },
+    "depth-anything-v2-prior": {
+        "teaser": "https://raw.githubusercontent.com/DepthAnything/Depth-Anything-V2/main/assets/teaser.png",
+    },
+    "depth-anything-v3-prior": {
+        "overview": "https://arxiv.org/html/2511.10647v1/figs/pdfs/pipeline.png",
+        "teaser": "https://arxiv.org/html/2511.10647v1/x1.png",
+    },
+    "dexora-1b": {
+        "teaser": "https://arxiv.org/html/2605.18722v1/teaser.png",
+    },
+    "diamond": {
+        "overview": "https://arxiv.org/html/2405.12399v2/architectures_02.png",
+    },
+    "diffusion-policy": {
+        "teaser": "https://raw.githubusercontent.com/real-stanford/diffusion_policy/main/media/teaser.png",
+    },
+    "dino-wm": {
+        "teaser": "https://arxiv.org/html/2411.04983v2/figures/intro.png",
+        "overview": "https://arxiv.org/html/2411.04983v2/arch.png",
+    },
+    "dm0": {
+        "overview": "https://arxiv.org/html/2510.23511v1/teaser.png",
+    },
+    "dreamdojo": {
+        "overview": "https://arxiv.org/html/2602.06949v1/overview_compressed.png",
+    },
+    "dreamx-world-5b": {
+        "teaser": "https://arxiv.org/html/2606.16993v1/figures/dreamx-world_teaser_fig.jpg",
+        "overview": "https://arxiv.org/html/2606.16993v1/pipeline_overall.png",
+    },
+    "dreamzero": {
+        "teaser": "https://arxiv.org/html/2602.15922v1/dreamzero-header-v2.png",
+        "overview": "https://arxiv.org/html/2602.15922v1/dreamzero_model.png",
+    },
+    "droid-w": {
+        "overview": "https://arxiv.org/html/2603.19076v1/pipeline.png",
+    },
+    "dualcamctrl": {
+        "overview": "https://arxiv.org/html/2511.23127v2/dualcam_framework.png",
+    },
+    "dust3r": {
+        "teaser": "https://raw.githubusercontent.com/naver/dust3r/main/assets/dust3r.jpg",
+    },
+    "dvlt": {
+        "teaser": "https://arxiv.org/html/2605.30215v2/teaser_figure.png",
+        "overview": "https://arxiv.org/html/2605.30215v2/method_overview_v3.png",
+    },
+    "dynamicrafter": {
+        "overview": "https://arxiv.org/html/2310.12190v2/overview3.png",
+    },
+    "easyanimate": {
+        "teaser": "https://arxiv.org/html/2405.18991/x1.png",
+        "overview": "https://arxiv.org/html/2405.18991/x2.png",
+    },
+    "echo-infinity": {
+        "teaser": "https://arxiv.org/html/2606.04527v1/1-teaser.png",
+    },
+    "echo-memory-context-k1": {
+        "teaser": "https://arxiv.org/html/2606.09803v1/figure_1_abs_framework.png",
+    },
+    "eo1": {
+        "overview": "https://arxiv.org/html/2508.21112v5/pipeline.png",
+    },
+    "eventvla": {
+        "overview": "https://arxiv.org/html/2606.20092v2/Overview.png",
+    },
+    "evoke": {
+        "teaser": "https://arxiv.org/html/2608.13546v2/fig_l_hourscale_demo.png",
+    },
+    "fantasyworld": {
+        "teaser": "https://arxiv.org/html/2509.21657v2/FantasyWorld-Overview_v2-reduced.png",
+        "overview": "https://raw.githubusercontent.com/Fantasy-AMAP/fantasy-world/main/assets/overview.png",
+    },
+    "fastvideo-causal-wan2.2": {
+        "teaser": "https://arxiv.org/html/2606.03159v2/teaser.png",
+    },
+    "fastwam": {
+        "teaser": "https://arxiv.org/html/2603.16666v2/teaser_main_new.png",
+        "overview": "https://arxiv.org/html/2603.16666v2/model_arch.png",
+    },
+    "flashworld": {
+        "teaser": "https://arxiv.org/html/2510.13678v1/teaser.png",
+        "overview": "https://arxiv.org/html/2510.13678v1/method.png",
+    },
+    "framepack": {
+        "teaser": "https://arxiv.org/html/2504.12626v3/sampling_v2.png",
+    },
+    "galaxea-vla": {
+        "teaser": "https://arxiv.org/html/2608.11739v1/tokenizer_v2.png",
+    },
+    "gamma-world": {
+        "teaser": "https://arxiv.org/html/2605.28816v1/teaser.png",
+        "overview": "https://arxiv.org/html/2605.28816v1/multiagent_method.png",
+    },
+    "gen3c": {
+        "teaser": "https://arxiv.org/html/2503.03751v1/motivation_img.png",
+        "overview": "https://arxiv.org/html/2503.03751v1/method_compatible.png",
+    },
+    "genie-envisioner": {
+        "teaser": "https://arxiv.org/html/2508.05635v3/Banner.png",
+        "overview": "https://raw.githubusercontent.com/AgibotTech/Genie-Envisioner/master/figs/overview.png",
+    },
+    "geocalib-prior": {
+        "teaser": "https://arxiv.org/html/2409.06704v2/teaser_v1_compressed.png",
+        "overview": "https://arxiv.org/html/2409.06704v2/architecture_v2_compressed.png",
+    },
+    "giga-brain-0": {
+        "overview": "https://arxiv.org/html/2608.15875v1/gigabrain07_teaser_compressed.png",
+    },
+    "giga-world-0": {
+        "overview": "https://arxiv.org/html/2511.19861v2/Dreamer_.png",
+    },
+    "giga-world-policy-0.5": {
+        "overview": "https://arxiv.org/html/2607.13960v3/framework.png",
+    },
+    "go1": {
+        "teaser": "https://arxiv.org/html/2503.06669v4/data_collection_pipeline_v2.png",
+    },
+    "gr00t": {
+        "teaser": "https://raw.githubusercontent.com/NVIDIA/Isaac-GR00T/main/media/header_compress.png",
+        "overview": "https://raw.githubusercontent.com/NVIDIA/Isaac-GR00T/main/media/model-architecture.png",
+    },
+    "helios": {
+        "teaser": "https://arxiv.org/html/2603.04379/x1.png",
+        "overview": "https://arxiv.org/html/2603.04379/x2.png",
+    },
+    "hma": {
+        "overview": "https://arxiv.org/html/2502.04296v1/framework_figure_xinlei2.png",
+    },
+    "hunyuan-game-craft": {
+        "overview": "https://arxiv.org/html/2506.17201v1/gamecraft-new.png",
+    },
+    "hunyuanvideo-1.5": {
+        "overview": "https://raw.githubusercontent.com/Tencent-Hunyuan/HunyuanVideo-1.5/refs/heads/main/assets/hy_video_1_5_dit.png",
+    },
+    "hunyuanworld-1": {
+        "teaser": "https://arxiv.org/html/2507.21809v2/teaser.png",
+        "overview": "https://arxiv.org/html/2507.21809v2/method.png",
+    },
+    "hunyuanworld-mirror": {
+        "overview": "https://arxiv.org/html/2510.10726v2/Figs/pipeline.png",
+    },
+    "hunyuanworld-voyager": {
+        "teaser": "https://arxiv.org/html/2405.07719v5/lb.png",
+    },
+    "hy-embodied": {
+        "teaser": "https://arxiv.org/html/2607.12894v1/1-teaser.png",
+    },
+    "hy-embodied-vla": {
+        "teaser": "https://arxiv.org/html/2606.14409v2/teaser_1.png",
+        "overview": "https://arxiv.org/html/2606.14409v2/pipeline.png",
+    },
+    "hy-world-2.0": {
+        "teaser": "https://arxiv.org/html/2604.14268v1/pics/teaser0.jpeg",
+    },
+    "hy-worldplay": {
+        "teaser": "https://arxiv.org/html/2602.09022v1/model1.png",
+    },
+    "hydra": {
+        "overview": "https://arxiv.org/html/2603.25716v2/pipeline.png",
+    },
+    "i2vgen-xl": {
+        "overview": "https://arxiv.org/html/2311.04145v1/Fig2_framework.png",
+    },
+    "infinite-vggt": {
+        "overview": "https://arxiv.org/html/2507.11539v2/framework.png",
+    },
+    "infinite-world": {
+        "overview": "https://arxiv.org/html/2602.02393v2/main_figure_cropped.png",
+    },
+    "inspatio-world": {
+        "overview": "https://arxiv.org/html/2604.07209v2/teaser.png",
+    },
+    "internvla-a1": {
+        "teaser": "https://arxiv.org/html/2607.04988v1/teaser.png",
+        "overview": "https://arxiv.org/html/2607.04988v1/Model-A1.5.png",
+    },
+    "irasim": {
+        "overview": "https://arxiv.org/html/2406.14540/x2.png",
+    },
+    "kairos-sensenova": {
+        "teaser": "https://arxiv.org/html/2606.16533v3/figures/motivation_v2.png",
+        "overview": "https://arxiv.org/html/2606.16533v3/figures/framework_new_v1.png",
+    },
+    "lagernvs": {
+        "overview": "https://arxiv.org/html/2603.20176v3/method_v5.png",
+    },
+    "lapa": {
+        "teaser": "https://arxiv.org/html/2410.11758v2/Figure1.png",
+        "overview": "https://arxiv.org/html/2410.11758v2/latent_action_model.png",
+    },
+    "last-r1": {
+        "overview": "https://arxiv.org/html/2604.28192v3/teaser.png",
+    },
+    "lda-1b": {
+        "teaser": "https://arxiv.org/html/2505.03233v3/datagen-v2.png",
+        "overview": "https://arxiv.org/html/2505.03233v3/pipeline.png",
+    },
+    "leworldmodel": {
+        "teaser": "https://arxiv.org/html/2603.19312v3/lewm.png",
+    },
+    "libero-para": {
+        "teaser": "https://raw.githubusercontent.com/cau-hai-lab/LIBERO-Para/master/images/LIBERO-Para.png",
+    },
+    "lingbot-map": {
+        "overview": "https://arxiv.org/html/2604.14141v2/Network.png",
+    },
+    "lingbot-va": {
+        "teaser": "https://arxiv.org/html/2601.21998v2/teaser_v3.png",
+        "overview": "https://arxiv.org/html/2601.21998v2/framework2.png",
+    },
+    "lingbot-video": {
+        "teaser": "https://arxiv.org/html/2607.07675v1/teaser_final.png",
+        "overview": "https://arxiv.org/html/2607.07675v1/architecture.png",
+    },
+    "lingbot-vla": {
+        "overview": "https://arxiv.org/html/2508.02317/x2.png",
+    },
+    "lingbot-vla-v2": {
+        "overview": "https://arxiv.org/html/2607.06403v1/framework.png",
+    },
+    "lingbot-world": {
+        "teaser": "https://arxiv.org/html/2601.20540v1/figures/teaser.png",
+        "overview": "https://arxiv.org/html/2601.20540v1/overview.png",
+    },
+    "lingbot-world-v2": {
+        "teaser": "https://arxiv.org/html/2607.07534v1/teaser.png",
+        "overview": "https://arxiv.org/html/2607.07534v1/data_engine.png",
+    },
+    "loger": {
+        "teaser": "https://arxiv.org/html/2603.03269v2/figure2v2.png",
+        "overview": "https://arxiv.org/html/2603.03269v2/data_ablation.png",
+    },
+    "longcat-video": {
+        "teaser": "https://arxiv.org/html/2510.22200v2/teaser-4-v2.png",
+        "overview": "https://arxiv.org/html/2510.22200v2/overview_training.png",
+    },
+    "longvie-2": {
+        "overview": "https://arxiv.org/html/2512.13604v1/framework.png",
+    },
+    "ltx-2.x": {
+        "overview": "https://arxiv.org/html/2601.03233/2601.03233v1/assets/figures/fig-1-overview-v2.png",
+    },
+    "ltx-video": {
+        "teaser": "https://arxiv.org/html/2501.00103/x1.png",
+        "overview": "https://arxiv.org/html/2501.00103/x4.png",
+    },
+    "magi-1": {
+        "teaser": "https://arxiv.org/html/2505.13211v1/algorithm_v4.png",
+        "overview": "https://arxiv.org/html/2505.13211v1/vae_new.png",
+    },
+    "matrix-game-2": {
+        "overview": "https://arxiv.org/html/2508.13009v4/asset/overall_architecture.png",
+    },
+    "matrix-game-3": {
+        "teaser": "https://arxiv.org/html/2604.08995v2/teaser.png",
+        "overview": "https://arxiv.org/html/2604.08995v2/mg3_overview.png",
+    },
+    "mem-0": {
+        "teaser": "https://arxiv.org/html/2603.01229v3/benchmark.png",
+    },
+    "mineworld": {
+        "overview": "https://arxiv.org/html/2504.08388v1/archv2-crop.png",
+    },
+    "minwm-hy-action2v": {
+        "teaser": "https://arxiv.org/html/2605.30263v1/paper_pipeline.png",
+    },
+    "mmaudio": {
+        "teaser": "https://arxiv.org/html/2412.15322v2/teaser-print-crop.png",
+        "overview": "https://arxiv.org/html/2412.15322v2/vis-crop-compressed.png",
+    },
+    "mme-vla": {
+        "overview": "https://arxiv.org/html/2603.04639v3/model_design.png",
+    },
+    "modelscope-t2v": {
+        "teaser": "https://arxiv.org/html/2308.06571/x1.png",
+        "overview": "https://arxiv.org/html/2308.06571/x2.png",
+    },
+    "molmoact2": {
+        "teaser": "https://arxiv.org/html/2605.02881v2/MAF11.png",
+    },
+    "molmobot": {
+        "teaser": "https://arxiv.org/html/2603.16861v2/MolmoBotTeaser_11.png",
+    },
+    "monst3r": {
+        "teaser": "https://raw.githubusercontent.com/Junyi42/monst3r/main/assets/fig1_teaser.png",
+    },
+    "mosaicmem": {
+        "teaser": "https://arxiv.org/html/2603.17117v1/figs/mem_comparison_V7.jpg",
+        "overview": "https://arxiv.org/html/2603.17117v1/figs/method_v4.jpg",
+    },
+    "motionbricks": {
+        "teaser": "https://arxiv.org/html/2604.24833v1/teaser_motion_bricks.png",
+    },
+    "motionctrl": {
+        "teaser": "https://arxiv.org/html/2312.03641v2/teaser.png",
+        "overview": "https://arxiv.org/html/2312.03641v2/framework_v2.png",
+    },
+    "moverse": {
+        "overview": "https://arxiv.org/html/2606.13376v2/pipeline_overview.png",
+    },
+    "mvdiffusion": {
+        "teaser": "https://arxiv.org/html/2307.01097v7/teaser_with_mesh_short_compress.png",
+    },
+    "neoverse": {
+        "overview": "https://arxiv.org/html/2601.00393v2/framework.png",
+    },
+    "oasis-500m": {
+        "overview": "https://raw.githubusercontent.com/etched-ai/open-oasis/master/media/arch.png",
+    },
+    "octo": {
+        "teaser": "https://raw.githubusercontent.com/octo-models/octo/main/docs/assets/teaser.jpg",
+    },
+    "omniforcing": {
+        "overview": "https://arxiv.org/html/2603.11647v2/teaser_2.png",
+    },
+    "open-dreamer": {
+        "teaser": "https://arxiv.org/html/2509.24527v1/imag.png",
+    },
+    "open-magvit2": {
+        "overview": "https://arxiv.org/html/2409.04410v3/framework.png",
+    },
+    "open-sora": {
+        "teaser": "https://arxiv.org/html/2503.09642/x1.png",
+        "overview": "https://arxiv.org/html/2503.09642/x2.png",
+    },
+    "open-sora-plan": {
+        "overview": "https://arxiv.org/html/2412.00131v1/overview.png",
+    },
+    "openvla": {
+        "teaser": "https://arxiv.org/html/2406.09246/x1.png",
+        "overview": "https://arxiv.org/html/2406.09246/x2.png",
+    },
+    "openvla-oft": {
+        "teaser": "https://arxiv.org/html/2502.19645v2/fig/figure_1_openvla_aloha.001.jpeg",
+    },
+    "pi0": {
+        "teaser": "https://arxiv.org/html/2410.24164/x1.png",
+        "overview": "https://arxiv.org/html/2410.24164/x2.png",
+    },
+    "pi05": {
+        "teaser": "https://arxiv.org/html/2504.16054/x1.png",
+        "overview": "https://arxiv.org/html/2504.16054/x3.png",
+    },
+    "pi3": {
+        "teaser": "https://arxiv.org/html/2507.13347v3/teaser.png",
+        "overview": "https://arxiv.org/html/2507.13347v3/pipeline.png",
+    },
+    "pixelsplat": {
+        "teaser": "https://arxiv.org/html/2312.12337v4/teaser_bigger_text.png",
+        "overview": "https://arxiv.org/html/2312.12337v4/point_clouds_fig.png",
+    },
+    "pointworld": {
+        "overview": "https://arxiv.org/html/2601.03782v1/method.png",
+    },
+    "pusa-vidgen": {
+        "teaser": "https://arxiv.org/html/2410.03160v1/figures/Teaser.png",
+        "overview": "https://arxiv.org/html/2410.03160v1/figures/Pipeline.png",
+    },
+    "real-time-chunking": {
+        "teaser": "https://arxiv.org/html/2506.07339v2/candle_frame1.jpg",
+    },
+    "recammaster": {
+        "overview": "https://arxiv.org/html/2503.11647v2/fig_pipe.png",
+    },
+    "rolling-forcing": {
+        "teaser": "https://arxiv.org/html/2509.25161v1/teaser.png",
+        "overview": "https://arxiv.org/html/2509.25161v1/method.png",
+    },
+    "rt-1": {
+        "teaser": "https://arxiv.org/html/2212.06817v2/figures/rt1_teaser_tasks.png",
+    },
+    "sama-14b": {
+        "overview": "https://arxiv.org/html/2603.19228v1/pipeline_newest.png",
+    },
+    "sana": {
+        "teaser": "https://arxiv.org/html/2410.10629v3/teaser.png",
+        "overview": "https://arxiv.org/html/2410.10629v3/model.png",
+    },
+    "sana-wm": {
+        "teaser": "https://arxiv.org/html/2605.15178v1/teaser.png",
+        "overview": "https://arxiv.org/html/2605.15178v1/pipeline_overview.png",
+    },
+    "scope": {
+        "teaser": "https://arxiv.org/html/2605.23345v2/teaser.png",
+        "overview": "https://arxiv.org/html/2605.23345v2/method.png",
+    },
+    "self-forcing": {
+        "overview": "https://arxiv.org/html/2506.08009v2/overview.png",
+    },
+    "shotstream": {
+        "teaser": "https://arxiv.org/html/2603.25746v1/overflow.png",
+        "overview": "https://arxiv.org/html/2603.25746v1/method_teacher.png",
+    },
+    "show-o": {
+        "overview": "https://arxiv.org/html/2408.12528v7/method_comparisons.png",
+    },
+    "simworld": {
+        "teaser": "https://arxiv.org/html/2512.01078v2/figure1.png",
+        "overview": "https://arxiv.org/html/2512.01078v2/whitepaper-figure2.png",
+    },
+    "skyreels-v2": {
+        "teaser": "https://arxiv.org/html/2504.13074v3/demo_fig1_v2.png",
+        "overview": "https://arxiv.org/html/2504.13074v3/mainpipeline_v2.png",
+    },
+    "skyreels-v3": {
+        "teaser": "https://arxiv.org/html/2601.17323v2/mo2v1.png",
+    },
+    "solaris": {
+        "teaser": "https://arxiv.org/html/2602.22208v2/teaser.png",
+        "overview": "https://arxiv.org/html/2602.22208v2/arch.png",
+    },
+    "solarwm": {
+        "overview": "https://arxiv.org/html/2609.02886v1/pipeline_2.png",
+    },
+    "spatia": {
+        "overview": "https://arxiv.org/html/2512.15716v1/overview.png",
+    },
+    "splatt3r": {
+        "overview": "https://arxiv.org/html/2408.13912v2/methodology.png",
+    },
+    "stable-video-infinity": {
+        "teaser": "https://arxiv.org/html/2510.09212v1/Figure/intro.png",
+        "overview": "https://arxiv.org/html/2510.09212v1/Figure/overall.png",
+    },
+    "stable-virtual-camera": {
+        "overview": "https://arxiv.org/html/2503.14489v2/overview.png",
+    },
+    "starvla": {
+        "teaser": "https://arxiv.org/html/2604.05014v1/vla-form.png",
+    },
+    "starwm": {
+        "teaser": "https://arxiv.org/html/2602.14857v2/online_casestudy.png",
+        "overview": "https://arxiv.org/html/2602.14857v2/starwm-agent.png",
+    },
+    "step-video-t2v": {
+        "overview": "https://arxiv.org/html/2502.10248v3/figure/model_architecture.png",
+    },
+    "t2v_turbo_t2v": {
+        "teaser": "https://arxiv.org/html/2405.18750/x1.png",
+        "overview": "https://arxiv.org/html/2405.18750/x2.png",
+    },
+    "tdmpc": {
+        "overview": "https://arxiv.org/html/2203.04955v2/overview.png",
+    },
+    "tesseract": {
+        "overview": "https://arxiv.org/html/2504.20995v1/arch-new.png",
+    },
+    "tinyvla": {
+        "overview": "https://arxiv.org/html/2402.03766v1/MobileVLMv2arch.png",
+    },
+    "track-anything-prior": {
+        "overview": "https://arxiv.org/html/2305.06558v1/overview.png",
+    },
+    "uni3c": {
+        "overview": "https://arxiv.org/html/2504.14899v2/pipeline.png",
+    },
+    "unidepth-v2-prior": {
+        "teaser": "https://arxiv.org/html/2502.20110v2/teaser1.png",
+        "overview": "https://arxiv.org/html/2502.20110v2/overview3.png",
+    },
+    "unik3d-prior": {
+        "teaser": "https://arxiv.org/html/2503.16591v1/teaser_cr.png",
+        "overview": "https://arxiv.org/html/2503.16591v1/overview_cr.png",
+    },
+    "uwm": {
+        "overview": "https://arxiv.org/html/2504.02792v3/teaser.png",
+    },
+    "vchitect-2-t2v": {
+        "teaser": "https://arxiv.org/html/2501.08453v1/teaser.png",
+        "overview": "https://arxiv.org/html/2501.08453v1/model_overview.png",
+    },
+    "versecrafter": {
+        "teaser": "https://arxiv.org/html/2601.05138v2/teaser2.png",
+        "overview": "https://arxiv.org/html/2601.05138v2/framework4.png",
+    },
+    "vggt-omega": {
+        "overview": "https://arxiv.org/html/2605.15195v1/architecture_v8.png",
+    },
+    "vggt-world": {
+        "teaser": "https://arxiv.org/html/2603.12655v1/Figure/ECCV_26_VGGTWorld.png",
+        "overview": "https://arxiv.org/html/2603.12655v1/fig_tartanair_3.png",
+    },
+    "vid2world": {
+        "teaser": "https://arxiv.org/html/2505.14357v3/v2w_overview.png",
+        "overview": "https://arxiv.org/html/2505.14357v3/pipeline.png",
+    },
+    "video-depth-anything-prior": {
+        "overview": "https://arxiv.org/html/2501.12375v3/overview_head_fix.png",
+    },
+    "viewcrafter": {
+        "overview": "https://arxiv.org/html/2409.02048v1/pipeline1.png",
+    },
+    "vlanext": {
+        "teaser": "https://arxiv.org/html/2602.18532v3/performance_first_glance.png",
+        "overview": "https://arxiv.org/html/2602.18532v3/framework.png",
+    },
+    "vmem": {
+        "teaser": "https://arxiv.org/html/2506.18903v3/vmem_method.png",
+        "overview": "https://arxiv.org/html/2506.18903v3/ood_demo.png",
+    },
+    "vqbet": {
+        "overview": "https://arxiv.org/html/2403.03181v2/figure_2.png",
+    },
+    "wall-oss": {
+        "teaser": "https://arxiv.org/html/2606.01955v1/teaser.png",
+        "overview": "https://arxiv.org/html/2606.01955v1/pipeline.png",
+    },
+    "wan2.1": {
+        "teaser": "https://raw.githubusercontent.com/Wan-Video/Wan2.1/main/assets/t2v_res.jpg",
+        "overview": "https://raw.githubusercontent.com/Wan-Video/Wan2.1/main/assets/video_dit_arch.jpg",
+    },
+    "wan2.1-vace": {
+        "teaser": "https://raw.githubusercontent.com/ali-vilab/VACE/main/assets/materials/teaser.jpg",
+    },
+    "wan2.2": {
+        "overview": "https://raw.githubusercontent.com/Wan-Video/Wan2.2/main/assets/moe_arch.png",
+    },
+    "wildworld": {
+        "teaser": "https://arxiv.org/html/2603.23497v1/teaser.png",
+        "overview": "https://arxiv.org/html/2603.23497v1/framework-arxiv.png",
+    },
+    "wonderjourney": {
+        "overview": "https://arxiv.org/html/2312.03884v2/overview.png",
+    },
+    "wonderworld": {
+        "overview": "https://arxiv.org/html/2406.09394v4/overview.png",
+    },
+    "worldcam": {
+        "teaser": "https://arxiv.org/html/2603.16871v1/teaser.png",
+    },
+    "worldfm": {
+        "teaser": "https://arxiv.org/html/2603.11911v3/files/20260309-153804_final_0309.png",
+        "overview": "https://arxiv.org/html/2603.11911v3/arch.png",
+    },
+    "worldgen": {
+        "overview": "https://arxiv.org/html/2511.16825v1/pipeline_w_prompt_anno_group_edit_white.png",
+    },
+    "worldgrow": {
+        "overview": "https://arxiv.org/html/2510.21682v1/pipeline_v2-resized.png",
+    },
+    "worldmem": {
+        "teaser": "https://arxiv.org/html/2504.12369v3/teaser.png",
+    },
+    "wow": {
+        "teaser": "https://arxiv.org/html/2509.22642v2/teaser.png",
+        "overview": "https://arxiv.org/html/2509.22642v2/figs/Brain_and_Mind_Model.png",
+    },
+    "x-wam": {
+        "teaser": "https://arxiv.org/html/2604.26694v2/teaser_new.png",
+        "overview": "https://arxiv.org/html/2604.26694v2/framework.png",
+    },
+    "xiaomi-robotics-0": {
+        "teaser": "https://arxiv.org/html/2602.12684v2/fig1.png",
+    },
+    "xiaomi-robotics-1": {
+        "teaser": "https://arxiv.org/html/2607.15330v2/teaser.png",
+        "overview": "https://arxiv.org/html/2607.15330v2/model.png",
+    },
+    "xvla": {
+        "teaser": "https://arxiv.org/html/2510.10274v1/intro_small.png",
+        "overview": "https://arxiv.org/html/2510.10274v1/archi.png",
+    },
+    "yume": {
+        "teaser": "https://arxiv.org/html/2512.22096v1/dataset.png",
+    },
+    "ati-wan21-14b": {
+        "teaser": "https://arxiv.org/html/2505.22944v3/figures/example1.jpg",
+        "overview": "https://arxiv.org/html/2505.22944v3/figures/Pipeline.jpg",
+    },
+    "egowm": {
+        "teaser": "https://arxiv.org/html/2601.15284v2/teaser.png",
+        "overview": "https://arxiv.org/html/2601.15284v2/method.png",
+    },
+    "emu3.5": {
+        "overview": "https://raw.githubusercontent.com/baaivision/Emu3.5/main/assets/arch.png",
+    },
+    "h-rdt": {
+        "overview": "https://arxiv.org/html/2507.23523v2/figure2.png",
+    },
+    "joyai-echo-wm": {
+        "teaser": "https://raw.githubusercontent.com/jd-opensource/JoyAI-Echo/main/assets/teaser.png",
+    },
+    "liveworld": {
+        "teaser": "https://arxiv.org/html/2603.07145v2/imgs/teaser.jpg",
+        "overview": "https://arxiv.org/html/2603.07145v2/main.png",
+    },
+    "lyra": {
+        "teaser": "https://arxiv.org/html/2604.13036v1/teaser_v3.png",
+        "overview": "https://arxiv.org/html/2604.13036v1/method_v3.png",
+    },
+    "magicworld": {
+        "overview": "https://arxiv.org/html/2511.18886v2/Fig_Model.png",
+    },
+    "matrix-game-3.5-first-person": {
+        "teaser": "https://matrix-game-v3-5.github.io/static/imgs/mg35/fig4_memory.jpg",
+        "overview": "https://matrix-game-v3-5.github.io/static/imgs/mg35/fig3_sequence.jpg",
+    },
+    "metric3d-prior": {
+        "teaser": "https://arxiv.org/html/2404.15506v4/page2.png",
+        "overview": "https://arxiv.org/html/2404.15506v4/ours.png",
+    },
+    "nwm": {
+        "teaser": "https://arxiv.org/html/2412.03572v2/figure_ood_v2.png",
+        "overview": "https://arxiv.org/html/2412.03572v2/CDiTv6.png",
+    },
+    "pandora": {
+        "overview": "https://arxiv.org/html/2406.09455v1/architecture_v2.png",
+    },
+    "prior-depth-anything": {
+        "teaser": "https://arxiv.org/html/2505.10565v1/motivation.png",
+        "overview": "https://arxiv.org/html/2505.10565v1/model.png",
+    },
+    "spatial-forcing": {
+        "teaser": "https://arxiv.org/html/2510.12276v2/fig_teaser.png",
+        "overview": "https://arxiv.org/html/2510.12276v2/fig_compare.png",
+    },
+    "thinksound": {
+        "teaser": "https://arxiv.org/html/2506.21448v3/fig1_teaser.png",
+        "overview": "https://arxiv.org/html/2506.21448v3/fig3_model.png",
+    },
+    "unianimate-dit": {
+        "teaser": "https://arxiv.org/html/2504.11289v1/figures.png",
+        "overview": "https://arxiv.org/html/2504.11289v1/Network.png",
+    },
+    "vggt": {
+        "teaser": "https://arxiv.org/html/2503.11651v1/comparison_vggt_dust3r.png",
+        "overview": "https://arxiv.org/html/2503.11651v1/architecture_v4.png",
+    },
+    "wilddet3d": {
+        "teaser": "https://arxiv.org/html/2604.08626v2/teaser_5_flat.png",
+        "overview": "https://arxiv.org/html/2604.08626v2/model_arch_new.png",
+    },
+}
+
+AR5IV_FALLBACK = {
+    "being-h05": {
+        "teaser": "https://ar5iv.labs.arxiv.org/html/2601.12993/x1.png",
+        "overview": "https://ar5iv.labs.arxiv.org/html/2601.12993/x5.png",
+    },
+    "cosmos-predict-2.5": {
+        "teaser": "https://ar5iv.labs.arxiv.org/html/2511.00062/x1.png",
+        "overview": "https://ar5iv.labs.arxiv.org/html/2511.00062/x2.png",
+    },
+    "cosmos3": {
+        "teaser": "https://ar5iv.labs.arxiv.org/html/2606.02800/x1.png",
+        "overview": "https://ar5iv.labs.arxiv.org/html/2606.02800/x2.png",
+    },
+    "dap": {
+        "overview": "https://ar5iv.labs.arxiv.org/html/2512.16913/x3.png",
+    },
+    "easyanimate": {
+        "teaser": "https://ar5iv.labs.arxiv.org/html/2405.18991/x1.png",
+        "overview": "https://ar5iv.labs.arxiv.org/html/2405.18991/x2.png",
+    },
+    "helios": {
+        "teaser": "https://ar5iv.labs.arxiv.org/html/2603.04379/x1.png",
+        "overview": "https://ar5iv.labs.arxiv.org/html/2603.04379/x2.png",
+    },
+    "ltx-video": {
+        "teaser": "https://ar5iv.labs.arxiv.org/html/2501.00103/x1.png",
+        "overview": "https://ar5iv.labs.arxiv.org/html/2501.00103/x4.png",
+    },
+    "modelscope-t2v": {
+        "teaser": "https://ar5iv.labs.arxiv.org/html/2308.06571/x1.png",
+        "overview": "https://ar5iv.labs.arxiv.org/html/2308.06571/x2.png",
+    },
+    "open-sora": {
+        "teaser": "https://ar5iv.labs.arxiv.org/html/2503.09642/x1.png",
+        "overview": "https://ar5iv.labs.arxiv.org/html/2503.09642/x2.png",
+    },
+    "openvla": {
+        "teaser": "https://ar5iv.labs.arxiv.org/html/2406.09246/x1.png",
+        "overview": "https://ar5iv.labs.arxiv.org/html/2406.09246/x2.png",
+    },
+    "pi0": {
+        "teaser": "https://ar5iv.labs.arxiv.org/html/2410.24164/x1.png",
+        "overview": "https://ar5iv.labs.arxiv.org/html/2410.24164/x2.png",
+    },
+    "pi05": {
+        "teaser": "https://ar5iv.labs.arxiv.org/html/2504.16054/x1.png",
+        "overview": "https://ar5iv.labs.arxiv.org/html/2504.16054/x3.png",
+    },
+}
+
+# In-tree paper / architecture stills only. Demo mp4s stay on disk for home /
+# Studio / CDN — they must not be harvested onto model homepages.
 LOCAL_MEDIA: dict[str, list[dict[str, str]]] = {
-    "ac3d": [{"kind": "video", "src": "/demos/ac3d_01.mp4", "caption": "Camera-controlled video", "captionZh": "相机控制视频"}],
-    "astra": [{"kind": "video", "src": "/demos/astra_01.mp4", "caption": "Interactive camera control", "captionZh": "交互式相机控制"}],
-    "cogvideox": [{"kind": "video", "src": "/demos/cogvideo_01.mp4", "caption": "Text-to-video sample", "captionZh": "文本生成视频"}],
-    "cosmos-predict-2.5": [{"kind": "video", "src": "/demos/cosmos_01.mp4", "caption": "World-video prediction", "captionZh": "世界视频预测"}],
-    "hunyuan-game-craft": [{"kind": "video", "src": "/demos/studio/hunyuan-game-craft-village.mp4", "caption": "Village-scale game world", "captionZh": "村落尺度游戏世界"}],
     "hunyuanvideo": [
-        {
-            "kind": "video",
-            "src": "/demos/studio/hunyuanvideo-t2v-cat-grass-official.mp4",
-            "poster": "/models/hunyuanvideo/video_poster.png",
-            "caption": "Official HunyuanVideo text-to-video demo (README teaser poster)",
-            "captionZh": "HunyuanVideo 官方文生视频演示（README 作品展示海报）",
-        },
-        {
-            "kind": "video",
-            "src": "/demos/studio/hunyuanvideo-i2v-firework-official.mp4",
-            "poster": "/models/hunyuanvideo/i2v_video_poster.jpg",
-            "caption": "HunyuanVideo-I2V image-to-video demo",
-            "captionZh": "HunyuanVideo-I2V 图生视频演示",
-        },
         {
             "kind": "image",
             "src": "/models/hunyuanvideo/overall.png",
@@ -85,43 +847,154 @@ LOCAL_MEDIA: dict[str, list[dict[str, str]]] = {
             "captionZh": "HunyuanVideo-I2V 架构：用 token replace 将参考图写入视频生成过程",
         },
     ],
-    "hunyuanvideo-1.5": [{"kind": "video", "src": "/demos/studio/hunyuanvideo-1-5-t2v-cat.mp4", "caption": "HunyuanVideo 1.5 text-to-video", "captionZh": "HunyuanVideo 1.5 文本生成视频"}],
-    "hy-worldplay": [{"kind": "video", "src": "/demos/studio/hy-worldplay-official-8gpu.mp4", "caption": "Interactive world play", "captionZh": "交互式世界漫游"}],
-    "leworldmodel": [{"kind": "video", "src": "/demos/studio/leworldmodel-pusht.mp4", "caption": "PushT world-model rollout", "captionZh": "PushT 世界模型滚动"}],
-    "longvie-1": [{"kind": "video", "src": "/demos/studio/longvie-1-control-video.mp4", "caption": "Long controllable video", "captionZh": "可控长视频"}],
-    "longvie-2": [{"kind": "video", "src": "/demos/studio/longvie-2-control-video.mp4", "caption": "Queued long-video segments", "captionZh": "分段衔接的长视频"}],
-    "ltx-video": [{"kind": "video", "src": "/demos/studio/ltx-video-i2v-penguin.mp4", "caption": "Image-to-video", "captionZh": "图生视频"}],
-    "ltx-2.x": [{"kind": "video", "src": "/demos/studio/ltx2-3-i2v-penguin.mp4", "caption": "LTX-2.3 image-to-video", "captionZh": "LTX-2.3 图生视频"}],
-    "matrix-game-2": [
-        {
-            "kind": "video",
-            "src": "/demos/studio/matrix-game-2-official-universal.mp4",
-            "poster": "/images/hero/matrix-game-2.webp",
-            "caption": "Keyboard-controlled interactive world",
-            "captionZh": "键鼠控制的交互世界",
-        }
-    ],
-    "matrix-game-3": [{"kind": "video", "src": "/demos/studio/matrix-game-3-cityscape.mp4", "caption": "Cityscape interactive world", "captionZh": "城市场景交互世界"}],
-    "modelscope-t2v": [{"kind": "video", "src": "/demos/studio/modelscope-t2v.mp4", "caption": "Text-to-video", "captionZh": "文本生成视频"}],
-    "neoverse": [
-        {
-            "kind": "video",
-            "src": "/demos/studio/neoverse-robot-tabletop.mp4",
-            "poster": "/images/hero/neoverse.webp",
-            "caption": "Tabletop manipulation trajectories",
-            "captionZh": "桌面操作轨迹",
-        }
-    ],
-    "open-sora-plan": [{"kind": "video", "src": "/demos/studio/open-sora-plan-tokyo-street.mp4", "caption": "Open-Sora Plan sample", "captionZh": "Open-Sora Plan 样例"}],
-    "skyreels-v3": [{"kind": "video", "src": "/demos/studio/skyreels-v3-reference-to-video.mp4", "caption": "Reference-to-video", "captionZh": "参考图生成视频"}],
-    "unianimate-dit": [{"kind": "video", "src": "/demos/studio/unianimate-dit-human-animation.mp4", "caption": "Human animation", "captionZh": "人物动画"}],
-    "videocrafter1-i2v": [{"kind": "video", "src": "/demos/studio/videocrafter1-i2v.mp4", "caption": "Image-to-video", "captionZh": "图生视频"}],
-    "videocrafter1-t2v": [{"kind": "video", "src": "/demos/studio/videocrafter1-t2v.mp4", "caption": "Text-to-video", "captionZh": "文本生成视频"}],
-    "videocrafter2-t2v": [{"kind": "video", "src": "/demos/studio/videocrafter2-t2v.mp4", "caption": "Text-to-video", "captionZh": "文本生成视频"}],
-    "wan2.1-vace": [{"kind": "video", "src": "/demos/studio/wan2-1-vace-girl-snake.mp4", "caption": "VACE-controlled generation", "captionZh": "VACE 可控生成"}],
-    "worldcam": [{"kind": "video", "src": "/demos/studio/worldcam-industrial.mp4", "caption": "Industrial camera-controlled world", "captionZh": "工业场景相机控制"}],
-    "yume": [{"kind": "video", "src": "/demos/studio/yume-1p5-jungle-castle.mp4", "caption": "First-person world exploration", "captionZh": "第一人称世界探索"}],
 }
+
+
+MAX_FIGURE_BYTES = 750_000
+MAX_FIGURE_WIDTH = 1600
+
+
+def looks_like_pdf_page(path: Path) -> bool:
+    try:
+        from PIL import Image
+    except ImportError:
+        return False
+    with Image.open(path) as image:
+        width, height = image.size
+    if width < 200 or height < 200:
+        return True
+    if height > width * 1.2 and height >= 1200:
+        return True
+    return False
+
+
+def compress_figure(src: Path, dest: Path) -> Path | None:
+    if not src.is_file() or src.stat().st_size < 800:
+        return None
+    if looks_like_pdf_page(src):
+        print(f"  skip pdf-page-like {src.name}", flush=True)
+        return None
+    dest.parent.mkdir(parents=True, exist_ok=True)
+    if src.stat().st_size <= MAX_FIGURE_BYTES and src.suffix.lower() in {".png", ".jpg", ".jpeg", ".webp"}:
+        if src.resolve() != dest.resolve():
+            shutil.copy2(src, dest)
+        return dest
+    cwebp = shutil.which("cwebp")
+    webp_dest = dest.with_suffix(".webp")
+    if cwebp:
+        cmd = [cwebp, "-quiet", "-q", "78", "-m", "6", "-resize", str(MAX_FIGURE_WIDTH), "0", str(src), "-o", str(webp_dest)]
+        if subprocess.run(cmd, check=False, capture_output=True).returncode == 0 and webp_dest.is_file():
+            if dest.exists() and dest != webp_dest:
+                dest.unlink()
+            return webp_dest
+    sips = shutil.which("sips")
+    jpeg_dest = dest.with_suffix(".jpg")
+    if sips:
+        cmd = [
+            sips,
+            "-s",
+            "format",
+            "jpeg",
+            "-s",
+            "formatOptions",
+            "82",
+            "--resampleWidth",
+            str(MAX_FIGURE_WIDTH),
+            str(src),
+            "--out",
+            str(jpeg_dest),
+        ]
+        if subprocess.run(cmd, check=False, capture_output=True).returncode == 0 and jpeg_dest.is_file():
+            if dest.exists() and dest != jpeg_dest:
+                dest.unlink()
+            return jpeg_dest
+    shutil.copy2(src, dest)
+    return dest
+
+
+def download_curated_figures() -> dict[str, list[str]]:
+    saved: dict[str, list[str]] = {}
+    for model_id, roles in CURATED_FIGURES.items():
+        dest_dir = THUMB_DIR / model_id
+        dest_dir.mkdir(parents=True, exist_ok=True)
+        for role, url in roles.items():
+            existing = list(dest_dir.glob(f"{role}.*"))
+            if any(path.is_file() and path.stat().st_size > 800 for path in existing):
+                saved.setdefault(model_id, []).append(f"{role}:exists")
+                continue
+            raw = request(url, timeout=40)
+            if (not raw or len(raw) < 4000) and model_id in AR5IV_FALLBACK and role in AR5IV_FALLBACK[model_id]:
+                time.sleep(0.3)
+                raw = request(AR5IV_FALLBACK[model_id][role], timeout=40)
+            if not raw or len(raw) < 4000:
+                print(f"  miss {model_id}/{role}", flush=True)
+                continue
+            suffix = ".png"
+            if raw[:3] == b"\xff\xd8\xff":
+                suffix = ".jpg"
+            elif raw[:4] == b"RIFF" and raw[8:12] == b"WEBP":
+                suffix = ".webp"
+            with tempfile.NamedTemporaryFile(suffix=suffix, delete=False) as handle:
+                handle.write(raw)
+                tmp = Path(handle.name)
+            try:
+                if looks_like_pdf_page(tmp):
+                    print(f"  skip pdf-page-like {model_id}/{role}", flush=True)
+                    continue
+                dest = dest_dir / f"{role}{suffix}"
+                written = compress_figure(tmp, dest)
+                if written:
+                    saved.setdefault(model_id, []).append(f"{role}:{written.name}:{written.stat().st_size}")
+                    print(f"  wrote {model_id}/{written.name} ({written.stat().st_size} bytes)", flush=True)
+            finally:
+                tmp.unlink(missing_ok=True)
+            time.sleep(0.2)
+    return saved
+
+
+def is_demo_video_figure(item: dict[str, str]) -> bool:
+    kind = item.get("kind") or "image"
+    src = str(item.get("src") or "").strip().lower()
+    if kind == "video":
+        return True
+    return src.endswith((".mp4", ".webm", ".mov", ".m4v")) or src.startswith("/demos/")
+
+
+def without_demo_videos(figures: list[dict[str, str]]) -> list[dict[str, str]]:
+    return [item for item in figures if not is_demo_video_figure(item)]
+
+
+def local_figure_exists(src: str) -> bool:
+    if not src.startswith("/"):
+        return False
+    path = PUBLIC / src.lstrip("/")
+    if not path.is_file():
+        return False
+    # Demo clips stay on disk for home / Studio / CDN; model homes must not list them.
+    if src.startswith("/demos/"):
+        return False
+    return path.stat().st_size > 800
+
+
+def merge_official_figures(figures: list[dict[str, str]], model_id: str) -> list[dict[str, str]]:
+    official = figure_records(model_id)
+    if not official:
+        return without_demo_videos(
+            [
+                item
+                for item in figures
+                if local_figure_exists(str(item.get("src") or ""))
+                and not str(item.get("src") or "").lower().endswith("/paper.png")
+            ]
+        )
+    kept = [
+        item
+        for item in figures
+        if str(item.get("src") or "") not in {row["src"] for row in official}
+        and not str(item.get("src") or "").lower().endswith("/paper.png")
+        and local_figure_exists(str(item.get("src") or ""))
+    ]
+    return without_demo_videos(official + kept)
 
 
 def request(url: str, timeout: int = 20) -> bytes | None:
@@ -207,7 +1080,7 @@ def apply_payload(media: dict[str, dict[str, object]]) -> None:
         else:
             docs.setdefault("paper", None)
         if extra.get("figures"):
-            docs["figures"] = extra["figures"]
+            docs["figures"] = without_demo_videos(list(extra["figures"]))
         else:
             docs.setdefault("figures", [])
     RECIPES.write_text(json.dumps(recipes, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
@@ -220,6 +1093,36 @@ def apply_payload(media: dict[str, dict[str, object]]) -> None:
 
 
 def main() -> None:
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "--paper-figures",
+        action="store_true",
+        help="Download curated official teaser/overview figures only; do not refetch arXiv metadata",
+    )
+    args = parser.parse_args()
+    if args.paper_figures:
+        print("downloading curated official paper figures", flush=True)
+        saved = download_curated_figures()
+        if OUT.exists():
+            media = json.loads(OUT.read_text(encoding="utf-8"))
+        else:
+            media = {}
+        for model_id in sorted({*CURATED_FIGURES, *saved}):
+            extra = media.get(model_id) if isinstance(media.get(model_id), dict) else {}
+            figures = merge_official_figures(list(extra.get("figures") or []), model_id)
+            extra = dict(extra)
+            extra["figures"] = figures
+            if figures or extra.get("paper"):
+                media[model_id] = extra
+        for model_id, extra in list(media.items()):
+            if not isinstance(extra, dict):
+                continue
+            extra["figures"] = without_demo_videos(list(extra.get("figures") or []))
+            media[model_id] = extra
+        OUT.write_text(json.dumps(media, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+        print(f"curated figures for {len(saved)} models -> {OUT}", flush=True)
+        return
+
     recipes = json.loads(RECIPES.read_text(encoding="utf-8"))["recipes"]
     arxiv_for: dict[str, str] = {}
     for recipe in recipes:
@@ -242,23 +1145,13 @@ def main() -> None:
         arxiv_id = arxiv_for.get(model_id)
         if arxiv_id and arxiv_id in papers:
             entry["paper"] = papers[arxiv_id]
-        figures = [dict(item) for item in LOCAL_MEDIA.get(model_id, [])]
-        if arxiv_id and not any(item.get("kind") == "image" or item.get("poster") for item in figures):
+        figures = without_demo_videos([dict(item) for item in LOCAL_MEDIA.get(model_id, [])])
+        if arxiv_id and not (THUMB_DIR / model_id / "paper.png").is_file():
             thumb = download_thumb(arxiv_id, model_id)
             if thumb:
                 downloaded += 1
-                paper = entry.get("paper") if isinstance(entry.get("paper"), dict) else {}
-                title = str(paper.get("title") or "Paper figure")
-                figures.insert(
-                    0,
-                    {
-                        "kind": "image",
-                        "src": thumb,
-                        "caption": title,
-                        "captionZh": title,
-                    },
-                )
                 time.sleep(0.15)
+        figures = merge_official_figures(figures, model_id)
         if figures:
             entry["figures"] = figures
         if entry:

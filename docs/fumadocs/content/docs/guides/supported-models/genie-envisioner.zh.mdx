@@ -1,27 +1,54 @@
 ---
 title: "Genie Envisioner"
-description: "Genie Envisioner is AgiBot's robotics world model platform: a video-generative backbone that predicts action-conditioned robot manipulation futures, usable for policy learning and evaluation."
-pageSource: generated
+description: "Genie Envisioner（AgiBot）：机器人世界模型、图生视频；Runner 一致性待确认。"
+modelId: "genie-envisioner"
+pageSource: authored
 ---
-
-**发表机构:** 智元机器人（AgiBot） · 企业
-image → video
 
 Genie Envisioner 是智元机器人的机器人世界模型平台：以视频生成为骨干，预测动作条件下的机器人操作未来，可用于策略学习与评估。本 catalog 中其官方（WorldArena 收录的）源码已内置树内；执行待 Genie-Envisioner 与 LTX-Video checkpoint 及机器人任务资产就位。
 
+兼容启动器跑发布的 **GE-base** 多视角 transformer，配本地 LTX tokenizer、T5 和 VAE。默认输入是同步的 **ALOHA** `high` / `left-wrist` / `right-wrist`——**不会**合成额外相机。合成三视角路径只给冒烟测试。动作质量一致性仍需要与 checkpoint 匹配的 AgiBot 或 LeRobot 轨迹。
+
+<ModelPaperFigures modelId="genie-envisioner" locale="zh" />
+
+记录论文为[arXiv 2508.05635](https://arxiv.org/abs/2508.05635)。
+
+项目页：[genie-envisioner.github.io](https://genie-envisioner.github.io/)。代码：[AgibotTech/Genie-Envisioner](https://github.com/AgibotTech/Genie-Envisioner)。
+
+论文：[arXiv 2508.05635](https://arxiv.org/abs/2508.05635)。项目页：[genie-envisioner.github.io](https://genie-envisioner.github.io/)。代码：[AgibotTech/Genie-Envisioner](https://github.com/AgibotTech/Genie-Envisioner)。权重：`agibot-world/Genie-Envisioner` 加 `Lightricks/LTX-Video`。Runner：**`Runner 一致性待确认`**。checkpoint 和任务资产就位前，pipeline 返回 **blocked** 诊断。
+
 <ModelCommandBuilder modelId="genie-envisioner" locale="zh" />
 
-## 架构
+## 用来做什么
 
-记录的 checkpoint 显示其视频骨干基于 LTX-Video（Lightricks/LTX-Video），加上智元自有的世界模型权重（agibot-world/Genie-Envisioner）。运行时内置于 synthesis/visual_generation/genie_envisioner/genie_envisioner_runtime。
+用 `genie-envisioner` 做 catalog 世界模型推理。需要动作条件未来帧、而不是独立片段生成器时选它。
 
-## 使用要点
+记录的 checkpoint 显示其视频骨干基于 LTX-Video（Lightricks/LTX-Video），加上智元自有的世界模型权重（agibot-world/Genie-Envisioner）。运行时内置于 synthesis/visual_generation/genie_envisioner/genie_envisioner_runtime。该模型由智元机器人（AgiBot）发布。
 
-pipeline 解析内置推理入口，在 checkpoint 与任务资产就位前返回 blocked 运行时诊断。提交任务前请就位两套记录的 checkpoint。
+catalog 记录的任务包括 机器人世界模型、图生视频、动作条件视频、robot-multiview-video。别名包括 `genie_envisioner`、`genieenvisioner`、`genie-envisioner-sim`。模态上，它接受图像，输出视频。
 
-## 评测 Benchmark
+记录的评测入口包括[WorldArena](/zh/docs/evaluation/benchmark-hub/worldarena)（该条目已收录于 WorldArena 的机器人世界模型评测）、[EWMBench](/zh/docs/evaluation/benchmark-hub/ewmbench)（具身世界模型视频预测质量）。
 
-- [WorldArena](/zh/docs/evaluation/benchmark-hub/worldarena) — 该条目已收录于 WorldArena 的机器人世界模型评测。
-- [EWMBench](/zh/docs/evaluation/benchmark-hub/ewmbench) — 具身世界模型视频预测质量。
+## 运行时契约
+
+必填 `prompt`、`image`；可选 `video`、`actions` (robot_action, world_action)；产物 `genie-envisioner.mp4`。
+
+记录的任务 profile：`robotics-world-model`、`image-to-video`、`action-conditioned-video`、`robot-multiview-video`。绑定的 pipeline 类是 `GenieEnvisionerPipeline`。
+
+系列状态：**Runner 一致性待确认**。
+
+`robot-multiview-video` 记录默认值：height=192, width=256, num_inference_steps=5, guidance_scale=1.0, fps=8, seed=42。
+
+pipeline 解析内置推理入口，在 checkpoint 与任务资产就位前返回 blocked 运行时诊断。 提交任务前请就位两套记录的 checkpoint。
+
+## 在 WorldFoundry 中运行
+
+catalog 启动命令是 `worldfoundry-eval run genie-envisioner --pipeline.task-profile robot-multiview-video`。上方命令构建器按已记录任务切换 `--pipeline.task-profile`，发出的仍是 `worldfoundry-eval run`。
+
+运行环境是统一 profile `worldfoundry-unified-cu128`（Python 3.11，CUDA 12.8）。
+
+记录的权重仓库包括 `agibot-world/Genie-Envisioner`、`Lightricks/LTX-Video`。就位权重用 `bash scripts/inference/prepare_model_infer.sh genie-envisioner`。
+
+状态：**Runner 一致性待确认**。
 
 <ModelRelatedRecipes modelId="genie-envisioner" locale="zh" />

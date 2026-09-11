@@ -1,22 +1,42 @@
 ---
 title: "Depth Anything 3"
-description: "Depth Anything 3 is ByteDance Seed's geometry foundation model: beyond monocular depth it predicts consistent geometry from multiple views. This entry registers the in-tree official SOH export route, separate from the depth-anything-v3-pri…"
-pageSource: generated
+description: "字节 Seed 的多视角几何基础模型。官方 SOH 导出路径已移植；runner 待验证。不是米制先验卡。权重 Apache-2.0。"
+modelId: "depth-anything-v3"
+pageSource: authored
 ---
 
-**发表机构:** 字节跳动（Seed 团队） · 企业
-image → depth
+Depth Anything 3（DA3）是字节 Seed 的**几何基础模型**：在单目深度之外还能预测**多视角一致**几何。这张卡是树内官方 **SOH 导出**路径（`DepthAnything3Pipeline`）。它**不是**已验证的米制先验 [depth-anything-v3-prior](/zh/docs/guides/supported-models/depth-anything-v3-prior)。别名 `da3`、`depth-anything-3` 解析到这里。
 
-Depth Anything 3 是字节 Seed 团队的几何基础模型：在单目深度之外还能从多视角预测一致几何。本条目注册树内官方 SOH 导出路径，与 depth-anything-v3-prior 的几何先验档案相互独立。
+<ModelPaperFigures modelId="depth-anything-v3" locale="zh" />
+
+官方论文见 [arXiv 2511.10647](https://arxiv.org/abs/2511.10647)。项目页：[depth-anything-3.github.io](https://depth-anything-3.github.io/)。代码：[ByteDance-Seed/Depth-Anything-3](https://github.com/ByteDance-Seed/Depth-Anything-3)。权重：`depth-anything/DA3-LARGE`（**apache-2.0**）。
+
+集成是 Runner 一致性待验证；runner **待验证**。recipe 的环境 / VRAM / 产物行未设置——就位后用 `model-show` 查看。
 
 <ModelCommandBuilder modelId="depth-anything-v3" locale="zh" />
 
-## 架构
+## 用来做什么
 
-DA3 采用朴素 Transformer 主干与「深度-射线」预测目标，覆盖单目深度到多视角几何（见上游发布）。权重为 apache-2.0；本条目的运行时细节在其记录路径中。
+完整 DA3 SOH 导出。只要度量深度就走先验兄弟卡。
 
-## 使用要点
+启动 `worldfoundry-eval run depth-anything-v3 --pipeline.task-profile official-soh-export`。
 
-集成为 runtime_ported，runner parity 待验证。若只需为其它管线提供深度先验，请用 depth-anything-v3-prior；本条目面向完整导出路径。
+## 运行时契约
+
+必填 `input_path`；可选 `export_format`、`process_res`、`process_res_method`、`max_frames`、`frame_stride`、`infer_gs`。
+
+| 旋钮 | 默认 |
+| --- | --- |
+| `input_path` | 捆绑 SOH 示例 `data/test_cases/depth_anything_v3/examples/SOH` |
+| `export_format` | `mini_npz` |
+| `process_res` | **504** |
+| `process_res_method` | `upper_bound_resize` |
+| `max_frames` | **2** |
+| `frame_stride` | **1** |
+| `infer_gs` | **false** |
+
+## 在 WorldFoundry 中运行
+
+状态：**Runner 一致性待验证**。 权重必须本地就位——运行时不下载。在该环境执行 `worldfoundry-eval run depth-anything-v3 --pipeline.task-profile official-soh-export`。catalog 未记录 VRAM。
 
 <ModelRelatedRecipes modelId="depth-anything-v3" locale="zh" />

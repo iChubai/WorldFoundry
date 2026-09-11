@@ -1,36 +1,34 @@
 ---
 title: "Matrix-Game 2.0"
-description: "Matrix-Game 2.0 is Skywork's real-time-oriented interactive world model generation: an auto-regressive diffusion design that follows keyboard/mouse actions across game scenes."
-pageSource: generated
+description: "Matrix-Game 2.0（Skywork AI (Kunlun Tech)）：`image`、`official_bench_actions` 进，`matrix-game-2-universal-ref-image-seed42-15f.mp4`、`matrix_game2_official_universal_seed42_15f.mp4` 出；runner 已验证。"
+modelId: "matrix-game-2"
+pageSource: authored
 ---
-
-**发表机构:** 昆仑万维（Skywork AI） · 企业
 
 Matrix-Game 2.0 是昆仑万维面向实时的交互式世界模型：自回归扩散设计，在游戏场景中跟随键鼠动作。本 catalog 中 runner 已按官方 inference_universal 默认值验证——150 帧、12 fps、352x640、官方 bench 动作——经树内运行时运行。
 
-<figure className="wf-recipe-media">
-  <Video src="/demos/studio/matrix-game-2-official-universal.mp4" poster="/images/hero/matrix-game-2.webp" autoPlay loop muted playsInline />
-  <figcaption>键鼠控制的交互世界</figcaption>
-</figure>
+<ModelPaperFigures modelId="matrix-game-2" locale="zh" />
+
+论文是 [arXiv 2508.13009](https://arxiv.org/abs/2508.13009)。项目页：[matrix-game-v2.github.io](https://matrix-game-v2.github.io)。代码：[SkyworkAI/Matrix-Game](https://github.com/SkyworkAI/Matrix-Game)。
 
 <ModelCommandBuilder modelId="matrix-game-2" locale="zh" />
 
-## 架构
+## 用来做什么
 
-树内运行时无外部 repo_root 依赖，WorldFoundry runner 使用官方默认值与树内 Bench_actions_* 条件生成器。另记录一个 universal-action-validation variant 用于动作保真度基准测试。
+从 `matrix-game-2-universal-action-validation` 起步，用官方 bench actions。不是 Matrix-Game 1 或 3。
 
-## 使用要点
+启动 `worldfoundry-eval run matrix-game-2-universal-action-validation --pipeline.task-profile official-universal-image`。
 
-自定义前请从已验证的官方默认值出发（num_frames=150、fps=12、seed=42、352x640、 official_bench_actions=true）。每次运行的产物检查在 catalog 外跟踪。
+评测入口：[WorldModelBench](/zh/docs/evaluation/benchmark-hub/worldmodelbench)（动作条件游戏世界滚动生成质量）。
 
-## 硬件建议
+## 运行时契约
 
-- **最低显存:** 24 GB
+必填 `image`、`official_bench_actions`；可选 `prompt`、`video`；产物 `matrix-game-2-universal-ref-image-seed42-15f.mp4`、`matrix_game2_official_universal_seed42_15f.mp4`、`matrix_game2_official_universal_seed42_15f.json`。
 
-## 评测 Benchmark
+默认旋钮：150 帧、12 fps、352×640、seed 42。
 
-- [WorldModelBench](/zh/docs/evaluation/benchmark-hub/worldmodelbench) — 动作条件游戏世界滚动生成质量。
-- [VBench](/zh/docs/evaluation/benchmark-hub/vbench) — 该模型 manifest 的证据记录中提到了这一评测。
-- [WorldScore](/zh/docs/evaluation/benchmark-hub/worldscore) — 该模型 manifest 的证据记录中提到了这一评测。
+## 在 WorldFoundry 中运行
+
+状态：**已验证**。统一环境 `worldfoundry-unified-cu128`（Python 3.11，CUDA 12.8）。先把 `Skywork/Matrix-Game-2.0` 就位到本地，缺文件加载失败，运行时不下载。在该环境执行 `worldfoundry-eval run matrix-game-2-universal-action-validation --pipeline.task-profile official-universal-image`。许可证：MIT。记录最低显存 24 GB。
 
 <ModelRelatedRecipes modelId="matrix-game-2" locale="zh" />

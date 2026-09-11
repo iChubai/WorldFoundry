@@ -1,25 +1,49 @@
 ---
 title: "RoboFlamingo"
-description: "RoboFlamingo adapts the OpenFlamingo vision-language model into a robot imitation policy: a lightweight policy head turns the VLM's visual-language features into actions."
-pageSource: generated
+description: "OpenFlamingo plus an LSTM action head; WorldFoundry GPU-validated predict needs three staged checkpoints."
+modelId: "roboflamingo"
+pageSource: authored
 ---
 
-**Publisher:** Open-source research release (institution not recorded) · Research lab
+RoboFlamingo turns OpenFlamingo into a language-conditioned robot policy: the VLM encodes a camera frame with a task instruction, and a recurrent head emits continuous controls (typically **7-DoF** pose plus gripper). The official paper is [Vision-Language Foundation Models as Effective Robot Imitators](https://arxiv.org/abs/2311.01378) (arXiv 2311.01378). The project page is [roboflamingo.github.io](https://roboflamingo.github.io/). The GitHub tree is [RoboFlamingo/RoboFlamingo](https://github.com/RoboFlamingo/RoboFlamingo).
 
-RoboFlamingo adapts the OpenFlamingo vision-language model into a robot imitation policy: a lightweight policy head turns the VLM's visual-language features into actions. In this catalog it is GPU-validated — the vendored architecture passed public pipeline CUDA action_trace validation with staged RoboFlamingo, OpenFlamingo, and MPT checkpoints, and runner parity is verified.
+<ModelPaperFigures modelId="roboflamingo" locale="en" />
+
+WorldFoundry vendors the architecture and inference source under `worldfoundry/synthesis/action_generation/roboflamingo`. There is a single catalog card — no extra variants. The public pipeline passed CUDA `action_trace` validation with three staged stacks: the released CALVIN policy, the OpenFlamingo VLM, and the MPT language backbone. Keep this model on embodied action maps, not video-generation scorecards. Alias `robo-flamingo` resolves here.
 
 <ModelCommandBuilder modelId="roboflamingo" locale="en" />
 
-## Architecture
+## What it is for
 
-An OpenFlamingo backbone (MPT language model with cross-attention vision fusion) plus a recurrent policy head for action prediction. The full architecture and inference source are vendored in-tree.
+Language-conditioned manipulation on a [CALVIN](/docs/evaluation/benchmark-hub/calvin)-style long-horizon suite is the intended route. Required inputs are `image`, `instruction`, `prompt`, and `video`. `RoboFlamingoPipeline` writes `roboflamingo_action_trace.json`.
 
-## Usage notes
+Use this card when you need a GPU-ready OpenFlamingo policy with explicit backbone staging — not a chunking or diffusion action head.
 
-Stage the RoboFlamingo policy, OpenFlamingo backbone, and MPT language model checkpoints locally. Per-run action trace evidence is tracked outside the model catalog.
+## Runtime contract
 
-## Evaluation benchmarks
+In-tree architecture defaults:
 
-- [CALVIN](/docs/evaluation/benchmark-hub/calvin) — RoboFlamingo's standard long-horizon evaluation suite.
+- Vision: **ViT-L-14** (OpenCLIP), language: **MPT-1B** (`mpt_dolly_3b` in config)
+- **`window_size` 12**, **`n_obs_steps` 2**, fusion `post`
+- Policy head: **LSTM** (`decoder_type` / `head_type` both `lstm`)
+- Gripper camera on, proprioception off (`use_state=false`), **fp32**
+
+Checkpoint directories — all must already exist under `${WORLDFOUNDRY_HFD_ROOT}`:
+
+- `robovlms/RoboFlamingo` → `robovlms--RoboFlamingo` (released CALVIN policy)
+- `openflamingo/OpenFlamingo-3B-vitl-mpt1b-langinstruct` → `openflamingo--OpenFlamingo-3B-vitl-mpt1b-langinstruct`
+- `anas-awadalla/mpt-1b-redpajama-200b-dolly` → `anas-awadalla--mpt-1b-redpajama-200b-dolly`
+
+The vision encoder file is also declared at `${WORLDFOUNDRY_CKPT_DIR}/open_clip/ViT-L-14.pt`. Full official CALVIN eval still needs the CALVIN assets themselves.
+
+## Running in WorldFoundry
+
+The environment profile is `worldfoundry-unified-cu128`. The recorded env YAML is **Python 3.8** with a prepare-only CUDA tag; the runner still completed a CUDA `action_trace` with those three checkpoints staged. After staging:
+
+```
+worldfoundry-eval run roboflamingo --pipeline.task-profile vla
+```
+
+No license is recorded in this repository. Confirm RoboFlamingo / OpenFlamingo / MPT terms before production use.
 
 <ModelRelatedRecipes modelId="roboflamingo" locale="en" />

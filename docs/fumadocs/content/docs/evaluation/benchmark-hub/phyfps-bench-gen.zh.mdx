@@ -1,54 +1,21 @@
 ---
 title: PhyFPS-Bench-Gen
-description: 100 条 prompt 的时间刻度一致性审计：生成器的 Meta FPS 是否与运动隐含的 PhyFPS 一致。
+description: "100 条 prompt 的时间刻度审计：Meta FPS 是否与运动隐含的 PhyFPS 一致？全部指标越低越好。不是物理定律评测。"
 ---
 
-## 简介
+PhyFPS-Bench-Gen（TACO Group，德州农工大学）审计**时间刻度幻觉**：生成器声明的容器帧率（**Meta FPS**）是否与运动隐含的物理速度（**PhyFPS**，由 Visual Chronometer 预测）一致。它**不是**定律、锚定、教育或续写评测。
 
-**发表机构：** TACO Group（Texas A&M University，德州农工大学）
+套件是 **100 条 prompt**。输出命名为 `0001.mp4` … `0100.mp4`。预测器在滑动窗口上运行（`--stride`、`--clip-length`）；scorecard 报告 Meta 与 PhyFPS 的误差，以及视频内 / 视频间变异系数。**全部指标越低越好。**
 
-PhyFPS-Bench-Gen 审计视频生成器的“时间刻度幻觉”（chronometric hallucination）：最先进的模型生成的运动所隐含的物理速度（PhyFPS，由 Visual Chronometer 预测器测量）会偏离容器声明的帧率（Meta FPS），且在片段内部与片段之间漂移。benchmark 提供 100 条 prompt；模型对每条 prompt 生成一个视频，Visual Chronometer 在滑动窗口上预测 PhyFPS，套件报告 Meta 与 PhyFPS 的误差以及片段内/片段间变异系数。所有指标都是越低越好。
+代码：[taco-group/Visual_Chronometer](https://github.com/taco-group/Visual_Chronometer)。权重：[xiangbog/Visual_Chronometer](https://huggingface.co/xiangbog/Visual_Chronometer)（`vc_common_10_60fps.ckpt`）。
 
-WorldFoundry 通过入库 runtime 在仓内运行 Visual Chronometer 的 `predict.py`，并把 `results.csv` 归一化到官方指标面。
+WorldFoundry 在仓内运行 Visual Chronometer `predict.py`，和/或归一化调用方的 `results.csv`。对齐指标需要 `WORLDFOUNDRY_PHYFPS_META_FPS`（或 manifest）。
 
-官方参考：
+<BenchmarkPageSections id="phyfps-bench-gen" locale="zh" />
 
-- 官方仓库: [taco-group/Visual_Chronometer](https://github.com/taco-group/Visual_Chronometer)
+## 如何运行
 
-## 评测协议
-
-生成视频应按 `0001.mp4` … `0100.mp4` 命名并与 `prompts.txt` 对齐。runner 在滑动窗口片段上预测 PhyFPS（`--stride`、`--clip-length`），聚合逐视频平均值，并对照通过 `WORLDFOUNDRY_PHYFPS_META_FPS` 或 manifest 提供的 Meta FPS 计算对齐指标。`official-validation` 模式则归一化已有的上游 `results.csv`。
-
-主指标是 `phyfps_bench_gen_average`。
-
-| Metric | 含义 | 方向 |
-| --- | --- | --- |
-| `avg_error_fps` | Meta FPS 与平均 PhyFPS 间的平均绝对差。 | 越低越好 |
-| `pct_error` | Meta 与 PhyFPS 相对误差百分比的均值。 | 越低越好 |
-| `inter_video_cv` | 逐视频平均 PhyFPS 的跨视频变异系数。 | 越低越好 |
-| `intra_video_cv` | 滑动窗口片段上视频内变异系数的均值。 | 越低越好 |
-| `phyfps_bench_gen_average` | 可用 PhyFPS-Bench-Gen 得分族的均值。 | 越低越好 |
-
-## 数据与产物布局
-
-WorldFoundry 仓内路径：
-
-```text
-worldfoundry/data/benchmarks/tasks/external/phyfps-bench-gen.yaml
-worldfoundry/evaluation/tasks/execution/runners/phyfps_bench_gen/runtime/visual_chronometer
-```
-
-```text
-.../runners/phyfps_bench_gen/runtime/visual_chronometer/   # 仓内 Visual Chronometer runtime
-${WORLDFOUNDRY_GENERATED_ARTIFACT_DIR}/0001.mp4 … 0100.mp4 # 每条 prompt 一个视频
-<out>/results.csv                                          # 逐片段 PhyFPS 预测
-```
-
-完整官方预测需要 VC-Common 权重（Hugging Face `xiangbog/Visual_Chronometer`）。
-
-## 运行评测
-
-目录 manifest 记录的 validation 命令：
+导入已有的 `results.csv`：
 
 ```bash
 worldfoundry-eval zoo benchmark-run \
@@ -56,13 +23,14 @@ worldfoundry-eval zoo benchmark-run \
   --mode official-validation \
   --official-results-path <results.csv> \
   --generated-artifact-dir <generated_videos> \
-  --output-dir <out> \
+  --output-dir tmp/phyfps-bench-gen/official-validation \
   --json
 ```
 
-在仓内预测 PhyFPS 并完成整套审计：
+在仓内预测 PhyFPS（对齐需要 VC-Common 权重与 Meta FPS）：
 
 ```bash
+export WORLDFOUNDRY_PHYFPS_META_FPS=24
 ${WORLDFOUNDRY_UNIFIED_PYTHON} \
   worldfoundry/evaluation/tasks/execution/runners/phyfps_bench_gen/run_phyfps_bench_gen_official_runner.py \
   --run-official \
@@ -72,30 +40,6 @@ ${WORLDFOUNDRY_UNIFIED_PYTHON} \
   --json
 ```
 
-## 权重与环境变量
-
-- `WORLDFOUNDRY_VISUAL_CHRONOMETER_ROOT`: 可选覆盖项，指向外部 runtime checkout。
-- `WORLDFOUNDRY_PHYFPS_BENCH_GEN_RESULTS_PATH`: 未显式传 `--official-results-path` 时，导入器默认从该路径读取官方结果导出文件。
-- `WORLDFOUNDRY_GENERATED_ARTIFACT_DIR`: 存放待评测生成产物（候选视频/rollout）的目录。
-- `WORLDFOUNDRY_PHYFPS_META_FPS`: 生成器声明的 Meta FPS，对齐指标必需。
-- `WORLDFOUNDRY_PHYFPS_BENCH_GEN_PROMPT_MANIFEST`: 覆盖仓内 PhyFPS prompt manifest。
-
-## 输出文件
-
-运行会在 `--output-dir` 下写出：
-
-- `scorecard.json`: WorldFoundry 统一 scorecard，记录上表中的指标值。
-- `benchmark_contract.json`: 本次运行的 benchmark contract 记录（输入、模式、来源信息）。
-- `raw_metric_table.jsonl`: 支撑 scorecard 的原始 metric 行。
-- `results.csv`
-- `per_sample_scores.jsonl`: 当结果源包含逐样本数值时写出的逐样本行。
-
-Scorecard 主键：`phyfps_bench_gen_average`（leaderboard key `phyfps_bench_gen_average`），写入 `scorecard.json`。
-
-## 边界与限制
-
-- 完整 leaderboard 对齐需要全部官方权重资产、100 个生成视频以及经验证的 scorecard 证据。
-- 官方发布的 VC-Common 权重仅用于 demo / leaderboard 复现，并非作者最强内部模型。
-- 没有 Meta FPS 时对齐指标无定义；此时运行只覆盖变异系数类指标。
+产物包括 `scorecard.json`（主键 `phyfps_bench_gen_average`）与 `results.csv`。
 
 [← 返回 Benchmark Hub](/zh/docs/evaluation/benchmark-hub)

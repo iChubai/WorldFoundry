@@ -1,22 +1,50 @@
 ---
 title: "HY-World 2.0 Trajectory Renderer"
-description: "HY-World 2.0 Trajectory Renderer is one stage of Tencent's world-generation chain, cataloged separately: it renders camera-controlled video from a pre-materialized HY-World scene point cloud (render_results/global_pcd.ply) along a camera J…"
-pageSource: generated
+description: "HY-World 2.0 Trajectory Renderer（Tencent (Hunyuan)）：相机可控视频；Runner 一致性待确认。"
+modelId: "hyworld-worldgen"
+pageSource: authored
 ---
-
-**发表机构:** 腾讯（混元） · 企业
-point cloud
 
 HY-World 2.0 轨迹渲染器是腾讯世界生成链中的一个阶段，单独记录：沿 camera JSON 从预先物化的 HY-World 场景点云（render_results/global_pcd.ply）渲染相机可控视频。它有意不加载任何模型 checkpoint——是渲染器，不是生成器。
 
+<ModelPaperFigures modelId="hyworld-worldgen" locale="zh" />
+
+记录论文为[arXiv 2604.14268](https://arxiv.org/abs/2604.14268)。
+
+项目页：[3d-models.hunyuan.tencent.com/world](https://3d-models.hunyuan.tencent.com/world/)。代码：[Tencent-Hunyuan/HY-World-2.0](https://github.com/Tencent-Hunyuan/HY-World-2.0)。
+
 <ModelCommandBuilder modelId="hyworld-worldgen" locale="zh" />
 
-## 架构
+## 用来做什么
 
-统一运行时包含树内 torch 点泼溅回退实现，不需要 PyTorch3D。官方源码以固定 revision 内置（许可：tencent-hunyuan-community）；该路径是官方轨迹渲染阶段，不声称完整五阶段世界生成。
+用 `hyworld-worldgen` 做 catalog 几何推理。产物是重建而不是生成视频时选它。
 
-## 使用要点
+统一运行时包含树内 torch 点泼溅回退实现，不需要 PyTorch3D。官方源码以固定 revision 内置（许可：tencent-hunyuan-community）；该路径是官方轨迹渲染阶段，不声称完整五阶段世界生成。该模型由腾讯（混元）发布。
 
-提供图像、camera JSON 与指向预物化 HY-World 场景的 scene_path。场景物化属于独立的完整 HY-World 生成 pipeline。
+catalog 记录的任务包括 相机可控视频、world-generation-stage、point-cloud-rendering。输出模态为点云。
+
+HYWorld worldgen。不是 HY-World 2.0，也不是 WorldPlay。
+
+## 运行时契约
+
+必填 `image`、`camera_json`、`scene_path`；产物 `hyworld-worldgen.mp4`。
+
+记录的任务 profile：`camera-controlled-video`、`world-generation-stage`、`point-cloud-rendering`。绑定的 pipeline 类是 `HYWorld2WorldgenPipeline`。
+
+系列状态：**Runner 一致性待确认**。
+
+提供图像、camera JSON 与指向预物化 HY-World 场景的 scene_path。 场景物化属于独立的完整 HY-World 生成 pipeline。
+
+Official source is vendored at revision 7f668e67c74338d50684e57be46a438459b6bbe1.
+
+## 在 WorldFoundry 中运行
+
+启动 `worldfoundry-eval run hyworld-worldgen --pipeline.task-profile camera-controlled-video` 写出几何。上方命令构建器按已记录任务切换 `--pipeline.task-profile`，发出的仍是 `worldfoundry-eval run`。
+
+运行环境是统一 profile `worldfoundry-unified-cu128`（Python 3.11，CUDA 12.8）。
+
+本卡片未记录公开 checkpoint id；按使用说明就位权重。就位权重用 `bash scripts/inference/prepare_model_infer.sh hyworld-worldgen`。
+
+状态：**Runner 一致性待确认**。
 
 <ModelRelatedRecipes modelId="hyworld-worldgen" locale="zh" />

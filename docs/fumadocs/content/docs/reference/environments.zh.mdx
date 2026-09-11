@@ -24,49 +24,47 @@ WorldFoundry 统一使用 conda 路径。文档里的标准流程为主框架创
 - **Optional dependencies（extras）** 是面向用户和贡献者、会随 wheel 元数据发布的安装面。应选择满足功能的最小 extra，例如 `python -m pip install -e ".[ui]"`。
 - **Dependency groups** 是源码 checkout 内供工具链和 resolver 使用的依赖桶；它们不是 wheel extra，不能用 `.[name]` 选择。使用支持 PEP 735 的 pip 时，可以运行 `python -m pip install --group lint`；环境工具也可以直接消费同一组声明。
 
-`all` 是经过筛选的通用 runtime bundle，不是全部 extra 的机械并集。它刻意排除了开发工具、NVIDIA 专有 VFX bindings、训练栈和模型专属 ABI 孤岛。下表“包含于 `all`”表示该 extra 声明的每个包名都出现在 `all`；如果运行时契约依赖更严格的版本范围，仍应同时安装对应的具名 extra。
+`all` 是经过筛选的通用 runtime bundle，不是全部 extra 的机械并集。它刻意排除了开发工具、NVIDIA 专有 VFX bindings、训练栈和模型专属 ABI 孤岛。下面目录里“包含于 `all`”表示该 extra 声明的每个包名都出现在 `all`；如果运行时契约依赖更严格的版本范围，仍应同时安装对应的具名 extra。
 
-| Extra | 用途 | 包含于 `all` | Editable 安装 |
-| --- | --- | --- | --- |
-| `api` | 托管模型 API client，以及图像和请求辅助依赖。 | 是 | `.[api]` |
-| `apple_pi` | Apple-PI 评测 runtime、judge client 与媒体辅助包。 | 是 | `.[apple_pi]` |
-| `hf` | Hugging Face 和 ModelScope 资产下载支持。 | 是 | `.[hf]` |
-| `video` | 覆盖视频、媒体、数据和 3D 的宽 runtime 依赖。 | 否 | `.[video]` |
-| `vipe` | ViPE 几何/深度 runtime 与可视化栈。 | 否 | `.[vipe]` |
-| `molmoact2` | MolmoAct2 模型服务栈及其窄版本 Transformers 契约。 | 否 | `.[molmoact2]` |
-| `metrics` | 通用评测指标和数据集 I/O。 | 否 | `.[metrics]` |
-| `distribution_metrics` | 感知与分布类指标模型。 | 否 | `.[distribution_metrics]` |
-| `dvlt` | DVLT 3D/可视化 runtime。 | 否 | `.[dvlt]` |
-| `ui` | 完整 Studio/browser UI，已包含 realtime transport 依赖。 | 是 | `.[ui]` |
-| `studio_realtime` | 最小 WebRTC/realtime Studio transport 栈。 | 是 | `.[studio_realtime]` |
-| `rtx_postprocess` | NVIDIA 专有 VFX 后处理，只允许显式 opt-in。 | 否 | `.[rtx_postprocess]` |
-| `tui` | Textual 终端界面。 | 是 | `.[tui]` |
-| `optimized_core` | 可选的 Torch core acceleration 依赖。 | 是 | `.[optimized_core]` |
-| `lora` | 在推理时加载和合并已发布的 PEFT LoRA adapter。 | 否 | `.[lora]` |
-| `profiling` | 模型 profiling 辅助工具。 | 否 | `.[profiling]` |
-| `web` | 最小 FastAPI web service 安装面。 | 是 | `.[web]` |
-| `mcp` | Model Context Protocol server/client 支持。 | 是 | `.[mcp]` |
-| `worldscore` | WorldScore 评测 runtime。 | 是 | `.[worldscore]` |
-| `studio_pointcloud` | Studio 点云可视化。 | 是 | `.[studio_pointcloud]` |
-| `studio_rerun` | 基于 Rerun 的 Studio 可视化。 | 是 | `.[studio_rerun]` |
-| `studio_geometry` | Studio 几何与 Open3D 可视化。 | 是 | `.[studio_geometry]` |
-| `studio_plot` | Studio 绘图与颜色工具。 | 否 | `.[studio_plot]` |
-| `dev` | 构建、pre-commit 和仓库固定版本的 lint 工具。 | 否 | `.[dev]` |
-| `eval_core` | 可选的 CPU 评估依赖。 | 否 | `.[eval_core]` |
-| `all` | 上述经过筛选的通用 runtime bundle。 | — | `.[all]` |
+<KvCatalog heading="Extra" vars rows={[
+    { name: <><code>api</code></>, description: "托管模型 API client，以及图像和请求辅助依赖。", reads: [{ label: "包含于 all", value: "是" }, { label: "安装", value: <><code>.[api]</code></> }] },
+    { name: <><code>apple_pi</code></>, description: "Apple-PI 评测 runtime、judge client 与媒体辅助包。", reads: [{ label: "包含于 all", value: "是" }, { label: "安装", value: <><code>.[apple_pi]</code></> }] },
+    { name: <><code>hf</code></>, description: "Hugging Face 和 ModelScope 资产下载支持。", reads: [{ label: "包含于 all", value: "是" }, { label: "安装", value: <><code>.[hf]</code></> }] },
+    { name: <><code>video</code></>, description: "覆盖视频、媒体、数据和 3D 的宽 runtime 依赖。", reads: [{ label: "包含于 all", value: "否" }, { label: "安装", value: <><code>.[video]</code></> }] },
+    { name: <><code>vipe</code></>, description: "ViPE 几何/深度 runtime 与可视化栈。", reads: [{ label: "包含于 all", value: "否" }, { label: "安装", value: <><code>.[vipe]</code></> }] },
+    { name: <><code>molmoact2</code></>, description: "MolmoAct2 模型服务栈及其窄版本 Transformers 契约。", reads: [{ label: "包含于 all", value: "否" }, { label: "安装", value: <><code>.[molmoact2]</code></> }] },
+    { name: <><code>metrics</code></>, description: "通用评测指标和数据集 I/O。", reads: [{ label: "包含于 all", value: "否" }, { label: "安装", value: <><code>.[metrics]</code></> }] },
+    { name: <><code>distribution_metrics</code></>, description: "感知与分布类指标模型。", reads: [{ label: "包含于 all", value: "否" }, { label: "安装", value: <><code>.[distribution_metrics]</code></> }] },
+    { name: <><code>dvlt</code></>, description: "DVLT 3D/可视化 runtime。", reads: [{ label: "包含于 all", value: "否" }, { label: "安装", value: <><code>.[dvlt]</code></> }] },
+    { name: <><code>ui</code></>, description: "完整 Studio/browser UI，已包含 realtime transport 依赖。", reads: [{ label: "包含于 all", value: "是" }, { label: "安装", value: <><code>.[ui]</code></> }] },
+    { name: <><code>studio_realtime</code></>, description: "最小 WebRTC/realtime Studio transport 栈。", reads: [{ label: "包含于 all", value: "是" }, { label: "安装", value: <><code>.[studio_realtime]</code></> }] },
+    { name: <><code>rtx_postprocess</code></>, description: "NVIDIA 专有 VFX 后处理，只允许显式 opt-in。", reads: [{ label: "包含于 all", value: "否" }, { label: "安装", value: <><code>.[rtx_postprocess]</code></> }] },
+    { name: <><code>tui</code></>, description: "Textual 终端界面。", reads: [{ label: "包含于 all", value: "是" }, { label: "安装", value: <><code>.[tui]</code></> }] },
+    { name: <><code>optimized_core</code></>, description: "可选的 Torch core acceleration 依赖。", reads: [{ label: "包含于 all", value: "是" }, { label: "安装", value: <><code>.[optimized_core]</code></> }] },
+    { name: <><code>lora</code></>, description: "在推理时加载和合并已发布的 PEFT LoRA adapter。", reads: [{ label: "包含于 all", value: "否" }, { label: "安装", value: <><code>.[lora]</code></> }] },
+    { name: <><code>profiling</code></>, description: "模型 profiling 辅助工具。", reads: [{ label: "包含于 all", value: "否" }, { label: "安装", value: <><code>.[profiling]</code></> }] },
+    { name: <><code>web</code></>, description: "最小 FastAPI web service 安装面。", reads: [{ label: "包含于 all", value: "是" }, { label: "安装", value: <><code>.[web]</code></> }] },
+    { name: <><code>mcp</code></>, description: "Model Context Protocol server/client 支持。", reads: [{ label: "包含于 all", value: "是" }, { label: "安装", value: <><code>.[mcp]</code></> }] },
+    { name: <><code>worldscore</code></>, description: "WorldScore 评测 runtime。", reads: [{ label: "包含于 all", value: "是" }, { label: "安装", value: <><code>.[worldscore]</code></> }] },
+    { name: <><code>studio_pointcloud</code></>, description: "Studio 点云可视化。", reads: [{ label: "包含于 all", value: "是" }, { label: "安装", value: <><code>.[studio_pointcloud]</code></> }] },
+    { name: <><code>studio_rerun</code></>, description: "基于 Rerun 的 Studio 可视化。", reads: [{ label: "包含于 all", value: "是" }, { label: "安装", value: <><code>.[studio_rerun]</code></> }] },
+    { name: <><code>studio_geometry</code></>, description: "Studio 几何与 Open3D 可视化。", reads: [{ label: "包含于 all", value: "是" }, { label: "安装", value: <><code>.[studio_geometry]</code></> }] },
+    { name: <><code>studio_plot</code></>, description: "Studio 绘图与颜色工具。", reads: [{ label: "包含于 all", value: "否" }, { label: "安装", value: <><code>.[studio_plot]</code></> }] },
+    { name: <><code>dev</code></>, description: "构建、pre-commit 和仓库固定版本的 lint 工具。", reads: [{ label: "包含于 all", value: "否" }, { label: "安装", value: <><code>.[dev]</code></> }] },
+    { name: <><code>eval_core</code></>, description: "可选的 CPU 评估依赖。", reads: [{ label: "包含于 all", value: "否" }, { label: "安装", value: <><code>.[eval_core]</code></> }] },
+    { name: <><code>all</code></>, description: "上述经过筛选的通用 runtime bundle。", reads: [{ label: "安装", value: <><code>.[all]</code></> }] }
+  ]} />
 
 源码内的 dependency groups 是更窄的 resolver building blocks：
 
-| Group | 预期用途 |
-| --- | --- |
-| `lint` | 仓库固定版本的 pre-commit 与 Ruff 工具链。 |
-| `flash_attn_fa25` | 面向 FA 2.5 兼容环境的 flash-attention 依赖桶。 |
-| `flash_attn_fa28` | 面向 FA 2.8 兼容环境的 flash-attention 依赖桶。 |
-| `runtime_clip_bundle` | 面向 CLIP 的 runtime 兼容依赖桶。 |
-| `runtime_timm_bundle` | Timm/Torch runtime 兼容依赖桶。 |
-| `three_d_core` | 共享点云与 3D 几何包。 |
-| `transformers_high` | 当前 Transformers/Diffusers 兼容依赖桶。 |
-| `transformers_low` | 旧版或模型受限的 Transformers 兼容依赖桶。 |
+- `lint` — 仓库固定版本的 pre-commit 与 Ruff 工具链。
+- `flash_attn_fa25` — 面向 FA 2.5 兼容环境的 flash-attention 依赖桶。
+- `flash_attn_fa28` — 面向 FA 2.8 兼容环境的 flash-attention 依赖桶。
+- `runtime_clip_bundle` — 面向 CLIP 的 runtime 兼容依赖桶。
+- `runtime_timm_bundle` — Timm/Torch runtime 兼容依赖桶。
+- `three_d_core` — 共享点云与 3D 几何包。
+- `transformers_high` — 当前 Transformers/Diffusers 兼容依赖桶。
+- `transformers_low` — 旧版或模型受限的 Transformers 兼容依赖桶。
 
 这些 group 只选择 Python requirements。CUDA/Torch wheel、native extension 构建和模型隔离环境仍然由下面的 setup scripts 与 runtime profiles 管理。
 
@@ -163,20 +161,157 @@ bash scripts/setup/bootstrap_worldfoundry.sh \
 `bootstrap_worldfoundry.sh` 和 `unified_install.sh` 会写出同一套可 `source` 的
 env 文件。这个文件应保留在本机；里面是路径，不应包含密钥。
 
-| 变量 | setup 是否写入 | 用途 |
-| --- | --- | --- |
-| `WORLDFOUNDRY_HOME` | 是 | 本地 runtime state 根目录。 |
-| `WORLDFOUNDRY_REPO_ROOT` | 是 | 当前 WorldFoundry checkout 的绝对路径。 |
-| `WORLDFOUNDRY_CACHE_DIR` | 是 | 通用 cache 根目录。 |
-| `WORLDFOUNDRY_DATA_DIR` | 是 | dataset 和 benchmark data 根目录。 |
-| `WORLDFOUNDRY_MODEL_DIR` | 是 | model asset 根目录。 |
-| `WORLDFOUNDRY_CKPT_DIR` | 是 | 非 HF 固定布局和兼容软链用的 checkpoint 根目录。 |
-| `WORLDFOUNDRY_ARTIFACT_DIR` | 是 | 生成输出和验证产物根目录。 |
-| `WORLDFOUNDRY_CONDA_ENVS_ROOT` | 是 | 统一环境和专用环境的父目录。 |
-| `WORLDFOUNDRY_UNIFIED_ENV_PREFIX` | 是 | 主 conda 环境绝对路径。 |
-| `WORLDFOUNDRY_CUDA_PROFILE` | 是 | 解析出的 CUDA wheel tier；CUDA 12.8+ 主机通常是 `cu128`。 |
-| `HF_HOME`, `HF_HUB_CACHE`, `HF_DATASETS_CACHE` | 是 | 使用 WorldFoundry 管理 HF cache 时的 Hugging Face cache 根目录。 |
-| `HF_TOKEN`, `HUGGING_FACE_HUB_TOKEN` | 否 | 用户自行提供的 gated asset 凭据。不要提交这些变量。 |
+<div className="pi-kv-catalog is-vars not-prose">
+  <section className="pi-kv-group">
+    <h3>变量</h3>
+    <ul>
+      <li className="pi-kv-row">
+        <div className="pi-kv-head">
+          <div className="pi-kv-names">
+            <code>WORLDFOUNDRY_HOME</code>
+          </div>
+          <span className="pi-kv-default">
+            <span>setup 是否写入</span>
+            是
+          </span>
+        </div>
+        <p>本地 runtime state 根目录。</p>
+      </li>
+      <li className="pi-kv-row">
+        <div className="pi-kv-head">
+          <div className="pi-kv-names">
+            <code>WORLDFOUNDRY_REPO_ROOT</code>
+          </div>
+          <span className="pi-kv-default">
+            <span>setup 是否写入</span>
+            是
+          </span>
+        </div>
+        <p>当前 WorldFoundry checkout 的绝对路径。</p>
+      </li>
+      <li className="pi-kv-row">
+        <div className="pi-kv-head">
+          <div className="pi-kv-names">
+            <code>WORLDFOUNDRY_CACHE_DIR</code>
+          </div>
+          <span className="pi-kv-default">
+            <span>setup 是否写入</span>
+            是
+          </span>
+        </div>
+        <p>通用 cache 根目录。</p>
+      </li>
+      <li className="pi-kv-row">
+        <div className="pi-kv-head">
+          <div className="pi-kv-names">
+            <code>WORLDFOUNDRY_DATA_DIR</code>
+          </div>
+          <span className="pi-kv-default">
+            <span>setup 是否写入</span>
+            是
+          </span>
+        </div>
+        <p>dataset 和 benchmark data 根目录。</p>
+      </li>
+      <li className="pi-kv-row">
+        <div className="pi-kv-head">
+          <div className="pi-kv-names">
+            <code>WORLDFOUNDRY_MODEL_DIR</code>
+          </div>
+          <span className="pi-kv-default">
+            <span>setup 是否写入</span>
+            是
+          </span>
+        </div>
+        <p>model asset 根目录。</p>
+      </li>
+      <li className="pi-kv-row">
+        <div className="pi-kv-head">
+          <div className="pi-kv-names">
+            <code>WORLDFOUNDRY_CKPT_DIR</code>
+          </div>
+          <span className="pi-kv-default">
+            <span>setup 是否写入</span>
+            是
+          </span>
+        </div>
+        <p>非 HF 固定布局和兼容软链用的 checkpoint 根目录。</p>
+      </li>
+      <li className="pi-kv-row">
+        <div className="pi-kv-head">
+          <div className="pi-kv-names">
+            <code>WORLDFOUNDRY_ARTIFACT_DIR</code>
+          </div>
+          <span className="pi-kv-default">
+            <span>setup 是否写入</span>
+            是
+          </span>
+        </div>
+        <p>生成输出和验证产物根目录。</p>
+      </li>
+      <li className="pi-kv-row">
+        <div className="pi-kv-head">
+          <div className="pi-kv-names">
+            <code>WORLDFOUNDRY_CONDA_ENVS_ROOT</code>
+          </div>
+          <span className="pi-kv-default">
+            <span>setup 是否写入</span>
+            是
+          </span>
+        </div>
+        <p>统一环境和专用环境的父目录。</p>
+      </li>
+      <li className="pi-kv-row">
+        <div className="pi-kv-head">
+          <div className="pi-kv-names">
+            <code>WORLDFOUNDRY_UNIFIED_ENV_PREFIX</code>
+          </div>
+          <span className="pi-kv-default">
+            <span>setup 是否写入</span>
+            是
+          </span>
+        </div>
+        <p>主 conda 环境绝对路径。</p>
+      </li>
+      <li className="pi-kv-row">
+        <div className="pi-kv-head">
+          <div className="pi-kv-names">
+            <code>WORLDFOUNDRY_CUDA_PROFILE</code>
+          </div>
+          <span className="pi-kv-default">
+            <span>setup 是否写入</span>
+            是
+          </span>
+        </div>
+        <p>解析出的 CUDA wheel tier；CUDA 12.8+ 主机通常是 <code>cu128</code>。</p>
+      </li>
+      <li className="pi-kv-row">
+        <div className="pi-kv-head">
+          <div className="pi-kv-names">
+            <code>HF_HOME</code>, <code>HF_HUB_CACHE</code>, <code>HF_DATASETS_CACHE</code>
+          </div>
+          <span className="pi-kv-default">
+            <span>setup 是否写入</span>
+            是
+          </span>
+        </div>
+        <p>使用 WorldFoundry 管理 HF cache 时的 Hugging Face cache 根目录。</p>
+      </li>
+      <li className="pi-kv-row">
+        <div className="pi-kv-head">
+          <div className="pi-kv-names">
+            <code>HF_TOKEN</code>, <code>HUGGING_FACE_HUB_TOKEN</code>
+          </div>
+          <span className="pi-kv-default">
+            <span>setup 是否写入</span>
+            否
+          </span>
+        </div>
+        <p>用户自行提供的 gated asset 凭据。不要提交这些变量。</p>
+      </li>
+    </ul>
+  </section>
+</div>
 
 公开 checkpoint 优先使用 Hugging Face 原生加载策略：`from_pretrained`、
 `snapshot_download` 和标准 HF cache 变量。`WORLDFOUNDRY_CKPT_DIR` 用于上游
@@ -220,12 +355,12 @@ autotune cache。
 `worldfoundry.core.logging_setup.configure_logging`。显式 CLI 标志优先于继承的
 环境变量。
 
-| 设置 | CLI | 环境变量 | 行为 |
-| --- | --- | --- | --- |
-| 级别 | `--log-level` | `WORLDFOUNDRY_LOG_LEVEL` | 控制台与文件阈值；CLI 接受 `DEBUG`、`INFO`、`WARNING`、`ERROR` 或 `CRITICAL`。 |
-| 文件 sink | `--log-file` | `WORLDFOUNDRY_LOG_FILE` | 可选旋转文件路径；二者均未设置时，拥有输出目录的 CLI 命令会创建每次 run 的 `events.jsonl`。 |
-| JSON Lines | `--log-json` | `WORLDFOUNDRY_LOG_JSON` | 文件 sink 输出 JSON Lines；控制台仍为文本。 |
-| 子进程上下文 | — | `WORLDFOUNDRY_LOG_CONTEXT` | 包含 `run_id`、`job_id`、`benchmark_id`、`model_id` 等结构化关联字段的 JSON object。 |
+<KvCatalog heading="设置" vars rows={[
+    { name: "级别", description: <>{"控制台与文件阈值；CLI 接受 "}<code>DEBUG</code>{"、"}<code>INFO</code>{"、"}<code>WARNING</code>{"、"}<code>ERROR</code>{" 或 "}<code>CRITICAL</code>{"。"}</>, reads: [{ label: "CLI", value: <><code>--log-level</code></> }, { label: "环境变量", value: <><code>WORLDFOUNDRY_LOG_LEVEL</code></> }] },
+    { name: "文件 sink", description: <>{"可选旋转文件路径；二者均未设置时，拥有输出目录的 CLI 命令会创建每次 run 的 "}<code>events.jsonl</code>{"。"}</>, reads: [{ label: "CLI", value: <><code>--log-file</code></> }, { label: "环境变量", value: <><code>WORLDFOUNDRY_LOG_FILE</code></> }] },
+    { name: "JSON Lines", description: "文件 sink 输出 JSON Lines；控制台仍为文本。", reads: [{ label: "CLI", value: <><code>--log-json</code></> }, { label: "环境变量", value: <><code>WORLDFOUNDRY_LOG_JSON</code></> }] },
+    { name: "子进程上下文", description: <>{"包含 "}<code>run_id</code>{"、"}<code>job_id</code>{"、"}<code>benchmark_id</code>{"、"}<code>model_id</code>{" 等结构化关联字段的 JSON object。"}</>, reads: [{ label: "环境变量", value: <><code>WORLDFOUNDRY_LOG_CONTEXT</code></> }] }
+  ]} />
 
 框架托管的 worker 通过 `log_context_environment()` 获得结构化上下文。拥有输出
 目录的 CLI 操作也会导出 `WORLDFOUNDRY_RUN_ID` 供运维查看，但它不能替代
@@ -239,7 +374,7 @@ Hugging Face、GitHub、Slack、AWS token 格式和紧凑 JWT。原始 stdout/st
 
 ## 模型专用环境例外
 
-所有模型默认都先从 `worldfoundry-unified-<cuda-tier>` 开始。只有下表这些 profile
+所有模型默认都先从 `worldfoundry-unified-<cuda-tier>` 开始。只有下面这些 profile
 存在真实 ABI 或框架族冲突时，才单独创建 conda 环境。
 
 安装某个例外环境：
@@ -252,50 +387,24 @@ bash scripts/setup/model_env_install.sh --model <model-id>
 安装对应环境，再检查或下载资产。只有只想安装环境、不碰 checkpoint 时，才直接用
 `scripts/setup/model_env_install.sh`。
 
-<div className="pi-env-model-table">
-
-| 模型 | 专用环境 | Setup 命令 | 说明 |
-| --- | --- | --- | --- |
-| `ac3d` | `ac3d` | `bash scripts/inference/prepare_model_infer.sh ac3d --download` | 官方 runtime 固定 Python 3.10、PyTorch 2.4 和 CUDA 12.4。推理代码在仓内 `worldfoundry/synthesis/visual_generation/ac3d/ac3d_runtime`；外部只需要 checkpoint/asset。 |
-| `cosmos3` | `worldfoundry-cosmos3-cu128` | `bash scripts/inference/prepare_model_infer.sh cosmos3 --download` | Cosmos3 使用原生 diffusion runner、checkpoint-shaped transformer、Wan VAE38、AVAE decoder 与 core runtime policy。Guardrail 保持为可选 orchestration layer；Diffusers 不是 inference backend。 |
-| `gen3c` | `gen3c` | `bash scripts/inference/prepare_model_infer.sh gen3c --download` | 仅推理的 Cosmos Predict1 栈需要 Python 3.10、CUDA 12.4、torch 2.6、Transformer Engine 和 MoGe。setup 只对发布包做 Transformer Engine include/link patch，不再 clone 或构建训练专用的 Apex 仓库。 |
-| `lyra-1` | `lyra` | `bash scripts/inference/prepare_model_infer.sh lyra-1 --download` | 复用 GEN3C 同类的仅推理 Cosmos Predict1 / Transformer Engine 依赖。 |
-| `magi-1` | `magi-official-cu124` | `bash scripts/inference/prepare_model_infer.sh magi-1 --download` | 官方栈是 Python 3.10.12、PyTorch 2.4 / CUDA 12.4。flash-attn 和 flashinfer wheel 对 ABI 敏感，需要留在这个环境。 |
-| `warp-as-history` | `warp-as-history` | `bash scripts/inference/prepare_model_infer.sh warp-as-history --download` | 固定 Python 3.10、torch 2.5.0+cu121、diffusers 0.36、transformers 4.51 和 peft 0.17。 |
-| `hunyuanvideo-t2v`、`hunyuanvideo-i2v`、`hunyuanvideo-1.5-t2v`、`hunyuanvideo-1.5-i2v` | `worldfoundry-unified-cu128` | `bash scripts/inference/prepare_model_infer.sh hunyuanvideo-t2v --download` | 四个 ID 全部使用共享 native diffusion runner 与按角色组织的 Hunyuan component；旧 Diffusers/xFuser CLI 环境不再作为 inference backend。 |
-| `kairos-sensenova` | `kairos-sensenova` | `bash scripts/inference/prepare_model_infer.sh kairos-sensenova --download` | 使用官方 torch/CUDA 12.6 级别依赖和 SageAttention 等 native attention 包；统一 CUDA 环境没有 Kairos attention 栈时用这个环境。 |
-| `lingbot-world`、`lingbot-world-act` | `lingbot-world` | `bash scripts/inference/prepare_model_infer.sh lingbot-world --download` | Base-Cam 与独立 catalog 的公开 Base-Act checkpoint 复用仓内 runtime。parity 需要精确 torch 和 flash-attn pins；统一环境在上游式测试里生成过近黑色视频。 |
-| `wonderworld` | `wonderworld` | `bash scripts/inference/prepare_model_infer.sh wonderworld --download` | 推理路径会 import PyTorch3D CUDA 扩展；运行 official path 前需要安装或构建与该环境匹配的 PyTorch3D wheel。 |
-| `wonderjourney` | `wonderworld` | `bash scripts/inference/prepare_model_infer.sh wonderjourney --download` | 复用 WonderWorld 的 PyTorch3D 扩展环境，WonderJourney runtime 代码已在仓内。 |
-| `hunyuan-game-craft` | `HYGameCraft` | `bash scripts/inference/prepare_model_infer.sh hunyuan-game-craft --download` | 官方推理依赖 HYGameCraft 和 torchrun sequence parallelism。专用环境包含 CUDA 12.4 toolkit，并从 PyPI 发布包构建固定版本 flash-attn 2.6.3，不 clone 它的 Git 仓库；共享 GPU 机器上要显式设置 `cuda_visible_devices` / `torchrun_nproc_per_node`。 |
-| `octo` | `worldfoundry-octo-jax` | `bash scripts/inference/prepare_model_infer.sh octo --download` | JAX CUDA 11.8、Flax 0.7.5、TensorFlow、dlimp 和 Octo tokenizer 资产需要与 PyTorch CUDA 环境隔离。 |
-| `lapa` | `worldfoundry-lapa-jax-cu118` | `bash scripts/inference/prepare_model_infer.sh lapa --download` | 使用官方 Python 3.10、JAX 0.4.25 CUDA 11/cuDNN 8.6、Flax 0.8.2、Tux 0.0.2 和 Transformers 4.40 推理栈。Transformers 5 已移除 LAPA 依赖的 Flax generation 模块，因此必须隔离。 |
-| `openvla-oft` | `worldfoundry-vla-openvla-compat-cu121` | `bash scripts/inference/prepare_model_infer.sh openvla-oft --download` | Prismatic/OpenVLA 兼容栈，使用较旧 transformers/timm/tokenizers；LIBERO/ALOHA OpenVLA-OFT 推理走这个环境。 |
-| `cogact` | `worldfoundry-vla-openvla-compat-cu121` | `bash scripts/inference/prepare_model_infer.sh cogact --download` | 和 OpenVLA-OFT 复用兼容环境，inference-only 加载会复用已落盘的 OpenVLA Llama tokenizer；只有本地既没有兼容 tokenizer、也没有完整 Llama-2 mirror 时才需要 token。 |
-| `lingbot-va` | `lingbot-va` | `bash scripts/inference/prepare_model_infer.sh lingbot-va --download` | prepare-only profile，对齐官方 Python 3.10、torch 2.9、CUDA 12.6、flash-attn 栈；rollout 前先 stage LingBot-VA base/posttrain checkpoints。 |
-| `being-h05` | `beingh` | `bash scripts/inference/prepare_model_infer.sh being-h05 --download` | prepare-only profile。需要 stage 全部 Being-H0.5 checkpoints；完整 `get_action` parity 需要上游 policy 栈，并且单张 80GB GPU profile 余量不够。 |
-| `dreamdojo` | `dreamdojo` | `bash scripts/inference/prepare_model_infer.sh dreamdojo --download` | prepare-only profile，记录官方面向 H100 级主机的 torchcodec/CUDA 12.8 设置；启用真实命令模板前需要先准备 GR-1 eval dataset。 |
-
-</div>
+<DedicatedEnvCatalog locale="zh" />
 
 EvalCrafter 是当前唯一由 WorldFoundry 管理专用 metric profile 的 benchmark。
 其他 benchmark 的 native stack 会在下一节单独列出；只有各自 preflight 通过后才算已配置。
 
 ## 统一环境但需要额外 runtime 条件
 
-下表模型仍然使用 `worldfoundry-unified-<cuda-tier>`，但文档里必须写清楚额外的本地
+下列模型仍然使用 `worldfoundry-unified-<cuda-tier>`，但文档里必须写清楚额外的本地
 资产、编译 wheel 或外部服务。这些都不是 clone 外部 repo 的理由；代码路径仍然在仓内。
 
-| 模型或模型族 | 额外条件 | 说明 |
-| --- | --- | --- |
-| 使用统一环境的 WRBench camera/world 集成（EasyAnimate、Hunyuan WorldPlay、HunyuanWorld-Voyager、InSpatio-World、Matrix-Game 2/3、ReCamMaster、SANA-WM、ATI、HyDRA、Spatia、minWM、MagicWorld、LiveWorld、VerseCrafter、VideoX-Fun camera variants、HY-World renderer） | 各 profile 声明的 Hugging Face checkpoint；Spatia 默认 MapAnything checkpoint 仅限非商业研究。 | 这些模型使用 `worldfoundry-unified-<cuda-tier>`，并各自保留独立的仓内推理 binding。Wan2.1、MapAnything、UniCeption、Uni3C、Depth Pro、STream3R、SAM3 视频分割、Qwen3-VL 实体提取和点云投影等可复用组件统一放在 `base_models`，runtime config 放在 `worldfoundry/data`；setup 不 clone 外部源码仓库。AC3D、Cosmos3、GEN3C、Hunyuan GameCraft 和两个 LingBot 路由使用上表专用环境。 |
-| SkyReels V3 | 官方 8 卡 USP 路径需要 CUDA compiler、flash-attn 和 torchao。 | 运行不带 `--skip-flash-attn` 的 `unified_install.sh`，或用 `scripts/setup/install_flash_attn.sh` 构建 flash-attn。 |
-| Matrix-Game-3 | flash-attn。 | config 可能请求 FA3；A100 验证主机上回退到 FA2 是可接受的。 |
-| HunyuanWorld-Mirror | 与当前 CUDA/PyTorch 匹配的 `gsplat` wheel。 | wheel 匹配当前 torch 栈时，仍属于统一环境模型。 |
-| pixelSplat | 本地 Gaussian rasterization 扩展和 `re10k.ckpt`。 | 模型 wrapper 在仓内；只需要用户准备扩展和 checkpoint。 |
-| LingBot-Map | 可选 FlashInfer。 | wrapper 默认走 SDPA，所以 baseline 推理不强制依赖 FlashInfer。 |
-| OpenPI / MME-VLA | JAX policy 依赖、部分 OpenPI checkpoint shards 需要 `gsutil`，完整 policy rollout 可能需要 OpenPI 风格 websocket 或 robot-simulator 服务。 | WorldFoundry 保留仓内代码；这些是运行时服务或 checkpoint 传输工具，不是外部 repo clone。LAPA 使用上表中的独立环境。 |
-| Solaris | JAX/Orbax checkpoint 加载和官方 HF evaluation fixtures。 | WorldFoundry 中走统一环境；文档重点写 dataset/checkpoint 结构，不写单独 conda 环境。 |
+- **使用统一环境的 WRBench camera/world 集成（EasyAnimate、Hunyuan WorldPlay、HunyuanWorld-Voyager、InSpatio-World、Matrix-Game 2/3、ReCamMaster、SANA-WM、ATI、HyDRA、Spatia、minWM、MagicWorld、LiveWorld、VerseCrafter、VideoX-Fun camera variants、HY-World renderer）** — 额外条件：各 profile 声明的 Hugging Face checkpoint；Spatia 默认 MapAnything checkpoint 仅限非商业研究。说明：这些模型使用 `worldfoundry-unified-<cuda-tier>`，并各自保留独立的仓内推理 binding。Wan2.1、MapAnything、UniCeption、Uni3C、Depth Pro、STream3R、SAM3 视频分割、Qwen3-VL 实体提取和点云投影等可复用组件统一放在 `base_models`，runtime config 放在 `worldfoundry/data`；setup 不 clone 外部源码仓库。AC3D、Cosmos3、GEN3C、Hunyuan GameCraft 和两个 LingBot 路由使用上表专用环境。
+- **SkyReels V3** — 额外条件：官方 8 卡 USP 路径需要 CUDA compiler、flash-attn 和 torchao。说明：运行不带 `--skip-flash-attn` 的 `unified_install.sh`，或用 `scripts/setup/install_flash_attn.sh` 构建 flash-attn。
+- **Matrix-Game-3** — 额外条件：flash-attn。说明：config 可能请求 FA3；A100 验证主机上回退到 FA2 是可接受的。
+- **HunyuanWorld-Mirror** — 额外条件：与当前 CUDA/PyTorch 匹配的 `gsplat` wheel。说明：wheel 匹配当前 torch 栈时，仍属于统一环境模型。
+- **pixelSplat** — 额外条件：本地 Gaussian rasterization 扩展和 `re10k.ckpt`。说明：模型 wrapper 在仓内；只需要用户准备扩展和 checkpoint。
+- **LingBot-Map** — 额外条件：可选 FlashInfer。说明：wrapper 默认走 SDPA，所以 baseline 推理不强制依赖 FlashInfer。
+- **OpenPI / MME-VLA** — 额外条件：JAX policy 依赖、部分 OpenPI checkpoint shards 需要 `gsutil`，完整 policy rollout 可能需要 OpenPI 风格 websocket 或 robot-simulator 服务。说明：WorldFoundry 保留仓内代码；这些是运行时服务或 checkpoint 传输工具，不是外部 repo clone。LAPA 使用上表中的独立环境。
+- **Solaris** — 额外条件：JAX/Orbax checkpoint 加载和官方 HF evaluation fixtures。说明：WorldFoundry 中走统一环境；文档重点写 dataset/checkpoint 结构，不写单独 conda 环境。
 
 ## Benchmark Metric 专用环境
 
@@ -318,12 +427,10 @@ EvalCrafter 已支持的三项 CLIP 指标和 `final_result.txt` 导入都运行
 0.15.2、TensorFlow 2.12.0、PaddlePaddle-GPU 2.5.1、MMCV 2.0.1 和 MMAction2
 1.1.0 pins；它只负责准备 upstream 依赖面，不表示 WorldFoundry 已经编排完整 scorer。
 
-| Benchmark 族 | 环境边界 | 已验证范围 |
-| --- | --- | --- |
-| EvalCrafter | 三项官方 CLIP 派生指标与结果导入使用统一环境；外部完整栈使用官方旧版独立环境准备。 | bounded metric 路径已验证；环境准备已有文档，但完整 17 项重算和 leaderboard 输出仍不支持。 |
-| iWorld-Bench | 使用统一环境，包含固定版本的仓内 ViPE 原生源码和 CUDA 构建。`WORLDFOUNDRY_IWORLD_BENCH_PYTHON` 只是给非标准、ABI 兼容 Python 的可选覆盖。 | 一个真实 16 帧视频已跑通官方 `memory_ability` 组件路径。未覆盖 bundled 三条 prompt 和全部九个组件指标，因此 full-suite 和 leaderboard validity 仍为 false。 |
-| VBench / VBench-2.0 / VBench++ | 统一环境，加所选 dimension 对应的 checkpoint 和可选 perception package。 | 只验证 bounded official dimension；每个所选 dimension 都必须单独通过 preflight。 |
-| T2V-SafetyBench | 统一 client 环境，加用户提供的 judge API endpoint/key。 | API 失败会 fail closed；本地 fixture 不会被声明成真实 judge 结果。 |
+- **EvalCrafter** — 环境边界：三项官方 CLIP 派生指标与结果导入使用统一环境；外部完整栈使用官方旧版独立环境准备。已验证范围：bounded metric 路径已验证；环境准备已有文档，但完整 17 项重算和 leaderboard 输出仍不支持。
+- **iWorld-Bench** — 环境边界：使用统一环境，包含固定版本的仓内 ViPE 原生源码和 CUDA 构建。`WORLDFOUNDRY_IWORLD_BENCH_PYTHON` 只是给非标准、ABI 兼容 Python 的可选覆盖。已验证范围：一个真实 16 帧视频已跑通官方 `memory_ability` 组件路径。未覆盖 bundled 三条 prompt 和全部九个组件指标，因此 full-suite 和 leaderboard validity 仍为 false。
+- **VBench / VBench-2.0 / VBench++** — 环境边界：统一环境，加所选 dimension 对应的 checkpoint 和可选 perception package。已验证范围：只验证 bounded official dimension；每个所选 dimension 都必须单独通过 preflight。
+- **T2V-SafetyBench** — 环境边界：统一 client 环境，加用户提供的 judge API endpoint/key。已验证范围：API 失败会 fail closed；本地 fixture 不会被声明成真实 judge 结果。
 
 不能因为 import 成功就推断独立环境已经可用。catalog/runtime profile 必须写出 Python
 入口或 setup 命令、资产要求和已验证范围；如果还没有可复现的环境配置，对应 metric
@@ -332,11 +439,9 @@ EvalCrafter 已支持的三项 CLIP 指标和 `final_result.txt` 导入都运行
 可复用 foundation model 放在 `worldfoundry/base_models`。这些组件为后续完整套件集成提供
 基础；组件存在并不代表当前 bounded EvalCrafter runner 已经调用它们：
 
-| 组件 | 仓内位置 | 说明 |
-| --- | --- | --- |
-| DeepFace runtime | `worldfoundry/base_models/perception_core/face/deepface` | 可供后续 celebrity identity 集成；当前支持的 CLIP 子集不会执行它。 |
-| DOVER runtime | `worldfoundry/base_models/perception_core/video_quality/dover` | 可供后续视频质量集成；当前支持的 CLIP 子集不会执行它。 |
-| VideoMAE action recipe | `worldfoundry/base_models/perception_core/action_recognition/videomae_mmaction` | 只保留 EvalCrafter 实际使用的 VideoMAEv2 config 和 Kinetics-400 label map。MMAction2 作为环境依赖安装，不把完整框架源码复制进仓库。 |
+- **DeepFace runtime** (`worldfoundry/base_models/perception_core/face/deepface`) — 可供后续 celebrity identity 集成；当前支持的 CLIP 子集不会执行它。
+- **DOVER runtime** (`worldfoundry/base_models/perception_core/video_quality/dover`) — 可供后续视频质量集成；当前支持的 CLIP 子集不会执行它。
+- **VideoMAE action recipe** (`worldfoundry/base_models/perception_core/action_recognition/videomae_mmaction`) — 只保留 EvalCrafter 实际使用的 VideoMAEv2 config 和 Kinetics-400 label map。MMAction2 作为环境依赖安装，不把完整框架源码复制进仓库。
 
 已支持的子集只需要 CLIP ViT-B/32；将它放到标准 checkpoint root，或显式设置覆盖变量：
 

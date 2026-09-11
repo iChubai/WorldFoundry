@@ -1,27 +1,50 @@
 ---
 title: "HunyuanWorld-Voyager"
-description: "HunyuanWorld-Voyager generates world-consistent RGB-D video along user-defined camera paths — walk a camera through the scene implied by one image and get aligned color and depth for 3D reconstruction."
+description: "HunyuanWorld-Voyager from Tencent (Hunyuan): world and video; Verified."
+modelId: "hunyuanworld-voyager"
 pageSource: generated
 ---
 
-**Publisher:** Tencent (Hunyuan) · Company
-video
-
 HunyuanWorld-Voyager generates world-consistent RGB-D video along user-defined camera paths — walk a camera through the scene implied by one image and get aligned color and depth for 3D reconstruction. In this catalog the runner is verified against the official case1 conditioned-video demo with the upstream single-GPU command shape.
+
+<ModelPaperFigures modelId="hunyuanworld-voyager" locale="en" />
+
+The recorded paper is [arXiv 2405.07719](https://arxiv.org/abs/2405.07719).
+
+Project page: [3d-models.hunyuan.tencent.com/world](https://3d-models.hunyuan.tencent.com/world/). Code: [Tencent-Hunyuan/HunyuanWorld-Voyager](https://github.com/Tencent-Hunyuan/HunyuanWorld-Voyager).
 
 <ModelCommandBuilder modelId="hunyuanworld-voyager" locale="en" />
 
-## Architecture
+## What it is for
 
-Per the upstream release, Voyager combines a HunyuanVideo-based generator with joint RGB-D output and a world-cache mechanism for long-range consistency. The official case1 defaults are recorded in the runtime profile: num_frames=49, infer_steps=50, flow_shift=7.0, embedded_cfg_scale=6.0, i2v_stability=true.
+Use `hunyuanworld-voyager` for catalog world-model inference. Choose it when you need action-conditioned future frames rather than a standalone clip generator.
 
-## Usage notes
+Per the upstream release, Voyager combines a HunyuanVideo-based generator with joint RGB-D output and a world-cache mechanism for long-range consistency. The official case1 defaults are recorded in the runtime profile: num_frames=49, infer_steps=50, flow_shift=7.0, embedded_cfg_scale=6.0, i2v_stability=true. It is published by Tencent (Hunyuan).
 
-HunyuanWorldVoyagerPipeline wraps the in-tree runtime — no external checkout at import or inference time. Per-run visual QA is tracked outside the catalog.
+Catalog tasks include world, video, and world model. Documented outputs include video.
 
-## Evaluation benchmarks
+Recorded evaluation entry points include [WorldScore](/docs/evaluation/benchmark-hub/worldscore) (Scoring for camera-navigable generated worlds), [CameraBench](/docs/evaluation/benchmark-hub/camerabench) (Camera-path adherence evaluation).
 
-- [WorldScore](/docs/evaluation/benchmark-hub/worldscore) — Scoring for camera-navigable generated worlds.
-- [CameraBench](/docs/evaluation/benchmark-hub/camerabench) — Camera-path adherence evaluation.
+## Runtime contract
+
+Required `image`; optional `prompt`, `video`, and `actions` (camera_path, navigation_action); artifacts `hunyuanworld-voyager.mp4`.
+
+Recorded task profiles: `world`, `video`, and `world_model`. WorldFoundry binds `HunyuanWorldVoyagerPipeline`.
+
+Family status: **Verified**.
+
+HunyuanWorldVoyagerPipeline wraps the in-tree runtime — no external checkout at import or inference time.
+
+Existing in-tree runtime is now exposed through a BaseSynthesis subclass.
+
+## Running in WorldFoundry
+
+Launch `worldfoundry-eval run hunyuanworld-voyager --pipeline.task-profile world` to step the world. The command builder above switches `--pipeline.task-profile` among recorded tasks and still emits `worldfoundry-eval run`.
+
+It runs in the unified environment `worldfoundry-unified-cu128` (Python 3.11, CUDA 12.8).
+
+Recorded weight repositories include `tencent/HunyuanWorld-Voyager`. Stage assets with `bash scripts/inference/prepare_model_infer.sh hunyuanworld-voyager`.
+
+Status: **Verified**.
 
 <ModelRelatedRecipes modelId="hunyuanworld-voyager" locale="en" />

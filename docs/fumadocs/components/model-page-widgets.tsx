@@ -3,6 +3,7 @@ import { ArrowRight } from 'lucide-react';
 
 import { ModelCommandBuilder as ModelCommandBuilderClient } from '@/components/model-command-builder';
 import { ModelIdentityMark } from '@/components/model-identity-mark';
+import { ModelVariantCards } from '@/components/model-variant-cards';
 import { getModelRecipe, getRelatedModelRecipes } from '@/lib/model-recipes';
 
 type Locale = 'en' | 'zh';
@@ -16,7 +17,12 @@ export function ModelCommandBuilder({
 }) {
   const recipe = getModelRecipe(modelId);
   if (!recipe) return null;
-  return <ModelCommandBuilderClient recipe={recipe} locale={locale} />;
+  return (
+    <>
+      <ModelCommandBuilderClient recipe={recipe} locale={locale} />
+      <ModelVariantCards modelId={modelId} locale={locale} />
+    </>
+  );
 }
 
 export function ModelRelatedRecipes({

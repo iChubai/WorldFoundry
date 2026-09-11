@@ -24,6 +24,43 @@
   --pi-radius-md: 0.625rem;
   --pi-radius-lg: 0.875rem;
   --pi-radius-xl: 1rem;
+  --pi-ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --pi-ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+
+  /* Docs type scale — Mintlify Aspen / Tailwind prose (SGLang Diffusion). */
+  --pi-doc-frame-max-width: 92rem;
+  --pi-doc-body-size: 1rem;
+  --pi-doc-body-leading: 1.75;
+  --pi-doc-body-tracking: -0.0125rem;
+  --pi-doc-paragraph-gap: 1.25em;
+  --pi-doc-list-gap: 1.25em;
+  --pi-doc-list-indent: 1.625em;
+  --pi-doc-list-item-gap: 0.5em;
+  --pi-doc-h1-size: 1.875rem;
+  --pi-doc-h1-leading: 1.2;
+  --pi-doc-h1-tracking: -0.025em;
+  --pi-doc-h1-weight: 600;
+  --pi-doc-h2-size: 1.5rem;
+  --pi-doc-h2-leading: 1.33333;
+  --pi-doc-h2-weight: 600;
+  --pi-doc-h2-mt: 2em;
+  --pi-doc-h2-mb: 1em;
+  --pi-doc-h3-size: 1.25rem;
+  --pi-doc-h3-leading: 1.6;
+  --pi-doc-h3-weight: 600;
+  --pi-doc-h3-mt: 1.6em;
+  --pi-doc-h3-mb: 0.6em;
+  --pi-doc-h4-size: 1rem;
+  --pi-doc-h4-leading: 1.5;
+  --pi-doc-h4-weight: 600;
+  --pi-doc-h4-mt: 1.5em;
+  --pi-doc-h4-mb: 0.5em;
+  --pi-doc-code-size: 0.875em;
+  --pi-doc-pre-size: 0.875rem;
+  --pi-doc-pre-leading: 1.71429;
+  --pi-doc-ui-xs: 0.75rem;
+  --pi-doc-ui-sm: 0.8125rem;
+  --pi-doc-ui-md: 0.875rem;
 
   /* Semantic surfaces (docs/content) */
   --pi-surface-table-head: #eee9dd;

@@ -1,93 +1,38 @@
 ---
 title: EvalCrafter
-description: 17-metric text-to-video evaluation across visual quality, alignment, motion, and temporal consistency.
+description: "700-prompt T2V quality bench: visual, alignment, motion, temporality (17 metrics → Total). WorldFoundry recomputes CLIP subset or imports; no invented board."
 ---
 
-## About
+EvalCrafter (Tencent AI Lab and City University of Hong Kong) is a **700-prompt** text-to-video quality suite. Seventeen objective metrics roll up into four aspects plus `evalcrafter_total`:
 
-**Publisher:** Tencent AI Lab & City University of Hong Kong
+- **Visual quality** — DOVER aesthetic / technical VQA, Inception Score.
+- **Text–video alignment** — CLIP, BLIP-BLEU, SD score, detection / color / count, OCR error, celebrity-ID error.
+- **Motion quality** — action recognition, motion activity, optical flow.
+- **Temporality** — temporal CLIP, warping error, face consistency.
 
-EvalCrafter evaluates text-to-video models on a 700-prompt suite with about 17 objective metrics grouped into four aspects: visual quality (DOVER aesthetic/technical VQA, inception score), text-video alignment (CLIP score, BLIP-BLEU, SD score, detection/color/count scores, OCR error, celebrity ID error), motion quality (action score, motion AC score, flow score), and temporal consistency (CLIP temporal score, warping error, face consistency).
+Paper: [EvalCrafter](https://arxiv.org/abs/2310.11440). Project: [evalcrafter.github.io](http://evalcrafter.github.io). Code: [evalcrafter/EvalCrafter](https://github.com/evalcrafter/EvalCrafter). Prompts: [`RaphaelLiu/EvalCrafter_T2V_Dataset`](https://huggingface.co/datasets/RaphaelLiu/EvalCrafter_T2V_Dataset). In-tree list: `worldfoundry/data/benchmarks/assets/evalcrafter/prompt700.txt`.
 
-WorldFoundry keeps an in-tree raw-metric implementation (`evalcrafter_raw_metrics.py`) for the CLIP-based subset and a normalizer for official EvalCrafter result exports; both paths convert into the standard scorecard. A bundled `sample_results.txt` supports import smoke runs.
+WorldFoundry keeps an **in-tree CLIP subset** (`clip_score`, `clip_temp_score`, `face_consistency_score`) and a normalizer for official `final_result.txt` dumps. Videos must be prompt-index MP4s (`0000.mp4` … `0699.mp4`). A bundled `sample_results.txt` supports import smoke. Primary key: `evalcrafter_total`.
 
-Official references:
+<BenchmarkPageSections id="evalcrafter" locale="en" />
 
-- Paper: [arxiv.org/abs/2310.11440](https://arxiv.org/abs/2310.11440)
-- Project page: [evalcrafter.github.io](http://evalcrafter.github.io)
-- Official repository: [evalcrafter/EvalCrafter](https://github.com/evalcrafter/EvalCrafter)
+## How to run
 
-## Evaluation protocol
-
-Generated videos must be prompt-index numbered MP4 files (`0000.mp4`, `0001.mp4`, ...) matching the official prompt list order. `--run-official` computes the in-tree metric subset directly from videos; `--from-upstream-results` or `--official-results-path` imports official metric dumps; `--metrics` selects metric families and `--check-inputs` preflights the layout.
-
-Primary metric: `evalcrafter_total`.
-
-| Metric | Meaning | Direction |
-| --- | --- | --- |
-| `visual_quality` | EvalCrafter visual-quality score. | Higher is better |
-| `text_video_alignment` | EvalCrafter text-video alignment score. | Higher is better |
-| `motion_quality` | EvalCrafter motion-quality score. | Higher is better |
-| `temporal_consistency` | EvalCrafter temporal-consistency score. | Higher is better |
-| `evalcrafter_total` | Aggregate EvalCrafter score. | Higher is better |
-| `vqa_aesthetic` | DOVER aesthetic component. | Higher is better |
-| `vqa_technical` | DOVER technical component. | Higher is better |
-| `inception_score` | EvalCrafter IS component. | Higher is better |
-| `clip_temp_score` | Temporal CLIP component. | Higher is better |
-| `warping_error` | Temporal warping error. | Lower is better |
-| `face_consistency_score` | Face consistency component. | Higher is better |
-| `action_score` | Action-recognition component. | Higher is better |
-| `motion_ac_score` | Motion activity component. | Higher is better |
-| `flow_score` | Optical-flow component. | Higher is better |
-| `clip_score` | CLIP alignment component. | Higher is better |
-| `blip_bleu` | BLIP/BLEU alignment component. | Higher is better |
-| `sd_score` | Stable-diffusion alignment component. | Higher is better |
-| `detection_score` | Detection alignment component. | Higher is better |
-| `color_score` | Color alignment component. | Higher is better |
-| `count_score` | Object-count alignment component. | Higher is better |
-| `ocr_error` | OCR mismatch component. | Lower is better |
-| `celebrity_id_error` | Celebrity identity mismatch component. | Lower is better |
-
-## Data and artifact layout
-
-In-tree paths:
-
-```text
-worldfoundry/data/benchmarks/tasks/external/evalcrafter.yaml
-worldfoundry/evaluation/tasks/execution/runners/evalcrafter/run_evalcrafter_official_runner.py
-worldfoundry/evaluation/tasks/execution/runners/evalcrafter/evalcrafter_raw_metrics.py
-worldfoundry/data/benchmarks/assets/evalcrafter
-```
-
-```bash
-export WORLDFOUNDRY_GENERATED_ARTIFACT_DIR=/path/to/evalcrafter/generated_videos
-```
-
-```text
-/path/to/evalcrafter/generated_videos/
-  0000.mp4
-  0001.mp4
-  ...
-```
-
-The CLIP ViT-B/32 checkpoint resolves through the shared base-model asset directory, `WORLDFOUNDRY_CLIP_VIT_B32_MODEL_DIR`, or `--clip-model`.
-
-## Run the benchmark
-
-Catalog-recorded validation command:
+Import official aggregates (smoke uses the bundled sample):
 
 ```bash
 worldfoundry-eval zoo benchmark-run \
   --benchmark-id evalcrafter \
   --mode official-validation \
   --official-results-path worldfoundry/data/benchmarks/assets/evalcrafter/sample_results.txt \
-  --output-dir tmp/benchmark_zoo/evalcrafter-import-smoke \
+  --output-dir tmp/evalcrafter/official-validation \
   --json
 ```
 
-Compute the in-tree metric subset from generated videos:
+Recompute the in-tree CLIP subset from numbered MP4s:
 
 ```bash
+export WORLDFOUNDRY_GENERATED_ARTIFACT_DIR=/path/to/evalcrafter/generated_videos
 worldfoundry-eval zoo benchmark-run \
   --benchmark-id evalcrafter \
   --mode official-run \
@@ -96,31 +41,16 @@ worldfoundry-eval zoo benchmark-run \
   --json
 ```
 
-## Checkpoints and environment variables
+CLIP ViT-B/32 resolves through `WORLDFOUNDRY_CLIP_VIT_B32_MODEL_DIR` or `--clip-model`. Default import path: `WORLDFOUNDRY_EVALCRAFTER_RESULTS_PATH`. Optional root: `WORLDFOUNDRY_EVALCRAFTER_ROOT`.
 
-- `WORLDFOUNDRY_EVALCRAFTER_ROOT`: Optional override pointing at an external runtime checkout.
-- `WORLDFOUNDRY_EVALCRAFTER_RESULTS_PATH`: Default path the importer reads official result exports from when `--official-results-path` is not passed.
-- `WORLDFOUNDRY_GENERATED_ARTIFACT_DIR`: Directory containing the candidate generated artifacts to score or import against.
-- `WORLDFOUNDRY_CLIP_VIT_B32_MODEL_DIR`: Local CLIP ViT-B/32 checkpoint directory for the in-tree metric subset.
+In-tree pointers:
 
-Shared checkpoint assets: `clip_vit_b32`.
+```text
+worldfoundry/data/benchmarks/tasks/external/evalcrafter.yaml
+worldfoundry/evaluation/tasks/execution/runners/evalcrafter/
+worldfoundry/data/benchmarks/assets/evalcrafter
+```
 
-This benchmark reuses the shared base-model dependency stack: `clip_vit_b32`.
-
-## Outputs
-
-The run writes into `--output-dir`:
-
-- `scorecard.json`: WorldFoundry scorecard with the metric values recorded above.
-- `benchmark_contract.json`: Benchmark contract record for the run (inputs, mode, provenance).
-- `raw_metric_table.jsonl`: Metric rows backing the scorecard.
-
-Scorecard primary key: `evalcrafter_total` (leaderboard key `Total`), stored in `scorecard.json`.
-
-## Limitations
-
-- The in-tree `official-run` path recomputes only the CLIP-based subset; DOVER/RAFT/face-model metrics require their upstream checkpoints.
-- Full 17-metric leaderboard parity requires the complete official metric stack over the 700-prompt suite.
-- A local scorecard is not an EvalCrafter leaderboard submission.
+Outputs include `scorecard.json` (primary `evalcrafter_total`), `benchmark_contract.json`, and `raw_metric_table.jsonl`.
 
 [← Benchmark Hub](/docs/evaluation/benchmark-hub)

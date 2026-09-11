@@ -1,32 +1,28 @@
 ---
 title: "WorldGen"
-description: "WorldGen turns a text prompt or an image into a full 3D world — text-to-3D-world and image-to-3D-world generation in one project."
-pageSource: generated
+description: "ZiYang Xie WorldGen: text or image in, traversable 3D splat/mesh out. In-tree adapter; gated FLUX foundations; runner parity pending."
+modelId: "worldgen"
+pageSource: authored
 ---
 
-**Publisher:** Open-source research release (institution not recorded) · Research lab
-text · image → 3D scene · world state
-[WorldGen: From Text to Traversable and Interactive 3D Worlds](https://arxiv.org/abs/2511.16825) (2025)
+WorldGen on this card is **ZiYang Xie's** open 3D-world generator ([github.com/ZiYang-xie/WorldGen](https://github.com/ZiYang-xie/WorldGen), project [worldgen.github.io](https://worldgen.github.io/)). At runtime it turns a **text prompt** and/or a **single image** into a **3D scene** — default **Gaussian splat** `worldgen.ply`, or a **mesh** `worldgen.glb` when `return_mesh` is set. It does **not** emit world video.
 
-WorldGen turns a text prompt or an image into a full 3D world — text-to-3D-world and image-to-3D-world generation in one project. In this catalog WorldFoundry exposes an in-tree adapter that executes the WorldGen inference flow when assets are staged; runner parity is pending, and missing gated foundation models are reported at inference time.
+<ModelPaperFigures modelId="worldgen" locale="en" />
 
-<figure className="wf-recipe-media is-diagram">
-  <img src="/models/worldgen/paper.png" alt="WorldGen: From Text to Traversable and Interactive 3D Worlds" />
-  <figcaption>WorldGen: From Text to Traversable and Interactive 3D Worlds</figcaption>
-</figure>
+The catalog paper URL and title-page thumb are Meta Reality Labs' [WorldGen: From Text to Traversable and Interactive 3D Worlds](https://arxiv.org/abs/2511.16825). That is a **different project** with the same name. This page documents the **LeoXie/WorldGen** adapter WorldFoundry actually wires, not Meta's release. It is also **not** [Hunyuan World worldgen](/docs/guides/supported-models/hyworld-worldgen).
 
 <ModelCommandBuilder modelId="worldgen" locale="en" />
 
-## Architecture
+## What it is for
 
-The catalog records a generation stack that depends on gated FLUX foundation models plus WorldGen's own assets (apache-2.0 for the WorldGen release itself, paper arXiv 2511.16825). Architecture internals beyond the recorded tasks are not stored in this repository.
+Build a walkable 3D asset, not a clip. Launch `worldfoundry-eval run worldgen` with `--pipeline.task-profile 3d-world-generation`. Recorded inputs: `prompt` and `image`. Optional `actions.camera_path`. Video is **not** a required input. The in-tree flow is text-to-scene (`t2s`) or image-to-scene (`i2s`): FLUX paints a panorama, then the adapter reconstructs splat or mesh. You can also pass a ready panorama and skip FLUX generation.
 
-## Usage notes
+Default inference resolution in the vendored script is **1600**. Low-VRAM mode turns on automatically below 24 GB. Background inpaint cannot combine with `return_mesh`.
 
-Accept the gated FLUX terms and stage the WorldGen assets before running; the in-tree adapter can then execute the inference flow. Full official scene-quality parity remains pending, with per-run artifact checks tracked outside the catalog.
+Score generated 3D worlds on [WorldScore](/docs/evaluation/benchmark-hub/worldscore). That is a catalog entry point, not an ingested WorldFoundry score.
 
-## Evaluation benchmarks
+## Running in WorldFoundry
 
-- [WorldScore](/docs/evaluation/benchmark-hub/worldscore) — Standard scoring for generated 3D worlds.
+`WorldGenPipeline` is an in-tree subprocess adapter in `worldfoundry-unified-cu128` (Python 3.11, CUDA 12.8). Stage `LeoXie/WorldGen` **and** accept the gated **FLUX.1-dev** (text-to-pano) and **FLUX.1-Fill-dev** (image-to-pano) terms. Missing foundations are reported at inference time. **Runner / official scene-quality parity is pending.**
 
 <ModelRelatedRecipes modelId="worldgen" locale="en" />

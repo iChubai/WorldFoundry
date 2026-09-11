@@ -1,115 +1,41 @@
 ---
 title: WBench
-description: "Multi-turn interactive video world-model evaluation: 28 metrics across quality, setting, interaction, consistency, and physical dimensions."
+description: "Meituan LongCat multi-turn video world-model bench: 28 metrics, five axes. WorldFoundry ships the metric runtime; a one-video flicker run is not the 289-case protocol."
 ---
 
-## About
+WBench (Meituan LongCat) evaluates **multi-turn interactive video world models** along five axes that roll into `wbench_average`:
 
-**Publisher:** Meituan (LongCat team)
+- **Quality** — aesthetic, imaging, flicker, dynamics, smoothness, HPSv3
+- **Setting** — scene / subject adherence
+- **Interaction** — navigation trajectory, event edits, subject actions, perspective switches
+- **Consistency** — background, segment continuity, perspective, subject, geometric / photometric reconstruction, spatial (incl. gated)
+- **Physical** — visual plausibility, causal fidelity
 
-WBench, from Meituan's LongCat team, evaluates multi-turn interactive video world models along five dimensions: quality (aesthetic/imaging/flicker/dynamics/smoothness/HPSv3), setting adherence (scene/subject), interaction (navigation trajectory, event edits, subject actions, perspective switches), consistency (background, segment continuity, perspective, subject, geometric and photometric reconstruction, spatial), and physical (visual plausibility, causal fidelity). Dimension means roll up into `wbench_average`.
+Paper: [WBench](https://arxiv.org/abs/2605.25874). Project: [meituan-longcat.github.io/WBench](https://meituan-longcat.github.io/WBench/). Code: [meituan-longcat/WBench](https://github.com/meituan-longcat/WBench). Data: [`meituan-longcat/WBench`](https://huggingface.co/datasets/meituan-longcat/WBench). Weights: [`meituan-longcat/WBench-weights`](https://huggingface.co/meituan-longcat/WBench-weights).
 
-WorldFoundry checks in the WBench metric runtime and backs it with shared base-model assets — HPSv3, TransNetV2 (segment continuity), PAVRM (visual plausibility), DreamSim, and MegaSAM pose precompute — while `--official-results-path` normalizes existing WBench `report.json` or per-metric evaluation directories.
+WorldFoundry **checks in the metric runtime** (HPSv3, TransNetV2, PAVRM, DreamSim, MegaSAM pose precompute). A **real single-video `temporal_flickering` component is verified**; the **289-case multi-turn protocol is not**. `--official-results-path` imports `report.json` or per-metric directories.
 
-Official references:
+<BenchmarkPageSections id="wbench" locale="en" />
 
-- Paper: [arxiv.org/abs/2605.25874](https://arxiv.org/abs/2605.25874)
-- Project page: [meituan-longcat.github.io/WBench](https://meituan-longcat.github.io/WBench/)
-- Official repository: [meituan-longcat/WBench](https://github.com/meituan-longcat/WBench)
-
-## Evaluation protocol
-
-`--run-official` needs `--model-name` (or `WORLDFOUNDRY_MODEL_ID`), `--dataset-root` pointing at the WBench dataset, and officially named generated videos; `--phase gpu` selects the GPU metric phase and `--metrics` restricts computation. Pass `--submission-protocol text_multi_turn|camera_conditioned|action_conditioned` only when the videos genuinely follow that official multi-turn interface. Generated videos are staged into an isolated work directory under `--output-dir`.
-
-Primary metric: `wbench_average`.
-
-| Metric | Meaning | Direction |
-| --- | --- | --- |
-| `aesthetic_quality` | Official WBench aesthetic quality score. | Higher is better |
-| `imaging_quality` | Official WBench imaging quality score. | Higher is better |
-| `temporal_flickering` | Official WBench temporal flickering score. | Higher is better |
-| `dynamic_degree` | Official WBench dynamic degree score. | Higher is better |
-| `motion_smoothness` | Official WBench motion smoothness score. | Higher is better |
-| `hpsv3_quality` | Official WBench HPSv3 quality score. | Higher is better |
-| `scene_adherence` | Official WBench scene adherence score. | Higher is better |
-| `subject_adherence` | Official WBench subject adherence score. | Higher is better |
-| `navigation_trajectory` | Official WBench navigation trajectory score. | Higher is better |
-| `event_edit_adherence` | Official WBench event edit adherence score. | Higher is better |
-| `subject_action_adherence` | Official WBench subject action adherence score. | Higher is better |
-| `perspective_switch_adherence` | Official WBench perspective switch adherence score. | Higher is better |
-| `background_consistency` | Official WBench background consistency score. | Higher is better |
-| `segment_continuity` | Official WBench segment continuity score. | Higher is better |
-| `perspective_consistency` | Official WBench perspective consistency score. | Higher is better |
-| `subject_consistency` | Official WBench subject consistency cross-model score. | Higher is better |
-| `geometric_consistency` | Official WBench geometric reconstruction consistency score. | Higher is better |
-| `photometric_consistency` | Official WBench photometric reconstruction consistency score. | Higher is better |
-| `spatial_consistency` | Official WBench spatial consistency score. | Higher is better |
-| `gated_spatial_consistency` | Official WBench gated spatial consistency score. | Higher is better |
-| `visual_plausibility` | Official WBench visual plausibility score. | Higher is better |
-| `causal_fidelity` | Official WBench causal fidelity score. | Higher is better |
-| `quality_score` | Mean WBench quality dimension score. | Higher is better |
-| `setting_score` | Mean WBench setting adherence dimension score. | Higher is better |
-| `interaction_score` | Mean WBench interaction dimension score. | Higher is better |
-| `consistency_score` | Mean WBench consistency dimension score. | Higher is better |
-| `physical_score` | Mean WBench physical dimension score. | Higher is better |
-| `wbench_average` | Mean WBench score across available official dimensions. | Higher is better |
-
-## Data and artifact layout
-
-In-tree paths:
-
-```text
-worldfoundry/data/benchmarks/tasks/external/wbench.yaml
-worldfoundry/evaluation/tasks/execution/runners/wbench
-```
-
-```text
-worldfoundry/evaluation/tasks/execution/runners/wbench      # checked-in metric runtime
-<WBench_dataset>/                                           # HF dataset meituan-longcat/WBench
-${WORLDFOUNDRY_GENERATED_ARTIFACT_DIR}/                     # officially named generated videos
-```
-
-Metric weights come from Hugging Face `meituan-longcat/WBench-weights`.
-
-## Run the benchmark
-
-Catalog-recorded validation command:
+## How to run
 
 ```bash
-python worldfoundry/evaluation/tasks/execution/runners/wbench/run_wbench_official_runner.py \
+${WORLDFOUNDRY_UNIFIED_PYTHON} \
+  worldfoundry/evaluation/tasks/execution/runners/wbench/run_wbench_official_runner.py \
   --run-official \
   --model-name <model_name> \
   --phase gpu \
   --metrics temporal_flickering \
   --dataset-root <WBench_dataset> \
   --generated-artifact-dir <one_officially_named_generated_video> \
-  --output-dir <out> \
+  --output-dir tmp/wbench/flicker \
   --json
 ```
 
-## Checkpoints and environment variables
+`--submission-protocol text_multi_turn|camera_conditioned|action_conditioned` only when videos truly follow that official multi-turn interface. Env: `WORLDFOUNDRY_WBENCH_RESULTS_PATH`, `WORLDFOUNDRY_WBENCH_ROOT`. Shared stack: `video_world_perception_stack`.
 
-- `WORLDFOUNDRY_WBENCH_ROOT`: Optional override pointing at a local benchmark runtime/repository root.
-- `WORLDFOUNDRY_WBENCH_RESULTS_PATH`: Default path the importer reads official result exports from when `--official-results-path` is not passed.
-- `WORLDFOUNDRY_GENERATED_ARTIFACT_DIR`: Directory containing the candidate generated artifacts to score or import against.
+In-tree pointers: `worldfoundry/data/benchmarks/tasks/external/wbench.yaml`, `worldfoundry/evaluation/tasks/execution/runners/wbench`.
 
-Shared checkpoint assets: `meituan-longcat/WBench-weights` (metric_weights).
-
-This benchmark reuses the shared base-model dependency stack: `video_world_perception_stack`.
-
-## Outputs
-
-The run writes into `--output-dir`:
-
-- `scorecard.json`: WorldFoundry scorecard with the metric values recorded above.
-- `raw_metric_table.jsonl`: Metric rows backing the scorecard.
-
-Scorecard primary key: `wbench_average` (leaderboard key `wbench_average`), stored in `scorecard.json`.
-
-## Limitations
-
-- A video-only or partial-metric run is integration evidence only; WBench comparability additionally requires a declared multi-turn submission protocol and full official coverage.
-- Leaderboard-valid scores require a complete official report for the full split.
-- Official GitHub sources are provenance only; runtime execution uses the checked-in WorldFoundry runner.
+Outputs include `scorecard.json` (primary `wbench_average`).
 
 [← Benchmark Hub](/docs/evaluation/benchmark-hub)

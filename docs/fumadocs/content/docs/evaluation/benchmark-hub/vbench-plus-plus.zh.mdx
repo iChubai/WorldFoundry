@@ -1,91 +1,41 @@
 ---
 title: VBench++
-description: VBench++ 的 I2V、长视频与 trustworthiness 扩展评测，含仓内 runtime。
+description: "VBench 扩展：I2V、长视频、可信度。WorldFoundry 内置 runtime，不编造榜单。与 VBench、VBench-2.0 不同。"
 ---
 
-## 简介
+VBench++（S-Lab、南洋理工与上海人工智能实验室）为 [VBench](/zh/docs/evaluation/benchmark-hub/vbench) 增加三条赛道。它 **不是** [VBench-2.0](/zh/docs/evaluation/benchmark-hub/vbench-2.0)。同一上游仓库：[Vchitect/VBench](https://github.com/Vchitect/VBench)（Apache-2.0）。
 
-**发表机构：** S-Lab（南洋理工大学）与上海人工智能实验室
+- **图像生成视频** — 官方可裁剪图像套件上的 I2V 主体 / 背景一致性与相机运动。
+- **长视频** — 时间窗口打分；目录记录的有界命令用 `temporal_flickering` / `long_custom_input`。
+- **可信度** — 公平、偏见、安全探针（部分需要额外人脸 / 属性模型）。
 
-VBench++ 在 VBench 之上扩展三条赛道：image-to-video 评测（官方裁剪图像 suite 上的 I2V subject/background consistency 与 camera motion）、带时间窗打分的长视频评测，以及 trustworthiness（公平性、偏见、安全）探针。上游代码位于同一 Vchitect/VBench 仓库。
+`--variant` 选择 `i2v`、`long` 或 `trustworthiness`。各变体平均分再加 `vbench_plus_plus_average`（WorldFoundry 对已有维度的均值）。
 
-WorldFoundry 把 VBench++ runtime 内置在 `worldfoundry/evaluation/tasks/execution/runners/vbench_plus_plus/runtime`，入口为 `run_vbench_plus_plus_official_runner.py`；`--variant` 选择 `i2v`、`long` 或 `trustworthiness`。
+论文：[VBench++](https://arxiv.org/abs/2411.13503)。项目：[vchitect.github.io/VBench-project](https://vchitect.github.io/VBench-project/)。
 
-官方参考：
+WorldFoundry **仓内内置 VBench++ runtime**。有界长视频组件已验证；全套未验证。
 
-- Paper: [arxiv.org/abs/2411.13503](https://arxiv.org/abs/2411.13503)
-- 项目主页: [vchitect.github.io/VBench-project](https://vchitect.github.io/VBench-project/)
-- 官方仓库: [Vchitect/VBench](https://github.com/Vchitect/VBench)
-- License: `apache-2.0`
+<BenchmarkPageSections id="vbench-plus-plus" locale="zh" />
 
-## 评测协议
-
-每个 variant 有自己的维度集合与 prompt/图像 suite（打包在公开 VBench 仓库中）。runner 逐维度调度 evaluator，写出 `dimension_scores.json`，把可用维度平均成各 variant 聚合分以及总体 `vbench_plus_plus_average`。
-
-主指标是 `vbench_plus_plus_average`。
-
-| Metric | 含义 | 方向 |
-| --- | --- | --- |
-| `vbench_plus_plus_i2v_average` | 可用官方 VBench++ 图生视频维度的均值。 | 越高越好 |
-| `vbench_plus_plus_long_average` | 可用官方 VBench++ 长视频维度的均值。 | 越高越好 |
-| `vbench_plus_plus_trustworthiness_average` | 可用官方 VBench++ 可信度维度的均值。 | 越高越好 |
-| `vbench_plus_plus_average` | WorldFoundry 包装器归一化的可用官方 VBench++ 变体维度均值。 | 越高越好 |
-
-## 数据与产物布局
-
-WorldFoundry 仓内路径：
-
-```text
-worldfoundry/data/benchmarks/tasks/external/vbench-plus-plus.yaml
-worldfoundry/evaluation/tasks/execution/runners/vbench_plus_plus/runtime
-```
-
-按 variant 约定准备生成视频（I2V 使用官方图像 suite 命名；long-video 模式接受自定义目录）：
+## 如何运行
 
 ```bash
-export WORLDFOUNDRY_GENERATED_ARTIFACT_DIR=/path/to/generated_videos
-export WORLDFOUNDRY_VBENCH_PLUS_PLUS_ROOT=/optional/external/checkout
-```
-
-## 运行评测
-
-目录 manifest 记录的 validation 命令：
-
-```bash
-${WORLDFOUNDRY_UNIFIED_PYTHON} worldfoundry/evaluation/tasks/execution/runners/vbench_plus_plus/run_vbench_plus_plus_official_runner.py \
+${WORLDFOUNDRY_UNIFIED_PYTHON} \
+  worldfoundry/evaluation/tasks/execution/runners/vbench_plus_plus/run_vbench_plus_plus_official_runner.py \
   --benchmark-id vbench-plus-plus \
   --variant long \
-  --videos-path ${WORLDFOUNDRY_GENERATED_ARTIFACT_DIR} \
+  --videos-path "${WORLDFOUNDRY_GENERATED_ARTIFACT_DIR}" \
   --dimension temporal_flickering \
   --mode long_custom_input \
-  --python ${WORLDFOUNDRY_UNIFIED_PYTHON} \
-  --output-dir <out> \
+  --python "${WORLDFOUNDRY_UNIFIED_PYTHON}" \
+  --output-dir tmp/vbench-plus-plus/long \
   --json
 ```
 
-## 权重与环境变量
+I2V 使用官方图像套件命名。可选 checkout 覆盖：`WORLDFOUNDRY_VBENCH_PLUS_PLUS_ROOT`。共享栈：`vbench_perception_metric_stack`。Prompt / 图像套件在公开 VBench 仓库中。
 
-- `WORLDFOUNDRY_VBENCH_PLUS_PLUS_ROOT`: 可选覆盖项，用外部 runtime checkout 替换仓内副本。
-- `WORLDFOUNDRY_GENERATED_ARTIFACT_DIR`: 存放待评测生成产物（候选视频/rollout）的目录。
+仓内指针：`worldfoundry/data/benchmarks/tasks/external/vbench-plus-plus.yaml`，`worldfoundry/evaluation/tasks/execution/runners/vbench_plus_plus/runtime`。
 
-该 benchmark 复用共享 base-model 依赖栈：`vbench_perception_metric_stack`。
-
-## 输出文件
-
-运行会在 `--output-dir` 下写出：
-
-- `scorecard.json`: WorldFoundry 统一 scorecard，记录上表中的指标值。
-- `raw_metric_table.jsonl`: 支撑 scorecard 的原始 metric 行。
-- `dimension_scores.json`: 逐维度得分明细。
-- `upstream_stdout.log`: 上游官方 scorer 的 stdout 日志。
-- `upstream_stderr.log`: 上游官方 scorer 的 stderr 日志。
-
-Scorecard 主键：`vbench_plus_plus_average`（leaderboard key `vbench_plus_plus_average`），写入 `scorecard.json`。
-
-## 边界与限制
-
-- 依赖随维度而变；部分 trustworthiness 探针需要额外的人脸/属性模型。
-- 单 variant 或部分维度的运行结果不能与官方 VBench++ leaderboard 聚合分比较。
-- 本地 scorecard 不是官方 VBench++ leaderboard 条目。
+产物包括 `scorecard.json`（主键 `vbench_plus_plus_average`）与 `dimension_scores.json`。
 
 [← 返回 Benchmark Hub](/zh/docs/evaluation/benchmark-hub)

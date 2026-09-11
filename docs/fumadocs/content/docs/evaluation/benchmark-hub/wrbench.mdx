@@ -1,84 +1,39 @@
 ---
 title: WRBench
-description: "Persistent-state diagnostic: does the world keep evolving when the camera looks away? D1-D6 chain over the Natural-25 suite."
+description: "USTC / X-Humanoid persistent-state bench: Natural-25, D1–D6 camera look-away chain. WorldFoundry checks in the package; full D1–D6 is unverified."
 ---
 
-## About
+WRBench (“Current World Models Lack a Persistent State Core”; USTC and X-Humanoid / Beijing Innovation Center of Humanoid Robotics) treats camera motion as an **observability intervention**: an event starts, the camera looks away, and on return the bench asks whether the target **advanced to the endpoint or froze**. **Natural-25** crosses 25 scene families with a four-level event design (spatial change × state change). The canonical camera track expands **100 semantic variants × five camera controls = 500 requests**.
 
-**Publisher:** USTC & X-Humanoid (Beijing Innovation Center of Humanoid Robotics)
+Hierarchical **D1–D6**:
 
-WRBench ("Current World Models Lack a Persistent State Core") treats camera motion as an intervention on observability: an event is set in motion, the camera turns away, and when it returns the benchmark asks whether the target advanced to the event endpoint or froze in its abandoned state. Natural-25 crosses 25 scene families with a four-level event design (spatial change × state change); the canonical camera track expands 100 semantic variants over five camera controls into 500 requests. A hierarchical D1-D6 chain separates requested-camera precision, prompt-camera alignment, visual integrity, visible spatial/state consistency, re-observation support, and re-observed spatial/state consistency, with D5/D6 conditionally aggregated only over judgeable hidden-and-returned evidence.
+- **D1** — requested-camera precision / prompt-camera alignment
+- **D2** — visual integrity
+- **D3 / D4** — visible spatial / state consistency
+- **D5 / D6** — re-observed spatial / state consistency (aggregated **only** over judgeable hidden-and-returned evidence)
 
-WorldFoundry checks in the complete WRBench package and Natural-25 assets under the runner runtime; official-result normalization is lightweight, and full D1-D6 execution requires configured scorer model assets.
+`wrbench_average` aggregates D1–D6. Paper: [WRBench](https://arxiv.org/abs/2606.20545). Project: [jinplu.github.io/WRBench](https://jinplu.github.io/WRBench/). Code: [JinPLu/WRBench](https://github.com/JinPLu/WRBench). Data: [`WRBench/wrbench-natural25`](https://huggingface.co/datasets/WRBench/wrbench-natural25).
 
-Official references:
+WorldFoundry **checks in the complete package and Natural-25 assets**. Natural-25 request materialization and result normalization are available; **full D1–D6 execution is unverified**. Scorers: VGGT-Omega, DINOv2, Qwen3.5, Qwen3-VL.
 
-- Paper: [arxiv.org/abs/2606.20545](https://arxiv.org/abs/2606.20545)
-- Project page: [jinplu.github.io/WRBench](https://jinplu.github.io/WRBench/)
-- Official repository: [JinPLu/WRBench](https://github.com/JinPLu/WRBench)
+<BenchmarkPageSections id="wrbench" locale="en" />
 
-## Evaluation protocol
+## How to run
 
-`--run-official` scores generated videos plus camera sidecars against the Natural-25 requests, selecting scorer stacks via `--scorer-profile` and gating sidecar provenance with `--sidecar-profile-gate`. Rows without re-observation support are excluded from D5/D6 rather than counted as failures. `--official-results-path` normalizes existing WRBench score exports.
-
-Primary metric: `wrbench_average`.
-
-| Metric | Meaning | Direction |
-| --- | --- | --- |
-| `d1_cam_prec` | D1-CamPrec: requested-camera trajectory precision when an explicit target trajectory exists. | Higher is better |
-| `d1_cam_align_common_yaw` | D1-CamAlign (common yaw): prompt-camera intent alignment for prompt/API camera control. | Higher is better |
-| `d1_cam_align_static_hold` | D1-CamAlign (static hold): alignment on hold-still camera requests. | Higher is better |
-| `d2_visual_integrity` | D2: visual integrity of the generated frames. | Higher is better |
-| `d3_visible_spatial_consistency` | D3: spatial consistency while content is visible. | Higher is better |
-| `d4_visible_state_consistency` | D4: event-state consistency while content is visible. | Higher is better |
-| `d5_reobservation_spatial_consistency` | D5: spatial consistency when hidden content returns into view. | Higher is better |
-| `d6_reobservation_state_consistency` | D6: event-state consistency of the returned target (did the event advance?). | Higher is better |
-| `wrbench_average` | Aggregate over the D1-D6 diagnostic dimensions. | Higher is better |
-
-## Data and artifact layout
-
-In-tree paths:
-
-```text
-worldfoundry/data/benchmarks/tasks/external/wrbench.yaml
-worldfoundry/data/benchmarks/assets/wrbench
-worldfoundry/evaluation/tasks/execution/runners/wrbench/runtime/wrbench
+```bash
+worldfoundry-eval zoo benchmark-run \
+  --benchmark-id wrbench \
+  --mode official-validation \
+  --official-results-path <official_results.json_or_csv> \
+  --generated-artifact-dir <generated_videos> \
+  --output-dir tmp/wrbench/official-validation \
+  --json
 ```
 
-```text
-worldfoundry/evaluation/tasks/execution/runners/wrbench/runtime/wrbench   # checked-in WRBench package
-worldfoundry/data/benchmarks/assets/wrbench                               # Natural-25 assets
-${WORLDFOUNDRY_GENERATED_ARTIFACT_DIR}/                                   # videos + camera sidecars
-```
+`--run-official` scores generated videos plus camera sidecars against Natural-25 (`--scorer-profile`, `--sidecar-profile-gate`). Rows without re-observation support are **excluded** from D5/D6, not counted as failures. Env: `WORLDFOUNDRY_WRBENCH_RESULTS_PATH`, `WORLDFOUNDRY_WRBENCH_ROOT`. Shared stack: `vggt_omega`, `dinov2`, `qwen3_5_vl`, `qwen3_vl`.
 
-Natural-25 is also published as Hugging Face dataset `WRBench/wrbench-natural25`.
+In-tree pointers: `worldfoundry/data/benchmarks/tasks/external/wrbench.yaml`, `worldfoundry/data/benchmarks/assets/wrbench`, `worldfoundry/evaluation/tasks/execution/runners/wrbench/runtime/wrbench`.
 
-## Run the benchmark
-
-## Checkpoints and environment variables
-
-- `WORLDFOUNDRY_WRBENCH_ROOT`: Optional override pointing at a local benchmark runtime/repository root.
-- `WORLDFOUNDRY_WRBENCH_RESULTS_PATH`: Default path the importer reads official result exports from when `--official-results-path` is not passed.
-- `WORLDFOUNDRY_GENERATED_ARTIFACT_DIR`: Directory containing the candidate generated artifacts to score or import against.
-
-This benchmark reuses the shared base-model dependency stack: `vggt_omega`, `dinov2`, `qwen3_5_vl`, `qwen3_vl`.
-
-## Outputs
-
-The run writes into `--output-dir`:
-
-- `scorecard.json`: WorldFoundry scorecard with the metric values recorded above.
-- `benchmark_contract.json`: Benchmark contract record for the run (inputs, mode, provenance).
-- `raw_metric_table.jsonl`: Metric rows backing the scorecard.
-- `per_sample_scores.jsonl`: Per-sample rows when the result source exposes sample-level values.
-- `generation_requests.jsonl`
-
-Scorecard primary key: `wrbench_average` (leaderboard key `Avg`), stored in `scorecard.json`.
-
-## Limitations
-
-- Leaderboard parity requires complete Natural-25 generation plus VGGT-Omega, DINOv2, Qwen3.5, and Qwen3-VL checkpoints.
-- D5/D6 are conditional metrics; comparing them across models requires matching re-observation-support denominators.
-- Lightweight result normalization does not audit how upstream scores were produced.
+Outputs include `scorecard.json` (primary `wrbench_average`, leaderboard key `Avg`) and `generation_requests.jsonl`.
 
 [← Benchmark Hub](/docs/evaluation/benchmark-hub)

@@ -176,6 +176,7 @@ export function WorldFoundryWorkflow({
           <li
             className="wf-system-workflow-stage"
             key={label}
+            data-wf-stage={isHome ? index : undefined}
             style={isHome ? ({ '--wf-stage-index': index } as React.CSSProperties) : undefined}
           >
             <div className="wf-system-workflow-stage-head">

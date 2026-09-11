@@ -1,38 +1,36 @@
 ---
 title: "AC3D"
-description: "AC3D analyzes and improves camera control in video diffusion: it is a ControlNet-style plugin that gives CogVideoX precise 3D camera control."
-pageSource: generated
+description: "Snap Research ControlNet plugin for CogVideoX 3D camera control. RealEstate10K demo is runner-verified; dedicated torch 2.4 / CUDA 12.4 env; Snap non-commercial license."
+modelId: "ac3d"
+pageSource: authored
 ---
 
-**Publisher:** Snap Inc. (Snap Research) · Company
-text → video
-[AC3D: Analyzing and Improving 3D Camera Control in Video Diffusion Transformers](https://arxiv.org/abs/2411.18673) (CVPR 2025, 2024)
+AC3D is Snap Research's **ControlNet-style** camera plugin for CogVideoX: text plus a source video and **19-column** camera pose rows go in; a camera-steered clip comes out. WorldFoundry vendors the official infer runtime under `worldfoundry/synthesis/visual_generation/ac3d/ac3d_runtime` and exposes it as `AC3DPipeline`. Aliases `ac3d-cogvideox`, `ac3d-2b`, and `ac3d-5b` resolve here.
 
-AC3D analyzes and improves camera control in video diffusion: it is a ControlNet-style plugin that gives CogVideoX precise 3D camera control. In this catalog the runner is verified — the RealEstate10K camera-control demo runs through the Workspace infer path with local CogVideoX-2B and AC3D ControlNet weights, preserving the official inference/cli_demo_camera.py generation path.
+<ModelPaperFigures modelId="ac3d" locale="en" />
 
-<figure className="wf-recipe-media is-diagram">
-  <img src="/models/ac3d/paper.png" alt="AC3D: Analyzing and Improving 3D Camera Control in Video Diffusion Transformers" />
-  <figcaption>AC3D: Analyzing and Improving 3D Camera Control in Video Diffusion Transformers</figcaption>
-</figure>
+The official paper is [AC3D: Analyzing and Improving 3D Camera Control in Video Diffusion Transformers](https://arxiv.org/abs/2411.18673) (CVPR 2025, arXiv 2411.18673). Project: [snap-research.github.io/ac3d](https://snap-research.github.io/ac3d/). Code: [snap-research/ac3d](https://github.com/snap-research/ac3d). License: **Snap non-commercial research**.
+
+Runner parity is **verified**: the RealEstate10K camera-control demo ran through the Workspace infer path with local CogVideoX-2B and AC3D ControlNet weights, preserving `inference/cli_demo_camera.py`. The adapter keeps official **2B ControlNet shape** settings even though a 5B ControlNet file is also staged.
 
 <ModelCommandBuilder modelId="ac3d" locale="en" />
 
-## Architecture
+## What it is for
 
-Per the paper (arXiv 2411.18673), AC3D locates camera-motion information in low-frequency early-timestep components and conditions only a subset of layers, improving control precision and visual quality. Both 2B and 5B ControlNet checkpoints are recorded; the adapter preserves official 2B ControlNet shape settings.
+Re-render a clip along a prescribed 3D path. Prefer the RealEstate10K-style 2B ControlNet demo.
 
-<figure className="wf-recipe-media">
-  <Video src="/demos/ac3d_01.mp4" autoPlay loop muted playsInline />
-  <figcaption>Camera-controlled video</figcaption>
-</figure>
+Launch `worldfoundry-eval run ac3d` with `--pipeline.task-profile camera-control-video`.
 
-## Usage notes
+Score on [CameraBench](/docs/evaluation/benchmark-hub/camerabench) — directly measures camera-control precision in generated video.
 
-AC3D stays in its dedicated environment because the official torch 2.4/CUDA 12.4 stack is not ABI-compatible with the unified environment. Inputs accept either a RealEstate10K-style root or a direct source video plus 19-column camera pose rows.
+## Runtime contract
 
-## Evaluation benchmarks
+Required: `prompt` and `video`; optional: `image`; `actions`: camera_index, camera_index_range, camera_pose_rows; artifacts: `ac3d.mp4`.
 
-- [CameraBench](/docs/evaluation/benchmark-hub/camerabench) — Directly measures camera-control precision in generated video.
-- [WRBench](/docs/evaluation/benchmark-hub/wrbench) — Referenced in this model's manifest evidence notes.
+Base weights: `THUDM/CogVideoX-2b` and `THUDM/CogVideoX-5b`. ControlNets stage under `$WORLDFOUNDRY_CKPT_DIR/ac3d` as `2B/checkpoint-10000.pt` and `5B/checkpoint-10000.pt`. Other pose formats must be converted to the 19-column convention first.
+
+## Run in WorldFoundry
+
+Status: **Verified**. Dedicated environment `ac3d` (Python 3.10, CUDA 12.4, torch 2.4) — not ABI-compatible with `worldfoundry-unified-cu128`. Stage CogVideoX base plus the matching ControlNet locally. Run `worldfoundry-eval run ac3d` with `--pipeline.task-profile camera-control-video`. License: Snap non-commercial research. Catalog VRAM is unset.
 
 <ModelRelatedRecipes modelId="ac3d" locale="en" />

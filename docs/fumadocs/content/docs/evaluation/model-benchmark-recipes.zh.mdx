@@ -1,0 +1,224 @@
+---
+title: 模型 → 评测配方
+description: "十条 catalog 里真实存在的推理/评测路径。先生成或导入，再读真实的 scorecard 字段。不训练。不编排名。"
+---
+
+十条 **推理 → 打分** 单元格，都在模型与 benchmark catalog 里。每条半屏：准备、生成、一条已记录的评测命令、`scorecard.json` 的**真实**主键、以及 pending / verified。进程退出不等于 leaderboard。WorldFoundry 不编排名。
+
+从[评测](/zh/docs/evaluation)（欢迎第五步）或 [Benchmark Hub](/zh/docs/evaluation/benchmark-hub) 进来。模型启动细节留在各模型页。
+
+**输出目录。** 片段或 trace 写到 `tmp/<benchmark-id>/<model-id>/gen`。scorecard 写到 `tmp/<benchmark-id>/<model-id>/eval/scorecard.json`。
+
+**状态用词。****Verified** 表示本仓库为该切片记录了 GPU / runner / 组件证据。**Pending** 表示路径已接线，但 parity、judge 或全套件尚未记录。**仅导入** 表示 normalizer 读官方形态文件，不重放模拟器。
+
+| # | 模型 | Benchmark | Scorecard 主键 | 单元格状态 |
+| --- | --- | --- | --- | --- |
+| 1 | [Wan2.1](/zh/docs/guides/supported-models/wan2.1) | [VBench](/zh/docs/evaluation/benchmark-hub/vbench) | `aesthetic_quality` | 模型已验证；VBench 有界 |
+| 2 | [Being-H0.5](/zh/docs/guides/supported-models/being-h05) | [LIBERO](/zh/docs/evaluation/benchmark-hub/libero) | `success_rate` | `get_action` 已验证；套件仅导入 |
+| 3 | [Causal-Forcing](/zh/docs/guides/supported-models/causal-forcing) | [VBench](/zh/docs/evaluation/benchmark-hub/vbench) | `aesthetic_quality` | 模型 demo pending；VBench 有界 |
+| 4 | [ZeroScope](/zh/docs/guides/supported-models/zeroscope) | [FETV](/zh/docs/evaluation/benchmark-hub/fetv) | `clip_score` | 模型已验证；FETV CLIPScore 有界 |
+| 5 | [pi0.5](/zh/docs/guides/supported-models/pi05) | [LIBERO](/zh/docs/evaluation/benchmark-hub/libero) | `success_rate` | `pi05_libero` 已验证；套件仅导入 |
+| 6 | [Cosmos Predict 2.5](/zh/docs/guides/supported-models/cosmos-predict-2.5) | [WorldModelBench](/zh/docs/evaluation/benchmark-hub/worldmodelbench) | `world_model_average` | 2B 生成已验证；judge 未验证 |
+| 7 | [HunyuanVideo](/zh/docs/guides/supported-models/hunyuanvideo) | [VBench](/zh/docs/evaluation/benchmark-hub/vbench) | `aesthetic_quality` | 模型 runner pending；VBench 有界 |
+| 8 | [GO-1](/zh/docs/guides/supported-models/go1) | — | 未记录 | 仅推理（catalog 无 bench） |
+| 9 | [EasyAnimate](/zh/docs/guides/supported-models/easyanimate) | [VBench](/zh/docs/evaluation/benchmark-hub/vbench) | `aesthetic_quality` | 模型 runner pending；VBench 有界 |
+| 10 | [GR00T](/zh/docs/guides/supported-models/gr00t) | [LIBERO](/zh/docs/evaluation/benchmark-hub/libero) | `success_rate` | N1.7 predict 已验证；套件仅导入 |
+
+`overall_quality`（VBench）和 `fetv_average`（FETV）只有在声明的组件齐全时才出现。下面的有界单元格不会写出它们。
+
+## Wan2.1 → VBench
+
+Catalog：`wan2.1` 推荐 `vbench`。用 **`wan2.1-t2v-1.3b`**（已验证 832×480、81 帧）。14B 与 I2V 已集成，不是本单元格。
+
+**准备。** `worldfoundry-unified-cu128`。本地就位 Wan-AI 1.3B T2V。
+
+**生成。** 产物 `wan2.1-t2v-1.3b-832x480-81f.mp4`。
+
+```bash
+worldfoundry-eval run wan2.1-t2v-1.3b --pipeline.task-profile text-to-video \
+  --output-dir tmp/vbench/wan2.1/gen
+```
+
+**打分。** Hub 记录的有界路径：`custom_input` / `aesthetic_quality`（本仓库唯一验证过的 VBench GPU 维度）。
+
+```bash
+${WORLDFOUNDRY_UNIFIED_PYTHON} \
+  worldfoundry/evaluation/tasks/execution/runners/vbench/run_vbench_official_runner.py run \
+  --mode custom_input --dimension aesthetic_quality \
+  --videos-path tmp/vbench/wan2.1/gen \
+  --output-dir tmp/vbench/wan2.1/eval --json
+```
+
+**Scorecard。** `aesthetic_quality`。`official_benchmark_verified=false`。
+
+## Being-H0.5 → LIBERO
+
+Catalog：`being-h05` 推荐 `libero`。用 **`being-h05-2b-libero`**。模型页上的论文百分比是上游数字，不是 WorldFoundry scorecard。
+
+**准备。** `worldfoundry-being-h05`。就位 `BeingBeyond/Being-H05-2B_libero`（运行时不下载）。
+
+**生成。** 产物 `being_h05_action_trace.json`。这是 `get_action` trace，不是闭环套件分数。
+
+```bash
+worldfoundry-eval run being-h05-2b-libero --pipeline.task-profile vla.policy_rollout \
+  --output-dir tmp/libero/being-h05/gen
+```
+
+**打分。** LIBERO 验证是 **仅 normalizer**。导入官方 `eval_result` 树：
+
+```bash
+worldfoundry-eval zoo benchmark-run --benchmark-id libero --mode official-validation \
+  --official-results-path <official_results.json> \
+  --output-dir tmp/libero/being-h05/eval --json
+```
+
+**Scorecard。** `success_rate`。闭环（`worldfoundry-eval embodied run`）已接线；本仓库没有 Being-H0.5 leaderboard 记录。
+
+## Causal-Forcing → VBench
+
+Catalog：`causal-forcing` 推荐 `vbench`。Studio 默认是 chunk-wise T2V。官方 demo 一致性为 **pending**。
+
+**准备。** `worldfoundry-unified-cu128`。就位 chunk-wise 学生权重 **以及** 本地 Wan2.1 布局（`$WORLDFOUNDRY_WAN_MODELS_ROOT` 或 `$WORLDFOUNDRY_CKPT_DIR`）。profile 把提示词列表指向 `worldfoundry/data/test_cases/forcing/prompts/`（可用 `$WORLDFOUNDRY_FORCING_PROMPTS_ROOT` 覆盖）。若该树本地不存在，`custom_input` 仍可给已写出的片段打分。
+
+**生成。** 产物 `causal-forcing.mp4`。
+
+```bash
+worldfoundry-eval run causal-forcing --pipeline.task-profile text-to-video \
+  --output-dir tmp/vbench/causal-forcing/gen
+```
+
+**打分。** 与 Wan2.1 相同的有界 VBench 命令；`--videos-path` 指向 `tmp/vbench/causal-forcing/gen`，`--output-dir` 指向 `tmp/vbench/causal-forcing/eval`。
+
+**Scorecard。** `aesthetic_quality`。模型：`official_demo_parity_pending`。评测：有界。
+
+## ZeroScope → FETV
+
+Catalog：`zeroscope` 推荐 `fetv`。576w Diffusers 路径 **runner 已验证**。自动化打分前先看 CC-BY-NC-4.0。
+
+**准备。** `worldfoundry-unified-cu128`。把 `cerspense/zeroscope_v2_576w` 就位到 `$WORLDFOUNDRY_HFD_ROOT`。
+
+**生成。** 产物 `zeroscope.mp4`（8 帧、576×320）。FETV-EVAL 按官方 prompt 索引拼接时期望 16 帧布局。
+
+```bash
+worldfoundry-eval run zeroscope --output-dir tmp/fetv/zeroscope/gen
+```
+
+**打分。** FETV-EVAL CLIPScore 是有界官方组件（`verification_status: bounded_official_clipscore_verified`）。
+
+```bash
+worldfoundry-eval zoo benchmark-run --benchmark-id fetv --mode official-validation \
+  --official-results-path <official_results.csv-or-FETV-EVAL-dir> \
+  --generated-artifact-dir tmp/fetv/zeroscope/gen \
+  --fetv-metrics clip_score \
+  --output-dir tmp/fetv/zeroscope/eval --json
+```
+
+**Scorecard。** `clip_score`。`fetv_average` 只有在声明的组件齐全时才出现。人工评分无法重算。
+
+## pi0.5 → LIBERO
+
+Catalog：`pi05` 推荐 `libero`。**`pi05_libero`** 是树内已验证的 `get_action` 参照。
+
+**准备。** `worldfoundry-openpi-cu12`。用 gsutil/gcloud 就位 `gs://openpi-assets`。
+
+**生成。** 产物 `pi05_action_trace.json`。
+
+```bash
+worldfoundry-eval run pi05 --pipeline.task-profile vla \
+  --output-dir tmp/libero/pi05/gen
+```
+
+**打分。** 与 Being-H0.5 相同的 LIBERO **official-validation** 一键命令；写出 `tmp/libero/pi05/eval`。
+
+**Scorecard。** `success_rate`。predict 路径已验证；套件导入仅 normalizer。不是 leaderboard。
+
+## Cosmos Predict 2.5 → WorldModelBench
+
+Catalog：`cosmos-predict-2.5` 推荐 `worldmodelbench`（另有 `physics-iq`；本单元格走世界套件）。用 **`cosmos-predict-2.5-2b`**。checkpoint gated。
+
+**准备。** `worldfoundry-unified-cu128`。就位 `nvidia/Cosmos-Predict2.5-2B`。要打分时再下载 350 条集合。
+
+**生成。** 产物 `cosmos-predict2.5-2b.mp4`。14B GPU 输出仍为 pending。
+
+```bash
+worldfoundry-eval run cosmos-predict-2.5-2b --pipeline.task-profile text-to-world-validation \
+  --output-dir tmp/worldmodelbench/cosmos-predict-2.5/gen
+```
+
+**打分。** 导入是记录的第一条路径。`official-run` 需要 `WORLDFOUNDRY_WORLDMODELBENCH_JUDGE`；**完整 judge 执行未验证**。
+
+```bash
+worldfoundry-eval zoo benchmark-run --benchmark-id worldmodelbench --mode official-validation \
+  --official-results-path <official_results.json> \
+  --benchmark-data-root <worldmodelbench_data_root> \
+  --generated-artifact-dir tmp/worldmodelbench/cosmos-predict-2.5/gen \
+  --output-dir tmp/worldmodelbench/cosmos-predict-2.5/eval --json
+```
+
+**Scorecard。** `world_model_average`。上游扣留了 leaderboard 答案。
+
+## HunyuanVideo → VBench
+
+Catalog：`hunyuanvideo` 推荐 `vbench`。用 **`hunyuanvideo-t2v`**。runner 与 demo 一致性为 **pending**。
+
+**准备。** `worldfoundry-unified-cu128`。就位 `tencent/HunyuanVideo`。官方 720×1280×129 面向 80 GB 级 GPU。
+
+**生成。** 产物 `hunyuanvideo-t2v.mp4`。
+
+```bash
+worldfoundry-eval run hunyuanvideo-t2v --pipeline.task-profile text-to-video \
+  --output-dir tmp/vbench/hunyuanvideo/gen
+```
+
+**打分。** 同一条有界 VBench 命令；目录 `tmp/vbench/hunyuanvideo/gen` 与 `tmp/vbench/hunyuanvideo/eval`。
+
+**Scorecard。** `aesthetic_quality`。命令能启动，不等于本工作区已有 checkpoint 驱动的 GPU 产物。
+
+## GO-1 → 无接线 bench
+
+Catalog：`go1` **没有** `recommended_benchmarks`。GPU 数值 rollout 为 **pending**（仅 `static_runtime_verified`）。[EWMBench](/zh/docs/evaluation/benchmark-hub/ewmbench) 是 AgiBot World 的**视频**套件，不是这条策略。模型页上的 `libero_example` 是本体草图，不是已验证评测。
+
+**准备。** `worldfoundry-vla-go1`。就位 `agibot-world/GO-1`。CC-BY-NC-SA-4.0。
+
+**生成。** 产物 `go1_action_trace.json`。
+
+```bash
+worldfoundry-eval run go1 --pipeline.task-profile vla \
+  --output-dir tmp/go1/gen
+```
+
+**打分。** 无。WorldFoundry 没有 GO-1 导入器或闭环单元格，因此不会写出 bench 的 `scorecard.json`。不要编造主键。
+
+## EasyAnimate → VBench
+
+Catalog：`easyanimate` 推荐 `vbench`。已接线 demo 是 **V5.1 I2V**（`*-InP`）。`custom_input` 给该目录打分；`vbench_standard` 命名不适用。runner 一致性为 **pending**。
+
+**准备。** `worldfoundry-unified-cu128`。就位 `alibaba-pai/EasyAnimateV5.1-7b-zh-InP`。
+
+**生成。** 产物 `easyanimate-i2v.mp4`。必填：`prompt` + `image`。
+
+```bash
+worldfoundry-eval run easyanimate --pipeline.task-profile text-to-video \
+  --output-dir tmp/vbench/easyanimate/gen
+```
+
+**打分。** 同一条有界 VBench 命令；目录 `tmp/vbench/easyanimate/gen` 与 `tmp/vbench/easyanimate/eval`。
+
+**Scorecard。** `aesthetic_quality`。这条运行时上的相机控制是 [CameraBench](/zh/docs/evaluation/benchmark-hub/camerabench)，另一条单元格。
+
+## GR00T → LIBERO
+
+Catalog：`gr00t` 推荐 `libero`。用 **`gr00t-n1.7-libero`**（已记录 CUDA `predict`）。模拟器 rollout 另行跟踪。
+
+**准备。** `worldfoundry-gr00t`。认证并就位锁定的 `nvidia/GR00T-N1.7-LIBERO` 与 `nvidia/Cosmos-Reason2-2B`。
+
+**生成。** 产物 `gr00t_action_trace.json`。
+
+```bash
+worldfoundry-eval run gr00t-n1.7-libero --pipeline.task-profile vla.policy_rollout \
+  --output-dir tmp/libero/gr00t/gen
+```
+
+**打分。** 同一条 LIBERO **official-validation** 一键命令；写出 `tmp/libero/gr00t/eval`。
+
+**Scorecard。** `success_rate`。predict 已验证；套件导入仅 normalizer。不是 leaderboard。

@@ -1,66 +1,19 @@
 ---
 title: FETV
-description: 按属性分类 prompt 的细粒度开放域文生视频评测，含 CLIP/BLIP/FID/FVD 指标。
+description: "NeurIPS 2023 细粒度 T2V 评测：619 条 prompt，覆盖内容、属性与复杂度。WorldFoundry 内置 CLIPScore 与导入器，不编造榜单。"
 ---
 
-## 简介
+FETV（北大与华为诺亚）是**细粒度**开放域文生视频评测。**619 条 prompt** 落在三个正交轴上：**主要内容**、**属性控制**（颜色、数量、风格）、**prompt 复杂度**（简单 vs 组合）。打分混合人工评分（静态质量、时序质量、整体 / 细粒度对齐）与自动指标（CLIPScore、BLIPScore、FID、FVD）。只有声明的分量齐备时才写出 `fetv_average`。
 
-**发表机构：** 北京大学与华为诺亚方舟实验室（NeurIPS 2023）
+论文：[FETV（NeurIPS 2023 D&B）](https://proceedings.neurips.cc/paper_files/paper/2023/hash/c481049f7410f38e788f67c171c64ad5-Abstract-Datasets_and_Benchmarks.html)。Prompt：[llyx97/FETV](https://github.com/llyx97/FETV)。打分器：[llyx97/FETV-EVAL](https://github.com/llyx97/FETV-EVAL)。数据集：[`lyx97/FETV`](https://huggingface.co/datasets/lyx97/FETV)（CC-BY-4.0）。
 
-FETV 是细粒度文生视频评测，619 条 prompt 沿三个正交轴分类：主要内容、属性控制与 prompt 复杂度。评测把人工评分（static quality、temporal quality、overall/fine-grained alignment）与自动指标结合——CLIPScore 变体、BLIP 对齐分以及逐类别计算的 FID/FVD 分布距离（FETV-EVAL）。
+WorldFoundry **内置 FETV-EVAL**，把生成视频接到官方 prompt 索引（官方 16 帧布局），通过共享基座资源跑 **CLIPScore**，并归一化 FETV-EVAL 结果目录或 CSV。人工评分不能重算。BLIP / FID / FVD 需要对应包与参考帧。
 
-WorldFoundry 在仓内内置 FETV-EVAL runtime（`runtime/fetv_eval`），把生成视频严格对齐到官方 prompt index 并解码为规定帧布局，通过共享 base-model 资产运行 CLIPScore 组件，同时可归一化官方 FETV-EVAL 结果目录。
+<BenchmarkPageSections id="fetv" locale="zh" />
 
-官方参考：
+## 如何运行
 
-- Paper: [proceedings.neurips.cc/paper_files/paper/2023/hash/c481049f7410f38e788f67c171c64ad5-Abstract-Datasets_and_Benchmarks.html](https://proceedings.neurips.cc/paper_files/paper/2023/hash/c481049f7410f38e788f67c171c64ad5-Abstract-Datasets_and_Benchmarks.html)
-- 项目主页: [github.com/llyx97/FETV](https://github.com/llyx97/FETV)
-- 官方仓库: [llyx97/FETV-EVAL](https://github.com/llyx97/FETV-EVAL)
-- 官方仓库: [llyx97/FETV](https://github.com/llyx97/FETV)
-- License: `cc-by-4.0`
-
-## 评测协议
-
-runner 路径：用 `--official-results-path` 导入官方结果 CSV 或 FETV-EVAL auto/manual 结果目录；或在仓内重算受支持的指标族，用 `--fetv-metrics` 选择（如 `clip_score`、`blip_score`、`fid`、`fvd`）。FID/FVD 需要参考帧目录（`--fetv-fid-real-video-dir`、`--fetv-fvd-real-video-dir`）；打分前视频会被解码为官方 16 帧布局。
-
-主指标是 `fetv_average`。
-
-| Metric | 含义 | 方向 |
-| --- | --- | --- |
-| `static_quality` | FETV 人工静态质量得分。 | 越高越好 |
-| `temporal_quality` | FETV 人工时序质量得分。 | 越高越好 |
-| `overall_alignment` | FETV 整体文本-视频对齐得分。 | 越高越好 |
-| `fine_grained_alignment` | FETV 细粒度 prompt 侧面对齐得分。 | 越高越好 |
-| `clip_score` | FETV 自动 CLIPScore 组件。 | 越高越好 |
-| `blip_score` | FETV 自动 BLIPScore 组件。 | 越高越好 |
-| `fid` | FETV 的 Fréchet Inception Distance 组件；越低越好。 | 越低越好 |
-| `fvd` | FETV 的 Fréchet Video Distance 组件；越低越好。 | 越低越好 |
-| `fetv_average` | 仅当所有声明的 FETV 组件分齐备时输出的均值。 | 越高越好 |
-
-## 数据与产物布局
-
-WorldFoundry 仓内路径：
-
-```text
-worldfoundry/data/benchmarks/tasks/external/fetv.yaml
-worldfoundry/evaluation/tasks/execution/runners/fetv/run_fetv_official_runner.py
-worldfoundry/evaluation/tasks/execution/runners/fetv/fetv_official_runtime.py
-worldfoundry/evaluation/tasks/execution/runners/fetv/runtime/fetv_eval/auto_eval.py
-worldfoundry/evaluation/tasks/execution/runners/fetv/runtime/fetv_eval/compute_fid.py
-worldfoundry/base_models/perception_core/video_quality/fetv_stylegan_v/src/scripts/calc_metrics_for_dataset.py
-worldfoundry/base_models/perception_core/video_text/fetv_blip/models/blip_retrieval.py
-```
-
-下载 FETV 数据集（Hugging Face `lyx97/FETV`）获取 prompts 与参考视频链接，按 prompt index 逐条生成视频，然后：
-
-```bash
-export WORLDFOUNDRY_GENERATED_ARTIFACT_DIR=/path/to/fetv/generated_videos
-export WORLDFOUNDRY_FETV_RESULTS_PATH=/path/to/fetv_eval_results   # 导入模式使用
-```
-
-## 运行评测
-
-目录 manifest 记录的 validation 命令：
+导入 FETV-EVAL 目录或官方 CSV：
 
 ```bash
 worldfoundry-eval zoo benchmark-run \
@@ -68,33 +21,22 @@ worldfoundry-eval zoo benchmark-run \
   --mode official-validation \
   --official-results-path <official_results.csv-or-FETV-EVAL-dir> \
   --generated-artifact-dir <generated_videos> \
-  --output-dir <out> \
+  --output-dir tmp/fetv/official-validation \
   --json
 ```
 
-## 权重与环境变量
+用 `--fetv-metrics` 选择自动指标族（`clip_score`、`blip_score`、`fid`、`fvd`）。FID / FVD 需要 `--fetv-fid-real-video-dir` / `--fetv-fvd-real-video-dir`。默认导入路径：`WORLDFOUNDRY_FETV_RESULTS_PATH`。可选：`WORLDFOUNDRY_FETV_RUNTIME_ROOT`、`WORLDFOUNDRY_FETV_ARTIFACT_SCORE_DIR`。共享栈：`video_quality_motion_stack`、`fetv_blip_retrieval_source`、`fetv_stylegan_v_fvd_source`。
 
-- `WORLDFOUNDRY_FETV_RUNTIME_ROOT`: 可选的外部 FETV-EVAL checkout 覆盖。
-- `WORLDFOUNDRY_FETV_ARTIFACT_SCORE_DIR`: 待转换的 WorldFoundry artifact score 目录。
-- `WORLDFOUNDRY_FETV_RESULTS_PATH`: 未显式传 `--official-results-path` 时，导入器默认从该路径读取官方结果导出文件。
-- `WORLDFOUNDRY_GENERATED_ARTIFACT_DIR`: 存放待评测生成产物（候选视频/rollout）的目录。
+仓内指针：
 
-该 benchmark 复用共享 base-model 依赖栈：`video_quality_motion_stack`, `fetv_blip_retrieval_source`, `fetv_stylegan_v_fvd_source`。
+```text
+worldfoundry/data/benchmarks/tasks/external/fetv.yaml
+worldfoundry/evaluation/tasks/execution/runners/fetv/runtime/fetv_eval
+worldfoundry/data/benchmarks/assets/fetv/fetv_data.json
+```
 
-## 输出文件
+产物包括 `scorecard.json`（齐备时主键 `fetv_average`）、`benchmark_contract.json`、`raw_metric_table.jsonl`。
 
-运行会在 `--output-dir` 下写出：
-
-- `scorecard.json`: WorldFoundry 统一 scorecard，记录上表中的指标值。
-- `benchmark_contract.json`: 本次运行的 benchmark contract 记录（输入、模式、来源信息）。
-- `raw_metric_table.jsonl`: 支撑 scorecard 的原始 metric 行。
-
-Scorecard 主键：`fetv_average`（leaderboard key `fetv_average`），写入 `scorecard.json`。
-
-## 边界与限制
-
-- 人工评分类指标（`static_quality`、`temporal_quality`、alignment 评分）只能导入，无法自动重算。
-- 自动指标的完整对齐需要本地准备 BLIP/FID/FVD 依赖与参考帧资产。
-- 本地 scorecard 不是官方 FETV leaderboard 结果。
+最小 ZeroScope 单元格（有界 `clip_score`）：[模型 → 评测配方](/zh/docs/evaluation/model-benchmark-recipes)。
 
 [← 返回 Benchmark Hub](/zh/docs/evaluation/benchmark-hub)

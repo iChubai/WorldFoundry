@@ -21,17 +21,11 @@ PAGE_SOURCE_RE = re.compile(r"^pageSource:\s*(authored|generated)\s*$", re.MULTI
 COPY = {
     "en": {
         "architecture": "Architecture",
-        "usage": "Usage notes",
+        "usage": "Runtime contract",
         "use_cases": "Typical uses",
         "hardware": "Hardware guidance",
         "min_vram": "Minimum VRAM",
         "recommended": "Recommended",
-        "variants": "Variants & pipeline bindings",
-        "variant": "Variant",
-        "task": "Task",
-        "profile": "Runtime profile",
-        "binding": "Pipeline binding",
-        "status": "Status",
         "benchmarks": "Evaluation benchmarks",
         "publisher": "Publisher",
         "company": "Company",
@@ -40,17 +34,11 @@ COPY = {
     },
     "zh": {
         "architecture": "架构",
-        "usage": "使用要点",
+        "usage": "运行时契约",
         "use_cases": "典型用途",
         "hardware": "硬件建议",
         "min_vram": "最低显存",
         "recommended": "推荐配置",
-        "variants": "变体与 Pipeline Binding",
-        "variant": "Variant",
-        "task": "任务",
-        "profile": "Runtime profile",
-        "binding": "Pipeline Binding",
-        "status": "状态",
         "benchmarks": "评测 Benchmark",
         "publisher": "发表机构",
         "company": "企业",
@@ -105,12 +93,6 @@ def locale_paragraphs(docs: dict[str, Any], key: str, locale: str) -> list[str]:
     return paragraphs(docs.get(key))
 
 
-def format_status(value: str | None) -> str:
-    if not value or value == "not_recorded":
-        return "—"
-    return value.replace("_", " ").replace("-", " ")
-
-
 def figure_block(figure: dict[str, Any], locale: str) -> str | None:
     src = str(figure.get("src") or "").strip()
     if not src:
@@ -120,16 +102,9 @@ def figure_block(figure: dict[str, Any], locale: str) -> str | None:
         caption = str(figure.get("caption") or "").strip()
     alt = mdx_escape(caption)
     kind = figure.get("kind") or "image"
-    if kind == "video":
-        poster = str(figure.get("poster") or "").strip()
-        poster_attr = f' poster="{poster}"' if poster else ""
-        video = f'<Video src="{src}"{poster_attr} autoPlay loop muted playsInline />'
-        if caption:
-            return (
-                f'<figure className="wf-recipe-media">\n  {video}\n  '
-                f"<figcaption>{alt}</figcaption>\n</figure>"
-            )
-        return f'<figure className="wf-recipe-media">\n  {video}\n</figure>'
+    src_l = src.lower()
+    if kind == "video" or src_l.endswith((".mp4", ".webm", ".mov", ".m4v")) or "/demos/" in src_l:
+        return None
     image = f'<img src="{src}" alt="{alt}" />'
     if caption:
         return (
@@ -186,7 +161,6 @@ def render_model_page(recipe: dict[str, Any], locale: str) -> str:
     use_cases = locale_paragraphs(docs, "useCases", locale)
     hardware = docs.get("hardware") or {}
     figures = [item for item in (docs.get("figures") or []) if isinstance(item, dict)]
-    variants = [item for item in (recipe.get("variants") or []) if isinstance(item, dict)]
     benchmarks = [item for item in (docs.get("benchmarks") or []) if isinstance(item, dict)]
     hub_prefix = "/zh/docs/evaluation/benchmark-hub" if locale == "zh" else "/docs/evaluation/benchmark-hub"
 
@@ -258,25 +232,6 @@ def render_model_page(recipe: dict[str, Any], locale: str) -> str:
             chunks.append(f"- **{copy['recommended']}:** {mdx_escape(str(recommended))}")
         for note in notes:
             chunks.append(f"- {mdx_escape(note)}")
-        chunks.append("")
-
-    if len(variants) > 1:
-        chunks.append(f"## {copy['variants']}")
-        chunks.append("")
-        chunks.append(
-            f"| {copy['variant']} | {copy['task']} | {copy['profile']} | "
-            f"{copy['binding']} | {copy['status']} |"
-        )
-        chunks.append("| --- | --- | --- | --- | --- |")
-        for variant in variants:
-            variant_id = str(variant.get("id") or "—")
-            task = mdx_escape(str(variant.get("task") or "—"))
-            profile = str(variant.get("runtimeProfile") or "—")
-            binding = str(variant.get("pipelineBinding") or "—")
-            status = format_status(str(variant.get("status") or ""))
-            chunks.append(
-                f"| `{variant_id}` | {task} | `{profile}` | `{binding}` | {status} |"
-            )
         chunks.append("")
 
     if benchmarks:

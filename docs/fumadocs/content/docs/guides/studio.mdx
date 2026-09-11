@@ -10,20 +10,20 @@ WorldFoundry Studio is a thin visual entrypoint around repo pipelines. The model
 Studio exposes multiple frontends:
 
 - **`world`** — Interactive world models. Standalone WebRTC console with a resident model runtime, reliable input-edge DataChannel, bounded in-memory frame queue, one persistent video track, immersive fullscreen, and a live runtime log. It does not render through Gradio or materialize an MP4 per control step.
+- **`native-world`** — CUDA/C++/ImGui world explorer (`worldfoundry/studio/native/world_explorer`). Aliases: `world-explorer`, `imgui`.
 - **`points`** — Viser point clouds / meshes. Starts native Viser directly instead of embedding it in the console shell.
 - **`embodied`** — Embodied simulators. **Planned.** URL bridge only: Studio registers an external simulator URL and tunnel hints; no in-tree embodied viewer yet.
 - **`spark`** — 3DGS. Starts the standalone Spark 3DGS viewer with repository-local Spark assets.
+- **`unified`** — Gradio shell. Requires `worldfoundry[ui]`; Workspace hides this visualizer mode.
 - **`auto`** — Default. Routes interactive worlds to `world`, 3D scenes to `spark`, point/depth workflows to `points`, and embodied policies to `embodied`.
 
 ## What it shows
 
-| Surface | Purpose |
-| --- | --- |
-| Preview Video | Latest generated or streamed video. |
-| Preview Image | Still-image outputs and imported reference frames. |
-| 3D World | Gaussian splat, point cloud, or spatial outputs when exported. |
-| Gallery | Recent shots and preview artifacts. |
-| Artifacts | Raw output artifacts for inspection and download. |
+- **Preview Video** — Latest generated or streamed video.
+- **Preview Image** — Still-image outputs and imported reference frames.
+- **3D World** — Gaussian splat, point cloud, or spatial outputs when exported.
+- **Gallery** — Recent shots and preview artifacts.
+- **Artifacts** — Raw output artifacts for inspection and download.
 
 By default, Studio hides most advanced panels. Use `--show-aux-panels` for history, notes, catalog, 3DGS import, and low-level runtime controls.
 
@@ -58,7 +58,7 @@ environment variable, repo-sibling `ckpt/` or `data/` directory when present,
 env-file value from `tmp/worldfoundry_unified_env.sh`, then
 `~/.cache/worldfoundry/...`.
 
-Start the Workspace from the unified model runtime environment, not from a
+First-time CUDA setup is `bash scripts/setup/bootstrap_worldfoundry.sh`, the same official first-clone script as the [Quickstart](/docs/quickstart). Start the Workspace from that unified model runtime, not from a
 lightweight UI-only environment. For CUDA 12.8 hosts this is usually
 `worldfoundry-unified-cu128` after `source tmp/worldfoundry_unified_env.sh`. If
 **LOAD** or **START** fails with a missing import such as `cv2`, restart `7870`
@@ -85,6 +85,7 @@ http://127.0.0.1:7870/
 The workspace is the preferred UI for release validation.
 Use it to submit inference jobs, inspect model-specific forms, review artifacts,
 and compare runs without switching between multiple one-off scripts.
+Those Workspace jobs are visual smoke (`python -m worldfoundry.studio.workspace_job infer`). Everyday reproducible / model-page commands use `worldfoundry-eval run <id> --pipeline.task-profile …`. See [CLI entrypoints](/docs/reference/cli#entrypoints).
 
 Workspace also supports evaluation jobs. For VBench, select **Evaluation**,
 choose benchmark `vbench`, put generated videos in **Dataset Root** (or an
@@ -99,14 +100,12 @@ JSON**.
 There is no separate **Settings** page in the Workspace UI. Configure each job
 in the **Create Job** dialog before submission.
 
-| Field group | What it controls |
-| --- | --- |
-| Model / variant / task profile | Which catalog entry runs and which official input contract is exposed. |
-| Prompt, input path, dynamic task fields | Model-specific inputs from the inference contract. |
-| Device, backend, attention | Runtime device and loading path (`auto`, `from_pretrained`, `api_init`). |
-| Frames, FPS, height, width, steps, guidance, seed | Generation parameters sent in the job payload. |
-| Runtime checks | Optional memory/compile toggles such as Torch Compile, CPU Offload, VAE Offload, and Text Encoder Offload. These appear only when the selected model advertises support. |
-| Call JSON / Load JSON | Advanced overrides merged into `call_kwargs` and `load_kwargs`. |
+- **Model / variant / task profile** — Which catalog entry runs and which official input contract is exposed.
+- **Prompt, input path, dynamic task fields** — Model-specific inputs from the inference contract.
+- **Device, backend, attention** — Runtime device and loading path (`auto`, `from_pretrained`, `api_init`).
+- **Frames, FPS, height, width, steps, guidance, seed** — Generation parameters sent in the job payload.
+- **Runtime checks** — Optional memory/compile toggles such as Torch Compile, CPU Offload, VAE Offload, and Text Encoder Offload. These appear only when the selected model advertises support.
+- **Call JSON / Load JSON** — Advanced overrides merged into `call_kwargs` and `load_kwargs`.
 
 When you open **Create Job** or switch task profiles, the form is prefilled from
 Workspace defaults loaded at startup. Model-specific official demo values from
@@ -114,18 +113,125 @@ the catalog and task profile still take precedence over those shared defaults.
 
 Default values when no settings file is present:
 
-| Key | Default |
-| --- | --- |
-| `device` | `cuda`, or `WORLDFOUNDRY_STUDIO_DEVICE` when set |
-| `backend` | `auto` |
-| `attention_backend` | `auto` |
-| `fps` | `16` |
-| `num_frames` | `81` |
-| `height` × `width` | `720` × `1280` |
-| `num_inference_steps` | `30` |
-| `guidance_scale` | `7.5` |
-| `seed` | `-1` |
-| `torch_compile` / `cpu_offload` | `false` |
+<div className="pi-kv-catalog not-prose">
+  <section className="pi-kv-group">
+    <h3>Key</h3>
+    <ul>
+      <li className="pi-kv-row">
+        <div className="pi-kv-head">
+          <div className="pi-kv-names">
+            <code>device</code>
+          </div>
+          <span className="pi-kv-default">
+            <span>Default</span>
+            <code>cuda</code>, or <code>WORLDFOUNDRY_STUDIO_DEVICE</code> when set
+          </span>
+        </div>
+      </li>
+      <li className="pi-kv-row">
+        <div className="pi-kv-head">
+          <div className="pi-kv-names">
+            <code>backend</code>
+          </div>
+          <span className="pi-kv-default">
+            <span>Default</span>
+            <code>auto</code>
+          </span>
+        </div>
+      </li>
+      <li className="pi-kv-row">
+        <div className="pi-kv-head">
+          <div className="pi-kv-names">
+            <code>attention_backend</code>
+          </div>
+          <span className="pi-kv-default">
+            <span>Default</span>
+            <code>auto</code>
+          </span>
+        </div>
+      </li>
+      <li className="pi-kv-row">
+        <div className="pi-kv-head">
+          <div className="pi-kv-names">
+            <code>fps</code>
+          </div>
+          <span className="pi-kv-default">
+            <span>Default</span>
+            <code>16</code>
+          </span>
+        </div>
+      </li>
+      <li className="pi-kv-row">
+        <div className="pi-kv-head">
+          <div className="pi-kv-names">
+            <code>num_frames</code>
+          </div>
+          <span className="pi-kv-default">
+            <span>Default</span>
+            <code>81</code>
+          </span>
+        </div>
+      </li>
+      <li className="pi-kv-row">
+        <div className="pi-kv-head">
+          <div className="pi-kv-names">
+            <code>height</code>
+            <code>width</code>
+          </div>
+          <span className="pi-kv-default">
+            <span>Default</span>
+            <code>720</code> × <code>1280</code>
+          </span>
+        </div>
+      </li>
+      <li className="pi-kv-row">
+        <div className="pi-kv-head">
+          <div className="pi-kv-names">
+            <code>num_inference_steps</code>
+          </div>
+          <span className="pi-kv-default">
+            <span>Default</span>
+            <code>30</code>
+          </span>
+        </div>
+      </li>
+      <li className="pi-kv-row">
+        <div className="pi-kv-head">
+          <div className="pi-kv-names">
+            <code>guidance_scale</code>
+          </div>
+          <span className="pi-kv-default">
+            <span>Default</span>
+            <code>7.5</code>
+          </span>
+        </div>
+      </li>
+      <li className="pi-kv-row">
+        <div className="pi-kv-head">
+          <div className="pi-kv-names">
+            <code>seed</code>
+          </div>
+          <span className="pi-kv-default">
+            <span>Default</span>
+            <code>-1</code>
+          </span>
+        </div>
+      </li>
+      <li className="pi-kv-row">
+        <div className="pi-kv-head">
+          <div className="pi-kv-names">
+            <code>torch_compile</code>
+            <code>cpu_offload</code>
+          </div>
+          <span className="pi-kv-default">
+            <span>Default</span>
+            <code>false</code>
+          </span>
+        </div>
+      </li>
+    </ul>
+  </section>
+</div>
 
 ### Optional persisted defaults
 
@@ -157,18 +263,133 @@ server was launched. Keep this default for normal repeated inference.
 
 Turn checks on only for setup debugging or release preflight:
 
-| Env var | Default | Effect |
-| --- | --- | --- |
-| `WORLDFOUNDRY_STUDIO_RUNTIME_CHECKS=strict` | skipped | Validate runtime imports and local model paths before loading a pipeline. |
-| `WORLDFOUNDRY_STUDIO_CHECK_RUNTIME_COMPLETENESS=1` | skipped | Recheck in-tree 3D/4D entrypoints while building the Studio catalog. |
-| `WORLDFOUNDRY_STUDIO_RESIDENT_WORKERS=0` | `auto` | Disable long-lived conda workers and return to subprocess-per-job dispatch. |
-| `WORLDFOUNDRY_STUDIO_RESIDENT_WORKER_MODELS=matrix-game-2` | all eligible | Limit resident workers to selected model IDs; torchrun/multi-GPU jobs still use one-shot subprocesses. |
-| `WORLDFOUNDRY_STUDIO_ARTIFACT_SCAN_MODE=missing` | `missing` | Scan the output directory only when required artifacts are missing from the run record. |
-| `WORLDFOUNDRY_STUDIO_ARTIFACT_SCAN_MODE=always` | off by default | Force a full recursive output scan for models that do not return artifact paths. |
-| `WORLDFOUNDRY_STUDIO_ARTIFACT_SCAN_MODE=off` | off by default | Never scan the output directory; rely on `preview_*`, `artifact_paths`, and `rrd_path`. |
-| `WORLDFOUNDRY_STUDIO_VALIDATE_PREVIEW_VIDEO=1` | skipped | Decode candidate preview videos before accepting them. |
-| `WORLDFOUNDRY_STUDIO_EXTRACT_VIDEO_PREVIEW_IMAGE=1` | skipped | Extract a still image from generated videos for preview. |
-| `WORLDFOUNDRY_STUDIO_BUILD_RERUN_PREVIEW=1` | skipped | Build `.rrd` previews automatically for geometry outputs. |
+<div className="pi-kv-catalog is-vars not-prose">
+  <section className="pi-kv-group">
+    <h3>Variable</h3>
+    <ul>
+      <li className="pi-kv-row">
+        <div className="pi-kv-head">
+          <div className="pi-kv-names">
+            <code>WORLDFOUNDRY_STUDIO_RUNTIME_CHECKS</code>
+          </div>
+          <span className="pi-kv-default">
+            <span>Default</span>
+            skipped
+          </span>
+        </div>
+        <p>Set to <code>strict</code> to validate runtime imports and local model paths before loading a pipeline.</p>
+      </li>
+      <li className="pi-kv-row">
+        <div className="pi-kv-head">
+          <div className="pi-kv-names">
+            <code>WORLDFOUNDRY_STUDIO_CHECK_RUNTIME_COMPLETENESS</code>
+          </div>
+          <span className="pi-kv-default">
+            <span>Default</span>
+            skipped
+          </span>
+        </div>
+        <p>Set to <code>1</code> to recheck in-tree 3D/4D entrypoints while building the Studio catalog.</p>
+      </li>
+      <li className="pi-kv-row">
+        <div className="pi-kv-head">
+          <div className="pi-kv-names">
+            <code>WORLDFOUNDRY_STUDIO_RESIDENT_WORKERS</code>
+          </div>
+          <span className="pi-kv-default">
+            <span>Default</span>
+            <code>auto</code>
+          </span>
+        </div>
+        <p>Set to <code>0</code> to disable long-lived conda workers and return to subprocess-per-job dispatch.</p>
+      </li>
+      <li className="pi-kv-row">
+        <div className="pi-kv-head">
+          <div className="pi-kv-names">
+            <code>WORLDFOUNDRY_STUDIO_RESIDENT_WORKER_MODELS</code>
+          </div>
+          <span className="pi-kv-default">
+            <span>Default</span>
+            all eligible
+          </span>
+        </div>
+        <p>Limit resident workers to selected model IDs, for example <code>matrix-game-2</code>; torchrun/multi-GPU jobs still use one-shot subprocesses.</p>
+      </li>
+      <li className="pi-kv-row">
+        <div className="pi-kv-head">
+          <div className="pi-kv-names">
+            <code>WORLDFOUNDRY_STUDIO_ARTIFACT_SCAN_MODE</code>
+          </div>
+          <span className="pi-kv-default">
+            <span>Default</span>
+            <code>missing</code>
+          </span>
+        </div>
+        <p>Scan the output directory only when required artifacts are missing from the run record.</p>
+      </li>
+      <li className="pi-kv-row">
+        <div className="pi-kv-head">
+          <div className="pi-kv-names">
+            <code>WORLDFOUNDRY_STUDIO_ARTIFACT_SCAN_MODE</code>
+          </div>
+          <span className="pi-kv-default">
+            <span>Value</span>
+            <code>always</code>
+          </span>
+        </div>
+        <p>Force a full recursive output scan for models that do not return artifact paths.</p>
+      </li>
+      <li className="pi-kv-row">
+        <div className="pi-kv-head">
+          <div className="pi-kv-names">
+            <code>WORLDFOUNDRY_STUDIO_ARTIFACT_SCAN_MODE</code>
+          </div>
+          <span className="pi-kv-default">
+            <span>Value</span>
+            <code>off</code>
+          </span>
+        </div>
+        <p>Never scan the output directory; rely on <code>preview_*</code>, <code>artifact_paths</code>, and <code>rrd_path</code>.</p>
+      </li>
+      <li className="pi-kv-row">
+        <div className="pi-kv-head">
+          <div className="pi-kv-names">
+            <code>WORLDFOUNDRY_STUDIO_VALIDATE_PREVIEW_VIDEO</code>
+          </div>
+          <span className="pi-kv-default">
+            <span>Default</span>
+            skipped
+          </span>
+        </div>
+        <p>Set to <code>1</code> to decode candidate preview videos before accepting them.</p>
+      </li>
+      <li className="pi-kv-row">
+        <div className="pi-kv-head">
+          <div className="pi-kv-names">
+            <code>WORLDFOUNDRY_STUDIO_EXTRACT_VIDEO_PREVIEW_IMAGE</code>
+          </div>
+          <span className="pi-kv-default">
+            <span>Default</span>
+            skipped
+          </span>
+        </div>
+        <p>Set to <code>1</code> to extract a still image from generated videos for preview.</p>
+      </li>
+      <li className="pi-kv-row">
+        <div className="pi-kv-head">
+          <div className="pi-kv-names">
+            <code>WORLDFOUNDRY_STUDIO_BUILD_RERUN_PREVIEW</code>
+          </div>
+          <span className="pi-kv-default">
+            <span>Default</span>
+            skipped
+          </span>
+        </div>
+        <p>Set to <code>1</code> to build <code>.rrd</code> previews automatically for geometry outputs.</p>
+      </li>
+    </ul>
+  </section>
+</div>
 
 For the fastest finish path, model runtimes should return explicit
 `preview_image`, `preview_video`, `artifact_paths`, `rrd_path`, and `output_dir`
@@ -317,12 +538,10 @@ directory for visualizable artifacts. The **Artifacts** tab shows **Open** and
 **Open in ...** actions for supported files. **Job Detail** keeps inline
 preview video/image only; it does not duplicate viewer launch shortcuts.
 
-| Artifact shape | Viewer |
-| --- | --- |
-| `.png`, `.jpg`, `.jpeg`, `.webp`, `.gif`, `.bmp`, `.mp4`, `.mov`, `.webm`, `.mkv`, `.avi`, `.wav`, `.mp3`, `.flac`, `.ogg` media files | Inline Workspace preview and direct **Open** link |
-| `.ply`, `.pcd`, `.xyz`, `.glb`, `.gltf`, `.obj` geometry files; `.npz` files with supported geometry/depth keys | Viser Geometry Viewer |
-| `.splat`, `.spz`, `.ksplat`, `.sog`, and Gaussian-splat `.ply` files | Spark Gaussian Splat Viewer |
-| `.rrd` recordings | Rerun Timeline Viewer |
+- **`.png`, `.jpg`, `.jpeg`, `.webp`, `.gif`, `.bmp`, `.mp4`, `.mov`, `.webm`, `.mkv`, `.avi`, `.wav`, `.mp3`, `.flac`, `.ogg` media files** — Inline Workspace preview and direct **Open** link
+- **`.ply`, `.pcd`, `.xyz`, `.glb`, `.gltf`, `.obj` geometry files; `.npz` files with supported geometry/depth keys** — Viser Geometry Viewer
+- **`.splat`, `.spz`, `.ksplat`, `.sog`, and Gaussian-splat `.ply` files** — Spark Gaussian Splat Viewer
+- **`.rrd` recordings** — Rerun Timeline Viewer
 
 ### Base-model perception outputs
 
@@ -417,11 +636,9 @@ browser requires that fallback.
 Keep the default route artifact-driven so model integrations do not duplicate
 viewer code:
 
-| Output semantics | Default | Use the official viewer when... |
-| --- | --- | --- |
-| Static point cloud, mesh, depth-derived geometry, camera frustums | Viser | It carries a model-specific control or annotation that cannot be represented as shared scene layers. |
-| Time-varying geometry, camera trajectory, synchronized images/depth/actions | Rerun | The official timeline cannot be exported to `.rrd` without losing semantics. |
-| Gaussian splats | Spark | The upstream renderer requires a nonstandard shader or splat format. |
+- **Static point cloud, mesh, depth-derived geometry, camera frustums** — Default Viser. Use the official viewer when it carries a model-specific control or annotation that cannot be represented as shared scene layers.
+- **Time-varying geometry, camera trajectory, synchronized images/depth/actions** — Default Rerun. Use the official viewer when the official timeline cannot be exported to `.rrd` without losing semantics.
+- **Gaussian splats** — Default Spark. Use the official viewer when the upstream renderer requires a nonstandard shader or splat format.
 
 An inference run is not visually verified merely because a viewer process
 starts. Release evidence for a 3D/4D method should confirm finite geometry,
@@ -436,12 +653,10 @@ Viser/Rerun scene layers are sufficient.
 These screenshots are from the `7870` workspace used for model release
 validation.
 
-| View | What to check |
-| --- | --- |
-| Inference jobs | Completed runs, inline preview media, status, and logs. |
-| Create Job | Model-specific inputs and official demo defaults. |
-| Catalog | World-model filtering and model metadata. |
-| Gallery | Recent visual outputs for side-by-side QA. |
+- **Inference jobs** — Completed runs, inline preview media, status, and logs.
+- **Create Job** — Model-specific inputs and official demo defaults.
+- **Catalog** — World-model filtering and model metadata.
+- **Gallery** — Recent visual outputs for side-by-side QA.
 
 ### Inference jobs
 
@@ -473,16 +688,14 @@ artifacts.
 
 ## Launch matrix
 
-| Use case | Command shape | Notes |
-| --- | --- | --- |
-| LingBot realtime | `python -m worldfoundry.studio.app lingbot-world --variant fast --frontend world --device cuda:1` | Resident runtime with continuous WebRTC video and DataChannel controls. |
-| LingBot camera | `python -m worldfoundry.studio.app lingbot-world --variant base-camera --device cuda:1` | Slower, camera-centric profile. |
-| MatrixGame | `python -m worldfoundry.studio.app matrix-game-2 --device cuda:1` | Interactive world navigation. |
-| WorldCam | `python -m worldfoundry.studio.app worldcam --device cuda:1` | Camera-path generation and view control. |
-| Hosted APIs | `python -m worldfoundry.studio.app <model> --backend api_init --endpoint <url>` | Endpoint stays explicit at launch. |
-| Viser point cloud | `python -m worldfoundry.studio.app pi3 --frontend points --asset /path/to/scene.ply --port 18590` | Native Viser UI. |
-| Spark 3DGS | `python -m worldfoundry.studio.app vggt --frontend spark --asset /path/to/scene.splat --port 8765` | Standalone Spark canvas. |
-| Embodied simulator | `python -m worldfoundry.studio.app openvla --frontend embodied --simulator-url http://127.0.0.1:9000` | **Planned.** Registers an external simulator URL only; does not launch an in-tree viewer. |
+- **LingBot realtime** — `python -m worldfoundry.studio.app lingbot-world --variant fast --frontend world --device cuda:1`. Resident runtime with continuous WebRTC video and DataChannel controls.
+- **LingBot camera** — `python -m worldfoundry.studio.app lingbot-world --variant base-camera --device cuda:1`. Slower, camera-centric profile.
+- **MatrixGame** — `python -m worldfoundry.studio.app matrix-game-2 --device cuda:1`. Interactive world navigation.
+- **WorldCam** — `python -m worldfoundry.studio.app worldcam --device cuda:1`. Camera-path generation and view control.
+- **Hosted APIs** — `python -m worldfoundry.studio.app <model> --backend api_init --endpoint <url>`. Endpoint stays explicit at launch.
+- **Viser point cloud** — `python -m worldfoundry.studio.app pi3 --frontend points --asset /path/to/scene.ply --port 18590`. Native Viser UI.
+- **Spark 3DGS** — `python -m worldfoundry.studio.app vggt --frontend spark --asset /path/to/scene.splat --port 8765`. Standalone Spark canvas.
+- **Embodied simulator** — `python -m worldfoundry.studio.app openvla --frontend embodied --simulator-url http://127.0.0.1:9000`. **Planned.** Registers an external simulator URL only; does not launch an in-tree viewer.
 
 Recommended local start:
 
@@ -527,14 +740,12 @@ instead of leaving the page indefinitely in a connecting state.
 
 ## Interaction modes
 
-| Mode | Flow | Best for |
-| --- | --- | --- |
-| Image World | Select a tray image or upload an image -> `START` -> hold keyboard or stick controls | Image-conditioned interactive world models. |
-| Video World | Upload a video -> `START` -> continue with video-to-video world-model flows | Video-conditioned world models. |
-| Stream | Seed input -> start one persistent session -> send key edges while frames continue | Interactive world models and continuation. |
-| Prompt-scheduled segments | Enter a prompt, optionally select an image, then `START`; edit the prompt and press `Enter` after the current segment | Models that accept a new prompt at native segment boundaries. |
-| Queued controlled segments | Select an initial image, dense control video, sparse control video, and prompt -> `RUN`; select new controls before each `EXTEND` | Long-form models with explicit per-segment control inputs. |
-| Spatial preview | Run or export 3D asset -> open `3D World` | Gaussian splat, point cloud, or scene outputs. |
+- **Image World** — Select a tray image or upload an image -> `START` -> hold keyboard or stick controls. Image-conditioned interactive world models.
+- **Video World** — Upload a video -> `START` -> continue with video-to-video world-model flows. Video-conditioned world models.
+- **Stream** — Seed input -> start one persistent session -> send key edges while frames continue. Interactive world models and continuation.
+- **Prompt-scheduled segments** — Enter a prompt, optionally select an image, then `START`; edit the prompt and press `Enter` after the current segment. Models that accept a new prompt at native segment boundaries.
+- **Queued controlled segments** — Select an initial image, dense control video, sparse control video, and prompt -> `RUN`; select new controls before each `EXTEND`. Long-form models with explicit per-segment control inputs.
+- **Spatial preview** — Run or export 3D asset -> open `3D World`. Gaussian splat, point cloud, or scene outputs.
 
 Keyboard/live controls:
 
@@ -624,12 +835,10 @@ does not reconnect the browser or restart generation.
    fullscreen.
 5. Press `Esc` or click **EXIT** to return to the standard Studio layout.
 
-| Control | Result |
-| --- | --- |
-| **FULLSCREEN** / `F` | Enter or leave immersive fullscreen. |
-| **LIVE LOG** / `Shift+L` | Toggle the runtime log in either the normal or fullscreen layout. `L` alone remains the camera-right control. |
-| **CLEAR** | Clear the visible log history only; the model session and runtime state are unchanged. |
-| `Esc` | Leave fullscreen and return to the same active session. |
+- **FULLSCREEN** / `F` — Enter or leave immersive fullscreen.
+- **LIVE LOG** / `Shift+L` — Toggle the runtime log in either the normal or fullscreen layout. `L` alone remains the camera-right control.
+- **CLEAR** — Clear the visible log history only; the model session and runtime state are unchanged.
+- **`Esc`** — Leave fullscreen and return to the same active session.
 
 The log includes client and model readiness, realtime transport state, segment
 queue/generation/playback transitions, errors, and per-chunk performance data.
@@ -649,45 +858,315 @@ fullscreen permission.
 
 ## Launch flags
 
-| Flag | Meaning |
-| --- | --- |
-| positional `model_id` / `--model` | Launch target. |
-| `--variant` | Runtime profile such as `fast` or `base-camera`. |
-| `--model-ref` / `--ckpt` / `--checkpoint` | Explicit local or repo reference. |
-| `--device` | Runtime device. |
-| `--backend` | `auto`, `from_pretrained`, or `api_init`. |
-| `--endpoint` | Explicit API endpoint. |
-| `--show-aux-panels` | Expose history, notes, catalog, and side panels. |
-| `--frontend` | `auto`, `world`, `points`, `embodied`, or `spark`. |
-| `--asset` | Remote asset path for native viewers, such as point cloud `.ply/.npz` or 3DGS `.splat/.spz/.ply`. |
-| `--simulator-url` | Native embodied simulator URL. |
-| `--host` / `--port` | Override frontend bind host and port. |
+<div className="pi-kv-catalog not-prose">
+  <section className="pi-kv-group">
+    <h3>Flag</h3>
+    <ul>
+      <li className="pi-kv-row">
+        <div className="pi-kv-head">
+          <div className="pi-kv-names">
+            <code>positional model_id</code>
+            <code>--model</code>
+          </div>
+        </div>
+        <p>Launch target.</p>
+      </li>
+      <li className="pi-kv-row">
+        <div className="pi-kv-head">
+          <div className="pi-kv-names">
+            <code>--variant</code>
+          </div>
+        </div>
+        <p>Runtime profile such as <code>fast</code> or <code>base-camera</code>.</p>
+      </li>
+      <li className="pi-kv-row">
+        <div className="pi-kv-head">
+          <div className="pi-kv-names">
+            <code>--model-ref</code>
+            <code>--ckpt</code>
+            <code>--checkpoint</code>
+          </div>
+        </div>
+        <p>Explicit local or repo reference.</p>
+      </li>
+      <li className="pi-kv-row">
+        <div className="pi-kv-head">
+          <div className="pi-kv-names">
+            <code>--device</code>
+          </div>
+        </div>
+        <p>Runtime device.</p>
+      </li>
+      <li className="pi-kv-row">
+        <div className="pi-kv-head">
+          <div className="pi-kv-names">
+            <code>--backend</code>
+          </div>
+        </div>
+        <p><code>auto</code>, <code>from_pretrained</code>, or <code>api_init</code>.</p>
+      </li>
+      <li className="pi-kv-row">
+        <div className="pi-kv-head">
+          <div className="pi-kv-names">
+            <code>--endpoint</code>
+          </div>
+        </div>
+        <p>Explicit API endpoint.</p>
+      </li>
+      <li className="pi-kv-row">
+        <div className="pi-kv-head">
+          <div className="pi-kv-names">
+            <code>--show-aux-panels</code>
+          </div>
+        </div>
+        <p>Expose history, notes, catalog, and side panels.</p>
+      </li>
+      <li className="pi-kv-row">
+        <div className="pi-kv-head">
+          <div className="pi-kv-names">
+            <code>--frontend</code>
+          </div>
+        </div>
+        <p><code>auto</code>, <code>world</code>, <code>native-world</code> (CUDA/C++/ImGui explorer), <code>points</code>, <code>spark</code>, <code>embodied</code>, or <code>unified</code> (Gradio; requires <code>worldfoundry[ui]</code>). Aliases such as <code>viser</code>, <code>3dgs</code>, and <code>imgui</code> are accepted.</p>
+      </li>
+      <li className="pi-kv-row">
+        <div className="pi-kv-head">
+          <div className="pi-kv-names">
+            <code>--asset</code>
+          </div>
+        </div>
+        <p>Remote asset path for native viewers, such as point cloud <code>.ply/.npz</code> or 3DGS <code>.splat/.spz/.ply</code>.</p>
+      </li>
+      <li className="pi-kv-row">
+        <div className="pi-kv-head">
+          <div className="pi-kv-names">
+            <code>--simulator-url</code>
+          </div>
+        </div>
+        <p>Native embodied simulator URL.</p>
+      </li>
+      <li className="pi-kv-row">
+        <div className="pi-kv-head">
+          <div className="pi-kv-names">
+            <code>--host</code>
+            <code>--port</code>
+          </div>
+        </div>
+        <p>Override frontend bind host and port.</p>
+      </li>
+    </ul>
+  </section>
+</div>
 
 ## Environment
 
-| Variable | Effect |
-| --- | --- |
-| `WORLDFOUNDRY_WORKSPACE_PORT` | Workspace HTTP port (default `7870`). |
-| `WORLDFOUNDRY_WORKSPACE_MAX_JOBS` | Concurrent job worker limit. |
-| `WORLDFOUNDRY_STUDIO_SETTINGS_FILE` | Optional JSON file loaded into `/api/settings` for Create Job defaults. |
-| `WORLDFOUNDRY_STUDIO_PORT` | Single-model Studio server port. |
-| `WORLDFOUNDRY_STUDIO_MODEL` | Default model ID. |
-| `WORLDFOUNDRY_STUDIO_VARIANT` | Default variant. |
-| `WORLDFOUNDRY_STUDIO_BACKEND` | Default backend. |
-| `WORLDFOUNDRY_STUDIO_DEVICE` | Default device. |
-| `WORLDFOUNDRY_STUDIO_ENDPOINT` | API endpoint. |
-| `WORLDFOUNDRY_STUDIO_FIXED_MODEL_REF` | Fixed local model/checkpoint ref. |
-| `WORLDFOUNDRY_STUDIO_SHOW_AUX_PANELS` | Show advanced panels. |
-| `WORLDFOUNDRY_STUDIO_FRONTEND` | Default frontend route. |
-| `WORLDFOUNDRY_STUDIO_ASSET` | Default native viewer asset. |
-| `WORLDFOUNDRY_STUDIO_SIMULATOR_URL` | Embodied simulator URL. |
-| `WORLDFOUNDRY_STUDIO_SPARK_PORT` / `WORLDFOUNDRY_STUDIO_POINTS_PORT` | Per-frontend default ports. |
-| `WORLDFOUNDRY_STUDIO_SSH_HOST` | SSH host shown in tunnel hints; set it to the user's own GPU node, for example `user@gpu-host`. |
-| `WORLDFOUNDRY_STUDIO_WORKSPACE_DIR` | Studio run/output root; falls back to `${WORLDFOUNDRY_ARTIFACT_DIR}/studio` when set, otherwise `tmp/worldfoundry_studio`. |
-| `WORLDFOUNDRY_STUDIO_MODEL_ROOT` | Extra local model repository root searched before shared roots. |
-| `WORLDFOUNDRY_MODEL_DIR` | Shared model/checkpoint root; Studio searches it for local repos and checkpoints. |
-| `WORLDFOUNDRY_CACHE_DIR` | Shared cache root; Studio searches `${WORLDFOUNDRY_CACHE_DIR}/hfd` and `${WORLDFOUNDRY_CACHE_DIR}/repos`. |
-| `WORLDFOUNDRY_HF_CACHE_DIR` | Optional Hugging Face Hub cache override. Leave unset to use Hugging Face's native `from_pretrained` / `snapshot_download` cache and auto-download behavior. |
+<div className="pi-kv-catalog is-vars not-prose">
+  <section className="pi-kv-group">
+    <h3>Variable</h3>
+    <ul>
+      <li className="pi-kv-row">
+        <div className="pi-kv-head">
+          <div className="pi-kv-names">
+            <code>WORLDFOUNDRY_WORKSPACE_PORT</code>
+          </div>
+        </div>
+        <p>Workspace HTTP port (default <code>7870</code>).</p>
+      </li>
+      <li className="pi-kv-row">
+        <div className="pi-kv-head">
+          <div className="pi-kv-names">
+            <code>WORLDFOUNDRY_WORKSPACE_HOST</code>
+          </div>
+        </div>
+        <p>Workspace bind host (default <code>127.0.0.1</code>).</p>
+      </li>
+      <li className="pi-kv-row">
+        <div className="pi-kv-head">
+          <div className="pi-kv-names">
+            <code>WORLDFOUNDRY_STUDIO_AUTH_TOKEN</code>
+          </div>
+        </div>
+        <p>Required when binding a non-loopback host. Clients send <code>Authorization: Bearer &lt;token&gt;</code> or <code>?token=</code>. Loopback stays unauthenticated.</p>
+      </li>
+      <li className="pi-kv-row">
+        <div className="pi-kv-head">
+          <div className="pi-kv-names">
+            <code>WORLDFOUNDRY_STUDIO_WORKSPACE_URL</code>
+          </div>
+        </div>
+        <p>Base URL used by MCP Studio tools (default <code>http://127.0.0.1:7870</code>).</p>
+      </li>
+      <li className="pi-kv-row">
+        <div className="pi-kv-head">
+          <div className="pi-kv-names">
+            <code>WORLDFOUNDRY_WORKSPACE_MAX_JOBS</code>
+          </div>
+        </div>
+        <p>Concurrent job worker limit.</p>
+      </li>
+      <li className="pi-kv-row">
+        <div className="pi-kv-head">
+          <div className="pi-kv-names">
+            <code>WORLDFOUNDRY_STUDIO_SETTINGS_FILE</code>
+          </div>
+        </div>
+        <p>Optional JSON file loaded into <code>/api/settings</code> for Create Job defaults.</p>
+      </li>
+      <li className="pi-kv-row">
+        <div className="pi-kv-head">
+          <div className="pi-kv-names">
+            <code>WORLDFOUNDRY_STUDIO_PORT</code>
+          </div>
+        </div>
+        <p>Single-model Studio server port.</p>
+      </li>
+      <li className="pi-kv-row">
+        <div className="pi-kv-head">
+          <div className="pi-kv-names">
+            <code>WORLDFOUNDRY_STUDIO_MODEL</code>
+          </div>
+        </div>
+        <p>Default model ID.</p>
+      </li>
+      <li className="pi-kv-row">
+        <div className="pi-kv-head">
+          <div className="pi-kv-names">
+            <code>WORLDFOUNDRY_STUDIO_VARIANT</code>
+          </div>
+        </div>
+        <p>Default variant.</p>
+      </li>
+      <li className="pi-kv-row">
+        <div className="pi-kv-head">
+          <div className="pi-kv-names">
+            <code>WORLDFOUNDRY_STUDIO_BACKEND</code>
+          </div>
+        </div>
+        <p>Default backend.</p>
+      </li>
+      <li className="pi-kv-row">
+        <div className="pi-kv-head">
+          <div className="pi-kv-names">
+            <code>WORLDFOUNDRY_STUDIO_DEVICE</code>
+          </div>
+        </div>
+        <p>Default device.</p>
+      </li>
+      <li className="pi-kv-row">
+        <div className="pi-kv-head">
+          <div className="pi-kv-names">
+            <code>WORLDFOUNDRY_STUDIO_ENDPOINT</code>
+          </div>
+        </div>
+        <p>API endpoint.</p>
+      </li>
+      <li className="pi-kv-row">
+        <div className="pi-kv-head">
+          <div className="pi-kv-names">
+            <code>WORLDFOUNDRY_STUDIO_FIXED_MODEL_REF</code>
+          </div>
+        </div>
+        <p>Fixed local model/checkpoint ref.</p>
+      </li>
+      <li className="pi-kv-row">
+        <div className="pi-kv-head">
+          <div className="pi-kv-names">
+            <code>WORLDFOUNDRY_STUDIO_SHOW_AUX_PANELS</code>
+          </div>
+        </div>
+        <p>Show advanced panels.</p>
+      </li>
+      <li className="pi-kv-row">
+        <div className="pi-kv-head">
+          <div className="pi-kv-names">
+            <code>WORLDFOUNDRY_STUDIO_FRONTEND</code>
+          </div>
+        </div>
+        <p>Default frontend route.</p>
+      </li>
+      <li className="pi-kv-row">
+        <div className="pi-kv-head">
+          <div className="pi-kv-names">
+            <code>WORLDFOUNDRY_STUDIO_ASSET</code>
+          </div>
+        </div>
+        <p>Default native viewer asset.</p>
+      </li>
+      <li className="pi-kv-row">
+        <div className="pi-kv-head">
+          <div className="pi-kv-names">
+            <code>WORLDFOUNDRY_STUDIO_SIMULATOR_URL</code>
+          </div>
+        </div>
+        <p>Embodied simulator URL.</p>
+      </li>
+      <li className="pi-kv-row">
+        <div className="pi-kv-head">
+          <div className="pi-kv-names">
+            <code>WORLDFOUNDRY_STUDIO_SPARK_PORT</code>
+          </div>
+        </div>
+        <p>Default port for the Spark frontend.</p>
+      </li>
+      <li className="pi-kv-row">
+        <div className="pi-kv-head">
+          <div className="pi-kv-names">
+            <code>WORLDFOUNDRY_STUDIO_POINTS_PORT</code>
+          </div>
+        </div>
+        <p>Default port for the Points frontend.</p>
+      </li>
+      <li className="pi-kv-row">
+        <div className="pi-kv-head">
+          <div className="pi-kv-names">
+            <code>WORLDFOUNDRY_STUDIO_SSH_HOST</code>
+          </div>
+        </div>
+        <p>SSH host shown in tunnel hints; set it to the user's own GPU node, for example <code>user@gpu-host</code>.</p>
+      </li>
+      <li className="pi-kv-row">
+        <div className="pi-kv-head">
+          <div className="pi-kv-names">
+            <code>WORLDFOUNDRY_STUDIO_WORKSPACE_DIR</code>
+          </div>
+        </div>
+        <p>Studio run/output root; falls back to <code>{"${WORLDFOUNDRY_ARTIFACT_DIR}/studio"}</code> when set, otherwise <code>tmp/worldfoundry_studio</code>.</p>
+      </li>
+      <li className="pi-kv-row">
+        <div className="pi-kv-head">
+          <div className="pi-kv-names">
+            <code>WORLDFOUNDRY_STUDIO_MODEL_ROOT</code>
+          </div>
+        </div>
+        <p>Extra local model repository root searched before shared roots.</p>
+      </li>
+      <li className="pi-kv-row">
+        <div className="pi-kv-head">
+          <div className="pi-kv-names">
+            <code>WORLDFOUNDRY_MODEL_DIR</code>
+          </div>
+        </div>
+        <p>Shared model/checkpoint root; Studio searches it for local repos and checkpoints.</p>
+      </li>
+      <li className="pi-kv-row">
+        <div className="pi-kv-head">
+          <div className="pi-kv-names">
+            <code>WORLDFOUNDRY_CACHE_DIR</code>
+          </div>
+        </div>
+        <p>Shared cache root; Studio searches <code>{"${WORLDFOUNDRY_CACHE_DIR}/hfd"}</code> and <code>{"${WORLDFOUNDRY_CACHE_DIR}/repos"}</code>.</p>
+      </li>
+      <li className="pi-kv-row">
+        <div className="pi-kv-head">
+          <div className="pi-kv-names">
+            <code>WORLDFOUNDRY_HF_CACHE_DIR</code>
+          </div>
+        </div>
+        <p>Optional Hugging Face Hub cache override. Leave unset to use Hugging Face's native <code>from_pretrained</code> / <code>snapshot_download</code> cache and auto-download behavior.</p>
+      </li>
+    </ul>
+  </section>
+</div>
 
 Only `WORLDFOUNDRY_*` Studio environment variables are supported.
 

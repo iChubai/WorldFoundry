@@ -1,57 +1,17 @@
 ---
 title: VideoVerse
-description: T2V 世界模型能力评测：300 条事件分解 prompt，评判时序因果与世界知识等十个维度。
+description: "OPPO 的 300 prompt 世界模型 T2V 评测：事件 LCS 加二元 QA。WorldFoundry 可跑 Gemini / URL / 本地 VLM 裁判，不编造榜单。"
 ---
 
-## 简介
+VideoVerse（OPPO 研究院，联合中山大学与香港理工）问的是文本生成视频离 **世界模型** 还有多远。官方规模：**300 条 prompt**，每条拆成有序事件，并带跨越 **十个维度** 的二元评测问题。分面包括 QA 准确率、事件覆盖、时间因果、世界知识一致性、静态 / 动态场景一致性。打分把检测到的事件顺序做 **事件 LCS**，再加逐题核验。
 
-**发表机构：** OPPO Research Institute（OPPO 研究院，联合中山大学与香港理工大学）
+论文：[VideoVerse](https://arxiv.org/abs/2510.08398)。项目：[naptmn.cn/Homepage_of_VideoVerse](https://www.naptmn.cn/Homepage_of_VideoVerse/)。代码：[Zeqing-Wang/VideoVerse](https://github.com/Zeqing-Wang/VideoVerse)。许可证：Apache-2.0。
 
-VideoVerse 追问：文生视频生成器距离世界模型还有多远。它的 300 条 prompt 每条都被分解为带顺序的事件与二值评审问题，覆盖十个维度，归组为 QA 准确率、事件覆盖率、时序因果、世界知识一致性与静态/动态场景一致性等指标族。评审结合对检测事件顺序的 event-LCS（最长公共子序列）检查与逐问题验证。
+WorldFoundry **在仓内跑裁判**（默认 Gemini，或 URL / 本地 VLM），并用官方事件 LCS / 核验逻辑归一化 `eval_res.json`。Prompt 清单已捆绑。`--strict` 强制标准 300 prompt 套件。官方路径已接入；带凭证的完整套件 **未** 做发布级验证。
 
-WorldFoundry 在仓内运行 VideoVerse judge——Gemini、URL 或本地 VLM 后端——并按官方 event-LCS 与验证检查逻辑归一化 `eval_res.json`。官方 prompt manifest 已捆绑入库；runner 校验 prompt/结果/视频覆盖率，并记录标准 300 条 prompt 套件是否完整。
+<BenchmarkPageSections id="videoverse" locale="zh" />
 
-官方参考：
-
-- Paper: [arxiv.org/abs/2510.08398](https://arxiv.org/abs/2510.08398)
-- 项目主页: [www.naptmn.cn/Homepage_of_VideoVerse](https://www.naptmn.cn/Homepage_of_VideoVerse/)
-- 官方仓库: [Zeqing-Wang/VideoVerse](https://github.com/Zeqing-Wang/VideoVerse)
-
-## 评测协议
-
-`--run-official` 依据捆绑 prompt manifest（`prompts_of_VideoVerse.json` 及分解版）评审生成视频，默认使用 Gemini 后端（`GEMINI_API_KEY`）。`official-validation` 归一化已有的 `eval_res.json`。仅在使用非标准 prompt 资产时才传 `--prompt-manifest` / `--decomposed-prompt-manifest`；`--strict` 强制全套覆盖。
-
-主指标是 `videoverse_average`。
-
-| Metric | 含义 | 方向 |
-| --- | --- | --- |
-| `qa_accuracy` | VideoVerse 二元/问答判定准确率。 | 越高越好 |
-| `event_coverage` | 必需事件的覆盖率。 | 越高越好 |
-| `temporal_causality` | 时序因果一致性得分。 | 越高越好 |
-| `world_knowledge_consistency` | 世界知识一致性得分。 | 越高越好 |
-| `static_scene_consistency` | 静态场景一致性得分。 | 越高越好 |
-| `dynamic_event_consistency` | 动态事件一致性得分。 | 越高越好 |
-| `videoverse_average` | 可用 VideoVerse 得分族的均值。 | 越高越好 |
-
-## 数据与产物布局
-
-WorldFoundry 仓内路径：
-
-```text
-worldfoundry/data/benchmarks/tasks/external/videoverse.yaml
-```
-
-```text
-worldfoundry/data/benchmarks/assets/videoverse/prompt/prompts_of_VideoVerse.json
-worldfoundry/data/benchmarks/assets/videoverse/prompt/prompts_of_VideoVerse_decomposed.json
-${WORLDFOUNDRY_GENERATED_ARTIFACT_DIR}/          # 按 prompt id 命名的候选视频
-<out>/eval_res.json                              # judge 输出
-<out>/judge_responses.jsonl                      # judge 原始记录
-```
-
-## 运行评测
-
-目录 manifest 记录的 validation 命令：
+## 如何运行
 
 ```bash
 worldfoundry-eval zoo benchmark-run \
@@ -59,34 +19,14 @@ worldfoundry-eval zoo benchmark-run \
   --mode official-validation \
   --official-results-path <official_results.json> \
   --generated-artifact-dir <generated_videos> \
-  --output-dir <out> \
+  --output-dir tmp/videoverse/official-validation \
   --json
 ```
 
-## 权重与环境变量
+`--run-official` 对照捆绑的 `prompts_of_VideoVerse.json` / 分解版给生成视频打分（`GEMINI_API_KEY` 或 `WORLDFOUNDRY_VIDEOVERSE_GEMINI_API_KEY`）。只有非标准资产才用 `--prompt-manifest`。默认导入：`WORLDFOUNDRY_VIDEOVERSE_RESULTS_PATH`。共享资源：`videoverse_dataset_assets`。
 
-- `WORLDFOUNDRY_VIDEOVERSE_RESULTS_PATH`: 未显式传 `--official-results-path` 时，导入器默认从该路径读取官方结果导出文件。
-- `WORLDFOUNDRY_GENERATED_ARTIFACT_DIR`: 存放待评测生成产物（候选视频/rollout）的目录。
-- `GEMINI_API_KEY`: Gemini judge 后端必需（也接受 `WORLDFOUNDRY_VIDEOVERSE_GEMINI_API_KEY`）。
+仓内指针：`worldfoundry/data/benchmarks/tasks/external/videoverse.yaml`，`worldfoundry/data/benchmarks/assets/videoverse/prompt/`。
 
-该 benchmark 复用共享 base-model 依赖栈：`videoverse_dataset_assets`。
-
-## 输出文件
-
-运行会在 `--output-dir` 下写出：
-
-- `scorecard.json`: WorldFoundry 统一 scorecard，记录上表中的指标值。
-- `benchmark_contract.json`: 本次运行的 benchmark contract 记录（输入、模式、来源信息）。
-- `raw_metric_table.jsonl`: 支撑 scorecard 的原始 metric 行。
-- `eval_res.json`
-- `judge_responses.jsonl`
-
-Scorecard 主键：`videoverse_average`（leaderboard key `videoverse_average`），写入 `scorecard.json`。
-
-## 边界与限制
-
-- 只有严格全套覆盖通过且七个指标族齐备时，框架集成才算完成。
-- leaderboard 对齐仍需源码审计过的 Gemini/API judge 执行与完整官方套件的提交协议证据。
-- 部分 prompt 的 judge 运行只是开发信号，不是 VideoVerse 官方成绩。
+产物包括 `scorecard.json`（主键 `videoverse_average`）、`eval_res.json`、`judge_responses.jsonl`。
 
 [← 返回 Benchmark Hub](/zh/docs/evaluation/benchmark-hub)

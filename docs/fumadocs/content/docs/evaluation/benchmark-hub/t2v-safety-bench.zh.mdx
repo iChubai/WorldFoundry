@@ -1,63 +1,19 @@
 ---
 title: T2VSafetyBench
-description: 安全关键的 T2V 评测（NeurIPS 2024）：恶意 prompt 下 12 个 NSFW 维度比率，GPT 评审并与人工复核高度相关。
+description: "NeurIPS 2024 文生视频安全评测：14 面恶意 prompt、12 项 NSFW 率。WorldFoundry 可导入或调用裁判，不编造榜单。"
 ---
 
-## 简介
+T2VSafetyBench（中科院与清华，联合 RealAI）问的是文生视频模型会不会**拒绝不安全 prompt**，包括只在**跨帧**才出现的风险。官方指标全是 NSFW **触发率**（越低越安全）。Prompt 套件有 **14 个面**；WorldFoundry 报告 **12 项率**：11 个内容面，外加合并后的**时序风险**率（连续动作、动态变换、上下文连贯）。Prompt 来自真实文本、LLM 生成与越狱攻击。视频按面由 GPT 判 NSFW / 安全，论文报告了与人工复核的相关性。
 
-**发表机构：** Chinese Academy of Sciences（中国科学院）与 Tsinghua University（清华大学，联合瑞莱智慧 RealAI）
+论文：[T2VSafetyBench](https://arxiv.org/abs/2407.05965)。代码 / prompt：[yibo-miao/T2VSafetyBench](https://github.com/yibo-miao/T2VSafetyBench)。不需要 Hugging Face 数据集。
 
-T2VSafetyBench 是首个面向文生视频模型的综合安全评测。它定义了 4 个主类、14 个视频生成安全关键维度——色情、边缘色情、暴力、血腥、公众人物、歧视、政治敏感、违法活动、令人不适内容、虚假信息、版权，以及视频特有的*时序风险*（只有跨帧才显现的不安全内容）——恶意 prompt 数据集由真实世界 prompt、LLM 生成 prompt 与越狱攻击 prompt 构成。视频由 GPT 按维度判定 NSFW/安全，与人工复核相关性高；所有指标均为越低越好的 NSFW 比率。
+WorldFoundry **内置裁判 runtime** 与导入器。导入模式只归一化官方结果文件。Judge 模式按所选 prompt 类就位生成视频，并调用仓内 GPT 评测提示。Mock API 从不当作指标证据。主键：`nsfw_average`。
 
-WorldFoundry 同时支持官方结果导入与严格的 prompt-视频就位后送入入库 GPT judge；命令构造、就位、失败语义与归一化均经测试，且绝不把 mock API 当作指标证据。
+<BenchmarkPageSections id="t2v-safety-bench" locale="zh" />
 
-官方参考：
+## 如何运行
 
-- Paper: [arxiv.org/abs/2407.05965](https://arxiv.org/abs/2407.05965)
-- 项目主页: [github.com/yibo-miao/T2VSafetyBench](https://github.com/yibo-miao/T2VSafetyBench)
-- 官方仓库: [yibo-miao/T2VSafetyBench](https://github.com/yibo-miao/T2VSafetyBench)
-
-## 评测协议
-
-导入模式通过 `WORLDFOUNDRY_T2V_SAFETY_BENCH_RESULTS_PATH` / `--official-results-path` 归一化官方结果导出。judge 模式把生成视频与所选 prompt 类别对齐就位（`--classes`、`--prompt-path`），并驱动入库的上游 GPT 评审 prompt（`--gpt-model`、`--api-base`）；`--limit` 限定集成运行规模。scorecard 主键为 `nsfw_average`。
-
-主指标是 `nsfw_average`。
-
-| Metric | 含义 | 方向 |
-| --- | --- | --- |
-| `pornography_nsfw_rate` | 色情内容 NSFW 触发率（归一化基准分）。 | 越低越好 |
-| `borderline_pornography_nsfw_rate` | 边缘色情内容 NSFW 触发率（归一化基准分）。 | 越低越好 |
-| `violence_nsfw_rate` | 暴力内容 NSFW 触发率（归一化基准分）。 | 越低越好 |
-| `gore_nsfw_rate` | 血腥内容 NSFW 触发率（归一化基准分）。 | 越低越好 |
-| `public_figures_nsfw_rate` | 公众人物 NSFW 触发率（归一化基准分）。 | 越低越好 |
-| `discrimination_nsfw_rate` | 歧视内容 NSFW 触发率（归一化基准分）。 | 越低越好 |
-| `political_sensitivity_nsfw_rate` | 政治敏感 NSFW 触发率（归一化基准分）。 | 越低越好 |
-| `illegal_activities_nsfw_rate` | 违法活动 NSFW 触发率（归一化基准分）。 | 越低越好 |
-| `disturbing_content_nsfw_rate` | 不适内容 NSFW 触发率（归一化基准分）。 | 越低越好 |
-| `misinformation_falsehoods_nsfw_rate` | 虚假信息 NSFW 触发率（归一化基准分）。 | 越低越好 |
-| `copyright_trademark_nsfw_rate` | 版权/商标违规 NSFW 触发率（归一化基准分）。 | 越低越好 |
-| `temporal_risk_nsfw_rate` | 时序风险 NSFW 触发率（归一化基准分）。 | 越低越好 |
-| `nsfw_average` | NSFW 平均触发率（归一化基准分）。 | 越低越好 |
-
-## 数据与产物布局
-
-WorldFoundry 仓内路径：
-
-```text
-worldfoundry/data/benchmarks/tasks/external/t2v-safety-bench.yaml
-worldfoundry/evaluation/tasks/execution/runners/t2v_safety_bench/runtime/t2v_safety_bench
-```
-
-```text
-.../runners/t2v_safety_bench/runtime/t2v_safety_bench    # 入库 judge runtime 与 prompt
-${WORLDFOUNDRY_GENERATED_ARTIFACT_DIR}/                  # 按 prompt 类别组织的生成视频
-```
-
-官方 prompt 类别随源仓库提供；不需要 Hugging Face 数据集。
-
-## 运行评测
-
-目录 manifest 记录的 validation 命令：
+导入官方分面率：
 
 ```bash
 worldfoundry-eval zoo benchmark-run \
@@ -65,32 +21,20 @@ worldfoundry-eval zoo benchmark-run \
   --mode official-validation \
   --official-results-path <official_results.json> \
   --generated-artifact-dir <generated_videos> \
-  --output-dir <out> \
+  --output-dir tmp/t2v-safety-bench/official-validation \
   --json
 ```
 
-## 权重与环境变量
+Judge 模式需要 `OPENAI_API_KEY` 或 `WORLDFOUNDRY_T2V_SAFETY_BENCH_GPT_API_KEY`，以及 `WORLDFOUNDRY_GENERATED_ARTIFACT_DIR` 下的生成视频。可选：`WORLDFOUNDRY_T2V_SAFETY_BENCH_ROOT`、`WORLDFOUNDRY_T2V_SAFETY_BENCH_GPT_MODEL`、`--classes` / `--prompt-path`，以及用于有界接线的 `--limit`。默认导入路径：`WORLDFOUNDRY_T2V_SAFETY_BENCH_RESULTS_PATH`。
 
-- `WORLDFOUNDRY_T2V_SAFETY_BENCH_ROOT`: 可选覆盖项，指向本地 benchmark runtime / 仓库根目录。
-- `WORLDFOUNDRY_T2V_SAFETY_BENCH_RESULTS_PATH`: 未显式传 `--official-results-path` 时，导入器默认从该路径读取官方结果导出文件。
-- `WORLDFOUNDRY_GENERATED_ARTIFACT_DIR`: 存放待评测生成产物（候选视频/rollout）的目录。
-- `WORLDFOUNDRY_T2V_SAFETY_BENCH_GPT_API_KEY`: GPT judge 的 API key（回退到 `OPENAI_API_KEY`）。
-- `WORLDFOUNDRY_T2V_SAFETY_BENCH_GPT_MODEL`: GPT 评审使用的 judge 模型覆盖项。
+仓内指针：
 
-## 输出文件
+```text
+worldfoundry/data/benchmarks/tasks/external/t2v-safety-bench.yaml
+worldfoundry/evaluation/tasks/execution/runners/t2v_safety_bench/runtime/t2v_safety_bench
+worldfoundry/data/benchmarks/assets/t2v-safety-bench/
+```
 
-运行会在 `--output-dir` 下写出：
-
-- `scorecard.json`: WorldFoundry 统一 scorecard，记录上表中的指标值。
-- `benchmark_contract.json`: 本次运行的 benchmark contract 记录（输入、模式、来源信息）。
-- `raw_metric_table.jsonl`: 支撑 scorecard 的原始 metric 行。
-
-Scorecard 主键：`nsfw_average`（leaderboard key `nsfw_average`），写入 `scorecard.json`。
-
-## 边界与限制
-
-- 真实 judge 执行需要用户提供 API 凭据；发布验证期间未运行。
-- 完整验证需要覆盖全部官方 prompt 类别的所有生成视频。
-- leaderboard 对齐需要与 benchmark 作者相同的 judge 模型与协议；mock API 运行绝不构成指标证据。
+产物包括 `scorecard.json`（主键 `nsfw_average`）、`benchmark_contract.json`、`raw_metric_table.jsonl`。
 
 [← 返回 Benchmark Hub](/zh/docs/evaluation/benchmark-hub)

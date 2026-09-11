@@ -1,97 +1,38 @@
 ---
 title: iWorld-Bench
-description: ICML 2026 交互式世界模型评测：统一动作接口下 4.9k 个任务，覆盖视觉生成、轨迹跟随与记忆能力。
+description: "ICML 2026 交互式世界模型评测：4.9k 任务覆盖视觉质量、轨迹跟随与记忆。WorldFoundry 封装官方指标，不编造榜单。"
 ---
 
-## 简介
+iWorld-Bench（清华，联合东北大学与华南理工；ICML 2026）评的是 **交互式** 世界模型——能响应外部动作序列的生成器。统一的 Action Generation Framework 桥接文本动作、相机矩阵与轨迹。发布从 **330k** 片段筛到 **2.1k** 高质量样本，再定义 **六类任务 / 4.9k 测试样本**，覆盖视觉生成、轨迹跟随与记忆（例如内容离镜再入镜的 `memory_symmetry`）。
 
-**发表机构：** Tsinghua University（清华大学，联合中国东北大学、华南理工大学）
+`iworldbench_average` 是已有分面的均值。许可证：Apache-2.0。
 
-iWorld-Bench（ICML 2026）评测交互式世界模型——响应外部动作序列的生成器——其统一动作生成框架（Action Generation Framework）打通了异构控制接口（文本动作、相机矩阵、轨迹）。它从 33 万视频片段中筛出 2.1k 覆盖多视角、多天气、多场景的高质量样本，定义六类任务（4.9k 测试样本），联合考察视觉生成质量、轨迹跟随与记忆能力（如 `memory_symmetry` 衡量出画再入画内容的一致性）。
+项目：[iworld-bench.com](https://iworld-bench.com/)。代码：[EmbodiedCity/iWorld-Bench](https://github.com/EmbodiedCity/iWorld-Bench)。数据：[`EmbodiedCity/iWorld-Bench-Dataset`](https://huggingface.co/datasets/EmbodiedCity/iWorld-Bench-Dataset)。
 
-WorldFoundry 包装官方指标 runtime，把 iWorld-Bench 报告 CSV/JSON 归一化为 scorecard；有界的纯像素 `memory` 组件无需编译版 VIPe runtime 即可运行。
+WorldFoundry **封装官方指标 runtime** 并归一化报告 CSV/JSON。目录记录的有界命令用 `--metric memory`（仅像素记忆，不编译 ViPE）。完整官方 GPU 执行需要数据集元数据、VBench 资产，以及兼容 CUDA 的 ViPE 构建——仓内 ViPE 树缺少原生扩展源码。
 
-官方参考：
+<BenchmarkPageSections id="iworld-bench" locale="zh" />
 
-- 项目主页: [iworld-bench.com](https://iworld-bench.com/)
-- 官方仓库: [EmbodiedCity/iWorld-Bench](https://github.com/EmbodiedCity/iWorld-Bench)
-- License: `Apache-2.0`
-
-## 评测协议
-
-`--run-official` 用 `--metric` 选择组件（目录记录的有界命令用 `--metric memory`），用 `--split` 选择任务分割；完整官方执行需要数据集元数据、VBench 资产与 CUDA 兼容的 VIPe 构建。`--official-results-path` 归一化已有报告输出；`WORLDFOUNDRY_IWORLD_BENCH_RUNTIME_BACKEND` 选择 runtime 后端。
-
-主指标是 `iworldbench_average`。
-
-| Metric | 含义 | 方向 |
-| --- | --- | --- |
-| `image_quality` | 生成视频的帧级画质。 | 越高越好 |
-| `brightness_consistency` | 生成帧间的亮度稳定性。 | 越高越好 |
-| `color_temperature_constraint` | 场景约束下的色温稳定性。 | 越高越好 |
-| `sharpness_retention` | rollout 全程的清晰度保持。 | 越高越好 |
-| `motion_smoothness` | 时序运动平滑度。 | 越高越好 |
-| `trajectory_accuracy` | 执行轨迹相对指令动作的准确度。 | 越高越好 |
-| `trajectory_tolerance` | 带容差带的轨迹跟随得分。 | 越高越好 |
-| `memory_symmetry` | 出画再入画内容的一致性。 | 越高越好 |
-| `trajectory_alignment` | 生成相机轨迹与指令轨迹的对齐度。 | 越高越好 |
-| `iworldbench_average` | 可用 iWorld-Bench 指标族的均值。 | 越高越好 |
-
-## 数据与产物布局
-
-WorldFoundry 仓内路径：
-
-```text
-worldfoundry/data/benchmarks/tasks/external/iworld-bench.yaml
-```
-
-```text
-${WORLDFOUNDRY_IWORLD_BENCH_DATASET_ROOT}/dataset/all_pack/metadata.csv
-${WORLDFOUNDRY_IWORLD_BENCH_DATASET_ROOT}/dataset/all_pack/camera_following_metadata.csv
-${WORLDFOUNDRY_IWORLD_BENCH_DATASET_ROOT}/dataset/all_pack/assets/
-${WORLDFOUNDRY_GENERATED_ARTIFACT_DIR}/                        # 按任务分割的生成视频
-```
+## 如何运行
 
 ```bash
 hf download EmbodiedCity/iWorld-Bench-Dataset --repo-type dataset \
   --revision 530c48cd3d8e9bb20ed685a96521c3a9b68cf6d2 \
   --local-dir "${WORLDFOUNDRY_IWORLD_BENCH_DATASET_ROOT}"
-```
 
-## 运行评测
-
-目录 manifest 记录的 validation 命令：
-
-```bash
-${WORLDFOUNDRY_UNIFIED_PYTHON} worldfoundry/evaluation/tasks/execution/runners/iworldbench/run_iworldbench_official_runner.py \
+${WORLDFOUNDRY_UNIFIED_PYTHON} \
+  worldfoundry/evaluation/tasks/execution/runners/iworldbench/run_iworldbench_official_runner.py \
   --run-official \
-  --generated-videos-dir ${WORLDFOUNDRY_GENERATED_ARTIFACT_DIR} \
+  --generated-videos-dir "${WORLDFOUNDRY_GENERATED_ARTIFACT_DIR}" \
   --metric memory \
-  --output-dir <out> \
+  --output-dir tmp/iworld-bench/memory \
   --json
 ```
 
-## 权重与环境变量
+`--split` 选择任务划分。`--official-results-path` 导入已有报告。环境变量：`WORLDFOUNDRY_IWORLD_BENCH_DATASET_ROOT`、`WORLDFOUNDRY_IWORLD_BENCH_RESULTS_PATH`、`WORLDFOUNDRY_IWORLD_BENCH_RUNTIME_BACKEND`。`WORLDFOUNDRY_IWORLD_BENCH_PYTHON` 是可选的兼容 Python 覆盖，不是单独环境要求。
 
-- `WORLDFOUNDRY_IWORLD_BENCH_ROOT`: 可选覆盖项，指向本地 benchmark runtime / 仓库根目录。
-- `WORLDFOUNDRY_IWORLD_BENCH_DATASET_ROOT`: 本地官方数据集根目录。
-- `WORLDFOUNDRY_GENERATED_ARTIFACT_DIR`
-- `WORLDFOUNDRY_IWORLD_BENCH_RESULTS_PATH`: 未显式传 `--official-results-path` 时，导入器默认从该路径读取官方结果导出文件。
-- `WORLDFOUNDRY_IWORLD_BENCH_RUNTIME_BACKEND`
+仓内指针：`worldfoundry/data/benchmarks/tasks/external/iworld-bench.yaml`。数据布局：`dataset/all_pack/metadata.csv`、`camera_following_metadata.csv`、`assets/`。
 
-## 输出文件
-
-运行会在 `--output-dir` 下写出：
-
-- `scorecard.json`: WorldFoundry 统一 scorecard，记录上表中的指标值。
-- `raw_metric_table.jsonl`: 支撑 scorecard 的原始 metric 行。
-- `upstream_command.json`
-
-Scorecard 主键：`iworldbench_average`（leaderboard key `iworldbench_average`），写入 `scorecard.json`。
-
-## 边界与限制
-
-- 超出有界 memory 指标的完整官方 GPU 执行需要 VBench 资产与 CUDA/Torch 兼容的 VIPe 扩展构建；内置 VIPe 树缺少原生扩展源码。
-- 仅跑有界 memory 的运行只覆盖一个组件，不是完整 iWorld-Bench 成绩。
-- 部分指标的方向元数据由上游定义；比较时请对照官方报告格式。
+产物包括 `scorecard.json`（主键 `iworldbench_average`）与 `raw_metric_table.jsonl`。
 
 [← 返回 Benchmark Hub](/zh/docs/evaluation/benchmark-hub)

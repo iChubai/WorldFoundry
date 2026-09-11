@@ -1,38 +1,28 @@
 ---
 title: "HunyuanVideo 1.5"
-description: "HunyuanVideo 1.5 is the newer revision of Tencent's open video family, again recorded with independent T2V and I2V recipes on one shared native infrastructure. The notable difference from the original: the I2V conditioner declares FLUX.1-R…"
-pageSource: generated
+description: "腾讯混元视频 1.5 的文生/图生视频，走共享原生基础设施；图生视频需要 gated 的 FLUX.1-Redux-dev。"
+modelId: "hunyuanvideo-1.5"
+pageSource: authored
 ---
-
-**发表机构:** 腾讯（混元） · 企业
-text · image → video
 
 HunyuanVideo 1.5 是腾讯开源视频系列的较新版本，同样以独立的 T2V 与 I2V 配方共享一套原生基础设施。与初代的显著差异：I2V 条件器将 FLUX.1-Redux-dev 声明为独立的 gated 视觉 checkpoint，而不是推断同级路径。
 
-<figure className="wf-recipe-media">
-  <Video src="/demos/studio/hunyuanvideo-1-5-t2v-cat.mp4" autoPlay loop muted playsInline />
-  <figcaption>HunyuanVideo 1.5 文本生成视频</figcaption>
-</figure>
+<ModelPaperFigures modelId="hunyuanvideo-1.5" locale="zh" />
 
 <ModelCommandBuilder modelId="hunyuanvideo-1.5" locale="zh" />
 
-## 架构
+## 用来做什么
 
-与 hunyuanvideo 条目相同的共享原生 runner 设计：HunyuanVideo 1.5 只拥有模型特有的网络、编解码与条件行为，装配、加载与调度均来自共享扩散基础设施。generate.py 没有被保留为第二套推理架构。
+从 `hunyuanvideo-1.5-t2v` 开始。启动 `worldfoundry-eval run hunyuanvideo-1.5-t2v --pipeline.task-profile text-to-video`。只有接受 gated FLUX.1-Redux-dev 条款后才跑 `hunyuanvideo-1.5-i2v`。
 
-## 使用要点
+列出的文生视频评测：[VBench](/zh/docs/evaluation/benchmark-hub/vbench)。
 
-注册表解析已验证；原生 checkpoint 加载的 CUDA 一致性仍在等待。运行 I2V 前有两道门槛：主 checkpoint 的 HF 许可元数据为“other”；FLUX.1-Redux-dev 为 gated 且许可为非商用（manifest 要求审阅）——请先在 Hugging Face 接受其条款。
+## 运行时契约
 
-## 变体与 Pipeline Binding
+必填 `prompt`；`actions` 是 seed。默认产物 `hunyuanvideo-1.5-t2v.mp4`。variant：`hunyuanvideo-1.5-t2v`、`hunyuanvideo-1.5-i2v`。图生视频 conditioner 把 `black-forest-labs/FLUX.1-Redux-dev` 声明为独立 gated 视觉 checkpoint。
 
-| Variant | 任务 | Runtime profile | Pipeline Binding | 状态 |
-| --- | --- | --- | --- | --- |
-| `hunyuanvideo-1.5-t2v` | text-to-video | `hunyuanvideo-1.5-t2v` | `hunyuanvideo-1.5-t2v` | integrated |
-| `hunyuanvideo-1.5-i2v` | image-to-video | `hunyuanvideo-1.5-i2v` | `hunyuanvideo-1.5-i2v` | integrated |
+## 在 WorldFoundry 中运行
 
-## 评测 Benchmark
-
-- [VBench](/zh/docs/evaluation/benchmark-hub/vbench) — 标准开源文生视频质量评测。
+统一环境 `worldfoundry-unified-cu128`（Python 3.11，CUDA 12.8）。就位 `tencent/HunyuanVideo-1.5`。主权重 license 元数据为 `other`。状态：原生带 checkpoint 的 CUDA 为 **Runner 一致性待确认**。跑 I2V 前先在 Hugging Face 接受 FLUX.1-Redux-dev 条款。
 
 <ModelRelatedRecipes modelId="hunyuanvideo-1.5" locale="zh" />

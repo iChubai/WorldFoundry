@@ -1,28 +1,47 @@
 ---
 title: "EgoWM"
-description: "EgoWM is an egocentric navigation world model: from a first-person view and navigation actions it predicts the video a moving agent would see, with 3-DoF and 25-DoF action variants recorded (egowm-svd-3dof / egowm-svd-25dof)."
-pageSource: generated
+description: "SVD 上的第一人称导航世界：3-DoF 与 25-DoF 变体。源码已绑定；checkpoint 就位前真正生成只出 runtime plan。未记录机构。"
+modelId: "egowm"
+pageSource: authored
 ---
 
-**发表机构:** 开源研究发布（仓库未记录正式机构） · 研究机构
+EgoWM 预测移动智能体**第一人称**会看到的视频：一张视角加导航动作。变体：`egowm-svd-3dof` 与 `egowm-svd-25dof`，基座是 **Stable Video Diffusion**（`anuragba/egowm`）。WorldFoundry 通过用户就位的源码检出绑定官方 25-DoF SVD 推理路径，对外是 `EgoWMPipeline`。变体之外的架构细节这里不存。未记录机构。
 
-EgoWM 是第一人称导航世界模型：给定第一视角画面与导航动作，预测移动智能体将看到的视频，记录了 3 自由度与 25 自由度两个动作 variant（egowm-svd-3dof / egowm-svd-25dof）。本 catalog 中官方源码路径已注册、源码固定在记录的 commit；checkpoint 保持运行时限制。
+论文：[arXiv 2601.15284](https://arxiv.org/abs/2601.15284)。项目页：[egowm.github.io](https://egowm.github.io/)。代码：[miccooper9/egowm](https://github.com/miccooper9/egowm)。
+
+配置导入应能过。**真正生成会先出 runtime plan**，直到 checkpoint 和资产就位。缺资产由 plan 报告，不是 catalog 阻塞项。Runner：`implemented`。
+
+<ModelPaperFigures modelId="egowm" locale="zh" />
 
 <ModelCommandBuilder modelId="egowm" locale="zh" />
 
-## 架构
+## 用来做什么
 
-variant 名称记录其为以 3 自由度或 25 自由度动作空间为条件的 Stable Video Diffusion 基座（checkpoint 为 anuragba/egowm）。除已记录任务外的架构内部细节仓库未存。
+用 CMU fixture 跑第一人称导航世界模型。
 
-## 使用要点
+启动 `worldfoundry-eval run egowm-svd-3dof --pipeline.task-profile navigation-video`。
 
-配置解析与 pipeline 导入预期可通过；在所需 checkpoint/资产就位前，真实生成会输出运行时计划。缺失资产由计划报告，不视为 catalog 阻塞。
+## 运行时契约
 
-## 变体与 Pipeline Binding
+必填 `image`、`prompt`；可选 `video`；`actions`：navigation_action, egocentric_action；产物 `generated_video`、`egowm.mp4`。
 
-| Variant | 任务 | Runtime profile | Pipeline Binding | 状态 |
-| --- | --- | --- | --- | --- |
-| `egowm-svd-3dof` | egocentric-navigation-video | `egowm` | `egowm` | planned |
-| `egowm-svd-25dof` | egocentric-navigation-video | `egowm` | `egowm` | planned |
+| 旋钮 | 默认 |
+| --- | --- |
+| 尺寸 | **512×512** |
+| 帧数 | **8** |
+| 步数 | **8** |
+| FPS | **7** |
+| Seed | **42** |
+| `motion_bucket_id` | **180** |
+| `action_scale` | **0.0** |
+| 学生 | `$WORLDFOUNDRY_CKPT_DIR/anuragba--egowm/svd_25dof_nav.pth` |
+| SVD 基座 | `stabilityai/stable-video-diffusion-img2vid` |
+| 源码 | `$WORLDFOUNDRY_MODEL_SOURCE_DIR/egowm` commit `4a24b6fb` |
+
+记录的 25-DoF SVD 冒烟旋钮：
+
+## 在 WorldFoundry 中运行
+
+状态：**Runner 一致性待验证**。统一环境 `worldfoundry-unified-cu128`（Python 3.11, CUDA 12.8）。先把 `anuragba/egowm`、`stabilityai/stable-video-diffusion-img2vid` 就位到本地，缺文件加载失败，运行时不下载。在该环境执行 `worldfoundry-eval run egowm-svd-3dof --pipeline.task-profile navigation-video`。catalog 未记录 VRAM。
 
 <ModelRelatedRecipes modelId="egowm" locale="zh" />

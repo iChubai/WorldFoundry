@@ -7,7 +7,7 @@ import MetricsSetup from '../../../../mdx/partials/metrics-usage-setup.zh.mdx';
 
 WorldFoundry 提供树内 metric 层——由 registry 管理的 scorer 与分布/感知 compute 例程，runner 通过稳定契约调用。Benchmark 决定*在什么数据上测什么*；metric 决定*如何把预测变成数字*。每条注册项声明输入、可选 checkpoint 依赖与输出形态；runner 引用 metric ID，registry 解析别名、校验可用性并路由到对应 `compute_*`，使模型代码不接触打分细节、打分却在跨机器时保持可复现。本 hub 只记录仓库实际实现了什么，并非已发表指标的综述。
 
-树内目录按四个家族组织（见下表）：**scorer 与质量**（CLIP、VQA、ITM、人脸、艺术、S2V judge）、**分布**（FID、IS、KID、FVD、JEDi、CMMD、Clean-FID）、**感知成对**（LPIPS、SSIM、DINO、mask、layout）、**编辑与 layout**（SemSR、IRS、CAS、manipulation）。依赖预训练 backbone 的 metric 显式声明依赖，缺失 checkpoint 时明确失败，绝不静默替换代理。第五页 [Registry 与参考](/zh/docs/evaluation/metrics/reference) 说明发现方式（`worldfoundry-eval metric list`）、参数化 id、checkpoint 落盘与包结构。每个 benchmark 的 evaluator asset 与运行命令见 [Benchmark Hub](/zh/docs/evaluation/benchmark-hub)；各页会标注近似与须使用官方脚本而非通用 compute API 的情形。
+树内目录按四个家族组织：**scorer 与质量**（CLIP、VQA、ITM、人脸、艺术、S2V judge）、**分布**（FID、IS、KID、FVD、JEDi、CMMD、Clean-FID）、**感知成对**（LPIPS、SSIM、DINO、mask、layout）、**编辑与 layout**（SemSR、IRS、CAS、manipulation）。依赖预训练 backbone 的 metric 显式声明依赖，缺失 checkpoint 时明确失败，绝不静默替换代理。第五页 [Registry 与参考](/zh/docs/evaluation/metrics/reference) 说明发现方式（`worldfoundry-eval metric list`）、参数化 id、checkpoint 落盘与包结构。每个 benchmark 的 evaluator asset 与运行命令见 [Benchmark Hub](/zh/docs/evaluation/benchmark-hub)；各页会标注近似与须使用官方脚本而非通用 compute API 的情形。
 
 ## 快速开始
 
@@ -15,13 +15,11 @@ WorldFoundry 提供树内 metric 层——由 registry 管理的 scorer 与分�
 
 ## 子页面
 
-| 页面 | 内容 |
-| --- | --- |
-| [多模态 scorer 与质量](/zh/docs/evaluation/metrics/scorers) | CLIPScore、VQAScore、ITMScore、FaceScore、ArtScore、OpenS2V reward 指标。 |
-| [分布指标](/zh/docs/evaluation/metrics/distribution) | FID、IS、KID、FVD、JEDi、CMMD、Clean-FID 及特征数组类指标。 |
-| [感知成对](/zh/docs/evaluation/metrics/perceptual) | LPIPS、SSIM、DINO 相似度、mask accuracy、layout quality。 |
-| [编辑与 layout](/zh/docs/evaluation/metrics/editing) | SemSR、IRS、CAS、编辑方向、object-wise consistency。 |
-| [Registry 与参考](/zh/docs/evaluation/metrics/reference) | `MetricRegistry`、已注册指标表、CLI、checkpoint、架构说明。 |
+- [多模态 scorer 与质量](/zh/docs/evaluation/metrics/scorers) — CLIPScore、VQAScore、ITMScore、FaceScore、ArtScore、OpenS2V reward 指标。
+- [分布指标](/zh/docs/evaluation/metrics/distribution) — FID、IS、KID、FVD、JEDi、CMMD、Clean-FID 及特征数组类指标。
+- [感知成对](/zh/docs/evaluation/metrics/perceptual) — LPIPS、SSIM、DINO 相似度、mask accuracy、layout quality。
+- [编辑与 layout](/zh/docs/evaluation/metrics/editing) — SemSR、IRS、CAS、编辑方向、object-wise consistency。
+- [Registry 与参考](/zh/docs/evaluation/metrics/reference) — `MetricRegistry`、已注册指标表、CLI、checkpoint、架构说明。
 
 ## 相关页面
 

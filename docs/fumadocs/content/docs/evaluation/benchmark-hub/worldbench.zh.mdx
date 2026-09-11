@@ -1,61 +1,24 @@
 ---
 title: WorldBench
-description: 诊断式物理评测：425 个仿真场景，用 SAM2 分割跟踪对照真值物理仿真打分，另含文本 QA。
+description: "UCLA 诊断物理评测：425 个 Kubric 场景，SAM2 对照真值物理，外加文本 QA。WorldFoundry 实现仓内打分器，不编造榜单。"
 ---
 
-## 简介
+WorldBench（UCLA，联合 Sony AI、耶鲁与 DEVCOM ARL）诊断世界模型离 **物理** 有多近。**Kubric**（PyBullet + Blender）渲染 **425** 个物理准确场景，覆盖运动物理、物体恒存、支撑关系、尺度 / 透视，并带真值深度、法线、分割与光流。模型从初始帧生成续写；**SAM2** 跟踪首帧框，掩码与仿真比较（前景 mIoU、背景 RMSE）。文本子集另有多选与是否 QA。
 
-**发表机构：** UCLA（联合 Sony AI、Yale、DEVCOM ARL）
+公开评测器把 Dice 叫做 “mIoU”。WorldFoundry 分开报 **常规 `foreground_miou`** 与发布版的 **`foreground_dice` 兼容值**。当前检视的 HF 树是 **375** 个场景目录（15 情景 × 25），而不是论文的 425。
 
-WorldBench 诊断世界模型与物理世界的距离。它用 Kubric（PyBullet + Blender）渲染 425 个物理精确场景，覆盖四个概念——运动物理、物体恒存、支撑关系、尺度/透视——每个场景带真值深度、法线、分割与光流。模型从初始帧生成视频续写；SAM2 将首帧物体框传播到生成视频中，并把 mask 与真值仿真对比（前景 mIoU、背景 RMSE）。文本子集另含多选与是/否问题。
+论文：[WorldBench](https://arxiv.org/abs/2601.21282)。项目：[world-bench.github.io](https://world-bench.github.io/)。数据：[`worldbenchmark/IntuitivePhysics`](https://huggingface.co/datasets/worldbenchmark/IntuitivePhysics)。数据集与评测器 **未声明再分发许可证**。
 
-WorldFoundry 在仓内以 model-backed runner 实现该 evaluator，作用于 `worldbenchmark/IntuitivePhysics` 数据集，并把常规 mIoU 与公开实现中名为 mIoU 实为 Dice 的兼容值分开报告。
+WorldFoundry 实现了仓内、模型支撑的 runner。运行时环境仍记录：**没有确认可再分发的官方原始视频评测器**，以及 **从视频做 `official-run` 不是发布声明**。兼容路径是通过 `WORLDFOUNDRY_WORLDBENCH_RESULTS_PATH` 导入。
 
-官方参考：
+<BenchmarkPageSections id="worldbench" locale="zh" />
 
-- Paper: [arxiv.org/abs/2601.21282](https://arxiv.org/abs/2601.21282)
-- 项目主页: [world-bench.github.io](https://world-bench.github.io/)
-
-## 评测协议
-
-`--run-official` 评测原始生成视频（需要 SAM2.1-hiera-large 权重）或通过 `--predicted-mask-dir` 使用预计算 mask；`--video-only` / `--text-only` 限定赛道，`--answer-manifest` 提供文本答案。兼容导入通过 `WORLDFOUNDRY_WORLDBENCH_RESULTS_PATH` 归一化已有结果文件。帧对齐参数（`--ground-truth-start-frame`、`--generated-skip-frames`）处理条件帧偏移。
-
-主指标是 `foreground_miou`。
-
-| Metric | 含义 | 方向 |
-| --- | --- | --- |
-| `foreground_miou` | 按物体、帧、场景平均的常规逐物体 IoU。 | 越高越好 |
-| `foreground_dice` | 公开实现名为 mIoU、实际计算的兼容值。 | 越高越好 |
-| `background_rmse` | 真值分割标为背景的像素上的 RGBA RMSE。 | 越低越好 |
-| `text_based_accuracy` | 可用 WorldBench 文本问题上的严格归一化答案准确率。 | 越高越好 |
-| `multiple_choice_accuracy` | 含显式选项列表的问题的准确率。 | 越高越好 |
-| `binary_accuracy` | WorldBench 是/否问题的准确率。 | 越高越好 |
-
-## 数据与产物布局
-
-WorldFoundry 仓内路径：
-
-```text
-worldfoundry/data/benchmarks/tasks/external/worldbench.yaml
-worldfoundry/evaluation/tasks/execution/runners/worldbench
-```
-
-```text
-cache/worldfoundry/data/hfd_datasets/worldbenchmark/IntuitivePhysics/scenes/            # 425 个场景
-cache/worldfoundry/data/hfd_datasets/worldbenchmark/IntuitivePhysics/textual_questions/ # 4 个类别 JSON
-worldfoundry/data/benchmarks/assets/worldbench/evaluator.yaml                           # evaluator 接线
-```
+## 如何运行
 
 ```bash
 hf download worldbenchmark/IntuitivePhysics --repo-type dataset \
   --local-dir cache/worldfoundry/data/hfd_datasets/worldbenchmark/IntuitivePhysics
-```
 
-## 运行评测
-
-对生成续写运行视频赛道：
-
-```bash
 ${WORLDFOUNDRY_UNIFIED_PYTHON} \
   worldfoundry/evaluation/tasks/execution/runners/worldbench/run_worldbench_official_runner.py \
   --run-official \
@@ -67,33 +30,10 @@ ${WORLDFOUNDRY_UNIFIED_PYTHON} \
   --json
 ```
 
-## 权重与环境变量
+已有掩码时用 `--predicted-mask-dir` 跳过 SAM2。`--text-only` 加 `--answer-manifest` 覆盖 QA。帧对齐：`--ground-truth-start-frame`、`--generated-skip-frames`。共享资源：`worldbench_dataset_assets`、`facebook/sam2.1-hiera-large`。
 
-- `WORLDFOUNDRY_WORLDBENCH_DATASET_ROOT`: 本地官方数据集根目录。
-- `WORLDFOUNDRY_GENERATED_ARTIFACT_DIR`: 存放待评测生成产物（候选视频/rollout）的目录。
-- `WORLDFOUNDRY_WORLDBENCH_ANSWER_MANIFEST`
-- `WORLDFOUNDRY_WORLDBENCH_SAM2_CKPT`
-- `WORLDFOUNDRY_WORLDBENCH_RESULTS_PATH`
+仓内指针：`worldfoundry/data/benchmarks/tasks/external/worldbench.yaml`，`worldfoundry/evaluation/tasks/execution/runners/worldbench`。
 
-共享 checkpoint 资产：`facebook/sam2.1-hiera-large`。
-
-该 benchmark 复用共享 base-model 依赖栈：`worldbench_dataset_assets`, `sam2`。
-
-## 输出文件
-
-运行会在 `--output-dir` 下写出：
-
-- `scorecard.json`: WorldFoundry 统一 scorecard，记录上表中的指标值。
-- `per_sample_scores.jsonl`: 当结果源包含逐样本数值时写出的逐样本行。
-- `raw_metric_table.jsonl`: 支撑 scorecard 的原始 metric 行。
-- `worldbench_evaluation.json`
-
-Scorecard 主键：`foreground_miou`（leaderboard key `foreground_miou`），写入 `scorecard.json`。
-
-## 边界与限制
-
-- 数据集与 evaluator 包未声明再分发许可；资产以上游为准。
-- 公开 evaluator 把 Dice 称作 "mIoU" 且存在未解决的运行缺陷；WorldFoundry 将两种重叠定义分开报告。
-- 全量数值对齐与官方提交协议尚未审计。
+产物包括 `scorecard.json`（主键 `foreground_miou`）与 `worldbench_evaluation.json`。
 
 [← 返回 Benchmark Hub](/zh/docs/evaluation/benchmark-hub)

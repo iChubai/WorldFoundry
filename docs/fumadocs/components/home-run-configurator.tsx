@@ -20,7 +20,13 @@ export type HomeRecipeOption = {
 
 type CommandMode = 'prepare' | 'inspect' | 'run';
 
-function commandFor(mode: CommandMode, modelId: string) {
+function taskProfile(task: string) {
+  const value = task.trim();
+  if (!value || value === 'Not recorded') return 'default';
+  return value.replaceAll('_', '-');
+}
+
+function commandFor(mode: CommandMode, modelId: string, task: string) {
   if (mode === 'prepare') {
     return `bash scripts/inference/prepare_model_infer.sh ${modelId}`;
   }
@@ -28,14 +34,8 @@ function commandFor(mode: CommandMode, modelId: string) {
     return `worldfoundry-eval zoo model-show --model-id ${modelId} --include-manifest --json`;
   }
   return [
-    'worldfoundry-eval evaluate \\',
-    '  --mode model \\',
-    `  --model-id ${modelId} \\`,
-    '  --model-runner worldfoundry:pipeline \\',
-    '  --requests-path tmp/requests.jsonl \\',
-    `  --output-dir tmp/model_eval/${modelId} \\`,
-    '  --metric artifact_count \\',
-    '  --json',
+    `worldfoundry-eval run ${modelId} \\`,
+    `  --pipeline.task-profile ${taskProfile(task)}`,
   ].join('\n');
 }
 
@@ -55,7 +55,10 @@ export function HomeRunConfigurator({
   const [task, setTask] = useState(model?.tasks[0] ?? '');
   const [mode, setMode] = useState<CommandMode>('run');
   const [copied, setCopied] = useState(false);
-  const command = useMemo(() => commandFor(mode, model?.id ?? modelId), [mode, model, modelId]);
+  const command = useMemo(
+    () => commandFor(mode, model?.id ?? modelId, task),
+    [mode, model, modelId, task],
+  );
 
   useEffect(() => {
     setTask(model?.tasks[0] ?? '');

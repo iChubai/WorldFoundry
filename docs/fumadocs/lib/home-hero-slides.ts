@@ -1,4 +1,4 @@
-import { withBasePath } from '@/lib/site-path';
+import { withBasePath, withMediaPath } from '@/lib/site-path';
 
 export type HomeHeroSlide =
   | {
@@ -23,7 +23,7 @@ export const homeHeroSlides: HomeHeroSlide[] = [
     kind: 'video',
     label: 'World models',
     caption: 'Unified inference and evaluation across video, 3D/4D, embodied, and interactive worlds.',
-    src: withBasePath('/cover_4x4_hero.mp4') ?? '/cover_4x4_hero.mp4',
+    src: withMediaPath('/cover_4x4_hero.mp4') ?? '/cover_4x4_hero.mp4',
     poster: withBasePath('/cover_4x4_hero-poster.webp') ?? '/cover_4x4_hero-poster.webp',
   },
 ];

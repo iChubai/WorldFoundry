@@ -1,26 +1,50 @@
 ---
 title: "Step-Video-T2V"
-description: "Step-Video-T2V is StepFun's large open text-to-video model (30B parameters upstream, MIT weights at stepfun-ai/stepvideo-t2v). In WorldFoundry the public pipeline is assembled from native role-based components with the shared diffusion run…"
+description: "Step-Video-T2V from StepFun: text-to-video and video-generation; Static load only."
+modelId: "step-video-t2v"
 pageSource: generated
 ---
 
-**Publisher:** StepFun · Company
-text → video
-
 Step-Video-T2V is StepFun's large open text-to-video model (30B parameters upstream, MIT weights at stepfun-ai/stepvideo-t2v). In WorldFoundry the public pipeline is assembled from native role-based components with the shared diffusion runner — DiT, Step-LLM text encoder, CLIP, scheduler, latent initialization, and VAE decoding all execute in-process.
+
+<ModelPaperFigures modelId="step-video-t2v" locale="en" />
+
+The recorded paper is [arXiv 2502.10248](https://arxiv.org/abs/2502.10248).
+
+Code: [stepfun-ai/Step-Video-T2V](https://github.com/stepfun-ai/Step-Video-T2V).
 
 <ModelCommandBuilder modelId="step-video-t2v" locale="en" />
 
-## Architecture
+## What it is for
+
+Pick `step-video-t2v` when you want this family's text-to-video line in WorldFoundry: a prompt in, a generated clip out. Use it as the catalog T2V start rather than an editor or a world-model stepper.
 
 Upstream: a 30B DiT with a deeply compressed Video-VAE (16x16 spatial, 8x temporal) and bilingual text encoders. In this repository the notable engineering fact is the native re-assembly: the former xFuser and caption/VAE HTTP-service runtime is not a backend — runner status records the native checkpoint layout as validated.
 
-## Usage notes
+Catalog tasks include text-to-video and video-generation. Catalog aliases include `step-video`, `stepvideo-t2v`, and `step_video_t2v`. Documented modalities: text in, video out.
+
+Recorded evaluation entry points include [VBench](/docs/evaluation/benchmark-hub/vbench) (Standard open T2V quality suite).
+
+## Runtime contract
+
+Required `prompt`; optional `image`; artifacts `generated_video` and `step_video_t2v.mp4`.
+
+Recorded task profiles: `text-to-video` and `video-generation`. WorldFoundry binds `StepVideoT2VPipeline`.
+
+Family status: **Static load only**.
 
 Native checkpoint layout is validated; full GPU artifact parity is not yet recorded. Use id step-video-t2v. At 30B scale plan for serious VRAM or multi-GPU setups.
 
-## Evaluation benchmarks
+Use id step-video-t2v. The public pipeline uses the canonical native diffusion assembler.
 
-- [VBench](/docs/evaluation/benchmark-hub/vbench) — Standard open T2V quality suite.
+## Running in WorldFoundry
+
+The catalog launch is `worldfoundry-eval run step-video-t2v --pipeline.task-profile text-to-video`. The command builder above switches `--pipeline.task-profile` among recorded tasks and still emits `worldfoundry-eval run`.
+
+It runs in the unified environment `worldfoundry-unified-cu128` (Python 3.11, CUDA 12.8).
+
+Recorded weight repositories include `stepfun-ai/stepvideo-t2v`. Stage assets with `bash scripts/inference/prepare_model_infer.sh step-video-t2v`.
+
+Recorded licenses include mit; status: **Static load only**.
 
 <ModelRelatedRecipes modelId="step-video-t2v" locale="en" />

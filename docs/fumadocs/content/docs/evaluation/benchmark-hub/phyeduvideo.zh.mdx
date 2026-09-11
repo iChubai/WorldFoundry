@@ -1,57 +1,19 @@
 ---
 title: PhyEduVideo
-description: WACV 2026 物理教育 T2V 评测：课程对齐的教学点 prompt，按语义、物理与时序质量打分。
+description: "WACV 2026 物理教育 T2V：60 个概念、205 条教学点 prompt。WorldFoundry 导入 judge 文件并校验覆盖——不跑 InternVL。"
 ---
 
-## 简介
+PhyEduVideo（IIIT Hyderabad、Adobe、IISER Thiruvananthapuram；WACV 2026）问的是 T2V 模型能不能**画出一个教学点**，不是它是否遵守某套定律分类。捆绑的 `Prompts/Prompts.json` 有 **6 类 60 个概念**（力学、振动与波动、流体、热力学、电磁学、光学），拆成 **205** 条视觉描述型教学点 prompt。
 
-**发表机构：** IIIT Hyderabad、Adobe 与 IISER Thiruvananthapuram
+这是**教育**，不是 [PhyGenBench](/zh/docs/evaluation/benchmark-hub/phygenbench)（27 条定律常识生成），不是 [PhyGround](/zh/docs/evaluation/benchmark-hub/phyground)（TI2V 上 13 条定律准则），也不是 [PhyFPS-Bench-Gen](/zh/docs/evaluation/benchmark-hub/phyfps-bench-gen)（帧率审计）。
 
-PhyEduVideo（WACV 2026）评测文生视频模型能否产出准确的物理教学演示。它把经典物理七大领域（力学、波动、热学、电磁学、流体、光学）的 60 个核心概念拆解为细粒度教学点，每个教学点配一条视觉描述型 prompt。上游打分由 InternVL/CLIP/VQA 评审栈在生成视频上完成。
+论文：[PhyEduVideo](https://arxiv.org/abs/2601.00943)。项目：[meghamariamkm.github.io/phyeduvideo26](https://meghamariamkm.github.io/phyeduvideo26/)。代码：[meghamariamkm/PhyEduVideo](https://github.com/meghamariamkm/PhyEduVideo)。
 
-WorldFoundry 捆绑 prompt manifest 并提供结果导入器：归一化调用方提供的 PhyEduVideo 结果文件，校验 prompt/视频覆盖率，并输出逐样本行与聚合 scorecard。
+WorldFoundry **导入**调用方提供的结果文件（JSON / JSONL / CSV），对照捆绑 manifest 校验 prompt/视频覆盖，并写出 scorecard。InternVL / CLIP / VQA 评审栈**不**在仓内运行。
 
-官方参考：
+<BenchmarkPageSections id="phyeduvideo" locale="zh" />
 
-- Paper: [arxiv.org/abs/2601.00943](https://arxiv.org/abs/2601.00943)
-- 项目主页: [meghamariamkm.github.io/phyeduvideo26](https://meghamariamkm.github.io/phyeduvideo26/)
-- 官方仓库: [meghamariamkm/PhyEduVideo](https://github.com/meghamariamkm/PhyEduVideo)
-
-## 评测协议
-
-仓内 runner 的打分路径仅支持导入：`official-validation`（或 `--run-official`，为 WorldFoundry 生成产物导入结果文件）把上游结果导出归一化为五个指标族，并对照捆绑的 `Prompts/*.json` 校验覆盖率。原始视频的 InternVL/CLIP/VQA 评审栈不在仓内执行。
-
-主指标是 `phyeduvideo_average`。
-
-| Metric | 含义 | 方向 |
-| --- | --- | --- |
-| `semantic_adherence` | 语义符合度（归一化基准分）。 | 越高越好 |
-| `physics_commonsense` | 物理常识（归一化基准分）。 | 越高越好 |
-| `motion_smoothness` | 运动平滑度（归一化基准分）。 | 越高越好 |
-| `temporal_flickering` | 时序闪烁（归一化基准分）。 | 越高越好 |
-| `phyeduvideo_average` | PhyEduVideo 平均分（归一化基准分）。 | 越高越好 |
-
-## 数据与产物布局
-
-WorldFoundry 仓内路径：
-
-```text
-worldfoundry/data/benchmarks/tasks/external/phyeduvideo.yaml
-worldfoundry/data/benchmarks/assets/phyeduvideo
-worldfoundry/evaluation/tasks/execution/runners/phyeduvideo
-```
-
-```text
-worldfoundry/data/benchmarks/assets/phyeduvideo/          # 捆绑的 Prompts/*.json manifest
-worldfoundry/evaluation/tasks/execution/runners/phyeduvideo/
-${WORLDFOUNDRY_GENERATED_ARTIFACT_DIR}/                   # 供覆盖率校验的候选视频
-```
-
-结果文件由调用方提供；不需要 Hugging Face 数据集。
-
-## 运行评测
-
-目录 manifest 记录的 validation 命令：
+## 如何运行
 
 ```bash
 worldfoundry-eval zoo benchmark-run \
@@ -59,32 +21,10 @@ worldfoundry-eval zoo benchmark-run \
   --mode official-validation \
   --official-results-path <official_results.json> \
   --generated-artifact-dir <generated_videos> \
-  --output-dir <out> \
+  --output-dir tmp/phyeduvideo/official-validation \
   --json
 ```
 
-## 权重与环境变量
-
-- `WORLDFOUNDRY_PHYEDUVIDEO_ROOT`: 可选覆盖项，指向本地 benchmark runtime / 仓库根目录。
-- `WORLDFOUNDRY_PHYEDUVIDEO_RESULTS_PATH`: 未显式传 `--official-results-path` 时，导入器默认从该路径读取官方结果导出文件。
-- `WORLDFOUNDRY_GENERATED_ARTIFACT_DIR`: 存放待评测生成产物（候选视频/rollout）的目录。
-
-## 输出文件
-
-运行会在 `--output-dir` 下写出：
-
-- `scorecard.json`: WorldFoundry 统一 scorecard，记录上表中的指标值。
-- `benchmark_contract.json`: 本次运行的 benchmark contract 记录（输入、模式、来源信息）。
-- `raw_metric_table.jsonl`: 支撑 scorecard 的原始 metric 行。
-- `results_summary.csv`
-- `per_sample_scores.jsonl`: 当结果源包含逐样本数值时写出的逐样本行。
-
-Scorecard 主键：`phyeduvideo_average`（leaderboard key `phyeduvideo_average`），写入 `scorecard.json`。
-
-## 边界与限制
-
-- 原始视频打分依赖上游 InternVL/CLIP/VQA judge 资产与协议，仓内不执行。
-- 结果导入不构成官方 benchmark / leaderboard 证据。
-- 覆盖率校验只确认 prompt 与视频的配对，不验证上游分数的产生过程。
+专用 runner 上的 `--run-official` 对 WorldFoundry 生成产物走同一条导入路径。产物包括 `scorecard.json`（主键 `phyeduvideo_average`）、`results_summary.csv`，以及文件提供时的逐样本行。
 
 [← 返回 Benchmark Hub](/zh/docs/evaluation/benchmark-hub)

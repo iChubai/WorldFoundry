@@ -1,27 +1,38 @@
 ---
 title: "VideoCrafter"
-description: "VideoCrafter is Tencent AI Lab's open video generation toolbox; this family entry aggregates the in-tree infer-only runtimes for VideoCrafter1 I2V, VideoCrafter1 T2V, and VideoCrafter2 T2V. The per-variant entries (videocrafter1-i2v, video…"
-pageSource: generated
+description: "Tencent AI Lab VideoCrafter family page. Default is VideoCrafter2 T2V at 512×320 / 16 frames / 28 fps / 50 DDIM steps; VC1 T2V and I2V are separate pending routes."
+modelId: "videocrafter"
+pageSource: authored
 ---
 
-**Publisher:** Tencent AI Lab · Company
-text · image → video
+`cogvideo` is not in this catalog (the later [CogVideoX](/docs/guides/supported-models/cogvideox) card is a different family). This page is the unused VideoCrafter family entry — Tencent AI Lab's U-Net latent video toolbox. It aggregates three in-tree **infer-only** runtimes: [VideoCrafter2 T2V](/docs/guides/supported-models/videocrafter2-t2v) (the default launch), [VideoCrafter1 T2V](/docs/guides/supported-models/videocrafter1-t2v), and [VideoCrafter1 I2V](/docs/guides/supported-models/videocrafter1-i2v). Checkpoint provenance lives here so the sibling pages do not duplicate Hugging Face aliases. Training, dataset, and download helpers are not packaged.
 
-VideoCrafter is Tencent AI Lab's open video generation toolbox; this family entry aggregates the in-tree infer-only runtimes for VideoCrafter1 I2V, VideoCrafter1 T2V, and VideoCrafter2 T2V. The per-variant entries (videocrafter1-i2v, videocrafter1-t2v, videocrafter2-t2v) hold the individual routes; checkpoint provenance is tracked here at the family level to avoid duplicate HF aliases.
+<ModelPaperFigures modelId="videocrafter" locale="en" />
+
+The paper field is [VideoCrafter2: Overcoming Data Limitations for High-Quality Video Diffusion Models](https://arxiv.org/abs/2401.09047). Project: [ailab-cvc.github.io/videocrafter2](https://ailab-cvc.github.io/videocrafter2/). Code: [VideoCrafter/VideoCrafter](https://github.com/VideoCrafter/VideoCrafter). `paper.png` is the title thumb only.
 
 <ModelCommandBuilder modelId="videocrafter" locale="en" />
 
-## Architecture
+## What it is for
 
-U-Net latent video diffusion models: VideoCrafter1 offers T2V (up to 1024x576) and I2V; VideoCrafter2 improves the T2V model by decoupling appearance learning (low-quality video + high-quality image data). Training, dataset, and download helpers are intentionally excluded from the in-tree packages.
+Start on VideoCrafter2 T2V (`VideoCrafter2T2VPipeline`): required `prompt`, artifact `videocrafter2-t2v.mp4`. That is the license-cleanest card (**Apache-2.0**) and the family default (`worldfoundry-eval run videocrafter --pipeline.task-profile text-to-video`).
 
-## Usage notes
+Use [videocrafter1-t2v](/docs/guides/supported-models/videocrafter1-t2v) for the older 1024×576 text-to-video weights, and [videocrafter1-i2v](/docs/guides/supported-models/videocrafter1-i2v) to animate a still. There is **no V2V** route. Compare the companion suite [EvalCrafter](/docs/evaluation/benchmark-hub/evalcrafter) and general T2V quality on [VBench](/docs/evaluation/benchmark-hub/vbench) — listed pointers, not ingested ranks.
 
-Runner parity is pending; exhaustive upstream benchmark parity is recorded as a longer validation stage. License note from the manifest: the VideoCrafter2 HF card exposes Apache-2.0, but the older Text2Video/Image2Video cards need license review.
+## Inference
 
-## Evaluation benchmarks
+Sampler is **DDIM** (`ddim_steps=50`, `ddim_eta=1.0`, `unconditional_guidance_scale=12.0` unless you override). Height and width must be divisible by 16. Frame count defaults to the U-Net `temporal_length` of **16**.
 
-- [EvalCrafter](/docs/evaluation/benchmark-hub/evalcrafter) — The benchmark developed alongside the VideoCrafter effort.
-- [VBench](/docs/evaluation/benchmark-hub/vbench) — Standard T2V suite.
+| Route | Task | Size / frames / fps | Checkpoint | Parity |
+| --- | --- | --- | --- | --- |
+| `videocrafter2-t2v` (default) | T2V | **512×320**, 16f, **28** fps | `VideoCrafter/VideoCrafter2` | pending |
+| `videocrafter1-t2v` | T2V | **1024×576**, 16f, **8** fps | `VideoCrafter/Text2Video-1024` | pending |
+| `videocrafter1-i2v` | I2V | **512×320**, 16f, **8** fps | `VideoCrafter/Image2Video-512` | pending |
+
+Catalog VRAM is unset. The family I2V task still names `videocrafter2-t2v.mp4` as the recorded artifact — that is a catalog quirk; I2V actually goes through the `videocrafter1-i2v` pipeline.
+
+## Running in WorldFoundry
+
+Unified env `worldfoundry-unified-cu128` (Python 3.11, CUDA 12.8). Stage the matching `model.ckpt` under `$WORLDFOUNDRY_HFD_ROOT` (`VideoCrafter--VideoCrafter2`, `VideoCrafter--Text2Video-1024`, or `VideoCrafter--Image2Video-512`). Older Text2Video / Image2Video cards expose **no license** in `cardData` — do not infer Apache-2.0 from the org name. Status: **Runner parity pending**.
 
 <ModelRelatedRecipes modelId="videocrafter" locale="en" />

@@ -1,80 +1,27 @@
 ---
 title: RoboCerebra
-description: Long-horizon robotic manipulation benchmark probing deliberate System-2 planning; WorldFoundry normalizes official result exports.
+description: "NeurIPS 2025 long-horizon household bench (1,000 trajectories, 100 variants). WorldFoundry imports official rollouts; it does not run LIBERO."
 ---
 
-## About
+RoboCerebra (Beihang CoLa Lab, NeurIPS 2025) tests **System-2** planning on long household sequences, not reactive System-1 control. The release is **1,000** human-annotated trajectories over **100** task variants (mean **9.1** atomic steps; horizons on the order of **3,000** simulation steps) on a **LIBERO**-based stack. Published eval is **600** rollouts (**60** tasks × **10** trials) with anchor-aligned planner / VLA handoffs. Six official conditions: **Ideal**, **Memory Exploration**, **Memory Execution**, **Random Disturbance**, **Observation Mismatching**, and **Mix**.
 
-**Publisher:** Beihang University (CoLa Lab)
+Paper: [RoboCerebra](https://arxiv.org/abs/2506.06677). Project: [robocerebra.github.io](https://robocerebra.github.io/). Code: [buaa-colalab/RoboCerebra](https://github.com/buaa-colalab/RoboCerebra).
 
-RoboCerebra, from Beihang University's CoLa Lab, benchmarks long-horizon robotic manipulation that requires deliberate high-level planning ("cerebra" System-2 reasoning) on top of reactive low-level control: extended household task sequences with dynamic subgoal changes, observation checks, and memory demands, evaluated by hierarchical VLM-planner + VLA-controller stacks.
+WorldFoundry **imports** official result exports (`worldfoundry-eval zoo benchmark-run --mode official-validation`). It does **not** run the bundled LIBERO simulator, collect rollouts, or host the hierarchical VLM planner + VLA controller. Declare the six-way condition split on the export if you want comparable numbers.
 
-WorldFoundry integrates RoboCerebra as an official-results runner: rollout exports are normalized into the unified scorecard.
+<BenchmarkPageSections id="robocerebra" locale="en" />
 
-Official references:
-
-- Paper: [arxiv.org/abs/2502.02853](https://arxiv.org/abs/2502.02853)
-- Official repository: [buaa-colalab/RoboCerebra](https://github.com/buaa-colalab/RoboCerebra)
-- License: `upstream_terms`
-
-## Evaluation protocol
-
-WorldFoundry integrates this benchmark through the unified result-import path: `worldfoundry-eval zoo benchmark-run --mode official-validation` normalizes a caller-provided official result export (JSON/CSV rollout summaries) into the WorldFoundry scorecard without executing the simulator. Simulator execution, policy loading, and rollout collection remain explicit upstream steps performed with the official tooling.
-
-Primary metric: `success_rate`.
-
-| Metric | Meaning | Direction |
-| --- | --- | --- |
-| `success_rate` | Primary episode success rate over evaluated rollouts. | Higher is better |
-| `task_success` | Per-task success aggregate. | Higher is better |
-| `episode_success` | Per-episode success indicator aggregate. | Higher is better |
-| `reward` | Mean episode reward / return. | Higher is better |
-
-## Data and artifact layout
-
-In-tree paths:
-
-```text
-worldfoundry/data/benchmarks/tasks/external/robocerebra.yaml
-```
-
-```text
-<official_results.json>                 # rollout summary export from the official tooling
-${WORLDFOUNDRY_ROBOCEREBRA_RESULTS_PATH}   # default import path
-```
-
-## Run the benchmark
-
-Catalog-recorded validation command:
+## How to run
 
 ```bash
 worldfoundry-eval zoo benchmark-run \
   --benchmark-id robocerebra \
   --mode official-validation \
   --official-results-path <official_results.json> \
-  --output-dir <out> \
+  --output-dir tmp/robocerebra/official-validation \
   --json
 ```
 
-## Checkpoints and environment variables
-
-- `WORLDFOUNDRY_ROBOCEREBRA_ROOT`: Optional override pointing at a local benchmark runtime/repository root.
-- `WORLDFOUNDRY_ROBOCEREBRA_RESULTS_PATH`: Default path the importer reads official result exports from when `--official-results-path` is not passed.
-
-## Outputs
-
-The run writes into `--output-dir`:
-
-- `scorecard.json`: WorldFoundry scorecard with the metric values recorded above.
-- `raw_results.jsonl`: Normalized rows parsed from the official result export.
-- `evaluation/summary.json`: Aggregated evaluation summary.
-
-Scorecard primary key: `success_rate` (leaderboard key `success_rate`), stored in `scorecard.json`.
-
-## Limitations
-
-- WorldFoundry normalizes supplied rollout results; it does not run the official simulator or policies in tree.
-- Full leaderboard parity is not claimed until official rollouts are executed with staged simulator assets and policy checkpoints, then imported.
-- Imported scorecards are integration evidence, not leaderboard submissions.
+Optional `WORLDFOUNDRY_ROBOCEREBRA_ROOT` points at a local bench/runtime root. Default import path: `WORLDFOUNDRY_ROBOCEREBRA_RESULTS_PATH`. Manifest: `worldfoundry/data/benchmarks/tasks/external/robocerebra.yaml`. Outputs: `scorecard.json` (primary `success_rate`), `raw_results.jsonl`, `evaluation/summary.json`.
 
 [← Benchmark Hub](/docs/evaluation/benchmark-hub)

@@ -1,26 +1,50 @@
 ---
 title: "DROID-W"
-description: "DROID-W is a robot world model oriented around the DROID robot-manipulation data ecosystem: it generates robot-view video for evaluation on DROID-style tasks."
+description: "DROID-W: robot-world-model and droid-evaluation; Runner parity pending."
+modelId: "droid-w"
 pageSource: generated
 ---
 
-**Publisher:** Open-source research release (institution not recorded) · Research lab
-video
-
 DROID-W is a robot world model oriented around the DROID robot-manipulation data ecosystem: it generates robot-view video for evaluation on DROID-style tasks. In this catalog the official source route is registered with the source pinned at a recorded commit; checkpoints and data remain runtime-gated.
+
+<ModelPaperFigures modelId="droid-w" locale="en" />
+
+The recorded paper is [arXiv 2603.19076](https://arxiv.org/abs/2603.19076).
+
+Project page: [moyangli00.github.io/droid-w](https://moyangli00.github.io/droid-w/). Code: [MoyangLi00/DROID-W](https://github.com/MoyangLi00/DROID-W).
 
 <ModelCommandBuilder modelId="droid-w" locale="en" />
 
-## Architecture
+## What it is for
+
+`droid-w` is the recorded interactive world line. Start here when the job is stepping a world with actions.
 
 Architecture internals are not recorded in this repository (upstream: MoyangLi00/DROID-W, apache-2.0). The official source is bound from $\{WORLDFOUNDRY_MODEL_SOURCE_DIR\}/DROID-W at commit c3414af6.
 
-## Usage notes
+Catalog tasks include robot-world-model, droid-evaluation, and video-generation. Documented outputs include video.
+
+Recorded evaluation entry points include [EWMBench](/docs/evaluation/benchmark-hub/ewmbench) (Embodied world-model evaluation for robot video prediction).
+
+## Runtime contract
+
+Required `image`, `prompt`, and `video`; optional `actions` (robot_action, droid_action); artifacts `generated_video` and `droid_w_runtime_plan.json`.
+
+Recorded task profiles: `robot-world-model`, `droid-evaluation`, and `video-generation`. WorldFoundry binds `DROIDWPipeline`.
+
+Family status: **Runner parity pending**.
 
 Config resolution and pipeline import are expected to pass; real generation emits a runtime plan until required checkpoints/assets are staged. Missing assets are reported by the plan, not treated as catalog blockers.
 
-## Evaluation benchmarks
+DROID-W official source route is registered; checkpoints/data are runtime-gated.
 
-- [EWMBench](/docs/evaluation/benchmark-hub/ewmbench) — Embodied world-model evaluation for robot video prediction.
+## Running in WorldFoundry
+
+Launch `worldfoundry-eval run droid-w --pipeline.task-profile robot-world-model` to step the world. The command builder above switches `--pipeline.task-profile` among recorded tasks and still emits `worldfoundry-eval run`.
+
+It runs in the unified environment `worldfoundry-unified-cu128` (Python 3.11, CUDA 12.8).
+
+No public checkpoint id is recorded on this card; follow the usage notes for staging. Stage assets with `bash scripts/inference/prepare_model_infer.sh droid-w`.
+
+Status: **Runner parity pending**.
 
 <ModelRelatedRecipes modelId="droid-w" locale="en" />

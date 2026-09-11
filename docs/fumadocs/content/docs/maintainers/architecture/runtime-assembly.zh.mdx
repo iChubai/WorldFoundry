@@ -15,14 +15,67 @@ description: pipeline、operator、synthesis、representation、base_models 的�
 
 ## 基类契约
 
-| 基类 | 文件:行 | 职责 |
-| --- | --- | --- |
-| `PipelineABC` | `pipelines/pipeline_utils.py:11` | 最小公共入口：`from_pretrained()` `:118`、`process()` `:173`，支持增量输出时还有 `stream()`。拥有模型构造、checkpoint 加载、设备放置、归一化执行与 `GenerationResult` artifact 语义。 |
-| `BaseOperator` | `operators/base_operator.py:4` | 仅输入与 interaction 整形：`interaction_template_init`、`get_interaction`、`check_interaction`、`process_interaction`、`process_perception`。不得承载生成或打分。 |
-| `BaseSynthesis` | `synthesis/base_synthesis.py:38` | 把公共 artifact 处理连接到本地 native runtime 或 hosted API：`from_pretrained` `:57`、`api_init` `:76`、`predict` `:93`。 |
-| `BaseRepresentation` | `representations/base_representation.py:4` | 把模型输出转换为几何/世界 artifact：`from_pretrained`、`api_init`、`get_representation`。 |
-| `ActionModelSynthesis` | `synthesis/action_generation/base_action_synthesis.py:14` | 具身动作 synthesis 面（继承 `RuntimeProfileSynthesis`）；用于 VLA 类动作策略。 |
-| `BaseMemory` | `core/memory/base.py:9` | 为流式、长上下文或交互式流程存储与变换前序多模态状态。在 `core` 定义，由各 family 在 `synthesis/*/memory` 实现。 |
+<div className="pi-kv-catalog not-prose">
+  <section className="pi-kv-group">
+    <h3>基类</h3>
+    <ul>
+      <li className="pi-kv-row">
+        <div className="pi-kv-head">
+          <div className="pi-kv-names">
+            <code>PipelineABC</code>
+          </div>
+        </div>
+        <p>最小公共入口：<code>from_pretrained()</code> <code>:118</code>、<code>process()</code> <code>:173</code>，支持增量输出时还有 <code>stream()</code>。拥有模型构造、checkpoint 加载、设备放置、归一化执行与 <code>GenerationResult</code> artifact 语义。</p>
+        <p className="pi-kv-read"><span>首读</span> <code>pipelines/pipeline_utils.py:11</code></p>
+      </li>
+      <li className="pi-kv-row">
+        <div className="pi-kv-head">
+          <div className="pi-kv-names">
+            <code>BaseOperator</code>
+          </div>
+        </div>
+        <p>仅输入与 interaction 整形：<code>interaction_template_init</code>、<code>get_interaction</code>、<code>check_interaction</code>、<code>process_interaction</code>、<code>process_perception</code>。不得承载生成或打分。</p>
+        <p className="pi-kv-read"><span>首读</span> <code>operators/base_operator.py:4</code></p>
+      </li>
+      <li className="pi-kv-row">
+        <div className="pi-kv-head">
+          <div className="pi-kv-names">
+            <code>BaseSynthesis</code>
+          </div>
+        </div>
+        <p>把公共 artifact 处理连接到本地 native runtime 或 hosted API：<code>from_pretrained</code> <code>:57</code>、<code>api_init</code> <code>:76</code>、<code>predict</code> <code>:93</code>。</p>
+        <p className="pi-kv-read"><span>首读</span> <code>synthesis/base_synthesis.py:38</code></p>
+      </li>
+      <li className="pi-kv-row">
+        <div className="pi-kv-head">
+          <div className="pi-kv-names">
+            <code>BaseRepresentation</code>
+          </div>
+        </div>
+        <p>把模型输出转换为几何/世界 artifact：<code>from_pretrained</code>、<code>api_init</code>、<code>get_representation</code>。</p>
+        <p className="pi-kv-read"><span>首读</span> <code>representations/base_representation.py:4</code></p>
+      </li>
+      <li className="pi-kv-row">
+        <div className="pi-kv-head">
+          <div className="pi-kv-names">
+            <code>ActionModelSynthesis</code>
+          </div>
+        </div>
+        <p>具身动作 synthesis 面（继承 <code>RuntimeProfileSynthesis</code>）；用于 VLA 类动作策略。</p>
+        <p className="pi-kv-read"><span>首读</span> <code>synthesis/action_generation/base_action_synthesis.py:14</code></p>
+      </li>
+      <li className="pi-kv-row">
+        <div className="pi-kv-head">
+          <div className="pi-kv-names">
+            <code>BaseMemory</code>
+          </div>
+        </div>
+        <p>为流式、长上下文或交互式流程存储与变换前序多模态状态。在 <code>core</code> 定义，由各 family 在 <code>{"synthesis/*/memory"}</code> 实现。</p>
+        <p className="pi-kv-read"><span>首读</span> <code>core/memory/base.py:9</code></p>
+      </li>
+    </ul>
+  </section>
+</div>
 
 ## 目录职责
 

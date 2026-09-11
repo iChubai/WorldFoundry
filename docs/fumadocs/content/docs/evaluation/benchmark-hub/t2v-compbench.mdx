@@ -1,57 +1,25 @@
 ---
 title: T2V-CompBench
-description: "Compositional T2V benchmark (CVPR 2025): 1,400 prompts over seven categories scored with MLLM, detection, and tracking metrics."
+description: "CVPR 2025 compositional T2V bench: 1,400 prompts over seven binding axes. WorldFoundry ships the runtime; it does not invent a board."
 ---
 
-## About
+T2V-CompBench (HKU, with CUHK and Huawei Noah's Ark Lab) asks whether a text-to-video model **binds the right attributes, actions, and motions to the right objects**. It is a composition test, not a single aesthetic score. The official suite has **1,400 prompts** (200 × 7):
 
-**Publisher:** The University of Hong Kong (with CUHK & Huawei Noah's Ark Lab)
+- **Consistent / dynamic attribute binding** — static properties, then temporal changes, on the correct object.
+- **Spatial relationships** — 2D / 3D layout (detection + depth / SAM).
+- **Motion binding** — foreground vs background motion (DOT tracking).
+- **Action binding** and **object interactions** — MLLM (LLaVA-style) judges.
+- **Generative numeracy** — object counts via GroundingDINO. This is the bounded official component WorldFoundry has executed on a real MP4.
 
-T2V-CompBench is the first benchmark dedicated to *compositional* text-to-video generation: binding the right attributes, actions, and motions to the right objects. Its 1,400 prompts (200 per category) cover consistent attribute binding, dynamic attribute binding, spatial relationships, motion binding, action binding, object interactions, and generative numeracy. Categories are scored by three metric types validated against human judgment: MLLM-based (LLaVA-style video judging), detection-based (GroundingDINO plus depth/SAM for spatial and numeracy categories), and tracking-based (DOT for motion binding).
+Paper: [T2V-CompBench](https://arxiv.org/abs/2407.14505). Project: [t2v-compbench-2025.github.io](https://t2v-compbench-2025.github.io/). Code: [KaiyueSun98/T2V-CompBench](https://github.com/KaiyueSun98/T2V-CompBench). Reference videos: [`Kaiyue/T2V-CompBench-Videos`](https://huggingface.co/datasets/Kaiyue/T2V-CompBench-Videos) (25,200 rows).
 
-WorldFoundry vendors the T2V-CompBench runtime in tree. A strict model-artifact manifest bridge stages generated videos into the official `category/NNNN.mp4` layout; the in-tree official `generative_numeracy` evaluator has been executed on a real MP4 (scorecard records `official_component_verified=true`), and the runner can normalize official CSV outputs or execute other categories when their metric assets are prepared.
+WorldFoundry **vendors the official runtime** and a strict manifest bridge that stages generated videos into `category/NNNN.mp4`. Import official CSV / JSON, or run a category when its metric assets are staged. `t2v_compbench_average` is emitted only when all seven category scores exist.
 
-Official references:
+<BenchmarkPageSections id="t2v-compbench" locale="en" />
 
-- Paper: [arxiv.org/abs/2407.14505](https://arxiv.org/abs/2407.14505)
-- Project page: [t2v-compbench-2025.github.io](https://t2v-compbench-2025.github.io/)
-- Official repository: [KaiyueSun98/T2V-CompBench](https://github.com/KaiyueSun98/T2V-CompBench)
+## How to run
 
-## Evaluation protocol
-
-Generated videos need the persisted generation manifest (or the exact official `category/NNNN.mp4` layout). `--category` selects one category; `generative_numeracy` needs a local GroundingDINO checkpoint plus a BERT-compatible text encoder; the four MLLM categories need LLaVA-compatible weights; `motion_binding` needs DOT and `--run-motion-two-stage`; spatial categories need Depth-Anything/SAM assets. `--preflight` validates assets before execution.
-
-Primary metric: `t2v_compbench_average`.
-
-| Metric | Meaning | Direction |
-| --- | --- | --- |
-| `consistent_attribute_binding` | T2V-CompBench MLLM score for binding static attributes to the correct objects. | Higher is better |
-| `dynamic_attribute_binding` | T2V-CompBench MLLM score for temporal attribute changes and bindings. | Higher is better |
-| `spatial_relationships` | T2V-CompBench detection/depth score for 2D and 3D spatial relationships. | Higher is better |
-| `motion_binding` | T2V-CompBench tracking score for foreground/background motion binding. | Higher is better |
-| `action_binding` | T2V-CompBench MLLM score for action-object binding. | Higher is better |
-| `object_interactions` | T2V-CompBench MLLM score for interaction consistency between objects. | Higher is better |
-| `generative_numeracy` | T2V-CompBench detection score for generated object counts. | Higher is better |
-| `t2v_compbench_average` | Mean emitted only when all seven official T2V-CompBench category scores are available. | Higher is better |
-
-## Data and artifact layout
-
-In-tree paths:
-
-```text
-worldfoundry/data/benchmarks/tasks/external/t2v-compbench.yaml
-worldfoundry/evaluation/tasks/execution/runners/t2v_compbench/runtime/t2v_compbench
-```
-
-```text
-.../runners/t2v_compbench/runtime/t2v_compbench             # vendored official runtime
-cache/worldfoundry/data/hfd_datasets/Kaiyue/T2V-CompBench-Videos   # official reference videos
-<generated>/<category>/NNNN.mp4                             # staged official layout
-```
-
-## Run the benchmark
-
-Catalog-recorded validation command:
+Import official category scores:
 
 ```bash
 worldfoundry-eval zoo benchmark-run \
@@ -59,39 +27,30 @@ worldfoundry-eval zoo benchmark-run \
   --mode official-validation \
   --official-results-path <official_results.json> \
   --generated-artifact-dir <generated_videos> \
-  --output-dir <out> \
+  --output-dir tmp/t2v-compbench/official-validation \
   --json
 ```
 
-## Checkpoints and environment variables
+Recompute a category from staged videos (numeracy needs GroundingDINO + a BERT-compatible encoder):
 
-- `WORLDFOUNDRY_T2V_COMPBENCH_ROOT`: Optional override pointing at a local benchmark runtime/repository root.
-- `WORLDFOUNDRY_T2V_COMPBENCH_RESULTS_PATH`: Default path the importer reads official result exports from when `--official-results-path` is not passed.
-- `WORLDFOUNDRY_T2V_COMPBENCH_GROUNDINGDINO_CKPT`: GroundingDINO checkpoint for detection-based categories.
-- `WORLDFOUNDRY_T2V_COMPBENCH_LLAVA_MODEL_PATH`: LLaVA-compatible MLLM weights for the four MLLM categories.
-- `WORLDFOUNDRY_T2V_COMPBENCH_SAM_CKPT`: SAM checkpoint for spatial-category segmentation.
+```bash
+${WORLDFOUNDRY_UNIFIED_PYTHON} \
+  worldfoundry/evaluation/tasks/execution/runners/t2v_compbench/run_t2v_compbench_official_runner.py \
+  --generated-video-dir <generated_videos_with_t2v_compbench_generation_manifest.jsonl> \
+  --category generative_numeracy \
+  --output-dir tmp/t2v-compbench/numeracy \
+  --json
+```
 
-This benchmark reuses the shared base-model dependency stack: `grounded_depth_segmentation_stack`.
+`--preflight` checks assets before a run. MLLM categories need `WORLDFOUNDRY_T2V_COMPBENCH_LLAVA_MODEL_PATH`; motion binding needs DOT; spatial categories need Depth-Anything / SAM (`WORLDFOUNDRY_T2V_COMPBENCH_SAM_CKPT`). Shared stack: `grounded_depth_segmentation_stack`. Default import path: `WORLDFOUNDRY_T2V_COMPBENCH_RESULTS_PATH`. Optional runtime root: `WORLDFOUNDRY_T2V_COMPBENCH_ROOT`.
 
-## Outputs
+In-tree pointers:
 
-The run writes into `--output-dir`:
+```text
+worldfoundry/data/benchmarks/tasks/external/t2v-compbench.yaml
+worldfoundry/evaluation/tasks/execution/runners/t2v_compbench/runtime/t2v_compbench
+```
 
-- `scorecard.json`: WorldFoundry scorecard with the metric values recorded above.
-- `per_sample_scores.jsonl`: Per-sample rows when the result source exposes sample-level values.
-- `raw_metric_table.jsonl`: Metric rows backing the scorecard.
-- `leaderboard_csv_manifest.json`
-- `generated_video_manifest.json`
-- `dataset_manifest.json`
-- `upstream_stdout.log`: Captured stdout of the upstream official scorer.
-- `upstream_stderr.log`: Captured stderr of the upstream official scorer.
-
-Scorecard primary key: `t2v_compbench_average` (leaderboard key `t2v_compbench_average`), stored in `scorecard.json`.
-
-## Limitations
-
-- Full-suite verification requires all 1,400 generated videos (200 × 7 categories), not the bounded one-video component run.
-- The MLLM categories need a compatible LLaVA runtime/checkpoint; motion_binding needs DOT; other detection paths need category-specific depth/SAM assets.
-- `t2v_compbench_average` is emitted only when all seven official category scores are available; full official benchmark and leaderboard parity have not been executed.
+Outputs include `scorecard.json` (primary `t2v_compbench_average` when complete), `raw_metric_table.jsonl`, and per-sample rows when the source exposes them.
 
 [← Benchmark Hub](/docs/evaluation/benchmark-hub)

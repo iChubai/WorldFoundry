@@ -1,21 +1,48 @@
 ---
 title: "VQ-BeT"
-description: "VQ-BeT (Vector-Quantized Behavior Transformer) generates behavior by tokenizing continuous actions with a hierarchical VQ-VAE and predicting those tokens with a transformer — capturing multimodal demonstrations without diffusion sampling c…"
+description: "VQ-BeT：行为生成、模仿学习；Runner 一致性待确认。"
+modelId: "vqbet"
 pageSource: generated
 ---
 
-**发表机构:** 开源研究发布（仓库未记录正式机构） · 研究机构
-
 VQ-BeT（向量量化行为 Transformer）用分层 VQ-VAE 将连续动作 token 化，再以 transformer 预测这些 token 来生成行为——无需扩散采样开销即可捕捉多模态示范。catalog 以官方仓库为源，经树内动作运行时适配器路由。
+
+<ModelPaperFigures modelId="vqbet" locale="zh" />
+
+记录论文为[arXiv 2403.03181](https://arxiv.org/abs/2403.03181)。
+
+项目页：[sjlee.cc/vq-bet](https://sjlee.cc/vq-bet/)。代码：[jayLEE0301/vq_bet_official](https://github.com/jayLEE0301/vq_bet_official)。
 
 <ModelCommandBuilder modelId="vqbet" locale="zh" />
 
-## 架构
+## 用来做什么
+
+需要 catalog 上的 VLA 策略时选 `vqbet`：指令与观测进、动作轨迹出。用来滚动已记录策略，不是用来训练新策略。
 
 残差 VQ-VAE 动作 tokenizer 加 GPT 式行为 token transformer，偏移头恢复连续动作。更多内部细节仓库未记录。
 
-## 使用要点
+catalog 记录的任务包括 行为生成、模仿学习、机器人策略、策略执行。别名包括 `vq-bet`、`vector-quantized-behavior-transformer`。
 
-checkpoint 缺失由运行时 missing_assets 报告，不视为 catalog 阻塞；权重就位前运行输出运行时计划。运行前需用官方代码训练自己的任务 checkpoint。
+## 运行时契约
+
+必填 `image`、`prompt`、`state`；可选 `model_id` (vqbet)、`policy_family`、`action_representation`；产物 `action_trace`、`vqbet_action_trace.json`。
+
+记录的任务 profile：`behavior_generation`、`imitation_learning`、`robot_policy`、`policy_rollout`。绑定的 pipeline 类是 `VQBeTPipeline`。
+
+系列状态：**Runner 一致性待确认**。
+
+checkpoint 缺失由运行时 missing_assets 报告，不视为 catalog 阻塞；权重就位前运行输出运行时计划。 运行前需用官方代码训练自己的任务 checkpoint。
+
+未记录官方预训练 checkpoint。
+
+## 在 WorldFoundry 中运行
+
+启动 `worldfoundry-eval run vqbet --pipeline.task-profile behavior_generation` 执行策略。上方命令构建器按已记录任务切换 `--pipeline.task-profile`，发出的仍是 `worldfoundry-eval run`。
+
+运行环境是统一 profile `worldfoundry-unified-cu128`（Python 3.11，CUDA 12.8）。
+
+记录的权重仓库包括 `lerobot/vqbet`。就位权重用 `bash scripts/inference/prepare_model_infer.sh vqbet`。
+
+状态：**Runner 一致性待确认**。
 
 <ModelRelatedRecipes modelId="vqbet" locale="zh" />

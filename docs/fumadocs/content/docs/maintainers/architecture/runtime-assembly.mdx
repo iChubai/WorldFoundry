@@ -15,14 +15,67 @@ Every runnable method needs both a pipeline and an operator. Operators may be th
 
 ## Base-class contracts
 
-| Base class | File:line | Owns |
-| --- | --- | --- |
-| `PipelineABC` | `pipelines/pipeline_utils.py:11` | The minimal public entrypoint: `from_pretrained()` `:118`, `process()` `:173`, and `stream()` when incremental output is supported. Owns model construction, checkpoint loading, device placement, normalized execution, and `GenerationResult` artifact semantics. |
-| `BaseOperator` | `operators/base_operator.py:4` | Input and interaction shaping only: `interaction_template_init`, `get_interaction`, `check_interaction`, `process_interaction`, `process_perception`. Must not own generation or scoring. |
-| `BaseSynthesis` | `synthesis/base_synthesis.py:38` | Connects public artifact handling to either a local native runtime or a hosted API: `from_pretrained` `:57`, `api_init` `:76`, `predict` `:93`. |
-| `BaseRepresentation` | `representations/base_representation.py:4` | Converts model outputs into geometric or world artifacts: `from_pretrained`, `api_init`, `get_representation`. |
-| `ActionModelSynthesis` | `synthesis/action_generation/base_action_synthesis.py:14` | Embodied-action synthesis surface (extends `RuntimeProfileSynthesis`); used by VLA-style action policies. |
-| `BaseMemory` | `core/memory/base.py:9` | Stores and transforms prior multimodal state for streaming, long-context, or interactive flows. Defined in `core`, implemented per-family in `synthesis/*/memory`. |
+<div className="pi-kv-catalog not-prose">
+  <section className="pi-kv-group">
+    <h3>Base class</h3>
+    <ul>
+      <li className="pi-kv-row">
+        <div className="pi-kv-head">
+          <div className="pi-kv-names">
+            <code>PipelineABC</code>
+          </div>
+        </div>
+        <p>The minimal public entrypoint: <code>from_pretrained()</code> <code>:118</code>, <code>process()</code> <code>:173</code>, and <code>stream()</code> when incremental output is supported. Owns model construction, checkpoint loading, device placement, normalized execution, and <code>GenerationResult</code> artifact semantics.</p>
+        <p className="pi-kv-read"><span>First file</span> <code>pipelines/pipeline_utils.py:11</code></p>
+      </li>
+      <li className="pi-kv-row">
+        <div className="pi-kv-head">
+          <div className="pi-kv-names">
+            <code>BaseOperator</code>
+          </div>
+        </div>
+        <p>Input and interaction shaping only: <code>interaction_template_init</code>, <code>get_interaction</code>, <code>check_interaction</code>, <code>process_interaction</code>, <code>process_perception</code>. Must not own generation or scoring.</p>
+        <p className="pi-kv-read"><span>First file</span> <code>operators/base_operator.py:4</code></p>
+      </li>
+      <li className="pi-kv-row">
+        <div className="pi-kv-head">
+          <div className="pi-kv-names">
+            <code>BaseSynthesis</code>
+          </div>
+        </div>
+        <p>Connects public artifact handling to either a local native runtime or a hosted API: <code>from_pretrained</code> <code>:57</code>, <code>api_init</code> <code>:76</code>, <code>predict</code> <code>:93</code>.</p>
+        <p className="pi-kv-read"><span>First file</span> <code>synthesis/base_synthesis.py:38</code></p>
+      </li>
+      <li className="pi-kv-row">
+        <div className="pi-kv-head">
+          <div className="pi-kv-names">
+            <code>BaseRepresentation</code>
+          </div>
+        </div>
+        <p>Converts model outputs into geometric or world artifacts: <code>from_pretrained</code>, <code>api_init</code>, <code>get_representation</code>.</p>
+        <p className="pi-kv-read"><span>First file</span> <code>representations/base_representation.py:4</code></p>
+      </li>
+      <li className="pi-kv-row">
+        <div className="pi-kv-head">
+          <div className="pi-kv-names">
+            <code>ActionModelSynthesis</code>
+          </div>
+        </div>
+        <p>Embodied-action synthesis surface (extends <code>RuntimeProfileSynthesis</code>); used by VLA-style action policies.</p>
+        <p className="pi-kv-read"><span>First file</span> <code>synthesis/action_generation/base_action_synthesis.py:14</code></p>
+      </li>
+      <li className="pi-kv-row">
+        <div className="pi-kv-head">
+          <div className="pi-kv-names">
+            <code>BaseMemory</code>
+          </div>
+        </div>
+        <p>Stores and transforms prior multimodal state for streaming, long-context, or interactive flows. Defined in <code>core</code>, implemented per-family in <code>{"synthesis/*/memory"}</code>.</p>
+        <p className="pi-kv-read"><span>First file</span> <code>core/memory/base.py:9</code></p>
+      </li>
+    </ul>
+  </section>
+</div>
 
 ## Directory roles
 

@@ -1,79 +1,37 @@
 ---
 title: LIBERO-Pro
-description: 即插即用的 LIBERO 扰动评测，揭示死记硬背：物体、位置、指令、任务与环境五类变体。
+description: "即插即用的 LIBERO 叠加层，探测死记：物体、位姿、指令、任务与环境偏移。WorldFoundry 导入官方 rollout。"
 ---
 
-## 简介
+LIBERO-PRO（华中科技大学，联合哈佛、MIT、武汉理工与 Lehigh）**不是**新的终身学习套件，也**不是** [LIBERO-Plus](/zh/docs/evaluation/benchmark-hub/libero-plus) 的 10,030 实例因子网格。它是叠在原始 LIBERO 任务上的**即插即用**层。论点是：原版 LIBERO 的训练 / 评测几乎是同一场景，所以 90%+ 可能是轨迹回放。PRO 施加**合理**扰动，再问策略是否仍把指令接地。
 
-**发表机构：** Huazhong University of Science and Technology（华中科技大学，联合清华、武汉理工与理海大学）
+论文图 6 的五类：
 
-LIBERO-PRO 在 LIBERO 上引入四个维度的合理扰动——被操作物体、初始状态、任务指令与环境——外加有原则的任务重设计，且可自由组合。其核心发现：在标准 LIBERO 上得分 90%+ 的模型，在这些泛化设置下可跌至 0%，暴露出对动作序列与布局的死记硬背而非真正的任务理解。
+- **物体属性** — 颜色、纹理、尺度；语义目标不变。
+- **初始构型** — 仍物理可行的摆放。很小的位置偏移就会让许多 VLA 归零。
+- **指令** — 同一目标的改写（不是 [LIBERO-Para](/zh/docs/evaluation/benchmark-hub/libero-para) 的 4,092 类体系）。
+- **任务重设计** — 新的物体集合或组合目标。这类**不**与另外四类混用。
+- **环境** — 背景、光照、纹理；可行性不变。
 
-WorldFoundry 以官方结果 runner 集成 LIBERO-PRO：上游 rollout 导出被归一化为统一 scorecard。
+另外四类可以组合。官方评测与原版 LIBERO 一致：**每任务 50 个 episode**。论文报告干净 LIBERO 上超过 **90%** 的模型在泛化 PRO 设置下塌到 **0%**——这是上游结论，不是 Hub 行。
 
-官方参考：
+论文：[LIBERO-PRO](https://arxiv.org/abs/2510.03827)。项目：[LIBERO-PRO 主页](https://zxy-mllab.github.io/LIBERO-PRO-Webpage/)。代码：[Zxy-MLlab/LIBERO-PRO](https://github.com/Zxy-MLlab/LIBERO-PRO)（MIT）。数据集：`zhouxueyang/LIBERO-Pro`。
 
-- 官方仓库: [Lifelong-Robot-Learning/LIBERO](https://github.com/Lifelong-Robot-Learning/LIBERO)
-- License: `mit`
+WorldFoundry **只导入官方结果**。你在上游跑该叠加层，再经 `official-validation` 归一化导出。仓内不跑 robosuite。[基础 LIBERO](/zh/docs/evaluation/benchmark-hub/libero) 可以接线闭环；本页不行。
 
-## 评测协议
+<BenchmarkPageSections id="libero-pro" locale="zh" />
 
-WorldFoundry 通过统一的结果导入路径集成该 benchmark：`worldfoundry-eval zoo benchmark-run --mode official-validation` 把调用方提供的官方结果导出（JSON/CSV rollout 汇总）归一化为 WorldFoundry scorecard，不执行模拟器。模拟器执行、策略加载与 rollout 采集仍是使用官方工具完成的显式上游步骤。
-
-主指标是 `success_rate`。
-
-| Metric | 含义 | 方向 |
-| --- | --- | --- |
-| `success_rate` | 评测 rollout 上的主成功率（逐 episode 成功比例）。 | 越高越好 |
-| `task_success` | 按任务聚合的成功率。 | 越高越好 |
-| `episode_success` | 逐 episode 成功指示的聚合值。 | 越高越好 |
-| `action_accuracy` | 相对参考动作的离线动作预测准确率。 | 越高越好 |
-
-## 数据与产物布局
-
-WorldFoundry 仓内路径：
-
-```text
-worldfoundry/data/benchmarks/tasks/external/libero-pro.yaml
-```
-
-```text
-<official_results.json>                 # 官方工具产出的 rollout 汇总导出
-${WORLDFOUNDRY_LIBERO_PRO_RESULTS_PATH}   # 默认导入路径
-```
-
-## 运行评测
-
-目录 manifest 记录的 validation 命令：
+## 如何运行
 
 ```bash
 worldfoundry-eval zoo benchmark-run \
   --benchmark-id libero-pro \
   --mode official-validation \
   --official-results-path <official_results.json> \
-  --output-dir <out> \
+  --output-dir tmp/libero-pro/official-validation \
   --json
 ```
 
-## 权重与环境变量
-
-- `WORLDFOUNDRY_LIBERO_PRO_ROOT`: 可选覆盖项，指向本地 benchmark runtime / 仓库根目录。
-- `WORLDFOUNDRY_LIBERO_PRO_RESULTS_PATH`: 未显式传 `--official-results-path` 时，导入器默认从该路径读取官方结果导出文件。
-
-## 输出文件
-
-运行会在 `--output-dir` 下写出：
-
-- `scorecard.json`: WorldFoundry 统一 scorecard，记录上表中的指标值。
-- `raw_results.jsonl`: 从官方结果导出解析出的归一化行。
-- `evaluation/summary.json`: 聚合评测摘要。
-
-Scorecard 主键：`success_rate`（leaderboard key `success_rate`），写入 `scorecard.json`。
-
-## 边界与限制
-
-- WorldFoundry 只归一化所提供的 rollout 结果；不在仓内运行官方模拟器或策略。
-- 在用就位的模拟器资产与策略权重执行官方 rollout 并导入之前，不声称完整 leaderboard 对齐。
-- 导入的 scorecard 是集成证据，不是 leaderboard 提交。
+可选 `WORLDFOUNDRY_LIBERO_PRO_ROOT` 指向 `Zxy-MLlab/LIBERO-PRO` 检出。默认导入路径：`WORLDFOUNDRY_LIBERO_PRO_RESULTS_PATH`。清单：`worldfoundry/data/benchmarks/tasks/external/libero-pro.yaml`。输出：`scorecard.json`（主键 `success_rate`）、`raw_results.jsonl`、`evaluation/summary.json`。
 
 [← 返回 Benchmark Hub](/zh/docs/evaluation/benchmark-hub)

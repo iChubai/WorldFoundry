@@ -1,58 +1,26 @@
 ---
 title: World-in-World
-description: "ICLR 2026 closed-loop utility benchmark: do world models actually help agents succeed at embodied tasks?"
+description: "ICLR 2026 oral closed-loop utility bench: does the world model help the agent succeed? WorldFoundry imports task summaries; it does not run the loop."
 ---
 
-## About
+World-in-World (Johns Hopkins, with PKU, Princeton, MIT, and Harvard; ICLR 2026 Oral) benchmarks generative world models in a **closed loop** that mirrors agent–environment interaction. **Task success beats visual quality.** A unified online planner and a standardized action API cover four environments:
 
-**Publisher:** Johns Hopkins University (with PKU, Princeton, MIT & Harvard)
+- Active Recognition
+- Active Embodied QA
+- Image-Goal Navigation (success + SPL)
+- Robotic Manipulation
 
-World-in-World (ICLR 2026 Oral) benchmarks generative world models in a closed loop that mirrors real agent-environment interaction, prioritizing task success over visual quality. It provides a unified online planning strategy and a standardized action API across four closed-loop environments: Active Recognition, Active Embodied QA, Image-Goal Navigation, and Robotic Manipulation. Key findings: visual quality alone does not guarantee task success (controllability matters more), action-observation post-training beats upgrading the video generator, and inference-time compute substantially improves closed-loop performance.
+The paper's findings: visual quality alone does not guarantee success (controllability matters more); action-observation post-training beats upgrading the video generator; inference-time compute helps closed-loop performance.
 
-WorldFoundry integrates World-in-World as a result importer: it normalizes caller-supplied task summaries into the metric surface with bundled assets supporting parsing and coverage checks.
+`world_in_world_average` is the mean over available closed-loop metrics.
 
-Official references:
+Paper: [World-in-World](https://arxiv.org/abs/2510.18135). Project: [world-in-world.github.io](https://world-in-world.github.io/). Code: [World-In-World/world-in-world](https://github.com/World-In-World/world-in-world).
 
-- Paper: [arxiv.org/abs/2510.18135](https://arxiv.org/abs/2510.18135)
-- Project page: [world-in-world.github.io](https://world-in-world.github.io/)
-- Official repository: [World-In-World/world-in-world](https://github.com/World-In-World/world-in-world)
+WorldFoundry is a **result importer**. Closed-loop environments, planners, workers, and task scorers execute **upstream**. Bundled assets support parsing and coverage checks only.
 
-## Evaluation protocol
+<BenchmarkPageSections id="world-in-world" locale="en" />
 
-The in-tree runner imports result summaries only: pass `--official-results-path` (or `WORLDFOUNDRY_WORLD_IN_WORLD_RESULTS_PATH`), optionally scoping with `--task` and `--exp-id`. Closed-loop environments, planners, workers, and task scorers execute upstream — not in WorldFoundry.
-
-Primary metric: `world_in_world_average`.
-
-| Metric | Meaning | Direction |
-| --- | --- | --- |
-| `active_recognition_success_rate` | Success rate on the Active Recognition closed-loop task. | Higher is better |
-| `image_goal_navigation_success_rate` | Success rate on Image-Goal Navigation. | Higher is better |
-| `image_goal_navigation_spl` | Success weighted by path length (SPL) on Image-Goal Navigation. | Higher is better |
-| `active_embodied_qa_score` | Answer score on Active Embodied QA. | Higher is better |
-| `active_embodied_qa_spl` | SPL on Active Embodied QA exploration. | Higher is better |
-| `robotic_manipulation_success_rate` | Success rate on the robotic-manipulation task. | Higher is better |
-| `interaction_trace_consistency` | Consistency of the world model's predicted interaction traces. | Higher is better |
-| `world_in_world_average` | Mean over available closed-loop task metrics. | Higher is better |
-
-## Data and artifact layout
-
-In-tree paths:
-
-```text
-worldfoundry/data/benchmarks/tasks/external/world-in-world.yaml
-worldfoundry/data/benchmarks/assets/world-in-world
-worldfoundry/evaluation/tasks/execution/runners/world_in_world
-```
-
-```text
-worldfoundry/data/benchmarks/assets/world-in-world              # bundled parsing/coverage assets
-worldfoundry/evaluation/tasks/execution/runners/world_in_world  # result importer
-<official_results.json>                                         # caller-supplied task summary
-```
-
-## Run the benchmark
-
-Catalog-recorded validation command:
+## How to run
 
 ```bash
 worldfoundry-eval zoo benchmark-run \
@@ -60,29 +28,14 @@ worldfoundry-eval zoo benchmark-run \
   --mode official-validation \
   --official-results-path <official_results.json> \
   --generated-artifact-dir <generated_videos> \
-  --output-dir <out> \
+  --output-dir tmp/world-in-world/official-validation \
   --json
 ```
 
-## Checkpoints and environment variables
+Optional `--task` / `--exp-id` scope the import. Default: `WORLDFOUNDRY_WORLD_IN_WORLD_RESULTS_PATH`.
 
-- `WORLDFOUNDRY_WORLD_IN_WORLD_RESULTS_PATH`: Default path the importer reads official result exports from when `--official-results-path` is not passed.
-- `WORLDFOUNDRY_GENERATED_ARTIFACT_DIR`: Directory containing the candidate generated artifacts to score or import against.
+In-tree pointers: `worldfoundry/data/benchmarks/tasks/external/world-in-world.yaml`, `worldfoundry/data/benchmarks/assets/world-in-world`, `worldfoundry/evaluation/tasks/execution/runners/world_in_world`.
 
-## Outputs
-
-The run writes into `--output-dir`:
-
-- `scorecard.json`: WorldFoundry scorecard with the metric values recorded above.
-- `benchmark_contract.json`: Benchmark contract record for the run (inputs, mode, provenance).
-- `raw_metric_table.jsonl`: Metric rows backing the scorecard.
-
-Scorecard primary key: `world_in_world_average` (leaderboard key `world_in_world_average`), stored in `scorecard.json`.
-
-## Limitations
-
-- Closed-loop rollout generation, environment execution, and official task scoring are entirely outside this importer.
-- Imported summaries are not official benchmark or leaderboard evidence.
-- Coverage checks validate summary structure, not how upstream results were produced.
+Outputs include `scorecard.json` (primary `world_in_world_average`).
 
 [← Benchmark Hub](/docs/evaluation/benchmark-hub)

@@ -1,81 +1,28 @@
 ---
 title: MIND
-description: 交互式世界模型的闭环回访评测：长上下文记忆、视觉质量、ViPE 动作控制与镜像测试场景一致性。
+description: "交互式世界模型的闭环回访评测：250 段 1080p / 24 FPS 视频。WorldFoundry 对视频打分，不生成视频；mind_average 也不是官方综合分。"
 ---
 
-## 简介
+MIND（中南大学 CSU-JPG）是开放域**闭环回访**评测：模型在相机 / 动作指令下 rollout，离开某区域后再返回。官方 **MIND-Data** 是 **250** 段虚幻引擎 5 视频，**1080p / 24 FPS**，覆盖八类场景（40+ 环境）。**200** 段共享同一动作空间（第一 / 第三人称各 100）；**50** 段使用变化的速度与旋转角（各 25）。打分包括长上下文记忆（PSNR / SSIM / LPIPS / MSE + DINOv3 patch MSE）、视觉质量（MUSIQ-SPAQ、LAION 美学）、动作控制（ViPE 相对位姿误差），以及考察通用场景一致性的**镜像测试**。布局：`<model>/{1st,3rd}_data/<test_type>/<name>/video.mp4`。项目把公开 leaderboard 标为**即将开放**。
 
-**发表机构：** Central South University（中南大学 CSU-JPG 团队）
+论文：[MIND](https://arxiv.org/abs/2602.08025)。项目：[csu-jpg.github.io/MIND.github.io](https://csu-jpg.github.io/MIND.github.io/)。代码：[CSU-JPG/MIND](https://github.com/CSU-JPG/MIND)（MIT）。数据集：[CSU-JPG/MIND](https://huggingface.co/datasets/CSU-JPG/MIND)。
 
-MIND 通过开放域闭环*回访*协议评测交互式世界模型的记忆一致性与动作控制：模型在相机/动作指令下 rollout，离开某区域后再返回——其续写与真值比较（长上下文记忆：PSNR/SSIM/LPIPS/MSE 加 DINOv3 patch token MSE）；*镜像测试*播放一段 rollout 与其时间反转的后半段以评估通用场景一致性。动作控制以 ViPE 估计的生成/真值视频轨迹间相对位姿误差度量；视觉质量用 MUSIQ-SPAQ 与 LAION 美学预测器。
+WorldFoundry **内置指标 runtime**（`run_mind_official_runner.py`）。`--run-official` 对就位的真值与生成视频打分；`--official-results-path` **导入**已完成的 MIND JSON；`--run-fixture` 是无 GPU 的归一化检查。本页**不跑**世界模型推理。`mind_average`（以及四个能力组得分）是 **WorldFoundry 派生值**——MIND 官方不发布综合分。
 
-WorldFoundry 内置 MIND 指标 runtime，由 `run_mind_official_runner.py` 驱动：`--run-official` 基于就位的 MIND-Data 真值根与模型输出计算指标；`--official-results-path` 归一化已有 MIND 结果 JSON；`--run-fixture` 让归一化器在无 GPU 时仍可测试。
+<BenchmarkPageSections id="mind" locale="zh" />
 
-官方参考：
+## 如何运行
 
-- Paper: [arxiv.org/abs/2602.08025](https://arxiv.org/abs/2602.08025)
-- 项目主页: [csu-jpg.github.io/MIND.github.io](https://csu-jpg.github.io/MIND.github.io/)
-- 官方仓库: [CSU-JPG/MIND](https://github.com/CSU-JPG/MIND)
-
-## 评测协议
-
-模型输出遵循 `<model>/{1st,3rd}_data/<test_type>/<name>/video.mp4` 布局。`--run-official` 需要 `--gt-root <MIND-Data>`、`--generated-artifact-dir` 与 `--dino-path <dinov3_vitb16>`；action 指标另需通过 `--vipe-repo` 提供 ViPE checkout 及 `vipe` CLI。`--metrics` 选择指标组；所有可变状态（工作目录、`MIND_CACHE_DIR`、staged 链接、日志）都写在 `--output-dir` 下——仓内 runtime 保持只读。
-
-主指标是 `mind_average`。
-
-| Metric | 含义 | 方向 |
-| --- | --- | --- |
-| `lcm_psnr` | 预测延续段与真值帧间的长上下文记忆 PSNR。 | 越高越好 |
-| `lcm_ssim` | 相对真值延续段的长上下文记忆 SSIM。 | 越高越好 |
-| `lcm_lpips` | 长上下文记忆 LPIPS（AlexNet）相对真值延续段；越低越好。 | 越低越好 |
-| `lcm_mse` | 相对真值延续段的长上下文记忆像素 MSE；越低越好。 | 越低越好 |
-| `dino_mse` | 预测帧与真值帧的 L2 归一化 DINOv3 patch token 间 MSE；越低越好。 | 越低越好 |
-| `imaging_quality` | 生成帧的 MUSIQ-SPAQ 成像质量（上游除以 100）。 | 越高越好 |
-| `aesthetic_quality` | LAION CLIP ViT-L/14 美学预测器得分（上游除以 10）。 | 越高越好 |
-| `action_rpe_trans_mean` | 生成视频与真值视频 ViPE 轨迹间的平均平移相对位姿误差；越低越好。 | 越低越好 |
-| `action_rpe_rot_mean_deg` | 两条 ViPE 轨迹间的平均旋转相对位姿误差（度）；越低越好。 | 越低越好 |
-| `action_rpe_trans_median` | 所有有效动作步上平移相对位姿误差的中位数；越低越好。 | 越低越好 |
-| `action_rpe_rot_median_deg` | 所有有效动作步上旋转相对位姿误差的中位数（度）；越低越好。 | 越低越好 |
-| `action_translation_rpe_trans_mean` | 限定纯平移动作的平均平移 RPE；越低越好。 | 越低越好 |
-| `action_rotation_rpe_rot_mean_deg` | 限定纯相机旋转动作的平均旋转 RPE（度）；越低越好。 | 越低越好 |
-| `gsc_psnr` | 镜像测试 rollout 与其时间反转半段间的一般场景一致性 PSNR。 | 越高越好 |
-| `gsc_ssim` | 镜像测试 rollout 上的一般场景一致性 SSIM。 | 越高越好 |
-| `gsc_lpips` | 镜像测试 rollout 上的一般场景一致性 LPIPS；越低越好。 | 越低越好 |
-| `gsc_mse` | 镜像测试 rollout 上的一般场景一致性像素 MSE；越低越好。 | 越低越好 |
-| `memory_consistency_score` | WorldFoundry 派生的归一化 LCM 与 DINOv3 组件指标均值。 | 越高越好 |
-| `visual_quality_score` | WorldFoundry 派生的归一化成像与美学指标均值。 | 越高越好 |
-| `action_control_score` | WorldFoundry 派生的归一化整体 RPE 平移与旋转指标均值。 | 越高越好 |
-| `scene_consistency_score` | WorldFoundry 派生的归一化镜像测试 GSC 指标均值。 | 越高越好 |
-| `mind_average` | WorldFoundry 派生的可用 MIND 能力组得分均值。MIND 官方不发布综合分，该值绝不是 leaderboard 数字。 | 越高越好 |
-
-## 数据与产物布局
-
-WorldFoundry 仓内路径：
-
-```text
-worldfoundry/data/benchmarks/tasks/external/mind.yaml
-worldfoundry/evaluation/tasks/execution/runners/mind
-```
-
-```text
-<MIND-Data>/                                    # 真值根（HF 数据集 CSU-JPG/MIND）
-<generated_root>/<model>/{1st,3rd}_data/<test_type>/<name>/video.mp4
-<weights>/dinov3_vitb16                         # DINOv3 指标权重（facebook/dinov3-vitb16-pretrain-lvd1689m）
-<vipe_checkout>/                                # action 指标所需 ViPE 仓库
-```
-
-## 运行评测
-
-目录 manifest 记录的 validation 命令：
+无 GPU 的 fixture：
 
 ```bash
 python worldfoundry/evaluation/tasks/execution/runners/mind/run_mind_official_runner.py \
   --run-fixture \
-  --output-dir <out> \
+  --output-dir tmp/mind/fixture \
   --json
 ```
 
-对已就位的真值与模型输出执行仓内 MIND 指标 runtime：
+对已就位真值与模型输出打分（DINOv3 用 `--dino-path`；需要动作指标时用 `--vipe-repo`）：
 
 ```bash
 ${WORLDFOUNDRY_UNIFIED_PYTHON} \
@@ -88,33 +35,17 @@ ${WORLDFOUNDRY_UNIFIED_PYTHON} \
   --json
 ```
 
-## 权重与环境变量
+导入已完成的 MIND 结果 JSON：
 
-lcm/visual/dino/gsc 指标需要 CUDA 及 LPIPS/torchmetrics/pyiqa/CLIP 资产；action 指标需要 ViPE CLI 与 checkout。
+```bash
+worldfoundry-eval zoo benchmark-run \
+  --benchmark-id mind \
+  --mode official-validation \
+  --official-results-path <mind_result.json> \
+  --output-dir tmp/mind/official-validation \
+  --json
+```
 
-- `WORLDFOUNDRY_MIND_ROOT`: 可选覆盖项，指向本地 benchmark runtime / 仓库根目录。
-- `WORLDFOUNDRY_MIND_RESULTS_PATH`: 未显式传 `--official-results-path` 时，导入器默认从该路径读取官方结果导出文件。
-- `WORLDFOUNDRY_GENERATED_ARTIFACT_DIR`: 存放待评测生成产物（候选视频/rollout）的目录。
-
-共享 checkpoint 资产：`facebook/dinov3-vitb16-pretrain-lvd1689m`（metric_weights）。
-
-该 benchmark 复用共享 base-model 依赖栈：`video_world_perception_stack`。
-
-## 输出文件
-
-运行会在 `--output-dir` 下写出：
-
-- `scorecard.json`: WorldFoundry 统一 scorecard，记录上表中的指标值。
-- `raw_metric_table.jsonl`: 支撑 scorecard 的原始 metric 行。
-- `per_sample_scores.jsonl`: 当结果源包含逐样本数值时写出的逐样本行。
-- `benchmark_contract.json`: 本次运行的 benchmark contract 记录（输入、模式、来源信息）。
-
-Scorecard 主键：`mind_average`（leaderboard key `mind_average`），写入 `scorecard.json`。
-
-## 边界与限制
-
-- `mind_average` 是 WorldFoundry 派生聚合值：MIND 官方没有综合分，因此它绝不是 leaderboard 数字。
-- leaderboard 有效成绩需要完整官方分割及已发布的 MIND leaderboard（尚未开放）。
-- DINOv3 权重不入库；通过 `--dino-path` 或 `<weights-dir>/dinov3_vitb16` 提供。
+可变状态（工作目录、`MIND_CACHE_DIR`、日志）都写在 `--output-dir` 下。环境变量：`WORLDFOUNDRY_MIND_ROOT`、`WORLDFOUNDRY_MIND_RESULTS_PATH`、`WORLDFOUNDRY_GENERATED_ARTIFACT_DIR`。清单：`worldfoundry/data/benchmarks/tasks/external/mind.yaml`。产物：`scorecard.json`（主键 `mind_average`）、`raw_metric_table.jsonl`、`per_sample_scores.jsonl`、`benchmark_contract.json`。
 
 [← 返回 Benchmark Hub](/zh/docs/evaluation/benchmark-hub)

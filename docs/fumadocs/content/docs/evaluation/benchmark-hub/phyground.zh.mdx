@@ -1,97 +1,35 @@
 ---
 title: PhyGround
-description: 基于准则的物理推理评测：250 条 ti2v prompt 覆盖 13 条物理定律，由 PhyJudge-9B 或人工标注评分。
+description: "准则锚定的 TI2V：250 条 prompt 覆盖 13 条定律，由 PhyJudge 或人工按 1–5 分评定。WorldFoundry 导入 scores.json，不跑 judge。"
 ---
 
-## 简介
+PhyGround（美国东北大学）是**准则锚定**，不是实拍续写，也不是 PhyGenEval。**250** 条文本+图像转视频 prompt 各带预期物理结果，以及 **13 条**定律分类（固体、流体、光学）中适用的 **2–4** 条。Judge（PhyJudge-9B 或人工）按 **1–5** 分评语义符合、物理时序有效性、持久性与各适用定律。这更像量表，而不是 [Physics-IQ](/zh/docs/evaluation/benchmark-hub/physics-iq) 的 mask IoU。
 
-**发表机构：** Northeastern University（美国东北大学）
+[PhyGenBench](/zh/docs/evaluation/benchmark-hub/phygenbench) 是 T2V *生成*常识套件（160 条 / 27 条定律 / PhyGenEval）。PhyGround 是 TI2V *定律准则*打分（250 条 / 13 条定律）。
 
-PhyGround 用于诊断生成式世界模型在具体物理定律上的推理失败。它策划了 250 条文本+图像转视频（ti2v）prompt，每条附带预期物理结果与 13 条定律分类（固体力学、流体动力学、光学）中适用的 2-4 条。视频在语义对齐、物理时序有效性、对象持久性及各适用定律上按 1-5 分评定。官方发布包含 459 名标注者的人工研究与开源物理专用 VLM judge PhyJudge-9B（Qwen3.5-9B LoRA）。
+论文：[PhyGround](https://arxiv.org/abs/2605.10806)。项目：[phyground.github.io](https://phyground.github.io/)。代码：[NU-World-Model-Embodied-AI/PhyGround](https://github.com/NU-World-Model-Embodied-AI/PhyGround)。数据：[NU-World-Model-Embodied-AI/phyground](https://huggingface.co/datasets/NU-World-Model-Embodied-AI/phyground)。
 
-WorldFoundry 仓内 runner 导入由 PhyJudge/vLLM 或云 API judge 基础设施产出的 `scores.json`，并在标准 PhyGround 数据根目录下自动发现 prompts、首帧图与逐模型视频。
+WorldFoundry **导入** PhyJudge/vLLM 或云端 judge 的 `scores.json`。它**不**对候选视频执行 PhyJudge-9B。
 
-官方参考：
+<BenchmarkPageSections id="phyground" locale="zh" />
 
-- Paper: [arxiv.org/abs/2605.10806](https://arxiv.org/abs/2605.10806)
-- 项目主页: [phyground.github.io](https://phyground.github.io/)
-- 官方仓库: [NU-World-Model-Embodied-AI/PhyGround](https://github.com/NU-World-Model-Embodied-AI/PhyGround)
+## 如何运行
 
-## 评测协议
-
-runner 导入 judge 输出而不执行 judge：将 `--benchmark-data-root` 指向包含 `annotations/` 的 PhyGround 数据根（或直接传 `--official-results-path`）；annotations 含多个模型 id 时用 `--result-model-id` 选定；可用 `--prompt-manifest` 校验 prompt 覆盖率。分数聚合为三个通用维度、三个领域分与 `phyground_overall`。
-
-主指标是 `phyground_overall`。
-
-| Metric | 含义 | 方向 |
-| --- | --- | --- |
-| `semantic_adherence` | Semantic Adherence（语义符合度）归一化基准分。 | 越高越好 |
-| `physical_temporal_validity` | Physical Temporal Validity（物理时序有效性）归一化基准分。 | 越高越好 |
-| `persistence` | Persistence（物体持久性）归一化基准分。 | 越高越好 |
-| `solid_body_score` | Solid-Body Score（固体力学分）归一化基准分。 | 越高越好 |
-| `fluid_dynamics_score` | Fluid Dynamics Score（流体动力学分）归一化基准分。 | 越高越好 |
-| `optics_score` | Optics Score（光学分）归一化基准分。 | 越高越好 |
-| `phyground_overall` | PhyGround 总分（归一化基准分）。 | 越高越好 |
-
-## 数据与产物布局
-
-WorldFoundry 仓内路径：
-
-```text
-worldfoundry/data/benchmarks/tasks/external/phyground.yaml
-worldfoundry/evaluation/tasks/execution/runners/phyground/runtime/phyground
-```
-
-标准 PhyGround 数据根（Hugging Face `NU-World-Model-Embodied-AI/phyground`）：
-
-```text
-<phyground_data_root>/prompts/phyground.json      # 250 条 prompt + 适用定律
-<phyground_data_root>/first_images/               # 首帧条件图
-<phyground_data_root>/annotations/                # judge/人工 scores.json
-<phyground_data_root>/videos/<model_id>/          # 逐模型生成视频
-```
+就位数据根（`prompts/`、`first_images/`、`annotations/`、`videos/<model_id>/`）并导入 judge 输出：
 
 ```bash
 hf download NU-World-Model-Embodied-AI/phyground --repo-type dataset --local-dir <phyground_data_root>
-```
 
-## 运行评测
-
-目录 manifest 记录的 validation 命令：
-
-```bash
 worldfoundry-eval zoo benchmark-run \
   --benchmark-id phyground \
   --mode official-validation \
   --benchmark-data-root <phyground_data_root> \
   --generated-artifact-dir <phyground_data_root>/videos/<model_id> \
   --result-model-id <model_id> \
-  --output-dir <out> \
+  --output-dir tmp/phyground/official-validation \
   --json
 ```
 
-## 权重与环境变量
-
-- `WORLDFOUNDRY_PHYGROUND_ROOT`: 可选覆盖项，指向本地 benchmark runtime / 仓库根目录。
-- `WORLDFOUNDRY_PHYGROUND_RESULTS_PATH`: 未显式传 `--official-results-path` 时，导入器默认从该路径读取官方结果导出文件。
-- `WORLDFOUNDRY_GENERATED_ARTIFACT_DIR`: 存放待评测生成产物（候选视频/rollout）的目录。
-
-该 benchmark 复用共享 base-model 依赖栈：`phyground_dataset_assets`。
-
-## 输出文件
-
-运行会在 `--output-dir` 下写出：
-
-- `scorecard.json`: WorldFoundry 统一 scorecard，记录上表中的指标值。
-- `benchmark_contract.json`: 本次运行的 benchmark contract 记录（输入、模式、来源信息）。
-- `raw_metric_table.jsonl`: 支撑 scorecard 的原始 metric 行。
-
-Scorecard 主键：`phyground_overall`（leaderboard key `phyground_overall`），写入 `scorecard.json`。
-
-## 边界与限制
-
-- 仓内路径不对候选视频执行 PhyJudge-9B 或任何云端 judge，只导入已准备好的 judge 输出。
-- 导入的分数不构成官方 benchmark 证据；官方数字以上游评审协议为准。
-- 多模型 annotation 文件必须用 `--result-model-id` 选定模型；混合模型会使聚合失效。
+也可把 `--official-results-path` 指到 `scores.json` / `annotations/`。`--prompt-manifest` 可校验 prompt 覆盖。产物包括 `scorecard.json`（主键 `phyground_overall`）。
 
 [← 返回 Benchmark Hub](/zh/docs/evaluation/benchmark-hub)

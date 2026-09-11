@@ -1,80 +1,38 @@
 ---
 title: LikePhys
-description: 免训练的似然偏好探针：用 12 个仿真场景检验视频扩散模型的直觉物理理解。
+description: "牛津似然探针：视频扩散模型是否更偏好物理合法片段，而不是配对的不合理变体？没有生成视频输入。"
 ---
 
-## 简介
+LikePhys（牛津大学，ICLR 2026）是**免训练似然探针**，不是生成评测。它**不**给你们生成的视频打分。对 **12 个仿真场景**（刚体、流体、可形变体、光学）中的每一个，它把物理合法片段与配对的不合理变体放在一起，问扩散模型是否给合法片段**更高似然**（更低去噪 ELBO）。主指标是**误排率**——模型偏好不合理变体的频率。全部指标**越低越好**。
 
-**发表机构：** University of Oxford（牛津大学）
+这和 [Physics-IQ](/zh/docs/evaluation/benchmark-hub/physics-iq)（续写实拍场景）、[PhyGenBench](/zh/docs/evaluation/benchmark-hub/phygenbench)（评审一段生成的 T2V）不是同一件事。
 
-LikePhys 评测的是视频扩散模型内部的直觉物理理解——而不是它生成的视频。对 12 个仿真场景（刚体、流体、可形变体、光学）中的每一个，benchmark 将物理合法片段与配对的物理不合理变体放在一起，检验模型是否给合法片段更高的似然（更低的去噪 ELBO）。主指标是误排率（mis-rank rate）：模型偏好不合理变体的频率。所有指标都是越低越好。
+论文：[LikePhys](https://arxiv.org/abs/2510.11512)。项目：[yuanjianhao508.github.io/LikePhys](https://yuanjianhao508.github.io/LikePhys/)。代码：[YuanJianhao508/LikePhys](https://github.com/YuanJianhao508/LikePhys)。片段：[JianhaoDYDY/LikePhys-Benchmark](https://huggingface.co/datasets/JianhaoDYDY/LikePhys-Benchmark)（920 个片段）。
 
-WorldFoundry 在仓内复现了官方误排公式（`evaluator.py` 的 `compute_misrank_normalized` 与 `read_exp_final.py` 聚合，含论文的 `filter_config` 变体排除规则），并可从调用方提供的 LikePhys checkout 驱动上游 ELBO 探针。
+WorldFoundry **仓内重算官方误排公式**（`compute_misrank_normalized` 与 `read_exp_final.py` 过滤）。跑上游 ELBO 探针需要调用方提供的 LikePhys checkout（`WORLDFOUNDRY_LIKEPHYS_EVALUATOR_ROOT`）、CUDA 与被探测权重——WorldFoundry 不内置 fork 的 diffusers pipeline。
 
-官方参考：
+<BenchmarkPageSections id="likephys" locale="zh" />
 
-- Paper: [arxiv.org/abs/2510.11512](https://arxiv.org/abs/2510.11512)
-- 项目主页: [yuanjianhao508.github.io/LikePhys](https://yuanjianhao508.github.io/LikePhys/)
-- 官方仓库: [YuanJianhao508/LikePhys](https://github.com/YuanJianhao508/LikePhys)
+## 如何运行
 
-## 评测协议
-
-两条路径：
-
-- **结果归一化**：把 `--official-results-path` 指向 `results_<model>.json` 文件（或包含 `<scenario>/results_<probe_model>.json` 的实验目录）；runner 按官方过滤规则重算误排聚合。结果根目录含多个探针后端时用 `--probe-model` 指定；`--no-report-filter` 可保留论文排除的变体。
-- **官方探针**（`--run-official`）：从 LikePhys checkout（设 `WORLDFOUNDRY_LIKEPHYS_EVALUATOR_ROOT`）执行上游 `evaluator.py`，因为它依赖上游 fork 的 diffusers pipeline 和 scheduler；需要 CUDA 与被探测模型的权重。`--dry-run` 只准备工作区并打印命令而不执行。
-
-主指标是 `likephys_misrank_rate`。
-
-| Metric | 含义 | 方向 |
-| --- | --- | --- |
-| `likephys_misrank_rate` | 所有已评分场景/变体对上按变体加权的平均误排率。 | 越低越好 |
-| `likephys_dataset_weighted_misrank_rate` | 逐场景误排率的均值（12 个场景等权重）。 | 越低越好 |
-| `rigid_body_misrank_rate` | 球下落、球碰撞、单摆、滑块与金字塔场景上的误排率。 | 越低越好 |
-| `fluid_misrank_rate` | 液滴、水龙头与河流流体场景上的误排率。 | 越低越好 |
-| `deformable_misrank_rate` | 布料垂落与旗帜飘动场景上的误排率。 | 越低越好 |
-| `optics_misrank_rate` | 移动光源与移动相机阴影场景上的误排率。 | 越低越好 |
-| `temporal_disorder_misrank_rate` | 限定全部 12 个场景共有的 temporal_disorder 变体的误排率。 | 越低越好 |
-
-## 数据与产物布局
-
-WorldFoundry 仓内路径：
-
-```text
-worldfoundry/data/benchmarks/tasks/external/likephys.yaml
-worldfoundry/evaluation/tasks/execution/runners/likephys
-```
-
-数据集片段与结果文件遵循上游布局：
-
-```text
-<likephys_data_root>/<scenario>_videos/subgroup_XXX/valid_00.mp4          # 物理合法片段
-<likephys_data_root>/<scenario>_videos/subgroup_XXX/<variation>_00.mp4    # 不合理变体
-<likephys_results_root>/<scenario>/results_<probe_model>.json             # 逐场景探针结果
-```
-
-从 Hugging Face 下载 benchmark 片段：
-
-```bash
-hf download JianhaoDYDY/LikePhys-Benchmark --repo-type dataset --local-dir <likephys_data_root>
-```
-
-## 运行评测
-
-目录 manifest 记录的 validation 命令：
+导入 `results_<model>.json`（或含 `<scenario>/results_<probe_model>.json` 的目录）并重算误排：
 
 ```bash
 worldfoundry-eval zoo benchmark-run \
   --benchmark-id likephys \
   --mode official-validation \
   --official-results-path <likephys_results_root> \
-  --output-dir <out> \
+  --output-dir tmp/likephys/official-validation \
   --json
 ```
 
-对单个模型、单个场景执行上游 ELBO 探针（需要 CUDA 与 LikePhys checkout）：
+结果根含多个后端时用 `--probe-model`。`--no-report-filter` 会保留论文 `filter_config` 排除的变体。
+
+对单个模型、单个场景跑上游 ELBO 探针（需要 CUDA 与 LikePhys checkout）：
 
 ```bash
+hf download JianhaoDYDY/LikePhys-Benchmark --repo-type dataset --local-dir "${WORLDFOUNDRY_LIKEPHYS_DATA_ROOT}"
+
 WORLDFOUNDRY_LIKEPHYS_EVALUATOR_ROOT=/path/to/LikePhys \
 ${WORLDFOUNDRY_UNIFIED_PYTHON} \
   worldfoundry/evaluation/tasks/execution/runners/likephys/run_likephys_official_runner.py \
@@ -86,28 +44,6 @@ ${WORLDFOUNDRY_UNIFIED_PYTHON} \
   --json
 ```
 
-## 权重与环境变量
-
-- `WORLDFOUNDRY_LIKEPHYS_EVALUATOR_ROOT`
-- `WORLDFOUNDRY_LIKEPHYS_RESULTS_PATH`: 未显式传 `--official-results-path` 时，导入器默认从该路径读取官方结果导出文件。
-- `WORLDFOUNDRY_LIKEPHYS_DATA_ROOT`
-- `WORLDFOUNDRY_GENERATED_ARTIFACT_DIR`: 存放待评测生成产物（候选视频/rollout）的目录。
-
-## 输出文件
-
-运行会在 `--output-dir` 下写出：
-
-- `scorecard.json`: WorldFoundry 统一 scorecard，记录上表中的指标值。
-- `benchmark_contract.json`: 本次运行的 benchmark contract 记录（输入、模式、来源信息）。
-- `raw_metric_table.jsonl`: 支撑 scorecard 的原始 metric 行。
-- `misrank_breakdown.json`
-
-Scorecard 主键：`likephys_misrank_rate`（leaderboard key `likephys_misrank_rate`），写入 `scorecard.json`。
-
-## 边界与限制
-
-- LikePhys 评测的是扩散模型本身而非生成视频——没有候选视频输入。
-- WorldFoundry 未内置上游 fork 的 diffusers pipeline / scheduler；探针需要通过 `WORLDFOUNDRY_LIKEPHYS_EVALUATOR_ROOT` 指向官方 checkout。
-- 完整 sweep 需要对每个（模型, 场景）组合在 920 个片段上各跑一遍 GPU；部分 sweep 不可与论文数字比较。
+`--dry-run` 只准备工作区并打印命令。产物包括 `scorecard.json`（主键 `likephys_misrank_rate`）与 `misrank_breakdown.json`。
 
 [← 返回 Benchmark Hub](/zh/docs/evaluation/benchmark-hub)

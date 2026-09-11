@@ -1,81 +1,27 @@
 ---
 title: BridgeData V2
-description: Real-robot manipulation dataset and evaluation protocol from Berkeley RAIL; WorldFoundry normalizes policy evaluation exports.
+description: "Berkeley RAIL real-robot set: 60,096 WidowX trajectories in 24 environments. WorldFoundry imports policy evals; it does not teleop the arm."
 ---
 
-## About
+BridgeData V2 (UC Berkeley RAIL) is a **real-robot** manipulation dataset for open-vocabulary, multi-task policies. Official numbers: **60,096** trajectories on a **WidowX 250** 6-DoF arm across **24** environments (**13** skills) — **50,365** VR teleop demos and **9,731** scripted pick-and-place rollouts. Seven toy kitchens dominate; the rest are tabletops, sinks, and similar. Control is **5 Hz** (mean length ~38 steps). Sensing is 640×480: fixed RGB-D over-the-shoulder, two randomized RGB views, and a wrist camera. Every trajectory has a language label; eval is **language-conditioned** (`eval_lc`) or **goal-image-conditioned** (`eval_gc`).
 
-**Publisher:** UC Berkeley (RAIL Lab)
+Paper: [BridgeData V2](https://arxiv.org/abs/2308.12952). Project: [rail-berkeley.github.io/bridgedata](https://rail-berkeley.github.io/bridgedata/). Code: [rail-berkeley/bridge_data_v2](https://github.com/rail-berkeley/bridge_data_v2) (MIT). Official media are HTTP / project-page downloads, not a single Hugging Face table.
 
-BridgeData V2 is UC Berkeley RAIL's large-scale real-robot manipulation dataset — 60k+ trajectories on a low-cost WidowX arm across 24 environments — designed for training and evaluating broadly generalizing robot policies with language- and goal-image conditioning. Evaluation reports task success over scripted real-robot or offline protocols.
+WorldFoundry **imports** policy-evaluation exports (task / goal success, offline action accuracy, rollout success). It does **not** materialize the dataset, run WidowX inference, or execute real-robot rollouts. Stage data under `${WORLDFOUNDRY_DATA_DIR}/datasets/bridgedata-v2` if you need it locally.
 
-WorldFoundry integrates BridgeData V2 as an official-results runner: policy evaluation exports (task/goal success, action accuracy, rollout success) are normalized into the unified scorecard; dataset materialization and policy rollouts stay upstream.
+<BenchmarkPageSections id="bridgedata-v2" locale="en" />
 
-Official references:
-
-- Paper: [arxiv.org/abs/2308.12952](https://arxiv.org/abs/2308.12952)
-- Project page: [rail-berkeley.github.io/bridgedata](https://rail-berkeley.github.io/bridgedata/)
-- Official repository: [rail-berkeley/bridge_data_v2](https://github.com/rail-berkeley/bridge_data_v2)
-- License: `mit`
-
-## Evaluation protocol
-
-WorldFoundry integrates this benchmark through the unified result-import path: `worldfoundry-eval zoo benchmark-run --mode official-validation` normalizes a caller-provided official result export (JSON/CSV rollout summaries) into the WorldFoundry scorecard without executing the simulator. Simulator execution, policy loading, and rollout collection remain explicit upstream steps performed with the official tooling.
-
-Primary metric: `success_rate`.
-
-| Metric | Meaning | Direction |
-| --- | --- | --- |
-| `success_rate` | Primary episode success rate over evaluated rollouts. | Higher is better |
-| `task_success` | Per-task success aggregate. | Higher is better |
-| `goal_success` | Goal-image-conditioned task success. | Higher is better |
-| `action_accuracy` | Offline action-prediction accuracy against reference actions. | Higher is better |
-| `rollout_success` | Success rate over executed policy rollouts. | Higher is better |
-
-## Data and artifact layout
-
-In-tree paths:
-
-```text
-worldfoundry/data/benchmarks/tasks/external/bridgedata-v2.yaml
-```
-
-```text
-<official_results.json>                 # rollout summary export from the official tooling
-${WORLDFOUNDRY_BRIDGEDATA_V2_RESULTS_PATH}   # default import path
-```
-The dataset is staged under `${WORLDFOUNDRY_DATA_DIR}/datasets/bridgedata-v2`; the official download is HTTP/project-page based rather than a single Hugging Face table.
-
-## Run the benchmark
-
-Catalog-recorded validation command:
+## How to run
 
 ```bash
 worldfoundry-eval zoo benchmark-run \
   --benchmark-id bridgedata-v2 \
   --mode official-validation \
   --official-results-path <official_results.json> \
-  --output-dir <out> \
+  --output-dir tmp/bridgedata-v2/official-validation \
   --json
 ```
 
-## Checkpoints and environment variables
-
-- `WORLDFOUNDRY_BRIDGEDATA_V2_RESULTS_PATH`: Default path the importer reads official result exports from when `--official-results-path` is not passed.
-
-## Outputs
-
-The run writes into `--output-dir`:
-
-- `scorecard.json`: WorldFoundry scorecard with the metric values recorded above.
-- `raw_results.jsonl`: Normalized rows parsed from the official result export.
-
-Scorecard primary key: `success_rate` (leaderboard key `success_rate`), stored in `scorecard.json`.
-
-## Limitations
-
-- Dataset materialization, eval-split definition, and policy-result import validation are prerequisites for integrated status.
-- WorldFoundry does not run real-robot or simulated rollouts for BridgeData V2; action normalization and task-goal mapping follow the upstream protocol.
-- Imported scorecards are integration evidence, not leaderboard submissions.
+Default import path: `WORLDFOUNDRY_BRIDGEDATA_V2_RESULTS_PATH`. Manifest: `worldfoundry/data/benchmarks/tasks/external/bridgedata-v2.yaml`. Declare language vs goal-image (and teleop vs scripted) with the export. Outputs: `scorecard.json` (primary `success_rate`; also `goal_success`, `action_accuracy`, `rollout_success`) and `raw_results.jsonl`.
 
 [← Benchmark Hub](/docs/evaluation/benchmark-hub)

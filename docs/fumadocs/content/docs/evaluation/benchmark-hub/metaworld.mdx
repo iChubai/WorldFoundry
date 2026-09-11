@@ -1,80 +1,39 @@
 ---
 title: Meta-World
-description: 50-task MuJoCo manipulation suite for multi-task and meta-RL; WorldFoundry normalizes official result exports.
+description: "CoRL 2019 Sawyer / MuJoCo suite: 50 skills, MT and ML splits. WorldFoundry imports official result exports — it does not run MuJoCo."
 ---
 
-## About
+Meta-World (CoRL 2019) is Stanford, UC Berkeley, and USC's multi-task and **meta-RL** manipulation benchmark, now maintained by the **Farama Foundation**. A **Sawyer** arm in **MuJoCo** must solve **50** distinct tabletop skills (reach, push, drawer, assembly, …). Official evaluation is **not** one number: you name the suite.
 
-**Publisher:** Stanford, UC Berkeley & USC (maintained by Farama Foundation)
+Multi-task (same policy, shared training):
 
-Meta-World (CoRL 2019) is the standard benchmark for multi-task and meta reinforcement learning in manipulation: 50 distinct MuJoCo tabletop tasks with a Sawyer arm, organized into the MT1/MT10/MT50 multi-task and ML1/ML10/ML45 meta-learning suites. Originally from Stanford/Berkeley/USC researchers, it is now maintained by the Farama Foundation.
+- **MT1** — one skill.
+- **MT10** — ten skills; report mean success.
+- **MT50** — all fifty.
 
-WorldFoundry integrates Meta-World as an official-results runner: result JSON/CSV exports are normalized into the unified scorecard with the MT/ML suite mapping declared by the caller.
+Meta-learning (adapt to held-out tasks / goals):
 
-Official references:
+- **ML1** — one skill, held-out goals.
+- **ML10** — 10 meta-train / 5 meta-test skills.
+- **ML45** — 45 meta-train / 5 meta-test skills.
 
-- Paper: [arxiv.org/abs/1910.10897](https://arxiv.org/abs/1910.10897)
-- Project page: [meta-world.github.io](https://meta-world.github.io/)
-- Official repository: [Farama-Foundation/Metaworld](https://github.com/Farama-Foundation/Metaworld)
-- License: `mit`
+The usual report card is **binary success rate**, not raw return. Paper: [Meta-World: A Benchmark and Evaluation for Multi-Task and Meta Reinforcement Learning](https://arxiv.org/abs/1910.10897). Project: [meta-world.github.io](https://meta-world.github.io/). Code: [Farama-Foundation/Metaworld](https://github.com/Farama-Foundation/Metaworld) (MIT).
 
-## Evaluation protocol
+WorldFoundry is **official-results only**. You run Farama Metaworld / MuJoCo upstream, then `official-validation` normalizes JSON/CSV. No in-tree simulator. Declare the MT/ML suite with the export or the rows cannot be compared.
 
-WorldFoundry integrates this benchmark through the unified result-import path: `worldfoundry-eval zoo benchmark-run --mode official-validation` normalizes a caller-provided official result export (JSON/CSV rollout summaries) into the WorldFoundry scorecard without executing the simulator. Simulator execution, policy loading, and rollout collection remain explicit upstream steps performed with the official tooling.
+<BenchmarkPageSections id="metaworld" locale="en" />
 
-Primary metric: `success_rate`.
-
-| Metric | Meaning | Direction |
-| --- | --- | --- |
-| `success_rate` | Primary episode success rate over evaluated rollouts. | Higher is better |
-| `task_success` | Per-task success aggregate. | Higher is better |
-| `reward` | Mean episode reward / return. | Higher is better |
-| `normalized_return` | Normalized episode return. | Higher is better |
-
-## Data and artifact layout
-
-In-tree paths:
-
-```text
-worldfoundry/data/benchmarks/tasks/external/metaworld.yaml
-```
-
-```text
-<official_results.json>                 # rollout summary export from the official tooling
-${WORLDFOUNDRY_METAWORLD_RESULTS_PATH}   # default import path
-```
-Requires the official Meta-World package and a MuJoCo-compatible runtime for upstream rollouts.
-
-## Run the benchmark
-
-Catalog-recorded validation command:
+## How to run
 
 ```bash
 worldfoundry-eval zoo benchmark-run \
   --benchmark-id metaworld \
   --mode official-validation \
   --official-results-path <official_results.json> \
-  --output-dir <out> \
+  --output-dir tmp/metaworld/official-validation \
   --json
 ```
 
-## Checkpoints and environment variables
-
-- `WORLDFOUNDRY_METAWORLD_RESULTS_PATH`: Default path the importer reads official result exports from when `--official-results-path` is not passed.
-
-## Outputs
-
-The run writes into `--output-dir`:
-
-- `scorecard.json`: WorldFoundry scorecard with the metric values recorded above.
-- `raw_results.jsonl`: Normalized rows parsed from the official result export.
-
-Scorecard primary key: `success_rate` (leaderboard key `success_rate`), stored in `scorecard.json`.
-
-## Limitations
-
-- WorldFoundry normalizes supplied rollout results; it does not run the official simulator or policies in tree.
-- Full leaderboard parity is not claimed until official rollouts are executed with staged simulator assets and policy checkpoints, then imported.
-- Imported scorecards are integration evidence, not leaderboard submissions.
+Default import path when you omit `--official-results-path` is `WORLDFOUNDRY_METAWORLD_RESULTS_PATH`. Manifest: `worldfoundry/data/benchmarks/tasks/external/metaworld.yaml`. Outputs: `scorecard.json` (primary `success_rate`) and `raw_results.jsonl`.
 
 [← Benchmark Hub](/docs/evaluation/benchmark-hub)

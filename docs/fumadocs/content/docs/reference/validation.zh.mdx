@@ -9,15 +9,13 @@ description: 代码、文档、runner 和 benchmark facade 的发布门禁。
 
 ## 按变更类型选择证据
 
-| 变更 | 最小证据 | 提升状态时的额外证据 |
-| --- | --- | --- |
-| 只改文档 | `npm run types:check`、`npm run build`、受影响 route 返回 200 | 布局或交互变化需要浏览器截图。 |
-| CLI 或 runner | 公开 CLI 目录检查加代表性 evaluate 命令 | 如果输出契约变化，再跑 existing-results 和 model-mode runs。 |
-| Model manifest | `zoo model-show`、`zoo model-download --check-local` | Clone、checkpoint、demo parity、runner parity、benchmark run。 |
-| Model runtime integration | 仓内 runtime import、无机器本地 source checkout 依赖、带 `backend_stage` 的 runtime profile，以及聚焦回归 | Checkpoint-backed run 和一份 normalized benchmark scorecard。 |
-| Benchmark manifest | `zoo benchmark-show`、`preflight runtime --profile <benchmark-id>` | Clone、dataset、official runtime、normalized scorecard。 |
-| Benchmark runner | `zoo benchmark-run --mode official-validation` 或 `--mode official-run` | Official result import、official runtime 和 full-suite fairness gate。 |
-| Suite 或 matrix | `run --all-benchmarks --plan-only --json` | 规划选中的 cells，然后用可运行 benchmark 路径验证 artifacts。 |
+- **只改文档** — `npm run types:check`、`npm run build`、受影响 route 返回 200。提升状态时的额外证据：布局或交互变化需要浏览器截图。
+- **CLI 或 runner** — 公开 CLI 目录检查加代表性 evaluate 命令。提升状态时的额外证据：如果输出契约变化，再跑 existing-results 和 model-mode runs。
+- **Model manifest** — `zoo model-show`、`zoo model-download --check-local`。提升状态时的额外证据：Clone、checkpoint、demo parity、runner parity、benchmark run。
+- **Model runtime integration** — 仓内 runtime import、无机器本地 source checkout 依赖、带 `backend_stage` 的 runtime profile，以及聚焦回归。提升状态时的额外证据：Checkpoint-backed run 和一份 normalized benchmark scorecard。
+- **Benchmark manifest** — `zoo benchmark-show`、`preflight runtime --profile <benchmark-id>`。提升状态时的额外证据：Clone、dataset、official runtime、normalized scorecard。
+- **Benchmark runner** — `zoo benchmark-run --mode official-validation` 或 `--mode official-run`。提升状态时的额外证据：Official result import、official runtime 和 full-suite fairness gate。
+- **Suite 或 matrix** — `run --all-benchmarks --plan-only --json`。提升状态时的额外证据：规划选中的 cells，然后用可运行 benchmark 路径验证 artifacts。
 
 ## 准备 CPU eval-core 门禁环境
 
@@ -86,15 +84,13 @@ conda run -p "${WORLDFOUNDRY_UNIFIED_ENV_PREFIX}" worldfoundry-eval zoo benchmar
 
 ## 产物验收
 
-| 产物 | 必需场景 | 通过标准 |
-| --- | --- | --- |
-| `run_manifest.json` | 任意 evaluation run | Command、ids、status、timestamps、counts 和 output paths 与 run 一致。 |
-| `execution_plan.json` | Runner 或 suite 变化 | Resolved model、benchmark、metrics 和 requests 是确定性的。 |
-| `sample_ledger.jsonl` | 部分失败 review | Failed/skipped samples 有可见原因。 |
-| `metrics/summary.json` | Metric 变化 | Aggregates、failed counts 和 metric keys 符合预期 schema。 |
-| `scorecard.json` | 可发布 evaluation evidence | Eligibility、leaderboard state、metrics 和 blockers 存在。 |
-| `report.json` | Model/benchmark validation | Stage status、command、repo/checkpoint/dataset refs 和 blockers 已记录。 |
-| `suite_report.json` | Suite 或 matrix 变化 | 每个选中 cell 都是 pass、fail 或 skipped，并带原因。 |
+- **`run_manifest.json`** — 任意 evaluation run。通过标准：Command、ids、status、timestamps、counts 和 output paths 与 run 一致。
+- **`execution_plan.json`** — Runner 或 suite 变化。通过标准：Resolved model、benchmark、metrics 和 requests 是确定性的。
+- **`sample_ledger.jsonl`** — 部分失败 review。通过标准：Failed/skipped samples 有可见原因。
+- **`metrics/summary.json`** — Metric 变化。通过标准：Aggregates、failed counts 和 metric keys 符合预期 schema。
+- **`scorecard.json`** — 可发布 evaluation evidence。通过标准：Eligibility、leaderboard state、metrics 和 blockers 存在。
+- **`report.json`** — Model/benchmark validation。通过标准：Stage status、command、repo/checkpoint/dataset refs 和 blockers 已记录。
+- **`suite_report.json`** — Suite 或 matrix 变化。通过标准：每个选中 cell 都是 pass、fail 或 skipped，并带原因。
 
 ## 集成声明规则
 
@@ -104,37 +100,32 @@ conda run -p "${WORLDFOUNDRY_UNIFIED_ENV_PREFIX}" worldfoundry-eval zoo benchmar
 
 ## Runner 证据
 
-<TypeTable
-  type={{
-    runnerRun: {
-      type: 'required',
-      description: 'Runner command、generated output、scorecard 和聚焦回归测试。',
-      required: true,
-    },
-    demoVerified: {
-      type: 'optional gate',
-      description: '官方命令、环境记录、生成样本、raw logs 和 parity notes。',
-    },
-    checkpointVerified: {
-      type: 'optional gate',
-      description: 'Pinned checkpoint source、revision 或 hash、local cache path、device、command 和 expected output checks。',
-    },
-    benchmarkReady: {
-      type: 'release evidence',
-      description: 'Normalized benchmark run，包含 run manifest、metrics summary、report、scorecard，且没有隐藏的 sample failures。',
-    },
-  }}
-/>
+<RecipeRecords items={[
+  {
+    term: 'runnerRun',
+    detail: '必填。Runner command、generated output、scorecard 和聚焦回归测试。',
+  },
+  {
+    term: 'demoVerified',
+    detail: '可选门。官方命令、环境记录、生成样本、raw logs 和 parity notes。',
+  },
+  {
+    term: 'checkpointVerified',
+    detail: '可选门。Pinned checkpoint source、revision 或 hash、local cache path、device、command 和 expected output checks。',
+  },
+  {
+    term: 'benchmarkReady',
+    detail: '发布证据。Normalized benchmark run，包含 run manifest、metrics summary、report、scorecard，且没有隐藏的 sample failures。',
+  },
+]} />
 
 ## 失败策略
 
-| 状态 | 含义 | 发布处理 |
-| --- | --- | --- |
-| Pass | 必需阶段已运行，并产出预期产物。 | 可以支撑对应 claim。 |
-| Partial | 有阶段因为 network、credentials、data、GPU 或 license review 被跳过。 | 可用于开发，不能支撑更强公开 claim。 |
-| Blocked | 必需 source、dataset、license、dependency、checkpoint 或 API 条件不可用。 | Manifest 保持 blocked 或 planned。 |
-| Stale | Report hash、manifest hash、git commit、validator script 或 timestamp 不再匹配。 | 重新运行验证后才能计入。 |
-| Runner-only | Schema 和 runner path 通过，但 official runtime 未运行。 | 不是 leaderboard evidence。 |
+- **Pass** — 必需阶段已运行，并产出预期产物。发布处理：可以支撑对应 claim。
+- **Partial** — 有阶段因为 network、credentials、data、GPU 或 license review 被跳过。发布处理：可用于开发，不能支撑更强公开 claim。
+- **Blocked** — 必需 source、dataset、license、dependency、checkpoint 或 API 条件不可用。发布处理：Manifest 保持 blocked 或 planned。
+- **Stale** — Report hash、manifest hash、git commit、validator script 或 timestamp 不再匹配。发布处理：重新运行验证后才能计入。
+- **Runner-only** — Schema 和 runner path 通过，但 official runtime 未运行。发布处理：不是 leaderboard evidence。
 
 ## Validation matrix
 
@@ -154,17 +145,15 @@ conda run -p "${WORLDFOUNDRY_UNIFIED_ENV_PREFIX}" worldfoundry-eval validate-art
   --json
 ```
 
-| Gate status | 含义 | Maintainer action |
-| --- | --- | --- |
-| `accepted_integrated` | Fresh report 通过所有必需阶段，manifest 也声明 integrated。 | 保持证据 fresh。 |
-| `accepted_variant_integrated` | 一个或多个 scoped variants 通过，但 parent family 仍是 planned。 | 继续验证剩余 variants。 |
-| `validated_but_manifest_not_promoted` | Report 通过，但 manifest 仍是 planned 或 blocked。 | Artifact review 后再提升。 |
-| `manifest_integrated_without_report` | Manifest 声称 integrated，但没有 fresh validation report。 | 运行 staged validation 或降级。 |
-| `manifest_overclaims_integration` | Manifest 声称 integrated，但 computed stages 不通过。 | 降级或重新运行 full validation。 |
-| `report_overclaims_integration` | Report 声称 integrated，但 staged evidence 不完整。 | 丢弃或重跑 report。 |
-| `stale_report` | Report hash、script、git commit、schema 或 manifest entry 改变。 | 重新运行验证。 |
-| `partial_or_blocked` | Report 存在，但 stages 失败或被跳过。 | 按 `next_action` 处理。 |
-| `not_validated` | Manifest entry 没有 report。 | 运行对应 runtime preflight 和 official validation run。 |
+- **`accepted_integrated`** — Fresh report 通过所有必需阶段，manifest 也声明 integrated。Maintainer action: 保持证据 fresh。
+- **`accepted_variant_integrated`** — 一个或多个 scoped variants 通过，但 parent family 仍是 planned。Maintainer action: 继续验证剩余 variants。
+- **`validated_but_manifest_not_promoted`** — Report 通过，但 manifest 仍是 planned 或 blocked。Maintainer action: Artifact review 后再提升。
+- **`manifest_integrated_without_report`** — Manifest 声称 integrated，但没有 fresh validation report。Maintainer action: 运行 staged validation 或降级。
+- **`manifest_overclaims_integration`** — Manifest 声称 integrated，但 computed stages 不通过。Maintainer action: 降级或重新运行 full validation。
+- **`report_overclaims_integration`** — Report 声称 integrated，但 staged evidence 不完整。Maintainer action: 丢弃或重跑 report。
+- **`stale_report`** — Report hash、script、git commit、schema 或 manifest entry 改变。Maintainer action: 重新运行验证。
+- **`partial_or_blocked`** — Report 存在，但 stages 失败或被跳过。Maintainer action: 按 `next_action` 处理。
+- **`not_validated`** — Manifest entry 没有 report。Maintainer action: 运行对应 runtime preflight 和 official validation run。
 
 ## 清单
 

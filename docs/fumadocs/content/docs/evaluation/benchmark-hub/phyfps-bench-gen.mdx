@@ -1,54 +1,21 @@
 ---
 title: PhyFPS-Bench-Gen
-description: "100-prompt audit of chronometric consistency: does a generator's Meta FPS match the PhyFPS implied by its motion?"
+description: "100-prompt chronometric audit: does Meta FPS match the PhyFPS implied by motion? All metrics lower-is-better. Not a physics-law bench."
 ---
 
-## About
+PhyFPS-Bench-Gen (TACO Group, Texas A&M) audits **chronometric hallucination**: whether a generator's declared container frame rate (**Meta FPS**) matches the physical speed implied by the motion (**PhyFPS**, from Visual Chronometer). It is **not** a law, grounding, education, or continuation bench.
 
-**Publisher:** TACO Group, Texas A&M University
+The suite is **100 prompts**. Name outputs `0001.mp4` … `0100.mp4`. The predictor runs on sliding windows (`--stride`, `--clip-length`); the scorecard reports Meta-vs-PhyFPS error plus intra- and inter-video coefficients of variation. **Every metric is lower-is-better.**
 
-PhyFPS-Bench-Gen audits *chronometric hallucination* in video generators: state-of-the-art models produce motion whose implied physical speed (PhyFPS, measured by the Visual Chronometer predictor) diverges from the container's declared frame rate (Meta FPS) and drifts within and across clips. The benchmark ships 100 prompts; a model generates one video per prompt, Visual Chronometer predicts PhyFPS over sliding windows, and the suite reports Meta-vs-PhyFPS error plus intra- and inter-video coefficients of variation. All metrics are lower-is-better.
+Code: [taco-group/Visual_Chronometer](https://github.com/taco-group/Visual_Chronometer). Checkpoint: [xiangbog/Visual_Chronometer](https://huggingface.co/xiangbog/Visual_Chronometer) (`vc_common_10_60fps.ckpt`).
 
-WorldFoundry runs the Visual Chronometer `predict.py` in tree via the checked-in runtime and normalizes `results.csv` into the official metric surface.
+WorldFoundry runs Visual Chronometer `predict.py` in tree and/or normalizes a caller `results.csv`. Alignment metrics need `WORLDFOUNDRY_PHYFPS_META_FPS` (or a manifest).
 
-Official references:
+<BenchmarkPageSections id="phyfps-bench-gen" locale="en" />
 
-- Official repository: [taco-group/Visual_Chronometer](https://github.com/taco-group/Visual_Chronometer)
+## How to run
 
-## Evaluation protocol
-
-Generated videos should follow `0001.mp4` … `0100.mp4` naming aligned with `prompts.txt`. The runner predicts PhyFPS per sliding-window clip (`--stride`, `--clip-length`), aggregates per-video averages, and computes alignment metrics against Meta FPS supplied via `WORLDFOUNDRY_PHYFPS_META_FPS` or a manifest. `official-validation` mode instead normalizes an existing upstream `results.csv`.
-
-Primary metric: `phyfps_bench_gen_average`.
-
-| Metric | Meaning | Direction |
-| --- | --- | --- |
-| `avg_error_fps` | Mean absolute gap between Meta FPS and average PhyFPS. | Lower is better |
-| `pct_error` | Mean relative Meta-vs-PhyFPS error percentage. | Lower is better |
-| `inter_video_cv` | Cross-video coefficient of variation over average PhyFPS. | Lower is better |
-| `intra_video_cv` | Mean within-video coefficient of variation over sliding-window clips. | Lower is better |
-| `phyfps_bench_gen_average` | Mean over available PhyFPS-Bench-Gen score families. | Lower is better |
-
-## Data and artifact layout
-
-In-tree paths:
-
-```text
-worldfoundry/data/benchmarks/tasks/external/phyfps-bench-gen.yaml
-worldfoundry/evaluation/tasks/execution/runners/phyfps_bench_gen/runtime/visual_chronometer
-```
-
-```text
-.../runners/phyfps_bench_gen/runtime/visual_chronometer/   # in-tree Visual Chronometer runtime
-${WORLDFOUNDRY_GENERATED_ARTIFACT_DIR}/0001.mp4 … 0100.mp4 # one video per prompt
-<out>/results.csv                                          # per-clip PhyFPS predictions
-```
-
-The VC-Common checkpoint (`xiangbog/Visual_Chronometer` on Hugging Face) is required for full official prediction.
-
-## Run the benchmark
-
-Catalog-recorded validation command:
+Import an existing `results.csv`:
 
 ```bash
 worldfoundry-eval zoo benchmark-run \
@@ -56,13 +23,14 @@ worldfoundry-eval zoo benchmark-run \
   --mode official-validation \
   --official-results-path <results.csv> \
   --generated-artifact-dir <generated_videos> \
-  --output-dir <out> \
+  --output-dir tmp/phyfps-bench-gen/official-validation \
   --json
 ```
 
-Predict PhyFPS in tree and score the full audit:
+Predict PhyFPS in tree (needs the VC-Common checkpoint and Meta FPS for alignment):
 
 ```bash
+export WORLDFOUNDRY_PHYFPS_META_FPS=24
 ${WORLDFOUNDRY_UNIFIED_PYTHON} \
   worldfoundry/evaluation/tasks/execution/runners/phyfps_bench_gen/run_phyfps_bench_gen_official_runner.py \
   --run-official \
@@ -72,30 +40,6 @@ ${WORLDFOUNDRY_UNIFIED_PYTHON} \
   --json
 ```
 
-## Checkpoints and environment variables
-
-- `WORLDFOUNDRY_VISUAL_CHRONOMETER_ROOT`: Optional override pointing at an external runtime checkout.
-- `WORLDFOUNDRY_PHYFPS_BENCH_GEN_RESULTS_PATH`: Default path the importer reads official result exports from when `--official-results-path` is not passed.
-- `WORLDFOUNDRY_GENERATED_ARTIFACT_DIR`: Directory containing the candidate generated artifacts to score or import against.
-- `WORLDFOUNDRY_PHYFPS_META_FPS`: Declared Meta FPS of the generator, required for alignment metrics.
-- `WORLDFOUNDRY_PHYFPS_BENCH_GEN_PROMPT_MANIFEST`: Override for the in-tree PhyFPS prompt manifest.
-
-## Outputs
-
-The run writes into `--output-dir`:
-
-- `scorecard.json`: WorldFoundry scorecard with the metric values recorded above.
-- `benchmark_contract.json`: Benchmark contract record for the run (inputs, mode, provenance).
-- `raw_metric_table.jsonl`: Metric rows backing the scorecard.
-- `results.csv`
-- `per_sample_scores.jsonl`: Per-sample rows when the result source exposes sample-level values.
-
-Scorecard primary key: `phyfps_bench_gen_average` (leaderboard key `phyfps_bench_gen_average`), stored in `scorecard.json`.
-
-## Limitations
-
-- Full leaderboard parity requires the complete official checkpoint assets, all 100 generated videos, and verified scorecard evidence.
-- The released VC-Common checkpoint is for demo/leaderboard reproduction and is not the authors' strongest internal model.
-- Alignment metrics are undefined without Meta FPS; runs without it cover only the CV metrics.
+Outputs include `scorecard.json` (primary `phyfps_bench_gen_average`) and `results.csv`.
 
 [← Benchmark Hub](/docs/evaluation/benchmark-hub)

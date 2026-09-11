@@ -1,93 +1,38 @@
 ---
 title: EvalCrafter
-description: 17 项指标的文生视频评测，覆盖画质、对齐、运动与时序一致性。
+description: "700 条 prompt 的 T2V 质量评测：视觉、对齐、运动、时序（17 项指标汇总为 Total）。WorldFoundry 可重算 CLIP 子集或导入，不编造榜单。"
 ---
 
-## 简介
+EvalCrafter（腾讯 AI Lab 与香港城市大学）是 **700 条 prompt** 的文生视频质量套件。17 项客观指标汇总为四个分面加 `evalcrafter_total`：
 
-**发表机构：** 腾讯 AI Lab 与香港城市大学
+- **视觉质量** — DOVER 美学 / 技术 VQA、Inception Score。
+- **文本-视频对齐** — CLIP、BLIP-BLEU、SD 分、检测 / 颜色 / 计数、OCR 误差、名人身份误差。
+- **运动质量** — 动作识别、运动活跃度、光流。
+- **时序** — 时序 CLIP、warping 误差、人脸一致性。
 
-EvalCrafter 在 700 条 prompt suite 上用约 17 个客观指标评测文生视频模型，分四个方面：视觉质量（DOVER aesthetic/technical VQA、inception score）、文本-视频对齐（CLIP score、BLIP-BLEU、SD score、detection/color/count score、OCR error、celebrity ID error）、运动质量（action score、motion AC score、flow score）与时序一致性（CLIP temporal score、warping error、face consistency）。
+论文：[EvalCrafter](https://arxiv.org/abs/2310.11440)。项目：[evalcrafter.github.io](http://evalcrafter.github.io)。代码：[evalcrafter/EvalCrafter](https://github.com/evalcrafter/EvalCrafter)。Prompt：[`RaphaelLiu/EvalCrafter_T2V_Dataset`](https://huggingface.co/datasets/RaphaelLiu/EvalCrafter_T2V_Dataset)。仓内列表：`worldfoundry/data/benchmarks/assets/evalcrafter/prompt700.txt`。
 
-WorldFoundry 仓内保留 CLIP 系子集的原始指标实现（`evalcrafter_raw_metrics.py`）以及官方 EvalCrafter 结果导出的 normalizer；两条路径都转换成标准 scorecard。内置 `sample_results.txt` 支持导入冒烟运行。
+WorldFoundry 保留 **仓内 CLIP 子集**（`clip_score`、`clip_temp_score`、`face_consistency_score`），以及官方 `final_result.txt` 的归一化器。视频必须按 prompt 序号命名（`0000.mp4` … `0699.mp4`）。内置 `sample_results.txt` 可供导入冒烟。主键：`evalcrafter_total`。
 
-官方参考：
+<BenchmarkPageSections id="evalcrafter" locale="zh" />
 
-- Paper: [arxiv.org/abs/2310.11440](https://arxiv.org/abs/2310.11440)
-- 项目主页: [evalcrafter.github.io](http://evalcrafter.github.io)
-- 官方仓库: [evalcrafter/EvalCrafter](https://github.com/evalcrafter/EvalCrafter)
+## 如何运行
 
-## 评测协议
-
-生成视频必须是与官方 prompt 列表顺序对应的编号 MP4（`0000.mp4`、`0001.mp4`……）。`--run-official` 直接从视频计算仓内指标子集；`--from-upstream-results` 或 `--official-results-path` 导入官方指标导出；`--metrics` 选择指标族，`--check-inputs` 预检目录布局。
-
-主指标是 `evalcrafter_total`。
-
-| Metric | 含义 | 方向 |
-| --- | --- | --- |
-| `visual_quality` | EvalCrafter 视觉质量得分。 | 越高越好 |
-| `text_video_alignment` | EvalCrafter 文本-视频对齐得分。 | 越高越好 |
-| `motion_quality` | EvalCrafter 运动质量得分。 | 越高越好 |
-| `temporal_consistency` | EvalCrafter 时序一致性得分。 | 越高越好 |
-| `evalcrafter_total` | EvalCrafter 聚合总分。 | 越高越好 |
-| `vqa_aesthetic` | DOVER 美学组件分。 | 越高越好 |
-| `vqa_technical` | DOVER 技术组件分。 | 越高越好 |
-| `inception_score` | EvalCrafter IS（Inception Score）组件分。 | 越高越好 |
-| `clip_temp_score` | 时序 CLIP 组件分。 | 越高越好 |
-| `warping_error` | 时序 warping 误差；越低越好。 | 越低越好 |
-| `face_consistency_score` | 人脸一致性组件分。 | 越高越好 |
-| `action_score` | 动作识别组件分。 | 越高越好 |
-| `motion_ac_score` | 运动活跃度组件分。 | 越高越好 |
-| `flow_score` | 光流组件分。 | 越高越好 |
-| `clip_score` | CLIP 对齐组件分。 | 越高越好 |
-| `blip_bleu` | BLIP/BLEU 对齐组件分。 | 越高越好 |
-| `sd_score` | Stable-diffusion 对齐组件分。 | 越高越好 |
-| `detection_score` | 检测对齐组件分。 | 越高越好 |
-| `color_score` | 颜色对齐组件分。 | 越高越好 |
-| `count_score` | 物体数量对齐组件分。 | 越高越好 |
-| `ocr_error` | OCR 不匹配组件分。 | 越低越好 |
-| `celebrity_id_error` | 名人身份不匹配组件分。 | 越低越好 |
-
-## 数据与产物布局
-
-WorldFoundry 仓内路径：
-
-```text
-worldfoundry/data/benchmarks/tasks/external/evalcrafter.yaml
-worldfoundry/evaluation/tasks/execution/runners/evalcrafter/run_evalcrafter_official_runner.py
-worldfoundry/evaluation/tasks/execution/runners/evalcrafter/evalcrafter_raw_metrics.py
-worldfoundry/data/benchmarks/assets/evalcrafter
-```
-
-```bash
-export WORLDFOUNDRY_GENERATED_ARTIFACT_DIR=/path/to/evalcrafter/generated_videos
-```
-
-```text
-/path/to/evalcrafter/generated_videos/
-  0000.mp4
-  0001.mp4
-  ...
-```
-
-CLIP ViT-B/32 权重通过共享 base-model 资产目录、`WORLDFOUNDRY_CLIP_VIT_B32_MODEL_DIR` 或 `--clip-model` 解析。
-
-## 运行评测
-
-目录 manifest 记录的 validation 命令：
+导入官方聚合（冒烟用内置样本）：
 
 ```bash
 worldfoundry-eval zoo benchmark-run \
   --benchmark-id evalcrafter \
   --mode official-validation \
   --official-results-path worldfoundry/data/benchmarks/assets/evalcrafter/sample_results.txt \
-  --output-dir tmp/benchmark_zoo/evalcrafter-import-smoke \
+  --output-dir tmp/evalcrafter/official-validation \
   --json
 ```
 
-从生成视频计算仓内指标子集：
+从编号 MP4 重算仓内 CLIP 子集：
 
 ```bash
+export WORLDFOUNDRY_GENERATED_ARTIFACT_DIR=/path/to/evalcrafter/generated_videos
 worldfoundry-eval zoo benchmark-run \
   --benchmark-id evalcrafter \
   --mode official-run \
@@ -96,31 +41,16 @@ worldfoundry-eval zoo benchmark-run \
   --json
 ```
 
-## 权重与环境变量
+CLIP ViT-B/32 通过 `WORLDFOUNDRY_CLIP_VIT_B32_MODEL_DIR` 或 `--clip-model` 解析。默认导入路径：`WORLDFOUNDRY_EVALCRAFTER_RESULTS_PATH`。可选根：`WORLDFOUNDRY_EVALCRAFTER_ROOT`。
 
-- `WORLDFOUNDRY_EVALCRAFTER_ROOT`: 可选覆盖项，指向外部 runtime checkout。
-- `WORLDFOUNDRY_EVALCRAFTER_RESULTS_PATH`: 未显式传 `--official-results-path` 时，导入器默认从该路径读取官方结果导出文件。
-- `WORLDFOUNDRY_GENERATED_ARTIFACT_DIR`: 存放待评测生成产物（候选视频/rollout）的目录。
-- `WORLDFOUNDRY_CLIP_VIT_B32_MODEL_DIR`: 仓内指标子集使用的本地 CLIP ViT-B/32 权重目录。
+仓内指针：
 
-共享 checkpoint 资产：`clip_vit_b32`。
+```text
+worldfoundry/data/benchmarks/tasks/external/evalcrafter.yaml
+worldfoundry/evaluation/tasks/execution/runners/evalcrafter/
+worldfoundry/data/benchmarks/assets/evalcrafter
+```
 
-该 benchmark 复用共享 base-model 依赖栈：`clip_vit_b32`。
-
-## 输出文件
-
-运行会在 `--output-dir` 下写出：
-
-- `scorecard.json`: WorldFoundry 统一 scorecard，记录上表中的指标值。
-- `benchmark_contract.json`: 本次运行的 benchmark contract 记录（输入、模式、来源信息）。
-- `raw_metric_table.jsonl`: 支撑 scorecard 的原始 metric 行。
-
-Scorecard 主键：`evalcrafter_total`（leaderboard key `Total`），写入 `scorecard.json`。
-
-## 边界与限制
-
-- 仓内 `official-run` 路径只重算 CLIP 系子集；DOVER/RAFT/人脸模型指标需要各自上游权重。
-- 17 项指标的 leaderboard 对齐需要在 700 条 prompt suite 上运行完整官方指标栈。
-- 本地 scorecard 不是 EvalCrafter leaderboard 提交。
+产物包括 `scorecard.json`（主键 `evalcrafter_total`）、`benchmark_contract.json`、`raw_metric_table.jsonl`。
 
 [← 返回 Benchmark Hub](/zh/docs/evaluation/benchmark-hub)

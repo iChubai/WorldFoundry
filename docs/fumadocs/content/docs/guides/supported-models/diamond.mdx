@@ -1,28 +1,52 @@
 ---
 title: "DIAMOND"
-description: "DIAMOND (DIffusion As a Model Of eNvironment Dreams) trains reinforcement-learning agents entirely inside a diffusion world model — its Atari agents and playable CS:GO world model made diffusion world models famous (NeurIPS 2024)."
-pageSource: generated
+description: "DIAMOND from University of Geneva / University of Edinburgh / Microsoft Research: diffusion-world-model and reinforcement-learning-world-model; Runner parity pending; 2 variants."
+modelId: "diamond"
+pageSource: authored
 ---
-
-**Publisher:** University of Geneva / University of Edinburgh / Microsoft Research · University
 
 DIAMOND (DIffusion As a Model Of eNvironment Dreams) trains reinforcement-learning agents entirely inside a diffusion world model — its Atari agents and playable CS:GO world model made diffusion world models famous (NeurIPS 2024). In this catalog the official play/inference stack is vendored in-tree with diamond-atari and diamond-csgo variants.
 
+<ModelPaperFigures modelId="diamond" locale="en" />
+
+The recorded paper is [arXiv 2405.12399](https://arxiv.org/abs/2405.12399).
+
+Project page: [diamond-wm.github.io](https://diamond-wm.github.io/). Code: [eloialonso/diamond](https://github.com/eloialonso/diamond).
+
+Paper: [arXiv 2405.12399](https://arxiv.org/abs/2405.12399) (NeurIPS 2024). Project: [diamond-wm.github.io](https://diamond-wm.github.io/). Code: [eloialonso/diamond](https://github.com/eloialonso/diamond). Publisher: University of Geneva / University of Edinburgh / Microsoft Research.
+
+Jobs run with a **local** checkpoint or `pretrained=true` plus a non-interactive `pretrained_game` from the pinned snapshot. Runtime downloads are **disabled**. Full generation parity needs staged Atari / CS:GO assets.
+
 <ModelCommandBuilder modelId="diamond" locale="en" />
 
-## Architecture
+## What it is for
 
-Per the publication, frame prediction uses an EDM-style diffusion model over recent frames and actions, keeping visual detail that latent world models lose. Runtime configs are packaged under data/models/runtime/configs/diamond/config; the MIT-licensed upstream downloads Atari assets on demand (disabled here — runtime network downloads are off).
+Pick `diamond-atari` when you need an action-conditioned world stepper: recorded actions and a frame in, a rollout out. Use it for interactive world inference, not a text-to-video prompt dump.
 
-## Usage notes
+Per the publication, frame prediction uses an EDM-style diffusion model over recent frames and actions, keeping visual detail that latent world models lose. Runtime configs are packaged under data/models/runtime/configs/diamond/config; the MIT-licensed upstream downloads Atari assets on demand (disabled here — runtime network downloads are off). It is published by University of Geneva / University of Edinburgh / Microsoft Research.
+
+Catalog tasks include diffusion-world-model, reinforcement-learning-world-model, game-world-model, and runtime-plan. Catalog aliases include `diamond-atari` and `diamond-csgo`. Also recorded: `diamond-csgo`.
+
+## Runtime contract
+
+Required `prompt`, `image`, and `video`; optional `actions` (game_action, atari_action); artifacts `generated_video` and `diamond.mp4`.
+
+Recorded task profiles: `diffusion-world-model`, `reinforcement-learning-world-model`, `game-world-model`, and `runtime-plan`. WorldFoundry binds `DIAMONDPipeline`.
+
+Start on `diamond-atari`. The family registers 2 catalog variants (cards above): `diamond-atari` (`atari-world-model`) — Runner parity pending; `diamond-csgo` (`game-world-model`) — Runner parity pending. Family status: **Runner parity pending**.
+
+Recorded `runtime-plan` defaults: frames=16, fps=15, seed=42, size=640.
 
 Jobs run with a local checkpoint or pretrained=true plus a non-interactive pretrained_game value from the pinned local snapshot. Full generation parity requires staged Atari assets/checkpoints.
 
-## Variants & pipeline bindings
+## Running in WorldFoundry
 
-| Variant | Task | Runtime profile | Pipeline binding | Status |
-| --- | --- | --- | --- | --- |
-| `diamond-atari` | atari-world-model | `diamond` | `diamond` | planned |
-| `diamond-csgo` | game-world-model | `diamond` | `diamond` | planned |
+Launch `worldfoundry-eval run diamond-atari --pipeline.task-profile runtime-plan` to step the world. The command builder above switches `--pipeline.task-profile` among recorded tasks and still emits `worldfoundry-eval run`.
+
+It runs in the unified environment `worldfoundry-unified-cu128` (Python 3.11, CUDA 12.8).
+
+Recorded weight repositories include `eloialonso/diamond`. Stage assets with `bash scripts/inference/prepare_model_infer.sh diamond-atari`.
+
+Status: **Runner parity pending**.
 
 <ModelRelatedRecipes modelId="diamond" locale="en" />

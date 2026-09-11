@@ -3,11 +3,77 @@ title: WorldFoundry
 description: Toward a general infrastructure for world intelligence
 ---
 
-WorldFoundry is open-source infrastructure for world intelligence. It is not a new model architecture. Discovery, runtime and asset preparation, inference, artifact inspection, and benchmark evidence share one workflow across video, 3D/4D, embodied action, and interactive worlds.
+WorldFoundry is open-source infrastructure for world intelligence. World intelligence is not a single generation task: a system has to infer structured state from observations, predict how that state evolves, express the consequences in task-specific outputs, and use those predictions during interaction. Video generators, neural scene representations, 4D models, and embodied policies each cover part of this problem.
 
-A generative world model is more than a perceptual generator. It maintains persistent, history-conditioned state, updates that state under actions or interventions, and produces temporally coherent trajectories. Visual plausibility is not sufficient evidence. The operational definition and capability progression are in [World models](/docs/overview/world-models).
+Discovery, runtime and asset preparation, inference, artifact inspection, and benchmark evidence share one workflow across those families — **without forcing them into one representation, task, or metric**.
 
-The current release integrates 270 models and nearly 100 benchmark and metric implementations. Catalog inclusion is not a runnable runtime. A demo is not benchmark evidence. An ingested score is not official leaderboard parity. Those states stay separate, with provenance.
+## A first run
+
+After the [Quickstart](/docs/quickstart) environment is sourced, generate one inspectable artifact for `matrix-game-2`:
+
+```bash
+bash scripts/inference/prepare_model_infer.sh matrix-game-2 --download
+worldfoundry-eval run matrix-game-2-universal-action-validation \
+  --pipeline.task-profile official-universal-image
+```
+
+That run justifies one claim: this configuration produced an inspectable artifact. It does not mean a benchmark completed. Everyday commands use `worldfoundry-eval run`. Layers and inventory are in [Design](/docs/overview/design).
+
+<h2 id="operational-definition">Operational definition</h2>
+
+Visual plausibility measures observation quality. It is not sufficient evidence of world modeling. A photorealistic video can still lose object identity, violate dynamics, or ignore an intervention.
+
+We therefore treat a **generative world model** as a learned, history- and control-conditioned latent dynamical system. It infers and maintains a persistent environmental state, evolves that state under endogenous dynamics and external interventions, and assimilates new observations so later predictions remain accountable to what just happened.
+
+<img
+  src="/paper/operational-definition.webp"
+  alt="Operational definition of a world model: state inference, forward simulation, and interactive response, closed by observation feedback"
+  width={1800}
+  height={739}
+/>
+
+Three coupled operations make the definition usable:
+
+1. **State inference** — estimate a task-relevant latent state from the interaction history.
+2. **Forward simulation** — predict how that state evolves under autonomous dynamics, physical constraints, and actions.
+3. **Interactive response** — produce distinct, coherent futures under alternative interventions, then fold observed outcomes back into the maintained state.
+
+A compact, modality-agnostic form is
+
+<MathBlock tex={'z_t \\sim q(z_t \\mid h_t),\\qquad z_{t+1} \\sim p(z_{t+1} \\mid z_t, c_t),\\qquad \\hat{o}_{t+1} \\sim g(o_{t+1} \\mid z_{t+1}).'} />
+
+Here <MathInline tex="h_t" /> is the observation–control history, <MathInline tex="c_t" /> is an action or intervention (including a null control), <MathInline tex="z_t" /> is the inferred environment state, and <MathInline tex={'\\hat{o}_{t+1}'} /> is a visual, geometric, or task-specific output. The formulation is functional rather than architectural: <MathInline tex="z_t" /> may be recurrent, object-centric, geometric, token-based, or otherwise structured.
+
+<Callout type="info">
+  From the same inferred state, controls with different environmental consequences should induce distinct but coherent rollouts. Factors outside the intervention should continue to follow the same conditional dynamics. New observations must update the state used thereafter.
+</Callout>
+
+<h2 id="capability-progression">Capability progression</h2>
+
+WorldFoundry does not assign every model a single discrete level. It records a **capability profile**: which functions a system actually supports, and whether those functions are coupled.
+
+<img
+  src="/paper/capability-progression.webp"
+  alt="Capability progression from perceptual grounding through the world-model spine of persistent state, dynamics, and closed-loop interaction, with controllable transformation as an orthogonal capability"
+  width={1800}
+  height={1012}
+/>
+
+<WorldModelProgression locale="en" />
+
+**Perceptual grounding** supplies observational evidence. The **world-model spine** is the coupling that matters: persistent state, intervention-conditioned dynamics, and feedback-driven updating. **Controllable transformation** can sit beside any of those stages — editing a couch color or deleting a shelf does not, by itself, prove that the system can roll the scene forward or close an interaction loop.
+
+<h2 id="foundation-and-world-models">Foundation models and generative world models</h2>
+
+The taxonomy is functional, not a ranking of visual quality.
+
+**Foundation generative models** learn visual, geometric, or spatiotemporal priors for synthesis, reconstruction, and controllable manipulation. They may be excellent at appearance, short-horizon coherence, or selective edits. They do not integrate state, dynamics, and feedback into a complete world-modeling loop.
+
+**Generative world models** do integrate that loop. Intervention effects persist across subsequent transitions, and new observations revise the state that governs later predictions. Higher fidelity, broader prompting, or larger scale does not by itself promote a system from the first class to the second.
+
+That is why WorldFoundry separates catalog inclusion, runnable inference, inspectable artifacts, and benchmark-eligible evidence. A convincing demo can still be only perceptual grounding. The current release integrates 270 models and nearly 100 benchmark and metric implementations. Catalog inclusion is not a runnable runtime. A demo is not benchmark evidence. An ingested score is not official leaderboard parity. Those states stay separate, with provenance.
+
+<h2 id="why-a-shared-workflow">Why a shared workflow</h2>
 
 WorldFoundry is most useful when work spans **more than one model, benchmark, or execution surface**. The technical report calls this *commensurability without homogenization*: heterogeneous systems stay inspectable under shared operational and evidential contracts, without being forced into a single representation, task, or metric.
 
@@ -22,21 +88,6 @@ That is why the shared workflow exists:
 This fits teams that maintain or compare several world-model families, separate generation from evaluation, reuse expensive artifacts, or need stable machine-readable discovery for people and agents. The more models, benchmarks, machines, and reviewers you have, the more those contracts repay their setup cost.
 
 <TeaserImage alt="WorldFoundry unifies world-model discovery, inference, inspection, and evaluation" />
-
-## A first run
-
-For `matrix-game-2`, confirm the catalog entry and local checkpoint, then generate one small result:
-
-```bash
-bash scripts/inference/prepare_model_infer.sh matrix-game-2 --download
-python -m worldfoundry.evaluation zoo model-download \
-  --model-id matrix-game-2 --check-local --json
-
-bash scripts/inference/test_nav_video_gen.sh matrix-game-2 \
-  --output-dir tmp/matrix_game2_first_run
-```
-
-That run justifies one claim: this configuration produced an inspectable artifact. It does not mean a benchmark completed. Layers and contracts are in [Design](/docs/overview/design); the concrete inventory is in [What's included](/docs/overview/capabilities).
 
 ## Acknowledgements
 

@@ -79,11 +79,13 @@
   "generatedBy": "docs/fumadocs/scripts/generate-org-logos.py (hand-reviewed publishing-institution mapping; GitHub user avatars are banned)",
   "modelLogos": {
     "4d-gs": "hust",
+    "a1": "zju",
     "abot-m0": "amap",
     "abot-world-0-5b-lf": "amap",
     "ac3d": "snap",
     "act": "stanford",
     "adaworld": "hkust",
+    "ahawam": "baidu",
     "alayaworld": "alayalab",
     "allegro": "rhymes",
     "animatediff": "cuhk",
@@ -113,6 +115,7 @@
     "depth-anything-v2-prior": "bytedance",
     "depth-anything-v3": "bytedance",
     "depth-anything-v3-prior": "bytedance",
+    "dexora-1b": "dexora",
     "diamond": "unige",
     "diffusion-policy": "stanford",
     "dino-wm": "nyu",
@@ -146,6 +149,8 @@
     "eventvla": "shanghai-ai-lab",
     "evoke": "alayalab",
     "fantasyworld": "amap",
+    "fastvideo-causal-wan2.2": "nvidia",
+    "fastwam": "galaxea",
     "flashworld": "tencent",
     "framepack": "stanford",
     "galaxea-vla": "galaxea",
@@ -196,6 +201,7 @@
     "lagernvs": "meta",
     "lapa": "microsoft",
     "last-r1": "cuhk",
+    "lda-1b": "galbot",
     "leworldmodel": "mila",
     "libero-para": "cau",
     "lingbot-map": "antgroup",
@@ -241,6 +247,7 @@
     "mosaicmem": "starkware",
     "motionbricks": "nvidia",
     "motionctrl": "tencent",
+    "moverse": "alibaba",
     "multi-task-dit": "huggingface",
     "multiworld": "map-org",
     "mvdiffusion": "sfu",
@@ -250,6 +257,7 @@
     "octo": "berkeley",
     "omniforcing": "omniforcing",
     "omnivinci": "nvidia",
+    "open-dreamer": "reactor",
     "open-magvit2": "tencent",
     "open-sora": "hpcaitech",
     "open-sora-plan": "pku",
@@ -290,6 +298,7 @@
     "skyreels-v3": "skywork",
     "smolvla": "huggingface",
     "solaris": "nyu",
+    "solarwm": "cuhk",
     "sora2": "openai",
     "spatia": "microsoft",
     "spatial-forcing": "openhelix",
@@ -319,6 +328,7 @@
     "versecrafter": "tencent",
     "vggt": "meta",
     "vggt-omega": "meta",
+    "vggt-world": "uq",
     "vid2world": "tsinghua",
     "video-depth-anything-prior": "bytedance",
     "videocrafter": "tencent",
@@ -348,14 +358,17 @@
     "worldcam": "kaist",
     "worldfm": "inspatio",
     "worldgen": "meta",
+    "worldgrow": "huawei",
     "worldlabs": "worldlabs",
     "worldlabs-marble-1.1": "worldlabs",
     "worldmem": "ntu",
     "wow": "x-humanoid",
+    "x-wam": "xiaomi",
     "xiaomi-robotics-0": "xiaomi",
     "xiaomi-robotics-1": "xiaomi",
     "xvla": "tsinghua",
-    "yume": "fudan"
+    "yume": "fudan",
+    "zeroscope": "modelscope"
   },
   "orgs": {
     "adelaide": {
@@ -371,7 +384,7 @@
       "key": "adobe",
       "license": "CC0-1.0",
       "name": "Adobe",
-      "source": "Simple Icons (https://simpleicons.org), CC0-1.0",
+      "source": "Simple Icons (https://simpleicons.org), CC0-1.0; official brand hex #FF0000",
       "src": "/org-logos/adobe.svg"
     },
     "agibot": {
@@ -438,6 +451,14 @@
       "source": "https://commons.wikimedia.org/wiki/File:Beijing_Academy_of_Artificial_Intelligence_logo.svg",
       "src": "/org-logos/baai.svg"
     },
+    "baidu": {
+      "abbr": "BD",
+      "key": "baidu",
+      "license": "CC0-1.0",
+      "name": "Baidu",
+      "source": "Simple Icons (https://simpleicons.org), CC0-1.0; official brand hex #2932E1",
+      "src": "/org-logos/baidu.svg"
+    },
     "beingbeyond": {
       "abbr": "BB",
       "key": "beingbeyond",
@@ -467,7 +488,7 @@
       "key": "buaa",
       "license": "Organization brand mark",
       "name": "Beihang University",
-      "source": "Official university brand mark (www.buaa.edu.cn), crest cropped for the identity mark",
+      "source": "Official university brand mark (www.buaa.edu.cn), crest cropped and restored to Beihang blue #004EA2",
       "src": "/org-logos/buaa.png"
     },
     "bytedance": {
@@ -475,7 +496,7 @@
       "key": "bytedance",
       "license": "CC0-1.0",
       "name": "ByteDance",
-      "source": "Simple Icons (https://simpleicons.org), CC0-1.0",
+      "source": "Simple Icons (https://simpleicons.org), CC0-1.0; official brand hex #3C8CFF",
       "src": "/org-logos/bytedance.svg"
     },
     "caltech": {
@@ -491,7 +512,7 @@
       "key": "cas",
       "license": "Organization brand mark",
       "name": "Chinese Academy of Sciences",
-      "source": "Official CAS seal from the UCAS brand mark (www.ucas.ac.cn), crest cropped for the identity mark",
+      "source": "Official CAS seal from the UCAS brand mark (www.ucas.ac.cn), crest cropped and restored to CAS navy #004B87",
       "src": "/org-logos/cas.png"
     },
     "cau": {
@@ -550,12 +571,20 @@
       "source": "GitHub organization brand avatar (github.com/Dexmal), pre-existing repo asset",
       "src": "/org-logos/dexmal.jpg"
     },
+    "dexora": {
+      "abbr": "DX",
+      "key": "dexora",
+      "license": "Public domain (simple geometry)",
+      "name": "Dexora",
+      "source": "Original simple dual-arm D monogram for the identity mark",
+      "src": "/org-logos/dexora.svg"
+    },
     "dji": {
       "abbr": "DJ",
       "key": "dji",
       "license": "CC0-1.0",
       "name": "DJI",
-      "source": "Simple Icons (https://simpleicons.org), CC0-1.0",
+      "source": "Simple Icons (https://simpleicons.org), CC0-1.0; official brand hex #000000",
       "src": "/org-logos/dji.svg"
     },
     "epfl": {
@@ -622,6 +651,14 @@
       "source": "GitHub organization brand avatar (github.com/OpenGalaxea)",
       "src": "/org-logos/galaxea.png"
     },
+    "galbot": {
+      "abbr": "GB",
+      "key": "galbot",
+      "license": "Organization brand mark",
+      "name": "Galbot",
+      "source": "GitHub organization brand avatar (github.com/GalaxyGeneralRobotics)",
+      "src": "/org-logos/galbot.jpg"
+    },
     "gatech": {
       "abbr": "GT",
       "key": "gatech",
@@ -649,9 +686,9 @@
     "google": {
       "abbr": "G",
       "key": "google",
-      "license": "CC0-1.0",
+      "license": "Public domain (simple geometry)",
       "name": "Google",
-      "source": "Simple Icons (https://simpleicons.org), CC0-1.0",
+      "source": "https://commons.wikimedia.org/wiki/File:Google_\"G\"_logo.svg",
       "src": "/org-logos/google.svg"
     },
     "google-deepmind": {
@@ -702,12 +739,20 @@
       "source": "GitHub organization brand avatar (github.com/hpcaitech), pre-existing repo asset",
       "src": "/org-logos/hpcaitech.jpg"
     },
+    "huawei": {
+      "abbr": "HW",
+      "key": "huawei",
+      "license": "CC0-1.0",
+      "name": "Huawei",
+      "source": "Simple Icons (https://simpleicons.org), CC0-1.0; official brand hex #FF0000",
+      "src": "/org-logos/huawei.svg"
+    },
     "huggingface": {
       "abbr": "HF",
       "key": "huggingface",
       "license": "CC0-1.0",
       "name": "Hugging Face",
-      "source": "Simple Icons (https://simpleicons.org), CC0-1.0",
+      "source": "Simple Icons (https://simpleicons.org), CC0-1.0; official brand hex #FFD21E",
       "src": "/org-logos/huggingface.svg"
     },
     "hust": {
@@ -787,7 +832,7 @@
       "key": "kuaishou",
       "license": "CC0-1.0",
       "name": "Kuaishou",
-      "source": "Simple Icons (https://simpleicons.org), CC0-1.0",
+      "source": "Simple Icons (https://simpleicons.org), CC0-1.0; official brand hex #FF4906",
       "src": "/org-logos/kuaishou.svg"
     },
     "lightricks": {
@@ -827,7 +872,7 @@
       "key": "meituan",
       "license": "CC0-1.0",
       "name": "Meituan",
-      "source": "Simple Icons (https://simpleicons.org), CC0-1.0",
+      "source": "Simple Icons (https://simpleicons.org), CC0-1.0; official brand hex #FFD100",
       "src": "/org-logos/meituan.svg"
     },
     "meta": {
@@ -835,7 +880,7 @@
       "key": "meta",
       "license": "CC0-1.0",
       "name": "Meta",
-      "source": "Simple Icons (https://simpleicons.org), CC0-1.0",
+      "source": "Simple Icons (https://simpleicons.org), CC0-1.0; official brand hex #0467DF",
       "src": "/org-logos/meta.svg"
     },
     "microsoft": {
@@ -867,7 +912,7 @@
       "key": "minimax",
       "license": "CC0-1.0",
       "name": "MiniMax",
-      "source": "Simple Icons (https://simpleicons.org), CC0-1.0",
+      "source": "Simple Icons (https://simpleicons.org), CC0-1.0; official brand hex #E73562",
       "src": "/org-logos/minimax.svg"
     },
     "mira-wm": {
@@ -886,12 +931,20 @@
       "source": "https://commons.wikimedia.org/wiki/File:MIT_logo.svg",
       "src": "/org-logos/mit.svg"
     },
+    "modelscope": {
+      "abbr": "MS",
+      "key": "modelscope",
+      "license": "Organization brand mark",
+      "name": "ModelScope",
+      "source": "GitHub organization brand avatar (github.com/modelscope)",
+      "src": "/org-logos/modelscope.png"
+    },
     "naver": {
       "abbr": "NA",
       "key": "naver",
       "license": "CC0-1.0",
       "name": "NAVER",
-      "source": "Simple Icons (https://simpleicons.org), CC0-1.0",
+      "source": "Simple Icons (https://simpleicons.org), CC0-1.0; official brand hex #03C75A",
       "src": "/org-logos/naver.svg"
     },
     "ntu": {
@@ -923,7 +976,7 @@
       "key": "nvidia",
       "license": "CC0-1.0",
       "name": "NVIDIA",
-      "source": "Simple Icons (https://simpleicons.org), CC0-1.0",
+      "source": "Simple Icons (https://simpleicons.org), CC0-1.0; official brand hex #76B900",
       "src": "/org-logos/nvidia.svg"
     },
     "nyu": {
@@ -947,7 +1000,7 @@
       "key": "openai",
       "license": "CC0-1.0",
       "name": "OpenAI",
-      "source": "Simple Icons (https://simpleicons.org), CC0-1.0",
+      "source": "Simple Icons (https://simpleicons.org), CC0-1.0; official brand hex #412991",
       "src": "/org-logos/openai.svg"
     },
     "openenvision": {
@@ -971,7 +1024,7 @@
       "key": "oppo",
       "license": "CC0-1.0",
       "name": "OPPO Research Institute",
-      "source": "Simple Icons (https://simpleicons.org), CC0-1.0",
+      "source": "Simple Icons (https://simpleicons.org), CC0-1.0; official brand hex #2D683D",
       "src": "/org-logos/oppo.svg"
     },
     "oxford": {
@@ -997,6 +1050,14 @@
       "name": "Peking University",
       "source": "https://commons.wikimedia.org/wiki/File:Peking_University_seal.svg",
       "src": "/org-logos/pku.svg"
+    },
+    "reactor": {
+      "abbr": "RC",
+      "key": "reactor",
+      "license": "Organization brand mark",
+      "name": "Reactor",
+      "source": "GitHub organization brand avatar (github.com/reactor-team)",
+      "src": "/org-logos/reactor.jpg"
     },
     "rhymes": {
       "abbr": "RA",
@@ -1107,7 +1168,7 @@
       "key": "snap",
       "license": "CC0-1.0",
       "name": "Snap Inc.",
-      "source": "Simple Icons (https://simpleicons.org), CC0-1.0 (Snapchat mark)",
+      "source": "Simple Icons (https://simpleicons.org), CC0-1.0 (Snapchat mark); official brand hex #FFFC00",
       "src": "/org-logos/snap.svg"
     },
     "snu": {
@@ -1123,7 +1184,7 @@
       "key": "sony",
       "license": "CC0-1.0",
       "name": "Sony AI",
-      "source": "Simple Icons (https://simpleicons.org), CC0-1.0",
+      "source": "Simple Icons (https://simpleicons.org), CC0-1.0; official brand hex #000000",
       "src": "/org-logos/sony.svg"
     },
     "spirit-ai": {
@@ -1211,7 +1272,7 @@
       "key": "ucas",
       "license": "Organization brand mark",
       "name": "University of Chinese Academy of Sciences",
-      "source": "Official university brand mark (www.ucas.ac.cn), CAS seal cropped for the identity mark",
+      "source": "Official university brand mark (www.ucas.ac.cn), CAS seal cropped and restored to UCAS navy #003087",
       "src": "/org-logos/ucas.png"
     },
     "ucla": {
@@ -1262,6 +1323,14 @@
       "source": "https://commons.wikimedia.org/wiki/File:Logo_UPC.svg",
       "src": "/org-logos/upc.svg"
     },
+    "uq": {
+      "abbr": "UQ",
+      "key": "uq",
+      "license": "Public domain (simple seal rendition)",
+      "name": "The University of Queensland",
+      "source": "Original simple circular-seal rendition of the UQ coat of arms (cross pattee and open book) in official UQ purple #51247A",
+      "src": "/org-logos/uq.svg"
+    },
     "usc": {
       "abbr": "USC",
       "key": "usc",
@@ -1299,7 +1368,7 @@
       "key": "vivo",
       "license": "CC0-1.0",
       "name": "vivo",
-      "source": "Simple Icons (https://simpleicons.org), CC0-1.0",
+      "source": "Simple Icons (https://simpleicons.org), CC0-1.0; official brand hex #415FFF",
       "src": "/org-logos/vivo.svg"
     },
     "wan": {
@@ -1355,7 +1424,7 @@
       "key": "xiaomi",
       "license": "CC0-1.0",
       "name": "Xiaomi Robotics",
-      "source": "Simple Icons (https://simpleicons.org), CC0-1.0",
+      "source": "Simple Icons (https://simpleicons.org), CC0-1.0; official brand hex #FF6900",
       "src": "/org-logos/xiaomi.svg"
     },
     "zhipu": {
@@ -1377,18 +1446,6 @@
   },
   "unmapped": {
     "benchmarks": [],
-    "models": [
-      "a1",
-      "ahawam",
-      "dexora-1b",
-      "fastwam",
-      "lda-1b",
-      "moverse",
-      "open-dreamer",
-      "vggt-world",
-      "worldgrow",
-      "x-wam",
-      "zeroscope"
-    ]
+    "models": []
   }
 }

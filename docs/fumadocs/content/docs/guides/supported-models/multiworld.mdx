@@ -1,26 +1,48 @@
 ---
 title: "MultiWorld"
-description: "MultiWorld (\"It Takes Two\") is a multi-agent interactive video generator: two players' actions drive one shared generated game world."
+description: "MultiWorld: video generation and multi-agent-world-model; Planned."
+modelId: "multiworld"
 pageSource: generated
 ---
 
-**Publisher:** Open-source research release (institution not recorded) · Research lab
-video
-
 MultiWorld ("It Takes Two") is a multi-agent interactive video generator: two players' actions drive one shared generated game world. In this catalog the in-tree ItTakesTwo wrapper is registered as the model-zoo entry; full generation remains dependency/checkpoint gated.
+
+<ModelPaperFigures modelId="multiworld" locale="en" />
+
+Code: [CIntellifusion/MultiWorld](https://github.com/CIntellifusion/MultiWorld). Code: [multimodal-art-projection/MultiWorld](https://github.com/multimodal-art-projection/MultiWorld).
 
 <ModelCommandBuilder modelId="multiworld" locale="en" />
 
-## Architecture
+## What it is for
+
+Pick `multiworld` when you need an action-conditioned world stepper: recorded actions and a frame in, a rollout out. Use it for interactive world inference, not a text-to-video prompt dump.
 
 Architecture internals beyond the recorded tasks are not stored in this repository. The upstream license is custom and flagged for manual review.
 
-## Usage notes
+Catalog tasks include video generation, multi-agent-world-model, interactive-video-generation, and game-video. Catalog aliases include `multiword` and `multiworld-ittakestwo`. Documented outputs include video.
+
+Recorded evaluation entry points include [WorldModelBench](/docs/evaluation/benchmark-hub/worldmodelbench) (Multi-agent world-rollout quality).
+
+## Runtime contract
+
+Required `prompt`, `image`, and `video`; optional `actions` (trajectory); artifacts `multiworld.mp4`.
+
+Recorded task profiles: `video_generation`, `multi-agent-world-model`, `interactive-video-generation`, and `game-video`. WorldFoundry binds `MultiWorldItTakesTwoPipeline`.
+
+Family status: **Planned**.
 
 Full generation is dependency/checkpoint gated — treat this entry as planned until assets and environment parity are staged. Review the custom upstream license first.
 
-## Evaluation benchmarks
+The in-tree MultiWorld ItTakesTwo wrapper is registered as the model-zoo entry; full generation remains dependency/checkpoint gated.
 
-- [WorldModelBench](/docs/evaluation/benchmark-hub/worldmodelbench) — Multi-agent world-rollout quality.
+## Running in WorldFoundry
+
+The catalog launch is `worldfoundry-eval run multiworld --pipeline.task-profile video_generation`. The command builder above switches `--pipeline.task-profile` among recorded tasks and still emits `worldfoundry-eval run`.
+
+It runs in the unified environment `worldfoundry-unified-cu128` (Python 3.11, CUDA 12.8).
+
+No public checkpoint id is recorded on this card; follow the usage notes for staging. Stage assets with `bash scripts/inference/prepare_model_infer.sh multiworld`.
+
+Status: **Planned**.
 
 <ModelRelatedRecipes modelId="multiworld" locale="en" />

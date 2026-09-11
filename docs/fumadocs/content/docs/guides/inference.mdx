@@ -12,15 +12,16 @@ bash scripts/setup/bootstrap_worldfoundry.sh
 source tmp/worldfoundry_unified_env.sh
 conda activate "${WORLDFOUNDRY_UNIFIED_ENV_PREFIX}"
 
-bash scripts/inference/test_nav_video_gen.sh matrix-game-2 \
-  --output-dir tmp/matrix_game2_first_run
+worldfoundry-eval run <model-id> \
+  --pipeline.task-profile <task-profile> \
+  --output-dir tmp/worldfoundry_infer/<model-id>
 ```
 
-Inspect the generated video and run metadata under `tmp/matrix_game2_first_run`. That output is inference evidence only — not benchmark or leaderboard evidence. For checkpoints and cache layout, see [Local assets](/docs/guides/local-assets); for the web workspace, see [Studio](/docs/guides/studio).
+Copy `<model-id>` and `<task-profile>` from the model page. Inspect the generated artifacts under `tmp/worldfoundry_infer/<model-id>`. That output is inference evidence only — not benchmark or leaderboard evidence. For checkpoints and cache layout, see [Local assets](/docs/guides/local-assets); for the web workspace, see [Studio](/docs/guides/studio). Run-status labels are in [Run status](/docs/guides/run-status).
 
 ## Environment
 
-Create and activate the unified inference environment:
+Create and activate the unified inference environment. The official first-clone command is `bash scripts/setup/bootstrap_worldfoundry.sh` (same as [Quickstart](/docs/quickstart)):
 
 ```bash
 bash scripts/setup/bootstrap_worldfoundry.sh
@@ -100,7 +101,17 @@ should be Hugging Face repo IDs, native HF cache locations, or documented
 
 ## CLI inference
 
-The shared command-line inference entrypoint is the Studio workspace job runner:
+The canonical command for everyday reproducible and documented runs is `worldfoundry-eval run`. This is the same shape as the commands on model pages:
+
+```bash
+worldfoundry-eval run <model-id> \
+  --pipeline.task-profile <task-profile> \
+  --output-dir tmp/worldfoundry_infer/<model-id>
+```
+
+**Which command.** Everyday reproducible / model-page commands use `worldfoundry-eval run`. Use `python -m worldfoundry.studio.workspace_job infer` only for Workspace visual smoke. See [CLI entrypoints](/docs/reference/cli#entrypoints).
+
+Workspace visual smoke (the same job path the Studio UI submits):
 
 ```bash
 python -m worldfoundry.studio.workspace_job infer \
@@ -363,12 +374,10 @@ are documented in the [Studio guide](/docs/guides/studio#create-job-configuratio
 
 Each inference run should produce a manifest-like JSON record and one or more artifacts:
 
-| Output | Expected use |
-| --- | --- |
-| Generated video/image/3D/action artifact | Primary demo output to inspect visually or structurally. |
-| Job manifest or run record | Model ID, variant, backend, parameters, paths, timings, status, and errors. |
-| Logs | Runtime import, checkpoint, CUDA, and model-specific call details. |
-| Gallery/files entry in Studio | Human review surface for release validation. |
+- **Generated video/image/3D/action artifact** — Primary demo output to inspect visually or structurally.
+- **Job manifest or run record** — Model ID, variant, backend, parameters, paths, timings, status, and errors.
+- **Logs** — Runtime import, checkpoint, CUDA, and model-specific call details.
+- **Gallery/files entry in Studio** — Human review surface for release validation.
 
 A video file existing is not success on its own. Check that the input contract,
 prompt/camera/action controls, frame count, resolution, and artifact content

@@ -1,32 +1,28 @@
 ---
 title: "WorldGen"
-description: "WorldGen turns a text prompt or an image into a full 3D world — text-to-3D-world and image-to-3D-world generation in one project."
-pageSource: generated
+description: "ZiYang Xie 的 WorldGen：文本或图像入，可遍历 3D splat/mesh 出。树内适配器；FLUX 基座 gated；runner 一致性仍为 pending。"
+modelId: "worldgen"
+pageSource: authored
 ---
 
-**发表机构:** 开源研究发布（仓库未记录正式机构） · 研究机构
-text · image → 3D scene · world state
-[WorldGen: From Text to Traversable and Interactive 3D Worlds](https://arxiv.org/abs/2511.16825) (2025)
+本卡片上的 WorldGen 是 **ZiYang Xie** 的开源 3D 世界生成器（[github.com/ZiYang-xie/WorldGen](https://github.com/ZiYang-xie/WorldGen)，项目页 [worldgen.github.io](https://worldgen.github.io/)）。运行时把**文本提示**和 / 或**单张图**变成 **3D 场景**——默认高斯溅射 `worldgen.ply`，打开 `return_mesh` 则写网格 `worldgen.glb`。它**不**输出世界视频。
 
-WorldGen 把文本提示或一张图变成完整 3D 世界——文本到 3D 世界与图像到 3D 世界生成合于一个项目。本 catalog 中 WorldFoundry 暴露树内适配器，在资产就位时执行 WorldGen 推理流程；runner parity 为 pending，gated 基础模型缺失会在推理时报告。
+<ModelPaperFigures modelId="worldgen" locale="zh" />
 
-<figure className="wf-recipe-media is-diagram">
-  <img src="/models/worldgen/paper.png" alt="WorldGen: From Text to Traversable and Interactive 3D Worlds" />
-  <figcaption>WorldGen: From Text to Traversable and Interactive 3D Worlds</figcaption>
-</figure>
+catalog 的论文链接和标题旁封面是 Meta Reality Labs 的 [WorldGen: From Text to Traversable and Interactive 3D Worlds](https://arxiv.org/abs/2511.16825)。那是**同名的另一个项目**。本页写的是 WorldFoundry 实际接好的 **LeoXie/WorldGen** 适配器，不是 Meta 的发布。也**不是** [Hunyuan World worldgen](/zh/docs/guides/supported-models/hyworld-worldgen)。
 
 <ModelCommandBuilder modelId="worldgen" locale="zh" />
 
-## 架构
+## 用来做什么
 
-catalog 记录其生成栈依赖 gated 的 FLUX 基础模型与 WorldGen 自身资产（WorldGen 本体为 apache-2.0，论文 arXiv 2511.16825）。除已记录任务外的架构内部细节仓库未存。
+做可走的 3D 资产，不是短片。启动 `worldfoundry-eval run worldgen`，任务 profile 为 `3d-world-generation`。记录输入：`prompt` 与 `image`。可选 `actions.camera_path`。视频**不是**必填。树内流程是文生场景（`t2s`）或图生场景（`i2s`）：FLUX 先画全景，适配器再重建 splat 或 mesh。也可以直接给现成全景，跳过 FLUX 生成。
 
-## 使用要点
+内置脚本默认推理分辨率是 **1600**。显存低于 24 GB 会自动开低显存模式。背景 inpaint 不能与 `return_mesh` 同时用。
 
-运行前请接受 gated FLUX 条款并就位 WorldGen 资产；树内适配器随后即可执行推理流程。完整的官方场景质量一致性仍为 pending，每次运行的产物检查在 catalog 外跟踪。
+生成 3D 世界的评测入口是 [WorldScore](/zh/docs/evaluation/benchmark-hub/worldscore)。那是 catalog 入口，不是已摄入的 WorldFoundry 分数。
 
-## 评测 Benchmark
+## 在 WorldFoundry 中运行
 
-- [WorldScore](/zh/docs/evaluation/benchmark-hub/worldscore) — 生成 3D 世界的标准评分。
+`WorldGenPipeline` 是 `worldfoundry-unified-cu128`（Python 3.11，CUDA 12.8）里的树内子进程适配器。就位 `LeoXie/WorldGen`，并接受 gated 的 **FLUX.1-dev**（文生全景）与 **FLUX.1-Fill-dev**（图生全景）条款。缺基座会在推理时报告。**Runner / 官方场景质量一致性仍为 pending。**
 
 <ModelRelatedRecipes modelId="worldgen" locale="zh" />

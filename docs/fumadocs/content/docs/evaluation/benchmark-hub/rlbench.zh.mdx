@@ -1,81 +1,27 @@
 ---
 title: RLBench
-description: 基于 CoppeliaSim/PyRep 的 100 任务视觉引导操作评测；WorldFoundry 归一化官方 rollout 导出。
+description: "CoppeliaSim / PyRep 上 100 个手工视觉引导任务。WorldFoundry 导入官方 rollout——不跑模拟器。"
 ---
 
-## 简介
+RLBench（IEEE RA-L / ICRA 2020）是帝国理工学院 Dyson 机器人实验室的评测：**100** 个独特手工操作任务，给 **CoppeliaSim**（经 **PyRep**）里的 **Franka Panda** 用。每个任务有程序化变体（物体位姿、目标）。运动规划器可以吐出**无限**演示，因此同一套件支持模仿学习、强化学习与**少样本**协议。观测是多相机视觉加状态 / 语言。
 
-**发表机构：** Imperial College London（帝国理工学院 Dyson 机器人实验室）
+论文：[RLBench: The Robot Learning Benchmark & Learning Environment](https://arxiv.org/abs/1909.12271)。项目：[sites.google.com/view/rlbench](https://sites.google.com/view/rlbench)。代码：[stepjam/RLBench](https://github.com/stepjam/RLBench)。本目录里 GitHub 许可证元数据是 `other:noassertion_github_api`——复用前先看上游条款。
 
-RLBench 来自帝国理工学院 Dyson 机器人实验室，是大规模视觉引导操作评测：在 CoppeliaSim（经 PyRep）中的 Franka Panda 上提供 100+ 手工设计任务，每个任务都可由运动规划器生成无限程序化演示，支持模仿学习、RL 与少样本协议。
+WorldFoundry **只导入官方结果**。你在上游跑 CoppeliaSim / PyRep / 官方任务资产，再经 `official-validation` 归一化 JSON/CSV。仓内无模拟器。导出须声明任务列表与协议（少样本 vs 模仿 vs RL）。
 
-WorldFoundry 以官方结果 runner 集成 RLBench：rollout 导出被归一化为统一 scorecard；CoppeliaSim/PyRep 执行保持显式且在上游完成。
+<BenchmarkPageSections id="rlbench" locale="zh" />
 
-官方参考：
-
-- Paper: [arxiv.org/abs/1909.12271](https://arxiv.org/abs/1909.12271)
-- 项目主页: [sites.google.com/corp/view/rlbench](https://sites.google.com/corp/view/rlbench)
-- 官方仓库: [stepjam/RLBench](https://github.com/stepjam/RLBench)
-- License: `other:noassertion_github_api`
-
-## 评测协议
-
-WorldFoundry 通过统一的结果导入路径集成该 benchmark：`worldfoundry-eval zoo benchmark-run --mode official-validation` 把调用方提供的官方结果导出（JSON/CSV rollout 汇总）归一化为 WorldFoundry scorecard，不执行模拟器。模拟器执行、策略加载与 rollout 采集仍是使用官方工具完成的显式上游步骤。
-
-主指标是 `success_rate`。
-
-| Metric | 含义 | 方向 |
-| --- | --- | --- |
-| `success_rate` | 评测 rollout 上的主成功率（逐 episode 成功比例）。 | 越高越好 |
-| `task_success` | 按任务聚合的成功率。 | 越高越好 |
-| `episode_success` | 逐 episode 成功指示的聚合值。 | 越高越好 |
-| `reward` | 平均 episode 奖励 / 回报。 | 越高越好 |
-| `normalized_return` | 归一化 episode 回报。 | 越高越好 |
-
-## 数据与产物布局
-
-WorldFoundry 仓内路径：
-
-```text
-worldfoundry/data/benchmarks/tasks/external/rlbench.yaml
-```
-
-```text
-<official_results.json>                 # 官方工具产出的 rollout 汇总导出
-${WORLDFOUNDRY_RLBENCH_RESULTS_PATH}   # 默认导入路径
-```
-上游 rollout 需要 CoppeliaSim、PyRep 与 RLBench 任务资产。
-
-## 运行评测
-
-目录 manifest 记录的 validation 命令：
+## 如何运行
 
 ```bash
 worldfoundry-eval zoo benchmark-run \
   --benchmark-id rlbench \
   --mode official-validation \
   --official-results-path <official_results.json> \
-  --output-dir <out> \
+  --output-dir tmp/rlbench/official-validation \
   --json
 ```
 
-## 权重与环境变量
-
-- `WORLDFOUNDRY_RLBENCH_RESULTS_PATH`: 未显式传 `--official-results-path` 时，导入器默认从该路径读取官方结果导出文件。
-
-## 输出文件
-
-运行会在 `--output-dir` 下写出：
-
-- `scorecard.json`: WorldFoundry 统一 scorecard，记录上表中的指标值。
-- `raw_results.jsonl`: 从官方结果导出解析出的归一化行。
-
-Scorecard 主键：`success_rate`（leaderboard key `success_rate`），写入 `scorecard.json`。
-
-## 边界与限制
-
-- WorldFoundry 只归一化所提供的 rollout 结果；不在仓内运行官方模拟器或策略。
-- 在用就位的模拟器资产与策略权重执行官方 rollout 并导入之前，不声称完整 leaderboard 对齐。
-- 导入的 scorecard 是集成证据，不是 leaderboard 提交。
+省略 `--official-results-path` 时，默认导入路径是 `WORLDFOUNDRY_RLBENCH_RESULTS_PATH`。清单：`worldfoundry/data/benchmarks/tasks/external/rlbench.yaml`。输出：`scorecard.json`（主键 `success_rate`）与 `raw_results.jsonl`。
 
 [← 返回 Benchmark Hub](/zh/docs/evaluation/benchmark-hub)

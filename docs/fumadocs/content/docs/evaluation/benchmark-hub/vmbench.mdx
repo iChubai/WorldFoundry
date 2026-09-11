@@ -1,65 +1,25 @@
 ---
 title: VMBench
-description: Perception-aligned video motion benchmark with five motion-centric metrics over a 1,050-prompt suite.
+description: "Alibaba AMAP ICCV 2025 motion bench: 1,050 prompts, five local metrics. WorldFoundry vendors the scorer; it does not invent a board."
 ---
 
-## About
+VMBench (AMAP-ML; ICCV 2025) evaluates **motion generation** with five perception-aligned local metrics — no hosted judge API:
 
-**Publisher:** Alibaba AMAP (AMAP-ML)
+- **PAS** — perceptible amplitude
+- **OIS** — object integrity under motion
+- **TCS** — temporal coherence
+- **CAS** — commonsense adherence
+- **MSS** — motion smoothness
 
-VMBench (ICCV 2025) evaluates motion generation quality with five perception-aligned metrics: perceptible amplitude, object integrity, temporal coherence, commonsense adherence, and motion smoothness. Its prompt suite contains 1,050 motion-centric prompts; generated videos are scored by local metric runtimes without any hosted judge API.
+Official suite: **1,050 motion-centric prompts**. Name videos `0001.mp4` … `1050.mp4`. `vmbench_average` is the mean of available PAS/OIS/TCS/CAS/MSS. License: Apache-2.0.
 
-WorldFoundry vendors the official VMBench metric code in tree (`runtime/official`), bundles the prompt suite at `worldfoundry/data/benchmarks/assets/vmbench/prompts/prompts.json`, and can either run the vendored metrics or normalize official `results.json`/`scores.csv` exports.
+Paper: [VMBench (ICCV 2025)](https://openaccess.thecvf.com/content/ICCV2025/html/Ling_VMBench_A_Benchmark_for_Perception-Aligned_Video_Motion_Generation_ICCV_2025_paper.html). Project: [amap-ml.github.io/VMBench-Website](https://amap-ml.github.io/VMBench-Website/). Code: [AMAP-ML/VMBench](https://github.com/AMAP-ML/VMBench).
 
-Official references:
+WorldFoundry **vendors the official metric code** and bundles the prompt suite (`worldfoundry/data/benchmarks/assets/vmbench/prompts/prompts.json`). The official HF dataset endpoint was **not public** at integration time. Result / runtime wiring is present; **full CUDA metric recomputation is unverified**. Full recompute needs MMDetection / MMPose / DeepSpeed and detector / tracker checkpoints.
 
-- Paper: [openaccess.thecvf.com/content/ICCV2025/html/Ling_VMBench_A_Benchmark_for_Perception-Aligned_Video_Motion_Generation_ICCV_2025_paper.html](https://openaccess.thecvf.com/content/ICCV2025/html/Ling_VMBench_A_Benchmark_for_Perception-Aligned_Video_Motion_Generation_ICCV_2025_paper.html)
-- Project page: [amap-ml.github.io/VMBench-Website](https://amap-ml.github.io/VMBench-Website/)
-- Official repository: [AMAP-ML/VMBench](https://github.com/AMAP-ML/VMBench)
-- License: `apache-2.0`
+<BenchmarkPageSections id="vmbench" locale="en" />
 
-## Evaluation protocol
-
-Generated videos must follow the official prompt-index naming convention `0001.mp4` … `1050.mp4`. The runner materializes `meta_info` rows from the video directory, dispatches the vendored metric stack (`--run-official`), or imports official result exports (`--official-results-path` / `--from-upstream-results`).
-
-Primary metric: `vmbench_average`.
-
-| Metric | Meaning | Direction |
-| --- | --- | --- |
-| `perceptible_amplitude_score` | Official VMBench PAS metric for perceptible motion amplitude. | Higher is better |
-| `object_integrity_score` | Official VMBench OIS metric for object identity and integrity under motion. | Higher is better |
-| `temporal_coherence_score` | Official VMBench TCS metric for temporal coherence. | Higher is better |
-| `commonsense_adherence_score` | Official VMBench CAS metric for action and motion commonsense adherence. | Higher is better |
-| `motion_smoothness_score` | Official VMBench MSS metric for motion smoothness. | Higher is better |
-| `vmbench_average` | Mean of available official VMBench PAS/OIS/TCS/CAS/MSS component scores. | Higher is better |
-
-## Data and artifact layout
-
-In-tree paths:
-
-```text
-worldfoundry/data/benchmarks/tasks/external/vmbench.yaml
-worldfoundry/evaluation/tasks/execution/runners/vmbench/run_vmbench_official_runner.py
-worldfoundry/evaluation/tasks/execution/runners/vmbench/vmbench_official_runtime.py
-worldfoundry/evaluation/tasks/execution/runners/vmbench/runtime/official
-```
-
-```bash
-export WORLDFOUNDRY_GENERATED_ARTIFACT_DIR=/path/to/vmbench/generated_videos
-export WORLDFOUNDRY_VMBENCH_PROMPT_MANIFEST=worldfoundry/data/benchmarks/assets/vmbench/prompts/prompts.json
-```
-
-```text
-/path/to/vmbench/generated_videos/
-  0001.mp4
-  0002.mp4
-  ...
-  1050.mp4
-```
-
-## Run the benchmark
-
-Catalog-recorded validation command:
+## How to run
 
 ```bash
 worldfoundry-eval zoo benchmark-run \
@@ -67,11 +27,9 @@ worldfoundry-eval zoo benchmark-run \
   --mode official-validation \
   --official-results-path <official_results.json> \
   --generated-artifact-dir <generated_videos> \
-  --output-dir <out> \
+  --output-dir tmp/vmbench/official-validation \
   --json
 ```
-
-Run the vendored metric stack over generated videos:
 
 ```bash
 ${WORLDFOUNDRY_UNIFIED_PYTHON} \
@@ -83,30 +41,10 @@ ${WORLDFOUNDRY_UNIFIED_PYTHON} \
   --json
 ```
 
-## Checkpoints and environment variables
+Env: `WORLDFOUNDRY_VMBENCH_PROMPT_MANIFEST` (defaults to the in-tree suite), `WORLDFOUNDRY_VMBENCH_RESULTS_PATH`. Shared stack: `motion_stack`.
 
-- `WORLDFOUNDRY_VMBENCH_PROMPT_MANIFEST`: Prompt manifest path; defaults to the bundled in-tree suite.
-- `WORLDFOUNDRY_VMBENCH_RESULTS_PATH`: Default path the importer reads official result exports from when `--official-results-path` is not passed.
-- `WORLDFOUNDRY_GENERATED_ARTIFACT_DIR`: Directory containing the candidate generated artifacts to score or import against.
+In-tree pointers: `worldfoundry/data/benchmarks/tasks/external/vmbench.yaml`, `worldfoundry/evaluation/tasks/execution/runners/vmbench/runtime/official`.
 
-This benchmark reuses the shared base-model dependency stack: `motion_stack`.
-
-## Outputs
-
-The run writes into `--output-dir`:
-
-- `scorecard.json`: WorldFoundry scorecard with the metric values recorded above.
-- `raw_metric_table.jsonl`: Metric rows backing the scorecard.
-- `per_sample_metrics.jsonl`
-- `upstream_stdout.log`: Captured stdout of the upstream official scorer.
-- `upstream_stderr.log`: Captured stderr of the upstream official scorer.
-
-Scorecard primary key: `vmbench_average` (leaderboard key `Avg`), stored in `scorecard.json`.
-
-## Limitations
-
-- Full metric recomputation is GPU-heavy and requires CUDA metric dependencies plus multiple detector/tracker checkpoints.
-- The official Hugging Face dataset endpoint was not public at integration time; the in-tree prompt bundle is the tracked source.
-- A local scorecard is not an official VMBench leaderboard result.
+Outputs include `scorecard.json` (primary `vmbench_average`, leaderboard key `Avg`).
 
 [← Benchmark Hub](/docs/evaluation/benchmark-hub)

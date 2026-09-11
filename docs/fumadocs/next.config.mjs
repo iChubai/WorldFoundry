@@ -2,6 +2,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createMDX } from 'fumadocs-mdx/next';
+import { docsMovedRedirects } from './lib/docs-moved-redirects.mjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const configPath = fileURLToPath(import.meta.url);
@@ -57,7 +58,29 @@ const config = {
         basePath,
       }
     : {}),
-  ...(process.env.NODE_ENV === 'production' ? { output: 'export' } : {}),
+  ...(process.env.NODE_ENV === 'production'
+    ? { output: 'export' }
+    : {
+        async redirects() {
+          return docsMovedRedirects.map(([source, destination]) => ({
+            source,
+            destination,
+            permanent: true,
+          }));
+        },
+        async rewrites() {
+          return [
+            { source: '/docs.md', destination: '/llms.mdx/docs' },
+            { source: '/docs.mdx', destination: '/llms.mdx/docs' },
+            { source: '/zh/docs.md', destination: '/llms.mdx/docs/zh' },
+            { source: '/zh/docs.mdx', destination: '/llms.mdx/docs/zh' },
+            { source: '/docs/:path*.md', destination: '/llms.mdx/docs/:path*' },
+            { source: '/docs/:path*.mdx', destination: '/llms.mdx/docs/:path*' },
+            { source: '/zh/docs/:path*.md', destination: '/llms.mdx/docs/zh/:path*' },
+            { source: '/zh/docs/:path*.mdx', destination: '/llms.mdx/docs/zh/:path*' },
+          ];
+        },
+      }),
   outputFileTracingRoot: __dirname,
   reactStrictMode: true,
   images: {

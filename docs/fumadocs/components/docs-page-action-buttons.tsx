@@ -1,6 +1,5 @@
 'use client';
 
-import { Check, Copy } from 'lucide-react';
 import { useState } from 'react';
 
 export function DocsCopyMarkdownButton({
@@ -27,9 +26,8 @@ export function DocsCopyMarkdownButton({
   }
 
   return (
-    <button type="button" className="pi-doc-action-chip" onClick={onCopy}>
-      {copied ? <Check aria-hidden="true" size={14} strokeWidth={2} /> : <Copy aria-hidden="true" size={14} strokeWidth={2} />}
-      <span>{copied ? copiedLabel : label}</span>
+    <button type="button" className="pi-doc-action-link" onClick={onCopy}>
+      {copied ? copiedLabel : label}
     </button>
   );
 }

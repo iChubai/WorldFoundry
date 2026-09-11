@@ -7,8 +7,6 @@ type StudioVisualizerDemo = {
   title: Record<StudioGalleryLocale, string>;
   subtitle: Record<StudioGalleryLocale, string>;
   aliases: Record<StudioGalleryLocale, string>;
-  image?: string;
-  embedUrl?: string;
   demoUrl?: string;
   port: string;
   artifacts: string;
@@ -23,7 +21,8 @@ const labels = {
     port: 'Port',
     aliases: 'Aliases',
     artifacts: 'Artifacts',
-    launch: 'Launch route',
+    launch: 'Launch',
+    demo: 'Live demo',
   },
   zh: {
     eyebrow: 'Studio 可视化 Demo',
@@ -32,7 +31,8 @@ const labels = {
     port: '端口',
     aliases: 'Alias',
     artifacts: '产物',
-    launch: '启动入口',
+    launch: '启动',
+    demo: '实时演示',
   },
 } satisfies Record<StudioGalleryLocale, Record<string, string>>;
 
@@ -51,7 +51,6 @@ const demos = [
       en: 'interactive-world, world-model, world-rollout',
       zh: 'interactive-world, world-model, world-rollout',
     },
-    image: '/images/studio/visualizers/live/interactive-world-model.png',
     port: '7868',
     artifacts: 'image, video, action_trace',
     command: 'python -m worldfoundry.studio.app matrix-game-2 --frontend world --port 7868',
@@ -70,7 +69,6 @@ const demos = [
       en: 'viser, geometry, pointcloud',
       zh: 'viser, geometry, pointcloud',
     },
-    image: '/images/studio/visualizers/live/viser-geometry.png',
     port: '18590',
     artifacts: 'ply, pcd, xyz, glb, gltf, obj, npz',
     command: 'python -m worldfoundry.studio.app pi3 --frontend points --asset /path/to/scene.ply',
@@ -89,7 +87,6 @@ const demos = [
       en: 'rrd',
       zh: 'rrd',
     },
-    image: '/images/studio/visualizers/live/rerun-timeline.png',
     port: '9876',
     artifacts: 'rrd',
     command: 'python -m worldfoundry.studio.app vggt --frontend rerun --asset /path/to/recording.rrd',
@@ -108,7 +105,6 @@ const demos = [
       en: '3dgs, splat',
       zh: '3dgs, splat',
     },
-    embedUrl: 'https://sparkjs.dev/examples/hello-world/',
     demoUrl: 'https://sparkjs.dev/examples/#hello-world',
     port: '8765',
     artifacts: 'splat, spz, ksplat, sog, splat-ply',
@@ -133,73 +129,33 @@ export function StudioVisualizerGallery({ locale = 'en' }: { locale?: StudioGall
         <figcaption className="pi-studio-viz-overview-caption">{t.overviewCaption}</figcaption>
       </figure>
 
-      <div className="pi-studio-viz-grid">
-        {demos.map((demo) => {
-          const media = demo.embedUrl ? (
-            <iframe
-              src={demo.embedUrl}
-              title={demo.title[locale]}
-              className="pi-studio-viz-card-embed"
-              loading="lazy"
-              referrerPolicy="no-referrer"
-              tabIndex={-1}
-            />
-          ) : (
-            <img
-              src={withBasePath(demo.image ?? '')}
-              alt={demo.title[locale]}
-              className="pi-studio-viz-card-image"
-              loading="lazy"
-            />
-          );
-
-          return (
-          <article className="pi-studio-viz-card" key={demo.id}>
-            <div className="pi-studio-viz-card-media">
-              {demo.demoUrl ? (
-                <a
-                  href={demo.demoUrl}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="pi-studio-viz-card-media-link"
-                  aria-label={`${demo.title[locale]} — Spark.js demo`}
-                >
-                  {media}
+      <ul className="pi-studio-viz-list">
+        {demos.map((demo) => (
+          <li className="pi-studio-viz-item" key={demo.id}>
+            <h3 className="pi-studio-viz-item-title">{demo.title[locale]}</h3>
+            <p className="pi-studio-viz-item-desc">{demo.subtitle[locale]}</p>
+            <p className="pi-studio-viz-item-facts">
+              <span>
+                {t.port} {demo.port}
+              </span>
+              <span>
+                {t.artifacts} {demo.artifacts}
+              </span>
+            </p>
+            <p className="pi-studio-viz-item-cmd">
+              <span className="pi-studio-viz-card-fact-label">{t.launch}</span>
+              <code>{demo.command}</code>
+            </p>
+            {demo.demoUrl ? (
+              <p className="pi-studio-viz-item-demo">
+                <a href={demo.demoUrl} rel="noreferrer" target="_blank">
+                  {t.demo}
                 </a>
-              ) : (
-                media
-              )}
-            </div>
-            <div className="pi-studio-viz-card-body">
-              <div className="pi-studio-viz-card-head">
-                <div className="pi-studio-viz-card-title-row">
-                  <h3 className="pi-studio-viz-card-title">{demo.title[locale]}</h3>
-                </div>
-                <ul className="pi-studio-viz-card-facts">
-                  <li>
-                    <span className="pi-studio-viz-card-fact-label">{t.port}</span>
-                    <code>{demo.port}</code>
-                  </li>
-                  <li>
-                    <span className="pi-studio-viz-card-fact-label">{t.aliases}</span>
-                    <code>{demo.aliases[locale]}</code>
-                  </li>
-                </ul>
-              </div>
-              <p className="pi-studio-viz-card-desc">{demo.subtitle[locale]}</p>
-              <p className="pi-studio-viz-card-artifacts">
-                <span className="pi-studio-viz-card-fact-label">{t.artifacts}</span>
-                {demo.artifacts}
               </p>
-              <div className="pi-studio-viz-card-cmd">
-                <span className="pi-studio-viz-card-fact-label">{t.launch}</span>
-                <code>{demo.command}</code>
-              </div>
-            </div>
-          </article>
-          );
-        })}
-      </div>
+            ) : null}
+          </li>
+        ))}
+      </ul>
     </section>
   );
 }

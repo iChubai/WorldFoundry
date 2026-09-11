@@ -1,55 +1,22 @@
 ---
 title: EWMBench
-description: 智元机器人发布的具身世界模型视频评测：场景一致性、运动正确性、语义对齐与多样性。
+description: "AgiBot 具身世界模型视频评测：场景、运动、语义、多样性。WorldFoundry 导入官方结果行，不编造榜单。"
 ---
 
-## 简介
+EWMBench（AgiBot / AgibotTech）评的是 AgiBot-World 生态里**动作条件**的机器人操作视频。这是世界模型质量评测，不是桌面操作成功率套件。四个分面汇总为 `ewmbench_average`：
 
-**发表机构：** AgiBot（智元机器人 AgibotTech）
+- **场景一致性** — 工作空间是否保持稳定？
+- **运动正确性** — 机械臂 / 物体轨迹是否匹配任务？
+- **语义对齐** — 片段是否匹配语言指令？
+- **多样性** — 生成 rollout 的多样性。
 
-EWMBench 评测具身操作场景下的视频世界模型。它由智元机器人基于 AgiBot-World 机器人数据生态构建，对生成的机器人操作视频沿四个指标族打分——场景一致性（工作区是否稳定）、运动正确性（机械臂轨迹是否符合任务）、语义对齐（视频是否符合语言指令）与多样性——聚合为 `ewmbench_average`。
+论文：[EWMBench](https://arxiv.org/abs/2505.09694)。数据 / 项目：[`agibot-world/EWMBench`](https://huggingface.co/datasets/agibot-world/EWMBench)（CC-BY-NC-SA-4.0）。代码：[AgibotTech/EWMBench](https://github.com/AgibotTech/EWMBench)。
 
-WorldFoundry 以捆绑 runtime 资产集成 EWMBench：统一 `benchmark-run` 入口归一化调用方提供的官方结果文件；runner 的 `--run-official` 路径在依赖就位时可调度上游 `evaluate.py` scorer。
+WorldFoundry **内置 runtime 资源**，并通过 `benchmark-run` 归一化官方结果文件。依赖就位时，`--run-official` 可调度上游 `evaluate.py`。检测器 / VLM 裁判资源仍在上游。
 
-官方参考：
+<BenchmarkPageSections id="ewmbench" locale="zh" />
 
-- Paper: [arxiv.org/abs/2505.09694](https://arxiv.org/abs/2505.09694)
-- 项目主页: [huggingface.co/datasets/agibot-world/EWMBench](https://huggingface.co/datasets/agibot-world/EWMBench)
-- 官方仓库: [AgibotTech/EWMBench](https://github.com/AgibotTech/EWMBench)
-
-## 评测协议
-
-`official-validation` 把官方 EWMBench 结果导出归一化到 WorldFoundry 指标面。`--run-official` 执行仓内 EWMBench scorer（mock 接线或上游 `evaluate.py` 调度）；`--task-manifest` 与 `--config-path` 绑定任务集与 scorer 配置，`--limit` 限定运行规模。
-
-主指标是 `ewmbench_average`。
-
-| Metric | 含义 | 方向 |
-| --- | --- | --- |
-| `scene_consistency` | 场景一致性（归一化基准分）。 | 越高越好 |
-| `motion_correctness` | 运动正确性（归一化基准分）。 | 越高越好 |
-| `semantic_alignment` | 语义对齐（归一化基准分）。 | 越高越好 |
-| `diversity` | 多样性（归一化基准分）。 | 越高越好 |
-| `ewmbench_average` | EWMBench 平均分（归一化基准分）。 | 越高越好 |
-
-## 数据与产物布局
-
-WorldFoundry 仓内路径：
-
-```text
-worldfoundry/data/benchmarks/tasks/external/ewmbench.yaml
-worldfoundry/evaluation/tasks/execution/runners/ewmbench/runtime/ewmbench
-```
-
-```text
-worldfoundry/evaluation/tasks/execution/runners/ewmbench/runtime/ewmbench   # 捆绑 runtime 资产
-${WORLDFOUNDRY_GENERATED_ARTIFACT_DIR}/                                     # 生成的操作视频
-```
-
-官方数据集见 Hugging Face [`agibot-world/EWMBench`](https://huggingface.co/datasets/agibot-world/EWMBench)。
-
-## 运行评测
-
-目录 manifest 记录的 validation 命令：
+## 如何运行
 
 ```bash
 worldfoundry-eval zoo benchmark-run \
@@ -57,31 +24,19 @@ worldfoundry-eval zoo benchmark-run \
   --mode official-validation \
   --official-results-path <official_results.json> \
   --generated-artifact-dir <generated_videos> \
-  --output-dir <out> \
+  --output-dir tmp/ewmbench/official-validation \
   --json
 ```
 
-## 权重与环境变量
+`--task-manifest` 与 `--config-path` 绑定任务集和打分配置；`--limit` 限制接线运行。默认导入路径：`WORLDFOUNDRY_EWMBENCH_RESULTS_PATH`。可选根：`WORLDFOUNDRY_EWMBENCH_ROOT`。共享资源：`ewmbench_dataset_assets`。
 
-- `WORLDFOUNDRY_EWMBENCH_RESULTS_PATH`: 未显式传 `--official-results-path` 时，导入器默认从该路径读取官方结果导出文件。
-- `WORLDFOUNDRY_GENERATED_ARTIFACT_DIR`: 存放待评测生成产物（候选视频/rollout）的目录。
+仓内指针：
 
-该 benchmark 复用共享 base-model 依赖栈：`ewmbench_dataset_assets`。
+```text
+worldfoundry/data/benchmarks/tasks/external/ewmbench.yaml
+worldfoundry/evaluation/tasks/execution/runners/ewmbench/runtime/ewmbench
+```
 
-## 输出文件
-
-运行会在 `--output-dir` 下写出：
-
-- `scorecard.json`: WorldFoundry 统一 scorecard，记录上表中的指标值。
-- `benchmark_contract.json`: 本次运行的 benchmark contract 记录（输入、模式、来源信息）。
-- `raw_metric_table.jsonl`: 支撑 scorecard 的原始 metric 行。
-
-Scorecard 主键：`ewmbench_average`（leaderboard key `ewmbench_average`），写入 `scorecard.json`。
-
-## 边界与限制
-
-- 导入的 scorecard 只是非 leaderboard 的集成证据；官方 runtime 执行与 judge 资产仍是上游要求。
-- 完整 leaderboard 对齐需要覆盖全部官方 prompt/任务套件的生成产物，以及上游 scorer / judge 资产。
-- mock 后端运行仅用于接线检查。
+产物包括 `scorecard.json`（主键 `ewmbench_average`）、`benchmark_contract.json`、`raw_metric_table.jsonl`。
 
 [← 返回 Benchmark Hub](/zh/docs/evaluation/benchmark-hub)

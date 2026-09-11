@@ -1,79 +1,37 @@
 ---
 title: LIBERO-Pro
-description: "Plug-and-play perturbed LIBERO evaluation exposing memorization: object, position, instruction, task, and environment variations."
+description: "Plug-and-play LIBERO overlay that probes memorization: object, pose, instruction, task, and environment shifts. WorldFoundry imports official rollouts."
 ---
 
-## About
+LIBERO-PRO (Huazhong University of Science and Technology, with Harvard, MIT, WUT, and Lehigh) is **not** a new lifelong suite and **not** [LIBERO-Plus](/docs/evaluation/benchmark-hub/libero-plus)'s 10,030-instance factor grid. It is a **plug-and-play** overlay on the original LIBERO tasks. The claim is that stock LIBERO train/eval are almost the same scene, so 90%+ scores can be rote replay. PRO applies **reasonable** perturbations and asks whether the policy still grounds the instruction.
 
-**Publisher:** Huazhong University of Science and Technology (with Tsinghua, WUT & Lehigh)
+Five official types (Figure 6 in the paper):
 
-LIBERO-PRO extends LIBERO with reasonable perturbations across four dimensions — manipulated objects, initial states, task instructions, and environments — plus principled task redesigns, all freely combinable. Its headline finding: models scoring 90%+ on standard LIBERO can collapse to 0% under these generalized settings, exposing rote memorization of action sequences and layouts rather than genuine task understanding.
+- **Object attributes** — color, texture, scale; same semantic target.
+- **Initial configuration** — placements that stay physically valid. Small position shifts are where many VLAs go to zero.
+- **Instruction** — paraphrases of the same goal (not the 4,092-type [LIBERO-Para](/docs/evaluation/benchmark-hub/libero-para) taxonomy).
+- **Task redesign** — new object sets or composed goals. These do **not** mix with the other four.
+- **Environment** — background, lighting, texture; feasibility unchanged.
 
-WorldFoundry integrates LIBERO-PRO as an official-results runner: upstream rollout exports are normalized into the unified scorecard.
+The other four types can be combined. Official eval matches stock LIBERO: **50 episodes per task**. The paper reports models above **90%** on clean LIBERO collapsing to **0%** under generalized PRO settings — an upstream finding, not a hub row.
 
-Official references:
+Paper: [LIBERO-PRO](https://arxiv.org/abs/2510.03827). Project: [LIBERO-PRO webpage](https://zxy-mllab.github.io/LIBERO-PRO-Webpage/). Code: [Zxy-MLlab/LIBERO-PRO](https://github.com/Zxy-MLlab/LIBERO-PRO) (MIT). Dataset: `zhouxueyang/LIBERO-Pro`.
 
-- Official repository: [Lifelong-Robot-Learning/LIBERO](https://github.com/Lifelong-Robot-Learning/LIBERO)
-- License: `mit`
+WorldFoundry is **official-results only**. You run the upstream overlay, then `official-validation` normalizes the export. No in-tree robosuite. [Base LIBERO](/docs/evaluation/benchmark-hub/libero) can wire closed-loop execution; this card cannot.
 
-## Evaluation protocol
+<BenchmarkPageSections id="libero-pro" locale="en" />
 
-WorldFoundry integrates this benchmark through the unified result-import path: `worldfoundry-eval zoo benchmark-run --mode official-validation` normalizes a caller-provided official result export (JSON/CSV rollout summaries) into the WorldFoundry scorecard without executing the simulator. Simulator execution, policy loading, and rollout collection remain explicit upstream steps performed with the official tooling.
-
-Primary metric: `success_rate`.
-
-| Metric | Meaning | Direction |
-| --- | --- | --- |
-| `success_rate` | Primary episode success rate over evaluated rollouts. | Higher is better |
-| `task_success` | Per-task success aggregate. | Higher is better |
-| `episode_success` | Per-episode success indicator aggregate. | Higher is better |
-| `action_accuracy` | Offline action-prediction accuracy against reference actions. | Higher is better |
-
-## Data and artifact layout
-
-In-tree paths:
-
-```text
-worldfoundry/data/benchmarks/tasks/external/libero-pro.yaml
-```
-
-```text
-<official_results.json>                 # rollout summary export from the official tooling
-${WORLDFOUNDRY_LIBERO_PRO_RESULTS_PATH}   # default import path
-```
-
-## Run the benchmark
-
-Catalog-recorded validation command:
+## How to run
 
 ```bash
 worldfoundry-eval zoo benchmark-run \
   --benchmark-id libero-pro \
   --mode official-validation \
   --official-results-path <official_results.json> \
-  --output-dir <out> \
+  --output-dir tmp/libero-pro/official-validation \
   --json
 ```
 
-## Checkpoints and environment variables
-
-- `WORLDFOUNDRY_LIBERO_PRO_ROOT`: Optional override pointing at a local benchmark runtime/repository root.
-- `WORLDFOUNDRY_LIBERO_PRO_RESULTS_PATH`: Default path the importer reads official result exports from when `--official-results-path` is not passed.
-
-## Outputs
-
-The run writes into `--output-dir`:
-
-- `scorecard.json`: WorldFoundry scorecard with the metric values recorded above.
-- `raw_results.jsonl`: Normalized rows parsed from the official result export.
-- `evaluation/summary.json`: Aggregated evaluation summary.
-
-Scorecard primary key: `success_rate` (leaderboard key `success_rate`), stored in `scorecard.json`.
-
-## Limitations
-
-- WorldFoundry normalizes supplied rollout results; it does not run the official simulator or policies in tree.
-- Full leaderboard parity is not claimed until official rollouts are executed with staged simulator assets and policy checkpoints, then imported.
-- Imported scorecards are integration evidence, not leaderboard submissions.
+Optional `WORLDFOUNDRY_LIBERO_PRO_ROOT` points at the `Zxy-MLlab/LIBERO-PRO` checkout. Default import path: `WORLDFOUNDRY_LIBERO_PRO_RESULTS_PATH`. Manifest: `worldfoundry/data/benchmarks/tasks/external/libero-pro.yaml`. Outputs: `scorecard.json` (primary `success_rate`), `raw_results.jsonl`, and `evaluation/summary.json`.
 
 [← Benchmark Hub](/docs/evaluation/benchmark-hub)

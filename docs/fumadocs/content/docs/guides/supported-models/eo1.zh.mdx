@@ -1,21 +1,50 @@
 ---
 title: "EO-1"
-description: "EO-1 (Embodied One) is an embodied VLA policy from the EO-Robotics project. WorldFoundry routes it through an in-tree Transformers processor.select_action runtime adapter sourced from the official EO repository; checkpoints are not yet rec…"
-pageSource: generated
+description: "EO-1：视觉-语言-动作（VLA）、embodied_vla；Runner 一致性待确认。"
+modelId: "eo1"
+pageSource: authored
 ---
-
-**发表机构:** 开源研究发布（仓库未记录正式机构） · 研究机构
 
 EO-1（Embodied One）是 EO-Robotics 项目的具身 VLA 策略。WorldFoundry 通过树内 Transformers processor.select_action 运行时适配器路由，源码来自官方 EO 仓库；尚未记录 checkpoint，运行输出运行时计划。
 
+<ModelPaperFigures modelId="eo1" locale="zh" />
+
+记录论文为[arXiv 2508.21112](https://arxiv.org/abs/2508.21112)。
+
+代码：[EO-Robotics/EO](https://github.com/EO-Robotics/EO)。
+
+论文：[arXiv 2508.21112](https://arxiv.org/abs/2508.21112)。记录的预期权重是 `IPEC-COMMUNITY/EO-1-3B`，路径 `$WORLDFOUNDRY_CKPT_DIR/IPEC-COMMUNITY--EO-1-3B`。该树就位前，运行会出 **runtime plan**；缺资产会报告，不是 catalog 阻塞项。许可证和机构未记。
+
 <ModelCommandBuilder modelId="eo1" locale="zh" />
 
-## 架构
+## 用来做什么
+
+需要 catalog 上的 VLA 策略时选 `eo1`：指令与观测进、动作轨迹出。用来滚动已记录策略，不是用来训练新策略。
 
 运行时契约为带 select_action 接口的 Hugging Face Transformers processor。官方仓库指针（EO-Robotics/EO，锁定 head 451c363d）之外的架构内部细节仓库未记录。
 
-## 使用要点
+catalog 记录的任务包括 视觉-语言-动作（VLA）、embodied_vla、VLA 策略执行、机器人策略。别名包括 `eo-1`、`embodied-one`。
+
+## 运行时契约
+
+必填 `image`、`prompt`、`state`；可选 `model_id` (eo1)、`policy_family`、`action_representation`；产物 `action_trace`、`eo1_action_trace.json`。
+
+记录的任务 profile：`vla`、`embodied_vla`、`vla.policy_rollout`、`robot_policy`。绑定的 pipeline 类是 `EO1Pipeline`。
+
+系列状态：**Runner 一致性待确认**。
 
 checkpoint 缺失由运行时 missing_assets 报告，不视为 catalog 阻塞；官方权重可用后就位即可。
+
+尚未记录任何 checkpoint；运行仅输出运行时计划。
+
+## 在 WorldFoundry 中运行
+
+catalog 启动命令是 `worldfoundry-eval run eo1 --pipeline.task-profile vla`。上方命令构建器按已记录任务切换 `--pipeline.task-profile`，发出的仍是 `worldfoundry-eval run`。
+
+运行环境是统一 profile `worldfoundry-unified-cu128`（Python 3.11，CUDA 12.8）。
+
+记录的权重仓库包括 `IPEC-COMMUNITY/EO-1-3B`。就位权重用 `bash scripts/inference/prepare_model_infer.sh eo1`。
+
+状态：**Runner 一致性待确认**。
 
 <ModelRelatedRecipes modelId="eo1" locale="zh" />

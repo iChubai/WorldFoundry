@@ -1,79 +1,27 @@
 ---
 title: MiKASA-Robo
-description: 记忆密集型桌面操作套件（ICLR 2026）：遮挡回忆与长时程顺序技能。
+description: "ICLR 2026 桌面记忆套件：32 个 RL 任务，后续 90 个语言条件 VLA 任务。WorldFoundry 导入官方结果；不跑 ManiSkill。"
 ---
 
-## 简介
+MiKASA-Robo 是 **MIKASA**（面向智能体的记忆密集技能评估套件）的桌面部分，来自 AIRI、MIPT 与 HSE。ICLR 2026 论文是 **32** 个 ManiSkill RL 任务、**12** 组、四类记忆：**物体**、**空间**、**顺序**、**容量**（遮挡回忆、先前布局、长动作顺序）。后续 **MIKASA-Robo-VLA** 扩展为 **90** 个语言条件任务（**10** 类记忆）、短 / 中 / 长时程（25–2160 步），以及 **22500** 条 oracle 轨迹。这两次发布**不可互换**。
 
-**发表机构：** AIRI（俄罗斯人工智能研究院，联合 MIPT 与 HSE）
+论文：[Memory, Benchmark & Robots](https://arxiv.org/abs/2502.10550)（[OpenReview](https://openreview.net/forum?id=9cLPurIZMj)）。VLA 文档：[mikasarobo.github.io](https://mikasarobo.github.io/)。代码：[CognitiveAISystems/MIKASA-Robo](https://github.com/CognitiveAISystems/MIKASA-Robo)。
 
-MiKASA-Robo（出自 MIKASA——面向智能体的记忆密集技能评估套件，ICLR 2026）评测桌面机器人操作中的记忆能力：32 个 RL 任务（在 MIKASA-Robo-VLA 中扩展为 90 个语言条件任务），覆盖四类记忆范畴，包括定位被遮挡物体、回忆先前配置，以及在有意义的部分可观测下执行长动作序列。
+WorldFoundry **导入**官方结果导出。它**不跑** ManiSkill、不采集 PPO/oracle 轨迹，也不替你选定 RL 还是 VLA——请在导出上声明。
 
-WorldFoundry 以官方结果 runner 集成 MiKASA-Robo：上游 rollout 导出被归一化为统一 scorecard。
+<BenchmarkPageSections id="mikasa" locale="zh" />
 
-官方参考：
-
-- 官方仓库: [CognitiveAISystems/MIKASA-Robo](https://github.com/CognitiveAISystems/MIKASA-Robo)
-- License: `upstream_terms`
-
-## 评测协议
-
-WorldFoundry 通过统一的结果导入路径集成该 benchmark：`worldfoundry-eval zoo benchmark-run --mode official-validation` 把调用方提供的官方结果导出（JSON/CSV rollout 汇总）归一化为 WorldFoundry scorecard，不执行模拟器。模拟器执行、策略加载与 rollout 采集仍是使用官方工具完成的显式上游步骤。
-
-主指标是 `success_rate`。
-
-| Metric | 含义 | 方向 |
-| --- | --- | --- |
-| `success_rate` | 评测 rollout 上的主成功率（逐 episode 成功比例）。 | 越高越好 |
-| `task_success` | 按任务聚合的成功率。 | 越高越好 |
-| `episode_success` | 逐 episode 成功指示的聚合值。 | 越高越好 |
-| `reward` | 平均 episode 奖励 / 回报。 | 越高越好 |
-
-## 数据与产物布局
-
-WorldFoundry 仓内路径：
-
-```text
-worldfoundry/data/benchmarks/tasks/external/mikasa.yaml
-```
-
-```text
-<official_results.json>                 # 官方工具产出的 rollout 汇总导出
-${WORLDFOUNDRY_MIKASA_RESULTS_PATH}   # 默认导入路径
-```
-
-## 运行评测
-
-目录 manifest 记录的 validation 命令：
+## 如何运行
 
 ```bash
 worldfoundry-eval zoo benchmark-run \
   --benchmark-id mikasa \
   --mode official-validation \
   --official-results-path <official_results.json> \
-  --output-dir <out> \
+  --output-dir tmp/mikasa/official-validation \
   --json
 ```
 
-## 权重与环境变量
-
-- `WORLDFOUNDRY_MIKASA_ROOT`: 可选覆盖项，指向本地 benchmark runtime / 仓库根目录。
-- `WORLDFOUNDRY_MIKASA_RESULTS_PATH`: 未显式传 `--official-results-path` 时，导入器默认从该路径读取官方结果导出文件。
-
-## 输出文件
-
-运行会在 `--output-dir` 下写出：
-
-- `scorecard.json`: WorldFoundry 统一 scorecard，记录上表中的指标值。
-- `raw_results.jsonl`: 从官方结果导出解析出的归一化行。
-- `evaluation/summary.json`: 聚合评测摘要。
-
-Scorecard 主键：`success_rate`（leaderboard key `success_rate`），写入 `scorecard.json`。
-
-## 边界与限制
-
-- WorldFoundry 只归一化所提供的 rollout 结果；不在仓内运行官方模拟器或策略。
-- 在用就位的模拟器资产与策略权重执行官方 rollout 并导入之前，不声称完整 leaderboard 对齐。
-- 导入的 scorecard 是集成证据，不是 leaderboard 提交。
+可选 `WORLDFOUNDRY_MIKASA_ROOT` 指向本地 runtime / 仓库。默认导入路径：`WORLDFOUNDRY_MIKASA_RESULTS_PATH`。清单：`worldfoundry/data/benchmarks/tasks/external/mikasa.yaml`。产物：`scorecard.json`（主键 `success_rate`）、`raw_results.jsonl`、`evaluation/summary.json`。
 
 [← 返回 Benchmark Hub](/zh/docs/evaluation/benchmark-hub)

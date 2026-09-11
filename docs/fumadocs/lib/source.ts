@@ -1,7 +1,9 @@
+import { readFile } from 'node:fs/promises';
+import path from 'node:path';
 import { docs } from 'collections/server';
 import { loader } from 'fumadocs-core/source';
-import { defaultLocale, isDefaultLocale } from './i18n';
-import { docsContentRoute, docsImageRoute, docsRoute } from './shared';
+import { defaultLocale, isDefaultLocale, isLocale } from './i18n';
+import { docsImageRoute, docsRoute } from './shared';
 import { i18n } from './i18n';
 import { withBasePath } from './site-path';
 
@@ -13,8 +15,8 @@ export const source = loader({
   plugins: [],
 });
 
-function getLocalizedSegments(page: (typeof source)['$inferPage'], leaf: string) {
-  const segments = [...page.slugs, leaf];
+function getLocalizedSegments(page: (typeof source)['$inferPage'], leaf?: string) {
+  const segments = leaf ? [...page.slugs, leaf] : [...page.slugs];
 
   if (!isDefaultLocale(page.locale)) {
     segments.unshift(page.locale ?? defaultLocale);
@@ -32,13 +34,48 @@ export function getPageImage(page: (typeof source)['$inferPage']) {
   };
 }
 
+export function getPageMarkdownSlugs(page: (typeof source)['$inferPage']) {
+  return getLocalizedSegments(page);
+}
+
 export function getPageMarkdownUrl(page: (typeof source)['$inferPage']) {
-  const segments = getLocalizedSegments(page, 'content.md');
+  // Public fumadocs Next.js URL: append `.md` to the page path.
+  // next.config rewrites this to /llms.mdx/docs/... in `next dev`.
+  const url = `${page.url}.md`;
 
   return {
-    segments,
-    url: withBasePath(`${docsContentRoute}/${segments.join('/')}`) ?? `${docsContentRoute}/${segments.join('/')}`,
+    segments: getPageMarkdownSlugs(page),
+    url: withBasePath(url) ?? url,
   };
+}
+
+export function resolveMarkdownSlug(slug: string[] | undefined) {
+  const segments = [...(slug ?? [])];
+
+  if (segments.at(-1) === 'content.md') {
+    segments.pop();
+  } else {
+    const last = segments.at(-1);
+    if (last && /\.mdx?$/i.test(last)) {
+      segments[segments.length - 1] = last.replace(/\.mdx?$/i, '');
+    }
+  }
+
+  const maybeLocale = segments[0];
+  const locale = isLocale(maybeLocale) ? maybeLocale : defaultLocale;
+  const pageSlugs = isLocale(maybeLocale) ? segments.slice(1) : segments;
+
+  return { locale, pageSlugs };
+}
+
+export async function getPageSourceMarkdown(page: (typeof source)['$inferPage']) {
+  const filePath = path.join(process.cwd(), 'content/docs', page.path);
+
+  try {
+    return await readFile(filePath, 'utf8');
+  } catch {
+    return getLLMText(page);
+  }
 }
 
 export async function getLLMText(page: (typeof source)['$inferPage']) {

@@ -1,26 +1,39 @@
 ---
 title: "DualCamCtrl"
-description: "DualCamCtrl controls video generation with a camera trajectory plus a depth image: the RGB and depth conditions together pin down scene geometry so the generated camera move stays physically grounded."
-pageSource: generated
+description: "HKUST-GZ EnVision: RGB + depth + camera .torch. Official demo verified: 320×480, 61 frames, 50 steps. License unknown. Expected seaside.mp4."
+modelId: "dualcamctrl"
+pageSource: authored
 ---
 
-**Publisher:** The Hong Kong University of Science and Technology (Guangzhou) (EnVision Lab) · University
-image → video · depth
+DualCamCtrl steers video with a **camera trajectory plus a depth image**: RGB and depth together pin geometry so the camera move stays grounded. WorldFoundry vendors infer under `worldfoundry/synthesis/visual_generation/dualcamctrl` as `DualCamCtrlPipeline`. Runner **and** demo are **verified** against the official RGB / depth / camera contract.
 
-DualCamCtrl controls video generation with a camera trajectory plus a depth image: the RGB and depth conditions together pin down scene geometry so the generated camera move stays physically grounded. In this catalog the runner is verified and follows the official RGB/depth/camera demo contract.
+<ModelPaperFigures modelId="dualcamctrl" locale="en" />
+
+Paper: [arXiv 2511.23127](https://arxiv.org/abs/2511.23127). Project: [soyouthinkyoucantell.github.io/dualcamctrl-page](https://soyouthinkyoucantell.github.io/dualcamctrl-page/). Code: [EnVision-Research/DualCamCtrl](https://github.com/EnVision-Research/DualCamCtrl). Publisher: HKUST (Guangzhou) EnVision Lab. Catalog license: **unknown**.
 
 <ModelCommandBuilder modelId="dualcamctrl" locale="en" />
 
-## Architecture
+## What it is for
 
-The default demo contract follows the official recipe: an image, a depth image, a camera .torch trajectory file, 61 frames at 320x480, 50 steps. The in-tree inference runtime lives under synthesis/visual_generation/dualcamctrl; internals beyond the recorded contract are not stored here.
+Dual-camera control for a stereo-style pair.
 
-## Usage notes
+Launch `worldfoundry-eval run dualcamctrl` with `--pipeline.task-profile world`.
 
-Open-source users should rely on the default Hugging Face cache/download path; pre-staged local assets can be passed through checkpoint_path, base_model_path, or WORLDFOUNDRY_MODEL_DIR.
+Score on [CameraBench](/docs/evaluation/benchmark-hub/camerabench) — camera-trajectory adherence of controlled generation.
 
-## Evaluation benchmarks
+## Runtime contract
 
-- [CameraBench](/docs/evaluation/benchmark-hub/camerabench) — Camera-trajectory adherence of controlled generation.
+Required: `prompt` and `image`; optional: `video`; `actions`: camera_trajectory, depth_image; artifacts: `dualcamctrl.mp4` and `seaside.mp4`.
+
+| Knob | Official demo |
+| --- | --- |
+| Size | **320×480** |
+| Frames | **61** |
+| Steps | **50** |
+| Trajectory | `.torch` camera file |
+
+## Run in WorldFoundry
+
+Status: **Verified**. Unified environment `worldfoundry-unified-cu128` (Python 3.11, CUDA 12.8). Stage `FayeHongfeiZhang/DualCamCtrl`, `alibaba-pai/Wan2.1-Fun-V1.1-1.3B-Control-Camera`, and `Wan-AI/Wan2.1-T2V-1.3B` among others locally — missing files fail at load, nothing is downloaded. Run `worldfoundry-eval run dualcamctrl` with `--pipeline.task-profile world`. Catalog VRAM is unset.
 
 <ModelRelatedRecipes modelId="dualcamctrl" locale="en" />

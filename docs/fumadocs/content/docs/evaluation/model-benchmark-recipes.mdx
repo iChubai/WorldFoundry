@@ -1,0 +1,224 @@
+---
+title: Model → benchmark recipes
+description: "Ten catalog-backed inference/eval paths. Generate or import, then read a real scorecard key. No training. No invented ranks."
+---
+
+Ten **inference → score** cells that exist in the model and benchmark catalogs. Each cell is half a screen: prepare, generate, one documented eval command, the **real** `scorecard.json` key, and pending vs verified. A process exit is not a leaderboard. WorldFoundry does not invent ranks.
+
+Start from [Evaluation](/docs/evaluation) (welcome step 5) or the [Benchmark Hub](/docs/evaluation/benchmark-hub). Model launch details stay on each model page.
+
+**Output dirs.** Write clips or traces under `tmp/<benchmark-id>/<model-id>/gen`. Write the scorecard under `tmp/<benchmark-id>/<model-id>/eval/scorecard.json`.
+
+**Status words.** **Verified** means this repository recorded GPU / runner / component evidence for that slice. **Pending** means the route is wired but parity, judge, or the full suite is not recorded. **Import only** means the normalizer reads official-shaped files; it does not replay the simulator.
+
+| # | Model | Benchmark | Scorecard key | Cell status |
+| --- | --- | --- | --- | --- |
+| 1 | [Wan2.1](/docs/guides/supported-models/wan2.1) | [VBench](/docs/evaluation/benchmark-hub/vbench) | `aesthetic_quality` | Model verified; VBench bounded |
+| 2 | [Being-H0.5](/docs/guides/supported-models/being-h05) | [LIBERO](/docs/evaluation/benchmark-hub/libero) | `success_rate` | `get_action` verified; suite import only |
+| 3 | [Causal-Forcing](/docs/guides/supported-models/causal-forcing) | [VBench](/docs/evaluation/benchmark-hub/vbench) | `aesthetic_quality` | Model demo pending; VBench bounded |
+| 4 | [ZeroScope](/docs/guides/supported-models/zeroscope) | [FETV](/docs/evaluation/benchmark-hub/fetv) | `clip_score` | Model verified; FETV CLIPScore bounded |
+| 5 | [pi0.5](/docs/guides/supported-models/pi05) | [LIBERO](/docs/evaluation/benchmark-hub/libero) | `success_rate` | `pi05_libero` verified; suite import only |
+| 6 | [Cosmos Predict 2.5](/docs/guides/supported-models/cosmos-predict-2.5) | [WorldModelBench](/docs/evaluation/benchmark-hub/worldmodelbench) | `world_model_average` | 2B gen verified; judge run pending |
+| 7 | [HunyuanVideo](/docs/guides/supported-models/hunyuanvideo) | [VBench](/docs/evaluation/benchmark-hub/vbench) | `aesthetic_quality` | Model runner pending; VBench bounded |
+| 8 | [GO-1](/docs/guides/supported-models/go1) | — | none recorded | Inference only (no catalog bench) |
+| 9 | [EasyAnimate](/docs/guides/supported-models/easyanimate) | [VBench](/docs/evaluation/benchmark-hub/vbench) | `aesthetic_quality` | Model runner pending; VBench bounded |
+| 10 | [GR00T](/docs/guides/supported-models/gr00t) | [LIBERO](/docs/evaluation/benchmark-hub/libero) | `success_rate` | N1.7 predict verified; suite import only |
+
+`overall_quality` (VBench) and `fetv_average` (FETV) appear only after every declared component is present. Bounded cells below do not emit them.
+
+## Wan2.1 → VBench
+
+Catalog: `wan2.1` recommends `vbench`. Use **`wan2.1-t2v-1.3b`** (verified 832×480, 81 frames). 14B and I2V are integrated, not this cell.
+
+**Prepare.** `worldfoundry-unified-cu128`. Stage Wan-AI 1.3B T2V locally.
+
+**Generate.** Artifact `wan2.1-t2v-1.3b-832x480-81f.mp4`.
+
+```bash
+worldfoundry-eval run wan2.1-t2v-1.3b --pipeline.task-profile text-to-video \
+  --output-dir tmp/vbench/wan2.1/gen
+```
+
+**Score.** Hub-recorded bounded path: `custom_input` / `aesthetic_quality` (the only VBench GPU dimension this repo verified).
+
+```bash
+${WORLDFOUNDRY_UNIFIED_PYTHON} \
+  worldfoundry/evaluation/tasks/execution/runners/vbench/run_vbench_official_runner.py run \
+  --mode custom_input --dimension aesthetic_quality \
+  --videos-path tmp/vbench/wan2.1/gen \
+  --output-dir tmp/vbench/wan2.1/eval --json
+```
+
+**Scorecard.** `aesthetic_quality`. `official_benchmark_verified=false`.
+
+## Being-H0.5 → LIBERO
+
+Catalog: `being-h05` recommends `libero`. Use **`being-h05-2b-libero`**. Paper percents on that card are upstream, not a WorldFoundry scorecard.
+
+**Prepare.** `worldfoundry-being-h05`. Stage `BeingBeyond/Being-H05-2B_libero` (no download at runtime).
+
+**Generate.** Artifact `being_h05_action_trace.json`. That is a `get_action` trace, not a closed-loop suite score.
+
+```bash
+worldfoundry-eval run being-h05-2b-libero --pipeline.task-profile vla.policy_rollout \
+  --output-dir tmp/libero/being-h05/gen
+```
+
+**Score.** LIBERO verification is **normalizer-only**. Import an official `eval_result` tree:
+
+```bash
+worldfoundry-eval zoo benchmark-run --benchmark-id libero --mode official-validation \
+  --official-results-path <official_results.json> \
+  --output-dir tmp/libero/being-h05/eval --json
+```
+
+**Scorecard.** `success_rate`. Closed-loop (`worldfoundry-eval embodied run`) is wired; this repo has not recorded a Being-H0.5 leaderboard run.
+
+## Causal-Forcing → VBench
+
+Catalog: `causal-forcing` recommends `vbench`. Studio default is chunk-wise T2V. Official demo parity is **pending**.
+
+**Prepare.** `worldfoundry-unified-cu128`. Stage the chunk-wise student **and** a local Wan2.1 layout (`$WORLDFOUNDRY_WAN_MODELS_ROOT` or `$WORLDFOUNDRY_CKPT_DIR`). Profile notes point prompt lists at `worldfoundry/data/test_cases/forcing/prompts/` (override `$WORLDFOUNDRY_FORCING_PROMPTS_ROOT`). If that tree is missing, `custom_input` still scores clips you already wrote.
+
+**Generate.** Artifact `causal-forcing.mp4`.
+
+```bash
+worldfoundry-eval run causal-forcing --pipeline.task-profile text-to-video \
+  --output-dir tmp/vbench/causal-forcing/gen
+```
+
+**Score.** Same bounded VBench command as Wan2.1; point `--videos-path` at `tmp/vbench/causal-forcing/gen` and `--output-dir` at `tmp/vbench/causal-forcing/eval`.
+
+**Scorecard.** `aesthetic_quality`. Model: `official_demo_parity_pending`. Bench: bounded.
+
+## ZeroScope → FETV
+
+Catalog: `zeroscope` recommends `fetv`. The 576w Diffusers route is **runner-verified**. Review CC-BY-NC-4.0 before automated scoring.
+
+**Prepare.** `worldfoundry-unified-cu128`. Stage `cerspense/zeroscope_v2_576w` under `$WORLDFOUNDRY_HFD_ROOT`.
+
+**Generate.** Artifact `zeroscope.mp4` (8 frames, 576×320). FETV-EVAL expects a 16-frame layout when it joins the official prompt index.
+
+```bash
+worldfoundry-eval run zeroscope --output-dir tmp/fetv/zeroscope/gen
+```
+
+**Score.** FETV-EVAL CLIPScore is the bounded official component (`verification_status: bounded_official_clipscore_verified`).
+
+```bash
+worldfoundry-eval zoo benchmark-run --benchmark-id fetv --mode official-validation \
+  --official-results-path <official_results.csv-or-FETV-EVAL-dir> \
+  --generated-artifact-dir tmp/fetv/zeroscope/gen \
+  --fetv-metrics clip_score \
+  --output-dir tmp/fetv/zeroscope/eval --json
+```
+
+**Scorecard.** `clip_score`. `fetv_average` only when every declared component is present. Human ratings cannot be recomputed.
+
+## pi0.5 → LIBERO
+
+Catalog: `pi05` recommends `libero`. **`pi05_libero`** is the in-tree validated `get_action` reference.
+
+**Prepare.** `worldfoundry-openpi-cu12`. Stage `gs://openpi-assets` with gsutil/gcloud.
+
+**Generate.** Artifact `pi05_action_trace.json`.
+
+```bash
+worldfoundry-eval run pi05 --pipeline.task-profile vla \
+  --output-dir tmp/libero/pi05/gen
+```
+
+**Score.** Same LIBERO **official-validation** one-liner as Being-H0.5; write `tmp/libero/pi05/eval`.
+
+**Scorecard.** `success_rate`. Predict path verified; suite import is normalizer-only. Not a leaderboard.
+
+## Cosmos Predict 2.5 → WorldModelBench
+
+Catalog: `cosmos-predict-2.5` recommends `worldmodelbench` (and `physics-iq`; this cell is the world suite). Use **`cosmos-predict-2.5-2b`**. Checkpoints are gated.
+
+**Prepare.** `worldfoundry-unified-cu128`. Stage `nvidia/Cosmos-Predict2.5-2B`. Download the 350-instance set when you will score.
+
+**Generate.** Artifact `cosmos-predict2.5-2b.mp4`. 14B GPU output is still pending.
+
+```bash
+worldfoundry-eval run cosmos-predict-2.5-2b --pipeline.task-profile text-to-world-validation \
+  --output-dir tmp/worldmodelbench/cosmos-predict-2.5/gen
+```
+
+**Score.** Import is the recorded first path. `official-run` needs `WORLDFOUNDRY_WORLDMODELBENCH_JUDGE`; **full judge execution is not verified**.
+
+```bash
+worldfoundry-eval zoo benchmark-run --benchmark-id worldmodelbench --mode official-validation \
+  --official-results-path <official_results.json> \
+  --benchmark-data-root <worldmodelbench_data_root> \
+  --generated-artifact-dir tmp/worldmodelbench/cosmos-predict-2.5/gen \
+  --output-dir tmp/worldmodelbench/cosmos-predict-2.5/eval --json
+```
+
+**Scorecard.** `world_model_average`. Leaderboard answers are withheld upstream.
+
+## HunyuanVideo → VBench
+
+Catalog: `hunyuanvideo` recommends `vbench`. Use **`hunyuanvideo-t2v`**. Runner and demo parity are **pending**.
+
+**Prepare.** `worldfoundry-unified-cu128`. Stage `tencent/HunyuanVideo`. Official 720×1280×129 wants an 80 GB-class GPU.
+
+**Generate.** Artifact `hunyuanvideo-t2v.mp4`.
+
+```bash
+worldfoundry-eval run hunyuanvideo-t2v --pipeline.task-profile text-to-video \
+  --output-dir tmp/vbench/hunyuanvideo/gen
+```
+
+**Score.** Same bounded VBench command; dirs `tmp/vbench/hunyuanvideo/gen` and `tmp/vbench/hunyuanvideo/eval`.
+
+**Scorecard.** `aesthetic_quality`. A started command is not a checkpoint-backed GPU artifact in this workspace.
+
+## GO-1 → no wired bench
+
+Catalog: `go1` records **no** `recommended_benchmarks`. GPU numerical rollout is **pending** (`static_runtime_verified` only). [EWMBench](/docs/evaluation/benchmark-hub/ewmbench) is an AgiBot World **video** suite, not this policy. `libero_example` on the model page is an embodiment sketch, not a validated eval.
+
+**Prepare.** `worldfoundry-vla-go1`. Stage `agibot-world/GO-1`. CC-BY-NC-SA-4.0.
+
+**Generate.** Artifact `go1_action_trace.json`.
+
+```bash
+worldfoundry-eval run go1 --pipeline.task-profile vla \
+  --output-dir tmp/go1/gen
+```
+
+**Score.** None. WorldFoundry does not ship a GO-1 importer or closed-loop cell, so it does not write a bench `scorecard.json`. Do not invent a key.
+
+## EasyAnimate → VBench
+
+Catalog: `easyanimate` recommends `vbench`. The wired demo is **V5.1 I2V** (`*-InP`). `custom_input` scores that folder; `vbench_standard` names do not apply. Runner parity is **pending**.
+
+**Prepare.** `worldfoundry-unified-cu128`. Stage `alibaba-pai/EasyAnimateV5.1-7b-zh-InP`.
+
+**Generate.** Artifact `easyanimate-i2v.mp4`. Required: `prompt` + `image`.
+
+```bash
+worldfoundry-eval run easyanimate --pipeline.task-profile text-to-video \
+  --output-dir tmp/vbench/easyanimate/gen
+```
+
+**Score.** Same bounded VBench command; dirs `tmp/vbench/easyanimate/gen` and `tmp/vbench/easyanimate/eval`.
+
+**Scorecard.** `aesthetic_quality`. Camera-control work on this runtime is [CameraBench](/docs/evaluation/benchmark-hub/camerabench), a different cell.
+
+## GR00T → LIBERO
+
+Catalog: `gr00t` recommends `libero`. Use **`gr00t-n1.7-libero`** (CUDA `predict` recorded). Simulator rollout is tracked separately.
+
+**Prepare.** `worldfoundry-gr00t`. Authenticate and stage pinned `nvidia/GR00T-N1.7-LIBERO` plus `nvidia/Cosmos-Reason2-2B`.
+
+**Generate.** Artifact `gr00t_action_trace.json`.
+
+```bash
+worldfoundry-eval run gr00t-n1.7-libero --pipeline.task-profile vla.policy_rollout \
+  --output-dir tmp/libero/gr00t/gen
+```
+
+**Score.** Same LIBERO **official-validation** one-liner; write `tmp/libero/gr00t/eval`.
+
+**Scorecard.** `success_rate`. Predict verified; suite import is normalizer-only. Not a leaderboard.

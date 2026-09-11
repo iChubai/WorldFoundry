@@ -1,26 +1,32 @@
 ---
 title: "ZeroScope"
-description: "ZeroScope is a community fine-tune of ModelScopeT2V optimized for watermark-free 16:9 video, released in 576w and XL upscale checkpoints by the creator cerspense."
-pageSource: generated
+description: "cerspense's watermark-free 16:9 ModelScopeT2V fine-tune. Prompt-only 576×320 U-Net; Diffusers-matched WorldFoundry route; CC-BY-NC-4.0."
+modelId: "zeroscope"
+pageSource: authored
 ---
 
-**Publisher:** Open-source community (cerspense) · Research lab
-text → video
+ZeroScope is a community **text-to-video** fine-tune of [ModelScopeT2V](/docs/guides/supported-models/modelscope-t2v) by **cerspense**, aimed at watermark-free **16:9** clips. A prompt goes in; `zeroscope.mp4` comes out. The in-tree runtime is **prompt-only**: image or video inputs raise. There is no camera path, no navigation action, and no 3D asset.
 
-ZeroScope is a community fine-tune of ModelScopeT2V optimized for watermark-free 16:9 video, released in 576w and XL upscale checkpoints by the creator cerspense. In this catalog it is a verified legacy route: WorldFoundry output matched the official Diffusers route for the selected configuration.
+<ModelPaperFigures modelId="zeroscope" locale="en" />
+
+WorldFoundry executes the Hugging Face Diffusers U-Net through `worldfoundry/synthesis/visual_generation/zeroscope/worldfoundry_runtime.py`. For the selected configuration, output **matched the official Diffusers route**. Aliases `zero-scope` and `zero_scope` resolve here.
+
+Two cards are recorded: `cerspense/zeroscope_v2_576w` (base **576×320**) and `cerspense/zeroscope_v2_XL` (upscaler). The wired Studio/API profile stages the **576w** checkpoint. Both licenses are **CC-BY-NC-4.0**.
 
 <ModelCommandBuilder modelId="zeroscope" locale="en" />
 
-## Architecture
+## What it is for
 
-A legacy U-Net latent video diffusion model (the ModelScopeT2V architecture) fine-tuned on watermark-free data; the 576w checkpoint generates at 576x320 and zeroscope_v2_XL upscales. The task list marks it legacy-unet-diffusion.
+Smoke-test a legacy T2V pipe, or compare against the ModelScopeT2V parent — not produce modern DiT footage. Launch `worldfoundry-eval run zeroscope` with a required `prompt`. Runtime defaults: **8 frames**, **576×320**, **25 steps**, guidance **9.0**, **8 fps**. Artifact: `zeroscope.mp4`.
 
-## Usage notes
+Use [FETV](/docs/evaluation/benchmark-hub/fetv) if you need a fine-grained suite from this U-Net era. For first-person world exploration use [YUME](/docs/guides/supported-models/yume). For a 3D splat use [WorldGen](/docs/guides/supported-models/worldgen).
 
-Runner parity is verified and the Studio/API route uses the unified environment — an easy, reliable smoke-test model. Mind the license: CC-BY-NC-4.0 requires benchmark policy review before commercial or automated benchmark use (recorded twice in the manifest).
+## Running in WorldFoundry
 
-## Evaluation benchmarks
+`ZeroScopePipeline` runs in `worldfoundry-unified-cu128` (Python 3.11, CUDA 12.8). Stage `cerspense/zeroscope_v2_576w` under `WORLDFOUNDRY_HFD_ROOT`. Review CC-BY-NC-4.0 before commercial use or automated benchmarking — the manifest records that policy review twice.
 
-- [FETV](/docs/evaluation/benchmark-hub/fetv) — Fine-grained legacy T2V evaluation.
+## Minimal eval
+
+The 576w route is runner-verified. Score generated clips on [FETV](/docs/evaluation/benchmark-hub/fetv) with `--fetv-metrics clip_score` and read `clip_score` — that is the bounded official component. `fetv_average` appears only when every declared component is present. Full cell: [Model → benchmark recipes](/docs/evaluation/model-benchmark-recipes).
 
 <ModelRelatedRecipes modelId="zeroscope" locale="en" />

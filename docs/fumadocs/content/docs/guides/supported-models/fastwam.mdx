@@ -1,26 +1,52 @@
 ---
 title: "FastWAM"
-description: "FastWAM is a GPU-validated world-action model built on the Wan video stack: a mixture-of-transformers (MoT) action-inference graph rides on Wan2.1-T2V-1.3B components. Both official LIBERO and RoboTwin checkpoint variants passed real A100…"
-pageSource: generated
+description: "FastWAM: wam and robot policy; Verified; dedicated `worldfoundry-vla-fastwam`."
+modelId: "fastwam"
+pageSource: authored
 ---
 
-**Publisher:** Open-source research release (institution not recorded) · Research lab
+FastWAM is a GPU-validated world-action model built on the Wan video stack: a mixture-of-transformers (MoT) action-inference graph rides on Wan2.1-T2V-1.3B components. Both official LIBERO and RoboTwin checkpoint variants passed real A100 workspace inference with finite 32-step action chunks using their official camera/state contracts — the catalog status is Verified (MIT license).
 
-FastWAM is a GPU-validated world-action model built on the Wan video stack: a mixture-of-transformers (MoT) action-inference graph rides on Wan2.1-T2V-1.3B components. Both official LIBERO and RoboTwin checkpoint variants passed real A100 workspace inference with finite 32-step action chunks using their official camera/state contracts — the catalog status is all_released_checkpoints_gpu_validated (MIT license).
+<ModelPaperFigures modelId="fastwam" locale="en" />
+
+The recorded paper is [arXiv 2603.16666](https://arxiv.org/abs/2603.16666).
+
+Project page: [yuantianyuan01.github.io/FastWAM](https://yuantianyuan01.github.io/FastWAM/). Code: [yuantianyuan01/FastWAM](https://github.com/yuantianyuan01/FastWAM).
+
+Both official **LIBERO** and **RoboTwin** variants completed real **A100** Workspace inference with finite **32-step** action chunks on their official camera/state contracts. Catalog runner is still unset — those are GPU-validated chunks, not closed-loop suite scores.
 
 <ModelCommandBuilder modelId="fastwam" locale="en" />
 
-## Architecture
+## What it is for
+
+Use `fastwam` for vision-language-action inference on this card. The recipe exists so you can launch the recorded policy profile.
 
 The released MoT action-inference graph, Wan VAE, UMT5 encoder, scheduler, preprocessing, and normalization all live in-tree. Runtime execution never imports an adjacent FastWAM source checkout and never enables remote checkpoint code.
 
-## Usage notes
+Catalog tasks include wam, robot policy, policy rollout, and embodied benchmark.
+
+Recorded evaluation entry points include [LIBERO](/docs/evaluation/benchmark-hub/libero) (GPU-validated LIBERO checkpoint variant), [RoboTwin 2.0](/docs/evaluation/benchmark-hub/robotwin) (GPU-validated RoboTwin checkpoint variant).
+
+## Runtime contract
+
+Required `image`, `prompt`, `state`, and `precomputed_language_tokens`; optional `model_id` (fastwam), `policy_family`, and `action_representation`; artifacts `action_trace` and `fastwam_action_trace.json`.
+
+Recorded task profiles: `wam`, `robot_policy`, `policy_rollout`, and `embodied_benchmark`. WorldFoundry binds `FastWAMPipeline`.
+
+Family status: **Verified**.
 
 Both LIBERO and RoboTwin variants are declared in the runtime data configuration — pick per benchmark. Stage yuanty/fastwam plus the Wan-series converted safetensors and Wan2.1-T2V-1.3B base locally.
 
-## Evaluation benchmarks
+WorldFoundry contains the released MoT action-inference graph, Wan VAE, UMT5 encoder, scheduler, preprocessing, and normalization code.
 
-- [LIBERO](/docs/evaluation/benchmark-hub/libero) — GPU-validated LIBERO checkpoint variant.
-- [RoboTwin 2.0](/docs/evaluation/benchmark-hub/robotwin) — GPU-validated RoboTwin checkpoint variant.
+## Running in WorldFoundry
+
+The catalog launch is `worldfoundry-eval run fastwam --pipeline.task-profile wam`. The command builder above switches `--pipeline.task-profile` among recorded tasks and still emits `worldfoundry-eval run`.
+
+It runs in the dedicated environment `worldfoundry-vla-fastwam` (Python 3.10, Cu121 Or Newer, torch>=2.2).
+
+Recorded weight repositories include `yuanty/fastwam`, `DiffSynth-Studio/Wan-Series-Converted-Safetensors`, and `Wan-AI/Wan2.1-T2V-1.3B` among others. Stage assets with `bash scripts/inference/prepare_model_infer.sh fastwam`.
+
+Status: **Verified**.
 
 <ModelRelatedRecipes modelId="fastwam" locale="en" />

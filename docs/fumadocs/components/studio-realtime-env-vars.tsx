@@ -264,7 +264,7 @@ export function StudioRealtimeEnvVars({ locale = 'en' }: { locale?: Locale }) {
   const t = copy[locale];
 
   return (
-    <div className="pi-kv-catalog not-prose">
+    <div className="pi-kv-catalog is-vars not-prose">
       {groups.map((group) => (
         <section className="pi-kv-group" key={group.id}>
           <h3>{group.title[locale]}</h3>

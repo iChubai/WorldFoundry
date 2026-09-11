@@ -15,8 +15,9 @@ company logo is used. When several universities co-publish, the first
 Logo assets live in `public/org-logos/`. They come from Wikimedia Commons
 (official logos with free licenses) and the Simple Icons project (CC0), plus a
 few GitHub *organization* brand avatars that were already committed to this
-repository for companies without a freely licensed logo. Personal GitHub
-avatars are banned: this script must never map an entry to
+repository for companies without a freely licensed logo. Simple Icons SVGs are
+recolored with each brand's official hex so they do not render default-black.
+Personal GitHub avatars are banned: this script must never map an entry to
 `avatars.githubusercontent.com` content or derive a logo from a repository
 owner's user avatar.
 
@@ -33,6 +34,7 @@ Run from `docs/fumadocs/`:
 from __future__ import annotations
 
 import json
+import re
 from pathlib import Path
 
 DOCS_ROOT = Path(__file__).resolve().parents[1]
@@ -44,9 +46,140 @@ SOURCES_PATH = LOGO_DIR / "SOURCES.md"
 
 SIMPLE_ICONS = "Simple Icons (https://simpleicons.org), CC0-1.0"
 
+# Official Simple Icons brand hex values. The upstream SVGs ship without a
+# fill, so browsers paint them default black. Apply the brand color so every
+# model/benchmark identity mark stays full-color on the white plate.
+# Sony / DJI publish a black (or white) wordmark; use the positive black fill
+# so the mark stays visible on the light plate.
+SIMPLE_ICON_BRAND_HEX: dict[str, str] = {
+    "adobe.svg": "FF0000",
+    "baidu.svg": "2932E1",
+    "bytedance.svg": "3C8CFF",
+    "huawei.svg": "FF0000",
+    "dji.svg": "000000",
+    "huggingface.svg": "FFD21E",
+    "kuaishou.svg": "FF4906",
+    "meituan.svg": "FFD100",
+    "meta.svg": "0467DF",
+    "minimax.svg": "E73562",
+    "naver.svg": "03C75A",
+    "nvidia.svg": "76B900",
+    "openai.svg": "412991",
+    "oppo.svg": "2D683D",
+    "snap.svg": "FFFC00",
+    "sony.svg": "000000",
+    "vivo.svg": "415FFF",
+    "xiaomi.svg": "FF6900",
+}
+
+# White-on-black cropped university seals → official crest blue on transparent.
+UNIVERSITY_SEAL_HEX: dict[str, str] = {
+    "buaa.png": "004EA2",
+    "cas.png": "004B87",
+    "ucas.png": "003087",
+}
+
 
 def commons(title: str) -> str:
     return "https://commons.wikimedia.org/wiki/File:" + title.replace(" ", "_")
+
+
+def _inject_attr(tag: str, name: str, value: str) -> str:
+    if re.search(rf'\b{name}=["\']', tag):
+        return re.sub(rf'{name}=["\'][^"\']*["\']', f'{name}="{value}"', tag)
+    if tag.endswith("/>"):
+        return f'{tag[:-2].rstrip()} {name}="{value}"/>'
+    if tag.endswith(">"):
+        return f'{tag[:-1].rstrip()} {name}="{value}">'
+    return tag
+
+
+def apply_simple_icon_brand_fills() -> int:
+    changed = 0
+    for filename, hex_color in SIMPLE_ICON_BRAND_HEX.items():
+        path = LOGO_DIR / filename
+        if not path.is_file():
+            raise SystemExit(f"missing simple-icon asset: {path}")
+        color = f"#{hex_color}"
+        text = path.read_text()
+        updated = re.sub(
+            r"<svg\b[^>]*>",
+            lambda match: _inject_attr(match.group(0), "fill", color),
+            text,
+            count=1,
+        )
+        updated = re.sub(
+            r"<path\b[^>]*/?>",
+            lambda match: _inject_attr(match.group(0), "fill", color),
+            updated,
+        )
+        if updated != text:
+            path.write_text(updated)
+            changed += 1
+    return changed
+
+
+def annotate_simple_icon_sources() -> None:
+    for meta in ORGS.values():
+        logo = meta.get("logo")
+        source = str(meta.get("source") or "")
+        if logo in SIMPLE_ICON_BRAND_HEX and source.startswith("Simple Icons"):
+            marker = f"official brand hex #{SIMPLE_ICON_BRAND_HEX[logo]}"
+            if marker not in source:
+                meta["source"] = f"{source}; {marker}"
+
+
+def recolor_university_seals() -> int:
+    try:
+        from PIL import Image
+    except ImportError:
+        print("skip university seal recolor (Pillow not installed)")
+        return 0
+
+    changed = 0
+    for filename, hex_color in UNIVERSITY_SEAL_HEX.items():
+        path = LOGO_DIR / filename
+        if not path.is_file():
+            raise SystemExit(f"missing university seal: {path}")
+        target = tuple(int(hex_color[i : i + 2], 16) for i in (0, 2, 4))
+        image = Image.open(path).convert("RGBA")
+        pixels = list(image.getdata())
+        opaque = [px for px in pixels if px[3] > 30]
+        if not opaque:
+            continue
+        already = 0
+        grayscale = 0
+        for r, g, b, _a in opaque:
+            chroma = max(r, g, b) - min(r, g, b)
+            if chroma < 18:
+                grayscale += 1
+            if all(abs(channel - target[i]) < 22 for i, channel in enumerate((r, g, b))):
+                already += 1
+        if already / len(opaque) > 0.7:
+            continue
+        if grayscale / len(opaque) < 0.55:
+            continue
+
+        recolored = []
+        for r, g, b, a in pixels:
+            if a < 8:
+                recolored.append((0, 0, 0, 0))
+                continue
+            luma = (r + g + b) / 3
+            # White-on-black seals: bright pixels are the crest.
+            # Black-on-white seals: dark pixels are the crest.
+            if luma >= 96:
+                mark = luma / 255.0
+            else:
+                mark = (255.0 - luma) / 255.0
+            if mark < 0.18:
+                recolored.append((0, 0, 0, 0))
+                continue
+            recolored.append((*target, int(min(255, a * mark))))
+        image.putdata(recolored)
+        image.save(path)
+        changed += 1
+    return changed
 
 
 # --------------------------------------------------------------------------
@@ -75,6 +208,48 @@ ORGS: dict[str, dict] = {
         "logo": "alibaba.svg",
         "source": commons("Alibaba en logo.svg"),
         "license": "Public domain (text logo)",
+    },
+    "modelscope": {
+        "name": "ModelScope",
+        "abbr": "MS",
+        "logo": "modelscope.png",
+        "source": "GitHub organization brand avatar (github.com/modelscope)",
+        "license": "Organization brand mark",
+    },
+    "baidu": {
+        "name": "Baidu",
+        "abbr": "BD",
+        "logo": "baidu.svg",
+        "source": SIMPLE_ICONS,
+        "license": "CC0-1.0",
+    },
+    "huawei": {
+        "name": "Huawei",
+        "abbr": "HW",
+        "logo": "huawei.svg",
+        "source": SIMPLE_ICONS,
+        "license": "CC0-1.0",
+    },
+    "galbot": {
+        "name": "Galbot",
+        "abbr": "GB",
+        "logo": "galbot.jpg",
+        "source": "GitHub organization brand avatar (github.com/GalaxyGeneralRobotics)",
+        "license": "Organization brand mark",
+    },
+    "reactor": {
+        "name": "Reactor",
+        "abbr": "RC",
+        "logo": "reactor.jpg",
+        "source": "GitHub organization brand avatar (github.com/reactor-team)",
+        "license": "Organization brand mark",
+    },
+    "dexora": {
+        "name": "Dexora",
+        "abbr": "DX",
+        "logo": "dexora.svg",
+        "source": "Original simple dual-arm D monogram for the identity mark",
+        "license": "Public domain (simple geometry)",
     },
     "wan": {
         "name": "Wan (Tongyi Wanxiang)",
@@ -115,8 +290,8 @@ ORGS: dict[str, dict] = {
         "name": "Google",
         "abbr": "G",
         "logo": "google.svg",
-        "source": SIMPLE_ICONS,
-        "license": "CC0-1.0",
+        "source": commons('Google "G" logo.svg'),
+        "license": "Public domain (simple geometry)",
     },
     "google-deepmind": {
         "name": "Google DeepMind",
@@ -606,7 +781,7 @@ ORGS: dict[str, dict] = {
         "name": "Beihang University",
         "abbr": "BUAA",
         "logo": "buaa.png",
-        "source": "Official university brand mark (www.buaa.edu.cn), crest cropped for the identity mark",
+        "source": "Official university brand mark (www.buaa.edu.cn), crest cropped and restored to Beihang blue #004EA2",
         "license": "Organization brand mark",
     },
     "csu": {
@@ -620,14 +795,14 @@ ORGS: dict[str, dict] = {
         "name": "Chinese Academy of Sciences",
         "abbr": "CAS",
         "logo": "cas.png",
-        "source": "Official CAS seal from the UCAS brand mark (www.ucas.ac.cn), crest cropped for the identity mark",
+        "source": "Official CAS seal from the UCAS brand mark (www.ucas.ac.cn), crest cropped and restored to CAS navy #004B87",
         "license": "Organization brand mark",
     },
     "ucas": {
         "name": "University of Chinese Academy of Sciences",
         "abbr": "UCAS",
         "logo": "ucas.png",
-        "source": "Official university brand mark (www.ucas.ac.cn), CAS seal cropped for the identity mark",
+        "source": "Official university brand mark (www.ucas.ac.cn), CAS seal cropped and restored to UCAS navy #003087",
         "license": "Organization brand mark",
     },
     "hku": {
@@ -798,6 +973,13 @@ ORGS: dict[str, dict] = {
         "source": "Original simple shield rendition of the University of Waterloo coat of arms",
         "license": "Public domain (simple seal rendition)",
     },
+    "uq": {
+        "name": "The University of Queensland",
+        "abbr": "UQ",
+        "logo": "uq.svg",
+        "source": "Original simple circular-seal rendition of the UQ coat of arms (cross pattee and open book) in official UQ purple #51247A",
+        "license": "Public domain (simple seal rendition)",
+    },
     "jhu": {
         "name": "Johns Hopkins University",
         "abbr": "JHU",
@@ -955,11 +1137,13 @@ ORGS: dict[str, dict] = {
 # --------------------------------------------------------------------------
 MODEL_ORGS: dict[str, str] = {
     "4d-gs": "hust",
+    "a1": "zju",
     "abot-m0": "amap",
     "abot-world-0-5b-lf": "amap",
     "ac3d": "snap",
     "act": "stanford",
     "adaworld": "hkust",
+    "ahawam": "baidu",
     "alayaworld": "alayalab",
     "allegro": "rhymes",
     "animatediff": "cuhk",
@@ -989,6 +1173,7 @@ MODEL_ORGS: dict[str, str] = {
     "depth-anything-v2-prior": "bytedance",
     "depth-anything-v3": "bytedance",
     "depth-anything-v3-prior": "bytedance",
+    "dexora-1b": "dexora",
     "diamond": "unige",
     "diffusion-policy": "stanford",
     "dino-wm": "nyu",
@@ -1022,6 +1207,8 @@ MODEL_ORGS: dict[str, str] = {
     "eventvla": "shanghai-ai-lab",
     "evoke": "alayalab",
     "fantasyworld": "amap",
+    "fastvideo-causal-wan2.2": "nvidia",
+    "fastwam": "galaxea",
     "flashworld": "tencent",
     "framepack": "stanford",
     "galaxea-vla": "galaxea",
@@ -1071,6 +1258,7 @@ MODEL_ORGS: dict[str, str] = {
     "krea-realtime-video": "krea",
     "lagernvs": "meta",
     "lapa": "microsoft",
+    "lda-1b": "galbot",
     "last-r1": "cuhk",
     "leworldmodel": "mila",
     "libero-para": "cau",
@@ -1111,6 +1299,7 @@ MODEL_ORGS: dict[str, str] = {
     "mme-vla": "umich",
     "mochi-1": "genmo",
     "modelscope-t2v": "alibaba",
+    "moverse": "alibaba",
     "molmoact2": "ai2",
     "molmobot": "ai2",
     "monst3r": "google-deepmind",
@@ -1126,6 +1315,7 @@ MODEL_ORGS: dict[str, str] = {
     "octo": "berkeley",
     "omnivinci": "nvidia",
     "omniforcing": "omniforcing",
+    "open-dreamer": "reactor",
     "open-magvit2": "tencent",
     "open-sora": "hpcaitech",
     "open-sora-plan": "pku",
@@ -1166,6 +1356,7 @@ MODEL_ORGS: dict[str, str] = {
     "skyreels-v2": "skywork",
     "skyreels-v3": "skywork",
     "smolvla": "huggingface",
+    "solarwm": "cuhk",
     "solaris": "nyu",
     "sora2": "openai",
     "spatia": "microsoft",
@@ -1195,6 +1386,7 @@ MODEL_ORGS: dict[str, str] = {
     "versecrafter": "tencent",
     "vggt": "meta",
     "vggt-omega": "meta",
+    "vggt-world": "uq",
     "vid2world": "tsinghua",
     "video-depth-anything-prior": "bytedance",
     "videocrafter": "tencent",
@@ -1224,32 +1416,23 @@ MODEL_ORGS: dict[str, str] = {
     "worldcam": "kaist",
     "worldfm": "inspatio",
     "worldgen": "meta",
+    "worldgrow": "huawei",
     "worldlabs": "worldlabs",
     "worldlabs-marble-1.1": "worldlabs",
     "worldmem": "ntu",
     "wow": "x-humanoid",
+    "x-wam": "xiaomi",
     "xiaomi-robotics-0": "xiaomi",
     "xiaomi-robotics-1": "xiaomi",
     "xvla": "tsinghua",
     "yume": "fudan",
+    "zeroscope": "modelscope",
 }
 
 # Models whose publishing institution could not be confirmed from the paper,
 # project page, or repository organization. They intentionally have no logo
 # and render model-name initials (never author names or GitHub avatars).
-UNRESOLVED_MODELS: list[str] = [
-    "a1",
-    "ahawam",
-    "dexora-1b",
-    "fastwam",
-    "lda-1b",
-    "moverse",
-    "open-dreamer",
-    "vggt-world",
-    "worldgrow",
-    "x-wam",
-    "zeroscope",
-]
+UNRESOLVED_MODELS: list[str] = []
 
 # --------------------------------------------------------------------------
 # benchmark_id -> org id (hand-reviewed).
@@ -1455,6 +1638,9 @@ def write_sources(orgs: dict[str, dict]) -> None:
 
 
 def main() -> None:
+    colored = apply_simple_icon_brand_fills()
+    seals = recolor_university_seals()
+    annotate_simple_icon_sources()
     validate()
     orgs = build_org_entries()
     write_map(orgs)
@@ -1467,7 +1653,8 @@ def main() -> None:
     print(
         f"models: {len(MODEL_ORGS)}/{total_models} mapped, "
         f"benchmarks: {len(BENCHMARK_ORGS)}/{total_benches} mapped, "
-        f"orgs: {len(ORGS)} ({len(with_logo)} with logo files)"
+        f"orgs: {len(ORGS)} ({len(with_logo)} with logo files), "
+        f"simple-icon fills: {colored}, university seals: {seals}"
     )
 
 

@@ -1,21 +1,48 @@
 ---
 title: "Wall-OSS"
-description: "Wall-OSS is X Square Robot's open-source embodied foundation policy from the Wall-X line, with two confirmed checkpoints: wall-oss-flow (flow-matching action decoding) and wall-oss-fast (FAST-token decoding). WorldFoundry routes it through…"
+description: "Wall-OSS from X Square Robot: vla action prediction and vla policy rollout; Runner parity pending."
+modelId: "wall-oss"
 pageSource: generated
 ---
 
-**Publisher:** X Square Robot · Company
-
 Wall-OSS is X Square Robot's open-source embodied foundation policy from the Wall-X line, with two confirmed checkpoints: wall-oss-flow (flow-matching action decoding) and wall-oss-fast (FAST-token decoding). WorldFoundry routes it through an in-tree action runtime adapter against the concrete Wall-X policy; checkpoint-backed parity remains asset-gated.
+
+<ModelPaperFigures modelId="wall-oss" locale="en" />
+
+The recorded paper is [arXiv 2606.01955](https://arxiv.org/abs/2606.01955).
+
+Code: [X-Square-Robot/wall-x](https://github.com/X-Square-Robot/wall-x).
 
 <ModelCommandBuilder modelId="wall-oss" locale="en" />
 
-## Architecture
+## What it is for
+
+Use `wall-oss` for vision-language-action inference on this card. The recipe exists so you can launch the recorded policy profile.
 
 Two decoding variants of one foundation policy: a flow-matching head (wall-oss-flow) and a FAST discrete-token head (wall-oss-fast). Architecture internals beyond the official repository pointer are not recorded in this repository.
 
-## Usage notes
+Catalog tasks include vla action prediction and vla policy rollout. Catalog aliases include `wall_oss` and `x-square-robot/wall-oss-flow`.
+
+## Runtime contract
+
+Required `image`, `prompt`, and `state`; optional `model_id` (wall-oss), `policy_family`, and `action_representation`; artifacts `action_trace` and `wall-oss_action_trace.json`.
+
+Recorded task profiles: `vla.action_prediction` and `vla.policy_rollout`. WorldFoundry binds `WallOSSPipeline`.
+
+Family status: **Runner parity pending**.
 
 Checkpoint absence is reported by runtime missing_assets and is not a catalog blocker; runs emit a runtime plan until weights are staged. Choose flow for smooth continuous control, fast for lower-latency decoding.
+
+WorldFoundry routes Wall-OSS through an in-tree action runtime adapter against the concrete Wall-X policy.
+
+## Running in WorldFoundry
+
+Launch `worldfoundry-eval run wall-oss --pipeline.task-profile vla.action_prediction` to execute the policy. The command builder above switches `--pipeline.task-profile` among recorded tasks and still emits `worldfoundry-eval run`.
+
+It runs in the unified environment `worldfoundry-unified-cu128` (Python 3.11, CUDA 12.8).
+
+Recorded weight repositories include `x-square-robot/wall-oss-flow` and `x-square-robot/wall-oss-fast`. Stage assets with `bash scripts/inference/prepare_model_infer.sh wall-oss`.
+
+Status: **Runner parity pending**.
 
 <ModelRelatedRecipes modelId="wall-oss" locale="en" />

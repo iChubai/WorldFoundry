@@ -1,33 +1,39 @@
 ---
 title: "DynamiCrafter"
-description: "DynamiCrafter animates open-domain still images by leveraging video diffusion priors — you give it a picture (optionally a prompt) and it produces a plausible motion clip. The catalog records two runnable variants at different resolutions:…"
-pageSource: generated
+description: "腾讯 / 港中文的开放域图生视频。两条已接线变体：512 与 1024。官方长配置一致性待验证。许可证审完前限制再分发。"
+modelId: "dynamicrafter"
+pageSource: authored
 ---
 
-**发表机构:** 腾讯 AI Lab / 香港中文大学 · 企业
-image → video
+DynamiCrafter 给开放域静帧做动画：图（加可选提示词）进去，一段像样的运动出来。它是 U-Net 时代的潜视频扩散，**双流**图像条件（CLIP 图像特征 + VAE 潜变量）。WorldFoundry 把两个分辨率 profile 封成树内运行时。默认 pipeline：`DynamiCrafter512I2VPipeline`。变体：`dynamicrafter-512-i2v`、`dynamicrafter-1024-i2v`。
 
-DynamiCrafter 借助视频扩散先验为开放域静态图片赋予动态——给它一张图（可附提示词），即可生成合理的运动视频。catalog 记录了两个不同分辨率的可运行 variant：dynamicrafter-512-i2v 与 dynamicrafter-1024-i2v，均封装为树内 WorldFoundry 运行时并配好了 checkpoint 环境。
+<ModelPaperFigures modelId="dynamicrafter" locale="zh" />
+
+论文：[arXiv 2310.12190](https://arxiv.org/abs/2310.12190)。项目页：[doubiiu.github.io/projects/DynamiCrafter](https://doubiiu.github.io/projects/DynamiCrafter/)。发布方：腾讯 AI Lab / 港中文。catalog 未记许可证；manifest 在上游许可审完前**限制再分发**。
+
+两条变体都已接线；**官方长配置一致性待验证**。求快用 512，定稿用 1024。它会发明运动——**不**跟相机路径或动作。
 
 <ModelCommandBuilder modelId="dynamicrafter" locale="zh" />
 
-## 架构
+## 用来做什么
 
-DynamiCrafter 属 U-Net 时代的潜空间视频扩散模型，采用双流图像条件设计（CLIP 图像特征加 VAE 编码的图像潜变量），见其论文。本仓库记录了两个分辨率 profile 与标准的 prompt/image/video/actions 输入 schema；更细的内部结构仓库未记录。
+用 DynamiCrafter 图生视频把静帧动起来。
 
-## 使用要点
+启动 `worldfoundry-eval run dynamicrafter-512-i2v --pipeline.task-profile image-to-video`。
 
-两个 variant 均已接通，但官方长配置的一致性验证仍在等待。建议先用 512 版求快，再用 1024 版出成品。 manifest 要求在人工审阅上游许可前保持再分发受限——请相应对待产出。
+评测入口：[AIGCBench](/zh/docs/evaluation/benchmark-hub/aigcbench)（与 DynamiCrafter 任务对齐的图生视频评测）。
 
-## 变体与 Pipeline Binding
+## 运行时契约
 
-| Variant | 任务 | Runtime profile | Pipeline Binding | 状态 |
+必填 `prompt`、`image`；可选 `video`；`actions`：seed；产物 `dynamicrafter-512-i2v.mp4`。
+
+| 变体 | 尺寸 | 帧数 | 帧步长 | 产物 |
 | --- | --- | --- | --- | --- |
-| `dynamicrafter-512-i2v` | image-to-video | `dynamicrafter-512-i2v` | `dynamicrafter-512-i2v` | integrated |
-| `dynamicrafter-1024-i2v` | image-to-video | `dynamicrafter-1024-i2v` | `dynamicrafter-1024-i2v` | integrated |
+| `dynamicrafter-512-i2v` | **320×512** | **50** | **24** | `dynamicrafter-512-i2v.mp4` |
+| `dynamicrafter-1024-i2v` | **576×1024** | **50** | **10** | `dynamicrafter-1024-i2v.mp4` |
 
-## 评测 Benchmark
+## 在 WorldFoundry 中运行
 
-- [AIGCBench](/zh/docs/evaluation/benchmark-hub/aigcbench) — 与 DynamiCrafter 任务对齐的图生视频评测。
+状态：**Runner 一致性待验证**。统一环境 `worldfoundry-unified-cu128`（Python 3.11, CUDA 12.8）。先把 `Doubiiu/DynamiCrafter`、`Doubiiu/DynamiCrafter_512`、`Doubiiu/DynamiCrafter_1024` 就位到本地，缺文件加载失败，运行时不下载。在该环境执行 `worldfoundry-eval run dynamicrafter-512-i2v --pipeline.task-profile image-to-video`。catalog 未记录 VRAM。
 
 <ModelRelatedRecipes modelId="dynamicrafter" locale="zh" />

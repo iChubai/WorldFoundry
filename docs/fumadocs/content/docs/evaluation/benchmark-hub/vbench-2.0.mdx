@@ -1,66 +1,23 @@
 ---
 title: VBench-2.0
-description: "Intrinsic-faithfulness successor to VBench: creativity, commonsense, controllability, human fidelity, and physics."
+description: "NTU / Shanghai AI Lab faithfulness suite: 18 abilities in five pillars. WorldFoundry vendors the runtime; it does not invent a board. Not interchangeable with VBench."
 ---
 
-## About
+VBench-2.0 (S-Lab, NTU and Shanghai AI Laboratory) is the **intrinsic-faithfulness** successor to [VBench](/docs/evaluation/benchmark-hub/vbench). It is **not interchangeable** with the 16-dimension quality suite. **18 fine-grained abilities** group into five pillars that average into `vbench2_total`:
 
-**Publisher:** S-Lab, Nanyang Technological University & Shanghai AI Laboratory
+- **Creativity** — composition, diversity.
+- **Commonsense** — instance preservation, motion rationality.
+- **Controllability** — camera, landscape, plot, dynamic, interaction, motion-order.
+- **Human fidelity** — anatomy, clothes, identity.
+- **Physics** — material, mechanics, multi-view consistency, thermotics.
 
-VBench-2.0 moves beyond per-frame quality toward intrinsic faithfulness: whether generated videos respect commonsense, physics, human anatomy, controllability, and creativity. It defines 18 fine-grained abilities grouped into five pillars (`creativity`, `commonsense`, `controllability`, `human_fidelity`, `physics`) and scores them with a mix of VLM judges, detectors, and specialist models.
+Paper: [VBench-2.0](https://arxiv.org/abs/2503.21755). Project: [vchitect.github.io/VBench-2.0-project](https://vchitect.github.io/VBench-2.0-project/). Code: [Vchitect/VBench](https://github.com/Vchitect/VBench). Snapshots: `Vchitect/VBench-2.0_sampled_videos`, `_human_annotation`, `_human_anomaly`.
 
-WorldFoundry vendors the VBench-2.0 runtime at `worldfoundry/evaluation/tasks/execution/runners/vbench_2_0/runtime` and drives it through `run_vbench_2_0_official_runner.py`, which also handles dataset-snapshot discovery, per-dimension dispatch, coverage manifests, and scorecard conversion.
+WorldFoundry **vendors the VBench-2.0 runtime**. The runner checks prompt-suite coverage (`vbench2_dataset_manifest.json`, `vbench2_video_coverage.json`) before dispatching evaluators. A bounded **diversity** component is verified; the full suite is not. Some dims need RetinaFace or other heavyweight judges.
 
-Official references:
+<BenchmarkPageSections id="vbench-2.0" locale="en" />
 
-- Paper: [arxiv.org/abs/2503.21755](https://arxiv.org/abs/2503.21755)
-- Project page: [vchitect.github.io/VBench-2.0-project](https://vchitect.github.io/VBench-2.0-project/)
-- Official repository: [Vchitect/VBench](https://github.com/Vchitect/VBench)
-
-## Evaluation protocol
-
-The runner validates video coverage against the official VBench-2.0 prompt suite before dispatching evaluators, and writes `vbench2_dataset_manifest.json` plus `vbench2_video_coverage.json` so incomplete runs are visible instead of silently under-scored. Dimensions can be selected individually with `--dimension`; the official total aggregates all five pillars.
-
-Primary metric: `vbench2_total`.
-
-| Metric | Meaning | Direction |
-| --- | --- | --- |
-| `vbench2_creativity` | Official VBench-2.0 creativity group aggregated from Composition and Diversity dimensions. | Higher is better |
-| `vbench2_commonsense` | Official VBench-2.0 commonsense group aggregated from Instance Preservation and Motion Rationality. | Higher is better |
-| `vbench2_controllability` | Official VBench-2.0 controllability group aggregated from camera, landscape, plot, dynamic, interaction, and motion-order dimensions. | Higher is better |
-| `vbench2_human_fidelity` | Official VBench-2.0 human fidelity group aggregated from anatomy, clothes, and identity dimensions. | Higher is better |
-| `vbench2_physics` | Official VBench-2.0 physics group aggregated from material, mechanics, multi-view consistency, and thermotics dimensions. | Higher is better |
-| `vbench2_total` | Mean of VBench-2.0 creativity, commonsense, controllability, human fidelity, and physics group scores. | Higher is better |
-
-## Data and artifact layout
-
-In-tree paths:
-
-```text
-worldfoundry/data/benchmarks/tasks/external/vbench-2.0.yaml
-worldfoundry/evaluation/tasks/execution/runners/vbench_2_0/runtime
-```
-
-Stage the official sampled-videos / annotation snapshots (Hugging Face `Vchitect/VBench-2.0_*`) and point the runner at them:
-
-```bash
-export WORLDFOUNDRY_VBENCH2_DATASET_ROOT=/path/to/vbench2_datasets
-export WORLDFOUNDRY_GENERATED_ARTIFACT_DIR=/path/to/generated_videos
-```
-
-Generated videos follow the official prompt-name convention from the VBench-2.0 suite. `WORLDFOUNDRY_HF_CACHE_DIR` is consulted for snapshot discovery when the dataset root is not set.
-
-## Run the benchmark
-
-Catalog-recorded validation command:
-
-```bash
-${WORLDFOUNDRY_UNIFIED_PYTHON} worldfoundry/evaluation/tasks/execution/runners/vbench_2_0/run_vbench_2_0_official_runner.py \
-  --benchmark-id vbench-2.0 \
-  --variant vbench2
-```
-
-Run a selected dimension against staged videos:
+## How to run
 
 ```bash
 ${WORLDFOUNDRY_UNIFIED_PYTHON} \
@@ -74,35 +31,10 @@ ${WORLDFOUNDRY_UNIFIED_PYTHON} \
   --json
 ```
 
-## Checkpoints and environment variables
+Env: `WORLDFOUNDRY_VBENCH2_DATASET_ROOT`, `WORLDFOUNDRY_VBENCH2_RESULTS_PATH`, `WORLDFOUNDRY_VBENCH2_ROOT`, `WORLDFOUNDRY_HF_CACHE_DIR`. Shared stack: `vbench_perception_metric_stack`.
 
-- `WORLDFOUNDRY_VBENCH2_ROOT`: Optional override pointing at an external runtime checkout instead of the in-tree copy.
-- `WORLDFOUNDRY_VBENCH2_RESULTS_PATH`: Default path the importer reads official result exports from when `--official-results-path` is not passed.
-- `WORLDFOUNDRY_GENERATED_ARTIFACT_DIR`: Directory containing the candidate generated artifacts to score or import against.
-- `WORLDFOUNDRY_VBENCH2_DATASET_ROOT`: Local root of the staged official dataset.
-- `WORLDFOUNDRY_HF_CACHE_DIR`: Hugging Face cache directory used for dataset snapshot discovery.
+In-tree pointers: `worldfoundry/data/benchmarks/tasks/external/vbench-2.0.yaml`, `worldfoundry/evaluation/tasks/execution/runners/vbench_2_0/runtime`.
 
-This benchmark reuses the shared base-model dependency stack: `vbench_perception_metric_stack`.
-
-## Outputs
-
-The run writes into `--output-dir`:
-
-- `scorecard.json`: WorldFoundry scorecard with the metric values recorded above.
-- `raw_metric_table.jsonl`: Metric rows backing the scorecard.
-- `dimension_scores.json`: Per-dimension score breakdown.
-- `vbench2_dataset_manifest.json`
-- `vbench2_video_coverage.json`
-- `vbench2_benchmark_contract.json`
-- `upstream_stdout.log`: Captured stdout of the upstream official scorer.
-- `upstream_stderr.log`: Captured stderr of the upstream official scorer.
-
-Scorecard primary key: `vbench2_total` (leaderboard key `total score`), stored in `scorecard.json`.
-
-## Limitations
-
-- Several dimensions require heavyweight judge/backbone checkpoints (VLM judges, detectors); partial-dimension runs are not comparable with official VBench-2.0 totals.
-- Coverage manifests record missing prompt videos; a run with incomplete coverage must not be quoted as a leaderboard number.
-- A local scorecard is not an official VBench-2.0 leaderboard entry.
+Outputs include `scorecard.json` (primary `vbench2_total`), `dimension_scores.json`, and coverage manifests.
 
 [← Benchmark Hub](/docs/evaluation/benchmark-hub)

@@ -1,79 +1,36 @@
 ---
 title: AI2-THOR
-description: Interactive 3D household simulator from Ai2, wired into WorldFoundry as a native closed-loop embodied runtime.
+description: "Ai2 Unity household simulator: 120 iTHOR rooms. WorldFoundry can step closed-loop FloorPlan wiring; it does not ship ALFRED or TEACh."
 ---
 
-## About
+AI2-THOR (Allen Institute for AI) is a **Unity** household simulator for embodied AI. The original **iTHOR** set is **120** artist-built rooms: 30 kitchens, 30 living rooms, 30 bedrooms, 30 bathrooms (`FloorPlan1–30`, `201–230`, `301–330`, `401–430`). Agents take **discrete** actions (`MoveAhead`, `RotateLeft`, `PickupObject`, open/close, toggle) against physics and object state. The usual iTHOR split is **20 / 5 / 5** train / val / test rooms per type. Later packs (RoboTHOR, ProcTHOR) and language stacks (**ALFRED**, **TEACh**) sit on this engine — they are not the WorldFoundry default.
 
-**Publisher:** Allen Institute for AI (Ai2)
+Paper: [AI2-THOR: An Interactive 3D Environment for Visual AI](https://arxiv.org/abs/1712.05474). Project: [ai2thor.allenai.org](https://ai2thor.allenai.org/). Code: [allenai/ai2thor](https://github.com/allenai/ai2thor) (Apache-2.0).
 
-AI2-THOR is the Allen Institute for AI's interactive 3D environment for embodied AI: near photo-realistic household scenes with actionable objects, physics, and an agent that navigates and manipulates through discrete actions. It underpins task suites such as ALFRED and TEACh.
+WorldFoundry **evaluates** a native closed loop: `worldfoundry-eval embodied run` boots the Unity build and steps a policy that already emits simulator tokens. In-tree configs (`FloorPlan1`–`FloorPlan3`) are **wiring checks**, not ALFRED/TEACh. You can also **import** a rollout export via `WORLDFOUNDRY_AI2THOR_RESULTS_PATH`. This page does **not** run VLA inference — supply the policy or policy server yourself.
 
-WorldFoundry wires AI2-THOR as a *native closed-loop simulator*: `worldfoundry-eval embodied run` boots the Unity-based simulator, steps a policy that emits discrete simulator tokens (`forward`, `left`, `pickup`, …), and writes rollout records plus a scorecard. Default scene tasks (e.g. FloorPlan1) are provided for wiring validation.
+<BenchmarkPageSections id="ai2thor" locale="en" />
 
-Official references:
+## How to run
 
-- Paper: [ai2thor.allenai.org/](https://ai2thor.allenai.org/)
-- Official repository: [allenai/ai2thor](https://github.com/allenai/ai2thor)
-- License: `upstream_terms`
-
-## Evaluation protocol
-
-Closed-loop runs are driven by eval configs under `worldfoundry/data/benchmarks/eval_configs/embodied/ai2thor/`; the policy is a checkpoint or an external policy server that maps observations to discrete simulator tokens. Result import via `WORLDFOUNDRY_AI2THOR_RESULTS_PATH` normalizes existing rollout summaries instead.
-
-Primary metric: `success_rate`.
-
-| Metric | Meaning | Direction |
-| --- | --- | --- |
-| `success_rate` | Primary episode success rate over evaluated rollouts. | Higher is better |
-| `task_success` | Per-task success aggregate. | Higher is better |
-| `episode_success` | Per-episode success indicator aggregate. | Higher is better |
-| `reward` | Mean episode reward / return. | Higher is better |
-
-## Data and artifact layout
-
-In-tree paths:
-
-```text
-worldfoundry/data/benchmarks/tasks/external/ai2thor.yaml
-```
-
-```text
-worldfoundry/data/benchmarks/eval_configs/embodied/ai2thor/floorplan1.yaml   # wiring-validation task
-cache/vla_va_wam/repos/allenai--ai2thor                                      # upstream repo mirror
-```
-
-Requires the AI2-THOR Python package, the Unity simulator build/cache, and a headless CloudRendering or X11 display backend.
-
-## Run the benchmark
-
-Catalog-recorded validation command:
+Closed-loop wiring (Unity package, simulator cache, and a CloudRendering or X11 display):
 
 ```bash
 worldfoundry-eval embodied run \
   --config worldfoundry/data/benchmarks/eval_configs/embodied/ai2thor/floorplan1.yaml
 ```
 
-## Checkpoints and environment variables
+Import an existing export:
 
-- `WORLDFOUNDRY_AI2THOR_ROOT`: Optional override pointing at a local benchmark runtime/repository root.
-- `WORLDFOUNDRY_AI2THOR_RESULTS_PATH`: Default path the importer reads official result exports from when `--official-results-path` is not passed.
+```bash
+worldfoundry-eval zoo benchmark-run \
+  --benchmark-id ai2thor \
+  --mode official-validation \
+  --official-results-path <official_results.json> \
+  --output-dir tmp/ai2thor/official-validation \
+  --json
+```
 
-## Outputs
-
-The run writes into `--output-dir`:
-
-- `scorecard.json`: WorldFoundry scorecard with the metric values recorded above.
-- `run_manifest.json`: Manifest of the executed rollout run.
-- `results.jsonl`: Per-episode rollout records.
-- `metrics/summary.json`: Aggregated metric summary for the run.
-
-Scorecard primary key: `success_rate` (leaderboard key `success_rate`), stored in `scorecard.json`.
-
-## Limitations
-
-- Official task suites such as ALFRED/TEACh are not bundled yet; the default scene tasks validate wiring only.
-- Non-zero rollouts require a policy checkpoint or an external policy server.
-- Closed-loop scores over default scene tasks are not comparable to published ALFRED/TEACh numbers.
+Optional `WORLDFOUNDRY_AI2THOR_ROOT` points at a local runtime/repo. Default import path: `WORLDFOUNDRY_AI2THOR_RESULTS_PATH`. Manifest: `worldfoundry/data/benchmarks/tasks/external/ai2thor.yaml`. Repo mirror: `cache/vla_va_wam/repos/allenai--ai2thor`. Outputs: `scorecard.json` (primary `success_rate`), `run_manifest.json`, `results.jsonl`, `metrics/summary.json`.
 
 [← Benchmark Hub](/docs/evaluation/benchmark-hub)

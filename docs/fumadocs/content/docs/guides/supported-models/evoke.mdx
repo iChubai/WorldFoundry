@@ -1,21 +1,44 @@
 ---
 title: "Evoke"
-description: "Official source is bundled at revision 74d268516d95c8fceadd2378f91a73f9f187042b."
-pageSource: generated
+description: "AlayaLab camera-controlled world / T2V-I2V-V2V. Official source bundled at revision 74d26851. Independent in-tree runtime; checkpoint-backed GPU parity pending."
+modelId: "evoke"
+pageSource: authored
 ---
 
-text · image · video → video
+Evoke is cataloged as a **camera-controlled world** that also lists text-to-video, image-to-video, and video-to-video. WorldFoundry bundles official source at revision `74d268516d95c8fceadd2378f91a73f9f187042b` and exposes an independent in-tree runtime as `EvokePipeline`. External source checkouts are rejected; checkpoints resolve from local WorldFoundry / Hugging Face storage with Hub clients offline.
 
-Evoke is a world model from Alayalab. The catalog records it for text-to-video, image-to-video, video-to-video, and camera-controlled-video.
+<ModelPaperFigures modelId="evoke" locale="en" />
 
-WorldFoundry binds it to the worldfoundry.pipelines.evoke.pipeline_evoke:EvokePipeline pipeline via worldfoundry.pipeline.
+The released **post-distillation** checkpoint was trained with **v2v** conditioning. Catalog i2v and t2v modes are upstream-documented **zero-shot** capabilities, not a claim that those modes match the trained v2v path. A supplied camera trajectory turns on geometric state and **requires separately acquired ViGeo1.1** (`pkqbajng/ViGeo1.1`, CC-BY-NC-4.0). This is an inference compatibility port to the shared environment, not parity with Evoke's pinned training stack.
 
-It runs in the shared unified environment worldfoundry-unified-cu128 (Python 3.11, CUDA 12.8).
-
-Weights are pulled from the Hugging Face repository AlayaLab/Evoke, pinned to revision 7fa34ecef, plus 1 more recorded repository.
-
-Runner parity is currently “Pending” and native-demo parity is “Not Recorded”; treat end-to-end GPU evidence as not yet recorded.
+Paper: [arXiv 2608.13546](https://arxiv.org/abs/2608.13546). Project: [evoke-world.github.io/Evoke](https://evoke-world.github.io/Evoke/). Code: [AlayaLab/Evoke](https://github.com/AlayaLab/Evoke). Weights: `AlayaLab/Evoke` (revision `7fa34ecef`). Source license: **Apache-2.0**. Status: **Runner parity pending**. The official three-step post-distillation command is wired; H200-class checkpoint execution has **not** been verified in this tree.
 
 <ModelCommandBuilder modelId="evoke" locale="en" />
+
+## What it is for
+
+Run the wired three-step post-distillation path. This is not AlayaWorld.
+
+Launch `worldfoundry-eval run evoke` with `--pipeline.task-profile text-to-video`.
+
+## Runtime contract
+
+Required: `prompt`, `image`, and `video`; `actions`: trajectory_npz, pose_path, camera_trajectory; artifacts: `evoke.mp4`.
+
+| Knob | Default |
+| --- | --- |
+| Mode | **auto** |
+| Size | **640×384** |
+| Chunks | **4** |
+| FPS | **24** |
+| Steps | **3** (post-distillation) |
+| Guidance | **1.0** |
+| Source | bundled revision `74d268516d95c8fceadd2378f91a73f9f187042b` (external checkouts rejected) |
+| Weights | `AlayaLab/Evoke` revision `7fa34ecef` — `evoke-base/{vae,scheduler,text_encoder,tokenizer}` plus `evoke/stage3_post_distillation/transformer` |
+| Camera geometry | separately acquired `pkqbajng/ViGeo1.1` (`vigeo.pt`, CC-BY-NC-4.0) |
+
+## Run in WorldFoundry
+
+Status: **Runner parity pending**. Unified environment `worldfoundry-unified-cu128` (Python 3.11, CUDA 12.8). Stage `AlayaLab/Evoke` and `pkqbajng/ViGeo1.1` locally — missing files fail at load, nothing is downloaded. Run `worldfoundry-eval run evoke` with `--pipeline.task-profile text-to-video`. License: CC-BY-NC-4.0. Catalog VRAM is unset.
 
 <ModelRelatedRecipes modelId="evoke" locale="en" />

@@ -51,10 +51,10 @@ Facade 本身很小。`run_evaluate()` 只做请求校验、模式选择和 runn
 
 Mode 选择是第一个影响成本与前置条件的分支。`existing-results` 不加载权重，只评分磁盘上已有内容，因此 hosted API 批处理与离线 demo 常用它。`model` 会先解析 runner 并调用 `generate()`；传入的 metrics 类型决定 scoring 留在进程内（`ContractRunner`）还是复用 existing-results 路径（`ExistingResultsRunner`）。
 
-| Mode | 必需输入 | 是否加载模型 | 指标路径 | 什么时候用 |
-| --- | --- | --- | --- | --- |
-| `existing-results` | `results` 或 `results_path`；requests 可选 | 否 | Built-in metric IDs 或 artifact checks | Demo、hosted job 或离线脚本已经产出 artifacts。 |
-| `model` | Requests 加 runner config 或 model-zoo id | 是 | 传 Metric objects 时走 `ContractRunner`；传 metric IDs/artifact checks 时走 `ExistingResultsRunner` | 希望由框架执行模型。 |
+<KvCatalog heading="Mode" vars rows={[
+    { name: <><code>existing-results</code></>, description: "Demo、hosted job 或离线脚本已经产出 artifacts。", reads: [{ label: "必需输入", value: <><code>results</code>{" 或 "}<code>results_path</code>{"；requests 可选"}</> }, { label: "是否加载模型", value: "否" }, { label: "指标路径", value: "Built-in metric IDs 或 artifact checks" }] },
+    { name: <><code>model</code></>, description: "希望由框架执行模型。", reads: [{ label: "必需输入", value: "Requests 加 runner config 或 model-zoo id" }, { label: "是否加载模型", value: "是" }, { label: "指标路径", value: <>{"传 Metric objects 时走 "}<code>ContractRunner</code>{"；传 metric IDs/artifact checks 时走 "}<code>ExistingResultsRunner</code></> }] }
+  ]} />
 
 ## Model Mode 细节
 
@@ -98,18 +98,103 @@ Generation 是最耗时的阶段：runner 异常会变成 failed samples，确�
 
 这些文件构成[评测指南](/zh/docs/evaluation#输出)中的 audit trail。各 run mode 下形态稳定：`existing-results` 仍会写 `sample_ledger.jsonl` 和 `scorecard.json`，便于与同一 benchmark 上的完整 model run 对比。路径均相对 `run_manifest.json` 中记录的 run 输出目录。
 
-| 文件 | 生产者 | 含义 |
-| --- | --- | --- |
-| `run_manifest.json` | Runner | Run identity、status、model、benchmark、dataset、context metadata、output paths。 |
-| `execution_plan.json` | Runner 或 `RunPlan` | Planned stages、sample IDs、materialization details、output files。 |
-| `requests.jsonl` | Runner | 每个样本一个归一化 `GenerationRequest`。 |
-| `results.jsonl` | Model runner through evaluation runner | 每个样本一个归一化 `GenerationResult`。 |
-| `sample_ledger.jsonl` | Runner | 样本级 pass/fail 状态和 stage-level errors。 |
-| `artifacts.jsonl` | Runner | 相对 output directory enrich 后的 flattened artifact refs。 |
-| `metrics/per_sample.jsonl` | Metrics layer | 样本级 metric output 或 skipped state。 |
-| `metrics/summary.json` | Metrics layer | Aggregates、failed ids、skipped ids、leaderboard fields。 |
-| `scorecard.json` | Reporting layer | Release/review surface，供 validation 和 docs 消费。 |
-| `report.md` | Reporting layer | 从 scorecard 派生的人类可读摘要。 |
+<div className="pi-kv-catalog not-prose">
+  <section className="pi-kv-group">
+    <h3>文件</h3>
+    <ul>
+      <li className="pi-kv-row">
+        <div className="pi-kv-head">
+          <div className="pi-kv-names">
+            <code>run_manifest.json</code>
+          </div>
+        </div>
+        <p>Run identity、status、model、benchmark、dataset、context metadata、output paths。</p>
+        <p className="pi-kv-read"><span>生产者</span> Runner</p>
+      </li>
+      <li className="pi-kv-row">
+        <div className="pi-kv-head">
+          <div className="pi-kv-names">
+            <code>execution_plan.json</code>
+          </div>
+        </div>
+        <p>Planned stages、sample IDs、materialization details、output files。</p>
+        <p className="pi-kv-read"><span>生产者</span> Runner 或 <code>RunPlan</code></p>
+      </li>
+      <li className="pi-kv-row">
+        <div className="pi-kv-head">
+          <div className="pi-kv-names">
+            <code>requests.jsonl</code>
+          </div>
+        </div>
+        <p>每个样本一个归一化 <code>GenerationRequest</code>。</p>
+        <p className="pi-kv-read"><span>生产者</span> Runner</p>
+      </li>
+      <li className="pi-kv-row">
+        <div className="pi-kv-head">
+          <div className="pi-kv-names">
+            <code>results.jsonl</code>
+          </div>
+        </div>
+        <p>每个样本一个归一化 <code>GenerationResult</code>。</p>
+        <p className="pi-kv-read"><span>生产者</span> Model runner through evaluation runner</p>
+      </li>
+      <li className="pi-kv-row">
+        <div className="pi-kv-head">
+          <div className="pi-kv-names">
+            <code>sample_ledger.jsonl</code>
+          </div>
+        </div>
+        <p>样本级 pass/fail 状态和 stage-level errors。</p>
+        <p className="pi-kv-read"><span>生产者</span> Runner</p>
+      </li>
+      <li className="pi-kv-row">
+        <div className="pi-kv-head">
+          <div className="pi-kv-names">
+            <code>artifacts.jsonl</code>
+          </div>
+        </div>
+        <p>相对 output directory enrich 后的 flattened artifact refs。</p>
+        <p className="pi-kv-read"><span>生产者</span> Runner</p>
+      </li>
+      <li className="pi-kv-row">
+        <div className="pi-kv-head">
+          <div className="pi-kv-names">
+            <code>metrics/per_sample.jsonl</code>
+          </div>
+        </div>
+        <p>样本级 metric output 或 skipped state。</p>
+        <p className="pi-kv-read"><span>生产者</span> Metrics layer</p>
+      </li>
+      <li className="pi-kv-row">
+        <div className="pi-kv-head">
+          <div className="pi-kv-names">
+            <code>metrics/summary.json</code>
+          </div>
+        </div>
+        <p>Aggregates、failed ids、skipped ids、leaderboard fields。</p>
+        <p className="pi-kv-read"><span>生产者</span> Metrics layer</p>
+      </li>
+      <li className="pi-kv-row">
+        <div className="pi-kv-head">
+          <div className="pi-kv-names">
+            <code>scorecard.json</code>
+          </div>
+        </div>
+        <p>Release/review surface，供 validation 和 docs 消费。</p>
+        <p className="pi-kv-read"><span>生产者</span> Reporting layer</p>
+      </li>
+      <li className="pi-kv-row">
+        <div className="pi-kv-head">
+          <div className="pi-kv-names">
+            <code>report.md</code>
+          </div>
+        </div>
+        <p>从 scorecard 派生的人类可读摘要。</p>
+        <p className="pi-kv-read"><span>生产者</span> Reporting layer</p>
+      </li>
+    </ul>
+  </section>
+</div>
 
 ## Task materialization
 

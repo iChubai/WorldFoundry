@@ -94,11 +94,9 @@ bash scripts/workspace/run_workspace.sh \
 
 ### Path naming
 
-| Source | Local directory rule | Example |
-| --- | --- | --- |
-| HF model `org/name` | `org--name` | `Skywork/Matrix-Game-2.0` → `Skywork--Matrix-Game-2.0` |
-| HF dataset `org/name` | `org__name` | `lerobot/libero` → `lerobot__libero` |
-| GitHub `owner/repo` | often `owner--repo` | `Lifelong-Robot-Learning/LIBERO` → `Lifelong-Robot-Learning--LIBERO` |
+- **HF model `org/name`** — local directory `org--name`. Example: `Skywork/Matrix-Game-2.0` → `Skywork--Matrix-Game-2.0`.
+- **HF dataset `org/name`** — local directory `org__name`. Example: `lerobot/libero` → `lerobot__libero`.
+- **GitHub `owner/repo`** — often `owner--repo`. Example: `Lifelong-Robot-Learning/LIBERO` → `Lifelong-Robot-Learning--LIBERO`.
 
 **Follow the `path` field in catalog YAML or `local_assets.example.yaml`.** Some embodied benchmarks still use legacy paths such as `cache/vla_va_wam/hf_datasets/org--name`; mirror that layout or override the path in your manifest.
 
@@ -192,14 +190,91 @@ Planner fields to read: `assets.data`, `assets.checkpoints`, `env.api_or_secret`
 
 These in-tree runtimes keep checkpoint locations in the shared base-model asset registry. Source code does not assume a checkout-specific absolute path.
 
-| Capability | Official source | Expected file | Default location | Override |
-| --- | --- | --- | --- | --- |
-| `sam2` | HF [`facebook/sam2.1-hiera-base-plus`](https://huggingface.co/facebook/sam2.1-hiera-base-plus) | `sam2.1_hiera_base_plus.pt` | `${WORLDFOUNDRY_HFD_ROOT}/facebook--sam2.1-hiera-base-plus/` | `WORLDFOUNDRY_SAM2_CKPT` |
-| `mobile_sam` | GitHub [`ChaoningZhang/MobileSAM`, `weights/`](https://github.com/ChaoningZhang/MobileSAM/tree/master/weights) | `mobile_sam.pt` | `${WORLDFOUNDRY_CKPT_DIR}/MobileSAM/` | `WORLDFOUNDRY_MOBILE_SAM_CKPT` |
-| `repvit_sam` | GitHub [`THU-MIG/RepViT`, release `v1.0`](https://github.com/THU-MIG/RepViT/releases/tag/v1.0) | `repvit_sam.pt` | `${WORLDFOUNDRY_CKPT_DIR}/RepViT/` | `WORLDFOUNDRY_REPVIT_SAM_CKPT` |
-| `midas_v21_small_256` | GitHub [`isl-org/MiDaS`, release `v2_1`](https://github.com/isl-org/MiDaS/releases/tag/v2_1) | `midas_v21_small_256.pt` | `${WORLDFOUNDRY_CKPT_DIR}/` | `WORLDFOUNDRY_MIDAS_V21_SMALL_CKPT` |
-| `unidepth_v2_vitl14` | HF [`lpiccinelli/unidepth-v2-vitl14`](https://huggingface.co/lpiccinelli/unidepth-v2-vitl14) | `config.json`, `model.safetensors` | `${WORLDFOUNDRY_HFD_ROOT}/lpiccinelli--unidepth-v2-vitl14/` | `WORLDFOUNDRY_UNIDEPTH_V2_VITL14_MODEL_DIR` |
-| `unik3d_vitl` | HF [`lpiccinelli/unik3d-vitl`](https://huggingface.co/lpiccinelli/unik3d-vitl) | `config.json`, `model.safetensors` | `${WORLDFOUNDRY_HFD_ROOT}/lpiccinelli--unik3d-vitl/` | `WORLDFOUNDRY_UNIK3D_VITL_MODEL_DIR` |
+<div className="pi-kv-catalog is-vars not-prose">
+  <section className="pi-kv-group">
+    <h3>Capability</h3>
+    <ul>
+      <li className="pi-kv-row">
+        <div className="pi-kv-head">
+          <div className="pi-kv-names">
+            <code>sam2</code>
+          </div>
+          <span className="pi-kv-default">
+            <span>Override</span>
+            <code>WORLDFOUNDRY_SAM2_CKPT</code>
+          </span>
+        </div>
+        <p>Official source: HF <a href="https://huggingface.co/facebook/sam2.1-hiera-base-plus">facebook/sam2.1-hiera-base-plus</a>. Expected file: <code>sam2.1_hiera_base_plus.pt</code></p>
+        <p className="pi-kv-read"><span>Default location</span> <code>{'${WORLDFOUNDRY_HFD_ROOT}/facebook--sam2.1-hiera-base-plus/'}</code></p>
+      </li>
+      <li className="pi-kv-row">
+        <div className="pi-kv-head">
+          <div className="pi-kv-names">
+            <code>mobile_sam</code>
+          </div>
+          <span className="pi-kv-default">
+            <span>Override</span>
+            <code>WORLDFOUNDRY_MOBILE_SAM_CKPT</code>
+          </span>
+        </div>
+        <p>Official source: GitHub <a href="https://github.com/ChaoningZhang/MobileSAM/tree/master/weights">ChaoningZhang/MobileSAM</a> <code>weights/</code>. Expected file: <code>mobile_sam.pt</code></p>
+        <p className="pi-kv-read"><span>Default location</span> <code>{'${WORLDFOUNDRY_CKPT_DIR}/MobileSAM/'}</code></p>
+      </li>
+      <li className="pi-kv-row">
+        <div className="pi-kv-head">
+          <div className="pi-kv-names">
+            <code>repvit_sam</code>
+          </div>
+          <span className="pi-kv-default">
+            <span>Override</span>
+            <code>WORLDFOUNDRY_REPVIT_SAM_CKPT</code>
+          </span>
+        </div>
+        <p>Official source: GitHub <a href="https://github.com/THU-MIG/RepViT/releases/tag/v1.0">THU-MIG/RepViT</a> release <code>v1.0</code>. Expected file: <code>repvit_sam.pt</code></p>
+        <p className="pi-kv-read"><span>Default location</span> <code>{'${WORLDFOUNDRY_CKPT_DIR}/RepViT/'}</code></p>
+      </li>
+      <li className="pi-kv-row">
+        <div className="pi-kv-head">
+          <div className="pi-kv-names">
+            <code>midas_v21_small_256</code>
+          </div>
+          <span className="pi-kv-default">
+            <span>Override</span>
+            <code>WORLDFOUNDRY_MIDAS_V21_SMALL_CKPT</code>
+          </span>
+        </div>
+        <p>Official source: GitHub <a href="https://github.com/isl-org/MiDaS/releases/tag/v2_1">isl-org/MiDaS</a> release <code>v2_1</code>. Expected file: <code>midas_v21_small_256.pt</code></p>
+        <p className="pi-kv-read"><span>Default location</span> <code>{'${WORLDFOUNDRY_CKPT_DIR}/'}</code></p>
+      </li>
+      <li className="pi-kv-row">
+        <div className="pi-kv-head">
+          <div className="pi-kv-names">
+            <code>unidepth_v2_vitl14</code>
+          </div>
+          <span className="pi-kv-default">
+            <span>Override</span>
+            <code>WORLDFOUNDRY_UNIDEPTH_V2_VITL14_MODEL_DIR</code>
+          </span>
+        </div>
+        <p>Official source: HF <a href="https://huggingface.co/lpiccinelli/unidepth-v2-vitl14">lpiccinelli/unidepth-v2-vitl14</a>. Expected files: <code>config.json</code>, <code>model.safetensors</code></p>
+        <p className="pi-kv-read"><span>Default location</span> <code>{'${WORLDFOUNDRY_HFD_ROOT}/lpiccinelli--unidepth-v2-vitl14/'}</code></p>
+      </li>
+      <li className="pi-kv-row">
+        <div className="pi-kv-head">
+          <div className="pi-kv-names">
+            <code>unik3d_vitl</code>
+          </div>
+          <span className="pi-kv-default">
+            <span>Override</span>
+            <code>WORLDFOUNDRY_UNIK3D_VITL_MODEL_DIR</code>
+          </span>
+        </div>
+        <p>Official source: HF <a href="https://huggingface.co/lpiccinelli/unik3d-vitl">lpiccinelli/unik3d-vitl</a>. Expected files: <code>config.json</code>, <code>model.safetensors</code></p>
+        <p className="pi-kv-read"><span>Default location</span> <code>{'${WORLDFOUNDRY_HFD_ROOT}/lpiccinelli--unik3d-vitl/'}</code></p>
+      </li>
+    </ul>
+  </section>
+</div>
 
 UniDepth V2 and UniK3D are released under CC-BY-NC-4.0. Review the upstream non-commercial terms before downloading or redistributing their weights.
 
@@ -470,12 +545,10 @@ cp worldfoundry/data/benchmarks/local_assets.example.yaml \
 export WORLDFOUNDRY_LOCAL_ASSET_MANIFEST="${WORLDFOUNDRY_HOME}/local_assets.yaml"
 ```
 
-| `kind` | You stage | Typical command |
-| --- | --- | --- |
-| `repo` | Existing source/runtime root | Set `WORLDFOUNDRY_<BENCHMARK>_ROOT=<path>` |
-| `dataset` | HF dataset snapshot | `hf download <id> --repo-type dataset --local-dir <path>` |
-| `checkpoint` | Model weights | `hf download <id> --local-dir <path>` |
-| `simulator_asset` | Simulator files | Manual install per benchmark docs |
-| `result_dump` | Upstream official results | Copy after running upstream evaluator |
+- **`repo`** — Existing source/runtime root. Typical command: set `WORLDFOUNDRY_<BENCHMARK>_ROOT=<path>`.
+- **`dataset`** — HF dataset snapshot. Typical command: `hf download <id> --repo-type dataset --local-dir <path>`.
+- **`checkpoint`** — Model weights. Typical command: `hf download <id> --local-dir <path>`.
+- **`simulator_asset`** — Simulator files. Typical command: manual install per benchmark docs.
+- **`result_dump`** — Upstream official results. Typical command: copy after running the upstream evaluator.
 
 Embodied simulator roots and helper scripts are covered in [Embodied official runtime](/docs/evaluation/embodied-official-runtime).

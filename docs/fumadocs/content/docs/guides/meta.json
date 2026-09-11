@@ -5,6 +5,8 @@
     "local-assets",
     "tui",
     "inference",
+    "inference-optimization",
+    "run-status",
     "supported-models",
     "studio",
     "add-model",

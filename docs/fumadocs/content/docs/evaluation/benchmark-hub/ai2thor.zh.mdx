@@ -1,79 +1,36 @@
 ---
 title: AI2-THOR
-description: Ai2 出品的交互式 3D 家居模拟器，在 WorldFoundry 中作为原生闭环具身 runtime 接入。
+description: "Ai2 的 Unity 家居模拟器：120 个 iTHOR 房间。WorldFoundry 可跑闭环 FloorPlan 接线；不附带 ALFRED 或 TEACh。"
 ---
 
-## 简介
+AI2-THOR（艾伦人工智能研究所，Ai2）是面向具身 AI 的 **Unity** 家居模拟器。原始 **iTHOR** 集合是 **120** 个美术手建房间：厨房、客厅、卧室、浴室各 30 个（`FloorPlan1–30`、`201–230`、`301–330`、`401–430`）。智能体使用**离散**动作（`MoveAhead`、`RotateLeft`、`PickupObject`、开关、拨动）与物理和物体状态交互。官方常用划分是每种房型 **20 / 5 / 5** 训练 / 验证 / 测试。后续场景包（RoboTHOR、ProcTHOR）和语言套件（**ALFRED**、**TEACh**）建立在这个引擎上——不是 WorldFoundry 默认任务。
 
-**发表机构：** Allen Institute for AI（Ai2，艾伦人工智能研究所）
+论文：[AI2-THOR: An Interactive 3D Environment for Visual AI](https://arxiv.org/abs/1712.05474)。项目：[ai2thor.allenai.org](https://ai2thor.allenai.org/)。代码：[allenai/ai2thor](https://github.com/allenai/ai2thor)（Apache-2.0）。
 
-AI2-THOR 是艾伦人工智能研究所面向具身 AI 的交互式 3D 环境：接近照片级的家居场景、可操作物体与物理引擎，智能体通过离散动作导航与操作。它是 ALFRED、TEACh 等任务套件的底座。
+WorldFoundry **评测**原生闭环：`worldfoundry-eval embodied run` 启动 Unity 构建，逐步执行已经输出模拟器 token 的策略。仓内配置（`FloorPlan1`–`FloorPlan3`）只做**接线检查**，不是 ALFRED/TEACh。也可以通过 `WORLDFOUNDRY_AI2THOR_RESULTS_PATH` **导入**已有 rollout 导出。本页**不跑** VLA 推理——策略或策略服务由你提供。
 
-WorldFoundry 把 AI2-THOR 作为*原生闭环模拟器*接入：`worldfoundry-eval embodied run` 启动基于 Unity 的模拟器，驱动输出离散模拟器 token（`forward`、`left`、`pickup` 等）的策略逐步执行，并写出 rollout 记录与 scorecard。默认场景任务（如 FloorPlan1）用于接线验证。
+<BenchmarkPageSections id="ai2thor" locale="zh" />
 
-官方参考：
+## 如何运行
 
-- Paper: [ai2thor.allenai.org/](https://ai2thor.allenai.org/)
-- 官方仓库: [allenai/ai2thor](https://github.com/allenai/ai2thor)
-- License: `upstream_terms`
-
-## 评测协议
-
-闭环运行由 `worldfoundry/data/benchmarks/eval_configs/embodied/ai2thor/` 下的评测配置驱动；策略是把观测映射为离散模拟器 token 的权重文件或外部策略服务。也可通过 `WORLDFOUNDRY_AI2THOR_RESULTS_PATH` 导入已有 rollout 汇总进行归一化。
-
-主指标是 `success_rate`。
-
-| Metric | 含义 | 方向 |
-| --- | --- | --- |
-| `success_rate` | 评测 rollout 上的主成功率（逐 episode 成功比例）。 | 越高越好 |
-| `task_success` | 按任务聚合的成功率。 | 越高越好 |
-| `episode_success` | 逐 episode 成功指示的聚合值。 | 越高越好 |
-| `reward` | 平均 episode 奖励 / 回报。 | 越高越好 |
-
-## 数据与产物布局
-
-WorldFoundry 仓内路径：
-
-```text
-worldfoundry/data/benchmarks/tasks/external/ai2thor.yaml
-```
-
-```text
-worldfoundry/data/benchmarks/eval_configs/embodied/ai2thor/floorplan1.yaml   # 接线验证任务
-cache/vla_va_wam/repos/allenai--ai2thor                                      # 上游仓库镜像
-```
-
-需要 AI2-THOR Python 包、Unity 模拟器构建/缓存，以及 headless CloudRendering 或 X11 显示后端。
-
-## 运行评测
-
-目录 manifest 记录的 validation 命令：
+闭环接线（需要 Unity 包、模拟器缓存，以及 CloudRendering 或 X11 显示）：
 
 ```bash
 worldfoundry-eval embodied run \
   --config worldfoundry/data/benchmarks/eval_configs/embodied/ai2thor/floorplan1.yaml
 ```
 
-## 权重与环境变量
+导入已有导出：
 
-- `WORLDFOUNDRY_AI2THOR_ROOT`: 可选覆盖项，指向本地 benchmark runtime / 仓库根目录。
-- `WORLDFOUNDRY_AI2THOR_RESULTS_PATH`: 未显式传 `--official-results-path` 时，导入器默认从该路径读取官方结果导出文件。
+```bash
+worldfoundry-eval zoo benchmark-run \
+  --benchmark-id ai2thor \
+  --mode official-validation \
+  --official-results-path <official_results.json> \
+  --output-dir tmp/ai2thor/official-validation \
+  --json
+```
 
-## 输出文件
-
-运行会在 `--output-dir` 下写出：
-
-- `scorecard.json`: WorldFoundry 统一 scorecard，记录上表中的指标值。
-- `run_manifest.json`: 本次 rollout 运行的 manifest。
-- `results.jsonl`: 逐 episode 的 rollout 记录。
-- `metrics/summary.json`: 本次运行的聚合指标摘要。
-
-Scorecard 主键：`success_rate`（leaderboard key `success_rate`），写入 `scorecard.json`。
-
-## 边界与限制
-
-- ALFRED/TEACh 等官方任务套件尚未捆绑；默认场景任务只验证接线。
-- 非零成绩的 rollout 需要策略权重或外部策略服务。
-- 默认场景任务的闭环得分不可与已发表的 ALFRED/TEACh 数字比较。
+可选 `WORLDFOUNDRY_AI2THOR_ROOT` 指向本地 runtime / 仓库。默认导入路径：`WORLDFOUNDRY_AI2THOR_RESULTS_PATH`。清单：`worldfoundry/data/benchmarks/tasks/external/ai2thor.yaml`。仓库镜像：`cache/vla_va_wam/repos/allenai--ai2thor`。产物：`scorecard.json`（主键 `success_rate`）、`run_manifest.json`、`results.jsonl`、`metrics/summary.json`。
 
 [← 返回 Benchmark Hub](/zh/docs/evaluation/benchmark-hub)

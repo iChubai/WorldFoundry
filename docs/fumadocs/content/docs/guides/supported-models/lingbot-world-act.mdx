@@ -1,25 +1,50 @@
 ---
 title: "LingBot-World Base Act"
-description: "LingBot-World Base Act is the action-conditioned sibling of LingBot-World: instead of camera poses it consumes an action matrix, making it the interactive-control profile of the family. It is independently cataloged and resolves the offici…"
+description: "LingBot-World Base Act from Robbyant (Ant Group): interactive-world-model and action-conditioned-video; Runner parity pending."
+modelId: "lingbot-world-act"
 pageSource: generated
 ---
 
-**Publisher:** Robbyant (Ant Group) · Company
-
 LingBot-World Base Act is the action-conditioned sibling of LingBot-World: instead of camera poses it consumes an action matrix, making it the interactive-control profile of the family. It is independently cataloged and resolves the official Base-Act preview checkpoint — Base-Cam is never substituted.
+
+<ModelPaperFigures modelId="lingbot-world-act" locale="en" />
+
+The recorded paper is [arXiv 2601.20540](https://arxiv.org/abs/2601.20540).
+
+Project page: [technology.robbyant.com/lingbot-world](https://technology.robbyant.com/lingbot-world). Code: [robbyant/lingbot-world](https://github.com/robbyant/lingbot-world).
 
 <ModelCommandBuilder modelId="lingbot-world-act" locale="en" />
 
-## Architecture
+## What it is for
 
-The inference path reuses the in-tree LingBot runtime and central Wan base modules (apache-2.0). Inputs are prompt, image, pose, and action_matrix.
+`lingbot-world-act` is the recorded interactive world line. Start here when the job is stepping a world with actions.
 
-## Usage notes
+The inference path reuses the in-tree LingBot runtime and central Wan base modules (apache-2.0). Inputs are prompt, image, pose, and action_matrix. It is published by Robbyant (Ant Group).
+
+Catalog tasks include interactive-world-model and action-conditioned-video.
+
+Recorded evaluation entry points include [WorldModelBench](/docs/evaluation/benchmark-hub/worldmodelbench) (Action-conditioned world-rollout quality).
+
+## Runtime contract
+
+Required `prompt`, `image`, `pose`, and `action_matrix`; artifacts `lingbot-world-act.mp4`.
+
+Recorded task profiles: `interactive-world-model` and `action-conditioned-video`. WorldFoundry binds `LingBotPipeline`.
+
+Family status: **Runner parity pending**.
 
 In-tree action payload routing is wired; full GPU artifact parity requires locally staged weights. The dedicated LingBot environment is retained because unified-env act2cam parity produced near-black output — do not switch environments.
 
-## Evaluation benchmarks
+Base-Act is independently cataloged and resolves the official action checkpoint rather than Base-Cam.
 
-- [WorldModelBench](/docs/evaluation/benchmark-hub/worldmodelbench) — Action-conditioned world-rollout quality.
+## Running in WorldFoundry
+
+The catalog launch is `worldfoundry-eval run lingbot-world-act --pipeline.task-profile interactive-world-model`. The command builder above switches `--pipeline.task-profile` among recorded tasks and still emits `worldfoundry-eval run`.
+
+It runs in the unified environment `worldfoundry-unified-cu128` (Python 3.11, CUDA 12.8).
+
+Recorded weight repositories include `robbyant/lingbot-world-base-act-preview`. Stage assets with `bash scripts/inference/prepare_model_infer.sh lingbot-world-act`.
+
+Status: **Runner parity pending**.
 
 <ModelRelatedRecipes modelId="lingbot-world-act" locale="en" />

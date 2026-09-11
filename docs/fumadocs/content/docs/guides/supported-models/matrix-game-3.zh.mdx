@@ -1,31 +1,36 @@
 ---
 title: "Matrix-Game 3.0"
-description: "Matrix-Game 3.0 is the third Skywork generation, pushing interactive world video to higher resolution with few-step inference."
-pageSource: generated
+description: "Matrix-Game 3.0（Skywork AI (Kunlun Tech)）：`prompt`、`image` 进，`matrix-game-3.mp4` 出；runner 已验证。"
+modelId: "matrix-game-3"
+pageSource: authored
 ---
-
-**发表机构:** 昆仑万维（Skywork AI） · 企业
 
 Matrix-Game 3.0 是昆仑万维的第三代，以少步推理把交互式世界视频推到更高分辨率。本 catalog 中 runner 已验证——官方 cityscape 图像条件 demo 以「forward + camera_r」动作、12 次迭代、3 步推理、 704x1280、int8 量化、编译 VAE 与 mg_lightvae 解码器运行。
 
-<figure className="wf-recipe-media">
-  <Video src="/demos/studio/matrix-game-3-cityscape.mp4" autoPlay loop muted playsInline />
-  <figcaption>城市场景交互世界</figcaption>
-</figure>
+<ModelPaperFigures modelId="matrix-game-3" locale="zh" />
+
+论文是 [arXiv 2604.08995](https://arxiv.org/abs/2604.08995)。项目页：[matrix-game-v3.github.io](https://matrix-game-v3.github.io)。代码：[SkyworkAI/Matrix-Game](https://github.com/SkyworkAI/Matrix-Game)。
 
 <ModelCommandBuilder modelId="matrix-game-3" locale="zh" />
 
-## 架构
+## 用来做什么
 
-运行时内置于 synthesis/visual_generation/matrix_game/matrix_game_3_runtime，包含官方 process_video 调用所需的仅推理视频写出器与 Dynamo 别名兼容；checkpoint_dir 保持为外部资产路径。
+在 Matrix-Game 3 上滚交互世界。1、2.0 与 3.5 第一人称在兄弟卡片。
 
-## 使用要点
+启动 `worldfoundry-eval run matrix-game-3 --pipeline.task-profile official-cityscape-image`。
 
-运行时不需要外部 Matrix-Game 检出。已验证 demo 为提速使用 int8 与编译的轻量 VAE——若追求最高保真且 GPU 余量充足，可关闭这些选项。
+评测入口：[WorldModelBench](/zh/docs/evaluation/benchmark-hub/worldmodelbench)（动作条件游戏世界滚动生成质量）。
 
-## 评测 Benchmark
+## 运行时契约
 
-- [WorldModelBench](/zh/docs/evaluation/benchmark-hub/worldmodelbench) — 动作条件游戏世界滚动生成质量。
-- [CameraBench](/zh/docs/evaluation/benchmark-hub/camerabench) — 相机动作跟随精度。
+必填 `prompt`、`image`；可选 `video`；`actions`：keyboard, mouse；产物 `matrix-game-3.mp4`。
+
+默认旋钮：num_inference_steps=3，fps=17。
+
+`official-cityscape-image` 记录默认值：num_inference_steps=3, fps=17。
+
+## 在 WorldFoundry 中运行
+
+状态：**Runner 一致性待验证**。统一环境 `worldfoundry-unified-cu128`（Python 3.11, CUDA 12.8）。先把 `Skywork/Matrix-Game-3.0` 就位到本地，缺文件加载失败，运行时不下载。在该环境执行 `worldfoundry-eval run matrix-game-3 --pipeline.task-profile official-cityscape-image`。catalog 未记录 VRAM。
 
 <ModelRelatedRecipes modelId="matrix-game-3" locale="zh" />

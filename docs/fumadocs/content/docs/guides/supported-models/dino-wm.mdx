@@ -1,21 +1,50 @@
 ---
 title: "DINO-WM"
-description: "DINO-WM builds world models on pre-trained DINOv2 visual features instead of pixels: it predicts future patch features and plans robot behavior by optimizing action sequences against a goal feature state — zero-shot planning without recons…"
-pageSource: generated
+description: "DINO-WM from New York University (NYU): visual-feature-world-model and predictive-coding; Runner parity pending."
+modelId: "dino-wm"
+pageSource: authored
 ---
-
-**Publisher:** New York University (NYU) · University
 
 DINO-WM builds world models on pre-trained DINOv2 visual features instead of pixels: it predicts future patch features and plans robot behavior by optimizing action sequences against a goal feature state — zero-shot planning without reconstruction. In this catalog the official planning/evaluation route is vendored in-tree, including the required env simulators.
 
+<ModelPaperFigures modelId="dino-wm" locale="en" />
+
+The recorded paper is [arXiv 2411.04983](https://arxiv.org/abs/2411.04983).
+
+Project page: [dino-wm.github.io](https://dino-wm.github.io/). Code: [gaoyuezhou/dino_wm](https://github.com/gaoyuezhou/dino_wm).
+
+Execution no longer needs an external checkout, but **full parity waits on the OSF checkpoint / task-asset layout**. Until then the run is gated.
+
 <ModelCommandBuilder modelId="dino-wm" locale="en" />
 
-## Architecture
+## What it is for
 
-Per the upstream project, a ViT predictor rolls DINOv2 patch features forward conditioned on actions; planning is model-predictive control in feature space. The infer entrypoint loads runtime configs from data/models/runtime/configs/dino_wm/conf, and the vendored dino_wm/env simulators are intentionally kept in-tree for official planning runs.
+Pick `dino-wm` when you need an action-conditioned world stepper: recorded actions and a frame in, a rollout out. Use it for interactive world inference, not a text-to-video prompt dump.
 
-## Usage notes
+Per the upstream project, a ViT predictor rolls DINOv2 patch features forward conditioned on actions; planning is model-predictive control in feature space. The infer entrypoint loads runtime configs from data/models/runtime/configs/dino_wm/conf, and the vendored dino_wm/env simulators are intentionally kept in-tree for official planning runs. It is published by New York University (NYU).
+
+Catalog tasks include visual-feature-world-model, predictive-coding, robot-world-model, and wall-planning.
+
+## Runtime contract
+
+Required `prompt`, `image`, and `video`; optional `actions` (robot_action, planning_action); artifacts `generated_world` and `dino-wm.mp4`.
+
+Recorded task profiles: `visual-feature-world-model`, `predictive-coding`, `robot-world-model`, and `wall-planning`. WorldFoundry binds `DinoWMPipeline`.
+
+Family status: **Runner parity pending**.
+
+Recorded `wall-planning` defaults: seed=0.
 
 Execution remains checkpoint/task-asset gated but no longer depends on an external repo checkout. Full runtime parity is blocked until the OSF checkpoint/task-asset layout is staged.
+
+## Running in WorldFoundry
+
+The catalog launch is `worldfoundry-eval run dino-wm --pipeline.task-profile wall-planning`. The command builder above switches `--pipeline.task-profile` among recorded tasks and still emits `worldfoundry-eval run`.
+
+It runs in the unified environment `worldfoundry-unified-cu128` (Python 3.11, CUDA 12.8).
+
+No public checkpoint id is recorded on this card; follow the usage notes for staging. Stage assets with `bash scripts/inference/prepare_model_infer.sh dino-wm`.
+
+Status: **Runner parity pending**.
 
 <ModelRelatedRecipes modelId="dino-wm" locale="en" />

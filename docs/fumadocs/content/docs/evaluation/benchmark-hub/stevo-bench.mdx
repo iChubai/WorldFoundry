@@ -1,81 +1,27 @@
 ---
 title: STEVO-Bench
-description: State-evolution-out-of-sight benchmark for video world models, with the official VLM-judge evaluator vendored in tree.
+description: "Caltech state-evolution-out-of-sight bench: 225 tasks, VLM judges. WorldFoundry vendors the official evaluator; it does not invent a board."
 ---
 
-## About
+STEVO-Bench (Caltech GLab) asks whether a video world model **keeps simulating state while it is unobserved**. Each task applies an observation control (in-scene occlusion, camera lookaway, or illumination dimming) plus a trigger action. VLM judges check that the hidden process kept progressing and stayed physically plausible. Official size: **225 tasks across 6 world-change categories**. License: MIT (retained in the vendored tree, pin `680fb6ee2733…`).
 
-STEVO-Bench probes whether video world models keep **simulating state evolution while it is unobserved**. Each task applies an observation control (in-scene occlusion, camera lookaway, or illumination dimming) plus a trigger action, then VLM judges verify that the hidden process kept progressing and stayed physically plausible. The benchmark ships **225 tasks across 6 world-change categories** (gradually accumulating scalar processes, few-object kinematics, irreversible transformations, agent behavior, and more).
+Three executable criteria (pinned CLI): `control` (`occlusion_done`, `trigger_applied`), `physics` (`physical_inaccuracy`), `state` (`state_evol`). Upstream `run_eval.sh` also mentions `--artifact` and `--coherence`, but those flags are **not** in the pinned CLI. Aggregation matches `eval/summarize_results.py`: `control_success = occlusion_done AND trigger_applied`, `task_success = state_evol AND NOT physical_inaccuracy` (primary).
 
-WorldFoundry vendors the upstream evaluator so `--run-official` executes the official judge code without an external checkout:
+Paper: [STEVO-Bench](http://arxiv.org/abs/2603.13215). Site: [glab-caltech.github.io/STEVOBench](https://glab-caltech.github.io/STEVOBench/). Tasks: [`JhanLiufu/StEvo-Bench`](https://huggingface.co/datasets/JhanLiufu/StEvo-Bench). Upstream: [jhanliufu-personal/STEVO-Bench](https://github.com/jhanliufu-personal/STEVO-Bench).
 
-- Runner: `worldfoundry/evaluation/tasks/execution/runners/stevo_bench/run_stevo_bench_official_runner.py`
-- Metric extraction/aggregation: `worldfoundry/evaluation/tasks/execution/runners/stevo_bench/stevo_bench_metrics.py`
-- Vendored read-only runtime: `worldfoundry/evaluation/tasks/execution/runners/stevo_bench/runtime/stevo_bench/` (`eval/eval_cli.py`, `eval/summarize_results.py`, MIT, pinned `680fb6ee2733…`)
+WorldFoundry **vendors the official judge code**. Judges are remote VLM APIs (Gemini by default; `GOOGLE_API_KEY`). Paper config: `--ensemble-size 3`. `--run-fixture` is a synthetic normalizer sample only.
 
-**Catalog status: cataloged.** The catalog entry lives at `worldfoundry/data/benchmarks/catalog/video/stevo-bench.yaml` and the benchmark is part of the formal hub inventory, so `worldfoundry-eval zoo benchmark-run --benchmark-id stevo-bench` dispatches this runner (`--mode official-run` for judged runs, `--mode official-validation` for result imports). The direct runner commands below remain equivalent.
+<BenchmarkPageSections id="stevo-bench" locale="en" />
 
-Official references:
-
-- Paper: [arXiv:2603.13215](http://arxiv.org/abs/2603.13215)
-- Website: [glab-caltech.github.io/STEVOBench](https://glab-caltech.github.io/STEVOBench/)
-- Task dataset: [JhanLiufu/StEvo-Bench](https://huggingface.co/datasets/JhanLiufu/StEvo-Bench)
-- Upstream repository (provenance recorded in the scorecard): [jhanliufu-personal/STEVO-Bench](https://github.com/jhanliufu-personal/STEVO-Bench)
-
-## Evaluation protocol and data layout
-
-Task YAMLs are a separate Hugging Face dataset staged outside the vendored tree:
+## How to run
 
 ```bash
 hf download JhanLiufu/StEvo-Bench --repo-type dataset --local-dir /path/to/stevo-bench-tasks
-export WORLDFOUNDRY_STEVO_BENCH_TASK_ROOT=/path/to/stevo-bench-tasks   # or pass --task-root
-```
+export WORLDFOUNDRY_STEVO_BENCH_TASK_ROOT=/path/to/stevo-bench-tasks
+export WORLDFOUNDRY_STEVO_BENCH_VLM_PROVIDER=gemini
+export GOOGLE_API_KEY=<your-key>
 
-Generated videos go into one directory with **exactly one JSON output map** (`task_id → video filename`); if the map is absent, the runner derives it from video stems, which is recorded as a comparability blocker:
-
-```text
-/path/to/generated/
-  <task_id_1>.mp4
-  <task_id_2>.mp4
-  ...
-  output_map.json        # optional but recommended; pass --output-map to disambiguate
-```
-
-The runner symlinks (or copies) the clips into an isolated `stevo_bench_work/outputs/` folder under `--output-dir`, then invokes the vendored `eval.eval_cli` once per criterion. The vendored tree is never mutated; every artifact lands under `--output-dir`. Three criteria are executable: `control` (`occlusion_done`, `trigger_applied`), `physics` (`physical_inaccuracy`), and `state` (`state_evol`). Upstream `run_eval.sh` also passes `--artifact` and `--coherence`, but the pinned CLI does not define those flags, so those two criteria are not executable upstream either.
-
-## Metrics
-
-Aggregation reproduces the official `eval/summarize_results.py`: each metric is the mean over tasks where the field is present, `control_success = occlusion_done AND trigger_applied`, and `task_success = state_evol AND NOT physical_inaccuracy`. Scorecard metric ids:
-
-| Metric id | Meaning | Direction |
-| --- | --- | --- |
-| `task_success` | State evolution confirmed and no physical inaccuracy; **primary metric**. | higher is better |
-| `state_evol_success` | Hidden process kept progressing while unobserved. | higher is better |
-| `physical_inaccuracy` | Physics judge flagged an implausible artifact; normalized score is `1 - rate`. | lower is better |
-| `occlusion_done` | Requested observation control actually applied in the video. | higher is better |
-| `trigger_applied` | Requested trigger action applied in the video. | higher is better |
-| `control_success` | Both controls applied. | higher is better |
-
-`per_sample_scores.jsonl` holds one record per (task, judge) pair with the raw boolean verdicts and derived fields.
-
-## Judges and environment
-
-The official judges are **remote VLM APIs** — no local weights are required (`--weights-dir` exists only as an isolation guard and never defaults into the vendored tree):
-
-```bash
-export WORLDFOUNDRY_STEVO_BENCH_VLM_PROVIDER=gemini     # default provider (runner --vlm-provider)
-export GOOGLE_API_KEY=<your-key>                        # required by the upstream Gemini judge
-export WORLDFOUNDRY_STEVO_BENCH_JUDGE_MODEL=<model>     # optional; applied to control/physics/se judges alike
-```
-
-Other recognized variables: `WORLDFOUNDRY_STEVO_BENCH_ROOT` (override the vendored runtime root), `WORLDFOUNDRY_STEVO_BENCH_TASK_ROOT`, `WORLDFOUNDRY_STEVO_BENCH_WEIGHTS_DIR`, `WORLDFOUNDRY_STEVO_BENCH_RESULTS_PATH`, `WORLDFOUNDRY_GENERATED_ARTIFACT_DIR`, `WORLDFOUNDRY_BENCHMARK_OUTPUT_DIR`, and `WORLDFOUNDRY_UNIFIED_PYTHON` for the judge subprocesses. Judge failures surface as nonzero exit codes from `eval.eval_cli`; the runner then raises instead of skipping silently, and the failure is captured in `official_runtime.log`.
-
-## Run the official in-tree evaluation
-
-```bash
-cd /path/to/WorldFoundry
-
-PYTHONPATH=. "${WORLDFOUNDRY_UNIFIED_PYTHON:-python}" \
+${WORLDFOUNDRY_UNIFIED_PYTHON} \
   worldfoundry/evaluation/tasks/execution/runners/stevo_bench/run_stevo_bench_official_runner.py \
   --run-official \
   --generated-artifact-dir /path/to/generated \
@@ -88,41 +34,21 @@ PYTHONPATH=. "${WORLDFOUNDRY_UNIFIED_PYTHON:-python}" \
   --json
 ```
 
-The paper configuration uses `--ensemble-size 3` with majority voting per criterion (the runner defaults match upstream `run_eval.sh`); a smaller ensemble is recorded as a comparability blocker. Useful extras: `--criterion {control,physics,state}` for a single criterion, `--pattern` (fnmatch over task ids), `--exclude-baseline`, `--overwrite`, `--output-map`, `--timeout` (default 6 h).
-
-## Import existing results (official-validation equivalent)
-
-Existing upstream outputs — a `summary.json`, a run directory, a `runs/` parent, or a bare `per_task/` tree — are normalized without any API key:
+Import `summary.json`, a run directory, a `runs/` parent, or a bare `per_task/` tree without an API key:
 
 ```bash
-PYTHONPATH=. "${WORLDFOUNDRY_UNIFIED_PYTHON:-python}" \
-  worldfoundry/evaluation/tasks/execution/runners/stevo_bench/run_stevo_bench_official_runner.py \
+worldfoundry-eval zoo benchmark-run \
+  --benchmark-id stevo-bench \
+  --mode official-validation \
   --official-results-path /path/to/runs/<output_map_stem> \
   --output-dir tmp/stevo_bench/imported \
   --json
 ```
 
-The same normalization is available through the catalog route:
+Pass `--output-map` when stems are ambiguous. Filename-derived maps, sub-3 ensembles, and partial coverage are recorded as comparability blockers.
 
-```bash
-worldfoundry-eval zoo benchmark-run --benchmark-id stevo-bench --mode official-validation \
-  --official-results-path /path/to/runs/<output_map_stem> \
-  --output-dir tmp/stevo_bench/imported --json
-```
+In-tree pointers: `worldfoundry/data/benchmarks/tasks/external/stevo-bench.yaml`, `worldfoundry/evaluation/tasks/execution/runners/stevo_bench/runtime/stevo_bench`.
 
-## Outputs
-
-- `scorecard.json`: WorldFoundry scorecard with `leaderboard_blockers` and `comparability_blockers` populated.
-- `raw_metric_table.jsonl`: one row per metric with availability and native scale.
-- `per_sample_scores.jsonl`: per-(task, judge) verdict records.
-- `benchmark_contract.json`: metric ids, primary metric, and runtime root.
-- `stevo_bench_staging.json`, `runtime_summary.json`, `official_runtime.log`, `stevo_bench_work/`: staging manifest, execution summary, judge transcripts, and upstream run directories (from `--run-official`).
-
-## What this integration does not claim
-
-- `--run-fixture` points at `worldfoundry/data/benchmarks/assets/stevo-bench/sample_run`, a synthetic normalizer-validation sample; it contains no upstream benchmark tasks, videos, or judge outputs.
-- `official_benchmark_verified` requires a real official run with zero comparability blockers; result imports are always `normalizer_only`. `leaderboard_valid` is always `false` — leaderboard submission requires the complete 225-task split judged with the official ensemble settings.
-- Judged runs depend on a remote VLM provider (Gemini by default) and its API key; no offline judge exists.
-- Partial task coverage, filename-derived output maps, and sub-3 ensembles are all explicitly recorded as blockers in the scorecard rather than hidden.
+Outputs include `scorecard.json` (primary `task_success`) with `leaderboard_blockers` / `comparability_blockers`.
 
 [← Benchmark Hub](/docs/evaluation/benchmark-hub)

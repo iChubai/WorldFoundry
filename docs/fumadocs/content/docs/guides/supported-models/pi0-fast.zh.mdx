@@ -1,21 +1,26 @@
 ---
 title: "pi0-FAST"
-description: "pi0-FAST is the autoregressive variant of pi0: instead of flow matching it uses the FAST action tokenizer to decode actions as discrete tokens, trading some smoothness for faster, simpler decoding. WorldFoundry reuses the in-tree OpenPI ru…"
-pageSource: generated
+description: "pi0 的自回归变体：用 FAST 动作 token 代替 flow matching，默认配置为 pi0_fast_droid。"
+modelId: "pi0-fast"
+pageSource: authored
 ---
-
-**发表机构:** Physical Intelligence（PI） · 企业
 
 pi0-FAST 是 pi0 的自回归变体：不用 flow matching，而以 FAST 动作 tokenizer 将动作解码为离散 token，以少量平滑性换取更快更简单的解码。WorldFoundry 复用树内 OpenPI 运行时，采用 pi0_fast_droid 配置与 pi0-FAST checkpoint 解析。
 
+<ModelPaperFigures modelId="pi0-fast" locale="zh" />
+
 <ModelCommandBuilder modelId="pi0-fast" locale="zh" />
 
-## 架构
+## 用来做什么
 
-与 pi0 相同的 PaliGemma 骨干，但采用 FAST（频域动作序列 token 化）离散动作解码。 FAST 解码作为算法专属运行时行为集成，而非 LeRobot 策略库变体。
+需要同一 PaliGemma 骨干上的离散 FAST token 时选 `pi0-fast`。启动 `worldfoundry-eval run pi0-fast --pipeline.task-profile vla`。默认配置是 `pi0_fast_droid`。不要走 LeRobot policy-zoo。
 
-## 使用要点
+## 运行时契约
 
-默认配置面向 DROID（pi0_fast_droid）。用 gsutil/gcloud 就位 GCS checkpoint；资产就位前运行输出运行时计划。
+必填 `image`、`instruction`、`prompt`。`actions`：`robot_action`、`proprio`、`action_space`。产物：`pi0_fast_action_trace.json`。解码比 flow-matching π0 更快，动作块更不平滑。
+
+## 在 WorldFoundry 中运行
+
+独立环境 `worldfoundry-openpi-cu12`（Python 3.11，CUDA 12.4 或更新）。用 gsutil 就位 GCS checkpoint。许可证见 [OpenPI](/zh/docs/guides/supported-models/openpi)（Apache-2.0）。状态：资产未就位前为 **Runner 一致性待确认**。
 
 <ModelRelatedRecipes modelId="pi0-fast" locale="zh" />

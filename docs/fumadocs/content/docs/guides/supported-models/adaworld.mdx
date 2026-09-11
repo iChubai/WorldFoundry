@@ -1,21 +1,50 @@
 ---
 title: "AdaWorld"
-description: "AdaWorld learns adaptable world models with latent actions: by extracting actions from unlabeled videos it can transfer control across domains with minimal finetuning."
-pageSource: generated
+description: "AdaWorld from The Hong Kong University of Science and Technology / MIT: latent-action-world-model and action-conditioned-video; Planned."
+modelId: "adaworld"
+pageSource: authored
 ---
 
-**Publisher:** The Hong Kong University of Science and Technology / MIT · University
+AdaWorld learns adaptable world models with latent actions: by extracting actions from unlabeled videos it can transfer control across domains with minimal finetuning.
 
-AdaWorld learns adaptable world models with latent actions: by extracting actions from unlabeled videos it can transfer control across domains with minimal finetuning. In this catalog it is retained as open-source provenance/source-only metadata and hidden from the formal Studio infer catalog.
+<ModelPaperFigures modelId="adaworld" locale="en" />
+
+The recorded paper is [arXiv 2503.18938](https://arxiv.org/abs/2503.18938).
+
+Project page: [adaptable-world-model.github.io](https://adaptable-world-model.github.io/). Code: [Little-Podi/AdaWorld](https://github.com/Little-Podi/AdaWorld).
+
+This card is **blocked** for release-facing inference. The official source is vendored under `worldfoundry/synthesis/visual_generation/world_model/adaworld` and public checkpoints exist upstream, but the official runner still needs AdaWorld-specific dependencies and task/demo video assets that are **not reproducible** in the unified Studio environment. WorldFoundry hides it from the formal Studio infer catalog. There is **no** advertised `worldfoundry-eval` path until that parity returns.
 
 <ModelCommandBuilder modelId="adaworld" locale="en" />
 
-## Architecture
+## What it is for
 
-Per the upstream project, a latent action autoencoder extracts transferable action representations that condition an autoregressive world model. The official source is vendored in-tree under synthesis/visual_generation/world_model/adaworld; public checkpoints exist upstream.
+Pick `adaworld` when you need an action-conditioned world stepper: recorded actions and a frame in, a rollout out. Use it for interactive world inference, not a text-to-video prompt dump.
 
-## Usage notes
+Per the upstream project, a latent action autoencoder extracts transferable action representations that condition an autoregressive world model. The official source is vendored in-tree under synthesis/visual_generation/world_model/adaworld; public checkpoints exist upstream. It is published by The Hong Kong University of Science and Technology / MIT.
+
+Catalog tasks include latent-action-world-model, action-conditioned-video, and multi-domain-world-model.
+
+## Runtime contract
+
+Required `prompt`, `image`, and `video`; optional `actions` (world_action, robot_action); artifacts `adaworld.mp4`.
+
+Recorded task profiles: `latent-action-world-model`, `action-conditioned-video`, and `multi-domain-world-model`.
+
+Family status: **Planned**.
 
 Blocked for release-facing inference: the official runner still requires AdaWorld-specific dependencies and task/demo video assets that are not reproducibly available in the unified Studio environment. Use the upstream repository directly until parity is restored.
+
+AdaWorld is retained as open-source provenance/source-only metadata and hidden from the formal Studio infer catalog.
+
+## Running in WorldFoundry
+
+Launch `worldfoundry-eval run adaworld --pipeline.task-profile latent-action-world-model` to step the world. The command builder above switches `--pipeline.task-profile` among recorded tasks and still emits `worldfoundry-eval run`.
+
+It runs in the unified environment `worldfoundry-unified-cu128` (Python 3.11, CUDA 12.8).
+
+No public checkpoint id is recorded on this card; follow the usage notes for staging. Stage assets with `bash scripts/inference/prepare_model_infer.sh adaworld`.
+
+Status: **Planned**.
 
 <ModelRelatedRecipes modelId="adaworld" locale="en" />

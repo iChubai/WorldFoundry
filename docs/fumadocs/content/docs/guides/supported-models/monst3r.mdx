@@ -1,21 +1,50 @@
 ---
 title: "MonST3R"
-description: "MonST3R extends the DUSt3R pointmap approach to dynamic scenes: it estimates per-timestep geometry directly from video, recovering shape and motion without a static-scene assumption."
-pageSource: generated
+description: "MonST3R from Google DeepMind / UC Berkeley: geometry estimation in the presence of motion; Verified."
+modelId: "monst3r"
+pageSource: authored
 ---
-
-**Publisher:** Google DeepMind / UC Berkeley · Company
 
 MonST3R extends the DUSt3R pointmap approach to dynamic scenes: it estimates per-timestep geometry directly from video, recovering shape and motion without a static-scene assumption. In this catalog it is fully verified — the CUDA Studio job produced a valid GLB v2 scene with 51 geometries and finite point data on 2026-07-10 through the in-tree demo.py subprocess adapter.
 
+<ModelPaperFigures modelId="monst3r" locale="en" />
+
+Project page: [monst3r-project.github.io](https://monst3r-project.github.io/). Code: [Junyi42/monst3r](https://github.com/Junyi42/monst3r).
+
+The paper is [Paper](https://monst3r-project.github.io/files/monst3r_paper.pdf). Project page: [monst3r-project.github.io](https://monst3r-project.github.io). Code: [Junyi42/monst3r](https://github.com/Junyi42/monst3r).
+
 <ModelCommandBuilder modelId="monst3r" locale="en" />
 
-## Architecture
+## What it is for
 
-Per the upstream publication, MonST3R fine-tunes the DUSt3R pointmap regressor on dynamic data so that pointmaps are estimated per timestep; downstream optimization aligns them into a 4D scene. WorldFoundry vendors the infer-time components in-tree and materializes a GLB scene artifact.
+Pick `monst3r` for feed-forward geometry: views in, reconstruction / trajectory / point cloud out. Use it when you need the catalog 3D route rather than a depth-only prior.
 
-## Usage notes
+Per the upstream publication, MonST3R fine-tunes the DUSt3R pointmap regressor on dynamic data so that pointmaps are estimated per timestep; downstream optimization aligns them into a 4D scene. WorldFoundry vendors the infer-time components in-tree and materializes a GLB scene artifact. It is published by Google DeepMind / UC Berkeley.
+
+Catalog tasks include geometry estimation in the presence of motion.
+
+Dynamic scene reconstruction. Sibling of CUT3R / DUSt3R-style cards.
+
+## Runtime contract
+
+Required `image` and `video`; optional `prompt` and `actions`; artifacts `generated_4d_scene` and `monst3r.glb`.
+
+Recorded task profiles: `geometry estimation in the presence of motion`. WorldFoundry binds `MonST3RPipeline`.
+
+Family status: **Verified**.
 
 The Studio default disables the optional flow loss so missing RAFT2/SAM2 assets do not block preview output. For full official dynamic-mask parity, configure the MonST3R, RAFT, and SAM2 assets in the runtime environment.
+
+WorldFoundry vendors the MonST3R infer-time components in-tree.
+
+## Running in WorldFoundry
+
+Launch `worldfoundry-eval run monst3r --pipeline.task-profile 'geometry estimation in the presence of motion'` to write geometry. The command builder above switches `--pipeline.task-profile` among recorded tasks and still emits `worldfoundry-eval run`.
+
+It runs in the unified environment `worldfoundry-unified-cu128` (Python 3.11, CUDA 12.8).
+
+No public checkpoint id is recorded on this card; follow the usage notes for staging. Stage assets with `bash scripts/inference/prepare_model_infer.sh monst3r`.
+
+Status: **Verified**.
 
 <ModelRelatedRecipes modelId="monst3r" locale="en" />

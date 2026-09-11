@@ -1,32 +1,23 @@
 ---
-title: HunyuanVideo
-description: An open-source video foundation model whose generation quality is comparable to, if not better than, leading closed-source systems.
+title: "HunyuanVideo"
+description: "Tencent open T2V/I2V DiT: prompt (and optional image) in, video out. Native WorldFoundry recipes at 720×1280, 129 frames; runner parity still pending."
+modelId: "hunyuanvideo"
 pageSource: authored
 ---
 
-HunyuanVideo is a novel open-source video foundation model that exhibits performance in video generation that is comparable to, if not superior to, leading closed-source models.
+HunyuanVideo is Tencent's open video foundation model: text-to-video and image-to-video from one ~13B diffusion Transformer. At run time the generator takes Gaussian noise plus an MLLM text condition, denoises in a Causal 3D VAE latent, and decodes an image or a video.
 
-Training combines data curation, image-video joint model training, and an infrastructure built for large-scale training and inference. By scaling both the architecture and the dataset, the authors trained a video generative model with over 13 billion parameters. The design work targets visual quality, motion diversity, text-video alignment, and generation stability. In the official professional human study — 1,533 prompts, one inference pass each, more than 60 evaluators — HunyuanVideo ranks above Runway Gen-3, Luma 1.6, and three top-performing Chinese video models on the overall metric, especially motion quality. That comparison uses the high-quality version, which the authors distinguish from the released fast version.
+<ModelPaperFigures modelId="hunyuanvideo" locale="en" />
 
-The paper is [HunyuanVideo: A Systematic Framework For Large Video Generation Model](https://arxiv.org/abs/2412.03603) (arXiv, 2024).
+The paper is [HunyuanVideo: A Systematic Framework For Large Video Generation Model](https://arxiv.org/abs/2412.03603) (arXiv, 2024). In the official professional human study — 1,533 prompts, one inference pass each, more than 60 evaluators — HunyuanVideo ranks above Runway Gen-3, Luma 1.6, and three top-performing Chinese video models on the overall metric, especially motion quality. That comparison uses the high-quality version, which the authors distinguish from the released fast version. Those are upstream numbers, not a WorldFoundry scorecard.
 
-<figure className="wf-recipe-media">
-  <Video src="/demos/studio/hunyuanvideo-t2v-cat-grass-official.mp4" poster="/models/hunyuanvideo/video_poster.png" autoPlay loop muted playsInline />
-  <figcaption>Official HunyuanVideo text-to-video demo (README teaser poster)</figcaption>
-</figure>
-
-The same foundation was later extended as HunyuanVideo-I2V. Image-to-video generation reconstructs the reference image with a token-replace method, concatenates MLLM semantic image tokens with video latents for full-attention multimodal generation, and ships LoRA training code for customizable special effects.
-
-<figure className="wf-recipe-media">
-  <Video src="/demos/studio/hunyuanvideo-i2v-firework-official.mp4" poster="/models/hunyuanvideo/i2v_video_poster.jpg" autoPlay loop muted playsInline />
-  <figcaption>HunyuanVideo-I2V image-to-video demo</figcaption>
-</figure>
+The same stack also runs as HunyuanVideo-I2V. Image-to-video reconstructs the reference image with a token-replace method and concatenates MLLM semantic image tokens with video latents for full-attention multimodal generation.
 
 <ModelCommandBuilder modelId="hunyuanvideo" locale="en" />
 
 ## Architecture
 
-HunyuanVideo is trained in a spatial-temporally compressed latent space produced by a Causal 3D VAE. A large language model encodes the text prompt as the condition; the generator takes Gaussian noise plus that condition and outputs a latent, which the 3D VAE decoder turns into an image or a video.
+HunyuanVideo denoises in a spatial-temporally compressed latent produced by a Causal 3D VAE. A large language model encodes the text prompt as the condition; the generator takes Gaussian noise plus that condition and outputs a latent, which the 3D VAE decoder turns into an image or a video.
 
 <figure className="wf-recipe-media is-diagram">
   <img src="/models/hunyuanvideo/overall.png" alt="HunyuanVideo overall architecture — Causal 3D VAE, LLM text encoder, and latent diffusion" />
@@ -42,7 +33,7 @@ The backbone is a Transformer with Full Attention and a Dual-stream to Single-st
 
 ### Text encoder
 
-The text encoder is a pre-trained decoder-only multimodal LLM rather than CLIP or T5-XXL. After visual-instruction finetuning it aligns image and text more tightly than T5, describes detail and follows complex reasoning better than CLIP, and can attend to key phrases when a system instruction is prepended to the user prompt. Because the MLLM uses causal attention, an extra bidirectional token refiner is added to strengthen the text features.
+The text encoder is a pre-trained decoder-only multimodal LLM rather than CLIP or T5-XXL. It can attend to key phrases when a system instruction is prepended to the user prompt. Because the MLLM uses causal attention, an extra bidirectional token refiner is added to strengthen the text features.
 
 <figure className="wf-recipe-media is-diagram">
   <img src="/models/hunyuanvideo/text_encoder.png" alt="MLLM text encoder with a bidirectional token refiner" />
@@ -51,7 +42,7 @@ The text encoder is a pre-trained decoder-only multimodal LLM rather than CLIP o
 
 ### Causal 3D VAE
 
-The CausalConv3D VAE compresses pixel-space video and images by 4× in time, 8× in space, and 16 channels, so the diffusion transformer can train at the original resolution and frame rate.
+The CausalConv3D VAE compresses pixel-space video and images by 4× in time, 8× in space, and 16 channels, so the diffusion transformer can run at the source resolution and frame rate in latent space.
 
 <figure className="wf-recipe-media is-diagram">
   <img src="/models/hunyuanvideo/3dvae.png" alt="CausalConv3D VAE — temporal 4×, spatial 8×, 16-channel latent" />
@@ -72,5 +63,15 @@ HunyuanVideo-I2V keeps this stack and inserts the reference image by token repla
 ## Inference
 
 Official inference covers text-to-video and image-to-video at 540p and 720p (recommended), 129 frames, and 9:16, 16:9, 4:3, 3:4, and 1:1. At batch size 1 the peak memory is 60GB for 720×1280×129 and 45GB for 544×960×129; I2V at 720p is also listed at 60GB. The authors tested on a single 80GB GPU and recommend 80GB for quality. For I2V, `--i2v-stability` with flow-shift 7.0 gives more stable motion; turning stability off and using flow-shift 17.0 gives more dynamic motion. FP8 T2V weights save about 10GB of GPU memory.
+
+WorldFoundry's native T2V recipe (`HunyuanVideoT2VPipeline`) defaults to **720×1280, 129 frames, 50 steps, 24 fps, guidance 6.0**. I2V (`HunyuanVideoI2VPipeline`) uses the same geometry unless you pass height / width / frames. Required input is `prompt`; I2V also needs the reference `image`; `actions` is seed. Artifacts: `hunyuanvideo-t2v.mp4` / `hunyuanvideo-i2v.mp4`.
+
+## In WorldFoundry
+
+Both T2V and I2V are declarative native-diffusion recipes assembled by the shared runner — not the upstream CLI. Launch `worldfoundry-eval run hunyuanvideo-t2v --pipeline.task-profile text-to-video` or the `hunyuanvideo-i2v` sibling. Checkpoints are `tencent/HunyuanVideo` and `tencent/HunyuanVideo-I2V` (license `other` on the cards). Integration is recorded; runner and demo parity are still pending, so a successful command is not the same as a checkpoint-backed GPU artifact in this workspace. Use the unified environment (`worldfoundry-unified-cu128`) and stage weights locally. Official 720p / 129-frame jobs want an 80 GB class GPU; plan down from there only if you accept the paper's 540p / FP8 trade-offs.
+
+## Minimal eval
+
+T2V clips go to [VBench](/docs/evaluation/benchmark-hub/vbench) `custom_input` / `aesthetic_quality`. Read `aesthetic_quality`. Runner parity is pending; a started command is not a verified GPU artifact. Full cell: [Model → benchmark recipes](/docs/evaluation/model-benchmark-recipes).
 
 <ModelRelatedRecipes modelId="hunyuanvideo" locale="en" />

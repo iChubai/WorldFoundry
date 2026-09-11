@@ -1,58 +1,22 @@
 ---
 title: IPV-Bench
-description: "Impossible-videos benchmark: generation and understanding of physically impossible events, from IPV-Txt prompts to IPV-Vid QA."
+description: "NUS Show Lab impossible-video bench: generate and recognize physically impossible events. WorldFoundry normalizes official CSV/JSON; it does not invent a board."
 ---
 
-## About
+IPV-Bench (Impossible Videos; Show Lab, NUS) flips the usual physics question. It asks whether models can **depict** counterfactual, physically impossible events — and whether video-understanding models can **recognize** them. The taxonomy covers physical, biological, geographical, and social impossibilities. Two tracks:
 
-**Publisher:** Show Lab, National University of Singapore
+- **Generation (IPV-Txt)** — visual quality and prompt following; `impossible_video_score` is the share of clips that are both high-quality and prompt-faithful.
+- **Understanding (IPV-Vid)** — judgement, multi-choice QA, and open QA against official labels.
 
-IPV-Bench (Impossible Videos) flips the usual physics question: instead of asking whether models obey physical law, it asks whether they can deliberately depict counterfactual, physically impossible events — and whether video understanding models can recognize them. The benchmark spans a taxonomy of physical, biological, geographical, and social impossibilities, with a generation track (prompt suite IPV-Txt, judged for visual quality and prompt following) and an understanding track (IPV-Vid judgement, multi-choice QA, and open QA).
+`ipv_bench_average` aggregates whatever official families you supply.
 
-WorldFoundry hosts an in-tree normalizer that accepts official CSV/JSON exports for both tracks and aggregates them into the unified scorecard; `--run-fixture` validates the wiring without external assets.
+Paper: [Impossible Videos](https://arxiv.org/abs/2503.14378). Code: [showlab/Impossible-Videos](https://github.com/showlab/Impossible-Videos).
 
-Official references:
+WorldFoundry **normalizes official CSV/JSON exports** for both tracks. It does not run the official judges or understanding models in tree. `--run-fixture` is wiring only.
 
-- Paper: [arxiv.org/abs/2503.14378](https://arxiv.org/abs/2503.14378)
-- Project page: [huggingface.co/papers/2503.14378](https://huggingface.co/papers/2503.14378)
-- Official repository: [showlab/Impossible-Videos](https://github.com/showlab/Impossible-Videos)
+<BenchmarkPageSections id="ipv-bench" locale="en" />
 
-## Evaluation protocol
-
-Generation-track rows need `visual_quality` and `prompt_following` annotations (human or official judge); `impossible_video_score` is the percentage of videos that are simultaneously high-quality and prompt-faithful under the official protocol. Understanding-track rows need official labels plus predictions/model answers for the judgement, MCQA, and open-QA tasks. `ipv_bench_average` aggregates whatever official families are supplied.
-
-Primary metric: `ipv_bench_average`.
-
-| Metric | Meaning | Direction |
-| --- | --- | --- |
-| `visual_quality` | IPV-Bench human or official judge annotation for generated-video visual quality. | Higher is better |
-| `prompt_following` | IPV-Bench human or official judge annotation for prompt following. | Higher is better |
-| `impossible_video_score` | Percentage of generated videos that are both high quality and good prompt following under the IPV-Bench protocol. | Higher is better |
-| `judgement_accuracy` | IPV-Bench video-understanding judgement task accuracy against official labels. | Higher is better |
-| `mcqa_accuracy` | IPV-Bench multi-choice QA accuracy against official labels. | Higher is better |
-| `open_qa_score` | IPV-Bench open-ended QA score from official evaluator or judge outputs. | Higher is better |
-| `ipv_bench_average` | IPV-Bench aggregate when supplied by official annotations, judge outputs, or normalized result files. | Higher is better |
-
-## Data and artifact layout
-
-In-tree paths:
-
-```text
-worldfoundry/data/benchmarks/tasks/external/ipv-bench.yaml
-worldfoundry/evaluation/tasks/execution/runners/ipv_bench
-```
-
-```text
-worldfoundry/evaluation/tasks/execution/runners/ipv_bench    # in-tree official runner
-${WORLDFOUNDRY_GENERATED_ARTIFACT_DIR}/                      # generated impossible videos
-<official_results.csv|json>                                  # annotation / judge / prediction exports
-```
-
-Official benchmark assets come from the source repository ([showlab/Impossible-Videos](https://github.com/showlab/Impossible-Videos)); no Hugging Face dataset is required by the contract entry.
-
-## Run the benchmark
-
-Catalog-recorded validation command:
+## How to run
 
 ```bash
 worldfoundry-eval zoo benchmark-run \
@@ -60,31 +24,14 @@ worldfoundry-eval zoo benchmark-run \
   --mode official-validation \
   --official-results-path <official_results.csv> \
   --generated-artifact-dir <generated_videos> \
-  --output-dir <out> \
+  --output-dir tmp/ipv-bench/official-validation \
   --json
 ```
 
-## Checkpoints and environment variables
+Default import: `WORLDFOUNDRY_IPV_BENCH_RESULTS_PATH`. Optional root / backend: `WORLDFOUNDRY_IPV_BENCH_ROOT`, `WORLDFOUNDRY_IPV_BENCH_RUNTIME_BACKEND`. No Hugging Face dataset is required by the contract.
 
-- `WORLDFOUNDRY_IPV_BENCH_ROOT`: Optional override pointing at a local benchmark runtime/repository root.
-- `WORLDFOUNDRY_IPV_BENCH_RESULTS_PATH`: Default path the importer reads official result exports from when `--official-results-path` is not passed.
-- `WORLDFOUNDRY_GENERATED_ARTIFACT_DIR`: Directory containing the candidate generated artifacts to score or import against.
-- `WORLDFOUNDRY_IPV_BENCH_RUNTIME_BACKEND`: Selects the runtime backend for the in-tree runner.
+In-tree pointers: `worldfoundry/data/benchmarks/tasks/external/ipv-bench.yaml`, `worldfoundry/evaluation/tasks/execution/runners/ipv_bench`.
 
-## Outputs
-
-The run writes into `--output-dir`:
-
-- `scorecard.json`: WorldFoundry scorecard with the metric values recorded above.
-- `benchmark_contract.json`: Benchmark contract record for the run (inputs, mode, provenance).
-- `raw_metric_table.jsonl`: Metric rows backing the scorecard.
-
-Scorecard primary key: `ipv_bench_average` (leaderboard key `ipv_bench_average`), stored in `scorecard.json`.
-
-## Limitations
-
-- WorldFoundry normalizes supplied annotations and judge outputs; it does not run the official judges or understanding models in tree.
-- Full leaderboard validation requires official annotations, judge outputs, or understanding predictions plus generated videos.
-- Fixture runs validate wiring only and are never benchmark evidence.
+Outputs include `scorecard.json` (primary `ipv_bench_average`) and `raw_metric_table.jsonl`.
 
 [← Benchmark Hub](/docs/evaluation/benchmark-hub)

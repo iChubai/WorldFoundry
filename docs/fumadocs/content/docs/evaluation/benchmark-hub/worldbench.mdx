@@ -1,61 +1,24 @@
 ---
 title: WorldBench
-description: "Diagnostic physics benchmark: 425 simulated scenes scored by SAM2 segmentation tracking against ground-truth physics, plus text QA."
+description: "UCLA diagnostic physics bench: 425 Kubric scenes, SAM2 vs ground-truth physics, plus text QA. WorldFoundry implements an in-tree scorer; it does not invent a board."
 ---
 
-## About
+WorldBench (UCLA, with Sony AI, Yale, and DEVCOM ARL) diagnoses how close world models are to **physics**. **Kubric** (PyBullet + Blender) renders **425** physically accurate scenes across four concepts — motion physics, object permanence, support relations, scale / perspective — with ground-truth depth, normals, segmentation, and flow. Models generate continuations from initial frames; **SAM2** tracks first-frame boxes and masks are compared to simulation (foreground mIoU, background RMSE). A textual subset adds multiple-choice and yes/no QA.
 
-**Publisher:** UCLA (with Sony AI, Yale & DEVCOM ARL)
+The public evaluator calls Dice “mIoU”. WorldFoundry reports **conventional `foreground_miou`** and the release’s **`foreground_dice` compatibility value** separately. The inspected HF tree currently has **375** scene directories (15 scenarios × 25) versus the paper’s 425.
 
-WorldBench diagnoses how close world models are to the physical world. It uses Kubric (PyBullet + Blender) to render 425 physically accurate scenes across four concepts — motion physics, object permanence, support relations, and scale/perspective — each with ground-truth depth, normals, segmentation, and flow. Models generate video continuations from initial frames; SAM2 propagates first-frame object boxes through the generated video and the masks are compared against ground-truth simulation (foreground mIoU, background RMSE). A textual subset adds multiple-choice and yes/no questions.
+Paper: [WorldBench](https://arxiv.org/abs/2601.21282). Project: [world-bench.github.io](https://world-bench.github.io/). Data: [`worldbenchmark/IntuitivePhysics`](https://huggingface.co/datasets/worldbenchmark/IntuitivePhysics). Dataset and evaluator declare **no redistribution license**.
 
-WorldFoundry implements the evaluator in tree as a model-backed runner over the `worldbenchmark/IntuitivePhysics` dataset, reporting both the conventional mIoU and the public release's Dice-named compatibility value separately.
+WorldFoundry implements an in-tree, model-backed runner. Runtime environments still record: **no confirmed redistributable official raw-video evaluator**, and **`official-run` from videos is not a release claim**. Import via `WORLDFOUNDRY_WORLDBENCH_RESULTS_PATH` is the supported compatibility path.
 
-Official references:
+<BenchmarkPageSections id="worldbench" locale="en" />
 
-- Paper: [arxiv.org/abs/2601.21282](https://arxiv.org/abs/2601.21282)
-- Project page: [world-bench.github.io](https://world-bench.github.io/)
-
-## Evaluation protocol
-
-`--run-official` evaluates raw generated videos (needs the SAM2.1-hiera-large checkpoint) or precomputed masks via `--predicted-mask-dir`; `--video-only` / `--text-only` restrict tracks, and `--answer-manifest` supplies textual answers. Compatibility import via `WORLDFOUNDRY_WORLDBENCH_RESULTS_PATH` normalizes existing result files. Frame alignment knobs (`--ground-truth-start-frame`, `--generated-skip-frames`) handle conditioning offsets.
-
-Primary metric: `foreground_miou`.
-
-| Metric | Meaning | Direction |
-| --- | --- | --- |
-| `foreground_miou` | Conventional per-object IoU averaged across objects, frames, and scenes. | Higher is better |
-| `foreground_dice` | Compatibility value computed by the public release while naming it mIoU. | Higher is better |
-| `background_rmse` | RGBA RMSE over pixels labeled as background in the ground-truth segmentation. | Lower is better |
-| `text_based_accuracy` | Exact normalized answer accuracy over available WorldBench textual questions. | Higher is better |
-| `multiple_choice_accuracy` | Accuracy over questions containing an explicit Options list. | Higher is better |
-| `binary_accuracy` | Accuracy over WorldBench yes/no questions. | Higher is better |
-
-## Data and artifact layout
-
-In-tree paths:
-
-```text
-worldfoundry/data/benchmarks/tasks/external/worldbench.yaml
-worldfoundry/evaluation/tasks/execution/runners/worldbench
-```
-
-```text
-cache/worldfoundry/data/hfd_datasets/worldbenchmark/IntuitivePhysics/scenes/            # 425 scenes
-cache/worldfoundry/data/hfd_datasets/worldbenchmark/IntuitivePhysics/textual_questions/ # 4 category JSONs
-worldfoundry/data/benchmarks/assets/worldbench/evaluator.yaml                           # evaluator wiring
-```
+## How to run
 
 ```bash
 hf download worldbenchmark/IntuitivePhysics --repo-type dataset \
   --local-dir cache/worldfoundry/data/hfd_datasets/worldbenchmark/IntuitivePhysics
-```
 
-## Run the benchmark
-
-Run the video track over generated continuations:
-
-```bash
 ${WORLDFOUNDRY_UNIFIED_PYTHON} \
   worldfoundry/evaluation/tasks/execution/runners/worldbench/run_worldbench_official_runner.py \
   --run-official \
@@ -67,33 +30,10 @@ ${WORLDFOUNDRY_UNIFIED_PYTHON} \
   --json
 ```
 
-## Checkpoints and environment variables
+`--predicted-mask-dir` skips SAM2 when masks already exist. `--text-only` plus `--answer-manifest` covers QA. Frame knobs: `--ground-truth-start-frame`, `--generated-skip-frames`. Shared assets: `worldbench_dataset_assets`, `facebook/sam2.1-hiera-large`.
 
-- `WORLDFOUNDRY_WORLDBENCH_DATASET_ROOT`: Local root of the staged official dataset.
-- `WORLDFOUNDRY_GENERATED_ARTIFACT_DIR`: Directory containing the candidate generated artifacts to score or import against.
-- `WORLDFOUNDRY_WORLDBENCH_ANSWER_MANIFEST`
-- `WORLDFOUNDRY_WORLDBENCH_SAM2_CKPT`
-- `WORLDFOUNDRY_WORLDBENCH_RESULTS_PATH`
+In-tree pointers: `worldfoundry/data/benchmarks/tasks/external/worldbench.yaml`, `worldfoundry/evaluation/tasks/execution/runners/worldbench`.
 
-Shared checkpoint assets: `facebook/sam2.1-hiera-large`.
-
-This benchmark reuses the shared base-model dependency stack: `worldbench_dataset_assets`, `sam2`.
-
-## Outputs
-
-The run writes into `--output-dir`:
-
-- `scorecard.json`: WorldFoundry scorecard with the metric values recorded above.
-- `per_sample_scores.jsonl`: Per-sample rows when the result source exposes sample-level values.
-- `raw_metric_table.jsonl`: Metric rows backing the scorecard.
-- `worldbench_evaluation.json`
-
-Scorecard primary key: `foreground_miou` (leaderboard key `foreground_miou`), stored in `scorecard.json`.
-
-## Limitations
-
-- The dataset and evaluator bundle declare no redistribution license; treat assets as upstream-controlled.
-- The public evaluator calls Dice "mIoU" and contains unresolved runtime defects; WorldFoundry reports both overlap definitions separately.
-- Full-dataset numerical parity and an official submission protocol have not been audited.
+Outputs include `scorecard.json` (primary `foreground_miou`) and `worldbench_evaluation.json`.
 
 [← Benchmark Hub](/docs/evaluation/benchmark-hub)

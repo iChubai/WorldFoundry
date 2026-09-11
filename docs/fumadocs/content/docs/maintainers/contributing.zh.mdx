@@ -49,13 +49,19 @@ Fumadocs 是唯一维护的文档面。新增或修改页面时，在 `docs/fuma
 
 ## 快速站点迭代
 
+模型演示视频由 GitHub CDN 提供，文档开发不需要执行 `git lfs pull`。
+
+```bash
+GIT_LFS_SKIP_SMUDGE=1 git clone https://github.com/OpenEnvision/WorldFoundry.git
+```
+
 WorldFoundry 目前只维护 **一个** Web 站点：`docs/fumadocs/` 下的 Fumadocs 文档应用。Homepage、benchmark hub、模型目录和 API 参考都是该应用内的路由，不是独立构建目标。Studio（`worldfoundry/studio/`）是 Python FastAPI 应用，不属于 Next.js 站点。
 
 每个站点都应在仓库内保留 **快速迭代** 的 npm 脚本。生产 CI 路径不变（`scripts/docs/build.sh` → `deploy-docs.yml`）。
 
-| 站点 | 路径 | `dev:fast` | `dev:ssd` | `dev:local` | `build:fast` | 环境变量前缀 |
-| --- | --- | --- | --- | --- | --- | --- |
-| 文档（Fumadocs） | `docs/fumadocs/` | `npm run dev:fast` | `npm run dev:ssd` | `npm run dev:local` | `npm run build:fast` | `WF_DOCS_*` |
+<KvCatalog heading="站点" vars rows={[
+    { name: "文档（Fumadocs）", reads: [{ label: "路径", value: <><code>docs/fumadocs/</code></> }, { label: "环境变量前缀", value: <><code>WF_DOCS_*</code></> }, { label: "dev:fast", value: <><code>npm run dev:fast</code></> }, { label: "dev:ssd", value: <><code>npm run dev:ssd</code></> }, { label: "dev:local", value: <><code>npm run dev:local</code></> }, { label: "build:fast", value: <><code>npm run build:fast</code></> }] }
+  ]} />
 
 在仓库根目录也可使用 `make docs-dev-fast`、`make docs-dev-ssd`、`make docs-dev-local` 或 `make docs-build-fast`。
 
@@ -99,16 +105,77 @@ npm run build:fast
 
 常用环境变量（`WF_DOCS_*`）：
 
-| 变量 | 作用 |
-| --- | --- |
-| `WF_DOCS_SKIP_MDX=1` | 启动 dev 时不运行 `fumadocs-mdx`（重启最快；改 MDX 后需手动 `npm run mdx:generate`）。 |
-| `WF_DOCS_REFRESH_MDX=1` | 下次启动 dev 时强制重新生成 MDX。 |
-| `WF_DOCS_REFRESH_API=1` | 重新生成 `generated/python-api.json`。 |
-| `WF_DOCS_KEEP_DIST=1` | 将 `.next` 缓存放在 `docs/fumadocs/tmp/` 而非 `/tmp`。 |
-| `WF_DOCS_CACHE_ROOT` | 覆盖 Next.js 与 webpack 缓存根目录。 |
-| `WF_DOCS_SSD_ROOT` | 覆盖 `dev:ssd` 的 SSD 符号链接根目录（默认 `~/.cache/worldfoundry-docs/<checkout-id>`）。 |
-| `WF_DOCS_UI_ONLY=1` | webpack 忽略模型/benchmark MDX 目录的 watch（仅改 CSS/组件；模型页 HMR 不可用）。 |
-| `WF_DOCS_WEBPACK_CACHE_DIR` | 覆盖 webpack 文件系统缓存路径。 |
+<div className="pi-kv-catalog is-vars not-prose">
+  <section className="pi-kv-group">
+    <h3>变量</h3>
+    <ul>
+      <li className="pi-kv-row">
+        <div className="pi-kv-head">
+          <div className="pi-kv-names">
+            <code>WF_DOCS_SKIP_MDX=1</code>
+          </div>
+        </div>
+        <p>启动 dev 时不运行 <code>fumadocs-mdx</code>（重启最快；改 MDX 后需手动 <code>npm run mdx:generate</code>）。</p>
+      </li>
+      <li className="pi-kv-row">
+        <div className="pi-kv-head">
+          <div className="pi-kv-names">
+            <code>WF_DOCS_REFRESH_MDX=1</code>
+          </div>
+        </div>
+        <p>下次启动 dev 时强制重新生成 MDX。</p>
+      </li>
+      <li className="pi-kv-row">
+        <div className="pi-kv-head">
+          <div className="pi-kv-names">
+            <code>WF_DOCS_REFRESH_API=1</code>
+          </div>
+        </div>
+        <p>重新生成 <code>generated/python-api.json</code>。</p>
+      </li>
+      <li className="pi-kv-row">
+        <div className="pi-kv-head">
+          <div className="pi-kv-names">
+            <code>WF_DOCS_KEEP_DIST=1</code>
+          </div>
+        </div>
+        <p>将 <code>.next</code> 缓存放在 <code>docs/fumadocs/tmp/</code> 而非 <code>/tmp</code>。</p>
+      </li>
+      <li className="pi-kv-row">
+        <div className="pi-kv-head">
+          <div className="pi-kv-names">
+            <code>WF_DOCS_CACHE_ROOT</code>
+          </div>
+        </div>
+        <p>覆盖 Next.js 与 webpack 缓存根目录。</p>
+      </li>
+      <li className="pi-kv-row">
+        <div className="pi-kv-head">
+          <div className="pi-kv-names">
+            <code>WF_DOCS_SSD_ROOT</code>
+          </div>
+        </div>
+        <p>覆盖 <code>dev:ssd</code> 的 SSD 符号链接根目录（默认 <code>{"~/.cache/worldfoundry-docs/<checkout-id>"}</code>）。</p>
+      </li>
+      <li className="pi-kv-row">
+        <div className="pi-kv-head">
+          <div className="pi-kv-names">
+            <code>WF_DOCS_UI_ONLY=1</code>
+          </div>
+        </div>
+        <p>webpack 忽略模型/benchmark MDX 目录的 watch（仅改 CSS/组件；模型页 HMR 不可用）。</p>
+      </li>
+      <li className="pi-kv-row">
+        <div className="pi-kv-head">
+          <div className="pi-kv-names">
+            <code>WF_DOCS_WEBPACK_CACHE_DIR</code>
+          </div>
+        </div>
+        <p>覆盖 webpack 文件系统缓存路径。</p>
+      </li>
+    </ul>
+  </section>
+</div>
 
 SSD 缓存辅助命令：`npm run ssd:setup`、`npm run ssd:status`、`npm run ssd:clean`（加 `-- --purge` 可删除 SSD 上的缓存数据）。
 
@@ -124,7 +191,7 @@ SSD 缓存辅助命令：`npm run ssd:setup`、`npm run ssd:status`、`npm run s
 2. 跳过/刷新类环境变量使用 `WF_<SITE>_` 前缀（例如 `WF_STUDIO_SKIP_MDX=1`）。
 3. 提供 `predev.mjs`（或等价逻辑），在输出已是最新时智能跳过 codegen。
 4. 若需从仓库根目录常用，添加对应的 `make docs-<site>-dev-fast` 目标。
-5. 在本节站点表（中英文页面）中补充一行。
+5. 在本节站点目录（中英文页面）中补充一条。
 
 生产部署速度是另一回事：CI 仍会跑完整的 `types:check`、目录漂移检查和全页静态导出，该路径未改动。
 

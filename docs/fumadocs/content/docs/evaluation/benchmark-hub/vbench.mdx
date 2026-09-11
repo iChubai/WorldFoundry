@@ -1,92 +1,34 @@
 ---
 title: VBench
-description: Comprehensive 16-dimension video generation quality suite with the in-tree official VBench runtime.
+description: "NTU / Shanghai AI Lab 16-dimension T2V quality suite. WorldFoundry ships the official runtime; it does not invent a board."
 ---
 
-## About
+VBench (S-Lab, NTU and Shanghai AI Laboratory) decomposes text-to-video quality into **16 dimensions**, each scored by a dedicated perception model rather than one embedding distance. Three groups:
 
-**Publisher:** S-Lab, Nanyang Technological University & Shanghai AI Laboratory
+- **Temporality** — subject / background consistency, flicker, motion smoothness, dynamic degree.
+- **Frame quality** — aesthetic quality, imaging quality.
+- **Semantics / text alignment** — object class, multiple objects, human action, color, spatial relationship, scene, appearance style, temporal style, overall consistency.
 
-VBench decomposes video generation quality into 16 evaluation dimensions covering temporal quality (subject/background consistency, flicker, motion smoothness, dynamic degree), frame-wise quality (aesthetic and imaging quality), and semantics/text alignment (object class, multiple objects, human action, color, spatial relationship, scene, appearance style, temporal style, overall consistency). Each dimension is scored by a dedicated perception model rather than a single embedding distance, and the official leaderboard aggregates them into quality/semantic splits.
+The official total is a **4× quality + 1× semantic** mix (`overall_quality`). WorldFoundry also emits `temporal_quality`, `frame_quality`, and `text_alignment` aggregates.
 
-WorldFoundry vendors the official VBench runtime in tree at `worldfoundry/evaluation/tasks/execution/runners/vbench/runtime` and exposes it through `worldfoundry/evaluation/tasks/execution/runners/vbench/run_vbench_official_runner.py`. The runner materializes prompt suites, dispatches the upstream dimension evaluators, and converts the resulting `full_json` outputs into a WorldFoundry scorecard.
+Paper: [VBench](https://arxiv.org/abs/2311.17982). Project: [vchitect.github.io/VBench-project](https://vchitect.github.io/VBench-project/). Code: [Vchitect/VBench](https://github.com/Vchitect/VBench) (Apache-2.0). Prompt suite in tree: `worldfoundry/data/benchmarks/assets/vbench/VBench_full_info.json` (946 rows). [VBench-2.0](/docs/evaluation/benchmark-hub/vbench-2.0) is a later faithfulness suite; the two are **not interchangeable**.
 
-Official references:
+WorldFoundry **vendors the official runtime**. Two modes: `custom_input` (any video folder; text-dependent dims need `--prompt` / `--prompt-file`) and `vbench_standard` (official names `"{prompt}-{index}.mp4"`, five samples per prompt, `index` in `0..4`). Bounded GPU validation covers `aesthetic_quality` only.
 
-- Paper: [arxiv.org/abs/2311.17982](https://arxiv.org/abs/2311.17982)
-- Project page: [vchitect.github.io/VBench-project](https://vchitect.github.io/VBench-project/)
-- Official repository: [Vchitect/VBench](https://github.com/Vchitect/VBench)
-- License: `apache-2.0`
+<BenchmarkPageSections id="vbench" locale="en" />
 
-## Evaluation protocol
+## How to run
 
-Two execution modes are supported:
-
-- `custom_input`: score an arbitrary directory of generated videos on selected dimensions (no official prompt suite required). Video-only dimensions such as `aesthetic_quality`, `imaging_quality`, `subject_consistency`, `temporal_flickering`, and `motion_smoothness` work directly; text-dependent dimensions need `--prompt` or `--prompt-file`.
-- `vbench_standard`: leaderboard-style scoring against the official `VBench_full_info.json` prompt suite. Generated videos must follow the official naming convention `"{prompt}-{index}.mp4"` with five samples per prompt (`index` in `0..4`); the runner preflights prompt-suite coverage before dispatching the upstream evaluator and fails when the materialization is incomplete.
-
-Primary metric: `overall_quality`.
-
-| Metric | Meaning | Direction |
-| --- | --- | --- |
-| `overall_quality` | Official-style final VBench aggregate: 4x quality score plus 1x semantic score. | Higher is better |
-| `temporal_quality` | WorldFoundry aggregate of VBench temporal and consistency dimensions. | Higher is better |
-| `frame_quality` | WorldFoundry aggregate of VBench aesthetic and imaging quality dimensions. | Higher is better |
-| `text_alignment` | Official-style semantic aggregate over VBench prompt-alignment dimensions. | Higher is better |
-| `subject_consistency` | Official VBench dimension score. | Higher is better |
-| `background_consistency` | Official VBench dimension score. | Higher is better |
-| `temporal_flickering` | Official VBench dimension score. | Higher is better |
-| `motion_smoothness` | Official VBench dimension score. | Higher is better |
-| `dynamic_degree` | Official VBench dimension score. | Higher is better |
-| `aesthetic_quality` | Official VBench dimension score. | Higher is better |
-| `imaging_quality` | Official VBench dimension score. | Higher is better |
-| `object_class` | Official VBench dimension score. | Higher is better |
-| `multiple_objects` | Official VBench dimension score. | Higher is better |
-| `human_action` | Official VBench dimension score. | Higher is better |
-| `color` | Official VBench dimension score. | Higher is better |
-| `spatial_relationship` | Official VBench dimension score. | Higher is better |
-| `scene` | Official VBench dimension score. | Higher is better |
-| `appearance_style` | Official VBench dimension score. | Higher is better |
-| `temporal_style` | Official VBench dimension score. | Higher is better |
-| `overall_consistency` | Official VBench dimension score. | Higher is better |
-
-## Data and artifact layout
-
-In-tree paths:
-
-```text
-worldfoundry/data/benchmarks/tasks/external/vbench.yaml
-worldfoundry/evaluation/tasks/execution/runners/vbench/runtime
-```
-
-Stage generated videos and point the runner at them:
+Catalog-recorded bounded command:
 
 ```bash
-export WORLDFOUNDRY_GENERATED_ARTIFACT_DIR=/path/to/generated_videos
-```
-
-For `vbench_standard`, the directory must contain five samples per official prompt:
-
-```text
-/path/to/generated_videos/
-  "A cat playing piano-0.mp4"
-  "A cat playing piano-1.mp4"
-  ...
-```
-
-Dimension checkpoints are resolved through the shared `vbench_perception_metric_stack` base-model assets; `--load-ckpt-from-local` forces local checkpoint resolution.
-
-## Run the benchmark
-
-Catalog-recorded validation command:
-
-```bash
-${WORLDFOUNDRY_UNIFIED_PYTHON} worldfoundry/evaluation/tasks/execution/runners/vbench/run_vbench_official_runner.py run \
+${WORLDFOUNDRY_UNIFIED_PYTHON} \
+  worldfoundry/evaluation/tasks/execution/runners/vbench/run_vbench_official_runner.py run \
   --mode custom_input \
   --dimension aesthetic_quality
 ```
 
-Score one dimension over a custom video directory:
+Score one dimension on a custom folder:
 
 ```bash
 ${WORLDFOUNDRY_UNIFIED_PYTHON} \
@@ -98,7 +40,7 @@ ${WORLDFOUNDRY_UNIFIED_PYTHON} \
   --json
 ```
 
-Import previously computed upstream VBench results instead of re-running the evaluators:
+Import an upstream `full_json` directory instead of re-running evaluators:
 
 ```bash
 ${WORLDFOUNDRY_UNIFIED_PYTHON} \
@@ -108,29 +50,18 @@ ${WORLDFOUNDRY_UNIFIED_PYTHON} \
   --json
 ```
 
-## Checkpoints and environment variables
+`--load-ckpt-from-local` forces local checkpoint resolution. Env: `WORLDFOUNDRY_VBENCH_ROOT`, `WORLDFOUNDRY_GENERATED_ARTIFACT_DIR`, `WORLDFOUNDRY_VBENCH_CACHE_DIR`. Shared stack: `vbench_perception_metric_stack`.
 
-- `WORLDFOUNDRY_VBENCH_ROOT`: Optional path to an external VBench checkout; the in-tree runtime is used when unset.
-- `WORLDFOUNDRY_GENERATED_ARTIFACT_DIR`: Directory of candidate generated videos.
-- `WORLDFOUNDRY_VBENCH_CACHE_DIR`: Cache directory for VBench dimension checkpoints.
+In-tree pointers:
 
-This benchmark reuses the shared base-model dependency stack: `vbench_perception_metric_stack`.
+```text
+worldfoundry/data/benchmarks/tasks/external/vbench.yaml
+worldfoundry/evaluation/tasks/execution/runners/vbench/runtime
+worldfoundry/data/benchmarks/assets/vbench/VBench_full_info.json
+```
 
-## Outputs
+Outputs include `scorecard.json` (primary `overall_quality`), `raw_metric_table.jsonl`, and captured upstream logs.
 
-The run writes into `--output-dir`:
-
-- `scorecard.json`: WorldFoundry scorecard with the metric values recorded above.
-- `raw_metric_table.jsonl`: Metric rows backing the scorecard.
-- `upstream_stdout.log`: Captured stdout of the upstream official scorer.
-- `upstream_stderr.log`: Captured stderr of the upstream official scorer.
-
-Scorecard primary key: `overall_quality` (leaderboard key `overall_quality`), stored in `scorecard.json`.
-
-## Limitations
-
-- `custom_input` runs on partial dimensions are wiring/development signals, not leaderboard-comparable VBench totals.
-- Leaderboard-grade claims require the full official prompt suite, five samples per prompt, and all 16 dimension evaluators with their published checkpoints.
-- A local scorecard is not a VBench leaderboard submission; official rankings come from the upstream maintainers.
+Minimal generate-then-score cells (Wan2.1, Causal-Forcing, HunyuanVideo, EasyAnimate): [Model → benchmark recipes](/docs/evaluation/model-benchmark-recipes).
 
 [← Benchmark Hub](/docs/evaluation/benchmark-hub)

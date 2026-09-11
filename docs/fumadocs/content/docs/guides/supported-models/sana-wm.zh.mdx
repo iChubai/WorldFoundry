@@ -1,32 +1,50 @@
 ---
 title: "SANA-WM"
-description: "SANA-WM is a world model built on NVIDIA's efficient Sana architecture: a two-stage design (interactive stage plus LTX-2 refiner) that generates camera-controlled world video with a resident multi-GPU pipeline. A real Workspace run partiti…"
-pageSource: generated
+description: "SANA-WM（NVIDIA）：世界模型、相机可控视频；Runner 一致性待确认; 独立环境 `sana`。"
+modelId: "sana-wm"
+pageSource: authored
 ---
-
-**发表机构:** 英伟达（NVIDIA） · 企业
-[SANA-WM: Efficient Minute-Scale World Modeling with Hybrid Linear Diffusion Transformer](https://arxiv.org/abs/2605.15178) (2026)
 
 SANA-WM 是基于英伟达高效 Sana 架构的世界模型：两阶段设计（交互阶段加 LTX-2 精修器），以常驻多卡 pipeline 生成相机可控的世界视频。真实 Workspace 运行把组件划分到四张 A100 上，从九帧原生窗口生成八帧有限、可解码的 1280x704 画面。
 
-<figure className="wf-recipe-media is-diagram">
-  <img src="/models/sana-wm/paper.png" alt="SANA-WM: Efficient Minute-Scale World Modeling with Hybrid Linear Diffusion Transformer" />
-  <figcaption>SANA-WM: Efficient Minute-Scale World Modeling with Hybrid Linear Diffusion Transformer</figcaption>
-</figure>
+<ModelPaperFigures modelId="sana-wm" locale="zh" />
+
+记录论文为[SANA-WM: Efficient Minute-Scale World Modeling with Hybrid Linear Diffusion Transformer](https://arxiv.org/abs/2605.15178)（2026）。
+
+项目页：[nvlabs.github.io/Sana/WM](https://nvlabs.github.io/Sana/WM/)。代码：[NVlabs/Sana](https://github.com/NVlabs/Sana)。
 
 <ModelCommandBuilder modelId="sana-wm" locale="zh" />
 
-## 架构
+## 用来做什么
 
-SANA-WM 复用规范的 Sana 网络、编码器、自编码器、调度器与配方角色——不再保留模态自有的 Sana 运行时（论文 arXiv 2605.15178，apache-2.0）。交互 pipeline 保持两阶段模型常驻，以原生 8k+1 时间窗口推进；质量档案保持双向阶段与 LTX-2 精修器开启。
+用 `sana-wm-streaming` 做相机条件视频推理。配方绑定了已记录的相机控制 profile。
 
-## 使用要点
+SANA-WM 复用规范的 Sana 网络、编码器、自编码器、调度器与配方角色——不再保留模态自有的 Sana 运行时（论文 arXiv 2605.15178，apache-2.0）。交互 pipeline 保持两阶段模型常驻，以原生 8k+1 时间窗口推进；质量档案保持双向阶段与 LTX-2 精修器开启。该模型由英伟达（NVIDIA）发布。
 
-已验证的四卡 A100 运行是四阶段冒烟测试，确认执行与条件连贯性——不代表默认 60 步质量配方。组件在多卡上的放置可配置。
+catalog 记录的任务包括 世界模型、相机可控视频、controllable-world-generation。别名包括 `sana world model`、`sana-wm-2.6b`、`sana-wm-streaming`、`Efficient-Large-Model/SANA-WM_streaming`。
 
-## 评测 Benchmark
+记录的评测入口包括[SANA-WM 80-Scene Benchmark](/zh/docs/evaluation/benchmark-hub/sana-wm-bench)（本仓库记录的 SANA-WM 专用评测）、[CameraBench](/zh/docs/evaluation/benchmark-hub/camerabench)（世界滚动生成的相机控制贴合度）。
 
-- [SANA-WM 80-Scene Benchmark](/zh/docs/evaluation/benchmark-hub/sana-wm-bench) — 本仓库记录的 SANA-WM 专用评测。
-- [CameraBench](/zh/docs/evaluation/benchmark-hub/camerabench) — 世界滚动生成的相机控制贴合度。
+不是 [SANA](/zh/docs/guides/supported-models/sana)。 评测看 [SANA-WM 80-Scene Benchmark](/zh/docs/evaluation/benchmark-hub/sana-wm-bench)、[CameraBench](/zh/docs/evaluation/benchmark-hub/camerabench)。
+
+## 运行时契约
+
+必填 `prompt`、`image`；可选 `video`、`actions` (camera_action, world_action, interaction)；产物 `sana-wm.mp4`。
+
+记录的任务 profile：`world-model`、`camera-controlled-video`、`controllable-world-generation`。绑定的 pipeline 类是 `SanaWMPipeline`。
+
+系列状态：**Runner 一致性待确认**。
+
+已验证的四卡 A100 运行是四阶段冒烟测试，确认执行与条件连贯性——不代表默认 60 步质量配方。 组件在多卡上的放置可配置。
+
+WorldFoundry registers an in-tree resident pipeline with configurable multi-GPU component placement.
+
+## 在 WorldFoundry 中运行
+
+启动 `worldfoundry-eval run sana-wm-streaming --pipeline.task-profile camera-controlled-video` 跟随相机路径。上方命令构建器按已记录任务切换 `--pipeline.task-profile`，发出的仍是 `worldfoundry-eval run`。
+
+记录的权重仓库包括 `Efficient-Large-Model/SANA-WM_streaming`、`Efficient-Large-Model/SANA-WM_bidirectional`。就位权重用 `bash scripts/inference/prepare_model_infer.sh sana-wm-streaming`。
+
+记录 license 为 apache-2.0；状态：**Runner 一致性待确认**。
 
 <ModelRelatedRecipes modelId="sana-wm" locale="zh" />

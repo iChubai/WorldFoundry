@@ -1,22 +1,46 @@
 ---
 title: "ThinkSound"
-description: "ThinkSound is Alibaba FunAudioLLM's video-to-audio generation model that uses chain-of-thought style reasoning to decide what a scene should sound like before synthesizing audio."
+description: "ThinkSound（Alibaba (Tongyi FunAudioLLM)）：视频生音频、audio-generation；计划中。"
+modelId: "thinksound"
 pageSource: generated
 ---
 
-**发表机构:** 阿里巴巴（通义 FunAudioLLM） · 企业
-video → audio
+ThinkSound 是阿里通义 FunAudioLLM 的视频配音模型，用思维链式推理先判断场景应有的声音、再合成音频。本 catalog 中它目前为 计划中：在仅推理运行时与 ThinkSound 扩散 checkpoint 都就位之前，条目在 Studio 中隐藏。
 
-ThinkSound 是阿里通义 FunAudioLLM 的视频配音模型，用思维链式推理先判断场景应有的声音、再合成音频。本 catalog 中它目前为 metadata_only：在仅推理运行时与 ThinkSound 扩散 checkpoint 都就位之前，条目在 Studio 中隐藏。
+<ModelPaperFigures modelId="thinksound" locale="zh" />
+
+代码：[FunAudioLLM/ThinkSound](https://huggingface.co/FunAudioLLM/ThinkSound)。
 
 <ModelCommandBuilder modelId="thinksound" locale="zh" />
 
-## 架构
+## 用来做什么
 
-上游描述为「推理阶段（面向音频的思维链）+ 流/扩散音频生成器」。本仓库仅记录 prompt/video 契约与 generated_audio 产物——内部细节仓库未记录。
+需要 catalog 音频生成时选 `thinksound`：记录输入进、音频出。用它而不是纯视频兄弟条目。
 
-## 使用要点
+上游描述为「推理阶段（面向音频的思维链）+ 流/扩散音频生成器」。本仓库仅记录 prompt/video 契约与 generated_audio 产物——内部细节仓库未记录。该模型由阿里巴巴（通义 FunAudioLLM）发布。
 
-目前不可运行：checkpoint 加载一致性被缺失的 thinksound.ckpt 扩散 checkpoint 阻塞。计划运行前请先确认集成状态；catalog 中可运行的视频配音替代是 MMAudio。
+catalog 记录的任务包括 视频生音频、audio-generation。别名包括 `FunAudioLLM/ThinkSound`。模态上，它接受视频，输出音频。
+
+## 运行时契约
+
+必填 `prompt`；可选 `video`；产物 `thinksound.wav`。
+
+记录的任务 profile：`video-to-audio`、`audio-generation`。绑定的 pipeline 类是 `ThinkSoundPipeline`。
+
+系列状态：**计划中**。
+
+目前不可运行：checkpoint 加载一致性被缺失的 thinksound.ckpt 扩散 checkpoint 阻塞。 计划运行前请先确认集成状态；catalog 中可运行的视频配音替代是 MMAudio。
+
+阻塞中：缺少 thinksound.ckpt 扩散 checkpoint，无法运行。
+
+## 在 WorldFoundry 中运行
+
+catalog 启动命令是 `worldfoundry-eval run thinksound --pipeline.task-profile video-to-audio`。上方命令构建器按已记录任务切换 `--pipeline.task-profile`，发出的仍是 `worldfoundry-eval run`。
+
+运行环境是统一 profile `worldfoundry-unified-cu128`（Python 3.11，CUDA 12.8）。
+
+记录的权重仓库包括 `FunAudioLLM/ThinkSound`。就位权重用 `bash scripts/inference/prepare_model_infer.sh thinksound`。
+
+状态：**计划中**。
 
 <ModelRelatedRecipes modelId="thinksound" locale="zh" />

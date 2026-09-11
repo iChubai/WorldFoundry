@@ -1,58 +1,19 @@
 ---
 title: Apple-PI
-description: "Law-grounded physical-intelligence benchmark: Perception → Formulation → Deduction over the 400-video Orchard mechanics dataset."
+description: "Law-grounded physical intelligence on the 400-video Orchard set: Perception → Formulation → Deduction. WorldFoundry scores GT and predictions; it does not generate the videos."
 ---
 
-## About
+Apple-π (NTU S-Lab) asks whether a **video model reasons with physical law**, not whether the pixels look plausible. **Orchard** is **400** classical-mechanics videos over **10** canonical tasks (nine single-law tasks plus one multi-law composition), from simulation, lab recordings, and internet footage. The protocol is chain-of-frames on an infographic-annotated first frame: **Perception** (read quantities / ground objects), **Formulation** (pick the law / predict a target-time state), **Deduction** (full law-consistent trajectory). Perception and Formulation each split into text and graphic, so there are **five** subtracks. Official scoring is hybrid: Gemini judging plus SAM3 / MoGe / trajectory-overlap / velocity-error. Predictions are **three** independent rollouts per case and subtrack; frame 0 is the condition.
 
-**Publisher:** S-Lab, Nanyang Technological University & CUHK
+Paper: [Apple-π](https://arxiv.org/abs/2607.16401). Project: [21yrm.github.io/Apple-PI-homepage](https://21yrm.github.io/Apple-PI-homepage/). Code: [21yrm/Apple-PI](https://github.com/21yrm/Apple-PI) (Apache-2.0). Formats: [GT_FORMAT.md](https://github.com/21yrm/Apple-PI/blob/main/docs/GT_FORMAT.md), [PREDICTION_FORMAT.md](https://github.com/21yrm/Apple-PI/blob/main/docs/PREDICTION_FORMAT.md).
 
-Apple-PI (Apple-π) anchors video-model evaluation explicitly in physical laws. Built on Orchard — 400 classical-mechanics videos from Isaac Sim simulation, lab recordings, and internet footage — it runs a three-stage scientific-reasoning protocol via chain-of-frames prompting: Perception (read physical quantities / ground objects), Formulation (select the governing law / predict the state at a target time), and Deduction (generate the full law-consistent trajectory). Perception and Formulation each split into text and graphic subtracks, giving five subtracks total. Scoring is hybrid: Gemini-based subjective judging plus physics-grounded objective metrics (SAM3 segmentation/tracking, MoGe depth, trajectory overlap, velocity error).
+WorldFoundry **evaluates** in tree (`run_apple_pi_official_runner.py`): it reads upstream-layout GT and prediction directories. It does **not** run video-model inference. You can also **import** a finished Apple-PI result JSON. `apple_pi_average` is a WorldFoundry mean of available subtracks, not an official composite.
 
-WorldFoundry integrates Apple-PI as a model-backed in-tree runner that consumes upstream-format GT and prediction directories and reuses existing SAM3/MoGe capability paths for the objective metrics.
+<BenchmarkPageSections id="apple-pi" locale="en" />
 
-Official references:
+## How to run
 
-- Paper: [arxiv.org/abs/2607.16401](https://arxiv.org/abs/2607.16401)
-- Project page: [21yrm.github.io/Apple-PI-homepage](https://21yrm.github.io/Apple-PI-homepage/)
-- Official repository: [21yrm/Apple-PI](https://github.com/21yrm/Apple-PI)
-- License: `{'status': 'apache-2.0', 'notes': 'Apple-PI source repository is Apache-2.0; GT data availability follows the upstream release.'}`
-
-## Evaluation protocol
-
-Predictions follow the upstream contract: three independent rollouts per case and subtrack, frame 0 as the conditioning frame. The runner selects subtracks with `--subtrack` (`perception_text`, `perception_graphic`, `formulation_text`, `formulation_graphic`, `deduction`) and the protocol with `--protocol`. Subjective judging uses Gemini (`--gemini-model`, `--judge-backend`); objective metrics load SAM3 and MoGe-2 checkpoints. `--no-foundation-models` skips the model-backed objective metrics for wiring checks.
-
-Primary metric: `deduction`.
-
-| Metric | Meaning | Direction |
-| --- | --- | --- |
-| `perception_text` | Final-frame text annotation artifact score. | Higher is better |
-| `perception_graphic` | Final-frame object-only grounding artifact score. | Higher is better |
-| `formulation_text` | Governing-law and formula answer score. | Higher is better |
-| `formulation_graphic` | Target-time state, velocity-arrow, and label score. | Higher is better |
-| `deduction` | Full-dynamics trajectory score combining upstream subjective and objective evaluation. | Higher is better |
-| `apple_pi_average` | Arithmetic mean of the available Apple-PI subtrack means. | Higher is better |
-
-## Data and artifact layout
-
-In-tree paths:
-
-```text
-worldfoundry/data/benchmarks/tasks/external/apple-pi.yaml
-```
-
-GT and prediction directories follow the upstream format docs
-([GT_FORMAT.md](https://github.com/21yrm/Apple-PI/blob/main/docs/GT_FORMAT.md),
-[PREDICTION_FORMAT.md](https://github.com/21yrm/Apple-PI/blob/main/docs/PREDICTION_FORMAT.md)):
-
-```text
-${WORLDFOUNDRY_APPLE_PI_GT_DIR}/            # upstream GT dataset layout
-${WORLDFOUNDRY_APPLE_PI_PREDICTION_DIR}/    # 3 rollouts per case/subtrack
-```
-
-## Run the benchmark
-
-Evaluate the deduction subtrack against a staged GT directory:
+Score the deduction subtrack against staged GT (Gemini key for real judging; SAM3 / MoGe-2 ride existing WorldFoundry capability paths):
 
 ```bash
 ${WORLDFOUNDRY_UNIFIED_PYTHON} \
@@ -65,36 +26,17 @@ ${WORLDFOUNDRY_UNIFIED_PYTHON} \
   --json
 ```
 
-## Checkpoints and environment variables
+Import an existing result file:
 
-Full evaluation needs a Gemini API key for subjective judging; SAM3 and MoGe-2 checkpoints ride the existing WorldFoundry capability paths.
+```bash
+worldfoundry-eval zoo benchmark-run \
+  --benchmark-id apple-pi \
+  --mode official-validation \
+  --official-results-path <apple_pi_results.json> \
+  --output-dir tmp/apple-pi/official-validation \
+  --json
+```
 
-- `WORLDFOUNDRY_APPLE_PI_RESULTS_PATH`: Default path the importer reads official result exports from when `--official-results-path` is not passed.
-- `WORLDFOUNDRY_APPLE_PI_GT_DIR`
-- `WORLDFOUNDRY_APPLE_PI_PREDICTION_DIR`
-- `WORLDFOUNDRY_APPLE_PI_JUDGE_BACKEND`
-- `WORLDFOUNDRY_APPLE_PI_SAM3_CHECKPOINT`
-- `WORLDFOUNDRY_APPLE_PI_MOGE_CHECKPOINT`
-
-Shared checkpoint assets: `sam3`, `moge_v2_vitl_normal`.
-
-This benchmark reuses the shared base-model dependency stack: `sam3`, `moge_v2_vitl_normal`.
-
-## Outputs
-
-The run writes into `--output-dir`:
-
-- `scorecard.json`: WorldFoundry scorecard with the metric values recorded above.
-- `raw_metric_table.jsonl`: Metric rows backing the scorecard.
-- `per_sample_scores.jsonl`: Per-sample rows when the result source exposes sample-level values.
-- `benchmark_contract.json`: Benchmark contract record for the run (inputs, mode, provenance).
-
-Scorecard primary key: `deduction` (leaderboard key `deduction`), stored in `scorecard.json`.
-
-## Limitations
-
-- The upstream GT dataset is documented but was not public at integration time; full-suite official execution and leaderboard parity are unverified in this workspace.
-- SAM3 and MoGe-2 objective metrics require their checkpoints and a compatible environment.
-- Wiring runs with `--no-foundation-models` or mock judges are not benchmark evidence.
+`--no-foundation-models` and `--judge-backend mock` are wiring only. Env: `WORLDFOUNDRY_APPLE_PI_GT_DIR`, `WORLDFOUNDRY_APPLE_PI_PREDICTION_DIR`, `WORLDFOUNDRY_APPLE_PI_RESULTS_PATH`, `WORLDFOUNDRY_APPLE_PI_JUDGE_BACKEND`, `WORLDFOUNDRY_APPLE_PI_SAM3_CHECKPOINT`, `WORLDFOUNDRY_APPLE_PI_MOGE_CHECKPOINT`. Manifest: `worldfoundry/data/benchmarks/tasks/external/apple-pi.yaml`. Outputs: `scorecard.json` (primary `deduction`), `raw_metric_table.jsonl`, `per_sample_scores.jsonl`, `benchmark_contract.json`.
 
 [← Benchmark Hub](/docs/evaluation/benchmark-hub)

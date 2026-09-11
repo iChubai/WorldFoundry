@@ -1,115 +1,41 @@
 ---
 title: WBench
-description: 多轮交互视频世界模型评测：质量、设定、交互、一致性与物理五大维度共 28 项指标。
+description: "美团 LongCat 多轮视频世界模型评测：28 个指标、五个轴。WorldFoundry 内置指标 runtime；单视频闪烁运行不是 289 例协议。"
 ---
 
-## 简介
+WBench（美团 LongCat）评的是 **多轮交互视频世界模型**，五个轴汇总为 `wbench_average`：
 
-**发表机构：** Meituan（美团 LongCat 团队）
+- **质量** — 美学、成像、闪烁、动态、平滑、HPSv3
+- **设定** — 场景 / 主体遵守
+- **交互** — 导航轨迹、事件编辑、主体动作、视角切换
+- **一致性** — 背景、片段连续、视角、主体、几何 / 光度重建、空间（含 gated）
+- **物理** — 视觉合理性、因果忠实
 
-WBench 由美团 LongCat 团队发布，沿五个维度评测多轮交互视频世界模型：质量（美学/成像/闪烁/动态度/平滑度/HPSv3）、设定遵循（场景/主体）、交互（导航轨迹、事件编辑、主体动作、视角切换）、一致性（背景、片段连续性、视角、主体、几何与光度重建、空间）与物理（视觉合理性、因果保真）。各维度均值汇总为 `wbench_average`。
+论文：[WBench](https://arxiv.org/abs/2605.25874)。项目：[meituan-longcat.github.io/WBench](https://meituan-longcat.github.io/WBench/)。代码：[meituan-longcat/WBench](https://github.com/meituan-longcat/WBench)。数据：[`meituan-longcat/WBench`](https://huggingface.co/datasets/meituan-longcat/WBench)。权重：[`meituan-longcat/WBench-weights`](https://huggingface.co/meituan-longcat/WBench-weights)。
 
-WorldFoundry 入库了 WBench 指标 runtime，并以共享 base-model 资产支撑——HPSv3、TransNetV2（片段连续性）、PAVRM（视觉合理性）、DreamSim、MegaSAM 位姿预计算；`--official-results-path` 可归一化已有的 WBench `report.json` 或逐指标评测目录。
+WorldFoundry **检入指标 runtime**（HPSv3、TransNetV2、PAVRM、DreamSim、MegaSAM 位姿预计算）。**真实单视频 `temporal_flickering` 组件已验证**；**289 例多轮协议未验证**。`--official-results-path` 导入 `report.json` 或分指标目录。
 
-官方参考：
+<BenchmarkPageSections id="wbench" locale="zh" />
 
-- Paper: [arxiv.org/abs/2605.25874](https://arxiv.org/abs/2605.25874)
-- 项目主页: [meituan-longcat.github.io/WBench](https://meituan-longcat.github.io/WBench/)
-- 官方仓库: [meituan-longcat/WBench](https://github.com/meituan-longcat/WBench)
-
-## 评测协议
-
-`--run-official` 需要 `--model-name`（或 `WORLDFOUNDRY_MODEL_ID`）、指向 WBench 数据集的 `--dataset-root`，以及按官方规则命名的生成视频；`--phase gpu` 选择 GPU 指标阶段，`--metrics` 限定计算范围。只有当生成视频确实遵循官方多轮接口时才传 `--submission-protocol text_multi_turn|camera_conditioned|action_conditioned`。生成视频会被就位到 `--output-dir` 下的隔离工作目录。
-
-主指标是 `wbench_average`。
-
-| Metric | 含义 | 方向 |
-| --- | --- | --- |
-| `aesthetic_quality` | 官方 WBench 美学质量得分。 | 越高越好 |
-| `imaging_quality` | 官方 WBench 成像质量得分。 | 越高越好 |
-| `temporal_flickering` | 官方 WBench 时序闪烁得分。 | 越高越好 |
-| `dynamic_degree` | 官方 WBench 动态度得分。 | 越高越好 |
-| `motion_smoothness` | 官方 WBench 运动平滑度得分。 | 越高越好 |
-| `hpsv3_quality` | 官方 WBench HPSv3 质量得分。 | 越高越好 |
-| `scene_adherence` | 官方 WBench 场景遵循得分。 | 越高越好 |
-| `subject_adherence` | 官方 WBench 主体遵循得分。 | 越高越好 |
-| `navigation_trajectory` | 官方 WBench 导航轨迹得分。 | 越高越好 |
-| `event_edit_adherence` | 官方 WBench 事件编辑遵循得分。 | 越高越好 |
-| `subject_action_adherence` | 官方 WBench 主体动作遵循得分。 | 越高越好 |
-| `perspective_switch_adherence` | 官方 WBench 视角切换遵循得分。 | 越高越好 |
-| `background_consistency` | 官方 WBench 背景一致性得分。 | 越高越好 |
-| `segment_continuity` | 官方 WBench 片段连续性得分。 | 越高越好 |
-| `perspective_consistency` | 官方 WBench 透视一致性得分。 | 越高越好 |
-| `subject_consistency` | 官方 WBench 跨模型主体一致性得分。 | 越高越好 |
-| `geometric_consistency` | 官方 WBench 几何重建一致性得分。 | 越高越好 |
-| `photometric_consistency` | 官方 WBench 光度重建一致性得分。 | 越高越好 |
-| `spatial_consistency` | 官方 WBench 空间一致性得分。 | 越高越好 |
-| `gated_spatial_consistency` | 官方 WBench 门控空间一致性得分。 | 越高越好 |
-| `visual_plausibility` | 官方 WBench 视觉合理性得分。 | 越高越好 |
-| `causal_fidelity` | 官方 WBench 因果保真得分。 | 越高越好 |
-| `quality_score` | WBench quality（质量）维度平均分。 | 越高越好 |
-| `setting_score` | WBench setting adherence（设定遵循）维度平均分。 | 越高越好 |
-| `interaction_score` | WBench interaction（交互）维度平均分。 | 越高越好 |
-| `consistency_score` | WBench consistency（一致性）维度平均分。 | 越高越好 |
-| `physical_score` | WBench physical（物理）维度平均分。 | 越高越好 |
-| `wbench_average` | 可用官方维度上的 WBench 平均分。 | 越高越好 |
-
-## 数据与产物布局
-
-WorldFoundry 仓内路径：
-
-```text
-worldfoundry/data/benchmarks/tasks/external/wbench.yaml
-worldfoundry/evaluation/tasks/execution/runners/wbench
-```
-
-```text
-worldfoundry/evaluation/tasks/execution/runners/wbench      # 入库指标 runtime
-<WBench_dataset>/                                           # HF 数据集 meituan-longcat/WBench
-${WORLDFOUNDRY_GENERATED_ARTIFACT_DIR}/                     # 按官方规则命名的生成视频
-```
-
-指标权重来自 Hugging Face `meituan-longcat/WBench-weights`。
-
-## 运行评测
-
-目录 manifest 记录的 validation 命令：
+## 如何运行
 
 ```bash
-python worldfoundry/evaluation/tasks/execution/runners/wbench/run_wbench_official_runner.py \
+${WORLDFOUNDRY_UNIFIED_PYTHON} \
+  worldfoundry/evaluation/tasks/execution/runners/wbench/run_wbench_official_runner.py \
   --run-official \
   --model-name <model_name> \
   --phase gpu \
   --metrics temporal_flickering \
   --dataset-root <WBench_dataset> \
   --generated-artifact-dir <one_officially_named_generated_video> \
-  --output-dir <out> \
+  --output-dir tmp/wbench/flicker \
   --json
 ```
 
-## 权重与环境变量
+只有视频真正遵循该官方多轮接口时才传 `--submission-protocol text_multi_turn|camera_conditioned|action_conditioned`。环境变量：`WORLDFOUNDRY_WBENCH_RESULTS_PATH`、`WORLDFOUNDRY_WBENCH_ROOT`。共享栈：`video_world_perception_stack`。
 
-- `WORLDFOUNDRY_WBENCH_ROOT`: 可选覆盖项，指向本地 benchmark runtime / 仓库根目录。
-- `WORLDFOUNDRY_WBENCH_RESULTS_PATH`: 未显式传 `--official-results-path` 时，导入器默认从该路径读取官方结果导出文件。
-- `WORLDFOUNDRY_GENERATED_ARTIFACT_DIR`: 存放待评测生成产物（候选视频/rollout）的目录。
+仓内指针：`worldfoundry/data/benchmarks/tasks/external/wbench.yaml`，`worldfoundry/evaluation/tasks/execution/runners/wbench`。
 
-共享 checkpoint 资产：`meituan-longcat/WBench-weights`（metric_weights）。
-
-该 benchmark 复用共享 base-model 依赖栈：`video_world_perception_stack`。
-
-## 输出文件
-
-运行会在 `--output-dir` 下写出：
-
-- `scorecard.json`: WorldFoundry 统一 scorecard，记录上表中的指标值。
-- `raw_metric_table.jsonl`: 支撑 scorecard 的原始 metric 行。
-
-Scorecard 主键：`wbench_average`（leaderboard key `wbench_average`），写入 `scorecard.json`。
-
-## 边界与限制
-
-- 仅视频或部分指标的运行只是集成证据；WBench 可比性还要求声明多轮提交协议并覆盖完整官方集。
-- leaderboard 有效分数需要完整分割上的完整官方报告。
-- 官方 GitHub 源仅作为 provenance；runtime 执行使用入库的 WorldFoundry runner。
+产物包括 `scorecard.json`（主键 `wbench_average`）。
 
 [← 返回 Benchmark Hub](/zh/docs/evaluation/benchmark-hub)

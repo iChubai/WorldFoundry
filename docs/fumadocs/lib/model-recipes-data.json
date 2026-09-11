@@ -429,12 +429,6 @@
             "src": "/models/ac3d/paper.png",
             "caption": "AC3D: Analyzing and Improving 3D Camera Control in Video Diffusion Transformers",
             "captionZh": "AC3D: Analyzing and Improving 3D Camera Control in Video Diffusion Transformers"
-          },
-          {
-            "kind": "video",
-            "src": "/demos/ac3d_01.mp4",
-            "caption": "Camera-controlled video",
-            "captionZh": "相机控制视频"
           }
         ]
       },
@@ -1121,12 +1115,6 @@
             "src": "/models/astra/paper.png",
             "caption": "Astra: General Interactive World Model with Autoregressive Denoising",
             "captionZh": "Astra: General Interactive World Model with Autoregressive Denoising"
-          },
-          {
-            "kind": "video",
-            "src": "/demos/astra_01.mp4",
-            "caption": "Interactive camera control",
-            "captionZh": "交互式相机控制"
           }
         ]
       },
@@ -2659,14 +2647,7 @@
           "记录的路径均为离线批量生成——不含流式或交互控制。"
         ],
         "paper": null,
-        "figures": [
-          {
-            "kind": "video",
-            "src": "/demos/cogvideo_01.mp4",
-            "caption": "Text-to-video sample",
-            "captionZh": "文本生成视频"
-          }
-        ]
+        "figures": []
       },
       "commands": {
         "prepare": "bash scripts/inference/prepare_model_infer.sh cogvideox-2b-t2v",
@@ -7479,14 +7460,7 @@
           "腾讯混元社区许可：请核对地域/用途条款。"
         ],
         "paper": null,
-        "figures": [
-          {
-            "kind": "video",
-            "src": "/demos/studio/hunyuan-game-craft-village.mp4",
-            "caption": "Village-scale game world",
-            "captionZh": "村落尺度游戏世界"
-          }
-        ]
+        "figures": []
       },
       "commands": {
         "prepare": "bash scripts/inference/prepare_model_infer.sh hunyuan-game-craft",
@@ -8590,14 +8564,7 @@
           "benchmark 打分与长交互套件尚未记录。"
         ],
         "paper": null,
-        "figures": [
-          {
-            "kind": "video",
-            "src": "/demos/studio/hy-worldplay-official-8gpu.mp4",
-            "caption": "Interactive world play",
-            "captionZh": "交互式世界漫游"
-          }
-        ]
+        "figures": []
       },
       "commands": {
         "prepare": "bash scripts/inference/prepare_model_infer.sh hy-worldplay",
@@ -11531,14 +11498,7 @@
           "仅支持排队分段——没有实时键盘交互。"
         ],
         "paper": null,
-        "figures": [
-          {
-            "kind": "video",
-            "src": "/demos/studio/longvie-2-control-video.mp4",
-            "caption": "Queued long-video segments",
-            "captionZh": "分段衔接的长视频"
-          }
-        ]
+        "figures": []
       },
       "commands": {
         "prepare": "bash scripts/inference/prepare_model_infer.sh longvie-2",
@@ -12520,15 +12480,7 @@
           "默认 352x640 分辨率面向实时交互，而非影视级画质。"
         ],
         "paper": null,
-        "figures": [
-          {
-            "kind": "video",
-            "src": "/demos/studio/matrix-game-2-official-universal.mp4",
-            "poster": "/images/hero/matrix-game-2.webp",
-            "caption": "Keyboard-controlled interactive world",
-            "captionZh": "键鼠控制的交互世界"
-          }
-        ]
+        "figures": []
       },
       "commands": {
         "prepare": "bash scripts/inference/prepare_model_infer.sh matrix-game-2-universal-action-validation",
@@ -13003,14 +12955,7 @@
           "每次运行的视觉 QA 在 catalog 外跟踪。"
         ],
         "paper": null,
-        "figures": [
-          {
-            "kind": "video",
-            "src": "/demos/studio/matrix-game-3-cityscape.mp4",
-            "caption": "Cityscape interactive world",
-            "captionZh": "城市场景交互世界"
-          }
-        ]
+        "figures": []
       },
       "commands": {
         "prepare": "bash scripts/inference/prepare_model_infer.sh matrix-game-3",
@@ -15156,15 +15101,7 @@
           "arxivId": "2601.00393",
           "abstract": "In this paper, we propose NeoVerse, a versatile 4D world model that is capable of 4D reconstruction, novel-trajectory video generation, and rich downstream applications. We first identify a common limitation of scalability in current 4D world modeling methods, caused either by expensive and specialized multi-view 4D data or by cumbersome training pre-processing. In contrast, our NeoVerse is built upon a core philosophy that makes the full pipeline scalable to diverse in-the-wild monocular videos. Specifically, NeoVerse features pose-free feed-forward 4D reconstruction, online monocular degradation pattern simulation, and other well-aligned techniques. These designs empower NeoVerse with versatility and generalization to various domains. Meanwhile, NeoVerse achieves state-of-the-art performance in standard reconstruction and generation benchmarks. Our project page is available at https://"
         },
-        "figures": [
-          {
-            "kind": "video",
-            "src": "/demos/studio/neoverse-robot-tabletop.mp4",
-            "poster": "/images/hero/neoverse.webp",
-            "caption": "Tabletop manipulation trajectories",
-            "captionZh": "桌面操作轨迹"
-          }
-        ]
+        "figures": []
       },
       "commands": {
         "prepare": "bash scripts/inference/prepare_model_infer.sh neoverse",
@@ -21508,14 +21445,7 @@
           "code-only 发布：仓库未确认任何官方 checkpoint。"
         ],
         "paper": null,
-        "figures": [
-          {
-            "kind": "video",
-            "src": "/demos/studio/worldcam-industrial.mp4",
-            "caption": "Industrial camera-controlled world",
-            "captionZh": "工业场景相机控制"
-          }
-        ]
+        "figures": []
       },
       "commands": {
         "prepare": "bash scripts/inference/prepare_model_infer.sh worldcam",
@@ -21953,14 +21883,7 @@
           "verified 状态覆盖 runner 路径；每次运行的视觉 QA 在 catalog 外跟踪。"
         ],
         "paper": null,
-        "figures": [
-          {
-            "kind": "video",
-            "src": "/demos/studio/yume-1p5-jungle-castle.mp4",
-            "caption": "First-person world exploration",
-            "captionZh": "第一人称世界探索"
-          }
-        ]
+        "figures": []
       },
       "commands": {
         "prepare": "bash scripts/inference/prepare_model_infer.sh yume",
@@ -28615,14 +28538,7 @@
           "checkpoint 权限由英伟达管控。"
         ],
         "paper": null,
-        "figures": [
-          {
-            "kind": "video",
-            "src": "/demos/cosmos_01.mp4",
-            "caption": "World-video prediction",
-            "captionZh": "世界视频预测"
-          }
-        ]
+        "figures": []
       },
       "commands": {
         "prepare": "bash scripts/inference/prepare_model_infer.sh cosmos-predict-2.5-2b",
@@ -38609,20 +38525,6 @@
         "paper": null,
         "figures": [
           {
-            "kind": "video",
-            "src": "/demos/studio/hunyuanvideo-t2v-cat-grass-official.mp4",
-            "poster": "/models/hunyuanvideo/video_poster.png",
-            "caption": "Official HunyuanVideo text-to-video demo (README teaser poster)",
-            "captionZh": "HunyuanVideo 官方文生视频演示（README 作品展示海报）"
-          },
-          {
-            "kind": "video",
-            "src": "/demos/studio/hunyuanvideo-i2v-firework-official.mp4",
-            "poster": "/models/hunyuanvideo/i2v_video_poster.jpg",
-            "caption": "HunyuanVideo-I2V image-to-video demo",
-            "captionZh": "HunyuanVideo-I2V 图生视频演示"
-          },
-          {
             "kind": "image",
             "src": "/models/hunyuanvideo/overall.png",
             "caption": "HunyuanVideo overall architecture — Causal 3D VAE, LLM text encoder, and latent diffusion",
@@ -39068,14 +38970,7 @@
           "主 checkpoint 许可元数据为“other”，商用前需审阅。"
         ],
         "paper": null,
-        "figures": [
-          {
-            "kind": "video",
-            "src": "/demos/studio/hunyuanvideo-1-5-t2v-cat.mp4",
-            "caption": "HunyuanVideo 1.5 text-to-video",
-            "captionZh": "HunyuanVideo 1.5 文本生成视频"
-          }
-        ]
+        "figures": []
       },
       "commands": {
         "prepare": "bash scripts/inference/prepare_model_infer.sh hunyuanvideo-1.5-t2v",
@@ -44766,14 +44661,7 @@
           "需要用户提供深度与点/轨迹控制视频——它不是普通的图生视频模型。"
         ],
         "paper": null,
-        "figures": [
-          {
-            "kind": "video",
-            "src": "/demos/studio/longvie-1-control-video.mp4",
-            "caption": "Long controllable video",
-            "captionZh": "可控长视频"
-          }
-        ]
+        "figures": []
       },
       "commands": {
         "prepare": "bash scripts/inference/prepare_model_infer.sh longvie-1",
@@ -45843,14 +45731,7 @@
           "视觉验证为部分性（Studio demo 产物），并非完整 checkpoint 一致性。"
         ],
         "paper": null,
-        "figures": [
-          {
-            "kind": "video",
-            "src": "/demos/studio/ltx2-3-i2v-penguin.mp4",
-            "caption": "LTX-2.3 image-to-video",
-            "captionZh": "LTX-2.3 图生视频"
-          }
-        ]
+        "figures": []
       },
       "commands": {
         "prepare": "bash scripts/inference/prepare_model_infer.sh ltx-2-t2v",
@@ -46205,14 +46086,7 @@
           "本地仅 0.9.8 I2V 路径可运行。"
         ],
         "paper": null,
-        "figures": [
-          {
-            "kind": "video",
-            "src": "/demos/studio/ltx-video-i2v-penguin.mp4",
-            "caption": "Image-to-video",
-            "captionZh": "图生视频"
-          }
-        ]
+        "figures": []
       },
       "commands": {
         "prepare": "bash scripts/inference/prepare_model_infer.sh ltx-video-i2v",
@@ -49504,14 +49378,7 @@
           "没有 runner parity 证据记录。"
         ],
         "paper": null,
-        "figures": [
-          {
-            "kind": "video",
-            "src": "/demos/studio/modelscope-t2v.mp4",
-            "caption": "Text-to-video",
-            "captionZh": "文本生成视频"
-          }
-        ]
+        "figures": []
       },
       "commands": {
         "prepare": "bash scripts/inference/prepare_model_infer.sh modelscope-t2v",
@@ -52348,14 +52215,7 @@
           "Checkpoint 属于外部资产——权重缺失时会在运行时报告，而不会自动下载。"
         ],
         "paper": null,
-        "figures": [
-          {
-            "kind": "video",
-            "src": "/demos/studio/open-sora-plan-tokyo-street.mp4",
-            "caption": "Open-Sora Plan sample",
-            "captionZh": "Open-Sora Plan 样例"
-          }
-        ]
+        "figures": []
       },
       "commands": {
         "prepare": "bash scripts/inference/prepare_model_infer.sh open-sora-plan",
@@ -56555,14 +56415,7 @@
           "14B 规模：需按数据中心级显存规划。"
         ],
         "paper": null,
-        "figures": [
-          {
-            "kind": "video",
-            "src": "/demos/studio/skyreels-v3-reference-to-video.mp4",
-            "caption": "Reference-to-video",
-            "captionZh": "参考图生成视频"
-          }
-        ]
+        "figures": []
       },
       "commands": {
         "prepare": "bash scripts/inference/prepare_model_infer.sh skyreels-v3",
@@ -60263,14 +60116,7 @@
           "专精人物主体——不是通用图生视频模型。"
         ],
         "paper": null,
-        "figures": [
-          {
-            "kind": "video",
-            "src": "/demos/studio/unianimate-dit-human-animation.mp4",
-            "caption": "Human animation",
-            "captionZh": "人物动画"
-          }
-        ]
+        "figures": []
       },
       "commands": {
         "prepare": "bash scripts/inference/prepare_model_infer.sh unianimate-dit",
@@ -62886,14 +62732,7 @@
           "属旧代质量；已被 catalog 中较新的图生视频条目超越。"
         ],
         "paper": null,
-        "figures": [
-          {
-            "kind": "video",
-            "src": "/demos/studio/videocrafter1-i2v.mp4",
-            "caption": "Image-to-video",
-            "captionZh": "图生视频"
-          }
-        ]
+        "figures": []
       },
       "commands": {
         "prepare": "bash scripts/inference/prepare_model_infer.sh videocrafter1-i2v",
@@ -63207,14 +63046,7 @@
           "属旧代质量；较早的 HF 卡片同样需要许可审阅。"
         ],
         "paper": null,
-        "figures": [
-          {
-            "kind": "video",
-            "src": "/demos/studio/videocrafter1-t2v.mp4",
-            "caption": "Text-to-video",
-            "captionZh": "文本生成视频"
-          }
-        ]
+        "figures": []
       },
       "commands": {
         "prepare": "bash scripts/inference/prepare_model_infer.sh videocrafter1-t2v",
@@ -63540,14 +63372,7 @@
           "相比 catalog 中 DiT 系条目，仍受 U-Net 时代的质量上限约束。"
         ],
         "paper": null,
-        "figures": [
-          {
-            "kind": "video",
-            "src": "/demos/studio/videocrafter2-t2v.mp4",
-            "caption": "Text-to-video",
-            "captionZh": "文本生成视频"
-          }
-        ]
+        "figures": []
       },
       "commands": {
         "prepare": "bash scripts/inference/prepare_model_infer.sh videocrafter2-t2v",
@@ -64477,14 +64302,7 @@
           "编辑质量取决于输入准备（掩码、参考图）——输入差则输出差。"
         ],
         "paper": null,
-        "figures": [
-          {
-            "kind": "video",
-            "src": "/demos/studio/wan2-1-vace-girl-snake.mp4",
-            "caption": "VACE-controlled generation",
-            "captionZh": "VACE 可控生成"
-          }
-        ]
+        "figures": []
       },
       "commands": {
         "prepare": "bash scripts/inference/prepare_model_infer.sh wan2.1-vace",
@@ -80305,14 +80123,7 @@
           "官方 PushT 评估一致性待验证。"
         ],
         "paper": null,
-        "figures": [
-          {
-            "kind": "video",
-            "src": "/demos/studio/leworldmodel-pusht.mp4",
-            "caption": "PushT world-model rollout",
-            "captionZh": "PushT 世界模型滚动"
-          }
-        ]
+        "figures": []
       },
       "commands": {
         "prepare": "bash scripts/inference/prepare_model_infer.sh leworldmodel",

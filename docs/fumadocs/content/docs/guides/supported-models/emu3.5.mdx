@@ -1,21 +1,48 @@
 ---
 title: "Emu3.5"
-description: "Emu3.5 is BAAI's native multimodal generation model: a single autoregressive model that reads and writes interleaved text and images. The catalog records it for multimodal generation, image generation, and VLA-style reasoning. The WorldFou…"
-pageSource: generated
+description: "Emu3.5 from Beijing Academy of Artificial Intelligence (BAAI): multimodal-generation and image-generation; Runner parity pending."
+modelId: "emu3.5"
+pageSource: authored
 ---
-
-**Publisher:** Beijing Academy of Artificial Intelligence (BAAI) · Research lab
 
 Emu3.5 is BAAI's native multimodal generation model: a single autoregressive model that reads and writes interleaved text and images. The catalog records it for multimodal generation, image generation, and VLA-style reasoning. The WorldFoundry route is complete and reports missing checkpoint/assets at runtime; outputs land as model_response artifacts rather than video files.
 
+<ModelPaperFigures modelId="emu3.5" locale="en" />
+
+Code: [BAAI/Emu3.5](https://huggingface.co/BAAI/Emu3.5).
+
+No paper / project / GitHub URL is recorded on this recipe. Catalog tasks include multimodal generation, image generation, and VLA-style reasoning. Runner parity is **pending**. Missing `BAAI/Emu3.5` weights are reported at runtime.
+
 <ModelCommandBuilder modelId="emu3.5" locale="en" />
 
-## Architecture
+## What it is for
 
-The Emu series treats images and text as one token stream for next-token prediction — no separate diffusion decoder in the loop, per BAAI's public releases. This repository records the prompt+image input contract and the model_response artifact; parameter counts and internals of the 3.5 revision are not recorded here.
+Pick `emu3.5` when you want the catalog VLA policy: instruction and observation in, an action trace out. Use it to roll the recorded policy, not to train a new one.
 
-## Usage notes
+The Emu series treats images and text as one token stream for next-token prediction — no separate diffusion decoder in the loop, per BAAI's public releases. This repository records the prompt+image input contract and the model_response artifact; parameter counts and internals of the 3.5 revision are not recorded here. It is published by Beijing Academy of Artificial Intelligence (BAAI).
+
+Catalog tasks include multimodal-generation, image-generation, and vla reasoning. Catalog aliases include `emu3p5`, `emu3_5`, and `BAAI/Emu3.5`.
+
+## Runtime contract
+
+Required `prompt`; optional `image`; artifacts `emu3.5.json`.
+
+Recorded task profiles: `multimodal-generation`, `image-generation`, and `vla.reasoning`. WorldFoundry binds `Emu35Pipeline`.
+
+Family status: **Runner parity pending**.
 
 Runner parity is pending — checkpoint-backed artifact parity has not been run in this workspace. Stage the BAAI/Emu3.5 weights first; the route fails informatively when assets are missing. Expect text/image responses, not video.
+
+WorldFoundry route is complete; missing checkpoint/assets are reported at runtime.
+
+## Running in WorldFoundry
+
+The catalog launch is `worldfoundry-eval run emu3.5 --pipeline.task-profile multimodal-generation`. The command builder above switches `--pipeline.task-profile` among recorded tasks and still emits `worldfoundry-eval run`.
+
+It runs in the unified environment `worldfoundry-unified-cu128` (Python 3.11, CUDA 12.8).
+
+Recorded weight repositories include `BAAI/Emu3.5`. Stage assets with `bash scripts/inference/prepare_model_infer.sh emu3.5`.
+
+Status: **Runner parity pending**.
 
 <ModelRelatedRecipes modelId="emu3.5" locale="en" />

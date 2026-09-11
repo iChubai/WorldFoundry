@@ -1,38 +1,36 @@
 ---
 title: "AC3D"
-description: "AC3D analyzes and improves camera control in video diffusion: it is a ControlNet-style plugin that gives CogVideoX precise 3D camera control."
-pageSource: generated
+description: "Snap Research 给 CogVideoX 的 ControlNet 式 3D 相机插件。RealEstate10K demo 已 runner 验证；独立 torch 2.4 / CUDA 12.4 环境；Snap 非商用研究许可。"
+modelId: "ac3d"
+pageSource: authored
 ---
 
-**发表机构:** Snap 公司（Snap Research） · 企业
-text → video
-[AC3D: Analyzing and Improving 3D Camera Control in Video Diffusion Transformers](https://arxiv.org/abs/2411.18673) (CVPR 2025, 2024)
+AC3D 是 Snap Research 给 CogVideoX 的 **ControlNet 风格**相机插件：文本、源视频和 **19 列**相机位姿行进去，沿相机轨迹的片段出来。WorldFoundry 把官方推理运行时放在 `worldfoundry/synthesis/visual_generation/ac3d/ac3d_runtime`，对外是 `AC3DPipeline`。别名 `ac3d-cogvideox`、`ac3d-2b`、`ac3d-5b` 解析到这里。
 
-AC3D 分析并改进视频扩散中的相机控制：它是 ControlNet 风格的插件，为 CogVideoX 提供精确的 3D 相机控制。本 catalog 中 runner 已验证——RealEstate10K 相机控制 demo 通过 Workspace 推理路径运行，使用本地 CogVideoX-2B 与 AC3D ControlNet 权重，并保留官方 inference/cli_demo_camera.py 生成路径。
+<ModelPaperFigures modelId="ac3d" locale="zh" />
 
-<figure className="wf-recipe-media is-diagram">
-  <img src="/models/ac3d/paper.png" alt="AC3D: Analyzing and Improving 3D Camera Control in Video Diffusion Transformers" />
-  <figcaption>AC3D: Analyzing and Improving 3D Camera Control in Video Diffusion Transformers</figcaption>
-</figure>
+官方论文是 [AC3D: Analyzing and Improving 3D Camera Control in Video Diffusion Transformers](https://arxiv.org/abs/2411.18673)（CVPR 2025，arXiv 2411.18673）。项目页：[snap-research.github.io/ac3d](https://snap-research.github.io/ac3d/)。代码：[snap-research/ac3d](https://github.com/snap-research/ac3d)。许可证：**Snap 非商用研究许可**。
+
+Runner 一致性**已验证**：RealEstate10K 相机控制 demo 走 Workspace 推理路径，用本地 CogVideoX-2B 与 AC3D ControlNet 权重，并保留 `inference/cli_demo_camera.py`。适配器即使也登记了 5B ControlNet，仍保持官方 **2B ControlNet 形状**。
 
 <ModelCommandBuilder modelId="ac3d" locale="zh" />
 
-## 架构
+## 用来做什么
 
-按论文（arXiv 2411.18673），AC3D 发现相机运动信息集中在低频、早期时间步分量，因此仅对部分层做条件注入，同时提升控制精度与画质。catalog 记录 2B 与 5B 两个 ControlNet checkpoint；适配器保留官方 2B ControlNet 形状设置。
+沿指定 3D 路径重绘一段视频。优先走 RealEstate10K 风格的 2B ControlNet demo。
 
-<figure className="wf-recipe-media">
-  <Video src="/demos/ac3d_01.mp4" autoPlay loop muted playsInline />
-  <figcaption>相机控制视频</figcaption>
-</figure>
+启动 `worldfoundry-eval run ac3d --pipeline.task-profile camera-control-video`。
 
-## 使用要点
+评测入口：[CameraBench](/zh/docs/evaluation/benchmark-hub/camerabench)（直接衡量生成视频中的相机控制精度）。
 
-AC3D 保留在专属环境中，因为官方 torch 2.4/CUDA 12.4 栈与统一环境的 ABI 不兼容。输入接受 RealEstate10K 风格的数据根目录，或「源视频 + 19 列相机位姿行」的直接输入。
+## 运行时契约
 
-## 评测 Benchmark
+必填 `prompt`、`video`；可选 `image`；`actions`：camera_index, camera_index_range, camera_pose_rows；产物 `ac3d.mp4`。
 
-- [CameraBench](/zh/docs/evaluation/benchmark-hub/camerabench) — 直接衡量生成视频中的相机控制精度。
-- [WRBench](/zh/docs/evaluation/benchmark-hub/wrbench) — 该模型 manifest 的证据记录中提到了这一评测。
+基座权重：`THUDM/CogVideoX-2b` 与 `THUDM/CogVideoX-5b`。ControlNet 就位在 `$WORLDFOUNDRY_CKPT_DIR/ac3d` 下的 `2B/checkpoint-10000.pt` 与 `5B/checkpoint-10000.pt`。其它位姿格式先转成 19 列约定。
+
+## 在 WorldFoundry 中运行
+
+状态：**已验证**。独立环境 `ac3d`（Python 3.10，CUDA 12.4，torch 2.4），与 `worldfoundry-unified-cu128` ABI 不兼容。本地就位 CogVideoX 基座和对应 ControlNet。在该环境执行 `worldfoundry-eval run ac3d --pipeline.task-profile camera-control-video`。许可证：Snap 非商用研究。catalog 未记录 VRAM。
 
 <ModelRelatedRecipes modelId="ac3d" locale="zh" />

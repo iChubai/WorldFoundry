@@ -1,26 +1,41 @@
 ---
 title: "AnimateDiff"
-description: "AnimateDiff is the classic motion-module approach to text-to-video: it animates existing Stable Diffusion image models by inserting a trained temporal module, rather than training a video model from scratch."
-pageSource: generated
+description: "上海 AI 实验室 / 港中文 MMLab 的 SD 1.5 运动模块文生视频。已对照官方 RealisticVision demo 验证 runner；本地没有图生视频或视频到视频。"
+modelId: "animatediff"
+pageSource: authored
 ---
 
-**发表机构:** 上海人工智能实验室 / 香港中文大学 MMLab · 研究机构
-text → video
+AnimateDiff 是经典的运动模块式文生视频：在现成的 Stable Diffusion 1.5 U-Net 上插入时序模块，而不是从头训练视频骨干。WorldFoundry 的树内路径 **runner 已验证**——文件 SHA256 与逐帧解码像素 SHA256 与官方 RealisticVision `scripts.animate` demo 一致。别名 `animate-diff`、`animate_diff` 解析到这里。
 
-AnimateDiff 是经典的「运动模块」式文生视频方法：通过在现成的 Stable Diffusion 图像模型中插入训练好的时序模块来让静态模型动起来，而不是从头训练视频模型。在本 catalog 中它是完整验证过的路径—— WorldFoundry 的输出与官方 RealisticVision scripts.animate demo 完全一致，文件 SHA256 与逐帧解码像素 SHA256 均精确匹配。条目同时响应别名 animate-diff、animate_diff。
+<ModelPaperFigures modelId="animatediff" locale="zh" />
+
+论文是 [AnimateDiff: Animate Your Personalized Text-to-Image Diffusion Models without Specific Tuning](https://arxiv.org/abs/2307.04725)。项目页：[animatediff.github.io](https://animatediff.github.io/)。代码：[guoyww/AnimateDiff](https://github.com/guoyww/AnimateDiff)。上方方法总览是官方架构图；`paper.png` 只作标题缩略图。
 
 <ModelCommandBuilder modelId="animatediff" locale="zh" />
 
-## 架构
+## 它用来做什么
 
-基座为旧式 U-Net 潜空间扩散模型（Stable Diffusion v1.5），叠加 AnimateDiff 的时序运动模块；记录的 checkpoint 包括 guoyww/animatediff、T2I 备份仓库、stable-diffusion-v1-5 与 CLIP ViT-L/14 文本编码器。 catalog 任务标签中特意标注 legacy-unet-diffusion，与较新的 DiT 系列相区分。
+只接受 prompt 的文生视频，走 `AnimateDiffPipeline`：必填 `prompt`，catalog 产物名是 `animatediff.gif`（运行时会把写出的文件规范成 **MP4**）。传入 `image` 或 `video` 会报错——本集成不是图生视频，也不是视频到视频。同一 GitHub 树里有 SparseCtrl 配置，但不是本卡片。
 
-## 使用要点
+可以换 T2I 基座（已验证 demo 用的是 Realistic Vision），运动模块保持不变。画质与时序一致性可对照 [VBench](/zh/docs/evaluation/benchmark-hub/vbench)——列出的套件，不是已摄入排名。
 
-Runner parity 已验证，是入门视频生成最稳妥的路径之一。Studio/API 路径在统一环境中运行（已包含记录在案的 diffusers/transformers checkpoint 键兼容性修复）；每次运行的验证证据在 catalog 之外单独跟踪。
+## 推理
 
-## 评测 Benchmark
+采样器是 **DDIM**（`inference-v2.yaml` 里的 `DDIMScheduler`）。WorldFoundry `generate_video` 默认值：
 
-- [VBench](/zh/docs/evaluation/benchmark-hub/vbench) — 检验文生视频画质与时序一致性的标准评测。
+| 旋钮 | 默认 | 说明 |
+| --- | --- | --- |
+| 分辨率 | **256×256** | 高宽须能被 8 整除 |
+| 帧数 | **16** | `video_length` / `num_frames` |
+| 步数 | **25** | `infer_steps` |
+| Guidance | **7.5** | `cfg_scale` |
+| FPS | **8** | 写出的 MP4 |
+| Seed | **1234** | |
+
+与 parity 对齐的官方 RealisticVision prompt YAML 同样是 **25** 步，但 **guidance 8**，并在 `mm_sd_v15_v2.ckpt` + `inference-v2.yaml` 或 `v3_sd15_mm.ckpt` + `inference-v3.yaml` 之间二选一。默认运动模块路径是 `$WORLDFOUNDRY_HFD_ROOT/guoyww--animatediff/mm_sd_v15_v2.ckpt`；Realistic Vision 权重来自 `guoyww/animatediff_t2i_backups`。catalog 未记录显存。
+
+## 在 WorldFoundry 中运行
+
+在 `worldfoundry-unified-cu128`（Python 3.11，CUDA 12.8）中运行 `worldfoundry-eval run animatediff --pipeline.task-profile text-to-video`。官方模块会调用 `.cuda()`——CPU 会被拒绝。请就位 `guoyww/animatediff`、`guoyww/animatediff_t2i_backups`、`stable-diffusion-v1-5/stable-diffusion-v1-5` 和 `openai/clip-vit-large-patch14`。记录卡片上运动模块许可是 **apache-2.0**。Studio/API 走同一套统一环境，并包含已记录的 diffusers/transformers 键名兼容修复。
 
 <ModelRelatedRecipes modelId="animatediff" locale="zh" />

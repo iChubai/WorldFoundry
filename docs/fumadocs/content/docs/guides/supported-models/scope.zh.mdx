@@ -1,32 +1,32 @@
 ---
 title: "SCOPE"
-description: "SCOPE is an interactive game world model over a Wan backbone: image plus per-step actions in, game-world video out (paper arXiv 2605.23345)."
-pageSource: generated
+description: "SCOPE：`image`、`prompt` 进，`generated_video`、`scope.mp4` 出；runner 已验证。"
+modelId: "scope"
+pageSource: authored
 ---
-
-**发表机构:** 开源研究发布（仓库未记录正式机构） · 研究机构
-image → video
-[SCOPE: Simulating Cross-game Operations in Playable Environments for FPS World Models](https://arxiv.org/abs/2605.23345) (2026)
 
 SCOPE 是基于 Wan 基座的交互式游戏世界模型：输入图像与逐步动作，输出游戏世界视频（论文 arXiv 2605.23345）。本 catalog 中集成与 runner 均已验证——图像+动作到视频的 demo 经 Workspace 推理路径运行，使用就位的 zizhaotong/SCOPE 权重、树内示例图与动作 parquet。
 
-<figure className="wf-recipe-media is-diagram">
-  <img src="/models/scope/paper.png" alt="SCOPE: Simulating Cross-game Operations in Playable Environments for FPS World Models" />
-  <figcaption>SCOPE: Simulating Cross-game Operations in Playable Environments for FPS World Models</figcaption>
-</figure>
+<ModelPaperFigures modelId="scope" locale="zh" />
+
+论文是 [SCOPE: Simulating Cross-game Operations in Playable Environments for FPS World Models](https://arxiv.org/abs/2605.23345)。项目页：[z2tong.github.io/SCOPE](https://z2tong.github.io/SCOPE)。代码：[z2tong/SCOPE](https://github.com/z2tong/SCOPE)。
+
+别名包括 `scope-world-model`、`zizhaotong/SCOPE`。
 
 <ModelCommandBuilder modelId="scope" locale="zh" />
 
-## 架构
+## 用来做什么
 
-SCOPE 专属的动作条件被集成为规范 Wan 网络 variant，与共享 Wan 编码器、VAE、加载器与分级执行组装（apache-2.0）。只有按 checkpoint 形状实现的动作条件网络保持模型专属。
+把 SCOPE 当动作条件世界路径来跑。启动 `worldfoundry-eval run scope`，任务 profile 为 `interactive-world-model`——必填 `image`、`prompt`；产物 `generated_video`、`scope.mp4`。
 
-## 使用要点
+评测看 [WorldModelBench](/zh/docs/evaluation/benchmark-hub/worldmodelbench)。
 
-SCOPEPipeline 在未提供 execute=True 时快速失败，提供后调用树内原生组装。权重保持为外部 HF 资产，通过 model_dir/checkpoint_root 或 SCOPE_MODEL_DIR 注入。
+## 运行时契约
 
-## 评测 Benchmark
+必填：`image`、`prompt`。 可选：`video`。 动作字段：action_parquet。 产物：`generated_video`、`scope.mp4`。 状态：**Verified**。 SCOPEPipeline 在未提供 execute=True 时快速失败，提供后调用树内原生组装。权重保持为外部 HF 资产，通过 model_dir/checkpoint_root 或 SCOPE_MODEL_DIR 注入。
 
-- [WorldModelBench](/zh/docs/evaluation/benchmark-hub/worldmodelbench) — 动作条件游戏世界滚动生成质量。
+## 在 WorldFoundry 中运行
+
+跑在统一环境 `worldfoundry-unified-cu128`（Python 3.10，CUDA 12.8）。 把 `zizhaotong/SCOPE` 就位到本地——运行时不代下权重。 启动 `worldfoundry-eval run scope`，任务 profile 为 `interactive-world-model`。
 
 <ModelRelatedRecipes modelId="scope" locale="zh" />

@@ -1,27 +1,54 @@
 ---
 title: "Genie Envisioner"
-description: "Genie Envisioner is AgiBot's robotics world model platform: a video-generative backbone that predicts action-conditioned robot manipulation futures, usable for policy learning and evaluation."
-pageSource: generated
+description: "Genie Envisioner from AgiBot: robotics-world-model and image-to-video; Runner parity pending."
+modelId: "genie-envisioner"
+pageSource: authored
 ---
-
-**Publisher:** AgiBot · Company
-image → video
 
 Genie Envisioner is AgiBot's robotics world model platform: a video-generative backbone that predicts action-conditioned robot manipulation futures, usable for policy learning and evaluation. In this catalog the official WorldArena-listed source is vendored in-tree; execution waits on the Genie-Envisioner and LTX-Video checkpoints plus robot task assets.
 
+The compatibility launcher runs the released **GE-base** multiview transformer with local LTX tokenizer, T5, and VAE. Default inputs are synchronized **ALOHA** `high` / `left-wrist` / `right-wrist` views — it does **not** synthesize extra cameras. A synthetic-three-view path exists for smoke tests only. Checkpoint-matched AgiBot or LeRobot trajectories are still required for action-quality parity.
+
+<ModelPaperFigures modelId="genie-envisioner" locale="en" />
+
+The recorded paper is [arXiv 2508.05635](https://arxiv.org/abs/2508.05635).
+
+Project page: [genie-envisioner.github.io](https://genie-envisioner.github.io/). Code: [AgibotTech/Genie-Envisioner](https://github.com/AgibotTech/Genie-Envisioner).
+
+Paper: [arXiv 2508.05635](https://arxiv.org/abs/2508.05635). Project: [genie-envisioner.github.io](https://genie-envisioner.github.io/). Code: [AgibotTech/Genie-Envisioner](https://github.com/AgibotTech/Genie-Envisioner). Weights: `agibot-world/Genie-Envisioner` plus `Lightricks/LTX-Video`. Runner: **`Runner parity pending`**. Until checkpoints and task assets are staged, the pipeline returns **blocked** diagnostics.
+
 <ModelCommandBuilder modelId="genie-envisioner" locale="en" />
 
-## Architecture
+## What it is for
+
+Use `genie-envisioner` for catalog world-model inference. Choose it when you need action-conditioned future frames rather than a standalone clip generator.
 
 The recorded checkpoints reveal an LTX-Video-based video backbone (Lightricks/LTX-Video) with AgiBot's own world-model weights (agibot-world/Genie-Envisioner). The runtime is vendored under synthesis/visual_generation/genie_envisioner/genie_envisioner_runtime.
 
-## Usage notes
+Catalog tasks include robotics-world-model, image-to-video, action-conditioned-video, and robot-multiview-video. Catalog aliases include `genie_envisioner`, `genieenvisioner`, and `genie-envisioner-sim`. Documented modalities: image in, video out.
+
+Recorded evaluation entry points include [WorldArena](/docs/evaluation/benchmark-hub/worldarena) (The entry is listed on WorldArena for robot world-model evaluation), [EWMBench](/docs/evaluation/benchmark-hub/ewmbench) (Embodied world-model video prediction quality).
+
+## Runtime contract
+
+Required `prompt` and `image`; optional `video` and `actions` (robot_action, world_action); artifacts `genie-envisioner.mp4`.
+
+Recorded task profiles: `robotics-world-model`, `image-to-video`, `action-conditioned-video`, and `robot-multiview-video`. WorldFoundry binds `GenieEnvisionerPipeline`.
+
+Family status: **Runner parity pending**.
+
+Recorded `robot-multiview-video` defaults: height=192, width=256, num_inference_steps=5, guidance_scale=1.0, fps=8, seed=42.
 
 The pipeline resolves the vendored inference entrypoint and returns blocked runtime diagnostics until checkpoints and task assets are staged. Stage both recorded checkpoint sets before submitting jobs.
 
-## Evaluation benchmarks
+## Running in WorldFoundry
 
-- [WorldArena](/docs/evaluation/benchmark-hub/worldarena) — The entry is listed on WorldArena for robot world-model evaluation.
-- [EWMBench](/docs/evaluation/benchmark-hub/ewmbench) — Embodied world-model video prediction quality.
+The catalog launch is `worldfoundry-eval run genie-envisioner --pipeline.task-profile robot-multiview-video`. The command builder above switches `--pipeline.task-profile` among recorded tasks and still emits `worldfoundry-eval run`.
+
+It runs in the unified environment `worldfoundry-unified-cu128` (Python 3.11, CUDA 12.8).
+
+Recorded weight repositories include `agibot-world/Genie-Envisioner` and `Lightricks/LTX-Video`. Stage assets with `bash scripts/inference/prepare_model_infer.sh genie-envisioner`.
+
+Status: **Runner parity pending**.
 
 <ModelRelatedRecipes modelId="genie-envisioner" locale="en" />

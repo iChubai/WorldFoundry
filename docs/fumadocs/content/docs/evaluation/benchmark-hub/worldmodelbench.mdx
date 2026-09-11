@@ -1,97 +1,44 @@
 ---
 title: WorldModelBench
-description: "NeurIPS 2025 world-model judging suite: instruction following, common sense, and physics adherence over 350 instances with a fine-tuned VILA judge."
+description: "NeurIPS 2025 world-model judging suite: 350 instances, VILA judge. WorldFoundry checks in evaluation.py; full judge execution is not verified."
 ---
 
-## About
+WorldModelBench (NVIDIA, UC Berkeley, UC San Diego, MIT; NeurIPS 2025) judges video generators as world models across **7 application domains / 56 subdomains**. Official size: **350 instances**, calibrated against **67K crowd-sourced human labels**. Three families:
 
-**Publisher:** NVIDIA, UC Berkeley, UC San Diego & MIT
+- Instruction following
+- Common-sense reasoning
+- Physics adherence (e.g. mass-conservation violations such as irregular size changes)
 
-WorldModelBench (NeurIPS 2025) judges video generation models as world models across 7 application domains and 56 subdomains. Its 350-instance suite scores instruction following, common-sense reasoning, and physics adherence (e.g. mass-conservation violations like irregular object-size changes), calibrated against 67K crowd-sourced human labels. The official judge is a fine-tuned 2B multimodal model (VILA family) that outperforms GPT-4o at detecting world-modeling violations.
+The official judge is a fine-tuned **2B VILA-family** multimodal model that the paper reports outperforms GPT-4o at detecting world-modeling violations. `world_model_average` aggregates public families.
 
-WorldFoundry checks in the upstream `evaluation.py` and the 350-instance manifest, resolves the dataset from local Hugging Face snapshots (`Efficient-Large-Model/worldmodelbench`), and can execute the official judge path when a VILA checkpoint or HF model id is supplied.
+Paper: [WorldModelBench](https://arxiv.org/abs/2502.20694). Project: [worldmodelbench-team.github.io](https://worldmodelbench-team.github.io/). Code: [WorldModelBench-Team/WorldModelBench](https://github.com/WorldModelBench-Team/WorldModelBench). Data: [`Efficient-Large-Model/worldmodelbench`](https://huggingface.co/datasets/Efficient-Large-Model/worldmodelbench).
 
-Official references:
+WorldFoundry **checks in upstream `evaluation.py` and the 350-instance manifest**. Result import and manifest coverage checks are verified; **full judge-checkpoint execution is not**. Leaderboard answers are withheld upstream.
 
-- Paper: [arxiv.org/abs/2502.20694](https://arxiv.org/abs/2502.20694)
-- Project page: [worldmodelbench-team.github.io](https://worldmodelbench-team.github.io/)
-- Official repository: [WorldModelBench-Team/WorldModelBench](https://github.com/WorldModelBench-Team/WorldModelBench)
+<BenchmarkPageSections id="worldmodelbench" locale="en" />
 
-## Evaluation protocol
-
-Official-run drives upstream `evaluation.py` with the judge selected via `WORLDFOUNDRY_WORLDMODELBENCH_JUDGE` (VILA checkpoint or HF model id); the wrapper validates accs/preds shapes against N, 2N, and 5N category lengths and records 350-instance video coverage in `scorecard.validation`. Official-validation mode instead normalizes caller-provided official-shaped result files.
-
-Primary metric: `world_model_average`.
-
-| Metric | Meaning | Direction |
-| --- | --- | --- |
-| `instruction_following` | WorldModelBench instruction-following score. | Higher is better |
-| `common_sense` | WorldModelBench common-sense reasoning score. | Higher is better |
-| `physical_adherence` | WorldModelBench physical-adherence score. | Higher is better |
-| `world_model_average` | Normalized aggregate across public WorldModelBench metric families. | Higher is better |
-
-## Data and artifact layout
-
-In-tree paths:
-
-```text
-worldfoundry/data/benchmarks/tasks/external/worldmodelbench.yaml
-worldfoundry/evaluation/tasks/execution/runners/worldmodelbench/runtime/evaluation.py
-worldfoundry/data/benchmarks/assets/worldmodelbench/worldmodelbench.json
-```
-
-```text
-worldfoundry/evaluation/tasks/execution/runners/worldmodelbench/runtime/evaluation.py
-worldfoundry/data/benchmarks/assets/worldmodelbench/worldmodelbench.json   # 350-instance manifest
-cache/worldfoundry/data/hfd_datasets/Efficient-Large-Model/worldmodelbench # dataset snapshot
-${WORLDFOUNDRY_GENERATED_ARTIFACT_DIR}/                                    # videos matching the manifest
-```
+## How to run
 
 ```bash
 hf download Efficient-Large-Model/worldmodelbench --repo-type dataset \
   --local-dir cache/worldfoundry/data/hfd_datasets/Efficient-Large-Model/worldmodelbench
-```
 
-## Run the benchmark
-
-Catalog-recorded validation command:
-
-```bash
 worldfoundry-eval zoo benchmark-run \
   --benchmark-id worldmodelbench \
   --mode official-validation \
   --official-results-path <official_results.json> \
   --benchmark-data-root <worldmodelbench_data_root> \
   --generated-artifact-dir <generated_videos> \
-  --output-dir <out> \
+  --output-dir tmp/worldmodelbench/official-validation \
   --json
 ```
 
-## Checkpoints and environment variables
+Official-run drives `evaluation.py` with `WORLDFOUNDRY_WORLDMODELBENCH_JUDGE` (VILA checkpoint or HF model id). The wrapper validates accs/preds shapes against N, 2N, and 5N category lengths and records 350-instance video coverage. Env: `WORLDFOUNDRY_WORLDMODELBENCH_RESULTS_PATH`, `WORLDFOUNDRY_WORLDMODELBENCH_DATA_ROOT`. Shared asset: `worldmodelbench_dataset_assets`. Manifest: `worldfoundry/data/benchmarks/assets/worldmodelbench/worldmodelbench.json`.
 
-- `WORLDFOUNDRY_WORLDMODELBENCH_ROOT`: Optional override pointing at a local benchmark runtime/repository root.
-- `WORLDFOUNDRY_GENERATED_ARTIFACT_DIR`: Directory containing the candidate generated artifacts to score or import against.
-- `WORLDFOUNDRY_WORLDMODELBENCH_RESULTS_PATH`: Default path the importer reads official result exports from when `--official-results-path` is not passed.
-- `WORLDFOUNDRY_WORLDMODELBENCH_JUDGE`: VILA checkpoint path or HF model id used by evaluation.py for official-run.
-- `WORLDFOUNDRY_WORLDMODELBENCH_DATA_ROOT`: Data root containing worldmodelbench.json when not using the default snapshot.
+In-tree pointers: `worldfoundry/data/benchmarks/tasks/external/worldmodelbench.yaml`, `worldfoundry/evaluation/tasks/execution/runners/worldmodelbench/runtime/evaluation.py`.
 
-This benchmark reuses the shared base-model dependency stack: `worldmodelbench_dataset_assets`.
+Outputs include `scorecard.json` (primary `world_model_average`) and `judge_responses.jsonl`.
 
-## Outputs
-
-The run writes into `--output-dir`:
-
-- `scorecard.json`: WorldFoundry scorecard with the metric values recorded above.
-- `runner_runtime_report.json`
-- `judge_responses.jsonl`
-- `raw_metric_table.jsonl`: Metric rows backing the scorecard.
-
-Scorecard primary key: `world_model_average` (leaderboard key `world_model_average`), stored in `scorecard.json`.
-
-## Limitations
-
-- Leaderboard answers are withheld upstream; local regression must use public outputs or caller-provided official-shaped result files.
-- Full leaderboard parity requires a completed judge run over all 350 instances plus upstream submission evidence.
-- Imported result files remain non-leaderboard evidence.
+Minimal Cosmos Predict 2.5 cell (import first; judge run pending): [Model → benchmark recipes](/docs/evaluation/model-benchmark-recipes).
 
 [← Benchmark Hub](/docs/evaluation/benchmark-hub)

@@ -1,40 +1,27 @@
 ---
 title: "CogVideoX"
-description: "CogVideoX is Zhipu AI's open video generation family, one of the most widely used open T2V/I2V baselines. This catalog entry serves three runnable variants — 2B text-to-video, 5B text-to-video, and 5B image-to-video — through in-tree runti…"
-pageSource: generated
+description: "智谱 THUDM 的开源文生 / 图生视频系列。2B T2V、5B T2V 与 5B I2V 路径均已在树内通过 runner 验证。"
+modelId: "cogvideox"
+pageSource: authored
 ---
 
-**发表机构:** 智谱 AI（THUDM） · 企业
-text · image → video
+CogVideoX 是智谱 AI / THUDM 的开源视频系列，也仍是被引用最多的开源文生 / 图生视频基线之一。论文是 [CogVideoX: Text-to-Video Diffusion Models with An Expert Transformer](https://arxiv.org/abs/2408.06072)。本 catalog 卡片通过树内运行时提供三个可跑 variant：**2B 文生视频**、**5B 文生视频**、**5B 图生视频**。runner 与 demo 一致性均已**验证**。
 
-CogVideoX 是智谱 AI 的开源视频生成系列，也是使用最广的开源文生/图生视频基线之一。本条目提供三个可运行 variant——2B 文生视频、5B 文生视频、5B 图生视频——均通过树内运行时执行，且 runner parity 已验证。权重可从 Hugging Face 原生加载（THUDM/CogVideoX-5b），也可用 model_path 指向本地镜像。
+<ModelPaperFigures modelId="cogvideox" locale="zh" />
 
-<figure className="wf-recipe-media">
-  <Video src="/demos/cogvideo_01.mp4" autoPlay loop muted playsInline />
-  <figcaption>文本生成视频</figcaption>
-</figure>
+生成器是 **3D 因果 VAE** 潜空间上的扩散 Transformer，用 **专家 Transformer** 做文本（和图像）条件。T2V 暴露 `num_inference_steps`、`num_frames`、`height`、`width`、`fps`；I2V 另加 `guidance_scale`。图生视频配置遵循官方风格的 **49 帧、50 步** Diffusers 配方。权重从 THUDM 的 Hugging Face 仓库加载（`THUDM/CogVideoX-2b`、`CogVideoX-5b`、`CogVideoX-5b-I2V`），或用本地 `model_path`。许可元数据：2B 为 **Apache-2.0**，若干 5B 卡片为 `other`——商用前要审。路径都是**离线批生成**：没有流式或交互控制。
 
 <ModelCommandBuilder modelId="cogvideox" locale="zh" />
 
-## 架构
+## 用来做什么
 
-CogVideoX 采用 3D 因果 VAE 潜空间上的扩散 Transformer，并使用专家 Transformer 条件设计（见上游论文）。在本仓库中，记录的契约为：T2V 暴露 num_inference_steps、num_frames、height、width、fps， I2V 额外暴露 guidance_scale。
+快速试 prompt 用 `cogvideox-2b-t2v`，要更大的文生视频卡片用 `cogvideox-5b-t2v`，给静帧加运动用 `cogvideox-5b-i2v`。必填：`prompt`（文生视频）或 `prompt` + `image`（图生视频）。可选：`video`。`actions` 是 seed。5B 文生视频默认产物：`cogvideox-5b-t2v.mp4`。片段质量对照 [VBench](/zh/docs/evaluation/benchmark-hub/vbench)，组合式提示对照 [T2V-CompBench](/zh/docs/evaluation/benchmark-hub/t2v-compbench)。那是 CogVideoX 结果通常被报告的套件——不是已收录的 WorldFoundry 排名。
 
-## 使用要点
+## 运行时契约
+默认 5B 文生视频类是 `CogVideoX5bT2VPipeline`；2B 文生视频与 5B 图生视频有对应 sibling pipeline。相对普通 T5 条件 U-Net，专家条件设计是论文的主要结构主张——运行时就是文本（和图像）token 在 3D VAE 潜空间里引导 DiT。`THUDM/CogVideoX1.5-5B` 与 `CogVideoX1.5-5B-I2V` 登记为额外 checkpoint，不是已验证的 Studio 路径。
 
-按大小与任务选 variant：2B T2V 适合快速迭代，5B T2V 追求质量，5B I2V 用于让图片动起来。 runner parity 已验证；每次运行的视觉 QA 在 catalog 之外跟踪。注意记录在案的许可细节：HF 元数据中 2B 为 Apache-2.0，若干更大 variant 为“other”——商用前请先审阅。
+## 在 WorldFoundry 中运行
 
-## 变体与 Pipeline Binding
-
-| Variant | 任务 | Runtime profile | Pipeline Binding | 状态 |
-| --- | --- | --- | --- | --- |
-| `cogvideox-2b-t2v` | text-to-video | `cogvideox-2b-t2v` | `cogvideox-2b-t2v` | verified |
-| `cogvideox-5b-t2v` | text-to-video | `cogvideox-5b-t2v` | `cogvideox-5b-t2v` | verified |
-| `cogvideox-5b-i2v` | image-to-video | `cogvideox-5b-i2v` | `cogvideox-5b-i2v` | verified |
-
-## 评测 Benchmark
-
-- [VBench](/zh/docs/evaluation/benchmark-hub/vbench) — CogVideoX 结果最常引用的开源评测。
-- [T2V-CompBench](/zh/docs/evaluation/benchmark-hub/t2v-compbench) — 面向 T2V variant 的组合式提示词评测。
+默认启动是 `worldfoundry-eval run cogvideox-2b-t2v --pipeline.task-profile text-to-video`，环境 `worldfoundry-unified-cu128`（Python 3.11，CUDA 12.8）。换成 `cogvideox-5b-t2v` 或 `cogvideox-5b-i2v` 即可。runner parity 已验证；逐次视觉 QA 在 catalog 外。
 
 <ModelRelatedRecipes modelId="cogvideox" locale="zh" />

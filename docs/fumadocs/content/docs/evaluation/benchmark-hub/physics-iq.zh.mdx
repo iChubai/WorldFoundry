@@ -1,75 +1,33 @@
 ---
 title: Physics-IQ Original
-description: 物理理解评测：对真实物理场景的 5 秒续写视频进行打分。
+description: "DeepMind 物理理解评测：把真实拍摄场景续写 5 秒。WorldFoundry 内置打分器，不编造榜单。"
 ---
 
-## 简介
+Physics-IQ（Google DeepMind）问的是视频模型会不会**续写真实物理**，不是像素好不好看。每个测试项给出一段实拍场景，模型必须生成接下来的 **5 秒**。发表协议是 **66 个场景 × 2 视角**（396 项）。WorldFoundry 的 contract 跟踪 **198 视频单次**划分。打分把续写与真实未来对比：基于运动 mask 的 **spatial / spatiotemporal** 一致度，再加 **MSE** 惩罚，聚合为 `physics_iq_score`（官方 `final_score_orig`）。当前官方代码还会输出分量截断的 `physics_iq_stable_score`。
 
-**发表机构：** Google DeepMind
+论文：[Physics-IQ](https://arxiv.org/abs/2501.09038)。项目：[physics-iq.github.io](https://physics-iq.github.io/)。代码：[google-deepmind/physics-IQ-benchmark](https://github.com/google-deepmind/physics-IQ-benchmark)。
 
-Physics-IQ 检验视频生成模型是否真正理解物理，而不是只渲染看起来合理的纹理。每个测试项给出一段真实拍摄场景，要求模型续写接下来 5 秒（发布协议为 66 个场景 × 多视角；WorldFoundry contract 跟踪 198 个视频的单次运行 split）。打分使用基于运动 mask 的 spatial/spatiotemporal 一致度与 MSE penalty，与真实续写对比后聚合为 Physics-IQ score。
+和本 Hub 上那些操作导入器不同，WorldFoundry **仓内内置打分 runtime**（`run_physics_iq_official_runner.py`，经 `--protocol` 与 `physics-iq-verified` 共享），并把 prompt/场景元数据放在 `worldfoundry/data/benchmarks/assets/physics-iq`。官方**媒体**（真实视频、mask、条件帧）仍要从 DeepMind 下载——不在仓库里。[Physics-IQ Verified](/zh/docs/evaluation/benchmark-hub/physics-iq-verified) 用另一套数据；两者**不可互换**。
 
-WorldFoundry 在仓内内置打分 runtime（`run_physics_iq_official_runner.py`，通过 `--protocol` 与 `physics-iq-verified` 协议共享），并把 prompt/场景元数据打包在 `worldfoundry/data/benchmarks/assets/physics-iq`。
+<BenchmarkPageSections id="physics-iq" locale="zh" />
 
-官方参考：
+## 如何运行
 
-- Paper: [arxiv.org/abs/2501.09038](https://arxiv.org/abs/2501.09038)
-- 项目主页: [physics-iq.github.io](https://physics-iq.github.io/)
-- 官方仓库: [google-deepmind/physics-IQ-benchmark](https://github.com/google-deepmind/physics-IQ-benchmark)
-
-## 评测协议
-
-runner 支持三条路径：`--run-official` 用官方媒体目录（`--dataset-root`）对生成续写重新计算原始指标；`--official-results-path` 导入已有 `raw_metrics.csv`；`--from-upstream-results` 接受上游结果导出。mask 从真实视频计算；`--generated-mask-dir` 允许使用预计算 mask，`--strict` 在场景视频缺失时直接失败。
-
-主指标是 `physics_iq_score`。
-
-| Metric | 含义 | 方向 |
-| --- | --- | --- |
-| `physics_iq_score` | 原始全局聚合得分（官方 final_score_orig）。 | 越高越好 |
-| `physics_iq_stable_score` | 当前官方实现输出的分量截断稳定分。 | 越高越好 |
-| `physics_iq_spatiotemporal` | 时空 IoU：运动发生的位置与时间与真实续写的重合度。 | 越高越好 |
-| `physics_iq_spatial` | 空间 IoU：动作发生的位置（不考虑时间）。 | 越高越好 |
-| `physics_iq_weighted_spatial` | 加权空间 IoU：动作发生的位置与幅度。 | 越高越好 |
-| `physics_iq_mse_penalty` | 相对真实续写的逐像素 MSE 罚分。 | 越低越好 |
-
-## 数据与产物布局
-
-WorldFoundry 仓内路径：
-
-```text
-worldfoundry/data/benchmarks/tasks/external/physics-iq.yaml
-worldfoundry/data/benchmarks/assets/physics-iq
-worldfoundry/evaluation/tasks/execution/runners/physics_iq
-```
-
-按 google-deepmind/physics-IQ-benchmark 说明下载官方媒体（真实视频、mask、条件帧），然后按官方场景 id 准备 198 个 5 秒续写视频：
-
-```bash
-export WORLDFOUNDRY_GENERATED_ARTIFACT_DIR=/path/to/physics-iq/generated_videos
-```
-
-```text
-/path/to/physics-iq/generated_videos/
-  <scenario_id>.mp4
-  ...
-```
-
-## 运行评测
-
-目录 manifest 记录的 validation 命令：
+导入已有的 `raw_metrics.csv`：
 
 ```bash
 worldfoundry-eval zoo benchmark-run \
   --benchmark-id physics-iq \
   --mode official-validation \
   --official-results-path <raw_metrics.csv> \
-  --output-dir <out> \
+  --output-dir tmp/physics-iq/official-validation \
   --json
 ```
 
-从生成续写重新计算指标：
+从按官方 scenario id 命名的 198 段续写重算：
 
 ```bash
+export WORLDFOUNDRY_GENERATED_ARTIFACT_DIR=/path/to/physics-iq/generated_videos
 ${WORLDFOUNDRY_UNIFIED_PYTHON} \
   worldfoundry/evaluation/tasks/execution/runners/physics_iq/run_physics_iq_official_runner.py \
   --protocol physics-iq \
@@ -81,28 +39,6 @@ ${WORLDFOUNDRY_UNIFIED_PYTHON} \
   --json
 ```
 
-## 权重与环境变量
-
-- `WORLDFOUNDRY_GENERATED_ARTIFACT_DIR`: 198 个生成续写视频的目录。
-
-## 输出文件
-
-运行会在 `--output-dir` 下写出：
-
-- `scorecard.json`: WorldFoundry 统一 scorecard，记录上表中的指标值。
-- `benchmark_contract.json`: 本次运行的 benchmark contract 记录（输入、模式、来源信息）。
-- `raw_metrics.csv`
-- `official_metrics.json`
-- `results_summary.csv`
-- `raw_metric_table.jsonl`: 支撑 scorecard 的原始 metric 行。
-- `per_sample_scores.jsonl`: 当结果源包含逐样本数值时写出的逐样本行。
-
-Scorecard 主键：`physics_iq_score`（leaderboard key `physics_iq_score`），写入 `scorecard.json`。
-
-## 边界与限制
-
-- 官方媒体（真实视频与 mask）需单独下载，仓内不做再分发。
-- 单次运行覆盖 198 个视频；官方协议对多次运行取平均，仅跑一次会低估协议方差。
-- 本地 Physics-IQ 分数不等于 Google DeepMind leaderboard 条目。
+缺场景视频时 `--strict` 会失败。`--generated-mask-dir` 可提供预计算 mask；否则 mask 来自真实视频。产物包括 `scorecard.json`（主键 `physics_iq_score`）、`raw_metrics.csv`、`official_metrics.json`，以及来源提供时的逐样本行。
 
 [← 返回 Benchmark Hub](/zh/docs/evaluation/benchmark-hub)

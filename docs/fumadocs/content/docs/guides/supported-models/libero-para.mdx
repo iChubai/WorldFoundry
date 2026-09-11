@@ -1,32 +1,30 @@
 ---
 title: "LIBERO-Para"
-description: "LIBERO-Para is a paraphrase-robustness evaluation line around the LIBERO benchmark: it tests how VLA policies behave when task instructions are reworded (paper: hf.co/papers/2603.28301, MIT license). The HAI-Lab/LIBERO-Para dataset is conf…"
-pageSource: generated
+description: "Paraphrase-robustness recipe around LIBERO: pair a staged VLA with reworded instructions. MIT dataset; not a new policy architecture."
+modelId: "libero-para"
+pageSource: authored
 ---
 
-**Publisher:** Open-source research release (institution not recorded) · Research lab
-[LIBERO-Para: A Diagnostic Benchmark and Metrics for Paraphrase Robustness in VLA Models](https://arxiv.org/abs/2603.28301) (2026)
+LIBERO-Para is a **paraphrase-robustness evaluation recipe** around the LIBERO suite, not a new vision-language-action architecture. The paper is [LIBERO-Para: A Diagnostic Benchmark and Metrics for Paraphrase Robustness in VLA Models](https://arxiv.org/abs/2603.28301) (arXiv 2603.28301; also [hf.co/papers/2603.28301](https://huggingface.co/papers/2603.28301)). The project is [cau-hai-lab.github.io/LIBERO-Para](https://cau-hai-lab.github.io/LIBERO-Para/); code is [cau-hai-lab/LIBERO-Para](https://github.com/cau-hai-lab/LIBERO-Para) (**MIT**). The held-out instruction set is the confirmed Hugging Face dataset [HAI-Lab/LIBERO-Para](https://huggingface.co/HAI-Lab/LIBERO-Para).
 
-LIBERO-Para is a paraphrase-robustness evaluation line around the LIBERO benchmark: it tests how VLA policies behave when task instructions are reworded (paper: hf.co/papers/2603.28301, MIT license). The HAI-Lab/LIBERO-Para dataset is confirmed on Hugging Face; WorldFoundry routes action evaluation through an in-tree official-policy runtime adapter.
+<ModelPaperFigures modelId="libero-para" locale="en" />
 
-<figure className="wf-recipe-media is-diagram">
-  <img src="/models/libero-para/paper.png" alt="LIBERO-Para: A Diagnostic Benchmark and Metrics for Paraphrase Robustness in VLA Models" />
-  <figcaption>LIBERO-Para: A Diagnostic Benchmark and Metrics for Paraphrase Robustness in VLA Models</figcaption>
-</figure>
+WorldFoundry routes action evaluation through an in-tree official-policy adapter (`LiberoParaPipeline`). You supply a LIBERO-capable policy; this card records `lerobot/xvla-libero` as the weight pointer. Required inputs are RGB `image`, language `prompt`, and robot `state`. The artifact is `libero-para_action_trace.json`. This page is the **model / recipe** entry. The scorecard and official-results import live on the separate benchmark page [LIBERO-Para](/docs/evaluation/benchmark-hub/libero-para), built on parent [LIBERO](/docs/evaluation/benchmark-hub/libero).
 
 <ModelCommandBuilder modelId="libero-para" locale="en" />
 
-## Architecture
+## What it is for
 
-This is an evaluation/dataset-centered entry rather than a new policy architecture; the recorded artifact is the paraphrased-instruction dataset plus an evaluation route. Further internals are not recorded in this repository.
+Measure how a staged VLA behaves when the LIBERO-Goal instruction is reworded while the scene stays fixed. Official materials describe held-out paraphrases along **action** and **object** axes (thousands of instructions across ten LIBERO-Goal scenarios) and a difficulty-aware **PRIDE** metric. Use those as the upstream protocol — this catalog does not ingest a leaderboard.
 
-## Usage notes
+Pair the recipe with a LIBERO-capable checkpoint. Missing weights are reported as runtime `missing_assets` and are not a catalog blocker; until they are staged the run stays in runtime-plan mode. Task profiles are `vla` (default), `policy_rollout`, and `embodied_benchmark`.
 
-Checkpoint absence is reported by runtime missing_assets and is not a catalog blocker; runs emit a runtime plan until weights are staged. Pair it with a LIBERO-capable policy to measure paraphrase robustness.
+## Runtime contract
 
-## Evaluation benchmarks
+`policy_family` is recorded as `libero_para_policy_eval`; `action_representation` as `libero_para_action_trace`. Integration is **Runner parity pending**. Runner / demo status is **not recorded**, and no verified end-to-end GPU artifact sits on this card. This entry has **no policy checkpoint of its own**.
 
-- [LIBERO-Para](/docs/evaluation/benchmark-hub/libero-para) — This entry is the LIBERO-Para evaluation itself.
-- [LIBERO](/docs/evaluation/benchmark-hub/libero) — Built on the LIBERO task suite.
+## Running in WorldFoundry
+
+Launch `worldfoundry-eval run libero-para --pipeline.task-profile vla` in the unified environment `worldfoundry-unified-cu128` (Python 3.11, CUDA 12.8). Stage `lerobot/xvla-libero` (or another LIBERO-capable policy) locally first. License on the official tree and dataset is **MIT**.
 
 <ModelRelatedRecipes modelId="libero-para" locale="en" />

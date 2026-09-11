@@ -97,10 +97,8 @@ For how CLI/TUI/MCP compile user intent into the `EvaluateRunRequest` / `ModelBe
 
 Use this table before opening a PR that touches evaluation internals. It lists the compatibility surfaces other teams and automation depend on; breaking them requires coordinated updates to validation, docs exports, and example scorecards.
 
-| If changing | Keep stable |
-| --- | --- |
-| `api/*` dataclasses | `to_dict()` / `from_dict()` JSON-safe payloads. |
-| `evaluation/tasks/run_*` output writing | File names, JSONL row shape, `sample_id` alignment, final manifest status. |
-| `models/resolver.py` | Error messages, runner resolution, model-zoo variant selection. |
-| `evaluation/tasks/official/*` schema | Manifest parsing and alias lookup behavior. |
-| `reporting*.py` and `scorecard.py` | Scorecard fields used by validation, docs, and release reports. |
+- `api/*` dataclasses — `to_dict()` / `from_dict()` JSON-safe payloads.
+- `evaluation/tasks/run_*` output writing — File names, JSONL row shape, `sample_id` alignment, final manifest status.
+- `models/resolver.py` — Error messages, runner resolution, model-zoo variant selection.
+- `evaluation/tasks/official/*` schema — Manifest parsing and alias lookup behavior.
+- `reporting*.py` and `scorecard.py` — Scorecard fields used by validation, docs, and release reports.

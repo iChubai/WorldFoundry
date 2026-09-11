@@ -1,47 +1,34 @@
 ---
 title: WorldArena (WorldAtlas Arena)
-description: OpenEnvision's six-axis benchmark for static, dynamic, long-horizon, and interactive generated worlds.
+description: "OpenEnvision six-axis generated-world bench. No official combined scalar. Distinct from Tsinghua WorldArena."
 ---
 
-## About
+WorldAtlas Arena (OpenEnvision; catalog id **`worldatlas-arena`**) evaluates generated world-model rollouts across image / video static and dynamic suites plus a memory loop. It keeps the official **six-axis result vector** and **does not define a benchmark-wide scalar**. This is **not** Tsinghua FIB Lab [WorldArena](/docs/evaluation/benchmark-hub/worldarena).
 
-**Publisher:** OpenEnvision.
+- **Long sequence** — long-horizon persistence and closed-loop memory
+- **Action control** — prompt, camera, motion, keystroke
+- **3D / 4D consistency** — geometry, depth, flow, reconstruction
+- **Physics** — physical plausibility and motion dynamics
+- **Quality** — perceptual quality, fidelity, temporal artifacts
+- **Real time** — throughput, response latency, physical-time behavior
 
-WorldAtlas Arena evaluates generated world-model rollouts across image/video
-static and dynamic suites plus a memory loop. It preserves the official
-six-axis result vector and deliberately does not invent a benchmark-wide scalar.
-This catalog id is `worldatlas-arena`; it is distinct from the separate
-`worldarena` embodied benchmark entry in this hub.
+Code: [OpenEnvision/WorldArena](https://github.com/OpenEnvision/WorldArena).
 
-Official source: [OpenEnvision/WorldArena](https://github.com/OpenEnvision/WorldArena).
+WorldFoundry can `--run-official` from a caller manifest, or normalize official report directories / summary JSON. Existing summaries normalize on CPU; full metric execution may need CUDA, checkpoints, media, and third-party runtimes. The checked-in fixture validates **normalization only**.
 
-## Metrics
+<BenchmarkPageSections id="worldatlas-arena" locale="en" />
 
-| Metric | Scope | Direction |
-| --- | --- | --- |
-| `long_sequence` | Long-horizon persistence and closed-loop memory. | Higher is better |
-| `action_control` | Prompt, camera, motion, and keystroke control. | Higher is better |
-| `consistency_3d_4d` | Geometry, depth, flow, and reconstruction consistency. | Higher is better |
-| `physics` | Physical plausibility and motion dynamics. | Higher is better |
-| `quality` | Perceptual quality, fidelity, and temporal artifacts. | Higher is better |
-| `real_time` | Throughput, response latency, and physical-time behavior. | Higher is better |
-
-## Run or import results
-
-Official execution requires a caller-provided manifest, benchmark media,
-predictions, and any checkpoints required by the chosen metrics:
+## How to run
 
 ```bash
-python worldfoundry/evaluation/tasks/execution/runners/worldatlas_arena/run_worldatlas_arena_official_runner.py \
+${WORLDFOUNDRY_UNIFIED_PYTHON} \
+  worldfoundry/evaluation/tasks/execution/runners/worldatlas_arena/run_worldatlas_arena_official_runner.py \
   --run-official \
   --manifest /data/worldarena/manifest.jsonl \
   --generated-artifact-dir /data/worldarena/predictions \
   --output-dir tmp/worldatlas-arena/official-run \
   --json
 ```
-
-Existing official report directories or summary JSON can be normalized through
-the catalog route:
 
 ```bash
 worldfoundry-eval zoo benchmark-run \
@@ -52,12 +39,6 @@ worldfoundry-eval zoo benchmark-run \
   --json
 ```
 
-## Outputs and limits
-
-The integration writes `scorecard.json`, `raw_metric_table.jsonl`,
-`per_sample_scores.jsonl`, and `benchmark_contract.json`. Existing summary
-reports can be normalized on CPU, while full metric execution may require CUDA,
-external checkpoints, media, and optional third-party runtimes. The checked-in
-fixture validates normalization only; full-suite parity is not yet verified.
+Outputs include `scorecard.json`, `raw_metric_table.jsonl`, `per_sample_scores.jsonl`, and `benchmark_contract.json`. There is no official combined leaderboard scalar to ingest.
 
 [← Benchmark Hub](/docs/evaluation/benchmark-hub)

@@ -11,23 +11,148 @@ description: worldfoundry/core 共享层 —— 加载、attention、分布式�
 
 ## 子包职责
 
-| 子包 | 职责 | 关键符号 |
-| --- | --- | --- |
-| `model_loading` | checkpoint 物化、state-dict 加载、LoRA 合并、推理网络构造。 | `load_state_dict_from_safetensors` `model_loading/file.py:110`；`instantiate_inference_network` `inference_model.py:23`；`GeneralLoRALoader` `lora.py:15` |
-| `checkpoint` | state-dict 赋值、remap、分布式 checkpoint (DCP)、安全加载。 | `checkpoint/{assignment,remap,dcp,safe_loading,load}.py` |
-| `vram` | 磁盘 state map、meta 初始化、staged 放置、层式 CPU offload、显存核算。 | `vram/{disk_map,initialization,layers,layerwise_offload,memory}.py` |
-| `attention` | 后端探测、dense SDPA、可变长 packed、sparse 3D、n-D/complex/projective RoPE、序列并行组合。 | `AttentionKernelCapability` `attention/backends.py:32`；`probe_attention_backends` `backends.py:144`；`complex_rope.py`、`causal_ulysses_attention.py` |
-| `distributed` | NCCL options、masked 正交 rank groups、模型并行初始化、context/block FSDP、device-mesh collectives。 | `initialize_model_parallel` `distributed/model_parallel_groups.py:238`；`RankGenerator` `:194`；`block_fsdp.py`、`context_parallel.py` |
-| `nn` | 可复用 transformer 算子：RMSNorm、共享 MLP、timestep/AdaLN/final-layer modulation、prefix gating、activation checkpointing、classic-diffusion block。 | `nn/{activation_checkpointing,diffusion_schedulers,convolutional_mlp,...}.py` |
-| `kernels` | autotune 缓存、能力探测、扩散 kernel、MoE、量化 GEMM。 | `kernels/{capabilities,autotune_cache,diffusion,moe,quantized_gemm}.py` |
-| `memory` | 多模态、流式、多轮 memory 契约。 | `BaseMemory` `memory/base.py:9`；`conditioning.py`、`media.py`、`mosaic.py`、`retrieval.py` |
-| `acceleration` | FP8 tensorwise 量化、低精度开关、加速技术报告、NVFP4、token pruning。 | `Float8Linear` `acceleration/quantization.py:47`；`AccelerationTechnology` `technology.py:15` |
-| `configuration` | Hydra 集成、模型配置、flags、Cosmos 风格配置。 | `configuration/{hydra,model_config,flags,cosmos_config}.py` |
-| `io` | 媒体与 artifact IO：audio、video、depth colormap、action track、cache、config utils。 | `io/{artifacts,audio,action_tracks,cache}.py`；`save_depth_colormap` `io/artifacts.py:82` |
-| `safety` | video IO guardrail 与安全过滤。 | `safety/{guardrails,video_io}.py` |
-| `structures` | 类型化 validator、shape 切片、tree utils、predicates。 | `Validator` `structures/validator.py:10`；`ShapeSlice` `shape_utils.py:63` |
-| `utils` | 跨包工具：array/tensor、batch ops、CUDA graph、feature extraction、functional utils。 | `utils/{array_tensor_utils,batch_ops,cuda_graph,functional_utils}.py` |
-| `visualization` | 动作 overlay 与共享可视化助手。 | `visualization/action_overlay.py` |
+<div className="pi-kv-catalog not-prose">
+  <section className="pi-kv-group">
+    <h3>子包</h3>
+    <ul>
+      <li className="pi-kv-row">
+        <div className="pi-kv-head">
+          <div className="pi-kv-names">
+            <code>model_loading</code>
+          </div>
+        </div>
+        <p>checkpoint 物化、state-dict 加载、LoRA 合并、推理网络构造。</p>
+        <p className="pi-kv-read"><span>首读</span> <code>load_state_dict_from_safetensors</code> <code>model_loading/file.py:110</code>；<code>instantiate_inference_network</code> <code>inference_model.py:23</code>；<code>GeneralLoRALoader</code> <code>lora.py:15</code></p>
+      </li>
+      <li className="pi-kv-row">
+        <div className="pi-kv-head">
+          <div className="pi-kv-names">
+            <code>checkpoint</code>
+          </div>
+        </div>
+        <p>state-dict 赋值、remap、分布式 checkpoint (DCP)、安全加载。</p>
+        <p className="pi-kv-read"><span>首读</span> <code>{"checkpoint/{assignment,remap,dcp,safe_loading,load}.py"}</code></p>
+      </li>
+      <li className="pi-kv-row">
+        <div className="pi-kv-head">
+          <div className="pi-kv-names">
+            <code>vram</code>
+          </div>
+        </div>
+        <p>磁盘 state map、meta 初始化、staged 放置、层式 CPU offload、显存核算。</p>
+        <p className="pi-kv-read"><span>首读</span> <code>{"vram/{disk_map,initialization,layers,layerwise_offload,memory}.py"}</code></p>
+      </li>
+      <li className="pi-kv-row">
+        <div className="pi-kv-head">
+          <div className="pi-kv-names">
+            <code>attention</code>
+          </div>
+        </div>
+        <p>后端探测、dense SDPA、可变长 packed、sparse 3D、n-D/complex/projective RoPE、序列并行组合。</p>
+        <p className="pi-kv-read"><span>首读</span> <code>AttentionKernelCapability</code> <code>attention/backends.py:32</code>；<code>probe_attention_backends</code> <code>backends.py:144</code>；<code>complex_rope.py</code>、<code>causal_ulysses_attention.py</code></p>
+      </li>
+      <li className="pi-kv-row">
+        <div className="pi-kv-head">
+          <div className="pi-kv-names">
+            <code>distributed</code>
+          </div>
+        </div>
+        <p>NCCL options、masked 正交 rank groups、模型并行初始化、context/block FSDP、device-mesh collectives。</p>
+        <p className="pi-kv-read"><span>首读</span> <code>initialize_model_parallel</code> <code>distributed/model_parallel_groups.py:238</code>；<code>RankGenerator</code> <code>:194</code>；<code>block_fsdp.py</code>、<code>context_parallel.py</code></p>
+      </li>
+      <li className="pi-kv-row">
+        <div className="pi-kv-head">
+          <div className="pi-kv-names">
+            <code>nn</code>
+          </div>
+        </div>
+        <p>可复用 transformer 算子：RMSNorm、共享 MLP、timestep/AdaLN/final-layer modulation、prefix gating、activation checkpointing、classic-diffusion block。</p>
+        <p className="pi-kv-read"><span>首读</span> <code>{"nn/{activation_checkpointing,diffusion_schedulers,convolutional_mlp,...}.py"}</code></p>
+      </li>
+      <li className="pi-kv-row">
+        <div className="pi-kv-head">
+          <div className="pi-kv-names">
+            <code>kernels</code>
+          </div>
+        </div>
+        <p>autotune 缓存、能力探测、扩散 kernel、MoE、量化 GEMM。</p>
+        <p className="pi-kv-read"><span>首读</span> <code>{"kernels/{capabilities,autotune_cache,diffusion,moe,quantized_gemm}.py"}</code></p>
+      </li>
+      <li className="pi-kv-row">
+        <div className="pi-kv-head">
+          <div className="pi-kv-names">
+            <code>memory</code>
+          </div>
+        </div>
+        <p>多模态、流式、多轮 memory 契约。</p>
+        <p className="pi-kv-read"><span>首读</span> <code>BaseMemory</code> <code>memory/base.py:9</code>；<code>conditioning.py</code>、<code>media.py</code>、<code>mosaic.py</code>、<code>retrieval.py</code></p>
+      </li>
+      <li className="pi-kv-row">
+        <div className="pi-kv-head">
+          <div className="pi-kv-names">
+            <code>acceleration</code>
+          </div>
+        </div>
+        <p>FP8 tensorwise 量化、低精度开关、加速技术报告、NVFP4、token pruning。</p>
+        <p className="pi-kv-read"><span>首读</span> <code>Float8Linear</code> <code>acceleration/quantization.py:47</code>；<code>AccelerationTechnology</code> <code>technology.py:15</code></p>
+      </li>
+      <li className="pi-kv-row">
+        <div className="pi-kv-head">
+          <div className="pi-kv-names">
+            <code>configuration</code>
+          </div>
+        </div>
+        <p>Hydra 集成、模型配置、flags、Cosmos 风格配置。</p>
+        <p className="pi-kv-read"><span>首读</span> <code>{"configuration/{hydra,model_config,flags,cosmos_config}.py"}</code></p>
+      </li>
+      <li className="pi-kv-row">
+        <div className="pi-kv-head">
+          <div className="pi-kv-names">
+            <code>io</code>
+          </div>
+        </div>
+        <p>媒体与 artifact IO：audio、video、depth colormap、action track、cache、config utils。</p>
+        <p className="pi-kv-read"><span>首读</span> <code>{"io/{artifacts,audio,action_tracks,cache}.py"}</code>；<code>save_depth_colormap</code> <code>io/artifacts.py:82</code></p>
+      </li>
+      <li className="pi-kv-row">
+        <div className="pi-kv-head">
+          <div className="pi-kv-names">
+            <code>safety</code>
+          </div>
+        </div>
+        <p>video IO guardrail 与安全过滤。</p>
+        <p className="pi-kv-read"><span>首读</span> <code>{"safety/{guardrails,video_io}.py"}</code></p>
+      </li>
+      <li className="pi-kv-row">
+        <div className="pi-kv-head">
+          <div className="pi-kv-names">
+            <code>structures</code>
+          </div>
+        </div>
+        <p>类型化 validator、shape 切片、tree utils、predicates。</p>
+        <p className="pi-kv-read"><span>首读</span> <code>Validator</code> <code>structures/validator.py:10</code>；<code>ShapeSlice</code> <code>shape_utils.py:63</code></p>
+      </li>
+      <li className="pi-kv-row">
+        <div className="pi-kv-head">
+          <div className="pi-kv-names">
+            <code>utils</code>
+          </div>
+        </div>
+        <p>跨包工具：array/tensor、batch ops、CUDA graph、feature extraction、functional utils。</p>
+        <p className="pi-kv-read"><span>首读</span> <code>{"utils/{array_tensor_utils,batch_ops,cuda_graph,functional_utils}.py"}</code></p>
+      </li>
+      <li className="pi-kv-row">
+        <div className="pi-kv-head">
+          <div className="pi-kv-names">
+            <code>visualization</code>
+          </div>
+        </div>
+        <p>动作 overlay 与共享可视化助手。</p>
+        <p className="pi-kv-read"><span>首读</span> <code>visualization/action_overlay.py</code></p>
+      </li>
+    </ul>
+  </section>
+</div>
 
 ## 依赖规则
 

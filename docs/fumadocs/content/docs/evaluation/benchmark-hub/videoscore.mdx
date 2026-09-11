@@ -1,68 +1,30 @@
 ---
 title: VideoScore
-description: VideoScore reward model scoring five aspects of generated video, with the VideoFeedback data stack in tree.
+description: "TIGER-Lab reward model: five 1-4 aspects trained on VideoFeedback 37.6K. WorldFoundry vendors the scorer; it does not invent a board."
 ---
 
-## About
+VideoScore (TIGER-Lab, University of Waterloo) is a **learned reward model**, not a prompt suite. It is trained on **VideoFeedback (37.6K human-annotated videos)** and predicts five aspect scores (official **1–4** scale) for any generated clip:
 
-**Publisher:** TIGER-Lab, University of Waterloo
+- Visual quality
+- Temporal consistency
+- Dynamic degree
+- Text-to-video alignment
+- Factual consistency
 
-VideoScore is a learned video-quality scorer trained on VideoFeedback (37.6K human-annotated videos). Instead of a prompt suite, it is a reward model that predicts five aspect scores for any generated video: visual quality, temporal consistency, dynamic degree, text-to-video alignment, and factual consistency. VideoScore-Bench evaluates scorer correlation with human ratings.
+`videoscore_average` is the mean of the five. VideoScore-Bench evaluates scorer–human correlation (SPCC / pairwise). License: MIT (runtime); dataset stacks Apache-2.0 / MIT.
 
-WorldFoundry vendors the VideoScore runtime in tree (`runtime/videoscore`), maps the five-aspect outputs into a scorecard, supports bounded in-process scoring for verification, and can wrap the upstream `benchmark/eval_videoscore.py` while normalizing its `eval_*_videoscore.json` outputs.
+Paper: [VideoScore](https://arxiv.org/abs/2406.15252). Project: [tiger-ai-lab.github.io/VideoScore](https://tiger-ai-lab.github.io/VideoScore/). Code: [TIGER-AI-Lab/VideoScore](https://github.com/TIGER-AI-Lab/VideoScore). Bench data: [`TIGER-Lab/VideoScore-Bench`](https://huggingface.co/datasets/TIGER-Lab/VideoScore-Bench).
 
-Official references:
+WorldFoundry **vendors the runtime**, supports bounded in-process GPU scoring, and wraps `benchmark/eval_videoscore.py`. A bounded official scorer GPU run is verified; **SPCC / pairwise full-suite parity is not**.
 
-- Paper: [arxiv.org/abs/2406.15252](https://arxiv.org/abs/2406.15252)
-- Project page: [tiger-ai-lab.github.io/VideoScore](https://tiger-ai-lab.github.io/VideoScore/)
-- Official repository: [TIGER-AI-Lab/VideoScore](https://github.com/TIGER-AI-Lab/VideoScore)
-- License: `mit`
+<BenchmarkPageSections id="videoscore" locale="en" />
 
-## Evaluation protocol
-
-Modes: bounded in-process scoring over a limited sample count (`--bounded-sample-count`) for GPU verification; full upstream benchmark execution through the wrapped official script; and import of upstream result JSON via `--official-results-path`/`--from-upstream-results`. Frames are materialized from the VideoScore-Bench zip archives when running from dataset rows.
-
-Primary metric: `videoscore_average`.
-
-| Metric | Meaning | Direction |
-| --- | --- | --- |
-| `visual_quality` | VideoScore visual quality aspect score on a 1-4 scale. | Higher is better |
-| `temporal_consistency` | VideoScore temporal consistency aspect score on a 1-4 scale. | Higher is better |
-| `dynamic_degree` | VideoScore dynamic-degree aspect score on a 1-4 scale. | Higher is better |
-| `text_to_video_alignment` | VideoScore text-to-video alignment aspect score on a 1-4 scale. | Higher is better |
-| `factual_consistency` | VideoScore factual consistency aspect score on a 1-4 scale. | Higher is better |
-| `videoscore_average` | Mean of the five VideoScore aspect scores. | Higher is better |
-
-## Data and artifact layout
-
-In-tree paths:
-
-```text
-worldfoundry/data/benchmarks/tasks/external/videoscore.yaml
-worldfoundry/evaluation/tasks/execution/runners/videoscore/runtime/videoscore
-```
-
-Stage the TIGER-Lab datasets and scorer weights:
+## How to run
 
 ```bash
 hf download TIGER-Lab/VideoScore-Bench --repo-type dataset --local-dir /path/to/VideoScore-Bench
 export WORLDFOUNDRY_VIDEOFEEDBACK_DATASET_ROOT=/path/to/VideoScore-Bench
-export WORLDFOUNDRY_VIDEOSCORE_MODEL_DIR=/path/to/VideoScore-v1.1   # optional local weights
-export WORLDFOUNDRY_VIDEOSCORE_FRAMES_DIR=/path/to/frames_cache
-```
 
-## Run the benchmark
-
-Catalog-recorded validation command:
-
-```bash
-${WORLDFOUNDRY_UNIFIED_PYTHON} worldfoundry/evaluation/tasks/execution/runners/videoscore/run_videoscore_official_runner.py \
-  --json
-```
-
-Bounded in-process scoring for verification:
-
-```bash
 ${WORLDFOUNDRY_UNIFIED_PYTHON} \
   worldfoundry/evaluation/tasks/execution/runners/videoscore/run_videoscore_official_runner.py \
   --bench-name video_feedback \
@@ -72,33 +34,10 @@ ${WORLDFOUNDRY_UNIFIED_PYTHON} \
   --json
 ```
 
-## Checkpoints and environment variables
+Import upstream `eval_*_videoscore.json` via `--official-results-path` / `--from-upstream-results`. Env: `WORLDFOUNDRY_VIDEOSCORE_MODEL_DIR`, `WORLDFOUNDRY_VIDEOSCORE_FRAMES_DIR`, `WORLDFOUNDRY_VIDEOSCORE_ROOT`. Shared stack: `videoscore_reward_metric_stack`.
 
-- `WORLDFOUNDRY_VIDEOSCORE_ROOT`: Optional override pointing at an external runtime checkout.
-- `WORLDFOUNDRY_VIDEOSCORE_FRAMES_DIR`: Frame materialization cache for dataset-driven scoring.
-- `WORLDFOUNDRY_VIDEOFEEDBACK_DATASET_ROOT`: Local VideoFeedback / VideoScore-Bench dataset root.
-- `WORLDFOUNDRY_VIDEOSCORE_MODEL_DIR`: Local VideoScore scorer weights; Hugging Face default loading is used when unset.
+In-tree pointers: `worldfoundry/data/benchmarks/tasks/external/videoscore.yaml`, `worldfoundry/evaluation/tasks/execution/runners/videoscore/runtime/videoscore`.
 
-This benchmark reuses the shared base-model dependency stack: `videoscore_reward_metric_stack`.
-
-## Outputs
-
-The run writes into `--output-dir`:
-
-- `scorecard.json`: WorldFoundry scorecard with the metric values recorded above.
-- `per_sample_scores.jsonl`: Per-sample rows when the result source exposes sample-level values.
-- `raw_metric_table.jsonl`: Metric rows backing the scorecard.
-- `generated_video_manifest.json`
-- `dataset_manifest.json`
-- `upstream_stdout.log`: Captured stdout of the upstream official scorer.
-- `upstream_stderr.log`: Captured stderr of the upstream official scorer.
-
-Scorecard primary key: `videoscore_average` (leaderboard key `videoscore_average`), stored in `scorecard.json`.
-
-## Limitations
-
-- Bounded verification runs are wiring signals only; the full-suite SPCC/pairwise protocol needs complete upstream generated-frame trees.
-- The runner patches a transformers DynamicCache API mismatch locally; behavior with other transformers versions is not guaranteed.
-- A local scorecard is not a VideoScore-Bench leaderboard entry.
+Outputs include `scorecard.json` (primary `videoscore_average`).
 
 [← Benchmark Hub](/docs/evaluation/benchmark-hub)

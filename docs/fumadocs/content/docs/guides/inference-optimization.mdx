@@ -1,61 +1,169 @@
 ---
-title: Inference optimization truth matrix
-description: Public Wan controls, runtime-effective auditing, hardware limits, and validation status.
+title: Inference optimization
+description: Which WorldFoundry inference speedups you can turn on, which combinations the runtime rejects, and how to confirm a knob actually ran.
 ---
 
-WorldFoundry does not equate an accepted option with an active speedup. Each optimization needs a public control, main-path consumption, and runtime `requested / effective / fallbacks` telemetry. Missing kernels, calibration, process groups, or checkpoint weights cause a build-time rejection or an explicit exact/dense fallback.
+<Callout type="warn" title="Experimental">
+These optimizations are experimental. They may change, may not apply to every model, and should not be treated as a supported production contract.
+</Callout>
 
-## Claim boundary
+WorldFoundry only treats a technique as available when a public control exists and the main path consumes it. An accepted flag is not a speedup. After a forward, read `requested / effective / fallbacks` from `runtime_optimization_report()`.
 
-One legacy same-H100 Wan2.2 TI2V-5B diagnostic at 1280×704, 121 frames, 50 steps, CFG 5 measured WorldFoundry at `130.8145 s` after the resident-BF16 fix and FastVideo at `170.9037 s`. Source: `benchmarks/results/20260830/framework_ab_diagnosis/records/full50-bf16weights-worldfoundry-gpu3.json`. This pre-v4 record is retained as historical diagnostic provenance only; Framework A/B v4 will not ingest it into a release summary.
+Most named knobs below are on the **native Wan 2.1 / Wan 2.2** pipelines (`Wan2p1*`, `Wan2p2*`, including VACE). Wan 2.5 / 2.6 / 2.7 are hosted APIs and have no local kernel controls. Other native recipes share only a subset (dtype, offload, sometimes attention or VAE tiling). Family runtimes (LTX, CogVideoX, and the rest) keep their own flags — do not copy Wan keys onto them.
 
-LightX2V's upstream “over 50×” result binds a different complete profile: Wan2.2 A14B, a four-step distilled checkpoint, CFG disabled, 480×832×81 output, NVFP4 weights, DynamicSparse Sage2 with `sparsity_ratio=0.9`, and one RTX 5090. It is a system-level comparison, not the speedup of one sparse kernel in isolation. The TI2V-5B, 50-step, CFG-on workload above neither reproduces that profile nor establishes framework parity or SOTA.
+<Callout type="info" title="Accepted is not effective">
+Missing kernels, calibration, process groups, or checkpoint weights fail at build time or report an explicit dense / SDPA fallback. Wrapper installation alone (`*-wrapper-installed (runtime-pending)`) is not acceleration.
+</Callout>
 
-This shows no deficit for that machine, checkpoint, prompt, and sample. It is not an isolated repeated A/B and not a cross-model SOTA claim. Framework A/B v4 accepts a release comparison only when every repetition uses the same physical GPU and UUID, all samples are globally sequential, AB and BA orders are balanced, and the continuous audit covers the passed idle gate through completed output. The certifying default is NVIDIA `Exclusive_Process` compute mode (`--gpu-isolation-proof compute-exclusive`); bounded polling and all `allow-*` escape hatches are diagnostic-only.
+## Default recommendation
 
-The current container exposes only a single `NSpid` value, so it cannot prove a container-PID to host-NVML-PID chain. Its H100s are also shared and use `Default`, not `Exclusive_Process`, compute mode. The v4 protocol therefore fails closed here. A clean-looking smoke run cannot override that missing identity and full-window exclusion proof.
+<Callout type="idea" title="First run vs throughput">
+**First run / official-looking output.** Keep the catalog defaults: `torch_dtype="bfloat16"`, `offload_mode="resident"` when VRAM fits (Studio default for Wan2.2 TI2V-5B), otherwise `async-block`. Leave feature cache, approximate attention, quantization, CUDA Graph, and TAEW preview off. Do not cut steps or CFG for an official benchmark.
 
-Live 4×H100 BF16/NCCL contracts pass for Torch and FA2 at both one and thirty Wan layers with zero MSE. At full 1280×704, 121-frame, 50-step resolution, a legacy E2E v4 SP1/SP4 run produced identical latent tensors and the same video SHA-256; its contaminated `155.9313 s` and `67.2043 s` timings (diagnostic `2.32×`) are now superseded and remain diagnostic only. The previously reported quality failure came from comparing SP4 against an SP1 artifact generated before later main-path changes.
+**Throughput on the same checkpoint.** Stay resident BF16. Set `attention_backend` to a real Flash / Sage provider for your GPU, then `fuse_qkv=True`, `fused_rope=True`, and `static_cross_kv=True`. Add `compile=True` only after a warmup request — the first compiled forward is slow. Turn on Wan VAE spatial tiling / temporal chunks if decode OOMs or dominates latency. Add **one** feature-cache algorithm only if you accept skipped DiT steps.
+</Callout>
 
-E2E schema v5 supersedes those records. It fingerprints the inference source tree, workload, checkpoint inventory, and artifact bytes; continuously audits CUDA processes at 0.1-second intervals from the idle gate through completed output; fails closed on query, parser, PID-identity, coverage, or monitor-thread errors; and rejects missing or stale reference provenance before model load. Runtime-effective gates use forward receipts rather than configuration: QKV projection execution, actual static-KV reuse without bypass, the exact SP degree and collectives, branch-per-rank CFG, real sparse-provider calls, request-window CUDA Graph replay, genuinely multi-tile/multi-chunk VAE execution, and low-precision kernels with every dense execution counter at zero. Non-default SP/CFG/VAE-parallel/quantized candidates require both latent and video references. Full-resolution scaling remains uncertified until new v5 runs pass all isolation, quality, runtime, and repetition gates.
+## What you can do
 
-The in-tree dynamic per-token/per-channel W8A8 path is now a real Triton kernel, not packed-storage marketing. A contaminated-H100, per-sample AB/BA operator diagnostic measured `1.128×` for the Wan SP4 fused-QKV shape, `1.117×` for MLP-up, and `1.061×` for MLP-down, with kernel counters greater than zero and no fallback. The measured small `8192×1024×1024` shape is dispatched to retained BF16 instead; telemetry calls this `dense_policy_calls`, not a fallback.
+These controls are wired. Enable them from `from_pretrained(...)`, Workspace **load JSON**, or `worldfoundry-eval run --pipeline.load.<kebab-name>` when that key is on the model’s load schema.
 
-The full-pipeline INT8 smoke is deliberately **not certified**. With expandable CUDA segments one profile completed in `153.639 s`, executed 18,200 W8A8 kernels plus 124 calibrated-BF16 calls with zero true fallback, but failed quality badly: latent cosine `0.9092`, video PSNR `17.40`, SSIM `0.7227`, and LPIPS `0.241`. Without expandable segments the extra retained BF16 copy caused a VAE-stage OOM. A later time-embedding/time-projection BF16 hybrid completed in a contaminated `173.5242 s`, hit 18,000 W8A8 kernels plus 124 calibrated-BF16 calls with zero true fallback, and still failed the latent gate (cosine `0.93417`, MSE `0.17157`, PSNR `26.45 dB`). INT8 therefore remains an opt-in experimental kernel/storage mode, not a speed claim. Qualified module-path exclusions and JSON quantization configuration are exposed for calibration, but a profile must pass its own full quality, isolation, and repeated performance gates before release.
+### Precision and placement
 
-## Capability matrix
+<KvCatalog heading="Placement" vars rows={[
+  { name: "torch_dtype / dit_weight_dtype", hintLabel: "How", hint: "bfloat16 / bf16", description: "Run the DiT in BF16. FP32 checkpoints convert on load. This is the normal production precision, not an extra experiment.", reads: [{ label: "Applies to", value: "native Wan 2.1 / 2.2; other native recipes that pass dtype into RuntimePolicy" }] },
+  { name: "offload_mode=resident", hintLabel: "Aliases", hint: "none / fast / resident", description: "Keep weights on GPU. Fastest when the model fits. Studio keeps Wan2.2 TI2V-5B resident on an H100-class card.", reads: [{ label: "Applies to", value: "native visual diffusion loaders that call parse_offload_policy" }] },
+  { name: "offload_mode=async-block", hintLabel: "Aliases", hint: "block / cpu / layer", description: "Layerwise CPU masters with pinned H2D prefetch (at most two resident layers). Use only when VRAM is tight. The Wan VAE stays resident; only the DiT offloads.", reads: [{ label: "Caveat", value: "Incompatible with quantization and with device_map=balanced" }] },
+  { name: "offload_mode=component", hintLabel: "How", hint: "offload_mode=\"component\"", description: "Whole-module CPU offload. Requires a vram_module_map on that component.", reads: [{ label: "Applies to", value: "components that declare a wrapper map" }] },
+  { name: "device_map=balanced", hintLabel: "How", hint: "device_map=\"balanced\"", description: "Shard transformer layers across visible GPUs. Requires offload_mode=none so weights stay in VRAM.", reads: [{ label: "Applies to", value: "modules that declare layer_container" }] },
+  { name: "inplace_residual", hintLabel: "How", hint: "inplace_residual=True", description: "In-place residual adds on the Wan DiT to cut activation memory. Inference-only; disabled under autograd.", reads: [{ label: "Applies to", value: "native Wan DiT only" }] }
+]} />
 
-<KvCatalog heading="Capability" vars rows={[
-    { name: "resident BF16 DiT", hintLabel: "Status", hint: "main path complete", description: "numerical approximation; one H100 E2E record", reads: [{ label: "Limit / fallback", value: "FP32 weights convert to BF16" }] },
-    { name: "distilled PEFT LoRA / low-step schedule", hintLabel: "Status", hint: "public Wan2.2 loading boundary complete", description: "adapter base-model/architecture/target audit before merge", reads: [{ label: "Limit / fallback", value: "needs compatible distilled weights; quality belongs to that checkpoint" }] },
-    { name: "FA2/3/4, xFormers, Sage", hintLabel: "Status", hint: "dispatcher complete", description: "exact/equivalent or approximate; CPU contract", reads: [{ label: "Limit / fallback", value: "reports SDPA fallback" }] },
-    { name: "QKV fusion, static cross-KV, RoPE cache/fusion", hintLabel: "Status", hint: "complete", description: "exact/equivalent; forward receipts + CPU contracts", reads: [{ label: "Limit / fallback", value: "QKV must execute; static-KV must hit with zero bypass; fused RoPE under SP is offset/padding aware" }] },
-    { name: "compile / CUDA Graph", hintLabel: "Status", hint: "complete for qualified single-rank paths", description: "exact/equivalent; request-window receipts + CPU contracts", reads: [{ label: "Limit / fallback", value: "compile needs a successful wrapper call/graph trace; Graph needs replay with zero eager/failure; SP + CUDA Graph is rejected" }] },
-    { name: "TeaCache, AdaCache", hintLabel: "Status", hint: "complete for qualified single-rank paths", description: "algorithmic approximation; CPU contracts", reads: [{ label: "Limit / fallback", value: "per-CFG state and dense/hit counters; SP composition is rejected" }] },
-    { name: "MagCache", hintLabel: "Status", hint: "complete for qualified single-rank paths", description: "algorithmic approximation; CPU contract", reads: [{ label: "Limit / fallback", value: "calibrated ratios required; uncalibrated Wan2.2 and SP composition are rejected" }] },
-    { name: <><code>taylorseer</code>{" (legacy)"}</>, hintLabel: "Status", hint: "whole-stack residual predictor", description: "algorithmic approximation; CPU contract", reads: [{ label: "Limit / fallback", value: "compatibility name; it is not LightX2V's per-block algorithm" }] },
-    { name: <><code>blocktaylorseer</code></>, hintLabel: "Status", hint: "pinned LightX2V Wan per-block self/cross/FFN predictor", description: "algorithmic approximation; phase-level, gate-refresh, CFG/request-isolation, and receipt contracts", reads: [{ label: "Limit / fallback", value: <>{"default dense pattern is "}<code>[true,false,false,false]</code>{"; GPU video-quality/E2E certification is still required; SP is rejected"}</> }] },
-    { name: <><code>custom</code></>, hintLabel: "Status", hint: "pinned LightX2V Tea decision + first-order stack-residual predictor", description: "algorithmic approximation; calibrated polynomial and request-local receipt contracts", reads: [{ label: "Limit / fallback", value: "requires published/model-supplied Tea coefficients; GPU video-quality/E2E certification is still required; SP is rejected" }] },
-    { name: "FP8 / NVFP4", hintLabel: "Status", hint: "packed wrappers, kernels, per-layer counters", description: "numerical approximation; CPU fallback contracts", reads: [{ label: "Limit / fallback", value: "build reports pending; ineligible workloads report dense" }] },
-    { name: "INT8 / INT4", hintLabel: "Status", hint: "INT8 dynamic W8A8 Triton plus packed INT4/groupwise storage", description: "kernel execution proven; default full INT8 fails quality", reads: [{ label: "Limit / fallback", value: "experimental opt-in; calibrated small INT8 uses BF16; INT4/groupwise dequantize+dense" }] },
-    { name: "GGUF", hintLabel: "Status", hint: "real tensor loader and compressed runtime storage complete", description: "synthetic loader/storage contracts", reads: [{ label: "Limit / fallback", value: "no qualified GGUF low-bit GEMM and no local real Wan GGUF certification" }] },
-    { name: "native Ulysses SP", hintLabel: "Status", hint: "fused multi-tensor all-to-all/gather and fused 3D RoPE composition complete", description: "legacy full-resolution SP1/SP4 outputs identical; v5 runtime counters required", reads: [{ label: "Limit / fallback", value: "cache, approximate-attention, and CUDA-Graph compositions are rejected; isolated scaling is pending" }] },
-    { name: "CFG parallel / SP×CFG", hintLabel: "Status", hint: "branch-per-rank and mesh complete", description: "equivalent; CPU/mock contracts", reads: [{ label: "Limit / fallback", value: "CFG degree 2; world size must match" }] },
-    { name: "VAE mixed precision / spatial tiles", hintLabel: "Status", hint: "complete", description: "numerical approximation; last-decode-window CPU contracts", reads: [{ label: "Limit / fallback", value: "certification requires more than one tile and zero single-tile calls" }] },
-    { name: "causal temporal VAE streaming", hintLabel: "Status", hint: "complete", description: "exact; last-decode-window causal contract", reads: [{ label: "Limit / fallback", value: "certification requires more than one chunk; convolution cache survives chunk boundaries" }] },
-    { name: "rank-parallel VAE tiles", hintLabel: "Status", hint: "sharding + typed all-gather", description: "real two-rank Gloo contract", reads: [{ label: "Limit / fallback", value: "degree equals full world size; full-resolution GPU certification pending" }] },
-    { name: "TAEW2.2 tiny decoder", hintLabel: "Status", hint: "opt-in preview path complete", description: "algorithmically approximate; layout/range/runtime contract", reads: [{ label: "Limit / fallback", value: "decode-only preview; official VAE remains the final-quality default" }] },
-    { name: "resident / block / component placement", hintLabel: "Status", hint: <>{"resident "}<code>fast</code>{"/"}<code>resident</code>{" preset plus asynchronous block prefetch and component wrappers"}</>, description: "block mode keeps CPU masters, primes layer 0, and overlaps next-layer H2D with current-layer compute; request receipts require async copies, zero synchronous rescue copies, pinned sources, and a two-layer residency bound", reads: [{ label: "Limit / fallback", value: "Wan2.2 TI2V-5B defaults to resident in Studio; use block only when VRAM requires it; quantization + block is rejected until quantized buffers have a certified offload lifecycle" }] },
-    { name: "STA", hintLabel: "Status", hint: "tuned-shape adapter", description: "algorithmic approximation; strict request receipt", reads: [{ label: "Limit / fallback", value: <>{"default 121×704×1280 post-patch grid "}<code>(31,22,40)</code>{" is untuned and the benchmark CLI fails before CUDA; only "}<code>(36,48,48)</code>{" and "}<code>(18,48,80)</code>{" are accepted"}</> }] },
-    { name: "FastVideo-style VSA", hintLabel: "Status", hint: "registered model-specific system; generic Wan not certified", description: "algorithmic approximation; metadata/weight audit required", reads: [{ label: "Limit / fallback", value: <>{"needs a 3D sparse plan and trained "}<code>gate_compress</code>{" VSA-QAT weights; missing capability/shape/metadata downgrades to reported exact attention and fails certification, while malformed model/provider contracts fail fast"}</> }] },
-    { name: "V-MoBA", hintLabel: "Status", hint: "weight-free FastVideo router and Wan processor complete", description: "algorithmic approximation; CPU fake-provider contracts plus request-window layer/chunk receipts", reads: [{ label: "Limit / fallback", value: <>{"requires a complete grid-specific temporal/spatial/3D chunk and top-k profile plus the three real "}<code>fastvideo_kernel</code>{" MoBA symbols; provider/shape/device/dtype mismatch fails closed; GPU quality and full E2E performance remain uncertified"}</> }] },
-    { name: "pinned LightX2V sparse lanes", hintLabel: "Status", hint: <>{"twelve canonical CLI kinds: "}<code>dynamic_sparse</code>{", "}<code>sparge</code>{", "}<code>nbhd</code>{", "}<code>lightx2v_sla_mask</code>{", "}<code>flexblock</code>{", "}<code>lightx2v_spas_sage</code>{", "}<code>draft_attn</code>{", "}<code>radial_attn</code>{", "}<code>rainfusion_attn</code>{", "}<code>svg_attn</code>{", "}<code>svg2_attn</code>{", "}<code>lightx2v_svg_mask</code></>, description: "algorithmic approximation; complete request/CFG/step/layer and upstream identity receipts", reads: [{ label: "Limit / fallback", value: <>{"every provider event must execute one exact kernel symbol from a clean pinned LightX2V commit and match its "}<code>provider_family</code>{"; Draft/RainFusion provider-owned dense phases are separately labeled "}<code>provider_dense</code>{"; SVG2 reuses a locked 128 MiB "}<code>uint8</code>{" FlashInfer workspace/wrapper, replans dynamic masks, and keeps centroids request-local; GPU quality/E2E speed remain uncertified"}</> }] },
-    { name: "FastVideo SLA_ATTN / SAGE_SLA_ATTN", hintLabel: "Status", hint: <>{"independent opt-in kinds "}<code>fastvideo_sla</code>{" / "}<code>fastvideo_sagesla</code>{" are on the Wan self-attention main path"}</>, description: <>{"learned "}<code>proj_l</code>{" is extracted once, kept FP32, placed per layer, and audited with exact provider/source/checkpoint/projection/call/step/layer receipts"}</>, reads: [{ label: "Limit / fallback", value: <>{"requires an SLA-trained checkpoint containing complete "}<code>proj_l</code>{" weights; official dense Wan and current FastVideo CausalWan Preview checkpoints do not contain them and fail closed; SageSLA additionally requires "}<code>spas_sage_attn</code>{"; GPU quality/E2E speed remain uncertified"}</> }] }
-  ]} />
+### Attention backends
 
-SP composes with fused 3D RoPE: the kernel receives the rank's global sequence offset and padded-token boundary, and certification requires `fused_rope_calls > 0`. SP with TeaCache, AdaCache, MagCache, feature cache, TaylorSeer, approximate attention, or CUDA Graph remains a construction-time error until rank-synchronized cache decisions, shard-consistent histories/routing, or graph-safe collective lifecycle support exists.
+<KvCatalog heading="Backend" vars rows={[
+  { name: "attention_backend", hintLabel: "Values", hint: "auto / flash / flash2 / flash3 / flash4 / sage / sage3 / xformers / sdpa / torch", description: "Dispatcher picks a kernel and reports SDPA if the provider is missing or the shape is ineligible. auto is the safe default.", reads: [{ label: "Applies to", value: "native Wan; HunyuanVideo also accepts attention_backend. Studio dropdown: auto, torch, flash_attn_2, flash_attn_3, sage, xformers" }] },
+  { name: "WORLDFOUNDRY_ATTENTION_BACKEND", hintLabel: "Env", hint: "auto / flash / cudnn / efficient / math", description: "Process-wide SDPA policy for runtimes that call install_worldfoundry_inference_infra. Names such as flash_attention_2 map to auto unless you pin a real dispatcher backend on the pipeline.", reads: [{ label: "Related", value: "WORLDFOUNDRY_ENABLE_TF32 (default on), WORLDFOUNDRY_MATMUL_PRECISION=high, WORLDFOUNDRY_DETERMINISTIC=1" }] }
+]} />
 
-## Public configuration
+### Exact or numerically equivalent Wan kernels
+
+<KvCatalog heading="Kernel" vars rows={[
+  { name: "fuse_qkv", hintLabel: "How", hint: "fuse_qkv=True", description: "Merge Q/K/V projections. Optional qkv_strategy=auto|packed|split and qkv_split_threshold (Studio default 8192).", reads: [{ label: "Applies to", value: "native Wan DiT. Confirm fused_blocks and a real projection call after one forward" }] },
+  { name: "fused_rope", hintLabel: "How", hint: "fused_rope=True", description: "Fused 3D RoPE. Safe to combine with Ulysses SP (the kernel takes the rank offset and padding). rope_precision is fp32 or fp64.", reads: [{ label: "Applies to", value: "native Wan DiT" }] },
+  { name: "static_cross_kv", hintLabel: "How", hint: "static_cross_kv=True", description: "Reuse text cross-attention K/V for the request. Studio default for Wan2.2 TI2V-5B. Not compatible with CUDA Graph.", reads: [{ label: "Applies to", value: "native Wan DiT" }] }
+]} />
+
+### Compile and CUDA Graph
+
+<KvCatalog heading="Compile" vars rows={[
+  { name: "compile", hintLabel: "How", hint: "compile=True or torch_compile=True", description: "torch.compile on the bound forward. Optional compile_mode (default / reduce-overhead / max-autotune / max-autotune-no-cudagraphs), compile_backend, compile_fullgraph, compile_dynamic. First request pays compile + autotune cost.", reads: [{ label: "Also", value: "WORLDFOUNDRY_TORCH_COMPILE=1 for processes that use compile_module_if_enabled" }] },
+  { name: "cuda_graph", hintLabel: "How", hint: "cuda_graph=True", description: "Capture and replay a stable-shape Wan DiT inner call. Off by default. With Inductor, compile_mode must be max-autotune-no-cudagraphs so graphs are not nested.", reads: [{ label: "Rejected with", value: "sequence parallel, feature cache, approximate attention, static_cross_kv, custom Inductor compile_options" }] }
+]} />
+
+### Parallelism
+
+<KvCatalog heading="Parallel" vars rows={[
+  { name: "sequence_parallel / sp_degree", hintLabel: "How", hint: "torchrun + sp_degree>=2", description: "Native Ulysses SP: exact attention, shards tokens across GPUs. Requires NCCL before load. Wan2.2 has 24 heads, so degree must divide 24 (2, 3, 4, 6, 8, 12).", reads: [{ label: "Rejected with", value: "feature cache, approximate attention, CUDA Graph" }] },
+  { name: "cfg_parallel", hintLabel: "How", hint: "cfg_parallel=2", description: "Positive and negative CFG branches on two ranks. World size must match the SP×CFG mesh. Degree is only 1 or 2.", reads: [{ label: "Rejected with", value: "cfg_gate_step < 1.0" }] },
+  { name: "vae_parallel", hintLabel: "How", hint: "vae_parallel=True or a degree", description: "Rank-parallel Wan VAE tiles with a typed all-gather. Degree must be the full SP×CFG world size when those are on. Needs torchrun WORLD_SIZE>1.", reads: [{ label: "Applies to", value: "official Wan VAE, not TAEW preview" }] }
+]} />
+
+### Wan VAE decode
+
+<KvCatalog heading="VAE" vars rows={[
+  { name: "vae_decode_autocast", hintLabel: "How", hint: "vae_decode_autocast=\"bf16\"", description: "Mixed-precision Wan decode. Slight numerical change vs FP32 decode.", reads: [{ label: "Applies to", value: "native Wan VAE" }] },
+  { name: "vae_spatial_tiling", hintLabel: "How", hint: "vae_spatial_tiling=True", description: "Tile spatial decode. Aliases: vae_tiled_decode, or component tiled=True. Default tile 34×34, stride 18×16. A shape that yields one tile is not tiled execution.", reads: [{ label: "Not the same flag", value: "vae_tiling is Hunyuan / Cosmos Predict2. Wan ignores that name." }] },
+  { name: "vae_temporal_chunk_size", hintLabel: "How", hint: "vae_temporal_chunk_size=4", description: "Causal temporal streaming decode. Convolution cache is kept across chunks. A sequence that fits in one chunk is not streaming.", reads: [{ label: "Applies to", value: "official Wan VAE" }] },
+  { name: "vae_channels_last_3d", hintLabel: "How", hint: "vae_channels_last_3d=True", description: "Convert Conv3d weights to channels-last. Fails if the VAE has no Conv3d.", reads: [{ label: "Applies to", value: "native Wan VAE" }] }
+]} />
+
+HunyuanVideo and Cosmos Predict2 expose their own `vae_tiling` (and Cosmos tile size/stride) on those pipelines only.
+
+### Distilled checkpoints
+
+Wan2.2 public pipelines accept `peft_adapter_path` and merge a PEFT LoRA after an adapter/base/target audit. Quality and step count belong to that distilled checkpoint. There is no separate “4-step mode” without matching weights.
+
+### Feature cache (lossy, one algorithm)
+
+Opt-in, single-rank, mutually exclusive. Each CFG branch gets its own cache. TeaCache has published coefficients for Wan2.1 1.3B / 14B T2V and I2V variants, Wan2.1 Fun / VACE aliases, Wan2.2 Fun / A14B, and Wan2.2 TI2V-5B. Other model IDs must pass `coefficients` explicitly.
+
+<KvCatalog heading="Cache" vars rows={[
+  { name: "teacache", hintLabel: "How", hint: "feature_cache=\"teacache\" or teacache=True", description: "Skip DiT steps from a residual threshold (default 0.26) plus the model preset. Also teacache=<threshold>.", reads: [{ label: "Applies to", value: "native Wan denoisers with a preset or explicit coefficients" }] },
+  { name: "adacache", hintLabel: "How", hint: "feature_cache=\"adacache\"", description: "Adaptive residual cache. Same SP / CUDA Graph bans as other caches.", reads: [{ label: "Applies to", value: "native Wan" }] },
+  { name: "magcache", hintLabel: "How", hint: "magcache={\"ratios\": [...]}", description: "Requires calibrated per-step ratios. No Wan2.2 preset is published in-tree.", reads: [{ label: "Fails closed", value: "magcache=True without ratios" }] },
+  { name: "blocktaylorseer", hintLabel: "How", hint: "feature_cache={\"algorithm\": \"blocktaylorseer\"}", description: "Pinned LightX2V per-block self / cross / FFN predictor. Default dense pattern [true, false, false, false].", reads: [{ label: "Applies to", value: "native Wan, single rank" }] },
+  { name: "taylorseer", hintLabel: "How", hint: "feature_cache=\"taylorseer\"", description: "Legacy whole-stack residual predictor. Not LightX2V’s per-block algorithm. Default interval 4.", reads: [{ label: "Applies to", value: "native Wan, single rank" }] },
+  { name: "custom", hintLabel: "How", hint: "feature_cache={\"algorithm\": \"custom\", ...}", description: "LightX2V Tea decision plus first-order stack residual. Needs published or explicit Tea coefficients.", reads: [{ label: "Applies to", value: "native Wan, single rank" }] },
+  { name: "firstblock / dualblock / dynamicblock", hintLabel: "How", hint: "feature_cache={\"algorithm\": \"firstblock\", \"residual_diff_threshold\": ...}", description: "Block-selective caches. residual_diff_threshold is required; there is no quality-safe default.", reads: [{ label: "Applies to", value: "native Wan, single rank" }] },
+  { name: "cfg_gate_step", hintLabel: "Alias", hint: "cfg_gate_fraction", description: "After this fraction of steps, reuse the CFG delta instead of running the negative branch. 1.0 (default) is full CFG.", reads: [{ label: "Rejected with", value: "cfg_parallel=2" }] }
+]} />
+
+### Approximate attention (lossy, opt-in)
+
+Never auto-selected. The run is marked `quality_tier="approximate"`. Only the Wan denoiser sets `supports_approximate_attention`.
+
+<KvCatalog heading="Sparse" vars rows={[
+  { name: "sta", hintLabel: "How", hint: "approximate_attention={\"kind\": \"sta\", ...}", description: "Sliding-tile attention. Only tuned grids (36, 48, 48) and (18, 48, 80) are accepted. Default Wan2.2 TI2V 121×704×1280 → (31, 22, 40) is rejected before CUDA.", reads: [{ label: "Applies to", value: "native Wan, single rank" }] },
+  { name: "vsa", hintLabel: "How", hint: "approximate_attention={\"kind\": \"vsa\", ...}", description: "FastVideo-style video sparse attention. Needs a 3D sparse plan and trained gate_compress VSA-QAT weights. Missing metadata falls back to recorded exact attention.", reads: [{ label: "Applies to", value: "model-specific VSA checkpoints, not generic dense Wan" }] },
+  { name: "vmoba", hintLabel: "How", hint: "approximate_attention={\"kind\": \"vmoba\", ...}", description: "Weight-free FastVideo router. Chunk sizes must divide the actual Wan patch grid. The in-tree default profile matches TI2V (31, 22, 40) only. Wrong geometry fails closed.", reads: [{ label: "Needs", value: "fastvideo_kernel MoBA symbols" }] },
+  { name: "fastvideo_sla / fastvideo_sagesla", hintLabel: "How", hint: "kind=\"fastvideo_sla\"", description: "Learned Sparse-Linear Attention. Requires a complete proj_l layout in the checkpoint. Official dense Wan and current FastVideo CausalWan Preview weights fail closed. SageSLA also needs spas_sage_attn.", reads: [{ label: "Do not", value: "enable on a dense checkpoint or alias it as LightX2V sla" }] },
+  { name: "LightX2V sparse kinds", hintLabel: "Kinds", hint: "dynamic_sparse, sparge, nbhd, lightx2v_sla_mask, flexblock, lightx2v_spas_sage, draft_attn, radial_attn, rainfusion_attn, svg_attn, svg2_attn, lightx2v_svg_mask", description: "Pinned LightX2V training-free sparse lanes. Each call must hit the pinned provider. Ambiguous aliases sla / sagesla are not accepted.", reads: [{ label: "Needs", value: "the pinned LightX2V checkout and a matching operator" }] }
+]} />
+
+STA / VSA / VMoBA symbols come from the vendored `thirdparty/fastvideo-kernel` tree (or a matching installed `fastvideo_kernel` wheel). Local build: set `CUDA_HOME` and `CUDACXX`, then `./build.sh` in that directory. ThunderKittens C++ kernels compile only on Hopper `sm_90a` (never on aarch64 hosts); otherwise Triton fallbacks run. FP4 attention / quant CUDA extensions need Blackwell `sm_120a` and CUDA ≥ 12.8. FA4 CuTe block-sparse is an optional `flash_attn.cute` extra, not part of the default build.
+
+### Quantization (experimental)
+
+<KvCatalog heading="Quant" vars rows={[
+  { name: "fp8 / nvfp4", hintLabel: "How", hint: "quantization={\"mode\": \"fp8\", \"min_features\": 1024}", description: "Packed low-precision wrappers. Ineligible shapes stay dense and say so. This is a numerical approximation, not a certified quality preset.", reads: [{ label: "Rejected with", value: "block or disk offload" }] },
+  { name: "int8", hintLabel: "How", hint: "quantization=\"int8\"", description: "Dynamic per-token / per-channel W8A8 Triton on large GEMMs. Small shapes keep BF16 (counted as dense_policy_calls, not a fallback). Full-pipeline INT8 is opt-in and quality-unsafe by default.", reads: [{ label: "Measured", value: "A full Wan INT8 smoke executed the kernels and still failed latent / video quality (cosine ~0.91, video PSNR ~17). Treat as calibration, not a speed claim." }] },
+  { name: "int4", hintLabel: "How", hint: "quantization=\"int4\"", description: "Packed / groupwise storage, then dequantize + dense. Not a claimed INT4 GEMM speedup.", reads: [{ label: "Rejected with", value: "block or disk offload" }] },
+  { name: "gguf", hintLabel: "How", hint: "quantization=\"gguf\" or a .gguf file", description: "Real GGUF tensor loader and compressed storage. There is no qualified GGUF low-bit GEMM in this runtime.", reads: [{ label: "Applies to", value: "native loader when the optional gguf package is installed" }] }
+]} />
+
+### Preview decode only
+
+`vae_preview_decoder_path` swaps the Wan2.2 48-channel official VAE for TAEW2.2. That is a fast, approximate, decode-only preview. Official VAE tiling, temporal chunking, and VAE-parallel do not apply because the official decoder is not built. Do not use TAEW for final-quality or official-benchmark videos.
+
+## What you cannot do
+
+<KvCatalog heading="Do not" rows={[
+  { name: "Count configuration as a speedup", hint: "Not evidence", description: "requested without effective, or pending wrappers, or dense_policy_calls / SDPA fallback, is not acceleration." },
+  { name: "Combine sequence parallel with caches, sparse attention, or CUDA Graph", hint: "Rejected at build", description: "SP needs rank-synchronized skip / route decisions that are not implemented. Fused RoPE is the exception — it is SP-aware." },
+  { name: "Combine CUDA Graph with feature cache, approximate attention, or static_cross_kv", hint: "Rejected at build", description: "Graph replay would freeze Python cache and sparse schedules from a previous step or request." },
+  { name: "Quantization + block or disk offload", hint: "Rejected at build", description: "Quantized weights are buffers; the async two-layer offloader owns Parameters only. Disk offload also cannot materialize the transform." },
+  { name: "device_map=balanced + any offload", hint: "Rejected at build", description: "Balanced sharding requires resident VRAM weights." },
+  { name: "Two feature caches at once", hint: "Rejected at build", description: "teacache, magcache, adacache, taylorseer, blocktaylorseer, custom, and the block caches are mutually exclusive." },
+  { name: "MagCache without ratios, or TeaCache without a preset or coefficients", hint: "Rejected at build", description: "Uncalibrated Wan2.2 MagCache has no in-tree ratios. Unknown TeaCache model IDs must supply coefficients." },
+  { name: "STA on the default TI2V 121×704×1280 grid", hint: "Rejected before CUDA", description: "Only (36, 48, 48) and (18, 48, 80) are tuned." },
+  { name: "Reuse a VMoBA profile on another resolution or frame count", hint: "Fails closed", description: "Chunk sizes must divide the real post-patch grid. Derive the grid first." },
+  { name: "FastVideo SLA on official dense Wan", hint: "Fails closed", description: "Those checkpoints have no proj_l. Do not use LightX2V sla / sagesla aliases for this lane." },
+  { name: "sage_attn2_k_int8_v_fp8 as a Wan sparse provider", hint: "Fails closed", description: "That registry entry expects quantized K/V tuples. The Wan generator supplies floating K/V and has no audited per-layer quantize cache." },
+  { name: "INT8 / INT4 / GGUF as a default quality path", hint: "Quality cliff", description: "INT8 kernels can run and still wreck latents. INT4 and GGUF are storage plus dense compute unless a future kernel path is certified." },
+  { name: "TAEW2.2 as the official VAE", hint: "Preview only", description: "Wrong colors / structure vs the 48-channel Wan2.2 VAE. Keep the official decoder for release and benchmarks." },
+  { name: "These Wan knobs on APIs or other families", hint: "Not wired", description: "Wan 2.5+ APIs ignore them. HunyuanVideo takes dtype, offload, attention, vae_tiling. Cosmos Predict2 takes dtype, offload, vae_tiling. Echo-Memory exposes offload_model only. Matrix-Game 3.5 builds a fixed BF16 RuntimePolicy. LTX-2.5 has its own offload_mode / quantization, not this matrix." },
+  { name: "PyTorch tricks that are not in RuntimePolicy", hint: "Not wired", description: "Arbitrary torch.compile on a family runtime, sequential offload, xFormers installed but not selected, or a community TeaCache monkey-patch is “possible in PyTorch,” not a WorldFoundry control. Put it here, not under What you can do." },
+  { name: "Change official benchmark steps, CFG, size, or enable lossy caches", hint: "Invalid comparison", description: "Scoring belongs in Evaluation. A faster unofficial schedule is a different workload." },
+  { name: "Inference accelerators on a training build", hint: "Rejected at build", description: "Training forbids offload, quantization, Sage, TeaCache, CUDA Graph, fuse_qkv, static_cross_kv, and the other inference wrappers." },
+  { name: "cfg_parallel degree other than 2", hint: "Rejected at build", description: "The runner only implements degree 1 or 2, and degree 2 needs a live two-rank CFG group." }
+]} />
+
+<Callout type="warn" title="OOM and first-run cost">
+Block offload is the VRAM escape hatch; resident + INT8 without expandable CUDA segments has OOM’d in the VAE stage because of an extra BF16 copy. `torch.compile` and CUDA Graph make the first request much slower. Do not time that request.
+</Callout>
+
+## How to turn knobs on
+
+The same load keys work from Python, CLI, or Workspace.
+
+<Callout type="info" title="Nested objects stay off the CLI">
+`feature_cache`, `approximate_attention`, and `quantization` belong in Python kwargs or load JSON — not a guessed CLI flag.
+</Callout>
+
+<Tabs items={['Python', 'CLI', 'Workspace']}>
+  <Tab>
+
+Complete surface for native Wan 2.1 / 2.2:
 
 ```python
 from worldfoundry.pipelines.wan.pipeline_wan_2p2 import Wan2p2Pipeline
@@ -63,171 +171,88 @@ from worldfoundry.pipelines.wan.pipeline_wan_2p2 import Wan2p2Pipeline
 pipe = Wan2p2Pipeline.from_pretrained(
     model_path="/checkpoints/Wan2.2-TI2V-5B",
     device="cuda",
-    offload_mode="resident",  # aliases: "fast" / "none"; use "async-block" when VRAM is tight
+    # Placement
+    offload_mode="resident",
     torch_dtype="bfloat16",
     dit_weight_dtype="bf16",
+    # Attention and exact kernels
     attention_backend="flash3",
     fuse_qkv=True,
     fused_rope=True,
     static_cross_kv=True,
-    approximate_attention={
-        "kind": "vmoba",
-        "temporal_chunk_size": 1,
-        "temporal_topk": 3,
-        "spatial_chunk_size": (2, 5),
-        "spatial_topk": 20,
-        "st_chunk_size": (1, 2, 5),
-        "st_topk": 15,
-        "moba_select_mode": "threshold",
-        "moba_threshold": 0.25,
-        "moba_threshold_type": "query_head",
-        "first_full_step": 12,
-        "first_full_layer": 0,
-        "temporal_layer": 1,
-        "spatial_layer": 1,
-        "st_layer": 1,
-    },  # lossy; this complete profile must match the actual Wan patch grid
-    quantization={"mode": "fp8", "min_features": 1024},
-    feature_cache={"algorithm": "blocktaylorseer"},
-    # Alternatives are teacache/magcache/adacache/custom or legacy taylorseer.
+    compile=False,
+    # Lossy — enable at most one cache, and not with SP / CUDA Graph:
+    # feature_cache={"algorithm": "teacache"},
+    # Wan VAE decode
     vae_decode_autocast="bf16",
     vae_spatial_tiling=True,
     vae_tile_size=(34, 34),
     vae_tile_stride=(18, 16),
     vae_temporal_chunk_size=4,
-    # Optional weight-dependent acceleration:
-    peft_adapter_path="/checkpoints/wan22-4step-lora",
 )
 ```
 
-FastVideo learned SLA is a separate, weight-dependent profile. It must not be
-enabled on a dense checkpoint or represented by a LightX2V SLA-mask alias:
+  </Tab>
+  <Tab>
 
-```python
-sla_pipe = Wan2p2Pipeline.from_pretrained(
-    model_path="/checkpoints/wan22-sla-trained-with-proj-l",
-    device="cuda",
-    offload_mode="resident",
-    torch_dtype="bfloat16",
-    approximate_attention={
-        "kind": "fastvideo_sla",       # or "fastvideo_sagesla"
-        "fastvideo_topk_ratio": 0.1,    # SageSLA upstream default is 0.5
-        "fastvideo_feature_map": "softmax",
-    },
-)
-```
-
-Loading scans for one complete, unambiguous `proj_l` layout and fails before
-inference when any Wan self-attention layer is missing, duplicated, malformed,
-or sourced from a mixed layout. Runtime certification additionally requires the
-clean pinned FastVideo provider and matching per-layer/global projection
-fingerprints. `fastvideo_sagesla` also requires the upstream
-`spas_sage_attn` implementation.
-
-TAEW2.2 preview is a separate approximate decode mode. Do not combine it with
-official-VAE tiling, temporal chunking, or rank-parallel decode:
-
-```python
-preview_pipe = Wan2p2Pipeline.from_pretrained(
-    model_path="/checkpoints/Wan2.2-TI2V-5B",
-    device="cuda",
-    offload_mode="none",
-    torch_dtype="bfloat16",
-    dit_weight_dtype="bf16",
-    vae_preview_decoder_path="/checkpoints/taew2_2.safetensors",
-)
-```
-
-Full multi-GPU E2E, quality, memory, and communication validation:
+Keys on that model’s load schema:
 
 ```bash
-torchrun --nproc_per_node=1 -m benchmarks.inference.wan22_multigpu_e2e \
-  --checkpoint /checkpoints/Wan2.2-TI2V-5B \
-  --output-dir benchmarks/results/wan22-sp1 \
-  --fused-rope --rope-precision fp64 \
-  --save-reference-latents \
-  --warmup-runs 1 --measured-runs 3
-
-torchrun --nproc_per_node=4 -m benchmarks.inference.wan22_multigpu_e2e \
-  --checkpoint /checkpoints/Wan2.2-TI2V-5B \
-  --output-dir benchmarks/results/wan22-sp4 \
-  --sp-degree 4 \
-  --fused-rope --rope-precision fp64 \
-  --warmup-runs 1 --measured-runs 3 \
-  --reference-latents benchmarks/results/wan22-sp1/final-latents.pt \
-  --reference-video benchmarks/results/wan22-sp1/output.mp4 \
-  --fail-on-fallback \
-  --profile-collectives
+worldfoundry-eval run wan2.2-ti2v-5b \
+  --pipeline.task-profile <task-profile> \
+  --pipeline.load.offload-mode resident \
+  --pipeline.load.attention-backend flash3 \
+  --pipeline.load.fuse-qkv true \
+  --pipeline.load.static-cross-kv true \
+  --output-dir tmp/worldfoundry_infer/wan2.2-ti2v-5b
 ```
 
-Only rank 0 writes video. Timed ranks synchronize before every repeat. The formal SP runtime gate requires the requested `sp_degree`, the native Ulysses processor, positive measured-window `all_to_all_calls`, `fused_multi_tensor_all_to_all_calls`, and `sequence_output_all_gather_calls`, plus exactly zero `unfused_multi_tensor_all_to_all_calls`. With fused RoPE it also requires positive request-window `fused_rope_calls` and zero `complex_rope_calls`; configuration alone cannot pass. The report includes the max-rank latency distribution, per-rank latency/peak VRAM, profiler-matched collective time, rank consistency, reference latent cosine/MSE/PSNR/max error, and video PSNR/SSIM/LPIPS. Those metrics feed explicit thresholds and the process exits non-zero when the quality gate fails. Reference latent/video files must be the hashed artifacts declared by one passing sibling `report.json`, with matching source, workload, and checkpoint fingerprints. Legacy or changed references are rejected before CUDA initialization. Requested optimizations must have an effective state or an explicit fallback; `--fail-on-fallback` additionally rejects a run that is honest but did not accelerate.
+  </Tab>
+  <Tab>
 
-Run the same isolated, order-balanced protocol against either external framework. Each framework uses its own Python environment, while prompt/seed/shape/steps/CFG, physical GPU/UUID, timing boundary, checkpoint fingerprints, MP4 validation, and bootstrap summary stay shared. Framework A/B schema v4 starts the CUDA process audit immediately after the idle gate and samples at 0.1-second intervals through model load and completed output. `nvidia-smi` failure, timeout, or malformed output is fatal. PID authorization uses `/proc` start time plus a proven `NSpid` identity (or the certifying `Exclusive_Process` temporal binding); a disappeared identity is never reused. Every accepted repetition is globally non-overlapping on one GPU, and AB/BA order counts must balance. Older v3 records cannot enter a v4 summary:
+Same job path as [Run inference](/docs/guides/inference):
 
 ```bash
-# VMoBA candidate against its own frozen dense baseline. This profile is bound
-# to 121x704x1280 -> patch grid (31, 22, 40).
-torchrun --nproc_per_node=1 -m benchmarks.inference.wan22_multigpu_e2e \
-  --checkpoint /checkpoints/Wan2.2-TI2V-5B \
-  --output-dir benchmarks/results/wan22-vmoba \
-  --approximate-attention vmoba \
-  --approximate-attention-profile \
-    benchmarks/inference/wan22_ti2v_121x704x1280_vmoba.json \
-  --reference-latents benchmarks/results/wan22-dense/final-latents.pt \
-  --reference-video benchmarks/results/wan22-dense/output.mp4 \
-  --fail-on-fallback
-
-# WorldFoundry vs FastVideo
-WAN22_AB_WF_APPROXIMATE_ATTENTION=vmoba \
-WAN22_AB_WF_APPROXIMATE_ATTENTION_PROFILE=benchmarks/inference/wan22_ti2v_121x704x1280_vmoba.json \
-WAN22_AB_REFERENCE_FRAMEWORK=fastvideo \
-  bash benchmarks/inference/run_framework_ab_wan22.sh
-
-# WorldFoundry vs LightX2V
-WAN22_AB_WF_APPROXIMATE_ATTENTION=vmoba \
-WAN22_AB_WF_APPROXIMATE_ATTENTION_PROFILE=benchmarks/inference/wan22_ti2v_121x704x1280_vmoba.json \
-WAN22_AB_REFERENCE_FRAMEWORK=lightx2v \
-WAN22_AB_LX_PYTHON=/envs/lightx2v/bin/python \
-WAN22_AB_OUTPUT_DIR=benchmarks/results/wan22-lightx2v \
-  bash benchmarks/inference/run_framework_ab_wan22.sh
+python -m worldfoundry.studio.workspace_job infer \
+  --model-id wan2.2-ti2v-5b \
+  --load-json '{
+    "offload_mode": "resident",
+    "attention_backend": "flash3",
+    "fuse_qkv": true,
+    "static_cross_kv": true
+  }' \
+  --output-dir tmp/worldfoundry_infer/wan2.2-ti2v-5b
 ```
 
-Do not reuse that profile for another frame count or resolution. Derive the
-actual Wan patch grid first and choose temporal, spatial, and 3D chunk dimensions
-that divide it; incompatible VMoBA geometry fails closed before it can be counted
-as acceleration.
+  </Tab>
+</Tabs>
 
-The launcher enforces a paired performance gate (default median speedup ≥1.0 and bootstrap 95% CI lower bound ≥0.97) and returns non-zero when it fails. Every video must pass shape/frame checks and a complete FFmpeg decode. Cross-framework PSNR/SSIM/LPIPS is opt-in diagnostic data, not a default quality-preservation gate: independent implementations do not guarantee the same seed-to-latent trajectory. Quality acceleration is certified against each framework's own frozen baseline, then with absolute benchmark metrics and human review.
+<KvCatalog heading="Studio and multi-GPU" rows={[
+  { name: "Workspace UI", hintLabel: "Studio", hint: "checkboxes + dropdown", description: "Compile, CPU offload, fused QKV, static cross-KV, fused RoPE, and attention. Nested objects stay in --load-json." },
+  { name: "Multi-GPU", hintLabel: "How", hint: "torchrun + sp_degree", description: "Sequence / CFG / VAE parallel require CUDA and a matching world size." }
+]} />
 
-Framework A/B v4 now has code-level runtime-authenticity gates for both reference attention lanes. FastVideo uses worker `collective_rpc` records to require one consistent accelerated backend and implementation class across T2V self/cross attention, one successful forward hook per role, and a direct call to the concrete FA4 → FA3 → FA2 entry point selected by the upstream default/varlen resolvers; wrappers and hooks must then be restored or removed. An outer `FlashAttentionImpl.forward` call without a concrete kernel call fails. LightX2V binds the requested mode to concrete attention classes and callable kernel symbols, then requires one successful self/cross `apply` call and method restoration. Missing or mixed identities, absent symbols, zero calls, substituted/non-accelerated backends, issues, or fallbacks fail closed.
-
-Those gates and their CPU mocks are complete; formal v4 GPU certification is not. The current shared/default-mode host cannot produce a certifying record, so fresh `Exclusive_Process` runs are still required. The gates prove only the requested reference attention path, not every upstream cache, sparse, quantization, or parallel technique. Existing cross-framework timings therefore remain diagnostics and do not establish complete technique parity or SOTA.
-
-## Audit what ran
+## Confirm what actually ran
 
 ```python
 dit = pipe.native_pipeline.components.denoiser.runtime_optimization_report()
 vae = pipe.native_pipeline.components.decoder.runtime_optimization_report()
-print(dit["requested"], dit["effective"], dit["fallbacks"], dit["runtime"])
-print(vae)
+print(dit["requested"], dit["effective"], dit["fallbacks"])
+print(vae["requested"], vae["effective"], vae["fallbacks"])
 ```
 
-Inspect quantization after a forward. `*-wrapper-installed (runtime-pending)` proves only weight conversion. An actual provider and `low_precision_kernel_calls > 0` prove kernel execution. Calibrated BF16 dispatch is separately counted by `dense_policy_calls`; packed dequantize+dense and true error/eligibility fallbacks remain visible and cannot be counted as acceleration.
+<KvCatalog heading="After one forward" rows={[
+  { name: "Attention", hint: "attempts == successes > 0", description: "Target provider fallbacks empty. Under torch.compile, also compiled_graph_traces > 0 and compile calls > 0." },
+  { name: "QKV / RoPE / static-KV", hint: "fused or wrapped blocks", description: "Block counts plus a real call in this request. Static-KV needs hits and bypasses=0." },
+  { name: "CUDA Graph", hint: "replay > 0", description: "This request must replay, with eager = capture_failed = 0." },
+  { name: "VAE tiles / chunks", hint: "last window > 1", description: "Lifetime totals do not count." },
+  { name: "Quantization", hint: "low_precision_kernel_calls > 0", description: "Calibrated BF16 (dense_policy_calls) is honest and is not a full low-precision run." }
+]} />
 
-Attention proof is also forward-dependent. Eager execution requires target-provider `attempts == successes > 0`; `torch.compile` requires `compiled_graph_traces > 0` plus `runtime.compile.calls > 0` because host call counters do not execute on every compiled replay. Both paths still require provider fallback, error, and quarantine counters to remain zero.
+## Next steps
 
-The release gate is stricter than those basic diagnostics:
-
-- Fused QKV requires `runtime.qkv_fusion.fused_blocks > 0`. Eager execution needs `eager_projection_calls > 0`; compiled execution needs `compiled_graph_traces > 0` plus `runtime.compile.wrapper_installed=true`, `calls > 0`, `failures=0`, and `last_error=null`.
-- Fused RoPE requires `runtime.fused_rope.installed_blocks > 0`, with `torch_fallback_calls`, `provider_failures`, `quarantined_skips`, and `malformed_receipts` all zero. Eager execution needs `provider_calls == eager_calls > 0` and exactly `provider_paths=["triton_hidden_qk_rmsnorm_rope_3d"]`; entering the public fused operator but falling back to Torch does not pass. Compiled execution instead needs `compiled_graph_traces > 0` together with the executed, failure-free compile-wrapper receipt above.
-- Static cross-KV requires `wrapped_blocks > 0`, `effective=kv-reuse`, positive request-window `hits`, `misses`, and `condition_hits`, plus `bypasses=0` and `bypass_kwargs=[]`.
-- STA/VSA requires `runtime_effective=true`, `kernel_attempts == sparse_calls > 0`, zero kernel/dense fallback, and an exact-whitelisted matching `fastvideo_kernel` provider symbol. Sparse-plan `scheduled_dense_calls` are allowed only when finalized request/branch/step/layer receipts cover the complete workload. VMoBA additionally requires requested `kind=vmoba`, provider path `fastvideo_kernel.moba_attn_varlen`, the exact workload grid and wrapped-block count, unique events for every branch/step/layer, route/profile agreement, and exact event/counter totals. Its three provider symbols and every shape/device/dtype boundary fail closed.
-- The twelve pinned LightX2V sparse kinds require the canonical provider symbol selected by their normalized operator, the exact `provider_family`, checkout commit `6fb7c1362b89d4908a9ea197bac4fbd7482ee2d5`, a clean source tree, the deterministic source fingerprint, and one strict flattened event emitted by every real provider call. DraftAttention's first-layer warmup and RainFusion's provider-scheduled dense phase count as `provider_dense`; they are neither sparse calls nor fallbacks, and both remain in the same complete event ledger. SVG2 additionally requires device/backend wrapper and 128 MiB `uint8` workspace reuse, a new FlashInfer plan for every dynamic mask, and request-local K-means centroids. The obsolete nested `provider_receipt` schema is rejected. Event totals are recomputed instead of trusting reported counters. Compatibility aliases such as `sla` or `sagesla` remain excluded because they are ambiguous. The upstream `sage_attn2_k_int8_v_fp8` registry entry is explicitly fail-closed in Wan A/B because it expects `(k_int8, k_scale)` and `(v_fp8, v_scale)` inputs, while the pinned Wan generator supplies floating K/V and has no audited per-layer quantize/cache/invalidation lifecycle.
-- SLA top-k profiles are also rejected before CUDA launch when pinned LightX2V's integer truncation would select zero key blocks. Launching its provider with that empty LUT can produce finite but invalid output on short sequences, so such a sample cannot count as sparse execution evidence.
-- FastVideo learned SLA requires the exact `fastvideo_sla` or `fastvideo_sagesla` kind, canonical provider class/family from clean commit `1b2b2a0161bc6b3b80158d1fa6380a051c6530c7`, one audited checkpoint layout, complete self-attention layer coverage, FP32 `proj_l`, matching per-layer/global projection fingerprints, unique global/per-layer call indices, exact timestep/top-k/feature-map values, and complete branch/step/layer events. Missing learned weights, a test-injected/dirty provider, mixed layout, source or projection mutation, dense substitution, or a summary inconsistent with its events fails closed.
-- Async block offload requires `runtime.offload.effective=true`, positive request-window async-copy and forward counters, zero synchronous-copy counters, zero pageable CPU sources, and `peak_active_layers <= 2`. Hook installation alone remains runtime-pending and cannot certify overlap.
-- CUDA Graph counters are request-window deltas. The current request needs `(capture > 0 or graphs > 0)`, `replay > 0`, and `eager = capture_failed = 0`; an existing graph may therefore certify a later request only when that request actually replays it.
-- Spatial VAE decode needs `last_spatial_tile_count > 1`, a tiled call, and `single_spatial_tile_calls=0`. Temporal streaming needs `last_temporal_chunk_count > 1`, a chunked call, and `single_temporal_chunk_calls=0`. Lifetime totals cannot satisfy either gate.
-- Quantization needs `low_precision_kernel_calls > 0`, while `packed_weight_calls`, `dense_policy_calls`, and `dense_fallback_calls` are all zero and `fallback_reasons` is empty. A calibrated dense call is honest telemetry, but it is not a fully low-precision certified candidate.
-
-Before publishing, fix checkpoint/prompt/seed/shape/steps/CFG/encoding/GPU; run repeated same-card, globally sequential, balanced AB/BA samples; gate exact paths on latent error and approximate paths against their own baseline plus absolute quality and human review. Never count pending, configuration-only, dense-fallback, single-tile, contaminated, legacy-schema, or escape-hatch samples as proof of acceleration, and do not extrapolate SOTA from one H100 sample.
+<Cards>
+  <Card title="Run inference" description="Environment, CLI, and Workspace commands." href="/docs/guides/inference" />
+  <Card title="Models" description="Pick a model ID and its default profile." href="/docs/guides/supported-models" />
+  <Card title="Studio" description="Workspace checkboxes and load JSON." href="/docs/guides/studio" />
+</Cards>

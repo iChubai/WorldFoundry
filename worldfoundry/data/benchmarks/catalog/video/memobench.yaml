@@ -165,6 +165,15 @@ metrics:
   output_unit: score
   primary: true
 runner:
+  normalization:
+    artifact_official_run: true
+    pass_generated_artifact_dir: true
+  official_script: worldfoundry/evaluation/tasks/execution/runners/memobench/run_memobench_official_runner.py
+  workspace:
+    module: worldfoundry.evaluation.tasks.execution.runners.memobench.run_memobench_official_runner
+    supports_official_runtime: true
+    accepts_generated_artifacts: true
+    supports_fixture: true
   runner_target: worldfoundry.evaluation.tasks.contracts.external:MemoBenchContract
   official_runner_script: worldfoundry/evaluation/tasks/execution/runners/memobench/run_memobench_official_runner.py
   validation_command:
@@ -218,6 +227,7 @@ runner:
   - WORLDFOUNDRY_MEMOBENCH_LEADERBOARD_PATH
 integration:
   status: integrated
+  tier: in_tree
   evidence:
     framework_validation: worldfoundry-eval zoo benchmark-run --benchmark-id memobench --mode official-validation --official-results-path <official_results.csv> --generated-artifact-dir <generated_frames> --output-dir <out> --json
     runtime_surface: memobench_official_in_tree

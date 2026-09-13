@@ -90,7 +90,6 @@ export const docsNavPageLabels: Record<Locale, DocsNavPageLabels> = {
     'reference/cli': 'CLI',
     'guides/studio': 'Studio',
     evaluation: 'Overview',
-    'evaluation/model-benchmark-recipes': 'Model → benchmark',
     'evaluation/benchmark-hub': 'Benchmark Hub',
     'evaluation/benchmark-hub/runtime-environments': 'Runtime environments',
     'evaluation/metrics': 'Metrics',
@@ -132,7 +131,6 @@ export const docsNavPageLabels: Record<Locale, DocsNavPageLabels> = {
     'reference/cli': 'CLI',
     'guides/studio': 'Studio',
     evaluation: '概览',
-    'evaluation/model-benchmark-recipes': '模型 → 评测',
     'evaluation/benchmark-hub': 'Benchmark Hub',
     'evaluation/benchmark-hub/runtime-environments': '运行环境矩阵',
     'evaluation/metrics': '指标',
@@ -184,7 +182,6 @@ export const docsNavGroups = [
     id: 'evaluation',
     slugs: [
       ['evaluation'],
-      ['evaluation', 'model-benchmark-recipes'],
       ['evaluation', 'benchmark-hub'],
       ['evaluation', 'benchmark-hub', 'runtime-environments'],
       ['evaluation', 'metrics'],

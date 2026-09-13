@@ -32,7 +32,7 @@ from worldfoundry.evaluation.tasks.execution.orchestration.benchmark_runner impo
     SCORECARD_SCHEMA_VERSION,
     run_benchmark_execution,
 )
-from worldfoundry.evaluation.tasks.execution.orchestration.run_mode import normalize_benchmark_run_mode
+from worldfoundry.evaluation.tasks.execution.orchestration.interfaces import normalize_benchmark_run_mode
 from worldfoundry.evaluation.utils import (
     BENCHMARK_TASK_ROOT,
     build_run_fingerprint,

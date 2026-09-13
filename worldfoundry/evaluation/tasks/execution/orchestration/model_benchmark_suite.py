@@ -579,7 +579,7 @@ def _benchmark_unavailable_reason(entry: BenchmarkZooEntry, *, mode: str) -> str
             # built-in model -> generated-artifact -> benchmark runs.  Keep
             # result importers usable in normalizer mode without advertising
             # them as raw-artifact evaluators in a matrix plan.
-            from ..runners.workspace_registry import workspace_benchmark_runtime_hint
+            from worldfoundry.evaluation.tasks.catalog.workspace_registry import workspace_benchmark_runtime_hint
 
             runtime_hint = workspace_benchmark_runtime_hint(entry.benchmark_id)
             if runtime_hint:

@@ -1,1 +1,0 @@
-"""PAWBench official evaluator integration."""

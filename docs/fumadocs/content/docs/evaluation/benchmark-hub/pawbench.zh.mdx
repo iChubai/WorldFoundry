@@ -44,4 +44,31 @@ worldfoundry-eval zoo benchmark-run \
 
 产物包括 `scorecard.json`、`raw_metric_table.jsonl`、`per_sample_scores.jsonl`、`benchmark_contract.json`。仓内样本只是归一化 fixture。
 
+## Rollout、裁判与 `metrics.json`
+
+流程：benchmark 包 → 你的视频生成器 → rollout 目录 → PAWEval → `metrics.json`。生成器与裁判是不同模型。官方 runner 不加载视频模型，只打磁盘上已有的视频。额外 pip：`worldfoundry/data/benchmarks/requirements/pawbench.txt`。
+
+HF 下载包含场景表、源图、生成 prompt 与打分策略（100 条可审阅 rubric：每个场景一条结果 rubric + 一条可信度 rubric）。把完整 50 × 50 网格写成：
+
+```text
+my-model-rollouts/
+  <scene-id>/
+    r000.mp4
+    …
+    r049.mp4
+```
+
+官方 PAWEval 用 OpenRouter 上的 **Gemini 3.5 Flash**（`OPENROUTER_API_KEY`）。这条路径不需要 `OPENAI_API_KEY`。其他 OpenAI 兼容裁判（`--vlm-base-url`、`--vlm-model`、`--vlm-api-key-env`）只供分析，不能和官方表直接比。
+
+`--model-name` 是写进结果文件的标签，不加载权重。同一 benchmark、模型名、视频和裁判配置再跑会接着已完成的 rollout 判断。
+
+PAWEval 在运行目录写下 `run.json`、`checkpoint.jsonl`、`rows.jsonl`、`metrics.json`。完整运行是 `status: "ok"` 且没有 blocker。两条赛道均值分开：
+
+- 校准 TVD：`tracks.calibration.models.<model>.track_average`（越低越好）。
+- 覆盖：`tracks.coverage.models.<model>.track_average`（越高越好）。
+
+`status` 为 `"blocked"` 时，先修列出的缺视频 / 裁判 / 基础设施错误再报分。可信度 rubric 记录动作、连续性、过程失败，不改终点标签。
+
+单条 rollout 只是读出，不是模型分。例如 50 次抛硬币的正反面频率，用 TVD 对照场景参考分布。
+
 [← 返回 Benchmark Hub](/zh/docs/evaluation/benchmark-hub)

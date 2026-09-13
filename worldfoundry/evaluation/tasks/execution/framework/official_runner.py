@@ -487,11 +487,11 @@ def merge_metric_id_score_rows(
 
 
 def apply_component_aggregates(benchmark_id: str, extracted: dict[str, dict[str, Any]]) -> None:
-    from worldfoundry.evaluation.tasks.execution.framework.video_quality_registry import (
-        get_video_quality_benchmark_config,
+    from worldfoundry.evaluation.tasks.execution.framework.video_quality_specs import (
+        video_quality_spec,
     )
 
-    components = get_video_quality_benchmark_config(benchmark_id).get("aggregate_components", {})
+    components = video_quality_spec(benchmark_id).get("aggregate_components", {})
     if not components:
         return
     available = {
@@ -561,12 +561,12 @@ def build_runner_config_from_contract(
     sample_filename: str | None = None,
 ) -> BenchRunnerConfig:
     from worldfoundry.evaluation.tasks.contracts.external import get_external_benchmark_contract
-    from worldfoundry.evaluation.tasks.execution.framework.video_quality_registry import (
-        get_video_quality_benchmark_config,
+    from worldfoundry.evaluation.tasks.execution.framework.video_quality_specs import (
+        video_quality_spec,
     )
 
     contract = get_external_benchmark_contract(benchmark_id)
-    config = get_video_quality_benchmark_config(benchmark_id)
+    config = video_quality_spec(benchmark_id)
     components = config.get("aggregate_components", {})
     metric_order: list[str] = []
     seen: set[str] = set()

@@ -25,6 +25,9 @@ official_sources:
   paper_url: https://arxiv.org/abs/2310.07899
   license: mit
 runner:
+  normalization:
+    dispatch: embodied
+    embodied_track: vla
   runner_target: worldfoundry.evaluation.tasks.contracts.external:LIBEROMemContract
   expected_artifacts:
   - scorecard.json

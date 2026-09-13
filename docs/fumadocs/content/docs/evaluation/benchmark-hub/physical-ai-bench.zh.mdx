@@ -46,4 +46,23 @@ ${WORLDFOUNDRY_UNIFIED_PYTHON} \
 
 `--metrics` 可限定开发用指标族。生成赛道 VQA 需要预测 manifest 或已配置的 Qwen 兼容 judge（`--judge-backend`、`--judge-model`、`--judge-base-url`）。产物包括 `scorecard.json` 与 `official_results.json`。
 
+## 仓内赛道与 sidecar
+
+这是只做推理的集成，不会 clone / import 上游仓库或其 `third_party`。prompt、评测设置与出处在 `worldfoundry/data/benchmarks/assets/physical-ai-bench`（故意没有 `SOURCE.json`）。
+
+- **Generation** 复用仓内 VBench / VBench++ I2V runtime。示例指标：`aesthetic_quality`、`background_consistency`、`imaging_quality`、`motion_smoothness`、`overall_consistency`、`subject_consistency`。二值物理 VQA 接受预测 manifest **或** Qwen 视频裁判。
+- **Conditional-generation** 在本地实现已发表的 CPU 迁移指标，并复用共享的 DOVER、LPIPS、Video-Depth-Anything、GroundingDINO、SAM2。预计算 sidecar：`--pred-depth-dir`（`.npy`）、`--pred-segmentation-dir`（JSON）。官方数据集 pickle 只有显式 `--allow-trusted-pickle` 才会加载；分割更推荐 JSON sidecar。
+
+标准环境：`worldfoundry-unified-cu128`。结果归一化以及 CPU 上的 Canny / 模糊 / 深度 / 分割不需要第二套环境。走模型的指标需要对应的 WorldFoundry checkpoint。
+
+PAI-Bench-G 的 Qwen2.5-VL-72B 二值 VQA 裁判通常要单独的多卡服务。塞不进 unified 进程时，起一个 vLLM OpenAI 兼容服务并传：
+
+```bash
+--judge-backend openai-compatible \
+--judge-model Qwen/Qwen2.5-VL-72B-Instruct \
+--judge-base-url http://localhost:8000/v1
+```
+
+那套环境只跑可选模型服务。评测代码与聚合仍在 unified WorldFoundry 进程里。
+
 [← 返回 Benchmark Hub](/zh/docs/evaluation/benchmark-hub)

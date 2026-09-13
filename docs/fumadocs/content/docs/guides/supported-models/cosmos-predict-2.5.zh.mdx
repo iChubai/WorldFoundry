@@ -26,8 +26,10 @@ WorldFoundry 已验证的配方是 **2B 文生世界**：**1280×704、93 帧、
 
 pipeline 在 `worldfoundry-unified-cu128` 里直接调用原生配方。启动 `worldfoundry-eval run cosmos-predict-2.5-2b --pipeline.task-profile text-to-world-validation`。按 NVIDIA 访问规则就位 `nvidia/Cosmos-Predict2.5-2B`（测 14B 线再就位 14B）。张量结构对齐不等于 GPU 输出一致性——14B 仍为 pending。
 
+仓内网络是仅推理的 PyTorch `MinimalV1LVGDiT`，复用 WorldFoundry 的 attention / timestep 原语。NVIDIA EMA 转换和 `Denoiser` 适配器在 `worldfoundry/base_models/diffusion_model/models/denoisers/cosmos2p5.py`，不在 network 包里。架构对照：`nvidia-cosmos/cosmos-predict2.5` 的 `a2c298b0a3df3778b973fe65e9e58877b292d8a7`。
+
 ## 最小评测
 
-2B 文生世界路径已验证。导入 [WorldModelBench](/zh/docs/evaluation/benchmark-hub/worldmodelbench) 官方形态结果，读 `world_model_average`。`official-run` 需要 `WORLDFOUNDRY_WORLDMODELBENCH_JUDGE`；完整 judge 未验证。完整单元格：[模型 → 评测配方](/zh/docs/evaluation/model-benchmark-recipes)。
+2B 文生世界路径已验证。导入 [WorldModelBench](/zh/docs/evaluation/benchmark-hub/worldmodelbench) 官方形态结果，读 `world_model_average`。`official-run` 需要 `WORLDFOUNDRY_WORLDMODELBENCH_JUDGE`；完整 judge 未验证。
 
 <ModelRelatedRecipes modelId="cosmos-predict-2.5" locale="zh" />

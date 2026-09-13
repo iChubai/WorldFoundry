@@ -27,4 +27,6 @@ WorldFoundry **原生运行**——共享加载器、联合模态 runner、Karra
 
 `Cosmos3Pipeline` 需要**独立**环境 `worldfoundry-cosmos3-cu128`（Python 3.11，CUDA 12.8，**torch==2.10.0**）。它**不走** Predict / Transfer 用的统一 cu128 profile。基础选择路由到 Nano。当前版本证据要求确切 SHA——Nano `411f42a8fdfb8c5b2583cb8786e0938f49796eaa`，Super `e0262be9d8f7586bc24c069a2aed2b665bdff266`。`prepare_model_infer.sh` 会输出结构化 checkpoint 报告与固定 snapshot model-ref，避免把旧的本地目录默认为当前版本。
 
+原生 transformer 的参数布局对齐官方 `nvidia/Cosmos3-Nano` 与 `nvidia/Cosmos3-Super`。实现来自 NVIDIA Cosmos3 Diffusers 贡献的 `aefdf852c16237039785d84ab3327167cb0ec07f`。加载、attention 分发、调度、模态打包和执行由 WorldFoundry 持有；Diffusers 不是运行时后端。
+
 <ModelRelatedRecipes modelId="cosmos3" locale="zh" />

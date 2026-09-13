@@ -36,6 +36,9 @@ dataset:
   reason: Meta-World evaluates continuous-control manipulation policies in simulator; result JSON/CSV files are 
     normalized by WorldFoundry.
 runner:
+  normalization:
+    dispatch: embodied
+    embodied_track: vla
   runner_target: worldfoundry.evaluation.tasks.contracts.external:MetaWorldContract
   verification_status: normalizer_only
   validation_command:

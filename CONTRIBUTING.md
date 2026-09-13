@@ -7,6 +7,12 @@ commands over private scripts.
 The detailed maintainer guide lives in
 [`docs/fumadocs/content/docs/maintainers/contributing.mdx`](docs/fumadocs/content/docs/maintainers/contributing.mdx).
 
+Model demo videos are served from GitHub CDN; docs development does not need `git lfs pull`.
+
+```bash
+GIT_LFS_SKIP_SMUDGE=1 git clone https://github.com/OpenEnvision/WorldFoundry.git
+```
+
 ## Before Opening A Pull Request
 
 - Keep the change scoped to one pipeline, benchmark path, CLI surface, or docs area.
@@ -58,7 +64,9 @@ The detailed maintainer guide lives in
 
 - training launchers, dataset builders, finetune scripts, or benchmark-only tooling
 - demo media, generated outputs, checkpoints, or downloaded datasets
-- notebooks, README files, or other documentation inside the synthesis tree
+- notebooks, README files, or other documentation inside the synthesis tree.
+  The only `README.md` allowed in this repository is the root file; put
+  operational notes in fumadocs instead.
 
 Keep local demo assets in `testcase/` and reference them through explicit input paths; they are not part of the public source distribution.
 

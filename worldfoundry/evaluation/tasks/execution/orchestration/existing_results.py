@@ -16,7 +16,6 @@ from __future__ import annotations
 import json
 from collections.abc import Iterable
 from dataclasses import asdict, dataclass
-from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Callable, Mapping, Sequence
 from uuid import uuid4
@@ -39,14 +38,21 @@ from worldfoundry.evaluation.reporting.scorecard import write_scorecard
 from worldfoundry.evaluation.utils import (
     build_run_fingerprint,
     build_version_context,
-    jsonable,
     read_json_or_jsonl,
-    reset_jsonl,
     write_json,
     write_jsonl,
 )
 
 from .cache import generation_cache_hit_metadata
+from .run_session import (
+    artifact_report_paths as _artifact_paths,
+    coerce_mapping as _coerce_mapping,
+    coerce_optional_mapping as _coerce_optional_mapping,
+    prepare_run_output_dir,
+    reset_session_jsonl,
+    session_paths,
+    utcnow_iso as _utcnow_iso,
+)
 
 # ---------------------------------------------------------------------------
 # Types and request DTOs
@@ -105,26 +111,6 @@ class ExistingResultsRunner:
 # ---------------------------------------------------------------------------
 # Coercion and alignment helpers
 # ---------------------------------------------------------------------------
-
-
-def _utcnow_iso() -> str:
-    """Return UTC ISO8601 timestamp with ``Z`` suffix."""
-    return datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z")
-
-
-def _coerce_mapping(value: Any) -> JsonRow:
-    """Transforms abstract variables into strict dictionaries suitable for JSON serialization."""
-    json_value = jsonable(value)
-    if isinstance(json_value, Mapping):
-        return dict(json_value)
-    return {"value": json_value}
-
-
-def _coerce_optional_mapping(value: Mapping[str, Any] | Any | None, default: Mapping[str, Any]) -> JsonRow:
-    """Safely coerces mapping inputs, applying a fallback dictionary if the input is None."""
-    if value is None:
-        return dict(default)
-    return _coerce_mapping(value)
 
 
 def _sample_id_from(value: Any) -> str | None:
@@ -548,27 +534,6 @@ def _artifact_rows(results: Sequence[GenerationResult]) -> list[JsonRow]:
     return rows
 
 
-def _artifact_paths(output_dir: Path, artifact_count: int) -> dict[str, str]:
-    """Defines and resolves standard file paths for all scorecard and manifest outputs of this run."""
-    paths = {
-        "run_manifest": output_dir / "run_manifest.json",
-        "environment": output_dir / "environment.json",
-        "env_requirements": output_dir / "env_requirements.json",
-        "execution_plan": output_dir / "execution_plan.json",
-        "requests": output_dir / "requests.jsonl",
-        "results": output_dir / "results.jsonl",
-        "sample_ledger": output_dir / "sample_ledger.jsonl",
-        "per_sample_metrics": output_dir / "metrics" / "per_sample.jsonl",
-        "summary": output_dir / "metrics" / "summary.json",
-        "run_summary": output_dir / "summary.json",
-        "report": output_dir / "report.md",
-        "scorecard": output_dir / "scorecard.json",
-    }
-    if artifact_count:
-        paths["artifacts"] = output_dir / "artifacts.jsonl"
-    return {name: str(path.resolve()) for name, path in paths.items()}
-
-
 def _coerce_request(
     request: ExistingResultsRunRequest | Mapping[str, Any] | None,
     kwargs: Mapping[str, Any],
@@ -599,34 +564,15 @@ def run_existing_results(
 ) -> ExistingResultsRunResult:
     """Orchestrate offline metric evaluation over aligned request/result pairs."""
     run_request = _coerce_request(request, kwargs)
-    output_dir = Path(run_request.output_dir).resolve()
-    metrics_dir = output_dir / "metrics"
-    output_dir.mkdir(parents=True, exist_ok=True)
-    metrics_dir.mkdir(parents=True, exist_ok=True)
+    output_dir = prepare_run_output_dir(run_request.output_dir)
 
     run_id = run_request.run_id or f"existing-results-{uuid4().hex[:12]}"
     started_at = _utcnow_iso()
     requests = _normalize_requests(run_request.requests)
     results = _align_results(requests, run_request.results)
     artifact_rows = _artifact_rows(results)
-
-    paths = {
-        "manifest": output_dir / "run_manifest.json",
-        "environment": output_dir / "environment.json",
-        "env_requirements": output_dir / "env_requirements.json",
-        "execution_plan": output_dir / "execution_plan.json",
-        "requests": output_dir / "requests.jsonl",
-        "results": output_dir / "results.jsonl",
-        "artifacts": output_dir / "artifacts.jsonl",
-        "sample_ledger": output_dir / "sample_ledger.jsonl",
-        "per_sample": metrics_dir / "per_sample.jsonl",
-        "summary": metrics_dir / "summary.json",
-        "run_summary": output_dir / "summary.json",
-        "report": output_dir / "report.md",
-        "scorecard": output_dir / "scorecard.json",
-    }
-    for key in ("requests", "results", "artifacts", "sample_ledger", "per_sample"):
-        reset_jsonl(paths[key])
+    paths = session_paths(output_dir)
+    reset_session_jsonl(paths)
 
     benchmark = _coerce_optional_mapping(
         run_request.benchmark,

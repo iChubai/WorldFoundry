@@ -36,4 +36,33 @@ In-tree pointers: `worldfoundry/data/benchmarks/tasks/external/worldbench.yaml`,
 
 Outputs include `scorecard.json` (primary `foreground_miou`) and `worldbench_evaluation.json`.
 
+## Dataset, videos, and frame alignment
+
+The in-tree runtime does **not** import an upstream checkout. SAM2 comes from `worldfoundry.base_models.perception_core.segment.sam2`. Dataset root must be the public HF layout:
+
+```text
+<dataset>/
+  scenes/<group>/<scenario>/<scene>/
+    rgba_00000.png
+    segmentation_00000.png
+    …
+  textual_questions/*.json
+```
+
+Generated continuations can mirror scene ids:
+
+```text
+<generated>/<group>/<scenario>/<scene>.mp4
+<generated>/<group>/<scenario>/<scene>/output.mp4
+<generated>/<group>/<scenario>/<scene>/00000.png
+```
+
+Any other video layout needs `--video-manifest` (JSON / JSONL / CSV / TSV) with `sample_id` and `video_path`. Text predictions use `--answer-manifest`. Stable `question_id` is `<question-file-stem>:<row>`; or include both `video_name` and `question` because some videos have two questions.
+
+The bench uses **nine conditioning frames**. By default, generated frame 0 aligns to GT frame 9 and **24 continuation frames** are scored. If the model prepends those nine frames, pass `--generated-skip-frames 9`. Defaults live in `worldfoundry/data/benchmarks/assets/worldbench/evaluator.yaml`.
+
+Raw video scoring defaults to `facebook/sam2.1-hiera-large`. Set `WORLDFOUNDRY_WORLDBENCH_SAM2_CKPT` to a local file, otherwise the HF cache resolver is used. Import-only path: `--official-results-path` without `--run-official`.
+
+Use `worldfoundry-unified-cu128`. A successful in-tree run is integration evidence, not `leaderboard_valid`, until full-dataset numerical parity is audited. The inspected upstream pin `WorldBenchmark/worldbench_eval@4575a164…` has no license file and a broken public evaluator; WorldFoundry keeps provenance in the catalog YAML, not a `SOURCE.json`.
+
 [← Benchmark Hub](/docs/evaluation/benchmark-hub)

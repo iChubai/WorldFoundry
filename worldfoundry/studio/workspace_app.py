@@ -30,7 +30,7 @@ from worldfoundry.core.inference import (
     InferenceVariantSpec,
 )
 from worldfoundry.core.io.paths import project_root
-from worldfoundry.evaluation.tasks.execution.runners.workspace_registry import (
+from worldfoundry.evaluation.tasks.catalog.workspace_registry import (
     run_workspace_benchmark,
     validate_workspace_registry,
     workspace_benchmark_has_input,

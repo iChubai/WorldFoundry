@@ -85,6 +85,18 @@ metrics:
   output_unit: score
   primary: true
 runner:
+  scoring:
+    engines: [in_tree]
+    hooks:
+      in_tree: worldfoundry.evaluation.tasks.execution.runners.phyeduvideo.phyeduvideo_in_tree_evaluator:IN_TREE_CONFIG
+  normalization:
+    artifact_official_run: true
+    pass_generated_artifact_dir: true
+  official_script: worldfoundry/evaluation/tasks/execution/runners/phyeduvideo/run_phyeduvideo_official_runner.py
+  workspace:
+    module: worldfoundry.evaluation.tasks.execution.runners.phyeduvideo.run_phyeduvideo_official_runner
+    generated_arg: null
+    limit_arg: --limit
   runner_target: worldfoundry.evaluation.tasks.contracts.external:PhyEduVideoContract
   official_runner_script: worldfoundry/evaluation/tasks/execution/runners/phyeduvideo/run_phyeduvideo_official_runner.py
   validation_command:
@@ -134,6 +146,7 @@ runner:
   - WORLDFOUNDRY_PHYEDUVIDEO_STRICT
 integration:
   status: integrated
+  tier: in_tree
   evidence:
     framework_validation: worldfoundry-eval zoo benchmark-run --benchmark-id phyeduvideo --mode official-validation --official-results-path <results_summary.csv> --generated-artifact-dir <generated_videos> --output-dir <out> --json
     normalizer_surface: in_tree_result_importer

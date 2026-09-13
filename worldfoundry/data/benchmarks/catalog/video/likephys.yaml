@@ -96,6 +96,21 @@ metrics:
   aggregator: mean
   output_unit: rate
 runner:
+  scoring:
+    engines: [physics_contract]
+    hooks:
+      physics_contract: worldfoundry.evaluation.tasks.execution.runners.likephys.likephys_contract_evaluator:write_likephys_evaluation
+  official_script: worldfoundry/evaluation/tasks/execution/runners/likephys/run_likephys_official_runner.py
+  workspace:
+    module: worldfoundry.evaluation.tasks.execution.runners.likephys.run_likephys_official_runner
+    generated_arg: --generated-artifact-dir
+    dataset_root_arg: --benchmark-data-root
+    limit_arg: --limit
+    benchmark_id_arg: --benchmark-id
+    model_arg: --probe-model
+    supports_official_runtime: true
+    default_metrics: [likephys_misrank_rate]
+    input_kind: likephys_results_root_or_probe_dataset
   runner_target: worldfoundry.evaluation.tasks.contracts.external:LikePhysContract
   official_runner_script: worldfoundry/evaluation/tasks/execution/runners/likephys/run_likephys_official_runner.py
   validation_command:
@@ -131,6 +146,8 @@ runner:
   - The --run-official probe drives the upstream evaluator.py from a caller-supplied checkout because it needs the upstream forked diffusers pipelines and schedulers; it requires CUDA and the probed checkpoints.
 integration:
   status: integrated
+  tier: in_tree
+  hf_dataset_id: JianhaoDYDY/LikePhys-Benchmark
   blocked_reasons:
   - The ELBO probe needs an official LikePhys checkout (WORLDFOUNDRY_LIKEPHYS_EVALUATOR_ROOT), CUDA, and the probed diffusion checkpoints; WorldFoundry does not vendor the upstream pipeline/scheduler forks.
   - Imported results_<model>.json artifacts are normalized faithfully but are not official-run evidence.

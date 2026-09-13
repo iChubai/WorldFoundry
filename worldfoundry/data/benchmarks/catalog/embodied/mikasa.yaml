@@ -23,6 +23,9 @@ official_sources:
     url: https://github.com/CognitiveAISystems/MIKASA-Robo
   license: upstream_terms
 runner:
+  normalization:
+    dispatch: embodied
+    embodied_track: vla
   runner_target: worldfoundry.evaluation.tasks.contracts.external:MIKASAContract
   expected_artifacts:
   - scorecard.json

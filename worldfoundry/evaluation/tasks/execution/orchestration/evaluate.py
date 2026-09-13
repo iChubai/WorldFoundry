@@ -20,7 +20,8 @@ from worldfoundry.evaluation.api import (
     align_batch_metric_outputs,
 )
 from worldfoundry.evaluation.tasks.execution.framework.in_tree_evaluator import BenchmarkZooInTreeEvaluator
-from worldfoundry.evaluation.tasks.execution.framework.in_tree_registry import target_benchmark_metrics
+from worldfoundry.evaluation.tasks.catalog.benchmark_id import normalize_benchmark_id
+from worldfoundry.evaluation.tasks.execution.framework.scoring_registry import target_benchmark_metrics
 from worldfoundry.evaluation.tasks.metrics.registry import (
     BuiltinExistingResultsMetric,
     MetricRegistryError,
@@ -927,12 +928,13 @@ def _metric_callable(
     metric_ids, metric_objects = _ensure_single_metric_mode(metrics, required_artifacts)
     if metric_objects:
         return _MetricObjectsCallable(metric_objects)
-    if benchmark_id is not None and benchmark_id in target_benchmark_metrics():
-        target_metrics = target_benchmark_metrics()[benchmark_id]
+    lookup_id = normalize_benchmark_id(benchmark_id)
+    if lookup_id and lookup_id in target_benchmark_metrics():
+        target_metrics = target_benchmark_metrics()[lookup_id]
         if metric_ids and all(metric_id in target_metrics for metric_id in metric_ids):
             # If benchmark ID is known and all requested metrics are in-tree for it, use the specialized evaluator.
             return BenchmarkZooInTreeEvaluator(
-                benchmark_id,
+                lookup_id,
                 metric_ids=metric_ids,
                 required_artifacts=required_artifacts or None,
             )
@@ -942,7 +944,7 @@ def _metric_callable(
     except MetricRegistryError as exc:
         # Fail fast with the metrics this benchmark actually supports instead of
         # silently emitting a scorecard without the requested metric.
-        supported = target_benchmark_metrics().get(benchmark_id or "")
+        supported = target_benchmark_metrics().get(lookup_id)
         if supported:
             raise MetricRegistryError(
                 f"{exc} Benchmark {benchmark_id!r} supports these in-tree metrics: {', '.join(supported)}"
@@ -1223,7 +1225,7 @@ def run_evaluate(
         )
         
         if contract_metrics:
-            # If explicit Metric objects are provided, use the ContractRunner for live metric computation.
+            # Metric objects keep Metric.aggregate; string ids generate then score offline.
             resolved = resolve_once()
             model = _resolved_model_metadata(run_request, resolved)
             delegate = execute_contract_run(

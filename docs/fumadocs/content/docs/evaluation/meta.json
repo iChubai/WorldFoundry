@@ -3,7 +3,6 @@
   "defaultOpen": true,
   "pages": [
     "index",
-    "model-benchmark-recipes",
     "benchmark-hub",
     "metrics",
     "embodied-official-runtime"

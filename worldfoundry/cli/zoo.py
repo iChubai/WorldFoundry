@@ -13,7 +13,7 @@ from worldfoundry.core.io.paths import (
     hfd_root_path,
     resolve_worldfoundry_path,
 )
-from worldfoundry.evaluation.tasks.execution.orchestration.run_mode import BENCHMARK_RUN_PUBLIC_MODES
+from worldfoundry.evaluation.tasks.execution.orchestration.interfaces import BENCHMARK_RUN_PUBLIC_MODES
 from worldfoundry.evaluation.utils import (
     BENCHMARK_ZOO_DIR,
     MODEL_ZOO_DIR,

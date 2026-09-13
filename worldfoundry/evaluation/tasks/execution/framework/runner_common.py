@@ -14,6 +14,7 @@ from typing import Any, Mapping, Sequence
 from worldfoundry.evaluation.reporting.scorecard import SCORECARD_SCHEMA_VERSION
 
 VIDEO_SUFFIXES = frozenset({".mp4", ".mov", ".mkv", ".webm", ".avi"})
+VIDEO_EXTENSIONS = VIDEO_SUFFIXES | {".m4v", ".gif"}
 
 
 def resolve_env_path(name: str) -> Path | None:
@@ -99,6 +100,7 @@ def build_video_coverage(expected_prompt_ids: set[str], generated_dir: Path | No
 
 __all__ = [
     "SCORECARD_SCHEMA_VERSION",
+    "VIDEO_EXTENSIONS",
     "VIDEO_SUFFIXES",
     "build_import_metric_rows",
     "build_video_coverage",

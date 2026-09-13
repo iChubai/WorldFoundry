@@ -3,13 +3,14 @@
 from __future__ import annotations
 
 import csv
-import os
 from pathlib import Path
 from typing import Any
 
 from worldfoundry.core.io.file_utils import materialize_file
 from worldfoundry.evaluation.api import GenerationRequest, GenerationResult
 from worldfoundry.evaluation.tasks.execution.framework.benchmark_assets import (
+    first_existing_dir,
+    resolve_env_path,
     bundled_benchmark_asset,
     bundled_benchmark_assets_root,
 )
@@ -21,20 +22,13 @@ PROMPT_MANIFEST_REL = Path("prompts_questions.csv")
 
 
 
-def _env_path(name: str) -> Path | None:
-    value = os.environ.get(name)
-    return Path(value).expanduser().resolve() if value else None
-
 
 def resolve_physvidbench_root(explicit: Path | None = None) -> Path | None:
-    for candidate in (
+    return first_existing_dir(
         explicit,
-        _env_path("WORLDFOUNDRY_PHYSVIDBENCH_ROOT"),
+        resolve_env_path("WORLDFOUNDRY_PHYSVIDBENCH_ROOT"),
         bundled_benchmark_assets_root(BENCHMARK_ID),
-    ):
-        if candidate is not None and candidate.is_dir():
-            return candidate.expanduser().resolve()
-    return None
+    )
 
 
 def resolve_prompt_manifest_path(
@@ -47,7 +41,7 @@ def resolve_prompt_manifest_path(
         if not path.is_file():
             raise FileNotFoundError(f"PhysVidBench prompt manifest not found: {path}")
         return path
-    env_manifest = _env_path("WORLDFOUNDRY_PHYSVIDBENCH_PROMPT_MANIFEST")
+    env_manifest = resolve_env_path("WORLDFOUNDRY_PHYSVIDBENCH_PROMPT_MANIFEST")
     if env_manifest is not None:
         if not env_manifest.is_file():
             raise FileNotFoundError(f"PhysVidBench prompt manifest not found: {env_manifest}")

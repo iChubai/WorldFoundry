@@ -103,6 +103,13 @@ metrics:
   output_unit: score
   primary: true
 runner:
+  official_script: worldfoundry/evaluation/tasks/execution/runners/camerabench/run_camerabench_official_runner.py
+  workspace:
+    module: worldfoundry.evaluation.tasks.execution.runners.camerabench.run_camerabench_official_runner
+    generated_arg: null
+    dataset_root_arg: --benchmark-data-root
+    supports_run_official: false
+    input_kind: score_dir_or_official_results
   runner_target: worldfoundry.evaluation.tasks.contracts.external:CameraBenchContract
   validation_command:
   - worldfoundry-eval
@@ -166,6 +173,8 @@ runner:
     generation remains an explicit external stage.
 integration:
   status: integrated
+  tier: model_backed
+  hf_dataset_id: linzhiqiu/camerabench
   evidence:
     strict_official_runtime: worldfoundry-eval zoo benchmark-run --benchmark-id camerabench --mode 
       official-validation --official-results-path <official_results.json> --benchmark-data-root <camerabench_data_root> 

@@ -19,6 +19,8 @@ python_path: ${WORLDFOUNDRY_UNIFIED_PYTHON:-python}
 pythonpath_roots:
 - .
 required_assets:
+  pip_requirements:
+  - worldfoundry/data/benchmarks/requirements/mind.txt
   task_yaml: worldfoundry/data/benchmarks/tasks/external/mind.yaml
   hf_dataset_ids:
   - CSU-JPG/MIND
@@ -47,6 +49,8 @@ required_paths:
   path: worldfoundry/evaluation/tasks/execution/runners/mind/runtime/WORLDFOUNDRY_PROVENANCE.md
 - id: fixture
   path: worldfoundry/data/benchmarks/assets/mind/fixtures/mind_result_fixture.json
+- id: pip_requirements
+  path: worldfoundry/data/benchmarks/requirements/mind.txt
 - id: task_yaml
   path: worldfoundry/data/benchmarks/tasks/external/mind.yaml
 requires_cuda_visibility: true

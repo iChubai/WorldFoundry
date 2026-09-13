@@ -5,7 +5,7 @@ description: 用 benchmark、metric 与可复现 scorecard 对生成产物打分
 
 评测把模型输出变成可审查证据：准备输入、生成或导入结果、打分、写出 scorecard。模型启动细节留在 runner；benchmark 消费归一化的 `GenerationResult`。打分与 leaderboard 声明是分开的——framework 导入成功不等于官方榜单跑通。
 
-首次端到端路径见[使用指南](/zh/docs/quickstart)。十条 catalog 里真实存在的生成再打分单元格（不编排名）见[模型 → 评测配方](/zh/docs/evaluation/model-benchmark-recipes)。Flag 与 discovery 命令见 [CLI](/zh/docs/reference/cli)。各 benchmark 布局见 [Benchmark Hub](/zh/docs/evaluation/benchmark-hub)。Metric 配方见[指标](/zh/docs/evaluation/metrics)。
+首次端到端路径见[使用指南](/zh/docs/quickstart)。Flag 与 discovery 命令见 [CLI](/zh/docs/reference/cli)。各 benchmark 布局见 [Benchmark Hub](/zh/docs/evaluation/benchmark-hub)。Metric 配方见[指标](/zh/docs/evaluation/metrics)。
 
 ## 该跑什么
 
@@ -164,7 +164,6 @@ Framework 导入证据用 `official-validation`；数据集、checkpoint、环�
 
 ## 下一步
 
-- [模型 → 评测配方](/zh/docs/evaluation/model-benchmark-recipes) — 十条 catalog 推理/评测单元格
 - [Benchmark Hub](/zh/docs/evaluation/benchmark-hub) — 各 benchmark 准备与运行说明
 - [指标](/zh/docs/evaluation/metrics) — 仓内 scorer 与 compute API
 - [支持的模型](/zh/docs/guides/supported-models) — catalog 状态

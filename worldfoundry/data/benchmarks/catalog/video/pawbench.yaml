@@ -72,6 +72,20 @@ metrics:
   output_unit: percent
   normalizer: percent:0:100
 runner:
+  normalization:
+    artifact_official_run: true
+    pass_generated_artifact_dir: true
+  official_script: worldfoundry/evaluation/tasks/execution/runners/pawbench/run_pawbench_official_runner.py
+  workspace:
+    module: worldfoundry.evaluation.tasks.execution.runners.pawbench.run_pawbench_official_runner
+    generated_arg: --generated-artifact-dir
+    dataset_root_arg: --dataset-root
+    model_arg: --model-name
+    supports_official_runtime: true
+    accepts_generated_artifacts: true
+    supports_fixture: true
+    default_metrics: [calibration_tvd_percent, coverage_percent]
+    input_kind: pawbench_dataset_rollouts_or_official_metrics
   runner_target: worldfoundry.evaluation.tasks.contracts.external:PAWBenchContract
   validation_command:
   - worldfoundry-eval
@@ -123,6 +137,8 @@ runner:
 integration:
   status: integrated
   tier: model_backed
+  hf_dataset_id: Andrew613/PAWBench
+  judge_model_id: google/gemini-3.5-flash
   implementation_scope: vendored_official_evaluator_with_hosted_paweval_judge
   source_files_copied: true
   full_dataset_verified: false

@@ -18,7 +18,7 @@ from worldfoundry.evaluation.runner import ModelBenchmarkSuiteRequest, run_model
 from worldfoundry.evaluation.tasks.execution.framework.benchmark_data import (  # noqa: E402
     materialize_sample_generated_videos,
 )
-from worldfoundry.evaluation.tasks.execution.framework.runner_registry import VIDEO_RUNNER_REGISTRY  # noqa: E402
+from worldfoundry.evaluation.tasks.catalog.dispatch import VIDEO_RUNNER_REGISTRY  # noqa: E402
 from worldfoundry.evaluation.utils import BENCHMARK_ZOO_DIR, MODEL_ZOO_DIR  # noqa: E402
 
 DEFAULT_PROMPT = "A small robot explores a bright workshop, cinematic motion, high quality."

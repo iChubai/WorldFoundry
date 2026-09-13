@@ -24,6 +24,8 @@ required_assets:
   in_tree_runtime_paths:
   - worldfoundry/evaluation/tasks/execution/runners/worldolympiad
   - worldfoundry/evaluation/tasks/execution/runners/worldolympiad/runtime/worldolympiad
+  pip_requirements:
+  - worldfoundry/data/benchmarks/requirements/worldolympiad.txt
   task_yaml: worldfoundry/data/benchmarks/tasks/external/worldolympiad.yaml
   fixture: worldfoundry/data/benchmarks/assets/worldolympiad
   hf_dataset_ids:
@@ -59,6 +61,8 @@ required_paths:
   path: worldfoundry/evaluation/tasks/execution/runners/worldolympiad/runtime/WORLDFOUNDRY_PROVENANCE.md
 - id: fixture
   path: worldfoundry/data/benchmarks/assets/worldolympiad
+- id: pip_requirements
+  path: worldfoundry/data/benchmarks/requirements/worldolympiad.txt
 - id: task_yaml
   path: worldfoundry/data/benchmarks/tasks/external/worldolympiad.yaml
 requires_cuda_visibility: false

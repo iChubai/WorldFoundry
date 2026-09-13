@@ -95,8 +95,6 @@ def _handle_reproduce(args: argparse.Namespace) -> int:
         ReproduceIntent(
             output_dir=args.output_dir,
             recipe_path=args.recipe,
-            profile_id=args.profile,
-            benchmark_id=args.benchmark,
         )
     )
     return _finish(prepared, args)
@@ -191,12 +189,9 @@ def register_evaluation_intent_subparsers(
 
     reproduce = subparsers.add_parser(
         "reproduce",
-        help="Run a checked-in profile or a custom model x benchmark recipe",
+        help="Run a custom model x benchmark recipe",
     )
-    reproduction_source = reproduce.add_mutually_exclusive_group(required=True)
-    reproduction_source.add_argument("--profile", help="Checked-in reproduction profile id.")
-    reproduction_source.add_argument("--benchmark", help="Benchmark id whose default reproduction profile should run.")
-    reproduction_source.add_argument("--recipe", type=Path, help="Custom reproduction recipe YAML.")
+    reproduce.add_argument("--recipe", type=Path, required=True, help="Reproduction recipe YAML.")
     reproduce.add_argument("--output-dir", type=Path, default=TMP_ROOT / "reproduce")
     reproduce.add_argument("--plan-only", action="store_true")
     reproduce.add_argument("--json", action="store_true")

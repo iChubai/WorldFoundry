@@ -70,6 +70,16 @@ metrics:
   higher_is_better: false
   stage: regress
 runner:
+  official_script: worldfoundry/evaluation/tasks/execution/runners/larybench/run_larybench_official_runner.py
+  workspace:
+    module: worldfoundry.evaluation.tasks.execution.runners.larybench.run_larybench_official_runner
+    generated_arg: null
+    dataset_root_arg: --dataset-root
+    split_arg: --split
+    model_arg: --model
+    supports_official_runtime: true
+    default_metrics: [top1_accuracy]
+    input_kind: dataset_root_or_official_results
   runner_target: worldfoundry.evaluation.tasks.contracts.external:LARYBenchContract
   validation_command:
   - worldfoundry-eval
@@ -115,6 +125,8 @@ runner:
   - Existing official outputs can be normalized without loading datasets or checkpoints.
 integration:
   status: integrated
+  tier: in_tree
+  hf_dataset_id: meituan-longcat/LARYBench
   evidence:
     runtime_surface: larybench_official_in_tree
     normalizer_verified: true

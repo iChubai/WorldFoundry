@@ -175,8 +175,8 @@ print(result["generated_video_path"])
 
 新 recipe 还必须增加严格 checkpoint-structure invariant、固定公开 model ID、
 catalog/binding/profile，并在 promotion 前完成真实 CUDA validation。
-完整清单见
-[`echo_memory` 集成说明](https://github.com/OpenEnvision/WorldFoundry/blob/main/worldfoundry/base_models/diffusion_model/models/networks/echo_memory/README.md)。
+公开用法和 checkpoint 身份见
+[Echo-Memory 模型卡](/zh/docs/guides/supported-models/echo-memory-context-k1)。
 Training 与尚未验证的 FSDP/USP 不属于当前 infer-only surface。
 
 ### Matrix-Game 3.5 原生模型

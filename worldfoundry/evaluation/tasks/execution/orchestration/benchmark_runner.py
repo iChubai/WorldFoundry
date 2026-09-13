@@ -38,23 +38,24 @@ from ...catalog.runner_kinds import IN_TREE_RUNTIME_KINDS
 from ...catalog.schema import BenchmarkZooEntry, load_entries
 from ...catalog.zoo_registry import BenchmarkZooRegistry, UnknownBenchmarkZooKeyError, load_benchmark_zoo_registry
 from ...contracts.external import get_external_benchmark_contract
-from ...execution.framework.benchmark_contract_registry import (
-    BENCHMARK_CONTRACT_EVALUATOR_KINDS,
+from worldfoundry.evaluation.tasks.catalog.dispatch import (
+    artifact_official_run_benchmarks,
+    embodied_result_normalizer_tracks,
+    pass_generated_artifact_dir_benchmarks,
+    specialized_result_normalizer_scripts,
+)
+from ...execution.framework.scoring_registry import (
+    contract_evaluator_kind,
     has_benchmark_contract_evaluator,
     write_benchmark_contract_evaluation,
 )
-from ..framework.runner_registry import specialized_result_normalizer_scripts
 from ..runners._benchmark_metrics import evaluate_external_metric, list_external_metric_evaluators
 from .interfaces import (
+    BENCHMARK_RUN_OFFICIAL_MODES as _OFFICIAL_MODES,
     BenchmarkSample,
     DatasetMaterializationPlan,
     OfficialRunResult,
     OfficialRunStage,
-)
-from .run_mode import (
-    BENCHMARK_RUN_OFFICIAL_MODES as _OFFICIAL_MODES,
-)
-from .run_mode import (
     normalize_benchmark_run_mode,
 )
 
@@ -66,62 +67,6 @@ JsonValue = Any
 REPO_ROOT = Path(__file__).resolve().parents[5]
 DEFAULT_MANIFEST_PATH = BENCHMARK_ZOO_DIR
 SCORECARD_SCHEMA_VERSION = "worldfoundry-scorecard"
-
-SPECIALIZED_RESULT_NORMALIZER_SCRIPTS: dict[str, tuple[str, str]] = specialized_result_normalizer_scripts()
-
-SPECIALIZED_ARTIFACT_OFFICIAL_RUN_BENCHMARKS: frozenset[str] = frozenset(
-    {
-        "aigcbench",
-        "evalcrafter",
-        "ipv-bench",
-        "memobench",
-        "phyfps-bench-gen",
-        "phyeduvideo",
-        "physics-iq",
-        "physics-iq-verified",
-        "phyground",
-        "pawbench",
-        "visual-chronometer",
-        "world-in-world",
-        "wrbench",
-    }
-)
-
-EMBODIED_RESULT_NORMALIZER_TRACKS: dict[str, str] = {
-    "behavior1k": "vla",
-    "bridgedata-v2": "vla",
-    "calvin": "vla",
-    "kinetix": "vla",
-    "libero": "vla",
-    "libero-mem": "vla",
-    "libero-para": "vla",
-    "libero-plus": "vla",
-    "libero-pro": "vla",
-    "maniskill": "vla",
-    "maniskill2": "vla",
-    "metaworld": "vla",
-    "mikasa": "vla",
-    "molmospaces": "vla",
-    "rlbench": "vla",
-    "robocasa": "vla",
-    "robocerebra": "vla",
-    "robomme": "vla",
-    "robotwin": "vla",
-    "simpler-env": "vla",
-    "vlabench": "vla",
-}
-
-GENERIC_RESULT_NORMALIZER_BENCHMARKS: frozenset[str] = frozenset(
-    {
-        "devil-dynamics",
-        "t2v-safety-bench",
-        "t2vworldbench",
-        "videoscience-bench",
-        "worldarena",
-        "worldatlas-arena",
-        "pawbench",
-    }
-)
 
 
 def _requires_external_runtime(*, default: bool, runtime_spec: Mapping[str, Any] | None) -> bool:
@@ -188,7 +133,7 @@ def _workspace_official_run_command(
     ``official-run`` also covers integrated benchmarks whose catalog entry does
     not duplicate a shell command.
     """
-    from ..runners.workspace_registry import (
+    from worldfoundry.evaluation.tasks.catalog.workspace_registry import (
         CLI_RUNNERS,
         benchmark_key,
         build_workspace_benchmark_command,
@@ -553,7 +498,7 @@ def _run_specialized_result_normalizer(
     kwargs: Mapping[str, JsonValue] | None = None,
 ) -> dict[str, JsonValue] | None:
     """Spawn a per-benchmark specialized normalizer subprocess."""
-    spec = SPECIALIZED_RESULT_NORMALIZER_SCRIPTS.get(benchmark_id)
+    spec = specialized_result_normalizer_scripts().get(benchmark_id)
     if spec is None:
         return None
     script, result_flag = spec
@@ -579,27 +524,7 @@ def _run_specialized_result_normalizer(
     score_dir = kwargs.get("score_dir") if benchmark_id == "camerabench" else None
     if score_dir not in (None, ""):
         command.extend(["--score-dir", str(score_dir), "--task", "all", "--no-gpt"])
-    if benchmark_id in {
-        "aigcbench",
-        "phyfps-bench-gen",
-        "visual-chronometer",
-        "physics-iq",
-        "physics-iq-verified",
-        "physvidbench",
-        "phygenbench",
-        "videophy",
-        "videophy2",
-        "phyground",
-        "phyeduvideo",
-        "world-in-world",
-        "worldatlas-arena",
-        "pawbench",
-        "mirabench",
-        "memobench",
-        "ewmbench",
-        "evalcrafter",
-        "wrbench",
-    } and generated_artifact_dir is not None:
+    if benchmark_id in pass_generated_artifact_dir_benchmarks() and generated_artifact_dir is not None:
         command.extend(["--generated-artifact-dir", str(generated_artifact_dir)])
     if benchmark_id == "worldatlas-arena" and kwargs.get("dataset_manifest"):
         command.extend(["--manifest", str(kwargs["dataset_manifest"])])
@@ -708,7 +633,7 @@ def _run_embodied_result_normalizer(
     kwargs: Mapping[str, JsonValue] | None = None,
 ) -> dict[str, JsonValue] | None:
     """Normalize embodied/VLA results in-process via ``embodied.normalizer``."""
-    track = EMBODIED_RESULT_NORMALIZER_TRACKS.get(benchmark_id)
+    track = embodied_result_normalizer_tracks().get(benchmark_id)
     if track is None:
         return None
     kwargs = kwargs or {}
@@ -1380,7 +1305,7 @@ class ManifestBenchmarkRunner:
                     "manifest_integration_status": self.entry.integration_status,
                     "manifest_verification_status": self.entry.verification_status,
                     "requires_upstream_runtime": contract.requires_upstream_runtime,
-                    "evaluator": BENCHMARK_CONTRACT_EVALUATOR_KINDS[self.benchmark_id],
+                    "evaluator": contract_evaluator_kind(self.benchmark_id),
                     **extra_metadata,
                 },
             )
@@ -1701,7 +1626,7 @@ class ManifestBenchmarkRunner:
                 run_official=(
                     mode == "official-run"
                     and generated_artifact_dir is not None
-                    and self.benchmark_id in SPECIALIZED_ARTIFACT_OFFICIAL_RUN_BENCHMARKS
+                    and self.benchmark_id in artifact_official_run_benchmarks()
                 ),
                 kwargs=extra_metadata,
             )
@@ -1831,18 +1756,6 @@ class ManifestBenchmarkRunner:
                         **extra_metadata,
                         "normalization_ok": embodied.get("ok") is True,
                     },
-                )
-            if self.benchmark_id in GENERIC_RESULT_NORMALIZER_BENCHMARKS:
-                return self._normalize_generic_official_results(
-                    root=root,
-                    contract=contract,
-                    data=data,
-                    mode=mode,
-                    results_path=Path(str(results_path)),
-                    runtime_spec=runtime_spec,
-                    runtime_report_path=runtime_report_path,
-                    generated_artifact_dir=generated_artifact_dir,
-                    generated_files=generated_files,
                 )
             if has_benchmark_contract_evaluator(self.benchmark_id):
                 evaluator_kwargs = dict(extra_metadata)

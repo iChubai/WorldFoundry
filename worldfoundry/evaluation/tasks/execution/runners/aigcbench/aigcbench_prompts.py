@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import json
-import os
 import re
 from pathlib import Path
 from typing import Any
@@ -11,6 +10,8 @@ from typing import Any
 from worldfoundry.core.io.file_utils import materialize_file
 from worldfoundry.evaluation.api import GenerationRequest, GenerationResult
 from worldfoundry.evaluation.tasks.execution.framework.benchmark_assets import (
+    first_existing_dir,
+    resolve_env_path,
     bundled_benchmark_asset,
     bundled_benchmark_assets_root,
 )
@@ -31,21 +32,14 @@ CANONICAL_PROMPT_COUNT = WEBVID_PROMPT_COUNT + LAION_PROMPT_COUNT + DEFAULT_OURS
 IMAGE_SUFFIXES = frozenset({".png", ".jpg", ".jpeg", ".webp"})
 
 
-def _env_path(name: str) -> Path | None:
-    value = os.environ.get(name)
-    return Path(value).expanduser().resolve() if value else None
-
 
 def resolve_aigcbench_root(explicit: Path | None = None) -> Path | None:
-    for candidate in (
+    return first_existing_dir(
         explicit,
-        _env_path("WORLDFOUNDRY_AIGCBENCH_ROOT"),
+        resolve_env_path("WORLDFOUNDRY_AIGCBENCH_ROOT"),
         IN_TREE_AIGCBENCH_ROOT,
         bundled_benchmark_assets_root(BENCHMARK_ID),
-    ):
-        if candidate is not None and candidate.is_dir():
-            return candidate.expanduser().resolve()
-    return None
+    )
 
 
 def resolve_dataset_root(explicit: Path | None = None) -> Path | None:
@@ -53,8 +47,8 @@ def resolve_dataset_root(explicit: Path | None = None) -> Path | None:
         path = explicit.expanduser().resolve()
         return path if path.is_dir() else None
     for candidate in (
-        _env_path("WORLDFOUNDRY_AIGCBENCH_DATASET_ROOT"),
-        _env_path("WORLDFOUNDRY_AIGCBENCH_PROMPT_SUITE_DIR"),
+        resolve_env_path("WORLDFOUNDRY_AIGCBENCH_DATASET_ROOT"),
+        resolve_env_path("WORLDFOUNDRY_AIGCBENCH_PROMPT_SUITE_DIR"),
         bundled_benchmark_assets_root(BENCHMARK_ID),
     ):
         if candidate is not None and candidate.is_dir():
@@ -77,7 +71,7 @@ def _resolve_dataset_file(
     if explicit is not None:
         path = explicit.expanduser().resolve()
         return path if path.is_file() else None
-    env_path = _env_path(env_name)
+    env_path = resolve_env_path(env_name)
     if env_path is not None:
         return env_path if env_path.is_file() else None
     bundled = bundled_benchmark_asset(BENCHMARK_ID, relative)
@@ -124,7 +118,7 @@ def resolve_prompt_manifest_path(
     if explicit is not None:
         path = explicit.expanduser().resolve()
         return path if path.is_file() else None
-    env_manifest = _env_path("WORLDFOUNDRY_AIGCBENCH_PROMPT_MANIFEST")
+    env_manifest = resolve_env_path("WORLDFOUNDRY_AIGCBENCH_PROMPT_MANIFEST")
     if env_manifest is not None:
         return env_manifest if env_manifest.is_file() else None
     bundled = bundled_benchmark_asset(BENCHMARK_ID, PROMPT_MANIFEST_REL)
@@ -138,7 +132,7 @@ def resolve_prompt_manifest_path(
 
 
 def resolve_t2i_image_dir(*, dataset_root: Path | None = None) -> Path | None:
-    env_dir = _env_path("WORLDFOUNDRY_AIGCBENCH_T2I_DIR")
+    env_dir = resolve_env_path("WORLDFOUNDRY_AIGCBENCH_T2I_DIR")
     if env_dir is not None and env_dir.is_dir():
         return env_dir
     root = dataset_root or resolve_dataset_root()

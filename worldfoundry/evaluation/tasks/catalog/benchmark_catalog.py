@@ -187,9 +187,12 @@ def load_benchmark_catalog_entries(root: str | Path | None = None) -> tuple[Any,
 
 def clear_benchmark_catalog_cache() -> None:
     """Clear cached benchmark catalog path indexes and loaded entries."""
+    from .dispatch import clear_catalog_dispatch_cache
+
     _catalog_benchmark_path_index.cache_clear()
     benchmark_catalog_ids.cache_clear()
     _load_benchmark_catalog_entries_cached.cache_clear()
+    clear_catalog_dispatch_cache()
 
 
 def load_benchmark_catalog_shard_entries(shard: str, root: str | Path | None = None) -> tuple[Any, ...]:

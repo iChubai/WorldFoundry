@@ -19,10 +19,6 @@ every metric this runner reports.
 
 from __future__ import annotations
 
-
-
-from worldfoundry.evaluation.tasks.execution.framework.runner_common import SCORECARD_SCHEMA_VERSION, VIDEO_SUFFIXES
-
 import argparse
 import json
 import os
@@ -31,6 +27,10 @@ from pathlib import Path
 from typing import Any, Mapping
 
 from worldfoundry.evaluation.tasks.execution.framework.io import utc_now_iso, write_json, write_jsonl
+from worldfoundry.evaluation.tasks.execution.framework.runner_common import (
+    SCORECARD_SCHEMA_VERSION,
+    resolve_env_path,
+)
 from worldfoundry.evaluation.tasks.execution.runners.likephys.likephys_metrics import (
     METRIC_ORDER,
     METRIC_SPECS,
@@ -134,9 +134,6 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     return parser.parse_args(argv)
 
 
-def _env_path(name: str) -> Path | None:
-    value = os.environ.get(name)
-    return Path(value).expanduser().resolve() if value else None
 
 
 def _strict_enabled(args: argparse.Namespace) -> bool:
@@ -151,9 +148,9 @@ def _strict_enabled(args: argparse.Namespace) -> bool:
 def _resolve_results_path(args: argparse.Namespace) -> Path | None:
     candidates = [
         args.official_results_path,
-        _env_path("WORLDFOUNDRY_LIKEPHYS_RESULTS_PATH"),
+        resolve_env_path("WORLDFOUNDRY_LIKEPHYS_RESULTS_PATH"),
         args.generated_artifact_dir,
-        _env_path("WORLDFOUNDRY_GENERATED_ARTIFACT_DIR"),
+        resolve_env_path("WORLDFOUNDRY_GENERATED_ARTIFACT_DIR"),
     ]
     for candidate in candidates:
         if candidate is not None and Path(candidate).exists():

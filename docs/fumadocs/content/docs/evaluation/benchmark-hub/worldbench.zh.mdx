@@ -36,4 +36,33 @@ ${WORLDFOUNDRY_UNIFIED_PYTHON} \
 
 产物包括 `scorecard.json`（主键 `foreground_miou`）与 `worldbench_evaluation.json`。
 
+## 数据集、视频与帧对齐
+
+仓内 runtime **不** import 上游 checkout。SAM2 来自 `worldfoundry.base_models.perception_core.segment.sam2`。数据集根必须是公开 HF 布局：
+
+```text
+<dataset>/
+  scenes/<group>/<scenario>/<scene>/
+    rgba_00000.png
+    segmentation_00000.png
+    …
+  textual_questions/*.json
+```
+
+生成续写可以对齐场景 id：
+
+```text
+<generated>/<group>/<scenario>/<scene>.mp4
+<generated>/<group>/<scenario>/<scene>/output.mp4
+<generated>/<group>/<scenario>/<scene>/00000.png
+```
+
+其他视频布局用 `--video-manifest`（JSON / JSONL / CSV / TSV），每行要有 `sample_id` 与 `video_path`。文本预测用 `--answer-manifest`。稳定 `question_id` 是 `<question-file-stem>:<row>`；或同时给 `video_name` 与 `question`，因为有的视频有两道题。
+
+评测用 **9 帧条件帧**。默认生成帧 0 对齐真值帧 9，再打 **24 帧续写**。若模型把那 9 帧也拼进输出，传 `--generated-skip-frames 9`。默认值在 `worldfoundry/data/benchmarks/assets/worldbench/evaluator.yaml`。
+
+原始视频打分默认 `facebook/sam2.1-hiera-large`。本地权重用 `WORLDFOUNDRY_WORLDBENCH_SAM2_CKPT`，否则走 HF cache。只导入时用 `--official-results-path`，不要加 `--run-official`。
+
+环境用 `worldfoundry-unified-cu128`。仓内跑通只是集成证据，在全量数值对齐审过之前不会标 `leaderboard_valid`。检视过的上游钉选 `WorldBenchmark/worldbench_eval@4575a164…` 没有 license，公开评测器也损坏；出处写在 catalog YAML，没有 `SOURCE.json`。
+
 [← 返回 Benchmark Hub](/zh/docs/evaluation/benchmark-hub)

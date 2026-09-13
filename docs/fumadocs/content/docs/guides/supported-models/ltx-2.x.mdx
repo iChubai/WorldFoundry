@@ -45,6 +45,8 @@ The catalog launch is `worldfoundry-eval run ltx-2-t2v --pipeline.task-profile t
 
 It runs in the unified environment `worldfoundry-unified-cu128` (Python 3.11, CUDA 12.8).
 
+The in-tree LTX package is **architecture only**. Runtime assembly, scheduling, loading, offload, quantization, and the denoising loop stay in the shared `diffusion_model` infrastructure. The transformer is adapted from [Lightricks/LTX-2](https://github.com/Lightricks/LTX-2) at `d6053703e00195bc668cbd1d5eda9dc0b2e7b74a`. Checkpoints and adapted source remain under the upstream LTX license. AlayaWorld's action/history model reuses this architecture from its own synthesis package.
+
 Recorded weight repositories include `Lightricks/LTX-2` and `Lightricks/LTX-2.3`. Stage assets with `bash scripts/inference/prepare_model_infer.sh ltx-2-t2v`.
 
 Recorded licenses include other; status: **Verified**.

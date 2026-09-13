@@ -8,11 +8,11 @@ from typing import Any, Mapping
 
 from worldfoundry.core.io.file_utils import materialize_file
 from worldfoundry.evaluation.api import GenerationRequest, GenerationResult
+from worldfoundry.evaluation.tasks.execution.framework.runner_common import resolve_env_path
 from worldfoundry.evaluation.utils import write_jsonl
 
 from .run_videoverse_official_runner import (
     _default_prompt_manifest,
-    _env_path,
     _load_json,
 )
 
@@ -26,7 +26,7 @@ def _read_jsonl(path: Path) -> list[dict[str, Any]]:
 def resolve_prompt_manifest_path(explicit: Path | None = None) -> Path:
     if explicit is not None:
         return explicit.expanduser().resolve()
-    env_path = _env_path("WORLDFOUNDRY_VIDEOVERSE_PROMPT_MANIFEST")
+    env_path = resolve_env_path("WORLDFOUNDRY_VIDEOVERSE_PROMPT_MANIFEST")
     if env_path is not None:
         return env_path
     default = _default_prompt_manifest()

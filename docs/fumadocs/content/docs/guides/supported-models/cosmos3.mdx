@@ -27,4 +27,6 @@ Score world-generation quality on [WorldModelBench](/docs/evaluation/benchmark-h
 
 `Cosmos3Pipeline` needs the **dedicated** environment `worldfoundry-cosmos3-cu128` (Python 3.11, CUDA 12.8, **torch==2.10.0**). It does **not** ride the unified cu128 profile that Predict / Transfer use. Base selection routes to Nano. Verified-revision evidence requires the exact SHA — Nano `411f42a8fdfb8c5b2583cb8786e0938f49796eaa`, Super `e0262be9d8f7586bc24c069a2aed2b665bdff266`. `prepare_model_infer.sh` emits a structured checkpoint report and a pinned snapshot model-ref so an older local directory is not silently treated as current.
 
+The native transformer matches the official `nvidia/Cosmos3-Nano` and `nvidia/Cosmos3-Super` parameter layout. It is derived from NVIDIA's Cosmos3 Diffusers contribution at `aefdf852c16237039785d84ab3327167cb0ec07f`. WorldFoundry owns loading, attention dispatch, scheduling, modality packing, and execution; Diffusers is not a runtime backend.
+
 <ModelRelatedRecipes modelId="cosmos3" locale="en" />

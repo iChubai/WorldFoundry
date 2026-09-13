@@ -50,8 +50,8 @@ evaluation_surface:
   judge: Hosted VLM judge APIs (Gemini by default, OpenAI supported) queried by the vendored official evaluator;
     verdicts are boolean per task and ensemble-aggregated (majority, ensemble size 3 in the paper configuration).
   notes:
-  - Upstream run_eval.sh also invokes --artifact and --coherence, but eval/eval_cli.py does not define those
-    flags at the pinned revision, so those two criteria are not executable upstream and are not exposed here.
+  - The pinned eval/eval_cli.py does not define --artifact or --coherence, so those two criteria are not
+    executable and are not exposed here. Evaluation enters only through run_stevo_bench_official_runner.py.
 metrics:
 - id: task_success
   name: Task Success
@@ -101,6 +101,17 @@ metrics:
   aggregator: mean
   output_unit: rate
 runner:
+  official_script: worldfoundry/evaluation/tasks/execution/runners/stevo_bench/run_stevo_bench_official_runner.py
+  workspace:
+    module: worldfoundry.evaluation.tasks.execution.runners.stevo_bench.run_stevo_bench_official_runner
+    generated_arg: --generated-artifact-dir
+    dataset_root_arg: --task-root
+    model_arg: --judge-model
+    supports_official_runtime: true
+    accepts_generated_artifacts: true
+    supports_fixture: true
+    default_metrics: [task_success]
+    input_kind: stevo_bench_run_dir_or_official_results
   runner_target: worldfoundry.evaluation.tasks.contracts.external:StevoBenchContract
   validation_command:
   - worldfoundry-eval
@@ -150,6 +161,8 @@ runner:
 integration:
   status: integrated
   tier: model_backed
+  hf_dataset_id: JhanLiufu/StEvo-Bench
+  judge_model_id: gemini-3.1-pro-preview
   implementation_scope: vendored_official_evaluator_with_hosted_vlm_judges
   source_files_copied: true
   full_dataset_verified: false

@@ -13,7 +13,6 @@ from __future__ import annotations
 
 from collections.abc import Iterable
 from dataclasses import asdict, dataclass
-from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Mapping, Sequence
 from uuid import uuid4
@@ -39,13 +38,20 @@ from worldfoundry.evaluation.reporting.scorecard import write_scorecard
 from worldfoundry.evaluation.utils import (
     build_run_fingerprint,
     build_version_context,
-    jsonable,
-    reset_jsonl,
     write_json,
     write_jsonl,
 )
 
 from .cache import cache_paths_from_stats, generation_cache_hit_metadata, run_generation_with_cache
+from .run_session import (
+    artifact_report_paths as _artifact_paths,
+    coerce_mapping as _coerce_mapping,
+    coerce_optional_mapping as _coerce_optional_mapping,
+    prepare_run_output_dir,
+    reset_session_jsonl,
+    session_paths,
+    utcnow_iso as _utcnow_iso,
+)
 
 JsonRow = dict[str, Any]
 
@@ -110,11 +116,6 @@ class ContractRunner:
         return run_contract(request, **kwargs)
 
 
-def _utcnow_iso() -> str:
-    """Returns the current UTC datetime as an ISO 8601 string, without microseconds."""
-    return datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z")
-
-
 def _read_jsonl(path: Path) -> list[JsonRow]:
     """Reads a JSONL file and returns its content as a list of dictionaries.
 
@@ -131,39 +132,6 @@ def _read_jsonl(path: Path) -> list[JsonRow]:
         if isinstance(row, Mapping):
             rows.append(dict(row))
     return rows
-
-
-def _coerce_mapping(value: Any) -> JsonRow:
-    """Coerces a value into a JSON-compatible dictionary.
-
-    If the value is already a mapping, it's converted to a dictionary.
-    Otherwise, it's wrapped in a dictionary with a 'value' key.
-
-    Args:
-        value: The value to coerce.
-
-    Returns:
-        A dictionary representation of the value.
-    """
-    json_value = jsonable(value)
-    if isinstance(json_value, Mapping):
-        return dict(json_value)
-    return {"value": json_value}
-
-
-def _coerce_optional_mapping(value: Mapping[str, Any] | Any | None, default: Mapping[str, Any]) -> JsonRow:
-    """Coerces an optional value into a JSON-compatible dictionary, using a default if None.
-
-    Args:
-        value: The value to coerce, which can be None.
-        default: The default mapping to use if `value` is None.
-
-    Returns:
-        A dictionary representation of the value or the default mapping.
-    """
-    if value is None:
-        return dict(default)
-    return _coerce_mapping(value)
 
 
 def _normalize_requests(source: Sequence[GenerationRequest | Mapping[str, Any]]) -> list[GenerationRequest]:
@@ -774,37 +742,6 @@ def _artifact_rows(results: Sequence[GenerationResult], output_dir: Path) -> lis
     return rows
 
 
-def _artifact_paths(output_dir: Path, artifact_count: int) -> dict[str, str]:
-    """Generates a dictionary of standard artifact file paths for the run report.
-
-    Args:
-        output_dir: The base output directory for the run.
-        artifact_count: The total number of artifacts generated. If 0, 'artifacts.jsonl' is omitted.
-
-    Returns:
-        A dictionary mapping artifact logical names to their resolved absolute string paths.
-    """
-    paths = {
-        "run_manifest": output_dir / "run_manifest.json",
-        "environment": output_dir / "environment.json",
-        "env_requirements": output_dir / "env_requirements.json",
-        "execution_plan": output_dir / "execution_plan.json",
-        "requests": output_dir / "requests.jsonl",
-        "results": output_dir / "results.jsonl",
-        "sample_ledger": output_dir / "sample_ledger.jsonl",
-        "per_sample_metrics": output_dir / "metrics" / "per_sample.jsonl",
-        "summary": output_dir / "metrics" / "summary.json",
-        "run_summary": output_dir / "summary.json",
-        "report": output_dir / "report.md",
-        "scorecard": output_dir / "scorecard.json",
-    }
-    if artifact_count:
-        # Only include artifacts.jsonl if there are actual artifacts
-        paths["artifacts"] = output_dir / "artifacts.jsonl"
-    # Resolve all paths to absolute strings
-    return {name: str(path.resolve()) for name, path in paths.items()}
-
-
 def _coerce_request(
     request: ContractRunRequest | Mapping[str, Any] | None,
     kwargs: Mapping[str, Any],
@@ -872,41 +809,18 @@ def run_contract(
     # Coerce the input request into a standardized ContractRunRequest object
     run_request = _coerce_request(request, kwargs)
     
-    # Initialize output directories and generate a unique run ID
-    output_dir = Path(run_request.output_dir).resolve()
-    metrics_dir = output_dir / "metrics"
-    output_dir.mkdir(parents=True, exist_ok=True)
-    metrics_dir.mkdir(parents=True, exist_ok=True)
+    output_dir = prepare_run_output_dir(run_request.output_dir)
 
     run_id = run_request.run_id or f"contract-{uuid4().hex[:12]}"
     started_at = _utcnow_iso()
     
     # Normalize input requests into a list of GenerationRequest objects
     requests = _normalize_requests(run_request.requests)
-    
-    # Define all standard output file paths
-    paths = {
-        "manifest": output_dir / "run_manifest.json",
-        "environment": output_dir / "environment.json",
-        "env_requirements": output_dir / "env_requirements.json",
-        "execution_plan": output_dir / "execution_plan.json",
-        "requests": output_dir / "requests.jsonl",
-        "results": output_dir / "results.jsonl",
-        "artifacts": output_dir / "artifacts.jsonl",
-        "sample_ledger": output_dir / "sample_ledger.jsonl",
-        "per_sample": metrics_dir / "per_sample.jsonl",
-        "summary": metrics_dir / "summary.json",
-        "run_summary": output_dir / "summary.json",
-        "report": output_dir / "report.md",
-        "scorecard": output_dir / "scorecard.json",
-    }
+    paths = session_paths(output_dir)
     
     # Load previously successful samples from disk if resume is enabled
     successful_sample_cache = _load_successful_sample_cache(paths, requests, run_request.metrics) if run_request.resume else {}
-    
-    # Reset JSONL files to ensure a clean start for non-resumed samples
-    for key in ("requests", "results", "artifacts", "sample_ledger", "per_sample"):
-        reset_jsonl(paths[key])
+    reset_session_jsonl(paths)
 
     runner = run_request.runner
     model_id = str(getattr(runner, "model_id", "contract-model"))

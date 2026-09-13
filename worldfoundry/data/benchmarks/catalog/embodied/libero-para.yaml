@@ -37,6 +37,9 @@ dataset_refs:
   license: mit
   path: cache/worldfoundry/data/hfd_datasets/HAI-Lab__LIBERO-Para
 runner:
+  normalization:
+    dispatch: embodied
+    embodied_track: vla
   runner_target: worldfoundry.evaluation.tasks.contracts.external:LIBEROParaContract
   expected_artifacts:
   - scorecard.json

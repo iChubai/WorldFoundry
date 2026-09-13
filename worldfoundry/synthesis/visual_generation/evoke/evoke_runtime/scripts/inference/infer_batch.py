@@ -216,8 +216,8 @@ CHUNK0_REF_WARP = _env("GEO_CHUNK0_REF_WARP", "1")
 # i2v chunk-0 amplitude, as a p90 pixel budget for the commanded parallax. Empty -> the engine's own
 # calibrated default (da3_cloud.CHUNK0_TARGET_DISPARITY_PX_DEFAULT, whose comment carries the calibration
 # table); 0 -> off, chunk 0 then keeps whatever amplitude the reference frame's depth median happens to
-# give, which is what made it run ~6x the flow of its own later chunks. See README.md "i2v chunk-0
-# camera amplitude".
+# give, which is what made it run ~6x the flow of its own later chunks. See the Evoke
+# supported-model page (i2v scale knobs).
 CHUNK0_TARGET_DISP_PX = _env("GEO_CHUNK0_TARGET_DISP_PX", "")
 ZBUF_DESPECKLE = _env("ZBUF_DESPECKLE", "1")       # 0 = no salt-and-pepper cleanup (matches configs that leave zbuf_despeckle unset)
 # persistent = correct for this ckpt: its per-chunk first latent is CONTINUOUS-frame distributed (NOT
@@ -297,7 +297,7 @@ def main():
         sys.exit(f"[ERROR] NUM_FRAMES={NUM_FRAMES} would accumulate the whole clip on GPU (~{_gb:.0f} GB fp32).\n"
                  f"        Set STREAM_LONG=1 to decode per chunk and stitch the final mp4 from segments/\n"
                  f"        (requires VAE_DECODE_TYPE=persistent, the launcher default). For hour-scale\n"
-                 f"        rollouts also consider GEO_HIST_MAX_FRAMES -- see scripts/inference/README.md.")
+                 f"        rollouts also consider GEO_HIST_MAX_FRAMES -- see the Evoke supported-model page.")
     if STREAM_LONG == "1" and VAE_DECODE_TYPE != "persistent":
         sys.exit(f"[ERROR] STREAM_LONG=1 requires VAE_DECODE_TYPE=persistent (got {VAE_DECODE_TYPE!r}); "
                  f"the full video is stitched from per-chunk segments.")
@@ -393,7 +393,7 @@ def main():
         _seed = str(int(r["seed"])) if r.get("seed") is not None else SEED
         # Optional "event_chunks": [2, 4] -- 0-indexed chunks that drop warp (also: static camera, and
         #   the chunk is skipped from the frame bank). Paired with a schedule this is the "drop warp on
-        #   the first chunk of each new segment" recipe; see scripts/inference/README.md for when it
+        #   the first chunk of each new segment" recipe; see the Evoke supported-model page for when it
         #   helps and what it costs. Per-case rather than an env var so one jsonl can mix cases with
         #   different switch points. event_prompt is deliberately NOT exposed: it would override the
         #   schedule on every event chunk with one text, which is wrong as soon as there are 2 switches.

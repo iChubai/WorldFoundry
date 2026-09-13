@@ -22,6 +22,8 @@ required_assets:
   in_tree_runtime_paths:
   - worldfoundry/evaluation/tasks/execution/runners/pawbench
   - worldfoundry/evaluation/tasks/execution/runners/pawbench/runtime/pawbench
+  pip_requirements:
+  - worldfoundry/data/benchmarks/requirements/pawbench.txt
   task_yaml: worldfoundry/data/benchmarks/tasks/external/pawbench.yaml
   fixture: worldfoundry/data/benchmarks/assets/pawbench/sample_results.json
   hf_dataset_ids:
@@ -48,6 +50,8 @@ required_paths:
   path: worldfoundry/evaluation/tasks/execution/runners/pawbench/runtime/pawbench/pawbench/paweval/rubrics/outcome
 - id: vendored_trustworthiness_rubrics
   path: worldfoundry/evaluation/tasks/execution/runners/pawbench/runtime/pawbench/pawbench/paweval/rubrics/trustworthiness
+- id: pip_requirements
+  path: worldfoundry/data/benchmarks/requirements/pawbench.txt
 - id: task_yaml
   path: worldfoundry/data/benchmarks/tasks/external/pawbench.yaml
 requires_cuda_visibility: false

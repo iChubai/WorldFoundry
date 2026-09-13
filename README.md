@@ -67,7 +67,6 @@ Join the **WorldFoundry Community** on Slack, [Discord](https://discord.gg/ybUQM
 - [Documentation](docs/fumadocs/content/docs/index.mdx)
 - [Project overview](docs/fumadocs/content/docs/overview/index.mdx)
 - [Design and architecture](docs/fumadocs/content/docs/overview/design.mdx)
-- [What is included](docs/fumadocs/content/docs/overview/capabilities.mdx)
 - [Why WorldFoundry](docs/fumadocs/content/docs/overview/why-worldfoundry.mdx)
 - [Quickstart](docs/fumadocs/content/docs/quickstart.mdx)
 - [Environment reference](docs/fumadocs/content/docs/reference/environments.mdx)
@@ -83,132 +82,132 @@ Join the **WorldFoundry Community** on Slack, [Discord](https://discord.gg/ybUQM
 
 ## Demo Gallery
 
-These examples are checked into the documentation site so a new user can see the expected artifact shape before running GPU jobs. Full release claims still require the matching run manifest, runtime profile, and validation scorecard.
+These examples are served from the official GitHub `main` tree so a new user can see the expected artifact shape before running GPU jobs. Full release claims still require the matching run manifest, runtime profile, and validation scorecard.
 
 <table>
   <tr>
     <td width="33%">
-      <a href="https://github.com/OpenEnvision/WorldFoundry/raw/main/docs/fumadocs/public/readme-demos/ltx2-3-i2v-penguin.mp4"><img src="docs/fumadocs/public/readme-demos/ltx2-3-i2v-penguin.gif" width="100%" alt="ltx2-3-i2v-penguin demo"></a>
+      <a href="https://raw.githubusercontent.com/OpenEnvision/WorldFoundry/main/docs/fumadocs/public/readme-demos/ltx2-3-i2v-penguin.mp4"><img src="https://raw.githubusercontent.com/OpenEnvision/WorldFoundry/main/docs/fumadocs/public/readme-demos/ltx2-3-i2v-penguin.gif" width="100%" alt="ltx2-3-i2v-penguin demo"></a>
       <br><strong>LTX-2.3</strong><br><sub>Image-to-video</sub>
     </td>
     <td width="33%">
-      <a href="https://github.com/OpenEnvision/WorldFoundry/raw/main/docs/fumadocs/public/readme-demos/wan2-1-vace-girl-snake.mp4"><img src="docs/fumadocs/public/readme-demos/wan2-1-vace-girl-snake.gif" width="100%" alt="wan2-1-vace-girl-snake demo"></a>
+      <a href="https://raw.githubusercontent.com/OpenEnvision/WorldFoundry/main/docs/fumadocs/public/readme-demos/wan2-1-vace-girl-snake.mp4"><img src="https://raw.githubusercontent.com/OpenEnvision/WorldFoundry/main/docs/fumadocs/public/readme-demos/wan2-1-vace-girl-snake.gif" width="100%" alt="wan2-1-vace-girl-snake demo"></a>
       <br><strong>Wan2.1 VACE</strong><br><sub>Image/control-to-video</sub>
     </td>
     <td width="33%">
-      <a href="https://github.com/OpenEnvision/WorldFoundry/raw/main/docs/fumadocs/public/readme-demos/skyreels-v3-reference-to-video.mp4"><img src="docs/fumadocs/public/readme-demos/skyreels-v3-reference-to-video.gif" width="100%" alt="skyreels-v3-reference-to-video demo"></a>
+      <a href="https://raw.githubusercontent.com/OpenEnvision/WorldFoundry/main/docs/fumadocs/public/readme-demos/skyreels-v3-reference-to-video.mp4"><img src="https://raw.githubusercontent.com/OpenEnvision/WorldFoundry/main/docs/fumadocs/public/readme-demos/skyreels-v3-reference-to-video.gif" width="100%" alt="skyreels-v3-reference-to-video demo"></a>
       <br><strong>SkyReels V3</strong><br><sub>Reference-to-video</sub>
     </td>
   </tr>
   <tr>
     <td width="33%">
-      <a href="https://github.com/OpenEnvision/WorldFoundry/raw/main/docs/fumadocs/public/readme-demos/unianimate-dit-human-animation.mp4"><img src="docs/fumadocs/public/readme-demos/unianimate-dit-human-animation.gif" width="100%" alt="unianimate-dit-human-animation demo"></a>
+      <a href="https://raw.githubusercontent.com/OpenEnvision/WorldFoundry/main/docs/fumadocs/public/readme-demos/unianimate-dit-human-animation.mp4"><img src="https://raw.githubusercontent.com/OpenEnvision/WorldFoundry/main/docs/fumadocs/public/readme-demos/unianimate-dit-human-animation.gif" width="100%" alt="unianimate-dit-human-animation demo"></a>
       <br><strong>UniAnimate-DiT</strong><br><sub>Human animation</sub>
     </td>
     <td width="33%">
-      <a href="https://github.com/OpenEnvision/WorldFoundry/raw/main/docs/fumadocs/public/readme-demos/open-sora-plan-tokyo-street.mp4"><img src="docs/fumadocs/public/readme-demos/open-sora-plan-tokyo-street.gif" width="100%" alt="open-sora-plan-tokyo-street demo"></a>
+      <a href="https://raw.githubusercontent.com/OpenEnvision/WorldFoundry/main/docs/fumadocs/public/readme-demos/open-sora-plan-tokyo-street.mp4"><img src="https://raw.githubusercontent.com/OpenEnvision/WorldFoundry/main/docs/fumadocs/public/readme-demos/open-sora-plan-tokyo-street.gif" width="100%" alt="open-sora-plan-tokyo-street demo"></a>
       <br><strong>Open-Sora-Plan</strong><br><sub>Text-to-video</sub>
     </td>
     <td width="33%">
-      <a href="https://github.com/OpenEnvision/WorldFoundry/raw/main/docs/fumadocs/public/readme-demos/hunyuanvideo-i2v-firework-official.mp4"><img src="docs/fumadocs/public/readme-demos/hunyuanvideo-i2v-firework-official.gif" width="100%" alt="hunyuanvideo-i2v-firework-official demo"></a>
+      <a href="https://raw.githubusercontent.com/OpenEnvision/WorldFoundry/main/docs/fumadocs/public/readme-demos/hunyuanvideo-i2v-firework-official.mp4"><img src="https://raw.githubusercontent.com/OpenEnvision/WorldFoundry/main/docs/fumadocs/public/readme-demos/hunyuanvideo-i2v-firework-official.gif" width="100%" alt="hunyuanvideo-i2v-firework-official demo"></a>
       <br><strong>HunyuanVideo I2V</strong><br><sub>Image-to-video</sub>
     </td>
   </tr>
   <tr>
     <td width="33%">
-      <a href="https://github.com/OpenEnvision/WorldFoundry/raw/main/docs/fumadocs/public/readme-demos/hunyuanvideo-t2v-cat-grass-official.mp4"><img src="docs/fumadocs/public/readme-demos/hunyuanvideo-t2v-cat-grass-official.gif" width="100%" alt="hunyuanvideo-t2v-cat-grass-official demo"></a>
+      <a href="https://raw.githubusercontent.com/OpenEnvision/WorldFoundry/main/docs/fumadocs/public/readme-demos/hunyuanvideo-t2v-cat-grass-official.mp4"><img src="https://raw.githubusercontent.com/OpenEnvision/WorldFoundry/main/docs/fumadocs/public/readme-demos/hunyuanvideo-t2v-cat-grass-official.gif" width="100%" alt="hunyuanvideo-t2v-cat-grass-official demo"></a>
       <br><strong>HunyuanVideo T2V</strong><br><sub>Text-to-video</sub>
     </td>
     <td width="33%">
-      <a href="https://github.com/OpenEnvision/WorldFoundry/raw/main/docs/fumadocs/public/readme-demos/cogvideo_01.mp4"><img src="docs/fumadocs/public/readme-demos/cogvideo_01.gif" width="100%" alt="cogvideo_01 demo"></a>
+      <a href="https://raw.githubusercontent.com/OpenEnvision/WorldFoundry/main/docs/fumadocs/public/readme-demos/cogvideo_01.mp4"><img src="https://raw.githubusercontent.com/OpenEnvision/WorldFoundry/main/docs/fumadocs/public/readme-demos/cogvideo_01.gif" width="100%" alt="cogvideo_01 demo"></a>
       <br><strong>CogVideoX</strong><br><sub>Text-to-video</sub>
     </td>
     <td width="33%">
-      <a href="https://github.com/OpenEnvision/WorldFoundry/raw/main/docs/fumadocs/public/readme-demos/ac3d_02.mp4"><img src="docs/fumadocs/public/readme-demos/ac3d_02.gif" width="100%" alt="ac3d_02 demo"></a>
+      <a href="https://raw.githubusercontent.com/OpenEnvision/WorldFoundry/main/docs/fumadocs/public/readme-demos/ac3d_02.mp4"><img src="https://raw.githubusercontent.com/OpenEnvision/WorldFoundry/main/docs/fumadocs/public/readme-demos/ac3d_02.gif" width="100%" alt="ac3d_02 demo"></a>
       <br><strong>AC3D</strong><br><sub>Camera/world scene</sub>
     </td>
   </tr>
   <tr>
     <td width="33%">
-      <a href="https://github.com/OpenEnvision/WorldFoundry/raw/main/docs/fumadocs/public/readme-demos/astra_02.mp4"><img src="docs/fumadocs/public/readme-demos/astra_02.gif" width="100%" alt="astra_02 demo"></a>
+      <a href="https://raw.githubusercontent.com/OpenEnvision/WorldFoundry/main/docs/fumadocs/public/readme-demos/astra_02.mp4"><img src="https://raw.githubusercontent.com/OpenEnvision/WorldFoundry/main/docs/fumadocs/public/readme-demos/astra_02.gif" width="100%" alt="astra_02 demo"></a>
       <br><strong>Astra</strong><br><sub>World navigation</sub>
     </td>
     <td width="33%">
-      <a href="https://github.com/OpenEnvision/WorldFoundry/raw/main/docs/fumadocs/public/readme-demos/warp_02.mp4"><img src="docs/fumadocs/public/readme-demos/warp_02.gif" width="100%" alt="warp_02 demo"></a>
+      <a href="https://raw.githubusercontent.com/OpenEnvision/WorldFoundry/main/docs/fumadocs/public/readme-demos/warp_02.mp4"><img src="https://raw.githubusercontent.com/OpenEnvision/WorldFoundry/main/docs/fumadocs/public/readme-demos/warp_02.gif" width="100%" alt="warp_02 demo"></a>
       <br><strong>Warp</strong><br><sub>World navigation</sub>
     </td>
     <td width="33%">
-      <a href="https://github.com/OpenEnvision/WorldFoundry/raw/main/docs/fumadocs/public/readme-demos/matrix-game-2-official-universal.mp4"><img src="docs/fumadocs/public/readme-demos/matrix-game-2-official-universal.gif" width="100%" alt="matrix-game-2-official-universal demo"></a>
+      <a href="https://raw.githubusercontent.com/OpenEnvision/WorldFoundry/main/docs/fumadocs/public/readme-demos/matrix-game-2-official-universal.mp4"><img src="https://raw.githubusercontent.com/OpenEnvision/WorldFoundry/main/docs/fumadocs/public/readme-demos/matrix-game-2-official-universal.gif" width="100%" alt="matrix-game-2-official-universal demo"></a>
       <br><strong>Matrix-Game-2</strong><br><sub>Interactive world model</sub>
     </td>
   </tr>
   <tr>
     <td width="33%">
-      <a href="https://github.com/OpenEnvision/WorldFoundry/raw/main/docs/fumadocs/public/readme-demos/hy-worldplay-official-8gpu.mp4"><img src="docs/fumadocs/public/readme-demos/hy-worldplay-official-8gpu.gif" width="100%" alt="hy-worldplay-official-8gpu demo"></a>
+      <a href="https://raw.githubusercontent.com/OpenEnvision/WorldFoundry/main/docs/fumadocs/public/readme-demos/hy-worldplay-official-8gpu.mp4"><img src="https://raw.githubusercontent.com/OpenEnvision/WorldFoundry/main/docs/fumadocs/public/readme-demos/hy-worldplay-official-8gpu.gif" width="100%" alt="hy-worldplay-official-8gpu demo"></a>
       <br><strong>HY-WorldPlay</strong><br><sub>8-GPU image-pose world video</sub>
     </td>
     <td width="33%">
-      <a href="https://github.com/OpenEnvision/WorldFoundry/raw/main/docs/fumadocs/public/readme-demos/hunyuan-game-craft-village.mp4"><img src="docs/fumadocs/public/readme-demos/hunyuan-game-craft-village.gif" width="100%" alt="hunyuan-game-craft-village demo"></a>
+      <a href="https://raw.githubusercontent.com/OpenEnvision/WorldFoundry/main/docs/fumadocs/public/readme-demos/hunyuan-game-craft-village.mp4"><img src="https://raw.githubusercontent.com/OpenEnvision/WorldFoundry/main/docs/fumadocs/public/readme-demos/hunyuan-game-craft-village.gif" width="100%" alt="hunyuan-game-craft-village demo"></a>
       <br><strong>Hunyuan GameCraft</strong><br><sub>Interactive village world</sub>
     </td>
     <td width="33%">
-      <a href="https://github.com/OpenEnvision/WorldFoundry/raw/main/docs/fumadocs/public/readme-demos/matrix-game-3-cityscape.mp4"><img src="docs/fumadocs/public/readme-demos/matrix-game-3-cityscape.gif" width="100%" alt="matrix-game-3-cityscape demo"></a>
+      <a href="https://raw.githubusercontent.com/OpenEnvision/WorldFoundry/main/docs/fumadocs/public/readme-demos/matrix-game-3-cityscape.mp4"><img src="https://raw.githubusercontent.com/OpenEnvision/WorldFoundry/main/docs/fumadocs/public/readme-demos/matrix-game-3-cityscape.gif" width="100%" alt="matrix-game-3-cityscape demo"></a>
       <br><strong>Matrix-Game-3</strong><br><sub>Cityscape world model</sub>
     </td>
   </tr>
   <tr>
     <td width="33%">
-      <a href="https://github.com/OpenEnvision/WorldFoundry/raw/main/docs/fumadocs/public/readme-demos/worldcam-industrial.mp4"><img src="docs/fumadocs/public/readme-demos/worldcam-industrial.gif" width="100%" alt="worldcam-industrial demo"></a>
+      <a href="https://raw.githubusercontent.com/OpenEnvision/WorldFoundry/main/docs/fumadocs/public/readme-demos/worldcam-industrial.mp4"><img src="https://raw.githubusercontent.com/OpenEnvision/WorldFoundry/main/docs/fumadocs/public/readme-demos/worldcam-industrial.gif" width="100%" alt="worldcam-industrial demo"></a>
       <br><strong>WorldCam</strong><br><sub>Camera-path world video</sub>
     </td>
     <td width="33%">
-      <a href="https://github.com/OpenEnvision/WorldFoundry/raw/main/docs/fumadocs/public/readme-demos/yume-1p5-jungle-castle.mp4"><img src="docs/fumadocs/public/readme-demos/yume-1p5-jungle-castle.gif" width="100%" alt="yume-1p5-jungle-castle demo"></a>
+      <a href="https://raw.githubusercontent.com/OpenEnvision/WorldFoundry/main/docs/fumadocs/public/readme-demos/yume-1p5-jungle-castle.mp4"><img src="https://raw.githubusercontent.com/OpenEnvision/WorldFoundry/main/docs/fumadocs/public/readme-demos/yume-1p5-jungle-castle.gif" width="100%" alt="yume-1p5-jungle-castle demo"></a>
       <br><strong>YUME-1.5</strong><br><sub>First-person world navigation</sub>
     </td>
     <td width="33%">
-      <a href="https://github.com/OpenEnvision/WorldFoundry/raw/main/docs/fumadocs/public/readme-demos/neoverse-robot-tabletop.mp4"><img src="docs/fumadocs/public/readme-demos/neoverse-robot-tabletop.gif" width="100%" alt="neoverse-robot-tabletop demo"></a>
+      <a href="https://raw.githubusercontent.com/OpenEnvision/WorldFoundry/main/docs/fumadocs/public/readme-demos/neoverse-robot-tabletop.mp4"><img src="https://raw.githubusercontent.com/OpenEnvision/WorldFoundry/main/docs/fumadocs/public/readme-demos/neoverse-robot-tabletop.gif" width="100%" alt="neoverse-robot-tabletop demo"></a>
       <br><strong>NeoVerse</strong><br><sub>Robot video-input world model</sub>
     </td>
   </tr>
   <tr>
     <td width="33%">
-      <a href="https://github.com/OpenEnvision/WorldFoundry/raw/main/docs/fumadocs/public/readme-demos/hunyuan-world-voyager-case1.mp4"><img src="docs/fumadocs/public/readme-demos/hunyuan-world-voyager-case1.gif" width="100%" alt="hunyuan-world-voyager-case1 demo"></a>
+      <a href="https://raw.githubusercontent.com/OpenEnvision/WorldFoundry/main/docs/fumadocs/public/readme-demos/hunyuan-world-voyager-case1.mp4"><img src="https://raw.githubusercontent.com/OpenEnvision/WorldFoundry/main/docs/fumadocs/public/readme-demos/hunyuan-world-voyager-case1.gif" width="100%" alt="hunyuan-world-voyager-case1 demo"></a>
       <br><strong>HunyuanWorld-Voyager</strong><br><sub>Conditioned world video</sub>
     </td>
     <td width="33%">
-      <a href="https://github.com/OpenEnvision/WorldFoundry/raw/main/docs/fumadocs/public/readme-demos/cosmos3.mp4"><img src="docs/fumadocs/public/readme-demos/cosmos3.gif" width="100%" alt="cosmos3 demo"></a>
+      <a href="https://raw.githubusercontent.com/OpenEnvision/WorldFoundry/main/docs/fumadocs/public/readme-demos/cosmos3.mp4"><img src="https://raw.githubusercontent.com/OpenEnvision/WorldFoundry/main/docs/fumadocs/public/readme-demos/cosmos3.gif" width="100%" alt="cosmos3 demo"></a>
       <br><strong>Cosmos3</strong><br><sub>World video generation</sub>
     </td>
     <td width="33%">
-      <a href="https://github.com/OpenEnvision/WorldFoundry/raw/main/docs/fumadocs/public/readme-demos/flashworld.mp4"><img src="docs/fumadocs/public/readme-demos/flashworld.gif" width="100%" alt="flashworld demo"></a>
+      <a href="https://raw.githubusercontent.com/OpenEnvision/WorldFoundry/main/docs/fumadocs/public/readme-demos/flashworld.mp4"><img src="https://raw.githubusercontent.com/OpenEnvision/WorldFoundry/main/docs/fumadocs/public/readme-demos/flashworld.gif" width="100%" alt="flashworld demo"></a>
       <br><strong>FlashWorld</strong><br><sub>World video generation</sub>
     </td>
   </tr>
   <tr>
     <td width="33%">
-      <a href="https://github.com/OpenEnvision/WorldFoundry/raw/main/docs/fumadocs/public/readme-demos/sana.mp4"><img src="docs/fumadocs/public/readme-demos/sana.gif" width="100%" alt="sana demo"></a>
+      <a href="https://raw.githubusercontent.com/OpenEnvision/WorldFoundry/main/docs/fumadocs/public/readme-demos/sana.mp4"><img src="https://raw.githubusercontent.com/OpenEnvision/WorldFoundry/main/docs/fumadocs/public/readme-demos/sana.gif" width="100%" alt="sana demo"></a>
       <br><strong>Sana</strong><br><sub>Video generation</sub>
     </td>
     <td width="33%">
-      <a href="https://github.com/OpenEnvision/WorldFoundry/raw/main/docs/fumadocs/public/readme-demos/lingbot-world.mp4"><img src="docs/fumadocs/public/readme-demos/lingbot-world.gif" width="100%" alt="lingbot-world demo"></a>
+      <a href="https://raw.githubusercontent.com/OpenEnvision/WorldFoundry/main/docs/fumadocs/public/readme-demos/lingbot-world.mp4"><img src="https://raw.githubusercontent.com/OpenEnvision/WorldFoundry/main/docs/fumadocs/public/readme-demos/lingbot-world.gif" width="100%" alt="lingbot-world demo"></a>
       <br><strong>LingBot World</strong><br><sub>World-action generation</sub>
     </td>
     <td width="33%">
-      <a href="https://github.com/OpenEnvision/WorldFoundry/raw/main/docs/fumadocs/public/readme-demos/wan2-2.mp4"><img src="docs/fumadocs/public/readme-demos/wan2-2.gif" width="100%" alt="wan2-2 demo"></a>
+      <a href="https://raw.githubusercontent.com/OpenEnvision/WorldFoundry/main/docs/fumadocs/public/readme-demos/wan2-2.mp4"><img src="https://raw.githubusercontent.com/OpenEnvision/WorldFoundry/main/docs/fumadocs/public/readme-demos/wan2-2.gif" width="100%" alt="wan2-2 demo"></a>
       <br><strong>Wan2.2</strong><br><sub>Video generation</sub>
     </td>
   </tr>
   <tr>
     <td width="33%">
-      <a href="https://github.com/OpenEnvision/WorldFoundry/raw/main/docs/fumadocs/public/readme-demos/luciddreamer.mp4"><img src="docs/fumadocs/public/readme-demos/luciddreamer.gif" width="100%" alt="luciddreamer demo"></a>
+      <a href="https://raw.githubusercontent.com/OpenEnvision/WorldFoundry/main/docs/fumadocs/public/readme-demos/luciddreamer.mp4"><img src="https://raw.githubusercontent.com/OpenEnvision/WorldFoundry/main/docs/fumadocs/public/readme-demos/luciddreamer.gif" width="100%" alt="luciddreamer demo"></a>
       <br><strong>LucidDreamer</strong><br><sub>World video generation</sub>
     </td>
     <td width="33%">
-      <a href="https://github.com/OpenEnvision/WorldFoundry/raw/main/docs/fumadocs/public/readme-demos/gen3c.mp4"><img src="docs/fumadocs/public/readme-demos/gen3c.gif" width="100%" alt="gen3c demo"></a>
+      <a href="https://raw.githubusercontent.com/OpenEnvision/WorldFoundry/main/docs/fumadocs/public/readme-demos/gen3c.mp4"><img src="https://raw.githubusercontent.com/OpenEnvision/WorldFoundry/main/docs/fumadocs/public/readme-demos/gen3c.gif" width="100%" alt="gen3c demo"></a>
       <br><strong>GEN3C</strong><br><sub>3D-aware video generation</sub>
     </td>
     <td width="33%">
-      <a href="https://github.com/OpenEnvision/WorldFoundry/raw/main/docs/fumadocs/public/readme-demos/longcat.mp4"><img src="docs/fumadocs/public/readme-demos/longcat.gif" width="100%" alt="longcat demo"></a>
+      <a href="https://raw.githubusercontent.com/OpenEnvision/WorldFoundry/main/docs/fumadocs/public/readme-demos/longcat.mp4"><img src="https://raw.githubusercontent.com/OpenEnvision/WorldFoundry/main/docs/fumadocs/public/readme-demos/longcat.gif" width="100%" alt="longcat demo"></a>
       <br><strong>LongCat</strong><br><sub>World video generation</sub>
     </td>
   </tr>
@@ -247,19 +246,15 @@ environment only when a model profile documents an ABI or simulator conflict.
 The full day-one path lives in the
 [Quickstart](docs/fumadocs/content/docs/quickstart.mdx).
 
-Install Git LFS before cloning so the optional demo media can be checked out correctly:
+Model demo videos are served from GitHub CDN; docs development does not need `git lfs pull`.
 
 ```bash
-git lfs install
-```
-
-```bash
-
-# You can clone the repository with all demo videos
-git clone https://github.com/OpenEnvision/WorldFoundry.git
-
-# or clone the repository skipping large LFS media files for a much faster download
+# Recommended: skip LFS smudge for a much faster clone
 GIT_LFS_SKIP_SMUDGE=1 git clone https://github.com/OpenEnvision/WorldFoundry.git
+
+# Optional: install Git LFS first if you want local demo video binaries
+git lfs install
+git clone https://github.com/OpenEnvision/WorldFoundry.git
 
 cd WorldFoundry
 
@@ -335,7 +330,7 @@ memory architecture and checkpoint path; there is no mutable `memory_method`
 switch. Current upstream weight availability and the extension contract for new
 research memories are documented in the
 [inference guide](docs/fumadocs/content/docs/guides/inference.mdx) and the
-[native Echo integration note](worldfoundry/base_models/diffusion_model/models/networks/echo_memory/README.md).
+[Echo-Memory model card](docs/fumadocs/content/docs/guides/supported-models/echo-memory-context-k1.mdx).
 The released K=1 checkpoint has exact structural coverage in the native model;
 a fresh post-cutover CUDA artifact, official-sample parity, and benchmark scoring
 remain pending.

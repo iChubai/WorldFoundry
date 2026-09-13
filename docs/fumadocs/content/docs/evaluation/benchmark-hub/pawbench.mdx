@@ -44,4 +44,31 @@ worldfoundry-eval zoo benchmark-run \
 
 Outputs include `scorecard.json`, `raw_metric_table.jsonl`, `per_sample_scores.jsonl`, and `benchmark_contract.json`. The checked-in sample is a normalizer fixture only.
 
+## Rollouts, judge, and `metrics.json`
+
+Workflow: benchmark package → your video generator → rollout directory → PAWEval → `metrics.json`. The generator and the judge are different models. The official runner never loads the video model; it scores videos already on disk. Extra pip pins: `worldfoundry/data/benchmarks/requirements/pawbench.txt`.
+
+The HF download is the scene table, source images, generation prompts, and scoring policy (100 reviewable rubrics: one outcome + one trustworthiness rubric per scene). Write the complete 50 × 50 grid as:
+
+```text
+my-model-rollouts/
+  <scene-id>/
+    r000.mp4
+    …
+    r049.mp4
+```
+
+Official PAWEval uses **Gemini 3.5 Flash** through OpenRouter (`OPENROUTER_API_KEY`). `OPENAI_API_KEY` is not part of that path. Other OpenAI-compatible judges (`--vlm-base-url`, `--vlm-model`, `--vlm-api-key-env`) are analysis-only and are not comparable to the official table.
+
+`--model-name` is the label written into result files; it does not load a checkpoint. Re-running the same benchmark, model name, videos, and judge resumes finished rollout judgments.
+
+PAWEval writes `run.json`, `checkpoint.jsonl`, `rows.jsonl`, and `metrics.json` under the run output. A complete run has `status: "ok"` and no blockers. Track averages stay separate:
+
+- Calibration TVD: `tracks.calibration.models.<model>.track_average` (lower is better).
+- Coverage: `tracks.coverage.models.<model>.track_average` (higher is better).
+
+If `status` is `"blocked"`, fix the listed missing-video / judge / infrastructure errors before reporting. Trustworthiness rubrics record action, continuity, and process failures without changing the terminal outcome label.
+
+One rollout is a readout, not a model score. Across 50 coin-flip rollouts, Head/Tail frequencies are compared to the scene reference with TVD.
+
 [← Benchmark Hub](/docs/evaluation/benchmark-hub)

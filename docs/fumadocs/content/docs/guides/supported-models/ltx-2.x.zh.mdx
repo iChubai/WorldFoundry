@@ -45,6 +45,8 @@ catalog 启动命令是 `worldfoundry-eval run ltx-2-t2v --pipeline.task-profile
 
 运行环境是统一 profile `worldfoundry-unified-cu128`（Python 3.11，CUDA 12.8）。
 
+仓内 LTX 包**只放架构代码**。运行时装配、调度、加载、offload、量化和去噪循环仍在共享的 `diffusion_model` 基础设施里。transformer 改编自 [Lightricks/LTX-2](https://github.com/Lightricks/LTX-2) 的 `d6053703e00195bc668cbd1d5eda9dc0b2e7b74a`。checkpoint 与改编源码仍受上游 LTX 许可约束。AlayaWorld 的动作 / 历史模型从自己的 synthesis 包复用这套架构。
+
 记录的权重仓库包括 `Lightricks/LTX-2`、`Lightricks/LTX-2.3`。就位权重用 `bash scripts/inference/prepare_model_infer.sh ltx-2-t2v`。
 
 记录 license 为 other；状态：**已验证**。

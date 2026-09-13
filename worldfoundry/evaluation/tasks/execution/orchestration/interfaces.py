@@ -226,3 +226,17 @@ class OfficialBenchmarkRunner(BenchmarkRunner, Protocol):
 
     def report_metadata(self) -> Mapping[str, JsonValue]:
         """Return stable runner metadata suitable for scorecards and audit reports."""
+
+
+BENCHMARK_RUN_CONTRACT_MODES = frozenset({"contract"})
+BENCHMARK_RUN_NORMALIZER_MODES = frozenset({"normalizer"})
+BENCHMARK_RUN_OFFICIAL_MODES = BENCHMARK_RUN_NORMALIZER_MODES | frozenset({"official-validation", "official-run"})
+BENCHMARK_RUN_PUBLIC_MODES = BENCHMARK_RUN_OFFICIAL_MODES
+BENCHMARK_RUN_SUPPORTED_MODES = BENCHMARK_RUN_CONTRACT_MODES | BENCHMARK_RUN_OFFICIAL_MODES
+
+
+def normalize_benchmark_run_mode(value: str) -> str:
+    if value not in BENCHMARK_RUN_SUPPORTED_MODES:
+        supported = ", ".join(sorted(BENCHMARK_RUN_SUPPORTED_MODES))
+        raise ValueError(f"benchmark run mode must be one of: {supported}")
+    return value

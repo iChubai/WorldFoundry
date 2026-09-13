@@ -223,6 +223,16 @@ metrics:
   output_unit: score
   primary: true
 runner:
+  official_script: worldfoundry/evaluation/tasks/execution/runners/mind/run_mind_official_runner.py
+  workspace:
+    module: worldfoundry.evaluation.tasks.execution.runners.mind.run_mind_official_runner
+    generated_arg: --generated-artifact-dir
+    dataset_root_arg: --gt-root
+    supports_official_runtime: true
+    accepts_generated_artifacts: true
+    supports_fixture: true
+    default_metrics: [mind_average]
+    input_kind: mind_results_or_generated_videos
   runner_target: worldfoundry.evaluation.tasks.contracts.external:MINDContract
   validation_command:
   - worldfoundry-eval
@@ -262,6 +272,8 @@ runner:
     leaderboard is not yet open.
 integration:
   status: integrated
+  tier: in_tree
+  hf_dataset_id: CSU-JPG/MIND
   blocked_reasons:
   - Leaderboard parity requires the complete 250-clip official split and the MIND leaderboard, which is not
     yet published.

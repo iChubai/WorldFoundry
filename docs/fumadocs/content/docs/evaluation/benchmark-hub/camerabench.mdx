@@ -55,4 +55,121 @@ In-tree pointer: `worldfoundry/data/benchmarks/tasks/external/camerabench.yaml`.
 
 Outputs include `scorecard.json` (primary `camerabench_average`), `camera_predictions.jsonl` when present, and `raw_metric_table.jsonl`.
 
+## Two-stage official protocol
+
+CameraBench splits **method-specific scoring** from **method-agnostic metrics**. WorldFoundry is Script 2: it aggregates a prepared `score_dir` or imports official JSON. Script 1 (Qwen-2.5-VL, MegaSAM, or your own method) stays upstream. Swap only Script 1; keep the JSON contracts below.
+
+Videos used by the official scripts come from [`syCen/Videos4CameraBnech`](https://huggingface.co/datasets/syCen/Videos4CameraBnech) (note the upstream spelling). A typical data root looks like:
+
+```text
+<data_root>/
+  binary_classification/
+  vqa_and_retrieval/          # one folder per skill
+  caption_data.json
+  videos/                     # optional local copy of the video set
+```
+
+`HF_TOKEN` may be required when a Script 1 model downloads weights.
+
+### Binary classification
+
+Splits:
+
+- Movement: `Move_Up`, `Move_Down`, `Move_In`, `Move_Out`, `Move_Left`, `Move_Right`
+- Rotation: `Pan_Left`, `Pan_Right`, `Roll_Clockwise`, `Roll_Counterclockwise`, `Tilt_Down`, `Tilt_Up`
+- Zooming: `Zoom_In`, `Zoom_Out`
+- Static: `Static`
+
+Auto-discovery looks for `vqa_scores_*.json` (or `classification_scores_*.json` for custom methods). Required record:
+
+```json
+{
+  "metadata": {
+    "method_type": "Your_Method_Name",
+    "model_name": "your_model_name",
+    "checkpoint": "optional_checkpoint_path",
+    "split_name": "Move_Down",
+    "generation_timestamp": "2025-01-XX"
+  },
+  "scores": [
+    {
+      "sample_id": "0",
+      "video_path": "path/to/video.mp4",
+      "question": "Is the camera moving downward?",
+      "ground_truth_label": "yes",
+      "method": "your_method_identifier",
+      "score": 0.85,
+      "error": null
+    }
+  ]
+}
+```
+
+### VQA and retrieval
+
+Skills: `complex_description`, `confusable_motion`, `has_motion`, `motion_and_steadiness`, `motion_direction`, `motion_speed`, `only_motion`, `scene_dynamics`, `tracking_shot`.
+
+Auto-discovery looks for `vqa_retrieval_scores_*.json`. Official evaluation can run `--mode vqa`, `--mode retrieval`, or both. Required record:
+
+```json
+{
+  "metadata": {
+    "method_type": "Your_Method_Name",
+    "model_name": "your_model_name",
+    "skill_name": "confusable_motion",
+    "task_name": "backward_camera_only_vs_backward_ground_only",
+    "split_name": "confusable_motion"
+  },
+  "scores": [
+    {
+      "sample_id": "0",
+      "pos_video": "path/to/positive_video.mp4",
+      "neg_video": "path/to/negative_video.mp4",
+      "pos_question": "Is the camera moving backward?",
+      "neg_question": "Is the ground moving backward?",
+      "method": "your_method_identifier",
+      "yes_scores": {
+        "pos_text_pos_image": 0.85,
+        "pos_text_neg_image": 0.23,
+        "neg_text_pos_image": 0.31,
+        "neg_text_neg_image": 0.78
+      },
+      "no_scores": {
+        "pos_text_pos_image": 0.15,
+        "pos_text_neg_image": 0.77,
+        "neg_text_pos_image": 0.69,
+        "neg_text_neg_image": 0.22
+      },
+      "error": null
+    }
+  ]
+}
+```
+
+### Captioning
+
+Auto-discovery looks for `caption_results_*.json`. GPT-4o judging needs `OPENAI_API_KEY`; WorldFoundry `--no-gpt` skips it. Required record:
+
+```json
+{
+  "metadata": {
+    "method_type": "Your_Method_Name",
+    "model_name": "your_model_name"
+  },
+  "captions": [
+    {
+      "sample_id": "0",
+      "video_path": "path/to/video.mp4",
+      "question": "Describe the camera motion in this video.",
+      "reference_answer": "The camera pans left while moving forward",
+      "method": "your_method_identifier",
+      "generated_caption": "The camera is panning to the left and moving forward smoothly",
+      "error": null
+    }
+  ]
+}
+```
+
+Catch Script 1 failures and store them as a string in `error`. Sample counts (total / success / fail) are derived from the file; do not invent them. Unique ids are built from `model_name`, `checkpoint`, and `split_name`.
+
 [← Benchmark Hub](/docs/evaluation/benchmark-hub)

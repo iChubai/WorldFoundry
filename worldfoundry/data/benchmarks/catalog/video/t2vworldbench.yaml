@@ -90,6 +90,11 @@ metrics:
   output_unit: score
   primary: true
 runner:
+  official_script: worldfoundry/evaluation/tasks/execution/runners/t2vworldbench/run_t2vworldbench_official_runner.py
+  workspace:
+    module: worldfoundry.evaluation.tasks.execution.runners.t2vworldbench.run_t2vworldbench_official_runner
+    supports_official_runtime: true
+    accepts_generated_artifacts: true
   runner_target: worldfoundry.evaluation.tasks.contracts.external:T2VWorldBenchContract
   validation_command:
   - worldfoundry-eval
@@ -129,6 +134,7 @@ runner:
   - WORLDFOUNDRY_T2VWORLDBENCH_RESULTS_PATH
 integration:
   status: integrated
+  tier: in_tree
   blocked_reasons:
   - Official repository/source metadata and the official-result normalizer are integrated.
   - Full validation requires generated videos and manually staged official Drive metadata/sample assets.

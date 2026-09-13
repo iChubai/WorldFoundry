@@ -9,7 +9,7 @@
 compute_environment: LOCAL_MACHINE
 distributed_type: DEEPSPEED
 deepspeed_config:
- deepspeed_config_file: configs/deepspeed/zero2.json
+ deepspeed_config_file: ../deepspeed/zero2.json
  deepspeed_multinode_launcher: standard
 fsdp_config: {}
 machine_rank: 0

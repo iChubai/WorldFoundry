@@ -12,10 +12,11 @@ from dataclasses import dataclass, field
 from typing import Any, Mapping
 
 from worldfoundry.evaluation.api import AggregateResult, GenerationRequest, GenerationResult, MetricResult
-from worldfoundry.evaluation.tasks.execution.framework.in_tree_registry import (
+from worldfoundry.evaluation.tasks.execution.framework.scoring_registry import (
     get_in_tree_benchmark_config,
     supported_in_tree_benchmark_ids,
 )
+from worldfoundry.evaluation.tasks.execution.framework.io import coerce_unit_score
 
 JUDGE_BLOCKED_REASON = "official judge, labels, rubric, or API evidence is required"
 SAFETY_JUDGE_REQUIRED_REASON = "safety judge or rule violation manifest is required"
@@ -185,31 +186,6 @@ class BenchmarkZooInTreeEvaluator:
         return _evaluate_reasoning_metrics(self.benchmark_id, self.metric_ids, request, result, artifact_status, self._config)
 
 
-def evaluate_benchmark_metrics(
-    benchmark_id: str,
-    request: GenerationRequest,
-    result: GenerationResult,
-    *,
-    metric_ids: Sequence[str] | None = None,
-    required_artifacts: Sequence[str] | None = None,
-) -> list[dict[str, Any]]:
-    """Evaluate one benchmark sample and return serializable rows.
-
-    Args:
-        benchmark_id: Target benchmark id.
-        request: Sample request containing reference labels, answers, or rubrics.
-        result: Generation output containing artifacts and evaluator metadata.
-        metric_ids: Optional metric subset.
-        required_artifacts: Optional artifact checks to enforce before scoring.
-    """
-    evaluator = BenchmarkZooInTreeEvaluator(
-        benchmark_id,
-        metric_ids=metric_ids,
-        required_artifacts=required_artifacts,
-    )
-    return [row.to_dict() for row in evaluator.evaluate_sample(request, result)]
-
-
 def artifact_presence_evidence(result: GenerationResult, required_artifacts: Sequence[str]) -> dict[str, Any]:
     """Check required artifact presence and coarse artifact kind.
 
@@ -283,16 +259,7 @@ def _unit_score(value: Any) -> float | None:
     Args:
         value: Candidate numeric score or percentage.
     """
-    if not isinstance(value, (int, float)) or isinstance(value, bool):
-        return None
-    numeric = float(value)
-    if numeric < 0:
-        return None
-    if numeric <= 1:
-        return numeric
-    if numeric <= 100:
-        return numeric / 100.0
-    return None
+    return coerce_unit_score(value)
 
 
 def _lookup_aliases(metric_id: str) -> tuple[str, ...]:

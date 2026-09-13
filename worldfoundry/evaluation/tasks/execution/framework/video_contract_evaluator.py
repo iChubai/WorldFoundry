@@ -20,10 +20,11 @@ from worldfoundry.core.time import utc_now_iso
 from worldfoundry.evaluation.reporting.scorecard import SCORECARD_SCHEMA_VERSION
 from worldfoundry.evaluation.tasks.execution.framework.io import optional_float
 from worldfoundry.evaluation.tasks.execution.framework.official_result_scoring import OfficialMetricScore
+from worldfoundry.evaluation.tasks.execution.framework.runner_common import VIDEO_SUFFIXES
 
 JsonValue = Any
 RECORD_FILE_SUFFIXES = frozenset({".json", ".jsonl", ".ndjson", ".yaml", ".yml", ".csv"})
-VIDEO_EXTENSIONS = frozenset({".mp4", ".mov", ".mkv", ".avi", ".webm", ".m4v"})
+VIDEO_EXTENSIONS = VIDEO_SUFFIXES | {".m4v"}
 LOCAL_METRIC_IDS = (
     "artifact_manifest_coverage",
     "generated_video_exists",

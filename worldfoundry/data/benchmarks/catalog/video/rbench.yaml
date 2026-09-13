@@ -170,6 +170,20 @@ metrics:
   aggregator: mean
   output_unit: score
 runner:
+  scoring:
+    engines: [physics_contract]
+    hooks:
+      physics_contract: worldfoundry.evaluation.tasks.execution.runners.rbench.rbench_contract_evaluator:write_rbench_evaluation
+  official_script: worldfoundry/evaluation/tasks/execution/runners/rbench/run_rbench_official_runner.py
+  workspace:
+    module: worldfoundry.evaluation.tasks.execution.runners.rbench.run_rbench_official_runner
+    generated_arg: --generated-artifact-dir
+    dataset_root_arg: --benchmark-data-root
+    prompt_manifest_arg: --prompt-manifest
+    benchmark_id_arg: --benchmark-id
+    model_arg: --result-model-id
+    default_metrics: [rbench_overall]
+    input_kind: rbench_official_results_tree
   runner_target: worldfoundry.evaluation.tasks.contracts.external:RBenchContract
   official_runner_script: worldfoundry/evaluation/tasks/execution/runners/rbench/run_rbench_official_runner.py
   validation_command:
@@ -207,6 +221,9 @@ runner:
   - gpt and qwen judge outputs are never mixed; one backend is aggregated per run.
 integration:
   status: integrated
+  tier: model_backed
+  hf_dataset_id: DAGroup-PKU/RBench
+  judge_model_id: gpt-4o+Qwen3-VL
   blocked_reasons:
   - Producing results requires an external VLM judge and the low-level operator stack with their checkpoints.
   - rbench_overall is a WorldFoundry composite; RBench publishes the two tracks separately.

@@ -27,8 +27,10 @@ Predict future world video from text, a first frame, or a video prefix. Variants
 
 The pipeline invokes the native recipes directly in `worldfoundry-unified-cu128`. Launch `worldfoundry-eval run cosmos-predict-2.5-2b` with `--pipeline.task-profile text-to-world-validation`. Stage `nvidia/Cosmos-Predict2.5-2B` (and 14B if you are testing that line) under NVIDIA's access rules. Structural tensor match is not the same as GPU output parity — 14B still pending.
 
+The in-tree network is an inference-only PyTorch `MinimalV1LVGDiT`. It uses WorldFoundry attention and timestep primitives. NVIDIA EMA conversion and the `Denoiser` adapter live in `worldfoundry/base_models/diffusion_model/models/denoisers/cosmos2p5.py`, not in the network package. Architecture reference: `nvidia-cosmos/cosmos-predict2.5` at `a2c298b0a3df3778b973fe65e9e58877b292d8a7`.
+
 ## Minimal eval
 
-The 2B text-to-world route is verified. Import [WorldModelBench](/docs/evaluation/benchmark-hub/worldmodelbench) official-shaped results and read `world_model_average`. `official-run` needs `WORLDFOUNDRY_WORLDMODELBENCH_JUDGE`; full judge execution is not verified. Full cell: [Model → benchmark recipes](/docs/evaluation/model-benchmark-recipes).
+The 2B text-to-world route is verified. Import [WorldModelBench](/docs/evaluation/benchmark-hub/worldmodelbench) official-shaped results and read `world_model_average`. `official-run` needs `WORLDFOUNDRY_WORLDMODELBENCH_JUDGE`; full judge execution is not verified.
 
 <ModelRelatedRecipes modelId="cosmos-predict-2.5" locale="en" />

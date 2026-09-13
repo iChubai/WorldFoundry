@@ -29,6 +29,6 @@ Wan-VAE encodes **1080p of arbitrary length** so the DiT denoises in latent spac
 
 Unified `worldfoundry-unified-cu128` (Python 3.11, CUDA 12.8). Stage Wan-AI checkpoints locally. License Apache-2.0. Catalog VRAM **8 GB** on the 1.3B line. Status: **Verified** on 1.3B T2V; 14B and both I2V lines are **Runner parity pending**. Family-level integration stays **Planned** until those three finish checkpoint, official-demo, and runner parity. Do not use the VACE demo clip or the Helios project page as this model's official sources.
 
-Generate the 1.3B T2V clip, then score the folder on [VBench](/docs/evaluation/benchmark-hub/vbench) `custom_input` / `aesthetic_quality` — the only VBench GPU dimension this repo verified. Read `aesthetic_quality` in `tmp/vbench/wan2.1/eval/scorecard.json`. Full cell: [Model → benchmark recipes](/docs/evaluation/model-benchmark-recipes).
+Generate the 1.3B T2V clip, then score the folder on [VBench](/docs/evaluation/benchmark-hub/vbench) `custom_input` / `aesthetic_quality` — the only VBench GPU dimension this repo verified. Read `aesthetic_quality` in `tmp/vbench/wan2.1/eval/scorecard.json`.
 
 <ModelRelatedRecipes modelId="wan2.1" locale="en" />

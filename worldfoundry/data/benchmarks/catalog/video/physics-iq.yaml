@@ -56,6 +56,17 @@ metrics:
   higher_is_better: false
   aggregator: mean
 runner:
+  normalization:
+    artifact_official_run: true
+    pass_generated_artifact_dir: true
+  official_script: worldfoundry/evaluation/tasks/execution/runners/physics_iq/run_physics_iq_official_runner.py
+  workspace:
+    module: worldfoundry.evaluation.tasks.execution.runners.physics_iq.run_physics_iq_official_runner
+    generated_arg: --generated-artifact-dir
+    dataset_root_arg: --dataset-root
+    limit_arg: --limit
+    supports_official_runtime: true
+    accepts_generated_artifacts: true
   runner_target: worldfoundry.evaluation.tasks.contracts.external:PhysicsIQContract
   official_runner_script: worldfoundry/evaluation/tasks/execution/runners/physics_iq/run_physics_iq_official_runner.py
   run_command: >-
@@ -76,6 +87,7 @@ runner:
   required_env: [WORLDFOUNDRY_PHYSICS_IQ_ORIGINAL_ROOT, WORLDFOUNDRY_GENERATED_ARTIFACT_DIR]
 integration:
   status: integrated
+  tier: in_tree
   notes:
   - Prompt materialization, mask generation, raw video metrics, and original score aggregation execute in tree.
   - Official media are data assets and are not vendored; the upstream source repository is provenance only.

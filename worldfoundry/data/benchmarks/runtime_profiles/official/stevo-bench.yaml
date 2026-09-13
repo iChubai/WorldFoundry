@@ -24,6 +24,9 @@ required_assets:
   in_tree_runtime_paths:
   - worldfoundry/evaluation/tasks/execution/runners/stevo_bench
   - worldfoundry/evaluation/tasks/execution/runners/stevo_bench/runtime/stevo_bench
+  pip_requirements:
+  - worldfoundry/data/benchmarks/requirements/stevo-bench.txt
+  - worldfoundry/data/benchmarks/requirements/stevo-bench-eval-se.txt
   task_yaml: worldfoundry/data/benchmarks/tasks/external/stevo-bench.yaml
   fixture: worldfoundry/data/benchmarks/assets/stevo-bench/sample_run
   hf_dataset_ids:
@@ -47,6 +50,10 @@ required_paths:
   path: worldfoundry/evaluation/tasks/execution/runners/stevo_bench/stevo_bench_metrics.py
 - id: vendored_official_evaluator
   path: worldfoundry/evaluation/tasks/execution/runners/stevo_bench/runtime/stevo_bench/eval/eval_cli.py
+- id: pip_requirements
+  path: worldfoundry/data/benchmarks/requirements/stevo-bench.txt
+- id: pip_requirements_eval_se
+  path: worldfoundry/data/benchmarks/requirements/stevo-bench-eval-se.txt
 - id: task_yaml
   path: worldfoundry/data/benchmarks/tasks/external/stevo-bench.yaml
 requires_cuda_visibility: false

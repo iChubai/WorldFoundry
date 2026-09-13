@@ -204,6 +204,15 @@ metrics:
   aggregator: mean
   output_unit: score
 runner:
+  official_script: worldfoundry/evaluation/tasks/execution/runners/worldolympiad/run_worldolympiad_official_runner.py
+  workspace:
+    module: worldfoundry.evaluation.tasks.execution.runners.worldolympiad.run_worldolympiad_official_runner
+    generated_arg: --generated-artifact-dir
+    limit_arg: --limit
+    supports_official_runtime: true
+    accepts_generated_artifacts: true
+    supports_fixture: true
+    input_kind: worldolympiad_case_root_or_official_results
   runner_target: worldfoundry.evaluation.tasks.contracts.external:WorldOlympiadContract
   validation_command:
   - worldfoundry-eval
@@ -242,6 +251,9 @@ runner:
   - Weights are passed explicitly from --weights-dir so upstream never resolves them into the source tree, and the Depth Anything 3 source tree is supplied through --da3-src.
 integration:
   status: integrated
+  tier: model_backed
+  hf_dataset_id: ziplab/WorldOlympiad
+  judge_model_id: Qwen/Qwen3-VL-8B-Instruct+facebook/sam3+depth-anything/DA3NESTED-GIANT-LARGE-1.1
   blocked_reasons:
   - Scored execution requires DA3, SAM3, and QwenVL services with GPU capacity that this integration does not provision.
   - The upstream repository publishes no license, so the vendored runtime carries no stated redistribution terms.

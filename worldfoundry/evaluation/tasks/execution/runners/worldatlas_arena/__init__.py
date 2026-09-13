@@ -1,2 +1,0 @@
-"""WorldAtlas Arena benchmark runner."""
-

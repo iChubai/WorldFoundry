@@ -338,10 +338,6 @@ docs/fumadocs/public/*.png
 !docs/fumadocs/public/demos/**
 !docs/fumadocs/public/home-demos/
 !docs/fumadocs/public/home-demos/*.mp4
-!docs/fumadocs/public/cover_4x4_hero.mp4
-!docs/fumadocs/public/readme-demos/
-!docs/fumadocs/public/readme-demos/*.mp4
-!docs/fumadocs/public/readme-demos/*.gif
 worldfoundry/base_models/diffusion_model/diffsynth/tokenizer_configs/
 worldfoundry/base_models/three_dimensions/general_3d/four_d_gaussians/four_d_gaussians_runtime/utils/*.TTF
 worldfoundry/base_models/three_dimensions/general_3d/mvdiffusion/mvdiffusion_runtime/assets/
@@ -388,6 +384,11 @@ worldfoundry/studio/assets/vendor/
 **/*_test.py
 **/test_*.cpp
 **/*_test.cpp
+# Shipped catalog/dispatch invariant tests (public release gate).
+!/tests/
+!/tests/evaluation/
+!/tests/evaluation/catalog/
+!/tests/evaluation/catalog/**
 *.pem
 *.key
 *.p12

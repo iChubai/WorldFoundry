@@ -1,4 +1,4 @@
-.PHONY: help install-core install-dev docs-check docs-dev-fast docs-dev-ssd docs-dev-local docs-build-fast cli-entrypoint-check lint ruff-check format-check shell-check data-check runtime-registry-check check-cuda-constraints packaging-check compile-eval cli-check precommit precommit-install preflight
+.PHONY: help install-core install-dev docs-check docs-dev-fast docs-dev-ssd docs-dev-local docs-build-fast cli-entrypoint-check lint ruff-check format-check shell-check data-check runtime-registry-check workspace-registry-check check-cuda-constraints packaging-check compile-eval cli-check precommit precommit-install preflight
 
 PYTHON ?= python
 PIP ?= $(PYTHON) -m pip
@@ -73,7 +73,7 @@ cli-entrypoint-check:
 	PYTHONPATH=$(PYTHONPATH) $(PYTHON) -m worldfoundry.cli zoo models --json >/dev/null
 	PYTHONPATH=$(PYTHONPATH) $(PYTHON) -m worldfoundry.cli zoo benchmarks --json >/dev/null
 
-lint: ruff-check format-check shell-check data-check runtime-registry-check
+lint: ruff-check format-check shell-check data-check runtime-registry-check workspace-registry-check
 
 ruff-check:
 	$(PYTHON) -m ruff check $(RUFF_SOURCES)
@@ -95,6 +95,10 @@ data-check:
 
 runtime-registry-check:
 	PYTHONPATH=$(PYTHONPATH) $(PYTHON) -c 'from worldfoundry.evaluation.models.runtime.validate import validate_runtime_registry; errors = [issue for issue in validate_runtime_registry() if issue.severity == "error"]; assert not errors, "\\n".join(f"[{issue.code}] {issue.message}" for issue in errors)'
+
+workspace-registry-check:
+	PYTHONPATH=$(PYTHONPATH) $(PYTHON) tests/evaluation/catalog/test_video_workspace_registry.py
+	PYTHONPATH=$(PYTHONPATH) $(PYTHON) tests/evaluation/catalog/test_execution_registries.py
 
 check-cuda-constraints:
 	PYTHONPATH=$(PYTHONPATH) $(PYTHON) scripts/setup/check_cuda_torch_constraints.py

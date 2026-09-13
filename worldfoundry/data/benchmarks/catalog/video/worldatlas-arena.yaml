@@ -104,6 +104,20 @@ metrics:
   output_unit: rate
   normalizer: identity:0:1
 runner:
+  normalization:
+    pass_generated_artifact_dir: true
+  official_script: worldfoundry/evaluation/tasks/execution/runners/worldatlas_arena/run_worldatlas_arena_official_runner.py
+  workspace:
+    module: worldfoundry.evaluation.tasks.execution.runners.worldatlas_arena.run_worldatlas_arena_official_runner
+    generated_arg: --generated-artifact-dir
+    dataset_manifest_arg: --manifest
+    limit_arg: --limit
+    model_arg: --model-name
+    supports_official_runtime: true
+    accepts_generated_artifacts: true
+    supports_fixture: true
+    default_metrics: [long_sequence, action_control, consistency_3d_4d, physics, quality, real_time]
+    input_kind: worldatlas_arena_manifest_predictions_or_official_report
   runner_target: worldfoundry.evaluation.tasks.contracts.external:WorldAtlasArenaContract
   validation_command:
   - worldfoundry-eval

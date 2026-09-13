@@ -36,4 +36,22 @@ worldfoundry-eval zoo benchmark-run \
 
 产物包括 `scorecard.json`（主键 `wrbench_average`，榜单键 `Avg`）与 `generation_requests.jsonl`。
 
+## 仓内 Natural-25 资产
+
+`worldfoundry/data/benchmarks/assets/wrbench/natural25/` 是 WorldFoundry 物化请求用的 prompt 网格（与本仓库一样 Apache-2.0）。Hugging Face 镜像：[合集](https://huggingface.co/collections/WRBench/wrbench-current-world-models-lack-a-persistent-state-core-6a365c717251293c9fc2cc26)、[`WRBench/wrbench-natural25`](https://huggingface.co/datasets/WRBench/wrbench-natural25)、[`WRBench/wrbench-videos`](https://huggingface.co/datasets/WRBench/wrbench-videos)、[榜单](https://huggingface.co/spaces/WRBench/wrbench-leaderboard)。
+
+| 文件 | 作用 |
+| --- | --- |
+| `scene_events_25x4.csv` | 25 个场景族 × 4 个事件轴（无 / 空间 / 状态 / 全） |
+| `families.jsonl` | 场景族元数据与 prompt 变体 |
+| `variants.jsonl` | 确定性 TI2V 变体：25 族 × 4 事件档 × 4 相机间隔。`ti2v_prompt` 是锚定首帧的正式 prompt |
+| `variants.legacy_pronoun_20260620.jsonl` | 冻结的 provenance 快照；目前与 `variants.jsonl` 字节相同 |
+| `t2v_layout_anchors.jsonl` | 纯文本布局事实（主体在左、交互者在右、开放表面、背景） |
+| `t2v_event_tails.jsonl` | 按 `variant_id` 的纯文本事件 / 动作尾巴 |
+| `prompt_profiles/t2v_layout_anchor.json` | 纯文本 prompt profile；禁止 T2I/TI2V 风格词 |
+| `camera_scopes/t2v_rotation_stress_30_60.json` | 仅 T2V 的旋转压力范围（`static`、`yaw30_LR`、`yaw30_RL`、`yaw60_LR`、`yaw60_RL`） |
+| `first_frames/` + `first_frames_manifest.json` | 已发布的 PNG 首帧，每个 `family_id` 一张 |
+
+可以用 `wrbench firstframe` 重生成首帧，或换成自己的 T2I 图。人工标注另行发布。纯文本榜单条目应物化 `t2v_layout_anchor` 和旋转压力范围，而不是主 TI2V/TV2V 面。
+
 [← 返回 Benchmark Hub](/zh/docs/evaluation/benchmark-hub)

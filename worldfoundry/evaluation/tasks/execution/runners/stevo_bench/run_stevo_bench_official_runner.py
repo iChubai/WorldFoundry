@@ -50,12 +50,11 @@ VIDEO_SUFFIXES = (".mp4", ".mov", ".mkv", ".webm", ".avi")
 # STEVO-Bench ships 225 tasks across 6 world-change categories.
 EXPECTED_TASK_COUNT = 225
 
-# ``eval/eval_cli.py`` exposes one flag per criterion. ``run_eval.sh`` at the
-# pinned revision also passes ``--artifact`` and ``--coherence``, which the CLI
-# does not define; those two criteria are therefore not executable upstream.
+# ``eval/eval_cli.py`` exposes one flag per criterion. The pinned CLI does not
+# define ``--artifact`` or ``--coherence``, so those criteria are not executable.
 CRITERIA = ("control", "physics", "state")
 CRITERION_FLAGS = {"control": "--control", "physics": "--physics", "state": "--state"}
-# Ensemble configuration from the paper, as encoded in upstream ``run_eval.sh``.
+# Ensemble configuration from the paper (majority, ensemble size 3).
 CRITERION_ENSEMBLE_MODE = {"control": "majority", "physics": "majority", "state": "majority"}
 
 

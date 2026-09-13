@@ -477,6 +477,10 @@ for the no-proxy download and smoke command. The complete upstream suite also
 expects direct `0000.mp4` through `0699.mp4` files, but WorldFoundry does not
 currently claim that full path.
 
+## WorldFoundry container
+
+The supported image is the repository-root `docker/Dockerfile`, built through `docker/build_with_docker.sh`. Dockerfiles under `worldfoundry/base_models/perception_core/detection/yolo_world/mmyolo/docker/` (and the MMYOLO CircleCI Dockerfile) are upstream snapshot artifacts. WorldFoundry does not build or publish those images; they keep PyTorch 1.8/1.9-era CUDA bases and are not maintained against the current runtime. If you need an MMYOLO-specific image, build it from current upstream rather than this vendored copy.
+
 ## Embodied simulator environments
 
 The host setup is Docker plus the unified WorldFoundry environment:

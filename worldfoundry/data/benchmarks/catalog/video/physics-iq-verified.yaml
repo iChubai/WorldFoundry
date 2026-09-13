@@ -51,6 +51,18 @@ metrics:
   higher_is_better: true
   aggregator: mean
 runner:
+  normalization:
+    artifact_official_run: true
+    pass_generated_artifact_dir: true
+  official_script: worldfoundry/evaluation/tasks/execution/runners/physics_iq/run_physics_iq_official_runner.py
+  workspace:
+    module: worldfoundry.evaluation.tasks.execution.runners.physics_iq.run_physics_iq_official_runner
+    generated_arg: --generated-artifact-dir
+    dataset_root_arg: --dataset-root
+    limit_arg: --limit
+    benchmark_id_arg: --benchmark-id
+    supports_official_runtime: true
+    accepts_generated_artifacts: true
   runner_target: worldfoundry.evaluation.tasks.contracts.external:PhysicsIQVerifiedContract
   official_runner_script: worldfoundry/evaluation/tasks/execution/runners/physics_iq/run_physics_iq_official_runner.py
   run_command: >-
@@ -71,6 +83,7 @@ runner:
   required_env: [WORLDFOUNDRY_PHYSICS_IQ_VERIFIED_ROOT, WORLDFOUNDRY_GENERATED_ARTIFACT_DIR]
 integration:
   status: integrated
+  tier: in_tree
   notes:
   - Shares the official mask/raw-metric engine with Original and selects only the Verified score adapter.
   - The bundled default is the upstream base best-practice prompt; model-specific prompt files may override it.

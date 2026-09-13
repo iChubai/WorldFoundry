@@ -27,6 +27,9 @@ official_sources:
   paper_url: https://arxiv.org/abs/2403.09227
   license: upstream_terms
 runner:
+  normalization:
+    dispatch: embodied
+    embodied_track: vla
   runner_target: worldfoundry.evaluation.tasks.contracts.external:Behavior1KContract
   expected_artifacts:
   - scorecard.json

@@ -277,6 +277,7 @@ if __name__ == "__main__":
 
     sys.path.append("../../")
     from evoke.modules.transformer_evoke import EvokeTransformer3DModel
+    from worldfoundry.core.io.paths import resolve_data_path
 
     args = Namespace()
     args.data_config = Namespace()
@@ -288,7 +289,9 @@ if __name__ == "__main__":
     args.training_config.ema_zero3_port = 10543
     args.model_config.train_norm_layers = False
     args.model_config.transformer_model_name_or_path = "Wan-AI/Wan2.1-T2V-1.3B-Diffusers"
-    args.training_config.ema_deepspeed_config_file = "../../configs/deepspeed/zero3.json"
+    args.training_config.ema_deepspeed_config_file = str(
+        resolve_data_path("models", "runtime", "configs", "evoke", "deepspeed", "zero3.json")
+    )
     resume_checkpoint_path = None
 
     output_dir = "temp"

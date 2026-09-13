@@ -536,10 +536,12 @@ if __name__ == "__main__":
     import sys
     from omegaconf import OmegaConf
     from depth_anything_3.cfg import load_config
+    from worldfoundry.core.io.paths import resolve_data_path
 
-    # Get default config path (relative to this file)
-    _default_config = os.path.join(
-        os.path.dirname(__file__), "configs", "eval_bench.yaml"
+    _default_config = str(
+        resolve_data_path(
+            "models", "runtime", "configs", "evoke", "depth_anything_3", "eval_bench.yaml"
+        )
     )
 
     # Check for help flag first (we need to handle this before OmegaConf)
@@ -567,7 +569,7 @@ Usage:
   python -m depth_anything_3.bench.evaluator [OPTIONS] [KEY=VALUE ...]
 
 Configuration:
-  --config PATH                      Config YAML file (default: bench/configs/eval_bench.yaml)
+  --config PATH                      Config YAML file (default: worldfoundry/data/models/runtime/configs/evoke/depth_anything_3/eval_bench.yaml)
 
 Config Overrides (using dotlist notation):
   model.path=VALUE                   Model path or HuggingFace ID

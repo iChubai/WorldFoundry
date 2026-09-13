@@ -16,6 +16,10 @@ from torch import Tensor
 from typing import Optional, List, Tuple
 import math
 
+from worldfoundry.synthesis.visual_generation.world_model.vid2world.config_paths import (
+    resolve_runtime_asset,
+)
+
 class RTVid(Dataset):
     """
     RT Dataset.
@@ -77,7 +81,9 @@ class RTVid(Dataset):
             self.random_resized_crop_ratio = (0.9, 1.1)
         
         # Initialize val_file_set before _load_metadata
-        self.val_file_list_path = val_file_list_path
+        self.val_file_list_path = (
+            str(resolve_runtime_asset(val_file_list_path)) if val_file_list_path else val_file_list_path
+        )
         self.val_file_set = set()
         if self.val_file_list_path and os.path.exists(self.val_file_list_path):
             with open(self.val_file_list_path, 'r') as f:

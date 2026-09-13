@@ -15,10 +15,12 @@ import torch
 import os
 from PIL import Image
 from typing import Tuple
-import yaml
 import pickle
 import tqdm
 from torch.utils.data import Dataset
+from worldfoundry.synthesis.visual_generation.world_model.vid2world.config_paths import (
+    load_runtime_yaml,
+)
 from worldfoundry.synthesis.visual_generation.world_model.vid2world.nvm_utils.misc import (
     angle_difference,
     get_data_path,
@@ -115,10 +117,7 @@ class BaseDataset(Dataset):
         self.context_size = context_size
         self.normalize = normalize
 
-        # load data/data_config.yaml
-        config_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "nvm_utils", "data_config.yaml")
-        with open(config_path, "r") as f:
-            all_data_config = yaml.safe_load(f)
+        all_data_config = load_runtime_yaml("data_config.yaml")
 
         dataset_names = list(all_data_config.keys())
         dataset_names.sort()

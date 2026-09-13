@@ -18,6 +18,9 @@ from torch import Tensor
 from typing import Optional, List, Tuple
 import math
 
+from worldfoundry.synthesis.visual_generation.world_model.vid2world.config_paths import (
+    resolve_runtime_asset,
+)
 from worldfoundry.synthesis.visual_generation.world_model.vid2world.csgo_utils.data import (
     CSGOHdf5Dataset,
     SegmentId,
@@ -107,9 +110,10 @@ class CSGOVID(Dataset):
         self.val_start_idx_path = val_start_idx_path
         self.val_file_set = set()
         
-        # Convert relative paths to absolute paths based on project root
         if self.val_file_list_path and not os.path.isabs(self.val_file_list_path):
-            self.val_file_list_path = str(_VID2WORLD_RUNTIME_ROOT / self.val_file_list_path)
+            self.val_file_list_path = str(
+                resolve_runtime_asset(self.val_file_list_path, _VID2WORLD_RUNTIME_ROOT)
+            )
         
         if self.val_file_list_path and os.path.exists(self.val_file_list_path):
             with open(self.val_file_list_path, 'r') as f: # val_file_list_path is a txt file, each line is a file path

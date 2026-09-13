@@ -4,7 +4,6 @@
 # This source code is licensed under the license found in the
 # LICENSE file in the root directory of this source tree.
 #
-import yaml
 import matplotlib.pyplot as plt
 import torch
 import numpy as np
@@ -14,13 +13,16 @@ from PIL import Image
 from torchvision import transforms
 import torchvision.transforms.functional as TF
 
+from worldfoundry.synthesis.visual_generation.world_model.vid2world.config_paths import (
+    load_runtime_yaml,
+)
+
 # Get the absolute path to the DynamiCrafter directory
 project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 IMAGE_ASPECT_RATIO = (4 / 3)  # all images are centered cropped to a 4:3 aspect ratio in training
 
-with open(os.path.join(project_root, "nvm_utils", "data_config.yaml"), "r") as f:
-    data_config = yaml.safe_load(f)
+data_config = load_runtime_yaml("data_config.yaml")
 
 
 def get_action_torch(diffusion_output, action_stats):

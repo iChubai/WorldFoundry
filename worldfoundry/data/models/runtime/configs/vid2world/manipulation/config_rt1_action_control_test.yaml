@@ -129,7 +129,7 @@ data:
         mode: validation
         augment_data: false
         subsample: false
-        val_file_list_path: ../lvdm/data/val_file_list.json
+        val_file_list_path: eval_inputs/val_file_list.json
         action_magnitude: 0.1
         action_dim: 13
         samples_per_episode: 6

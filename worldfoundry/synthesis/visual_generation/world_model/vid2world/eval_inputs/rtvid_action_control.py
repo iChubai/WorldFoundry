@@ -25,6 +25,10 @@ from torchvision import transforms
 from torchvision.transforms import functional as F
 import json
 
+from worldfoundry.synthesis.visual_generation.world_model.vid2world.config_paths import (
+    resolve_runtime_asset,
+)
+
 
 class RTVidActionControl(Dataset):
     """
@@ -106,7 +110,9 @@ class RTVidActionControl(Dataset):
             self.hue = [-0.05, 0.05]
         
         # Load validation file list
-        self.val_file_list_path = val_file_list_path
+        self.val_file_list_path = (
+            str(resolve_runtime_asset(val_file_list_path)) if val_file_list_path else val_file_list_path
+        )
         self.val_file_set = set()
         if self.val_file_list_path and os.path.exists(self.val_file_list_path):
             with open(self.val_file_list_path, 'r') as f:

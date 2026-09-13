@@ -2,12 +2,14 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from worldfoundry.core.io.paths import resolve_data_path
+from worldfoundry.synthesis.visual_generation.world_model.vid2world.config_paths import (
+    runtime_config_root,
+)
 
 
 RUNTIME_DIR = Path(__file__).resolve().parent
 OFFICIAL_ENTRYPOINT = RUNTIME_DIR / "main" / "inference.py"
-CONFIG_ROOT = resolve_data_path("models", "runtime", "configs", "vid2world")
+CONFIG_ROOT = runtime_config_root()
 DEFAULT_CONFIG = "game/config_csgo_test.yaml"
 BLOCKED_REASON = (
     "Vid2World source is vendored in-tree; inference requires a test config with "

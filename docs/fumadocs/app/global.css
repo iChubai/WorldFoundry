@@ -4510,6 +4510,32 @@ a.pi-blog-post-card:hover h2 {
   margin: 10px 0 2px !important;
 }
 
+.pi-doc-content .wf-docs-tabs-panel > :first-child {
+  margin-top: 0;
+}
+
+.pi-doc-content .wf-docs-tabs-panel > p {
+  color: var(--pi-muted);
+  font-size: var(--pi-doc-ui-md);
+  line-height: 1.5;
+  margin: 0;
+}
+
+.pi-doc-content .wf-docs-tabs-panel > figure.shiki:only-child {
+  border: 0 !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  margin: -1rem !important;
+}
+
+.pi-doc-content .wf-docs-tabs-panel > figure.shiki:last-child:not(:only-child) {
+  border: 0 !important;
+  border-radius: 0 !important;
+  border-top: 1px solid var(--pi-line) !important;
+  box-shadow: none !important;
+  margin: 0.75rem -1rem -1rem !important;
+}
+
 .pi-doc-content .fd-step figure.shiki {
   margin: 12px 0 16px !important;
 }

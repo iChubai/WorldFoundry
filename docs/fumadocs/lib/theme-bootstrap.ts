@@ -1,5 +1,5 @@
 /**
- * Blocking theme bootstrap for the document (Server Component).
+ * Blocking theme bootstrap injected into <head> via useServerInsertedHTML.
  * next-themes' in-tree <script> is marked as a data block under React 19, so
  * FOUC prevention must live here instead.
  * Matches fumadocs RootProvider defaults: attribute=class, defaultTheme=system.

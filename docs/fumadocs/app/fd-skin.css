@@ -860,6 +860,15 @@
   color: inherit;
 }
 
+.dark .pi-doc-content .wf-docs-tabs-panel > p {
+  color: var(--pi-muted);
+}
+
+.dark .pi-doc-content .wf-docs-tabs-panel > figure.shiki:only-child,
+.dark .pi-doc-content .wf-docs-tabs-panel > figure.shiki:last-child:not(:only-child) {
+  box-shadow: none !important;
+}
+
 .dark .pi-doc-content details {
   background: color-mix(in srgb, var(--pi-paper) 88%, var(--pi-elevated));
 }

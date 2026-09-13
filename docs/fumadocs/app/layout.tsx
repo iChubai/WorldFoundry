@@ -1,8 +1,8 @@
 import { Provider } from '@/components/provider';
+import { ThemeBootstrap } from '@/components/theme-bootstrap';
 import { brandDisplayFont } from '@/lib/brand-font';
 import { docsSansFont } from '@/lib/docs-font';
 import { withBasePath } from '@/lib/site-path';
-import { THEME_BOOTSTRAP_SCRIPT } from '@/lib/theme-bootstrap';
 import 'fumadocs-ui/components/image-zoom2.css';
 import './styles/tokens.css';
 import './global.css';
@@ -34,7 +34,7 @@ export default function Layout({ children }: LayoutProps<'/'>) {
       className={`${brandDisplayFont.variable} ${docsSansFont.variable}`}
     >
       <body className="flex flex-col min-h-screen" suppressHydrationWarning>
-        <script dangerouslySetInnerHTML={{ __html: THEME_BOOTSTRAP_SCRIPT }} />
+        <ThemeBootstrap />
         <Provider>{children}</Provider>
       </body>
     </html>

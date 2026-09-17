@@ -389,6 +389,13 @@ worldfoundry/studio/assets/vendor/
 !/tests/evaluation/
 !/tests/evaluation/catalog/
 !/tests/evaluation/catalog/**
+!/tests/evaluation/execution/
+!/tests/evaluation/execution/test_*.py
+!/tests/evaluation/metrics/
+!/tests/evaluation/metrics/test_*.py
+!/tests/core/
+!/tests/core/attention/
+!/tests/core/attention/test_*.py
 *.pem
 *.key
 *.p12

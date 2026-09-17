@@ -4,7 +4,7 @@ This module is responsible for safely, lightly, and side-effect-freely probing a
 dispatching the optimal Attention computation backend in the current runtime environment.
 
 Core Architectural Design:
-1. Zero-Cost Probing: Uses `importlib.util.find_spec` to dynamically query packages
+1. Package Probing: Uses `importlib.machinery.PathFinder` to locate packages
    rather than physically importing them. Since many acceleration packages (e.g., `flash_attn`)
    might crash hard during import/initialization (e.g., due to missing shared libraries or
    mismatched CUDA runtimes), this probing mechanism ensures a graceful fallback to PyTorch
@@ -26,11 +26,11 @@ Core Architectural Design:
 
 from __future__ import annotations
 
-import importlib.util
 import logging
 import os
 from dataclasses import dataclass
 from functools import lru_cache
+from importlib.machinery import PathFinder
 from typing import Mapping
 
 import torch
@@ -613,13 +613,16 @@ def _package_capability(
 ) -> AttentionKernelCapability:
     """Underlying safe package prober.
 
-    Queries package specs via `importlib.util.find_spec` without executing the actual
-    `__init__.py` code, avoiding potential segfaults or library errors on non-CUDA machines.
+    Walks package search paths without importing parent packages or extension modules.
     """
-    try:
-        available = importlib.util.find_spec(import_name or package) is not None
-    except ModuleNotFoundError:
-        available = False
+    parts = (import_name or package).split(".")
+    spec = PathFinder.find_spec(parts[0])
+    for index in range(1, len(parts)):
+        if spec is None or spec.submodule_search_locations is None:
+            spec = None
+            break
+        spec = PathFinder.find_spec(".".join(parts[:index + 1]), spec.submodule_search_locations)
+    available = spec is not None
     if not available:
         return AttentionKernelCapability(
             name=name, package=package, available=False, usable=False, reason=unavailable_reason

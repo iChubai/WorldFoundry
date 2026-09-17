@@ -48,7 +48,7 @@ description: worldfoundry/core 共享层 —— 加载、attention、分布式�
             <code>attention</code>
           </div>
         </div>
-        <p>后端探测、dense SDPA、可变长 packed、sparse 3D、n-D/complex/projective RoPE、序列并行组合。</p>
+        <p>后端探测、dense SDPA、可变长 packed、sparse 3D、n-D/complex/projective RoPE、序列并行组合。包探测沿模块搜索路径查找，不初始化可选扩展或其父包。</p>
         <p className="pi-kv-read"><span>首读</span> <code>AttentionKernelCapability</code> <code>attention/backends.py:32</code>；<code>probe_attention_backends</code> <code>backends.py:144</code>；<code>complex_rope.py</code>、<code>causal_ulysses_attention.py</code></p>
       </li>
       <li className="pi-kv-row">

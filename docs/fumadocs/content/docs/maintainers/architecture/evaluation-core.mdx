@@ -13,7 +13,7 @@ For module-level lookup, use the [Codebase map](/docs/maintainers/architecture/f
 
 ## End-to-end flow
 
-Evaluate and model-only runs enter `run_evaluate()` (`evaluate.py:1071`). That facade stays thin: it validates the request, picks `ContractRunner` or `ExistingResultsRunner`, and leaves file writing to the delegate. A model-plus-benchmark run is a separate function — `run_model_benchmark()` in `model_benchmark.py` — reached from `execute_prepared_evaluation()`, not from the `run_evaluate` mode fork. Official suite scoring inside that path uses `ManifestBenchmarkRunner`. For which file each stage writes, see [Workflow](/docs/maintainers/architecture/workflow).
+Evaluate and model-only runs enter `run_evaluate()` in `evaluate.py`. Model mode generates and aligns results first; both modes then delegate scoring and artifact output to `ExistingResultsRunner`. Model-plus-benchmark runs enter `run_model_benchmark()` through `execute_prepared_evaluation()` and use `ManifestBenchmarkRunner` for official-suite scoring.
 
 <ArchDiagram id="evaluation-core" />
 
@@ -29,17 +29,31 @@ At the sample level, a **`GenerationRequest`** carries ids, task name, inputs, c
 
 These types are intentionally free of checkpoint paths, subprocess details, or vendor-specific imports. Runners translate catalog YAML into these contracts at run time.
 
+Keyword overrides on a run request replace fields without copying live runners, metrics, or nested configuration objects. The original request remains unchanged; execution and cleanup use the supplied instances.
+
 ## Run paths
 
 Three run paths cover the common execution shapes. Pick the path that matches your task—do not add conditional branches to the dispatch when a new path will do.
 
-**ContractRunner** (`contract.py`) is the reference in-process path for model execution plus `Metric` objects. It normalizes requests, writes an execution plan, runs generation (with optional SQLite cache reuse), computes per-sample metrics, aggregates them, and emits scorecard and report artifacts. Use it when you need the strictest artifact layout and custom metric objects in the same process.
+**ContractRunner** (`contract.py`) normalizes requests and executes generation with optional cache reuse. It delegates scoring and report output to `ExistingResultsRunner`, so custom metrics use the same computation and aggregation logic online and offline.
 
-**ExistingResultsRunner** (`existing_results.py`) scores artifacts that already exist on disk. It loads results from a path or inline list, aligns them to requests, runs built-in metric IDs or artifact checks, and writes the same summary and scorecard bundle as a full model run. Use it for hosted API batches, offline demos, or any workflow where generation happened outside WorldFoundry.
+**ExistingResultsRunner** (`existing_results.py`) aligns existing results with requests and owns sample ledgers, scorecards, and reports. `scoring.py` executes bounded metric batches and calls each metric’s `aggregate()` while preserving direction, raw and normalized statistics, confidence intervals, and skip details. The evaluate facade accepts benchmark metric IDs, built-in offline metric IDs, and metric objects in the same run. Missing requested numeric fields produce invalid metric records with skip reasons.
+
+`aggregate_mean(...)` accepts Python and NumPy real scalars, using the same numeric eligibility rule for means and valid counts. Scores returned directly and scores restored from checkpoints therefore aggregate identically.
+
+Online and offline paths share result conversion, preserving top-level score fields and shorthand artifact paths. Raw fields are merged into `metadata.extra`, including fields within score mappings; existing metadata wins same-name conflicts. Each output metric ID belongs to one executor: overlapping declarations are rejected before generation when known, and duplicate dynamically emitted IDs fail scoring. Embodied metric suites use registered directions or explicit defaults for embodied success/reward metrics; unknown field metrics have no assumed direction.
+
+The `numeric` wildcard expands to the union of fields in successful aligned results before scoring batches begin. Each field then uses the same definition and missing-value handling as an explicit `numeric:<field>` selection. Expansion is scoped to the run, so the caller can reuse the metric object with another dataset.
 
 **`run_model_benchmark()`** (`model_benchmark.py:825`) chains generation with a benchmark-zoo runner. There is no `ModelBenchmarkRunner` class. It resolves the benchmark manifest, materializes requests from the task registry, runs the model, materializes artifacts for the external evaluator (`ManifestBenchmarkRunner` in `benchmark_runner.py:870`), and hands normalized metrics to reporting. Use it for end-to-end model-plus-benchmark runs.
 
-When model mode receives string metric IDs instead of `Metric` objects, scoring falls through to the same path as `ExistingResultsRunner` even though generation already ran in-process. See [Workflow — Model mode detail](/docs/maintainers/architecture/workflow#model-mode-detail).
+Both model mode and direct `ContractRunner` calls hand generated results to the same scoring runner. Python requests expose `metric_batch_size` (default 32) and `resume`. Each completed metric batch writes `metrics/checkpoint.jsonl`; resume compares requests, results, metric implementation, version, and declared `parameters` / `config`. New or changed metrics run independently of completed generation. Unversioned legacy callables still execute, but their scores are recomputed on resume. Runner parameters and config participate in generation reuse, and local output files must still exist. Samples that need generation also discard their old metric checkpoints.
+
+Checkpoints record the executor's full metric selection; reports store each output metric's definition separately. Adding an unrelated metric preserves comparability, while changing the components of an aggregate changes its definition. Comparisons reject different definitions of the selected metrics. Winner selection requires valid scores, complete reported metric coverage, and a known direction; partial scores remain visible.
+
+If an executor returns only some of its declared output metrics, missing outputs receive invalid records with `metric_not_returned` and zero coverage. They remain in the sample denominator and count as skipped. Incomplete bundles are not checkpointed, and older checkpoints missing declared outputs are recomputed on resume.
+
+Embodied closed-loop runs save all planned requests before generation and flush each completed rollout to `results.jsonl`. Cancellation records an `interrupted` generation stage; completed results remain available. Shard merging requires every declared shard's results file and a result for every planned request. A completed empty shard is allowed. Across scoring entry points, failed generation contributes zero to `generation_success` and is skipped by quality metrics.
 
 ## Reproducible planning
 
@@ -62,6 +76,10 @@ runner = resolve_model_zoo_runner(manifest) # resolver.py
 
 Built-in runners register through `builtins.py` and `registry.py`; custom targets resolve from catalog `runner_target` strings. Catalog metadata in `manifest.py` and `schema.py` is provenance and readiness—not a substitute for a runnable runner.
 
+The registry creates runners without installing inference settings or wrapping their methods. Configured runners are loaded inside the generation execution context only after resume and cache lookup identify pending samples.
+
+`WorldFoundryPipelineRunner` retains its construction config and exposes current pipeline target, runtime profile, and generation defaults through `parameters`. Directly supplied runner objects use these settings for both resume and shared generation-cache lookup.
+
 ## Benchmark integration
 
 Benchmark metadata follows a parallel catalog path. Task YAML describes per-sample protocol; benchmark-zoo YAML describes integration status, external runners, and metric IDs.
@@ -77,6 +95,8 @@ metrics = official_normalizers.normalize(raw)
 ```
 
 External benchmarks stay behind the runner boundary: vendor evaluators produce raw output, normalizers convert it into stable metrics, and the shared reporting layer writes `metrics/summary.json` and `scorecard.json`.
+
+Metric packages keep declarations importable without optional computation dependencies. Public registry listing includes all built-in package declarations; compute exports use the shared `lazy_export` helper to load implementations on invocation. An unavailable compute dependency therefore does not hide the metric ID, aliases, or direction.
 
 ## Reporting chain
 

@@ -195,7 +195,12 @@ def build_scorecard(
         eligibility_reasons.append("evaluation provenance is not leaderboard-comparable")
     if backend_is_mock:
         eligibility_reasons.append(MOCK_BACKEND_BLOCKING_REASON)
-    score_valid = failed_samples == 0
+    invalid_metrics = [key for key, value in per_metric.items() if value.get("valid") is False]
+    if not leaderboard:
+        eligibility_reasons.append("no valid metric scores")
+    if invalid_metrics:
+        eligibility_reasons.append(f"invalid metrics: {', '.join(sorted(invalid_metrics))}")
+    score_valid = failed_samples == 0 and bool(leaderboard) and not invalid_metrics
     leaderboard_valid = (
         score_valid
         and bool(evidence_gate["present"])

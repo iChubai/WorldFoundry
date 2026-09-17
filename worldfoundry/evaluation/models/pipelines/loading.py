@@ -451,12 +451,9 @@ def call_pipeline_from_pretrained(
 def load_pipeline_from_spec(spec: PipelineRunnerSpec) -> Any:
     """Import and instantiate a pipeline based on a resolved :class:`PipelineRunnerSpec`.
 
-    Ensures the inference infrastructure is installed, imports the target
-    class, and dispatches to :func:`call_pipeline_from_pretrained`.
+    Imports the target class and dispatches to :func:`call_pipeline_from_pretrained`.
+    The execution layer owns inference runtime settings.
     """
-    from worldfoundry.core import install_worldfoundry_inference_infra
-
-    install_worldfoundry_inference_infra()
     pipeline_cls = import_pipeline_target(spec.pipeline_target)
     return call_pipeline_from_pretrained(
         pipeline_cls,
@@ -474,9 +471,6 @@ def load_pipeline_from_config(config: WorldModelConfig) -> tuple[PipelineRunnerS
     Returns both the :class:`PipelineRunnerSpec` and the loaded pipeline
     object so callers can inspect the spec while using the pipeline.
     """
-    from worldfoundry.core import install_worldfoundry_inference_infra
-
-    install_worldfoundry_inference_infra()
     spec = build_pipeline_runner_spec(config)
     return spec, load_pipeline_from_spec(spec)
 

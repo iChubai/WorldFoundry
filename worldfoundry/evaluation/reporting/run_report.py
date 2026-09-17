@@ -21,7 +21,6 @@ from worldfoundry.evaluation.utils import (
 
 from .comparison_identity import build_comparison_identity, comparison_identity_from_summary
 
-
 RUN_SUMMARY_SCHEMA_VERSION = "worldfoundry-run-summary"
 
 MOCK_EVALUATION_BACKEND = "mock"
@@ -93,18 +92,18 @@ def resolve_run_summary_path(path: str | Path) -> Path:
     """Resolve *path* to an actual summary/scorecard file, checking directories for ``summary.json``."""
     source = Path(path)
     if source.is_dir():
-        for candidate in (source / "summary.json", source / "scorecard.json"):
-            if candidate.exists():
-                return candidate
-        raise FileNotFoundError(f"run directory does not contain summary.json or scorecard.json: {source}")
+        candidate = find_run_summary_candidate(source)
+        if candidate is not None:
+            return candidate
+        raise FileNotFoundError(f"run directory does not contain a summary, scorecard, or manifest: {source}")
     if not source.exists():
         raise FileNotFoundError(f"run summary path does not exist: {source}")
     return source
 
 
 def find_run_summary_candidate(run_dir: Path) -> Path | None:
-    """Return the first existing summary/scorecard file in *run_dir*, or ``None``."""
-    for candidate in (run_dir / "summary.json", run_dir / "scorecard.json"):
+    """Prefer completed reports, falling back to the current run manifest."""
+    for candidate in (run_dir / "summary.json", run_dir / "scorecard.json", run_dir / "run_manifest.json"):
         if candidate.is_file():
             return candidate
     return None
@@ -229,17 +228,13 @@ def build_run_summary(scorecard: Mapping[str, Any]) -> dict[str, Any]:
     )
 
     sample_count = _int_or_zero(
-        metrics_summary.get("sample_count")
-        or generation.get("num_requests")
-        or dataset.get("sample_count")
+        metrics_summary.get("sample_count"), generation.get("num_requests"), dataset.get("sample_count"),
     )
     successful_samples = _int_or_zero(
-        metrics_summary.get("successful_samples")
-        or generation.get("successful")
+        metrics_summary.get("successful_samples"), generation.get("successful"),
     )
     failed_samples = _int_or_zero(
-        metrics_summary.get("failed_samples")
-        or generation.get("failed")
+        metrics_summary.get("failed_samples"), generation.get("failed"),
     )
 
     backend = evaluation_backend_from_payload(scorecard)
@@ -308,6 +303,7 @@ def build_run_summary(scorecard: Mapping[str, Any]) -> dict[str, Any]:
             "sample_count": sample_count,
             "successful_samples": successful_samples,
             "failed_samples": failed_samples,
+            "skipped_samples": _int_or_zero(metrics_summary.get("skipped_samples")),
             "failed_sample_ids": list(metrics_summary.get("failed_sample_ids") or ()),
         },
         "generation": generation,
@@ -338,6 +334,14 @@ def load_run_summary(path: str | Path) -> dict[str, Any]:
         return payload
     if schema_version == "worldfoundry-scorecard":
         return build_run_summary(payload)
+    if schema_version == "worldfoundry-run-manifest":
+        return build_run_summary({
+            "schema_version": schema_version,
+            "run": payload,
+            **{key: payload.get(key, {}) for key in ("benchmark", "model", "dataset", "artifacts")},
+            "generation": {"num_requests": payload.get("sample_count", 0)},
+            "eligibility": {"score_valid": False, "leaderboard_valid": False, "leaderboard_eligible": False},
+        })
     raise ValueError(f"unsupported run summary schema_version in {source_path}: {schema_version!r}")
 
 

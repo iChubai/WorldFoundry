@@ -850,9 +850,7 @@ def run_model_benchmark(
     """
     if isinstance(request, ModelBenchmarkRunRequest):
         if kwargs:
-            payload = asdict(request)
-            payload.update(kwargs)
-            request = ModelBenchmarkRunRequest(**payload)
+            request = replace(request, **kwargs)
     else:
         payload = dict(kwargs)
         if isinstance(request, Mapping):

@@ -257,15 +257,11 @@ class ModelRunnerRegistry:
         return import_dotted_attr(entry.runner_target)
 
     def create(self, config: WorldModelConfig | Mapping[str, Any]) -> Any:
-        """Instantiate a wrapped runner from :class:`WorldModelConfig`."""
+        """Instantiate a runner from :class:`WorldModelConfig`."""
         model_config = config if isinstance(config, WorldModelConfig) else WorldModelConfig.from_dict(config)
-        from worldfoundry.core import install_worldfoundry_inference_infra, wrap_runner_for_worldfoundry_core
-
-        install_worldfoundry_inference_infra()
         runner_obj = self.resolve_runner_class(model_config.runner)
         factory = getattr(runner_obj, "from_config", None)
-        runner = factory(model_config) if callable(factory) else runner_obj(model_config)
-        return wrap_runner_for_worldfoundry_core(runner)
+        return factory(model_config) if callable(factory) else runner_obj(model_config)
 
 
 # ---------------------------------------------------------------------------

@@ -298,15 +298,13 @@ def _scorecard_to_workspace_result(
     summary = metrics.get("summary", {}) if isinstance(metrics, Mapping) else {}
     leaderboard = metrics.get("leaderboard", {}) if isinstance(metrics, Mapping) else {}
     run_status = str(run.get("status") or "completed").strip().lower()
-    if run_status in {"failed", "error"} and scorecard.get("normalization_ok") and leaderboard:
-        run_status = "normalized"
     output_dir_path = Path(output_dir)
     return {
         "schema_version": "worldfoundry-evaluate-run-result",
         "mode": "existing-results",
         "delegate_runner": delegate_runner,
         "status": run_status,
-        "exit_code": int(run.get("returncode") or 0),
+        "exit_code": int(run.get("workspace_runner_returncode", run.get("returncode") or 0)),
         "output_dir": str(output_dir_path),
         "manifest_path": "",
         "execution_plan_path": "",
@@ -647,6 +645,11 @@ def _run_cli_command(
     log_callback: Callable[[str, str], None] | None,
     timeout: float | None = None,
 ) -> dict[str, Any]:
+    from uuid import uuid4
+
+    from worldfoundry.evaluation.tasks.execution.orchestration.run_session import run_stage, session_paths, utcnow_iso
+    from worldfoundry.evaluation.utils import read_json_object, write_json
+
     output_dir_path = Path(output_dir)
     output_dir_path.mkdir(parents=True, exist_ok=True)
     env = os.environ.copy()
@@ -655,44 +658,57 @@ def _run_cli_command(
         log_callback("system", f"{benchmark_id} runner={' '.join(command)}\n")
     stdout_log = output_dir_path / "workspace_runner_stdout.log"
     stderr_log = output_dir_path / "workspace_runner_stderr.log"
-    try:
-        completed = run_logged_subprocess(
-            command,
-            stdout_path=stdout_log,
-            stderr_path=stderr_log,
-            cwd=REPO_ROOT,
-            env=env,
-            timeout=timeout,
+    paths = session_paths(output_dir_path)
+    run_id = f"workspace-{uuid4().hex[:12]}"
+    with run_stage(paths, "evaluate", manifest={
+        "run_id": run_id, "runner": delegate_runner, "benchmark": {"benchmark_id": benchmark_id},
+    }):
+        try:
+            completed = run_logged_subprocess(
+                command,
+                stdout_path=stdout_log,
+                stderr_path=stderr_log,
+                cwd=REPO_ROOT,
+                env=env,
+                timeout=timeout,
+            )
+        except subprocess.TimeoutExpired:
+            tail = read_text_tail(stderr_log, max_lines=40) or read_text_tail(stdout_log, max_lines=40)
+            raise RuntimeError(
+                f"{benchmark_id} runner timed out after {timeout}s and was terminated; tail={tail}"
+            ) from None
+        scorecard_path = output_dir_path / "scorecard.json"
+        if not scorecard_path.is_file():
+            tail = read_text_tail(stderr_log, max_lines=40) or read_text_tail(stdout_log, max_lines=40)
+            raise RuntimeError(
+                f"{benchmark_id} runner did not write scorecard.json; exit={completed.returncode}; tail={tail}"
+            )
+        scorecard = json.loads(scorecard_path.read_text(encoding="utf-8"))
+        run = scorecard.setdefault("run", {})
+        run.setdefault("run_id", run_id)
+        run["workspace_runner_returncode"] = completed.returncode
+        if completed.returncode != 0:
+            run["status"] = "failed"
+            scorecard.setdefault("eligibility", {}).update(
+                score_valid=False, leaderboard_valid=False, leaderboard_eligible=False,
+            )
+            # Keep partial scores, but discard any completed reports emitted before the failure.
+            for key in ("run_summary", "report"):
+                paths[key].unlink(missing_ok=True)
+        write_json(scorecard_path, scorecard)
+        result = _scorecard_to_workspace_result(
+            scorecard,
+            output_dir=output_dir_path,
+            benchmark_id=benchmark_id,
+            request=request,
+            delegate_runner=delegate_runner,
         )
-    except subprocess.TimeoutExpired:
-        tail = read_text_tail(stderr_log, max_lines=40) or read_text_tail(stdout_log, max_lines=40)
-        raise RuntimeError(
-            f"{benchmark_id} runner timed out after {timeout}s and was terminated; tail={tail}"
-        ) from None
-    scorecard_path = output_dir_path / "scorecard.json"
-    if not scorecard_path.is_file():
-        tail = read_text_tail(stderr_log, max_lines=40) or read_text_tail(stdout_log, max_lines=40)
-        raise RuntimeError(
-            f"{benchmark_id} runner did not write scorecard.json; exit={completed.returncode}; tail={tail}"
-        )
-    scorecard = json.loads(scorecard_path.read_text(encoding="utf-8"))
-    if isinstance(scorecard, dict):
-        scorecard.setdefault("run", {})["workspace_runner_returncode"] = completed.returncode
-    result = _scorecard_to_workspace_result(
-        scorecard,
-        output_dir=output_dir_path,
-        benchmark_id=benchmark_id,
-        request=request,
-        delegate_runner=delegate_runner,
-    )
-    if (
-        completed.returncode != 0
-        and not result.get("normalization_ok")
-        and result.get("status") not in {"failed", "blocked"}
-    ):
-        result["status"] = "failed"
-        result["exit_code"] = completed.returncode
-    return result
+        manifest = read_json_object(paths["manifest"])
+        manifest.update(run_id=run["run_id"], status=result["status"], exit_code=result["exit_code"],
+                        finished_at=utcnow_iso())
+        write_json(paths["manifest"], manifest)
+        result["manifest_path"] = str(paths["manifest"])
+        return result
 
 
 def run_workspace_benchmark(

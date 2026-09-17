@@ -76,6 +76,7 @@ class WorldFoundryPipelineRunner:
         runtime_profile_id: str | None = None,
         output_dir: Path | None = None,
         generation_defaults: Mapping[str, Any] | None = None,
+        config: WorldModelConfig | None = None,
     ) -> None:
         """Initialize the pipeline runner with a loaded pipeline and configuration.
 
@@ -87,6 +88,7 @@ class WorldFoundryPipelineRunner:
                 defaults to ``model_id`` when ``None``.
             output_dir: Optional directory for generated artifacts.
             generation_defaults: Defaults applied to each generation request.
+            config: Resolved construction settings, including model weights.
         """
         self.model_id = model_id
         self.pipeline = pipeline
@@ -94,7 +96,17 @@ class WorldFoundryPipelineRunner:
         self.runtime_profile_id = runtime_profile_id or model_id
         self.output_dir = output_dir
         self.generation_defaults = dict(generation_defaults or {})
+        self.config = config
         self.cleaned = False
+
+    @property
+    def parameters(self) -> dict[str, Any]:
+        """Current generation settings used by the shared runner identity."""
+        return {
+            "pipeline_target": self.pipeline_target,
+            "runtime_profile_id": self.runtime_profile_id,
+            "generation_defaults": dict(self.generation_defaults),
+        }
 
     @classmethod
     def from_config(cls, config: WorldModelConfig) -> "WorldFoundryPipelineRunner":
@@ -115,6 +127,7 @@ class WorldFoundryPipelineRunner:
             runtime_profile_id=spec.runtime_profile_id,
             output_dir=spec.output_dir,
             generation_defaults=spec.generation_defaults,
+            config=config,
         )
 
     def _runtime_profile(self) -> PipelineRuntimeProfile:

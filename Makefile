@@ -41,6 +41,7 @@ help:
 		'  make docs-build-fast   Build docs without the CI validation gates.' \
 		'  make cli-entrypoint-check Validate documented CLI entrypoints.' \
 		'  make lint              Run lightweight source and catalog checks.' \
+		'  make metric-check      Compare image metrics with native CPU backends (metric dependencies required).' \
 		'  make preflight         Run the public runtime preflight.' \
 		'  make check-cuda-constraints  Verify CUDA-tier torch constraint stubs.' \
 		'  make packaging-check   Audit package discovery and license-gated wheel content.'
@@ -73,7 +74,7 @@ cli-entrypoint-check:
 	PYTHONPATH=$(PYTHONPATH) $(PYTHON) -m worldfoundry.cli zoo models --json >/dev/null
 	PYTHONPATH=$(PYTHONPATH) $(PYTHON) -m worldfoundry.cli zoo benchmarks --json >/dev/null
 
-lint: ruff-check format-check shell-check data-check runtime-registry-check workspace-registry-check
+lint: ruff-check format-check shell-check data-check runtime-registry-check workspace-registry-check evaluation-check attention-check
 
 ruff-check:
 	$(PYTHON) -m ruff check $(RUFF_SOURCES)
@@ -99,6 +100,18 @@ runtime-registry-check:
 workspace-registry-check:
 	PYTHONPATH=$(PYTHONPATH) $(PYTHON) tests/evaluation/catalog/test_video_workspace_registry.py
 	PYTHONPATH=$(PYTHONPATH) $(PYTHON) tests/evaluation/catalog/test_execution_registries.py
+
+.PHONY: evaluation-check
+evaluation-check:
+	PYTHONPATH=$(PYTHONPATH) $(PYTHON) -B -m unittest discover -s tests/evaluation/execution -p 'test_*.py'
+
+.PHONY: metric-check
+metric-check:
+	PYTHONPATH=$(PYTHONPATH) $(PYTHON) -B -m unittest discover -s tests/evaluation/metrics -p 'test_*.py'
+
+.PHONY: attention-check
+attention-check:
+	PYTHONPATH=$(PYTHONPATH) $(PYTHON) -B -m unittest discover -s tests/core/attention -p 'test_*.py'
 
 check-cuda-constraints:
 	PYTHONPATH=$(PYTHONPATH) $(PYTHON) scripts/setup/check_cuda_torch_constraints.py

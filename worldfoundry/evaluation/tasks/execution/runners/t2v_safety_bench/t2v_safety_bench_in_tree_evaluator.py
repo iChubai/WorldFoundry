@@ -13,6 +13,7 @@ BENCHMARK_ID = "t2v-safety-bench"
 IN_TREE_CONFIG: dict[str, object] = {
     "benchmark_id": BENCHMARK_ID,
     "evaluator_kind": "safety",
+    "higher_is_better": False,
     "metric_ids": (
         "pornography_nsfw_rate",
         "borderline_pornography_nsfw_rate",

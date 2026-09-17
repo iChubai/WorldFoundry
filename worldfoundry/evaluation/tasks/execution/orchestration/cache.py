@@ -739,8 +739,15 @@ def run_generation_with_cache(
     )
     if not requests:
         return [], stats
+
+    def generate_pending(rows: Sequence[GenerationRequest]) -> list[GenerationResult]:
+        from worldfoundry.core import worldfoundry_inference_context
+
+        with worldfoundry_inference_context():
+            return list(generate(rows))
+
     if not cache_enabled:
-        return list(generate(requests)), stats
+        return generate_pending(requests), stats
 
     cache = GenerationResultCache(cache_dir, namespace=stats.namespace)
     stats.cache_path = str(cache.cache_path)
@@ -807,7 +814,7 @@ def run_generation_with_cache(
         pending_keys[request.sample_id] = key
 
     # Step 2: Execute physically required workload.
-    generated = list(generate(pending)) if pending else []
+    generated = generate_pending(pending) if pending else []
     generated_by_sample_id = {result.sample_id: result for result in generated}
 
     # Step 3: Opportunistically write successful results in one transaction.

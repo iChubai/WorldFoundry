@@ -12,8 +12,14 @@ from typing import Any, Mapping, Sequence
 
 from worldfoundry.evaluation.utils import (
     escape_markdown_cell as _escape_markdown_cell,
+)
+from worldfoundry.evaluation.utils import (
     format_value as _format_value,
+)
+from worldfoundry.evaluation.utils import (
     mapping_or_empty as _mapping,
+)
+from worldfoundry.evaluation.utils import (
     write_json,
     write_text,
 )
@@ -21,11 +27,19 @@ from worldfoundry.evaluation.utils import (
 from .comparison_identity import compare_identities, comparison_identity_from_summary
 from .run_report import (
     MOCK_BACKEND_BLOCKING_REASON,
-    dedupe_labels as _dedupe_labels,
     is_mock_backend,
     load_run_summary,
+)
+from .run_report import (
+    dedupe_labels as _dedupe_labels,
+)
+from .run_report import (
     number_or_none as _number_or_none,
+)
+from .run_report import (
     resolve_run_summary_path as _run_summary_path,
+)
+from .run_report import (
     row_from_summary as _row_from_summary,
 )
 
@@ -124,18 +138,17 @@ def build_markdown_comparison(comparison: Mapping[str, Any]) -> str:
     return "\n".join(lines).rstrip() + "\n"
 
 # ── Internal helpers ─────────────────────────────────────────
-def _higher_is_better(summaries: Sequence[Mapping[str, Any]], metric_id: str) -> bool:
+def _higher_is_better(summaries: Sequence[Mapping[str, Any]], metric_id: str) -> bool | None:
     """Determine whether higher values are better for *metric_id* across *summmaries*."""
     values: list[bool] = []
     for summary in summaries:
         per_metric = _mapping(_mapping(summary.get("metrics")).get("per_metric"))
         metric_payload = _mapping(per_metric.get(metric_id))
         value = metric_payload.get("higher_is_better")
-        if isinstance(value, bool):
-            values.append(value)
-    if values and all(value is False for value in values):
-        return False
-    return True
+        if not isinstance(value, bool):
+            return None
+        values.append(value)
+    return values[0] if values and all(value == values[0] for value in values) else None
 
 def _best_by_metric(
     *,
@@ -146,13 +159,23 @@ def _best_by_metric(
     """Identify the best run for each metric, respecting higher/lower-is-better semantics."""
     best: dict[str, dict[str, Any]] = {}
     for metric_id in metric_ids:
-        higher_is_better = _higher_is_better(summaries, metric_id)
         candidates = []
-        for row in rows:
+        candidate_summaries = []
+        for row, summary in zip(rows, summaries):
+            metric = _mapping(_mapping(_mapping(summary.get("metrics")).get("per_metric")).get(metric_id))
+            if row.get("score_valid") is False or metric.get("valid") is False:
+                continue
+            if metric.get("n_total") is not None and metric.get("n_valid") is not None:
+                if metric["n_valid"] < metric["n_total"]:
+                    continue
             value = _number_or_none(_mapping(row.get("metrics")).get(metric_id))
             if value is not None:
                 candidates.append((float(value), row))
+                candidate_summaries.append(summary)
         if not candidates:
+            continue
+        higher_is_better = _higher_is_better(candidate_summaries, metric_id)
+        if higher_is_better is None:
             continue
         best_value, best_row = (
             max(candidates, key=lambda item: item[0])
@@ -257,10 +280,6 @@ def build_run_comparison(
         ]
     )
     identities = [comparison_identity_from_summary(summary) for summary in summaries]
-    incompatibilities, compatibility_warnings = compare_identities(identities)
-    if incompatibilities:
-        raise ValueError("runs are not comparable: " + "; ".join(incompatibilities))
-
     metric_ids_by_run = [set(map(str, _mapping(row.get("metrics")))) for row in rows]
     available_metric_ids = set().union(*metric_ids_by_run)
     common_metric_ids = set.intersection(*metric_ids_by_run) if metric_ids_by_run else set()
@@ -269,6 +288,9 @@ def build_run_comparison(
         if metric_ids is not None
         else sorted(common_metric_ids)
     )
+    incompatibilities, compatibility_warnings = compare_identities(identities, metric_ids=selected_metric_ids)
+    if incompatibilities:
+        raise ValueError("runs are not comparable: " + "; ".join(incompatibilities))
     unknown_metric_ids = sorted(set(selected_metric_ids).difference(available_metric_ids))
     partially_available_metric_ids = sorted(
         set(selected_metric_ids).intersection(available_metric_ids).difference(common_metric_ids)

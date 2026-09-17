@@ -1644,7 +1644,7 @@ def _build_parser(model_run_schema: Any | None = None) -> argparse.ArgumentParse
         action="store_true",
         help="Print the resolved model-specific configuration and exit without loading the model.",
     )
-    run_parser.add_argument("--resume", action="store_true", help="Reuse completed suite cells when fingerprints match.")
+    run_parser.add_argument("--resume", action="store_true", help="Reuse completed generation, metric results, and suite cells when inputs match.")
     run_parser.add_argument("--no-skip-incompatible", dest="skip_incompatible", action="store_false", default=True)
     run_parser.add_argument("--fail-on-skipped", action="store_true")
     _RETIRED_TASK_FLAG_HELP = (

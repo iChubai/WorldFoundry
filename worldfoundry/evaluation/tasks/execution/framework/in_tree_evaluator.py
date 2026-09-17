@@ -12,11 +12,11 @@ from dataclasses import dataclass, field
 from typing import Any, Mapping
 
 from worldfoundry.evaluation.api import AggregateResult, GenerationRequest, GenerationResult, MetricResult
+from worldfoundry.evaluation.tasks.execution.framework.io import coerce_unit_score
 from worldfoundry.evaluation.tasks.execution.framework.scoring_registry import (
     get_in_tree_benchmark_config,
     supported_in_tree_benchmark_ids,
 )
-from worldfoundry.evaluation.tasks.execution.framework.io import coerce_unit_score
 
 JUDGE_BLOCKED_REASON = "official judge, labels, rubric, or API evidence is required"
 SAFETY_JUDGE_REQUIRED_REASON = "safety judge or rule violation manifest is required"
@@ -103,6 +103,15 @@ class BenchmarkZooInTreeEvaluator:
         required = config.get("required_artifacts", ("generated_video",))
         self.required_artifacts = tuple(required_artifacts or required)  # type: ignore[arg-type]
         self._config = config
+        self.parameters = {"benchmark_id": key}
+        self.higher_is_better = bool(config.get("higher_is_better", True))
+
+    def metric_definition(self, metric_id: str) -> dict[str, Any]:
+        """Describe one output; aggregate scores also depend on the selected components."""
+        parameters: dict[str, Any] = dict(self.parameters)
+        if metric_id == self._config.get("primary_metric"):
+            parameters["components"] = sorted(key for key in self.metric_ids if key != metric_id)
+        return {"parameters": parameters, "higher_is_better": self.higher_is_better}
 
     def __call__(self, request: GenerationRequest, result: GenerationResult) -> list[MetricResult]:
         """Evaluate one materialized sample for existing-results runner use.

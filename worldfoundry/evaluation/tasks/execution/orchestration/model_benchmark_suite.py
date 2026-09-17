@@ -353,9 +353,7 @@ def _coerce_request(
     if isinstance(request, ModelBenchmarkSuiteRequest):
         if not kwargs:
             return request
-        payload = asdict(request)
-        payload.update(kwargs)
-        return ModelBenchmarkSuiteRequest(**payload)
+        return replace(request, **kwargs)
     payload = dict(kwargs)
     if isinstance(request, Mapping):
         payload = {**dict(request), **payload}

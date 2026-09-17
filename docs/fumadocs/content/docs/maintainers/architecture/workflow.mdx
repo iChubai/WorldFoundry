@@ -5,7 +5,7 @@ description: End-to-end execution flow from CLI inputs to artifacts, metrics, sc
 
 ## Introduction
 
-This page traces one evaluation run from the CLI through artifact files on disk. Read it when you need to know *where* a flag lands in code, *which* runner owns file writing, or *why* model mode can fork into `ContractRunner` versus `ExistingResultsRunner`. User-facing command examples live in the [Evaluation guide](/docs/evaluation); for how CLI/TUI/MCP compile intent into the request this page starts from, see [Surfaces and orchestration](/docs/maintainers/architecture/surfaces-orchestration). Here the focus is execution plumbing.
+This page traces one evaluation run from the CLI through artifact files on disk. Read it when you need to know *where* a flag lands in code, *which* runner owns file writing, or how model mode hands generated results to `ExistingResultsRunner`. User-facing command examples live in the [Evaluation guide](/docs/evaluation); for how CLI/TUI/MCP compile intent into the request this page starts from, see [Surfaces and orchestration](/docs/maintainers/architecture/surfaces-orchestration). Here the focus is execution plumbing.
 
 ## Entry points
 
@@ -49,47 +49,40 @@ The facade is intentionally small. `run_evaluate()` validates the request, choos
 
 ## Mode behavior
 
-Mode selection is the first branch that changes cost and requirements. `existing-results` never loads weights—it only scores what is already on disk, which is why hosted API batches and offline demos use it. `model` resolves a runner and calls `generate()` first; the metrics you pass then decide whether scoring stays in-process (`ContractRunner`) or reuses the existing-results path (`ExistingResultsRunner`).
-
-<KvCatalog heading="Mode" vars rows={[
-    { name: <><code>existing-results</code></>, description: "A demo, hosted job, or offline process already generated artifacts.", reads: [{ label: "Input", value: <><code>results</code>{" or "}<code>results_path</code>{"; optional requests"}</> }, { label: "Model loaded", value: "No" }, { label: "Metrics", value: "Built-in metric IDs or artifact checks" }] },
-    { name: <><code>model</code></>, description: "You want model execution in the framework.", reads: [{ label: "Input", value: "Requests plus runner config or model-zoo id" }, { label: "Model loaded", value: "Yes" }, { label: "Metrics", value: <>{"Either object metrics through "}<code>ContractRunner</code>{", or built-in metrics through "}<code>ExistingResultsRunner</code></> }] }
-  ]} />
+`existing-results` scores supplied results without loading a generation model. `model` resolves a runner and generates results first. Both modes resolve metric IDs and objects into the same scoring path.
 
 ## Model mode detail
 
-After `runner.generate()` returns, `_align_model_results()` ensures every request has a matching result row (including explicit failures). The fork below is easy to miss: passing `Metric` objects keeps the whole run inside `ContractRunner`; passing string metric IDs delegates scoring to the same code path as `existing-results`.
+The model runner emits `GenerationResult` objects. After sample alignment, `ExistingResultsRunner` handles scoring and reporting through `scoring.py`.
 
 ```python
-runner = resolve_model_zoo_runner(request.model_id)
 results = runner.generate(requests)
 results = _align_model_results(requests, results)
-
-if isinstance(request.metrics[0], Metric):
-    return ContractRunner(...).score(results)       # Metric objects → in-process
-else:
-    return ExistingResultsRunner(...).score(results)  # metric ids → existing-results path
+return ExistingResultsRunner().run(
+    output_dir=output_dir, requests=requests, results=results, metrics=resolved_metrics,
+)
 ```
 
-Important distinction: model execution and benchmark scoring are separated. A model runner only emits `GenerationResult` objects. Scoring happens after results are normalized. `ContractRunner` (`orchestration/contract.py:96`) and `ExistingResultsRunner` (`orchestration/existing_results.py:93`) are the two delegate runners this fork chooses between; model resolution uses `resolve_model_zoo_runner()` at `evaluation/models/runners/resolver.py:386`.
 
 ## Contract runner detail
 
-`run_contract()` is the strictest in-process path and the reference implementation for artifact layout (`run_contract` at `evaluation/tasks/execution/orchestration/contract.py:852`, `ContractRunner` at `:96`). Each stage writes or updates a file that downstream validation, docs exports, and leaderboard tooling expect to find. When debugging a partial run, walk the stages in order: a missing `metrics/per_sample.jsonl` usually means generation never finished alignment, not that reporting failed.
+`run_contract()` owns generation and delegates scoring and artifact reporting to `ExistingResultsRunner`. The output file layout remains shared across direct contract runs, model mode, and offline scoring. Metric progress is persisted in batches; an interrupted run retains `metrics/checkpoint.jsonl` for `resume=True`. Shared stage handling records generation, scoring, aggregation, and reporting failures. Starting a new attempt clears the previous finished reports; the run index falls back to the current manifest until a new report is ready. Metric summaries distinguish executed, scored, successful, failed, and skipped samples. A skipped metric value does not become an execution error, and each metric retains its own aggregation policy.
+
+Workspace CLI delegates use the same stage handling. A failed subprocess preserves any fresh partial scores and records its actual exit code; successful normalization does not override execution failure. Reports from an earlier attempt cannot stand in for a missing new scorecard.
 
 ```python
-# evaluation/tasks/execution/orchestration/contract.py → run_contract()
-requests = _normalize_requests(request)
-write_execution_plan(requests)                # execution_plan.json
-write_run_manifest(status="running")          # run_manifest.json
+# contract.py: generation
+results, cache_stats = run_generation_with_cache(requests, runner.generate, ...)
+return run_existing_results(
+    output_dir=output_dir, requests=requests, results=results, metrics=metrics,
+)
 
-results = run_generation_with_cache(runner, requests)
-write_artifacts_jsonl(_artifact_rows(results)) # artifacts.jsonl
-write_per_sample_metrics(...)                 # metrics/per_sample.jsonl
-summary = _build_summary(...)                 # metrics/summary.json
-write_scorecard(summary)                      # scorecard.json
-write_run_report_artifacts(summary)           # summary.json + report.md
-write_run_manifest(status="finished")         # final run_manifest.json
+# existing_results.py: shared scoring and reporting
+for batch in score_samples(...):
+    write_sample_progress(batch)
+summary = build_metrics_summary(requests, results, per_sample_rows, metrics)
+write_scorecard(..., metrics_summary=summary)
+write_run_report_artifacts(...)
 ```
 
 Generation is the expensive stage: runner exceptions become failed samples, and deterministic outputs can reuse the SQLite generation cache. Reporting stages only run after every sample has an aligned result row.

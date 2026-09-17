@@ -344,6 +344,8 @@ def model_runner_fingerprint(model_runner: Any | None) -> dict[str, Any] | None:
         "model_id": str(getattr(model_runner, "model_id", "")),
         "runner_version": str(getattr(model_runner, "runner_version", getattr(model_runner, "version", ""))),
         "capabilities": sorted(str(item) for item in getattr(model_runner, "capabilities", ()) or ()),
+        "parameters": jsonable(getattr(model_runner, "parameters", None)),
+        "config": jsonable(getattr(model_runner, "config", None)),
     }
     describe = getattr(model_runner, "describe_capabilities", None)
     if callable(describe):
@@ -360,8 +362,11 @@ def metric_fingerprint(metric: Any) -> dict[str, Any]:
     """Generate a stable metadata fingerprint dictionary for a metric object."""
     return {
         "class": _class_reference(metric),
-        "name": str(getattr(metric, "name", "") or metric.__class__.__name__),
+        "name": str(getattr(metric, "name", "") or getattr(metric, "__name__", "") or metric.__class__.__name__),
         "version": str(getattr(metric, "version", "")),
+        "parameters": jsonable(getattr(metric, "parameters", None)),
+        "config": jsonable(getattr(metric, "config", None)),
+        "metric_ids": jsonable(getattr(metric, "metric_ids", None)),
         "required_artifacts": tuple(str(item) for item in getattr(metric, "required_artifacts", ()) or ()),
         "higher_is_better": getattr(metric, "higher_is_better", None),
     }

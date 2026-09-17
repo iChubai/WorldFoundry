@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from dataclasses import asdict, dataclass, is_dataclass
+from dataclasses import asdict, dataclass, is_dataclass, replace
 from pathlib import Path
 from typing import Any, Mapping, Sequence
 
@@ -116,9 +116,7 @@ def _coerce_request(
     if isinstance(request, WorldFoundryRunRequest):
         if not kwargs:
             return request
-        payload = asdict(request)
-        payload.update(kwargs)
-        return WorldFoundryRunRequest(**payload)
+        return replace(request, **kwargs)
     payload = dict(kwargs)
     if isinstance(request, Mapping):
         payload = {**dict(request), **payload}
@@ -373,6 +371,7 @@ def _run_existing_or_model(request: WorldFoundryRunRequest) -> WorldFoundryRunRe
             **_runner_kwargs(request),
             dataset_id=request.dataset_id,
             run_id=request.run_id,
+            resume=request.resume,
             fail_on_sample_error=request.fail_on_sample_error,
             write_artifacts_index=request.write_artifacts_index,
             generation_cache_dir=request.generation_cache_dir,

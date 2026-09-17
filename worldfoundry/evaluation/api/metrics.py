@@ -2,8 +2,10 @@
 
 from __future__ import annotations
 
+from collections import Counter
 from collections.abc import Iterable
 from dataclasses import dataclass, field
+from numbers import Real
 from typing import Any, Mapping, Protocol, Sequence, runtime_checkable
 
 from worldfoundry.evaluation.api.json_contract import JsonContract, copy_mapping, tuple_of_str
@@ -224,6 +226,28 @@ class AggregateResult(JsonContract):
             diagnostics=data.get("diagnostics"),
             schema_version=data.get("schema_version", AGGREGATE_RESULT_SCHEMA_VERSION),
         )
+
+
+def aggregate_mean(metric_id: str, rows: Sequence[MetricResult]) -> AggregateResult:
+    """Mean numeric metric values while retaining validity and skip counts."""
+    raw = [
+        float(row.raw_value)
+        for row in rows
+        if row.valid and isinstance(row.raw_value, Real) and not isinstance(row.raw_value, bool)
+    ]
+    normalized = [float(row.normalized_value) for row in rows if row.valid and row.normalized_value is not None]
+    values = (row.normalized_value if row.normalized_value is not None else row.raw_value for row in rows if row.valid)
+    n_valid = sum(isinstance(value, Real) and not isinstance(value, bool) for value in values)
+    return AggregateResult(
+        metric_id=metric_id,
+        n_total=len(rows),
+        n_valid=n_valid,
+        n_skipped=len(rows) - n_valid,
+        valid=bool(raw or normalized),
+        raw_stats={"mean": sum(raw) / len(raw)} if raw else {},
+        normalized_stats={"mean": sum(normalized) / len(normalized)} if normalized else {},
+        skip_breakdown=dict(Counter(row.skip_reason or "invalid" for row in rows if not row.valid)),
+    )
 
 
 @runtime_checkable

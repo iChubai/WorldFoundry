@@ -130,6 +130,24 @@ ipr = compute_improved_precision_recall("/path/to/reference", "/path/to/generate
 vendi = compute_vendi_score(feature_matrix)
 ```
 
+FID, KID, Inception Score, precision/recall, MIND, and `compute_distribution_metrics(...)` accept image directories or explicit image-file lists. File lists preserve caller order and use the same RGB conversion and `samples_resize_and_crop` preprocessing as directories. SwAV FID also accepts file lists and applies its existing preprocessing and `max_size` limit.
+
+The bundled backend loads under `worldfoundry.evaluation.tasks.metrics._shared.vendor.torch_fidelity`, independently of an installed `torch_fidelity` package or TorchMetrics import order. Register custom extractors and noise sources on that bundled package. PPL also accepts generator wrappers from the installed package, preserving their latent and class metadata.
+
+`compute_realism_score(...)` accepts a generated image directory, an image file, an array, or a sequence of files and arrays. Directory batches produce one realism score per image; `mean_realism` is the mean of those scores and does not depend on batch size.
+
+Precision measures the fraction of generated samples covered by the reference manifold; recall measures the fraction of reference samples covered by the generated manifold. In `compute_precision_recall(...)` and `compute_distribution_metrics(...)`, backend `input1_*` options refer to generated inputs and `input2_*` options to reference inputs. The combined helper also computes Inception Score on the generated set.
+
+`compute_ppl(...)` returns the backend's mean and standard deviation. With `ppl_reduction="none"`, it also preserves the NumPy array `perceptual_path_length_raw` of per-sample distances after percentile filtering. `summarize_distribution_metrics(...)` renames this key to `ppl_raw` while preserving the array.
+
+PPL defaults to the 1st–99th percentile range. Set `ppl_discard_percentile_lower` or `ppl_discard_percentile_higher` to `None` to disable that bound independently. For generator instances and module wrappers, conditional sampling uses the model's `num_classes`; paired latent samples receive the same label.
+
+SceneFID manifest keys are image paths relative to the image root, or absolute paths. When `generated_bboxes_json` is omitted, reference keys are reused relative to the generated root, preserving subdirectories; absolute reference keys must be under the reference root. Missing images raise an error instead of falling back to another file with the same basename. Supply a separate generated manifest when filenames or boxes differ.
+
+SceneFID, LQS, and object-wise consistency share one bbox convention: four values mean `(x1, y1, x2, y2)` and five values mean `(x, y, width, height, extra)`. The fifth value does not affect geometry. Pixel and normalized coordinates use the same format; convert four-value `xywh` inputs before calling these metrics.
+
+LQS matches objects within each category by minimum total center distance, including when object counts differ. Recall is matched objects divided by ground-truth objects; precision is matched objects divided by predicted objects. Location and area consistency use the matched pairs. This follows the matching objective and object-count denominators in the [LQS definition](https://arxiv.org/html/2208.06162#S4.SS2.SSS2), using SciPy's rectangular assignment solver instead of enumerating permutations.
+
 ### Video distribution (`family=distribution`, video tags)
 
 <KvCatalog heading="Metric" vars rows={[
@@ -161,6 +179,14 @@ fvmd = compute_fvmd("/path/to/reference_videos", "/path/to/generated_videos")
 
 jedi = compute_jedi_from_features(train_features, test_features)
 ```
+
+`JEDiMetric.load_features(num_samples=...)` applies the same per-side sample cap to cached arrays and newly extracted features. Reading a cache does not truncate the stored file. Feature extraction runs locally without creating or destroying a distributed process group, and releases its extractor after loading both sides.
+
+JEDi video batches use `(B, T, C, H, W)` with pixels in `[0, 1]`. The extractor converts them to channel-first clips before normalization. Encoder and probe checkpoints must match the model; missing or incompatible weights raise an error instead of retaining initialized weights.
+
+For precomputed features, `run_jedi_scorer(...)` reports the actual `reference_num_samples`, `generated_num_samples`, and `feature_dim`. The legacy `num_samples` field contains the common count when both sides have equal lengths, or `null` when they differ.
+
+The mock JEDi backend converts UTF-8 seed bytes directly into a NumPy seed. Identical seeds and dimensions reproduce the same features and score across fresh processes.
 
 ### Perceptual pairwise (`family=perceptual`)
 
@@ -200,6 +226,10 @@ dino_sim = compute_dino_similarity(ref, gen)
 dreamsim_dist = compute_dreamsim(ref, gen)
 ```
 
+PSNR, SSIM, MS-SSIM, and FSIM preserve the input pixel scale; both images must use the same units. `data_range` defaults to 255 if either input is uint8 or either maximum exceeds 1, otherwise 1. Pass an explicit range when float pixel values alone cannot identify the intended range; it is forwarded in the original units.
+
+LPIPS accepts uint8 pixels or normalized floats in `[0, 1]`, using TorchMetrics with `normalize=True`. For compatibility, float pairs with a maximum above 1 are also treated as `[0, 255]`. Both images always share one normalization scale.
+
 ## CLI surface
 
 - `worldfoundry-eval metric list` — Print or JSON-export all registry entries.
@@ -221,6 +251,8 @@ pip install -e ".[distribution_metrics]"
 Core dependencies in the `distribution_metrics` extra include `torch`, `torchvision`, `torchmetrics`, `scikit-learn`, `scipy`, `transformers`, `pillow`, and the optional metric packages declared in `pyproject.toml`.
 
 Keep heavy imports lazy: importing `worldfoundry.evaluation.tasks.metrics` should not require every checkpoint to be present until a specific `compute_*` function is called.
+
+After installing the metric dependencies, run `make metric-check` for CPU comparisons with the native backends and crop-source regressions. The LPIPS check downloads SqueezeNet weights to a temporary directory that is removed after the run.
 
 ## Checkpoints and environment variables
 

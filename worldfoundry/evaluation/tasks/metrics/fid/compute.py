@@ -6,13 +6,13 @@ from collections.abc import Mapping, Sequence
 from pathlib import Path
 from typing import Any
 
-from worldfoundry.evaluation.tasks.metrics._shared.torch_fidelity import calculate_metrics
+from worldfoundry.evaluation.tasks.metrics._shared.torch_fidelity import calculate_metrics, prepare_image_input
 
 
 def resolve_distribution_inputs(
     reference: str | Path | Sequence[str | Path] | None,
     generated: str | Path | Sequence[str | Path] | None,
-) -> tuple[str | Path, str | Path]:
+) -> tuple[str | Path | Sequence[str | Path], str | Path | Sequence[str | Path]]:
     if reference is None or generated is None:
         raise ValueError("reference and generated inputs are required")
     return reference, generated
@@ -32,12 +32,12 @@ def compute_distribution_metrics(
     cuda: bool = True,
     **kwargs: Any,
 ) -> dict[str, float]:
-    """Run torch-fidelity distribution metrics (backward-compat helper; prefer metric-local APIs)."""
+    """Run distribution metrics with backend input1=generated, input2=reference."""
     ref, gen = resolve_distribution_inputs(reference, generated)
     metric_flags = {name: True for name in metrics}
     result = calculate_metrics()(
-        input1=str(ref),
-        input2=str(gen),
+        input1=prepare_image_input(gen, **kwargs),
+        input2=prepare_image_input(ref, **kwargs),
         batch_size=batch_size,
         cuda=cuda,
         feature_extractor=feature_extractor,
@@ -73,19 +73,15 @@ def compute_fid(
             **kwargs,
         )
     result = calculate_metrics()(
-        input1=str(reference),
-        input2=str(generated),
+        input1=prepare_image_input(reference, **kwargs),
+        input2=prepare_image_input(generated, **kwargs),
         batch_size=batch_size,
         cuda=cuda,
         feature_extractor=feature_extractor,
         fid=True,
         **kwargs,
     )
-    parsed = _parse_numeric_result(result)
-    for key, value in parsed.items():
-        if "fid" in key.lower():
-            return value
-    raise KeyError("FID key missing from torch-fidelity result")
+    return float(result["frechet_inception_distance"])
 
 
 def compute_paired_fid_kid(
@@ -133,7 +129,7 @@ def compute_paired_fid_kid(
     return fid_score, kid_mean
 
 
-def summarize_distribution_metrics(payload: Mapping[str, float]) -> dict[str, float]:
+def summarize_distribution_metrics(payload: Mapping[str, Any]) -> dict[str, Any]:
     """Normalize torch-fidelity metric keys to stable WorldFoundry names."""
     aliases = {
         "inception_score_mean": "is_mean",
@@ -149,11 +145,7 @@ def summarize_distribution_metrics(payload: Mapping[str, float]) -> dict[str, fl
         "recall": "recall",
         "f_score": "f_score",
     }
-    summary: dict[str, float] = {}
-    for key, value in payload.items():
-        normalized = aliases.get(key, key)
-        summary[normalized] = float(value)
-    return summary
+    return {aliases.get(key, key): value for key, value in payload.items()}
 
 
 __all__ = [

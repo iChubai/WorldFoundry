@@ -2,9 +2,11 @@
 
 from __future__ import annotations
 
+from worldfoundry.evaluation.tasks.metrics._shared.lazy import lazy_export
 from worldfoundry.evaluation.tasks.metrics.registry import metric_module_from_globals
 
-from .compute import compute_kid, polynomial_mmd
+compute_kid = lazy_export(f"{__name__}.compute", "compute_kid", owner=__name__)
+polynomial_mmd = lazy_export(f"{__name__}.compute", "polynomial_mmd", owner=__name__)
 
 METRIC_ID = "kid"
 ALIASES = ("kernel-inception-distance",)

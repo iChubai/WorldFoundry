@@ -123,6 +123,24 @@ ipr = compute_improved_precision_recall("/path/to/reference", "/path/to/generate
 vendi = compute_vendi_score(feature_matrix)
 ```
 
+FID、KID、Inception Score、precision/recall、MIND 和 `compute_distribution_metrics(...)` 接受图片目录或明确的图片文件列表。列表保留传入顺序，与目录使用相同的 RGB 转换和 `samples_resize_and_crop` 预处理。SwAV FID 也接受文件列表，并沿用自身的预处理及 `max_size` 上限。
+
+内置后端通过 `worldfoundry.evaluation.tasks.metrics._shared.vendor.torch_fidelity` 加载，与已安装的 `torch_fidelity` 包及 TorchMetrics 的导入顺序相互独立。自定义特征提取器和噪声源需注册到该内置包。PPL 也接受外部包的生成器 wrapper，保留其潜变量和类别信息。
+
+`compute_realism_score(...)` 接受生成图片目录、单个图片文件、数组，以及文件与数组组成的序列。目录批次中的每张图片分别产生一个 realism 分数；`mean_realism` 是逐图分数的均值，不受 batch size 影响。
+
+Precision 表示生成样本被参考流形覆盖的比例，recall 表示参考样本被生成流形覆盖的比例。在 `compute_precision_recall(...)` 和 `compute_distribution_metrics(...)` 中，后端 `input1_*` 参数对应生成输入，`input2_*` 参数对应参考输入。批量接口也在生成集上计算 Inception Score。
+
+`compute_ppl(...)` 返回后端的均值与标准差。设置 `ppl_reduction="none"` 时，还会保留 `perceptual_path_length_raw` NumPy 数组，包含经过百分位过滤后的逐样本距离。`summarize_distribution_metrics(...)` 将该键改名为 `ppl_raw`，同时保留数组。
+
+PPL 默认保留第 1 至第 99 百分位范围。将 `ppl_discard_percentile_lower` 或 `ppl_discard_percentile_higher` 设为 `None`，可独立关闭对应边界。对于生成器实例和 module wrapper，条件采样读取模型的 `num_classes`，成对的潜变量样本使用相同标签。
+
+SceneFID manifest 的 key 可以是相对于图片根目录的路径或绝对路径。省略 `generated_bboxes_json` 时，参考 key 会按相对路径复用于生成目录，保留子目录层级；绝对参考路径必须位于参考根目录下。缺少图片时会报错，不会回退到其他同名文件。生成图片的文件名或 bbox 不同时，应提供独立的生成 manifest。
+
+SceneFID、LQS 和 object-wise consistency 共用 bbox 约定：四值表示 `(x1, y1, x2, y2)`，五值表示 `(x, y, width, height, extra)`，第五项不参与几何计算。像素坐标与归一化坐标使用相同格式；四值 `xywh` 输入需在调用前转换。
+
+LQS 在同类别内按最小总中心距离匹配对象，支持两侧数量不同。召回率为匹配数量除以真实对象数量，精确率为匹配数量除以预测对象数量；位置和面积一致性使用已匹配的对象对。匹配目标和对象计数分母依据 [LQS 定义](https://arxiv.org/html/2208.06162#S4.SS2.SSS2)，使用 SciPy 的矩形指派求解器替代全排列枚举。
+
 ### 视频分布（`family=distribution`，video tags）
 
 <KvCatalog heading="指标" vars rows={[
@@ -154,6 +172,14 @@ fvmd = compute_fvmd("/path/to/reference_videos", "/path/to/generated_videos")
 
 jedi = compute_jedi_from_features(train_features, test_features)
 ```
+
+`JEDiMetric.load_features(num_samples=...)` 对缓存数组与新提取的特征使用相同的单侧样本上限；读取缓存不会截短磁盘上的文件。特征提取在本地运行，不创建或销毁分布式进程组，加载两侧特征后释放提取器。
+
+JEDi 视频批次使用 `(B, T, C, H, W)`，像素范围为 `[0, 1]`；提取器先转换为通道在首维的视频片段，再执行归一化。Encoder 和 probe checkpoint 必须与模型匹配；缺少权重或形状不匹配时直接报错，不会保留初始化权重继续计算。
+
+使用预计算特征时，`run_jedi_scorer(...)` 报告实际的 `reference_num_samples`、`generated_num_samples` 和 `feature_dim`。原有 `num_samples` 字段在两侧数量相等时记录共同数量，不相等时为 `null`。
+
+Mock JEDi 后端直接用 UTF-8 seed 字节构造 NumPy 种子。相同 seed 和维度在独立进程中产生相同的特征与分数。
 
 ### 感知成对（`family=perceptual`）
 
@@ -193,6 +219,10 @@ dino_sim = compute_dino_similarity(ref, gen)
 dreamsim_dist = compute_dreamsim(ref, gen)
 ```
 
+PSNR、SSIM、MS-SSIM 和 FSIM 保留输入像素尺度，两张图必须使用相同单位。任一输入是 uint8 或任一最大值超过 1 时，`data_range` 默认为 255，否则为 1。浮点像素值不足以判断预期值域时，应显式传入 `data_range`；该参数按原始单位传给后端。
+
+LPIPS 接受 uint8 像素或 `[0, 1]` 归一化浮点数，使用 TorchMetrics 的 `normalize=True`。为兼容已有调用，任一浮点图像最大值超过 1 时，也按 `[0, 255]` 处理。两张图始终共用一个归一化尺度。
+
 ## CLI 接口
 
 - `worldfoundry-eval metric list` — 列出或 JSON 导出全部 registry 条目。
@@ -214,6 +244,8 @@ pip install -e ".[distribution_metrics]"
 `distribution_metrics` extra 核心依赖包括 `torch`、`torchvision`、`torchmetrics`、`scikit-learn`、`scipy`、`transformers`、`pillow`，以及 `pyproject.toml` 中声明的可选 metric 包。
 
 重依赖保持 lazy import：导入 `worldfoundry.evaluation.tasks.metrics` 不应要求所有 checkpoint 已就绪，直到具体 `compute_*` 被调用。
+
+安装指标依赖后，可运行 `make metric-check`，在 CPU 上对照原生后端并检查裁剪图片来源。LPIPS 检查会下载 SqueezeNet 权重到临时目录，并在测试结束后删除。
 
 ## Checkpoint 与环境变量
 

@@ -9,7 +9,9 @@ while the selected upstream interpreter executes the official entrypoint.
 from __future__ import annotations
 
 import json
+import math
 import os
+import re
 import shutil
 import subprocess
 import sys
@@ -19,11 +21,13 @@ from pathlib import Path
 from typing import Any, Mapping, Sequence
 from urllib.parse import urlparse
 
+from worldfoundry.core.io import resolve_data_path
 from worldfoundry.runtime.assets import expand_worldfoundry_path
 from worldfoundry.runtime.env import resolve_hfd_root
 
 PROJECT_ROOT = Path(__file__).resolve().parents[4]
 UPSTREAM_REVISION = "0b931fd42f5ef51410019ae41b261eb3b8936410"
+WM_UPSTREAM_REVISION = "a08f1274573d7cd6ec66719f204951f4227a5173"
 DEFAULT_SOURCE_ROOT = PROJECT_ROOT / "cache" / "generative_taxonomy" / "jd-opensource--JoyAI-Echo"
 DEFAULT_HFD_ROOT = resolve_hfd_root()
 
@@ -47,12 +51,12 @@ def _expand_path(value: str | Path | None) -> Path | None:
 
 def _python_path(value: str | Path | None) -> Path:
     if value is None or not str(value).strip():
-        return Path(sys.executable).resolve()
+        return Path(sys.executable).absolute()
     text = os.path.expandvars(str(value))
     if Path(text).is_absolute() or os.sep in text:
-        return Path(text).expanduser().resolve()
+        return Path(text).expanduser().absolute()
     discovered = shutil.which(text)
-    return Path(discovered).resolve() if discovered else Path(text).expanduser()
+    return Path(discovered).absolute() if discovered else Path(text).expanduser()
 
 
 def _first_path(value: Any) -> str | None:
@@ -136,6 +140,7 @@ class JoyAIEchoRuntimePlan:
     output_path: str
     output_root: str
     request_path: str | None = None
+    upstream_revision: str = UPSTREAM_REVISION
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -147,7 +152,7 @@ class JoyAIEchoRuntimePlan:
             "output_path": self.output_path,
             "output_root": self.output_root,
             "request_path": self.request_path,
-            "upstream_revision": UPSTREAM_REVISION,
+            "upstream_revision": self.upstream_revision,
         }
 
 
@@ -491,7 +496,9 @@ class JoyAIEchoWMRuntime(_JoyAIEchoSubprocessRuntime):
         self.checkpoint_path = checkpoint_root if checkpoint_is_file else checkpoint_root / checkpoint_name
         self.gemma_path = _expand_path(gemma_path) or DEFAULT_HFD_ROOT / "google--gemma-3-12b-it-qat-q4_0-unquantized"
         default_config = "inference_wm.yaml" if self.variant == "base" else "inference_wm_causal.yaml"
-        self.config_path = _expand_path(config_path) or self.runtime_root / "configs" / default_config
+        self.config_path = _expand_path(config_path) or Path(
+            resolve_data_path(f"models/runtime/configs/joyai-echo-wm/{default_config}")
+        )
 
     @property
     def script_path(self) -> Path:
@@ -528,7 +535,7 @@ class JoyAIEchoWMRuntime(_JoyAIEchoSubprocessRuntime):
             "device_ready": device_ready,
             "blocked_reasons": [] if device_ready else ["Echo-WM inference requires CUDA."],
             "license": "LTX-2 Community License; upstream marks JoyAI-Echo academic/non-commercial",
-            "upstream_revision": UPSTREAM_REVISION,
+            "upstream_revision": WM_UPSTREAM_REVISION,
         }
 
     @staticmethod
@@ -541,11 +548,15 @@ class JoyAIEchoWMRuntime(_JoyAIEchoSubprocessRuntime):
         text = str(value or "").strip()
         if not text:
             raise ValueError("Echo-WM requires an Action DSL string, for example 'w-60,a-60'.")
+        if not all(re.fullmatch(r"(?:none|[wasdijkl]+)-[1-9][0-9]*", segment.strip()) for segment in text.split(",")):
+            raise ValueError("Invalid Echo-WM Action DSL; use segments such as w-60,none-60,wj-60.")
         return text
 
     @staticmethod
     def _image_path(request: Mapping[str, Any], output: Path) -> Path:
-        value = request.get("image") or request.get("images")
+        value = request.get("image")
+        if value is None:
+            value = request.get("images")
         path_text = _first_path(value)
         if path_text is not None:
             path = Path(path_text).expanduser().resolve()
@@ -565,6 +576,55 @@ class JoyAIEchoWMRuntime(_JoyAIEchoSubprocessRuntime):
         request: Mapping[str, Any],
         output_path: str | Path,
     ) -> JoyAIEchoRuntimePlan:
+        request = dict(request)
+        reference = request.pop("ref_image_path", None)
+        if request.get("images") is None and request.get("image") is None and reference is not None:
+            request["images"] = reference
+
+        common = {
+            "prompt",
+            "images",
+            "image",
+            "interactions",
+            "actions",
+            "action_str",
+            "width",
+            "height",
+            "num_frames",
+            "fps",
+            "seed",
+            "fov_deg",
+            "translation_speed",
+            "rotation_speed_deg",
+            "pitch_limit_deg",
+            "auto_fov",
+            "no_audio",
+            "audio",
+            "action_overlay",
+            "sample_id",
+        }
+        variant_keys = (
+            {"steps", "guidance_scale", "video_cfg", "audio_cfg", "negative_prompt", "stg_scale", "stg_blocks"}
+            if self.variant == "base"
+            else {"video_local_attn_size", "video_sink_size", "video_chunk_size", "timesteps"}
+        )
+        unknown = request.keys() - common - variant_keys
+        if unknown:
+            raise ValueError(f"Unsupported Echo-WM {self.variant} options: {sorted(unknown)}")
+        for name in ("steps", "video_local_attn_size", "video_sink_size"):
+            value = request.get(name)
+            minimum = 0 if name == "video_sink_size" else 1
+            if value is not None and (isinstance(value, bool) or int(value) != float(value) or int(value) < minimum):
+                raise ValueError(f"Echo-WM {name} must be an integer >= {minimum}")
+        timesteps = request.get("timesteps")
+        if timesteps is not None:
+            if not isinstance(timesteps, (list, tuple)) or not timesteps:
+                raise ValueError("Echo-WM timesteps must be a non-empty descending list")
+            values = [float(value) for value in timesteps]
+            if not all(math.isfinite(v) and v == int(v) and 0 < v <= 1000 for v in values) or any(
+                a <= b for a, b in zip(values, values[1:])
+            ):
+                raise ValueError("Echo-WM timesteps must be integers in [1, 1000] and descending")
         prompt = str(request.get("prompt") or "").strip()
         if not prompt:
             raise ValueError("Echo-WM requires a prompt.")
@@ -574,9 +634,46 @@ class JoyAIEchoWMRuntime(_JoyAIEchoSubprocessRuntime):
         output.parent.mkdir(parents=True, exist_ok=True)
         image_path = self._image_path(request, output)
         action_str = self._action_string(request)
-        num_frames = request.get("num_frames")
-        if self.variant == "flash" and num_frames is not None and (int(num_frames) - 1) % 24:
-            raise ValueError("Echo-WM Flash num_frames must follow 1 + 24m (for example 241 or 385).")
+        import yaml
+
+        defaults = yaml.safe_load(self.config_path.read_text())
+        video = defaults.get("video", {})
+        causal = defaults.get("causal", {})
+        num_frames = request.get("num_frames", video.get("num_frames", 241))
+        chunk_size = request.get("video_chunk_size", causal.get("video_chunk_size", 3))
+        for name, value in (("num_frames", num_frames), ("video_chunk_size", chunk_size)):
+            if isinstance(value, bool) or int(value) != float(value) or int(value) <= 0:
+                raise ValueError(f"Echo-WM {name} must be a positive integer")
+        stride = 8 * int(chunk_size) if self.variant == "flash" else 8
+        if int(num_frames) <= 1 or (int(num_frames) - 1) % stride:
+            raise ValueError(f"Echo-WM {self.variant} num_frames must follow 1 + {stride}*N with N >= 1.")
+        for name in ("width", "height"):
+            value = request.get(name, video.get(name))
+            if value is not None and (int(value) <= 0 or int(value) != float(value) or int(value) % 32):
+                raise ValueError(f"Echo-WM {name} must be a positive multiple of 32")
+        for name in ("fps", "fov_deg"):
+            value = request.get(name)
+            if value is not None and (not math.isfinite(float(value)) or float(value) <= 0):
+                raise ValueError(f"Echo-WM {name} must be finite and positive")
+        if request.get("fov_deg") is not None and float(request["fov_deg"]) >= 180:
+            raise ValueError("Echo-WM fov_deg must be below 180")
+        for name in (
+            "width",
+            "height",
+            "num_frames",
+            "video_chunk_size",
+            "steps",
+            "seed",
+            "video_local_attn_size",
+            "video_sink_size",
+        ):
+            if request.get(name) is not None:
+                value = request[name]
+                if isinstance(value, bool) or int(value) != float(value):
+                    raise ValueError(f"Echo-WM {name} must be an integer")
+                request[name] = int(value)
+        if timesteps is not None:
+            request["timesteps"] = [int(value) for value in timesteps]
         command = [
             str(self.python_executable),
             str(self.script_path),
@@ -642,6 +739,7 @@ class JoyAIEchoWMRuntime(_JoyAIEchoSubprocessRuntime):
         return JoyAIEchoRuntimePlan(
             project=self.project_name,
             variant=self.variant,
+            upstream_revision=WM_UPSTREAM_REVISION,
             command=tuple(command),
             env=_runtime_env(self.device, self.runtime_root),
             workdir=str(self.runtime_root),

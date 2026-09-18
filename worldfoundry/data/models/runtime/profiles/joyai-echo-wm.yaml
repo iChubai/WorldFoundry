@@ -10,7 +10,7 @@ groups:
 - action_control
 source_repos:
 - url: https://github.com/jd-opensource/JoyAI-Echo
-  revision: 0b931fd42f5ef51410019ae41b261eb3b8936410
+  revision: a08f1274573d7cd6ec66719f204951f4227a5173
   local_dir: ${WORLDFOUNDRY_MODEL_SOURCE_DIR}/jd-opensource--JoyAI-Echo
   subdir: echo_wm
 checkpoints:

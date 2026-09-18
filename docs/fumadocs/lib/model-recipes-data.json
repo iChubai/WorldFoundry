@@ -1,5 +1,5 @@
 {
-  "total": 265,
+  "total": 268,
   "categories": [
     {
       "id": "video",
@@ -13,7 +13,7 @@
       "label": "World models",
       "label_zh": "世界模型",
       "description": "Interactive worlds, prediction, navigation, and simulator-shaped systems.",
-      "count": 98
+      "count": 101
     },
     {
       "id": "three_d_four_d",
@@ -23636,6 +23636,399 @@
       "catalogPath": "worldfoundry/data/models/catalog/world_models/alayaworld.yaml"
     },
     {
+      "id": "alayaworld-v1.1",
+      "name": "AlayaWorld v1.1",
+      "category": "world_models",
+      "categoryLabel": "World models",
+      "categoryLabelZh": "世界模型",
+      "provider": "AlayaLab",
+      "summary": "Separate AR and four-step DMD inference for AlayaWorld v1.1 with ViGeo spatial memory.",
+      "aliases": [
+        "alayaworld-v11",
+        "alaya-world-v1.1"
+      ],
+      "tasks": [
+        "image-to-video",
+        "camera-controlled-video",
+        "interactive-world-model"
+      ],
+      "status": {
+        "group": "integrated",
+        "label": "Integrated",
+        "integration": "integrated",
+        "runner": "pending",
+        "demo": "not_recorded"
+      },
+      "runtime": {
+        "profileId": "alayaworld-v1.1",
+        "bindingId": "alayaworld-v1.1",
+        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runner": "worldfoundry.pipeline",
+        "pipelineTarget": "worldfoundry.pipelines.alayaworld_v11.pipeline_alayaworld_v11:AlayaWorldV11Pipeline",
+        "loadingMethod": "from_pretrained",
+        "invocationMode": "native_or_standard_invocation",
+        "backendStage": "official_external_runtime",
+        "runtimeStatus": "cpu_contract_validated_checkpoint_gpu_pending",
+        "environmentId": "alayaworld-v1.1",
+        "environmentName": "alayaworld-v1.1",
+        "environmentKind": "dedicated",
+        "python": "3.11",
+        "cudaProfile": "cu128",
+        "cudaLabel": "CUDA 12.8",
+        "driverStatus": null,
+        "condaPackages": [
+          "python",
+          "pip",
+          "ffmpeg"
+        ],
+        "pipPackages": [
+          "torch>=2.6",
+          "torchvision",
+          "transformers>=4.49",
+          "safetensors",
+          "accelerate",
+          "einops",
+          "numpy",
+          "pillow",
+          "pyyaml",
+          "imageio",
+          "imageio-ffmpeg",
+          "sentencepiece",
+          "diffusers",
+          "easydict",
+          "decord",
+          "scipy",
+          "opencv-python",
+          "huggingface-hub",
+          "tqdm"
+        ],
+        "packageVersions": {
+          "torch": "torch>=2.6",
+          "torchvision": "torchvision",
+          "transformers": "transformers>=4.49",
+          "accelerate": "accelerate",
+          "diffusers": "diffusers"
+        },
+        "validationImports": [
+          "torch",
+          "yaml",
+          "worldfoundry.synthesis.visual_generation.alayaworld_v11"
+        ],
+        "notes": [
+          "Uses extracted inference-only rollout methods and inference configuration sections; no trainer or optimizer is instantiated.",
+          "CPU configuration and adapter contracts checked; checkpoint loading, VRAM usage and GPU artifact parity remain pending.",
+          "Single-GPU inference bridge; full-window native VAE encoding may use more peak memory than the upstream streaming encoder.",
+          "CUDA inference dependencies are optional and separate from the CPU catalog installation."
+        ]
+      },
+      "sources": [
+        {
+          "kind": "source",
+          "label": "Source",
+          "url": "https://github.com/AlayaLab/AlayaWorld",
+          "revision": "ea03cfbb2e4c4e9102ed8ea8562e0b5370ca9b79"
+        },
+        {
+          "kind": "docs",
+          "label": "Upstream README",
+          "url": "https://github.com/AlayaLab/AlayaWorld#readme",
+          "revision": "ea03cfbb2e4c4e9102ed8ea8562e0b5370ca9b79"
+        }
+      ],
+      "checkpoints": [
+        {
+          "id": "AlayaLab/AlayaWorld-v1.1-stage2b",
+          "revision": "17f2f8a4939d85920b8a6c5191ce88dec7f862d1",
+          "role": "primary"
+        },
+        {
+          "id": "AlayaLab/AlayaWorld-v1.1-stage3",
+          "revision": "75fef054c5c0f86fd1450d50f70ef2f0a93fff2b",
+          "role": "dmd_lora"
+        },
+        {
+          "id": "Lightricks/LTX-2.3",
+          "revision": "5948be4ced3a4493d1f836df64378ff136ddb770",
+          "role": "base_model"
+        },
+        {
+          "id": "pkqbajng/ViGeo1.1",
+          "revision": "49103e6eeab888bae974251d3578b496bec711d7",
+          "role": "spatial_geometry"
+        },
+        {
+          "id": "google/gemma-3-12b-it-qat-q4_0-unquantized",
+          "revision": "68f7ee4fbd59087436ada77ed2d62f373fdd4482",
+          "role": "text_encoder",
+          "gated": true
+        }
+      ],
+      "variants": [],
+      "inferenceTasks": [
+        {
+          "id": "image-to-video",
+          "label": "Image To Video",
+          "description": "Catalog task profile used by the model runtime.",
+          "source": "catalog",
+          "variantIds": [],
+          "inputs": [
+            {
+              "field": "prompt",
+              "detail": "Required",
+              "kind": "string",
+              "target": "input",
+              "required": true,
+              "description": "Recorded input field from the runtime profile."
+            },
+            {
+              "field": "image",
+              "detail": "Required",
+              "kind": "string",
+              "target": "input",
+              "required": true,
+              "description": "Recorded input field from the runtime profile."
+            },
+            {
+              "field": "video",
+              "detail": "Optional",
+              "kind": "string",
+              "target": "input",
+              "required": false,
+              "description": "Recorded input field from the runtime profile."
+            },
+            {
+              "field": "actions",
+              "detail": "camera_path",
+              "kind": "string",
+              "target": "input",
+              "required": false,
+              "description": "Recorded input field from the runtime profile."
+            }
+          ],
+          "artifacts": [
+            {
+              "kind": "generated_world",
+              "filename": ""
+            },
+            {
+              "kind": "generated_world",
+              "filename": "alayaworld-v1.1.mp4"
+            }
+          ]
+        },
+        {
+          "id": "camera-controlled-video",
+          "label": "Camera Controlled Video",
+          "description": "Catalog task profile used by the model runtime.",
+          "source": "catalog",
+          "variantIds": [],
+          "inputs": [
+            {
+              "field": "prompt",
+              "detail": "Required",
+              "kind": "string",
+              "target": "input",
+              "required": true,
+              "description": "Recorded input field from the runtime profile."
+            },
+            {
+              "field": "image",
+              "detail": "Required",
+              "kind": "string",
+              "target": "input",
+              "required": true,
+              "description": "Recorded input field from the runtime profile."
+            },
+            {
+              "field": "video",
+              "detail": "Optional",
+              "kind": "string",
+              "target": "input",
+              "required": false,
+              "description": "Recorded input field from the runtime profile."
+            },
+            {
+              "field": "actions",
+              "detail": "camera_path",
+              "kind": "string",
+              "target": "input",
+              "required": false,
+              "description": "Recorded input field from the runtime profile."
+            }
+          ],
+          "artifacts": [
+            {
+              "kind": "generated_world",
+              "filename": ""
+            },
+            {
+              "kind": "generated_world",
+              "filename": "alayaworld-v1.1.mp4"
+            }
+          ]
+        },
+        {
+          "id": "interactive-world-model",
+          "label": "Interactive World Model",
+          "description": "Catalog task profile used by the model runtime.",
+          "source": "catalog",
+          "variantIds": [],
+          "inputs": [
+            {
+              "field": "prompt",
+              "detail": "Required",
+              "kind": "string",
+              "target": "input",
+              "required": true,
+              "description": "Recorded input field from the runtime profile."
+            },
+            {
+              "field": "image",
+              "detail": "Required",
+              "kind": "string",
+              "target": "input",
+              "required": true,
+              "description": "Recorded input field from the runtime profile."
+            },
+            {
+              "field": "video",
+              "detail": "Optional",
+              "kind": "string",
+              "target": "input",
+              "required": false,
+              "description": "Recorded input field from the runtime profile."
+            },
+            {
+              "field": "actions",
+              "detail": "camera_path",
+              "kind": "string",
+              "target": "input",
+              "required": false,
+              "description": "Recorded input field from the runtime profile."
+            }
+          ],
+          "artifacts": [
+            {
+              "kind": "generated_world",
+              "filename": ""
+            },
+            {
+              "kind": "generated_world",
+              "filename": "alayaworld-v1.1.mp4"
+            }
+          ]
+        }
+      ],
+      "inputContract": [
+        {
+          "field": "prompt",
+          "detail": "Required"
+        },
+        {
+          "field": "image",
+          "detail": "Required"
+        },
+        {
+          "field": "video",
+          "detail": "Optional"
+        },
+        {
+          "field": "actions",
+          "detail": "camera_path"
+        }
+      ],
+      "artifacts": [
+        {
+          "kind": "generated_world",
+          "filename": ""
+        },
+        {
+          "kind": "generated_world",
+          "filename": "alayaworld-v1.1.mp4"
+        }
+      ],
+      "notes": [
+        "GPU/checkpoint-backed artifact parity has not been run in this workspace.",
+        "Uses extracted inference-only rollout methods and inference configuration sections; no trainer or optimizer is instantiated.",
+        "CPU configuration and adapter contracts checked; checkpoint loading, VRAM usage and GPU artifact parity remain pending.",
+        "Single-GPU inference bridge; full-window native VAE encoding may use more peak memory than the upstream streaming encoder."
+      ],
+      "docs": {
+        "curated": true,
+        "publisher": {
+          "name": "AlayaLab",
+          "nameZh": "AlayaLab",
+          "kind": "lab"
+        },
+        "overview": [
+          "Separate AR and four-step DMD inference for AlayaWorld v1.1 with ViGeo spatial memory."
+        ],
+        "overviewZh": [
+          "AlayaWorld v1.1 独立提供带 ViGeo 空间记忆的 AR 和四步 DMD 推理。"
+        ],
+        "architecture": [
+          "The inference-only rollout methods and three small configuration adapters are extracted from the pinned upstream and paired with WorldFoundry checkpoint/LoRA loaders, LTX VAE, Gemma encoding and the existing Alaya history encoder. An inference-only entry skips trainer setup, optimizers, critics and training data."
+        ],
+        "architectureZh": [
+          "从固定版本的上游提取纯推理 rollout 和少量配置适配代码，复用 WorldFoundry checkpoint/LoRA 加载器、LTX VAE、Gemma 及历史编码器；不实例化 trainer、训练配置或优化器。Alaya Transformer 扩展和 ViGeo 几何仍使用外部源码。"
+        ],
+        "usageNotes": [
+          "Select variant=ar (30 steps) or dmd (4 steps). Stage2b transformer/history weights, the LTX-2.3 base, Gemma and ViGeo1.1 are required; DMD additionally needs stage3 LoRA. This is separate from the original merged DA3 checkpoint route."
+        ],
+        "usageNotesZh": [
+          "选择 variant=ar（30 步）或 dmd（4 步）。需 stage2b Transformer/历史权重、LTX-2.3 基座、Gemma 和 ViGeo1.1；DMD 另需 stage3 LoRA。此路线独立于原版 DA3 合并 checkpoint。"
+        ],
+        "highlights": [
+          "Image To Video",
+          "Camera Controlled Video",
+          "Interactive World Model",
+          "Dedicated env · Python 3.11 · CUDA 12.8",
+          "Gated or private weights — check access first"
+        ],
+        "highlightsZh": [
+          "图生视频",
+          "相机可控视频生成",
+          "交互式世界模型",
+          "独立环境 · Python 3.11 · CUDA 12.8",
+          "权重为 gated/私有——请先确认访问权限"
+        ],
+        "modalities": {
+          "inputs": [
+            "image"
+          ],
+          "outputs": [
+            "video"
+          ]
+        },
+        "useCases": [],
+        "useCasesZh": [],
+        "hardware": {
+          "minVramGb": null,
+          "recommended": null,
+          "notes": []
+        },
+        "benchmarks": [],
+        "limitations": [
+          "Uses extracted inference-only rollout methods and inference configuration sections; no trainer or optimizer is instantiated.",
+          "CPU configuration and adapter contracts checked; checkpoint loading, VRAM usage and GPU artifact parity remain pending.",
+          "Single-GPU inference bridge; full-window native VAE encoding may use more peak memory than the upstream streaming encoder."
+        ],
+        "limitationsZh": [
+          "当前工作区仅完成 CPU 可执行的检查，GPU 推理和 checkpoint 产物仍待验证。"
+        ],
+        "paper": null,
+        "figures": []
+      },
+      "commands": {
+        "prepare": "bash scripts/inference/prepare_model_infer.sh alayaworld-v1.1",
+        "install": "bash scripts/setup/model_env_install.sh --model alayaworld-v1.1",
+        "inspect": "worldfoundry-eval zoo model-show --model-id alayaworld-v1.1 --include-manifest --json",
+        "check": "worldfoundry-eval zoo model-download --model-id alayaworld-v1.1 --check-local --json",
+        "run": "worldfoundry-eval run \\\n  alayaworld-v1.1 \\\n  --pipeline.task-profile image-to-video \\\n  --pipeline.prompt \"Describe the desired output.\" \\\n  --pipeline.image /path/to/input \\\n  --json"
+      },
+      "catalogPath": "worldfoundry/data/models/catalog/world_models/alayaworld-v1.1.yaml"
+    },
+    {
       "id": "allegro",
       "name": "Allegro",
       "category": "video",
@@ -23962,6 +24355,429 @@
         "run": "worldfoundry-eval run \\\n  allegro \\\n  --pipeline.task-profile text-to-video \\\n  --pipeline.prompt \"Describe the desired output.\" \\\n  --pipeline.image /path/to/input \\\n  --json"
       },
       "catalogPath": "worldfoundry/data/models/catalog/video/allegro.yaml"
+    },
+    {
+      "id": "astronex-world",
+      "name": "Astronex-World",
+      "category": "world_models",
+      "categoryLabel": "World models",
+      "categoryLabelZh": "世界模型",
+      "provider": "Astronex-Robotics",
+      "summary": "Astronex-World exposes causal and bidirectional camera/action-conditioned video inference.",
+      "aliases": [
+        "astronex"
+      ],
+      "tasks": [
+        "text-to-video",
+        "image-to-video",
+        "camera-controlled-video",
+        "interactive-world-model"
+      ],
+      "status": {
+        "group": "integrated",
+        "label": "Integrated",
+        "integration": "integrated",
+        "runner": "pending",
+        "demo": "not_recorded"
+      },
+      "runtime": {
+        "profileId": "astronex-world",
+        "bindingId": "astronex-world",
+        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runner": "worldfoundry.pipeline",
+        "pipelineTarget": "worldfoundry.pipelines.astronex_world.pipeline_astronex_world:AstronexWorldPipeline",
+        "loadingMethod": "from_pretrained",
+        "invocationMode": "native_or_standard_invocation",
+        "backendStage": "official_external_runtime",
+        "runtimeStatus": "cpu_contract_validated_checkpoint_gpu_pending",
+        "environmentId": "astronex-world",
+        "environmentName": "astronex-world",
+        "environmentKind": "dedicated",
+        "python": "3.11",
+        "cudaProfile": "cu128",
+        "cudaLabel": "CUDA 12.8",
+        "driverStatus": null,
+        "condaPackages": [
+          "python",
+          "pip",
+          "ffmpeg"
+        ],
+        "pipPackages": [
+          "torch>=2.6",
+          "torchvision",
+          "transformers>=4.49",
+          "safetensors",
+          "accelerate",
+          "einops",
+          "numpy",
+          "pillow",
+          "pyyaml",
+          "imageio",
+          "imageio-ffmpeg",
+          "sentencepiece",
+          "diffusers==0.35.0",
+          "omegaconf",
+          "easydict",
+          "ftfy",
+          "decord",
+          "opencv-python",
+          "av",
+          "tqdm",
+          "regex"
+        ],
+        "packageVersions": {
+          "torch": "torch>=2.6",
+          "torchvision": "torchvision",
+          "transformers": "transformers>=4.49",
+          "accelerate": "accelerate",
+          "diffusers": "diffusers==0.35.0"
+        },
+        "validationImports": [
+          "torch",
+          "yaml",
+          "worldfoundry.synthesis.visual_generation.astronex_world"
+        ],
+        "notes": [
+          "Official inference command construction is CPU-validated; checkpoint-backed generation remains pending.",
+          "The released action prediction head is zero initialized; action prediction is not advertised.",
+          "CUDA inference dependencies are optional and separate from the CPU catalog installation."
+        ]
+      },
+      "sources": [
+        {
+          "kind": "source",
+          "label": "Source",
+          "url": "https://github.com/Astronex-Robotics/Astronex-World",
+          "revision": "27584bf1a89da01ef35a03b48d83bc818d2adf2b"
+        },
+        {
+          "kind": "docs",
+          "label": "Upstream README",
+          "url": "https://github.com/Astronex-Robotics/Astronex-World#readme",
+          "revision": "27584bf1a89da01ef35a03b48d83bc818d2adf2b"
+        }
+      ],
+      "checkpoints": [
+        {
+          "id": "Astronex-Lab/Astronex-World",
+          "revision": "f06ea330f2ce5cabef5fbf175287fe323ec1218c",
+          "role": "primary"
+        }
+      ],
+      "variants": [],
+      "inferenceTasks": [
+        {
+          "id": "text-to-video",
+          "label": "Text To Video",
+          "description": "Catalog task profile used by the model runtime.",
+          "source": "catalog",
+          "variantIds": [],
+          "inputs": [
+            {
+              "field": "prompt",
+              "detail": "Required",
+              "kind": "string",
+              "target": "input",
+              "required": true,
+              "description": "Recorded input field from the runtime profile."
+            },
+            {
+              "field": "image",
+              "detail": "Required",
+              "kind": "string",
+              "target": "input",
+              "required": true,
+              "description": "Recorded input field from the runtime profile."
+            },
+            {
+              "field": "video",
+              "detail": "Optional",
+              "kind": "string",
+              "target": "input",
+              "required": false,
+              "description": "Recorded input field from the runtime profile."
+            },
+            {
+              "field": "actions",
+              "detail": "trajectory, action_tokens, event_prompt",
+              "kind": "string",
+              "target": "input",
+              "required": false,
+              "description": "Recorded input field from the runtime profile."
+            }
+          ],
+          "artifacts": [
+            {
+              "kind": "generated_world",
+              "filename": ""
+            },
+            {
+              "kind": "generated_world",
+              "filename": "astronex-world.mp4"
+            }
+          ]
+        },
+        {
+          "id": "image-to-video",
+          "label": "Image To Video",
+          "description": "Catalog task profile used by the model runtime.",
+          "source": "catalog",
+          "variantIds": [],
+          "inputs": [
+            {
+              "field": "prompt",
+              "detail": "Required",
+              "kind": "string",
+              "target": "input",
+              "required": true,
+              "description": "Recorded input field from the runtime profile."
+            },
+            {
+              "field": "image",
+              "detail": "Required",
+              "kind": "string",
+              "target": "input",
+              "required": true,
+              "description": "Recorded input field from the runtime profile."
+            },
+            {
+              "field": "video",
+              "detail": "Optional",
+              "kind": "string",
+              "target": "input",
+              "required": false,
+              "description": "Recorded input field from the runtime profile."
+            },
+            {
+              "field": "actions",
+              "detail": "trajectory, action_tokens, event_prompt",
+              "kind": "string",
+              "target": "input",
+              "required": false,
+              "description": "Recorded input field from the runtime profile."
+            }
+          ],
+          "artifacts": [
+            {
+              "kind": "generated_world",
+              "filename": ""
+            },
+            {
+              "kind": "generated_world",
+              "filename": "astronex-world.mp4"
+            }
+          ]
+        },
+        {
+          "id": "camera-controlled-video",
+          "label": "Camera Controlled Video",
+          "description": "Catalog task profile used by the model runtime.",
+          "source": "catalog",
+          "variantIds": [],
+          "inputs": [
+            {
+              "field": "prompt",
+              "detail": "Required",
+              "kind": "string",
+              "target": "input",
+              "required": true,
+              "description": "Recorded input field from the runtime profile."
+            },
+            {
+              "field": "image",
+              "detail": "Required",
+              "kind": "string",
+              "target": "input",
+              "required": true,
+              "description": "Recorded input field from the runtime profile."
+            },
+            {
+              "field": "video",
+              "detail": "Optional",
+              "kind": "string",
+              "target": "input",
+              "required": false,
+              "description": "Recorded input field from the runtime profile."
+            },
+            {
+              "field": "actions",
+              "detail": "trajectory, action_tokens, event_prompt",
+              "kind": "string",
+              "target": "input",
+              "required": false,
+              "description": "Recorded input field from the runtime profile."
+            }
+          ],
+          "artifacts": [
+            {
+              "kind": "generated_world",
+              "filename": ""
+            },
+            {
+              "kind": "generated_world",
+              "filename": "astronex-world.mp4"
+            }
+          ]
+        },
+        {
+          "id": "interactive-world-model",
+          "label": "Interactive World Model",
+          "description": "Catalog task profile used by the model runtime.",
+          "source": "catalog",
+          "variantIds": [],
+          "inputs": [
+            {
+              "field": "prompt",
+              "detail": "Required",
+              "kind": "string",
+              "target": "input",
+              "required": true,
+              "description": "Recorded input field from the runtime profile."
+            },
+            {
+              "field": "image",
+              "detail": "Required",
+              "kind": "string",
+              "target": "input",
+              "required": true,
+              "description": "Recorded input field from the runtime profile."
+            },
+            {
+              "field": "video",
+              "detail": "Optional",
+              "kind": "string",
+              "target": "input",
+              "required": false,
+              "description": "Recorded input field from the runtime profile."
+            },
+            {
+              "field": "actions",
+              "detail": "trajectory, action_tokens, event_prompt",
+              "kind": "string",
+              "target": "input",
+              "required": false,
+              "description": "Recorded input field from the runtime profile."
+            }
+          ],
+          "artifacts": [
+            {
+              "kind": "generated_world",
+              "filename": ""
+            },
+            {
+              "kind": "generated_world",
+              "filename": "astronex-world.mp4"
+            }
+          ]
+        }
+      ],
+      "inputContract": [
+        {
+          "field": "prompt",
+          "detail": "Required"
+        },
+        {
+          "field": "image",
+          "detail": "Required"
+        },
+        {
+          "field": "video",
+          "detail": "Optional"
+        },
+        {
+          "field": "actions",
+          "detail": "trajectory, action_tokens, event_prompt"
+        }
+      ],
+      "artifacts": [
+        {
+          "kind": "generated_world",
+          "filename": ""
+        },
+        {
+          "kind": "generated_world",
+          "filename": "astronex-world.mp4"
+        }
+      ],
+      "notes": [
+        "GPU/checkpoint-backed artifact parity has not been run in this workspace.",
+        "Official inference command construction is CPU-validated; checkpoint-backed generation remains pending.",
+        "The released action prediction head is zero initialized; action prediction is not advertised."
+      ],
+      "docs": {
+        "curated": true,
+        "publisher": {
+          "name": "Astronex-Robotics",
+          "nameZh": "Astronex-Robotics",
+          "kind": "lab"
+        },
+        "overview": [
+          "Astronex-World exposes causal and bidirectional camera/action-conditioned video inference."
+        ],
+        "overviewZh": [
+          "Astronex-World 支持相机和动作条件下的因果及双向视频推理。"
+        ],
+        "architecture": [
+          "Wan2.2 TI2V-5B with PRoPE camera conditioning, 64-dimensional actions and embodiment conditioning. The official sampler remains external; no Wan backbone is copied into this integration."
+        ],
+        "architectureZh": [
+          "基于 Wan2.2 TI2V-5B，加入 PRoPE 相机条件、64 维动作和 embodiment 条件。调用外部官方采样器，本次集成不复制 Wan 骨干。"
+        ],
+        "usageNotes": [
+          "Select mode=causal or bidirectional; supply source_root and checkpoint_dir. execute=True runs inference. latent_frames counts generated latent frames, not video frames; causal blocks require (latent_frames + reference_count) % 8 == 0."
+        ],
+        "usageNotesZh": [
+          "选择 mode=causal 或 bidirectional，并提供 source_root 和 checkpoint_dir。execute=True 执行推理。latent_frames 为生成潜帧数；因果模式要求 (latent_frames + reference_count) 能被 8 整除。"
+        ],
+        "highlights": [
+          "Text To Video",
+          "Image To Video",
+          "Camera Controlled Video",
+          "Dedicated env · Python 3.11 · CUDA 12.8",
+          "Public Hugging Face weights"
+        ],
+        "highlightsZh": [
+          "文生视频",
+          "图生视频",
+          "相机可控视频生成",
+          "独立环境 · Python 3.11 · CUDA 12.8",
+          "公开的 Hugging Face 权重"
+        ],
+        "modalities": {
+          "inputs": [
+            "text",
+            "image"
+          ],
+          "outputs": [
+            "video"
+          ]
+        },
+        "useCases": [],
+        "useCasesZh": [],
+        "hardware": {
+          "minVramGb": null,
+          "recommended": null,
+          "notes": []
+        },
+        "benchmarks": [],
+        "limitations": [
+          "Official inference command construction is CPU-validated; checkpoint-backed generation remains pending.",
+          "The released action prediction head is zero initialized; action prediction is not advertised."
+        ],
+        "limitationsZh": [
+          "当前工作区仅完成 CPU 可执行的检查，GPU 推理和 checkpoint 产物仍待验证。"
+        ],
+        "paper": null,
+        "figures": []
+      },
+      "commands": {
+        "prepare": "bash scripts/inference/prepare_model_infer.sh astronex-world",
+        "install": "bash scripts/setup/model_env_install.sh --model astronex-world",
+        "inspect": "worldfoundry-eval zoo model-show --model-id astronex-world --include-manifest --json",
+        "check": "worldfoundry-eval zoo model-download --model-id astronex-world --check-local --json",
+        "run": "worldfoundry-eval run \\\n  astronex-world \\\n  --pipeline.task-profile text-to-video \\\n  --pipeline.prompt \"Describe the desired output.\" \\\n  --pipeline.image /path/to/input \\\n  --json"
+      },
+      "catalogPath": "worldfoundry/data/models/catalog/world_models/astronex-world.yaml"
     },
     {
       "id": "ati-wan21-14b",
@@ -34226,13 +35042,13 @@
           "kind": "source",
           "label": "Source",
           "url": "https://github.com/jd-opensource/JoyAI-Echo",
-          "revision": "0b931fd42f5ef51410019ae41b261eb3b8936410"
+          "revision": "a08f1274573d7cd6ec66719f204951f4227a5173"
         },
         {
           "kind": "docs",
           "label": "Upstream README",
           "url": "https://github.com/jd-opensource/JoyAI-Echo#readme",
-          "revision": "0b931fd42f5ef51410019ae41b261eb3b8936410"
+          "revision": "a08f1274573d7cd6ec66719f204951f4227a5173"
         }
       ],
       "checkpoints": [
@@ -66566,6 +67382,368 @@
       "catalogPath": "worldfoundry/data/models/catalog/three_d_four_d/worldgen.yaml"
     },
     {
+      "id": "zing",
+      "name": "Zing-0.5",
+      "category": "world_models",
+      "categoryLabel": "World models",
+      "categoryLabelZh": "世界模型",
+      "provider": "seedleap",
+      "summary": "Zing-0.5 generates video with frame-aligned keyboard control and prompt switching.",
+      "aliases": [
+        "zing-0.5",
+        "zing-world-model"
+      ],
+      "tasks": [
+        "text-to-video",
+        "image-to-video",
+        "interactive-world-model"
+      ],
+      "status": {
+        "group": "integrated",
+        "label": "Integrated",
+        "integration": "integrated",
+        "runner": "pending",
+        "demo": "not_recorded"
+      },
+      "runtime": {
+        "profileId": "zing",
+        "bindingId": "zing",
+        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runner": "worldfoundry.pipeline",
+        "pipelineTarget": "worldfoundry.pipelines.zing.pipeline_zing:ZingPipeline",
+        "loadingMethod": "from_pretrained",
+        "invocationMode": "native_or_standard_invocation",
+        "backendStage": "independent_in_tree_runtime",
+        "runtimeStatus": "cpu_contract_validated_checkpoint_gpu_pending",
+        "environmentId": "zing",
+        "environmentName": "zing",
+        "environmentKind": "dedicated",
+        "python": "3.11",
+        "cudaProfile": "cu128",
+        "cudaLabel": "CUDA 12.8",
+        "driverStatus": null,
+        "condaPackages": [
+          "python",
+          "pip",
+          "ffmpeg"
+        ],
+        "pipPackages": [
+          "torch>=2.6",
+          "torchvision",
+          "transformers>=4.49",
+          "safetensors",
+          "accelerate",
+          "einops",
+          "numpy",
+          "pillow",
+          "pyyaml",
+          "imageio",
+          "imageio-ffmpeg",
+          "sentencepiece"
+        ],
+        "packageVersions": {
+          "torch": "torch>=2.6",
+          "torchvision": "torchvision",
+          "transformers": "transformers>=4.49",
+          "accelerate": "accelerate"
+        },
+        "validationImports": [
+          "torch",
+          "yaml",
+          "worldfoundry.synthesis.visual_generation.zing"
+        ],
+        "notes": [
+          "Tiny CPU transformer state-dict and FP32/BF16 rollout parity checked against upstream, including eviction and prompt switches.",
+          "Checkpoint-backed GPU generation and native auxiliary-model parity are pending.",
+          "CUDA inference dependencies are optional and separate from the CPU catalog installation."
+        ]
+      },
+      "sources": [
+        {
+          "kind": "source",
+          "label": "Source",
+          "url": "https://github.com/seedleap/zing-world-model",
+          "revision": "11212da06f63290f4d354cdc0324241ba6eac356"
+        },
+        {
+          "kind": "docs",
+          "label": "Upstream README",
+          "url": "https://github.com/seedleap/zing-world-model#readme",
+          "revision": "11212da06f63290f4d354cdc0324241ba6eac356"
+        }
+      ],
+      "checkpoints": [
+        {
+          "id": "seedleap/zing-0.5",
+          "revision": "b9ca1ed1de750bf19a0e6562c6cd71fa7ef35648",
+          "role": "primary"
+        }
+      ],
+      "variants": [],
+      "inferenceTasks": [
+        {
+          "id": "text-to-video",
+          "label": "Text To Video",
+          "description": "Catalog task profile used by the model runtime.",
+          "source": "catalog",
+          "variantIds": [],
+          "inputs": [
+            {
+              "field": "prompt",
+              "detail": "Required",
+              "kind": "string",
+              "target": "input",
+              "required": true,
+              "description": "Recorded input field from the runtime profile."
+            },
+            {
+              "field": "image",
+              "detail": "Required",
+              "kind": "string",
+              "target": "input",
+              "required": true,
+              "description": "Recorded input field from the runtime profile."
+            },
+            {
+              "field": "video",
+              "detail": "Optional",
+              "kind": "string",
+              "target": "input",
+              "required": false,
+              "description": "Recorded input field from the runtime profile."
+            },
+            {
+              "field": "actions",
+              "detail": "controls",
+              "kind": "string",
+              "target": "input",
+              "required": false,
+              "description": "Recorded input field from the runtime profile."
+            }
+          ],
+          "artifacts": [
+            {
+              "kind": "generated_world",
+              "filename": ""
+            },
+            {
+              "kind": "generated_world",
+              "filename": "zing.mp4"
+            }
+          ]
+        },
+        {
+          "id": "image-to-video",
+          "label": "Image To Video",
+          "description": "Catalog task profile used by the model runtime.",
+          "source": "catalog",
+          "variantIds": [],
+          "inputs": [
+            {
+              "field": "prompt",
+              "detail": "Required",
+              "kind": "string",
+              "target": "input",
+              "required": true,
+              "description": "Recorded input field from the runtime profile."
+            },
+            {
+              "field": "image",
+              "detail": "Required",
+              "kind": "string",
+              "target": "input",
+              "required": true,
+              "description": "Recorded input field from the runtime profile."
+            },
+            {
+              "field": "video",
+              "detail": "Optional",
+              "kind": "string",
+              "target": "input",
+              "required": false,
+              "description": "Recorded input field from the runtime profile."
+            },
+            {
+              "field": "actions",
+              "detail": "controls",
+              "kind": "string",
+              "target": "input",
+              "required": false,
+              "description": "Recorded input field from the runtime profile."
+            }
+          ],
+          "artifacts": [
+            {
+              "kind": "generated_world",
+              "filename": ""
+            },
+            {
+              "kind": "generated_world",
+              "filename": "zing.mp4"
+            }
+          ]
+        },
+        {
+          "id": "interactive-world-model",
+          "label": "Interactive World Model",
+          "description": "Catalog task profile used by the model runtime.",
+          "source": "catalog",
+          "variantIds": [],
+          "inputs": [
+            {
+              "field": "prompt",
+              "detail": "Required",
+              "kind": "string",
+              "target": "input",
+              "required": true,
+              "description": "Recorded input field from the runtime profile."
+            },
+            {
+              "field": "image",
+              "detail": "Required",
+              "kind": "string",
+              "target": "input",
+              "required": true,
+              "description": "Recorded input field from the runtime profile."
+            },
+            {
+              "field": "video",
+              "detail": "Optional",
+              "kind": "string",
+              "target": "input",
+              "required": false,
+              "description": "Recorded input field from the runtime profile."
+            },
+            {
+              "field": "actions",
+              "detail": "controls",
+              "kind": "string",
+              "target": "input",
+              "required": false,
+              "description": "Recorded input field from the runtime profile."
+            }
+          ],
+          "artifacts": [
+            {
+              "kind": "generated_world",
+              "filename": ""
+            },
+            {
+              "kind": "generated_world",
+              "filename": "zing.mp4"
+            }
+          ]
+        }
+      ],
+      "inputContract": [
+        {
+          "field": "prompt",
+          "detail": "Required"
+        },
+        {
+          "field": "image",
+          "detail": "Required"
+        },
+        {
+          "field": "video",
+          "detail": "Optional"
+        },
+        {
+          "field": "actions",
+          "detail": "controls"
+        }
+      ],
+      "artifacts": [
+        {
+          "kind": "generated_world",
+          "filename": ""
+        },
+        {
+          "kind": "generated_world",
+          "filename": "zing.mp4"
+        }
+      ],
+      "notes": [
+        "GPU/checkpoint-backed artifact parity has not been run in this workspace.",
+        "Tiny CPU transformer state-dict and FP32/BF16 rollout parity checked against upstream, including eviction and prompt switches.",
+        "Checkpoint-backed GPU generation and native auxiliary-model parity are pending."
+      ],
+      "docs": {
+        "curated": true,
+        "publisher": {
+          "name": "seedleap",
+          "nameZh": "seedleap",
+          "kind": "lab"
+        },
+        "overview": [
+          "Zing-0.5 generates video with frame-aligned keyboard control and prompt switching."
+        ],
+        "overviewZh": [
+          "Zing-0.5 支持按帧键盘控制和提示词切换的视频生成。"
+        ],
+        "architecture": [
+          "Native Wan2.2 TI2V-5B layers, UMT5, VAE38 and attention are reused. Only the keyboard convolution and prompt-switching causal cache are model-specific."
+        ],
+        "architectureZh": [
+          "复用原生 Wan2.2 TI2V-5B 层、UMT5、VAE38 和注意力实现，新增键盘卷积和支持提示词切换的因果缓存。"
+        ],
+        "usageNotes": [
+          "Use ZingPipeline.from_pretrained(checkpoint_dir). num_frames includes the optional reference and must be 1+4*N; height/width are multiples of 32. Keyboard controls contain N-1 rows of eight values for a total N-frame result."
+        ],
+        "usageNotesZh": [
+          "通过 ZingPipeline.from_pretrained 加载。num_frames 包含可选参考帧，必须为 1+4*N；宽高为 32 的倍数。总长 N 帧时键盘控制为 N-1 行、每行八个值。"
+        ],
+        "highlights": [
+          "Text To Video",
+          "Image To Video",
+          "Interactive World Model",
+          "Dedicated env · Python 3.11 · CUDA 12.8",
+          "Public Hugging Face weights"
+        ],
+        "highlightsZh": [
+          "文生视频",
+          "图生视频",
+          "交互式世界模型",
+          "独立环境 · Python 3.11 · CUDA 12.8",
+          "公开的 Hugging Face 权重"
+        ],
+        "modalities": {
+          "inputs": [
+            "text",
+            "image"
+          ],
+          "outputs": [
+            "video"
+          ]
+        },
+        "useCases": [],
+        "useCasesZh": [],
+        "hardware": {
+          "minVramGb": null,
+          "recommended": null,
+          "notes": []
+        },
+        "benchmarks": [],
+        "limitations": [
+          "Tiny CPU transformer state-dict and FP32/BF16 rollout parity checked against upstream, including eviction and prompt switches.",
+          "Checkpoint-backed GPU generation and native auxiliary-model parity are pending."
+        ],
+        "limitationsZh": [
+          "当前工作区仅完成 CPU 可执行的检查，GPU 推理和 checkpoint 产物仍待验证。"
+        ],
+        "paper": null,
+        "figures": []
+      },
+      "commands": {
+        "prepare": "bash scripts/inference/prepare_model_infer.sh zing",
+        "install": "bash scripts/setup/model_env_install.sh --model zing",
+        "inspect": "worldfoundry-eval zoo model-show --model-id zing --include-manifest --json",
+        "check": "worldfoundry-eval zoo model-download --model-id zing --check-local --json",
+        "run": "worldfoundry-eval run \\\n  zing \\\n  --pipeline.task-profile text-to-video \\\n  --pipeline.prompt \"Describe the desired output.\" \\\n  --pipeline.image /path/to/input \\\n  --json"
+      },
+      "catalogPath": "worldfoundry/data/models/catalog/world_models/zing.yaml"
+    },
+    {
       "id": "a1",
       "name": "A1",
       "category": "vla_va_wam",
@@ -92818,22 +93996,24 @@
       "category": "world_models",
       "categoryLabel": "World models",
       "categoryLabelZh": "世界模型",
-      "provider": "SolarWM authors",
-      "summary": "SolarWM is an open data and scalable training foundation for camera-controlled, long-horizon video world models. It supports Wan2.2 5B/14B, LTX-2.5 22B, and MiniMax-H3 33B backbones; the 5B line releases the full bidirectional FM, TF-AnyFl…",
+      "provider": "Junchao-cs",
+      "summary": "SolarWM provides dataset-indexed camera-controlled inference across Wan 5B/14B, LTX-2.5 and MiniMax-H3 releases.",
       "aliases": [
         "solar-wm",
         "solarwm-wan2.2-5b",
-        "solarwm-wan22-5b"
+        "solarwm-wan22-5b",
+        "solarwm-wan2.2-14b",
+        "solarwm-ltx-22b",
+        "solarwm-h3-33b"
       ],
       "tasks": [
-        "camera-conditioned-world-model",
-        "long-horizon-video-generation",
-        "interactive-video-generation"
+        "camera-controlled-video",
+        "interactive-world-model"
       ],
       "status": {
-        "group": "runtime_ported",
-        "label": "Runtime Ported",
-        "integration": "runtime_ported",
+        "group": "integrated",
+        "label": "Integrated",
+        "integration": "integrated",
         "runner": "pending",
         "demo": "not_recorded"
       },
@@ -92842,11 +94022,11 @@
         "bindingId": "solarwm",
         "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
-        "pipelineTarget": "worldfoundry.pipelines.world_model.pipeline_runtime_manifest:SolarWMPipeline",
+        "pipelineTarget": "worldfoundry.pipelines.solarwm.pipeline_solarwm:SolarWMPipeline",
         "loadingMethod": "from_pretrained",
         "invocationMode": "native_or_standard_invocation",
-        "backendStage": "in_tree_runtime_manifest",
-        "runtimeStatus": "official_runtime_checkpoint_bound",
+        "backendStage": "official_external_runtime",
+        "runtimeStatus": "cpu_contract_validated_checkpoint_gpu_pending",
         "environmentId": "solarwm",
         "environmentName": "worldfoundry-solarwm-wan22-cu124",
         "environmentKind": "dedicated",
@@ -92893,10 +94073,9 @@
           "numpy"
         ],
         "notes": [
-          "The default route launches the official single-GPU Wan2.2-5B Stage2/SGF camera-length configuration from a user-staged checkout.",
-          "SolarWM has dataset-backed inference: the selected row supplies its caption, source frames, and authoritative camera trajectory.",
-          "The compatibility launcher forces transaction_v1 output, requires one selected sample, and copies its official video.mp4 into the WorldFoundry artifact path.",
-          "Other released SolarWM backbones remain cataloged variants because they require mutually incompatible runtime environments and multi-rank GPU validation.",
+          "Only the infer action is exposed. Training, preencoding and data-engine commands are excluded.",
+          "Code is Apache-2.0; LTX and H3 base/adapter weights retain their respective community licenses and restrictions.",
+          "Checkpoint-backed GPU generation is pending.",
           "Pins the official SolarWM Wan2.2 release-tested Python 3.10, PyTorch 2.5.1/CUDA 12.4, Diffusers 0.38.0, Transformers 5.12.1, PEFT 0.20.0, and FlashAttention 2.8.3 stack.",
           "FlashAttention is installed after PyTorch with build isolation disabled by the model-environment installer, matching the official Wan setup order.",
           "SolarWM source is intentionally not installed into this environment; the runtime adapter adds the pinned user-staged checkout's src directory to PYTHONPATH.",
@@ -92916,77 +94095,40 @@
         },
         {
           "kind": "source",
-          "label": "GitHub",
-          "url": "https://github.com/Junchao-cs/SolarWM"
-        },
-        {
-          "kind": "weights",
-          "label": "Hugging Face",
-          "url": "https://huggingface.co/junchaoh-cs/SolarWM-Wan2.2-5B"
-        },
-        {
-          "kind": "weights",
-          "label": "Hugging Face",
-          "url": "https://huggingface.co/junchaoh-cs/SolarWM-Wan2.2-14B",
-          "revision": "3b8189b4179156ff9cc5ca296e095cd4c20d2d03"
-        },
-        {
-          "kind": "weights",
-          "label": "Hugging Face",
-          "url": "https://huggingface.co/junchaoh-cs/SolarWM-LTX-22B",
-          "revision": "c5f0ed69b552d0f0f06f02097a7d3deeca253617"
-        },
-        {
-          "kind": "weights",
-          "label": "Hugging Face",
-          "url": "https://huggingface.co/junchaoh-cs/SolarWM-H3-33B",
-          "revision": "e0c060c6ea5cc6016177ee79f5b3abfb1ee8456c"
+          "label": "Source",
+          "url": "https://github.com/Junchao-cs/SolarWM",
+          "revision": "2fe1ea9aca072f787bbba07ee9380b0e1ea7563b"
         },
         {
           "kind": "docs",
           "label": "Upstream README",
-          "url": "https://github.com/Junchao-cs/SolarWM#readme"
+          "url": "https://github.com/Junchao-cs/SolarWM#readme",
+          "revision": "2fe1ea9aca072f787bbba07ee9380b0e1ea7563b"
         }
       ],
       "checkpoints": [
         {
-          "id": "junchaoh-cs/SolarWM-Wan2.2-5B",
-          "revision": "3b9db472c44637a5bd0284a82c2d6e1ccf119220",
-          "notes": [
-            "Catalog default: the complete four-step autoregressive Stage2/SGF route."
-          ]
-        },
-        {
-          "id": "junchaoh-cs/SolarWM-Wan2.2-14B",
-          "revision": "3b8189b4179156ff9cc5ca296e095cd4c20d2d03"
-        },
-        {
-          "id": "junchaoh-cs/SolarWM-LTX-22B",
-          "revision": "c5f0ed69b552d0f0f06f02097a7d3deeca253617"
+          "id": "junchaoh-cs/SolarWM",
+          "revision": "fe1587a9392bb91df5c90bcbe849064a5e88c546",
+          "role": "primary",
+          "gated": true
         },
         {
           "id": "junchaoh-cs/SolarWM-H3-33B",
-          "revision": "e0c060c6ea5cc6016177ee79f5b3abfb1ee8456c"
-        },
-        {
-          "id": "junchaoh-cs/SolarWM-Data",
-          "revision": "60c85899ee5303bb3ccdd5add7b5d606c54ddaab",
-          "role": "inference_dataset"
-        },
-        {
-          "id": "junchaoh-cs/SolarWM-Wan2.2-5B",
-          "license": "apache-2.0"
+          "revision": "028f22ab01b61cd5f14237f4eded507782d1d054",
+          "role": "primary",
+          "gated": true
         }
       ],
       "variants": [
         {
           "id": "solarwm-wan2.2-5b",
           "label": "solarwm-wan2.2-5b",
-          "task": "camera-conditioned-long-horizon-video",
+          "task": "camera-conditioned-video",
           "runtimeProfile": "solarwm",
           "pipelineBinding": "solarwm",
           "status": "integrated",
-          "pipelineTarget": "worldfoundry.pipelines.world_model.pipeline_runtime_manifest:SolarWMPipeline",
+          "pipelineTarget": "worldfoundry.pipelines.solarwm.pipeline_solarwm:SolarWMPipeline",
           "runner": "worldfoundry.pipeline",
           "loadingMethod": "from_pretrained",
           "invocationMode": "native_or_standard_invocation",
@@ -92994,17 +94136,9 @@
           "environmentKind": "dedicated",
           "python": "3.10",
           "cudaLabel": "CUDA 12.4",
-          "backendStage": "in_tree_runtime_manifest",
-          "runtimeStatus": "official_runtime_checkpoint_bound",
+          "backendStage": "official_external_runtime",
+          "runtimeStatus": "cpu_contract_validated_checkpoint_gpu_pending",
           "inputContract": [
-            {
-              "field": "required",
-              "detail": "data_root"
-            },
-            {
-              "field": "optional",
-              "detail": "config_path, base_model_dir, checkpoint_dir, test_index, sample_count"
-            },
             {
               "field": "prompt",
               "detail": "Optional"
@@ -93015,11 +94149,11 @@
             },
             {
               "field": "video",
-              "detail": "Required"
+              "detail": "Optional"
             },
             {
               "field": "actions",
-              "detail": "camera_trajectory"
+              "detail": "overrides"
             }
           ],
           "artifacts": [
@@ -93039,8 +94173,8 @@
           "task": "camera-conditioned-video",
           "runtimeProfile": "solarwm",
           "pipelineBinding": "solarwm",
-          "status": "planned",
-          "pipelineTarget": "worldfoundry.pipelines.world_model.pipeline_runtime_manifest:SolarWMPipeline",
+          "status": "integrated",
+          "pipelineTarget": "worldfoundry.pipelines.solarwm.pipeline_solarwm:SolarWMPipeline",
           "runner": "worldfoundry.pipeline",
           "loadingMethod": "from_pretrained",
           "invocationMode": "native_or_standard_invocation",
@@ -93048,17 +94182,9 @@
           "environmentKind": "dedicated",
           "python": "3.10",
           "cudaLabel": "CUDA 12.4",
-          "backendStage": "in_tree_runtime_manifest",
-          "runtimeStatus": "official_runtime_checkpoint_bound",
+          "backendStage": "official_external_runtime",
+          "runtimeStatus": "cpu_contract_validated_checkpoint_gpu_pending",
           "inputContract": [
-            {
-              "field": "required",
-              "detail": "data_root"
-            },
-            {
-              "field": "optional",
-              "detail": "config_path, base_model_dir, checkpoint_dir, test_index, sample_count"
-            },
             {
               "field": "prompt",
               "detail": "Optional"
@@ -93069,11 +94195,11 @@
             },
             {
               "field": "video",
-              "detail": "Required"
+              "detail": "Optional"
             },
             {
               "field": "actions",
-              "detail": "camera_trajectory"
+              "detail": "overrides"
             }
           ],
           "artifacts": [
@@ -93093,8 +94219,8 @@
           "task": "camera-conditioned-video",
           "runtimeProfile": "solarwm",
           "pipelineBinding": "solarwm",
-          "status": "planned",
-          "pipelineTarget": "worldfoundry.pipelines.world_model.pipeline_runtime_manifest:SolarWMPipeline",
+          "status": "integrated",
+          "pipelineTarget": "worldfoundry.pipelines.solarwm.pipeline_solarwm:SolarWMPipeline",
           "runner": "worldfoundry.pipeline",
           "loadingMethod": "from_pretrained",
           "invocationMode": "native_or_standard_invocation",
@@ -93102,17 +94228,9 @@
           "environmentKind": "dedicated",
           "python": "3.10",
           "cudaLabel": "CUDA 12.4",
-          "backendStage": "in_tree_runtime_manifest",
-          "runtimeStatus": "official_runtime_checkpoint_bound",
+          "backendStage": "official_external_runtime",
+          "runtimeStatus": "cpu_contract_validated_checkpoint_gpu_pending",
           "inputContract": [
-            {
-              "field": "required",
-              "detail": "data_root"
-            },
-            {
-              "field": "optional",
-              "detail": "config_path, base_model_dir, checkpoint_dir, test_index, sample_count"
-            },
             {
               "field": "prompt",
               "detail": "Optional"
@@ -93123,11 +94241,11 @@
             },
             {
               "field": "video",
-              "detail": "Required"
+              "detail": "Optional"
             },
             {
               "field": "actions",
-              "detail": "camera_trajectory"
+              "detail": "overrides"
             }
           ],
           "artifacts": [
@@ -93147,8 +94265,8 @@
           "task": "camera-conditioned-video",
           "runtimeProfile": "solarwm",
           "pipelineBinding": "solarwm",
-          "status": "planned",
-          "pipelineTarget": "worldfoundry.pipelines.world_model.pipeline_runtime_manifest:SolarWMPipeline",
+          "status": "integrated",
+          "pipelineTarget": "worldfoundry.pipelines.solarwm.pipeline_solarwm:SolarWMPipeline",
           "runner": "worldfoundry.pipeline",
           "loadingMethod": "from_pretrained",
           "invocationMode": "native_or_standard_invocation",
@@ -93156,17 +94274,9 @@
           "environmentKind": "dedicated",
           "python": "3.10",
           "cudaLabel": "CUDA 12.4",
-          "backendStage": "in_tree_runtime_manifest",
-          "runtimeStatus": "official_runtime_checkpoint_bound",
+          "backendStage": "official_external_runtime",
+          "runtimeStatus": "cpu_contract_validated_checkpoint_gpu_pending",
           "inputContract": [
-            {
-              "field": "required",
-              "detail": "data_root"
-            },
-            {
-              "field": "optional",
-              "detail": "config_path, base_model_dir, checkpoint_dir, test_index, sample_count"
-            },
             {
               "field": "prompt",
               "detail": "Optional"
@@ -93177,11 +94287,11 @@
             },
             {
               "field": "video",
-              "detail": "Required"
+              "detail": "Optional"
             },
             {
               "field": "actions",
-              "detail": "camera_trajectory"
+              "detail": "overrides"
             }
           ],
           "artifacts": [
@@ -93198,102 +94308,18 @@
       ],
       "inferenceTasks": [
         {
-          "id": "camera-conditioned-long-horizon-video",
-          "label": "Camera Conditioned Long Horizon Video",
-          "description": "Catalog task profile used by the model runtime.",
-          "source": "catalog",
-          "variantIds": [
-            "solarwm-wan2.2-5b"
-          ],
-          "inputs": [
-            {
-              "field": "required",
-              "detail": "data_root",
-              "kind": "string",
-              "target": "input",
-              "required": false,
-              "description": "Recorded input field from the runtime profile."
-            },
-            {
-              "field": "optional",
-              "detail": "config_path, base_model_dir, checkpoint_dir, test_index, sample_count",
-              "kind": "string",
-              "target": "input",
-              "required": false,
-              "description": "Recorded input field from the runtime profile."
-            },
-            {
-              "field": "prompt",
-              "detail": "Optional",
-              "kind": "string",
-              "target": "input",
-              "required": false,
-              "description": "Recorded input field from the runtime profile."
-            },
-            {
-              "field": "image",
-              "detail": "Optional",
-              "kind": "string",
-              "target": "input",
-              "required": false,
-              "description": "Recorded input field from the runtime profile."
-            },
-            {
-              "field": "video",
-              "detail": "Required",
-              "kind": "string",
-              "target": "input",
-              "required": true,
-              "description": "Recorded input field from the runtime profile."
-            },
-            {
-              "field": "actions",
-              "detail": "camera_trajectory",
-              "kind": "string",
-              "target": "input",
-              "required": false,
-              "description": "Recorded input field from the runtime profile."
-            }
-          ],
-          "artifacts": [
-            {
-              "kind": "generated_world",
-              "filename": ""
-            },
-            {
-              "kind": "generated_world",
-              "filename": "solarwm.mp4"
-            }
-          ]
-        },
-        {
           "id": "camera-conditioned-video",
           "label": "Camera Conditioned Video",
           "description": "Catalog task profile used by the model runtime.",
           "source": "catalog",
           "variantIds": [
+            "solarwm-wan2.2-5b",
             "solarwm-wan2.2-14b",
             "solarwm-ltx-22b",
             "solarwm-h3-33b"
           ],
           "inputs": [
             {
-              "field": "required",
-              "detail": "data_root",
-              "kind": "string",
-              "target": "input",
-              "required": false,
-              "description": "Recorded input field from the runtime profile."
-            },
-            {
-              "field": "optional",
-              "detail": "config_path, base_model_dir, checkpoint_dir, test_index, sample_count",
-              "kind": "string",
-              "target": "input",
-              "required": false,
-              "description": "Recorded input field from the runtime profile."
-            },
-            {
               "field": "prompt",
               "detail": "Optional",
               "kind": "string",
@@ -93311,15 +94337,15 @@
             },
             {
               "field": "video",
-              "detail": "Required",
+              "detail": "Optional",
               "kind": "string",
               "target": "input",
-              "required": true,
+              "required": false,
               "description": "Recorded input field from the runtime profile."
             },
             {
               "field": "actions",
-              "detail": "camera_trajectory",
+              "detail": "overrides",
               "kind": "string",
               "target": "input",
               "required": false,
@@ -93340,14 +94366,6 @@
       ],
       "inputContract": [
         {
-          "field": "required",
-          "detail": "data_root"
-        },
-        {
-          "field": "optional",
-          "detail": "config_path, base_model_dir, checkpoint_dir, test_index, sample_count"
-        },
-        {
           "field": "prompt",
           "detail": "Optional"
         },
@@ -93357,11 +94375,11 @@
         },
         {
           "field": "video",
-          "detail": "Required"
+          "detail": "Optional"
         },
         {
           "field": "actions",
-          "detail": "camera_trajectory"
+          "detail": "overrides"
         }
       ],
       "artifacts": [
@@ -93375,61 +94393,53 @@
         }
       ],
       "notes": [
-        "WorldFoundry binds the official Wan2.2-5B Stage2 inference CLI through a user-staged source checkout.",
-        "The adapter passes explicit source, checkpoint, dataset, and output paths and copies the official transaction's video artifact into the WorldFoundry artifact contract.",
-        "Catalog, runtime profile, isolated environment, pipeline loading, requirement diagnostics, and compatibility-launcher artifact normalization are CPU-tested.",
-        "A real checkpoint-backed CUDA artifact has not been generated in this CPU-only workspace.",
-        "The default route launches the official single-GPU Wan2.2-5B Stage2/SGF camera-length configuration from a user-staged checkout.",
-        "SolarWM has dataset-backed inference: the selected row supplies its caption, source frames, and authoritative camera trajectory.",
-        "The compatibility launcher forces transaction_v1 output, requires one selected sample, and copies its official video.mp4 into the WorldFoundry artifact path.",
-        "Other released SolarWM backbones remain cataloged variants because they require mutually incompatible runtime environments and multi-rank GPU validation."
+        "GPU/checkpoint-backed artifact parity has not been run in this workspace.",
+        "Only the infer action is exposed. Training, preencoding and data-engine commands are excluded.",
+        "Code is Apache-2.0; LTX and H3 base/adapter weights retain their respective community licenses and restrictions.",
+        "Checkpoint-backed GPU generation is pending."
       ],
       "docs": {
         "curated": true,
         "publisher": {
-          "name": "SolarWM authors",
-          "nameZh": "SolarWM 作者团队",
+          "name": "Junchao-cs",
+          "nameZh": "Junchao-cs",
           "kind": "lab"
         },
         "overview": [
-          "SolarWM is an open data and scalable training foundation for camera-controlled, long-horizon video world models. It supports Wan2.2 5B/14B, LTX-2.5 22B, and MiniMax-H3 33B backbones; the 5B line releases the full bidirectional FM, TF-AnyFlow, and SGF progression."
+          "SolarWM provides dataset-indexed camera-controlled inference across Wan 5B/14B, LTX-2.5 and MiniMax-H3 releases."
         ],
         "overviewZh": [
-          "SolarWM 是面向相机控制、长时程视频世界模型的开放数据与可扩展训练基础设施，覆盖 Wan2.2 5B/14B、LTX-2.5 22B 与 MiniMax-H3 33B；其中 5B 路线完整发布了双向 FM、TF-AnyFlow 与 SGF 三阶段流程。"
+          "SolarWM 支持从数据索引读取相机轨迹，在 Wan 5B/14B、LTX-2.5 和 MiniMax-H3 路线上执行推理。"
         ],
         "architecture": [
-          "The complete 5B route adapts Wan2.2 through Stage0.5 bidirectional flow matching, Stage1 teacher-forced AnyFlow, and Stage2 distribution matching via self-gradient forcing. The final causal model performs four-step autoregressive camera-conditioned rollout from short training clips."
+          "A single WorldFoundry launcher selects the released solarwm infer route in its dedicated backend environment. Source backbones, training code and data pipelines are not vendored."
         ],
         "architectureZh": [
-          "完整 5B 路线以 Wan2.2 为基座，依次进行 Stage0.5 双向流匹配、Stage1 teacher-forced AnyFlow，以及 Stage2 基于 self-gradient forcing 的分布匹配；最终因果模型以四步自回归方式执行相机条件滚动生成。"
+          "WorldFoundry 统一选择官方 solarwm infer 路线，在对应独立环境中启动。不会复制上游骨干、训练代码或数据流水线。"
         ],
         "usageNotes": [
-          "Stage the pinned SolarWM checkout, accept the gated Hugging Face repositories, download the Wan2.2-5B bundle and SolarWM-Data, then set source/base/checkpoint/data paths if they differ from WorldFoundry defaults. Inference consumes SolarWM dataset rows and camera trajectories; it is not a prompt-only T2V route."
+          "Default variant=wan-5b-dmd. Provide source_root, checkpoint_dir, base_path and data_root. Prompts, images and camera tracks come from the indexed samples. Use a separate interpreter for Wan, LTX and H3; route process counts follow the official configs."
         ],
         "usageNotesZh": [
-          "请先就位锁定版本的 SolarWM checkout，接受 Hugging Face gated 仓库条款并下载 Wan2.2-5B 权重包与 SolarWM-Data；若目录不同于 WorldFoundry 默认值，再显式设置源码、基座、checkpoint 与数据路径。推理消费 SolarWM 数据行和相机轨迹，并非纯 prompt 文生视频接口。"
+          "默认 variant=wan-5b-dmd，需提供 source_root、checkpoint_dir、base_path 和 data_root。提示词、图像和相机轨迹来自索引样本。Wan、LTX、H3 使用独立解释器，进程数遵循官方推理配置。"
         ],
         "highlights": [
-          "Camera Conditioned World Model",
-          "Long Horizon Video Generation",
-          "Interactive Video Generation",
-          "1 runnable WorldFoundry variant",
+          "Camera Controlled Video",
+          "Interactive World Model",
+          "4 runnable WorldFoundry variants",
           "Dedicated env · Python 3.10 · CUDA 12.4",
-          "Public Hugging Face weights"
+          "Gated or private weights — check access first"
         ],
         "highlightsZh": [
-          "camera-conditioned-world-model",
-          "long-horizon-video-generation",
-          "交互式视频生成",
-          "1 个可运行的 WorldFoundry variant",
+          "相机可控视频生成",
+          "交互式世界模型",
+          "4 个可运行的 WorldFoundry variant",
           "独立环境 · Python 3.10 · CUDA 12.4",
-          "公开的 Hugging Face 权重"
+          "权重为 gated/私有——请先确认访问权限"
         ],
         "modalities": {
           "inputs": [],
-          "outputs": [
-            "video"
-          ]
+          "outputs": []
         },
         "useCases": [],
         "useCasesZh": [],
@@ -93453,14 +94463,12 @@
           }
         ],
         "limitations": [
-          "The default route requires a CUDA 12.4 environment, the gated Wan2.2-5B assets, and the released dataset indexes/raw shards.",
-          "Checkpoint-backed GPU parity is pending in WorldFoundry.",
-          "LTX-2.5 and MiniMax-H3 derivatives carry backbone-specific licenses and are metadata-only variants in this integration."
+          "Only the infer action is exposed. Training, preencoding and data-engine commands are excluded.",
+          "Code is Apache-2.0; LTX and H3 base/adapter weights retain their respective community licenses and restrictions.",
+          "Checkpoint-backed GPU generation is pending."
         ],
         "limitationsZh": [
-          "默认路线需要 CUDA 12.4 环境、受限访问的 Wan2.2-5B 资产，以及已发布的数据索引和原始分片。",
-          "WorldFoundry 尚未完成基于真实 checkpoint 的 GPU 一致性验证。",
-          "LTX-2.5 与 MiniMax-H3 衍生权重受各自基座许可约束，在本次集成中仅登记元数据。"
+          "当前工作区仅完成 CPU 可执行的检查，GPU 推理和 checkpoint 产物仍待验证。"
         ],
         "paper": null,
         "figures": []
@@ -93470,7 +94478,7 @@
         "install": "bash scripts/setup/model_env_install.sh --model solarwm-wan2.2-5b",
         "inspect": "worldfoundry-eval zoo model-show --model-id solarwm --include-manifest --json",
         "check": "worldfoundry-eval zoo model-download --model-id solarwm --check-local --json",
-        "run": "worldfoundry-eval run \\\n  solarwm-wan2.2-5b \\\n  --pipeline.task-profile camera-conditioned-long-horizon-video \\\n  --pipeline.video /path/to/input \\\n  --json"
+        "run": "worldfoundry-eval run \\\n  solarwm-wan2.2-5b \\\n  --pipeline.task-profile camera-conditioned-video \\\n  --json"
       },
       "catalogPath": "worldfoundry/data/models/catalog/world_models/solarwm.yaml"
     },

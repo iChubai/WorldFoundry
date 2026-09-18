@@ -1,50 +1,25 @@
 ---
 title: "SolarWM"
-description: "SolarWM（SolarWM authors）：交互式视频生成；Runner 一致性待确认; 4 个 variant。"
-modelId: "solarwm"
+description: "SolarWM provides dataset-indexed camera-controlled inference across Wan 5B/14B, LTX-2.5 and MiniMax-H3 releases."
 pageSource: generated
 ---
 
-SolarWM 是面向相机控制、长时程视频世界模型的开放数据与可扩展训练基础设施，覆盖 Wan2.2 5B/14B、LTX-2.5 22B 与 MiniMax-H3 33B；其中 5B 路线完整发布了双向 FM、TF-AnyFlow 与 SGF 三阶段流程。
+**发表机构:** Junchao-cs · 研究机构
 
-<ModelPaperFigures modelId="solarwm" locale="zh" />
-
-记录论文为[arXiv 2609.02886](https://arxiv.org/abs/2609.02886)。
-
-项目页：[junchao-cs.github.io/SolarWM-Web](https://junchao-cs.github.io/SolarWM-Web/)。代码：[Junchao-cs/SolarWM](https://github.com/Junchao-cs/SolarWM)。
+SolarWM 支持从数据索引读取相机轨迹，在 Wan 5B/14B、LTX-2.5 和 MiniMax-H3 路线上执行推理。
 
 <ModelCommandBuilder modelId="solarwm" locale="zh" />
 
-## 用来做什么
+## 架构
 
-用 `solarwm-wan2.2-5b` 做 catalog 世界模型推理。需要动作条件未来帧、而不是独立片段生成器时选它。
-
-完整 5B 路线以 Wan2.2 为基座，依次进行 Stage0.5 双向流匹配、Stage1 teacher-forced AnyFlow，以及 Stage2 基于 self-gradient forcing 的分布匹配；最终因果模型以四步自回归方式执行相机条件滚动生成。该模型由SolarWM 作者团队发布。
-
-catalog 记录的任务包括 camera-conditioned-world-model、long-horizon-video-generation、交互式视频生成、camera-conditioned-long-horizon-video。别名包括 `solar-wm`、`solarwm-wan2.2-5b`、`solarwm-wan22-5b`。输出模态为视频。同系列还有 `solarwm-wan2.2-14b`、`solarwm-ltx-22b`、`solarwm-h3-33b`。
-
-记录的评测入口包括[WorldModelBench](/zh/docs/evaluation/benchmark-hub/worldmodelbench)（长时程相机控制下的世界一致性）。
+WorldFoundry 统一选择官方 solarwm infer 路线，在对应独立环境中启动。不会复制上游骨干、训练代码或数据流水线。
 
 ## 运行时契约
 
-必填 `video`；可选 `required`、`optional` (config_path, base_model_dir, checkpoint_dir, test_index, sample_count)、`prompt`、`image`、`actions`；产物 `generated_world`、`solarwm.mp4`。
+默认 variant=wan-5b-dmd，需提供 source_root、checkpoint_dir、base_path 和 data_root。提示词、图像和相机轨迹来自索引样本。Wan、LTX、H3 使用独立解释器，进程数遵循官方推理配置。
 
-记录的任务 profile：`camera-conditioned-world-model`、`long-horizon-video-generation`、`interactive-video-generation`、`camera-conditioned-long-horizon-video`、`camera-conditioned-video`。绑定的 pipeline 类是 `SolarWMPipeline`。
+## 评测 Benchmark
 
-起步 variant 是 `solarwm-wan2.2-5b`。catalog 登记了 4 个 variant（上方卡片）：`solarwm-wan2.2-5b`（`camera-conditioned-long-horizon-video`）：Runner 一致性待确认、`solarwm-wan2.2-14b`（`camera-conditioned-video`）：Runner 一致性待确认、`solarwm-ltx-22b`（`camera-conditioned-video`）：Runner 一致性待确认、`solarwm-h3-33b`（`camera-conditioned-video`）：Runner 一致性待确认。系列状态：**Runner 一致性待确认**。
-
-请先就位锁定版本的 SolarWM checkout，接受 Hugging Face gated 仓库条款并下载 Wan2.2-5B 权重包与 SolarWM-Data；若目录不同于 WorldFoundry 默认值，再显式设置源码、基座、checkpoint 与数据路径。 推理消费 SolarWM 数据行和相机轨迹，并非纯 prompt 文生视频接口。
-
-默认路线需要 CUDA 12.4 环境、受限访问的 Wan2.2-5B 资产，以及已发布的数据索引和原始分片。
-
-## 在 WorldFoundry 中运行
-
-catalog 启动命令是 `worldfoundry-eval run solarwm-wan2.2-5b --pipeline.task-profile camera-conditioned-long-horizon-video`。上方命令构建器按已记录任务切换 `--pipeline.task-profile`，发出的仍是 `worldfoundry-eval run`。
-
-运行环境是独立 profile `worldfoundry-solarwm-wan22-cu124`（Python 3.10，CUDA 12.4，torch==2.5.1+cu124）。
-
-记录的权重仓库包括 `junchaoh-cs/SolarWM-Wan2.2-5B`、`junchaoh-cs/SolarWM-Wan2.2-14B`、`junchaoh-cs/SolarWM-LTX-22B` 等。就位权重用 `bash scripts/inference/prepare_model_infer.sh solarwm-wan2.2-5b`。
-
-记录 license 为 apache-2.0；状态：**Runner 一致性待确认**。
+- [WorldModelBench](/zh/docs/evaluation/benchmark-hub/worldmodelbench) — 长时程相机控制下的世界一致性。
 
 <ModelRelatedRecipes modelId="solarwm" locale="zh" />

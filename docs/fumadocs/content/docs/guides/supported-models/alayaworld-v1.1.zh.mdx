@@ -1,0 +1,22 @@
+---
+title: "AlayaWorld v1.1"
+description: "Separate AR and four-step DMD inference for AlayaWorld v1.1 with ViGeo spatial memory."
+pageSource: generated
+---
+
+**发表机构:** AlayaLab · 研究机构
+image → video
+
+AlayaWorld v1.1 独立提供带 ViGeo 空间记忆的 AR 和四步 DMD 推理。
+
+<ModelCommandBuilder modelId="alayaworld-v1.1" locale="zh" />
+
+## 架构
+
+从固定版本的上游提取纯推理 rollout 和少量配置适配代码，复用 WorldFoundry checkpoint/LoRA 加载器、LTX VAE、Gemma 及历史编码器；不实例化 trainer、训练配置或优化器。Alaya Transformer 扩展和 ViGeo 几何仍使用外部源码。
+
+## 运行时契约
+
+选择 variant=ar（30 步）或 dmd（4 步）。需 stage2b Transformer/历史权重、LTX-2.3 基座、Gemma 和 ViGeo1.1；DMD 另需 stage3 LoRA。此路线独立于原版 DA3 合并 checkpoint。
+
+<ModelRelatedRecipes modelId="alayaworld-v1.1" locale="zh" />

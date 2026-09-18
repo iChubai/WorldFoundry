@@ -5,6 +5,7 @@
     "local-assets",
     "tui",
     "inference",
+    "interactive-inference",
     "inference-optimization",
     "run-status",
     "supported-models",

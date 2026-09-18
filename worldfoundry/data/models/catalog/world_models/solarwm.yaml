@@ -1,172 +1,139 @@
-id: solarwm
+schema_version: 2
+model_id: solarwm
 name: SolarWM
+family: SolarWM
+domain: world
 aliases:
 - solar-wm
 - solarwm-wan2.2-5b
 - solarwm-wan22-5b
+- solarwm-wan2.2-14b
+- solarwm-ltx-22b
+- solarwm-h3-33b
 tasks:
-- camera-conditioned-world-model
-- long-horizon-video-generation
-- interactive-video-generation
+- camera-controlled-video
+- interactive-world-model
 output_artifacts:
 - generated_world
-provider: official_repo
-source:
-  status: open_source
-  official_repo_url: https://github.com/Junchao-cs/SolarWM
-  hf_repo_id: junchaoh-cs/SolarWM-Wan2.2-5B
+capabilities:
+  task_family: world_model
+  modalities:
+  - camera-controlled-video
+  - interactive-world-model
+availability:
+  source: open_source
   license: apache-2.0
   requires_auth: true
-  notes:
-  - The Apache-2.0 declaration covers SolarWM code. Released derivatives retain backbone-specific license terms.
-official_sources:
-  paper: https://arxiv.org/abs/2609.02886
-  project_page: https://junchao-cs.github.io/SolarWM-Web/
+sources:
   github:
     url: https://github.com/Junchao-cs/SolarWM
-    head_sha: a3a3fac16466102a2b97df867f7703df7172cb2a
+    revision: 2fe1ea9aca072f787bbba07ee9380b0e1ea7563b
   huggingface:
-  - repo_id: junchaoh-cs/SolarWM-Wan2.2-5B
-    revision: 3b9db472c44637a5bd0284a82c2d6e1ccf119220
+  - repo_id: junchaoh-cs/SolarWM
+    revision: fe1587a9392bb91df5c90bcbe849064a5e88c546
     type: model
-    status: confirmed
-    gated: auto
-  - repo_id: junchaoh-cs/SolarWM-Wan2.2-14B
-    revision: 3b8189b4179156ff9cc5ca296e095cd4c20d2d03
-    type: model
-    status: confirmed
-    gated: auto
-  - repo_id: junchaoh-cs/SolarWM-LTX-22B
-    revision: c5f0ed69b552d0f0f06f02097a7d3deeca253617
-    type: model
-    status: confirmed
     gated: auto
   - repo_id: junchaoh-cs/SolarWM-H3-33B
-    revision: e0c060c6ea5cc6016177ee79f5b3abfb1ee8456c
+    revision: 028f22ab01b61cd5f14237f4eded507782d1d054
     type: model
-    status: confirmed
-    gated: auto
-  dataset:
-    repo_id: junchaoh-cs/SolarWM-Data
-    revision: 60c85899ee5303bb3ccdd5add7b5d606c54ddaab
     gated: auto
 checkpoints:
-- repo_id: junchaoh-cs/SolarWM-Wan2.2-5B
-  revision: 3b9db472c44637a5bd0284a82c2d6e1ccf119220
-  gated: auto
-  requires_auth: true
-  path: SolarWM-5B-sgf-stage2-81f
-  notes:
-  - 'Catalog default: the complete four-step autoregressive Stage2/SGF route.'
-- repo_id: junchaoh-cs/SolarWM-Wan2.2-14B
-  revision: 3b8189b4179156ff9cc5ca296e095cd4c20d2d03
-  gated: auto
-  requires_auth: true
-  path: SolarWM-14B-bid-stage0p5-81f
-- repo_id: junchaoh-cs/SolarWM-LTX-22B
-  revision: c5f0ed69b552d0f0f06f02097a7d3deeca253617
-  gated: auto
-  requires_auth: true
-  path: SolarWM-ltx-22B-bid-stage0p5-153f
-- repo_id: junchaoh-cs/SolarWM-H3-33B
-  revision: e0c060c6ea5cc6016177ee79f5b3abfb1ee8456c
-  gated: auto
-  requires_auth: true
-  path: SolarWM-h3-33B-bid-stage0p5-158f
-variants:
-- id: solarwm-wan2.2-5b
-  task: camera-conditioned-long-horizon-video
-  provider: official_repo
-  checkpoint_refs:
-  - repo_id: junchaoh-cs/SolarWM-Wan2.2-5B
-    revision: 3b9db472c44637a5bd0284a82c2d6e1ccf119220
+  primary:
+    repo_id: junchaoh-cs/SolarWM
+    revision: fe1587a9392bb91df5c90bcbe849064a5e88c546
+    type: model
     gated: auto
-    requires_auth: true
-  runtime_profile: runtime-profile:solarwm
-  runner_target: worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner
+integration:
+  status: integrated
+  runtime_profile: solarwm
   pipeline_binding: solarwm
-  integration:
-    status: integrated
-  runner_parity:
-    status: pending
-    notes:
-    - The official Stage2 command is bound and CPU contract-tested; checkpoint-backed CUDA artifact parity is pending.
-- id: solarwm-wan2.2-14b
-  task: camera-conditioned-video
-  provider: official_repo
-  checkpoint_refs:
-  - repo_id: junchaoh-cs/SolarWM-Wan2.2-14B
-    revision: 3b8189b4179156ff9cc5ca296e095cd4c20d2d03
-    gated: auto
-    requires_auth: true
-  integration:
-    status: planned
-  runner_parity:
-    status: pending
-  notes:
-  - Official Stage0.5 bidirectional weights are released; this variant requires an eight-rank Wan environment.
-- id: solarwm-ltx-22b
-  task: camera-conditioned-video
-  provider: official_repo
-  checkpoint_refs:
-  - repo_id: junchaoh-cs/SolarWM-LTX-22B
-    revision: c5f0ed69b552d0f0f06f02097a7d3deeca253617
-    gated: auto
-    requires_auth: true
-  integration:
-    status: planned
-  runner_parity:
-    status: pending
-  notes:
-  - Official Stage0.5 LoRA weights are released; LTX-2.5 uses its own Python 3.12/CUDA 12.8 environment.
-- id: solarwm-h3-33b
-  task: camera-conditioned-video
-  provider: official_repo
-  checkpoint_refs:
-  - repo_id: junchaoh-cs/SolarWM-H3-33B
-    revision: e0c060c6ea5cc6016177ee79f5b3abfb1ee8456c
-    gated: auto
-    requires_auth: true
-  integration:
-    status: planned
-  runner_parity:
-    status: pending
-  notes:
-  - Official Stage0.5 LoRA weights are released; MiniMax-H3 uses its own license and eight-rank runtime.
-runtime_profile: runtime-profile:solarwm
+  runner: worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner
 runner_target: worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner
 pipeline_binding: solarwm
-integration:
-  status: runtime_ported
+runtime_profile: runtime-profile:solarwm
+evidence:
   notes:
-  - WorldFoundry binds the official Wan2.2-5B Stage2 inference CLI through a user-staged source checkout.
-  - The adapter passes explicit source, checkpoint, dataset, and output paths and copies the official transaction's video artifact into the WorldFoundry artifact contract.
+  - Only the infer action is exposed. Training, preencoding and data-engine commands are excluded.
+  - Code is Apache-2.0; LTX and H3 base/adapter weights retain their respective community licenses and restrictions.
+  - Checkpoint-backed GPU generation is pending.
 runner_parity:
   status: pending
   notes:
-  - Catalog, runtime profile, isolated environment, pipeline loading, requirement diagnostics, and compatibility-launcher artifact normalization are CPU-tested.
-  - A real checkpoint-backed CUDA artifact has not been generated in this CPU-only workspace.
+  - GPU/checkpoint-backed artifact parity has not been run in this workspace.
 catalog_category: world_models
-catalog_scope: World-model catalog entries. Integrated entries expose in-tree WorldFoundry runtimes; blocked entries retain upstream provenance without runnable backends.
 docs:
-  publisher: SolarWM authors
+  publisher: Junchao-cs
   publisher_kind: lab
-  publisher_zh: SolarWM 作者团队
-  overview: SolarWM is an open data and scalable training foundation for camera-controlled, long-horizon video world models. It supports Wan2.2 5B/14B, LTX-2.5 22B, and MiniMax-H3 33B backbones; the 5B line releases the full bidirectional FM, TF-AnyFlow, and SGF progression.
-  overview_zh: SolarWM 是面向相机控制、长时程视频世界模型的开放数据与可扩展训练基础设施，覆盖 Wan2.2 5B/14B、LTX-2.5 22B 与 MiniMax-H3 33B；其中 5B 路线完整发布了双向 FM、TF-AnyFlow 与 SGF 三阶段流程。
-  architecture: The complete 5B route adapts Wan2.2 through Stage0.5 bidirectional flow matching, Stage1 teacher-forced AnyFlow, and Stage2 distribution matching via self-gradient forcing. The final causal model performs four-step autoregressive camera-conditioned rollout from short training clips.
-  architecture_zh: 完整 5B 路线以 Wan2.2 为基座，依次进行 Stage0.5 双向流匹配、Stage1 teacher-forced AnyFlow，以及 Stage2 基于 self-gradient forcing 的分布匹配；最终因果模型以四步自回归方式执行相机条件滚动生成。
-  usage_notes: Stage the pinned SolarWM checkout, accept the gated Hugging Face repositories, download the Wan2.2-5B bundle and SolarWM-Data, then set source/base/checkpoint/data paths if they differ from WorldFoundry defaults. Inference consumes SolarWM dataset rows and camera trajectories; it is not a prompt-only T2V route.
-  usage_notes_zh: 请先就位锁定版本的 SolarWM checkout，接受 Hugging Face gated 仓库条款并下载 Wan2.2-5B 权重包与 SolarWM-Data；若目录不同于 WorldFoundry 默认值，再显式设置源码、基座、checkpoint 与数据路径。推理消费 SolarWM 数据行和相机轨迹，并非纯 prompt 文生视频接口。
+  publisher_zh: Junchao-cs
+  overview: SolarWM provides dataset-indexed camera-controlled inference across Wan 5B/14B, LTX-2.5 and MiniMax-H3 releases.
+  overview_zh: SolarWM 支持从数据索引读取相机轨迹，在 Wan 5B/14B、LTX-2.5 和 MiniMax-H3 路线上执行推理。
+  architecture: A single WorldFoundry launcher selects the released solarwm infer route in its dedicated backend environment.
+    Source backbones, training code and data pipelines are not vendored.
+  architecture_zh: WorldFoundry 统一选择官方 solarwm infer 路线，在对应独立环境中启动。不会复制上游骨干、训练代码或数据流水线。
+  usage_notes: Default variant=wan-5b-dmd. Provide source_root, checkpoint_dir, base_path and data_root. Prompts, images and
+    camera tracks come from the indexed samples. Use a separate interpreter for Wan, LTX and H3; route process counts follow
+    the official configs.
+  usage_notes_zh: 默认 variant=wan-5b-dmd，需提供 source_root、checkpoint_dir、base_path 和 data_root。提示词、图像和相机轨迹来自索引样本。Wan、LTX、H3
+    使用独立解释器，进程数遵循官方推理配置。
   limitations:
-  - The default route requires a CUDA 12.4 environment, the gated Wan2.2-5B assets, and the released dataset indexes/raw shards.
-  - Checkpoint-backed GPU parity is pending in WorldFoundry.
-  - LTX-2.5 and MiniMax-H3 derivatives carry backbone-specific licenses and are metadata-only variants in this integration.
+  - Only the infer action is exposed. Training, preencoding and data-engine commands are excluded.
+  - Code is Apache-2.0; LTX and H3 base/adapter weights retain their respective community licenses and restrictions.
+  - Checkpoint-backed GPU generation is pending.
   limitations_zh:
-  - 默认路线需要 CUDA 12.4 环境、受限访问的 Wan2.2-5B 资产，以及已发布的数据索引和原始分片。
-  - WorldFoundry 尚未完成基于真实 checkpoint 的 GPU 一致性验证。
-  - LTX-2.5 与 MiniMax-H3 衍生权重受各自基座许可约束，在本次集成中仅登记元数据。
+  - 当前工作区仅完成 CPU 可执行的检查，GPU 推理和 checkpoint 产物仍待验证。
   recommended_benchmarks:
   - id: worldmodelbench
     reason: Long-horizon camera-controlled world consistency.
     reason_zh: 长时程相机控制下的世界一致性。
+official_sources:
+  paper: https://arxiv.org/abs/2609.02886
+  project_page: https://junchao-cs.github.io/SolarWM-Web/
+  dataset:
+    repo_id: junchaoh-cs/SolarWM-Data
+    revision: 60c85899ee5303bb3ccdd5add7b5d606c54ddaab
+    gated: auto
+variants:
+- id: solarwm-wan2.2-5b
+  task: camera-conditioned-video
+  runtime_profile: runtime-profile:solarwm
+  pipeline_binding: solarwm
+  runner_target: worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner
+  integration:
+    status: integrated
+  runner_parity:
+    status: pending
+  notes:
+  - Inference variant=wan-5b-dmd; GPU/checkpoint validation pending.
+- id: solarwm-wan2.2-14b
+  task: camera-conditioned-video
+  runtime_profile: runtime-profile:solarwm
+  pipeline_binding: solarwm
+  runner_target: worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner
+  integration:
+    status: integrated
+  runner_parity:
+    status: pending
+  notes:
+  - Inference variant=wan-14b; GPU/checkpoint validation pending.
+- id: solarwm-ltx-22b
+  task: camera-conditioned-video
+  runtime_profile: runtime-profile:solarwm
+  pipeline_binding: solarwm
+  runner_target: worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner
+  integration:
+    status: integrated
+  runner_parity:
+    status: pending
+  notes:
+  - Inference variant=ltx; GPU/checkpoint validation pending.
+- id: solarwm-h3-33b
+  task: camera-conditioned-video
+  runtime_profile: runtime-profile:solarwm
+  pipeline_binding: solarwm
+  runner_target: worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner
+  integration:
+    status: integrated
+  runner_parity:
+    status: pending
+  notes:
+  - Inference variant=h3-bidirectional; GPU/checkpoint validation pending.

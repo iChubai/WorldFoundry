@@ -1,0 +1,22 @@
+---
+title: "Zing-0.5"
+description: "Zing-0.5 generates video with frame-aligned keyboard control and prompt switching."
+pageSource: generated
+---
+
+**Publisher:** seedleap · Research lab
+text · image → video
+
+Zing-0.5 generates video with frame-aligned keyboard control and prompt switching.
+
+<ModelCommandBuilder modelId="zing" locale="en" />
+
+## Architecture
+
+Native Wan2.2 TI2V-5B layers, UMT5, VAE38 and attention are reused. Only the keyboard convolution and prompt-switching causal cache are model-specific.
+
+## Runtime contract
+
+Use ZingPipeline.from_pretrained(checkpoint_dir). num_frames includes the optional reference and must be 1+4*N; height/width are multiples of 32. Keyboard controls contain N-1 rows of eight values for a total N-frame result.
+
+<ModelRelatedRecipes modelId="zing" locale="en" />

@@ -1,0 +1,22 @@
+---
+title: "AlayaWorld v1.1"
+description: "Separate AR and four-step DMD inference for AlayaWorld v1.1 with ViGeo spatial memory."
+pageSource: generated
+---
+
+**Publisher:** AlayaLab · Research lab
+image → video
+
+Separate AR and four-step DMD inference for AlayaWorld v1.1 with ViGeo spatial memory.
+
+<ModelCommandBuilder modelId="alayaworld-v1.1" locale="en" />
+
+## Architecture
+
+The inference-only rollout methods and three small configuration adapters are extracted from the pinned upstream and paired with WorldFoundry checkpoint/LoRA loaders, LTX VAE, Gemma encoding and the existing Alaya history encoder. An inference-only entry skips trainer setup, optimizers, critics and training data.
+
+## Runtime contract
+
+Select variant=ar (30 steps) or dmd (4 steps). Stage2b transformer/history weights, the LTX-2.3 base, Gemma and ViGeo1.1 are required; DMD additionally needs stage3 LoRA. This is separate from the original merged DA3 checkpoint route.
+
+<ModelRelatedRecipes modelId="alayaworld-v1.1" locale="en" />

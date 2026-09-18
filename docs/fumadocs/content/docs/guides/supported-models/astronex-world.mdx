@@ -1,0 +1,22 @@
+---
+title: "Astronex-World"
+description: "Astronex-World exposes causal and bidirectional camera/action-conditioned video inference."
+pageSource: generated
+---
+
+**Publisher:** Astronex-Robotics · Research lab
+text · image → video
+
+Astronex-World exposes causal and bidirectional camera/action-conditioned video inference.
+
+<ModelCommandBuilder modelId="astronex-world" locale="en" />
+
+## Architecture
+
+Wan2.2 TI2V-5B with PRoPE camera conditioning, 64-dimensional actions and embodiment conditioning. The official sampler remains external; no Wan backbone is copied into this integration.
+
+## Runtime contract
+
+Select mode=causal or bidirectional; supply source_root and checkpoint_dir. execute=True runs inference. latent_frames counts generated latent frames, not video frames; causal blocks require (latent_frames + reference_count) % 8 == 0.
+
+<ModelRelatedRecipes modelId="astronex-world" locale="en" />

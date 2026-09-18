@@ -1,55 +1,45 @@
 schema_version: 2
 model_id: solarwm
-display_name: SolarWM (Wan2.2-5B Stage2)
+display_name: SolarWM
 task_family: world_model
 groups:
 - world
-- interactive
-- camera_conditioned
-- long_horizon
+- video
 source_repos:
 - url: https://github.com/Junchao-cs/SolarWM
-  revision: a3a3fac16466102a2b97df867f7703df7172cb2a
-  local_dir: ${WORLDFOUNDRY_MODEL_SOURCE_DIR}/SolarWM
-  role: official_inference_checkout
-  required_paths:
-  - src/solarwm/__init__.py
-  - configs/examples/wan22_ti2v_5b/infer_stage2_sgf_camera_length.yaml
+  revision: 2fe1ea9aca072f787bbba07ee9380b0e1ea7563b
+  local_dir: ${WORLDFOUNDRY_MODEL_SOURCE_DIR}/Junchao-cs--SolarWM
 checkpoints:
-- repo_id: junchaoh-cs/SolarWM-Wan2.2-5B
-  revision: 3b9db472c44637a5bd0284a82c2d6e1ccf119220
-  role: solarwm_wan22_5b_release_bundle
-  local_dir: ${WORLDFOUNDRY_CKPT_DIR}/junchaoh-cs--SolarWM-Wan2.2-5B
-- repo_id: junchaoh-cs/SolarWM-Data
-  revision: 60c85899ee5303bb3ccdd5add7b5d606c54ddaab
-  role: inference_dataset
-  local_dir: ${WORLDFOUNDRY_DATA_DIR}/SolarWM-Data/releases-v1
+- repo_id: junchaoh-cs/SolarWM
+  revision: fe1587a9392bb91df5c90bcbe849064a5e88c546
+  local_dir: ${WORLDFOUNDRY_HFD_ROOT}/junchaoh-cs--SolarWM
+  role: primary
+  gated: true
+- repo_id: junchaoh-cs/SolarWM-H3-33B
+  revision: 028f22ab01b61cd5f14237f4eded507782d1d054
+  local_dir: ${WORLDFOUNDRY_HFD_ROOT}/junchaoh-cs--SolarWM-H3-33B
+  role: primary
+  gated: true
 input_schema:
-  required:
-  - data_root
-  optional:
-  - config_path
-  - base_model_dir
-  - checkpoint_dir
-  - test_index
-  - sample_count
   prompt: false
   image: false
-  video: true
+  video: false
   actions:
-  - camera_trajectory
+  - overrides
 artifact_kind: generated_world
 artifact_filename: solarwm.mp4
 execution:
   environment: solarwm
+  backend_stage: official_external_runtime
+  runtime_status: cpu_contract_validated_checkpoint_gpu_pending
+  integration_status: integrated
   pipeline_binding: solarwm
-  backend_stage: in_tree_runtime_manifest
-  runtime_status: official_runtime_checkpoint_bound
-  integration_status: runtime_ported
+  defaults:
+    variant: wan-5b-dmd
 integration:
-  status: runtime_ported
+  status: integrated
+license: apache-2.0
 notes:
-- The default route launches the official single-GPU Wan2.2-5B Stage2/SGF camera-length configuration from a user-staged checkout.
-- 'SolarWM has dataset-backed inference: the selected row supplies its caption, source frames, and authoritative camera trajectory.'
-- The compatibility launcher forces transaction_v1 output, requires one selected sample, and copies its official video.mp4 into the WorldFoundry artifact path.
-- Other released SolarWM backbones remain cataloged variants because they require mutually incompatible runtime environments and multi-rank GPU validation.
+- Only the infer action is exposed. Training, preencoding and data-engine commands are excluded.
+- Code is Apache-2.0; LTX and H3 base/adapter weights retain their respective community licenses and restrictions.
+- Checkpoint-backed GPU generation is pending.

@@ -1,6 +1,6 @@
 {
-  "modelsTotal": 269,
-  "modelsListed": 259,
+  "modelsTotal": 272,
+  "modelsListed": 262,
   "benchmarksTotal": 75,
   "modelFamilies": [
     {
@@ -469,7 +469,7 @@
       "id": "world_models",
       "label": "World models",
       "blurb": "Interactive worlds, camera/action conditioning, navigation, and simulator-shaped systems.",
-      "count": 95,
+      "count": 98,
       "entries": [
         {
           "id": "abot-world-0-5b-lf",
@@ -504,11 +504,27 @@
           ]
         },
         {
+          "id": "alayaworld-v1.1",
+          "name": "AlayaWorld v 1.1",
+          "status": "integrated",
+          "aliases": [
+            "alayaworld-v1.1"
+          ]
+        },
+        {
           "id": "astra",
           "name": "Astra",
           "status": "integrated",
           "aliases": [
             "astra"
+          ]
+        },
+        {
+          "id": "astronex-world",
+          "name": "Astronex-World",
+          "status": "integrated",
+          "aliases": [
+            "astronex-world"
           ]
         },
         {
@@ -1086,7 +1102,7 @@
         {
           "id": "solarwm",
           "name": "SolarWM",
-          "status": "runtime_ported",
+          "status": "integrated",
           "aliases": [
             "solarwm"
           ]
@@ -1259,6 +1275,14 @@
           "status": "integrated",
           "aliases": [
             "yume"
+          ]
+        },
+        {
+          "id": "zing",
+          "name": "Zing-0.5",
+          "status": "integrated",
+          "aliases": [
+            "zing"
           ]
         }
       ]

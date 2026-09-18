@@ -27,11 +27,11 @@ availability:
   license: ltx-2-community-license
   requires_auth: true
 sources:
-  paper: https://arxiv.org/abs/2608.23383
-  project_page: https://echo-team-joy-future-academy-jd.github.io/Echo-1.5-Page/
+  paper: https://arxiv.org/abs/2608.23189
+  project_page: https://echo-team-joy-future-academy-jd.github.io/Echo-1.5-Page/wm/
   github:
     url: https://github.com/jd-opensource/JoyAI-Echo
-    revision: 0b931fd42f5ef51410019ae41b261eb3b8936410
+    revision: a08f1274573d7cd6ec66719f204951f4227a5173
   huggingface:
   - repo_id: Echo-Team/Echo-WM
     type: model

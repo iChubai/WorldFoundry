@@ -114,6 +114,8 @@ result = pipe(output_dir="tmp/solarwm", execute=True, return_dict=True)
 
 Other variants are `wan-5b-dmd-237f`, `wan-5b-ar`, `wan-5b-bidirectional`, `wan-5b-bidirectional-153f`, `wan-14b`, `ltx`, `h3-bidirectional`, `h3-ar`, `h3-dmd` and `h3-dmd-long`. GPU process counts are recorded in `solarwm/routes.yaml`; explicit CUDA device lists must match them.
 
+The `wan-5b-dmd-237f` route follows the indexed source length. Supply at least 237 video frames and matching camera poses to exercise its 237-frame rollout; selecting this variant with an 81-frame source still produces an 81-frame clip.
+
 Wan, LTX and H3 require **separate environments**. The packaged `solarwm` environment describes the default Wan route only. Follow the pinned upstream environment guide for LTX/H3, and pass its Python interpreter explicitly. LTX needs `assets` entries `model.codec.video_vae_path` and `inference.negative_caption_cache`. H3 needs `data.silence_latents_path` and `data.encoder_contract_path`; `h3-dmd-long` additionally needs `inference.plan` and `inference.dataset_root`. These are existing inference assets; this integration does not preencode data.
 
 Use `overrides={"data.test_index": "...", "validation.sample_count": 1}` for Wan indexed selection. LTX uses `data.index` and `inference.sample_count`. Unknown overrides and training commands are rejected. Each call gets a fresh output directory. Completed videos and completion markers are required before a run is reported successful.

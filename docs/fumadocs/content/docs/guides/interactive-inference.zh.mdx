@@ -114,6 +114,8 @@ result = pipe(output_dir="tmp/solarwm", execute=True, return_dict=True)
 
 另有 `wan-5b-dmd-237f`、`wan-5b-ar`、`wan-5b-bidirectional`、`wan-5b-bidirectional-153f`、`wan-14b`、`ltx`、`h3-bidirectional`、`h3-ar`、`h3-dmd` 和 `h3-dmd-long`。每条路线的 GPU 进程数见 `solarwm/routes.yaml`；显式传入的 CUDA 设备数量必须匹配。
 
+`wan-5b-dmd-237f` 路线会依据索引中的源片段长度生成。验证 237 帧 rollout 时，应提供至少 237 帧的视频及匹配的相机位姿；仅选择该变体，输入仍为 81 帧时，输出也只有 81 帧。
+
 Wan、LTX、H3 使用各自的环境，仓库中的 `solarwm` 环境清单只描述默认 Wan 路线。LTX/H3 按固定版本的上游文档安装，并传入对应解释器。LTX 的 `assets` 需要 `model.codec.video_vae_path`、`inference.negative_caption_cache`；H3 需要 `data.silence_latents_path`、`data.encoder_contract_path`。`h3-dmd-long` 还需 `inference.plan`、`inference.dataset_root`。这些资产须提前准备，集成不会执行预编码。
 
 Wan 可用 `overrides={"data.test_index": "...", "validation.sample_count": 1}` 选择样本；LTX 使用 `data.index`、`inference.sample_count`。未知覆盖项及训练命令会被拒绝。每次运行使用独立目录，必须同时找到视频和完成标记才能返回成功。

@@ -14,7 +14,7 @@ The startup update script already installs everything below (editable core, `.[u
 | Lint / quality gates | `make lint`, `make compile-eval`, `make docs-check` | See "Lint" caveat below. |
 | Tests | `make test-eval-core` (release-gate CPU suite), `make test-training` | See "Tests" caveat below. |
 | Studio workspace (browser app) | `bash scripts/workspace/run_workspace.sh --host 127.0.0.1 --port 7870 --max-jobs 2` | FastAPI app; serves at `http://127.0.0.1:7870/`. Catalog, Create Job form, Visualizers all work on CPU. Do not submit heavy inference jobs (no GPU). |
-| Docs site (Next.js / Fumadocs) | `cd docs/fumadocs && npm run dev -- --port 8014` | Serves at `http://127.0.0.1:8014/docs`. `npm ci` deps are pre-installed. `predev`/`prebuild` shell out to `python3`. |
+| Docs site (Next.js / Fumadocs) | `cd docs/fumadocs && npm run dev:ssd -- --port 8014` | Serves at `http://127.0.0.1:8014/docs`. **Prefer `dev:ssd`** on shared storage — symlinks `.next`/webpack/`.source` caches to local SSD (`~/.cache/worldfoundry-docs`). Fallback: `dev:fast` (same checkout, caches on shared FS) or `dev:local` (full mirror under `/tmp/wf-docs-dev`). Use `npm run dev` when MDX/codegen must refresh. `npm ci` deps are pre-installed. `predev`/`prebuild` shell out to `python3`. After editing docs/fumadocs UI/CSS/components, restart dev and confirm pages load before reporting done to the user. |
 
 ### Non-obvious caveats
 

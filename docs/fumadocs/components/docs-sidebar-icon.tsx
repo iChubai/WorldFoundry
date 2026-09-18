@@ -5,11 +5,11 @@ import {
   Box,
   Braces,
   ChartColumn,
-  CircleHelp,
   Compass,
   FileCode2,
   FileText,
   Gauge,
+  GitBranch,
   GitPullRequest,
   HardDrive,
   Layers,
@@ -28,9 +28,9 @@ import {
 
 const SIDEBAR_ICONS: Record<string, LucideIcon> = {
   '': BookOpen,
+  'overview/world-models': GitBranch,
   'overview/design': Compass,
   'overview/capabilities': Blocks,
-  'overview/why-worldfoundry': CircleHelp,
   quickstart: Rocket,
   'reference/environments': Terminal,
   'guides/local-assets': HardDrive,

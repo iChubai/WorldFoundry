@@ -9,13 +9,11 @@ WorldFoundry Studio 是围绕仓库 pipelines 的薄可视化入口。模型在�
 
 Studio 现在有多前端入口：
 
-| Frontend | 适用场景 | 说明 |
-| --- | --- | --- |
-| `world` | 交互世界模型 | 独立 WebRTC 控制台：常驻模型、可靠按键边沿 DataChannel、有界内存帧队列、单一持续视频轨、沉浸式全屏和实时运行日志；控制热路径不生成 MP4。 |
-| `points` | Viser 点云 / mesh | 直接启动原生 Viser，不嵌回游戏机界面。 |
-| `embodied` | 具身智能仿真器 | **计划中。** 目前只是 URL bridge：Studio 登记外部 simulator URL 并给出 tunnel 提示，还没有仓内 embodied viewer。 |
-| `spark` | 3DGS | 启动独立 Spark 3DGS viewer，复用项目内置 Spark frontend，并允许通过 `WORLDFOUNDRY_MODEL_DIR` / `WORLDFOUNDRY_ARTIFACT_DIR` 暴露本地资产。 |
-| `auto` | 默认 | 按模型类型自动路由：交互世界 -> `world`，3D scene -> `spark`，点云/深度 -> `points`，具身策略 -> `embodied`。 |
+- **`world`** — 交互世界模型。独立 WebRTC 控制台：常驻模型、可靠按键边沿 DataChannel、有界内存帧队列、单一持续视频轨、沉浸式全屏和实时运行日志；控制热路径不生成 MP4。
+- **`points`** — Viser 点云 / mesh。直接启动原生 Viser，不嵌回游戏机界面。
+- **`embodied`** — 具身智能仿真器。**计划中。** 目前只是 URL bridge：Studio 登记外部 simulator URL 并给出 tunnel 提示，还没有仓内 embodied viewer。
+- **`spark`** — 3DGS。启动独立 Spark 3DGS viewer，复用项目内置 Spark frontend，并允许通过 `WORLDFOUNDRY_MODEL_DIR` / `WORLDFOUNDRY_ARTIFACT_DIR` 暴露本地资产。
+- **`auto`** — 默认。按模型类型自动路由：交互世界 -> `world`，3D scene -> `spark`，点云/深度 -> `points`，具身策略 -> `embodied`。
 
 ## 可视化内容
 
@@ -181,8 +179,11 @@ Resident worker 会让 conda 子进程在多个 job 之间保持存活，因此�
 
 `7870` Workspace 是整套可视化服务的统一浏览器入口。打开 **Visualizers**
 页面后，每张卡片都有 **Launch**、**Open** 和 **Stop** 按钮。卡片下方会
-嵌入正在运行的 viewer iframe，普通 QA 流程里不需要手动复制 URL。**具身仿真器
-Bridge** 卡片标记为 **计划中**：与 Viser、Spark、Rerun、World Rollout 不同，目前还不会启动仓内 embodied viewer。
+嵌入正在运行的 viewer iframe，普通 QA 流程里不需要手动复制 URL。
+
+具身仿真器不是 Workspace visualizer。`--frontend embodied` 只会登记外部
+simulator URL 并打印 tunnel 提示；请先单独启动 simulator，再传入
+`--simulator-url`。
 
 <StudioVisualizerGallery locale="zh" />
 
@@ -193,32 +194,9 @@ Bridge** 卡片标记为 **计划中**：与 Viser、Spark、Rerun、World Rollo
 WASD/IJKL 只发送按下/释放边沿，服务端按生成 chunk 重采样；RGB 帧直接进入
 WebRTC 视频轨。控制到画面的热路径不会扫描 artifact、写 manifest 或编码 MP4。
 
-| 环境变量 | 默认值 | 作用 |
-| --- | --- | --- |
-| `WORLDFOUNDRY_REALTIME_FPS` | `16` | WebRTC 播放节奏与输入重采样频率。 |
-| `WORLDFOUNDRY_REALTIME_CHUNK_FRAMES` | `9` | 每个生成 chunk 的目标帧数；有严格时序约束的模型会覆盖该值。 |
-| `WORLDFOUNDRY_REALTIME_INFERENCE_STEPS` | 模型默认；LingBot Fast 为 `4` | 显式的延迟/质量覆盖；非蒸馏模型不会被静默降到 4 步。 |
-| `WORLDFOUNDRY_REALTIME_FRAME_QUEUE` | `max(chunk, 8)` | 单个 steady-state chunk 的有界播放队列。 |
-| `WORLDFOUNDRY_REALTIME_FRAME_QUEUE_POLICY` | `latest-interactive` | `latest-interactive` 在拥塞时限制延迟，`ordered-quality` 保留每一帧；严格计数的 prompt/segment 会话始终强制使用 `ordered-quality`。 |
-| `WORLDFOUNDRY_REALTIME_PRESENTATION_MODE` | `hold-last` | WebRTC A/B 开关。`hold-last` 保留兼容的恒定时钟；`real-frames` 将 pacing 交给 chunk presentation manager，并通过两帧 mailbox 只发送真实帧。 |
-| `WORLDFOUNDRY_REALTIME_PRESENTATION_MAX_FPS` | `模型 FPS × 2` | `real-frames` 模式存在 pending chunk 时，active chunk 的最大 drain 速率。 |
-| `WORLDFOUNDRY_REALTIME_SOCKET_PACING_MODE` | `legacy-dual` | WebSocket A/B 开关。`client-only` 关闭服务端逐帧 sleep，仅保留浏览器现有的 presentation clock。 |
-| `WORLDFOUNDRY_REALTIME_BACKPRESSURE_MS` | 半个 chunk | 正常播放时保留全部帧；只有拥塞超过预算才丢弃旧帧。 |
-| `WORLDFOUNDRY_REALTIME_WARMUP_CHUNKS` | `1` | 后台 stream warmup；设为 `0` 可关闭，编译/autotune 实验可调高。 |
-| `WORLDFOUNDRY_REALTIME_PREWARM_TIMEOUT_SECONDS` | 未设置 | configure 与 warmup chunks 的可选 deadline；当前不可取消的模型调用返回后才报告超时，设为 `0` 可关闭。 |
-| `WORLDFOUNDRY_REALTIME_POSTPROCESS_PRESET` | `identity` | 可选 `identity`、`rtx-super-resolution`、`rtx-super-resolution-ultra` 或 `rtx-deblur-ultra`。RTX 必须显式启用；运行条件不满足时会在启动服务前失败。 |
-| `WORLDFOUNDRY_REALTIME_RTX_SCALE` | preset 默认值（VSR 为 `2`，deblur 为 `1`） | VSR 空间放大倍数；NVIDIA VFX 最高支持 4x，同分辨率去噪/去模糊模式必须为 `1`。 |
-| `WORLDFOUNDRY_REALTIME_RTX_OUTPUT_WIDTH` / `WORLDFOUNDRY_REALTIME_RTX_OUTPUT_HEIGHT` | 未设置 | 可选的 RTX 显式输出尺寸；必须同时设置或同时不设。 |
-| `WORLDFOUNDRY_REALTIME_RTX_QUALITY` | preset 默认值 | 覆盖 NVIDIA VFX quality 枚举，例如 `HIGH`、`ULTRA`、`DEBLUR_ULTRA` 或 `HIGHBITRATE_HIGH`。 |
-| `WORLDFOUNDRY_REALTIME_RTX_DEVICE` | Studio device 中的 index，否则为 `0` | VFX effect 使用的 CUDA device index。 |
-| `WORLDFOUNDRY_REALTIME_RTX_NON_BLOCKING` | `false` | 请求异步 VFX 执行。WorldFoundry 在 clone 借用的 DLPack 输出前仍会同步，不会降低内存安全性。 |
-| `WORLDFOUNDRY_REALTIME_RTX_USE_CURRENT_STREAM` | `true` | 把当前 PyTorch CUDA stream pointer 传给 NVIDIA VFX；只应在排查 stream interop 时关闭。 |
-| `WORLDFOUNDRY_REALTIME_PERF_LOG_INTERVAL_CHUNKS` | `5` | 每 N 个 chunk 输出一次含各阶段 p50/p90 的结构化 timing 摘要；设为 `0` 可关闭周期摘要。 |
-| `WORLDFOUNDRY_REALTIME_PERF_WARMUP_CHUNKS` | `0` | 将会话开头 N 个 chunk 标记为 warmup 并从摘要中排除；原始 JSONL 仍保留 warmup 标记。 |
-| `WORLDFOUNDRY_REALTIME_PERF_JSONL` | 未设置 | 可选的 JSONL 路径，每个 chunk 写一条规范化 `realtime.chunk_timing` 事件；仅建议 profiling 时启用，避免热路径文件 I/O。 |
-| `WORLDFOUNDRY_REALTIME_LIVENESS_TIMEOUT_SECONDS` | `30` | 浏览器 heartbeat 消失后自动回收会话，同时避免误杀较慢的在途 chunk。 |
-| `WORLDFOUNDRY_REALTIME_SHUTDOWN_TIMEOUT_SECONDS` | `5` | preload、会话 worker、传输层与 runtime reset 共享的协作式异步 teardown 总 deadline；它限制 shutdown handler 的等待时间，但不会强杀仍在运行的模型线程。 |
-| `WORLDFOUNDRY_REALTIME_ICE_SERVERS_JSON` | 未设置 | 浏览器无法直连 GPU 主机时使用的 STUN/TURN `iceServers` JSON。 |
+延迟相关默认值可以单独调整，不必改 catalog 质量配置：
+
+<StudioRealtimeEnvVars locale="zh" />
 
 ### 可选 NVIDIA RTX 后处理
 

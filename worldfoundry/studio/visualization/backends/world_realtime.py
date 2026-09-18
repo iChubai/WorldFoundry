@@ -99,6 +99,8 @@ _CHUNK_METRIC_NAMES = (
     "cache_frames",
     "cache_tokens",
     "compile_active",
+    "compile_graphs",
+    "world_size",
     "cuda_graph",
 )
 
@@ -3449,13 +3451,16 @@ def serve_realtime_world_frontend(
         # Overlap model residency work with input selection while keeping the
         # HTML server immediately reachable.
         nonlocal preload_task
-        preload_task = asyncio.create_task(runtime.preload(), name="world-realtime-preload")
+        # Allow browsing inputs on CPU without loading inference checkpoints.
+        # Explicit load/session requests still preload the runtime on demand.
+        if _env_bool("WORLDFOUNDRY_STUDIO_WORLD_PRELOAD", True):
+            preload_task = asyncio.create_task(runtime.preload(), name="world-realtime-preload")
 
-        def consume_preload_result(task: asyncio.Task[Any]) -> None:
-            if not task.cancelled():
-                task.exception()
+            def consume_preload_result(task: asyncio.Task[Any]) -> None:
+                if not task.cancelled():
+                    task.exception()
 
-        preload_task.add_done_callback(consume_preload_result)
+            preload_task.add_done_callback(consume_preload_result)
 
         stale_after = _env_int("WORLDFOUNDRY_UPLOAD_STALE_SECONDS", 24 * 60 * 60)
         cutoff = time.time() - stale_after

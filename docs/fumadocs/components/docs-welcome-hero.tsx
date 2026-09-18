@@ -21,7 +21,7 @@ const copy = {
       {
         title: 'One workflow',
         items: [
-          'Discovery, inference, inspection, and evaluation in one reproducible path',
+          'Discovery, inference, inspection, and evaluation under one operational definition',
           'TUI, CLI, Studio, Python, and MCP share the same request and artifact contracts',
           'Inspect manifests, needs, and blockers before allocating GPUs or downloading weights',
           'Durable artifacts support later review, rescoring, and evidence reuse',
@@ -31,7 +31,7 @@ const copy = {
       {
         title: 'Breadth with clear boundaries',
         items: [
-          '240+ cataloged models and benchmarks with explicit readiness signals',
+          '270 models and nearly 100 benchmark and metric implementations, with explicit readiness signals',
           'Native upstream runtimes across video, 3D/4D, interactive worlds, and embodied stacks',
           'Benchmarks score outputs without taking ownership of model loading',
           'Generation and scoring can run in separate environments when required',
@@ -50,7 +50,7 @@ const copy = {
       {
         title: '一条工作流',
         items: [
-          '模型发现、推理、检查与评测走同一条可复现路径',
+          '模型发现、推理、检查与评测对齐同一套世界模型操作定义',
           'TUI、CLI、Studio、Python 与 MCP 共享 request 与 artifact 契约',
           '申请 GPU 或下载权重前，可先查看 manifest、needs 与 blocker',
           '持久 artifact 支持后续 review、重新打分与证据复用',
@@ -60,7 +60,7 @@ const copy = {
       {
         title: '广覆盖、边界清晰',
         items: [
-          '240+ 模型与 benchmark 目录，readiness 信号明确可见',
+          '270 个模型与近 100 套 benchmark / metric 实现，readiness 信号明确可见',
           '保留视频、3D/4D、交互世界与具身栈的原生 runtime',
           'Benchmark 只评测输出，不接管模型加载',
           '生成与打分可按需拆到不同环境执行',

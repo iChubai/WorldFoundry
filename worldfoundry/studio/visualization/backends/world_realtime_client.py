@@ -106,6 +106,7 @@ const el = {
   startButton: document.getElementById("startButton"),
   resetButton: document.getElementById("resetButton"),
   livePill: document.getElementById("livePill"),
+  statusError: document.getElementById("statusError"),
   overlayStatus: document.getElementById("overlayStatus"),
   timer: document.getElementById("sessionTimer"),
   streamStats: document.getElementById("streamStats"),
@@ -698,7 +699,9 @@ async function api(path, options = {}) {
 }
 
 function setStatus(text, live = false, error = false) {
-  el.livePill.textContent = text;
+  el.livePill.textContent = error ? "ERROR" : text;
+  el.statusError.textContent = error ? text : "";
+  el.statusError.hidden = !error;
   el.livePill.title = text;
   el.livePill.classList.toggle("is-live", live);
   el.livePill.style.color = error ? "var(--danger)" : "";

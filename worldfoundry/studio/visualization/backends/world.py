@@ -221,20 +221,23 @@ def world_frontend_html(entry: CatalogEntry, launch_config: StudioLaunchConfig) 
           <video id="frameVideo" muted playsinline></video>
           <canvas id="frameCanvas" aria-label="Decoded generated world frames"></canvas>
           <div class="screen-noise"></div>
-          <div class="floating-state" id="livePill">FROZEN</div>
-          <div class="start-overlay is-hidden" id="startOverlay" aria-hidden="true">
-            <div class="overlay-status" id="overlayStatus">LOAD INPUT</div>
-          </div>
-          <div class="viewport-tools" aria-label="Viewport tools">
-            <button class="viewport-tool" id="fullscreenButton" type="button" aria-pressed="false" title="Toggle immersive fullscreen (F)">
-              <span class="viewport-tool-icon" aria-hidden="true"></span>
-              <span id="fullscreenLabel">FULLSCREEN</span>
-            </button>
-            <button class="viewport-tool" id="logToggleButton" type="button" aria-pressed="false" aria-controls="runtimeLog" title="Toggle live runtime log (Shift+L)">
-              <span class="live-log-dot" aria-hidden="true"></span>
-              <span>LIVE LOG</span>
-              <span class="log-count" id="logCount">0</span>
-            </button>
+          <div class="viewport-header">
+            <div class="floating-state" id="livePill">FROZEN</div>
+            <div class="start-overlay is-hidden" id="startOverlay" aria-hidden="true">
+              <div class="overlay-status" id="overlayStatus">LOAD INPUT</div>
+            </div>
+            <div class="viewport-tools" aria-label="Viewport tools">
+              <button class="viewport-tool" id="fullscreenButton" type="button" aria-pressed="false" title="Toggle immersive fullscreen (F)">
+                <span class="viewport-tool-icon" aria-hidden="true"></span>
+                <span id="fullscreenLabel">FULLSCREEN</span>
+              </button>
+              <button class="viewport-tool" id="logToggleButton" type="button" aria-pressed="false" aria-controls="runtimeLog" title="Toggle live runtime log (Shift+L)">
+                <span class="live-log-dot" aria-hidden="true"></span>
+                <span>LIVE LOG</span>
+                <span class="log-count" id="logCount">0</span>
+              </button>
+            </div>
+            <div class="viewport-error" id="statusError" role="alert" hidden></div>
           </div>
           <aside class="runtime-log studio-panel" id="runtimeLog" data-panel-id="logs" aria-label="Live runtime log" aria-hidden="true">
             <div class="runtime-log-header panel-handle">
@@ -530,11 +533,31 @@ button:disabled,
   z-index: 2;
 }
 
-.floating-state {
+.viewport-header {
   position: absolute;
   top: 0.85rem;
+  left: 0.85rem;
   right: 0.85rem;
-  z-index: 5;
+  z-index: 8;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: start;
+  gap: 0.6rem;
+  pointer-events: none;
+}
+
+.viewport-header > * {
+  pointer-events: auto;
+}
+
+.floating-state {
+  grid-column: 2;
+  grid-row: 1;
+  min-width: 0;
+  max-width: min(12rem, 30vw);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
   border: 1px solid rgba(255, 255, 255, 0.14);
   border-radius: 999px;
   padding: 0.42rem 0.72rem;
@@ -547,6 +570,26 @@ button:disabled,
 .floating-state.is-live {
   color: #dfffe9;
   border-color: rgba(51, 209, 122, 0.42);
+}
+
+.viewport-error {
+  grid-column: 1 / -1;
+  grid-row: 2;
+  min-width: 0;
+  max-height: 6rem;
+  overflow: auto;
+  overflow-wrap: anywhere;
+  padding: 0.65rem 0.8rem;
+  border: 1px solid rgba(255, 100, 100, 0.45);
+  border-radius: 0.65rem;
+  background: rgba(28, 8, 12, 0.94);
+  color: var(--danger);
+  font-size: 0.75rem;
+  line-height: 1.5;
+}
+
+.viewport-error[hidden] {
+  display: none;
 }
 
 .start-overlay {
@@ -562,11 +605,11 @@ button:disabled,
 }
 
 .viewport-tools {
-  position: absolute;
-  top: 0.85rem;
-  left: 0.85rem;
-  z-index: 8;
+  grid-column: 1;
+  grid-row: 1;
+  min-width: 0;
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: 0.42rem;
 }
@@ -1400,13 +1443,9 @@ body.is-immersive {
   opacity: 0.1;
 }
 
-.is-immersive .viewport-tools {
+.is-immersive .viewport-header {
   top: max(0.8rem, env(safe-area-inset-top));
   left: max(0.8rem, env(safe-area-inset-left));
-}
-
-.is-immersive .floating-state {
-  top: max(0.8rem, env(safe-area-inset-top));
   right: max(0.8rem, env(safe-area-inset-right));
 }
 
@@ -1566,9 +1605,13 @@ body.is-immersive {
     border-radius: 1rem;
   }
 
-  .floating-state {
+  .viewport-header {
     top: 0.55rem;
+    left: 0.55rem;
     right: 0.55rem;
+  }
+
+  .floating-state {
     padding: 0.34rem 0.58rem;
     font-size: 0.66rem;
   }
@@ -1754,6 +1797,7 @@ const el = {
   startButton: document.getElementById("startButton"),
   overlayStatus: document.getElementById("overlayStatus"),
   livePill: document.getElementById("livePill"),
+  statusError: document.getElementById("statusError"),
   timer: document.getElementById("sessionTimer"),
   streamStats: document.getElementById("streamStats"),
   thumbTray: document.getElementById("thumbTray"),
@@ -1877,7 +1921,9 @@ async function interactiveRequest(type, payload, httpFallback) {
 }
 
 function setStatus(text, live = false, isError = false) {
-  el.livePill.textContent = text;
+  el.livePill.textContent = isError ? "ERROR" : text;
+  el.statusError.textContent = isError ? text : "";
+  el.statusError.hidden = !isError;
   el.livePill.title = text;
   el.livePill.classList.toggle("is-live", live);
   el.livePill.style.color = isError ? "var(--danger)" : "";

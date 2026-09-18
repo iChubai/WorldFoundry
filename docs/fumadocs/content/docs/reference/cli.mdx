@@ -116,7 +116,7 @@ Several commands can reach the evaluation core, but they start from different us
 | Execute a materialized run plan or use eval-core fields directly | `evaluate` (alias `eval`) | Lower-level deterministic path for requests/results ledgers and model-mode evaluation. |
 | Generate from a dataset manifest, then score | `generate-score` | One intent owns dataset materialization, generation, cache, and metrics. |
 | Import or execute one benchmark's official surface | `zoo benchmark-run` | Exposes benchmark-specific modes and parameters. Follow that benchmark's Hub page. |
-| Re-run a checked-in profile or recipe | `reproduce` | Resolves a named profile, benchmark default, or recipe YAML. |
+| Re-run a pinned model × benchmark recipe | `reproduce` | Resolves a recipe YAML, or a named profile if one is provided. |
 | Build indexes, comparisons, or contract checks | `index-runs`, `compare-runs`, `validate-artifact` | Operates on durable run outputs without rerunning a model. |
 
 ## Complete command map
@@ -138,7 +138,7 @@ Several commands can reach the evaluation core, but they start from different us
 | `run` | Direct typed inference, one model × benchmark cell, or a suite/matrix. |
 | `score` | Score an artifact directory with a benchmark, or result rows with selected metrics. |
 | `generate-score` | Run an in-tree model over a dataset manifest and score the results. |
-| `reproduce` | Execute a checked-in profile, a benchmark default profile, or custom recipe YAML. |
+| `reproduce` | Execute a recipe YAML, or a named / benchmark-default profile when one exists. |
 | `evaluate` / `eval` | Deterministic eval-core execution for materialized results, run plans, or model mode. |
 | `embodied` | `plan`, `run`, `serve`, `merge` for simulator-backed closed-loop evaluation. |
 

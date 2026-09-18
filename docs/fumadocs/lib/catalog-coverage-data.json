@@ -1,6 +1,6 @@
 {
   "modelsTotal": 269,
-  "modelsListed": 262,
+  "modelsListed": 259,
   "benchmarksTotal": 75,
   "modelFamilies": [
     {
@@ -469,7 +469,7 @@
       "id": "world_models",
       "label": "World models",
       "blurb": "Interactive worlds, camera/action conditioning, navigation, and simulator-shaped systems.",
-      "count": 97,
+      "count": 95,
       "entries": [
         {
           "id": "abot-world-0-5b-lf",
@@ -841,15 +841,12 @@
           "name": "LingBot-World",
           "status": "verified",
           "aliases": [
-            "lingbot-world"
-          ]
-        },
-        {
-          "id": "lingbot-world-act",
-          "name": "LingBot-World Base Act",
-          "status": "integrated",
-          "aliases": [
+            "lingbot-world",
             "lingbot-world-act"
+          ],
+          "versions": [
+            "Cam",
+            "Act"
           ]
         },
         {
@@ -922,19 +919,16 @@
           ]
         },
         {
-          "id": "minwm-hy-action2v",
+          "id": "minwm",
           "name": "minWM",
           "status": "integrated",
           "aliases": [
-            "minwm-hy-action2v"
-          ]
-        },
-        {
-          "id": "minwm-wan-action2v",
-          "name": "minWM Wan Action 2V",
-          "status": "integrated",
-          "aliases": [
+            "minwm-hy-action2v",
             "minwm-wan-action2v"
+          ],
+          "versions": [
+            "HY Action2V",
+            "Wan Action2V"
           ]
         },
         {
@@ -1273,7 +1267,7 @@
       "id": "three_d_four_d",
       "label": "3D / 4D",
       "blurb": "Reconstruction, depth, point clouds, scene representations, and dynamic geometry.",
-      "count": 36,
+      "count": 35,
       "entries": [
         {
           "id": "cut3r",
@@ -1322,18 +1316,15 @@
         },
         {
           "id": "dust3r",
-          "name": "DUSt 3R",
+          "name": "DUSt3R",
           "status": "verified",
           "aliases": [
-            "dust3r"
-          ]
-        },
-        {
-          "id": "dust3r-base-model",
-          "name": "DUSt 3R Base Model",
-          "status": "verified",
-          "aliases": [
+            "dust3r",
             "dust3r-base-model"
+          ],
+          "versions": [
+            "Catalog",
+            "Base"
           ]
         },
         {

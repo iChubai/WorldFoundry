@@ -2,12 +2,12 @@ import Link from 'next/link';
 import {
   ArrowRight,
   ArrowUpRight,
+  BookMarked,
   CircleDot,
-  GitCompareArrows,
+  ClipboardCheck,
   Layers3,
   MessageCircle,
   MessagesSquare,
-  Puzzle,
   UserPlus,
 } from 'lucide-react';
 import { CatalogCoverage } from '@/components/catalog-coverage';
@@ -16,6 +16,7 @@ import { HomeHeroMedia } from '@/components/home-hero-media';
 import { type HomeRecipeOption } from '@/components/home-run-configurator';
 import { SiteFooter } from '@/components/site-footer';
 import { SiteHeader } from '@/components/site-header';
+import { WorldModelProgression } from '@/components/world-model-progression';
 import { WorldFoundryWorkflow } from '@/components/worldfoundry-system-map';
 import {
   OPENENVISION_AWESOME_WORLD_MODELING,
@@ -31,22 +32,22 @@ import { withBasePath } from '@/lib/site-path';
 
 const pillars = [
   {
-    title: 'Shared',
+    title: 'Cataloged',
     description:
-      'Environment setup, checkpoints, input shaping, previews, and reporting stay shared while model-specific behavior stays explicit.',
-    Icon: Puzzle,
+      'Declarative model and benchmark manifests, plus explicit runtime and asset management, make heterogeneous systems discoverable before compute is spent.',
+    Icon: BookMarked,
   },
   {
-    title: 'Durable',
+    title: 'Artifact-centric',
     description:
-      'Expensive outputs survive the process that created them, so they can be inspected, rescored, compared, or audited without rerunning inference.',
+      'Durable request and result contracts decouple generation from scoring. Videos, geometry, actions, and traces can be inspected or rescored without reloading the model.',
     Icon: Layers3,
   },
   {
-    title: 'Comparable',
+    title: 'Evidence-aware',
     description:
-      'Runs, artifacts, and scorecards share stable IDs and provenance, so teams can compare models and benchmarks on the same evidence.',
-    Icon: GitCompareArrows,
+      'Scorecards keep declared support, operational readiness, and validated performance separate, so a catalog entry or a demo is never mistaken for a benchmark claim.',
+    Icon: ClipboardCheck,
   },
 ];
 
@@ -204,22 +205,23 @@ export default function HomePage() {
           <div className="wf-home-hero-showcase">
             <HomeHeroMedia>
               <div className="wf-home-hero-content">
-                <p className="wf-home-hero-kicker">Infrastructure for world models</p>
+                <p className="wf-home-hero-kicker">Toward a general infrastructure for world intelligence</p>
                 <h1 id="wf-home-title">WorldFoundry</h1>
                 <p className="wf-home-hero-lead">
-                  Run, inspect, and evaluate world models in one reproducible workflow.
+                  Discover, run, inspect, and evaluate world models under one operational
+                  definition — without flattening them into a single interface.
                 </p>
                 <div className="wf-home-hero-actions">
                   <Link href="/docs/guides/supported-models" className="wf-home-button wf-home-button-primary">
                     <span>Explore model recipes</span>
                     <ArrowRight aria-hidden="true" size={16} strokeWidth={1.8} />
                   </Link>
-                  <Link href="/docs/quickstart" className="wf-home-button wf-home-button-secondary">
-                    <span>Start the quickstart</span>
+                  <Link href="/docs/overview/world-models" className="wf-home-button wf-home-button-secondary">
+                    <span>Read the definition</span>
                   </Link>
                 </div>
                 <Link className="wf-home-hero-catalog-link" href="/docs/guides/supported-models">
-                  {modelRecipeIndex.total} manifest-backed model recipes
+                  270 models · nearly 100 benchmark and metric implementations
                   <ArrowRight aria-hidden="true" size={13} strokeWidth={1.7} />
                 </Link>
               </div>
@@ -238,11 +240,11 @@ export default function HomePage() {
               Why WorldFoundry
             </p>
             <h2 id="wf-pillars-title">
-              Infrastructure for <span>operating</span> world models.
+              Commensurability <span>without</span> homogenization.
             </h2>
             <p>
-              Shared setup, durable artifacts, and comparable evidence — without forcing every model
-              into the same internals.
+              Shared catalogs, durable artifacts, and evidence-aware scorecards — while native
+              inputs, execution semantics, and evaluation protocols stay model-specific.
             </p>
           </header>
           <div className="wf-home-pillar-grid">
@@ -257,8 +259,8 @@ export default function HomePage() {
             ))}
           </div>
           <div className="wf-home-center-action">
-            <Link href="/docs/overview/why-worldfoundry" className="wf-home-text-link">
-              Read the benefits and tradeoffs
+            <Link href="/docs" className="wf-home-text-link">
+              Read the introduction
               <ArrowRight aria-hidden="true" size={15} strokeWidth={1.8} />
             </Link>
           </div>
@@ -274,11 +276,41 @@ export default function HomePage() {
               Catalog
             </p>
             <h2 id="wf-catalog-title">
-              One engine, <span>many</span> models.
+              270 models, <span>one</span> operational vocabulary.
             </h2>
-            <p>Browse integrated models and benchmarks with the same manifest contracts.</p>
+            <p>
+              Video, 3D/4D, interactive worlds, and embodied systems share manifests and readiness
+              signals. Catalog inclusion is not uniform runtime maturity.
+            </p>
           </header>
           <CatalogCoverage />
+        </section>
+
+        <section
+          className="wf-home-taxonomy wf-home-reveal"
+          aria-labelledby="wf-taxonomy-title"
+        >
+          <header className="wf-home-center-intro">
+            <p className="wf-home-section-badge">
+              <span aria-hidden="true" />
+              Capability progression
+            </p>
+            <h2 id="wf-taxonomy-title">
+              From generation to <span>world intelligence</span>.
+            </h2>
+            <p>
+              Visual plausibility is not world modeling. A system exhibits stronger competence as
+              representations become persistent, transitions become intervention-responsive, and
+              predictions become useful in a closed loop.
+            </p>
+          </header>
+          <WorldModelProgression locale="en" />
+          <div className="wf-home-center-action">
+            <Link href="/docs/overview/world-models" className="wf-home-text-link">
+              Read the operational definition
+              <ArrowRight aria-hidden="true" size={15} strokeWidth={1.8} />
+            </Link>
+          </div>
         </section>
 
         <section

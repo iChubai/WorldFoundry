@@ -105,3 +105,14 @@ Reviewer 应能复现你的路径，而不必问你用了哪台 GPU、靠哪条�
 Cache 目录只放临时下载、checkpoint 副本、数据集镜像、official-runtime clone cache、生成预览和日志，不是第二棵 `worldfoundry/`。树内 runner 不得从 cache path import Python 模块。若克隆官方仓只是为了取出 `inference.py`，把仅推理切片 vendoring 进对应 package，删掉训练侧。
 
 推理时真正会跑到的 transform 可以留在 runtime package，例如 GroundingDINO `util.transforms`、DUST3R crop helper、DROID-SLAM RGB-D geometry。Training dataset、dataloader、loss、callback、只用于增强的模块和实验脚本不应进来。`pixelsplat` 是当前 3D base model 下的例外，因为它仍走官方 Lightning test runner 和 dataset 形态的 loader。把它当作待迁成纯推理 runner 的债务，不要当成你正在加的这个模型的样板。
+
+## 模型主页
+
+每个模型的文章是独立文件：`docs/fumadocs/content/docs/guides/supported-models/<model-id>.mdx` 以及对应的 `.zh.mdx`。目录页仍然链到 `/zh/docs/guides/supported-models/<model-id>`。
+
+`npm --prefix docs/fumadocs run models:generate` 会按 catalog 的 `docs:` 和 recipe JSON 生成初稿。之后改该文件即可写模型自己的概述、架构、配图和额外章节。共用控件可以嵌进 MDX：
+
+- `<ModelCommandBuilder modelId="<model-id>" locale="zh" />` — 运行命令构建器
+- `<ModelRelatedRecipes modelId="<model-id>" locale="zh" />` — 同族相关模型
+
+手写内容请把 frontmatter 的 `pageSource` 设为 `authored`。仍是 `generated` 的页面会在下次 generate 时被刷新。YAML 里的 `docs.overview` 只给生成稿打底，一旦你接手 MDX，文章以文件为准。

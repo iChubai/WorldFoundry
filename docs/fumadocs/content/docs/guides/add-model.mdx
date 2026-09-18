@@ -105,3 +105,14 @@ Do not commit checkpoints, generated videos, local caches, API keys, or private 
 Cache directories are for temporary downloads, checkpoint copies, dataset mirrors, official-runtime clone caches, generated previews, and logs. They are not a second `worldfoundry/` tree. An in-tree runner must not import Python modules from a cache path. If the official repo is cloned only to harvest `inference.py`, vendor the infer-only slice under the appropriate package and delete the training side.
 
 Transforms that actually run at inference time may stay in the runtime package — GroundingDINO `util.transforms`, DUST3R crop helpers, DROID-SLAM RGB-D geometry. Training datasets, dataloaders, losses, callbacks, augmentation-only modules, and experiment scripts should not. `pixelsplat` is the current exception under 3D base models because it still uses the official Lightning test runner and a dataset-shaped loader. Treat that as debt to port into a pure inference runner, not as a pattern for the model you are adding.
+
+## Model homepage
+
+Each model article lives in its own file: `docs/fumadocs/content/docs/guides/supported-models/<model-id>.mdx` and the paired `.zh.mdx`. The Models catalog still links to `/docs/guides/supported-models/<model-id>`.
+
+`npm --prefix docs/fumadocs run models:generate` writes an initial page from the catalog `docs:` block and the recipe JSON. Edit that file for model-specific narrative — overview, architecture, figures, extra sections. Shared widgets stay embeddable:
+
+- `<ModelCommandBuilder modelId="<model-id>" locale="en" />` — run-command box
+- `<ModelRelatedRecipes modelId="<model-id>" locale="en" />` — same-family links
+
+To keep hand edits, set `pageSource: authored` in the frontmatter. Generated pages keep `pageSource: generated` and will be refreshed on the next generate. YAML `docs.overview` only seeds a generated page; it does not render the article once you own the MDX file.

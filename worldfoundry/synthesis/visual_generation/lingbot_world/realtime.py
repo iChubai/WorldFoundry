@@ -247,6 +247,7 @@ class LingBotRealtimeSession:
         self._camera_directions: torch.Tensor | None = None
         self._decoder_model: TAEHV | None = None
         self._decoder: StreamingTAEHV | None = None
+        self._decoder_needs_scaling = False
         self._context: list[torch.Tensor] | None = None
         self._vae_state: dict[str, Any] | None = None
         self._pending_first_condition: torch.Tensor | None = None
@@ -329,6 +330,8 @@ class LingBotRealtimeSession:
         if hasattr(self.model, "_orig_mod"):
             return
         if "FullyShardedDataParallel" in type(self.model).__name__:
+            if self.rank == 0:
+                print("[lingbot-realtime] torch.compile skipped: FSDP model", flush=True)
             return
         try:
             torch._dynamo.config.capture_scalar_outputs = True
@@ -344,6 +347,12 @@ class LingBotRealtimeSession:
                 ),
                 namespace=self.compile_namespace,
             )
+            if self.rank == 0:
+                print(
+                    f"[lingbot-realtime] compile_wrapper={hasattr(self.model, '_orig_mod')} "
+                    f"world_size={self.sp_size}; graph compilation occurs during warmup",
+                    flush=True,
+                )
         except Exception as exc:
             if self.rank == 0:
                 print(f"[lingbot-realtime] torch.compile unavailable: {exc}", flush=True)
@@ -351,7 +360,33 @@ class LingBotRealtimeSession:
     @staticmethod
     def _decoder_checkpoint() -> Path:
         configured = os.getenv("WORLDFOUNDRY_LINGBOT_LIGHTTAE_PATH", "").strip()
-        return Path(configured).expanduser() if configured else checkpoint_root_path("taehv", "lighttaew2_1.pth")
+        if configured:
+            return Path(configured).expanduser()
+        candidates = [
+            checkpoint_root_path("taehv", name)
+            for name in ("lighttaew2_1.pth", "taew2_1.pth", "taew2_1.safetensors")
+        ]
+        return next((path for path in candidates if path.is_file()), candidates[0])
+
+    @staticmethod
+    def _decoder_uses_raw_latents(checkpoint: Path) -> bool:
+        # Standard TAEW2.1 was trained on diffusion-model latents. LightTAE
+        # instead expects the Wan VAE's raw (mean/std restored) latents.
+        # An override also supports locally renamed checkpoint exports.
+        convention = os.getenv("WORLDFOUNDRY_LINGBOT_TAE_LATENT_FORMAT", "auto").strip().lower()
+        if convention == "auto":
+            name = checkpoint.stem.lower()
+            if "lighttae" in name:
+                return True
+            if name.startswith("taew2_1"):
+                return False
+            raise ValueError(
+                f"Unknown TAE latent convention for {checkpoint.name}; set "
+                "WORLDFOUNDRY_LINGBOT_TAE_LATENT_FORMAT to normalized (TAEW2.1) or raw (LightTAE)."
+            )
+        if convention not in {"normalized", "raw"}:
+            raise ValueError("WORLDFOUNDRY_LINGBOT_TAE_LATENT_FORMAT must be auto, normalized, or raw.")
+        return convention == "raw"
 
     def _load_decoder(self) -> None:
         if self._decoder_model is not None:
@@ -360,12 +395,27 @@ class LingBotRealtimeSession:
         if not checkpoint.is_file():
             raise FileNotFoundError(
                 f"LingBot realtime LightTAE checkpoint is missing: {checkpoint}. "
-                "Set WORLDFOUNDRY_LINGBOT_LIGHTTAE_PATH to lighttaew2_1.pth."
+                "Install taew2_1.pth or taew2_1.safetensors in the taehv checkpoint directory, "
+                "or set WORLDFOUNDRY_LINGBOT_LIGHTTAE_PATH to a compatible Wan 2.1 TAE checkpoint."
             )
-        decoder = TAEHV(checkpoint_path=str(checkpoint)).eval().requires_grad_(False)
+        needs_scaling = self._decoder_uses_raw_latents(checkpoint)
+        if checkpoint.suffix == ".safetensors":
+            from safetensors.torch import load_file
+
+            decoder = TAEHV(checkpoint_path=None)
+            decoder.load_state_dict(decoder.patch_tgrow_layers(load_file(str(checkpoint), device="cpu")), strict=True)
+        else:
+            decoder = TAEHV(checkpoint_path=str(checkpoint))
+        decoder = decoder.eval().requires_grad_(False)
         decoder = decoder.to(device=self.device, dtype=torch.bfloat16)
         self._decoder_model = decoder
         self._decoder = StreamingTAEHV(decoder)
+        self._decoder_needs_scaling = needs_scaling
+        print(
+            f"[lingbot-realtime] decoder={checkpoint.name} "
+            f"latent_format={'raw' if needs_scaling else 'normalized'}",
+            flush=True,
+        )
 
     def next_output_frames(self) -> int:
         return self.first_output_frames if self.autoregressive_index == 0 else self.steady_output_frames
@@ -651,10 +701,11 @@ class LingBotRealtimeSession:
             raise RuntimeError("Only rank zero decodes realtime frames.")
         if self._decoder is None:
             raise RuntimeError("LightTAE decoder is not initialized.")
-        mean = self.core.vae.mean.to(dtype=torch.bfloat16).view(1, 1, 16, 1, 1)
-        std = self.core.vae.std.to(dtype=torch.bfloat16).view(1, 1, 16, 1, 1)
         z = latent.permute(1, 0, 2, 3)[None].to(torch.bfloat16)
-        z = z * std + mean
+        if self._decoder_needs_scaling:
+            mean = self.core.vae.mean.to(dtype=torch.bfloat16).view(1, 1, 16, 1, 1)
+            std = self.core.vae.std.to(dtype=torch.bfloat16).view(1, 1, 16, 1, 1)
+            z = z * std + mean
         frames: list[torch.Tensor] = []
         frame = self._decoder.decode(z)
         while frame is not None:
@@ -803,6 +854,10 @@ class LingBotRealtimeSession:
             "total_ms": (time.perf_counter() - wall_started) * 1000.0,
             "cache_frames": self.cache_frames,
             "world_size": self.sp_size,
+            "compile_active": int(hasattr(self.model, "_orig_mod")),
+            # Per-process Dynamo graph count: distinguishes a requested
+            # wrapper from actual tracing during the resident rollout.
+            "compile_graphs": int(torch._dynamo.utils.counters["stats"]["unique_graphs"]),
         }
         self.autoregressive_index += 1
         if self.rank != 0:

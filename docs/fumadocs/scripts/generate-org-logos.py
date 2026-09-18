@@ -22,6 +22,7 @@ owner's user avatar.
 
 Outputs:
 - lib/model-logo-map.json          (orgs + modelLogos + benchmarkLogos)
+- lib/model-org-src.ts             (canonical org src paths for runtime guards)
 - lib/benchmark-catalog-status.json (rewrites each `logoKey` to an org id)
 - public/org-logos/SOURCES.md       (per-file provenance / license manifest)
 
@@ -37,6 +38,7 @@ from pathlib import Path
 DOCS_ROOT = Path(__file__).resolve().parents[1]
 LOGO_DIR = DOCS_ROOT / "public" / "org-logos"
 MAP_PATH = DOCS_ROOT / "lib" / "model-logo-map.json"
+ORG_SRC_PATH = DOCS_ROOT / "lib" / "model-org-src.ts"
 BENCH_STATUS_PATH = DOCS_ROOT / "lib" / "benchmark-catalog-status.json"
 SOURCES_PATH = LOGO_DIR / "SOURCES.md"
 
@@ -60,12 +62,26 @@ ORGS: dict[str, dict] = {
         "source": commons("Tencent Logo.svg"),
         "license": "Public domain (text logo)",
     },
+    "tencent-hunyuan": {
+        "name": "Tencent Hunyuan",
+        "abbr": "HY",
+        "logo": "tencent-hunyuan.png",
+        "source": "Official Hunyuan header mark from hunyuan.tencent.com (https://hunyuan-blog-web-prod-1258344703.cos.ap-guangzhou.myqcloud.com/assets/hy-blog-logo-zh-DxX4P937.png)",
+        "license": "Organization brand mark",
+    },
     "alibaba": {
         "name": "Alibaba",
         "abbr": "AL",
         "logo": "alibaba.svg",
         "source": commons("Alibaba en logo.svg"),
         "license": "Public domain (text logo)",
+    },
+    "wan": {
+        "name": "Wan (Tongyi Wanxiang)",
+        "abbr": "WN",
+        "logo": "wan.png",
+        "source": "Official Wan brand mark (same emblem as Wan-Video/Wan2.1 assets/logo.png); GitHub organization brand avatar (github.com/Wan-Video)",
+        "license": "Organization brand mark",
     },
     "amap": {
         "name": "Amap (Alibaba)",
@@ -561,9 +577,9 @@ ORGS: dict[str, dict] = {
     "sjtu": {
         "name": "Shanghai Jiao Tong University",
         "abbr": "SJTU",
-        "logo": "sjtu.svg",
-        "source": "Original simple circular-seal rendition of the SJTU emblem (anvil / gear / book)",
-        "license": "Public domain (simple seal rendition)",
+        "logo": "sjtu.png",
+        "source": "Official university brand mark (www.sjtu.edu.cn), crest cropped for the identity mark",
+        "license": "Organization brand mark",
     },
     "fudan": {
         "name": "Fudan University",
@@ -617,16 +633,16 @@ ORGS: dict[str, dict] = {
     "hku": {
         "name": "The University of Hong Kong",
         "abbr": "HKU",
-        "logo": "hku.svg",
-        "source": "Original simple shield rendition of the HKU coat of arms",
-        "license": "Public domain (simple seal rendition)",
+        "logo": "hku.png",
+        "source": "Official university coat of arms from the HKU site mark (www.hku.hk), shield cropped for the identity mark",
+        "license": "Organization brand mark",
     },
     "cuhk": {
         "name": "The Chinese University of Hong Kong",
         "abbr": "CUHK",
-        "logo": "cuhk.svg",
-        "source": "Original simple circular-seal rendition of the CUHK bird emblem",
-        "license": "Public domain (simple seal rendition)",
+        "logo": "cuhk.png",
+        "source": "Official university emblem cropped from the CUHK site header mark (https://www.cuhk.edu.hk/english/images/cuhk_logo_2x.png)",
+        "license": "Organization brand mark",
     },
     "cityu": {
         "name": "City University of Hong Kong",
@@ -905,9 +921,9 @@ ORGS: dict[str, dict] = {
     "harvard": {
         "name": "Harvard University",
         "abbr": "HU",
-        "logo": "harvard.svg",
-        "source": "Original simple shield rendition of the Harvard crimson",
-        "license": "Public domain (simple seal rendition)",
+        "logo": "harvard.png",
+        "source": commons("Harvard University shield.png"),
+        "license": "Public domain",
     },
     "ucla": {
         "name": "UCLA",
@@ -1028,18 +1044,18 @@ MODEL_ORGS: dict[str, str] = {
     "helios": "pku",
     "hexplane": "umich",
     "hma": "mit",
-    "hunyuan-game-craft": "tencent",
-    "hy-embodied-vla": "tencent",
-    "hunyuanvideo": "tencent",
-    "hunyuanvideo-1.5": "tencent",
-    "hunyuanworld-1": "tencent",
-    "hunyuanworld-mirror": "tencent",
-    "hunyuanworld-voyager": "tencent",
-    "hy-embodied": "tencent",
-    "hy-world-2.0": "tencent",
-    "hy-worldplay": "tencent",
+    "hunyuan-game-craft": "tencent-hunyuan",
+    "hy-embodied-vla": "tencent-hunyuan",
+    "hunyuanvideo": "tencent-hunyuan",
+    "hunyuanvideo-1.5": "tencent-hunyuan",
+    "hunyuanworld-1": "tencent-hunyuan",
+    "hunyuanworld-mirror": "tencent-hunyuan",
+    "hunyuanworld-voyager": "tencent-hunyuan",
+    "hy-embodied": "tencent-hunyuan",
+    "hy-world-2.0": "tencent-hunyuan",
+    "hy-worldplay": "tencent-hunyuan",
     "hydra": "hust",
-    "hyworld-worldgen": "tencent",
+    "hyworld-worldgen": "tencent-hunyuan",
     "i2vgen-xl": "alibaba",
     "infinite-vggt": "berkeley",
     "infinite-world": "meigen",
@@ -1190,16 +1206,16 @@ MODEL_ORGS: dict[str, str] = {
     "vmem": "oxford",
     "vqbet": "snu",
     "wall-oss": "x-square",
-    "wan-2p5": "alibaba",
-    "wan-2p6": "alibaba",
-    "wan-2p7": "alibaba",
-    "wan2.1": "alibaba",
-    "wan2.1-vace": "alibaba",
-    "wan2.2": "alibaba",
-    "wan21-fun-14b-cam": "alibaba",
-    "wan21-fun-1p3b-cam": "alibaba",
-    "wan22-fun-5b-cam": "alibaba",
-    "wan22-fun-a14b-cam": "alibaba",
+    "wan-2p5": "wan",
+    "wan-2p6": "wan",
+    "wan-2p7": "wan",
+    "wan2.1": "wan",
+    "wan2.1-vace": "wan",
+    "wan2.2": "wan",
+    "wan21-fun-14b-cam": "wan",
+    "wan21-fun-1p3b-cam": "wan",
+    "wan22-fun-5b-cam": "wan",
+    "wan22-fun-a14b-cam": "wan",
     "warp-as-history": "sjtu",
     "wilddet3d": "ai2",
     "wildworld": "shanda",
@@ -1369,6 +1385,20 @@ def write_map(orgs: dict[str, dict]) -> None:
     print(f"wrote {MAP_PATH}")
 
 
+def write_org_src_ts(orgs: dict[str, dict]) -> None:
+    lines = [
+        "// Generated by docs/fumadocs/scripts/generate-org-logos.py — do not edit.",
+        "export const modelOrgSrc: Record<string, string> = {",
+    ]
+    for key, entry in sorted(orgs.items()):
+        src = entry.get("src")
+        if src:
+            lines.append(f'  "{key}": "{src}",')
+    lines.extend(["};", ""])
+    ORG_SRC_PATH.write_text("\n".join(lines))
+    print(f"wrote {ORG_SRC_PATH}")
+
+
 def rewrite_benchmark_status() -> None:
     if not BENCH_STATUS_PATH.is_file():
         print(f"skip (missing): {BENCH_STATUS_PATH}")
@@ -1428,6 +1458,7 @@ def main() -> None:
     validate()
     orgs = build_org_entries()
     write_map(orgs)
+    write_org_src_ts(orgs)
     rewrite_benchmark_status()
     write_sources(orgs)
     total_models = len(MODEL_ORGS) + len(UNRESOLVED_MODELS)

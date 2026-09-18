@@ -207,23 +207,29 @@ export function WorldFoundryArchitecture({ locale = 'en' }: { locale?: SystemMap
           <div className="wf-system-architecture-unit" key={label}>
             {index > 0 && copy.handoffs[index - 1] ? (
               <div className="wf-system-architecture-handoff" aria-hidden="true">
-                <span>{copy.handoffs[index - 1]}</span>
+                <span className="wf-system-architecture-handoff-label">
+                  {copy.handoffs[index - 1]}
+                </span>
               </div>
             ) : null}
             <section className="wf-system-architecture-layer">
               <div className="wf-system-architecture-heading">
-                <span>{String(index + 1).padStart(2, '0')}</span>
+                <span className="wf-system-architecture-index">
+                  {String(index + 1).padStart(2, '0')}
+                </span>
                 <Icon aria-hidden="true" size={20} strokeWidth={1.7} />
                 <div>
-                  <strong>{label}</strong>
-                  <p>{purpose}</p>
+                  <span className="wf-system-architecture-title">{label}</span>
+                  <span className="wf-system-architecture-purpose">{purpose}</span>
                 </div>
               </div>
-              <ul>
+              <div className="wf-system-architecture-chips">
                 {items.map((item) => (
-                  <li key={item}>{item}</li>
+                  <span className="wf-system-architecture-chip" key={item}>
+                    {item}
+                  </span>
                 ))}
-              </ul>
+              </div>
             </section>
           </div>
         ))}

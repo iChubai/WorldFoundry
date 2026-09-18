@@ -1,11 +1,25 @@
 ---
 title: WorldFoundry
-description: 统一的世界模型推理与评测基础设施
+description: 面向世界智能的通用基础设施
 ---
 
-WorldFoundry 是一套运行与评测世界模型的开源基础设施，不是又一个模型架构。模型发现、runtime 与资产准备、推理、artifact 检查和 benchmark 证据走同一条工作流，覆盖视频、3D/4D、交互世界与具身系统。
+WorldFoundry 是面向世界智能的开源基础设施，不是又一个模型架构。模型发现、runtime 与资产准备、推理、artifact 检查和 benchmark 证据走同一条工作流，覆盖视频、3D/4D、具身动作与交互世界。
 
-被 catalog 收录，不等于 runtime 能跑；demo 效果好，不等于已有 benchmark 证据；分数导入成功，也不等于官方 leaderboard 水平。这些状态分开记录，并保留 provenance。
+生成式世界模型不只是感知生成器。它维护由历史条件化的持久状态，在动作或干预下更新该状态，并产生时间上连贯的轨迹。视觉逼真度并不足够。操作定义与能力分层见[世界模型](/zh/docs/overview/world-models)。
+
+当前版本集成了 270 个模型与近 100 套 benchmark / metric 实现。被 catalog 收录，不等于 runtime 能跑；demo 效果好，不等于已有 benchmark 证据；分数导入成功，也不等于官方 leaderboard 水平。这些状态分开记录，并保留 provenance。
+
+WorldFoundry 的价值出现在**跨模型、跨 benchmark、跨界面**的工作流里。技术报告把这一点表述为**可通约而不均质化**：异构系统应能在共享的运行与证据契约下被检查，而不被强迫接受同一种表征、任务或指标。
+
+因此才需要这条共享工作流：
+
+- **统一的运行语义。** 稳定的 model ID 与 benchmark ID，加上 request、result、artifact、manifest 与 scorecard，替代仓库昵称和手写路径。可以查证模型只是被收录还是真的执行过、用了哪个 checkpoint 与 runtime、sample 是否覆盖，以及分数是归一化、官方计算，还是已经过 leaderboard 校验。
+- **集成只做一次。** 环境准备、checkpoint 查找、输入输出整理、job 记录、预览与 metric 汇总保持共享。模型差异留在 pipeline 与 operator，benchmark 差异留在 runner 与 metric。
+- **产物可复用。** 生成结果不绑定于一次 UI 会话。同一批 artifact 可以检查、重新打分、转换、对照或审计，而不必再加载模型。
+- **记录比命令更完整。** checkpoint、依赖、dataset 或 evaluator 一变，同一条命令就可能不可比。ledger、身份、blocker 与 scorecard 同时说明实际跑了什么，以及该结果被允许主张什么。
+- **多入口，同一后端。** TUI、CLI、Studio、Python 与 MCP 共用 catalog 与契约。界面可以换，run 身份与持久输出保持一致。
+
+这适合需要长期维护或比较多个世界模型家族、将生成与评测解耦、复用昂贵 artifact，或为人与 agent 提供稳定机器可读发现的团队。模型、benchmark、机器与 reviewer 越多，这些契约越划算。
 
 <TeaserImage alt="WorldFoundry 统一世界模型发现、推理、检查与评测" />
 
@@ -22,7 +36,7 @@ bash scripts/inference/test_nav_video_gen.sh matrix-game-2 \
   --output-dir tmp/matrix_game2_first_run
 ```
 
-这次运行只支撑一个结论：这套配置产出了可检查的 artifact，并不等于某个 benchmark 已经跑完。各层与契约见[设计](/zh/docs/overview/design)，更完整的问题陈述见[为什么使用 WorldFoundry](/zh/docs/overview/why-worldfoundry)。
+这次运行只支撑一个结论：这套配置产出了可检查的 artifact，并不等于某个 benchmark 已经跑完。各层与契约见[设计](/zh/docs/overview/design)，具体清单见[包含什么](/zh/docs/overview/capabilities)。
 
 ## 致谢
 

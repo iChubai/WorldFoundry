@@ -168,11 +168,12 @@ export type ModelRecipeBenchmarkRef = {
 };
 
 /**
- * Narrative block for the model homepage. Populated from the optional
- * curated `docs:` / `homepage:` block in the catalog manifest when present
- * (`curated: true`), otherwise synthesized deterministically from recorded
- * catalog, runtime, binding, and evidence fields by
- * scripts/generate-model-recipes.py.
+ * Narrative block that seeds a generated per-model MDX page. Populated from
+ * the optional curated `docs:` / `homepage:` block in the catalog manifest
+ * when present (`curated: true`), otherwise synthesized deterministically
+ * from recorded catalog, runtime, binding, and evidence fields by
+ * scripts/generate-model-recipes.py. Hand-written pages (`pageSource:
+ * authored`) do not read this block at render time.
  */
 /**
  * Formal publishing institution recorded in the catalog manifest.

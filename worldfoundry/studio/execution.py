@@ -3283,8 +3283,19 @@ class StudioManager:
             )
             if supports_input_kwarg and (current_missing or current_is_default):
                 call_kwargs["input_path"] = raw_input_path
+        explicit_load_kwargs = parse_jsonish(load_kwargs_text, default={}) or {}
         load_kwargs = entry.default_load_kwargs.copy()
-        load_kwargs.update(parse_jsonish(load_kwargs_text, default={}) or {})
+        if (
+            entry.model_id == LINGBOT_WORLD_MODEL_ID
+            and explicit_load_kwargs.get("runtime_variant") == "fast"
+            and _torchrun_lingbot_fast_enabled()
+        ):
+            # These catalog defaults select the distributed launcher, but are
+            # not explicit requests to shard a resident Fast model. Let the
+            # worker's VRAM policy decide; user-supplied values still win.
+            for key in ("t5_fsdp", "dit_fsdp", "t5_cpu"):
+                load_kwargs.pop(key, None)
+        load_kwargs.update(explicit_load_kwargs)
 
         if entry.category in {"Embodied Action", "Visual Action"}:
             call_kwargs.setdefault("return_dict", True)

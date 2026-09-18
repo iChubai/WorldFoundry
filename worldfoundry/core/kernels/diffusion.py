@@ -904,6 +904,71 @@ def layer_norm_scale_shift(
 
 
 # ──────────────────────────────────────────────────────────────────────────
+# residual_layer_norm_scale_shift — functional residual + AdaLN fusion
+# ──────────────────────────────────────────────────────────────────────────
+
+
+def _residual_layer_norm_scale_shift_torch(residual, update, scale, shift, eps, gate, output_gate):
+    summed = residual + (update if gate is None else update * gate)
+    normalized = _layer_norm_scale_shift_torch(summed, scale, shift, eps, False)
+    outputs = (normalized, summed)
+    return outputs if output_gate is None else (*outputs, output_gate.expand_as(summed).contiguous())
+
+
+def _eligible_residual_layer_norm_scale_shift(residual, update, scale, shift, eps, gate, output_gate):
+    tensors = (residual, update, scale, shift) + tuple(t for t in (gate, output_gate) if t is not None)
+    return (
+        _eligible_layer_norm_scale_shift(residual, scale, shift, eps, False)
+        and _inference_only(*tensors)
+        and _same_cuda_device(*tensors)
+        and all(t.dtype in _FLOAT_DTYPES for t in tensors)
+        and residual.shape == update.shape
+        and _regular_contiguous(update)
+        and all(_broadcastable_to(t, residual) for t in (gate, output_gate) if t is not None)
+    )
+
+
+def _residual_layer_norm_scale_shift_triton(residual, update, scale, shift, eps, gate, output_gate):
+    from worldfoundry.core.kernels.triton_residual_adaln import residual_layer_norm_scale_shift as implementation
+
+    return implementation(residual, update, scale, shift, eps, gate, output_gate)
+
+
+def residual_layer_norm_scale_shift(
+    residual: torch.Tensor,
+    update: torch.Tensor,
+    scale: torch.Tensor,
+    shift: torch.Tensor,
+    eps: float = 1e-6,
+    *,
+    gate: torch.Tensor | None = None,
+    output_gate: torch.Tensor | None = None,
+) -> tuple[torch.Tensor, ...]:
+    """Fuse residual addition and affine-free AdaLN without mutating inputs.
+
+    Returns ``(normalized, residual_sum)``. With ``output_gate``, a third
+    contiguous, broadcast gate output is produced in the same launch. Training,
+    unsupported layouts and small auto workloads retain PyTorch semantics.
+    """
+    requested = _requested_kernel_backend()
+    args = (residual, update, scale, shift, eps, gate, output_gate)
+    if (
+        torch.compiler.is_compiling()
+        or requested in _TORCH_BACKENDS
+        or (requested == "auto" and not kernel_autotune_enabled()
+            and residual.numel() < _kernel_threshold(residual, "layer_norm_scale_shift"))
+    ):
+        return _residual_layer_norm_scale_shift_torch(*args)
+    tensors = (residual, update, scale, shift) + tuple(t for t in (gate, output_gate) if t is not None)
+    return KERNEL_REGISTRY.dispatch(
+        "residual_layer_norm_scale_shift",
+        _residual_layer_norm_scale_shift_torch,
+        *args,
+        signature=_workload_signature(*tensors, extra=(float(eps), gate is not None, output_gate is not None)),
+    )
+
+
+# ──────────────────────────────────────────────────────────────────────────
 # rms_norm_scale_shift — optional learned weight; same AdaLN size floor
 # ──────────────────────────────────────────────────────────────────────────
 
@@ -1490,6 +1555,15 @@ def _register_kernels() -> None:
         predicate=_eligible_layer_norm_scale_shift,
     )
     KERNEL_REGISTRY.register(
+        "residual_layer_norm_scale_shift",
+        backend="triton",
+        name="triton_residual_layer_norm_scale_shift",
+        priority=100,
+        autotune=True,
+        implementation=_residual_layer_norm_scale_shift_triton,
+        predicate=_eligible_residual_layer_norm_scale_shift,
+    )
+    KERNEL_REGISTRY.register(
         "rms_norm_scale_shift",
         backend="triton",
         name="triton_rms_norm_scale_shift",
@@ -1528,6 +1602,7 @@ __all__ = [
     "rms_norm_scale_shift",
     "residual_gate_add",
     "residual_gate_add_",
+    "residual_layer_norm_scale_shift",
     "silu_and_mul",
     "silu_mul",
 ]

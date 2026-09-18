@@ -168,18 +168,18 @@
     "helios": "pku",
     "hexplane": "umich",
     "hma": "mit",
-    "hunyuan-game-craft": "tencent",
-    "hunyuanvideo": "tencent",
-    "hunyuanvideo-1.5": "tencent",
-    "hunyuanworld-1": "tencent",
-    "hunyuanworld-mirror": "tencent",
-    "hunyuanworld-voyager": "tencent",
-    "hy-embodied": "tencent",
-    "hy-embodied-vla": "tencent",
-    "hy-world-2.0": "tencent",
-    "hy-worldplay": "tencent",
+    "hunyuan-game-craft": "tencent-hunyuan",
+    "hunyuanvideo": "tencent-hunyuan",
+    "hunyuanvideo-1.5": "tencent-hunyuan",
+    "hunyuanworld-1": "tencent-hunyuan",
+    "hunyuanworld-mirror": "tencent-hunyuan",
+    "hunyuanworld-voyager": "tencent-hunyuan",
+    "hy-embodied": "tencent-hunyuan",
+    "hy-embodied-vla": "tencent-hunyuan",
+    "hy-world-2.0": "tencent-hunyuan",
+    "hy-worldplay": "tencent-hunyuan",
     "hydra": "hust",
-    "hyworld-worldgen": "tencent",
+    "hyworld-worldgen": "tencent-hunyuan",
     "i2vgen-xl": "alibaba",
     "infinite-vggt": "berkeley",
     "infinite-world": "meigen",
@@ -330,16 +330,16 @@
     "vmem": "oxford",
     "vqbet": "snu",
     "wall-oss": "x-square",
-    "wan-2p5": "alibaba",
-    "wan-2p6": "alibaba",
-    "wan-2p7": "alibaba",
-    "wan2.1": "alibaba",
-    "wan2.1-vace": "alibaba",
-    "wan2.2": "alibaba",
-    "wan21-fun-14b-cam": "alibaba",
-    "wan21-fun-1p3b-cam": "alibaba",
-    "wan22-fun-5b-cam": "alibaba",
-    "wan22-fun-a14b-cam": "alibaba",
+    "wan-2p5": "wan",
+    "wan-2p6": "wan",
+    "wan-2p7": "wan",
+    "wan2.1": "wan",
+    "wan2.1-vace": "wan",
+    "wan2.2": "wan",
+    "wan21-fun-14b-cam": "wan",
+    "wan21-fun-1p3b-cam": "wan",
+    "wan22-fun-5b-cam": "wan",
+    "wan22-fun-a14b-cam": "wan",
     "warp-as-history": "sjtu",
     "wilddet3d": "ai2",
     "wildworld": "shanda",
@@ -537,10 +537,10 @@
     "cuhk": {
       "abbr": "CUHK",
       "key": "cuhk",
-      "license": "Public domain (simple seal rendition)",
+      "license": "Organization brand mark",
       "name": "The Chinese University of Hong Kong",
-      "source": "Original simple circular-seal rendition of the CUHK bird emblem",
-      "src": "/org-logos/cuhk.svg"
+      "source": "Official university emblem cropped from the CUHK site header mark (https://www.cuhk.edu.hk/english/images/cuhk_logo_2x.png)",
+      "src": "/org-logos/cuhk.png"
     },
     "dexmal": {
       "abbr": "DX",
@@ -673,18 +673,18 @@
     "harvard": {
       "abbr": "HU",
       "key": "harvard",
-      "license": "Public domain (simple seal rendition)",
+      "license": "Public domain",
       "name": "Harvard University",
-      "source": "Original simple shield rendition of the Harvard crimson",
-      "src": "/org-logos/harvard.svg"
+      "source": "https://commons.wikimedia.org/wiki/File:Harvard_University_shield.png",
+      "src": "/org-logos/harvard.png"
     },
     "hku": {
       "abbr": "HKU",
       "key": "hku",
-      "license": "Public domain (simple seal rendition)",
+      "license": "Organization brand mark",
       "name": "The University of Hong Kong",
-      "source": "Original simple shield rendition of the HKU coat of arms",
-      "src": "/org-logos/hku.svg"
+      "source": "Official university coat of arms from the HKU site mark (www.hku.hk), shield cropped for the identity mark",
+      "src": "/org-logos/hku.png"
     },
     "hkust": {
       "abbr": "HKUST",
@@ -1089,10 +1089,10 @@
     "sjtu": {
       "abbr": "SJTU",
       "key": "sjtu",
-      "license": "Public domain (simple seal rendition)",
+      "license": "Organization brand mark",
       "name": "Shanghai Jiao Tong University",
-      "source": "Original simple circular-seal rendition of the SJTU emblem (anvil / gear / book)",
-      "src": "/org-logos/sjtu.svg"
+      "source": "Official university brand mark (www.sjtu.edu.cn), crest cropped for the identity mark",
+      "src": "/org-logos/sjtu.png"
     },
     "skywork": {
       "abbr": "SK",
@@ -1189,6 +1189,14 @@
       "name": "Tencent",
       "source": "https://commons.wikimedia.org/wiki/File:Tencent_Logo.svg",
       "src": "/org-logos/tencent.svg"
+    },
+    "tencent-hunyuan": {
+      "abbr": "HY",
+      "key": "tencent-hunyuan",
+      "license": "Organization brand mark",
+      "name": "Tencent Hunyuan",
+      "source": "Official Hunyuan header mark from hunyuan.tencent.com (https://hunyuan-blog-web-prod-1258344703.cos.ap-guangzhou.myqcloud.com/assets/hy-blog-logo-zh-DxX4P937.png)",
+      "src": "/org-logos/tencent-hunyuan.png"
     },
     "tsinghua": {
       "abbr": "THU",
@@ -1293,6 +1301,14 @@
       "name": "vivo",
       "source": "Simple Icons (https://simpleicons.org), CC0-1.0",
       "src": "/org-logos/vivo.svg"
+    },
+    "wan": {
+      "abbr": "WN",
+      "key": "wan",
+      "license": "Organization brand mark",
+      "name": "Wan (Tongyi Wanxiang)",
+      "source": "Official Wan brand mark (same emblem as Wan-Video/Wan2.1 assets/logo.png); GitHub organization brand avatar (github.com/Wan-Video)",
+      "src": "/org-logos/wan.png"
     },
     "waterloo": {
       "abbr": "UWL",

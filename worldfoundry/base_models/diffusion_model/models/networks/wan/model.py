@@ -392,6 +392,7 @@ class DiTBlock(nn.Module):
         self.ffn = nn.Sequential(nn.Linear(dim, ffn_dim), nn.GELU(approximate="tanh"), nn.Linear(ffn_dim, dim))
         self.modulation = nn.Parameter(torch.randn(1, 6, dim) / dim**0.5)
         self.gate = GateModule()
+        self._worldfoundry_residual_adaln_runtime = None
 
     def forward(
         self,
@@ -475,6 +476,13 @@ class DiTBlock(nn.Module):
             context,
             **kwargs,
         )
+        fusion = self._worldfoundry_residual_adaln_runtime
+        if (fusion is not None and not return_partial and not inplace_residual
+                and not torch.is_grad_enabled() and not torch.compiler.is_compiling()):
+            if modifiers is not None:
+                shift_mlp, scale_mlp, gate_mlp = modifiers
+            input_x, x = fusion.apply(x, cross_attn_out, scale_mlp, shift_mlp, self.norm2.eps)
+            return self.gate(x, gate_mlp, self.ffn(input_x))
         x = x.add_(cross_attn_out) if inplace_residual else x + cross_attn_out
         if return_partial:
             return x, (shift_mlp, scale_mlp, gate_mlp)

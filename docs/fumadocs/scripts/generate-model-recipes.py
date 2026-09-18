@@ -9,9 +9,11 @@ Optional per-model ``docs:`` block
 ----------------------------------
 
 A catalog manifest MAY carry a curated documentation block. When present it
-overrides the synthesized narrative on the model homepage; when absent the
+seeds the generated per-model MDX page under
+``docs/fumadocs/content/docs/guides/supported-models/<id>.mdx``; when absent the
 generator composes an equivalent narrative from the recorded catalog, runtime,
-binding, and evidence fields, so every model page stays detailed either way.
+binding, and evidence fields. Hand-written pages set ``pageSource: authored``
+and are not overwritten. The article source of truth is the MDX file.
 ``homepage:`` is accepted as an alias of ``docs:`` (``docs:`` wins on
 conflicts). All keys are optional. Schema::
 
@@ -126,7 +128,9 @@ os.environ.update(
 )
 
 sys.path.insert(0, str(ROOT))
+sys.path.insert(0, str(Path(__file__).resolve().parent))
 from worldfoundry.runtime.inference_catalog import get_model_inference_spec  # noqa: E402
+from model_page_mdx import sync_model_pages  # noqa: E402
 
 CATALOG_ROOT = ROOT / "worldfoundry/data/models/catalog"
 PROFILE_ROOT = ROOT / "worldfoundry/data/models/runtime/profiles"
@@ -172,7 +176,14 @@ STATUS_ORDER = {
 }
 
 # Docs catalog hides blocked 3D/4D entries.
-DOCS_EXCLUDED_RECIPE_IDS: set[str] = set()
+# Extra IDs are runtime/profile rows of a model that already has a public recipe.
+DOCS_EXCLUDED_RECIPE_IDS: set[str] = {
+    "dust3r-base-model",
+    "dreamx-world-5b-cam",
+    "matrix-game-3.5-third-person",
+    "minwm-wan-action2v",
+    "pi0-worldfoundry",
+}
 
 
 def docs_catalog_visible(category_id: str, model_id: str, status_group: str) -> bool:
@@ -1646,7 +1657,11 @@ def command_data(model_id: str, runtime_model_id: str, default_task: dict[str, A
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--check", action="store_true", help="Fail when generated recipe data is stale.")
+    parser.add_argument(
+        "--check",
+        action="store_true",
+        help="Fail when generated recipe data or generated model MDX pages are stale.",
+    )
     args = parser.parse_args()
 
     profiles = manifest_index(PROFILE_ROOT, ("model_id", "id"))
@@ -1820,9 +1835,11 @@ def main() -> int:
             for path, expected in outputs
             if not path.is_file() or path.read_text(encoding="utf-8") != expected
         ]
+        page_status = sync_model_pages(recipes, check=True)
         if stale_paths:
             for path in stale_paths:
                 print(f"stale generated model recipe data: {path}", file=sys.stderr)
+        if stale_paths or page_status:
             print("run `npm --prefix docs/fumadocs run models:generate` to refresh it", file=sys.stderr)
             return 1
         print(f"model recipe data is current: {OUT} and {INDEX_OUT}")
@@ -1832,7 +1849,7 @@ def main() -> int:
         if not path.is_file() or path.read_text(encoding="utf-8") != content:
             path.write_text(content, encoding="utf-8")
     print(f"wrote {OUT} and {INDEX_OUT} recipes={len(recipes)}")
-    return 0
+    return sync_model_pages(recipes, check=False)
 
 
 if __name__ == "__main__":

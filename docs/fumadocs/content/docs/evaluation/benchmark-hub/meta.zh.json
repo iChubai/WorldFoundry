@@ -80,7 +80,6 @@
     "apple-pi",
     "physical-ai-bench",
     "stevo-bench",
-    "pawbench",
-    "worldatlas-arena"
+    "pawbench"
   ]
 }

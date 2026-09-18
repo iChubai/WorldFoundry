@@ -144,6 +144,7 @@ _TRAINING_FORBIDDEN_OPTIONS = frozenset(
         "approximate_attention",
         "fuse_qkv",
         "inplace_residual",
+        "fused_residual_adaln",
         "rms_norm_precision",
         "inference_mode",
         "magcache",

@@ -1,4 +1,4 @@
-.PHONY: help install-core install-dev docs-check cli-entrypoint-check lint ruff-check format-check shell-check data-check runtime-registry-check check-cuda-constraints packaging-check compile-eval cli-check precommit precommit-install preflight test-eval-core test-training
+.PHONY: help install-core install-dev docs-check docs-dev-fast docs-dev-ssd docs-dev-local docs-build-fast cli-entrypoint-check lint ruff-check format-check shell-check data-check runtime-registry-check check-cuda-constraints packaging-check compile-eval cli-check precommit precommit-install preflight test-eval-core test-training
 
 PYTHON ?= python
 PIP ?= $(PYTHON) -m pip
@@ -35,6 +35,9 @@ help:
 		'  make install-core      Install the editable core package.' \
 		'  make install-dev       Install lightweight development dependencies.' \
 		'  make docs-check        Verify checked-in generated documentation.' \
+		'  make docs-dev-fast     Fast docs dev server (skip MDX regen, keep cache).' \
+		'  make docs-dev-local    Mirror docs to local SSD, then run docs-dev-fast.' \
+		'  make docs-build-fast   Fast local static export (no CI drift checks).' \
 		'  make cli-entrypoint-check Validate documented CLI entrypoints.' \
 		'  make lint              Run lightweight source and catalog checks.' \
 		'  make preflight         Run the public runtime preflight.' \
@@ -53,6 +56,18 @@ docs-check:
 	npm --prefix docs/fumadocs run api:check
 	npm --prefix docs/fumadocs run models:check
 	npm --prefix docs/fumadocs run coverage:check
+
+docs-dev-fast:
+	npm --prefix docs/fumadocs run dev:fast
+
+docs-dev-ssd:
+	npm --prefix docs/fumadocs run dev:ssd
+
+docs-dev-local:
+	npm --prefix docs/fumadocs run dev:local
+
+docs-build-fast:
+	bash scripts/docs/build-fast.sh
 
 cli-entrypoint-check:
 	PYTHONPATH=$(PYTHONPATH) $(PYTHON) -m worldfoundry.cli --help >/dev/null

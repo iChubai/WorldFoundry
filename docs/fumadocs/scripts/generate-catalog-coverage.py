@@ -92,6 +92,27 @@ MODEL_VERSION_GROUPS = {
             "depth-anything-v3-prior": "Metric Prior",
         },
     },
+    "dust3r": {
+        "name": "DUSt3R",
+        "versions": {
+            "dust3r": "Catalog",
+            "dust3r-base-model": "Base",
+        },
+    },
+    "minwm": {
+        "name": "minWM",
+        "versions": {
+            "minwm-hy-action2v": "HY Action2V",
+            "minwm-wan-action2v": "Wan Action2V",
+        },
+    },
+    "lingbot-world": {
+        "name": "LingBot-World",
+        "versions": {
+            "lingbot-world": "Cam",
+            "lingbot-world-act": "Act",
+        },
+    },
 }
 HOMEPAGE_EXCLUDED_MODEL_IDS = {"pi0-worldfoundry"}
 # Compact product names that must not get a space before an embedded digit.

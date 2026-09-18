@@ -124,6 +124,7 @@ _WAN_DENOISER_OPTION_KEYS = frozenset(
         "feature_cache",
         "firstblock",
         "fused_rope",
+        "fused_residual_adaln",
         "inplace_residual",
         "magcache",
         "peft_adapter_path",
@@ -604,6 +605,9 @@ class WanDenoiser(FeatureCacheDenoiserMixin, GraphWrappedDenoiserMixin):
         """Invalidate state and telemetry that must not cross requests."""
 
         self._begin_graph_request_window()
+        residual_adaln = getattr(self.model, "_worldfoundry_residual_adaln_runtime", None)
+        if residual_adaln is not None:
+            residual_adaln.reset()
         self._inplace_residual_state().update(
             request_id=None,
             calls=0,
@@ -1441,6 +1445,12 @@ class WanDenoiser(FeatureCacheDenoiserMixin, GraphWrappedDenoiserMixin):
         from worldfoundry.core.attention import attention_dispatch_report
         from worldfoundry.core.kernels import kernel_dispatch_report
 
+        residual_adaln_state = getattr(self.model, "_worldfoundry_residual_adaln_runtime", None)
+        residual_adaln = residual_adaln_state.report() if residual_adaln_state is not None else None
+        if residual_adaln is not None:
+            effective["fused_residual_adaln_runtime"] = residual_adaln
+            if residual_adaln["accelerated_calls"] == 0 or residual_adaln["fallback_calls"] > 0:
+                fallbacks.append("fused_residual_adaln: not all requests used the fused CUDA path")
         return {
             "requested": requested,
             "effective": effective,
@@ -1453,6 +1463,7 @@ class WanDenoiser(FeatureCacheDenoiserMixin, GraphWrappedDenoiserMixin):
                 "compile": runtime_compile if isinstance(compile_runtime, Mapping) else None,
                 "approximate_attention": approximate,
                 "fused_rope": fused_rope,
+                "fused_residual_adaln": residual_adaln,
                 "qkv_fusion": qkv_fusion,
                 "static_cross_kv": cross_kv,
                 "sequence_parallel": sequence_parallel,
@@ -2223,6 +2234,13 @@ def _build_wan_denoiser(
     if not isinstance(inplace_residual_value, bool):
         raise TypeError("Wan inplace_residual must be a bool")
     inplace_residual = inplace_residual_value
+    fused_residual_adaln = context.component_options.get(
+        "fused_residual_adaln", context.policy.options.get("fused_residual_adaln", False)
+    )
+    if not isinstance(fused_residual_adaln, bool):
+        raise TypeError("Wan fused_residual_adaln must be a bool")
+    if fused_residual_adaln and (inplace_residual or context.policy.compile or resolve_cuda_graph_option(context)):
+        raise ValueError("fused_residual_adaln currently requires functional residuals, eager execution and no CUDA graph")
     rope_precision = str(
         context.component_options.get(
             "rope_precision",
@@ -2338,6 +2356,10 @@ def _build_wan_denoiser(
     model._worldfoundry_fused_rope = fused_rope
     model._worldfoundry_rope_precision = rope_precision
     model._worldfoundry_inplace_residual = inplace_residual
+    if fused_residual_adaln:
+        from ...optimizations.residual_adaln import enable_residual_adaln_fusion
+
+        enable_residual_adaln_fusion(model)
     configured_rms_norms = model.set_rms_norm_precision(rms_norm_precision)
     if fused_rope:
         from ...optimizations.fused_rope import install_fused_rope_runtime
@@ -2371,6 +2393,12 @@ def _build_wan_denoiser(
             requested=inplace_residual,
             effective="no-grad-cache-free-dispatch-installed",
         )
+        if fused_residual_adaln:
+            applied.record_model_kernel(
+                "fused_residual_adaln",
+                requested=True,
+                effective="optional-cross-attention-residual-adaln-dispatch-installed",
+            )
     return WanDenoiser(
         model,
         compute_dtype=context.policy.dtype,

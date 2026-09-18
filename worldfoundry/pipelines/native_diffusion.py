@@ -79,6 +79,7 @@ class NativeVisualDiffusionPipeline(PipelineABC):
         "dit_weight_dtype",
         "feature_cache",
         "fused_rope",
+        "fused_residual_adaln",
         "fuse_qkv",
         "qkv_strategy",
         "qkv_split_threshold",

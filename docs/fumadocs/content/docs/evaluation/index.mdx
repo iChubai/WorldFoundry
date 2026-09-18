@@ -13,9 +13,8 @@ For a first end-to-end path, use [Usage](/docs/quickstart). For flags and discov
 | --- | --- |
 | Score a directory with a complete benchmark protocol | `worldfoundry-eval score --benchmark <id> --artifacts <dir> ...` |
 | Generate from a dataset manifest, then score metric IDs | `worldfoundry-eval generate-score --model <id> --dataset-manifest <file> ...` |
-| Reproduce a known model × benchmark configuration | `worldfoundry-eval reproduce --benchmark <id> ...` |
+| Reproduce a known model × benchmark configuration | `worldfoundry-eval reproduce --recipe <recipe.yaml> ...` |
 | Run a new/custom model on an existing benchmark | `worldfoundry-eval run --model <id> --model-manifest-dir <dir> --benchmark <id> ...` |
-| Change a known model or benchmark configuration | `worldfoundry-eval reproduce --recipe <recipe.yaml> ...` |
 | Score existing JSON/JSONL results | `worldfoundry-eval evaluate --mode existing-results ...` |
 | Build a request ledger from a task | `worldfoundry-eval task materialize ...` |
 | Run one benchmark × model | `worldfoundry-eval run --benchmark <id> --model <id> ...` |
@@ -109,21 +108,7 @@ Remove `--plan-only` after preflight reports `ready: true`.
 
 ## Reproduction recipes
 
-Checked-in reproduction profiles bind the known generator model, checkpoint, generation parameters, official prompts, and benchmark runtime without requiring users to re-enter them. Use an explicit profile when a benchmark has multiple published cells, or the benchmark ID when one profile is declared as its default:
-
-```bash
-worldfoundry-eval reproduce \
-  --profile vbench-zeroscope-aesthetic \
-  --output-dir tmp/reproduce \
-  --plan-only \
-  --json
-
-worldfoundry-eval reproduce --benchmark vbench --output-dir tmp/reproduce --plan-only --json
-```
-
-The checked-in VBench profile is a bounded one-sample, `aesthetic_quality` validation profile and is explicitly not leaderboard eligible. Profile scope and eligibility are part of the prepared plan rather than inferred from a successful process exit.
-
-Use `--recipe` for a custom or newly published model cell. A reproduction recipe keeps upstream model and benchmark settings separate, so benchmark parameters cannot silently override orchestrator-owned paths or modes.
+Use `--recipe` for an immutable model × benchmark cell. A reproduction recipe keeps upstream model and benchmark settings separate, so benchmark parameters cannot silently override orchestrator-owned paths or modes. Scope and eligibility are part of the prepared plan rather than inferred from a successful process exit.
 
 ```yaml
 schema_version: worldfoundry-reproduction-recipe-v1

@@ -55,6 +55,7 @@ Join the **WorldFoundry Community** on Slack, [Discord](https://discord.gg/ybUQM
 
 ## 📰 News
 
+- **[2026-09-10]** ❤️ The official WorldFoundry update is ready for release. Next week, we will roll out comprehensive updates to WorldFoundry and another project, along with the accompanying technical reports and entirely new open-source documentation. Thank you for your patience throughout this process. Stay tuned!
 - **[2026-07-12]** 🔥 **WorldFoundry reached 100+ stars on its very first day!** Thanks to the community for the incredible support and encouragement. More exciting updates are coming!
 - **[2026-07-11]** 🎉 **WorldFoundry is officially open-sourced.** We welcome ⭐ stars, bug reports, feature requests, and pull requests from the community!
 - **[Coming Soon]** Documentation improvements and additional benchmark integrations.

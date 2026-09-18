@@ -21,6 +21,8 @@ def get_vae_config(args=None):
         args.lightvae_pruning_rate = 0.75
     else:
         vae_path = os.path.join(args.ckpt_dir, "Wan2.2_VAE.pth")
+        # The full Wan checkpoint must not inherit the lightweight VAE's default.
+        args.lightvae_pruning_rate = 0.0
     return {
         "vae_path": vae_path,
         "vae_dtype": "bfloat16",

@@ -48,7 +48,6 @@ REQUIRED_RUNTIME_FILES = (
     "data/build_da3_video_index.py",
     "mosaic/main.py",
     "frustum/frustum_handler.py",
-    "LICENSE",
 )
 REQUIRED_DATA_FILES = tuple(
     matrix_game_35_infer_config_path(profile) for profile in ("common", "first_person", "third_person")

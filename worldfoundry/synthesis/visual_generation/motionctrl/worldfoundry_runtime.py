@@ -406,9 +406,10 @@ class MotionCtrlRuntime:
             target: The output file path for the MP4 video.
             fps: The frames per second for the output video.
         """
-        import imageio.v2 as imageio
         import torch
         import torchvision
+
+        from worldfoundry.core.io import write_video
 
         raw = samples.detach().cpu().float()
 
@@ -442,8 +443,7 @@ class MotionCtrlRuntime:
         # Scale pixel values from [-1, 1] to [0, 255] and convert to uint8.
         grid = ((grid + 1.0) / 2.0 * 255).to(torch.uint8).permute(0, 2, 3, 1)  # [t, h, w, c] for imageio.
 
-        # Save the video using imageio.
-        imageio.mimsave(str(target), [frame.numpy() for frame in grid], fps=fps, quality=8, macro_block_size=1)
+        write_video(grid.numpy(), target, fps=fps, quality=8)
 
     def predict(
         self,

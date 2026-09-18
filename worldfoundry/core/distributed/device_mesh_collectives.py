@@ -9,13 +9,15 @@ collective. Used with FSDP2 meshes; plain TP/CP groups stay on
 from __future__ import annotations
 
 import itertools
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import torch
 import torch.distributed as dist
-from torch.distributed.device_mesh import DeviceMesh
 
 from worldfoundry.core.distributed.tensor_collectives import all_to_all_concat
+
+if TYPE_CHECKING:
+    from torch.distributed.device_mesh import DeviceMesh
 
 try:
     from torch.distributed.tensor import Replicate, distribute_tensor

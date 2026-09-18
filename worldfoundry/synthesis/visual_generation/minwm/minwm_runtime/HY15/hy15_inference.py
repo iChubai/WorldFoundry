@@ -43,8 +43,8 @@ from worldfoundry.core.camera_trajectory import (
     camera_trajectory_action_labels,
     camera_trajectory_tensors,
 )
-from worldfoundry.synthesis.visual_generation.hunyuan_world.hunyuan_worldplay.schedulers.scheduling_flow_match_discrete import (
-    FlowMatchDiscreteScheduler,
+from worldfoundry.base_models.diffusion_model.schedulers.hunyuan_compat import (
+    HunyuanVideoFlowMatchDiscreteScheduler as FlowMatchDiscreteScheduler,
 )
 
 

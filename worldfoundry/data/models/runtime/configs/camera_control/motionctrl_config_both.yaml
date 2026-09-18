@@ -89,5 +89,7 @@ model:
     cond_stage_config:
       target: worldfoundry.base_models.diffusion_model.models.encoders.lvdm.condition2.FrozenOpenCLIPEmbedder
       params:
+        # The complete MotionCtrl checkpoint supplies the text encoder weights.
+        version: null
         freeze: true
         layer: penultimate

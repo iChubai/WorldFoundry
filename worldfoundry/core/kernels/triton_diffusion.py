@@ -81,6 +81,9 @@ def _packed_silu_mul_kernel(
 def _broadcast_row_offset(row, d0, d1, d2, d3, s0, s1, s2, s3):
     """Decode a flattened row index into a 4-D leading-axis pointer offset."""
 
+    # Per-token modulation can span more than 2**31 elements (e.g. LingBot
+    # at 720p). Widen before stride multiplication, not after it overflows.
+    row = row.to(tl.int64)
     i3 = row % d3
     row = row // d3
     i2 = row % d2

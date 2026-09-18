@@ -33,7 +33,10 @@ def _normalize_checkpoint_state(checkpoint: Any) -> Any:
 
 def load_model_checkpoint(model: Any, ckpt: str | Path, adapter_ckpt: str | Path | None = None) -> Any:
     checkpoint = _normalize_checkpoint_state(load_torch_state_dict(ckpt, map_location="cpu"))
-    model.load_state_dict(checkpoint, strict=False)
+    incompatible = model.load_state_dict(checkpoint, strict=False)
+    missing_text = [name for name in incompatible.missing_keys if name.startswith("cond_stage_model.")]
+    if missing_text:
+        raise RuntimeError(f"MotionCtrl checkpoint is missing text encoder weights: {missing_text}")
     if adapter_ckpt is not None:
         adapter_state = _normalize_checkpoint_state(load_torch_state_dict(adapter_ckpt, map_location="cpu"))
         model.adapter.load_state_dict(adapter_state, strict=True)

@@ -942,9 +942,18 @@ class Decoder3d_38(nn.Module):
 
 
 def count_conv3d(model):
+    # Shared encoder/decoder blocks own different CausalConv3d classes.
+    # Count all three implementations so their temporal caches have enough slots.
+    from worldfoundry.base_models.diffusion_model.models.autoencoders.wan.reference_21 import (
+        CausalConv3d as ReferenceCausalConv3d,
+    )
+    from worldfoundry.base_models.diffusion_model.models.autoencoders.wan.variants.action_21 import (
+        CausalConv3d as ActionCausalConv3d,
+    )
+
     count = 0
     for m in model.modules():
-        if isinstance(m, CausalConv3d):
+        if isinstance(m, (CausalConv3d, ReferenceCausalConv3d, ActionCausalConv3d)):
             count += 1
     return count
 

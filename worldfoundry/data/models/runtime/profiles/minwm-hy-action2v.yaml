@@ -34,10 +34,10 @@ artifact_filename: minwm-hy-action2v.mp4
 execution:
   environment: _unified
   backend_stage: independent_in_tree_runtime
-  runtime_status: checkpoint_assets_pending
-  integration_status: integrated_checkpoint_assets_pending
+  runtime_status: blocked_missing_runtime_modules
+  integration_status: blocked
   pipeline_binding: minwm-hy-action2v
-integration: {status: integrated_checkpoint_assets_pending}
+integration: {status: blocked}
 notes:
-- Uses the dedicated HY15 Action2V entrypoint and native motion tokens.
+- The HY15 entrypoint imports hunyuan_worldplay runtime modules omitted from the public release (infer_state, action transformers and runtime); checkpoints alone do not make this route runnable.
 - Only the HY15/Action2V/dmd subset of the 384.97 GB upstream minWM repository is required.

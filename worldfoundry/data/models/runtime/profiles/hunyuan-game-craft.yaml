@@ -29,10 +29,10 @@ artifact_filename: hunyuan-game-craft.mp4
 execution:
   environment: hunyuan-game-craft
   backend_stage: official_in_tree_runtime
-  runtime_status: official_torchrun_contract
-  integration_status: integrated
+  runtime_status: blocked_missing_runtime_modules
+  integration_status: blocked
   pipeline_binding: hunyuan-game-craft
-integration: {status: integrated}
+integration: {status: blocked}
 notes:
-- The infer-only Hunyuan GameCraft runtime is retained in tree and rejects external source roots.
+- The public release omits the hunyuan_game_craft runtime package (including config.py and runtime.py); the registered pipeline cannot load, even with local checkpoints.
 - Its Python 3.10 / torch 2.5.1 stack remains isolated in the documented HYGameCraft environment.

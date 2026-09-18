@@ -1,0 +1,31 @@
+---
+title: "VideoCrafter1 I2V"
+description: "VideoCrafter1 I2V is the image-to-video member of Tencent AI Lab's VideoCrafter1 release: it animates a still image while preserving its content, style, and structure. The in-tree infer-only runtime wraps the official path with local check…"
+pageSource: generated
+---
+
+**发表机构:** 腾讯 AI Lab · 企业
+image → video
+
+VideoCrafter1 I2V 是腾讯 AI Lab VideoCrafter1 发布中的图生视频成员：在保持内容、风格与结构的前提下让静态图动起来。树内仅推理运行时封装官方路径，提供本地 checkpoint、fps、帧数与 seed 控制。
+
+<figure className="wf-recipe-media">
+  <Video src="/demos/studio/videocrafter1-i2v.mp4" autoPlay loop muted playsInline />
+  <figcaption>图生视频</figcaption>
+</figure>
+
+<ModelCommandBuilder modelId="videocrafter1-i2v" locale="zh" />
+
+## 架构
+
+以输入图像嵌入为条件的 U-Net 潜空间视频扩散模型（见上游发布）。checkpoint 溯源记录在系列级 videocrafter 条目上；训练与下载脚本有意未打包。
+
+## 使用要点
+
+Runner parity 为 pending。预期是 2023 年代的质量：短片、运动幅度有限。若要更高保真的图像动画，请用 DynamiCrafter 或 DiT 系图生视频条目。
+
+## 评测 Benchmark
+
+- [EvalCrafter](/zh/docs/evaluation/benchmark-hub/evalcrafter) — VideoCrafter 项目的配套评测。
+
+<ModelRelatedRecipes modelId="videocrafter1-i2v" locale="zh" />

@@ -1,0 +1,27 @@
+---
+title: "WoW"
+description: "WoW is X-Humanoid's embodied world model family for action-conditioned image-to-video: four checkpoint lines are recorded (Wan 1.3B-2M under MIT, Wan 14B-600k demo default, Wan 14B-2M official recommended, and a DiT 2B development line). W…"
+pageSource: generated
+---
+
+**Publisher:** X-Humanoid (Beijing Humanoid Robot Innovation Center) · Company
+image → video
+
+WoW is X-Humanoid's embodied world model family for action-conditioned image-to-video: four checkpoint lines are recorded (Wan 1.3B-2M under MIT, Wan 14B-600k demo default, Wan 14B-2M official recommended, and a DiT 2B development line). WorldFoundry routes the Wan variants through the canonical Wan loader with shared conditioner, VAE, and scheduler; the released 1.3B transformer graph matches the native model exactly for all 825 tensors.
+
+<ModelCommandBuilder modelId="wow" locale="en" />
+
+## Architecture
+
+The Wan line uses VAE-only first-frame conditioning on Wan diffusion backbones. The DiT 2B line is a transformer override on the canonical Cosmos Predict2 recipe, selected via runtime_backend=dit2b — no private Cosmos runtime remains. Demo defaults are recorded: Wan uses steps=50, seed=42, tiled, 41 frames at 15 fps; DiT 2B uses 720p, 16 fps, guidance=7.
+
+## Usage notes
+
+Start with the structurally validated Wan 1.3B-2M (MIT) checkpoint; the official recommendation is Wan 14B-2M. Note the pinned DiT 2B Hub snapshot does not expose wow_dit_2b.pt, so that line's local graph validation is pending.
+
+## Evaluation benchmarks
+
+- [EWMBench](/docs/evaluation/benchmark-hub/ewmbench) — Embodied action-conditioned world-model quality.
+- [WorldArena](/docs/evaluation/benchmark-hub/worldarena) — Listed among WorldArena open-source world models.
+
+<ModelRelatedRecipes modelId="wow" locale="en" />

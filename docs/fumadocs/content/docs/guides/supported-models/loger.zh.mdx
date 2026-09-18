@@ -1,0 +1,22 @@
+---
+title: "LoGeR"
+description: "LoGeR reconstructs 3D scenes with camera trajectories and point clouds from input views, and is one of the verified 3D routes in this catalog: checkpoint-backed Studio inference produced finite poses, depth, and a 601,570-vertex point clou…"
+pageSource: generated
+---
+
+**发表机构:** 开源研究发布（仓库未记录正式机构） · 研究机构
+point cloud
+
+LoGeR 从输入视图重建 3D 场景、相机轨迹与点云，是本 catalog 中已验证的 3D 路径之一： checkpoint 加载的 Studio 推理产出有限位姿、深度与 601,570 顶点的点云，证据记录在 inference_evidence.yaml。
+
+<ModelCommandBuilder modelId="loger" locale="zh" />
+
+## 架构
+
+catalog 记录其为「重建+轨迹」模型，导出二进制 PLY 产物；发表机构与架构内部细节仓库未记录（上游：Junyi42/LoGeR，apache-2.0）。
+
+## 使用要点
+
+已在共享 worldfoundry-unified-cu128 环境中端到端验证——点云导航管线的可靠选择。
+
+<ModelRelatedRecipes modelId="loger" locale="zh" />

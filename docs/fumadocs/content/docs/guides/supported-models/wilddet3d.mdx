@@ -1,0 +1,21 @@
+---
+title: "WildDet3D"
+description: "WildDet3D from the Allen Institute for AI tackles 3D detection in the wild: recovering 3D object boxes from unconstrained real-world imagery as a world-understanding capability. Both the official GitHub repository and the allenai/WildDet3D…"
+pageSource: generated
+---
+
+**Publisher:** Allen Institute for AI (AI2) · Research lab
+
+WildDet3D from the Allen Institute for AI tackles 3D detection in the wild: recovering 3D object boxes from unconstrained real-world imagery as a world-understanding capability. Both the official GitHub repository and the allenai/WildDet3D Hugging Face model are confirmed; WorldFoundry registers the official inference route in-tree with detector assets runtime-gated.
+
+<ModelCommandBuilder modelId="wilddet3d" locale="en" />
+
+## Architecture
+
+This is a perception entry rather than a generator: outputs are 3D detection artifacts (generated_3d_asset) instead of video. Architecture internals beyond the official repository pointer (pinned head 1b8aa52b) are not recorded in this repository.
+
+## Usage notes
+
+Config resolution and pipeline import are expected to pass; real generation emits a runtime plan until required checkpoints/assets are staged. Missing assets are reported by the plan and are not treated as catalog blockers. Note the SAM-derived license recorded upstream (other:sam-license).
+
+<ModelRelatedRecipes modelId="wilddet3d" locale="en" />

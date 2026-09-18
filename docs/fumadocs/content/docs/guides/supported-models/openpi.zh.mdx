@@ -1,0 +1,34 @@
+---
+title: "OpenPI"
+description: "OpenPI is Physical Intelligence's official open-source release of the pi-series robot policies (Apache-2.0). WorldFoundry flattens the inference runtime in-tree and validates it end to end: py_compile, import/from_pretrained, plan-only pre…"
+pageSource: generated
+---
+
+**发表机构:** Physical Intelligence（PI） · 企业
+
+OpenPI 是 Physical Intelligence 官方开源的 pi 系列机器人策略（Apache-2.0）。 WorldFoundry 将推理运行时扁平化内置树内并端到端验证：py_compile、导入/from_pretrained、仅计划 predict 与 checkpoint 驱动的 pi05_libero 策略推理全部通过，输出配置的动作 schema。
+
+<ModelCommandBuilder modelId="openpi" locale="zh" />
+
+## 架构
+
+该运行时是 pi0 / pi0-FAST / pi0.5 家族的共享基础设施：基于 PaliGemma 的 VLA 骨干，配 flow-matching 或 FAST token 动作解码。本地 pi05_libero 路由使用后端 worldfoundry.openpi.in_tree_runtime.create_trained_policy_infer。
+
+## 使用要点
+
+checkpoint 来自 GCS（gs://openpi-assets）而非 Hugging Face——请用 gsutil 或 gcloud 就位。具体模型世代请使用专门的 pi0、pi0-fast 与 pi05 catalog 条目。
+
+## 变体与 Pipeline Binding
+
+| Variant | 任务 | Runtime profile | Pipeline Binding | 状态 |
+| --- | --- | --- | --- | --- |
+| `pi0-base` | vla.policy_rollout | `openpi` | `openpi` | integrated |
+| `pi05-libero` | vla.policy_rollout | `openpi` | `openpi` | integrated |
+| `pi0-fast-base` | vla.policy_rollout | `openpi` | `openpi` | integrated |
+| `pi0-fast-droid` | vla.policy_rollout | `openpi` | `openpi` | integrated |
+
+## 评测 Benchmark
+
+- [LIBERO](/zh/docs/evaluation/benchmark-hub/libero) — checkpoint 驱动的 pi05_libero 推理已验证。
+
+<ModelRelatedRecipes modelId="openpi" locale="zh" />

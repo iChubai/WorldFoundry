@@ -1,0 +1,38 @@
+---
+title: "Wan2.2"
+description: "Wan2.2 is the next Wan generation, tracked separately from Wan2.1 because upstream versions code and checkpoints separately. The recorded runnable surface is the TI2V 5B variant — a compact text+image-to-video model. WorldFoundry wraps the…"
+pageSource: generated
+---
+
+**Publisher:** Alibaba (Tongyi Lab) · Company
+text · image → video
+
+Wan2.2 is the next Wan generation, tracked separately from Wan2.1 because upstream versions code and checkpoints separately. The recorded runnable surface is the TI2V 5B variant — a compact text+image-to-video model. WorldFoundry wraps the in-tree Wan2.2 TI2V runtime.
+
+<ModelCommandBuilder modelId="wan2.2" locale="en" />
+
+## Architecture
+
+Upstream Wan2.2 introduces MoE denoising in its larger variants and a high-compression VAE in the TI2V 5B; this catalog's recorded route is the 5B dense TI2V model. Contract: prompt/image/video/ actions in, generated_video out.
+
+## Usage notes
+
+The default TI2V 5B route is verified for 121 frames at 1280x704, 24 FPS, and 50 steps. Stage the official checkpoint locally before running it; the A14B variants require their own checkpoints and validation.
+
+## Hardware guidance
+
+- **Minimum VRAM:** 80 GB
+
+## Variants & pipeline bindings
+
+| Variant | Task | Runtime profile | Pipeline binding | Status |
+| --- | --- | --- | --- | --- |
+| `wan2.2-t2v-a14b` | text-to-video | `wan2.2-t2v-a14b` | `wan2.2-t2v-a14b` | integrated |
+| `wan2.2-i2v-a14b` | image-to-video | `wan2.2-i2v-a14b` | `wan2.2-i2v-a14b` | integrated |
+| `wan2.2-ti2v-5b` | text-image-to-video | `wan2.2-ti2v-5b-1280x704-121f` | `wan2.2-ti2v-5b` | integrated |
+
+## Evaluation benchmarks
+
+- [VBench](/docs/evaluation/benchmark-hub/vbench) — Standard quality suite.
+
+<ModelRelatedRecipes modelId="wan2.2" locale="en" />

@@ -1,0 +1,26 @@
+---
+title: "FastWAM"
+description: "FastWAM is a GPU-validated world-action model built on the Wan video stack: a mixture-of-transformers (MoT) action-inference graph rides on Wan2.1-T2V-1.3B components. Both official LIBERO and RoboTwin checkpoint variants passed real A100…"
+pageSource: generated
+---
+
+**Publisher:** Open-source research release (institution not recorded) · Research lab
+
+FastWAM is a GPU-validated world-action model built on the Wan video stack: a mixture-of-transformers (MoT) action-inference graph rides on Wan2.1-T2V-1.3B components. Both official LIBERO and RoboTwin checkpoint variants passed real A100 workspace inference with finite 32-step action chunks using their official camera/state contracts — the catalog status is all_released_checkpoints_gpu_validated (MIT license).
+
+<ModelCommandBuilder modelId="fastwam" locale="en" />
+
+## Architecture
+
+The released MoT action-inference graph, Wan VAE, UMT5 encoder, scheduler, preprocessing, and normalization all live in-tree. Runtime execution never imports an adjacent FastWAM source checkout and never enables remote checkpoint code.
+
+## Usage notes
+
+Both LIBERO and RoboTwin variants are declared in the runtime data configuration — pick per benchmark. Stage yuanty/fastwam plus the Wan-series converted safetensors and Wan2.1-T2V-1.3B base locally.
+
+## Evaluation benchmarks
+
+- [LIBERO](/docs/evaluation/benchmark-hub/libero) — GPU-validated LIBERO checkpoint variant.
+- [RoboTwin 2.0](/docs/evaluation/benchmark-hub/robotwin) — GPU-validated RoboTwin checkpoint variant.
+
+<ModelRelatedRecipes modelId="fastwam" locale="en" />

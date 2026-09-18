@@ -1,0 +1,25 @@
+---
+title: "A1"
+description: "A1 (AffordVLA) is an affordance-guided vision-language-action policy: it grounds manipulation in visual affordances before predicting robot actions. WorldFoundry runs AffordVLA fully in-tree — Molmo and CLIP ViT encoders, L1/DiT/flow actio…"
+pageSource: generated
+---
+
+**Publisher:** Open-source research release (institution not recorded) · Research lab
+
+A1 (AffordVLA) is an affordance-guided vision-language-action policy: it grounds manipulation in visual affordances before predicting robot actions. WorldFoundry runs AffordVLA fully in-tree — Molmo and CLIP ViT encoders, L1/DiT/flow action heads, and preprocessing — with two confirmed checkpoints: spatialtemporal-ai/a1-libero for tasks and a1-pretrain as the pretrained policy.
+
+<ModelCommandBuilder modelId="a1" locale="en" />
+
+## Architecture
+
+The stack couples Molmo (VLM) and CLIP ViT visual encoding with selectable action heads (L1 regression, DiT, or flow). The runtime derives action dimensions from checkpoint tensors and validates every action-token boundary, so mismatched checkpoints fail fast.
+
+## Usage notes
+
+Stage tokenizer and checkpoint assets locally before running. Assets are local-only and checkpoint-provided Python is never executed; runtime loading uses strict key matching.
+
+## Evaluation benchmarks
+
+- [LIBERO](/docs/evaluation/benchmark-hub/libero) — The a1-libero checkpoint targets LIBERO manipulation tasks.
+
+<ModelRelatedRecipes modelId="a1" locale="en" />

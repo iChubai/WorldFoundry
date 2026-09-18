@@ -1,0 +1,26 @@
+---
+title: "DreamX-World 5B"
+description: "DreamX-World 5B AR is the causal autoregressive profile of Amap's DreamX-World: a resident runtime with latent, attention, cross-attention, and VAE caches that rolls world video forward block by block under action control. A 2026-07-28 sin…"
+pageSource: generated
+---
+
+**Publisher:** Alibaba (Amap, AMAP-ML) · Company
+
+DreamX-World 5B AR is the causal autoregressive profile of Amap's DreamX-World: a resident runtime with latent, attention, cross-attention, and VAE caches that rolls world video forward block by block under action control. A 2026-07-28 single-A100 run generated a finite, decodable native nine-frame 1280x704 block from the official example image.
+
+<ModelCommandBuilder modelId="dreamx-world-5b" locale="en" />
+
+## Architecture
+
+Causal three-latent blocks use the released causal checkpoint with a distilled four-step AR-Forcing schedule and no RGB feedback: attention KV, cross-attention, latent, and causal VAE state stay resident across controls, and decoded RGB is output-only — never reused as conditioning.
+
+## Usage notes
+
+The Workspace default includes a staged fixture and non-empty prompt. The validated two-control rollout confirms the resident AR path — it is not a long-horizon quality-parity claim, so evaluate long rollouts yourself before relying on them.
+
+## Evaluation benchmarks
+
+- [WorldModelBench](/docs/evaluation/benchmark-hub/worldmodelbench) — General world-rollout quality.
+- [MemoBench](/docs/evaluation/benchmark-hub/memobench) — Long-horizon consistency of autoregressive rollouts.
+
+<ModelRelatedRecipes modelId="dreamx-world-5b" locale="en" />

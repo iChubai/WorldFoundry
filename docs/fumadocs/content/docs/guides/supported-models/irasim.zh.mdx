@@ -1,0 +1,26 @@
+---
+title: "IRASim"
+description: "IRASim (Interactive Real-Robot Action Simulator) generates realistic robot-arm videos from an initial frame plus an action trajectory — a learned simulator for robot data."
+pageSource: generated
+---
+
+**发表机构:** 字节跳动 · 企业
+video
+
+IRASim（交互式真实机器人动作模拟器）从初始帧加动作轨迹生成逼真的机械臂视频——机器人数据的学习型模拟器。本 catalog 中其模型、扩散与推理 pipeline 模块已内置树内；真实生成待手动就位官方 checkpoint 归档。
+
+<ModelCommandBuilder modelId="irasim" locale="zh" />
+
+## 架构
+
+按上游发布，DiT 视频扩散模型以逐帧动作 token 为条件，生成轨迹精确的机器人视频。打包在 synthesis/visual_generation/irasim/irasim_runtime 的运行时已裁剪训练数据加载器、评估脚本与交互 demo。
+
+## 使用要点
+
+发布的 checkpoint 归档不是当前下载器支持的 HF 模型仓库——期望得到真实视频前请手动提供 checkpoint 与任务 fixture。
+
+## 评测 Benchmark
+
+- [EWMBench](/zh/docs/evaluation/benchmark-hub/ewmbench) — 具身世界模型视频预测质量。
+
+<ModelRelatedRecipes modelId="irasim" locale="zh" />

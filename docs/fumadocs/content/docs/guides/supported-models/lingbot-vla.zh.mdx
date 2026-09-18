@@ -1,0 +1,33 @@
+---
+title: "LingBot-VLA"
+description: "LingBot-VLA is Robbyant's 4B vision-language-action policy line: a pretrained base plus RoboTwin post-trained and depth-enhanced RoboTwin variants, all Apache-2.0 with pinned revisions on Hugging Face and ModelScope. WorldFoundry integrate…"
+pageSource: generated
+---
+
+**发表机构:** 蚂蚁灵波科技（Robbyant，蚂蚁集团） · 企业
+
+LingBot-VLA 是蚂蚁灵波科技（Robbyant）的 4B 视觉-语言-动作策略线：预训练 base，加 RoboTwin 后训练与深度增强 RoboTwin 变体，全部 Apache-2.0，并在 Hugging Face 与 ModelScope 锁定 revision。WorldFoundry 将官方策略、特征变换、机器人映射与归一化资产直接内置树内，作为进程内运行时。
+
+<ModelCommandBuilder modelId="lingbot-vla" locale="zh" />
+
+## 架构
+
+4B 策略骨干，配特征变换与按机器人映射；运行时使用共享的 WorldFoundry 核心设备选择、编译调度、Hugging Face 快照协调与流式 safetensors 加载。更多内部细节仓库未记录。
+
+## 使用要点
+
+模拟器基准用 RoboTwin 后训练版（depth 变体增加深度输入），微调用 base。更新的 6B 世代请见 lingbot-vla-v2。
+
+## 变体与 Pipeline Binding
+
+| Variant | 任务 | Runtime profile | Pipeline Binding | 状态 |
+| --- | --- | --- | --- | --- |
+| `lingbot-vla-4b` | vla.pretraining | `lingbot-vla` | `lingbot-vla` | integrated |
+| `lingbot-vla-4b-posttrain-robotwin` | vla.policy_rollout | `lingbot-vla` | `lingbot-vla` | integrated |
+| `lingbot-vla-4b-depth-posttrain-robotwin` | vla.policy_rollout | `lingbot-vla` | `lingbot-vla` | integrated |
+
+## 评测 Benchmark
+
+- [RoboTwin 2.0](/zh/docs/evaluation/benchmark-hub/robotwin) — 有专门的 RoboTwin 后训练 checkpoint。
+
+<ModelRelatedRecipes modelId="lingbot-vla" locale="zh" />

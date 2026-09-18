@@ -1,0 +1,26 @@
+---
+title: "LTX-2.5 Distilled"
+description: "LTX-2.5 is a 22B joint audio-video model. This inference-only integration exposes the official fast two-stage DistilledPipeline for text-to-video and image-to-video, including synchronized audio generation."
+pageSource: generated
+---
+
+**发表机构:** Lightricks · 企业
+text · image → video
+
+LTX-2.5 是一个 22B 联合音视频模型。本次仅推理集成开放官方快速两阶段 DistilledPipeline，支持文生视频、图生视频与同步音频生成。
+
+<ModelCommandBuilder modelId="ltx-2.5" locale="zh" />
+
+## 架构
+
+官方蒸馏路径使用内嵌投影的 Gemma 4 12B 文本编码器，在半分辨率下联合去噪视频和音频，经 LTX-2.5 潜空间上采样后进行短程第二阶段细化，最后由独立音频与视频 VAE 解码。WorldFoundry 直接调用该官方源码，不复用不兼容的 LTX-2.3 单体权重加载器。
+
+## 使用要点
+
+请先接受 Hugging Face 模型条款，按仓库目录结构下载五个必需拆分组件，检出记录的源码 revision，并在独立环境中安装 ltx-core 与 ltx-pipelines 依赖；执行时显式传入 execute=True。可选 duration head 可启用基于提示词的自动时长预测。
+
+## 评测 Benchmark
+
+- [VBench](/zh/docs/evaluation/benchmark-hub/vbench) — 基础文生/图生视频质量与运动评测。
+
+<ModelRelatedRecipes modelId="ltx-2.5" locale="zh" />

@@ -1,0 +1,32 @@
+---
+title: "Solaris"
+description: "Solaris is a multi-agent interactive video world model from NYU's VisionX group (paper arXiv 2602.22208): multiple agents act inside one generated world."
+pageSource: generated
+---
+
+**Publisher:** New York University (VisionX) · University
+video
+[Solaris: Building a Multiplayer Video World Model in Minecraft](https://arxiv.org/abs/2602.22208) (2026)
+
+Solaris is a multi-agent interactive video world model from NYU's VisionX group (paper arXiv 2602.22208): multiple agents act inside one generated world. In this catalog the runner is verified — the inference-only runtime is vendored in-tree and consumes the official Orbax checkpoint (nyu-visionx/solaris) and eval datasets from Hugging Face or a local mirror.
+
+<figure className="wf-recipe-media is-diagram">
+  <img src="/models/solaris/paper.png" alt="Solaris: Building a Multiplayer Video World Model in Minecraft" />
+  <figcaption>Solaris: Building a Multiplayer Video World Model in Minecraft</figcaption>
+</figure>
+
+<ModelCommandBuilder modelId="solaris" locale="en" />
+
+## Architecture
+
+The runtime is JAX/Orbax-based per the recorded checkpoint format; internals beyond the recorded tasks are not stored here. The upstream license is flagged for manual review.
+
+## Usage notes
+
+Inference launches one sample per visible GPU — eval_num_samples must be a multiple of the visible GPU count. Official weights and eval datasets resolve from HF or a same-layout local mirror.
+
+## Evaluation benchmarks
+
+- [WorldModelBench](/docs/evaluation/benchmark-hub/worldmodelbench) — Multi-agent world-rollout quality.
+
+<ModelRelatedRecipes modelId="solaris" locale="en" />

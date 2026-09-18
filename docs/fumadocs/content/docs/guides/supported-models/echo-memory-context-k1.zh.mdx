@@ -1,0 +1,32 @@
+---
+title: "Echo-Memory"
+description: "Echo-Memory Context K=1 is one identity in JD's Echo-Memory family — a controlled study of how memory mechanisms affect interactive, action-conditioned world models. This identity is permanently bound to the context_k1/epoch-0.safetensors…"
+pageSource: generated
+---
+
+**发表机构:** 京东（Joy Future Academy） · 企业
+image → video
+[Echo-Memory: A Controlled Study of Memory in Action World Models](https://arxiv.org/abs/2606.09803) (2026)
+
+Echo-Memory Context K=1（单帧上下文）是京东 Echo-Memory 家族中的一个身份——该家族对「记忆机制如何影响交互式动作条件世界模型」做受控研究。此身份永久绑定 paper_primary 发布层级的 context_k1/epoch-0.safetensors checkpoint：它是最小上下文基线——每个新 chunk 仅以 K=1 帧上下文为条件。在本 catalog 中，它是唯一由官方 Hugging Face main 分支提供 checkpoint 的 Echo-Memory 身份；原生结构化加载覆盖已发布的 1185 张量 DiT，NativeDiffusionPipeline 切换后的全新两 chunk CUDA 产物验证仍为 pending。
+
+<figure className="wf-recipe-media is-diagram">
+  <img src="/models/echo-memory-context-k1/paper.png" alt="Echo-Memory: A Controlled Study of Memory in Action World Models" />
+  <figcaption>Echo-Memory: A Controlled Study of Memory in Action World Models</figcaption>
+</figure>
+
+<ModelCommandBuilder modelId="echo-memory-context-k1" locale="zh" />
+
+## 架构
+
+按 Echo-Memory 发布（arXiv 2606.09803），所有 variant 都是基于 Wan2.1-T2V-1.3B 的交互式世界模型，差异只在记忆机制。在 WorldFoundry 中，每个 variant 是绑定单一 checkpoint 的独立模型身份：配方由 NativeDiffusionPipeline 从共享 Wan 组件加框架自有的 frozen-context 策略组装——不使用外部后端。采样器采用「目标噪声+干净上下文后缀」、仅目标 CFG、每个求解步后重锁上下文、仅解码目标帧。
+
+## 使用要点
+
+checkpoint 从 Echo-Team/Echo-Memory（cc-by-4.0）下载，基座为 Wan2.1-T2V-1.3B（apache-2.0）。2026-07-20 的 A100 产物早于 NativeDiffusionPipeline 切换，仅作为历史证据保留——全新 CUDA 产物验证应视为 pending。运行时用户不选择记忆方法——每种方法都是独立的 catalog 身份。
+
+## 评测 Benchmark
+
+- [MemoBench](/zh/docs/evaluation/benchmark-hub/memobench) — 专为评估交互式世界模型的长时程记忆而设。
+
+<ModelRelatedRecipes modelId="echo-memory-context-k1" locale="zh" />

@@ -1,0 +1,34 @@
+---
+title: "Spatial-Forcing"
+description: "Spatial-Forcing aligns VLA internal representations with 3D geometry (via VGGT-style supervision) to boost manipulation precision on OpenVLA backbones. All four released OpenVLA-LIBERO checkpoints (spatial, object, goal, long; Apache-2.0)…"
+pageSource: generated
+---
+
+**发表机构:** 开源研究发布（仓库未记录正式机构） · 研究机构
+
+Spatial-Forcing 将 VLA 内部表征与 3D 几何对齐（借助 VGGT 式监督），提升 OpenVLA 骨干的操作精度。四个已发布 OpenVLA-LIBERO checkpoint（spatial、object、goal、long；Apache-2.0）全部通过严格恢复与真实 A100 推理，输出有限 8x7 动作——catalog 状态为 all_released_checkpoints_gpu_validated。
+
+<ModelCommandBuilder modelId="spatial-forcing" locale="zh" />
+
+## 架构
+
+训练期施加空间对齐的 OpenVLA 7B 微调 checkpoint；推理时按标准 OpenVLA 式策略运行。推理专用运行时禁用 checkpoint 携带的远程代码；VGGT、对齐投影器与 LoRA 适配器副本被排除。
+
+## 使用要点
+
+从官方 collection 中按需选择 LIBERO 子集 checkpoint（spatial/object/goal/long）；仅接受本地就位的快照。
+
+## 变体与 Pipeline Binding
+
+| Variant | 任务 | Runtime profile | Pipeline Binding | 状态 |
+| --- | --- | --- | --- | --- |
+| `spatial-forcing-libero-spatial` | vla.policy_rollout | `spatial-forcing` | `spatial-forcing` | all released checkpoints gpu validated |
+| `spatial-forcing-libero-object` | vla.policy_rollout | `spatial-forcing` | `spatial-forcing` | all released checkpoints gpu validated |
+| `spatial-forcing-libero-goal` | vla.policy_rollout | `spatial-forcing` | `spatial-forcing` | all released checkpoints gpu validated |
+| `spatial-forcing-libero-10` | vla.policy_rollout | `spatial-forcing` | `spatial-forcing` | all released checkpoints gpu validated |
+
+## 评测 Benchmark
+
+- [LIBERO](/zh/docs/evaluation/benchmark-hub/libero) — 四个 LIBERO checkpoint 全部通过 GPU 验证。
+
+<ModelRelatedRecipes modelId="spatial-forcing" locale="zh" />

@@ -1,0 +1,28 @@
+---
+title: "MolmoBot"
+description: "MolmoBot is AI2's robot policy family around the Molmo VLM, with Apache-2.0 checkpoints for Franka DROID, image-conditioned DROID, RBY1 multitask, and a Pi0-based DROID variant. WorldFoundry records the OLMo/MolmoBot-Pi0 action inference c…"
+pageSource: generated
+---
+
+**发表机构:** 艾伦人工智能研究所（AI2） · 研究机构
+
+MolmoBot 是 AI2 围绕 Molmo VLM 的机器人策略家族，Apache-2.0 checkpoint 覆盖 Franka DROID、图像条件 DROID、RBY1 多任务与基于 Pi0 的 DROID 变体。WorldFoundry 记录 OLMo/MolmoBot-Pi0 动作推理契约，并调用扁平化树内推理封装。
+
+<ModelCommandBuilder modelId="molmobot" locale="zh" />
+
+## 架构
+
+仓库记录两个推理契约：基于 OLMo 的 MolmoBot 路径与 MolmoBot-Pi0 路径。解析器、运行时导入与 compileall 检查无需外部 checkout 即通过；更多内部细节仓库未记录。
+
+## 使用要点
+
+在声称 demo parity 前仍需 checkpoint 驱动的动作块验证。Franka 用 MolmoBot-DROID，RBY1 人形平台用 RBY1Multitask。
+
+## 变体与 Pipeline Binding
+
+| Variant | 任务 | Runtime profile | Pipeline Binding | 状态 |
+| --- | --- | --- | --- | --- |
+| `molmobot-droid` | vla.policy_rollout | `molmobot` | `molmobot` | in tree import verification in progress |
+| `molmobot-pi0-droid` | vla.policy_rollout | `molmobot` | `molmobot` | in tree import verification in progress |
+
+<ModelRelatedRecipes modelId="molmobot" locale="zh" />

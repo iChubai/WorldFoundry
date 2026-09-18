@@ -1,0 +1,27 @@
+---
+title: "JoyAI-Echo 1.5 / Echo-LongVideo"
+description: "JoyAI-Echo 1.5 is an inference-only long-form audio-video generator. Its R2V request can combine a prompt, an optional first frame, and as many as seven ordered image/audio memory slots so identity, voice, and story context persist across…"
+pageSource: generated
+---
+
+**发表机构:** 京东（JoyAI / Echo 团队） · 企业
+image → video
+
+JoyAI-Echo 1.5 是仅推理的长时程音视频生成模型。R2V 请求可组合提示词、可选首帧与最多七个有序图像/音频记忆槽，使角色身份、声音与故事上下文在可独立编辑的镜头间延续。
+
+<ModelCommandBuilder modelId="joyai-echo-longvideo" locale="zh" />
+
+## 架构
+
+该版本基于 LTX-2.3，加入少步 DMD 生成与成对跨模态记忆库。WorldFoundry 将官方 Python 3.11、PyTorch 2.8、CUDA 12.8 运行环境保持外置，并通过已发布 CLI 契约调用。
+
+## 使用要点
+
+请检出记录的 JoyAI-Echo revision，准备专用环境，并传入 source_root、本地 Echo checkpoint 与受限访问的 Gemma checkpoint。生成必须显式设置 execute=True。FP4 还需 NVIDIA ModelOpt，生产级语音记忆提取需完成上游 MSST 设置。
+
+## 评测 Benchmark
+
+- [ChronoMagic-Bench](/zh/docs/evaluation/benchmark-hub/chronomagic-bench) — 评测生成镜头间的长时程时间连续性。
+- [VBench](/zh/docs/evaluation/benchmark-hub/vbench) — 基础视频质量与运动评测。
+
+<ModelRelatedRecipes modelId="joyai-echo-longvideo" locale="zh" />

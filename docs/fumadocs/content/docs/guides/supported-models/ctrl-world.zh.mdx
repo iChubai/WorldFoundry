@@ -1,0 +1,25 @@
+---
+title: "Ctrl-World"
+description: "Ctrl-World is a controllable generative world model for robot manipulation: conditioned on robot actions, it predicts future observation video so policies can be evaluated or improved inside the model."
+pageSource: generated
+---
+
+**发表机构:** 清华大学 / 斯坦福大学 · 高校
+
+Ctrl-World 是面向机器人操作的可控生成式世界模型：以机器人动作为条件预测未来观测视频，使策略可以在模型内被评估或改进。本 catalog 中其官方（WorldArena 收录的）源码已内置树内；执行待 Ctrl-World、Stable Video Diffusion 与 CLIP checkpoint 及任务资产就位。
+
+<ModelCommandBuilder modelId="ctrl-world" locale="zh" />
+
+## 架构
+
+记录的 checkpoint 揭示其设计：Stable Video Diffusion 图生视频基座（stabilityai/stable-video-diffusion-img2vid）、CLIP 条件（openai/clip-vit-base-patch32），加上 Ctrl-World 自有的动作条件权重（yjguo/Ctrl-World）。除此之外的内部细节仓库未记录。
+
+## 使用要点
+
+pipeline 解析内置的滚动生成入口，在 checkpoint 与任务资产就位前返回 blocked 运行时诊断。提交任务前请就位全部三套记录的 checkpoint。
+
+## 评测 Benchmark
+
+- [WorldArena](/zh/docs/evaluation/benchmark-hub/worldarena) — 该条目已收录于 WorldArena 的机器人世界模型评测。
+
+<ModelRelatedRecipes modelId="ctrl-world" locale="zh" />

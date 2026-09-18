@@ -1,0 +1,32 @@
+---
+title: "LongVie 2"
+description: "LongVie 2 is the second-generation controllable long-video framework from the Vchitect team, and the verified member of the pair in this catalog: Studio's default four-GPU torchrun USP route completed a checkpoint-backed run on 2026-07-28,…"
+pageSource: generated
+---
+
+**Publisher:** Shanghai AI Laboratory (Vchitect) · Research lab
+image → video · depth
+
+LongVie 2 is the second-generation controllable long-video framework from the Vchitect team, and the verified member of the pair in this catalog: Studio's default four-GPU torchrun USP route completed a checkpoint-backed run on 2026-07-28, decoding all 81 frames at 640x352. It generates queued 81-frame control-video segments where each continuation reuses the prior final frame, an eight-frame history, and the noise state.
+
+<figure className="wf-recipe-media">
+  <Video src="/demos/studio/longvie-2-control-video.mp4" autoPlay loop muted playsInline />
+  <figcaption>Queued long-video segments</figcaption>
+</figure>
+
+<ModelCommandBuilder modelId="longvie-2" locale="en" />
+
+## Architecture
+
+Built over canonical Wan roles (base: Wan2.1-I2V-14B-480P) plus LongVie-specific weights: the adapter loads both control.safetensors and dit.safetensors — the latter is the LongVie 2 DiT attention override that distinguishes it from LongVie-1. Official USP ring/ulysses distributed inference is supported when execute=True.
+
+## Usage notes
+
+Each queued segment needs a non-empty prompt plus dense depth and sparse pointmap/track control videos; the first segment also needs an image. Quality defaults: 81 frames at 16 FPS, 50 steps. The Studio profile uses four-rank USP with the complete model resident on each supported 80GB rank, and only rank zero materializes the artifact. This is queued segment generation, not keyboard realtime.
+
+## Evaluation benchmarks
+
+- [ChronoMagic-Bench](/docs/evaluation/benchmark-hub/chronomagic-bench) — Long-horizon generation suite.
+- [CameraBench](/docs/evaluation/benchmark-hub/camerabench) — Control-driven generation benefits from camera-motion evaluation.
+
+<ModelRelatedRecipes modelId="longvie-2" locale="en" />

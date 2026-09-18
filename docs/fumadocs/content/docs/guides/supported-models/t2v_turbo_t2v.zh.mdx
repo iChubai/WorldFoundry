@@ -1,0 +1,32 @@
+---
+title: "T2V Turbo T2V"
+description: "T2V-Turbo is a fast text-to-video model distilled from VideoCrafter2 with consistency distillation plus reward feedback, generating watchable clips in 4-8 steps."
+pageSource: generated
+---
+
+**发表机构:** 加州大学圣塔芭芭拉分校（UCSB） · 高校
+text → video
+[T2V-Turbo: Breaking the Quality Bottleneck of Video Consistency Model with Mixed Reward Feedback](https://arxiv.org/abs/2405.18750) (2024)
+
+T2V-Turbo 是从 VideoCrafter2 蒸馏出的快速文生视频模型，结合一致性蒸馏与奖励反馈，4-8 步即可生成可看的视频。在本 catalog 中它由共享原生扩散组件装配：VideoCrafter2 基座与有序的 T2V-Turbo LoRA 是两个独立的声明式 checkpoint 输入。
+
+<figure className="wf-recipe-media is-diagram">
+  <img src="/models/t2v_turbo_t2v/paper.png" alt="T2V-Turbo: Breaking the Quality Bottleneck of Video Consistency Model with Mixed Reward Feedback" />
+  <figcaption>T2V-Turbo: Breaking the Quality Bottleneck of Video Consistency Model with Mixed Reward Feedback</figcaption>
+</figure>
+
+<ModelCommandBuilder modelId="t2v_turbo_t2v" locale="zh" />
+
+## 架构
+
+基座：VideoCrafter2 的 U-Net 潜空间视频扩散。之上：以混合奖励反馈训练的一致性蒸馏 LoRA（见论文 arXiv 2405.18750）。WorldFoundry 使用共享原生装配器、runner、checkpoint 加载器、offload 策略与 LVDM 组件。
+
+## 使用要点
+
+runner 状态记录了原生 checkpoint 验证：本地 VideoCrafter2 与 T2V-Turbo VC2 资产可用于严格的组件与 LoRA 校验。适合需要大量快速文生视频草稿、而非极致质量的场景。
+
+## 评测 Benchmark
+
+- [VBench](/zh/docs/evaluation/benchmark-hub/vbench) — T2V-Turbo 的优化目标正是该评测的各维度。
+
+<ModelRelatedRecipes modelId="t2v_turbo_t2v" locale="zh" />

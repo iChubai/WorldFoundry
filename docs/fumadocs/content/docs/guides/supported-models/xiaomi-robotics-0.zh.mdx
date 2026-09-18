@@ -1,0 +1,38 @@
+---
+title: "Xiaomi-Robotics-0"
+description: "Xiaomi-Robotics-0 is Xiaomi's open VLA policy line with an unusually complete Apache-2.0 benchmark zoo: confirmed checkpoints for LIBERO, CALVIN ABCD-D, CALVIN ABC-D, SimplerEnv Google Robot, and SimplerEnv WidowX, all revision-pinned. The…"
+pageSource: generated
+---
+
+**发表机构:** 小米机器人（Xiaomi Robotics） · 企业
+
+Xiaomi-Robotics-0 是小米的开放 VLA 策略线，Apache-2.0 基准阵容非常完整：LIBERO、 CALVIN ABCD-D、CALVIN ABC-D、SimplerEnv Google Robot 与 SimplerEnv WidowX 的 checkpoint 均已确认并锁定 revision。catalog 默认为 LIBERO checkpoint。
+
+<ModelCommandBuilder modelId="xiaomi-robotics-0" locale="zh" />
+
+## 架构
+
+除官方仓库指针（XiaomiRobotics/Xiaomi-Robotics-0）外，架构内部细节仓库未记录；发布的 checkpoint 共享同一策略设计，按基准分别微调。
+
+## 使用要点
+
+按基准选择 checkpoint：LIBERO、任一 CALVIN 划分或 SimplerEnv 本体。更新一代请见 xiaomi-robotics-1。
+
+## 变体与 Pipeline Binding
+
+| Variant | 任务 | Runtime profile | Pipeline Binding | 状态 |
+| --- | --- | --- | --- | --- |
+| `xiaomi-robotics-0-libero` | vla.policy_rollout | `xiaomi-robotics-0` | `xiaomi-robotics-0` | all released checkpoints gpu validated |
+| `xiaomi-robotics-0-calvin-abcd` | vla.policy_rollout | `xiaomi-robotics-0` | `xiaomi-robotics-0` | all released checkpoints gpu validated |
+| `xiaomi-robotics-0-calvin-abc` | vla.policy_rollout | `xiaomi-robotics-0` | `xiaomi-robotics-0` | all released checkpoints gpu validated |
+| `xiaomi-robotics-0-simplerenv-google` | vla.policy_rollout | `xiaomi-robotics-0` | `xiaomi-robotics-0` | all released checkpoints gpu validated |
+| `xiaomi-robotics-0-simplerenv-widowx` | vla.policy_rollout | `xiaomi-robotics-0` | `xiaomi-robotics-0` | all released checkpoints gpu validated |
+| `xiaomi-robotics-0-pretrain` | vla.action_prediction | `xiaomi-robotics-0` | `xiaomi-robotics-0` | all released checkpoints gpu validated |
+
+## 评测 Benchmark
+
+- [LIBERO](/zh/docs/evaluation/benchmark-hub/libero) — 有专门的 LIBERO 策略 checkpoint。
+- [CALVIN](/zh/docs/evaluation/benchmark-hub/calvin) — 有专门的 CALVIN ABCD-D 与 ABC-D checkpoint。
+- [SimplerEnv](/zh/docs/evaluation/benchmark-hub/simpler-env) — 有专门的 Google Robot 与 WidowX checkpoint。
+
+<ModelRelatedRecipes modelId="xiaomi-robotics-0" locale="zh" />

@@ -1,0 +1,32 @@
+---
+title: "Octo"
+description: "Octo is Berkeley RAIL's generalist robot policy trained on Open X-Embodiment data, released as octo-base-1.5 and octo-small-1.5 with pinned revisions."
+pageSource: generated
+---
+
+**发表机构:** 加州大学伯克利分校（RAIL 实验室） · 高校
+
+Octo 是伯克利 RAIL 在 Open X-Embodiment 数据上训练的通用机器人策略，发布 octo-base-1.5 与 octo-small-1.5 并锁定 revision。本 catalog 中官方 octo-small-1.5 的 Orbax 树在 A100 上恢复（1.367 亿参数），sample_actions 产出有限的 (1, 4, 7) 动作块——树内 JAX 运行时的真实 GPU 验证。
+
+<ModelCommandBuilder modelId="octo" locale="zh" />
+
+## 架构
+
+带扩散动作头的 transformer 通用策略，以 JAX/Flax 实现。树内包为扁平结构、单层建模与预处理模块；checkpoint 中的旧类名由内部 ModuleSpec 解析器仅针对推理组件转换。
+
+## 使用要点
+
+选择 octo-small-1.5（GPU 已验证恢复）或 octo-base-1.5；两者共用同一树内建模包。不使用源码 checkout、包别名或 sys.path 注入。
+
+## 变体与 Pipeline Binding
+
+| Variant | 任务 | Runtime profile | Pipeline Binding | 状态 |
+| --- | --- | --- | --- | --- |
+| `octo-base-1.5` | vla.policy_rollout | `octo` | `octo` | integrated |
+| `octo-small-1.5` | vla.policy_rollout | `octo` | `octo` | integrated |
+
+## 评测 Benchmark
+
+- [SimplerEnv](/zh/docs/evaluation/benchmark-hub/simpler-env) — Open X 通用策略的常用评测场。
+
+<ModelRelatedRecipes modelId="octo" locale="zh" />

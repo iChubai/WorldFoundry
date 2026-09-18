@@ -1,0 +1,27 @@
+---
+title: "GigaWorld-0"
+description: "GigaWorld-0 is GigaAI's open robotics world-model series: video-generation models trained for action-conditioned robot data generation, with pretrain and GR1-specialized 2B checkpoints recorded."
+pageSource: generated
+---
+
+**发表机构:** 极佳科技（GigaAI） · 企业
+video
+
+GigaWorld-0 是极佳科技开源的机器人世界模型系列：面向动作条件机器人数据生成训练的视频生成模型，记录了 pretrain 与 GR1 专用两个 2B checkpoint。本 catalog 中其官方（WorldArena 收录的）源码已内置树内；执行待 checkpoint 与任务资产就位。
+
+<ModelCommandBuilder modelId="giga-world-0" locale="zh" />
+
+## 架构
+
+记录两个 2B 视频 checkpoint——open-gigaai 下的 GigaWorld-0-Video-Pretrain-2b 与 GigaWorld-0-Video-GR1-2b。除已记录任务外的架构内部细节仓库未存。
+
+## 使用要点
+
+pipeline 解析内置推理入口，在 checkpoint 与任务资产就位前返回 blocked 运行时诊断。
+
+## 评测 Benchmark
+
+- [WorldArena](/zh/docs/evaluation/benchmark-hub/worldarena) — 该条目已收录于 WorldArena 的机器人世界模型评测。
+- [EWMBench](/zh/docs/evaluation/benchmark-hub/ewmbench) — 具身世界模型视频预测质量。
+
+<ModelRelatedRecipes modelId="giga-world-0" locale="zh" />

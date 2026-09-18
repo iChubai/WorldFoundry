@@ -1,0 +1,35 @@
+---
+title: "Helios"
+description: "Helios is PKU-YuanGroup's long-video generation family covering T2V, I2V, V2V, and long-video generation, released in three checkpoints: Helios-Distilled (default, efficient), Helios-Mid, and Helios-Base (best quality). WorldFoundry vendor…"
+pageSource: generated
+---
+
+**Publisher:** Peking University (Yuan Group) · University
+text · image · video → video
+
+Helios is PKU-YuanGroup's long-video generation family covering T2V, I2V, V2V, and long-video generation, released in three checkpoints: Helios-Distilled (default, efficient), Helios-Mid, and Helios-Base (best quality). WorldFoundry vendors the inference implementation in-tree at the pinned revision, and all three checkpoints are exposed as variants. Resident Distilled sessions keep the native 9-latent/33-frame history and accept prompt changes between segments.
+
+<ModelCommandBuilder modelId="helios" locale="en" />
+
+## Architecture
+
+Helios generates video in 33-frame chunks; the in-tree pipeline rounds requested frame counts up to a compatible chunk count. The manifest records group offloading and multi-GPU context parallelism as runtime options. Note the recorded Base smoke test: a real A100 checkpoint-load and decode at 384x640/33 frames used a 3-step [1,1,1] pyramid — it verifies wiring and a nonblank artifact, not the official [20,20,20] quality recipe.
+
+## Usage notes
+
+Default to Helios-Distilled; switch to Base for final quality (expect much longer runtimes). Runner status is pending_visual_qa: import-light preflight is unit-tested, but full 240-request-frame visual parity needs the dedicated Helios environment plus GPU execution. Helios does not expose keyboard camera controls — prompt updates at chunk boundaries are the only interactivity.
+
+## Variants & pipeline bindings
+
+| Variant | Task | Runtime profile | Pipeline binding | Status |
+| --- | --- | --- | --- | --- |
+| `helios-distilled` | text-to-video | `helios` | `helios` | integrated |
+| `helios-base` | text-to-video | `helios` | `helios` | integrated |
+| `helios-mid` | text-to-video | `helios` | `helios` | integrated |
+
+## Evaluation benchmarks
+
+- [VBench](/docs/evaluation/benchmark-hub/vbench) — Baseline quality suite for the T2V routes.
+- [ChronoMagic-Bench](/docs/evaluation/benchmark-hub/chronomagic-bench) — Long-horizon suite matching Helios's long-video focus.
+
+<ModelRelatedRecipes modelId="helios" locale="en" />

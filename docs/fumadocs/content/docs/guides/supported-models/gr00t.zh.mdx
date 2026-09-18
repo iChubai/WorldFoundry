@@ -1,0 +1,32 @@
+---
+title: "NVIDIA GR00T"
+description: "NVIDIA GR00T is the Isaac GR00T humanoid/manipulation foundation policy line (N1 through N1.7). WorldFoundry executes the model, processor, transforms, and policy runtime from a flattened in-tree package with checkpoint-hosted Python disab…"
+pageSource: generated
+---
+
+**发表机构:** 英伟达（NVIDIA） · 企业
+
+英伟达 GR00T 是 Isaac GR00T 人形/操作基础策略线（N1 至 N1.7）。WorldFoundry 从扁平化树内包执行模型、processor、变换与策略运行时，禁用 checkpoint 携带的 Python；checkpoint 驱动的 predict 已在 CUDA 11.8 上用本地 Cosmos-Reason2-2B 与 GR00T-N1.7-LIBERO/libero_10 资产验证。
+
+<ModelCommandBuilder modelId="gr00t" locale="zh" />
+
+## 架构
+
+GR00T 将推理 VLM（已验证 N1.7 路径使用 Cosmos-Reason2-2B）与动作策略头耦合；记录的 checkpoint 覆盖 GR00T-N1-2B 与 GR00T-N1.7-LIBERO。权重采用 NVIDIA Open Model License，多个仓库需 Hugging Face 认证。
+
+## 使用要点
+
+先为门控 NVIDIA 仓库认证，就位锁定 revision，再从已验证的 N1.7 LIBERO 路径起步。模拟器 rollout 验证与已验证的 predict 路径分开跟踪。
+
+## 变体与 Pipeline Binding
+
+| Variant | 任务 | Runtime profile | Pipeline Binding | 状态 |
+| --- | --- | --- | --- | --- |
+| `gr00t-n1-2b` | vla.policy_rollout | `gr00t` | `gr00t` | integrated |
+| `gr00t-n1.7-libero` | vla.policy_rollout | `gr00t` | `gr00t` | integrated |
+
+## 评测 Benchmark
+
+- [LIBERO](/zh/docs/evaluation/benchmark-hub/libero) — 已验证 predict 路径使用 GR00T-N1.7-LIBERO/libero_10。
+
+<ModelRelatedRecipes modelId="gr00t" locale="zh" />

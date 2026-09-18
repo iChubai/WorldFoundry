@@ -1,0 +1,27 @@
+---
+title: "WoW"
+description: "WoW is X-Humanoid's embodied world model family for action-conditioned image-to-video: four checkpoint lines are recorded (Wan 1.3B-2M under MIT, Wan 14B-600k demo default, Wan 14B-2M official recommended, and a DiT 2B development line). W…"
+pageSource: generated
+---
+
+**发表机构:** X-Humanoid（北京人形机器人创新中心） · 企业
+image → video
+
+WoW 是 X-Humanoid 的具身世界模型家族，面向动作条件图生视频：仓库记录四条 checkpoint 线（MIT 许可的 Wan 1.3B-2M、官方 demo 默认的 Wan 14B-600k、官方推荐的 Wan 14B-2M，以及 DiT 2B 开发线）。WorldFoundry 将 Wan 变体经规范 Wan loader 路由，共享 conditioner、VAE 与调度器；已发布的 1.3B transformer 计算图与原生模型 825 个张量全部精确匹配。
+
+<ModelCommandBuilder modelId="wow" locale="zh" />
+
+## 架构
+
+Wan 线在 Wan 扩散骨干上采用仅 VAE 的首帧条件。DiT 2B 线是规范 Cosmos Predict2 配方上的 transformer 覆盖，经 runtime_backend=dit2b 选择——不再保留私有 Cosmos 运行时。demo 默认值有记录：Wan 为 steps=50、seed=42、tiled、41 帧、15 fps；DiT 2B 为 720p、16 fps、guidance=7。
+
+## 使用要点
+
+建议从结构已验证的 Wan 1.3B-2M（MIT）checkpoint 起步；官方推荐为 Wan 14B-2M。注意锁定的 DiT 2B Hub 快照未暴露 wow_dit_2b.pt，该线的本地计算图验证仍为 pending。
+
+## 评测 Benchmark
+
+- [EWMBench](/zh/docs/evaluation/benchmark-hub/ewmbench) — 具身动作条件世界模型质量。
+- [WorldArena](/zh/docs/evaluation/benchmark-hub/worldarena) — WorldArena 开源世界模型榜单收录。
+
+<ModelRelatedRecipes modelId="wow" locale="zh" />

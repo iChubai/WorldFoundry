@@ -1,0 +1,31 @@
+---
+title: "LongVie"
+description: "LongVie is a controllable ultra-long video generation framework from the Vchitect team: it drives a Wan-based diffusion backbone with dense depth and sparse point/track control videos to keep minute-scale videos consistent. This entry reta…"
+pageSource: generated
+---
+
+**Publisher:** Shanghai AI Laboratory (Vchitect) · Research lab
+image → video · depth
+
+LongVie is a controllable ultra-long video generation framework from the Vchitect team: it drives a Wan-based diffusion backbone with dense depth and sparse point/track control videos to keep minute-scale videos consistent. This entry retains the first-generation adapter, but upstream has not published first-generation weights; the public Vchitect/LongVie2 checkpoint is not interchangeable.
+
+<figure className="wf-recipe-media">
+  <Video src="/demos/studio/longvie-1-control-video.mp4" autoPlay loop muted playsInline />
+  <figcaption>Long controllable video</figcaption>
+</figure>
+
+<ModelCommandBuilder modelId="longvie-1" locale="en" />
+
+## Architecture
+
+LongVie-1 = canonical Wan model + encoders + VAE + VACE/control roles + checkpoint loaders + the shared staged runner. The native runner preserves the official 640x352 segment size and the history/noise continuation state, with optional USP ring/ulysses distributed controls. Its synthesis package is a thin product assembly boundary, not a separate engine.
+
+## Usage notes
+
+Default calls fail fast unless execute=True. Execution additionally requires an explicitly staged first-generation control checkpoint because no official LongVie-1 weights are published. For the public checkpoint-backed route, use longvie-2.
+
+## Evaluation benchmarks
+
+- [ChronoMagic-Bench](/docs/evaluation/benchmark-hub/chronomagic-bench) — Long-horizon suite for minute-scale generation.
+
+<ModelRelatedRecipes modelId="longvie-1" locale="en" />

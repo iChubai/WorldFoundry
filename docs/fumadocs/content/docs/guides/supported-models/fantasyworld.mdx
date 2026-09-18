@@ -1,0 +1,39 @@
+---
+title: "FantasyWorld"
+description: "FantasyWorld does geometry-consistent world modeling by unifying video and 3D prediction: from an image it produces camera-controllable world video that stays geometrically coherent. Two variants are recorded — the verified Wan2.1 pipeline…"
+pageSource: generated
+---
+
+**Publisher:** Alibaba (Amap, Fantasy-AMAP) · Company
+[FantasyWorld: Geometry-Consistent World Modeling via Unified Video and 3D Prediction](https://arxiv.org/abs/2509.21657) (2025)
+
+FantasyWorld does geometry-consistent world modeling by unifying video and 3D prediction: from an image it produces camera-controllable world video that stays geometrically coherent. Two variants are recorded — the verified Wan2.1 pipeline (the release-facing default) and a Wan2.2 pipeline that stays hidden from Studio until its official memory strategy is verified.
+
+<figure className="wf-recipe-media is-diagram">
+  <img src="/models/fantasyworld/paper.png" alt="FantasyWorld: Geometry-Consistent World Modeling via Unified Video and 3D Prediction" />
+  <figcaption>FantasyWorld: Geometry-Consistent World Modeling via Unified Video and 3D Prediction</figcaption>
+</figure>
+
+<ModelCommandBuilder modelId="fantasyworld" locale="en" />
+
+## Architecture
+
+FantasyWorld augments a Wan video backbone with a unified 3D-prediction branch so that generated frames respect scene geometry (per arXiv 2509.21657). Runtime execution requires local FantasyWorld Wan2.1, Wan2.1 I2V, MoGe, and CUDA assets.
+
+## Usage notes
+
+The default row resolves to the verified in-tree Wan2.1 runner — that is the route to use. The Wan2.2 variant remains pending because the official single-GPU run requires an accepted memory strategy.
+
+## Variants & pipeline bindings
+
+| Variant | Task | Runtime profile | Pipeline binding | Status |
+| --- | --- | --- | --- | --- |
+| `fantasyworld-wan21` | image-to-world-video | `fantasyworld-wan21` | `fantasyworld-wan21` | verified |
+| `fantasyworld-wan22` | camera-controlled-world-video | `fantasyworld-wan22` | `fantasyworld-wan22` | checkpoint assets staged cpu schema validated gpu pending |
+
+## Evaluation benchmarks
+
+- [WorldScore](/docs/evaluation/benchmark-hub/worldscore) — Scores geometry-consistent generated worlds.
+- [CameraBench](/docs/evaluation/benchmark-hub/camerabench) — Camera-control quality evaluation.
+
+<ModelRelatedRecipes modelId="fantasyworld" locale="en" />

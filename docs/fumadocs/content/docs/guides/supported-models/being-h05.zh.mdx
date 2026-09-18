@@ -1,0 +1,35 @@
+---
+title: "Being-H0.5"
+description: "Being-H0.5 is BeingBeyond's 2B-parameter cross-embodiment VLA policy."
+pageSource: generated
+---
+
+**发表机构:** BeingBeyond（北京智在无界） · 企业
+
+Being-H0.5 是 BeingBeyond 的 2B 参数跨本体 VLA 策略。本 catalog 中它是 GPU 已验证条目： LIBERO checkpoint 通过了公开 pipeline 的 checkpoint 驱动 GPU get_action 验证并输出 action_trace 产物。仓库记录四条 checkpoint 线——base、LIBERO、RoboCasa 与 LIBERO+RoboCasa 合并变体——推理专用运行时直接内置树内。
+
+<ModelCommandBuilder modelId="being-h05" locale="zh" />
+
+## 架构
+
+推理专用的 Being-H0.5 架构与策略运行时位于 worldfoundry/synthesis/action_generation/being_h05，已验证的 LIBERO 路径使用高效 SDPA 注意力。官方仓库指针之外的架构内部细节仓库未记录。
+
+## 使用要点
+
+建议从 GPU 已验证的 Being-H05-2B_libero checkpoint 起步。注意所有 Being-H05 Hugging Face 仓库均为 manual_review:missing_hf_license——生产使用前请确认许可。
+
+## 变体与 Pipeline Binding
+
+| Variant | 任务 | Runtime profile | Pipeline Binding | 状态 |
+| --- | --- | --- | --- | --- |
+| `being-h05-2b` | vla.policy_rollout | `being-h05` | `being-h05` | integrated |
+| `being-h05-2b-libero` | vla.policy_rollout | `being-h05` | `being-h05` | integrated |
+| `being-h05-2b-robocasa` | vla.policy_rollout | `being-h05` | `being-h05` | integrated |
+| `being-h05-2b-libero-robocasa` | vla.policy_rollout | `being-h05` | `being-h05` | integrated |
+
+## 评测 Benchmark
+
+- [LIBERO](/zh/docs/evaluation/benchmark-hub/libero) — GPU 已验证的 LIBERO 策略 checkpoint。
+- [RoboCasa](/zh/docs/evaluation/benchmark-hub/robocasa) — 有专门的 RoboCasa checkpoint 线。
+
+<ModelRelatedRecipes modelId="being-h05" locale="zh" />

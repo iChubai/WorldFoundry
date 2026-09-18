@@ -1,0 +1,22 @@
+---
+title: "Depth Anything V1"
+description: "Depth Anything V1 is the foundation model for relative monocular depth that popularized large-scale unlabeled-data depth training."
+pageSource: generated
+---
+
+**Publisher:** TikTok / The University of Hong Kong · Company
+image → depth
+
+Depth Anything V1 is the foundation model for relative monocular depth that popularized large-scale unlabeled-data depth training. In this catalog both integration and runner status are verified: the in-tree pipeline exports relative depth and geometry artifacts, and the Studio route produced a visually validated nonblank depth map on 2026-07-10.
+
+<ModelCommandBuilder modelId="depth-anything-v1" locale="en" />
+
+## Architecture
+
+A DINOv2 ViT backbone with a DPT-style depth head, trained on ~62M unlabeled images with a teacher-student scheme (per the publication). This entry serves relative depth; its metric siblings are the separate *-prior entries.
+
+## Usage notes
+
+A verified, dependable prior — good default for relative depth. For metric depth choose depth-anything-v2-prior or depth-anything-v3-prior instead.
+
+<ModelRelatedRecipes modelId="depth-anything-v1" locale="en" />

@@ -1,0 +1,22 @@
+---
+title: "CUT3R"
+description: "CUT3R is a continuous 3D perception model with persistent state: it ingests a stream of images and continuously updates a metric-scale 3D reconstruction, without offline bundling."
+pageSource: generated
+---
+
+**Publisher:** UC Berkeley · University
+point cloud
+
+CUT3R is a continuous 3D perception model with persistent state: it ingests a stream of images and continuously updates a metric-scale 3D reconstruction, without offline bundling. In this catalog the in-tree point-cloud and two-stage 3DGS routes are registered through Studio discovery. CUT3R also serves as the geometry backbone for the verified VMem entry in the video category.
+
+<ModelCommandBuilder modelId="cut3r" locale="en" />
+
+## Architecture
+
+A recurrent transformer maintains a persistent scene state; each new frame updates the state and outputs pointmaps and camera parameters online (per the upstream publication). The recorded routes cover raw point-cloud export and a two-stage 3DGS pipeline; weights are apache-2.0.
+
+## Usage notes
+
+Runner parity is pending: checkpoint-backed inference depends on staged local or Hugging Face cut3r weights. Stage them before submitting Studio jobs.
+
+<ModelRelatedRecipes modelId="cut3r" locale="en" />

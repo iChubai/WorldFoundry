@@ -1,0 +1,21 @@
+---
+title: "TD-MPC"
+description: "TD-MPC (Temporal Difference Model Predictive Control) is a classic model-based RL algorithm: it learns a latent dynamics model and plans actions by combining short-horizon MPC with a learned terminal value function. The catalog sources the…"
+pageSource: generated
+---
+
+**Publisher:** Open-source research release (institution not recorded) · Research lab
+
+TD-MPC (Temporal Difference Model Predictive Control) is a classic model-based RL algorithm: it learns a latent dynamics model and plans actions by combining short-horizon MPC with a learned terminal value function. The catalog sources the concrete official repository — not the generic LeRobot policy zoo — and routes it through an in-tree action runtime adapter.
+
+<ModelCommandBuilder modelId="tdmpc" locale="en" />
+
+## Architecture
+
+A task-oriented latent dynamics model (TOLD) plus value/policy heads; planning combines the cross-entropy method over the latent model with TD-learned values. Further internals are not recorded in this repository.
+
+## Usage notes
+
+Checkpoint absence is reported by runtime missing_assets and is not a catalog blocker; runs emit a runtime plan until weights are staged. Train your own task checkpoint with the official code before running.
+
+<ModelRelatedRecipes modelId="tdmpc" locale="en" />

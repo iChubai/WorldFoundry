@@ -1,0 +1,21 @@
+---
+title: "GeoCalib"
+description: "GeoCalib estimates camera calibration and the gravity direction from a single image by combining geometric optimization with deep learning."
+pageSource: generated
+---
+
+**发表机构:** 苏黎世联邦理工学院（CVG 组） · 高校
+
+GeoCalib 通过几何优化与深度学习结合，从单张图像估计相机标定与重力方向。本 catalog 中它是已验证的相机标定先验，由上层管线（尤其是 VIPE）通过共享 geometry-prior 契约调用。
+
+<ModelCommandBuilder modelId="geocalib-prior" locale="zh" />
+
+## 架构
+
+神经网络预测几何线索，可微优化层将其转化为焦距与重力估计（见上游 ECCV 2024 发布）。注册于 base_models/three_dimensions/general_3d/geocalib；apache-2.0。
+
+## 使用要点
+
+它作为独立几何先验集成在 worldfoundry/base_models 下，通过共享的 geometry-prior pipeline/operator 契约对外暴露。上层管线（如 ViPE）从这一规范位置导入它，而不是各自保留私有副本。runner parity 已通过共享契约验证。
+
+<ModelRelatedRecipes modelId="geocalib-prior" locale="zh" />

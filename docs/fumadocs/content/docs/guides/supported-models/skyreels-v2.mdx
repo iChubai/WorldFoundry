@@ -1,0 +1,26 @@
+---
+title: "SkyReels-V2"
+description: "SkyReels-V2 is Skywork AI's open film-generation model family built on the Wan architecture, recorded here for text-to-video and image-to-video. WorldFoundry serves the 1.3B route assembled entirely from the shared native Wan graph, condit…"
+pageSource: generated
+---
+
+**Publisher:** Skywork AI (Kunlun) · Company
+text · image → video
+
+SkyReels-V2 is Skywork AI's open film-generation model family built on the Wan architecture, recorded here for text-to-video and image-to-video. WorldFoundry serves the 1.3B route assembled entirely from the shared native Wan graph, conditioner, VAE, scheduler, initializer, loader, and runner — the vendored CLI/pipeline is deliberately not an inference backend.
+
+<ModelCommandBuilder modelId="skyreels-v2" locale="en" />
+
+## Architecture
+
+The manifest records the upstream graph as an FPS-conditioned Wan capability: SkyReels-V2's diffusion-forcing design conditions on frame rate to enable long-form generation. In WorldFoundry it is a native Wan-graph assembly with prompt/image inputs and a generated_video artifact.
+
+## Usage notes
+
+Integration is complete for the 1.3B route; no runner-parity record exists yet. Larger upstream checkpoints (5B/14B) are not the recorded route — stick to 1.3B for the supported path.
+
+## Evaluation benchmarks
+
+- [VBench](/docs/evaluation/benchmark-hub/vbench) — Standard T2V quality suite.
+
+<ModelRelatedRecipes modelId="skyreels-v2" locale="en" />

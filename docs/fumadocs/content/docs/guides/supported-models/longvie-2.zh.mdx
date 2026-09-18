@@ -1,0 +1,32 @@
+---
+title: "LongVie 2"
+description: "LongVie 2 is the second-generation controllable long-video framework from the Vchitect team, and the verified member of the pair in this catalog: Studio's default four-GPU torchrun USP route completed a checkpoint-backed run on 2026-07-28,…"
+pageSource: generated
+---
+
+**发表机构:** 上海人工智能实验室（Vchitect 团队） · 研究机构
+image → video · depth
+
+LongVie 2 是 Vchitect 团队第二代可控长视频框架，也是本 catalog 中这对条目里已验证的一个： Studio 默认的四卡 torchrun USP 路径已于 2026-07-28 完成 checkpoint 加载运行，81 帧全部按 640x352 解码。它以排队的 81 帧控制视频分段生成，每次续写复用上一段末帧、八帧历史与噪声状态。
+
+<figure className="wf-recipe-media">
+  <Video src="/demos/studio/longvie-2-control-video.mp4" autoPlay loop muted playsInline />
+  <figcaption>分段衔接的长视频</figcaption>
+</figure>
+
+<ModelCommandBuilder modelId="longvie-2" locale="zh" />
+
+## 架构
+
+构建在规范化 Wan 角色之上（基座：Wan2.1-I2V-14B-480P），叠加 LongVie 专属权重：适配器同时加载 control.safetensors 与 dit.safetensors——后者即区别于 LongVie-1 的 LongVie 2 DiT 注意力覆盖。 execute=True 时支持官方 USP ring/ulysses 分布式推理。
+
+## 使用要点
+
+每个排队分段都需要非空提示词加稠密深度与稀疏点图/轨迹控制视频；首段还需要一张图像。质量默认值： 81 帧、16 FPS、50 步。Studio profile 使用四 rank USP，只有 rank 0 落盘产物。这是排队式分段生成，不是键盘实时交互。
+
+## 评测 Benchmark
+
+- [ChronoMagic-Bench](/zh/docs/evaluation/benchmark-hub/chronomagic-bench) — 长时程生成评测。
+- [CameraBench](/zh/docs/evaluation/benchmark-hub/camerabench) — 控制驱动生成适合做相机运动评测。
+
+<ModelRelatedRecipes modelId="longvie-2" locale="zh" />

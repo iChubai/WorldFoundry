@@ -1,0 +1,32 @@
+---
+title: "NeoVerse"
+description: "NeoVerse is a 4D world model built as a native assembly over canonical Wan components plus model-specific control and reconstruction roles: it enhances world generation with 4D-aware conditioning."
+pageSource: generated
+---
+
+**发表机构:** CreateAI（原图森未来） · 企业
+[NeoVerse: Enhancing 4D World Model with in-the-wild Monocular Videos](https://arxiv.org/abs/2601.00393) (CVPR 2026, 2026)
+
+NeoVerse 是一个 4D 世界模型，由规范 Wan 组件加模型专属的控制与重建角色原生组装而成，用 4D 感知条件增强世界生成。本 catalog 中其 runner 已针对 README 风格的 tilt_up 视频 demo（使用本地 NeoVerse 资产）验证；官方视频输入路径使用 static_scene=false。
+
+<figure className="wf-recipe-media">
+  <Video src="/demos/studio/neoverse-robot-tabletop.mp4" poster="/images/hero/neoverse.webp" autoPlay loop muted playsInline />
+  <figcaption>桌面操作轨迹</figcaption>
+</figure>
+
+<ModelCommandBuilder modelId="neoverse" locale="zh" />
+
+## 架构
+
+按上游发布（arXiv 2601.00393），NeoVerse 在 Wan 视频基座上叠加 4D 重建与控制角色。 WorldFoundry 将其表达为共享 Wan 基础设施上的原生组装——真实推理仍受 checkpoint/GPU 限制，不使用仅元数据的 runner 壳。
+
+## 使用要点
+
+运行需要 NeoVerse、Wan、重建器、LoRA 与 CUDA 资产。视频输入请按官方路径使用 static_scene=false；每次运行的视觉 QA 与产物检查在 catalog 外跟踪。
+
+## 评测 Benchmark
+
+- [WorldScore](/zh/docs/evaluation/benchmark-hub/worldscore) — 评估可游走的生成世界。
+- [4DWorldBench](/zh/docs/evaluation/benchmark-hub/4dworldbench) — 契合该条目的 4D 世界模型定位。
+
+<ModelRelatedRecipes modelId="neoverse" locale="zh" />

@@ -1,0 +1,21 @@
+---
+title: "Qwen2.5-Omni"
+description: "Qwen2.5-Omni is Alibaba's end-to-end omni-modal model: it perceives text, images, audio, and video."
+pageSource: generated
+---
+
+**发表机构:** 阿里巴巴（通义千问 Qwen） · 企业
+
+Qwen2.5-Omni 是阿里的端到端全模态模型：能感知文本、图像、音频与视频。在本 catalog 中作为理解/推理条目——多模态推理、音频推理与图像/视频问答——产物为 model_response。记录的权重是 7B 版本（Qwen/Qwen2.5-Omni-7B）。
+
+<ModelCommandBuilder modelId="qwen2.5-omni" locale="zh" />
+
+## 架构
+
+阿里将 Qwen2.5-Omni 描述为 Thinker-Talker 设计：推理核心加语音生成头，并用 TMRoPE 做音视频时间对齐。本仓库中只使用文本响应路径——记录契约为输入 prompt/image/video、输出模型响应。
+
+## 使用要点
+
+Runner parity 为 pending。可用于为其它条目生成的视频做描述、问答或质检。7B 规模单张现代 GPU 即可运行。
+
+<ModelRelatedRecipes modelId="qwen2.5-omni" locale="zh" />

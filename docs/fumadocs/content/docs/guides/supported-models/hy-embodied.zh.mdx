@@ -1,0 +1,21 @@
+---
+title: "HY-Embodied"
+description: "HY-Embodied is Tencent Hunyuan's embodied policy line, recorded here against the confirmed tencent/HY-Embodied-0.5 checkpoint. WorldFoundry routes it through an in-tree official Transformers image-text runtime adapter; weights are not yet…"
+pageSource: generated
+---
+
+**发表机构:** 腾讯混元 · 企业
+
+HY-Embodied 是腾讯混元的具身策略线，本条目对应已确认的 tencent/HY-Embodied-0.5 checkpoint。WorldFoundry 通过树内官方 Transformers 图文运行时适配器路由；权重尚未就位，运行输出运行时计划。
+
+<ModelCommandBuilder modelId="hy-embodied" locale="zh" />
+
+## 架构
+
+运行时契约是基于 HY-Embodied-0.5 checkpoint 的 Transformers 图文接口。官方仓库指针（Tencent-Hunyuan/HY-Embodied，锁定 head c9b3530e）之外的架构内部细节仓库未记录。
+
+## 使用要点
+
+checkpoint 缺失由运行时 missing_assets 报告，不视为 catalog 阻塞；权重就位前运行输出运行时计划。如需 GPU 已验证的混元策略，请见同门条目 hy-embodied-vla。
+
+<ModelRelatedRecipes modelId="hy-embodied" locale="zh" />

@@ -1,0 +1,31 @@
+---
+title: "X-VLA"
+description: "X-VLA is a cross-embodiment VLA built on a Florence-2 backbone with soft-prompt domain conditioning (paper: arXiv 2510.10274, Apache-2.0). It is one of the most thoroughly validated entries in this catalog: all nine released checkpoints re…"
+pageSource: generated
+---
+
+**发表机构:** 清华大学智能产业研究院（AIR） · 高校
+[X-VLA: Soft-Prompted Transformer as Scalable Cross-Embodiment Vision-Language-Action Model](https://arxiv.org/abs/2510.10274) (2025)
+
+X-VLA 是跨本体 VLA，基于 Florence-2 骨干与软提示域条件（论文：arXiv 2510.10274， Apache-2.0）。它是本 catalog 验证最充分的条目之一：九个已发布 checkpoint 全部严格恢复，并以显式域 ID 经真实 A100 推理产出有限的 30x20 动作，树内动作头与上游最大绝对差低于 5e-7。
+
+<figure className="wf-recipe-media is-diagram">
+  <img src="/models/xvla/paper.png" alt="X-VLA: Soft-Prompted Transformer as Scalable Cross-Embodiment Vision-Language-Action Model" />
+  <figcaption>X-VLA: Soft-Prompted Transformer as Scalable Cross-Embodiment Vision-Language-Action Model</figcaption>
+</figure>
+
+<ModelCommandBuilder modelId="xvla" locale="zh" />
+
+## 架构
+
+Florence-2 视觉-语言骨干、X-VLA processor 与软提示 transformer——域专用软提示切换本体；树内动作头与上游拥有完全相同的 300 个状态键、张量形状与参数量。
+
+## 使用要点
+
+务必传入与本体/checkpoint 匹配的显式域 ID。运行时强制 trust_remote_code=false 且绝不导入源码 checkout；训练、FastAPI 服务、模拟器客户端与机器人驱动被排除。
+
+## 评测 Benchmark
+
+- [BridgeData V2](/zh/docs/evaluation/benchmark-hub/bridgedata-v2) — 已确认的 X-VLA-WidowX checkpoint 面向 Bridge 式 WidowX 数据。
+
+<ModelRelatedRecipes modelId="xvla" locale="zh" />

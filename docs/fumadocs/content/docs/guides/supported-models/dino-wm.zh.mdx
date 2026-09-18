@@ -1,0 +1,21 @@
+---
+title: "DINO-WM"
+description: "DINO-WM builds world models on pre-trained DINOv2 visual features instead of pixels: it predicts future patch features and plans robot behavior by optimizing action sequences against a goal feature state — zero-shot planning without recons…"
+pageSource: generated
+---
+
+**发表机构:** 纽约大学（NYU） · 高校
+
+DINO-WM 在预训练 DINOv2 视觉特征（而非像素）上构建世界模型：预测未来 patch 特征，并通过针对目标特征状态优化动作序列来规划机器人行为——无需重建即可零样本规划。本 catalog 中官方规划/评估路径已内置树内，包括必需的 env 仿真器。
+
+<ModelCommandBuilder modelId="dino-wm" locale="zh" />
+
+## 架构
+
+按上游项目，ViT 预测器在动作条件下向前滚动 DINOv2 patch 特征；规划是特征空间中的模型预测控制。推理入口从 data/models/runtime/configs/dino_wm/conf 加载运行时配置，内置的 dino_wm/env 仿真器为官方规划运行有意保留在树内。
+
+## 使用要点
+
+执行仍受 checkpoint/任务资产限制，但不再依赖外部仓库检出。完整运行时一致性在 OSF checkpoint/任务资产布局就位前保持 blocked。
+
+<ModelRelatedRecipes modelId="dino-wm" locale="zh" />

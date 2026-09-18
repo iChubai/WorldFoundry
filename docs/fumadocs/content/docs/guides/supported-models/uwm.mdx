@@ -1,0 +1,26 @@
+---
+title: "Unified World Models"
+description: "Unified World Models (UWM) from the University of Washington's WEIRD Lab couples video prediction and action diffusion in one robot world model, with recorded variants for LIBERO-90 (uwm-libero90) and DROID (uwm-droid). WorldFoundry regist…"
+pageSource: generated
+---
+
+**Publisher:** University of Washington (WEIRD Lab) · University
+
+Unified World Models (UWM) from the University of Washington's WEIRD Lab couples video prediction and action diffusion in one robot world model, with recorded variants for LIBERO-90 (uwm-libero90) and DROID (uwm-droid). WorldFoundry registers the official evaluation route in-tree; checkpoints and datasets are runtime-gated.
+
+<ModelCommandBuilder modelId="uwm" locale="en" />
+
+## Architecture
+
+UWM is a video-action diffusion design: one diffusion process jointly models future observations and robot actions, so the same network serves prediction and policy roles. Details beyond the official repository pointer are not recorded in this repository.
+
+## Usage notes
+
+Config resolution and pipeline import are expected to pass; real generation emits a runtime plan until required checkpoints/assets are staged. Missing assets are reported by the plan and are not treated as catalog blockers. Pick the LIBERO-90 or DROID variant to match your evaluation suite.
+
+## Evaluation benchmarks
+
+- [LIBERO](/docs/evaluation/benchmark-hub/libero) — The uwm-libero90 variant targets LIBERO tasks.
+- [EWMBench](/docs/evaluation/benchmark-hub/ewmbench) — Robot world-model rollout quality.
+
+<ModelRelatedRecipes modelId="uwm" locale="en" />

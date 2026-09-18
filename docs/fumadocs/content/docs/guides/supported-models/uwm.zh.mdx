@@ -1,0 +1,26 @@
+---
+title: "Unified World Models"
+description: "Unified World Models (UWM) from the University of Washington's WEIRD Lab couples video prediction and action diffusion in one robot world model, with recorded variants for LIBERO-90 (uwm-libero90) and DROID (uwm-droid). WorldFoundry regist…"
+pageSource: generated
+---
+
+**发表机构:** 华盛顿大学（WEIRD 实验室） · 高校
+
+华盛顿大学 WEIRD 实验室的 Unified World Models（UWM）将视频预测与动作扩散耦合进同一个机器人世界模型，仓库记录了 LIBERO-90（uwm-libero90）与 DROID（uwm-droid）两个变体。WorldFoundry 树内注册了官方评测路由；checkpoint 与数据集为运行时门控。
+
+<ModelCommandBuilder modelId="uwm" locale="zh" />
+
+## 架构
+
+UWM 是视频-动作扩散设计：单个扩散过程联合建模未来观测与机器人动作，同一网络兼任预测与策略角色。官方仓库指针之外的细节仓库未记录。
+
+## 使用要点
+
+配置解析与 pipeline 导入预期可通过；在所需 checkpoint/资产就位前，真实生成会输出运行时计划。缺失资产由计划报告，不视为 catalog 阻塞。请按评测套件选择 LIBERO-90 或 DROID 变体。
+
+## 评测 Benchmark
+
+- [LIBERO](/zh/docs/evaluation/benchmark-hub/libero) — uwm-libero90 变体面向 LIBERO 任务。
+- [EWMBench](/zh/docs/evaluation/benchmark-hub/ewmbench) — 机器人世界模型滚动生成质量。
+
+<ModelRelatedRecipes modelId="uwm" locale="zh" />

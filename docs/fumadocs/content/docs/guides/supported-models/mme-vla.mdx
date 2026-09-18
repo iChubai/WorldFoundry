@@ -1,0 +1,25 @@
+---
+title: "MME-VLA"
+description: "MME-VLA is the policy-learning line of the RoboMME project, centered on perceptual frame sampling for memory-heavy manipulation. Four Apache-2.0 checkpoint repos are confirmed from the README — the best perceptual-framesamp module, the mme…"
+pageSource: generated
+---
+
+**Publisher:** Open-source research release (institution not recorded) · Research lab
+
+MME-VLA is the policy-learning line of the RoboMME project, centered on perceptual frame sampling for memory-heavy manipulation. Four Apache-2.0 checkpoint repos are confirmed from the README — the best perceptual-framesamp module, the mme_vla_suite collection, a pi05 baseline, and a VLM subgoal predictor. WorldFoundry calls create_trained_policy(...).infer in-process from a vendored subset.
+
+<ModelCommandBuilder modelId="mme-vla" locale="en" />
+
+## Architecture
+
+The recorded design combines a perceptual frame-sampling module with policy learning and an optional VLM subgoal predictor. Resolver, runtime import, and compileall checks pass without an external checkout; further internals are not recorded in this repository.
+
+## Usage notes
+
+Checkpoint-backed action-chunk validation remains required before demo parity is claimed; stage the framesamp module checkpoint first.
+
+## Evaluation benchmarks
+
+- [RoboMME](/docs/evaluation/benchmark-hub/robomme) — Native benchmark of the RoboMME project.
+
+<ModelRelatedRecipes modelId="mme-vla" locale="en" />

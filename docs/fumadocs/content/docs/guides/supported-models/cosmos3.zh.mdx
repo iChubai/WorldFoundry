@@ -1,0 +1,34 @@
+---
+title: "Cosmos3"
+description: "Cosmos3 is the newest, broadest Cosmos generation recorded here: one joint-modality model covering text-to-image/video, image/video-to-video, synchronized sound, and structured action inference (policy, forward and inverse dynamics), in Na…"
+pageSource: generated
+---
+
+**发表机构:** 英伟达（NVIDIA） · 企业
+text · image · video → image · video
+
+Cosmos3 是此处记录的最新、覆盖面最广的 Cosmos 世代：单一联合模态模型覆盖文生图/视频、图/视频到视频、同步声音，以及结构化动作推断（策略、正向与逆向动力学），含 Nano 与 Super 两个 variant。本 catalog 中它经共享加载器、联合模态 runner、原生 Karras flow-UniPC 调度器、共享 Wan VAE38 与仅推理的 AVAE 声音解码器运行。
+
+<ModelCommandBuilder modelId="cosmos3" locale="zh" />
+
+## 架构
+
+Nano 结构检查匹配 814 个 transformer、196 个 VAE 与 182 个 AVAE checkpoint 张量， 35 步调度与官方调度器数值一致。Guardrail 与 reasoner/serving 栈是编排扩展，有意置于本仅推理配方之外。
+
+## 使用要点
+
+基础选择路由到 Nano；需要 Super checkpoint 请选 cosmos3-super variant。当前版本证据要求确切的 variant SHA——准备脚本输出结构化 checkpoint 报告与固定 snapshot model-ref，避免把旧的本地目录误当作当前版本。端到端 GPU 输出一致性需要在此原生路径上重跑。
+
+## 变体与 Pipeline Binding
+
+| Variant | 任务 | Runtime profile | Pipeline Binding | 状态 |
+| --- | --- | --- | --- | --- |
+| `cosmos3-nano` | world-generation | `cosmos3-nano` | `cosmos3-nano` | integrated |
+| `cosmos3-super` | world-generation | `cosmos3-super` | `cosmos3-super` | integrated |
+
+## 评测 Benchmark
+
+- [WorldModelBench](/zh/docs/evaluation/benchmark-hub/worldmodelbench) — 各条件下世界生成质量评测。
+- [Physics-IQ Original](/zh/docs/evaluation/benchmark-hub/physics-iq) — 生成世界视频的物理合理性。
+
+<ModelRelatedRecipes modelId="cosmos3" locale="zh" />

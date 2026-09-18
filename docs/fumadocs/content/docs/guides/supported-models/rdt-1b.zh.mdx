@@ -1,0 +1,21 @@
+---
+title: "RDT-1B"
+description: "RDT-1B from Tsinghua's thu-ml group is the Robotics Diffusion Transformer: a 1B diffusion policy pretrained on large multi-robot data with a native 128-dimensional unified action space covering many embodiments. The confirmed robotics-diff…"
+pageSource: generated
+---
+
+**发表机构:** 清华大学（thu-ml 团队） · 高校
+
+清华大学 thu-ml 团队的 RDT-1B 即 Robotics Diffusion Transformer：1B 扩散策略，在大规模多机器人数据上预训练，原生 128 维统一动作空间覆盖多种本体。已确认的 robotics-diffusion-transformer/rdt-1b 预训练策略有记录，统一动作模型、两帧三相机预处理与 DPM 推理在树内运行。
+
+<ModelCommandBuilder modelId="rdt-1b" locale="zh" />
+
+## 架构
+
+在 128 维统一动作编码上的扩散 transformer，将异构机器人动作空间映射进同一词表；提示编码使用官方 T5 checkpoint，并接受预计算 embedding 以降低峰值内存。
+
+## 使用要点
+
+发布的 checkpoint 为预训练版本，部署可能需按本体/任务微调。内存受限主机建议使用预计算的 T5 embedding。
+
+<ModelRelatedRecipes modelId="rdt-1b" locale="zh" />

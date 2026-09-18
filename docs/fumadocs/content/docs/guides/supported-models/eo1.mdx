@@ -1,0 +1,21 @@
+---
+title: "EO-1"
+description: "EO-1 (Embodied One) is an embodied VLA policy from the EO-Robotics project. WorldFoundry routes it through an in-tree Transformers processor.select_action runtime adapter sourced from the official EO repository; checkpoints are not yet rec…"
+pageSource: generated
+---
+
+**Publisher:** Open-source research release (institution not recorded) · Research lab
+
+EO-1 (Embodied One) is an embodied VLA policy from the EO-Robotics project. WorldFoundry routes it through an in-tree Transformers processor.select_action runtime adapter sourced from the official EO repository; checkpoints are not yet recorded, so runs emit a runtime plan.
+
+<ModelCommandBuilder modelId="eo1" locale="en" />
+
+## Architecture
+
+The runtime contract is a Hugging Face Transformers processor with a select_action interface. Architecture internals beyond the official repository pointer (EO-Robotics/EO, pinned head 451c363d) are not recorded in this repository.
+
+## Usage notes
+
+Checkpoint absence is reported by runtime missing_assets and is not a catalog blocker; stage official weights when available.
+
+<ModelRelatedRecipes modelId="eo1" locale="en" />

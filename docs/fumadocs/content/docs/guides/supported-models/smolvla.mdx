@@ -1,0 +1,32 @@
+---
+title: "SmolVLA"
+description: "SmolVLA is Hugging Face's compact community VLA: a SmolVLM2-500M vision-language backbone with a flow-matching action expert, small enough for consumer hardware. The catalog records the HuggingFaceVLA/smolvla_libero task checkpoint (manife…"
+pageSource: generated
+---
+
+**Publisher:** Hugging Face (LeRobot) · Company
+
+SmolVLA is Hugging Face's compact community VLA: a SmolVLM2-500M vision-language backbone with a flow-matching action expert, small enough for consumer hardware. The catalog records the HuggingFaceVLA/smolvla_libero task checkpoint (manifest and normalization schema validated) as the rollout default, with lerobot/smolvla_base as a fine-tuning asset.
+
+<ModelCommandBuilder modelId="smolvla" locale="en" />
+
+## Architecture
+
+The official flow-matching architecture is preserved in-tree with strict checkpoint structure: SmolVLM2-500M-Video-Instruct as the pinned vision-language backbone plus the flow action expert. Runtime loading is local-only with no external source checkout.
+
+## Usage notes
+
+Use smolvla_libero for rollouts; the multi-robot base checkpoint lacks canonical state statistics and remains a non-default fine-tuning asset.
+
+## Variants & pipeline bindings
+
+| Variant | Task | Runtime profile | Pipeline binding | Status |
+| --- | --- | --- | --- | --- |
+| `smolvla-libero` | vla.policy_rollout | `smolvla` | `smolvla` | runtime ported selected checkpoint gpu validated |
+| `smolvla-base` | vla.pretraining | `smolvla` | `smolvla` | runtime ported selected checkpoint gpu validated |
+
+## Evaluation benchmarks
+
+- [LIBERO](/docs/evaluation/benchmark-hub/libero) — The validated rollout default is the LIBERO task checkpoint.
+
+<ModelRelatedRecipes modelId="smolvla" locale="en" />

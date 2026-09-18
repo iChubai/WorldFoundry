@@ -1,0 +1,32 @@
+---
+title: "LIBERO-Para"
+description: "LIBERO-Para is a paraphrase-robustness evaluation line around the LIBERO benchmark: it tests how VLA policies behave when task instructions are reworded (paper: hf.co/papers/2603.28301, MIT license). The HAI-Lab/LIBERO-Para dataset is conf…"
+pageSource: generated
+---
+
+**Publisher:** Open-source research release (institution not recorded) · Research lab
+[LIBERO-Para: A Diagnostic Benchmark and Metrics for Paraphrase Robustness in VLA Models](https://arxiv.org/abs/2603.28301) (2026)
+
+LIBERO-Para is a paraphrase-robustness evaluation line around the LIBERO benchmark: it tests how VLA policies behave when task instructions are reworded (paper: hf.co/papers/2603.28301, MIT license). The HAI-Lab/LIBERO-Para dataset is confirmed on Hugging Face; WorldFoundry routes action evaluation through an in-tree official-policy runtime adapter.
+
+<figure className="wf-recipe-media is-diagram">
+  <img src="/models/libero-para/paper.png" alt="LIBERO-Para: A Diagnostic Benchmark and Metrics for Paraphrase Robustness in VLA Models" />
+  <figcaption>LIBERO-Para: A Diagnostic Benchmark and Metrics for Paraphrase Robustness in VLA Models</figcaption>
+</figure>
+
+<ModelCommandBuilder modelId="libero-para" locale="en" />
+
+## Architecture
+
+This is an evaluation/dataset-centered entry rather than a new policy architecture; the recorded artifact is the paraphrased-instruction dataset plus an evaluation route. Further internals are not recorded in this repository.
+
+## Usage notes
+
+Checkpoint absence is reported by runtime missing_assets and is not a catalog blocker; runs emit a runtime plan until weights are staged. Pair it with a LIBERO-capable policy to measure paraphrase robustness.
+
+## Evaluation benchmarks
+
+- [LIBERO-Para](/docs/evaluation/benchmark-hub/libero-para) — This entry is the LIBERO-Para evaluation itself.
+- [LIBERO](/docs/evaluation/benchmark-hub/libero) — Built on the LIBERO task suite.
+
+<ModelRelatedRecipes modelId="libero-para" locale="en" />

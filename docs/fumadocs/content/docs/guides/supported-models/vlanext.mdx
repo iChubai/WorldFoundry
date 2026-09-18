@@ -1,0 +1,26 @@
+---
+title: "VLANeXt"
+description: "VLANeXt is a next-generation VLA released under the S-Lab License 1.0 (source-available, research-oriented), with official LIBERO and LIBERO-plus checkpoints in the DravenALG/VLANeXt collection. WorldFoundry calls the official get_vla/get_…"
+pageSource: generated
+---
+
+**Publisher:** Nanyang Technological University (S-Lab) · University
+
+VLANeXt is a next-generation VLA released under the S-Lab License 1.0 (source-available, research-oriented), with official LIBERO and LIBERO-plus checkpoints in the DravenALG/VLANeXt collection. WorldFoundry calls the official get_vla/get_processor/get_vla_action contract in-process from a vendored inference subset.
+
+<ModelCommandBuilder modelId="vlanext" locale="en" />
+
+## Architecture
+
+Public checkpoints cover the LIBERO suites (VLANeXt_libero_spatial.pt, _object.pt and more). Architecture internals beyond the official repository pointer are not recorded in this repository.
+
+## Usage notes
+
+Resolver, runtime import, and compileall checks pass without an external checkout; checkpoint-backed action-chunk validation remains required before demo parity is claimed. Note the S-Lab-1.0 license restricts commercial use.
+
+## Evaluation benchmarks
+
+- [LIBERO](/docs/evaluation/benchmark-hub/libero) — Official LIBERO checkpoint collection.
+- [LIBERO-Plus](/docs/evaluation/benchmark-hub/libero-plus) — LIBERO-plus contracts are recorded.
+
+<ModelRelatedRecipes modelId="vlanext" locale="en" />

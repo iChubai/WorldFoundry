@@ -1,0 +1,25 @@
+---
+title: "A1"
+description: "A1 (AffordVLA) is an affordance-guided vision-language-action policy: it grounds manipulation in visual affordances before predicting robot actions. WorldFoundry runs AffordVLA fully in-tree — Molmo and CLIP ViT encoders, L1/DiT/flow actio…"
+pageSource: generated
+---
+
+**发表机构:** 开源研究发布（仓库未记录正式机构） · 研究机构
+
+A1（AffordVLA）是可供性（affordance）引导的视觉-语言-动作策略：先将操作任务锚定到视觉可供性，再预测机器人动作。WorldFoundry 将 AffordVLA 完整内置树内——Molmo 与 CLIP ViT 编码器、 L1/DiT/flow 动作头与预处理——并确认两个 checkpoint：任务用 spatialtemporal-ai/a1-libero，预训练策略 a1-pretrain。
+
+<ModelCommandBuilder modelId="a1" locale="zh" />
+
+## 架构
+
+该栈将 Molmo（VLM）与 CLIP ViT 视觉编码同可选动作头（L1 回归、DiT 或 flow）耦合。运行时从 checkpoint 张量推导动作维度并校验每个动作 token 边界，不匹配的 checkpoint 会快速失败。
+
+## 使用要点
+
+运行前需在本地就位 tokenizer 与 checkpoint 资产。资产仅从本地加载，绝不执行 checkpoint 携带的 Python；运行时加载采用严格键匹配。
+
+## 评测 Benchmark
+
+- [LIBERO](/zh/docs/evaluation/benchmark-hub/libero) — a1-libero checkpoint 面向 LIBERO 操作任务。
+
+<ModelRelatedRecipes modelId="a1" locale="zh" />

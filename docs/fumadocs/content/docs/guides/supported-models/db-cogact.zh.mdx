@@ -1,0 +1,27 @@
+---
+title: "DB-CogACT / Dexbotic"
+description: "DB-CogACT is the CogACT recipe rebuilt inside Dexmal's Dexbotic framework, with an unusually complete released checkpoint zoo: single-arm and dual-arm foundations plus task checkpoints for LIBERO, CALVIN, and SimplerEnv, all Apache-2.0. Wo…"
+pageSource: generated
+---
+
+**发表机构:** Dexmal（原力灵机） · 企业
+
+DB-CogACT 是在 Dexmal 的 Dexbotic 框架内重建的 CogACT 配方，发布的 checkpoint 阵容相当完整：单臂与双臂基础模型，外加 LIBERO、CALVIN、SimplerEnv 任务 checkpoint，全部 Apache-2.0。 WorldFoundry 从内置推理子集在进程内构建官方 Dexbotic 策略，无需外部 checkout 即输出 LIBERO 动作轨迹。
+
+<ModelCommandBuilder modelId="db-cogact" locale="zh" />
+
+## 架构
+
+仓库记录 Dexbotic v1 推理契约：请求携带 observation.prompt 与观测图像，策略沿用 CogACT 的 VLM+DiT 动作设计并在 Dexbotic 中重实现。内置推理子集位于 worldfoundry/synthesis/action_generation/db_cogact/db_cogact_runtime。
+
+## 使用要点
+
+按基准选择 checkpoint：libero-db-cogact、calvin-db-cogact 或 simpler-db-cogact；SArm/HArm 基础模型用于微调。集成状态为 checkpoint_backed_runtime_ready。
+
+## 评测 Benchmark
+
+- [LIBERO](/zh/docs/evaluation/benchmark-hub/libero) — 有专门的 libero-db-cogact checkpoint。
+- [CALVIN](/zh/docs/evaluation/benchmark-hub/calvin) — 有专门的 calvin-db-cogact checkpoint。
+- [SimplerEnv](/zh/docs/evaluation/benchmark-hub/simpler-env) — 有专门的 simpler-db-cogact checkpoint。
+
+<ModelRelatedRecipes modelId="db-cogact" locale="zh" />

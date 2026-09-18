@@ -1,0 +1,31 @@
+---
+title: "MIRA"
+description: "MIRA is a multiplayer interactive world model: several players act in one shared, action-conditioned generated world (paper arXiv 2607.05352)."
+pageSource: generated
+---
+
+**发表机构:** 开源研究发布（仓库未记录正式机构） · 研究机构
+[Multiplayer Interactive World Models with Representation Autoencoders](https://arxiv.org/abs/2607.05352) (2026)
+
+MIRA 是多人交互世界模型：多名玩家在同一个动作条件生成世界中行动（论文 arXiv 2607.05352）。本 catalog 中仅推理的上游源码已内置树内；执行需要兼容的本地 checkpoint 与包含 index.json 的本地 Rocket Science 数据集切分。
+
+<figure className="wf-recipe-media is-diagram">
+  <img src="/models/mira/paper.png" alt="Multiplayer Interactive World Models with Representation Autoencoders" />
+  <figcaption>Multiplayer Interactive World Models with Representation Autoencoders</figcaption>
+</figure>
+
+<ModelCommandBuilder modelId="mira" locale="zh" />
+
+## 架构
+
+除已记录任务外的架构内部细节仓库未存（apache-2.0）。Workspace 发现、参数路由与命令生成的覆盖不需加载模型权重；local-checkpoint variant 记录 Rocket Science 滚动生成任务。
+
+## 使用要点
+
+公开的 Rocket Science 数据集约 29.24 TB——已固定但有意不自动下载。TorchCodec ABI 不兼容时视频解码回退到 PyAV；输出使用共享的 WorldFoundry 视频后端。训练与指标入口有意省略。
+
+## 评测 Benchmark
+
+- [WorldModelBench](/zh/docs/evaluation/benchmark-hub/worldmodelbench) — 多人世界滚动生成质量。
+
+<ModelRelatedRecipes modelId="mira" locale="zh" />

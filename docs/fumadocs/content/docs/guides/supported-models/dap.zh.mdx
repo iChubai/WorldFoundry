@@ -1,0 +1,22 @@
+---
+title: "Depth Any Panoramas"
+description: "Depth Any Panoramas (DAP) is Insta360's metric depth estimator for panoramic images — full 360° depth from a single equirectangular input."
+pageSource: generated
+---
+
+**发表机构:** 影石 Insta360（研究团队） · 企业
+image → depth
+
+Depth Any Panoramas（DAP）是影石 Insta360 面向全景图像的米制深度估计器——从单张等距柱状投影图得到完整 360° 深度。本 catalog 中它是已验证的几何先验：runner parity 已通过共享 geometry-prior 契约验证，权重位于 Insta360-Research/DAP-weights。
+
+<ModelCommandBuilder modelId="dap" locale="zh" />
+
+## 架构
+
+基于 Depth-Anything 系主干，适配全景输入与米制输出。它位于 base_models/three_dimensions/depth 下作为独立先验；ViPE 从该规范位置导入。除已记录结构外的细节仓库未存。
+
+## 使用要点
+
+它作为独立几何先验集成在 worldfoundry/base_models 下，通过共享的 geometry-prior pipeline/operator 契约对外暴露。上层管线（如 ViPE）从这一规范位置导入它，而不是各自保留私有副本。runner parity 已验证；每次运行的验证证据在 catalog 外跟踪。
+
+<ModelRelatedRecipes modelId="dap" locale="zh" />

@@ -1,0 +1,25 @@
+---
+title: "HunyuanWorld 1.0"
+description: "HunyuanWorld 1.0 generates immersive, explorable 3D worlds from text or an image — the first generation of Tencent's open world-generation stack, exporting layered panoramas and mesh scenes."
+pageSource: generated
+---
+
+**Publisher:** Tencent (Hunyuan) · Company
+
+HunyuanWorld 1.0 generates immersive, explorable 3D worlds from text or an image — the first generation of Tencent's open world-generation stack, exporting layered panoramas and mesh scenes. In this catalog the official source route is registered; checkpoints and third-party assets stay runtime-gated.
+
+<ModelCommandBuilder modelId="hunyuanworld-1" locale="en" />
+
+## Architecture
+
+Per the upstream release, generation goes panorama-first: a panoramic proxy is generated, semantically layered, and lifted to a 3D world representation. Architecture internals beyond this are not recorded in this repository.
+
+## Usage notes
+
+Config resolution and pipeline import are expected to pass; real generation emits a runtime plan until required checkpoints/assets are staged. Missing assets are reported by the plan and are not treated as catalog blockers. For the newer component-verified stack, see the hy-world-2.0 entry.
+
+## Evaluation benchmarks
+
+- [WorldScore](/docs/evaluation/benchmark-hub/worldscore) — Standard scoring for generated explorable worlds.
+
+<ModelRelatedRecipes modelId="hunyuanworld-1" locale="en" />

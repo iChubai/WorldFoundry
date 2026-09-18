@@ -1,0 +1,32 @@
+---
+title: "Echo-Memory"
+description: "Echo-Memory Context K=1 is one identity in JD's Echo-Memory family — a controlled study of how memory mechanisms affect interactive, action-conditioned world models. This identity is permanently bound to the context_k1/epoch-0.safetensors…"
+pageSource: generated
+---
+
+**Publisher:** JD.com (Joy Future Academy) · Company
+image → video
+[Echo-Memory: A Controlled Study of Memory in Action World Models](https://arxiv.org/abs/2606.09803) (2026)
+
+Echo-Memory Context K=1 is one identity in JD's Echo-Memory family — a controlled study of how memory mechanisms affect interactive, action-conditioned world models. This identity is permanently bound to the context_k1/epoch-0.safetensors checkpoint in the paper-primary release tier: it is the minimal context baseline — each new chunk conditions on only K=1 context frame. In this catalog it is the one Echo-Memory identity whose checkpoint is served from the official Hugging Face main branch; native structural loading covers the released 1185-tensor DiT, and a fresh two-chunk CUDA artifact remains pending after the NativeDiffusionPipeline cutover.
+
+<figure className="wf-recipe-media is-diagram">
+  <img src="/models/echo-memory-context-k1/paper.png" alt="Echo-Memory: A Controlled Study of Memory in Action World Models" />
+  <figcaption>Echo-Memory: A Controlled Study of Memory in Action World Models</figcaption>
+</figure>
+
+<ModelCommandBuilder modelId="echo-memory-context-k1" locale="en" />
+
+## Architecture
+
+Per the Echo-Memory release (arXiv 2606.09803), every variant is a Wan2.1-T2V-1.3B-based interactive world model that differs only in its memory mechanism. In WorldFoundry each variant is an independent model identity pinned to one checkpoint: the recipe is assembled by NativeDiffusionPipeline from shared Wan components plus the framework-owned frozen-context strategy — no external backend. The sampler uses target-noise plus clean-context suffix, target-only CFG, context relocking after every solver step, and target-only decode.
+
+## Usage notes
+
+The checkpoint downloads from Echo-Team/Echo-Memory (cc-by-4.0) with the Wan2.1-T2V-1.3B base (apache-2.0). The 2026-07-20 A100 artifact predates the NativeDiffusionPipeline cutover and is retained as historical evidence only — treat fresh CUDA artifact validation as pending. Users do not select a memory method at runtime — each method is its own catalog identity.
+
+## Evaluation benchmarks
+
+- [MemoBench](/docs/evaluation/benchmark-hub/memobench) — Purpose-built for evaluating long-horizon memory in interactive world models.
+
+<ModelRelatedRecipes modelId="echo-memory-context-k1" locale="en" />

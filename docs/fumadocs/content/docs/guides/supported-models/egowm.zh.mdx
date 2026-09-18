@@ -1,0 +1,28 @@
+---
+title: "EgoWM"
+description: "EgoWM is an egocentric navigation world model: from a first-person view and navigation actions it predicts the video a moving agent would see, with 3-DoF and 25-DoF action variants recorded (egowm-svd-3dof / egowm-svd-25dof)."
+pageSource: generated
+---
+
+**发表机构:** 开源研究发布（仓库未记录正式机构） · 研究机构
+
+EgoWM 是第一人称导航世界模型：给定第一视角画面与导航动作，预测移动智能体将看到的视频，记录了 3 自由度与 25 自由度两个动作 variant（egowm-svd-3dof / egowm-svd-25dof）。本 catalog 中官方源码路径已注册、源码固定在记录的 commit；checkpoint 保持运行时限制。
+
+<ModelCommandBuilder modelId="egowm" locale="zh" />
+
+## 架构
+
+variant 名称记录其为以 3 自由度或 25 自由度动作空间为条件的 Stable Video Diffusion 基座（checkpoint 为 anuragba/egowm）。除已记录任务外的架构内部细节仓库未存。
+
+## 使用要点
+
+配置解析与 pipeline 导入预期可通过；在所需 checkpoint/资产就位前，真实生成会输出运行时计划。缺失资产由计划报告，不视为 catalog 阻塞。
+
+## 变体与 Pipeline Binding
+
+| Variant | 任务 | Runtime profile | Pipeline Binding | 状态 |
+| --- | --- | --- | --- | --- |
+| `egowm-svd-3dof` | egocentric-navigation-video | `egowm` | `egowm` | planned |
+| `egowm-svd-25dof` | egocentric-navigation-video | `egowm` | `egowm` | planned |
+
+<ModelRelatedRecipes modelId="egowm" locale="zh" />

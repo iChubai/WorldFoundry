@@ -1,0 +1,33 @@
+---
+title: "RollingForcing"
+description: "RollingForcing streams minutes-long video autoregressively: rolling-window denoising with an attention sink lets it generate long text-to-video without the drift that kills naive streaming (paper arXiv 2509.25161)."
+pageSource: generated
+---
+
+**发表机构:** 腾讯（ARC Lab）/ 南洋理工大学 · 企业
+text → video
+[Rolling Forcing: Autoregressive Long Video Diffusion in Real Time](https://arxiv.org/abs/2509.25161) (2025)
+
+RollingForcing 自回归地流式生成数分钟长的视频：滚动窗口去噪加 attention sink，避免了朴素流式生成的漂移崩坏（论文 arXiv 2509.25161）。本 catalog 中 runner 达到 full_demo_verified——用发布的确切 checkpoint 完成完整 Workspace 推理，126 个潜帧解码为 501 帧 832x480、16 fps 的 H.264，A100 上耗时 31.31 秒的视频内容。
+
+<figure className="wf-recipe-media is-diagram">
+  <img src="/models/rolling-forcing/paper.png" alt="Rolling Forcing: Autoregressive Long Video Diffusion in Real Time" />
+  <figcaption>Rolling Forcing: Autoregressive Long Video Diffusion in Real Time</figcaption>
+</figure>
+
+<ModelCommandBuilder modelId="rolling-forcing" locale="zh" />
+
+## 架构
+
+树内仅推理 runner 复用现有 forcing pipeline、因果 Wan variant、attention sink/KV 缓存、核心调度器、注意力分发、分布式辅助与视频 I/O；执行绝不导入外部 RollingForcing 仓库。静态集成遵循官方五步、三潜帧块配置。
+
+## 使用要点
+
+发布路径仅文生视频——未验证的图生视频行为不对外宣传。BF16 与显存容量是硬件要求；官方 126 潜帧解码为 16 fps 长视频，更小的三的倍数可作冒烟运行。上游条款仅允许学术使用。
+
+## 评测 Benchmark
+
+- [VBench](/zh/docs/evaluation/benchmark-hub/vbench) — 长文生视频输出的质量评测。
+- [ChronoMagic-Bench](/zh/docs/evaluation/benchmark-hub/chronomagic-bench) — 长时程时间连贯性评测。
+
+<ModelRelatedRecipes modelId="rolling-forcing" locale="zh" />

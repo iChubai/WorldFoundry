@@ -1,0 +1,22 @@
+---
+title: "H-RDT"
+description: "H-RDT (Human-to-Robotics Diffusion Transformer) pretrains a diffusion-transformer policy on large-scale human manipulation data before robot fine-tuning (paper: arXiv 2506.23503, MPL-2.0). The official release is the 48-dimensional human-m…"
+pageSource: generated
+---
+
+**Publisher:** Open-source research release (institution not recorded) · Research lab
+[Data Augmentation for Cognitive Behavioral Therapy: Leveraging ERNIE Language Models using Artificial Intelligence](https://arxiv.org/abs/2506.23503) (2025)
+
+H-RDT (Human-to-Robotics Diffusion Transformer) pretrains a diffusion-transformer policy on large-scale human manipulation data before robot fine-tuning (paper: arXiv 2506.23503, MPL-2.0). The official release is the 48-dimensional human-motion pretraining checkpoint (embodiedfoundation/H-RDT); WorldFoundry keeps the transformer, flow-matching sampler, DINOv2+SigLIP vision path, and optional T5 language path in-tree.
+
+<ModelCommandBuilder modelId="h-rdt" locale="en" />
+
+## Architecture
+
+A diffusion transformer with flow-matching sampling; vision uses DINOv2 plus SigLIP and language optionally uses T5. Module and parameter names preserve the official checkpoint contract with strict restoration.
+
+## Usage notes
+
+The released checkpoint is the human-motion pretraining stage (48-DoF), not the unreleased 14-dimensional robot fine-tune — plan your own fine-tuning for robot deployment. Training, datasets, ROS, robot drivers, simulator clients, and hub mixins are excluded.
+
+<ModelRelatedRecipes modelId="h-rdt" locale="en" />

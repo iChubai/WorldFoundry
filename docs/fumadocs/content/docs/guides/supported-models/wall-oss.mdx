@@ -1,0 +1,21 @@
+---
+title: "Wall-OSS"
+description: "Wall-OSS is X Square Robot's open-source embodied foundation policy from the Wall-X line, with two confirmed checkpoints: wall-oss-flow (flow-matching action decoding) and wall-oss-fast (FAST-token decoding). WorldFoundry routes it through…"
+pageSource: generated
+---
+
+**Publisher:** X Square Robot · Company
+
+Wall-OSS is X Square Robot's open-source embodied foundation policy from the Wall-X line, with two confirmed checkpoints: wall-oss-flow (flow-matching action decoding) and wall-oss-fast (FAST-token decoding). WorldFoundry routes it through an in-tree action runtime adapter against the concrete Wall-X policy; checkpoint-backed parity remains asset-gated.
+
+<ModelCommandBuilder modelId="wall-oss" locale="en" />
+
+## Architecture
+
+Two decoding variants of one foundation policy: a flow-matching head (wall-oss-flow) and a FAST discrete-token head (wall-oss-fast). Architecture internals beyond the official repository pointer are not recorded in this repository.
+
+## Usage notes
+
+Checkpoint absence is reported by runtime missing_assets and is not a catalog blocker; runs emit a runtime plan until weights are staged. Choose flow for smooth continuous control, fast for lower-latency decoding.
+
+<ModelRelatedRecipes modelId="wall-oss" locale="en" />

@@ -1,0 +1,25 @@
+---
+title: "MotionCtrl"
+description: "MotionCtrl is a unified, flexible motion controller for video generation: it controls camera motion and object motion independently in one model (SIGGRAPH 2024)."
+pageSource: generated
+---
+
+**Publisher:** Tencent (ARC Lab) · Company
+
+MotionCtrl is a unified, flexible motion controller for video generation: it controls camera motion and object motion independently in one model (SIGGRAPH 2024). In this catalog the runner is verified — the camera-motion demo runs through the Workspace infer path with the staged MotionCtrl checkpoint and in-tree camera-pose fixture.
+
+<ModelCommandBuilder modelId="motionctrl" locale="en" />
+
+## Architecture
+
+Per the publication, a Camera Motion Control Module conditions on camera pose sequences and an Object Motion Control Module on trajectories, attached to an LVDM-family video base. WorldFoundry vendors the LVDM stack, control modules, sampler, default config, and motion fixtures under synthesis/visual_generation/motionctrl/motionctrl_runtime and loads them in-process.
+
+## Usage notes
+
+The default camera/object motion fixture parameters are recorded in the runtime profile — start there. The upstream CLI is provenance only; benchmark scoring remains separate.
+
+## Evaluation benchmarks
+
+- [CameraBench](/docs/evaluation/benchmark-hub/camerabench) — Camera-motion control adherence.
+
+<ModelRelatedRecipes modelId="motionctrl" locale="en" />

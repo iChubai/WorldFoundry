@@ -1,0 +1,21 @@
+---
+title: "Multi-task DiT Policy"
+description: "Multi-task DiT Policy is an imitation-learning diffusion-transformer policy recorded against the concrete LeRobot multi_task_dit implementation — no separate official repository was identified upstream. WorldFoundry routes it through an in…"
+pageSource: generated
+---
+
+**Publisher:** Hugging Face (LeRobot reference) · Company
+
+Multi-task DiT Policy is an imitation-learning diffusion-transformer policy recorded against the concrete LeRobot multi_task_dit implementation — no separate official repository was identified upstream. WorldFoundry routes it through an in-tree action runtime adapter; checkpoints are not recorded, so runs emit a runtime plan.
+
+<ModelCommandBuilder modelId="multi-task-dit" locale="en" />
+
+## Architecture
+
+A DiT (diffusion transformer) policy head conditioned on multi-task context, following the LeRobot reference implementation. Further internals are not recorded in this repository.
+
+## Usage notes
+
+Checkpoint absence is reported by runtime missing_assets and is not a catalog blocker; runs emit a runtime plan until weights are staged. Stage a trained policy checkpoint to run real predictions.
+
+<ModelRelatedRecipes modelId="multi-task-dit" locale="en" />

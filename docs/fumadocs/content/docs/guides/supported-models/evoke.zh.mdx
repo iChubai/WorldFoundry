@@ -1,0 +1,21 @@
+---
+title: "Evoke"
+description: "Official source is bundled at revision 74d268516d95c8fceadd2378f91a73f9f187042b."
+pageSource: generated
+---
+
+text · image · video → video
+
+Evoke 是来自 Alayalab 的世界模型。Catalog 将它记录为文生视频、图生视频、视频到视频转换、相机可控视频生成任务。
+
+WorldFoundry 将它绑定到 worldfoundry.pipelines.evoke.pipeline_evoke:EvokePipeline pipeline（runner：worldfoundry.pipeline）。
+
+它运行在统一环境 worldfoundry-unified-cu128 中（Python 3.11，CUDA 12.8）。
+
+权重来自 Hugging Face 仓库 AlayaLab/Evoke，固定在 revision 7fa34ecef，另有 1 个已记录仓库。
+
+当前 runner parity 为“Pending”，原生 demo parity 为“Not Recorded”；端到端 GPU 证据应视为尚未记录。
+
+<ModelCommandBuilder modelId="evoke" locale="zh" />
+
+<ModelRelatedRecipes modelId="evoke" locale="zh" />

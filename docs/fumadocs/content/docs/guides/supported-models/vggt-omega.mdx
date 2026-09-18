@@ -1,0 +1,21 @@
+---
+title: "VGGT-Omega"
+description: "VGGT-Omega is the extended VGGT release published under facebook/VGGT-Omega, covering 3D reconstruction, Gaussian splatting, and novel view synthesis."
+pageSource: generated
+---
+
+**Publisher:** Meta AI · Company
+
+VGGT-Omega is the extended VGGT release published under facebook/VGGT-Omega, covering 3D reconstruction, Gaussian splatting, and novel view synthesis. In this catalog it is verified with unusually strong evidence: single-image GPU parity against the pinned upstream commit passed with max_abs_diff=0.0 for comparable outputs, and the in-tree runner supports the official scene-export route.
+
+<ModelCommandBuilder modelId="vggt-omega" locale="en" />
+
+## Architecture
+
+It uses an official-architecture representation runner plus the existing WorldFoundry VGGTResult/save interface, emitting predictions.npz plus GLB scene artifacts. Weights stay under assets/checkpoints and are never committed into source files; the checkpoint license is CC-BY-NC-4.0.
+
+## Usage notes
+
+Use this entry for the verified official scene-export route with WorldFoundry representation artifacts. It is distinct from the vggt (base) and vggt-world entries — pick by route, not by name.
+
+<ModelRelatedRecipes modelId="vggt-omega" locale="en" />

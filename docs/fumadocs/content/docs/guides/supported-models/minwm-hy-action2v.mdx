@@ -1,0 +1,25 @@
+---
+title: "minWM"
+description: "minWM HY Action2V is Shengshu's minimal world-model recipe on a HunyuanVideo-1.5 base: given a prompt, an image, and a motion trajectory it generates action-conditioned, camera-controllable video through a distilled DMD entrypoint."
+pageSource: generated
+---
+
+**Publisher:** Shengshu Technology · Company
+
+minWM HY Action2V is Shengshu's minimal world-model recipe on a HunyuanVideo-1.5 base: given a prompt, an image, and a motion trajectory it generates action-conditioned, camera-controllable video through a distilled DMD entrypoint. In this catalog the dedicated HY15 Action2V route and native action-token path are wired; runner parity waits on checkpoints.
+
+<ModelCommandBuilder modelId="minwm-hy-action2v" locale="en" />
+
+## Architecture
+
+The official source is vendored at a pinned revision (apache-2.0). Only the HY15/Action2V/dmd subset of the 384.97 GB upstream minWM repository is required — the entry deliberately avoids pulling the full research archive.
+
+## Usage notes
+
+Inputs are prompt, image, and trajectory (native motion tokens). Stage the HY15 Action2V DMD subset before expecting artifacts; the Wan-based sibling is separately cataloged as minwm-wan-action2v.
+
+## Evaluation benchmarks
+
+- [CameraBench](/docs/evaluation/benchmark-hub/camerabench) — Camera/motion-trajectory adherence.
+
+<ModelRelatedRecipes modelId="minwm-hy-action2v" locale="en" />

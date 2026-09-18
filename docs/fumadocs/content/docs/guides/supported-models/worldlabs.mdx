@@ -1,0 +1,25 @@
+---
+title: "World Labs API"
+description: "World Labs API is the hosted entry for World Labs' generative world service, recorded for world-generation and asset outputs rather than flat video. Instead of returning a clip, the service produces explorable 3D world content on World Lab…"
+pageSource: generated
+---
+
+**Publisher:** World Labs · Company
+
+World Labs API is the hosted entry for World Labs' generative world service, recorded for world-generation and asset outputs rather than flat video. Instead of returning a clip, the service produces explorable 3D world content on World Labs' infrastructure; WorldFoundry archives what the API returns as artifacts. This is the only hosted_api entry in the catalog aimed at world generation instead of video generation.
+
+<ModelCommandBuilder modelId="worldlabs" locale="en" />
+
+## Architecture
+
+World Labs has not published the architecture behind its world generation service; this repository records only the hosted endpoint integration and the artifact kinds it returns.
+
+## Usage notes
+
+The catalog marks this entry as integrated: the hosted-API Studio pipeline is available, but you must supply your own provider API key and account. No weights are downloaded and no GPU environment is provisioned locally — generation happens on the provider side, so cost, quota, and content policy follow your provider account. Access is provisioned through World Labs' platform (worldlabs.ai).
+
+## Evaluation benchmarks
+
+- [WorldScore](/docs/evaluation/benchmark-hub/worldscore) — Unified benchmark for scoring generated explorable worlds.
+
+<ModelRelatedRecipes modelId="worldlabs" locale="en" />

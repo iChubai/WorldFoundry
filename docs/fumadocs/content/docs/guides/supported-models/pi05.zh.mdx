@@ -1,0 +1,25 @@
+---
+title: "pi0.5"
+description: "pi0.5 is Physical Intelligence's open-world generalization upgrade of pi0: trained for broader scene and task transfer while keeping the flow-matching VLA recipe. This catalog entry is the concrete pi0.5 algorithm route, reusing the in-tre…"
+pageSource: generated
+---
+
+**发表机构:** Physical Intelligence（PI） · 企业
+
+pi0.5 是 Physical Intelligence 对 pi0 的开放世界泛化升级：面向更广的场景与任务迁移训练，同时保持 flow-matching VLA 配方。本 catalog 条目是具体的 pi0.5 算法路由，复用树内 OpenPI 运行时与 pi05 专用配置及 checkpoint 选择——pi05_libero 路径已在 openpi 条目下完成 checkpoint 验证。
+
+<ModelCommandBuilder modelId="pi05" locale="zh" />
+
+## 架构
+
+与 pi0 同族架构——基于 PaliGemma 的 VLA 加 flow-matching 动作专家——按 pi0.5 的开放世界配方训练。请勿经 LeRobot 策略库路由；catalog 使用官方 openpi 运行时。
+
+## 使用要点
+
+用 gsutil/gcloud 就位 GCS checkpoint（gs://openpi-assets）。pi05_libero 配置是本仓库中已验证的参照路径。
+
+## 评测 Benchmark
+
+- [LIBERO](/zh/docs/evaluation/benchmark-hub/libero) — pi05_libero 是树内已验证参照。
+
+<ModelRelatedRecipes modelId="pi05" locale="zh" />

@@ -1,0 +1,25 @@
+---
+title: "StarWM"
+description: "StarWM is a multi-agent world model for StarCraft-style environments: it predicts action-conditioned game video across many interacting units. WorldFoundry exposes the official offline inference client in-tree; jobs talk to an OpenAI-compa…"
+pageSource: generated
+---
+
+**发表机构:** 开源研究发布（仓库未记录正式机构） · 研究机构
+
+StarWM 是面向星际争霸类环境的多智能体世界模型：在大量交互单位下预测动作条件的游戏视频。 WorldFoundry 将官方离线推理客户端内置树内；作业通过 OpenAI 兼容的 StarWM 端点交互，使用官方 prompt fixture 格式，Hugging Face 上的 yxzhang2024/StarWM checkpoint 已确认。
+
+<ModelCommandBuilder modelId="starwm" locale="zh" />
+
+## 架构
+
+运行时为端点-客户端设计：路由构建官方 run_inference_client.py 命令，执行前校验 input_file、mode 与 served_model_id/api_model_id。模型架构内部细节仓库未记录。
+
+## 使用要点
+
+真实生成需要一个运行中的 OpenAI 兼容 StarWM 端点；catalog 路由只负责构建并校验客户端命令。每次运行的验证证据在模型 catalog 外跟踪。
+
+## 评测 Benchmark
+
+- [WorldModelBench](/zh/docs/evaluation/benchmark-hub/worldmodelbench) — 动作条件游戏世界滚动生成质量。
+
+<ModelRelatedRecipes modelId="starwm" locale="zh" />

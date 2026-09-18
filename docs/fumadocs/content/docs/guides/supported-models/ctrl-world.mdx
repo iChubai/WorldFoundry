@@ -1,0 +1,25 @@
+---
+title: "Ctrl-World"
+description: "Ctrl-World is a controllable generative world model for robot manipulation: conditioned on robot actions, it predicts future observation video so policies can be evaluated or improved inside the model."
+pageSource: generated
+---
+
+**Publisher:** Tsinghua University / Stanford University · University
+
+Ctrl-World is a controllable generative world model for robot manipulation: conditioned on robot actions, it predicts future observation video so policies can be evaluated or improved inside the model. In this catalog the official WorldArena-listed source is vendored in-tree; execution waits on the Ctrl-World, Stable Video Diffusion, and CLIP checkpoints plus task assets.
+
+<ModelCommandBuilder modelId="ctrl-world" locale="en" />
+
+## Architecture
+
+The recorded checkpoints tell the design: a Stable Video Diffusion image-to-video backbone (stabilityai/stable-video-diffusion-img2vid) with CLIP conditioning (openai/clip-vit-base-patch32) and Ctrl-World's own action-conditioning weights (yjguo/Ctrl-World). Internals beyond this are not recorded in this repository.
+
+## Usage notes
+
+The pipeline resolves the vendored rollout entrypoint and returns blocked runtime diagnostics until checkpoints and task assets are staged. Stage all three recorded checkpoint sets before submitting jobs.
+
+## Evaluation benchmarks
+
+- [WorldArena](/docs/evaluation/benchmark-hub/worldarena) — The entry is listed on WorldArena for robot world-model evaluation.
+
+<ModelRelatedRecipes modelId="ctrl-world" locale="en" />

@@ -1,0 +1,27 @@
+---
+title: "Wan 2.7 API"
+description: "Wan 2.7 API is the newest DashScope-hosted Wan endpoint in this catalog, recorded for image-to-video. It follows the same integration pattern as the Wan 2.5/2.6 entries — WorldFoundry submits the start image to Alibaba Cloud and archives t…"
+pageSource: generated
+---
+
+**Publisher:** Alibaba (Tongyi Lab) · Company
+image → video
+
+Wan 2.7 API is the newest DashScope-hosted Wan endpoint in this catalog, recorded for image-to-video. It follows the same integration pattern as the Wan 2.5/2.6 entries — WorldFoundry submits the start image to Alibaba Cloud and archives the returned clip — and carries aliases wan2.7 and wan-2.7. Keep in mind the exact served model revision is controlled by Alibaba, not this repo.
+
+<ModelCommandBuilder modelId="wan-2p7" locale="en" />
+
+## Architecture
+
+Wan 2.7 belongs to Tongyi Lab's Wan video-generation family; its API-served architecture and scale are not published, and this repository records only the endpoint integration.
+
+## Usage notes
+
+The catalog marks this entry as integrated: the hosted-API Studio pipeline is available, but you must supply your own provider API key and account. No weights are downloaded and no GPU environment is provisioned locally — generation happens on the provider side, so cost, quota, and content policy follow your provider account. Keys are issued via Alibaba Cloud DashScope (dashscope.aliyun.com).
+
+## Evaluation benchmarks
+
+- [VBench](/docs/evaluation/benchmark-hub/vbench) — Standard multi-dimension quality suite for comparing hosted text/image-to-video outputs.
+- [Physics-IQ Original](/docs/evaluation/benchmark-hub/physics-iq) — Probes whether provider-side video models respect basic physical plausibility.
+
+<ModelRelatedRecipes modelId="wan-2p7" locale="en" />

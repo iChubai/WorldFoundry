@@ -1,0 +1,21 @@
+---
+title: "Latent Action Pretraining"
+description: "LAPA (Latent Action Pretraining) learns actions without action labels: it pretrains a video-action model on unlabeled video by discovering latent actions, then transfers to real robot control. The MIT-licensed LAPA-7B-openx checkpoint is c…"
+pageSource: generated
+---
+
+**发表机构:** 开源研究发布（仓库未记录正式机构） · 研究机构
+
+LAPA（Latent Action Pretraining）无需动作标签学习动作：在无标注视频上通过发现隐式动作预训练视频-动作模型，再迁移到真实机器人控制。MIT 许可的 LAPA-7B-openx checkpoint 已确认并锁定 revision；WorldFoundry 将隐式动作推理运行时内置树内。
+
+<ModelCommandBuilder modelId="lapa" locale="zh" />
+
+## 架构
+
+7B 视频-动作模型，在 Open X-Embodiment 规模数据上以隐式动作量化训练。树内运行时通过了 py_compile、from_pretrained、仅计划执行与别名校验。
+
+## 使用要点
+
+真实 7B 推理目前受环境限制：prepare 环境缺少 tux，gpu-jax0325 环境的 JAX 不兼容。仅计划执行可用；完整推理需要兼容的 JAX 环境。
+
+<ModelRelatedRecipes modelId="lapa" locale="zh" />

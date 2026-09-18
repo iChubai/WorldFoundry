@@ -1,0 +1,35 @@
+---
+title: "MolmoAct2"
+description: "MolmoAct2 is AI2's second-generation action reasoning model with an unusually broad Apache-2.0 checkpoint zoo: base, Think (depth-reasoning), DROID (Franka), Bimanual YAM, SO100/101, and LIBERO variants are all confirmed. WorldFoundry port…"
+pageSource: generated
+---
+
+**Publisher:** Allen Institute for AI (AI2) · Research lab
+
+MolmoAct2 is AI2's second-generation action reasoning model with an unusually broad Apache-2.0 checkpoint zoo: base, Think (depth-reasoning), DROID (Franka), Bimanual YAM, SO100/101, and LIBERO variants are all confirmed. WorldFoundry ports the official DROID/YAM predict_action server contracts into an in-tree action_trace pipeline with no external checkout dependency.
+
+<ModelCommandBuilder modelId="molmoact2" locale="en" />
+
+## Architecture
+
+MolmoAct2 builds on the Molmo open VLM line with action-reasoning heads; the Think variant adds depth-based reasoning before acting. Configured DROID, YAM, SO100, LIBERO, and Think-LIBERO profiles expose checkpoint-backed action_trace routes.
+
+## Usage notes
+
+Pick the checkpoint per embodiment: DROID for Franka arms, BimanualYAM for dual-arm YAM, SO100_101 for SO-ARM, LIBERO/Think-LIBERO for simulation. Integration is statically verified.
+
+## Variants & pipeline bindings
+
+| Variant | Task | Runtime profile | Pipeline binding | Status |
+| --- | --- | --- | --- | --- |
+| `molmoact2-droid` | vla.policy_rollout | `molmoact2` | `molmoact2` | in tree checkpoint runtime static verified |
+| `molmoact2-bimanual-yam` | vla.policy_rollout | `molmoact2` | `molmoact2` | in tree checkpoint runtime static verified |
+| `molmoact2-so100-101` | vla.policy_rollout | `molmoact2` | `molmoact2` | in tree checkpoint runtime static verified |
+| `molmoact2-libero` | vla.policy_rollout | `molmoact2` | `molmoact2` | in tree checkpoint runtime static verified |
+| `molmoact2-think-libero` | vla.policy_rollout | `molmoact2` | `molmoact2` | in tree checkpoint runtime static verified |
+
+## Evaluation benchmarks
+
+- [LIBERO](/docs/evaluation/benchmark-hub/libero) — Dedicated LIBERO and Think-LIBERO checkpoints.
+
+<ModelRelatedRecipes modelId="molmoact2" locale="en" />

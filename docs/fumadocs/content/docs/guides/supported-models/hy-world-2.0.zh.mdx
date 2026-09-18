@@ -1,0 +1,25 @@
+---
+title: "HY-World 2.0"
+description: "HY-World 2.0 is Tencent's second-generation world stack, recorded here as components: HY-Pano 2.0 panorama generation (supported in-tree), WorldMirror 2.0 reconstruction (verified through the Workspace infer path), and full text/image-to-3…"
+pageSource: generated
+---
+
+**发表机构:** 腾讯（混元） · 企业
+
+HY-World 2.0 是腾讯第二代世界生成栈，此处按组件记录：HY-Pano 2.0 全景生成（树内支持）、 WorldMirror 2.0 重建（已通过 Workspace 推理路径验证），以及完整文/图到 3D 世界生成（上游已开源， WorldFoundry 侧迁移待完成）。已验证的重建路径导出深度、法线、点云、高斯泼溅、相机参数、COLMAP 文件与 RRD 场景元数据。
+
+<ModelCommandBuilder modelId="hy-world-2.0" locale="zh" />
+
+## 架构
+
+上游的五阶段世界生成串联 WorldNav 轨迹生成、轨迹渲染、视频生成、GS 数据准备与 3DGS 组合（traj_generate.py 到 world_gs_trainer.py），另需 VLM 端点。WorldFoundry 已树内封装 HY-Pano 2.0 与 WorldMirror 2.0；其余阶段尚未迁移。
+
+## 使用要点
+
+当下请使用已验证的 WorldMirror 2.0 重建路径；在五阶段运行时迁移并验证之前，完整世界生成请视为仅上游可用。轨迹渲染阶段单独记录为 hyworld-worldgen 条目。
+
+## 评测 Benchmark
+
+- [WorldScore](/zh/docs/evaluation/benchmark-hub/worldscore) — 生成可探索世界的标准评分。
+
+<ModelRelatedRecipes modelId="hy-world-2.0" locale="zh" />

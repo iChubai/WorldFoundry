@@ -1,0 +1,21 @@
+---
+title: "Spirit-VLA v1.5"
+description: "Spirit-VLA v1.5 is Spirit AI's vision-language-action policy on a Qwen3-VL backbone, released as the confirmed Spirit-AI-robotics/Spirit-v1.5 base checkpoint. WorldFoundry includes the native inference architecture and preprocessing in-tre…"
+pageSource: generated
+---
+
+**发表机构:** Spirit AI（千寻智能） · 企业
+
+Spirit-VLA v1.5 是 Spirit AI（千寻智能）基于 Qwen3-VL 骨干的视觉-语言-动作策略，发布已确认的 Spirit-AI-robotics/Spirit-v1.5 base checkpoint。WorldFoundry 将原生推理架构与预处理内置树内；运行时加载官方 checkpoint 与 Qwen3-VL 骨干，禁用远程 Python。
+
+<ModelCommandBuilder modelId="spirit-v1.5" locale="zh" />
+
+## 架构
+
+Qwen3-VL 视觉-语言骨干配 Spirit 的动作预测头。官方仓库指针之外的架构内部细节仓库未记录。
+
+## 使用要点
+
+导入与 checkpoint 门控已验证；数值 parity 需本地就位 21.6 GB checkpoint。
+
+<ModelRelatedRecipes modelId="spirit-v1.5" locale="zh" />

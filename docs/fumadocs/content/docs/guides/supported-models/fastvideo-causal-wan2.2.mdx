@@ -1,0 +1,22 @@
+---
+title: "FastVideo CausalWan2.2"
+description: "FastVideo CausalWan2.2 is an eight-step causal Wan2.2 rollout that emits video in three-latent-frame blocks while routing between high- and low-noise experts."
+pageSource: generated
+---
+
+**Publisher:** NVIDIA / FastVideo · Company
+text → video
+
+FastVideo CausalWan2.2 is an eight-step causal Wan2.2 rollout that emits video in three-latent-frame blocks while routing between high- and low-noise experts.
+
+<ModelCommandBuilder modelId="fastvideo-causal-wan2.2" locale="en" />
+
+## Architecture
+
+WorldFoundry keeps expert KV/cross-attention caches independent and owns deterministic self-forcing re-noise on the fixed shifted flow schedule.
+
+## Usage notes
+
+Defaults are 832x480, 717 frames, eight steps, guidance 1, and 16 FPS.
+
+<ModelRelatedRecipes modelId="fastvideo-causal-wan2.2" locale="en" />

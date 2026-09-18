@@ -1,0 +1,31 @@
+---
+title: "X-VLA"
+description: "X-VLA is a cross-embodiment VLA built on a Florence-2 backbone with soft-prompt domain conditioning (paper: arXiv 2510.10274, Apache-2.0). It is one of the most thoroughly validated entries in this catalog: all nine released checkpoints re…"
+pageSource: generated
+---
+
+**Publisher:** Tsinghua University (AIR) · University
+[X-VLA: Soft-Prompted Transformer as Scalable Cross-Embodiment Vision-Language-Action Model](https://arxiv.org/abs/2510.10274) (2025)
+
+X-VLA is a cross-embodiment VLA built on a Florence-2 backbone with soft-prompt domain conditioning (paper: arXiv 2510.10274, Apache-2.0). It is one of the most thoroughly validated entries in this catalog: all nine released checkpoints restored strictly and produced finite 30x20 actions through real A100 inference with explicit domain IDs, and the in-tree action head matches upstream within 5e-7.
+
+<figure className="wf-recipe-media is-diagram">
+  <img src="/models/xvla/paper.png" alt="X-VLA: Soft-Prompted Transformer as Scalable Cross-Embodiment Vision-Language-Action Model" />
+  <figcaption>X-VLA: Soft-Prompted Transformer as Scalable Cross-Embodiment Vision-Language-Action Model</figcaption>
+</figure>
+
+<ModelCommandBuilder modelId="xvla" locale="en" />
+
+## Architecture
+
+A Florence-2 vision-language backbone, the X-VLA processor, and a soft-prompted transformer whose domain-specific soft prompts switch embodiments; the in-tree action head has exactly the same 300 state keys, tensor shapes, and parameter count as upstream.
+
+## Usage notes
+
+Always pass the explicit domain ID matching your embodiment/checkpoint. Runtime forces trust_remote_code=false and never imports a source checkout; training, FastAPI serving, simulator clients, and robot drivers are excluded.
+
+## Evaluation benchmarks
+
+- [BridgeData V2](/docs/evaluation/benchmark-hub/bridgedata-v2) — The confirmed X-VLA-WidowX checkpoint targets Bridge-style WidowX data.
+
+<ModelRelatedRecipes modelId="xvla" locale="en" />

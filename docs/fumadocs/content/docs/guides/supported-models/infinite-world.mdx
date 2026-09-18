@@ -1,0 +1,27 @@
+---
+title: "Infinite-World"
+description: "Infinite-World is MeiGen-AI's long-horizon world video model: from one image it navigates and extends a world over long durations."
+pageSource: generated
+---
+
+**Publisher:** Meituan (MeiGen-AI) · Company
+video
+
+Infinite-World is MeiGen-AI's long-horizon world video model: from one image it navigates and extends a world over long durations. In this catalog it is verified — real GPU inference produced a non-empty long-horizon world video artifact with preview metadata through the Studio workspace job path, using the official image-conditioned navigation demo settings.
+
+<ModelCommandBuilder modelId="infinite-world" locale="en" />
+
+## Architecture
+
+The in-tree runtime resolves local or Hugging Face checkpoint layouts without relying on an external repository at inference time. Architecture internals beyond the recorded structure are not stored in this repository.
+
+## Usage notes
+
+The profile matches the official local/Hugging Face checkpoint layout — start from the official image-conditioned demo settings that were verified.
+
+## Evaluation benchmarks
+
+- [WorldModelBench](/docs/evaluation/benchmark-hub/worldmodelbench) — Long-horizon world-rollout quality.
+- [MemoBench](/docs/evaluation/benchmark-hub/memobench) — Long-horizon consistency evaluation.
+
+<ModelRelatedRecipes modelId="infinite-world" locale="en" />

@@ -1,0 +1,21 @@
+---
+title: "HunyuanWorld-Mirror"
+description: "HunyuanWorld-Mirror is Tencent's universal 3D reconstruction model: feed it images and it returns point clouds, Gaussian splats, depth, normals, and camera parameters in one pass."
+pageSource: generated
+---
+
+**Publisher:** Tencent (Hunyuan) · Company
+
+HunyuanWorld-Mirror is Tencent's universal 3D reconstruction model: feed it images and it returns point clouds, Gaussian splats, depth, normals, and camera parameters in one pass. In this catalog it is verified — GPU inference with local tencent/HunyuanWorld-Mirror assets produced point-cloud PLY, Gaussian-splat PLY, depth maps, normal maps, and a scene.rrd.
+
+<ModelCommandBuilder modelId="hunyuanworld-mirror" locale="en" />
+
+## Architecture
+
+WorldFoundry routes inference through the in-tree HunyuanMirrorPipeline and vendored inference-only WorldMirror model code; the official repository serves as provenance for parity checks, not a runtime dependency. Third-party packages (onnxruntime, pycolmap, open3d, gsplat) are environment dependencies, not catalog blockers.
+
+## Usage notes
+
+HunyuanMirrorPipeline accepts image, input, images, or image_path payloads from the standard pipeline runner and writes reconstruction artifacts to the sample output directory. Real inference needs the configured Python environment, local checkpoints, and GPU-compatible torch/gsplat.
+
+<ModelRelatedRecipes modelId="hunyuanworld-mirror" locale="en" />

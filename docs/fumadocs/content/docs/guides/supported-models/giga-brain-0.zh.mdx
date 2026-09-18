@@ -1,0 +1,32 @@
+---
+title: "GigaBrain-0"
+description: "GigaBrain-0 is GigaAI's 3.5B VLA foundation policy with subtask prediction, released as GigaBrain-0-3.5B-Base and the 0.1 refresh under Apache-2.0."
+pageSource: generated
+---
+
+**发表机构:** 极佳科技（GigaAI） · 企业
+
+GigaBrain-0 是极佳科技（GigaAI）的 3.5B VLA 基础策略，支持子任务预测，发布 GigaBrain-0-3.5B-Base 与 0.1 更新版，Apache-2.0 许可。本 catalog 中树内 GigaBrain-0.1 运行时使用转换的 LeRobot RoboTwin 统计输出了 checkpoint 驱动的 CUDA action_trace，PaliGemma tokenizer 与 physical-intelligence FAST tokenizer 均已就位。
+
+<ModelCommandBuilder modelId="giga-brain-0" locale="zh" />
+
+## 架构
+
+3.5B 策略，PaliGemma tokenizer 基座，用 FAST 动作 tokenizer 做离散动作编码，另有子任务预测头。官方仓库指针之外的架构内部细节仓库未记录。
+
+## 使用要点
+
+PaliGemma tokenizer 模型为门控（需人工审查），需要 Hugging Face 认证。由于官方任务 norm_stats/delta_mask 资产门控或未就位，官方任务分数 parity 单独跟踪。
+
+## 变体与 Pipeline Binding
+
+| Variant | 任务 | Runtime profile | Pipeline Binding | 状态 |
+| --- | --- | --- | --- | --- |
+| `giga-brain-0-3.5b-base` | vla.action_prediction | `giga-brain-0` | `giga-brain-0` | integrated |
+| `giga-brain-0.1-3.5b-base` | vla.policy_rollout | `giga-brain-0` | `giga-brain-0` | integrated |
+
+## 评测 Benchmark
+
+- [RoboTwin 2.0](/zh/docs/evaluation/benchmark-hub/robotwin) — CUDA 动作轨迹以转换的 RoboTwin 统计产出。
+
+<ModelRelatedRecipes modelId="giga-brain-0" locale="zh" />

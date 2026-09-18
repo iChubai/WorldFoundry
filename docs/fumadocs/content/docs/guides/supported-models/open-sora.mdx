@@ -1,0 +1,26 @@
+---
+title: "Open-Sora"
+description: "Open-Sora is HPC-AI Tech's fully open text-to-video project — model, training code, and data pipeline are all published, which made it a popular reproducible baseline. The WorldFoundry route is complete and reports missing checkpoints at r…"
+pageSource: generated
+---
+
+**Publisher:** HPC-AI Tech · Company
+text → video
+
+Open-Sora is HPC-AI Tech's fully open text-to-video project — model, training code, and data pipeline are all published, which made it a popular reproducible baseline. The WorldFoundry route is complete and reports missing checkpoints at runtime. Note the recorded packaging detail: Open-Sora often requires separate model and VAE repositories, and both confirmed public HF repos are listed in the manifest.
+
+<ModelCommandBuilder modelId="open-sora" locale="en" />
+
+## Architecture
+
+Open-Sora uses a spatial-temporal diffusion transformer (its STDiT design) over a video VAE latent space, per the upstream project. This repository records the prompt-only input contract and the two-repo (model + VAE) checkpoint layout; version-specific internals are not recorded here.
+
+## Usage notes
+
+No runner-parity record exists yet. Stage both the model and VAE repositories before running — forgetting the VAE is the most common failure. Best used as a reproducible research baseline rather than a production generator.
+
+## Evaluation benchmarks
+
+- [VBench](/docs/evaluation/benchmark-hub/vbench) — The suite Open-Sora releases habitually report on.
+
+<ModelRelatedRecipes modelId="open-sora" locale="en" />

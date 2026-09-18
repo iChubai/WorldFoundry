@@ -1,0 +1,25 @@
+---
+title: "Matrix-Game 1.0"
+description: "Matrix-Game 1.0 is the first generation of Skywork's interactive game world model: from an image and keyboard/mouse-style actions it generates playable game-world video."
+pageSource: generated
+---
+
+**Publisher:** Skywork AI (Kunlun Tech) · Company
+
+Matrix-Game 1.0 is the first generation of Skywork's interactive game world model: from an image and keyboard/mouse-style actions it generates playable game-world video. In this catalog it is registered as its own model id and never routes through Matrix-Game-2; the minimal official Python runtime closure is vendored in-tree.
+
+<ModelCommandBuilder modelId="matrix-game-1" locale="en" />
+
+## Architecture
+
+The local cache layout records the checkpoint scale: seven DiT shards, four text_encoder_i2v shards, a VAE weight, configs, and assets under Skywork--Matrix-Game. Architecture internals beyond this are not recorded in this repository.
+
+## Usage notes
+
+Matrix-Game-1 uses torch 2.5.1+cu124; prefer the worldfoundry-unified-cu128 environment on modern NVIDIA hosts. For newer quality and verified runners see matrix-game-2 and matrix-game-3.
+
+## Evaluation benchmarks
+
+- [WorldModelBench](/docs/evaluation/benchmark-hub/worldmodelbench) — Action-conditioned game-world rollout quality.
+
+<ModelRelatedRecipes modelId="matrix-game-1" locale="en" />

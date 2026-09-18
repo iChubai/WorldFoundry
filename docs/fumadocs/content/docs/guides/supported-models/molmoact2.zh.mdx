@@ -1,0 +1,35 @@
+---
+title: "MolmoAct2"
+description: "MolmoAct2 is AI2's second-generation action reasoning model with an unusually broad Apache-2.0 checkpoint zoo: base, Think (depth-reasoning), DROID (Franka), Bimanual YAM, SO100/101, and LIBERO variants are all confirmed. WorldFoundry port…"
+pageSource: generated
+---
+
+**发表机构:** 艾伦人工智能研究所（AI2） · 研究机构
+
+MolmoAct2 是 AI2 的第二代动作推理模型，Apache-2.0 checkpoint 阵容异常齐全：base、 Think（深度推理）、DROID（Franka）、双臂 YAM、SO100/101 与 LIBERO 变体均已确认。WorldFoundry 将官方 DROID/YAM predict_action 服务契约移植为树内 action_trace pipeline，无外部 checkout 依赖。
+
+<ModelCommandBuilder modelId="molmoact2" locale="zh" />
+
+## 架构
+
+MolmoAct2 基于 Molmo 开放 VLM 线并加动作推理头；Think 变体在行动前增加基于深度的推理。已配置的 DROID、YAM、SO100、LIBERO 与 Think-LIBERO profile 暴露 checkpoint 驱动的 action_trace 路由。
+
+## 使用要点
+
+按本体选择 checkpoint：Franka 机械臂用 DROID，双臂 YAM 用 BimanualYAM，SO-ARM 用 SO100_101，仿真用 LIBERO/Think-LIBERO。集成已通过静态验证。
+
+## 变体与 Pipeline Binding
+
+| Variant | 任务 | Runtime profile | Pipeline Binding | 状态 |
+| --- | --- | --- | --- | --- |
+| `molmoact2-droid` | vla.policy_rollout | `molmoact2` | `molmoact2` | in tree checkpoint runtime static verified |
+| `molmoact2-bimanual-yam` | vla.policy_rollout | `molmoact2` | `molmoact2` | in tree checkpoint runtime static verified |
+| `molmoact2-so100-101` | vla.policy_rollout | `molmoact2` | `molmoact2` | in tree checkpoint runtime static verified |
+| `molmoact2-libero` | vla.policy_rollout | `molmoact2` | `molmoact2` | in tree checkpoint runtime static verified |
+| `molmoact2-think-libero` | vla.policy_rollout | `molmoact2` | `molmoact2` | in tree checkpoint runtime static verified |
+
+## 评测 Benchmark
+
+- [LIBERO](/zh/docs/evaluation/benchmark-hub/libero) — 有专门的 LIBERO 与 Think-LIBERO checkpoint。
+
+<ModelRelatedRecipes modelId="molmoact2" locale="zh" />

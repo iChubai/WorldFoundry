@@ -1,0 +1,26 @@
+---
+title: "Wan2.1-Fun V1.1 1.3B Control Camera"
+description: "Wan2.1-Fun V1.1 1.3B Control Camera is the GPU-validated camera-control entry of the VideoX-Fun family in this catalog: the complete 1.3B camera checkpoint and split Wan components passed real A100 inference in the WorldFoundry workspace.…"
+pageSource: generated
+---
+
+**Publisher:** Alibaba PAI (VideoX-Fun) · Company
+image → video
+
+Wan2.1-Fun V1.1 1.3B Control Camera is the GPU-validated camera-control entry of the VideoX-Fun family in this catalog: the complete 1.3B camera checkpoint and split Wan components passed real A100 inference in the WorldFoundry workspace. The official pose-conditioned route emitted nine coherent H.264 frames at 672x384 after four denoising steps, with all 989 transformer tensors matched without fallback.
+
+<ModelCommandBuilder modelId="wan21-fun-1p3b-cam" locale="en" />
+
+## Architecture
+
+A 1.3B-parameter Wan2.1 diffusion transformer with the VideoX-Fun Control+i2v camera conditioning pathway. The checkpoint matched all 989 in-tree transformer tensors without fallback or skipped camera weights, confirming the conversion is exact.
+
+## Usage notes
+
+This is the recommended starting point for VideoX-Fun camera control: smallest footprint and the only variant with recorded real-GPU validation. Supply explicit camera pose sequences; scale up to the 14B/Wan2.2 variants once your pipeline works here.
+
+## Evaluation benchmarks
+
+- [CameraBench](/docs/evaluation/benchmark-hub/camerabench) — Camera-pose adherence for controlled i2v generation.
+
+<ModelRelatedRecipes modelId="wan21-fun-1p3b-cam" locale="en" />

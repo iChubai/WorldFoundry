@@ -1,0 +1,21 @@
+---
+title: "OpenPIE 0.6"
+description: "OpenPIE 0.6 is Exla AI's open-weights pi-0.6-style policy, tracked as its own catalog entry separate from OpenPI pi0/pi0.5. The exla-ai/openpie-0.6 checkpoint is confirmed on Hugging Face; WorldFoundry routes it through the in-tree officia…"
+pageSource: generated
+---
+
+**Publisher:** Exla AI · Company
+
+OpenPIE 0.6 is Exla AI's open-weights pi-0.6-style policy, tracked as its own catalog entry separate from OpenPI pi0/pi0.5. The exla-ai/openpie-0.6 checkpoint is confirmed on Hugging Face; WorldFoundry routes it through the in-tree official-policy runtime using the FLA policy factory.
+
+<ModelCommandBuilder modelId="openpie-0.6" locale="en" />
+
+## Architecture
+
+The runtime contract is the FLA policy factory from the exla-ai/fla repository (pinned head 1ac45102). Architecture internals are not recorded in this repository.
+
+## Usage notes
+
+Checkpoint absence is reported by runtime missing_assets and is not a catalog blocker; runs emit a runtime plan until weights are staged.
+
+<ModelRelatedRecipes modelId="openpie-0.6" locale="en" />

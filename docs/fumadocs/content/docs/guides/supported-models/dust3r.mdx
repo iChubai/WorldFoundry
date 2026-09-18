@@ -1,0 +1,27 @@
+---
+title: "DUSt3R"
+description: "DUSt3R made unconstrained two-view 3D reconstruction easy: feed it two images — no calibration, no poses — and it directly regresses aligned pointmaps."
+pageSource: generated
+---
+
+**Publisher:** NAVER Labs Europe · Company
+[DUSt3R: Geometric 3D Vision Made Easy](https://arxiv.org/abs/2312.14132) (2023)
+
+DUSt3R made unconstrained two-view 3D reconstruction easy: feed it two images — no calibration, no poses — and it directly regresses aligned pointmaps. In this catalog it is fully verified: checkpoint-backed Studio inference produced a finite point cloud from the bundled multi-view test case, with evidence recorded in inference_evidence.yaml.
+
+<figure className="wf-recipe-media is-diagram">
+  <img src="/models/dust3r/paper.png" alt="DUSt3R: Geometric 3D Vision Made Easy" />
+  <figcaption>DUSt3R: Geometric 3D Vision Made Easy</figcaption>
+</figure>
+
+<ModelCommandBuilder modelId="dust3r" locale="en" />
+
+## Architecture
+
+A ViT encoder-decoder that regresses per-pixel 3D pointmaps in a shared frame for an image pair; global alignment merges pairs into scenes (per arXiv 2312.14132). WorldFoundry vendors it under base_models/three_dimensions/general_3d/dust3r, exposed via the geometry-prior contract.
+
+## Usage notes
+
+The runnable route is exposed through the shared geometry-prior contract (see dust3r-base-model). Mind the license: upstream is CC-BY-NC-SA-4.0 — recorded for provenance; respect non-commercial terms downstream.
+
+<ModelRelatedRecipes modelId="dust3r" locale="en" />

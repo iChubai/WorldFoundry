@@ -1,0 +1,25 @@
+---
+title: "AHA-WAM"
+description: "AHA-WAM is a world-action model for manipulation: paired video and action experts share a mixture cache so the policy benefits from predictive world modeling. The MIT-licensed SereneC/AHA-WAM-RoboTwin2.0 checkpoint (robotwin_ahawam.pt) is…"
+pageSource: generated
+---
+
+**发表机构:** 开源研究发布（仓库未记录正式机构） · 研究机构
+
+AHA-WAM 是面向操作的世界-动作模型：视频与动作专家成对并共享 mixture cache，使策略受益于预测式世界建模。仓库记录 MIT 许可的 SereneC/AHA-WAM-RoboTwin2.0 checkpoint（robotwin_ahawam.pt）， Wan 系列 VAE 与 UMT5 文本编码器权重来自 DiffSynth-Studio 转换版本；全部在树内进程内执行。
+
+<ModelCommandBuilder modelId="ahawam" locale="zh" />
+
+## 架构
+
+精确的视频/动作专家、mixture cache 编辑器、六帧历史与两阶段块推理在进程内运行，并搭配 Wan VAE 与 UMT5 编码器。训练器、数据集、模拟器、评测启动器与部署服务均被排除。
+
+## 使用要点
+
+需在本地就位策略 checkpoint、统计文件与 Wan 系列 VAE/文本编码器权重。资产仅从本地加载，绝不执行 checkpoint 携带的 Python；运行时加载采用严格键匹配。
+
+## 评测 Benchmark
+
+- [RoboTwin 2.0](/zh/docs/evaluation/benchmark-hub/robotwin) — 发布的 checkpoint 面向 RoboTwin 2.0 训练。
+
+<ModelRelatedRecipes modelId="ahawam" locale="zh" />

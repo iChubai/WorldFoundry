@@ -1,0 +1,22 @@
+---
+title: "Prior Depth Anything"
+description: "Prior Depth Anything is a depth-completion prior: it takes any coarse or sparse metric-depth prior plus an image and refines them into a dense, sharper metric depth map."
+pageSource: generated
+---
+
+**发表机构:** 开源研究发布（仓库未记录正式机构） · 研究机构
+image → depth
+
+Prior Depth Anything 是深度补全先验：接受任意粗糙或稀疏的米制深度先验加一张图像，将其细化为致密且更锐利的米制深度图。本 catalog 中它已验证——Workspace 于 2026-07-11 加载官方 checkpoint，并对真实的 Depth Anything 3 米制深度条件完成了细化。
+
+<ModelCommandBuilder modelId="prior-depth-anything" locale="zh" />
+
+## 架构
+
+catalog 记录其为提示条件的深度补全设计：模型同时消费提示米制深度与图像（checkpoint 为 Rain729/Prior-Depth-Anything，apache-2.0）。注册于 base_models/three_dimensions/depth/priorda，供上层几何管线共享而不嵌套于其下。
+
+## 使用要点
+
+它作为独立几何先验集成在 worldfoundry/base_models 下，通过共享的 geometry-prior pipeline/operator 契约对外暴露。上层管线（如 ViPE）从这一规范位置导入它，而不是各自保留私有副本。请与米制深度源（如 depth-anything-v3-prior）配对使用，由它细化该源的输出。
+
+<ModelRelatedRecipes modelId="prior-depth-anything" locale="zh" />

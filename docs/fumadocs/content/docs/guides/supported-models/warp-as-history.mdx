@@ -1,0 +1,26 @@
+---
+title: "Warp-as-History"
+description: "Warp-as-History (WAH) is a camera-controlled image-to-video method: it warps the input image along the requested camera path and treats those warps as the generation history that a video model then refines."
+pageSource: generated
+---
+
+**Publisher:** Open-source research release (institution not recorded) · Research lab
+image → video
+
+Warp-as-History (WAH) is a camera-controlled image-to-video method: it warps the input image along the requested camera path and treats those warps as the generation history that a video model then refines. Both integration and runner status are verified — GPU parity passed with staged Helios-Distilled and LoRA checkpoints, reproducing the official BMX/graffiti warp-video demo.
+
+<ModelCommandBuilder modelId="warp-as-history" locale="en" />
+
+## Architecture
+
+WAH = geometric warping + a Helios-Distilled diffusers runtime + a task LoRA; Pi3 submodule code is vendored for camera-pose-to-warp rendering. Checkpoints stay external and are injected through model_path/lora_path/pi3x_ckpt_path or the corresponding WAH_* environment variables.
+
+## Usage notes
+
+This model intentionally uses a dedicated conda environment because its official stack pins Python 3.10 and torch 2.5.0+cu121 — do not run it in the unified env. Pi3X is only needed when rendering warps from camera poses.
+
+## Evaluation benchmarks
+
+- [CameraBench](/docs/evaluation/benchmark-hub/camerabench) — Camera-motion evaluation matches WAH's core capability.
+
+<ModelRelatedRecipes modelId="warp-as-history" locale="en" />

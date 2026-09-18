@@ -1,0 +1,22 @@
+---
+title: "H-RDT"
+description: "H-RDT (Human-to-Robotics Diffusion Transformer) pretrains a diffusion-transformer policy on large-scale human manipulation data before robot fine-tuning (paper: arXiv 2506.23503, MPL-2.0). The official release is the 48-dimensional human-m…"
+pageSource: generated
+---
+
+**发表机构:** 开源研究发布（仓库未记录正式机构） · 研究机构
+[Data Augmentation for Cognitive Behavioral Therapy: Leveraging ERNIE Language Models using Artificial Intelligence](https://arxiv.org/abs/2506.23503) (2025)
+
+H-RDT（Human-to-Robotics Diffusion Transformer）先在大规模人类操作数据上预训练扩散 transformer 策略，再做机器人微调（论文：arXiv 2506.23503，MPL-2.0）。官方发布为 48 维人体动作预训练 checkpoint（embodiedfoundation/H-RDT）；WorldFoundry 将 transformer、flow-matching 采样器、 DINOv2+SigLIP 视觉路径与可选 T5 语言路径内置树内。
+
+<ModelCommandBuilder modelId="h-rdt" locale="zh" />
+
+## 架构
+
+扩散 transformer 配 flow-matching 采样；视觉用 DINOv2 加 SigLIP，语言可选 T5。模块与参数名保持官方 checkpoint 契约，恢复为严格模式。
+
+## 使用要点
+
+发布的 checkpoint 是人体动作预训练阶段（48 维），而非未发布的 14 维机器人微调——机器人部署需自行微调。训练、数据集、ROS、机器人驱动、模拟器客户端与 hub mixin 均被排除。
+
+<ModelRelatedRecipes modelId="h-rdt" locale="zh" />

@@ -1,0 +1,27 @@
+---
+title: "GigaWorld-0"
+description: "GigaWorld-0 is GigaAI's open robotics world-model series: video-generation models trained for action-conditioned robot data generation, with pretrain and GR1-specialized 2B checkpoints recorded."
+pageSource: generated
+---
+
+**Publisher:** GigaAI · Company
+video
+
+GigaWorld-0 is GigaAI's open robotics world-model series: video-generation models trained for action-conditioned robot data generation, with pretrain and GR1-specialized 2B checkpoints recorded. In this catalog the official WorldArena-listed source is vendored in-tree; execution waits on staged checkpoints and task assets.
+
+<ModelCommandBuilder modelId="giga-world-0" locale="en" />
+
+## Architecture
+
+Two 2B video checkpoints are recorded — GigaWorld-0-Video-Pretrain-2b and GigaWorld-0-Video-GR1-2b under open-gigaai. Architecture internals beyond the recorded tasks are not stored in this repository.
+
+## Usage notes
+
+The pipeline resolves the vendored inference entrypoint and returns blocked runtime diagnostics until checkpoints and task assets are staged.
+
+## Evaluation benchmarks
+
+- [WorldArena](/docs/evaluation/benchmark-hub/worldarena) — The entry is listed on WorldArena for robot world-model evaluation.
+- [EWMBench](/docs/evaluation/benchmark-hub/ewmbench) — Embodied world-model video prediction quality.
+
+<ModelRelatedRecipes modelId="giga-world-0" locale="en" />

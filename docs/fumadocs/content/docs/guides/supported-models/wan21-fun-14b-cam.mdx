@@ -1,0 +1,26 @@
+---
+title: "Wan2.1-Fun V1.1 14B Control Camera"
+description: "Wan2.1-Fun V1.1 14B Control Camera is Alibaba PAI's largest Wan2.1-generation camera-control checkpoint in the VideoX-Fun family: image-to-video generation steered by explicit camera pose sequences. WorldFoundry vendors VideoX-Fun in-tree…"
+pageSource: generated
+---
+
+**Publisher:** Alibaba PAI (VideoX-Fun) · Company
+image → video
+
+Wan2.1-Fun V1.1 14B Control Camera is Alibaba PAI's largest Wan2.1-generation camera-control checkpoint in the VideoX-Fun family: image-to-video generation steered by explicit camera pose sequences. WorldFoundry vendors VideoX-Fun in-tree (revision 403f1f7b) and wires a dedicated route for the alibaba-pai/Wan2.1-Fun-V1.1-14B-Control-Camera checkpoint under Apache-2.0.
+
+<ModelCommandBuilder modelId="wan21-fun-14b-cam" locale="en" />
+
+## Architecture
+
+A 14B-parameter Wan2.1 diffusion transformer with the VideoX-Fun Control-Camera conditioning pathway: camera extrinsics are injected as control signals alongside the image condition. Further internals are not recorded in this repository.
+
+## Usage notes
+
+Use the sibling wan21-fun-1p3b-cam entry for a GPU-validated reference of the same route at 1.3B scale; the 14B route itself is wired but parity is pending. Camera pose sequences must be supplied explicitly.
+
+## Evaluation benchmarks
+
+- [CameraBench](/docs/evaluation/benchmark-hub/camerabench) — Camera-pose adherence for controlled i2v generation.
+
+<ModelRelatedRecipes modelId="wan21-fun-14b-cam" locale="en" />

@@ -1,0 +1,58 @@
+---
+title: "Sana"
+description: "Sana is NVIDIA's efficient generation family, and the largest variant surface in the video category: twenty recorded variants spanning text-to-image (600M–4.8B, up to 4K), ControlNet-conditioned image generation, Sana-Video 2B text-to-vide…"
+pageSource: generated
+---
+
+**发表机构:** 英伟达（NVIDIA） · 企业
+text · video → image · video
+[SANA: Efficient High-Resolution Image Synthesis with Linear Diffusion Transformers](https://arxiv.org/abs/2410.10629) (2024)
+
+Sana 是英伟达的高效生成系列，也是 video 类别中 variant 最多的条目：二十个已记录 variant，覆盖文生图（600M–4.8B，最高 4K）、ControlNet 条件图像生成、Sana-Video 2B 的 480p/720p 文生视频、LongSANA 长视频，以及 SANA-Streaming 的视频到视频（长时与双向）。checkpoint 数学分布在树内按角色划分的规范化扩散组件中。
+
+<figure className="wf-recipe-media is-diagram">
+  <img src="/models/sana/paper.png" alt="SANA: Efficient High-Resolution Image Synthesis with Linear Diffusion Transformers" />
+  <figcaption>SANA: Efficient High-Resolution Image Synthesis with Linear Diffusion Transformers</figcaption>
+</figure>
+
+<ModelCommandBuilder modelId="sana" locale="zh" />
+
+## 架构
+
+Sana 的高效来自深压缩自编码器（32x）、线性注意力 DiT 块与小型 LLM 文本编码器，见论文（arXiv 2410.10629）。记录的流式路径使用内置官方 BF16 CLI、混合 DiT 块、融合 GDN 核与因果 LTX-2 VAE 封装，源码同步自固定的 NVlabs/Sana commit；论文中的 MPQ 部署路径不在公开 BF16 配方内。
+
+## 使用要点
+
+集成状态为 runtime_ported、runner parity 为 pending，但注意已记录证据：long-streaming checkpoint 在真实 A100 上完成一次运行，81 帧 1280x704、16 FPS 全部解码（产物 SHA256 记录在 profile 中）。 SANA-Streaming 接受源视频路径或 hf:// URI。完整 50 步/更长帧数的官方质量一致性仍在等待。
+
+## 变体与 Pipeline Binding
+
+| Variant | 任务 | Runtime profile | Pipeline Binding | 状态 |
+| --- | --- | --- | --- | --- |
+| `sana-600m-512px` | text-to-image | `sana` | `sana-600m-512px` | runtime ported |
+| `sana-600m-1024px` | text-to-image | `sana` | `sana-600m-1024px` | runtime ported |
+| `sana-1600m-512px` | text-to-image | `sana` | `sana-1600m-512px` | runtime ported |
+| `sana-1600m-512px-multiling` | text-to-image | `sana` | `sana-1600m-512px-multiling` | runtime ported |
+| `sana-1600m-1024px` | text-to-image | `sana` | `sana-1600m-1024px` | runtime ported |
+| `sana-1600m-1024px-multiling` | text-to-image | `sana` | `sana-1600m-1024px-multiling` | runtime ported |
+| `sana-1600m-1024px-bf16` | text-to-image | `sana` | `sana-1600m-1024px-bf16` | runtime ported |
+| `sana-1600m-2k-bf16` | text-to-image | `sana` | `sana-1600m-2k-bf16` | runtime ported |
+| `sana-1600m-4k-bf16` | text-to-image | `sana` | `sana-1600m-4k-bf16` | runtime ported |
+| `sana1p5-1600m-1024px` | text-to-image | `sana` | `sana1p5-1600m-1024px` | runtime ported |
+| `sana1p5-4800m-1024px` | text-to-image | `sana` | `sana1p5-4800m-1024px` | runtime ported |
+| `sana-sprint-600m-1024px` | text-to-image | `sana` | `sana-sprint-600m-1024px` | runtime ported |
+| `sana-sprint-1600m-1024px` | text-to-image | `sana` | `sana-sprint-1600m-1024px` | runtime ported |
+| `sana-controlnet-600m-1024px` | image-conditioned-generation | `sana` | `sana-controlnet-600m-1024px` | runtime ported |
+| `sana-controlnet-1600m-1024px-bf16` | image-conditioned-generation | `sana` | `sana-controlnet-1600m-1024px-bf16` | runtime ported |
+| `sana-video-2b-480p` | text-to-video | `sana-video-2b-480p` | `sana-video-2b-480p` | integrated |
+| `sana-video-2b-720p` | text-to-video | `sana-video-2b-720p` | `sana-video-2b-720p` | integrated |
+| `longsana-video-2b-480p` | text-to-video | `longsana-video-2b-480p` | `longsana-video-2b-480p` | integrated |
+| `sana-streaming-2b-720p` | video-to-video | `sana-streaming-2b-720p` | `sana-streaming-2b-720p` | integrated |
+| `sana-streaming-bidirectional-2b-720p` | video-to-video | `sana-streaming-bidirectional-2b-720p` | `sana-streaming-bidirectional-2b-720p` | integrated |
+
+## 评测 Benchmark
+
+- [VBench](/zh/docs/evaluation/benchmark-hub/vbench) — Sana-Video 文生视频路径的质量评测。
+- [SANA-WM 80-Scene Benchmark](/zh/docs/evaluation/benchmark-hub/sana-wm-bench) — 本仓库中针对 Sana 的世界模型评测。
+
+<ModelRelatedRecipes modelId="sana" locale="zh" />

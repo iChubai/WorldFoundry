@@ -1,0 +1,27 @@
+---
+title: "UniAnimate-DiT"
+description: "UniAnimate-DiT is Alibaba ali-vilab's human image animation model built on Wan2.1-I2V: it animates a person photo to follow a driving pose sequence. The in-tree route is wired with local checkpoint assets and exposes max_frames, resolution…"
+pageSource: generated
+---
+
+**Publisher:** Alibaba (Tongyi Lab) · Company
+image → video
+
+UniAnimate-DiT is Alibaba ali-vilab's human image animation model built on Wan2.1-I2V: it animates a person photo to follow a driving pose sequence. The in-tree route is wired with local checkpoint assets and exposes max_frames, resolution, step count, and seed controls.
+
+<figure className="wf-recipe-media">
+  <Video src="/demos/studio/unianimate-dit-human-animation.mp4" autoPlay loop muted playsInline />
+  <figcaption>Human animation</figcaption>
+</figure>
+
+<ModelCommandBuilder modelId="unianimate-dit" locale="en" />
+
+## Architecture
+
+Built on the Wan2.1 image-to-video diffusion transformer with pose-sequence conditioning for human animation (checkpoint: ZheWang123/UniAnimate-DiT). Deeper conditioning internals are not recorded in this repository.
+
+## Usage notes
+
+Runner parity is pending; per-run artifact checks live outside the catalog. Prepare a clean subject photo and a driving pose sequence for best results.
+
+<ModelRelatedRecipes modelId="unianimate-dit" locale="en" />

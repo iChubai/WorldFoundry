@@ -1,0 +1,21 @@
+---
+title: "LaST-R1"
+description: "LaST-R1 is an MIT-licensed VLA policy trained with reinforcement learning, recorded against the confirmed chenhao01/LaST-R1 checkpoint. WorldFoundry routes it through the in-tree official-policy runtime adapter; weights are not yet staged,…"
+pageSource: generated
+---
+
+**Publisher:** Open-source research release (institution not recorded) · Research lab
+
+LaST-R1 is an MIT-licensed VLA policy trained with reinforcement learning, recorded against the confirmed chenhao01/LaST-R1 checkpoint. WorldFoundry routes it through the in-tree official-policy runtime adapter; weights are not yet staged, so runs emit a runtime plan.
+
+<ModelCommandBuilder modelId="last-r1" locale="en" />
+
+## Architecture
+
+Task tags record a VLA plus reinforcement-learning design. Architecture internals beyond the official repository pointer (CHEN-H01/LaST-R1, pinned head ba4e9396) are not recorded in this repository.
+
+## Usage notes
+
+Checkpoint absence is reported by runtime missing_assets and is not a catalog blocker; runs emit a runtime plan until weights are staged.
+
+<ModelRelatedRecipes modelId="last-r1" locale="en" />

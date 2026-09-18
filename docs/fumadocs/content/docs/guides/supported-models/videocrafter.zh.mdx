@@ -1,0 +1,27 @@
+---
+title: "VideoCrafter"
+description: "VideoCrafter is Tencent AI Lab's open video generation toolbox; this family entry aggregates the in-tree infer-only runtimes for VideoCrafter1 I2V, VideoCrafter1 T2V, and VideoCrafter2 T2V. The per-variant entries (videocrafter1-i2v, video…"
+pageSource: generated
+---
+
+**发表机构:** 腾讯 AI Lab · 企业
+text · image → video
+
+VideoCrafter 是腾讯 AI Lab 的开源视频生成工具箱；本系列条目聚合了 VideoCrafter1 I2V、 VideoCrafter1 T2V 与 VideoCrafter2 T2V 的树内仅推理运行时。各 variant 条目（videocrafter1-i2v、 videocrafter1-t2v、videocrafter2-t2v）持有具体路径；checkpoint 溯源在本系列级条目统一跟踪，避免重复的 HF 别名。
+
+<ModelCommandBuilder modelId="videocrafter" locale="zh" />
+
+## 架构
+
+U-Net 潜空间视频扩散模型：VideoCrafter1 提供 T2V（最高 1024x576）与 I2V；VideoCrafter2 通过解耦外观学习（低质量视频 + 高质量图像数据）改进 T2V。训练、数据集与下载辅助脚本被有意排除在树内包外。
+
+## 使用要点
+
+Runner parity 为 pending；与上游评测的完整一致性被记录为更长期的验证阶段。manifest 的许可提示： VideoCrafter2 的 HF 卡片为 Apache-2.0，但更早的 Text2Video/Image2Video 卡片需要许可审阅。
+
+## 评测 Benchmark
+
+- [EvalCrafter](/zh/docs/evaluation/benchmark-hub/evalcrafter) — 与 VideoCrafter 项目同源的评测。
+- [VBench](/zh/docs/evaluation/benchmark-hub/vbench) — 标准文生视频评测。
+
+<ModelRelatedRecipes modelId="videocrafter" locale="zh" />

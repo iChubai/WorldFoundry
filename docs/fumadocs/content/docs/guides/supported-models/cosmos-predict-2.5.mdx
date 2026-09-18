@@ -1,0 +1,39 @@
+---
+title: "Cosmos Predict 2.5"
+description: "Cosmos Predict 2.5 is NVIDIA's world foundation model for physical AI: text, image, or video in — world video out, with 2B and 14B variants."
+pageSource: generated
+---
+
+**Publisher:** NVIDIA · Company
+text · image · video → video
+
+Cosmos Predict 2.5 is NVIDIA's world foundation model for physical AI: text, image, or video in — world video out, with 2B and 14B variants. In this catalog it is assembled natively from WorldFoundry's canonical denoiser, conditioner, scheduler, decoder, and loader roles without Diffusers; official EMA transformer structures match 569/569 (2B) and 729/729 (14B) tensors, Reason1 language weights match 338/338, and the shared Wan VAE matches 194/194.
+
+<figure className="wf-recipe-media">
+  <Video src="/demos/cosmos_01.mp4" autoPlay loop muted playsInline />
+  <figcaption>World-video prediction</figcaption>
+</figure>
+
+<ModelCommandBuilder modelId="cosmos-predict-2.5" locale="en" />
+
+## Architecture
+
+Predict 2.5 unifies text/image/video-to-world generation in one flow-based model with a Reason1 language conditioner and shared Wan VAE. Image/video conditioning and positive classifier-free guidance are expressed through shared runner contracts rather than a model-specific runtime.
+
+## Usage notes
+
+The public CosmosPredict2p5Pipeline invokes the native recipes directly. The 2B text-to-world route is verified at 1280x704 for 93 frames and 35 steps; the 14B route still requires end-to-end GPU output validation. NVIDIA checkpoint access remains gated.
+
+## Variants & pipeline bindings
+
+| Variant | Task | Runtime profile | Pipeline binding | Status |
+| --- | --- | --- | --- | --- |
+| `cosmos-predict-2.5-2b` | world-generation | `cosmos-predict2.5-2b` | `cosmos-predict2.5-2b` | integrated |
+| `cosmos-predict-2.5-14b` | world-generation | `cosmos-predict2.5-14b` | `cosmos-predict2.5-14b` | integrated |
+
+## Evaluation benchmarks
+
+- [WorldModelBench](/docs/evaluation/benchmark-hub/worldmodelbench) — World-generation quality across conditions.
+- [Physics-IQ Original](/docs/evaluation/benchmark-hub/physics-iq) — Physical plausibility of predicted world video.
+
+<ModelRelatedRecipes modelId="cosmos-predict-2.5" locale="en" />

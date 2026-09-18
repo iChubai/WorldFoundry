@@ -1,0 +1,26 @@
+---
+title: "LingBot-Video"
+description: "LingBot-Video is Robbyant's video generation family, recorded for text-to-image, text-to-video, text+image-to-video, and video refinement. Two checkpoint lines are recorded: a dense 1.3B model and a MoE 30B-A3B model that ships with a refi…"
+pageSource: generated
+---
+
+**Publisher:** Robbyant (Ant Group) · Company
+text · image → image · video
+
+LingBot-Video is Robbyant's video generation family, recorded for text-to-image, text-to-video, text+image-to-video, and video refinement. Two checkpoint lines are recorded: a dense 1.3B model and a MoE 30B-A3B model that ships with a refiner. WorldFoundry flattens the inference package in-tree under synthesis/visual_generation/lingbot_video and deliberately excludes the prompt rewriter, training, and benchmark sources.
+
+<ModelCommandBuilder modelId="lingbot-video" locale="en" />
+
+## Architecture
+
+The dense 1.3B and MoE 30B-A3B (3B active) checkpoints share the inference surface; the MoE line adds a refiner stage. The preserved code paths include direct Diffusers, optional SGLang, FSDP, context-parallel, and CFG-parallel execution. The upstream-recommended stack pins a dedicated Transformers 5 / Diffusers 0.39 environment.
+
+## Usage notes
+
+Full checkpoint-backed artifact and visual parity are pending. The released Dense 1.3B checkpoint already has a recorded 121-frame, 832x480 quality-oriented Workspace artifact. Note one quirk from the profile: T2I produces an image even though the default artifact type is the T2V video route. Dense and MoE weights are external (apache-2.0) and never tracked in git.
+
+## Evaluation benchmarks
+
+- [VBench](/docs/evaluation/benchmark-hub/vbench) — General T2V quality suite for both checkpoint lines.
+
+<ModelRelatedRecipes modelId="lingbot-video" locale="en" />

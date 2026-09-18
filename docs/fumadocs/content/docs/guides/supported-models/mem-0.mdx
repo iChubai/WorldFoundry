@@ -1,0 +1,25 @@
+---
+title: "Mem-0"
+description: "Mem-0 (\"Memory Matters\") is a memory-augmented manipulation policy from the RoboTwin RMBench line: an episodic memory bank lets the policy execute multi-task sequences that depend on what happened earlier. The confirmed qiuly/Mem-0-m1mix-R…"
+pageSource: generated
+---
+
+**Publisher:** Open-source research release (institution not recorded) · Research lab
+
+Mem-0 ("Memory Matters") is a memory-augmented manipulation policy from the RoboTwin RMBench line: an episodic memory bank lets the policy execute multi-task sequences that depend on what happened earlier. The confirmed qiuly/Mem-0-m1mix-RMBench checkpoint targets the published M1 multi-task execution setting; the full runtime is in-tree and statically verified.
+
+<ModelCommandBuilder modelId="mem-0" locale="en" />
+
+## Architecture
+
+The in-tree runtime contains the episodic memory bank, a Qwen feature path, a task classifier, and a flow-matching action decoder. Output matches the official 14-value dual-arm joint adapter, excluding the two model-only padding channels.
+
+## Usage notes
+
+This entry targets the M1 multi-task execution checkpoint and does not require the high-level planning server. The published checkpoint is byte-split — the runtime reads its contiguous parts directly without assembling another copy.
+
+## Evaluation benchmarks
+
+- [RoboTwin 2.0](/docs/evaluation/benchmark-hub/robotwin) — Built on the RoboTwin platform's RMBench memory tasks.
+
+<ModelRelatedRecipes modelId="mem-0" locale="en" />

@@ -1,0 +1,32 @@
+---
+title: "GigaBrain-0"
+description: "GigaBrain-0 is GigaAI's 3.5B VLA foundation policy with subtask prediction, released as GigaBrain-0-3.5B-Base and the 0.1 refresh under Apache-2.0."
+pageSource: generated
+---
+
+**Publisher:** GigaAI · Company
+
+GigaBrain-0 is GigaAI's 3.5B VLA foundation policy with subtask prediction, released as GigaBrain-0-3.5B-Base and the 0.1 refresh under Apache-2.0. In this catalog the in-tree GigaBrain-0.1 runtime emitted a checkpoint-backed CUDA action_trace using converted LeRobot RoboTwin statistics, with PaliGemma tokenizer and the physical-intelligence FAST tokenizer staged.
+
+<ModelCommandBuilder modelId="giga-brain-0" locale="en" />
+
+## Architecture
+
+A 3.5B policy on a PaliGemma tokenizer base using the FAST action tokenizer for discrete action encoding, plus subtask prediction heads. Architecture internals beyond the official repository pointer are not recorded in this repository.
+
+## Usage notes
+
+The PaliGemma tokenizer model is gated (manual review) and requires Hugging Face auth. Official task-score parity remains separate because official task norm_stats/delta_mask assets are gated or not staged.
+
+## Variants & pipeline bindings
+
+| Variant | Task | Runtime profile | Pipeline binding | Status |
+| --- | --- | --- | --- | --- |
+| `giga-brain-0-3.5b-base` | vla.action_prediction | `giga-brain-0` | `giga-brain-0` | integrated |
+| `giga-brain-0.1-3.5b-base` | vla.policy_rollout | `giga-brain-0` | `giga-brain-0` | integrated |
+
+## Evaluation benchmarks
+
+- [RoboTwin 2.0](/docs/evaluation/benchmark-hub/robotwin) — CUDA action trace was produced with converted RoboTwin statistics.
+
+<ModelRelatedRecipes modelId="giga-brain-0" locale="en" />

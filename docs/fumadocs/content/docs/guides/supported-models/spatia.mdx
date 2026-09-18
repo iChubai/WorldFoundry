@@ -1,0 +1,26 @@
+---
+title: "Spatia"
+description: "Spatia is a camera-controlled video-to-video world model: given source video and a target camera trajectory it re-renders the scene along the new viewpoint path. WorldFoundry vendors the official source in-tree (revision f75b10c9) and expo…"
+pageSource: generated
+---
+
+**Publisher:** Open-source research release (institution not recorded) · Research lab
+video → video
+
+Spatia is a camera-controlled video-to-video world model: given source video and a target camera trajectory it re-renders the scene along the new viewpoint path. WorldFoundry vendors the official source in-tree (revision f75b10c9) and exposes it through the shared pipeline runner with the Jinjing713/Spatia checkpoint reference, released under Apache-2.0.
+
+<ModelCommandBuilder modelId="spatia" locale="en" />
+
+## Architecture
+
+The in-tree route wires Spatia inference with a dense world-to-camera (W2C) trajectory input: per-frame camera extrinsics drive the re-rendering. Architecture internals beyond the vendored source are not recorded in this repository.
+
+## Usage notes
+
+Provide source video plus a dense per-frame W2C camera trajectory; the in-tree route validates both before execution. Runner parity is pending, so treat outputs as unverified until a parity run is recorded.
+
+## Evaluation benchmarks
+
+- [CameraBench](/docs/evaluation/benchmark-hub/camerabench) — Camera-trajectory adherence for controlled re-rendering.
+
+<ModelRelatedRecipes modelId="spatia" locale="en" />

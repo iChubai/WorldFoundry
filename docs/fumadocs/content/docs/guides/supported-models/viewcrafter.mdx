@@ -1,0 +1,25 @@
+---
+title: "ViewCrafter"
+description: "ViewCrafter is a novel-view-synthesis world model: from one or a few input images it synthesizes high-fidelity videos along new camera trajectories, using point-cloud priors from DUSt3R to anchor geometry. Four official Apache-2.0 checkpoi…"
+pageSource: generated
+---
+
+**Publisher:** Open-source research release (institution not recorded) · Research lab
+
+ViewCrafter is a novel-view-synthesis world model: from one or a few input images it synthesizes high-fidelity videos along new camera trajectories, using point-cloud priors from DUSt3R to anchor geometry. Four official Apache-2.0 checkpoints are confirmed on Hugging Face (ViewCrafter_25, _25_sparse, _16, _25_512) plus an official demo Space; WorldFoundry registers the official source route in-tree.
+
+<ModelCommandBuilder modelId="viewcrafter" locale="en" />
+
+## Architecture
+
+The design couples a point-cloud reconstruction prior (DUSt3R) with a video diffusion renderer: reconstructed geometry is re-projected along the target trajectory and the diffusion model fills in photoreal detail. Checkpoint variants cover 25-frame, sparse-view, 16-frame, and 512-resolution configurations.
+
+## Usage notes
+
+Pick the checkpoint variant matching your frame count and resolution needs; DUSt3R and view assets are runtime-gated alongside the checkpoints. Config resolution and pipeline import are expected to pass; real generation emits a runtime plan until required checkpoints/assets are staged. Missing assets are reported by the plan and are not treated as catalog blockers.
+
+## Evaluation benchmarks
+
+- [CameraBench](/docs/evaluation/benchmark-hub/camerabench) — Novel-view trajectory adherence and view quality.
+
+<ModelRelatedRecipes modelId="viewcrafter" locale="en" />

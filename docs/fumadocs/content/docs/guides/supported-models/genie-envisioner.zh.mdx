@@ -1,0 +1,27 @@
+---
+title: "Genie Envisioner"
+description: "Genie Envisioner is AgiBot's robotics world model platform: a video-generative backbone that predicts action-conditioned robot manipulation futures, usable for policy learning and evaluation."
+pageSource: generated
+---
+
+**发表机构:** 智元机器人（AgiBot） · 企业
+image → video
+
+Genie Envisioner 是智元机器人的机器人世界模型平台：以视频生成为骨干，预测动作条件下的机器人操作未来，可用于策略学习与评估。本 catalog 中其官方（WorldArena 收录的）源码已内置树内；执行待 Genie-Envisioner 与 LTX-Video checkpoint 及机器人任务资产就位。
+
+<ModelCommandBuilder modelId="genie-envisioner" locale="zh" />
+
+## 架构
+
+记录的 checkpoint 显示其视频骨干基于 LTX-Video（Lightricks/LTX-Video），加上智元自有的世界模型权重（agibot-world/Genie-Envisioner）。运行时内置于 synthesis/visual_generation/genie_envisioner/genie_envisioner_runtime。
+
+## 使用要点
+
+pipeline 解析内置推理入口，在 checkpoint 与任务资产就位前返回 blocked 运行时诊断。提交任务前请就位两套记录的 checkpoint。
+
+## 评测 Benchmark
+
+- [WorldArena](/zh/docs/evaluation/benchmark-hub/worldarena) — 该条目已收录于 WorldArena 的机器人世界模型评测。
+- [EWMBench](/zh/docs/evaluation/benchmark-hub/ewmbench) — 具身世界模型视频预测质量。
+
+<ModelRelatedRecipes modelId="genie-envisioner" locale="zh" />

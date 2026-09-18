@@ -1,0 +1,27 @@
+---
+title: "Sora2"
+description: "Sora2 is the catalog entry for OpenAI's Sora 2 hosted video model, recorded for text-to-video and image-to-video. Prompts are submitted to OpenAI's API and the generated clips are stored as standard WorldFoundry artifacts, letting Sora 2 o…"
+pageSource: generated
+---
+
+**Publisher:** OpenAI · Company
+text · image → video
+
+Sora2 is the catalog entry for OpenAI's Sora 2 hosted video model, recorded for text-to-video and image-to-video. Prompts are submitted to OpenAI's API and the generated clips are stored as standard WorldFoundry artifacts, letting Sora 2 output be evaluated with the same tooling as any local model in this repository. WorldFoundry does not, and cannot, run Sora locally — the entry records only the hosted integration.
+
+<ModelCommandBuilder modelId="sora2" locale="en" />
+
+## Architecture
+
+OpenAI has publicly described the original Sora as a diffusion transformer operating on spacetime patches of video latents; beyond that public statement, no architecture, scale, or training details for Sora 2 are disclosed, and this repository records none.
+
+## Usage notes
+
+The catalog marks this entry as integrated: the hosted-API Studio pipeline is available, but you must supply your own provider API key and account. No weights are downloaded and no GPU environment is provisioned locally — generation happens on the provider side, so cost, quota, and content policy follow your provider account. Access requires an OpenAI account with Sora API availability in your region and tier.
+
+## Evaluation benchmarks
+
+- [VBench](/docs/evaluation/benchmark-hub/vbench) — Standard multi-dimension quality suite for comparing hosted text/image-to-video outputs.
+- [Physics-IQ Original](/docs/evaluation/benchmark-hub/physics-iq) — Probes whether provider-side video models respect basic physical plausibility.
+
+<ModelRelatedRecipes modelId="sora2" locale="en" />

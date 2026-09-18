@@ -1,0 +1,25 @@
+---
+title: "MAGI-2 Preview"
+description: "114B-parameter MoE (256 experts, top-6), ~6B active per token; joint audio+video, 32/44.1kHz muxed."
+pageSource: generated
+---
+
+text · image → video
+
+MAGI-2 Preview 是来自 sand-ai 的视频生成模型。Catalog 将它记录为文生视频、图生视频任务。它还有别名 magi2、magi2_preview、magi-2-preview。
+
+该条目目前尚未绑定可运行的 WorldFoundry pipeline；本页只记录上游来源与就绪状态。
+
+它运行在统一环境 worldfoundry-unified-cu128 中（Python 3.11，CUDA 12.8）。
+
+权重来自 Hugging Face 仓库 sand-ai/MAGI-2-preview（license：apache-2.0），另有 1 个已记录仓库。
+
+尚未记录任何 runner 或原生 demo 证据；仅有 catalog 条目并不代表 GPU 已成功跑通。
+
+<ModelCommandBuilder modelId="magi2-preview" locale="zh" />
+
+## 硬件建议
+
+- **最低显存:** 80 GB
+
+<ModelRelatedRecipes modelId="magi2-preview" locale="zh" />

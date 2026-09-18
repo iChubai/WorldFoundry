@@ -1,0 +1,25 @@
+---
+title: "RoboFlamingo"
+description: "RoboFlamingo adapts the OpenFlamingo vision-language model into a robot imitation policy: a lightweight policy head turns the VLM's visual-language features into actions."
+pageSource: generated
+---
+
+**发表机构:** 开源研究发布（仓库未记录正式机构） · 研究机构
+
+RoboFlamingo 将 OpenFlamingo 视觉-语言模型改造为机器人模仿策略：轻量策略头把 VLM 的视觉-语言特征转为动作。本 catalog 中已 GPU 验证——内置架构以就位的 RoboFlamingo、OpenFlamingo 与 MPT checkpoint 通过公开 pipeline 的 CUDA action_trace 验证，runner parity 为 verified。
+
+<ModelCommandBuilder modelId="roboflamingo" locale="zh" />
+
+## 架构
+
+OpenFlamingo 骨干（MPT 语言模型加交叉注意力视觉融合），配循环策略头做动作预测。完整架构与推理源码内置树内。
+
+## 使用要点
+
+在本地就位 RoboFlamingo 策略、OpenFlamingo 骨干与 MPT 语言模型 checkpoint。每次运行的动作轨迹证据在模型 catalog 外跟踪。
+
+## 评测 Benchmark
+
+- [CALVIN](/zh/docs/evaluation/benchmark-hub/calvin) — RoboFlamingo 的标准长时程评测套件。
+
+<ModelRelatedRecipes modelId="roboflamingo" locale="zh" />

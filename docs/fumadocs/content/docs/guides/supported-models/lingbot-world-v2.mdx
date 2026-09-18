@@ -1,0 +1,27 @@
+---
+title: "LingBot-World-V2"
+description: "LingBot-World-V2 (also aliased lingbot-world-infinity) is the second generation of Robbyant's world model: a 14B causal-fast model for image-to-world video with camera control."
+pageSource: generated
+---
+
+**Publisher:** Robbyant (Ant Group) · Company
+image → world state · video
+
+LingBot-World-V2 (also aliased lingbot-world-infinity) is the second generation of Robbyant's world model: a 14B causal-fast model for image-to-world video with camera control. In this catalog only the released causal-fast inference route is integrated; official 8-GPU artifact parity waits on the staged 14B checkpoint and a CUDA run.
+
+<ModelCommandBuilder modelId="lingbot-world-v2" locale="en" />
+
+## Architecture
+
+Common Wan, T5, VAE, scheduler, FSDP, collective, geometry, and media code is reused from WorldFoundry; training, example assets, and unreleased causal-pretrain/bidirectional routes are excluded. The recorded checkpoint is robbyant/lingbot-world-v2-14b-causal-fast.
+
+## Usage notes
+
+Execution is offline-first with no runtime downloads. Eight GPUs are the official causal-fast recipe; Workspace also exposes a four-GPU compact topology. When Workspace already owns the torchrun process group, inference runs in that group without nested torchrun workers. Note the license: the integrated code is CC BY-NC-SA 4.0 — not for commercial use.
+
+## Evaluation benchmarks
+
+- [CameraBench](/docs/evaluation/benchmark-hub/camerabench) — Camera-control adherence of world rollouts.
+- [WorldModelBench](/docs/evaluation/benchmark-hub/worldmodelbench) — General world-rollout quality.
+
+<ModelRelatedRecipes modelId="lingbot-world-v2" locale="en" />

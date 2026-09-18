@@ -1,0 +1,26 @@
+---
+title: "LiveWorld"
+description: "LiveWorld is a camera-controlled video-to-video world model with a monitor-centric workflow: it consumes a video plus a geometry NPZ and re-renders the scene under new camera behavior."
+pageSource: generated
+---
+
+**Publisher:** Open-source research release (institution not recorded) · Research lab
+video → video
+
+LiveWorld is a camera-controlled video-to-video world model with a monitor-centric workflow: it consumes a video plus a geometry NPZ and re-renders the scene under new camera behavior. In this catalog the official source is vendored at a pinned revision and the dedicated geometry-NPZ route is wired; prediction waits on four missing checkpoint snapshots.
+
+<ModelCommandBuilder modelId="liveworld" locale="en" />
+
+## Architecture
+
+The recorded stack pins Wan2.1-T2V-14B and SAM3, both structurally validated locally (apache-2.0). Architecture internals beyond the recorded structure are not stored in this repository.
+
+## Usage notes
+
+Runtime resolution is local-only; prediction remains gated until the four missing checkpoint snapshots are staged. Inputs are prompt, video, and geometry_npz.
+
+## Evaluation benchmarks
+
+- [CameraBench](/docs/evaluation/benchmark-hub/camerabench) — Camera-behavior adherence of re-rendered video.
+
+<ModelRelatedRecipes modelId="liveworld" locale="en" />

@@ -1,0 +1,31 @@
+---
+title: "LTX-Video"
+description: "LTX-Video is Lightricks' earlier fast video generation model; this entry integrates the 0.9.8 distilled image-to-video route natively. Like LTX-2.x it runs a two-stage denoise with the official spatial upscaler in between. The single runna…"
+pageSource: generated
+---
+
+**发表机构:** Lightricks · 企业
+text · image → video
+
+LTX-Video 是 Lightricks 较早的高速视频生成模型；本条目原生集成其 0.9.8 蒸馏图生视频路径。与 LTX-2.x 一样采用两段去噪、中间接官方空间上采样器。唯一可运行 variant 是 ltx-video-i2v；系列级的 T2V 标签描述的是上游能力，并非当前本地路径。
+
+<figure className="wf-recipe-media">
+  <Video src="/demos/studio/ltx-video-i2v-penguin.mp4" autoPlay loop muted playsInline />
+  <figcaption>图生视频</figcaption>
+</figure>
+
+<ModelCommandBuilder modelId="ltx-video" locale="zh" />
+
+## 架构
+
+与 LTX-2.x 共用同一套原生 Transformer、VAE、调度器、加载器与联合状态 runner。T5 文本编码器通过 NativeModuleLoader 以 Transformers 架构加载；Diffusers 不是推理后端。空间上采样器在两段去噪之间自动运行。
+
+## 使用要点
+
+Runner parity 为 pending——原生 I2V target 已注册，但与上游 pipeline 的完整 checkpoint 一致性尚未记录。官方 HF 卡片许可为“other”，商用前请审阅。
+
+## 评测 Benchmark
+
+- [AIGCBench](/zh/docs/evaluation/benchmark-hub/aigcbench) — 针对可运行 I2V 路径的评测。
+
+<ModelRelatedRecipes modelId="ltx-video" locale="zh" />

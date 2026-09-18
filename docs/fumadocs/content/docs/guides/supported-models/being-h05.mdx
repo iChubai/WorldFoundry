@@ -1,0 +1,35 @@
+---
+title: "Being-H0.5"
+description: "Being-H0.5 is BeingBeyond's 2B-parameter cross-embodiment VLA policy."
+pageSource: generated
+---
+
+**Publisher:** BeingBeyond · Company
+
+Being-H0.5 is BeingBeyond's 2B-parameter cross-embodiment VLA policy. In this catalog it is a GPU-validated entry: the LIBERO checkpoint passed public pipeline checkpoint-backed GPU get_action validation and emitted an action_trace artifact. Four checkpoint lines are recorded — base, LIBERO, RoboCasa, and a combined LIBERO+RoboCasa variant — with the inference-only runtime kept directly in-tree.
+
+<ModelCommandBuilder modelId="being-h05" locale="en" />
+
+## Architecture
+
+The inference-only Being-H0.5 architecture and policy runtime live under worldfoundry/synthesis/action_generation/being_h05, using efficient SDPA attention for the validated LIBERO path. Architecture internals beyond the official repository pointer are not recorded in this repository.
+
+## Usage notes
+
+Start with the GPU-verified Being-H05-2B_libero checkpoint. Note all Being-H05 Hugging Face repos carry manual_review:missing_hf_license — confirm licensing before production use.
+
+## Variants & pipeline bindings
+
+| Variant | Task | Runtime profile | Pipeline binding | Status |
+| --- | --- | --- | --- | --- |
+| `being-h05-2b` | vla.policy_rollout | `being-h05` | `being-h05` | integrated |
+| `being-h05-2b-libero` | vla.policy_rollout | `being-h05` | `being-h05` | integrated |
+| `being-h05-2b-robocasa` | vla.policy_rollout | `being-h05` | `being-h05` | integrated |
+| `being-h05-2b-libero-robocasa` | vla.policy_rollout | `being-h05` | `being-h05` | integrated |
+
+## Evaluation benchmarks
+
+- [LIBERO](/docs/evaluation/benchmark-hub/libero) — GPU-validated LIBERO policy checkpoint.
+- [RoboCasa](/docs/evaluation/benchmark-hub/robocasa) — Dedicated RoboCasa checkpoint line.
+
+<ModelRelatedRecipes modelId="being-h05" locale="en" />

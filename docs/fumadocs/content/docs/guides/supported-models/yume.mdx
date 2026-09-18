@@ -1,0 +1,37 @@
+---
+title: "YUME"
+description: "YUME is an interactive world-video generator: from an image (and for YUME-1.5, text) it produces explorable first-person world videos that respond to keyboard-style motion input. Both recorded variants are verified in this catalog — YUME I…"
+pageSource: generated
+---
+
+**Publisher:** Open-source research release (institution not recorded) · Research lab
+
+YUME is an interactive world-video generator: from an image (and for YUME-1.5, text) it produces explorable first-person world videos that respond to keyboard-style motion input. Both recorded variants are verified in this catalog — YUME I2V on the official Yume-I2V-540P checkpoint and YUME-1.5 on Yume-5B-720P — running through in-tree vendored runtime adapters under Apache-2.0.
+
+<figure className="wf-recipe-media">
+  <Video src="/demos/studio/yume-1p5-jungle-castle.mp4" autoPlay loop muted playsInline />
+  <figcaption>First-person world exploration</figcaption>
+</figure>
+
+<ModelCommandBuilder modelId="yume" locale="en" />
+
+## Architecture
+
+Two checkpoint lines are recorded: Yume-I2V-540P for image-conditioned world video and the 5B-parameter Yume-5B-720P for the 1.5 generation with image/video/text conditioning at 720P. Architecture internals beyond the vendored adapters are not recorded in this repository.
+
+## Usage notes
+
+Both variants share the pipeline runner and unified environment profile; checkpoints stage into WORLDFOUNDRY_CKPT_DIR. Prefer yume-1p5 for text conditioning and 720P output. Per-run visual QA is tracked outside the catalog.
+
+## Variants & pipeline bindings
+
+| Variant | Task | Runtime profile | Pipeline binding | Status |
+| --- | --- | --- | --- | --- |
+| `yume` | image/video-to-world-video | `yume` | `yume` | integrated |
+| `yume-1p5` | image/video/text-to-world-video | `yume-1p5` | `yume-1p5` | integrated |
+
+## Evaluation benchmarks
+
+- [WorldModelBench](/docs/evaluation/benchmark-hub/worldmodelbench) — Interactive first-person world rollout quality.
+
+<ModelRelatedRecipes modelId="yume" locale="en" />

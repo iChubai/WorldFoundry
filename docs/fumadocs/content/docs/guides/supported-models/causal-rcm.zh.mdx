@@ -1,0 +1,32 @@
+---
+title: "Causal-rCM"
+description: "Causal-rCM applies NVIDIA's rCM consistency distillation to causal video generation: it streams video autoregressively over latent-frame chunks with distilled few-step sampling, making it a low-latency interactive world-model candidate."
+pageSource: generated
+---
+
+**发表机构:** 英伟达（NVIDIA） · 企业
+text · image → video
+[Large Scale Diffusion Distillation via Score-Regularized Continuous-Time Consistency](https://arxiv.org/abs/2510.08431) (ICLR 2026, 2025)
+
+Causal-rCM 把英伟达的 rCM 一致性蒸馏应用于因果视频生成：以潜帧 chunk 为单位自回归流式生成，配合蒸馏的少步采样，是低延迟交互式世界模型的候选。本 catalog 中官方 Apache-2.0 因果推理栈已内置树内；执行待公开 DiT、Wan2.1 VAE 与 umT5 checkpoint 本地就位。
+
+<figure className="wf-recipe-media is-diagram">
+  <img src="/models/causal-rcm/paper.png" alt="Large Scale Diffusion Distillation via Score-Regularized Continuous-Time Consistency" />
+  <figcaption>Large Scale Diffusion Distillation via Score-Regularized Continuous-Time Consistency</figcaption>
+</figure>
+
+<ModelCommandBuilder modelId="causal-rcm" locale="zh" />
+
+## 架构
+
+按论文（arXiv 2510.08431），rCM 结合分数正则化的一致性蒸馏实现少步采样。内置栈去掉了上游 imaginaire 框架——由 WorldFoundry 自有的 lazy_config、easy_io 与日志支撑——块因果掩码谓词提取到 worldfoundry/core/attention/block_pattern.py，并在 702 种掩码与 162 种 chunk 调度配置下对照上游验证。
+
+## 使用要点
+
+first_chunk_t 与 chunk_t 选择调度：c1-1 逐帧模式流式延迟最低，c3-3 吞吐更高。默认使用蒸馏的 4 步采样；distilled=False 则以 CFG 采样多步教师。context_from_last_step=True 每 chunk 省一次干净前向，但要求 checkpoint 针对带噪上下文训练。发布的入口为提示词/图像条件，无离散动作空间。
+
+## 评测 Benchmark
+
+- [VBench](/zh/docs/evaluation/benchmark-hub/vbench) — 流式文/图生视频的质量评测。
+
+<ModelRelatedRecipes modelId="causal-rcm" locale="zh" />

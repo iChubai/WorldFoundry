@@ -1,0 +1,31 @@
+---
+title: "SkyReels V3"
+description: "SkyReels V3 is Skywork's newer generation, recorded for reference-to-video, audio-guided video, and video-to-video. The catalog route loads the SkyReels-V3-R2V-14B checkpoint into the shared native Wan graph with reference-image latent con…"
+pageSource: generated
+---
+
+**Publisher:** Skywork AI (Kunlun) · Company
+image · video → video
+
+SkyReels V3 is Skywork's newer generation, recorded for reference-to-video, audio-guided video, and video-to-video. The catalog route loads the SkyReels-V3-R2V-14B checkpoint into the shared native Wan graph with reference-image latent concatenation and dual text/image guidance — implemented as reusable initializer and execution-strategy capabilities rather than a bespoke runtime.
+
+<figure className="wf-recipe-media">
+  <Video src="/demos/studio/skyreels-v3-reference-to-video.mp4" autoPlay loop muted playsInline />
+  <figcaption>Reference-to-video</figcaption>
+</figure>
+
+<ModelCommandBuilder modelId="skyreels-v3" locale="en" />
+
+## Architecture
+
+Transformer, UMT5 text encoder, and VAE checkpoint schemas map exactly onto the native Wan graphs (recorded as verified). Reference conditioning concatenates reference-image latents; guidance runs dual text/image channels through the UniPC scheduler and dual-condition runner.
+
+## Usage notes
+
+Runner status is partial: checkpoint schema mapping is exact, and a prior official-runtime visual artifact is documented, but native visual parity still needs a GPU inference run. No Diffusers or model-owned subprocess runtime is involved.
+
+## Evaluation benchmarks
+
+- [VBench](/docs/evaluation/benchmark-hub/vbench) — Baseline quality suite.
+
+<ModelRelatedRecipes modelId="skyreels-v3" locale="en" />

@@ -1,0 +1,21 @@
+---
+title: "Diffusion Policy"
+description: "Diffusion Policy is the landmark visuomotor policy that models action generation as conditional denoising diffusion, substantially improving multimodal action distributions over regression policies. WorldFoundry vendors the low-dimensional…"
+pageSource: generated
+---
+
+**Publisher:** Stanford University (REAL Lab) · University
+
+Diffusion Policy is the landmark visuomotor policy that models action generation as conditional denoising diffusion, substantially improving multimodal action distributions over regression policies. WorldFoundry vendors the low-dimensional PushT variant in-tree, reconstructed from an offline-converted, fully resolved config with tensor-only state dictionaries.
+
+<ModelCommandBuilder modelId="diffusion-policy" locale="en" />
+
+## Architecture
+
+A denoising diffusion model over action sequences conditioned on observations. The in-tree runtime is the released low-dimensional PushT policy; the converted checkpoint passed weights-only reload, strict model/EMA restoration, CPU loading, and a finite GPU action probe.
+
+## Usage notes
+
+The executable dill workspace checkpoint is rejected at runtime with no unsafe deserialization fallback — conversion must happen once in a trusted offline environment. The predict_action route emits the configured low-dimensional PushT action schema.
+
+<ModelRelatedRecipes modelId="diffusion-policy" locale="en" />

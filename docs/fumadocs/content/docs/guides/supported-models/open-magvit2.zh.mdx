@@ -1,0 +1,21 @@
+---
+title: "Open-MAGVIT2"
+description: "Open-MAGVIT2 is Tencent ARC's open reproduction of the MAGVIT-v2 lookup-free visual tokenizer, plus autoregressive generation on top of it."
+pageSource: generated
+---
+
+**发表机构:** 腾讯（ARC Lab） · 企业
+
+Open-MAGVIT2 是腾讯 ARC 对 MAGVIT-v2 免查表（lookup-free）视觉分词器的开源复现，并在其上构建自回归生成。本 catalog 中可运行的路径是 ImageNet 类条件图像生成——完整 256 token 生成已通过 checkpoint 加载的 GPU 与语义视觉 QA 验证（256x256、ImageNet 类别 207）。产物是 PNG 图像而非视频。
+
+<ModelCommandBuilder modelId="open-magvit2" locale="zh" />
+
+## 架构
+
+树内记录两部分：带超大码本的免查表量化（LFQ）分词器，以及为指定 ImageNet 类别预测视觉 token 的自回归 Transformer。class_id 输入选择类别；生成通过内置 CUDA 封装执行。
+
+## 使用要点
+
+runner 状态为 checkpoint_backed_verified——该路径确实用 TencentARC/Open-MAGVIT2 权重（apache-2.0）在 GPU 上跑通过。预期要放对位置：这是类条件图像生成，不是提示词生成视频；视频分词是其分词器在上游支持的能力。
+
+<ModelRelatedRecipes modelId="open-magvit2" locale="zh" />

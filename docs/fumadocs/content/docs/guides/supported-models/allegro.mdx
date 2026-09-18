@@ -1,0 +1,26 @@
+---
+title: "Allegro"
+description: "Allegro is an open text-to-video and image-to-video generation model, cataloged here through its TI2V (text+image to video) route. WorldFoundry wraps the in-tree Allegro TI2V runtime, so a prompt — optionally anchored by a start image — pr…"
+pageSource: generated
+---
+
+**Publisher:** Rhymes AI · Company
+text · image → video
+
+Allegro is an open text-to-video and image-to-video generation model, cataloged here through its TI2V (text+image to video) route. WorldFoundry wraps the in-tree Allegro TI2V runtime, so a prompt — optionally anchored by a start image — produces a video artifact through the standard pipeline contract. The entry also resolves the aliases allegro_ti2v and allegro-ti2v.
+
+<ModelCommandBuilder modelId="allegro" locale="en" />
+
+## Architecture
+
+Allegro is a diffusion-transformer video generator released by Rhymes AI; the manifest records the in-tree runtime wrapper and the TI2V conditioning path (prompt, image, video, actions in the input schema), while local checkpoint assets remain external. Deeper architecture internals are not recorded in this repository — consult the upstream release for layer-level details.
+
+## Usage notes
+
+The catalog marks the integration as integrated with runner parity pending: the pipeline target is registered, but artifact parity with the official demo configuration still requires a full official run. Stage the Allegro checkpoints locally before launching, and use the model-show command on this page to inspect the recorded contract first.
+
+## Evaluation benchmarks
+
+- [VBench](/docs/evaluation/benchmark-hub/vbench) — Multi-dimension video generation quality suite that fits Allegro's T2V/I2V output.
+
+<ModelRelatedRecipes modelId="allegro" locale="en" />

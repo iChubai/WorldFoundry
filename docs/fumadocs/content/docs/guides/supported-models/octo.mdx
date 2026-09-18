@@ -1,0 +1,32 @@
+---
+title: "Octo"
+description: "Octo is Berkeley RAIL's generalist robot policy trained on Open X-Embodiment data, released as octo-base-1.5 and octo-small-1.5 with pinned revisions."
+pageSource: generated
+---
+
+**Publisher:** University of California, Berkeley (RAIL) · University
+
+Octo is Berkeley RAIL's generalist robot policy trained on Open X-Embodiment data, released as octo-base-1.5 and octo-small-1.5 with pinned revisions. In this catalog the official octo-small-1.5 Orbax tree restored on an A100 (136.7M parameters) and sample_actions produced a finite (1, 4, 7) action chunk — a real-GPU validation of the in-tree JAX runtime.
+
+<ModelCommandBuilder modelId="octo" locale="en" />
+
+## Architecture
+
+A transformer generalist policy with diffusion action heads, implemented in JAX/Flax. The in-tree package is flat with one-level modeling and preprocessing modules; legacy class names in checkpoints are translated by an internal ModuleSpec resolver for inference components only.
+
+## Usage notes
+
+Choose octo-small-1.5 (GPU-validated restore) or octo-base-1.5; both use the same in-tree modeling package. No source checkout, package alias, or sys.path injection is used.
+
+## Variants & pipeline bindings
+
+| Variant | Task | Runtime profile | Pipeline binding | Status |
+| --- | --- | --- | --- | --- |
+| `octo-base-1.5` | vla.policy_rollout | `octo` | `octo` | integrated |
+| `octo-small-1.5` | vla.policy_rollout | `octo` | `octo` | integrated |
+
+## Evaluation benchmarks
+
+- [SimplerEnv](/docs/evaluation/benchmark-hub/simpler-env) — Common evaluation venue for Open X generalist policies.
+
+<ModelRelatedRecipes modelId="octo" locale="en" />

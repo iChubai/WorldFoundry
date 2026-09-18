@@ -1,0 +1,27 @@
+---
+title: "Runway Gen-4.5"
+description: "Runway Gen-4.5 is Runway's hosted image-to-video model. Give it a start image and it returns an animated clip generated on Runway's service; the catalog keeps the legacy aliases gen_3_i2v and gen-3-i2v pointing at this entry so earlier Wor…"
+pageSource: generated
+---
+
+**Publisher:** Runway · Company
+image → video
+
+Runway Gen-4.5 is Runway's hosted image-to-video model. Give it a start image and it returns an animated clip generated on Runway's service; the catalog keeps the legacy aliases gen_3_i2v and gen-3-i2v pointing at this entry so earlier WorldFoundry configs still resolve. Like every hosted_api entry, it exists so provider-rendered results flow through the same Studio pipeline and artifact format as local models.
+
+<ModelCommandBuilder modelId="runway-gen4p5" locale="en" />
+
+## Architecture
+
+This is a hosted, provider-operated model: the vendor has not published its architecture, parameter count, or training recipe, and this repository does not record them. What WorldFoundry records is the integration surface only — a Studio pipeline that submits requests to the provider endpoint and collects the returned video artifacts.
+
+## Usage notes
+
+The catalog marks this entry as integrated: the hosted-API Studio pipeline is available, but you must supply your own provider API key and account. No weights are downloaded and no GPU environment is provisioned locally — generation happens on the provider side, so cost, quota, and content policy follow your provider account. Runway API credentials are managed in your Runway workspace settings.
+
+## Evaluation benchmarks
+
+- [VBench](/docs/evaluation/benchmark-hub/vbench) — Standard multi-dimension quality suite for comparing hosted text/image-to-video outputs.
+- [Physics-IQ Original](/docs/evaluation/benchmark-hub/physics-iq) — Probes whether provider-side video models respect basic physical plausibility.
+
+<ModelRelatedRecipes modelId="runway-gen4p5" locale="en" />

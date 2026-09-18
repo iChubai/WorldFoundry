@@ -1,0 +1,22 @@
+---
+title: "ShotStream"
+description: "ShotStream is Kling AI Research's real-time interactive streaming video generator: it targets continuous, interactively steered video streams rather than fixed clips."
+pageSource: generated
+---
+
+**Publisher:** Kuaishou (Kling Team) · Company
+video
+
+ShotStream is Kling AI Research's real-time interactive streaming video generator: it targets continuous, interactively steered video streams rather than fixed clips. In this catalog the official inference route is registered with the source bound at a pinned commit; checkpoint and streaming assets stay runtime-gated.
+
+<ModelCommandBuilder modelId="shotstream" locale="en" />
+
+## Architecture
+
+Architecture internals beyond the recorded tasks are not stored in this repository (weights at KlingTeam/ShotStream). The upstream repository lacks a root license and is flagged for manual review.
+
+## Usage notes
+
+Config resolution and pipeline import are expected to pass; real generation emits a runtime plan until required checkpoints/assets are staged. Missing assets are reported by the plan and are not treated as catalog blockers.
+
+<ModelRelatedRecipes modelId="shotstream" locale="en" />

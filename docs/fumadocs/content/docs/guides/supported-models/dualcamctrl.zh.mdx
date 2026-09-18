@@ -1,0 +1,26 @@
+---
+title: "DualCamCtrl"
+description: "DualCamCtrl controls video generation with a camera trajectory plus a depth image: the RGB and depth conditions together pin down scene geometry so the generated camera move stays physically grounded."
+pageSource: generated
+---
+
+**发表机构:** 香港科技大学（广州）EnVision 实验室 · 高校
+image → video · depth
+
+DualCamCtrl 用「相机轨迹 + 深度图」控制视频生成：RGB 与深度条件共同确定场景几何，使生成的相机运动保持物理可信。本 catalog 中 runner 已验证，遵循官方 RGB/深度/相机 demo 契约。
+
+<ModelCommandBuilder modelId="dualcamctrl" locale="zh" />
+
+## 架构
+
+默认 demo 契约遵循官方配方：一张图、一张深度图、一个相机 .torch 轨迹文件，61 帧 320x480、50 步。树内推理运行时位于 synthesis/visual_generation/dualcamctrl；除记录契约外的内部细节此处未存。
+
+## 使用要点
+
+开源用户默认使用 Hugging Face 缓存/下载路径；已就位的本地资产可通过 checkpoint_path、 base_model_path 或 WORLDFOUNDRY_MODEL_DIR 传入。
+
+## 评测 Benchmark
+
+- [CameraBench](/zh/docs/evaluation/benchmark-hub/camerabench) — 受控生成的相机轨迹贴合度。
+
+<ModelRelatedRecipes modelId="dualcamctrl" locale="zh" />

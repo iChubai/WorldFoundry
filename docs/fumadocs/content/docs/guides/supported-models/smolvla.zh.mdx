@@ -1,0 +1,32 @@
+---
+title: "SmolVLA"
+description: "SmolVLA is Hugging Face's compact community VLA: a SmolVLM2-500M vision-language backbone with a flow-matching action expert, small enough for consumer hardware. The catalog records the HuggingFaceVLA/smolvla_libero task checkpoint (manife…"
+pageSource: generated
+---
+
+**发表机构:** Hugging Face（LeRobot） · 企业
+
+SmolVLA 是 Hugging Face 的紧凑社区 VLA：SmolVLM2-500M 视觉-语言骨干配 flow-matching 动作专家，小到可在消费级硬件运行。catalog 记录 HuggingFaceVLA/smolvla_libero 任务 checkpoint （manifest 与归一化 schema 已验证）为 rollout 默认，lerobot/smolvla_base 为微调资产。
+
+<ModelCommandBuilder modelId="smolvla" locale="zh" />
+
+## 架构
+
+官方 flow-matching 架构以严格 checkpoint 结构保留在树内：锁定的 SmolVLM2-500M-Video-Instruct 视觉-语言骨干加 flow 动作专家。运行时仅本地加载，无外部源码 checkout。
+
+## 使用要点
+
+rollout 用 smolvla_libero；多机器人 base checkpoint 缺少规范状态统计，仅作为非默认微调资产。
+
+## 变体与 Pipeline Binding
+
+| Variant | 任务 | Runtime profile | Pipeline Binding | 状态 |
+| --- | --- | --- | --- | --- |
+| `smolvla-libero` | vla.policy_rollout | `smolvla` | `smolvla` | runtime ported selected checkpoint gpu validated |
+| `smolvla-base` | vla.pretraining | `smolvla` | `smolvla` | runtime ported selected checkpoint gpu validated |
+
+## 评测 Benchmark
+
+- [LIBERO](/zh/docs/evaluation/benchmark-hub/libero) — 已验证的 rollout 默认为 LIBERO 任务 checkpoint。
+
+<ModelRelatedRecipes modelId="smolvla" locale="zh" />

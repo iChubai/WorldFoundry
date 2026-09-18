@@ -1,0 +1,31 @@
+---
+title: "Matrix-Game 3.0"
+description: "Matrix-Game 3.0 is the third Skywork generation, pushing interactive world video to higher resolution with few-step inference."
+pageSource: generated
+---
+
+**发表机构:** 昆仑万维（Skywork AI） · 企业
+
+Matrix-Game 3.0 是昆仑万维的第三代，以少步推理把交互式世界视频推到更高分辨率。本 catalog 中 runner 已验证——官方 cityscape 图像条件 demo 以「forward + camera_r」动作、12 次迭代、3 步推理、 704x1280、int8 量化、编译 VAE 与 mg_lightvae 解码器运行。
+
+<figure className="wf-recipe-media">
+  <Video src="/demos/studio/matrix-game-3-cityscape.mp4" autoPlay loop muted playsInline />
+  <figcaption>城市场景交互世界</figcaption>
+</figure>
+
+<ModelCommandBuilder modelId="matrix-game-3" locale="zh" />
+
+## 架构
+
+运行时内置于 synthesis/visual_generation/matrix_game/matrix_game_3_runtime，包含官方 process_video 调用所需的仅推理视频写出器与 Dynamo 别名兼容；checkpoint_dir 保持为外部资产路径。
+
+## 使用要点
+
+运行时不需要外部 Matrix-Game 检出。已验证 demo 为提速使用 int8 与编译的轻量 VAE——若追求最高保真且 GPU 余量充足，可关闭这些选项。
+
+## 评测 Benchmark
+
+- [WorldModelBench](/zh/docs/evaluation/benchmark-hub/worldmodelbench) — 动作条件游戏世界滚动生成质量。
+- [CameraBench](/zh/docs/evaluation/benchmark-hub/camerabench) — 相机动作跟随精度。
+
+<ModelRelatedRecipes modelId="matrix-game-3" locale="zh" />

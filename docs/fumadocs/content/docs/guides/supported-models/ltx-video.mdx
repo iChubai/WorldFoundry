@@ -1,0 +1,31 @@
+---
+title: "LTX-Video"
+description: "LTX-Video is Lightricks' earlier fast video generation model; this entry integrates the 0.9.8 distilled image-to-video route natively. Like LTX-2.x it runs a two-stage denoise with the official spatial upscaler in between. The single runna…"
+pageSource: generated
+---
+
+**Publisher:** Lightricks · Company
+text · image → video
+
+LTX-Video is Lightricks' earlier fast video generation model; this entry integrates the 0.9.8 distilled image-to-video route natively. Like LTX-2.x it runs a two-stage denoise with the official spatial upscaler in between. The single runnable variant is ltx-video-i2v; family-level T2V labels describe upstream capability, not a current local route.
+
+<figure className="wf-recipe-media">
+  <Video src="/demos/studio/ltx-video-i2v-penguin.mp4" autoPlay loop muted playsInline />
+  <figcaption>Image-to-video</figcaption>
+</figure>
+
+<ModelCommandBuilder modelId="ltx-video" locale="en" />
+
+## Architecture
+
+Uses the same native transformer, VAE, scheduler, loader, and joint-state runner as LTX-2.x. The T5 text encoder is loaded as a Transformers architecture through NativeModuleLoader; Diffusers is not an inference backend. The spatial upscaler runs automatically between the two denoising stages.
+
+## Usage notes
+
+Runner parity is pending — the native I2V target is registered, but full checkpoint-backed parity with the upstream pipeline has not been recorded. The official HF cards report license 'other'; review before commercial use.
+
+## Evaluation benchmarks
+
+- [AIGCBench](/docs/evaluation/benchmark-hub/aigcbench) — I2V benchmark for the runnable route.
+
+<ModelRelatedRecipes modelId="ltx-video" locale="en" />

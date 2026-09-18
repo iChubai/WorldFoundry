@@ -1,0 +1,32 @@
+---
+title: "VGGT-World"
+description: "VGGT-World builds a world model on top of VGGT-style 3D scene understanding: it couples geometry-grounded scene perception with video generation so rollouts stay consistent with the underlying 3D structure. WorldFoundry registers the offic…"
+pageSource: generated
+---
+
+**Publisher:** Open-source research release (institution not recorded) · Research lab
+video
+[VGGT-World: Transforming VGGT into an Autoregressive Geometry World Model](https://arxiv.org/abs/2603.12655) (2026)
+
+VGGT-World builds a world model on top of VGGT-style 3D scene understanding: it couples geometry-grounded scene perception with video generation so rollouts stay consistent with the underlying 3D structure. WorldFoundry registers the official source route in-tree (paper: arXiv 2603.12655); checkpoints and assets are runtime-gated.
+
+<figure className="wf-recipe-media is-diagram">
+  <img src="/models/vggt-world/paper.png" alt="VGGT-World: Transforming VGGT into an Autoregressive Geometry World Model" />
+  <figcaption>VGGT-World: Transforming VGGT into an Autoregressive Geometry World Model</figcaption>
+</figure>
+
+<ModelCommandBuilder modelId="vggt-world" locale="en" />
+
+## Architecture
+
+Beyond the recorded official repository (SimonSun0810/VGGT-World, pinned head c90f5ee2) and the arXiv paper pointer, architecture internals are not recorded in this repository.
+
+## Usage notes
+
+Config resolution and pipeline import are expected to pass; real generation emits a runtime plan until required checkpoints/assets are staged. Missing assets are reported by the plan and are not treated as catalog blockers.
+
+## Evaluation benchmarks
+
+- [WorldScore](/docs/evaluation/benchmark-hub/worldscore) — Unified world-generation quality across 3D-grounded rollouts.
+
+<ModelRelatedRecipes modelId="vggt-world" locale="en" />

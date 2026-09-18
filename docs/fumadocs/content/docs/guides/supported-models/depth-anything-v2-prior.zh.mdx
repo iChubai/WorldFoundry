@@ -1,0 +1,22 @@
+---
+title: "Depth Anything V2"
+description: "Depth Anything V2 is the sharper, synthetic-data-trained successor to V1, integrated here as a metric/monocular depth prior with verified runner status. The recorded checkpoint is depth-anything/Depth-Anything-V2-Large; the shared priors f…"
+pageSource: generated
+---
+
+**发表机构:** TikTok / 香港大学 · 企业
+image → depth
+
+Depth Anything V2 是 V1 的后继者，用合成数据训练、细节更锐利，此处作为米制/单目深度先验集成，runner 状态已验证。记录的 checkpoint 为 depth-anything/Depth-Anything-V2-Large；共享先验工厂与视频深度先验复用同一实现。
+
+<ModelCommandBuilder modelId="depth-anything-v2-prior" locale="zh" />
+
+## 架构
+
+与 V1 同为 DINOv2+DPT 家族，但用精确合成标注加伪标注真实图像训练，边缘与细结构更好（见论文）。注册于 base_models/three_dimensions/depth/depth_anything/depth_anything_v2。
+
+## 使用要点
+
+它作为独立几何先验集成在 worldfoundry/base_models 下，通过共享的 geometry-prior pipeline/operator 契约对外暴露。上层管线（如 ViPE）从这一规范位置导入它，而不是各自保留私有副本。runner parity 已通过共享契约验证。
+
+<ModelRelatedRecipes modelId="depth-anything-v2-prior" locale="zh" />

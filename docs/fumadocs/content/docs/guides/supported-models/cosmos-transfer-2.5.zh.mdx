@@ -1,0 +1,26 @@
+---
+title: "Cosmos Transfer 2.5"
+description: "Cosmos Transfer 2.5 does controlled world-to-world translation: it takes structured control inputs (e.g. edge maps or simulation renders) and generates photoreal world video that follows them — the sim-to-real arm of the Cosmos family."
+pageSource: generated
+---
+
+**发表机构:** 英伟达（NVIDIA） · 企业
+
+Cosmos Transfer 2.5 做受控的世界到世界转换：接受结构化控制输入（如边缘图或仿真渲染），生成遵循这些控制的写实世界视频——是 Cosmos 家族的 sim-to-real 分支。本 catalog 中它复用与 Predict 2.5 相同的原生 runner、Reason1 条件器、flow-UniPC 调度器与 Wan VAE，仅新增按 checkpoint 形状实现的 VACE 控制分支。
+
+<ModelCommandBuilder modelId="cosmos-transfer-2.5" locale="zh" />
+
+## 架构
+
+原生 VACE 网络在 28 层基座的第 0/7/14/21 层添加四块控制分支，外加 8 模态控制嵌入器；控制与条件视频编码复用同一个框架自有 Wan VAE 实例。不保留 Diffusers、ControlNet 后端或模型专属 runner。
+
+## 使用要点
+
+请先准备官方 2B edge checkpoint、Predict2.5 VAE 与 Reason1 文本编码器，再提供原始 RGB 控制视频。原生路径会自动提取 Canny 边缘；仅在直接提供边缘图时设置 control_is_preprocessed。
+
+## 评测 Benchmark
+
+- [WorldModelBench](/zh/docs/evaluation/benchmark-hub/worldmodelbench) — 控制条件下的世界生成质量。
+- [Physics-IQ Original](/zh/docs/evaluation/benchmark-hub/physics-iq) — 转换后世界视频的物理合理性。
+
+<ModelRelatedRecipes modelId="cosmos-transfer-2.5" locale="zh" />

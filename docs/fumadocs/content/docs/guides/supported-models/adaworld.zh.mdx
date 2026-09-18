@@ -1,0 +1,21 @@
+---
+title: "AdaWorld"
+description: "AdaWorld learns adaptable world models with latent actions: by extracting actions from unlabeled videos it can transfer control across domains with minimal finetuning."
+pageSource: generated
+---
+
+**发表机构:** 香港科技大学 / 麻省理工学院 · 高校
+
+AdaWorld 用潜在动作学习可适配的世界模型：从无标注视频中提取动作，使控制能力以极少微调迁移到新领域。本 catalog 中它作为开源溯源/仅源码元数据保留，并在正式的 Studio 推理 catalog 中隐藏。
+
+<ModelCommandBuilder modelId="adaworld" locale="zh" />
+
+## 架构
+
+按上游项目，潜在动作自编码器提取可迁移的动作表示，用于条件化自回归世界模型。官方源码已内置于 synthesis/visual_generation/world_model/adaworld；上游存在公开 checkpoint。
+
+## 使用要点
+
+面向发布的推理被 blocked：官方 runner 仍需要 AdaWorld 专属依赖与任务/demo 视频资产，而这些在统一 Studio 环境中无法可复现地获得。在一致性恢复之前请直接使用上游仓库。
+
+<ModelRelatedRecipes modelId="adaworld" locale="zh" />

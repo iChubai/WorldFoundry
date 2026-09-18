@@ -1,0 +1,21 @@
+---
+title: "pixelSplat"
+description: "pixelSplat reconstructs a 3D Gaussian-splat scene from just two images in a single forward pass — feed-forward 3DGS rather than per-scene optimization (CVPR 2024)."
+pageSource: generated
+---
+
+**Publisher:** Massachusetts Institute of Technology (MIT) · University
+
+pixelSplat reconstructs a 3D Gaussian-splat scene from just two images in a single forward pass — feed-forward 3DGS rather than per-scene optimization (CVPR 2024). In this catalog the runtime source is vendored in-tree, but inference stays blocked until a local Gaussian rasterization extension is provided and the re10k.ckpt checkpoint is staged.
+
+<ModelCommandBuilder modelId="pixelsplat" locale="en" />
+
+## Architecture
+
+Per the publication, an epipolar transformer resolves scale ambiguity between the two views, and the network predicts a probabilistic distribution over Gaussian parameters. WorldFoundry vendors the source under base_models/three_dimensions/point_clouds/pixelsplat with a lazy wrapper around the official test entrypoint (MIT license; checkpoint mirror dylanebert/pixelSplat).
+
+## Usage notes
+
+PixelSplatSynthesis wraps the official test entrypoint but fails fast without the local Gaussian rasterization extension and the staged re10k.ckpt. Build/stage both before submitting jobs.
+
+<ModelRelatedRecipes modelId="pixelsplat" locale="en" />

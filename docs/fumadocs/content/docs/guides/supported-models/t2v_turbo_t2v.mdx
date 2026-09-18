@@ -1,0 +1,32 @@
+---
+title: "T2V Turbo T2V"
+description: "T2V-Turbo is a fast text-to-video model distilled from VideoCrafter2 with consistency distillation plus reward feedback, generating watchable clips in 4-8 steps."
+pageSource: generated
+---
+
+**Publisher:** University of California, Santa Barbara · University
+text → video
+[T2V-Turbo: Breaking the Quality Bottleneck of Video Consistency Model with Mixed Reward Feedback](https://arxiv.org/abs/2405.18750) (2024)
+
+T2V-Turbo is a fast text-to-video model distilled from VideoCrafter2 with consistency distillation plus reward feedback, generating watchable clips in 4-8 steps. In this catalog it is assembled from the shared native diffusion components: the VideoCrafter2 base model and the ordered T2V-Turbo LoRA remain separate declarative checkpoint inputs.
+
+<figure className="wf-recipe-media is-diagram">
+  <img src="/models/t2v_turbo_t2v/paper.png" alt="T2V-Turbo: Breaking the Quality Bottleneck of Video Consistency Model with Mixed Reward Feedback" />
+  <figcaption>T2V-Turbo: Breaking the Quality Bottleneck of Video Consistency Model with Mixed Reward Feedback</figcaption>
+</figure>
+
+<ModelCommandBuilder modelId="t2v_turbo_t2v" locale="en" />
+
+## Architecture
+
+Base: VideoCrafter2's U-Net latent video diffusion. On top: a consistency-distilled LoRA trained with mixed reward feedback (per the publication, arXiv 2405.18750). WorldFoundry uses the shared native assembler, runner, checkpoint loader, offload policy, and LVDM components.
+
+## Usage notes
+
+Runner status records native checkpoint validation: local VideoCrafter2 and T2V-Turbo VC2 assets are available for strict component and LoRA checks. Use it when you need many quick T2V drafts rather than maximum quality.
+
+## Evaluation benchmarks
+
+- [VBench](/docs/evaluation/benchmark-hub/vbench) — T2V-Turbo was tuned for exactly this suite's dimensions.
+
+<ModelRelatedRecipes modelId="t2v_turbo_t2v" locale="en" />

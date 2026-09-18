@@ -1,0 +1,25 @@
+---
+title: "EventVLA"
+description: "EventVLA from InternRobotics is a long-horizon-memory VLA: on top of a Qwen3-VL-4B base it adds an event head, temporal anchors, and a raw keyframe-image memory so the policy remembers what already happened in long tasks. The Apache-2.0 ga…"
+pageSource: generated
+---
+
+**发表机构:** 上海人工智能实验室（InternRobotics） · 研究机构
+
+InternRobotics 的 EventVLA 是长时程记忆 VLA：在 Qwen3-VL-4B 基座上增加事件头、时间锚点与原始关键帧图像记忆，使策略在长任务中记住已发生的事件。仓库记录 Apache-2.0 的 ganlinyang/EventVLA checkpoint 集合，默认策略为 RoboTwin-MeM 子目录。
+
+<ModelCommandBuilder modelId="eventvla" locale="zh" />
+
+## 架构
+
+Qwen3-VL 编码馈入动作 token 收集与兼容 checkpoint 的 MLP 动作头；事件头与时间锚点维护情节结构，关键帧图像构成记忆。全部在树内进程内运行。
+
+## 使用要点
+
+在本地就位 EventVLA checkpoint（子目录 RoboTwin-MeM）与 Qwen3-VL-4B-Instruct 基座。训练、数据集、模拟器、基准启动器与 WebSocket 传输均被排除。
+
+## 评测 Benchmark
+
+- [RoboTwin 2.0](/zh/docs/evaluation/benchmark-hub/robotwin) — RoboTwin-MeM checkpoint 面向 RoboTwin 记忆任务。
+
+<ModelRelatedRecipes modelId="eventvla" locale="zh" />

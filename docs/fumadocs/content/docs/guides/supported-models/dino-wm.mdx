@@ -1,0 +1,21 @@
+---
+title: "DINO-WM"
+description: "DINO-WM builds world models on pre-trained DINOv2 visual features instead of pixels: it predicts future patch features and plans robot behavior by optimizing action sequences against a goal feature state — zero-shot planning without recons…"
+pageSource: generated
+---
+
+**Publisher:** New York University (NYU) · University
+
+DINO-WM builds world models on pre-trained DINOv2 visual features instead of pixels: it predicts future patch features and plans robot behavior by optimizing action sequences against a goal feature state — zero-shot planning without reconstruction. In this catalog the official planning/evaluation route is vendored in-tree, including the required env simulators.
+
+<ModelCommandBuilder modelId="dino-wm" locale="en" />
+
+## Architecture
+
+Per the upstream project, a ViT predictor rolls DINOv2 patch features forward conditioned on actions; planning is model-predictive control in feature space. The infer entrypoint loads runtime configs from data/models/runtime/configs/dino_wm/conf, and the vendored dino_wm/env simulators are intentionally kept in-tree for official planning runs.
+
+## Usage notes
+
+Execution remains checkpoint/task-asset gated but no longer depends on an external repo checkout. Full runtime parity is blocked until the OSF checkpoint/task-asset layout is staged.
+
+<ModelRelatedRecipes modelId="dino-wm" locale="en" />

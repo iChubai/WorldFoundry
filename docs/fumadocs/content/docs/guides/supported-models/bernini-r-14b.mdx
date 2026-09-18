@@ -1,0 +1,32 @@
+---
+title: "Bernini-R 14B"
+description: "Bernini-R 14B is the renderer-only release of ByteDance's Bernini family: the 14B rendering model packaged without the 7B semantic planner. It keeps the same six-task surface (text-to-image, image editing, text/video/reference-to-video) bu…"
+pageSource: generated
+---
+
+**Publisher:** ByteDance · Company
+text · image · video → image · video
+[Bernini: Latent Semantic Planning for Video Diffusion](https://arxiv.org/abs/2605.22344) (2026)
+
+Bernini-R 14B is the renderer-only release of ByteDance's Bernini family: the 14B rendering model packaged without the 7B semantic planner. It keeps the same six-task surface (text-to-image, image editing, text/video/reference-to-video) but takes your inputs directly instead of planning first. WorldFoundry vendors the official renderer inference in-tree and loads ByteDance/Bernini-R-Diffusers.
+
+<figure className="wf-recipe-media is-diagram">
+  <img src="/models/bernini-r-14b/paper.png" alt="Bernini: Latent Semantic Planning for Video Diffusion" />
+  <figcaption>Bernini: Latent Semantic Planning for Video Diffusion</figcaption>
+</figure>
+
+<ModelCommandBuilder modelId="bernini-r-14b" locale="en" />
+
+## Architecture
+
+A single 14B rendering network from the Bernini two-stage design, run standalone. The manifest records that image recipes fit on one GPU while video recipes can use explicit Ulysses sequence parallelism for speed.
+
+## Usage notes
+
+Runner parity is pending_gpu_validation. Use task_type to select the task; stage the Bernini-R-Diffusers checkpoint (apache-2.0) locally first. For quick experiments prefer the 1.3B sibling; for the planner+renderer pipeline use the flagship bernini entry.
+
+## Evaluation benchmarks
+
+- [VBench](/docs/evaluation/benchmark-hub/vbench) — Checks the renderer's raw T2V quality.
+
+<ModelRelatedRecipes modelId="bernini-r-14b" locale="en" />

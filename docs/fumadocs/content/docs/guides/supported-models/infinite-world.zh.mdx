@@ -1,0 +1,27 @@
+---
+title: "Infinite-World"
+description: "Infinite-World is MeiGen-AI's long-horizon world video model: from one image it navigates and extends a world over long durations."
+pageSource: generated
+---
+
+**发表机构:** 美团（MeiGen-AI） · 企业
+video
+
+Infinite-World 是美团 MeiGen-AI 的长时程世界视频模型：从一张图出发，长时间地在世界中导航与扩展。本 catalog 中它已验证——真实 GPU 推理经 Studio workspace 任务路径、按官方图像条件导航 demo 设置，产出非空的长时程世界视频产物与预览元数据。
+
+<ModelCommandBuilder modelId="infinite-world" locale="zh" />
+
+## 架构
+
+树内运行时可解析本地或 Hugging Face checkpoint 布局，推理时不依赖外部仓库。除已记录结构外的架构内部细节仓库未存。
+
+## 使用要点
+
+档案匹配官方的本地/Hugging Face checkpoint 布局——请从已验证的官方图像条件 demo 设置出发。
+
+## 评测 Benchmark
+
+- [WorldModelBench](/zh/docs/evaluation/benchmark-hub/worldmodelbench) — 长时程世界滚动生成质量。
+- [MemoBench](/zh/docs/evaluation/benchmark-hub/memobench) — 长时程一致性评测。
+
+<ModelRelatedRecipes modelId="infinite-world" locale="zh" />

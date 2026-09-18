@@ -1,0 +1,26 @@
+---
+title: "ABot-World-0-5B-LF"
+description: "ABot-World-0-5B-LF is Amap's interactive world model: give it an image plus actions and it rolls out world video block by block, keeping causal KV state resident between action blocks."
+pageSource: generated
+---
+
+**Publisher:** Alibaba (Amap) · Company
+image → world state · video
+
+ABot-World-0-5B-LF is Amap's interactive world model: give it an image plus actions and it rolls out world video block by block, keeping causal KV state resident between action blocks. In this catalog it is checkpoint/GPU validated — real A100 Workspace inference produced a fully decodable 1280x704 nine-frame H.264 artifact from the public 0.5B-LF checkpoint at the official resolution.
+
+<ModelCommandBuilder modelId="abot-world-0-5b-lf" locale="en" />
+
+## Architecture
+
+Only causal inference and resident interactive rollout are integrated; Wan attention, T5, the Wan2.2 VAE, scheduler, media I/O, and FP8 support are reused in-tree, while training, Gradio, benchmark, and experimental quantizer sources are excluded. The recorded checkpoint is acvlab/ABot-World-0-5B-LF (causal student).
+
+## Usage notes
+
+Runtime execution is offline-first and requires a local checkpoint directory. The resident API keeps causal KV state between action blocks; the first block returns 9 RGB frames and subsequent blocks return 12 — plan client-side buffering accordingly.
+
+## Evaluation benchmarks
+
+- [WorldModelBench](/docs/evaluation/benchmark-hub/worldmodelbench) — General world-model rollout quality evaluation.
+
+<ModelRelatedRecipes modelId="abot-world-0-5b-lf" locale="en" />

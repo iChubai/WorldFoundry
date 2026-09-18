@@ -1,0 +1,31 @@
+---
+title: "WorldCam"
+description: "WorldCam, from KAIST's CV Lab with Adobe Research and MAUM AI, is an interactive world model with camera-pose control for long-horizon game video."
+pageSource: generated
+---
+
+**发表机构:** KAIST（韩国科学技术院）/ Adobe Research / MAUM AI · 高校
+
+WorldCam 由 KAIST CV Lab 联合 Adobe Research 与 MAUM AI 发布，是支持相机位姿控制的交互式世界模型，面向长时程游戏视频。本 catalog 中集成状态为 verified：运行时代码已内置树内，wrapper 支持 load_model=False 规划、无外部 checkout 依赖，runner 支持统一环境 profile 下官方风格的条件视频 demo。
+
+<figure className="wf-recipe-media">
+  <Video src="/demos/studio/worldcam-industrial.mp4" autoPlay loop muted playsInline />
+  <figcaption>工业场景相机控制</figcaption>
+</figure>
+
+<ModelCommandBuilder modelId="worldcam" locale="zh" />
+
+## 架构
+
+树内 runner 遵循官方条件视频路径，使用本地 WorldCam/Wan 资产，表明其为基于 Wan 的扩散骨干加相机位姿条件。除此之外的架构内部细节仓库未记录。
+
+## 使用要点
+
+该发布为 code-only（无已确认的官方 checkpoint），需自行就位本地 WorldCam/Wan 资产； wrapper 的 load_model=False 模式可在无权重时验证规划。每次运行的产物检查在 catalog 外跟踪。
+
+## 评测 Benchmark
+
+- [CameraBench](/zh/docs/evaluation/benchmark-hub/camerabench) — 相机位姿控制的滚动生成跟随度。
+- [WorldModelBench](/zh/docs/evaluation/benchmark-hub/worldmodelbench) — 长时程交互世界质量。
+
+<ModelRelatedRecipes modelId="worldcam" locale="zh" />

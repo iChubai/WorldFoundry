@@ -1,0 +1,25 @@
+---
+title: "pi0.5"
+description: "pi0.5 is Physical Intelligence's open-world generalization upgrade of pi0: trained for broader scene and task transfer while keeping the flow-matching VLA recipe. This catalog entry is the concrete pi0.5 algorithm route, reusing the in-tre…"
+pageSource: generated
+---
+
+**Publisher:** Physical Intelligence · Company
+
+pi0.5 is Physical Intelligence's open-world generalization upgrade of pi0: trained for broader scene and task transfer while keeping the flow-matching VLA recipe. This catalog entry is the concrete pi0.5 algorithm route, reusing the in-tree OpenPI runtime with pi05-specific configuration and checkpoint selection — the pi05_libero path is checkpoint-validated under the openpi entry.
+
+<ModelCommandBuilder modelId="pi05" locale="en" />
+
+## Architecture
+
+Same family architecture as pi0 — a PaliGemma-based VLA with a flow-matching action expert — trained with pi0.5's open-world recipe. Do not route this through LeRobot policy-zoo; the catalog uses the official openpi runtime.
+
+## Usage notes
+
+Stage GCS checkpoints (gs://openpi-assets) with gsutil/gcloud. The pi05_libero configuration is the validated reference path in this repository.
+
+## Evaluation benchmarks
+
+- [LIBERO](/docs/evaluation/benchmark-hub/libero) — pi05_libero is the validated in-tree reference.
+
+<ModelRelatedRecipes modelId="pi05" locale="en" />

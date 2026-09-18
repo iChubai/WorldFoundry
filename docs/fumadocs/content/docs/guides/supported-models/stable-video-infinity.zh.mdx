@@ -1,0 +1,33 @@
+---
+title: "Stable Video Infinity 2.0"
+description: "Stable Video Infinity 2.0 (SVI) generates arbitrarily long videos by chaining clips with five-frame continuation and per-clip seed changes, driven by prompt streams. This is one of the strongest evidence entries in the catalog: runner stat…"
+pageSource: generated
+---
+
+**发表机构:** 洛桑联邦理工学院（EPFL VITA 实验室） · 高校
+image → video
+[Stable Video Infinity: Infinite-Length Video Generation with Error Recycling](https://arxiv.org/abs/2510.09212) (2025)
+
+Stable Video Infinity 2.0（SVI）通过五帧续接与逐段换种子来串联视频段，由提示词流驱动，可生成任意长度的视频。它是 catalog 中证据最充分的条目之一：runner 状态为 full_default_gpu_parity_verified，记录的 A100 运行生成两段相接的 81 帧 832x544 视频并输出 157 帧 H.264 产物；与固定官方运行时的同设置对比达到 31.03 dB PSNR。
+
+<figure className="wf-recipe-media is-diagram">
+  <img src="/models/stable-video-infinity/paper.png" alt="Stable Video Infinity: Infinite-Length Video Generation with Error Recycling" />
+  <figcaption>Stable Video Infinity: Infinite-Length Video Generation with Error Recycling</figcaption>
+</figure>
+
+<ModelCommandBuilder modelId="stable-video-infinity" locale="zh" />
+
+## 架构
+
+SVI 2.0 是叠加在 Wan2.1-I2V-14B-480P 上的 LoRA：适配器复用 WorldFoundry 规范化 Wan 组件与分段 runner，保留五帧续接、参考帧填充与提示词流重复机制。发布的训练管线 LoRA 键会归一化为纯 Wan DiT 模块名，任何发现的 LoRA 对未合并成功都会导致加载失败。
+
+## 使用要点
+
+默认值遵循官方配方：五运动帧续接、完整参考帧填充、每段独立种子、每条提示词重复两次后推进。除非启用 use_first_prompt_only，官方 999 段上限被限定为每条提示词两段。需同时就位 SVI LoRA （vita-video-gen/svi-model，MIT）与 Wan2.1 基座。
+
+## 评测 Benchmark
+
+- [ChronoMagic-Bench](/zh/docs/evaluation/benchmark-hub/chronomagic-bench) — 长时程评测，契合 SVI 的无限长视频目标。
+- [VBench](/zh/docs/evaluation/benchmark-hub/vbench) — 单段质量标尺。
+
+<ModelRelatedRecipes modelId="stable-video-infinity" locale="zh" />

@@ -1,0 +1,33 @@
+---
+title: "OpenVLA"
+description: "OpenVLA is the widely used open 7B vision-language-action model (MIT license): a Prismatic-based VLM fine-tuned on Open X-Embodiment robot demonstrations to predict discretized actions. Both openvla-7b and the LIBERO-10 fine-tune are confi…"
+pageSource: generated
+---
+
+**发表机构:** 开源研究发布（仓库未记录正式机构） · 研究机构
+
+OpenVLA 是广泛使用的开放 7B 视觉-语言-动作模型（MIT 许可）：基于 Prismatic 的 VLM 在 Open X-Embodiment 机器人示范上微调，预测离散化动作。openvla-7b 与 LIBERO-10 微调版均已确认并锁定 revision，树内 WorldFoundry runner 在 base 路由上以 unnorm_key=bridge_orig 验证。
+
+<ModelCommandBuilder modelId="openvla" locale="zh" />
+
+## 架构
+
+7B Prismatic VLM（SigLIP/DINOv2 融合视觉，Llama-2 语言），输出动作 token 并按数据集专用归一化键反解为连续 7 自由度动作。
+
+## 使用要点
+
+unnorm_key 需匹配数据分布（已验证默认为 bridge_orig）。LIBERO 评测用 LIBERO-10 微调版；更快的微调线请见 openvla-oft。
+
+## 变体与 Pipeline Binding
+
+| Variant | 任务 | Runtime profile | Pipeline Binding | 状态 |
+| --- | --- | --- | --- | --- |
+| `openvla-7b` | vla.action_prediction | `openvla` | `openvla` | integrated |
+| `openvla-libero-10` | vla.policy_rollout | `openvla` | `openvla` | integrated |
+
+## 评测 Benchmark
+
+- [BridgeData V2](/zh/docs/evaluation/benchmark-hub/bridgedata-v2) — 已验证路由使用 bridge_orig 归一化。
+- [LIBERO](/zh/docs/evaluation/benchmark-hub/libero) — 有专门的 LIBERO-10 微调 checkpoint。
+
+<ModelRelatedRecipes modelId="openvla" locale="zh" />

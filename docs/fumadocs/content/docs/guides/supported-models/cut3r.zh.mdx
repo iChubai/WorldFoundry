@@ -1,0 +1,22 @@
+---
+title: "CUT3R"
+description: "CUT3R is a continuous 3D perception model with persistent state: it ingests a stream of images and continuously updates a metric-scale 3D reconstruction, without offline bundling."
+pageSource: generated
+---
+
+**发表机构:** 加州大学伯克利分校（UC Berkeley） · 高校
+point cloud
+
+CUT3R 是带持久状态的连续 3D 感知模型：接收图像流并持续更新米制尺度的 3D 重建，无需离线捆绑优化。本 catalog 中已通过 Studio 发现机制注册了树内点云与两段式 3DGS 路径。CUT3R 同时是 video 类别中已验证的 VMem 条目的几何主干。
+
+<ModelCommandBuilder modelId="cut3r" locale="zh" />
+
+## 架构
+
+循环 Transformer 维护持久场景状态；每帧新图像更新状态并在线输出点图与相机参数（见上游论文）。已记录路径覆盖点云导出与两段式 3DGS pipeline；权重为 apache-2.0。
+
+## 使用要点
+
+Runner parity 为 pending：checkpoint 加载推理依赖就位的本地或 Hugging Face cut3r 权重。提交 Studio 任务前请先就位权重。
+
+<ModelRelatedRecipes modelId="cut3r" locale="zh" />

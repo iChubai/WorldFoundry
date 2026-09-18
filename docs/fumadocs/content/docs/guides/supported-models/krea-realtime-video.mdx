@@ -1,0 +1,26 @@
+---
+title: "Krea Realtime Video 14B"
+description: "Krea Realtime Video 14B is Krea AI's open realtime/streaming video generation model. Unlike the batch T2V models in this catalog, it targets low-latency streaming generation: text-to-video and video-to-video in a streaming regime. The in-t…"
+pageSource: generated
+---
+
+**Publisher:** Krea AI · Company
+text · video → video
+
+Krea Realtime Video 14B is Krea AI's open realtime/streaming video generation model. Unlike the batch T2V models in this catalog, it targets low-latency streaming generation: text-to-video and video-to-video in a streaming regime. The in-tree runtime lives under synthesis/visual_generation/krea_realtime, and the route exposes num_blocks, resolution, fps, and seed controls. Alias krea-rt-14b resolves here.
+
+<ModelCommandBuilder modelId="krea-realtime-video" locale="en" />
+
+## Architecture
+
+Upstream describes it as a 14B autoregressive/streaming video model distilled for realtime block-wise generation (weights at krea/krea-realtime-video, apache-2.0). This repository records the block-based generation controls (num_blocks) and the prompt/video input contract; deeper internals are not recorded here.
+
+## Usage notes
+
+Runner parity is pending: the route is wired and controls are exposed, but official longer-realtime parity has not been recorded. Realtime throughput expectations depend heavily on your GPU — the 14B scale wants datacenter-class hardware for true realtime rates.
+
+## Evaluation benchmarks
+
+- [VBench](/docs/evaluation/benchmark-hub/vbench) — Baseline quality check for streaming T2V output.
+
+<ModelRelatedRecipes modelId="krea-realtime-video" locale="en" />

@@ -1,0 +1,25 @@
+---
+title: "LingBot-World Base Act"
+description: "LingBot-World Base Act is the action-conditioned sibling of LingBot-World: instead of camera poses it consumes an action matrix, making it the interactive-control profile of the family. It is independently cataloged and resolves the offici…"
+pageSource: generated
+---
+
+**Publisher:** Robbyant (Ant Group) · Company
+
+LingBot-World Base Act is the action-conditioned sibling of LingBot-World: instead of camera poses it consumes an action matrix, making it the interactive-control profile of the family. It is independently cataloged and resolves the official Base-Act preview checkpoint — Base-Cam is never substituted.
+
+<ModelCommandBuilder modelId="lingbot-world-act" locale="en" />
+
+## Architecture
+
+The inference path reuses the in-tree LingBot runtime and central Wan base modules (apache-2.0). Inputs are prompt, image, pose, and action_matrix.
+
+## Usage notes
+
+In-tree action payload routing is wired; full GPU artifact parity requires locally staged weights. The dedicated LingBot environment is retained because unified-env act2cam parity produced near-black output — do not switch environments.
+
+## Evaluation benchmarks
+
+- [WorldModelBench](/docs/evaluation/benchmark-hub/worldmodelbench) — Action-conditioned world-rollout quality.
+
+<ModelRelatedRecipes modelId="lingbot-world-act" locale="en" />

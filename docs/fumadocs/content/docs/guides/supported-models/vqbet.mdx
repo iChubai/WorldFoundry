@@ -1,0 +1,21 @@
+---
+title: "VQ-BeT"
+description: "VQ-BeT (Vector-Quantized Behavior Transformer) generates behavior by tokenizing continuous actions with a hierarchical VQ-VAE and predicting those tokens with a transformer — capturing multimodal demonstrations without diffusion sampling c…"
+pageSource: generated
+---
+
+**Publisher:** Open-source research release (institution not recorded) · Research lab
+
+VQ-BeT (Vector-Quantized Behavior Transformer) generates behavior by tokenizing continuous actions with a hierarchical VQ-VAE and predicting those tokens with a transformer — capturing multimodal demonstrations without diffusion sampling costs. The catalog sources the official repository and routes it through an in-tree action runtime adapter.
+
+<ModelCommandBuilder modelId="vqbet" locale="en" />
+
+## Architecture
+
+A residual VQ-VAE action tokenizer plus a GPT-style transformer over behavior tokens, with offset heads recovering continuous actions. Further internals are not recorded in this repository.
+
+## Usage notes
+
+Checkpoint absence is reported by runtime missing_assets and is not a catalog blocker; runs emit a runtime plan until weights are staged. Train your own task checkpoint with the official code before running.
+
+<ModelRelatedRecipes modelId="vqbet" locale="en" />

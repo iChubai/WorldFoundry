@@ -1,0 +1,27 @@
+---
+title: "ABot-M0"
+description: "ABot-M0 from Amap's CV Lab is a bimanual manipulation VLA built on Qwen3-VL with an AML flow action expert and optional VGGT geometric fusion. Three released task weights are confirmed — ABot-M0-LIBERO, ABot-M0-Robocasa, and ABot-M0-RoboTw…"
+pageSource: generated
+---
+
+**Publisher:** Amap CV Lab (Alibaba Group) · Company
+
+ABot-M0 from Amap's CV Lab is a bimanual manipulation VLA built on Qwen3-VL with an AML flow action expert and optional VGGT geometric fusion. Three released task weights are confirmed — ABot-M0-LIBERO, ABot-M0-Robocasa, and ABot-M0-RoboTwin2 — plus a ModelScope pretraining checkpoint, all under Apache-2.0, and all three are staged and manifest-size verified in this catalog.
+
+<ModelCommandBuilder modelId="abot-m0" locale="en" />
+
+## Architecture
+
+Qwen3-VL provides the vision-language backbone; the AML flow action expert decodes actions; optional VGGT fusion injects 3D geometry. The runtime accepts the released config.yaml, dataset_statistics.json, and steps_*_pytorch_model.pt layout directly, preserving the strict state-dict architecture.
+
+## Usage notes
+
+Pick the task weight matching your benchmark (LIBERO, RoboCasa, or RoboTwin2). Only inference components are in-tree; datasets, training, deployment services, and robot SDK code are excluded.
+
+## Evaluation benchmarks
+
+- [LIBERO](/docs/evaluation/benchmark-hub/libero) — Dedicated ABot-M0-LIBERO task weight.
+- [RoboCasa](/docs/evaluation/benchmark-hub/robocasa) — Dedicated ABot-M0-Robocasa task weight.
+- [RoboTwin 2.0](/docs/evaluation/benchmark-hub/robotwin) — Dedicated ABot-M0-RoboTwin2 task weight.
+
+<ModelRelatedRecipes modelId="abot-m0" locale="en" />

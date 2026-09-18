@@ -1,0 +1,25 @@
+---
+title: "HY-World 2.0"
+description: "HY-World 2.0 is Tencent's second-generation world stack, recorded here as components: HY-Pano 2.0 panorama generation (supported in-tree), WorldMirror 2.0 reconstruction (verified through the Workspace infer path), and full text/image-to-3…"
+pageSource: generated
+---
+
+**Publisher:** Tencent (Hunyuan) · Company
+
+HY-World 2.0 is Tencent's second-generation world stack, recorded here as components: HY-Pano 2.0 panorama generation (supported in-tree), WorldMirror 2.0 reconstruction (verified through the Workspace infer path), and full text/image-to-3D-world generation (open upstream, migration pending in WorldFoundry). The verified reconstruction path exports depth, normals, point cloud, Gaussian splat, cameras, COLMAP files, and RRD scene metadata.
+
+<ModelCommandBuilder modelId="hy-world-2.0" locale="en" />
+
+## Architecture
+
+The upstream five-stage world generation chains WorldNav trajectory generation, trajectory rendering, video generation, GS data preparation, and 3DGS composition (traj_generate.py through world_gs_trainer.py) plus a VLM endpoint. WorldFoundry wraps HY-Pano 2.0 and WorldMirror 2.0 in-tree; the remaining stages are not yet migrated.
+
+## Usage notes
+
+Use the verified WorldMirror 2.0 reconstruction path today; treat full world generation as upstream-only until the five-stage runtime is migrated and verified. The trajectory-render stage is separately cataloged as hyworld-worldgen.
+
+## Evaluation benchmarks
+
+- [WorldScore](/docs/evaluation/benchmark-hub/worldscore) — Standard scoring for generated explorable worlds.
+
+<ModelRelatedRecipes modelId="hy-world-2.0" locale="en" />

@@ -1,0 +1,32 @@
+---
+title: "Bernini-R 1.3B"
+description: "Bernini-R 1.3B is the small renderer-only member of ByteDance's Bernini family — a 1.3B rendering checkpoint fine-tuned from Wan2.1 1.3B, covering the same six task types as its larger siblings. It is the practical single-GPU way to try th…"
+pageSource: generated
+---
+
+**Publisher:** ByteDance · Company
+text · image · video → image · video
+[Bernini: Latent Semantic Planning for Video Diffusion](https://arxiv.org/abs/2605.22344) (2026)
+
+Bernini-R 1.3B is the small renderer-only member of ByteDance's Bernini family — a 1.3B rendering checkpoint fine-tuned from Wan2.1 1.3B, covering the same six task types as its larger siblings. It is the practical single-GPU way to try the Bernini task surface. WorldFoundry vendors the renderer inference in-tree and loads ByteDance/Bernini-R-1.3B-Diffusers.
+
+<figure className="wf-recipe-media is-diagram">
+  <img src="/models/bernini-r-1.3b/paper.png" alt="Bernini: Latent Semantic Planning for Video Diffusion" />
+  <figcaption>Bernini: Latent Semantic Planning for Video Diffusion</figcaption>
+</figure>
+
+<ModelCommandBuilder modelId="bernini-r-1.3b" locale="en" />
+
+## Architecture
+
+The manifest explicitly records this as a renderer-only 1.3B checkpoint fine-tuned from the Wan2.1 1.3B diffusion-transformer backbone; the 7B planner stage of the full Bernini design is absent.
+
+## Usage notes
+
+Runner parity is pending_gpu_validation, but the small footprint makes this the recommended first stop in the Bernini family. Select tasks via task_type; the checkpoint is apache-2.0 and must be staged locally.
+
+## Evaluation benchmarks
+
+- [VBench](/docs/evaluation/benchmark-hub/vbench) — Quick quality yardstick for the small renderer.
+
+<ModelRelatedRecipes modelId="bernini-r-1.3b" locale="en" />

@@ -1,0 +1,22 @@
+---
+title: "HY-World 2.0 Trajectory Renderer"
+description: "HY-World 2.0 Trajectory Renderer is one stage of Tencent's world-generation chain, cataloged separately: it renders camera-controlled video from a pre-materialized HY-World scene point cloud (render_results/global_pcd.ply) along a camera J…"
+pageSource: generated
+---
+
+**Publisher:** Tencent (Hunyuan) · Company
+point cloud
+
+HY-World 2.0 Trajectory Renderer is one stage of Tencent's world-generation chain, cataloged separately: it renders camera-controlled video from a pre-materialized HY-World scene point cloud (render_results/global_pcd.ply) along a camera JSON. It intentionally loads no model checkpoint — it is a renderer, not a generator.
+
+<ModelCommandBuilder modelId="hyworld-worldgen" locale="en" />
+
+## Architecture
+
+The unified runtime includes an in-tree torch point-splat fallback and does not require PyTorch3D. Official source is vendored at a pinned revision (license: tencent-hunyuan-community); this route is the official trajectory-render stage and does not claim full five-stage world generation.
+
+## Usage notes
+
+Provide an image, camera JSON, and a scene_path pointing at a pre-materialized HY-World scene. Scene materialization belongs to the separate full HY-World generation pipeline.
+
+<ModelRelatedRecipes modelId="hyworld-worldgen" locale="en" />

@@ -1,0 +1,26 @@
+---
+title: "GEN3C"
+description: "GEN3C generates camera-controlled video with an explicit 3D cache: it builds a rough 3D scene from the input image (via depth), warps it along the requested camera path, and lets the video model fill in the rest — precise camera control wi…"
+pageSource: generated
+---
+
+**发表机构:** 英伟达（NVIDIA） · 企业
+image → video
+
+GEN3C 用显式 3D 缓存生成相机可控视频：先从输入图（借助深度）搭出粗略 3D 场景，沿目标相机路径前向扭曲，再让视频模型补全其余部分——兼顾精确相机控制与 3D 一致性（CVPR 2025）。本 catalog 中它经与 Cosmos Predict1 家族相同的去噪器/条件器/调度器契约原生组装。
+
+<ModelCommandBuilder modelId="gen3c" locale="zh" />
+
+## 架构
+
+命名相机轨迹、MoGe 深度与 RGBD 前向扭曲是潜变量初始化角色内的原生预处理；调用方也可直接提供预渲染的 3D 缓存张量。栈使用原生 T5 条件器、Karras x0 AB2 调度器、编解码器与加载器（许可： nvidia-source-code）。
+
+## 使用要点
+
+transformer 与 T5 checkpoint 结构、相机几何、注册表与调度器契约已通过本地验证，但全分辨率原生 GPU 输出一致性待验证——早期官方运行时的 demo 证据不适用于原生路径。
+
+## 评测 Benchmark
+
+- [CameraBench](/zh/docs/evaluation/benchmark-hub/camerabench) — 受控生成的相机轨迹贴合度。
+
+<ModelRelatedRecipes modelId="gen3c" locale="zh" />

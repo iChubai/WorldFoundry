@@ -1,0 +1,21 @@
+---
+title: "Segment and Track Anything"
+description: "Segment and Track Anything (SAM-Track) combines SAM segmentation with AOT/DeAOT tracking so objects can be segmented once and tracked across a whole video, with GroundingDINO enabling text-prompted selection."
+pageSource: generated
+---
+
+**发表机构:** 浙江大学（ReLER 实验室） · 高校
+
+Segment and Track Anything（SAM-Track）把 SAM 分割与 AOT/DeAOT 跟踪结合起来：对象只需分割一次即可在整段视频中被跟踪，GroundingDINO 支持文本提示选择。本 catalog 中它是经共享 geometry-prior 契约调用的独立跟踪先验。
+
+<ModelCommandBuilder modelId="track-anything-prior" locale="zh" />
+
+## 架构
+
+记录的结构组合三个子组件——SAM 出掩码、GroundingDINO 做文本定位、AOT/DeAOT 做传播——并在可用时复用 WorldFoundry 的规范组件。注册于 base_models/perception_core/tracking/track_anything；上游许可为 AGPL-3.0。
+
+## 使用要点
+
+它作为独立几何先验集成在 worldfoundry/base_models 下，通过共享的 geometry-prior pipeline/operator 契约对外暴露。上层管线（如 ViPE）从这一规范位置导入它，而不是各自保留私有副本。配置解析与 pipeline/operator 导入预期可通过；真实先验推理仍受 checkpoint/资产限制。
+
+<ModelRelatedRecipes modelId="track-anything-prior" locale="zh" />

@@ -1,0 +1,27 @@
+---
+title: "JoyAI-Echo 1.5 / Echo-LongVideo"
+description: "JoyAI-Echo 1.5 is an inference-only long-form audio-video generator. Its R2V request can combine a prompt, an optional first frame, and as many as seven ordered image/audio memory slots so identity, voice, and story context persist across…"
+pageSource: generated
+---
+
+**Publisher:** JD.com (JoyAI / Echo Team) · Company
+image → video
+
+JoyAI-Echo 1.5 is an inference-only long-form audio-video generator. Its R2V request can combine a prompt, an optional first frame, and as many as seven ordered image/audio memory slots so identity, voice, and story context persist across independently editable shots.
+
+<ModelCommandBuilder modelId="joyai-echo-longvideo" locale="en" />
+
+## Architecture
+
+The release builds on LTX-2.3 and adds few-step DMD generation plus a paired cross-modal memory bank. WorldFoundry keeps the official Python 3.11, PyTorch 2.8, CUDA 12.8 runtime external and communicates through the checked-in CLI contract.
+
+## Usage notes
+
+Clone JoyAI-Echo at the recorded revision, prepare its dedicated environment, and pass source_root plus local Echo and gated Gemma checkpoints. Generation is safety-gated behind execute=True. FP4 also needs NVIDIA ModelOpt; production voice-memory extraction needs the upstream MSST setup.
+
+## Evaluation benchmarks
+
+- [ChronoMagic-Bench](/docs/evaluation/benchmark-hub/chronomagic-bench) — Long-horizon temporal continuity across generated shots.
+- [VBench](/docs/evaluation/benchmark-hub/vbench) — Baseline video quality and motion evaluation.
+
+<ModelRelatedRecipes modelId="joyai-echo-longvideo" locale="en" />

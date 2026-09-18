@@ -1,0 +1,27 @@
+---
+title: "WonderWorld"
+description: "WonderWorld generates an interactive 3D world from a single image fast enough for a live loop — the user picks where to extend the scene and new content appears in seconds."
+pageSource: generated
+---
+
+**Publisher:** Stanford University / MIT · University
+image → 3D scene · world state
+[WonderWorld: Interactive 3D Scene Generation from a Single Image](https://arxiv.org/abs/2406.09394) (CVPR 2025, 2024)
+
+WonderWorld generates an interactive 3D world from a single image fast enough for a live loop — the user picks where to extend the scene and new content appears in seconds. In this catalog the in-tree run.py/example_config flow runs through the shared 3D/4D subprocess adapter; runner parity is pending runtime assets.
+
+<ModelCommandBuilder modelId="wonderworld" locale="en" />
+
+## Architecture
+
+Per the paper (arXiv 2406.09394), the key representation is FLAGS (Fast LAyered Gaussian Surfels), generated from a single view with a guided depth-diffusion scheme — under 10 seconds per scene on the reported hardware. Direct execution requires WonderWorld checkpoints plus local PyTorch3D-compatible extensions.
+
+## Usage notes
+
+Missing source, inpainting, segmentation, depth/normal, or 3DGS assets are reported at inference time. Stage the full asset set and compile the PyTorch3D-compatible extensions before expecting real scene output.
+
+## Evaluation benchmarks
+
+- [WorldScore](/docs/evaluation/benchmark-hub/worldscore) — Standard scoring for interactive generated 3D worlds.
+
+<ModelRelatedRecipes modelId="wonderworld" locale="en" />

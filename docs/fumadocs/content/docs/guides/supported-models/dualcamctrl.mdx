@@ -1,0 +1,26 @@
+---
+title: "DualCamCtrl"
+description: "DualCamCtrl controls video generation with a camera trajectory plus a depth image: the RGB and depth conditions together pin down scene geometry so the generated camera move stays physically grounded."
+pageSource: generated
+---
+
+**Publisher:** The Hong Kong University of Science and Technology (Guangzhou) (EnVision Lab) · University
+image → video · depth
+
+DualCamCtrl controls video generation with a camera trajectory plus a depth image: the RGB and depth conditions together pin down scene geometry so the generated camera move stays physically grounded. In this catalog the runner is verified and follows the official RGB/depth/camera demo contract.
+
+<ModelCommandBuilder modelId="dualcamctrl" locale="en" />
+
+## Architecture
+
+The default demo contract follows the official recipe: an image, a depth image, a camera .torch trajectory file, 61 frames at 320x480, 50 steps. The in-tree inference runtime lives under synthesis/visual_generation/dualcamctrl; internals beyond the recorded contract are not stored here.
+
+## Usage notes
+
+Open-source users should rely on the default Hugging Face cache/download path; pre-staged local assets can be passed through checkpoint_path, base_model_path, or WORLDFOUNDRY_MODEL_DIR.
+
+## Evaluation benchmarks
+
+- [CameraBench](/docs/evaluation/benchmark-hub/camerabench) — Camera-trajectory adherence of controlled generation.
+
+<ModelRelatedRecipes modelId="dualcamctrl" locale="en" />

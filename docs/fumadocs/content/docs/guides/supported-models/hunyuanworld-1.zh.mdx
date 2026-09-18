@@ -1,0 +1,25 @@
+---
+title: "HunyuanWorld 1.0"
+description: "HunyuanWorld 1.0 generates immersive, explorable 3D worlds from text or an image — the first generation of Tencent's open world-generation stack, exporting layered panoramas and mesh scenes."
+pageSource: generated
+---
+
+**发表机构:** 腾讯（混元） · 企业
+
+HunyuanWorld 1.0 从文本或一张图生成沉浸式、可探索的 3D 世界——腾讯开源世界生成栈的第一代，导出分层全景与网格场景。本 catalog 中官方源码路径已注册；checkpoint 与第三方资产保持运行时限制。
+
+<ModelCommandBuilder modelId="hunyuanworld-1" locale="zh" />
+
+## 架构
+
+按上游发布，生成以全景为先：先生成全景代理图，再做语义分层并提升为 3D 世界表示。除此之外的架构内部细节仓库未记录。
+
+## 使用要点
+
+配置解析与 pipeline 导入预期可通过；在所需 checkpoint/资产就位前，真实生成会输出运行时计划。缺失资产由计划报告，不视为 catalog 阻塞。较新的组件已验证栈请见 hy-world-2.0 条目。
+
+## 评测 Benchmark
+
+- [WorldScore](/zh/docs/evaluation/benchmark-hub/worldscore) — 生成可探索世界的标准评分。
+
+<ModelRelatedRecipes modelId="hunyuanworld-1" locale="zh" />

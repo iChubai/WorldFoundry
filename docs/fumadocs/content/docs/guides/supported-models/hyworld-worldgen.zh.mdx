@@ -1,0 +1,22 @@
+---
+title: "HY-World 2.0 Trajectory Renderer"
+description: "HY-World 2.0 Trajectory Renderer is one stage of Tencent's world-generation chain, cataloged separately: it renders camera-controlled video from a pre-materialized HY-World scene point cloud (render_results/global_pcd.ply) along a camera J…"
+pageSource: generated
+---
+
+**发表机构:** 腾讯（混元） · 企业
+point cloud
+
+HY-World 2.0 轨迹渲染器是腾讯世界生成链中的一个阶段，单独记录：沿 camera JSON 从预先物化的 HY-World 场景点云（render_results/global_pcd.ply）渲染相机可控视频。它有意不加载任何模型 checkpoint——是渲染器，不是生成器。
+
+<ModelCommandBuilder modelId="hyworld-worldgen" locale="zh" />
+
+## 架构
+
+统一运行时包含树内 torch 点泼溅回退实现，不需要 PyTorch3D。官方源码以固定 revision 内置（许可：tencent-hunyuan-community）；该路径是官方轨迹渲染阶段，不声称完整五阶段世界生成。
+
+## 使用要点
+
+提供图像、camera JSON 与指向预物化 HY-World 场景的 scene_path。场景物化属于独立的完整 HY-World 生成 pipeline。
+
+<ModelRelatedRecipes modelId="hyworld-worldgen" locale="zh" />

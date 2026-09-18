@@ -1,0 +1,27 @@
+---
+title: "Wan 2.6 API"
+description: "Wan 2.6 API is the DashScope-hosted image-to-video endpoint for Alibaba's Wan 2.6 model. You provide a start image and receive a rendered clip from Alibaba Cloud; WorldFoundry records the request and stores the result in its standard artif…"
+pageSource: generated
+---
+
+**Publisher:** Alibaba (Tongyi Lab) · Company
+image → video
+
+Wan 2.6 API is the DashScope-hosted image-to-video endpoint for Alibaba's Wan 2.6 model. You provide a start image and receive a rendered clip from Alibaba Cloud; WorldFoundry records the request and stores the result in its standard artifact layout. The catalog lists wan2.6 and wan-2.6 as aliases. Choose this entry when you want the newer hosted Wan generation without local GPU setup.
+
+<ModelCommandBuilder modelId="wan-2p6" locale="en" />
+
+## Architecture
+
+Wan 2.6 continues the Wan diffusion-transformer video family from Tongyi Lab; the API-served revision's precise architecture and parameters are not published, and this repository records only the hosted integration.
+
+## Usage notes
+
+The catalog marks this entry as integrated: the hosted-API Studio pipeline is available, but you must supply your own provider API key and account. No weights are downloaded and no GPU environment is provisioned locally — generation happens on the provider side, so cost, quota, and content policy follow your provider account. Keys are issued via Alibaba Cloud DashScope (dashscope.aliyun.com).
+
+## Evaluation benchmarks
+
+- [VBench](/docs/evaluation/benchmark-hub/vbench) — Standard multi-dimension quality suite for comparing hosted text/image-to-video outputs.
+- [Physics-IQ Original](/docs/evaluation/benchmark-hub/physics-iq) — Probes whether provider-side video models respect basic physical plausibility.
+
+<ModelRelatedRecipes modelId="wan-2p6" locale="en" />

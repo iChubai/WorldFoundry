@@ -1,0 +1,26 @@
+---
+title: "PointWorld"
+description: "PointWorld is NVIDIA's point-cloud world model for robotics: instead of predicting pixels it predicts future 3D point-cloud states under actions, giving geometry-native world modeling."
+pageSource: generated
+---
+
+**Publisher:** NVIDIA · Company
+point cloud
+
+PointWorld is NVIDIA's point-cloud world model for robotics: instead of predicting pixels it predicts future 3D point-cloud states under actions, giving geometry-native world modeling. In this catalog the official source route is registered at a pinned commit; checkpoint and point-cloud assets stay runtime-gated.
+
+<ModelCommandBuilder modelId="pointworld" locale="en" />
+
+## Architecture
+
+Architecture internals beyond the recorded tasks are not stored in this repository (apache-2.0; checkpoints at nvidia/PointWorld_models). The recorded artifact type is generated_3d_asset.
+
+## Usage notes
+
+Config resolution and pipeline import are expected to pass; real generation emits a runtime plan until required checkpoints/assets are staged. Missing assets are reported by the plan and are not treated as catalog blockers. Inputs include point clouds alongside the usual prompt/image/video/actions.
+
+## Evaluation benchmarks
+
+- [EWMBench](/docs/evaluation/benchmark-hub/ewmbench) — Embodied world-model prediction quality.
+
+<ModelRelatedRecipes modelId="pointworld" locale="en" />

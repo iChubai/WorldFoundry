@@ -1,0 +1,27 @@
+---
+title: "Dexora 1B"
+description: "Dexora 1B is a dexterous bimanual manipulation VLA built on a 1B RDT policy backbone (paper: arXiv 2605.18722, MIT license). WorldFoundry keeps the full inference stack in-tree — SigLIP/T5 encoders, strict checkpoint loader, diffusion samp…"
+pageSource: generated
+---
+
+**发表机构:** 开源研究发布（仓库未记录正式机构） · 研究机构
+[Dexora: Open-source VLA for High-DoF Bimanual Dexterity](https://arxiv.org/abs/2605.18722) (ICRA 2026, 2026)
+
+Dexora 1B 是灵巧双臂操作 VLA，基于 1B RDT 策略骨干（论文：arXiv 2605.18722，MIT 许可）。 WorldFoundry 将完整推理栈内置树内——SigLIP/T5 编码器、严格 checkpoint 加载器、扩散采样器与 36 自由度动作契约——但作者只发布了数据与训练代码，无官方策略权重。
+
+<figure className="wf-recipe-media is-diagram">
+  <img src="/models/dexora-1b/paper.png" alt="Dexora: Open-source VLA for High-DoF Bimanual Dexterity" />
+  <figcaption>Dexora: Open-source VLA for High-DoF Bimanual Dexterity</figcaption>
+</figure>
+
+<ModelCommandBuilder modelId="dexora-1b" locale="zh" />
+
+## 架构
+
+1B 参数的 RDT（机器人扩散 transformer）策略，SigLIP 视觉与 T5 语言编码，经扩散采样器输出 36 自由度双臂灵巧动作。源码级 checkpoint 与推理契约与官方 1B 配置一致。
+
+## 使用要点
+
+需先用官方流程训练自己的 Stage-1 或 Stage-3 checkpoint，运行时才能执行；训练、数据集、遥操作、ZMQ 服务、机器人 SDK 与模拟器代码均不在树内。
+
+<ModelRelatedRecipes modelId="dexora-1b" locale="zh" />

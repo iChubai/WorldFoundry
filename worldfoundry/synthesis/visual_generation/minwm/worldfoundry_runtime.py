@@ -68,6 +68,10 @@ class MinWMHYAction2VRuntime(_MinWMRuntime):
     MODEL_ID = "minwm-hy-action2v"
 
     @staticmethod
+    def bundled_repo_root() -> Path:
+        return Path(__file__).resolve().parent
+
+    @staticmethod
     def default_base_path(checkpoints: Path) -> Path:
         return checkpoints / "HunyuanVideo-1.5"
 
@@ -126,7 +130,7 @@ class MinWMHYAction2VRuntime(_MinWMRuntime):
             "torch.distributed.run",
             "--nproc_per_node=1",
             "--module",
-            "worldfoundry.synthesis.visual_generation.minwm.minwm_runtime.HY15.hy15_inference",
+            "worldfoundry.synthesis.visual_generation.minwm.hy15_inference",
             "--mode",
             "ar_rollout",
             "--transformer_dir",

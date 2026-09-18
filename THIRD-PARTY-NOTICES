@@ -341,3 +341,17 @@ nvidia-vfx
   bindings for RTX Video Super Resolution, denoise, and deblur.  The package is
   not redistributed as source by WorldFoundry.  Installation and use remain
   subject to NVIDIA's terms.
+
+Hunyuan GameCraft inference adaptation
+  Source: https://github.com/Tencent-Hunyuan/Hunyuan-GameCraft-1.0
+  Revision: 9a35ecf495a1b97b4929524fff442481069ecdc2
+  License: Tencent Hunyuan Community License (included with gamecraft components).
+  Locations: base_models/diffusion_model/models/networks/hunyuan_video/gamecraft;
+             synthesis/visual_generation/hunyuan_world/gamecraft_inference.
+
+minWM HY15 Action2V inference adaptation
+  Source: https://github.com/shengshu-ai/minWM
+  Revision: df522a26cd4409d3e3e8f269cc98eac069b5df47
+  License: upstream HY15 files retain Tencent Hunyuan license headers;
+           the minWM repository also supplies Apache-2.0.
+  Copies and provenance: base_models/diffusion_model/models/networks/hunyuan_video/h15.

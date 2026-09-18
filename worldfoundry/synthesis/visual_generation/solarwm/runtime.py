@@ -3,6 +3,9 @@
 from __future__ import annotations
 
 import json
+import shutil
+import tempfile
+from dataclasses import replace
 from pathlib import Path
 
 import yaml
@@ -91,6 +94,38 @@ class SolarWMRuntime(OfficialInferenceRuntime):
         if missing:
             result["status"] = "blocked"
         return result
+
+    def run_plan(self, plan, *, timeout_seconds=7200):
+        # Upstream publishes with renameat2(RENAME_NOREPLACE). Shared/FUSE
+        # filesystems may reject that operation even though ordinary writes
+        # work. Preserve its publication protocol on local scratch, then copy
+        # the completed artifacts and diagnostics to the requested directory.
+        output = Path(plan.output_dir)
+        if output.exists() and any(output.rglob("*.mp4")):
+            raise FileExistsError(f"Inference output already contains videos: {output}")
+        with tempfile.TemporaryDirectory(prefix="worldfoundry-solarwm-") as scratch:
+            command = list(plan.command)
+            for index, argument in enumerate(command):
+                if index and command[index - 1] == "--set":
+                    key, _, value = argument.partition("=")
+                    if key == "runtime.output_dir":
+                        command[index] = f"{key}={json.dumps(scratch)}"
+                    elif key == "inference.work_dir":
+                        command[index] = f"{key}={json.dumps(str(Path(scratch) / 'conditioning'))}"
+            staged = replace(plan, command=tuple(command), output_dir=scratch)
+            result = super().run_plan(staged, timeout_seconds=timeout_seconds)
+            shutil.copytree(scratch, output, dirs_exist_ok=True)
+
+            def published(value):
+                if isinstance(value, str) and value.startswith(scratch + "/"):
+                    return str(output / Path(value).relative_to(scratch))
+                if isinstance(value, list):
+                    return [published(item) for item in value]
+                return value
+
+            result = {key: published(value) for key, value in result.items()}
+            Path(result["metadata_path"]).write_text(json.dumps(result, indent=2) + "\n")
+            return result
 
     def build_plan(self, *, request, output_dir):
         request = dict(request)

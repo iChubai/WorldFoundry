@@ -122,6 +122,13 @@ def _runtime_env(device: str, source_root: Path) -> dict[str, str]:
         "PYTHONUNBUFFERED": "1",
         "TOKENIZERS_PARALLELISM": "false",
     }
+    # The upstream overlay otherwise defaults to /usr/bin/ffprobe, which
+    # need not exist in conda and user-local installations.
+    for tool in ("ffmpeg", "ffprobe"):
+        variable = f"{tool.upper()}_BIN"
+        resolved = shutil.which(os.environ.get(variable) or tool)
+        if resolved:
+            env[variable] = resolved
     visible_devices = _cuda_visible_devices(device)
     if visible_devices:
         env["CUDA_VISIBLE_DEVICES"] = visible_devices
@@ -514,9 +521,11 @@ class JoyAIEchoWMRuntime(_JoyAIEchoSubprocessRuntime):
     def preflight(self) -> dict[str, Any]:
         missing_checkpoint = self.missing_checkpoint_files()
         missing_runtime = self.missing_runtime_files()
-        ffmpeg_path = shutil.which("ffmpeg")
+        ffmpeg_path = shutil.which(os.environ.get("FFMPEG_BIN") or "ffmpeg")
+        ffprobe_path = shutil.which(os.environ.get("FFPROBE_BIN") or "ffprobe")
+        missing_tools = [name for name, path in (("ffmpeg", ffmpeg_path), ("ffprobe", ffprobe_path)) if not path]
         device_ready = self.device.lower().startswith("cuda")
-        ready = not missing_checkpoint and not missing_runtime and ffmpeg_path is not None and device_ready
+        ready = not missing_checkpoint and not missing_runtime and not missing_tools and device_ready
         return {
             "status": "ready" if ready else "blocked",
             "project": self.project_name,
@@ -528,9 +537,10 @@ class JoyAIEchoWMRuntime(_JoyAIEchoSubprocessRuntime):
             "config_path": str(self.config_path),
             "python_executable": str(self.python_executable),
             "ffmpeg": ffmpeg_path,
+            "ffprobe": ffprobe_path,
             "missing_checkpoint_files": list(missing_checkpoint),
             "missing_runtime_files": list(missing_runtime),
-            "missing_system_tools": [] if ffmpeg_path else ["ffmpeg"],
+            "missing_system_tools": missing_tools,
             "device": self.device,
             "device_ready": device_ready,
             "blocked_reasons": [] if device_ready else ["Echo-WM inference requires CUDA."],

@@ -117,6 +117,13 @@ def apply_attention_policy(
     for child in model.modules():
         setter = getattr(child, "set_attention_backend", None)
         if callable(setter):
+            # Diffusers' same-named API has a different backend vocabulary
+            # ("native" rather than "torch") and changes a process-global
+            # registry. It is not our per-module attention seam. Inherited
+            # ModelMixin methods may also control none of a model's custom
+            # attention layers, so leave those to their owning runtime.
+            if getattr(setter, "__module__", "").startswith("diffusers."):
+                continue
             setter(effective)
             configured += 1
 
@@ -136,7 +143,7 @@ def apply_attention_policy(
             else f"provider {requested!r} did not resolve to an executable backend"
         )
     if configured == 0:
-        seam_reason = "model exposes no set_attention_backend seam"
+        seam_reason = "model exposes no compatible set_attention_backend seam"
         reason = seam_reason if reason is None else f"{reason}; {seam_reason}"
     return AttentionPolicyReport(
         requested_backend=requested,

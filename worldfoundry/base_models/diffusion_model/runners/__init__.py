@@ -31,7 +31,18 @@ from .strategies import (
     UnsupportedExecutionStrategyError,
     default_execution_strategy_registry,
 )
-from .wan_staged import TeaCache, WanStagedPipeline, model_fn_wan_video
+
+
+def __getattr__(name: str):
+    # Wan's tokenizer dependencies are optional for other runner families.
+    if name in {"TeaCache", "WanStagedPipeline", "model_fn_wan_video"}:
+        from . import wan_staged
+
+        value = getattr(wan_staged, name)
+        globals()[name] = value
+        return value
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
+
 
 __all__ = [
     "DiffusionExecutor",

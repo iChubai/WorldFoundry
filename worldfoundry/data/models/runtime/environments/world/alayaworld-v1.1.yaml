@@ -31,6 +31,7 @@ pip_packages:
 validation_imports:
 - torch
 - yaml
+- worldfoundry.base_models.diffusion_model.models.autoencoders.ltx.component
 - worldfoundry.synthesis.visual_generation.alayaworld_v11
 notes:
 - CUDA inference dependencies are optional and separate from the CPU catalog installation.

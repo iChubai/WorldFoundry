@@ -21,9 +21,12 @@ pip_packages:
 - imageio
 - imageio-ffmpeg
 - sentencepiece
+- ftfy
 validation_imports:
 - torch
 - yaml
+- ftfy
+- worldfoundry.base_models.diffusion_model.loaders.wan_interactive
 - worldfoundry.synthesis.visual_generation.zing
 notes:
 - CUDA inference dependencies are optional and separate from the CPU catalog installation.

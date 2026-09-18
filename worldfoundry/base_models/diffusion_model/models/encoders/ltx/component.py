@@ -11,9 +11,10 @@ from __future__ import annotations
 
 import json
 from collections.abc import Mapping, Sequence
+from functools import lru_cache
 
 import torch
-from transformers import Gemma3Config, Gemma3ForConditionalGeneration
+from transformers import AutoModel, Gemma3Config, Gemma3ForConditionalGeneration
 
 from ....components import ComponentBuildContext
 from ....contracts import Conditioning, DiffusionRequest
@@ -115,8 +116,24 @@ def _gemma_config(checkpoint: MaterializedCheckpoint) -> Mapping[str, object]:
     return {"checkpoint_config": value}
 
 
+@lru_cache(maxsize=1)
+def _gemma_vision_has_wrapper() -> bool:
+    """Inspect the installed Transformers layout without allocating weights."""
+
+    config = Gemma3Config().vision_config
+    config.hidden_size = 16
+    config.intermediate_size = 32
+    config.num_hidden_layers = 1
+    config.num_attention_heads = 2
+    config.image_size = 8
+    config.patch_size = 4
+    with torch.device("meta"):
+        vision = AutoModel.from_config(config)
+    return hasattr(vision, "vision_model")
+
+
 def convert_ltx_gemma_state_dict(state_dict: Mapping[str, object]) -> Mapping[str, object]:
-    """Map official Gemma weights to the Transformers 4.x module layout."""
+    """Map official Gemma weights to the installed Transformers module layout."""
 
     converted: dict[str, object] = {}
     for key, value in state_dict.items():
@@ -126,12 +143,10 @@ def convert_ltx_gemma_state_dict(state_dict: Mapping[str, object]) -> Mapping[st
             if key == "language_model.model.embed_tokens.weight":
                 converted["model.lm_head.weight"] = value
         elif key.startswith("vision_tower."):
-            # Both Google's Gemma-3 snapshots and current Transformers expose
-            # the SigLIP backbone through its outer ``vision_model`` wrapper.
-            # Some converted snapshots omit that segment, so normalize both
-            # source layouts to the module's checkpoint-compatible path.
-            suffix = key.removeprefix("vision_tower.")
-            if not suffix.startswith("vision_model."):
+            # Transformers versions differ in whether SigLIP retains this
+            # wrapper. Normalize the checkpoint to the actual module layout.
+            suffix = key.removeprefix("vision_tower.").removeprefix("vision_model.")
+            if _gemma_vision_has_wrapper():
                 suffix = f"vision_model.{suffix}"
             converted[f"model.model.vision_tower.{suffix}"] = value
         elif key.startswith("multi_modal_projector."):

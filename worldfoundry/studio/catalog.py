@@ -19,6 +19,7 @@ from worldfoundry.core.io.paths import (
     official_runtime_repo_path,
     resolve_local_hf_model_path,
 )
+from worldfoundry.runtime.interactive_inference_catalog import studio_contract_override
 
 from .runtime_paths import studio_hfd_cache_roots
 
@@ -12821,6 +12822,7 @@ def _discover_catalog_infos() -> tuple[_AstPipelineInfo, ...]:
 
 def _build_entry(info: _AstPipelineInfo) -> CatalogEntry:
     override = CURATED_OVERRIDES.get(info.model_id) or CURATED_OVERRIDES.get(_catalog_id_key(info.model_id), {})
+    override = {**override, **studio_contract_override(info.model_id)}
     inferred_category = _category_from_family(info.family, info.class_name, info.call_params)
     if (
         inferred_category == "Video Generation"

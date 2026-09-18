@@ -769,6 +769,7 @@ def load_model_run_schema(
     from worldfoundry.evaluation.models.catalog.zoo_registry import load_model_zoo_registry
     from worldfoundry.evaluation.utils import MODEL_ZOO_DIR
     from worldfoundry.runtime.inference_catalog import model_inference_spec
+    from worldfoundry.runtime.interactive_inference_catalog import interactive_task_for_variant
     from worldfoundry.studio.catalog import find_entry
 
     canonical_model_id = model_id
@@ -876,11 +877,18 @@ def load_model_run_schema(
         supported_call_params=entry.call_params,
     )
     try:
-        variant = spec.variant(None if catalog_variant_id else variant_id)
+        # A catalog variant may also be a concrete shared inference variant.
+        # Preserve its runtime settings instead of silently selecting the default.
+        try:
+            variant = spec.variant(catalog_variant_id or variant_id)
+        except ValueError:
+            if not catalog_variant_id:
+                raise
+            variant = spec.variant()
     except ValueError as exc:
         raise ModelRunSchemaError(str(exc)) from exc
     try:
-        task = spec.task(task_id)
+        task = interactive_task_for_variant(spec, variant, spec.task(task_id))
     except ValueError as exc:
         raise ModelRunSchemaError(str(exc)) from exc
 
@@ -917,9 +925,10 @@ def load_model_run_schema(
         ):
             continue
         target = _normalise(input_field.target)
-        scope = "input" if target in {"prompt", "input-path"} else "call"
-        key = _call_key(field_id, entry.call_params)
-        default = _default_for_call_key(call_defaults, key, input_field.default)
+        scope = "input" if target in {"prompt", "input-path"} else "load" if target == "load-kwargs" else "call"
+        key = input_field.field_id if scope == "load" else _call_key(field_id, entry.call_params)
+        defaults = load_defaults if scope == "load" else call_defaults
+        default = _default_for_call_key(defaults, key, input_field.default)
         if field_id == "prompt" and default in (None, ""):
             default = entry.default_prompt or None
         if scope == "input" and field_id != "prompt" and entry.default_input_path:
@@ -929,14 +938,14 @@ def load_model_run_schema(
         if _normalise(kind) == "string" and inferred_kind != "string":
             kind = inferred_kind
         option_name = field_id
-        option = f"--pipeline.{option_name}"
+        option = f"--pipeline.load.{option_name}" if scope == "load" else f"--pipeline.{option_name}"
         if option in seen_options:
             continue
         seen_options.add(option)
         fields.append(
             ModelRunField(
                 option=option,
-                dest=f"model_run__call__{option_name.replace('-', '_')}",
+                dest=f"model_run__{scope}__{option_name.replace('-', '_')}",
                 scope=scope,
                 key_path=(key,),
                 kind=kind or inferred_kind,

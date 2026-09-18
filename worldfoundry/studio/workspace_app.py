@@ -48,6 +48,10 @@ from worldfoundry.runtime.inference_catalog import (
     get_model_inference_spec,
     model_inference_spec,
 )
+from worldfoundry.runtime.interactive_inference_catalog import (
+    INTERACTIVE_INFERENCE_SPECS,
+    interactive_task_for_variant,
+)
 
 from .catalog import (
     COGVIDEOX_DEFAULT_VARIANT_ID,
@@ -1300,7 +1304,7 @@ def _resolve_inference_contract(
                 variant = spec.variant(payload.model_id)
             except ValueError:
                 variant = spec.variant()
-        task = spec.task(payload.task_profile_id)
+        task = interactive_task_for_variant(spec, variant, spec.task(payload.task_profile_id))
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
 
@@ -1548,6 +1552,8 @@ def _model_payload(entry: CatalogEntry) -> dict[str, Any]:
         row = variant.to_dict()
         row["model_ref"] = _variant_model_ref(entry, variant)
         row["load_kwargs"] = _variant_load_kwargs(entry, variant)
+        if entry.model_id in INTERACTIVE_INFERENCE_SPECS:
+            row["tasks"] = [interactive_task_for_variant(infer_spec, variant, task).to_dict() for task in infer_spec.tasks]
         extra = extra_by_id.get(variant.variant_id) or {}
         if extra.get("workload_type"):
             row["workload_type"] = extra["workload_type"]
@@ -5408,14 +5414,15 @@ WORKSPACE_HTML = r"""
     }
     function selectedTaskProfile() {
       const model = selectedModel();
-      const tasks = model && model.tasks && model.tasks.length ? model.tasks : [{task_id: "default", label: "Default Inference", inputs: [], outputs: []}];
+      const variant = selectedVariant();
+      const tasks = variant && variant.tasks ? variant.tasks : model && model.tasks && model.tasks.length ? model.tasks : [{task_id: "default", label: "Default Inference", inputs: [], outputs: []}];
       return tasks.find(t => t.task_id === $("taskProfile").value) || tasks[0];
     }
     function taskDefaultForAliases(aliases, fallback) {
       const normalized = new Set(aliases.map(alias => normalizeFieldId(alias)));
       const field = inferTaskFields().find(item => normalized.has(normalizeFieldId(item.field_id)));
       if (!field) return undefined;
-      if (field.default === null || field.default === undefined) return fallback;
+      if (field.default === null || field.default === undefined) return selectedVariant()?.tasks ? "" : fallback;
       return field.default;
     }
     function taskFieldForAliases(aliases) {
@@ -5423,7 +5430,7 @@ WORKSPACE_HTML = r"""
       return inferTaskFields().find(item => normalized.has(normalizeFieldId(item.field_id)));
     }
     function applyDedicatedInferValue(controlId, aliases, value, payload) {
-      if (!fieldControlVisible(controlId)) return;
+      if (!fieldControlVisible(controlId) || $(controlId).value === "") return;
       const field = taskFieldForAliases(aliases);
       const fieldId = field ? normalizeFieldId(field.field_id) : normalizeFieldId(aliases[0] || controlId);
       const target = field && field.target ? field.target : "params";
@@ -6004,7 +6011,7 @@ WORKSPACE_HTML = r"""
     $("evalMode").onchange = syncEvaluationMode;
     $("evalBenchmark").onchange = () => { syncEvaluationBenchmarkDefaults(); syncEvaluationMode(); };
     $("modelSelect").onchange = () => { populateInferSpecControls(); applySelectedModelDefaults(); };
-    $("variantSelect").onchange = () => { renderInferSpecSummary(); applySelectedModelDefaults(); };
+    $("variantSelect").onchange = () => { renderInferDynamicFields(); renderInferSpecSummary(); applySelectedModelDefaults(); };
     $("taskProfile").onchange = () => { renderInferDynamicFields(); renderInferSpecSummary(); updateCreateMode(); applyInferTaskDefaults(); };
     $("backend").onchange = updateCreateMode;
     $("catalogSearch").oninput = renderCatalog;

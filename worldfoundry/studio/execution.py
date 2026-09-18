@@ -2121,6 +2121,13 @@ class BaseRuntimeDriver:
         base_kwargs = dict(request.call_kwargs)
         names = _signature_names(method)
         accepts_var_kwargs = _accepts_var_kwargs(method)
+        # These adapters use **kwargs for declared model controls, not for
+        # arbitrary Studio aliases (image_path, task_type, output_dir, ...).
+        from worldfoundry.runtime.interactive_inference_catalog import INTERACTIVE_INFERENCE_SPECS
+
+        if ctx.entry.model_id in INTERACTIVE_INFERENCE_SPECS:
+            names = set(ctx.entry.call_params)
+            accepts_var_kwargs = False
         declares_visual_modalities = hasattr(ctx.pipeline, "ACCEPTS_IMAGES") or hasattr(
             ctx.pipeline, "ACCEPTS_VIDEO"
         )

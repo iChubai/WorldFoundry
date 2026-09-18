@@ -481,6 +481,8 @@ INFER_CONTROL_ORDER = (
     "offload_transformer_during_vae",
     "offload_vae",
     "output_path",
+    "call_json",
+    "load_json",
 )
 
 
@@ -505,6 +507,8 @@ class InferControlSpec:
 
 # Default InferControlSpec instances keyed by field ID, used before variant overrides.
 _INFER_CONTROL_DEFAULT_SPECS = {
+    "call_json": InferControlSpec("call_json", "Inference options (JSON)", '{"controls": []}'),
+    "load_json": InferControlSpec("load_json", "Model assets / loading (JSON)", '{"source_root": "/path/to/source"}'),
     "prompt": InferControlSpec("prompt", "Prompt", "Describe the scene or action..."),
     "negative_prompt": InferControlSpec("negative_prompt", "Negative prompt", "Optional negative prompt"),
     "input": InferControlSpec("input", "Input path", "image/video path"),
@@ -616,7 +620,7 @@ def infer_control_fields(model_id: str, ckpt_type: str | None = None) -> tuple[s
     """
     # ── Studio-runtime models use spec-driven fields ──
     if not is_script_infer_model_id(model_id):
-        studio_fields = _control_fields_from_studio_spec(model_id)
+        studio_fields = _control_fields_from_studio_spec(model_id, ckpt_type)
         if studio_fields:
             return studio_fields
     variant = resolve_infer_model_variant(model_id, ckpt_type)
@@ -1222,17 +1226,19 @@ def _normalise_infer_field(value: str) -> str:
     return str(value or "").strip().lower().replace("-", "_")
 
 
-def _control_fields_from_studio_spec(model_id: str) -> tuple[str, ...]:
+def _control_fields_from_studio_spec(model_id: str, variant_id: str | None = None) -> tuple[str, ...]:
     """Extract inference control field IDs from the studio inference spec's task inputs."""
     spec = _studio_inference_spec(model_id)
     entry = _studio_entry_for_model(model_id)
     if spec is None or entry is None:
         return ()
     try:
-        task = spec.task(None)
+        from worldfoundry.runtime.interactive_inference_catalog import interactive_task_for_variant
+
+        task = interactive_task_for_variant(spec, spec.variant(variant_id), spec.task(None))
     except ValueError:
         return ()
-    fields: set[str] = set()
+    fields: set[str] = {"call_json", "load_json", "output_path"}
     for field in task.inputs:
         field_id = _normalise_infer_field(field.field_id)
         target = _normalise_infer_field(field.target)
@@ -2133,6 +2139,8 @@ def build_model_infer_command(
     output_path: str | Path | None = None,
     conda_envs_root: str | Path | None = None,
     gpu: str | None = None,
+    call_json: str | None = None,
+    load_json: str | None = None,
 ) -> tuple[str, ...]:
     """Build a shell command tuple for model inference.
 
@@ -2190,6 +2198,12 @@ def build_model_infer_command(
     Raises:
         ValueError: When the model has no registered infer script or variant group.
     """
+    for label, value in (("call_json", call_json), ("load_json", load_json)):
+        if value:
+            import json
+
+            if not isinstance(json.loads(value), dict):
+                raise ValueError(f"{label} must be a JSON object")
     resolved_variant = resolve_infer_model_variant(model_id, ckpt_type)
     script_family = _script_infer_family_id(model_id)
     script_infer = script_family in INFER_MODEL_VARIANTS
@@ -2273,6 +2287,8 @@ def build_model_infer_command(
             ("--offload-transformer-during-vae", offload_transformer_during_vae),
             ("--offload-vae", offload_vae),
             ("--output-path", output_path),
+            ("--call-json", call_json),
+            ("--load-json", load_json),
         ),
     )
 

@@ -37,6 +37,7 @@ from worldfoundry.core.io.paths import (
     official_runtime_repo_path,
     project_root,
 )
+from worldfoundry.runtime.interactive_inference_catalog import INTERACTIVE_INFERENCE_SPECS
 
 LINGBOT_WORLD_MODEL_ID = "lingbot-world"
 LINGBOT_VARIANT_FAST = "fast"
@@ -5009,6 +5010,7 @@ UNI3C_INFERENCE_SPEC = ModelInferenceSpec(
 )
 
 _MODEL_INFERENCE_SPECS: dict[str, ModelInferenceSpec] = {
+    **INTERACTIVE_INFERENCE_SPECS,
     GENIE_ENVISIONER_INFERENCE_SPEC.model_family_id: GENIE_ENVISIONER_INFERENCE_SPEC,
     GIGA_WORLD_0_INFERENCE_SPEC.model_family_id: GIGA_WORLD_0_INFERENCE_SPEC,
     CTRL_WORLD_INFERENCE_SPEC.model_family_id: CTRL_WORLD_INFERENCE_SPEC,

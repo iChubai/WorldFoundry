@@ -16,6 +16,30 @@ These routes generate video using local weights. Catalog browsing and configurat
 
 Runtime settings live under `worldfoundry/data/models/runtime/configs/`. Training loops, optimizers, losses and data preparation pipelines are not part of these integrations. External checkouts stay outside the WorldFoundry source tree. SolarWM refers to upstream inference recipes without copying their mixed training/inference configuration trees.
 
+## Workspace, TUI and CLI
+
+All routes in the table are discoverable in Workspace and the TUI. The shared inference contract supplies model variants, input fields and loading options. Echo Base/Flash expose their own controls; SolarWM uses indexed data and does not ask for a prompt or image.
+
+Inspect a model without loading checkpoints:
+
+```bash
+worldfoundry run zing --help
+worldfoundry run solarwm --model-variant h3-ar --model-status
+worldfoundry run joyai-echo-wm --model-variant flash --help
+```
+
+For direct inference, loading options use `--pipeline.load.*`; generation options use `--pipeline.*`:
+
+```bash
+worldfoundry run zing \
+  --pipeline.load.checkpoint-dir /path/to/zing-0.5 \
+  --pipeline.prompt "A walk through a quiet garden." \
+  --pipeline.num-frames 81 \
+  --output-dir tmp/zing
+```
+
+In the TUI, select the model and variant, then use **Model assets / loading (JSON)** for additional paths and **Inference options (JSON)** for model controls. For SolarWM, for example, supply `{"base_path":"/weights/base","data_root":"/data/index"}` in the loading field and `{"overrides":{"inference.sample_count":1}}` in the inference field. Set its checkpoint path separately. LTX and H3 routes also require the assets listed below.
+
 ## Zing-0.5
 
 Stage `seedleap/zing-0.5` with its original `generator/model.pt` and `pretrained/{text_encoder,tokenizer,vae}` layout. Install the optional CUDA inference dependencies from the `zing` runtime environment manifest.

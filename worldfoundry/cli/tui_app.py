@@ -465,6 +465,12 @@ class WorldFoundryTui(App[None]):
                                             placeholder="runs/tui/…",
                                             id="output-dir",
                                         )
+                                    with Vertical(classes="field-group full-width"):
+                                        yield Label("Inference options (JSON)", id="call-json-label", classes="field-caption")
+                                        yield Input(placeholder='{"controls": []}', id="call-json")
+                                    with Vertical(classes="field-group full-width"):
+                                        yield Label("Model assets / loading (JSON)", id="load-json-label", classes="field-caption")
+                                        yield Input(placeholder='{"source_root": "/path/to/source"}', id="load-json")
                                     with Vertical(classes="field-group"):
                                         yield Label("Artifact path", id="output-path-label", classes="field-caption")
                                         yield Input(
@@ -1446,6 +1452,8 @@ class WorldFoundryTui(App[None]):
                 ),
                 offload_vae=infer_input_value("offload_vae", "offload-vae"),
                 output_path=infer_input_value("output_path", "output-path"),
+                call_json=infer_input_value("call_json", "call-json"),
+                load_json=infer_input_value("load_json", "load-json"),
                 conda_envs_root=_blank_to_none(self.query_one("#conda-envs-root", Input).value),
                 gpu=_blank_to_none(self.query_one("#gpu", Input).value),
             )
@@ -1690,6 +1698,9 @@ class WorldFoundryTui(App[None]):
             studio_runtime = bool(selected_row and "studio_runtime" in selected_row.notes)
             script_infer = self.action == "infer" and not studio_runtime
             self._sync_infer_field_text(control_specs)
+            for field in ("call_json", "load_json"):
+                widget = field.replace("_", "-")
+                self._set_field_visible(field, f"{widget}-label", widget, field in controls)
             self._set_field_visible("prompt", "prompt-label", "prompt", "prompt" in controls)
             self._set_field_visible(
                 "negative_prompt",

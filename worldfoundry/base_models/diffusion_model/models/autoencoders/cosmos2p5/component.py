@@ -10,6 +10,7 @@ or Canny edge frames for Transfer-2.5 control.  The inner network is
 from __future__ import annotations
 
 from collections.abc import Mapping
+from dataclasses import replace
 
 import torch
 import torch.nn.functional as functional
@@ -51,12 +52,18 @@ class Cosmos25VideoCodec:
         vae: WanVideoVAE,
         *,
         device: torch.device,
+        dtype: torch.dtype | None = None,
+        minimum_frames: int = 1,
         tiled: bool = False,
         tile_size: tuple[int, int] = (34, 34),
         tile_stride: tuple[int, int] = (18, 16),
     ) -> None:
         self.vae = vae
         self.device = device
+        self.dtype = dtype
+        self.minimum_frames = int(minimum_frames)
+        if self.minimum_frames < 1 or (self.minimum_frames - 1) % 4:
+            raise ValueError("Cosmos minimum_frames must be positive and satisfy 4k + 1")
         self.tiled = bool(tiled)
         self.tile_size = tile_size
         self.tile_stride = tile_stride
@@ -132,9 +139,12 @@ class Cosmos25VideoCodec:
             raise ValueError("Cosmos2.5 height and width must be divisible by 16")
         if (request.num_frames - 1) % 4:
             raise ValueError("Cosmos2.5 num_frames must satisfy (num_frames - 1) % 4 == 0")
+        # Transfer weights require their full temporal context for stable
+        # generation. Decode still receives the original requested length.
+        request = replace(request, num_frames=max(self.minimum_frames, request.num_frames))
         latent_frames = (request.num_frames - 1) // 4 + 1
         shape = (request.batch_size, 16, latent_frames, request.height // 8, request.width // 8)
-        noise = torch.randn(shape, generator=generator, device=device, dtype=dtype)
+        noise = torch.randn(shape, generator=generator, device=device, dtype=torch.float32)
         pixels, conditioned_frames = prepare_video_conditioning_pixels(
             request,
             device=device,
@@ -184,8 +194,10 @@ class Cosmos25VideoCodec:
     def decode(self, latents: torch.Tensor, request: DiffusionRequest) -> torch.Tensor:
         if bool(request.inputs.get("return_latent", False)):
             return latents
+        # Sampling keeps its state in FP32; cast only at the VAE boundary.
+        dtype = self.dtype or next(self.vae.parameters(), latents).dtype
         video = self.vae.decode(
-            latents,
+            latents.to(dtype=dtype),
             self.device,
             tiled=self.tiled,
             tile_size=self.tile_size,
@@ -223,6 +235,8 @@ def build_cosmos25_video_codec(context: ComponentBuildContext) -> Cosmos25VideoC
     return Cosmos25VideoCodec(
         vae,
         device=context.policy.device,
+        dtype=context.policy.dtype,
+        minimum_frames=int(context.component_options.get("minimum_frames", 1)),
         tiled=bool(context.component_options.get("tiled", False)),
         tile_size=(int(tile_size[0]), int(tile_size[1])),
         tile_stride=(int(tile_stride[0]), int(tile_stride[1])),

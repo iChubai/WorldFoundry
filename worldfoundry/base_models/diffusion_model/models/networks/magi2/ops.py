@@ -234,6 +234,25 @@ def flash_mh_moe_fwd(
     """
 
     if can_use_fused_mh_moe(x, W_gate, W_up, W_down):
+        # The released Hopper kernel avoids thousands of padded GEMM launches
+        # per layer and preserves the upstream intermediate rounding.
+        if (
+            x.dtype == torch.bfloat16
+            and x.shape[-1] == 256
+            and W_down.shape[1] == 1280
+            and torch.cuda.get_device_capability(x.device)[0] >= 9
+        ):
+            try:
+                from .mh_moe_triton import mh_moe_fwd_func
+            except ImportError:
+                pass
+            else:
+                with torch.cuda.device(x.device):
+                    return mh_moe_fwd_func(
+                        x=x, gather_ids=gather_ids, probs=probs,
+                        expert_offsets=expert_offsets, W_gate=W_gate,
+                        W_up=W_up, W_down=W_down, deterministic=True,
+                    )
         return _grouped_mh_moe_fwd(
             x=x,
             gather_ids=gather_ids,
@@ -434,6 +453,33 @@ def attention_with_sink(
             softmax_lse.transpose(0, 1).to(_FP32) - sink_logits.view(1, num_heads)
         )
         return (attended.to(_FP32) * sink_weight.unsqueeze(-1)).to(q.dtype)
+
+    if (
+        q.is_cuda
+        and torch.version.hip is None
+        and q.dtype in (torch.float16, torch.bfloat16)
+        and q.shape[-1] <= 256
+        and q.shape[-1] % 8 == 0
+        and torch.cuda.get_device_capability(q.device)[0] >= 8
+        and hasattr(torch.ops.aten, "_scaled_dot_product_flash_attention")
+    ):
+        # PyTorch ships FlashAttention even when the optional FA3 package is
+        # absent. Its ATen interface exposes the same log-normalizer needed
+        # for exact sink correction; public SDPA returns only the output.
+        out = torch.empty_like(q)
+        bounds = cu_seqlens.tolist()
+        for start, stop in zip(bounds[:-1], bounds[1:]):
+            if stop <= start:
+                continue
+            attended, lse, *_ = torch.ops.aten._scaled_dot_product_flash_attention(
+                q[start:stop].transpose(0, 1).unsqueeze(0),
+                k[start:stop].transpose(0, 1).unsqueeze(0),
+                v[start:stop].transpose(0, 1).unsqueeze(0),
+                dropout_p=0.0, is_causal=False, return_debug_mask=False, scale=scale,
+            )
+            weight = torch.sigmoid(lse[0].float() - sink_logits[:, None])
+            out[start:stop] = (attended[0].float() * weight[..., None]).transpose(0, 1)
+        return out
 
     out = torch.empty_like(q, dtype=_FP32)
     bounds = cu_seqlens.tolist()

@@ -19,7 +19,7 @@ a ``model_forward`` with the contract documented on :class:`Magi2PreviewSampler`
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import Callable, Optional, Tuple
 
 import torch
@@ -29,6 +29,28 @@ import torch.nn.functional as F
 # (already /1000-normalized) timestep, and returns a (video, audio) velocity
 # tuple, each a batch-of-2 tensor ordered [cond, uncond].
 ModelForward = Callable[..., Tuple[torch.Tensor, torch.Tensor]]
+
+
+DEFAULT_NEGATIVE_PROMPT = (
+    'Bright tones, overexposed, static, blurred details, subtitles, style, works, paintings, images, '
+    'static, overall gray, worst quality, low quality, JPEG compression residue, ugly, incomplete, extra '
+    'fingers, poorly drawn hands, poorly drawn faces, deformed, disfigured, misshapen limbs, fused '
+    'fingers, still picture, messy background, three legs, many people in the background, walking '
+    'backwards, low quality, worst quality, poor quality, noise, background noise, hiss, hum, buzz, '
+    'crackle, static, compression artifacts, MP3 artifacts, digital clipping, distortion, muffled, muddy,'
+    ' unclear, echo, reverb, room echo, over-reverberated, hollow sound, distant, washed out, harsh, '
+    'shrill, piercing, grating, tinny, thin sound, boomy, bass-heavy, flat EQ, over-compressed, abrupt '
+    'cut, jarring transition, sudden silence, looping artifact, music, instrumental, sirens, alarms, '
+    'crowd noise, unrelated sound effects, chaotic, disorganized, messy, cheap sound, emotionless, flat '
+    'delivery, deadpan, lifeless, apathetic, robotic, mechanical, monotone, flat intonation, undynamic, '
+    'boring, reading from a script, AI voice, synthetic, text-to-speech, TTS, insincere, fake emotion, '
+    'exaggerated, overly dramatic, melodramatic, cheesy, cringey, hesitant, unconfident, tired, weak '
+    'voice, stuttering, stammering, mumbling, slurred speech, mispronounced, bad articulation, lisp, '
+    'vocal fry, creaky voice, mouth clicks, lip smacks, wet mouth sounds, heavy breathing, audible '
+    'inhales, plosives, p-pops, coughing, clearing throat, sneezing, speaking too fast, rushed, speaking '
+    'too slow, dragged out, unnatural pauses, awkward silence, choppy, disconnected, multiple speakers, '
+    'two voices, background talking, out of tune, off-key, autotune artifacts'
+)
 
 
 @dataclass
@@ -53,25 +75,25 @@ class CFGConfig:
 class Magi2SamplingConfig:
     """MAGI-2-preview sampling defaults (from upstream ``EvaluationConfig``).
 
-    Bakes the shipping evaluation defaults for the preview stage and the refiner
+    Bakes the released magi2_preview.json defaults for the preview stage and the refiner
     renoise. Build a :class:`CFGConfig` from this via :meth:`to_cfg_config`.
     """
 
     num_inference_steps: int = 100
-    shift: float = 5.0
+    shift: float = 7.0
     z_dim: int = 48
     vae_stride: Tuple[int, int, int] = (8, 16, 16)
     video_txt_guidance_scale: float = 5.0
-    audio_txt_guidance_scale: float = 5.0
-    use_cfg_trick: bool = True
+    audio_txt_guidance_scale: float = 7.0
+    use_cfg_trick: bool = False
     cfg_trick_start_frame: int = 13
     cfg_trick_value: float = 2.0
     use_dynamic_cfg: bool = False
     dynamic_cfg_start_t: int = 500
     dynamic_cfg_cutoff_value: float = 2.0
-    use_ref_for_uncond: bool = False
+    use_ref_for_uncond: bool = True
     use_skimmed_cfg_linear: bool = False
-    skimmed_cfg_scale: float = 5.0
+    skimmed_cfg_scale: float = 3.0
     cfg_rescale: float = 0.0
     # Refiner stage.
     magi2_refiner_num_inference_steps: int = 5

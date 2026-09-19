@@ -46,4 +46,6 @@ integration:
 notes:
 - MAGI-2-preview 114B MoE (256 experts, top-6, 6B active/token) audio+video DiT, ported from SandAI Apache-2.0.
 - This adapter supports preview-only T2V with joint audio. Image conditioning and the upstream refiner stage are not implemented and are rejected.
+- Preview video uses 12.5 fps and the released stride-8 latent geometry. The native preset uses 100 steps, shift 7, video guidance 5, audio guidance 7, and negative-prompt conditioning.
+- The released checkpoint supports 10-second clips only; other durations are rejected before loading weights. The default landscape preview is 896x512.
 - Upstream targets 8xHopper; this port collapses cp/ep/dp to single-GPU (sequential residency for the 114B MoE).

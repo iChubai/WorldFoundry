@@ -69,7 +69,8 @@ class Cosmos2Denoiser:
         if not isinstance(context, torch.Tensor) or not all(isinstance(value, torch.Tensor) for value in conditions):
             raise TypeError("Cosmos Predict2 Video2World conditioning is incomplete")
         latents = model_input.latents
-        context = context.to(device=latents.device, dtype=latents.dtype)
+        model_dtype = next(self.model.parameters(), latents).dtype
+        context = context.to(device=latents.device, dtype=model_dtype)
         condition_latents, condition_mask, condition_indicator = (
             value.to(device=latents.device, dtype=latents.dtype) for value in conditions
         )
@@ -92,14 +93,14 @@ class Cosmos2Denoiser:
         timestep = timestep + (1.0 - condition_indicator[:, 0, :, 0, 0]) * noise_timestep[:, 0, 0, 0, 0, None]
         padding_mask = values.get("padding_mask")
         prediction = self.model(
-            network_input,
-            timestep,
+            network_input.to(model_dtype),
+            timestep.to(model_dtype),
             context,
             fps=float(values.get("fps", 16.0)),
             condition_mask=condition_mask,
             padding_mask=padding_mask if isinstance(padding_mask, torch.Tensor) else None,
         )
-        clean = c_skip * latents + c_out * prediction
+        clean = c_skip * latents + c_out * prediction.float()
         clean = condition_mask * condition_latents + (1.0 - condition_mask) * clean
         return DenoiserOutput(sample=clean)
 

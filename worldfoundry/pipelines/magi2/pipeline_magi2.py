@@ -9,6 +9,7 @@ are rejected before loading weights.
 from __future__ import annotations
 
 import json
+import math
 import shutil
 import subprocess
 import sys
@@ -21,19 +22,19 @@ import torch
 
 from ..pipeline_utils import PipelineABC
 
-# The Turbo VAE maps T latent frames to ``1 + (T - 1) * 4`` output frames.
-# Using 8 here silently halved every requested clip (for example, a planned
-# nine-frame smoke test decoded to only five frames).
-_VAE_STRIDE = (4, 16, 16)
+# The preview DiT was trained at temporal stride 8. The Turbo decoder expands
+# each latent interval to 4 frames, so preview-only video runs at 12.5 fps.
+# The optional upstream refiner doubles temporal resolution before 25 fps export.
+_VAE_STRIDE = (8, 16, 16)
 _VIDEO_LATENT_CHANNELS = 48
 _AUDIO_LATENT_CHANNELS = 64
 _AUDIO_LATENT_FPS = 25.0
 _AUDIO_SAMPLE_RATE = 44100
-_DEFAULT_FPS = 12.5  # 10s clip -> round(10 * 12.5 * 2) = 250 frames
+_DEFAULT_FPS = 12.5  # 10s preview -> 32 latent frames -> 125 decoded frames
 
 
-def _round_to_multiple(value: int, multiple: int) -> int:
-    return max(multiple, int(round(value / multiple)) * multiple)
+def _floor_to_multiple(value: int, multiple: int) -> int:
+    return max(multiple, int(value) // multiple * multiple)
 
 
 def _is_module(value: Any) -> bool:
@@ -68,9 +69,9 @@ class NativeMagi2Pipeline(PipelineABC):
     DEFAULT_NUM_INFERENCE_STEPS = 100
     DEFAULT_REFINER_STEPS = 5
     DEFAULT_FPS = _DEFAULT_FPS
-    DEFAULT_SHIFT = 5.0
+    DEFAULT_SHIFT = 7.0
     DEFAULT_VIDEO_GUIDANCE = 5.0
-    DEFAULT_AUDIO_GUIDANCE = 5.0
+    DEFAULT_AUDIO_GUIDANCE = 7.0
 
     def __init__(
         self,
@@ -238,20 +239,27 @@ class NativeMagi2Pipeline(PipelineABC):
     # ------------------------------------------------------------------ #
     def _plan(self, *, short_edge: int, aspect_ratio: str, duration_seconds: float) -> dict[str, int]:
         ratios = {"21:9": (21, 9), "16:9": (16, 9), "4:3": (4, 3), "1:1": (1, 1), "3:4": (3, 4), "9:16": (9, 16)}
-        aw, ah = ratios.get(aspect_ratio, (16, 9))
+        if aspect_ratio not in ratios:
+            raise ValueError(f"Unsupported MAGI-2 aspect ratio: {aspect_ratio}")
+        if isinstance(short_edge, bool) or not isinstance(short_edge, int) or short_edge < 16:
+            raise ValueError("MAGI-2 short_edge must be an integer of at least 16 pixels")
+        if not math.isfinite(duration_seconds) or duration_seconds <= 0:
+            raise ValueError("MAGI-2 duration_seconds must be positive and finite")
+        aw, ah = ratios[aspect_ratio]
         if aw >= ah:
             height, width = short_edge, int(round(short_edge * aw / ah))
         else:
             width, height = short_edge, int(round(short_edge * ah / aw))
         unit = _VAE_STRIDE[1]  # spatial 16
-        height, width = _round_to_multiple(height, unit), _round_to_multiple(width, unit)
+        # Match the released 896x512 preview preset for the default 16:9 shape.
+        height, width = _floor_to_multiple(height, unit), _floor_to_multiple(width, unit)
         frames = round(duration_seconds * self.DEFAULT_FPS * 2)
         video_latent_t = (frames - 1) // _VAE_STRIDE[0] + 1
         audio_latent_t = round(duration_seconds * _AUDIO_LATENT_FPS)
         return {
             "height": height,
             "width": width,
-            "frames": frames,
+            "frames": (video_latent_t - 1) * 4 + 1,
             "video_latent_t": video_latent_t,
             "latent_h": height // _VAE_STRIDE[1],
             "latent_w": width // _VAE_STRIDE[2],
@@ -286,11 +294,20 @@ class NativeMagi2Pipeline(PipelineABC):
 
         if use_refiner:
             raise NotImplementedError("MAGI-2 refiner inference is not implemented; use preview-only T2V.")
+        # Upstream explicitly supports only ten-second clips. Short latent
+        # windows are not a valid way to reduce the released model's workload.
+        if duration_seconds != self.DEFAULT_DURATION_SECONDS:
+            raise ValueError("MAGI-2-preview supports only duration_seconds=10.0")
+        if isinstance(num_inference_steps, bool) or not isinstance(num_inference_steps, int) or num_inference_steps < 1:
+            raise ValueError("MAGI-2 num_inference_steps must be a positive integer")
+        plan = self._plan(short_edge=short_edge, aspect_ratio=aspect_ratio, duration_seconds=duration_seconds)
 
         from worldfoundry.base_models.diffusion_model.models.networks.magi2 import (
-            CFGConfig,
             Magi2PreviewSampler,
             Magi2SamplingConfig,
+        )
+        from worldfoundry.base_models.diffusion_model.models.networks.magi2.sampler import (
+            DEFAULT_NEGATIVE_PROMPT,
         )
         from worldfoundry.base_models.diffusion_model.schedulers.magi2 import (
             FlowUniPCMultistepScheduler,
@@ -298,6 +315,9 @@ class NativeMagi2Pipeline(PipelineABC):
 
         # Denoising is the peak-memory stage. Keep the video/audio decoders on
         # CPU until the preview DiT has finished streaming all of its layers.
+        for decoder in (self.turbo_decoder, self.video_vae, self.audio_vae):
+            if _is_module(decoder):
+                decoder.to("cpu")
         self._ensure_components(load_decoders=False)
         if self.preview_transformer is None:
             raise RuntimeError("preview_transformer is not initialized")
@@ -310,11 +330,16 @@ class NativeMagi2Pipeline(PipelineABC):
 
             self.data_proxy = Magi2PreviewDataProxy(Magi2PreviewDataProxyConfig())
         cfg = Magi2SamplingConfig()
-        plan = self._plan(short_edge=short_edge, aspect_ratio=aspect_ratio, duration_seconds=duration_seconds)
 
         # 1. Text encode (context = hidden_states[-3], 5120-d).
         context = self._encode_prompt(prompt)
+        if negative_prompt is None:
+            negative_prompt = DEFAULT_NEGATIVE_PROMPT
         null_context = self._encode_prompt(negative_prompt) if negative_prompt else torch.zeros_like(context[:, :0])
+        if _is_module(self.preview_transformer):
+            # A previous call offloaded these after denoising.
+            self.preview_transformer.pre_adapter.to(device)
+            self.preview_transformer.post_adapter.to(device)
 
         # 2. Seed latents (video + audio pure noise) — audio has no encoder.
         gen = torch.Generator(device="cpu").manual_seed(int(seed))
@@ -327,21 +352,15 @@ class NativeMagi2Pipeline(PipelineABC):
         ).to(device)
 
         # 3. Preview denoise via the sampler driving the DiT through the data proxy.
-        video_scheduler = FlowUniPCMultistepScheduler(shift=cfg.shift)
-        audio_scheduler = FlowUniPCMultistepScheduler(shift=cfg.shift)
-        video_scheduler.set_timesteps(num_inference_steps, device=device)
-        audio_scheduler.set_timesteps(num_inference_steps, device=device)
+        video_scheduler = FlowUniPCMultistepScheduler()
+        audio_scheduler = FlowUniPCMultistepScheduler()
+        video_scheduler.set_timesteps(num_inference_steps, device=device, shift=cfg.shift)
+        audio_scheduler.set_timesteps(num_inference_steps, device=device, shift=cfg.shift)
         video_t_list = list(video_scheduler.timesteps)
 
         model_forward = self._make_model_forward(self.preview_transformer, context, device)
         sampler = Magi2PreviewSampler(model_forward=model_forward, device=device, dtype=torch.bfloat16)
-        cfg_config = CFGConfig(
-            use_cfg_trick=cfg.use_cfg_trick,
-            cfg_trick_start_frame=cfg.cfg_trick_start_frame,
-            cfg_trick_value=cfg.cfg_trick_value,
-            video_txt_guidance_scale=cfg.video_txt_guidance_scale,
-            audio_txt_guidance_scale=cfg.audio_txt_guidance_scale,
-        )
+        cfg_config = cfg.to_cfg_config()
         video_latent, audio_latent = sampler.sample(
             video_t_list=video_t_list,
             latent=video_latent,
@@ -360,7 +379,6 @@ class NativeMagi2Pipeline(PipelineABC):
             self.preview_transformer.pre_adapter.to("cpu")
             self.preview_transformer.post_adapter.to("cpu")
         torch.cuda.empty_cache()
-        self._ensure_components(load_preview=False, load_decoders=True)
 
         result: dict[str, Any] = {"plan": plan}
         if return_latents:
@@ -368,13 +386,25 @@ class NativeMagi2Pipeline(PipelineABC):
             result["audio_latent"] = audio_latent
             return result
 
+        self._ensure_components(load_preview=False, load_decoders=True)
+        for decoder in (self.turbo_decoder, self.video_vae, self.audio_vae):
+            if _is_module(decoder):
+                decoder.to(device)
         if _is_module(self.turbo_decoder):
             result["video"] = self.turbo_decoder.decode(video_latent)
         elif _is_module(self.video_vae) and hasattr(self.video_vae, "decode"):
             result["video"] = self.video_vae.decode(video_latent)
         if _is_module(self.audio_vae):
+            from scipy.signal import resample
+
             # audio latent [1, L, 64] -> [1, 64, L] for the VAE decode contract.
-            result["audio"] = self.audio_vae.decode(audio_latent.transpose(1, 2))
+            audio = self.audio_vae.decode(audio_latent.transpose(1, 2))
+            # The DiT emits 25 tokens/s, expanded by 2048 to 51.2 kHz.
+            # Match the official decoder's resampling before 44.1 kHz export.
+            samples = int(audio.shape[-1] * 441 / 512)
+            result["audio"] = torch.from_numpy(
+                resample(audio.float().cpu().numpy(), samples, axis=-1)
+            ).to(audio.device)
         return result
 
     def _make_model_forward(self, transformer: Any, context: torch.Tensor, device: torch.device):
@@ -453,12 +483,12 @@ class NativeMagi2Pipeline(PipelineABC):
         if output_path is not None and "video" in result:
             result["output_path"] = self._write_mp4_with_audio(
                 video=result["video"], audio=result.get("audio"),
-                output_path=Path(output_path), fps=int(round(self.DEFAULT_FPS * 2)),
+                output_path=Path(output_path), fps=self.DEFAULT_FPS,
             )
         return result
 
     @staticmethod
-    def _write_mp4_with_audio(*, video: torch.Tensor, audio: torch.Tensor | None, output_path: Path, fps: int) -> str:
+    def _write_mp4_with_audio(*, video: torch.Tensor, audio: torch.Tensor | None, output_path: Path, fps: float) -> str:
         from worldfoundry.core.io.video import save_image_or_video_tensor
 
         output_path.parent.mkdir(parents=True, exist_ok=True)
@@ -476,7 +506,11 @@ class NativeMagi2Pipeline(PipelineABC):
                 shutil.copy(str(wav), str(output_path.with_suffix(".wav")))
                 return str(output_path)
             subprocess.run(
-                [ffmpeg, "-y", "-i", str(silent), "-i", str(wav), "-c:v", "copy", "-c:a", "aac", "-shortest", str(output_path)],
+                [
+                    ffmpeg, "-y", "-i", str(silent), "-i", str(wav),
+                    "-map", "0:v:0", "-map", "1:a:0", "-c:v", "copy", "-c:a", "aac",
+                    "-af", "apad", "-t", str(video.shape[-3] / fps), str(output_path),
+                ],
                 check=True,
                 capture_output=True,
             )

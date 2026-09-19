@@ -108,6 +108,7 @@ class Cosmos25Denoiser:
         if not isinstance(context, torch.Tensor):
             raise TypeError("Cosmos2.5 denoising requires a context tensor")
         latents = model_input.latents
+        model_dtype = next(self.model.parameters(), latents).dtype
         condition_latents = values.get("condition_latents")
         condition_mask = values.get("condition_mask")
         condition_indicator = values.get("condition_indicator")
@@ -133,9 +134,9 @@ class Cosmos25Denoiser:
             timestep = indicator * (conditional_timestep / 1000.0) + (1 - indicator) * timestep
         padding_mask = values.get("padding_mask")
         prediction = self.model(
-            model_latents,
-            timestep,
-            context,
+            model_latents.to(model_dtype),
+            timestep.to(model_dtype),
+            context.to(model_dtype),
             fps=float(values.get("fps", 16.0)),
             condition_mask=condition_mask,
             padding_mask=padding_mask if isinstance(padding_mask, torch.Tensor) else None,
@@ -159,6 +160,7 @@ class Cosmos25TransferDenoiser(Cosmos25Denoiser):
         if not isinstance(latent_control_input, torch.Tensor):
             raise TypeError("Cosmos Transfer2.5 requires an encoded control video")
         latents = model_input.latents
+        model_dtype = next(self.model.parameters(), latents).dtype
         conditions = tuple(
             values.get(name) for name in ("condition_latents", "condition_mask", "condition_indicator", "initial_noise")
         )
@@ -179,10 +181,10 @@ class Cosmos25TransferDenoiser(Cosmos25Denoiser):
             timestep = indicator * (conditional_timestep / 1000.0) + (1 - indicator) * timestep
         padding_mask = values.get("padding_mask")
         prediction = self.model(
-            model_latents,
-            timestep,
-            context,
-            latent_control_input=latent_control_input.to(device=latents.device, dtype=latents.dtype),
+            model_latents.to(model_dtype),
+            timestep.to(model_dtype),
+            context.to(model_dtype),
+            latent_control_input=latent_control_input.to(device=latents.device, dtype=model_dtype),
             fps=float(values.get("fps", 16.0)),
             condition_mask=condition_mask,
             padding_mask=padding_mask if isinstance(padding_mask, torch.Tensor) else None,

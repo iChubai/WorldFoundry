@@ -56,6 +56,9 @@ class KarrasX0AB2Scheduler:
             raise ValueError("Karras x0 AB2 requires 0 < sigma_min < sigma_max and rho > 0")
         ramp = torch.linspace(0, 1, sampling.num_inference_steps + 1, device=device, dtype=torch.float64)
         sigmas = (sigma_max ** (1 / rho) + ramp * (sigma_min ** (1 / rho) - sigma_max ** (1 / rho))) ** rho
+        # Network precision must not quantize the integration grid. NVIDIA's
+        # rectified-flow sampler keeps sigma and its persistent sample in fp32.
+        dtype = torch.float64 if dtype == torch.float64 else torch.float32
         self._previous_x0 = None
         self._previous_sigma = None
         self._final_sigma = sigmas[-1].to(dtype=dtype)

@@ -12,6 +12,8 @@ whose extra tensors (``condition_latents``, ``condition_mask``,
 
 from __future__ import annotations
 
+from dataclasses import replace
+
 import torch
 
 from ...components import ComponentBuildContext
@@ -62,6 +64,10 @@ class Cosmos2Video2WorldInitializer:
                 "Cosmos Predict2 num_frames must satisfy "
                 f"(num_frames - 1) % {self.temporal_compression} == 0"
             )
+        # Released Video2World weights use a 93-frame sampling window. Shorter
+        # latent sequences produce late-frame breakup. The shared decoder trims
+        # to the original request length after sampling this complete window.
+        request = replace(request, num_frames=max(93, request.num_frames))
         pixels, conditioned_frames = prepare_video_conditioning_pixels(
             request,
             device=device,
@@ -80,7 +86,7 @@ class Cosmos2Video2WorldInitializer:
             request.height // self.spatial_compression,
             request.width // self.spatial_compression,
         )
-        noise = torch.randn(shape, generator=generator, device=device, dtype=dtype) * self.sigma_max
+        noise = torch.randn(shape, generator=generator, device=device, dtype=torch.float32) * self.sigma_max
         condition_latents = latent_encoder.encode(pixels).to(device=device, dtype=dtype)
         if condition_latents.shape != noise.shape:
             raise ValueError(

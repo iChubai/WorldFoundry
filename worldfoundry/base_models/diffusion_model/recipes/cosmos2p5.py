@@ -91,6 +91,7 @@ def _recipe(
     capabilities: frozenset[str] | None = None,
     architecture: str = "cosmos-predict2.5-minimal-v1-lvg-dit",
     pretrained_checkpoint: CheckpointSpec | None = None,
+    minimum_frames: int = 1,
 ) -> NativeDiffusionRecipe:
     """Bind DiT, Reason1 conditioner, VAE-as-initializer, and Wan UniPC CFG."""
 
@@ -136,7 +137,10 @@ def _recipe(
                 _build_cosmos25_prompt_conditioner,
                 {"weights": "text-encoder", "tokenizer": "tokenizer"},
             ),
-            ComponentSpec(codec, _build_cosmos25_video_codec, {"weights": "vae"}),
+            ComponentSpec(
+                codec, _build_cosmos25_video_codec, {"weights": "vae"},
+                options={"minimum_frames": minimum_frames},
+            ),
             ComponentSpec(
                 scheduler,
                 _build_cosmos25_scheduler,
@@ -230,6 +234,7 @@ def cosmos25_transfer_2b_recipe() -> NativeDiffusionRecipe:
             }
         ),
         architecture="cosmos-transfer2.5-minimal-v4-lvg-vace-dit",
+        minimum_frames=93,
     )
 
 

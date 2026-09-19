@@ -114,6 +114,10 @@ class Allegro:
         seed: int = 123,
         generation_type: Literal["i2v", "t2v"] = "i2v",
         device: str = "cuda",
+        num_frames: int = 88,
+        height: int = 720,
+        width: int = 1280,
+        num_inference_steps: int | None = None,
     ):
         """
         Build an in-tree Allegro TI2V runtime.
@@ -132,6 +136,10 @@ class Allegro:
             seed: CUDA generator seed used during sampling for reproducibility.
             generation_type: Supported generation mode, expected to be "i2v" (Image-to-Video).
             device: Explicit execution device assigned by the Workspace.
+            num_frames: Native checkpoint length, fixed at 88 frames.
+            height: Native checkpoint height, fixed at 720 pixels.
+            width: Native checkpoint width, fixed at 1280 pixels.
+            num_inference_steps: Standard alias overriding num_sampling_steps.
 
         Raises:
             ValueError: If `generation_type` is not "i2v".
@@ -142,7 +150,13 @@ class Allegro:
             raise ValueError("Allegro runtime currently supports only i2v generation.")
         self.model_path = str(Path(model_path))
         self.allegro_ti2v_pipeline = None
-        self.num_sampling_steps = num_sampling_steps
+        self.num_sampling_steps = int(num_sampling_steps if num_inference_steps is None else num_inference_steps)
+        self.num_frames = int(num_frames)
+        self.height, self.width = int(height), int(width)
+        if self.num_frames < 1 or self.num_sampling_steps < 1:
+            raise ValueError("Allegro frame and inference step counts must be positive.")
+        if (self.num_frames, self.height, self.width) != (88, 720, 1280):
+            raise ValueError("Allegro TI2V supports 88 frames at 720x1280; other generation shapes are unsupported.")
         self.guidance_scale = guidance_scale
         self.seed = seed
         self.device_spec = str(device)
@@ -187,7 +201,7 @@ class Allegro:
             text_encoder.eval()
 
             tokenizer = T5Tokenizer.from_pretrained(model_path / "tokenizer")
-            scheduler = EulerAncestralDiscreteScheduler()
+            scheduler = EulerAncestralDiscreteScheduler.from_pretrained(model_path / "scheduler")
 
             transformer = components.transformer_cls.from_pretrained(
                 model_path / "transformer",
@@ -246,8 +260,8 @@ class Allegro:
             pre_results = preprocess_images(
                 image_path,
                 "",  # Allegro TI2V currently uses only one conditioning image.
-                height=720,
-                width=1280,
+                height=self.height,
+                width=self.width,
                 device=self.device,
                 dtype=torch.bfloat16,
                 components=self.components,
@@ -263,9 +277,9 @@ class Allegro:
                 negative_prompt=self.negative_prompt,
                 conditional_images=pre_results["conditional_images"],
                 conditional_images_indices=pre_results["conditional_images_indices"],
-                num_frames=88,
-                height=720,
-                width=1280,
+                num_frames=self.num_frames,
+                height=self.height,
+                width=self.width,
                 num_inference_steps=self.num_sampling_steps,
                 guidance_scale=self.guidance_scale,
                 max_sequence_length=512,

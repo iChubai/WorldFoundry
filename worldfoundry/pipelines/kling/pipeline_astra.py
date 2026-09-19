@@ -108,7 +108,7 @@ class AstraPipeline(PipelineABC):
             [0, cond)                            : condition frame(s) from direction 0
             [cond, cond + per_dir)               : direction 0 motion poses
             [cond + per_dir, cond + 2 * per_dir) : direction 1 motion poses
-            [cond + 2 * per_dir, ...)            : zero-padded (identity pose)
+            [cond + 2 * per_dir, ...)            : repeated final pose for padded chunks
 
         Note: the mask column (last dim) is included as-is, but the memory module
         overrides it in prepare_framepack, so its values here do not matter.
@@ -145,6 +145,8 @@ class AstraPipeline(PipelineABC):
             combined[dst_offset:dst_offset + n_motion, :] = emb[src_start:src_end, :]
             dst_offset += n_motion
 
+        if dst_offset > 0:
+            combined[dst_offset:] = combined[dst_offset - 1].clone()
         return combined
 
     def process(self, input_: str, interaction: Dict[str, Any], args: Optional[AstraConfig] = None):
@@ -279,12 +281,19 @@ class AstraPipeline(PipelineABC):
                  frames_per_generation: int | None = None,
                  total_frames_to_generate: int | None = None,
                  num_inference_steps: int | None = None,
+                 seed: int | None = None,
                  height: int | None = None,
                  width: int | None = None,
                  **kwargs: Any,
                 ) -> List[Image.Image] | Dict[str, Any]:
         """
         Main entry point. Supports multi-step direction interaction.
+
+        ``num_frames`` is the total decoded video length. The native
+        ``total_frames_to_generate`` option remains latent frames per direction.
+        Camera directions advance at complete native chunk boundaries; shorter
+        outputs crop the generated sequence. ``seed`` uses a request-local
+        generator without changing global RNG state.
 
         When 'direction' is a list of N directions, the pipeline generates
         total_frames_to_generate * N frames, with camera motion transitioning
@@ -302,20 +311,25 @@ class AstraPipeline(PipelineABC):
         Returns:
             List of PIL.Image frames comprising the generated video.
         """
-        del output_path, fps, height, width
+        if height not in (None, 480) or width not in (None, 832):
+            raise ValueError("Astra currently generates 480x832 frames.")
+        if fps is not None and fps <= 0:
+            raise ValueError("Astra fps must be positive.")
+        if num_frames is not None and num_frames < 1:
+            raise ValueError("Astra num_frames must be positive.")
         args = replace(self.config)
         step_value = num_inference_steps
         for alias in ("steps", "sample_steps", "infer_steps", "sampling_steps", "num_steps"):
             if step_value is None and alias in kwargs:
                 step_value = kwargs.pop(alias)
-        if num_frames is not None:
-            args.total_frames_to_generate = max(1, int(num_frames))
         if total_frames_to_generate is not None:
             args.total_frames_to_generate = max(1, int(total_frames_to_generate))
         if frames_per_generation is not None:
             args.frames_per_generation = max(1, int(frames_per_generation))
         if step_value is not None:
             args.num_inference_steps = max(1, int(step_value))
+        if args.frames_per_generation != 8:
+            raise ValueError("Astra requires 8 latent frames per denoising chunk.")
         if not image_path:
             if not images:
                 raise ValueError("Astra requires image_path or images.")
@@ -324,6 +338,21 @@ class AstraPipeline(PipelineABC):
             else:
                 raise ValueError("Astra workspace inference currently requires a filesystem image path.")
         interaction_payload = self._normalise_workspace_interaction(prompt=prompt, interactions=interactions)
+        directions = interaction_payload["direction"]
+        direction_count = 1 if isinstance(directions, str) else len(directions)
+        if direction_count < 1:
+            raise ValueError("Astra requires at least one camera direction.")
+        if num_frames is not None:
+            # The native count is latents per direction; the public count is
+            # decoded frames for the whole video, including the condition frame.
+            initial_frames = 4 * (args.initial_condition_frames - 1) + 1
+            stride = 4 * direction_count
+            per_direction = max(1, (int(num_frames) - initial_frames + stride - 1) // stride)
+            chunk = args.frames_per_generation
+            args.total_frames_to_generate = ((per_direction + chunk - 1) // chunk) * chunk
+        elif args.total_frames_to_generate % args.frames_per_generation:
+            raise ValueError("Astra total_frames_to_generate must be a multiple of 8 latent frames per direction.")
+        generator = None if seed is None else torch.Generator(device=self.device).manual_seed(int(seed))
 
         # Process input and interaction signals
         processed_data = self.process(str(image_path), interaction_payload, args=args)
@@ -344,7 +373,9 @@ class AstraPipeline(PipelineABC):
 
         # Autoregressive generation loop over all direction steps
         while total_generated < total_frames:
-            current_generation = min(args.frames_per_generation, total_frames - total_generated)
+            # Astra predicts complete latent chunks. A shorter last denoising
+            # chunk degrades its tail; generate the full chunk and crop below.
+            current_generation = args.frames_per_generation
             logger.info("Generation step: %s/%s", total_generated, total_frames)
 
             framepack_data = self.memory.select(
@@ -360,7 +391,8 @@ class AstraPipeline(PipelineABC):
                 prompt_emb_pos,
                 prompt_emb_neg,
                 args,
-                camera_embedding_uncond
+                camera_embedding_uncond,
+                generator=generator,
             )
 
             new_latents_squeezed = new_latents.squeeze(0)
@@ -370,14 +402,20 @@ class AstraPipeline(PipelineABC):
             total_generated += current_generation
 
         # Concatenate all generated frames and prepend the initial condition frame
-        all_generated = torch.cat(all_generated_frames, dim=1)
+        all_generated = torch.cat(all_generated_frames, dim=1)[:, :total_frames]
         final_video_latents = torch.cat(
             [initial_latents.to(all_generated.device), all_generated], dim=1
         ).unsqueeze(0)
 
         logger.info("Decoding video...")
         video_np = self.synthesis.decode_video(final_video_latents)
+        if num_frames is not None:
+            video_np = video_np[: int(num_frames)]
         pil_frames = [Image.fromarray(frame) for frame in video_np]
+        if output_path is not None:
+            from worldfoundry.core.io import write_video
+
+            write_video(pil_frames, output_path, fps=16 if fps is None else fps)
         if return_dict:
             return {
                 "status": "success",
@@ -385,5 +423,6 @@ class AstraPipeline(PipelineABC):
                 "artifact_kind": "generated_video",
                 "frames": pil_frames,
                 "num_frames": len(pil_frames),
+                "output_path": str(output_path) if output_path is not None else None,
             }
         return pil_frames

@@ -13,9 +13,8 @@ from ....base_models.three_dimensions.point_clouds.vggt.vggt.models.vggt import 
 from ....base_models.three_dimensions.point_clouds.vggt.vggt.utils.load_fn import load_and_preprocess_images, load_and_preprocess_images_square
 from ....base_models.three_dimensions.point_clouds.vggt.vggt.utils.pose_enc import pose_encoding_to_extri_intri
 from ....base_models.three_dimensions.point_clouds.vggt.vggt.utils.geometry import unproject_depth_map_to_point_map
-from ....base_models.three_dimensions.point_clouds.gaussian_splatting.scene.dataset_readers import (
-    storePly,
-    fetchPly,
+from ....base_models.three_dimensions.point_clouds.ply_io import (
+    read_point_cloud as fetchPly,
 )
 from ....base_models.three_dimensions.point_clouds.flash_world.render import (
     gaussian_render,

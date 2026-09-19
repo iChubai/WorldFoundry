@@ -15,6 +15,7 @@ runtime:
   autocast_cache_enabled: false
   enable_model_cpu_offload: true
   enable_vae_tiling: true
+  temporal_frame_multiple: 6
   fps: 30
   call_kwargs:
     height: 480

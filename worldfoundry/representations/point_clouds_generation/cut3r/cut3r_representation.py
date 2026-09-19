@@ -8,8 +8,8 @@ from PIL import Image
 from huggingface_hub import snapshot_download
 
 from ...base_representation import BaseRepresentation
-from ....base_models.three_dimensions.point_clouds.gaussian_splatting.scene.dataset_readers import (
-    fetchPly,
+from ....base_models.three_dimensions.point_clouds.ply_io import (
+    read_point_cloud as fetchPly,
 )
 from ....base_models.three_dimensions.point_clouds.flash_world.render import (
     gaussian_render,
@@ -699,6 +699,8 @@ class CUT3RRepresentation(BaseRepresentation):
 
                 valid_mask = np.isfinite(depth_buf).astype(np.uint8)
                 if valid_mask.any():
+                    import cv2
+
                     kernel = np.ones((3, 3), np.uint8)
                     dilated = cv2.dilate((img_fallback * 255).astype(np.uint8), kernel, iterations=1)
                     filled = cv2.dilate(valid_mask, kernel, iterations=1)

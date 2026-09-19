@@ -230,7 +230,7 @@ def enable_layerwise_cpu_offload(
     device: torch.device | str | None = None,
     pin_memory: bool = True,
 ) -> LayerwiseOffloadHandle:
-    """Attach layerwise CPU offload hooks to the first or named ``ModuleList``.
+    """Attach hooks to a ModuleList or an explicitly named Sequential stack.
 
     The helper keeps parameters on CPU and moves one layer at a time to CUDA.
     The next layer is prefetched on a separate CUDA stream while the current
@@ -250,7 +250,11 @@ def enable_layerwise_cpu_offload(
 
     layers = _find_layer_container(model, layer_container)
     if layers is None or len(layers) == 0:
-        return LayerwiseOffloadHandle(enabled=False, layer_count=0, reason="no nn.ModuleList layer container found")
+        return LayerwiseOffloadHandle(
+            enabled=False,
+            layer_count=0,
+            reason="no ModuleList or explicitly named Sequential layer container found",
+        )
 
     stream = torch.cuda.Stream(device=target_device)
     metrics = _LayerwiseOffloadMetrics(
@@ -468,18 +472,21 @@ class _LayerwiseOffloadState:
 # ──────────────────────────────────────────────────────────────────────────
 
 
-def _find_layer_container(model: nn.Module, layer_container: str | None) -> nn.ModuleList | None:
-    """Resolve the decoder ``ModuleList``; return ``None`` when the path is not one.
+def _find_layer_container(
+    model: nn.Module, layer_container: str | None
+) -> nn.ModuleList | nn.Sequential | None:
+    """Resolve an explicit layer stack, or discover the first ModuleList.
 
     A dotted ``layer_container`` is required when the first ``ModuleList`` is
-    not the transformer stack (e.g. a vision tower). Unresolved or non-list
-    attributes disable offload rather than wrapping the wrong children.
+    not the transformer stack (e.g. a vision tower). Sequential is accepted
+    only for an explicit path, so discovery cannot mistake an MLP for the
+    complete transformer stack. Wan's CLIP encoder uses a Sequential stack.
     """
     if layer_container:
         current: object = model
         for part in layer_container.split("."):
             current = getattr(current, part)
-        return current if isinstance(current, nn.ModuleList) else None
+        return current if isinstance(current, (nn.ModuleList, nn.Sequential)) else None
     for module in model.modules():
         for child in module.children():
             if isinstance(child, nn.ModuleList):

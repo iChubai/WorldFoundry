@@ -20,8 +20,8 @@ from ...operators.cut3r_operator import CUT3ROperator
 from ...representations.point_clouds_generation.cut3r.cut3r_representation import (
     CUT3RRepresentation,
 )
-from ...base_models.three_dimensions.point_clouds.gaussian_splatting.scene.dataset_readers import (
-    storePly,
+from ...base_models.three_dimensions.point_clouds.ply_io import (
+    write_point_cloud as storePly,
 )
 
 logger = logging.getLogger(__name__)

@@ -750,10 +750,22 @@ class OfficialVideoRuntime:
         import imageio
         import torch
 
-        dtype_name = str(extra.get("torch_dtype") or self.runtime.get("torch_dtype") or "float16")
-        pipe, _ = self._get_diffusers_pipeline(checkpoint_path, torch_dtype_name=dtype_name)
         call_kwargs = dict(self.runtime.get("call_kwargs") or {})
         call_kwargs.update(extra)
+        requested_frames = None
+        frame_multiple = int(self.runtime.get("temporal_frame_multiple", 1))
+        if frame_multiple > 1 and call_kwargs.get("num_frames") is not None:
+            requested_frames = int(call_kwargs["num_frames"])
+            if requested_frames < 1:
+                raise ValueError("num_frames must be positive")
+            # Causal VAEs decode k * stride + 1 frames. Round up before
+            # sampling and trim after decoding instead of silently dropping
+            # requested frames (e.g. Mochi otherwise turns 84 into 79).
+            call_kwargs["num_frames"] = (
+                (requested_frames - 1 + frame_multiple - 1) // frame_multiple
+            ) * frame_multiple + 1
+        dtype_name = str(extra.get("torch_dtype") or self.runtime.get("torch_dtype") or "float16")
+        pipe, _ = self._get_diffusers_pipeline(checkpoint_path, torch_dtype_name=dtype_name)
         # Some Diffusers pipelines condition on ``target_fps`` while others do
         # not accept an FPS argument at all. Preserve the requested playback
         # rate before signature filtering so the encoded artifact still honors
@@ -801,6 +813,12 @@ class OfficialVideoRuntime:
         frames = getattr(result, "frames", None) or getattr(result, "videos", None) or result[0]
         if frames and isinstance(frames, list) and frames and isinstance(frames[0], list):
             frames = frames[0]
+        if requested_frames is not None:
+            if len(frames) < requested_frames:
+                raise RuntimeError(
+                    f"Video decoder returned {len(frames)} frames; expected at least {requested_frames}"
+                )
+            frames = frames[:requested_frames]
         output_path.parent.mkdir(parents=True, exist_ok=True)
         imageio.mimsave(str(output_path), frames, fps=output_fps)
         return self._success_result(output_path, metadata={"pipeline_target": self.runtime.get("pipeline_target")})

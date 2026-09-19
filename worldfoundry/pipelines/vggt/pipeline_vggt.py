@@ -19,8 +19,8 @@ from ...representations.point_clouds_generation.vggt.vggt_representation import 
     _opencv_world_to_opengl,
     _opencv_w2c_to_opengl_c2w,
 )
-from ...base_models.three_dimensions.point_clouds.gaussian_splatting.scene.dataset_readers import (
-    storePly,
+from ...base_models.three_dimensions.point_clouds.ply_io import (
+    write_point_cloud as storePly,
 )
 
 

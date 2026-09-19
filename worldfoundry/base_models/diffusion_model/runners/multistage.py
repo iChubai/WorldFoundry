@@ -101,7 +101,7 @@ class JointMultiStageDiffusionRunner:
     Construction requires one scheduler per stage_steps entry; each stage_steps
     value must be positive. CFG is classic ``ε_neg + s*(ε_pos-ε_neg)`` applied
     independently per modality. After each intra-stage step, denoise_mask blends
-    the prediction with clean_latent so frozen regions are not updated.
+    the updated latent with clean_latent so frozen regions are not updated.
     """
 
     def __init__(
@@ -262,14 +262,15 @@ class JointMultiStageDiffusionRunner:
                     denoised = prediction.samples[name]
                     if denoised.shape != state.latent.shape:
                         raise ValueError(f"{name} denoiser output shape does not match its latent state")
-                    # denoise_mask==1 updates; ==0 keeps clean_latent so frozen regions stay put.
-                    denoised = denoised * state.denoise_mask + state.clean_latent * (1 - state.denoise_mask)
                     latent = modality_schedulers[name].step(
                         denoised,
                         step,
                         state.latent,
                         generator=generator,
                     )
+                    # A scheduler may consume velocity, noise, or clean-sample predictions.
+                    # Anchor conditioning in latent space after the solver update.
+                    latent = latent * state.denoise_mask + state.clean_latent * (1 - state.denoise_mask)
                     next_states[name] = state.with_updates(latent=latent)
                 states = next_states
 

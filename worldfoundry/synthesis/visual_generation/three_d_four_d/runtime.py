@@ -510,10 +510,26 @@ class ThreeDFourDRuntimeSynthesis(BaseSynthesis):
                 "--seed",
                 seed,
             ]
-            for key in ("pretrained_model_name_or_path", "weight_name", "H", "W", "T", "num_steps"):
-                value = options.get(key, self.options.get(key))
-                if value is None:
-                    value = options.get(key.lower(), self.options.get(key.lower()))
+            # T is the model context window; num_targets is the output length.
+            aliases = {
+                "pretrained_model_name_or_path": (),
+                "weight_name": (),
+                "H": ("height", "h"),
+                "W": ("width", "w"),
+                "T": ("t",),
+                "num_steps": ("num_inference_steps",),
+                "num_targets": ("num_frames",),
+                "traj_prior": (),
+                "video_save_fps": ("fps",),
+            }
+            for key, alternatives in aliases.items():
+                value = None
+                for source in (options, self.options):
+                    value = next((source[name] for name in (key, *alternatives) if source.get(name) is not None), None)
+                    if value is not None:
+                        break
+                if key == "video_save_fps" and context.get("fps") is not None:
+                    value = context["fps"]
                 if value is not None:
                     command.extend([f"--{key}", str(value)])
             return command

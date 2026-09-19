@@ -642,3 +642,18 @@ recursive-include worldfoundry/base_models/diffusion_model/models/networks/hunyu
 # InSpatio uses these inference-only entry points as subprocess resources.
 recursive-include worldfoundry/synthesis/visual_generation/inspatio_world/inspatio_world_runtime *.py *.sh
 recursive-include worldfoundry/synthesis/visual_generation/inspatio_world/inspatio_world_runtime/inference_inputs LICENSE-InSpatio PROVENANCE.md
+
+# Explicit Warp-as-History inference resources; Pi3 remains external.
+include worldfoundry/synthesis/visual_generation/warp_as_history/warp_as_history_runtime/helios/__init__.py
+include worldfoundry/synthesis/visual_generation/warp_as_history/warp_as_history_runtime/helios/diffusers_version/__init__.py
+include worldfoundry/synthesis/visual_generation/warp_as_history/warp_as_history_runtime/helios/diffusers_version/pipeline_helios_diffusers.py
+include worldfoundry/synthesis/visual_generation/warp_as_history/warp_as_history_runtime/helios/diffusers_version/scheduling_helios_diffusers.py
+include worldfoundry/synthesis/visual_generation/warp_as_history/warp_as_history_runtime/helios/diffusers_version/transformer_helios_diffusers.py
+include worldfoundry/synthesis/visual_generation/warp_as_history/warp_as_history_runtime/warp_as_history/__init__.py
+include worldfoundry/synthesis/visual_generation/warp_as_history/warp_as_history_runtime/warp_as_history/camera_warp.py
+include worldfoundry/synthesis/visual_generation/warp_as_history/warp_as_history_runtime/warp_as_history/defaults.py
+include worldfoundry/synthesis/visual_generation/warp_as_history/warp_as_history_runtime/warp_as_history/infer.py
+include worldfoundry/synthesis/visual_generation/warp_as_history/warp_as_history_runtime/warp_as_history/pipeline.py
+include worldfoundry/synthesis/visual_generation/warp_as_history/warp_as_history_runtime/LICENSE-Warp-as-History
+include worldfoundry/synthesis/visual_generation/warp_as_history/warp_as_history_runtime/LICENSE-Helios
+include worldfoundry/synthesis/visual_generation/warp_as_history/warp_as_history_runtime/PROVENANCE.md

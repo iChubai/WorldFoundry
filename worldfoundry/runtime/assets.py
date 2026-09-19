@@ -55,6 +55,25 @@ def _has_huggingface_incomplete_download(path: Path) -> bool:
     return next(download_root.rglob("*.incomplete"), None) is not None
 
 
+def local_file_is_ready(path: str | Path) -> bool:
+    """Check for nonempty files without an unfinished-download sidecar.
+
+    Downloaders can preallocate the complete file size before writing its
+    contents. In particular, an aria2 control file means that transfer has
+    not completed, even when the target has its expected byte length.
+    This is a readiness check, not a checksum verification.
+    """
+    path = Path(path)
+    try:
+        return (
+            path.is_file()
+            and path.stat().st_size > 0
+            and not any(Path(str(path) + suffix).exists() for suffix in (".aria2", ".incomplete", ".part"))
+        )
+    except OSError:
+        return False
+
+
 def _path_is_ready(path: Path | None) -> bool:
     """Return whether a resolved asset path looks usable.
 
@@ -66,7 +85,7 @@ def _path_is_ready(path: Path | None) -> bool:
         return False
     try:
         if path.is_file():
-            return path.stat().st_size > 0
+            return local_file_is_ready(path)
         if not path.is_dir():
             return False
         # ``huggingface_hub.snapshot_download(local_dir=...)`` creates this

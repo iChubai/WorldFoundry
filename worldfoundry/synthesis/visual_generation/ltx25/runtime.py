@@ -19,7 +19,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
-from worldfoundry.runtime.assets import expand_worldfoundry_path
+from worldfoundry.runtime.assets import expand_worldfoundry_path, local_file_is_ready
 from worldfoundry.runtime.env import resolve_hfd_root
 
 PROJECT_ROOT = Path(__file__).resolve().parents[4]
@@ -211,11 +211,16 @@ class LTX25DistilledRuntime:
 
     def preflight(self) -> dict[str, Any]:
         missing_checkpoint = [str(path) for path in self._required_checkpoint_files if not path.is_file()]
+        incomplete_checkpoint = [
+            str(path) for path in self._required_checkpoint_files
+            if path.is_file() and not local_file_is_ready(path)
+        ]
         missing_runtime = [str(path) for path in self._runtime_files if not path.is_file()]
         ffmpeg = shutil.which("ffmpeg")
         device_ready = self.device.lower().startswith(("cuda", "mps"))
-        ready = not missing_checkpoint and not missing_runtime and ffmpeg is not None and device_ready
+        ready = not missing_checkpoint and not incomplete_checkpoint and not missing_runtime and ffmpeg is not None and device_ready
         blocked_reasons = [] if device_ready else ["LTX-2.5 inference requires a CUDA or MPS accelerator."]
+        blocked_reasons.extend(f"Checkpoint download is incomplete or empty: {path}" for path in incomplete_checkpoint)
         return {
             "status": "ready" if ready else "blocked",
             "model_id": "ltx-2.5",
@@ -230,6 +235,7 @@ class LTX25DistilledRuntime:
                 str(self.prompt_enhancer_gemma_root) if self.prompt_enhancer_gemma_root else None
             ),
             "missing_checkpoint_files": missing_checkpoint,
+            "incomplete_checkpoint_files": incomplete_checkpoint,
             "missing_runtime_files": missing_runtime,
             "missing_system_tools": [] if ffmpeg else ["ffmpeg"],
             "blocked_reasons": blocked_reasons,

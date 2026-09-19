@@ -8262,7 +8262,7 @@ CURATED_OVERRIDES: Dict[str, Dict[str, Any]] = {
         ),
         "aliases": ("magi2", "magi2_preview", "magi-2-preview", "sand-ai/MAGI-2-preview"),
         "tags": ("text-to-video", "audio-video", "moe", "in-tree-runtime", "local-checkpoint"),
-        "notes": "114B MoE preview runtime using sequential CPU residency and per-layer GPU offload; the optional refiner is disabled by default.",
+        "notes": "114B MoE preview-only text-to-video with audio and per-layer GPU offload; refiner and image conditioning are not implemented.",
     },
     "mochi-1-preview-t2v": {
         "display_name": "Mochi-1 Preview T2V",
@@ -11569,6 +11569,29 @@ CURATED_OVERRIDES: Dict[str, Dict[str, Any]] = {
         ),
         "aliases": ("ltx-2.x", "ltx2.3", "ltx-2.3", "ltx2.3-i2v", "ltx2_3_i2v"),
         "tags": ("image-to-video", "joint-audio-video", "native-diffusion", "local-checkpoint"),
+    },
+    "hyperflow": {
+        "display_name": "HyperFlow for MiniMax-H3",
+        "category": "Video Generation",
+        "supports_from_pretrained": True,
+        "supports_stream": False,
+        "default_backend": "from_pretrained",
+        "default_task_type": "t2va",
+        "suggested_task_types": ("t2va", "fl2va", "ref2va"),
+        "default_model_ref": lambda: _checkpoint_model_ref(
+            "minimax-h3", "MiniMaxAI--MiniMax-H3", fallback=str(hfd_root_path("MiniMaxAI--MiniMax-H3"))
+        ),
+        "default_load_kwargs": {"gpus": 1},
+        "default_call_kwargs": {"num_frames": 124, "seed": 42, "return_dict": True},
+        "call_params": (
+            "prompt", "images", "image", "last_image", "references", "workflow", "output_path",
+            "return_dict", "num_frames", "height", "width", "seed", "fps", "num_inference_steps",
+            "memory_reserve_margin", "offload", "attention_backend", "sol_attn", "timeout_seconds",
+        ),
+        "load_params": ("model_path", "weights_path", "python_executable", "device", "gpus"),
+        "aliases": ("hyperflow-h3", "minimax-h3-hyperflow"),
+        "tags": ("text-to-video", "image-to-video", "reference-to-video", "joint-audio-video", "official-runtime"),
+        "notes": "Eight-step HyperFlow adapter; local H3 components and the dedicated inference environment are required.",
     },
     "ltx-2.5": {
         "display_name": "LTX-2.5 Distilled",

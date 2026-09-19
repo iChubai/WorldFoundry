@@ -1,30 +1,9 @@
-"""Bespoke MAGI-2-preview audio-video pipeline (native, single-GPU).
+"""Preview-only MAGI-2 audio-video inference using shared model components.
 
-MAGI-2-preview is a 114B-parameter MoE (256 experts, top-6, ~6B active/token)
-unified audio+video model that upstream targets 8×Hopper with context/expert/
-data parallelism. This port collapses cp=ep=dp=1 and runs the two stages —
-``preview`` (low-res 100-step denoise) → optional ``refiner`` (1080p, 5-step
-renoise) — as a bespoke :class:`PipelineABC` subclass, the same "Option B"
-approach used for MiniMax H3.
-
-Because the full model does not fit one 80GB GPU, components are loaded with
-**sequential residency**: encode text → evict encoder → run the preview MoE DiT
-denoise → evict → (optional) refiner → evict → VAE decode → mux. Set
-``PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True``.
-
-Flow per request:
-
-1. Qwen3.5 text encoder → context ``[1, L, 5120]`` (hidden_states[-3]).
-2. Data proxy packs seed video/audio noise + text into the flat token stream;
-   the preview sampler (FlowUniPC flow-matching + CFG-trick) denoises via the
-   preview DiT.
-3. Optional refiner: trilinear-upscale the preview latent, partial-renoise to a
-   fixed sigma, 5 UniPC steps through the refiner DiT.
-4. Video decoded by the turbo VAE, audio by the Stable-Audio VAE; 44.1 kHz
-   stereo muxed into the mp4.
-
-Heavy component construction is deferred to :meth:`from_pretrained`; the
-orchestration accepts injected components so it stays unit-testable.
+The 114B MoE streams layers from CPU memory to one GPU. Text encoding precedes
+preview denoising; video and audio decoders are materialized afterwards.
+Image conditioning and the upstream refiner stage are not implemented and
+are rejected before loading weights.
 """
 
 from __future__ import annotations
@@ -182,13 +161,11 @@ class NativeMagi2Pipeline(PipelineABC):
         device = torch.device(self.device)
         from worldfoundry.base_models.diffusion_model.models.networks.magi2.config import (
             Magi2PreviewConfig,
-            Magi2RefinerConfig,
         )
         from worldfoundry.base_models.diffusion_model.models.networks.magi2.loading import (
             load_magi2_audio_vae_weights,
             load_magi2_dit_weights,
             load_magi2_turbo_weights,
-            load_magi2_video_vae_weights,
         )
 
         if load_preview and self.preview_transformer is None:
@@ -282,7 +259,7 @@ class NativeMagi2Pipeline(PipelineABC):
         }
 
     # ------------------------------------------------------------------ #
-    # Core generation (preview stage; refiner optional).
+    # Core generation (preview stage).
     # ------------------------------------------------------------------ #
     @torch.inference_mode()
     def generate(
@@ -298,7 +275,7 @@ class NativeMagi2Pipeline(PipelineABC):
         use_refiner: bool = False,
         return_latents: bool = False,
     ) -> dict[str, Any]:
-        """Run the preview (and optional refiner) denoise and decode.
+        """Run the preview denoise and decode.
 
         Returns a dict with ``plan``, decoded ``video``/``audio`` tensors (when
         the VAEs are loaded), or raw ``video_latent``/``audio_latent`` when
@@ -307,10 +284,13 @@ class NativeMagi2Pipeline(PipelineABC):
         :meth:`from_pretrained` (weight loading wired in the integration seam).
         """
 
+        if use_refiner:
+            raise NotImplementedError("MAGI-2 refiner inference is not implemented; use preview-only T2V.")
+
         from worldfoundry.base_models.diffusion_model.models.networks.magi2 import (
+            CFGConfig,
             Magi2PreviewSampler,
             Magi2SamplingConfig,
-            CFGConfig,
         )
         from worldfoundry.base_models.diffusion_model.schedulers.magi2 import (
             FlowUniPCMultistepScheduler,
@@ -373,10 +353,6 @@ class NativeMagi2Pipeline(PipelineABC):
             cfg_config=cfg_config,
             progress=False,
         )
-
-        # 4. Optional refiner stage (trilinear upscale + renoise + 5 UniPC steps).
-        if use_refiner and _is_module(self.refiner_transformer):
-            video_latent = self._run_refiner(video_latent, context, null_context, plan, cfg, device)
 
         # Every streamed MoE layer is back on CPU after ``sample``. Move the
         # small resident adapters as well, then materialize only the decoders.
@@ -462,6 +438,8 @@ class NativeMagi2Pipeline(PipelineABC):
         output_path: str | Path | None = None,
         **kwargs: Any,
     ) -> dict[str, Any]:
+        if any(kwargs.get(key) is not None for key in ("images", "image", "image_path", "video", "video_path")):
+            raise NotImplementedError("MAGI-2 currently supports text-to-video only; visual conditioning is not implemented.")
         result = self.generate(
             prompt=prompt,
             negative_prompt=negative_prompt,

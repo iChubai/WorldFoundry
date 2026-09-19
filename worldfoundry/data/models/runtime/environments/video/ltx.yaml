@@ -18,6 +18,8 @@ envs:
   - imageio
   - imageio-ffmpeg
   - pillow
+  - sentencepiece
+  - protobuf
   validation_imports:
   - torch
   - torchvision
@@ -26,6 +28,8 @@ envs:
   - safetensors
   - imageio
   - PIL
+  - sentencepiece
+  - google.protobuf
   notes:
   - LTX-Video I2V uses the shared native diffusion loader and runner; Transformers supplies only the T5 architecture.
 - model_id: ltx_video_i2v
@@ -47,6 +51,8 @@ envs:
   - imageio
   - imageio-ffmpeg
   - pillow
+  - sentencepiece
+  - protobuf
   validation_imports:
   - torch
   - torchvision
@@ -55,6 +61,8 @@ envs:
   - safetensors
   - imageio
   - PIL
+  - sentencepiece
+  - google.protobuf
   notes:
   - Studio alias for ltx-video-i2v; kept explicit so workspace dispatch resolves the same environment as the catalog profile.
 - model_id: ltx-2-i2v

@@ -28,7 +28,7 @@ checkpoints:
   role: text_encoder
 input_schema:
   prompt: true
-  image: true
+  image: false
   video: false
   audio: false
   actions:
@@ -45,5 +45,5 @@ integration:
   status: planned
 notes:
 - MAGI-2-preview 114B MoE (256 experts, top-6, 6B active/token) audio+video DiT, ported from SandAI Apache-2.0.
-- Two-stage: preview (low-res, 100 steps) -> refiner (1080p, 5 steps). T2V and I2V, 10s clips, joint audio muxed.
+- This adapter supports preview-only T2V with joint audio. Image conditioning and the upstream refiner stage are not implemented and are rejected.
 - Upstream targets 8xHopper; this port collapses cp/ep/dp to single-GPU (sequential residency for the 114B MoE).

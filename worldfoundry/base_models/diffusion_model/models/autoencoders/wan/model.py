@@ -1806,13 +1806,15 @@ class WanVideoVAE(nn.Module):
         # one tile at a time.  The resident dense path must keep an already
         # materialized CUDA tensor in place; forcing it through CPU here adds
         # a full video-sized D2H/H2D round trip before any encoder work.
-        source_videos = videos.to("cpu") if tiled else videos
+        if tiled:
+            tile_size = tuple(size * self.upsampling_factor for size in tile_size)
+            tile_stride = tuple(stride * self.upsampling_factor for stride in tile_stride)
         hidden_states = []
-        for video in source_videos:
+        for video in videos:
+            if tiled:
+                video = video.to("cpu")
             video = video.unsqueeze(0)
             if tiled:
-                tile_size = (tile_size[0] * self.upsampling_factor, tile_size[1] * self.upsampling_factor)
-                tile_stride = (tile_stride[0] * self.upsampling_factor, tile_stride[1] * self.upsampling_factor)
                 hidden_state = self.tiled_encode(video, device, tile_size, tile_stride)
             else:
                 hidden_state = self.single_encode(video, device)

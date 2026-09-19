@@ -12,7 +12,6 @@ from typing import Any, Mapping
 from worldfoundry.core.io.paths import checkpoint_root_candidates, resolve_data_path
 from worldfoundry.runtime.in_tree_cli import ensure_in_tree_runtime, execute_in_tree, require_path
 
-
 _PROJECT_ROOT = Path(__file__).resolve().parents[4]
 
 
@@ -116,7 +115,7 @@ def _magicworld_latent_frames(num_frames: int) -> int:
     if requested <= 0:
         raise ValueError("MagicWorld num_frames must be positive")
     latent_frames = max(1, (requested - 1) // 4 + 1)
-    if latent_frames % 3 != 0:
+    if (requested - 1) % 4 != 0 or latent_frames % 3 != 0:
         raise ValueError(
             f"MagicWorld num_frames={requested} maps to {latent_frames} latent frames; "
             "MagicWorld-Fast requires a multiple of 3 latent frames "

@@ -217,9 +217,9 @@ class VGGTOmegaPipeline(PipelineABC):
             "predict_depth": interaction_dict.get("predict_depth", True),
             "predict_points": interaction_dict.get("predict_points", True),
             "predict_tracks": False,
-            "preprocess_mode": kwargs.get("preprocess_mode", "balanced"),
-            "resolution": kwargs.get("resolution", 512),
-            "patch_size": kwargs.get("patch_size", 16),
+            "preprocess_mode": kwargs.get("preprocess_mode", getattr(self.representation_model, "preprocess_mode", "balanced")),
+            "resolution": kwargs.get("resolution", getattr(self.representation_model, "resolution", 512)),
+            "patch_size": kwargs.get("patch_size", getattr(self.representation_model, "patch_size", 16)),
         }
         results = self.representation_model.get_representation(data)
 

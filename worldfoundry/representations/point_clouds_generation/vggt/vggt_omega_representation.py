@@ -55,7 +55,7 @@ class VGGTOmegaRepresentation:
             VGGTOmega,
         )
 
-        checkpoint_path = _resolve_checkpoint_file(pretrained_model_path)
+        checkpoint_path = _resolve_checkpoint_file(pretrained_model_path, enable_alignment=enable_alignment)
         model = VGGTOmega(enable_alignment=enable_alignment)
         state_dict = torch.load(str(checkpoint_path), map_location="cpu")
         model.load_state_dict(state_dict)
@@ -128,18 +128,22 @@ class VGGTOmegaRepresentation:
             )
         return results
 
-def _resolve_checkpoint_file(pretrained_model_path: str) -> Path:
+def _resolve_checkpoint_file(pretrained_model_path: str, *, enable_alignment: bool = False) -> Path:
     """
     Resolve a VGGT-Omega checkpoint file.
 
     Args:
         pretrained_model_path: File path or directory containing released checkpoints.
+        enable_alignment: Select the released 256-resolution text-alignment checkpoint.
     """
     path = Path(pretrained_model_path)
     if path.is_file():
         return path
     if path.is_dir():
-        checkpoint = path / DEFAULT_VGGT_OMEGA_CHECKPOINT_NAME
+        checkpoint_name = (
+            "vggt_omega_1b_256_text.pt" if enable_alignment else DEFAULT_VGGT_OMEGA_CHECKPOINT_NAME
+        )
+        checkpoint = path / checkpoint_name
         if checkpoint.is_file():
             return checkpoint
         candidates = sorted(path.glob("*.pt"))

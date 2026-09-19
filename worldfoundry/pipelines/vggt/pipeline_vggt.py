@@ -54,8 +54,12 @@ class VGGTResult:
         return {
             'image': self.images[idx],
             'camera_params': self.camera_params[idx] if idx < len(self.camera_params) else None,
-            'numpy_data': {k: v[idx] if isinstance(v, np.ndarray) and v.ndim > len(self.images) else v 
-                          for k, v in self.numpy_data.items()}
+            'numpy_data': {
+                k: v[idx]
+                if isinstance(v, np.ndarray) and v.ndim > 0 and v.shape[0] == len(self.images)
+                else v
+                for k, v in self.numpy_data.items()
+            }
         }
     
     def save(self, output_dir: Optional[str] = None) -> List[str]:

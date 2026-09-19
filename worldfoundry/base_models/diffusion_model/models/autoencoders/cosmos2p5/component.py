@@ -25,7 +25,13 @@ from ..wan.component import convert_wan21_vae_state_dict
 from ..wan.model import CausalConv3d, RMS_norm, Upsample, WanVideoVAE
 
 
-def _extract_canny_edges(frames, *, low_threshold: int = 100, high_threshold: int = 200):
+def _extract_canny_edges(
+    frames,
+    *,
+    low_threshold: int = 100,
+    high_threshold: int = 200,
+    target_size: tuple[int, int] | None = None,
+):
     """Convert uint8 RGB control frames to the official edge-control format."""
 
     import cv2
@@ -33,13 +39,17 @@ def _extract_canny_edges(frames, *, low_threshold: int = 100, high_threshold: in
 
     low = int(low_threshold)
     high = int(high_threshold)
-    if not 0 <= low < high <= 255:
-        raise ValueError("Canny thresholds must satisfy 0 <= low < high <= 255")
+    # These are gradient thresholds, not pixel intensities; upstream presets
+    # include 200/300 and 300/400.
+    if not 0 <= low < high:
+        raise ValueError("Canny thresholds must satisfy 0 <= low < high")
     edge_frames = []
     for frame in frames:
         rgb = np.asarray(frame)[..., :3]
-        gray = cv2.cvtColor(rgb, cv2.COLOR_RGB2GRAY)
-        edges = cv2.Canny(gray, low, high)
+        if target_size is not None:
+            rgb = cv2.resize(rgb, target_size, interpolation=cv2.INTER_AREA)
+        # Match upstream: resize RGB first, then extract multichannel edges.
+        edges = cv2.Canny(rgb, low, high)
         edge_frames.append(np.repeat(edges[..., None], 3, axis=-1))
     return np.stack(edge_frames, axis=0)
 
@@ -93,6 +103,8 @@ class Cosmos25VideoCodec:
         if request.batch_size != 1:
             raise ValueError("Cosmos Transfer2.5 control video currently requires batch size 1")
         frame_array = coerce_video_frames(control)
+        if not len(frame_array):
+            raise ValueError("Cosmos Transfer2.5 control video cannot be empty")
         control_is_preprocessed = bool(
             request.inputs.get("control_is_preprocessed", control_is_mapping)
         )
@@ -101,10 +113,9 @@ class Cosmos25VideoCodec:
                 frame_array,
                 low_threshold=int(request.inputs.get("canny_low_threshold", 100)),
                 high_threshold=int(request.inputs.get("canny_high_threshold", 200)),
+                target_size=(request.width, request.height),
             )
         frames = torch.from_numpy(frame_array).permute(0, 3, 1, 2)
-        if not len(frames):
-            raise ValueError("Cosmos Transfer2.5 control video cannot be empty")
         frames = self._resize(frames, request.height, request.width)
         if len(frames) < request.num_frames:
             frames = torch.cat((frames, frames[-1:].expand(request.num_frames - len(frames), -1, -1, -1)))

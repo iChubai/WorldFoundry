@@ -69,13 +69,13 @@ def _look_at_quaternion_wxyz(
     forward = target - pos
     forward = forward / (np.linalg.norm(forward) + 1e-8)
     world_up = np.array([0.0, 1.0, 0.0], dtype=np.float64)
-    right = np.cross(world_up, forward)
+    right = np.cross(forward, world_up)
     rn = np.linalg.norm(right)
     if rn < 1e-8:
         right = np.array([1.0, 0.0, 0.0], dtype=np.float64)
     else:
         right = right / rn
-    up = np.cross(forward, right)
+    up = np.cross(right, forward)
     backward = -forward
     r_mat = np.stack([right, up, backward], axis=1).astype(np.float32)
     q = matrix_to_quaternion(torch.from_numpy(r_mat).unsqueeze(0)).squeeze(0)
@@ -166,9 +166,9 @@ def _orientation_in_place_at_t(
     """Camera fixed; orientation interpolated over segment (t in [0, 1])."""
     t = float(np.clip(t, 0.0, 1.0))
     if action == "camera_l":
-        return _rotate_yaw_world(quat_start, -t * _YAW_PER_SEGMENT)
-    if action == "camera_r":
         return _rotate_yaw_world(quat_start, t * _YAW_PER_SEGMENT)
+    if action == "camera_r":
+        return _rotate_yaw_world(quat_start, -t * _YAW_PER_SEGMENT)
     if action == "camera_up":
         return _rotate_pitch_local(quat_start, t * _PITCH_PER_SEGMENT)
     if action == "camera_down":

@@ -27,11 +27,11 @@ integration_status: integrated
 integration:
   status: integrated
   notes:
-  - WorldFoundry registers an in-tree resident pipeline with configurable multi-GPU component placement.
+  - WorldFoundry registers a native stage-one pipeline with shared Sana components and VAE decoding.
 runner_parity:
-  status: implemented
+  status: partial
   notes:
-  - The quality profile keeps the bidirectional stage and LTX-2 refiner enabled.
+  - The bidirectional native recipe currently omits the official LTX-2 refinement stage.
 variants:
 - id: sana-wm-streaming
   task: camera-controlled-video

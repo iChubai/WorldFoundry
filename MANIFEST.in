@@ -638,3 +638,7 @@ include worldfoundry/synthesis/visual_generation/world_model/vid2world/csgo_util
 recursive-include worldfoundry/base_models/diffusion_model/models/networks/hunyuan_video/gamecraft LICENSE PROVENANCE.md
 recursive-include worldfoundry/synthesis/visual_generation/hunyuan_world/gamecraft_inference LICENSE PROVENANCE.md
 recursive-include worldfoundry/base_models/diffusion_model/models/networks/hunyuan_video/h15 LICENSE-HUNYUAN LICENSE-MINWM ACTION_CAMERA_PROVENANCE.md
+
+# InSpatio uses these inference-only entry points as subprocess resources.
+recursive-include worldfoundry/synthesis/visual_generation/inspatio_world/inspatio_world_runtime *.py *.sh
+recursive-include worldfoundry/synthesis/visual_generation/inspatio_world/inspatio_world_runtime/inference_inputs LICENSE-InSpatio PROVENANCE.md

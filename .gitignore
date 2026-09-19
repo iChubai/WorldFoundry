@@ -411,13 +411,11 @@ worldfoundry/studio/assets/vendor/
 /worldfoundry/base_models/three_dimensions/general_3d/mast3r/
 /worldfoundry/base_models/three_dimensions/general_3d/monst3r/
 /worldfoundry/base_models/three_dimensions/general_3d/stable_virtual_camera/
-/worldfoundry/base_models/three_dimensions/point_clouds/cut3r/
 /worldfoundry/base_models/three_dimensions/point_clouds/gaussian_splatting/
 /worldfoundry/base_models/three_dimensions/point_clouds/pi3/
 /worldfoundry/base_models/three_dimensions/slam/mega_sam_runtime/UniDepth/
 /worldfoundry/synthesis/visual_generation/hunyuan_world/hunyuan_game_craft/
 /worldfoundry/synthesis/visual_generation/hunyuan_world/hunyuan_world_voyager/
-/worldfoundry/synthesis/visual_generation/hunyuan_world/hunyuan_worldplay/
 /worldfoundry/synthesis/visual_generation/hunyuan_world/hy_world_2p0_panogen_runtime/
 /worldfoundry/synthesis/visual_generation/hunyuan_world/hy_world_2p0_worldgen_runtime/
 /worldfoundry/synthesis/visual_generation/krea_realtime/realtime_video_runtime/

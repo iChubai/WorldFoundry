@@ -116,7 +116,7 @@ class LoGeRRepresentation(BaseRepresentation):
 
         else:
             model_root = pretrained_model_path
-            if subfolder:
+            if subfolder and not os.path.isfile(os.path.join(model_root, "latest.pt")):
                 model_root = os.path.join(model_root, subfolder)
             ckpt_file = os.path.join(model_root, "latest.pt")
             if not os.path.exists(ckpt_file):

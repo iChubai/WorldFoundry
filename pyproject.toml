@@ -531,11 +531,7 @@ packages = { find = { where = ["."], namespaces = true, include = ["worldfoundry
     "worldfoundry.synthesis.visual_generation.*.*_runtime*",
     "worldfoundry.base_models.*.*.*_runtime.src*",
     "worldfoundry.base_models.*.*.*_runtime.*.src*",
-    "worldfoundry.base_models.*.depth_anything",
-    "worldfoundry.base_models.*.depth_anything.*",
     "worldfoundry.base_models.*.*.pixelsplat.src*",
-    "worldfoundry.base_models.*.vggt.vggt",
-    "worldfoundry.base_models.*.vggt.vggt.*",
     "worldfoundry.base_models.*.vggt_omega.vggt_omega",
     "worldfoundry.base_models.*.vggt_omega.vggt_omega.*",
     "worldfoundry.base_models.*.pixelsplat",
@@ -558,8 +554,6 @@ packages = { find = { where = ["."], namespaces = true, include = ["worldfoundry
     "worldfoundry.base_models.three_dimensions.general_3d.monst3r.*",
     "worldfoundry.base_models.three_dimensions.general_3d.stable_virtual_camera",
     "worldfoundry.base_models.three_dimensions.general_3d.stable_virtual_camera.*",
-    "worldfoundry.base_models.three_dimensions.point_clouds.cut3r",
-    "worldfoundry.base_models.three_dimensions.point_clouds.cut3r.*",
     "worldfoundry.base_models.three_dimensions.point_clouds.gaussian_splatting",
     "worldfoundry.base_models.three_dimensions.point_clouds.gaussian_splatting.*",
     "worldfoundry.base_models.three_dimensions.point_clouds.pi3",
@@ -568,8 +562,6 @@ packages = { find = { where = ["."], namespaces = true, include = ["worldfoundry
     "worldfoundry.synthesis.visual_generation.hunyuan_world.hunyuan_game_craft.*",
     "worldfoundry.synthesis.visual_generation.hunyuan_world.hunyuan_world_voyager",
     "worldfoundry.synthesis.visual_generation.hunyuan_world.hunyuan_world_voyager.*",
-    "worldfoundry.synthesis.visual_generation.hunyuan_world.hunyuan_worldplay",
-    "worldfoundry.synthesis.visual_generation.hunyuan_world.hunyuan_worldplay.*",
 ] } }
 include-package-data = true
 
@@ -627,6 +619,14 @@ include-package-data = true
     "evoke_runtime/**/*",
 ]
 "worldfoundry.synthesis.visual_generation.matrix_game" = [
+    "matrix_game_1_runtime/**/*.py",
+    "matrix_game_1_runtime/**/*.json",
+    "matrix_game_1_runtime/**/*.yaml",
+    "matrix_game_1_runtime/**/*.yml",
+    "matrix_game_3_runtime/**/*.py",
+    "matrix_game_3_runtime/**/*.json",
+    "matrix_game_3_runtime/**/*.yaml",
+    "matrix_game_3_runtime/**/*.yml",
     "matrix_game_3p5_runtime/**/*",
 ]
 "worldfoundry.synthesis.visual_generation.moverse" = [
@@ -634,6 +634,67 @@ include-package-data = true
 ]
 "worldfoundry.synthesis.visual_generation.uni3c" = [
     "uni3c_runtime/**/*",
+]
+
+"worldfoundry.synthesis.visual_generation.allegro" = [
+    "allegro_runtime/**/*.py",
+    "allegro_runtime/**/*.json",
+    "allegro_runtime/**/*.yaml",
+    "allegro_runtime/**/*.yml",
+]
+
+"worldfoundry.synthesis.visual_generation.easyanimate" = [
+    "easyanimate_runtime/**/*.py",
+    "easyanimate_runtime/**/*.json",
+    "easyanimate_runtime/**/*.yaml",
+    "easyanimate_runtime/**/*.yml",
+]
+
+"worldfoundry.synthesis.visual_generation.infinite_world" = [
+    "infinite_world_runtime/**/*.py",
+    "infinite_world_runtime/**/*.json",
+    "infinite_world_runtime/**/*.yaml",
+    "infinite_world_runtime/**/*.yml",
+]
+
+"worldfoundry.synthesis.visual_generation.kling" = [
+    "astra_runtime/**/*.py",
+    "astra_runtime/**/*.json",
+    "astra_runtime/**/*.yaml",
+    "astra_runtime/**/*.yml",
+]
+
+"worldfoundry.synthesis.visual_generation.lingbot_world" = [
+    "lingbot_world_runtime/**/*.py",
+    "lingbot_world_runtime/**/*.json",
+    "lingbot_world_runtime/**/*.yaml",
+    "lingbot_world_runtime/**/*.yml",
+]
+
+"worldfoundry.synthesis.visual_generation.worldcam" = [
+    "worldcam_runtime/**/*.py",
+    "worldcam_runtime/**/*.json",
+    "worldcam_runtime/**/*.yaml",
+    "worldcam_runtime/**/*.yml",
+]
+
+"worldfoundry.synthesis.visual_generation.worldfm" = [
+    "worldfm_runtime/**/*.py",
+    "worldfm_runtime/**/*.json",
+    "worldfm_runtime/**/*.yaml",
+    "worldfm_runtime/**/*.yml",
+]
+
+"worldfoundry.base_models.three_dimensions.depth.depth_anything" = [
+    "**/*.json",
+    "**/*.yaml",
+    "**/*.yml",
+]
+
+"worldfoundry.base_models.three_dimensions.point_clouds.vggt" = [
+    "**/*.json",
+    "**/*.yaml",
+    "**/*.yml",
 ]
 
 [tool.setuptools.exclude-package-data]
@@ -673,7 +734,6 @@ include-package-data = true
     "stable_virtual_camera/**/*",
 ]
 "worldfoundry.base_models.three_dimensions.point_clouds" = [
-    "cut3r/**/*",
     "gaussian_splatting/**/*",
     "pi3/**/*",
 ]
@@ -683,7 +743,6 @@ include-package-data = true
 "worldfoundry.synthesis.visual_generation.hunyuan_world" = [
     "hunyuan_game_craft/**/*",
     "hunyuan_world_voyager/**/*",
-    "hunyuan_worldplay/**/*",
     "hy_world_2p0_panogen_runtime/**/*",
     "hy_world_2p0_worldgen_runtime/**/*",
 ]

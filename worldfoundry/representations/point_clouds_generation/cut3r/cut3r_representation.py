@@ -151,7 +151,7 @@ class CUT3RRepresentation(BaseRepresentation):
         
         instance = cls(model=model, device=device)
         # Use auto-detected size or default
-        instance.size = size if size is not None else 224
+        instance.size = size if size is not None else int(max(model.patch_embed.img_size))
         return instance
     
     @staticmethod
@@ -207,7 +207,8 @@ class CUT3RRepresentation(BaseRepresentation):
     
     def _prepare_views(
         self,
-        images: Union[np.ndarray, List[np.ndarray], List[str]]
+        images: Union[np.ndarray, List[np.ndarray], List[str]],
+        size: Optional[int] = None
     ) -> List[Dict[str, Any]]:
         """
         Prepare input views for CUT3R inference.
@@ -218,44 +219,33 @@ class CUT3RRepresentation(BaseRepresentation):
         Returns:
             List of view dictionaries
         """
-        # Convert to list if single image
-        if isinstance(images, np.ndarray):
+        if isinstance(images, (str, np.ndarray, Image.Image)):
             images = [images]
-        
-        # Convert numpy arrays to file paths (temporary) if needed
-        # CUT3R's load_images expects file paths
+        if not images:
+            raise ValueError("CUT3R requires at least one image")
+
         import tempfile
-        temp_files = []
-        image_paths = []
-        
-        for img in images:
-            if isinstance(img, str):
-                image_paths.append(img)
-            elif isinstance(img, np.ndarray):
-                # Save to temporary file
-                temp_file = tempfile.NamedTemporaryFile(suffix='.jpg', delete=False)
-                # Convert to uint8 and save
-                img_uint8 = (img * 255).astype(np.uint8) if img.max() <= 1.0 else img.astype(np.uint8)
-                Image.fromarray(img_uint8).save(temp_file.name)
-                image_paths.append(temp_file.name)
-                temp_files.append(temp_file.name)
-        
-        # CUT3R recurrent inference expects at least two views.
-        # If only one image is provided, duplicate it as a minimal fallback
-        # to avoid invalid position/index errors inside RoPE attention.
-        if len(image_paths) == 1:
-            image_paths.append(image_paths[0])
-        
-        # Load images using CUT3R's loader
-        loaded_images = load_images(image_paths, size=self.size, verbose=False)
-        
-        # Clean up temp files
-        for temp_file in temp_files:
-            try:
-                os.unlink(temp_file)
-            except:
-                pass
-        
+
+        # Lossless temporary images preserve array inputs and are cleaned on failure too.
+        with tempfile.TemporaryDirectory(prefix="cut3r-") as temporary_dir:
+            image_paths = []
+            for index, img in enumerate(images):
+                if isinstance(img, (str, os.PathLike)):
+                    image_paths.append(os.fspath(img))
+                    continue
+                if isinstance(img, np.ndarray):
+                    if not np.isfinite(img).all():
+                        raise ValueError("CUT3R image contains non-finite values")
+                    if np.issubdtype(img.dtype, np.floating) and img.max() <= 1.0:
+                        img = img * 255
+                    img = Image.fromarray(np.clip(img, 0, 255).astype(np.uint8))
+                if not isinstance(img, Image.Image):
+                    raise TypeError(f"Unsupported CUT3R image type: {type(img).__name__}")
+                path = os.path.join(temporary_dir, f"{index}.png")
+                img.convert("RGB").save(path)
+                image_paths.append(path)
+            loaded_images = load_images(image_paths, size=size or self.size, verbose=False)
+
         # Convert to views format
         views = []
         for i, img_data in enumerate(loaded_images):
@@ -323,7 +313,7 @@ class CUT3RRepresentation(BaseRepresentation):
         vis_threshold = data.get('vis_threshold', 1.0)
         
         # Prepare views
-        views = self._prepare_views(images)
+        views = self._prepare_views(images, size=size)
         
         # Run inference
         with torch.no_grad():

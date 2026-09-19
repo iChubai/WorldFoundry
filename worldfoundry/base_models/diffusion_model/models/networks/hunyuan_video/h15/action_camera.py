@@ -872,7 +872,6 @@ class ARHunyuanVideo_1_5_DiffusionTransformer(ModelMixin, ConfigMixin):
             encoder_attention_mask, text_states, timestep_txt, extra_kwargs, vision_states, mask_type
         )
         freqs_cis = (freqs_cos, freqs_sin) if freqs_cos is not None else None
-        txt = txt[text_mask.bool().to(txt.device)].unsqueeze(0)
         for index, block in enumerate(self.double_blocks):
             force_full_attn = (
                 self.attn_mode in ["flex-block-attn"]
@@ -890,7 +889,7 @@ class ARHunyuanVideo_1_5_DiffusionTransformer(ModelMixin, ConfigMixin):
                 vec_txt=vec_txt,
                 vec=vec,
                 freqs_cis=freqs_cis,
-                text_mask=None,
+                text_mask=text_mask,
                 attn_param=self.attn_param,
                 is_flash=force_full_attn,
                 block_idx=index,

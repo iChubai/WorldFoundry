@@ -87,7 +87,7 @@ class RotaryPositionEmbedding2D(nn.Module):
             raise ValueError("Positions must have shape (batch_size, n_tokens, 2).")
 
         feature_dim = tokens.size(-1) // 2
-        max_position = int(positions.max()) + 1
+        max_position = int(positions.abs().max()) + 1
         cos_comp, sin_comp = self._compute_frequency_components(feature_dim, max_position, tokens.device, tokens.dtype)
         vertical_features, horizontal_features = tokens.chunk(2, dim=-1)
         vertical_features = self._apply_1d_rope(vertical_features, positions[..., 0], cos_comp, sin_comp)
@@ -128,8 +128,11 @@ class RotaryPositionEmbedding2D(nn.Module):
     def _apply_1d_rope(self, tokens: Tensor, positions: Tensor, cos_comp: Tensor, sin_comp: Tensor) -> Tensor:
         """Gather per-token angles via embedding so positions need not be dense."""
 
-        cos = F.embedding(positions, cos_comp)[:, None, :, :]
-        sin = F.embedding(positions, sin_comp)[:, None, :, :]
+        absolute_positions = positions.abs()
+        cos = F.embedding(absolute_positions, cos_comp)[:, None, :, :]
+        sin = F.embedding(absolute_positions, sin_comp)[:, None, :, :]
+        # Special tokens may use negative coordinates (for example CUT3R poses).
+        sin = sin * positions.sign()[:, None, :, None]
         return (tokens * cos) + (self._rotate_features(tokens) * sin)
 
 

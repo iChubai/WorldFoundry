@@ -5,8 +5,8 @@ from typing import Dict, Any, Optional
 
 from huggingface_hub import snapshot_download
 
-from worldfoundry.base_models.three_dimensions.point_clouds.pi3.pi3.models.pi3 import Pi3
-from worldfoundry.base_models.three_dimensions.point_clouds.pi3.pi3.utils.geometry import depth_edge
+from worldfoundry.base_models.three_dimensions.point_clouds.pi3_inference.models.pi3 import Pi3
+from worldfoundry.base_models.three_dimensions.point_clouds.pi3_inference.utils.geometry import depth_edge
 from ...base_representation import BaseRepresentation
 
 
@@ -45,7 +45,7 @@ class Pi3Representation(BaseRepresentation):
         Returns: Pi3Representation instance with loaded model.
         """
         try:
-            model = Pi3.from_pretrained(pretrained_model_path)
+            model = Pi3.from_pretrained(pretrained_model_path, strict=True)
         except Exception:
             if os.path.isdir(pretrained_model_path):
                 model_root = pretrained_model_path
@@ -60,7 +60,7 @@ class Pi3Representation(BaseRepresentation):
 
             from safetensors.torch import load_file
             model = Pi3()
-            model.load_state_dict(load_file(ckpt_path), strict=False)
+            model.load_state_dict(load_file(ckpt_path), strict=True)
 
         return cls(model=model, device=device)
 

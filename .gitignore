@@ -399,22 +399,6 @@ worldfoundry/studio/assets/vendor/
 **/*_test.py
 **/test_*.cpp
 **/*_test.cpp
-# Shipped catalog/dispatch invariant tests (public release gate).
-!/tests/
-!/tests/evaluation/
-!/tests/evaluation/catalog/
-!/tests/evaluation/catalog/**
-!/tests/evaluation/execution/
-!/tests/evaluation/execution/test_*.py
-!/tests/evaluation/metrics/
-!/tests/evaluation/metrics/test_*.py
-!/tests/core/
-!/tests/core/attention/
-!/tests/core/attention/test_*.py
-!/tests/core/test_nvtx.py
-!/tests/core/test_nvtx_runner.py
-!/tests/core/vram/
-!/tests/core/vram/test_packed_layerwise_offload.py
 *.pem
 *.key
 *.p12

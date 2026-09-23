@@ -2,6 +2,19 @@
 /tests/
 /tmp/
 
+# Local maintenance and validation scripts are not part of the public release.
+/scripts/embodied/mirror_docker_images.py
+/scripts/embodied/resolve_official_image_digests.py
+/scripts/embodied/run_dlc_embodied_eval.sh
+/scripts/embodied/submit_dlc_embodied_eval.sh
+/scripts/inference/__init__.py
+/scripts/inference/prepare_leworldmodel_smoke_dataset.py
+/scripts/run_worldscore_eval_local.sh
+/scripts/setup/materialize_workspace_demo_assets.py
+/scripts/workspace/run_video_model_gang.py
+/scripts/workspace/run_video_model_matrix.py
+/scripts/workspace/validate_generated_videos.py
+
 # Project-specific local files
 .develop_references.py
 /apps/

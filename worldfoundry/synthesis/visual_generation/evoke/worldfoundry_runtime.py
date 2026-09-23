@@ -12,7 +12,6 @@ from typing import Any, Mapping, Sequence
 from worldfoundry.core.io.paths import resolve_local_hf_model_path
 from worldfoundry.runtime.in_tree_cli import ensure_in_tree_runtime, execute_in_tree, require_path
 
-
 SOURCE_REVISION = "74d268516d95c8fceadd2378f91a73f9f187042b"
 CHECKPOINT_REPO = "AlayaLab/Evoke"
 CHECKPOINT_REVISION = "7fa34ecef85754fde6f08996b1ece9d195dcd2f4"
@@ -107,9 +106,10 @@ def _probe_runtime(python_executable: str, cuda_visible_devices: str) -> tuple[b
             env=env,
             capture_output=True,
             text=True,
-            # Cold imports from the shared DolphinFS environment can exceed one minute when another
-            # worker is importing torch concurrently. This is a readiness probe, not an inference SLA.
-            timeout=180,
+            # Cold imports from the shared DolphinFS environment can take several minutes
+            # (the Evoke dependency probe took 329 seconds in a local validation run).
+            # This is a readiness probe, not an inference SLA.
+            timeout=600,
             check=False,
         )
     except (OSError, subprocess.SubprocessError) as exc:

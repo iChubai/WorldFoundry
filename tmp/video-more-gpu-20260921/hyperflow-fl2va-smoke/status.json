@@ -1,0 +1,10 @@
+{
+  "case": "hyperflow-fl2va-smoke",
+  "started_at": 1790002263.3487153,
+  "gpu": "1",
+  "status": "generated",
+  "videos": [
+    "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/WorldFoundry/tmp/video-more-gpu-20260921/hyperflow-fl2va-smoke/demo.mp4"
+  ],
+  "elapsed_seconds": 531.45
+}

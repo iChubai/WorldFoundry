@@ -24,12 +24,18 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Iterable, Iterator, Mapping
 
+from worldfoundry.core.execution.process import run_logged_subprocess
 from worldfoundry.core.io.paths import resolve_worldfoundry_path
 from worldfoundry.core.io.serialization import write_json
-from worldfoundry.core.logging_setup import get_logger, log_context
-from worldfoundry.core.process import run_logged_subprocess
-from worldfoundry.core.time import utc_now_iso
+from worldfoundry.core.observability.logging_setup import get_logger, log_context
+from worldfoundry.core.observability.time import utc_now_iso
 from worldfoundry.evaluation.reporting import inspect_scorecard_runtime_flags
+from worldfoundry.evaluation.tasks.catalog.dispatch import (
+    artifact_official_run_benchmarks,
+    embodied_result_normalizer_tracks,
+    pass_generated_artifact_dir_benchmarks,
+    specialized_result_normalizer_scripts,
+)
 from worldfoundry.evaluation.tasks.execution.framework.result_normalizer import OfficialResultsNormalizer
 from worldfoundry.runtime.env import benchmark_repo_cache_root
 
@@ -38,12 +44,6 @@ from ...catalog.runner_kinds import IN_TREE_RUNTIME_KINDS
 from ...catalog.schema import BenchmarkZooEntry, load_entries
 from ...catalog.zoo_registry import BenchmarkZooRegistry, UnknownBenchmarkZooKeyError, load_benchmark_zoo_registry
 from ...contracts.external import get_external_benchmark_contract
-from worldfoundry.evaluation.tasks.catalog.dispatch import (
-    artifact_official_run_benchmarks,
-    embodied_result_normalizer_tracks,
-    pass_generated_artifact_dir_benchmarks,
-    specialized_result_normalizer_scripts,
-)
 from ...execution.framework.scoring_registry import (
     contract_evaluator_kind,
     has_benchmark_contract_evaluator,
@@ -52,6 +52,8 @@ from ...execution.framework.scoring_registry import (
 from ..runners._benchmark_metrics import evaluate_external_metric, list_external_metric_evaluators
 from .interfaces import (
     BENCHMARK_RUN_OFFICIAL_MODES as _OFFICIAL_MODES,
+)
+from .interfaces import (
     BenchmarkSample,
     DatasetMaterializationPlan,
     OfficialRunResult,
@@ -521,6 +523,12 @@ def _run_specialized_result_normalizer(
         command.append("--run-official")
     if results_path is not None:
         command.extend([result_flag, str(results_path)])
+    from worldfoundry.evaluation.tasks.catalog.dispatch import official_runner_spec
+
+    runner_spec = official_runner_spec(benchmark_id)
+    result_model_id = kwargs.get("result_model_id")
+    if runner_spec is not None and runner_spec.model_arg and result_model_id:
+        command.extend([runner_spec.model_arg, str(result_model_id)])
     score_dir = kwargs.get("score_dir") if benchmark_id == "camerabench" else None
     if score_dir not in (None, ""):
         command.extend(["--score-dir", str(score_dir), "--task", "all", "--no-gpt"])

@@ -1,0 +1,39 @@
+{
+  "case": "molmoact2-libero",
+  "gpu": "2",
+  "status": "generated",
+  "started_at": 1790030409.8845415,
+  "scope": "Official MolmoAct2-LIBERO model-card real episode0frame0 images and exact state;FP32 10step offline inference,no closed-loop success",
+  "artifact": "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/WorldFoundry/tmp/action-pathfix-gpu-20260921/molmoact2-libero/actions.json",
+  "validation": {
+    "shape": [
+      10,
+      7
+    ],
+    "finite": true,
+    "min": -1.0,
+    "max": 0.009381592273712158,
+    "std": 0.34671410924812085,
+    "per_dim_min": [
+      -0.033516108989715576,
+      -0.33566439151763916,
+      -0.08563923835754395,
+      -0.001850120723247528,
+      0.0012135058641433716,
+      -0.0010561496019363403,
+      -1.0
+    ],
+    "per_dim_max": [
+      -6.198883056640625e-05,
+      0.009381592273712158,
+      0.007049858570098877,
+      -5.4195523262023926e-05,
+      0.003600791096687317,
+      0.004356950521469116,
+      -0.9985529184341431
+    ],
+    "peak_memory_allocated": 23416902144,
+    "torch_version": "2.5.1+cu121"
+  },
+  "elapsed_seconds": 134.5
+}

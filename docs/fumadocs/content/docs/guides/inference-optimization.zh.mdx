@@ -256,3 +256,241 @@ print(vae["requested"], vae["effective"], vae["fallbacks"])
   <Card title="模型" description="挑选 model ID 和默认 profile。" href="/zh/docs/guides/supported-models" />
   <Card title="Studio" description="Workspace 勾选与 load JSON。" href="/zh/docs/guides/studio" />
 </Cards>
+
+## 不引入 CUDA 同步的分阶段跟踪
+
+录制 Nsight Systems trace 时设置 `WORLDFOUNDRY_NVTX=1`。例如，把下列
+`inference.py` 换成现有推理脚本：
+
+```bash
+WORLDFOUNDRY_NVTX=1 nsys profile --trace=cuda,nvtx,osrt -o inference-trace python inference.py
+```
+
+标准 `NativeDiffusionRunner` 会标记 `worldfoundry.run`、`encode`、
+`denoise_step`、`denoiser.positive/negative` 和 `decode`。公共视频后处理、
+H.264 输出和打包 offload 分别标记 `worldfoundry.postprocess`、
+`worldfoundry.output.h264` 和 `worldfoundry.offload.h2d`。
+自定义 runner 仅继承其实际调用的公共方法中的标记。
+这些范围标记 CPU 提交工作的位置，不额外同步 CUDA，也不代表客户端显示延迟。
+未开启时不会导入 PyTorch 或探测 CUDA；无 CUDA 时为空操作。
+
+## offload 固定缓冲区与 GQA 兼容路径
+
+通过 Python 接口 `enable_layerwise_cpu_offload(..., reuse_buffers=True)` 显式开启后，连续权重会
+按 dtype 打包到对齐的 CPU 缓冲区，复用最多两个 CUDA 槽，并通过 CUDA event
+防止计算尚未结束时覆盖权重。报告新增 `buffer_mode` 和 `device_buffer_bytes`。
+非连续权重保留原布局，报告 `per-parameter`；也可用 `reuse_buffers=False`
+显式选择旧路径；默认仍为 `False`。
+
+打包路径要求 `torch.no_grad()` 或 `torch.inference_mode()`、顺序执行各层，
+且参数不共享底层存储。开启时拒绝 CUDA Graph capture 和 state-dict 操作。
+修改模型 dtype/device 或保存、加载权重前，先 disable。
+原地权重修改使用 `layerwise_offload_mutation_scope(layer)`；
+`handle.disable()` 会恢复 CPU 权重并移除 hook。
+固定槽改善的是显存和拷贝管理，并不保证所有层尺寸下吞吐都更高。
+
+公共 `scaled_dot_product_attention` 在显式选择 `backend="efficient"`，或兼容
+不支持 `enable_gqa` 的旧 SDPA 时，对 batch 相同的四维张量和共享 mask 使用
+分组 query 与零步长 K/V view。按 batch/head 指定的 mask 仍走显式 head 扩展。
+部分形状和布局仍可能触发 reshape 拷贝；原有 native GQA 选择保持不变。
+
+每个 case 使用独立进程比较：
+
+```bash
+python -m scripts.benchmark_runtime_buffers --case offload-legacy --output artifacts/offload-legacy.json
+python -m scripts.benchmark_runtime_buffers --case offload-packed --output artifacts/offload-packed.json
+python -m scripts.benchmark_runtime_buffers --case gqa-copy --output artifacts/gqa-copy.json
+python -m scripts.benchmark_runtime_buffers --case gqa-view --output artifacts/gqa-view.json
+```
+
+这些是排除 warmup 的合成组件测试，记录 CUDA-event 耗时和峰值 allocated 显存，
+不代表完整模型 FPS。设计参考 FlashDreams
+[#637](https://github.com/NVIDIA/flashdreams/pull/637)、
+[#632](https://github.com/NVIDIA/flashdreams/pull/632) 和
+[#634](https://github.com/NVIDIA/flashdreams/pull/634)。
+
+2026-09-18 的本地组件测量：单张 H100 80GB、PyTorch 2.5.1+cu121、FP16，
+每个独立进程 warmup 10 轮、测量 50 轮：
+
+| 用例 | CUDA 耗时中位数 | 峰值 allocated 显存 |
+| --- | ---: | ---: |
+| offload：原有逐参数拷贝 | 0.932 ms | 37.38 MiB |
+| offload：打包固定槽 | 1.514 ms | 37.38 MiB |
+| GQA：显式复制 K/V head | 0.419 ms | 82 MiB |
+| GQA：分组 view | 0.358 ms | 19 MiB |
+
+Offload 使用 8 个宽度 1024 的 Linear 层，batch 64。GQA 使用
+Q `[1,32,256,64]`、K/V `[1,8,8192,64]` 和 efficient SDPA。
+打包 offload 将 H2D 拷贝次数减半，但这个小层用例耗时更高，因此保持显式可选。
+选择前需对实际模型及层尺寸测量。峰值显存包含进程中所有存活 tensor，不只是权重。
+
+## Evoke 的 KV arena
+
+参考 FlashDreams [#635](https://github.com/NVIDIA/flashdreams/pull/635)，
+`KVSegmentArena` 为 `[static | current | memory]` 分配连续 K/V 存储。
+历史段只在创建时拷贝，后续仅写入当前段；attention 看到的长度精确等于有效 token 数。
+持久段必须是 arena 对应位置的真实 view，校验包括底层存储、offset、stride、dtype 和 device。
+
+Evoke 的普通推理 self-attention 已接入这一实现，默认关闭。用原生 transformer 显式开启：
+
+```python
+transformer.eval()
+transformer.enable_kv_cache(use_arena=True)
+# 对比原路径：transformer.enable_kv_cache(use_arena=False)
+```
+
+选择会保留到后续无参数的 `enable_kv_cache()` 调用，因此 pipeline 每轮重新启用缓存时仍有效。
+历史 key 在原有 RoPE 完成后进入 arena，不改变位置编码、attention 算法或历史淘汰策略。
+`clear_kv_cache()`、禁用缓存和首个去噪步骤都会丢弃旧 arena；当前块长度变化会重建。
+调用方仍须在历史内容或其 RoPE 变化时开始新的首步或清缓存。
+训练/autograd、NAViT、序列分片、历史权重放大和 `torch.compile` 保留原有路径。
+不同会话、不同层各自持有 arena，读写须在同一个 CUDA stream 上顺序执行。
+
+复现组件对比，每个命令运行于独立进程：
+
+```bash
+python -m scripts.benchmark_kv_arena --case cat --output artifacts/kv-cat.json
+python -m scripts.benchmark_kv_arena --case arena --output artifacts/kv-arena.json
+python -m scripts.benchmark_kv_arena --case evoke-cat --output artifacts/evoke-cat.json
+python -m scripts.benchmark_kv_arena --case evoke-arena --output artifacts/evoke-arena.json
+```
+
+默认使用 batch 1、16 heads、head dim 64、4096 history token、256 current token，
+独立 KV 用例另有 1024 memory token；Evoke 用例没有 memory 段。
+真实 Evoke attention 用例包含投影、归一化、RoPE、缓存和输出投影，使用随机权重。
+`--phase cache-build` 可测首步重建；`--dtype bfloat16 --heads 40 --head-dim 128`
+可切换到 Evoke 默认的 head 配置。
+
+2026-09-18，H100 80GB、PyTorch 2.5.1+cu121、FP16、10 轮 warmup、50 轮测量：
+
+| 用例（缓存复用步骤） | CUDA 中位数 | 峰值 allocated | 每步 `aten::cat` |
+| --- | ---: | ---: | ---: |
+| KV 组装 + SDPA，cat | 0.078 ms | 47.08 MiB | 2 |
+| KV 组装 + SDPA，arena | 0.045 ms | 27.08 MiB | 0 |
+| Evoke attention，cat | 0.915 ms | 116.65 MiB | 4 |
+| Evoke attention，arena | 0.819 ms | 100.15 MiB | 2 |
+
+Evoke 剩余的 `cat` 用于 attention 输出组装。首步仍需生成历史 KV 并建立 arena，
+因此复用步骤的收益不能直接当作整次请求收益。
+机器存在其他 GPU 负载，耗时只作本地参考；allocated 显存统计属于当前进程。
+当前环境的外部 FlashAttention 3 不可用，Evoke 实际回退到 PyTorch SDPA。
+这些测量不包含预训练整模型、视频质量或端到端 FPS，arena 因此保持显式可选。
+
+相同 token 配置下，切换到 BF16、40 heads × 128 后，单层结果如下：
+
+| 阶段 | cat CUDA 中位数 | arena CUDA 中位数 | cat 峰值 | arena 峰值 |
+| --- | ---: | ---: | ---: | ---: |
+| 缓存复用 | 1.785 ms | 1.553 ms | 596.09 MiB | 513.59 MiB |
+| 首步重建 | 8.192 ms | 8.164 ms | 774.06 MiB | 776.56 MiB |
+
+复用步骤的临时峰值减少 85 MiB，但常驻显存从 403.43 增加到 405.93 MiB。
+首步没有峰值显存收益，耗时差异也很小。每层额外常驻的 2.5 MiB 会累加，
+因此不能把单层复用步骤节省的 82.5 MiB 当成整个模型的显存节省。
+用 `--layers 40` 可以测量多个真实 attention 层的缓存同时驻留、逐层执行时的影响；
+该用例不含 MLP、残差、VAE 或预训练权重。
+
+40 层缓存同时驻留的实测结果（相同 BF16、40 heads × 128 和 token 配置）：
+
+| 实现 | CUDA 中位数 | 峰值 allocated | 每步 `aten::cat` |
+| --- | ---: | ---: | ---: |
+| cat | 90.858 ms | 13218.38 MiB | 160 |
+| arena | 80.479 ms | 13233.38 MiB | 80 |
+
+这组测量中耗时减少约 11.4%，但常驻显存增加 100 MiB，临时峰值减少 85 MiB，
+最终峰值增加 15 MiB。因此保留为可选的吞吐优化，不能据单层结果默认视为省显存优化。
+共享 GPU 上的耗时仍需在实际模型和部署负载下复测。
+
+```bash
+python -m scripts.benchmark_kv_arena --case evoke-cat --dtype bfloat16 --heads 40 --head-dim 128 --layers 40 --output artifacts/kv-stack40-cat.json
+python -m scripts.benchmark_kv_arena --case evoke-arena --dtype bfloat16 --heads 40 --head-dim 128 --layers 40 --output artifacts/kv-stack40-arena.json
+```
+
+验证通过 47 项 arena 相关测试，包括 FP16/BF16 多块多步逐元素一致性、40 × 128 的真实 attention、
+RoPE 更新、空历史、块长变化、会话隔离、训练回退、缓存清理和 arena 原语的 CUDA graph replay。
+包含 GQA、offload、NVTX 和 SDPA 兼容性在内的定向回归共 77 项通过。
+完整模型的 CUDA Graph、外部 FlashAttention 3 和预训练视频质量未在这次验证中覆盖。
+[原始测量与每轮样本](/measurements/kv-arena-2026-09-18.json)保留了全部十组结果。
+
+## 其他模型的迁移检查
+
+2026-09-18 的代码检查按实际 attention/cache 路径判断适用性。同名的 KV cache
+可能保存 RoPE 前的 key、RoPE 后的 key，或线性 attention 的状态矩阵，不能统一替换。
+
+| 模型 / 路径 | 发现与处理 |
+| --- | --- |
+| **LongCat-Video，缓存续写** | 可选优化，默认关闭。开启后将历史缓存的 batch `repeat` 改用只读广播；RoPE 只旋转当前 query，省去整段历史 query 的填充和计算。完整 key 仍按原位置旋转，没有新增常驻 arena。 |
+| **H-RDT，self/cross-attention** | 可选优化，默认关闭。开启后将原始 KV heads 交给公共 SDPA 的 GQA 路径；只整理小尺寸 V 的末维 stride。单 batch 的 padding mask 用共享二维 view；显式 cuDNN、cuDNN+efficient，以及多 batch 的 efficient 专属 padding mask 保留原 head 展开。 |
+| **HY-Embodied-VLA，MoT SDPA 分支** | 下一优先项：`_sdpa_attention_forward_mot` 仍显式重复 K/V heads。需对齐视觉片段、padding、因果 mask；dual-tower eager 分支另有 FP32 计算和有限负值 mask 语义，不能一起替换。 |
+| **Zing** | `SelfAttention.forward` 每步拼接历史 raw K/V，再对完整 key 做 RoPE。可研究复用预留空间和块内静态 RoPE；须覆盖 active/final 提交、prompt 切换、sink/pinned block 和裁剪。 |
+| **Gamma-World** | causal 路径已有原地写入；重点是 `disable_kv_cache_update` 与 sink/window 分支的拼接。仓库内的 list-cache wrapper 不等于当前推理入口已经使用它，需先确认热点路径。 |
+| **LingBot-World、Self-Forcing、RCM、MoVerse fused memrope** | 已有固定缓存或等价的复用机制。RCM 推理入口显式设 `fast_infer=True` 并调用 `write_transient`；不应再叠加一份历史 arena。MoVerse 其他 RoPE/EMA 路径需分别检查。 |
+| **Echo Infinity** | 窗口位置与相对 RoPE 会变化，不能直接持久化旋转后的历史 key。需要以窗口/位置版本为单位失效，先测重新旋转的开销。 |
+| **Galaxea-VLA、Xiaomi-Robotics-1** | 暂不直接迁移。Galaxea 有 soft-capping 和混合模块语义；Xiaomi 的历史是分组 KV，当前块是完整 heads，不能简单删掉 `repeat_interleave`。 |
+| **Sana 线性 attention** | 主要缓存递推状态矩阵，优先检查状态更新和融合 kernel，不属于 token KV arena 的同一种布局。 |
+
+公共 offload 的后续候选包括 **Wan 2.1/2.2、HunyuanVideo、Cosmos、LTX、Sana**：
+它们的原生组件已经声明 `layer_container`，可以测试打包固定槽。但公共 loader
+目前没有默认启用 `reuse_buffers=True`，此前的小层测量也没有证明它普遍更快。
+需要按实际层尺寸、dtype、量化及 CPU/GPU 带宽分别测量。
+走 `NativeDiffusionRunner` 的模型已共享 NVTX 标记，自定义自回归 runner 需要补其实际阶段。
+
+LongCat 和 H-RDT 的这两项优化均为**默认关闭、分别选择开启**。
+它们保持数学计算语义，但 H-RDT 的不同浮点计算布局不保证逐位一致，
+且两者尚未完成预训练整模型质量验证；组件数值回归通过不等于质量认证。
+
+| 环境变量 | 默认 / 关闭 | 开启后的作用 |
+| --- | --- | --- |
+| `WORLDFOUNDRY_HRDT_GQA_OPTIMIZATION` | 未设置或 `0` | `1`：启用 H-RDT GQA 存储优化 |
+| `WORLDFOUNDRY_LONGCAT_KV_OPTIMIZATION` | 未设置或 `0` | `1`：启用 LongCat 历史 KV 广播和当前 query RoPE |
+
+生成命令和 prompt 用法不变，按需在启动前设置对应环境变量：
+
+```bash
+# 按模型独立选择；要关闭，把对应的 1 改为 0，或 unset 该变量。
+export WORLDFOUNDRY_HRDT_GQA_OPTIMIZATION=1
+export WORLDFOUNDRY_LONGCAT_KV_OPTIMIZATION=1
+```
+
+环境变量在模型构造时读取；修改后须重新加载模型，常驻服务须重载或重启。
+关闭时恢复原有 head 展开、四维 padding mask，以及 LongCat 的 batch repeat / 完整 query RoPE 路径。
+直接构造 attention 模块时，也可分别传 `enable_gqa_optimization=False/True`
+或 `enable_kv_optimization=False/True`；显式参数优先于环境变量。
+Evoke KV arena 与 packed offload 继续保持各自的默认关闭策略。
+
+复现组件对照时，脚本的 `--mode baseline/optimized` 显式关闭/开启对应优化，覆盖环境变量设置：
+
+```bash
+python -m scripts.benchmark_model_attention --model h-rdt-cross --mode baseline --output artifacts/hrdt-before.json
+python -m scripts.benchmark_model_attention --model h-rdt-cross --mode optimized --output artifacts/hrdt-after.json
+python -m scripts.benchmark_model_attention --model h-rdt-cross --mode baseline --mask padding --output artifacts/hrdt-mask-before.json
+python -m scripts.benchmark_model_attention --model h-rdt-cross --mode optimized --mask padding --output artifacts/hrdt-mask-after.json
+python -m scripts.benchmark_model_attention --model longcat --mode baseline --batch 2 --output artifacts/longcat-before.json
+python -m scripts.benchmark_model_attention --model longcat --mode optimized --batch 2 --output artifacts/longcat-after.json
+```
+
+H-RDT 默认用 efficient SDPA、16 Q heads / 4 KV heads；LongCat 用 16 heads，
+该环境 FA3 不可用，实际走 SDPA fallback。两者均为 head dim 64、256 query token、
+4096 condition/history token、BF16、随机权重；10 轮 warmup 后测 50 轮，每组独立进程。
+LongCat 的基准网格为 `(1, 1, 256)`，用于控制 token 数；不是视频分辨率或整模型 FPS 测试。
+
+以下结果在停止占用 GPU 的 `gg` 进程、确认 GPU 空闲后测得，环境为 H100 80GB、
+PyTorch 2.5.1+cu121。耗时为 CUDA event 中位数，显存为组件进程的 PyTorch allocated 峰值。
+
+| 组件 / 场景 | 原耗时 → 优化后 | 耗时降低 | 峰值显存：原值 → 优化后 |
+| --- | --- | --- | --- |
+| H-RDT cross-attention，无 mask，B=1 | 0.451 → 0.427 ms | 5.4% | 67.00 → 62.00 MiB（−5.00 MiB） |
+| H-RDT cross-attention，padding mask，B=1 | 0.592 → 0.573 ms | 3.2% | 69.01 → 62.00 MiB（约 −7.00 MiB） |
+| LongCat 缓存续写，B=2，共享 B=1 历史 | 1.044 → 0.902 ms | 13.6% | 322.20 → 240.20 MiB（−82.00 MiB） |
+
+这三组的常驻 allocated 显存均不增加。LongCat 每步 `repeat` 从 2 次降为 0 次，
+`cat` 从 5 次降为 4 次；历史 K/V 的拼接仍然存在。耗时是一次本地组件对照的观测值，
+不能直接推算整模型收益。[原始测量与每轮样本](/measurements/model-attention-2026-09-18.json)
+包含六个独立进程的结果、实际 attention kernel、源码哈希和验证命令。
+
+开关接入后，107 项定向回归通过，覆盖默认关闭、显式开关、环境变量优先级、模型间开关独立性，
+以及 FP16/BF16、self/cross-attention、padding/全遮挡 mask、
+batch 1/2、GQA/MHA、梯度、不同历史长度、缓存替换和 3D RoPE query 偏移。
+关闭优化后的已测输出与旧实现逐元素一致；开启后，LongCat 的已测多步输出仍逐元素一致，
+H-RDT 的不同 SDPA 布局用数值容差比较。
+上述原始性能记录保留引入开关前的源码哈希与当时的 49 项验证结果。
+验证范围为单卡组件；完整模型、视频/动作质量和多卡 context parallel 尚未覆盖。

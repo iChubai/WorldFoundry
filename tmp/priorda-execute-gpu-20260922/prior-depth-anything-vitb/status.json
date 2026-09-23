@@ -1,0 +1,5 @@
+{
+  "status": "generated",
+  "validation_correction": "tmp/priorda-execute-gpu-20260922/prior-depth-anything-vitb/initial-validator-failure.json",
+  "scope": "Official sample-2 actual low-resolution prior144x192 is bilinearly resized by the public pipeline to RGB384x512. Initial validator wrongly required output equal low-resolution prior shape; GPU inference itself succeeded. Raw numeric units retained; no inferred meter calibration."
+}

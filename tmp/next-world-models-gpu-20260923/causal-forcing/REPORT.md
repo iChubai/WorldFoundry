@@ -1,0 +1,9 @@
+# Causal-Forcing local GPU validation
+
+The public `CausalForcingPipeline` launched the in-tree official inference route with the local chunkwise checkpoint and Wan base assets on GPU 2. A text prompt for a red teapot produced an 81-frame, 832×480 MP4. All frames decoded. The sampled frames in `contact.jpg` retain the teapot and window scene, but show very little motion, so this run establishes inference and output structure rather than convincing video dynamics.
+
+Evidence: `status.json`, `generated.mp4`, `contact.jpg`, and `result-summary.json`. The recorded configuration used 21 latent output frames and seed 42.
+
+The framewise and Causal-Forcing++ two-step checkpoints were also tested with their matching configs, each producing 81 decodable 832×480 frames on GPUs 2 and 3. Their weights contain only `generator_ema`, whereas chunkwise contains only `generator`; selecting the matching EMA flag fixed the validation harness's initial `KeyError: generator`. The framewise clip pans until part of the teapot leaves the frame. The two-step clip stays coherent but moves very little. Evidence: `../causal-forcing-framewise/{status.json,generated.mp4,contact.jpg}` and `../causal-forcing-2step/{status.json,generated.mp4,contact.jpg}`.
+
+The Causal-Forcing++ one-step checkpoint was then tested on GPU 2 with its matching config and `generator_ema`. It generated 81 decodable 832×480 frames; SHA-256 is in `../causal-forcing-1step/status.json`. The five-frame contact retains the teapot, table and window but is nearly static (mean decoded adjacent-frame absolute RGB difference 0.519/255, first-to-last 6.581/255). Evidence: `../causal-forcing-1step/{status.json,generated.mp4,contact.jpg}`. These runs establish short configured inference and recognizable output, not broad video dynamics or control semantics.

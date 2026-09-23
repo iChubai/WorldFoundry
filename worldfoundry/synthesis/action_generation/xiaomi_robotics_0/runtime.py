@@ -311,7 +311,7 @@ class XiaomiRobotics0Runtime:
             ) from exc
 
         from worldfoundry.core.attention import resolve_transformers_attention_implementation
-        from worldfoundry.core.device import resolve_inference_device, resolve_inference_dtype
+        from worldfoundry.core.execution.device import resolve_inference_device, resolve_inference_dtype
 
         from .modeling_mibot import MiBoTForActionGeneration
         from .processing_mibot import MiBotProcessor

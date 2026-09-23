@@ -1,0 +1,10 @@
+{
+  "case": "sana-video-2b-480p",
+  "started_at": 1790006518.0125024,
+  "gpu": "3",
+  "status": "generated",
+  "videos": [
+    "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/WorldFoundry/tmp/sana-video-gpu-20260921/sana-video-2b-480p/demo.mp4"
+  ],
+  "elapsed_seconds": 182.75
+}

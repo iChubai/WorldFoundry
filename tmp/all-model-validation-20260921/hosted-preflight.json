@@ -1,0 +1,152 @@
+[
+  {
+    "model_id": "hailuo-2p3",
+    "target": "worldfoundry.pipelines.minimax.pipeline_hailuo_2p3:Hailuo2p3Pipeline",
+    "credential_env_present": {
+      "MINIMAX_API_KEY": false,
+      "HAILUO_API_KEY": false
+    },
+    "endpoint_env_present": {},
+    "source_sha256": "9f1b7f51df3ac651da02087ceb1025d6e55c4244254fb482812cab119f9a9359",
+    "checked_at": 1789992691.9776003,
+    "inference_performed": false,
+    "status": "blocked_external",
+    "reason": "MiniMax Hailuo API key is required. Pass api_key or set MINIMAX_API_KEY/HAILUO_API_KEY."
+  },
+  {
+    "model_id": "kling-api",
+    "target": "worldfoundry.pipelines.kling.pipeline_kling_api:KlingApiPipeline",
+    "credential_env_present": {
+      "KLING_API_KEY": false,
+      "KLING_ACCESS_TOKEN": false
+    },
+    "endpoint_env_present": {},
+    "source_sha256": "ebc69fb7573ad7944f88975ebd089cdac03e9ebfe03e0f5ef79b4b0a301f2da0",
+    "checked_at": 1789992692.0805385,
+    "inference_performed": false,
+    "status": "blocked_external",
+    "reason": "Kling API key is required. Pass api_key or set KLING_API_KEY/KLING_ACCESS_TOKEN."
+  },
+  {
+    "model_id": "luma-ray2",
+    "target": "worldfoundry.pipelines.luma.pipeline_luma_ray2:LumaRay2Pipeline",
+    "credential_env_present": {
+      "LUMA_API_KEY": false,
+      "LUMALABS_API_KEY": false
+    },
+    "endpoint_env_present": {},
+    "source_sha256": "0816114be2d75ec98319f4de6a801e32351efb4c165f23d8fbb247d47f1ac842",
+    "checked_at": 1789992692.1613379,
+    "inference_performed": false,
+    "status": "blocked_external",
+    "reason": "Luma API key is required. Pass api_key or set LUMA_API_KEY/LUMALABS_API_KEY."
+  },
+  {
+    "model_id": "runway-gen4p5",
+    "target": "worldfoundry.pipelines.runway.pipeline_runway_gen4p5:RunwayGen4p5Pipeline",
+    "credential_env_present": {},
+    "endpoint_env_present": {},
+    "source_sha256": "444b51c75c29882b0409aad7c01f60e5b8f4f6d857586d3e78a9af5a9c92ad1d",
+    "checked_at": 1789992692.2492702,
+    "inference_performed": false,
+    "status": "blocked_external",
+    "reason": "Runway API key is required. Pass api_key or set RUNWAY_API_KEY."
+  },
+  {
+    "model_id": "sora2",
+    "target": "worldfoundry.pipelines.sora.pipeline_sora2:Sora2Pipeline",
+    "credential_env_present": {
+      "SORA2_API_KEY": false,
+      "SORA_API_KEY": false,
+      "OPENAI_API_KEY": false
+    },
+    "endpoint_env_present": {
+      "SORA2_ENDPOINT": false,
+      "SORA_ENDPOINT": false,
+      "OPENAI_BASE_URL": false
+    },
+    "source_sha256": "d314d2b147fbdafd3df2d8d770fdb7741237a7513b673e4295707354401561cf",
+    "checked_at": 1789992692.3369727,
+    "inference_performed": false,
+    "status": "blocked_external",
+    "reason": "Sora2 API key is required. Pass api_key or set SORA2_API_KEY/SORA_API_KEY/OPENAI_API_KEY."
+  },
+  {
+    "model_id": "veo3",
+    "target": "worldfoundry.pipelines.veo.pipeline_veo3:Veo3Pipeline",
+    "credential_env_present": {
+      "VEO3_API_KEY": false,
+      "VEO_API_KEY": false,
+      "OPENAI_API_KEY": false
+    },
+    "endpoint_env_present": {
+      "VEO3_ENDPOINT": false,
+      "VEO_ENDPOINT": false,
+      "OPENAI_BASE_URL": false
+    },
+    "source_sha256": "1c67c4d752b824b0438daa75629c02e6ed8e2a528a9d568db40083238778edd8",
+    "checked_at": 1789992692.4170253,
+    "inference_performed": false,
+    "status": "blocked_external",
+    "reason": "Veo3 endpoint is required. Pass endpoint or set VEO3_ENDPOINT/VEO_ENDPOINT/OPENAI_BASE_URL."
+  },
+  {
+    "model_id": "wan-2p5",
+    "target": "worldfoundry.pipelines.wan.pipeline_wan_2p5:Wan2p5Pipeline",
+    "credential_env_present": {
+      "DASHSCOPE_API_KEY": false,
+      "WAN_API_KEY": false,
+      "ALIYUN_API_KEY": false
+    },
+    "endpoint_env_present": {},
+    "source_sha256": "decc543ec578f818d9d32f4fa668a5d7b052f56f7a19f9fb0a43b8ac48343c96",
+    "checked_at": 1789992692.519671,
+    "inference_performed": false,
+    "status": "blocked_external",
+    "reason": "Wan2.5 API key is required. Pass api_key or set DASHSCOPE_API_KEY/WAN_API_KEY/ALIYUN_API_KEY."
+  },
+  {
+    "model_id": "wan-2p6",
+    "target": "worldfoundry.pipelines.wan.pipeline_wan_2p6:Wan2p6Pipeline",
+    "credential_env_present": {
+      "DASHSCOPE_API_KEY": false,
+      "WAN_API_KEY": false,
+      "ALIYUN_API_KEY": false
+    },
+    "endpoint_env_present": {},
+    "source_sha256": "aa73362c224099858ed4f80379b1c8065702e47d5c25d9a86bce60f383ac6d8b",
+    "checked_at": 1789992692.5670626,
+    "inference_performed": false,
+    "status": "blocked_external",
+    "reason": "Wan2.6 API key is required. Pass api_key or set DASHSCOPE_API_KEY/WAN_API_KEY/ALIYUN_API_KEY."
+  },
+  {
+    "model_id": "wan-2p7",
+    "target": "worldfoundry.pipelines.wan.pipeline_wan_2p7:Wan2p7Pipeline",
+    "credential_env_present": {
+      "DASHSCOPE_API_KEY": false,
+      "WAN_API_KEY": false,
+      "ALIYUN_API_KEY": false
+    },
+    "endpoint_env_present": {},
+    "source_sha256": "9f92f49ae627bab342eacd78011026df79846ded236afe12034ef922b986f235",
+    "checked_at": 1789992692.6060414,
+    "inference_performed": false,
+    "status": "blocked_external",
+    "reason": "Wan2.7 API key is required. Pass api_key or set DASHSCOPE_API_KEY/WAN_API_KEY/ALIYUN_API_KEY."
+  },
+  {
+    "model_id": "worldlabs",
+    "target": "worldfoundry.pipelines.worldlabs.pipeline_worldlabs:WorldLabsPipeline",
+    "credential_env_present": {
+      "WORLDLABS_API_KEY": false,
+      "WLT_API_KEY": false
+    },
+    "endpoint_env_present": {},
+    "source_sha256": "5e4119c4799803981938f09aabf1cc43684d7586cf4933d44106c715c10d7fc5",
+    "checked_at": 1789992692.873271,
+    "inference_performed": false,
+    "status": "blocked_external",
+    "reason": "World Labs API key is required. Pass api_key or set WORLDLABS_API_KEY/WLT_API_KEY."
+  }
+]

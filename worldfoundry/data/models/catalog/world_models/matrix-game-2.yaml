@@ -114,8 +114,12 @@ variants:
     fps=12, seed=42.'
   - 'Output contract: official and WorldFoundry runner demos emit matrix_game2_*_universal_seed42_15f.mp4
     plus sidecar JSON under the caller output directory.'
-  - 'WorldScore/VBench validation status: runner_contract_ready_gpu_parity_pending. VBench
-    can probe the 15-frame mp4; WorldScore still requires its official static/dynamic
+  - 'The 15-frame parameter counts latent frames: both GPU entrypoints produced
+    57 decoded RGB frames at 640x352/12fps. The repaired action tensors match
+    official source exactly and decoded video mean RGB absolute difference is
+    4.762; this is near visual parity, not bitwise equality.'
+  - 'WorldScore/VBench validation status: short GPU parity verified, benchmark
+    scoring pending. VBench can probe the 57-frame mp4; WorldScore still requires its official static/dynamic
     tree with image_data.json, frames, videos/output.mp4, and static camera_data.json.'
   provider: official_repo
   runtime_profile: matrix-game-2-universal-ref-image-seed42-15f
@@ -135,10 +139,11 @@ runner_parity:
       min_width: 600
   - path: matrix_game2_worldfoundry_universal_seed42_15f.json
   notes: >-
-    The current MatrixGame2Pipeline supports the official default settings:
-    num_frames=150, fps=12, seed=42, size=[352,640], official_bench_actions=true,
-    and the Matrix-Game-2.0 checkpoint. Per-run artifact checks are tracked outside
-    the catalog.
+    The MatrixGame2Pipeline supports official benchmark actions and the
+    Matrix-Game-2.0 checkpoint. GPU comparison used 15 latent frames, fps=12,
+    seed=42, size=[352,640], and official_bench_actions=true; full 150-latent-frame
+    rollout and benchmark scoring remain unverified. Per-run artifacts are tracked
+    outside the catalog.
   status: verified
 catalog_category: world_models
 catalog_scope: world-model/interactive starred models

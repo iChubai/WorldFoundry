@@ -1,12 +1,12 @@
 {
-  "total": 268,
+  "total": 267,
   "categories": [
     {
       "id": "video",
       "label": "Video",
       "label_zh": "视频",
       "description": "Video, image, and audio-visual generation or editing runtimes.",
-      "count": 58
+      "count": 57
     },
     {
       "id": "world_models",
@@ -61051,7 +61051,12 @@
       ],
       "checkpoints": [
         {
-          "id": "lpiccinelli/unidepth-v2-vitl14"
+          "id": "lpiccinelli/unidepth-v2-vitl14",
+          "revision": "1d0d3c52f60b5164629d279bb9a7546458e6dcc4"
+        },
+        {
+          "id": "lpiccinelli/unidepth-v2-vitl14",
+          "license": "cc-by-nc-4.0"
         }
       ],
       "variants": [],
@@ -61224,7 +61229,8 @@
       ],
       "notes": [
         "Integrated as an independent geometric prior at worldfoundry/base_models/three_dimensions/depth/unidepth.",
-        "The default checkpoint is resolved through Hugging Face from lpiccinelli/unidepth-v2-vitl14 or an explicit local model_path override.",
+        "The shared loader uses the registered local model directory or HF snapshot 1d0d3c52f60b5164629d279bb9a7546458e6dcc4 with the matching upstream V2 compatibility decoder and canonical DINOv2 backbone; weight loading is strict.",
+        "The pinned decoder requires xformers.components.attention; tested with xformers 0.0.28.post3.",
         "The upstream release is CC-BY-NC-4.0; downstream users must respect the non-commercial license terms when enabling this prior.",
         "Real checkpoint inference and official point export are verified through the shared geometry-prior pipeline/operator contract and Workspace route.",
         "Independent base-model profile for the UniDepth V2 prior under worldfoundry.base_models.three_dimensions.depth.unidepth.",
@@ -82452,7 +82458,7 @@
         "notes": [
           "The policy requires three configured camera views and a 14D state for the bundled RoboTwin mapping; single-image replication is opt-in because it changes model semantics.",
           "The model is constructed on the meta device and checkpoint tensors stream directly to the selected device/dtype, avoiding a second full FP32 model during startup.",
-          "Device and dtype selection is provided by worldfoundry.core.device across pre-Ampere, Ampere, Ada, Hopper, and newer CUDA architectures.",
+          "Device and dtype selection is provided by worldfoundry.core.execution.device across pre-Ampere, Ampere, Ada, Hopper, and newer CUDA architectures.",
           "The selectable base policy was staged from ModelScope and its core blobs match the pinned Hugging Face revision by exact size and SHA-256; it is a pretraining checkpoint, so task-level numerical parity is not claimed.",
           "This is an inference-only environment. The in-tree policy and preprocessing code have no LeRobot, datasets, trainer, or external source-checkout dependency."
         ]
@@ -82966,7 +82972,7 @@
         "Full demo parity requires staging the public checkpoint and its Qwen2.5-VL processor assets.",
         "The policy requires three configured camera views and a 14D state for the bundled RoboTwin mapping; single-image replication is opt-in because it changes model semantics.",
         "The model is constructed on the meta device and checkpoint tensors stream directly to the selected device/dtype, avoiding a second full FP32 model during startup.",
-        "Device and dtype selection is provided by worldfoundry.core.device across pre-Ampere, Ampere, Ada, Hopper, and newer CUDA architectures.",
+        "Device and dtype selection is provided by worldfoundry.core.execution.device across pre-Ampere, Ampere, Ada, Hopper, and newer CUDA architectures.",
         "The selectable base policy was staged from ModelScope and its core blobs match the pinned Hugging Face revision by exact size and SHA-256; it is a pretraining checkpoint, so task-level numerical parity is not claimed."
       ],
       "docs": {
@@ -106151,251 +106157,6 @@
         "run": "worldfoundry-eval run \\\n  spatial-forcing-libero-spatial \\\n  --pipeline.task-profile vla.policy_rollout \\\n  --pipeline.prompt \"Describe the desired output.\" \\\n  --pipeline.image /path/to/input \\\n  --pipeline.state VALUE \\\n  --json"
       },
       "catalogPath": "worldfoundry/data/models/catalog/vla_va_wam/spatial-forcing.yaml"
-    },
-    {
-      "id": "thinksound",
-      "name": "ThinkSound",
-      "category": "video",
-      "categoryLabel": "Video",
-      "categoryLabelZh": "视频",
-      "provider": "Alibaba (Tongyi FunAudioLLM)",
-      "summary": "ThinkSound is Alibaba FunAudioLLM's video-to-audio generation model that uses chain-of-thought style reasoning to decide what a scene should sound like before synthesizing audio.",
-      "aliases": [
-        "FunAudioLLM/ThinkSound"
-      ],
-      "tasks": [
-        "video-to-audio",
-        "audio-generation"
-      ],
-      "status": {
-        "group": "profile",
-        "label": "Metadata Only",
-        "integration": "metadata_only",
-        "runner": "pending",
-        "demo": "not_recorded"
-      },
-      "runtime": {
-        "profileId": "thinksound",
-        "bindingId": "thinksound",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
-        "runner": "worldfoundry.pipeline",
-        "pipelineTarget": "worldfoundry.pipelines.video_official.pipeline_official_video:ThinkSoundPipeline",
-        "loadingMethod": "from_pretrained",
-        "invocationMode": "native_or_standard_invocation",
-        "backendStage": "official_runtime_bridge",
-        "runtimeStatus": "pending_checkpoint_and_in_tree_runtime",
-        "environmentId": "_unified",
-        "environmentName": "worldfoundry-unified-cu128",
-        "environmentKind": "unified",
-        "python": "3.11",
-        "cudaProfile": "cu128",
-        "cudaLabel": "CUDA 12.8",
-        "driverStatus": "compatible_unified_default",
-        "condaPackages": [
-          "python=3.11",
-          "pip",
-          "ffmpeg",
-          "setuptools",
-          "wheel"
-        ],
-        "pipPackages": [
-          "torch",
-          "torchvision",
-          "torchaudio",
-          "xfuser"
-        ],
-        "packageVersions": {
-          "torch": "torch",
-          "torchvision": "torchvision",
-          "torchaudio": "torchaudio",
-          "xfuser": "xfuser"
-        },
-        "validationImports": [
-          "torch",
-          "torchvision",
-          "numpy",
-          "transformers",
-          "diffusers",
-          "xfuser",
-          "worldfoundry"
-        ],
-        "notes": [
-          "Default unified WorldFoundry runtime for modern NVIDIA hosts. Install with `bash scripts/setup/unified_install.sh`.",
-          "Override tier with `--cuda cu124` or `--cuda cu121` when an upstream model still pins an older CUDA wheel bucket.",
-          "Source the environment file emitted by `scripts/setup/unified_install.sh` so WORLDFOUNDRY_USE_UNIFIED_ENV=1 routes compatible profiles here.",
-          "Runnable GPU models that previously used cu113/cu118/cu124 CUDA buckets are mapped to this tier when they do not carry hard ABI pins requiring isolation."
-        ]
-      },
-      "sources": [
-        {
-          "kind": "source",
-          "label": "GitHub",
-          "url": "https://huggingface.co/FunAudioLLM/ThinkSound"
-        }
-      ],
-      "checkpoints": [
-        {
-          "id": "FunAudioLLM/ThinkSound",
-          "role": "audio_checkpoint"
-        }
-      ],
-      "variants": [],
-      "inferenceTasks": [
-        {
-          "id": "video-to-audio",
-          "label": "Video To Audio",
-          "description": "Catalog task profile used by the model runtime.",
-          "source": "catalog",
-          "variantIds": [],
-          "inputs": [
-            {
-              "field": "prompt",
-              "detail": "Required",
-              "kind": "string",
-              "target": "input",
-              "required": true,
-              "description": "Recorded input field from the runtime profile."
-            },
-            {
-              "field": "video",
-              "detail": "optional",
-              "kind": "string",
-              "target": "input",
-              "required": false,
-              "description": "Recorded input field from the runtime profile."
-            }
-          ],
-          "artifacts": [
-            {
-              "kind": "generated_audio",
-              "filename": "thinksound.wav"
-            }
-          ]
-        },
-        {
-          "id": "audio-generation",
-          "label": "Audio Generation",
-          "description": "Catalog task profile used by the model runtime.",
-          "source": "catalog",
-          "variantIds": [],
-          "inputs": [
-            {
-              "field": "prompt",
-              "detail": "Required",
-              "kind": "string",
-              "target": "input",
-              "required": true,
-              "description": "Recorded input field from the runtime profile."
-            },
-            {
-              "field": "video",
-              "detail": "optional",
-              "kind": "string",
-              "target": "input",
-              "required": false,
-              "description": "Recorded input field from the runtime profile."
-            }
-          ],
-          "artifacts": [
-            {
-              "kind": "generated_audio",
-              "filename": "thinksound.wav"
-            }
-          ]
-        }
-      ],
-      "inputContract": [
-        {
-          "field": "prompt",
-          "detail": "Required"
-        },
-        {
-          "field": "video",
-          "detail": "optional"
-        }
-      ],
-      "artifacts": [
-        {
-          "kind": "generated_audio",
-          "filename": "thinksound.wav"
-        }
-      ],
-      "notes": [
-        "Hidden from Studio until the infer-only runtime and ThinkSound diffusion checkpoint are both available in-tree/Hugging Face cache.",
-        "Checkpoint-backed artifact parity is blocked by the missing `thinksound.ckpt` diffusion checkpoint."
-      ],
-      "docs": {
-        "curated": true,
-        "publisher": {
-          "name": "Alibaba (Tongyi FunAudioLLM)",
-          "nameZh": "阿里巴巴（通义 FunAudioLLM）",
-          "kind": "company"
-        },
-        "overview": [
-          "ThinkSound is Alibaba FunAudioLLM's video-to-audio generation model that uses chain-of-thought style reasoning to decide what a scene should sound like before synthesizing audio. In this catalog it is currently metadata_only: the entry is hidden from Studio until the infer-only runtime and the ThinkSound diffusion checkpoint are both available."
-        ],
-        "overviewZh": [
-          "ThinkSound 是阿里通义 FunAudioLLM 的视频配音模型，用思维链式推理先判断场景应有的声音、再合成音频。本 catalog 中它目前为 metadata_only：在仅推理运行时与 ThinkSound 扩散 checkpoint 都就位之前，条目在 Studio 中隐藏。"
-        ],
-        "architecture": [
-          "Upstream describes a reasoning stage (audio-focused chain of thought) feeding a flow/ diffusion audio generator. This repository records only the prompt/video contract and the generated_audio artifact — internals are not recorded here."
-        ],
-        "architectureZh": [
-          "上游描述为「推理阶段（面向音频的思维链）+ 流/扩散音频生成器」。本仓库仅记录 prompt/video 契约与 generated_audio 产物——内部细节仓库未记录。"
-        ],
-        "usageNotes": [
-          "Not runnable yet: checkpoint-backed parity is blocked by the missing thinksound.ckpt diffusion checkpoint. Watch the integration status before planning any runs; MMAudio is the runnable video-to-audio alternative in this catalog."
-        ],
-        "usageNotesZh": [
-          "目前不可运行：checkpoint 加载一致性被缺失的 thinksound.ckpt 扩散 checkpoint 阻塞。计划运行前请先确认集成状态；catalog 中可运行的视频配音替代是 MMAudio。"
-        ],
-        "highlights": [
-          "Video To Audio",
-          "Audio Generation",
-          "Unified env · Python 3.11 · CUDA 12.8",
-          "Public Hugging Face weights"
-        ],
-        "highlightsZh": [
-          "video-to-audio",
-          "audio-generation",
-          "统一环境 · Python 3.11 · CUDA 12.8",
-          "公开的 Hugging Face 权重"
-        ],
-        "modalities": {
-          "inputs": [
-            "video"
-          ],
-          "outputs": [
-            "audio"
-          ]
-        },
-        "useCases": [],
-        "useCasesZh": [],
-        "hardware": {
-          "minVramGb": null,
-          "recommended": null,
-          "notes": []
-        },
-        "benchmarks": [],
-        "limitations": [
-          "Blocked: the thinksound.ckpt diffusion checkpoint is missing, so nothing runs.",
-          "Hidden from Studio until runtime and checkpoint are both in place."
-        ],
-        "limitationsZh": [
-          "阻塞中：缺少 thinksound.ckpt 扩散 checkpoint，无法运行。",
-          "运行时与 checkpoint 双双就位前，条目在 Studio 中隐藏。"
-        ],
-        "paper": null,
-        "figures": []
-      },
-      "commands": {
-        "prepare": "bash scripts/inference/prepare_model_infer.sh thinksound",
-        "install": "bash scripts/setup/model_env_install.sh --model thinksound",
-        "inspect": "worldfoundry-eval zoo model-show --model-id thinksound --include-manifest --json",
-        "check": "worldfoundry-eval zoo model-download --model-id thinksound --check-local --json",
-        "run": "worldfoundry-eval run \\\n  thinksound \\\n  --pipeline.task-profile video-to-audio \\\n  --pipeline.prompt \"Describe the desired output.\" \\\n  --json"
-      },
-      "catalogPath": "worldfoundry/data/models/catalog/video/thinksound.yaml"
     },
     {
       "id": "vlanext",

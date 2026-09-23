@@ -100,7 +100,7 @@ def _tokenizer_directory(location: str) -> Path:
 def _component_device(requested: str, policy_device: str, minimum_gib: float) -> str:
     import torch
 
-    from worldfoundry.core.device import resolve_inference_device
+    from worldfoundry.core.execution.device import resolve_inference_device
 
     choice = str(requested).strip().lower()
     if choice in {"policy", "same"}:
@@ -234,7 +234,7 @@ class AHAWAMRuntime:
 
         import torch
 
-        from worldfoundry.core.device import resolve_inference_device, resolve_inference_dtype
+        from worldfoundry.core.execution.device import resolve_inference_device, resolve_inference_dtype
 
         from .modeling import restore_ahawam_model
 

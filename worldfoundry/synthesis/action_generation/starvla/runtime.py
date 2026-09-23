@@ -331,7 +331,7 @@ class StarVLAPlanRuntime:
             return self._loaded
         import torch
 
-        from worldfoundry.core.device import resolve_inference_device, resolve_inference_dtype
+        from worldfoundry.core.execution.device import resolve_inference_device, resolve_inference_dtype
 
         from .modeling.base import load_starvla_model
 

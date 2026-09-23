@@ -1,0 +1,9 @@
+{
+  "model_id": "shotstream",
+  "status": "generated",
+  "gpu": "0",
+  "artifact": "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/WorldFoundry/tmp/next-world-models-gpu-20260923/shotstream/generated.mp4",
+  "decoded_frames": 81,
+  "artifact_sha256": "9078ef11ca97c232f623df25ef70beccf19e6828a01fcadd5e7811ae9c764f3b",
+  "elapsed_seconds": 347.71
+}

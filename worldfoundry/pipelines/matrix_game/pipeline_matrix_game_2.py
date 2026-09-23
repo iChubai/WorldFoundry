@@ -97,7 +97,8 @@ class MatrixGame2Pipeline(PipelineABC):
                 resize_H=352,
                 resize_W=640,
                 interaction_signal=None,
-                official_bench_actions: bool = False):
+                official_bench_actions: bool = False,
+                seed: Optional[int] = None):
         """
         the input_image is PIL image
         """
@@ -124,7 +125,7 @@ class MatrixGame2Pipeline(PipelineABC):
 
         num_frames = (num_output_frames - 1) * 4 + 1
         if official_bench_actions:
-            operator_condition = self.operators.process_official_bench_actions(num_frames=num_frames)
+            operator_condition = self.operators.process_official_bench_actions(num_frames=num_frames, seed=seed)
         else:
             # define the interaction
             self.operators.get_interaction(interaction_signal)
@@ -183,6 +184,7 @@ class MatrixGame2Pipeline(PipelineABC):
             resize_W=resize_W,
             interaction_signal=interactions,
             official_bench_actions=official_bench_actions,
+            seed=seed,
         )
         predict_kwargs = dict(kwds)
         runtime_predict = getattr(getattr(self.synthesis_model, "runtime", None), "predict", None)

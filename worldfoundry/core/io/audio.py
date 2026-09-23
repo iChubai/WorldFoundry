@@ -108,8 +108,9 @@ def mux_audio_video(
     output_path: str | Path | None = None,
     audio_codec: str = "aac",
     audio_bitrate: str = "192k",
+    shortest: bool = True,
 ) -> str:
-    """Mux an audio artifact into a video using ffmpeg with checked, atomic output."""
+    """Mux with checked, atomic output; ``shortest=False`` retains both full tracks."""
 
     video = Path(video_path).expanduser()
     audio = Path(audio_path).expanduser()
@@ -151,7 +152,7 @@ def mux_audio_video(
                 audio_codec,
                 "-b:a",
                 audio_bitrate,
-                "-shortest",
+                *(["-shortest"] if shortest else []),
                 str(temporary),
             ]
             try:

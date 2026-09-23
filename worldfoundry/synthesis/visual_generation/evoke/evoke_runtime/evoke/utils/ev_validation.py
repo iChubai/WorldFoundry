@@ -1,10 +1,12 @@
-"""V2V / camera-viz helpers: video/pose loading, RGB saving, trajectory + joystick overlay, GT|pred side-by-side."""
+"""V2V / camera-viz helpers: video/pose loading, joystick overlay, GT|pred side-by-side."""
 from __future__ import annotations
 
-import os
+from typing import TYPE_CHECKING
 
 import torch
-import torchvision
+
+if TYPE_CHECKING:
+    import numpy as np
 
 
 def load_ref_video_for_v2v(
@@ -123,7 +125,6 @@ def load_pose_for_v2v(
     """
     import numpy as np
     from evoke.utils.inference_geometry import (
-        compute_relative_poses_lingbot,
         resolve_intrinsic_source_resolution,
         transform_intrinsic_for_crop_resize,
     )
@@ -243,37 +244,6 @@ def _to_np_uint8_frames(video) -> "list[np.ndarray]":
     raise ValueError(f"unrecognized video type {type(video)}")
 
 
-def save_rgb_video(frames, filename: str, fps: float) -> None:
-    """Write list[H,W,3 uint8 RGB] to mp4 via cv2.VideoWriter (handles RGB->BGR internally)."""
-    import cv2
-    import numpy as np
-
-    out_dir = os.path.dirname(filename)
-    if out_dir:
-        os.makedirs(out_dir, exist_ok=True)
-
-    frames = _to_np_uint8_frames(frames)
-    if len(frames) == 0:
-        raise ValueError(f"save_rgb_video: empty frames, cannot write {filename}")
-
-    h, w = frames[0].shape[:2]
-    writer = cv2.VideoWriter(
-        filename,
-        cv2.VideoWriter_fourcc(*"mp4v"),
-        float(fps),
-        (w, h),
-    )
-    if not writer.isOpened():
-        raise RuntimeError(f"save_rgb_video: failed to open video writer for {filename}")
-
-    try:
-        for frame_rgb in frames:
-            frame_rgb = np.ascontiguousarray(frame_rgb)
-            writer.write(cv2.cvtColor(frame_rgb, cv2.COLOR_RGB2BGR))
-    finally:
-        writer.release()
-
-
 def _ensure_framewise_relative(c2ws_arr):
     """Convert absolute c2w sequence to framewise relative poses via SE3 inverse."""
     import numpy as np
@@ -290,119 +260,6 @@ def _ensure_framewise_relative(c2ws_arr):
         prev_inv[:3, 3] = t_inv
         out[k] = prev_inv @ c2ws_arr[k]
     return out
-
-
-def add_camera_trajectory_overlay(
-    video_frames,
-    c2ws_absolute,
-    panel_size: int = 160,
-    panel_margin: int = 12,
-    label: str = "cam top-down",
-):
-    """Overlay a camera XZ top-down trajectory mini-map with forward arrow in the bottom-right corner. Returns list[H,W,3 uint8 RGB]."""
-    import numpy as np
-
-    try:
-        import cv2
-    except ImportError:
-        print("[CamViz] WARNING: cv2 not available, trajectory overlay skipped")
-        return list(video_frames) if not isinstance(video_frames, list) else video_frames
-
-    if isinstance(video_frames, np.ndarray):
-        video_frames = [video_frames[i] for i in range(video_frames.shape[0])]
-    n_frames = len(video_frames)
-    if n_frames == 0:
-        return video_frames
-
-    if hasattr(c2ws_absolute, "cpu"):
-        c2ws_absolute = c2ws_absolute.cpu().numpy()
-    c2ws_absolute = np.asarray(c2ws_absolute, dtype=np.float32)
-    F_pix = c2ws_absolute.shape[0]
-
-    abs_c2ws = c2ws_absolute
-
-    positions = abs_c2ws[:, :3, 3]                 # [F, 3]
-    x_pos = positions[:, 0]
-    z_pos = -positions[:, 2]                       # negate Z so forward maps upward on screen
-    x_range = max(np.ptp(x_pos), 1e-3)
-    z_range = max(np.ptp(z_pos), 1e-3)
-    scale = (panel_size - 24) / max(x_range, z_range)
-    # center trajectory in panel
-    x_center_world = (x_pos.max() + x_pos.min()) / 2.0
-    z_center_world = (z_pos.max() + z_pos.min()) / 2.0
-
-    forward_world = abs_c2ws[:, :3, 2]              # [F, 3] camera +Z forward (OpenCV convention)
-
-    h, w = video_frames[0].shape[:2]
-    panel_x = w - panel_size - panel_margin
-    panel_y = h - panel_size - panel_margin
-    cx_panel = panel_size // 2
-    cz_panel = panel_size // 2
-
-    # map video frame index to c2w index (handles length mismatch)
-    if F_pix == n_frames:
-        idx_map = list(range(F_pix))
-    else:
-        idx_map = [min(int(round(i * (F_pix - 1) / max(n_frames - 1, 1))), F_pix - 1)
-                   for i in range(n_frames)]
-
-    def _to_panel(k):
-        px = int(panel_x + cx_panel + (x_pos[k] - x_center_world) * scale)
-        py = int(panel_y + cz_panel + (z_pos[k] - z_center_world) * scale)
-        return px, py
-
-    result = []
-    for pf in range(n_frames):
-        cidx = idx_map[pf]
-        frame_bgr = video_frames[pf][:, :, ::-1].copy()
-
-        # semi-transparent panel background
-        overlay = frame_bgr.copy()
-        cv2.rectangle(
-            overlay, (panel_x, panel_y), (panel_x + panel_size, panel_y + panel_size),
-            (35, 35, 35), -1,
-        )
-        cv2.addWeighted(overlay, 0.55, frame_bgr, 0.45, 0, frame_bgr)
-        cv2.rectangle(
-            frame_bgr, (panel_x, panel_y), (panel_x + panel_size, panel_y + panel_size),
-            (220, 220, 220), 1,
-        )
-
-        # center crosshair (world origin reference)
-        ox = panel_x + cx_panel
-        oz = panel_y + cz_panel
-        cv2.line(frame_bgr, (ox - 4, oz), (ox + 4, oz), (160, 160, 160), 1)
-        cv2.line(frame_bgr, (ox, oz - 4), (ox, oz + 4), (160, 160, 160), 1)
-
-        # draw cumulative trajectory polyline
-        pts = [_to_panel(k) for k in range(0, cidx + 1)]
-        if len(pts) >= 2:
-            for i in range(1, len(pts)):
-                cv2.line(frame_bgr, pts[i - 1], pts[i], (80, 220, 255), 1, cv2.LINE_AA)
-
-        # current position dot
-        if pts:
-            cv2.circle(frame_bgr, pts[-1], 3, (60, 255, 60), -1, cv2.LINE_AA)
-
-        # forward direction arrow
-        if cidx < F_pix and pts:
-            fwd = forward_world[cidx]
-            fx, fz = float(fwd[0]), -float(fwd[2])
-            magn = (fx * fx + fz * fz) ** 0.5 + 1e-6
-            arrow_len = max(panel_size // 8, 14)
-            tip = (
-                int(pts[-1][0] + fx / magn * arrow_len),
-                int(pts[-1][1] + fz / magn * arrow_len),
-            )
-            cv2.arrowedLine(frame_bgr, pts[-1], tip, (60, 220, 255), 2, cv2.LINE_AA, tipLength=0.35)
-
-        cv2.putText(
-            frame_bgr, label, (panel_x + 4, panel_y + 12),
-            cv2.FONT_HERSHEY_SIMPLEX, 0.38, (220, 220, 220), 1, cv2.LINE_AA,
-        )
-        result.append(frame_bgr[:, :, ::-1].copy())
-
-    return result
 
 
 # --------------------- joystick HUD: analytic fields, drawn supersampled ---------------------
@@ -684,7 +541,7 @@ def add_joystick_overlay_from_c2ws(
     import numpy as np
 
     try:
-        import cv2
+        import cv2  # noqa: F401 -- check the optional overlay backend before drawing
     except ImportError:
         print("[CamViz] cv2 not available, joystick overlay skipped")
         return list(video_frames) if not isinstance(video_frames, list) else video_frames
@@ -742,7 +599,6 @@ def _load_gt_video_rgb_for_viz(
     Exactly one of num_target_frames or target_frame_indices must be provided.
     """
     import cv2
-    import numpy as np
 
     assert (num_target_frames is None) != (target_frame_indices is None), (
         "exactly one of num_target_frames / target_frame_indices must be given"
@@ -972,7 +828,6 @@ def _load_warp_frames_from_dump_dir(
     from pathlib import Path
 
     import cv2
-    import numpy as np
 
     warp_dir = Path(warp_dump_dir)
     if not warp_dir.is_dir():

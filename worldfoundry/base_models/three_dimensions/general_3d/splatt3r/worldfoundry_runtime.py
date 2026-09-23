@@ -263,7 +263,9 @@ class Splatt3RRuntime:
         for item in loaded:
             item["img"] = item["img"].to(self.device)
             if "original_img" not in item:
-                item["original_img"] = item["img"]
+                # DUSt3R normalizes encoder inputs to [-1, 1], while the
+                # Gaussian color residual is anchored to RGB in [0, 1].
+                item["original_img"] = item["img"].add(1).mul(0.5)
             elif hasattr(item["original_img"], "to"):
                 item["original_img"] = item["original_img"].to(self.device)
             item["true_shape"] = torch.from_numpy(item["true_shape"])

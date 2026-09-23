@@ -1,0 +1,74 @@
+{
+  "bf16": {
+    "status": "blocked",
+    "project": "echo_longvideo",
+    "variant": "bf16",
+    "source_root": "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/WorldFoundry/cache/generative_taxonomy/jd-opensource--JoyAI-Echo",
+    "runtime_root": "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/WorldFoundry/cache/generative_taxonomy/jd-opensource--JoyAI-Echo/echo_longvideo",
+    "checkpoint_dir": "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/ckpts/jdopensource--JoyAI-Echo/echo15_full_dmd",
+    "gemma_path": "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/ckpts/google--gemma-3-12b-it",
+    "config_path": "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/WorldFoundry/cache/generative_taxonomy/jd-opensource--JoyAI-Echo/echo_longvideo/configs/inference.bf16.yaml",
+    "python_executable": "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/envs/joyai-echo-longvideo/bin/python",
+    "ffmpeg": "/home/hadoop-aipnlp/.local/bin/ffmpeg",
+    "missing_checkpoint_files": [
+      "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/ckpts/google--gemma-3-12b-it/config.json"
+    ],
+    "missing_runtime_files": [
+      "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/envs/joyai-echo-longvideo/bin/python"
+    ],
+    "missing_system_tools": [],
+    "device": "cuda:3",
+    "device_ready": true,
+    "blocked_reasons": [],
+    "license": "LTX-2 Community License; upstream marks JoyAI-Echo academic/non-commercial",
+    "upstream_revision": "0b931fd42f5ef51410019ae41b261eb3b8936410"
+  },
+  "fp8": {
+    "status": "blocked",
+    "project": "echo_longvideo",
+    "variant": "fp8",
+    "source_root": "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/WorldFoundry/cache/generative_taxonomy/jd-opensource--JoyAI-Echo",
+    "runtime_root": "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/WorldFoundry/cache/generative_taxonomy/jd-opensource--JoyAI-Echo/echo_longvideo",
+    "checkpoint_dir": "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/ckpts/jdopensource--JoyAI-Echo/echo15_fp8",
+    "gemma_path": "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/ckpts/google--gemma-3-12b-it",
+    "config_path": "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/WorldFoundry/cache/generative_taxonomy/jd-opensource--JoyAI-Echo/echo_longvideo/configs/inference.fp8.yaml",
+    "python_executable": "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/envs/joyai-echo-longvideo/bin/python",
+    "ffmpeg": "/home/hadoop-aipnlp/.local/bin/ffmpeg",
+    "missing_checkpoint_files": [
+      "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/ckpts/google--gemma-3-12b-it/config.json"
+    ],
+    "missing_runtime_files": [
+      "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/envs/joyai-echo-longvideo/bin/python"
+    ],
+    "missing_system_tools": [],
+    "device": "cuda:3",
+    "device_ready": true,
+    "blocked_reasons": [],
+    "license": "LTX-2 Community License; upstream marks JoyAI-Echo academic/non-commercial",
+    "upstream_revision": "0b931fd42f5ef51410019ae41b261eb3b8936410"
+  },
+  "fp4": {
+    "status": "blocked",
+    "project": "echo_longvideo",
+    "variant": "fp4",
+    "source_root": "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/WorldFoundry/cache/generative_taxonomy/jd-opensource--JoyAI-Echo",
+    "runtime_root": "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/WorldFoundry/cache/generative_taxonomy/jd-opensource--JoyAI-Echo/echo_longvideo",
+    "checkpoint_dir": "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/ckpts/jdopensource--JoyAI-Echo/echo15_fp4",
+    "gemma_path": "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/ckpts/google--gemma-3-12b-it",
+    "config_path": "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/WorldFoundry/cache/generative_taxonomy/jd-opensource--JoyAI-Echo/echo_longvideo/configs/inference.fp4.yaml",
+    "python_executable": "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/envs/joyai-echo-longvideo/bin/python",
+    "ffmpeg": "/home/hadoop-aipnlp/.local/bin/ffmpeg",
+    "missing_checkpoint_files": [
+      "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/ckpts/google--gemma-3-12b-it/config.json"
+    ],
+    "missing_runtime_files": [
+      "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/envs/joyai-echo-longvideo/bin/python"
+    ],
+    "missing_system_tools": [],
+    "device": "cuda:3",
+    "device_ready": true,
+    "blocked_reasons": [],
+    "license": "LTX-2 Community License; upstream marks JoyAI-Echo academic/non-commercial",
+    "upstream_revision": "0b931fd42f5ef51410019ae41b261eb3b8936410"
+  }
+}

@@ -23,7 +23,7 @@ from worldfoundry.core.io.serialization import (
     write_json,
     write_jsonl,
 )
-from worldfoundry.core.time import utc_now_iso
+from worldfoundry.core.observability.time import utc_now_iso
 
 
 # Typed dictionary format for general JSON-like data mappings

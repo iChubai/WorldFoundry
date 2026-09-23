@@ -226,7 +226,7 @@ WORLD_MODEL_RUNTIME_SPECS: Mapping[str, WorldModelRuntimeSpec] = {
     "tesseract": WorldModelRuntimeSpec(
         model_id="tesseract",
         display_name="TesserAct",
-        runtime_module="worldfoundry.synthesis.visual_generation.tesseract.worldfoundry_runtime",
+        runtime_module="worldfoundry.synthesis.action_generation.tesseract.worldfoundry_runtime",
         runtime_root_attr=None,
         runtime_root_func="runtime_root",
         blocked_reason="",

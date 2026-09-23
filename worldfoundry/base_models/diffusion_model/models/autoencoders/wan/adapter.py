@@ -53,6 +53,7 @@ class WanAutoencoderAdapterMixin(ModuleDeviceDtypeMixin):
 
     def encode(self, value: torch.Tensor, return_dict: bool = True):
         """Encode a batch; wrap the mean as a deterministic diagonal Gaussian."""
+        self._prepare_codec_offload()
         encoded = torch.stack(
             [
                 self.model.encode(item.unsqueeze(0), self.scale).squeeze(0)
@@ -67,6 +68,7 @@ class WanAutoencoderAdapterMixin(ModuleDeviceDtypeMixin):
 
     def decode(self, value: torch.Tensor, return_dict: bool = True):
         """Decode a latent batch and clamp pixels to ``[-1, 1]``."""
+        self._prepare_codec_offload()
         decoded = torch.stack(
             [
                 self.model.decode(item.unsqueeze(0), self.scale)
@@ -78,6 +80,13 @@ class WanAutoencoderAdapterMixin(ModuleDeviceDtypeMixin):
         if return_dict:
             return DecoderOutput(sample=decoded)
         return (decoded,)
+
+    def _prepare_codec_offload(self) -> None:
+        """Activate an installed offload hook for methods bypassing forward."""
+        hook = getattr(self, "_hf_hook", None)
+        pre_forward = getattr(hook, "pre_forward", None)
+        if pre_forward is not None:
+            pre_forward(self)
 
 
 __all__ = ["WanAutoencoderAdapterMixin", "WanAutoencoderConfig"]

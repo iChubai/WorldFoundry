@@ -1,0 +1,39 @@
+{
+  "model": "HMA",
+  "input": "official HMA assets/langtable_prompt/frame_00.png",
+  "actions": "four rightward two-dimensional actions scaled by 0.05",
+  "generation": "prompt horizon 3, four generated frames, MaskGIT 2 iterations, seed 42",
+  "discrete": {
+    "artifact": "tmp/next-world-models-gpu-20260923/hma-discrete-fixed/generated.mp4",
+    "sha256": "970e95b8aa6cf75abe5803510126938dc3deca02f8123fa0836a4e5f13a456eb",
+    "decoded_frames": 5,
+    "shape": [
+      256,
+      256,
+      3
+    ],
+    "frame0_to_frame4_mae": 13.461
+  },
+  "continuous_regression": {
+    "artifact": "tmp/next-world-models-gpu-20260923/hma-cont-regression/generated.mp4",
+    "sha256": "10b63143ccbe39cf201b93f3da6010d0ae7feb112f2b7763da8f1dde58e86bd5",
+    "decoded_frames": 5,
+    "shape": [
+      256,
+      256,
+      3
+    ],
+    "frame0_to_frame4_mae": 6.484
+  },
+  "magvit_tokenizer": {
+    "path": "tmp/official-sources-20260923/HMA/data/magvit2.ckpt",
+    "sha256": "5324feabfec9599e2989a5c377bbc211bc05a96fa963f6d96f3ee8be0a83fac9",
+    "bytes": 1151275392
+  },
+  "visual_review": "Discrete first/final frames preserve the LangTable surface, five colored shapes and gripper; the blue block and gripper move rightward in the short rollout. Continuous regression also preserves scene layout, with smaller motion. These observations do not prove action calibration or robot task success.",
+  "limits": [
+    "Only a synthetic small rightward action and four generated frames",
+    "No ground-truth trajectory or task-success metric",
+    "No raw logits/tokens separately archived"
+  ]
+}

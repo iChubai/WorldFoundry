@@ -75,7 +75,7 @@ from worldfoundry.core.distributed.context_parallel import (
 from worldfoundry.core.distributed.fsdp_runtime import hsdp_device_mesh
 from worldfoundry.core.distributed.logging import log
 from worldfoundry.core.model_loading import InferenceModel, load_state_dict, non_strict_load_model
-from worldfoundry.core.time import CudaSyncTimer as sync_timer
+from worldfoundry.core.observability.time import CudaSyncTimer as sync_timer
 from worldfoundry.core.utils import count_parameters as count_params
 from worldfoundry.core.utils import inference_runtime as misc
 

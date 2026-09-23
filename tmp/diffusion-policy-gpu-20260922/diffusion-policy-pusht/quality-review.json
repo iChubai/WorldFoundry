@@ -1,0 +1,5 @@
+{
+  "status": "verified_inference_only",
+  "scope": "Official lowdimPushT epoch550 checkpoint,EMA weights,100DDPMsteps,real official demonstration episode0frames0and1.8x2pixel-coordinate action chunk.Offline comparison only; no simulated success-rate claim. Safe conversion retains original model/EMA tensors and exact published policy configuration. Model and EMA strict loads both have zero missing/unexpected. Original public server supplied size but no publisher SHA; local checkpoint SHA recorded, no remote SHA-match claim. Official PushT first2frames visually reviewed: grayTblock,green target,blue pusher. Reference action MAE43.3/82.4pixels; offline inference only.",
+  "reviewed_in_current_session": true
+}

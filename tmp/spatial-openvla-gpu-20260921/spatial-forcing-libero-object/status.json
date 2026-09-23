@@ -1,0 +1,41 @@
+{
+  "case": "spatial-forcing-libero-object",
+  "gpu": "2",
+  "status": "generated",
+  "started_at": 1790031049.586679,
+  "scope": "Real LIBERO10 episode0 observation,distinct front/wrist and exact8D proprio;10 checkpoint in-domain,other suites OOD integration;offline only,no closed-loop success.",
+  "artifact": "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/WorldFoundry/tmp/spatial-openvla-gpu-20260921/spatial-forcing-libero-object/actions.json",
+  "validation": {
+    "shape": [
+      8,
+      7
+    ],
+    "finite": true,
+    "min": -0.045753869803335706,
+    "max": 0.2408673960930019,
+    "std": 0.07924422510112523,
+    "per_dim_min": [
+      -0.024494266151833588,
+      0.09476492419910543,
+      -0.012989039258728075,
+      -0.00782749241354555,
+      -0.01428850094700447,
+      -0.045753869803335706,
+      0.0732421875
+    ],
+    "per_dim_max": [
+      0.08538536351319104,
+      0.2408673960930019,
+      0.21240234988281248,
+      0.001946416620132549,
+      0.006665042941973953,
+      -0.024997556164102652,
+      0.158203125
+    ],
+    "peak_memory_allocated": 15534210048,
+    "torch_version": "2.5.1+cu121",
+    "within_q01_q99": true,
+    "normalization_note": "Regression heads may exceed q01/q99; recorded diagnostic,not hard bound."
+  },
+  "elapsed_seconds": 115.19
+}

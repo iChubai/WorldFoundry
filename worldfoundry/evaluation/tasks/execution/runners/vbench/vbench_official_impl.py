@@ -17,7 +17,7 @@ from pathlib import Path
 from typing import Any
 
 from worldfoundry.core.io.paths import cache_root_path
-from worldfoundry.core.process import run_logged_subprocess
+from worldfoundry.core.execution.process import run_logged_subprocess
 from worldfoundry.evaluation.tasks.execution.framework.benchmark_assets import bundled_benchmark_asset
 from worldfoundry.evaluation.tasks.execution.framework.io import env_path, utc_now_iso, write_json, write_jsonl
 from worldfoundry.evaluation.utils import REPO_ROOT

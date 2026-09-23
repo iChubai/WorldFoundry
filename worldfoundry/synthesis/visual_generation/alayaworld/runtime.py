@@ -38,7 +38,7 @@ from worldfoundry.base_models.diffusion_model.models.representations.ltx.types i
     VideoLatentShape,
 )
 from worldfoundry.base_models.diffusion_model.optimizations import RuntimePolicy
-from worldfoundry.core.camera_trajectory import (
+from worldfoundry.core.geometry.trajectory import (
     camera_poses_to_adaln_actions,
     camera_trajectory_view_matrices,
     parse_camera_trajectory,

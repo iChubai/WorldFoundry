@@ -162,7 +162,6 @@ STUDIO_HIDDEN_CATALOG_MODEL_IDS: frozenset[str] = frozenset(
         "qwen2.5-omni",
         "spatial-ladder",
         "spatial-reasoner",
-        "thinksound",
         # Image / Sprint / ControlNet checkpoints are variants on the Sana card.
         # CogVideoX 2B T2V and 5B I2V share the CogVideoX card with 5B T2V.
     }

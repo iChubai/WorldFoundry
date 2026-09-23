@@ -2042,7 +2042,7 @@ def main(argv: list[str] | None = None) -> int:
 
     try:
         exit_code = args.func(args)
-        from worldfoundry.core.logging_setup import is_configured
+        from worldfoundry.core.observability.logging_setup import is_configured
 
         if is_configured():
             from worldfoundry.core import get_logger
@@ -2063,7 +2063,7 @@ def main(argv: list[str] | None = None) -> int:
         )
         return exit_code
     except KeyboardInterrupt:
-        from worldfoundry.core.logging_setup import is_configured
+        from worldfoundry.core.observability.logging_setup import is_configured
 
         if is_configured():
             from worldfoundry.core import get_logger
@@ -2089,7 +2089,7 @@ def main(argv: list[str] | None = None) -> int:
         # trace or stack-carrying log event (CM-08).  Runtime failures below
         # stay on exit 1.  Returning (not parser.exit) preserves the historic
         # ``return 2`` handler behaviour for in-process callers of ``main``.
-        from worldfoundry.core.logging_setup import is_configured
+        from worldfoundry.core.observability.logging_setup import is_configured
 
         if is_configured():
             from worldfoundry.core import get_logger
@@ -2126,7 +2126,7 @@ def main(argv: list[str] | None = None) -> int:
         )
         return 2
     except Exception as exc:
-        from worldfoundry.core.logging_setup import is_configured
+        from worldfoundry.core.observability.logging_setup import is_configured
 
         if is_configured():
             from worldfoundry.core import get_logger

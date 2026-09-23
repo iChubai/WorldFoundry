@@ -1,0 +1,9 @@
+{
+  "model_id": "minimax-h3",
+  "case": "minimax-h3-20260924-audit",
+  "status": "failed_integration",
+  "status_evidence": "tmp/minimax-h3-gpu-20260924/memory-assessment.json",
+  "report": "tmp/minimax-h3-gpu-20260924/REPORT.md",
+  "scope": "All 14 DiT, 14 Qwen text-encoder, three video-VAE, and one audio-VAE checkpoint shards are present; safetensors headers open and a small sampled tensor from each shard is finite/nonzero. Their combined 134.13 GiB exceeds one H100 79.65 GiB; current public loader moves every component to the same device. The 61.73-GiB DiT alone leaves 17.92 GiB before activations. Sequential CPU offload at reduced geometry is plausible but not implemented or verified. No cross-card job was displaced and no GPU inference claim is made.",
+  "reviewed_in_current_session": true
+}

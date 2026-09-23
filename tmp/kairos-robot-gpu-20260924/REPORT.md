@@ -1,0 +1,7 @@
+# Kairos Sensenova Robot 4B 480P distilled GPU validation
+
+The independent local Kairos Robot 4B 480P distilled DiT checkpoint, Qwen2.5-VL-7B text encoder, and Wan VAE loaded on H100 GPU 1. The in-tree runtime accepted a real toy photograph and a robot-arm prompt, completed its four distilled sampling steps, and wrote [future_world.mp4](future_world.mp4): nine decodable 640×480 frames. The video SHA-256 is `ffdf0406840c2f936271e3baf0732afaff227d97312117ddf8d403655b3503bd`. [result.json](result.json), [status.json](status.json), and [run.log](run.log) preserve the checkpoint paths, replay parameters, and run result. End-to-end runtime was about 220 seconds.
+
+I viewed frames 0, 4, and 8 in [contact-0-4-8.jpg](contact-0-4-8.jpg). The turquoise toy, white plate, red table, and wall remain recognizable, but the output is nearly static: mean absolute pixel difference from frame 0 is 3.29 at frame 4 and 1.92 at frame 8. No robot arm becomes discernible. This is **verified inference only**; the clip does not establish action control, robot-task success, instruction following, or long-horizon motion. [quality-review.json](quality-review.json) records the visual judgment and temporal differences.
+
+The run used the previously repaired Kairos VAE cache-slot counter in [wan_video_vae.py](../../worldfoundry/synthesis/visual_generation/kairos/kairos_runtime/kairos/modules/vaes/wan_video_vae.py). [run.py](run.py) is the replay script with the full checkpoint and input paths.

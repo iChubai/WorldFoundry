@@ -1,0 +1,141 @@
+{
+  "hy-worldplay": [
+    {
+      "path": "../ckpts/HY-WorldPlay",
+      "exists": true,
+      "size_bytes": null
+    },
+    {
+      "path": "../ckpts/tencent--HY-WorldPlay",
+      "exists": false,
+      "size_bytes": null
+    },
+    {
+      "path": "../ckpts/tencent--HunyuanVideo-1.5",
+      "exists": true,
+      "size_bytes": null
+    }
+  ],
+  "wonderjourney": [
+    {
+      "path": "../ckpts/WonderJourney/sam_vit_h_4b8939.pth",
+      "exists": true,
+      "size_bytes": 2564550879
+    },
+    {
+      "path": "../ckpts/WonderJourney/dpt_beit_large_512.pt",
+      "exists": false,
+      "size_bytes": null
+    }
+  ],
+  "liveworld": [
+    {
+      "path": "../ckpts/ZichengD--LiveWorld/ckpts/lora/model.pt",
+      "exists": true,
+      "size_bytes": 6515334127
+    },
+    {
+      "path": "../ckpts/ZichengD--LiveWorld/ckpts/state_adapter/model.pt",
+      "exists": true,
+      "size_bytes": 6515334127
+    },
+    {
+      "path": "../ckpts/modelscope/Qwen--Qwen3-VL-8B-Instruct/model.safetensors.index.json",
+      "exists": false,
+      "size_bytes": null
+    },
+    {
+      "path": "../ckpts/yslan--STream3R/model.safetensors",
+      "exists": true,
+      "size_bytes": 4762545592
+    },
+    {
+      "path": "../ckpts/modelscope/facebook--dinov3-vith16plus-pretrain-lvd1689m/model.safetensors",
+      "exists": false,
+      "size_bytes": null
+    }
+  ],
+  "pointworld": [
+    {
+      "path": "../ckpts/nvidia--PointWorld_models/filter_droid_test_split/model-last.pt",
+      "exists": true,
+      "size_bytes": 6146270338
+    },
+    {
+      "path": "../ckpts/nvidia--PointWorld_models/large-droid/model-best.pt",
+      "exists": true,
+      "size_bytes": 13038678298
+    }
+  ],
+  "wilddet3d": [
+    {
+      "path": "../ckpts/allenai--WildDet3D/wilddet3d_alldata_all_prompt_v1.0.pt",
+      "exists": true,
+      "size_bytes": 4733213037
+    }
+  ],
+  "worldgrow": [
+    {
+      "path": "../ckpts/UranusITS--WorldGrow/ckpts/slat_flow.safetensors",
+      "exists": true,
+      "size_bytes": 4293731864
+    },
+    {
+      "path": "../ckpts/UranusITS--WorldGrow/ckpts/ss_coarse_flow.safetensors",
+      "exists": true,
+      "size_bytes": 3922845568
+    },
+    {
+      "path": "../ckpts/UranusITS--WorldGrow/ckpts/ss_fine_flow.safetensors",
+      "exists": true,
+      "size_bytes": 3922845568
+    }
+  ],
+  "starwm": [
+    {
+      "path": "../ckpts/yxzhang2024--StarWM/model-00001-of-00004.safetensors",
+      "exists": true,
+      "size_bytes": 4902257696
+    },
+    {
+      "path": "../ckpts/yxzhang2024--StarWM/model-00002-of-00004.safetensors",
+      "exists": true,
+      "size_bytes": 4915960368
+    },
+    {
+      "path": "../ckpts/yxzhang2024--StarWM/model-00003-of-00004.safetensors",
+      "exists": true,
+      "size_bytes": 4983068496
+    },
+    {
+      "path": "../ckpts/yxzhang2024--StarWM/model-00004-of-00004.safetensors",
+      "exists": true,
+      "size_bytes": 1580230264
+    }
+  ],
+  "leworldmodel": [
+    {
+      "path": "../ckpts/eren23--lewm-models/slim_96d_4e_4p/lejepa_weights.safetensors",
+      "exists": true,
+      "size_bytes": 39279128
+    }
+  ],
+  "leworldmodel_requirements": {
+    "stable_worldmodel": true,
+    "stable_pretraining": true,
+    "pusht_dataset_candidates": [
+      {
+        "path": "/home/hadoop-aipnlp/.stable-wm/pusht.h5",
+        "exists": false
+      },
+      {
+        "path": "/home/hadoop-aipnlp/.stable-wm/datasets/pusht.h5",
+        "exists": false
+      }
+    ]
+  },
+  "starwm_endpoint": {
+    "default": "http://localhost:12000",
+    "official_default_fixture_exists": false
+  }
+}

@@ -40,7 +40,6 @@ EXPECTED_VAE_FILES = ("vae/pytorch_model.pt",)
 EXPECTED_CHECKPOINT_FILES = EXPECTED_DIT_FILES + EXPECTED_TEXT_ENCODER_FILES + EXPECTED_VAE_FILES
 REQUIRED_RUNTIME_CONFIG_FILES = ("environment.yml",)
 REQUIRED_RUNTIME_FILES = (
-    "run_inference.sh",
     "inference_bench.py",
     "teacache_forward.py",
     "condtions.py",

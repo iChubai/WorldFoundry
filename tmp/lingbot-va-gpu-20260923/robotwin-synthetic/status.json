@@ -1,0 +1,22 @@
+{
+  "model_id": "lingbot-va",
+  "status": "generated",
+  "gpu": "1",
+  "artifact": "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/WorldFoundry/tmp/lingbot-va-gpu-20260923/robotwin-synthetic/action_trace.json",
+  "trace_keys": [
+    "action",
+    "artifact_kind",
+    "backend",
+    "backend_quality",
+    "checkpoint_dir",
+    "config_name",
+    "host",
+    "metadata",
+    "model_id",
+    "port",
+    "prompt",
+    "schema_version",
+    "status"
+  ],
+  "elapsed_seconds": 265.81
+}

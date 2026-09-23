@@ -495,12 +495,12 @@ class HunyuanMirrorPipeline(PipelineABC):
                 e4x4 = predictions['camera_poses']
                 k3x3 = predictions['camera_intrs']
                 render_interpolated_video(self.represent_model.gs_renderer, predictions["splats"], e4x4, k3x3, (H, W), self.output_path / "rendered", interp_per_pair=15, loop_reverse=num_views==1)
-                logger.info("Saved rendered.mp4 to %s", self.output_path)
+                logger.info("Saved rendered_rgb.mp4 to %s", self.output_path)
             else:
                 logger.info("save_rendered flag not set, skipping video rendering")
             
             save_results['gaussians_path'] = str(ply_path)
-            rendered_video = self.output_path / "rendered.mp4"
+            rendered_video = self.output_path / "rendered_rgb.mp4"
             save_results['rendered_video_path'] = str(rendered_video) if save_rendered and rendered_video.exists() else None
         
         return save_results

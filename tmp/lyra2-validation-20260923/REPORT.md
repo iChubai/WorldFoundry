@@ -1,0 +1,9 @@
+# Lyra2 navigation video verification
+
+Public Lyra2Pipeline,real toy photograph,81frames832x480at16fps,forward0.12 input trajectory,35stepsCFG5shift5seed42,offload and prompt offload. Actual contact viewed: coherent toy/table/wall, smooth forward enlargement, no severe collapse. Existing SDPA fallback used without transformer-engine. Video synthesis only; no reconstruction, long memory, LoRA, or calibrated output-camera claim.
+
+Final run tmp/lyra2-vaefix-gpu-20260923 completed in648.80seconds, peakCUDA70.99GB. Full decode,45actual preclamp decoder calls, observed DA3 outputs and public video tensor are finite. Five actual model loads have no missing/unexpected/meta. DCP audit covers1435model keys without missing or shape mismatch;126extra entries are explicit in quality-review.json. All75published checkpoint files were hashed, including32official zero-byte DCP files and3unused LoRAs; four actual UMT5 tokenizer files also match official hashes. The exact prompt gives identical fast/slow tokenizer IDs despite the Transformers warning.
+
+Fixed count_parameters() returning an undefined variable; verified frozen, tied, empty and meta parameter counts. Fixed the VAE cache allocation by replacing a duplicate CausalConv3d class with the existing shared class used inside the encoder/decoder. Both convolution implementations have identical AST after removing docstrings; class identity now makes count_conv3d allocate nonzero caches. No shared convolution math changed.
+
+The VAE file passes F821/F822/F823. The shared torch_utils file retains two pre-existing any_get_shape errors in an unrelated running-statistics method; these are not claimed fixed or exercised.141 and143 retain the two actual pre-fix failures. No training, commits or pushes. Reconstruction and longer navigation remain untested.

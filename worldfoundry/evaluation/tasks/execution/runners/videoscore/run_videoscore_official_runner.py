@@ -25,7 +25,7 @@ from functools import partial
 from pathlib import Path
 from typing import Any, Callable
 
-from worldfoundry.core.process import run_logged_subprocess
+from worldfoundry.core.execution.process import run_logged_subprocess
 from worldfoundry.evaluation.tasks.execution.framework.benchmark_data import (
     build_generated_video_manifest,
     build_local_dataset_manifest,

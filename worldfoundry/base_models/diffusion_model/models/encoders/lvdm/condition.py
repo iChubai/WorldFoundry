@@ -626,18 +626,13 @@ class FrozenOpenCLIPImageEmbedderV2(AbstractEncoder):
         Args:
             x: The x.
         """
-        # normalize to [0,1]
-        # x = kornia.geometry.resize(x, (224, 224),
-        #                            interpolation='bicubic', align_corners=True,
-        #                            antialias=self.antialias)
-        # x = (x + 1.) / 2.
-        # renormalize according to clip
-        # x = kornia.enhance.normalize(x, self.mean, self.std)
-        trans = transforms.Compose([transforms.Resize((224, 224)), transforms.Normalize(self.mean, self.std)])
-        x = trans(x)
-        # print(old_x.shape, x.shape, flush=True)
-        # print(flush=True)
-        return x
+        # Video runtimes supply images in [-1, 1]; CLIP normalization expects [0, 1].
+        x = kornia.geometry.resize(
+            x, (224, 224), interpolation="bicubic", align_corners=True,
+            antialias=self.antialias,
+        )
+        x = (x + 1.0) / 2.0
+        return kornia.enhance.normalize(x, self.mean, self.std)
 
     def freeze(self):
         """Freeze."""
@@ -701,9 +696,15 @@ class FrozenOpenCLIPImageEmbedderV2(AbstractEncoder):
             x = patch_dropout(x)
         x = self.model.visual.ln_pre(x)
 
-        x = x.permute(1, 0, 2)  # NLD -> LND
-        x = self.model.visual.transformer(x)
-        x = x.permute(1, 0, 2)  # LND -> NLD
+        transformer = self.model.visual.transformer
+        # Modern OpenCLIP accepts NLD and handles its internal layout itself,
+        # including when batch_first=False. Older versions require LND here.
+        legacy_layout = not hasattr(transformer, "batch_first")
+        if legacy_layout:
+            x = x.permute(1, 0, 2)  # NLD -> LND
+        x = transformer(x)
+        if legacy_layout:
+            x = x.permute(1, 0, 2)  # LND -> NLD
 
         return x
 

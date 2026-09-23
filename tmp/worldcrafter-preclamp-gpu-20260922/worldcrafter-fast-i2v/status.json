@@ -1,0 +1,9 @@
+{
+  "status": "generated",
+  "case": "worldcrafter-fast-i2v",
+  "gpu": "3",
+  "videos": [
+    "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/WorldFoundry/tmp/worldcrafter-preclamp-gpu-20260922/worldcrafter-fast-i2v/demo.mp4"
+  ],
+  "elapsed_seconds": 110.29480862617493
+}

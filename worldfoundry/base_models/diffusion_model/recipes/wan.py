@@ -43,6 +43,7 @@ from ..models.encoders.wan import (
     build_wan_text_conditioner,
 )
 from ..models.initializers.wan import (
+    build_wan_causal_i2v_latent_initializer,
     build_wan_i2v_latent_initializer,
     build_wan_t2v_latent_initializer,
     build_wan_ti2v_latent_initializer,
@@ -62,7 +63,7 @@ WAN22_TI2V_5B_MODEL_ID = "wan2.2-ti2v-5b"
 WAN22_T2V_A14B_MODEL_ID = "wan2.2-t2v-a14b"
 WAN22_I2V_A14B_MODEL_ID = "wan2.2-i2v-a14b"
 WAN21_VACE_14B_MODEL_ID = "wan2.1-vace"
-FASTVIDEO_CAUSAL_WAN22_MODEL_ID = "fastvideo-causal-wan2.2-t2v-14b"
+FASTVIDEO_CAUSAL_WAN22_MODEL_ID = "fastvideo-causal-wan2.2-i2v-14b"
 
 WAN21_T2V_1P3B_REPO_ID = "Wan-AI/Wan2.1-T2V-1.3B"
 WAN21_T2V_14B_REPO_ID = "Wan-AI/Wan2.1-T2V-14B"
@@ -589,8 +590,8 @@ def wan22_i2v_a14b_recipe() -> NativeDiffusionRecipe:
     return _wan22_a14b_recipe(image_to_video=True)
 
 
-def fastvideo_causal_wan22_t2v_14b_recipe() -> NativeDiffusionRecipe:
-    """Return FastVideo's eight-step, three-latent-frame CausalWan2.2 rollout."""
+def fastvideo_causal_wan22_i2v_14b_recipe() -> NativeDiffusionRecipe:
+    """Return FastVideo's eight-step, first-frame-conditioned CausalWan2.2 rollout."""
 
     denoiser, conditioner, initializer, scheduler, codec = _keys()
     repo_id = FASTVIDEO_CAUSAL_WAN22_REPO_ID
@@ -654,7 +655,7 @@ def fastvideo_causal_wan22_t2v_14b_recipe() -> NativeDiffusionRecipe:
                 {"weights": "text-encoder", "tokenizer": "tokenizer"},
                 {"tokenizer_subdir": "tokenizer", "text_length": 512},
             ),
-            ComponentSpec(initializer, build_wan_t2v_latent_initializer),
+            ComponentSpec(initializer, build_wan_causal_i2v_latent_initializer),
             ComponentSpec(
                 scheduler,
                 build_fastvideo_causal_wan_self_forcing_scheduler,
@@ -671,6 +672,7 @@ def fastvideo_causal_wan22_t2v_14b_recipe() -> NativeDiffusionRecipe:
                 "denoiser": denoiser,
                 "conditioner": conditioner,
                 "latent_initializer": initializer,
+                "latent_encoder": codec,
                 "scheduler": scheduler,
                 "decoder": codec,
             },
@@ -678,7 +680,7 @@ def fastvideo_causal_wan22_t2v_14b_recipe() -> NativeDiffusionRecipe:
         ),
         checkpoints=checkpoints,
         capabilities=frozenset(
-            {"text-to-video", "causal-generation", "dual-expert", "self-forcing"}
+            {"image-to-video", "causal-generation", "dual-expert", "self-forcing"}
         ),
         options={
             "latent_channels": 16,
@@ -686,7 +688,7 @@ def fastvideo_causal_wan22_t2v_14b_recipe() -> NativeDiffusionRecipe:
             "temporal_compression": 4,
             "default_height": 480,
             "default_width": 832,
-            "default_num_frames": 717,
+            "default_num_frames": 81,
             "default_num_inference_steps": 8,
             "default_guidance_scale": 1.0,
             "default_fps": 16,
@@ -808,7 +810,7 @@ __all__ = [
     "WAN21_VACE_14B_REVISION",
     "WAN_TOKENIZER_FILES",
     "WAN21_UPSTREAM_SOURCE_REVISION",
-    "fastvideo_causal_wan22_t2v_14b_recipe",
+    "fastvideo_causal_wan22_i2v_14b_recipe",
     "wan21_i2v_14b_480p_recipe",
     "wan21_i2v_14b_720p_recipe",
     "wan21_t2v_1p3b_recipe",

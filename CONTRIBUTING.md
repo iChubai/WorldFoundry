@@ -58,9 +58,31 @@ GIT_LFS_SKIP_SMUDGE=1 git clone https://github.com/OpenEnvision/WorldFoundry.git
 - Preserve JSON output compatibility or document the breaking change.
 - Run `make docs-check` and document help, error handling, and no-heavy-import behavior.
 
+## Core Responsibility Boundaries
+
+Keep `worldfoundry/core` model-neutral. Place camera geometry in `core.geometry`,
+inference execution and process-local caches in `core.execution`, logging and timing
+in `core.observability`, and streaming video post-processing in `core.video`.
+Use the existing `nn`, `attention`, `io`, `checkpoint`, and other domain packages
+for their respective primitives. The root is reserved for the lazy public facade
+and cross-cutting contracts, registries, and input normalization.
+
+Import implementation modules directly or use the existing public facade; do not
+add forwarding modules at abandoned paths. Package initializers must preserve
+lightweight control-plane imports. Model-specific orchestration and components
+belong in `synthesis` and `base_models`, respectively.
+
 ## Synthesis Is Infer-Only
 
 `worldfoundry/synthesis/**` packages upstream **inference** runtimes only. Do not add:
+
+- shell launch scripts: framework adapters call Python entrypoints or component APIs directly
+- unused placeholder modules or leaf packages left after moving implementations; import canonical
+  components directly instead of keeping unused re-export shells in `synthesis`
+- copies of networks, VAEs, text encoders, schedulers, or third-party models already owned by
+  `worldfoundry/base_models/`; reuse those implementations, including
+  `worldfoundry/base_models/diffusion_model/`. Keep checkpoint-specific differences as small
+  variants there, and keep model orchestration and input/output adaptation in `synthesis`.
 
 - training launchers, dataset builders, finetune scripts, or benchmark-only tooling
 - demo media, generated outputs, checkpoints, or downloaded datasets
@@ -69,6 +91,11 @@ GIT_LFS_SKIP_SMUDGE=1 git clone https://github.com/OpenEnvision/WorldFoundry.git
   operational notes in fumadocs instead.
 
 Keep local demo assets in `testcase/` and reference them through explicit input paths; they are not part of the public source distribution.
+
+For each retained file or helper, identify its inference caller, configured target, checkpoint-loading
+contract, or public API role. After migrations, remove abandoned entrypoints and their private helpers
+together. Check lazy imports, subprocess workers, registries, and serialized checkpoint classes before
+deleting code; an unused-import report alone is not evidence that a runtime component is unnecessary.
 
 Before release or large runtime imports, run the public quality gates:
 

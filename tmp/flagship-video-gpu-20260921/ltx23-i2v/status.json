@@ -1,0 +1,10 @@
+{
+  "case": "ltx23-i2v",
+  "started_at": 1789997507.6146183,
+  "gpu": "1",
+  "status": "generated",
+  "videos": [
+    "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/WorldFoundry/tmp/flagship-video-gpu-20260921/ltx23-i2v/demo.mp4"
+  ],
+  "elapsed_seconds": 202.21
+}

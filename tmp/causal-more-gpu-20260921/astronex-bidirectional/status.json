@@ -1,0 +1,11 @@
+{
+  "case": "astronex-bidirectional",
+  "started_at": 1790002012.0299423,
+  "gpu": "1",
+  "status": "generated",
+  "videos": [
+    "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/WorldFoundry/tmp/causal-more-gpu-20260921/astronex-bidirectional/demo.mp4",
+    "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/WorldFoundry/tmp/causal-more-gpu-20260921/astronex-bidirectional/demo/02071254d9b24f5c84a262e5ce9cd136/artifacts/A warm fantasy workshop with arched windows, hanging lanterns, herbs and glass flasks. A woman reads_w9h8.mp4"
+  ],
+  "elapsed_seconds": 152.25
+}

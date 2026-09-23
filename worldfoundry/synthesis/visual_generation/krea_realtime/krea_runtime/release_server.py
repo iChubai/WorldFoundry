@@ -135,7 +135,7 @@ def load_text_encoder():
         # temp code to just return a static embedding
         # TODO: remove
         print("USING STATIC COND DICT. PLSPLSPLS REMOVE BEFORE MERGING")
-        static_cond_dict = torch.load("static_cond_dict_cat_skateboard.pth")
+        static_cond_dict = torch.load("static_cond_dict_cat_skateboard.pth", weights_only=True)
         class StaticTextEncoder(torch.nn.Module):
             def forward(self, text_prompts):
                 return static_cond_dict
@@ -209,7 +209,7 @@ def load_vae():
     vae_encoder = VAEEncoderWrapper(vae)
 
     vae_decoder = VAEDecoderWrapper()
-    vae_state_dict = torch.load(vae_path, map_location="cpu")
+    vae_state_dict = torch.load(vae_path, map_location="cpu", weights_only=True)
     decoder_state_dict = {}
     for key, value in vae_state_dict.items():
         if 'decoder.' in key or 'conv2' in key:

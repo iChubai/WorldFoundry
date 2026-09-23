@@ -1,0 +1,9 @@
+{
+  "model_id": "genie-envisioner",
+  "status": "generated",
+  "gpu": "1",
+  "artifact": "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/WorldFoundry/tmp/next-world-models-gpu-20260923/genie-envisioner/generated.mp4",
+  "decoded_frames": 13,
+  "artifact_sha256": "05de32653421ac407598313b8f66ba93ed89a6b9479028f078d003d606113ad6",
+  "elapsed_seconds": 111.82
+}

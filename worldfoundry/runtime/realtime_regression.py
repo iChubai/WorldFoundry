@@ -12,7 +12,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Literal
 
-from worldfoundry.core.realtime_timing import TimingDistribution
+from worldfoundry.core.observability.realtime_timing import TimingDistribution
 from worldfoundry.runtime.performance import (
     OptimizationSnapshot,
     PerformanceManifest,

@@ -1,0 +1,12 @@
+{
+  "status": "verified_inference_only",
+  "video": "tmp/spatia-gpu-20260924/demo-fixed.mp4",
+  "decoded_frames": 9,
+  "width": 832,
+  "height": 480,
+  "fps": 16,
+  "pixel_std": 65.943,
+  "mean_adjacent_frame_absdiff": 10.079,
+  "first_last_absdiff": 21.84,
+  "contact_sheet": "tmp/spatia-gpu-20260924/contact-fixed.jpg"
+}

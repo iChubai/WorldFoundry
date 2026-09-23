@@ -1,0 +1,20 @@
+{
+  "model_id": "solaris",
+  "case": "official-one-looks-away-eval-1sample-33frames",
+  "status": "quality_concern",
+  "checkpoint": "../ckpts/nyu-visionx--solaris/solaris.pt",
+  "dataset": "../ckpts/nyu-visionx--solaris-eval-datasets/eval/oneLooksAwayEval/test",
+  "environment": "../envs/worldarena-trajan",
+  "device": "GPU0 H100 80GB",
+  "eval_num_samples": 1,
+  "num_workers": 0,
+  "num_frames_eval": 33,
+  "output_video": "tmp/solaris-gpu-20260923/output/single_gpu_one_looks_away_33f/eval_one_looks_away/video_0_side_by_side.mp4",
+  "decoded_width": 1280,
+  "decoded_height": 704,
+  "decoded_frames": 33,
+  "fps": 20,
+  "elapsed_seconds": 329.3,
+  "visual_review": "Frames 0, 16, 32 retain the Minecraft world and lower player view; in the upper generated view the other avatar disappears by frame 16 while ground truth still has the avatar near the right edge. This indicates a short-horizon camera/action alignment concern.",
+  "scope": "One official example only; no benchmark score or systemic model failure claim."
+}

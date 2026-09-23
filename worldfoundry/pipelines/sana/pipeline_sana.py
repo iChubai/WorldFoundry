@@ -57,7 +57,7 @@ class SanaPipeline(NativeVisualDiffusionPipeline):
             self.DEFAULT_SCHEDULER_OPTIONS = {
                 "shift": 8.0 if variant.resolution == "720p" else 7.0
                 if variant.resolution == "480p"
-                else 4.0 if "600m" in variant.model_id
+                else 4.0 if "600m" in variant.model_id.split("-")
                 else 3.0
             }
         super().__init__(

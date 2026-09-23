@@ -1,0 +1,10 @@
+{
+  "model_id": "openpie-0.6",
+  "status": "failed_integration",
+  "case": "offline-action-preflight",
+  "finding": "Default runtime config rejected its external source checkout before weight loading; configured fla.policies.policy_config target is outside worldfoundry and installed fla has no policies module.",
+  "status_evidence": "tmp/openpie-0.6-gpu-20260924/status.json",
+  "scope": "Weight and default loader/deployment preflight only; no GPU action inference and no task-success claim.",
+  "reviewed_in_current_session": true,
+  "blocker_kind": "blocked_loader"
+}

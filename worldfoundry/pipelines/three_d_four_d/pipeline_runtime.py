@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from ...operators.three_d_four_d_runtime_operator import ThreeDFourDRuntimeOperator
 from ...synthesis.visual_generation.memory.runtime import RuntimeMemory
-from ...synthesis.visual_generation.three_d_four_d.runtime import (
+from ...base_models.three_dimensions.three_d_four_d.runtime import (
     ThreeDFourDRuntimeSynthesis,
 )
 from ..pipeline_utils import PipelineABC

@@ -16,7 +16,6 @@ from .pipeline_official_video import (
     SAMA14BPipeline,
     SpatialLadderPipeline,
     SpatialReasonerPipeline,
-    ThinkSoundPipeline,
     UniAnimateDiTPipeline,
 )
 
@@ -36,6 +35,5 @@ __all__ = [
     "SAMA14BPipeline",
     "SpatialLadderPipeline",
     "SpatialReasonerPipeline",
-    "ThinkSoundPipeline",
     "UniAnimateDiTPipeline",
 ]

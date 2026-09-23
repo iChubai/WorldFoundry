@@ -39,6 +39,7 @@ except ModuleNotFoundError:
 
 import warnings
 from worldfoundry.core.attention import scaled_dot_product_attention as _worldfoundry_scaled_dot_product_attention
+from worldfoundry.core.attention.varlen import flash_attention as _worldfoundry_varlen_attention
 
 
 def _gpu_supports_flash_attention():
@@ -124,9 +125,16 @@ def flash_attention(
     assert dtype in half_dtypes
     assert q.device.type == 'cuda' and q.size(-1) <= 256
 
-    # Use PyTorch SDPA on pre-Ampere GPUs (FlashAttention requires Ampere or newer)
-    if not _gpu_supports_flash_attention():
-        return _sdpa_attention_fallback(
+    # The shared dispatcher handles the current FlashAttention 3 Python ABI
+    # (including seqused_q/seqused_k) and preserves variable lengths. The
+    # older in-tree FA3 call below targets an obsolete ABI. It also supplies
+    # the SDPA fallback when an optional FlashAttention package is absent.
+    if (
+        version == 3
+        or not _gpu_supports_flash_attention()
+        or (version == 2 and not FLASH_ATTN_2_AVAILABLE)
+    ):
+        return _worldfoundry_varlen_attention(
             q, k, v,
             q_lens=q_lens,
             k_lens=k_lens,
@@ -134,7 +142,10 @@ def flash_attention(
             softmax_scale=softmax_scale,
             q_scale=q_scale,
             causal=causal,
+            window_size=window_size,
+            deterministic=deterministic,
             dtype=dtype,
+            version=version,
         )
 
     # params

@@ -1,0 +1,10 @@
+{
+  "case": "wan21-vace-14b",
+  "started_at": 1789993692.2778277,
+  "gpu": "3",
+  "status": "generated",
+  "videos": [
+    "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/WorldFoundry/tmp/video-broad-gpu-20260921/wan21-vace-14b/demo.mp4"
+  ],
+  "elapsed_seconds": 362.63
+}

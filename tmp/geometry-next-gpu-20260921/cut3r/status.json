@@ -1,0 +1,61 @@
+{
+  "case": "cut3r",
+  "gpu": "1",
+  "status": "generated",
+  "started_at": 1789992951.1612346,
+  "checkpoint_loads": [
+    {
+      "module": "ARCroco3DStereo",
+      "missing": [],
+      "unexpected": []
+    }
+  ],
+  "files": [
+    "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/WorldFoundry/tmp/geometry-next-gpu-20260921/cut3r/scene/frame_000000.png",
+    "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/WorldFoundry/tmp/geometry-next-gpu-20260921/cut3r/scene/frame_000001.png",
+    "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/WorldFoundry/tmp/geometry-next-gpu-20260921/cut3r/scene/frame_000002.png",
+    "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/WorldFoundry/tmp/geometry-next-gpu-20260921/cut3r/scene/point_clouds/pc_000000.npy",
+    "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/WorldFoundry/tmp/geometry-next-gpu-20260921/cut3r/scene/point_clouds/pc_000001.npy",
+    "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/WorldFoundry/tmp/geometry-next-gpu-20260921/cut3r/scene/point_clouds/pc_000002.npy",
+    "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/WorldFoundry/tmp/geometry-next-gpu-20260921/cut3r/scene/depth_maps/depth_000000.png",
+    "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/WorldFoundry/tmp/geometry-next-gpu-20260921/cut3r/scene/depth_maps/depth_000001.png",
+    "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/WorldFoundry/tmp/geometry-next-gpu-20260921/cut3r/scene/depth_maps/depth_000002.png"
+  ],
+  "arrays": {
+    "point_clouds": {
+      "shape": [
+        3,
+        147456,
+        3
+      ],
+      "min": -6.3767218589782715,
+      "max": 14.302929878234863,
+      "std": 3.602943181991577
+    },
+    "depth_maps": {
+      "shape": [
+        3,
+        1,
+        288,
+        512
+      ],
+      "min": 0.7221994400024414,
+      "max": 13.1373872756958,
+      "std": 3.29725980758667
+    },
+    "camera_poses": {
+      "shape": [
+        3,
+        1,
+        4,
+        4
+      ],
+      "min": -0.15209266543388367,
+      "max": 1.0,
+      "std": 0.4458406865596771
+    }
+  },
+  "depth_maps_checked": 3,
+  "peak_memory_allocated": 3532425728,
+  "elapsed_seconds": 120.727
+}

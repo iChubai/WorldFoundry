@@ -1,0 +1,1984 @@
+{
+  "case": "depth-anything-v1-small",
+  "gpu": "0",
+  "status": "generated",
+  "started_at": 1789993187.872233,
+  "checkpoint_loads": [
+    {
+      "module": "Dinov2Embeddings",
+      "missing": [
+        "mask_token",
+        "position_embeddings",
+        "patch_embeddings.projection.weight",
+        "patch_embeddings.projection.bias"
+      ],
+      "unexpected": []
+    },
+    {
+      "module": "Dinov2Embeddings",
+      "missing": [
+        "cls_token",
+        "position_embeddings",
+        "patch_embeddings.projection.weight",
+        "patch_embeddings.projection.bias"
+      ],
+      "unexpected": []
+    },
+    {
+      "module": "Conv2d",
+      "missing": [
+        "weight"
+      ],
+      "unexpected": []
+    },
+    {
+      "module": "Conv2d",
+      "missing": [
+        "bias"
+      ],
+      "unexpected": []
+    },
+    {
+      "module": "Dinov2Embeddings",
+      "missing": [
+        "cls_token",
+        "mask_token",
+        "patch_embeddings.projection.weight",
+        "patch_embeddings.projection.bias"
+      ],
+      "unexpected": []
+    },
+    {
+      "module": "Linear",
+      "missing": [
+        "weight"
+      ],
+      "unexpected": []
+    },
+    {
+      "module": "Linear",
+      "missing": [
+        "bias"
+      ],
+      "unexpected": []
+    },
+    {
+      "module": "Linear",
+      "missing": [
+        "weight"
+      ],
+      "unexpected": []
+    },
+    {
+      "module": "Linear",
+      "missing": [
+        "bias"
+      ],
+      "unexpected": []
+    },
+    {
+      "module": "Linear",
+      "missing": [
+        "weight"
+      ],
+      "unexpected": []
+    },
+    {
+      "module": "Linear",
+      "missing": [
+        "bias"
+      ],
+      "unexpected": []
+    },
+    {
+      "module": "Linear",
+      "missing": [
+        "weight"
+      ],
+      "unexpected": []
+    },
+    {
+      "module": "Linear",
+      "missing": [
+        "bias"
+      ],
+      "unexpected": []
+    },
+    {
+      "module": "Dinov2LayerScale",
+      "missing": [],
+      "unexpected": []
+    },
+    {
+      "module": "Dinov2LayerScale",
+      "missing": [],
+      "unexpected": []
+    },
+    {
+      "module": "Linear",
+      "missing": [
+        "weight"
+      ],
+      "unexpected": []
+    },
+    {
+      "module": "Linear",
+      "missing": [
+        "bias"
+      ],
+      "unexpected": []
+    },
+    {
+      "module": "Linear",
+      "missing": [
+        "weight"
+      ],
+      "unexpected": []
+    },
+    {
+      "module": "Linear",
+      "missing": [
+        "bias"
+      ],
+      "unexpected": []
+    },
+    {
+      "module": "LayerNorm",
+      "missing": [
+        "weight"
+      ],
+      "unexpected": []
+    },
+    {
+      "module": "LayerNorm",
+      "missing": [
+        "bias"
+      ],
+      "unexpected": []
+    },
+    {
+      "module": "LayerNorm",
+      "missing": [
+        "weight"
+      ],
+      "unexpected": []
+    },
+    {
+      "module": "LayerNorm",
+      "missing": [
+        "bias"
+      ],
+      "unexpected": []
+    },
+    {
+      "module": "Linear",
+      "missing": [
+        "weight"
+      ],
+      "unexpected": []
+    },
+    {
+      "module": "Linear",
+      "missing": [
+        "bias"
+      ],
+      "unexpected": []
+    },
+    {
+      "module": "Linear",
+      "missing": [
+        "weight"
+      ],
+      "unexpected": []
+    },
+    {
+      "module": "Linear",
+      "missing": [
+        "bias"
+      ],
+      "unexpected": []
+    },
+    {
+      "module": "Linear",
+      "missing": [
+        "weight"
+      ],
+      "unexpected": []
+    },
+    {
+      "module": "Linear",
+      "missing": [
+        "bias"
+      ],
+      "unexpected": []
+    },
+    {
+      "module": "Linear",
+      "missing": [
+        "weight"
+      ],
+      "unexpected": []
+    },
+    {
+      "module": "Linear",
+      "missing": [
+        "bias"
+      ],
+      "unexpected": []
+    },
+    {
+      "module": "Dinov2LayerScale",
+      "missing": [],
+      "unexpected": []
+    },
+    {
+      "module": "Dinov2LayerScale",
+      "missing": [],
+      "unexpected": []
+    },
+    {
+      "module": "Linear",
+      "missing": [
+        "weight"
+      ],
+      "unexpected": []
+    },
+    {
+      "module": "Linear",
+      "missing": [
+        "bias"
+      ],
+      "unexpected": []
+    },
+    {
+      "module": "Linear",
+      "missing": [
+        "weight"
+      ],
+      "unexpected": []
+    },
+    {
+      "module": "Linear",
+      "missing": [
+        "bias"
+      ],
+      "unexpected": []
+    },
+    {
+      "module": "LayerNorm",
+      "missing": [
+        "weight"
+      ],
+      "unexpected": []
+    },
+    {
+      "module": "LayerNorm",
+      "missing": [
+        "bias"
+      ],
+      "unexpected": []
+    },
+    {
+      "module": "LayerNorm",
+      "missing": [
+        "weight"
+      ],
+      "unexpected": []
+    },
+    {
+      "module": "LayerNorm",
+      "missing": [
+        "bias"
+      ],
+      "unexpected": []
+    },
+    {
+      "module": "Linear",
+      "missing": [
+        "weight"
+      ],
+      "unexpected": []
+    },
+    {
+      "module": "Linear",
+      "missing": [
+        "bias"
+      ],
+      "unexpected": []
+    },
+    {
+      "module": "Linear",
+      "missing": [
+        "weight"
+      ],
+      "unexpected": []
+    },
+    {
+      "module": "Linear",
+      "missing": [
+        "bias"
+      ],
+      "unexpected": []
+    },
+    {
+      "module": "Linear",
+      "missing": [
+        "weight"
+      ],
+      "unexpected": []
+    },
+    {
+      "module": "Linear",
+      "missing": [
+        "bias"
+      ],
+      "unexpected": []
+    },
+    {
+      "module": "Linear",
+      "missing": [
+        "weight"
+      ],
+      "unexpected": []
+    },
+    {
+      "module": "Linear",
+      "missing": [
+        "bias"
+      ],
+      "unexpected": []
+    },
+    {
+      "module": "Dinov2LayerScale",
+      "missing": [],
+      "unexpected": []
+    },
+    {
+      "module": "Dinov2LayerScale",
+      "missing": [],
+      "unexpected": []
+    },
+    {
+      "module": "Linear",
+      "missing": [
+        "weight"
+      ],
+      "unexpected": []
+    },
+    {
+      "module": "Linear",
+      "missing": [
+        "bias"
+      ],
+      "unexpected": []
+    },
+    {
+      "module": "Linear",
+      "missing": [
+        "weight"
+      ],
+      "unexpected": []
+    },
+    {
+      "module": "Linear",
+      "missing": [
+        "bias"
+      ],
+      "unexpected": []
+    },
+    {
+      "module": "LayerNorm",
+      "missing": [
+        "weight"
+      ],
+      "unexpected": []
+    },
+    {
+      "module": "LayerNorm",
+      "missing": [
+        "bias"
+      ],
+      "unexpected": []
+    },
+    {
+      "module": "LayerNorm",
+      "missing": [
+        "weight"
+      ],
+      "unexpected": []
+    },
+    {
+      "module": "LayerNorm",
+      "missing": [
+        "bias"
+      ],
+      "unexpected": []
+    },
+    {
+      "module": "Linear",
+      "missing": [
+        "weight"
+      ],
+      "unexpected": []
+    },
+    {
+      "module": "Linear",
+      "missing": [
+        "bias"
+      ],
+      "unexpected": []
+    },
+    {
+      "module": "Linear",
+      "missing": [
+        "weight"
+      ],
+      "unexpected": []
+    },
+    {
+      "module": "Linear",
+      "missing": [
+        "bias"
+      ],
+      "unexpected": []
+    },
+    {
+      "module": "Linear",
+      "missing": [
+        "weight"
+      ],
+      "unexpected": []
+    },
+    {
+      "module": "Linear",
+      "missing": [
+        "bias"
+      ],
+      "unexpected": []
+    },
+    {
+      "module": "Linear",
+      "missing": [
+        "weight"
+      ],
+      "unexpected": []
+    },
+    {
+      "module": "Linear",
+      "missing": [
+        "bias"
+      ],
+      "unexpected": []
+    },
+    {
+      "module": "Dinov2LayerScale",
+      "missing": [],
+      "unexpected": []
+    },
+    {
+      "module": "Dinov2LayerScale",
+      "missing": [],
+      "unexpected": []
+    },
+    {
+      "module": "Linear",
+      "missing": [
+        "weight"
+      ],
+      "unexpected": []
+    },
+    {
+      "module": "Linear",
+      "missing": [
+        "bias"
+      ],
+      "unexpected": []
+    },
+    {
+      "module": "Linear",
+      "missing": [
+        "weight"
+      ],
+      "unexpected": []
+    },
+    {
+      "module": "Linear",
+      "missing": [
+        "bias"
+      ],
+      "unexpected": []
+    },
+    {
+      "module": "LayerNorm",
+      "missing": [
+        "weight"
+      ],
+      "unexpected": []
+    },
+    {
+      "module": "LayerNorm",
+      "missing": [
+        "bias"
+      ],
+      "unexpected": []
+    },
+    {
+      "module": "LayerNorm",
+      "missing": [
+        "weight"
+      ],
+      "unexpected": []
+    },
+    {
+      "module": "LayerNorm",
+      "missing": [
+        "bias"
+      ],
+      "unexpected": []
+    },
+    {
+      "module": "Linear",
+      "missing": [
+        "weight"
+      ],
+      "unexpected": []
+    },
+    {
+      "module": "Linear",
+      "missing": [
+        "bias"
+      ],
+      "unexpected": []
+    },
+    {
+      "module": "Linear",
+      "missing": [
+        "weight"
+      ],
+      "unexpected": []
+    },
+    {
+      "module": "Linear",
+      "missing": [
+        "bias"
+      ],
+      "unexpected": []
+    },
+    {
+      "module": "Linear",
+      "missing": [
+        "weight"
+      ],
+      "unexpected": []
+    },
+    {
+      "module": "Linear",
+      "missing": [
+        "bias"
+      ],
+      "unexpected": []
+    },
+    {
+      "module": "Linear",
+      "missing": [
+        "weight"
+      ],
+      "unexpected": []
+    },
+    {
+      "module": "Linear",
+      "missing": [
+        "bias"
+      ],
+      "unexpected": []
+    },
+    {
+      "module": "Dinov2LayerScale",
+      "missing": [],
+      "unexpected": []
+    },
+    {
+      "module": "Dinov2LayerScale",
+      "missing": [],
+      "unexpected": []
+    },
+    {
+      "module": "Linear",
+      "missing": [
+        "weight"
+      ],
+      "unexpected": []
+    },
+    {
+      "module": "Linear",
+      "missing": [
+        "bias"
+      ],
+      "unexpected": []
+    },
+    {
+      "module": "Linear",
+      "missing": [
+        "weight"
+      ],
+      "unexpected": []
+    },
+    {
+      "module": "Linear",
+      "missing": [
+        "bias"
+      ],
+      "unexpected": []
+    },
+    {
+      "module": "LayerNorm",
+      "missing": [
+        "weight"
+      ],
+      "unexpected": []
+    },
+    {
+      "module": "LayerNorm",
+      "missing": [
+        "bias"
+      ],
+      "unexpected": []
+    },
+    {
+      "module": "LayerNorm",
+      "missing": [
+        "weight"
+      ],
+      "unexpected": []
+    },
+    {
+      "module": "LayerNorm",
+      "missing": [
+        "bias"
+      ],
+      "unexpected": []
+    },
+    {
+      "module": "Linear",
+      "missing": [
+        "weight"
+      ],
+      "unexpected": []
+    },
+    {
+      "module": "Linear",
+      "missing": [
+        "bias"
+      ],
+      "unexpected": []
+    },
+    {
+      "module": "Linear",
+      "missing": [
+        "weight"
+      ],
+      "unexpected": []
+    },
+    {
+      "module": "Linear",
+      "missing": [
+        "bias"
+      ],
+      "unexpected": []
+    },
+    {
+      "module": "Linear",
+      "missing": [
+        "weight"
+      ],
+      "unexpected": []
+    },
+    {
+      "module": "Linear",
+      "missing": [
+        "bias"
+      ],
+      "unexpected": []
+    },
+    {
+      "module": "Linear",
+      "missing": [
+        "weight"
+      ],
+      "unexpected": []
+    },
+    {
+      "module": "Linear",
+      "missing": [
+        "bias"
+      ],
+      "unexpected": []
+    },
+    {
+      "module": "Dinov2LayerScale",
+      "missing": [],
+      "unexpected": []
+    },
+    {
+      "module": "Dinov2LayerScale",
+      "missing": [],
+      "unexpected": []
+    },
+    {
+      "module": "Linear",
+      "missing": [
+        "weight"
+      ],
+      "unexpected": []
+    },
+    {
+      "module": "Linear",
+      "missing": [
+        "bias"
+      ],
+      "unexpected": []
+    },
+    {
+      "module": "Linear",
+      "missing": [
+        "weight"
+      ],
+      "unexpected": []
+    },
+    {
+      "module": "Linear",
+      "missing": [
+        "bias"
+      ],
+      "unexpected": []
+    },
+    {
+      "module": "LayerNorm",
+      "missing": [
+        "weight"
+      ],
+      "unexpected": []
+    },
+    {
+      "module": "LayerNorm",
+      "missing": [
+        "bias"
+      ],
+      "unexpected": []
+    },
+    {
+      "module": "LayerNorm",
+      "missing": [
+        "weight"
+      ],
+      "unexpected": []
+    },
+    {
+      "module": "LayerNorm",
+      "missing": [
+        "bias"
+      ],
+      "unexpected": []
+    },
+    {
+      "module": "Linear",
+      "missing": [
+        "weight"
+      ],
+      "unexpected": []
+    },
+    {
+      "module": "Linear",
+      "missing": [
+        "bias"
+      ],
+      "unexpected": []
+    },
+    {
+      "module": "Linear",
+      "missing": [
+        "weight"
+      ],
+      "unexpected": []
+    },
+    {
+      "module": "Linear",
+      "missing": [
+        "bias"
+      ],
+      "unexpected": []
+    },
+    {
+      "module": "Linear",
+      "missing": [
+        "weight"
+      ],
+      "unexpected": []
+    },
+    {
+      "module": "Linear",
+      "missing": [
+        "bias"
+      ],
+      "unexpected": []
+    },
+    {
+      "module": "Linear",
+      "missing": [
+        "weight"
+      ],
+      "unexpected": []
+    },
+    {
+      "module": "Linear",
+      "missing": [
+        "bias"
+      ],
+      "unexpected": []
+    },
+    {
+      "module": "Dinov2LayerScale",
+      "missing": [],
+      "unexpected": []
+    },
+    {
+      "module": "Dinov2LayerScale",
+      "missing": [],
+      "unexpected": []
+    },
+    {
+      "module": "Linear",
+      "missing": [
+        "weight"
+      ],
+      "unexpected": []
+    },
+    {
+      "module": "Linear",
+      "missing": [
+        "bias"
+      ],
+      "unexpected": []
+    },
+    {
+      "module": "Linear",
+      "missing": [
+        "weight"
+      ],
+      "unexpected": []
+    },
+    {
+      "module": "Linear",
+      "missing": [
+        "bias"
+      ],
+      "unexpected": []
+    },
+    {
+      "module": "LayerNorm",
+      "missing": [
+        "weight"
+      ],
+      "unexpected": []
+    },
+    {
+      "module": "LayerNorm",
+      "missing": [
+        "bias"
+      ],
+      "unexpected": []
+    },
+    {
+      "module": "LayerNorm",
+      "missing": [
+        "weight"
+      ],
+      "unexpected": []
+    },
+    {
+      "module": "LayerNorm",
+      "missing": [
+        "bias"
+      ],
+      "unexpected": []
+    },
+    {
+      "module": "Linear",
+      "missing": [
+        "weight"
+      ],
+      "unexpected": []
+    },
+    {
+      "module": "Linear",
+      "missing": [
+        "bias"
+      ],
+      "unexpected": []
+    },
+    {
+      "module": "Linear",
+      "missing": [
+        "weight"
+      ],
+      "unexpected": []
+    },
+    {
+      "module": "Linear",
+      "missing": [
+        "bias"
+      ],
+      "unexpected": []
+    },
+    {
+      "module": "Linear",
+      "missing": [
+        "weight"
+      ],
+      "unexpected": []
+    },
+    {
+      "module": "Linear",
+      "missing": [
+        "bias"
+      ],
+      "unexpected": []
+    },
+    {
+      "module": "Linear",
+      "missing": [
+        "weight"
+      ],
+      "unexpected": []
+    },
+    {
+      "module": "Linear",
+      "missing": [
+        "bias"
+      ],
+      "unexpected": []
+    },
+    {
+      "module": "Dinov2LayerScale",
+      "missing": [],
+      "unexpected": []
+    },
+    {
+      "module": "Dinov2LayerScale",
+      "missing": [],
+      "unexpected": []
+    },
+    {
+      "module": "Linear",
+      "missing": [
+        "weight"
+      ],
+      "unexpected": []
+    },
+    {
+      "module": "Linear",
+      "missing": [
+        "bias"
+      ],
+      "unexpected": []
+    },
+    {
+      "module": "Linear",
+      "missing": [
+        "weight"
+      ],
+      "unexpected": []
+    },
+    {
+      "module": "Linear",
+      "missing": [
+        "bias"
+      ],
+      "unexpected": []
+    },
+    {
+      "module": "LayerNorm",
+      "missing": [
+        "weight"
+      ],
+      "unexpected": []
+    },
+    {
+      "module": "LayerNorm",
+      "missing": [
+        "bias"
+      ],
+      "unexpected": []
+    },
+    {
+      "module": "LayerNorm",
+      "missing": [
+        "weight"
+      ],
+      "unexpected": []
+    },
+    {
+      "module": "LayerNorm",
+      "missing": [
+        "bias"
+      ],
+      "unexpected": []
+    },
+    {
+      "module": "Linear",
+      "missing": [
+        "weight"
+      ],
+      "unexpected": []
+    },
+    {
+      "module": "Linear",
+      "missing": [
+        "bias"
+      ],
+      "unexpected": []
+    },
+    {
+      "module": "Linear",
+      "missing": [
+        "weight"
+      ],
+      "unexpected": []
+    },
+    {
+      "module": "Linear",
+      "missing": [
+        "bias"
+      ],
+      "unexpected": []
+    },
+    {
+      "module": "Linear",
+      "missing": [
+        "weight"
+      ],
+      "unexpected": []
+    },
+    {
+      "module": "Linear",
+      "missing": [
+        "bias"
+      ],
+      "unexpected": []
+    },
+    {
+      "module": "Linear",
+      "missing": [
+        "weight"
+      ],
+      "unexpected": []
+    },
+    {
+      "module": "Linear",
+      "missing": [
+        "bias"
+      ],
+      "unexpected": []
+    },
+    {
+      "module": "Dinov2LayerScale",
+      "missing": [],
+      "unexpected": []
+    },
+    {
+      "module": "Dinov2LayerScale",
+      "missing": [],
+      "unexpected": []
+    },
+    {
+      "module": "Linear",
+      "missing": [
+        "weight"
+      ],
+      "unexpected": []
+    },
+    {
+      "module": "Linear",
+      "missing": [
+        "bias"
+      ],
+      "unexpected": []
+    },
+    {
+      "module": "Linear",
+      "missing": [
+        "weight"
+      ],
+      "unexpected": []
+    },
+    {
+      "module": "Linear",
+      "missing": [
+        "bias"
+      ],
+      "unexpected": []
+    },
+    {
+      "module": "LayerNorm",
+      "missing": [
+        "weight"
+      ],
+      "unexpected": []
+    },
+    {
+      "module": "LayerNorm",
+      "missing": [
+        "bias"
+      ],
+      "unexpected": []
+    },
+    {
+      "module": "LayerNorm",
+      "missing": [
+        "weight"
+      ],
+      "unexpected": []
+    },
+    {
+      "module": "LayerNorm",
+      "missing": [
+        "bias"
+      ],
+      "unexpected": []
+    },
+    {
+      "module": "Linear",
+      "missing": [
+        "weight"
+      ],
+      "unexpected": []
+    },
+    {
+      "module": "Linear",
+      "missing": [
+        "bias"
+      ],
+      "unexpected": []
+    },
+    {
+      "module": "Linear",
+      "missing": [
+        "weight"
+      ],
+      "unexpected": []
+    },
+    {
+      "module": "Linear",
+      "missing": [
+        "bias"
+      ],
+      "unexpected": []
+    },
+    {
+      "module": "Linear",
+      "missing": [
+        "weight"
+      ],
+      "unexpected": []
+    },
+    {
+      "module": "Linear",
+      "missing": [
+        "bias"
+      ],
+      "unexpected": []
+    },
+    {
+      "module": "Linear",
+      "missing": [
+        "weight"
+      ],
+      "unexpected": []
+    },
+    {
+      "module": "Linear",
+      "missing": [
+        "bias"
+      ],
+      "unexpected": []
+    },
+    {
+      "module": "Dinov2LayerScale",
+      "missing": [],
+      "unexpected": []
+    },
+    {
+      "module": "Dinov2LayerScale",
+      "missing": [],
+      "unexpected": []
+    },
+    {
+      "module": "Linear",
+      "missing": [
+        "weight"
+      ],
+      "unexpected": []
+    },
+    {
+      "module": "Linear",
+      "missing": [
+        "bias"
+      ],
+      "unexpected": []
+    },
+    {
+      "module": "Linear",
+      "missing": [
+        "weight"
+      ],
+      "unexpected": []
+    },
+    {
+      "module": "Linear",
+      "missing": [
+        "bias"
+      ],
+      "unexpected": []
+    },
+    {
+      "module": "LayerNorm",
+      "missing": [
+        "weight"
+      ],
+      "unexpected": []
+    },
+    {
+      "module": "LayerNorm",
+      "missing": [
+        "bias"
+      ],
+      "unexpected": []
+    },
+    {
+      "module": "LayerNorm",
+      "missing": [
+        "weight"
+      ],
+      "unexpected": []
+    },
+    {
+      "module": "LayerNorm",
+      "missing": [
+        "bias"
+      ],
+      "unexpected": []
+    },
+    {
+      "module": "Linear",
+      "missing": [
+        "weight"
+      ],
+      "unexpected": []
+    },
+    {
+      "module": "Linear",
+      "missing": [
+        "bias"
+      ],
+      "unexpected": []
+    },
+    {
+      "module": "Linear",
+      "missing": [
+        "weight"
+      ],
+      "unexpected": []
+    },
+    {
+      "module": "Linear",
+      "missing": [
+        "bias"
+      ],
+      "unexpected": []
+    },
+    {
+      "module": "Linear",
+      "missing": [
+        "weight"
+      ],
+      "unexpected": []
+    },
+    {
+      "module": "Linear",
+      "missing": [
+        "bias"
+      ],
+      "unexpected": []
+    },
+    {
+      "module": "Linear",
+      "missing": [
+        "weight"
+      ],
+      "unexpected": []
+    },
+    {
+      "module": "Linear",
+      "missing": [
+        "bias"
+      ],
+      "unexpected": []
+    },
+    {
+      "module": "Dinov2LayerScale",
+      "missing": [],
+      "unexpected": []
+    },
+    {
+      "module": "Dinov2LayerScale",
+      "missing": [],
+      "unexpected": []
+    },
+    {
+      "module": "Linear",
+      "missing": [
+        "weight"
+      ],
+      "unexpected": []
+    },
+    {
+      "module": "Linear",
+      "missing": [
+        "bias"
+      ],
+      "unexpected": []
+    },
+    {
+      "module": "Linear",
+      "missing": [
+        "weight"
+      ],
+      "unexpected": []
+    },
+    {
+      "module": "Linear",
+      "missing": [
+        "bias"
+      ],
+      "unexpected": []
+    },
+    {
+      "module": "LayerNorm",
+      "missing": [
+        "weight"
+      ],
+      "unexpected": []
+    },
+    {
+      "module": "LayerNorm",
+      "missing": [
+        "bias"
+      ],
+      "unexpected": []
+    },
+    {
+      "module": "LayerNorm",
+      "missing": [
+        "weight"
+      ],
+      "unexpected": []
+    },
+    {
+      "module": "LayerNorm",
+      "missing": [
+        "bias"
+      ],
+      "unexpected": []
+    },
+    {
+      "module": "Linear",
+      "missing": [
+        "weight"
+      ],
+      "unexpected": []
+    },
+    {
+      "module": "Linear",
+      "missing": [
+        "bias"
+      ],
+      "unexpected": []
+    },
+    {
+      "module": "Linear",
+      "missing": [
+        "weight"
+      ],
+      "unexpected": []
+    },
+    {
+      "module": "Linear",
+      "missing": [
+        "bias"
+      ],
+      "unexpected": []
+    },
+    {
+      "module": "Linear",
+      "missing": [
+        "weight"
+      ],
+      "unexpected": []
+    },
+    {
+      "module": "Linear",
+      "missing": [
+        "bias"
+      ],
+      "unexpected": []
+    },
+    {
+      "module": "Linear",
+      "missing": [
+        "weight"
+      ],
+      "unexpected": []
+    },
+    {
+      "module": "Linear",
+      "missing": [
+        "bias"
+      ],
+      "unexpected": []
+    },
+    {
+      "module": "Dinov2LayerScale",
+      "missing": [],
+      "unexpected": []
+    },
+    {
+      "module": "Dinov2LayerScale",
+      "missing": [],
+      "unexpected": []
+    },
+    {
+      "module": "Linear",
+      "missing": [
+        "weight"
+      ],
+      "unexpected": []
+    },
+    {
+      "module": "Linear",
+      "missing": [
+        "bias"
+      ],
+      "unexpected": []
+    },
+    {
+      "module": "Linear",
+      "missing": [
+        "weight"
+      ],
+      "unexpected": []
+    },
+    {
+      "module": "Linear",
+      "missing": [
+        "bias"
+      ],
+      "unexpected": []
+    },
+    {
+      "module": "LayerNorm",
+      "missing": [
+        "weight"
+      ],
+      "unexpected": []
+    },
+    {
+      "module": "LayerNorm",
+      "missing": [
+        "bias"
+      ],
+      "unexpected": []
+    },
+    {
+      "module": "LayerNorm",
+      "missing": [
+        "weight"
+      ],
+      "unexpected": []
+    },
+    {
+      "module": "LayerNorm",
+      "missing": [
+        "bias"
+      ],
+      "unexpected": []
+    },
+    {
+      "module": "LayerNorm",
+      "missing": [
+        "weight"
+      ],
+      "unexpected": []
+    },
+    {
+      "module": "LayerNorm",
+      "missing": [
+        "bias"
+      ],
+      "unexpected": []
+    },
+    {
+      "module": "Conv2d",
+      "missing": [
+        "weight"
+      ],
+      "unexpected": []
+    },
+    {
+      "module": "Conv2d",
+      "missing": [
+        "bias"
+      ],
+      "unexpected": []
+    },
+    {
+      "module": "Conv2d",
+      "missing": [
+        "weight"
+      ],
+      "unexpected": []
+    },
+    {
+      "module": "Conv2d",
+      "missing": [
+        "bias"
+      ],
+      "unexpected": []
+    },
+    {
+      "module": "Conv2d",
+      "missing": [
+        "weight"
+      ],
+      "unexpected": []
+    },
+    {
+      "module": "Conv2d",
+      "missing": [
+        "bias"
+      ],
+      "unexpected": []
+    },
+    {
+      "module": "Conv2d",
+      "missing": [],
+      "unexpected": []
+    },
+    {
+      "module": "Conv2d",
+      "missing": [],
+      "unexpected": []
+    },
+    {
+      "module": "Conv2d",
+      "missing": [],
+      "unexpected": []
+    },
+    {
+      "module": "Conv2d",
+      "missing": [],
+      "unexpected": []
+    },
+    {
+      "module": "Conv2d",
+      "missing": [
+        "weight"
+      ],
+      "unexpected": []
+    },
+    {
+      "module": "Conv2d",
+      "missing": [
+        "bias"
+      ],
+      "unexpected": []
+    },
+    {
+      "module": "Conv2d",
+      "missing": [
+        "weight"
+      ],
+      "unexpected": []
+    },
+    {
+      "module": "Conv2d",
+      "missing": [
+        "bias"
+      ],
+      "unexpected": []
+    },
+    {
+      "module": "Conv2d",
+      "missing": [
+        "weight"
+      ],
+      "unexpected": []
+    },
+    {
+      "module": "Conv2d",
+      "missing": [
+        "bias"
+      ],
+      "unexpected": []
+    },
+    {
+      "module": "Conv2d",
+      "missing": [
+        "weight"
+      ],
+      "unexpected": []
+    },
+    {
+      "module": "Conv2d",
+      "missing": [
+        "bias"
+      ],
+      "unexpected": []
+    },
+    {
+      "module": "Conv2d",
+      "missing": [
+        "weight"
+      ],
+      "unexpected": []
+    },
+    {
+      "module": "Conv2d",
+      "missing": [
+        "bias"
+      ],
+      "unexpected": []
+    },
+    {
+      "module": "Conv2d",
+      "missing": [
+        "weight"
+      ],
+      "unexpected": []
+    },
+    {
+      "module": "Conv2d",
+      "missing": [
+        "bias"
+      ],
+      "unexpected": []
+    },
+    {
+      "module": "Conv2d",
+      "missing": [
+        "weight"
+      ],
+      "unexpected": []
+    },
+    {
+      "module": "Conv2d",
+      "missing": [
+        "bias"
+      ],
+      "unexpected": []
+    },
+    {
+      "module": "Conv2d",
+      "missing": [
+        "weight"
+      ],
+      "unexpected": []
+    },
+    {
+      "module": "Conv2d",
+      "missing": [
+        "bias"
+      ],
+      "unexpected": []
+    },
+    {
+      "module": "Conv2d",
+      "missing": [
+        "weight"
+      ],
+      "unexpected": []
+    },
+    {
+      "module": "Conv2d",
+      "missing": [
+        "bias"
+      ],
+      "unexpected": []
+    },
+    {
+      "module": "Conv2d",
+      "missing": [
+        "weight"
+      ],
+      "unexpected": []
+    },
+    {
+      "module": "Conv2d",
+      "missing": [
+        "bias"
+      ],
+      "unexpected": []
+    },
+    {
+      "module": "Conv2d",
+      "missing": [
+        "weight"
+      ],
+      "unexpected": []
+    },
+    {
+      "module": "Conv2d",
+      "missing": [
+        "bias"
+      ],
+      "unexpected": []
+    },
+    {
+      "module": "Conv2d",
+      "missing": [
+        "weight"
+      ],
+      "unexpected": []
+    },
+    {
+      "module": "Conv2d",
+      "missing": [
+        "bias"
+      ],
+      "unexpected": []
+    },
+    {
+      "module": "Conv2d",
+      "missing": [
+        "weight"
+      ],
+      "unexpected": []
+    },
+    {
+      "module": "Conv2d",
+      "missing": [
+        "bias"
+      ],
+      "unexpected": []
+    },
+    {
+      "module": "Conv2d",
+      "missing": [
+        "weight"
+      ],
+      "unexpected": []
+    },
+    {
+      "module": "Conv2d",
+      "missing": [
+        "bias"
+      ],
+      "unexpected": []
+    },
+    {
+      "module": "Conv2d",
+      "missing": [
+        "weight"
+      ],
+      "unexpected": []
+    },
+    {
+      "module": "Conv2d",
+      "missing": [
+        "bias"
+      ],
+      "unexpected": []
+    },
+    {
+      "module": "Conv2d",
+      "missing": [
+        "weight"
+      ],
+      "unexpected": []
+    },
+    {
+      "module": "Conv2d",
+      "missing": [
+        "bias"
+      ],
+      "unexpected": []
+    },
+    {
+      "module": "Conv2d",
+      "missing": [
+        "weight"
+      ],
+      "unexpected": []
+    },
+    {
+      "module": "Conv2d",
+      "missing": [
+        "bias"
+      ],
+      "unexpected": []
+    },
+    {
+      "module": "Conv2d",
+      "missing": [
+        "weight"
+      ],
+      "unexpected": []
+    },
+    {
+      "module": "Conv2d",
+      "missing": [
+        "bias"
+      ],
+      "unexpected": []
+    },
+    {
+      "module": "Conv2d",
+      "missing": [
+        "weight"
+      ],
+      "unexpected": []
+    },
+    {
+      "module": "Conv2d",
+      "missing": [
+        "bias"
+      ],
+      "unexpected": []
+    },
+    {
+      "module": "Conv2d",
+      "missing": [
+        "weight"
+      ],
+      "unexpected": []
+    },
+    {
+      "module": "Conv2d",
+      "missing": [
+        "bias"
+      ],
+      "unexpected": []
+    },
+    {
+      "module": "Conv2d",
+      "missing": [
+        "weight"
+      ],
+      "unexpected": []
+    },
+    {
+      "module": "Conv2d",
+      "missing": [
+        "bias"
+      ],
+      "unexpected": []
+    },
+    {
+      "module": "ConvTranspose2d",
+      "missing": [
+        "weight"
+      ],
+      "unexpected": []
+    },
+    {
+      "module": "ConvTranspose2d",
+      "missing": [
+        "bias"
+      ],
+      "unexpected": []
+    },
+    {
+      "module": "Conv2d",
+      "missing": [
+        "weight"
+      ],
+      "unexpected": []
+    },
+    {
+      "module": "Conv2d",
+      "missing": [
+        "bias"
+      ],
+      "unexpected": []
+    },
+    {
+      "module": "ConvTranspose2d",
+      "missing": [
+        "weight"
+      ],
+      "unexpected": []
+    },
+    {
+      "module": "ConvTranspose2d",
+      "missing": [
+        "bias"
+      ],
+      "unexpected": []
+    },
+    {
+      "module": "Conv2d",
+      "missing": [
+        "weight"
+      ],
+      "unexpected": []
+    },
+    {
+      "module": "Conv2d",
+      "missing": [
+        "bias"
+      ],
+      "unexpected": []
+    },
+    {
+      "module": "Conv2d",
+      "missing": [
+        "weight"
+      ],
+      "unexpected": []
+    },
+    {
+      "module": "Conv2d",
+      "missing": [
+        "bias"
+      ],
+      "unexpected": []
+    },
+    {
+      "module": "Conv2d",
+      "missing": [
+        "weight"
+      ],
+      "unexpected": []
+    },
+    {
+      "module": "Conv2d",
+      "missing": [
+        "bias"
+      ],
+      "unexpected": []
+    }
+  ],
+  "arrays": {
+    "result.depth": {
+      "shape": [
+        704,
+        1280
+      ],
+      "min": 0.4909895956516266,
+      "max": 27.749723434448242,
+      "std": 7.9838457107543945
+    }
+  },
+  "depth_maps_checked": 1,
+  "peak_memory_allocated": 457966592,
+  "elapsed_seconds": 120.376
+}

@@ -286,7 +286,7 @@ def parse_args(argv=None):
     p.add_argument("--geo_cloud_splat_radius", type=int, default=2,
                    help="da3: render splat radius (density vs. time)")
     p.add_argument("--geo_da3_src", type=str, default=None,
-                   help="da3: path to the DepthAnything3 source tree (configurable, never hardcode; None -> EVOKE_DA3_SRC or the module default)")
+                   help="da3: legacy source option; omit to use WorldFoundry's shared base model")
     p.add_argument("--geo_da3_weights", type=str, default=None,
                    help="da3: path to the DepthAnything3 weight snapshot (None -> EVOKE_DA3_WEIGHTS or the module default)")
     p.add_argument("--geo_da3_process_res", type=int, default=504,
@@ -297,7 +297,7 @@ def parse_args(argv=None):
                    help="depth estimator: vigeo=ViGeo (default; no pose/intrinsics input, needs the "
                         "models/ViGeo1.1 weights) | da3=pose-conditioned DepthAnything3")
     p.add_argument("--geo_vigeo_src", type=str, default=None,
-                   help="vigeo: ViGeo source tree (None -> EVOKE_VIGEO_SRC or the vendored evoke/third_party/vigeo)")
+                   help="vigeo: legacy source option; omit to use WorldFoundry's shared base model")
     p.add_argument("--geo_vigeo_weights", type=str, default=None,
                    help="vigeo: directory holding vigeo.pt (None -> EVOKE_VIGEO_WEIGHTS or models/ViGeo1.1)")
     p.add_argument("--geo_vigeo_num_tokens", type=int, default=0,
@@ -762,10 +762,10 @@ def build_pipe(args):
         print("[geo-infer] reusing the already-loaded pipeline (weights are not re-read)", flush=True)
         return hit
     from diffusers import AutoencoderKLWan
-    from evoke.modules.transformer_evoke import EvokeTransformer3DModel
+    from worldfoundry.base_models.diffusion_model.models.networks.evoke.model import EvokeTransformer3DModel
     from evoke.pipelines.pipeline_evoke import EvokePipeline
     # use diffusers-fork scheduler to accept mu kwarg
-    from evoke.diffusers_version.scheduling_evoke_diffusers import EvokeScheduler
+    from worldfoundry.base_models.diffusion_model.schedulers.evoke import EvokeScheduler
 
     # output_dir is created in main(): it is per-case, and on a cache hit this function returns above,
     # so leaving the mkdir here would silently skip every later case's directory.

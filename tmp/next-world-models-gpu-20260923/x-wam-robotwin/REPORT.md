@@ -1,0 +1,5 @@
+# X-WAM RoboTwin GPU validation
+
+The public X-WAM runtime loaded the local RoboTwin-SFT DeepSpeed checkpoint and Wan2.2-TI2V-5B base configuration on GPU 2. The real toy photograph was repeated across the three required camera inputs; the robot state was synthetic zeros (16 values), the instruction requested gripper motion, and seed 42 was used. The checkpoint's string-to-tensor `module` state passed strict assignment. Inference emitted a finite 32×14 action chunk and a finite 9×16 proprioception prediction, recorded in `result.json`.
+
+The first attempt failed during restricted `torch.load`: the official DeepSpeed pickle contains a built-in `set` in addition to tensors and standard Torch storage globals. The checkpoint's `data.pkl` was inspected with `pickletools`; the runtime now narrowly allowlists `set` while retaining `weights_only=True`. The retest passed. This is an inference and output-structure check with synthetic observations, not RoboTwin task success or action accuracy. Evidence: `result.json`, `run.log`, and `run-retest.log`.

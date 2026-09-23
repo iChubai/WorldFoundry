@@ -1,0 +1,22 @@
+{
+  "case": "mmaudio-small_44k",
+  "status": "verified_inference_only",
+  "public_runtime_status": "succeeded",
+  "finite": true,
+  "shape": [
+    221184,
+    1
+  ],
+  "sample_rate": 44100,
+  "duration": 5.015510204081632,
+  "expected_duration": 5.0,
+  "raw_min": -0.82421875,
+  "raw_max": 0.88671875,
+  "std": 0.14988343752072084,
+  "clipped_fraction": 0.0,
+  "raw_vs_file_max_abs": 1.52587890625e-05,
+  "peak_memory_allocated": 4453306880,
+  "loading": "all recorded strict modules0missing/unexpected",
+  "scope": "Official5secbeach video,requested8sec is truncated by released runtime;25Euler steps,cfg4.5,seed42. Original harness erroneously required8secs and is retained. Audio subjective and synchronization review pending,no semantic pass.",
+  "artifact_sha256": "aa57c15232cd54b35e0b8e804870e20fe1c99bac06ea6683717dbe9b3a2bad44"
+}

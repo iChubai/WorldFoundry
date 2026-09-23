@@ -27,11 +27,10 @@ from xfuser.core.distributed import get_sequence_parallel_rank, get_sequence_par
 from xfuser.core.long_ctx_attention import xFuserLongContextAttention
 from yunchang.kernels import AttnType
 
-from worldfoundry.core.device import is_npu_available
 from worldfoundry.core.distributed.xfuser_parallel import initialize_usp  # noqa: F401 - public compatibility export
-from worldfoundry.core.gradient import gradient_checkpoint_forward
+from worldfoundry.core.execution.device import is_npu_available
 from worldfoundry.core.nn import sinusoidal_embedding_1d
-
+from worldfoundry.core.nn.gradient import gradient_checkpoint_forward
 
 # ──────────────────────────────────────────────────────────────────────────
 # RoPE pad/apply — NPU host pad, then slice the rank's global offsets
@@ -151,6 +150,7 @@ def usp_dit_forward(
 def usp_attn_forward(self, x, freqs):
     """Self-attention via xFuser long-context kernels (FA on CUDA, NPU variant)."""
 
+    q = self.norm_q(self.q(x))
     k = self.norm_k(self.k(x))
     v = self.v(x)
 

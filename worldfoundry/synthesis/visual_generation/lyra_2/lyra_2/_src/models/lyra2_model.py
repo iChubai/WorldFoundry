@@ -35,7 +35,7 @@ from worldfoundry.core.configuration.lazy_config import instantiate as lazy_inst
 from worldfoundry.core.distributed import broadcast_dtensor_model_states
 from worldfoundry.core.distributed.context_parallel import broadcast
 from worldfoundry.core.distributed.logging import log
-from worldfoundry.core.geometry import ray_condition
+from worldfoundry.core.geometry.transforms import ray_condition
 from worldfoundry.core.utils import inference_runtime as misc
 
 try:

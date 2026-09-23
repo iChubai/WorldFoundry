@@ -1,0 +1,24 @@
+schema_version: 2
+id: xgen-jing
+name: XGEN-JING Flash v1
+provider: XGEN Labs
+tasks: [text-to-video, image-to-video, camera-controlled-video, world-model]
+source:
+  status: open_source
+  official_repo_url: https://github.com/XGEN-Labs/XGEN-JING
+  revision: cbeec31630d63a981a8e40d6e79c71a188a7d8c9
+  license: minimax-h3-community
+checkpoint: XGENlabs/XGEN-JING
+runtime_profile: runtime-profile:xgen-jing
+runner_target: worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner
+pipeline_binding: xgen-jing
+integration:
+  status: integrated
+  notes:
+  - Reuses the canonical MiniMax-H3 DiT, Qwen3-VL conditioner, geometry and scheduler helpers.
+  - Diffusers H3 video/audio codecs and core H264/audio IO are reused without copying architectures.
+  - Four-step bidirectional JING-Flash-v1 only; the causal model has not been released.
+runner_parity:
+  status: pending
+  notes: Checkpoint-backed GPU validation is in progress.
+catalog_category: world_models

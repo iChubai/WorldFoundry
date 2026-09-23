@@ -1,13 +1,13 @@
 {
-  "modelsTotal": 272,
-  "modelsListed": 262,
+  "modelsTotal": 271,
+  "modelsListed": 261,
   "benchmarksTotal": 75,
   "modelFamilies": [
     {
       "id": "video",
       "label": "Video",
       "blurb": "Text-, image-, and video-conditioned generation, editing, and audio-video systems.",
-      "count": 56,
+      "count": 55,
       "entries": [
         {
           "id": "allegro",
@@ -372,14 +372,6 @@
           "status": "integrated",
           "aliases": [
             "t2v_turbo_t2v"
-          ]
-        },
-        {
-          "id": "thinksound",
-          "name": "ThinkSound",
-          "status": "metadata_only",
-          "aliases": [
-            "thinksound"
           ]
         },
         {

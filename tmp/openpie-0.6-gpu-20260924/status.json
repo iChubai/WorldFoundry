@@ -1,0 +1,5 @@
+{
+  "status": "blocked_loader",
+  "gpu_action_run": false,
+  "evidence": "tmp/vla-blockers-gpu-20260924/loader-preflight.json"
+}

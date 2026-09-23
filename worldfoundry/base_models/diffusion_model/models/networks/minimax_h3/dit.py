@@ -242,6 +242,7 @@ class MiniMaxH3Attention(nn.Module):
         *,
         rope_cache: tuple[torch.Tensor, torch.Tensor] | None,
         cu_seqlens: torch.Tensor,
+        attention_groups: list[tuple[torch.Tensor, torch.Tensor]] | None = None,
     ) -> torch.Tensor:
         """x: [T, hidden] packed rows -> [T, hidden]."""
 
@@ -256,7 +257,20 @@ class MiniMaxH3Attention(nn.Module):
         else:
             cos_sin_cache, positions = rope_cache
             q, k = qk_norm_rope(q, k, self.q_norm, self.k_norm, cos_sin_cache, positions)
-        out = _varlen_attention(q, k, v, cu_seqlens=cu_seqlens, softmax_scale=self.softmax_scale)
+        if attention_groups is None:
+            out = _varlen_attention(q, k, v, cu_seqlens=cu_seqlens, softmax_scale=self.softmax_scale)
+        else:
+            # Variants can expose global media with document-local text without
+            # materializing a quadratic attention mask or duplicating projections.
+            out = torch.zeros_like(q)
+            for queries, keys in attention_groups:
+                attended = F.scaled_dot_product_attention(
+                    q.index_select(0, queries).transpose(0, 1).unsqueeze(0),
+                    k.index_select(0, keys).transpose(0, 1).unsqueeze(0),
+                    v.index_select(0, keys).transpose(0, 1).unsqueeze(0),
+                    scale=self.softmax_scale,
+                )
+                out.index_copy_(0, queries, attended.squeeze(0).transpose(0, 1))
         out = out.reshape(total, self.num_heads * self.head_dim)
         return self.out_proj(out)
 
@@ -383,6 +397,8 @@ class MiniMaxH3DiTBlock(nn.Module):
         rope_cache: tuple[torch.Tensor, torch.Tensor],
         cu_seqlens: torch.Tensor,
         adaln_params: tuple[torch.Tensor, ...] | None = None,
+        attention_groups: list[tuple[torch.Tensor, torch.Tensor]] | None = None,
+        ffn_conditioner: Any = None,
     ) -> torch.Tensor:
         if adaln_params is None:
             adaln_params = self.adaln_proj(adaln_input)
@@ -391,10 +407,15 @@ class MiniMaxH3DiTBlock(nn.Module):
         residual = x
         h = self.norm1(x)
         h = indexed_scale_shift(h, shift_msa, scale_msa, combined_indices, dtype=_BF16)
-        h = self.attn(h, rope_cache=rope_cache, cu_seqlens=cu_seqlens)
+        if attention_groups is None:
+            h = self.attn(h, rope_cache=rope_cache, cu_seqlens=cu_seqlens)
+        else:
+            h = self.attn(h, rope_cache=rope_cache, cu_seqlens=cu_seqlens, attention_groups=attention_groups)
         x = indexed_gate(residual, gate_msa, h, combined_indices, dtype=_BF16)
 
         residual = x
+        if ffn_conditioner is not None:
+            x = ffn_conditioner(x)
         h = self.norm2(x)
         h = indexed_scale_shift(h, shift_mlp, scale_mlp, combined_indices, dtype=_BF16)
         h = self.mlp(h)

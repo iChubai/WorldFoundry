@@ -1,0 +1,55 @@
+{
+  "artifact_path": "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/WorldFoundry/tmp/stepvideo-gpu-20260923/demo-quality.mp4",
+  "generated_image_path": null,
+  "generated_video_path": "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/WorldFoundry/tmp/stepvideo-gpu-20260923/demo-quality.mp4",
+  "model_name": "step-video-t2v",
+  "generation_type": "t2v",
+  "metadata": {
+    "model_id": "step-video-t2v",
+    "seed": 0,
+    "num_inference_steps": 50,
+    "guidance_scale": 9.0,
+    "guidance_mode": "standard",
+    "cfg_parallel_degree": 1,
+    "parallel_optimization_report": {
+      "requested": {
+        "cfg_parallel": false
+      },
+      "effective": {
+        "cfg_parallel": "exact-local"
+      },
+      "fallbacks": [],
+      "quality_tier": "exact",
+      "runtime": {
+        "cfg_parallel_local_branch_calls": {
+          "positive": 0,
+          "negative": 0
+        },
+        "cfg_parallel_collective_calls": 0
+      }
+    },
+    "cfg_gate_optimization_report": {
+      "requested": {
+        "cfg_delta_cache": false
+      },
+      "effective": {
+        "cfg_delta_cache": "not-requested"
+      },
+      "fallbacks": [],
+      "quality_tier": "exact",
+      "runtime": {
+        "cfg_delta_cache": {
+          "gate_fraction": 1.0,
+          "total_steps": 50,
+          "gate_step_index": 50,
+          "delta_refreshes": 0,
+          "cached_delta_steps": 0,
+          "positive_branch_calls": 50,
+          "negative_branch_calls": 50
+        }
+      }
+    },
+    "final_denoise": false,
+    "extensions": []
+  }
+}

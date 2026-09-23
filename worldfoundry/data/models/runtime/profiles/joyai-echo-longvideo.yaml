@@ -30,7 +30,7 @@ artifact_filename: joyai-echo-longvideo.mp4
 execution:
   environment: joyai-echo-longvideo
   backend_stage: official_external_runtime
-  runtime_status: command_contract_validated_checkpoint_gpu_pending
+  runtime_status: command_contract_validated_gpu_blocked_gated_encoder_and_environment
   integration_status: integrated
   pipeline_binding: joyai-echo-longvideo
   defaults:

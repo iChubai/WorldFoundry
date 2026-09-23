@@ -1,0 +1,21 @@
+{
+  "video": "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/WorldFoundry/tmp/video-broad-gpu-20260921/ltx-video-098/demo.mp4",
+  "metadata": {
+    "width": 768,
+    "height": 512,
+    "r_frame_rate": "30/1",
+    "duration": "1.100000",
+    "nb_frames": "33"
+  },
+  "decoded_frames": 33,
+  "mean": 45.12469289861229,
+  "std": 36.552677506479384,
+  "mean_frame_delta": 1.6939172744750977,
+  "max_frame_delta": 1.8618671894073486,
+  "decode_stderr": "",
+  "passed": true,
+  "expected_width": 768,
+  "expected_height": 512,
+  "expected_fps": 30,
+  "expected_frames": 33
+}

@@ -1,0 +1,86 @@
+{
+  "status": "verified_configuration",
+  "case": "pixelsplat-re10k-final",
+  "scope": "Original convolutional RE10K checkpoint,2real posed scenes,2context images and3official target indices per scene,256x256. Public GPU pipeline,strict loading,raw finite encoder/decoder,393216Gaussians per scene. No full benchmark,unposed-input accuracy or complete upstream numerical parity claim. Export normalizes scene and retains DC color only.",
+  "visual_review": "All2comparison sheets actually viewed. Bedroom furniture, curtains and hallway objects align with target views; some fine detail and disocclusion blur remain.",
+  "metrics": [
+    {
+      "scene": "5aca87f95a9412c6",
+      "psnr": [
+        [
+          23.776710510253906,
+          25.395835876464844,
+          29.397153854370117
+        ]
+      ],
+      "pred_min": 0.0009980722097679973,
+      "pred_max": 1.0673948526382446,
+      "context_indices": [
+        [
+          58,
+          133
+        ]
+      ],
+      "target_indices": [
+        [
+          84,
+          102,
+          129
+        ]
+      ]
+    },
+    {
+      "scene": "bc95e5c7e357f1b7",
+      "psnr": [
+        [
+          24.827804565429688,
+          24.670793533325195,
+          27.256256103515625
+        ]
+      ],
+      "pred_min": 0.02529371716082096,
+      "pred_max": 1.0603777170181274,
+      "context_indices": [
+        [
+          35,
+          91
+        ]
+      ],
+      "target_indices": [
+        [
+          48,
+          51,
+          82
+        ]
+      ]
+    }
+  ],
+  "ply_reviews": [
+    {
+      "before_decoded_opacity_max_abs": 5.960464477539063e-08,
+      "opacity_max_abs": 5.960464477539063e-08,
+      "positions_max_abs": 1.031348993052461e-05,
+      "covariance_relative_frobenius_max": 1.6532512955965572e-06,
+      "ply": "tmp/pixelsplat-final-gpu-20260923/pixelsplat-re10k-final/scene/5aca87f95a9412c6/gaussians.ply",
+      "vertices": 393216,
+      "passed": true,
+      "scope": "Standard3DGS PLY sigmoid opacity/log scales/WXYZ rotations; world covariance after exported scene centering, scaling and rotation. DC color only, as current export contract."
+    },
+    {
+      "before_decoded_opacity_max_abs": 5.960464477539063e-08,
+      "opacity_max_abs": 5.960464477539063e-08,
+      "positions_max_abs": 4.827583257593915e-06,
+      "covariance_relative_frobenius_max": 1.6482544268038627e-06,
+      "ply": "tmp/pixelsplat-final-gpu-20260923/pixelsplat-re10k-final/scene/bc95e5c7e357f1b7/gaussians.ply",
+      "vertices": 393216,
+      "passed": true,
+      "scope": "Standard3DGS PLY sigmoid opacity/log scales/WXYZ rotations; world covariance after exported scene centering, scaling and rotation. DC color only, as current export contract."
+    }
+  ],
+  "persistent_source_hashes_match": true,
+  "removed_torch_generated_helpers": [
+    "tmp/pixelsplat-validation-20260922/staging/tmp1ka1yrrv/_remote_module_non_scriptable.py"
+  ],
+  "checkpoint_hashes": "tmp/pixelsplat-validation-20260922/checkpoint-hashes.json",
+  "reviewed_at": 1790094426.7144196
+}

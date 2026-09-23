@@ -1,0 +1,10 @@
+{
+  "case": "worldcam",
+  "started_at": 1790001299.5447652,
+  "gpu": "3",
+  "status": "generated",
+  "videos": [
+    "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/WorldFoundry/tmp/causal-more-gpu-20260921/worldcam/demo.mp4"
+  ],
+  "elapsed_seconds": 146.95
+}

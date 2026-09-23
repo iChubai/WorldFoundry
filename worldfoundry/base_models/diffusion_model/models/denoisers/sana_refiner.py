@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
+import inspect
 from collections.abc import Mapping
+from contextlib import contextmanager, nullcontext
 
 import torch
 
@@ -10,6 +12,30 @@ from ...components import ComponentBuildContext
 from ...contracts import DiffusionRequest, ModalityState
 from ...loaders import NativeCheckpointResolver
 from ...optimizations import OffloadMode
+
+
+@contextmanager
+def _masked_ltx2_blocks(transformer: torch.nn.Module, mask: torch.Tensor):
+    """Pass the frozen-prefix mask through Diffusers releases without a top-level mask argument."""
+
+    blocks = getattr(transformer, "transformer_blocks", None)
+    if blocks is None or not len(blocks):
+        raise TypeError("LTX-2 refiner has no transformer blocks to receive the prefix mask")
+    handles = []
+
+    def supply_mask(module, args, kwargs):
+        kwargs["self_attention_mask"] = mask
+        return args, kwargs
+
+    try:
+        for block in blocks:
+            if "self_attention_mask" not in inspect.signature(block.forward).parameters:
+                raise TypeError("LTX-2 refiner block cannot receive the prefix mask")
+            handles.append(block.register_forward_pre_hook(supply_mask, with_kwargs=True))
+        yield
+    finally:
+        for handle in handles:
+            handle.remove()
 
 
 def _pack_latents(latents: torch.Tensor) -> torch.Tensor:
@@ -73,16 +99,15 @@ class SanaWMLTX2RefinerProcessor:
         total_tokens: int,
         context_tokens: int,
         device: torch.device,
-        dtype: torch.dtype,
     ) -> torch.Tensor:
         mask = torch.ones(
             batch_size,
             total_tokens,
             total_tokens,
             device=device,
-            dtype=dtype,
+            dtype=torch.bool,
         )
-        mask[:, :context_tokens, context_tokens:] = 0.0
+        mask[:, :context_tokens, context_tokens:] = False
         return mask
 
     def _velocity(
@@ -134,26 +159,28 @@ class SanaWMLTX2RefinerProcessor:
             total_tokens=video_tokens.shape[1],
             context_tokens=context_tokens.shape[1],
             device=self.device,
-            dtype=self.dtype,
         )
-        output = self.transformer(
-            hidden_states=video_tokens,
-            audio_hidden_states=audio_tokens,
-            encoder_hidden_states=video_context.to(device=self.device, dtype=self.dtype),
-            audio_encoder_hidden_states=audio_context.to(device=self.device, dtype=self.dtype),
-            timestep=model_timestep,
-            audio_timestep=audio_timestep,
-            encoder_attention_mask=context_mask.to(device=self.device),
-            audio_encoder_attention_mask=context_mask.to(device=self.device),
-            num_frames=int(context.shape[2] + active.shape[2]),
-            height=int(active.shape[3]),
-            width=int(active.shape[4]),
-            fps=float(fps),
-            audio_num_frames=1,
-            isolate_modalities=True,
-            video_self_attention_mask=mask,
-            return_dict=False,
-        )
+        top_level_mask = "video_self_attention_mask" in inspect.signature(self.transformer.forward).parameters
+        mask_scope = nullcontext() if top_level_mask else _masked_ltx2_blocks(self.transformer, mask)
+        with mask_scope:
+            output = self.transformer(
+                hidden_states=video_tokens,
+                audio_hidden_states=audio_tokens,
+                encoder_hidden_states=video_context.to(device=self.device, dtype=self.dtype),
+                audio_encoder_hidden_states=audio_context.to(device=self.device, dtype=self.dtype),
+                timestep=model_timestep,
+                audio_timestep=audio_timestep,
+                encoder_attention_mask=context_mask.to(device=self.device),
+                audio_encoder_attention_mask=context_mask.to(device=self.device),
+                num_frames=int(context.shape[2] + active.shape[2]),
+                height=int(active.shape[3]),
+                width=int(active.shape[4]),
+                fps=float(fps),
+                audio_num_frames=1,
+                isolate_modalities=True,
+                return_dict=False,
+                **({"video_self_attention_mask": mask} if top_level_mask else {}),
+            )
         if not isinstance(output, tuple) or not output or not isinstance(output[0], torch.Tensor):
             raise TypeError("LTX-2 refiner transformer must return a video tensor tuple")
         return output[0][:, context_tokens.shape[1] :].to(dtype=self.dtype)

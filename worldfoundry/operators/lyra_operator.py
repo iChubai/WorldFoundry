@@ -7,7 +7,7 @@ from typing import Any, Dict, Sequence, Union
 import numpy as np
 import torch
 
-from worldfoundry.core.world_explorer import sample_camera_path
+from worldfoundry.core.geometry.path import sample_camera_path
 
 from ..pipelines.lyra.lyra_utils import load_pil_image
 from .base_operator import BaseOperator

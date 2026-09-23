@@ -1,0 +1,3 @@
+# LeWorldModel GPU preflight
+
+The local `eren23/lewm-models/slim_96d_4e_4p/lejepa_weights.safetensors` is 39,279,128 bytes and exposes 151 tensors. The initial CPU-only construction had two missing ViT pooler keys because this checkpoint omits the unused pooler. `run.py` now constructs `ViTModel(..., add_pooling_layer=False)`. The corrected run was stopped before CUDA allocation to avoid colliding with the concurrent SANA-WM job on GPU2. No generated latent result or model quality claim exists yet. The official PushT HDF5 dataset is absent from the default `~/.stable-wm/pusht.h5` and `~/.stable-wm/datasets/pusht.h5` paths, so even a direct OOD image/action rollout would not establish official evaluation parity.

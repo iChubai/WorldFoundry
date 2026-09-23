@@ -1,0 +1,21 @@
+{
+  "video": "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/WorldFoundry/tmp/causal-more-gpu-20260921/lingbot-video-dense/demo.mp4",
+  "metadata": {
+    "width": 832,
+    "height": 480,
+    "r_frame_rate": "24/1",
+    "duration": "2.041667",
+    "nb_frames": "49"
+  },
+  "decoded_frames": 49,
+  "mean": 66.49410342261905,
+  "std": 75.55349426516452,
+  "mean_frame_delta": 29.58501625061035,
+  "max_frame_delta": 51.16245651245117,
+  "decode_stderr": "",
+  "passed": true,
+  "expected_width": 832,
+  "expected_height": 480,
+  "expected_fps": 24.0,
+  "expected_frames": 49
+}

@@ -1,0 +1,11 @@
+{
+  "case": "longcat-video",
+  "started_at": 1789997098.7121046,
+  "gpu": "3",
+  "status": "generated",
+  "videos": [
+    "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/WorldFoundry/tmp/helios-longcat-gpu-20260921/longcat-video/demo.mp4",
+    "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/WorldFoundry/tmp/helios-longcat-gpu-20260921/longcat-video/artifacts/output_t2v.mp4"
+  ],
+  "elapsed_seconds": 401.11
+}

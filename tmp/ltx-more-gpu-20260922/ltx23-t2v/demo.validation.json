@@ -1,0 +1,21 @@
+{
+  "video": "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/WorldFoundry/tmp/ltx-more-gpu-20260922/ltx23-t2v/demo.mp4",
+  "metadata": {
+    "width": 768,
+    "height": 512,
+    "r_frame_rate": "24/1",
+    "duration": "5.041667",
+    "nb_frames": "121"
+  },
+  "decoded_frames": 121,
+  "mean": 87.35651449981978,
+  "std": 65.41353287855947,
+  "mean_frame_delta": 6.2255706787109375,
+  "max_frame_delta": 8.163375854492188,
+  "decode_stderr": "",
+  "passed": true,
+  "expected_width": 768,
+  "expected_height": 512,
+  "expected_fps": 24.0,
+  "expected_frames": 121
+}

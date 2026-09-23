@@ -1,0 +1,14 @@
+{
+  "case": "framepack-original",
+  "started_at": 1790065237.0755634,
+  "gpu": "3",
+  "status": "generated",
+  "videos": [
+    "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/WorldFoundry/tmp/classic-video-audited-gpu-20260922/framepack-original/demo.mp4",
+    "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/WorldFoundry/tmp/classic-video-audited-gpu-20260922/framepack-original/.framepack_outputs/260922_162344_334_4632_18.mp4",
+    "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/WorldFoundry/tmp/classic-video-audited-gpu-20260922/framepack-original/.framepack_outputs/260922_162344_334_4632_27.mp4",
+    "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/WorldFoundry/tmp/classic-video-audited-gpu-20260922/framepack-original/.framepack_outputs/260922_162344_334_4632_37.mp4",
+    "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/WorldFoundry/tmp/classic-video-audited-gpu-20260922/framepack-original/.framepack_outputs/260922_162344_334_4632_9.mp4"
+  ],
+  "elapsed_seconds": 299.31
+}

@@ -78,7 +78,7 @@ class DM0Runtime:
         import torch
         from transformers import AutoTokenizer
 
-        from worldfoundry.core.device import resolve_inference_device, resolve_inference_dtype
+        from worldfoundry.core.execution.device import resolve_inference_device, resolve_inference_dtype
 
         from .modeling import DM0Config, DM0ForCausalLM
 

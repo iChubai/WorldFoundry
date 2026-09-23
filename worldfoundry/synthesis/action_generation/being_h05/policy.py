@@ -12,7 +12,7 @@ from typing import Any, Dict, List, Optional, Union
 
 import numpy as np
 import torch
-from worldfoundry.core.device import resolve_inference_device, resolve_inference_dtype
+from worldfoundry.core.execution.device import resolve_inference_device, resolve_inference_dtype
 from PIL import Image
 from safetensors import safe_open
 from transformers import AutoConfig, AutoModel, AutoTokenizer

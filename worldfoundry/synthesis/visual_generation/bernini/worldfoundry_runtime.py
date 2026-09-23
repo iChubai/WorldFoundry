@@ -770,7 +770,7 @@ class BerniniRuntime:
             env.setdefault("NCCL_NET_PLUGIN", "none")
             env.setdefault("NCCL_DEBUG", "WARN")
             env.setdefault("TOKENIZERS_PARALLELISM", "false")
-            from worldfoundry.core.process import run_torchrun_module
+            from worldfoundry.core.execution.process import run_torchrun_module
 
             completed = run_torchrun_module(
                 "worldfoundry.synthesis.visual_generation.bernini.distributed_infer",

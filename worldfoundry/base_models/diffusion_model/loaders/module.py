@@ -29,7 +29,7 @@ PostLoadHook = Callable[[torch.nn.Module], None]
 def _compile_policy_from_runtime(policy: RuntimePolicy):
     """Resolve the public compile knobs and external CUDA-Graph interaction."""
 
-    from worldfoundry.core.compile_cache import CompilePolicy
+    from worldfoundry.core.execution.compile_cache import CompilePolicy
 
     backend = str(policy.options.get("compile_backend", "inductor")).strip()
     if not backend:

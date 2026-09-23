@@ -260,7 +260,7 @@ class Gen3CPipeline(PipelineABC):
         if not str(prompt or "").strip():
             prompt = DEFAULT_GEN3C_PROMPT
         if camera_path is not None and camera_to_world is None:
-            from worldfoundry.core.world_explorer import sample_camera_path
+            from worldfoundry.core.geometry.path import sample_camera_path
 
             sampled_path = sample_camera_path(camera_path, frame_count=int(num_frames))
             camera_to_world = np.linalg.inv(sampled_path["camera_w2c"])[None]

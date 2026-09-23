@@ -6,7 +6,7 @@ defaults:
     config: runtime/configs/dynamicrafter/inference_512_v1.0.yaml
     height: 320
     width: 512
-    video_length: 50
+    video_length: 16
     frame_stride: 24
     guidance_rescale: 0.7
     timestep_spacing: uniform_trailing
@@ -19,7 +19,7 @@ defaults:
     config: runtime/configs/dynamicrafter/inference_1024_v1.0.yaml
     height: 576
     width: 1024
-    video_length: 50
+    video_length: 16
     frame_stride: 10
     guidance_rescale: 0.7
     timestep_spacing: uniform_trailing

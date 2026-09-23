@@ -1,0 +1,13 @@
+{
+  "status": "verified_inference_only",
+  "video": "tmp/unianimate-dit-gpu-20260923/demo.mp4",
+  "decoded_frames": 9,
+  "width": 288,
+  "height": 480,
+  "fps": 15,
+  "pixel_std": 51.795,
+  "mean_adjacent_frame_absdiff": 4.482,
+  "first_last_absdiff": 5.195,
+  "contact_sheet": "tmp/unianimate-dit-gpu-20260923/contact.jpg",
+  "quality_scope": "Short 9-frame, 4-step runtime smoke with schematic synthetic pose sequence; not official 81-frame/50-step quality parity or motion-control score."
+}

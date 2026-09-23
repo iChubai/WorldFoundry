@@ -1,0 +1,29 @@
+{
+  "case": "show-o",
+  "gpu": "0",
+  "started_at": 1790013302.8675663,
+  "status": "generated",
+  "validation": {
+    "sample": {
+      "shape": [
+        1,
+        3,
+        256,
+        256
+      ],
+      "finite": true,
+      "min": -1.1416852474212646,
+      "max": 1.1208853721618652,
+      "std": 0.5341669917106628
+    },
+    "image_size": [
+      256,
+      256
+    ],
+    "pixel_mean": 117.71715799967448,
+    "pixel_std": 68.07544802747506,
+    "peak_memory_allocated": 6778610176
+  },
+  "artifact": "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/WorldFoundry/tmp/showo-gpu-20260922/show-o/demo.png",
+  "elapsed_seconds": 63.73
+}

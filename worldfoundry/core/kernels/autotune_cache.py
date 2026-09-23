@@ -215,7 +215,7 @@ def _cache_directory() -> Path | None:
         if configured:
             root = Path(configured).expanduser()
         else:
-            from worldfoundry.core.compile_cache import configure_persistent_compile_cache
+            from worldfoundry.core.execution.compile_cache import configure_persistent_compile_cache
 
             root = configure_persistent_compile_cache(namespace="kernel-autotune").root / "kernel-autotune"
         directory = root / _kernel_source_fingerprint()[:20]

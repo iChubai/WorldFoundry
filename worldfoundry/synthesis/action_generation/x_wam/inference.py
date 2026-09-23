@@ -874,7 +874,7 @@ class XWAMRuntime:
         import torch
 
         from worldfoundry.core.checkpoint import assign_state_dict_strict
-        from worldfoundry.core.device import resolve_inference_device, resolve_inference_dtype
+        from worldfoundry.core.execution.device import resolve_inference_device, resolve_inference_dtype
 
         _variant_root, config_path, weight_path = _resolve_policy_assets(self.config, self.variant)
         base_root, model_config_path, tokenizer_path = _resolve_base_assets(self.config)
@@ -900,12 +900,16 @@ class XWAMRuntime:
             tokenizer_path=tokenizer_path,
             dtype=dtype,
         )
-        checkpoint = torch.load(
-            weight_path,
-            map_location="cpu",
-            mmap=True,
-            weights_only=True,
-        )
+        # The official DeepSpeed bundle stores a built-in set alongside the
+        # tensor state. Keep restricted loading enabled and allow only that
+        # audited built-in type instead of unpickling arbitrary objects.
+        with torch.serialization.safe_globals([set]):
+            checkpoint = torch.load(
+                weight_path,
+                map_location="cpu",
+                mmap=True,
+                weights_only=True,
+            )
         state_dict = checkpoint.get("module") if isinstance(checkpoint, Mapping) else None
         if not isinstance(state_dict, Mapping):
             raise TypeError(f"X-WAM DeepSpeed checkpoint has no mapping-valued 'module' state: {weight_path}")

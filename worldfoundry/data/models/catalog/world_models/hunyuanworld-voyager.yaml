@@ -6,10 +6,11 @@ family: Tencent Hunyuan / HY-World
 id: hunyuanworld-voyager
 integration:
   notes:
-  - Existing in-tree runtime is now exposed through a BaseSynthesis subclass.
-  - The WorldFoundry runner follows the official case1 conditioned-video demo and
-    upstream single-GPU command shape.
-  status: integrated
+  - >-
+    The public pipeline cannot load because its in-tree Voyager config.py and
+    runtime.py sources are missing, leaving only pycache files. The upstream pinned
+    tree is a different package and lacks the WorldFoundry runtime adapter.
+  status: blocked
 license: other:tencent-hunyuanworld-community
 modalities:
 - image-to-video
@@ -17,7 +18,7 @@ modalities:
 - world-generation
 - long-range
 name: HunyuanWorld-Voyager
-pipeline_binding: hunyuanworld-voyager
+pipeline_binding: null
 official_sources:
   project_page: https://3d-models.hunyuan.tencent.com/world/
   paper: https://arxiv.org/abs/2405.07719
@@ -35,14 +36,11 @@ runtime_profile: runtime-profile:hunyuanworld-voyager
 starred: true
 runner_parity:
   notes:
-  - HunyuanWorldVoyagerPipeline is registered against the in-tree Voyager runtime
-    and no external repo checkout is required at import or inference time.
-  - >-
-    The official README case1 defaults are represented in the runtime profile:
-    num_frames=49, infer_steps=50, flow_shift=7.0, seed=0,
-    embedded_cfg_scale=6.0, i2v_stability=true, ulysses_degree=1, and ring_degree=1.
-  - Per-run visual QA and artifact checks are tracked outside the catalog.
-  status: verified
+  - Public from_pretrained fails with ModuleNotFoundError for the missing in-tree
+    hunyuan_world_voyager.config module before any checkpoint-backed inference.
+  - Official case1 defaults are recorded, but no runnable integration or visual
+    validation has been established.
+  status: failed
 catalog_category: world_models
 catalog_scope: world-model/interactive starred models
 catalog_policy:
@@ -57,12 +55,12 @@ docs:
   publisher: Tencent (Hunyuan)
   publisher_kind: company
   publisher_zh: 腾讯（混元）
-  overview: HunyuanWorld-Voyager generates world-consistent RGB-D video along user-defined camera paths — walk a camera through the scene implied by one image and get aligned color and depth for 3D reconstruction. In this catalog the runner is verified against the official case1 conditioned-video demo with the upstream single-GPU command shape.
-  overview_zh: HunyuanWorld-Voyager 沿用户定义的相机路径生成世界一致的 RGB-D 视频——让相机在一张图所暗示的场景中游走，得到对齐的彩色与深度，可用于 3D 重建。本 catalog 中 runner 已按官方 case1 条件视频 demo 与上游单卡命令形状验证。
+  overview: HunyuanWorld-Voyager is designed to generate RGB-D video along camera paths. WorldFoundry's public pipeline currently cannot load because its in-tree runtime sources are missing.
+  overview_zh: HunyuanWorld-Voyager 旨在沿相机路径生成 RGB-D 视频。WorldFoundry 的公开 pipeline 目前因树内运行时源码缺失而无法加载。
   architecture: 'Per the upstream release, Voyager combines a HunyuanVideo-based generator with joint RGB-D output and a world-cache mechanism for long-range consistency. The official case1 defaults are recorded in the runtime profile: num_frames=49, infer_steps=50, flow_shift=7.0, embedded_cfg_scale=6.0, i2v_stability=true.'
   architecture_zh: 按上游发布，Voyager 将基于 HunyuanVideo 的生成器与 RGB-D 联合输出及世界缓存机制结合，实现长程一致性。运行时档案记录官方 case1 默认值：num_frames=49、infer_steps=50、flow_shift=7.0、 embedded_cfg_scale=6.0、i2v_stability=true。
-  usage_notes: HunyuanWorldVoyagerPipeline wraps the in-tree runtime — no external checkout at import or inference time. Per-run visual QA is tracked outside the catalog.
-  usage_notes_zh: HunyuanWorldVoyagerPipeline 封装树内运行时——导入与推理时都不需要外部检出。每次运行的视觉 QA 在 catalog 外跟踪。
+  usage_notes: The Voyager pipeline binding is disabled until its missing in-tree runtime sources and adapter are restored and tested.
+  usage_notes_zh: Voyager 的 pipeline binding 已禁用，须恢复缺失的树内运行时源码和适配器并通过测试后才能启用。
   limitations:
   - '49-frame default clips: longer voyages need iterative extension.'
   - Depth quality is generative, not sensor-grade — validate before metric use.

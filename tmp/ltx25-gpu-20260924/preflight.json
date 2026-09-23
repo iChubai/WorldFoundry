@@ -1,0 +1,34 @@
+{
+  "status": "blocked",
+  "model_id": "ltx-2.5",
+  "pipeline": "ltx_pipelines.distilled",
+  "source_root": "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/WorldFoundry/cache/generative_taxonomy/Lightricks--LTX-2",
+  "checkpoint_dir": "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/ckpts/Lightricks--LTX-2.5",
+  "python_executable": "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/envs/worldfoundry-unified-cu121/bin/python3.11",
+  "component_paths": {
+    "transformer_path": "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/ckpts/Lightricks--LTX-2.5/diffusion_models/ltx-2.5-22b-distilled-transformer-bf16.safetensors",
+    "text_encoder_path": "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/ckpts/Lightricks--LTX-2.5/text_encoders/gemma4-12b-with-proj-ltx-2.5-bf16.safetensors",
+    "video_vae_path": "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/ckpts/Lightricks--LTX-2.5/vae/ltx-2.5-video-vae-bf16.safetensors",
+    "audio_vae_path": "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/ckpts/Lightricks--LTX-2.5/vae/ltx-2.5-audio-vae-bf16.safetensors",
+    "spatial_upsampler_path": "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/ckpts/Lightricks--LTX-2.5/latent_upscale_models/ltx-2.5-latent-spatial-upscaler-x2-bf16-1.0.safetensors",
+    "duration_head_path": "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/ckpts/Lightricks--LTX-2.5/model_patches/ltx-2.5-duration-head-bf16.safetensors"
+  },
+  "prompt_enhancer_gemma_root": null,
+  "missing_checkpoint_files": [],
+  "incomplete_checkpoint_files": [
+    "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/ckpts/Lightricks--LTX-2.5/diffusion_models/ltx-2.5-22b-distilled-transformer-bf16.safetensors",
+    "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/ckpts/Lightricks--LTX-2.5/text_encoders/gemma4-12b-with-proj-ltx-2.5-bf16.safetensors"
+  ],
+  "missing_runtime_files": [],
+  "missing_system_tools": [],
+  "blocked_reasons": [
+    "Checkpoint download is incomplete or empty: /mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/ckpts/Lightricks--LTX-2.5/diffusion_models/ltx-2.5-22b-distilled-transformer-bf16.safetensors",
+    "Checkpoint download is incomplete or empty: /mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/ckpts/Lightricks--LTX-2.5/text_encoders/gemma4-12b-with-proj-ltx-2.5-bf16.safetensors"
+  ],
+  "device": "cuda:0",
+  "device_ready": true,
+  "ffmpeg": "/home/hadoop-aipnlp/.local/bin/ffmpeg",
+  "license": "LTX-2.x Community License Agreement (August 11, 2026)",
+  "upstream_revision": "a95ab856bf29407b6b066ede0abe1846050db56c",
+  "checkpoint_revision": "bf86adedf518142442575d1ce2e767b7d01c8c76"
+}

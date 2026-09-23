@@ -290,7 +290,7 @@ class A1Runtime:
                 "A1 requires an hfd-staged local checkpoint directory: "
                 f"{self.checkpoint_root}"
             )
-        from worldfoundry.core.device import resolve_inference_device, resolve_inference_dtype
+        from worldfoundry.core.execution.device import resolve_inference_device, resolve_inference_dtype
 
         self.device = torch.device(resolve_inference_device(config.device))
         self.dtype = resolve_inference_dtype(self.device, config.torch_dtype)
@@ -445,7 +445,7 @@ _RUNTIME_CACHE: dict[tuple[str, str], A1Runtime] = {}
 
 
 def clear_runtime_cache() -> None:
-    from worldfoundry.core.runtime_cache import clear_inference_runtime_cache
+    from worldfoundry.core.execution.runtime_cache import clear_inference_runtime_cache
 
     clear_inference_runtime_cache(_RUNTIME_CACHE)
 

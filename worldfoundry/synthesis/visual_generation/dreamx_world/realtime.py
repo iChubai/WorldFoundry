@@ -21,7 +21,7 @@ import torch.distributed as dist
 from PIL import Image
 
 from worldfoundry.core.io.paths import resolve_data_path
-from worldfoundry.core.realtime import DEFAULT_REALTIME_CONTROLS, RealtimeSpec
+from worldfoundry.core.execution.realtime import DEFAULT_REALTIME_CONTROLS, RealtimeSpec
 from worldfoundry.runtime.local_checkpoint_cache import stage_checkpoint_for_realtime
 
 from .checkpoints import enforce_offline_model_loading, resolve_checkpoint as _resolve_checkpoint

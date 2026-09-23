@@ -35,7 +35,7 @@ _CHECKPOINT_PATTERNS = tuple(str(item) for item in _MODEL_CONFIG["checkpoint_pat
 
 
 def clear_runtime_cache() -> None:
-    from worldfoundry.core.runtime_cache import clear_inference_runtime_cache
+    from worldfoundry.core.execution.runtime_cache import clear_inference_runtime_cache
 
     clear_inference_runtime_cache(_RUNTIME_CACHE)
 
@@ -75,9 +75,10 @@ class _LingBotV2Runtime:
 
         from worldfoundry.core.attention import resolve_transformers_attention_implementation
         from worldfoundry.core.checkpoint import load_safetensors_into_model_streaming
-        from worldfoundry.core.device import resolve_inference_device, resolve_inference_dtype
-        from worldfoundry.core.inference import compile_module_if_enabled, install_worldfoundry_inference_infra
+        from worldfoundry.core.execution.device import resolve_inference_device, resolve_inference_dtype
+        from worldfoundry.core.execution.inference import compile_module_if_enabled, install_worldfoundry_inference_infra
         from worldfoundry.core.io.hf import materialize_hf_snapshot
+        from worldfoundry.core.io.paths import resolve_local_hf_model_path
         from worldfoundry.core.utils.torch_utils import freeze_params, set_random_seed
 
         from .preprocessing.features import FeatureTransform
@@ -124,7 +125,7 @@ class _LingBotV2Runtime:
         if "qwen3" not in base_location.lower() or "vl" not in base_location.lower():
             raise ValueError(f"LingBot-VLA v2 requires a Qwen3-VL base model, got {base_location!r}")
         self.base_model = materialize_hf_snapshot(
-            base_location,
+            str(resolve_local_hf_model_path(base_location, required_files=("config.json",))),
             revision=str(options["base_revision"]) if options.get("base_revision") else None,
             cache_dir=options.get("cache_dir"),
             allow_patterns=_BASE_ASSET_PATTERNS,

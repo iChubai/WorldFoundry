@@ -21,7 +21,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Mapping, Sequence
 
-from worldfoundry.core.process import run_logged_subprocess
+from worldfoundry.core.execution.process import run_logged_subprocess
 from worldfoundry.evaluation.tasks.execution.runners.likephys.likephys_scenarios import (
     CANONICAL_SUBGROUP_COUNT,
     DEFAULT_EXPERIMENT_NAME,

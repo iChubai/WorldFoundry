@@ -10,8 +10,8 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Mapping
 
+from worldfoundry.core.execution.process import read_text_tail, run_logged_subprocess
 from worldfoundry.core.io import materialize_file
-from worldfoundry.core.process import read_text_tail, run_logged_subprocess
 from worldfoundry.evaluation.tasks.execution.framework.runner_common import VIDEO_SUFFIXES
 from worldfoundry.evaluation.tasks.execution.runners.ewmbench.ewmbench_metrics import METRIC_SPECS
 from worldfoundry.evaluation.tasks.execution.runners.ewmbench.ewmbench_paths import resolve_ewmbench_root

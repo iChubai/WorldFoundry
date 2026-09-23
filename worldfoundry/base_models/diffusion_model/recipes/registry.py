@@ -270,9 +270,9 @@ def default_native_diffusion_registry() -> NativeDiffusionRegistry:
             ),
         ),
         (
-            "fastvideo-causal-wan2.2-t2v-14b",
+            "fastvideo-causal-wan2.2-i2v-14b",
             ".wan",
-            "fastvideo_causal_wan22_t2v_14b_recipe",
+            "fastvideo_causal_wan22_i2v_14b_recipe",
             ("FastVideo/CausalWan2.2-I2V-A14B-Preview-Diffusers",),
         ),
         (
@@ -322,6 +322,7 @@ def default_native_diffusion_registry() -> NativeDiffusionRegistry:
             ("RiemannDynamics/Matrix-Game-3.5-Base:third-person",),
         ),
         ("ltx-2-i2v", ".ltx", "ltx2_i2v_recipe", ("ltx2-i2v",)),
+        ("ltx-2-t2v", ".ltx", "ltx2_t2v_recipe", ("ltx2-t2v",)),
         ("ltx-2.3-i2v", ".ltx", "ltx23_i2v_recipe", ("ltx2.3-i2v", "ltx2_3_i2v")),
         ("ltx-2.3-t2v", ".ltx", "ltx23_t2v_recipe", ("ltx2.3-t2v", "ltx2_3_t2v")),
         ("ltx-video-i2v", ".ltx", "ltx_video_i2v_recipe", ("ltx-video",)),

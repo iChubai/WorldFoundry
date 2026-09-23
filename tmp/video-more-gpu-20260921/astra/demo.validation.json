@@ -1,0 +1,21 @@
+{
+  "video": "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/WorldFoundry/tmp/video-more-gpu-20260921/astra/demo.mp4",
+  "metadata": {
+    "width": 832,
+    "height": 480,
+    "r_frame_rate": "12/1",
+    "duration": "2.833333",
+    "nb_frames": "34"
+  },
+  "decoded_frames": 34,
+  "mean": 47.52223448822464,
+  "std": 34.82812656970312,
+  "mean_frame_delta": 1.8533647060394287,
+  "max_frame_delta": 8.09047794342041,
+  "decode_stderr": "",
+  "passed": true,
+  "expected_width": 832,
+  "expected_height": 480,
+  "expected_fps": 12,
+  "expected_frames": 34
+}

@@ -45,7 +45,7 @@ from __future__ import annotations
 import torch
 from torch import Tensor
 
-from worldfoundry.core.compile_cache import configure_persistent_compile_cache
+from worldfoundry.core.execution.compile_cache import configure_persistent_compile_cache
 
 configure_persistent_compile_cache(namespace="rope-triton")
 

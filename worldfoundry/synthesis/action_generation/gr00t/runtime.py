@@ -291,14 +291,35 @@ def _resolve_observation(
     language_key = str(modality_configs["language"]["modality_keys"][0])
     state_keys = [str(key) for key in modality_configs["state"]["modality_keys"]]
 
-    # Load and process the input image into a standard array format
-    image_array, image_source = _load_image_array(image)
+    # Preserve named camera views instead of duplicating the first camera.
+    cameras = image
+    if gr00t_observation:
+        supplied_video = gr00t_observation.get("video")
+        if supplied_video is None:
+            supplied_video = gr00t_observation.get("camera_views")
+        if supplied_video is not None:
+            cameras = supplied_video
+    video = {}
+    sources = {}
+    for video_key in video_keys:
+        if isinstance(cameras, Mapping):
+            if video_key not in cameras:
+                raise ValueError(f"GR00T observation is missing camera {video_key!r}.")
+            camera = cameras[video_key]
+        else:
+            camera = cameras
+        image_array, source = _load_image_array(camera)
+        video[video_key] = image_array[None, None, ...]
+        sources[video_key] = source
+    image_source = json.dumps(sources) if isinstance(cameras, Mapping) else next(iter(sources.values()))
 
     # Initialize all state modalities to zeros
     state = _zero_state(state_keys, state_statistics)
     # If proprioceptive data is provided, update the state modalities
     if gr00t_observation:
-        joint_state = gr00t_observation.get("joint_state")
+        joint_state = gr00t_observation.get("state")
+        if joint_state is None:
+            joint_state = gr00t_observation.get("joint_state")
         if joint_state is None:
             joint_state = gr00t_observation.get("proprio") # Fallback for older naming conventions
         if isinstance(joint_state, Mapping):
@@ -307,7 +328,7 @@ def _resolve_observation(
     # Construct the final observation dictionary in the format expected by GR00T
     return (
         {
-            "video": {video_key: image_array[None, None, ...] for video_key in video_keys},
+            "video": video,
             "state": state,
             "language": {language_key: [[instruction or "do something"]]},
             "metadata": {"architecture": architecture},
@@ -389,7 +410,7 @@ class GR00TRuntime:
         """
         if self.policy is not None:
             return
-        from worldfoundry.core.device import resolve_inference_device, resolve_inference_dtype
+        from worldfoundry.core.execution.device import resolve_inference_device, resolve_inference_dtype
 
         # Ensure gr00t modules are correctly aliased before policy import
         checkpoint = self.config.checkpoint_dir.expanduser().resolve()

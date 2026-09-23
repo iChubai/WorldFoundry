@@ -53,7 +53,7 @@ from worldfoundry.core.io.disk import (
     ensure_free_disk,
 )
 from worldfoundry.core.io.integrity import sync_directory
-from worldfoundry.core.logging_setup import get_logger
+from worldfoundry.core.observability.logging_setup import get_logger
 
 # huggingface_hub, loguru, and boto3 (via io.s3_filesystem) are imported
 # lazily inside the functions that need them so that loading a plain local

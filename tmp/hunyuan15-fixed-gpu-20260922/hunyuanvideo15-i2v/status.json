@@ -1,0 +1,10 @@
+{
+  "case": "hunyuanvideo15-i2v",
+  "started_at": 1790009768.534181,
+  "gpu": "3",
+  "status": "generated",
+  "videos": [
+    "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/WorldFoundry/tmp/hunyuan15-fixed-gpu-20260922/hunyuanvideo15-i2v/demo.mp4"
+  ],
+  "elapsed_seconds": 744.02
+}

@@ -111,7 +111,7 @@ def sana_controlnet_config(*, input_size: int, parameter_scale: str) -> dict[str
     return config
 
 
-def sana_video_config(*, resolution: str) -> dict[str, object]:
+def sana_video_config(*, resolution: str, longlive: bool = False) -> dict[str, object]:
     selected = str(resolution).strip().lower()
     if selected == "480p":
         input_size = 60
@@ -138,11 +138,11 @@ def sana_video_config(*, resolution: str) -> dict[str, object]:
         "qk_norm": True,
         "y_norm": True,
         "y_norm_scale_factor": 0.01,
-        "attn_type": "LiteLAReLURope",
-        "ffn_type": "GLUMBConvTemp",
+        "attn_type": "cachedcausal" if longlive else "LiteLAReLURope",
+        "ffn_type": "CachedGLUMBConvTemp" if longlive else "GLUMBConvTemp",
         "mlp_acts": ("silu", "silu", None),
         "use_pe": True,
-        "pos_embed_type": "wan_rope",
+        "pos_embed_type": "casual_wan_rope" if longlive else "wan_rope",
         "linear_head_dim": 112,
         "cross_norm": True,
         "t_kernel_size": 3,
@@ -553,8 +553,15 @@ def build_sana_controlnet_denoiser(context: ComponentBuildContext) -> SanaDenois
 def build_sana_video_denoiser(context: ComponentBuildContext) -> SanaDenoiser:
     from ..networks.sana.sana_multi_scale_video import SanaMSVideo
 
-    config = sana_video_config(resolution=str(context.component_options.get("resolution", "480p")))
-    return _build(context, module_class=SanaMSVideo, config=config)
+    longlive = bool(context.component_options.get("longlive", False))
+    config = sana_video_config(
+        resolution=str(context.component_options.get("resolution", "480p")),
+        longlive=longlive,
+    )
+    denoiser = _build(context, module_class=SanaMSVideo, config=config)
+    if longlive:
+        denoiser.model.set_fp32_attention(True)
+    return denoiser
 
 
 def build_sana_streaming_denoiser(context: ComponentBuildContext) -> SanaDenoiser:

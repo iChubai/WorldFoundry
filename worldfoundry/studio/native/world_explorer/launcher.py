@@ -8,7 +8,7 @@ import subprocess
 import sys
 from pathlib import Path
 
-from worldfoundry.core.world_explorer import WORLD_EXPLORER_TAG
+from worldfoundry.core.geometry.path import WORLD_EXPLORER_TAG
 
 from . import NATIVE_EXPLORER_ROOT
 

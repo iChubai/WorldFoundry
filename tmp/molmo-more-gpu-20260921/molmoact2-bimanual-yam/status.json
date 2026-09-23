@@ -1,0 +1,53 @@
+{
+  "case": "molmoact2-bimanual-yam",
+  "gpu": "3",
+  "status": "generated",
+  "started_at": 1790006015.07066,
+  "scope": "Model-card real episode images/state/instruction;FP32 ten-step offline inference,no closed-loop task-success claim. DROID duplicated exterior view follows upstream sample explicitly.",
+  "artifact": "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/WorldFoundry/tmp/molmo-more-gpu-20260921/molmoact2-bimanual-yam/actions.json",
+  "validation": {
+    "shape": [
+      30,
+      14
+    ],
+    "finite": true,
+    "min": -0.09399306774139404,
+    "max": 0.996411144733429,
+    "std": 0.35719331180665825,
+    "per_dim_min": [
+      -0.06944119930267334,
+      0.004134005401283503,
+      0.013831665739417076,
+      -0.08519399166107178,
+      -0.03337174654006958,
+      0.15438991785049438,
+      0.9921488761901855,
+      0.19825103878974915,
+      0.004744360223412514,
+      0.017154298722743988,
+      -0.07409274578094482,
+      -0.08282923698425293,
+      -0.09399306774139404,
+      0.9856128692626953
+    ],
+    "per_dim_max": [
+      -0.06620877981185913,
+      0.006922226864844561,
+      0.013831665739417076,
+      -0.08182454109191895,
+      -0.014499932527542114,
+      0.16128498315811157,
+      0.996411144733429,
+      0.20276716351509094,
+      0.006566958036273718,
+      0.01807556487619877,
+      -0.0700838565826416,
+      -0.07949179410934448,
+      -0.09161412715911865,
+      0.9911713004112244
+    ],
+    "peak_memory_allocated": 23421451264,
+    "torch_version": "2.5.1+cu121"
+  },
+  "elapsed_seconds": 117.18
+}

@@ -1,0 +1,29 @@
+{
+  "case": "monst3r",
+  "status": "generated",
+  "started_at": 1789998639.7180645,
+  "gpu": "0",
+  "geometry_vertices": {
+    "geometry_0": 341522,
+    "geometry_1": 4,
+    "geometry_2": 14,
+    "geometry_3": 4,
+    "geometry_4": 14,
+    "geometry_5": 4,
+    "geometry_6": 14
+  },
+  "artifact": "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/WorldFoundry/tmp/scene-all-gpu-20260921/monst3r/scene.glb",
+  "bounds": [
+    [
+      -0.47244059604172756,
+      -0.042594136216177386,
+      0.0
+    ],
+    [
+      0.5246641611081689,
+      0.5470170458601977,
+      1.215935582712024
+    ]
+  ],
+  "elapsed_seconds": 58.206790924072266
+}

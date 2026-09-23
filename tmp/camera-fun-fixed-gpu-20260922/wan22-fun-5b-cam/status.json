@@ -1,0 +1,11 @@
+{
+  "case": "wan22-fun-5b-cam",
+  "started_at": 1790017209.0324502,
+  "gpu": "3",
+  "status": "generated",
+  "videos": [
+    "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/WorldFoundry/tmp/camera-fun-fixed-gpu-20260922/wan22-fun-5b-cam/demo.mp4",
+    "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/WorldFoundry/tmp/camera-fun-fixed-gpu-20260922/wan22-fun-5b-cam/.demo_wan22-fun-5b-cam_inputs/outputs/00000001.mp4"
+  ],
+  "elapsed_seconds": 663.8
+}

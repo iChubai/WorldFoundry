@@ -419,6 +419,32 @@ WorldModelBenchContract = ExternalBenchmarkContract(
     ),
 )
 
+HarnessEvalWContract = ExternalBenchmarkContract(
+    benchmark_id="harnesseval-w",
+    display_name="HarnessEval-W",
+    input_keys=("generated_artifact_dir", "manifest", "plan_root", "backend_config", "official_results_path"),
+    output_keys=("scorecard", "raw_metric_table", "per_case_metrics", "official_report", "benchmark_contract"),
+    metric_ids=(
+        "overall_macro",
+        "overall_core_macro",
+        "overall_observation_macro",
+        "observation_quality_macro",
+        "observation_physical_plausibility_macro",
+        "exploratory_transition",
+        "intentional_transition",
+        "physical_transition",
+        "drift_resistance",
+        "return_revisit_consistency",
+        "offscreen_evolution",
+    ),
+    requires_upstream_runtime=True,
+    notes=(
+        "In-tree Python evaluator preserves official skill plans, evidence and common-case aggregation.",
+        "Model components are reused from base_models; no upstream generation or shell launchers are included.",
+        "Full-suite GPU/judge parity remains unverified; synthetic fixtures are not leaderboard evidence.",
+    ),
+)
+
 WorldOlympiadContract = ExternalBenchmarkContract(
     benchmark_id="worldolympiad",
     display_name="WorldOlympiad",
@@ -1817,6 +1843,7 @@ _BUILTIN_CONTRACT_ITEMS = (
     WorldBenchContract,
     WorldInWorldContract,
     WorldModelBenchContract,
+    HarnessEvalWContract,
     WorldOlympiadContract,
     WorldReasonBenchContract,
     WorldScoreContract,

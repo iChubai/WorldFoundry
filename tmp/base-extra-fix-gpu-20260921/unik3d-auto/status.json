@@ -1,0 +1,35 @@
+{
+  "case": "unik3d-auto",
+  "gpu": "0",
+  "status": "generated",
+  "started_at": 1789995410.425498,
+  "checkpoint_loads": [
+    {
+      "module": "UniK3D",
+      "missing": [],
+      "unexpected": []
+    }
+  ],
+  "arrays": {
+    "result.metadata.depth_shape": {
+      "shape": [
+        2
+      ],
+      "min": 704.0,
+      "max": 1280.0,
+      "std": 288.0
+    },
+    "depth": {
+      "shape": [
+        704,
+        1280
+      ],
+      "min": 0.4751143455505371,
+      "max": 11.894353866577148,
+      "std": 2.696094036102295
+    }
+  },
+  "depth_maps_checked": 1,
+  "peak_memory_allocated": 3247073280,
+  "elapsed_seconds": 36.76
+}

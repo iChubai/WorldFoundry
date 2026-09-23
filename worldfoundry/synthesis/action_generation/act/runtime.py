@@ -34,7 +34,7 @@ def select_act_checkpoint(*, checkpoint_path: str | Path | None, checkpoint_dir:
     """Select an ACT checkpoint file from explicit options or profile metadata.
 
     Args:
-        checkpoint_path: Explicit policy checkpoint file.
+        checkpoint_path: Explicit policy checkpoint file or checkpoint directory.
         checkpoint_dir: Explicit directory containing policy_best.ckpt or policy_last.ckpt.
         checkpoints: Profile checkpoint records.
     """
@@ -46,7 +46,11 @@ def select_act_checkpoint(*, checkpoint_path: str | Path | None, checkpoint_dir:
 
     candidates: list[Path] = []
     if checkpoint_path:
-        candidates.append(expand(checkpoint_path))
+        path = expand(checkpoint_path)
+        if path.is_dir():
+            candidates.extend([path / "policy_best.ckpt", path / "policy_last.ckpt"])
+        else:
+            candidates.append(path)
     if checkpoint_dir:
         root = expand(checkpoint_dir)
         candidates.extend([root / "policy_best.ckpt", root / "policy_last.ckpt"])

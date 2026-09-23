@@ -1,0 +1,10 @@
+{
+  "case": "lingbot-world-v2-compact",
+  "started_at": 1790001208.9451437,
+  "gpu": "0",
+  "status": "generated",
+  "videos": [
+    "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/WorldFoundry/tmp/causal-more-gpu-20260921/lingbot-world-v2-compact/demo.mp4"
+  ],
+  "elapsed_seconds": 263.74
+}

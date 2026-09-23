@@ -426,20 +426,25 @@ class SanaMS(Sana):
         if self.y_norm:
             y = self.attention_y_norm(y)
 
+        # sCM uses dense cross-attention even when xFormers is installed.
+        # Its context must retain batch boundaries and a tensor padding mask.
+        pack_context = _xformers_available and not isinstance(
+            self.blocks[0].cross_attn, MultiHeadCrossVallinaAttention
+        )
         if mask is not None:
             mask = mask.to(torch.int16)
             mask = mask.repeat(y.shape[0] // mask.shape[0], 1) if mask.shape[0] != y.shape[0] else mask
             mask = mask.squeeze(1).squeeze(1)
-            if _xformers_available:
+            if pack_context:
                 y = y.squeeze(1).masked_select(mask.unsqueeze(-1) != 0).view(1, -1, x.shape[-1])
                 y_lens = mask.sum(dim=1).tolist()
             else:
                 y_lens = mask
-        elif _xformers_available:
+        elif pack_context:
             y_lens = [y.shape[2]] * y.shape[0]
             y = y.squeeze(1).view(1, -1, x.shape[-1])
         else:
-            raise ValueError(f"Attention type is not available due to _xformers_available={_xformers_available}.")
+            y_lens = None
 
         for block in self.blocks:
             x = block(x, y, t0, y_lens, (self.h, self.w), image_pos_embed, **kwargs)

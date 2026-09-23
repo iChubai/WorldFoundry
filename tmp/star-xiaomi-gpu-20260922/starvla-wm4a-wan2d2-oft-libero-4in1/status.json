@@ -1,0 +1,40 @@
+{
+  "case": "starvla-wm4a-wan2d2-oft-libero-4in1",
+  "gpu": "3",
+  "status": "generated",
+  "started_at": 1790008379.864401,
+  "scope": "Real LIBERO10 observation,180degree camera rotation then224x224 resize,front/wrist order;no state follows upstream LIBERO example_dict;franka action normalization,8x7 chunk;offline integration only.",
+  "artifact": "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/WorldFoundry/tmp/star-xiaomi-gpu-20260922/starvla-wm4a-wan2d2-oft-libero-4in1/actions.json",
+  "validation": {
+    "shape": [
+      1,
+      8,
+      7
+    ],
+    "finite": true,
+    "min": -0.1080322265625,
+    "max": 0.98046875,
+    "std": 0.1840934006997258,
+    "per_dim_min": [
+      0.0040912628173828125,
+      -0.1080322265625,
+      -0.085601806640625,
+      -0.011503741145133972,
+      -0.0010128021240234375,
+      -0.008395403623580933,
+      -0.002105712890625
+    ],
+    "per_dim_max": [
+      0.069122314453125,
+      0.0299835205078125,
+      0.0048065185546875,
+      0.001086592674255371,
+      0.00418853759765625,
+      0.0004870593547821045,
+      0.98046875
+    ],
+    "peak_memory_allocated": 23696791040,
+    "torch_version": "2.5.1+cu121"
+  },
+  "elapsed_seconds": 96.32
+}

@@ -43,7 +43,7 @@ from worldfoundry.core.attention.kv_cache_policy import (
     KVCachePolicy,
 )
 from worldfoundry.core.attention.kv_quantization import KVQuantConfig, QuantizedKVStore
-from worldfoundry.core.device import get_current_torch_device
+from worldfoundry.core.execution.device import get_current_torch_device
 
 # ──────────────────────────────────────────────────────────────────────────
 # Fixed rolling buffer — shapes never change, so CUDA Graphs can capture it

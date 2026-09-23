@@ -1,0 +1,20 @@
+{
+  "status": "success",
+  "model_id": "dualcamctrl",
+  "artifact_kind": "generated_video",
+  "artifact_path": "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/WorldFoundry/tmp/dualcamctrl-gpu-20260924/dualcamctrl-9f-8step.mp4",
+  "video_sha256": "895effdfddb893708e2b1b47dd87bae7af1445c238d5df2406e86382b86cc1e6",
+  "runtime": "worldfoundry.dualcamctrl.in_tree_runtime",
+  "backend_quality": "official_demo_contract",
+  "image_path": "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/WorldFoundry/tmp/dualcamctrl-gpu-20260924/input.png",
+  "depth_path": "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/WorldFoundry/tmp/dualcamctrl-gpu-20260924/depth-synthetic.png",
+  "camera_path": "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/WorldFoundry/tmp/dualcamctrl-gpu-20260924/camera-synthetic.torch",
+  "seed": 42,
+  "num_frames": 9,
+  "height": 320,
+  "width": 480,
+  "num_inference_steps": 8,
+  "official_source": "https://github.com/EnVision-Research/DualCamCtrl",
+  "elapsed_seconds": 108.89,
+  "gpu_peak_allocated_gb": 24.1
+}

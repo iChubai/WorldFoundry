@@ -75,7 +75,7 @@ class XVLARuntime:
         from transformers import AutoImageProcessor, BartTokenizerFast
 
         from worldfoundry.core.attention import resolve_transformers_attention_implementation
-        from worldfoundry.core.device import resolve_inference_device, resolve_inference_dtype
+        from worldfoundry.core.execution.device import resolve_inference_device, resolve_inference_dtype
 
         from .configuration import XVLAConfig
         from .modeling import XVLA

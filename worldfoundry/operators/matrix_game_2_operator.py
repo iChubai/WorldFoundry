@@ -28,6 +28,9 @@ def _combine_official_action_data(data, num_frames=57, keyboard_dim=6, mouse=Tru
     current_frame = 0
 
     while current_frame < num_frames:
+        # Upstream samples the segment length from [12] before the action.
+        # The draw has a constant result but still advances the RNG state.
+        rng.randint(0, 0)
         rd = rng.randint(0, len(data) - 1)
         k = data[rd]["keyboard_condition"]
         if mouse:

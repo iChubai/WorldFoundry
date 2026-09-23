@@ -1,0 +1,21 @@
+{
+  "video": "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/WorldFoundry/tmp/video-quality-more-gpu-20260921/lingbot-forest-49f-40steps/demo.mp4",
+  "metadata": {
+    "width": 832,
+    "height": 480,
+    "r_frame_rate": "24/1",
+    "duration": "2.041667",
+    "nb_frames": "49"
+  },
+  "decoded_frames": 49,
+  "mean": 65.62818334534902,
+  "std": 75.63474486748476,
+  "mean_frame_delta": 30.757333755493164,
+  "max_frame_delta": 56.47538375854492,
+  "decode_stderr": "",
+  "passed": true,
+  "expected_width": 832,
+  "expected_height": 480,
+  "expected_fps": 24.0,
+  "expected_frames": 49
+}

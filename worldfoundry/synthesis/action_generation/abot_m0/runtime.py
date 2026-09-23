@@ -239,8 +239,8 @@ class ABotM0Runtime:
             return self._model
         import torch
 
-        from worldfoundry.core.device import resolve_inference_device, resolve_inference_dtype
-        from worldfoundry.core.inference import compile_module_if_enabled
+        from worldfoundry.core.execution.device import resolve_inference_device, resolve_inference_dtype
+        from worldfoundry.core.execution.inference import compile_module_if_enabled
 
         from .action_head import ActionHeadConfig
         from .modeling import ABotM0Model
@@ -397,7 +397,7 @@ class ABotM0Runtime:
         import numpy as np
         import torch
 
-        from worldfoundry.core.inference import worldfoundry_inference_context
+        from worldfoundry.core.execution.inference import worldfoundry_inference_context
 
         model = self._load()
         views = collect_images(observation, image, self.config.camera_keys)

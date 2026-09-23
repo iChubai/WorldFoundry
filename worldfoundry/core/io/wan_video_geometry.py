@@ -14,8 +14,6 @@ Public surface:
 - :func:`save_video` / :func:`save_image` / :func:`merge_video_audio`
   — debug artifact writers (errors are logged, not always raised;
   that is the vendored contract).
-- :func:`download_cosyvoice_repo` / :func:`download_cosyvoice_model`
-  — optional CosyVoice fetch used by Wan audio recipes.
 """
 
 import binascii
@@ -251,18 +249,3 @@ def best_output_size(w, h, dw, dh, expected_area):
         return ow1, oh1
     else:
         return ow2, oh2
-
-
-def download_cosyvoice_repo(repo_path):
-    """Clone FunAudioLLM/CosyVoice (recursive, ``main``) into *repo_path*."""
-    try:
-        import git
-    except ImportError:
-        raise ImportError('failed to import git, please run pip install GitPython')
-    repo = git.Repo.clone_from('https://github.com/FunAudioLLM/CosyVoice.git', repo_path, multi_options=['--recursive'], branch='main')
-
-
-def download_cosyvoice_model(model_name, model_path):
-    """Download ``iic/{model_name}`` from ModelScope into *model_path*."""
-    from modelscope import snapshot_download
-    snapshot_download('iic/{}'.format(model_name), local_dir=model_path)

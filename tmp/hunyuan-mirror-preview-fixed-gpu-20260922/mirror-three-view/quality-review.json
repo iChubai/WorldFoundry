@@ -1,0 +1,51 @@
+{
+  "status": "verified_inference_only",
+  "scope": "Full local checkpoint on H100; public API exports Gaussian/point PLY,depth/normals,and valid preview path after fix. All predicted tensors and PLY fields finite; positive depth/focal/scales, valid opacity and rotations. No ground-truth metric reconstruction score or conditioned-prior mode verification.",
+  "visual_review": "Actual RGB render, input/depth/normal montage viewed. Three generated-video frames of toy car in room: room structure and depth ordering plausible, some motion/texture smearing; not a calibrated static real scene.",
+  "video_validation": {
+    "video": "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/WorldFoundry/tmp/hunyuan-mirror-preview-fixed-gpu-20260922/mirror-three-view/scene/rendered_rgb.mp4",
+    "metadata": {
+      "width": 518,
+      "height": 294,
+      "r_frame_rate": "30/1",
+      "duration": "1.100000",
+      "nb_frames": "33"
+    },
+    "decoded_frames": 33,
+    "mean": 40.975674325674326,
+    "std": 46.00136675938722,
+    "mean_frame_delta": 7.176514625549316,
+    "max_frame_delta": 8.147785186767578,
+    "decode_stderr": "",
+    "passed": true,
+    "expected_width": 518,
+    "expected_height": 294,
+    "expected_fps": 30,
+    "expected_frames": 33
+  },
+  "geometry_checks": {
+    "rotation_orthogonality_max": 1.7881393432617188e-07,
+    "rotation_determinants": [
+      [
+        1.0000001192092896,
+        1.0,
+        0.9999998807907104
+      ]
+    ],
+    "depth_positive_fraction": 1.0,
+    "positive_focal": true,
+    "quat_norm_min": 0.9999998211860657,
+    "quat_norm_max": 1.0000001192092896,
+    "scale_min": 5.370898037426741e-08,
+    "opacity_min": 0.0009641870274208486,
+    "opacity_max": 0.9959635138511658
+  },
+  "checkpoint_loading": [
+    {
+      "module": "HunyuanWorldMirrorRepresentation",
+      "missing": [],
+      "unexpected": []
+    }
+  ],
+  "reviewed_at": 1790089582.164165
+}

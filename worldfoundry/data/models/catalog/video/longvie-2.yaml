@@ -55,6 +55,8 @@ runner_parity:
   - Full quality defaults are 81 frames at 16 FPS and 50 denoising steps. Studio's
     default four-GPU torchrun USP route completed a checkpoint-backed run on
     2026-07-28; all 81 frames decoded at 640x352 and rank zero materialized the artifact.
+  - A separate 2026-09-23 single-GPU smoke run with local control, DiT, and Wan
+    weights produced nine decodable 640x352 frames at four denoising steps.
 runtime_profile: runtime-profile:longvie-2
 runner_target: worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner
 pipeline_binding: longvie-2
@@ -74,11 +76,11 @@ docs:
   usage_notes_zh: 每个排队分段都需要非空提示词加稠密深度与稀疏点图/轨迹控制视频；首段还需要一张图像。质量默认值： 81 帧、16 FPS、50 步。Studio profile 使用四 rank USP，只有 rank 0 落盘产物。这是排队式分段生成，不是键盘实时交互。
   limitations:
   - Requires prepared depth + pointmap/track control videos for every segment — significant input preparation.
-  - Four-GPU USP is the recorded Studio route; single-GPU behavior is not the verified configuration.
+  - Single-GPU short inference is verified, but the 81-frame/50-step single-GPU route and control quality remain unmeasured.
   - Queued segments only — no realtime keyboard interaction.
   limitations_zh:
   - 每个分段都需要预先准备深度与点图/轨迹控制视频——输入准备成本高。
-  - 已验证的 Studio 路径是四卡 USP；单卡行为不是已验证配置。
+  - 已验证单卡短片推理，但单卡 81 帧、50 步路径及控制质量尚未测量。
   - 仅支持排队分段——没有实时键盘交互。
   recommended_benchmarks:
   - id: chronomagic-bench

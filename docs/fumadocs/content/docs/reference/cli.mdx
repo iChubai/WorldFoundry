@@ -464,6 +464,8 @@ worldfoundry-eval zoo benchmark-run \
 
 Benchmark-specific inputs such as data roots, score directories, prompt manifests, judge credentials, and metric subsets live on the corresponding [Benchmark Hub](/docs/evaluation/benchmark-hub) page.
 
+For HarnessEval-W, `--result-model-id` selects a model without changing the official common-case cohort. See [HarnessEval-W](/docs/evaluation/benchmark-hub/harnesseval-w) for Python execution, cached scoring and model prerequisites.
+
 ## Benchmark modes
 
 - **`official-run`** — Execute the benchmark runtime declared by the manifest against prepared artifacts. Use only when the required evaluator, data, checkpoints, and services are ready.

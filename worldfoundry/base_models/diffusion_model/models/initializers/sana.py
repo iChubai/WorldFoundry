@@ -200,8 +200,8 @@ class SanaWorldInitializer(SanaNoiseInitializer):
 
     @staticmethod
     def _camera_conditions(request: DiffusionRequest) -> dict[str, torch.Tensor]:
-        from worldfoundry.core.camera_conditioning import pack_spatiotemporal_camera_conditioning
-        from worldfoundry.core.camera_trajectory import rollout_wasd_camera_actions
+        from worldfoundry.core.geometry.conditioning import pack_spatiotemporal_camera_conditioning
+        from worldfoundry.core.geometry.trajectory import rollout_wasd_camera_actions
 
         direct_camera = request.inputs.get("camera_conditions")
         direct_plucker = request.inputs.get("chunk_plucker")

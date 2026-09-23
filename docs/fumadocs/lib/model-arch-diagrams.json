@@ -2650,19 +2650,6 @@
       "caption": "Method overview: Spatial Forcing implicitly forces spatial features, instead of feeding explicit depth or an external 3D expert.",
       "captionZh": "论文方法总览：Spatial Forcing 隐式强迫空间特征，而不是输入显式深度或外挂三维专家。"
     },
-    "thinksound": {
-      "modelId": "thinksound",
-      "teaserSrc": "/models/thinksound/teaser.png",
-      "teaserAlt": "Official paper teaser: ThinkSound uses chain-of-thought steps to generate and edit video-aligned audio.",
-      "teaserAltZh": "论文官方 Teaser：ThinkSound 用思维链分步生成并编辑与视频对齐的音频。",
-      "teaserCaption": "Official paper teaser: ThinkSound uses chain-of-thought steps to generate and edit video-aligned audio.",
-      "teaserCaptionZh": "论文官方 Teaser：ThinkSound 用思维链分步生成并编辑与视频对齐的音频。",
-      "src": "/models/thinksound/overview.png",
-      "alt": "Method overview: an MLLM produces CoT tokens that condition a multi-stream then single-stream flow-matching audio transformer.",
-      "altZh": "论文方法总览：多模态大模型产出思维链 token，再条件化先多流后单流的流匹配音频 Transformer。",
-      "caption": "Method overview: an MLLM produces CoT tokens that condition a multi-stream then single-stream flow-matching audio transformer.",
-      "captionZh": "论文方法总览：多模态大模型产出思维链 token，再条件化先多流后单流的流匹配音频 Transformer。"
-    },
     "vlanext": {
       "modelId": "vlanext",
       "teaserSrc": "/models/vlanext/teaser.png",

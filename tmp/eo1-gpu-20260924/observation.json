@@ -1,0 +1,10 @@
+{
+  "model_id": "eo1",
+  "status": "failed_integration",
+  "case": "offline-action-preflight",
+  "finding": "Default runtime config rejected its external source checkout before weight loading; the checkpoint declares AutoConfig/AutoModel code requiring trust_remote_code, while the in-tree runtime forbids it.",
+  "status_evidence": "tmp/eo1-gpu-20260924/status.json",
+  "scope": "Weight and default loader/deployment preflight only; no GPU action inference and no task-success claim.",
+  "reviewed_in_current_session": true,
+  "blocker_kind": "blocked_loader"
+}

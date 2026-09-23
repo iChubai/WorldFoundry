@@ -244,12 +244,6 @@ class SpatialReasonerPipeline(OfficialVideoPipeline):
     GENERATION_TYPE = "multimodal"
 
 
-class ThinkSoundPipeline(OfficialVideoPipeline):
-    """Pipeline implementation for ThinkSound visual generation."""
-    MODEL_ID = "thinksound"
-    GENERATION_TYPE = "v2a"
-
-
 class UniAnimateDiTPipeline(OfficialVideoPipeline):
     """Pipeline implementation for UniAnimateDiT visual generation."""
     MODEL_ID = "unianimate-dit"
@@ -273,6 +267,5 @@ __all__ = [
     "SAMA14BPipeline",
     "SpatialLadderPipeline",
     "SpatialReasonerPipeline",
-    "ThinkSoundPipeline",
     "UniAnimateDiTPipeline",
 ]

@@ -29,8 +29,8 @@ from pathlib import Path
 from types import MappingProxyType
 from typing import Any, Callable, Mapping
 
-from worldfoundry.core.logging_setup import configure_logging, get_logger
-from worldfoundry.core.process import run_logged_subprocess
+from worldfoundry.core.observability.logging_setup import configure_logging, get_logger
+from worldfoundry.core.execution.process import run_logged_subprocess
 from worldfoundry.evaluation.reporting.scorecard import SCORECARD_SCHEMA_VERSION
 from worldfoundry.evaluation.tasks.catalog.zoo_registry import load_benchmark_zoo_registry
 from worldfoundry.evaluation.tasks.execution.framework.io import (

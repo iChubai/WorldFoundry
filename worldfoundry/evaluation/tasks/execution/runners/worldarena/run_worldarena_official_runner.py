@@ -17,7 +17,7 @@ if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
 from worldfoundry.base_models.capabilities import vbench_asset_path  # noqa: E402
-from worldfoundry.core.time import utc_now_iso  # noqa: E402
+from worldfoundry.core.observability.time import utc_now_iso  # noqa: E402
 from worldfoundry.evaluation.reporting.scorecard import SCORECARD_SCHEMA_VERSION  # noqa: E402
 from worldfoundry.evaluation.tasks.catalog.zoo_registry import load_benchmark_zoo_registry  # noqa: E402
 from worldfoundry.evaluation.tasks.execution.framework.io import env_path, write_json  # noqa: E402

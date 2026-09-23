@@ -5,7 +5,7 @@ from typing import Literal
 
 import torch
 
-from worldfoundry.synthesis.visual_generation.three_d_four_d.runtime_extension_overlay import (
+from worldfoundry.base_models.three_dimensions.three_d_four_d.runtime_extension_overlay import (
     add_runtime_extension_overlay,
 )
 

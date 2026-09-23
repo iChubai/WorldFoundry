@@ -1,0 +1,10 @@
+{
+  "case": "ltx2-t2v",
+  "started_at": 1790018164.0266628,
+  "gpu": "0",
+  "status": "generated",
+  "videos": [
+    "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/WorldFoundry/tmp/ltx2-t2v-gpu-20260922/ltx2-t2v/demo.mp4"
+  ],
+  "elapsed_seconds": 466.23
+}

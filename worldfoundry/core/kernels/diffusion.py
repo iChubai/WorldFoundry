@@ -266,7 +266,7 @@ def _configure_triton_cache_once() -> None:
     """Configure the persistent cache before the first eager Triton import."""
 
     try:
-        from worldfoundry.core.compile_cache import configure_persistent_compile_cache
+        from worldfoundry.core.execution.compile_cache import configure_persistent_compile_cache
 
         configure_persistent_compile_cache(namespace="in-tree-kernels")
     except (ImportError, OSError):

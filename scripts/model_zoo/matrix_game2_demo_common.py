@@ -105,7 +105,7 @@ def build_case(args: argparse.Namespace, variant: str) -> dict[str, Any]:
     actions = MODE_ACTIONS[args.mode]
     operator = matrix_game_2_operator(mode=args.mode)
     condition_frames = (int(args.num_output_frames) - 1) * 4 + 1
-    conditions = operator.process_official_bench_actions(num_frames=condition_frames)
+    conditions = operator.process_official_bench_actions(num_frames=condition_frames, seed=int(args.seed))
     return {
         "id": f"matrix_game2_{VARIANT_LABELS[variant]}_{args.mode}_seed{args.seed}_{args.num_output_frames}f",
         "model": "mg2",

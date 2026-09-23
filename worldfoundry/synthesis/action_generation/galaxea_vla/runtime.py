@@ -186,7 +186,7 @@ class GalaxeaVLARuntime:
             return self._model
         import torch
 
-        from worldfoundry.core.device import resolve_inference_device, resolve_inference_dtype
+        from worldfoundry.core.execution.device import resolve_inference_device, resolve_inference_dtype
 
         from .modeling import GalaxeaZero
         from .preprocessing import PaliGemmaTokenizer

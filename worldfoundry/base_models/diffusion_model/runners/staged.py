@@ -14,7 +14,7 @@ import torch
 import numpy as np
 from einops import rearrange, repeat, reduce
 from typing import Union
-from worldfoundry.core.device import get_device_name, get_device_type, is_npu_available, parse_device_type
+from worldfoundry.core.execution.device import get_device_name, get_device_type, is_npu_available, parse_device_type
 from worldfoundry.core.model_loading import GeneralLoRALoader, ModelConfig, load_state_dict
 from worldfoundry.core.vram import AutoTorchModule, AutoWrappedLinear
 

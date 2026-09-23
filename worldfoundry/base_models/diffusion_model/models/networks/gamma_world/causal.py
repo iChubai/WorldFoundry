@@ -938,8 +938,8 @@ class CausalCosmosBlock(nn.Module):
             eps=self.layer_norm_self_attn.eps,
         )
 
-        action_emb = self.input_encoder(action_bias_B_L_D)
-        normed_x = normed_x + action_emb
+        if action_bias_B_L_D is not None:
+            normed_x = normed_x + self.input_encoder(action_bias_B_L_D)
 
         attn_out = self.self_attn(
             normed_x,

@@ -50,7 +50,7 @@ def _catalog_runtime_completeness_checks_enabled() -> bool:
 
 @lru_cache(maxsize=1)
 def _three_d_four_d_runtime_spec_tables() -> tuple[Mapping[str, Any], Mapping[str, Any]]:
-    from worldfoundry.synthesis.visual_generation.three_d_four_d.runtime import (
+    from worldfoundry.base_models.three_dimensions.three_d_four_d.runtime import (
         IN_TREE_RUNTIME_DIRS,
         THREE_D_FOUR_D_RUNTIME_SPECS,
     )

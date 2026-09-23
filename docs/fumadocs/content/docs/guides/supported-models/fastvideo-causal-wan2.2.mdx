@@ -1,6 +1,6 @@
 ---
 title: "FastVideo CausalWan2.2"
-description: "NVIDIA / FastVideo eight-step causal Wan2.2: 832×480, 717 frames, guidance 1, 16 fps, three-latent blocks. Native recipe; A14B GPU required. Runner pending."
+description: "NVIDIA / FastVideo eight-step causal Wan2.2 image-to-video: 832×480, 81 frames, guidance 1, 16 fps. Local checkpoint integrity blocks GPU validation."
 modelId: "fastvideo-causal-wan2.2"
 pageSource: authored
 ---
@@ -9,7 +9,7 @@ FastVideo CausalWan2.2 is an **eight-step causal** Wan2.2 rollout: video comes o
 
 <ModelPaperFigures modelId="fastvideo-causal-wan2.2" locale="en" />
 
-Paper: [arXiv 2606.03159](https://arxiv.org/abs/2606.03159). Project: [nvidia.github.io/flashdreams](https://nvidia.github.io/flashdreams/main/index.html). Code: [NVIDIA/FlashDreams](https://github.com/NVIDIA/FlashDreams). Preview weights: `FastVideo/CausalWan2.2-I2V-A14B-Preview-Diffusers` (**Apache-2.0**).  Status: Runner 一致性待验证.
+Paper: [arXiv 2606.03159](https://arxiv.org/abs/2606.03159). Project: [nvidia.github.io/flashdreams](https://nvidia.github.io/flashdreams/main/index.html). Code: [NVIDIA/FlashDreams](https://github.com/NVIDIA/FlashDreams). Preview weights: `FastVideo/CausalWan2.2-I2V-A14B-Preview-Diffusers` (**Apache-2.0**). CPU contract tests pass; real inference remains unverified.
 
 <ModelCommandBuilder modelId="fastvideo-causal-wan2.2" locale="en" />
 
@@ -17,16 +17,16 @@ Paper: [arXiv 2606.03159](https://arxiv.org/abs/2606.03159). Project: [nvidia.gi
 
 Causal Wan2.2 fast video. Not the full Wan2.2 family card.
 
-Launch `worldfoundry-eval run fastvideo-causal-wan2.2-t2v-14b` with `--pipeline.task-profile text-to-video`.
+Launch `worldfoundry-eval run fastvideo-causal-wan2.2-i2v-14b` with `--pipeline.task-profile image-to-video` and an input image.
 
 ## Runtime contract
 
-Required: `prompt`; optional: `image` and `video`; artifacts: `fastvideo-causal-wan2.2-t2v-14b.mp4`.
+Required: `prompt` and `image`; artifacts: `fastvideo-causal-wan2.2-i2v-14b.mp4`.
 
 | Knob | Default |
 | --- | --- |
 | Size | **832×480** |
-| Frames | **717** |
+| Frames | **81** |
 | Steps | **8** |
 | Guidance | **1** |
 | FPS | **16** |
@@ -34,6 +34,6 @@ Required: `prompt`; optional: `image` and `video`; artifacts: `fastvideo-causal-
 
 ## Run in WorldFoundry
 
-Status: **Runner parity pending**. Unified environment `worldfoundry-unified-cu128` (Python 3.11, CUDA 12.8). Stage `FastVideo/CausalWan2.2-I2V-A14B-Preview-Diffusers` locally — missing files fail at load, nothing is downloaded. Run `worldfoundry-eval run fastvideo-causal-wan2.2-t2v-14b` with `--pipeline.task-profile text-to-video`. License: Apache-2.0. Catalog VRAM is unset.
+Status: **checkpoint integrity blocked**. The two local text-encoder shards have the expected byte counts but fail the pinned release's SHA-256 checks, so checkpoint-backed GPU inference has not been run. Restore those shards before running `worldfoundry-eval run fastvideo-causal-wan2.2-i2v-14b --pipeline.task-profile image-to-video` with an image. License: Apache-2.0. Catalog VRAM is unset.
 
 <ModelRelatedRecipes modelId="fastvideo-causal-wan2.2" locale="en" />

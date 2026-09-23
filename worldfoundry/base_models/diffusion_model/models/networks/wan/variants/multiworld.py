@@ -314,7 +314,11 @@ class MultiWorldDiTBlock(DiTBlock):
         freqs: torch.Tensor,
         *,
         action_embeds: torch.Tensor,
+        **kwargs: Any,
     ) -> torch.Tensor:
+        # WanModel forwards its exact-RoPE policy through every block. Keep
+        # that policy when MultiWorld replaces the standard Wan cross-attn.
+        kwargs.pop("_worldfoundry_inplace_residual", None)
         sequence_timestep = t_mod.ndim == 4
         chunk_dim = 2 if sequence_timestep else 1
         shift_msa, scale_msa, gate_msa, shift_mlp, scale_mlp, gate_mlp = (
@@ -328,7 +332,7 @@ class MultiWorldDiTBlock(DiTBlock):
         x = self.gate(
             x,
             gate_msa,
-            self.self_attn(scale_shift(self.norm1(x), shift_msa, scale_msa), freqs),
+            self.self_attn(scale_shift(self.norm1(x), shift_msa, scale_msa), freqs, **kwargs),
         )
         x = x + self.cross_attn(self.norm3(x), action_embeds, context)
         return self.gate(

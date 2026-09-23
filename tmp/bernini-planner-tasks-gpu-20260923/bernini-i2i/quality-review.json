@@ -1,0 +1,46 @@
+{
+  "status": "verified_configuration",
+  "case": "bernini-i2i",
+  "scope": "Full Bernini,40 default steps,seed42,848x480; videos81frames16fps. Public pipeline. Editing uses prior generated red-balloon fixture. Covers only this task and seed.",
+  "visual_review": "Actual image viewed: red reference balloon recolored blue, meadow/sky remain recognizable.",
+  "final_loading": [
+    {
+      "nested_construction": false,
+      "model": "BerniniModel",
+      "path": "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/ckpts/ByteDance--Bernini-Diffusers",
+      "subfolder": "bernini",
+      "info": {
+        "missing_keys": [],
+        "unexpected_keys": [],
+        "mismatched_keys": [],
+        "error_msgs": []
+      },
+      "meta_parameters": []
+    },
+    {
+      "nested_construction": false,
+      "model": "AutoencoderKLWan",
+      "path": "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/ckpts/ByteDance--Bernini-Diffusers",
+      "subfolder": "vae",
+      "info": {
+        "missing_keys": [],
+        "unexpected_keys": [],
+        "mismatched_keys": [],
+        "error_msgs": []
+      },
+      "meta_parameters": []
+    }
+  ],
+  "nested_construction_records_retained": true,
+  "raw_decode_count": 1,
+  "artifact_validation": {
+    "size": [
+      848,
+      480
+    ],
+    "decoded": true
+  },
+  "source_hash_mismatches": [],
+  "source_note": "Any component_pipelines hash mismatch is the separate PixelSplat checkpoint-path mapping; Bernini code unchanged.",
+  "reviewed_at": 1790094570.7962148
+}

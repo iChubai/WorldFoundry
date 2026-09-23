@@ -1,0 +1,68 @@
+{
+  "status": "verified_configuration",
+  "case": "bernini-r-14b-t2i",
+  "scope": "Bernini-R14B,40 default steps,seed42,848x480; videos81frames16fps. Public pipeline. Editing uses prior generated red-balloon fixture. Covers only this task and seed.",
+  "visual_review": "Viewed output image: blue balloon over green meadow and blue sky matches the requested subject/color.",
+  "final_loading": [
+    {
+      "model": "AutoencoderKLWan",
+      "path": "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/ckpts/ByteDance--Bernini-R-Diffusers",
+      "subfolder": "vae",
+      "info": {
+        "missing_keys": [],
+        "unexpected_keys": [],
+        "mismatched_keys": [],
+        "error_msgs": []
+      },
+      "meta_parameters": []
+    },
+    {
+      "model": "UMT5EncoderModel",
+      "path": "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/ckpts/ByteDance--Bernini-R-Diffusers",
+      "subfolder": "text_encoder",
+      "info": {
+        "missing_keys": [],
+        "unexpected_keys": [],
+        "mismatched_keys": [],
+        "error_msgs": []
+      },
+      "meta_parameters": []
+    },
+    {
+      "model": "WanTransformer3DModel",
+      "path": "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/ckpts/ByteDance--Bernini-R-Diffusers",
+      "subfolder": "transformer",
+      "info": {
+        "missing_keys": [],
+        "unexpected_keys": [],
+        "mismatched_keys": [],
+        "error_msgs": []
+      },
+      "meta_parameters": []
+    },
+    {
+      "model": "WanTransformer3DModel",
+      "path": "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/ckpts/ByteDance--Bernini-R-Diffusers",
+      "subfolder": "transformer_2",
+      "info": {
+        "missing_keys": [],
+        "unexpected_keys": [],
+        "mismatched_keys": [],
+        "error_msgs": []
+      },
+      "meta_parameters": []
+    }
+  ],
+  "nested_construction_records_retained": true,
+  "raw_decode_count": 1,
+  "artifact_validation": {
+    "size": [
+      848,
+      480
+    ],
+    "decoded": true
+  },
+  "source_hash_mismatches": [],
+  "source_note": "Any component_pipelines hash mismatch is the separate PixelSplat checkpoint-path mapping; Bernini code unchanged.",
+  "reviewed_at": 1790093082.8543506
+}

@@ -27,8 +27,8 @@ from PIL import Image
 
 from worldfoundry.core import autocast_context
 from worldfoundry.core.acceleration.encoder_lifecycle import offload_module_to_cpu
+from worldfoundry.core.execution.realtime import RealtimeSpec
 from worldfoundry.core.io.paths import checkpoint_root_path
-from worldfoundry.core.realtime import RealtimeSpec
 from worldfoundry.runtime.compile_cache import CompilePolicy, compile_module_cached
 from worldfoundry.synthesis.visual_generation.inspatio_world.inspatio_world_runtime.utils.taehv import (
     TAEHV,

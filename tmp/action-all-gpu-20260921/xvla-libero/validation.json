@@ -1,0 +1,12 @@
+{
+  "shape": [
+    30,
+    20
+  ],
+  "finite": true,
+  "min": -1.044316053390503,
+  "max": 1.0283002853393555,
+  "std": 0.3719463217633288,
+  "first_arm_rotation_min_norm": 0.8948606642137431,
+  "first_arm_rotation_min_cross_norm": 0.7948318244357498
+}

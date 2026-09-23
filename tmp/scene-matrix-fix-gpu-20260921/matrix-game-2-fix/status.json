@@ -1,0 +1,10 @@
+{
+  "case": "matrix-game-2-fix",
+  "started_at": 1789998975.4976225,
+  "gpu": "1",
+  "status": "generated",
+  "videos": [
+    "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/WorldFoundry/tmp/scene-matrix-fix-gpu-20260921/matrix-game-2-fix/demo.mp4"
+  ],
+  "elapsed_seconds": 111.28
+}

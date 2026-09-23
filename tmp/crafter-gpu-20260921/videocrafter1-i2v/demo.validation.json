@@ -1,0 +1,21 @@
+{
+  "video": "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/WorldFoundry/tmp/crafter-gpu-20260921/videocrafter1-i2v/demo.mp4",
+  "metadata": {
+    "width": 512,
+    "height": 320,
+    "r_frame_rate": "8/1",
+    "duration": "2.000000",
+    "nb_frames": "16"
+  },
+  "decoded_frames": 16,
+  "mean": 52.910796549479166,
+  "std": 57.78603641025603,
+  "mean_frame_delta": 1.879737138748169,
+  "max_frame_delta": 2.1366615295410156,
+  "decode_stderr": "",
+  "passed": true,
+  "expected_width": 512,
+  "expected_height": 320,
+  "expected_fps": 8,
+  "expected_frames": 16
+}

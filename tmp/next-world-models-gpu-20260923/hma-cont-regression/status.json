@@ -1,0 +1,9 @@
+{
+  "model_id": "hma",
+  "status": "generated",
+  "gpu": "2",
+  "artifact": "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/WorldFoundry/tmp/next-world-models-gpu-20260923/hma-cont-regression/generated.mp4",
+  "decoded_frames": 5,
+  "artifact_sha256": "10b63143ccbe39cf201b93f3da6010d0ae7feb112f2b7763da8f1dde58e86bd5",
+  "elapsed_seconds": 260.54
+}

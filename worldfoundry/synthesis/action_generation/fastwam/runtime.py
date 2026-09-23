@@ -175,7 +175,7 @@ class FastWAMRuntime:
         from torch import nn
 
         from worldfoundry.core.checkpoint.assignment import assign_state_dict_strict
-        from worldfoundry.core.device import resolve_inference_device, resolve_inference_dtype
+        from worldfoundry.core.execution.device import resolve_inference_device, resolve_inference_dtype
         from worldfoundry.core.model_loading.file import load_state_dict, load_torch_checkpoint
 
         from .action_dit import ActionDiT

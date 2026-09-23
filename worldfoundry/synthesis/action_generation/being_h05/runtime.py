@@ -354,8 +354,12 @@ def build_being_h05_observation(
         if value is None:
             # If the full key (e.g., 'robot_state.eef_position') is not found,
             # try looking for a 'short key' (e.g., 'eef_position').
-            short_key = key.split(".", 1)[1]
+            namespace, short_key = key.split(".", 1)
             value = source.get(short_key)
+            if value is None:
+                nested_state = source.get(namespace)
+                if isinstance(nested_state, Mapping):
+                    value = nested_state.get(short_key)
         if value is None:
             # If still not found, provide a default zero-filled array.
             value = _default_state_array(key)

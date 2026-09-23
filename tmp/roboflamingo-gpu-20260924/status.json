@@ -1,0 +1,5 @@
+{
+  "status": "blocked_checkpoint",
+  "gpu_action_run": false,
+  "evidence": "worldfoundry/synthesis/action_generation/roboflamingo/runtime.py"
+}

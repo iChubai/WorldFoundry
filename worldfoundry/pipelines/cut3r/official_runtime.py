@@ -266,7 +266,7 @@ def build_rerun_recording(
 
     # Deferred import: keeps `import worldfoundry.pipelines.cut3r` working in
     # deployments without the studio package (only this visualization helper needs it).
-    from worldfoundry.core.geometry import depth_to_world_points
+    from worldfoundry.core.geometry.transforms import depth_to_world_points
 
     root = Path(output_dir)
     camera_paths = sorted((root / "camera").glob("*.npz"))

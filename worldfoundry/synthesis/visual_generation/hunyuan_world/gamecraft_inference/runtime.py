@@ -14,8 +14,8 @@ import torch.distributed
 import torchvision
 from einops import rearrange
 
-from worldfoundry.core.geometry import ray_condition
-from worldfoundry.core.geometry import torch_meshgrid_ij as custom_meshgrid
+from worldfoundry.core.geometry.transforms import ray_condition
+from worldfoundry.core.geometry.transforms import torch_meshgrid_ij as custom_meshgrid
 
 ACTION_DICT = {
     "w": "forward",

@@ -1,0 +1,19 @@
+{
+  "dit": "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/ckpts/kairos-agi--kairos-sensenova-4B-720P/kairos-common-4B-720P.safetensors",
+  "text_encoder": "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/ckpts/Qwen--Qwen2.5-VL-7B-Instruct",
+  "vae": "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/ckpts/Wan-AI--Wan2.1-T2V-14B/Wan2.1_VAE.pth",
+  "input_image": "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/WorldFoundry/tmp/priorda-preflight-20260922/fixtures/assets/sample-2/rgb.jpg",
+  "prompt": "A small turquoise toy sits on a plate on a red table. The camera slowly moves closer.",
+  "video": "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/WorldFoundry/tmp/kairos-720p-gpu-20260924/future_world.mp4",
+  "decoded_frames": 9,
+  "frame_shape": [
+    720,
+    1280,
+    3
+  ],
+  "pixel_min": 0,
+  "pixel_max": 255,
+  "pixel_std": 50.69164656236349,
+  "elapsed_seconds": 326.9851384162903,
+  "gpu_peak_allocated_bytes": 0
+}

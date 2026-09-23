@@ -95,7 +95,7 @@ def _prepare_input(request):
     subprocess.run(command, check=True, cwd=request["source_root"])
 
 
-# Inference configuration adapters from the pinned Alaya loader (see PROVENANCE.md).
+# Inference configuration adapters from the pinned Alaya loader.
 def _read_transformer_config(checkpoint_path) -> dict:
     import safetensors
 

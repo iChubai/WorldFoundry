@@ -198,6 +198,7 @@ class Yume1p5Runtime:
             arg_c, arg_null, noise = self.model.generate(
                 caption,
                 frame_num=history_current_frame_num,
+                size=(size[1], size[0]),
                 max_area=max_area,
                 current_latent_num=current_latent_num,
                 seed=seed

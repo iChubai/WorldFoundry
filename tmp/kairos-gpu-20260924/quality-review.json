@@ -1,0 +1,23 @@
+{
+  "video": "tmp/kairos-gpu-20260924/future_world.mp4",
+  "sha256": "698ff0152e3a8a5cb62c4916f23135d0d2e006fd13440727fa5e551bf136a65b",
+  "frames": 9,
+  "frame_shape": [
+    480,
+    640,
+    3
+  ],
+  "sampled_frames": [
+    0,
+    4,
+    8
+  ],
+  "mean_abs_pixel_delta_from_frame0": {
+    "4": 2.36555552482605,
+    "8": 0.8788064122200012
+  },
+  "contact": "tmp/kairos-gpu-20260924/contact-0-4-8.jpg",
+  "visual_review": "Frames 0, 4 and 8 retain the turquoise toy, white plate, red table and painted wall with very little change; no discernible camera push-in is established over this nine-frame clip.",
+  "status": "verified_inference_only",
+  "scope_limit": "Short nine-frame 640x480 I2V path from a real toy photo at 50 steps; does not establish long-horizon motion quality, commanded camera movement, or robot task success."
+}

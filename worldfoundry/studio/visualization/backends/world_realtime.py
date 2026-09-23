@@ -30,10 +30,10 @@ import numpy as np
 from PIL import Image
 
 from worldfoundry.core.acceleration.prewarm import run_async_prewarm_sequence
-from worldfoundry.core.logging_setup import get_logger, write_jsonl_event
-from worldfoundry.core.realtime import RealtimeSpec
-from worldfoundry.core.realtime_timing import RealtimeChunkTiming, RealtimeTimingWindow
-from worldfoundry.core.video_postprocess import (
+from worldfoundry.core.execution.realtime import RealtimeSpec
+from worldfoundry.core.observability.logging_setup import get_logger, write_jsonl_event
+from worldfoundry.core.observability.realtime_timing import RealtimeChunkTiming, RealtimeTimingWindow
+from worldfoundry.core.video.postprocess import (
     IdentityVideoPostProcessor,
     VideoPostprocessChain,
     VideoPostprocessStream,
@@ -664,7 +664,7 @@ def _realtime_postprocess_stream(
             fps=fps,
         )
 
-    from worldfoundry.core.video_postprocess_rtx import (
+    from worldfoundry.core.video.rtx import (
         require_rtx_vfx_runtime,
         rtx_postprocessor_from_preset,
     )

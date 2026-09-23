@@ -1,0 +1,38 @@
+{
+  "status": "verified_inference_only",
+  "video": {
+    "metadata": {
+      "width": 688,
+      "height": 512,
+      "r_frame_rate": "16/1",
+      "nb_frames": "81"
+    },
+    "decoded_frames": 81,
+    "shape": [
+      81,
+      512,
+      688,
+      3
+    ],
+    "mean": 137.41267826541414,
+    "std": 51.61834204793436,
+    "mean_delta": 0.818394660949707,
+    "max_delta": 1.8842394351959229
+  },
+  "loading": {
+    "diffusers_final_clean": true,
+    "hf_umt5_clean": true,
+    "clip_unused_projection_extra": "visual_projection.weight",
+    "controlnet_overlay_missing_main_backbone": 1303,
+    "controlnet_overlay_active_missing": 0
+  },
+  "raw": {
+    "pcd_calls": 80,
+    "controlnet_group_count": 20,
+    "all_observed_finite": true
+  },
+  "source_hash_count": 13,
+  "actual_contact_viewed": true,
+  "visual_note": "Six actual contact frames viewed: turquoise toy, plate, red table and wall remain coherent; viewpoint drifts smoothly left. The turquoise toy centroid moves about22px left and segmented width grows96\u2192106px across81 frames. This supports qualitative motion response, not calibrated15-degree adherence.",
+  "source_renderer": "Control bundle used project Torch fallback; official stage-two Uni3C runtime unchanged."
+}

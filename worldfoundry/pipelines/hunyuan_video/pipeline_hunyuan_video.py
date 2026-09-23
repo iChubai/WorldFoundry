@@ -128,7 +128,14 @@ class NativeHunyuanVideoPipeline(PipelineABC):
             if resolved_model_id.startswith("hunyuanvideo-1.5"):
                 overrides["resources"] = root
                 local_vision = source_root / "vision_encoder" / "siglip"
-                if resolved_model_id == "hunyuanvideo-1.5-i2v" and local_vision.is_dir():
+                vision_files = (
+                    "image_encoder/config.json",
+                    "image_encoder/model.safetensors",
+                    "feature_extractor/preprocessor_config.json",
+                )
+                if resolved_model_id == "hunyuanvideo-1.5-i2v" and all(
+                    (local_vision / name).is_file() for name in vision_files
+                ):
                     overrides["vision"] = str(local_vision.resolve())
 
         if resolved_model_id in {"hunyuanvideo-t2v", "hunyuanvideo-i2v"}:

@@ -217,7 +217,7 @@ def load_extra_components(args, model, checkpoint_path) -> None:
     if camera_config is not None and getattr(camera_config, "enabled", False):
         camera_path = os.path.join(os.path.dirname(os.fspath(checkpoint_path)), "camera_ctrl.safetensors")
         if os.path.exists(camera_path):
-            from evoke.modules.camera_control import load_camera_ctrl_weights
+            from worldfoundry.base_models.diffusion_model.models.networks.evoke.camera_control import load_camera_ctrl_weights
 
             load_camera_ctrl_weights(
                 model,

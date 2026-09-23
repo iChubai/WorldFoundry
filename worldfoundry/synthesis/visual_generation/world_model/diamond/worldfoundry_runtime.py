@@ -21,10 +21,26 @@ DEFAULT_PRETRAINED_DIR = next(
 BLOCKED_REASON = ""
 
 
+def _is_csgo(options):
+    return str(options.get("variant") or options.get("pretrained_game") or options.get("game") or "").lower() in {"csgo", "diamond-csgo"}
+
+
 def missing_requirements(*, options, runtime_root, entrypoint, profile):
     del runtime_root, profile
     options = dict(options or {})
     missing = []
+    if _is_csgo(options):
+        root = Path(str(options.get("pretrained_dir") or DEFAULT_PRETRAINED_DIR)).expanduser()
+        spawn = Path(str(options["spawn_dir"])).expanduser() if options.get("spawn_dir") else root / "csgo/spawn" / str(options.get("spawn_id", 0))
+        checkpoint = options.get("checkpoint") or options.get("checkpoint_path") or options.get("model_path")
+        required = [
+            RUNTIME_DIR / "csgo_inference.py", root / "csgo/config/agent/csgo.yaml",
+            Path(str(checkpoint)).expanduser() if checkpoint else root / "csgo/model/csgo.pt",
+            *(spawn / name for name in ("low_res.npy", "full_res.npy", "act.npy")),
+        ]
+        if options.get("actions_path"):
+            required.append(Path(str(options["actions_path"])).expanduser())
+        return [{"kind": "asset", "path": str(p), "reason": "required local DIAMOND CS:GO asset is missing"} for p in required if not p.is_file()]
     config_dir = Path(str(options.get("config_dir") or CONFIG_DIR)).expanduser()
     checkpoint = options.get("checkpoint") or options.get("checkpoint_path") or options.get("model_path")
     pretrained = bool(options.get("pretrained", False))
@@ -72,6 +88,25 @@ def missing_requirements(*, options, runtime_root, entrypoint, profile):
 
 def build_command(context):
     options = dict(context.get("options") or {})
+    if _is_csgo(options):
+        command = [
+            context["python"], str(RUNTIME_DIR / "csgo_inference.py"),
+            "--pretrained-dir", str(options.get("pretrained_dir") or DEFAULT_PRETRAINED_DIR),
+            "--spawn-id", str(options.get("spawn_id", 0)),
+            "--action", str(options.get("action", "forward")),
+            "--sampler", str(options.get("sampler", "higher_quality")),
+            "--headless-steps", str(options.get("headless_steps", options.get("frames", 24))),
+            "--fps", str(options.get("fps", 16)), "--seed", str(options.get("seed", 42)),
+            "--device", str(options.get("device", "cuda")),
+            "--output-path", context["output_path"],
+        ]
+        checkpoint = options.get("checkpoint") or options.get("checkpoint_path") or options.get("model_path")
+        if checkpoint:
+            command.extend(("--checkpoint", str(checkpoint)))
+        for name in ("spawn_dir", "actions_path"):
+            if options.get(name):
+                command.extend(("--" + name.replace("_", "-"), str(options[name])))
+        return command
     command = [
         context["python"],
         context["entrypoint"],

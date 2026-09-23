@@ -1,0 +1,24 @@
+{
+  "video": "tmp/wow-13b-quality-recheck-20260924/future_world.mp4",
+  "sha256": "dbd438ea6e9da68e91315abde1dd8618a5577dff07179b3de458deca1cca87f4",
+  "frames": 9,
+  "frame_shape": [
+    480,
+    832,
+    3
+  ],
+  "sampled_frames": [
+    0,
+    4,
+    8
+  ],
+  "mean_abs_pixel_delta_from_frame0": {
+    "4": 6.873652935028076,
+    "8": 11.159958839416504
+  },
+  "contact": "tmp/wow-13b-quality-recheck-20260924/contact-0-4-8.jpg",
+  "status": "verified_inference_only",
+  "visual_review": "Frames 0, 4 and 8 all retain the turquoise toy, white plate, red table and wall. The frame becomes modestly softer/fainter, but the abrupt replacement seen with the robot-arm prompt does not occur in this paired run. No calibrated camera push-in is evident.",
+  "comparison": "tmp/wow-13b-gpu-20260923/quality-review.json",
+  "scope_limit": "Single neutral scene-preservation prompt, same toy photograph/seed/50 steps as robot-arm prompt. This shows prompt sensitivity in this case, not general temporal consistency, motion fidelity or robot-task ability."
+}

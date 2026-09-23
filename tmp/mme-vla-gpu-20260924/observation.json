@@ -1,0 +1,10 @@
+{
+  "model_id": "mme-vla",
+  "status": "blocked_external",
+  "case": "offline-action-preflight",
+  "finding": "Complete 79999.zip archive needs extraction to 79999/params, and unified inference environment has no JAX/Flax/Orbax. Partial extraction was removed.",
+  "status_evidence": "tmp/mme-vla-gpu-20260924/status.json",
+  "scope": "Weight and default loader/deployment preflight only; no GPU action inference and no task-success claim.",
+  "reviewed_in_current_session": true,
+  "blocker_kind": "blocked_dependency"
+}

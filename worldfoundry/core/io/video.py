@@ -24,6 +24,8 @@ import threading
 from pathlib import Path
 from typing import Any, Iterable, Optional
 
+from worldfoundry.core.observability.nvtx import nvtx_range
+
 from .media import IMAGE_EXTENSIONS, VIDEO_EXTENSIONS
 from .paths import scratch_directory
 from .storage import local_path_for_uri, parse_uri_scheme, uri_to_local_path, write_binary_uri
@@ -620,6 +622,7 @@ def _drain_ffmpeg_stderr(
 # ──────────────────────────────────────────────────────────────────────────
 
 
+@nvtx_range("worldfoundry.output.h264")
 def save_video_h264(
     video_frames,
     output_path: str | Path,

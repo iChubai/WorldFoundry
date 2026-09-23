@@ -15,7 +15,7 @@ from worldfoundry.base_models.perception_core.optical_flow.sea_raft import (
     load_ckpt,
     parse_args,
 )
-from worldfoundry.core.device import get_current_torch_device
+from worldfoundry.core.execution.device import get_current_torch_device
 
 from .utils import load_dimension_info, read_video_frames_cv2
 from worldfoundry.core.distributed.evaluation_collectives import (

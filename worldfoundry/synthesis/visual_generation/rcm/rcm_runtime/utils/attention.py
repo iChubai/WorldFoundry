@@ -137,7 +137,7 @@ def attention(
     cc, backends, kern = _get_sdpa_config(q.device, is_half)
 
     if cc == 90 and FLASH_ATTN_3_AVAILABLE and is_half:
-        return flash_attn_func(
+        output = flash_attn_func(
             q=q,
             k=k,
             v=v,
@@ -145,6 +145,8 @@ def attention(
             causal=causal,
             deterministic=deterministic,
         )
+        # FlashAttention 3 exposes both tensor-only and (tensor, LSE) APIs.
+        return output[0] if isinstance(output, tuple) else output
 
     if deterministic:
         raise NotImplementedError("Deterministic mode in attention is only supported when Flash Attention 3 is available.")

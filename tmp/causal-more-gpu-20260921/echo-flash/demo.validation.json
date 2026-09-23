@@ -1,0 +1,21 @@
+{
+  "video": "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/WorldFoundry/tmp/causal-more-gpu-20260921/echo-flash/demo.mp4",
+  "metadata": {
+    "width": 1280,
+    "height": 704,
+    "r_frame_rate": "24/1",
+    "duration": "2.041667",
+    "nb_frames": "49"
+  },
+  "decoded_frames": 49,
+  "mean": 95.287759571158,
+  "std": 62.20780553082191,
+  "mean_frame_delta": 5.985716342926025,
+  "max_frame_delta": 9.929486274719238,
+  "decode_stderr": "",
+  "passed": true,
+  "expected_width": 1280,
+  "expected_height": 704,
+  "expected_fps": 24.0,
+  "expected_frames": 49
+}

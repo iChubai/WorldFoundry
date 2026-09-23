@@ -1,0 +1,21 @@
+{
+  "video": "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/WorldFoundry/tmp/causal-more-gpu-20260921/alaya-native/demo.mp4",
+  "metadata": {
+    "width": 960,
+    "height": 544,
+    "r_frame_rate": "24/1",
+    "duration": "2.666667",
+    "nb_frames": "64"
+  },
+  "decoded_frames": 64,
+  "mean": 88.45444908281823,
+  "std": 58.679602909382254,
+  "mean_frame_delta": 0.8843047618865967,
+  "max_frame_delta": 1.9947916269302368,
+  "decode_stderr": "",
+  "passed": true,
+  "expected_width": 960,
+  "expected_height": 544,
+  "expected_fps": 24.0,
+  "expected_frames": 64
+}

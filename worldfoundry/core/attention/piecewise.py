@@ -68,7 +68,7 @@ def piecewise_attention_available(device: torch.device | str | None = None) -> b
     if not _pisa_device_eligible(parsed):
         return False
     try:
-        from worldfoundry.core.compile_cache import configure_persistent_compile_cache
+        from worldfoundry.core.execution.compile_cache import configure_persistent_compile_cache
 
         configure_persistent_compile_cache(namespace="pisa-triton")
         import triton  # noqa: F401

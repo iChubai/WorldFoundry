@@ -1,5 +1,24 @@
 schema_version: worldfoundry.runtime_defaults.v1
 defaults:
+  ltx2_t2v:
+    model_name: ltx2_t2v
+    generation_type: t2v
+    version_hint: '2.0'
+    checkpoint_path: ${WORLDFOUNDRY_CKPT_DIR}/Lightricks--LTX-2/ltx-2-19b-distilled.safetensors
+    spatial_upsampler_path: ${WORLDFOUNDRY_CKPT_DIR}/Lightricks--LTX-2/ltx-2-spatial-upscaler-x2-1.0.safetensors
+    gemma_root: ${WORLDFOUNDRY_CKPT_DIR}/Lightricks--LTX-2/text_encoder
+    offload_mode: disk
+    vae_tiling:
+      spatial_tile_size: 768
+      spatial_overlap: 64
+      temporal_tile_size: 80
+      temporal_overlap: 24
+    height: 512
+    width: 768
+    num_frames: 121
+    frame_rate: 24
+    num_inference_steps: 11
+    enhance_prompt: false
   ltx2_i2v:
     model_name: ltx2_i2v
     generation_type: i2v

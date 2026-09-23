@@ -629,7 +629,7 @@ class OpenPIRuntime:
                 f"OpenPI config {self.config.config_name!r} uses data family "
                 f"{runtime_config.data_family!r}, not {self.config.data_family!r}."
             )
-        from worldfoundry.core.device import resolve_inference_device, resolve_inference_dtype
+        from worldfoundry.core.execution.device import resolve_inference_device, resolve_inference_dtype
 
         device = resolve_inference_device(
             self.config.pytorch_device or "cuda",

@@ -12,7 +12,7 @@ patch indices — models that need both compose them.
 
 Not this module:
     Grid-index 3D / 2D / n-D RoPE lives in :mod:`.rope`, :mod:`.rope_2d`,
-    :mod:`.rope_nd`. Pose I/O lives in :mod:`worldfoundry.core.camera_pose`.
+    :mod:`.rope_nd`. Pose I/O lives in :mod:`worldfoundry.core.geometry.pose`.
     The old ``prope_diagonal_mask`` / ``attn_mask`` hooks are
     intentionally not part of this interface.
 

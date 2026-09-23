@@ -22,7 +22,7 @@ from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import FileResponse, HTMLResponse, Response, StreamingResponse
 from pydantic import BaseModel, Field
 
-from worldfoundry.core.inference import (
+from worldfoundry.core.execution.inference import (
     InferenceArtifactSpec,
     InferenceCheckpointRef,
     InferenceFieldSpec,

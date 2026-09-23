@@ -100,7 +100,7 @@ def missing_requirements(*, options, runtime_root, entrypoint, profile) -> list[
     checkpoint = _checkpoint_path(options)
     if not checkpoint.is_file() or checkpoint.stat().st_size == 0:
         missing.append(
-            {"kind": "checkpoint", "path": str(checkpoint), "reason": "EgoWM 25-DoF checkpoint is missing or empty"}
+            {"kind": "checkpoint", "path": str(checkpoint), "reason": "EgoWM checkpoint is missing or empty"}
         )
 
     base_model = _base_model_dir(options)

@@ -14,8 +14,6 @@ from worldfoundry.core.attention.varlen import (
 )
 from worldfoundry.base_models.diffusion_model.models.networks.wan.reference_21 import (
     WanRMSNorm,
-    WanLayerNorm,
-    WAN_CROSSATTENTION_CLASSES,
     rope_params,
     sinusoidal_embedding_1d,
 )
@@ -24,6 +22,8 @@ from .causal import (
     CausalWanAttentionBlock,
     CausalHead,
 )
+from .normalization import WanLayerNorm
+from .attention import WAN_CROSSATTENTION_CLASSES
 
 
 # ---------------------------------------------------------------------------

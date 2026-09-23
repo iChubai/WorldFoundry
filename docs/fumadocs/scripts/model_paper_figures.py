@@ -1686,16 +1686,6 @@ CAPTIONS: dict[str, dict[str, tuple[str, str]]] = {
             "论文方法总览：Spatial Forcing 隐式强迫空间特征，而不是输入显式深度或外挂三维专家。",
         ),
     },
-    "thinksound": {
-        "teaser": (
-            "Official paper teaser: ThinkSound uses chain-of-thought steps to generate and edit video-aligned audio.",
-            "论文官方 Teaser：ThinkSound 用思维链分步生成并编辑与视频对齐的音频。",
-        ),
-        "overview": (
-            "Method overview: an MLLM produces CoT tokens that condition a multi-stream then single-stream flow-matching audio transformer.",
-            "论文方法总览：多模态大模型产出思维链 token，再条件化先多流后单流的流匹配音频 Transformer。",
-        ),
-    },
     "unianimate-dit": {
         "teaser": (
             "Official paper teaser: UniAnimate-DiT animates stylized and photorealistic characters from driving poses.",

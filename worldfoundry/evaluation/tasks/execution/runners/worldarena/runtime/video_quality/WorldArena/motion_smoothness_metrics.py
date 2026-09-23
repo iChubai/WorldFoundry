@@ -9,7 +9,7 @@ from tqdm import tqdm
 from worldfoundry.base_models.perception_core.frame_interpolation.vfimamba import config as cfg
 from worldfoundry.base_models.perception_core.frame_interpolation.vfimamba.inference import Model, convert
 from worldfoundry.base_models.perception_core.frame_interpolation.vfimamba.benchmark.utils.padder import InputPadder
-from worldfoundry.core.device import get_current_torch_device
+from worldfoundry.core.execution.device import get_current_torch_device
 
 from .utils import load_dimension_info, read_video_frames_cv2
 from worldfoundry.core.distributed.evaluation_collectives import (

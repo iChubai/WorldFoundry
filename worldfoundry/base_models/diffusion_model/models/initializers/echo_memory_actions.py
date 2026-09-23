@@ -23,7 +23,7 @@ from typing import Any
 
 import numpy as np
 
-from worldfoundry.core.camera_trajectory import parse_camera_trajectory
+from worldfoundry.core.geometry.trajectory import parse_camera_trajectory
 
 
 def _rotation_z(yaw: float) -> np.ndarray:

@@ -17,6 +17,7 @@ source:
 checkpoint_refs:
 - repo_id: lpiccinelli/unidepth-v2-vitl14
   filename: model.safetensors
+  revision: 1d0d3c52f60b5164629d279bb9a7546458e6dcc4
 official_sources:
   project_page: https://lpiccinelli-eth.github.io/pub/unidepth/
   paper: https://arxiv.org/abs/2502.20110
@@ -25,8 +26,10 @@ integration:
   status: integrated
   notes:
   - Integrated as an independent geometric prior at worldfoundry/base_models/three_dimensions/depth/unidepth.
-  - The default checkpoint is resolved through Hugging Face from lpiccinelli/unidepth-v2-vitl14
-    or an explicit local model_path override.
+  - The shared loader uses the registered local model directory or HF snapshot
+    1d0d3c52f60b5164629d279bb9a7546458e6dcc4 with the matching upstream V2 compatibility
+    decoder and canonical DINOv2 backbone; weight loading is strict.
+  - The pinned decoder requires xformers.components.attention; tested with xformers 0.0.28.post3.
   - The upstream release is CC-BY-NC-4.0; downstream users must respect the non-commercial
     license terms when enabling this prior.
 base_model_target: worldfoundry.base_models.three_dimensions.depth.unidepth

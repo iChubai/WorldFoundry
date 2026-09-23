@@ -1,0 +1,9 @@
+{
+  "model_id": "ltx-2-v2v",
+  "case": "ltx-2-v2v-20260924-audit",
+  "status": "failed_integration",
+  "status_evidence": "tmp/ltx2-v2v-gpu-20260924/preflight.json",
+  "report": "tmp/ltx2-v2v-gpu-20260924/REPORT.md",
+  "scope": "The variant is profile_only with integration_status planned. Coverage lists no pipeline target and the LTX-2 pipeline package has only T2V/I2V adapters. A local LTX-2 checkpoint does not establish V2V execution; no public WorldFoundry V2V runner or GPU inference is available.",
+  "reviewed_in_current_session": true
+}

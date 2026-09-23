@@ -25,7 +25,7 @@ if str(REPO_ROOT) not in sys.path:  # pragma: no cover - direct script execution
     sys.path.insert(0, str(REPO_ROOT))
 
 from worldfoundry.core.io.paths import checkpoint_root_path  # noqa: E402
-from worldfoundry.core.time import utc_now_iso  # noqa: E402
+from worldfoundry.core.observability.time import utc_now_iso  # noqa: E402
 from worldfoundry.evaluation.reporting.scorecard import SCORECARD_SCHEMA_VERSION  # noqa: E402
 from worldfoundry.evaluation.tasks.execution.framework.io import env_path, write_json, write_jsonl  # noqa: E402
 from worldfoundry.evaluation.tasks.execution.runners.stevo_bench.stevo_bench_metrics import (  # noqa: E402

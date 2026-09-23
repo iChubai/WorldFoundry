@@ -30,7 +30,7 @@ from .base import (
     RunnerComponents,
     Wan22DualExpertGuidanceRunner,
 )
-from .chunked import ChunkedKVCacheRunner
+from .chunked import ChunkedAdditiveCacheRunner, ChunkedKVCacheRunner
 from .multistage import JointMultiStageDiffusionRunner, MultiStageComponents
 from .prefix_recompute import PrefixRecomputeRunner
 
@@ -402,16 +402,18 @@ def build_autoregressive_window_strategy(
 def build_chunked_kv_cache_strategy(
     context: ExecutionBuildContext,
 ) -> ChunkedKVCacheRunner:
-    """Temporal chunk traversal with framework-owned persistent attention / KV cache. Same six encoded-latent bindings."""
+    """Temporal chunk traversal with token or additive attention caches."""
 
     required = {
         "denoiser",
         "conditioner",
         "latent_initializer",
-        "latent_encoder",
         "scheduler",
         "decoder",
     }
+    additive = context.recipe.execution.strategy == "chunked-additive-cache"
+    if not additive:
+        required.add("latent_encoder")
     bindings = context.recipe.execution.bindings
     if set(bindings) != required:
         raise ValueError(
@@ -420,7 +422,8 @@ def build_chunked_kv_cache_strategy(
         )
     bound = {role: context.components[key] for role, key in bindings.items()}
     options = context.recipe.execution.options
-    return ChunkedKVCacheRunner(
+    runner_class = ChunkedAdditiveCacheRunner if additive else ChunkedKVCacheRunner
+    return runner_class(
         model_id=context.recipe.model_id,
         components=RunnerComponents(
             denoiser=bound["denoiser"],  # type: ignore[arg-type]
@@ -428,7 +431,7 @@ def build_chunked_kv_cache_strategy(
             latent_initializer=bound["latent_initializer"],  # type: ignore[arg-type]
             scheduler=bound["scheduler"],  # type: ignore[arg-type]
             decoder=bound["decoder"],  # type: ignore[arg-type]
-            latent_encoder=bound["latent_encoder"],  # type: ignore[arg-type]
+            latent_encoder=bound.get("latent_encoder"),  # type: ignore[arg-type]
         ),
         device=context.policy.device,
         dtype=context.policy.dtype,
@@ -501,6 +504,7 @@ def default_execution_strategy_registry() -> ExecutionStrategyRegistry:
     registry.register("joint-multistage", build_joint_multistage_strategy)
     registry.register("autoregressive-window", build_autoregressive_window_strategy)
     registry.register("chunked-kv-cache", build_chunked_kv_cache_strategy)
+    registry.register("chunked-additive-cache", build_chunked_kv_cache_strategy)
     registry.register("prefix-recompute", build_prefix_recompute_strategy)
     registry.freeze()
     return registry

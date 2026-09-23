@@ -1,0 +1,88 @@
+{
+  "worldgen": {
+    "required_flux_dev_candidates": [
+      {
+        "path": "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/ckpts/FLUX.1-dev",
+        "exists": false,
+        "is_file": false,
+        "size_bytes": null
+      },
+      {
+        "path": "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/ckpts/hfd/black-forest-labs--FLUX.1-dev",
+        "exists": false,
+        "is_file": false,
+        "size_bytes": null
+      },
+      {
+        "path": "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/ckpt/FLUX.1-dev",
+        "exists": false,
+        "is_file": false,
+        "size_bytes": null
+      },
+      {
+        "path": "/home/hadoop-aipnlp/.cache/worldfoundry/checkpoints/FLUX.1-dev",
+        "exists": false,
+        "is_file": false,
+        "size_bytes": null
+      },
+      {
+        "path": "/home/hadoop-aipnlp/.cache/huggingface/hub/models--black-forest-labs--FLUX.1-dev",
+        "exists": false,
+        "is_file": false,
+        "size_bytes": null
+      }
+    ],
+    "staged_loras": [
+      {
+        "path": "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/ckpts/LeoXie--WorldGen/models--WorldGen-Flux-Lora/worldgen_text2scene.safetensors",
+        "exists": true,
+        "is_file": true,
+        "size_bytes": 34647632
+      },
+      {
+        "path": "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/ckpts/LeoXie--WorldGen/models--WorldGen-Flux-Lora/worldgen_img2scene.safetensors",
+        "exists": true,
+        "is_file": true,
+        "size_bytes": 44917720
+      }
+    ],
+    "source_reference": "worldfoundry/synthesis/visual_generation/worldgen/worldgen_runtime/src/worldgen/pano_gen.py:66",
+    "blocker": "FLUX.1-dev base checkpoint absent from the checked local cache candidates; WorldGen LoRA alone cannot run."
+  },
+  "ac3d": {
+    "controlnet_candidates": [
+      {
+        "path": "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/ckpt/ac3d/2B/checkpoint-10000.pt",
+        "exists": false,
+        "is_file": false,
+        "size_bytes": null
+      },
+      {
+        "path": "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/ckpt/ac3d/5B/checkpoint-10000.pt",
+        "exists": false,
+        "is_file": false,
+        "size_bytes": null
+      },
+      {
+        "path": "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/ckpts/ac3d/2B/checkpoint-10000.pt",
+        "exists": false,
+        "is_file": false,
+        "size_bytes": null
+      },
+      {
+        "path": "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/ckpts/ac3d/5B/checkpoint-10000.pt",
+        "exists": false,
+        "is_file": false,
+        "size_bytes": null
+      }
+    ],
+    "runtime_source": {
+      "path": "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/WorldFoundry/worldfoundry/synthesis/visual_generation/ac3d/ac3d_runtime",
+      "exists": true,
+      "is_file": false,
+      "size_bytes": null
+    },
+    "source_reference": "worldfoundry/synthesis/visual_generation/ac3d/runtime.py:73",
+    "blocker": "Neither 2B nor 5B AC3D ControlNet checkpoint is staged in the default or adjacent checkpoint roots."
+  }
+}

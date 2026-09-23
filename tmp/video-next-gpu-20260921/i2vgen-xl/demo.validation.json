@@ -1,0 +1,22 @@
+{
+  "video": "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/WorldFoundry/tmp/video-next-gpu-20260921/i2vgen-xl/demo.mp4",
+  "metadata": {
+    "width": 1280,
+    "height": 704,
+    "r_frame_rate": "16/1",
+    "duration": "1.000000",
+    "nb_frames": "16"
+  },
+  "decoded_frames": 16,
+  "mean": 24.201366817589964,
+  "std": 29.875065101307378,
+  "mean_frame_delta": 10.216475486755371,
+  "max_frame_delta": 106.48725128173828,
+  "decode_stderr": "",
+  "passed": true,
+  "expected_width": 1280,
+  "expected_height": 704,
+  "expected_fps": 16,
+  "expected_frames": 16,
+  "visual_review": "quality_concern"
+}

@@ -525,6 +525,7 @@ def load_state_dict(objects, states, strip_prefix=None, strict=False):
 
 def count_parameters(model, verbose: bool = False):
     """Sum ``numel`` over parameters (includes frozen); optionally log the count."""
+    count = sum(parameter.numel() for parameter in model.parameters())
     if verbose:
         from worldfoundry.core.distributed.logging import log
 

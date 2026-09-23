@@ -902,6 +902,28 @@ def _perception_data_capability(
 
 
 BASE_MODEL_CAPABILITIES: dict[str, BaseModelCapability] = {
+    "vigeo": BaseModelCapability(
+        id="vigeo",
+        family="depth",
+        canonical_owner="worldfoundry.base_models.three_dimensions.depth.vigeo",
+        canonical_path="worldfoundry/base_models/three_dimensions/depth/vigeo",
+        package_imports=("torch", "numpy", "einops", "huggingface_hub"),
+        install_packages=("torch", "numpy", "einops", "huggingface-hub"),
+        asset_env=("WORLDFOUNDRY_VIGEO_MODEL_DIR", "EVOKE_VIGEO_WEIGHTS"),
+        assets=(
+            BaseModelAsset(
+                id="vigeo_model",
+                kind="dir",
+                role="model_dir",
+                env=("WORLDFOUNDRY_VIGEO_MODEL_DIR", "EVOKE_VIGEO_WEIGHTS"),
+                local_path="${WORLDFOUNDRY_HFD_ROOT}/pkqbajng--ViGeo1.1",
+                hf_repo_id="pkqbajng/ViGeo1.1",
+                hf_revision="49103e6eeab888bae974251d3578b496bec711d7",
+                required_files=("vigeo.pt",),
+                note="Shared ViGeo video geometry model; checkpoint weights are CC-BY-NC-4.0.",
+            ),
+        ),
+    ),
     "depth_anything_v3": BaseModelCapability(
         id="depth_anything_v3",
         family="depth",
@@ -1279,8 +1301,8 @@ BASE_MODEL_CAPABILITIES: dict[str, BaseModelCapability] = {
         family="depth",
         canonical_owner="worldfoundry.base_models.three_dimensions.depth.unidepth",
         canonical_path="worldfoundry/base_models/three_dimensions/depth/unidepth",
-        package_imports=("torch", "torchvision", "numpy", "einops", "huggingface_hub", "safetensors"),
-        install_packages=("torch", "torchvision", "numpy", "einops", "huggingface-hub", "safetensors"),
+        package_imports=("torch", "torchvision", "numpy", "einops", "huggingface_hub", "safetensors", "xformers.components.attention"),
+        install_packages=("torch", "torchvision", "numpy", "einops", "huggingface-hub", "safetensors", "xformers==0.0.28.post3"),
         asset_env=("WORLDFOUNDRY_UNIDEPTH_V2_VITL14_MODEL_DIR",),
         assets=(
             BaseModelAsset(
@@ -1294,6 +1316,7 @@ BASE_MODEL_CAPABILITIES: dict[str, BaseModelCapability] = {
                     "${WORLDFOUNDRY_WORKSPACE_ROOT}/ckpt/hfd/lpiccinelli--unidepth-v2-vitl14",
                 ),
                 hf_repo_id="lpiccinelli/unidepth-v2-vitl14",
+                hf_revision="1d0d3c52f60b5164629d279bb9a7546458e6dcc4",
                 min_file_count=1,
                 required_files=("config.json", "model.safetensors"),
                 note="UniDepth v2 ViT-L depth prior reused by ViPE-style geometric perception paths.",
@@ -2442,8 +2465,6 @@ BASE_MODEL_CAPABILITIES.update(
             asset_env=(
                 "WORLDFOUNDRY_WBENCH_MEGASAM_CKPT",
                 "WORLDFOUNDRY_WBENCH_MEGASAM_DEPTH_ANYTHING_CKPT",
-                "WORLDFOUNDRY_WBENCH_MEGASAM_DINOV2_CKPT",
-                "WORLDFOUNDRY_WBENCH_MEGASAM_METRIC_DEPTH_CKPT",
             ),
             asset_env_policy="all",
             assets=(
@@ -2476,36 +2497,6 @@ BASE_MODEL_CAPABILITIES.update(
                     hf_filename="megasam/depth_anything_vitl14.pth",
                     min_size_bytes=100_000_000,
                     note="Depth-Anything ViT-L checkpoint used by MegaSAM mono-depth preprocessing.",
-                ),
-                BaseModelAsset(
-                    id="wbench_megasam_dinov2_checkpoint",
-                    kind="file",
-                    role="checkpoint",
-                    env=("WORLDFOUNDRY_WBENCH_MEGASAM_DINOV2_CKPT",),
-                    local_path="${WORLDFOUNDRY_CACHE_DIR}/models/wbench/megasam/torch_hub_checkpoints/dinov2_vitl14_pretrain.pth",
-                    alternate_paths=(
-                        "${WORLDFOUNDRY_CKPT_DIR}/WBench/megasam/torch_hub_checkpoints/dinov2_vitl14_pretrain.pth",
-                        "${WORLDFOUNDRY_CKPT_DIR}/WBench/weights/megasam/torch_hub_checkpoints/dinov2_vitl14_pretrain.pth",
-                    ),
-                    hf_repo_id="meituan-longcat/WBench-weights",
-                    hf_filename="megasam/torch_hub_checkpoints/dinov2_vitl14_pretrain.pth",
-                    min_size_bytes=100_000_000,
-                    note="DINOv2 ViT-L checkpoint used by MegaSAM/UniDepth torch.hub cache.",
-                ),
-                BaseModelAsset(
-                    id="wbench_megasam_metric_depth_checkpoint",
-                    kind="file",
-                    role="checkpoint",
-                    env=("WORLDFOUNDRY_WBENCH_MEGASAM_METRIC_DEPTH_CKPT",),
-                    local_path="${WORLDFOUNDRY_CACHE_DIR}/models/wbench/megasam/torch_hub_checkpoints/metric_depth_vit_large_800k.pth",
-                    alternate_paths=(
-                        "${WORLDFOUNDRY_CKPT_DIR}/WBench/megasam/torch_hub_checkpoints/metric_depth_vit_large_800k.pth",
-                        "${WORLDFOUNDRY_CKPT_DIR}/WBench/weights/megasam/torch_hub_checkpoints/metric_depth_vit_large_800k.pth",
-                    ),
-                    hf_repo_id="meituan-longcat/WBench-weights",
-                    hf_filename="megasam/torch_hub_checkpoints/metric_depth_vit_large_800k.pth",
-                    min_size_bytes=100_000_000,
-                    note="Metric-depth checkpoint used by MegaSAM/UniDepth preprocessing.",
                 ),
             ),
         ),
@@ -3879,6 +3870,7 @@ BASE_MODEL_STACKS: dict[str, BaseModelStack] = {
             "wbench_pavrm_qwen3vl",
             "wbench_dreamsim",
             "wbench_megasam",
+            "unidepth_v2_vitl14",
         ),
         note="WBench in-tree metric stack: segmentation, depth, flow, quality, reward, DreamSim, and MegaSAM pose assets.",
     ),

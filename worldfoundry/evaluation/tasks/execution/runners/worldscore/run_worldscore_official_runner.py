@@ -939,7 +939,7 @@ def run_command_with_timeout(command: list[str], cwd: Path, env: dict[str, str],
         timeout: Maximum runtime in seconds.
     """
 
-    from worldfoundry.core.process import terminate_process_group
+    from worldfoundry.core.execution.process import terminate_process_group
 
     process = subprocess.Popen(
         command,

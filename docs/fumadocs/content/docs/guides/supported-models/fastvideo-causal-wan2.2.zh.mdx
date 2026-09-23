@@ -1,6 +1,6 @@
 ---
 title: "FastVideo CausalWan2.2"
-description: "英伟达 / FastVideo 的 8 步因果 Wan2.2：832×480、717 帧、guidance 1、16 fps、三潜帧块。原生配方；需要 A14B GPU。Runner 待验证。"
+description: "英伟达 / FastVideo 的 8 步因果 Wan2.2 图生视频：832×480、81 帧、guidance 1、16 fps。本地权重校验失败，暂不能进行 GPU 验证。"
 modelId: "fastvideo-causal-wan2.2"
 pageSource: authored
 ---
@@ -9,7 +9,7 @@ FastVideo CausalWan2.2 是 **8 步因果** Wan2.2 滚动：视频按**三潜帧*
 
 <ModelPaperFigures modelId="fastvideo-causal-wan2.2" locale="zh" />
 
-论文：[arXiv 2606.03159](https://arxiv.org/abs/2606.03159)。项目页：[nvidia.github.io/flashdreams](https://nvidia.github.io/flashdreams/main/index.html)。代码：[NVIDIA/FlashDreams](https://github.com/NVIDIA/FlashDreams)。预览权重：`FastVideo/CausalWan2.2-I2V-A14B-Preview-Diffusers`（**Apache-2.0**）。状态：**Runner 一致性待验证**。
+论文：[arXiv 2606.03159](https://arxiv.org/abs/2606.03159)。项目页：[nvidia.github.io/flashdreams](https://nvidia.github.io/flashdreams/main/index.html)。代码：[NVIDIA/FlashDreams](https://github.com/NVIDIA/FlashDreams)。预览权重：`FastVideo/CausalWan2.2-I2V-A14B-Preview-Diffusers`（**Apache-2.0**）。CPU 契约测试通过，真实推理仍未验证。
 
 <ModelCommandBuilder modelId="fastvideo-causal-wan2.2" locale="zh" />
 
@@ -17,16 +17,16 @@ FastVideo CausalWan2.2 是 **8 步因果** Wan2.2 滚动：视频按**三潜帧*
 
 因果 Wan2.2 快视频。不是完整 Wan2.2 家族卡。
 
-启动 `worldfoundry-eval run fastvideo-causal-wan2.2-t2v-14b --pipeline.task-profile text-to-video`。
+提供输入图像，并运行 `worldfoundry-eval run fastvideo-causal-wan2.2-i2v-14b --pipeline.task-profile image-to-video`。
 
 ## 运行时契约
 
-必填 `prompt`；可选 `image`、`video`；产物 `fastvideo-causal-wan2.2-t2v-14b.mp4`。
+必填 `prompt` 和 `image`；产物 `fastvideo-causal-wan2.2-i2v-14b.mp4`。
 
 | 旋钮 | 默认 |
 | --- | --- |
 | 尺寸 | **832×480** |
-| 帧数 | **717** |
+| 帧数 | **81** |
 | 步数 | **8** |
 | Guidance | **1** |
 | FPS | **16** |
@@ -34,6 +34,6 @@ FastVideo CausalWan2.2 是 **8 步因果** Wan2.2 滚动：视频按**三潜帧*
 
 ## 在 WorldFoundry 中运行
 
-状态：**Runner 一致性待验证**。统一环境 `worldfoundry-unified-cu128`（Python 3.11, CUDA 12.8）。先把 `FastVideo/CausalWan2.2-I2V-A14B-Preview-Diffusers` 就位到本地，缺文件加载失败，运行时不下载。在该环境执行 `worldfoundry-eval run fastvideo-causal-wan2.2-t2v-14b --pipeline.task-profile text-to-video`。许可证：Apache-2.0。catalog 未记录 VRAM。
+状态：**权重完整性阻塞**。本地两个文本编码器分片虽然字节数符合发布版，但 SHA-256 校验失败，因此尚未运行真实权重 GPU 推理。恢复分片后，提供图像运行 `worldfoundry-eval run fastvideo-causal-wan2.2-i2v-14b --pipeline.task-profile image-to-video`。许可证：Apache-2.0。catalog 未记录 VRAM。
 
 <ModelRelatedRecipes modelId="fastvideo-causal-wan2.2" locale="zh" />

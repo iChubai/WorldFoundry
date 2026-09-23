@@ -1,0 +1,36 @@
+{
+  "case": {
+    "id": "dvlt",
+    "gpu": "2",
+    "target": "worldfoundry.pipelines.component_pipelines:DVLTPipeline",
+    "load": {
+      "model_path": "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/ckpts/nvidia--dvlt",
+      "device": "cuda"
+    },
+    "call": {
+      "images": [
+        "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/WorldFoundry/tmp/skyreels-omega-gpu-20260920/inputs/frame-0.png",
+        "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/WorldFoundry/tmp/skyreels-omega-gpu-20260920/inputs/frame-16.png",
+        "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/WorldFoundry/tmp/skyreels-omega-gpu-20260920/inputs/frame-32.png"
+      ]
+    }
+  },
+  "gpu": "2",
+  "status": "passed",
+  "started_at": 1789987324.7812977,
+  "checkpoint_loads": [
+    {
+      "class": "DVLTModel",
+      "missing": [],
+      "unexpected": []
+    }
+  ],
+  "artifact": "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/WorldFoundry/tmp/resume-gpu-20260921/dvlt/scene/inputs_dvlt.glb",
+  "validation": {
+    "vertices": 211708,
+    "finite": true,
+    "geometries": 2
+  },
+  "max_memory_allocated": 1244071424,
+  "elapsed_seconds": 211.9962499141693
+}

@@ -1,0 +1,531 @@
+{
+  "checkpoint_root": "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/ckpts/minimax-h3",
+  "components": {
+    "transformer": {
+      "directory": "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/ckpts/minimax-h3/transformer",
+      "index": "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/ckpts/minimax-h3/transformer/diffusion_pytorch_model.safetensors.index.json",
+      "indexed_tensors": 638,
+      "shard_count": 14,
+      "shards": [
+        {
+          "file": "diffusion_pytorch_model-00001-of-00014.safetensors",
+          "exists": true,
+          "bytes": 4825958704,
+          "header_tensors": 64,
+          "sample_tensor": {
+            "key": "audio_proj_in.bias",
+            "shape": [
+              5376
+            ],
+            "finite": true,
+            "nonzero": true,
+            "dtype": "torch.float32"
+          }
+        },
+        {
+          "file": "diffusion_pytorch_model-00002-of-00014.safetensors",
+          "exists": true,
+          "bytes": 4702158032,
+          "header_tensors": 46,
+          "sample_tensor": {
+            "key": "transformer_blocks.3.adaln_proj.linear.bias",
+            "shape": [
+              96768
+            ],
+            "finite": true,
+            "nonzero": true,
+            "dtype": "torch.bfloat16"
+          }
+        },
+        {
+          "file": "diffusion_pytorch_model-00003-of-00014.safetensors",
+          "exists": true,
+          "bytes": 4933368192,
+          "header_tensors": 43,
+          "sample_tensor": {
+            "key": "transformer_blocks.10.adaln_proj.linear.bias",
+            "shape": [
+              96768
+            ],
+            "finite": true,
+            "nonzero": true,
+            "dtype": "torch.bfloat16"
+          }
+        },
+        {
+          "file": "diffusion_pytorch_model-00004-of-00014.safetensors",
+          "exists": true,
+          "bytes": 4567069608,
+          "header_tensors": 43,
+          "sample_tensor": {
+            "key": "transformer_blocks.11.adaln_proj.linear.bias",
+            "shape": [
+              96768
+            ],
+            "finite": true,
+            "nonzero": true,
+            "dtype": "torch.bfloat16"
+          }
+        },
+        {
+          "file": "diffusion_pytorch_model-00005-of-00014.safetensors",
+          "exists": true,
+          "bytes": 4702158080,
+          "header_tensors": 46,
+          "sample_tensor": {
+            "key": "transformer_blocks.14.adaln_proj.linear.bias",
+            "shape": [
+              96768
+            ],
+            "finite": true,
+            "nonzero": true,
+            "dtype": "torch.bfloat16"
+          }
+        },
+        {
+          "file": "diffusion_pytorch_model-00006-of-00014.safetensors",
+          "exists": true,
+          "bytes": 4933368232,
+          "header_tensors": 43,
+          "sample_tensor": {
+            "key": "transformer_blocks.18.adaln_proj.linear.bias",
+            "shape": [
+              96768
+            ],
+            "finite": true,
+            "nonzero": true,
+            "dtype": "torch.bfloat16"
+          }
+        },
+        {
+          "file": "diffusion_pytorch_model-00007-of-00014.safetensors",
+          "exists": true,
+          "bytes": 4567069608,
+          "header_tensors": 43,
+          "sample_tensor": {
+            "key": "transformer_blocks.22.adaln_proj.linear.bias",
+            "shape": [
+              96768
+            ],
+            "finite": true,
+            "nonzero": true,
+            "dtype": "torch.bfloat16"
+          }
+        },
+        {
+          "file": "diffusion_pytorch_model-00008-of-00014.safetensors",
+          "exists": true,
+          "bytes": 4702158080,
+          "header_tensors": 46,
+          "sample_tensor": {
+            "key": "transformer_blocks.25.adaln_proj.linear.bias",
+            "shape": [
+              96768
+            ],
+            "finite": true,
+            "nonzero": true,
+            "dtype": "torch.bfloat16"
+          }
+        },
+        {
+          "file": "diffusion_pytorch_model-00009-of-00014.safetensors",
+          "exists": true,
+          "bytes": 4933368232,
+          "header_tensors": 43,
+          "sample_tensor": {
+            "key": "transformer_blocks.29.adaln_proj.linear.bias",
+            "shape": [
+              96768
+            ],
+            "finite": true,
+            "nonzero": true,
+            "dtype": "torch.bfloat16"
+          }
+        },
+        {
+          "file": "diffusion_pytorch_model-00010-of-00014.safetensors",
+          "exists": true,
+          "bytes": 4567069608,
+          "header_tensors": 43,
+          "sample_tensor": {
+            "key": "transformer_blocks.33.adaln_proj.linear.bias",
+            "shape": [
+              96768
+            ],
+            "finite": true,
+            "nonzero": true,
+            "dtype": "torch.bfloat16"
+          }
+        },
+        {
+          "file": "diffusion_pytorch_model-00011-of-00014.safetensors",
+          "exists": true,
+          "bytes": 4702158080,
+          "header_tensors": 46,
+          "sample_tensor": {
+            "key": "transformer_blocks.36.adaln_proj.linear.bias",
+            "shape": [
+              96768
+            ],
+            "finite": true,
+            "nonzero": true,
+            "dtype": "torch.bfloat16"
+          }
+        },
+        {
+          "file": "diffusion_pytorch_model-00012-of-00014.safetensors",
+          "exists": true,
+          "bytes": 4933368232,
+          "header_tensors": 43,
+          "sample_tensor": {
+            "key": "transformer_blocks.40.adaln_proj.linear.bias",
+            "shape": [
+              96768
+            ],
+            "finite": true,
+            "nonzero": true,
+            "dtype": "torch.bfloat16"
+          }
+        },
+        {
+          "file": "diffusion_pytorch_model-00013-of-00014.safetensors",
+          "exists": true,
+          "bytes": 4567069608,
+          "header_tensors": 43,
+          "sample_tensor": {
+            "key": "transformer_blocks.44.adaln_proj.linear.bias",
+            "shape": [
+              96768
+            ],
+            "finite": true,
+            "nonzero": true,
+            "dtype": "torch.bfloat16"
+          }
+        },
+        {
+          "file": "diffusion_pytorch_model-00014-of-00014.safetensors",
+          "exists": true,
+          "bytes": 4644161920,
+          "header_tensors": 46,
+          "sample_tensor": {
+            "key": "token_refiner.refiner_blocks.0.attn.norm_k.weight",
+            "shape": [
+              128
+            ],
+            "finite": true,
+            "nonzero": true,
+            "dtype": "torch.bfloat16"
+          }
+        }
+      ],
+      "all_index_shards_present": true,
+      "total_bytes": 66280504216,
+      "headers_readable": true
+    },
+    "text_encoder": {
+      "directory": "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/ckpts/minimax-h3/text_encoder",
+      "index": "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/ckpts/minimax-h3/text_encoder/model.safetensors.index.json",
+      "indexed_tensors": 1058,
+      "shard_count": 14,
+      "shards": [
+        {
+          "file": "model-00001-of-00014.safetensors",
+          "exists": true,
+          "bytes": 4932328944,
+          "header_tensors": 43,
+          "sample_tensor": {
+            "key": "model.language_model.layers.0.input_layernorm.weight",
+            "shape": [
+              5120
+            ],
+            "finite": true,
+            "nonzero": true,
+            "dtype": "torch.bfloat16"
+          }
+        },
+        {
+          "file": "model-00002-of-00014.safetensors",
+          "exists": true,
+          "bytes": 4875990528,
+          "header_tensors": 55,
+          "sample_tensor": {
+            "key": "model.language_model.layers.4.input_layernorm.weight",
+            "shape": [
+              5120
+            ],
+            "finite": true,
+            "nonzero": true,
+            "dtype": "torch.bfloat16"
+          }
+        },
+        {
+          "file": "model-00003-of-00014.safetensors",
+          "exists": true,
+          "bytes": 4875990552,
+          "header_tensors": 55,
+          "sample_tensor": {
+            "key": "model.language_model.layers.10.input_layernorm.weight",
+            "shape": [
+              5120
+            ],
+            "finite": true,
+            "nonzero": true,
+            "dtype": "torch.bfloat16"
+          }
+        },
+        {
+          "file": "model-00004-of-00014.safetensors",
+          "exists": true,
+          "bytes": 4875990584,
+          "header_tensors": 55,
+          "sample_tensor": {
+            "key": "model.language_model.layers.14.input_layernorm.weight",
+            "shape": [
+              5120
+            ],
+            "finite": true,
+            "nonzero": true,
+            "dtype": "torch.bfloat16"
+          }
+        },
+        {
+          "file": "model-00005-of-00014.safetensors",
+          "exists": true,
+          "bytes": 4875990584,
+          "header_tensors": 55,
+          "sample_tensor": {
+            "key": "model.language_model.layers.19.input_layernorm.weight",
+            "shape": [
+              5120
+            ],
+            "finite": true,
+            "nonzero": true,
+            "dtype": "torch.bfloat16"
+          }
+        },
+        {
+          "file": "model-00006-of-00014.safetensors",
+          "exists": true,
+          "bytes": 4875990584,
+          "header_tensors": 55,
+          "sample_tensor": {
+            "key": "model.language_model.layers.24.input_layernorm.weight",
+            "shape": [
+              5120
+            ],
+            "finite": true,
+            "nonzero": true,
+            "dtype": "torch.bfloat16"
+          }
+        },
+        {
+          "file": "model-00007-of-00014.safetensors",
+          "exists": true,
+          "bytes": 4875990584,
+          "header_tensors": 55,
+          "sample_tensor": {
+            "key": "model.language_model.layers.29.input_layernorm.weight",
+            "shape": [
+              5120
+            ],
+            "finite": true,
+            "nonzero": true,
+            "dtype": "torch.bfloat16"
+          }
+        },
+        {
+          "file": "model-00008-of-00014.safetensors",
+          "exists": true,
+          "bytes": 4875990584,
+          "header_tensors": 55,
+          "sample_tensor": {
+            "key": "model.language_model.layers.34.input_layernorm.weight",
+            "shape": [
+              5120
+            ],
+            "finite": true,
+            "nonzero": true,
+            "dtype": "torch.bfloat16"
+          }
+        },
+        {
+          "file": "model-00009-of-00014.safetensors",
+          "exists": true,
+          "bytes": 4875990584,
+          "header_tensors": 55,
+          "sample_tensor": {
+            "key": "model.language_model.layers.39.input_layernorm.weight",
+            "shape": [
+              5120
+            ],
+            "finite": true,
+            "nonzero": true,
+            "dtype": "torch.bfloat16"
+          }
+        },
+        {
+          "file": "model-00010-of-00014.safetensors",
+          "exists": true,
+          "bytes": 4875990584,
+          "header_tensors": 55,
+          "sample_tensor": {
+            "key": "model.language_model.layers.44.input_layernorm.weight",
+            "shape": [
+              5120
+            ],
+            "finite": true,
+            "nonzero": true,
+            "dtype": "torch.bfloat16"
+          }
+        },
+        {
+          "file": "model-00011-of-00014.safetensors",
+          "exists": true,
+          "bytes": 4875990584,
+          "header_tensors": 55,
+          "sample_tensor": {
+            "key": "model.language_model.layers.49.input_layernorm.weight",
+            "shape": [
+              5120
+            ],
+            "finite": true,
+            "nonzero": true,
+            "dtype": "torch.bfloat16"
+          }
+        },
+        {
+          "file": "model-00012-of-00014.safetensors",
+          "exists": true,
+          "bytes": 4875990584,
+          "header_tensors": 55,
+          "sample_tensor": {
+            "key": "model.language_model.layers.54.input_layernorm.weight",
+            "shape": [
+              5120
+            ],
+            "finite": true,
+            "nonzero": true,
+            "dtype": "torch.bfloat16"
+          }
+        },
+        {
+          "file": "model-00013-of-00014.safetensors",
+          "exists": true,
+          "bytes": 4875990584,
+          "header_tensors": 55,
+          "sample_tensor": {
+            "key": "model.language_model.layers.59.input_layernorm.weight",
+            "shape": [
+              5120
+            ],
+            "finite": true,
+            "nonzero": true,
+            "dtype": "torch.bfloat16"
+          }
+        },
+        {
+          "file": "model-00014-of-00014.safetensors",
+          "exists": true,
+          "bytes": 3270697008,
+          "header_tensors": 355,
+          "sample_tensor": {
+            "key": "model.language_model.norm.weight",
+            "shape": [
+              5120
+            ],
+            "finite": true,
+            "nonzero": true,
+            "dtype": "torch.bfloat16"
+          }
+        }
+      ],
+      "all_index_shards_present": true,
+      "total_bytes": 66714912872,
+      "headers_readable": true
+    },
+    "video_vae": {
+      "directory": "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/ckpts/minimax-h3/vae",
+      "index": "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/ckpts/minimax-h3/vae/diffusion_pytorch_model.safetensors.index.json",
+      "indexed_tensors": 703,
+      "shard_count": 3,
+      "shards": [
+        {
+          "file": "diffusion_pytorch_model-00001-of-00003.safetensors",
+          "exists": true,
+          "bytes": 5061033024,
+          "header_tensors": 303,
+          "sample_tensor": {
+            "key": "decoder.norm_out.bias",
+            "shape": [
+              2048
+            ],
+            "finite": true,
+            "nonzero": true,
+            "dtype": "torch.float32"
+          }
+        },
+        {
+          "file": "diffusion_pytorch_model-00002-of-00003.safetensors",
+          "exists": true,
+          "bytes": 4955986528,
+          "header_tensors": 372,
+          "sample_tensor": {
+            "key": "decoder.proj_in.bias",
+            "shape": [
+              2048
+            ],
+            "finite": true,
+            "nonzero": true,
+            "dtype": "torch.float32"
+          }
+        },
+        {
+          "file": "diffusion_pytorch_model-00003-of-00003.safetensors",
+          "exists": true,
+          "bytes": 398539336,
+          "header_tensors": 28,
+          "sample_tensor": {
+            "key": "encoder.down_blocks.4.resnets.1.norm1.bias",
+            "shape": [
+              512
+            ],
+            "finite": true,
+            "nonzero": true,
+            "dtype": "torch.float32"
+          }
+        }
+      ],
+      "all_index_shards_present": true,
+      "total_bytes": 10415558888,
+      "headers_readable": true
+    },
+    "audio_vae": {
+      "directory": "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/ckpts/minimax-h3/audio_vae",
+      "index": null,
+      "indexed_tensors": 0,
+      "shard_count": 1,
+      "shards": [
+        {
+          "file": "diffusion_pytorch_model.safetensors",
+          "exists": true,
+          "bytes": 605429340,
+          "header_tensors": 1087,
+          "sample_tensor": {
+            "key": "dec_in_proj.bias",
+            "shape": [
+              2048
+            ],
+            "finite": true,
+            "nonzero": true,
+            "dtype": "torch.float32"
+          }
+        }
+      ],
+      "all_index_shards_present": true,
+      "total_bytes": 605429340,
+      "headers_readable": true
+    }
+  },
+  "gpu0_total_mib": 81559,
+  "all_present_and_headers_readable": true
+}

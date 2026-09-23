@@ -1,0 +1,7 @@
+# CameraCtrl real-GPU validation
+
+The in-tree CameraCtrl runtime loaded the local SD 1.5 base, CameraCtrl pose adaptor, RealEstate10K image LoRA, and AnimateDiff V3 motion module and adapter on H100 GPU 1. With a text prompt describing a living room, seed 42, 25 inference steps, and a documented synthetic 16-frame camera path translating 0→0.12 m to the right, it generated [camera_video.mp4](camera_video.mp4). The MP4 has SHA-256 `be2a486553aa5f47b78ea7fa9c52ee78f448afe989e611a3ba65db85836b6051`; all 16 frames decoded at 384×256 and 8 fps with nonconstant pixel values. See [result.json](result.json), [status.json](status.json), and the exact [trajectory](small-right-translation-16f.txt).
+
+I viewed frames 0, 8 and 15 in [contact-0-8-15.jpg](contact-0-8-15.jpg). A red sofa, lamps, side table and foreground cushion stay recognizable while framing changes modestly. [quality-review.json](quality-review.json) records temporal pixel differences and the visual observation. This is **verified inference only**: the absent official pose fixture was replaced with a clearly synthetic small translation, and no metric camera displacement, pose fidelity, benchmark score or long-horizon quality is established.
+
+The initial probe called the runtime object directly and failed before loading; the corrected [run.py](run.py) calls its public `predict()` method. [retry.log](retry.log) shows the complete 25-step run. No CameraCtrl project code change was needed.

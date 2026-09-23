@@ -3,7 +3,7 @@ import torch.nn.functional as F
 from .utils import load_video, load_dimension_info, clip_transform
 from tqdm import tqdm
 from worldfoundry.base_models.perception_core.general_perception import openai_clip as clip
-from worldfoundry.core.device import get_current_torch_device
+from worldfoundry.core.execution.device import get_current_torch_device
 
 from worldfoundry.core.distributed.evaluation_collectives import (
     get_world_size,

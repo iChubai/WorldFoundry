@@ -76,7 +76,7 @@ class RDT1BRuntime:
         import torch
         from transformers import SiglipImageProcessor, SiglipVisionModel
 
-        from worldfoundry.core.device import resolve_inference_device, resolve_inference_dtype
+        from worldfoundry.core.execution.device import resolve_inference_device, resolve_inference_dtype
 
         from .runner import RDTRunner
 

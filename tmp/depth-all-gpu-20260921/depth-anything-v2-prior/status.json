@@ -1,0 +1,35 @@
+{
+  "case": "depth-anything-v2-prior",
+  "gpu": "3",
+  "status": "generated",
+  "started_at": 1789993187.869373,
+  "checkpoint_loads": [
+    {
+      "module": "DepthAnythingV2",
+      "missing": [],
+      "unexpected": []
+    }
+  ],
+  "arrays": {
+    "result.metadata.depth_shape": {
+      "shape": [
+        2
+      ],
+      "min": 704.0,
+      "max": 1280.0,
+      "std": 288.0
+    },
+    "depth": {
+      "shape": [
+        704,
+        1280
+      ],
+      "min": 0.0,
+      "max": 698.1104736328125,
+      "std": 198.7195587158203
+    }
+  },
+  "depth_maps_checked": 1,
+  "peak_memory_allocated": 2401341952,
+  "elapsed_seconds": 92.167
+}

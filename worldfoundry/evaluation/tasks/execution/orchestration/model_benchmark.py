@@ -16,7 +16,7 @@ from typing import Any, Callable, Mapping, Sequence
 
 from worldfoundry.core.io.file_utils import materialize_file
 from worldfoundry.core.io.serialization import read_jsonl_objects
-from worldfoundry.core.time import utc_now_iso
+from worldfoundry.core.observability.time import utc_now_iso
 from worldfoundry.evaluation.api import GenerationRequest, GenerationResult
 from worldfoundry.evaluation.api.artifacts import local_path_for_uri
 from worldfoundry.evaluation.reporting import (

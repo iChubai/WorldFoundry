@@ -408,7 +408,7 @@ class InspatioWorldRuntime:
             tae_checkpoint_path: Optional local TAE checkpoint path.
         """
         runtime_root = Path(self.repo_root)
-        script_path = runtime_root / "run_inference_pipeline.sh"
+        script_path = runtime_root / "run_inference_pipeline.py"
         raw_config = config_path or self.defaults.get("config_path") or DEFAULT_CONFIG_PATH
         config_candidate = Path(str(raw_config)).expanduser()
         if not config_candidate.is_absolute():
@@ -597,8 +597,8 @@ class InspatioWorldRuntime:
                 step3_gpus = inherited_devices
 
         command = [
-            "bash",
-            str((Path(self.repo_root) / "run_inference_pipeline.sh").resolve()),
+            sys.executable,
+            str((Path(self.repo_root) / "run_inference_pipeline.py").resolve()),
             "--input_dir",
             str(input_dir),
             "--traj_txt_path",

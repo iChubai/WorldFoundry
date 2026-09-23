@@ -1,0 +1,10 @@
+{
+  "case": "t2v-turbo",
+  "started_at": 1789990550.8651948,
+  "gpu": "1",
+  "status": "generated",
+  "videos": [
+    "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/WorldFoundry/tmp/video-next-gpu-20260921/t2v-turbo/demo.mp4"
+  ],
+  "elapsed_seconds": 154.43
+}

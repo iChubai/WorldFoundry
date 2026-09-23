@@ -1,0 +1,9 @@
+# MVDiffusion outpaint validation
+
+Public MVDiffusion pano outpaint path with real toy photograph and text, default 50 sampling steps/CFG9, eight 512x512 perspective images and a 4096x968 panorama. Strict outpaint overlay and final HF/Diffusers base loads are clean; 50 actual MultiViewBaseModel outputs are finite. The adapter returns this run's new panorama rather than an older MP4. Viewed the actual eight-view contact and 4096x968 panorama: the original turquoise toy, white plate, red table and painted wall remain recognizable in the source-facing views. The generated unseen views introduce broad red wall patches, extra lamps, chairs and toy-like objects, and change scene style abruptly. This is a semantic consistency concern. No camera/viewpoint metric or semantic fidelity pass is claimed.
+
+The public call finished in 189.32 seconds. The final panorama and eight view images fully decode. The generated panorama matches the copied public artifact by SHA-256; the wrap seam mean absolute RGB difference is 2.398. The eight-view contact and panorama were visually inspected.
+
+The local 6.25GB outpaint checkpoint has SHA-256 5fd8027072c3f8d6f87bb18c4e39b0db06fa3c949483c32ae7725d0d1dc66ae5, without a confirmed upstream checksum. Twelve Stable Diffusion 2 inpainting files match fixed cached Hugging Face metadata; live API metadata access returned 401. The recorded result was generated before the artifact-kind label changed and says generated_video, but its actual returned artifact is a PNG. The current runtime spec and catalog label it generated_image.
+
+The adapter fix snapshots prior artifacts and rejects stale outputs. Ticket 152 generated fresh images but returned an older MP4; ticket 153 returned the fresh panorama. No additional GPU run was needed for the label-only correction.

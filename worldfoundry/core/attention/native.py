@@ -296,15 +296,20 @@ def scaled_dot_product_attention(
         # constraint outside compiled graphs and trace the operator directly.
         compiling = torch.compiler.is_compiling()
         context = nullcontext() if compiling else _sdpa_kernel_context(backend=backend, backends=backends)
+        requested = backends if backends is not None else backend
+        efficient_only = _only_efficient_backend(requested)
         with context:
-            try:
-                output = sdpa(query, key, value, **kwargs)
-            except TypeError:
-                if "enable_gqa" not in kwargs:
-                    raise
-                key, value = _repeat_key_value_for_gqa(key, value, query)
+            if enable_gqa and efficient_only:
                 kwargs.pop("enable_gqa", None)
-                output = sdpa(query, key, value, **kwargs)
+                output = _compatible_gqa(sdpa, query, key, value, kwargs)
+            else:
+                try:
+                    output = sdpa(query, key, value, **kwargs)
+                except TypeError as error:
+                    if "enable_gqa" not in kwargs or "enable_gqa" not in str(error):
+                        raise
+                    kwargs.pop("enable_gqa")
+                    output = _compatible_gqa(sdpa, query, key, value, kwargs)
         return normalize_fully_masked_rows(output, attn_mask, query, key)
 
     if enable_gqa:
@@ -410,6 +415,45 @@ def flattened_multihead_attention(
     return output.transpose(1, 2).reshape(batch, -1, heads * value_head_dim)
 
 
+def _only_efficient_backend(requested: Any) -> bool:
+    if isinstance(requested, (list, tuple)):
+        if len(requested) != 1:
+            return False
+        requested = requested[0]
+    if isinstance(requested, str):
+        return requested.strip().lower() == "efficient"
+    return getattr(requested, "name", None) == "EFFICIENT_ATTENTION"
+
+
+def _compatible_gqa(sdpa, query: Tensor, key: Tensor, value: Tensor, kwargs: dict[str, Any]) -> Tensor:
+    """Adapt GQA to kernels without native support, sharing KV storage when possible.
+
+    Flatten batch and KV heads, and express each group of query heads against
+    a zero-stride KV view. Head/batch-specific masks retain the explicit-head
+    path because their axes cannot be passed unchanged to the grouped layout.
+    No RuntimeError (including OOM) is caught or retried here.
+    """
+
+    mask = kwargs.get("attn_mask")
+    if (
+        query.ndim == key.ndim == value.ndim == 4
+        and query.shape[0] == key.shape[0] == value.shape[0]
+        and key.shape[1] == value.shape[1]
+        and (mask is None or mask.ndim <= 2)
+    ):
+        batch, heads, length, width = query.shape
+        kv_heads = key.shape[1]
+        if kv_heads <= 0 or heads % kv_heads:
+            raise ValueError(f"Cannot expand {kv_heads} KV heads to {heads} query heads.")
+        groups = heads // kv_heads
+        q = query.reshape(batch * kv_heads, groups, length, width)
+        k = key.reshape(batch * kv_heads, 1, *key.shape[2:]).expand(-1, groups, -1, -1)
+        v = value.reshape(batch * kv_heads, 1, *value.shape[2:]).expand(-1, groups, -1, -1)
+        return sdpa(q, k, v, **kwargs).reshape(batch, heads, length, value.shape[-1])
+    key, value = _repeat_key_value_for_gqa(key, value, query)
+    return sdpa(query, key, value, **kwargs)
+
+
 def _repeat_key_value_for_gqa(key: Any, value: Any, query: Any) -> tuple[Any, Any]:
     """Expand KV heads so older SDPA that lacks ``enable_gqa`` still matches Q.
 
@@ -421,7 +465,7 @@ def _repeat_key_value_for_gqa(key: Any, value: Any, query: Any) -> tuple[Any, An
     key_value_heads = int(key.shape[1])
     if key_value_heads == query_heads:
         return key, value
-    if query_heads % key_value_heads:
+    if key_value_heads <= 0 or query_heads % key_value_heads:
         raise ValueError(f"Cannot expand {key_value_heads} KV heads to {query_heads} query heads.")
     repeats = query_heads // key_value_heads
     return (

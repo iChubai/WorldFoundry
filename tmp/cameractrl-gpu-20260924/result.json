@@ -1,0 +1,37 @@
+{
+  "components": {
+    "sd15_path": "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/ckpts/stable-diffusion-v1-5--stable-diffusion-v1-5",
+    "pose_adaptor_ckpt": "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/ckpts/hehao13--CameraCtrl/CameraCtrl.ckpt",
+    "image_lora_ckpt": "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/ckpts/hehao13--CameraCtrl/RealEstate10K_LoRA.ckpt",
+    "motion_module_ckpt": "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/ckpts/guoyww--animatediff/v3_sd15_mm.ckpt",
+    "motion_adapter_ckpt": "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/ckpts/guoyww--animatediff/v3_sd15_adapter.ckpt"
+  },
+  "trajectory": "tmp/cameractrl-gpu-20260924/small-right-translation-16f.txt",
+  "synthetic_translation_x_m": [
+    0.0,
+    0.12
+  ],
+  "prompt": "A realistic living room with a red sofa and a lamp, the camera slowly moves sideways.",
+  "output": {
+    "status": "success",
+    "model_id": "cameractrl",
+    "artifact_kind": "generated_video",
+    "artifact_path": "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/WorldFoundry/tmp/cameractrl-gpu-20260924/camera_video.mp4",
+    "video_sha256": "be2a486553aa5f47b78ea7fa9c52ee78f448afe989e611a3ba65db85836b6051",
+    "runtime": "worldfoundry.cameractrl.in_tree_runtime",
+    "backend_quality": "in_tree_runtime",
+    "trajectory_file": "tmp/cameractrl-gpu-20260924/small-right-translation-16f.txt",
+    "seed": 42
+  },
+  "decoded_frames": 16,
+  "frame_shape": [
+    256,
+    384,
+    3
+  ],
+  "pixel_min": 0,
+  "pixel_max": 255,
+  "pixel_std": 60.903992222756536,
+  "elapsed_seconds": 179.47365856170654,
+  "gpu_peak_allocated_bytes": 12975430144
+}

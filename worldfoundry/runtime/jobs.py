@@ -15,7 +15,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
-from worldfoundry.core.time import utc_now_iso as _utc_now_iso
+from worldfoundry.core.observability.time import utc_now_iso as _utc_now_iso
 
 TERMINAL_JOB_STATUSES = frozenset({"completed", "failed", "cancelled"})
 
@@ -131,7 +131,7 @@ def run_bounded_command(
     process_env = os.environ.copy()
     if env:
         process_env.update(env)
-    from worldfoundry.core.logging_setup import log_context_environment
+    from worldfoundry.core.observability.logging_setup import log_context_environment
 
     process_env.update(log_context_environment())
 
@@ -516,7 +516,7 @@ class AsyncCommandJobStore:
                 Path(job.output_dir).mkdir(parents=True, exist_ok=True)
             if job.log_dir:
                 Path(job.log_dir).mkdir(parents=True, exist_ok=True)
-            from worldfoundry.core.logging_setup import log_context_environment
+            from worldfoundry.core.observability.logging_setup import log_context_environment
 
             process_env.update(log_context_environment(run_id=job.run_id, job_id=job.job_id, phase="job"))
             if job.event_log_path:
@@ -642,7 +642,7 @@ class AsyncCommandJobStore:
 
         if job.event_log_path is None:
             return
-        from worldfoundry.core.logging_setup import write_jsonl_event
+        from worldfoundry.core.observability.logging_setup import write_jsonl_event
 
         fields: dict[str, Any] = {
             "run_id": job.run_id,

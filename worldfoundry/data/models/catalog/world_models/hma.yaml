@@ -32,23 +32,23 @@ variants:
 - id: hma-magvit-362m
   task: robot-action-video
   provider: official_repo
-  checkpoint: liruiw/hma-base-cont
+  checkpoint: liruiw/hma-base-disc
   integration:
     status: planned
 - id: hma-mar-1b
   task: robot-action-video
   provider: official_repo
-  checkpoint: liruiw/hma-base-disc
+  checkpoint: liruiw/hma-base-cont
   integration:
     status: planned
 integration:
   status: runtime_ported
   notes:
-  - HMA official continuous interactive inference is bound through a user-staged source checkout and local checkpoint directories.
+  - HMA official continuous MAR and discrete MAGVIT interactive inference are bound through a user-staged source checkout and local checkpoint directories.
 runner_parity:
   status: implemented
   notes:
-  - The compatibility wrapper runs the official STMAR action-conditioned sampler and decodes each predicted latent with the SVD temporal VAE.
+  - The compatibility wrapper runs STMAR with the SVD temporal VAE for continuous checkpoints, or STMaskGIT with the official MAGVIT2 tokenizer for discrete checkpoints.
   - Real GPU validation evidence is tracked per run rather than embedded as a machine-local catalog path.
 runtime_profile: runtime-profile:hma
 output_artifacts:

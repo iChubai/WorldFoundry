@@ -1,0 +1,10 @@
+{
+  "case": "videocrafter2-t2v",
+  "started_at": 1789988108.661855,
+  "gpu": "3",
+  "status": "generated",
+  "videos": [
+    "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/WorldFoundry/tmp/crafter-gpu-20260921/videocrafter2-t2v/demo.mp4"
+  ],
+  "elapsed_seconds": 266.25
+}

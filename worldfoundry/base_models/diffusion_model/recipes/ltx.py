@@ -34,6 +34,7 @@ from ..schedulers import build_ltx_fixed_euler_scheduler
 from .spec import NativeDiffusionRecipe
 
 LTX2_I2V_MODEL_ID = "ltx-2-i2v"
+LTX2_T2V_MODEL_ID = "ltx-2-t2v"
 LTX23_I2V_MODEL_ID = "ltx-2.3-i2v"
 LTX23_T2V_MODEL_ID = "ltx-2.3-t2v"
 LTX_VIDEO_I2V_MODEL_ID = "ltx-video-i2v"
@@ -209,6 +210,19 @@ def ltx2_i2v_recipe() -> NativeDiffusionRecipe:
     )
 
 
+def ltx2_t2v_recipe() -> NativeDiffusionRecipe:
+    """LTX-2 19B distilled T2V with the released two-stage schedule."""
+    return _ltx_recipe(
+        model_id=LTX2_T2V_MODEL_ID,
+        repo_id=LTX2_REPO_ID,
+        revision=LTX2_REVISION,
+        checkpoint_file="ltx-2-19b-distilled.safetensors",
+        upsampler_file="ltx-2-spatial-upscaler-x2-1.0.safetensors",
+        aliases=("ltx2-t2v",),
+        generation_type="t2v",
+    )
+
+
 def ltx23_i2v_recipe() -> NativeDiffusionRecipe:
     """LTX-2.3 22B distilled I2V; same roles and two-stage Euler as LTX-2."""
 
@@ -365,9 +379,11 @@ __all__ = [
     "LTX23_I2V_MODEL_ID",
     "LTX23_T2V_MODEL_ID",
     "LTX2_I2V_MODEL_ID",
+    "LTX2_T2V_MODEL_ID",
     "LTX_VIDEO_I2V_MODEL_ID",
     "ltx23_i2v_recipe",
     "ltx23_t2v_recipe",
     "ltx2_i2v_recipe",
+    "ltx2_t2v_recipe",
     "ltx_video_i2v_recipe",
 ]

@@ -1,0 +1,32 @@
+{
+  "status": "verified_inference_only",
+  "scope": "Public Oasis500MPipeline,official Minecraft image fixture and paired recorded25column actions,64frames640x36020fps,10DDIMstepsseed0,one initial frame and32frame sliding context. Actual contact viewed: grassland/wood block/birch tree/sky remain coherent across turning and upward motion; some held-item and fine-texture drift. No long-term game success or exact physics claim.",
+  "all_observed_raw_finite": true,
+  "persistent_source_hashes_match": true,
+  "actual_contact_viewed": true,
+  "reviewed_at": 1790100341.620019,
+  "video_validation": {
+    "video": "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/WorldFoundry/tmp/oasis-native-gpu-20260923/oasis-image/demo.mp4",
+    "metadata": {
+      "width": 640,
+      "height": 360,
+      "r_frame_rate": "20/1",
+      "duration": "3.200000",
+      "nb_frames": "64"
+    },
+    "decoded_frames": 64,
+    "mean": 131.5779283311632,
+    "std": 62.35845605598496,
+    "mean_frame_delta": 9.176234245300293,
+    "max_frame_delta": 30.19796371459961,
+    "decode_stderr": "",
+    "passed": true,
+    "expected_width": 640,
+    "expected_height": 360,
+    "expected_fps": 20,
+    "expected_frames": 64
+  },
+  "raw_denoiser_calls": 630,
+  "raw_predictor_calls": 1,
+  "loading_alias_note": "32missing DiT names alias the two shared rotary tensors already loaded; final safetensors load_model strict default succeeded. VAE strict clean."
+}

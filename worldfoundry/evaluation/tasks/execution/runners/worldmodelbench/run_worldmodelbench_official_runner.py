@@ -14,7 +14,7 @@ import time
 from pathlib import Path
 from typing import Any
 
-from worldfoundry.core.process import run_logged_subprocess
+from worldfoundry.core.execution.process import run_logged_subprocess
 from worldfoundry.evaluation.tasks.execution.framework.benchmark_assets import bundled_benchmark_asset
 from worldfoundry.evaluation.tasks.execution.framework.io import (
     env_path,

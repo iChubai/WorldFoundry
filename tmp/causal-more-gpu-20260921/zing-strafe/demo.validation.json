@@ -1,0 +1,21 @@
+{
+  "video": "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/WorldFoundry/tmp/causal-more-gpu-20260921/zing-strafe/demo.mp4",
+  "metadata": {
+    "width": 832,
+    "height": 480,
+    "r_frame_rate": "24/1",
+    "duration": "3.375000",
+    "nb_frames": "81"
+  },
+  "decoded_frames": 81,
+  "mean": 79.75708150216944,
+  "std": 53.30325147386586,
+  "mean_frame_delta": 4.68759822845459,
+  "max_frame_delta": 6.209640979766846,
+  "decode_stderr": "",
+  "passed": true,
+  "expected_width": 832,
+  "expected_height": 480,
+  "expected_fps": 24.0,
+  "expected_frames": 81
+}

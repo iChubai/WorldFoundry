@@ -1,0 +1,41 @@
+{
+  "case": "openvla-oft-libero-spatial-object-goal-10",
+  "gpu": "3",
+  "status": "generated",
+  "started_at": 1790004366.7534838,
+  "scope": "Real offline LIBERO10 observation,dual distinct cameras,8D xyz+axis-angle+fingers;in-domain only for 10 and combined checkpoint;other suites OOD;no closed-loop success",
+  "artifact": "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/WorldFoundry/tmp/action-more-gpu-20260921/openvla-oft-libero-spatial-object-goal-10/actions.json",
+  "validation": {
+    "shape": [
+      8,
+      7
+    ],
+    "finite": true,
+    "min": -0.13220215008166736,
+    "max": 0.98828125,
+    "std": 0.22912509648508408,
+    "per_dim_min": [
+      -0.033319945826416064,
+      0.011532209080957756,
+      -0.13220215008166736,
+      -0.010786475967932488,
+      0.0012683858512447521,
+      -0.006113092303070278,
+      -0.005584716796875
+    ],
+    "per_dim_max": [
+      0.13044500895141597,
+      0.0970890582165782,
+      -0.0416761132424579,
+      -0.0016526518132560786,
+      0.017445919497547452,
+      0.005730954337685945,
+      0.98828125
+    ],
+    "peak_memory_allocated": 15534210048,
+    "torch_version": "2.5.1+cu121",
+    "within_q01_q99": true,
+    "normalization_note": "Regression heads may exceed q01/q99; recorded diagnostic,not hard bound."
+  },
+  "elapsed_seconds": 102.36
+}

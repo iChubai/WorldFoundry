@@ -9,7 +9,7 @@ from typing import Any
 
 import yaml
 
-from worldfoundry.core.inference import (
+from worldfoundry.core.execution.inference import (
     InferenceArtifactSpec,
     InferenceCheckpointRef,
     InferenceFieldSpec,

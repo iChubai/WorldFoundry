@@ -8,8 +8,8 @@ retention, scheduler updates, and decode.
 Inputs: ChunkedCacheDenoiser plus encoded-latent RunnerComponents,
 base_chunk_frames, num_cached_chunks, sink_token.
 Output: DiffusionOutput with chunked-kv-cache metadata.
-Must not: let a model package own cache lifetime, or run without an
-EncodedLatentInitializer (construction / _prepare raise TypeError).
+Must not: let a model package own cache lifetime. Noise-only and encoded
+initializers both use the canonical initialization contracts.
 """
 
 from __future__ import annotations
@@ -53,6 +53,8 @@ class ChunkedKVCacheRunner(NativeDiffusionRunner):
     updates, and decode lifecycle are shared infrastructure.
     """
 
+    execution_strategy = "chunked-kv-cache"
+
     def __init__(
         self,
         *,
@@ -82,6 +84,8 @@ class ChunkedKVCacheRunner(NativeDiffusionRunner):
             if index == 0:
                 next_index += remainder
             indices.append(next_index)
+        if indices[-1] < total_frames:
+            indices.append(total_frames)
         return tuple(indices)
 
     @staticmethod
@@ -208,7 +212,7 @@ class ChunkedKVCacheRunner(NativeDiffusionRunner):
         self,
         request: DiffusionRequest,
     ) -> tuple[DiffusionRunContext, Tensor, Mapping[str, object]]:
-        """Encode, run extensions, and initialize via EncodedLatentInitializer only."""
+        """Encode, run extensions, and initialize noise or encoded latents."""
         generator = self._generator(request.sampling.seed)
         conditioning = self.components.conditioner.encode(
             request,
@@ -232,8 +236,18 @@ class ChunkedKVCacheRunner(NativeDiffusionRunner):
 
         initializer = self.components.latent_initializer
         encoder = self.components.latent_encoder
-        if encoder is None or not isinstance(initializer, EncodedLatentInitializer):
-            raise TypeError("chunked-kv-cache requires an encoded latent initializer")
+        if not isinstance(initializer, EncodedLatentInitializer):
+            initialized = initializer.initialize(
+                request,
+                generator=generator,
+                device=self.device,
+                dtype=self.dtype,
+            )
+            if not isinstance(initialized, Tensor):
+                raise TypeError("noise initializer must return a Tensor")
+            return context, initialized, {}
+        if encoder is None:
+            raise TypeError("encoded latent initialization requires a latent encoder")
         initialized = initializer.initialize_with_encoder(
             request,
             latent_encoder=encoder,
@@ -313,11 +327,8 @@ class ChunkedKVCacheRunner(NativeDiffusionRunner):
             if latents.ndim != 5:
                 raise ValueError("chunked-kv-cache requires BCTHW latents")
             total_frames = int(latents.shape[2])
-            if total_frames <= self.base_chunk_frames:
-                raise ValueError(
-                    "chunked-kv-cache requires more latent frames than one base chunk: "
-                    f"{total_frames} <= {self.base_chunk_frames}"
-                )
+            if total_frames <= 0:
+                raise ValueError("chunked execution requires at least one latent frame")
             chunk_indices = self._segments(total_frames, self.base_chunk_frames)
             num_chunks = len(chunk_indices) - 1
             state_blocks = self.cache_denoiser.streaming_cache_layout()
@@ -491,7 +502,7 @@ class ChunkedKVCacheRunner(NativeDiffusionRunner):
                     "seed": request.sampling.seed,
                     "num_inference_steps": request.sampling.num_inference_steps,
                     "guidance_scale": request.sampling.guidance_scale,
-                    "execution_strategy": "chunked-kv-cache",
+                    "execution_strategy": self.execution_strategy,
                     "base_chunk_frames": self.base_chunk_frames,
                     "num_cached_blocks": requested_cached,
                     "sink_token": requested_sink,
@@ -510,4 +521,49 @@ class ChunkedKVCacheRunner(NativeDiffusionRunner):
             self._end_denoiser_request(context, error=run_error)
 
 
-__all__ = ["ChunkedCacheDenoiser", "ChunkedKVCacheRunner"]
+class ChunkedAdditiveCacheRunner(ChunkedKVCacheRunner):
+    """Sum linear-attention sufficient statistics and retain the last conv state.
+
+    Unlike token caches, each committed chunk owns a V K-transpose matrix,
+    a key sum, and one temporal-convolution tail. RoPE addresses only the
+    current chunk because the prior keys have already been rotated.
+    """
+
+    execution_strategy = "chunked-additive-cache"
+
+    @staticmethod
+    def _new_cache(num_chunks, num_blocks):
+        return [[[None] * 3 for _ in range(num_blocks)] for _ in range(num_chunks)]
+
+    @staticmethod
+    def _accumulate_cache(
+        cache, chunk_index, *, state_blocks, num_cached_chunks, sink_token,
+        chunk_indices, spatial_tokens,
+    ):
+        del state_blocks, chunk_indices, spatial_tokens
+        if sink_token:
+            raise ValueError("additive cache does not support a separate sink-token prefix")
+        current = cache[chunk_index]
+        if chunk_index:
+            first = max(chunk_index - num_cached_chunks, 0) if num_cached_chunks > 0 else 0
+            for block_index, block in enumerate(current):
+                block[2] = cache[chunk_index - 1][block_index][2]
+                for previous in cache[first:chunk_index]:
+                    for slot in (0, 1):
+                        value = previous[block_index][slot]
+                        if value is not None:
+                            block[slot] = value.clone() if block[slot] is None else block[slot] + value
+        return current, 0, 0
+
+    @staticmethod
+    def _promote_full_history(cache, chunk_index, state_blocks):
+        # Keep per-chunk contributions: the next chunk sums them exactly once.
+        pass
+
+    @staticmethod
+    def _chunk_conditioning(values, *, start, end, **kwargs):
+        kwargs.update(rope_start=start, rope_end=end, frame_index=None)
+        return ChunkedKVCacheRunner._chunk_conditioning(values, start=start, end=end, **kwargs)
+
+
+__all__ = ["ChunkedAdditiveCacheRunner", "ChunkedCacheDenoiser", "ChunkedKVCacheRunner"]

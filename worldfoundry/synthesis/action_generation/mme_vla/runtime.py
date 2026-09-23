@@ -51,7 +51,7 @@ def _stage_paligemma_tokenizer(location: str | Path | None = None) -> Path:
 
 
 def clear_runtime_cache() -> None:
-    from worldfoundry.core.runtime_cache import clear_inference_runtime_cache
+    from worldfoundry.core.execution.runtime_cache import clear_inference_runtime_cache
 
     clear_inference_runtime_cache(_RUNTIME_CACHE)
 

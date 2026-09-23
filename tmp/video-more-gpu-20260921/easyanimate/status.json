@@ -1,0 +1,10 @@
+{
+  "case": "easyanimate",
+  "started_at": 1790001830.863009,
+  "gpu": "0",
+  "status": "generated",
+  "videos": [
+    "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/WorldFoundry/tmp/video-more-gpu-20260921/easyanimate/demo.mp4"
+  ],
+  "elapsed_seconds": 245.37
+}

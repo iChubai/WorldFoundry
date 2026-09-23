@@ -1,0 +1,5 @@
+{
+  "status": "passed",
+  "cases": 52,
+  "scope": "All26 released Atari denoiser weights; current shared conditioning/solver refactor versus exact pre-change methods, matched RNG, Euler and stochastic Heun, complete3-step trajectories bitwise equal. Complements prior full public Atari rollouts; synthetic observations here."
+}

@@ -1,0 +1,40 @@
+{
+  "case": "db-cogact-libero",
+  "gpu": "2",
+  "status": "generated",
+  "started_at": 1790030670.2081833,
+  "scope": "Real LIBERO10 observation with distinct two cameras and exact proprio;offline action-chunk check,no closed-loop success",
+  "artifact": "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/WorldFoundry/tmp/db-cogact-shape-gpu-20260921/db-cogact-libero/actions.json",
+  "validation": {
+    "shape": [
+      1,
+      16,
+      7
+    ],
+    "finite": true,
+    "min": -0.9975272595167161,
+    "max": 0.9996,
+    "std": 0.3731189313577387,
+    "per_dim_min": [
+      -0.2895217922329909,
+      -0.0021408604237170836,
+      -0.13901869473606554,
+      -0.039861961985956276,
+      -0.02225062776272646,
+      -0.03518568921293466,
+      -0.9975272595167161
+    ],
+    "per_dim_max": [
+      0.025496084064245195,
+      0.19289269953163635,
+      0.16618033781647545,
+      0.000992318979627399,
+      0.0028082092190469254,
+      0.006880002659338524,
+      0.9996
+    ],
+    "peak_memory_allocated": 16624986624,
+    "torch_version": "2.5.1+cu121"
+  },
+  "elapsed_seconds": 128.83
+}

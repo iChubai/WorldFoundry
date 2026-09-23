@@ -23,7 +23,7 @@ import cv2
 import numpy as np
 from PIL import Image
 
-from worldfoundry.core.geometry import rotation_matrix_to_euler_angles_opencv
+from worldfoundry.core.geometry.transforms import rotation_matrix_to_euler_angles_opencv
 
 # ──────────────────────────────────────────────────────────────────────────
 # Depth colormaps — per-frame min/max stretch so NaN / empty maps stay blank

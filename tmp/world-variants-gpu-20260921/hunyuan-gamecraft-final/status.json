@@ -1,0 +1,10 @@
+{
+  "case": "hunyuan-gamecraft-final",
+  "started_at": 1790000894.9272494,
+  "gpu": "1",
+  "status": "generated",
+  "videos": [
+    "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/WorldFoundry/tmp/world-variants-gpu-20260921/hunyuan-gamecraft-final/demo.mp4"
+  ],
+  "elapsed_seconds": 883.48
+}

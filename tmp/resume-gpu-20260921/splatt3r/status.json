@@ -1,0 +1,76 @@
+{
+  "case": {
+    "id": "splatt3r",
+    "gpu": "3",
+    "target": "worldfoundry.pipelines.component_pipelines:Splatt3RPipeline",
+    "load": {
+      "model_path": "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/ckpts/brandonsmart--splatt3r_v1.0/epoch=19-step=1200.ckpt",
+      "device": "cuda"
+    },
+    "call": {
+      "images": [
+        "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/WorldFoundry/tmp/skyreels-omega-gpu-20260920/inputs/frame-0.png",
+        "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/WorldFoundry/tmp/skyreels-omega-gpu-20260920/inputs/frame-16.png"
+      ]
+    }
+  },
+  "gpu": "3",
+  "status": "passed",
+  "started_at": 1789987324.7880616,
+  "checkpoint_loads": [
+    {
+      "class": "MAST3RGaussians",
+      "missing": [],
+      "unexpected": [
+        "lpips_criterion.scaling_layer.shift",
+        "lpips_criterion.scaling_layer.scale",
+        "lpips_criterion.net.slice1.0.weight",
+        "lpips_criterion.net.slice1.0.bias",
+        "lpips_criterion.net.slice2.3.weight",
+        "lpips_criterion.net.slice2.3.bias",
+        "lpips_criterion.net.slice3.6.weight",
+        "lpips_criterion.net.slice3.6.bias",
+        "lpips_criterion.net.slice4.8.weight",
+        "lpips_criterion.net.slice4.8.bias",
+        "lpips_criterion.net.slice5.10.weight",
+        "lpips_criterion.net.slice5.10.bias",
+        "lpips_criterion.lin0.model.1.weight",
+        "lpips_criterion.lin1.model.1.weight",
+        "lpips_criterion.lin2.model.1.weight",
+        "lpips_criterion.lin3.model.1.weight",
+        "lpips_criterion.lin4.model.1.weight",
+        "lpips_criterion.lins.0.model.1.weight",
+        "lpips_criterion.lins.1.model.1.weight",
+        "lpips_criterion.lins.2.model.1.weight",
+        "lpips_criterion.lins.3.model.1.weight",
+        "lpips_criterion.lins.4.model.1.weight"
+      ]
+    }
+  ],
+  "artifact": "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/WorldFoundry/tmp/resume-gpu-20260921/splatt3r/scene.ply",
+  "validation": {
+    "points": 294912,
+    "finite": true,
+    "fields": [
+      "x",
+      "y",
+      "z",
+      "nx",
+      "ny",
+      "nz",
+      "f_dc_0",
+      "f_dc_1",
+      "f_dc_2",
+      "opacity",
+      "scale_0",
+      "scale_1",
+      "scale_2",
+      "rot_0",
+      "rot_1",
+      "rot_2",
+      "rot_3"
+    ]
+  },
+  "max_memory_allocated": 3829072384,
+  "elapsed_seconds": 82.6645770072937
+}

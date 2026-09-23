@@ -1,0 +1,21 @@
+{
+  "model_id": "solaris",
+  "case": "official-rotation-eval-1sample-33frames",
+  "status": "quality_concern",
+  "checkpoint": "../ckpts/nyu-visionx--solaris/solaris.pt",
+  "dataset": "../ckpts/nyu-visionx--solaris-eval-datasets/eval/rotationEval/test",
+  "environment": "../envs/worldarena-trajan",
+  "device": "GPU0 H100 80GB",
+  "eval_num_samples": 1,
+  "num_workers": 0,
+  "num_frames_eval": 33,
+  "output_video": "tmp/solaris-gpu-20260923/output/single_gpu_rotation_33f/eval_rotation/video_0_side_by_side.mp4",
+  "decoded_width": 1280,
+  "decoded_height": 704,
+  "decoded_frames": 33,
+  "fps": 20,
+  "elapsed_seconds": 325.1,
+  "visual_review": "Frames 0, 16, 32 remain recognizable Minecraft views, but the upper generated player's avatar shifts to the far right edge while the ground-truth avatar stays nearer the interior. Relative action/view geometry diverges; lower view remains largely stable.",
+  "frame_diff_evidence": "tmp/solaris-gpu-20260923/rotation-frame-diff.json",
+  "scope": "One short official rotation example; cannot infer benchmark score or systemic model failure."
+}

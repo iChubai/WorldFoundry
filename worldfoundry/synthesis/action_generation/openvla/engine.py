@@ -59,8 +59,9 @@ def select_openvla_checkpoint(
 ) -> Path:
     if checkpoint_dir:
         explicit_path = _expand_runtime_path(checkpoint_dir)
-        if explicit_path.exists():
-            return explicit_path
+        if not explicit_path.is_dir():
+            raise FileNotFoundError(f"OpenVLA checkpoint directory does not exist: {explicit_path}")
+        return explicit_path
 
     candidates: list[Mapping[str, Any]] = []
     candidates.extend(dict(item) for item in checkpoints)

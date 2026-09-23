@@ -1,0 +1,21 @@
+{
+  "video": "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/WorldFoundry/tmp/crafter-gpu-20260921/dynamicrafter-512/demo.mp4",
+  "metadata": {
+    "width": 512,
+    "height": 320,
+    "r_frame_rate": "8/1",
+    "duration": "2.000000",
+    "nb_frames": "16"
+  },
+  "decoded_frames": 16,
+  "mean": 36.71127669270833,
+  "std": 41.28614377910222,
+  "mean_frame_delta": 4.691754341125488,
+  "max_frame_delta": 7.608651161193848,
+  "decode_stderr": "",
+  "passed": true,
+  "expected_width": 512,
+  "expected_height": 320,
+  "expected_fps": 8,
+  "expected_frames": 16
+}

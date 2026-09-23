@@ -176,8 +176,19 @@ class ScopeActionBlock(DiTBlock):
         action_freqs: torch.Tensor,
         mouse_action: torch.Tensor | None = None,
         keyboard_action: torch.Tensor | None = None,
+        **kwargs: Any,
     ) -> torch.Tensor:
         """Wan AdaLN self-attn → text cross-attn → SCOPE action → gated FFN."""
+        self_attention_kwargs = {
+            key: kwargs[key]
+            for key in (
+                "_worldfoundry_rope_precision",
+                "_worldfoundry_rope_grid",
+                "_worldfoundry_rope_table",
+                "_worldfoundry_sparse_grid",
+            )
+            if key in kwargs
+        }
         sequence_timestep = t_mod.ndim == 4
         chunk_dim = 2 if sequence_timestep else 1
         shift_msa, scale_msa, gate_msa, shift_mlp, scale_mlp, gate_mlp = (
@@ -191,7 +202,11 @@ class ScopeActionBlock(DiTBlock):
         x = self.gate(
             x,
             gate_msa,
-            self.self_attn(scale_shift(self.norm1(x), shift_msa, scale_msa), freqs),
+            self.self_attn(
+                scale_shift(self.norm1(x), shift_msa, scale_msa),
+                freqs,
+                **self_attention_kwargs,
+            ),
         )
         x = x + self.cross_attn(self.norm3(x), context)
         x = self.action_attn(

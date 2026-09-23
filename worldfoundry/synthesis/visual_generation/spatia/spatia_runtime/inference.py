@@ -54,14 +54,20 @@ def run_command(command, cwd=None, quiet=False, env=None):
     print(f"[INFO] Running command: {' '.join(str(arg) for arg in command)}")
     run_kwargs = {
         "cwd": str(cwd) if cwd is not None else None,
-        "check": True,
     }
     if env is not None:
         run_kwargs["env"] = env
     if quiet:
-        run_kwargs["stdout"] = subprocess.DEVNULL
-        run_kwargs["stderr"] = subprocess.DEVNULL
-    subprocess.run(command, **run_kwargs)
+        completed = subprocess.run(command, capture_output=True, text=True, **run_kwargs)
+        if completed.returncode:
+            raise RuntimeError(
+                f"Spatia subprocess exited with code {completed.returncode}: "
+                f"{' '.join(str(arg) for arg in command)}\n"
+                f"stdout (tail):\n{completed.stdout[-4000:]}\n"
+                f"stderr (tail):\n{completed.stderr[-4000:]}"
+            )
+    else:
+        subprocess.run(command, check=True, **run_kwargs)
 def save_extrinsic_and_intrinsics(extrinsic=None, intrinsic=None, extrinsic_path=None, intrinsics_path=None):
     if extrinsic_path is not None:
         os.makedirs(os.path.dirname(extrinsic_path), exist_ok=True)

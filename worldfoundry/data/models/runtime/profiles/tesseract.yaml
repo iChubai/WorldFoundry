@@ -32,6 +32,6 @@ execution:
 integration:
   status: runtime_ported
 notes:
-- TesserAct source is vendored in-tree under synthesis/visual_generation/tesseract/tesseract_runtime.
+- TesserAct source is vendored in-tree under synthesis/action_generation/tesseract/tesseract_runtime.
 - The compatibility launcher uses the official TesserAct RGB-depth-normal SFT model classes and local checkpoints only.
 - Official depth and normal files are accepted; synthetic-gradient conditioning is a deterministic runtime smoke aid, not estimated geometry.

@@ -1,0 +1,21 @@
+{
+  "video": "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/WorldFoundry/tmp/video-more-gpu-20260921/easyanimate/demo.mp4",
+  "metadata": {
+    "width": 768,
+    "height": 512,
+    "r_frame_rate": "16/1",
+    "duration": "2.125000",
+    "nb_frames": "34"
+  },
+  "decoded_frames": 34,
+  "mean": 45.461289828431376,
+  "std": 49.58174742259304,
+  "mean_frame_delta": 16.167978286743164,
+  "max_frame_delta": 20.553972244262695,
+  "decode_stderr": "",
+  "passed": true,
+  "expected_width": 768,
+  "expected_height": 512,
+  "expected_fps": 16,
+  "expected_frames": 34
+}

@@ -139,7 +139,9 @@ def build_hunyuan_video15_codec(context: ComponentBuildContext) -> HunyuanVideo1
                 torch.nn.GroupNorm: AutoWrappedModule,
                 RMS_norm: AutoWrappedModule,
             },
-            layer_container="decoder.up",
+            # Decoder.up entries are structural containers: decode calls their
+            # block/upsample children directly, so hooks on the containers
+            # never run. Use the declared leaf-module offload wrappers.
         ),
         context.require_checkpoint("weights"),
         context.policy,

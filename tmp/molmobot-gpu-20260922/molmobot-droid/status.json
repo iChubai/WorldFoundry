@@ -1,0 +1,41 @@
+{
+  "case": "molmobot-droid",
+  "gpu": "1",
+  "status": "generated",
+  "started_at": 1790015653.4040513,
+  "scope": "Real DROID episode1/frame0 from official MolmoAct2-DROID model-card, exact8D joint-position/gripper state and two camera images. Actual images viewed: robot over workbench/open drawer and wrist view of black objects. MolmoBot trained on simulation; this is offline real-world/OOD inference, not a closed-loop success score. n_obs_steps2 runtime first-observation padding and synthmanip normalization retained; outputs joint positions plus gripper0..255 training scale.",
+  "artifact": "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/WorldFoundry/tmp/molmobot-gpu-20260922/molmobot-droid/actions.json",
+  "validation": {
+    "shape": [
+      16,
+      8
+    ],
+    "finite": true,
+    "min": -2.3801345825195312,
+    "max": 2.2246525287628174,
+    "std": 1.1438820687663562,
+    "per_dim_min": [
+      -0.180711030960083,
+      -0.24743539094924927,
+      0.10131669044494629,
+      -2.3801345825195312,
+      -0.9644754528999329,
+      2.118096113204956,
+      0.15685319900512695,
+      -0.7168847322463989
+    ],
+    "per_dim_max": [
+      -0.13999515771865845,
+      0.1650911569595337,
+      0.13009560108184814,
+      -2.0358734130859375,
+      -0.32377827167510986,
+      2.2246525287628174,
+      0.4729483127593994,
+      0.6311309337615967
+    ],
+    "peak_memory_allocated": 10903024128,
+    "torch_version": "2.5.1+cu121"
+  },
+  "elapsed_seconds": 274.36
+}

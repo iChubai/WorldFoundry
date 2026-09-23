@@ -1,0 +1,10 @@
+{
+  "case": "lingbot-forest-49f-40steps",
+  "started_at": 1790003130.9188132,
+  "gpu": "0",
+  "status": "generated",
+  "videos": [
+    "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/WorldFoundry/tmp/video-quality-more-gpu-20260921/lingbot-forest-49f-40steps/demo.mp4"
+  ],
+  "elapsed_seconds": 96.36
+}

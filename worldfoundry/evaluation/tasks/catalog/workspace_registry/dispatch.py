@@ -11,8 +11,8 @@ from functools import lru_cache
 from pathlib import Path
 from typing import Any, Callable, Mapping, Sequence
 
+from worldfoundry.core.execution.process import read_text_tail, run_logged_subprocess
 from worldfoundry.core.io.paths import project_root
-from worldfoundry.core.process import read_text_tail, run_logged_subprocess
 from worldfoundry.evaluation.tasks.catalog.benchmark_id import normalize_benchmark_id
 from worldfoundry.evaluation.tasks.catalog.dispatch import CLI_RUNNERS
 from worldfoundry.evaluation.tasks.execution.framework.benchmark_assets import bundled_benchmark_asset
@@ -528,6 +528,7 @@ def build_workspace_benchmark_command(payload: Any, output_dir: str | Path) -> l
     model_id = _first_non_empty(
         _payload_get(payload, "model_id"),
         config.get("model_id"),
+        config.get("result_model_id"),
         config.get("model_name"),
     )
     if model_id and spec.model_arg:

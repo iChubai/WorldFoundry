@@ -1,0 +1,40 @@
+{
+  "case": "smolvla-libero",
+  "gpu": "1",
+  "status": "generated",
+  "started_at": 1790065072.580523,
+  "scope": "Real LIBERO10 episode0 distinct cameras and8D proprio;offline only,no closed-loop success. New independent full inference retry; original failures retained. Final HF loading info captured.",
+  "artifact": "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/WorldFoundry/tmp/smolvla-camera-fixed-gpu-20260922/smolvla-libero/actions.json",
+  "validation": {
+    "shape": [
+      1,
+      50,
+      7
+    ],
+    "finite": true,
+    "min": -1.0214406251907349,
+    "max": 1.0294269323349,
+    "std": 0.3960833606598332,
+    "per_dim_min": [
+      -0.38767632842063904,
+      -0.13825435936450958,
+      -0.4620751142501831,
+      -0.024118781089782715,
+      -0.06396085023880005,
+      -0.031017567962408066,
+      -1.0214406251907349
+    ],
+    "per_dim_max": [
+      0.1814982146024704,
+      0.6699472665786743,
+      0.38958510756492615,
+      0.006230397615581751,
+      0.037663087248802185,
+      0.039833053946495056,
+      1.0294269323349
+    ],
+    "peak_memory_allocated": 2516807680,
+    "torch_version": "2.5.1+cu121"
+  },
+  "elapsed_seconds": 65.55
+}

@@ -1,0 +1,21 @@
+{
+  "frames": 16,
+  "frame_shape": [
+    256,
+    384,
+    3
+  ],
+  "sampled_frames": [
+    0,
+    8,
+    15
+  ],
+  "mean_abs_pixel_delta_from_frame0": {
+    "8": 15.21384334564209,
+    "15": 22.71068572998047
+  },
+  "contact": "tmp/cameractrl-gpu-20260924/contact-0-8-15.jpg",
+  "visual_review": "Frames 0, 8 and 15 show a coherent living room: red sofa, two lamps, side table and foreground cushion remain recognizable while framing shifts modestly.",
+  "status": "verified_inference_only",
+  "scope_limit": "The 16-frame camera path is synthetic and the source fixture is text-only; no measured 0.12m output displacement, pose fidelity, benchmark metric, or long-horizon guarantee."
+}

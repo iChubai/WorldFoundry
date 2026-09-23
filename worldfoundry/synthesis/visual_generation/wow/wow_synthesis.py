@@ -208,6 +208,10 @@ class WoWSynthesis(BaseSynthesis):
         if enable_vram:
             persistent_param_gb = getattr(synthesis_args, "persistent_param_gb", 70)
             pipeline.enable_vram_management(num_persistent_param_in_dit=int(persistent_param_gb * 10**9))
+        else:
+            # The native loader builds components on CPU. Without VRAM management,
+            # the staged runner does not move them before prompt encoding.
+            pipeline.to(device)
 
         return cls(pipeline=pipeline, backend="wan", device=device)
 

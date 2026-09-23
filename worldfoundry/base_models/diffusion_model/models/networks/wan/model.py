@@ -43,7 +43,6 @@ from worldfoundry.core.attention import (
 from worldfoundry.core.attention import (
     packed_sequence_attention as flash_attention,
 )
-from worldfoundry.core.gradient import gradient_checkpoint_forward
 from worldfoundry.core.kernels import (
     hidden_qk_rmsnorm_rope_3d,
     layer_norm_scale_shift,
@@ -53,6 +52,7 @@ from worldfoundry.core.kernels import (
 from worldfoundry.core.kernels.registry import kernel_dispatch_receipt_scope
 from worldfoundry.core.nn import RMSNorm, sinusoidal_embedding_1d
 from worldfoundry.core.nn import scale_shift as modulate  # noqa: F401
+from worldfoundry.core.nn.gradient import gradient_checkpoint_forward
 
 from .adapter import SimpleAdapter
 

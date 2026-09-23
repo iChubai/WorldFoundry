@@ -1,0 +1,21 @@
+{
+  "video": "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/WorldFoundry/tmp/classic-video-audited-gpu-20260922/animatediff-v2/demo.mp4",
+  "metadata": {
+    "width": 512,
+    "height": 512,
+    "r_frame_rate": "8/1",
+    "duration": "2.000000",
+    "nb_frames": "16"
+  },
+  "decoded_frames": 16,
+  "mean": 63.03580810546875,
+  "std": 46.0413564287208,
+  "mean_frame_delta": 9.757378578186035,
+  "max_frame_delta": 11.321331024169922,
+  "decode_stderr": "",
+  "passed": true,
+  "expected_width": 512,
+  "expected_height": 512,
+  "expected_fps": 8,
+  "expected_frames": 16
+}

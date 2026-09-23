@@ -12,8 +12,6 @@ from worldfoundry.core.attention.varlen import (
 )
 from worldfoundry.base_models.diffusion_model.models.networks.wan.reference_21 import (
     WanRMSNorm,
-    WanLayerNorm,
-    WAN_CROSSATTENTION_CLASSES,
     rope_params,
     MLPProj,
     sinusoidal_embedding_1d
@@ -22,6 +20,9 @@ from worldfoundry.core.model_loading.model_configuration import NativeConfigMixi
 import torch.nn as nn
 import torch
 import math
+
+from .normalization import WanLayerNorm
+from .attention import WAN_CROSSATTENTION_CLASSES
 
 
 def causal_rope_apply(x, grid_sizes, freqs, start_frame=0, compute_dtype=torch.float64):

@@ -103,8 +103,8 @@ class NeoVerseOfficialRuntime:
             NeoVerseControlBranch,
             NeoVerseControlBranchDictConverter,
         )
-        from worldfoundry.base_models.three_dimensions.point_clouds.hyworldmirror_2p0.models.models.worldmirror import (
-            WorldMirror,
+        from worldfoundry.synthesis.visual_generation.neoverse.native.worldmirror import (
+            NeoVerseWorldMirror,
         )
         from worldfoundry.core.model_loading import hash_state_dict_keys, load_model, load_state_dict
         from worldfoundry.synthesis.visual_generation.neoverse.native.depth_anything_reconstructor import (
@@ -174,7 +174,7 @@ class NeoVerseOfficialRuntime:
         reconstructor_state = load_state_dict(str(resolved_reconstructor_path), device="cpu")
         reconstructor_hash = hash_state_dict_keys(reconstructor_state)
         if reconstructor_hash == "1a1d001a35f78f3a7796a1e719ead340":
-            reconstructor_class = WorldMirror
+            reconstructor_class = NeoVerseWorldMirror
         elif reconstructor_hash == "252f1c3923a62665aee9b32f1b18afb5":
             reconstructor_class = DepthAnything3Reconstructor
         else:

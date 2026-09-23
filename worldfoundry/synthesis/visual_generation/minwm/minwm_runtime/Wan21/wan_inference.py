@@ -9,7 +9,7 @@ import torch.distributed as dist
 from torch.utils.data import DataLoader, SequentialSampler
 from torch.utils.data.distributed import DistributedSampler
 
-from worldfoundry.core.camera_trajectory import camera_trajectory_tensors
+from worldfoundry.core.geometry.trajectory import camera_trajectory_tensors
 from worldfoundry.core.io import TextPromptDataset
 from worldfoundry.core.utils.torch_utils import set_seed_everywhere
 from worldfoundry.core.vram import DynamicSwapInstaller, get_cuda_free_memory_gb, gpu

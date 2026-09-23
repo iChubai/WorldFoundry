@@ -1,0 +1,13 @@
+{
+  "id": "hy-vla-umi-synthetic-state-regexfix",
+  "status": "generated",
+  "started_at": 1790120942.1761625,
+  "gpu": "3",
+  "artifact": "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/WorldFoundry/tmp/hy-embodied-vla-gpu-20260923/hy-vla-umi-synthetic-state-regexfix/action_trace.json",
+  "action_shape": [
+    50,
+    20
+  ],
+  "artifact_sha256": "b92fdbb85dd0b87488e461ffbafd6253f5ad24f0b692071c84b329e8bd0d3cf2",
+  "elapsed_seconds": 263.74
+}

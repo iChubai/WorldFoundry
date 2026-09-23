@@ -28,7 +28,7 @@ import os
 
 import torch
 
-from worldfoundry.core.compile_cache import configure_persistent_compile_cache
+from worldfoundry.core.execution.compile_cache import configure_persistent_compile_cache
 
 configure_persistent_compile_cache(namespace="pisa-triton")
 

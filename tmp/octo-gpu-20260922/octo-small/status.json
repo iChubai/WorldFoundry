@@ -1,0 +1,8 @@
+{
+  "case": "octo-small",
+  "started_at": 1790013671.2687747,
+  "status": "generated",
+  "gpu": "1",
+  "artifact": "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/WorldFoundry/tmp/octo-gpu-20260922/octo-small/actions.json",
+  "elapsed_seconds": 65.74023985862732
+}

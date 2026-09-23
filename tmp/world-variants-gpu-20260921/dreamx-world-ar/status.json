@@ -1,0 +1,10 @@
+{
+  "case": "dreamx-world-ar",
+  "started_at": 1789999735.5377965,
+  "gpu": "0",
+  "status": "generated",
+  "videos": [
+    "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/WorldFoundry/tmp/world-variants-gpu-20260921/dreamx-world-ar/demo.mp4"
+  ],
+  "elapsed_seconds": 168.26
+}

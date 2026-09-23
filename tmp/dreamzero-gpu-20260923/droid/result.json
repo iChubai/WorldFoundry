@@ -1,0 +1,57 @@
+{
+  "variant": "DROID",
+  "embodiment": "oxe_droid",
+  "checkpoint": "/tmp/worldfoundry-dreamzero-20260923/GEAR-Dreams--DreamZero-DROID",
+  "checkpoint_shards": 10,
+  "input_photo": "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/WorldFoundry/tmp/priorda-preflight-20260922/fixtures/assets/sample-2/rgb.jpg",
+  "input_video_keys": [
+    "exterior_image_1_left",
+    "exterior_image_2_left",
+    "wrist_image_left"
+  ],
+  "input_state_keys": [
+    "cartesian_position",
+    "gripper_position",
+    "joint_position"
+  ],
+  "action_summary": {
+    "action.joint_position": {
+      "shape": [
+        24,
+        7
+      ],
+      "min": -0.09680742025375366,
+      "max": 0.3938062787055969
+    },
+    "action.gripper_position": {
+      "shape": [
+        24
+      ],
+      "min": 0.1171875,
+      "max": 0.5712890625
+    }
+  },
+  "video_latent_shape": [
+    1,
+    16,
+    3,
+    44,
+    80
+  ],
+  "video_latent_min": -3.140625,
+  "video_latent_max": 3.203125,
+  "decoded_video": {
+    "path": "tmp/dreamzero-gpu-20260923/droid/future_world.mp4",
+    "shape": [
+      9,
+      352,
+      640,
+      3
+    ],
+    "decoded_frames": 9
+  },
+  "decode_error": null,
+  "load_seconds": 404.75756573677063,
+  "elapsed_seconds": 474.8421137332916,
+  "gpu_peak_allocated_bytes": 55624471552
+}

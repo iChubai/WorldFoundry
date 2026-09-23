@@ -261,6 +261,7 @@ class DualCamCtrlRuntime:
             (
                 checkpoint_root_path(flat_name),
                 checkpoint_root_path("hfd", flat_name),
+                checkpoint_root_path(Path(model_id).name),
             )
         )
         try:
@@ -351,6 +352,12 @@ class DualCamCtrlRuntime:
             model_config.local_model_path = self.local_model_path
             model_config.skip_download = not self.allow_download
             model_config.download_if_necessary(use_usp=self.use_usp)
+            if not model_config.path:
+                raise FileNotFoundError(
+                    f"DualCamCtrl checkpoint asset is missing: {model_config.model_id} "
+                    f"({model_config.origin_file_pattern}). Set WORLDFOUNDRY_CKPT_DIR "
+                    "to the local checkpoint root or allow download."
+                )
         tokenizer_config = self._model_config(self.tokenizer_repo, "google/*")
         tokenizer_config.local_model_path = self.local_model_path
         tokenizer_config.skip_download = not self.allow_download

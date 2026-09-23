@@ -1,0 +1,21 @@
+{
+  "video": "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/WorldFoundry/tmp/modelscope-layout-fixed-gpu-20260922/modelscope-t2v/demo.mp4",
+  "metadata": {
+    "width": 256,
+    "height": 256,
+    "r_frame_rate": "8/1",
+    "duration": "2.000000",
+    "nb_frames": "16"
+  },
+  "decoded_frames": 16,
+  "mean": 84.26284708658854,
+  "std": 59.978150928633404,
+  "mean_frame_delta": 13.029679298400879,
+  "max_frame_delta": 15.41399097442627,
+  "decode_stderr": "",
+  "passed": true,
+  "expected_width": 256,
+  "expected_height": 256,
+  "expected_fps": 8,
+  "expected_frames": 16
+}

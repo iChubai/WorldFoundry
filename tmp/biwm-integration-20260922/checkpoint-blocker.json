@@ -1,0 +1,38 @@
+{
+  "status": "blocked_external",
+  "checked_date": "2026-09-22",
+  "upstream_revision": "e546ae0a04a831c8a19aafa437b5662fffd92d67",
+  "reason": "No publicly released trained BiWM generator found; base Wan weights are not BiWM. No training performed.",
+  "evidence": {
+    "hf_model_search": [],
+    "author_models": [
+      "shaohao011/AdaThink-Med-HuatuoGPT-o1-7B",
+      "shaohao011/AdaThink-Med-Qwen-7B",
+      "shaohao011/AdaThink-Med-LLama-8B"
+    ],
+    "release_assets": [
+      "demo.mp4",
+      "demo_web.mp4"
+    ],
+    "dataset_files": [
+      ".gitattributes",
+      "videos_real.json",
+      "videos_real.tar",
+      "videos_syn.json",
+      "videos_syn.tar"
+    ],
+    "readme": "tmp/refs/BiWM/README.md:127"
+  },
+  "integration_validation": {
+    "cpu": "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/WorldFoundry/tmp/biwm-integration-20260922/cpu-parity.json",
+    "gpu": "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/WorldFoundry/tmp/biwm-gpu-parity-20260922/biwm-wan-upstream-parity/validation.json",
+    "interface": "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/WorldFoundry/tmp/biwm-integration-20260922/interface.json",
+    "full_published_t5_vae_with_synthetic_transformer": "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/WorldFoundry/tmp/biwm-integration-20260922/component-videos.json"
+  },
+  "not_claimed": [
+    "trained-generator inference",
+    "trained BiWM visual quality",
+    "HY15/LTX inference",
+    "learned history compression"
+  ]
+}

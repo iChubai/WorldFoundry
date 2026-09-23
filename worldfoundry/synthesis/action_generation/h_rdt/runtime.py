@@ -128,7 +128,7 @@ class HRDTRuntime:
         import torch
 
         from worldfoundry.core.checkpoint.assignment import assign_state_dict_strict
-        from worldfoundry.core.device import resolve_inference_device, resolve_inference_dtype
+        from worldfoundry.core.execution.device import resolve_inference_device, resolve_inference_dtype
         from worldfoundry.core.model_loading.file import load_torch_state_dict
 
         from .modeling import HRDTRunner

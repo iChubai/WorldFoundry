@@ -1,4 +1,4 @@
-"""ViGeo depth estimation -- a drop-in replacement for DA3DepthEstimator in the cloud-warp backend.
+"""ViGeo depth estimation for the cloud-warp inference backend.
 
 This matches DA3's *output contract*, not its method. DA3 is pose-conditioned -- the GT extrinsics and
 intrinsics are network inputs, so its depth is solved inside the GT camera model -- while ViGeo accepts
@@ -23,7 +23,6 @@ Two things do not transfer from DA3:
 from __future__ import annotations
 
 import os
-import sys
 from pathlib import Path
 from typing import Optional
 
@@ -31,13 +30,13 @@ import numpy as np
 import torch
 import torch.nn.functional as F
 
+from worldfoundry import base_models
+
 from .da3_cloud import _umeyama_scale_collinear_safe
 
 _REPO_ROOT = Path(__file__).resolve().parents[3]
-# Vendored in-repo alongside DA3 (see evoke/third_party/vigeo/PROVENANCE.md); the package uses absolute
-# imports, so the directory goes on sys.path rather than being imported as a evoke.third_party subpackage.
-_VIGEO_SRC = Path(os.environ.get("EVOKE_VIGEO_SRC",
-                                 str(_REPO_ROOT / "evoke" / "third_party" / "vigeo")))
+# Model source has one canonical owner; checkpoint locations remain configurable.
+_VIGEO_SRC = Path(base_models.__file__).resolve().parent / "three_dimensions/depth/vigeo"
 _VIGEO_WEIGHTS = Path(os.environ.get("EVOKE_VIGEO_WEIGHTS", str(_REPO_ROOT / "models" / "ViGeo1.1")))
 
 _PATCH = 14  # ViGeo.patch_size
@@ -66,13 +65,13 @@ def check_assets(src=None, weights=None) -> None:
     surfaces inside a per-window `except` and is reported as geometric degeneracy, so a run with a bad
     path produces an all-black warp and still exits successfully.
     """
-    src = Path(src) if src else _VIGEO_SRC
+    src = Path(src).expanduser().resolve() if src else _VIGEO_SRC
     weights = Path(weights) if weights else _VIGEO_WEIGHTS
-    if not (src / "vigeo").is_dir():
+    if src != _VIGEO_SRC:
+        raise ValueError("Evoke uses WorldFoundry's shared ViGeo implementation; omit the ViGeo source override.")
+    if not (src / "vigeo.py").is_file():
         raise FileNotFoundError(
-            f"ViGeo source not found: {src / 'vigeo'} does not exist. The vendored in-repo copy should be "
-            f"at evoke/third_party/vigeo (see its PROVENANCE.md), or set EVOKE_VIGEO_SRC to point at an "
-            f"external checkout.")
+            f"ViGeo source is missing from the shared base model at {src}.")
     if not (weights / "vigeo.pt").is_file():
         raise FileNotFoundError(
             f"ViGeo weights not found: {weights / 'vigeo.pt'} does not exist. Fetch the "
@@ -89,14 +88,14 @@ def _fit_patch_res(h: int, w: int, long_side: int, patch: int = _PATCH):
 
 
 class ViGeoDepthEstimator:
-    """ViGeo-backed depth estimator; signature and returns match `DA3DepthEstimator`.
+    """ViGeo-backed streaming depth estimator.
 
     Per-knob semantics live on `VigeoBackendConfig` in evoke/utils/train_config.py. Defaults here
     reproduce the validated recipe, so constructing with no arguments gives a measured configuration
     rather than an untested one.
 
     The instance is **stateful** while streaming (kv-cache, locked scale). Every stream boundary -- a new
-    sample, a new rollout, a new video -- must call `reset_stream()`; the builders in `da3_cloud` do this
+    sample, a new rollout, a new video -- must call `reset_stream()`; the inference pipeline does this
     for their callers.
     """
 
@@ -232,9 +231,7 @@ class ViGeoDepthEstimator:
         if self._model is not None:
             return
         check_assets(self.src, self.weights)
-        if str(self.src) not in sys.path:
-            sys.path.insert(0, str(self.src))
-        from vigeo import ViGeo
+        from worldfoundry.base_models.three_dimensions.depth.vigeo import ViGeo
         self._model = ViGeo.from_pretrained(str(self.weights)).to(self.device).eval()
         print(f"[vigeo] loaded {self.weights} (mask_head={self._model.mask_head is not None}) "
               f"process_res={self.process_res} num_tokens={self.num_tokens} mode={self.mode} "

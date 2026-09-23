@@ -21,7 +21,7 @@ from threading import RLock
 from time import monotonic
 from typing import Any
 
-from worldfoundry.core.time import utc_now_iso
+from worldfoundry.core.observability.time import utc_now_iso
 from worldfoundry.evaluation.reporting.run_manifest import redact_secret_text
 from worldfoundry.runtime.jobs import TERMINAL_JOB_STATUSES
 

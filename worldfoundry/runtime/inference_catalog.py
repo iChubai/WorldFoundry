@@ -1,6 +1,6 @@
 """Curated per-model-family inference specs.
 
-Holds the model identity that :mod:`worldfoundry.core.inference` must not:
+Holds the model identity that :mod:`worldfoundry.core.execution.inference` must not:
 checkpoint locations, demo fixtures, default prompts, call kwargs, and the
 task/variant profiles for every curated model family, plus the registry
 lookups (:func:`get_model_inference_spec`, :func:`list_model_inference_specs`)
@@ -18,7 +18,7 @@ from collections.abc import Mapping, Sequence
 from pathlib import Path
 from typing import Any
 
-from worldfoundry.core.inference import (
+from worldfoundry.core.execution.inference import (
     InferenceArtifactSpec,
     InferenceCheckpointRef,
     InferenceFieldSpec,
@@ -26,7 +26,7 @@ from worldfoundry.core.inference import (
     InferenceVariantSpec,
     ModelInferenceSpec,
 )
-from worldfoundry.core.inference import (
+from worldfoundry.core.execution.inference import (
     normalise_infer_id as _normalise_infer_id,
 )
 from worldfoundry.core.io.paths import (

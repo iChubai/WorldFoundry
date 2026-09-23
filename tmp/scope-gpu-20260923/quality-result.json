@@ -1,0 +1,27 @@
+{
+  "status": "success",
+  "model_id": "scope",
+  "model_name": "SCOPE",
+  "artifact_kind": "generated_video",
+  "artifact_path": "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/WorldFoundry/tmp/scope-gpu-20260923/scope-quality.mp4",
+  "generated_video_path": "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/WorldFoundry/tmp/scope-gpu-20260923/scope-quality.mp4",
+  "artifact_sha256": "20bc5180ed553a7b75750370c167beb9388d685057276ab1ddb61669499f377e",
+  "runtime": "worldfoundry.synthesis.visual_generation.scope.scope_runtime.inference",
+  "backend_quality": "in_tree_scope_runtime",
+  "run_dir": "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/WorldFoundry/tmp/scope-gpu-20260923/.scope-quality_scope_work",
+  "log_path": "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/WorldFoundry/tmp/scope-gpu-20260923/scope-quality.mp4.scope.log",
+  "metadata": {
+    "prompt": "First-person game view moving forward up a stone stair corridor",
+    "model_dir": "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/ckpts/zizhaotong--SCOPE",
+    "image_path": "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/WorldFoundry/tmp/scope-gpu-20260923/oasis_input.png",
+    "action_path": "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/WorldFoundry/tmp/scope-gpu-20260923/forward-17.parquet",
+    "generation": {
+      "height": 480,
+      "width": 832,
+      "max_frames": 17,
+      "num_inference_steps": 20,
+      "seed": 23,
+      "fps": 20
+    }
+  }
+}

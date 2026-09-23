@@ -328,7 +328,7 @@ Hugging Face cache snapshot。Direct root 支持 `org/name`、`org--name` 和嵌
 
 ## 编译器缓存
 
-`worldfoundry.core.compile_cache` 为 Inductor、Triton、CUDA driver JIT 和
+`worldfoundry.core.execution.compile_cache` 为 Inductor、Triton、CUDA driver JIT 和
 torch C++/CUDA extensions 配置持久化 `torch.compile` 缓存；兼容入口
 `worldfoundry.runtime.compile_cache` 暴露同一 API。根目录优先使用
 `WORLDFOUNDRY_COMPILE_CACHE_DIR`，否则为
@@ -352,7 +352,7 @@ autotune cache。
 ## 日志
 
 下列 CLI 标志和环境变量进入同一套 opt-in 日志管线
-`worldfoundry.core.logging_setup.configure_logging`。显式 CLI 标志优先于继承的
+`worldfoundry.core.observability.logging_setup.configure_logging`。显式 CLI 标志优先于继承的
 环境变量。
 
 <KvCatalog heading="设置" vars rows={[

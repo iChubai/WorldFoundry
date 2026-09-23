@@ -1,0 +1,5 @@
+{
+  "status": "inference_verified",
+  "result": "tmp/kairos-gpu-20260924/result.json",
+  "gpu": "1"
+}

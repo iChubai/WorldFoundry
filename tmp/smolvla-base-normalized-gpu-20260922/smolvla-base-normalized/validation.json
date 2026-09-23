@@ -1,0 +1,22 @@
+{
+  "shape": [
+    1,
+    50,
+    6
+  ],
+  "finite": true,
+  "min": -1.3350830078125,
+  "max": 0.9806573987007141,
+  "weight_report": {
+    "files": 1,
+    "loaded_keys": 500,
+    "missing_keys": 0,
+    "unexpected_keys": 0,
+    "shape_mismatches": 0
+  },
+  "peak_memory_allocated": 1909154304,
+  "state": "synthetic normalized zero6D; actual robot state is not normalized with fabricated statistics",
+  "images": "Two real SO100 modelcard images; absent third camera follows official prepare_images mask",
+  "normalization_limitation": "Base foundation checkpoint lacks state stats; public calibrated rollout fails explicitly. Only normalized model-space inference tested.",
+  "scope": "No fine-tuning, no robot action calibration and no closed-loop success."
+}

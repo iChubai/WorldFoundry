@@ -1,4 +1,4 @@
-# Adapted from seedleap/zing-world-model (Apache-2.0); see PROVENANCE.md.
+# Adapted from seedleap/zing-world-model (Apache-2.0).
 from __future__ import annotations
 
 from dataclasses import dataclass

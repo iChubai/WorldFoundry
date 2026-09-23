@@ -1,0 +1,11 @@
+{
+  "case": "wan21-fun-14b-cam",
+  "started_at": 1790017301.6861923,
+  "gpu": "1",
+  "status": "generated",
+  "videos": [
+    "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/WorldFoundry/tmp/camera-fun-fixed-gpu-20260922/wan21-fun-14b-cam/demo.mp4",
+    "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/WorldFoundry/tmp/camera-fun-fixed-gpu-20260922/wan21-fun-14b-cam/.demo_wan21-fun-14b-cam_inputs/outputs/00000001.mp4"
+  ],
+  "elapsed_seconds": 1214.63
+}

@@ -11,7 +11,7 @@ from worldfoundry.core.distributed.evaluation_collectives import (
     gather_list_of_dict,
     get_world_size
 )
-from worldfoundry.core.device import get_current_torch_device
+from worldfoundry.core.execution.device import get_current_torch_device
 
 class DepthEstimator:
     def __init__(self, model_path, device):

@@ -20,7 +20,7 @@ from PIL import Image
 from safetensors.torch import load_file
 from torchvision import transforms
 
-from worldfoundry.core.camera_trajectory import (
+from worldfoundry.core.geometry.trajectory import (
     camera_trajectory_action_labels,
     camera_trajectory_tensors,
 )

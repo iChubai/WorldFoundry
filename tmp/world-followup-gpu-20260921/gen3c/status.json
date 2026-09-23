@@ -1,0 +1,10 @@
+{
+  "case": "gen3c",
+  "started_at": 1789999384.9070065,
+  "gpu": "1",
+  "status": "generated",
+  "videos": [
+    "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/WorldFoundry/tmp/world-followup-gpu-20260921/gen3c/demo.mp4"
+  ],
+  "elapsed_seconds": 906.69
+}

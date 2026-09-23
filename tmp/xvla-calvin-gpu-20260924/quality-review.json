@@ -1,0 +1,19 @@
+{
+  "status": "verified_inference_only",
+  "checkpoint": "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/ckpts/2toINF--X-VLA-Calvin-ABC_D",
+  "fixture": "tmp/calvin-fixture-20260922/fixture.json",
+  "fixture_source": "ducido/calvin_debug_lerobo_format@c5af1b00c4c0157a4e947dd7b48813663843a818",
+  "input": "Real CALVIN debug-mirror episode0 frame0 static/base and gripper cameras; 7D state converted to 20D exploratory X-VLA EE6D state; domain_id=2; 10 denoising steps; seed42.",
+  "action_shape": [
+    30,
+    20
+  ],
+  "finite": true,
+  "value_min": -0.4241688549518585,
+  "value_max": 0.9999760389328003,
+  "value_std": 0.31678004500848445,
+  "first_arm_rotation_min_norm": 1.1175711984823968,
+  "first_arm_rotation_min_cross_norm": 0.029616936333211136,
+  "gpu_peak_allocated_bytes": 3680265216,
+  "scope_limit": "One offline observation with exploratory state adapter, third-party CALVIN debug conversion (not D test split); no calibration, official CALVIN metric, closed-loop rollout, or task success."
+}

@@ -1,0 +1,12 @@
+{
+  "repo_id": "yxzhang2024/StarWM",
+  "checkpoint": "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/ckpts/yxzhang2024--StarWM",
+  "prompt": "Current StarCraft II observation at t=0:\nInfo: Minerals 150; Gas 0; Supply 12/15; no alerts.\nQueue: Barracks construction 80 percent complete.\nMy Units: SCV #1 at (20,20), HP 100 percent, idle; Marine #2 at (24,20), HP 100 percent.\nMy Structures: Command Center at (16,16), HP 100 percent.\nVisible Hostiles: Enemy Zergling #3 at (30,20), HP 100 percent, approaching Marine #2.\nActions over the next 5 seconds: SCV #1 continues Barracks construction; Marine #2 attacks Zergling #3.\nPredict the observation after 5 seconds in the same five modules.\n\n/no_think",
+  "device": "cuda:0",
+  "status": "generated",
+  "response": "</think>[16:25]\n\n</think>[16:25]\n\n",
+  "input_tokens": 191,
+  "output_tokens": 17,
+  "generation_seconds": 0.7148654460906982,
+  "peak_cuda_bytes": 16465754112
+}

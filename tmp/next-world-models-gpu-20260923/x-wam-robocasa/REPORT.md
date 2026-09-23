@@ -1,0 +1,3 @@
+# X-WAM RoboCasa GPU validation
+
+The public X-WAM runtime loaded the local RoboCasa-SFT DeepSpeed checkpoint with strict state assignment on GPU 2. Using the same real RGB photograph repeated across the required three cameras, a synthetic zero 8D state, and seed 42, it returned finite 32×7 actions and finite 9×16 proprioception predictions. The checkpoint uses the audited restricted-load `set` allowlist described in the RoboTwin report. This establishes inference and output structure for the RoboCasa variant, not task success or a measured response to distinct camera inputs. Evidence: `result.json` and `run.log`.

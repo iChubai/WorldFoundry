@@ -1,0 +1,58 @@
+{
+  "case": "being-h05-libero",
+  "gpu": "0",
+  "status": "generated",
+  "started_at": 1790003038.4386399,
+  "scope": "Real offline LIBERO10 dual-camera/state; verify nested state survives public operator->runtime;no closed-loop success",
+  "artifact": "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/WorldFoundry/tmp/being-gpu-20260921/being-h05-libero/actions.json",
+  "validation": {
+    "fields": {
+      "action.eef_position": {
+        "shape": [
+          1,
+          15,
+          3
+        ],
+        "finite": true,
+        "min": -0.208984375,
+        "max": 0.146484375,
+        "std": 0.07972674025826586
+      },
+      "action.eef_rotation": {
+        "shape": [
+          1,
+          15,
+          3
+        ],
+        "finite": true,
+        "min": -0.02734375,
+        "max": 0.056640625,
+        "std": 0.015617572290521806
+      },
+      "action.gripper_position": {
+        "shape": [
+          1,
+          15,
+          1
+        ],
+        "finite": true,
+        "min": -0.021484375,
+        "max": 1.0,
+        "std": 0.36944721350427856
+      },
+      "action_unified": {
+        "shape": [
+          1,
+          15,
+          200
+        ],
+        "finite": true,
+        "min": -3.828125,
+        "max": 4.09375,
+        "std": 1.1506310585248456
+      }
+    },
+    "peak_memory_allocated": 5668005888
+  },
+  "elapsed_seconds": 89.69
+}

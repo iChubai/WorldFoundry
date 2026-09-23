@@ -1,0 +1,4375 @@
+[
+  {
+    "model_id": "helios-distilled",
+    "parent_model": "helios",
+    "category": "catalog_variant",
+    "pipeline_targets": [
+      "worldfoundry.pipelines.helios.pipeline_helios:HeliosPipeline"
+    ],
+    "verification_status": "not_run",
+    "variant": {
+      "variant_id": "helios-distilled",
+      "task": "text-to-video",
+      "provider": null,
+      "checkpoint_refs": [
+        {
+          "hf_repo_id": "BestWishYsh/Helios-Distilled",
+          "revision": null,
+          "license": null,
+          "private": null,
+          "gated": null,
+          "path": null,
+          "filename": null,
+          "estimated_size_gb": null,
+          "requires_auth": false,
+          "notes": []
+        }
+      ],
+      "integration_status": "planned",
+      "runner_target": null,
+      "pipeline_target": "worldfoundry.pipelines.helios.pipeline_helios:HeliosPipeline",
+      "pipeline_binding": "helios",
+      "runtime_profile": "helios",
+      "demo_parity": {
+        "status": "not_applicable",
+        "demo_command": null,
+        "expected_artifacts": [],
+        "notes": []
+      },
+      "runner_parity": {
+        "status": "not_applicable",
+        "demo_command": null,
+        "expected_artifacts": [],
+        "notes": []
+      },
+      "min_vram_gb": null,
+      "requires_auth": false,
+      "notes": []
+    }
+  },
+  {
+    "model_id": "helios-base",
+    "parent_model": "helios",
+    "category": "catalog_variant",
+    "pipeline_targets": [
+      "worldfoundry.pipelines.helios.pipeline_helios:HeliosPipeline"
+    ],
+    "verification_status": "not_run",
+    "variant": {
+      "variant_id": "helios-base",
+      "task": "text-to-video",
+      "provider": null,
+      "checkpoint_refs": [
+        {
+          "hf_repo_id": "BestWishYsh/Helios-Base",
+          "revision": null,
+          "license": null,
+          "private": null,
+          "gated": null,
+          "path": null,
+          "filename": null,
+          "estimated_size_gb": null,
+          "requires_auth": false,
+          "notes": []
+        }
+      ],
+      "integration_status": "planned",
+      "runner_target": null,
+      "pipeline_target": "worldfoundry.pipelines.helios.pipeline_helios:HeliosPipeline",
+      "pipeline_binding": "helios",
+      "runtime_profile": "helios",
+      "demo_parity": {
+        "status": "not_applicable",
+        "demo_command": null,
+        "expected_artifacts": [],
+        "notes": []
+      },
+      "runner_parity": {
+        "status": "not_applicable",
+        "demo_command": null,
+        "expected_artifacts": [],
+        "notes": []
+      },
+      "min_vram_gb": null,
+      "requires_auth": false,
+      "notes": []
+    }
+  },
+  {
+    "model_id": "helios-mid",
+    "parent_model": "helios",
+    "category": "catalog_variant",
+    "pipeline_targets": [
+      "worldfoundry.pipelines.helios.pipeline_helios:HeliosPipeline"
+    ],
+    "verification_status": "not_run",
+    "variant": {
+      "variant_id": "helios-mid",
+      "task": "text-to-video",
+      "provider": null,
+      "checkpoint_refs": [
+        {
+          "hf_repo_id": "BestWishYsh/Helios-Mid",
+          "revision": null,
+          "license": null,
+          "private": null,
+          "gated": null,
+          "path": null,
+          "filename": null,
+          "estimated_size_gb": null,
+          "requires_auth": false,
+          "notes": []
+        }
+      ],
+      "integration_status": "planned",
+      "runner_target": null,
+      "pipeline_target": "worldfoundry.pipelines.helios.pipeline_helios:HeliosPipeline",
+      "pipeline_binding": "helios",
+      "runtime_profile": "helios",
+      "demo_parity": {
+        "status": "not_applicable",
+        "demo_command": null,
+        "expected_artifacts": [],
+        "notes": []
+      },
+      "runner_parity": {
+        "status": "not_applicable",
+        "demo_command": null,
+        "expected_artifacts": [],
+        "notes": []
+      },
+      "min_vram_gb": null,
+      "requires_auth": false,
+      "notes": []
+    }
+  },
+  {
+    "model_id": "being-h05-2b",
+    "parent_model": "being-h05",
+    "category": "catalog_variant",
+    "pipeline_targets": [],
+    "verification_status": "not_run",
+    "variant": {
+      "variant_id": "being-h05-2b",
+      "task": "vla.policy_rollout",
+      "provider": null,
+      "checkpoint_refs": [
+        {
+          "hf_repo_id": "BeingBeyond/Being-H05-2B",
+          "revision": null,
+          "license": null,
+          "private": null,
+          "gated": null,
+          "path": null,
+          "filename": null,
+          "estimated_size_gb": null,
+          "requires_auth": false,
+          "notes": []
+        }
+      ],
+      "integration_status": "planned",
+      "runner_target": null,
+      "pipeline_target": null,
+      "pipeline_binding": null,
+      "runtime_profile": null,
+      "demo_parity": {
+        "status": "not_applicable",
+        "demo_command": null,
+        "expected_artifacts": [],
+        "notes": []
+      },
+      "runner_parity": {
+        "status": "not_applicable",
+        "demo_command": null,
+        "expected_artifacts": [],
+        "notes": []
+      },
+      "min_vram_gb": null,
+      "requires_auth": false,
+      "notes": [
+        "WorldFoundry keeps the Being-H0.5 checkpoint runtime directly under worldfoundry/synthesis/action_generation/being_h05; the base checkpoint uses the same strict safetensors inference path, with variant-specific CUDA validation still pending."
+      ]
+    }
+  },
+  {
+    "model_id": "being-h05-2b-libero",
+    "parent_model": "being-h05",
+    "category": "catalog_variant",
+    "pipeline_targets": [],
+    "verification_status": "not_run",
+    "variant": {
+      "variant_id": "being-h05-2b-libero",
+      "task": "vla.policy_rollout",
+      "provider": null,
+      "checkpoint_refs": [
+        {
+          "hf_repo_id": "BeingBeyond/Being-H05-2B_libero",
+          "revision": null,
+          "license": null,
+          "private": null,
+          "gated": null,
+          "path": null,
+          "filename": null,
+          "estimated_size_gb": null,
+          "requires_auth": false,
+          "notes": []
+        }
+      ],
+      "integration_status": "integrated",
+      "runner_target": null,
+      "pipeline_target": null,
+      "pipeline_binding": null,
+      "runtime_profile": null,
+      "demo_parity": {
+        "status": "not_applicable",
+        "demo_command": null,
+        "expected_artifacts": [],
+        "notes": []
+      },
+      "runner_parity": {
+        "status": "not_applicable",
+        "demo_command": null,
+        "expected_artifacts": [],
+        "notes": []
+      },
+      "min_vram_gb": null,
+      "requires_auth": false,
+      "notes": [
+        "Public WorldFoundry pipeline emitted checkpoint-backed LIBERO action_trace on an 80GB CUDA GPU using memory-efficient SDPA."
+      ]
+    }
+  },
+  {
+    "model_id": "being-h05-2b-robocasa",
+    "parent_model": "being-h05",
+    "category": "catalog_variant",
+    "pipeline_targets": [],
+    "verification_status": "not_run",
+    "variant": {
+      "variant_id": "being-h05-2b-robocasa",
+      "task": "vla.policy_rollout",
+      "provider": null,
+      "checkpoint_refs": [
+        {
+          "hf_repo_id": "BeingBeyond/Being-H05-2B_robocasa",
+          "revision": null,
+          "license": null,
+          "private": null,
+          "gated": null,
+          "path": null,
+          "filename": null,
+          "estimated_size_gb": null,
+          "requires_auth": false,
+          "notes": []
+        }
+      ],
+      "integration_status": "planned",
+      "runner_target": null,
+      "pipeline_target": null,
+      "pipeline_binding": null,
+      "runtime_profile": null,
+      "demo_parity": {
+        "status": "not_applicable",
+        "demo_command": null,
+        "expected_artifacts": [],
+        "notes": []
+      },
+      "runner_parity": {
+        "status": "not_applicable",
+        "demo_command": null,
+        "expected_artifacts": [],
+        "notes": []
+      },
+      "min_vram_gb": null,
+      "requires_auth": false,
+      "notes": [
+        "WorldFoundry keeps the Being-H0.5 checkpoint runtime directly under worldfoundry/synthesis/action_generation/being_h05; the RoboCasa checkpoint uses the same strict safetensors inference path, with variant-specific CUDA validation still pending."
+      ]
+    }
+  },
+  {
+    "model_id": "being-h05-2b-libero-robocasa",
+    "parent_model": "being-h05",
+    "category": "catalog_variant",
+    "pipeline_targets": [],
+    "verification_status": "not_run",
+    "variant": {
+      "variant_id": "being-h05-2b-libero-robocasa",
+      "task": "vla.policy_rollout",
+      "provider": null,
+      "checkpoint_refs": [
+        {
+          "hf_repo_id": "BeingBeyond/Being-H05-2B_libero_robocasa",
+          "revision": null,
+          "license": null,
+          "private": null,
+          "gated": null,
+          "path": null,
+          "filename": null,
+          "estimated_size_gb": null,
+          "requires_auth": false,
+          "notes": []
+        }
+      ],
+      "integration_status": "planned",
+      "runner_target": null,
+      "pipeline_target": null,
+      "pipeline_binding": null,
+      "runtime_profile": null,
+      "demo_parity": {
+        "status": "not_applicable",
+        "demo_command": null,
+        "expected_artifacts": [],
+        "notes": []
+      },
+      "runner_parity": {
+        "status": "not_applicable",
+        "demo_command": null,
+        "expected_artifacts": [],
+        "notes": []
+      },
+      "min_vram_gb": null,
+      "requires_auth": false,
+      "notes": [
+        "WorldFoundry keeps the Being-H0.5 checkpoint runtime directly under worldfoundry/synthesis/action_generation/being_h05; LIBERO+RoboCasa checkpoint tensor GPU probe passed, but real get_action exceeded a single 80GB GPU memory budget."
+      ]
+    }
+  },
+  {
+    "model_id": "cogact-base",
+    "parent_model": "cogact",
+    "category": "catalog_variant",
+    "pipeline_targets": [],
+    "verification_status": "not_run",
+    "variant": {
+      "variant_id": "cogact-base",
+      "task": "vla.action_prediction",
+      "provider": null,
+      "checkpoint_refs": [
+        {
+          "hf_repo_id": "CogACT/CogACT-Base",
+          "revision": null,
+          "license": "mit",
+          "private": null,
+          "gated": null,
+          "path": null,
+          "filename": null,
+          "estimated_size_gb": null,
+          "requires_auth": false,
+          "notes": []
+        }
+      ],
+      "integration_status": "integrated",
+      "runner_target": null,
+      "pipeline_target": null,
+      "pipeline_binding": null,
+      "runtime_profile": null,
+      "demo_parity": {
+        "status": "not_applicable",
+        "demo_command": null,
+        "expected_artifacts": [],
+        "notes": []
+      },
+      "runner_parity": {
+        "status": "not_applicable",
+        "demo_command": null,
+        "expected_artifacts": [],
+        "notes": []
+      },
+      "min_vram_gb": null,
+      "requires_auth": false,
+      "notes": [
+        "Official minimal demo calls vla.load_vla(... action_model_type=DiT-B ...).predict_action(image, prompt, unnorm_key, cfg_scale, use_ddim, num_ddim_steps).",
+        "Output is a 16 x 7 action chunk; default SimplerEnv setups use bridge_orig or fractal20220817_data normalization."
+      ]
+    }
+  },
+  {
+    "model_id": "db-cogact-libero",
+    "parent_model": "db-cogact",
+    "category": "catalog_variant",
+    "pipeline_targets": [],
+    "verification_status": "not_run",
+    "variant": {
+      "variant_id": "db-cogact-libero",
+      "task": "vla.policy_rollout",
+      "provider": null,
+      "checkpoint_refs": [
+        {
+          "hf_repo_id": "Dexmal/libero-db-cogact",
+          "revision": null,
+          "license": "apache-2.0",
+          "private": null,
+          "gated": null,
+          "path": null,
+          "filename": null,
+          "estimated_size_gb": null,
+          "requires_auth": false,
+          "notes": []
+        }
+      ],
+      "integration_status": "integrated",
+      "runner_target": null,
+      "pipeline_target": null,
+      "pipeline_binding": null,
+      "runtime_profile": null,
+      "demo_parity": {
+        "status": "not_applicable",
+        "demo_command": null,
+        "expected_artifacts": [],
+        "notes": []
+      },
+      "runner_parity": {
+        "status": "not_applicable",
+        "demo_command": null,
+        "expected_artifacts": [],
+        "notes": []
+      },
+      "min_vram_gb": null,
+      "requires_auth": false,
+      "notes": [
+        "Official v1 API request uses observation.prompt, observation.images slots 1/2/3, optional state, and sampling num_steps/cfg_scale/seed.",
+        "Dexbotic declares CogACT action_mode as relative by default; checkpoint and benchmark may override this."
+      ]
+    }
+  },
+  {
+    "model_id": "dreamzero-droid",
+    "parent_model": "dreamzero",
+    "category": "catalog_variant",
+    "pipeline_targets": [],
+    "verification_status": "not_run",
+    "variant": {
+      "variant_id": "dreamzero-droid",
+      "task": "wam.world_action_modeling",
+      "provider": null,
+      "checkpoint_refs": [
+        {
+          "hf_repo_id": "GEAR-Dreams/DreamZero-DROID",
+          "revision": null,
+          "license": "apache-2.0",
+          "private": null,
+          "gated": null,
+          "path": null,
+          "filename": null,
+          "estimated_size_gb": null,
+          "requires_auth": false,
+          "notes": []
+        }
+      ],
+      "integration_status": "integrated",
+      "runner_target": null,
+      "pipeline_target": null,
+      "pipeline_binding": null,
+      "runtime_profile": null,
+      "demo_parity": {
+        "status": "not_applicable",
+        "demo_command": null,
+        "expected_artifacts": [],
+        "notes": []
+      },
+      "runner_parity": {
+        "status": "not_applicable",
+        "demo_command": null,
+        "expected_artifacts": [],
+        "notes": []
+      },
+      "min_vram_gb": null,
+      "requires_auth": false,
+      "notes": [
+        "Official default demo is the distributed server plus test_client_AR.py with debug_image videos.",
+        "WorldFoundry runs the flattened DreamZero server/model runtime and builds an in-tree torch.distributed server command; checkpoint-backed execution requires the staged checkpoint and compatible CUDA topology."
+      ]
+    }
+  },
+  {
+    "model_id": "dreamzero-agibot",
+    "parent_model": "dreamzero",
+    "category": "catalog_variant",
+    "pipeline_targets": [],
+    "verification_status": "not_run",
+    "variant": {
+      "variant_id": "dreamzero-agibot",
+      "task": "wam.post_training_base",
+      "provider": null,
+      "checkpoint_refs": [
+        {
+          "hf_repo_id": "GEAR-Dreams/DreamZero-AgiBot",
+          "revision": null,
+          "license": "apache-2.0",
+          "private": null,
+          "gated": null,
+          "path": null,
+          "filename": null,
+          "estimated_size_gb": null,
+          "requires_auth": false,
+          "notes": []
+        }
+      ],
+      "integration_status": "integrated",
+      "runner_target": null,
+      "pipeline_target": null,
+      "pipeline_binding": null,
+      "runtime_profile": null,
+      "demo_parity": {
+        "status": "not_applicable",
+        "demo_command": null,
+        "expected_artifacts": [],
+        "notes": []
+      },
+      "runner_parity": {
+        "status": "not_applicable",
+        "demo_command": null,
+        "expected_artifacts": [],
+        "notes": []
+      },
+      "min_vram_gb": null,
+      "requires_auth": false,
+      "notes": [
+        "WorldFoundry runs the flattened DreamZero server/model runtime and builds an in-tree torch.distributed server command; checkpoint-backed execution requires the staged checkpoint and compatible CUDA topology."
+      ]
+    }
+  },
+  {
+    "model_id": "giga-brain-0-3.5b-base",
+    "parent_model": "giga-brain-0",
+    "category": "catalog_variant",
+    "pipeline_targets": [],
+    "verification_status": "not_run",
+    "variant": {
+      "variant_id": "giga-brain-0-3.5b-base",
+      "task": "vla.action_prediction",
+      "provider": null,
+      "checkpoint_refs": [
+        {
+          "hf_repo_id": "open-gigaai/GigaBrain-0-3.5B-Base",
+          "revision": null,
+          "license": "apache-2.0",
+          "private": null,
+          "gated": null,
+          "path": null,
+          "filename": null,
+          "estimated_size_gb": null,
+          "requires_auth": false,
+          "notes": []
+        }
+      ],
+      "integration_status": "planned",
+      "runner_target": null,
+      "pipeline_target": null,
+      "pipeline_binding": null,
+      "runtime_profile": null,
+      "demo_parity": {
+        "status": "not_applicable",
+        "demo_command": null,
+        "expected_artifacts": [],
+        "notes": []
+      },
+      "runner_parity": {
+        "status": "not_applicable",
+        "demo_command": null,
+        "expected_artifacts": [],
+        "notes": []
+      },
+      "min_vram_gb": null,
+      "requires_auth": false,
+      "notes": [
+        "Base GigaBrain-0 checkpoint tensor GPU probe passed; promoted action-trace evidence currently covers the GigaBrain-0.1 variant."
+      ]
+    }
+  },
+  {
+    "model_id": "giga-brain-0.1-3.5b-base",
+    "parent_model": "giga-brain-0",
+    "category": "catalog_variant",
+    "pipeline_targets": [],
+    "verification_status": "not_run",
+    "variant": {
+      "variant_id": "giga-brain-0.1-3.5b-base",
+      "task": "vla.policy_rollout",
+      "provider": null,
+      "checkpoint_refs": [
+        {
+          "hf_repo_id": "open-gigaai/GigaBrain-0.1-3.5B-Base",
+          "revision": null,
+          "license": "apache-2.0",
+          "private": null,
+          "gated": null,
+          "path": null,
+          "filename": null,
+          "estimated_size_gb": null,
+          "requires_auth": false,
+          "notes": []
+        }
+      ],
+      "integration_status": "integrated",
+      "runner_target": null,
+      "pipeline_target": null,
+      "pipeline_binding": null,
+      "runtime_profile": null,
+      "demo_parity": {
+        "status": "not_applicable",
+        "demo_command": null,
+        "expected_artifacts": [],
+        "notes": []
+      },
+      "runner_parity": {
+        "status": "not_applicable",
+        "demo_command": null,
+        "expected_artifacts": [],
+        "notes": []
+      },
+      "min_vram_gb": null,
+      "requires_auth": false,
+      "notes": [
+        "Public WorldFoundry pipeline emitted checkpoint-backed GigaBrain-0.1 action_trace on an 80GB CUDA GPU using converted LeRobot RobotWin stats."
+      ]
+    }
+  },
+  {
+    "model_id": "gr00t-n1-2b",
+    "parent_model": "gr00t",
+    "category": "catalog_variant",
+    "pipeline_targets": [],
+    "verification_status": "not_run",
+    "variant": {
+      "variant_id": "gr00t-n1-2b",
+      "task": "vla.policy_rollout",
+      "provider": null,
+      "checkpoint_refs": [
+        {
+          "hf_repo_id": "nvidia/GR00T-N1-2B",
+          "revision": "fc879581ca32f4f6d6e02cf0cc80452f6b0c3873",
+          "license": null,
+          "private": null,
+          "gated": null,
+          "path": null,
+          "filename": null,
+          "estimated_size_gb": null,
+          "requires_auth": true,
+          "notes": []
+        }
+      ],
+      "integration_status": "integrated",
+      "runner_target": null,
+      "pipeline_target": null,
+      "pipeline_binding": null,
+      "runtime_profile": null,
+      "demo_parity": {
+        "status": "not_applicable",
+        "demo_command": null,
+        "expected_artifacts": [],
+        "notes": []
+      },
+      "runner_parity": {
+        "status": "not_applicable",
+        "demo_command": null,
+        "expected_artifacts": [],
+        "notes": []
+      },
+      "min_vram_gb": null,
+      "requires_auth": true,
+      "notes": [
+        "WorldFoundry keeps the GR00T checkpoint runtime directly under worldfoundry/synthesis/action_generation/gr00t; real prediction requires the gated local assets and GR00T dependency environment."
+      ]
+    }
+  },
+  {
+    "model_id": "gr00t-n1.7-libero",
+    "parent_model": "gr00t",
+    "category": "catalog_variant",
+    "pipeline_targets": [],
+    "verification_status": "not_run",
+    "variant": {
+      "variant_id": "gr00t-n1.7-libero",
+      "task": "vla.policy_rollout",
+      "provider": null,
+      "checkpoint_refs": [
+        {
+          "hf_repo_id": "nvidia/GR00T-N1.7-LIBERO",
+          "revision": "2ea293aa20ba7cf5bbf3ba17a5fbcb1a01cbfe21",
+          "license": null,
+          "private": null,
+          "gated": null,
+          "path": null,
+          "filename": null,
+          "estimated_size_gb": null,
+          "requires_auth": true,
+          "notes": []
+        }
+      ],
+      "integration_status": "integrated",
+      "runner_target": null,
+      "pipeline_target": null,
+      "pipeline_binding": null,
+      "runtime_profile": null,
+      "demo_parity": {
+        "status": "not_applicable",
+        "demo_command": null,
+        "expected_artifacts": [],
+        "notes": []
+      },
+      "runner_parity": {
+        "status": "not_applicable",
+        "demo_command": null,
+        "expected_artifacts": [],
+        "notes": []
+      },
+      "min_vram_gb": null,
+      "requires_auth": true,
+      "notes": [
+        "WorldFoundry keeps the GR00T checkpoint runtime directly under worldfoundry/synthesis/action_generation/gr00t.",
+        "Real predict with the staged LIBERO checkpoint loaded local nvidia--Cosmos-Reason2-2B on CUDA 11.8 with SDPA and emits the configured action trace schema."
+      ]
+    }
+  },
+  {
+    "model_id": "hy-embodied-vla-umi",
+    "parent_model": "hy-embodied-vla",
+    "category": "catalog_variant",
+    "pipeline_targets": [],
+    "verification_status": "not_run",
+    "variant": {
+      "variant_id": "hy-embodied-vla-umi",
+      "task": "vla.policy_rollout",
+      "provider": null,
+      "checkpoint_refs": [
+        {
+          "hf_repo_id": "tencent/Hy-Embodied-0.5-VLA-UMI",
+          "revision": "3f53d1f8d2bc587c523cfdc9f1041ceee42c2524",
+          "license": "Apache-2.0",
+          "private": null,
+          "gated": null,
+          "path": null,
+          "filename": null,
+          "estimated_size_gb": null,
+          "requires_auth": false,
+          "notes": []
+        }
+      ],
+      "integration_status": "integrated",
+      "runner_target": null,
+      "pipeline_target": null,
+      "pipeline_binding": null,
+      "runtime_profile": "runtime-profile:hy-embodied-vla",
+      "demo_parity": {
+        "status": "not_applicable",
+        "demo_command": null,
+        "expected_artifacts": [],
+        "notes": []
+      },
+      "runner_parity": {
+        "status": "not_applicable",
+        "demo_command": null,
+        "expected_artifacts": [],
+        "notes": []
+      },
+      "min_vram_gb": null,
+      "requires_auth": false,
+      "notes": [
+        "Produces a 50-step normalized RT-relative action chunk with 20 channels."
+      ]
+    }
+  },
+  {
+    "model_id": "hy-embodied-vla-robotwin",
+    "parent_model": "hy-embodied-vla",
+    "category": "catalog_variant",
+    "pipeline_targets": [],
+    "verification_status": "not_run",
+    "variant": {
+      "variant_id": "hy-embodied-vla-robotwin",
+      "task": "vla.policy_rollout",
+      "provider": null,
+      "checkpoint_refs": [
+        {
+          "hf_repo_id": "tencent/Hy-Embodied-0.5-VLA-RoboTwin",
+          "revision": "bd7bba6f5934ad62293a2a34f74760c6a3ef2ff8",
+          "license": "Apache-2.0",
+          "private": null,
+          "gated": null,
+          "path": null,
+          "filename": null,
+          "estimated_size_gb": null,
+          "requires_auth": false,
+          "notes": []
+        }
+      ],
+      "integration_status": "integrated",
+      "runner_target": null,
+      "pipeline_target": null,
+      "pipeline_binding": null,
+      "runtime_profile": "runtime-profile:hy-embodied-vla",
+      "demo_parity": {
+        "status": "not_applicable",
+        "demo_command": null,
+        "expected_artifacts": [],
+        "notes": []
+      },
+      "runner_parity": {
+        "status": "not_applicable",
+        "demo_command": null,
+        "expected_artifacts": [],
+        "notes": []
+      },
+      "min_vram_gb": null,
+      "requires_auth": false,
+      "notes": [
+        "Produces 20 RT-relative plus 20 absolute action tokens and uses six-frame visual memory."
+      ]
+    }
+  },
+  {
+    "model_id": "lapa-7b-openx",
+    "parent_model": "lapa",
+    "category": "catalog_variant",
+    "pipeline_targets": [],
+    "verification_status": "not_run",
+    "variant": {
+      "variant_id": "lapa-7b-openx",
+      "task": "vam.video_action_modeling",
+      "provider": null,
+      "checkpoint_refs": [
+        {
+          "hf_repo_id": "latent-action-pretraining/LAPA-7B-openx",
+          "revision": "b5397375f9dd5e07fcaf2e88e6da8690524058b2",
+          "license": "mit",
+          "private": null,
+          "gated": null,
+          "path": null,
+          "filename": null,
+          "estimated_size_gb": null,
+          "requires_auth": false,
+          "notes": []
+        }
+      ],
+      "integration_status": "integrated",
+      "runner_target": null,
+      "pipeline_target": null,
+      "pipeline_binding": null,
+      "runtime_profile": null,
+      "demo_parity": {
+        "status": "not_applicable",
+        "demo_command": null,
+        "expected_artifacts": [],
+        "notes": []
+      },
+      "runner_parity": {
+        "status": "not_applicable",
+        "demo_command": null,
+        "expected_artifacts": [],
+        "notes": []
+      },
+      "min_vram_gb": null,
+      "requires_auth": false,
+      "notes": [
+        "WorldFoundry vendors LAPA latent_pretraining inference runtime under worldfoundry/synthesis/action_generation/lapa/lapa_runtime; real inference is blocked by missing tux/JAX environment compatibility."
+      ]
+    }
+  },
+  {
+    "model_id": "lingbot-va-base",
+    "parent_model": "lingbot-va",
+    "category": "catalog_variant",
+    "pipeline_targets": [],
+    "verification_status": "not_run",
+    "variant": {
+      "variant_id": "lingbot-va-base",
+      "task": "vam.video_action_modeling",
+      "provider": null,
+      "checkpoint_refs": [
+        {
+          "hf_repo_id": "robbyant/lingbot-va-base",
+          "revision": null,
+          "license": "apache-2.0",
+          "private": null,
+          "gated": null,
+          "path": null,
+          "filename": null,
+          "estimated_size_gb": null,
+          "requires_auth": false,
+          "notes": []
+        }
+      ],
+      "integration_status": "integrated",
+      "runner_target": null,
+      "pipeline_target": null,
+      "pipeline_binding": null,
+      "runtime_profile": null,
+      "demo_parity": {
+        "status": "not_applicable",
+        "demo_command": null,
+        "expected_artifacts": [],
+        "notes": []
+      },
+      "runner_parity": {
+        "status": "not_applicable",
+        "demo_command": null,
+        "expected_artifacts": [],
+        "notes": []
+      },
+      "min_vram_gb": null,
+      "requires_auth": false,
+      "notes": [
+        "WorldFoundry vendors LingBot-VA official wan_va runtime under worldfoundry/synthesis/action_generation/wan_va; base transformer CUDA forward passed on an 80GB CUDA GPU, staged configs use attn_mode=torch, and the server command can select local checkpoints."
+      ]
+    }
+  },
+  {
+    "model_id": "lingbot-va-posttrain-robotwin",
+    "parent_model": "lingbot-va",
+    "category": "catalog_variant",
+    "pipeline_targets": [],
+    "verification_status": "not_run",
+    "variant": {
+      "variant_id": "lingbot-va-posttrain-robotwin",
+      "task": "vla.policy_rollout",
+      "provider": null,
+      "checkpoint_refs": [
+        {
+          "hf_repo_id": "robbyant/lingbot-va-posttrain-robotwin",
+          "revision": null,
+          "license": "apache-2.0",
+          "private": null,
+          "gated": null,
+          "path": null,
+          "filename": null,
+          "estimated_size_gb": null,
+          "requires_auth": false,
+          "notes": []
+        }
+      ],
+      "integration_status": "integrated",
+      "runner_target": null,
+      "pipeline_target": null,
+      "pipeline_binding": null,
+      "runtime_profile": null,
+      "demo_parity": {
+        "status": "not_applicable",
+        "demo_command": null,
+        "expected_artifacts": [],
+        "notes": []
+      },
+      "runner_parity": {
+        "status": "not_applicable",
+        "demo_command": null,
+        "expected_artifacts": [],
+        "notes": []
+      },
+      "min_vram_gb": null,
+      "requires_auth": false,
+      "notes": [
+        "WorldFoundry vendors LingBot-VA official wan_va runtime under worldfoundry/synthesis/action_generation/wan_va; robotwin posttrain checkpoint tensor GPU probe passed on an 80GB CUDA GPU and the selected checkpoint can be passed to the vendored server."
+      ]
+    }
+  },
+  {
+    "model_id": "lingbot-va-posttrain-libero-long",
+    "parent_model": "lingbot-va",
+    "category": "catalog_variant",
+    "pipeline_targets": [],
+    "verification_status": "not_run",
+    "variant": {
+      "variant_id": "lingbot-va-posttrain-libero-long",
+      "task": "vla.policy_rollout",
+      "provider": null,
+      "checkpoint_refs": [
+        {
+          "hf_repo_id": "robbyant/lingbot-va-posttrain-libero-long",
+          "revision": null,
+          "license": "apache-2.0",
+          "private": null,
+          "gated": null,
+          "path": null,
+          "filename": null,
+          "estimated_size_gb": null,
+          "requires_auth": false,
+          "notes": []
+        }
+      ],
+      "integration_status": "integrated",
+      "runner_target": null,
+      "pipeline_target": null,
+      "pipeline_binding": null,
+      "runtime_profile": null,
+      "demo_parity": {
+        "status": "not_applicable",
+        "demo_command": null,
+        "expected_artifacts": [],
+        "notes": []
+      },
+      "runner_parity": {
+        "status": "not_applicable",
+        "demo_command": null,
+        "expected_artifacts": [],
+        "notes": []
+      },
+      "min_vram_gb": null,
+      "requires_auth": false,
+      "notes": [
+        "WorldFoundry vendors LingBot-VA official wan_va runtime under worldfoundry/synthesis/action_generation/wan_va; libero-long posttrain checkpoint tensor GPU probe passed on an 80GB CUDA GPU and server-init validation loaded the checkpoint to websocket listen."
+      ]
+    }
+  },
+  {
+    "model_id": "lingbot-vla-v2-6b",
+    "parent_model": "lingbot-vla-v2",
+    "category": "catalog_variant",
+    "pipeline_targets": [],
+    "verification_status": "not_run",
+    "variant": {
+      "variant_id": "lingbot-vla-v2-6b",
+      "task": "vla.action_prediction",
+      "provider": null,
+      "checkpoint_refs": [
+        {
+          "hf_repo_id": "robbyant/lingbot-vla-v2-6b",
+          "revision": null,
+          "license": "apache-2.0",
+          "private": null,
+          "gated": null,
+          "path": null,
+          "filename": null,
+          "estimated_size_gb": null,
+          "requires_auth": false,
+          "notes": []
+        }
+      ],
+      "integration_status": "integrated",
+      "runner_target": null,
+      "pipeline_target": null,
+      "pipeline_binding": null,
+      "runtime_profile": null,
+      "demo_parity": {
+        "status": "not_applicable",
+        "demo_command": null,
+        "expected_artifacts": [],
+        "notes": []
+      },
+      "runner_parity": {
+        "status": "not_applicable",
+        "demo_command": null,
+        "expected_artifacts": [],
+        "notes": []
+      },
+      "min_vram_gb": null,
+      "requires_auth": false,
+      "notes": []
+    }
+  },
+  {
+    "model_id": "lingbot-vla-4b",
+    "parent_model": "lingbot-vla",
+    "category": "catalog_variant",
+    "pipeline_targets": [],
+    "verification_status": "not_run",
+    "variant": {
+      "variant_id": "lingbot-vla-4b",
+      "task": "vla.pretraining",
+      "provider": null,
+      "checkpoint_refs": [
+        {
+          "hf_repo_id": "robbyant/lingbot-vla-4b",
+          "revision": "87712223fb463f0f6a6565f8feba64c35418e393",
+          "license": "apache-2.0",
+          "private": null,
+          "gated": null,
+          "path": null,
+          "filename": null,
+          "estimated_size_gb": null,
+          "requires_auth": false,
+          "notes": []
+        }
+      ],
+      "integration_status": "integrated",
+      "runner_target": null,
+      "pipeline_target": null,
+      "pipeline_binding": null,
+      "runtime_profile": null,
+      "demo_parity": {
+        "status": "not_applicable",
+        "demo_command": null,
+        "expected_artifacts": [],
+        "notes": []
+      },
+      "runner_parity": {
+        "status": "not_applicable",
+        "demo_command": null,
+        "expected_artifacts": [],
+        "notes": []
+      },
+      "min_vram_gb": null,
+      "requires_auth": false,
+      "notes": []
+    }
+  },
+  {
+    "model_id": "lingbot-vla-4b-posttrain-robotwin",
+    "parent_model": "lingbot-vla",
+    "category": "catalog_variant",
+    "pipeline_targets": [],
+    "verification_status": "not_run",
+    "variant": {
+      "variant_id": "lingbot-vla-4b-posttrain-robotwin",
+      "task": "vla.policy_rollout",
+      "provider": null,
+      "checkpoint_refs": [
+        {
+          "hf_repo_id": "robbyant/lingbot-vla-4b-posttrain-robotwin",
+          "revision": null,
+          "license": "apache-2.0",
+          "private": null,
+          "gated": null,
+          "path": null,
+          "filename": null,
+          "estimated_size_gb": null,
+          "requires_auth": false,
+          "notes": []
+        }
+      ],
+      "integration_status": "integrated",
+      "runner_target": null,
+      "pipeline_target": null,
+      "pipeline_binding": null,
+      "runtime_profile": null,
+      "demo_parity": {
+        "status": "not_applicable",
+        "demo_command": null,
+        "expected_artifacts": [],
+        "notes": []
+      },
+      "runner_parity": {
+        "status": "not_applicable",
+        "demo_command": null,
+        "expected_artifacts": [],
+        "notes": []
+      },
+      "min_vram_gb": null,
+      "requires_auth": false,
+      "notes": []
+    }
+  },
+  {
+    "model_id": "lingbot-vla-4b-depth-posttrain-robotwin",
+    "parent_model": "lingbot-vla",
+    "category": "catalog_variant",
+    "pipeline_targets": [],
+    "verification_status": "not_run",
+    "variant": {
+      "variant_id": "lingbot-vla-4b-depth-posttrain-robotwin",
+      "task": "vla.policy_rollout",
+      "provider": null,
+      "checkpoint_refs": [
+        {
+          "hf_repo_id": "robbyant/lingbot-vla-4b-depth-posttrain-robotwin",
+          "revision": null,
+          "license": "apache-2.0",
+          "private": null,
+          "gated": null,
+          "path": null,
+          "filename": null,
+          "estimated_size_gb": null,
+          "requires_auth": false,
+          "notes": []
+        }
+      ],
+      "integration_status": "integrated",
+      "runner_target": null,
+      "pipeline_target": null,
+      "pipeline_binding": null,
+      "runtime_profile": null,
+      "demo_parity": {
+        "status": "not_applicable",
+        "demo_command": null,
+        "expected_artifacts": [],
+        "notes": []
+      },
+      "runner_parity": {
+        "status": "not_applicable",
+        "demo_command": null,
+        "expected_artifacts": [],
+        "notes": []
+      },
+      "min_vram_gb": null,
+      "requires_auth": false,
+      "notes": []
+    }
+  },
+  {
+    "model_id": "perceptual-framesamp-modul",
+    "parent_model": "mme-vla",
+    "category": "catalog_variant",
+    "pipeline_targets": [],
+    "verification_status": "not_run",
+    "variant": {
+      "variant_id": "perceptual-framesamp-modul",
+      "task": "vla.policy_rollout",
+      "provider": null,
+      "checkpoint_refs": [
+        {
+          "hf_repo_id": "Yinpei/perceptual-framesamp-modul",
+          "revision": null,
+          "license": "apache-2.0",
+          "private": null,
+          "gated": null,
+          "path": null,
+          "filename": null,
+          "estimated_size_gb": null,
+          "requires_auth": false,
+          "notes": []
+        }
+      ],
+      "integration_status": "integrated",
+      "runner_target": null,
+      "pipeline_target": null,
+      "pipeline_binding": null,
+      "runtime_profile": null,
+      "demo_parity": {
+        "status": "not_applicable",
+        "demo_command": null,
+        "expected_artifacts": [],
+        "notes": []
+      },
+      "runner_parity": {
+        "status": "not_applicable",
+        "demo_command": null,
+        "expected_artifacts": [],
+        "notes": []
+      },
+      "min_vram_gb": null,
+      "requires_auth": false,
+      "notes": [
+        "Official QuickStart serves checkpoint subdir 79999 with scripts/serve_policy.py --policy.config=mme_vla_suite.",
+        "Runtime input keys are observation/state, observation/image, observation/wrist_image, prompt, and optional memory/subgoal tensors."
+      ]
+    }
+  },
+  {
+    "model_id": "molmoact2-droid",
+    "parent_model": "molmoact2",
+    "category": "catalog_variant",
+    "pipeline_targets": [],
+    "verification_status": "not_run",
+    "variant": {
+      "variant_id": "molmoact2-droid",
+      "task": "vla.policy_rollout",
+      "provider": null,
+      "checkpoint_refs": [
+        {
+          "hf_repo_id": "allenai/MolmoAct2-DROID",
+          "revision": null,
+          "license": "apache-2.0",
+          "private": null,
+          "gated": null,
+          "path": null,
+          "filename": null,
+          "estimated_size_gb": null,
+          "requires_auth": false,
+          "notes": []
+        }
+      ],
+      "integration_status": "integrated",
+      "runner_target": null,
+      "pipeline_target": null,
+      "pipeline_binding": null,
+      "runtime_profile": null,
+      "demo_parity": {
+        "status": "not_applicable",
+        "demo_command": null,
+        "expected_artifacts": [],
+        "notes": []
+      },
+      "runner_parity": {
+        "status": "not_applicable",
+        "demo_command": null,
+        "expected_artifacts": [],
+        "notes": []
+      },
+      "min_vram_gb": null,
+      "requires_auth": false,
+      "notes": [
+        "DROID defaults use external_cam, external_cam_2, wrist_cam, franka_droid normalization, and an 8-D state vector."
+      ]
+    }
+  },
+  {
+    "model_id": "molmoact2-bimanual-yam",
+    "parent_model": "molmoact2",
+    "category": "catalog_variant",
+    "pipeline_targets": [],
+    "verification_status": "not_run",
+    "variant": {
+      "variant_id": "molmoact2-bimanual-yam",
+      "task": "vla.policy_rollout",
+      "provider": null,
+      "checkpoint_refs": [
+        {
+          "hf_repo_id": "allenai/MolmoAct2-BimanualYAM",
+          "revision": null,
+          "license": "apache-2.0",
+          "private": null,
+          "gated": null,
+          "path": null,
+          "filename": null,
+          "estimated_size_gb": null,
+          "requires_auth": false,
+          "notes": []
+        }
+      ],
+      "integration_status": "integrated",
+      "runner_target": null,
+      "pipeline_target": null,
+      "pipeline_binding": null,
+      "runtime_profile": null,
+      "demo_parity": {
+        "status": "not_applicable",
+        "demo_command": null,
+        "expected_artifacts": [],
+        "notes": []
+      },
+      "runner_parity": {
+        "status": "not_applicable",
+        "demo_command": null,
+        "expected_artifacts": [],
+        "notes": []
+      },
+      "min_vram_gb": null,
+      "requires_auth": false,
+      "notes": [
+        "YAM defaults use top_cam, left_cam, right_cam, yam_dual_molmoact2 normalization, and a 14-D state vector."
+      ]
+    }
+  },
+  {
+    "model_id": "molmoact2-so100-101",
+    "parent_model": "molmoact2",
+    "category": "catalog_variant",
+    "pipeline_targets": [],
+    "verification_status": "not_run",
+    "variant": {
+      "variant_id": "molmoact2-so100-101",
+      "task": "vla.policy_rollout",
+      "provider": null,
+      "checkpoint_refs": [
+        {
+          "hf_repo_id": "allenai/MolmoAct2-SO100_101",
+          "revision": null,
+          "license": "apache-2.0",
+          "private": null,
+          "gated": null,
+          "path": null,
+          "filename": null,
+          "estimated_size_gb": null,
+          "requires_auth": false,
+          "notes": []
+        }
+      ],
+      "integration_status": "integrated",
+      "runner_target": null,
+      "pipeline_target": null,
+      "pipeline_binding": null,
+      "runtime_profile": null,
+      "demo_parity": {
+        "status": "not_applicable",
+        "demo_command": null,
+        "expected_artifacts": [],
+        "notes": []
+      },
+      "runner_parity": {
+        "status": "not_applicable",
+        "demo_command": null,
+        "expected_artifacts": [],
+        "notes": []
+      },
+      "min_vram_gb": null,
+      "requires_auth": false,
+      "notes": [
+        "SO100/SO101 defaults use top_cam, side_cam, so100_so101_molmoact2 normalization, and a 6-D state vector."
+      ]
+    }
+  },
+  {
+    "model_id": "molmoact2-libero",
+    "parent_model": "molmoact2",
+    "category": "catalog_variant",
+    "pipeline_targets": [],
+    "verification_status": "not_run",
+    "variant": {
+      "variant_id": "molmoact2-libero",
+      "task": "vla.policy_rollout",
+      "provider": null,
+      "checkpoint_refs": [
+        {
+          "hf_repo_id": "allenai/MolmoAct2-LIBERO",
+          "revision": null,
+          "license": "apache-2.0",
+          "private": null,
+          "gated": null,
+          "path": null,
+          "filename": null,
+          "estimated_size_gb": null,
+          "requires_auth": false,
+          "notes": []
+        }
+      ],
+      "integration_status": "integrated",
+      "runner_target": null,
+      "pipeline_target": null,
+      "pipeline_binding": null,
+      "runtime_profile": null,
+      "demo_parity": {
+        "status": "not_applicable",
+        "demo_command": null,
+        "expected_artifacts": [],
+        "notes": []
+      },
+      "runner_parity": {
+        "status": "not_applicable",
+        "demo_command": null,
+        "expected_artifacts": [],
+        "notes": []
+      },
+      "min_vram_gb": null,
+      "requires_auth": false,
+      "notes": [
+        "LIBERO checkpoint is cataloged, but the in-tree runtime defaults are currently validated with the agentview/wrist RGB schema and libero normalization."
+      ]
+    }
+  },
+  {
+    "model_id": "molmoact2-think-libero",
+    "parent_model": "molmoact2",
+    "category": "catalog_variant",
+    "pipeline_targets": [],
+    "verification_status": "not_run",
+    "variant": {
+      "variant_id": "molmoact2-think-libero",
+      "task": "vla.policy_rollout",
+      "provider": null,
+      "checkpoint_refs": [
+        {
+          "hf_repo_id": "allenai/MolmoAct2-Think-LIBERO",
+          "revision": null,
+          "license": "apache-2.0",
+          "private": null,
+          "gated": null,
+          "path": null,
+          "filename": null,
+          "estimated_size_gb": null,
+          "requires_auth": false,
+          "notes": []
+        }
+      ],
+      "integration_status": "integrated",
+      "runner_target": null,
+      "pipeline_target": null,
+      "pipeline_binding": null,
+      "runtime_profile": null,
+      "demo_parity": {
+        "status": "not_applicable",
+        "demo_command": null,
+        "expected_artifacts": [],
+        "notes": []
+      },
+      "runner_parity": {
+        "status": "not_applicable",
+        "demo_command": null,
+        "expected_artifacts": [],
+        "notes": []
+      },
+      "min_vram_gb": null,
+      "requires_auth": false,
+      "notes": [
+        "Think-LIBERO uses the LIBERO camera/state schema with depth reasoning enabled."
+      ]
+    }
+  },
+  {
+    "model_id": "molmobot-droid",
+    "parent_model": "molmobot",
+    "category": "catalog_variant",
+    "pipeline_targets": [],
+    "verification_status": "not_run",
+    "variant": {
+      "variant_id": "molmobot-droid",
+      "task": "vla.policy_rollout",
+      "provider": null,
+      "checkpoint_refs": [
+        {
+          "hf_repo_id": "allenai/MolmoBot-DROID",
+          "revision": null,
+          "license": "apache-2.0",
+          "private": null,
+          "gated": null,
+          "path": null,
+          "filename": null,
+          "estimated_size_gb": null,
+          "requires_auth": false,
+          "notes": []
+        }
+      ],
+      "integration_status": "integrated",
+      "runner_target": null,
+      "pipeline_target": null,
+      "pipeline_binding": null,
+      "runtime_profile": null,
+      "demo_parity": {
+        "status": "not_applicable",
+        "demo_command": null,
+        "expected_artifacts": [],
+        "notes": []
+      },
+      "runner_parity": {
+        "status": "not_applicable",
+        "demo_command": null,
+        "expected_artifacts": [],
+        "notes": []
+      },
+      "min_vram_gb": null,
+      "requires_auth": false,
+      "notes": [
+        "Official command serves MolmoBot-DROID with launch_scripts/serve_molmo.py --hf-repo allenai/MolmoBot-DROID."
+      ]
+    }
+  },
+  {
+    "model_id": "molmobot-pi0-droid",
+    "parent_model": "molmobot",
+    "category": "catalog_variant",
+    "pipeline_targets": [],
+    "verification_status": "not_run",
+    "variant": {
+      "variant_id": "molmobot-pi0-droid",
+      "task": "vla.policy_rollout",
+      "provider": null,
+      "checkpoint_refs": [
+        {
+          "hf_repo_id": "allenai/MolmoBot-Pi0-DROID",
+          "revision": null,
+          "license": "apache-2.0",
+          "private": null,
+          "gated": null,
+          "path": null,
+          "filename": null,
+          "estimated_size_gb": null,
+          "requires_auth": false,
+          "notes": []
+        }
+      ],
+      "integration_status": "planned",
+      "runner_target": null,
+      "pipeline_target": null,
+      "pipeline_binding": null,
+      "runtime_profile": null,
+      "demo_parity": {
+        "status": "not_applicable",
+        "demo_command": null,
+        "expected_artifacts": [],
+        "notes": []
+      },
+      "runner_parity": {
+        "status": "not_applicable",
+        "demo_command": null,
+        "expected_artifacts": [],
+        "notes": []
+      },
+      "min_vram_gb": null,
+      "requires_auth": false,
+      "notes": [
+        "Official demo uses PiJointPosPolicy with qpos arm/gripper, exo_camera_1, wrist_camera, and task prompt."
+      ]
+    }
+  },
+  {
+    "model_id": "octo-base-1.5",
+    "parent_model": "octo",
+    "category": "catalog_variant",
+    "pipeline_targets": [],
+    "verification_status": "not_run",
+    "variant": {
+      "variant_id": "octo-base-1.5",
+      "task": "vla.policy_rollout",
+      "provider": null,
+      "checkpoint_refs": [
+        {
+          "hf_repo_id": "rail-berkeley/octo-base-1.5",
+          "revision": "ee3c10e8edd6ce2e8b1e8744d3c6fba4097bed48",
+          "license": null,
+          "private": null,
+          "gated": null,
+          "path": null,
+          "filename": null,
+          "estimated_size_gb": null,
+          "requires_auth": false,
+          "notes": []
+        }
+      ],
+      "integration_status": "integrated",
+      "runner_target": null,
+      "pipeline_target": null,
+      "pipeline_binding": null,
+      "runtime_profile": null,
+      "demo_parity": {
+        "status": "not_applicable",
+        "demo_command": null,
+        "expected_artifacts": [],
+        "notes": []
+      },
+      "runner_parity": {
+        "status": "not_applicable",
+        "demo_command": null,
+        "expected_artifacts": [],
+        "notes": []
+      },
+      "min_vram_gb": null,
+      "requires_auth": false,
+      "notes": [
+        "Uses the same direct in-tree modeling package as the verified small variant; base checkpoint sampling remains pending a separate checkpoint-backed run."
+      ]
+    }
+  },
+  {
+    "model_id": "octo-small-1.5",
+    "parent_model": "octo",
+    "category": "catalog_variant",
+    "pipeline_targets": [],
+    "verification_status": "not_run",
+    "variant": {
+      "variant_id": "octo-small-1.5",
+      "task": "vla.policy_rollout",
+      "provider": null,
+      "checkpoint_refs": [
+        {
+          "hf_repo_id": "rail-berkeley/octo-small-1.5",
+          "revision": "dc9aa3019f764726c770814b27e4ab0fc6e32a58",
+          "license": null,
+          "private": null,
+          "gated": null,
+          "path": null,
+          "filename": null,
+          "estimated_size_gb": null,
+          "requires_auth": false,
+          "notes": []
+        }
+      ],
+      "integration_status": "integrated",
+      "runner_target": null,
+      "pipeline_target": null,
+      "pipeline_binding": null,
+      "runtime_profile": null,
+      "demo_parity": {
+        "status": "not_applicable",
+        "demo_command": null,
+        "expected_artifacts": [],
+        "notes": []
+      },
+      "runner_parity": {
+        "status": "not_applicable",
+        "demo_command": null,
+        "expected_artifacts": [],
+        "notes": []
+      },
+      "min_vram_gb": null,
+      "requires_auth": false,
+      "notes": [
+        "Direct in-tree GPU sample_actions verification passed with the staged official checkpoint and local T5 tokenizer assets."
+      ]
+    }
+  },
+  {
+    "model_id": "pi0-base",
+    "parent_model": "openpi",
+    "category": "catalog_variant",
+    "pipeline_targets": [],
+    "verification_status": "not_run",
+    "variant": {
+      "variant_id": "pi0-base",
+      "task": "vla.policy_rollout",
+      "provider": "official_gcs",
+      "checkpoint_refs": [],
+      "integration_status": "integrated",
+      "runner_target": null,
+      "pipeline_target": null,
+      "pipeline_binding": null,
+      "runtime_profile": null,
+      "demo_parity": {
+        "status": "not_applicable",
+        "demo_command": null,
+        "expected_artifacts": [],
+        "notes": []
+      },
+      "runner_parity": {
+        "status": "not_applicable",
+        "demo_command": null,
+        "expected_artifacts": [],
+        "notes": []
+      },
+      "min_vram_gb": null,
+      "requires_auth": false,
+      "notes": [
+        "The pi0 model graph, transforms, local checkpoint loader, and action sampler are in-tree; numerical parity remains gated only by staged checkpoint assets."
+      ]
+    }
+  },
+  {
+    "model_id": "pi05-libero",
+    "parent_model": "openpi",
+    "category": "catalog_variant",
+    "pipeline_targets": [],
+    "verification_status": "not_run",
+    "variant": {
+      "variant_id": "pi05-libero",
+      "task": "vla.policy_rollout",
+      "provider": "official_gcs",
+      "checkpoint_refs": [],
+      "integration_status": "integrated",
+      "runner_target": null,
+      "pipeline_target": null,
+      "pipeline_binding": null,
+      "runtime_profile": null,
+      "demo_parity": {
+        "status": "not_applicable",
+        "demo_command": null,
+        "expected_artifacts": [],
+        "notes": []
+      },
+      "runner_parity": {
+        "status": "not_applicable",
+        "demo_command": null,
+        "expected_artifacts": [],
+        "notes": []
+      },
+      "min_vram_gb": null,
+      "requires_auth": false,
+      "notes": [
+        "Checkpoint-backed policy inference is wired through the flattened in-tree runtime and rejects remote checkpoint URIs."
+      ]
+    }
+  },
+  {
+    "model_id": "pi0-fast-base",
+    "parent_model": "openpi",
+    "category": "catalog_variant",
+    "pipeline_targets": [],
+    "verification_status": "not_run",
+    "variant": {
+      "variant_id": "pi0-fast-base",
+      "task": "vla.policy_rollout",
+      "provider": "official_gcs",
+      "checkpoint_refs": [],
+      "integration_status": "planned",
+      "runner_target": null,
+      "pipeline_target": null,
+      "pipeline_binding": null,
+      "runtime_profile": null,
+      "demo_parity": {
+        "status": "not_applicable",
+        "demo_command": null,
+        "expected_artifacts": [],
+        "notes": []
+      },
+      "runner_parity": {
+        "status": "not_applicable",
+        "demo_command": null,
+        "expected_artifacts": [],
+        "notes": []
+      },
+      "min_vram_gb": null,
+      "requires_auth": false,
+      "notes": [
+        "pi0-FAST is tracked as a concrete OpenPI algorithm variant, not as a LeRobot policy-zoo variant."
+      ]
+    }
+  },
+  {
+    "model_id": "pi0-fast-droid",
+    "parent_model": "openpi",
+    "category": "catalog_variant",
+    "pipeline_targets": [],
+    "verification_status": "not_run",
+    "variant": {
+      "variant_id": "pi0-fast-droid",
+      "task": "vla.policy_rollout",
+      "provider": "official_gcs",
+      "checkpoint_refs": [],
+      "integration_status": "planned",
+      "runner_target": null,
+      "pipeline_target": null,
+      "pipeline_binding": null,
+      "runtime_profile": null,
+      "demo_parity": {
+        "status": "not_applicable",
+        "demo_command": null,
+        "expected_artifacts": [],
+        "notes": []
+      },
+      "runner_parity": {
+        "status": "not_applicable",
+        "demo_command": null,
+        "expected_artifacts": [],
+        "notes": []
+      },
+      "min_vram_gb": null,
+      "requires_auth": false,
+      "notes": [
+        "pi0-FAST DROID checkpoint is tracked as a concrete OpenPI algorithm variant."
+      ]
+    }
+  },
+  {
+    "model_id": "openvla-oft-libero-spatial",
+    "parent_model": "openvla-oft",
+    "category": "catalog_variant",
+    "pipeline_targets": [],
+    "verification_status": "not_run",
+    "variant": {
+      "variant_id": "openvla-oft-libero-spatial",
+      "task": "vla.policy_rollout",
+      "provider": null,
+      "checkpoint_refs": [
+        {
+          "hf_repo_id": "moojink/openvla-7b-oft-finetuned-libero-spatial",
+          "revision": null,
+          "license": "mit",
+          "private": null,
+          "gated": null,
+          "path": null,
+          "filename": null,
+          "estimated_size_gb": null,
+          "requires_auth": false,
+          "notes": []
+        }
+      ],
+      "integration_status": "integrated",
+      "runner_target": null,
+      "pipeline_target": null,
+      "pipeline_binding": null,
+      "runtime_profile": null,
+      "demo_parity": {
+        "status": "not_applicable",
+        "demo_command": null,
+        "expected_artifacts": [],
+        "notes": []
+      },
+      "runner_parity": {
+        "status": "not_applicable",
+        "demo_command": null,
+        "expected_artifacts": [],
+        "notes": []
+      },
+      "min_vram_gb": null,
+      "requires_auth": false,
+      "notes": [
+        "Official README demo loads sample_libero_spatial_observation.pkl with full_image, wrist_image, state, and task_description.",
+        "Default unnorm_key is libero_spatial_no_noops; output is a future action chunk."
+      ]
+    }
+  },
+  {
+    "model_id": "openvla-oft-libero-object",
+    "parent_model": "openvla-oft",
+    "category": "catalog_variant",
+    "pipeline_targets": [],
+    "verification_status": "not_run",
+    "variant": {
+      "variant_id": "openvla-oft-libero-object",
+      "task": "vla.policy_rollout",
+      "provider": null,
+      "checkpoint_refs": [
+        {
+          "hf_repo_id": "moojink/openvla-7b-oft-finetuned-libero-object",
+          "revision": null,
+          "license": "mit",
+          "private": null,
+          "gated": null,
+          "path": null,
+          "filename": null,
+          "estimated_size_gb": null,
+          "requires_auth": false,
+          "notes": []
+        }
+      ],
+      "integration_status": "integrated",
+      "runner_target": null,
+      "pipeline_target": null,
+      "pipeline_binding": null,
+      "runtime_profile": null,
+      "demo_parity": {
+        "status": "not_applicable",
+        "demo_command": null,
+        "expected_artifacts": [],
+        "notes": []
+      },
+      "runner_parity": {
+        "status": "not_applicable",
+        "demo_command": null,
+        "expected_artifacts": [],
+        "notes": []
+      },
+      "min_vram_gb": null,
+      "requires_auth": false,
+      "notes": [
+        "Uses the same official OpenVLA-OFT LIBERO input contract with task_suite_name=libero_object."
+      ]
+    }
+  },
+  {
+    "model_id": "openvla-oft-libero-goal",
+    "parent_model": "openvla-oft",
+    "category": "catalog_variant",
+    "pipeline_targets": [],
+    "verification_status": "not_run",
+    "variant": {
+      "variant_id": "openvla-oft-libero-goal",
+      "task": "vla.policy_rollout",
+      "provider": null,
+      "checkpoint_refs": [
+        {
+          "hf_repo_id": "moojink/openvla-7b-oft-finetuned-libero-goal",
+          "revision": null,
+          "license": "mit",
+          "private": null,
+          "gated": null,
+          "path": null,
+          "filename": null,
+          "estimated_size_gb": null,
+          "requires_auth": false,
+          "notes": []
+        }
+      ],
+      "integration_status": "integrated",
+      "runner_target": null,
+      "pipeline_target": null,
+      "pipeline_binding": null,
+      "runtime_profile": null,
+      "demo_parity": {
+        "status": "not_applicable",
+        "demo_command": null,
+        "expected_artifacts": [],
+        "notes": []
+      },
+      "runner_parity": {
+        "status": "not_applicable",
+        "demo_command": null,
+        "expected_artifacts": [],
+        "notes": []
+      },
+      "min_vram_gb": null,
+      "requires_auth": false,
+      "notes": [
+        "Uses the same official OpenVLA-OFT LIBERO input contract with task_suite_name=libero_goal."
+      ]
+    }
+  },
+  {
+    "model_id": "openvla-oft-libero-10",
+    "parent_model": "openvla-oft",
+    "category": "catalog_variant",
+    "pipeline_targets": [],
+    "verification_status": "not_run",
+    "variant": {
+      "variant_id": "openvla-oft-libero-10",
+      "task": "vla.policy_rollout",
+      "provider": null,
+      "checkpoint_refs": [
+        {
+          "hf_repo_id": "moojink/openvla-7b-oft-finetuned-libero-10",
+          "revision": null,
+          "license": "mit",
+          "private": null,
+          "gated": null,
+          "path": null,
+          "filename": null,
+          "estimated_size_gb": null,
+          "requires_auth": false,
+          "notes": []
+        }
+      ],
+      "integration_status": "integrated",
+      "runner_target": null,
+      "pipeline_target": null,
+      "pipeline_binding": null,
+      "runtime_profile": null,
+      "demo_parity": {
+        "status": "not_applicable",
+        "demo_command": null,
+        "expected_artifacts": [],
+        "notes": []
+      },
+      "runner_parity": {
+        "status": "not_applicable",
+        "demo_command": null,
+        "expected_artifacts": [],
+        "notes": []
+      },
+      "min_vram_gb": null,
+      "requires_auth": false,
+      "notes": [
+        "Uses the same official OpenVLA-OFT LIBERO input contract with task_suite_name=libero_10."
+      ]
+    }
+  },
+  {
+    "model_id": "openvla-oft-libero-spatial-object-goal-10",
+    "parent_model": "openvla-oft",
+    "category": "catalog_variant",
+    "pipeline_targets": [],
+    "verification_status": "not_run",
+    "variant": {
+      "variant_id": "openvla-oft-libero-spatial-object-goal-10",
+      "task": "vla.policy_rollout",
+      "provider": null,
+      "checkpoint_refs": [
+        {
+          "hf_repo_id": "moojink/openvla-7b-oft-finetuned-libero-spatial-object-goal-10",
+          "revision": null,
+          "license": "mit",
+          "private": null,
+          "gated": null,
+          "path": null,
+          "filename": null,
+          "estimated_size_gb": null,
+          "requires_auth": false,
+          "notes": []
+        }
+      ],
+      "integration_status": "integrated",
+      "runner_target": null,
+      "pipeline_target": null,
+      "pipeline_binding": null,
+      "runtime_profile": null,
+      "demo_parity": {
+        "status": "not_applicable",
+        "demo_command": null,
+        "expected_artifacts": [],
+        "notes": []
+      },
+      "runner_parity": {
+        "status": "not_applicable",
+        "demo_command": null,
+        "expected_artifacts": [],
+        "notes": []
+      },
+      "min_vram_gb": null,
+      "requires_auth": false,
+      "notes": [
+        "Combined LIBERO checkpoint; WorldFoundry runtime accepts explicit task_suite_name/unnorm_key per job."
+      ]
+    }
+  },
+  {
+    "model_id": "openvla-7b",
+    "parent_model": "openvla",
+    "category": "catalog_variant",
+    "pipeline_targets": [],
+    "verification_status": "not_run",
+    "variant": {
+      "variant_id": "openvla-7b",
+      "task": "vla.action_prediction",
+      "provider": null,
+      "checkpoint_refs": [
+        {
+          "hf_repo_id": "openvla/openvla-7b",
+          "revision": "47a0ec7fc4ec123775a391911046cf33cf9ed83f",
+          "license": "mit",
+          "private": null,
+          "gated": null,
+          "path": null,
+          "filename": null,
+          "estimated_size_gb": null,
+          "requires_auth": false,
+          "notes": []
+        }
+      ],
+      "integration_status": "integrated",
+      "runner_target": null,
+      "pipeline_target": null,
+      "pipeline_binding": null,
+      "runtime_profile": null,
+      "demo_parity": {
+        "status": "not_applicable",
+        "demo_command": null,
+        "expected_artifacts": [],
+        "notes": []
+      },
+      "runner_parity": {
+        "status": "verified",
+        "demo_command": null,
+        "expected_artifacts": [],
+        "notes": [
+          "Covered by the entry-level in-tree OpenVLA runner with unnorm_key=bridge_orig."
+        ]
+      },
+      "min_vram_gb": null,
+      "requires_auth": false,
+      "notes": [
+        "The local base checkpoint route uses unnorm_key=bridge_orig."
+      ]
+    }
+  },
+  {
+    "model_id": "openvla-libero-10",
+    "parent_model": "openvla",
+    "category": "catalog_variant",
+    "pipeline_targets": [],
+    "verification_status": "not_run",
+    "variant": {
+      "variant_id": "openvla-libero-10",
+      "task": "vla.policy_rollout",
+      "provider": null,
+      "checkpoint_refs": [
+        {
+          "hf_repo_id": "openvla/openvla-7b-finetuned-libero-10",
+          "revision": "80970322773f81baa2e22fe495d0487b93a05cfa",
+          "license": "mit",
+          "private": null,
+          "gated": null,
+          "path": null,
+          "filename": null,
+          "estimated_size_gb": null,
+          "requires_auth": false,
+          "notes": []
+        }
+      ],
+      "integration_status": "planned",
+      "runner_target": null,
+      "pipeline_target": null,
+      "pipeline_binding": null,
+      "runtime_profile": null,
+      "demo_parity": {
+        "status": "not_applicable",
+        "demo_command": null,
+        "expected_artifacts": [],
+        "notes": []
+      },
+      "runner_parity": {
+        "status": "not_applicable",
+        "demo_command": null,
+        "expected_artifacts": [],
+        "notes": []
+      },
+      "min_vram_gb": null,
+      "requires_auth": false,
+      "notes": [
+        "Covered by the entry-level in-tree OpenVLA runner when runtime parameter unnorm_key=libero_10 is provided. Variant-specific model-zoo parameters are not encoded yet."
+      ]
+    }
+  },
+  {
+    "model_id": "smolvla-libero",
+    "parent_model": "smolvla",
+    "category": "catalog_variant",
+    "pipeline_targets": [],
+    "verification_status": "not_run",
+    "variant": {
+      "variant_id": "smolvla-libero",
+      "task": "vla.policy_rollout",
+      "provider": null,
+      "checkpoint_refs": [
+        {
+          "hf_repo_id": "HuggingFaceVLA/smolvla_libero",
+          "revision": null,
+          "license": null,
+          "private": null,
+          "gated": null,
+          "path": null,
+          "filename": null,
+          "estimated_size_gb": null,
+          "requires_auth": false,
+          "notes": []
+        }
+      ],
+      "integration_status": "integrated",
+      "runner_target": null,
+      "pipeline_target": null,
+      "pipeline_binding": null,
+      "runtime_profile": null,
+      "demo_parity": {
+        "status": "not_applicable",
+        "demo_command": null,
+        "expected_artifacts": [],
+        "notes": []
+      },
+      "runner_parity": {
+        "status": "not_applicable",
+        "demo_command": null,
+        "expected_artifacts": [],
+        "notes": []
+      },
+      "min_vram_gb": null,
+      "requires_auth": false,
+      "notes": []
+    }
+  },
+  {
+    "model_id": "smolvla-base",
+    "parent_model": "smolvla",
+    "category": "catalog_variant",
+    "pipeline_targets": [],
+    "verification_status": "not_run",
+    "variant": {
+      "variant_id": "smolvla-base",
+      "task": "vla.pretraining",
+      "provider": null,
+      "checkpoint_refs": [
+        {
+          "hf_repo_id": "lerobot/smolvla_base",
+          "revision": null,
+          "license": null,
+          "private": null,
+          "gated": null,
+          "path": null,
+          "filename": null,
+          "estimated_size_gb": null,
+          "requires_auth": false,
+          "notes": []
+        }
+      ],
+      "integration_status": "planned",
+      "runner_target": null,
+      "pipeline_target": null,
+      "pipeline_binding": null,
+      "runtime_profile": null,
+      "demo_parity": {
+        "status": "not_applicable",
+        "demo_command": null,
+        "expected_artifacts": [],
+        "notes": []
+      },
+      "runner_parity": {
+        "status": "not_applicable",
+        "demo_command": null,
+        "expected_artifacts": [],
+        "notes": []
+      },
+      "min_vram_gb": null,
+      "requires_auth": false,
+      "notes": []
+    }
+  },
+  {
+    "model_id": "spatial-forcing-libero-spatial",
+    "parent_model": "spatial-forcing",
+    "category": "catalog_variant",
+    "pipeline_targets": [],
+    "verification_status": "not_run",
+    "variant": {
+      "variant_id": "spatial-forcing-libero-spatial",
+      "task": "vla.policy_rollout",
+      "provider": null,
+      "checkpoint_refs": [
+        {
+          "hf_repo_id": "haofuly/spatial-forcing-7b-finetuned-libero-spatial",
+          "revision": "58718e3948c78ae14a10514e162be775dee1bb6f",
+          "license": "apache-2.0",
+          "private": null,
+          "gated": null,
+          "path": null,
+          "filename": null,
+          "estimated_size_gb": null,
+          "requires_auth": false,
+          "notes": []
+        }
+      ],
+      "integration_status": "integrated",
+      "runner_target": null,
+      "pipeline_target": null,
+      "pipeline_binding": null,
+      "runtime_profile": null,
+      "demo_parity": {
+        "status": "not_applicable",
+        "demo_command": null,
+        "expected_artifacts": [],
+        "notes": []
+      },
+      "runner_parity": {
+        "status": "not_applicable",
+        "demo_command": null,
+        "expected_artifacts": [],
+        "notes": []
+      },
+      "min_vram_gb": null,
+      "requires_auth": false,
+      "notes": [
+        "Uses unnorm_key libero_spatial_no_noops and task_suite_name libero_spatial."
+      ]
+    }
+  },
+  {
+    "model_id": "spatial-forcing-libero-object",
+    "parent_model": "spatial-forcing",
+    "category": "catalog_variant",
+    "pipeline_targets": [],
+    "verification_status": "not_run",
+    "variant": {
+      "variant_id": "spatial-forcing-libero-object",
+      "task": "vla.policy_rollout",
+      "provider": null,
+      "checkpoint_refs": [
+        {
+          "hf_repo_id": "haofuly/spatial-forcing-7b-finetuned-libero-object",
+          "revision": "7dae9150e87b05ee02d867d4e0f36343a46a8d77",
+          "license": "apache-2.0",
+          "private": null,
+          "gated": null,
+          "path": null,
+          "filename": null,
+          "estimated_size_gb": null,
+          "requires_auth": false,
+          "notes": []
+        }
+      ],
+      "integration_status": "integrated",
+      "runner_target": null,
+      "pipeline_target": null,
+      "pipeline_binding": null,
+      "runtime_profile": null,
+      "demo_parity": {
+        "status": "not_applicable",
+        "demo_command": null,
+        "expected_artifacts": [],
+        "notes": []
+      },
+      "runner_parity": {
+        "status": "not_applicable",
+        "demo_command": null,
+        "expected_artifacts": [],
+        "notes": []
+      },
+      "min_vram_gb": null,
+      "requires_auth": false,
+      "notes": [
+        "Uses unnorm_key libero_object_no_noops and task_suite_name libero_object."
+      ]
+    }
+  },
+  {
+    "model_id": "spatial-forcing-libero-goal",
+    "parent_model": "spatial-forcing",
+    "category": "catalog_variant",
+    "pipeline_targets": [],
+    "verification_status": "not_run",
+    "variant": {
+      "variant_id": "spatial-forcing-libero-goal",
+      "task": "vla.policy_rollout",
+      "provider": null,
+      "checkpoint_refs": [
+        {
+          "hf_repo_id": "haofuly/spatial-forcing-7b-finetuned-libero-goal",
+          "revision": "c0093e70524ad781ae6fe644618f501af32a184d",
+          "license": "apache-2.0",
+          "private": null,
+          "gated": null,
+          "path": null,
+          "filename": null,
+          "estimated_size_gb": null,
+          "requires_auth": false,
+          "notes": []
+        }
+      ],
+      "integration_status": "integrated",
+      "runner_target": null,
+      "pipeline_target": null,
+      "pipeline_binding": null,
+      "runtime_profile": null,
+      "demo_parity": {
+        "status": "not_applicable",
+        "demo_command": null,
+        "expected_artifacts": [],
+        "notes": []
+      },
+      "runner_parity": {
+        "status": "not_applicable",
+        "demo_command": null,
+        "expected_artifacts": [],
+        "notes": []
+      },
+      "min_vram_gb": null,
+      "requires_auth": false,
+      "notes": [
+        "Uses unnorm_key libero_goal_no_noops and task_suite_name libero_goal."
+      ]
+    }
+  },
+  {
+    "model_id": "spatial-forcing-libero-10",
+    "parent_model": "spatial-forcing",
+    "category": "catalog_variant",
+    "pipeline_targets": [],
+    "verification_status": "not_run",
+    "variant": {
+      "variant_id": "spatial-forcing-libero-10",
+      "task": "vla.policy_rollout",
+      "provider": null,
+      "checkpoint_refs": [
+        {
+          "hf_repo_id": "haofuly/spatial-forcing-7b-finetuned-libero-10",
+          "revision": "737f7e02dec79d8a3a26ab44738926183aed059e",
+          "license": "apache-2.0",
+          "private": null,
+          "gated": null,
+          "path": null,
+          "filename": null,
+          "estimated_size_gb": null,
+          "requires_auth": false,
+          "notes": []
+        }
+      ],
+      "integration_status": "integrated",
+      "runner_target": null,
+      "pipeline_target": null,
+      "pipeline_binding": null,
+      "runtime_profile": null,
+      "demo_parity": {
+        "status": "not_applicable",
+        "demo_command": null,
+        "expected_artifacts": [],
+        "notes": []
+      },
+      "runner_parity": {
+        "status": "not_applicable",
+        "demo_command": null,
+        "expected_artifacts": [],
+        "notes": []
+      },
+      "min_vram_gb": null,
+      "requires_auth": false,
+      "notes": [
+        "Uses unnorm_key libero_10_no_noops and task_suite_name libero_10."
+      ]
+    }
+  },
+  {
+    "model_id": "starvla-qwen3-vl-oft-libero-4in1",
+    "parent_model": "starvla",
+    "category": "catalog_variant",
+    "pipeline_targets": [],
+    "verification_status": "not_run",
+    "variant": {
+      "variant_id": "starvla-qwen3-vl-oft-libero-4in1",
+      "task": "vla.policy_rollout",
+      "provider": null,
+      "checkpoint_refs": [
+        {
+          "hf_repo_id": "StarVLA/Qwen3-VL-OFT-LIBERO-4in1",
+          "revision": "1947454be8c0f4de315f4cbde96b874819a6dab3",
+          "license": null,
+          "private": null,
+          "gated": null,
+          "path": null,
+          "filename": null,
+          "estimated_size_gb": null,
+          "requires_auth": false,
+          "notes": []
+        }
+      ],
+      "integration_status": "integrated",
+      "runner_target": null,
+      "pipeline_target": null,
+      "pipeline_binding": null,
+      "runtime_profile": null,
+      "demo_parity": {
+        "status": "not_applicable",
+        "demo_command": null,
+        "expected_artifacts": [],
+        "notes": []
+      },
+      "runner_parity": {
+        "status": "not_applicable",
+        "demo_command": null,
+        "expected_artifacts": [],
+        "notes": []
+      },
+      "min_vram_gb": null,
+      "requires_auth": false,
+      "notes": [
+        "Public WorldFoundry pipeline emitted checkpoint-backed StarVLA QwenOFT LIBERO action_trace with checkpoint-statistics action unnormalization on an A100-SXM4-80GB through the in-tree runtime."
+      ]
+    }
+  },
+  {
+    "model_id": "starvla-wm4a-wan2d2-oft-libero-4in1",
+    "parent_model": "starvla",
+    "category": "catalog_variant",
+    "pipeline_targets": [],
+    "verification_status": "not_run",
+    "variant": {
+      "variant_id": "starvla-wm4a-wan2d2-oft-libero-4in1",
+      "task": "wam.world_action_modeling",
+      "provider": null,
+      "checkpoint_refs": [
+        {
+          "hf_repo_id": "StarVLA/WM4A-Wan2d2-OFT-LIBERO-4in1",
+          "revision": "e431aa1d059fd61864db707f3c178673af01c9d4",
+          "license": "mit",
+          "private": null,
+          "gated": null,
+          "path": null,
+          "filename": null,
+          "estimated_size_gb": null,
+          "requires_auth": false,
+          "notes": []
+        }
+      ],
+      "integration_status": "planned",
+      "runner_target": null,
+      "pipeline_target": null,
+      "pipeline_binding": null,
+      "runtime_profile": null,
+      "demo_parity": {
+        "status": "not_applicable",
+        "demo_command": null,
+        "expected_artifacts": [],
+        "notes": []
+      },
+      "runner_parity": {
+        "status": "not_applicable",
+        "demo_command": null,
+        "expected_artifacts": [],
+        "notes": []
+      },
+      "min_vram_gb": null,
+      "requires_auth": false,
+      "notes": [
+        "WM4A checkpoint tensor GPU probe and in-tree source import passed, but the WM4A world-action runtime has not been promoted by the QwenOFT policy validation."
+      ]
+    }
+  },
+  {
+    "model_id": "vlanext-libero",
+    "parent_model": "vlanext",
+    "category": "catalog_variant",
+    "pipeline_targets": [],
+    "verification_status": "not_run",
+    "variant": {
+      "variant_id": "vlanext-libero",
+      "task": "vla.policy_rollout",
+      "provider": null,
+      "checkpoint_refs": [
+        {
+          "hf_repo_id": "DravenALG/VLANeXt",
+          "revision": null,
+          "license": "s-lab-1.0",
+          "private": null,
+          "gated": null,
+          "path": null,
+          "filename": null,
+          "estimated_size_gb": null,
+          "requires_auth": false,
+          "notes": []
+        }
+      ],
+      "integration_status": "integrated",
+      "runner_target": null,
+      "pipeline_target": null,
+      "pipeline_binding": null,
+      "runtime_profile": null,
+      "demo_parity": {
+        "status": "not_applicable",
+        "demo_command": null,
+        "expected_artifacts": [],
+        "notes": []
+      },
+      "runner_parity": {
+        "status": "not_applicable",
+        "demo_command": null,
+        "expected_artifacts": [],
+        "notes": []
+      },
+      "min_vram_gb": null,
+      "requires_auth": false,
+      "notes": [
+        "Official public checkpoints are VLANeXt_libero_spatial.pt, VLANeXt_libero_object.pt, VLANeXt_libero_goal.pt, and VLANeXt_libero_10.pt.",
+        "Demo observation includes full_image, optional full_image_wrist, image/state/action history, and task_description."
+      ]
+    }
+  },
+  {
+    "model_id": "x-wam-robocasa-sft",
+    "parent_model": "x-wam",
+    "category": "catalog_variant",
+    "pipeline_targets": [],
+    "verification_status": "not_run",
+    "variant": {
+      "variant_id": "x-wam-robocasa-sft",
+      "task": "wam.world_action_modeling",
+      "provider": null,
+      "checkpoint_refs": [
+        {
+          "hf_repo_id": "sharinka0715/X-WAM-checkpoints",
+          "revision": "bb6fd1643cfa8bdc751612a7ace0bd8062a8917a",
+          "license": "apache-2.0",
+          "private": null,
+          "gated": null,
+          "path": null,
+          "filename": null,
+          "estimated_size_gb": null,
+          "requires_auth": false,
+          "notes": []
+        }
+      ],
+      "integration_status": "integrated",
+      "runner_target": null,
+      "pipeline_target": null,
+      "pipeline_binding": null,
+      "runtime_profile": null,
+      "demo_parity": {
+        "status": "not_applicable",
+        "demo_command": null,
+        "expected_artifacts": [],
+        "notes": []
+      },
+      "runner_parity": {
+        "status": "not_applicable",
+        "demo_command": null,
+        "expected_artifacts": [],
+        "notes": []
+      },
+      "min_vram_gb": null,
+      "requires_auth": false,
+      "notes": [
+        "Three RoboCasa RGB views plus an 8-D single-arm state produce a 32-by-7 relative end-effector action chunk."
+      ]
+    }
+  },
+  {
+    "model_id": "x-wam-robotwin-sft",
+    "parent_model": "x-wam",
+    "category": "catalog_variant",
+    "pipeline_targets": [],
+    "verification_status": "not_run",
+    "variant": {
+      "variant_id": "x-wam-robotwin-sft",
+      "task": "wam.world_action_modeling",
+      "provider": null,
+      "checkpoint_refs": [
+        {
+          "hf_repo_id": "sharinka0715/X-WAM-checkpoints",
+          "revision": "bb6fd1643cfa8bdc751612a7ace0bd8062a8917a",
+          "license": "apache-2.0",
+          "private": null,
+          "gated": null,
+          "path": null,
+          "filename": null,
+          "estimated_size_gb": null,
+          "requires_auth": false,
+          "notes": []
+        }
+      ],
+      "integration_status": "integrated",
+      "runner_target": null,
+      "pipeline_target": null,
+      "pipeline_binding": null,
+      "runtime_profile": null,
+      "demo_parity": {
+        "status": "not_applicable",
+        "demo_command": null,
+        "expected_artifacts": [],
+        "notes": []
+      },
+      "runner_parity": {
+        "status": "not_applicable",
+        "demo_command": null,
+        "expected_artifacts": [],
+        "notes": []
+      },
+      "min_vram_gb": null,
+      "requires_auth": false,
+      "notes": [
+        "Three RoboTwin RGB views plus a 16-D bimanual state produce a 32-by-14 relative end-effector action chunk."
+      ]
+    }
+  },
+  {
+    "model_id": "x-wam-pretrained",
+    "parent_model": "x-wam",
+    "category": "catalog_variant",
+    "pipeline_targets": [],
+    "verification_status": "not_run",
+    "variant": {
+      "variant_id": "x-wam-pretrained",
+      "task": "wam.post_training_base",
+      "provider": null,
+      "checkpoint_refs": [
+        {
+          "hf_repo_id": "sharinka0715/X-WAM-checkpoints",
+          "revision": "bb6fd1643cfa8bdc751612a7ace0bd8062a8917a",
+          "license": "apache-2.0",
+          "private": null,
+          "gated": null,
+          "path": null,
+          "filename": null,
+          "estimated_size_gb": null,
+          "requires_auth": false,
+          "notes": []
+        }
+      ],
+      "integration_status": "planned",
+      "runner_target": null,
+      "pipeline_target": null,
+      "pipeline_binding": null,
+      "runtime_profile": null,
+      "demo_parity": {
+        "status": "not_applicable",
+        "demo_command": null,
+        "expected_artifacts": [],
+        "notes": []
+      },
+      "runner_parity": {
+        "status": "not_applicable",
+        "demo_command": null,
+        "expected_artifacts": [],
+        "notes": []
+      },
+      "min_vram_gb": null,
+      "requires_auth": false,
+      "notes": [
+        "The pretrained subtree has no deployment quantile statistics, so it is not exposed as a runnable policy variant."
+      ]
+    }
+  },
+  {
+    "model_id": "xiaomi-robotics-0-libero",
+    "parent_model": "xiaomi-robotics-0",
+    "category": "catalog_variant",
+    "pipeline_targets": [],
+    "verification_status": "not_run",
+    "variant": {
+      "variant_id": "xiaomi-robotics-0-libero",
+      "task": "vla.policy_rollout",
+      "provider": null,
+      "checkpoint_refs": [
+        {
+          "hf_repo_id": "XiaomiRobotics/Xiaomi-Robotics-0-LIBERO",
+          "revision": "fc04bbdcc53e498695cfad95d1199091396ef55b",
+          "license": "apache-2.0",
+          "private": null,
+          "gated": null,
+          "path": null,
+          "filename": null,
+          "estimated_size_gb": null,
+          "requires_auth": false,
+          "notes": []
+        }
+      ],
+      "integration_status": "integrated",
+      "runner_target": null,
+      "pipeline_target": null,
+      "pipeline_binding": null,
+      "runtime_profile": null,
+      "demo_parity": {
+        "status": "not_applicable",
+        "demo_command": null,
+        "expected_artifacts": [],
+        "notes": []
+      },
+      "runner_parity": {
+        "status": "not_applicable",
+        "demo_command": null,
+        "expected_artifacts": [],
+        "notes": []
+      },
+      "min_vram_gb": null,
+      "requires_auth": false,
+      "notes": [
+        "Uses robot_type libero_all with base and left-wrist RGB views and emits a 10-step action chunk."
+      ]
+    }
+  },
+  {
+    "model_id": "xiaomi-robotics-0-calvin-abcd",
+    "parent_model": "xiaomi-robotics-0",
+    "category": "catalog_variant",
+    "pipeline_targets": [],
+    "verification_status": "not_run",
+    "variant": {
+      "variant_id": "xiaomi-robotics-0-calvin-abcd",
+      "task": "vla.policy_rollout",
+      "provider": null,
+      "checkpoint_refs": [
+        {
+          "hf_repo_id": "XiaomiRobotics/Xiaomi-Robotics-0-Calvin-ABCD_D",
+          "revision": "1161227fbcde104c7333ccf684695d3612df2d26",
+          "license": "apache-2.0",
+          "private": null,
+          "gated": null,
+          "path": null,
+          "filename": null,
+          "estimated_size_gb": null,
+          "requires_auth": false,
+          "notes": []
+        }
+      ],
+      "integration_status": "integrated",
+      "runner_target": null,
+      "pipeline_target": null,
+      "pipeline_binding": null,
+      "runtime_profile": null,
+      "demo_parity": {
+        "status": "not_applicable",
+        "demo_command": null,
+        "expected_artifacts": [],
+        "notes": []
+      },
+      "runner_parity": {
+        "status": "not_applicable",
+        "demo_command": null,
+        "expected_artifacts": [],
+        "notes": []
+      },
+      "min_vram_gb": null,
+      "requires_auth": false,
+      "notes": [
+        "Uses robot_type calvin_abcd_orig with base and left-wrist RGB views and emits a 10-step action chunk."
+      ]
+    }
+  },
+  {
+    "model_id": "xiaomi-robotics-0-calvin-abc",
+    "parent_model": "xiaomi-robotics-0",
+    "category": "catalog_variant",
+    "pipeline_targets": [],
+    "verification_status": "not_run",
+    "variant": {
+      "variant_id": "xiaomi-robotics-0-calvin-abc",
+      "task": "vla.policy_rollout",
+      "provider": null,
+      "checkpoint_refs": [
+        {
+          "hf_repo_id": "XiaomiRobotics/Xiaomi-Robotics-0-Calvin-ABC_D",
+          "revision": "3e64bfa35ab26c00cb5572e3f174a2421a85577d",
+          "license": "apache-2.0",
+          "private": null,
+          "gated": null,
+          "path": null,
+          "filename": null,
+          "estimated_size_gb": null,
+          "requires_auth": false,
+          "notes": []
+        }
+      ],
+      "integration_status": "integrated",
+      "runner_target": null,
+      "pipeline_target": null,
+      "pipeline_binding": null,
+      "runtime_profile": null,
+      "demo_parity": {
+        "status": "not_applicable",
+        "demo_command": null,
+        "expected_artifacts": [],
+        "notes": []
+      },
+      "runner_parity": {
+        "status": "not_applicable",
+        "demo_command": null,
+        "expected_artifacts": [],
+        "notes": []
+      },
+      "min_vram_gb": null,
+      "requires_auth": false,
+      "notes": [
+        "Uses robot_type calvin_abc_orig with base and left-wrist RGB views and emits a 10-step action chunk."
+      ]
+    }
+  },
+  {
+    "model_id": "xiaomi-robotics-0-simplerenv-google",
+    "parent_model": "xiaomi-robotics-0",
+    "category": "catalog_variant",
+    "pipeline_targets": [],
+    "verification_status": "not_run",
+    "variant": {
+      "variant_id": "xiaomi-robotics-0-simplerenv-google",
+      "task": "vla.policy_rollout",
+      "provider": null,
+      "checkpoint_refs": [
+        {
+          "hf_repo_id": "XiaomiRobotics/Xiaomi-Robotics-0-SimplerEnv-Google-Robot",
+          "revision": "3b6b1bf65cf9ffbf0865a9abc0b66ee338e0bee6",
+          "license": "apache-2.0",
+          "private": null,
+          "gated": null,
+          "path": null,
+          "filename": null,
+          "estimated_size_gb": null,
+          "requires_auth": false,
+          "notes": []
+        }
+      ],
+      "integration_status": "integrated",
+      "runner_target": null,
+      "pipeline_target": null,
+      "pipeline_binding": null,
+      "runtime_profile": null,
+      "demo_parity": {
+        "status": "not_applicable",
+        "demo_command": null,
+        "expected_artifacts": [],
+        "notes": []
+      },
+      "runner_parity": {
+        "status": "not_applicable",
+        "demo_command": null,
+        "expected_artifacts": [],
+        "notes": []
+      },
+      "min_vram_gb": null,
+      "requires_auth": false,
+      "notes": [
+        "Uses robot_type fractal_delta with one ego RGB view and emits a 4-step action chunk."
+      ]
+    }
+  },
+  {
+    "model_id": "xiaomi-robotics-0-simplerenv-widowx",
+    "parent_model": "xiaomi-robotics-0",
+    "category": "catalog_variant",
+    "pipeline_targets": [],
+    "verification_status": "not_run",
+    "variant": {
+      "variant_id": "xiaomi-robotics-0-simplerenv-widowx",
+      "task": "vla.policy_rollout",
+      "provider": null,
+      "checkpoint_refs": [
+        {
+          "hf_repo_id": "XiaomiRobotics/Xiaomi-Robotics-0-SimplerEnv-WidowX",
+          "revision": "3f25b13ea6007d44466e6ea9d2ffe460876142c5",
+          "license": "apache-2.0",
+          "private": null,
+          "gated": null,
+          "path": null,
+          "filename": null,
+          "estimated_size_gb": null,
+          "requires_auth": false,
+          "notes": []
+        }
+      ],
+      "integration_status": "integrated",
+      "runner_target": null,
+      "pipeline_target": null,
+      "pipeline_binding": null,
+      "runtime_profile": null,
+      "demo_parity": {
+        "status": "not_applicable",
+        "demo_command": null,
+        "expected_artifacts": [],
+        "notes": []
+      },
+      "runner_parity": {
+        "status": "not_applicable",
+        "demo_command": null,
+        "expected_artifacts": [],
+        "notes": []
+      },
+      "min_vram_gb": null,
+      "requires_auth": false,
+      "notes": [
+        "Uses robot_type bridge_delta with one base RGB view and emits a 4-step action chunk."
+      ]
+    }
+  },
+  {
+    "model_id": "xiaomi-robotics-0-pretrain",
+    "parent_model": "xiaomi-robotics-0",
+    "category": "catalog_variant",
+    "pipeline_targets": [],
+    "verification_status": "not_run",
+    "variant": {
+      "variant_id": "xiaomi-robotics-0-pretrain",
+      "task": "vla.action_prediction",
+      "provider": null,
+      "checkpoint_refs": [
+        {
+          "hf_repo_id": "XiaomiRobotics/Xiaomi-Robotics-0-Pretrain",
+          "revision": "50276c277f7d5c9b1a52fcecdea79045568c6916",
+          "license": "apache-2.0",
+          "private": null,
+          "gated": null,
+          "path": null,
+          "filename": null,
+          "estimated_size_gb": null,
+          "requires_auth": false,
+          "notes": []
+        }
+      ],
+      "integration_status": "integrated",
+      "runner_target": null,
+      "pipeline_target": null,
+      "pipeline_binding": null,
+      "runtime_profile": null,
+      "demo_parity": {
+        "status": "not_applicable",
+        "demo_command": null,
+        "expected_artifacts": [],
+        "notes": []
+      },
+      "runner_parity": {
+        "status": "not_applicable",
+        "demo_command": null,
+        "expected_artifacts": [],
+        "notes": []
+      },
+      "min_vram_gb": null,
+      "requires_auth": false,
+      "notes": [
+        "Base weights require explicit robot_type, camera_keys, and view_labels plus a matching embodiment state schema; their action horizons are 15 or 30 depending on robot_type."
+      ]
+    }
+  },
+  {
+    "model_id": "cosmos-predict-2.5-2b",
+    "parent_model": "cosmos-predict-2.5",
+    "category": "catalog_variant",
+    "pipeline_targets": [],
+    "verification_status": "not_run",
+    "variant": {
+      "variant_id": "cosmos-predict-2.5-2b",
+      "task": "world-generation",
+      "provider": "official_repo",
+      "checkpoint_refs": [
+        {
+          "hf_repo_id": "nvidia/Cosmos-Predict2.5-2B",
+          "revision": "f176dc95b4a70f53ce01c4b302851595e7322b00",
+          "license": "other:nvidia-open-model-license",
+          "private": false,
+          "gated": "auto",
+          "path": null,
+          "filename": "base/post-trained/81edfebe-bd6a-4039-8c1d-737df1a790bf_ema_bf16.pt",
+          "estimated_size_gb": null,
+          "requires_auth": true,
+          "notes": []
+        }
+      ],
+      "integration_status": "integrated",
+      "runner_target": null,
+      "pipeline_target": null,
+      "pipeline_binding": null,
+      "runtime_profile": "cosmos-predict2.5-2b",
+      "demo_parity": {
+        "status": "verified",
+        "demo_command": null,
+        "expected_artifacts": [],
+        "notes": [
+          "The full sequence preserves the nighttime bus terminal, bus, road, lighting, and background geometry with subtle continuous motion."
+        ]
+      },
+      "runner_parity": {
+        "status": "verified",
+        "demo_command": null,
+        "expected_artifacts": [],
+        "notes": [
+          "The native 2B route completed a 35-step, 93-frame, 1280x704 checkpoint-backed Studio/API run with all frames decodable and unique."
+        ]
+      },
+      "min_vram_gb": null,
+      "requires_auth": true,
+      "notes": []
+    }
+  },
+  {
+    "model_id": "cosmos-predict-2.5-14b",
+    "parent_model": "cosmos-predict-2.5",
+    "category": "catalog_variant",
+    "pipeline_targets": [],
+    "verification_status": "not_run",
+    "variant": {
+      "variant_id": "cosmos-predict-2.5-14b",
+      "task": "world-generation",
+      "provider": "official_repo",
+      "checkpoint_refs": [
+        {
+          "hf_repo_id": "nvidia/Cosmos-Predict2.5-14B",
+          "revision": "71ebf3e8af30ecfe440bf0481115975fcc052b46",
+          "license": "other:nvidia-open-model-license",
+          "private": false,
+          "gated": false,
+          "path": null,
+          "filename": "base/post-trained/e21d2a49-4747-44c8-ba44-9f6f9243715f_ema_bf16.pt",
+          "estimated_size_gb": null,
+          "requires_auth": false,
+          "notes": []
+        }
+      ],
+      "integration_status": "integrated",
+      "runner_target": null,
+      "pipeline_target": null,
+      "pipeline_binding": null,
+      "runtime_profile": "cosmos-predict2.5-14b",
+      "demo_parity": {
+        "status": "pending",
+        "demo_command": null,
+        "expected_artifacts": [],
+        "notes": []
+      },
+      "runner_parity": {
+        "status": "pending",
+        "demo_command": null,
+        "expected_artifacts": [],
+        "notes": [
+          "blocked: Native checkpoint structure passes; high-memory GPU output parity and an official demo artifact remain pending."
+        ]
+      },
+      "min_vram_gb": null,
+      "requires_auth": false,
+      "notes": []
+    }
+  },
+  {
+    "model_id": "cosmos-transfer-2.5-2b",
+    "parent_model": "cosmos-transfer-2.5",
+    "category": "catalog_variant",
+    "pipeline_targets": [],
+    "verification_status": "not_run",
+    "variant": {
+      "variant_id": "cosmos-transfer-2.5-2b",
+      "task": "controlled-video",
+      "provider": "official_repo",
+      "checkpoint_refs": [
+        {
+          "hf_repo_id": "nvidia/Cosmos-Transfer2.5-2B",
+          "revision": "bd963eabcfc2d61dc4ea365cacf41d45ac480aa5",
+          "license": "other:nvidia-open-model-license",
+          "private": false,
+          "gated": "auto",
+          "path": null,
+          "filename": "general/edge/ecd0ba00-d598-4f94-aa09-e8627899c431_ema_bf16.pt",
+          "estimated_size_gb": null,
+          "requires_auth": true,
+          "notes": []
+        }
+      ],
+      "integration_status": "integrated",
+      "runner_target": null,
+      "pipeline_target": null,
+      "pipeline_binding": null,
+      "runtime_profile": "cosmos-transfer2.5-2b-controlled-video",
+      "demo_parity": {
+        "status": "verified",
+        "demo_command": null,
+        "expected_artifacts": [],
+        "notes": [
+          "The full decoded sequence preserves the road, guardrails, motorcycle, mirrors, and rider geometry with coherent motion and no repeated frames."
+        ]
+      },
+      "runner_parity": {
+        "status": "verified",
+        "demo_command": null,
+        "expected_artifacts": [],
+        "notes": [
+          "The native edge-control route completed a 35-step, 93-frame, 1280x704 checkpoint-backed run using the repository motorcycle control-video fixture."
+        ]
+      },
+      "min_vram_gb": null,
+      "requires_auth": true,
+      "notes": []
+    }
+  },
+  {
+    "model_id": "diamond-atari",
+    "parent_model": "diamond",
+    "category": "catalog_variant",
+    "pipeline_targets": [
+      "worldfoundry.pipelines.world_model.pipeline_runtime_manifest:DIAMONDPipeline"
+    ],
+    "verification_status": "not_run",
+    "variant": {
+      "variant_id": "diamond-atari",
+      "task": "atari-world-model",
+      "provider": "official_repo",
+      "checkpoint_refs": [],
+      "integration_status": "integrated",
+      "runner_target": null,
+      "pipeline_target": "worldfoundry.pipelines.world_model.pipeline_runtime_manifest:DIAMONDPipeline",
+      "pipeline_binding": "diamond",
+      "runtime_profile": "runtime-profile:diamond",
+      "demo_parity": {
+        "status": "not_applicable",
+        "demo_command": null,
+        "expected_artifacts": [],
+        "notes": []
+      },
+      "runner_parity": {
+        "status": "not_applicable",
+        "demo_command": null,
+        "expected_artifacts": [],
+        "notes": []
+      },
+      "min_vram_gb": null,
+      "requires_auth": false,
+      "notes": []
+    }
+  },
+  {
+    "model_id": "diamond-csgo",
+    "parent_model": "diamond",
+    "category": "catalog_variant",
+    "pipeline_targets": [
+      "worldfoundry.pipelines.world_model.pipeline_runtime_manifest:DIAMONDCsgoPipeline"
+    ],
+    "verification_status": "not_run",
+    "variant": {
+      "variant_id": "diamond-csgo",
+      "task": "game-world-model",
+      "provider": "official_repo",
+      "checkpoint_refs": [],
+      "integration_status": "integrated",
+      "runner_target": null,
+      "pipeline_target": "worldfoundry.pipelines.world_model.pipeline_runtime_manifest:DIAMONDCsgoPipeline",
+      "pipeline_binding": "diamond-csgo",
+      "runtime_profile": "runtime-profile:diamond",
+      "demo_parity": {
+        "status": "not_applicable",
+        "demo_command": null,
+        "expected_artifacts": [],
+        "notes": []
+      },
+      "runner_parity": {
+        "status": "not_applicable",
+        "demo_command": null,
+        "expected_artifacts": [],
+        "notes": []
+      },
+      "min_vram_gb": null,
+      "requires_auth": false,
+      "notes": []
+    },
+    "bindings": [
+      {
+        "path": "worldfoundry/data/models/bindings/pipelines/diamond-csgo.yaml",
+        "sha256": "f31ba01120631d3a37b566f2e01436354b61d92b37f83ae3886d1f3680077b6c",
+        "binding_id": "diamond-csgo",
+        "configuration": {
+          "schema_version": 2,
+          "binding_id": "diamond-csgo",
+          "model_id": "diamond-csgo",
+          "runner": "worldfoundry.pipeline",
+          "pipeline": {
+            "target": "worldfoundry.pipelines.world_model.pipeline_runtime_manifest:DIAMONDCsgoPipeline",
+            "loading": {
+              "method": "from_pretrained",
+              "signature": "unified"
+            },
+            "invocation": {
+              "mode": "native_or_standard_invocation"
+            }
+          }
+        }
+      }
+    ]
+  },
+  {
+    "model_id": "dreamdojo-2b-gr1-action-conditioned",
+    "parent_model": "dreamdojo",
+    "category": "catalog_variant",
+    "pipeline_targets": [],
+    "verification_status": "not_run",
+    "variant": {
+      "variant_id": "dreamdojo-2b-gr1-action-conditioned",
+      "task": "robot-world-generation",
+      "provider": "official_repo",
+      "checkpoint_refs": [
+        {
+          "hf_repo_id": "nvidia/DreamDojo",
+          "revision": "89d029e10816d2995d700cb8ba06f171e0504203",
+          "license": "other:nvidia-open-model-license",
+          "private": false,
+          "gated": false,
+          "path": null,
+          "filename": null,
+          "estimated_size_gb": null,
+          "requires_auth": false,
+          "notes": [
+            "Expected official subset: DreamDojo 2B GR-1 action-conditioned/post-trained checkpoint."
+          ]
+        }
+      ],
+      "integration_status": "planned",
+      "runner_target": null,
+      "pipeline_target": null,
+      "pipeline_binding": null,
+      "runtime_profile": "runtime-profile:dreamdojo",
+      "demo_parity": {
+        "status": "pending",
+        "demo_command": null,
+        "expected_artifacts": [],
+        "notes": []
+      },
+      "runner_parity": {
+        "status": "pending",
+        "demo_command": null,
+        "expected_artifacts": [],
+        "notes": [
+          "blocked: nvidia/DreamDojo checkpoints are retained as provenance/staging references only.",
+          "blocked: No WorldFoundry runner or pipeline target is registered for this metadata-only entry."
+        ]
+      },
+      "min_vram_gb": null,
+      "requires_auth": false,
+      "notes": []
+    }
+  },
+  {
+    "model_id": "dreamdojo-distilled-gr1-realtime",
+    "parent_model": "dreamdojo",
+    "category": "catalog_variant",
+    "pipeline_targets": [],
+    "verification_status": "not_run",
+    "variant": {
+      "variant_id": "dreamdojo-distilled-gr1-realtime",
+      "task": "interactive-robot-world-generation",
+      "provider": "official_repo",
+      "checkpoint_refs": [
+        {
+          "hf_repo_id": "nvidia/DreamDojo",
+          "revision": "89d029e10816d2995d700cb8ba06f171e0504203",
+          "license": "other:nvidia-open-model-license",
+          "private": false,
+          "gated": false,
+          "path": null,
+          "filename": null,
+          "estimated_size_gb": null,
+          "requires_auth": false,
+          "notes": [
+            "Expected official subset: distilled GR-1 student checkpoint used by launch_student_inference.sh."
+          ]
+        }
+      ],
+      "integration_status": "planned",
+      "runner_target": null,
+      "pipeline_target": null,
+      "pipeline_binding": null,
+      "runtime_profile": "runtime-profile:dreamdojo",
+      "demo_parity": {
+        "status": "pending",
+        "demo_command": null,
+        "expected_artifacts": [],
+        "notes": []
+      },
+      "runner_parity": {
+        "status": "pending",
+        "demo_command": null,
+        "expected_artifacts": [],
+        "notes": [
+          "blocked: DreamDojo distilled checkpoint references are retained as provenance/staging references only.",
+          "blocked: No WorldFoundry runner or pipeline target is registered for this metadata-only entry."
+        ]
+      },
+      "min_vram_gb": null,
+      "requires_auth": false,
+      "notes": []
+    }
+  },
+  {
+    "model_id": "egowm-svd-3dof",
+    "parent_model": "egowm",
+    "category": "catalog_variant",
+    "pipeline_targets": [],
+    "verification_status": "not_run",
+    "variant": {
+      "variant_id": "egowm-svd-3dof",
+      "task": "egocentric-navigation-video",
+      "provider": "official_repo",
+      "checkpoint_refs": [
+        {
+          "hf_repo_id": "anuragba/egowm",
+          "revision": null,
+          "license": null,
+          "private": null,
+          "gated": null,
+          "path": null,
+          "filename": null,
+          "estimated_size_gb": null,
+          "requires_auth": false,
+          "notes": []
+        }
+      ],
+      "integration_status": "planned",
+      "runner_target": null,
+      "pipeline_target": null,
+      "pipeline_binding": null,
+      "runtime_profile": null,
+      "demo_parity": {
+        "status": "not_applicable",
+        "demo_command": null,
+        "expected_artifacts": [],
+        "notes": []
+      },
+      "runner_parity": {
+        "status": "not_applicable",
+        "demo_command": null,
+        "expected_artifacts": [],
+        "notes": []
+      },
+      "min_vram_gb": null,
+      "requires_auth": false,
+      "notes": []
+    }
+  },
+  {
+    "model_id": "egowm-svd-25dof",
+    "parent_model": "egowm",
+    "category": "catalog_variant",
+    "pipeline_targets": [],
+    "verification_status": "not_run",
+    "variant": {
+      "variant_id": "egowm-svd-25dof",
+      "task": "egocentric-navigation-video",
+      "provider": "official_repo",
+      "checkpoint_refs": [
+        {
+          "hf_repo_id": "anuragba/egowm",
+          "revision": null,
+          "license": null,
+          "private": null,
+          "gated": null,
+          "path": null,
+          "filename": null,
+          "estimated_size_gb": null,
+          "requires_auth": false,
+          "notes": []
+        }
+      ],
+      "integration_status": "planned",
+      "runner_target": null,
+      "pipeline_target": null,
+      "pipeline_binding": null,
+      "runtime_profile": null,
+      "demo_parity": {
+        "status": "not_applicable",
+        "demo_command": null,
+        "expected_artifacts": [],
+        "notes": []
+      },
+      "runner_parity": {
+        "status": "not_applicable",
+        "demo_command": null,
+        "expected_artifacts": [],
+        "notes": []
+      },
+      "min_vram_gb": null,
+      "requires_auth": false,
+      "notes": []
+    }
+  },
+  {
+    "model_id": "gamma-world-causal-few-step",
+    "parent_model": "gamma-world",
+    "category": "catalog_variant",
+    "pipeline_targets": [
+      "worldfoundry.pipelines.gamma_world.pipeline_gamma_world:GammaWorldPipeline"
+    ],
+    "verification_status": "not_run",
+    "variant": {
+      "variant_id": "gamma-world-causal-few-step",
+      "task": "action-conditioned-video",
+      "provider": "official_repo",
+      "checkpoint_refs": [],
+      "integration_status": "integrated",
+      "runner_target": null,
+      "pipeline_target": "worldfoundry.pipelines.gamma_world.pipeline_gamma_world:GammaWorldPipeline",
+      "pipeline_binding": "gamma-world",
+      "runtime_profile": "gamma-world",
+      "demo_parity": {
+        "status": "not_applicable",
+        "demo_command": null,
+        "expected_artifacts": [],
+        "notes": []
+      },
+      "runner_parity": {
+        "status": "pending",
+        "demo_command": null,
+        "expected_artifacts": [],
+        "notes": []
+      },
+      "min_vram_gb": null,
+      "requires_auth": false,
+      "notes": []
+    }
+  },
+  {
+    "model_id": "gamma-world-causal",
+    "parent_model": "gamma-world",
+    "category": "catalog_variant",
+    "pipeline_targets": [
+      "worldfoundry.pipelines.gamma_world.pipeline_gamma_world:GammaWorldPipeline"
+    ],
+    "verification_status": "not_run",
+    "variant": {
+      "variant_id": "gamma-world-causal",
+      "task": "action-conditioned-video",
+      "provider": "official_repo",
+      "checkpoint_refs": [],
+      "integration_status": "integrated",
+      "runner_target": null,
+      "pipeline_target": "worldfoundry.pipelines.gamma_world.pipeline_gamma_world:GammaWorldPipeline",
+      "pipeline_binding": "gamma-world",
+      "runtime_profile": "gamma-world",
+      "demo_parity": {
+        "status": "not_applicable",
+        "demo_command": null,
+        "expected_artifacts": [],
+        "notes": []
+      },
+      "runner_parity": {
+        "status": "pending",
+        "demo_command": null,
+        "expected_artifacts": [],
+        "notes": []
+      },
+      "min_vram_gb": null,
+      "requires_auth": false,
+      "notes": []
+    }
+  },
+  {
+    "model_id": "gamma-world-bidirectional",
+    "parent_model": "gamma-world",
+    "category": "catalog_variant",
+    "pipeline_targets": [
+      "worldfoundry.pipelines.gamma_world.pipeline_gamma_world:GammaWorldPipeline"
+    ],
+    "verification_status": "not_run",
+    "variant": {
+      "variant_id": "gamma-world-bidirectional",
+      "task": "action-conditioned-video",
+      "provider": "official_repo",
+      "checkpoint_refs": [],
+      "integration_status": "integrated",
+      "runner_target": null,
+      "pipeline_target": "worldfoundry.pipelines.gamma_world.pipeline_gamma_world:GammaWorldPipeline",
+      "pipeline_binding": "gamma-world",
+      "runtime_profile": "gamma-world",
+      "demo_parity": {
+        "status": "not_applicable",
+        "demo_command": null,
+        "expected_artifacts": [],
+        "notes": []
+      },
+      "runner_parity": {
+        "status": "pending",
+        "demo_command": null,
+        "expected_artifacts": [],
+        "notes": []
+      },
+      "min_vram_gb": null,
+      "requires_auth": false,
+      "notes": []
+    }
+  },
+  {
+    "model_id": "hma-magvit-362m",
+    "parent_model": "hma",
+    "category": "catalog_variant",
+    "pipeline_targets": [],
+    "verification_status": "not_run",
+    "variant": {
+      "variant_id": "hma-magvit-362m",
+      "task": "robot-action-video",
+      "provider": "official_repo",
+      "checkpoint_refs": [
+        {
+          "hf_repo_id": "liruiw/hma-base-disc",
+          "revision": null,
+          "license": null,
+          "private": null,
+          "gated": null,
+          "path": null,
+          "filename": null,
+          "estimated_size_gb": null,
+          "requires_auth": false,
+          "notes": []
+        }
+      ],
+      "integration_status": "planned",
+      "runner_target": null,
+      "pipeline_target": null,
+      "pipeline_binding": null,
+      "runtime_profile": null,
+      "demo_parity": {
+        "status": "not_applicable",
+        "demo_command": null,
+        "expected_artifacts": [],
+        "notes": []
+      },
+      "runner_parity": {
+        "status": "not_applicable",
+        "demo_command": null,
+        "expected_artifacts": [],
+        "notes": []
+      },
+      "min_vram_gb": null,
+      "requires_auth": false,
+      "notes": []
+    }
+  },
+  {
+    "model_id": "hma-mar-1b",
+    "parent_model": "hma",
+    "category": "catalog_variant",
+    "pipeline_targets": [],
+    "verification_status": "not_run",
+    "variant": {
+      "variant_id": "hma-mar-1b",
+      "task": "robot-action-video",
+      "provider": "official_repo",
+      "checkpoint_refs": [
+        {
+          "hf_repo_id": "liruiw/hma-base-cont",
+          "revision": null,
+          "license": null,
+          "private": null,
+          "gated": null,
+          "path": null,
+          "filename": null,
+          "estimated_size_gb": null,
+          "requires_auth": false,
+          "notes": []
+        }
+      ],
+      "integration_status": "planned",
+      "runner_target": null,
+      "pipeline_target": null,
+      "pipeline_binding": null,
+      "runtime_profile": null,
+      "demo_parity": {
+        "status": "not_applicable",
+        "demo_command": null,
+        "expected_artifacts": [],
+        "notes": []
+      },
+      "runner_parity": {
+        "status": "not_applicable",
+        "demo_command": null,
+        "expected_artifacts": [],
+        "notes": []
+      },
+      "min_vram_gb": null,
+      "requires_auth": false,
+      "notes": []
+    }
+  },
+  {
+    "model_id": "lingbot-world-base-cam",
+    "parent_model": "lingbot-world",
+    "category": "catalog_variant",
+    "pipeline_targets": [],
+    "verification_status": "not_run",
+    "variant": {
+      "variant_id": "lingbot-world-base-cam",
+      "task": null,
+      "provider": null,
+      "checkpoint_refs": [
+        {
+          "hf_repo_id": "robbyant/lingbot-world-base-cam",
+          "revision": null,
+          "license": null,
+          "private": null,
+          "gated": null,
+          "path": null,
+          "filename": null,
+          "estimated_size_gb": null,
+          "requires_auth": false,
+          "notes": []
+        }
+      ],
+      "integration_status": "planned",
+      "runner_target": null,
+      "pipeline_target": null,
+      "pipeline_binding": null,
+      "runtime_profile": null,
+      "demo_parity": {
+        "status": "not_applicable",
+        "demo_command": null,
+        "expected_artifacts": [],
+        "notes": []
+      },
+      "runner_parity": {
+        "status": "verified",
+        "demo_command": null,
+        "expected_artifacts": [],
+        "notes": [
+          "The base-cam checkpoint is wired through the in-tree LingBot-World runner.",
+          "A 2026-07-28 checkpoint-backed full run completed with 161 frames and 70 denoising steps; all frames decoded at 832x464 and 16 FPS with valid motion.",
+          "A four-A100 Workspace run also completed the same full setting with adaptive T5-FSDP, replicated/offloaded DiTs, and Ulysses size 4."
+        ]
+      },
+      "min_vram_gb": null,
+      "requires_auth": false,
+      "notes": []
+    }
+  },
+  {
+    "model_id": "lingbot-world-base-act",
+    "parent_model": "lingbot-world",
+    "category": "catalog_variant",
+    "pipeline_targets": [
+      "worldfoundry.pipelines.lingbot_world.pipeline_lingbot_world:LingBotPipeline"
+    ],
+    "verification_status": "not_run",
+    "variant": {
+      "variant_id": "lingbot-world-base-act",
+      "task": null,
+      "provider": null,
+      "checkpoint_refs": [
+        {
+          "hf_repo_id": "robbyant/lingbot-world-base-act-preview",
+          "revision": null,
+          "license": null,
+          "private": null,
+          "gated": null,
+          "path": null,
+          "filename": null,
+          "estimated_size_gb": null,
+          "requires_auth": false,
+          "notes": []
+        }
+      ],
+      "integration_status": "planned",
+      "runner_target": null,
+      "pipeline_target": "worldfoundry.pipelines.lingbot_world.pipeline_lingbot_world:LingBotPipeline",
+      "pipeline_binding": "lingbot-world-act",
+      "runtime_profile": "runtime-profile:lingbot-world-act",
+      "demo_parity": {
+        "status": "not_applicable",
+        "demo_command": null,
+        "expected_artifacts": [],
+        "notes": []
+      },
+      "runner_parity": {
+        "status": "pending",
+        "demo_command": null,
+        "expected_artifacts": [],
+        "notes": [
+          "The public Base-Act preview checkpoint is independently routed through the in-tree action-conditioned runtime.",
+          "Full GPU artifact parity requires locally staged weights."
+        ]
+      },
+      "min_vram_gb": null,
+      "requires_auth": false,
+      "notes": []
+    }
+  },
+  {
+    "model_id": "lingbot-world-fast",
+    "parent_model": "lingbot-world",
+    "category": "catalog_variant",
+    "pipeline_targets": [],
+    "verification_status": "not_run",
+    "variant": {
+      "variant_id": "lingbot-world-fast",
+      "task": null,
+      "provider": null,
+      "checkpoint_refs": [],
+      "integration_status": "planned",
+      "runner_target": null,
+      "pipeline_target": null,
+      "pipeline_binding": null,
+      "runtime_profile": null,
+      "demo_parity": {
+        "status": "not_applicable",
+        "demo_command": null,
+        "expected_artifacts": [],
+        "notes": []
+      },
+      "runner_parity": {
+        "status": "not_applicable",
+        "demo_command": null,
+        "expected_artifacts": [],
+        "notes": []
+      },
+      "min_vram_gb": null,
+      "requires_auth": false,
+      "notes": []
+    }
+  },
+  {
+    "model_id": "matrix-game-2-universal-action-validation",
+    "parent_model": "matrix-game-2",
+    "category": "catalog_variant",
+    "pipeline_targets": [],
+    "verification_status": "not_run",
+    "variant": {
+      "variant_id": "matrix-game-2-universal-action-validation",
+      "task": "action-conditioned-video",
+      "provider": "official_repo",
+      "checkpoint_refs": [
+        {
+          "hf_repo_id": "Skywork/Matrix-Game-2.0",
+          "revision": "f1729d99a80e0f07993a77d7dad4a3190e23c2c8",
+          "license": "mit",
+          "private": false,
+          "gated": false,
+          "path": null,
+          "filename": null,
+          "estimated_size_gb": null,
+          "requires_auth": false,
+          "notes": []
+        }
+      ],
+      "integration_status": "planned",
+      "runner_target": null,
+      "pipeline_target": null,
+      "pipeline_binding": null,
+      "runtime_profile": "matrix-game-2-universal-ref-image-seed42-15f",
+      "demo_parity": {
+        "status": "verified",
+        "demo_command": [
+          "python",
+          "scripts/model_zoo/run_matrix_game2_official_demo.py"
+        ],
+        "expected_artifacts": [
+          {
+            "min_size_bytes": 100000,
+            "path": "matrix_game2_official_universal_seed42_15f.mp4",
+            "video_probe": {
+              "max_fps": 30,
+              "min_fps": 10,
+              "min_frames": 10,
+              "min_height": 300,
+              "min_width": 600
+            }
+          },
+          {
+            "path": "matrix_game2_official_universal_seed42_15f.json"
+          }
+        ],
+        "notes": []
+      },
+      "runner_parity": {
+        "status": "verified",
+        "demo_command": [
+          "python",
+          "scripts/model_zoo/run_matrix_game2_worldfoundry_runner_demo.py"
+        ],
+        "expected_artifacts": [
+          {
+            "min_size_bytes": 100000,
+            "path": "matrix_game2_worldfoundry_universal_seed42_15f.mp4",
+            "video_probe": {
+              "max_fps": 30,
+              "min_fps": 10,
+              "min_frames": 10,
+              "min_height": 300,
+              "min_width": 600
+            }
+          },
+          {
+            "path": "matrix_game2_worldfoundry_universal_seed42_15f.json"
+          }
+        ],
+        "notes": [
+          "Uses the same reference image, seed, checkpoint, universal mode, and in-tree official Bench_actions_* trajectory generator as Matrix-Game-2 inference_universal."
+        ]
+      },
+      "min_vram_gb": 24.0,
+      "requires_auth": false,
+      "notes": [
+        "Generation contract: mode=universal, official_bench_actions=true, num_output_frames=15, fps=12, seed=42.",
+        "Output contract: official and WorldFoundry runner demos emit matrix_game2_*_universal_seed42_15f.mp4 plus sidecar JSON under the caller output directory.",
+        "WorldScore/VBench validation status: runner_contract_ready_gpu_parity_pending. VBench can probe the 15-frame mp4; WorldScore still requires its official static/dynamic tree with image_data.json, frames, videos/output.mp4, and static camera_data.json."
+      ]
+    }
+  },
+  {
+    "model_id": "local-checkpoint",
+    "parent_model": "mira",
+    "category": "catalog_variant",
+    "pipeline_targets": [],
+    "verification_status": "not_run",
+    "variant": {
+      "variant_id": "local-checkpoint",
+      "task": "rocket-science-rollout",
+      "provider": "local",
+      "checkpoint_refs": [],
+      "integration_status": "integrated",
+      "runner_target": null,
+      "pipeline_target": null,
+      "pipeline_binding": null,
+      "runtime_profile": null,
+      "demo_parity": {
+        "status": "not_applicable",
+        "demo_command": null,
+        "expected_artifacts": [],
+        "notes": []
+      },
+      "runner_parity": {
+        "status": "not_applicable",
+        "demo_command": null,
+        "expected_artifacts": [],
+        "notes": []
+      },
+      "min_vram_gb": null,
+      "requires_auth": false,
+      "notes": []
+    }
+  },
+  {
+    "model_id": "nwm-recon",
+    "parent_model": "nwm",
+    "category": "catalog_variant",
+    "pipeline_targets": [],
+    "verification_status": "not_run",
+    "variant": {
+      "variant_id": "nwm-recon",
+      "task": "navigation-world-model",
+      "provider": "official_repo",
+      "checkpoint_refs": [
+        {
+          "hf_repo_id": "facebook/nwm",
+          "revision": null,
+          "license": null,
+          "private": null,
+          "gated": null,
+          "path": null,
+          "filename": null,
+          "estimated_size_gb": null,
+          "requires_auth": false,
+          "notes": []
+        }
+      ],
+      "integration_status": "planned",
+      "runner_target": null,
+      "pipeline_target": null,
+      "pipeline_binding": null,
+      "runtime_profile": null,
+      "demo_parity": {
+        "status": "not_applicable",
+        "demo_command": null,
+        "expected_artifacts": [],
+        "notes": []
+      },
+      "runner_parity": {
+        "status": "not_applicable",
+        "demo_command": null,
+        "expected_artifacts": [],
+        "notes": []
+      },
+      "min_vram_gb": null,
+      "requires_auth": false,
+      "notes": []
+    }
+  },
+  {
+    "model_id": "nwm-scand",
+    "parent_model": "nwm",
+    "category": "catalog_variant",
+    "pipeline_targets": [],
+    "verification_status": "not_run",
+    "variant": {
+      "variant_id": "nwm-scand",
+      "task": "navigation-world-model",
+      "provider": "official_repo",
+      "checkpoint_refs": [
+        {
+          "hf_repo_id": "facebook/nwm",
+          "revision": null,
+          "license": null,
+          "private": null,
+          "gated": null,
+          "path": null,
+          "filename": null,
+          "estimated_size_gb": null,
+          "requires_auth": false,
+          "notes": []
+        }
+      ],
+      "integration_status": "planned",
+      "runner_target": null,
+      "pipeline_target": null,
+      "pipeline_binding": null,
+      "runtime_profile": null,
+      "demo_parity": {
+        "status": "not_applicable",
+        "demo_command": null,
+        "expected_artifacts": [],
+        "notes": []
+      },
+      "runner_parity": {
+        "status": "not_applicable",
+        "demo_command": null,
+        "expected_artifacts": [],
+        "notes": []
+      },
+      "min_vram_gb": null,
+      "requires_auth": false,
+      "notes": []
+    }
+  },
+  {
+    "model_id": "solarwm-wan2.2-5b",
+    "parent_model": "solarwm",
+    "category": "catalog_variant",
+    "pipeline_targets": [
+      "worldfoundry.pipelines.solarwm.pipeline_solarwm:SolarWMPipeline"
+    ],
+    "verification_status": "not_run",
+    "variant": {
+      "variant_id": "solarwm-wan2.2-5b",
+      "task": "camera-conditioned-video",
+      "provider": null,
+      "checkpoint_refs": [],
+      "integration_status": "integrated",
+      "runner_target": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+      "pipeline_target": "worldfoundry.pipelines.solarwm.pipeline_solarwm:SolarWMPipeline",
+      "pipeline_binding": "solarwm",
+      "runtime_profile": "runtime-profile:solarwm",
+      "demo_parity": {
+        "status": "not_applicable",
+        "demo_command": null,
+        "expected_artifacts": [],
+        "notes": []
+      },
+      "runner_parity": {
+        "status": "pending",
+        "demo_command": null,
+        "expected_artifacts": [],
+        "notes": []
+      },
+      "min_vram_gb": null,
+      "requires_auth": false,
+      "notes": [
+        "Inference variant=wan-5b-dmd; GPU/checkpoint validation pending."
+      ]
+    }
+  },
+  {
+    "model_id": "solarwm-wan2.2-14b",
+    "parent_model": "solarwm",
+    "category": "catalog_variant",
+    "pipeline_targets": [
+      "worldfoundry.pipelines.solarwm.pipeline_solarwm:SolarWMPipeline"
+    ],
+    "verification_status": "not_run",
+    "variant": {
+      "variant_id": "solarwm-wan2.2-14b",
+      "task": "camera-conditioned-video",
+      "provider": null,
+      "checkpoint_refs": [],
+      "integration_status": "integrated",
+      "runner_target": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+      "pipeline_target": "worldfoundry.pipelines.solarwm.pipeline_solarwm:SolarWMPipeline",
+      "pipeline_binding": "solarwm",
+      "runtime_profile": "runtime-profile:solarwm",
+      "demo_parity": {
+        "status": "not_applicable",
+        "demo_command": null,
+        "expected_artifacts": [],
+        "notes": []
+      },
+      "runner_parity": {
+        "status": "pending",
+        "demo_command": null,
+        "expected_artifacts": [],
+        "notes": []
+      },
+      "min_vram_gb": null,
+      "requires_auth": false,
+      "notes": [
+        "Inference variant=wan-14b; GPU/checkpoint validation pending."
+      ]
+    }
+  },
+  {
+    "model_id": "solarwm-ltx-22b",
+    "parent_model": "solarwm",
+    "category": "catalog_variant",
+    "pipeline_targets": [
+      "worldfoundry.pipelines.solarwm.pipeline_solarwm:SolarWMPipeline"
+    ],
+    "verification_status": "not_run",
+    "variant": {
+      "variant_id": "solarwm-ltx-22b",
+      "task": "camera-conditioned-video",
+      "provider": null,
+      "checkpoint_refs": [],
+      "integration_status": "integrated",
+      "runner_target": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+      "pipeline_target": "worldfoundry.pipelines.solarwm.pipeline_solarwm:SolarWMPipeline",
+      "pipeline_binding": "solarwm",
+      "runtime_profile": "runtime-profile:solarwm",
+      "demo_parity": {
+        "status": "not_applicable",
+        "demo_command": null,
+        "expected_artifacts": [],
+        "notes": []
+      },
+      "runner_parity": {
+        "status": "pending",
+        "demo_command": null,
+        "expected_artifacts": [],
+        "notes": []
+      },
+      "min_vram_gb": null,
+      "requires_auth": false,
+      "notes": [
+        "Inference variant=ltx; GPU/checkpoint validation pending."
+      ]
+    }
+  },
+  {
+    "model_id": "solarwm-h3-33b",
+    "parent_model": "solarwm",
+    "category": "catalog_variant",
+    "pipeline_targets": [
+      "worldfoundry.pipelines.solarwm.pipeline_solarwm:SolarWMPipeline"
+    ],
+    "verification_status": "not_run",
+    "variant": {
+      "variant_id": "solarwm-h3-33b",
+      "task": "camera-conditioned-video",
+      "provider": null,
+      "checkpoint_refs": [],
+      "integration_status": "integrated",
+      "runner_target": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+      "pipeline_target": "worldfoundry.pipelines.solarwm.pipeline_solarwm:SolarWMPipeline",
+      "pipeline_binding": "solarwm",
+      "runtime_profile": "runtime-profile:solarwm",
+      "demo_parity": {
+        "status": "not_applicable",
+        "demo_command": null,
+        "expected_artifacts": [],
+        "notes": []
+      },
+      "runner_parity": {
+        "status": "pending",
+        "demo_command": null,
+        "expected_artifacts": [],
+        "notes": []
+      },
+      "min_vram_gb": null,
+      "requires_auth": false,
+      "notes": [
+        "Inference variant=h3-bidirectional; GPU/checkpoint validation pending."
+      ]
+    }
+  },
+  {
+    "model_id": "worldcrafter",
+    "parent_model": "worldcrafter",
+    "category": "world_models",
+    "pipeline_targets": [
+      "worldfoundry.pipelines.worldcrafter.pipeline_worldcrafter:WorldCrafterPipeline"
+    ],
+    "verification_status": "not_run",
+    "catalog": [
+      {
+        "path": "worldfoundry/data/models/catalog/world_models/worldcrafter.yaml",
+        "sha256": "0237f0a9619e0e01371517b6f8d65a2997ba2f95594b56b560dd203e73d92e68"
+      }
+    ],
+    "bindings": [
+      {
+        "path": "worldfoundry/data/models/bindings/pipelines/worldcrafter.yaml",
+        "sha256": "8ec3fb7f32fc4d20d11e4331ce7f4cd03676c1469082e1a7a87858dd651fa684"
+      }
+    ],
+    "profiles": [
+      {
+        "path": "worldfoundry/data/models/runtime/profiles/worldcrafter.yaml",
+        "sha256": "4745e7ca686d2a834a861533af1f1756158f6b30ccf8af389cb336313b040b3f"
+      }
+    ],
+    "scope_added": "Explicit user request20260922;Base/FastI2V/T2V plusBase resume obligations"
+  },
+  {
+    "model_id": "worldcrafter-base",
+    "parent_model": "worldcrafter",
+    "category": "world_models",
+    "pipeline_targets": [
+      "worldfoundry.pipelines.worldcrafter.pipeline_worldcrafter:WorldCrafterPipeline"
+    ],
+    "verification_status": "not_run",
+    "catalog": [
+      {
+        "path": "worldfoundry/data/models/catalog/world_models/worldcrafter-base.yaml",
+        "sha256": "d12a2c3abbb8d41152563fefde626d76c89ec19a648d9e9eafae7819dd666ac0"
+      }
+    ],
+    "bindings": [
+      {
+        "path": "worldfoundry/data/models/bindings/pipelines/worldcrafter-base.yaml",
+        "sha256": "328ecbdb80d465e5da3c4eb05492b0daadb83547fb209f3a2805cd1a222aaf0e"
+      }
+    ],
+    "profiles": [
+      {
+        "path": "worldfoundry/data/models/runtime/profiles/worldcrafter-base.yaml",
+        "sha256": "1c17e978ce126984aa0911554b86a120d04736ef2e85534054a5e26c9e2b4b40"
+      }
+    ],
+    "scope_added": "Explicit user request20260922;Base/FastI2V/T2V plusBase resume obligations"
+  },
+  {
+    "model_id": "worldcrafter-fast",
+    "parent_model": "worldcrafter",
+    "category": "world_models",
+    "pipeline_targets": [
+      "worldfoundry.pipelines.worldcrafter.pipeline_worldcrafter:WorldCrafterPipeline"
+    ],
+    "verification_status": "not_run",
+    "catalog": [
+      {
+        "path": "worldfoundry/data/models/catalog/world_models/worldcrafter-fast.yaml",
+        "sha256": "c3bfcd0dbca9b3b7bfbf459f6d89d5c3b835d140baf456baa9cb878fad7a9113"
+      }
+    ],
+    "bindings": [
+      {
+        "path": "worldfoundry/data/models/bindings/pipelines/worldcrafter-fast.yaml",
+        "sha256": "e2e641704a8ab5ae04cb69af5662d407af7834fe723b448a42274b29f870a008"
+      }
+    ],
+    "profiles": [
+      {
+        "path": "worldfoundry/data/models/runtime/profiles/worldcrafter-fast.yaml",
+        "sha256": "89646b55c7e53d8046b07492251aa86e156bc374bd3d0b057dfca1d8e6315b91"
+      }
+    ],
+    "scope_added": "Explicit user request20260922;Base/FastI2V/T2V plusBase resume obligations"
+  },
+  {
+    "model_id": "biwm-wan21",
+    "category": "world_models",
+    "pipeline_targets": [
+      "worldfoundry.pipelines.biwm.pipeline_biwm:BiWMPipeline"
+    ],
+    "catalog": [
+      {
+        "path": "worldfoundry/data/models/catalog/world_models/biwm-wan21.yaml"
+      }
+    ],
+    "required_variants": [
+      "stage1_t2v",
+      "stage2_t2v",
+      "stage2_i2v"
+    ]
+  },
+  {
+    "model_id": "biwm-wan22",
+    "category": "world_models",
+    "pipeline_targets": [
+      "worldfoundry.pipelines.biwm.pipeline_biwm:BiWMPipeline"
+    ],
+    "catalog": [
+      {
+        "path": "worldfoundry/data/models/catalog/world_models/biwm-wan22.yaml"
+      }
+    ],
+    "required_variants": [
+      "stage1_t2v",
+      "stage2_t2v",
+      "stage2_i2v"
+    ]
+  },
+  {
+    "model_id": "xgen-jing",
+    "catalog": [
+      {
+        "path": "worldfoundry/data/models/catalog/world_models/xgen-jing.yaml",
+        "sha256": "3b0b2dc7676caf366a7816e3e5465079150090a9008c3da76fc5fefbc12905b5"
+      }
+    ],
+    "bindings": [
+      {
+        "path": "worldfoundry/data/models/bindings/pipelines/xgen-jing.yaml",
+        "sha256": "5f94c087a1f4efd29a930c4e350f53837e97d7842b508838774dc17c496571a6",
+        "binding_id": "xgen-jing",
+        "configuration": {
+          "schema_version": 2,
+          "binding_id": "xgen-jing",
+          "model_id": "xgen-jing",
+          "runner": "worldfoundry.pipeline",
+          "pipeline": {
+            "target": "worldfoundry.pipelines.xgen_jing.pipeline_xgen_jing:XGENJINGPipeline",
+            "loading": {
+              "method": "from_pretrained",
+              "signature": "unified"
+            },
+            "invocation": {
+              "mode": "native_or_standard_invocation"
+            }
+          }
+        }
+      }
+    ],
+    "profiles": [
+      {
+        "path": "worldfoundry/data/models/runtime/profiles/xgen-jing.yaml",
+        "sha256": "66b3e1af28354ac2f83bd11cca638ab75a4d6ce271c146c5123e7c7ea9a9bcb8"
+      }
+    ],
+    "variants": [],
+    "checkpoints": [
+      {
+        "repo_id": "XGENlabs/XGEN-JING",
+        "revision": "8153db624fa4fa573d2e0c5335b515882efff30d",
+        "subfolder": "jing_flash_v1",
+        "role": "controlled_transformer",
+        "local_candidate": "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/ckpts/XGENlabs--XGEN-JING",
+        "local_candidate_exists": true
+      },
+      {
+        "repo_id": "MiniMaxAI/MiniMax-H3",
+        "revision": "42ed227ee7df40d41602854ae760620d6eb651fe",
+        "role": "diffusers_text_encoder_tokenizer_processor_video_audio_vae_schedulers",
+        "local_candidate": "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/ckpts/MiniMaxAI--MiniMax-H3",
+        "local_candidate_exists": false
+      }
+    ],
+    "pipeline_targets": [
+      "worldfoundry.pipelines.xgen_jing.pipeline_xgen_jing:XGENJINGPipeline"
+    ],
+    "historical_evidence": [],
+    "verification_status": "not_run",
+    "checks": {
+      "target_source": [
+        {
+          "target": "worldfoundry.pipelines.xgen_jing.pipeline_xgen_jing:XGENJINGPipeline",
+          "exists": true
+        }
+      ]
+    },
+    "category": "world_models",
+    "tasks": [
+      "text-to-video",
+      "image-to-video",
+      "camera-controlled-video",
+      "world-model"
+    ],
+    "declared_integration": {
+      "status": "integrated",
+      "notes": [
+        "Reuses the canonical MiniMax-H3 DiT, Qwen3-VL conditioner, geometry and scheduler helpers.",
+        "Diffusers H3 video/audio codecs and core H264/audio IO are reused without copying architectures.",
+        "Four-step bidirectional JING-Flash-v1 only; the causal model has not been released."
+      ]
+    },
+    "aliases": [],
+    "binding_reference": "xgen-jing",
+    "profile_reference": "runtime-profile:xgen-jing",
+    "input_schema": {
+      "prompt": true,
+      "image": true,
+      "video": false,
+      "actions": [
+        "control",
+        "chunks",
+        "slices"
+      ]
+    },
+    "artifact_kind": "generated_world",
+    "declared_execution": {
+      "backend_stage": "shared_base_model_runtime",
+      "runtime_status": "integrated_checkpoint_required",
+      "integration_status": "integrated",
+      "pipeline_binding": "xgen-jing",
+      "default_parameters": {
+        "height": 544,
+        "width": 960,
+        "seed": 42,
+        "first_chunk_size": 2
+      }
+    },
+    "scope_note": "New entry from resumed session. JING tiny/full text component parity exists, but trained-generator full inference explicitly deferred while other models run; not counted as verified."
+  }
+]

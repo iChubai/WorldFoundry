@@ -1,4 +1,4 @@
-# Adapted from seedleap/zing-world-model (Apache-2.0); see PROVENANCE.md.
+# Adapted from seedleap/zing-world-model (Apache-2.0).
 """Wan 2.2 backbone with Zing's action and prompt-switch cache protocol.
 
 All generic Wan weights/layers are constructed by reference_22, not copied here.

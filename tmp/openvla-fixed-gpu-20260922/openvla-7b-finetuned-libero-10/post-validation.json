@@ -1,0 +1,24 @@
+{
+  "status": "passed",
+  "shape": [
+    1,
+    7
+  ],
+  "finite": true,
+  "actions": [
+    [
+      0.06830358505249023,
+      0.03616070747375488,
+      0.0870535671710968,
+      0.020892858505249023,
+      0.0057214301824569935,
+      0.025178581476211548,
+      0.0
+    ]
+  ],
+  "device": "cuda:0",
+  "normalization_key": "libero_10",
+  "original_status_preserved": true,
+  "harness_error": "Expected unbatched[7];actual public actions are[1,7],and action is[7].",
+  "hf_final_zero_missing_unexpected": true
+}

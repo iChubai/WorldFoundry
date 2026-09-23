@@ -23,6 +23,8 @@ from typing import Iterable, Mapping
 import torch
 from torch import Tensor
 
+from worldfoundry.core.observability.nvtx import nvtx_range
+
 from ..contracts import (
     ConditionEncoder,
     Conditioning,
@@ -226,7 +228,8 @@ class NativeDiffusionRunner:
                     f"{extension.extension_id}.before_denoiser must return "
                     f"DenoiserInput, got {type(model_input).__name__}"
                 )
-        model_output = self.components.denoiser(model_input)
+        with nvtx_range(f"worldfoundry.denoiser.{branch}"):
+            model_output = self.components.denoiser(model_input)
         if not isinstance(model_output, DenoiserOutput):
             raise TypeError(f"denoiser must return DenoiserOutput, got {type(model_output).__name__}")
         for extension in reversed(self.extensions):
@@ -487,6 +490,7 @@ class NativeDiffusionRunner:
         return self._guided_output(positive=positive, negative=negative, scale=scale)
 
     @torch.no_grad()
+    @nvtx_range("worldfoundry.run")
     def run(self, request: DiffusionRequest) -> DiffusionOutput:
         """Execute one native diffusion request: encode → init → schedule → CFG steps → decode.
 
@@ -500,11 +504,12 @@ class NativeDiffusionRunner:
         cfg_collectives_before = self._cfg_parallel_collective_calls
         self._reset_cfg_gate_request(request.sampling.num_inference_steps)
         generator = self._generator(request.sampling.seed)
-        conditioning = self.components.conditioner.encode(
-            request,
-            device=self.device,
-            dtype=self.dtype,
-        )
+        with nvtx_range("worldfoundry.encode"):
+            conditioning = self.components.conditioner.encode(
+                request,
+                device=self.device,
+                dtype=self.dtype,
+            )
         if not isinstance(conditioning, Conditioning):
             raise TypeError(f"conditioner.encode must return Conditioning, got {type(conditioning).__name__}")
         context = DiffusionRunContext(
@@ -590,26 +595,27 @@ class NativeDiffusionRunner:
                     )
 
             for step in schedule:
-                context.step = step
-                model_latents = self.components.scheduler.scale_model_input(
-                    latents,
-                    step,
-                )
-                prediction = self.predict(context, model_latents)
-                latents = self.components.scheduler.step(
-                    prediction.sample,
-                    step,
-                    latents,
-                    generator=generator,
-                )
-                if not isinstance(latents, Tensor):
-                    raise TypeError("scheduler.step must return a tensor")
-                for extension in self.extensions:
-                    latents = extension.after_step(context, latents)
+                with nvtx_range("worldfoundry.denoise_step"):
+                    context.step = step
+                    model_latents = self.components.scheduler.scale_model_input(
+                        latents,
+                        step,
+                    )
+                    prediction = self.predict(context, model_latents)
+                    latents = self.components.scheduler.step(
+                        prediction.sample,
+                        step,
+                        latents,
+                        generator=generator,
+                    )
                     if not isinstance(latents, Tensor):
-                        raise TypeError(
-                            f"{extension.extension_id}.after_step must return a tensor, got {type(latents).__name__}"
-                        )
+                        raise TypeError("scheduler.step must return a tensor")
+                    for extension in self.extensions:
+                        latents = extension.after_step(context, latents)
+                        if not isinstance(latents, Tensor):
+                            raise TypeError(
+                                f"{extension.extension_id}.after_step must return a tensor, got {type(latents).__name__}"
+                            )
 
             # Final denoise: some schedulers (FinalDenoiseScheduler) request one extra
             # clean prediction after the regular steps. Use predict.sample as the final
@@ -634,7 +640,8 @@ class NativeDiffusionRunner:
                                 f"got {type(latents).__name__}"
                             )
 
-            sample = self.components.decoder.decode(latents, request)
+            with nvtx_range("worldfoundry.decode"):
+                sample = self.components.decoder.decode(latents, request)
             if not isinstance(sample, Tensor):
                 raise TypeError("decoder.decode must return a tensor")
             for extension in self.extensions:

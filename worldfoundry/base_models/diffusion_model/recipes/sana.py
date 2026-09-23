@@ -55,6 +55,7 @@ from ..models.initializers.sana import (
 from ..schedulers import (
     build_sana_flow_dpm_scheduler,
     build_sana_flow_match_scheduler,
+    build_sana_longlive_scheduler,
     build_sana_scm_scheduler,
     build_sana_streaming_euler_scheduler,
     build_sana_wm_streaming_euler_scheduler,
@@ -206,9 +207,10 @@ def _execution(
 
 
 def _parameter_scale(model_id: str) -> str:
-    if "600m" in model_id:
+    tokens = model_id.lower().split("-")
+    if "600m" in tokens:
         return "600M"
-    if "4800m" in model_id:
+    if "4800m" in tokens:
         return "4800M"
     return "1600M"
 
@@ -246,7 +248,7 @@ def _image_recipe(variant: SanaVariant) -> NativeDiffusionRecipe:
     initializer_factory = build_sana_controlnet_initializer if controlnet else build_sana_image_initializer
     scheduler_factory = build_sana_scm_scheduler if sprint else build_sana_flow_match_scheduler
     scheduler_options = {"sigma_data": 0.5} if sprint else {
-        "shift": 4.0 if "600m" in variant.model_id else 3.0
+        "shift": 4.0 if _parameter_scale(variant.model_id) == "600M" else 3.0
     }
     codec_options = {"decoder_input_scale": 0.5} if sprint else {}
     return NativeDiffusionRecipe(
@@ -302,6 +304,7 @@ def _video_recipe(variant: SanaVariant) -> NativeDiffusionRecipe:
     denoiser, conditioner, initializer, scheduler, codec = _keys()
     checkpoints = _shared_checkpoints(variant)
     streaming = variant.runner == "streaming"
+    longlive = variant.model_id == "longsana-video-2b-480p"
     long_streaming = streaming and variant.mode == "long_streaming"
     resolution = "720p" if "720p" in variant.model_id else "480p"
     if resolution == "480p":
@@ -351,6 +354,7 @@ def _video_recipe(variant: SanaVariant) -> NativeDiffusionRecipe:
                 {
                     "resolution": resolution,
                     "autoregressive": variant.mode == "long_streaming",
+                    "longlive": longlive,
                 },
             ),
             ComponentSpec(
@@ -375,7 +379,9 @@ def _video_recipe(variant: SanaVariant) -> NativeDiffusionRecipe:
             ComponentSpec(
                 scheduler,
                 (
-                    build_sana_streaming_euler_scheduler
+                    build_sana_longlive_scheduler
+                    if longlive
+                    else build_sana_streaming_euler_scheduler
                     if long_streaming
                     else build_sana_flow_dpm_scheduler
                 ),
@@ -385,13 +391,18 @@ def _video_recipe(variant: SanaVariant) -> NativeDiffusionRecipe:
         ),
         execution=_execution(
             encoded_initialization=streaming,
-            strategy="chunked-kv-cache" if long_streaming else "standard",
+            strategy=(
+                "chunked-additive-cache" if longlive
+                else "chunked-kv-cache" if long_streaming else "standard"
+            ),
             options={
                 "base_chunk_frames": 3,
                 "num_cached_chunks": 2,
                 "sink_token": True,
             }
             if long_streaming
+            else {"base_chunk_frames": 10, "num_cached_chunks": -1, "sink_token": False}
+            if longlive
             else None,
         ),
         checkpoints=checkpoints,

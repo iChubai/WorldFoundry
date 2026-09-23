@@ -272,7 +272,7 @@ class Gen3CModel(InferenceModel):
 	) -> tuple[Any, Any]:
 		import torch
 
-		from worldfoundry.core.spatial_warp import forward_warp_indexed_frames
+		from worldfoundry.core.geometry.warp import forward_warp_indexed_frames
 
 		native_pipeline = getattr(self.pipeline, "native_pipeline", self.pipeline)
 		device = torch.device(getattr(native_pipeline, "device", "cpu"))

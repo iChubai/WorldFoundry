@@ -1,0 +1,8 @@
+{
+  "model_id": "cosmos3-super",
+  "status": "generated",
+  "gpus": "1,3",
+  "decoded_frames": 9,
+  "artifact_sha256": "166006bf36e0e83bebb3787a49489834919c6bab94bea18ecca2380a299e3a6b",
+  "elapsed_seconds": 154.07
+}

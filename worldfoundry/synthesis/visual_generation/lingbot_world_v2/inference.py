@@ -47,7 +47,7 @@ from worldfoundry.core.attention.causal_rope_sequence_parallel import (
 )
 from worldfoundry.core.distributed.block_fsdp import shard_model
 from worldfoundry.core.distributed.sequence_ops import get_world_size
-from worldfoundry.core.geometry import ray_condition
+from worldfoundry.core.geometry.transforms import ray_condition
 from worldfoundry.operators.lingbot_world_operator import (
     compute_relative_poses,
     get_Ks_transformed,

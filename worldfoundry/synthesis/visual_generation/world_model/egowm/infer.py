@@ -1,4 +1,4 @@
-"""Compatibility launcher for official EgoWM 25-DoF SVD inference."""
+"""Compatibility launcher for official EgoWM 3-DoF and 25-DoF SVD inference."""
 
 from __future__ import annotations
 
@@ -63,17 +63,12 @@ def run(args: argparse.Namespace) -> Path:
         from PIL import Image
 
         from models.svd_wrapper import (
+            DebugActionUnetFwise2,
             DebugActionUnetFwise2state,
+            DebugSVDActionPipeline,
             DebugSVDActionStateConstcfgPipeline,
         )
 
-        unet = DebugActionUnetFwise2state.from_pretrained(
-            str(base_model_dir),
-            subfolder="unet",
-            low_cpu_mem_usage=False,
-            torch_dtype=torch.float16,
-            variant="fp16",
-        )
         with torch.serialization.safe_globals([argparse.Namespace]):
             checkpoint = torch.load(
                 checkpoint_path,
@@ -82,10 +77,35 @@ def run(args: argparse.Namespace) -> Path:
                 weights_only=True,
             )
         state_dict = checkpoint.get("unet", checkpoint)
+        action_embedding = state_dict.get("add_action_embedding.linear_1.weight")
+        if action_embedding is None:
+            raise ValueError("EgoWM checkpoint has no action embedding")
+        action_width = action_embedding.shape[1]
+        has_state = any(key.startswith("add_state_embedding.") for key in state_dict)
+        if action_width == 96 and not has_state:
+            action_dims = 3
+            unet_class = DebugActionUnetFwise2
+            pipeline_class = DebugSVDActionPipeline
+        elif action_width == 800 and has_state:
+            action_dims = 25
+            unet_class = DebugActionUnetFwise2state
+            pipeline_class = DebugSVDActionStateConstcfgPipeline
+        else:
+            raise ValueError(
+                f"Unsupported EgoWM checkpoint: action width {action_width}, "
+                f"state embedding present={has_state}"
+            )
+        unet = unet_class.from_pretrained(
+            str(base_model_dir),
+            subfolder="unet",
+            low_cpu_mem_usage=False,
+            torch_dtype=torch.float16,
+            variant="fp16",
+        )
         unet.load_state_dict(state_dict, strict=True)
         del state_dict, checkpoint
 
-        pipeline = DebugSVDActionStateConstcfgPipeline.from_pretrained(
+        pipeline = pipeline_class.from_pretrained(
             str(base_model_dir),
             unet=unet,
             torch_dtype=torch.float16,
@@ -95,25 +115,25 @@ def run(args: argparse.Namespace) -> Path:
         pipeline.set_progress_bar_config(disable=False)
 
         image = Image.open(input_image).convert("RGB").resize((args.width, args.height))
-        actions = torch.zeros((args.num_frames, 25), dtype=torch.float32)
+        actions = torch.zeros((args.num_frames, action_dims), dtype=torch.float32)
         actions[:, 0] = float(args.action_scale)
-        initial_state = torch.zeros(25, dtype=torch.float32)
         generator = torch.manual_seed(args.seed)
 
-        frames = pipeline(
-            image,
+        inference_kwargs = dict(
             decode_chunk_size=min(8, args.num_frames),
             generator=generator,
             motion_bucket_id=args.motion_bucket_id,
             noise_aug_strength=0.1,
             actions=actions,
-            init_state=initial_state,
             fps=args.fps,
             height=args.height,
             width=args.width,
             num_frames=args.num_frames,
             num_inference_steps=args.num_inference_steps,
-        ).frames[0]
+        )
+        if action_dims == 25:
+            inference_kwargs["init_state"] = torch.zeros(25, dtype=torch.float32)
+        frames = pipeline(image, **inference_kwargs).frames[0]
 
         from worldfoundry.core.io.video import save_video_h264
 

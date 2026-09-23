@@ -30,7 +30,7 @@ import imageio.v2 as imageio
 from tqdm import tqdm
 from kornia.geometry.depth import depth_to_3d_v2
 
-from worldfoundry.synthesis.visual_generation.three_d_four_d.pytorch3d_compat import (
+from worldfoundry.base_models.three_dimensions.three_d_four_d.pytorch3d_compat import (
     configure_pytorch3d_extension,
 )
 

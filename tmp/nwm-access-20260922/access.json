@@ -1,0 +1,56 @@
+{
+  "time": 1790077605.0155437,
+  "gated": "manual",
+  "files": [
+    {
+      "file": "cdit_b_100000.pth.tar",
+      "revision": "0821a1a7b1ae938539e32f13f5ad82465e0f3fde",
+      "local_exists": false,
+      "token_available": true,
+      "status": 403,
+      "error": "Access to model facebook/nwm is restricted and you are not in the authorized list. Visit https://huggingface.co/facebook/nwm to ask for access.",
+      "code": "GatedRepo",
+      "accessible": false
+    },
+    {
+      "file": "cdit_l_100000.pth.tar",
+      "revision": "0821a1a7b1ae938539e32f13f5ad82465e0f3fde",
+      "local_exists": false,
+      "token_available": true,
+      "status": 403,
+      "error": "Access to model facebook/nwm is restricted and you are not in the authorized list. Visit https://huggingface.co/facebook/nwm to ask for access.",
+      "code": "GatedRepo",
+      "accessible": false
+    },
+    {
+      "file": "cdit_s_100000.pth.tar",
+      "revision": "0821a1a7b1ae938539e32f13f5ad82465e0f3fde",
+      "local_exists": false,
+      "token_available": true,
+      "status": 403,
+      "error": "Access to model facebook/nwm is restricted and you are not in the authorized list. Visit https://huggingface.co/facebook/nwm to ask for access.",
+      "code": "GatedRepo",
+      "accessible": false
+    },
+    {
+      "file": "cdit_xl_100000.pth.tar",
+      "revision": "0821a1a7b1ae938539e32f13f5ad82465e0f3fde",
+      "local_exists": false,
+      "token_available": true,
+      "status": 403,
+      "error": "Access to model facebook/nwm is restricted and you are not in the authorized list. Visit https://huggingface.co/facebook/nwm to ask for access.",
+      "code": "GatedRepo",
+      "accessible": false
+    },
+    {
+      "file": "cdit_xl_ego4d_200000.pth.tar",
+      "revision": "0821a1a7b1ae938539e32f13f5ad82465e0f3fde",
+      "local_exists": false,
+      "token_available": true,
+      "status": 403,
+      "error": "Access to model facebook/nwm is restricted and you are not in the authorized list. Visit https://huggingface.co/facebook/nwm to ask for access.",
+      "code": "GatedRepo",
+      "accessible": false
+    }
+  ]
+}

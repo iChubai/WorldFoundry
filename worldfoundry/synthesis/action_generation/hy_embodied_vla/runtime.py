@@ -190,7 +190,7 @@ class HyEmbodiedVLARuntime:
         if self.policy is not None:
             return
 
-        from worldfoundry.core.device import resolve_inference_device, resolve_inference_dtype
+        from worldfoundry.core.execution.device import resolve_inference_device, resolve_inference_dtype
 
         from .configuration_hy_vla import HyVLAConfig
         from .modeling_hy_vla import HyVLA

@@ -26,7 +26,7 @@ from worldfoundry.core.attention import packed_sequence_attention
 from worldfoundry.core.nn import RMSNorm
 from worldfoundry.core.nn import scale_shift as modulate
 
-from ..wan.model import DiTBlock
+from ..wan.model import DiTBlock, _SELF_ATTENTION_INTERNAL_KWARGS
 from .architecture import EchoCheckpointArchitecture
 from .schema import EchoMemoryMechanism, EchoMemoryRecipe, SpatialInjection
 
@@ -291,6 +291,7 @@ class EchoWanAttentionBlock(DiTBlock):
         t_mod: torch.Tensor,
         freqs: torch.Tensor,
         memory_context: Mapping[str, Any] | None = None,
+        **kwargs: Any,
     ) -> torch.Tensor:
         """Wan residual block plus Echo action / SSM slots on ``B (F·HW) C``."""
         if memory_context is None:
@@ -304,10 +305,20 @@ class EchoWanAttentionBlock(DiTBlock):
         original_x = x
         x = self._inject_actions(x, memory_context)
         x = self._action_attention(x, original_x, memory_context)
-        y = self.self_attn(modulate(self.norm1(x), shift_msa, scale_msa), freqs)
+        self_attention_kwargs = {
+            key: kwargs.pop(key)
+            for key in _SELF_ATTENTION_INTERNAL_KWARGS
+            if key in kwargs
+        }
+        kwargs.pop("_worldfoundry_inplace_residual", None)
+        y = self.self_attn(
+            modulate(self.norm1(x), shift_msa, scale_msa),
+            freqs,
+            **self_attention_kwargs,
+        )
         x = self.gate(x, gate_msa, y)
         x = self._apply_temporal_memory(x, memory_context)
-        x = x + self.cross_attn(self.norm3(x), context)
+        x = x + self.cross_attn(self.norm3(x), context, **kwargs)
         y = self.ffn(modulate(self.norm2(x), shift_mlp, scale_mlp))
         x = self.gate(x, gate_mlp, y)
         return x

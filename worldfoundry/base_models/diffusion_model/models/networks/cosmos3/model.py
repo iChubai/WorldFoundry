@@ -34,8 +34,8 @@ import torch.nn as nn
 
 from worldfoundry.core.attention import rotate_half as _rotate_half
 from worldfoundry.core.attention import scaled_dot_product_attention
-from worldfoundry.core.gradient import gradient_checkpoint_forward
 from worldfoundry.core.nn import DomainAwareLinear
+from worldfoundry.core.nn.gradient import gradient_checkpoint_forward
 from worldfoundry.core.nn.timestep import TimestepEmbedding, Timesteps
 
 

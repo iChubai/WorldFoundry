@@ -14,7 +14,7 @@ import torch
 import torch.distributed as dist
 import xfuser
 
-from worldfoundry.core.device import parse_device_type, parse_nccl_backend
+from worldfoundry.core.execution.device import parse_device_type, parse_nccl_backend
 
 # ──────────────────────────────────────────────────────────────────────────
 # xFuser process-group init — NCCL backend follows device_type (cuda vs npu)

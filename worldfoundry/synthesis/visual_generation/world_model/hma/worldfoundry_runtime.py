@@ -1,8 +1,9 @@
-"""Bind WorldFoundry to the official HMA continuous interactive runtime."""
+"""Bind WorldFoundry to the official HMA continuous and discrete runtimes."""
 
 from __future__ import annotations
 
 import importlib.util
+import json
 from pathlib import Path
 from typing import Any, Mapping
 
@@ -60,6 +61,22 @@ def _base_model_dir(options: Mapping[str, Any]) -> Path:
     )
 
 
+def _magvit_checkpoint(options: Mapping[str, Any], source: Path) -> Path:
+    return _path_option(
+        options,
+        "hma_magvit_checkpoint",
+        "magvit_checkpoint",
+        default=source / "data" / "magvit2.ckpt",
+    )
+
+
+def _is_discrete(checkpoint: Path) -> bool:
+    config = checkpoint / "config.json"
+    if not config.is_file():
+        return False
+    return json.loads(config.read_text()).get("image_vocab_size") is not None
+
+
 def missing_requirements(*, options, runtime_root, entrypoint, profile) -> list[dict[str, str]]:
     """Report missing source, model, prompt, or Python assets."""
     del profile
@@ -67,7 +84,12 @@ def missing_requirements(*, options, runtime_root, entrypoint, profile) -> list[
     source = Path(str(runtime_root)).expanduser()
     missing: list[dict[str, str]] = []
 
-    required_source_files = ("hma/model/st_mar.py", "assets/langtable_prompt/frame_00.png")
+    checkpoint = _checkpoint_dir(options)
+    discrete = _is_discrete(checkpoint)
+    required_source_files = (
+        "hma/model/st_mask_git.py" if discrete else "hma/model/st_mar.py",
+        "assets/langtable_prompt/frame_00.png",
+    )
     if not source.is_dir():
         missing.append(
             {
@@ -93,7 +115,6 @@ def missing_requirements(*, options, runtime_root, entrypoint, profile) -> list[
             }
         )
 
-    checkpoint = _checkpoint_dir(options)
     for relative in ("config.json", "model.safetensors"):
         path = checkpoint / relative
         if not path.is_file() or path.stat().st_size == 0:
@@ -101,17 +122,24 @@ def missing_requirements(*, options, runtime_root, entrypoint, profile) -> list[
                 {
                     "kind": "checkpoint",
                     "path": str(path),
-                    "reason": "HMA continuous checkpoint asset is missing or empty",
+                    "reason": "HMA checkpoint asset is missing or empty",
                 }
             )
 
-    base_model = _base_model_dir(options)
-    for relative in ("vae/config.json", "vae/diffusion_pytorch_model.fp16.safetensors"):
-        path = base_model / relative
-        if not path.is_file() or path.stat().st_size == 0:
+    if discrete:
+        tokenizer = _magvit_checkpoint(options, source)
+        if not tokenizer.is_file() or tokenizer.stat().st_size == 0:
             missing.append(
-                {"kind": "checkpoint", "path": str(path), "reason": "SVD temporal VAE asset is missing or empty"}
+                {"kind": "checkpoint", "path": str(tokenizer), "reason": "MAGVIT2 tokenizer asset is missing or empty"}
             )
+    else:
+        base_model = _base_model_dir(options)
+        for relative in ("vae/config.json", "vae/diffusion_pytorch_model.fp16.safetensors"):
+            path = base_model / relative
+            if not path.is_file() or path.stat().st_size == 0:
+                missing.append(
+                    {"kind": "checkpoint", "path": str(path), "reason": "SVD temporal VAE asset is missing or empty"}
+                )
 
     image_path = _option(options, "image_path", "input_image")
     if image_path not in (None, ""):
@@ -150,6 +178,8 @@ def build_command(context: Mapping[str, Any]) -> list[str]:
         str(_checkpoint_dir(settings)),
         "--base-model-dir",
         str(_base_model_dir(settings)),
+        "--magvit-checkpoint",
+        str(_magvit_checkpoint(settings, source)),
         "--input-image",
         str(expand_worldfoundry_path(str(image_path))),
         "--output-path",

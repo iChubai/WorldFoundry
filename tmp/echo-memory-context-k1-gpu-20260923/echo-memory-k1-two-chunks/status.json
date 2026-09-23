@@ -1,0 +1,11 @@
+{
+  "id": "echo-memory-k1-two-chunks",
+  "status": "generated",
+  "gpu": "1",
+  "started_at": 1790125137.6492836,
+  "elapsed_seconds": 298.77,
+  "artifact": "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/WorldFoundry/tmp/echo-memory-context-k1-gpu-20260923/echo-memory-k1-two-chunks/generated.mp4",
+  "decoded_frames": 161,
+  "artifact_sha256": "5a2f2da773f0f96ea7e59de72d3a12e798ceacf69a45eca30ff405e9ae6777d0",
+  "validation_script_false_failure": "Original check expected artifact_path; pipeline returns generated_video_path. Script corrected; existing output decoded with ffprobe and visually inspected."
+}

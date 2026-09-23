@@ -1,5 +1,5 @@
 # Inference methods adapted from AlayaLab/AlayaWorld at ea03cfbb2e4c4e9102ed8ea8562e0b5370ca9b79.
-# See LICENSE and PROVENANCE.md. No training lifecycle is included.
+# No training lifecycle is included.
 """ViGeo-conditioned autoregressive inference orchestration.
 
 Only the transitive per-case rollout methods are retained. Model loading,

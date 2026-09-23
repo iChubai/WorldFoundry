@@ -1,0 +1,15 @@
+{
+  "model_id": "giga-brain-0",
+  "variant": "0",
+  "checkpoint": "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/ckpts/open-gigaai--GigaBrain-0-3.5B-Base",
+  "input": "deterministic synthetic RGB, RoboTwin public mean state, public stats",
+  "action_shape": [
+    50,
+    14
+  ],
+  "all_finite": true,
+  "action_min": -1.597877025604248,
+  "action_max": 5.381859302520752,
+  "action_std": 1.9076542147881583,
+  "official_task_score": null
+}

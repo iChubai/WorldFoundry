@@ -411,6 +411,8 @@ class FlowUniPCMultistepScheduler(NativeSchedulerMixin):
         *args,
         sample: torch.Tensor = None,
         order: int = None,  # pyright: ignore
+        sigma: torch.Tensor = None,
+        sigma_next: torch.Tensor = None,
         **kwargs,
     ) -> torch.Tensor:
         """
@@ -425,6 +427,8 @@ class FlowUniPCMultistepScheduler(NativeSchedulerMixin):
                 A current instance of a sample created by the diffusion process.
             order (`int`):
                 The order of UniP at this timestep (corresponds to the *p* in UniPC-p).
+            sigma, sigma_next (`torch.Tensor`, optional):
+                Override the current and next sigma for staged schedules without changing the stored schedule.
 
         Returns:
             `torch.Tensor`:
@@ -457,7 +461,8 @@ class FlowUniPCMultistepScheduler(NativeSchedulerMixin):
             x_t = self.solver_p.step(model_output, s0, x).prev_sample
             return x_t
 
-        sigma_t, sigma_s0 = self.sigmas[self.step_index + 1], self.sigmas[self.step_index]  # pyright: ignore
+        sigma_t = self.sigmas[self.step_index + 1] if sigma_next is None else sigma_next
+        sigma_s0 = self.sigmas[self.step_index] if sigma is None else sigma
         alpha_t, sigma_t = self._sigma_to_alpha_sigma_t(sigma_t)
         alpha_s0, sigma_s0 = self._sigma_to_alpha_sigma_t(sigma_s0)
 
@@ -546,6 +551,8 @@ class FlowUniPCMultistepScheduler(NativeSchedulerMixin):
         last_sample: torch.Tensor = None,
         this_sample: torch.Tensor = None,
         order: int = None,  # pyright: ignore
+        sigma_before: torch.Tensor = None,
+        sigma: torch.Tensor = None,
         **kwargs,
     ) -> torch.Tensor:
         """
@@ -562,6 +569,8 @@ class FlowUniPCMultistepScheduler(NativeSchedulerMixin):
                 The generated sample after the last predictor `x_{t}`.
             order (`int`):
                 The `p` of UniC-p at this step. The effective order of accuracy should be `order + 1`.
+            sigma_before, sigma (`torch.Tensor`, optional):
+                Override the previous and current sigma for staged schedules without changing the stored schedule.
 
         Returns:
             `torch.Tensor`:
@@ -597,7 +606,8 @@ class FlowUniPCMultistepScheduler(NativeSchedulerMixin):
         x_t = this_sample
         model_t = this_model_output
 
-        sigma_t, sigma_s0 = self.sigmas[self.step_index], self.sigmas[self.step_index - 1]  # pyright: ignore
+        sigma_t = self.sigmas[self.step_index] if sigma is None else sigma
+        sigma_s0 = self.sigmas[self.step_index - 1] if sigma_before is None else sigma_before
         alpha_t, sigma_t = self._sigma_to_alpha_sigma_t(sigma_t)
         alpha_s0, sigma_s0 = self._sigma_to_alpha_sigma_t(sigma_s0)
 

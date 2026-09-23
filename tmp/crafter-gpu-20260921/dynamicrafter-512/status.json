@@ -1,0 +1,10 @@
+{
+  "case": "dynamicrafter-512",
+  "started_at": 1789988604.3990462,
+  "gpu": "0",
+  "status": "generated",
+  "videos": [
+    "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/WorldFoundry/tmp/crafter-gpu-20260921/dynamicrafter-512/demo.mp4"
+  ],
+  "elapsed_seconds": 222.86
+}

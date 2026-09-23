@@ -1,0 +1,10 @@
+{
+  "case": "mochi-1-fixed",
+  "started_at": 1789993692.280428,
+  "gpu": "0",
+  "status": "generated",
+  "videos": [
+    "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/WorldFoundry/tmp/video-broad-gpu-20260921/mochi-1-fixed/demo.mp4"
+  ],
+  "elapsed_seconds": 612.0
+}

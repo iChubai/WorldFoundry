@@ -378,7 +378,13 @@ class AutoregressiveWindowRunner(NativeDiffusionRunner):
                 )
             )
             block_size = int(self.windowed_denoiser.block_size)
-            if frames_per_view % block_size:
+            first_frame_latent = context.conditioning.shared.get("first_frame_latent")
+            if first_frame_latent is not None:
+                if not isinstance(first_frame_latent, Tensor) or n_views != 1:
+                    raise ValueError("causal first-frame conditioning requires one tensor view")
+                if first_frame_latent.shape != initial_noise[:, :, :1].shape:
+                    raise ValueError("causal first-frame latent must match one noise frame")
+            if first_frame_latent is None and frames_per_view % block_size:
                 raise ValueError(
                     f"latent frames per view ({frames_per_view}) must be divisible by block_size={block_size}"
                 )
@@ -404,8 +410,54 @@ class AutoregressiveWindowRunner(NativeDiffusionRunner):
                 {**shared, **context.conditioning.negative} if use_negative else None
             )
 
-            for start in range(0, frames_per_view, block_size):
-                end = start + block_size
+            start_frame = 0
+            if first_frame_latent is not None:
+                # FastVideo I2V encodes the source image as a clean latent,
+                # commits it to both experts at timestep zero, then rolls out
+                # only the remaining noisy frames.
+                output_by_view[:, :, :, :1] = first_frame_latent.unsqueeze(2)
+                context.step = SchedulerStep(
+                    index=max(request.sampling.num_inference_steps - 1, 0),
+                    timestep=torch.tensor(0.0, device=self.device),
+                    next_timestep=torch.tensor(0.0, device=self.device),
+                )
+                positive_seed = self._window_conditioning(
+                    positive_base,
+                    n_views=1,
+                    frames_per_view=frames_per_view,
+                    start=0,
+                    end=1,
+                    cache=positive_cache,
+                    frame_sequence_length=frame_sequence_length,
+                    block_noise=first_frame_latent,
+                )
+                self._call_denoiser_with_conditioning(
+                    context,
+                    latents=first_frame_latent,
+                    branch="positive-cache-commit",
+                    conditioning=positive_seed,
+                )
+                if negative_base is not None and negative_cache is not None:
+                    negative_seed = self._window_conditioning(
+                        negative_base,
+                        n_views=1,
+                        frames_per_view=frames_per_view,
+                        start=0,
+                        end=1,
+                        cache=negative_cache,
+                        frame_sequence_length=frame_sequence_length,
+                        block_noise=first_frame_latent,
+                    )
+                    self._call_denoiser_with_conditioning(
+                        context,
+                        latents=first_frame_latent,
+                        branch="negative-cache-commit",
+                        conditioning=negative_seed,
+                    )
+                start_frame = 1
+
+            for start in range(start_frame, frames_per_view, block_size):
+                end = min(start + block_size, frames_per_view)
                 block_noise = rearrange(
                     noise_by_view[:, :, :, start:end],
                     "B C V T H W -> B C (V T) H W",
@@ -506,6 +558,7 @@ class AutoregressiveWindowRunner(NativeDiffusionRunner):
                     "prediction_mode": self.prediction_mode,
                     "block_size": block_size,
                     "n_views": n_views,
+                    "first_frame_conditioned": first_frame_latent is not None,
                 },
             )
             for extension in reversed(self.extensions):

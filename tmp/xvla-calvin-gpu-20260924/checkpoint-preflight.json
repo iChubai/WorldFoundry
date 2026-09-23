@@ -1,0 +1,184 @@
+[
+  {
+    "variant": "widowx",
+    "path": "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/ckpts/2toINF--X-VLA-WidowX",
+    "required_files_present": {
+      "config.json": true,
+      "model.safetensors": true,
+      "preprocessor_config.json": true,
+      "tokenizer.json": true,
+      "tokenizer_config.json": true
+    },
+    "model_bytes": 3519068172,
+    "allocated_bytes": 0,
+    "first_8_bytes_hex": "40bd010000000000",
+    "low_allocated_block_count": true,
+    "allocation_note": "DolphinFS st_blocks does not establish missing checkpoint data; safetensors tensor-read probe is required.",
+    "safetensors_header_and_sample": {
+      "key_count": 903,
+      "sample_key": "transformer.action_decoder.bias.weight",
+      "sample_shape": [
+        30,
+        20
+      ],
+      "sample_finite": true,
+      "sample_absmax": 0.3666815161705017
+    }
+  },
+  {
+    "variant": "google-robot",
+    "path": "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/ckpts/2toINF--X-VLA-Google-Robot",
+    "required_files_present": {
+      "config.json": true,
+      "model.safetensors": true,
+      "preprocessor_config.json": true,
+      "tokenizer.json": true,
+      "tokenizer_config.json": true
+    },
+    "model_bytes": 3519068172,
+    "allocated_bytes": 0,
+    "first_8_bytes_hex": "40bd010000000000",
+    "low_allocated_block_count": true,
+    "allocation_note": "DolphinFS st_blocks does not establish missing checkpoint data; safetensors tensor-read probe is required.",
+    "safetensors_header_and_sample": {
+      "key_count": 903,
+      "sample_key": "transformer.action_decoder.bias.weight",
+      "sample_shape": [
+        30,
+        20
+      ],
+      "sample_finite": true,
+      "sample_absmax": 0.5799575448036194
+    }
+  },
+  {
+    "variant": "calvin",
+    "path": "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/ckpts/2toINF--X-VLA-Calvin-ABC_D",
+    "required_files_present": {
+      "config.json": true,
+      "model.safetensors": true,
+      "preprocessor_config.json": true,
+      "tokenizer.json": true,
+      "tokenizer_config.json": true
+    },
+    "model_bytes": 3519068172,
+    "allocated_bytes": 3519068672,
+    "first_8_bytes_hex": "40bd010000000000",
+    "low_allocated_block_count": false,
+    "allocation_note": "DolphinFS st_blocks does not establish missing checkpoint data; safetensors tensor-read probe is required.",
+    "safetensors_header_and_sample": {
+      "key_count": 903,
+      "sample_key": "transformer.action_decoder.bias.weight",
+      "sample_shape": [
+        30,
+        20
+      ],
+      "sample_finite": true,
+      "sample_absmax": 0.4018101096153259
+    }
+  },
+  {
+    "variant": "robotwin2",
+    "path": "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/ckpts/2toINF--X-VLA-RoboTwin2",
+    "required_files_present": {
+      "config.json": true,
+      "model.safetensors": true,
+      "preprocessor_config.json": true,
+      "tokenizer.json": true,
+      "tokenizer_config.json": true
+    },
+    "model_bytes": 3519068172,
+    "allocated_bytes": 0,
+    "first_8_bytes_hex": "40bd010000000000",
+    "low_allocated_block_count": true,
+    "allocation_note": "DolphinFS st_blocks does not establish missing checkpoint data; safetensors tensor-read probe is required.",
+    "safetensors_header_and_sample": {
+      "key_count": 903,
+      "sample_key": "transformer.action_decoder.bias.weight",
+      "sample_shape": [
+        30,
+        20
+      ],
+      "sample_finite": true,
+      "sample_absmax": 0.16486522555351257
+    }
+  },
+  {
+    "variant": "vlabench",
+    "path": "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/ckpts/2toINF--X-VLA-VLABench",
+    "required_files_present": {
+      "config.json": true,
+      "model.safetensors": true,
+      "preprocessor_config.json": true,
+      "tokenizer.json": true,
+      "tokenizer_config.json": true
+    },
+    "model_bytes": 3519068172,
+    "allocated_bytes": 0,
+    "first_8_bytes_hex": "40bd010000000000",
+    "low_allocated_block_count": true,
+    "allocation_note": "DolphinFS st_blocks does not establish missing checkpoint data; safetensors tensor-read probe is required.",
+    "safetensors_header_and_sample": {
+      "key_count": 903,
+      "sample_key": "transformer.action_decoder.bias.weight",
+      "sample_shape": [
+        30,
+        20
+      ],
+      "sample_finite": true,
+      "sample_absmax": 0.2527249753475189
+    }
+  },
+  {
+    "variant": "agiworld",
+    "path": "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/ckpts/2toINF--X-VLA-AgiWorld-Challenge",
+    "required_files_present": {
+      "config.json": true,
+      "model.safetensors": true,
+      "preprocessor_config.json": true,
+      "tokenizer.json": true,
+      "tokenizer_config.json": true
+    },
+    "model_bytes": 3519068172,
+    "allocated_bytes": 0,
+    "first_8_bytes_hex": "40bd010000000000",
+    "low_allocated_block_count": true,
+    "allocation_note": "DolphinFS st_blocks does not establish missing checkpoint data; safetensors tensor-read probe is required.",
+    "safetensors_header_and_sample": {
+      "key_count": 903,
+      "sample_key": "transformer.action_decoder.bias.weight",
+      "sample_shape": [
+        30,
+        20
+      ],
+      "sample_finite": true,
+      "sample_absmax": 0.16486522555351257
+    }
+  },
+  {
+    "variant": "softfold",
+    "path": "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/ckpts/2toINF--X-VLA-SoftFold",
+    "required_files_present": {
+      "config.json": true,
+      "model.safetensors": true,
+      "preprocessor_config.json": true,
+      "tokenizer.json": true,
+      "tokenizer_config.json": true
+    },
+    "model_bytes": 3519068172,
+    "allocated_bytes": 0,
+    "first_8_bytes_hex": "40bd010000000000",
+    "low_allocated_block_count": true,
+    "allocation_note": "DolphinFS st_blocks does not establish missing checkpoint data; safetensors tensor-read probe is required.",
+    "safetensors_header_and_sample": {
+      "key_count": 903,
+      "sample_key": "transformer.action_decoder.bias.weight",
+      "sample_shape": [
+        30,
+        20
+      ],
+      "sample_finite": true,
+      "sample_absmax": 0.11176509410142899
+    }
+  }
+]

@@ -9,7 +9,7 @@ import numpy as np
 import torch
 import torch.nn.functional as F
 
-from worldfoundry.core.spatial_warp import (
+from worldfoundry.core.geometry.warp import (
     Sparse3DCache,
     forward_warp_indexed_frames,
     pixel_intrinsics,

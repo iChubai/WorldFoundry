@@ -1,0 +1,13 @@
+{
+  "status": "verified_inference_only",
+  "video": "tmp/stepvideo-gpu-20260923/demo-quality.mp4",
+  "decoded_frames": 17,
+  "width": 992,
+  "height": 544,
+  "fps": 25,
+  "pixel_std": 70.112,
+  "mean_adjacent_frame_absdiff": 1.724,
+  "first_last_absdiff": 13.582,
+  "contact_sheet": "tmp/stepvideo-gpu-20260923/contact-quality.jpg",
+  "visual_review": "Frames 0/8/16 clearly depict a white cat with sunglasses on a surfboard over water. Scene and subject remain coherent with slight movement. This is a shortest-valid 17-frame run at official spatial resolution and 50 steps; 204-frame long-form quality and benchmark scores were not tested."
+}

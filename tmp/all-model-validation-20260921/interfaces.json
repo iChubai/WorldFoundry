@@ -1,0 +1,2771 @@
+[
+  {
+    "target": "worldfoundry.pipelines.abot_world.pipeline_abot_world:ABotWorldPipeline",
+    "model_ids": [
+      "abot-world-0-5b-lf"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.798
+  },
+  {
+    "target": "worldfoundry.pipelines.ac3d.pipeline_ac3d:AC3DPipeline",
+    "model_ids": [
+      "ac3d"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 21.041
+  },
+  {
+    "target": "worldfoundry.pipelines.alayaworld.pipeline_alayaworld:AlayaWorldPipeline",
+    "model_ids": [
+      "alayaworld"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 88.22
+  },
+  {
+    "target": "worldfoundry.pipelines.alayaworld_v11.pipeline_alayaworld_v11:AlayaWorldV11Pipeline",
+    "model_ids": [
+      "alayaworld-v1.1"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.167
+  },
+  {
+    "target": "worldfoundry.pipelines.allegro.pipeline_allegro_ti2v:AllegroTi2VPipeline",
+    "model_ids": [
+      "allegro",
+      "allegro-ti2v"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.319
+  },
+  {
+    "target": "worldfoundry.pipelines.astronex_world.pipeline_astronex_world:AstronexWorldPipeline",
+    "model_ids": [
+      "astronex-world"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.08
+  },
+  {
+    "target": "worldfoundry.pipelines.ati.pipeline_ati:ATIPipeline",
+    "model_ids": [
+      "ati-wan21-14b"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.093
+  },
+  {
+    "target": "worldfoundry.pipelines.bernini.pipeline_bernini:BerniniWorldFoundryPipeline",
+    "model_ids": [
+      "bernini",
+      "bernini-r-1.3b",
+      "bernini-r-14b"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.389
+  },
+  {
+    "target": "worldfoundry.pipelines.cogvideox.pipeline_cogvideox_2b_t2v:CogVideoX2bT2VPipeline",
+    "model_ids": [
+      "cogvideox-2b-t2v"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.107
+  },
+  {
+    "target": "worldfoundry.pipelines.cogvideox.pipeline_cogvideox_5b_i2v:CogVideoX5bI2VPipeline",
+    "model_ids": [
+      "cogvideox-5b-i2v"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.011
+  },
+  {
+    "target": "worldfoundry.pipelines.cogvideox.pipeline_cogvideox_5b_t2v:CogVideoX5bT2VPipeline",
+    "model_ids": [
+      "cogvideox",
+      "cogvideox-5b-t2v"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.01
+  },
+  {
+    "target": "worldfoundry.pipelines.component_pipelines:ACTPipeline",
+    "model_ids": [
+      "act"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.012
+  },
+  {
+    "target": "worldfoundry.pipelines.component_pipelines:AnimateDiffPipeline",
+    "model_ids": [
+      "animatediff"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.0
+  },
+  {
+    "target": "worldfoundry.pipelines.component_pipelines:BeingH05Pipeline",
+    "model_ids": [
+      "being-h05"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.0
+  },
+  {
+    "target": "worldfoundry.pipelines.component_pipelines:BeingH07Pipeline",
+    "model_ids": [
+      "being-h07"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.0
+  },
+  {
+    "target": "worldfoundry.pipelines.component_pipelines:CameraCtrlPipeline",
+    "model_ids": [
+      "cameractrl"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.0
+  },
+  {
+    "target": "worldfoundry.pipelines.component_pipelines:CogACTPipeline",
+    "model_ids": [
+      "cogact"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.0
+  },
+  {
+    "target": "worldfoundry.pipelines.component_pipelines:DBCogACTPipeline",
+    "model_ids": [
+      "db-cogact"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.0
+  },
+  {
+    "target": "worldfoundry.pipelines.component_pipelines:DVLTPipeline",
+    "model_ids": [
+      "dvlt"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.0
+  },
+  {
+    "target": "worldfoundry.pipelines.component_pipelines:DiffusionPolicyPipeline",
+    "model_ids": [
+      "diffusion-policy"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.0
+  },
+  {
+    "target": "worldfoundry.pipelines.component_pipelines:DreamDojoPipeline",
+    "model_ids": [
+      "dreamdojo"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.0
+  },
+  {
+    "target": "worldfoundry.pipelines.component_pipelines:DreamZeroPipeline",
+    "model_ids": [
+      "dreamzero"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.0
+  },
+  {
+    "target": "worldfoundry.pipelines.component_pipelines:DualCamCtrlPipeline",
+    "model_ids": [
+      "dualcamctrl"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.0
+  },
+  {
+    "target": "worldfoundry.pipelines.component_pipelines:EO1Pipeline",
+    "model_ids": [
+      "eo1"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.0
+  },
+  {
+    "target": "worldfoundry.pipelines.component_pipelines:GR00TPipeline",
+    "model_ids": [
+      "gr00t"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.0
+  },
+  {
+    "target": "worldfoundry.pipelines.component_pipelines:GaussianActorPipeline",
+    "model_ids": [
+      "gaussian-actor"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.0
+  },
+  {
+    "target": "worldfoundry.pipelines.component_pipelines:GigaBrain0Pipeline",
+    "model_ids": [
+      "giga-brain-0"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.0
+  },
+  {
+    "target": "worldfoundry.pipelines.component_pipelines:HYEmbodiedPipeline",
+    "model_ids": [
+      "hy-embodied"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.0
+  },
+  {
+    "target": "worldfoundry.pipelines.component_pipelines:IRASimPipeline",
+    "model_ids": [
+      "irasim"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.0
+  },
+  {
+    "target": "worldfoundry.pipelines.component_pipelines:LAPAPipeline",
+    "model_ids": [
+      "lapa"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.0
+  },
+  {
+    "target": "worldfoundry.pipelines.component_pipelines:LastR1Pipeline",
+    "model_ids": [
+      "last-r1"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.0
+  },
+  {
+    "target": "worldfoundry.pipelines.component_pipelines:LiberoParaPipeline",
+    "model_ids": [
+      "libero-para"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.0
+  },
+  {
+    "target": "worldfoundry.pipelines.component_pipelines:LingBotVAPipeline",
+    "model_ids": [
+      "lingbot-va"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.0
+  },
+  {
+    "target": "worldfoundry.pipelines.component_pipelines:LingBotVLAPipeline",
+    "model_ids": [
+      "lingbot-vla"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.0
+  },
+  {
+    "target": "worldfoundry.pipelines.component_pipelines:LingBotVLAV2Pipeline",
+    "model_ids": [
+      "lingbot-vla-v2"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.0
+  },
+  {
+    "target": "worldfoundry.pipelines.component_pipelines:MMEVLAPipeline",
+    "model_ids": [
+      "mme-vla"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.0
+  },
+  {
+    "target": "worldfoundry.pipelines.component_pipelines:MolmoAct2Pipeline",
+    "model_ids": [
+      "molmoact2"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.0
+  },
+  {
+    "target": "worldfoundry.pipelines.component_pipelines:MolmoBotPipeline",
+    "model_ids": [
+      "molmobot"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.0
+  },
+  {
+    "target": "worldfoundry.pipelines.component_pipelines:MotionCtrlPipeline",
+    "model_ids": [
+      "motionctrl"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.0
+  },
+  {
+    "target": "worldfoundry.pipelines.component_pipelines:MultiTaskDiTPipeline",
+    "model_ids": [
+      "multi-task-dit"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.0
+  },
+  {
+    "target": "worldfoundry.pipelines.component_pipelines:OctoPipeline",
+    "model_ids": [
+      "octo"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.0
+  },
+  {
+    "target": "worldfoundry.pipelines.component_pipelines:OpenMAGVIT2Pipeline",
+    "model_ids": [
+      "open-magvit2"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.0
+  },
+  {
+    "target": "worldfoundry.pipelines.component_pipelines:OpenPIE06Pipeline",
+    "model_ids": [
+      "openpie-0.6"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.0
+  },
+  {
+    "target": "worldfoundry.pipelines.component_pipelines:OpenPIPipeline",
+    "model_ids": [
+      "openpi",
+      "pi0",
+      "pi0-fast",
+      "pi0-worldfoundry",
+      "pi05"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.0
+  },
+  {
+    "target": "worldfoundry.pipelines.component_pipelines:OpenVLAOFTPipeline",
+    "model_ids": [
+      "openvla-oft"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.0
+  },
+  {
+    "target": "worldfoundry.pipelines.component_pipelines:OpenVLAPipeline",
+    "model_ids": [
+      "openvla"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.0
+  },
+  {
+    "target": "worldfoundry.pipelines.component_pipelines:PandoraPipeline",
+    "model_ids": [
+      "pandora"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.0
+  },
+  {
+    "target": "worldfoundry.pipelines.component_pipelines:PixelSplatPipeline",
+    "model_ids": [
+      "pixelsplat"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.0
+  },
+  {
+    "target": "worldfoundry.pipelines.component_pipelines:RealTimeChunkingPipeline",
+    "model_ids": [
+      "real-time-chunking"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.0
+  },
+  {
+    "target": "worldfoundry.pipelines.component_pipelines:RoboFlamingoPipeline",
+    "model_ids": [
+      "roboflamingo"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.0
+  },
+  {
+    "target": "worldfoundry.pipelines.component_pipelines:ShowOPipeline",
+    "model_ids": [
+      "show-o"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.0
+  },
+  {
+    "target": "worldfoundry.pipelines.component_pipelines:Splatt3RPipeline",
+    "model_ids": [
+      "splatt3r"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.0
+  },
+  {
+    "target": "worldfoundry.pipelines.component_pipelines:StarVLAPipeline",
+    "model_ids": [
+      "starvla"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.0
+  },
+  {
+    "target": "worldfoundry.pipelines.component_pipelines:TDMPCPipeline",
+    "model_ids": [
+      "tdmpc"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.0
+  },
+  {
+    "target": "worldfoundry.pipelines.component_pipelines:VLANeXtPipeline",
+    "model_ids": [
+      "vlanext"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.0
+  },
+  {
+    "target": "worldfoundry.pipelines.component_pipelines:VQBeTPipeline",
+    "model_ids": [
+      "vqbet"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.0
+  },
+  {
+    "target": "worldfoundry.pipelines.component_pipelines:WallOSSPipeline",
+    "model_ids": [
+      "wall-oss"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.0
+  },
+  {
+    "target": "worldfoundry.pipelines.component_pipelines:XVLAPipeline",
+    "model_ids": [
+      "xvla"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.0
+  },
+  {
+    "target": "worldfoundry.pipelines.component_pipelines:ZeroScopePipeline",
+    "model_ids": [
+      "zeroscope"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.0
+  },
+  {
+    "target": "worldfoundry.pipelines.cosmos.pipeline_cosmos3:Cosmos3Pipeline",
+    "model_ids": [
+      "cosmos3",
+      "cosmos3-nano",
+      "cosmos3-super"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.109
+  },
+  {
+    "target": "worldfoundry.pipelines.cosmos.pipeline_cosmos_predict2:CosmosPredict2Pipeline",
+    "model_ids": [
+      "cosmos-predict-2",
+      "cosmos-predict2-14b-video2world",
+      "cosmos-predict2-2b-video2world"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.011
+  },
+  {
+    "target": "worldfoundry.pipelines.cosmos.pipeline_cosmos_predict2p5:CosmosPredict2p5Pipeline",
+    "model_ids": [
+      "cosmos-predict-2.5",
+      "cosmos-predict2.5-14b",
+      "cosmos-predict2.5-2b"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.009
+  },
+  {
+    "target": "worldfoundry.pipelines.cosmos.pipeline_cosmos_transfer2p5:CosmosTransfer2p5Pipeline",
+    "model_ids": [
+      "cosmos-transfer-2.5",
+      "cosmos-transfer2.5-2b-controlled-video"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.01
+  },
+  {
+    "target": "worldfoundry.pipelines.cut3r.pipeline_cut3r:CUT3RPipeline",
+    "model_ids": [
+      "cut3r"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 3.668
+  },
+  {
+    "target": "worldfoundry.pipelines.depth_anything.pipeline_depth_anything_v1:DepthAnything1Pipeline",
+    "model_ids": [
+      "depth-anything-v1"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.364
+  },
+  {
+    "target": "worldfoundry.pipelines.depth_anything.pipeline_depth_anything_v3:DepthAnything3Pipeline",
+    "model_ids": [
+      "depth-anything-v3"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 1.445
+  },
+  {
+    "target": "worldfoundry.pipelines.dreamx_world.pipeline_dreamx_world:DreamXWorld5BARPipeline",
+    "model_ids": [
+      "dreamx-world-5b"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.043
+  },
+  {
+    "target": "worldfoundry.pipelines.dreamx_world.pipeline_dreamx_world:DreamXWorld5BCamPipeline",
+    "model_ids": [
+      "dreamx-world-5b-cam"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.0
+  },
+  {
+    "target": "worldfoundry.pipelines.dynamicrafter.pipeline_dynamicrafter_1024_i2v:DynamiCrafter1024I2VPipeline",
+    "model_ids": [
+      "dynamicrafter-1024-i2v"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.255
+  },
+  {
+    "target": "worldfoundry.pipelines.dynamicrafter.pipeline_dynamicrafter_512_i2v:DynamiCrafter512I2VPipeline",
+    "model_ids": [
+      "dynamicrafter",
+      "dynamicrafter-512-i2v"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.017
+  },
+  {
+    "target": "worldfoundry.pipelines.easyanimate.pipeline_easyanimate_i2v:EasyAnimateI2VPipeline",
+    "model_ids": [
+      "easyanimate",
+      "easyanimate-i2v"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.137
+  },
+  {
+    "target": "worldfoundry.pipelines.echo_infinity.pipeline_echo_infinity:EchoInfinityPipeline",
+    "model_ids": [
+      "echo-infinity"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.083
+  },
+  {
+    "target": "worldfoundry.pipelines.echo_memory.pipeline_echo_memory:EchoMemoryContextK1Pipeline",
+    "model_ids": [
+      "echo-memory-context-k1"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.092
+  },
+  {
+    "target": "worldfoundry.pipelines.evoke.pipeline_evoke:EvokePipeline",
+    "model_ids": [
+      "evoke"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.142
+  },
+  {
+    "target": "worldfoundry.pipelines.fantasy_world.pipeline_fantasy_world:FantasyWorldPipeline",
+    "model_ids": [
+      "fantasyworld"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.053
+  },
+  {
+    "target": "worldfoundry.pipelines.fantasy_world.pipeline_fantasy_world:FantasyWorldWan21Pipeline",
+    "model_ids": [
+      "fantasyworld-wan21"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.0
+  },
+  {
+    "target": "worldfoundry.pipelines.fantasy_world.pipeline_fantasy_world:FantasyWorldWan22Pipeline",
+    "model_ids": [
+      "fantasyworld-wan22"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.0
+  },
+  {
+    "target": "worldfoundry.pipelines.fastvideo_causal_wan.pipeline_fastvideo_causal_wan:FastVideoCausalWanPipeline",
+    "model_ids": [
+      "fastvideo-causal-wan2.2",
+      "fastvideo-causal-wan2.2-i2v-14b"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.065
+  },
+  {
+    "target": "worldfoundry.pipelines.flash_world.pipeline_flash_world:FlashWorldPipeline",
+    "model_ids": [
+      "flashworld"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.051
+  },
+  {
+    "target": "worldfoundry.pipelines.forcing.pipeline_forcing:CausalForcingPipeline",
+    "model_ids": [
+      "causal-forcing"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.163
+  },
+  {
+    "target": "worldfoundry.pipelines.forcing.pipeline_forcing:RollingForcingPipeline",
+    "model_ids": [
+      "rolling-forcing"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.0
+  },
+  {
+    "target": "worldfoundry.pipelines.forcing.pipeline_forcing:SelfForcingPipeline",
+    "model_ids": [
+      "self-forcing"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.0
+  },
+  {
+    "target": "worldfoundry.pipelines.gamma_world.pipeline_gamma_world:GammaWorldPipeline",
+    "model_ids": [
+      "gamma-world",
+      "gamma-world-bidirectional",
+      "gamma-world-causal",
+      "gamma-world-causal-few-step"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.388
+  },
+  {
+    "target": "worldfoundry.pipelines.gen3c.pipeline_gen3c:Gen3CPipeline",
+    "model_ids": [
+      "gen3c"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.055
+  },
+  {
+    "target": "worldfoundry.pipelines.geometry_priors.pipeline_geometry_priors:DAPPipeline",
+    "model_ids": [
+      "dap"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.372
+  },
+  {
+    "target": "worldfoundry.pipelines.geometry_priors.pipeline_geometry_priors:DUSt3RPipeline",
+    "model_ids": [
+      "dust3r",
+      "dust3r-base-model"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.0
+  },
+  {
+    "target": "worldfoundry.pipelines.geometry_priors.pipeline_geometry_priors:DepthAnythingV2PriorPipeline",
+    "model_ids": [
+      "depth-anything-v2-prior"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.0
+  },
+  {
+    "target": "worldfoundry.pipelines.geometry_priors.pipeline_geometry_priors:DepthAnythingV3PriorPipeline",
+    "model_ids": [
+      "depth-anything-v3-prior"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.0
+  },
+  {
+    "target": "worldfoundry.pipelines.geometry_priors.pipeline_geometry_priors:GeoCalibPriorPipeline",
+    "model_ids": [
+      "geocalib-prior"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.0
+  },
+  {
+    "target": "worldfoundry.pipelines.geometry_priors.pipeline_geometry_priors:GeometryPriorPipeline",
+    "model_ids": [
+      "geometry-prior"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.0
+  },
+  {
+    "target": "worldfoundry.pipelines.geometry_priors.pipeline_geometry_priors:Metric3DPriorPipeline",
+    "model_ids": [
+      "metric3d-prior"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.0
+  },
+  {
+    "target": "worldfoundry.pipelines.geometry_priors.pipeline_geometry_priors:PriorDepthAnythingPipeline",
+    "model_ids": [
+      "prior-depth-anything"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.0
+  },
+  {
+    "target": "worldfoundry.pipelines.geometry_priors.pipeline_geometry_priors:TrackAnythingPriorPipeline",
+    "model_ids": [
+      "track-anything-prior"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.0
+  },
+  {
+    "target": "worldfoundry.pipelines.geometry_priors.pipeline_geometry_priors:UniDepthV2PriorPipeline",
+    "model_ids": [
+      "unidepth-v2-prior"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.0
+  },
+  {
+    "target": "worldfoundry.pipelines.geometry_priors.pipeline_geometry_priors:UniK3DPriorPipeline",
+    "model_ids": [
+      "unik3d-prior"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.0
+  },
+  {
+    "target": "worldfoundry.pipelines.geometry_priors.pipeline_geometry_priors:VideoDepthAnythingPriorPipeline",
+    "model_ids": [
+      "video-depth-anything-prior"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.0
+  },
+  {
+    "target": "worldfoundry.pipelines.helios.pipeline_helios:HeliosPipeline",
+    "model_ids": [
+      "helios",
+      "helios-base",
+      "helios-distilled",
+      "helios-mid"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.094
+  },
+  {
+    "target": "worldfoundry.pipelines.hunyuan_video.pipeline_hunyuan_video:HunyuanVideo15I2VPipeline",
+    "model_ids": [
+      "hunyuanvideo-1.5-i2v"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.037
+  },
+  {
+    "target": "worldfoundry.pipelines.hunyuan_video.pipeline_hunyuan_video:HunyuanVideo15T2VPipeline",
+    "model_ids": [
+      "hunyuanvideo-1.5",
+      "hunyuanvideo-1.5-t2v"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.0
+  },
+  {
+    "target": "worldfoundry.pipelines.hunyuan_video.pipeline_hunyuan_video:HunyuanVideoI2VPipeline",
+    "model_ids": [
+      "hunyuanvideo-i2v"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.0
+  },
+  {
+    "target": "worldfoundry.pipelines.hunyuan_video.pipeline_hunyuan_video:HunyuanVideoT2VPipeline",
+    "model_ids": [
+      "hunyuanvideo",
+      "hunyuanvideo-t2v"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.0
+  },
+  {
+    "target": "worldfoundry.pipelines.hunyuan_world.pipeline_hunyuan_game_craft:HunyuanGameCraftPipeline",
+    "model_ids": [
+      "hunyuan-game-craft"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.14
+  },
+  {
+    "target": "worldfoundry.pipelines.hunyuan_world.pipeline_hunyuan_mirror:HunyuanMirrorPipeline",
+    "model_ids": [
+      "hunyuanworld-mirror"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.012
+  },
+  {
+    "target": "worldfoundry.pipelines.hunyuan_world.pipeline_hunyuan_world_voyager:HunyuanWorldVoyagerPipeline",
+    "model_ids": [
+      "hunyuanworld-voyager"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.012
+  },
+  {
+    "target": "worldfoundry.pipelines.hunyuan_world.pipeline_hunyuan_worldplay:HunyuanWorldPlayPipeline",
+    "model_ids": [
+      "hy-worldplay"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.125
+  },
+  {
+    "target": "worldfoundry.pipelines.hunyuan_world.pipeline_hy_world_2p0:HYWorld2Pipeline",
+    "model_ids": [
+      "hy-world-2.0"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.021
+  },
+  {
+    "target": "worldfoundry.pipelines.hunyuan_world.pipeline_hy_world_2p0_worldgen:HYWorld2WorldgenPipeline",
+    "model_ids": [
+      "hyworld-worldgen"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.02
+  },
+  {
+    "target": "worldfoundry.pipelines.hy_embodied_vla.pipeline_hy_embodied_vla:HyEmbodiedVLAPipeline",
+    "model_ids": [
+      "hy-embodied-vla"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.045
+  },
+  {
+    "target": "worldfoundry.pipelines.hydra.pipeline_hydra:HydraPipeline",
+    "model_ids": [
+      "hydra"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.093
+  },
+  {
+    "target": "worldfoundry.pipelines.hyperflow.pipeline_hyperflow:HyperFlowPipeline",
+    "model_ids": [
+      "hyperflow"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.095
+  },
+  {
+    "target": "worldfoundry.pipelines.infinite_vggt.pipeline_infinite_vggt:InfiniteVGGTPipeline",
+    "model_ids": [
+      "infinite-vggt"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.636
+  },
+  {
+    "target": "worldfoundry.pipelines.infinite_world.pipeline_infinite_world:InfiniteWorldPipeline",
+    "model_ids": [
+      "infinite-world"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.268
+  },
+  {
+    "target": "worldfoundry.pipelines.inspatio_world.pipeline_inspatio_world:InspatioWorldPipeline",
+    "model_ids": [
+      "inspatio-world"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.094
+  },
+  {
+    "target": "worldfoundry.pipelines.joyai_echo.pipeline_joyai_echo:JoyAIEchoLongVideoPipeline",
+    "model_ids": [
+      "joyai-echo-longvideo"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.1
+  },
+  {
+    "target": "worldfoundry.pipelines.joyai_echo.pipeline_joyai_echo:JoyAIEchoWMPipeline",
+    "model_ids": [
+      "joyai-echo-wm"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.0
+  },
+  {
+    "target": "worldfoundry.pipelines.kairos.pipeline_kairos:KairosPipeline",
+    "model_ids": [
+      "kairos-sensenova"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.1
+  },
+  {
+    "target": "worldfoundry.pipelines.kling.pipeline_astra:AstraPipeline",
+    "model_ids": [
+      "astra"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 4.43
+  },
+  {
+    "target": "worldfoundry.pipelines.kling.pipeline_kling_api:KlingApiPipeline",
+    "model_ids": [
+      "kling-api"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.091
+  },
+  {
+    "target": "worldfoundry.pipelines.kling.pipeline_recammaster:ReCamMasterPipeline",
+    "model_ids": [
+      "recammaster"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.013
+  },
+  {
+    "target": "worldfoundry.pipelines.lingbot_map.pipeline_lingbot_map:LingBotMapPipeline",
+    "model_ids": [
+      "lingbot-map"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.098
+  },
+  {
+    "target": "worldfoundry.pipelines.lingbot_video.pipeline_lingbot_video:LingBotVideoGenerationPipeline",
+    "model_ids": [
+      "lingbot-video"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.945
+  },
+  {
+    "target": "worldfoundry.pipelines.lingbot_world.pipeline_lingbot_world:LingBotPipeline",
+    "model_ids": [
+      "lingbot-world",
+      "lingbot-world-act",
+      "lingbot-world-base-act"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.193
+  },
+  {
+    "target": "worldfoundry.pipelines.lingbot_world_v2.pipeline_lingbot_world_v2:LingBotWorldV2Pipeline",
+    "model_ids": [
+      "lingbot-world-v2"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.041
+  },
+  {
+    "target": "worldfoundry.pipelines.liveworld.pipeline_liveworld:LiveWorldPipeline",
+    "model_ids": [
+      "liveworld"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.094
+  },
+  {
+    "target": "worldfoundry.pipelines.longcat_video.pipeline_longcat_video:LongCatVideoPipeline",
+    "model_ids": [
+      "longcat-video"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.087
+  },
+  {
+    "target": "worldfoundry.pipelines.longvie.pipeline_longvie:LongVie1Pipeline",
+    "model_ids": [
+      "longvie-1"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.12
+  },
+  {
+    "target": "worldfoundry.pipelines.longvie.pipeline_longvie:LongVie2Pipeline",
+    "model_ids": [
+      "longvie-2"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.0
+  },
+  {
+    "target": "worldfoundry.pipelines.ltx2.pipeline_ltx2_3_i2v:LTX23I2VPipeline",
+    "model_ids": [
+      "ltx-2.3-i2v",
+      "ltx-2.x"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.084
+  },
+  {
+    "target": "worldfoundry.pipelines.ltx2.pipeline_ltx2_3_t2v:LTX23T2VPipeline",
+    "model_ids": [
+      "ltx-2.3-t2v"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.022
+  },
+  {
+    "target": "worldfoundry.pipelines.ltx2.pipeline_ltx2_i2v:LTX2I2VPipeline",
+    "model_ids": [
+      "ltx-2-i2v"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.019
+  },
+  {
+    "target": "worldfoundry.pipelines.ltx25.pipeline_ltx25:LTX25Pipeline",
+    "model_ids": [
+      "ltx-2.5"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.115
+  },
+  {
+    "target": "worldfoundry.pipelines.ltx_video.pipeline_ltx_video_i2v:LTXVideoI2VPipeline",
+    "model_ids": [
+      "ltx-video",
+      "ltx-video-i2v"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.087
+  },
+  {
+    "target": "worldfoundry.pipelines.luma.pipeline_luma_ray2:LumaRay2Pipeline",
+    "model_ids": [
+      "luma-ray2"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.095
+  },
+  {
+    "target": "worldfoundry.pipelines.lyra.pipeline_lyra1:Lyra1Pipeline",
+    "model_ids": [
+      "lyra-1"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.153
+  },
+  {
+    "target": "worldfoundry.pipelines.lyra.pipeline_lyra2:Lyra2Pipeline",
+    "model_ids": [
+      "lyra-2"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.106
+  },
+  {
+    "target": "worldfoundry.pipelines.lyra.pipeline_lyra2:LyraPipeline",
+    "model_ids": [
+      "lyra"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.0
+  },
+  {
+    "target": "worldfoundry.pipelines.magi2.pipeline_magi2:NativeMagi2Pipeline",
+    "model_ids": [
+      "magi2-preview"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.045
+  },
+  {
+    "target": "worldfoundry.pipelines.magic_world.pipeline_magic_world:MagicWorldPipeline",
+    "model_ids": [
+      "magicworld"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.105
+  },
+  {
+    "target": "worldfoundry.pipelines.matrix_game.pipeline_matrix_game_1:MatrixGame1Pipeline",
+    "model_ids": [
+      "matrix-game-1"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.163
+  },
+  {
+    "target": "worldfoundry.pipelines.matrix_game.pipeline_matrix_game_2:MatrixGame2Pipeline",
+    "model_ids": [
+      "matrix-game-2",
+      "matrix-game-2-universal-ref-image-seed42-15f"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.027
+  },
+  {
+    "target": "worldfoundry.pipelines.matrix_game.pipeline_matrix_game_3:MatrixGame3Pipeline",
+    "model_ids": [
+      "matrix-game-3"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.1
+  },
+  {
+    "target": "worldfoundry.pipelines.matrix_game.pipeline_matrix_game_3p5:MatrixGame35FirstPersonPipeline",
+    "model_ids": [
+      "matrix-game-3.5-first-person"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.087
+  },
+  {
+    "target": "worldfoundry.pipelines.matrix_game.pipeline_matrix_game_3p5:MatrixGame35ThirdPersonPipeline",
+    "model_ids": [
+      "matrix-game-3.5-third-person"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.0
+  },
+  {
+    "target": "worldfoundry.pipelines.minimax.pipeline_hailuo_2p3:Hailuo2p3Pipeline",
+    "model_ids": [
+      "hailuo-2p3"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.087
+  },
+  {
+    "target": "worldfoundry.pipelines.minimax.pipeline_minimax_h3:NativeMiniMaxH3Pipeline",
+    "model_ids": [
+      "minimax-h3"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.393
+  },
+  {
+    "target": "worldfoundry.pipelines.minwm.pipeline_minwm:MinWMHYAction2VPipeline",
+    "model_ids": [
+      "minwm-hy-action2v"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.124
+  },
+  {
+    "target": "worldfoundry.pipelines.minwm.pipeline_minwm:MinWMWanAction2VPipeline",
+    "model_ids": [
+      "minwm-wan-action2v"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.0
+  },
+  {
+    "target": "worldfoundry.pipelines.moverse.pipeline_moverse:MoVersePipeline",
+    "model_ids": [
+      "moverse"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.045
+  },
+  {
+    "target": "worldfoundry.pipelines.multiworld.pipeline_multiworld_ittakestwo:MultiWorldItTakesTwoPipeline",
+    "model_ids": [
+      "multiworld"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.181
+  },
+  {
+    "target": "worldfoundry.pipelines.neoverse.pipeline_neoverse:NeoVersePipeline",
+    "model_ids": [
+      "neoverse"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.048
+  },
+  {
+    "target": "worldfoundry.pipelines.pi3.pipeline_loger:LoGeRPipeline",
+    "model_ids": [
+      "loger"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 4.183
+  },
+  {
+    "target": "worldfoundry.pipelines.pi3.pipeline_pi3:Pi3Pipeline",
+    "model_ids": [
+      "pi3"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.086
+  },
+  {
+    "target": "worldfoundry.pipelines.pusa_vidgen.pipeline_pusa_vidgen:PusaVidGenPipeline",
+    "model_ids": [
+      "pusa-vidgen"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.129
+  },
+  {
+    "target": "worldfoundry.pipelines.rt1.pipeline_rt1:RT1Pipeline",
+    "model_ids": [
+      "rt-1"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.188
+  },
+  {
+    "target": "worldfoundry.pipelines.runway.pipeline_runway_gen4p5:RunwayGen4p5Pipeline",
+    "model_ids": [
+      "runway-gen4p5"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.086
+  },
+  {
+    "target": "worldfoundry.pipelines.sana.pipeline_sana:LongsanaVideo2b480pPipeline",
+    "model_ids": [
+      "longsana-video-2b-480p"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.059
+  },
+  {
+    "target": "worldfoundry.pipelines.sana.pipeline_sana:Sana1600M1024pxBf16Pipeline",
+    "model_ids": [
+      "sana-1600m-1024px-bf16"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.0
+  },
+  {
+    "target": "worldfoundry.pipelines.sana.pipeline_sana:Sana1600M1024pxMultilingPipeline",
+    "model_ids": [
+      "sana-1600m-1024px-multiling"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.0
+  },
+  {
+    "target": "worldfoundry.pipelines.sana.pipeline_sana:Sana1600M1024pxPipeline",
+    "model_ids": [
+      "sana-1600m-1024px"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.0
+  },
+  {
+    "target": "worldfoundry.pipelines.sana.pipeline_sana:Sana1600M2kBf16Pipeline",
+    "model_ids": [
+      "sana-1600m-2k-bf16"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.0
+  },
+  {
+    "target": "worldfoundry.pipelines.sana.pipeline_sana:Sana1600M4kBf16Pipeline",
+    "model_ids": [
+      "sana-1600m-4k-bf16"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.0
+  },
+  {
+    "target": "worldfoundry.pipelines.sana.pipeline_sana:Sana1600M512pxMultilingPipeline",
+    "model_ids": [
+      "sana-1600m-512px-multiling"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.0
+  },
+  {
+    "target": "worldfoundry.pipelines.sana.pipeline_sana:Sana1600M512pxPipeline",
+    "model_ids": [
+      "sana-1600m-512px"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.0
+  },
+  {
+    "target": "worldfoundry.pipelines.sana.pipeline_sana:Sana1p51600M1024pxPipeline",
+    "model_ids": [
+      "sana1p5-1600m-1024px"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.0
+  },
+  {
+    "target": "worldfoundry.pipelines.sana.pipeline_sana:Sana1p54800M1024pxPipeline",
+    "model_ids": [
+      "sana1p5-4800m-1024px"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.0
+  },
+  {
+    "target": "worldfoundry.pipelines.sana.pipeline_sana:Sana600M1024pxPipeline",
+    "model_ids": [
+      "sana-600m-1024px"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.0
+  },
+  {
+    "target": "worldfoundry.pipelines.sana.pipeline_sana:Sana600M512pxPipeline",
+    "model_ids": [
+      "sana-600m-512px"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.0
+  },
+  {
+    "target": "worldfoundry.pipelines.sana.pipeline_sana:SanaControlnet1600M1024pxBf16Pipeline",
+    "model_ids": [
+      "sana-controlnet-1600m-1024px-bf16"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.0
+  },
+  {
+    "target": "worldfoundry.pipelines.sana.pipeline_sana:SanaControlnet600M1024pxPipeline",
+    "model_ids": [
+      "sana-controlnet-600m-1024px"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.0
+  },
+  {
+    "target": "worldfoundry.pipelines.sana.pipeline_sana:SanaPipeline",
+    "model_ids": [
+      "sana"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.0
+  },
+  {
+    "target": "worldfoundry.pipelines.sana.pipeline_sana:SanaSprint1600M1024pxPipeline",
+    "model_ids": [
+      "sana-sprint-1600m-1024px"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.0
+  },
+  {
+    "target": "worldfoundry.pipelines.sana.pipeline_sana:SanaSprint600M1024pxPipeline",
+    "model_ids": [
+      "sana-sprint-600m-1024px"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.0
+  },
+  {
+    "target": "worldfoundry.pipelines.sana.pipeline_sana:SanaStreaming2b720pPipeline",
+    "model_ids": [
+      "sana-streaming-2b-720p"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.0
+  },
+  {
+    "target": "worldfoundry.pipelines.sana.pipeline_sana:SanaStreamingBidirectional2b720pPipeline",
+    "model_ids": [
+      "sana-streaming-bidirectional-2b-720p"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.0
+  },
+  {
+    "target": "worldfoundry.pipelines.sana.pipeline_sana:SanaVideo2b480pPipeline",
+    "model_ids": [
+      "sana-video-2b-480p"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.0
+  },
+  {
+    "target": "worldfoundry.pipelines.sana.pipeline_sana:SanaVideo2b720pPipeline",
+    "model_ids": [
+      "sana-video-2b-720p"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.0
+  },
+  {
+    "target": "worldfoundry.pipelines.sana_wm.pipeline_sana_wm:SanaWMPipeline",
+    "model_ids": [
+      "sana-wm"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.05
+  },
+  {
+    "target": "worldfoundry.pipelines.sana_wm.pipeline_sana_wm:SanaWMStreamingPipeline",
+    "model_ids": [
+      "sana-wm-streaming"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.0
+  },
+  {
+    "target": "worldfoundry.pipelines.scope.pipeline_scope:SCOPEPipeline",
+    "model_ids": [
+      "scope"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.1
+  },
+  {
+    "target": "worldfoundry.pipelines.skyreels_v2.pipeline_skyreels_v2:SkyReelsV2Pipeline",
+    "model_ids": [
+      "skyreels-v2"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.042
+  },
+  {
+    "target": "worldfoundry.pipelines.skyreels_v3.pipeline_skyreels_v3:SkyReelsV3Pipeline",
+    "model_ids": [
+      "skyreels-v3"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.041
+  },
+  {
+    "target": "worldfoundry.pipelines.solaris.pipeline_solaris:SolarisPipeline",
+    "model_ids": [
+      "solaris"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.113
+  },
+  {
+    "target": "worldfoundry.pipelines.solarwm.pipeline_solarwm:SolarWMPipeline",
+    "model_ids": [
+      "solarwm",
+      "solarwm-h3-33b",
+      "solarwm-ltx-22b",
+      "solarwm-wan2.2-14b",
+      "solarwm-wan2.2-5b"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.087
+  },
+  {
+    "target": "worldfoundry.pipelines.sora.pipeline_sora2:Sora2Pipeline",
+    "model_ids": [
+      "sora2"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.09
+  },
+  {
+    "target": "worldfoundry.pipelines.spatia.pipeline_spatia:SpatiaPipeline",
+    "model_ids": [
+      "spatia"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.108
+  },
+  {
+    "target": "worldfoundry.pipelines.spatial_forcing.pipeline_spatial_forcing:SpatialForcingPipeline",
+    "model_ids": [
+      "spatial-forcing"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.046
+  },
+  {
+    "target": "worldfoundry.pipelines.stable_video_infinity.pipeline_stable_video_infinity:StableVideoInfinityPipeline",
+    "model_ids": [
+      "stable-video-infinity"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.098
+  },
+  {
+    "target": "worldfoundry.pipelines.step_video.pipeline_step_video_t2v:StepVideoT2VPipeline",
+    "model_ids": [
+      "step-video-t2v"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.038
+  },
+  {
+    "target": "worldfoundry.pipelines.t2v_turbo.pipeline_t2v_turbo_t2v:T2VTurboT2VPipeline",
+    "model_ids": [
+      "t2v_turbo_t2v"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.037
+  },
+  {
+    "target": "worldfoundry.pipelines.three_d_four_d.pipeline_runtime:LagrNVSPipeline",
+    "model_ids": [
+      "lagernvs"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.108
+  },
+  {
+    "target": "worldfoundry.pipelines.three_d_four_d.pipeline_runtime:MVDiffusionPipeline",
+    "model_ids": [
+      "mvdiffusion"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.0
+  },
+  {
+    "target": "worldfoundry.pipelines.three_d_four_d.pipeline_runtime:MonST3RPipeline",
+    "model_ids": [
+      "monst3r"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.0
+  },
+  {
+    "target": "worldfoundry.pipelines.three_d_four_d.pipeline_runtime:StableVirtualCameraPipeline",
+    "model_ids": [
+      "stable-virtual-camera"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.0
+  },
+  {
+    "target": "worldfoundry.pipelines.three_d_four_d.pipeline_runtime:WonderJourneyPipeline",
+    "model_ids": [
+      "wonderjourney"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.0
+  },
+  {
+    "target": "worldfoundry.pipelines.three_d_four_d.pipeline_runtime:WonderWorldPipeline",
+    "model_ids": [
+      "wonderworld"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.0
+  },
+  {
+    "target": "worldfoundry.pipelines.three_d_four_d.pipeline_runtime:WorldGenPipeline",
+    "model_ids": [
+      "worldgen"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.0
+  },
+  {
+    "target": "worldfoundry.pipelines.uni3c.pipeline_uni3c:Uni3CPipeline",
+    "model_ids": [
+      "uni3c"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.042
+  },
+  {
+    "target": "worldfoundry.pipelines.vchitect.pipeline_vchitect_2_t2v:Vchitect2T2VPipeline",
+    "model_ids": [
+      "vchitect-2-t2v"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.038
+  },
+  {
+    "target": "worldfoundry.pipelines.veo.pipeline_veo3:Veo3Pipeline",
+    "model_ids": [
+      "veo3"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.084
+  },
+  {
+    "target": "worldfoundry.pipelines.versecrafter.pipeline_versecrafter:VerseCrafterPipeline",
+    "model_ids": [
+      "versecrafter"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.094
+  },
+  {
+    "target": "worldfoundry.pipelines.vggt.pipeline_vggt:VGGTPipeline",
+    "model_ids": [
+      "vggt"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.325
+  },
+  {
+    "target": "worldfoundry.pipelines.vggt_omega.pipeline_vggt_omega:VGGTOmegaPipeline",
+    "model_ids": [
+      "vggt-omega"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.113
+  },
+  {
+    "target": "worldfoundry.pipelines.video_official.pipeline_official_video:Emu35Pipeline",
+    "model_ids": [
+      "emu3.5"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.0
+  },
+  {
+    "target": "worldfoundry.pipelines.video_official.pipeline_official_video:FramePackPipeline",
+    "model_ids": [
+      "framepack"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.0
+  },
+  {
+    "target": "worldfoundry.pipelines.video_official.pipeline_official_video:I2VGenXLPipeline",
+    "model_ids": [
+      "i2vgen-xl"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.0
+  },
+  {
+    "target": "worldfoundry.pipelines.video_official.pipeline_official_video:KreaRealtimeVideoPipeline",
+    "model_ids": [
+      "krea-realtime-video"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.0
+  },
+  {
+    "target": "worldfoundry.pipelines.video_official.pipeline_official_video:MAGI1Pipeline",
+    "model_ids": [
+      "magi-1"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.0
+  },
+  {
+    "target": "worldfoundry.pipelines.video_official.pipeline_official_video:MMAudioPipeline",
+    "model_ids": [
+      "mmaudio"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.0
+  },
+  {
+    "target": "worldfoundry.pipelines.video_official.pipeline_official_video:Mochi1PreviewT2VPipeline",
+    "model_ids": [
+      "mochi-1",
+      "mochi-1-preview-t2v"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.0
+  },
+  {
+    "target": "worldfoundry.pipelines.video_official.pipeline_official_video:ModelScopeT2VPipeline",
+    "model_ids": [
+      "modelscope-t2v"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.0
+  },
+  {
+    "target": "worldfoundry.pipelines.video_official.pipeline_official_video:OmniVinciPipeline",
+    "model_ids": [
+      "omnivinci"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.0
+  },
+  {
+    "target": "worldfoundry.pipelines.video_official.pipeline_official_video:OpenSoraPipeline",
+    "model_ids": [
+      "open-sora"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.0
+  },
+  {
+    "target": "worldfoundry.pipelines.video_official.pipeline_official_video:OpenSoraPlanPipeline",
+    "model_ids": [
+      "open-sora-plan"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.0
+  },
+  {
+    "target": "worldfoundry.pipelines.video_official.pipeline_official_video:Qwen25OmniPipeline",
+    "model_ids": [
+      "qwen2.5-omni"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.0
+  },
+  {
+    "target": "worldfoundry.pipelines.video_official.pipeline_official_video:SAMA14BPipeline",
+    "model_ids": [
+      "sama-14b"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.0
+  },
+  {
+    "target": "worldfoundry.pipelines.video_official.pipeline_official_video:SpatialLadderPipeline",
+    "model_ids": [
+      "spatial-ladder"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.0
+  },
+  {
+    "target": "worldfoundry.pipelines.video_official.pipeline_official_video:SpatialReasonerPipeline",
+    "model_ids": [
+      "spatial-reasoner"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.0
+  },
+  {
+    "target": "worldfoundry.pipelines.video_official.pipeline_official_video:ThinkSoundPipeline",
+    "model_ids": [
+      "thinksound"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.0
+  },
+  {
+    "target": "worldfoundry.pipelines.video_official.pipeline_official_video:UniAnimateDiTPipeline",
+    "model_ids": [
+      "unianimate-dit"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.0
+  },
+  {
+    "target": "worldfoundry.pipelines.video_x_fun.pipeline_video_x_fun:Wan21Fun14BCameraPipeline",
+    "model_ids": [
+      "wan21-fun-14b-cam"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.105
+  },
+  {
+    "target": "worldfoundry.pipelines.video_x_fun.pipeline_video_x_fun:Wan21Fun1P3BCameraPipeline",
+    "model_ids": [
+      "wan21-fun-1p3b-cam"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.0
+  },
+  {
+    "target": "worldfoundry.pipelines.video_x_fun.pipeline_video_x_fun:Wan22Fun5BCameraPipeline",
+    "model_ids": [
+      "wan22-fun-5b-cam"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.0
+  },
+  {
+    "target": "worldfoundry.pipelines.video_x_fun.pipeline_video_x_fun:Wan22FunA14BCameraPipeline",
+    "model_ids": [
+      "wan22-fun-a14b-cam"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.0
+  },
+  {
+    "target": "worldfoundry.pipelines.videocrafter.pipeline_videocrafter1_i2v:VideoCrafter1I2VPipeline",
+    "model_ids": [
+      "videocrafter1-i2v"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.144
+  },
+  {
+    "target": "worldfoundry.pipelines.videocrafter.pipeline_videocrafter1_t2v:VideoCrafter1T2VPipeline",
+    "model_ids": [
+      "videocrafter1-t2v"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.0
+  },
+  {
+    "target": "worldfoundry.pipelines.videocrafter.pipeline_videocrafter2_t2v:VideoCrafter2T2VPipeline",
+    "model_ids": [
+      "videocrafter",
+      "videocrafter2-t2v"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.0
+  },
+  {
+    "target": "worldfoundry.pipelines.vmem.pipeline_vmem:VMemPipeline",
+    "model_ids": [
+      "vmem"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.12
+  },
+  {
+    "target": "worldfoundry.pipelines.wan.pipeline_wan_2p1_i2v:Wan2p1I2V720PPipeline",
+    "model_ids": [
+      "wan2.1-i2v-14b-720p"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.057
+  },
+  {
+    "target": "worldfoundry.pipelines.wan.pipeline_wan_2p1_i2v:Wan2p1I2VPipeline",
+    "model_ids": [
+      "wan2.1-i2v-14b-480p"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.0
+  },
+  {
+    "target": "worldfoundry.pipelines.wan.pipeline_wan_2p1_t2v:Wan2p1T2V14BPipeline",
+    "model_ids": [
+      "wan2.1-t2v-14b"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.0
+  },
+  {
+    "target": "worldfoundry.pipelines.wan.pipeline_wan_2p1_t2v:Wan2p1T2VPipeline",
+    "model_ids": [
+      "wan2.1",
+      "wan2.1-t2v-1.3b",
+      "wan2.1-t2v-1.3b-832x480-81f"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.0
+  },
+  {
+    "target": "worldfoundry.pipelines.wan.pipeline_wan_2p2:Wan2p2I2VA14BPipeline",
+    "model_ids": [
+      "wan2.2-i2v-a14b"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.009
+  },
+  {
+    "target": "worldfoundry.pipelines.wan.pipeline_wan_2p2:Wan2p2Pipeline",
+    "model_ids": [
+      "wan2.2",
+      "wan2.2-ti2v-5b",
+      "wan2.2-ti2v-5b-1280x704-121f"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.0
+  },
+  {
+    "target": "worldfoundry.pipelines.wan.pipeline_wan_2p2:Wan2p2T2VA14BPipeline",
+    "model_ids": [
+      "wan2.2-t2v-a14b"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.0
+  },
+  {
+    "target": "worldfoundry.pipelines.wan.pipeline_wan_2p5:Wan2p5Pipeline",
+    "model_ids": [
+      "wan-2p5"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.083
+  },
+  {
+    "target": "worldfoundry.pipelines.wan.pipeline_wan_2p6:Wan2p6Pipeline",
+    "model_ids": [
+      "wan-2p6"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.041
+  },
+  {
+    "target": "worldfoundry.pipelines.wan.pipeline_wan_2p7:Wan2p7Pipeline",
+    "model_ids": [
+      "wan-2p7"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.031
+  },
+  {
+    "target": "worldfoundry.pipelines.wan.pipeline_wan_vace:Wan2p1VACEPipeline",
+    "model_ids": [
+      "wan2.1-vace"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.012
+  },
+  {
+    "target": "worldfoundry.pipelines.warp_as_history.pipeline_warp_as_history:WarpAsHistoryPipeline",
+    "model_ids": [
+      "warp-as-history"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.248
+  },
+  {
+    "target": "worldfoundry.pipelines.world_model.pipeline_runtime_manifest:CausalRCMPipeline",
+    "model_ids": [
+      "causal-rcm"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.094
+  },
+  {
+    "target": "worldfoundry.pipelines.world_model.pipeline_runtime_manifest:CtrlWorldPipeline",
+    "model_ids": [
+      "ctrl-world"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.0
+  },
+  {
+    "target": "worldfoundry.pipelines.world_model.pipeline_runtime_manifest:DIAMONDPipeline",
+    "model_ids": [
+      "diamond"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.0
+  },
+  {
+    "target": "worldfoundry.pipelines.world_model.pipeline_runtime_manifest:DROIDWPipeline",
+    "model_ids": [
+      "droid-w"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.0
+  },
+  {
+    "target": "worldfoundry.pipelines.world_model.pipeline_runtime_manifest:DinoWMPipeline",
+    "model_ids": [
+      "dino-wm"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.0
+  },
+  {
+    "target": "worldfoundry.pipelines.world_model.pipeline_runtime_manifest:EgoWMPipeline",
+    "model_ids": [
+      "egowm"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.0
+  },
+  {
+    "target": "worldfoundry.pipelines.world_model.pipeline_runtime_manifest:GenieEnvisionerPipeline",
+    "model_ids": [
+      "genie-envisioner"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.0
+  },
+  {
+    "target": "worldfoundry.pipelines.world_model.pipeline_runtime_manifest:GigaWorld0Pipeline",
+    "model_ids": [
+      "giga-world-0"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.0
+  },
+  {
+    "target": "worldfoundry.pipelines.world_model.pipeline_runtime_manifest:HMAPipeline",
+    "model_ids": [
+      "hma"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.0
+  },
+  {
+    "target": "worldfoundry.pipelines.world_model.pipeline_runtime_manifest:HappyOysterPipeline",
+    "model_ids": [
+      "happyoyster"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.0
+  },
+  {
+    "target": "worldfoundry.pipelines.world_model.pipeline_runtime_manifest:HunyuanWorld1Pipeline",
+    "model_ids": [
+      "hunyuanworld-1"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.0
+  },
+  {
+    "target": "worldfoundry.pipelines.world_model.pipeline_runtime_manifest:LeWorldModelPipeline",
+    "model_ids": [
+      "leworldmodel"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.0
+  },
+  {
+    "target": "worldfoundry.pipelines.world_model.pipeline_runtime_manifest:MIRAPipeline",
+    "model_ids": [
+      "mira"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.0
+  },
+  {
+    "target": "worldfoundry.pipelines.world_model.pipeline_runtime_manifest:MineWorldPipeline",
+    "model_ids": [
+      "mineworld"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.0
+  },
+  {
+    "target": "worldfoundry.pipelines.world_model.pipeline_runtime_manifest:MosaicMemPipeline",
+    "model_ids": [
+      "mosaicmem"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.0
+  },
+  {
+    "target": "worldfoundry.pipelines.world_model.pipeline_runtime_manifest:MotionBricksPipeline",
+    "model_ids": [
+      "motionbricks"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.0
+  },
+  {
+    "target": "worldfoundry.pipelines.world_model.pipeline_runtime_manifest:NWMPipeline",
+    "model_ids": [
+      "nwm"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.0
+  },
+  {
+    "target": "worldfoundry.pipelines.world_model.pipeline_runtime_manifest:Oasis500MPipeline",
+    "model_ids": [
+      "oasis-500m"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.0
+  },
+  {
+    "target": "worldfoundry.pipelines.world_model.pipeline_runtime_manifest:OmniForcingPipeline",
+    "model_ids": [
+      "omniforcing"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.0
+  },
+  {
+    "target": "worldfoundry.pipelines.world_model.pipeline_runtime_manifest:OpenDreamerPipeline",
+    "model_ids": [
+      "open-dreamer"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.0
+  },
+  {
+    "target": "worldfoundry.pipelines.world_model.pipeline_runtime_manifest:PointWorldPipeline",
+    "model_ids": [
+      "pointworld"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.0
+  },
+  {
+    "target": "worldfoundry.pipelines.world_model.pipeline_runtime_manifest:ShotStreamPipeline",
+    "model_ids": [
+      "shotstream"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.0
+  },
+  {
+    "target": "worldfoundry.pipelines.world_model.pipeline_runtime_manifest:SimWorldPipeline",
+    "model_ids": [
+      "simworld"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.0
+  },
+  {
+    "target": "worldfoundry.pipelines.world_model.pipeline_runtime_manifest:StarWMPipeline",
+    "model_ids": [
+      "starwm"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.0
+  },
+  {
+    "target": "worldfoundry.pipelines.world_model.pipeline_runtime_manifest:TesserActPipeline",
+    "model_ids": [
+      "tesseract"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.0
+  },
+  {
+    "target": "worldfoundry.pipelines.world_model.pipeline_runtime_manifest:UWMPipeline",
+    "model_ids": [
+      "uwm"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.0
+  },
+  {
+    "target": "worldfoundry.pipelines.world_model.pipeline_runtime_manifest:VGGTWorldPipeline",
+    "model_ids": [
+      "vggt-world"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.0
+  },
+  {
+    "target": "worldfoundry.pipelines.world_model.pipeline_runtime_manifest:Vid2WorldPipeline",
+    "model_ids": [
+      "vid2world"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.0
+  },
+  {
+    "target": "worldfoundry.pipelines.world_model.pipeline_runtime_manifest:ViewCrafterPipeline",
+    "model_ids": [
+      "viewcrafter"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.0
+  },
+  {
+    "target": "worldfoundry.pipelines.world_model.pipeline_runtime_manifest:WildDet3DPipeline",
+    "model_ids": [
+      "wilddet3d"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.0
+  },
+  {
+    "target": "worldfoundry.pipelines.world_model.pipeline_runtime_manifest:WildWorldPipeline",
+    "model_ids": [
+      "wildworld"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.0
+  },
+  {
+    "target": "worldfoundry.pipelines.world_model.pipeline_runtime_manifest:WorldGrowPipeline",
+    "model_ids": [
+      "worldgrow"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.0
+  },
+  {
+    "target": "worldfoundry.pipelines.world_model.pipeline_runtime_manifest:WorldMemPipeline",
+    "model_ids": [
+      "worldmem"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.0
+  },
+  {
+    "target": "worldfoundry.pipelines.worldcam.pipeline_worldcam:WorldCamPipeline",
+    "model_ids": [
+      "worldcam"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.167
+  },
+  {
+    "target": "worldfoundry.pipelines.worldfm.pipeline_worldfm:WorldFMPipeline",
+    "model_ids": [
+      "worldfm"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.311
+  },
+  {
+    "target": "worldfoundry.pipelines.worldlabs.pipeline_worldlabs:WorldLabsPipeline",
+    "model_ids": [
+      "worldlabs"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.084
+  },
+  {
+    "target": "worldfoundry.pipelines.worldlabs_marble_1p1.pipeline_worldlabs_marble_1p1:WorldLabsMarble11Pipeline",
+    "model_ids": [
+      "worldlabs-marble-1.1"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.038
+  },
+  {
+    "target": "worldfoundry.pipelines.wow.pipeline_wow:WoWPipeline",
+    "model_ids": [
+      "wow"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.12
+  },
+  {
+    "target": "worldfoundry.pipelines.x_wam.pipeline_x_wam:XWAMPipeline",
+    "model_ids": [
+      "x-wam"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.04
+  },
+  {
+    "target": "worldfoundry.pipelines.xiaomi_robotics_0.pipeline_xiaomi_robotics_0:XiaomiRobotics0Pipeline",
+    "model_ids": [
+      "xiaomi-robotics-0"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.133
+  },
+  {
+    "target": "worldfoundry.pipelines.yume.pipeline_yume:YumePipeline",
+    "model_ids": [
+      "yume"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.053
+  },
+  {
+    "target": "worldfoundry.pipelines.yume.pipeline_yume_1p5:Yume1p5Pipeline",
+    "model_ids": [
+      "yume-1p5"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.031
+  },
+  {
+    "target": "worldfoundry.pipelines.zing.pipeline_zing:ZingPipeline",
+    "model_ids": [
+      "zing"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.26
+  },
+  {
+    "target": "worldfoundry.synthesis.action_generation.a1.pipeline:A1Pipeline",
+    "model_ids": [
+      "a1"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.12
+  },
+  {
+    "target": "worldfoundry.synthesis.action_generation.abot_m0.pipeline:ABotM0Pipeline",
+    "model_ids": [
+      "abot-m0"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.043
+  },
+  {
+    "target": "worldfoundry.synthesis.action_generation.ahawam.pipeline:AHAWAMPipeline",
+    "model_ids": [
+      "ahawam"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.097
+  },
+  {
+    "target": "worldfoundry.synthesis.action_generation.dexora.pipeline:DexoraPipeline",
+    "model_ids": [
+      "dexora-1b"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.078
+  },
+  {
+    "target": "worldfoundry.synthesis.action_generation.dm0.pipeline:DM0Pipeline",
+    "model_ids": [
+      "dm0"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.056
+  },
+  {
+    "target": "worldfoundry.synthesis.action_generation.eventvla.pipeline:EventVLAPipeline",
+    "model_ids": [
+      "eventvla"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.093
+  },
+  {
+    "target": "worldfoundry.synthesis.action_generation.fastwam.pipeline:FastWAMPipeline",
+    "model_ids": [
+      "fastwam"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.071
+  },
+  {
+    "target": "worldfoundry.synthesis.action_generation.galaxea_vla.galaxea_vla_synthesis:GalaxeaVLASynthesis",
+    "model_ids": [
+      "galaxea-vla"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.056
+  },
+  {
+    "target": "worldfoundry.synthesis.action_generation.giga_world_policy.pipeline:GigaWorldPolicyPipeline",
+    "model_ids": [
+      "giga-world-policy-0.5"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.076
+  },
+  {
+    "target": "worldfoundry.synthesis.action_generation.go1.pipeline:GO1Pipeline",
+    "model_ids": [
+      "go1"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.056
+  },
+  {
+    "target": "worldfoundry.synthesis.action_generation.h_rdt.h_rdt_synthesis:HRDTSynthesis",
+    "model_ids": [
+      "h-rdt"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.044
+  },
+  {
+    "target": "worldfoundry.synthesis.action_generation.internvla_a1.internvla_a1_synthesis:InternVLAA1Synthesis",
+    "model_ids": [
+      "internvla-a1"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.043
+  },
+  {
+    "target": "worldfoundry.synthesis.action_generation.lda_1b.lda_1b_synthesis:LDA1BSynthesis",
+    "model_ids": [
+      "lda-1b"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.046
+  },
+  {
+    "target": "worldfoundry.synthesis.action_generation.mem0.pipeline:Mem0Pipeline",
+    "model_ids": [
+      "mem-0"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.042
+  },
+  {
+    "target": "worldfoundry.synthesis.action_generation.rdt_1b.pipeline:RDT1BPipeline",
+    "model_ids": [
+      "rdt-1b"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.044
+  },
+  {
+    "target": "worldfoundry.synthesis.action_generation.rise.pipeline:RisePipeline",
+    "model_ids": [
+      "rise"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.057
+  },
+  {
+    "target": "worldfoundry.synthesis.action_generation.smolvla.pipeline:SmolVLAPipeline",
+    "model_ids": [
+      "smolvla"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.062
+  },
+  {
+    "target": "worldfoundry.synthesis.action_generation.spirit_v15.pipeline:SpiritV15Pipeline",
+    "model_ids": [
+      "spirit-v1.5"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.043
+  },
+  {
+    "target": "worldfoundry.synthesis.action_generation.tinyvla.pipeline:TinyVLAPipeline",
+    "model_ids": [
+      "tinyvla"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.059
+  },
+  {
+    "target": "worldfoundry.synthesis.action_generation.xiaomi_robotics_1.pipeline:XiaomiRobotics1Pipeline",
+    "model_ids": [
+      "xiaomi-robotics-1"
+    ],
+    "scope": "import and public interface only; no inference claim",
+    "status": "passed",
+    "elapsed_seconds": 0.055
+  },
+  {
+    "target": "worldfoundry.pipelines.world_model.pipeline_runtime_manifest:DIAMONDCsgoPipeline",
+    "model_ids": [
+      "diamond-csgo"
+    ],
+    "scope": "Public subclass/map/model-id loader interface; actual GPU evidence recorded separately.",
+    "status": "passed",
+    "evidence": "tmp/diamond-csgo-integration-20260922/interface.json"
+  }
+]

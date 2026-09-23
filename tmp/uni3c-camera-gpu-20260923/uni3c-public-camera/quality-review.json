@@ -1,0 +1,95 @@
+{
+  "status": "verified_inference_only",
+  "scope": "Public Uni3CPipeline camera mode using real toy photograph, verified 81-frame512x720 control bundle with official DepthPro/Tracer/15degree camera construction and WorldFoundry Torch point-cloud rendering fallback; official in-tree PCDController stage-two, default 40steps CFG5 seed1024, 81-frame688x512 video16fps. Full decode, strict base loading and overlay audit, actual raw outputs finite, and actual contact viewed. Toy/table/wall remain coherent with leftward viewpoint motion. The output camera angle is not calibrated and the unified camera+human path is outside this result.",
+  "video_review": {
+    "status": "verified_inference_only",
+    "video": {
+      "metadata": {
+        "width": 688,
+        "height": 512,
+        "r_frame_rate": "16/1",
+        "nb_frames": "81"
+      },
+      "decoded_frames": 81,
+      "shape": [
+        81,
+        512,
+        688,
+        3
+      ],
+      "mean": 137.41267826541414,
+      "std": 51.61834204793436,
+      "mean_delta": 0.818394660949707,
+      "max_delta": 1.8842394351959229
+    },
+    "loading": {
+      "diffusers_final_clean": true,
+      "hf_umt5_clean": true,
+      "clip_unused_projection_extra": "visual_projection.weight",
+      "controlnet_overlay_missing_main_backbone": 1303,
+      "controlnet_overlay_active_missing": 0
+    },
+    "raw": {
+      "pcd_calls": 80,
+      "controlnet_group_count": 20,
+      "all_observed_finite": true
+    },
+    "source_hash_count": 13,
+    "actual_contact_viewed": true,
+    "visual_note": "Six actual contact frames viewed: turquoise toy, plate, red table and wall remain coherent; viewpoint drifts smoothly left. The turquoise toy centroid moves about22px left and segmented width grows96\u2192106px across81 frames. This supports qualitative motion response, not calibrated15-degree adherence.",
+    "source_renderer": "Control bundle used project Torch fallback; official stage-two Uni3C runtime unchanged."
+  },
+  "control_review": {
+    "status": "passed",
+    "reference_revision": "75ed6e2180316b7f07398e4e88ea8bdba3e6970c",
+    "render": {
+      "frames": 81,
+      "height": 512,
+      "width": 720,
+      "fps": 16.0,
+      "mean": 134.0169847304384,
+      "std": 48.32979304127771
+    },
+    "mask": {
+      "frames": 81,
+      "height": 512,
+      "width": 720,
+      "fps": 16.0,
+      "mean": 22.546710330664865,
+      "std": 72.26263984171048
+    },
+    "mask_fraction_gt127": 0.08846929521390604,
+    "depth": {
+      "shape": [
+        512,
+        720
+      ],
+      "minimum": 1.5384961366653442,
+      "maximum": 2.1637308597564697
+    },
+    "camera": {
+      "max_rotation_orthogonality_error": 2.6476173276002157e-07,
+      "det_min": 0.9999997987399599,
+      "det_max": 1.0000001312604192,
+      "center_travel": 0.5186750041751509,
+      "rotation_start_to_end_degrees": 15.000008964758175
+    },
+    "renderer": "WorldFoundry Torch point-cloud fallback due to incompatible installed PyTorch3D C extension; official DepthPro, Tracer, camera construction, and image preprocessing used.",
+    "loads": {
+      "depthpro": "strict clean",
+      "tracer": "no missing/meta; 80 unused edge_extractor checkpoint keys ignored by CarveKit strict=False (source explicitly marks edge detector unused)"
+    },
+    "source_hashes": 122,
+    "actual_contact_viewed": true,
+    "visual_note": "Render shows the toy, plate, red table and wall across the 15-degree trajectory. Gray uncovered borders and object-edge holes are marked by the paired mask; inputs are usable for generation."
+  },
+  "asset_hashes": [
+    "tmp/uni3c-validation-20260923/apple--DepthPro-hashes.json",
+    "tmp/uni3c-validation-20260923/Carve--tracer_b7-hashes.json",
+    "tmp/uni3c-validation-20260923/ewrfcas--Uni3C-hashes.json",
+    "tmp/uni3c-validation-20260923/Wan-AI--Wan2.1-I2V-14B-720P-Diffusers-hashes.json"
+  ],
+  "loading_note": "Four final Diffusers/HF model loads clean except unused CLIP visual_projection.weight extra in CLIPVisionModel. Controlnet checkpoint has490 control-specific keys;1303 missing names in overlay are exactly prior-loaded main backbone namespaces, and no controlnet namespace missing. CarveKit Tracer has80 upstream-documented unused edge_extractor extras, no missing.",
+  "raw_note": "80 PCDController and80x20 ControlNet block output observations finite; not every VAE preclamp tensor separately captured.",
+  "reviewed_at": 1790107154.3166254
+}

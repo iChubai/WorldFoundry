@@ -90,6 +90,7 @@ class CausalRCMPipeline(WorldModelRuntimePipeline):
     """Pipeline implementation for Causal-rCM streaming visual generation."""
 
     MODEL_ID = "causal-rcm"
+    MODEL_PATH_OPTION = "dit_path"
     RUNTIME_GATED_OPTION_KEYS = (
         "dit_path",
         "checkpoint_path",
@@ -151,6 +152,13 @@ class DIAMONDPipeline(WorldModelRuntimePipeline):
     """Pipeline implementation for DIAMOND visual generation."""
     MODEL_ID = "diamond"
     RUNTIME_GATED_OPTION_KEYS = (
+        "variant",
+        "spawn_dir",
+        "spawn_id",
+        "action",
+        "actions_path",
+        "sampler",
+        "seed",
         "checkpoint",
         "checkpoint_path",
         "model_path",
@@ -166,10 +174,27 @@ class DIAMONDPipeline(WorldModelRuntimePipeline):
         "dataset_dir",
     )
 
+    @classmethod
+    def _resolve_model_id(cls, options, model_id=None):
+        selected = super()._resolve_model_id(options, model_id)
+        if selected in {"diamond-csgo", "diamond-atari"}:
+            variant = selected.removeprefix("diamond-")
+            if options.get("variant", variant) != variant:
+                raise ValueError(f"{selected} requires variant={variant!r}")
+            options["variant"] = variant
+            return "diamond"
+        return selected
+
     def _promote_call_options(self, kwargs: dict) -> dict:
         if kwargs.get("frames") and not kwargs.get("headless_steps"):
             kwargs["headless_steps"] = kwargs["frames"]
         return kwargs
+
+
+class DIAMONDCsgoPipeline(DIAMONDPipeline):
+    """DIAMOND CS:GO with its released spawn and spatial upsampler."""
+
+    MODEL_ID = "diamond-csgo"
 
 
 class DinoWMPipeline(WorldModelRuntimePipeline):
@@ -538,6 +563,7 @@ __all__ = [
     "CausalRCMPipeline",
     "CtrlWorldPipeline",
     "DIAMONDPipeline",
+    "DIAMONDCsgoPipeline",
     "DinoWMPipeline",
     "DROIDWPipeline",
     "EgoWMPipeline",

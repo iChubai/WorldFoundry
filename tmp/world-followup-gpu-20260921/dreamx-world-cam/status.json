@@ -1,0 +1,10 @@
+{
+  "case": "dreamx-world-cam",
+  "started_at": 1789999634.9459877,
+  "gpu": "2",
+  "status": "generated",
+  "videos": [
+    "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/WorldFoundry/tmp/world-followup-gpu-20260921/dreamx-world-cam/demo.mp4"
+  ],
+  "elapsed_seconds": 183.5
+}

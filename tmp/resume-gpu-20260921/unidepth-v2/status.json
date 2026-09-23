@@ -1,0 +1,49 @@
+{
+  "case": {
+    "id": "unidepth-v2",
+    "gpu": "1",
+    "target": "worldfoundry.pipelines.geometry_priors.pipeline_geometry_priors:UniDepthV2PriorPipeline",
+    "load": {
+      "model_path": "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/ckpts/lpiccinelli--unidepth-v2-vitl14-1d0d3c52",
+      "device": "cuda"
+    },
+    "call": {
+      "images": "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/WorldFoundry/tmp/skyreels-omega-gpu-20260920/inputs/frame-0.png",
+      "execute": true
+    }
+  },
+  "gpu": "1",
+  "status": "passed",
+  "started_at": 1789987324.7848854,
+  "checkpoint_loads": [
+    {
+      "class": "UniDepthV2",
+      "missing": [],
+      "unexpected": []
+    }
+  ],
+  "artifact": "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/WorldFoundry/tmp/resume-gpu-20260921/unidepth-v2/scene/point_cloud.ply",
+  "validation": {
+    "points": 5000,
+    "finite": true,
+    "fields": [
+      "x",
+      "y",
+      "z",
+      "red",
+      "green",
+      "blue"
+    ],
+    "depth": {
+      "shape": [
+        480,
+        832
+      ],
+      "min": 0.5486318469047546,
+      "max": 16.508800506591797,
+      "std": 3.6868224143981934
+    }
+  },
+  "max_memory_allocated": 2357734400,
+  "elapsed_seconds": 103.36098504066467
+}

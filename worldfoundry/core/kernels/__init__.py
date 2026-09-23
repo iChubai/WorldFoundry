@@ -20,7 +20,7 @@ public functions (``group_norm_silu``, ``qk_rmsnorm_rope``, ``routed_swiglu_moe`
 
 Not this package:
     Attention backends live in :mod:`worldfoundry.core.attention`. Persistent
-    compile-cache roots live in :mod:`worldfoundry.core.compile_cache`.
+    compile-cache roots live in :mod:`worldfoundry.core.execution.compile_cache`.
     NVFP4 / weight-only quantization lives in
     :mod:`worldfoundry.core.acceleration`.
 

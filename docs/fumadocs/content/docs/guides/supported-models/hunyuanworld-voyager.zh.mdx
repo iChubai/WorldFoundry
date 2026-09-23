@@ -1,52 +1,18 @@
 ---
 title: "HunyuanWorld-Voyager"
-description: "HunyuanWorld-Voyager（Tencent (Hunyuan)）：世界模型、video；已验证。"
+description: "腾讯的相机路径 RGB-D 世界生成模型。WorldFoundry 集成目前因运行时源码缺失而受阻。"
 modelId: "hunyuanworld-voyager"
 pageSource: authored
 ---
 
-HunyuanWorld-Voyager 沿用户定义的相机路径生成世界一致的 RGB-D 视频——让相机在一张图所暗示的场景中游走，得到对齐的彩色与深度，可用于 3D 重建。本 catalog 中 runner 已按官方 case1 条件视频 demo 与上游单卡命令形状验证。
+HunyuanWorld-Voyager 旨在从输入图像出发，沿指定相机路径生成 RGB-D 视频。参见[官方源码](https://github.com/Tencent-Hunyuan/HunyuanWorld-Voyager)和[项目页](https://3d-models.hunyuan.tencent.com/world/)。
 
 <ModelPaperFigures modelId="hunyuanworld-voyager" locale="zh" />
 
-记录论文为[arXiv 2405.07719](https://arxiv.org/abs/2405.07719)。
+## WorldFoundry 状态
 
-项目页：[3d-models.hunyuan.tencent.com/world](https://3d-models.hunyuan.tencent.com/world/)。代码：[Tencent-Hunyuan/HunyuanWorld-Voyager](https://github.com/Tencent-Hunyuan/HunyuanWorld-Voyager)。
+**集成受阻。** 公开的 `HunyuanWorldVoyagerPipeline.from_pretrained` 在加载权重前就会失败：树内 `hunyuan_world_voyager/config.py` 和 `runtime.py` 源码缺失，只剩 Python 缓存文件。固定版本的上游 `voyager/` 包有 37 个 Python 文件，但不包含 WorldFoundry 的 `HunyuanWorldVoyagerRuntime` 适配器。恢复源码并验证公开路径之前，pipeline binding 已禁用。
 
-<ModelCommandBuilder modelId="hunyuanworld-voyager" locale="zh" />
-
-## 用来做什么
-
-用 `hunyuanworld-voyager` 做 catalog 世界模型推理。需要动作条件未来帧、而不是独立片段生成器时选它。
-
-按上游发布，Voyager 将基于 HunyuanVideo 的生成器与 RGB-D 联合输出及世界缓存机制结合，实现长程一致性。运行时档案记录官方 case1 默认值：num_frames=49、infer_steps=50、flow_shift=7.0、 embedded_cfg_scale=6.0、i2v_stability=true。该模型由腾讯（混元）发布。
-
-catalog 记录的任务包括 世界模型、video。输出模态为视频。
-
-记录的评测入口包括[WorldScore](/zh/docs/evaluation/benchmark-hub/worldscore)（相机可游走生成世界的评分）、[CameraBench](/zh/docs/evaluation/benchmark-hub/camerabench)（相机路径贴合度评测）。
-
-沿相机路径漫游 HunyuanWorld。不是 Mirror，也不是 World-1。
-
-## 运行时契约
-
-必填 `image`；可选 `prompt`、`video`、`actions` (camera_path, navigation_action)；产物 `hunyuanworld-voyager.mp4`。
-
-记录的任务 profile：`world`、`video`、`world_model`。绑定的 pipeline 类是 `HunyuanWorldVoyagerPipeline`。
-
-系列状态：**已验证**。
-
-HunyuanWorldVoyagerPipeline 封装树内运行时——导入与推理时都不需要外部检出。
-
-Existing in-tree runtime is now exposed through a BaseSynthesis subclass.
-
-## 在 WorldFoundry 中运行
-
-启动 `worldfoundry-eval run hunyuanworld-voyager --pipeline.task-profile world` 推进世界。上方命令构建器按已记录任务切换 `--pipeline.task-profile`，发出的仍是 `worldfoundry-eval run`。
-
-运行环境是统一 profile `worldfoundry-unified-cu128`（Python 3.11，CUDA 12.8）。
-
-记录的权重仓库包括 `tencent/HunyuanWorld-Voyager`。就位权重用 `bash scripts/inference/prepare_model_infer.sh hunyuanworld-voyager`。
-
-状态：**已验证**。
+上游 case1 默认值（49 帧、50 步、flow shift 7.0）仅供参考；目前没有真实权重推理或视觉质量验证结果。
 
 <ModelRelatedRecipes modelId="hunyuanworld-voyager" locale="zh" />

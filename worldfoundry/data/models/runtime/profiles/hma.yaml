@@ -38,4 +38,5 @@ integration:
 notes:
 - WorldFoundry launches the user-staged official source through a narrow compatibility wrapper; upstream source is not vendored.
 - The default smoke route follows the official interactive simulator contract with the base continuous model, LangTable prompt image, two-dimensional action, and local SVD temporal VAE.
+- The discrete checkpoint can be selected with hma_checkpoint_dir and requires the official MAGVIT2 tokenizer at source/data/magvit2.ckpt or hma_magvit_checkpoint.
 - The launcher imports only the model and sampling modules, so dataset-encoding and hosted-Space dependencies are not required for inference.

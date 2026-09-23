@@ -1,0 +1,14 @@
+{
+  "output_dir": "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/WorldFoundry/tmp/multiworld-gpu-20260923",
+  "generated_video_path": "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/WorldFoundry/tmp/multiworld-gpu-20260923/demo-quality.mp4",
+  "config_path": "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/WorldFoundry/worldfoundry/data/models/runtime/configs/multiworld/ittakestwo/configs/inference_480P_toy.yaml",
+  "checkpoint_path": "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/ckpts/Haoyuwu--MultiWorldCheckpoint/multiworld_480p_toydata.safetensors",
+  "device": "cuda:0",
+  "num_frames": 81,
+  "height": 480,
+  "width": 480,
+  "fps": 16,
+  "num_inference_steps": 35,
+  "inference_seed": 0,
+  "derived_env_obv_from_image": true
+}

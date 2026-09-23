@@ -1,0 +1,214 @@
+{
+  "status": "completed",
+  "games": [
+    {
+      "family": "diamond-atari",
+      "configuration": "Pong",
+      "case": "diamond-pong",
+      "status": "verified_inference_only",
+      "scope": "Public DIAMONDPipeline, actual published Pong checkpoint, real Atari initialization,100 policy-controlled imagined steps;3 EDM denoising evaluations/step,64x64/15fps. Horizon50 and predicted terminal events reset context, so this is not a continuous100step trajectory. Score/reward accuracy and game-wide action semantics were not established.",
+      "evidence": "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/WorldFoundry/tmp/diamond-atari-gpu-20260922/diamond-pong/quality-review.json"
+    },
+    {
+      "family": "diamond-atari",
+      "configuration": "Breakout",
+      "case": "diamond-breakout",
+      "status": "verified_inference_only",
+      "scope": "Public DIAMONDPipeline, actual published Breakout checkpoint, real Atari initialization,100 policy-controlled imagined steps;3 EDM denoising evaluations/step,64x64/15fps. Horizon50 and predicted terminal events reset context, so this is not a continuous100step trajectory. Score/reward accuracy and game-wide action semantics were not established.",
+      "evidence": "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/WorldFoundry/tmp/diamond-atari-gpu-20260922/diamond-breakout/quality-review.json"
+    },
+    {
+      "family": "diamond-atari",
+      "configuration": "Alien",
+      "case": "diamond-alien",
+      "status": "verified_inference_only",
+      "scope": "Public DIAMONDPipeline, actual published Alien checkpoint, real Atari initialization,100 policy-controlled imagined steps;3 EDM denoising evaluations/step,64x64/15fps. Horizon50 and predicted terminal events reset context, so this is not a continuous100step trajectory. Score/reward accuracy and game-wide action semantics were not established.",
+      "evidence": "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/WorldFoundry/tmp/diamond-atari-all-gpu-20260922/diamond-alien/quality-review.json"
+    },
+    {
+      "family": "diamond-atari",
+      "configuration": "Amidar",
+      "case": "diamond-amidar",
+      "status": "verified_inference_only",
+      "scope": "Public DIAMONDPipeline, actual published Amidar checkpoint, real Atari initialization,100 policy-controlled imagined steps;3 EDM denoising evaluations/step,64x64/15fps. Horizon50 and predicted terminal events reset context, so this is not a continuous100step trajectory. Score/reward accuracy and game-wide action semantics were not established.",
+      "evidence": "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/WorldFoundry/tmp/diamond-atari-all-gpu-20260922/diamond-amidar/quality-review.json"
+    },
+    {
+      "family": "diamond-atari",
+      "configuration": "Assault",
+      "case": "diamond-assault",
+      "status": "verified_inference_only",
+      "scope": "Public DIAMONDPipeline, actual published Assault checkpoint, real Atari initialization,100 policy-controlled imagined steps;3 EDM denoising evaluations/step,64x64/15fps. Horizon50 and predicted terminal events reset context, so this is not a continuous100step trajectory. Score/reward accuracy and game-wide action semantics were not established.",
+      "evidence": "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/WorldFoundry/tmp/diamond-atari-all-gpu-20260922/diamond-assault/quality-review.json"
+    },
+    {
+      "family": "diamond-atari",
+      "configuration": "Asterix",
+      "case": "diamond-asterix",
+      "status": "verified_inference_only",
+      "scope": "Public DIAMONDPipeline, actual published Asterix checkpoint, real Atari initialization,100 policy-controlled imagined steps;3 EDM denoising evaluations/step,64x64/15fps. Horizon50 and predicted terminal events reset context, so this is not a continuous100step trajectory. Score/reward accuracy and game-wide action semantics were not established.",
+      "evidence": "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/WorldFoundry/tmp/diamond-atari-all-gpu-20260922/diamond-asterix/quality-review.json"
+    },
+    {
+      "family": "diamond-atari",
+      "configuration": "BankHeist",
+      "case": "diamond-bankheist",
+      "status": "verified_inference_only",
+      "scope": "Public DIAMONDPipeline, actual published BankHeist checkpoint, real Atari initialization,100 policy-controlled imagined steps;3 EDM denoising evaluations/step,64x64/15fps. Horizon50 and predicted terminal events reset context, so this is not a continuous100step trajectory. Score/reward accuracy and game-wide action semantics were not established.",
+      "evidence": "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/WorldFoundry/tmp/diamond-atari-all-gpu-20260922/diamond-bankheist/quality-review.json"
+    },
+    {
+      "family": "diamond-atari",
+      "configuration": "BattleZone",
+      "case": "diamond-battlezone",
+      "status": "verified_inference_only",
+      "scope": "Public DIAMONDPipeline, actual published BattleZone checkpoint, real Atari initialization,100 policy-controlled imagined steps;3 EDM denoising evaluations/step,64x64/15fps. Horizon50 and predicted terminal events reset context, so this is not a continuous100step trajectory. Score/reward accuracy and game-wide action semantics were not established.",
+      "evidence": "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/WorldFoundry/tmp/diamond-atari-all-gpu-20260922/diamond-battlezone/quality-review.json"
+    },
+    {
+      "family": "diamond-atari",
+      "configuration": "Boxing",
+      "case": "diamond-boxing",
+      "status": "verified_inference_only",
+      "scope": "Public DIAMONDPipeline, actual published Boxing checkpoint, real Atari initialization,100 policy-controlled imagined steps;3 EDM denoising evaluations/step,64x64/15fps. Horizon50 and predicted terminal events reset context, so this is not a continuous100step trajectory. Score/reward accuracy and game-wide action semantics were not established.",
+      "evidence": "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/WorldFoundry/tmp/diamond-atari-all-gpu-20260922/diamond-boxing/quality-review.json"
+    },
+    {
+      "family": "diamond-atari",
+      "configuration": "ChopperCommand",
+      "case": "diamond-choppercommand",
+      "status": "verified_inference_only",
+      "scope": "Public DIAMONDPipeline, actual published ChopperCommand checkpoint, real Atari initialization,100 policy-controlled imagined steps;3 EDM denoising evaluations/step,64x64/15fps. Horizon50 and predicted terminal events reset context, so this is not a continuous100step trajectory. Score/reward accuracy and game-wide action semantics were not established.",
+      "evidence": "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/WorldFoundry/tmp/diamond-atari-all-gpu-20260922/diamond-choppercommand/quality-review.json"
+    },
+    {
+      "family": "diamond-atari",
+      "configuration": "CrazyClimber",
+      "case": "diamond-crazyclimber",
+      "status": "verified_inference_only",
+      "scope": "Public DIAMONDPipeline, actual published CrazyClimber checkpoint, real Atari initialization,100 policy-controlled imagined steps;3 EDM denoising evaluations/step,64x64/15fps. Horizon50 and predicted terminal events reset context, so this is not a continuous100step trajectory. Score/reward accuracy and game-wide action semantics were not established.",
+      "evidence": "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/WorldFoundry/tmp/diamond-atari-all-gpu-20260922/diamond-crazyclimber/quality-review.json"
+    },
+    {
+      "family": "diamond-atari",
+      "configuration": "DemonAttack",
+      "case": "diamond-demonattack",
+      "status": "verified_inference_only",
+      "scope": "Public DIAMONDPipeline, actual published DemonAttack checkpoint, real Atari initialization,100 policy-controlled imagined steps;3 EDM denoising evaluations/step,64x64/15fps. Horizon50 and predicted terminal events reset context, so this is not a continuous100step trajectory. Score/reward accuracy and game-wide action semantics were not established.",
+      "evidence": "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/WorldFoundry/tmp/diamond-atari-all-gpu-20260922/diamond-demonattack/quality-review.json"
+    },
+    {
+      "family": "diamond-atari",
+      "configuration": "Freeway",
+      "case": "diamond-freeway",
+      "status": "verified_inference_only",
+      "scope": "Public DIAMONDPipeline, actual published Freeway checkpoint, real Atari initialization,100 policy-controlled imagined steps;3 EDM denoising evaluations/step,64x64/15fps. Horizon50 and predicted terminal events reset context, so this is not a continuous100step trajectory. Score/reward accuracy and game-wide action semantics were not established.",
+      "evidence": "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/WorldFoundry/tmp/diamond-atari-all-gpu-20260922/diamond-freeway/quality-review.json"
+    },
+    {
+      "family": "diamond-atari",
+      "configuration": "Frostbite",
+      "case": "diamond-frostbite",
+      "status": "verified_inference_only",
+      "scope": "Public DIAMONDPipeline, actual published Frostbite checkpoint, real Atari initialization,100 policy-controlled imagined steps;3 EDM denoising evaluations/step,64x64/15fps. Horizon50 and predicted terminal events reset context, so this is not a continuous100step trajectory. Score/reward accuracy and game-wide action semantics were not established.",
+      "evidence": "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/WorldFoundry/tmp/diamond-atari-all-gpu-20260922/diamond-frostbite/quality-review.json"
+    },
+    {
+      "family": "diamond-atari",
+      "configuration": "Gopher",
+      "case": "diamond-gopher",
+      "status": "verified_inference_only",
+      "scope": "Public DIAMONDPipeline, actual published Gopher checkpoint, real Atari initialization,100 policy-controlled imagined steps;3 EDM denoising evaluations/step,64x64/15fps. Horizon50 and predicted terminal events reset context, so this is not a continuous100step trajectory. Score/reward accuracy and game-wide action semantics were not established.",
+      "evidence": "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/WorldFoundry/tmp/diamond-atari-all-gpu-20260922/diamond-gopher/quality-review.json"
+    },
+    {
+      "family": "diamond-atari",
+      "configuration": "Hero",
+      "case": "diamond-hero",
+      "status": "verified_inference_only",
+      "scope": "Public DIAMONDPipeline, actual published Hero checkpoint, real Atari initialization,100 policy-controlled imagined steps;3 EDM denoising evaluations/step,64x64/15fps. Horizon50 and predicted terminal events reset context, so this is not a continuous100step trajectory. Score/reward accuracy and game-wide action semantics were not established.",
+      "evidence": "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/WorldFoundry/tmp/diamond-atari-all-gpu-20260922/diamond-hero/quality-review.json"
+    },
+    {
+      "family": "diamond-atari",
+      "configuration": "Jamesbond",
+      "case": "diamond-jamesbond",
+      "status": "verified_inference_only",
+      "scope": "Public DIAMONDPipeline, actual published Jamesbond checkpoint, real Atari initialization,100 policy-controlled imagined steps;3 EDM denoising evaluations/step,64x64/15fps. Horizon50 and predicted terminal events reset context, so this is not a continuous100step trajectory. Score/reward accuracy and game-wide action semantics were not established.",
+      "evidence": "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/WorldFoundry/tmp/diamond-atari-all-gpu-20260922/diamond-jamesbond/quality-review.json"
+    },
+    {
+      "family": "diamond-atari",
+      "configuration": "Kangaroo",
+      "case": "diamond-kangaroo",
+      "status": "verified_inference_only",
+      "scope": "Public DIAMONDPipeline, actual published Kangaroo checkpoint, real Atari initialization,100 policy-controlled imagined steps;3 EDM denoising evaluations/step,64x64/15fps. Horizon50 and predicted terminal events reset context, so this is not a continuous100step trajectory. Score/reward accuracy and game-wide action semantics were not established.",
+      "evidence": "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/WorldFoundry/tmp/diamond-atari-all-gpu-20260922/diamond-kangaroo/quality-review.json"
+    },
+    {
+      "family": "diamond-atari",
+      "configuration": "Krull",
+      "case": "diamond-krull",
+      "status": "verified_inference_only",
+      "scope": "Public DIAMONDPipeline, actual published Krull checkpoint, real Atari initialization,100 policy-controlled imagined steps;3 EDM denoising evaluations/step,64x64/15fps. Horizon50 and predicted terminal events reset context, so this is not a continuous100step trajectory. Score/reward accuracy and game-wide action semantics were not established.",
+      "evidence": "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/WorldFoundry/tmp/diamond-atari-all-gpu-20260922/diamond-krull/quality-review.json"
+    },
+    {
+      "family": "diamond-atari",
+      "configuration": "KungFuMaster",
+      "case": "diamond-kungfumaster",
+      "status": "verified_inference_only",
+      "scope": "Public DIAMONDPipeline, actual published KungFuMaster checkpoint, real Atari initialization,100 policy-controlled imagined steps;3 EDM denoising evaluations/step,64x64/15fps. Horizon50 and predicted terminal events reset context, so this is not a continuous100step trajectory. Score/reward accuracy and game-wide action semantics were not established.",
+      "evidence": "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/WorldFoundry/tmp/diamond-atari-all-gpu-20260922/diamond-kungfumaster/quality-review.json"
+    },
+    {
+      "family": "diamond-atari",
+      "configuration": "MsPacman",
+      "case": "diamond-mspacman",
+      "status": "verified_inference_only",
+      "scope": "Public DIAMONDPipeline, actual published MsPacman checkpoint, real Atari initialization,100 policy-controlled imagined steps;3 EDM denoising evaluations/step,64x64/15fps. Horizon50 and predicted terminal events reset context, so this is not a continuous100step trajectory. Score/reward accuracy and game-wide action semantics were not established.",
+      "evidence": "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/WorldFoundry/tmp/diamond-atari-all-gpu-20260922/diamond-mspacman/quality-review.json"
+    },
+    {
+      "family": "diamond-atari",
+      "configuration": "PrivateEye",
+      "case": "diamond-privateeye",
+      "status": "verified_inference_only",
+      "scope": "Public DIAMONDPipeline, actual published PrivateEye checkpoint, real Atari initialization,100 policy-controlled imagined steps;3 EDM denoising evaluations/step,64x64/15fps. Horizon50 and predicted terminal events reset context, so this is not a continuous100step trajectory. Score/reward accuracy and game-wide action semantics were not established.",
+      "evidence": "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/WorldFoundry/tmp/diamond-atari-all-gpu-20260922/diamond-privateeye/quality-review.json"
+    },
+    {
+      "family": "diamond-atari",
+      "configuration": "Qbert",
+      "case": "diamond-qbert",
+      "status": "verified_inference_only",
+      "scope": "Public DIAMONDPipeline, actual published Qbert checkpoint, real Atari initialization,100 policy-controlled imagined steps;3 EDM denoising evaluations/step,64x64/15fps. Horizon50 and predicted terminal events reset context, so this is not a continuous100step trajectory. Score/reward accuracy and game-wide action semantics were not established.",
+      "evidence": "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/WorldFoundry/tmp/diamond-atari-all-gpu-20260922/diamond-qbert/quality-review.json"
+    },
+    {
+      "family": "diamond-atari",
+      "configuration": "RoadRunner",
+      "case": "diamond-roadrunner",
+      "status": "verified_inference_only",
+      "scope": "Public DIAMONDPipeline, actual published RoadRunner checkpoint, real Atari initialization,100 policy-controlled imagined steps;3 EDM denoising evaluations/step,64x64/15fps. Horizon50 and predicted terminal events reset context, so this is not a continuous100step trajectory. Score/reward accuracy and game-wide action semantics were not established.",
+      "evidence": "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/WorldFoundry/tmp/diamond-atari-all-gpu-20260922/diamond-roadrunner/quality-review.json"
+    },
+    {
+      "family": "diamond-atari",
+      "configuration": "Seaquest",
+      "case": "diamond-seaquest",
+      "status": "verified_inference_only",
+      "scope": "Public DIAMONDPipeline, actual published Seaquest checkpoint, real Atari initialization,100 policy-controlled imagined steps;3 EDM denoising evaluations/step,64x64/15fps. Horizon50 and predicted terminal events reset context, so this is not a continuous100step trajectory. Score/reward accuracy and game-wide action semantics were not established.",
+      "evidence": "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/WorldFoundry/tmp/diamond-atari-all-gpu-20260922/diamond-seaquest/quality-review.json"
+    },
+    {
+      "family": "diamond-atari",
+      "configuration": "UpNDown",
+      "case": "diamond-upndown",
+      "status": "verified_inference_only",
+      "scope": "Public DIAMONDPipeline, actual published UpNDown checkpoint, real Atari initialization,100 policy-controlled imagined steps;3 EDM denoising evaluations/step,64x64/15fps. Horizon50 and predicted terminal events reset context, so this is not a continuous100step trajectory. Score/reward accuracy and game-wide action semantics were not established.",
+      "evidence": "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/WorldFoundry/tmp/diamond-atari-all-gpu-20260922/diamond-upndown/quality-review.json"
+    }
+  ],
+  "action_review": "tmp/diamond-action-gpu-20260922/diamond-pong-actions/quality-review.json"
+}

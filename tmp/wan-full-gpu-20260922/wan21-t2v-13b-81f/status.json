@@ -1,0 +1,10 @@
+{
+  "case": "wan21-t2v-13b-81f",
+  "started_at": 1790013060.939169,
+  "gpu": "0",
+  "status": "generated",
+  "videos": [
+    "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/WorldFoundry/tmp/wan-full-gpu-20260922/wan21-t2v-13b-81f/demo.mp4"
+  ],
+  "elapsed_seconds": 235.7
+}

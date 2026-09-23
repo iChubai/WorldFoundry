@@ -396,6 +396,10 @@ worldfoundry/studio/assets/vendor/
 !/tests/core/
 !/tests/core/attention/
 !/tests/core/attention/test_*.py
+!/tests/core/test_nvtx.py
+!/tests/core/test_nvtx_runner.py
+!/tests/core/vram/
+!/tests/core/vram/test_packed_layerwise_offload.py
 *.pem
 *.key
 *.p12
@@ -404,7 +408,6 @@ worldfoundry/studio/assets/vendor/
 !worldfoundry/data/benchmarks/assets/**/*.npz
 !docs/fumadocs/public/wechat_qr*.png
 /worldfoundry/base_models/three_dimensions/depth/dvlt/dvlt_runtime/
-/worldfoundry/base_models/three_dimensions/depth/unidepth/
 /worldfoundry/base_models/three_dimensions/depth/unik3d/
 /worldfoundry/base_models/three_dimensions/general_3d/dust3r/
 /worldfoundry/base_models/three_dimensions/general_3d/four_d_gaussians/

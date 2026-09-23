@@ -1,0 +1,47 @@
+{
+  "status": "passed_numerics_visual_review_pending",
+  "shape": [
+    384,
+    512
+  ],
+  "original_prior_shape": [
+    144,
+    192
+  ],
+  "finite": true,
+  "min": 1664.2100830078125,
+  "max": 2565.03173828125,
+  "std": 349.0605163574219,
+  "ground_truth_valid_pixels": 196608,
+  "prior_metrics": {
+    "abs_rel": 0.012922868132591248,
+    "rmse": 68.906196853721,
+    "delta1": 0.9928690592447916
+  },
+  "output_metrics": {
+    "abs_rel": 0.01062155980616808,
+    "rmse": 49.69470270121857,
+    "delta1": 0.9980570475260416
+  },
+  "loading": [
+    {
+      "module": "DepthAnythingV2",
+      "strict": true,
+      "missing": [],
+      "unexpected": []
+    },
+    {
+      "module": "DepthAnythingV2",
+      "strict": true,
+      "missing": [],
+      "unexpected": []
+    },
+    {
+      "module": "DepthAnythingV2",
+      "strict": true,
+      "missing": [],
+      "unexpected": []
+    }
+  ],
+  "scope": "Official sample-2 actual low-resolution prior144x192 is bilinearly resized by the public pipeline to RGB384x512. Initial validator wrongly required output equal low-resolution prior shape; GPU inference itself succeeded. Raw numeric units retained; no inferred meter calibration."
+}

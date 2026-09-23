@@ -1,0 +1,13 @@
+{
+  "id": "hy-vla-robotwin-synthetic-state-regexfix",
+  "status": "generated",
+  "started_at": 1790120942.1834936,
+  "gpu": "0",
+  "artifact": "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/WorldFoundry/tmp/hy-embodied-vla-gpu-20260923/hy-vla-robotwin-synthetic-state-regexfix/action_trace.json",
+  "action_shape": [
+    20,
+    20
+  ],
+  "artifact_sha256": "b1ad86cd4eb124efda001f9b7ea2c7662775d4b9539786e9bc1dc29dc07a7e72",
+  "elapsed_seconds": 261.05
+}

@@ -50,7 +50,7 @@ class FantasyWorldWan21Runner:
             extri_intri_to_pose_encoding,
             pose_encoding_to_extri_intri,
         )
-        from worldfoundry.core.camera_pose import RealEstate10KPoseProcessor
+        from worldfoundry.core.geometry.pose import RealEstate10KPoseProcessor
 
         from . import utils as fw_utils
 

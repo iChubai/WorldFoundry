@@ -1,0 +1,10 @@
+{
+  "case": "flashworld",
+  "started_at": 1789998666.1777258,
+  "gpu": "2",
+  "status": "generated",
+  "videos": [
+    "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/WorldFoundry/tmp/scene-all-gpu-20260921/flashworld/video.mp4"
+  ],
+  "elapsed_seconds": 253.66
+}

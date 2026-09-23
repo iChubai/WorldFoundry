@@ -1,0 +1,10 @@
+{
+  "case": "worldfm",
+  "started_at": 1790000419.062761,
+  "gpu": "3",
+  "status": "generated",
+  "videos": [
+    "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/WorldFoundry/tmp/worldfm-fix-gpu-20260921/worldfm/royal-esplanade/output.mp4"
+  ],
+  "elapsed_seconds": 625.02
+}

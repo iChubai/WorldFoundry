@@ -1,0 +1,11 @@
+{
+  "shape": [
+    1,
+    7
+  ],
+  "finite": true,
+  "min": -0.007479244917631175,
+  "max": 0.007033863924443714,
+  "std": 0.003927506449562663,
+  "normalization_bounds_passed": true
+}

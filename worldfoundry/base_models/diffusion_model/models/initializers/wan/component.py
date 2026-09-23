@@ -331,6 +331,43 @@ class WanImageToVideoLatentInitializer(WanTextToVideoLatentInitializer):
         )
 
 
+class WanCausalFirstFrameLatentInitializer(WanTextToVideoLatentInitializer):
+    """Encode one image latent for causal Wan's clean first-frame cache seed."""
+
+    def initialize(self, request, *, generator, device, dtype):
+        del request, generator, device, dtype
+        raise RuntimeError("causal Wan I2V requires its latent_encoder binding")
+
+    @torch.no_grad()
+    def initialize_with_encoder(
+        self,
+        request: DiffusionRequest,
+        *,
+        latent_encoder: LatentEncoder,
+        generator: torch.Generator,
+        device: torch.device,
+        dtype: torch.dtype,
+    ) -> LatentInitialization:
+        from worldfoundry.core import load_pil_image
+
+        noise = self._noise(request, generator=generator, device=device, dtype=dtype)
+        image = load_pil_image(WanImageToVideoLatentInitializer._image(request), first_sequence_item=False)
+        pixels = torch.from_numpy(np.ascontiguousarray(np.asarray(image, dtype=np.float32)))
+        pixels = pixels.permute(2, 0, 1).div_(127.5).sub_(1.0).unsqueeze(0)
+        pixels = torch.nn.functional.interpolate(
+            pixels, size=(request.height, request.width), mode="bicubic", align_corners=False
+        ).unsqueeze(2).repeat(request.batch_size, 1, 1, 1, 1)
+        first = latent_encoder.encode(
+            pixels.to(device=device, dtype=self._codec_dtype(latent_encoder))
+        ).to(device=device, dtype=noise.dtype)
+        if first.shape != noise[:, :, :1].shape:
+            raise ValueError(
+                "causal Wan first-frame latent geometry must match generated noise: "
+                f"{tuple(first.shape)} vs {tuple(noise[:, :, :1].shape)}"
+            )
+        return LatentInitialization(noise, {"first_frame_latent": first})
+
+
 class WanTextImageToVideoLatentInitializer(WanTextToVideoLatentInitializer):
     """Initialize Wan2.2 TI2V with an optional frozen first-frame latent."""
 
@@ -713,6 +750,18 @@ def build_wan_i2v_latent_initializer(
     )
 
 
+def build_wan_causal_i2v_latent_initializer(
+    context: ComponentBuildContext,
+) -> WanCausalFirstFrameLatentInitializer:
+    """Build the first-frame-only condition used by FastVideo CausalWan I2V."""
+
+    return WanCausalFirstFrameLatentInitializer(
+        channels=int(context.component_options.get("channels", 16)),
+        spatial_compression=int(context.component_options.get("spatial_compression", 8)),
+        temporal_compression=int(context.component_options.get("temporal_compression", 4)),
+    )
+
+
 def build_wan_ti2v_latent_initializer(
     context: ComponentBuildContext,
 ) -> WanTextImageToVideoLatentInitializer:
@@ -738,11 +787,13 @@ def build_wan_vace_latent_initializer(
 
 
 __all__ = [
+    "WanCausalFirstFrameLatentInitializer",
     "WanImageToVideoLatentInitializer",
     "WanReferenceLatentInitializer",
     "WanTextToVideoLatentInitializer",
     "WanTextImageToVideoLatentInitializer",
     "WanVaceLatentInitializer",
+    "build_wan_causal_i2v_latent_initializer",
     "build_wan_i2v_latent_initializer",
     "build_wan_reference_latent_initializer",
     "build_wan_t2v_latent_initializer",

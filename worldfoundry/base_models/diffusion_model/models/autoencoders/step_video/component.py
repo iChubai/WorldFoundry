@@ -9,12 +9,14 @@ role (T2V draws noise with 17-frame packing).
 from __future__ import annotations
 
 from collections.abc import Mapping
+from dataclasses import replace
 
 import torch
 
 from ....components import ComponentBuildContext
 from ....contracts import DiffusionRequest
 from ....loaders import ModuleLoadSpec, NativeModuleLoader
+from ....optimizations import OffloadPolicy
 from .model import AutoencoderKL
 
 
@@ -43,6 +45,10 @@ class StepVideoDecoder:
 
 def build_step_video_decoder(context: ComponentBuildContext) -> StepVideoDecoder:
     """Load the StepVideo VAE and remap ``decoder.conv_out`` keys."""
+    # StepVideo's VAE has no block container for asynchronous layer offload.
+    # Keep this small decoder resident while the much larger DiT uses the
+    # caller's block-offload policy.
+    decoder_policy = replace(context.policy, offload=OffloadPolicy())
     vae = NativeModuleLoader().load(
         ModuleLoadSpec(
             module_class=AutoencoderKL,
@@ -51,7 +57,7 @@ def build_step_video_decoder(context: ComponentBuildContext) -> StepVideoDecoder
             layer_container="decoder",
         ),
         context.require_checkpoint("weights"),
-        context.policy,
+        decoder_policy,
     )
     if not isinstance(vae, AutoencoderKL):
         raise TypeError(f"expected StepVideo AutoencoderKL, got {type(vae).__name__}")

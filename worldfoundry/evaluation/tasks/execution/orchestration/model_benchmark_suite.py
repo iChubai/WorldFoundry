@@ -26,7 +26,7 @@ from dataclasses import asdict, dataclass, replace
 from pathlib import Path
 from typing import Any, Callable, Mapping, Sequence
 
-from worldfoundry.core.logging_setup import get_logger
+from worldfoundry.core.observability.logging_setup import get_logger
 from worldfoundry.evaluation.api import is_generation_result_successful
 from worldfoundry.evaluation.models.catalog import load_model_zoo_registry
 from worldfoundry.evaluation.models.catalog.manifest import model_zoo_entry_to_world_model_manifest

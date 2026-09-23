@@ -1,0 +1,5 @@
+{
+  "status": "verified_inference_only",
+  "scope": "Actual GPU autoregressive action inference afterconstructorSDPAfix;finalHF zero missing/unexpected/mismatch/error/meta. Publicbatched actions1x7finite equal singularaction7; originalfailedstatus retained as harness-shape error and corrected by independent artifact/hash validation. RealLIBERO10 agentview;LIBERO10 finetuned checkpoint and corresponding normalization. Offline only,no closed-loop success.",
+  "reviewed_in_current_session": true
+}

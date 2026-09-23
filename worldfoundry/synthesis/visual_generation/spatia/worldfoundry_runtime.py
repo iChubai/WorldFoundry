@@ -124,8 +124,11 @@ class SpatiaRuntime:
         matrix = intrinsics[0]
         intrinsic_path = input_dir / "intrinsics.txt"
         intrinsic_path.parent.mkdir(parents=True, exist_ok=True)
+        # Spatia's MapAnything and renderer input files use intrinsics normalized
+        # by the target image size. The public pipeline accepts pixel-space K.
         intrinsic_path.write_text(
-            f"[{float(matrix[0][0])} {float(matrix[1][1])} {float(matrix[0][2])} {float(matrix[1][2])}]\n",
+            f"[{float(matrix[0][0]) / width} {float(matrix[1][1]) / height} "
+            f"{float(matrix[0][2]) / width} {float(matrix[1][2]) / height}]\n",
             encoding="utf-8",
         )
         checkpoint_root = require_path(self.checkpoint_path, "Spatia checkpoint")

@@ -1,0 +1,13 @@
+{
+  "case": "solarwm-dmd-237f",
+  "started_at": 1790003942.7522335,
+  "gpu": "2",
+  "status": "generated",
+  "videos": [
+    "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/WorldFoundry/tmp/causal-more-gpu-20260921/solarwm-dmd-237f/demo/325b25687f6d431bbce141ee743105d0/generation/ema_self_forcing_nfe4/slot-000000/compare.mp4",
+    "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/WorldFoundry/tmp/causal-more-gpu-20260921/solarwm-dmd-237f/demo/325b25687f6d431bbce141ee743105d0/generation/ema_self_forcing_nfe4/slot-000000/video.mp4",
+    "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/WorldFoundry/tmp/causal-more-gpu-20260921/solarwm-dmd-237f/demo/325b25687f6d431bbce141ee743105d0/generation/live_self_forcing_nfe4/slot-000000/compare.mp4",
+    "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/WorldFoundry/tmp/causal-more-gpu-20260921/solarwm-dmd-237f/demo/325b25687f6d431bbce141ee743105d0/generation/live_self_forcing_nfe4/slot-000000/video.mp4"
+  ],
+  "elapsed_seconds": 248.74
+}

@@ -56,8 +56,8 @@ except ImportError:  # pragma: no cover - selected by the installed torch
     from torch.distributed.device_mesh import DeviceMesh
 
 from worldfoundry.core.attention.rope_kernel import apply_rotary_pos_emb
-from worldfoundry.core.device import get_current_torch_device
 from worldfoundry.core.distributed.context_parallel import split_inputs_cp
+from worldfoundry.core.execution.device import get_current_torch_device
 
 T = TypeVar("T")
 

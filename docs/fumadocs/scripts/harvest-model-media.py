@@ -744,10 +744,6 @@ CURATED_FIGURES: dict[str, dict[str, str]] = {
         "teaser": "https://arxiv.org/html/2510.12276v2/fig_teaser.png",
         "overview": "https://arxiv.org/html/2510.12276v2/fig_compare.png",
     },
-    "thinksound": {
-        "teaser": "https://arxiv.org/html/2506.21448v3/fig1_teaser.png",
-        "overview": "https://arxiv.org/html/2506.21448v3/fig3_model.png",
-    },
     "unianimate-dit": {
         "teaser": "https://arxiv.org/html/2504.11289v1/figures.png",
         "overview": "https://arxiv.org/html/2504.11289v1/Network.png",

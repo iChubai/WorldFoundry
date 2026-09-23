@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+import json
 import os
 import re
 import shutil
@@ -20,7 +21,6 @@ def _demo_asset_root() -> Path:
     return resolve_data_path("test_cases", "unianimate_dit").resolve()
 
 
-DEFAULT_CASE = '[1, "data/images/WOMEN-Blouses_Shirts-id_00004955-01_4_full.jpg", "data/saved_pose/WOMEN-Blouses_Shirts-id_00004955-01_4_full"]'
 DEFAULT_REF_IMAGE = "data/images/WOMEN-Blouses_Shirts-id_00004955-01_4_full.jpg"
 DEFAULT_SOURCE_VIDEO = "data/videos/source_video.mp4"
 DEFAULT_POSE_DIR = "data/saved_pose/WOMEN-Blouses_Shirts-id_00004955-01_4_full"
@@ -50,6 +50,8 @@ def _as_bool(value: str | bool | int | None) -> bool:
 def _rewrite_demo_script(
     source: str,
     *,
+    prompt: str,
+    reference_image: str,
     max_frames: int,
     steps: int,
     height: int,
@@ -58,17 +60,19 @@ def _rewrite_demo_script(
     use_usp: bool,
 ) -> str:
     text = source
+    case = f'[1, {json.dumps(reference_image)}, {json.dumps(DEFAULT_POSE_DIR)}]'
     text = re.sub(r"^height\s*=\s*\d+", f"height = {height}", text, flags=re.MULTILINE)
     text = re.sub(r"^width\s*=\s*\d+", f"width = {width}", text, flags=re.MULTILINE)
     text = re.sub(r"^seed\s*=\s*\d+", f"seed = {seed}", text, flags=re.MULTILINE)
     text = re.sub(r"^max_frames\s*=\s*\d+", f"max_frames = {max_frames}", text, flags=re.MULTILINE)
     text = re.sub(
         r"test_list_path\s*=\s*\[.*?\]\s*\n\nmisc_size",
-        f"test_list_path = [\n    {DEFAULT_CASE},\n]\n\nmisc_size",
+        f"test_list_path = [\n    {case},\n]\n\nmisc_size",
         text,
         flags=re.DOTALL,
     )
     text = re.sub(r"num_inference_steps\s*=\s*50", f"num_inference_steps={steps}", text)
+    text = text.replace('prompt="a person is dancing",', f"prompt={prompt!r},", 1)
     text = re.sub(
         r"start_frame\s*=\s*random\.randint\(0,\s*_total_frame_num-cover_frame_num-1\)",
         "start_frame = 0 # random.randint(0, _total_frame_num-cover_frame_num-1)",
@@ -149,9 +153,12 @@ def _ensure_demo_assets(repo_root: Path) -> None:
     _ensure_link(repo_root / "data", _demo_asset_root())
 
 
-def _ensure_demo_pose(workspace_root: Path, source_repo_root: Path) -> None:
+def _ensure_demo_pose(workspace_root: Path, source_repo_root: Path, reference_image: str) -> None:
     pose_dir = workspace_root / DEFAULT_POSE_DIR
-    if (pose_dir / "pose.jpg").is_file() and any(path.suffix.lower() in {".jpg", ".png"} for path in pose_dir.iterdir()):
+    if (pose_dir / "pose.jpg").is_file() and any(
+        path.name != "pose.jpg" and path.suffix.lower() in {".jpg", ".png"}
+        for path in pose_dir.iterdir()
+    ):
         return
     align_script = source_repo_root / "run_align_pose.py"
     if not align_script.is_file():
@@ -162,7 +169,7 @@ def _ensure_demo_pose(workspace_root: Path, source_repo_root: Path) -> None:
             sys.executable,
             str(align_script),
             "--ref_name",
-            DEFAULT_REF_IMAGE,
+            reference_image,
             "--source_video_paths",
             DEFAULT_SOURCE_VIDEO,
             "--saved_pose_dir",
@@ -189,6 +196,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--checkpoint-dir", required=True)
     parser.add_argument("--wan-root", required=True)
     parser.add_argument("--prompt", default="")
+    parser.add_argument("--image-path", default="")
     parser.add_argument("--output-path", required=True)
     parser.add_argument("--max-frames", type=int, default=81)
     parser.add_argument("--num-inference-steps", type=int, default=50)
@@ -214,12 +222,17 @@ def main() -> None:
     _ensure_link(workspace_root / "Wan2.1-I2V-14B-720P", Path(args.wan_root))
     _ensure_link(workspace_root / "checkpoints", Path(args.checkpoint_dir))
     _ensure_demo_assets(workspace_root)
-    _ensure_demo_pose(workspace_root, repo_root)
+    reference_image = str(Path(args.image_path).expanduser().resolve()) if args.image_path else DEFAULT_REF_IMAGE
+    if args.image_path and not Path(reference_image).is_file():
+        raise FileNotFoundError(f"UniAnimate reference image not found: {reference_image}")
+    _ensure_demo_pose(workspace_root, repo_root, reference_image)
 
     run_script = output_path.parent / "unianimate_dit_official_demo.py"
     run_script.write_text(
         _rewrite_demo_script(
             source_script.read_text(encoding="utf-8"),
+            prompt=args.prompt or "a person is dancing",
+            reference_image=reference_image,
             max_frames=args.max_frames,
             steps=args.num_inference_steps,
             height=args.height,

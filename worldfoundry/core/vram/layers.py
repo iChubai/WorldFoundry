@@ -23,7 +23,8 @@ from typing import Union
 
 import torch
 
-from ..device import get_device_name, is_npu_available, parse_device_type
+from worldfoundry.core.execution.device import get_device_name, is_npu_available, parse_device_type
+
 from .disk_map import DiskMap
 from .initialization import init_weights_on_device, skip_model_initialization
 

@@ -1,0 +1,9 @@
+{
+  "model_id": "causal-forcing",
+  "status": "generated",
+  "gpu": "2",
+  "artifact": "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/WorldFoundry/tmp/next-world-models-gpu-20260923/causal-forcing/generated.mp4",
+  "decoded_frames": 81,
+  "artifact_sha256": "b4ee183b51343a5d703e81c8f93d2d968c4c848d92e5c87e889e70688013b576",
+  "elapsed_seconds": 228.5
+}

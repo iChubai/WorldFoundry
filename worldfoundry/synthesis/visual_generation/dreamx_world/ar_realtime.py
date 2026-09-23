@@ -19,8 +19,8 @@ import torch
 from PIL import Image
 from safetensors.torch import load_file
 
-from worldfoundry.core.geometry import euler_angles_to_rotation_matrix_zyx
-from worldfoundry.core.realtime import DEFAULT_REALTIME_CONTROLS, RealtimeSpec
+from worldfoundry.core.geometry.transforms import euler_angles_to_rotation_matrix_zyx
+from worldfoundry.core.execution.realtime import DEFAULT_REALTIME_CONTROLS, RealtimeSpec
 from worldfoundry.runtime.local_checkpoint_cache import stage_checkpoint_for_realtime
 
 from .checkpoints import enforce_offline_model_loading, resolve_checkpoint

@@ -77,12 +77,29 @@ def _load_checkpoint_state_dict(ckpt_path: str) -> dict:
 
 def _load_state_dict_selective(model, ckpt_state, source_name="checkpoint"):
     current = model.state_dict()
-    for key in current:
-        if key in ckpt_state and current[key].shape == ckpt_state[key].shape:
-            current[key] = ckpt_state[key]
+    missing = []
+    mismatched = []
+    matched = 0
+    for key, value in current.items():
+        checkpoint_value = ckpt_state.get(key)
+        if checkpoint_value is None:
+            if not key.endswith(".rope.periods"):
+                missing.append(key)
+        elif value.shape != checkpoint_value.shape:
+            mismatched.append(f"{key}: expected {tuple(value.shape)}, got {tuple(checkpoint_value.shape)}")
+        else:
+            current[key] = checkpoint_value
+            matched += 1
+    if missing or mismatched:
+        raise RuntimeError(
+            f"WorldMirror checkpoint {source_name} is incompatible: "
+            f"missing keys={missing}; shape mismatches={mismatched}"
+        )
     model.load_state_dict(current, strict=True)
-    matched = sum(1 for k in current if k in ckpt_state and current[k].shape == ckpt_state[k].shape)
-    print(f"  Loaded {matched}/{len(current)} keys from {source_name}")
+    print(
+        f"  Loaded {matched}/{len(current)} keys from {source_name} "
+        f"({len(current) - matched} deterministic RoPE buffers initialized from config)"
+    )
 
 
 def _has_model_files(path: str) -> bool:

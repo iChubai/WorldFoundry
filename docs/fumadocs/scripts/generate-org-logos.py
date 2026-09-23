@@ -1372,7 +1372,6 @@ MODEL_ORGS: dict[str, str] = {
     "t2v_turbo_t2v": "google",
     "tdmpc": "ucsd",
     "tesseract": "umass",
-    "thinksound": "alibaba",
     "tineuvox": "hust",
     "tinyvla": "midea",
     "track-anything-prior": "zju",

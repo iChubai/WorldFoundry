@@ -1,8 +1,8 @@
 {
   "generatedFrom": "worldfoundry/data/benchmarks/catalog + tasks/external + recorded About facts",
-  "benchmarkCount": 75,
+  "benchmarkCount": 76,
   "leaderboardIngestedIds": [],
-  "leaderboardPlaceholderCount": 75,
+  "leaderboardPlaceholderCount": 76,
   "pages": {
     "ai2thor": {
       "id": "ai2thor",
@@ -11288,6 +11288,208 @@
         "source": "",
         "sourceZh": "",
         "officialUrl": "https://jinplu.github.io/WRBench/",
+        "entries": []
+      }
+    },
+    "harnesseval-w": {
+      "id": "harnesseval-w",
+      "name": "HarnessEval-W",
+      "projectPage": "https://mirros-lab.github.io/HarnessEval-W",
+      "paperUrl": "https://arxiv.org/abs/2608.16859",
+      "dimensions": [
+        {
+          "id": "exploratory_transition",
+          "name": "Exploratory Transition",
+          "nameZh": "Exploratory Transition",
+          "kind": "track",
+          "description": "",
+          "descriptionZh": ""
+        },
+        {
+          "id": "intentional_transition",
+          "name": "Intentional Transition",
+          "nameZh": "Intentional Transition",
+          "kind": "track",
+          "description": "",
+          "descriptionZh": ""
+        },
+        {
+          "id": "physical_transition",
+          "name": "Physical Transition",
+          "nameZh": "Physical Transition",
+          "kind": "track",
+          "description": "",
+          "descriptionZh": ""
+        },
+        {
+          "id": "drift_resistance",
+          "name": "Drift Resistance",
+          "nameZh": "Drift Resistance",
+          "kind": "track",
+          "description": "",
+          "descriptionZh": ""
+        },
+        {
+          "id": "return_revisit_consistency",
+          "name": "Return Revisit Consistency",
+          "nameZh": "Return Revisit Consistency",
+          "kind": "track",
+          "description": "",
+          "descriptionZh": ""
+        },
+        {
+          "id": "offscreen_evolution",
+          "name": "Offscreen Evolution",
+          "nameZh": "Offscreen Evolution",
+          "kind": "track",
+          "description": "",
+          "descriptionZh": ""
+        }
+      ],
+      "data": {
+        "summary": "",
+        "summaryZh": "",
+        "sizeLabel": "",
+        "sizeLabelZh": "",
+        "count": null,
+        "unit": "",
+        "sources": [
+          {
+            "kind": "huggingface",
+            "id": "MirroS-Lab/HarnessEval-W",
+            "license": "{'status': 'upstream_readme_declaration', 'notes': 'Upstream README declares Apache-2.0; no standalone LICENSE file exists at the pinned revision.'}"
+          },
+          {
+            "kind": "github",
+            "id": "https://github.com/MirroS-Lab/HarnessEval-W",
+            "license": "{'status': 'upstream_readme_declaration', 'notes': 'Upstream README declares Apache-2.0; no standalone LICENSE file exists at the pinned revision.'}"
+          }
+        ],
+        "splits": [
+          "exploratory_transition",
+          "intentional_transition",
+          "physical_transition",
+          "drift_resistance",
+          "return_revisit_consistency",
+          "offscreen_evolution"
+        ],
+        "modalities": [
+          "image",
+          "video",
+          "text",
+          "action"
+        ],
+        "license": "{'status': 'upstream_readme_declaration', 'notes': 'Upstream README declares Apache-2.0; no standalone LICENSE file exists at the pinned revision.'}",
+        "notes": [],
+        "notesZh": [],
+        "notApplicable": false
+      },
+      "metrics": [
+        {
+          "id": "overall_macro",
+          "name": "Overall Macro",
+          "description": "Equal mean of all six family scores; each case combines core and observation scores at 50/50.",
+          "descriptionZh": "",
+          "higherIsBetter": true,
+          "primary": true,
+          "leaderboardKey": "overall_macro"
+        },
+        {
+          "id": "overall_core_macro",
+          "name": "Overall Core Macro",
+          "description": "Official HarnessEval common-case overall core macro score.",
+          "descriptionZh": "",
+          "higherIsBetter": true,
+          "primary": false,
+          "leaderboardKey": "overall_core_macro"
+        },
+        {
+          "id": "overall_observation_macro",
+          "name": "Overall Observation Macro",
+          "description": "Official HarnessEval common-case overall observation macro score.",
+          "descriptionZh": "",
+          "higherIsBetter": true,
+          "primary": false,
+          "leaderboardKey": "overall_observation_macro"
+        },
+        {
+          "id": "observation_quality_macro",
+          "name": "Observation Quality Macro",
+          "description": "Official HarnessEval common-case observation quality macro score.",
+          "descriptionZh": "",
+          "higherIsBetter": true,
+          "primary": false,
+          "leaderboardKey": "observation_quality_macro"
+        },
+        {
+          "id": "observation_physical_plausibility_macro",
+          "name": "Observation Physical Plausibility Macro",
+          "description": "Official HarnessEval common-case observation physical plausibility macro score.",
+          "descriptionZh": "",
+          "higherIsBetter": true,
+          "primary": false,
+          "leaderboardKey": "observation_physical_plausibility_macro"
+        },
+        {
+          "id": "exploratory_transition",
+          "name": "Exploratory Transition",
+          "description": "Official HarnessEval common-case exploratory transition score.",
+          "descriptionZh": "",
+          "higherIsBetter": true,
+          "primary": false,
+          "leaderboardKey": "exploratory_transition"
+        },
+        {
+          "id": "intentional_transition",
+          "name": "Intentional Transition",
+          "description": "Official HarnessEval common-case intentional transition score.",
+          "descriptionZh": "",
+          "higherIsBetter": true,
+          "primary": false,
+          "leaderboardKey": "intentional_transition"
+        },
+        {
+          "id": "physical_transition",
+          "name": "Physical Transition",
+          "description": "Official HarnessEval common-case physical transition score.",
+          "descriptionZh": "",
+          "higherIsBetter": true,
+          "primary": false,
+          "leaderboardKey": "physical_transition"
+        },
+        {
+          "id": "drift_resistance",
+          "name": "Drift Resistance",
+          "description": "Official HarnessEval common-case drift resistance score.",
+          "descriptionZh": "",
+          "higherIsBetter": true,
+          "primary": false,
+          "leaderboardKey": "drift_resistance"
+        },
+        {
+          "id": "return_revisit_consistency",
+          "name": "Return Revisit Consistency",
+          "description": "Official HarnessEval common-case return revisit consistency score.",
+          "descriptionZh": "",
+          "higherIsBetter": true,
+          "primary": false,
+          "leaderboardKey": "return_revisit_consistency"
+        },
+        {
+          "id": "offscreen_evolution",
+          "name": "Offscreen Evolution",
+          "description": "Official HarnessEval common-case offscreen evolution score.",
+          "descriptionZh": "",
+          "higherIsBetter": true,
+          "primary": false,
+          "leaderboardKey": "offscreen_evolution"
+        }
+      ],
+      "leaderboard": {
+        "ingested": false,
+        "source": "",
+        "sourceZh": "",
+        "officialUrl": "https://mirros-lab.github.io/HarnessEval-W",
         "entries": []
       }
     }

@@ -41,8 +41,11 @@ class InnerModel(nn.Module):
         self.conv_out = Conv3x3(cfg.channels[0], cfg.img_channels)
         nn.init.zeros_(self.conv_out.weight)
 
-    def forward(self, noisy_next_obs: Tensor, c_noise: Tensor, obs: Tensor, act: Tensor) -> Tensor:
-        cond = self.cond_proj(self.noise_emb(c_noise) + self.act_emb(act))
+    def conditioning(self, c_noise: Tensor, act: Tensor) -> Tensor:
+        return self.cond_proj(self.noise_emb(c_noise) + self.act_emb(act))
+
+    def forward(self, noisy_next_obs: Tensor, c_noise: Tensor, obs: Tensor, act: Tensor, **kwargs) -> Tensor:
+        cond = self.conditioning(c_noise, act, **kwargs)
         x = self.conv_in(torch.cat((obs, noisy_next_obs), dim=1))
         x, _, _ = self.unet(x, cond)
         x = self.conv_out(F.silu(self.norm_out(x)))

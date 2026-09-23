@@ -2,9 +2,10 @@ id: ltx-2.x
 name: LTX-2.x
 description: >-
   Native WorldFoundry integration for the official distilled LTX-2 and LTX-2.3
-  image-to-video paths. It uses the official spatial upscaler between two
-  denoising stages; text-to-video and video-to-video remain upstream-only
-  profiles until scoped runners are implemented and validated.
+  image-to-video and text-to-video paths. It uses the official spatial
+  upscaler between two denoising stages; video-to-video remains an
+  upstream-only profile. Per-configuration inference validation is tracked
+  separately from integration status.
 runner_target: worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner
 pipeline_binding: ltx-2.x
 runtime_profile: runtime-profile:ltx-2.3-i2v
@@ -64,7 +65,11 @@ variants:
     demo_parity:
       status: pending_demo
     runner_parity:
-      status: planned
+      status: pending
+    runner_target: worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner
+    pipeline_binding: ltx-2-t2v
+    integration:
+      status: integrated
   - id: ltx-2-i2v
     task: image-to-video
     provider: official_repo

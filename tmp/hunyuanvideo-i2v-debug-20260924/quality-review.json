@@ -1,0 +1,14 @@
+{
+  "model_id": "hunyuanvideo-i2v",
+  "status": "quality_concern",
+  "tested_configuration": "Local Tencent HunyuanVideo-I2V checkpoint, 720p, 50 steps, seed 42, 24 fps, same source image and prompt; tested 17, 33, 65 frames in addition to prior 129-frame output.",
+  "findings": {
+    "17_frames": "17/17 decode; intact room, maximum adjacent RGB MAE 2.28/255, frame 8\u21929 1.17/255",
+    "33_frames": "33/33 decode; intact room, maximum adjacent RGB MAE 3.85/255, frame 8\u21929 2.44/255",
+    "65_frames": "65/65 decode; intact room through frame 64, maximum adjacent RGB MAE 4.14/255, frame 8\u21929 1.80/255, frame 63\u219264 1.19/255; finite video and latents",
+    "129_frames": "Prior 129/129 output decodes but abruptly cuts from room to floorboards at frame 8\u21929, RGB MAE 67.22/255; quality concern remains.",
+    "vae_isolation": "Same first 5 latent frames decoded alone and as 129-frame prefix using actual VAE checkpoint; maximum prefix MAE 0.0133 on decoder scale, no frame-9 cut."
+  },
+  "conclusion": "No deterministic implementation bug isolated by these tests; retain 129-frame quality concern. Shorter lengths verify inference and temporal continuity only, not general long-horizon quality or camera-motion adherence.",
+  "report": "tmp/hunyuanvideo-i2v-debug-20260924/REPORT.md"
+}

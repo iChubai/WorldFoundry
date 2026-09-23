@@ -1,0 +1,403 @@
+{
+  "date": "2026-09-21 18:48:13.665985",
+  "session_requested": "01a079fc-1b61-7dc2-9d0d-aa6c757461b5",
+  "resume_cli": {
+    "status": "blocked_by_usage_limit",
+    "continued_by_current_session": true,
+    "events": "events.jsonl"
+  },
+  "source": "current working tree with existing concurrent modifications preserved",
+  "hardware": "NVIDIA H100 80GB, GPUs 1/2/3 for this batch",
+  "successful_model_count": 3,
+  "all_catalog_models_verified": false,
+  "cases": {
+    "unidepth-v2": {
+      "case": {
+        "id": "unidepth-v2",
+        "gpu": "1",
+        "target": "worldfoundry.pipelines.geometry_priors.pipeline_geometry_priors:UniDepthV2PriorPipeline",
+        "load": {
+          "model_path": "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/ckpts/lpiccinelli--unidepth-v2-vitl14-1d0d3c52",
+          "device": "cuda"
+        },
+        "call": {
+          "images": "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/WorldFoundry/tmp/skyreels-omega-gpu-20260920/inputs/frame-0.png",
+          "execute": true
+        }
+      },
+      "gpu": "1",
+      "status": "passed",
+      "started_at": 1789987324.7848854,
+      "checkpoint_loads": [
+        {
+          "class": "UniDepthV2",
+          "missing": [],
+          "unexpected": []
+        }
+      ],
+      "artifact": "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/WorldFoundry/tmp/resume-gpu-20260921/unidepth-v2/scene/point_cloud.ply",
+      "validation": {
+        "points": 5000,
+        "finite": true,
+        "fields": [
+          "x",
+          "y",
+          "z",
+          "red",
+          "green",
+          "blue"
+        ],
+        "depth": {
+          "shape": [
+            480,
+            832
+          ],
+          "min": 0.5486318469047546,
+          "max": 16.508800506591797,
+          "std": 3.6868224143981934
+        }
+      },
+      "max_memory_allocated": 2357734400,
+      "elapsed_seconds": 103.36098504066467,
+      "result": {
+        "status": "succeeded",
+        "runtime": "geometry_prior_in_tree",
+        "model_id": "unidepth-v2-prior",
+        "artifact_path": "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/WorldFoundry/tmp/resume-gpu-20260921/unidepth-v2/scene/point_cloud.ply",
+        "depth_path": "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/WorldFoundry/tmp/resume-gpu-20260921/unidepth-v2/scene/depth.npy",
+        "preview_image": "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/WorldFoundry/tmp/resume-gpu-20260921/unidepth-v2/scene/depth_preview.png",
+        "point_cloud_path": "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/WorldFoundry/tmp/resume-gpu-20260921/unidepth-v2/scene/point_cloud.ply",
+        "metadata_path": "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/WorldFoundry/tmp/resume-gpu-20260921/unidepth-v2/scene/depth_metadata.json",
+        "metadata": {
+          "model_id": "unidepth-v2-prior",
+          "depth_source": "metric_depth",
+          "depth_kind": "model_metric_depth",
+          "depth_shape": [
+            480,
+            832
+          ],
+          "point_source": "model_points",
+          "coordinate_frame": "camera",
+          "coordinate_convention": "x-right/y-up/z-forward",
+          "preview_image": "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/WorldFoundry/tmp/resume-gpu-20260921/unidepth-v2/scene/depth_preview.png",
+          "point_cloud_path": "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/WorldFoundry/tmp/resume-gpu-20260921/unidepth-v2/scene/point_cloud.ply",
+          "checkpoint_path": "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/ckpts/lpiccinelli--unidepth-v2-vitl14-1d0d3c52"
+        }
+      },
+      "visual_review": "Depth preview preserves foreground objects, floor, vertical columns and background structure."
+    },
+    "dvlt": {
+      "case": {
+        "id": "dvlt",
+        "gpu": "2",
+        "target": "worldfoundry.pipelines.component_pipelines:DVLTPipeline",
+        "load": {
+          "model_path": "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/ckpts/nvidia--dvlt",
+          "device": "cuda"
+        },
+        "call": {
+          "images": [
+            "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/WorldFoundry/tmp/skyreels-omega-gpu-20260920/inputs/frame-0.png",
+            "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/WorldFoundry/tmp/skyreels-omega-gpu-20260920/inputs/frame-16.png",
+            "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/WorldFoundry/tmp/skyreels-omega-gpu-20260920/inputs/frame-32.png"
+          ]
+        }
+      },
+      "gpu": "2",
+      "status": "passed",
+      "started_at": 1789987324.7812977,
+      "checkpoint_loads": [
+        {
+          "class": "DVLTModel",
+          "missing": [],
+          "unexpected": []
+        }
+      ],
+      "artifact": "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/WorldFoundry/tmp/resume-gpu-20260921/dvlt/scene/inputs_dvlt.glb",
+      "validation": {
+        "vertices": 211708,
+        "finite": true,
+        "geometries": 2
+      },
+      "max_memory_allocated": 1244071424,
+      "elapsed_seconds": 211.9962499141693,
+      "result": {
+        "status": "success",
+        "model_id": "dvlt",
+        "artifact_kind": "generated_3d_asset",
+        "artifact_path": "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/WorldFoundry/tmp/resume-gpu-20260921/dvlt/scene/inputs_dvlt.glb",
+        "metadata_path": "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/WorldFoundry/tmp/resume-gpu-20260921/dvlt/scene/inputs_dvlt.json",
+        "runtime": "worldfoundry.dvlt.in_tree_runtime",
+        "backend_quality": "in_tree_runtime",
+        "checkpoint_path": "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/ckpts/nvidia--dvlt",
+        "source_runtime": "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/WorldFoundry/worldfoundry/base_models/three_dimensions/depth/dvlt/dvlt_runtime",
+        "sequence_name": "inputs",
+        "frame_count": 3,
+        "point_count": 211329,
+        "actions": []
+      },
+      "geometry_validation": {
+        "frame_count": 3,
+        "point_count": 211329,
+        "xyz_std": [
+          0.5757025569300099,
+          0.2261822875804553,
+          0.5438774610068123
+        ],
+        "finite": true
+      },
+      "visual_review": "Projection preview shows coherent floor and room structure with input-consistent colors; no quantitative accuracy claim."
+    },
+    "splatt3r": {
+      "case": {
+        "id": "splatt3r",
+        "gpu": "3",
+        "target": "worldfoundry.pipelines.component_pipelines:Splatt3RPipeline",
+        "load": {
+          "model_path": "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/ckpts/brandonsmart--splatt3r_v1.0/epoch=19-step=1200.ckpt",
+          "device": "cuda"
+        },
+        "call": {
+          "images": [
+            "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/WorldFoundry/tmp/skyreels-omega-gpu-20260920/inputs/frame-0.png",
+            "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/WorldFoundry/tmp/skyreels-omega-gpu-20260920/inputs/frame-16.png"
+          ]
+        }
+      },
+      "gpu": "3",
+      "status": "passed",
+      "started_at": 1789987324.7880616,
+      "checkpoint_loads": [
+        {
+          "class": "MAST3RGaussians",
+          "missing": [],
+          "unexpected": [
+            "lpips_criterion.scaling_layer.shift",
+            "lpips_criterion.scaling_layer.scale",
+            "lpips_criterion.net.slice1.0.weight",
+            "lpips_criterion.net.slice1.0.bias",
+            "lpips_criterion.net.slice2.3.weight",
+            "lpips_criterion.net.slice2.3.bias",
+            "lpips_criterion.net.slice3.6.weight",
+            "lpips_criterion.net.slice3.6.bias",
+            "lpips_criterion.net.slice4.8.weight",
+            "lpips_criterion.net.slice4.8.bias",
+            "lpips_criterion.net.slice5.10.weight",
+            "lpips_criterion.net.slice5.10.bias",
+            "lpips_criterion.lin0.model.1.weight",
+            "lpips_criterion.lin1.model.1.weight",
+            "lpips_criterion.lin2.model.1.weight",
+            "lpips_criterion.lin3.model.1.weight",
+            "lpips_criterion.lin4.model.1.weight",
+            "lpips_criterion.lins.0.model.1.weight",
+            "lpips_criterion.lins.1.model.1.weight",
+            "lpips_criterion.lins.2.model.1.weight",
+            "lpips_criterion.lins.3.model.1.weight",
+            "lpips_criterion.lins.4.model.1.weight"
+          ]
+        }
+      ],
+      "artifact": "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/WorldFoundry/tmp/resume-gpu-20260921/splatt3r/scene.ply",
+      "validation": {
+        "points": 294912,
+        "finite": true,
+        "fields": [
+          "x",
+          "y",
+          "z",
+          "nx",
+          "ny",
+          "nz",
+          "f_dc_0",
+          "f_dc_1",
+          "f_dc_2",
+          "opacity",
+          "scale_0",
+          "scale_1",
+          "scale_2",
+          "rot_0",
+          "rot_1",
+          "rot_2",
+          "rot_3"
+        ]
+      },
+      "max_memory_allocated": 3829072384,
+      "elapsed_seconds": 82.6645770072937,
+      "result": {
+        "status": "success",
+        "model_id": "splatt3r",
+        "artifact_kind": "generated_3d_asset",
+        "artifact_path": "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/WorldFoundry/tmp/resume-gpu-20260921/splatt3r/scene.ply",
+        "artifact_sha256": "54005cfdeb9a6471efe7762759cd42b34c37bd9973df769ea9bbff01a8e1661f",
+        "runtime": "worldfoundry.splatt3r.in_tree_runtime",
+        "backend_quality": "in_tree_runtime",
+        "image_paths": [
+          "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/WorldFoundry/tmp/skyreels-omega-gpu-20260920/inputs/frame-0.png",
+          "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/WorldFoundry/tmp/skyreels-omega-gpu-20260920/inputs/frame-16.png"
+        ]
+      },
+      "visual_review": "Corrected projection preview reflects room colors; geometry unchanged from baseline."
+    }
+  },
+  "contracts": {
+    "passed": [
+      "explicit model_path overrides absent fallback",
+      "explicit weights_path overrides absent fallback",
+      "explicit checkpoint_path overrides absent fallback",
+      "explicit ckpt_path overrides absent fallback",
+      "explicit weights_dir overrides absent fallback",
+      "explicit missing checkpoint is rejected",
+      "repository-prefixed directory discovered",
+      "multi-checkpoint prior retains required dependency checks",
+      "legacy UniDepth config produces actionable revision error before model allocation",
+      "all restored inference files parse"
+    ]
+  },
+  "public_loading_contracts": {
+    "passed": [
+      "DVLT public model_path routes to checkpoint_path",
+      "Splatt3R public model_path routes to checkpoint_path",
+      "UniDepth public model_path overrides absent default directory"
+    ]
+  },
+  "color_regression": {
+    "geometry_unchanged": true,
+    "negative_rgb_channels_before": 0.93359375,
+    "negative_rgb_channels_after": 0.15855577256944445,
+    "rgb_mean_before": [
+      0.050740912556648254,
+      0.012360792607069016,
+      0.0042604925110936165
+    ],
+    "rgb_mean_after": [
+      0.2482381910085678,
+      0.1427445262670517,
+      0.06089413911104202
+    ],
+    "visual_review": "point-cloud colors now reflect warm room lighting; before fix most points clipped to black",
+    "scope": "point projection preview, not an upstream render parity claim"
+  },
+  "checkpoint_verification": {
+    "revision": "1d0d3c52f60b5164629d279bb9a7546458e6dcc4",
+    "sha256": "13952af59d28d21d4de5873f8b8bf6d679c5dd031dbf7f9e5818cbeca579f6af",
+    "bytes": 1452916608,
+    "verified_against_hub": true
+  },
+  "changed_files": [
+    {
+      "path": "worldfoundry/base_models/three_dimensions/depth/unidepth/__init__.py",
+      "before_sha256": "0a0e54ce4337acb150f27f82846e0bf74ff3970f23592df1a08b337312e29ab1",
+      "after_sha256": "00a6235feebeb3c85c12791f6990a3d4bcc7f8197c18393600582c2fe7c95cc7"
+    },
+    {
+      "path": "worldfoundry/base_models/three_dimensions/general_3d/splatt3r/worldfoundry_runtime.py",
+      "before_sha256": "17076eedf233cbc64729ffbc15e988c2a4cfc081fd21b4760c2bb5d3140296b9",
+      "after_sha256": "8d6f2a900fa387302b6dd725edb26253bc03d7529cbf081c5ad885877b953773"
+    },
+    {
+      "path": "worldfoundry/pipelines/component_pipelines.py",
+      "before_sha256": "eeea5ee217e4a86b21d325cf97fc7ec9dbab28c2f749f0fdcbc006a2022ac379",
+      "after_sha256": "2a179e5cacc4aebe5c8e3063a46c200fd7d5f1e87463d2bf3cc28f26d1d56a02"
+    },
+    {
+      "path": "worldfoundry/pipelines/geometry_priors/pipeline_geometry_priors.py",
+      "before_sha256": "8ebf5255d89cd1eda62cf2f8835ca7e00c90352f532ad95489a92bb9ae3c2dca",
+      "after_sha256": "a91f2ce680bd6348d7e4fde99062607d14025742e35c3e7a00c7be0ba9d67312"
+    },
+    {
+      "path": "worldfoundry/synthesis/visual_generation/geometry_priors.py",
+      "before_sha256": "42f9467225b69e98cf1b3db9d167d017b108391b5327b5093b6c777aaa663857",
+      "after_sha256": "aea75a3ff72c32230f1b798daea7f50dca36241fa46b4c45db8cff6bd25579b5"
+    }
+  ],
+  "ignored_local_runtime_files": [
+    "worldfoundry/base_models/three_dimensions/depth/dvlt/dvlt_runtime/src/dvlt/__init__.py",
+    "worldfoundry/base_models/three_dimensions/depth/dvlt/dvlt_runtime/src/dvlt/common/__init__.py",
+    "worldfoundry/base_models/three_dimensions/depth/dvlt/dvlt_runtime/src/dvlt/common/amp.py",
+    "worldfoundry/base_models/three_dimensions/depth/dvlt/dvlt_runtime/src/dvlt/common/constants.py",
+    "worldfoundry/base_models/three_dimensions/depth/dvlt/dvlt_runtime/src/dvlt/common/geometry.py",
+    "worldfoundry/base_models/three_dimensions/depth/dvlt/dvlt_runtime/src/dvlt/common/io.py",
+    "worldfoundry/base_models/three_dimensions/depth/dvlt/dvlt_runtime/src/dvlt/common/pose.py",
+    "worldfoundry/base_models/three_dimensions/depth/dvlt/dvlt_runtime/src/dvlt/common/projection.py",
+    "worldfoundry/base_models/three_dimensions/depth/dvlt/dvlt_runtime/src/dvlt/common/rays.py",
+    "worldfoundry/base_models/three_dimensions/depth/dvlt/dvlt_runtime/src/dvlt/common/rotation.py",
+    "worldfoundry/base_models/three_dimensions/depth/dvlt/dvlt_runtime/src/dvlt/common/tensor.py",
+    "worldfoundry/base_models/three_dimensions/depth/dvlt/dvlt_runtime/src/dvlt/common/types.py",
+    "worldfoundry/base_models/three_dimensions/depth/dvlt/dvlt_runtime/src/dvlt/common/numpy/__init__.py",
+    "worldfoundry/base_models/three_dimensions/depth/dvlt/dvlt_runtime/src/dvlt/common/numpy/geometry.py",
+    "worldfoundry/base_models/three_dimensions/depth/dvlt/dvlt_runtime/src/dvlt/common/numpy/projection.py",
+    "worldfoundry/base_models/three_dimensions/depth/dvlt/dvlt_runtime/src/dvlt/common/numpy/rotation.py",
+    "worldfoundry/base_models/three_dimensions/depth/dvlt/dvlt_runtime/src/dvlt/model/__init__.py",
+    "worldfoundry/base_models/three_dimensions/depth/dvlt/dvlt_runtime/src/dvlt/model/base.py",
+    "worldfoundry/base_models/three_dimensions/depth/dvlt/dvlt_runtime/src/dvlt/model/dvlt/__init__.py",
+    "worldfoundry/base_models/three_dimensions/depth/dvlt/dvlt_runtime/src/dvlt/model/dvlt/blocks.py",
+    "worldfoundry/base_models/three_dimensions/depth/dvlt/dvlt_runtime/src/dvlt/model/dvlt/depth_scaling.py",
+    "worldfoundry/base_models/three_dimensions/depth/dvlt/dvlt_runtime/src/dvlt/model/dvlt/heads.py",
+    "worldfoundry/base_models/three_dimensions/depth/dvlt/dvlt_runtime/src/dvlt/model/dvlt/model.py",
+    "worldfoundry/base_models/three_dimensions/depth/dvlt/dvlt_runtime/src/dvlt/model_components/__init__.py",
+    "worldfoundry/base_models/three_dimensions/depth/dvlt/dvlt_runtime/src/dvlt/model_components/head_activations.py",
+    "worldfoundry/base_models/three_dimensions/depth/dvlt/dvlt_runtime/src/dvlt/model_components/pose_encoding.py",
+    "worldfoundry/base_models/three_dimensions/depth/dvlt/dvlt_runtime/src/dvlt/model_components/layers/__init__.py",
+    "worldfoundry/base_models/three_dimensions/depth/dvlt/dvlt_runtime/src/dvlt/model_components/layers/attention.py",
+    "worldfoundry/base_models/three_dimensions/depth/dvlt/dvlt_runtime/src/dvlt/model_components/layers/block.py",
+    "worldfoundry/base_models/three_dimensions/depth/dvlt/dvlt_runtime/src/dvlt/model_components/layers/patch_embed.py",
+    "worldfoundry/base_models/three_dimensions/depth/dvlt/dvlt_runtime/src/dvlt/model_components/layers/rope.py",
+    "worldfoundry/base_models/three_dimensions/depth/dvlt/dvlt_runtime/src/dvlt/struct/__init__.py",
+    "worldfoundry/base_models/three_dimensions/depth/dvlt/dvlt_runtime/src/dvlt/struct/cameras.py",
+    "worldfoundry/base_models/three_dimensions/depth/dvlt/dvlt_runtime/src/dvlt/struct/rays.py",
+    "worldfoundry/base_models/three_dimensions/depth/dvlt/dvlt_runtime/src/dvlt/struct/tensor.py",
+    "worldfoundry/base_models/three_dimensions/depth/dvlt/dvlt_runtime/src/dvlt/struct/util.py",
+    "worldfoundry/base_models/three_dimensions/depth/dvlt/dvlt_runtime/src/dvlt/util/__init__.py",
+    "worldfoundry/base_models/three_dimensions/depth/dvlt/dvlt_runtime/src/dvlt/util/download.py",
+    "worldfoundry/base_models/three_dimensions/depth/dvlt/dvlt_runtime/src/dvlt/util/preprocess.py",
+    "worldfoundry/base_models/three_dimensions/general_3d/dust3r/__init__.py",
+    "worldfoundry/base_models/three_dimensions/general_3d/dust3r/croco/__init__.py",
+    "worldfoundry/base_models/three_dimensions/general_3d/dust3r/croco/models/__init__.py",
+    "worldfoundry/base_models/three_dimensions/general_3d/dust3r/croco/models/blocks.py",
+    "worldfoundry/base_models/three_dimensions/general_3d/dust3r/croco/models/croco.py",
+    "worldfoundry/base_models/three_dimensions/general_3d/dust3r/croco/models/dpt_block.py",
+    "worldfoundry/base_models/three_dimensions/general_3d/dust3r/croco/models/pos_embed.py",
+    "worldfoundry/base_models/three_dimensions/general_3d/dust3r/croco/models/curope/__init__.py",
+    "worldfoundry/base_models/three_dimensions/general_3d/dust3r/croco/models/curope/curope2d.py",
+    "worldfoundry/base_models/three_dimensions/general_3d/dust3r/dust3r/__init__.py",
+    "worldfoundry/base_models/three_dimensions/general_3d/dust3r/dust3r/model.py",
+    "worldfoundry/base_models/three_dimensions/general_3d/dust3r/dust3r/patch_embed.py",
+    "worldfoundry/base_models/three_dimensions/general_3d/dust3r/dust3r/heads/__init__.py",
+    "worldfoundry/base_models/three_dimensions/general_3d/dust3r/dust3r/heads/dpt_head.py",
+    "worldfoundry/base_models/three_dimensions/general_3d/dust3r/dust3r/heads/linear_head.py",
+    "worldfoundry/base_models/three_dimensions/general_3d/dust3r/dust3r/heads/postprocess.py",
+    "worldfoundry/base_models/three_dimensions/general_3d/dust3r/dust3r/utils/__init__.py",
+    "worldfoundry/base_models/three_dimensions/general_3d/dust3r/dust3r/utils/device.py",
+    "worldfoundry/base_models/three_dimensions/general_3d/dust3r/dust3r/utils/image.py",
+    "worldfoundry/base_models/three_dimensions/general_3d/dust3r/dust3r/utils/misc.py",
+    "worldfoundry/base_models/three_dimensions/general_3d/dust3r/dust3r/utils/path_to_croco.py",
+    "worldfoundry/base_models/three_dimensions/general_3d/mast3r/__init__.py",
+    "worldfoundry/base_models/three_dimensions/general_3d/mast3r/mast3r/__init__.py",
+    "worldfoundry/base_models/three_dimensions/general_3d/mast3r/mast3r/catmlp_dpt_head.py",
+    "worldfoundry/base_models/three_dimensions/general_3d/mast3r/mast3r/model.py",
+    "worldfoundry/base_models/three_dimensions/general_3d/mast3r/mast3r/utils/__init__.py",
+    "worldfoundry/base_models/three_dimensions/general_3d/mast3r/mast3r/utils/path_to_dust3r.py",
+    "worldfoundry/base_models/three_dimensions/depth/dvlt/dvlt_runtime/src/dvlt/util/skyseg.py"
+  ],
+  "gg_restored": {
+    "pid": 394878,
+    "command": [
+      "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-hldy-nlp/3A/multimodal/yangboxue/GrabGPU/gg",
+      "4",
+      "2400",
+      "0,1,2,3"
+    ]
+  },
+  "git_delivery": {
+    "committed": false,
+    "pushed": false,
+    "incremental_patch": "task-only.patch",
+    "reason": "Preserved concurrent modifications and untracked UniDepth integration; scoped incremental patch is reviewable without bundling other work."
+  },
+  "limitations": [
+    "GPU verification covers only the recorded real checkpoints and input/options, not every catalog model or parameter combination.",
+    "Numeric and qualitative projection/depth previews establish a smoke validation, not quantitative 3D accuracy or upstream rendering parity.",
+    "Ignored local DVLT/MASt3R/DUSt3R inference dependencies remain excluded from public packaging.",
+    "Existing legacy UniDepth weights remain untouched; this run uses the SHA-256 verified pinned snapshot in a separate directory."
+  ]
+}

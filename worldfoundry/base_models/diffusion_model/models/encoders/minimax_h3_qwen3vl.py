@@ -146,6 +146,9 @@ class MiniMaxH3Qwen3VLEncoder(nn.Module):
         model_path: str,
         *,
         torch_dtype: torch.dtype = torch.bfloat16,
+        strict: bool = False,
+        preserve_rotary_precision: bool = False,
+        low_cpu_mem_usage: bool = False,
         **hf_config_kwargs: Any,
     ) -> "MiniMaxH3Qwen3VLEncoder":
         """Build the encoder from an HF checkpoint directory.
@@ -172,9 +175,27 @@ class MiniMaxH3Qwen3VLEncoder(nn.Module):
             vision_start_token_id=int(hf_config.vision_start_token_id),
             hf_config=hf_config,
         )
-        encoder = cls(config)
-        encoder.load_weights(_iter_checkpoint_weights(model_path))
-        return encoder.to(torch_dtype)
+        if low_cpu_mem_usage:
+            from accelerate import init_empty_weights
+            with init_empty_weights(include_buffers=False):
+                encoder = cls(config)
+        else:
+            encoder = cls(config)
+        rotary = {name: value.clone() for name, value in encoder.named_buffers()
+                  if preserve_rotary_precision and name.endswith("inv_freq")}
+        if low_cpu_mem_usage:
+            encoder.to(torch_dtype)
+        loaded = encoder.load_weights(_iter_checkpoint_weights(model_path))
+        names = {name.removeprefix(_CHECKPOINT_PREFIX) for name in loaded}
+        missing = sorted(set(dict(encoder.model.named_parameters())) - names)
+        encoder.loading_report = {"missing": missing, "loaded_tensors": len(loaded)}
+        if strict and missing:
+            raise ValueError(f"Incomplete MiniMax H3 text encoder checkpoint: {missing[:10]}")
+        encoder.to(torch_dtype)
+        for name, value in rotary.items():
+            parent, _, field = name.rpartition(".")
+            setattr(encoder.get_submodule(parent), field, value)
+        return encoder
 
     @property
     def device(self) -> torch.device:
@@ -295,7 +316,14 @@ class MiniMaxH3Qwen3VLEncoder(nn.Module):
                 )
             try:
                 with torch.no_grad():
-                    param.copy_(loaded_weight.to(param.dtype))
+                    if param.shape != loaded_weight.shape:
+                        raise ValueError("checkpoint tensor shape mismatch")
+                    if param.is_meta:
+                        from accelerate.utils import set_module_tensor_to_device
+                        set_module_tensor_to_device(self.model, param_name, "cpu",
+                                                    value=loaded_weight, dtype=param.dtype)
+                    else:
+                        param.copy_(loaded_weight.to(param.dtype))
             except Exception as exc:
                 raise RuntimeError(
                     "Failed to load MiniMax H3 Qwen3-VL weight "
@@ -304,6 +332,40 @@ class MiniMaxH3Qwen3VLEncoder(nn.Module):
                 ) from exc
             loaded.add(name)
         return loaded
+
+    @torch.no_grad()
+    def encode_presentation(self, prompt, *, tokenizer, processor, images=()):
+        """Encode H3's verbatim prompt and numbered reference images (no chat template).
+
+        Vision rows carry modality tag 0, all other rows tag 1. Support both
+        Transformers' original mRoPE interface and its explicit token-type interface.
+        """
+        import inspect
+
+        token_ids, tags, vision = [], [], {}
+        if images:
+            vision = processor.image_processor(images=list(images), return_tensors="pt")
+            merge = processor.image_processor.merge_size ** 2
+            for index, grid in enumerate(vision["image_grid_thw"]):
+                label = tokenizer(f"<Picture {index + 1}>: ", add_special_tokens=False)["input_ids"]
+                image_ids = ([tokenizer.convert_tokens_to_ids("<|vision_start|>")]
+                             + [tokenizer.convert_tokens_to_ids("<|image_pad|>")] * (int(grid.prod()) // merge)
+                             + [tokenizer.convert_tokens_to_ids("<|vision_end|>")])
+                token_ids.extend(label + image_ids)
+                tags.extend([1] * len(label) + [0] * len(image_ids))
+        prompt_ids = tokenizer(prompt, add_special_tokens=False)["input_ids"]
+        token_ids.extend(prompt_ids)
+        tags.extend([1] * len(prompt_ids))
+        ids = torch.tensor([token_ids], device=self.device, dtype=torch.long)
+        arguments = {"input_ids": ids, "attention_mask": torch.ones_like(ids), "use_cache": False}
+        if "mm_token_type_ids" in inspect.signature(self.model.forward).parameters:
+            arguments["mm_token_type_ids"] = torch.tensor(
+                processor.create_mm_token_type_ids([token_ids]), device=self.device, dtype=torch.long)
+        if images:
+            arguments.update(pixel_values=vision["pixel_values"].to(self.device, torch.bfloat16),
+                             image_grid_thw=vision["image_grid_thw"].to(self.device))
+        hidden = self.model(**arguments).last_hidden_state
+        return hidden.to(torch.bfloat16), torch.tensor(tags, device=self.device, dtype=torch.long)
 
 
 def _iter_checkpoint_weights(

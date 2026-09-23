@@ -8,11 +8,13 @@ implement :class:`~...contracts.EncodedLatentInitializer` and encode
 
 from .component import (
     WAN_DENOISE_MASK_IS_ALL_ONES,
+    WanCausalFirstFrameLatentInitializer,
     WanImageToVideoLatentInitializer,
     WanReferenceLatentInitializer,
     WanTextToVideoLatentInitializer,
     WanTextImageToVideoLatentInitializer,
     WanVaceLatentInitializer,
+    build_wan_causal_i2v_latent_initializer,
     build_wan_i2v_latent_initializer,
     build_wan_reference_latent_initializer,
     build_wan_t2v_latent_initializer,
@@ -22,11 +24,13 @@ from .component import (
 
 __all__ = [
     "WAN_DENOISE_MASK_IS_ALL_ONES",
+    "WanCausalFirstFrameLatentInitializer",
     "WanImageToVideoLatentInitializer",
     "WanReferenceLatentInitializer",
     "WanTextToVideoLatentInitializer",
     "WanTextImageToVideoLatentInitializer",
     "WanVaceLatentInitializer",
+    "build_wan_causal_i2v_latent_initializer",
     "build_wan_i2v_latent_initializer",
     "build_wan_reference_latent_initializer",
     "build_wan_t2v_latent_initializer",

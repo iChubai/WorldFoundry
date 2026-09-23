@@ -115,6 +115,19 @@ def inv(mat):
     raise ValueError(f"bad matrix type = {type(mat)}")
 
 
+def get_med_dist_between_poses(poses):
+    """Median pairwise distance between camera centers (DUSt3R convention)."""
+    from scipy.spatial.distance import pdist
+
+    centers = [
+        pose[:3, 3].detach().cpu().numpy()
+        if isinstance(pose, torch.Tensor)
+        else np.asarray(pose[:3, 3])
+        for pose in poses
+    ]
+    return np.median(pdist(centers))
+
+
 def depthmap_to_pts3d(depth, pseudo_focal, pp=None, **_):
     """
     Args:

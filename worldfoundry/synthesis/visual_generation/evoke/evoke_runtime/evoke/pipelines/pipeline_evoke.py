@@ -35,8 +35,8 @@ from diffusers.utils import is_ftfy_available, is_torch_xla_available, logging, 
 from diffusers.utils.torch_utils import randn_tensor
 from diffusers.video_processor import VideoProcessor
 
-from ..diffusers_version.scheduling_evoke_diffusers import EvokeScheduler
-from ..modules.transformer_evoke import EvokeTransformer3DModel
+from worldfoundry.base_models.diffusion_model.schedulers.evoke import EvokeScheduler
+from worldfoundry.base_models.diffusion_model.models.networks.evoke.model import EvokeTransformer3DModel
 from ..utils.inference_utils import (
     AdaptiveAntiDrifting,
     add_noise,
@@ -1519,7 +1519,7 @@ class EvokePipeline(DiffusionPipeline, WanLoraLoaderMixin):
                 and cam_lingbot_c2ws_chunk is not None
                 and getattr(self.transformer, "enable_cam_control", False)
             ):
-                from evoke.modules.camera_control import prepare_cam_plucker_emb
+                from worldfoundry.base_models.diffusion_model.models.networks.evoke.camera_control import prepare_cam_plucker_emb
                 _H_lat_stage, _W_lat_stage = latents.shape[-2], latents.shape[-1]
                 _H_pix_stage = _H_lat_stage * self.vae_scale_factor_spatial
                 _W_pix_stage = _W_lat_stage * self.vae_scale_factor_spatial
@@ -2943,7 +2943,7 @@ class EvokePipeline(DiffusionPipeline, WanLoraLoaderMixin):
                         # so the stage1 plucker is static during the skill. No-op for non-event chunks.
                         if is_event_k:
                             _cam_c2ws_window = _cam_c2ws_window[:, :1].expand(-1, _cam_c2ws_window.shape[1], -1, -1)
-                        from evoke.modules.camera_control import prepare_cam_plucker_emb
+                        from worldfoundry.base_models.diffusion_model.models.networks.evoke.camera_control import prepare_cam_plucker_emb
                         _cam_emb_section = prepare_cam_plucker_emb(
                             Ks=cam_Ks_dev,
                             c2ws_window=_cam_c2ws_window,

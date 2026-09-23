@@ -7,13 +7,13 @@ from easydict import EasyDict as edict
 from PIL import Image
 from tqdm import tqdm
 
-from worldfoundry.core.device import get_current_torch_device
 from worldfoundry.core.distributed.evaluation_collectives import (
     distribute_list_to_rank,
     gather_list_of_dict,
     get_rank,
     get_world_size,
 )
+from worldfoundry.core.execution.device import get_current_torch_device
 from worldfoundry.core.utils.inference_runtime import adaptive_batched_inference, resolve_inference_batch_size
 from worldfoundry.core.utils.torch_utils import temporal_feature_consistency
 

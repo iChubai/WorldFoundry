@@ -2,7 +2,7 @@
 
 Implements ``initialize_with_encoder``: the recipe-bound Tokenize1 VAE
 encodes the reference image; a depth network plus
-:func:`~worldfoundry.core.spatial_warp.forward_warp_indexed_frames` build
+:func:`~worldfoundry.core.geometry.warp.forward_warp_indexed_frames` build
 the 3D cache.  Returned :class:`~...contracts.LatentInitialization`
 conditioning keys (``condition_latents``, ``condition_indicator``,
 ``condition_video_input_mask``, ``condition_video_pose``,
@@ -20,8 +20,8 @@ import numpy as np
 import torch
 import torch.nn.functional as functional
 
-from worldfoundry.core.camera_trajectory import named_camera_trajectory_tensors
-from worldfoundry.core.spatial_warp import forward_warp_indexed_frames
+from worldfoundry.core.geometry.trajectory import named_camera_trajectory_tensors
+from worldfoundry.core.geometry.warp import forward_warp_indexed_frames
 
 from ....components import ComponentBuildContext
 from ....contracts import DiffusionRequest, LatentEncoder, LatentInitialization

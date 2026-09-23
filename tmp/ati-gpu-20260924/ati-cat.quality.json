@@ -1,0 +1,13 @@
+{
+  "artifact": "tmp/ati-gpu-20260924/ati-cat.mp4",
+  "frames_decoded": 81,
+  "height": 720,
+  "width": 544,
+  "first_last_mae": 61.31436538696289,
+  "adjacent_mae_min": 2.8461711406707764,
+  "adjacent_mae_median": 4.81464409828186,
+  "adjacent_mae_max": 10.551912307739258,
+  "pixel_std_first": 64.62103769331591,
+  "pixel_std_middle": 64.92845230842138,
+  "pixel_std_last": 65.41128256095867
+}

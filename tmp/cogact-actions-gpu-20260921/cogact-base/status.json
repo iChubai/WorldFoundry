@@ -1,0 +1,39 @@
+{
+  "case": "cogact-base",
+  "gpu": "3",
+  "status": "generated",
+  "started_at": 1790005475.7008517,
+  "scope": "Pinned upstream AML demo image and instruction;photo has sponge/apple but no robot,cannot establish embodied task success;16x7 offline10DDIM integration check",
+  "artifact": "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/WorldFoundry/tmp/cogact-actions-gpu-20260921/cogact-base/actions.json",
+  "validation": {
+    "shape": [
+      16,
+      7
+    ],
+    "finite": true,
+    "min": -0.1895911991596222,
+    "max": 1.0,
+    "std": 0.3509495742296724,
+    "per_dim_min": [
+      -0.04802657663822174,
+      -0.00520208477973938,
+      -0.1895911991596222,
+      -0.13518670201301575,
+      -0.15896904468536377,
+      -0.006207764148712158,
+      0.0
+    ],
+    "per_dim_max": [
+      0.0038521289825439453,
+      0.1493837982416153,
+      -0.04219892621040344,
+      0.29348671436309814,
+      0.2316620647907257,
+      0.4479668438434601,
+      1.0
+    ],
+    "peak_memory_allocated": 15518329856,
+    "torch_version": "2.5.1+cu121"
+  },
+  "elapsed_seconds": 76.78
+}

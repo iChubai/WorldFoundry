@@ -1,0 +1,10 @@
+{
+  "model_id": "lingbot-vla-v2-6b",
+  "variant_id": "lingbot-vla-v2-6b",
+  "status": "verified_inference_only",
+  "case": "reuse-identical-checkpoint",
+  "finding": "Same robbyant/lingbot-vla-v2-6b checkpoint already ran on GPU 3: six safetensors shards, 1708 keys, zero missing/mismatched/unexpected keys, finite 50x14 action chunk. Real toy photo duplicated across three cameras and synthetic zero state; no robot-task success claim.",
+  "status_evidence": "tmp/lingbot-vla-v2-gpu-20260923/lingbot-vla-v2-synthetic-state-defaultfix/status.json",
+  "scope": "Existing GPU 3 inference evidence reused; no duplicate GPU run this batch.",
+  "reviewed_in_current_session": true
+}

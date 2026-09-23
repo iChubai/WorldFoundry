@@ -1,0 +1,7 @@
+# LingBot-World-V2 causal-fast short GPU validation
+
+The WorldFoundry public `LingBotWorldV2Pipeline` loaded the local `robbyant/lingbot-world-v2-14b-causal-fast` checkpoint on physical GPU 3 with one process, T5 on CPU, and model offloading. A real abandoned-room image plus a generated forward camera path produced [demo.mp4](demo.mp4): nine decodable frames at 848×464, 16 FPS. The six sampled frames in [contact.jpg](contact.jpg) retain the room, furniture and sunlight; the viewpoint moves subtly forward without an obvious scene collapse. The quantitative check in [validation.json](validation.json) found pixel standard deviation 40.66, mean adjacent-frame difference 2.94/255, and first-to-last difference 10.73/255.
+
+The command and runtime options are recorded in [result.json](result.json). This is a short single-GPU inference check, not the official eight-GPU 361-frame recipe or a measured camera-control score. Wall time including the large checkpoint load was 386.9 s. The earlier independent 49-frame run remains at `tmp/causal-more-gpu-20260921/lingbot-world-v2-compact/` and also fully decoded, but this report's status is based on the new GPU 3 artifact.
+
+The first attempt used the dedicated environment without `PYTHONPATH` and failed before model import; [import-failure.log](import-failure.log) records that setup error. Rerunning with `PYTHONPATH=$PWD` completed. No model code change was required for this case.

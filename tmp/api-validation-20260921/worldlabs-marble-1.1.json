@@ -1,0 +1,10 @@
+{
+  "model_id": "worldlabs-marble-1.1",
+  "credential_present": {
+    "WORLDLABS_API_KEY": false,
+    "WLT_API_KEY": false
+  },
+  "local_gpu_supported": false,
+  "status": "blocked_external",
+  "error": "ValueError: World Labs API key is required. Pass api_key or set WORLDLABS_API_KEY/WLT_API_KEY."
+}

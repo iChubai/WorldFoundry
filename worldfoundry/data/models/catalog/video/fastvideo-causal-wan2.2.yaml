@@ -4,7 +4,7 @@ aliases:
 - fastvideo-causal-wan
 - FastVideo/CausalWan2.2-I2V-A14B-Preview-Diffusers
 tasks:
-- text-to-video
+- image-to-video
 - causal-video-generation
 provider: official_repo
 source:
@@ -27,26 +27,27 @@ checkpoints:
   license: apache-2.0
   role: dual_expert_transformers_text_encoder_vae
 variants:
-- id: fastvideo-causal-wan2.2-t2v-14b
-  task: text-to-video
+- id: fastvideo-causal-wan2.2-i2v-14b
+  task: image-to-video
   provider: official_repo
-  runtime_profile: fastvideo-causal-wan2.2-t2v-14b
-  pipeline_binding: fastvideo-causal-wan2.2-t2v-14b
+  runtime_profile: fastvideo-causal-wan2.2-i2v-14b
+  pipeline_binding: fastvideo-causal-wan2.2-i2v-14b
   runner_target: worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner
   integration:
     status: integrated
   runner_parity:
     status: pending
-    notes: CPU fake-component execution validates the schedule, expert routing, cache
-      separation, and three-frame traversal; full 14B pixels need CUDA and weights.
+    notes: CPU fake-component execution validates the schedule, image first-frame
+      seeding, expert routing, cache separation, and block traversal. Local text
+      encoder shards 1 and 2 fail official SHA-256 checks, blocking GPU inference.
 runner_target: worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner
-runtime_profile: runtime-profile:fastvideo-causal-wan2.2-t2v-14b
-pipeline_binding: fastvideo-causal-wan2.2-t2v-14b
+runtime_profile: runtime-profile:fastvideo-causal-wan2.2-i2v-14b
+pipeline_binding: fastvideo-causal-wan2.2-i2v-14b
 integration:
   status: integrated
   notes:
-  - Native roles cover both Wan2.2 experts, T5 conditioning, VAE, the fixed shifted
-    schedule, and framework-owned self-forcing cache traversal.
+  - Native roles cover both Wan2.2 experts, T5 conditioning, a required input image,
+    VAE first-frame seeding, the fixed shifted schedule, and cache traversal.
 runner_parity:
   status: pending
 catalog_category: video
@@ -61,9 +62,9 @@ docs:
   architecture: WorldFoundry keeps expert KV/cross-attention caches independent and owns
     deterministic self-forcing re-noise on the fixed shifted flow schedule.
   architecture_zh: WorldFoundry 独立维护两个专家的 KV/交叉注意力缓存，并在固定移位 flow schedule 上执行确定性的 self-forcing 重加噪。
-  usage_notes: Defaults are 832x480, 717 frames, eight steps, guidance 1, and 16 FPS.
-  usage_notes_zh: 默认配置为 832x480、717 帧、八步、guidance 1、16 FPS。
+  usage_notes: An input image is required. Defaults are 832x480, 81 frames, eight steps, guidance 1, and 16 FPS.
+  usage_notes_zh: 必须提供输入图像。默认配置为 832x480、81 帧、八步、guidance 1、16 FPS。
   limitations:
-  - Full inference requires the external A14B checkpoint and a suitable CUDA GPU.
+  - The local text encoder shards 1 and 2 are incomplete and fail official LFS SHA-256 checks; GPU inference is blocked until repaired.
   limitations_zh:
-  - 完整推理需要外部 A14B checkpoint 与合适的 CUDA GPU。
+  - 本地文本编码器前两片不完整，未通过官方 LFS SHA-256 校验；修复前无法进行 GPU 推理。

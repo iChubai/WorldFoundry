@@ -50,7 +50,8 @@ runner_parity:
   notes:
   - Static compilation, route resolution, local asset wiring, and offline command planning are covered locally.
   - The default PCDController camera route completed real H100 Workspace inference with the official Uni3C controller and Wan2.1-I2V-14B checkpoints.
-  - The validated run emitted nine coherent H.264 frames at 416x256 and 16 FPS; all frames decoded uniquely and the forward-camera control produced positive radial optical flow.
+  - A full 81-frame H.264 camera run at 688x512 and 16 FPS decoded completely using a real toy photograph and a verified 15-degree input-control trajectory. The generated view moved smoothly; output angle was not calibrated.
+  - Input point-cloud controls used WorldFoundry's Torch renderer because the installed PyTorch3D extension was incompatible; official DepthPro, Tracer, camera construction, and Uni3C stage-two inference were used.
   - The unified camera-plus-human route remains outside this checkpoint-backed validation claim.
 output_artifacts:
 - generated_video

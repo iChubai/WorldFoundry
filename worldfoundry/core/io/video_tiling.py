@@ -322,7 +322,7 @@ class TileProcessor:
         self.temporal_tile_overlap_factor = temporal_tile_overlap_factor
         self.sr_ratio = sr_ratio
         self.parallel_group = parallel_group
-        from worldfoundry.core.compile_cache import CompilePolicy, compile_callable_cached
+        from worldfoundry.core.execution.compile_cache import CompilePolicy, compile_callable_cached
 
         blend_policy = CompilePolicy(dynamic=False)
         self._blend_t_compiled = compile_callable_cached(

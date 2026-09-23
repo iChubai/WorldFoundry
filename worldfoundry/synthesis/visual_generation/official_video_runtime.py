@@ -493,6 +493,33 @@ class OfficialVideoRuntime:
                 extra=kwargs,
             )
         if kind == "transformers_generation":
+            if self.model_id == "omnivinci":
+                return self._run_omnivinci(
+                    prompt=prompt,
+                    output_path=output,
+                    image_path=image_path,
+                    video_path=video_path,
+                    checkpoint_path=report.checkpoint_path,
+                    extra=kwargs,
+                )
+            if self.model_id == "qwen2.5-omni":
+                return self._run_qwen25_omni(
+                    prompt=prompt,
+                    output_path=output,
+                    image_path=image_path,
+                    video_path=video_path,
+                    checkpoint_path=report.checkpoint_path,
+                    extra=kwargs,
+                )
+            if self.model_id in {"spatial-reasoner", "spatial-ladder"}:
+                return self._run_qwen25_vl(
+                    prompt=prompt,
+                    output_path=output,
+                    image_path=image_path,
+                    video_path=video_path,
+                    checkpoint_path=report.checkpoint_path,
+                    extra=kwargs,
+                )
             return self._run_transformers_text(
                 prompt=prompt,
                 output_path=output,
@@ -852,30 +879,28 @@ class OfficialVideoRuntime:
             pipe = pipeline("text-to-video-synthesis", str(checkpoint_path))
         finally:
             torch.load = original_torch_load  # type: ignore[assignment]
-        try:
-            import imageio.v2 as imageio
-            import torchvision
+        from modelscope.pipelines.multi_modal.text_to_video_synthesis_pipeline import tensor2vid
+        from worldfoundry.core.io.video import save_video_h264
 
-            if not hasattr(torchvision.io, "write_video"):
+        def _postprocess_video(inputs: dict[str, Any], **post_params: Any) -> dict[str, str]:
+            # Preserve ModelScope's frame conversion and encoding parameters while
+            # using the shared writer across torchvision/PyAV versions.
+            target = Path(post_params.get("output_video") or output_path)
+            save_video_h264(tensor2vid(inputs["video"]), target, fps=8, crf=10)
+            return {OutputKeys.OUTPUT_VIDEO: str(target)}
 
-                def _write_video_imageio(
-                    filename: str,
-                    video_array: Any,
-                    fps: int = 8,
-                    video_codec: str | None = None,
-                    options: Mapping[str, Any] | None = None,
-                    **_: Any,
-                ) -> None:
-                    del video_codec, options
-                    frames = video_array.detach().cpu().numpy() if hasattr(video_array, "detach") else video_array
-                    imageio.mimsave(filename, frames, fps=fps)
+        pipe.postprocess = _postprocess_video
+        clip_encoder = getattr(getattr(pipe, "model", None), "clip_encoder", None)
+        clip_model = getattr(clip_encoder, "model", None)
+        if getattr(getattr(clip_model, "transformer", None), "batch_first", False):
+            # ModelScope passes LND to individual residual blocks; modern OpenCLIP
+            # blocks expect NLD. Preserve the checkpoint's causal attention mask.
+            original_forward = clip_encoder.text_transformer_forward
 
-                torchvision.io.write_video = _write_video_imageio  # type: ignore[attr-defined]
-        except Exception:
-            pass
-        clip_model = getattr(getattr(getattr(pipe, "model", None), "clip_encoder", None), "model", None)
-        if clip_model is not None and hasattr(clip_model, "attn_mask"):
-            clip_model.attn_mask = None
+            def _text_transformer_forward(x: Any, attn_mask: Any = None) -> Any:
+                return original_forward(x.transpose(0, 1), attn_mask=attn_mask).transpose(0, 1)
+
+            clip_encoder.text_transformer_forward = _text_transformer_forward
         result = pipe({"text": prompt}, output_video=str(output_path))
         produced = result.get(OutputKeys.OUTPUT_VIDEO) if isinstance(result, Mapping) else None
         produced_path = Path(produced).expanduser() if produced else output_path
@@ -896,6 +921,259 @@ class OfficialVideoRuntime:
             metadata={
                 "pipeline_target": "modelscope:text-to-video-synthesis",
                 "seed": seed,
+            },
+        )
+
+    def _run_omnivinci(
+        self,
+        *,
+        prompt: str,
+        output_path: Path,
+        image_path: str | Path | None,
+        video_path: str | Path | None,
+        checkpoint_path: Path | None,
+        extra: Mapping[str, Any],
+    ) -> dict[str, Any]:
+        """Follow OmniVinci's released multimodal processor/generation example."""
+        if video_path:
+            raise ValueError("OmniVinci video preprocessing is not configured")
+        if checkpoint_path is None:
+            raise ValueError("OmniVinci checkpoint is required")
+
+        import torch
+        from transformers import AutoModel, AutoProcessor
+
+        processor = AutoProcessor.from_pretrained(
+            str(checkpoint_path), trust_remote_code=True, local_files_only=True
+        )
+        model = AutoModel.from_pretrained(
+            str(checkpoint_path),
+            trust_remote_code=True,
+            torch_dtype=getattr(torch, str(self.runtime.get("torch_dtype") or "float16")),
+            device_map=self.runtime.get("device_map") or "auto",
+            local_files_only=True,
+        )
+        model.eval()
+        content: list[dict[str, str]] = []
+        if image_path:
+            image = Path(image_path).expanduser().resolve()
+            if not image.is_file():
+                raise FileNotFoundError(image)
+            content.append({"type": "image", "image": str(image)})
+        content.append({"type": "text", "text": prompt})
+        conversation = [{"role": "user", "content": content}]
+        templated = processor.apply_chat_template(
+            conversation, tokenize=False, add_generation_prompt=True
+        )
+        inputs = processor([templated])
+        input_ids = inputs.input_ids.to(model.llm_model_embed_tokens.weight.device)
+        generation_config = model.default_generation_config
+        generation_config.update(max_new_tokens=int(extra.get("max_new_tokens") or 128))
+        with torch.inference_mode():
+            # OmniVinci's released generate() forwards multimodal embeddings
+            # directly to its BF16 Qwen decoder.  Image embeddings can remain
+            # FP32 after _embed(), which makes the first decoder matmul fail.
+            embeddings, _, attention_mask = model._embed(
+                input_ids,
+                getattr(inputs, "media", None),
+                getattr(inputs, "media_config", None),
+                None,
+                None,
+            )
+            decoder_weight = model.llm_model_embed_tokens.weight
+            embeddings = embeddings.to(device=decoder_weight.device, dtype=decoder_weight.dtype)
+            attention_mask = attention_mask.to(decoder_weight.device)
+            output_ids = model.llm.generate(
+                inputs_embeds=embeddings,
+                attention_mask=attention_mask,
+                generation_config=generation_config,
+            )
+        if output_ids.shape[1] >= input_ids.shape[1] and torch.equal(
+            output_ids[:, : input_ids.shape[1]].cpu(), input_ids.cpu()
+        ):
+            output_ids = output_ids[:, input_ids.shape[1] :]
+        answer = processor.tokenizer.batch_decode(output_ids, skip_special_tokens=True)[0]
+        output = output_path.with_suffix(".json")
+        output.parent.mkdir(parents=True, exist_ok=True)
+        output.write_text(
+            json.dumps({"prompt": prompt, "text": answer, "image_path": str(image_path or "")}, ensure_ascii=False, indent=2),
+            encoding="utf-8",
+        )
+        return self._success_result(
+            output,
+            metadata={
+                "checkpoint_path": str(checkpoint_path),
+                "model_class": type(model).__name__,
+                "input_kind": "image_text" if image_path else "text",
+            },
+        )
+
+    def _run_qwen25_omni(
+        self,
+        *,
+        prompt: str,
+        output_path: Path,
+        image_path: str | Path | None,
+        video_path: str | Path | None,
+        checkpoint_path: Path | None,
+        extra: Mapping[str, Any],
+    ) -> dict[str, Any]:
+        """Use Qwen2.5-Omni's conditional generation API for text/image QA."""
+        if video_path:
+            raise ValueError("Qwen2.5-Omni video input requires multimodal video preprocessing, which is not configured")
+        if checkpoint_path is None:
+            raise ValueError("Qwen2.5-Omni checkpoint is required")
+
+        import torch
+        from PIL import Image
+        from transformers import (
+            Qwen2_5OmniConfig,
+            Qwen2_5OmniForConditionalGeneration,
+            Qwen2_5OmniProcessor,
+        )
+
+        processor = Qwen2_5OmniProcessor.from_pretrained(str(checkpoint_path))
+        config = Qwen2_5OmniConfig.from_pretrained(str(checkpoint_path))
+        config.enable_audio_output = False
+        # The Omni override always reads spk_dict.pt, even for text-only output.
+        # Load the safetensors weights through the Transformers base loader; the
+        # speaker pickle and audio-output modules are unnecessary for image QA.
+        model = super(
+            Qwen2_5OmniForConditionalGeneration, Qwen2_5OmniForConditionalGeneration
+        ).from_pretrained(
+            str(checkpoint_path),
+            config=config,
+            torch_dtype=getattr(torch, str(self.runtime.get("torch_dtype") or "bfloat16")),
+            device_map=self.runtime.get("device_map") or "auto",
+            use_safetensors=True,
+            local_files_only=True,
+        )
+        model.eval()
+
+        content: list[dict[str, str]] = []
+        image = None
+        if image_path:
+            image = Image.open(image_path).convert("RGB")
+            content.append({"type": "image", "image": str(image_path)})
+        content.append({"type": "text", "text": prompt})
+        conversation = [{"role": "user", "content": content}]
+        text = processor.apply_chat_template(conversation, add_generation_prompt=True, tokenize=False)
+        inputs = processor(
+            text=text,
+            images=[image] if image is not None else None,
+            return_tensors="pt",
+            padding=True,
+        ).to(model.device).to(model.dtype)
+        with torch.inference_mode():
+            output_ids = model.thinker.generate(
+                **inputs,
+                max_new_tokens=int(extra.get("max_new_tokens") or 128),
+            )
+        prompt_ids = inputs["input_ids"]
+        if output_ids.shape[1] >= prompt_ids.shape[1] and torch.equal(
+            output_ids[:, : prompt_ids.shape[1]], prompt_ids
+        ):
+            output_ids = output_ids[:, prompt_ids.shape[1] :]
+        answer = processor.batch_decode(
+            output_ids, skip_special_tokens=True, clean_up_tokenization_spaces=False
+        )[0]
+        output = output_path.with_suffix(".json")
+        output.parent.mkdir(parents=True, exist_ok=True)
+        output.write_text(
+            json.dumps({"prompt": prompt, "text": answer, "image_path": str(image_path or "")}, ensure_ascii=False, indent=2),
+            encoding="utf-8",
+        )
+        return self._success_result(
+            output,
+            metadata={
+                "checkpoint_path": str(checkpoint_path),
+                "model_class": "Qwen2_5OmniForConditionalGeneration.thinker",
+                "input_kind": "image_text" if image is not None else "text",
+            },
+        )
+
+    def _run_qwen25_vl(
+        self,
+        *,
+        prompt: str,
+        output_path: Path,
+        image_path: str | Path | None,
+        video_path: str | Path | None,
+        checkpoint_path: Path | None,
+        extra: Mapping[str, Any],
+    ) -> dict[str, Any]:
+        """Run a released Qwen2.5-VL checkpoint with its visual inputs."""
+        if video_path:
+            raise ValueError(f"{self.model_id} video preprocessing is not configured")
+        if checkpoint_path is None:
+            raise ValueError(f"{self.model_id} checkpoint is required")
+
+        import torch
+        from PIL import Image
+        from transformers import (
+            AutoProcessor,
+            AutoTokenizer,
+            Qwen2VLImageProcessor,
+            Qwen2VLVideoProcessor,
+            Qwen2_5_VLForConditionalGeneration,
+            Qwen2_5_VLProcessor,
+        )
+
+        preprocessor_config = json.loads((checkpoint_path / "preprocessor_config.json").read_text(encoding="utf-8"))
+        if preprocessor_config.get("image_processor_type") == "Qwen2_5_VLImageProcessor":
+            # The released SpatialReasoner names a processor class absent from
+            # current Transformers. Qwen2.5-VL uses Qwen2VL image preprocessing.
+            image_processor = Qwen2VLImageProcessor.from_pretrained(
+                str(checkpoint_path), local_files_only=True
+            )
+            tokenizer = AutoTokenizer.from_pretrained(str(checkpoint_path), local_files_only=True)
+            chat_config = json.loads((checkpoint_path / "chat_template.json").read_text(encoding="utf-8"))
+            processor = Qwen2_5_VLProcessor(
+                image_processor=image_processor,
+                tokenizer=tokenizer,
+                video_processor=Qwen2VLVideoProcessor(),
+                chat_template=chat_config["chat_template"],
+            )
+        else:
+            processor = AutoProcessor.from_pretrained(str(checkpoint_path), local_files_only=True)
+        model = Qwen2_5_VLForConditionalGeneration.from_pretrained(
+            str(checkpoint_path),
+            torch_dtype=getattr(torch, str(self.runtime.get("torch_dtype") or "bfloat16")),
+            device_map=self.runtime.get("device_map") or "auto",
+            use_safetensors=True,
+            local_files_only=True,
+        )
+        model.eval()
+        image = Image.open(image_path).convert("RGB") if image_path else None
+        content: list[dict[str, str]] = []
+        if image is not None:
+            content.append({"type": "image", "image": str(image_path)})
+        content.append({"type": "text", "text": prompt})
+        conversation = [{"role": "user", "content": content}]
+        text = processor.apply_chat_template(conversation, add_generation_prompt=True, tokenize=False)
+        inputs = processor(
+            text=[text], images=[image] if image is not None else None, padding=True, return_tensors="pt"
+        ).to(model.device)
+        with torch.inference_mode():
+            output_ids = model.generate(
+                **inputs, max_new_tokens=int(extra.get("max_new_tokens") or 128), do_sample=False
+            )
+        answer_ids = output_ids[:, inputs["input_ids"].shape[1] :]
+        answer = processor.batch_decode(
+            answer_ids, skip_special_tokens=True, clean_up_tokenization_spaces=False
+        )[0]
+        output = output_path.with_suffix(".json")
+        output.parent.mkdir(parents=True, exist_ok=True)
+        output.write_text(
+            json.dumps({"prompt": prompt, "text": answer, "image_path": str(image_path or "")}, ensure_ascii=False, indent=2),
+            encoding="utf-8",
+        )
+        return self._success_result(
+            output,
+            metadata={
+                "checkpoint_path": str(checkpoint_path),
+                "model_class": "Qwen2_5_VLForConditionalGeneration",
+                "input_kind": "image_text" if image is not None else "text",
             },
         )
 

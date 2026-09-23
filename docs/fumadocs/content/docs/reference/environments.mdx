@@ -335,7 +335,7 @@ commands without executing them.
 
 ## Compiler caches
 
-`worldfoundry.core.compile_cache` configures persistent `torch.compile` caches
+`worldfoundry.core.execution.compile_cache` configures persistent `torch.compile` caches
 for Inductor, Triton, the CUDA driver JIT, and torch C++/CUDA extensions. The
 compatibility import `worldfoundry.runtime.compile_cache` exposes the same API.
 The root is `WORLDFOUNDRY_COMPILE_CACHE_DIR` when set, otherwise
@@ -362,7 +362,7 @@ when the cluster provides a compatible service.
 ## Logging
 
 The CLI flags and environment variables below feed the same opt-in logging
-pipeline, `worldfoundry.core.logging_setup.configure_logging`. Explicit CLI
+pipeline, `worldfoundry.core.observability.logging_setup.configure_logging`. Explicit CLI
 flags take precedence over inherited environment values.
 
 <KvCatalog heading="Setting" vars rows={[

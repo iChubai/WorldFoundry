@@ -1,0 +1,12 @@
+{
+  "status": "verified_configuration",
+  "scope": "Public MatrixGame2Pipeline Universal checkpoint, official snowy reference image, seed42, official_bench_actions=true, 15 requested latent frames yielding 57 RGB frames 640x352/12fps. Both official and WorldFoundry videos fully decoded. Three CPU action lengths matched official tensors exactly; after project RNG/seed repair, decoded RGB mean absolute difference improved from 54.890 to 4.762. Viewed all six paired contact positions from the actual decoded videos: the snowy hut, trees and mountain background remain coherent while the camera moves around the hut and returns; corresponding official and repaired WorldFoundry frames have nearly the same layout. Fine texture and color differ, so this is not bitwise parity. This validates the short configuration, not the 150-latent-frame default, benchmark score, closed-loop gameplay, or exact pixel equality.",
+  "output_review": "tmp/matrix-game2-actions-seedfix-gpu-20260923/output-review.json",
+  "action_parity": "tmp/matrix-game2-actions-seedfix-gpu-20260923/action-parity.json",
+  "initial_comparison": "tmp/matrix-game2-official-actions-gpu-20260923/output-review.json",
+  "asset_integrity": "tmp/matrix-game2-official-actions-gpu-20260923/asset-integrity.json",
+  "source_integrity": "tmp/matrix-game2-actions-seedfix-gpu-20260923/source-integrity.json",
+  "actual_contact_viewed": true,
+  "visual_note": "Viewed all six paired contact positions from the actual decoded videos: the snowy hut, trees and mountain background remain coherent while the camera moves around the hut and returns; corresponding official and repaired WorldFoundry frames have nearly the same layout. Fine texture and color differ, so this is not bitwise parity.",
+  "limitation": "Decoded output numeric checks and strict checkpoint loading; every internal denoiser tensor was not separately captured."
+}

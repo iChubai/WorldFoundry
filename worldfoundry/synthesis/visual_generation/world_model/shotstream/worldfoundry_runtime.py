@@ -151,7 +151,9 @@ def missing_requirements(*, options, runtime_root, entrypoint, profile) -> list[
                 {"kind": "asset", "path": str(resolved_data_path), "reason": "ShotStream input CSV is missing"}
             )
 
-    for module_name in ("torch", "torchvision", "omegaconf", "pandas", "decord", "flash_attn"):
+    for module_name in (
+        "torch", "torchvision", "omegaconf", "pandas", "decord", "flash_attn", "easydict", "flask"
+    ):
         if importlib.util.find_spec(module_name) is None:
             missing.append(
                 {

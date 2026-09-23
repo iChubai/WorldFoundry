@@ -1,0 +1,10 @@
+{
+  "case": "wan22-ti2v-5b-121f",
+  "started_at": 1790013061.2039285,
+  "gpu": "3",
+  "status": "generated",
+  "videos": [
+    "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/WorldFoundry/tmp/wan-full-gpu-20260922/wan22-ti2v-5b-121f/demo.mp4"
+  ],
+  "elapsed_seconds": 307.62
+}

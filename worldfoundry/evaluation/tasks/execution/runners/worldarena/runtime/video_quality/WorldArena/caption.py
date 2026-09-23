@@ -21,7 +21,7 @@ except ImportError:
     json_repair = None
 from pathlib import Path
 
-from worldfoundry.core.device import get_current_torch_device, resolve_inference_dtype
+from worldfoundry.core.execution.device import get_current_torch_device, resolve_inference_dtype
 from worldfoundry.core.utils.inference_runtime import resolve_generation_max_new_tokens
 
 

@@ -99,6 +99,74 @@ def build_sana_flow_dpm_scheduler(context: ComponentBuildContext) -> SanaFlowDPM
     )
 
 
+class SanaLongLiveScheduler:
+    """Released four-step flow x0 prediction with fresh noise between steps.
+
+    LongLive looks up sigmas in a shifted 1000-entry training table. Model
+    timesteps follow the execution dtype (including BF16 rounding), while
+    re-noising looks up the original integer next timestep.
+    """
+
+    TIMESTEPS = (1000, 960, 889, 727)
+
+    def __init__(self, *, shift: float = 7.0) -> None:
+        self.shift = float(shift)
+        self._sigmas: Tensor | None = None
+
+    def schedule(self, sampling, *, device, dtype):
+        if sampling.num_inference_steps != len(self.TIMESTEPS):
+            raise ValueError("LongSANA's released LongLive checkpoint requires 4 inference steps")
+        if sampling.guidance_scale != 1.0:
+            raise ValueError("LongSANA's released LongLive checkpoint uses guidance_scale=1")
+        unsupported = set(sampling.scheduler_options) - {"shift"}
+        if unsupported:
+            raise ValueError(f"unsupported LongLive scheduler options: {sorted(unsupported)}")
+        shift = float(sampling.scheduler_options.get("shift", self.shift))
+        if shift <= 0:
+            raise ValueError("LongLive shift must be positive")
+        sigma = torch.linspace(1.0, 0.0, 1001)[:-1]
+        self._sigmas = (shift * sigma / (1.0 + (shift - 1.0) * sigma)).to(device)
+        return tuple(
+            SchedulerStep(
+                index=index,
+                timestep=torch.tensor(value, device=device, dtype=dtype),
+                next_timestep=torch.tensor(
+                    self.TIMESTEPS[index + 1] if index + 1 < len(self.TIMESTEPS) else 0,
+                    device=device, dtype=torch.float32,
+                ),
+            )
+            for index, value in enumerate(self.TIMESTEPS)
+        )
+
+    @staticmethod
+    def scale_model_input(latents, step):
+        return latents
+
+    def step(self, model_output, step, latents, *, generator):
+        if self._sigmas is None:
+            raise RuntimeError("LongLive schedule must be initialized before stepping")
+        table = self._sigmas
+        times = table * 1000.0
+        index = (times.double() - step.timestep.double()).abs().argmin()
+        clean = (latents.double() - table[index].double() * model_output.double()).to(model_output.dtype)
+        if step.index == len(self.TIMESTEPS) - 1:
+            return clean
+        index = (times - step.next_timestep).abs().argmin()
+        sigma = table[index]
+        batch, channels, frames, height, width = clean.shape
+        flat = clean.permute(0, 2, 1, 3, 4).flatten(0, 1)
+        noise = torch.empty_like(flat).normal_(generator=generator)
+        noise = noise.reshape(batch, frames, channels, height, width).permute(0, 2, 1, 3, 4)
+        calculation_dtype = torch.promote_types(clean.dtype, torch.float32)
+        return (
+            (1 - sigma) * clean.to(calculation_dtype) + sigma * noise.to(calculation_dtype)
+        ).to(noise.dtype)
+
+
+def build_sana_longlive_scheduler(context: ComponentBuildContext) -> SanaLongLiveScheduler:
+    return SanaLongLiveScheduler(shift=float(context.component_options.get("shift", 7.0)))
+
+
 class SanaStreamingEulerScheduler(WanFlowMatchEulerScheduler):
     """Euler flow schedule including released 2/4-step streaming timesteps."""
 
@@ -287,6 +355,7 @@ __all__ = [
     "SanaStreamingEulerScheduler",
     "SanaWMStreamingEulerScheduler",
     "build_sana_flow_dpm_scheduler",
+    "build_sana_longlive_scheduler",
     "build_sana_flow_match_scheduler",
     "build_sana_scm_scheduler",
     "build_sana_streaming_euler_scheduler",

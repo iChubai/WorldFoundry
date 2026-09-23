@@ -1,0 +1,78 @@
+{
+  "pi3x": {
+    "status": "verified_configuration",
+    "camera_checks": [
+      {
+        "rotation_orthogonality_max_error": 1.2540603364641356e-06,
+        "rotation_determinant": 1.000000882446534
+      },
+      {
+        "rotation_orthogonality_max_error": 9.79516307175743e-07,
+        "rotation_determinant": 0.9999989514571254
+      },
+      {
+        "rotation_orthogonality_max_error": 6.876149258872033e-07,
+        "rotation_determinant": 1.000000814891915
+      }
+    ],
+    "point_count": 584511,
+    "visual_review": "Depth follows scene structure; colored nonempty point clouds inspected in two projections. Sparse/outlier regions remain; no ground-truth accuracy or metric-scale claim."
+  },
+  "loger": {
+    "status": "verified_configuration",
+    "camera_checks": [
+      {
+        "rotation_orthogonality_max_error": 5.844067432203559e-07,
+        "rotation_determinant": 0.9999997127871934
+      },
+      {
+        "rotation_orthogonality_max_error": 3.2292563514335626e-06,
+        "rotation_determinant": 1.0000030707682968
+      },
+      {
+        "rotation_orthogonality_max_error": 4.381549789655992e-07,
+        "rotation_determinant": 0.9999996524936703
+      }
+    ],
+    "point_count": 575141,
+    "visual_review": "Depth follows scene structure; colored nonempty point clouds inspected in two projections. Sparse/outlier regions remain; no ground-truth accuracy or metric-scale claim."
+  },
+  "loger-star": {
+    "status": "verified_configuration",
+    "camera_checks": [
+      {
+        "rotation_orthogonality_max_error": 3.599880624705065e-07,
+        "rotation_determinant": 1.00000031450613
+      },
+      {
+        "rotation_orthogonality_max_error": 1.4440649369618086e-06,
+        "rotation_determinant": 1.0000015494670083
+      },
+      {
+        "rotation_orthogonality_max_error": 2.2325816484425332e-07,
+        "rotation_determinant": 1.0000000201297503
+      }
+    ],
+    "point_count": 574344,
+    "visual_review": "Depth follows scene structure; colored nonempty point clouds inspected in two projections. Sparse/outlier regions remain; no ground-truth accuracy or metric-scale claim."
+  },
+  "lingbot-map": {
+    "status": "verified_configuration",
+    "camera_checks": [
+      {
+        "rotation_orthogonality_max_error": 2.8678207364407626e-08,
+        "rotation_determinant": 0.9999999899570822
+      },
+      {
+        "rotation_orthogonality_max_error": 2.1643906111812328e-08,
+        "rotation_determinant": 0.9999999830985815
+      },
+      {
+        "rotation_orthogonality_max_error": 5.657808299641687e-08,
+        "rotation_determinant": 0.9999999807730197
+      }
+    ],
+    "point_count": 49998,
+    "visual_review": "Depth follows scene structure; colored nonempty point clouds inspected in two projections. Sparse/outlier regions remain; no ground-truth accuracy or metric-scale claim."
+  }
+}

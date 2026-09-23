@@ -1,0 +1,10 @@
+{
+  "case": "cosmos-predict25-2b",
+  "started_at": 1789996061.7081385,
+  "gpu": "1",
+  "status": "generated",
+  "videos": [
+    "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/WorldFoundry/tmp/cosmos-wan-gpu-20260921/cosmos-predict25-2b/demo.mp4"
+  ],
+  "elapsed_seconds": 215.05
+}

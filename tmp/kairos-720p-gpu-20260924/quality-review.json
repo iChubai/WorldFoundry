@@ -1,0 +1,23 @@
+{
+  "video": "tmp/kairos-720p-gpu-20260924/future_world.mp4",
+  "sha256": "19b98dd46aa259a65ec836006dfcac0a326ed7ee7c24cf69d89af6381d412be4",
+  "frames": 9,
+  "frame_shape": [
+    720,
+    1280,
+    3
+  ],
+  "sampled_frames": [
+    0,
+    4,
+    8
+  ],
+  "mean_abs_pixel_delta_from_frame0": {
+    "4": 1.3574970960617065,
+    "8": 1.1483532190322876
+  },
+  "contact": "tmp/kairos-720p-gpu-20260924/contact-0-4-8.jpg",
+  "status": "verified_inference_only",
+  "visual_review": "Frames 0, 4 and 8 retain the turquoise toy, white plate, red table and wall. The nine-frame output is nearly static and no camera push-in is visually established.",
+  "scope_limit": "Short nine-frame 720P I2V runtime check with a real toy photo and simple camera-motion prompt; no calibrated camera motion, long-horizon dynamics, robot task or semantic instruction-following metric."
+}

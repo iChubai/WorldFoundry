@@ -1,0 +1,10 @@
+{
+  "case": "helios-mid",
+  "started_at": 1789997098.798348,
+  "gpu": "1",
+  "status": "generated",
+  "videos": [
+    "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/WorldFoundry/tmp/helios-longcat-gpu-20260921/helios-mid/demo.mp4"
+  ],
+  "elapsed_seconds": 256.86
+}

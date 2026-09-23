@@ -1,0 +1,90 @@
+{
+  "case": "lingbot-map-windowed",
+  "gpu": "2",
+  "status": "generated",
+  "started_at": 1789995907.3647819,
+  "checkpoint_loads": [
+    {
+      "module": "GCTStream",
+      "missing": [],
+      "unexpected": []
+    }
+  ],
+  "arrays": {
+    "extrinsic": {
+      "shape": [
+        3,
+        3,
+        4
+      ],
+      "min": -0.14910247921943665,
+      "max": 0.9999998211860657,
+      "std": 0.43001508712768555
+    },
+    "intrinsic": {
+      "shape": [
+        3,
+        3,
+        3
+      ],
+      "min": 0.0,
+      "max": 295.5045166015625,
+      "std": 128.9835662841797
+    },
+    "depth": {
+      "shape": [
+        3,
+        294,
+        518,
+        1
+      ],
+      "min": 0.12320417165756226,
+      "max": 2.6975831985473633,
+      "std": 0.6467912793159485
+    },
+    "depth_conf": {
+      "shape": [
+        3,
+        294,
+        518
+      ],
+      "min": 1.0000001192092896,
+      "max": 29.035728454589844,
+      "std": 5.872035503387451
+    },
+    "images": {
+      "shape": [
+        3,
+        3,
+        294,
+        518
+      ],
+      "min": 0.0,
+      "max": 1.0,
+      "std": 0.18428750336170197
+    },
+    "input_images": {
+      "shape": [
+        3,
+        3,
+        294,
+        518
+      ],
+      "min": 0.0,
+      "max": 1.0,
+      "std": 0.18428750336170197
+    }
+  },
+  "cameras": 3,
+  "files": [
+    "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/WorldFoundry/tmp/omega-all-gpu-20260921/lingbot-map-windowed/scene/lingbot_map_predictions.npz",
+    "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/WorldFoundry/tmp/omega-all-gpu-20260921/lingbot-map-windowed/scene/lingbot_map_point_cloud.ply",
+    "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/WorldFoundry/tmp/omega-all-gpu-20260921/lingbot-map-windowed/scene/camera_params.json",
+    "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/WorldFoundry/tmp/omega-all-gpu-20260921/lingbot-map-windowed/scene/depth_visualizations/depth_000000.png",
+    "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/WorldFoundry/tmp/omega-all-gpu-20260921/lingbot-map-windowed/scene/depth_visualizations/depth_000001.png",
+    "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/WorldFoundry/tmp/omega-all-gpu-20260921/lingbot-map-windowed/scene/depth_visualizations/depth_000002.png"
+  ],
+  "point_count": 49998,
+  "peak_memory_allocated": 9265437696,
+  "elapsed_seconds": 55.832
+}

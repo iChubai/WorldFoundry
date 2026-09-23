@@ -1,0 +1,9 @@
+{
+  "id": "sama14b-autumn-edit",
+  "status": "generated",
+  "started_at": 1790118385.3366854,
+  "gpu": "2",
+  "artifact": "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/WorldFoundry/tmp/sama14b-edit-gpu-20260923/sama14b-autumn-edit/edited.mp4",
+  "decoded_frames": 17,
+  "elapsed_seconds": 1080.87
+}

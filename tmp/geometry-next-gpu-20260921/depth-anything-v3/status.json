@@ -1,0 +1,159 @@
+{
+  "case": "depth-anything-v3",
+  "gpu": "2",
+  "status": "generated",
+  "started_at": 1789992951.162398,
+  "checkpoint_loads": [
+    {
+      "module": "DepthAnything3",
+      "missing": [
+        "model.da3.head.scratch.output_conv2_aux.1.2.weight",
+        "model.da3.head.scratch.output_conv2_aux.1.2.bias",
+        "model.da3.head.scratch.output_conv2_aux.2.2.weight",
+        "model.da3.head.scratch.output_conv2_aux.2.2.bias",
+        "model.da3.head.scratch.output_conv2_aux.3.2.weight",
+        "model.da3.head.scratch.output_conv2_aux.3.2.bias"
+      ],
+      "unexpected": []
+    }
+  ],
+  "arrays": {
+    "result.depth": {
+      "shape": [
+        3,
+        294,
+        504
+      ],
+      "min": 0.26612329483032227,
+      "max": 6.041484832763672,
+      "std": 1.417580246925354
+    },
+    "result.confidence": {
+      "shape": [
+        3,
+        294,
+        504
+      ],
+      "min": 1.0000007152557373,
+      "max": 33.11298370361328,
+      "std": 8.451555252075195
+    },
+    "result.extrinsics": {
+      "shape": [
+        3,
+        3,
+        4
+      ],
+      "min": -0.15722207725048065,
+      "max": 1.0,
+      "std": 0.43169015645980835
+    },
+    "result.intrinsics": {
+      "shape": [
+        3,
+        3,
+        3
+      ],
+      "min": 0.0,
+      "max": 265.89923095703125,
+      "std": 118.93000030517578
+    },
+    "result.processed_images": {
+      "shape": [
+        3,
+        294,
+        504,
+        3
+      ],
+      "min": 0.0,
+      "max": 254.0,
+      "std": 46.78728915021529
+    },
+    "result.depth_visualizations": {
+      "shape": [
+        3,
+        294,
+        504,
+        3
+      ],
+      "min": 0.0,
+      "max": 255.0,
+      "std": 66.30956649831602
+    },
+    "result.point_cloud.points": {
+      "shape": [
+        444528,
+        3
+      ],
+      "min": -2.6855316162109375,
+      "max": 5.649670124053955,
+      "std": 1.3627936840057373
+    },
+    "result.point_cloud.colors": {
+      "shape": [
+        444528,
+        3
+      ],
+      "min": 0.0,
+      "max": 254.0,
+      "std": 46.7872891502153
+    },
+    "result.point_cloud.per_view.0.points": {
+      "shape": [
+        148176,
+        3
+      ],
+      "min": -2.666934013366699,
+      "max": 5.643433094024658,
+      "std": 1.3315550088882446
+    },
+    "result.point_cloud.per_view.0.colors": {
+      "shape": [
+        148176,
+        3
+      ],
+      "min": 0.0,
+      "max": 254.0,
+      "std": 40.78042188034302
+    },
+    "result.point_cloud.per_view.1.points": {
+      "shape": [
+        148176,
+        3
+      ],
+      "min": -2.6855316162109375,
+      "max": 5.649670124053955,
+      "std": 1.4039361476898193
+    },
+    "result.point_cloud.per_view.1.colors": {
+      "shape": [
+        148176,
+        3
+      ],
+      "min": 0.0,
+      "max": 254.0,
+      "std": 50.37368016988579
+    },
+    "result.point_cloud.per_view.2.points": {
+      "shape": [
+        148176,
+        3
+      ],
+      "min": -2.553344249725342,
+      "max": 5.5409417152404785,
+      "std": 1.3486722707748413
+    },
+    "result.point_cloud.per_view.2.colors": {
+      "shape": [
+        148176,
+        3
+      ],
+      "min": 0.0,
+      "max": 254.0,
+      "std": 47.77114838616674
+    }
+  },
+  "depth_maps_checked": 3,
+  "peak_memory_allocated": 10476546560,
+  "elapsed_seconds": 70.251
+}

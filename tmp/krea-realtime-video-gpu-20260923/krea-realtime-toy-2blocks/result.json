@@ -1,0 +1,38 @@
+{
+  "status": "succeeded",
+  "runtime": "official_cli",
+  "backend_quality": "in_tree_official_runtime",
+  "artifact_path": "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/WorldFoundry/tmp/krea-realtime-video-gpu-20260923/krea-realtime-toy-2blocks/generated.mp4",
+  "artifact_sha256": "58a2480370eefc531dbac6910f217b5170e68cc83bca6ac79a8c91d701f3368b",
+  "metadata": {
+    "command": [
+      "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/envs/worldfoundry-unified-cu121/bin/python",
+      "-m",
+      "worldfoundry.synthesis.visual_generation.krea_realtime.worldfoundry_runner",
+      "--repo-root",
+      "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/WorldFoundry/worldfoundry/synthesis/visual_generation/krea_realtime/krea_runtime",
+      "--checkpoint-path",
+      "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/ckpts/krea--krea-realtime-video/krea-realtime-video-14b.safetensors",
+      "--model-folder",
+      "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/ckpts",
+      "--prompt",
+      "A turquoise plush frog sits on a white tray atop a red-covered table. The camera slowly moves forward.",
+      "--output-path",
+      "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/WorldFoundry/tmp/krea-realtime-video-gpu-20260923/krea-realtime-toy-2blocks/generated.mp4",
+      "--num-blocks",
+      "2",
+      "--height",
+      "480",
+      "--width",
+      "832",
+      "--fps",
+      "16",
+      "--seed",
+      "42"
+    ],
+    "log_path": "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/WorldFoundry/tmp/krea-realtime-video-gpu-20260923/krea-realtime-toy-2blocks/generated.mp4.log"
+  },
+  "artifact_paths": [
+    "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/WorldFoundry/tmp/krea-realtime-video-gpu-20260923/krea-realtime-toy-2blocks/generated.mp4"
+  ]
+}

@@ -127,7 +127,7 @@ class GO1Runtime:
             return self._model
         import torch
 
-        from worldfoundry.core.device import resolve_inference_device, resolve_inference_dtype
+        from worldfoundry.core.execution.device import resolve_inference_device, resolve_inference_dtype
 
         from .configuration_go1 import GO1ModelConfig
         from .modeling_go1 import GO1Model

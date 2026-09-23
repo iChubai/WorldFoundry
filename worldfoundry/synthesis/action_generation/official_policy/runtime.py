@@ -450,20 +450,25 @@ class OfficialPolicyRuntime:
 
         # Check for checkpoint requirements
         if self.config.require_checkpoint and self.config.checkpoint_location is None:
-            missing.append({"kind": "checkpoint", "path": "", "reason": "no checkpoint_path/checkpoint_dir/checkpoint_ref configured"})
-        elif (
-            self.config.require_checkpoint
-            and self.config.checkpoint_path is not None
-            and not self.config.checkpoint_path.exists()
-            and not self.config.checkpoint_ref
-        ):
-            missing.append(
-                {
-                    "kind": "checkpoint",
-                    "path": str(self.config.checkpoint_path),
-                    "reason": "checkpoint path does not exist",
-                }
-            )
+            if self.config.checkpoint_path is not None:
+                reason = "configured checkpoint path does not exist"
+                if self.config.checkpoint_ref:
+                    reason += " and checkpoint repository is not cached locally"
+                missing.append(
+                    {"kind": "checkpoint", "path": str(self.config.checkpoint_path), "reason": reason}
+                )
+            elif self.config.checkpoint_ref:
+                missing.append(
+                    {
+                        "kind": "checkpoint",
+                        "path": self.config.checkpoint_ref,
+                        "reason": "configured checkpoint repository is not cached locally",
+                    }
+                )
+            else:
+                missing.append(
+                    {"kind": "checkpoint", "path": "", "reason": "no checkpoint_path/checkpoint_dir/checkpoint_ref configured"}
+                )
 
         # Check for other required assets
         for item in self.config.required_assets:

@@ -1,46 +1,21 @@
 ---
 title: "Emu3.5"
-description: "Emu3.5（Beijing Academy of Artificial Intelligence (BAAI)）：图像生成、VLA 推理；Runner 一致性待确认。"
-modelId: "emu3.5"
+description: "Emu3.5 is BAAI's native multimodal generation model for interleaved text and images. WorldFoundry has a registered adapter, but the staged checkpoint declares an Emu3 architecture that the installed Transformers runtime cannot resolve. Che…"
 pageSource: generated
 ---
 
-Emu3.5 是北京智源（BAAI）的原生多模态生成模型：单一自回归模型即可读写交错的文本与图像。 catalog 将其记录为多模态生成、图像生成与 VLA 式推理任务。WorldFoundry 路径已完备，缺失的 checkpoint/资产会在运行时报告；输出以 model_response 产物落盘，而非视频文件。
+**发表机构:** 北京智源人工智能研究院（BAAI） · 研究机构
 
-<ModelPaperFigures modelId="emu3.5" locale="zh" />
-
-代码：[BAAI/Emu3.5](https://huggingface.co/BAAI/Emu3.5)。
+Emu3.5 是北京智源（BAAI）面向交错文本与图像的原生多模态生成模型。WorldFoundry 已注册适配器，但已就位权重声明的 Emu3 架构无法被当前 Transformers 运行时识别。加载模型前即被阻塞，且不宣称视频输出。
 
 <ModelCommandBuilder modelId="emu3.5" locale="zh" />
 
-## 用来做什么
+## 架构
 
-需要 catalog 上的 VLA 策略时选 `emu3.5`：指令与观测进、动作轨迹出。用来滚动已记录策略，不是用来训练新策略。
-
-Emu 系列把图像与文本统一为一个 token 流做下一个 token 预测——按 BAAI 的公开发布，推理环节没有独立的扩散解码器。本仓库记录了 prompt+image 输入契约与 model_response 产物；3.5 版的参数规模与内部细节仓库未记录。该模型由北京智源人工智能研究院（BAAI）发布。
-
-catalog 记录的任务包括 multimodal-generation、图像生成、VLA 推理。别名包括 `emu3p5`、`emu3_5`、`BAAI/Emu3.5`。
+Emu 系列把图像与文本统一为一个 token 流做下一个 token 预测——按 BAAI 的公开发布，推理环节没有独立的扩散解码器。本仓库记录了 prompt+image 输入契约与 model_response 产物；3.5 版的参数规模与内部细节仓库未记录。
 
 ## 运行时契约
 
-必填 `prompt`；可选 `image`；产物 `emu3.5.json`。
-
-记录的任务 profile：`multimodal-generation`、`image-generation`、`vla.reasoning`。绑定的 pipeline 类是 `Emu35Pipeline`。
-
-系列状态：**Runner 一致性待确认**。
-
-先就位 BAAI/Emu3.5 权重；资产缺失时路径会给出明确报错。 预期输出是文本/图像响应，而不是视频。
-
-Checkpoint 属于外部资产——权重缺失时会在运行时报告，而不会自动下载。
-
-## 在 WorldFoundry 中运行
-
-catalog 启动命令是 `worldfoundry-eval run emu3.5 --pipeline.task-profile multimodal-generation`。上方命令构建器按已记录任务切换 `--pipeline.task-profile`，发出的仍是 `worldfoundry-eval run`。
-
-运行环境是统一 profile `worldfoundry-unified-cu128`（Python 3.11，CUDA 12.8）。
-
-记录的权重仓库包括 `BAAI/Emu3.5`。就位权重用 `bash scripts/inference/prepare_model_infer.sh emu3.5`。
-
-状态：**Runner 一致性待确认**。
+BAAI/Emu3.5 权重已就位，但 Transformers 4.57.6 无法识别 config.model_type Emu3。验证权重生成文本/图像响应前，需要经过检查的兼容加载器。
 
 <ModelRelatedRecipes modelId="emu3.5" locale="zh" />

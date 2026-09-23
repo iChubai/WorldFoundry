@@ -14,9 +14,13 @@ input_schema:
 artifact_kind: model_response
 artifact_filename: emu3.5.json
 execution:
-  backend_stage: official_hf_transformers_runtime
-  runtime_status: integrated_checkpoint_required
-  integration_status: integrated
+  backend_stage: registered_adapter_preflight_blocked
+  runtime_status: blocked_unsupported_emu3_architecture
+  integration_status: blocked
   pipeline_binding: emu3.5
 integration:
-  status: integrated
+  status: blocked
+notes:
+- The BAAI/Emu3.5 checkpoint is staged, but Transformers 4.57.6 does not
+  recognize its Emu3 model_type; the registered adapter cannot load it.
+- The official checkpoint describes text/image generation, not video output.

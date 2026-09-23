@@ -1,5 +1,5 @@
 {
-  "total": 266,
+  "total": 265,
   "categories": [
     {
       "id": "video",
@@ -20,7 +20,7 @@
       "label": "3D & 4D",
       "label_zh": "3D 与 4D",
       "description": "Reconstruction, geometry, point clouds, scenes, and dynamic representations.",
-      "count": 36
+      "count": 35
     },
     {
       "id": "vla_va_wam",
@@ -35442,7 +35442,7 @@
       "categoryLabel": "Video",
       "categoryLabelZh": "视频",
       "provider": "Beijing Academy of Artificial Intelligence (BAAI)",
-      "summary": "Emu3.5 is BAAI's native multimodal generation model: a single autoregressive model that reads and writes interleaved text and images. The catalog records it for multimodal generation, image generation, and VLA-style reasoning. The WorldFou…",
+      "summary": "Emu3.5 is BAAI's native multimodal generation model for interleaved text and images. WorldFoundry has a registered adapter, but the staged checkpoint declares an Emu3 architecture that the installed Transformers runtime cannot resolve. Che…",
       "aliases": [
         "emu3p5",
         "emu3_5",
@@ -35454,9 +35454,9 @@
         "vla.reasoning"
       ],
       "status": {
-        "group": "integrated",
-        "label": "Integrated",
-        "integration": "integrated",
+        "group": "blocked",
+        "label": "Blocked",
+        "integration": "blocked",
         "runner": "pending",
         "demo": "not_recorded"
       },
@@ -35468,8 +35468,8 @@
         "pipelineTarget": "worldfoundry.pipelines.video_official.pipeline_official_video:Emu35Pipeline",
         "loadingMethod": "from_pretrained",
         "invocationMode": "native_or_standard_invocation",
-        "backendStage": "official_hf_transformers_runtime",
-        "runtimeStatus": "integrated_checkpoint_required",
+        "backendStage": "registered_adapter_preflight_blocked",
+        "runtimeStatus": "blocked_unsupported_emu3_architecture",
         "environmentId": "_unified",
         "environmentName": "worldfoundry-unified-cu128",
         "environmentKind": "unified",
@@ -35506,6 +35506,8 @@
           "worldfoundry"
         ],
         "notes": [
+          "The BAAI/Emu3.5 checkpoint is staged, but Transformers 4.57.6 does not recognize its Emu3 model_type; the registered adapter cannot load it.",
+          "The official checkpoint describes text/image generation, not video output.",
           "Default unified WorldFoundry runtime for modern NVIDIA hosts. Install with `bash scripts/setup/unified_install.sh`.",
           "Override tier with `--cuda cu124` or `--cuda cu121` when an upstream model still pins an older CUDA wheel bucket.",
           "Source the environment file emitted by `scripts/setup/unified_install.sh` so WORLDFOUNDRY_USE_UNIFIED_ENV=1 routes compatible profiles here.",
@@ -35638,8 +35640,11 @@
         }
       ],
       "notes": [
-        "WorldFoundry route is complete; missing checkpoint/assets are reported at runtime.",
-        "Checkpoint-backed artifact parity has not been run in this workspace."
+        "The checkpoint is staged, but the installed Transformers runtime cannot resolve its Emu3 architecture; checkpoint-backed inference stops before model loading.",
+        "The official checkpoint describes text and image generation, not video output.",
+        "Checkpoint-backed artifact parity has not been run in this workspace.",
+        "The BAAI/Emu3.5 checkpoint is staged, but Transformers 4.57.6 does not recognize its Emu3 model_type; the registered adapter cannot load it.",
+        "The official checkpoint describes text/image generation, not video output."
       ],
       "docs": {
         "curated": true,
@@ -35649,10 +35654,10 @@
           "kind": "lab"
         },
         "overview": [
-          "Emu3.5 is BAAI's native multimodal generation model: a single autoregressive model that reads and writes interleaved text and images. The catalog records it for multimodal generation, image generation, and VLA-style reasoning. The WorldFoundry route is complete and reports missing checkpoint/assets at runtime; outputs land as model_response artifacts rather than video files."
+          "Emu3.5 is BAAI's native multimodal generation model for interleaved text and images. WorldFoundry has a registered adapter, but the staged checkpoint declares an Emu3 architecture that the installed Transformers runtime cannot resolve. Checkpoint-backed inference is blocked before model loading; no video output is claimed."
         ],
         "overviewZh": [
-          "Emu3.5 是北京智源（BAAI）的原生多模态生成模型：单一自回归模型即可读写交错的文本与图像。 catalog 将其记录为多模态生成、图像生成与 VLA 式推理任务。WorldFoundry 路径已完备，缺失的 checkpoint/资产会在运行时报告；输出以 model_response 产物落盘，而非视频文件。"
+          "Emu3.5 是北京智源（BAAI）面向交错文本与图像的原生多模态生成模型。WorldFoundry 已注册适配器，但已就位权重声明的 Emu3 架构无法被当前 Transformers 运行时识别。加载模型前即被阻塞，且不宣称视频输出。"
         ],
         "architecture": [
           "The Emu series treats images and text as one token stream for next-token prediction — no separate diffusion decoder in the loop, per BAAI's public releases. This repository records the prompt+image input contract and the model_response artifact; parameter counts and internals of the 3.5 revision are not recorded here."
@@ -35661,10 +35666,10 @@
           "Emu 系列把图像与文本统一为一个 token 流做下一个 token 预测——按 BAAI 的公开发布，推理环节没有独立的扩散解码器。本仓库记录了 prompt+image 输入契约与 model_response 产物；3.5 版的参数规模与内部细节仓库未记录。"
         ],
         "usageNotes": [
-          "Runner parity is pending — checkpoint-backed artifact parity has not been run in this workspace. Stage the BAAI/Emu3.5 weights first; the route fails informatively when assets are missing. Expect text/image responses, not video."
+          "The BAAI/Emu3.5 weights are staged, but Transformers 4.57.6 rejects config.model_type Emu3. A compatible, reviewed loader is required before a checkpoint-backed text/image response can be verified."
         ],
         "usageNotesZh": [
-          "Runner parity 为 pending——本工作区尚未做过 checkpoint 加载的产物一致性验证。先就位 BAAI/Emu3.5 权重；资产缺失时路径会给出明确报错。预期输出是文本/图像响应，而不是视频。"
+          "BAAI/Emu3.5 权重已就位，但 Transformers 4.57.6 无法识别 config.model_type Emu3。验证权重生成文本/图像响应前，需要经过检查的兼容加载器。"
         ],
         "highlights": [
           "Multimodal Generation",
@@ -35693,12 +35698,12 @@
         },
         "benchmarks": [],
         "limitations": [
-          "Runner parity is recorded as pending: the WorldFoundry route is wired, but a checkpoint-backed GPU artifact has not been verified in this workspace, so do not treat this page as proof of a validated end-to-end run.",
-          "Checkpoints are external assets — missing weights are reported at runtime rather than downloaded automatically."
+          "The registered runner is blocked by an unsupported checkpoint architecture before model loading; no checkpoint-backed artifact has been verified.",
+          "The official checkpoint card describes text/image generation, not video generation."
         ],
         "limitationsZh": [
-          "Runner parity 记录为 pending：WorldFoundry 路径已接好，但本工作区尚未完成 checkpoint 加载的 GPU 产物验证，请勿把本页当作端到端跑通的证明。",
-          "Checkpoint 属于外部资产——权重缺失时会在运行时报告，而不会自动下载。"
+          "已注册 runner 在加载模型前就被不支持的权重架构阻塞；尚未验证加载权重后的产物。",
+          "官方权重说明的是文本/图像生成，而非视频生成。"
         ],
         "paper": null,
         "figures": []
@@ -66393,444 +66398,6 @@
         "run": "worldfoundry-eval run \\\n  wonderjourney \\\n  --pipeline.task-profile 3d-world-generation \\\n  --pipeline.prompt \"Describe the desired output.\" \\\n  --pipeline.image /path/to/input \\\n  --json"
       },
       "catalogPath": "worldfoundry/data/models/catalog/three_d_four_d/wonderjourney.yaml"
-    },
-    {
-      "id": "wonderworld",
-      "name": "WonderWorld",
-      "category": "three_d_four_d",
-      "categoryLabel": "3D & 4D",
-      "categoryLabelZh": "3D 与 4D",
-      "provider": "Stanford University / MIT",
-      "summary": "WonderWorld generates an interactive 3D world from a single image fast enough for a live loop — the user picks where to extend the scene and new content appears in seconds.",
-      "aliases": [
-        "WonderWorld: Interactive 3D Scene Generation from a Single Image"
-      ],
-      "tasks": [
-        "image-to-3d-world",
-        "3d-scene-generation",
-        "interactive-3d-generation",
-        "interactive 3D scene generation from a single image"
-      ],
-      "status": {
-        "group": "integrated",
-        "label": "Integrated",
-        "integration": "integrated",
-        "runner": "pending",
-        "demo": "not_recorded"
-      },
-      "runtime": {
-        "profileId": "wonderworld",
-        "bindingId": "wonderworld",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
-        "runner": "worldfoundry.pipeline",
-        "pipelineTarget": "worldfoundry.pipelines.three_d_four_d.pipeline_runtime:WonderWorldPipeline",
-        "loadingMethod": "from_pretrained",
-        "invocationMode": "native_or_standard_invocation",
-        "backendStage": "official_in_tree_subprocess_runtime",
-        "runtimeStatus": "runtime_assets_required",
-        "environmentId": "wonderworld",
-        "environmentName": "wonderworld",
-        "environmentKind": "dedicated",
-        "python": "3.10",
-        "cudaProfile": "cu124",
-        "cudaLabel": "CUDA 12.4",
-        "driverStatus": "requires_local_extension_build:pytorch3d",
-        "condaPackages": [
-          "python",
-          "pip",
-          "ffmpeg"
-        ],
-        "pipPackages": [
-          "torch",
-          "torchvision",
-          "pytorch3d",
-          "transformers",
-          "diffusers",
-          "omegaconf",
-          "opencv-python",
-          "imageio",
-          "imageio-ffmpeg",
-          "spacy",
-          "flask"
-        ],
-        "packageVersions": {
-          "torch": "torch",
-          "torchvision": "torchvision",
-          "transformers": "transformers",
-          "diffusers": "diffusers"
-        },
-        "validationImports": [
-          "torch",
-          "pytorch3d",
-          "transformers",
-          "diffusers",
-          "omegaconf",
-          "cv2"
-        ],
-        "notes": [
-          "Uses the in-tree WonderWorld run.py/example_config flow through worldfoundry/synthesis/visual_generation/wonderworld/wonderworld_runtime.",
-          "Direct execution still requires WonderWorld checkpoint/runtime assets and local PyTorch3D-compatible extensions.",
-          "Uses the local WonderWorld runtime environment because the infer path imports PyTorch3D CUDA extensions.",
-          "WonderWorld runtime source is in tree under worldfoundry/synthesis/visual_generation/wonderworld/wonderworld_runtime; prepare checkpoint/runtime assets and PyTorch3D-compatible CUDA extensions before running inference."
-        ]
-      },
-      "sources": [
-        {
-          "kind": "project",
-          "label": "Project",
-          "url": "https://kovenyu.com/wonderworld/"
-        },
-        {
-          "kind": "paper",
-          "label": "Paper",
-          "url": "https://arxiv.org/abs/2406.09394"
-        },
-        {
-          "kind": "source",
-          "label": "GitHub",
-          "url": "https://github.com/KovenYu/WonderWorld"
-        },
-        {
-          "kind": "docs",
-          "label": "Upstream README",
-          "url": "https://github.com/KovenYu/WonderWorld#readme"
-        }
-      ],
-      "checkpoints": [],
-      "variants": [],
-      "inferenceTasks": [
-        {
-          "id": "image-to-3d-world",
-          "label": "Image To 3D World",
-          "description": "Catalog task profile used by the model runtime.",
-          "source": "catalog",
-          "variantIds": [],
-          "inputs": [
-            {
-              "field": "prompt",
-              "detail": "Required",
-              "kind": "string",
-              "target": "input",
-              "required": true,
-              "description": "Recorded input field from the runtime profile."
-            },
-            {
-              "field": "image",
-              "detail": "Required",
-              "kind": "string",
-              "target": "input",
-              "required": true,
-              "description": "Recorded input field from the runtime profile."
-            },
-            {
-              "field": "video",
-              "detail": "Optional",
-              "kind": "string",
-              "target": "input",
-              "required": false,
-              "description": "Recorded input field from the runtime profile."
-            },
-            {
-              "field": "actions",
-              "detail": "camera_view_matrix_sequence",
-              "kind": "string",
-              "target": "input",
-              "required": false,
-              "description": "Recorded input field from the runtime profile."
-            }
-          ],
-          "artifacts": [
-            {
-              "kind": "generated_world",
-              "filename": ""
-            },
-            {
-              "kind": "generated_world",
-              "filename": "wonderworld.splat"
-            }
-          ]
-        },
-        {
-          "id": "3d-scene-generation",
-          "label": "3D Scene Generation",
-          "description": "Catalog task profile used by the model runtime.",
-          "source": "catalog",
-          "variantIds": [],
-          "inputs": [
-            {
-              "field": "prompt",
-              "detail": "Required",
-              "kind": "string",
-              "target": "input",
-              "required": true,
-              "description": "Recorded input field from the runtime profile."
-            },
-            {
-              "field": "image",
-              "detail": "Required",
-              "kind": "string",
-              "target": "input",
-              "required": true,
-              "description": "Recorded input field from the runtime profile."
-            },
-            {
-              "field": "video",
-              "detail": "Optional",
-              "kind": "string",
-              "target": "input",
-              "required": false,
-              "description": "Recorded input field from the runtime profile."
-            },
-            {
-              "field": "actions",
-              "detail": "camera_view_matrix_sequence",
-              "kind": "string",
-              "target": "input",
-              "required": false,
-              "description": "Recorded input field from the runtime profile."
-            }
-          ],
-          "artifacts": [
-            {
-              "kind": "generated_world",
-              "filename": ""
-            },
-            {
-              "kind": "generated_world",
-              "filename": "wonderworld.splat"
-            }
-          ]
-        },
-        {
-          "id": "interactive-3d-generation",
-          "label": "Interactive 3D Generation",
-          "description": "Catalog task profile used by the model runtime.",
-          "source": "catalog",
-          "variantIds": [],
-          "inputs": [
-            {
-              "field": "prompt",
-              "detail": "Required",
-              "kind": "string",
-              "target": "input",
-              "required": true,
-              "description": "Recorded input field from the runtime profile."
-            },
-            {
-              "field": "image",
-              "detail": "Required",
-              "kind": "string",
-              "target": "input",
-              "required": true,
-              "description": "Recorded input field from the runtime profile."
-            },
-            {
-              "field": "video",
-              "detail": "Optional",
-              "kind": "string",
-              "target": "input",
-              "required": false,
-              "description": "Recorded input field from the runtime profile."
-            },
-            {
-              "field": "actions",
-              "detail": "camera_view_matrix_sequence",
-              "kind": "string",
-              "target": "input",
-              "required": false,
-              "description": "Recorded input field from the runtime profile."
-            }
-          ],
-          "artifacts": [
-            {
-              "kind": "generated_world",
-              "filename": ""
-            },
-            {
-              "kind": "generated_world",
-              "filename": "wonderworld.splat"
-            }
-          ]
-        },
-        {
-          "id": "interactive 3D scene generation from a single image",
-          "label": "Interactive 3D Scene Generation From A Single Image",
-          "description": "Catalog task profile used by the model runtime.",
-          "source": "catalog",
-          "variantIds": [],
-          "inputs": [
-            {
-              "field": "prompt",
-              "detail": "Required",
-              "kind": "string",
-              "target": "input",
-              "required": true,
-              "description": "Recorded input field from the runtime profile."
-            },
-            {
-              "field": "image",
-              "detail": "Required",
-              "kind": "string",
-              "target": "input",
-              "required": true,
-              "description": "Recorded input field from the runtime profile."
-            },
-            {
-              "field": "video",
-              "detail": "Optional",
-              "kind": "string",
-              "target": "input",
-              "required": false,
-              "description": "Recorded input field from the runtime profile."
-            },
-            {
-              "field": "actions",
-              "detail": "camera_view_matrix_sequence",
-              "kind": "string",
-              "target": "input",
-              "required": false,
-              "description": "Recorded input field from the runtime profile."
-            }
-          ],
-          "artifacts": [
-            {
-              "kind": "generated_world",
-              "filename": ""
-            },
-            {
-              "kind": "generated_world",
-              "filename": "wonderworld.splat"
-            }
-          ]
-        }
-      ],
-      "inputContract": [
-        {
-          "field": "prompt",
-          "detail": "Required"
-        },
-        {
-          "field": "image",
-          "detail": "Required"
-        },
-        {
-          "field": "video",
-          "detail": "Optional"
-        },
-        {
-          "field": "actions",
-          "detail": "camera_view_matrix_sequence"
-        }
-      ],
-      "artifacts": [
-        {
-          "kind": "generated_world",
-          "filename": ""
-        },
-        {
-          "kind": "generated_world",
-          "filename": "wonderworld.splat"
-        }
-      ],
-      "notes": [
-        "WorldFoundry runs the in-tree WonderWorld run.py/example_config flow through the shared 3D/4D subprocess adapter.",
-        "Missing source, inpainting, segmentation, depth/normal, or 3DGS assets are reported at inference time.",
-        "Pipeline target imports and plan-only inference are wired; full artifact parity needs runtime assets.",
-        "Uses the in-tree WonderWorld run.py/example_config flow through worldfoundry/synthesis/visual_generation/wonderworld/wonderworld_runtime.",
-        "Direct execution still requires WonderWorld checkpoint/runtime assets and local PyTorch3D-compatible extensions."
-      ],
-      "docs": {
-        "curated": true,
-        "publisher": {
-          "name": "Stanford University / MIT",
-          "nameZh": "斯坦福大学 / 麻省理工学院",
-          "kind": "university"
-        },
-        "overview": [
-          "WonderWorld generates an interactive 3D world from a single image fast enough for a live loop — the user picks where to extend the scene and new content appears in seconds. In this catalog the in-tree run.py/example_config flow runs through the shared 3D/4D subprocess adapter; runner parity is pending runtime assets."
-        ],
-        "overviewZh": [
-          "WonderWorld 从单张图像生成可交互的 3D 世界，速度快到支持实时循环——用户指定扩展方向，新内容数秒内出现。本 catalog 中树内 run.py/example_config 流程经共享 3D/4D 子进程适配器运行；runner parity 待运行时资产就位。"
-        ],
-        "architecture": [
-          "Per the paper (arXiv 2406.09394), the key representation is FLAGS (Fast LAyered Gaussian Surfels), generated from a single view with a guided depth-diffusion scheme — under 10 seconds per scene on the reported hardware. Direct execution requires WonderWorld checkpoints plus local PyTorch3D-compatible extensions."
-        ],
-        "architectureZh": [
-          "按论文（arXiv 2406.09394），核心表示是 FLAGS（快速分层高斯面元），配合引导式深度扩散从单视图生成——在论文硬件上每场景不足 10 秒。直接运行需要 WonderWorld checkpoint 与本地兼容 PyTorch3D 的扩展。"
-        ],
-        "usageNotes": [
-          "Missing source, inpainting, segmentation, depth/normal, or 3DGS assets are reported at inference time. Stage the full asset set and compile the PyTorch3D-compatible extensions before expecting real scene output."
-        ],
-        "usageNotesZh": [
-          "源码、修复、分割、深度/法线或 3DGS 资产缺失会在推理时报告。期望得到真实场景输出前，请就位全套资产并编译兼容 PyTorch3D 的扩展。"
-        ],
-        "highlights": [
-          "Image To 3D World",
-          "3D Scene Generation",
-          "Interactive 3D Generation",
-          "Dedicated env · Python 3.10 · CUDA 12.4"
-        ],
-        "highlightsZh": [
-          "图像生成 3D 世界",
-          "3d-scene-generation",
-          "interactive-3d-generation",
-          "独立环境 · Python 3.10 · CUDA 12.4"
-        ],
-        "modalities": {
-          "inputs": [
-            "image"
-          ],
-          "outputs": [
-            "3D scene",
-            "world state"
-          ]
-        },
-        "useCases": [],
-        "useCasesZh": [],
-        "hardware": {
-          "minVramGb": null,
-          "recommended": null,
-          "notes": []
-        },
-        "benchmarks": [
-          {
-            "id": "worldscore",
-            "name": "WorldScore",
-            "category": "World Models",
-            "categoryZh": "世界模型",
-            "summary": "In-tree official runtime scores generated videos per prompt",
-            "summaryZh": "仓内 official runtime 对生成视频逐 prompt 评分",
-            "href": "/docs/evaluation/benchmark-hub/worldscore",
-            "source": "docs",
-            "reason": "Standard scoring for interactive generated 3D worlds.",
-            "reasonZh": "交互式生成 3D 世界的标准评分。"
-          }
-        ],
-        "limitations": [
-          "Runner parity is pending staged runtime assets and local extensions.",
-          "Single-image origin: scene fidelity beyond the visible content is generative guesswork."
-        ],
-        "limitationsZh": [
-          "runner parity 待运行时资产与本地扩展就位。",
-          "以单图为源：可见内容之外的场景保真度依赖生成式推测。"
-        ],
-        "paper": {
-          "title": "WonderWorld: Interactive 3D Scene Generation from a Single Image",
-          "year": 2024,
-          "venue": "CVPR 2025",
-          "arxivId": "2406.09394",
-          "abstract": "We present WonderWorld, a novel framework for interactive 3D scene generation that enables users to interactively specify scene contents and layout and see the created scenes in low latency. The major challenge lies in achieving fast generation of 3D scenes. Existing scene generation approaches fall short of speed as they often require (1) progressively generating many views and depth maps, and (2) time-consuming optimization of the scene geometry representations. We introduce the Fast Layered Gaussian Surfels (FLAGS) as our scene representation and an algorithm to generate it from a single view. Our approach does not need multiple views, and it leverages a geometry-based initialization that significantly reduces optimization time. Another challenge is generating coherent geometry that allows all scenes to be connected. We introduce the guided depth diffusion that allows partial conditio"
-        },
-        "figures": []
-      },
-      "commands": {
-        "prepare": "bash scripts/inference/prepare_model_infer.sh wonderworld",
-        "install": "bash scripts/setup/model_env_install.sh --model wonderworld",
-        "inspect": "worldfoundry-eval zoo model-show --model-id wonderworld --include-manifest --json",
-        "check": "worldfoundry-eval zoo model-download --model-id wonderworld --check-local --json",
-        "run": "worldfoundry-eval run \\\n  wonderworld \\\n  --pipeline.task-profile image-to-3d-world \\\n  --pipeline.prompt \"Describe the desired output.\" \\\n  --pipeline.image /path/to/input \\\n  --json"
-      },
-      "catalogPath": "worldfoundry/data/models/catalog/three_d_four_d/wonderworld.yaml"
     },
     {
       "id": "worldlabs",

@@ -1,9 +1,0 @@
-{
-  "model_id": "ltx-2.5",
-  "case": "ltx-2.5-20260924-audit",
-  "status": "blocked_external",
-  "status_evidence": "tmp/ltx25-gpu-20260924/preflight.json",
-  "report": "tmp/ltx25-gpu-20260924/REPORT.md",
-  "scope": "The official LTX-2.5 preflight is blocked: required transformer and Gemma4 text-encoder safetensors have .aria2 sidecars and are 2,335,547,254 and 940,793,130 bytes short of official expected sizes. Source/runtime files are present. No GPU inference is valid before these checkpoint downloads complete.",
-  "reviewed_in_current_session": true
-}

@@ -1,5 +1,0 @@
-{
-  "status": "verified_inference_only",
-  "scope": "Official checkpoint fixed-revision/hash verified; all1555 tensors strict-streamed toCUDA BF16 with zero missing/unexpected/shape mismatches/meta. Actual50x14finite absolute bimanualjoint actions,10denoisingsteps,8.68GB allocation. Official RoboTwin2.0 click_bell aloha-agilex clean episode0frame10 real simulation demonstration,matching3RGBviews/state; exact official camera/joint ordering,640x480JPEG roundtrip then224resize. Actual fixture contact sheet reviewed. Type-only LossKwargs import and unsupported SDPA fallback fixed; effective backend honestly reported eager. Earlier final failure was audit-harness nested-state assertion, corrected using actual runtime unwrap. Offline only, no closed-loop success. Base checkpoint with Robotwin embodiment/norm is an OOD probe; substantial reference deviations retained (some joint MAE>1rad). Small gripper0..1 overshoot retained; see per-dimension extrema.",
-  "reviewed_in_current_session": true
-}

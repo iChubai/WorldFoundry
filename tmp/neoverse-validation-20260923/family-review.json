@@ -1,6 +1,0 @@
-{
-  "status": "quality_concern",
-  "case": "neoverse-family-final",
-  "scope": "Four final public configurations reviewed: LoRA/base video inference succeeds; LoRA/base single-image tilt fails to inpaint black unseen top regions. Family retains quality_concern; successful video configurations remain recorded separately.",
-  "reviewed_at": 1790097399.0110283
-}

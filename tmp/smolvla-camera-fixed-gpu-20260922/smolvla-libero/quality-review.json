@@ -1,5 +1,0 @@
-{
-  "status": "verified_inference_only",
-  "scope": "SmolVLA LIBERO exact checkpoint aftercamera mapping fix,strict streaming788 tensors zero missing/unexpected/shape mismatches;runtime rejects meta leftovers. RealLIBERO10 episode0 two distinct cameras+8D proprio,10denoisingsteps,CUDAfloat32 peak2.517GB,1x50x7finite postprocessed actions. Gripper range-1.02144..1.02943 preserved;single offline input only,not closed-loop success or task-quality validation.",
-  "reviewed_in_current_session": true
-}

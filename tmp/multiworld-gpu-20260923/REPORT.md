@@ -1,9 +1,0 @@
-# MultiWorld ItTakesTwo GPU validation
-
-The public `MultiWorldItTakesTwoPipeline` loaded the local `Haoyuwu/MultiWorldCheckpoint` toydata 480p checkpoint, `Wan-AI/Wan2.2-TI2V-5B` VAE, and `facebook/VGGT-1B` environment encoder on physical GPU 3. The local MultiWorld checkpoint has the same 11,229,869,474-byte length and LFS SHA256 recorded by Hugging Face revision `4bb57a0ab390f7555c39996a50a2e93c10d7cfc3`; none of these assets has an unfinished-download sidecar.
-
-The first load reached the denoising loop but failed because the shared `WanModel` passes `_worldfoundry_rope_precision` to every block and `MultiWorldDiTBlock.forward` did not accept it. The block now forwards Wan's internal RoPE options to its self-attention. The original traceback is in [run.log](run.log); [run-retry.log](run-retry.log) records the succeeding 9-frame smoke run.
-
-After the fix, [demo-quality.mp4](demo-quality.mp4) completed the toy config's 35 denoising steps and produced 81/81 decodable frames at 480×480, 16 FPS. [demo-quality-result.json](demo-quality-result.json) records the public pipeline's runtime metadata and [validation-quality.json](validation-quality.json) records the decode check. The first and last frames differ by 7.77/255 mean absolute pixel value. The [contact sheet](contact-quality.jpg) shows that the cat and water scene remains almost static, with a stray colored object near the last frame's top-right corner.
-
-The input was the local Wan example cat image, outside the released ItTakesTwo game domain. Both players received synthetic forward controls. This proves local checkpoint-backed loading, action input plumbing, 35-step denoising, VAE decoding, and MP4 export. It does **not** prove correct two-player game control, realistic motion, or parity with the upstream game dataset. The earlier 9-frame, 4-step smoke artifact is [demo.mp4](demo.mp4).

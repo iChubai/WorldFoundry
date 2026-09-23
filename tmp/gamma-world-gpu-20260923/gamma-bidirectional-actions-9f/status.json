@@ -1,9 +1,0 @@
-{
-  "model_id": "gamma-world",
-  "status": "generated",
-  "gpu": "3",
-  "artifact": "tmp/gamma-world-gpu-20260923/gamma-bidirectional-actions-9f/generated.mp4",
-  "decoded_frames": 9,
-  "artifact_sha256": "668968bc95d41497fdba6a19b5437f6ae148a4217098cd2489698b0b9e0b5ee2",
-  "elapsed_seconds": 134.4
-}

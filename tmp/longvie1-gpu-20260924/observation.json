@@ -1,9 +1,0 @@
-{
-  "model_id": "longvie-1",
-  "case": "longvie-1-20260924-audit",
-  "status": "blocked_external",
-  "status_evidence": "tmp/longvie1-gpu-20260924/asset-preflight.json",
-  "report": "tmp/longvie1-gpu-20260924/REPORT.md",
-  "scope": "LongVie-1 has no published default first-generation control checkpoint. The runtime raises FileNotFoundError without an explicit first-generation control_weight_path or weight_dir and rejects LongVie2 DiT/control weights. The Wan2.1-I2V-14B-480P base exists under an unprefixed local alias, so the missing LongVie-1 control weight is the blocker.",
-  "reviewed_in_current_session": true
-}

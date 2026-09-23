@@ -1,5 +1,0 @@
-# GigaWorld-0 local GPU validation
-
-The public `GigaWorld0Pipeline` loaded the local GR1 2B transformer, safe T5-11B encoder and Wan Diffusers VAE on GPU 3. The first preflight pointed at the default `../ckpt` directory and returned a blocked plan even though all assets were present under `../ckpts`. Setting `WORLDFOUNDRY_CKPT_DIR` to the actual directory resolved this configuration issue; the retest used the real checkpoint path, torch attention, a real toy photograph, four diffusion steps, seed 42, and a 9-frame 480×320 output.
-
-The MP4 contains nine decodable frames and its SHA-256 is recorded in `status.json`. The sampled contact shows a turquoise toy and red table preserved, with modest motion and noticeable toy/detail blur in the last frames. This verifies loading, inference and the video artifact structure for this short configuration. It does not establish long-horizon quality or precise camera-motion adherence. Evidence: `status.json`, `generated.mp4`, `contact.jpg`, `result-summary.json`, `generated.mp4.log`, and the initial blocked-plan result in `giga-world-0.log`.

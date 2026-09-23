@@ -1,5 +1,0 @@
-# Cosmos 3 Super local GPU validation
-
-The public `Cosmos3Pipeline` loaded the local Super checkpoint across GPUs 1 and 3 using the balanced device map. The checkpoint's local `.hfd/repo_metadata.json` records the profile's expected revision `e0262be9d8f7586bc24c069a2aed2b665bdff266`; individual asset digests were not rechecked here. A real abandoned-room image and forward-motion prompt, seed 42, and the recipe's required 35 steps generated a nine-frame video at 832×480. All frames decoded and the MP4 SHA-256 is in `status.json`.
-
-The first attempt used four steps and was rejected before sampling because the joint multistage recipe requires 35. The corrected run completed. The five-frame contact shows a coherent room but minimal visible viewpoint change over this short clip. This supports checkpoint loading and short configured inference, not the profile's optional sound/action branches, long-term dynamics or calibrated camera control. Evidence: `status.json`, `generated.mp4`, `contact.jpg`, `result-summary.json`, and both run logs in the parent directory.

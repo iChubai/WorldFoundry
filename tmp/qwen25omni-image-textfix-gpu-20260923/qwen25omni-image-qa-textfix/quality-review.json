@@ -1,9 +1,0 @@
-{
-  "status": "verified_configuration",
-  "scope": "Public Qwen25OmniPipeline image-question-answering with a real RGB toy photograph and one-sentence prompt, 48 generated-token cap. Image pixels match the staged pipeline input exactly. The answer identifies a light-blue plush toy on a white platform, consistent with the inspected image. This validates text response to one image, not audio input/output, video QA, or broad spatial reasoning. The safetensors thinker path omits the unused speech pickle; all five model shards match official LFS SHA-256.",
-  "status_evidence": "tmp/qwen25omni-image-textfix-gpu-20260923/qwen25omni-image-qa-textfix/quality-review.json",
-  "artifact_sha256": "39db35c6e3de0eb6246fcf7d0647a6a06c036e9ff07b4c5e9e9acf8875711051",
-  "image_input_pixel_equal": true,
-  "official_weight_shards": 5,
-  "reviewed_at": 1790116640.251263
-}

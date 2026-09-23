@@ -1,9 +1,0 @@
-{
-  "model_id": "tesseract",
-  "status": "generated",
-  "gpu": "3",
-  "artifact": "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/WorldFoundry/tmp/next-world-models-gpu-20260923/tesseract/generated.mp4",
-  "decoded_frames": 9,
-  "artifact_sha256": "8e394bb50d439a87e28ee9c569d74dcf65cf389773901e1efe693e8c0782a013",
-  "elapsed_seconds": 227.89
-}

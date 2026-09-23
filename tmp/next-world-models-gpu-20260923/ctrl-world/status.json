@@ -1,9 +1,0 @@
-{
-  "model_id": "ctrl-world",
-  "status": "generated",
-  "gpu": "0",
-  "artifact": "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/WorldFoundry/tmp/next-world-models-gpu-20260923/ctrl-world/generated.mp4",
-  "decoded_frames": 5,
-  "artifact_sha256": "97fc2cfcf9448f69b2a144368bddcdda7b37d80b56ed0976c8495df1beb39f1d",
-  "elapsed_seconds": 103.9
-}

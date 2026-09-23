@@ -1,7 +1,0 @@
-# OmniVinci image QA GPU review, 2026-09-23
-
-Status: **verified_configuration**, limited to one image question-answering configuration. The public `OmniVinciPipeline` loaded the local `nvidia/omnivinci` release on H100 GPU 1 and generated a JSON answer. The original RGB photograph and the image staged by the pipeline are pixel-identical (512×384). For the prompt asking the object, color, and support, the answer was: “A blue and white stuffed animal is sitting on a white plate atop a red table.” This matches the inspected photograph. `omnivinci-image-qa-dtypefix/status.json`, `result.json`, and `response.json` preserve the result and artifact hash.
-
-The integration fixes preserve the image in the processor conversation and place token IDs on the model's embedding device. The published model's multimodal embedding path produced FP32 embeddings while its decoder weights were BF16, so the adapter now casts embeddings to the decoder dtype before using the released decoder generation path. `openai-whisper`, `kaldiio`, `s2wrapper`, and FlashAttention dependencies were installed only under this ignored evidence directory. Earlier failures remain in separate case directories.
-
-This validates one image/text response, not video or audio input, broad spatial reasoning, or semantic correctness on other images. The local checkpoint loaded successfully; official LFS hash parity for all OmniVinci weight shards was not established in this run.

@@ -1,9 +1,0 @@
-{
-  "id": "omnivinci-image-qa-dtypefix",
-  "status": "generated",
-  "gpu": "1",
-  "started_at": 1790123636.3654873,
-  "artifact": "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/WorldFoundry/tmp/omnivinci-image-gpu-20260923/omnivinci-image-qa-dtypefix/response.json",
-  "answer": "A blue and white stuffed animal is sitting on a white plate atop a red table.",
-  "elapsed_seconds": 138.87
-}

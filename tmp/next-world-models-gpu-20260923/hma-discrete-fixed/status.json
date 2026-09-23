@@ -1,9 +1,0 @@
-{
-  "model_id": "hma-discrete",
-  "status": "generated",
-  "gpu": "2",
-  "artifact": "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/WorldFoundry/tmp/next-world-models-gpu-20260923/hma-discrete-fixed/generated.mp4",
-  "decoded_frames": 5,
-  "artifact_sha256": "970e95b8aa6cf75abe5803510126938dc3deca02f8123fa0836a4e5f13a456eb",
-  "elapsed_seconds": 320.94
-}

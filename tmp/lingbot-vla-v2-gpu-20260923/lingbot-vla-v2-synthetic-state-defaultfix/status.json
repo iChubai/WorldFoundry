@@ -1,8 +1,0 @@
-{
-  "id": "lingbot-vla-v2-synthetic-state-defaultfix",
-  "status": "generated",
-  "gpu": "3",
-  "started_at": 1790124119.5180588,
-  "artifact": "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/WorldFoundry/tmp/lingbot-vla-v2-gpu-20260923/lingbot-vla-v2-synthetic-state-defaultfix/action_trace.json",
-  "elapsed_seconds": 120.5
-}

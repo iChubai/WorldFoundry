@@ -1,5 +1,0 @@
-# ShotStream local GPU validation
-
-The public `ShotStreamPipeline` launched the pinned official source checkout and local causal checkpoint on GPU 0. The wrapper created a one-shot text fixture for a red teapot, and the official four-step causal loop wrote 81 frames. The MP4 fully decodes; its SHA-256 is in `status.json`. The five sampled frames show a recognizable red teapot, blinds and table, but very little motion. This verifies the short inference path and artifact structure, not dynamic quality or longer multi-shot continuity.
-
-The first two attempts failed before inference because the isolated `sana-wm` environment lacked `easydict` and `flask`, which upstream imports. Both were installed only in the ignored validation dependency directory, and the successful third run used that directory through `PYTHONPATH`. WorldFoundry's ShotStream preflight now checks these two imports so the same missing-dependency problem is reported before launching the official script. Evidence: `status.json`, `generated.mp4`, `contact.jpg`, `generated.mp4.log`, and the attempt logs in the parent directory.

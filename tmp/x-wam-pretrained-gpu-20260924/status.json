@@ -1,5 +1,0 @@
-{
-  "status": "blocked_deployment",
-  "gpu_action_run": false,
-  "evidence": "worldfoundry/synthesis/action_generation/x_wam/inference.py"
-}

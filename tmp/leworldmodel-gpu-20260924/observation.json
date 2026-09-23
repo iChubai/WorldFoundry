@@ -1,9 +1,0 @@
-{
-  "model_id": "leworldmodel",
-  "case": "slim96-checkpoint-setup",
-  "status": "not_run",
-  "status_evidence": "tmp/leworldmodel-gpu-20260924/result.json",
-  "report": "tmp/leworldmodel-gpu-20260924/REPORT.md",
-  "scope": "39.3MB local JEPA safetensors with 151 tensors found. First CPU model construction included an unused ViT pooler not present in checkpoint; script corrected to add_pooling_layer=False. The corrected run was stopped before GPU allocation because GPU2 was reserved for a concurrent SANA-WM validation; no inference or quality claim. Official PushT HDF5 is absent from default stable-wm paths.",
-  "reviewed_in_current_session": true
-}

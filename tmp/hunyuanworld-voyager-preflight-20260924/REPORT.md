@@ -1,5 +1,0 @@
-# HunyuanWorld-Voyager public pipeline audit
-
-`HunyuanWorldVoyagerPipeline.from_pretrained(model_path='/nonexistent', skip_representation_model=True, device='cpu')` fails before any checkpoint access with `ModuleNotFoundError: No module named 'worldfoundry.synthesis.visual_generation.hunyuan_world.hunyuan_world_voyager.config'` at the config import in `pipeline_hunyuan_world_voyager.py`. The in-tree `hunyuan_world_voyager/` directory contains only `.pyc` cache files, no `config.py`, `runtime.py`, or Python package sources. The synthesis adapter imports `HunyuanWorldVoyagerRuntime` from the missing runtime module.
-
-The pinned official GitHub tree `6218ccd36df77d0254dcf24ad1fb77312f75b04a` lists 37 Python files under `voyager/`, including its own `config.py` and `inference.py`, but no WorldFoundry `HunyuanWorldVoyagerRuntime` adapter. Copying that package alone would not repair the public pipeline. No GPU inference was attempted. The catalog and runtime profile now mark the integration blocked and disable the broken binding; this audit is recorded as `failed_integration`.

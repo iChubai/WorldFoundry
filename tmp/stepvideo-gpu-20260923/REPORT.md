@@ -1,9 +1,0 @@
-# Step-Video-T2V GPU validation
-
-The local `stepfun-ai/stepvideo-t2v` DiT, Step-LLM, CLIP, and VAE checkpoints were loaded by the public WorldFoundry native diffusion pipeline on physical GPU 3. The first run exposed a runtime bug: global block offload was applied to the StepVideo VAE, which has no block layer container. `worldfoundry/base_models/diffusion_model/models/autoencoders/step_video/component.py` now keeps this relatively small decoder resident while the large DiT retains block CPU offload. [failure-first.txt](failure-first.txt) contains the original stack trace.
-
-After that fix, [demo.mp4](demo.mp4) generated 17/17 decodable frames at 448×256, 17 FPS, with four denoising steps. [validation-smoke.json](validation-smoke.json) and [contact.jpg](contact.jpg) show a quality concern: the video has broad blurred bands and no recognizable cat or lake from the prompt. Four steps and this resolution are far below the model's 50-step, 544×992 defaults, so this smoke artifact only confirms inference and export; it does not establish model quality.
-
-The follow-up [demo-quality.mp4](demo-quality.mp4) completed 50 denoising steps at the official 992×544 spatial resolution. All 17 frames decode at 25 FPS. [validation-quality.json](validation-quality.json) records a pixel standard deviation of 70.11/255 and a 13.58/255 first-to-last mean absolute difference. Visual review of frames 0, 8, and 16 in [contact-quality.jpg](contact-quality.jpg) finds the prompted white cat with sunglasses on a surfboard over water, with a coherent scene and slight motion. The poor four-step smoke image was therefore caused by the very low test settings, rather than demonstrated by this run at quality settings.
-
-This is still a shortest-valid 17-frame inference check, not a 204-frame long-form quality or benchmark evaluation. [result-quality.json](result-quality.json) records the native 50-step run and its output path.

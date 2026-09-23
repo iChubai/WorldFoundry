@@ -1,9 +1,0 @@
-{
-  "model_id": "causal-forcing-framewise",
-  "status": "generated",
-  "gpu": "2",
-  "artifact": "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/WorldFoundry/tmp/next-world-models-gpu-20260923/causal-forcing-framewise/generated.mp4",
-  "decoded_frames": 81,
-  "artifact_sha256": "7f279479c6ff61b676749928b71150eacd7b64e5a243033870da3f5920552e1d",
-  "elapsed_seconds": 147.47
-}

@@ -1,9 +1,0 @@
-{
-  "model_id": "giga-world-0",
-  "status": "generated",
-  "gpu": "3",
-  "artifact": "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/WorldFoundry/tmp/next-world-models-gpu-20260923/giga-world-0/generated.mp4",
-  "decoded_frames": 9,
-  "artifact_sha256": "e7d0c1b64ef3b0af61ef2cd15e03e11ef49987081ae038b0e03df7e5e584a8f3",
-  "elapsed_seconds": 146.48
-}

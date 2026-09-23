@@ -1,5 +1,0 @@
-{
-  "status": "verified_inference_only",
-  "gpu_action_run_this_batch": false,
-  "existing_evidence": "tmp/lingbot-vla-v2-gpu-20260923/lingbot-vla-v2-synthetic-state-defaultfix/status.json"
-}

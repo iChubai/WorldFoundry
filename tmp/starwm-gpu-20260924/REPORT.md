@@ -1,5 +1,0 @@
-# StarWM GPU validation
-
-Direct local checkpoint inference completed on GPU3 with `yxzhang2024/StarWM`: all four Qwen3-8B safetensors shards loaded; the first official `wm_test_horizon5_1traj.json` sample from the upstream GitHub repository was used with its `/no_think` prompt. The checkpoint generated 287 tokens in 7.22 s, with 17.0 GB peak CUDA allocation. Its output has all five official sections and predicts 00:05. Supply 13/15 and the 41% SCV training queue match the label. Minerals are 50 versus the label 20, and mining workers 9 versus 8, so this is one inference-only validation, not scored parity. The earlier hand-written simplified prompt produced only closing tags; the official prompt fixed input-format validity.
-
-The WorldFoundry public route remains an endpoint client, not a local checkpoint loader. Its default `data/models/runtime/configs/starwm/data/wm_test_horizon5_1traj.json` fixture is absent, and `BLOCKED_REASON` is nonempty even when a caller supplies an endpoint; no public-pipeline parity is claimed. The temporary full upstream fixture and output are retained only under this evidence directory.

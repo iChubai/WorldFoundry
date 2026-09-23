@@ -1,9 +1,0 @@
-{
-  "status": "verified_configuration",
-  "scope": "Public SpatialReasonerPipeline image question answering using the official four-shard Qwen2.5-VL checkpoint, a real toy photograph, and a one-sentence object/color/support question. Staged image pixels equal the source photo and all four safetensors SHA-256 values match official LFS at revision 7b77d2e6968eedbe00fac2191cbe440892d279f1. The inspected answer correctly describes a blue-and-white stuffed animal on a white support over a red cloth. One image and one question only; no video QA, calibrated spatial reasoning, or benchmark score claim.",
-  "answer": "A blue and white stuffed animal rests atop a white pedestal on a red table cloth.",
-  "artifact_sha256": "c653f05fdc87a24a28cb629b096641338830a646eea1ffbf40af276995ad1671",
-  "image_input_pixel_equal": true,
-  "official_weight_shards": 4,
-  "reviewed_at": 1790118992.9830306
-}

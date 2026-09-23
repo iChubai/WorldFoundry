@@ -1,9 +1,0 @@
-{
-  "file": "worldfoundry/synthesis/action_generation/lingbot_vla/modeling/policy.py",
-  "before_sha256": "15fa7d8f707dd7aa4949d29b869d676b6dba4de8080c8a886bf0ce5750de11e8",
-  "after_sha256": "72133d5d812ab9f2a968c75e60dfab824d300e5ba7092c1610f67253a8fbcc4a",
-  "issue": "Transformers4.57.6 no longer exports LossKwargs; used only as TypedDict annotation parent. Remove loss-only annotation dependency, preserve FlashAttentionKwargs and all inference methods.",
-  "original_failure": "tmp/lingbot-vla-gpu-20260922/lingbot-vla-robotwin/status.json",
-  "second_issue": "FA2 unavailable; generic resolver returns SDPA, but in-tree Qwen vision and language mappings support only eager/FA2. Explicit logged fallback to supported eager and report effective backend; do not silently label eager as SDPA.",
-  "second_failure": "tmp/lingbot-vla-fixed-gpu-20260922/lingbot-vla-robotwin/status.json"
-}

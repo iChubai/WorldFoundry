@@ -1,9 +1,0 @@
-{
-  "id": "krea-realtime-toy-2blocks",
-  "status": "generated",
-  "started_at": 1790118708.275514,
-  "gpu": "3",
-  "artifact": "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/WorldFoundry/tmp/krea-realtime-video-gpu-20260923/krea-realtime-toy-2blocks/generated.mp4",
-  "decoded_frames": 18,
-  "elapsed_seconds": 1245.71
-}

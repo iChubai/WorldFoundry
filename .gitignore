@@ -1,5 +1,6 @@
 # Public branch excludes local test source and generated test artifacts below.
 /tests/
+/tmp/
 
 # Project-specific local files
 .develop_references.py

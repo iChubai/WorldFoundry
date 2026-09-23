@@ -1,7 +1,0 @@
-# JoyAI-Echo 1.5 / Echo-LongVideo runtime preflight
-
-The official source checkout is present at revision `0b931fd42f5ef51410019ae41b261eb3b8936410`. Local Echo checkpoint files exist for BF16 (`model.safetensors`, 46,139,886,222 bytes), FP8 (`model.safetensors`, 27,618,018,022 bytes), and FP4 (`components.safetensors` and `transformer_modelopt.pt`). CUDA devices are available. The WorldFoundry public runtime preflight for each variant is recorded in [preflight.json](preflight.json).
-
-All three variants are **blocked before inference**. The configured `google/gemma-3-12b-it` text encoder directory contains only a README and lacks `config.json` and model weights. A direct Hugging Face request for its `config.json` using the current login returned HTTP 403 `GatedRepoError` (account not authorized). The dedicated `envs/joyai-echo-longvideo/bin/python` is also absent. These are prerequisites for the official inference path; nearby QAT Gemma weights are a different export and were not substituted. Consequently, no JoyAI-Echo LongVideo GPU artifact, visual quality result, or runtime parity claim is made here.
-
-To unblock, obtain access to the exact `google/gemma-3-12b-it` encoder, stage its full checkpoint in the configured directory, and build the pinned dedicated environment. Rerun BF16/FP8/FP4 preflight, then generate and review an actual video with the official route. FP4 additionally requires NVIDIA ModelOpt. The local preflight checks file presence, not the integrity or compatibility of every weight tensor.

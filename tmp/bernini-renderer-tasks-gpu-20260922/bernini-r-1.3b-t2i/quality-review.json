@@ -1,5 +1,0 @@
-{
-  "status": "quality_concern",
-  "visual_review": "Actual output image viewed: clear grass, sky and hot-air balloon, but requested blue balloon is prominently striped in green,yellow,orange and blue. Structural/numerical inference succeeds; color instruction is not followed.",
-  "scope": "T2I; default40steps,848x480,seed42. No sampler or model code modified."
-}

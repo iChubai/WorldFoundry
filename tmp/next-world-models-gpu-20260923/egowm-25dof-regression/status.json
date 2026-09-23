@@ -1,9 +1,0 @@
-{
-  "model_id": "egowm",
-  "status": "generated",
-  "gpu": "1",
-  "artifact": "/mnt/dolphinfs/ssd_pool/docker/user/hadoop-nlp-hl02/hadoop-aipnlp/3A/multimodal/yangboxue/arena/WorldFoundry/tmp/next-world-models-gpu-20260923/egowm-25dof-regression/generated.mp4",
-  "decoded_frames": 9,
-  "artifact_sha256": "a8792c31308f3f64e63150b1c720a49eb0f232f4a1fa3a4696baa97b346c80d8",
-  "elapsed_seconds": 163.07
-}

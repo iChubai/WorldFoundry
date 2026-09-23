@@ -1,9 +1,0 @@
-{
-  "model_id": "gamma-world",
-  "status": "generated",
-  "gpu": "3",
-  "artifact": "tmp/gamma-world-gpu-20260923/gamma-few-step-9f/generated.mp4",
-  "decoded_frames": 9,
-  "artifact_sha256": "0d46ee7b19f16ecd20cdda6fe9266ac8a6111eb94426a48e5568e3d7a3042dac",
-  "elapsed_seconds": 127.97
-}

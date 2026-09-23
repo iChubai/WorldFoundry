@@ -1,9 +1,0 @@
-# Uni3C full camera inference validation
-
-Public Uni3CPipeline camera mode using real toy photograph, verified 81-frame512x720 control bundle with official DepthPro/Tracer/15degree camera construction and WorldFoundry Torch point-cloud rendering fallback; official in-tree PCDController stage-two, default 40steps CFG5 seed1024, 81-frame688x512 video16fps. Full decode, strict base loading and overlay audit, actual raw outputs finite, and actual contact viewed. Toy/table/wall remain coherent with leftward viewpoint motion. The output camera angle is not calibrated and the unified camera+human path is outside this result.
-
-The public pipeline completed in 495.73s. Final video, six-frame actual contact, and full decoded-frame statistics are in tmp/uni3c-camera-gpu-20260923/uni3c-public-camera. The output moves the toy centroid about22px left and grows its segmented width96→106px across81 frames; this is only qualitative camera response.
-
-Input controls were generated from the real toy photograph using the official DepthPro, Tracer and camera construction, and the project Torch point-cloud renderer because the installed PyTorch3D extension has an incompatible CUDA symbol. The control rendering has expected masked uncovered borders and is visually usable. Depth is positive and finite; the control rotation is15.000009degrees with orthogonal matrices.
-
-The active Wan Diffusers model, VAE, UMT5, and CLIP loads are clean except one unused CLIP projection tensor in a projection-free CLIPVisionModel. The ControlNet overlay loads all490 control-specific tensors and reports1303 missing main Wan tensor names already loaded by the clean base loader. All80 main denoiser outputs and20 ControlNet group outputs per call were finite. Four asset families (38 files) match official SHA or HF blob digests. The unified human route and exact geometric adherence remain unverified. No product inference code was changed for this result.

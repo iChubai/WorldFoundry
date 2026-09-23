@@ -1,7 +1,0 @@
-# Kairos Sensenova 4B 720P GPU validation
-
-The independent local Kairos Sensenova 4B 720P DiT checkpoint, Qwen2.5-VL-7B text encoder, and Wan VAE loaded on H100 GPU 1. The in-tree runtime accepted a real toy photograph and a camera push-in prompt, completed 50 sampling steps, and wrote [future_world.mp4](future_world.mp4): nine decodable 1280×720 frames. The video SHA-256 is `19b98dd46aa259a65ec836006dfcac0a326ed7ee7c24cf69d89af6381d412be4`. [result.json](result.json), [status.json](status.json), and [run.log](run.log) preserve the full checkpoint paths and run result. End-to-end runtime was about 327 seconds; sampling and decoding took about 128 seconds.
-
-I viewed frames 0, 4, and 8 in [contact-0-4-8.jpg](contact-0-4-8.jpg). The turquoise toy, white plate, red table, and wall remain recognizable, but the output is nearly static: mean absolute pixel difference from frame 0 is 1.36 at frame 4 and 1.15 at frame 8. The requested camera push-in is not visually established. This is **verified inference only**; it does not establish calibrated camera motion, long-horizon dynamics, or robot-task success. [quality-review.json](quality-review.json) records the visual judgment and temporal differences.
-
-The run used the previously repaired Kairos VAE cache-slot counter in [wan_video_vae.py](../../worldfoundry/synthesis/visual_generation/kairos/kairos_runtime/kairos/modules/vaes/wan_video_vae.py). [run.py](run.py) is the replay script with the checkpoint and input paths.

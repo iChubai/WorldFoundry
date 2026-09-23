@@ -1,5 +1,5 @@
 {
-  "total": 267,
+  "total": 266,
   "categories": [
     {
       "id": "video",
@@ -13,7 +13,7 @@
       "label": "World models",
       "label_zh": "世界模型",
       "description": "Interactive worlds, prediction, navigation, and simulator-shaped systems.",
-      "count": 101
+      "count": 100
     },
     {
       "id": "three_d_four_d",
@@ -12036,7 +12036,7 @@
       "categoryLabel": "World models",
       "categoryLabelZh": "世界模型",
       "provider": "Skywork AI (Kunlun Tech)",
-      "summary": "Matrix-Game 2.0 is Skywork's real-time-oriented interactive world model generation: an auto-regressive diffusion design that follows keyboard/mouse actions across game scenes.",
+      "summary": "Matrix-Game 2.0 is Skywork's real-time-oriented interactive world model generation: an auto-regressive diffusion design that follows keyboard/mouse actions across game scenes. The in-tree runner was checked with a 15-latent-frame short run…",
       "aliases": [],
       "tasks": [
         "world",
@@ -12059,7 +12059,7 @@
         "loadingMethod": "from_pretrained",
         "invocationMode": "native_or_standard_invocation",
         "backendStage": "in_tree_runtime_ready",
-        "runtimeStatus": "official_demo_parity_pending",
+        "runtimeStatus": "official_actions_gpu_parity_verified_15_latent_frames",
         "environmentId": "matrix-game-2",
         "environmentName": "worldfoundry-unified-cu128",
         "environmentKind": "unified",
@@ -12092,7 +12092,8 @@
           "cv2"
         ],
         "notes": [
-          "Runtime profile records stable environment, checkpoint, and parameter assumptions only; run readiness is kept in release run manifests.",
+          "The official and WorldFoundry entrypoints both generated 57 decoded RGB frames from 15 requested latent frames using the same reference image, seed 42, and official benchmark actions. The repaired runner matched official action tensors exactly and had mean decoded RGB absolute difference 4.762.",
+          "This short configuration does not validate long interactive rollouts.",
           "Matrix-Game-2 uses this environment through the workspace conda dispatcher with a local Matrix-Game-2.0 checkpoint and in-tree Bench_actions_* trajectory generation helpers.",
           "The official bench-action route expects num_frames, fps, seed, size, and official_bench_actions parameters matching the upstream config.",
           "torchao extension warnings can appear when cached torchao .so files were built for a different Python suffix; Matrix-Game-2 does not require those extensions."
@@ -12151,7 +12152,7 @@
           "python": "3.11",
           "cudaLabel": "CUDA 12.8",
           "backendStage": "in_tree_runtime_ready",
-          "runtimeStatus": "official_demo_parity_pending",
+          "runtimeStatus": "official_actions_gpu_parity_verified_15_latent_frames",
           "inputContract": [
             {
               "field": "prompt",
@@ -12378,10 +12379,11 @@
       ],
       "notes": [
         "Matrix-Game 2 already uses an in-tree runtime and no external repo_root dependency was found.",
-        "The WorldFoundry runner uses the official inference_universal defaults and in-tree Bench_actions_* condition generator.",
-        "The current MatrixGame2Pipeline supports the official default settings: num_frames=150, fps=12, seed=42, size=[352,640], official_bench_actions=true, and the Matrix-Game-2.0 checkpoint. Per-run artifact checks are tracked outside the catalog.",
-        "The official universal-mode command is wired through the formal model-zoo helper. The Studio/API route uses the full official default, num_output_frames=150, seed=42, and official Bench_actions_* trajectories.",
-        "Runtime profile records stable environment, checkpoint, and parameter assumptions only; run readiness is kept in release run manifests."
+        "The WorldFoundry runner supports official benchmark actions via the in-tree Bench_actions_* condition generator; GPU comparison covered 15 latent frames.",
+        "The MatrixGame2Pipeline supports official benchmark actions and the Matrix-Game-2.0 checkpoint. GPU comparison used 15 latent frames, fps=12, seed=42, size=[352,640], and official_bench_actions=true; full 150-latent-frame rollout and benchmark scoring remain unverified. Per-run artifacts are tracked outside the catalog.",
+        "A local short-run comparison used official universal mode with 15 latent frames, seed=42, and Bench_actions_* trajectories. The Studio/API route uses the official 150-frame default; full-length parity remains unverified.",
+        "The official and WorldFoundry entrypoints both generated 57 decoded RGB frames from 15 requested latent frames using the same reference image, seed 42, and official benchmark actions. The repaired runner matched official action tensors exactly and had mean decoded RGB absolute difference 4.762.",
+        "This short configuration does not validate long interactive rollouts."
       ],
       "docs": {
         "curated": true,
@@ -12391,22 +12393,22 @@
           "kind": "company"
         },
         "overview": [
-          "Matrix-Game 2.0 is Skywork's real-time-oriented interactive world model generation: an auto-regressive diffusion design that follows keyboard/mouse actions across game scenes. In this catalog the runner is verified with the official inference_universal defaults — 150 frames at 12 fps, 352x640, official bench actions — through the in-tree runtime."
+          "Matrix-Game 2.0 is Skywork's real-time-oriented interactive world model generation: an auto-regressive diffusion design that follows keyboard/mouse actions across game scenes. The in-tree runner was checked with a 15-latent-frame short run at 12 fps and 352x640 using official bench actions; full 150-frame parity remains unverified."
         ],
         "overviewZh": [
-          "Matrix-Game 2.0 是昆仑万维面向实时的交互式世界模型：自回归扩散设计，在游戏场景中跟随键鼠动作。本 catalog 中 runner 已按官方 inference_universal 默认值验证——150 帧、12 fps、352x640、官方 bench 动作——经树内运行时运行。"
+          "Matrix-Game 2.0 是昆仑万维面向实时的交互式世界模型：自回归扩散设计，在游戏场景中跟随键鼠动作。树内 runner 已用官方 bench 动作在 12 fps、352x640 下完成 15 个 latent 帧的短流程验证；完整 150 帧一致性仍未验证。"
         ],
         "architecture": [
-          "The in-tree runtime has no external repo_root dependency, and the WorldFoundry runner uses the official defaults plus the in-tree Bench_actions_* condition generator. A universal-action-validation variant is recorded for benchmarking action fidelity."
+          "The in-tree runtime has no external repo_root dependency and supports official benchmark actions through the in-tree Bench_actions_* condition generator. The official 150-latent-frame default is supported, but the recorded comparison used 15 latent frames. A universal-action-validation variant is recorded for benchmarking action fidelity."
         ],
         "architectureZh": [
-          "树内运行时无外部 repo_root 依赖，WorldFoundry runner 使用官方默认值与树内 Bench_actions_* 条件生成器。另记录一个 universal-action-validation variant 用于动作保真度基准测试。"
+          "树内运行时无外部 repo_root 依赖，并通过树内 Bench_actions_* 条件生成器支持官方 bench 动作。运行时支持官方默认的 150 个 latent 帧，但已记录的对照只运行了 15 个 latent 帧。另记录一个 universal-action-validation variant 用于动作保真度基准测试。"
         ],
         "usageNotes": [
-          "Start from the verified official defaults (num_frames=150, fps=12, seed=42, size 352x640, official_bench_actions=true) before customizing. Per-run artifact checks are tracked outside the catalog."
+          "The official default is 150 latent frames at 12 fps, seed=42, 352x640, with bench actions. The recorded parity check used 15 latent frames; per-run artifacts are tracked outside the catalog."
         ],
         "usageNotesZh": [
-          "自定义前请从已验证的官方默认值出发（num_frames=150、fps=12、seed=42、352x640、 official_bench_actions=true）。每次运行的产物检查在 catalog 外跟踪。"
+          "官方默认设置为 150 个 latent 帧、12 fps、seed=42、352x640，并使用 bench 动作。已记录的一致性检查只运行了 15 个 latent 帧；每次运行的产物在 catalog 外跟踪。"
         ],
         "highlights": [
           "World",
@@ -19705,14 +19707,9 @@
       },
       "sources": [
         {
-          "kind": "project",
-          "label": "Project",
-          "url": "https://pku-yuangroup.github.io/Helios-Page/"
-        },
-        {
           "kind": "paper",
           "label": "Paper",
-          "url": "https://arxiv.org/abs/2503.07598"
+          "url": "https://arxiv.org/abs/2503.20314"
         },
         {
           "kind": "source",
@@ -20096,10 +20093,10 @@
       "notes": [
         "Only official Wan-Video GitHub and Wan-AI Hugging Face repos are listed.",
         "Wan2.1 T2V 1.3B now has an independent canonical native diffusion recipe; its public catalog binding remains unchanged until CUDA artifact parity passes.",
-        "Family-level integration_status remains planned because T2V-14B and I2V variants have not passed checkpoint, official demo, and WorldFoundry runner parity.",
+        "T2V-14B and I2V variants remain parity-pending; their runtime integration does not imply validated output parity.",
         "WorldFoundry wraps the in-tree Wan2.1 T2V/I2V runtimes.",
-        "WorldFoundry pipeline target is registered; generated artifact parity still requires the staged checkpoint/runtime environment.",
-        "Verified for Wan2.1 T2V-1.3B only ; other Wan2.1 T2V-14B and I2V variants remain pending and keep the family-level integration_status planned.",
+        "A prior local 81-frame WorldFoundry artifact is recorded above; reproducing it requires the staged checkpoint and runtime environment.",
+        "A local 81-frame result was recorded for Wan2.1 T2V-1.3B only; parity for the T2V-14B and I2V variants remains pending.",
         "Variant profile for the ready Wan2.1 1.3B catalog demo contract."
       ],
       "docs": {
@@ -20122,10 +20119,10 @@
           "Wan2.1 是扩散 Transformer，配时空 Wan-VAE 与 UMT5 文本编码（见上游发布）。在本仓库中， 1.3B T2V 拥有独立的规范化原生扩散配方；记录契约为 prompt/image/video/actions 输入与 generated_video 产物。"
         ],
         "usageNotes": [
-          "Read the status carefully: the runner-parity field says verified for the registered pipeline target, but the manifest notes that family-level integration remains planned because T2V-14B and the I2V variants have not passed checkpoint, official-demo, and runner parity. The 1.3B route is the safest starting point; its public binding stays unchanged until CUDA artifact parity passes."
+          "The family is integrated, and a prior local 81-frame artifact is recorded for T2V-1.3B. Output parity for T2V-14B and I2V remains pending. The independent native 1.3B recipe will not replace the current public binding until CUDA artifact parity passes."
         ],
         "usageNotesZh": [
-          "状态要仔细读：runner parity 字段对已注册 pipeline target 记为 verified，但 manifest 注明系列级集成仍为 planned——因为 T2V-14B 与 I2V variant 尚未通过 checkpoint、官方 demo 与 runner 三重一致性。1.3B 路径是最稳妥的起点；在 CUDA 产物一致性通过前，其公开 binding 保持不变。"
+          "系列已集成，T2V-1.3B 已记录一次本地 81 帧产物；T2V-14B 与 I2V 的输出一致性仍待验证。独立的原生 1.3B 路径通过 CUDA 产物一致性验证前，不会替换现有公开绑定。"
         ],
         "highlights": [
           "Text To Video",
@@ -20185,14 +20182,29 @@
         ],
         "limitations": [
           "Family-level parity is incomplete: T2V-14B and I2V variants lack full checkpoint/demo/runner parity.",
-          "Generated artifact parity still requires the staged checkpoint/runtime environment."
+          "Reproducing the recorded T2V-1.3B artifact requires the staged checkpoint and runtime environment."
         ],
         "limitationsZh": [
           "系列级一致性未完成：T2V-14B 与 I2V variant 缺少完整的 checkpoint/demo/runner 一致性。",
-          "生成产物一致性仍需就位的 checkpoint/运行时环境。"
+          "复现已记录的 T2V-1.3B 产物需要就位的 checkpoint 和运行时环境。"
         ],
         "paper": null,
-        "figures": []
+        "figures": [
+          {
+            "kind": "image",
+            "role": "teaser",
+            "src": "/models/wan2.1/teaser.jpg",
+            "caption": "Paper teaser — Wan2.1 text-to-video samples",
+            "captionZh": "论文 Teaser：Wan2.1 文生视频样例"
+          },
+          {
+            "kind": "image",
+            "role": "overview",
+            "src": "/models/wan2.1/overview.jpg",
+            "caption": "Method overview — Wan DiT architecture",
+            "captionZh": "方法总览：Wan DiT 架构"
+          }
+        ]
       },
       "commands": {
         "prepare": "bash scripts/inference/prepare_model_infer.sh wan2.1-t2v-1.3b",
@@ -49877,7 +49889,7 @@
         "WorldFoundry route is complete; missing checkpoint/assets are reported at runtime.",
         "WorldFoundry runner path is wired for the official preview checkpoint.",
         "Full official runner parity remains pending.",
-        "Official Mochi-1 preview CLI parity command is wired with fixed prompt, seed, resolution, frame count, CFG scale, and step count, but the full 31-frame / 64-step official quality run remains pending.",
+        "Full 31-frame / 64-step official quality parity remains pending. No public demo reproduction script is packaged with this catalog entry.",
         "A similarly named diffusers repo candidate returned 401 and is not listed."
       ],
       "docs": {
@@ -49900,10 +49912,10 @@
           "上游将 Mochi-1 描述为 100 亿参数的非对称扩散 Transformer（AsymmDiT），配专用视频 VAE。本仓库记录 runner 接线与标准 prompt/image/video/actions 输入 schema；更多内部细节仓库未记录。"
         ],
         "usageNotes": [
-          "Runner parity is pending — the path is wired but full official parity has not been recorded. Note the org naming: GitHub is genmoai, Hugging Face is genmo. Stage the preview checkpoint before running."
+          "Runner parity is pending: the path is wired, but full 31-frame / 64-step official quality parity has not been recorded. No public demo reproduction script is packaged. GitHub uses genmoai while Hugging Face uses genmo; stage the preview checkpoint before running."
         ],
         "usageNotesZh": [
-          "Runner parity 为 pending——路径已接好，但完整官方一致性尚未记录。注意组织命名：GitHub 为 genmoai，Hugging Face 为 genmo。运行前先就位 preview checkpoint。"
+          "Runner parity 仍待验证：路径已接好，但完整 31 帧、64 步的官方画质一致性尚未记录，且未提供公开 demo 复现脚本。GitHub 组织名为 genmoai，Hugging Face 为 genmo；运行前需就位 preview checkpoint。"
         ],
         "highlights": [
           "Text To Video",
@@ -97785,240 +97797,6 @@
         "run": "worldfoundry-eval run \\\n  vid2world \\\n  --pipeline.task-profile interactive-world-model \\\n  --pipeline.image /path/to/input \\\n  --pipeline.prompt \"Describe the desired output.\" \\\n  --pipeline.video /path/to/input \\\n  --json"
       },
       "catalogPath": "worldfoundry/data/models/catalog/world_models/vid2world.yaml"
-    },
-    {
-      "id": "viewcrafter",
-      "name": "ViewCrafter",
-      "category": "world_models",
-      "categoryLabel": "World models",
-      "categoryLabelZh": "世界模型",
-      "provider": "Open-source research release (institution not recorded)",
-      "summary": "ViewCrafter is a novel-view-synthesis world model: from one or a few input images it synthesizes high-fidelity videos along new camera trajectories, using point-cloud priors from DUSt3R to anchor geometry. Four official Apache-2.0 checkpoi…",
-      "aliases": [],
-      "tasks": [
-        "world_model"
-      ],
-      "status": {
-        "group": "runtime_ported",
-        "label": "Runtime Ported",
-        "integration": "runtime_ported",
-        "runner": "implemented_checkpoint_pending",
-        "demo": "not_recorded"
-      },
-      "runtime": {
-        "profileId": "viewcrafter",
-        "bindingId": "viewcrafter",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
-        "runner": "worldfoundry.pipeline",
-        "pipelineTarget": "worldfoundry.pipelines.world_model.pipeline_runtime_manifest:ViewCrafterPipeline",
-        "loadingMethod": "from_pretrained",
-        "invocationMode": "native_or_standard_invocation",
-        "backendStage": "worldfoundry_runtime_plan",
-        "runtimeStatus": "route_ready_assets_pending",
-        "environmentId": "_unified",
-        "environmentName": "worldfoundry-unified-cu128",
-        "environmentKind": "unified",
-        "python": "3.11",
-        "cudaProfile": "cu128",
-        "cudaLabel": "CUDA 12.8",
-        "driverStatus": "compatible_unified_default",
-        "condaPackages": [
-          "python=3.11",
-          "pip",
-          "ffmpeg",
-          "setuptools",
-          "wheel"
-        ],
-        "pipPackages": [
-          "torch",
-          "torchvision",
-          "torchaudio",
-          "xfuser"
-        ],
-        "packageVersions": {
-          "torch": "torch",
-          "torchvision": "torchvision",
-          "torchaudio": "torchaudio",
-          "xfuser": "xfuser"
-        },
-        "validationImports": [
-          "torch",
-          "torchvision",
-          "numpy",
-          "transformers",
-          "diffusers",
-          "xfuser",
-          "worldfoundry"
-        ],
-        "notes": [
-          "ViewCrafter official source route is registered; checkpoints and DUSt3R/view assets are runtime-gated.",
-          "Missing checkpoints/assets are reported by the runtime plan and are not catalog blockers.",
-          "Default unified WorldFoundry runtime for modern NVIDIA hosts. Install with `bash scripts/setup/unified_install.sh`.",
-          "Override tier with `--cuda cu124` or `--cuda cu121` when an upstream model still pins an older CUDA wheel bucket.",
-          "Source the environment file emitted by `scripts/setup/unified_install.sh` so WORLDFOUNDRY_USE_UNIFIED_ENV=1 routes compatible profiles here.",
-          "Runnable GPU models that previously used cu113/cu118/cu124 CUDA buckets are mapped to this tier when they do not carry hard ABI pins requiring isolation."
-        ]
-      },
-      "sources": [
-        {
-          "kind": "project",
-          "label": "Project",
-          "url": "https://drexubery.github.io/ViewCrafter/"
-        },
-        {
-          "kind": "paper",
-          "label": "Paper",
-          "url": "https://arxiv.org/abs/2409.02048"
-        },
-        {
-          "kind": "source",
-          "label": "GitHub",
-          "url": "https://github.com/Drexubery/ViewCrafter"
-        },
-        {
-          "kind": "weights",
-          "label": "Hugging Face",
-          "url": "https://huggingface.co/Drexubery/ViewCrafter_25"
-        },
-        {
-          "kind": "weights",
-          "label": "Hugging Face",
-          "url": "https://huggingface.co/Drexubery/ViewCrafter_25_sparse"
-        },
-        {
-          "kind": "weights",
-          "label": "Hugging Face",
-          "url": "https://huggingface.co/Drexubery/ViewCrafter_16"
-        },
-        {
-          "kind": "weights",
-          "label": "Hugging Face",
-          "url": "https://huggingface.co/Drexubery/ViewCrafter_25_512"
-        },
-        {
-          "kind": "weights",
-          "label": "Hugging Face",
-          "url": "https://huggingface.co/Doubiiu/ViewCrafter"
-        },
-        {
-          "kind": "docs",
-          "label": "Upstream README",
-          "url": "https://github.com/Drexubery/ViewCrafter#readme"
-        }
-      ],
-      "checkpoints": [],
-      "variants": [],
-      "inferenceTasks": [
-        {
-          "id": "world_model",
-          "label": "World Model",
-          "description": "Catalog task profile used by the model runtime.",
-          "source": "catalog",
-          "variantIds": [],
-          "inputs": [],
-          "artifacts": [
-            {
-              "kind": "generated_video",
-              "filename": ""
-            },
-            {
-              "kind": "generated_video",
-              "filename": "viewcrafter_runtime_plan.json"
-            }
-          ]
-        }
-      ],
-      "inputContract": [],
-      "artifacts": [
-        {
-          "kind": "generated_video",
-          "filename": ""
-        },
-        {
-          "kind": "generated_video",
-          "filename": "viewcrafter_runtime_plan.json"
-        }
-      ],
-      "notes": [
-        "ViewCrafter official source route is registered; checkpoints and DUSt3R/view assets are runtime-gated.",
-        "resolve_model_zoo_config and pipeline import are expected to pass; real generation emits a runtime plan until required checkpoints/assets are staged.",
-        "Missing checkpoints/assets are reported by the runtime plan and are not catalog blockers."
-      ],
-      "docs": {
-        "curated": true,
-        "publisher": {
-          "name": "Open-source research release (institution not recorded)",
-          "nameZh": "开源研究发布（仓库未记录正式机构）",
-          "kind": "lab"
-        },
-        "overview": [
-          "ViewCrafter is a novel-view-synthesis world model: from one or a few input images it synthesizes high-fidelity videos along new camera trajectories, using point-cloud priors from DUSt3R to anchor geometry. Four official Apache-2.0 checkpoints are confirmed on Hugging Face (ViewCrafter_25, _25_sparse, _16, _25_512) plus an official demo Space; WorldFoundry registers the official source route in-tree."
-        ],
-        "overviewZh": [
-          "ViewCrafter 是新视角合成方向的世界模型：从单张或少量输入图像出发，沿新的相机轨迹合成高保真视频，并用 DUSt3R 点云先验锚定几何。Hugging Face 上确认了四个官方 Apache-2.0 checkpoint（ViewCrafter_25、_25_sparse、_16、_25_512）与官方演示 Space；WorldFoundry 树内注册了官方源码路由。"
-        ],
-        "architecture": [
-          "The design couples a point-cloud reconstruction prior (DUSt3R) with a video diffusion renderer: reconstructed geometry is re-projected along the target trajectory and the diffusion model fills in photoreal detail. Checkpoint variants cover 25-frame, sparse-view, 16-frame, and 512-resolution configurations."
-        ],
-        "architectureZh": [
-          "设计将点云重建先验（DUSt3R）与视频扩散渲染器耦合：沿目标轨迹重投影重建几何，再由扩散模型补全照片级细节。checkpoint 变体覆盖 25 帧、稀疏视角、16 帧与 512 分辨率配置。"
-        ],
-        "usageNotes": [
-          "Pick the checkpoint variant matching your frame count and resolution needs; DUSt3R and view assets are runtime-gated alongside the checkpoints. Config resolution and pipeline import are expected to pass; real generation emits a runtime plan until required checkpoints/assets are staged. Missing assets are reported by the plan and are not treated as catalog blockers."
-        ],
-        "usageNotesZh": [
-          "按帧数与分辨率需求选择 checkpoint 变体；DUSt3R 与视角资产同 checkpoint 一样为运行时门控。配置解析与 pipeline 导入预期可通过；在所需 checkpoint/资产就位前，真实生成会输出运行时计划。缺失资产由计划报告，不视为 catalog 阻塞。"
-        ],
-        "highlights": [
-          "World Model",
-          "Unified env · Python 3.11 · CUDA 12.8"
-        ],
-        "highlightsZh": [
-          "世界模型",
-          "统一环境 · Python 3.11 · CUDA 12.8"
-        ],
-        "modalities": {
-          "inputs": [],
-          "outputs": []
-        },
-        "useCases": [],
-        "useCasesZh": [],
-        "hardware": {
-          "minVramGb": null,
-          "recommended": null,
-          "notes": []
-        },
-        "benchmarks": [
-          {
-            "id": "camerabench",
-            "name": "CameraBench",
-            "category": "Video Generation",
-            "categoryZh": "视频生成",
-            "summary": "In-tree official runtime scores generated videos per prompt; some dimensions may call a hosted API",
-            "summaryZh": "仓内 official runtime 对生成视频逐 prompt 评分；部分维度可能调用 hosted API",
-            "href": "/docs/evaluation/benchmark-hub/camerabench",
-            "source": "docs",
-            "reason": "Novel-view trajectory adherence and view quality.",
-            "reasonZh": "新视角轨迹跟随与视图质量。"
-          }
-        ],
-        "limitations": [
-          "Checkpoints and DUSt3R/view assets are runtime-gated; no GPU validation is recorded in this repository."
-        ],
-        "limitationsZh": [
-          "checkpoint 与 DUSt3R/视角资产为运行时门控；仓库未记录 GPU 验证。"
-        ],
-        "paper": null,
-        "figures": []
-      },
-      "commands": {
-        "prepare": "bash scripts/inference/prepare_model_infer.sh viewcrafter",
-        "install": "bash scripts/setup/model_env_install.sh --model viewcrafter",
-        "inspect": "worldfoundry-eval zoo model-show --model-id viewcrafter --include-manifest --json",
-        "check": "worldfoundry-eval zoo model-download --model-id viewcrafter --check-local --json",
-        "run": "worldfoundry-eval run \\\n  viewcrafter \\\n  --pipeline.task-profile world_model \\\n  --json"
-      },
-      "catalogPath": "worldfoundry/data/models/catalog/world_models/viewcrafter.yaml"
     },
     {
       "id": "vqbet",

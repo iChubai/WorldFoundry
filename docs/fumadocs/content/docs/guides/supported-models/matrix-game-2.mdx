@@ -1,11 +1,11 @@
 ---
 title: "Matrix-Game 2.0"
-description: "Matrix-Game 2.0 from Skywork AI (Kunlun Tech): `image` and `official_bench_actions` in; `matrix-game-2-universal-ref-image-seed42-15f.mp4` and `matrix_game2_official_universal_seed42_15f.mp4` out; runner verified…"
+description: "Matrix-Game 2.0 from Skywork AI: a 15-latent-frame short run was compared with official universal mode; full 150-frame parity remains unverified."
 modelId: "matrix-game-2"
 pageSource: authored
 ---
 
-Matrix-Game 2.0 is Skywork's real-time-oriented interactive world model generation: an auto-regressive diffusion design that follows keyboard/mouse actions across game scenes. In this catalog the runner is verified with the official inference_universal defaults — 150 frames at 12 fps, 352x640, official bench actions — through the in-tree runtime.
+Matrix-Game 2.0 is Skywork's real-time-oriented interactive world model generation: an auto-regressive diffusion design that follows keyboard/mouse actions across game scenes. The in-tree runner was compared with official universal mode using 15 latent frames at 12 fps and 352×640 with official bench actions; full 150-latent-frame parity remains unverified.
 
 <ModelPaperFigures modelId="matrix-game-2" locale="en" />
 
@@ -23,12 +23,12 @@ Score on [WorldModelBench](/docs/evaluation/benchmark-hub/worldmodelbench) — a
 
 ## Runtime contract
 
-Required: `image` and `official_bench_actions`; optional: `prompt` and `video`; artifacts: `matrix-game-2-universal-ref-image-seed42-15f.mp4`, `matrix_game2_official_universal_seed42_15f.mp4`, and `matrix_game2_official_universal_seed42_15f.json`.
+Required: `image` and `official_bench_actions`; optional: `prompt` and `video`. The recorded short-run comparison produced `matrix_game2_official_universal_seed42_15f.mp4` and a JSON sidecar; the runtime profile lists `matrix-game-2-universal-ref-image-seed42-15f.mp4`.
 
-Defaults: 150 frames, 12 fps, 352×640, seed 42.
+The official default is 150 latent frames, 12 fps, 352×640, seed 42. The recorded comparison used 15 latent frames and produced 57 decoded RGB frames. No public model-zoo demo helper is packaged for this comparison.
 
 ## Run in WorldFoundry
 
-Status: **Verified**. Unified environment `worldfoundry-unified-cu128` (Python 3.11, CUDA 12.8). Stage `Skywork/Matrix-Game-2.0` locally — missing files fail at load, nothing is downloaded. Run `worldfoundry-eval run matrix-game-2-universal-action-validation` with `--pipeline.task-profile official-universal-image`. License: MIT. Minimum VRAM is recorded at 24 GB.
+Status: **15-latent-frame short-run parity verified**; full-length parity and benchmark scoring remain pending. Unified environment `worldfoundry-unified-cu128` (Python 3.11, CUDA 12.8). Stage `Skywork/Matrix-Game-2.0` locally — missing files fail at load, nothing is downloaded. Run `worldfoundry-eval run matrix-game-2-universal-action-validation` with `--pipeline.task-profile official-universal-image`. License: MIT. Minimum VRAM is recorded at 24 GB.
 
 <ModelRelatedRecipes modelId="matrix-game-2" locale="en" />

@@ -1,11 +1,11 @@
 ---
 title: "Matrix-Game 2.0"
-description: "Matrix-Game 2.0（Skywork AI (Kunlun Tech)）：`image`、`official_bench_actions` 进，`matrix-game-2-universal-ref-image-seed42-15f.mp4`、`matrix_game2_official_universal_seed42_15f.mp4` 出；runner 已验证。"
+description: "Matrix-Game 2.0（Skywork AI）：已与官方 universal 模式完成 15 个 latent 帧的短流程对比；完整 150 帧一致性尚未验证。"
 modelId: "matrix-game-2"
 pageSource: authored
 ---
 
-Matrix-Game 2.0 是昆仑万维面向实时的交互式世界模型：自回归扩散设计，在游戏场景中跟随键鼠动作。本 catalog 中 runner 已按官方 inference_universal 默认值验证——150 帧、12 fps、352x640、官方 bench 动作——经树内运行时运行。
+Matrix-Game 2.0 是昆仑万维面向实时的交互式世界模型：自回归扩散设计，在游戏场景中跟随键鼠动作。树内 runner 使用官方 bench 动作，在 12 fps、352×640 下与官方 universal 模式完成 15 个 latent 帧的短流程对比；完整 150 个 latent 帧的一致性尚未验证。
 
 <ModelPaperFigures modelId="matrix-game-2" locale="zh" />
 
@@ -23,12 +23,12 @@ Matrix-Game 2.0 是昆仑万维面向实时的交互式世界模型：自回归�
 
 ## 运行时契约
 
-必填 `image`、`official_bench_actions`；可选 `prompt`、`video`；产物 `matrix-game-2-universal-ref-image-seed42-15f.mp4`、`matrix_game2_official_universal_seed42_15f.mp4`、`matrix_game2_official_universal_seed42_15f.json`。
+必填 `image`、`official_bench_actions`；可选 `prompt`、`video`。已记录的短流程对比产出 `matrix_game2_official_universal_seed42_15f.mp4` 及 JSON 旁路文件；运行时 profile 列出 `matrix-game-2-universal-ref-image-seed42-15f.mp4`。
 
-默认旋钮：150 帧、12 fps、352×640、seed 42。
+官方默认设置为 150 个 latent 帧、12 fps、352×640、seed 42。已记录的对比仅使用 15 个 latent 帧，解码为 57 个 RGB 帧。本仓库未提供该对比的公开 model-zoo demo helper。
 
 ## 在 WorldFoundry 中运行
 
-状态：**已验证**。统一环境 `worldfoundry-unified-cu128`（Python 3.11，CUDA 12.8）。先把 `Skywork/Matrix-Game-2.0` 就位到本地，缺文件加载失败，运行时不下载。在该环境执行 `worldfoundry-eval run matrix-game-2-universal-action-validation --pipeline.task-profile official-universal-image`。许可证：MIT。记录最低显存 24 GB。
+状态：**已验证 15 个 latent 帧的短流程一致性**；完整长度一致性及 benchmark 评分仍待完成。统一环境 `worldfoundry-unified-cu128`（Python 3.11，CUDA 12.8）。先把 `Skywork/Matrix-Game-2.0` 就位到本地，缺文件加载失败，运行时不下载。在该环境执行 `worldfoundry-eval run matrix-game-2-universal-action-validation --pipeline.task-profile official-universal-image`。许可证：MIT。记录最低显存 24 GB。
 
 <ModelRelatedRecipes modelId="matrix-game-2" locale="zh" />

@@ -533,11 +533,6 @@ class Vid2WorldPipeline(WorldModelRuntimePipeline):
     MODEL_ID = "vid2world"
 
 
-class ViewCrafterPipeline(WorldModelRuntimePipeline):
-    """Pipeline implementation for ViewCrafter visual generation."""
-    MODEL_ID = "viewcrafter"
-
-
 class WildDet3DPipeline(WorldModelRuntimePipeline):
     """Pipeline implementation for WildDet3D visual generation."""
     MODEL_ID = "wilddet3d"
@@ -591,7 +586,6 @@ __all__ = [
     "UWMPipeline",
     "VGGTWorldPipeline",
     "Vid2WorldPipeline",
-    "ViewCrafterPipeline",
     "WildDet3DPipeline",
     "WildWorldPipeline",
     "WorldModelRuntimePipeline",

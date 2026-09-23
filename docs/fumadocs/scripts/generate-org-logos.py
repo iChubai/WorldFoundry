@@ -1392,7 +1392,6 @@ MODEL_ORGS: dict[str, str] = {
     "videocrafter1-i2v": "tencent",
     "videocrafter1-t2v": "tencent",
     "videocrafter2-t2v": "tencent",
-    "viewcrafter": "tencent",
     "vlanext": "ntu",
     "vmem": "oxford",
     "vqbet": "snu",

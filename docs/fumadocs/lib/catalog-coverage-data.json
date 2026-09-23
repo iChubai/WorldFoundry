@@ -1,6 +1,6 @@
 {
-  "modelsTotal": 271,
-  "modelsListed": 261,
+  "modelsTotal": 270,
+  "modelsListed": 260,
   "benchmarksTotal": 75,
   "modelFamilies": [
     {
@@ -461,7 +461,7 @@
       "id": "world_models",
       "label": "World models",
       "blurb": "Interactive worlds, camera/action conditioning, navigation, and simulator-shaped systems.",
-      "count": 98,
+      "count": 97,
       "entries": [
         {
           "id": "abot-world-0-5b-lf",
@@ -1161,14 +1161,6 @@
           "status": "runtime_ported",
           "aliases": [
             "vid2world"
-          ]
-        },
-        {
-          "id": "viewcrafter",
-          "name": "ViewCrafter",
-          "status": "runtime_ported",
-          "aliases": [
-            "viewcrafter"
           ]
         },
         {

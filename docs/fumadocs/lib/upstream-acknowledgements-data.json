@@ -1,5 +1,5 @@
 {
-  "modelsTotal": 226,
+  "modelsTotal": 225,
   "benchmarksTotal": 70,
   "infrastructure": [
     {
@@ -196,7 +196,7 @@
       "id": "world_models",
       "label": "World models",
       "labelZh": "世界模型",
-      "count": 87,
+      "count": 86,
       "entries": [
         {
           "name": "ABot-World-0-5B-LF",
@@ -509,10 +509,6 @@
         {
           "name": "Vid2World",
           "url": "https://github.com/thuml/Vid2World"
-        },
-        {
-          "name": "ViewCrafter",
-          "url": "https://github.com/Drexubery/ViewCrafter"
         },
         {
           "name": "Wan2.2-Fun 5B Control Camera",

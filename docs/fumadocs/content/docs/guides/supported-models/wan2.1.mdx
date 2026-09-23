@@ -9,7 +9,7 @@ Wan2.1 is Alibaba Tongyi Lab's open video foundation family, and the backbone a 
 
 <ModelPaperFigures modelId="wan2.1" locale="en" />
 
-The technical report is [Wan: Open and Advanced Large-Scale Video Generative Models](https://arxiv.org/abs/2503.20314). Code and weights live at [Wan-Video/Wan2.1](https://github.com/Wan-Video/Wan2.1) and [Wan-AI](https://huggingface.co/Wan-AI). The catalog still points the paper field at arXiv 2503.07598 (VACE) and the project field at the Helios page — those are neighboring entries, not this family.
+The technical report is [Wan: Open and Advanced Large-Scale Video Generative Models](https://arxiv.org/abs/2503.20314). Code and weights live at [Wan-Video/Wan2.1](https://github.com/Wan-Video/Wan2.1) and [Wan-AI](https://huggingface.co/Wan-AI).
 
 <ModelCommandBuilder modelId="wan2.1" locale="en" />
 
@@ -27,7 +27,7 @@ Wan-VAE encodes **1080p of arbitrary length** so the DiT denoises in latent spac
 
 ## Running in WorldFoundry
 
-Unified `worldfoundry-unified-cu128` (Python 3.11, CUDA 12.8). Stage Wan-AI checkpoints locally. License Apache-2.0. Catalog VRAM **8 GB** on the 1.3B line. Status: **Verified** on 1.3B T2V; 14B and both I2V lines are **Runner parity pending**. Family-level integration stays **Planned** until those three finish checkpoint, official-demo, and runner parity. Do not use the VACE demo clip or the Helios project page as this model's official sources.
+Unified `worldfoundry-unified-cu128` (Python 3.11, CUDA 12.8). Stage Wan-AI checkpoints locally. License Apache-2.0. Catalog VRAM **8 GB** on the 1.3B line. Runtime integration is recorded for the family. A prior local 81-frame T2V 1.3B artifact is recorded with verified demo and runner parity; 14B T2V and both I2V lines still lack output parity. No public parity demo script is packaged, and reproducing the 1.3B artifact requires the staged checkpoint and runtime environment.
 
 Generate the 1.3B T2V clip, then score the folder on [VBench](/docs/evaluation/benchmark-hub/vbench) `custom_input` / `aesthetic_quality` — the only VBench GPU dimension this repo verified. Read `aesthetic_quality` in `tmp/vbench/wan2.1/eval/scorecard.json`.
 

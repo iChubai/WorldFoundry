@@ -9,11 +9,17 @@
 /scripts/embodied/submit_dlc_embodied_eval.sh
 /scripts/inference/__init__.py
 /scripts/inference/prepare_leworldmodel_smoke_dataset.py
+/scripts/model_zoo/matrix_game2_demo_common.py
+/scripts/model_zoo/matrix_game_parity_worker.py
+/scripts/model_zoo/run_matrix_game2_official_demo.py
+/scripts/model_zoo/run_matrix_game2_worldfoundry_runner_demo.py
+/scripts/model_zoo/run_mochi1_preview_official_demo.sh
 /scripts/run_worldscore_eval_local.sh
 /scripts/setup/materialize_workspace_demo_assets.py
 /scripts/workspace/run_video_model_gang.py
 /scripts/workspace/run_video_model_matrix.py
 /scripts/workspace/validate_generated_videos.py
+/thirdparty/flash-attention/
 
 # Project-specific local files
 .develop_references.py

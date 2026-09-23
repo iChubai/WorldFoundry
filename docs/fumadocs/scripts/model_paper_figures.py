@@ -1378,12 +1378,6 @@ CAPTIONS: dict[str, dict[str, tuple[str, str]]] = {
             "论文方法总览：Video Depth Anything 的几何与深度架构。",
         ),
     },
-    "viewcrafter": {
-        "overview": (
-            "Method overview: Fig. 1: Overview of our ViewCrafter. Given a single reference image or sparse image sets, we first build its point cloud representation using a dense stereo model, which enables accurately moving cameras for.",
-            "论文方法总览：ViewCrafter 的相机控制架构。",
-        ),
-    },
     "vlanext": {
         "teaser": (
             "Official paper teaser: Performance comparison on the LIBERO and LIBERO-plus benchmarks . We compare VLANeXt with representative VLA baselines across model scales. Despite its smaller model size, VLANeXt achieves higher success rates than.",

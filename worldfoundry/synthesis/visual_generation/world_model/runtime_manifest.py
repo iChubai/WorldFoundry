@@ -435,16 +435,6 @@ WORLD_MODEL_RUNTIME_SPECS: Mapping[str, WorldModelRuntimeSpec] = {
         required_assets=("Vid2World checkpoint/assets",),
         input_schema={"prompt": True, "image": True, "video": True, "actions": ["action", "world_action"]},
     ),
-    "viewcrafter": WorldModelRuntimeSpec(
-        model_id="viewcrafter",
-        display_name="ViewCrafter",
-        source_dir_names=("ViewCrafter",),
-        official_repo_url="https://github.com/Drexubery/ViewCrafter",
-        entrypoint_relative="inference.py",
-        blocked_reason="ViewCrafter official source route is registered; execution requires ViewCrafter checkpoints plus DUSt3R/view trajectory assets.",
-        required_assets=("Drexubery/ViewCrafter checkpoint", "DUSt3R/view trajectory assets"),
-        input_schema={"prompt": True, "image": True, "video": True, "actions": ["camera_control", "novel_view"]},
-    ),
     "wilddet3d": WorldModelRuntimeSpec(
         model_id="wilddet3d",
         display_name="WildDet3D",

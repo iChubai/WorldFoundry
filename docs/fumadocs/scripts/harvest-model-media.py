@@ -617,9 +617,6 @@ CURATED_FIGURES: dict[str, dict[str, str]] = {
     "video-depth-anything-prior": {
         "overview": "https://arxiv.org/html/2501.12375v3/overview_head_fix.png",
     },
-    "viewcrafter": {
-        "overview": "https://arxiv.org/html/2409.02048v1/pipeline1.png",
-    },
     "vlanext": {
         "teaser": "https://arxiv.org/html/2602.18532v3/performance_first_glance.png",
         "overview": "https://arxiv.org/html/2602.18532v3/framework.png",

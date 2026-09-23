@@ -2451,14 +2451,6 @@
       "caption": "Method overview: Transforming video diffusion models into interactive world models involves two key challenges : (1) Causal generation: converting full-sequence diffusion models into causal diffusion models; (2) Action conditioning:.",
       "captionZh": "论文方法总览：Vid2World 的交互世界模型架构。"
     },
-    "viewcrafter": {
-      "modelId": "viewcrafter",
-      "src": "/models/viewcrafter/overview.webp",
-      "alt": "Method overview: Fig. 1: Overview of our ViewCrafter. Given a single reference image or sparse image sets, we first build its point cloud representation using a dense stereo model, which enables accurately moving cameras for.",
-      "altZh": "论文方法总览：ViewCrafter 的相机控制架构。",
-      "caption": "Method overview: Fig. 1: Overview of our ViewCrafter. Given a single reference image or sparse image sets, we first build its point cloud representation using a dense stereo model, which enables accurately moving cameras for.",
-      "captionZh": "论文方法总览：ViewCrafter 的相机控制架构。"
-    },
     "vqbet": {
       "modelId": "vqbet",
       "src": "/models/vqbet/overview.png",

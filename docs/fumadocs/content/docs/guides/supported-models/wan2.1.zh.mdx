@@ -9,7 +9,7 @@ Wan2.1 是阿里通义实验室的开源视频基础系列，也是本 catalog �
 
 <ModelPaperFigures modelId="wan2.1" locale="zh" />
 
-技术报告是 [Wan: Open and Advanced Large-Scale Video Generative Models](https://arxiv.org/abs/2503.20314)。代码与权重在 [Wan-Video/Wan2.1](https://github.com/Wan-Video/Wan2.1) 和 [Wan-AI](https://huggingface.co/Wan-AI)。catalog 的 paper 字段仍指向 arXiv 2503.07598（VACE），project 字段指向 Helios 主页——那是相邻条目，不是这个系列。
+技术报告是 [Wan: Open and Advanced Large-Scale Video Generative Models](https://arxiv.org/abs/2503.20314)。代码与权重在 [Wan-Video/Wan2.1](https://github.com/Wan-Video/Wan2.1) 和 [Wan-AI](https://huggingface.co/Wan-AI)。
 
 <ModelCommandBuilder modelId="wan2.1" locale="zh" />
 
@@ -27,7 +27,7 @@ Wan-VAE 编解码**任意长度的 1080p**，DiT 在潜空间去噪。文本是 
 
 ## 在 WorldFoundry 中运行
 
-统一环境 `worldfoundry-unified-cu128`（Python 3.11，CUDA 12.8）。就位 Wan-AI checkpoint。License Apache-2.0。1.3B 线 catalog 显存 **8 GB**。状态：1.3B T2V **已验证**；14B 与两条 I2V 为 **Runner 一致性待确认**。在那三条完成 checkpoint、官方 demo 与 runner 三重一致性之前，系列级集成仍为 **计划中**。不要把 VACE 演示片段或 Helios 项目页当成这个模型的官方来源。
+统一环境 `worldfoundry-unified-cu128`（Python 3.11，CUDA 12.8）。就位 Wan-AI checkpoint。License Apache-2.0。1.3B 线 catalog 显存 **8 GB**。系列已记录运行时集成；先前一次本地运行产出了 81 帧的 T2V 1.3B 视频，并记录了已验证的官方 demo 与 runner 一致性。14B T2V 和两条 I2V 的输出一致性仍待验证。本仓库未提供公开的一致性 demo 脚本；复现 1.3B 产物需就位 checkpoint 和运行时环境。
 
 先生成 1.3B 文生视频，再对目录跑 [VBench](/zh/docs/evaluation/benchmark-hub/vbench) 的 `custom_input` / `aesthetic_quality`——本仓库唯一验证过的 VBench GPU 维度。读 `tmp/vbench/wan2.1/eval/scorecard.json` 里的 `aesthetic_quality`。
 

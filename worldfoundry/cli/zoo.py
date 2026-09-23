@@ -36,6 +36,12 @@ DEFAULT_BENCHMARK_ZOO_DIR = BENCHMARK_ZOO_DIR
 _DEFAULT_HFD_ROOT = hfd_root_path()
 _BENCHMARK_RUN_MODE_CHOICES = tuple(sorted(BENCHMARK_RUN_PUBLIC_MODES))
 
+# These catalog entries route through WorldModelRuntimeSynthesis, whose plan is
+# the authority for local source, checkpoint, and dataset readiness.
+_WORLD_MODEL_RUNTIME_READINESS_IDS = frozenset(
+    {"mira", "simworld", "uwm", "vggt-world", "vid2world"}
+)
+
 # ── Script path constants ───────────────────────────────────────
 
 _SCRIPT_MODEL_ZOO_DOWNLOAD_CHECKPOINTS = "scripts/model_zoo/download_checkpoints.py"
@@ -147,6 +153,23 @@ def _model_needs(entry) -> tuple[str, ...]:
     if entry.runner_entry_kind != "runnable_runner":
         needs.append("runner")
     return tuple(dict.fromkeys(needs))
+
+
+def _world_model_runtime_plan(entry) -> dict[str, Any] | None:
+    """Probe local readiness for the runtime-manifest routes with known asset gates."""
+    if entry.model_id not in _WORLD_MODEL_RUNTIME_READINESS_IDS:
+        return None
+    from worldfoundry.synthesis.visual_generation.world_model.runtime_manifest import WorldModelRuntimeSynthesis
+
+    try:
+        return WorldModelRuntimeSynthesis.from_pretrained(model_id=entry.model_id, device="cpu").plan()
+    except Exception as exc:  # A failed readiness probe must never advertise a runnable model.
+        reason = f"runtime readiness probe failed: {type(exc).__name__}: {exc}"
+        return {
+            "status": "blocked",
+            "missing_assets": [{"kind": "runtime", "path": entry.model_id, "reason": reason}],
+            "blocked_reason": reason,
+        }
 
 
 def _declared_dataset_path_exists(raw_path: str) -> bool:
@@ -299,16 +322,67 @@ def _model_command_readiness(entry) -> dict[str, bool]:
     }
 
 
+def _model_discovery(entry) -> dict[str, Any]:
+    """Combine declared runner support with local runtime-manifest readiness."""
+    runnable = entry.is_runnable_runner_entry
+    needs = list(_model_needs(entry))
+    commands = _model_user_commands(entry)
+    flags = _model_command_readiness(entry)
+    next_action = _model_next_action(entry)
+    discovery: dict[str, Any] = {
+        "runnable": runnable,
+        "needs": needs,
+        "next_action": next_action,
+        "commands": commands,
+        **flags,
+    }
+    plan = _world_model_runtime_plan(entry)
+    if plan is None:
+        return discovery
+
+    blocked = plan.get("status") != "ready"
+    for requirement in plan.get("missing_assets", ()):
+        if not isinstance(requirement, Mapping):
+            continue
+        kind = str(requirement.get("kind") or "runtime")
+        needs.append({"source_repo": "source-repo", "runtime_requirement": "runtime"}.get(kind, kind))
+    if blocked and plan.get("blocked_reason"):
+        needs.append("runtime")
+    if blocked and not needs:
+        needs.append("runtime")
+    discovery["needs"] = list(dict.fromkeys(needs))
+    discovery["runnable"] = runnable and not blocked
+    discovery["runner_ready"] = runnable and not blocked
+    discovery["one_command_ready"] = runnable and not blocked
+    discovery["runtime_readiness"] = {
+        "status": plan.get("status"),
+        "missing_assets": plan.get("missing_assets", []),
+        "blocked_reason": plan.get("blocked_reason", ""),
+    }
+    if blocked:
+        commands.pop("run", None)
+        if _model_has_runner_target(entry):
+            model_id = entry.model_id
+            commands["plan"] = (
+                f"worldfoundry-eval run --model {model_id} --benchmark <benchmark-id> "
+                f"--mode official-run --plan-only --output-dir tmp/model_benchmark/{model_id}/<benchmark-id> --json"
+            )
+        missing = plan.get("missing_assets") or []
+        first_reason = next(
+            (str(item.get("reason")) for item in missing if isinstance(item, Mapping) and item.get("reason")),
+            "",
+        )
+        reason = str(plan.get("blocked_reason") or first_reason or "runtime requirements are not met")
+        discovery["next_action"] = f"resolve runtime blocker: {reason}"
+    return discovery
+
+
 def _model_list_payload(entry) -> dict[str, Any]:
     """Build the full model list payload with discovery and readiness metadata."""
     payload = entry.to_dict()
     payload["verification_status"] = entry.verification_status
     payload["runner_entry_kind"] = entry.runner_entry_kind
-    payload["runnable"] = entry.is_runnable_runner_entry
-    payload.update(_model_command_readiness(entry))
-    payload["commands"] = _model_user_commands(entry)
-    payload["needs"] = list(_model_needs(entry))
-    payload["next_action"] = _model_next_action(entry)
+    payload.update(_model_discovery(entry))
     return payload
 
 
@@ -569,8 +643,8 @@ def _handle_zoo_models_list(args: argparse.Namespace) -> int:
             "Model catalog",
             ("Model", "Integration", "Runnable", "Needs"),
             [
-                (entry.model_id, entry.integration_status, entry.is_runnable_runner_entry, _model_needs(entry))
-                for entry in entries
+                (entry.model_id, entry.integration_status, item["runnable"], item["needs"])
+                for entry, item in zip(entries, payload)
             ],
             hint=f"Inspect a model: {cli_prog_name()} zoo model-show --model-id <id>",
         )
@@ -578,14 +652,14 @@ def _handle_zoo_models_list(args: argparse.Namespace) -> int:
 
     manifest_paths = _model_manifest_paths(args.manifest_dir)
     rows = []
-    for entry in entries:
+    for entry, item in zip(entries, payload):
         rows.append(
             (
                 entry.model_id,
                 entry.integration_status,
                 entry.source.status,
-                "yes" if entry.is_runnable_runner_entry else "no",
-                _compact_list(_model_needs(entry), limit=3),
+                "yes" if item["runnable"] else "no",
+                _compact_list(item["needs"], limit=3),
                 entry.runner_entry_kind,
                 _compact_list(registry.aliases_for(entry.model_id), limit=2),
                 _dash(manifest_paths.get(entry.model_id)),
@@ -647,13 +721,9 @@ def _handle_zoo_model_show(args: argparse.Namespace) -> int:
     payload = entry.to_dict()
     payload["registry_aliases"] = list(registry.aliases_for(args.model_id))
     payload["discovery"] = {
-        "runnable": entry.is_runnable_runner_entry,
-        "needs": list(_model_needs(entry)),
+        **_model_discovery(entry),
         "runner": entry.runner_entry_kind,
         "manifest_path": _model_manifest_paths(args.manifest_dir).get(entry.model_id),
-        "next_action": _model_next_action(entry),
-        "commands": _model_user_commands(entry),
-        **_model_command_readiness(entry),
     }
     if args.include_manifest:
         manifest = registry.to_world_model_manifests()

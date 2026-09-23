@@ -9,6 +9,8 @@ from worldfoundry.synthesis.visual_generation.liveworld import LiveWorldSynthesi
 
 
 class LiveWorldPipeline(PipelineABC):
+    MODEL_PATH_OPTION = "checkpoint_path"
+
     def __init__(self, synthesis_model: LiveWorldSynthesis, *, device: str = "cuda") -> None:
         self.synthesis_model = synthesis_model
         self.device = device

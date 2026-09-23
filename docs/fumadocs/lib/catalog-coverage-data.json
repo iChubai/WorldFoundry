@@ -1786,7 +1786,7 @@
         {
           "id": "libero-para",
           "name": "LIBERO-Para",
-          "status": "runtime_ported",
+          "status": "blocked",
           "aliases": [
             "libero-para"
           ]

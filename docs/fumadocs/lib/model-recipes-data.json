@@ -81337,7 +81337,7 @@
       "categoryLabel": "Embodied",
       "categoryLabelZh": "具身智能",
       "provider": "Open-source research release (institution not recorded)",
-      "summary": "LIBERO-Para is a paraphrase-robustness evaluation line around the LIBERO benchmark: it tests how VLA policies behave when task instructions are reworded (paper: hf.co/papers/2603.28301, MIT license). The HAI-Lab/LIBERO-Para dataset is conf…",
+      "summary": "LIBERO-Para tests how VLA policies respond to paraphrased LIBERO instructions (paper: hf.co/papers/2603.28301, MIT license). Its dataset is confirmed on Hugging Face. WorldFoundry has a registered policy adapter, but public action inferenc…",
       "aliases": [],
       "tasks": [
         "vla",
@@ -81345,9 +81345,9 @@
         "embodied_benchmark"
       ],
       "status": {
-        "group": "runtime_ported",
-        "label": "Runtime Ported",
-        "integration": "runtime_ported",
+        "group": "blocked",
+        "label": "Blocked",
+        "integration": "blocked",
         "runner": "not_recorded",
         "demo": "not_recorded"
       },
@@ -81359,8 +81359,8 @@
         "pipelineTarget": "worldfoundry.pipelines.component_pipelines:LiberoParaPipeline",
         "loadingMethod": "from_pretrained",
         "invocationMode": "native_or_standard_invocation",
-        "backendStage": "official_in_tree_runtime",
-        "runtimeStatus": "official_runtime_route_ready_checkpoint_required",
+        "backendStage": "registered_adapter_preflight_blocked",
+        "runtimeStatus": "blocked_external_lerobot_source_and_policy_target",
         "environmentId": "_unified",
         "environmentName": "worldfoundry-unified-cu128",
         "environmentKind": "unified",
@@ -81397,6 +81397,9 @@
           "worldfoundry"
         ],
         "notes": [
+          "The pipeline binding is registered, but the configured source_repo/source_subdir is rejected by the in-tree official-policy runtime before planning.",
+          "Clearing that source option only exposes a second blocker: policy_target points to an external LeRobot class, while the runtime accepts worldfoundry.* targets.",
+          "The lerobot/xvla-libero checkpoint is staged; trained action inference is not verified.",
           "Default unified WorldFoundry runtime for modern NVIDIA hosts. Install with `bash scripts/setup/unified_install.sh`.",
           "Override tier with `--cuda cu124` or `--cuda cu121` when an upstream model still pins an older CUDA wheel bucket.",
           "Source the environment file emitted by `scripts/setup/unified_install.sh` so WORLDFOUNDRY_USE_UNIFIED_ENV=1 routes compatible profiles here.",
@@ -81677,8 +81680,12 @@
         }
       ],
       "notes": [
-        "WorldFoundry routes LIBERO-Para action evaluation through an in-tree official-policy runtime adapter.",
-        "Checkpoint absence is reported by runtime missing_assets and is not a catalog blocker."
+        "The pipeline binding is registered, but its official-policy runtime rejects the configured external LeRobot source before planning.",
+        "Removing the source option only exposes the external lerobot.policies.xvla target, which the in-tree runtime also rejects. No trained action trace is verified.",
+        "The lerobot/xvla-libero weights are staged; the required LeRobot source/package is absent, and the in-tree X-VLA loader cannot read that checkpoint as-is.",
+        "The pipeline binding is registered, but the configured source_repo/source_subdir is rejected by the in-tree official-policy runtime before planning.",
+        "Clearing that source option only exposes a second blocker: policy_target points to an external LeRobot class, while the runtime accepts worldfoundry.* targets.",
+        "The lerobot/xvla-libero checkpoint is staged; trained action inference is not verified."
       ],
       "docs": {
         "curated": true,
@@ -81688,22 +81695,22 @@
           "kind": "lab"
         },
         "overview": [
-          "LIBERO-Para is a paraphrase-robustness evaluation line around the LIBERO benchmark: it tests how VLA policies behave when task instructions are reworded (paper: hf.co/papers/2603.28301, MIT license). The HAI-Lab/LIBERO-Para dataset is confirmed on Hugging Face; WorldFoundry routes action evaluation through an in-tree official-policy runtime adapter."
+          "LIBERO-Para tests how VLA policies respond to paraphrased LIBERO instructions (paper: hf.co/papers/2603.28301, MIT license). Its dataset is confirmed on Hugging Face. WorldFoundry has a registered policy adapter, but public action inference is currently blocked by incompatible external LeRobot source and policy targets."
         ],
         "overviewZh": [
-          "LIBERO-Para 是围绕 LIBERO 基准的指令改写鲁棒性评测线：测试 VLA 策略在任务指令被改写时的表现（论文：hf.co/papers/2603.28301，MIT 许可）。HAI-Lab/LIBERO-Para 数据集已在 Hugging Face 确认； WorldFoundry 通过树内官方策略运行时适配器路由动作评测。"
+          "LIBERO-Para 测试 VLA 策略面对改写后的 LIBERO 指令时的表现（论文：hf.co/papers/2603.28301，MIT 许可）。其数据集已在 Hugging Face 确认。WorldFoundry 已注册策略适配器，但公共动作推理目前被不兼容的外部 LeRobot 源码与策略目标阻塞。"
         ],
         "architecture": [
-          "This is an evaluation/dataset-centered entry rather than a new policy architecture; the recorded artifact is the paraphrased-instruction dataset plus an evaluation route. Further internals are not recorded in this repository."
+          "This entry centers on an evaluation dataset rather than a new policy architecture. The registered adapter targets a LeRobot X-VLA policy checkpoint, but its source and target configuration fails the in-tree runtime contract before a policy is loaded."
         ],
         "architectureZh": [
-          "这是以评测/数据集为中心的条目，而非新策略架构；记录的工件为指令改写数据集与评测路由。更多内部细节仓库未记录。"
+          "本条目以评测数据集为中心，而非新的策略架构。已注册适配器指向 LeRobot X-VLA 策略权重，但其源码与目标配置不符合树内运行时约束，尚未加载策略即失败。"
         ],
         "usageNotes": [
-          "Checkpoint absence is reported by runtime missing_assets and is not a catalog blocker; runs emit a runtime plan until weights are staged. Pair it with a LIBERO-capable policy to measure paraphrase robustness."
+          "The dataset/result-import evaluation path is separate from policy inference. The staged lerobot/xvla-libero weights do not make this public pipeline runnable; a reviewed in-tree LeRobot-compatible loader is still required."
         ],
         "usageNotesZh": [
-          "checkpoint 缺失由运行时 missing_assets 报告，不视为 catalog 阻塞；权重就位前运行输出运行时计划。与支持 LIBERO 的策略搭配即可测量指令改写鲁棒性。"
+          "数据集与结果导入评测路径独立于策略推理。虽然 lerobot/xvla-libero 权重已就位，公共 pipeline 仍不可运行；还需经过验证的树内 LeRobot 兼容加载器。"
         ],
         "highlights": [
           "Vla",
@@ -81757,10 +81764,12 @@
           }
         ],
         "limitations": [
-          "No policy checkpoint of its own; it evaluates other policies."
+          "No policy checkpoint of its own; it evaluates other policies.",
+          "The registered policy runner is blocked before planning; no checkpoint-backed action trace has been validated."
         ],
         "limitationsZh": [
-          "自身无策略 checkpoint；用于评测其他策略。"
+          "自身无策略 checkpoint；用于评测其他策略。",
+          "已注册的策略 runner 在规划前即被阻塞；尚未验证加载权重生成的动作轨迹。"
         ],
         "paper": {
           "title": "LIBERO-Para: A Diagnostic Benchmark and Metrics for Paraphrase Robustness in VLA Models",
@@ -81772,9 +81781,10 @@
         "figures": [
           {
             "kind": "image",
-            "src": "/models/libero-para/paper.png",
-            "caption": "LIBERO-Para: A Diagnostic Benchmark and Metrics for Paraphrase Robustness in VLA Models",
-            "captionZh": "LIBERO-Para: A Diagnostic Benchmark and Metrics for Paraphrase Robustness in VLA Models"
+            "role": "teaser",
+            "src": "/models/libero-para/teaser.webp",
+            "caption": "Paper teaser — paraphrase robustness diagnostic for VLA models",
+            "captionZh": "论文 Teaser：VLA 改写鲁棒性诊断"
           }
         ]
       },

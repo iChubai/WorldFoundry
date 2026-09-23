@@ -22,9 +22,16 @@ input_schema:
 artifact_kind: action_trace
 artifact_filename: libero-para_action_trace.json
 execution:
-  backend_stage: official_in_tree_runtime
-  runtime_status: official_runtime_route_ready_checkpoint_required
-  integration_status: runtime_ported
+  backend_stage: registered_adapter_preflight_blocked
+  runtime_status: blocked_external_lerobot_source_and_policy_target
+  integration_status: blocked
   pipeline_binding: libero-para
 integration:
-  status: runtime_ported
+  status: blocked
+notes:
+- The pipeline binding is registered, but the configured source_repo/source_subdir
+  is rejected by the in-tree official-policy runtime before planning.
+- >-
+  Clearing that source option only exposes a second blocker: policy_target points
+  to an external LeRobot class, while the runtime accepts worldfoundry.* targets.
+- The lerobot/xvla-libero checkpoint is staged; trained action inference is not verified.

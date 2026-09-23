@@ -9,7 +9,7 @@ LIBERO-Para 是围绕 LIBERO 套件的**指令改写鲁棒性评测配方**，�
 
 <ModelPaperFigures modelId="libero-para" locale="zh" />
 
-WorldFoundry 通过树内官方策略适配器（`LiberoParaPipeline`）路由动作评测。你提供一个能跑 LIBERO 的策略；本卡片把 `lerobot/xvla-libero` 记为权重指针。必填输入是 RGB `image`、语言 `prompt` 与机器人 `state`。产物是 `libero-para_action_trace.json`。本页是**模型 / 配方**条目。scorecard 与官方结果导入在单独的评测页 [LIBERO-Para](/zh/docs/evaluation/benchmark-hub/libero-para)，构建于父套件 [LIBERO](/zh/docs/evaluation/benchmark-hub/libero) 之上。
+WorldFoundry 已注册树内官方策略适配器（`LiberoParaPipeline`），但其配置的外部 LeRobot 源码与策略目标在规划前就被拒绝。`lerobot/xvla-libero` 权重目前只是已就位的指针；尚未验证加载权重生成的动作轨迹。预期输入是 RGB `image`、语言 `prompt` 与机器人 `state`，预期产物是 `libero-para_action_trace.json`。本页是**模型 / 配方**条目。scorecard 与官方结果导入在单独的评测页 [LIBERO-Para](/zh/docs/evaluation/benchmark-hub/libero-para)，构建于父套件 [LIBERO](/zh/docs/evaluation/benchmark-hub/libero) 之上。
 
 <ModelCommandBuilder modelId="libero-para" locale="zh" />
 
@@ -17,13 +17,13 @@ WorldFoundry 通过树内官方策略适配器（`LiberoParaPipeline`）路由�
 
 衡量已就位的 VLA 在 LIBERO-Goal 指令被改写、场景保持不变时的表现。官方材料沿**动作**与**物体**两轴给出持出改写（十个 LIBERO-Goal 场景、数千条指令），以及按难度加权的 **PRIDE** 指标。把它们当作上游协议——本 catalog 不收录排行榜。
 
-把配方与能跑 LIBERO 的 checkpoint 配对。缺失权重以运行时 `missing_assets` 报告，不是 catalog 阻塞项；权重就位前运行停在 runtime plan。任务 profile 为 `vla`（默认）、`policy_rollout`、`embodied_benchmark`。
+已注册的任务 profile 为 `vla`（默认）、`policy_rollout`、`embodied_benchmark`。仅就位能跑 LIBERO 的 checkpoint 无法解除当前阻塞；还需要经过验证、兼容 LeRobot 策略的树内加载器。
 
 ## 运行时契约
-`policy_family` 记录为 `libero_para_policy_eval`；`action_representation` 为 `libero_para_action_trace`。集成为 **Runner 一致性待确认**。runner / demo 为 **未记录**，本卡片也没有已验证的端到端 GPU 产物。本条目**自身没有策略 checkpoint**。
+`policy_family` 记录为 `libero_para_policy_eval`；`action_representation` 为 `libero_para_action_trace`。集成状态为**阻塞**，运行在规划前停止。runner / demo 为**未记录**，本卡片也没有已验证的端到端 GPU 产物。本条目**自身没有策略 checkpoint**。
 
 ## 在 WorldFoundry 中运行
 
-在统一环境 `worldfoundry-unified-cu128`（Python 3.11，CUDA 12.8）里运行 `worldfoundry-eval run libero-para --pipeline.task-profile vla`。先在本地就位 `lerobot/xvla-libero`（或其它能跑 LIBERO 的策略）。官方代码树与数据集许可为 **MIT**。
+即使 `lerobot/xvla-libero` 已就位，`worldfoundry-eval run libero-para --pipeline.task-profile vla` 策略推理仍被外部源码与策略目标配置阻塞。独立的 benchmark 官方结果导入路径仍可用。官方代码树与数据集许可为 **MIT**。
 
 <ModelRelatedRecipes modelId="libero-para" locale="zh" />

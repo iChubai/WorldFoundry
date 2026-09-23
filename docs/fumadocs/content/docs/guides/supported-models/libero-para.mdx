@@ -9,7 +9,7 @@ LIBERO-Para is a **paraphrase-robustness evaluation recipe** around the LIBERO s
 
 <ModelPaperFigures modelId="libero-para" locale="en" />
 
-WorldFoundry routes action evaluation through an in-tree official-policy adapter (`LiberoParaPipeline`). You supply a LIBERO-capable policy; this card records `lerobot/xvla-libero` as the weight pointer. Required inputs are RGB `image`, language `prompt`, and robot `state`. The artifact is `libero-para_action_trace.json`. This page is the **model / recipe** entry. The scorecard and official-results import live on the separate benchmark page [LIBERO-Para](/docs/evaluation/benchmark-hub/libero-para), built on parent [LIBERO](/docs/evaluation/benchmark-hub/libero).
+WorldFoundry registers an in-tree official-policy adapter (`LiberoParaPipeline`), but its configured external LeRobot source and policy target are rejected before planning. The `lerobot/xvla-libero` weights are only a staged pointer; no checkpoint-backed action trace has been verified. The intended inputs are RGB `image`, language `prompt`, and robot `state`, with `libero-para_action_trace.json` as the intended artifact. This page is the **model / recipe** entry. The scorecard and official-results import live on the separate benchmark page [LIBERO-Para](/docs/evaluation/benchmark-hub/libero-para), built on parent [LIBERO](/docs/evaluation/benchmark-hub/libero).
 
 <ModelCommandBuilder modelId="libero-para" locale="en" />
 
@@ -17,14 +17,14 @@ WorldFoundry routes action evaluation through an in-tree official-policy adapter
 
 Measure how a staged VLA behaves when the LIBERO-Goal instruction is reworded while the scene stays fixed. Official materials describe held-out paraphrases along **action** and **object** axes (thousands of instructions across ten LIBERO-Goal scenarios) and a difficulty-aware **PRIDE** metric. Use those as the upstream protocol — this catalog does not ingest a leaderboard.
 
-Pair the recipe with a LIBERO-capable checkpoint. Missing weights are reported as runtime `missing_assets` and are not a catalog blocker; until they are staged the run stays in runtime-plan mode. Task profiles are `vla` (default), `policy_rollout`, and `embodied_benchmark`.
+The registered task profiles are `vla` (default), `policy_rollout`, and `embodied_benchmark`. Staging a LIBERO-capable checkpoint alone does not unblock this pipeline; it needs a reviewed in-tree loader compatible with the LeRobot policy.
 
 ## Runtime contract
 
-`policy_family` is recorded as `libero_para_policy_eval`; `action_representation` as `libero_para_action_trace`. Integration is **Runner parity pending**. Runner / demo status is **not recorded**, and no verified end-to-end GPU artifact sits on this card. This entry has **no policy checkpoint of its own**.
+`policy_family` is recorded as `libero_para_policy_eval`; `action_representation` as `libero_para_action_trace`. Integration is **blocked** before planning. Runner / demo status is **not recorded**, and no verified end-to-end GPU artifact sits on this card. This entry has **no policy checkpoint of its own**.
 
 ## Running in WorldFoundry
 
-Launch `worldfoundry-eval run libero-para --pipeline.task-profile vla` in the unified environment `worldfoundry-unified-cu128` (Python 3.11, CUDA 12.8). Stage `lerobot/xvla-libero` (or another LIBERO-capable policy) locally first. License on the official tree and dataset is **MIT**.
+Policy inference through `worldfoundry-eval run libero-para --pipeline.task-profile vla` is currently blocked by the external source and target configuration, even with `lerobot/xvla-libero` staged. The separate benchmark result-import path remains available. License on the official tree and dataset is **MIT**.
 
 <ModelRelatedRecipes modelId="libero-para" locale="en" />

@@ -1,4 +1,4 @@
-"""Bespoke MiniMax H3 audio-video pipeline (native, single-GPU).
+"""Bespoke MiniMax H3 audio-video pipeline with component placement.
 
 MiniMax H3 couples video and audio in one packed-token denoise loop with
 independent per-modality sigma schedules and pinned condition rows. That does
@@ -50,6 +50,7 @@ from ._minimax_h3 import (
     minimax_h3_denoise_loop,
     minimax_h3_packed_sequence,
     minimax_h3_packed_sequence_ref2va_blocks,
+    minimax_h3_patchify_video_latent,
     minimax_h3_task_profile,
     minimax_h3_unpack_audio_tokens,
     minimax_h3_unpatchify_video_tokens,
@@ -77,6 +78,7 @@ _VIDEO_LATENT_CHANNELS = 24
 _AUDIO_LATENT_CHANNELS = 32
 _AUDIO_CHANNELS = 2
 _AUDIO_SAMPLE_RATE = 32000
+_COMPONENT_NAMES = ("transformer", "text_encoder", "video_vae", "audio_vae")
 
 
 def _round_to_multiple(value: int, multiple: int) -> int:
@@ -87,6 +89,41 @@ def _is_module(value: Any) -> bool:
     """True only for an instantiated nn.Module (not a bare class placeholder)."""
 
     return isinstance(value, torch.nn.Module)
+
+
+def _resolve_component_devices(
+    device: str,
+    overrides: Mapping[str, str] | None = None,
+    *,
+    cuda_count: int | None = None,
+) -> dict[str, str]:
+    """Keep the 62-GiB DiT and Qwen encoder off the same accelerator.
+
+    Bare ``cuda`` uses all visible devices. An explicit ``cuda:N`` confines
+    the DiT to that device and keeps other components on CPU unless overridden.
+    This is component placement, not SGLang's Ulysses sequence parallelism.
+    """
+
+    if device == "cuda":
+        count = torch.cuda.device_count() if cuda_count is None else cuda_count
+        if count < 1:
+            raise RuntimeError("MiniMax H3 requested CUDA but no CUDA device is visible")
+        placements = {
+            "transformer": "cuda:0",
+            "text_encoder": "cuda:1" if count >= 2 else "cpu",
+            "video_vae": "cuda:2" if count >= 3 else "cpu",
+            "audio_vae": "cuda:3" if count >= 4 else ("cuda:2" if count >= 3 else "cpu"),
+        }
+    elif device.startswith("cuda:"):
+        placements = dict.fromkeys(_COMPONENT_NAMES, "cpu")
+        placements["transformer"] = device
+    else:
+        placements = dict.fromkeys(_COMPONENT_NAMES, device)
+    for name, target in (overrides or {}).items():
+        if name not in placements:
+            raise ValueError(f"Unknown MiniMax H3 component device key: {name}")
+        placements[name] = str(torch.device(target))
+    return placements
 
 
 def _reverse_normalize_latents(
@@ -128,7 +165,7 @@ def _resolve_canvas(short_edge: int, aspect_ratio: str) -> tuple[int, int]:
 
 
 class NativeMiniMaxH3Pipeline(PipelineABC):
-    """Public MiniMax H3 pipeline backed by the ported single-GPU components."""
+    """Public MiniMax H3 pipeline backed by the ported components."""
 
     MODEL_ID = "minimax-h3"
     GENERATION_TYPE = "t2v"
@@ -149,6 +186,7 @@ class NativeMiniMaxH3Pipeline(PipelineABC):
         text_encoder: Any = None,
         tokenizer: Any = None,
         device: str = "cuda",
+        component_devices: Mapping[str, str] | None = None,
         model_id: str | None = None,
     ) -> None:
         super().__init__(model_id=model_id or self.MODEL_ID, device=device)
@@ -157,6 +195,7 @@ class NativeMiniMaxH3Pipeline(PipelineABC):
         self.audio_vae = audio_vae
         self.text_encoder = text_encoder
         self.tokenizer = tokenizer
+        self.component_devices = dict(component_devices or dict.fromkeys(_COMPONENT_NAMES, device))
 
     # ------------------------------------------------------------------ #
     # Loading.
@@ -167,6 +206,7 @@ class NativeMiniMaxH3Pipeline(PipelineABC):
         model_path: str | Mapping[str, Any] | None = None,
         required_components: Mapping[str, Any] | None = None,
         device: str = "cuda",
+        component_devices: Mapping[str, str] | None = None,
         model_id: str | None = None,
         **kwargs: Any,
     ) -> "NativeMiniMaxH3Pipeline":
@@ -190,13 +230,24 @@ class NativeMiniMaxH3Pipeline(PipelineABC):
         audio_vae = options.get("audio_vae")
         text_encoder = options.get("text_encoder")
         tokenizer = options.get("tokenizer")
+        placements = (
+            _resolve_component_devices(device, options.get("component_devices", component_devices))
+            if source is not None
+            else dict(component_devices or dict.fromkeys(_COMPONENT_NAMES, device))
+        )
 
         if source is not None and any(
             component is None for component in (transformer, video_vae, audio_vae, text_encoder)
         ):
+            checkpoint_root = Path(str(source)).expanduser()
+            partition = str(options.get("partition", "FL2VA"))
+            if partition not in {"FL2VA", "Ref2VA"}:
+                raise ValueError(f"Unsupported MiniMax H3 checkpoint partition: {partition}")
+            if (checkpoint_root / partition / "model_index.json").is_file():
+                checkpoint_root = checkpoint_root / partition
             transformer, video_vae, audio_vae, text_encoder, tokenizer = cls._load_components(
-                Path(str(source)).expanduser(),
-                device=device,
+                checkpoint_root,
+                component_devices=placements,
                 transformer=transformer,
                 video_vae=video_vae,
                 audio_vae=audio_vae,
@@ -210,7 +261,8 @@ class NativeMiniMaxH3Pipeline(PipelineABC):
             audio_vae=audio_vae,
             text_encoder=text_encoder,
             tokenizer=tokenizer,
-            device=device,
+            device=placements["transformer"],
+            component_devices=placements,
             model_id=resolved_model_id,
         )
 
@@ -219,7 +271,7 @@ class NativeMiniMaxH3Pipeline(PipelineABC):
         cls,
         root: Path,
         *,
-        device: str,
+        component_devices: Mapping[str, str],
         transformer: Any,
         video_vae: Any,
         audio_vae: Any,
@@ -236,13 +288,13 @@ class NativeMiniMaxH3Pipeline(PipelineABC):
         """
 
         if transformer is None:
-            transformer = cls._load_transformer(root, device=device)
+            transformer = cls._load_transformer(root, device=component_devices["transformer"])
         if video_vae is None:
-            video_vae = cls._load_video_vae(root, device=device)
+            video_vae = cls._load_video_vae(root, device=component_devices["video_vae"])
         if audio_vae is None:
-            audio_vae = cls._load_audio_vae(root, device=device)
+            audio_vae = cls._load_audio_vae(root, device=component_devices["audio_vae"])
         if text_encoder is None:
-            text_encoder = cls._load_text_encoder(root, device=device)
+            text_encoder = cls._load_text_encoder(root, device=component_devices["text_encoder"])
         if tokenizer is None:
             tokenizer = cls._load_tokenizer(root)
         return transformer, video_vae, audio_vae, text_encoder, tokenizer
@@ -271,9 +323,14 @@ class NativeMiniMaxH3Pipeline(PipelineABC):
 
         tdir = cls._subdir(root, "transformer")
         arch = MiniMaxH3DiTArchConfig()
-        model = MiniMaxH3DiTModel(arch)
-        if any(tdir.glob("*.safetensors")):
-            load_minimax_h3_dit_weights(model, tdir, arch, strict=True)
+        if not any(tdir.glob("*.safetensors")):
+            raise FileNotFoundError(f"MiniMax H3 DiT weights are missing from {tdir}")
+        # The released DiT is about 62 GiB. Assign checkpoint tensors directly
+        # into a meta-initialized module instead of random-initializing another
+        # full CPU copy before the strict load.
+        with torch.device("meta"):
+            model = MiniMaxH3DiTModel(arch)
+        load_minimax_h3_dit_weights(model, tdir, arch, strict=True)
         return model.to(device).eval()
 
     @classmethod
@@ -300,8 +357,14 @@ class NativeMiniMaxH3Pipeline(PipelineABC):
         )
         model = MiniMaxH3VideoVAE(MiniMaxH3VideoVAEConfig(arch_config=arch))
         weight_dir = vdir / "source" if (vdir / "source").is_dir() else vdir
-        if any(weight_dir.glob("*.safetensors")):
-            load_minimax_h3_vae_weights(model, weight_dir, strict=False)
+        if not any(weight_dir.glob("*.safetensors")):
+            raise FileNotFoundError(f"MiniMax H3 video VAE weights are missing from {weight_dir}")
+        missing, unexpected = load_minimax_h3_vae_weights(model, weight_dir, strict=False)
+        if missing or unexpected:
+            raise RuntimeError(
+                "MiniMax H3 video VAE checkpoint does not match the port: "
+                f"{len(missing)} missing, {len(unexpected)} unexpected keys"
+            )
         return model.to(device).eval()
 
     @classmethod
@@ -327,8 +390,9 @@ class NativeMiniMaxH3Pipeline(PipelineABC):
             latents_std=cfg_json.get("latents_std"),
         )
         model = MiniMaxH3AudioVAE(MiniMaxH3AudioVAEConfig(arch_config=arch))
-        if any(adir.glob("*.safetensors")):
-            load_minimax_h3_vae_weights(model, adir, strict=True)
+        if not any(adir.glob("*.safetensors")):
+            raise FileNotFoundError(f"MiniMax H3 audio VAE weights are missing from {adir}")
+        load_minimax_h3_vae_weights(model, adir, strict=True)
         return model.to(device).eval()
 
     @classmethod
@@ -340,7 +404,13 @@ class NativeMiniMaxH3Pipeline(PipelineABC):
         )
 
         tdir = cls._subdir(root, "text_encoder")
-        return MiniMaxH3Qwen3VLEncoder.from_pretrained(str(tdir), torch_dtype=torch.bfloat16).to(device).eval()
+        return (
+            MiniMaxH3Qwen3VLEncoder.from_pretrained(
+                str(tdir), torch_dtype=torch.bfloat16, strict=True, low_cpu_mem_usage=True
+            )
+            .to(device)
+            .eval()
+        )
 
     @classmethod
     def _load_tokenizer(cls, root: Path) -> Any:
@@ -410,9 +480,7 @@ class NativeMiniMaxH3Pipeline(PipelineABC):
         device = torch.device(self.device)
         profile = minimax_h3_task_profile(task)
         flow_shift = float(flow_shift if flow_shift is not None else profile.default_flow_shift)
-        audio_flow_shift = float(
-            audio_flow_shift if audio_flow_shift is not None else profile.default_audio_flow_shift
-        )
+        audio_flow_shift = float(audio_flow_shift if audio_flow_shift is not None else profile.default_audio_flow_shift)
         plan = self._resolve_plan(
             task=task,
             short_edge=short_edge,
@@ -455,7 +523,22 @@ class NativeMiniMaxH3Pipeline(PipelineABC):
         generator = torch.Generator(device="cpu").manual_seed(int(seed))
         n_video_rows = int(packed["img_pos"].shape[0])
         n_audio_rows = int(packed["audio_pos"].shape[0])
-        initial_video = torch.randn(n_video_rows, 96, generator=generator, dtype=torch.float32)
+        # The released t2va recipe seeds the raw BCTHW latent before
+        # patchification. Drawing directly in token-row order changes which
+        # noise value lands at each channel/time/pixel for a given seed.
+        initial_video = minimax_h3_patchify_video_latent(
+            torch.randn(
+                1,
+                _VIDEO_LATENT_CHANNELS,
+                plan["latent_t"],
+                plan["latent_h"],
+                plan["latent_w"],
+                generator=generator,
+                dtype=torch.float32,
+            ),
+            patch_size=(1, _PATCH_H, _PATCH_W),
+        )
+        assert initial_video.shape == (n_video_rows, 96)
         # Audio uses an independently reseeded generator (same seed) — matches the
         # reference, which draws audio noise from a fresh generator.
         audio_generator = torch.Generator(device="cpu").manual_seed(int(seed))
@@ -491,7 +574,12 @@ class NativeMiniMaxH3Pipeline(PipelineABC):
 
         video_latent = minimax_h3_unpatchify_video_tokens(
             video_target,
-            latent_shape=(plan["latent_t"], plan["latent_h"] // _PATCH_H, plan["latent_w"] // _PATCH_W, _VIDEO_LATENT_CHANNELS),
+            latent_shape=(
+                plan["latent_t"],
+                plan["latent_h"] // _PATCH_H,
+                plan["latent_w"] // _PATCH_W,
+                _VIDEO_LATENT_CHANNELS,
+            ),
             patch_size=(1, _PATCH_H, _PATCH_W),
         )
         # unpack expects the TOTAL audio row count (audio_t * channels); it
@@ -502,31 +590,31 @@ class NativeMiniMaxH3Pipeline(PipelineABC):
         result["video_latent"] = video_latent
         result["audio_latent"] = audio_latent
         if _is_module(self.video_vae):
-            result["video"] = self._decode_video(video_latent.to(device))
+            result["video"] = self._decode_video(video_latent.to(self.component_devices["video_vae"]))
         if _is_module(self.audio_vae):
-            result["audio"] = self._decode_audio(audio_latent.to(device))
+            result["audio"] = self._decode_audio(audio_latent.to(self.component_devices["audio_vae"]))
         return result
 
     def _decode_video(self, latent: torch.Tensor) -> torch.Tensor:
-        """Reverse-normalize latents and decode to pixel frames [B,3,T,H,W]."""
+        """Reverse-normalize latents and decode to RGB frames in [0, 1]."""
 
         arch = self.video_vae.sglang_config.arch_config
-        latent = _reverse_normalize_latents(
-            latent, mean_values=arch.latents_mean, std_values=arch.latents_std
-        )
+        latent = _reverse_normalize_latents(latent, mean_values=arch.latents_mean, std_values=arch.latents_std)
         decode_base = getattr(self.video_vae, "decode_base", None)
         if callable(decode_base):
-            return decode_base(latent)
-        return self.video_vae.decode(latent)
+            decoded = decode_base(latent)
+        else:
+            decoded = self.video_vae.decode(latent)
+        # The released VAE decodes into ImageNet-normalized pixel space. The
+        # official processor reverses that normalization before video export.
+        return self.video_vae.processor.revert_tensor(decoded)
 
     def _decode_audio(self, latent: torch.Tensor) -> torch.Tensor:
         """Reverse-normalize latents and decode to a stereo waveform."""
 
         arch = self.audio_vae.sglang_config.arch_config if hasattr(self.audio_vae, "sglang_config") else None
         if arch is not None and arch.latents_mean is not None:
-            latent = _reverse_normalize_latents(
-                latent, mean_values=arch.latents_mean, std_values=arch.latents_std
-            )
+            latent = _reverse_normalize_latents(latent, mean_values=arch.latents_mean, std_values=arch.latents_std)
         return self.audio_vae.decode(latent)
 
     # ------------------------------------------------------------------ #
@@ -548,9 +636,7 @@ class NativeMiniMaxH3Pipeline(PipelineABC):
         **kwargs: Any,
     ) -> dict[str, Any]:
         if self.text_encoder is None or self.tokenizer is None:
-            raise RuntimeError(
-                "text_encoder/tokenizer are not initialized; call from_pretrained with a checkpoint"
-            )
+            raise RuntimeError("text_encoder/tokenizer are not initialized; call from_pretrained with a checkpoint")
         prompt_embeds = self._encode_prompt(prompt)
         result = self.generate(
             prompt_embeds=prompt_embeds,
@@ -574,8 +660,13 @@ class NativeMiniMaxH3Pipeline(PipelineABC):
         return result
 
     def _encode_prompt(self, prompt: str) -> torch.Tensor:
-        tokens = self.tokenizer(prompt, return_tensors="pt")
-        input_ids = tokens["input_ids"].to(self.device)
+        # SGLang's t2va presentation encodes the prompt verbatim, without a
+        # Qwen chat template or tokenizer-added special tokens.
+        tokens = self.tokenizer(prompt, return_tensors="pt", add_special_tokens=False)
+        input_ids = tokens["input_ids"]
+        if input_ids.ndim != 2 or input_ids.shape[0] != 1:
+            raise ValueError("MiniMax H3 text encoder requires one tokenized prompt")
+        input_ids = input_ids[0].to(self.component_devices["text_encoder"])
         return self.text_encoder.encode_ids(input_ids)
 
     @staticmethod
@@ -608,8 +699,24 @@ class NativeMiniMaxH3Pipeline(PipelineABC):
                 return str(output_path)
             subprocess.run(
                 [
-                    ffmpeg, "-y", "-i", str(silent), "-i", str(wav),
-                    "-c:v", "copy", "-c:a", "aac", "-shortest", str(output_path),
+                    ffmpeg,
+                    "-y",
+                    "-i",
+                    str(silent),
+                    "-i",
+                    str(wav),
+                    # Video is aligned up to the model's 17n+5 frame boundary.
+                    # Its decoded duration can exceed the requested audio
+                    # duration, so pad the audio before selecting the shorter
+                    # stream; otherwise ffmpeg discards the final video frames.
+                    "-c:v",
+                    "copy",
+                    "-c:a",
+                    "aac",
+                    "-af",
+                    "apad",
+                    "-shortest",
+                    str(output_path),
                 ],
                 check=True,
                 capture_output=True,

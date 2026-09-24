@@ -67,9 +67,7 @@ class MiniMaxH3Qwen3VLConfig:
     image_token_id: int = 151655
     video_token_id: int = 151656
     vision_start_token_id: int = 151652
-    architectures: list[str] = field(
-        default_factory=lambda: ["MiniMaxH3Qwen3VLEncoder"]
-    )
+    architectures: list[str] = field(default_factory=lambda: ["MiniMaxH3Qwen3VLEncoder"])
     # Full HuggingFace Qwen3VLConfig instance for backbone construction; typed
     # Any to avoid importing transformers at module import time.
     hf_config: Any = None
@@ -86,10 +84,7 @@ class MiniMaxH3Qwen3VLEncoder(nn.Module):
 
     @staticmethod
     def should_materialize_checkpoint_weight(name: str) -> bool:
-        return (
-            "rotary_emb.inv_freq" not in name
-            and not _is_unconsumed_checkpoint_weight(name)
-        )
+        return "rotary_emb.inv_freq" not in name and not _is_unconsumed_checkpoint_weight(name)
 
     def __init__(self, config: MiniMaxH3Qwen3VLConfig) -> None:
         super().__init__()
@@ -109,8 +104,7 @@ class MiniMaxH3Qwen3VLEncoder(nn.Module):
         hf_config.text_config.output_hidden_states = False
         if int(hf_config.text_config.num_hidden_layers) != selected_layer:
             raise ValueError(
-                "MiniMax H3 Qwen3-VL config must be trimmed to "
-                f"{selected_layer} language layers before construction"
+                f"MiniMax H3 Qwen3-VL config must be trimmed to {selected_layer} language layers before construction"
             )
 
         self.config = config
@@ -160,9 +154,7 @@ class MiniMaxH3Qwen3VLEncoder(nn.Module):
         from transformers import AutoConfig
 
         hf_config = AutoConfig.from_pretrained(model_path, **hf_config_kwargs)
-        hf_config.text_config.num_hidden_layers = (
-            MINIMAX_H3_QWEN3VL_SELECTED_LM_LAYER
-        )
+        hf_config.text_config.num_hidden_layers = MINIMAX_H3_QWEN3VL_SELECTED_LM_LAYER
 
         config = MiniMaxH3Qwen3VLConfig(
             hidden_size=int(hf_config.text_config.hidden_size),
@@ -177,12 +169,16 @@ class MiniMaxH3Qwen3VLEncoder(nn.Module):
         )
         if low_cpu_mem_usage:
             from accelerate import init_empty_weights
+
             with init_empty_weights(include_buffers=False):
                 encoder = cls(config)
         else:
             encoder = cls(config)
-        rotary = {name: value.clone() for name, value in encoder.named_buffers()
-                  if preserve_rotary_precision and name.endswith("inv_freq")}
+        rotary = {
+            name: value.clone()
+            for name, value in encoder.named_buffers()
+            if preserve_rotary_precision and name.endswith("inv_freq")
+        }
         if low_cpu_mem_usage:
             encoder.to(torch_dtype)
         loaded = encoder.load_weights(_iter_checkpoint_weights(model_path))
@@ -243,21 +239,11 @@ class MiniMaxH3Qwen3VLEncoder(nn.Module):
         if (pixel_values is None) != (image_grid_thw is None):
             raise ValueError("pixel_values and image_grid_thw must be given together")
         if (pixel_values_videos is None) != (video_grid_thw is None):
-            raise ValueError(
-                "pixel_values_videos and video_grid_thw must be given together"
-            )
+            raise ValueError("pixel_values_videos and video_grid_thw must be given together")
 
         host_ids = input_ids.to(device="cpu", dtype=torch.long)[None]
-        host_image_grid_thw = (
-            image_grid_thw.to(device="cpu", dtype=torch.long)
-            if image_grid_thw is not None
-            else None
-        )
-        host_video_grid_thw = (
-            video_grid_thw.to(device="cpu", dtype=torch.long)
-            if video_grid_thw is not None
-            else None
-        )
+        host_image_grid_thw = image_grid_thw.to(device="cpu", dtype=torch.long) if image_grid_thw is not None else None
+        host_video_grid_thw = video_grid_thw.to(device="cpu", dtype=torch.long) if video_grid_thw is not None else None
         position_ids = None
         if host_image_grid_thw is not None or host_video_grid_thw is not None:
             position_ids, _ = self.model.get_rope_index(
@@ -279,18 +265,13 @@ class MiniMaxH3Qwen3VLEncoder(nn.Module):
             call_kwargs["pixel_values"] = pixel_values.to(self.device, torch.bfloat16)
             call_kwargs["image_grid_thw"] = host_image_grid_thw.to(self.device)
         if pixel_values_videos is not None:
-            call_kwargs["pixel_values_videos"] = pixel_values_videos.to(
-                self.device, torch.bfloat16
-            )
+            call_kwargs["pixel_values_videos"] = pixel_values_videos.to(self.device, torch.bfloat16)
             call_kwargs["video_grid_thw"] = host_video_grid_thw.to(self.device)
 
         hidden = self.model(**call_kwargs).last_hidden_state[0].to(torch.bfloat16)
         expected_shape = [int(ids.shape[1]), self.hidden_dim]
         if list(hidden.shape) != expected_shape:
-            raise ValueError(
-                f"unexpected hidden shape {list(hidden.shape)}, "
-                f"expected {expected_shape}"
-            )
+            raise ValueError(f"unexpected hidden shape {list(hidden.shape)}, expected {expected_shape}")
         return hidden
 
     def load_weights(
@@ -311,17 +292,17 @@ class MiniMaxH3Qwen3VLEncoder(nn.Module):
                 param_name = param_name[len(_CHECKPOINT_PREFIX) :]
             param = params.get(param_name)
             if param is None:
-                raise KeyError(
-                    f"Unexpected MiniMax H3 Qwen3-VL checkpoint weight: {name}"
-                )
+                raise KeyError(f"Unexpected MiniMax H3 Qwen3-VL checkpoint weight: {name}")
             try:
                 with torch.no_grad():
                     if param.shape != loaded_weight.shape:
                         raise ValueError("checkpoint tensor shape mismatch")
                     if param.is_meta:
                         from accelerate.utils import set_module_tensor_to_device
-                        set_module_tensor_to_device(self.model, param_name, "cpu",
-                                                    value=loaded_weight, dtype=param.dtype)
+
+                        set_module_tensor_to_device(
+                            self.model, param_name, "cpu", value=loaded_weight, dtype=param.dtype
+                        )
                     else:
                         param.copy_(loaded_weight.to(param.dtype))
             except Exception as exc:
@@ -345,12 +326,14 @@ class MiniMaxH3Qwen3VLEncoder(nn.Module):
         token_ids, tags, vision = [], [], {}
         if images:
             vision = processor.image_processor(images=list(images), return_tensors="pt")
-            merge = processor.image_processor.merge_size ** 2
+            merge = processor.image_processor.merge_size**2
             for index, grid in enumerate(vision["image_grid_thw"]):
                 label = tokenizer(f"<Picture {index + 1}>: ", add_special_tokens=False)["input_ids"]
-                image_ids = ([tokenizer.convert_tokens_to_ids("<|vision_start|>")]
-                             + [tokenizer.convert_tokens_to_ids("<|image_pad|>")] * (int(grid.prod()) // merge)
-                             + [tokenizer.convert_tokens_to_ids("<|vision_end|>")])
+                image_ids = (
+                    [tokenizer.convert_tokens_to_ids("<|vision_start|>")]
+                    + [tokenizer.convert_tokens_to_ids("<|image_pad|>")] * (int(grid.prod()) // merge)
+                    + [tokenizer.convert_tokens_to_ids("<|vision_end|>")]
+                )
                 token_ids.extend(label + image_ids)
                 tags.extend([1] * len(label) + [0] * len(image_ids))
         prompt_ids = tokenizer(prompt, add_special_tokens=False)["input_ids"]
@@ -360,10 +343,13 @@ class MiniMaxH3Qwen3VLEncoder(nn.Module):
         arguments = {"input_ids": ids, "attention_mask": torch.ones_like(ids), "use_cache": False}
         if "mm_token_type_ids" in inspect.signature(self.model.forward).parameters:
             arguments["mm_token_type_ids"] = torch.tensor(
-                processor.create_mm_token_type_ids([token_ids]), device=self.device, dtype=torch.long)
+                processor.create_mm_token_type_ids([token_ids]), device=self.device, dtype=torch.long
+            )
         if images:
-            arguments.update(pixel_values=vision["pixel_values"].to(self.device, torch.bfloat16),
-                             image_grid_thw=vision["image_grid_thw"].to(self.device))
+            arguments.update(
+                pixel_values=vision["pixel_values"].to(self.device, torch.bfloat16),
+                image_grid_thw=vision["image_grid_thw"].to(self.device),
+            )
         hidden = self.model(**arguments).last_hidden_state
         return hidden.to(torch.bfloat16), torch.tensor(tags, device=self.device, dtype=torch.long)
 
@@ -379,12 +365,15 @@ def _iter_checkpoint_weights(
 
     shard_paths = sorted(glob.glob(os.path.join(model_path, "*.safetensors")))
     if not shard_paths:
-        raise FileNotFoundError(
-            f"No *.safetensors found under {model_path!r}"
-        )
+        raise FileNotFoundError(f"No *.safetensors found under {model_path!r}")
     for shard_path in shard_paths:
         with safe_open(shard_path, framework="pt", device="cpu") as f:
             for name in f.keys():
+                # The H3 feature extractor stops after layer 49. Avoid reading
+                # unused checkpoint tensors (layers 50+, final norm, lm_head)
+                # from the multi-GB shards merely to discard them downstream.
+                if not MiniMaxH3Qwen3VLEncoder.should_materialize_checkpoint_weight(name):
+                    continue
                 yield name, f.get_tensor(name)
 
 

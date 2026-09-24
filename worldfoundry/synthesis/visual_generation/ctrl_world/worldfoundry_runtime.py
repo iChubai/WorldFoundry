@@ -216,7 +216,7 @@ def build_command(context: Mapping[str, Any]) -> list[str]:
         "--num-frames",
         str(settings.get("num_frames", 5)),
         "--num-inference-steps",
-        str(settings.get("num_inference_steps", 4)),
+        str(settings.get("num_inference_steps", 25)),
         "--guidance-scale",
         str(settings.get("guidance_scale", 1.0)),
         "--motion-bucket-id",

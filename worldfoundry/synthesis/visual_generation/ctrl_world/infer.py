@@ -68,7 +68,7 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument("--height", type=int, default=192)
     parser.add_argument("--width", type=int, default=320)
     parser.add_argument("--num-frames", type=int, default=NUM_FRAMES)
-    parser.add_argument("--num-inference-steps", type=int, default=4)
+    parser.add_argument("--num-inference-steps", type=int, default=25)
     parser.add_argument("--guidance-scale", type=float, default=1.0)
     parser.add_argument("--motion-bucket-id", type=int, default=127)
     parser.add_argument("--fps", type=int, default=4)

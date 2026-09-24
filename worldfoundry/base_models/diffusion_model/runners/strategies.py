@@ -143,7 +143,11 @@ class ExecutionStrategyRegistry:
         return tuple(sorted(self._builders))
 
 
-def build_standard_strategy(context: ExecutionBuildContext) -> NativeDiffusionRunner:
+def build_standard_strategy(
+    context: ExecutionBuildContext,
+    *,
+    runner_type: type[NativeDiffusionRunner] = NativeDiffusionRunner,
+) -> NativeDiffusionRunner:
     """Build the shared condition → initialize → denoise → decode loop.
 
     Bindings must cover denoiser / conditioner / latent_initializer / scheduler / decoder,
@@ -166,7 +170,7 @@ def build_standard_strategy(context: ExecutionBuildContext) -> NativeDiffusionRu
             f"required={sorted(required_bindings)}; got={sorted(actual_bindings)}"
         )
     bound = {role: context.components[key] for role, key in context.recipe.execution.bindings.items()}
-    return NativeDiffusionRunner(
+    return runner_type(
         model_id=context.recipe.model_id,
         components=RunnerComponents(
             denoiser=bound["denoiser"],  # type: ignore[arg-type]
@@ -183,6 +187,13 @@ def build_standard_strategy(context: ExecutionBuildContext) -> NativeDiffusionRu
         cfg_parallel_degree=_cfg_parallel_degree(context),
         cfg_gate_step=_cfg_gate_step(context),
     )
+
+
+def build_vchitect_strategy(context: ExecutionBuildContext) -> NativeDiffusionRunner:
+    """Use the standard component graph with Vchitect's official CFG curve."""
+    from .vchitect import VchitectGuidanceRunner
+
+    return build_standard_strategy(context, runner_type=VchitectGuidanceRunner)
 
 
 def build_dual_condition_guidance_strategy(
@@ -497,6 +508,7 @@ def default_execution_strategy_registry() -> ExecutionStrategyRegistry:
 
     registry = ExecutionStrategyRegistry()
     registry.register("standard", build_standard_strategy)
+    registry.register("vchitect-guidance", build_vchitect_strategy)
     registry.register("dual-condition-guidance", build_dual_condition_guidance_strategy)
     registry.register("wan22-dual-expert-guidance", build_wan22_dual_expert_guidance_strategy)
     registry.register("frozen-context", build_frozen_context_strategy)
@@ -561,6 +573,7 @@ __all__ = [
     "build_chunked_kv_cache_strategy",
     "build_prefix_recompute_strategy",
     "build_standard_strategy",
+    "build_vchitect_strategy",
     "build_frozen_context_strategy",
     "build_joint_multistage_strategy",
     "build_masked_latent_strategy",

@@ -79,10 +79,9 @@ class VchitectPromptConditioner:
             add_special_tokens=True,
             return_tensors="pt",
         )
-        return self.text_encoder_3(
-            tokens.input_ids.to(self.device),
-            attention_mask=tokens.attention_mask.to(self.device),
-        ).last_hidden_state.to(self.dtype)
+        # The released pipeline encodes the full padded 256-token sequence.
+        # Passing an attention mask changes the T5 context seen by the denoiser.
+        return self.text_encoder_3(tokens.input_ids.to(self.device)).last_hidden_state.to(self.dtype)
 
     def _branch(self, prompts: Sequence[str]) -> dict[str, torch.Tensor]:
         clip_1, pooled_1 = self._clip(prompts, second=False)

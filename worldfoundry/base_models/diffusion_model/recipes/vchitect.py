@@ -5,23 +5,23 @@ runner.
 
 Binds the Vchitect MMDiT denoiser, triple text-encoder conditioner
 (CLIP-L / CLIP-G / T5 from the Hub snapshot), Vchitect latent
-initializer, Wan flow-match Euler (shift 3.0), and an SD3 frame-wise
-VAE decoder.  Execution is the default ``standard`` five-role binding.
-CFG is on; temporal compression is 1 (per-frame latents).  No dual
+initializer, the released FlowMatch Euler timetable (shift 3.0), and an SD3 frame-wise
+VAE decoder.  Execution retains the standard five-role binding with its
+Vchitect-specific guidance strategy.
+CFG follows the released cosine timestep curve; temporal compression is 1 (per-frame latents).  No dual
 expert or multistage refinement.
 """
 
 from __future__ import annotations
 
-from ..components import ComponentKey, ComponentKind, ComponentSpec
+from ..components import ComponentKey, ComponentKind, ComponentSpec, ExecutionSpec
 from ..loaders import CheckpointSpec
 from ..models.autoencoders.sd3 import build_sd3_frame_decoder
 from ..models.denoisers.vchitect import build_vchitect_denoiser
 from ..models.encoders.vchitect import build_vchitect_prompt_conditioner
 from ..models.initializers.vchitect import build_vchitect_latent_initializer
-from ..schedulers import build_wan_flow_match_euler_scheduler
+from ..schedulers.vchitect import build_vchitect_flow_match_euler_scheduler
 from .spec import NativeDiffusionRecipe
-
 
 VCHITECT_MODEL_ID = "vchitect-2-t2v"
 VCHITECT_REPO_ID = "Vchitect/Vchitect-2.0-2B"
@@ -77,7 +77,7 @@ def vchitect_2_t2v_recipe() -> NativeDiffusionRecipe:
             ),
             ComponentSpec(
                 ComponentKey(ComponentKind.SCHEDULER),
-                build_wan_flow_match_euler_scheduler,
+                build_vchitect_flow_match_euler_scheduler,
                 options={"shift": 3.0},
             ),
             ComponentSpec(
@@ -86,6 +86,7 @@ def vchitect_2_t2v_recipe() -> NativeDiffusionRecipe:
                 {"weights": "vae"},
             ),
         ),
+        execution=ExecutionSpec(strategy="vchitect-guidance"),
         checkpoints=checkpoints,
         capabilities=frozenset({"text-to-video", "classifier-free-guidance"}),
         options={"latent_channels": 16, "spatial_compression": 8, "temporal_compression": 1},

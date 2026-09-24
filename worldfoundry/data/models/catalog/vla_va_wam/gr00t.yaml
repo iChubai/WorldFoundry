@@ -11,10 +11,8 @@ checkpoint:
 id: gr00t
 integration:
   notes:
-  - The GR00T model, processor, transforms, and policy runtime execute from the flattened in-tree package with checkpoint-hosted Python disabled.
-  - Checkpoint-backed predict is verified with local nvidia--Cosmos-Reason2-2B and
-    nvidia--GR00T-N1.7-LIBERO/libero_10 on CUDA 11.8; simulator rollout validation
-    remains separate.
+  - Original N1 uses pinned official n1-release source in an isolated worker; N1.7 retains the flattened in-tree runtime with checkpoint-hosted Python disabled.
+  - Checkpoint-backed offline prediction is verified for local GR00T-N1-2B and GR00T-N1.7-LIBERO/libero_10; simulator rollout validation remains separate.
   status: integrated
 license: other:nvidia-open-model-license
 name: NVIDIA GR00T
@@ -53,7 +51,8 @@ variants:
   id: gr00t-n1-2b
   integration_status: integrated
   notes:
-  - WorldFoundry keeps the GR00T checkpoint runtime directly under worldfoundry/synthesis/action_generation/gr00t; real prediction requires the gated local assets and GR00T dependency environment.
+  - Original N1 inference requires the pinned NVIDIA n1-release checkout and a separate Transformers 4.45.2 worker environment configured with n1_source_dir and n1_python.
+  - GPU offline prediction generated four finite 16-step GR1 arms-only action groups; two old decode_layer checkpoint tensors are unused by the official source, and task success is untested.
   task: vla.policy_rollout
 - checkpoint_refs:
   - repo_id: nvidia/GR00T-N1.7-LIBERO
@@ -75,12 +74,12 @@ docs:
   publisher: NVIDIA
   publisher_kind: company
   publisher_zh: 英伟达（NVIDIA）
-  overview: NVIDIA GR00T is the Isaac GR00T humanoid/manipulation foundation policy line (N1 through N1.7). WorldFoundry executes the model, processor, transforms, and policy runtime from a flattened in-tree package with checkpoint-hosted Python disabled; checkpoint-backed predict is verified with local Cosmos-Reason2-2B and GR00T-N1.7-LIBERO/libero_10 assets on CUDA 11.8.
-  overview_zh: 英伟达 GR00T 是 Isaac GR00T 人形/操作基础策略线（N1 至 N1.7）。WorldFoundry 从扁平化树内包执行模型、processor、变换与策略运行时，禁用 checkpoint 携带的 Python；checkpoint 驱动的 predict 已在 CUDA 11.8 上用本地 Cosmos-Reason2-2B 与 GR00T-N1.7-LIBERO/libero_10 资产验证。
+  overview: NVIDIA GR00T is the Isaac GR00T humanoid/manipulation foundation policy line (N1 through N1.7). WorldFoundry uses an isolated pinned official-source worker for original N1 and an in-tree runtime for N1.7; both staged checkpoint families have produced offline actions on GPU.
+  overview_zh: 英伟达 GR00T 是 Isaac GR00T 人形/操作基础策略线（N1 至 N1.7）。WorldFoundry 对初代 N1 使用固定官方源码的隔离进程，对 N1.7 使用树内运行时；两类本地权重均已在 GPU 上生成离线动作。
   architecture: GR00T couples a reasoner VLM (Cosmos-Reason2-2B in the verified N1.7 path) with an action policy head; recorded checkpoints span GR00T-N1-2B and GR00T-N1.7-LIBERO. Weights are under the NVIDIA Open Model License and several repos require Hugging Face auth.
   architecture_zh: GR00T 将推理 VLM（已验证 N1.7 路径使用 Cosmos-Reason2-2B）与动作策略头耦合；记录的 checkpoint 覆盖 GR00T-N1-2B 与 GR00T-N1.7-LIBERO。权重采用 NVIDIA Open Model License，多个仓库需 Hugging Face 认证。
-  usage_notes: Authenticate for the gated NVIDIA repos, stage the pinned revisions locally, and start from the verified N1.7 LIBERO path. Simulator rollout validation remains separate from the verified predict path.
-  usage_notes_zh: 先为门控 NVIDIA 仓库认证，就位锁定 revision，再从已验证的 N1.7 LIBERO 路径起步。模拟器 rollout 验证与已验证的 predict 路径分开跟踪。
+  usage_notes: Stage the pinned NVIDIA checkpoint revisions locally. Original N1 additionally needs the n1-release source checkout and an isolated worker environment; see the GR00T N1 runtime README. Simulator rollout validation remains separate from offline predict.
+  usage_notes_zh: 先就位固定版本的 NVIDIA 权重。初代 N1 还需要 n1-release 官方源码和隔离运行环境，详见 GR00T N1 运行说明。模拟器 rollout 验证与离线 predict 分开跟踪。
   limitations:
   - Gated checkpoints require Hugging Face authentication.
   - NVIDIA Open Model License — review terms before commercial use.

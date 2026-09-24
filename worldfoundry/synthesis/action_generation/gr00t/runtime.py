@@ -105,6 +105,10 @@ def select_gr00t_checkpoint(
     candidates.extend(dict(item) for item in checkpoints)
 
     requested = str(variant or "").lower()
+    if checkpoint_dir:
+        explicit = Path(_expand_path_template(str(checkpoint_dir))).expanduser().resolve()
+        if (explicit / "config.json").is_file():
+            return explicit
 
     # First pass: try to find a checkpoint matching the requested variant or role/path substring
     for item in candidates:
@@ -386,6 +390,11 @@ class GR00TRuntime:
         checkpoint = Path(checkpoint_dir).expanduser().resolve()
         # Verify essential checkpoint files exist
         _require_checkpoint_file(checkpoint, "config.json")
+        config = json.loads((checkpoint / "config.json").read_text(encoding="utf-8"))
+        if config.get("model_type") == "gr00t_n1":
+            from worldfoundry.synthesis.action_generation.gr00t.legacy_n1 import describe_n1_checkpoint
+
+            return describe_n1_checkpoint(checkpoint)
         _require_checkpoint_file(checkpoint, "processor_config.json")
         _require_checkpoint_file(checkpoint, "embodiment_id.json")
         _require_checkpoint_file(checkpoint, "model.safetensors.index.json")

@@ -1195,8 +1195,8 @@ class OfficialVideoRuntime:
         path = Path(video_path).expanduser().resolve()
         if not path.is_file():
             raise FileNotFoundError(path)
-        if max_frames < 4:
-            raise ValueError("Qwen2.5-VL video input requires max_video_frames >= 4")
+        if not 4 <= max_frames <= 128:
+            raise ValueError("Qwen2.5 video input requires 4 <= max_video_frames <= 128")
 
         capture = cv2.VideoCapture(str(path))
         if not capture.isOpened():
@@ -1247,8 +1247,8 @@ class OfficialVideoRuntime:
         extra: Mapping[str, Any],
     ) -> dict[str, Any]:
         """Run a released Qwen2.5-VL checkpoint with its visual inputs."""
-        if video_path:
-            raise ValueError(f"{self.model_id} video preprocessing is not configured")
+        if video_path and image_path:
+            raise ValueError(f"{self.model_id} accepts one image or one video per request")
         if checkpoint_path is None:
             raise ValueError(f"{self.model_id} checkpoint is required")
 
@@ -1289,19 +1289,68 @@ class OfficialVideoRuntime:
         )
         model.eval()
         image = Image.open(image_path).convert("RGB") if image_path else None
+        video = video_metadata = None
+        if video_path:
+            video, video_metadata = self._sample_qwen_video(
+                video_path, int(extra.get("max_video_frames") or 8)
+            )
         content: list[dict[str, str]] = []
         if image is not None:
             content.append({"type": "image", "image": str(image_path)})
+        if video is not None:
+            content.append({"type": "video", "video": str(video_path)})
         content.append({"type": "text", "text": prompt})
         conversation = [{"role": "user", "content": content}]
         text = processor.apply_chat_template(conversation, add_generation_prompt=True, tokenize=False)
-        inputs = processor(
-            text=[text], images=[image] if image is not None else None, padding=True, return_tensors="pt"
-        ).to(model.device)
-        with torch.inference_mode():
-            output_ids = model.generate(
-                **inputs, max_new_tokens=int(extra.get("max_new_tokens") or 128), do_sample=False
+        processor_kwargs: dict[str, Any] = {
+            "text": [text],
+            "images": [image] if image is not None else None,
+            "videos": [video] if video is not None else None,
+            "padding": True,
+            "return_tensors": "pt",
+        }
+        if video_metadata is not None:
+            processor_kwargs["fps"] = video_metadata["sampled_fps"]
+        inputs = processor(**processor_kwargs)
+        if video is not None:
+            if "pixel_values_videos" not in inputs or "video_grid_thw" not in inputs:
+                raise RuntimeError("Qwen2.5-VL processor omitted required video tensors")
+            video_metadata["video_grid_thw"] = inputs["video_grid_thw"].tolist()
+            video_metadata["pixel_values_videos_shape"] = list(inputs["pixel_values_videos"].shape)
+            video_metadata["video_token_count"] = int(
+                (inputs["input_ids"] == processor.video_token_id).sum().item()
             )
+            if video_metadata["video_token_count"] == 0:
+                raise RuntimeError("Qwen2.5-VL processor produced no video tokens")
+        inputs = inputs.to(model.device)
+        visual_forward_calls: list[dict[str, Any]] = []
+        visual_hook = None
+        if video is not None:
+            def _capture_visual_forward(_module: Any, args: tuple[Any, ...], kwargs: dict[str, Any]) -> None:
+                pixels = args[0] if args else kwargs.get("hidden_states")
+                grid = kwargs.get("grid_thw")
+                visual_forward_calls.append({
+                    "pixel_shape": list(pixels.shape) if isinstance(pixels, torch.Tensor) else None,
+                    "grid_thw": grid.tolist() if isinstance(grid, torch.Tensor) else None,
+                })
+
+            visual_hook = model.visual.register_forward_pre_hook(_capture_visual_forward, with_kwargs=True)
+        try:
+            with torch.inference_mode():
+                output_ids = model.generate(
+                    **inputs, max_new_tokens=int(extra.get("max_new_tokens") or 128), do_sample=False
+                )
+        finally:
+            if visual_hook is not None:
+                visual_hook.remove()
+        if video_metadata is not None:
+            video_metadata["visual_forward_calls"] = visual_forward_calls
+            if not visual_forward_calls or not any(
+                call["pixel_shape"] == video_metadata["pixel_values_videos_shape"]
+                and call["grid_thw"] == video_metadata["video_grid_thw"]
+                for call in visual_forward_calls
+            ):
+                raise RuntimeError("Qwen2.5-VL video tensor did not reach the visual encoder")
         answer_ids = output_ids[:, inputs["input_ids"].shape[1] :]
         answer = processor.batch_decode(
             answer_ids, skip_special_tokens=True, clean_up_tokenization_spaces=False
@@ -1309,7 +1358,16 @@ class OfficialVideoRuntime:
         output = output_path.with_suffix(".json")
         output.parent.mkdir(parents=True, exist_ok=True)
         output.write_text(
-            json.dumps({"prompt": prompt, "text": answer, "image_path": str(image_path or "")}, ensure_ascii=False, indent=2),
+            json.dumps(
+                {
+                    "prompt": prompt,
+                    "text": answer,
+                    "image_path": str(image_path or ""),
+                    "video_input": video_metadata,
+                },
+                ensure_ascii=False,
+                indent=2,
+            ),
             encoding="utf-8",
         )
         return self._success_result(
@@ -1317,7 +1375,7 @@ class OfficialVideoRuntime:
             metadata={
                 "checkpoint_path": str(checkpoint_path),
                 "model_class": "Qwen2_5_VLForConditionalGeneration",
-                "input_kind": "image_text" if image is not None else "text",
+                "input_kind": "video_text" if video is not None else "image_text" if image is not None else "text",
             },
         )
 

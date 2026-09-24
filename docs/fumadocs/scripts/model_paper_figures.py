@@ -310,12 +310,6 @@ CAPTIONS: dict[str, dict[str, tuple[str, str]]] = {
             "论文方法总览：NVIDIA DreamZero 的方法架构。",
         ),
     },
-    "droid-w": {
-        "overview": (
-            "Method overview: System Overview. The proposed DROID-W takes a sequence of RGB images as inputs and simultaneously estimates camera poses while recovering scene geometry. It alternatingly performs pose-depth refinement and.",
-            "论文方法总览：DROID-W 的几何与深度架构。",
-        ),
-    },
     "dualcamctrl": {
         "overview": (
             "Method overview: DualCamCtrl’s dual-branch framework jointly generates aligned RGB and depth video latents.",

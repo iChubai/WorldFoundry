@@ -35,7 +35,7 @@ No file in this directory is a personal GitHub avatar.
 | `dji.svg` | DJI | Simple Icons (https://simpleicons.org), CC0-1.0; official brand hex #000000 | CC0-1.0 | model:metric3d-prior |
 | `epfl.svg` | EPFL | https://commons.wikimedia.org/wiki/File:Logo_EPFL.svg | Public domain (text logo) | model:stable-video-infinity |
 | `etched.png` | Etched | GitHub organization brand avatar (github.com/etched-ai), pre-existing repo asset | Organization brand mark | model:oasis-500m |
-| `eth.svg` | ETH Zurich | https://commons.wikimedia.org/wiki/File:ETH_Zürich_Logo_black.svg | Public domain (text logo) | model:droid-w, model:geocalib-prior, model:unidepth-v2-prior, model:unik3d-prior |
+| `eth.svg` | ETH Zurich | https://commons.wikimedia.org/wiki/File:ETH_Zürich_Logo_black.svg | Public domain (text logo) | model:geocalib-prior, model:unidepth-v2-prior, model:unik3d-prior |
 | `exla.png` | Exla AI | GitHub organization brand avatar (github.com/exla-ai), pre-existing repo asset | Organization brand mark | - |
 | `farama.png` | Farama Foundation | GitHub organization brand avatar (github.com/Farama-Foundation), pre-existing repo asset | Organization brand mark | benchmark:metaworld |
 | `freiburg.png` | University of Freiburg | https://commons.wikimedia.org/wiki/File:Wortmarke-grundform-universitaet_freiburg_blau_rgb.png | CC BY-SA 4.0 | benchmark:calvin |

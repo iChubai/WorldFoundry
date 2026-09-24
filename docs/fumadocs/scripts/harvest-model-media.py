@@ -161,9 +161,6 @@ CURATED_FIGURES: dict[str, dict[str, str]] = {
         "teaser": "https://arxiv.org/html/2602.15922v1/dreamzero-header-v2.png",
         "overview": "https://arxiv.org/html/2602.15922v1/dreamzero_model.png",
     },
-    "droid-w": {
-        "overview": "https://arxiv.org/html/2603.19076v1/pipeline.png",
-    },
     "dualcamctrl": {
         "overview": "https://arxiv.org/html/2511.23127v2/dualcam_framework.png",
     },

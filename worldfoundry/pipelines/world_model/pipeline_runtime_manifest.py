@@ -382,10 +382,6 @@ class TesserActPipeline(WorldModelRuntimePipeline):
         return kwargs
 
 
-class DROIDWPipeline(WorldModelRuntimePipeline):
-    """Pipeline implementation for DROIDW visual generation."""
-    MODEL_ID = "droid-w"
-
 
 class EgoWMPipeline(WorldModelRuntimePipeline):
     """Pipeline implementation for EgoWM visual generation."""
@@ -560,7 +556,6 @@ __all__ = [
     "DIAMONDPipeline",
     "DIAMONDCsgoPipeline",
     "DinoWMPipeline",
-    "DROIDWPipeline",
     "EgoWMPipeline",
     "GenieEnvisionerPipeline",
     "GigaWorld0Pipeline",

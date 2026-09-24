@@ -172,7 +172,6 @@ _STATIC_ASSET_GATED_WORLD_RUNTIME_MODEL_IDS = frozenset(
         "ctrl-world",
         "diamond",
         "dino-wm",
-        "droid-w",
         "egowm",
         "genie-envisioner",
         "giga-world-0",

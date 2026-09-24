@@ -1,5 +1,5 @@
 {
-  "modelsTotal": 221,
+  "modelsTotal": 220,
   "benchmarksTotal": 75,
   "infrastructure": [
     {
@@ -210,7 +210,7 @@
       "id": "world_models",
       "label": "World models",
       "labelZh": "世界模型",
-      "count": 94,
+      "count": 93,
       "entries": [
         {
           "name": "ABot-World-0-5B-LF",
@@ -291,10 +291,6 @@
         {
           "name": "DreamX-World 5B",
           "url": "https://github.com/AMAP-ML/DreamX-World"
-        },
-        {
-          "name": "DROID-W",
-          "url": "https://github.com/MoyangLi00/DROID-W"
         },
         {
           "name": "DualCamCtrl",

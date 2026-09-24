@@ -1,6 +1,6 @@
 {
-  "modelsTotal": 267,
-  "modelsListed": 257,
+  "modelsTotal": 266,
+  "modelsListed": 256,
   "benchmarksTotal": 75,
   "modelFamilies": [
     {
@@ -477,7 +477,7 @@
       "id": "world_models",
       "label": "World models",
       "blurb": "Interactive worlds, camera/action conditioning, navigation, and simulator-shaped systems.",
-      "count": 103,
+      "count": 102,
       "entries": [
         {
           "id": "abot-world-0-5b-lf",
@@ -658,14 +658,6 @@
           "versions": [
             "AR",
             "Cam"
-          ]
-        },
-        {
-          "id": "droid-w",
-          "name": "DROID-W",
-          "status": "runtime_ported",
-          "aliases": [
-            "droid-w"
           ]
         },
         {

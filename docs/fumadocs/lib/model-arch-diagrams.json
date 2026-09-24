@@ -1871,15 +1871,6 @@
       "caption": "Method overview: The overall architecture of Dexbotic. It introduces the Dexdata format to unify different embodiments. In Model Layer, Dexbotic integrates the open-source vision encoder, LLM and action expert through a unified.",
       "captionZh": "论文方法总览：DM0 的机器人操作架构。"
     },
-    "droid-w": {
-      "modelId": "droid-w",
-      "paperSrc": "/models/droid-w/paper.png",
-      "src": "/models/droid-w/overview.webp",
-      "alt": "Method overview: System Overview. The proposed DROID-W takes a sequence of RGB images as inputs and simultaneously estimates camera poses while recovering scene geometry. It alternatingly performs pose-depth refinement and.",
-      "altZh": "论文方法总览：DROID-W 的几何与深度架构。",
-      "caption": "Method overview: System Overview. The proposed DROID-W takes a sequence of RGB images as inputs and simultaneously estimates camera poses while recovering scene geometry. It alternatingly performs pose-depth refinement and.",
-      "captionZh": "论文方法总览：DROID-W 的几何与深度架构。"
-    },
     "egowm": {
       "modelId": "egowm",
       "paperSrc": "/models/egowm/paper.png",

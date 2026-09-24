@@ -266,16 +266,6 @@ WORLD_MODEL_RUNTIME_SPECS: Mapping[str, WorldModelRuntimeSpec] = {
         ),
         input_schema={"prompt": True, "image": True, "video": False, "actions": ["camera_navigation", "world_action"]},
     ),
-    "droid-w": WorldModelRuntimeSpec(
-        model_id="droid-w",
-        display_name="DROID-W",
-        source_dir_names=("DROID-W",),
-        official_repo_url="https://github.com/MoyangLi00/DROID-W",
-        entrypoint_relative="run.py",
-        blocked_reason="DROID-W official source route is registered; execution requires DROID-W checkpoints, DROID task assets, and the official dependency environment.",
-        required_assets=("DROID-W checkpoint/assets", "DROID evaluation data"),
-        input_schema=_ROBOT_INPUTS,
-    ),
     "egowm": WorldModelRuntimeSpec(
         model_id="egowm",
         display_name="EgoWM",

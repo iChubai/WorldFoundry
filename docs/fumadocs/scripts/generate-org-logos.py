@@ -1182,7 +1182,6 @@ MODEL_ORGS: dict[str, str] = {
     "dreamx-world-5b": "amap",
     "dreamx-world-5b-cam": "amap",
     "dreamzero": "nvidia",
-    "droid-w": "eth",
     "dualcamctrl": "hkust",
     "dust3r": "naver",
     "dust3r-base-model": "naver",

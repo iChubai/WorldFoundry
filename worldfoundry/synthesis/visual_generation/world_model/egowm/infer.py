@@ -16,13 +16,18 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument("--output-path", type=Path, required=True)
     parser.add_argument("--device", default="cuda")
     parser.add_argument("--num-frames", type=int, default=8)
-    parser.add_argument("--num-inference-steps", type=int, default=8)
+    parser.add_argument("--num-inference-steps", type=int, default=25)
     parser.add_argument("--fps", type=int, default=7)
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--height", type=int, default=512)
     parser.add_argument("--width", type=int, default=512)
     parser.add_argument("--motion-bucket-id", type=int, default=180)
-    parser.add_argument("--action-scale", type=float, default=0.0)
+    parser.add_argument(
+        "--action-scale",
+        type=float,
+        default=0.0,
+        help="First action component; for 3-DoF, normalized offset from zero displacement.",
+    )
     return parser
 
 
@@ -116,7 +121,13 @@ def run(args: argparse.Namespace) -> Path:
 
         image = Image.open(input_image).convert("RGB").resize((args.width, args.height))
         actions = torch.zeros((args.num_frames, action_dims), dtype=torch.float32)
-        actions[:, 0] = float(args.action_scale)
+        if action_dims == 3:
+            # Official 3-DoF scripts normalize x from [-2.5, 5] to [-1, 1].
+            # Zero displacement is therefore -1/3, not zero. Treat the UI
+            # action scale as an offset from that stationary baseline.
+            actions[:, 0] = -1.0 / 3.0 + float(args.action_scale)
+        else:
+            actions[:, 0] = float(args.action_scale)
         generator = torch.manual_seed(args.seed)
 
         inference_kwargs = dict(
@@ -133,6 +144,11 @@ def run(args: argparse.Namespace) -> Path:
         )
         if action_dims == 25:
             inference_kwargs["init_state"] = torch.zeros(25, dtype=torch.float32)
+        else:
+            # Official 3-DoF inference uses constant CFG 2.0 on every frame.
+            # Equal endpoints reproduce that with the shared action pipeline.
+            inference_kwargs["min_guidance_scale"] = 2.0
+            inference_kwargs["max_guidance_scale"] = 2.0
         frames = pipeline(image, **inference_kwargs).frames[0]
 
         from worldfoundry.core.io.video import save_video_h264

@@ -158,7 +158,7 @@ def build_command(context: Mapping[str, Any]) -> list[str]:
         "--num-frames",
         str(settings.get("num_frames", 8)),
         "--num-inference-steps",
-        str(settings.get("num_inference_steps", 8)),
+        str(settings.get("num_inference_steps", 25)),
         "--fps",
         str(settings.get("fps", 7)),
         "--seed",

@@ -2688,6 +2688,7 @@ def _openpi_default_call_kwargs() -> Dict[str, Any]:
 
 def _lapa_default_ref() -> str:
     return _checkpoint_model_ref(
+        "latent-action-pretraining--LAPA-7B-openx",
         "LAPA-7B-openx",
         "hfd/latent-action-pretraining--LAPA-7B-openx",
         fallback="latent-action-pretraining/LAPA-7B-openx",

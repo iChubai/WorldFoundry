@@ -1,48 +1,32 @@
 ---
 title: "Emu3.5"
-description: "Emu3.5 text/image generation; public checkpoint inference is blocked by an unsupported Emu3 architecture."
+description: "Checkpoint-backed interleaved text and image generation through the official runtime."
 modelId: "emu3.5"
 pageSource: authored
 ---
 
-Emu3.5 is BAAI's native multimodal generation model for interleaved text and images. WorldFoundry has a registered adapter, but the staged checkpoint declares an Emu3 architecture that the installed Transformers runtime cannot resolve. Checkpoint-backed inference is blocked before model loading; no video output is claimed.
+Emu3.5 is BAAI's model for interleaved text and image generation. WorldFoundry calls a pinned checkout of the official implementation and returns its protobuf response. It does not generate video.
+
+A checkpoint-backed `howto` run through the WorldFoundry pipeline produced three text segments and two decoded 384×384 PNG images. Larger image sizes and byte-for-byte parity with a separate official CLI invocation remain unverified.
 
 <ModelPaperFigures modelId="emu3.5" locale="en" />
 
-Code: [BAAI/Emu3.5](https://huggingface.co/BAAI/Emu3.5).
-
-No paper / project / GitHub URL is recorded on this recipe. Catalog tasks include multimodal generation, image generation, and VLA-style reasoning. The `BAAI/Emu3.5` weights are staged, but checkpoint-backed inference remains **blocked**.
+Code: [baaivision/Emu3.5](https://github.com/baaivision/Emu3.5). Weights: [BAAI/Emu3.5](https://huggingface.co/BAAI/Emu3.5) and [BAAI/Emu3.5-VisionTokenizer](https://huggingface.co/BAAI/Emu3.5-VisionTokenizer).
 
 <ModelCommandBuilder modelId="emu3.5" locale="en" />
 
 ## What it is for
 
-The official checkpoint describes text and image generation. The `vla.reasoning` task label is catalog metadata; no robot-action policy or action-trace output has been verified.
-
-The Emu series treats images and text as one token stream for next-token prediction — no separate diffusion decoder in the loop, per BAAI's public releases. This repository records the prompt+image input contract and the model_response artifact; parameter counts and internals of the 3.5 revision are not recorded here. It is published by Beijing Academy of Artificial Intelligence (BAAI).
-
-Catalog tasks include multimodal-generation, image-generation, and vla reasoning. Catalog aliases include `emu3p5`, `emu3_5`, and `BAAI/Emu3.5`.
+The `story` and `howto` tasks take a text prompt and optionally a reference image. Emu3.5 predicts a unified text/image token sequence, generates visual tokens with discrete diffusion, and decodes images with its separate vision tokenizer. The response may contain text and images; it is stored as an official `.pb` artifact.
 
 ## Runtime contract
 
-Required `prompt`; optional `image`; artifacts `emu3.5.json`.
+The runtime requires both checkpoints and the official source at revision `8fcf1da48f9c5252fe0a0b8dc842e07b6efcd745`. Set `WORLDFOUNDRY_HFD_ROOT` to the directory containing `BAAI--Emu3.5` and `BAAI--Emu3.5-VisionTokenizer`, and `WORLDFOUNDRY_EMU35_REPO_ROOT` to the checkout. Model loading uses the official Emu3 class with eager attention; the vision tokenizer, generation, decoding, and protobuf writer also come from the official release.
 
-Recorded task profiles: `multimodal-generation`, `image-generation`, and `vla.reasoning`. WorldFoundry binds `Emu35Pipeline`.
-
-Integration status: **Blocked**. Runner parity remains pending.
-
-Transformers 4.57.6 cannot resolve the checkpoint's `config.model_type` value `Emu3`. A reviewed, compatible loader is needed before a text/image response can be verified.
-
-The registered adapter currently stops before model loading.
+WorldFoundry checks local assets before inference and does not download weights at runtime. The checkpoint-backed `howto` response was parsed with three text segments and two decoded images. Byte-for-byte parity with a separate official CLI invocation remains unverified.
 
 ## Running in WorldFoundry
 
-The catalog command is `worldfoundry-eval run emu3.5 --pipeline.task-profile multimodal-generation`. It cannot currently load the staged checkpoint.
-
-It runs in the unified environment `worldfoundry-unified-cu128` (Python 3.11, CUDA 12.8).
-
-Recorded weight repositories include `BAAI/Emu3.5`; the checkpoint is already staged in this workspace.
-
-Status: **Blocked**.
+Use the `emu3.5` pipeline binding with a prompt and optional image. The default output is `emu3.5.pb`; `task_type` selects `story` or `howto`. Optional `target_height` and `target_width` set the visual-token grid together (a 24×24 grid decodes to 384×384 pixels). Give `max_new_tokens` enough room to finish the image; a shorter cap can yield a valid protobuf containing only text. The model needs a GPU with enough memory for the large main checkpoint and the vision tokenizer.
 
 <ModelRelatedRecipes modelId="emu3.5" locale="en" />

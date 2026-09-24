@@ -1,7 +1,6 @@
 """Video Official visual generation pipeline module."""
 
 from .pipeline_official_video import (
-    Emu35Pipeline,
     FramePackPipeline,
     I2VGenXLPipeline,
     KreaRealtimeVideoPipeline,
@@ -20,7 +19,6 @@ from .pipeline_official_video import (
 )
 
 __all__ = [
-    "Emu35Pipeline",
     "FramePackPipeline",
     "I2VGenXLPipeline",
     "KreaRealtimeVideoPipeline",

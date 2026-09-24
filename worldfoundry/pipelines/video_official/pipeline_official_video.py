@@ -196,12 +196,6 @@ class OpenSoraPipeline(OfficialVideoPipeline):
     GENERATION_TYPE = "t2v"
 
 
-class Emu35Pipeline(OfficialVideoPipeline):
-    """Pipeline implementation for Emu35 visual generation."""
-    MODEL_ID = "emu3.5"
-    GENERATION_TYPE = "multimodal"
-
-
 class KreaRealtimeVideoPipeline(OfficialVideoPipeline):
     """Pipeline implementation for KreaRealtimeVideo visual generation."""
     MODEL_ID = "krea-realtime-video"
@@ -251,7 +245,6 @@ class UniAnimateDiTPipeline(OfficialVideoPipeline):
 
 
 __all__ = [
-    "Emu35Pipeline",
     "FramePackPipeline",
     "I2VGenXLPipeline",
     "KreaRealtimeVideoPipeline",

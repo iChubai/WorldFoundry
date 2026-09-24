@@ -1,21 +1,21 @@
 ---
 title: "Emu3.5"
-description: "Emu3.5 is BAAI's native multimodal generation model for interleaved text and images. WorldFoundry has a registered adapter, but the staged checkpoint declares an Emu3 architecture that the installed Transformers runtime cannot resolve. Che…"
+description: "Emu3.5 is BAAI's native multimodal model for interleaved text and images. WorldFoundry uses the pinned official implementation and emits its protobuf response. Checkpoint-backed GPU inference has produced text and decoded images; no video…"
 pageSource: generated
 ---
 
 **发表机构:** 北京智源人工智能研究院（BAAI） · 研究机构
 
-Emu3.5 是北京智源（BAAI）面向交错文本与图像的原生多模态生成模型。WorldFoundry 已注册适配器，但已就位权重声明的 Emu3 架构无法被当前 Transformers 运行时识别。加载模型前即被阻塞，且不宣称视频输出。
+Emu3.5 是北京智源（BAAI）面向交错文本与图像的原生多模态模型。WorldFoundry 调用固定版本的官方实现并输出其 protobuf 响应。权重支持的 GPU 推理已生成文本和可解码图像；不宣称视频输出。
 
 <ModelCommandBuilder modelId="emu3.5" locale="zh" />
 
 ## 架构
 
-Emu 系列把图像与文本统一为一个 token 流做下一个 token 预测——按 BAAI 的公开发布，推理环节没有独立的扩散解码器。本仓库记录了 prompt+image 输入契约与 model_response 产物；3.5 版的参数规模与内部细节仓库未记录。
+Emu3.5 预测统一的图文 token 序列，并以离散扩散生成视觉 token，再通过独立的视觉 tokenizer 解码。
 
 ## 运行时契约
 
-BAAI/Emu3.5 权重已就位，但 Transformers 4.57.6 无法识别 config.model_type Emu3。验证权重生成文本/图像响应前，需要经过检查的兼容加载器。
+就位 BAAI/Emu3.5、BAAI/Emu3.5-VisionTokenizer 权重和固定版本的官方源码。默认 story 和 howto 任务返回官方 protobuf 响应。
 
 <ModelRelatedRecipes modelId="emu3.5" locale="zh" />

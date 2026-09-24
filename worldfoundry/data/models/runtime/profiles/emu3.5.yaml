@@ -1,26 +1,29 @@
 schema_version: 2
 model_id: emu3.5
 display_name: Emu3.5
-task_family: video_generation
-groups: [video, multimodal]
+task_family: multimodal_generation
+groups: [multimodal, image]
 source_repos:
+- url: https://github.com/baaivision/Emu3.5
 - url: https://huggingface.co/BAAI/Emu3.5
 checkpoints:
 - repo_id: BAAI/Emu3.5
   role: model_checkpoint
+- repo_id: BAAI/Emu3.5-VisionTokenizer
+  role: vision_tokenizer
 input_schema:
   prompt: true
   image: optional
 artifact_kind: model_response
-artifact_filename: emu3.5.json
+artifact_filename: emu3.5.pb
 execution:
-  backend_stage: registered_adapter_preflight_blocked
-  runtime_status: blocked_unsupported_emu3_architecture
-  integration_status: blocked
+  backend_stage: official_checkout_eager_runtime
+  runtime_status: verified_interleaved_inference
+  integration_status: integrated
   pipeline_binding: emu3.5
 integration:
-  status: blocked
+  status: integrated
 notes:
-- The BAAI/Emu3.5 checkpoint is staged, but Transformers 4.57.6 does not
-  recognize its Emu3 model_type; the registered adapter cannot load it.
-- The official checkpoint describes text/image generation, not video output.
+- The pinned official checkout and both checkpoints are required; no weights are downloaded at runtime.
+- Official Emu3.5 generates interleaved text and images. This route emits the official protobuf response, not video.
+- The checkpoint-backed GPU howto response was parsed with text and two decoded 384x384 PNG images.

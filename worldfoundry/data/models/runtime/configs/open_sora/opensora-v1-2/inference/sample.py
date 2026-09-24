@@ -22,13 +22,14 @@ model = dict(
 )
 vae = dict(
     type="OpenSoraVAE_V1_2",
-    from_pretrained="hpcai-tech/OpenSora-VAE-v1.2",
+    # mmengine's lazy config loader rewrites `import os` into an unusable proxy.
+    from_pretrained=__import__("os").environ.get("OPENSORA_VAE_PATH", "hpcai-tech/OpenSora-VAE-v1.2"),
     micro_frame_size=17,
     micro_batch_size=4,
 )
 text_encoder = dict(
     type="t5",
-    from_pretrained="DeepFloyd/t5-v1_1-xxl",
+    from_pretrained=__import__("os").environ.get("OPENSORA_TEXT_ENCODER_PATH", "DeepFloyd/t5-v1_1-xxl"),
     model_max_length=300,
 )
 scheduler = dict(

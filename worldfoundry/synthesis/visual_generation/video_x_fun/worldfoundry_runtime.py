@@ -130,6 +130,7 @@ class _WanFunCameraRuntime:
         fps: int,
         num_inference_steps: int,
         seed: int,
+        enable_teacache: bool,
     ) -> Path:
         upstream = require_path(self.repo_root / self.ENTRYPOINT, f"{self.MODEL_ID} entrypoint", kind="file")
         source = upstream.read_text(encoding="utf-8")
@@ -153,6 +154,7 @@ class _WanFunCameraRuntime:
             "prompt": prompt.strip(),
             "seed": int(seed),
             "num_inference_steps": int(num_inference_steps),
+            "enable_teacache": bool(enable_teacache),
             "save_path": str(native_output),
         }
         for name, value in values.items():
@@ -265,6 +267,7 @@ class _WanFunCameraRuntime:
         fps: int = 16,
         num_inference_steps: int = 50,
         seed: int = 43,
+        enable_teacache: bool = True,
         return_dict: bool = True,
         **_: Any,
     ) -> Any:
@@ -289,6 +292,7 @@ class _WanFunCameraRuntime:
             fps=fps,
             num_inference_steps=num_inference_steps,
             seed=seed,
+            enable_teacache=enable_teacache,
         )
         env = dict(self.env)
         if self.device.startswith("cuda:") and "CUDA_VISIBLE_DEVICES" not in env:

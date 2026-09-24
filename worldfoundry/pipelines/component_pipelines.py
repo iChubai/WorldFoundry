@@ -322,10 +322,15 @@ LingBotVLAV2Pipeline = _independent_action_pipeline(
     doc="WorldFoundry VLA policy pipeline for LingBot-VLA v2 batched action generation.",
     synthesis_target="worldfoundry.synthesis.action_generation.lingbot_vla_v2:LingBotVLAV2Synthesis",
 )
-LastR1Pipeline = _official_policy_pipeline(
+LastR1Pipeline = _component_pipeline_class(
     "LastR1Pipeline",
     model_id="last-r1",
-    doc="WorldFoundry policy-rollout pipeline for LaST-R1.",
+    doc="WorldFoundry offline action-inference pipeline for LaST-R1.",
+    operator_target="worldfoundry.operators.official_policy_operator:OfficialPolicyOperator",
+    memory_target="worldfoundry.synthesis.action_generation.memory:ActionTraceMemory",
+    synthesis_target="worldfoundry.synthesis.action_generation.last_r1:LastR1Synthesis",
+    generation_type="vla_policy",
+    model_path_option="checkpoint_path",
 )
 MMEVLAPipeline = _independent_action_pipeline(
     "MMEVLAPipeline",

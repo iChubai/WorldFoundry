@@ -18,6 +18,7 @@ from worldfoundry.core.io.paths import (
     local_data_root_path,
     official_runtime_repo_path,
     resolve_local_hf_model_path,
+    resolve_worldfoundry_path,
 )
 from worldfoundry.runtime.interactive_inference_catalog import studio_contract_override
 
@@ -142,9 +143,6 @@ STUDIO_HIDDEN_CATALOG_MODEL_IDS: frozenset[str] = frozenset(
         # AdaWorld is tracked as source/provenance only until the official env, checkpoints, and task assets are
         # reproducibly runnable from the unified Studio environment.
         "adaworld",
-        # The released libero_10 weights need LaST-R1's custom action-token rollout;
-        # the generic official-policy pipeline cannot execute them.
-        "last-r1",
         # Internal shared operator/contract surface. Concrete priors such as metric3d-prior,
         # unidepth-v2-prior, dap, and video-depth-anything-prior are the user-facing entries.
         "geometry-prior",
@@ -1116,6 +1114,25 @@ def _cogact_default_ref() -> str:
         str(checkpoint_root_path("hfd", "CogACT--CogACT-Base")),
         "CogACT/CogACT-Base",
     )
+
+
+def _last_r1_default_ref() -> str:
+    suffix = Path("chenhao01--LaST-R1") / "LaST-R1-RL" / "last-r1-rl-libero_10"
+    configured = resolve_worldfoundry_path(Path("${WORLDFOUNDRY_CKPT_DIR}") / suffix)
+    if not (configured / "config.json").is_file() and not os.environ.get("WORLDFOUNDRY_CKPT_DIR"):
+        sibling = PIPELINES_ROOT.parents[2] / "ckpts" / suffix
+        if (sibling / "config.json").is_file():
+            return str(sibling)
+    return str(configured)
+
+
+def _last_r1_default_load_kwargs() -> Dict[str, Any]:
+    source = official_runtime_repo_path("LaST-R1", specific_env="WORLDFOUNDRY_LAST_R1_SOURCE_DIR")
+    if not source.is_dir() and not os.environ.get("WORLDFOUNDRY_LAST_R1_SOURCE_DIR"):
+        sibling = PIPELINES_ROOT.parents[2] / "model" / "LaST-R1"
+        if sibling.is_dir():
+            source = sibling
+    return {"source_root": str(source)}
 
 
 def _cogact_default_call_kwargs() -> Dict[str, Any]:
@@ -5291,6 +5308,19 @@ CURATED_OVERRIDES: Dict[str, Dict[str, Any]] = {
         "aliases": ("smolvla-libero", "huggingfacevla/smolvla_libero"),
         "tags": ("vla", "policy", "robot-action", "flow-matching", "in-tree-runtime"),
         "notes": "The Workspace default uses the task-trained LIBERO checkpoint, two RGB views, and an 8-D state vector.",
+    },
+    "last-r1": {
+        "display_name": "LaST-R1",
+        "category": "Embodied Action",
+        "summary": "Offline image-and-instruction inference with the libero_10 RL policy.",
+        "default_model_ref": _last_r1_default_ref,
+        "default_prompt": "Pick up the red block and place it in the bowl.",
+        "default_load_kwargs": _last_r1_default_load_kwargs,
+        "supports_from_pretrained": True,
+        "default_backend": "from_pretrained",
+        "tags": ("vla", "policy", "robot-action", "libero"),
+        "env_hints": ("WORLDFOUNDRY_LAST_R1_SOURCE_DIR",),
+        "notes": "The pinned official source is required. Offline action inference is verified; LIBERO task success is unmeasured.",
     },
     "cogact": {
         "display_name": "CogACT",
@@ -13068,8 +13098,6 @@ def find_runtime_entry(model_id: str) -> CatalogEntry:
     requested = _cogvideox_variant_id(model_id) or _catalog_id_key(model_id)
     if not requested:
         raise KeyError(f"Unknown Studio model id: {model_id}")
-    if requested == _catalog_id_key("last-r1"):
-        raise KeyError("LaST-R1 Studio inference is unavailable until its action-token rollout is integrated")
     ast_model_id = FAST_CANONICAL_AST_ALIASES.get(requested, requested)
     for info in _discover_catalog_infos():
         if _catalog_id_key(info.model_id) == _catalog_id_key(ast_model_id):

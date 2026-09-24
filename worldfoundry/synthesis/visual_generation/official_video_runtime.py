@@ -257,7 +257,17 @@ class OfficialVideoRuntime:
         self.runtime_config_path = runtime_config_path
         self.config = self._load_config(runtime_config_path)
         runtime = dict(self.config.get("runtime") or {})
-        runtime.update({key: value for key, value in overrides.items() if value is not None})
+        defaults = runtime.get("defaults")
+        default_variables = dict(defaults) if isinstance(defaults, Mapping) else {}
+        for key, value in overrides.items():
+            if value is None:
+                continue
+            if key in default_variables:
+                default_variables[key] = value
+            else:
+                runtime[key] = value
+        if isinstance(defaults, Mapping):
+            runtime["defaults"] = default_variables
         self.runtime = _expand_value(runtime)
         self._diffusers_pipeline: Any | None = None
         self._diffusers_pipeline_key: tuple[str, ...] | None = None

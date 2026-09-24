@@ -47,12 +47,16 @@ class VchitectDenoiser:
         timestep = model_input.timestep.to(device=model_input.latents.device).reshape(-1)
         if timestep.numel() == 1:
             timestep = timestep.expand(model_input.latents.shape[0])
-        sample = self.model(
-            model_input.latents,
-            encoder_hidden_states=prompt.to(device=model_input.latents.device, dtype=model_input.latents.dtype),
-            pooled_projections=pooled.to(device=model_input.latents.device, dtype=model_input.latents.dtype),
-            timestep=timestep,
-        )
+        # The released model uses bfloat16 weights under autocast. Its first
+        # latent is float32 and its text sequence/pooled vectors have different
+        # dtypes; coercing everything to the latent dtype changes the trajectory.
+        with torch.autocast("cuda", dtype=torch.bfloat16, enabled=model_input.latents.is_cuda):
+            sample = self.model(
+                model_input.latents,
+                encoder_hidden_states=prompt.to(device=model_input.latents.device),
+                pooled_projections=pooled.to(device=model_input.latents.device),
+                timestep=timestep,
+            )
         return DenoiserOutput(sample=sample)
 
 

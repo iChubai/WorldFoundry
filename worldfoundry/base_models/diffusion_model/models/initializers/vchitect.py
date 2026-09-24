@@ -31,6 +31,10 @@ class VchitectLatentInitializer:
         """Return ``[B, num_frames, C, H/s, W/s]`` Gaussian noise."""
         if request.height % self.spatial_compression or request.width % self.spatial_compression:
             raise ValueError("Vchitect height and width must be divisible by the VAE compression")
+        # The released pipeline draws noise using the concatenated prompt embedding
+        # dtype. Its CLIP/T5 sequence embedding is float32 even though the
+        # transformer runs in bfloat16, so the seeded noise must be float32 too.
+        del dtype
         return torch.randn(
             request.batch_size,
             request.num_frames,
@@ -39,7 +43,7 @@ class VchitectLatentInitializer:
             request.width // self.spatial_compression,
             generator=generator,
             device=device,
-            dtype=dtype,
+            dtype=torch.float32,
         )
 
 

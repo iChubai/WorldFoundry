@@ -30,7 +30,10 @@ class VchitectPromptConditioner:
         from transformers import CLIPTextModelWithProjection, CLIPTokenizer, T5EncoderModel, T5TokenizerFast
 
         self.device = device
-        self.dtype = dtype
+        # The released pipeline loads all three text encoders in float32 and
+        # applies bfloat16 autocast during inference. The sequence embedding
+        # remains float32 while CLIP pooled vectors are bfloat16.
+        self.dtype = torch.float32
         self.tokenizer = CLIPTokenizer.from_pretrained(root, subfolder="tokenizer", local_files_only=True)
         self.tokenizer_2 = CLIPTokenizer.from_pretrained(root, subfolder="tokenizer_2", local_files_only=True)
         self.tokenizer_3 = T5TokenizerFast.from_pretrained(root, subfolder="tokenizer_3", local_files_only=True)
@@ -38,19 +41,19 @@ class VchitectPromptConditioner:
             root,
             subfolder="text_encoder",
             local_files_only=True,
-            torch_dtype=dtype,
+            torch_dtype=torch.float32,
         ).to(device)
         self.text_encoder_2 = CLIPTextModelWithProjection.from_pretrained(
             root,
             subfolder="text_encoder_2",
             local_files_only=True,
-            torch_dtype=dtype,
+            torch_dtype=torch.float32,
         ).to(device)
         self.text_encoder_3 = T5EncoderModel.from_pretrained(
             root,
             subfolder="text_encoder_3",
             local_files_only=True,
-            torch_dtype=dtype,
+            torch_dtype=torch.float32,
         ).to(device)
         for model in (self.text_encoder, self.text_encoder_2, self.text_encoder_3):
             model.eval().requires_grad_(False)
@@ -67,7 +70,7 @@ class VchitectPromptConditioner:
             return_tensors="pt",
         ).input_ids.to(self.device)
         output = encoder(tokens, output_hidden_states=True)
-        return output.hidden_states[-2].to(self.dtype), output.text_embeds.to(self.dtype)
+        return output.hidden_states[-2].to(self.dtype), output.text_embeds
 
     @torch.no_grad()
     def _t5(self, prompts: Sequence[str]) -> torch.Tensor:
@@ -103,10 +106,11 @@ class VchitectPromptConditioner:
         """Return SD3-style ``prompt_embeds`` and ``pooled_prompt_embeds``."""
         del device, dtype
         negative = request.negative_prompts or ("",) * request.batch_size
-        return Conditioning(
-            positive=self._branch(request.prompts),
-            negative=self._branch(negative),
-        )
+        with torch.autocast("cuda", dtype=torch.bfloat16, enabled=self.device.type == "cuda"):
+            return Conditioning(
+                positive=self._branch(request.prompts),
+                negative=self._branch(negative),
+            )
 
 
 def build_vchitect_prompt_conditioner(context: ComponentBuildContext) -> VchitectPromptConditioner:

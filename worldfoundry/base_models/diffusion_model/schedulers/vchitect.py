@@ -45,6 +45,19 @@ class VchitectFlowMatchEulerScheduler(WanFlowMatchEulerScheduler):
             for index in range(count)
         )
 
+    def step(
+        self,
+        model_output: torch.Tensor,
+        step: SchedulerStep,
+        latents: torch.Tensor,
+        *,
+        generator: torch.Generator,
+    ) -> torch.Tensor:
+        """Follow Diffusers' float32 Euler update and output dtype cast."""
+        del generator
+        delta = (step.next_timestep - step.timestep) / self.num_train_timesteps
+        return (latents.float() + delta * model_output).to(model_output.dtype)
+
 
 def build_vchitect_flow_match_euler_scheduler(
     context: ComponentBuildContext,

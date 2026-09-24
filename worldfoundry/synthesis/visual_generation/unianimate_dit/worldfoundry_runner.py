@@ -50,14 +50,14 @@ def _as_bool(value: str | bool | int | None) -> bool:
 def _rewrite_demo_script(
     source: str,
     *,
-    prompt: str,
-    reference_image: str,
     max_frames: int,
     steps: int,
     height: int,
     width: int,
     seed: int,
     use_usp: bool,
+    prompt: str = "a person is dancing",
+    reference_image: str = DEFAULT_REF_IMAGE,
 ) -> str:
     text = source
     case = f'[1, {json.dumps(reference_image)}, {json.dumps(DEFAULT_POSE_DIR)}]'

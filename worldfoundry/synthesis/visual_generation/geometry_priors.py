@@ -164,7 +164,13 @@ class GeometryPriorSynthesis(BaseSynthesis):
         known_paths = _known_checkpoint_candidates(self.model_id)
         explicit = self._explicit_checkpoint()
         if self.model_id == "track-anything-prior":
-            checkpoint_paths = tuple(dict.fromkeys((*profile_paths, *known_paths)))
+            checkpoint_paths = tuple(
+                self._expand_path(str(self.options.get(key) or default))
+                for key, default in zip(
+                    ("sam_ckpt_path", "aot_ckpt_path", "grounding_dino_ckpt_path"),
+                    known_paths,
+                )
+            )
         elif explicit:
             checkpoint_paths = (self._expand_path(str(explicit)),)
         else:
@@ -256,7 +262,6 @@ class GeometryPriorSynthesis(BaseSynthesis):
         execute: bool = False,
         **kwargs: Any,
     ) -> dict[str, Any]:
-        del prompt
         missing = self.state.missing_requirements
         plan = {
             "model_id": self.model_id,
@@ -298,6 +303,8 @@ class GeometryPriorSynthesis(BaseSynthesis):
         if self.model_id == "video-depth-anything-prior":
             return self._run_video_depth(video=video, images=images, output_dir=output_dir, **kwargs)
         if self.model_id == "track-anything-prior":
+            if prompt is not None:
+                kwargs.setdefault("prompt", prompt)
             return self._run_track_anything(video=video, images=images, output_dir=output_dir, **kwargs)
         if self.model_id in {"dust3r", "dust3r-base-model"}:
             return self._run_dust3r(images=images, output_dir=output_dir, **kwargs)
@@ -557,12 +564,14 @@ class GeometryPriorSynthesis(BaseSynthesis):
     def _run_track_anything(self, *, video: Any, images: Any, output_dir: Path, **kwargs: Any) -> dict[str, Any]:
         from worldfoundry.base_models.perception_core.tracking.track_anything import TrackAnythingPipeline
 
-        root = _checkpoint_root()
-        sam_ckpt = Path(str(kwargs.get("sam_ckpt_path") or root / "SAM" / "models" / "sams" / "sam_vit_b_01ec64.pth")).expanduser()
-        aot_ckpt = Path(str(kwargs.get("aot_ckpt_path") or root / "Track-Anything" / "R50_DeAOTL_PRE_YTB_DAV.pth")).expanduser()
-        grounding_ckpt = Path(
-            str(kwargs.get("grounding_dino_ckpt_path") or root / "GroundingDINO" / "groundingdino_swint_ogc.pth")
-        ).expanduser()
+        defaults = _known_checkpoint_candidates(self.model_id)
+
+        def checkpoint_path(key: str, index: int) -> Path:
+            return Path(str(kwargs.get(key) or self.options.get(key) or defaults[index])).expanduser()
+
+        sam_ckpt = checkpoint_path("sam_ckpt_path", 0)
+        aot_ckpt = checkpoint_path("aot_ckpt_path", 1)
+        grounding_ckpt = checkpoint_path("grounding_dino_ckpt_path", 2)
         frames = _load_video_frames(
             _first_available(video, kwargs.get("video_path"), kwargs.get("input_path"), images),
             max_frames=int(kwargs.get("max_frames") or 3),

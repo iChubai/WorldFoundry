@@ -87,6 +87,7 @@ pyarrow
 moviepy
 safetensors
 einops
+einops-exts==0.0.4
 accelerate
 imageio
 imageio-ffmpeg

@@ -338,6 +338,7 @@ all = [
     "colorspacious",
     "easydict",
     "einops",
+    "einops-exts==0.0.4",
     "evo",
     "fastapi",
     "filelock",

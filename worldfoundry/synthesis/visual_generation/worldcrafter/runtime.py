@@ -340,8 +340,6 @@ class WorldCrafter:
                 raise ValueError(
                     "Fast requires CFG=1 and six regular steps; the first T2V chunk uses twelve steps"
                 )
-            if resume_from is not None or state_output_dir is not None:
-                raise ValueError("Fast resume/state export is not yet validated")
             self.pipeline.resident_branches.switch("equal")
             self.pipeline.resident_branches.switches = 0
             self.pipeline.stage_model_trace.clear()
@@ -431,6 +429,8 @@ class WorldCrafter:
                 "model_sha256"
             ],
         }
+        if is_fast:
+            run_contract["model_type"] = "fast"
         resume_state: dict[str, object] | None = None
         prior_history_selection: list[dict[str, object]] = []
         if resume_from is not None:
@@ -524,12 +524,15 @@ class WorldCrafter:
                 f"got {len(self.memory_provider.render_records)}"
             )
         output_path.parent.mkdir(parents=True, exist_ok=True)
-        if is_fast and len(frames) != (final_chunk_index + 1) * CAMERA_CHUNK_FRAMES:
+        if is_fast and len(frames) != (final_chunk_index - start_chunk + 1) * CAMERA_CHUNK_FRAMES:
             raise RuntimeError("Fast output must preserve every decoded RGB frame")
         if resume_state is None:
             export_to_video(frames, str(output_path), fps=fps)
         else:
-            assemble_resumed_video(output_path, chunk_output_dir, final_chunk_index, fps)
+            assemble_resumed_video(
+                output_path, chunk_output_dir, final_chunk_index, fps,
+                overlap_frames=0 if is_fast else 1,
+            )
         history_selection = [
             *prior_history_selection,
             *[record.to_jsonable() for record in self.memory_provider.render_records],
@@ -563,7 +566,11 @@ class WorldCrafter:
         }
         if is_fast:
             first_chunk_steps = 12 if mode == "t2v" else 6
-            expected_calls = first_chunk_steps + final_chunk_index * 6
+            expected_calls = (
+                first_chunk_steps + final_chunk_index * 6
+                if resume_state is None
+                else (final_chunk_index - start_chunk + 1) * 6
+            )
             if len(self.pipeline.stage_model_trace) != expected_calls:
                 raise RuntimeError(
                     "Fast forward count differs from the mode-specific DMD contract"

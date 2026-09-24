@@ -125,8 +125,6 @@ class WorldCrafterPipeline(PipelineABC):
         if self.model_type == "fast":
             if kwargs.get("num_inference_steps", 6) != 6 or kwargs.get("guidance_scale", 1.0) != 1.0:
                 raise ValueError("Fast requires six contract-owned steps and CFG=1")
-            if kwargs.get("resume_from") is not None or kwargs.get("state_output_dir") is not None:
-                raise ValueError("Fast resume/state export is not supported")
         import inspect
         allowed = set(inspect.signature(WorldCrafter.generate).parameters) - {"self", "mode", "camera_path", "image_path", "prompt", "output_path"}
         unknown = set(kwargs) - allowed

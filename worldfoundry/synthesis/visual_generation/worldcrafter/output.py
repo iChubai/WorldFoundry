@@ -56,7 +56,11 @@ def save_chunk_state(
 
 
 def assemble_resumed_video(
-    output_path: Path, chunk_output_dir: Path, final_chunk_index: int, fps: int
+    output_path: Path,
+    chunk_output_dir: Path,
+    final_chunk_index: int,
+    fps: int,
+    overlap_frames: int = 1,
 ) -> None:
     chunk_paths = [
         chunk_output_dir / f"chunk_{index:03d}_33f.mp4"
@@ -71,8 +75,28 @@ def assemble_resumed_video(
     ffmpeg = _resolve_ffmpeg_executable()
     if ffmpeg is None:
         raise RuntimeError("FFmpeg is required to assemble resumed WorldCrafter video")
+    if overlap_frames not in (0, 1):
+        raise ValueError("WorldCrafter chunk overlap must be zero (Fast) or one (Base)")
     if len(chunk_paths) == 1:
         shutil.copyfile(chunk_paths[0], output_path)
+        return
+    if overlap_frames == 0:
+        concat_path = output_path.with_suffix(".concat.txt")
+        concat_path.write_text(
+            "".join(
+                "file '" + str(path.resolve()).replace("'", "'\\''") + "'\n"
+                for path in chunk_paths
+            ),
+            encoding="utf-8",
+        )
+        try:
+            subprocess.run(
+                [ffmpeg, "-y", "-f", "concat", "-safe", "0", "-i", str(concat_path),
+                 "-c", "copy", str(output_path)],
+                check=True,
+            )
+        finally:
+            concat_path.unlink(missing_ok=True)
         return
 
     # Each 33-frame chunk repeats the previous chunk's last frame. A stream

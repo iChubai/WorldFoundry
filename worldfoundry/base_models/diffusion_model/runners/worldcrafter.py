@@ -265,8 +265,6 @@ class WorldCrafterPipeline(HeliosPipeline):
                 raise ValueError("Fast inference requires pyramid sampling and CFG=1")
             if pyramid_num_inference_steps_list is not None:
                 raise ValueError("Fast steps are owned by the checkpoint DMD contract")
-            if resume_state is not None:
-                raise ValueError("Fast resume is not yet validated")
         elif camera_trajectory is not None and is_enable_stage2:
             raise ValueError("Base camera inference requires stage1 sampling")
         if memory_size != 4:

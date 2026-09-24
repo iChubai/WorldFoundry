@@ -127,6 +127,11 @@ def main() -> None:
     args = parse_args()
     repo_root = Path(args.repo_root).expanduser().resolve()
     checkpoint_path = Path(args.checkpoint_path).expanduser().resolve()
+    # The published F1 checkpoint uses forward section ordering and memory
+    # layout, whereas FramePackI2V_HY uses the original backward schedule.
+    os.environ["WORLDFOUNDRY_FRAMEPACK_VARIANT"] = (
+        "f1" if any(re.search(r"framepack[-_]f1", part.lower()) for part in checkpoint_path.parts) else "original"
+    )
     image_path = Path(args.image_path).expanduser().resolve()
     output_path = Path(args.output_path).expanduser().resolve()
     hf_home = Path(args.hf_home).expanduser().resolve()

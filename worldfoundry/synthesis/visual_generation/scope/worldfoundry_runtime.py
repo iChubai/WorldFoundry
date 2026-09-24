@@ -191,7 +191,21 @@ class SCOPERuntime:
         if self.device.startswith("cuda:"):
             cuda_index = self.device.split(":", 1)[1].strip()
             if cuda_index.isdigit():
-                env["CUDA_VISIBLE_DEVICES"] = cuda_index
+                # CUDA device indices are relative to the caller's visible set.
+                # The subprocess uses its own cuda:0 after narrowing that set.
+                visible = env.get("CUDA_VISIBLE_DEVICES")
+                if visible is None:
+                    selected = cuda_index
+                else:
+                    devices = [value.strip() for value in visible.split(",") if value.strip()]
+                    index = int(cuda_index)
+                    if index >= len(devices):
+                        raise ValueError(
+                            f"SCOPE device {self.device!r} is outside "
+                            f"CUDA_VISIBLE_DEVICES={visible!r}"
+                        )
+                    selected = devices[index]
+                env["CUDA_VISIBLE_DEVICES"] = selected
                 env["SCOPE_DEVICE"] = "cuda"
             else:
                 env["SCOPE_DEVICE"] = self.device

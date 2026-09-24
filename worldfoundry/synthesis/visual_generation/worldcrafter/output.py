@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import json
 import os
+import shutil
 import subprocess
 from pathlib import Path
 
@@ -55,7 +56,7 @@ def save_chunk_state(
 
 
 def assemble_resumed_video(
-    output_path: Path, chunk_output_dir: Path, final_chunk_index: int
+    output_path: Path, chunk_output_dir: Path, final_chunk_index: int, fps: int
 ) -> None:
     chunk_paths = [
         chunk_output_dir / f"chunk_{index:03d}_33f.mp4"
@@ -70,25 +71,39 @@ def assemble_resumed_video(
     ffmpeg = _resolve_ffmpeg_executable()
     if ffmpeg is None:
         raise RuntimeError("FFmpeg is required to assemble resumed WorldCrafter video")
-    concat_path = output_path.with_suffix(".concat.txt")
-    concat_path.write_text(
-        "".join("file '" + str(path.resolve()).replace("'", "'\\''") + "'\n" for path in chunk_paths),
-        encoding="utf-8",
+    if len(chunk_paths) == 1:
+        shutil.copyfile(chunk_paths[0], output_path)
+        return
+
+    # Each 33-frame chunk repeats the previous chunk's last frame. A stream
+    # copy would keep both copies at every boundary (66 frames for two chunks,
+    # instead of the 65 frames produced by uninterrupted Base inference).
+    filters = []
+    for index in range(len(chunk_paths)):
+        trim = "trim=start_frame=1," if index else ""
+        filters.append(f"[{index}:v]{trim}setpts=PTS-STARTPTS[v{index}]")
+    inputs = "".join(f"[v{index}]" for index in range(len(chunk_paths)))
+    filters.append(
+        f"{inputs}concat=n={len(chunk_paths)}:v=1:a=0,format=yuv420p[v]"
     )
     subprocess.run(
         [
             ffmpeg,
             "-y",
-            "-f",
-            "concat",
-            "-safe",
-            "0",
-            "-i",
-            str(concat_path),
+            *[option for path in chunk_paths for option in ("-i", str(path))],
+            "-filter_complex",
+            ";".join(filters),
+            "-map",
+            "[v]",
             "-c",
-            "copy",
+            "libx264",
+            "-crf",
+            "18",
+            "-pix_fmt",
+            "yuv420p",
+            "-r",
+            str(fps),
             str(output_path),
         ],
         check=True,
     )
-    concat_path.unlink()

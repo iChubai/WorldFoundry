@@ -529,7 +529,7 @@ class WorldCrafter:
         if resume_state is None:
             export_to_video(frames, str(output_path), fps=fps)
         else:
-            assemble_resumed_video(output_path, chunk_output_dir, final_chunk_index)
+            assemble_resumed_video(output_path, chunk_output_dir, final_chunk_index, fps)
         history_selection = [
             *prior_history_selection,
             *[record.to_jsonable() for record in self.memory_provider.render_records],

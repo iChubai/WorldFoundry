@@ -142,6 +142,9 @@ STUDIO_HIDDEN_CATALOG_MODEL_IDS: frozenset[str] = frozenset(
         # AdaWorld is tracked as source/provenance only until the official env, checkpoints, and task assets are
         # reproducibly runnable from the unified Studio environment.
         "adaworld",
+        # The released libero_10 weights need LaST-R1's custom action-token rollout;
+        # the generic official-policy pipeline cannot execute them.
+        "last-r1",
         # Internal shared operator/contract surface. Concrete priors such as metric3d-prior,
         # unidepth-v2-prior, dap, and video-depth-anything-prior are the user-facing entries.
         "geometry-prior",
@@ -8682,7 +8685,7 @@ CURATED_OVERRIDES: Dict[str, Dict[str, Any]] = {
         "default_task_type": "video-to-video",
         "default_backend": "from_pretrained",
         "supports_from_pretrained": True,
-        "default_input_path": str(_data_path("test_cases", "neoverse", "videos", "movie.mp4")),
+        "default_input_path": None,
         "default_load_kwargs": lambda: _sana_streaming_default_load_kwargs(bidirectional=False),
         "default_call_kwargs": {
             "num_frames": 81,
@@ -8719,7 +8722,7 @@ CURATED_OVERRIDES: Dict[str, Dict[str, Any]] = {
         "default_task_type": "video-to-video",
         "default_backend": "from_pretrained",
         "supports_from_pretrained": True,
-        "default_input_path": str(_data_path("test_cases", "neoverse", "videos", "movie.mp4")),
+        "default_input_path": None,
         "default_load_kwargs": lambda: _sana_streaming_default_load_kwargs(bidirectional=True),
         "default_call_kwargs": {
             "num_frames": 81,
@@ -13064,6 +13067,8 @@ def find_runtime_entry(model_id: str) -> CatalogEntry:
     requested = _cogvideox_variant_id(model_id) or _catalog_id_key(model_id)
     if not requested:
         raise KeyError(f"Unknown Studio model id: {model_id}")
+    if requested == _catalog_id_key("last-r1"):
+        raise KeyError("LaST-R1 Studio inference is unavailable until its action-token rollout is integrated")
     ast_model_id = FAST_CANONICAL_AST_ALIASES.get(requested, requested)
     for info in _discover_catalog_infos():
         if _catalog_id_key(info.model_id) == _catalog_id_key(ast_model_id):

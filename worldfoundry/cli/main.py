@@ -970,9 +970,6 @@ def _uses_direct_model_run(args: argparse.Namespace) -> bool:
 
 def _handle_direct_model_run(args: argparse.Namespace) -> int:
     """Execute one model directly from its typed inference contract."""
-    from worldfoundry.evaluation.api import GenerationRequest
-    from worldfoundry.evaluation.runner import EvaluateRunRequest, execute_evaluate_run
-
     schema = args.model_run_schema
     if not schema.runnable:
         raise CliUsageError(
@@ -996,6 +993,9 @@ def _handle_direct_model_run(args: argparse.Namespace) -> int:
     )
     if missing and args.requests_path is None:
         raise CliUsageError(f"direct {schema.model_id} inference requires {', '.join(missing)}")
+
+    from worldfoundry.evaluation.api import GenerationRequest
+    from worldfoundry.evaluation.runner import EvaluateRunRequest, execute_evaluate_run
 
     requests = None
     if args.requests_path is None:

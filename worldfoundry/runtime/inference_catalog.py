@@ -96,7 +96,6 @@ _RUNTIME_CONFIGS_ROOT = Path(__file__).resolve().parents[1] / "data" / "models" 
 _PROJECT_ROOT = project_root(__file__)
 _WORKSPACE_ROOT = _PROJECT_ROOT.parent
 GENERIC_IMAGE_FIXTURE = str(_TEST_CASES_ROOT / "studio_demo" / "00" / "image.jpg")
-GENERIC_VIDEO_FIXTURE = str(_TEST_CASES_ROOT / "neoverse" / "videos" / "movie.mp4")
 GENERIC_3D_FIXTURE = str(_TEST_CASES_ROOT / "vggt" / "examples" / "kitchen" / "images")
 GENERIC_GEOMETRY_FIXTURE = str(_TEST_CASES_ROOT / "images" / "000.png")
 GENERIC_ACTION_FIXTURE = str(_TEST_CASES_ROOT / "test_vla_case1" / "droid" / "exterior_image_1_left.png")
@@ -2315,7 +2314,7 @@ def _sana_streaming_inference_spec(*, bidirectional: bool) -> ModelInferenceSpec
                         kind="path",
                         target="input_path",
                         required=True,
-                        default=GENERIC_VIDEO_FIXTURE,
+                        description="Provide at least num_frames decoded frames; shorter videos are rejected.",
                     ),
                     _field("negative_prompt", "Negative Prompt", target="call_kwargs", default=""),
                     _field("num_frames", "Frames", kind="integer", target="call_kwargs", default=81),
@@ -2385,7 +2384,7 @@ def _bernini_task_profile(
                 kind="path",
                 target="input_path",
                 required=True,
-                default=GENERIC_IMAGE_FIXTURE if input_kind == "image" else GENERIC_VIDEO_FIXTURE,
+                default=GENERIC_IMAGE_FIXTURE if input_kind == "image" else None,
             )
         )
     if reference_image:
@@ -5188,7 +5187,7 @@ def generic_model_inference_spec(
         value = _default_call_value(call_defaults, *names)
         return None if value is _MISSING_DEFAULT else value
 
-    def generic_input_default() -> str:
+    def generic_input_default() -> str | None:
         configured = field_default("input_path", "data_path", "image", "image_path", "video", "video_path")
         if configured not in (None, ""):
             return configured
@@ -5201,7 +5200,7 @@ def generic_model_inference_spec(
         wants_video = bool({"video", "videos", "video-path"} & supported)
         wants_image = bool({"image", "images", "image-path"} & supported)
         if wants_video and not wants_image and workload not in {"i2v"}:
-            return GENERIC_VIDEO_FIXTURE
+            return None
         return GENERIC_IMAGE_FIXTURE
 
     def add_common_fields(fields: list[InferenceFieldSpec]) -> None:

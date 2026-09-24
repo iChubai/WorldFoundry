@@ -163,13 +163,14 @@ class SanaVideoToVideoInitializer(SanaNoiseInitializer):
             raise ValueError("SANA-Streaming requires request.inputs['video']")
         if request.batch_size != 1:
             raise ValueError("SANA-Streaming currently requires prompt batch size 1")
-        frames = torch.from_numpy(coerce_video_frames(value)).permute(0, 3, 1, 2).float()
-        if frames.shape[0] < request.num_frames:
-            frames = torch.cat(
-                (frames, frames[-1:].expand(request.num_frames - frames.shape[0], -1, -1, -1)),
-                dim=0,
+        source_frames = coerce_video_frames(value)
+        if source_frames.shape[0] < request.num_frames:
+            raise ValueError(
+                "SANA-Streaming source video has "
+                f"{source_frames.shape[0]} frames, but num_frames={request.num_frames}; "
+                "provide a source video at least as long as the requested output"
             )
-        frames = frames[: request.num_frames]
+        frames = torch.from_numpy(source_frames[: request.num_frames]).permute(0, 3, 1, 2).float()
         frames = functional.interpolate(
             frames,
             size=(request.height, request.width),

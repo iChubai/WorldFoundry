@@ -204,53 +204,6 @@ def _load_image(value: Any) -> Any:
     return value
 
 
-def real_time_chunking_action(
-    *,
-    instruction: str,
-    image: Any,
-    observation: Mapping[str, Any],
-    action_context: Sequence[Any],
-    checkpoint_path: str,
-    device: str,
-) -> dict[str, Any]:
-    """
-    Applies Real-Time Chunking (RTC) routing to an existing action chunk.
-
-    This function is used when no policy checkpoint is provided, and the actions are
-    derived directly from the `action_context`. It effectively passes through the
-    provided action context as the determined actions, signaling that a policy
-    denoiser might be required for new chunks.
-
-    Args:
-        instruction: The natural language instruction for the task.
-        image: The current visual observation (ignored in this passthrough mode).
-        observation: The current observation data.
-        action_context: A sequence of actions representing the action chunk to be passed through.
-        checkpoint_path: The path to the policy checkpoint (ignored in this passthrough mode).
-        device: The device to run the policy on (ignored in this passthrough mode).
-
-    Returns:
-        A dictionary representing the RTC output, including the instruction, actions,
-        observation keys, and RTC specific metadata.
-
-    Raises:
-        ValueError: If `action_context` is empty, as RTC requires existing actions in this mode.
-    """
-    # The image, checkpoint_path, and device parameters are not used in this specific RTC mode.
-    del image, checkpoint_path, device
-    if not action_context:
-        raise ValueError("real-time-chunking requires an action_context/action_chunk input when no policy checkpoint is provided.")
-    return {
-        "instruction": instruction,
-        "actions": list(action_context),
-        "observation_keys": sorted(str(key) for key in observation),
-        "rtc": {
-            "mode": "chunk_context_passthrough",
-            "requires_policy_denoiser_for_new_chunks": True,
-        },
-    }
-
-
 @dataclass(frozen=True)
 class OfficialPolicyRuntimeConfig:
     """

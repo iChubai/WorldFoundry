@@ -53,15 +53,6 @@ algorithms:
     local_dir: ${WORLDFOUNDRY_MODEL_SOURCE_DIR}/openpi
     revision: c23745b5ad24e98f66967ea795a07b2588ed6c79
   worldfoundry_model_id: pi0-fast
-- id: real-time-chunking
-  lerobot_policy_dir: rtc
-  name: Real-Time Chunking
-  source_basis: official_repo
-  official_repo:
-    url: https://github.com/Physical-Intelligence/real-time-chunking-kinetix
-    local_dir: ${WORLDFOUNDRY_MODEL_SOURCE_DIR}/real-time-chunking-kinetix
-    revision: 9296f31d62d5bfeb5779dcb2f9bcf71ca37f448b
-  worldfoundry_model_id: real-time-chunking
 - id: gr00t
   lerobot_policy_dir: groot
   name: NVIDIA GR00T

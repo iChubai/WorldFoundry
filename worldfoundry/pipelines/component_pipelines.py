@@ -354,12 +354,6 @@ OpenVLAOFTPipeline = _independent_action_pipeline(
     synthesis_target="worldfoundry.synthesis.action_generation.openvla_oft:OpenVLAOFTSynthesis",
 )
 OpenVLAOFTPipeline.MODEL_PATH_OPTION = "checkpoint_path"
-RealTimeChunkingPipeline = _official_policy_pipeline(
-    "RealTimeChunkingPipeline",
-    model_id="real-time-chunking",
-    doc="WorldFoundry action-chunking runtime pipeline for Real-Time Chunking.",
-    generation_type="action_chunking_policy",
-)
 SmolVLAPipeline = _official_policy_pipeline(
     "SmolVLAPipeline",
     model_id="smolvla",
@@ -532,7 +526,6 @@ __all__ = [
     "OpenVLAPipeline",
     "PandoraPipeline",
     "PixelSplatPipeline",
-    "RealTimeChunkingPipeline",
     "RoboFlamingoPipeline",
     "ShowOPipeline",
     "SmolVLAPipeline",

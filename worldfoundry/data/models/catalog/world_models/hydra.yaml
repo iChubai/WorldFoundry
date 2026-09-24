@@ -20,30 +20,32 @@ integration:
   - Official source is vendored at revision 48652becf0030edbaabde4d04f33bb33ad380410.
   - The public repository has no LICENSE file in the pinned revision; license review remains required.
 runner_parity:
-  status: verified_inference_only
+  status: verified_configuration
   notes:
-  - A 2026-09-24 local checkpoint-backed run produced 77 condition and 77 generated
-    decodable 832x480 frames at the upstream default of 50 denoising steps.
-  - Generated middle frames show a broad wall-like occlusion with a synthetic camera
-    path and model-generated source video; camera adherence and quality remain unverified.
+  - The public pipeline generated the official example 1 with its source video,
+    camera JSON, and caption at the upstream default of 50 steps on local checkpoints.
+    All 77 generated frames decode at 832x480 and visibly preserve the street scene
+    and armored subject as the subject leaves and returns to view.
+  - A separate synthetic-camera run showed a broad wall-like occlusion; performance
+    on arbitrary trajectories and quantitative camera adherence remain unmeasured.
 catalog_category: world_models
 docs:
   publisher: Open-source research release (institution not recorded)
   publisher_kind: lab
   publisher_zh: 开源研究发布（仓库未记录正式机构）
-  overview: 'HyDRA is a camera-controlled video-to-video world model: it re-renders an input video along new camera behavior described by a camera JSON. The pinned in-tree runtime completed one local checkpoint-backed 50-step GPU inference run; the generated middle frames show an occlusion with synthetic camera controls.'
-  overview_zh: HyDRA 是相机可控的视频到视频世界模型：按 camera JSON 描述的新相机行为重新渲染输入视频。固定版本的树内运行时已完成一次本地真实权重 50 步 GPU 推理；使用合成相机控制时，生成视频中段出现大面积遮挡。
+  overview: 'HyDRA is a camera-controlled video-to-video world model: it re-renders an input video along new camera behavior described by a camera JSON. The pinned runtime generated a coherent 77-frame continuation of an official example at 50 steps; a separate synthetic camera case showed an occlusion.'
+  overview_zh: HyDRA 是相机可控的视频到视频世界模型：按 camera JSON 描述的新相机行为重新渲染输入视频。固定版本的运行时用官方样例和 50 步推理生成了连贯的 77 帧续写；另一个合成相机案例出现遮挡。
   architecture: Architecture internals are not recorded in this repository. The pinned public revision has no LICENSE file, so license review remains required before downstream use.
   architecture_zh: 架构内部细节仓库未记录。固定的公开 revision 无 LICENSE 文件，下游使用前必须先做许可审查。
-  usage_notes: Bundled source is mandatory — external source checkouts are rejected. Inputs are prompt, video, and camera_json. A 50-step run completed, but synthetic-path visual quality needs review.
-  usage_notes_zh: 必须使用内置源码——外部源码检出会被拒绝。输入为提示词、视频与 camera_json。50 步推理已完成，但合成轨迹下的画质仍需检查。
+  usage_notes: Bundled source is mandatory — external source checkouts are rejected. Inputs are prompt, video, and camera_json. The official example completed at 50 steps; synthetic-path visual quality needs review.
+  usage_notes_zh: 必须使用内置源码——外部源码检出会被拒绝。输入为提示词、视频与 camera_json。官方样例 50 步推理已完成；合成轨迹下的画质仍需检查。
   limitations:
   - 'No LICENSE in the pinned upstream revision: legal review required.'
-  - One 50-step GPU artifact is recorded; its generated middle frames show a broad occlusion, and camera adherence is unmeasured.
+  - The official example looks coherent, while a separate synthetic-path artifact has a broad occlusion; quantitative camera adherence is unmeasured.
   - The publishing institution is not recorded in this repository.
   limitations_zh:
   - 固定上游 revision 无 LICENSE：需要法律审查。
-  - 已记录一次 50 步 GPU 产物；生成段中部出现大面积遮挡，相机轨迹遵循性尚未测量。
+  - 官方样例画面连贯，但另一个合成轨迹产物出现大面积遮挡；相机轨迹遵循性尚未量化测量。
   - 发表机构在本仓库中未记录。
   recommended_benchmarks:
   - id: camerabench

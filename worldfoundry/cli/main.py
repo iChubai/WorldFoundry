@@ -987,6 +987,13 @@ def _handle_direct_model_run(args: argparse.Namespace) -> int:
         and field.required
         and not resolution.inputs.get(field.input_key or field.key_path[-1])
     ]
+    missing.extend(
+        field.option
+        for field in schema.fields
+        if field.scope == "call"
+        and field.required
+        and getattr(args, field.dest, None) in (None, "")
+    )
     if missing and args.requests_path is None:
         raise CliUsageError(f"direct {schema.model_id} inference requires {', '.join(missing)}")
 

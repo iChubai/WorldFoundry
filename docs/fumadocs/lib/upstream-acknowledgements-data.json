@@ -1,13 +1,7 @@
 {
-  "modelsTotal": 220,
-  "benchmarksTotal": 69,
+  "modelsTotal": 221,
+  "benchmarksTotal": 75,
   "infrastructure": [
-    {
-      "name": "Hugging Face Finetrainers",
-      "url": "https://github.com/huggingface/finetrainers",
-      "summary": "Video diffusion training reference used to cross-check Wan flow, preprocessing, and LoRA semantics.",
-      "summary_zh": "用于交叉核对 Wan flow、预处理与 LoRA 语义的视频扩散训练参考实现。"
-    },
     {
       "name": "FastVideo",
       "url": "https://github.com/hao-ai-lab/FastVideo",
@@ -32,7 +26,7 @@
       "id": "video",
       "label": "Video",
       "labelZh": "视频",
-      "count": 39,
+      "count": 44,
       "entries": [
         {
           "name": "Allegro",
@@ -59,6 +53,10 @@
           "url": "https://github.com/aigc-apps/EasyAnimate"
         },
         {
+          "name": "FastVideo CausalWan2.2",
+          "url": "https://github.com/NVIDIA/FlashDreams"
+        },
+        {
           "name": "FramePack",
           "url": "https://github.com/lllyasviel/FramePack"
         },
@@ -75,8 +73,16 @@
           "url": "https://github.com/Tencent-Hunyuan/HunyuanVideo-1.5"
         },
         {
+          "name": "HyperFlow for MiniMax-H3",
+          "url": "https://github.com/Video-Rebirth/hyperflow"
+        },
+        {
           "name": "I2VGen-XL",
           "url": "https://github.com/ali-vilab/i2vgen-xl"
+        },
+        {
+          "name": "JoyAI-Echo 1.5 / Echo-LongVideo",
+          "url": "https://github.com/jd-opensource/JoyAI-Echo"
         },
         {
           "name": "Krea Realtime Video 14B",
@@ -96,11 +102,23 @@
         },
         {
           "name": "LTX-2.x",
+          "url": "https://github.com/Lightricks/LTX-2"
+        },
+        {
+          "name": "LTX-Video",
           "url": "https://github.com/Lightricks/LTX-Video"
         },
         {
           "name": "MAGI-1",
           "url": "https://github.com/SandAI-org/MAGI-1"
+        },
+        {
+          "name": "MAGI-2 Preview",
+          "url": "https://github.com/SandAI-org/MAGI-2-preview"
+        },
+        {
+          "name": "MiniMax H3",
+          "url": "https://github.com/sgl-project/sglang"
         },
         {
           "name": "MMAudio",
@@ -131,7 +149,7 @@
           "url": "https://github.com/Yaofang-Liu/Pusa-VidGen"
         },
         {
-          "name": "SAMA 14B",
+          "name": "SAMA",
           "url": "https://github.com/Cynthiazxy123/SAMA"
         },
         {
@@ -185,10 +203,6 @@
         {
           "name": "Wan2.2",
           "url": "https://github.com/Wan-Video/Wan2.2"
-        },
-        {
-          "name": "Warp-as-History",
-          "url": "https://github.com/yyfz/Warp-as-History"
         }
       ]
     },
@@ -196,7 +210,7 @@
       "id": "world_models",
       "label": "World models",
       "labelZh": "世界模型",
-      "count": 86,
+      "count": 94,
       "entries": [
         {
           "name": "ABot-World-0-5B-LF",
@@ -219,8 +233,16 @@
           "url": "https://github.com/EternalEvan/Astra"
         },
         {
+          "name": "Astronex-World",
+          "url": "https://github.com/Astronex-Robotics/Astronex-World"
+        },
+        {
           "name": "ATI-Wan2.1-14B",
           "url": "https://github.com/bytedance/ATI"
+        },
+        {
+          "name": "BiWM Wan2.1",
+          "url": "https://github.com/LynnReal-AI/BiWM"
         },
         {
           "name": "CameraCtrl",
@@ -267,7 +289,7 @@
           "url": "https://github.com/NVIDIA/DreamDojo"
         },
         {
-          "name": "DreamX-World 5B AR",
+          "name": "DreamX-World 5B",
           "url": "https://github.com/AMAP-ML/DreamX-World"
         },
         {
@@ -283,12 +305,20 @@
           "url": "https://github.com/Echo-Team-Joy-Future-Academy-JD/Echo-Infinity"
         },
         {
-          "name": "Echo-Memory Context K=1",
+          "name": "Echo-Memory",
           "url": "https://github.com/Echo-Team-Joy-Future-Academy-JD/Echo-Memory"
+        },
+        {
+          "name": "Echo-WM",
+          "url": "https://github.com/jd-opensource/JoyAI-Echo"
         },
         {
           "name": "EgoWM",
           "url": "https://github.com/miccooper9/egowm"
+        },
+        {
+          "name": "Evoke",
+          "url": "https://github.com/AlayaLab/Evoke"
         },
         {
           "name": "Gamma-World",
@@ -355,10 +385,6 @@
           "url": "https://github.com/bytedance/IRASim"
         },
         {
-          "name": "IRIS",
-          "url": "https://github.com/eloialonso/iris"
-        },
-        {
           "name": "Kairos Sensenova",
           "url": "https://github.com/kairos-agi/kairos-sensenova"
         },
@@ -387,7 +413,7 @@
           "url": "https://github.com/SkyworkAI/Matrix-Game"
         },
         {
-          "name": "Matrix-Game 3.5 First-Person Base",
+          "name": "Matrix-Game 3.5",
           "url": "https://github.com/Riemann-Dynamics/Matrix-Game-3.5"
         },
         {
@@ -395,7 +421,7 @@
           "url": "https://github.com/microsoft/mineworld"
         },
         {
-          "name": "minWM HY Action2V",
+          "name": "minWM",
           "url": "https://github.com/shengshu-ai/minWM"
         },
         {
@@ -479,6 +505,10 @@
           "url": "https://github.com/solaris-wm/solaris"
         },
         {
+          "name": "SolarWM",
+          "url": "https://github.com/Junchao-cs/SolarWM"
+        },
+        {
           "name": "Spatia",
           "url": "https://github.com/ZhaoJingjing713/Spatia"
         },
@@ -515,6 +545,10 @@
           "url": "https://github.com/aigc-apps/VideoX-Fun"
         },
         {
+          "name": "Warp-as-History",
+          "url": "https://github.com/yyfz/Warp-as-History"
+        },
+        {
           "name": "WildDet3D",
           "url": "https://github.com/allenai/WildDet3D"
         },
@@ -525,6 +559,10 @@
         {
           "name": "WorldCam",
           "url": "https://github.com/cvlab-kaist/WorldCam"
+        },
+        {
+          "name": "WorldCrafter",
+          "url": "https://github.com/TencentARC/WorldCrafter"
         },
         {
           "name": "WorldGrow",
@@ -539,8 +577,16 @@
           "url": "https://github.com/wow-world-model/wow-world-model"
         },
         {
+          "name": "XGEN-JING Flash v1",
+          "url": "https://github.com/XGEN-Labs/XGEN-JING"
+        },
+        {
           "name": "YUME",
           "url": "https://github.com/stdstu12/YUME"
+        },
+        {
+          "name": "Zing-0.5",
+          "url": "https://github.com/seedleap/zing-world-model"
         }
       ]
     },
@@ -548,23 +594,11 @@
       "id": "three_d_four_d",
       "label": "3D & 4D",
       "labelZh": "3D 与 4D",
-      "count": 44,
+      "count": 34,
       "entries": [
-        {
-          "name": "4D-GS",
-          "url": "https://github.com/hustvl/4DGaussians"
-        },
-        {
-          "name": "Consistent4D",
-          "url": "https://github.com/yanqinJiang/Consistent4D"
-        },
         {
           "name": "CUT3R",
           "url": "https://github.com/CUT3R/CUT3R"
-        },
-        {
-          "name": "D-NeRF",
-          "url": "https://github.com/albertpumarola/D-NeRF"
         },
         {
           "name": "Depth Any Panoramas",
@@ -599,32 +633,12 @@
           "url": "https://github.com/imlixinyang/FlashWorld"
         },
         {
-          "name": "GaussianFlow",
-          "url": "https://github.com/Zerg-Overmind/GaussianFlow"
-        },
-        {
-          "name": "GaussianFlow",
-          "url": "https://github.com/NJU-3DV/Gaussian-Flow."
-        },
-        {
-          "name": "GaussianObject",
-          "url": "https://github.com/GaussianObject/GaussianObject"
-        },
-        {
           "name": "GeoCalib",
           "url": "https://github.com/cvg/GeoCalib"
         },
         {
-          "name": "HexPlane",
-          "url": "https://github.com/Caoang327/HexPlane"
-        },
-        {
           "name": "Infinite VGGT",
           "url": "https://github.com/wzzheng/StreamVGGT"
-        },
-        {
-          "name": "K-Planes",
-          "url": "https://github.com/sarafridov/K-Planes"
         },
         {
           "name": "LagrNVS",
@@ -675,16 +689,8 @@
           "url": "https://github.com/KlingAIResearch/ReCamMaster"
         },
         {
-          "name": "SC-GS",
-          "url": "https://github.com/CVMI-Lab/SC-GS"
-        },
-        {
           "name": "Segment and Track Anything",
           "url": "https://github.com/z-x-yang/Segment-and-Track-Anything"
-        },
-        {
-          "name": "Shape of Motion",
-          "url": "https://github.com/vye16/shape-of-motion"
         },
         {
           "name": "Splatt3R",
@@ -693,10 +699,6 @@
         {
           "name": "Stable Virtual Camera",
           "url": "https://github.com/Stability-AI/stable-virtual-camera"
-        },
-        {
-          "name": "TiNeuVox",
-          "url": "https://github.com/hustvl/TiNeuVox"
         },
         {
           "name": "UniDepth V2",
@@ -709,6 +711,10 @@
         {
           "name": "VGGT",
           "url": "https://github.com/facebookresearch/vggt"
+        },
+        {
+          "name": "VGGT-Omega",
+          "url": "https://github.com/facebookresearch/vggt-omega"
         },
         {
           "name": "Video Depth Anything",
@@ -732,7 +738,7 @@
       "id": "vla_va_wam",
       "label": "Embodied",
       "labelZh": "具身智能",
-      "count": 51,
+      "count": 49,
       "entries": [
         {
           "name": "A1",
@@ -907,20 +913,12 @@
           "url": "https://github.com/starVLA/starVLA"
         },
         {
-          "name": "TD-MPC",
-          "url": "https://github.com/nicklashansen/tdmpc"
-        },
-        {
           "name": "TinyVLA",
           "url": "https://github.com/liyaxuanliyaxuan/TinyVLA"
         },
         {
           "name": "VLANeXt",
           "url": "https://github.com/DravenALG/VLANeXt"
-        },
-        {
-          "name": "VQ-BeT",
-          "url": "https://github.com/jayLEE0301/vq_bet_official"
         },
         {
           "name": "X-VLA",
@@ -953,7 +951,7 @@
       "id": "video",
       "label": "Video & world benchmarks",
       "labelZh": "视频与世界模型评测",
-      "count": 47,
+      "count": 53,
       "entries": [
         {
           "name": "4DWorldBench",
@@ -1006,6 +1004,11 @@
           "repo": "TIGER-AI-Lab/GenAI-Bench"
         },
         {
+          "name": "HarnessEval-W",
+          "url": "https://github.com/MirroS-Lab/HarnessEval-W",
+          "repo": "MirroS-Lab/HarnessEval-W"
+        },
+        {
           "name": "IPV-Bench",
           "url": "https://github.com/showlab/Impossible-Videos",
           "repo": "showlab/Impossible-Videos"
@@ -1026,9 +1029,19 @@
           "repo": "MemoBench-Team/MemoBench"
         },
         {
+          "name": "MIND",
+          "url": "https://github.com/CSU-JPG/MIND",
+          "repo": "CSU-JPG/MIND"
+        },
+        {
           "name": "MiraBench",
           "url": "https://github.com/mira-space/MiraData",
           "repo": "mira-space/MiraData"
+        },
+        {
+          "name": "PAWBench",
+          "url": "https://github.com/Andrew0613/PAWBench",
+          "repo": "Andrew0613/PAWBench"
         },
         {
           "name": "PhyEduVideo",
@@ -1074,6 +1087,16 @@
           "name": "RBench",
           "url": "https://github.com/DAGroup-PKU/ReVidgen",
           "repo": "DAGroup-PKU/ReVidgen"
+        },
+        {
+          "name": "SANA-WM 80-Scene Benchmark",
+          "url": "https://github.com/NVlabs/Sana",
+          "repo": "NVlabs/Sana"
+        },
+        {
+          "name": "STEVO-Bench",
+          "url": "https://github.com/jhanliufu-personal/STEVO-Bench",
+          "repo": "jhanliufu-personal/STEVO-Bench"
         },
         {
           "name": "T2V-CompBench",
@@ -1159,6 +1182,11 @@
           "name": "WorldArena",
           "url": "https://github.com/tsinghua-fib-lab/WorldArena",
           "repo": "tsinghua-fib-lab/WorldArena"
+        },
+        {
+          "name": "WorldArena (WorldAtlas Arena)",
+          "url": "https://github.com/OpenEnvision/WorldArena",
+          "repo": "OpenEnvision/WorldArena"
         },
         {
           "name": "WorldBench",

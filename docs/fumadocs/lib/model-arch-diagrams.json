@@ -1,20 +1,6 @@
 {
   "version": 1,
   "diagrams": {
-    "ac3d": {
-      "modelId": "ac3d",
-      "paperSrc": "/models/ac3d/paper.png",
-      "teaserSrc": "/models/ac3d/teaser.webp",
-      "teaserAlt": "Official paper teaser: AC3D camera-controlled video samples with consistent wide-angle motion.",
-      "teaserAltZh": "论文官方 Teaser：AC3D 的相机可控视频样例，广角运动保持一致。",
-      "teaserCaption": "Official paper teaser: AC3D camera-controlled video samples with consistent wide-angle motion.",
-      "teaserCaptionZh": "论文官方 Teaser：AC3D 的相机可控视频样例，广角运动保持一致。",
-      "src": "/models/ac3d/overview.png",
-      "alt": "Method overview: frozen DiT-XL video blocks with a lightweight trainable camera DiT-XS ControlNet stream.",
-      "altZh": "论文方法总览：冻结的 DiT-XL 视频模块，加上可训练的轻量相机 DiT-XS ControlNet 支路。",
-      "caption": "Method overview: frozen DiT-XL video blocks with a lightweight trainable camera DiT-XS ControlNet stream.",
-      "captionZh": "论文方法总览：冻结的 DiT-XL 视频模块，加上可训练的轻量相机 DiT-XS ControlNet 支路。"
-    },
     "animatediff": {
       "modelId": "animatediff",
       "paperSrc": "/models/animatediff/paper.png",
@@ -133,6 +119,15 @@
       "caption": "Depth Anything V2",
       "captionZh": "Depth Anything V2"
     },
+    "diamond": {
+      "modelId": "diamond",
+      "paperSrc": "/models/diamond/paper.png",
+      "src": "/models/diamond/overview.png",
+      "alt": "Method overview: a 3D U-Net diffusion world model that conditions on actions by frame-stacking or cross-attention.",
+      "altZh": "论文方法总览：3D U-Net 扩散世界模型，用帧堆叠或交叉注意力注入动作。",
+      "caption": "Method overview: a 3D U-Net diffusion world model that conditions on actions by frame-stacking or cross-attention.",
+      "captionZh": "论文方法总览：3D U-Net 扩散世界模型，用帧堆叠或交叉注意力注入动作。"
+    },
     "dualcamctrl": {
       "modelId": "dualcamctrl",
       "paperSrc": "/models/dualcamctrl/paper.png",
@@ -207,15 +202,6 @@
       "caption": "Method overview: GigaBrain-0.7 pairs a VLA action system with a VLM planner and a world-model evaluator.",
       "captionZh": "论文方法总览：GigaBrain-0.7 把 VLA 动作系统与 VLM 规划器、世界模型评估器配对。"
     },
-    "hunyuan-game-craft": {
-      "modelId": "hunyuan-game-craft",
-      "paperSrc": "/models/hunyuan-game-craft/paper.png",
-      "src": "/models/hunyuan-game-craft/overview.png",
-      "alt": "Method overview: action-conditioned Double/Single-stream DiT blocks with WASD continuous control and history masks.",
-      "altZh": "论文方法总览：动作条件的双流/单流 DiT，配合 WASD 连续控制与历史掩码。",
-      "caption": "Method overview: action-conditioned Double/Single-stream DiT blocks with WASD continuous control and history masks.",
-      "captionZh": "论文方法总览：动作条件的双流/单流 DiT，配合 WASD 连续控制与历史掩码。"
-    },
     "hunyuanworld-mirror": {
       "modelId": "hunyuanworld-mirror",
       "paperSrc": "/models/hunyuanworld-mirror/paper.png",
@@ -224,19 +210,6 @@
       "altZh": "论文方法总览：HunyuanWorld-Mirror 的几何与深度架构。",
       "caption": "Method overview: Overview of WorldMirror . Our framework employs Multi-modal Tokenization to encode all inputs (images, optional priors including intrinsics, camera poses, and depth maps) into a unified token sequence. The merged.",
       "captionZh": "论文方法总览：HunyuanWorld-Mirror 的几何与深度架构。"
-    },
-    "hunyuanworld-voyager": {
-      "modelId": "hunyuanworld-voyager",
-      "paperSrc": "/models/hunyuanworld-voyager/paper.png",
-      "teaserSrc": "/models/hunyuanworld-voyager/teaser.png",
-      "teaserAlt": "Official paper teaser: Loading Balancing for SP-Ring.",
-      "teaserAltZh": "论文官方 Teaser：HunyuanWorld-Voyager 的方法论文配图。",
-      "teaserCaption": "Official paper teaser: Loading Balancing for SP-Ring.",
-      "teaserCaptionZh": "论文官方 Teaser：HunyuanWorld-Voyager 的方法论文配图。",
-      "alt": "HunyuanWorld-Voyager",
-      "altZh": "HunyuanWorld-Voyager",
-      "caption": "HunyuanWorld-Voyager",
-      "captionZh": "HunyuanWorld-Voyager"
     },
     "hy-worldplay": {
       "modelId": "hy-worldplay",
@@ -531,6 +504,15 @@
       "caption": "StarVLA",
       "captionZh": "StarVLA"
     },
+    "step-video-t2v": {
+      "modelId": "step-video-t2v",
+      "paperSrc": "/models/step-video-t2v/paper.png",
+      "src": "/models/step-video-t2v/overview.webp",
+      "alt": "Method overview: Architecture overview of Step-Video-T2V. Videos are represented by a high-compression Video-VAE, achieving 16x16 spatial and 8x temporal compression ratios. User prompts are encoded using two bilingual pre-trained.",
+      "altZh": "论文方法总览：Step-Video-T2V 的视频生成架构。",
+      "caption": "Method overview: Architecture overview of Step-Video-T2V. Videos are represented by a high-compression Video-VAE, achieving 16x16 spatial and 8x temporal compression ratios. User prompts are encoded using two bilingual pre-trained.",
+      "captionZh": "论文方法总览：Step-Video-T2V 的视频生成架构。"
+    },
     "vggt-omega": {
       "modelId": "vggt-omega",
       "paperSrc": "/models/vggt-omega/paper.png",
@@ -604,6 +586,15 @@
       "caption": "WorldCam",
       "captionZh": "WorldCam"
     },
+    "worldcrafter": {
+      "modelId": "worldcrafter"
+    },
+    "worldcrafter-base": {
+      "modelId": "worldcrafter-base"
+    },
+    "worldcrafter-fast": {
+      "modelId": "worldcrafter-fast"
+    },
     "yume": {
       "modelId": "yume",
       "paperSrc": "/models/yume/paper.png",
@@ -619,6 +610,20 @@
     },
     "zeroscope": {
       "modelId": "zeroscope"
+    },
+    "ac3d": {
+      "modelId": "ac3d",
+      "paperSrc": "/models/ac3d/paper.png",
+      "teaserSrc": "/models/ac3d/teaser.webp",
+      "teaserAlt": "Official paper teaser: AC3D camera-controlled video samples with consistent wide-angle motion.",
+      "teaserAltZh": "论文官方 Teaser：AC3D 的相机可控视频样例，广角运动保持一致。",
+      "teaserCaption": "Official paper teaser: AC3D camera-controlled video samples with consistent wide-angle motion.",
+      "teaserCaptionZh": "论文官方 Teaser：AC3D 的相机可控视频样例，广角运动保持一致。",
+      "src": "/models/ac3d/overview.png",
+      "alt": "Method overview: frozen DiT-XL video blocks with a lightweight trainable camera DiT-XS ControlNet stream.",
+      "altZh": "论文方法总览：冻结的 DiT-XL 视频模块，加上可训练的轻量相机 DiT-XS ControlNet 支路。",
+      "caption": "Method overview: frozen DiT-XL video blocks with a lightweight trainable camera DiT-XS ControlNet stream.",
+      "captionZh": "论文方法总览：冻结的 DiT-XL 视频模块，加上可训练的轻量相机 DiT-XS ControlNet 支路。"
     },
     "act": {
       "modelId": "act",
@@ -656,6 +661,9 @@
       "caption": "AlayaWorld: Long-Horizon and Playable Video World Generation",
       "captionZh": "AlayaWorld: Long-Horizon and Playable Video World Generation"
     },
+    "alayaworld-v1.1": {
+      "modelId": "alayaworld-v1.1"
+    },
     "allegro": {
       "modelId": "allegro",
       "paperSrc": "/models/allegro/paper.png",
@@ -668,6 +676,9 @@
       "altZh": "Allegro",
       "caption": "Allegro",
       "captionZh": "Allegro"
+    },
+    "astronex-world": {
+      "modelId": "astronex-world"
     },
     "ati-wan21-14b": {
       "modelId": "ati-wan21-14b",
@@ -759,15 +770,6 @@
       "altZh": "论文方法总览：Cosmos3 论文中的世界模型架构。",
       "caption": "Method overview: Cosmos3’s world-model architecture from the paper.",
       "captionZh": "论文方法总览：Cosmos3 论文中的世界模型架构。"
-    },
-    "diamond": {
-      "modelId": "diamond",
-      "paperSrc": "/models/diamond/paper.png",
-      "src": "/models/diamond/overview.png",
-      "alt": "Method overview: a 3D U-Net diffusion world model that conditions on actions by frame-stacking or cross-attention.",
-      "altZh": "论文方法总览：3D U-Net 扩散世界模型，用帧堆叠或交叉注意力注入动作。",
-      "caption": "Method overview: a 3D U-Net diffusion world model that conditions on actions by frame-stacking or cross-attention.",
-      "captionZh": "论文方法总览：3D U-Net 扩散世界模型，用帧堆叠或交叉注意力注入动作。"
     },
     "diffusion-policy": {
       "modelId": "diffusion-policy",
@@ -982,6 +984,15 @@
       "caption": "Method overview: an autoregressive video DiT with multi-term memory and a pyramid predictor-corrector over a frozen VAE.",
       "captionZh": "论文方法总览：自回归视频 DiT，带多段记忆，并在冻结 VAE 上做金字塔式预测-校正。"
     },
+    "hunyuan-game-craft": {
+      "modelId": "hunyuan-game-craft",
+      "paperSrc": "/models/hunyuan-game-craft/paper.png",
+      "src": "/models/hunyuan-game-craft/overview.png",
+      "alt": "Method overview: action-conditioned Double/Single-stream DiT blocks with WASD continuous control and history masks.",
+      "altZh": "论文方法总览：动作条件的双流/单流 DiT，配合 WASD 连续控制与历史掩码。",
+      "caption": "Method overview: action-conditioned Double/Single-stream DiT blocks with WASD continuous control and history masks.",
+      "captionZh": "论文方法总览：动作条件的双流/单流 DiT，配合 WASD 连续控制与历史掩码。"
+    },
     "hunyuanvideo": {
       "modelId": "hunyuanvideo",
       "src": "/models/hunyuanvideo/overall.png",
@@ -999,6 +1010,19 @@
       "caption": "Method overview: HunyuanVideo 1.5’s Diffusion Transformer for latent video generation.",
       "captionZh": "论文方法总览：HunyuanVideo 1.5 用于潜空间视频生成的 Diffusion Transformer。"
     },
+    "hunyuanworld-voyager": {
+      "modelId": "hunyuanworld-voyager",
+      "paperSrc": "/models/hunyuanworld-voyager/paper.png",
+      "teaserSrc": "/models/hunyuanworld-voyager/teaser.png",
+      "teaserAlt": "Official paper teaser: Loading Balancing for SP-Ring.",
+      "teaserAltZh": "论文官方 Teaser：HunyuanWorld-Voyager 的方法论文配图。",
+      "teaserCaption": "Official paper teaser: Loading Balancing for SP-Ring.",
+      "teaserCaptionZh": "论文官方 Teaser：HunyuanWorld-Voyager 的方法论文配图。",
+      "alt": "HunyuanWorld-Voyager",
+      "altZh": "HunyuanWorld-Voyager",
+      "caption": "HunyuanWorld-Voyager",
+      "captionZh": "HunyuanWorld-Voyager"
+    },
     "hy-embodied-vla": {
       "modelId": "hy-embodied-vla",
       "paperSrc": "/models/hy-embodied-vla/paper.png",
@@ -1013,19 +1037,6 @@
       "caption": "Method overview: Architectural overview of HyVLA-0 . 5 . The framework adopts a MoT architecture to facilitate cross-modal interactions via a shared joint-attention mechanism. To effectively process K K -frame multi-view RGB.",
       "captionZh": "论文方法总览：Hy-Embodied-0.5-VLA 的机器人操作架构。"
     },
-    "hyworld-worldgen": {
-      "modelId": "hyworld-worldgen",
-      "paperSrc": "/models/hyworld-worldgen/paper.png",
-      "teaserSrc": "/models/hy-world-2.0/teaser.jpg",
-      "teaserAlt": "Official paper teaser: HY-World 2.0 samples from the paper.",
-      "teaserAltZh": "论文官方 Teaser：HY-World 2.0 论文中的样例。",
-      "teaserCaption": "Official paper teaser: HY-World 2.0 samples from the paper.",
-      "teaserCaptionZh": "论文官方 Teaser：HY-World 2.0 论文中的样例。",
-      "alt": "HY-World 2.0 Trajectory Renderer",
-      "altZh": "HY-World 2.0 Trajectory Renderer",
-      "caption": "HY-World 2.0 Trajectory Renderer",
-      "captionZh": "HY-World 2.0 Trajectory Renderer"
-    },
     "hydra": {
       "modelId": "hydra",
       "paperSrc": "/models/hydra/paper.png",
@@ -1034,6 +1045,9 @@
       "altZh": "论文方法总览：HyDRA 的方法架构。",
       "caption": "Method overview: Model architecture.",
       "captionZh": "论文方法总览：HyDRA 的方法架构。"
+    },
+    "hyperflow": {
+      "modelId": "hyperflow"
     },
     "i2vgen-xl": {
       "modelId": "i2vgen-xl",
@@ -1266,6 +1280,9 @@
       "caption": "Method overview: a VQGAN latent plus a text-conditioned denoising U-Net with temporal attention.",
       "captionZh": "论文方法总览：VQGAN 潜空间加上带时间注意力、文本条件的去噪 U-Net。"
     },
+    "multiworld": {
+      "modelId": "multiworld"
+    },
     "mvdiffusion": {
       "modelId": "mvdiffusion",
       "paperSrc": "/models/mvdiffusion/paper.png",
@@ -1368,6 +1385,19 @@
       "altZh": "论文方法总览：π0.5 的预训练配方，以及推理时使用的动作专家。",
       "caption": "Method overview: π0.5’s pretraining recipe and the action expert used at inference.",
       "captionZh": "论文方法总览：π0.5 的预训练配方，以及推理时使用的动作专家。"
+    },
+    "pixelsplat": {
+      "modelId": "pixelsplat",
+      "teaserSrc": "/models/pixelsplat/teaser.png",
+      "teaserAlt": "Official paper teaser: Overview. Given a pair of input images, pixelSplat reconstructs a 3D radiance field parameterized via 3D Gaussian primitives. This yields an explicit 3D representation that is renderable in real time, remains.",
+      "teaserAltZh": "论文官方 Teaser：pixelSplat 的方法论文配图。",
+      "teaserCaption": "Official paper teaser: Overview. Given a pair of input images, pixelSplat reconstructs a 3D radiance field parameterized via 3D Gaussian primitives. This yields an explicit 3D representation that is renderable in real time, remains.",
+      "teaserCaptionZh": "论文官方 Teaser：pixelSplat 的方法论文配图。",
+      "src": "/models/pixelsplat/overview.png",
+      "alt": "Method overview: 3D Gaussians (top) and corresponding depth maps (bottom) predicted by our method. In contrast to light field rendering methods like GPNR [ 47 ] and that of Du et al. [ 10 ] , our method produces an explicit 3D.",
+      "altZh": "论文方法总览：pixelSplat 的几何与深度架构。",
+      "caption": "Method overview: 3D Gaussians (top) and corresponding depth maps (bottom) predicted by our method. In contrast to light field rendering methods like GPNR [ 47 ] and that of Du et al. [ 10 ] , our method produces an explicit 3D.",
+      "captionZh": "论文方法总览：pixelSplat 的几何与深度架构。"
     },
     "pusa-vidgen": {
       "modelId": "pusa-vidgen",
@@ -1496,6 +1526,14 @@
       "caption": "Method overview: Overview of the proposed method.",
       "captionZh": "论文方法总览：SkyReels-V2 的方法架构。"
     },
+    "solarwm": {
+      "modelId": "solarwm",
+      "src": "/models/solarwm/overview.webp",
+      "alt": "Method overview: Table 1 : Release matrix for representative interactive video world models. Release status was verified from official artifacts as of August 18, 2026; SolarWM entries indicate commitments for this release. ✓: public;.",
+      "altZh": "论文方法总览：SolarWM 的交互世界模型架构。",
+      "caption": "Method overview: Table 1 : Release matrix for representative interactive video world models. Release status was verified from official artifacts as of August 18, 2026; SolarWM entries indicate commitments for this release. ✓: public;.",
+      "captionZh": "论文方法总览：SolarWM 的交互世界模型架构。"
+    },
     "sora2": {
       "modelId": "sora2"
     },
@@ -1536,15 +1574,6 @@
       "altZh": "论文方法总览：Stable Virtual Camera 的相机控制架构。",
       "caption": "Method overview: Method. Seva is trained with fixed sequence length as a “ M M -in N N -out” multi-view diffusion model with standard architecture. It conditions on CLIP embeddings, VAE latents of the input views, and their.",
       "captionZh": "论文方法总览：Stable Virtual Camera 的相机控制架构。"
-    },
-    "step-video-t2v": {
-      "modelId": "step-video-t2v",
-      "paperSrc": "/models/step-video-t2v/paper.png",
-      "src": "/models/step-video-t2v/overview.webp",
-      "alt": "Method overview: Architecture overview of Step-Video-T2V. Videos are represented by a high-compression Video-VAE, achieving 16x16 spatial and 8x temporal compression ratios. User prompts are encoded using two bilingual pre-trained.",
-      "altZh": "论文方法总览：Step-Video-T2V 的视频生成架构。",
-      "caption": "Method overview: Architecture overview of Step-Video-T2V. Videos are represented by a high-compression Video-VAE, achieving 16x16 spatial and 8x temporal compression ratios. User prompts are encoded using two bilingual pre-trained.",
-      "captionZh": "论文方法总览：Step-Video-T2V 的视频生成架构。"
     },
     "t2v_turbo_t2v": {
       "modelId": "t2v_turbo_t2v",
@@ -1723,15 +1752,6 @@
       "caption": "Method overview: The proposed WonderJourney framework and workflow across modules . Our modular design does not require any training, allowing easy future improvements from the quick advances in vision and language models.",
       "captionZh": "论文方法总览：WonderJourney 的方法架构。"
     },
-    "wonderworld": {
-      "modelId": "wonderworld",
-      "paperSrc": "/models/wonderworld/paper.png",
-      "src": "/models/wonderworld/overview.png",
-      "alt": "Method overview: The proposed WonderWorld: Our system takes a single image as input and generates connected diverse 3D scenes. Users can specify where (by moving the real-time rendering camera) and what to generate (by typing text.",
-      "altZh": "论文方法总览：WonderWorld 的相机控制架构。",
-      "caption": "Method overview: The proposed WonderWorld: Our system takes a single image as input and generates connected diverse 3D scenes. Users can specify where (by moving the real-time rendering camera) and what to generate (by typing text.",
-      "captionZh": "论文方法总览：WonderWorld 的相机控制架构。"
-    },
     "worldlabs": {
       "modelId": "worldlabs"
     },
@@ -1743,6 +1763,12 @@
       "altZh": "论文方法总览：WorldGen 的方法架构。",
       "caption": "Method overview: WorldGen overview . Our pipeline begins by planning the scene layout, producing a blockout ( B B ), reference image ( 𝐑 {R} ), and navigation mesh (S) (Stage 1). Next, we generate a single 3D mesh that aligns with.",
       "captionZh": "论文方法总览：WorldGen 的方法架构。"
+    },
+    "xgen-jing": {
+      "modelId": "xgen-jing"
+    },
+    "zing": {
+      "modelId": "zing"
     },
     "a1": {
       "modelId": "a1",
@@ -1890,14 +1916,6 @@
       "caption": "Galaxea G0Plus",
       "captionZh": "Galaxea G0Plus"
     },
-    "gaussian-actor": {
-      "modelId": "gaussian-actor",
-      "paperSrc": "/models/gaussian-actor/paper.png",
-      "alt": "Gaussian Actor",
-      "altZh": "Gaussian Actor",
-      "caption": "Gaussian Actor",
-      "captionZh": "Gaussian Actor"
-    },
     "genie-envisioner": {
       "modelId": "genie-envisioner",
       "paperSrc": "/models/genie-envisioner/paper.png",
@@ -1968,6 +1986,19 @@
       "caption": "Method overview: An overview of HunyuanWorld 1.0 architecture for 3D world generation. Given a conditioned scene image or textual description, HunyuanWorld 1.0 generates layer-wise 3D worlds in mesh through a staged generative.",
       "captionZh": "论文方法总览：HunyuanWorld 1.0 的视频生成架构。"
     },
+    "hyworld-worldgen": {
+      "modelId": "hyworld-worldgen",
+      "paperSrc": "/models/hyworld-worldgen/paper.png",
+      "teaserSrc": "/models/hy-world-2.0/teaser.jpg",
+      "teaserAlt": "Official paper teaser: HY-World 2.0 samples from the paper.",
+      "teaserAltZh": "论文官方 Teaser：HY-World 2.0 论文中的样例。",
+      "teaserCaption": "Official paper teaser: HY-World 2.0 samples from the paper.",
+      "teaserCaptionZh": "论文官方 Teaser：HY-World 2.0 论文中的样例。",
+      "alt": "HY-World 2.0 Trajectory Renderer",
+      "altZh": "HY-World 2.0 Trajectory Renderer",
+      "caption": "HY-World 2.0 Trajectory Renderer",
+      "captionZh": "HY-World 2.0 Trajectory Renderer"
+    },
     "infinite-vggt": {
       "modelId": "infinite-vggt",
       "paperSrc": "/models/infinite-vggt/paper.png",
@@ -1990,15 +2021,6 @@
       "altZh": "论文方法总览：InternVLA-A1-3B 的机器人操作架构。",
       "caption": "Method overview: Framework of InternVLA-A1.5 . The architecture adopts a Mixture-of-Transformers design comprising a pretrained VLM for multimodal perception and a lightweight unified expert that shares full attention layers with the.",
       "captionZh": "论文方法总览：InternVLA-A1-3B 的机器人操作架构。"
-    },
-    "last-r1": {
-      "modelId": "last-r1",
-      "paperSrc": "/models/last-r1/paper.png",
-      "src": "/models/last-r1/overview.png",
-      "alt": "Method overview: The Overview of LaST-R1. (a) Unlike vanilla RL baselines that strictly optimize actions, (b) our approach utilizes LAPO to jointly optimize an adaptive latent CoT alongside physical execution. By bridging cognitive.",
-      "altZh": "论文方法总览：LaST-R1 的方法架构。",
-      "caption": "Method overview: The Overview of LaST-R1. (a) Unlike vanilla RL baselines that strictly optimize actions, (b) our approach utilizes LAPO to jointly optimize an adaptive latent CoT alongside physical execution. By bridging cognitive.",
-      "captionZh": "论文方法总览：LaST-R1 的方法架构。"
     },
     "lapa": {
       "modelId": "lapa",
@@ -2128,9 +2150,6 @@
       "altZh": "论文方法总览：MoVerse 的方法架构。",
       "caption": "Method overview: MoVerse pipeline overview. From a single narrow-field-of-view input image, Stage I synthesizes a gravity-aligned 360 ∘ panorama, Stage II lifts the panorama into a persistent 3D Gaussian scaffold, and Stage III.",
       "captionZh": "论文方法总览：MoVerse 的方法架构。"
-    },
-    "multi-task-dit": {
-      "modelId": "multi-task-dit"
     },
     "nwm": {
       "modelId": "nwm",
@@ -2313,14 +2332,6 @@
       "caption": "SmolVLA",
       "captionZh": "SmolVLA"
     },
-    "solarwm": {
-      "modelId": "solarwm",
-      "src": "/models/solarwm/overview.webp",
-      "alt": "Method overview: Table 1 : Release matrix for representative interactive video world models. Release status was verified from official artifacts as of August 18, 2026; SolarWM entries indicate commitments for this release. ✓: public;.",
-      "altZh": "论文方法总览：SolarWM 的交互世界模型架构。",
-      "caption": "Method overview: Table 1 : Release matrix for representative interactive video world models. Release status was verified from official artifacts as of August 18, 2026; SolarWM entries indicate commitments for this release. ✓: public;.",
-      "captionZh": "论文方法总览：SolarWM 的交互世界模型架构。"
-    },
     "spirit-v1.5": {
       "modelId": "spirit-v1.5"
     },
@@ -2336,14 +2347,6 @@
       "altZh": "论文方法总览：StarWM 的方法架构。",
       "caption": "Method overview: Framework of our StarWM-Agent. The agent interacts with the SC2 engine via a textual interface and follows a Generate–Simulate–Refine decision loop: the policy first generates an initial action proposal from the.",
       "captionZh": "论文方法总览：StarWM 的方法架构。"
-    },
-    "tdmpc": {
-      "modelId": "tdmpc",
-      "src": "/models/tdmpc/overview.png",
-      "alt": "Method overview: TD-MPC encodes an observation, plans latent trajectories, then executes an action and reads the reward back.",
-      "altZh": "论文方法总览：TD-MPC 编码观测、在潜空间规划轨迹，再执行动作并读回奖励。",
-      "caption": "Method overview: TD-MPC encodes an observation, plans latent trajectories, then executes an action and reads the reward back.",
-      "captionZh": "论文方法总览：TD-MPC 编码观测、在潜空间规划轨迹，再执行动作并读回奖励。"
     },
     "tesseract": {
       "modelId": "tesseract",
@@ -2408,14 +2411,6 @@
       "altZh": "论文方法总览：Vid2World 的交互世界模型架构。",
       "caption": "Method overview: Transforming video diffusion models into interactive world models involves two key challenges : (1) Causal generation: converting full-sequence diffusion models into causal diffusion models; (2) Action conditioning:.",
       "captionZh": "论文方法总览：Vid2World 的交互世界模型架构。"
-    },
-    "vqbet": {
-      "modelId": "vqbet",
-      "src": "/models/vqbet/overview.png",
-      "alt": "Method overview: Overview of VQ-BeT, broken down into the residual VQ encoder-decoder training phase and the VQ-BeT training phase. The same architecture works for both conditional and unconditional cases with an optional goal input..",
-      "altZh": "论文方法总览：VQ-BeT 的视频生成架构。",
-      "caption": "Method overview: Overview of VQ-BeT, broken down into the residual VQ encoder-decoder training phase and the VQ-BeT training phase. The same architecture works for both conditional and unconditional cases with an optional goal input..",
-      "captionZh": "论文方法总览：VQ-BeT 的视频生成架构。"
     },
     "wilddet3d": {
       "modelId": "wilddet3d",
@@ -2515,6 +2510,12 @@
       "altZh": "论文方法总览：先把双向动作条件教师蒸馏成因果 LongForcing 学生，再做低延迟滚动。",
       "caption": "Method overview: a bidirectional action-conditioned teacher is distilled into a causal LongForcing student for low-latency rollout.",
       "captionZh": "论文方法总览：先把双向动作条件教师蒸馏成因果 LongForcing 学生，再做低延迟滚动。"
+    },
+    "biwm-wan21": {
+      "modelId": "biwm-wan21"
+    },
+    "biwm-wan22": {
+      "modelId": "biwm-wan22"
     },
     "fastwam": {
       "modelId": "fastwam",
@@ -2641,14 +2642,20 @@
       "caption": "Method overview: Network Architecture of IRASim . (a) shows the general diffusion transformer architecture of IRASim. The input to IRASim includes the historical frames and the given trajectory. (b) Video-level adaptation.",
       "captionZh": "论文方法总览：IRASim 的视频生成架构。"
     },
+    "last-r1": {
+      "modelId": "last-r1",
+      "paperSrc": "/models/last-r1/paper.png",
+      "src": "/models/last-r1/overview.png",
+      "alt": "Method overview: The Overview of LaST-R1. (a) Unlike vanilla RL baselines that strictly optimize actions, (b) our approach utilizes LAPO to jointly optimize an adaptive latent CoT alongside physical execution. By bridging cognitive.",
+      "altZh": "论文方法总览：LaST-R1 的方法架构。",
+      "caption": "Method overview: The Overview of LaST-R1. (a) Unlike vanilla RL baselines that strictly optimize actions, (b) our approach utilizes LAPO to jointly optimize an adaptive latent CoT alongside physical execution. By bridging cognitive.",
+      "captionZh": "论文方法总览：LaST-R1 的方法架构。"
+    },
     "magi2-preview": {
       "modelId": "magi2-preview"
     },
     "minimax-h3": {
       "modelId": "minimax-h3"
-    },
-    "multiworld": {
-      "modelId": "multiworld"
     },
     "pandora": {
       "modelId": "pandora",
@@ -2657,19 +2664,6 @@
       "altZh": "论文方法总览：预训练 LLM 骨干接收视觉编码状态与语言动作，再由视频生成器滚动出下一世界状态。",
       "caption": "Method overview: a pretrained LLM backbone consumes vision-encoded states and language actions, then a video generator rolls out the next world state.",
       "captionZh": "论文方法总览：预训练 LLM 骨干接收视觉编码状态与语言动作，再由视频生成器滚动出下一世界状态。"
-    },
-    "pixelsplat": {
-      "modelId": "pixelsplat",
-      "teaserSrc": "/models/pixelsplat/teaser.png",
-      "teaserAlt": "Official paper teaser: Overview. Given a pair of input images, pixelSplat reconstructs a 3D radiance field parameterized via 3D Gaussian primitives. This yields an explicit 3D representation that is renderable in real time, remains.",
-      "teaserAltZh": "论文官方 Teaser：pixelSplat 的方法论文配图。",
-      "teaserCaption": "Official paper teaser: Overview. Given a pair of input images, pixelSplat reconstructs a 3D radiance field parameterized via 3D Gaussian primitives. This yields an explicit 3D representation that is renderable in real time, remains.",
-      "teaserCaptionZh": "论文官方 Teaser：pixelSplat 的方法论文配图。",
-      "src": "/models/pixelsplat/overview.png",
-      "alt": "Method overview: 3D Gaussians (top) and corresponding depth maps (bottom) predicted by our method. In contrast to light field rendering methods like GPNR [ 47 ] and that of Du et al. [ 10 ] , our method produces an explicit 3D.",
-      "altZh": "论文方法总览：pixelSplat 的几何与深度架构。",
-      "caption": "Method overview: 3D Gaussians (top) and corresponding depth maps (bottom) predicted by our method. In contrast to light field rendering methods like GPNR [ 47 ] and that of Du et al. [ 10 ] , our method produces an explicit 3D.",
-      "captionZh": "论文方法总览：pixelSplat 的几何与深度架构。"
     },
     "worldlabs-marble-1.1": {
       "modelId": "worldlabs-marble-1.1"

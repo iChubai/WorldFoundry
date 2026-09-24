@@ -1,5 +1,5 @@
 {
-  "total": 266,
+  "total": 262,
   "categories": [
     {
       "id": "video",
@@ -34,7 +34,7 @@
       "label": "Embodied",
       "label_zh": "具身智能",
       "description": "VLA, vision-action, world-action, and robot-policy runtimes.",
-      "count": 58
+      "count": 54
     },
     {
       "id": "hosted_api",
@@ -9641,6 +9641,7 @@
           "Workspace also supports a four-GPU compact topology; both 4 and 8 divide the model's 40 attention heads.",
           "On four A100 80GB GPUs, Workspace adapts the catalog default to T5 FSDP, replicated/offloaded DiTs, and Ulysses size 4. This exact topology completed all 70 denoising steps and produced a coherent 161-frame artifact on 2026-07-28.",
           "A checkpoint-backed single-GPU full-quality run completed on 2026-07-28 with the official 161-frame, 70-step, 399360-pixel-area base-cam settings; all 161 frames decoded at 832x464 and 16 FPS with non-static, non-black content.",
+          "The public lingbot-world binding also validated the independent Fast weights with runtime_variant=fast and fast_model_path in the dedicated environment. The 21-frame output decoded at 544x720 and 16 FPS with changing content; longer Fast rollouts and camera adherence were not measured. Fast frame counts must be 12n-3 (9, 21, 33, ...) because upstream chunks three latent frames.",
           "Runtime dependencies are declared in-tree; environment creation does not read an external LingBot repository checkout.",
           "LingBot-World act2cam parity requires the dedicated official environment with flash-attn; the unified env produced near-black act2cam videos on the upstream examples/05 demo.",
           "Exact torch and flash-attn pins intentionally keep this model out of unified runtime routing."
@@ -9668,6 +9669,11 @@
           "url": "https://huggingface.co/robbyant/lingbot-world-base-cam"
         },
         {
+          "kind": "weights",
+          "label": "Hugging Face",
+          "url": "https://huggingface.co/robbyant/lingbot-world-fast"
+        },
+        {
           "kind": "docs",
           "label": "Upstream README",
           "url": "https://github.com/robbyant/lingbot-world#readme"
@@ -9678,6 +9684,11 @@
           "id": "robbyant/lingbot-world-base-cam",
           "revision": "6fc824ffc338d64c97c77e2eb8c0f4cfc24d82bd",
           "role": "lingbot_world_base_cam_checkpoint"
+        },
+        {
+          "id": "robbyant/lingbot-world-fast",
+          "revision": "b7a1db2da9bd3ba675ee01c228f41db0309b981e",
+          "role": "lingbot_world_fast_checkpoint"
         }
       ],
       "variants": [],
@@ -9910,14 +9921,16 @@
         "Base-cam inference uses the dedicated lingbot-world conda environment profile.",
         "LingBotPipeline is registered against the in-tree LingBot world runtime.",
         "The base-cam checkpoint is wired through the Studio/API route and dedicated conda environment profile.",
-        "Base-Act is independently cataloged against the public preview checkpoint; only the Fast checkpoint remains unavailable.",
+        "Base-Act is independently cataloged against the public preview checkpoint. The official Fast checkpoint is separately validated through the public binding for a 21-frame camera-controlled clip.",
         "Base-cam full-quality artifact validation completed on 2026-07-28 using the official 161-frame, 70-step camera-control demo settings.",
         "The shared timestep embedding preserves floating precision for integer scheduler timesteps, preventing distributed sequence-parallel output corruption.",
+        "The public lingbot-world binding also ran the independent Fast checkpoint with Base-Cam shared T5/VAE assets, producing 21 decodable frames at 544x720 and 16 fps on one H100; this validates only that short configuration.",
         "LingBotPipeline wraps the in-tree LingBot world runtime.",
         "The official base-cam recipe uses eight GPUs with both DiT/T5 FSDP and Ulysses sequence parallelism.",
         "Workspace also supports a four-GPU compact topology; both 4 and 8 divide the model's 40 attention heads.",
         "On four A100 80GB GPUs, Workspace adapts the catalog default to T5 FSDP, replicated/offloaded DiTs, and Ulysses size 4. This exact topology completed all 70 denoising steps and produced a coherent 161-frame artifact on 2026-07-28.",
-        "A checkpoint-backed single-GPU full-quality run completed on 2026-07-28 with the official 161-frame, 70-step, 399360-pixel-area base-cam settings; all 161 frames decoded at 832x464 and 16 FPS with non-static, non-black content."
+        "A checkpoint-backed single-GPU full-quality run completed on 2026-07-28 with the official 161-frame, 70-step, 399360-pixel-area base-cam settings; all 161 frames decoded at 832x464 and 16 FPS with non-static, non-black content.",
+        "The public lingbot-world binding also validated the independent Fast weights with runtime_variant=fast and fast_model_path in the dedicated environment. The 21-frame output decoded at 544x720 and 16 FPS with changing content; longer Fast rollouts and camera adherence were not measured. Fast frame counts must be 12n-3 (9, 21, 33, ...) because upstream chunks three latent frames."
       ],
       "docs": {
         "curated": true,
@@ -9939,10 +9952,10 @@
           "官方 base-cam 配方使用八卡，DiT/T5 FSDP 加 Ulysses 序列并行；Workspace 亦支持四卡紧凑拓扑（4 与 8 都能整除模型的 40 个注意力头）。共享的时间步嵌入为整数调度时间步保留浮点精度，避免分布式序列并行的输出损坏。"
         ],
         "usageNotes": [
-          "The wrapper resolves only local HFD or explicit checkpoint directories — no runtime downloads. Base-cam runs in the dedicated lingbot-world conda environment profile; Base-Act is separately cataloged, and only the Fast checkpoint remains unavailable."
+          "The wrapper resolves only local HFD or explicit checkpoint directories — no runtime downloads. Base-cam runs in the dedicated lingbot-world environment; Base-Act is separately cataloged. The official Fast checkpoint uses Base-Cam's T5/VAE assets plus its own 16 shards; pass runtime_variant=fast and fast_model_path, and request 9, 21, 33, ... frames. The public binding was validated at 21 frames only."
         ],
         "usageNotesZh": [
-          "封装仅解析本地 HFD 或显式 checkpoint 目录——无运行时下载。base-cam 在专属 lingbot-world conda 环境档案中运行；Base-Act 单独记录，目前仅 Fast checkpoint 不可得。"
+          "封装仅解析本地 HFD 或显式 checkpoint 目录，不在运行时下载。Base-Cam 使用专属 lingbot-world 环境，Base-Act 单独记录。官方 Fast 权重复用 Base-Cam 的 T5/VAE 组件，并使用独立的 16 个分片；需传入 runtime_variant=fast、fast_model_path，帧数取 9、21、33 等。公开 binding 仅验证了 21 帧配置。"
         ],
         "highlights": [
           "World",
@@ -9997,11 +10010,11 @@
         ],
         "limitations": [
           "Dedicated conda environment for base-cam inference.",
-          "Practical inference needs 4-8 A100-class GPUs."
+          "Official full-length Base-Cam inference needs 4-8 A100-class GPUs; short Fast inference was validated on one H100."
         ],
         "limitationsZh": [
           "base-cam 推理需要专属 conda 环境。",
-          "实际推理需要 4-8 张 A100 级 GPU。"
+          "官方完整长度的 Base-Cam 推理需要 4-8 张 A100 级 GPU；Fast 短片段已在单张 H100 上验证。"
         ],
         "paper": null,
         "figures": []
@@ -27129,11 +27142,11 @@
             },
             {
               "field": "input_path",
-              "detail": "Required; default=/workspace/worldfoundry/data/test_cases/neoverse/videos/movie.mp4",
+              "detail": "Required",
               "kind": "path",
               "target": "input_path",
               "required": true,
-              "default": "/workspace/worldfoundry/data/test_cases/neoverse/videos/movie.mp4",
+              "default": null,
               "choices": [],
               "description": ""
             },
@@ -27435,11 +27448,11 @@
             },
             {
               "field": "input_path",
-              "detail": "Required; default=/workspace/worldfoundry/data/test_cases/neoverse/videos/movie.mp4",
+              "detail": "Required",
               "kind": "path",
               "target": "input_path",
               "required": true,
-              "default": "/workspace/worldfoundry/data/test_cases/neoverse/videos/movie.mp4",
+              "default": null,
               "choices": [],
               "description": ""
             },
@@ -41288,6 +41301,394 @@
       "catalogPath": "worldfoundry/data/models/catalog/video/hunyuanvideo-1.5.yaml"
     },
     {
+      "id": "hunyuanworld-voyager",
+      "name": "HunyuanWorld-Voyager",
+      "category": "world_models",
+      "categoryLabel": "World models",
+      "categoryLabelZh": "世界模型",
+      "provider": "Tencent (Hunyuan)",
+      "summary": "HunyuanWorld-Voyager generates RGB-D video along camera paths. WorldFoundry's public runner has generated the official case1 example through a bridge to the licensed upstream checkout.",
+      "aliases": [],
+      "tasks": [
+        "world",
+        "video",
+        "world_model"
+      ],
+      "status": {
+        "group": "integrated",
+        "label": "Integrated",
+        "integration": "integrated",
+        "runner": "verified_configuration",
+        "demo": "not_recorded"
+      },
+      "runtime": {
+        "profileId": "hunyuanworld-voyager",
+        "bindingId": "hunyuanworld-voyager",
+        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runner": "worldfoundry.pipeline",
+        "pipelineTarget": "worldfoundry.pipelines.hunyuan_world.pipeline_hunyuan_world_voyager_official:HunyuanWorldVoyagerOfficialPipeline",
+        "loadingMethod": "from_pretrained",
+        "invocationMode": "native_or_standard_invocation",
+        "backendStage": "external_official_cli_bridge",
+        "runtimeStatus": "official_case1_8step_gpu_validated",
+        "environmentId": "_unified",
+        "environmentName": "worldfoundry-unified-cu128",
+        "environmentKind": "unified",
+        "python": "3.11",
+        "cudaProfile": "cu128",
+        "cudaLabel": "CUDA 12.8",
+        "driverStatus": "compatible_unified_default",
+        "condaPackages": [
+          "python=3.11",
+          "pip",
+          "ffmpeg",
+          "setuptools",
+          "wheel"
+        ],
+        "pipPackages": [
+          "torch",
+          "torchvision",
+          "torchaudio",
+          "xfuser"
+        ],
+        "packageVersions": {
+          "torch": "torch",
+          "torchvision": "torchvision",
+          "torchaudio": "torchaudio",
+          "xfuser": "xfuser"
+        },
+        "validationImports": [
+          "torch",
+          "torchvision",
+          "numpy",
+          "transformers",
+          "diffusers",
+          "xfuser",
+          "worldfoundry"
+        ],
+        "notes": [
+          "The in-tree bridge calls a separate official checkout at revision 6218ccd36df77d0254dcf24ad1fb77312f75b04a; Tencent's community-licensed source and weights are not redistributed in this package.",
+          "Set WORLDFOUNDRY_VOYAGER_SOURCE_ROOT to that checkout and WORLDFOUNDRY_VOYAGER_PYTHON to an environment with the official dependencies; the bridge validates source, checkpoints, and a 49-frame condition directory.",
+          "Camera motion must already be rendered into the 49-frame condition directory. A raw image or action sequence alone is not a supported input.",
+          "The official case1 checkpoint generated an RGB-D MP4 on one H100 at 8 steps; the public runner generated RGB-D MP4s at 1 and 8 steps. All decoded as 45 frames at 768x1024 and 24 fps. The upstream pipeline drops four conditioning frames and removes a 16-pixel separator from its internal RGB-D frame.",
+          "The upstream Tencent HunyuanWorld-Voyager Community License excludes use in the EU, UK, and South Korea and requires its LICENSE and NOTICE on redistribution.",
+          "Default unified WorldFoundry runtime for modern NVIDIA hosts. Install with `bash scripts/setup/unified_install.sh`.",
+          "Override tier with `--cuda cu124` or `--cuda cu121` when an upstream model still pins an older CUDA wheel bucket.",
+          "Source the environment file emitted by `scripts/setup/unified_install.sh` so WORLDFOUNDRY_USE_UNIFIED_ENV=1 routes compatible profiles here.",
+          "Runnable GPU models that previously used cu113/cu118/cu124 CUDA buckets are mapped to this tier when they do not carry hard ABI pins requiring isolation."
+        ]
+      },
+      "sources": [
+        {
+          "kind": "project",
+          "label": "Project",
+          "url": "https://3d-models.hunyuan.tencent.com/world/"
+        },
+        {
+          "kind": "paper",
+          "label": "Paper",
+          "url": "https://arxiv.org/abs/2405.07719"
+        },
+        {
+          "kind": "source",
+          "label": "GitHub",
+          "url": "https://github.com/Tencent-Hunyuan/HunyuanWorld-Voyager"
+        },
+        {
+          "kind": "weights",
+          "label": "Hugging Face",
+          "url": "https://huggingface.co/tencent/HunyuanWorld-Voyager"
+        },
+        {
+          "kind": "docs",
+          "label": "Upstream README",
+          "url": "https://github.com/Tencent-Hunyuan/HunyuanWorld-Voyager#readme"
+        }
+      ],
+      "checkpoints": [
+        {
+          "id": "tencent/HunyuanWorld-Voyager",
+          "revision": "ef280b832e98ce8aed249739ebd20da7556e2b2f",
+          "role": "voyager_checkpoint"
+        }
+      ],
+      "variants": [],
+      "inferenceTasks": [
+        {
+          "id": "world",
+          "label": "World",
+          "description": "Catalog task profile used by the model runtime.",
+          "source": "catalog",
+          "variantIds": [],
+          "inputs": [
+            {
+              "field": "prompt",
+              "detail": "Required",
+              "kind": "string",
+              "target": "input",
+              "required": true,
+              "description": "Recorded input field from the runtime profile."
+            },
+            {
+              "field": "image",
+              "detail": "Required",
+              "kind": "string",
+              "target": "input",
+              "required": true,
+              "description": "Recorded input field from the runtime profile."
+            },
+            {
+              "field": "video",
+              "detail": "Optional",
+              "kind": "string",
+              "target": "input",
+              "required": false,
+              "description": "Recorded input field from the runtime profile."
+            },
+            {
+              "field": "actions",
+              "detail": "",
+              "kind": "string",
+              "target": "input",
+              "required": false,
+              "description": "Recorded input field from the runtime profile."
+            }
+          ],
+          "artifacts": [
+            {
+              "kind": "generated_world",
+              "filename": "hunyuanworld-voyager.mp4"
+            }
+          ]
+        },
+        {
+          "id": "video",
+          "label": "Video",
+          "description": "Catalog task profile used by the model runtime.",
+          "source": "catalog",
+          "variantIds": [],
+          "inputs": [
+            {
+              "field": "prompt",
+              "detail": "Required",
+              "kind": "string",
+              "target": "input",
+              "required": true,
+              "description": "Recorded input field from the runtime profile."
+            },
+            {
+              "field": "image",
+              "detail": "Required",
+              "kind": "string",
+              "target": "input",
+              "required": true,
+              "description": "Recorded input field from the runtime profile."
+            },
+            {
+              "field": "video",
+              "detail": "Optional",
+              "kind": "string",
+              "target": "input",
+              "required": false,
+              "description": "Recorded input field from the runtime profile."
+            },
+            {
+              "field": "actions",
+              "detail": "",
+              "kind": "string",
+              "target": "input",
+              "required": false,
+              "description": "Recorded input field from the runtime profile."
+            }
+          ],
+          "artifacts": [
+            {
+              "kind": "generated_world",
+              "filename": "hunyuanworld-voyager.mp4"
+            }
+          ]
+        },
+        {
+          "id": "world_model",
+          "label": "World Model",
+          "description": "Catalog task profile used by the model runtime.",
+          "source": "catalog",
+          "variantIds": [],
+          "inputs": [
+            {
+              "field": "prompt",
+              "detail": "Required",
+              "kind": "string",
+              "target": "input",
+              "required": true,
+              "description": "Recorded input field from the runtime profile."
+            },
+            {
+              "field": "image",
+              "detail": "Required",
+              "kind": "string",
+              "target": "input",
+              "required": true,
+              "description": "Recorded input field from the runtime profile."
+            },
+            {
+              "field": "video",
+              "detail": "Optional",
+              "kind": "string",
+              "target": "input",
+              "required": false,
+              "description": "Recorded input field from the runtime profile."
+            },
+            {
+              "field": "actions",
+              "detail": "",
+              "kind": "string",
+              "target": "input",
+              "required": false,
+              "description": "Recorded input field from the runtime profile."
+            }
+          ],
+          "artifacts": [
+            {
+              "kind": "generated_world",
+              "filename": "hunyuanworld-voyager.mp4"
+            }
+          ]
+        }
+      ],
+      "inputContract": [
+        {
+          "field": "prompt",
+          "detail": "Required"
+        },
+        {
+          "field": "image",
+          "detail": "Required"
+        },
+        {
+          "field": "video",
+          "detail": "Optional"
+        },
+        {
+          "field": "actions",
+          "detail": ""
+        }
+      ],
+      "artifacts": [
+        {
+          "kind": "generated_world",
+          "filename": "hunyuanworld-voyager.mp4"
+        }
+      ],
+      "notes": [
+        "The public pipeline bridges to an external, pinned official Voyager checkout and a dedicated Python environment. The official case1 checkpoint and the public runner both produced decodable RGB-D video at eight inference steps. The licensed upstream source and weights are not redistributed here.",
+        "The independent official CLI and public WorldFoundryPipelineRunner each ran the same official case1 conditions with the checkpoint on H100 GPU3 at eight inference steps. Both outputs fully decoded as 45-frame, 768x1024, 24 fps H.264 RGB-D video; key frames were visually reviewed.",
+        "Validation covers this case1 configuration only; the upstream 50-step default, arbitrary camera paths, long-range extension, and quantitative depth or camera fidelity have not been validated.",
+        "The in-tree bridge calls a separate official checkout at revision 6218ccd36df77d0254dcf24ad1fb77312f75b04a; Tencent's community-licensed source and weights are not redistributed in this package.",
+        "Set WORLDFOUNDRY_VOYAGER_SOURCE_ROOT to that checkout and WORLDFOUNDRY_VOYAGER_PYTHON to an environment with the official dependencies; the bridge validates source, checkpoints, and a 49-frame condition directory.",
+        "Camera motion must already be rendered into the 49-frame condition directory. A raw image or action sequence alone is not a supported input.",
+        "The official case1 checkpoint generated an RGB-D MP4 on one H100 at 8 steps; the public runner generated RGB-D MP4s at 1 and 8 steps. All decoded as 45 frames at 768x1024 and 24 fps. The upstream pipeline drops four conditioning frames and removes a 16-pixel separator from its internal RGB-D frame.",
+        "The upstream Tencent HunyuanWorld-Voyager Community License excludes use in the EU, UK, and South Korea and requires its LICENSE and NOTICE on redistribution."
+      ],
+      "docs": {
+        "curated": true,
+        "publisher": {
+          "name": "Tencent (Hunyuan)",
+          "nameZh": "腾讯（混元）",
+          "kind": "company"
+        },
+        "overview": [
+          "HunyuanWorld-Voyager generates RGB-D video along camera paths. WorldFoundry's public runner has generated the official case1 example through a bridge to the licensed upstream checkout."
+        ],
+        "overviewZh": [
+          "HunyuanWorld-Voyager 沿相机路径生成 RGB-D 视频。WorldFoundry 的公开 runner 已通过外部官方源码桥接成功生成 case1 示例。"
+        ],
+        "architecture": [
+          "Per the upstream release, Voyager combines a HunyuanVideo-based generator with joint RGB-D output and a world-cache mechanism for long-range consistency. The official case1 defaults are recorded in the runtime profile: num_frames=49, infer_steps=50, flow_shift=7.0, embedded_cfg_scale=6.0, i2v_stability=true."
+        ],
+        "architectureZh": [
+          "按上游发布，Voyager 将基于 HunyuanVideo 的生成器与 RGB-D 联合输出及世界缓存机制结合，实现长程一致性。运行时档案记录官方 case1 默认值：num_frames=49、infer_steps=50、flow_shift=7.0、 embedded_cfg_scale=6.0、i2v_stability=true。"
+        ],
+        "usageNotes": [
+          "Provide a separate official checkout at revision 6218ccd36df77d0254dcf24ad1fb77312f75b04a, the checkpoint, an official-dependency Python environment, and a 49-frame rendered condition directory. Set WORLDFOUNDRY_VOYAGER_SOURCE_ROOT and WORLDFOUNDRY_VOYAGER_PYTHON. The 8-step case1 configuration was tested; the official 50-step default was not. The Tencent community license restricts use by region and redistribution."
+        ],
+        "usageNotesZh": [
+          "需提供固定版本 6218ccd36df77d0254dcf24ad1fb77312f75b04a 的外部官方源码、权重、官方依赖环境及含 49 帧的已渲染条件目录，并设置 WORLDFOUNDRY_VOYAGER_SOURCE_ROOT 和 WORLDFOUNDRY_VOYAGER_PYTHON。已验证 case1 的 8 步配置，未验证官方默认的 50 步；腾讯社区许可证限制使用地域及再分发。"
+        ],
+        "highlights": [
+          "World",
+          "Video",
+          "World Model",
+          "Unified env · Python 3.11 · CUDA 12.8",
+          "Public Hugging Face weights"
+        ],
+        "highlightsZh": [
+          "世界模型",
+          "视频生成",
+          "世界模型",
+          "统一环境 · Python 3.11 · CUDA 12.8",
+          "公开的 Hugging Face 权重"
+        ],
+        "modalities": {
+          "inputs": [],
+          "outputs": [
+            "video"
+          ]
+        },
+        "useCases": [],
+        "useCasesZh": [],
+        "hardware": {
+          "minVramGb": null,
+          "recommended": null,
+          "notes": []
+        },
+        "benchmarks": [
+          {
+            "id": "worldscore",
+            "name": "WorldScore",
+            "category": "World Models",
+            "categoryZh": "世界模型",
+            "summary": "In-tree official runtime scores generated videos per prompt",
+            "summaryZh": "仓内 official runtime 对生成视频逐 prompt 评分",
+            "href": "/docs/evaluation/benchmark-hub/worldscore",
+            "source": "docs",
+            "reason": "Scoring for camera-navigable generated worlds.",
+            "reasonZh": "相机可游走生成世界的评分。"
+          },
+          {
+            "id": "camerabench",
+            "name": "CameraBench",
+            "category": "Video Generation",
+            "categoryZh": "视频生成",
+            "summary": "In-tree official runtime scores generated videos per prompt; some dimensions may call a hosted API",
+            "summaryZh": "仓内 official runtime 对生成视频逐 prompt 评分；部分维度可能调用 hosted API",
+            "href": "/docs/evaluation/benchmark-hub/camerabench",
+            "source": "docs",
+            "reason": "Camera-path adherence evaluation.",
+            "reasonZh": "相机路径贴合度评测。"
+          }
+        ],
+        "limitations": [
+          "49-frame default clips: longer voyages need iterative extension.",
+          "Depth quality is generative, not sensor-grade — validate before metric use."
+        ],
+        "limitationsZh": [
+          "默认 49 帧片段：更长的游走需要迭代扩展。",
+          "深度是生成式的、非传感器级——用于米制用途前请先验证。"
+        ],
+        "paper": null,
+        "figures": []
+      },
+      "commands": {
+        "prepare": "bash scripts/inference/prepare_model_infer.sh hunyuanworld-voyager",
+        "install": "bash scripts/setup/model_env_install.sh --model hunyuanworld-voyager",
+        "inspect": "worldfoundry-eval zoo model-show --model-id hunyuanworld-voyager --include-manifest --json",
+        "check": "worldfoundry-eval zoo model-download --model-id hunyuanworld-voyager --check-local --json",
+        "run": "worldfoundry-eval run \\\n  hunyuanworld-voyager \\\n  --pipeline.task-profile world \\\n  --pipeline.prompt \"Describe the desired output.\" \\\n  --pipeline.image /path/to/input \\\n  --json"
+      },
+      "catalogPath": "worldfoundry/data/models/catalog/world_models/hunyuanworld-voyager.yaml"
+    },
+    {
       "id": "hy-embodied-vla",
       "name": "Hy-Embodied-0.5-VLA",
       "category": "vla_va_wam",
@@ -45664,7 +46065,7 @@
         "group": "integrated",
         "label": "Integrated",
         "integration": "integrated",
-        "runner": "pending",
+        "runner": "verified_configuration",
         "demo": "not_recorded"
       },
       "runtime": {
@@ -45676,7 +46077,7 @@
         "loadingMethod": "from_pretrained",
         "invocationMode": "native_or_standard_invocation",
         "backendStage": "independent_in_tree_runtime",
-        "runtimeStatus": "checkpoint_manifest_validated_runtime_pending",
+        "runtimeStatus": "public_binding_17f8step_gpu_validated",
         "environmentId": "_unified",
         "environmentName": "worldfoundry-unified-cu128",
         "environmentKind": "unified",
@@ -45715,6 +46116,9 @@
         "notes": [
           "Uses the official Base-Act preview checkpoint; Base-Cam is not substituted.",
           "The dedicated LingBot environment is retained because unified-env act2cam parity produced near-black output.",
+          "An H100 in the dedicated environment generated a 17-frame, 8-step video from the official example image and a forward [F,4] WASD matrix; the official full-length settings remain untested.",
+          "A previous dedicated-environment GPU run generated 49 frames at 40 steps from a real room image with forward camera poses and a nonzero [F,4] action matrix. The two controls were not separately ablated.",
+          "The public WorldFoundryPipelineRunner binding generated the 17-frame, 8-step cat example; its MP4 decoded fully at 544x720 and 16 fps. The public runner has not been exercised at the official 161-frame length.",
           "Default unified WorldFoundry runtime for modern NVIDIA hosts. Install with `bash scripts/setup/unified_install.sh`.",
           "Override tier with `--cuda cu124` or `--cuda cu121` when an upstream model still pins an older CUDA wheel bucket.",
           "Source the environment file emitted by `scripts/setup/unified_install.sh` so WORLDFOUNDRY_USE_UNIFIED_ENV=1 routes compatible profiles here.",
@@ -45755,7 +46159,7 @@
           "id": "robbyant/lingbot-world-base-act-preview",
           "revision": "d098089683285a22f2fdf8448ad07c0066e75d18",
           "role": "lingbot_world_base_act_checkpoint",
-          "status": "checkpoint_manifest_validated"
+          "status": "direct_pipeline_gpu_validated"
         }
       ],
       "variants": [],
@@ -45882,9 +46286,13 @@
       "notes": [
         "Base-Act is independently cataloged and resolves the official action checkpoint rather than Base-Cam.",
         "The inference path reuses the in-tree LingBot runtime and central Wan base modules.",
-        "In-tree action payload routing is wired; full GPU artifact parity requires locally staged weights.",
+        "The dedicated LingBot environment loaded the Base-Act preview checkpoint with control_type=act. An earlier 49-frame, 40-step room example and a current 17-frame, 8-step cat example both generated checkpoint-backed action-conditioned MP4s.",
+        "The public WorldFoundryPipelineRunner binding also generated the cat example at 17 frames and 8 steps. Its 544x720, 16 fps MP4 decoded fully; first, middle, and last frames were visually reviewed with non-black, changing content. Action-only adherence and the official 161-frame recipe remain untested.",
         "Uses the official Base-Act preview checkpoint; Base-Cam is not substituted.",
-        "The dedicated LingBot environment is retained because unified-env act2cam parity produced near-black output."
+        "The dedicated LingBot environment is retained because unified-env act2cam parity produced near-black output.",
+        "An H100 in the dedicated environment generated a 17-frame, 8-step video from the official example image and a forward [F,4] WASD matrix; the official full-length settings remain untested.",
+        "A previous dedicated-environment GPU run generated 49 frames at 40 steps from a real room image with forward camera poses and a nonzero [F,4] action matrix. The two controls were not separately ablated.",
+        "The public WorldFoundryPipelineRunner binding generated the 17-frame, 8-step cat example; its MP4 decoded fully at 544x720 and 16 fps. The public runner has not been exercised at the official 161-frame length."
       ],
       "docs": {
         "curated": true,
@@ -45906,10 +46314,10 @@
           "推理路径复用树内 LingBot 运行时与中央 Wan 基座模块（apache-2.0）。输入为提示词、图像、位姿与 action_matrix。"
         ],
         "usageNotes": [
-          "In-tree action payload routing is wired; full GPU artifact parity requires locally staged weights. The dedicated LingBot environment is retained because unified-env act2cam parity produced near-black output — do not switch environments."
+          "The Base-Act preview checkpoint generated a 49-frame, 40-step room video and a 17-frame, 8-step cat video with a forward WASD action matrix. The public runner was also validated for the latter configuration in the dedicated LingBot environment. These runs do not isolate action adherence or validate the official 161-frame recipe. Keep the dedicated environment because unified-env act2cam output was near-black."
         ],
         "usageNotesZh": [
-          "树内动作负载路由已接通；完整 GPU 产物一致性需要本地就位权重。保留专属 LingBot 环境是因为统一环境下的 act2cam 一致性测试产出接近全黑的输出——请勿更换环境。"
+          "Base-Act 预览权重已生成 49 帧、40 步房间视频，以及带前进 WASD 动作矩阵的 17 帧、8 步猫图视频；后者也通过专属 LingBot 环境的公开 runner 验证。这些运行尚未单独测量动作贴合度，也未验证官方 161 帧配方。统一环境的 act2cam 曾产出近黑画面，因此保留专属环境。"
         ],
         "highlights": [
           "Interactive World Model",
@@ -45949,11 +46357,11 @@
           }
         ],
         "limitations": [
-          "Full GPU artifact parity is pending staged weights.",
+          "Only the 17-frame, 8-step public-runner configuration was validated; action-only adherence and the official 161-frame recipe remain untested.",
           "Must run in the dedicated LingBot environment (unified-env parity failed)."
         ],
         "limitationsZh": [
-          "完整 GPU 产物一致性待权重就位。",
+          "公开 runner 仅验证了 17 帧、8 步配置；仅动作信号的贴合度及官方 161 帧配方尚未验证。",
           "必须在专属 LingBot 环境运行（统一环境一致性失败）。"
         ],
         "paper": null,
@@ -47633,7 +48041,7 @@
       "categoryLabel": "Video",
       "categoryLabelZh": "视频",
       "provider": "Lightricks",
-      "summary": "LTX-2.x is Lightricks' current-generation video model family in this catalog, integrated natively for the distilled LTX-2 and LTX-2.3 image-to-video paths. The native route uses the official spatial upscaler between two denoising stages. S…",
+      "summary": "LTX-2.x is Lightricks' current video model family. WorldFoundry provides native distilled I2V routes and official IC-LoRA control-video routes for LTX-2 and LTX-2.3. The controlled V2V routes completed small synthetic-reference inference;…",
       "aliases": [],
       "tasks": [
         "text-to-video",
@@ -47725,9 +48133,9 @@
         },
         {
           "kind": "source",
-          "label": "GitHub",
+          "label": "Source",
           "url": "https://github.com/Lightricks/LTX-Video",
-          "revision": "4b2d053057623ddd4d0a1d3e9cd28890e9ef487f"
+          "revision": "d6053703e00195bc668cbd1d5eda9dc0b2e7b74a"
         },
         {
           "kind": "docs",
@@ -47738,7 +48146,7 @@
           "kind": "docs",
           "label": "Upstream README",
           "url": "https://github.com/Lightricks/LTX-Video#readme",
-          "revision": "4b2d053057623ddd4d0a1d3e9cd28890e9ef487f"
+          "revision": "d6053703e00195bc668cbd1d5eda9dc0b2e7b74a"
         }
       ],
       "checkpoints": [
@@ -47752,6 +48160,20 @@
         {
           "id": "Lightricks/LTX-2.3",
           "revision": "76730e634e70a28f4e8d51f5e29c08e40e2d8e74",
+          "license": "other",
+          "gated": false,
+          "private": false
+        },
+        {
+          "id": "Lightricks/LTX-2-19b-IC-LoRA-Pose-Control",
+          "revision": "ecdabfb03acd2e807c90ea260ccc136140e7ac80",
+          "license": "other",
+          "gated": false,
+          "private": false
+        },
+        {
+          "id": "Lightricks/LTX-2.3-22b-IC-LoRA-Union-Control",
+          "revision": "b4d1c4d8c9e544e9bbbd6811bb4363708b6093ff",
           "license": "other",
           "gated": false,
           "private": false
@@ -47847,18 +48269,18 @@
           "label": "ltx-2-v2v",
           "task": "video-to-video",
           "runtimeProfile": "ltx-2-v2v",
-          "pipelineBinding": "ltx-2.x",
-          "status": "planned",
-          "pipelineTarget": null,
-          "runner": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
-          "loadingMethod": null,
-          "invocationMode": null,
+          "pipelineBinding": "ltx-2-v2v",
+          "status": "integrated",
+          "pipelineTarget": "worldfoundry.pipelines.ltx2.pipeline_ltx2_v2v:LTX2V2VPipeline",
+          "runner": "worldfoundry.pipeline",
+          "loadingMethod": "from_pretrained",
+          "invocationMode": "native_or_standard_invocation",
           "environmentName": "worldfoundry-unified-cu128",
           "environmentKind": "unified",
           "python": "3.11",
           "cudaLabel": "CUDA 12.8",
-          "backendStage": "profile_only",
-          "runtimeStatus": "profile_resolves_catalog_variant_runner_parity_pending",
+          "backendStage": "official_ic_lora",
+          "runtimeStatus": "verified_inference_only",
           "inputContract": [
             {
               "field": "prompt",
@@ -47874,7 +48296,7 @@
             },
             {
               "field": "actions",
-              "detail": "seed"
+              "detail": "seed, control_type"
             }
           ],
           "artifacts": [
@@ -47973,18 +48395,18 @@
           "label": "ltx-2.3-v2v",
           "task": "video-to-video",
           "runtimeProfile": "ltx-2.3-v2v",
-          "pipelineBinding": "ltx-2.x",
-          "status": "planned",
-          "pipelineTarget": null,
-          "runner": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
-          "loadingMethod": null,
-          "invocationMode": null,
+          "pipelineBinding": "ltx-2.3-v2v",
+          "status": "integrated",
+          "pipelineTarget": "worldfoundry.pipelines.ltx2.pipeline_ltx2_v2v:LTX23V2VPipeline",
+          "runner": "worldfoundry.pipeline",
+          "loadingMethod": "from_pretrained",
+          "invocationMode": "native_or_standard_invocation",
           "environmentName": "worldfoundry-unified-cu128",
           "environmentKind": "unified",
           "python": "3.11",
           "cudaLabel": "CUDA 12.8",
-          "backendStage": "profile_only",
-          "runtimeStatus": "profile_resolves_catalog_variant_runner_parity_pending",
+          "backendStage": "official_ic_lora",
+          "runtimeStatus": "verified_inference_only",
           "inputContract": [
             {
               "field": "prompt",
@@ -48000,7 +48422,7 @@
             },
             {
               "field": "actions",
-              "detail": "seed"
+              "detail": "seed, control_type"
             }
           ],
           "artifacts": [
@@ -48148,7 +48570,7 @@
             },
             {
               "field": "actions",
-              "detail": "seed",
+              "detail": "seed, control_type",
               "kind": "string",
               "target": "input",
               "required": false,
@@ -48189,18 +48611,18 @@
       ],
       "notes": [
         "Tracked separately from LTX-Video 0.9.x because upstream publishes LTX-2.x under distinct Hugging Face repository ids.",
-        "The runnable LTX-2 and LTX-2.3 routes are I2V only. The family-level T2V and V2V capability labels describe upstream models, not currently runnable WorldFoundry variants.",
+        "The runnable V2V variants require Pose-Control or Union-Control IC-LoRA and a corresponding pose, Canny, or depth reference video; arbitrary RGB video is not equivalent.",
         "I2V uses the official Spatial Upscaler as the boundary between two denoising stages. It is loaded automatically from spatial_upsampler_path; Studio does not expose it as an independent refiner toggle.",
         "The current native distilled schedule is 8 first-stage steps plus 3 second-stage steps (11 total). The upstream DistilledPipeline documentation currently records 8 plus 4, so this integration must not be described as exact upstream pipeline parity until that difference is reconciled and checkpoint-backed validation is recorded.",
-        "WorldFoundry implements LTX-2.x I2V and LTX-2.3 T2V with native components and the generic joint multi-stage runner; V2V and LTX-2 T2V remain profile-only.",
-        "No Diffusers pipeline, copied upstream pipeline, or per-model loader is used.",
+        "WorldFoundry implements LTX-2.x I2V and LTX-2.3 T2V with native components and the generic joint multi-stage runner.",
+        "The controlled V2V routes invoke the version-matched official IC-LoRA pipeline through a dedicated Python environment.",
         "WorldFoundry LTX-2 I2V pipeline target is registered and produced the nonblank Studio demo artifact recorded above.",
         "WorldFoundry LTX-2.3 I2V pipeline target is registered and produced the nonblank Studio demo artifact recorded above.",
-        "T2V/V2V variants still need scoped wrappers and checkpoint-backed validation.",
+        "Both V2V control bindings completed checkpoint-backed 17-frame synthetic-reference inference; natural-video semantic quality and default-resolution parity remain pending.",
         "LTX-2 and LTX-2.3 I2V routes share WorldFoundry's native diffusion infrastructure.",
-        "LTX-2.3 T2V and both I2V routes use native components; LTX-2 T2V and V2V remain profile-only.",
+        "LTX-2 and LTX-2.3 V2V use the official IC-LoRA pipeline with typed control videos; only small synthetic control cases have been visually checked.",
         "Full upstream parity remains pending; per-run artifact checks are tracked outside the model catalog.",
-        "Official Lightricks LTX-2.x HF base repos were confirmed. Gated LoRA or community variants are not included.",
+        "The V2V control variants require version-matched public IC-LoRA weights and distilled base checkpoints.",
         "Uses the shared NativeDiffusionPipeline, component loader, joint multi-stage runner, scheduler, and optimization policies.",
         "No Diffusers pipeline or copied LTX runtime backend is used."
       ],
@@ -48212,10 +48634,10 @@
           "kind": "company"
         },
         "overview": [
-          "LTX-2.x is Lightricks' current-generation video model family in this catalog, integrated natively for the distilled LTX-2 and LTX-2.3 image-to-video paths. The native route uses the official spatial upscaler between two denoising stages. Six variants are recorded (T2V/I2V/V2V for both 2 and 2.3), but only the two I2V routes are runnable today — the others are upstream capability profiles."
+          "LTX-2.x is Lightricks' current video model family. WorldFoundry provides native distilled I2V routes and official IC-LoRA control-video routes for LTX-2 and LTX-2.3. The controlled V2V routes completed small synthetic-reference inference; broader quality remains unverified."
         ],
         "overviewZh": [
-          "LTX-2.x 是 Lightricks 当前一代视频模型在本 catalog 中的条目，原生集成了蒸馏版 LTX-2 与 LTX-2.3 的图生视频路径。原生路径在两段去噪之间使用官方空间上采样器。共记录六个 variant（2 与 2.3 各有 T2V/I2V/V2V），但目前只有两条 I2V 路径可运行——其余是上游能力档案。"
+          "LTX-2.x 是 Lightricks 当前的视频模型系列。WorldFoundry 提供原生蒸馏版 I2V 路径，以及 LTX-2 和 LTX-2.3 的官方 IC-LoRA 控制视频路径。V2V 已通过小尺寸合成控制输入推理，尚未验证更广泛的质量。"
         ],
         "architecture": [
           "The I2V route is a two-stage denoise with the official Spatial Upscaler as the boundary, loaded automatically from spatial_upsampler_path (not a separate Studio refiner toggle). Assembly uses the shared NativeDiffusionPipeline, joint multi-stage runner, and optimization policies — no Diffusers pipeline or copied upstream pipeline. Note the recorded schedule caveat: the native distilled schedule is 8+3 steps while upstream documents 8+4, so exact upstream parity must not be claimed until reconciled."
@@ -48224,16 +48646,16 @@
           "I2V 路径为两段去噪，以官方 Spatial Upscaler 为分界，从 spatial_upsampler_path 自动加载（不是独立的 Studio 细化开关）。装配使用共享 NativeDiffusionPipeline、联合多段 runner 与优化策略——不使用 Diffusers pipeline 或复制的上游 pipeline。注意记录在案的调度差异：原生蒸馏调度为 8+3 步，而上游文档为 8+4 步，在差异调和并完成 checkpoint 验证前不得宣称与上游完全一致。"
         ],
         "usageNotes": [
-          "Runner status is partial_studio_visual_validation_verified: both the LTX-2 and LTX-2.3 I2V targets produced recorded nonblank Studio demo artifacts. T2V/V2V still need scoped wrappers and validation — don't select those variants expecting output. This entry is tracked separately from LTX-Video 0.9.x because upstream ships distinct HF repository ids."
+          "Select the matching distilled checkpoint and IC-LoRA, provide a pose control video for LTX-2 or a Canny/depth/pose control video for LTX-2.3, and use a Python environment with official ltx-pipelines. The recorded 256px runs establish inference structure only."
         ],
         "usageNotesZh": [
-          "runner 状态为 partial_studio_visual_validation_verified：LTX-2 与 LTX-2.3 的 I2V target 均产出了记录在案的非空 Studio demo 产物。T2V/V2V 仍需专门封装与验证——不要指望选那些 variant 能出结果。由于上游使用不同的 HF 仓库 id，本条目与 LTX-Video 0.9.x 分开跟踪。"
+          "选择与版本匹配的蒸馏权重和 IC-LoRA；LTX-2 输入姿态控制视频，LTX-2.3 输入 Canny、深度或姿态控制视频，并使用安装官方 ltx-pipelines 的 Python 环境。已记录的 256px 运行只证明推理结构通过。"
         ],
         "highlights": [
           "Text To Video",
           "Image To Video",
           "Video To Video",
-          "4 runnable WorldFoundry variants",
+          "6 runnable WorldFoundry variants",
           "Unified env · Python 3.11 · CUDA 12.8",
           "Public Hugging Face weights"
         ],
@@ -48241,7 +48663,7 @@
           "文生视频",
           "图生视频",
           "视频到视频转换",
-          "4 个可运行的 WorldFoundry variant",
+          "6 个可运行的 WorldFoundry variant",
           "统一环境 · Python 3.11 · CUDA 12.8",
           "公开的 Hugging Face 权重"
         ],
@@ -48277,12 +48699,12 @@
           }
         ],
         "limitations": [
-          "Only the I2V routes run; T2V and V2V variants are profiles, not runnable paths.",
+          "V2V has only been checked with synthetic pose/Canny controls at 256px; natural-video semantics, dynamic motion, and default-resolution quality remain unverified.",
           "The 8+3 vs 8+4 distilled-schedule difference means exact upstream parity is not yet claimable.",
           "Visual validation is partial (Studio demo artifacts), not full checkpoint-backed parity."
         ],
         "limitationsZh": [
-          "只有 I2V 路径可运行；T2V 与 V2V variant 是档案而非可运行路径。",
+          "V2V 仅用 256px 合成姿态/Canny 控制输入验证；自然视频语义、动态运动及默认分辨率质量仍未验证。",
           "蒸馏调度 8+3 与上游 8+4 的差异未调和前，不能宣称与上游精确一致。",
           "视觉验证为部分性（Studio demo 产物），并非完整 checkpoint 一致性。"
         ],
@@ -48892,6 +49314,8 @@
           "diffusers==0.29.2",
           "einops>=0.6.0",
           "ffmpeg-python",
+          "flash-attn==2.4.2",
+          "flashinfer-python==0.2.0.post2",
           "ftfy==6.2.0",
           "gpustat==1.1.1",
           "imageio==2.34.0",
@@ -48908,6 +49332,7 @@
         "packageVersions": {
           "accelerate": "accelerate==0.32.1",
           "diffusers": "diffusers==0.29.2",
+          "flash-attn": "flash-attn==2.4.2",
           "transformers": "transformers==4.42.3"
         },
         "validationImports": [
@@ -54805,11 +55230,11 @@
           "av"
         ],
         "notes": [
-          "Transformers 4.57+ requires torch 2.6 or newer to load the released T5 PyTorch .bin shards. On older torch, convert the trusted local shards with torch 2.6+ and weights_only=True to safetensors, then pass OPENSORA_TEXT_ENCODER_PATH to that local directory.",
+          "Transformers 4.57+ requires torch 2.6 or newer to load the released T5 PyTorch .bin shards directly. The pinned torch 2.5.1 runtime instead requires a separate derived safetensors directory. Run worldfoundry/synthesis/visual_generation/open_sora/open_sora_runtime/tools/convert_t5_to_safetensors.py with --source ../ckpts/DeepFloyd--t5-v1_1-xxl and --output ../ckpts/DeepFloyd--t5-v1_1-xxl-safetensors before inference.",
           "The in-tree v1.2.0 inference source supports single-GPU execution without ColossalAI.",
           "Distributed execution and sharded checkpoints require colossalai==0.3.7 from the official requirements.",
           "Runtime config injects local VAE and text-encoder paths through OPENSORA_VAE_PATH and OPENSORA_TEXT_ENCODER_PATH.",
-          "Transformers 4.57+ rejects the published T5 PyTorch .bin shards on torch 2.5.1; use torch 2.6 or newer, or convert those shards to safetensors with torch 2.6+ and weights_only=True before loading them in this environment."
+          "Transformers 4.57+ rejects the published T5 PyTorch .bin shards on torch 2.5.1. Direct .bin loading requires torch 2.6 or newer. For this pinned torch 2.5.1 environment, run the in-tree convert_t5_to_safetensors.py tool (using torch.load(weights_only=True)) to create a separate derived cache. The tool was verified with torch 2.5.1 and safetensors 0.7.0."
         ]
       },
       "sources": [
@@ -54921,7 +55346,7 @@
         "WorldFoundry route is complete; missing checkpoint/assets are reported at runtime.",
         "No WorldFoundry runtime or official-output parity run was performed for this manifest update.",
         "OpenSora-STDiT-v2 candidate returned 401 in this pass and is not listed.",
-        "Transformers 4.57+ requires torch 2.6 or newer to load the released T5 PyTorch .bin shards. On older torch, convert the trusted local shards with torch 2.6+ and weights_only=True to safetensors, then pass OPENSORA_TEXT_ENCODER_PATH to that local directory."
+        "Transformers 4.57+ requires torch 2.6 or newer to load the released T5 PyTorch .bin shards directly. The pinned torch 2.5.1 runtime instead requires a separate derived safetensors directory. Run worldfoundry/synthesis/visual_generation/open_sora/open_sora_runtime/tools/convert_t5_to_safetensors.py with --source ../ckpts/DeepFloyd--t5-v1_1-xxl and --output ../ckpts/DeepFloyd--t5-v1_1-xxl-safetensors before inference."
       ],
       "docs": {
         "curated": true,
@@ -69809,7 +70234,7 @@
         "group": "integrated",
         "label": "Integrated",
         "integration": "integrated",
-        "runner": "pending",
+        "runner": "checkpoint_gpu_validated",
         "demo": "not_recorded"
       },
       "runtime": {
@@ -69821,7 +70246,7 @@
         "loadingMethod": "from_pretrained",
         "invocationMode": "native_or_standard_invocation",
         "backendStage": "shared_base_model_runtime",
-        "runtimeStatus": "integrated_checkpoint_required",
+        "runtimeStatus": "checkpoint_gpu_validated",
         "environmentId": "_unified",
         "environmentName": "worldfoundry-unified-cu128",
         "environmentKind": "unified",
@@ -69859,10 +70284,11 @@
         ],
         "notes": [
           "checkpoint_path points to XGEN-JING or its jing_flash_v1 subdirectory; base_model_path uses Diffusers H3 components.",
-          "Requires a Diffusers release exposing MiniMax-H3 codecs (tested with 0.40.0) and Transformers Qwen3-VL support.",
+          "Requires Diffusers >=0.40.0 for MiniMax-H3 codecs and Transformers Qwen3-VL support.",
           "CPU offload and sequential text/DiT/codec stages permit one GPU; upstream six-GPU distributed execution is not exposed.",
           "Four fixed distilled steps, 24 FPS and stereo 32 kHz audio; no CFG or negative prompt.",
           "Control lists have one WASD/IJKL string per repeated slice; default layout yields 17 * slice_count + 5 pixel frames.",
+          "Local checkpoint-backed 22-frame text-only cases at 448x256 with cpu_offload=false and the default 960x544 canvas with cpu_offload=true passed strict loading and audio/video artifact checks on one GPU; image references, camera-control quality, and longer runs have not been validated.",
           "Default unified WorldFoundry runtime for modern NVIDIA hosts. Install with `bash scripts/setup/unified_install.sh`.",
           "Override tier with `--cuda cu124` or `--cuda cu121` when an upstream model still pins an older CUDA wheel bucket.",
           "Source the environment file emitted by `scripts/setup/unified_install.sh` so WORLDFOUNDRY_USE_UNIFIED_ENV=1 routes compatible profiles here.",
@@ -70114,12 +70540,14 @@
         "Reuses the canonical MiniMax-H3 DiT, Qwen3-VL conditioner, geometry and scheduler helpers.",
         "Diffusers H3 video/audio codecs and core H264/audio IO are reused without copying architectures.",
         "Four-step bidirectional JING-Flash-v1 only; the causal model has not been released.",
-        "Checkpoint-backed GPU validation is in progress.",
+        "The public pipeline strictly loaded the released JING-Flash-v1 and MiniMax-H3 checkpoints and produced a decodable 22-frame, 448x256, 24 FPS H.264 video with 32 kHz stereo AAC audio on one GPU.",
+        "Text-only 22-frame runs at both 448x256 and the default 960x544 canvas show a coherent moving golden retriever; image references, camera-control accuracy, longer runs, and upstream artifact parity remain unverified.",
         "checkpoint_path points to XGEN-JING or its jing_flash_v1 subdirectory; base_model_path uses Diffusers H3 components.",
-        "Requires a Diffusers release exposing MiniMax-H3 codecs (tested with 0.40.0) and Transformers Qwen3-VL support.",
+        "Requires Diffusers >=0.40.0 for MiniMax-H3 codecs and Transformers Qwen3-VL support.",
         "CPU offload and sequential text/DiT/codec stages permit one GPU; upstream six-GPU distributed execution is not exposed.",
         "Four fixed distilled steps, 24 FPS and stereo 32 kHz audio; no CFG or negative prompt.",
-        "Control lists have one WASD/IJKL string per repeated slice; default layout yields 17 * slice_count + 5 pixel frames."
+        "Control lists have one WASD/IJKL string per repeated slice; default layout yields 17 * slice_count + 5 pixel frames.",
+        "Local checkpoint-backed 22-frame text-only cases at 448x256 with cpu_offload=false and the default 960x544 canvas with cpu_offload=true passed strict loading and audio/video artifact checks on one GPU; image references, camera-control quality, and longer runs have not been validated."
       ],
       "docs": {
         "curated": false,
@@ -70129,14 +70557,14 @@
           "WorldFoundry binds it to the worldfoundry.pipelines.xgen_jing.pipeline_xgen_jing:XGENJINGPipeline pipeline via worldfoundry.pipeline.",
           "It runs in the shared unified environment worldfoundry-unified-cu128 (Python 3.11, CUDA 12.8).",
           "Weights are pulled from the Hugging Face repository XGENlabs/XGEN-JING, pinned to revision 8153db624, plus 1 more recorded repository.",
-          "Runner parity is currently “Pending” and native-demo parity is “Not Recorded”; treat end-to-end GPU evidence as not yet recorded."
+          "Runner parity is currently “Checkpoint Gpu Validated” and native-demo parity is “Not Recorded”; treat end-to-end GPU evidence as not yet recorded."
         ],
         "overviewZh": [
           "XGEN-JING Flash v1 是来自 Xgen Labs 的世界模型。Catalog 将它记录为文生视频、图生视频、相机可控视频生成、世界模型任务。",
           "WorldFoundry 将它绑定到 worldfoundry.pipelines.xgen_jing.pipeline_xgen_jing:XGENJINGPipeline pipeline（runner：worldfoundry.pipeline）。",
           "它运行在统一环境 worldfoundry-unified-cu128 中（Python 3.11，CUDA 12.8）。",
           "权重来自 Hugging Face 仓库 XGENlabs/XGEN-JING，固定在 revision 8153db624，另有 1 个已记录仓库。",
-          "当前 runner parity 为“Pending”，原生 demo parity 为“Not Recorded”；端到端 GPU 证据应视为尚未记录。"
+          "当前 runner parity 为“Checkpoint Gpu Validated”，原生 demo parity 为“Not Recorded”；端到端 GPU 证据应视为尚未记录。"
         ],
         "architecture": [],
         "architectureZh": [],
@@ -70174,14 +70602,16 @@
         },
         "benchmarks": [],
         "limitations": [
-          "Runner evidence is “Pending” — not a verified end-to-end GPU run. Do not treat this page as proof the route is fully validated.",
+          "Runner evidence is “Checkpoint Gpu Validated” — not a verified end-to-end GPU run. Do not treat this page as proof the route is fully validated.",
           "Native demo evidence: Not recorded.",
-          "Checkpoint-backed GPU validation is in progress."
+          "The public pipeline strictly loaded the released JING-Flash-v1 and MiniMax-H3 checkpoints and produced a decodable 22-frame, 448x256, 24 FPS H.264 video with 32 kHz stereo AAC audio on one GPU.",
+          "Text-only 22-frame runs at both 448x256 and the default 960x544 canvas show a coherent moving golden retriever; image references, camera-control accuracy, longer runs, and upstream artifact parity remain unverified."
         ],
         "limitationsZh": [
-          "Runner 证据为“Pending”——这不是经过验证的端到端 GPU 运行结果，请勿将本页视为该路径已被完整验证的证明。",
+          "Runner 证据为“Checkpoint Gpu Validated”——这不是经过验证的端到端 GPU 运行结果，请勿将本页视为该路径已被完整验证的证明。",
           "原生 Demo 证据：未记录。",
-          "Checkpoint-backed GPU validation is in progress."
+          "The public pipeline strictly loaded the released JING-Flash-v1 and MiniMax-H3 checkpoints and produced a decodable 22-frame, 448x256, 24 FPS H.264 video with 32 kHz stereo AAC audio on one GPU.",
+          "Text-only 22-frame runs at both 448x256 and the default 960x544 canvas show a coherent moving golden retriever; image references, camera-control accuracy, longer runs, and upstream artifact parity remain unverified."
         ],
         "paper": null,
         "figures": []
@@ -76977,421 +77407,6 @@
       "catalogPath": "worldfoundry/data/models/catalog/vla_va_wam/galaxea-vla.yaml"
     },
     {
-      "id": "gaussian-actor",
-      "name": "Gaussian Actor",
-      "category": "vla_va_wam",
-      "categoryLabel": "Embodied",
-      "categoryLabelZh": "具身智能",
-      "provider": "Hugging Face (LeRobot reference)",
-      "summary": "Gaussian Actor is a reinforcement-learning actor policy recorded against the concrete LeRobot gaussian_actor implementation — no separate official repository was identified upstream. WorldFoundry routes it through an in-tree action runtime…",
-      "aliases": [
-        "gaussian_actor",
-        "gaussian-policy-actor"
-      ],
-      "tasks": [
-        "reinforcement_learning",
-        "actor_policy",
-        "robot_policy"
-      ],
-      "status": {
-        "group": "runtime_ported",
-        "label": "Runtime ported",
-        "integration": "runtime_ported",
-        "runner": "not_recorded",
-        "demo": "not_recorded"
-      },
-      "runtime": {
-        "profileId": "gaussian-actor",
-        "bindingId": "gaussian-actor",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
-        "runner": "worldfoundry.pipeline",
-        "pipelineTarget": "worldfoundry.pipelines.component_pipelines:GaussianActorPipeline",
-        "loadingMethod": "from_pretrained",
-        "invocationMode": "native_or_standard_invocation",
-        "backendStage": "official_in_tree_runtime",
-        "runtimeStatus": "official_lerobot_runtime_route_ready_checkpoint_required",
-        "environmentId": "_unified",
-        "environmentName": "worldfoundry-unified-cu128",
-        "environmentKind": "unified",
-        "python": "3.11",
-        "cudaProfile": "cu128",
-        "cudaLabel": "CUDA 12.8",
-        "driverStatus": "compatible_unified_default",
-        "condaPackages": [
-          "python=3.11",
-          "pip",
-          "ffmpeg",
-          "setuptools",
-          "wheel"
-        ],
-        "pipPackages": [
-          "torch",
-          "torchvision",
-          "torchaudio",
-          "xfuser"
-        ],
-        "packageVersions": {
-          "torch": "torch",
-          "torchvision": "torchvision",
-          "torchaudio": "torchaudio",
-          "xfuser": "xfuser"
-        },
-        "validationImports": [
-          "torch",
-          "torchvision",
-          "numpy",
-          "transformers",
-          "diffusers",
-          "xfuser",
-          "worldfoundry"
-        ],
-        "notes": [
-          "Default unified WorldFoundry runtime for modern NVIDIA hosts. Install with `bash scripts/setup/unified_install.sh`.",
-          "Override tier with `--cuda cu124` or `--cuda cu121` when an upstream model still pins an older CUDA wheel bucket.",
-          "Source the environment file emitted by `scripts/setup/unified_install.sh` so WORLDFOUNDRY_USE_UNIFIED_ENV=1 routes compatible profiles here.",
-          "Runnable GPU models that previously used cu113/cu118/cu124 CUDA buckets are mapped to this tier when they do not carry hard ABI pins requiring isolation."
-        ]
-      },
-      "sources": [
-        {
-          "kind": "paper",
-          "label": "Paper",
-          "url": "https://arxiv.org/abs/2602.22818"
-        },
-        {
-          "kind": "source",
-          "label": "GitHub",
-          "url": "https://github.com/huggingface/lerobot"
-        },
-        {
-          "kind": "docs",
-          "label": "Upstream README",
-          "url": "https://github.com/huggingface/lerobot#readme"
-        }
-      ],
-      "checkpoints": [
-        {
-          "id": "lerobot/gaussian_actor",
-          "role": "policy_checkpoint"
-        }
-      ],
-      "variants": [],
-      "inferenceTasks": [
-        {
-          "id": "reinforcement_learning",
-          "label": "Reinforcement Learning",
-          "description": "Catalog task profile used by the model runtime.",
-          "source": "catalog",
-          "variantIds": [],
-          "inputs": [
-            {
-              "field": "model_id",
-              "detail": "gaussian-actor",
-              "kind": "string",
-              "target": "input",
-              "required": false,
-              "description": "Recorded input field from the runtime profile."
-            },
-            {
-              "field": "prompt",
-              "detail": "Required",
-              "kind": "string",
-              "target": "input",
-              "required": true,
-              "description": "Recorded input field from the runtime profile."
-            },
-            {
-              "field": "image",
-              "detail": "Required",
-              "kind": "string",
-              "target": "input",
-              "required": true,
-              "description": "Recorded input field from the runtime profile."
-            },
-            {
-              "field": "state",
-              "detail": "Required",
-              "kind": "string",
-              "target": "input",
-              "required": true,
-              "description": "Recorded input field from the runtime profile."
-            },
-            {
-              "field": "policy_family",
-              "detail": "gaussian_actor_policy",
-              "kind": "string",
-              "target": "input",
-              "required": false,
-              "description": "Recorded input field from the runtime profile."
-            },
-            {
-              "field": "action_representation",
-              "detail": "continuous_actor_action",
-              "kind": "string",
-              "target": "input",
-              "required": false,
-              "description": "Recorded input field from the runtime profile."
-            }
-          ],
-          "artifacts": [
-            {
-              "kind": "action_trace",
-              "filename": ""
-            },
-            {
-              "kind": "action_trace",
-              "filename": "gaussian-actor_action_trace.json"
-            }
-          ]
-        },
-        {
-          "id": "actor_policy",
-          "label": "Actor Policy",
-          "description": "Catalog task profile used by the model runtime.",
-          "source": "catalog",
-          "variantIds": [],
-          "inputs": [
-            {
-              "field": "model_id",
-              "detail": "gaussian-actor",
-              "kind": "string",
-              "target": "input",
-              "required": false,
-              "description": "Recorded input field from the runtime profile."
-            },
-            {
-              "field": "prompt",
-              "detail": "Required",
-              "kind": "string",
-              "target": "input",
-              "required": true,
-              "description": "Recorded input field from the runtime profile."
-            },
-            {
-              "field": "image",
-              "detail": "Required",
-              "kind": "string",
-              "target": "input",
-              "required": true,
-              "description": "Recorded input field from the runtime profile."
-            },
-            {
-              "field": "state",
-              "detail": "Required",
-              "kind": "string",
-              "target": "input",
-              "required": true,
-              "description": "Recorded input field from the runtime profile."
-            },
-            {
-              "field": "policy_family",
-              "detail": "gaussian_actor_policy",
-              "kind": "string",
-              "target": "input",
-              "required": false,
-              "description": "Recorded input field from the runtime profile."
-            },
-            {
-              "field": "action_representation",
-              "detail": "continuous_actor_action",
-              "kind": "string",
-              "target": "input",
-              "required": false,
-              "description": "Recorded input field from the runtime profile."
-            }
-          ],
-          "artifacts": [
-            {
-              "kind": "action_trace",
-              "filename": ""
-            },
-            {
-              "kind": "action_trace",
-              "filename": "gaussian-actor_action_trace.json"
-            }
-          ]
-        },
-        {
-          "id": "robot_policy",
-          "label": "Robot Policy",
-          "description": "Catalog task profile used by the model runtime.",
-          "source": "catalog",
-          "variantIds": [],
-          "inputs": [
-            {
-              "field": "model_id",
-              "detail": "gaussian-actor",
-              "kind": "string",
-              "target": "input",
-              "required": false,
-              "description": "Recorded input field from the runtime profile."
-            },
-            {
-              "field": "prompt",
-              "detail": "Required",
-              "kind": "string",
-              "target": "input",
-              "required": true,
-              "description": "Recorded input field from the runtime profile."
-            },
-            {
-              "field": "image",
-              "detail": "Required",
-              "kind": "string",
-              "target": "input",
-              "required": true,
-              "description": "Recorded input field from the runtime profile."
-            },
-            {
-              "field": "state",
-              "detail": "Required",
-              "kind": "string",
-              "target": "input",
-              "required": true,
-              "description": "Recorded input field from the runtime profile."
-            },
-            {
-              "field": "policy_family",
-              "detail": "gaussian_actor_policy",
-              "kind": "string",
-              "target": "input",
-              "required": false,
-              "description": "Recorded input field from the runtime profile."
-            },
-            {
-              "field": "action_representation",
-              "detail": "continuous_actor_action",
-              "kind": "string",
-              "target": "input",
-              "required": false,
-              "description": "Recorded input field from the runtime profile."
-            }
-          ],
-          "artifacts": [
-            {
-              "kind": "action_trace",
-              "filename": ""
-            },
-            {
-              "kind": "action_trace",
-              "filename": "gaussian-actor_action_trace.json"
-            }
-          ]
-        }
-      ],
-      "inputContract": [
-        {
-          "field": "model_id",
-          "detail": "gaussian-actor"
-        },
-        {
-          "field": "prompt",
-          "detail": "Required"
-        },
-        {
-          "field": "image",
-          "detail": "Required"
-        },
-        {
-          "field": "state",
-          "detail": "Required"
-        },
-        {
-          "field": "policy_family",
-          "detail": "gaussian_actor_policy"
-        },
-        {
-          "field": "action_representation",
-          "detail": "continuous_actor_action"
-        }
-      ],
-      "artifacts": [
-        {
-          "kind": "action_trace",
-          "filename": ""
-        },
-        {
-          "kind": "action_trace",
-          "filename": "gaussian-actor_action_trace.json"
-        }
-      ],
-      "notes": [
-        "No separate official repository was identified; use the concrete LeRobot gaussian_actor policy as reference source.",
-        "WorldFoundry routes Gaussian Actor through an in-tree action runtime adapter against the concrete policy.",
-        "Checkpoint absence is reported by runtime missing_assets and is not a catalog blocker."
-      ],
-      "docs": {
-        "curated": true,
-        "publisher": {
-          "name": "Hugging Face (LeRobot reference)",
-          "nameZh": "Hugging Face（LeRobot 参考实现）",
-          "kind": "company"
-        },
-        "overview": [
-          "Gaussian Actor is a reinforcement-learning actor policy recorded against the concrete LeRobot gaussian_actor implementation — no separate official repository was identified upstream. WorldFoundry routes it through an in-tree action runtime adapter; checkpoints are not recorded, so runs emit a runtime plan."
-        ],
-        "overviewZh": [
-          "Gaussian Actor 是强化学习 actor 策略，以 LeRobot 中具体的 gaussian_actor 实现为参考记录——上游未识别到独立官方仓库。WorldFoundry 通过树内动作运行时适配器路由；未记录 checkpoint，运行输出运行时计划。"
-        ],
-        "architecture": [
-          "A Gaussian policy head for continuous control: the actor outputs mean and variance of an action distribution, following the LeRobot reference implementation. Further internals are not recorded in this repository."
-        ],
-        "architectureZh": [
-          "面向连续控制的高斯策略头：actor 输出动作分布的均值与方差，遵循 LeRobot 参考实现。更多内部细节仓库未记录。"
-        ],
-        "usageNotes": [
-          "Checkpoint absence is reported by runtime missing_assets and is not a catalog blocker; stage a trained actor checkpoint to run real predictions."
-        ],
-        "usageNotesZh": [
-          "checkpoint 缺失由运行时 missing_assets 报告，不视为 catalog 阻塞；就位训练好的 actor checkpoint 即可运行真实预测。"
-        ],
-        "highlights": [
-          "Reinforcement Learning",
-          "Actor Policy",
-          "Robot Policy",
-          "Unified env · Python 3.11 · CUDA 12.8",
-          "Public Hugging Face weights"
-        ],
-        "highlightsZh": [
-          "reinforcement_learning",
-          "actor_policy",
-          "机器人策略",
-          "统一环境 · Python 3.11 · CUDA 12.8",
-          "公开的 Hugging Face 权重"
-        ],
-        "modalities": {
-          "inputs": [],
-          "outputs": []
-        },
-        "useCases": [],
-        "useCasesZh": [],
-        "hardware": {
-          "minVramGb": null,
-          "recommended": null,
-          "notes": []
-        },
-        "benchmarks": [],
-        "limitations": [
-          "Reference-implementation entry: no official standalone repository or weights.",
-          "No license is recorded in this repository."
-        ],
-        "limitationsZh": [
-          "参考实现条目：无独立官方仓库或权重。",
-          "仓库未记录许可证。"
-        ],
-        "paper": null,
-        "figures": []
-      },
-      "commands": {
-        "prepare": "bash scripts/inference/prepare_model_infer.sh gaussian-actor",
-        "install": "bash scripts/setup/model_env_install.sh --model gaussian-actor",
-        "inspect": "worldfoundry-eval zoo model-show --model-id gaussian-actor --include-manifest --json",
-        "check": "worldfoundry-eval zoo model-download --model-id gaussian-actor --check-local --json",
-        "run": "worldfoundry-eval run \\\n  gaussian-actor \\\n  --pipeline.task-profile reinforcement_learning \\\n  --pipeline.prompt \"Describe the desired output.\" \\\n  --pipeline.image /path/to/input \\\n  --pipeline.state VALUE \\\n  --json"
-      },
-      "catalogPath": "worldfoundry/data/models/catalog/vla_va_wam/gaussian-actor.yaml"
-    },
-    {
       "id": "genie-envisioner",
       "name": "Genie Envisioner",
       "category": "world_models",
@@ -81726,424 +81741,6 @@
       "catalogPath": "worldfoundry/data/models/catalog/vla_va_wam/internvla-a1.yaml"
     },
     {
-      "id": "last-r1",
-      "name": "LaST-R1",
-      "category": "vla_va_wam",
-      "categoryLabel": "Embodied",
-      "categoryLabelZh": "具身智能",
-      "provider": "Open-source research release (institution not recorded)",
-      "summary": "LaST-R1 is an MIT-licensed VLA policy trained with reinforcement learning, recorded against the confirmed chenhao01/LaST-R1 checkpoint. WorldFoundry routes it through the in-tree official-policy runtime adapter; weights are not yet staged,…",
-      "aliases": [],
-      "tasks": [
-        "vla",
-        "reinforcement_learning",
-        "policy_rollout"
-      ],
-      "status": {
-        "group": "runtime_ported",
-        "label": "Runtime ported",
-        "integration": "runtime_ported",
-        "runner": "not_recorded",
-        "demo": "not_recorded"
-      },
-      "runtime": {
-        "profileId": "last-r1",
-        "bindingId": "last-r1",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
-        "runner": "worldfoundry.pipeline",
-        "pipelineTarget": "worldfoundry.pipelines.component_pipelines:LastR1Pipeline",
-        "loadingMethod": "from_pretrained",
-        "invocationMode": "native_or_standard_invocation",
-        "backendStage": "official_in_tree_runtime",
-        "runtimeStatus": "official_runtime_route_ready_checkpoint_required",
-        "environmentId": "_unified",
-        "environmentName": "worldfoundry-unified-cu128",
-        "environmentKind": "unified",
-        "python": "3.11",
-        "cudaProfile": "cu128",
-        "cudaLabel": "CUDA 12.8",
-        "driverStatus": "compatible_unified_default",
-        "condaPackages": [
-          "python=3.11",
-          "pip",
-          "ffmpeg",
-          "setuptools",
-          "wheel"
-        ],
-        "pipPackages": [
-          "torch",
-          "torchvision",
-          "torchaudio",
-          "xfuser"
-        ],
-        "packageVersions": {
-          "torch": "torch",
-          "torchvision": "torchvision",
-          "torchaudio": "torchaudio",
-          "xfuser": "xfuser"
-        },
-        "validationImports": [
-          "torch",
-          "torchvision",
-          "numpy",
-          "transformers",
-          "diffusers",
-          "xfuser",
-          "worldfoundry"
-        ],
-        "notes": [
-          "Default unified WorldFoundry runtime for modern NVIDIA hosts. Install with `bash scripts/setup/unified_install.sh`.",
-          "Override tier with `--cuda cu124` or `--cuda cu121` when an upstream model still pins an older CUDA wheel bucket.",
-          "Source the environment file emitted by `scripts/setup/unified_install.sh` so WORLDFOUNDRY_USE_UNIFIED_ENV=1 routes compatible profiles here.",
-          "Runnable GPU models that previously used cu113/cu118/cu124 CUDA buckets are mapped to this tier when they do not carry hard ABI pins requiring isolation."
-        ]
-      },
-      "sources": [
-        {
-          "kind": "project",
-          "label": "Project",
-          "url": "https://siriyep.github.io/last-r1/"
-        },
-        {
-          "kind": "paper",
-          "label": "Paper",
-          "url": "https://arxiv.org/abs/2604.28192"
-        },
-        {
-          "kind": "source",
-          "label": "GitHub",
-          "url": "https://github.com/CHEN-H01/LaST-R1"
-        },
-        {
-          "kind": "weights",
-          "label": "Hugging Face",
-          "url": "https://huggingface.co/chenhao01/LaST-R1"
-        },
-        {
-          "kind": "docs",
-          "label": "Upstream README",
-          "url": "https://github.com/CHEN-H01/LaST-R1#readme"
-        }
-      ],
-      "checkpoints": [
-        {
-          "id": "chenhao01/LaST-R1"
-        }
-      ],
-      "variants": [],
-      "inferenceTasks": [
-        {
-          "id": "vla",
-          "label": "Vla",
-          "description": "Catalog task profile used by the model runtime.",
-          "source": "catalog",
-          "variantIds": [],
-          "inputs": [
-            {
-              "field": "model_id",
-              "detail": "last-r1",
-              "kind": "string",
-              "target": "input",
-              "required": false,
-              "description": "Recorded input field from the runtime profile."
-            },
-            {
-              "field": "image",
-              "detail": "Required",
-              "kind": "string",
-              "target": "input",
-              "required": true,
-              "description": "Recorded input field from the runtime profile."
-            },
-            {
-              "field": "prompt",
-              "detail": "Required",
-              "kind": "string",
-              "target": "input",
-              "required": true,
-              "description": "Recorded input field from the runtime profile."
-            },
-            {
-              "field": "state",
-              "detail": "Required",
-              "kind": "string",
-              "target": "input",
-              "required": true,
-              "description": "Recorded input field from the runtime profile."
-            },
-            {
-              "field": "policy_family",
-              "detail": "rl_refined_vla_policy",
-              "kind": "string",
-              "target": "input",
-              "required": false,
-              "description": "Recorded input field from the runtime profile."
-            },
-            {
-              "field": "action_representation",
-              "detail": "vla_action_trace",
-              "kind": "string",
-              "target": "input",
-              "required": false,
-              "description": "Recorded input field from the runtime profile."
-            }
-          ],
-          "artifacts": [
-            {
-              "kind": "action_trace",
-              "filename": ""
-            },
-            {
-              "kind": "action_trace",
-              "filename": "last-r1_action_trace.json"
-            }
-          ]
-        },
-        {
-          "id": "reinforcement_learning",
-          "label": "Reinforcement Learning",
-          "description": "Catalog task profile used by the model runtime.",
-          "source": "catalog",
-          "variantIds": [],
-          "inputs": [
-            {
-              "field": "model_id",
-              "detail": "last-r1",
-              "kind": "string",
-              "target": "input",
-              "required": false,
-              "description": "Recorded input field from the runtime profile."
-            },
-            {
-              "field": "image",
-              "detail": "Required",
-              "kind": "string",
-              "target": "input",
-              "required": true,
-              "description": "Recorded input field from the runtime profile."
-            },
-            {
-              "field": "prompt",
-              "detail": "Required",
-              "kind": "string",
-              "target": "input",
-              "required": true,
-              "description": "Recorded input field from the runtime profile."
-            },
-            {
-              "field": "state",
-              "detail": "Required",
-              "kind": "string",
-              "target": "input",
-              "required": true,
-              "description": "Recorded input field from the runtime profile."
-            },
-            {
-              "field": "policy_family",
-              "detail": "rl_refined_vla_policy",
-              "kind": "string",
-              "target": "input",
-              "required": false,
-              "description": "Recorded input field from the runtime profile."
-            },
-            {
-              "field": "action_representation",
-              "detail": "vla_action_trace",
-              "kind": "string",
-              "target": "input",
-              "required": false,
-              "description": "Recorded input field from the runtime profile."
-            }
-          ],
-          "artifacts": [
-            {
-              "kind": "action_trace",
-              "filename": ""
-            },
-            {
-              "kind": "action_trace",
-              "filename": "last-r1_action_trace.json"
-            }
-          ]
-        },
-        {
-          "id": "policy_rollout",
-          "label": "Policy Rollout",
-          "description": "Catalog task profile used by the model runtime.",
-          "source": "catalog",
-          "variantIds": [],
-          "inputs": [
-            {
-              "field": "model_id",
-              "detail": "last-r1",
-              "kind": "string",
-              "target": "input",
-              "required": false,
-              "description": "Recorded input field from the runtime profile."
-            },
-            {
-              "field": "image",
-              "detail": "Required",
-              "kind": "string",
-              "target": "input",
-              "required": true,
-              "description": "Recorded input field from the runtime profile."
-            },
-            {
-              "field": "prompt",
-              "detail": "Required",
-              "kind": "string",
-              "target": "input",
-              "required": true,
-              "description": "Recorded input field from the runtime profile."
-            },
-            {
-              "field": "state",
-              "detail": "Required",
-              "kind": "string",
-              "target": "input",
-              "required": true,
-              "description": "Recorded input field from the runtime profile."
-            },
-            {
-              "field": "policy_family",
-              "detail": "rl_refined_vla_policy",
-              "kind": "string",
-              "target": "input",
-              "required": false,
-              "description": "Recorded input field from the runtime profile."
-            },
-            {
-              "field": "action_representation",
-              "detail": "vla_action_trace",
-              "kind": "string",
-              "target": "input",
-              "required": false,
-              "description": "Recorded input field from the runtime profile."
-            }
-          ],
-          "artifacts": [
-            {
-              "kind": "action_trace",
-              "filename": ""
-            },
-            {
-              "kind": "action_trace",
-              "filename": "last-r1_action_trace.json"
-            }
-          ]
-        }
-      ],
-      "inputContract": [
-        {
-          "field": "model_id",
-          "detail": "last-r1"
-        },
-        {
-          "field": "image",
-          "detail": "Required"
-        },
-        {
-          "field": "prompt",
-          "detail": "Required"
-        },
-        {
-          "field": "state",
-          "detail": "Required"
-        },
-        {
-          "field": "policy_family",
-          "detail": "rl_refined_vla_policy"
-        },
-        {
-          "field": "action_representation",
-          "detail": "vla_action_trace"
-        }
-      ],
-      "artifacts": [
-        {
-          "kind": "action_trace",
-          "filename": ""
-        },
-        {
-          "kind": "action_trace",
-          "filename": "last-r1_action_trace.json"
-        }
-      ],
-      "notes": [
-        "WorldFoundry routes LaST-R1 through the in-tree official-policy runtime adapter.",
-        "Checkpoint absence is reported by runtime missing_assets and is not a catalog blocker."
-      ],
-      "docs": {
-        "curated": true,
-        "publisher": {
-          "name": "Open-source research release (institution not recorded)",
-          "nameZh": "开源研究发布（仓库未记录正式机构）",
-          "kind": "lab"
-        },
-        "overview": [
-          "LaST-R1 is an MIT-licensed VLA policy trained with reinforcement learning, recorded against the confirmed chenhao01/LaST-R1 checkpoint. WorldFoundry routes it through the in-tree official-policy runtime adapter; weights are not yet staged, so runs emit a runtime plan."
-        ],
-        "overviewZh": [
-          "LaST-R1 是 MIT 许可、以强化学习训练的 VLA 策略，对应已确认的 chenhao01/LaST-R1 checkpoint。WorldFoundry 通过树内官方策略运行时适配器路由；权重尚未就位，运行输出运行时计划。"
-        ],
-        "architecture": [
-          "Task tags record a VLA plus reinforcement-learning design. Architecture internals beyond the official repository pointer (CHEN-H01/LaST-R1, pinned head ba4e9396) are not recorded in this repository."
-        ],
-        "architectureZh": [
-          "任务标签记录其为 VLA 加强化学习设计。官方仓库指针（CHEN-H01/LaST-R1，锁定 head ba4e9396）之外的架构内部细节仓库未记录。"
-        ],
-        "usageNotes": [
-          "Checkpoint absence is reported by runtime missing_assets and is not a catalog blocker; runs emit a runtime plan until weights are staged."
-        ],
-        "usageNotesZh": [
-          "checkpoint 缺失由运行时 missing_assets 报告，不视为 catalog 阻塞；权重就位前运行输出运行时计划。"
-        ],
-        "highlights": [
-          "Vla",
-          "Reinforcement Learning",
-          "Policy Rollout",
-          "Unified env · Python 3.11 · CUDA 12.8",
-          "Public Hugging Face weights"
-        ],
-        "highlightsZh": [
-          "视觉-语言-动作（VLA）",
-          "reinforcement_learning",
-          "策略执行",
-          "统一环境 · Python 3.11 · CUDA 12.8",
-          "公开的 Hugging Face 权重"
-        ],
-        "modalities": {
-          "inputs": [],
-          "outputs": []
-        },
-        "useCases": [],
-        "useCasesZh": [],
-        "hardware": {
-          "minVramGb": null,
-          "recommended": null,
-          "notes": []
-        },
-        "benchmarks": [],
-        "limitations": [
-          "No GPU validation is recorded in this repository."
-        ],
-        "limitationsZh": [
-          "仓库未记录 GPU 验证。"
-        ],
-        "paper": null,
-        "figures": []
-      },
-      "commands": {
-        "prepare": "bash scripts/inference/prepare_model_infer.sh last-r1",
-        "install": "bash scripts/setup/model_env_install.sh --model last-r1",
-        "inspect": "worldfoundry-eval zoo model-show --model-id last-r1 --include-manifest --json",
-        "check": "worldfoundry-eval zoo model-download --model-id last-r1 --check-local --json",
-        "run": "worldfoundry-eval run \\\n  last-r1 \\\n  --pipeline.task-profile vla \\\n  --pipeline.image /path/to/input \\\n  --pipeline.prompt \"Describe the desired output.\" \\\n  --pipeline.state VALUE \\\n  --json"
-      },
-      "catalogPath": "worldfoundry/data/models/catalog/vla_va_wam/last-r1.yaml"
-    },
-    {
       "id": "lapa",
       "name": "Latent Action Pretraining",
       "category": "vla_va_wam",
@@ -82201,7 +81798,7 @@
           "https://storage.googleapis.com/jax-releases/cuda11/jaxlib-0.4.25+cuda11.cudnn86-cp310-cp310-manylinux2014_x86_64.whl",
           "nvidia-cuda-runtime-cu11==11.8.89",
           "nvidia-cuda-nvrtc-cu11==11.8.89",
-          "nvidia-cuda-nvcc-cu11==11.8.89",
+          "nvidia-cuda-nvcc-cu12==12.6.85",
           "nvidia-cuda-cupti-cu11==11.8.87",
           "nvidia-cublas-cu11==11.11.3.6",
           "nvidia-cudnn-cu11==8.9.6.50",
@@ -82244,7 +81841,8 @@
           "Predicted-video artifacts should be added only by a concrete LAPA runtime runner that emits them.",
           "VA/VAM latent-action profile. It is not categorized as video generation. The prepare env keeps the full LAQ training stack out of scope, while the flattened in-tree LAPA inference modules use JAX CUDA 11.8 wheels for action-token inference.",
           "LAPA-7B-openx requires runtime JAX compatibility shims for Flax/Tux and frame inputs shaped like the WorldBench route.",
-          "LAPA stays isolated because Transformers 5 removes the Flax generation modules required by the official runtime."
+          "LAPA stays isolated because Transformers 5 removes the Flax generation modules required by the official runtime.",
+          "H100 requires CUDA 12.6 ptxas for JAX compilation; the CUDA 11.8 ptxas wheel fails even though the JAX CUDA 11.8 runtime works."
         ]
       },
       "sources": [
@@ -87363,421 +86961,6 @@
       "catalogPath": "worldfoundry/data/models/catalog/world_models/moverse.yaml"
     },
     {
-      "id": "multi-task-dit",
-      "name": "Multi-task DiT Policy",
-      "category": "vla_va_wam",
-      "categoryLabel": "Embodied",
-      "categoryLabelZh": "具身智能",
-      "provider": "Hugging Face (LeRobot reference)",
-      "summary": "Multi-task DiT Policy is an imitation-learning diffusion-transformer policy recorded against the concrete LeRobot multi_task_dit implementation — no separate official repository was identified upstream. WorldFoundry routes it through an in…",
-      "aliases": [
-        "multi_task_dit",
-        "multitask-dit-policy"
-      ],
-      "tasks": [
-        "imitation_learning",
-        "diffusion_transformer_policy",
-        "robot_policy"
-      ],
-      "status": {
-        "group": "runtime_ported",
-        "label": "Runtime ported",
-        "integration": "runtime_ported",
-        "runner": "not_recorded",
-        "demo": "not_recorded"
-      },
-      "runtime": {
-        "profileId": "multi-task-dit",
-        "bindingId": "multi-task-dit",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
-        "runner": "worldfoundry.pipeline",
-        "pipelineTarget": "worldfoundry.pipelines.component_pipelines:MultiTaskDiTPipeline",
-        "loadingMethod": "from_pretrained",
-        "invocationMode": "native_or_standard_invocation",
-        "backendStage": "official_in_tree_runtime",
-        "runtimeStatus": "official_lerobot_runtime_route_ready_checkpoint_required",
-        "environmentId": "_unified",
-        "environmentName": "worldfoundry-unified-cu128",
-        "environmentKind": "unified",
-        "python": "3.11",
-        "cudaProfile": "cu128",
-        "cudaLabel": "CUDA 12.8",
-        "driverStatus": "compatible_unified_default",
-        "condaPackages": [
-          "python=3.11",
-          "pip",
-          "ffmpeg",
-          "setuptools",
-          "wheel"
-        ],
-        "pipPackages": [
-          "torch",
-          "torchvision",
-          "torchaudio",
-          "xfuser"
-        ],
-        "packageVersions": {
-          "torch": "torch",
-          "torchvision": "torchvision",
-          "torchaudio": "torchaudio",
-          "xfuser": "xfuser"
-        },
-        "validationImports": [
-          "torch",
-          "torchvision",
-          "numpy",
-          "transformers",
-          "diffusers",
-          "xfuser",
-          "worldfoundry"
-        ],
-        "notes": [
-          "Default unified WorldFoundry runtime for modern NVIDIA hosts. Install with `bash scripts/setup/unified_install.sh`.",
-          "Override tier with `--cuda cu124` or `--cuda cu121` when an upstream model still pins an older CUDA wheel bucket.",
-          "Source the environment file emitted by `scripts/setup/unified_install.sh` so WORLDFOUNDRY_USE_UNIFIED_ENV=1 routes compatible profiles here.",
-          "Runnable GPU models that previously used cu113/cu118/cu124 CUDA buckets are mapped to this tier when they do not carry hard ABI pins requiring isolation."
-        ]
-      },
-      "sources": [
-        {
-          "kind": "paper",
-          "label": "Paper",
-          "url": "https://arxiv.org/abs/2602.22818"
-        },
-        {
-          "kind": "source",
-          "label": "GitHub",
-          "url": "https://github.com/huggingface/lerobot"
-        },
-        {
-          "kind": "docs",
-          "label": "Upstream README",
-          "url": "https://github.com/huggingface/lerobot#readme"
-        }
-      ],
-      "checkpoints": [
-        {
-          "id": "lerobot/multi_task_dit",
-          "role": "policy_checkpoint"
-        }
-      ],
-      "variants": [],
-      "inferenceTasks": [
-        {
-          "id": "imitation_learning",
-          "label": "Imitation Learning",
-          "description": "Catalog task profile used by the model runtime.",
-          "source": "catalog",
-          "variantIds": [],
-          "inputs": [
-            {
-              "field": "model_id",
-              "detail": "multi-task-dit",
-              "kind": "string",
-              "target": "input",
-              "required": false,
-              "description": "Recorded input field from the runtime profile."
-            },
-            {
-              "field": "image",
-              "detail": "Required",
-              "kind": "string",
-              "target": "input",
-              "required": true,
-              "description": "Recorded input field from the runtime profile."
-            },
-            {
-              "field": "prompt",
-              "detail": "Required",
-              "kind": "string",
-              "target": "input",
-              "required": true,
-              "description": "Recorded input field from the runtime profile."
-            },
-            {
-              "field": "state",
-              "detail": "Required",
-              "kind": "string",
-              "target": "input",
-              "required": true,
-              "description": "Recorded input field from the runtime profile."
-            },
-            {
-              "field": "policy_family",
-              "detail": "multi_task_diffusion_transformer_policy",
-              "kind": "string",
-              "target": "input",
-              "required": false,
-              "description": "Recorded input field from the runtime profile."
-            },
-            {
-              "field": "action_representation",
-              "detail": "diffusion_transformer_action_chunk",
-              "kind": "string",
-              "target": "input",
-              "required": false,
-              "description": "Recorded input field from the runtime profile."
-            }
-          ],
-          "artifacts": [
-            {
-              "kind": "action_trace",
-              "filename": ""
-            },
-            {
-              "kind": "action_trace",
-              "filename": "multi-task-dit_action_trace.json"
-            }
-          ]
-        },
-        {
-          "id": "diffusion_transformer_policy",
-          "label": "Diffusion Transformer Policy",
-          "description": "Catalog task profile used by the model runtime.",
-          "source": "catalog",
-          "variantIds": [],
-          "inputs": [
-            {
-              "field": "model_id",
-              "detail": "multi-task-dit",
-              "kind": "string",
-              "target": "input",
-              "required": false,
-              "description": "Recorded input field from the runtime profile."
-            },
-            {
-              "field": "image",
-              "detail": "Required",
-              "kind": "string",
-              "target": "input",
-              "required": true,
-              "description": "Recorded input field from the runtime profile."
-            },
-            {
-              "field": "prompt",
-              "detail": "Required",
-              "kind": "string",
-              "target": "input",
-              "required": true,
-              "description": "Recorded input field from the runtime profile."
-            },
-            {
-              "field": "state",
-              "detail": "Required",
-              "kind": "string",
-              "target": "input",
-              "required": true,
-              "description": "Recorded input field from the runtime profile."
-            },
-            {
-              "field": "policy_family",
-              "detail": "multi_task_diffusion_transformer_policy",
-              "kind": "string",
-              "target": "input",
-              "required": false,
-              "description": "Recorded input field from the runtime profile."
-            },
-            {
-              "field": "action_representation",
-              "detail": "diffusion_transformer_action_chunk",
-              "kind": "string",
-              "target": "input",
-              "required": false,
-              "description": "Recorded input field from the runtime profile."
-            }
-          ],
-          "artifacts": [
-            {
-              "kind": "action_trace",
-              "filename": ""
-            },
-            {
-              "kind": "action_trace",
-              "filename": "multi-task-dit_action_trace.json"
-            }
-          ]
-        },
-        {
-          "id": "robot_policy",
-          "label": "Robot Policy",
-          "description": "Catalog task profile used by the model runtime.",
-          "source": "catalog",
-          "variantIds": [],
-          "inputs": [
-            {
-              "field": "model_id",
-              "detail": "multi-task-dit",
-              "kind": "string",
-              "target": "input",
-              "required": false,
-              "description": "Recorded input field from the runtime profile."
-            },
-            {
-              "field": "image",
-              "detail": "Required",
-              "kind": "string",
-              "target": "input",
-              "required": true,
-              "description": "Recorded input field from the runtime profile."
-            },
-            {
-              "field": "prompt",
-              "detail": "Required",
-              "kind": "string",
-              "target": "input",
-              "required": true,
-              "description": "Recorded input field from the runtime profile."
-            },
-            {
-              "field": "state",
-              "detail": "Required",
-              "kind": "string",
-              "target": "input",
-              "required": true,
-              "description": "Recorded input field from the runtime profile."
-            },
-            {
-              "field": "policy_family",
-              "detail": "multi_task_diffusion_transformer_policy",
-              "kind": "string",
-              "target": "input",
-              "required": false,
-              "description": "Recorded input field from the runtime profile."
-            },
-            {
-              "field": "action_representation",
-              "detail": "diffusion_transformer_action_chunk",
-              "kind": "string",
-              "target": "input",
-              "required": false,
-              "description": "Recorded input field from the runtime profile."
-            }
-          ],
-          "artifacts": [
-            {
-              "kind": "action_trace",
-              "filename": ""
-            },
-            {
-              "kind": "action_trace",
-              "filename": "multi-task-dit_action_trace.json"
-            }
-          ]
-        }
-      ],
-      "inputContract": [
-        {
-          "field": "model_id",
-          "detail": "multi-task-dit"
-        },
-        {
-          "field": "image",
-          "detail": "Required"
-        },
-        {
-          "field": "prompt",
-          "detail": "Required"
-        },
-        {
-          "field": "state",
-          "detail": "Required"
-        },
-        {
-          "field": "policy_family",
-          "detail": "multi_task_diffusion_transformer_policy"
-        },
-        {
-          "field": "action_representation",
-          "detail": "diffusion_transformer_action_chunk"
-        }
-      ],
-      "artifacts": [
-        {
-          "kind": "action_trace",
-          "filename": ""
-        },
-        {
-          "kind": "action_trace",
-          "filename": "multi-task-dit_action_trace.json"
-        }
-      ],
-      "notes": [
-        "No separate official repository was identified; use the concrete LeRobot multi_task_dit policy as reference source.",
-        "WorldFoundry routes Multi-task DiT through an in-tree action runtime adapter against the concrete policy.",
-        "Checkpoint absence is reported by runtime missing_assets and is not a catalog blocker."
-      ],
-      "docs": {
-        "curated": true,
-        "publisher": {
-          "name": "Hugging Face (LeRobot reference)",
-          "nameZh": "Hugging Face（LeRobot 参考实现）",
-          "kind": "company"
-        },
-        "overview": [
-          "Multi-task DiT Policy is an imitation-learning diffusion-transformer policy recorded against the concrete LeRobot multi_task_dit implementation — no separate official repository was identified upstream. WorldFoundry routes it through an in-tree action runtime adapter; checkpoints are not recorded, so runs emit a runtime plan."
-        ],
-        "overviewZh": [
-          "Multi-task DiT Policy 是模仿学习的扩散 transformer 策略，以 LeRobot 中具体的 multi_task_dit 实现为参考记录——上游未识别到独立官方仓库。WorldFoundry 通过树内动作运行时适配器路由；未记录 checkpoint，运行输出运行时计划。"
-        ],
-        "architecture": [
-          "A DiT (diffusion transformer) policy head conditioned on multi-task context, following the LeRobot reference implementation. Further internals are not recorded in this repository."
-        ],
-        "architectureZh": [
-          "以多任务上下文为条件的 DiT（扩散 transformer）策略头，遵循 LeRobot 参考实现。更多内部细节仓库未记录。"
-        ],
-        "usageNotes": [
-          "Checkpoint absence is reported by runtime missing_assets and is not a catalog blocker; runs emit a runtime plan until weights are staged. Stage a trained policy checkpoint to run real predictions."
-        ],
-        "usageNotesZh": [
-          "checkpoint 缺失由运行时 missing_assets 报告，不视为 catalog 阻塞；权重就位前运行输出运行时计划。就位训练好的策略 checkpoint 即可运行真实预测。"
-        ],
-        "highlights": [
-          "Imitation Learning",
-          "Diffusion Transformer Policy",
-          "Robot Policy",
-          "Unified env · Python 3.11 · CUDA 12.8",
-          "Public Hugging Face weights"
-        ],
-        "highlightsZh": [
-          "imitation_learning",
-          "diffusion_transformer_policy",
-          "机器人策略",
-          "统一环境 · Python 3.11 · CUDA 12.8",
-          "公开的 Hugging Face 权重"
-        ],
-        "modalities": {
-          "inputs": [],
-          "outputs": []
-        },
-        "useCases": [],
-        "useCasesZh": [],
-        "hardware": {
-          "minVramGb": null,
-          "recommended": null,
-          "notes": []
-        },
-        "benchmarks": [],
-        "limitations": [
-          "Reference-implementation entry: no official standalone repository or weights.",
-          "No license is recorded in this repository."
-        ],
-        "limitationsZh": [
-          "参考实现条目：无独立官方仓库或权重。",
-          "仓库未记录许可证。"
-        ],
-        "paper": null,
-        "figures": []
-      },
-      "commands": {
-        "prepare": "bash scripts/inference/prepare_model_infer.sh multi-task-dit",
-        "install": "bash scripts/setup/model_env_install.sh --model multi-task-dit",
-        "inspect": "worldfoundry-eval zoo model-show --model-id multi-task-dit --include-manifest --json",
-        "check": "worldfoundry-eval zoo model-download --model-id multi-task-dit --check-local --json",
-        "run": "worldfoundry-eval run \\\n  multi-task-dit \\\n  --pipeline.task-profile imitation_learning \\\n  --pipeline.image /path/to/input \\\n  --pipeline.prompt \"Describe the desired output.\" \\\n  --pipeline.state VALUE \\\n  --json"
-      },
-      "catalogPath": "worldfoundry/data/models/catalog/vla_va_wam/multi-task-dit.yaml"
-    },
-    {
       "id": "nwm",
       "name": "Navigation World Models",
       "category": "world_models",
@@ -90282,7 +89465,7 @@
       "categoryLabel": "Embodied",
       "categoryLabelZh": "具身智能",
       "provider": "Physical Intelligence",
-      "summary": "pi0.5 is Physical Intelligence's open-world generalization upgrade of pi0: trained for broader scene and task transfer while keeping the flow-matching VLA recipe. This catalog entry is the concrete pi0.5 algorithm route, reusing the in-tre…",
+      "summary": "pi0.5 is Physical Intelligence's open-world generalization upgrade of pi0: trained for broader scene and task transfer while keeping the flow-matching VLA recipe. The independent pi05 binding reused the in-tree OpenPI runtime and produced…",
       "aliases": [
         "pi0.5",
         "pi05-base",
@@ -90297,7 +89480,7 @@
         "group": "runtime_ported",
         "label": "Runtime ported",
         "integration": "runtime_ported",
-        "runner": "not_recorded",
+        "runner": "checkpoint_gpu_validated",
         "demo": "not_recorded"
       },
       "runtime": {
@@ -90309,7 +89492,7 @@
         "loadingMethod": "from_pretrained",
         "invocationMode": "native_or_standard_invocation",
         "backendStage": "in_tree_runtime",
-        "runtimeStatus": "in_tree_openpi_pi05_runtime_ported_pi05_libero_gpu_readiness_in_family_profile",
+        "runtimeStatus": "pi05_libero_public_binding_checkpoint_gpu_validated",
         "environmentId": "pi05",
         "environmentName": "worldfoundry-openpi-cu12",
         "environmentKind": "dedicated",
@@ -90353,7 +89536,9 @@
         "notes": [
           "pi0.5 is a concrete OpenPI algorithm entry routed through the in-tree OpenPI runtime.",
           "WorldFoundry keeps the inference-only OpenPI runtime directly under worldfoundry/synthesis/action_generation/openpi.",
-          "Default runtime config uses the ready pi05_libero policy config; all three declared Orbax checkpoints are locally staged and their metadata trees are validated.",
+          "Default runtime config uses pi05_libero. Stage its Orbax checkpoint under the same openpi-assets root used by the OpenPI profile, or pass an explicit path.",
+          "Metadata checks alone do not establish that pi05_base or pi05_droid can run.",
+          "The independent pi05 public binding produced finite 10x7 actions with pi05_libero on GPU2 from synthetic dual-camera images and checkpoint-mean state; no LIBERO task-success claim.",
           "This profile emits action_trace artifacts and is not a video-generation profile.",
           "Uses the shared in-tree OpenPI inference environment and a strictly local pi0.5 checkpoint.",
           "No external source checkout, Git dependency, runtime download, or PYTHONPATH injection is required."
@@ -90597,9 +89782,13 @@
       "notes": [
         "Concrete pi0.5 algorithm entry backed by Physical Intelligence openpi. Do not route this through LeRobot policy-zoo.",
         "WorldFoundry reuses the in-tree OpenPI runtime with pi05-specific config and checkpoint selection.",
+        "The independent pi05 public binding produced finite 10x7 actions with the official pi05_libero Orbax checkpoint on GPU2.",
+        "Inputs were synthetic dual-camera images and the checkpoint-mean state; LIBERO task success and pi05_base/pi05_droid remain unverified.",
         "pi0.5 is a concrete OpenPI algorithm entry routed through the in-tree OpenPI runtime.",
         "WorldFoundry keeps the inference-only OpenPI runtime directly under worldfoundry/synthesis/action_generation/openpi.",
-        "Default runtime config uses the ready pi05_libero policy config; all three declared Orbax checkpoints are locally staged and their metadata trees are validated.",
+        "Default runtime config uses pi05_libero. Stage its Orbax checkpoint under the same openpi-assets root used by the OpenPI profile, or pass an explicit path.",
+        "Metadata checks alone do not establish that pi05_base or pi05_droid can run.",
+        "The independent pi05 public binding produced finite 10x7 actions with pi05_libero on GPU2 from synthetic dual-camera images and checkpoint-mean state; no LIBERO task-success claim.",
         "This profile emits action_trace artifacts and is not a video-generation profile."
       ],
       "docs": {
@@ -90610,10 +89799,10 @@
           "kind": "company"
         },
         "overview": [
-          "pi0.5 is Physical Intelligence's open-world generalization upgrade of pi0: trained for broader scene and task transfer while keeping the flow-matching VLA recipe. This catalog entry is the concrete pi0.5 algorithm route, reusing the in-tree OpenPI runtime with pi05-specific configuration and checkpoint selection — the pi05_libero path is checkpoint-validated under the openpi entry."
+          "pi0.5 is Physical Intelligence's open-world generalization upgrade of pi0: trained for broader scene and task transfer while keeping the flow-matching VLA recipe. The independent pi05 binding reused the in-tree OpenPI runtime and produced finite 10x7 actions with the official pi05_libero checkpoint on a GPU from synthetic observations."
         ],
         "overviewZh": [
-          "pi0.5 是 Physical Intelligence 对 pi0 的开放世界泛化升级：面向更广的场景与任务迁移训练，同时保持 flow-matching VLA 配方。本 catalog 条目是具体的 pi0.5 算法路由，复用树内 OpenPI 运行时与 pi05 专用配置及 checkpoint 选择——pi05_libero 路径已在 openpi 条目下完成 checkpoint 验证。"
+          "pi0.5 是 Physical Intelligence 对 pi0 的开放世界泛化升级：面向更广的场景与任务迁移训练，同时保持 flow-matching VLA 配方。独立的 pi05 绑定复用树内 OpenPI 运行时，以官方 pi05_libero 权重和合成观测在 GPU 上产出有限的 10×7 动作。"
         ],
         "architecture": [
           "Same family architecture as pi0 — a PaliGemma-based VLA with a flow-matching action expert — trained with pi0.5's open-world recipe. Do not route this through LeRobot policy-zoo; the catalog uses the official openpi runtime."
@@ -90666,10 +89855,12 @@
         ],
         "limitations": [
           "GCS-hosted checkpoints require gsutil/gcloud tooling.",
+          "The recorded synthetic-input run verifies action inference structure, not LIBERO task success or pi05_base/pi05_droid.",
           "No license is recorded on this entry (see the openpi entry, Apache-2.0)."
         ],
         "limitationsZh": [
           "GCS 托管 checkpoint 需要 gsutil/gcloud 工具。",
+          "已记录的合成输入运行只验证动作推理结构，不代表 LIBERO 任务成功，也不覆盖 pi05_base/pi05_droid。",
           "本条目未记录许可证（参见 openpi 条目，Apache-2.0）。"
         ],
         "paper": null,
@@ -95968,421 +95159,6 @@
       "catalogPath": "worldfoundry/data/models/catalog/world_models/starwm.yaml"
     },
     {
-      "id": "tdmpc",
-      "name": "TD-MPC",
-      "category": "vla_va_wam",
-      "categoryLabel": "Embodied",
-      "categoryLabelZh": "具身智能",
-      "provider": "Open-source research release (institution not recorded)",
-      "summary": "TD-MPC (Temporal Difference Model Predictive Control) is a classic model-based RL algorithm: it learns a latent dynamics model and plans actions by combining short-horizon MPC with a learned terminal value function. The catalog sources the…",
-      "aliases": [
-        "td-mpc",
-        "temporal-difference-mpc"
-      ],
-      "tasks": [
-        "model_predictive_control",
-        "robot_policy",
-        "policy_rollout"
-      ],
-      "status": {
-        "group": "runtime_ported",
-        "label": "Runtime ported",
-        "integration": "runtime_ported",
-        "runner": "not_recorded",
-        "demo": "not_recorded"
-      },
-      "runtime": {
-        "profileId": "tdmpc",
-        "bindingId": "tdmpc",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
-        "runner": "worldfoundry.pipeline",
-        "pipelineTarget": "worldfoundry.pipelines.component_pipelines:TDMPCPipeline",
-        "loadingMethod": "from_pretrained",
-        "invocationMode": "native_or_standard_invocation",
-        "backendStage": "official_in_tree_runtime",
-        "runtimeStatus": "official_lerobot_runtime_route_ready_checkpoint_required",
-        "environmentId": "_unified",
-        "environmentName": "worldfoundry-unified-cu128",
-        "environmentKind": "unified",
-        "python": "3.11",
-        "cudaProfile": "cu128",
-        "cudaLabel": "CUDA 12.8",
-        "driverStatus": "compatible_unified_default",
-        "condaPackages": [
-          "python=3.11",
-          "pip",
-          "ffmpeg",
-          "setuptools",
-          "wheel"
-        ],
-        "pipPackages": [
-          "torch",
-          "torchvision",
-          "torchaudio",
-          "xfuser"
-        ],
-        "packageVersions": {
-          "torch": "torch",
-          "torchvision": "torchvision",
-          "torchaudio": "torchaudio",
-          "xfuser": "xfuser"
-        },
-        "validationImports": [
-          "torch",
-          "torchvision",
-          "numpy",
-          "transformers",
-          "diffusers",
-          "xfuser",
-          "worldfoundry"
-        ],
-        "notes": [
-          "Default unified WorldFoundry runtime for modern NVIDIA hosts. Install with `bash scripts/setup/unified_install.sh`.",
-          "Override tier with `--cuda cu124` or `--cuda cu121` when an upstream model still pins an older CUDA wheel bucket.",
-          "Source the environment file emitted by `scripts/setup/unified_install.sh` so WORLDFOUNDRY_USE_UNIFIED_ENV=1 routes compatible profiles here.",
-          "Runnable GPU models that previously used cu113/cu118/cu124 CUDA buckets are mapped to this tier when they do not carry hard ABI pins requiring isolation."
-        ]
-      },
-      "sources": [
-        {
-          "kind": "paper",
-          "label": "Paper",
-          "url": "https://arxiv.org/abs/2203.04955"
-        },
-        {
-          "kind": "source",
-          "label": "GitHub",
-          "url": "https://github.com/nicklashansen/tdmpc"
-        },
-        {
-          "kind": "docs",
-          "label": "Upstream README",
-          "url": "https://github.com/nicklashansen/tdmpc#readme"
-        }
-      ],
-      "checkpoints": [
-        {
-          "id": "lerobot/tdmpc",
-          "role": "tdmpc_policy_checkpoint"
-        }
-      ],
-      "variants": [],
-      "inferenceTasks": [
-        {
-          "id": "model_predictive_control",
-          "label": "Model Predictive Control",
-          "description": "Catalog task profile used by the model runtime.",
-          "source": "catalog",
-          "variantIds": [],
-          "inputs": [
-            {
-              "field": "model_id",
-              "detail": "tdmpc",
-              "kind": "string",
-              "target": "input",
-              "required": false,
-              "description": "Recorded input field from the runtime profile."
-            },
-            {
-              "field": "image",
-              "detail": "Required",
-              "kind": "string",
-              "target": "input",
-              "required": true,
-              "description": "Recorded input field from the runtime profile."
-            },
-            {
-              "field": "prompt",
-              "detail": "Optional",
-              "kind": "string",
-              "target": "input",
-              "required": false,
-              "description": "Recorded input field from the runtime profile."
-            },
-            {
-              "field": "state",
-              "detail": "Required",
-              "kind": "string",
-              "target": "input",
-              "required": true,
-              "description": "Recorded input field from the runtime profile."
-            },
-            {
-              "field": "policy_family",
-              "detail": "temporal_difference_mpc_policy",
-              "kind": "string",
-              "target": "input",
-              "required": false,
-              "description": "Recorded input field from the runtime profile."
-            },
-            {
-              "field": "action_representation",
-              "detail": "mpc_action",
-              "kind": "string",
-              "target": "input",
-              "required": false,
-              "description": "Recorded input field from the runtime profile."
-            }
-          ],
-          "artifacts": [
-            {
-              "kind": "action_trace",
-              "filename": ""
-            },
-            {
-              "kind": "action_trace",
-              "filename": "tdmpc_action_trace.json"
-            }
-          ]
-        },
-        {
-          "id": "robot_policy",
-          "label": "Robot Policy",
-          "description": "Catalog task profile used by the model runtime.",
-          "source": "catalog",
-          "variantIds": [],
-          "inputs": [
-            {
-              "field": "model_id",
-              "detail": "tdmpc",
-              "kind": "string",
-              "target": "input",
-              "required": false,
-              "description": "Recorded input field from the runtime profile."
-            },
-            {
-              "field": "image",
-              "detail": "Required",
-              "kind": "string",
-              "target": "input",
-              "required": true,
-              "description": "Recorded input field from the runtime profile."
-            },
-            {
-              "field": "prompt",
-              "detail": "Optional",
-              "kind": "string",
-              "target": "input",
-              "required": false,
-              "description": "Recorded input field from the runtime profile."
-            },
-            {
-              "field": "state",
-              "detail": "Required",
-              "kind": "string",
-              "target": "input",
-              "required": true,
-              "description": "Recorded input field from the runtime profile."
-            },
-            {
-              "field": "policy_family",
-              "detail": "temporal_difference_mpc_policy",
-              "kind": "string",
-              "target": "input",
-              "required": false,
-              "description": "Recorded input field from the runtime profile."
-            },
-            {
-              "field": "action_representation",
-              "detail": "mpc_action",
-              "kind": "string",
-              "target": "input",
-              "required": false,
-              "description": "Recorded input field from the runtime profile."
-            }
-          ],
-          "artifacts": [
-            {
-              "kind": "action_trace",
-              "filename": ""
-            },
-            {
-              "kind": "action_trace",
-              "filename": "tdmpc_action_trace.json"
-            }
-          ]
-        },
-        {
-          "id": "policy_rollout",
-          "label": "Policy Rollout",
-          "description": "Catalog task profile used by the model runtime.",
-          "source": "catalog",
-          "variantIds": [],
-          "inputs": [
-            {
-              "field": "model_id",
-              "detail": "tdmpc",
-              "kind": "string",
-              "target": "input",
-              "required": false,
-              "description": "Recorded input field from the runtime profile."
-            },
-            {
-              "field": "image",
-              "detail": "Required",
-              "kind": "string",
-              "target": "input",
-              "required": true,
-              "description": "Recorded input field from the runtime profile."
-            },
-            {
-              "field": "prompt",
-              "detail": "Optional",
-              "kind": "string",
-              "target": "input",
-              "required": false,
-              "description": "Recorded input field from the runtime profile."
-            },
-            {
-              "field": "state",
-              "detail": "Required",
-              "kind": "string",
-              "target": "input",
-              "required": true,
-              "description": "Recorded input field from the runtime profile."
-            },
-            {
-              "field": "policy_family",
-              "detail": "temporal_difference_mpc_policy",
-              "kind": "string",
-              "target": "input",
-              "required": false,
-              "description": "Recorded input field from the runtime profile."
-            },
-            {
-              "field": "action_representation",
-              "detail": "mpc_action",
-              "kind": "string",
-              "target": "input",
-              "required": false,
-              "description": "Recorded input field from the runtime profile."
-            }
-          ],
-          "artifacts": [
-            {
-              "kind": "action_trace",
-              "filename": ""
-            },
-            {
-              "kind": "action_trace",
-              "filename": "tdmpc_action_trace.json"
-            }
-          ]
-        }
-      ],
-      "inputContract": [
-        {
-          "field": "model_id",
-          "detail": "tdmpc"
-        },
-        {
-          "field": "image",
-          "detail": "Required"
-        },
-        {
-          "field": "prompt",
-          "detail": "Optional"
-        },
-        {
-          "field": "state",
-          "detail": "Required"
-        },
-        {
-          "field": "policy_family",
-          "detail": "temporal_difference_mpc_policy"
-        },
-        {
-          "field": "action_representation",
-          "detail": "mpc_action"
-        }
-      ],
-      "artifacts": [
-        {
-          "kind": "action_trace",
-          "filename": ""
-        },
-        {
-          "kind": "action_trace",
-          "filename": "tdmpc_action_trace.json"
-        }
-      ],
-      "notes": [
-        "Concrete algorithm entry sourced from the official TD-MPC repository, not from the generic LeRobot policy zoo.",
-        "WorldFoundry routes TD-MPC through an in-tree action runtime adapter against the concrete TD-MPC policy.",
-        "Checkpoint absence is reported by runtime missing_assets and is not a catalog blocker."
-      ],
-      "docs": {
-        "curated": true,
-        "publisher": {
-          "name": "Open-source research release (institution not recorded)",
-          "nameZh": "开源研究发布（仓库未记录正式机构）",
-          "kind": "lab"
-        },
-        "overview": [
-          "TD-MPC (Temporal Difference Model Predictive Control) is a classic model-based RL algorithm: it learns a latent dynamics model and plans actions by combining short-horizon MPC with a learned terminal value function. The catalog sources the concrete official repository — not the generic LeRobot policy zoo — and routes it through an in-tree action runtime adapter."
-        ],
-        "overviewZh": [
-          "TD-MPC（时序差分模型预测控制）是经典的基于模型强化学习算法：学习隐式动力学模型，将短程 MPC 与学习到的终端价值函数结合来规划动作。catalog 采用具体官方仓库为源——而非通用 LeRobot 策略库——并经树内动作运行时适配器路由。"
-        ],
-        "architecture": [
-          "A task-oriented latent dynamics model (TOLD) plus value/policy heads; planning combines the cross-entropy method over the latent model with TD-learned values. Further internals are not recorded in this repository."
-        ],
-        "architectureZh": [
-          "任务导向隐式动力学模型（TOLD）加价值/策略头；规划将隐式模型上的交叉熵方法与 TD 学习的价值结合。更多内部细节仓库未记录。"
-        ],
-        "usageNotes": [
-          "Checkpoint absence is reported by runtime missing_assets and is not a catalog blocker; runs emit a runtime plan until weights are staged. Train your own task checkpoint with the official code before running."
-        ],
-        "usageNotesZh": [
-          "checkpoint 缺失由运行时 missing_assets 报告，不视为 catalog 阻塞；权重就位前运行输出运行时计划。运行前需用官方代码训练自己的任务 checkpoint。"
-        ],
-        "highlights": [
-          "Model Predictive Control",
-          "Robot Policy",
-          "Policy Rollout",
-          "Unified env · Python 3.11 · CUDA 12.8",
-          "Public Hugging Face weights"
-        ],
-        "highlightsZh": [
-          "model_predictive_control",
-          "机器人策略",
-          "策略执行",
-          "统一环境 · Python 3.11 · CUDA 12.8",
-          "公开的 Hugging Face 权重"
-        ],
-        "modalities": {
-          "inputs": [],
-          "outputs": []
-        },
-        "useCases": [],
-        "useCasesZh": [],
-        "hardware": {
-          "minVramGb": null,
-          "recommended": null,
-          "notes": []
-        },
-        "benchmarks": [],
-        "limitations": [
-          "No official pretrained checkpoints are recorded.",
-          "State-based RL policy — no language or open-vocabulary conditioning."
-        ],
-        "limitationsZh": [
-          "未记录官方预训练 checkpoint。",
-          "基于状态的 RL 策略——无语言或开放词表条件。"
-        ],
-        "paper": null,
-        "figures": []
-      },
-      "commands": {
-        "prepare": "bash scripts/inference/prepare_model_infer.sh tdmpc",
-        "install": "bash scripts/setup/model_env_install.sh --model tdmpc",
-        "inspect": "worldfoundry-eval zoo model-show --model-id tdmpc --include-manifest --json",
-        "check": "worldfoundry-eval zoo model-download --model-id tdmpc --check-local --json",
-        "run": "worldfoundry-eval run \\\n  tdmpc \\\n  --pipeline.task-profile model_predictive_control \\\n  --pipeline.image /path/to/input \\\n  --pipeline.state VALUE \\\n  --json"
-      },
-      "catalogPath": "worldfoundry/data/models/catalog/vla_va_wam/tdmpc.yaml"
-    },
-    {
       "id": "tesseract",
       "name": "TesserAct",
       "category": "world_models",
@@ -98573,494 +97349,6 @@
       "catalogPath": "worldfoundry/data/models/catalog/world_models/vid2world.yaml"
     },
     {
-      "id": "vqbet",
-      "name": "VQ-BeT",
-      "category": "vla_va_wam",
-      "categoryLabel": "Embodied",
-      "categoryLabelZh": "具身智能",
-      "provider": "Open-source research release (institution not recorded)",
-      "summary": "VQ-BeT (Vector-Quantized Behavior Transformer) generates behavior by tokenizing continuous actions with a hierarchical VQ-VAE and predicting those tokens with a transformer — capturing multimodal demonstrations without diffusion sampling c…",
-      "aliases": [
-        "vq-bet",
-        "vector-quantized-behavior-transformer"
-      ],
-      "tasks": [
-        "behavior_generation",
-        "imitation_learning",
-        "robot_policy",
-        "policy_rollout"
-      ],
-      "status": {
-        "group": "runtime_ported",
-        "label": "Runtime ported",
-        "integration": "runtime_ported",
-        "runner": "not_recorded",
-        "demo": "not_recorded"
-      },
-      "runtime": {
-        "profileId": "vqbet",
-        "bindingId": "vqbet",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
-        "runner": "worldfoundry.pipeline",
-        "pipelineTarget": "worldfoundry.pipelines.component_pipelines:VQBeTPipeline",
-        "loadingMethod": "from_pretrained",
-        "invocationMode": "native_or_standard_invocation",
-        "backendStage": "official_in_tree_runtime",
-        "runtimeStatus": "official_lerobot_runtime_route_ready_checkpoint_required",
-        "environmentId": "_unified",
-        "environmentName": "worldfoundry-unified-cu128",
-        "environmentKind": "unified",
-        "python": "3.11",
-        "cudaProfile": "cu128",
-        "cudaLabel": "CUDA 12.8",
-        "driverStatus": "compatible_unified_default",
-        "condaPackages": [
-          "python=3.11",
-          "pip",
-          "ffmpeg",
-          "setuptools",
-          "wheel"
-        ],
-        "pipPackages": [
-          "torch",
-          "torchvision",
-          "torchaudio",
-          "xfuser"
-        ],
-        "packageVersions": {
-          "torch": "torch",
-          "torchvision": "torchvision",
-          "torchaudio": "torchaudio",
-          "xfuser": "xfuser"
-        },
-        "validationImports": [
-          "torch",
-          "torchvision",
-          "numpy",
-          "transformers",
-          "diffusers",
-          "xfuser",
-          "worldfoundry"
-        ],
-        "notes": [
-          "Default unified WorldFoundry runtime for modern NVIDIA hosts. Install with `bash scripts/setup/unified_install.sh`.",
-          "Override tier with `--cuda cu124` or `--cuda cu121` when an upstream model still pins an older CUDA wheel bucket.",
-          "Source the environment file emitted by `scripts/setup/unified_install.sh` so WORLDFOUNDRY_USE_UNIFIED_ENV=1 routes compatible profiles here.",
-          "Runnable GPU models that previously used cu113/cu118/cu124 CUDA buckets are mapped to this tier when they do not carry hard ABI pins requiring isolation."
-        ]
-      },
-      "sources": [
-        {
-          "kind": "project",
-          "label": "Project",
-          "url": "https://sjlee.cc/vq-bet/"
-        },
-        {
-          "kind": "paper",
-          "label": "Paper",
-          "url": "https://arxiv.org/abs/2403.03181"
-        },
-        {
-          "kind": "source",
-          "label": "GitHub",
-          "url": "https://github.com/jayLEE0301/vq_bet_official"
-        },
-        {
-          "kind": "docs",
-          "label": "Upstream README",
-          "url": "https://github.com/jayLEE0301/vq_bet_official#readme"
-        }
-      ],
-      "checkpoints": [
-        {
-          "id": "lerobot/vqbet",
-          "role": "vqbet_policy_checkpoint"
-        }
-      ],
-      "variants": [],
-      "inferenceTasks": [
-        {
-          "id": "behavior_generation",
-          "label": "Behavior Generation",
-          "description": "Catalog task profile used by the model runtime.",
-          "source": "catalog",
-          "variantIds": [],
-          "inputs": [
-            {
-              "field": "model_id",
-              "detail": "vqbet",
-              "kind": "string",
-              "target": "input",
-              "required": false,
-              "description": "Recorded input field from the runtime profile."
-            },
-            {
-              "field": "image",
-              "detail": "Required",
-              "kind": "string",
-              "target": "input",
-              "required": true,
-              "description": "Recorded input field from the runtime profile."
-            },
-            {
-              "field": "prompt",
-              "detail": "Required",
-              "kind": "string",
-              "target": "input",
-              "required": true,
-              "description": "Recorded input field from the runtime profile."
-            },
-            {
-              "field": "state",
-              "detail": "Required",
-              "kind": "string",
-              "target": "input",
-              "required": true,
-              "description": "Recorded input field from the runtime profile."
-            },
-            {
-              "field": "policy_family",
-              "detail": "vector_quantized_behavior_transformer",
-              "kind": "string",
-              "target": "input",
-              "required": false,
-              "description": "Recorded input field from the runtime profile."
-            },
-            {
-              "field": "action_representation",
-              "detail": "vqbet_action_sequence",
-              "kind": "string",
-              "target": "input",
-              "required": false,
-              "description": "Recorded input field from the runtime profile."
-            }
-          ],
-          "artifacts": [
-            {
-              "kind": "action_trace",
-              "filename": ""
-            },
-            {
-              "kind": "action_trace",
-              "filename": "vqbet_action_trace.json"
-            }
-          ]
-        },
-        {
-          "id": "imitation_learning",
-          "label": "Imitation Learning",
-          "description": "Catalog task profile used by the model runtime.",
-          "source": "catalog",
-          "variantIds": [],
-          "inputs": [
-            {
-              "field": "model_id",
-              "detail": "vqbet",
-              "kind": "string",
-              "target": "input",
-              "required": false,
-              "description": "Recorded input field from the runtime profile."
-            },
-            {
-              "field": "image",
-              "detail": "Required",
-              "kind": "string",
-              "target": "input",
-              "required": true,
-              "description": "Recorded input field from the runtime profile."
-            },
-            {
-              "field": "prompt",
-              "detail": "Required",
-              "kind": "string",
-              "target": "input",
-              "required": true,
-              "description": "Recorded input field from the runtime profile."
-            },
-            {
-              "field": "state",
-              "detail": "Required",
-              "kind": "string",
-              "target": "input",
-              "required": true,
-              "description": "Recorded input field from the runtime profile."
-            },
-            {
-              "field": "policy_family",
-              "detail": "vector_quantized_behavior_transformer",
-              "kind": "string",
-              "target": "input",
-              "required": false,
-              "description": "Recorded input field from the runtime profile."
-            },
-            {
-              "field": "action_representation",
-              "detail": "vqbet_action_sequence",
-              "kind": "string",
-              "target": "input",
-              "required": false,
-              "description": "Recorded input field from the runtime profile."
-            }
-          ],
-          "artifacts": [
-            {
-              "kind": "action_trace",
-              "filename": ""
-            },
-            {
-              "kind": "action_trace",
-              "filename": "vqbet_action_trace.json"
-            }
-          ]
-        },
-        {
-          "id": "robot_policy",
-          "label": "Robot Policy",
-          "description": "Catalog task profile used by the model runtime.",
-          "source": "catalog",
-          "variantIds": [],
-          "inputs": [
-            {
-              "field": "model_id",
-              "detail": "vqbet",
-              "kind": "string",
-              "target": "input",
-              "required": false,
-              "description": "Recorded input field from the runtime profile."
-            },
-            {
-              "field": "image",
-              "detail": "Required",
-              "kind": "string",
-              "target": "input",
-              "required": true,
-              "description": "Recorded input field from the runtime profile."
-            },
-            {
-              "field": "prompt",
-              "detail": "Required",
-              "kind": "string",
-              "target": "input",
-              "required": true,
-              "description": "Recorded input field from the runtime profile."
-            },
-            {
-              "field": "state",
-              "detail": "Required",
-              "kind": "string",
-              "target": "input",
-              "required": true,
-              "description": "Recorded input field from the runtime profile."
-            },
-            {
-              "field": "policy_family",
-              "detail": "vector_quantized_behavior_transformer",
-              "kind": "string",
-              "target": "input",
-              "required": false,
-              "description": "Recorded input field from the runtime profile."
-            },
-            {
-              "field": "action_representation",
-              "detail": "vqbet_action_sequence",
-              "kind": "string",
-              "target": "input",
-              "required": false,
-              "description": "Recorded input field from the runtime profile."
-            }
-          ],
-          "artifacts": [
-            {
-              "kind": "action_trace",
-              "filename": ""
-            },
-            {
-              "kind": "action_trace",
-              "filename": "vqbet_action_trace.json"
-            }
-          ]
-        },
-        {
-          "id": "policy_rollout",
-          "label": "Policy Rollout",
-          "description": "Catalog task profile used by the model runtime.",
-          "source": "catalog",
-          "variantIds": [],
-          "inputs": [
-            {
-              "field": "model_id",
-              "detail": "vqbet",
-              "kind": "string",
-              "target": "input",
-              "required": false,
-              "description": "Recorded input field from the runtime profile."
-            },
-            {
-              "field": "image",
-              "detail": "Required",
-              "kind": "string",
-              "target": "input",
-              "required": true,
-              "description": "Recorded input field from the runtime profile."
-            },
-            {
-              "field": "prompt",
-              "detail": "Required",
-              "kind": "string",
-              "target": "input",
-              "required": true,
-              "description": "Recorded input field from the runtime profile."
-            },
-            {
-              "field": "state",
-              "detail": "Required",
-              "kind": "string",
-              "target": "input",
-              "required": true,
-              "description": "Recorded input field from the runtime profile."
-            },
-            {
-              "field": "policy_family",
-              "detail": "vector_quantized_behavior_transformer",
-              "kind": "string",
-              "target": "input",
-              "required": false,
-              "description": "Recorded input field from the runtime profile."
-            },
-            {
-              "field": "action_representation",
-              "detail": "vqbet_action_sequence",
-              "kind": "string",
-              "target": "input",
-              "required": false,
-              "description": "Recorded input field from the runtime profile."
-            }
-          ],
-          "artifacts": [
-            {
-              "kind": "action_trace",
-              "filename": ""
-            },
-            {
-              "kind": "action_trace",
-              "filename": "vqbet_action_trace.json"
-            }
-          ]
-        }
-      ],
-      "inputContract": [
-        {
-          "field": "model_id",
-          "detail": "vqbet"
-        },
-        {
-          "field": "image",
-          "detail": "Required"
-        },
-        {
-          "field": "prompt",
-          "detail": "Required"
-        },
-        {
-          "field": "state",
-          "detail": "Required"
-        },
-        {
-          "field": "policy_family",
-          "detail": "vector_quantized_behavior_transformer"
-        },
-        {
-          "field": "action_representation",
-          "detail": "vqbet_action_sequence"
-        }
-      ],
-      "artifacts": [
-        {
-          "kind": "action_trace",
-          "filename": ""
-        },
-        {
-          "kind": "action_trace",
-          "filename": "vqbet_action_trace.json"
-        }
-      ],
-      "notes": [
-        "Concrete algorithm entry sourced from the official VQ-BeT repository.",
-        "WorldFoundry routes VQ-BeT through an in-tree action runtime adapter against the concrete VQ-BeT policy.",
-        "Checkpoint absence is reported by runtime missing_assets and is not a catalog blocker."
-      ],
-      "docs": {
-        "curated": true,
-        "publisher": {
-          "name": "Open-source research release (institution not recorded)",
-          "nameZh": "开源研究发布（仓库未记录正式机构）",
-          "kind": "lab"
-        },
-        "overview": [
-          "VQ-BeT (Vector-Quantized Behavior Transformer) generates behavior by tokenizing continuous actions with a hierarchical VQ-VAE and predicting those tokens with a transformer — capturing multimodal demonstrations without diffusion sampling costs. The catalog sources the official repository and routes it through an in-tree action runtime adapter."
-        ],
-        "overviewZh": [
-          "VQ-BeT（向量量化行为 Transformer）用分层 VQ-VAE 将连续动作 token 化，再以 transformer 预测这些 token 来生成行为——无需扩散采样开销即可捕捉多模态示范。catalog 以官方仓库为源，经树内动作运行时适配器路由。"
-        ],
-        "architecture": [
-          "A residual VQ-VAE action tokenizer plus a GPT-style transformer over behavior tokens, with offset heads recovering continuous actions. Further internals are not recorded in this repository."
-        ],
-        "architectureZh": [
-          "残差 VQ-VAE 动作 tokenizer 加 GPT 式行为 token transformer，偏移头恢复连续动作。更多内部细节仓库未记录。"
-        ],
-        "usageNotes": [
-          "Checkpoint absence is reported by runtime missing_assets and is not a catalog blocker; runs emit a runtime plan until weights are staged. Train your own task checkpoint with the official code before running."
-        ],
-        "usageNotesZh": [
-          "checkpoint 缺失由运行时 missing_assets 报告，不视为 catalog 阻塞；权重就位前运行输出运行时计划。运行前需用官方代码训练自己的任务 checkpoint。"
-        ],
-        "highlights": [
-          "Behavior Generation",
-          "Imitation Learning",
-          "Robot Policy",
-          "Unified env · Python 3.11 · CUDA 12.8",
-          "Public Hugging Face weights"
-        ],
-        "highlightsZh": [
-          "behavior_generation",
-          "imitation_learning",
-          "机器人策略",
-          "统一环境 · Python 3.11 · CUDA 12.8",
-          "公开的 Hugging Face 权重"
-        ],
-        "modalities": {
-          "inputs": [],
-          "outputs": []
-        },
-        "useCases": [],
-        "useCasesZh": [],
-        "hardware": {
-          "minVramGb": null,
-          "recommended": null,
-          "notes": []
-        },
-        "benchmarks": [],
-        "limitations": [
-          "No official pretrained checkpoints are recorded.",
-          "No license is recorded in this repository."
-        ],
-        "limitationsZh": [
-          "未记录官方预训练 checkpoint。",
-          "仓库未记录许可证。"
-        ],
-        "paper": null,
-        "figures": []
-      },
-      "commands": {
-        "prepare": "bash scripts/inference/prepare_model_infer.sh vqbet",
-        "install": "bash scripts/setup/model_env_install.sh --model vqbet",
-        "inspect": "worldfoundry-eval zoo model-show --model-id vqbet --include-manifest --json",
-        "check": "worldfoundry-eval zoo model-download --model-id vqbet --check-local --json",
-        "run": "worldfoundry-eval run \\\n  vqbet \\\n  --pipeline.task-profile behavior_generation \\\n  --pipeline.image /path/to/input \\\n  --pipeline.prompt \"Describe the desired output.\" \\\n  --pipeline.state VALUE \\\n  --json"
-      },
-      "catalogPath": "worldfoundry/data/models/catalog/vla_va_wam/vqbet.yaml"
-    },
-    {
       "id": "wilddet3d",
       "name": "WildDet3D",
       "category": "world_models",
@@ -99904,7 +98192,7 @@
       "checkpoints": [
         {
           "id": "UranusITS/WorldGrow",
-          "license": "manual_review:missing_root_license"
+          "role": "world_checkpoint"
         }
       ],
       "variants": [],
@@ -110353,6 +108641,437 @@
       "catalogPath": "worldfoundry/data/models/catalog/world_models/irasim.yaml"
     },
     {
+      "id": "last-r1",
+      "name": "LaST-R1",
+      "category": "vla_va_wam",
+      "categoryLabel": "Embodied",
+      "categoryLabelZh": "具身智能",
+      "provider": "Open-source research release (institution not recorded)",
+      "summary": "LaST-R1 is an MIT-licensed VLA policy trained with reinforcement learning. The libero_10 RL checkpoint is staged locally, but WorldFoundry does not yet provide the model-specific rollout adapter needed for inference.",
+      "aliases": [],
+      "tasks": [
+        "vla",
+        "reinforcement_learning",
+        "policy_rollout"
+      ],
+      "status": {
+        "group": "planned",
+        "label": "Planned",
+        "integration": "planned",
+        "runner": "not_recorded",
+        "demo": "not_recorded"
+      },
+      "runtime": {
+        "profileId": "last-r1",
+        "bindingId": null,
+        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runner": null,
+        "pipelineTarget": null,
+        "loadingMethod": null,
+        "invocationMode": null,
+        "backendStage": "model_specific_rollout_adapter_required",
+        "runtimeStatus": "unavailable",
+        "environmentId": "_unified",
+        "environmentName": "worldfoundry-unified-cu128",
+        "environmentKind": "unified",
+        "python": "3.11",
+        "cudaProfile": "cu128",
+        "cudaLabel": "CUDA 12.8",
+        "driverStatus": "compatible_unified_default",
+        "condaPackages": [
+          "python=3.11",
+          "pip",
+          "ffmpeg",
+          "setuptools",
+          "wheel"
+        ],
+        "pipPackages": [
+          "torch",
+          "torchvision",
+          "torchaudio",
+          "xfuser"
+        ],
+        "packageVersions": {
+          "torch": "torch",
+          "torchvision": "torchvision",
+          "torchaudio": "torchaudio",
+          "xfuser": "xfuser"
+        },
+        "validationImports": [
+          "torch",
+          "torchvision",
+          "numpy",
+          "transformers",
+          "diffusers",
+          "xfuser",
+          "worldfoundry"
+        ],
+        "notes": [
+          "Default unified WorldFoundry runtime for modern NVIDIA hosts. Install with `bash scripts/setup/unified_install.sh`.",
+          "Override tier with `--cuda cu124` or `--cuda cu121` when an upstream model still pins an older CUDA wheel bucket.",
+          "Source the environment file emitted by `scripts/setup/unified_install.sh` so WORLDFOUNDRY_USE_UNIFIED_ENV=1 routes compatible profiles here.",
+          "Runnable GPU models that previously used cu113/cu118/cu124 CUDA buckets are mapped to this tier when they do not carry hard ABI pins requiring isolation."
+        ]
+      },
+      "sources": [
+        {
+          "kind": "project",
+          "label": "Project",
+          "url": "https://siriyep.github.io/last-r1/"
+        },
+        {
+          "kind": "paper",
+          "label": "Paper",
+          "url": "https://arxiv.org/abs/2604.28192"
+        },
+        {
+          "kind": "source",
+          "label": "GitHub",
+          "url": "https://github.com/CHEN-H01/LaST-R1"
+        },
+        {
+          "kind": "weights",
+          "label": "Hugging Face",
+          "url": "https://huggingface.co/chenhao01/LaST-R1"
+        },
+        {
+          "kind": "docs",
+          "label": "Upstream README",
+          "url": "https://github.com/CHEN-H01/LaST-R1#readme"
+        }
+      ],
+      "checkpoints": [
+        {
+          "id": "chenhao01/LaST-R1"
+        }
+      ],
+      "variants": [],
+      "inferenceTasks": [
+        {
+          "id": "vla",
+          "label": "Vla",
+          "description": "Catalog task profile used by the model runtime.",
+          "source": "catalog",
+          "variantIds": [],
+          "inputs": [
+            {
+              "field": "model_id",
+              "detail": "last-r1",
+              "kind": "string",
+              "target": "input",
+              "required": false,
+              "description": "Recorded input field from the runtime profile."
+            },
+            {
+              "field": "image",
+              "detail": "Required",
+              "kind": "string",
+              "target": "input",
+              "required": true,
+              "description": "Recorded input field from the runtime profile."
+            },
+            {
+              "field": "prompt",
+              "detail": "Required",
+              "kind": "string",
+              "target": "input",
+              "required": true,
+              "description": "Recorded input field from the runtime profile."
+            },
+            {
+              "field": "state",
+              "detail": "Required",
+              "kind": "string",
+              "target": "input",
+              "required": true,
+              "description": "Recorded input field from the runtime profile."
+            },
+            {
+              "field": "policy_family",
+              "detail": "rl_refined_vla_policy",
+              "kind": "string",
+              "target": "input",
+              "required": false,
+              "description": "Recorded input field from the runtime profile."
+            },
+            {
+              "field": "action_representation",
+              "detail": "vla_action_trace",
+              "kind": "string",
+              "target": "input",
+              "required": false,
+              "description": "Recorded input field from the runtime profile."
+            }
+          ],
+          "artifacts": [
+            {
+              "kind": "action_trace",
+              "filename": ""
+            },
+            {
+              "kind": "action_trace",
+              "filename": "last-r1_action_trace.json"
+            }
+          ]
+        },
+        {
+          "id": "reinforcement_learning",
+          "label": "Reinforcement Learning",
+          "description": "Catalog task profile used by the model runtime.",
+          "source": "catalog",
+          "variantIds": [],
+          "inputs": [
+            {
+              "field": "model_id",
+              "detail": "last-r1",
+              "kind": "string",
+              "target": "input",
+              "required": false,
+              "description": "Recorded input field from the runtime profile."
+            },
+            {
+              "field": "image",
+              "detail": "Required",
+              "kind": "string",
+              "target": "input",
+              "required": true,
+              "description": "Recorded input field from the runtime profile."
+            },
+            {
+              "field": "prompt",
+              "detail": "Required",
+              "kind": "string",
+              "target": "input",
+              "required": true,
+              "description": "Recorded input field from the runtime profile."
+            },
+            {
+              "field": "state",
+              "detail": "Required",
+              "kind": "string",
+              "target": "input",
+              "required": true,
+              "description": "Recorded input field from the runtime profile."
+            },
+            {
+              "field": "policy_family",
+              "detail": "rl_refined_vla_policy",
+              "kind": "string",
+              "target": "input",
+              "required": false,
+              "description": "Recorded input field from the runtime profile."
+            },
+            {
+              "field": "action_representation",
+              "detail": "vla_action_trace",
+              "kind": "string",
+              "target": "input",
+              "required": false,
+              "description": "Recorded input field from the runtime profile."
+            }
+          ],
+          "artifacts": [
+            {
+              "kind": "action_trace",
+              "filename": ""
+            },
+            {
+              "kind": "action_trace",
+              "filename": "last-r1_action_trace.json"
+            }
+          ]
+        },
+        {
+          "id": "policy_rollout",
+          "label": "Policy Rollout",
+          "description": "Catalog task profile used by the model runtime.",
+          "source": "catalog",
+          "variantIds": [],
+          "inputs": [
+            {
+              "field": "model_id",
+              "detail": "last-r1",
+              "kind": "string",
+              "target": "input",
+              "required": false,
+              "description": "Recorded input field from the runtime profile."
+            },
+            {
+              "field": "image",
+              "detail": "Required",
+              "kind": "string",
+              "target": "input",
+              "required": true,
+              "description": "Recorded input field from the runtime profile."
+            },
+            {
+              "field": "prompt",
+              "detail": "Required",
+              "kind": "string",
+              "target": "input",
+              "required": true,
+              "description": "Recorded input field from the runtime profile."
+            },
+            {
+              "field": "state",
+              "detail": "Required",
+              "kind": "string",
+              "target": "input",
+              "required": true,
+              "description": "Recorded input field from the runtime profile."
+            },
+            {
+              "field": "policy_family",
+              "detail": "rl_refined_vla_policy",
+              "kind": "string",
+              "target": "input",
+              "required": false,
+              "description": "Recorded input field from the runtime profile."
+            },
+            {
+              "field": "action_representation",
+              "detail": "vla_action_trace",
+              "kind": "string",
+              "target": "input",
+              "required": false,
+              "description": "Recorded input field from the runtime profile."
+            }
+          ],
+          "artifacts": [
+            {
+              "kind": "action_trace",
+              "filename": ""
+            },
+            {
+              "kind": "action_trace",
+              "filename": "last-r1_action_trace.json"
+            }
+          ]
+        }
+      ],
+      "inputContract": [
+        {
+          "field": "model_id",
+          "detail": "last-r1"
+        },
+        {
+          "field": "image",
+          "detail": "Required"
+        },
+        {
+          "field": "prompt",
+          "detail": "Required"
+        },
+        {
+          "field": "state",
+          "detail": "Required"
+        },
+        {
+          "field": "policy_family",
+          "detail": "rl_refined_vla_policy"
+        },
+        {
+          "field": "action_representation",
+          "detail": "vla_action_trace"
+        }
+      ],
+      "artifacts": [
+        {
+          "kind": "action_trace",
+          "filename": ""
+        },
+        {
+          "kind": "action_trace",
+          "filename": "last-r1_action_trace.json"
+        }
+      ],
+      "notes": [
+        "The local libero_10 RL checkpoint is staged, but the public policy runner is not ready.",
+        "Official inference uses a custom latent/action-token rollout; the generic Hugging Face action adapter cannot execute it."
+      ],
+      "docs": {
+        "curated": true,
+        "publisher": {
+          "name": "Open-source research release (institution not recorded)",
+          "nameZh": "开源研究发布（仓库未记录正式机构）",
+          "kind": "lab"
+        },
+        "overview": [
+          "LaST-R1 is an MIT-licensed VLA policy trained with reinforcement learning. The libero_10 RL checkpoint is staged locally, but WorldFoundry does not yet provide the model-specific rollout adapter needed for inference."
+        ],
+        "overviewZh": [
+          "LaST-R1 是 MIT 许可、以强化学习训练的 VLA 策略。libero_10 RL 权重已在本地就位，但 WorldFoundry 尚缺少推理所需的模型专用 rollout 适配器。"
+        ],
+        "architecture": [
+          "Task tags record a VLA plus reinforcement-learning design. Architecture internals beyond the official repository pointer (CHEN-H01/LaST-R1, pinned head ba4e9396) are not recorded in this repository."
+        ],
+        "architectureZh": [
+          "任务标签记录其为 VLA 加强化学习设计。官方仓库指针（CHEN-H01/LaST-R1，锁定 head ba4e9396）之外的架构内部细节仓库未记录。"
+        ],
+        "usageNotes": [
+          "The local libero_10 checkpoint has both weight shards; libero_goal is incomplete. Inference remains unavailable until the official latent/action-token rollout is adapted and validated."
+        ],
+        "usageNotesZh": [
+          "本地 libero_10 checkpoint 两片权重齐全；libero_goal 尚未下载完整。官方 latent/action-token rollout 完成适配和验证前不可推理。"
+        ],
+        "highlights": [
+          "Vla",
+          "Reinforcement Learning",
+          "Policy Rollout",
+          "Unified env · Python 3.11 · CUDA 12.8",
+          "Public Hugging Face weights"
+        ],
+        "highlightsZh": [
+          "视觉-语言-动作（VLA）",
+          "reinforcement_learning",
+          "策略执行",
+          "统一环境 · Python 3.11 · CUDA 12.8",
+          "公开的 Hugging Face 权重"
+        ],
+        "modalities": {
+          "inputs": [],
+          "outputs": []
+        },
+        "useCases": [],
+        "useCasesZh": [],
+        "hardware": {
+          "minVramGb": null,
+          "recommended": null,
+          "notes": []
+        },
+        "benchmarks": [
+          {
+            "id": "libero",
+            "name": "LIBERO",
+            "category": "Embodied AI",
+            "categoryZh": "具身 AI",
+            "summary": "Imports official or upstream results into a normalized scorecard",
+            "summaryZh": "导入官方 / 上游结果并归一化为 scorecard",
+            "href": "/docs/evaluation/benchmark-hub/libero",
+            "source": "manifest",
+            "reason": "Referenced in this model's manifest evidence notes.",
+            "reasonZh": "该模型 manifest 的证据记录中提到了这一评测。"
+          }
+        ],
+        "limitations": [
+          "No LaST-R1 policy inference or GPU validation is recorded in this repository."
+        ],
+        "limitationsZh": [
+          "仓库未记录 LaST-R1 策略推理或 GPU 验证。"
+        ],
+        "paper": null,
+        "figures": []
+      },
+      "commands": {
+        "prepare": "bash scripts/inference/prepare_model_infer.sh last-r1",
+        "install": "bash scripts/setup/model_env_install.sh --model last-r1",
+        "inspect": "worldfoundry-eval zoo model-show --model-id last-r1 --include-manifest --json",
+        "check": "worldfoundry-eval zoo model-download --model-id last-r1 --check-local --json",
+        "run": "worldfoundry-eval run \\\n  last-r1 \\\n  --pipeline.task-profile vla \\\n  --pipeline.image /path/to/input \\\n  --pipeline.prompt \"Describe the desired output.\" \\\n  --pipeline.state VALUE \\\n  --json"
+      },
+      "catalogPath": "worldfoundry/data/models/catalog/vla_va_wam/last-r1.yaml"
+    },
+    {
       "id": "magi2-preview",
       "name": "MAGI-2 Preview",
       "category": "video",
@@ -111983,394 +110702,6 @@
         "run": "worldfoundry-eval run \\\n  adaworld \\\n  --pipeline.task-profile latent-action-world-model \\\n  --pipeline.prompt \"Describe the desired output.\" \\\n  --pipeline.image /path/to/input \\\n  --pipeline.video /path/to/input \\\n  --json"
       },
       "catalogPath": "worldfoundry/data/models/catalog/world_models/adaworld.yaml"
-    },
-    {
-      "id": "hunyuanworld-voyager",
-      "name": "HunyuanWorld-Voyager",
-      "category": "world_models",
-      "categoryLabel": "World models",
-      "categoryLabelZh": "世界模型",
-      "provider": "Tencent (Hunyuan)",
-      "summary": "HunyuanWorld-Voyager generates RGB-D video along camera paths. WorldFoundry's public runner has generated the official case1 example through a bridge to the licensed upstream checkout.",
-      "aliases": [],
-      "tasks": [
-        "world",
-        "video",
-        "world_model"
-      ],
-      "status": {
-        "group": "integrated",
-        "label": "Integrated",
-        "integration": "integrated",
-        "runner": "verified_configuration",
-        "demo": "not_recorded"
-      },
-      "runtime": {
-        "profileId": "hunyuanworld-voyager",
-        "bindingId": "hunyuanworld-voyager",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
-        "runner": "worldfoundry.pipeline",
-        "pipelineTarget": "worldfoundry.pipelines.hunyuan_world.pipeline_hunyuan_world_voyager_official:HunyuanWorldVoyagerOfficialPipeline",
-        "loadingMethod": "from_pretrained",
-        "invocationMode": "native_or_standard_invocation",
-        "backendStage": "external_official_cli_bridge",
-        "runtimeStatus": "official_case1_8step_gpu_validated",
-        "environmentId": "_unified",
-        "environmentName": "worldfoundry-unified-cu128",
-        "environmentKind": "unified",
-        "python": "3.11",
-        "cudaProfile": "cu128",
-        "cudaLabel": "CUDA 12.8",
-        "driverStatus": "compatible_unified_default",
-        "condaPackages": [
-          "python=3.11",
-          "pip",
-          "ffmpeg",
-          "setuptools",
-          "wheel"
-        ],
-        "pipPackages": [
-          "torch",
-          "torchvision",
-          "torchaudio",
-          "xfuser"
-        ],
-        "packageVersions": {
-          "torch": "torch",
-          "torchvision": "torchvision",
-          "torchaudio": "torchaudio",
-          "xfuser": "xfuser"
-        },
-        "validationImports": [
-          "torch",
-          "torchvision",
-          "numpy",
-          "transformers",
-          "diffusers",
-          "xfuser",
-          "worldfoundry"
-        ],
-        "notes": [
-          "The in-tree bridge calls a separate official checkout at revision 6218ccd36df77d0254dcf24ad1fb77312f75b04a; Tencent's community-licensed source and weights are not redistributed in this package.",
-          "Set WORLDFOUNDRY_VOYAGER_SOURCE_ROOT to that checkout and WORLDFOUNDRY_VOYAGER_PYTHON to an environment with the official dependencies; the bridge validates source, checkpoints, and a 49-frame condition directory.",
-          "Camera motion must already be rendered into the 49-frame condition directory. A raw image or action sequence alone is not a supported input.",
-          "The official case1 checkpoint generated an RGB-D MP4 on one H100 at 8 steps; the public runner generated RGB-D MP4s at 1 and 8 steps. All decoded as 45 frames at 768x1024 and 24 fps. The upstream pipeline drops four conditioning frames and removes a 16-pixel separator from its internal RGB-D frame.",
-          "The upstream Tencent HunyuanWorld-Voyager Community License excludes use in the EU, UK, and South Korea and requires its LICENSE and NOTICE on redistribution.",
-          "Default unified WorldFoundry runtime for modern NVIDIA hosts. Install with `bash scripts/setup/unified_install.sh`.",
-          "Override tier with `--cuda cu124` or `--cuda cu121` when an upstream model still pins an older CUDA wheel bucket.",
-          "Source the environment file emitted by `scripts/setup/unified_install.sh` so WORLDFOUNDRY_USE_UNIFIED_ENV=1 routes compatible profiles here.",
-          "Runnable GPU models that previously used cu113/cu118/cu124 CUDA buckets are mapped to this tier when they do not carry hard ABI pins requiring isolation."
-        ]
-      },
-      "sources": [
-        {
-          "kind": "project",
-          "label": "Project",
-          "url": "https://3d-models.hunyuan.tencent.com/world/"
-        },
-        {
-          "kind": "paper",
-          "label": "Paper",
-          "url": "https://arxiv.org/abs/2405.07719"
-        },
-        {
-          "kind": "source",
-          "label": "GitHub",
-          "url": "https://github.com/Tencent-Hunyuan/HunyuanWorld-Voyager"
-        },
-        {
-          "kind": "weights",
-          "label": "Hugging Face",
-          "url": "https://huggingface.co/tencent/HunyuanWorld-Voyager"
-        },
-        {
-          "kind": "docs",
-          "label": "Upstream README",
-          "url": "https://github.com/Tencent-Hunyuan/HunyuanWorld-Voyager#readme"
-        }
-      ],
-      "checkpoints": [
-        {
-          "id": "tencent/HunyuanWorld-Voyager",
-          "revision": "ef280b832e98ce8aed249739ebd20da7556e2b2f",
-          "role": "voyager_checkpoint"
-        }
-      ],
-      "variants": [],
-      "inferenceTasks": [
-        {
-          "id": "world",
-          "label": "World",
-          "description": "Catalog task profile used by the model runtime.",
-          "source": "catalog",
-          "variantIds": [],
-          "inputs": [
-            {
-              "field": "prompt",
-              "detail": "Required",
-              "kind": "string",
-              "target": "input",
-              "required": true,
-              "description": "Recorded input field from the runtime profile."
-            },
-            {
-              "field": "image",
-              "detail": "Required",
-              "kind": "string",
-              "target": "input",
-              "required": true,
-              "description": "Recorded input field from the runtime profile."
-            },
-            {
-              "field": "video",
-              "detail": "Optional",
-              "kind": "string",
-              "target": "input",
-              "required": false,
-              "description": "Recorded input field from the runtime profile."
-            },
-            {
-              "field": "actions",
-              "detail": "",
-              "kind": "string",
-              "target": "input",
-              "required": false,
-              "description": "Recorded input field from the runtime profile."
-            }
-          ],
-          "artifacts": [
-            {
-              "kind": "generated_world",
-              "filename": "hunyuanworld-voyager.mp4"
-            }
-          ]
-        },
-        {
-          "id": "video",
-          "label": "Video",
-          "description": "Catalog task profile used by the model runtime.",
-          "source": "catalog",
-          "variantIds": [],
-          "inputs": [
-            {
-              "field": "prompt",
-              "detail": "Required",
-              "kind": "string",
-              "target": "input",
-              "required": true,
-              "description": "Recorded input field from the runtime profile."
-            },
-            {
-              "field": "image",
-              "detail": "Required",
-              "kind": "string",
-              "target": "input",
-              "required": true,
-              "description": "Recorded input field from the runtime profile."
-            },
-            {
-              "field": "video",
-              "detail": "Optional",
-              "kind": "string",
-              "target": "input",
-              "required": false,
-              "description": "Recorded input field from the runtime profile."
-            },
-            {
-              "field": "actions",
-              "detail": "",
-              "kind": "string",
-              "target": "input",
-              "required": false,
-              "description": "Recorded input field from the runtime profile."
-            }
-          ],
-          "artifacts": [
-            {
-              "kind": "generated_world",
-              "filename": "hunyuanworld-voyager.mp4"
-            }
-          ]
-        },
-        {
-          "id": "world_model",
-          "label": "World Model",
-          "description": "Catalog task profile used by the model runtime.",
-          "source": "catalog",
-          "variantIds": [],
-          "inputs": [
-            {
-              "field": "prompt",
-              "detail": "Required",
-              "kind": "string",
-              "target": "input",
-              "required": true,
-              "description": "Recorded input field from the runtime profile."
-            },
-            {
-              "field": "image",
-              "detail": "Required",
-              "kind": "string",
-              "target": "input",
-              "required": true,
-              "description": "Recorded input field from the runtime profile."
-            },
-            {
-              "field": "video",
-              "detail": "Optional",
-              "kind": "string",
-              "target": "input",
-              "required": false,
-              "description": "Recorded input field from the runtime profile."
-            },
-            {
-              "field": "actions",
-              "detail": "",
-              "kind": "string",
-              "target": "input",
-              "required": false,
-              "description": "Recorded input field from the runtime profile."
-            }
-          ],
-          "artifacts": [
-            {
-              "kind": "generated_world",
-              "filename": "hunyuanworld-voyager.mp4"
-            }
-          ]
-        }
-      ],
-      "inputContract": [
-        {
-          "field": "prompt",
-          "detail": "Required"
-        },
-        {
-          "field": "image",
-          "detail": "Required"
-        },
-        {
-          "field": "video",
-          "detail": "Optional"
-        },
-        {
-          "field": "actions",
-          "detail": ""
-        }
-      ],
-      "artifacts": [
-        {
-          "kind": "generated_world",
-          "filename": "hunyuanworld-voyager.mp4"
-        }
-      ],
-      "notes": [
-        "The public pipeline bridges to an external, pinned official Voyager checkout and a dedicated Python environment. The official case1 checkpoint and the public runner both produced decodable RGB-D video at eight inference steps. The licensed upstream source and weights are not redistributed here.",
-        "The independent official CLI and public WorldFoundryPipelineRunner each ran the same official case1 conditions with the checkpoint on H100 GPU3 at eight inference steps. Both outputs fully decoded as 45-frame, 768x1024, 24 fps H.264 RGB-D video; key frames were visually reviewed.",
-        "Validation covers this case1 configuration only; the upstream 50-step default, arbitrary camera paths, long-range extension, and quantitative depth or camera fidelity have not been validated.",
-        "The in-tree bridge calls a separate official checkout at revision 6218ccd36df77d0254dcf24ad1fb77312f75b04a; Tencent's community-licensed source and weights are not redistributed in this package.",
-        "Set WORLDFOUNDRY_VOYAGER_SOURCE_ROOT to that checkout and WORLDFOUNDRY_VOYAGER_PYTHON to an environment with the official dependencies; the bridge validates source, checkpoints, and a 49-frame condition directory.",
-        "Camera motion must already be rendered into the 49-frame condition directory. A raw image or action sequence alone is not a supported input.",
-        "The official case1 checkpoint generated an RGB-D MP4 on one H100 at 8 steps; the public runner generated RGB-D MP4s at 1 and 8 steps. All decoded as 45 frames at 768x1024 and 24 fps. The upstream pipeline drops four conditioning frames and removes a 16-pixel separator from its internal RGB-D frame.",
-        "The upstream Tencent HunyuanWorld-Voyager Community License excludes use in the EU, UK, and South Korea and requires its LICENSE and NOTICE on redistribution."
-      ],
-      "docs": {
-        "curated": true,
-        "publisher": {
-          "name": "Tencent (Hunyuan)",
-          "nameZh": "腾讯（混元）",
-          "kind": "company"
-        },
-        "overview": [
-          "HunyuanWorld-Voyager generates RGB-D video along camera paths. WorldFoundry's public runner has generated the official case1 example through a bridge to the licensed upstream checkout."
-        ],
-        "overviewZh": [
-          "HunyuanWorld-Voyager 沿相机路径生成 RGB-D 视频。WorldFoundry 的公开 runner 已通过外部官方源码桥接成功生成 case1 示例。"
-        ],
-        "architecture": [
-          "Per the upstream release, Voyager combines a HunyuanVideo-based generator with joint RGB-D output and a world-cache mechanism for long-range consistency. The official case1 defaults are recorded in the runtime profile: num_frames=49, infer_steps=50, flow_shift=7.0, embedded_cfg_scale=6.0, i2v_stability=true."
-        ],
-        "architectureZh": [
-          "按上游发布，Voyager 将基于 HunyuanVideo 的生成器与 RGB-D 联合输出及世界缓存机制结合，实现长程一致性。运行时档案记录官方 case1 默认值：num_frames=49、infer_steps=50、flow_shift=7.0、 embedded_cfg_scale=6.0、i2v_stability=true。"
-        ],
-        "usageNotes": [
-          "Provide a separate official checkout at revision 6218ccd36df77d0254dcf24ad1fb77312f75b04a, the checkpoint, an official-dependency Python environment, and a 49-frame rendered condition directory. Set WORLDFOUNDRY_VOYAGER_SOURCE_ROOT and WORLDFOUNDRY_VOYAGER_PYTHON. The 8-step case1 configuration was tested; the official 50-step default was not. The Tencent community license restricts use by region and redistribution."
-        ],
-        "usageNotesZh": [
-          "需提供固定版本 6218ccd36df77d0254dcf24ad1fb77312f75b04a 的外部官方源码、权重、官方依赖环境及含 49 帧的已渲染条件目录，并设置 WORLDFOUNDRY_VOYAGER_SOURCE_ROOT 和 WORLDFOUNDRY_VOYAGER_PYTHON。已验证 case1 的 8 步配置，未验证官方默认的 50 步；腾讯社区许可证限制使用地域及再分发。"
-        ],
-        "highlights": [
-          "World",
-          "Video",
-          "World Model",
-          "Unified env · Python 3.11 · CUDA 12.8",
-          "Public Hugging Face weights"
-        ],
-        "highlightsZh": [
-          "世界模型",
-          "视频生成",
-          "世界模型",
-          "统一环境 · Python 3.11 · CUDA 12.8",
-          "公开的 Hugging Face 权重"
-        ],
-        "modalities": {
-          "inputs": [],
-          "outputs": [
-            "video"
-          ]
-        },
-        "useCases": [],
-        "useCasesZh": [],
-        "hardware": {
-          "minVramGb": null,
-          "recommended": null,
-          "notes": []
-        },
-        "benchmarks": [
-          {
-            "id": "worldscore",
-            "name": "WorldScore",
-            "category": "World Models",
-            "categoryZh": "世界模型",
-            "summary": "In-tree official runtime scores generated videos per prompt",
-            "summaryZh": "仓内 official runtime 对生成视频逐 prompt 评分",
-            "href": "/docs/evaluation/benchmark-hub/worldscore",
-            "source": "docs",
-            "reason": "Scoring for camera-navigable generated worlds.",
-            "reasonZh": "相机可游走生成世界的评分。"
-          },
-          {
-            "id": "camerabench",
-            "name": "CameraBench",
-            "category": "Video Generation",
-            "categoryZh": "视频生成",
-            "summary": "In-tree official runtime scores generated videos per prompt; some dimensions may call a hosted API",
-            "summaryZh": "仓内 official runtime 对生成视频逐 prompt 评分；部分维度可能调用 hosted API",
-            "href": "/docs/evaluation/benchmark-hub/camerabench",
-            "source": "docs",
-            "reason": "Camera-path adherence evaluation.",
-            "reasonZh": "相机路径贴合度评测。"
-          }
-        ],
-        "limitations": [
-          "49-frame default clips: longer voyages need iterative extension.",
-          "Depth quality is generative, not sensor-grade — validate before metric use."
-        ],
-        "limitationsZh": [
-          "默认 49 帧片段：更长的游走需要迭代扩展。",
-          "深度是生成式的、非传感器级——用于米制用途前请先验证。"
-        ],
-        "paper": null,
-        "figures": []
-      },
-      "commands": {
-        "prepare": "bash scripts/inference/prepare_model_infer.sh hunyuanworld-voyager",
-        "install": "bash scripts/setup/model_env_install.sh --model hunyuanworld-voyager",
-        "inspect": "worldfoundry-eval zoo model-show --model-id hunyuanworld-voyager --include-manifest --json",
-        "check": "worldfoundry-eval zoo model-download --model-id hunyuanworld-voyager --check-local --json",
-        "run": "worldfoundry-eval run \\\n  hunyuanworld-voyager \\\n  --pipeline.task-profile world \\\n  --pipeline.prompt \"Describe the desired output.\" \\\n  --pipeline.image /path/to/input \\\n  --json"
-      },
-      "catalogPath": "worldfoundry/data/models/catalog/world_models/hunyuanworld-voyager.yaml"
     }
   ]
 }

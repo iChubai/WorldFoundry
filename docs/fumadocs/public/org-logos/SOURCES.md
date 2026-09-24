@@ -53,7 +53,7 @@ No file in this directory is a personal GitHub avatar.
 | `hkust.svg` | Hong Kong University of Science and Technology | Original simple circular-seal rendition of the HKUST emblem | Public domain (simple seal rendition) | model:adaworld, model:dualcamctrl |
 | `hpcaitech.jpg` | HPC-AI Tech | GitHub organization brand avatar (github.com/hpcaitech), pre-existing repo asset | Organization brand mark | model:open-sora |
 | `huawei.svg` | Huawei | Simple Icons (https://simpleicons.org), CC0-1.0; official brand hex #FF0000 | CC0-1.0 | model:worldgrow |
-| `huggingface.svg` | Hugging Face | Simple Icons (https://simpleicons.org), CC0-1.0; official brand hex #FFD21E | CC0-1.0 | model:gaussian-actor, model:multi-task-dit, model:smolvla |
+| `huggingface.svg` | Hugging Face | Simple Icons (https://simpleicons.org), CC0-1.0; official brand hex #FFD21E | CC0-1.0 | model:smolvla |
 | `hust.svg` | Huazhong University of Science and Technology | Original simple circular-seal rendition of the HUST emblem | Public domain (simple seal rendition) | model:4d-gs, model:hydra, model:tineuvox |
 | `imperial.png` | Imperial College London | https://commons.wikimedia.org/wiki/File:Shield_of_Imperial_College_London.svg | CC BY 3.0 | benchmark:rlbench |
 | `inspatio.jpg` | InSpatio | GitHub organization brand avatar (github.com/inspatio), pre-existing repo asset | Organization brand mark | model:inspatio-world, model:worldfm |
@@ -106,7 +106,7 @@ No file in this directory is a personal GitHub avatar.
 | `sjtu.png` | Shanghai Jiao Tong University | Official university brand mark (www.sjtu.edu.cn), crest cropped for the identity mark | Organization brand mark | benchmark:pawbench, benchmark:video-bench, model:gaussianobject, model:pi3, model:warp-as-history |
 | `skywork.jpg` | Skywork AI (Kunlun) | GitHub organization brand avatar (github.com/SkyworkAI), pre-existing repo asset | Organization brand mark | model:matrix-game-1, model:matrix-game-2, model:matrix-game-3, model:skyreels-v2, model:skyreels-v3 |
 | `snap.svg` | Snap Inc. | Simple Icons (https://simpleicons.org), CC0-1.0 (Snapchat mark); official brand hex #FFFC00 | CC0-1.0 | model:ac3d |
-| `snu.svg` | Seoul National University | https://commons.wikimedia.org/wiki/File:서울대학교.svg | Public domain (simple shield rendition) | model:vqbet |
+| `snu.svg` | Seoul National University | https://commons.wikimedia.org/wiki/File:서울대학교.svg | Public domain (simple shield rendition) | - |
 | `sony.svg` | Sony AI | Simple Icons (https://simpleicons.org), CC0-1.0; official brand hex #000000 | CC0-1.0 | model:mmaudio |
 | `spirit-ai.svg` | Spirit AI | Original simple figure monogram for the identity mark | Public domain (simple geometry) | model:spirit-v1.5 |
 | `stability.png` | Stability AI | GitHub organization brand avatar (github.com/Stability-AI), pre-existing repo asset | Organization brand mark | model:stable-virtual-camera |
@@ -120,7 +120,7 @@ No file in this directory is a personal GitHub avatar.
 | `tsinghua.png` | Tsinghua University | https://commons.wikimedia.org/wiki/File:Tsinghua_University_Logo.svg | Public domain | benchmark:iworld-bench, benchmark:worldarena, benchmark:worldreasonbench, model:astra, model:causal-forcing, model:ctrl-world, model:h-rdt, model:rdt-1b, model:sama-14b, model:vid2world, model:xvla |
 | `ucas.png` | University of Chinese Academy of Sciences | Official university brand mark (www.ucas.ac.cn), CAS seal cropped and restored to UCAS navy #003087 | Organization brand mark | model:consistent4d, model:scope |
 | `ucla.svg` | UCLA | Original simple circular-seal rendition of the UCLA wordmark | Public domain (simple seal rendition) | benchmark:worldbench |
-| `ucsd.svg` | UC San Diego | https://commons.wikimedia.org/wiki/File:Seal_of_the_University_of_California,_San_Diego.svg | Public domain | benchmark:maniskill, benchmark:maniskill2, benchmark:videoscience-bench, model:pandora, model:tdmpc |
+| `ucsd.svg` | UC San Diego | https://commons.wikimedia.org/wiki/File:Seal_of_the_University_of_California,_San_Diego.svg | Public domain | benchmark:maniskill, benchmark:maniskill2, benchmark:videoscience-bench, model:pandora |
 | `umass.svg` | UMass Amherst | https://commons.wikimedia.org/wiki/File:UMass_Amherst_athletics_logo.svg | Public domain (simple geometry) | model:tesseract |
 | `umich.svg` | University of Michigan | https://commons.wikimedia.org/wiki/File:University_of_Michigan_logo.svg | Public domain (simple geometry) | benchmark:robomme, model:hexplane, model:mme-vla |
 | `unige.svg` | University of Geneva | https://commons.wikimedia.org/wiki/File:Uni_GE_logo.svg | Public domain | model:diamond, model:iris |

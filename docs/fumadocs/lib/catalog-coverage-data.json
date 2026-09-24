@@ -1,6 +1,6 @@
 {
-  "modelsTotal": 271,
-  "modelsListed": 261,
+  "modelsTotal": 267,
+  "modelsListed": 257,
   "benchmarksTotal": 75,
   "modelFamilies": [
     {
@@ -791,7 +791,7 @@
         {
           "id": "hunyuanworld-voyager",
           "name": "HunyuanWorld-Voyager",
-          "status": "blocked",
+          "status": "integrated",
           "aliases": [
             "hunyuanworld-voyager"
           ]
@@ -1629,7 +1629,7 @@
       "id": "vla_va_wam",
       "label": "VLA / VA / WAM",
       "blurb": "Embodied policies, world-action models, and robot control stacks.",
-      "count": 58,
+      "count": 54,
       "entries": [
         {
           "id": "a1",
@@ -1744,14 +1744,6 @@
           ]
         },
         {
-          "id": "gaussian-actor",
-          "name": "Gaussian Actor",
-          "status": "runtime_ported",
-          "aliases": [
-            "gaussian-actor"
-          ]
-        },
-        {
           "id": "giga-brain-0",
           "name": "GigaBrain-0",
           "status": "integrated",
@@ -1802,7 +1794,7 @@
         {
           "id": "last-r1",
           "name": "LaST-R 1",
-          "status": "runtime_ported",
+          "status": "planned",
           "aliases": [
             "last-r1"
           ]
@@ -1877,14 +1869,6 @@
           "status": "in_tree_import_verification_in_progress",
           "aliases": [
             "molmobot"
-          ]
-        },
-        {
-          "id": "multi-task-dit",
-          "name": "Multi-task DiT Policy",
-          "status": "runtime_ported",
-          "aliases": [
-            "multi-task-dit"
           ]
         },
         {
@@ -2032,14 +2016,6 @@
           ]
         },
         {
-          "id": "tdmpc",
-          "name": "TD-MPC",
-          "status": "runtime_ported",
-          "aliases": [
-            "tdmpc"
-          ]
-        },
-        {
           "id": "tinyvla",
           "name": "TinyVLA",
           "status": "integrated",
@@ -2053,14 +2029,6 @@
           "status": "in_tree_vendored_import_verified",
           "aliases": [
             "vlanext"
-          ]
-        },
-        {
-          "id": "vqbet",
-          "name": "VQ-BeT",
-          "status": "runtime_ported",
-          "aliases": [
-            "vqbet"
           ]
         },
         {

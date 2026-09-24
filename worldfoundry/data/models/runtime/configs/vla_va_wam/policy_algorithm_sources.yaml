@@ -26,24 +26,6 @@ algorithms:
     local_dir: ${WORLDFOUNDRY_MODEL_SOURCE_DIR}/diffusion_policy
     revision: 5ba07ac6661db573af695b419a7947ecb704690f
   worldfoundry_model_id: diffusion-policy
-- id: tdmpc
-  lerobot_policy_dir: tdmpc
-  name: TD-MPC
-  source_basis: official_repo
-  official_repo:
-    url: https://github.com/nicklashansen/tdmpc
-    local_dir: ${WORLDFOUNDRY_MODEL_SOURCE_DIR}/tdmpc
-    revision: f4d85eca7419039b71bab2234ffc8aca378dd313
-  worldfoundry_model_id: tdmpc
-- id: vqbet
-  lerobot_policy_dir: vqbet
-  name: VQ-BeT
-  source_basis: official_repo
-  official_repo:
-    url: https://github.com/jayLEE0301/vq_bet_official
-    local_dir: ${WORLDFOUNDRY_MODEL_SOURCE_DIR}/vq_bet_official
-    revision: 09d4851288ca5deaaa1ab367a208e520f8ee9a84
-  worldfoundry_model_id: vqbet
 - id: pi0
   lerobot_policy_dir: pi0
   name: pi0
@@ -117,19 +99,3 @@ algorithms:
     local_dir: ${WORLDFOUNDRY_MODEL_SOURCE_DIR}/molmoact2
     revision: 40ac992dd4b5e4f31a37b3aa26cfbb5c9fb2cf05
   worldfoundry_model_id: molmoact2
-- id: multi-task-dit
-  lerobot_policy_dir: multi_task_dit
-  name: Multi-task DiT Policy
-  source_basis: lerobot_policy_reference
-  official_repo:
-    url: https://github.com/huggingface/lerobot
-    local_dir: ${WORLDFOUNDRY_MODEL_SOURCE_DIR}/lerobot
-  worldfoundry_model_id: multi-task-dit
-- id: gaussian-actor
-  lerobot_policy_dir: gaussian_actor
-  name: Gaussian Actor
-  source_basis: lerobot_policy_reference
-  official_repo:
-    url: https://github.com/huggingface/lerobot
-    local_dir: ${WORLDFOUNDRY_MODEL_SOURCE_DIR}/lerobot
-  worldfoundry_model_id: gaussian-actor

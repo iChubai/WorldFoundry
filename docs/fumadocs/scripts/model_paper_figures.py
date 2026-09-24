@@ -1248,12 +1248,6 @@ CAPTIONS: dict[str, dict[str, tuple[str, str]]] = {
             "论文方法总览：T2V-Turbo 用一致性蒸馏做少步视频生成。",
         ),
     },
-    "tdmpc": {
-        "overview": (
-            "Method overview: TD-MPC encodes an observation, plans latent trajectories, then executes an action and reads the reward back.",
-            "论文方法总览：TD-MPC 编码观测、在潜空间规划轨迹，再执行动作并读回奖励。",
-        ),
-    },
     "tesseract": {
         "overview": (
             "Method overview: Architecture and Training Overview of TesserAct.",
@@ -1374,12 +1368,6 @@ CAPTIONS: dict[str, dict[str, tuple[str, str]]] = {
         "overview": (
             "Method overview: Long sequences with revisitations. We compare our VMem against a baseline without memory that relies solely on the last K K frames for context. Each sequence: input images (left), then generated images at selected.",
             "论文方法总览：VMem 的方法架构。",
-        ),
-    },
-    "vqbet": {
-        "overview": (
-            "Method overview: Overview of VQ-BeT, broken down into the residual VQ encoder-decoder training phase and the VQ-BeT training phase. The same architecture works for both conditional and unconditional cases with an optional goal input..",
-            "论文方法总览：VQ-BeT 的视频生成架构。",
         ),
     },
     "wan2.1": {

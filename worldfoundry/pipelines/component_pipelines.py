@@ -310,12 +310,6 @@ FastWAMPipeline = _official_policy_pipeline(
     doc="WorldFoundry WAM policy pipeline for FastWAM.",
     generation_type="world_action_model",
 )
-GaussianActorPipeline = _official_policy_pipeline(
-    "GaussianActorPipeline",
-    model_id="gaussian-actor",
-    doc="WorldFoundry action-policy pipeline for Gaussian Actor.",
-    generation_type="actor_policy",
-)
 LingBotVLAPipeline = _independent_action_pipeline(
     "LingBotVLAPipeline",
     model_id="lingbot-vla",
@@ -332,12 +326,6 @@ LastR1Pipeline = _official_policy_pipeline(
     "LastR1Pipeline",
     model_id="last-r1",
     doc="WorldFoundry policy-rollout pipeline for LaST-R1.",
-)
-MultiTaskDiTPipeline = _official_policy_pipeline(
-    "MultiTaskDiTPipeline",
-    model_id="multi-task-dit",
-    doc="WorldFoundry action-policy pipeline for Multi-task DiT.",
-    generation_type="diffusion_transformer_policy",
 )
 MMEVLAPipeline = _independent_action_pipeline(
     "MMEVLAPipeline",
@@ -376,18 +364,6 @@ SpiritV15Pipeline = _official_policy_pipeline(
     "SpiritV15Pipeline",
     model_id="spirit-v1.5",
     doc="WorldFoundry VLA policy pipeline for Spirit-VLA v1.5.",
-)
-TDMPCPipeline = _official_policy_pipeline(
-    "TDMPCPipeline",
-    model_id="tdmpc",
-    doc="WorldFoundry MPC policy pipeline for TD-MPC.",
-    generation_type="model_predictive_control",
-)
-VQBeTPipeline = _official_policy_pipeline(
-    "VQBeTPipeline",
-    model_id="vqbet",
-    doc="WorldFoundry behavior-transformer policy pipeline for VQ-BeT.",
-    generation_type="behavior_generation",
 )
 VLANeXtPipeline = _independent_action_pipeline(
     "VLANeXtPipeline",

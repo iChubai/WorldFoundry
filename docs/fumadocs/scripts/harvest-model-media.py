@@ -560,9 +560,6 @@ CURATED_FIGURES: dict[str, dict[str, str]] = {
         "teaser": "https://arxiv.org/html/2405.18750/x1.png",
         "overview": "https://arxiv.org/html/2405.18750/x2.png",
     },
-    "tdmpc": {
-        "overview": "https://arxiv.org/html/2203.04955v2/overview.png",
-    },
     "tesseract": {
         "overview": "https://arxiv.org/html/2504.20995v1/arch-new.png",
     },
@@ -615,9 +612,6 @@ CURATED_FIGURES: dict[str, dict[str, str]] = {
     "vmem": {
         "teaser": "https://arxiv.org/html/2506.18903v3/vmem_method.png",
         "overview": "https://arxiv.org/html/2506.18903v3/ood_demo.png",
-    },
-    "vqbet": {
-        "overview": "https://arxiv.org/html/2403.03181v2/figure_2.png",
     },
     "wan2.1": {
         "teaser": "https://raw.githubusercontent.com/Wan-Video/Wan2.1/main/assets/t2v_res.jpg",

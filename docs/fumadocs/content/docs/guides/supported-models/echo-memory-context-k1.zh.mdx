@@ -36,8 +36,13 @@ Echo memory-context K1 槽位，不是 Infinity 长视频卡。
 | 上下文帧 | **1** |
 | 采样步数 | **50** |
 | Sample shift | **5.0** |
+| 相机轨迹 | `z*80`（静止） |
+| 相机每帧平移步长 | **0.00125**（`w*80` 每块沿 +Y 移动 0.1） |
+| 相机每帧旋转步长 | **0.5625°**（`left*80` 每块转动 45°） |
 | 微调 | `Echo-Team/Echo-Memory`（`cc-by-4.0`） |
 | 主干 | `Wan-AI/Wan2.1-T2V-1.3B`（`apache-2.0`） |
+
+要请求官方示例尺度的前进动作，请传入 `camera_trajectory="w*80"`；要转动 45°，请传入 `"left*80"`。仅在提示词中描述相机运动不会替换默认的静止动作。可用 `camera_translation_step` 和 `camera_rotation_step_degrees` 覆盖每帧幅度。
 
 ## 在 WorldFoundry 中运行
 

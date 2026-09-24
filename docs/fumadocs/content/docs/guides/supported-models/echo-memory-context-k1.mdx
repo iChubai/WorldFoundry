@@ -36,8 +36,13 @@ Required: `prompt` and `image`; optional: `video`; `actions`: camera_trajectory;
 | Context frames | **1** |
 | Sample steps | **50** |
 | Sample shift | **5.0** |
+| Camera trajectory | `z*80` (stationary) |
+| Camera translation step | **0.00125** per frame (`w*80` moves +Y 0.1 per chunk) |
+| Camera rotation step | **0.5625°** per frame (`left*80` turns 45° per chunk) |
 | Finetune | `Echo-Team/Echo-Memory` (`cc-by-4.0`) |
 | Backbone | `Wan-AI/Wan2.1-T2V-1.3B` (`apache-2.0`) |
+
+Pass `camera_trajectory="w*80"` to request the published forward action scale, or `"left*80"` for a 45° turn. A camera move mentioned only in the prompt does not replace the default stationary action. `camera_translation_step` and `camera_rotation_step_degrees` can override the per-frame distances.
 
 ## Run in WorldFoundry
 

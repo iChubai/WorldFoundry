@@ -15,8 +15,8 @@ x-echo-common: &echo_common
   base_seed: 42
   negative_prompt: "oversaturated colors, overexposed, static, blurry details"
   camera_trajectory: "z*80"
-  camera_translation_step: 0.08
-  camera_rotation_step_degrees: 3.0
+  camera_translation_step: 0.00125
+  camera_rotation_step_degrees: 0.5625
   offload_model: true
   t5_cpu: false
   t5_fsdp: false

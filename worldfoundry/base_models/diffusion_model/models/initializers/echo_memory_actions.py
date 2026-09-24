@@ -137,16 +137,19 @@ def echo_camera_trajectory_actions(
     *,
     frame_count: int,
     temporal_stride: int = 4,
-    translation_step: float = 0.08,
-    rotation_step_degrees: float = 3.0,
+    translation_step: float = 0.00125,
+    rotation_step_degrees: float = 0.5625,
 ) -> np.ndarray:
     """Return Echo RT12 actions shaped ``[T_latent, 12]``.
 
-    Compact WorldFoundry controls (for example ``"left*80"``), action JSON
+    Compact WorldFoundry controls (for example ``"w*80"``), action JSON
     files, integer-keyed mappings, and explicit pixel/latent-rate RT rows are
     accepted. All poses are normalized relative to row zero. Compact controls
     are translated to Echo's published XY-plane, Z-yaw convention rather than
-    reusing the generic OpenCV camera-matrix convention.
+    reusing the generic OpenCV camera-matrix convention. The default translation
+    step gives ``w*80`` a +Y displacement of 0.1 per 81-frame chunk; the
+    default rotation step gives ``left*80`` a 45-degree turn. Both match the
+    upstream replay examples.
     """
 
     frame_count = int(frame_count)

@@ -671,10 +671,6 @@ DATA_OVERLAYS: dict[str, dict[str, Any]] = {
         "summary": "About prose records 10,030 tasks",
         "summaryZh": "简介记录 10,030 个任务",
     },
-    "libero-para": {
-        "notes": ["About prose records 43 paraphrase categories."],
-        "notesZh": ["简介记录 43 个改写类别。"],
-    },
     "maniskill2": {
         "count": 20,
         "unit": "tasks",

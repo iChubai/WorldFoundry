@@ -1,7 +1,7 @@
 """Native embodied simulator registry.
 
 Only simulators with an in-tree :class:`BaseSimulator` implementation are listed.
-Offline or normalizer-only benchmarks (e.g. BridgeData V2, LIBERO-Para) stay in the
+Offline or normalizer-only benchmarks (e.g. BridgeData V2) stay in the
 catalog but are not resolved by the closed-loop runner.
 
 Sections:

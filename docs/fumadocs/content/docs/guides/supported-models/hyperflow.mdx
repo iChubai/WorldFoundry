@@ -1,0 +1,18 @@
+---
+title: "HyperFlow for MiniMax-H3"
+description: "Eight-step MiniMax-H3 adapter with joint video/audio, first/last-frame conditioning and ordered multimodal references."
+pageSource: generated
+---
+
+**Publisher:** Video Rebirth
+text · image → video
+
+Eight-step MiniMax-H3 adapter with joint video/audio, first/last-frame conditioning and ordered multimodal references.
+
+<ModelCommandBuilder modelId="hyperflow" locale="en" />
+
+## Runtime contract
+
+Supply a complete local diffusers MiniMax-H3 snapshot, weights_path and the dedicated Python executable. The upstream loader supplies the fixed grid; num_inference_steps must be 8 and output fps must be 24.
+
+<ModelRelatedRecipes modelId="hyperflow" locale="en" />

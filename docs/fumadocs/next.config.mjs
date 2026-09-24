@@ -70,14 +70,14 @@ const config = {
         },
         async rewrites() {
           return [
-            { source: '/docs.md', destination: '/llms.mdx/docs' },
-            { source: '/docs.mdx', destination: '/llms.mdx/docs' },
-            { source: '/zh/docs.md', destination: '/llms.mdx/docs/zh' },
-            { source: '/zh/docs.mdx', destination: '/llms.mdx/docs/zh' },
-            { source: '/docs/:path*.md', destination: '/llms.mdx/docs/:path*' },
-            { source: '/docs/:path*.mdx', destination: '/llms.mdx/docs/:path*' },
-            { source: '/zh/docs/:path*.md', destination: '/llms.mdx/docs/zh/:path*' },
-            { source: '/zh/docs/:path*.mdx', destination: '/llms.mdx/docs/zh/:path*' },
+            { source: '/docs.md', destination: '/llms.mdx/docs/index.md' },
+            { source: '/docs.mdx', destination: '/llms.mdx/docs/index.md' },
+            { source: '/zh/docs.md', destination: '/llms.mdx/docs/zh/index.md' },
+            { source: '/zh/docs.mdx', destination: '/llms.mdx/docs/zh/index.md' },
+            { source: '/docs/:path*.md', destination: '/llms.mdx/docs/:path*.md' },
+            { source: '/docs/:path*.mdx', destination: '/llms.mdx/docs/:path*.md' },
+            { source: '/zh/docs/:path*.md', destination: '/llms.mdx/docs/zh/:path*.md' },
+            { source: '/zh/docs/:path*.mdx', destination: '/llms.mdx/docs/zh/:path*.md' },
           ];
         },
       }),

@@ -2,7 +2,7 @@
 title: "HY-World 2.0 Trajectory Renderer"
 description: "HY-World 2.0 Trajectory Renderer from Tencent (Hunyuan): camera-controlled-video and world-generation-stage; Runner parity pending."
 modelId: "hyworld-worldgen"
-pageSource: generated
+pageSource: authored
 ---
 
 HY-World 2.0 Trajectory Renderer is one stage of Tencent's world-generation chain, cataloged separately: it renders camera-controlled video from a pre-materialized HY-World scene point cloud (render_results/global_pcd.ply) along a camera JSON. It intentionally loads no model checkpoint — it is a renderer, not a generator.
@@ -17,11 +17,11 @@ Project page: [3d-models.hunyuan.tencent.com/world](https://3d-models.hunyuan.te
 
 ## What it is for
 
-Use `hyworld-worldgen` for catalog geometry inference. Choose it when the artifact is a reconstruction, not a generated video.
+Use `hyworld-worldgen` to render camera-controlled video from an existing HY-World scene point cloud. It does not generate a scene or load a model checkpoint.
 
-The unified runtime includes an in-tree torch point-splat fallback and does not require PyTorch3D. Official source is vendored at a pinned revision (license: tencent-hunyuan-community); this route is the official trajectory-render stage and does not claim full five-stage world generation. It is published by Tencent (Hunyuan).
+The adapter invokes the official trajectory-render stage from a local checkout at pinned revision `7f668e67c74338d50684e57be46a438459b6bbe1` (Tencent Hunyuan community license). The public tree does not bundle that source or implement the full five-stage world generation chain.
 
-Catalog tasks include camera-controlled-video, world-generation-stage, and point-cloud-rendering. Documented outputs include point cloud.
+Catalog tasks include camera-controlled-video, world-generation-stage, and point-cloud-rendering. This route outputs a video from an existing point cloud.
 
 ## Runtime contract
 
@@ -33,15 +33,15 @@ Family status: **Runner parity pending**.
 
 Provide an image, camera JSON, and a scene_path pointing at a pre-materialized HY-World scene. Scene materialization belongs to the separate full HY-World generation pipeline.
 
-Official source is vendored at revision 7f668e67c74338d50684e57be46a438459b6bbe1.
+Before running, install the pinned official source in the runtime directory and provide a materialized scene containing `render_results/global_pcd.ply`. Neither asset is bundled with the public repository.
 
 ## Running in WorldFoundry
 
-Launch `worldfoundry-eval run hyworld-worldgen --pipeline.task-profile camera-controlled-video` to write geometry. The command builder above switches `--pipeline.task-profile` among recorded tasks and still emits `worldfoundry-eval run`.
+Launch `worldfoundry-eval run hyworld-worldgen --pipeline.task-profile camera-controlled-video` after staging the source and scene to write video.
 
 It runs in the unified environment `worldfoundry-unified-cu128` (Python 3.11, CUDA 12.8).
 
-No public checkpoint id is recorded on this card; follow the usage notes for staging. Stage assets with `bash scripts/inference/prepare_model_infer.sh hyworld-worldgen`.
+This checkpoint-free renderer requires the official source checkout and a pre-materialized scene as described above.
 
 Status: **Runner parity pending**.
 

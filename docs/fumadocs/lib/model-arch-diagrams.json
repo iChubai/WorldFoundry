@@ -1868,15 +1868,6 @@
       "caption": "Method overview: an action-projection module conditions a trainable U-Net or DiT on a frozen VAE latent of the first frame.",
       "captionZh": "论文方法总览：动作投影模块在冻结 VAE 的首帧潜变量上条件化可训练的 U-Net 或 DiT。"
     },
-    "eo1": {
-      "modelId": "eo1",
-      "paperSrc": "/models/eo1/paper.png",
-      "src": "/models/eo1/overview.png",
-      "alt": "Method overview: EO -1 Model Architecture . EO -1 model is a Vision-Language-Action (VLA) model that adopts a single unified decoder-only transformer, equipping with discrete language-modeling head for multimodal embodied reasoning.",
-      "altZh": "论文方法总览：EO-1 的机器人操作架构。",
-      "caption": "Method overview: EO -1 Model Architecture . EO -1 model is a Vision-Language-Action (VLA) model that adopts a single unified decoder-only transformer, equipping with discrete language-modeling head for multimodal embodied reasoning.",
-      "captionZh": "论文方法总览：EO-1 的机器人操作架构。"
-    },
     "eventvla": {
       "modelId": "eventvla",
       "paperSrc": "/models/eventvla/paper.png",
@@ -1920,9 +1911,6 @@
       "altZh": "论文方法总览：Genie Envisioner 的方法架构。",
       "caption": "Method overview: Overview.",
       "captionZh": "论文方法总览：Genie Envisioner 的方法架构。"
-    },
-    "geometry-prior": {
-      "modelId": "geometry-prior"
     },
     "giga-world-0": {
       "modelId": "giga-world-0",
@@ -1979,19 +1967,6 @@
       "altZh": "论文方法总览：HunyuanWorld 1.0 的视频生成架构。",
       "caption": "Method overview: An overview of HunyuanWorld 1.0 architecture for 3D world generation. Given a conditioned scene image or textual description, HunyuanWorld 1.0 generates layer-wise 3D worlds in mesh through a staged generative.",
       "captionZh": "论文方法总览：HunyuanWorld 1.0 的视频生成架构。"
-    },
-    "hy-embodied": {
-      "modelId": "hy-embodied",
-      "paperSrc": "/models/hy-embodied/paper.png",
-      "teaserSrc": "/models/hy-embodied/teaser.png",
-      "teaserAlt": "Official paper teaser: Performance Comparison. Hy-Embodied-VLM-1.0 consistently outperforms strong VLM baselines of comparable scale across the three capability levels of our embodied intelligence taxonomy, achieving the best overall.",
-      "teaserAltZh": "论文官方 Teaser：HY-Embodied 的方法论文配图。",
-      "teaserCaption": "Official paper teaser: Performance Comparison. Hy-Embodied-VLM-1.0 consistently outperforms strong VLM baselines of comparable scale across the three capability levels of our embodied intelligence taxonomy, achieving the best overall.",
-      "teaserCaptionZh": "论文官方 Teaser：HY-Embodied 的方法论文配图。",
-      "alt": "HY-Embodied",
-      "altZh": "HY-Embodied",
-      "caption": "HY-Embodied",
-      "captionZh": "HY-Embodied"
     },
     "infinite-vggt": {
       "modelId": "infinite-vggt",
@@ -2064,20 +2039,6 @@
       "altZh": "LeWorldModel",
       "caption": "LeWorldModel",
       "captionZh": "LeWorldModel"
-    },
-    "libero-para": {
-      "modelId": "libero-para",
-      "paperSrc": "/models/libero-para/paper.png",
-      "teaserSrc": "/models/libero-para/teaser.webp",
-      "teaserAlt": "Official paper teaser: LIBERO-Para tests whether VLA policies stay robust when instructions are paraphrased.",
-      "teaserAltZh": "论文官方 Teaser：LIBERO-Para 检验 VLA 策略在指令被改写后是否仍然稳健。",
-      "teaserCaption": "Official paper teaser: LIBERO-Para tests whether VLA policies stay robust when instructions are paraphrased.",
-      "teaserCaptionZh": "论文官方 Teaser：LIBERO-Para 检验 VLA 策略在指令被改写后是否仍然稳健。",
-      "src": "/models/libero-para/overview.png",
-      "alt": "Method overview: LIBERO-Para’s architecture from the paper.",
-      "altZh": "论文方法总览：LIBERO-Para 论文中的方法架构。",
-      "caption": "Method overview: LIBERO-Para’s architecture from the paper.",
-      "captionZh": "论文方法总览：LIBERO-Para 论文中的方法架构。"
     },
     "lingbot-va": {
       "modelId": "lingbot-va",
@@ -2212,9 +2173,6 @@
       "altZh": "Training Agents Inside of Scalable World Models",
       "caption": "Training Agents Inside of Scalable World Models",
       "captionZh": "Training Agents Inside of Scalable World Models"
-    },
-    "openpie-0.6": {
-      "modelId": "openpie-0.6"
     },
     "pi0": {
       "modelId": "pi0",
@@ -2458,19 +2416,6 @@
       "altZh": "论文方法总览：VQ-BeT 的视频生成架构。",
       "caption": "Method overview: Overview of VQ-BeT, broken down into the residual VQ encoder-decoder training phase and the VQ-BeT training phase. The same architecture works for both conditional and unconditional cases with an optional goal input..",
       "captionZh": "论文方法总览：VQ-BeT 的视频生成架构。"
-    },
-    "wall-oss": {
-      "modelId": "wall-oss",
-      "teaserSrc": "/models/wall-oss/teaser.webp",
-      "teaserAlt": "Official paper teaser: Conceptual illustration of modality hierarchy and WALL-WM’s general performance. Left: a stylized alignment landscape over semantic abstraction and spatial-temporal precision. Text provides coarse semantic alignment,.",
-      "teaserAltZh": "论文官方 Teaser：Wall-OSS 的方法论文配图。",
-      "teaserCaption": "Official paper teaser: Conceptual illustration of modality hierarchy and WALL-WM’s general performance. Left: a stylized alignment landscape over semantic abstraction and spatial-temporal precision. Text provides coarse semantic alignment,.",
-      "teaserCaptionZh": "论文官方 Teaser：Wall-OSS 的方法论文配图。",
-      "src": "/models/wall-oss/overview.png",
-      "alt": "Method overview: Overall framework of WALL-WM . WALL-WM implements event-centric world action modeling as a layer-coupled video-action denoiser: given the current multi-view observation and a next-event instruction, it jointly.",
-      "altZh": "论文方法总览：Wall-OSS 的视频生成架构。",
-      "caption": "Method overview: Overall framework of WALL-WM . WALL-WM implements event-centric world action modeling as a layer-coupled video-action denoiser: given the current multi-view observation and a next-event instruction, it jointly.",
-      "captionZh": "论文方法总览：Wall-OSS 的视频生成架构。"
     },
     "wilddet3d": {
       "modelId": "wilddet3d",

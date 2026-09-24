@@ -6,7 +6,7 @@ description: After cloning WorldFoundry, configure checkpoints, Docker-backed si
 WorldFoundry ships **result normalizers, CLI entry points, and simulator interfaces** under `worldfoundry.evaluation.tasks.embodied`. **Checkpoints, simulator assets, Docker images, and rollout outputs are not in git.** You point WorldFoundry at them with environment variables or CLI flags on your machine.
 
 - **Native closed-loop simulators** (`ai2thor`, `behavior1k`, `calvin`, `kinetix`, `libero`, `libero-mem`, `libero-plus`, `libero-pro`, `maniskill2`, `maniskill`, `mikasa`, `molmospaces`, `rlbench`, `robocasa`, `robocerebra`, `robomme`, `robotwin`, `simpler-env`, `vlabench`) — Official result import, in-tree simulator API, Docker-backed rollout hooks
-- **Result import only** (`bridgedata-v2`, `libero-para`, `metaworld`) — Official-shaped result normalization
+- **Result import only** (`bridgedata-v2`, `metaworld`) — Official-shaped result normalization
 
 `integration_status: integrated` means the surface exists. It does **not** mean leaderboard evidence exists. Scorecards stay `official_benchmark_verified=false` until you complete the official protocol.
 
@@ -125,7 +125,6 @@ Each benchmark uses separate env vars for **your** checkout, checkpoint, and res
     { name: <><code>libero</code></>, description: <><code>WORLDFOUNDRY_LIBERO_SUITE</code></>, reads: [{ label: "Policy checkpoint", value: <><code>WORLDFOUNDRY_LIBERO_POLICY_CHECKPOINT</code></> }, { label: "Official results", value: <><code>WORLDFOUNDRY_LIBERO_RESULTS_PATH</code></> }] },
     { name: <><code>robotwin</code></>, description: <><code>WORLDFOUNDRY_ROBOTWIN_TASK_CONFIG</code></>, reads: [{ label: "Policy checkpoint", value: <><code>WORLDFOUNDRY_ROBOTWIN_POLICY_CHECKPOINT</code></> }, { label: "Official results", value: <><code>WORLDFOUNDRY_ROBOTWIN_RESULTS_PATH</code></> }] },
     { name: <><code>robomme</code></>, description: <><code>WORLDFOUNDRY_ROBOMME_SUITE</code></>, reads: [{ label: "Policy checkpoint", value: <><code>WORLDFOUNDRY_ROBOMME_POLICY_CHECKPOINT</code></> }, { label: "Official results", value: <><code>WORLDFOUNDRY_ROBOMME_RESULTS_PATH</code></> }] },
-    { name: <><code>libero-para</code></>, description: <><code>WORLDFOUNDRY_LIBERO_PARA_SPLIT</code></>, reads: [{ label: "Policy checkpoint", value: <><code>WORLDFOUNDRY_LIBERO_PARA_POLICY_CHECKPOINT</code></> }, { label: "Official results", value: <><code>WORLDFOUNDRY_LIBERO_PARA_RESULTS_PATH</code></> }] },
     { name: <><code>calvin</code></>, description: <><code>WORLDFOUNDRY_CALVIN_SPLIT</code></>, reads: [{ label: "Policy checkpoint", value: <><code>WORLDFOUNDRY_CALVIN_POLICY_CHECKPOINT</code></> }, { label: "Official results", value: <><code>WORLDFOUNDRY_CALVIN_RESULTS_PATH</code></> }] },
     { name: <><code>robocasa</code></>, description: <><code>WORLDFOUNDRY_ROBOCASA_SUITE</code></>, reads: [{ label: "Policy checkpoint", value: <><code>WORLDFOUNDRY_ROBOCASA_POLICY_CHECKPOINT</code></> }, { label: "Official results", value: <><code>WORLDFOUNDRY_ROBOCASA_RESULTS_PATH</code></> }] },
     { name: <><code>maniskill2</code></>, description: <><code>WORLDFOUNDRY_MANISKILL2_SUITE</code></>, reads: [{ label: "Policy checkpoint", value: <><code>WORLDFOUNDRY_MANISKILL2_POLICY_CHECKPOINT</code></> }, { label: "Official results", value: <><code>WORLDFOUNDRY_MANISKILL2_RESULTS_PATH</code></> }] },

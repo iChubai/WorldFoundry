@@ -8,7 +8,7 @@ WorldFoundry 在仓库内提供具身 benchmark 的 **结果归一化、CLI 和 
 两类测评 surface：
 
 - **原生闭环 simulator** (`ai2thor`, `behavior1k`, `calvin`, `kinetix`, `libero`, `libero-mem`, `libero-plus`, `libero-pro`, `maniskill2`, `maniskill`, `mikasa`, `molmospaces`, `rlbench`, `robocasa`, `robocerebra`, `robomme`, `robotwin`, `simpler-env`, `vlabench`) — official result import、in-tree simulator API、Docker-backed rollout hooks
-- **仅结果导入** (`bridgedata-v2`, `libero-para`, `metaworld`) — 归一化官方格式的结果文件
+- **仅结果导入** (`bridgedata-v2`, `metaworld`) — 归一化官方格式的结果文件
 
 `integration_status: integrated` 只表示接口已接入，**不等于** leaderboard 已验证。未跑完官方 protocol 前，scorecard 保持 `official_benchmark_verified=false`。
 
@@ -129,7 +129,6 @@ source tmp/worldfoundry_unified_env.sh
     { name: <><code>libero</code></>, description: <><code>WORLDFOUNDRY_LIBERO_SUITE</code></>, reads: [{ label: "Policy checkpoint", value: <><code>WORLDFOUNDRY_LIBERO_POLICY_CHECKPOINT</code></> }, { label: "Official results", value: <><code>WORLDFOUNDRY_LIBERO_RESULTS_PATH</code></> }] },
     { name: <><code>robotwin</code></>, description: <><code>WORLDFOUNDRY_ROBOTWIN_TASK_CONFIG</code></>, reads: [{ label: "Policy checkpoint", value: <><code>WORLDFOUNDRY_ROBOTWIN_POLICY_CHECKPOINT</code></> }, { label: "Official results", value: <><code>WORLDFOUNDRY_ROBOTWIN_RESULTS_PATH</code></> }] },
     { name: <><code>robomme</code></>, description: <><code>WORLDFOUNDRY_ROBOMME_SUITE</code></>, reads: [{ label: "Policy checkpoint", value: <><code>WORLDFOUNDRY_ROBOMME_POLICY_CHECKPOINT</code></> }, { label: "Official results", value: <><code>WORLDFOUNDRY_ROBOMME_RESULTS_PATH</code></> }] },
-    { name: <><code>libero-para</code></>, description: <><code>WORLDFOUNDRY_LIBERO_PARA_SPLIT</code></>, reads: [{ label: "Policy checkpoint", value: <><code>WORLDFOUNDRY_LIBERO_PARA_POLICY_CHECKPOINT</code></> }, { label: "Official results", value: <><code>WORLDFOUNDRY_LIBERO_PARA_RESULTS_PATH</code></> }] },
     { name: <><code>calvin</code></>, description: <><code>WORLDFOUNDRY_CALVIN_SPLIT</code></>, reads: [{ label: "Policy checkpoint", value: <><code>WORLDFOUNDRY_CALVIN_POLICY_CHECKPOINT</code></> }, { label: "Official results", value: <><code>WORLDFOUNDRY_CALVIN_RESULTS_PATH</code></> }] },
     { name: <><code>robocasa</code></>, description: <><code>WORLDFOUNDRY_ROBOCASA_SUITE</code></>, reads: [{ label: "Policy checkpoint", value: <><code>WORLDFOUNDRY_ROBOCASA_POLICY_CHECKPOINT</code></> }, { label: "Official results", value: <><code>WORLDFOUNDRY_ROBOCASA_RESULTS_PATH</code></> }] },
     { name: <><code>maniskill2</code></>, description: <><code>WORLDFOUNDRY_MANISKILL2_SUITE</code></>, reads: [{ label: "Policy checkpoint", value: <><code>WORLDFOUNDRY_MANISKILL2_POLICY_CHECKPOINT</code></> }, { label: "Official results", value: <><code>WORLDFOUNDRY_MANISKILL2_RESULTS_PATH</code></> }] },

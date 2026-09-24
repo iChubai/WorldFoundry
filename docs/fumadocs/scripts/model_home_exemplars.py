@@ -470,36 +470,6 @@ EXEMPLAR_PROSE: dict[str, dict[str, Any]] = {
             ],
         },
     },
-    "libero-para": {
-        "description": {
-            "en": "Paraphrase-robustness eval around LIBERO (HAI-Lab dataset, MIT) — not a new policy.",
-            "zh": "围绕 LIBERO 的复述鲁棒性评测（HAI-Lab 数据集，MIT）——不是新策略。",
-        },
-        "use_cases": {
-            "en": [
-                "Start on `libero-para` to measure a LIBERO-capable VLA when instructions are reworded. Launch `worldfoundry-eval run libero-para`. Pair it with a staged policy — the catalog records `lerobot/xvla-libero` as a weight pointer.",
-            ],
-            "zh": [
-                "从 `libero-para` 开始，衡量 LIBERO 能力的 VLA 在指令被改写时的表现。启动 `worldfoundry-eval run libero-para`。与已就位策略配对——catalog 记录了 `lerobot/xvla-libero` 作为权重指针。",
-            ],
-        },
-        "contract_extra": {
-            "en": [
-                "Artifact: `libero-para_action_trace.json`. Missing checkpoints surface as runtime `missing_assets`, not a catalog blocker.",
-            ],
-            "zh": [
-                "产物：`libero-para_action_trace.json`。缺失 checkpoint 以运行时 `missing_assets` 报告，不是 catalog 阻塞。",
-            ],
-        },
-        "run_extra": {
-            "en": [
-                "License MIT. Paper [arXiv 2603.28301](https://arxiv.org/abs/2603.28301). Status: Planned as an eval/dataset line, not a new architecture.",
-            ],
-            "zh": [
-                "License MIT。论文 [arXiv 2603.28301](https://arxiv.org/abs/2603.28301)。状态：评测/数据集线为计划中，不是新架构。",
-            ],
-        },
-    },
     "wan2.1": {
         "description": {
             "en": "Alibaba Tongyi Lab open video family. The 1.3B T2V 832×480 / 81-frame route is Verified.",

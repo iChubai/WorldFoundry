@@ -1,0 +1,21 @@
+---
+title: "WorldCrafter Base"
+description: "Reuses shared Helios transformer, scheduler, latent preparation and VGGT layers."
+pageSource: generated
+---
+
+text · image → video
+
+WorldCrafter Base is a world model from Tencentarc. The catalog records it for text-to-video, image-to-video, camera-controlled-video, and world-model.
+
+WorldFoundry binds it to the worldfoundry.pipelines.worldcrafter.pipeline_worldcrafter:WorldCrafterPipeline pipeline via worldfoundry.pipeline.
+
+It runs in the shared unified environment worldfoundry-unified-cu128 (Python 3.11, CUDA 12.8).
+
+Weights are pulled from the Hugging Face repository TencentARC/WorldCrafter-Base, pinned to revision d6b4731d4, plus 1 more recorded repository.
+
+A WorldFoundry runner-parity artifact is recorded for this route.
+
+<ModelCommandBuilder modelId="worldcrafter-base" locale="en" />
+
+<ModelRelatedRecipes modelId="worldcrafter-base" locale="en" />

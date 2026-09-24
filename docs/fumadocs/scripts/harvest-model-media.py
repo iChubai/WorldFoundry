@@ -187,9 +187,6 @@ CURATED_FIGURES: dict[str, dict[str, str]] = {
     "echo-memory-context-k1": {
         "teaser": "https://arxiv.org/html/2606.09803v1/figure_1_abs_framework.png",
     },
-    "eo1": {
-        "overview": "https://arxiv.org/html/2508.21112v5/pipeline.png",
-    },
     "eventvla": {
         "overview": "https://arxiv.org/html/2606.20092v2/Overview.png",
     },
@@ -272,9 +269,6 @@ CURATED_FIGURES: dict[str, dict[str, str]] = {
     "hunyuanworld-voyager": {
         "teaser": "https://arxiv.org/html/2405.07719v5/lb.png",
     },
-    "hy-embodied": {
-        "teaser": "https://arxiv.org/html/2607.12894v1/1-teaser.png",
-    },
     "hy-embodied-vla": {
         "teaser": "https://arxiv.org/html/2606.14409v2/teaser_1.png",
         "overview": "https://arxiv.org/html/2606.14409v2/pipeline.png",
@@ -327,9 +321,6 @@ CURATED_FIGURES: dict[str, dict[str, str]] = {
     },
     "leworldmodel": {
         "teaser": "https://arxiv.org/html/2603.19312v3/lewm.png",
-    },
-    "libero-para": {
-        "teaser": "https://raw.githubusercontent.com/cau-hai-lab/LIBERO-Para/master/images/LIBERO-Para.png",
     },
     "lingbot-map": {
         "overview": "https://arxiv.org/html/2604.14141v2/Network.png",
@@ -627,10 +618,6 @@ CURATED_FIGURES: dict[str, dict[str, str]] = {
     },
     "vqbet": {
         "overview": "https://arxiv.org/html/2403.03181v2/figure_2.png",
-    },
-    "wall-oss": {
-        "teaser": "https://arxiv.org/html/2606.01955v1/teaser.png",
-        "overview": "https://arxiv.org/html/2606.01955v1/pipeline.png",
     },
     "wan2.1": {
         "teaser": "https://raw.githubusercontent.com/Wan-Video/Wan2.1/main/assets/t2v_res.jpg",

@@ -147,6 +147,11 @@ CATEGORY_META = {
         "label_zh": "视频",
         "description": "Video, image, and audio-visual generation or editing runtimes.",
     },
+    "multimodal": {
+        "label": "Multimodal",
+        "label_zh": "多模态",
+        "description": "Interleaved text and image generation or understanding runtimes.",
+    },
     "world_models": {
         "label": "World models",
         "label_zh": "世界模型",
@@ -941,6 +946,7 @@ def recipe_notes(item: dict[str, Any], profile: dict[str, Any] | None) -> list[s
 
 DOCS_CATEGORY_NOUNS = {
     "video": ("video generation model", "视频生成模型"),
+    "multimodal": ("multimodal text and image model", "图文多模态模型"),
     "world_models": ("world model", "世界模型"),
     "three_d_four_d": ("3D/4D reconstruction and generation model", "3D/4D 重建与生成模型"),
     "vla_va_wam": ("embodied vision-language-action model", "具身智能（视觉-语言-动作）模型"),

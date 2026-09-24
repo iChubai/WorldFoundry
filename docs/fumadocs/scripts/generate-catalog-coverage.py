@@ -22,6 +22,10 @@ FAMILY_META = {
         "Video",
         "Text-, image-, and video-conditioned generation, editing, and audio-video systems.",
     ),
+    "multimodal": (
+        "Multimodal",
+        "Image-text understanding and generation systems without a video inference route.",
+    ),
     "world_models": (
         "World models",
         "Interactive worlds, camera/action conditioning, navigation, and simulator-shaped systems.",

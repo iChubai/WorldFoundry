@@ -1460,31 +1460,6 @@ LIBEROContract = ExternalBenchmarkContract(
     ),
 )
 
-LIBEROParaContract = ExternalBenchmarkContract(
-    benchmark_id="libero-para",
-    display_name="LIBERO-Para",
-    input_keys=(
-        "dataset_root",
-        "paraphrase_manifest",
-        "episode_manifest",
-        "policy_results_path",
-        "official_results_path",
-    ),
-    output_keys=("scorecard", "raw_results", "per_sample_metrics", "rollout_logs"),
-    metric_ids=(
-        "success_rate",
-        "paraphrase_success_rate",
-        "language_generalization_success",
-        "task_success",
-        "action_accuracy",
-    ),
-    requires_upstream_runtime=True,
-    notes=(
-        "Contract covers LIBERO-Para paraphrased language-instruction manipulation evaluation for VLA policies.",
-        "WorldFoundry normalizes official-shaped result files; upstream LIBERO-Para runtime execution remains external evidence.",
-    ),
-)
-
 SimplerEnvContract = ExternalBenchmarkContract(
     benchmark_id="simpler-env",
     display_name="SimplerEnv",
@@ -1793,7 +1768,6 @@ _BUILTIN_CONTRACT_ITEMS = (
     LikePhysContract,
     LIBEROContract,
     LIBEROMemContract,
-    LIBEROParaContract,
     LIBEROPlusContract,
     LIBEROProContract,
     ManiSkillContract,

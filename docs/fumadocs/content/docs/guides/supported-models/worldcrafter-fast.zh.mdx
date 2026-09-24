@@ -1,0 +1,21 @@
+---
+title: "WorldCrafter Fast"
+description: "Reuses shared Helios transformer, scheduler, latent preparation and VGGT layers."
+pageSource: generated
+---
+
+text · image → video
+
+WorldCrafter Fast 是来自 Tencentarc 的世界模型。Catalog 将它记录为文生视频、图生视频、相机可控视频生成、世界模型任务。
+
+WorldFoundry 将它绑定到 worldfoundry.pipelines.worldcrafter.pipeline_worldcrafter:WorldCrafterPipeline pipeline（runner：worldfoundry.pipeline）。
+
+它运行在统一环境 worldfoundry-unified-cu128 中（Python 3.11，CUDA 12.8）。
+
+权重来自 Hugging Face 仓库 TencentARC/WorldCrafter-Fast，固定在 revision 51320c3eb。
+
+该路径已记录 WorldFoundry runner parity 产物。
+
+<ModelCommandBuilder modelId="worldcrafter-fast" locale="zh" />
+
+<ModelRelatedRecipes modelId="worldcrafter-fast" locale="zh" />

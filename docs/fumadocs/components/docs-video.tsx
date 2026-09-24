@@ -22,7 +22,7 @@ function hideRecipeFigure(node: HTMLElement | null) {
 }
 
 function isDemoVideoChild(node: ReactNode): boolean {
-  if (!isValidElement(node)) return false;
+  if (!isValidElement<{ src?: unknown; children?: ReactNode }>(node)) return false;
   if (node.type === ModelPageNoDemoVideo || node.type === DocsVideo) return true;
   const typeName = typeof node.type === 'string' ? node.type : undefined;
   if (typeName === 'video' || typeName === 'Video') return true;

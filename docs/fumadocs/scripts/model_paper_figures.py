@@ -370,12 +370,6 @@ CAPTIONS: dict[str, dict[str, tuple[str, str]]] = {
             "论文官方 Teaser：Echo-Memory 的相机控制论文配图。",
         ),
     },
-    "eo1": {
-        "overview": (
-            "Method overview: EO -1 Model Architecture . EO -1 model is a Vision-Language-Action (VLA) model that adopts a single unified decoder-only transformer, equipping with discrete language-modeling head for multimodal embodied reasoning.",
-            "论文方法总览：EO-1 的机器人操作架构。",
-        ),
-    },
     "eventvla": {
         "overview": (
             "Method overview: Overview of EventVLA. EventVLA tackles long-horizon, memory-requiring manipulation tasks by storing sparse, task-critical visual evidence. The figure illustrates the (a) non-Markovian challenge, (b) our proposed and.",
@@ -570,12 +564,6 @@ CAPTIONS: dict[str, dict[str, tuple[str, str]]] = {
             "论文官方 Teaser：HunyuanWorld-Voyager 的方法论文配图。",
         ),
     },
-    "hy-embodied": {
-        "teaser": (
-            "Official paper teaser: Performance Comparison. Hy-Embodied-VLM-1.0 consistently outperforms strong VLM baselines of comparable scale across the three capability levels of our embodied intelligence taxonomy, achieving the best overall.",
-            "论文官方 Teaser：HY-Embodied 的方法论文配图。",
-        ),
-    },
     "hy-embodied-vla": {
         "teaser": (
             "Official paper teaser: Overview of Hy-Embodied-0.5-VLA. An end-to-end VLA system that pairs the Hy-Embodied-0.5-MoT backbone with a flow-matching action expert under a delta-chunk action representation, pre-trained on a 10 10 K-hour.",
@@ -690,16 +678,6 @@ CAPTIONS: dict[str, dict[str, tuple[str, str]]] = {
         "teaser": (
             "Official paper teaser: LeWorldModel Training Pipeline. Given frame observations 𝒐 1 : T {{o}}_{1:T} and actions 𝒂 1 : T {{a}}_{1:T} , the encoder maps frames into low-dimensional latent representations 𝒛 1 : T {{z}}_{1:T} . The predictor.",
             "论文官方 Teaser：LeWorldModel 的方法论文配图。",
-        ),
-    },
-    "libero-para": {
-        "teaser": (
-            "Official paper teaser: LIBERO-Para tests whether VLA policies stay robust when instructions are paraphrased.",
-            "论文官方 Teaser：LIBERO-Para 检验 VLA 策略在指令被改写后是否仍然稳健。",
-        ),
-        "overview": (
-            "Method overview: LIBERO-Para’s architecture from the paper.",
-            "论文方法总览：LIBERO-Para 论文中的方法架构。",
         ),
     },
     "lingbot-map": {
@@ -1402,16 +1380,6 @@ CAPTIONS: dict[str, dict[str, tuple[str, str]]] = {
         "overview": (
             "Method overview: Overview of VQ-BeT, broken down into the residual VQ encoder-decoder training phase and the VQ-BeT training phase. The same architecture works for both conditional and unconditional cases with an optional goal input..",
             "论文方法总览：VQ-BeT 的视频生成架构。",
-        ),
-    },
-    "wall-oss": {
-        "teaser": (
-            "Official paper teaser: Conceptual illustration of modality hierarchy and WALL-WM’s general performance. Left: a stylized alignment landscape over semantic abstraction and spatial-temporal precision. Text provides coarse semantic alignment,.",
-            "论文官方 Teaser：Wall-OSS 的方法论文配图。",
-        ),
-        "overview": (
-            "Method overview: Overall framework of WALL-WM . WALL-WM implements event-centric world action modeling as a layer-coupled video-action denoiser: given the current multi-view observation and a next-event instruction, it jointly.",
-            "论文方法总览：Wall-OSS 的视频生成架构。",
         ),
     },
     "wan2.1": {

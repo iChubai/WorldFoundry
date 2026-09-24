@@ -53,10 +53,6 @@ CURATED_FIGURES: dict[str, dict[str, str]] = {
     "libero-mem": {
         "teaser": "https://arxiv.org/html/2511.11478v3/Fig-memory-in-nonMarkov.png",
     },
-    "libero-para": {
-        "teaser": "https://arxiv.org/html/2603.28301v2/Fig1.png",
-        "overview": "https://arxiv.org/html/2603.28301v2/Fig2.png",
-    },
     "libero-plus": {
         "overview": "https://arxiv.org/html/2510.13626v3/imgs/benchmark_component.png",
     },

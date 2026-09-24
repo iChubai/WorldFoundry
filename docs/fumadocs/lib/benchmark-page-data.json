@@ -1,8 +1,8 @@
 {
   "generatedFrom": "worldfoundry/data/benchmarks/catalog + tasks/external + recorded About facts",
-  "benchmarkCount": 76,
+  "benchmarkCount": 75,
   "leaderboardIngestedIds": [],
-  "leaderboardPlaceholderCount": 76,
+  "leaderboardPlaceholderCount": 75,
   "pages": {
     "ai2thor": {
       "id": "ai2thor",
@@ -824,138 +824,6 @@
         "source": "",
         "sourceZh": "",
         "officialUrl": "https://libero-mem.github.io/",
-        "entries": []
-      }
-    },
-    "libero-para": {
-      "id": "libero-para",
-      "name": "LIBERO-Para",
-      "projectPage": "https://cau-hai-lab.github.io/LIBERO-Para/",
-      "paperUrl": "https://arxiv.org/abs/2603.28301",
-      "dimensions": [
-        {
-          "id": "object_axis",
-          "name": "Object-only paraphrases",
-          "nameZh": "仅物体改写",
-          "kind": "axis",
-          "description": "Three lexical object types; 259 held-out strings. The visual scene stays the LIBERO-Goal initial state.",
-          "descriptionZh": "3 种物体词汇类型，259 条仅评测改写。视觉场景仍是 LIBERO-Goal 初始状态。"
-        },
-        {
-          "id": "action_axis",
-          "name": "Action-only paraphrases",
-          "nameZh": "仅动作改写",
-          "kind": "axis",
-          "description": "Ten action types (3 lexical, 2 structural, 5 pragmatic); 870 held-out strings.",
-          "descriptionZh": "10 种动作类型（3 词汇、2 结构、5 语用），870 条仅评测改写。"
-        },
-        {
-          "id": "compositional",
-          "name": "Compositional (object × action)",
-          "nameZh": "组合改写（物体 × 动作）",
-          "kind": "axis",
-          "description": "Thirty compositional types (3×10); 2,963 held-out strings.",
-          "descriptionZh": "30 种组合类型（3×10），2,963 条仅评测改写。"
-        },
-        {
-          "id": "libero_goal_control",
-          "name": "LIBERO-Goal control",
-          "nameZh": "LIBERO-Goal 对照",
-          "kind": "split",
-          "description": "Original 10 LIBERO-Goal instructions on the identical initial state — the only cue is language.",
-          "descriptionZh": "10 条原始 LIBERO-Goal 指令，初始状态相同——唯一线索是语言。"
-        }
-      ],
-      "data": {
-        "summary": "4,092 held-out paraphrases of 10 LIBERO-Goal instructions (43 types: 3 object-only + 10 action-only + 30 compositional). Same robosuite scene; only the instruction changes. Staged snapshot: HAI-Lab/LIBERO-Para.",
-        "summaryZh": "10 条 LIBERO-Goal 指令的 4,092 条仅评测改写（43 类：3 仅物体 + 10 仅动作 + 30 组合）。同一 robosuite 场景，只改指令。就位快照：HAI-Lab/LIBERO-Para。",
-        "sizeLabel": "4,092 paraphrases · 43 types",
-        "sizeLabelZh": "4,092 条改写 · 43 类",
-        "count": 4092,
-        "unit": "paraphrases",
-        "sources": [
-          {
-            "kind": "huggingface",
-            "id": "HAI-Lab/LIBERO-Para",
-            "license": "mit"
-          },
-          {
-            "kind": "github",
-            "id": "https://github.com/cau-hai-lab/LIBERO-Para",
-            "license": "mit"
-          }
-        ],
-        "splits": [
-          "paraphrase_eval",
-          "libero_para_standard"
-        ],
-        "modalities": [
-          "language",
-          "vision",
-          "action",
-          "state"
-        ],
-        "license": "mit",
-        "notes": [
-          "Official protocol also reports PRIDE (difficulty-weighted success). WorldFoundry does not recompute PRIDE; it imports success fields from the official export."
-        ],
-        "notesZh": [
-          "官方协议还报告 PRIDE（按改写难度加权的成功率）。WorldFoundry 不重算 PRIDE，只导入官方导出中的成功字段。"
-        ],
-        "notApplicable": false
-      },
-      "metrics": [
-        {
-          "id": "success_rate",
-          "name": "Success Rate",
-          "description": "Primary episode success on the paraphrased (or control) instruction, imported from the official eval.",
-          "descriptionZh": "改写（或对照）指令上的主 episode 成功率，从官方评测导入。",
-          "higherIsBetter": true,
-          "primary": true,
-          "leaderboardKey": "success_rate"
-        },
-        {
-          "id": "paraphrase_success_rate",
-          "name": "Paraphrase Success Rate",
-          "description": "Success restricted to the 4,092 held-out paraphrases when the export splits them out.",
-          "descriptionZh": "当导出单独列出时，4,092 条仅评测改写上的成功率。",
-          "higherIsBetter": true,
-          "primary": false,
-          "leaderboardKey": "paraphrase_success_rate"
-        },
-        {
-          "id": "language_generalization_success",
-          "name": "Language Generalization Success",
-          "description": "Success aggregated over linguistic-variation cells (object / action / compositional).",
-          "descriptionZh": "按语言变体格子（物体 / 动作 / 组合）聚合的成功率。",
-          "higherIsBetter": true,
-          "primary": false,
-          "leaderboardKey": "language_generalization_success"
-        },
-        {
-          "id": "task_success",
-          "name": "Task Success",
-          "description": "Per-task success among the 10 LIBERO-Goal scenes.",
-          "descriptionZh": "10 个 LIBERO-Goal 场景上的逐任务成功率。",
-          "higherIsBetter": true,
-          "primary": false,
-          "leaderboardKey": "task_success"
-        },
-        {
-          "id": "action_accuracy",
-          "name": "Action Accuracy",
-          "description": "Offline action-prediction accuracy if the official dump includes it.",
-          "descriptionZh": "若官方导出包含该字段，则为相对参考动作的离线预测准确率。",
-          "higherIsBetter": true,
-          "primary": false,
-          "leaderboardKey": "action_accuracy"
-        }
-      ],
-      "leaderboard": {
-        "ingested": false,
-        "source": "",
-        "sourceZh": "",
-        "officialUrl": "https://cau-hai-lab.github.io/LIBERO-Para/",
         "entries": []
       }
     },

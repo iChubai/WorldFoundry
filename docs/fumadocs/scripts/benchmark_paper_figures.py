@@ -67,16 +67,6 @@ CAPTIONS: dict[str, dict[str, tuple[str, str]]] = {
             "论文官方 Teaser：物体级 POMDP 任务——必须记住先前动作，而不能只看当前帧。",
         ),
     },
-    "libero-para": {
-        "teaser": (
-            "Official paper teaser: VLA models can overfit to seen instruction phrasings and fail on paraphrases.",
-            "论文官方 Teaser：VLA 可能过拟合见过的指令措辞，改写后失败。",
-        ),
-        "overview": (
-            "Official paper figure: a two-axis paraphrase grid — action vs. object — under data-scarce fine-tuning.",
-            "论文主图：数据稀缺微调下的双轴改写网格——动作轴与物体轴。",
-        ),
-    },
     "libero-plus": {
         "overview": (
             "Official paper figure: 10,030 tasks across seven perturbation factors and twenty-one components.",

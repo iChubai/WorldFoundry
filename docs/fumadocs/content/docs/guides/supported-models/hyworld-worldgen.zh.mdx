@@ -17,13 +17,11 @@ HY-World 2.0 轨迹渲染器是腾讯世界生成链中的一个阶段，单独�
 
 ## 用来做什么
 
-用 `hyworld-worldgen` 做 catalog 几何推理。产物是重建而不是生成视频时选它。
+用 `hyworld-worldgen` 将已有 HY-World 场景点云按相机轨迹渲染成视频。它不生成场景，也不加载模型 checkpoint。
 
-统一运行时包含树内 torch 点泼溅回退实现，不需要 PyTorch3D。官方源码以固定 revision 内置（许可：tencent-hunyuan-community）；该路径是官方轨迹渲染阶段，不声称完整五阶段世界生成。该模型由腾讯（混元）发布。
+适配器调用固定版本 `7f668e67c74338d50684e57be46a438459b6bbe1` 的官方轨迹渲染阶段（腾讯混元社区许可）。公开仓库未内置该源码，也未实现完整的五阶段世界生成链。
 
-catalog 记录的任务包括 相机可控视频、world-generation-stage、point-cloud-rendering。输出模态为点云。
-
-HYWorld worldgen。不是 HY-World 2.0，也不是 WorldPlay。
+catalog 记录的任务包括相机可控视频、world-generation-stage、point-cloud-rendering；这条路径从已有点云输出视频。
 
 ## 运行时契约
 
@@ -35,15 +33,15 @@ HYWorld worldgen。不是 HY-World 2.0，也不是 WorldPlay。
 
 提供图像、camera JSON 与指向预物化 HY-World 场景的 scene_path。 场景物化属于独立的完整 HY-World 生成 pipeline。
 
-Official source is vendored at revision 7f668e67c74338d50684e57be46a438459b6bbe1.
+运行前须把固定版本的官方源码安装到运行目录，并提供含 `render_results/global_pcd.ply` 的预物化场景。公开仓库不包含这两项资产。
 
 ## 在 WorldFoundry 中运行
 
-启动 `worldfoundry-eval run hyworld-worldgen --pipeline.task-profile camera-controlled-video` 写出几何。上方命令构建器按已记录任务切换 `--pipeline.task-profile`，发出的仍是 `worldfoundry-eval run`。
+源码与场景准备好后，运行 `worldfoundry-eval run hyworld-worldgen --pipeline.task-profile camera-controlled-video` 输出视频。
 
 运行环境是统一 profile `worldfoundry-unified-cu128`（Python 3.11，CUDA 12.8）。
 
-本卡片未记录公开 checkpoint id；按使用说明就位权重。就位权重用 `bash scripts/inference/prepare_model_infer.sh hyworld-worldgen`。
+这条渲染路径不加载模型 checkpoint，但需要上述官方源码和预物化场景。
 
 状态：**Runner 一致性待确认**。
 

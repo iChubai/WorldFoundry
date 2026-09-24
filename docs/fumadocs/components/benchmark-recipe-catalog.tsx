@@ -8,6 +8,7 @@ import {
   benchmarkCatalogEntries,
   type BenchmarkCatalogItem,
 } from '@/lib/benchmark-catalog';
+import { getBenchmarkPageEntry } from '@/lib/benchmark-page-data';
 import { BenchmarkIdentityMark } from '@/components/benchmark-identity-mark';
 
 type Locale = 'en' | 'zh';

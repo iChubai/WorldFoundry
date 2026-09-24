@@ -1,6 +1,6 @@
 {
-  "modelsTotal": 270,
-  "modelsListed": 260,
+  "modelsTotal": 271,
+  "modelsListed": 261,
   "benchmarksTotal": 75,
   "modelFamilies": [
     {
@@ -71,14 +71,6 @@
           ]
         },
         {
-          "id": "emu3.5",
-          "name": "Emu 3.5",
-          "status": "integrated",
-          "aliases": [
-            "emu3.5"
-          ]
-        },
-        {
           "id": "fastvideo-causal-wan2.2",
           "name": "FastVideo CausalWan 2.2",
           "status": "integrated",
@@ -116,6 +108,14 @@
           "status": "integrated",
           "aliases": [
             "hunyuanvideo-1.5"
+          ]
+        },
+        {
+          "id": "hyperflow",
+          "name": "HyperFlow for MiniMax-H 3",
+          "status": "integrated",
+          "aliases": [
+            "hyperflow"
           ]
         },
         {
@@ -458,10 +458,26 @@
       ]
     },
     {
+      "id": "multimodal",
+      "label": "Multimodal",
+      "blurb": "Image-text understanding and generation systems without a video inference route.",
+      "count": 1,
+      "entries": [
+        {
+          "id": "emu3.5",
+          "name": "Emu 3.5",
+          "status": "integrated",
+          "aliases": [
+            "emu3.5"
+          ]
+        }
+      ]
+    },
+    {
       "id": "world_models",
       "label": "World models",
       "blurb": "Interactive worlds, camera/action conditioning, navigation, and simulator-shaped systems.",
-      "count": 97,
+      "count": 103,
       "entries": [
         {
           "id": "abot-world-0-5b-lf",
@@ -525,6 +541,22 @@
           "status": "integrated",
           "aliases": [
             "ati-wan21-14b"
+          ]
+        },
+        {
+          "id": "biwm-wan21",
+          "name": "BiWM Wan 2.1",
+          "status": "integrated_checkpoint_gated",
+          "aliases": [
+            "biwm-wan21"
+          ]
+        },
+        {
+          "id": "biwm-wan22",
+          "name": "BiWM Wan 2.2",
+          "status": "integrated_checkpoint_gated",
+          "aliases": [
+            "biwm-wan22"
           ]
         },
         {
@@ -735,7 +767,7 @@
         {
           "id": "hunyuan-game-craft",
           "name": "Hunyuan Game Craft",
-          "status": "runtime_ported",
+          "status": "integrated",
           "aliases": [
             "hunyuan-game-craft"
           ]
@@ -759,7 +791,7 @@
         {
           "id": "hunyuanworld-voyager",
           "name": "HunyuanWorld-Voyager",
-          "status": "integrated",
+          "status": "blocked",
           "aliases": [
             "hunyuanworld-voyager"
           ]
@@ -775,7 +807,7 @@
         {
           "id": "hyworld-worldgen",
           "name": "HY-World 2.0 Trajectory Renderer",
-          "status": "integrated",
+          "status": "runtime_ported",
           "aliases": [
             "hyworld-worldgen"
           ]
@@ -860,7 +892,7 @@
         {
           "id": "lingbot-world-v2",
           "name": "LingBot-World-V 2",
-          "status": "implemented_checkpoint_pending",
+          "status": "implemented_checkpoint_manifest_validated",
           "aliases": [
             "lingbot-world-v2"
           ]
@@ -982,7 +1014,7 @@
         {
           "id": "multiworld",
           "name": "MultiWorld",
-          "status": "planned",
+          "status": "integrated",
           "aliases": [
             "multiworld"
           ]
@@ -1230,6 +1262,30 @@
           ]
         },
         {
+          "id": "worldcrafter",
+          "name": "WorldCrafter",
+          "status": "integrated",
+          "aliases": [
+            "worldcrafter"
+          ]
+        },
+        {
+          "id": "worldcrafter-base",
+          "name": "WorldCrafter Base",
+          "status": "integrated",
+          "aliases": [
+            "worldcrafter-base"
+          ]
+        },
+        {
+          "id": "worldcrafter-fast",
+          "name": "WorldCrafter Fast",
+          "status": "integrated",
+          "aliases": [
+            "worldcrafter-fast"
+          ]
+        },
+        {
           "id": "worldgrow",
           "name": "WorldGrow",
           "status": "runtime_ported",
@@ -1254,6 +1310,14 @@
           ]
         },
         {
+          "id": "xgen-jing",
+          "name": "XGEN-JING Flash v 1",
+          "status": "integrated",
+          "aliases": [
+            "xgen-jing"
+          ]
+        },
+        {
           "id": "yume",
           "name": "YUME",
           "status": "integrated",
@@ -1275,7 +1339,7 @@
       "id": "three_d_four_d",
       "label": "3D / 4D",
       "blurb": "Reconstruction, depth, point clouds, scene representations, and dynamic geometry.",
-      "count": 35,
+      "count": 34,
       "entries": [
         {
           "id": "cut3r",
@@ -1368,14 +1432,6 @@
           ]
         },
         {
-          "id": "geometry-prior",
-          "name": "Geometry",
-          "status": "runtime_ported",
-          "aliases": [
-            "geometry-prior"
-          ]
-        },
-        {
           "id": "infinite-vggt",
           "name": "Infinite VGGT",
           "status": "runtime_ported",
@@ -1458,7 +1514,7 @@
         {
           "id": "pixelsplat",
           "name": "pixelSplat",
-          "status": "planned",
+          "status": "integrated",
           "aliases": [
             "pixelsplat"
           ]
@@ -1554,7 +1610,7 @@
         {
           "id": "wonderworld",
           "name": "WonderWorld",
-          "status": "integrated",
+          "status": "blocked",
           "aliases": [
             "wonderworld"
           ]
@@ -1573,7 +1629,7 @@
       "id": "vla_va_wam",
       "label": "VLA / VA / WAM",
       "blurb": "Embodied policies, world-action models, and robot control stacks.",
-      "count": 63,
+      "count": 58,
       "entries": [
         {
           "id": "a1",
@@ -1664,14 +1720,6 @@
           ]
         },
         {
-          "id": "eo1",
-          "name": "EO-1",
-          "status": "runtime_ported",
-          "aliases": [
-            "eo1"
-          ]
-        },
-        {
           "id": "eventvla",
           "name": "EventVLA",
           "status": "in_tree_checkpoint_runtime",
@@ -1736,14 +1784,6 @@
           ]
         },
         {
-          "id": "hy-embodied",
-          "name": "HY-Embodied",
-          "status": "runtime_ported",
-          "aliases": [
-            "hy-embodied"
-          ]
-        },
-        {
           "id": "hy-embodied-vla",
           "name": "Hy-Embodied-0.5-VLA",
           "status": "integrated",
@@ -1781,14 +1821,6 @@
           "status": "in_tree_checkpoint_runtime_static_verified",
           "aliases": [
             "lda-1b"
-          ]
-        },
-        {
-          "id": "libero-para",
-          "name": "LIBERO-Para",
-          "status": "blocked",
-          "aliases": [
-            "libero-para"
           ]
         },
         {
@@ -1885,14 +1917,6 @@
           "status": "integrated",
           "aliases": [
             "openpi"
-          ]
-        },
-        {
-          "id": "openpie-0.6",
-          "name": "OpenPIE 0.6",
-          "status": "runtime_ported",
-          "aliases": [
-            "openpie-0.6"
           ]
         },
         {
@@ -2040,14 +2064,6 @@
           ]
         },
         {
-          "id": "wall-oss",
-          "name": "Wall-OSS",
-          "status": "runtime_ported",
-          "aliases": [
-            "wall-oss"
-          ]
-        },
-        {
           "id": "xvla",
           "name": "X-VLA",
           "status": "all_released_checkpoints_gpu_validated",
@@ -2174,7 +2190,7 @@
     {
       "id": "video",
       "label": "Video & world",
-      "count": 52,
+      "count": 53,
       "entries": [
         {
           "id": "4dworldbench",
@@ -2244,6 +2260,13 @@
           "name": "GenAI-Bench",
           "aliases": [
             "genai-bench"
+          ]
+        },
+        {
+          "id": "harnesseval-w",
+          "name": "HarnessEval-W",
+          "aliases": [
+            "harnesseval-w"
           ]
         },
         {
@@ -2545,7 +2568,7 @@
     {
       "id": "embodied",
       "label": "Embodied",
-      "count": 23,
+      "count": 22,
       "entries": [
         {
           "id": "ai2thor",
@@ -2601,13 +2624,6 @@
           "name": "LIBERO-Mem",
           "aliases": [
             "libero-mem"
-          ]
-        },
-        {
-          "id": "libero-para",
-          "name": "LIBERO-Para",
-          "aliases": [
-            "libero-para"
           ]
         },
         {

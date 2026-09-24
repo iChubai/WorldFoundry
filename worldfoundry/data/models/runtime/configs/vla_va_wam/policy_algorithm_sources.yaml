@@ -99,18 +99,6 @@ algorithms:
   model_refs:
   - repo_id: lerobot/smolvla_base
   worldfoundry_model_id: smolvla
-- id: wall-oss
-  lerobot_policy_dir: wall_x
-  name: WALL-OSS / Wall-X
-  source_basis: official_repo
-  official_repo:
-    url: https://github.com/X-Square-Robot/wall-x
-    local_dir: ${WORLDFOUNDRY_MODEL_SOURCE_DIR}/wall-x
-    revision: e23a5868465be0d4e2543d73e16210b5cf21e22e
-  model_refs:
-  - repo_id: x-square-robot/wall-oss-flow
-  - repo_id: x-square-robot/wall-oss-fast
-  worldfoundry_model_id: wall-oss
 - id: xvla
   lerobot_policy_dir: xvla
   name: X-VLA
@@ -120,15 +108,6 @@ algorithms:
     local_dir: ${WORLDFOUNDRY_MODEL_SOURCE_DIR}/X-VLA
     revision: 6bc2513f5f1cbec715cc668b414392a6cae5c671
   worldfoundry_model_id: xvla
-- id: eo1
-  lerobot_policy_dir: eo1
-  name: EO-1
-  source_basis: official_repo
-  official_repo:
-    url: https://github.com/EO-Robotics/EO
-    local_dir: ${WORLDFOUNDRY_MODEL_SOURCE_DIR}/EO
-    revision: 451c363d7dff682700789afae0b9b17c004e8f8c
-  worldfoundry_model_id: eo1
 - id: molmoact2
   lerobot_policy_dir: molmoact2
   name: MolmoAct2

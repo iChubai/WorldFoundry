@@ -27,7 +27,6 @@ EMBODIED_BENCHMARK_IDS: tuple[str, ...] = (
     "libero-mem",
     "libero-plus",
     "libero-pro",
-    "libero-para",
     "simpler-env",
     "robocasa",
     "calvin",

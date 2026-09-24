@@ -304,11 +304,6 @@ DBCogACTPipeline = _independent_action_pipeline(
     operator_target="worldfoundry.operators.vla_native_operator:DBCogACTOperator",
     synthesis_target="worldfoundry.synthesis.action_generation.db_cogact:DBCogACTSynthesis",
 )
-EO1Pipeline = _official_policy_pipeline(
-    "EO1Pipeline",
-    model_id="eo1",
-    doc="WorldFoundry VLA policy pipeline for EO-1.",
-)
 FastWAMPipeline = _official_policy_pipeline(
     "FastWAMPipeline",
     model_id="fastwam",
@@ -320,11 +315,6 @@ GaussianActorPipeline = _official_policy_pipeline(
     model_id="gaussian-actor",
     doc="WorldFoundry action-policy pipeline for Gaussian Actor.",
     generation_type="actor_policy",
-)
-HYEmbodiedPipeline = _official_policy_pipeline(
-    "HYEmbodiedPipeline",
-    model_id="hy-embodied",
-    doc="WorldFoundry VLA policy pipeline for HY-Embodied.",
 )
 LingBotVLAPipeline = _independent_action_pipeline(
     "LingBotVLAPipeline",
@@ -342,11 +332,6 @@ LastR1Pipeline = _official_policy_pipeline(
     "LastR1Pipeline",
     model_id="last-r1",
     doc="WorldFoundry policy-rollout pipeline for LaST-R1.",
-)
-LiberoParaPipeline = _official_policy_pipeline(
-    "LiberoParaPipeline",
-    model_id="libero-para",
-    doc="WorldFoundry action-evaluation adapter for LIBERO-Para policies.",
 )
 MultiTaskDiTPipeline = _official_policy_pipeline(
     "MultiTaskDiTPipeline",
@@ -367,11 +352,6 @@ MolmoBotPipeline = _independent_action_pipeline(
     doc="WorldFoundry VLA policy pipeline for MolmoBot action generation.",
     operator_target="worldfoundry.operators.vla_native_operator:MolmoBotOperator",
     synthesis_target="worldfoundry.synthesis.action_generation.molmobot:MolmoBotSynthesis",
-)
-OpenPIE06Pipeline = _official_policy_pipeline(
-    "OpenPIE06Pipeline",
-    model_id="openpie-0.6",
-    doc="WorldFoundry VLA policy pipeline for OpenPIE 0.6.",
 )
 OpenVLAOFTPipeline = _independent_action_pipeline(
     "OpenVLAOFTPipeline",
@@ -415,11 +395,6 @@ VLANeXtPipeline = _independent_action_pipeline(
     doc="WorldFoundry VLA policy pipeline for VLANeXt action generation.",
     operator_target="worldfoundry.operators.vla_native_operator:VLANeXtOperator",
     synthesis_target="worldfoundry.synthesis.action_generation.vlanext:VLANeXtSynthesis",
-)
-WallOSSPipeline = _official_policy_pipeline(
-    "WallOSSPipeline",
-    model_id="wall-oss",
-    doc="WorldFoundry VLA policy pipeline for Wall-OSS.",
 )
 XVLAPipeline = _independent_action_pipeline(
     "XVLAPipeline",
@@ -554,16 +529,13 @@ __all__ = [
     "DreamDojoPipeline",
     "DreamZeroPipeline",
     "DualCamCtrlPipeline",
-    "EO1Pipeline",
     "FastWAMPipeline",
     "GaussianActorPipeline",
     "GigaBrain0Pipeline",
     "GR00TPipeline",
-    "HYEmbodiedPipeline",
     "IRASimPipeline",
     "LAPAPipeline",
     "LastR1Pipeline",
-    "LiberoParaPipeline",
     "LingBotVAPipeline",
     "LingBotVLAPipeline",
     "LingBotVLAV2Pipeline",
@@ -574,7 +546,6 @@ __all__ = [
     "MultiTaskDiTPipeline",
     "OctoPipeline",
     "OpenMAGVIT2Pipeline",
-    "OpenPIE06Pipeline",
     "OpenPIPipeline",
     "OpenVLAOFTPipeline",
     "OpenVLAPipeline",
@@ -590,7 +561,6 @@ __all__ = [
     "TDMPCPipeline",
     "VQBeTPipeline",
     "VLANeXtPipeline",
-    "WallOSSPipeline",
     "XVLAPipeline",
     "ZeroScopePipeline",
 ]

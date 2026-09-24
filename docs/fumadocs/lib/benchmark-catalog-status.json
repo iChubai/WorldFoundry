@@ -528,36 +528,6 @@
     "summaryZh": "导入官方 / 上游结果并归一化为 scorecard",
     "verificationStatus": "normalizer_only"
   },
-  "libero-para": {
-    "aliases": [
-      "LIBERO-Para",
-      "libero_para",
-      "libero-paraphrase"
-    ],
-    "badges": [
-      "normalizer"
-    ],
-    "category": "Embodied AI",
-    "categoryZh": "具身 AI",
-    "domains": [
-      "vla",
-      "robot-manipulation",
-      "language-generalization",
-      "paraphrase-generalization"
-    ],
-    "integrationStatus": "integrated",
-    "leaderboardValid": false,
-    "logoKey": "cau",
-    "metrics": [
-      "success_rate"
-    ],
-    "name": "LIBERO-Para",
-    "requiresApi": false,
-    "runtimeKind": "external_official_results_runner",
-    "summary": "Imports official or upstream results into a normalized scorecard",
-    "summaryZh": "导入官方 / 上游结果并归一化为 scorecard",
-    "verificationStatus": "normalizer_only"
-  },
   "libero-plus": {
     "aliases": [
       "libero_plus"

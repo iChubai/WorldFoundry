@@ -35,7 +35,12 @@ export function getPageImage(page: (typeof source)['$inferPage']) {
 }
 
 export function getPageMarkdownSlugs(page: (typeof source)['$inferPage']) {
-  return getLocalizedSegments(page);
+  const segments = getLocalizedSegments(page);
+  // A static export cannot write a page as a file and its descendants as a
+  // directory at the same path. Give every markdown route a .md leaf.
+  if (page.slugs.length === 0) segments.push('index.md');
+  else segments[segments.length - 1] += '.md';
+  return segments;
 }
 
 export function getPageMarkdownUrl(page: (typeof source)['$inferPage']) {
@@ -52,7 +57,7 @@ export function getPageMarkdownUrl(page: (typeof source)['$inferPage']) {
 export function resolveMarkdownSlug(slug: string[] | undefined) {
   const segments = [...(slug ?? [])];
 
-  if (segments.at(-1) === 'content.md') {
+  if (segments.at(-1) === 'index.md' || segments.at(-1) === 'content.md') {
     segments.pop();
   } else {
     const last = segments.at(-1);

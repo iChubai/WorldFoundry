@@ -22,5 +22,5 @@ runner_parity:
   status: checkpoint_gpu_validated
   notes:
   - The public pipeline strictly loaded the released JING-Flash-v1 and MiniMax-H3 checkpoints and produced a decodable 22-frame, 448x256, 24 FPS H.264 video with 32 kHz stereo AAC audio on one GPU.
-  - The recorded text-only low-resolution case shows a coherent moving golden retriever; default-resolution output, image references, camera-control accuracy, and upstream artifact parity remain unverified.
+  - Text-only 22-frame runs at both 448x256 and the default 960x544 canvas show a coherent moving golden retriever; image references, camera-control accuracy, longer runs, and upstream artifact parity remain unverified.
 catalog_category: world_models

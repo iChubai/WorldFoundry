@@ -39,4 +39,4 @@ notes:
 - CPU offload and sequential text/DiT/codec stages permit one GPU; upstream six-GPU distributed execution is not exposed.
 - Four fixed distilled steps, 24 FPS and stereo 32 kHz audio; no CFG or negative prompt.
 - Control lists have one WASD/IJKL string per repeated slice; default layout yields 17 * slice_count + 5 pixel frames.
-- A local checkpoint-backed 22-frame, 448x256 text-only case passed strict loading and audio/video artifact checks on one GPU with cpu_offload=false; the default 544x960 size, image references, and camera-control quality have not been validated.
+- Local checkpoint-backed 22-frame text-only cases at 448x256 with cpu_offload=false and the default 960x544 canvas with cpu_offload=true passed strict loading and audio/video artifact checks on one GPU; image references, camera-control quality, and longer runs have not been validated.

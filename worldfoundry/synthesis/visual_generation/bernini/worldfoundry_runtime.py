@@ -184,6 +184,10 @@ COMMON_DEFAULTS = {
     "height": 480,
     "width": 848,
     "num_inference_steps": 40,
+    "omega_vid": 1.25,
+    "omega_img": 4.5,
+    "omega_txt": 4.0,
+    "omega_scale": 0.8,
     "flow_shift": 5.0,
     "seed": 42,
     "fps": 16,
@@ -856,10 +860,12 @@ class BerniniRuntime:
                 from .inference.parallel import get_parallel_state
 
                 write_output = get_parallel_state().ulysses_rank == 0
-            if self.variant.family == "planner_renderer":
-                from .inference.system_prompts import get_system_prompt_for_task
+            # The official CLI selects a task-specific prefix for both the
+            # planner and renderer pipelines. Keep an explicit override intact.
+            from .inference.system_prompts import get_system_prompt_for_task
 
-                defaults.setdefault("system_prompt", get_system_prompt_for_task(task_type))
+            defaults.setdefault("system_prompt", get_system_prompt_for_task(task_type))
+            if self.variant.family == "planner_renderer":
                 pipeline(
                     task_type,
                     prompt,

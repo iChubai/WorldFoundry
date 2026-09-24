@@ -384,7 +384,15 @@ class OfficialVideoRuntime:
         self._diffusers_pipeline_key = key
         return pipe, torch_dtype
 
-    def runtime_plan(self, *, output_path: str | Path | None = None, prompt: str = "") -> dict[str, Any]:
+    def runtime_plan(
+        self,
+        *,
+        output_path: str | Path | None = None,
+        prompt: str = "",
+        image_path: str | Path | None = None,
+        video_path: str | Path | None = None,
+        extra: Mapping[str, Any] | None = None,
+    ) -> dict[str, Any]:
         report = self._requirement_report()
         defaults = self.runtime.get("defaults")
         default_variables = dict(defaults) if isinstance(defaults, Mapping) else {}
@@ -398,10 +406,11 @@ class OfficialVideoRuntime:
             "output_path": output_path or "",
             "output_dir": Path(output_path).parent if output_path else "",
             "prompt": prompt,
-            "image_path": "",
-            "video_path": "",
+            "image_path": image_path or "",
+            "video_path": video_path or (extra or {}).get("video_path") or "",
             "device": self.device,
             **default_variables,
+            **_with_cli_aliases(default_variables, extra or {}),
         }
         variables = _normalize_cli_path_variables(variables)
         command = self.runtime.get("command")
@@ -451,7 +460,17 @@ class OfficialVideoRuntime:
             output.parent.mkdir(parents=True, exist_ok=True)
             plan_path = output.with_suffix(output.suffix + ".runtime_plan.json")
             plan_path.write_text(
-                json.dumps(self.runtime_plan(output_path=output, prompt=prompt), indent=2, sort_keys=True),
+                json.dumps(
+                    self.runtime_plan(
+                        output_path=output,
+                        prompt=prompt,
+                        image_path=image_path,
+                        video_path=video_path,
+                        extra=kwargs,
+                    ),
+                    indent=2,
+                    sort_keys=True,
+                ),
                 encoding="utf-8",
             )
             return {

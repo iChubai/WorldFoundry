@@ -2,7 +2,7 @@
 title: "LingBot-World"
 description: "LingBot-World（Robbyant (Ant Group)）：世界模型、相机控制；已验证; 独立环境 `lingbot-world`。"
 modelId: "lingbot-world"
-pageSource: generated
+pageSource: authored
 ---
 
 LingBot-World 是蚂蚁灵波的相机可控世界视频模型。本 catalog 中它已完整验证：base-cam checkpoint 于 2026-07-28 按官方 161 帧、70 步相机控制 demo 完成全质量产物验证——包括一个四张 A100 的紧凑拓扑，自适应调整 FSDP/Ulysses 设置并产出连贯产物。
@@ -35,7 +35,7 @@ catalog 记录的任务包括 世界模型、相机控制、image-navigation-vid
 
 `image-navigation-video` 记录默认值：frames=161, seed=42；`image-action-video` 记录默认值：frames=21, seed=42。
 
-封装仅解析本地 HFD 或显式 checkpoint 目录——无运行时下载。 base-cam 在专属 lingbot-world conda 环境档案中运行；Base-Act 单独记录，目前仅 Fast checkpoint 不可得。
+封装仅解析本地 HFD 或显式 checkpoint 目录，不在运行时下载。Base-Cam 在专属 `lingbot-world` 环境中运行；Base-Act 单独记录。官方 Fast 权重复用 Base-Cam 的 T5/VAE 组件，并使用独立的 16 个分片。公开 binding 已在单张 H100 上生成可完整解码的 21 帧、544 × 720、16 fps Fast 视频，画面持续变化。选择 Fast 时传入 `runtime_variant=fast` 和 `fast_model_path`；由于上游按三个潜变量帧分块，帧数需取 9、21、33 等，否则会被截短。更长的 Fast 视频和相机贴合度尚未测量。
 
 ## 在 WorldFoundry 中运行
 

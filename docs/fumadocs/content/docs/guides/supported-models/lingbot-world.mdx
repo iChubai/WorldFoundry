@@ -37,7 +37,7 @@ Family status: **Verified**.
 
 Recorded `image-navigation-video` defaults: frames=161, seed=42 Recorded `image-action-video` defaults: frames=21, seed=42.
 
-The wrapper resolves only local HFD or explicit checkpoint directories — no runtime downloads. Base-cam runs in the dedicated lingbot-world conda environment profile; Base-Act is separately cataloged, and only the Fast checkpoint remains unavailable.
+The wrapper resolves only local HFD or explicit checkpoint directories — no runtime downloads. Base-cam runs in the dedicated `lingbot-world` environment; Base-Act is separately cataloged. The official Fast checkpoint uses Base-Cam's shared T5/VAE assets plus its own 16 shards. The public binding produced a fully decodable 21-frame, 544 × 720, 16 fps Fast clip with changing content on one H100. Select it with `runtime_variant=fast` and `fast_model_path`; Fast frame counts must be 9, 21, 33, … because its three-latent-frame chunks otherwise truncate the clip. Longer Fast rollouts and camera adherence remain unmeasured.
 
 ## Running in WorldFoundry
 

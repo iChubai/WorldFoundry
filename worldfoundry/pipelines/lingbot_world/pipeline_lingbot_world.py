@@ -208,7 +208,19 @@ class LingBotPipeline(PipelineABC):
                   **kwds):
 
         """Execute the complete pipeline generation flow."""
-        del operator_kwargs
+        # PipelineInvocation carries model-specific inputs separately from the
+        # common image/prompt/action fields. Keep direct-call arguments as the
+        # priority, while accepting the same pose and action payload through
+        # WorldFoundryPipelineRunner's request.inputs.
+        if isinstance(operator_kwargs, dict):
+            if action_path is None:
+                action_path = operator_kwargs.get("action_path")
+            if poses_c2ws is None:
+                poses_c2ws = operator_kwargs.get("poses_c2ws")
+            if poses_Ks is None:
+                poses_Ks = operator_kwargs.get("poses_Ks")
+            if action_matrix is None:
+                action_matrix = operator_kwargs.get("action_matrix")
         processed_inputs = self.process(
             images=images,
             prompt=prompt,

@@ -7,10 +7,11 @@ id: hunyuanworld-voyager
 integration:
   notes:
   - >-
-    The public pipeline cannot load because its in-tree Voyager config.py and
-    runtime.py sources are missing, leaving only pycache files. The upstream pinned
-    tree is a different package and lacks the WorldFoundry runtime adapter.
-  status: blocked
+    The public pipeline bridges to an external, pinned official Voyager checkout
+    and a dedicated Python environment. The official case1 checkpoint and the
+    public runner both produced decodable RGB-D video at eight inference steps.
+    The licensed upstream source and weights are not redistributed here.
+  status: integrated
 license: other:tencent-hunyuanworld-community
 modalities:
 - image-to-video
@@ -18,7 +19,7 @@ modalities:
 - world-generation
 - long-range
 name: HunyuanWorld-Voyager
-pipeline_binding: null
+pipeline_binding: hunyuanworld-voyager
 official_sources:
   project_page: https://3d-models.hunyuan.tencent.com/world/
   paper: https://arxiv.org/abs/2405.07719
@@ -36,11 +37,14 @@ runtime_profile: runtime-profile:hunyuanworld-voyager
 starred: true
 runner_parity:
   notes:
-  - Public from_pretrained fails with ModuleNotFoundError for the missing in-tree
-    hunyuan_world_voyager.config module before any checkpoint-backed inference.
-  - Official case1 defaults are recorded, but no runnable integration or visual
-    validation has been established.
-  status: failed
+  - The independent official CLI and public WorldFoundryPipelineRunner each ran
+    the same official case1 conditions with the checkpoint on H100 GPU3 at eight
+    inference steps. Both outputs fully decoded as 45-frame, 768x1024, 24 fps
+    H.264 RGB-D video; key frames were visually reviewed.
+  - Validation covers this case1 configuration only; the upstream 50-step
+    default, arbitrary camera paths, long-range extension, and quantitative
+    depth or camera fidelity have not been validated.
+  status: verified_configuration
 catalog_category: world_models
 catalog_scope: world-model/interactive starred models
 catalog_policy:
@@ -55,12 +59,12 @@ docs:
   publisher: Tencent (Hunyuan)
   publisher_kind: company
   publisher_zh: 腾讯（混元）
-  overview: HunyuanWorld-Voyager is designed to generate RGB-D video along camera paths. WorldFoundry's public pipeline currently cannot load because its in-tree runtime sources are missing.
-  overview_zh: HunyuanWorld-Voyager 旨在沿相机路径生成 RGB-D 视频。WorldFoundry 的公开 pipeline 目前因树内运行时源码缺失而无法加载。
+  overview: HunyuanWorld-Voyager generates RGB-D video along camera paths. WorldFoundry's public runner has generated the official case1 example through a bridge to the licensed upstream checkout.
+  overview_zh: HunyuanWorld-Voyager 沿相机路径生成 RGB-D 视频。WorldFoundry 的公开 runner 已通过外部官方源码桥接成功生成 case1 示例。
   architecture: 'Per the upstream release, Voyager combines a HunyuanVideo-based generator with joint RGB-D output and a world-cache mechanism for long-range consistency. The official case1 defaults are recorded in the runtime profile: num_frames=49, infer_steps=50, flow_shift=7.0, embedded_cfg_scale=6.0, i2v_stability=true.'
   architecture_zh: 按上游发布，Voyager 将基于 HunyuanVideo 的生成器与 RGB-D 联合输出及世界缓存机制结合，实现长程一致性。运行时档案记录官方 case1 默认值：num_frames=49、infer_steps=50、flow_shift=7.0、 embedded_cfg_scale=6.0、i2v_stability=true。
-  usage_notes: The Voyager pipeline binding is disabled until its missing in-tree runtime sources and adapter are restored and tested.
-  usage_notes_zh: Voyager 的 pipeline binding 已禁用，须恢复缺失的树内运行时源码和适配器并通过测试后才能启用。
+  usage_notes: Provide a separate official checkout at revision 6218ccd36df77d0254dcf24ad1fb77312f75b04a, the checkpoint, an official-dependency Python environment, and a 49-frame rendered condition directory. Set WORLDFOUNDRY_VOYAGER_SOURCE_ROOT and WORLDFOUNDRY_VOYAGER_PYTHON. The 8-step case1 configuration was tested; the official 50-step default was not. The Tencent community license restricts use by region and redistribution.
+  usage_notes_zh: 需提供固定版本 6218ccd36df77d0254dcf24ad1fb77312f75b04a 的外部官方源码、权重、官方依赖环境及含 49 帧的已渲染条件目录，并设置 WORLDFOUNDRY_VOYAGER_SOURCE_ROOT 和 WORLDFOUNDRY_VOYAGER_PYTHON。已验证 case1 的 8 步配置，未验证官方默认的 50 步；腾讯社区许可证限制使用地域及再分发。
   limitations:
   - '49-frame default clips: longer voyages need iterative extension.'
   - Depth quality is generative, not sensor-grade — validate before metric use.

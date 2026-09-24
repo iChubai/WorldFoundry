@@ -8,30 +8,37 @@ groups:
 source_repos:
 - url: https://github.com/Tencent-Hunyuan/HunyuanWorld-Voyager
   revision: 6218ccd36df77d0254dcf24ad1fb77312f75b04a
-  in_tree_path: worldfoundry/synthesis/visual_generation/hunyuan_world/hunyuan_world_voyager
 checkpoints:
 - repo_id: tencent/HunyuanWorld-Voyager
   revision: ef280b832e98ce8aed249739ebd20da7556e2b2f
   role: voyager_checkpoint
 input_schema:
-  prompt: false
+  prompt: true
   image: true
   video: false
-  actions:
-  - camera_path
-  - navigation_action
+  actions: []
 artifact_kind: generated_world
 artifact_filename: hunyuanworld-voyager.mp4
 execution:
   environment: _unified
-  backend_stage: source_only_unavailable
-  runtime_status: missing_in_tree_runtime_sources
-  integration_status: blocked
-  pipeline_binding: null
+  backend_stage: external_official_cli_bridge
+  runtime_status: official_case1_8step_gpu_validated
+  integration_status: integrated
+  pipeline_binding: hunyuanworld-voyager
 integration:
-  status: blocked
+  status: integrated
 notes:
-- The public from_pretrained path fails before checkpoint loading because the in-tree
-  hunyuan_world_voyager/config.py and runtime.py source files are absent.
-- Only pycache files remain in that directory. The pinned upstream tree has 37
-  voyager Python files, but no WorldFoundry HunyuanWorldVoyagerRuntime adapter.
+- The in-tree bridge calls a separate official checkout at revision
+  6218ccd36df77d0254dcf24ad1fb77312f75b04a; Tencent's community-licensed
+  source and weights are not redistributed in this package.
+- Set WORLDFOUNDRY_VOYAGER_SOURCE_ROOT to that checkout and
+  WORLDFOUNDRY_VOYAGER_PYTHON to an environment with the official dependencies;
+  the bridge validates source, checkpoints, and a 49-frame condition directory.
+- Camera motion must already be rendered into the 49-frame condition directory.
+  A raw image or action sequence alone is not a supported input.
+- The official case1 checkpoint generated an RGB-D MP4 on one H100 at 8 steps;
+  the public runner generated RGB-D MP4s at 1 and 8 steps. All decoded as 45
+  frames at 768x1024 and 24 fps. The upstream pipeline drops four conditioning
+  frames and removes a 16-pixel separator from its internal RGB-D frame.
+- The upstream Tencent HunyuanWorld-Voyager Community License excludes use in
+  the EU, UK, and South Korea and requires its LICENSE and NOTICE on redistribution.

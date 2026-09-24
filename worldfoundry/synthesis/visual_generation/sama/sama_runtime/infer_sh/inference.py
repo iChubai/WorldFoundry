@@ -20,11 +20,6 @@ from worldfoundry.synthesis.visual_generation.sama.native_pipeline import (
 
 DEFAULT_MODEL_ROOT = ""
 
-DEFAULT_NEG_PROMPT = (
-    "色调艳丽，过曝，静态，细节模糊不清，字幕，风格，作品，画作，画面，静止，整体发灰，"
-    "最差质量，低质量，JPEG压缩残留，丑陋的，残缺的，多余的手指，画得不好的手部，画得不好的脸部，"
-    "畸形的，毁容的，形态畸形的肢体，手指融合，静止不动的画面，杂乱的背景，三条腿，背景人很多，倒着走"
-)
 VIDEO_EXTENSIONS = (".mp4", ".mov", ".mkv", ".avi", ".webm")
 
 
@@ -64,7 +59,11 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--device", default="cuda:0", help="Device string (default: cuda:0)")
     parser.add_argument("--lora-path", default="", help="LoRA checkpoint path (optional)")
     parser.add_argument("--state-dict", default="", help="Full DiT weight checkpoint path")
-    parser.add_argument("--negative-prompt", default=DEFAULT_NEG_PROMPT, help="Negative prompt")
+    parser.add_argument(
+        "--negative-prompt",
+        default=None,
+        help="Negative prompt override (defaults to '[Video edit]' with --prompt-prefix, otherwise empty)",
+    )
     parser.add_argument("--height", type=int, default=480, help="Target frame height (default: 480)")
     parser.add_argument("--width", type=int, default=832, help="Target frame width (default: 832)")
     parser.add_argument("--max-frames", type=int, default=81, help="Max frames to read from source video (default: 81)")
@@ -303,10 +302,11 @@ def main() -> None:
     width, height = frames[0].size
 
     prompt = args.prompt
-    negative_prompt = ''
+    negative_prompt = args.negative_prompt
     if args.prompt_prefix:
         prompt = f"[Video edit] {prompt}"
-        negative_prompt = "[Video edit]"
+    if negative_prompt is None:
+        negative_prompt = "[Video edit]" if args.prompt_prefix else ""
     
     print(f"[Run] prompt='{prompt}' src='{args.src_video}' frames={len(frames)} "
           f"size={width}x{height} fps={case_fps} seed={args.seed}", flush=True)

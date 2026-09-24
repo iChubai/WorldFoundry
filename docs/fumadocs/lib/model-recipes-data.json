@@ -111991,7 +111991,7 @@
       "categoryLabel": "World models",
       "categoryLabelZh": "世界模型",
       "provider": "Tencent (Hunyuan)",
-      "summary": "HunyuanWorld-Voyager is designed to generate RGB-D video along camera paths. WorldFoundry's public pipeline currently cannot load because its in-tree runtime sources are missing.",
+      "summary": "HunyuanWorld-Voyager generates RGB-D video along camera paths. WorldFoundry's public runner has generated the official case1 example through a bridge to the licensed upstream checkout.",
       "aliases": [],
       "tasks": [
         "world",
@@ -111999,10 +111999,10 @@
         "world_model"
       ],
       "status": {
-        "group": "blocked",
-        "label": "Blocked",
-        "integration": "blocked",
-        "runner": "failed",
+        "group": "integrated",
+        "label": "Integrated",
+        "integration": "integrated",
+        "runner": "verified_configuration",
         "demo": "not_recorded"
       },
       "runtime": {
@@ -112010,11 +112010,11 @@
         "bindingId": "hunyuanworld-voyager",
         "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
-        "pipelineTarget": "worldfoundry.pipelines.hunyuan_world.pipeline_hunyuan_world_voyager:HunyuanWorldVoyagerPipeline",
+        "pipelineTarget": "worldfoundry.pipelines.hunyuan_world.pipeline_hunyuan_world_voyager_official:HunyuanWorldVoyagerOfficialPipeline",
         "loadingMethod": "from_pretrained",
         "invocationMode": "native_or_standard_invocation",
-        "backendStage": "source_only_unavailable",
-        "runtimeStatus": "missing_in_tree_runtime_sources",
+        "backendStage": "external_official_cli_bridge",
+        "runtimeStatus": "official_case1_8step_gpu_validated",
         "environmentId": "_unified",
         "environmentName": "worldfoundry-unified-cu128",
         "environmentKind": "unified",
@@ -112051,8 +112051,11 @@
           "worldfoundry"
         ],
         "notes": [
-          "The public from_pretrained path fails before checkpoint loading because the in-tree hunyuan_world_voyager/config.py and runtime.py source files are absent.",
-          "Only pycache files remain in that directory. The pinned upstream tree has 37 voyager Python files, but no WorldFoundry HunyuanWorldVoyagerRuntime adapter.",
+          "The in-tree bridge calls a separate official checkout at revision 6218ccd36df77d0254dcf24ad1fb77312f75b04a; Tencent's community-licensed source and weights are not redistributed in this package.",
+          "Set WORLDFOUNDRY_VOYAGER_SOURCE_ROOT to that checkout and WORLDFOUNDRY_VOYAGER_PYTHON to an environment with the official dependencies; the bridge validates source, checkpoints, and a 49-frame condition directory.",
+          "Camera motion must already be rendered into the 49-frame condition directory. A raw image or action sequence alone is not a supported input.",
+          "The official case1 checkpoint generated an RGB-D MP4 on one H100 at 8 steps; the public runner generated RGB-D MP4s at 1 and 8 steps. All decoded as 45 frames at 768x1024 and 24 fps. The upstream pipeline drops four conditioning frames and removes a 16-pixel separator from its internal RGB-D frame.",
+          "The upstream Tencent HunyuanWorld-Voyager Community License excludes use in the EU, UK, and South Korea and requires its LICENSE and NOTICE on redistribution.",
           "Default unified WorldFoundry runtime for modern NVIDIA hosts. Install with `bash scripts/setup/unified_install.sh`.",
           "Override tier with `--cuda cu124` or `--cuda cu121` when an upstream model still pins an older CUDA wheel bucket.",
           "Source the environment file emitted by `scripts/setup/unified_install.sh` so WORLDFOUNDRY_USE_UNIFIED_ENV=1 routes compatible profiles here.",
@@ -112104,10 +112107,10 @@
           "inputs": [
             {
               "field": "prompt",
-              "detail": "Optional",
+              "detail": "Required",
               "kind": "string",
               "target": "input",
-              "required": false,
+              "required": true,
               "description": "Recorded input field from the runtime profile."
             },
             {
@@ -112128,7 +112131,7 @@
             },
             {
               "field": "actions",
-              "detail": "camera_path, navigation_action",
+              "detail": "",
               "kind": "string",
               "target": "input",
               "required": false,
@@ -112151,10 +112154,10 @@
           "inputs": [
             {
               "field": "prompt",
-              "detail": "Optional",
+              "detail": "Required",
               "kind": "string",
               "target": "input",
-              "required": false,
+              "required": true,
               "description": "Recorded input field from the runtime profile."
             },
             {
@@ -112175,7 +112178,7 @@
             },
             {
               "field": "actions",
-              "detail": "camera_path, navigation_action",
+              "detail": "",
               "kind": "string",
               "target": "input",
               "required": false,
@@ -112198,10 +112201,10 @@
           "inputs": [
             {
               "field": "prompt",
-              "detail": "Optional",
+              "detail": "Required",
               "kind": "string",
               "target": "input",
-              "required": false,
+              "required": true,
               "description": "Recorded input field from the runtime profile."
             },
             {
@@ -112222,7 +112225,7 @@
             },
             {
               "field": "actions",
-              "detail": "camera_path, navigation_action",
+              "detail": "",
               "kind": "string",
               "target": "input",
               "required": false,
@@ -112240,7 +112243,7 @@
       "inputContract": [
         {
           "field": "prompt",
-          "detail": "Optional"
+          "detail": "Required"
         },
         {
           "field": "image",
@@ -112252,7 +112255,7 @@
         },
         {
           "field": "actions",
-          "detail": "camera_path, navigation_action"
+          "detail": ""
         }
       ],
       "artifacts": [
@@ -112262,11 +112265,14 @@
         }
       ],
       "notes": [
-        "The public pipeline cannot load because its in-tree Voyager config.py and runtime.py sources are missing, leaving only pycache files. The upstream pinned tree is a different package and lacks the WorldFoundry runtime adapter.",
-        "Public from_pretrained fails with ModuleNotFoundError for the missing in-tree hunyuan_world_voyager.config module before any checkpoint-backed inference.",
-        "Official case1 defaults are recorded, but no runnable integration or visual validation has been established.",
-        "The public from_pretrained path fails before checkpoint loading because the in-tree hunyuan_world_voyager/config.py and runtime.py source files are absent.",
-        "Only pycache files remain in that directory. The pinned upstream tree has 37 voyager Python files, but no WorldFoundry HunyuanWorldVoyagerRuntime adapter."
+        "The public pipeline bridges to an external, pinned official Voyager checkout and a dedicated Python environment. The official case1 checkpoint and the public runner both produced decodable RGB-D video at eight inference steps. The licensed upstream source and weights are not redistributed here.",
+        "The independent official CLI and public WorldFoundryPipelineRunner each ran the same official case1 conditions with the checkpoint on H100 GPU3 at eight inference steps. Both outputs fully decoded as 45-frame, 768x1024, 24 fps H.264 RGB-D video; key frames were visually reviewed.",
+        "Validation covers this case1 configuration only; the upstream 50-step default, arbitrary camera paths, long-range extension, and quantitative depth or camera fidelity have not been validated.",
+        "The in-tree bridge calls a separate official checkout at revision 6218ccd36df77d0254dcf24ad1fb77312f75b04a; Tencent's community-licensed source and weights are not redistributed in this package.",
+        "Set WORLDFOUNDRY_VOYAGER_SOURCE_ROOT to that checkout and WORLDFOUNDRY_VOYAGER_PYTHON to an environment with the official dependencies; the bridge validates source, checkpoints, and a 49-frame condition directory.",
+        "Camera motion must already be rendered into the 49-frame condition directory. A raw image or action sequence alone is not a supported input.",
+        "The official case1 checkpoint generated an RGB-D MP4 on one H100 at 8 steps; the public runner generated RGB-D MP4s at 1 and 8 steps. All decoded as 45 frames at 768x1024 and 24 fps. The upstream pipeline drops four conditioning frames and removes a 16-pixel separator from its internal RGB-D frame.",
+        "The upstream Tencent HunyuanWorld-Voyager Community License excludes use in the EU, UK, and South Korea and requires its LICENSE and NOTICE on redistribution."
       ],
       "docs": {
         "curated": true,
@@ -112276,10 +112282,10 @@
           "kind": "company"
         },
         "overview": [
-          "HunyuanWorld-Voyager is designed to generate RGB-D video along camera paths. WorldFoundry's public pipeline currently cannot load because its in-tree runtime sources are missing."
+          "HunyuanWorld-Voyager generates RGB-D video along camera paths. WorldFoundry's public runner has generated the official case1 example through a bridge to the licensed upstream checkout."
         ],
         "overviewZh": [
-          "HunyuanWorld-Voyager 旨在沿相机路径生成 RGB-D 视频。WorldFoundry 的公开 pipeline 目前因树内运行时源码缺失而无法加载。"
+          "HunyuanWorld-Voyager 沿相机路径生成 RGB-D 视频。WorldFoundry 的公开 runner 已通过外部官方源码桥接成功生成 case1 示例。"
         ],
         "architecture": [
           "Per the upstream release, Voyager combines a HunyuanVideo-based generator with joint RGB-D output and a world-cache mechanism for long-range consistency. The official case1 defaults are recorded in the runtime profile: num_frames=49, infer_steps=50, flow_shift=7.0, embedded_cfg_scale=6.0, i2v_stability=true."
@@ -112288,10 +112294,10 @@
           "按上游发布，Voyager 将基于 HunyuanVideo 的生成器与 RGB-D 联合输出及世界缓存机制结合，实现长程一致性。运行时档案记录官方 case1 默认值：num_frames=49、infer_steps=50、flow_shift=7.0、 embedded_cfg_scale=6.0、i2v_stability=true。"
         ],
         "usageNotes": [
-          "The Voyager pipeline binding is disabled until its missing in-tree runtime sources and adapter are restored and tested."
+          "Provide a separate official checkout at revision 6218ccd36df77d0254dcf24ad1fb77312f75b04a, the checkpoint, an official-dependency Python environment, and a 49-frame rendered condition directory. Set WORLDFOUNDRY_VOYAGER_SOURCE_ROOT and WORLDFOUNDRY_VOYAGER_PYTHON. The 8-step case1 configuration was tested; the official 50-step default was not. The Tencent community license restricts use by region and redistribution."
         ],
         "usageNotesZh": [
-          "Voyager 的 pipeline binding 已禁用，须恢复缺失的树内运行时源码和适配器并通过测试后才能启用。"
+          "需提供固定版本 6218ccd36df77d0254dcf24ad1fb77312f75b04a 的外部官方源码、权重、官方依赖环境及含 49 帧的已渲染条件目录，并设置 WORLDFOUNDRY_VOYAGER_SOURCE_ROOT 和 WORLDFOUNDRY_VOYAGER_PYTHON。已验证 case1 的 8 步配置，未验证官方默认的 50 步；腾讯社区许可证限制使用地域及再分发。"
         ],
         "highlights": [
           "World",
@@ -112362,7 +112368,7 @@
         "install": "bash scripts/setup/model_env_install.sh --model hunyuanworld-voyager",
         "inspect": "worldfoundry-eval zoo model-show --model-id hunyuanworld-voyager --include-manifest --json",
         "check": "worldfoundry-eval zoo model-download --model-id hunyuanworld-voyager --check-local --json",
-        "run": "worldfoundry-eval run \\\n  hunyuanworld-voyager \\\n  --pipeline.task-profile world \\\n  --pipeline.image /path/to/input \\\n  --json"
+        "run": "worldfoundry-eval run \\\n  hunyuanworld-voyager \\\n  --pipeline.task-profile world \\\n  --pipeline.prompt \"Describe the desired output.\" \\\n  --pipeline.image /path/to/input \\\n  --json"
       },
       "catalogPath": "worldfoundry/data/models/catalog/world_models/hunyuanworld-voyager.yaml"
     }

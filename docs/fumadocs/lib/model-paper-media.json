@@ -728,24 +728,6 @@
   "leworldmodel": {
     "figures": []
   },
-  "libero-para": {
-    "paper": {
-      "title": "LIBERO-Para: A Diagnostic Benchmark and Metrics for Paraphrase Robustness in VLA Models",
-      "year": 2026,
-      "venue": null,
-      "arxivId": "2603.28301",
-      "abstract": "Vision-Language-Action (VLA) models achieve strong performance in robotic manipulation by leveraging pre-trained vision-language backbones. However, in downstream robotic settings, they are typically fine-tuned with limited data, leading to overfitting to specific instruction formulations and leaving robustness to paraphrased instructions underexplored. To study this gap, we introduce LIBERO-Para, a controlled benchmark that independently varies action expressions and object references for fine-grained analysis of linguistic generalization. Across seven VLA configurations (0.6B-7.5B), we observe consistent performance degradation of 22-52 pp under paraphrasing. This degradation is primarily driven by object-level lexical variation: even simple synonym substitutions cause large drops, indicating reliance on surface-level matching rather than semantic grounding. Moreover, 80-96% of failure"
-    },
-    "figures": [
-      {
-        "kind": "image",
-        "role": "teaser",
-        "src": "/models/libero-para/teaser.webp",
-        "caption": "Paper teaser — paraphrase robustness diagnostic for VLA models",
-        "captionZh": "论文 Teaser：VLA 改写鲁棒性诊断"
-      }
-    ]
-  },
   "mineworld": {
     "paper": {
       "title": "MineWorld: a Real-Time and Open-Source Interactive World Model on Minecraft",

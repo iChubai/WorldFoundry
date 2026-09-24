@@ -1,6 +1,6 @@
 {
-  "modelsTotal": 225,
-  "benchmarksTotal": 70,
+  "modelsTotal": 220,
+  "benchmarksTotal": 69,
   "infrastructure": [
     {
       "name": "Hugging Face Finetrainers",
@@ -732,7 +732,7 @@
       "id": "vla_va_wam",
       "label": "Embodied",
       "labelZh": "具身智能",
-      "count": 56,
+      "count": 51,
       "entries": [
         {
           "name": "A1",
@@ -771,10 +771,6 @@
           "url": "https://github.com/Dexmal/dexbotic"
         },
         {
-          "name": "EO-1",
-          "url": "https://github.com/EO-Robotics/EO"
-        },
-        {
           "name": "EventVLA",
           "url": "https://github.com/InternRobotics/EventVLA"
         },
@@ -803,10 +799,6 @@
           "url": "https://github.com/HongzheBi/H_RDT"
         },
         {
-          "name": "HY-Embodied",
-          "url": "https://github.com/Tencent-Hunyuan/HY-Embodied"
-        },
-        {
           "name": "Hy-Embodied-0.5-VLA",
           "url": "https://github.com/Tencent-Hunyuan/Hy-Embodied-0.5-VLA"
         },
@@ -825,10 +817,6 @@
         {
           "name": "LDA-1B",
           "url": "https://github.com/jiangranlv/LDA-1B"
-        },
-        {
-          "name": "LIBERO-Para",
-          "url": "https://github.com/cau-hai-lab/LIBERO-Para"
         },
         {
           "name": "LingBot-VA",
@@ -869,10 +857,6 @@
         {
           "name": "Octo",
           "url": "https://github.com/octo-models/octo"
-        },
-        {
-          "name": "OpenPIE 0.6",
-          "url": "https://github.com/exla-ai/fla"
         },
         {
           "name": "OpenVLA",
@@ -937,10 +921,6 @@
         {
           "name": "VQ-BeT",
           "url": "https://github.com/jayLEE0301/vq_bet_official"
-        },
-        {
-          "name": "Wall-OSS",
-          "url": "https://github.com/X-Square-Robot/wall-x"
         },
         {
           "name": "X-VLA",
@@ -1216,7 +1196,7 @@
       "id": "embodied",
       "label": "Embodied benchmarks",
       "labelZh": "具身智能评测",
-      "count": 23,
+      "count": 22,
       "entries": [
         {
           "name": "AI2-THOR",
@@ -1257,11 +1237,6 @@
           "name": "LIBERO-Mem",
           "url": "https://github.com/Lifelong-Robot-Learning/LIBERO",
           "repo": "Lifelong-Robot-Learning/LIBERO"
-        },
-        {
-          "name": "LIBERO-Para",
-          "url": "https://github.com/cau-hai-lab/LIBERO-Para",
-          "repo": "cau-hai-lab/LIBERO-Para"
         },
         {
           "name": "LIBERO-Plus",

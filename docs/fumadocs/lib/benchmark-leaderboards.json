@@ -111,53 +111,6 @@
         }
       ]
     },
-    "libero-para": {
-      "kind": "paper",
-      "paperTitle": "LIBERO-Para: A Diagnostic Benchmark and Metrics for Paraphrase Robustness in VLA Models",
-      "paperYear": "2026",
-      "paperUrl": "https://arxiv.org/abs/2603.28301",
-      "metric": "Success after instruction drop",
-      "metricZh": "指令改写后成功率",
-      "paperNote": "Paper Table: SR (Drop) on LIBERO-Para.",
-      "paperNoteZh": "论文表：LIBERO-Para 上的 SR（Drop）。",
-      "entries": [
-        {
-          "rank": 1,
-          "model": "Xiaomi-Robotics-0",
-          "score": "76.0"
-        },
-        {
-          "rank": 2,
-          "model": "π0.5",
-          "score": "71.4"
-        },
-        {
-          "rank": 3,
-          "model": "OpenVLA-OFT goal",
-          "score": "64.7"
-        },
-        {
-          "rank": 4,
-          "model": "OpenVLA-OFT mixed",
-          "score": "63.7"
-        },
-        {
-          "rank": 5,
-          "model": "X-VLA",
-          "score": "62.1"
-        },
-        {
-          "rank": 6,
-          "model": "VLA-Adapter",
-          "score": "46.3"
-        },
-        {
-          "rank": 7,
-          "model": "π0.5 (expert-only)",
-          "score": "39.1"
-        }
-      ]
-    },
     "libero-plus": {
       "kind": "paper",
       "paperTitle": "LIBERO-Plus: In-depth Robustness Analysis of Vision-Language-Action Models",

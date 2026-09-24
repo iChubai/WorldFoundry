@@ -216,19 +216,6 @@
       "teaserCaption": "Official paper teaser: object-level POMDP tasks that require remembering prior actions, not just the current frame.",
       "teaserCaptionZh": "论文官方 Teaser：物体级 POMDP 任务——必须记住先前动作，而不能只看当前帧。"
     },
-    "libero-para": {
-      "benchmarkId": "libero-para",
-      "teaserSrc": "/benchmarks/libero-para/teaser.webp",
-      "teaserAlt": "Official paper teaser: VLA models can overfit to seen instruction phrasings and fail on paraphrases.",
-      "teaserAltZh": "论文官方 Teaser：VLA 可能过拟合见过的指令措辞，改写后失败。",
-      "teaserCaption": "Official paper teaser: VLA models can overfit to seen instruction phrasings and fail on paraphrases.",
-      "teaserCaptionZh": "论文官方 Teaser：VLA 可能过拟合见过的指令措辞，改写后失败。",
-      "src": "/benchmarks/libero-para/overview.webp",
-      "alt": "Official paper figure: a two-axis paraphrase grid — action vs. object — under data-scarce fine-tuning.",
-      "altZh": "论文主图：数据稀缺微调下的双轴改写网格——动作轴与物体轴。",
-      "caption": "Official paper figure: a two-axis paraphrase grid — action vs. object — under data-scarce fine-tuning.",
-      "captionZh": "论文主图：数据稀缺微调下的双轴改写网格——动作轴与物体轴。"
-    },
     "libero-plus": {
       "benchmarkId": "libero-plus",
       "src": "/benchmarks/libero-plus/overview.webp",

@@ -935,10 +935,20 @@ class OfficialVideoRuntime:
         extra: Mapping[str, Any],
     ) -> dict[str, Any]:
         """Follow OmniVinci's released multimodal processor/generation example."""
-        if video_path:
-            raise ValueError("OmniVinci video preprocessing is not configured")
         if checkpoint_path is None:
             raise ValueError("OmniVinci checkpoint is required")
+
+        video = None
+        if video_path is not None:
+            video = Path(video_path).expanduser().resolve()
+            if not video.is_file():
+                raise FileNotFoundError(video)
+        requested_frames = int(extra.get("max_video_frames", 8))
+        if not 1 <= requested_frames <= 128:
+            raise ValueError("OmniVinci max_video_frames must be between 1 and 128")
+        load_audio_in_video = extra.get("load_audio_in_video", False)
+        if not isinstance(load_audio_in_video, bool):
+            raise TypeError("OmniVinci load_audio_in_video must be a bool")
 
         import torch
         from transformers import AutoModel, AutoProcessor
@@ -954,18 +964,30 @@ class OfficialVideoRuntime:
             local_files_only=True,
         )
         model.eval()
+        if video is not None:
+            # The released example sets both configs before the processor
+            # extracts frames. Most QA clips are silent, so audio is opt-in.
+            model.config.num_video_frames = requested_frames
+            processor.config.num_video_frames = requested_frames
+            model.config.load_audio_in_video = load_audio_in_video
+            processor.config.load_audio_in_video = load_audio_in_video
         content: list[dict[str, str]] = []
         if image_path:
             image = Path(image_path).expanduser().resolve()
             if not image.is_file():
                 raise FileNotFoundError(image)
             content.append({"type": "image", "image": str(image)})
+        if video is not None:
+            content.append({"type": "video", "video": str(video)})
         content.append({"type": "text", "text": prompt})
         conversation = [{"role": "user", "content": content}]
         templated = processor.apply_chat_template(
             conversation, tokenize=False, add_generation_prompt=True
         )
         inputs = processor([templated])
+        video_frames_processed = (
+            len(inputs.media["video"][0]) if video is not None else 0
+        )
         input_ids = inputs.input_ids.to(model.llm_model_embed_tokens.weight.device)
         generation_config = model.default_generation_config
         generation_config.update(max_new_tokens=int(extra.get("max_new_tokens") or 128))
@@ -996,7 +1018,16 @@ class OfficialVideoRuntime:
         output = output_path.with_suffix(".json")
         output.parent.mkdir(parents=True, exist_ok=True)
         output.write_text(
-            json.dumps({"prompt": prompt, "text": answer, "image_path": str(image_path or "")}, ensure_ascii=False, indent=2),
+            json.dumps(
+                {
+                    "prompt": prompt,
+                    "text": answer,
+                    "image_path": str(image_path or ""),
+                    "video_path": str(video or ""),
+                },
+                ensure_ascii=False,
+                indent=2,
+            ),
             encoding="utf-8",
         )
         return self._success_result(
@@ -1004,7 +1035,14 @@ class OfficialVideoRuntime:
             metadata={
                 "checkpoint_path": str(checkpoint_path),
                 "model_class": type(model).__name__,
-                "input_kind": "image_text" if image_path else "text",
+                "input_kind": (
+                    "image_video_text"
+                    if video is not None and image_path
+                    else "video_text" if video is not None else "image_text" if image_path else "text"
+                ),
+                "max_video_frames": requested_frames if video is not None else None,
+                "video_frames_processed": video_frames_processed if video is not None else None,
+                "load_audio_in_video": load_audio_in_video if video is not None else None,
             },
         )
 

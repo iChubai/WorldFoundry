@@ -31,11 +31,15 @@ Family status: **Runner parity pending**.
 
 Use it to interrogate videos produced by generation entries — e.g. asking questions about physical plausibility or event order — rather than to generate content.
 
+The public `OmniVinciPipeline` accepts a video file through `video_path` (or `video`). It samples eight frames by default; set `max_video_frames` from 1 to 128 to change that limit. Video audio is off by default; set `load_audio_in_video=True` when the clip has an audio track and the question needs it. One checkpoint-backed, silent 13-frame clip was tested with eight sampled frames, and the image QA route also passed a regression check. Longer clips, audio-in-video, and evaluator runner parity remain unverified.
+
 WorldFoundry route is complete; missing checkpoint/assets are reported at runtime.
 
 ## Running in WorldFoundry
 
 Launch `worldfoundry-eval run omnivinci --pipeline.task-profile multimodal-reasoning` to run the reasoning route. The command builder above switches `--pipeline.task-profile` among recorded tasks and still emits `worldfoundry-eval run`.
+
+For direct video QA, call `OmniVinciPipeline.from_pretrained(model_path="/path/to/nvidia--omnivinci")`, then `pipeline(prompt="What is happening?", video_path="/path/to/clip.mp4", max_video_frames=8, load_audio_in_video=False, output_path="answer.json", return_dict=True)`. The result points to a JSON answer and reports the number of frames processed.
 
 It runs in the unified environment `worldfoundry-unified-cu128` (Python 3.11, CUDA 12.8).
 

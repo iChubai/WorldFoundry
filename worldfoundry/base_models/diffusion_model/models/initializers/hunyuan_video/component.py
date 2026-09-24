@@ -57,6 +57,7 @@ class HunyuanVideoLatentInitializer:
         image_to_video: bool = False,
         concat_condition: bool = False,
         freeze_first_frame: bool = False,
+        stabilize_i2v: bool = False,
     ) -> None:
         self.channels = int(channels)
         self.spatial_compression = int(spatial_compression)
@@ -64,6 +65,7 @@ class HunyuanVideoLatentInitializer:
         self.image_to_video = bool(image_to_video)
         self.concat_condition = bool(concat_condition)
         self.freeze_first_frame = bool(freeze_first_frame)
+        self.stabilize_i2v = bool(stabilize_i2v)
 
     def _noise(
         self,
@@ -145,6 +147,16 @@ class HunyuanVideoLatentInitializer:
                 f"{tuple(image_latents.shape)} vs {tuple(noise.shape)}"
             )
 
+        if self.stabilize_i2v:
+            # The released I2V stable recipe (flow shift 7) adds a small copy
+            # of the reference latent to every initial noise frame before
+            # token replacement freezes the first frame during denoising.
+            stability_t = torch.tensor([0.999], device=device, dtype=torch.float32)
+            noise = (
+                noise * stability_t
+                + image_latents.expand_as(noise) * (1.0 - stability_t)
+            ).to(dtype=dtype)
+
         if self.concat_condition:
             condition = torch.zeros_like(noise)
             condition[:, :, :1] = image_latents
@@ -178,6 +190,7 @@ def build_hunyuan_video_latent_initializer(context: ComponentBuildContext) -> Hu
         image_to_video=bool(options.get("image_to_video", False)),
         concat_condition=bool(options.get("concat_condition", False)),
         freeze_first_frame=bool(options.get("freeze_first_frame", False)),
+        stabilize_i2v=bool(options.get("stabilize_i2v", False)),
     )
 
 

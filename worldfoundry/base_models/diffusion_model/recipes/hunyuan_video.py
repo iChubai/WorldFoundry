@@ -145,8 +145,9 @@ def hunyuan_video_i2v_recipe() -> NativeDiffusionRecipe:
     """Original HunyuanVideo I2V with frozen first frame and encoded init.
 
     Same five roles as T2V, but the I2V DiT, ``image_to_video`` conditioner,
-    and initializer with ``freeze_first_frame``.  The VAE is also bound as
-    ``latent_encoder``.  Strategy ``standard``; embedded guidance.
+    and initializer with ``freeze_first_frame`` and the official stability
+    mix for shift 7.  The VAE is also bound as ``latent_encoder``.  Strategy
+    ``standard``; embedded guidance.
     """
 
     repo_id = "tencent/HunyuanVideo-I2V"
@@ -177,7 +178,7 @@ def hunyuan_video_i2v_recipe() -> NativeDiffusionRecipe:
             ComponentSpec(
                 initializer,
                 build_hunyuan_video_latent_initializer,
-                options={"image_to_video": True, "freeze_first_frame": True},
+                options={"image_to_video": True, "freeze_first_frame": True, "stabilize_i2v": True},
             ),
             ComponentSpec(scheduler, build_hunyuan_video_flow_match_scheduler, options={"shift": 7.0}),
             ComponentSpec(

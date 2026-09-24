@@ -1,4 +1,6 @@
 """Public JING-Flash-v1 pipeline with the shared WorldFoundry invocation contract."""
+from pathlib import Path
+
 from worldfoundry.pipelines.pipeline_utils import PipelineABC
 
 
@@ -16,7 +18,10 @@ class XGENJINGPipeline(PipelineABC):
         for name in ("runtime_profile", "variant_id", "pipeline_binding"):
             options.pop(name, None)
         checkpoint = options.pop("checkpoint_path", None) or hfd_root_path("XGENlabs--XGEN-JING")
-        base = options.pop("base_model_path", None) or hfd_root_path("MiniMaxAI--MiniMax-H3")
+        base = options.pop("base_model_path", None)
+        if base is None:
+            candidates = (hfd_root_path("MiniMaxAI--MiniMax-H3"), hfd_root_path("minimax-h3"))
+            base = next((candidate for candidate in candidates if Path(candidate).is_dir()), candidates[0])
         cpu_offload = options.pop("cpu_offload", True)
         if options:
             raise TypeError(f"Unsupported JING loading options: {sorted(options)}")

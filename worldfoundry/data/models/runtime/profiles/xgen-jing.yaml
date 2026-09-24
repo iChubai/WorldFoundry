@@ -24,7 +24,7 @@ artifact_kind: generated_world
 artifact_filename: xgen-jing.mp4
 execution:
   backend_stage: shared_base_model_runtime
-  runtime_status: integrated_checkpoint_required
+  runtime_status: checkpoint_gpu_validated
   integration_status: integrated
   pipeline_binding: xgen-jing
   default_parameters:
@@ -35,7 +35,8 @@ execution:
 license: minimax-h3-community
 notes:
 - checkpoint_path points to XGEN-JING or its jing_flash_v1 subdirectory; base_model_path uses Diffusers H3 components.
-- Requires a Diffusers release exposing MiniMax-H3 codecs (tested with 0.40.0) and Transformers Qwen3-VL support.
+- Requires Diffusers >=0.40.0 for MiniMax-H3 codecs and Transformers Qwen3-VL support.
 - CPU offload and sequential text/DiT/codec stages permit one GPU; upstream six-GPU distributed execution is not exposed.
 - Four fixed distilled steps, 24 FPS and stereo 32 kHz audio; no CFG or negative prompt.
 - Control lists have one WASD/IJKL string per repeated slice; default layout yields 17 * slice_count + 5 pixel frames.
+- A local checkpoint-backed 22-frame, 448x256 text-only case passed strict loading and audio/video artifact checks on one GPU with cpu_offload=false; the default 544x960 size, image references, and camera-control quality have not been validated.

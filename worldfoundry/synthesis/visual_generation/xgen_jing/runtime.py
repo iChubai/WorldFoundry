@@ -76,9 +76,18 @@ def denoise(model, packed, *, video_shift, audio_shift, reference_timestep=0., c
     return packed.video[0, start:].cpu(), packed.audio_channel_major().cpu()
 
 
-def _load_codec(base, name, device):
-    from diffusers import AutoencoderKLMiniMaxH3, AutoencoderKLMiniMaxH3Audio
+def _codec_classes():
+    try:
+        from diffusers import AutoencoderKLMiniMaxH3, AutoencoderKLMiniMaxH3Audio
+    except ImportError as exc:
+        raise ImportError(
+            "XGEN-JING requires Diffusers >= 0.40.0 with the MiniMax H3 video and audio codecs"
+        ) from exc
+    return AutoencoderKLMiniMaxH3, AutoencoderKLMiniMaxH3Audio
 
+
+def _load_codec(base, name, device):
+    AutoencoderKLMiniMaxH3, AutoencoderKLMiniMaxH3Audio = _codec_classes()
     cls = AutoencoderKLMiniMaxH3 if name == "vae" else AutoencoderKLMiniMaxH3Audio
     model, info = cls.from_pretrained(base / name, torch_dtype=torch.float32,
                                       local_files_only=True, output_loading_info=True)
@@ -128,6 +137,7 @@ class JINGRuntime:
             num_frames = 17 * count + 5 if first_chunk_size == 2 else 17 * (count - 1) + 5
         if type(num_frames) is not int or num_frames < 22:
             raise ValueError("num_frames must be an integer >= 22")
+        _codec_classes()
         frames, lengths = chunk_lengths(num_frames, first_chunk_size)
         expanded = expand_slices(case, len(lengths))
         images = []

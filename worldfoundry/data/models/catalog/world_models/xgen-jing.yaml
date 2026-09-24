@@ -19,6 +19,8 @@ integration:
   - Diffusers H3 video/audio codecs and core H264/audio IO are reused without copying architectures.
   - Four-step bidirectional JING-Flash-v1 only; the causal model has not been released.
 runner_parity:
-  status: pending
-  notes: Checkpoint-backed GPU validation is in progress.
+  status: checkpoint_gpu_validated
+  notes:
+  - The public pipeline strictly loaded the released JING-Flash-v1 and MiniMax-H3 checkpoints and produced a decodable 22-frame, 448x256, 24 FPS H.264 video with 32 kHz stereo AAC audio on one GPU.
+  - The recorded text-only low-resolution case shows a coherent moving golden retriever; default-resolution output, image references, camera-control accuracy, and upstream artifact parity remain unverified.
 catalog_category: world_models

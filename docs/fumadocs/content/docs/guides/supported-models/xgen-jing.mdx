@@ -30,7 +30,7 @@ result = pipe(
 )
 ```
 
-The transformer directory must contain `jing_flash_v1/config.json`, the shard index and every published weight shard (or point directly to `jing_flash_v1`). The base directory supplies `text_encoder`, `tokenizer`, `processor`, `vae`, `audio_vae`, `scheduler` and `audio_scheduler`. Loading is local and strict; ordinary H3 transformer weights are not JING. Use Diffusers with MiniMax-H3 codecs (tested with 0.40.0) and Transformers with Qwen3-VL support (tested with 5.12.1).
+The transformer directory must contain `jing_flash_v1/config.json`, the shard index and every published weight shard (or point directly to `jing_flash_v1`). The base directory supplies `text_encoder`, `tokenizer`, `processor`, `vae`, `audio_vae`, `scheduler` and `audio_scheduler`. Loading is local and strict; ordinary H3 transformer weights are not JING. Use Diffusers >=0.40.0 for the MiniMax-H3 codecs and Transformers with Qwen3-VL support (tested with 5.12.1). The runtime checks for both codecs before loading the large models.
 
 Use `w/s/a/d` for forward/backward/left/right translation and `i/k/j/l` for look up/down/left/right. Comma-separated simultaneous keys are accepted; opposites cancel. Each chunk's control list has exactly `repeat` entries. Empty controls still encode the learned zero camera command. Up to five references retain their supplied order as `<Picture 1>`, etc.; omit references for text-only generation. The first image is stretched to the canvas, later images are aspect-preserving cover-cropped.
 
@@ -38,6 +38,6 @@ With `first_chunk_size=2` (default), `N` slices produce `17*N+5` pixel frames; `
 
 The runtime processes text, transformer and codecs sequentially. Default transformer CPU offload avoids the upstream six-GPU requirement, at a transfer-time cost; `cpu_offload=False` keeps the transformer on the selected GPU. This route does not implement distributed sequence parallelism. `save_latents=True` also saves generated video/audio rows alongside the MP4. Numerical checks run before output clipping.
 
-The causal model and streaming observation-history inference are not released and are not exposed here. Validation covers only explicitly recorded configurations; long conversations and action accuracy need dedicated evaluation.
+The released JING-Flash-v1 and MiniMax-H3 checkpoints passed a single-GPU, text-only test at 448×256 with 22 frames, four steps and `cpu_offload=False`. The public pipeline produced a fully decodable 24 FPS H.264 video with a 32 kHz stereo AAC track; the frames show a coherent golden retriever running across grass. This validates that recorded configuration, not the default 960×544 size, image references, camera-control accuracy or general prompt quality. The causal model and streaming observation-history inference are not released and are not exposed here.
 
 Sources: [XGEN-JING](https://github.com/XGEN-Labs/XGEN-JING), revision `cbeec31630d63a981a8e40d6e79c71a188a7d8c9`; [weights](https://huggingface.co/XGENlabs/XGEN-JING), revision `8153db624fa4fa573d2e0c5335b515882efff30d`. Attribution and the MiniMax H3 Community License are recorded in root `THIRD-PARTY-NOTICES`.

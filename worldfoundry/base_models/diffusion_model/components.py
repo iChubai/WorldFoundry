@@ -159,14 +159,21 @@ _TRAINING_FORBIDDEN_OPTIONS = frozenset(
 def validate_runtime_policy_for_purpose(policy: RuntimePolicy, purpose: BuildPurpose | str) -> None:
     """Fail closed when a training build requests inference-only behavior.
 
-    Non-TRAINING returns immediately. TRAINING rejects offload, quantization, SAGE
-    attention, and ``_TRAINING_FORBIDDEN_OPTIONS`` (TeaCache, cuda_graph, cache_skip, …).
+    All purposes reject the unimplemented combined residual/AdaLN opt-in.
+    Otherwise non-TRAINING returns immediately. TRAINING rejects offload,
+    quantization, SAGE attention, and ``_TRAINING_FORBIDDEN_OPTIONS`` (TeaCache,
+    cuda_graph, cache_skip, …).
     P0 deliberately accepts a narrow policy; frozen-component offload and
     training-safe quantization must go through training-owned contracts instead of
     silently reusing inference wrappers. Raises :exc:`ValueError` on violation.
     """
 
     resolved = BuildPurpose(purpose)
+    fused_residual_adaln = policy.options.get("fused_residual_adaln")
+    if fused_residual_adaln is not None and not isinstance(fused_residual_adaln, bool):
+        raise TypeError("fused_residual_adaln must be a bool")
+    if fused_residual_adaln:
+        raise ValueError("fused_residual_adaln is unavailable: the combined kernel is not implemented")
     if resolved is not BuildPurpose.TRAINING:
         return
 

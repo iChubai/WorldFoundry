@@ -233,6 +233,15 @@ class NativeVisualDiffusionPipeline(PipelineABC):
             resolved = {str(name): value for name, value in explicit.items()}
         else:
             raise TypeError("runtime_options must be a mapping when provided")
+        # No native denoiser installs a combined residual/AdaLN runtime.
+        # This old opt-in must fail before loading instead of being ignored.
+        for value in (options.get("fused_residual_adaln"), resolved.get("fused_residual_adaln")):
+            if value is None:
+                continue
+            if not isinstance(value, bool):
+                raise TypeError("fused_residual_adaln must be a bool")
+            if value:
+                raise ValueError("fused_residual_adaln is unavailable: the combined kernel is not implemented")
         for name in cls.RUNTIME_POLICY_OPTION_KEYS:
             if name in options and options[name] is not None:
                 resolved[name] = options[name]
@@ -365,6 +374,7 @@ class NativeVisualDiffusionPipeline(PipelineABC):
         **kwargs: Any,
     ) -> dict[str, Any]:
         options = cls._options(model_path, required_components, kwargs)
+        cls._runtime_policy_options(options)
         model_id = cls._requested_model_id(options)
         return {
             "model_id": model_id,

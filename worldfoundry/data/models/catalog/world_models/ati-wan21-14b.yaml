@@ -38,8 +38,8 @@ docs:
   overview_zh: ATI（Any Trajectory Instruction）把「画轨迹」变成视频控制：在输入图上画出点轨迹，基于 Wan2.1-14B 的模型就让物体、相机或两者沿轨迹运动。本 catalog 中仅内置 ATI 的官方推理增量——未改动的 Wan2.1 实现从 worldfoundry/base_models 复用。
   architecture: Per the upstream release, ATI injects dense point-track conditioning into the Wan2.1 I2V backbone through a trajectory instruction module. Runtime checkpoint loading builds a read-only union of ATI weights (bytedance-research/ATI) and locally staged Wan2.1 I2V 480P base components.
   architecture_zh: 按上游发布，ATI 通过轨迹指令模块把稠密点轨迹条件注入 Wan2.1 I2V 基座。运行时 checkpoint 加载构建 ATI 权重（bytedance-research/ATI）与本地就位的 Wan2.1 I2V 480P 基座组件的只读并集。
-  usage_notes: Real 81-frame GPU inference is verified with local ATI and Wan2.1 I2V 480P checkpoints. Point-track accuracy and official artifact parity remain unmeasured. No source checkout or runtime download is permitted. Input schema is prompt, image, and dense point tracks.
-  usage_notes_zh: 已用本地 ATI 与 Wan2.1 I2V 480P 权重验证真实的 81 帧 GPU 推理；点轨迹精度和官方产物一致性尚未测量。不允许源码检出或运行时下载。输入为提示词、图像与稠密点轨迹。
+  usage_notes: Real 81-frame GPU inference is verified with local ATI and Wan2.1 I2V 480P checkpoints. Point-track accuracy and official artifact parity remain unmeasured. No source checkout or runtime download is permitted. Packed tracks have shape [N,121,1,3], with x/y pixel coordinates multiplied by 8; visibility may be normalized [0,1] or upstream quantized [0,8], consistently within each track.
+  usage_notes_zh: 已用本地 ATI 与 Wan2.1 I2V 480P 权重验证真实的 81 帧 GPU 推理；点轨迹精度和官方产物一致性尚未测量。不允许源码检出或运行时下载。打包轨迹形状为 [N,121,1,3]，x/y 像素坐标乘以 8；可见度可用归一化 [0,1] 或上游量化 [0,8]，每条轨迹内部应保持一种编码。
   limitations:
   - Point-trajectory adherence and official artifact parity are not established by the synthetic-track smoke test.
   - '14B backbone: needs high-memory GPUs for practical inference.'

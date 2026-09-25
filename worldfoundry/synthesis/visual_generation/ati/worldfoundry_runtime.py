@@ -180,6 +180,19 @@ class ATIRuntime:
         raw = np.asarray(unzip_to_array(packed), dtype=np.float32).copy()
         if raw.ndim != 4 or raw.shape[1:] != (121, 1, 3):
             raise ValueError(f"ATI track payload must have shape [N,121,1,3], got {raw.shape}.")
+        if raw.shape[0] == 0:
+            raise ValueError("ATI track payload must contain at least one trajectory.")
+        if not np.isfinite(raw).all():
+            raise ValueError("ATI track coordinates and visibility must be finite.")
+        visibility = raw[..., 2]
+        if np.any((visibility < 0) | (visibility > 8)):
+            raise ValueError("ATI track visibility must be in [0,1] or upstream quantized [0,8].")
+        # Upstream serializes both pixel coordinates and visibility multiplied by 8.
+        # Accept ordinary 0..1 visibility as well, so a visible value of 1 does not
+        # become only 1/8 visible after process_tracks divides the payload by 8.
+        if visibility.size:
+            normalized_tracks = visibility.reshape(raw.shape[0], -1).max(axis=1) <= 1
+            visibility[normalized_tracks] *= 8
         if track_width and track_height:
             raw[..., 0] *= float(image_width) / float(track_width)
             raw[..., 1] *= float(image_height) / float(track_height)

@@ -278,7 +278,8 @@ class MultiWorldItTakesTwoRuntime:
             if derive_env_obv_from_image is None
             else bool(derive_env_obv_from_image)
         )
-        if env_obv is None and derive_environment:
+        derived_environment = env_obv is None and derive_environment
+        if derived_environment:
             image_path = save_image_input(input_image, output_root / "input.png")
             env_obv = _derive_env_obv_from_image(image_path)
         if env_obv is None:
@@ -331,7 +332,7 @@ class MultiWorldItTakesTwoRuntime:
             "fps": resolved_fps,
             "num_inference_steps": steps,
             "inference_seed": seed,
-            "derived_env_obv_from_image": bool(derive_environment),
+            "derived_env_obv_from_image": derived_environment,
         }
         (output_root / f"{save_name}.json").write_text(
             json.dumps(metadata, indent=2, ensure_ascii=False),

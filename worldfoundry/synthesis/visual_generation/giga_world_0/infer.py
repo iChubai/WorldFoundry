@@ -30,7 +30,7 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument("--guidance-scale", type=float, default=1.0)
     parser.add_argument("--fps", type=int, default=16)
     parser.add_argument("--seed", type=int, default=6666)
-    parser.add_argument("--max-text-length", type=int, default=128)
+    parser.add_argument("--max-text-length", type=int, default=512)
     parser.add_argument("--mixed-precision", choices=("bf16", "fp16", "fp32"), default="bf16")
     return parser
 

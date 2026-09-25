@@ -44,3 +44,4 @@ notes:
 - The compatibility launcher selectively imports the GigaWorld-0 diffusion subset of giga-models so unrelated vision and VLA extras are not required.
 - The legacy official T5-11B PyTorch checkpoint must be converted locally with weights-only loading to the encoder-only safetensors directory above.
 - Single-image low-step generation validates checkpoint execution only; use official GR1 observations and full sampling settings for evaluation-quality parity.
+- The text encoder accepts up to 512 tokens by default, matching the official GigaWorld-0 encoder; smaller max_text_length values are an explicit runtime choice.

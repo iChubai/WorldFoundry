@@ -217,7 +217,7 @@ def build_command(context: Mapping[str, Any]) -> list[str]:
         "--seed",
         str(settings.get("seed", 6666)),
         "--max-text-length",
-        str(settings.get("max_text_length", 128)),
+        str(settings.get("max_text_length", 512)),
         "--mixed-precision",
         str(settings.get("mixed_precision", "bf16")),
     ]

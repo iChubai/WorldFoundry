@@ -11493,6 +11493,7 @@ CURATED_OVERRIDES: Dict[str, Dict[str, Any]] = {
         "display_name": "Veo3",
         "category": "Remote API",
         "default_backend": "api_init",
+        "default_endpoint": "https://generativelanguage.googleapis.com",
         "tags": ("api", "t2v", "i2v"),
     },
     "ltx-2.3-t2v": {

@@ -45,6 +45,7 @@ worldfoundry-tui = "worldfoundry.cli.tui:main"
 [project.optional-dependencies]
 api = [
     "dashscope",
+    "google-genai>=1.60.0,<2",
     "openai>=1",
     "pillow",
     "qwen-vl-utils",

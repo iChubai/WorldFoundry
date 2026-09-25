@@ -14,7 +14,7 @@ here instead of once per vendor.
     World Labs, DashScope).
 
 :class:`OpenAiVideoSynthesis`
-    Backends reached through an OpenAI-compatible SDK client (Sora, Veo).
+    Backends reached through an OpenAI-compatible SDK client (Sora).
 """
 
 from __future__ import annotations

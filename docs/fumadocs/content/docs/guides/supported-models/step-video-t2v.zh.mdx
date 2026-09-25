@@ -27,7 +27,7 @@ catalog 记录的任务包括 文生视频、视频生成。别名包括 `step-v
 
 ## 运行时契约
 
-必填 `prompt`；可选 `image`；产物 `generated_video`、`step_video_t2v.mp4`。
+必填 `prompt`；不接受图像输入。产物：`generated_video`、`step_video_t2v.mp4`。
 
 记录的任务 profile：`text-to-video`、`video-generation`。绑定的 pipeline 类是 `StepVideoT2VPipeline`。
 

@@ -31,11 +31,13 @@ class GammaWorldLatentInitializer:
         spatial_compression: int = 8,
         temporal_compression: int = 4,
         num_players: int = 2,
+        required_num_frames: int | None = None,
     ) -> None:
         self.channels = int(channels)
         self.spatial_compression = int(spatial_compression)
         self.temporal_compression = int(temporal_compression)
         self.num_players = int(num_players)
+        self.required_num_frames = required_num_frames
         if min(self.channels, self.spatial_compression, self.temporal_compression, self.num_players) <= 0:
             raise ValueError("Gamma latent dimensions and num_players must be positive")
 
@@ -98,6 +100,11 @@ class GammaWorldLatentInitializer:
     ) -> LatentInitialization:
         if request.batch_size != 1:
             raise ValueError("Gamma-World currently supports one multi-player rollout per request")
+        if self.required_num_frames is not None and request.num_frames != self.required_num_frames:
+            raise ValueError(
+                "Gamma-World bidirectional requires "
+                f"num_frames={self.required_num_frames} per view (received {request.num_frames!r})"
+            )
         if request.height % self.spatial_compression or request.width % self.spatial_compression:
             raise ValueError(
                 f"Gamma height and width must be divisible by {self.spatial_compression}"
@@ -191,6 +198,7 @@ def build_gamma_world_latent_initializer(
         spatial_compression=int(context.recipe_options.get("spatial_compression", 8)),
         temporal_compression=int(context.recipe_options.get("temporal_compression", 4)),
         num_players=int(options.get("num_players", 2)),
+        required_num_frames=context.recipe_options.get("required_num_frames"),
     )
 
 

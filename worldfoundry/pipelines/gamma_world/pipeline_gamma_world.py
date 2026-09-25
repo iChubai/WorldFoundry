@@ -127,6 +127,13 @@ class GammaWorldPipeline(NativeTextToVideoPipeline):
                     "Gamma-World mode is selected while loading the pipeline; "
                     f"loaded {self.recipe_model_id!r}, received {requested_mode!r} at inference"
                 )
+        if self.recipe_model_id == "gamma-world-bidirectional":
+            num_frames = kwargs.get("num_frames", self.DEFAULT_NUM_FRAMES)
+            if num_frames is not None and num_frames != 189:
+                raise ValueError(
+                    "Gamma-World bidirectional requires num_frames=189 per view "
+                    f"(received {num_frames!r}); causal modes support shorter rollouts"
+                )
         guidance = kwargs.pop("guidance", None)
         if guidance is not None:
             if kwargs.get("guidance_scale") is not None:

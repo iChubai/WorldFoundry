@@ -52,5 +52,6 @@ integration:
   status: integrated
 notes:
 - causal_few_step is the default four-step streaming model.
+- Bidirectional mode requires exactly 189 output frames per player view (`num_frames=189`); causal modes allow shorter rollouts.
 - Pass a sequence of per-player images plus one action JSON/mapping per player, or pass a compatible eval_dir.
 - DiT, Reason1 conditioning, Wan VAE, scheduler, and window execution are assembled through the shared native diffusion roles.

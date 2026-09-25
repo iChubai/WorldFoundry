@@ -57,6 +57,7 @@ def _recipe(
     steps: int,
     guidance: float,
     execution_options: dict[str, object] | None = None,
+    required_num_frames: int | None = None,
 ) -> NativeDiffusionRecipe:
     """Bind shared Gamma roles; ``strategy`` chooses window vs full-sequence."""
 
@@ -137,6 +138,7 @@ def _recipe(
             "temporal_compression": 4,
             "default_num_inference_steps": steps,
             "default_guidance_scale": guidance,
+            **({"required_num_frames": required_num_frames} if required_num_frames is not None else {}),
         },
         metadata={
             "architecture": "gamma-world-cosmos-multiview-dit",
@@ -192,6 +194,7 @@ def gamma_world_bidirectional_recipe() -> NativeDiffusionRecipe:
         strategy="standard",
         steps=35,
         guidance=5.0,
+        required_num_frames=189,
     )
 
 

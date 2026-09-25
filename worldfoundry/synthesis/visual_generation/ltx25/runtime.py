@@ -49,12 +49,14 @@ def _expand_path(value: str | Path | None) -> Path | None:
 
 def _python_path(value: str | Path | None) -> Path:
     if value is None or not str(value).strip():
-        return Path(sys.executable).resolve()
+        return Path(os.path.abspath(sys.executable))
     text = os.path.expandvars(str(value))
     if Path(text).is_absolute() or os.sep in text:
-        return Path(text).expanduser().resolve()
+        # venv Python is often a symlink to its base interpreter. Resolving it
+        # loses the venv's site-packages when launched from another workdir.
+        return Path(os.path.abspath(os.path.expanduser(text)))
     discovered = shutil.which(text)
-    return Path(discovered).resolve() if discovered else Path(text).expanduser()
+    return Path(os.path.abspath(discovered)) if discovered else Path(text).expanduser()
 
 
 def _append_value(command: list[str], flag: str, value: Any) -> None:

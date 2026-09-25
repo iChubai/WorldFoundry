@@ -60,7 +60,7 @@ evidence:
   notes:
   - WorldFoundry launches the version-pinned official ltx_pipelines.distilled entrypoint in a dedicated environment.
   - Split checkpoint mapping, T2V/I2V conditioning, audio-video output, offload, and quantization command contracts are CPU-tested.
-  - Checkpoint-backed GPU artifact parity remains pending because this workspace has no accelerator or LTX-2.5 weights.
+  - Local required split components now pass CPU preflight; the two previously incomplete large files match the pinned official SHA-256 values. Checkpoint-backed GPU artifact parity remains pending.
 runner_parity:
   status: pending
   expected_artifacts:
@@ -68,7 +68,7 @@ runner_parity:
   - ltx-2.5.json
   notes:
   - Command construction and official split-component mapping are validated without importing upstream CUDA code.
-  - Visual and synchronized-audio quality parity requires the gated checkpoint and accelerator hardware.
+  - Visual and synchronized-audio quality parity still requires a checkpoint-backed GPU run.
 catalog_category: video
 docs:
   publisher: Lightricks
@@ -82,12 +82,12 @@ docs:
   usage_notes_zh: 请先接受 Hugging Face 模型条款，按仓库目录结构下载五个必需拆分组件，检出记录的源码 revision，并在独立环境中安装 ltx-core 与 ltx-pipelines 依赖；执行时显式传入 execute=True。可选 duration head 可启用基于提示词的自动时长预测。
   limitations:
   - The checkpoint is gated and approximately 66 GiB for the required distilled components.
-  - GPU/MPS artifact and audio-video parity have not been validated in this CPU-only workspace.
+  - GPU/MPS artifact and audio-video parity have not yet been validated.
   - DFR, full/dev-model guidance, IC-LoRA, video editing, training, UI, and server surfaces are outside this inference-only integration.
   - The LTX-2.x Community License requires a paid license for covered commercial entities at or above its revenue threshold except for its defined non-commercial uses.
   limitations_zh:
   - Checkpoint 需要接受访问条款，必需蒸馏组件合计约 66 GiB。
-  - 当前纯 CPU workspace 尚未验证 GPU/MPS 产物及音视频一致性。
+  - 尚未验证 GPU/MPS 产物及音视频一致性。
   - DFR、完整 dev 模型引导、IC-LoRA、视频编辑、训练、UI 与服务端均不在本次仅推理集成范围内。
   - LTX-2.x Community License 对达到其营收门槛的适用商业实体要求付费许可，但其定义的非商业用途除外。
   recommended_benchmarks:

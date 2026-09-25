@@ -38,8 +38,9 @@ variants:
   runner_parity:
     status: pending
     notes: CPU fake-component execution validates the schedule, image first-frame
-      seeding, expert routing, cache separation, and block traversal. Local text
-      encoder shards 1 and 2 fail official SHA-256 checks, blocking GPU inference.
+      seeding, expert routing, cache separation, and block traversal. A repaired,
+      hash-verified checkpoint completed a 13-frame GPU inference. The default
+      81-frame output and upstream numerical parity remain unverified.
 runner_target: worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner
 runtime_profile: runtime-profile:fastvideo-causal-wan2.2-i2v-14b
 pipeline_binding: fastvideo-causal-wan2.2-i2v-14b
@@ -65,6 +66,6 @@ docs:
   usage_notes: An input image is required. Defaults are 832x480, 81 frames, eight steps, guidance 1, and 16 FPS.
   usage_notes_zh: 必须提供输入图像。默认配置为 832x480、81 帧、八步、guidance 1、16 FPS。
   limitations:
-  - The local text encoder shards 1 and 2 are incomplete and fail official LFS SHA-256 checks; GPU inference is blocked until repaired.
+  - A 13-frame checkpoint-backed inference passed; the default 81-frame output and upstream numerical parity remain unverified.
   limitations_zh:
-  - 本地文本编码器前两片不完整，未通过官方 LFS SHA-256 校验；修复前无法进行 GPU 推理。
+  - 已完成 13 帧的真实权重推理；默认的 81 帧输出和与官方实现的数值一致性仍待验证。

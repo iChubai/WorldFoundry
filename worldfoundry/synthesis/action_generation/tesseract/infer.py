@@ -66,18 +66,19 @@ def _validate_args(args: argparse.Namespace) -> None:
 
 
 def _load_rgb(path: Path, *, height: int, width: int):
-    import cv2
     import numpy as np
     from PIL import Image
 
     from tesseract.utils import crop_and_resize_frames, read_video_first_frame
 
     if path.suffix.lower() in {".mp4", ".mov", ".webm", ".avi"}:
-        image = read_video_first_frame(str(path))
+        image = np.asarray(read_video_first_frame(str(path)), dtype=np.float32)
     else:
-        image = np.asarray(Image.open(path).convert("RGB"), dtype=np.uint8)
+        image = np.asarray(Image.open(path).convert("RGB"), dtype=np.float32)
+    # Official RGBDN inference resizes float32 RGB before scaling to [0, 1].
+    # Quantizing the resized result to uint8 changes nearly every input pixel.
     image = crop_and_resize_frames([image], (height, width), interpolation="bilinear")[0]
-    return np.ascontiguousarray(image, dtype=np.uint8)
+    return np.ascontiguousarray(image, dtype=np.float32)
 
 
 def _synthetic_gradient_geometry(rgb):

@@ -78,6 +78,9 @@ def _missing_required_paths(
             raw_path = item.get("path")
             label = str(item.get("id") or item.get("label") or "")
             base = str(item.get("base") or base)
+            hint = str(item.get("hint") or "")
+        else:
+            hint = ""
         if not isinstance(raw_path, str) or not raw_path.strip():
             continue
         rendered = str(_expand_value(raw_path)).format(**variables)
@@ -91,7 +94,8 @@ def _missing_required_paths(
                 candidate = (checkpoint_path / candidate) if checkpoint_path else candidate
         if not candidate.exists():
             prefix = f"{label}: " if label else ""
-            missing.append(f"{prefix}{rendered} -> {candidate}")
+            suffix = f"; {hint}" if hint else ""
+            missing.append(f"{prefix}{rendered} -> {candidate}{suffix}")
     return missing
 
 

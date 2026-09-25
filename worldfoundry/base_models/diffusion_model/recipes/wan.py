@@ -661,7 +661,8 @@ def fastvideo_causal_wan22_i2v_14b_recipe() -> NativeDiffusionRecipe:
                 build_fastvideo_causal_wan_self_forcing_scheduler,
                 options={
                     "raw_timesteps": (1000, 850, 700, 550, 350, 275, 200, 125),
-                    "shift": 5.0,
+                    "shift": 12.0,
+                    "boundary_ratio": 0.875,
                 },
             ),
             ComponentSpec(codec, build_diffusers_wan_video_codec, {"weights": "vae"}),

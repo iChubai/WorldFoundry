@@ -14,6 +14,8 @@ Unsupported keys in ``SamplingConfig.scheduler_options`` raise
 
 from __future__ import annotations
 
+from dataclasses import dataclass
+
 import torch
 from torch import Tensor
 
@@ -227,15 +229,19 @@ def build_wan_flow_match_euler_scheduler(
     )
 
 
+@dataclass(frozen=True, slots=True)
+class _CausalWanSchedulerStep(SchedulerStep):
+    """Carry the request's shifted boundary without mutable scheduler state."""
+
+    boundary_sigma: Tensor
+
+
 class FastVideoCausalWanSelfForcingScheduler:
     """Fixed eight-step self-forcing sampler released with CausalWan2.2.
 
-    The configured values are raw training indices.  Model calls receive the
-    rationally shifted timestep, while each completed prediction is converted
-    to ``x0`` and re-noised at the *next* shifted sigma.  Re-noising in
-    :meth:`step` is equivalent to the upstream sampler doing it immediately
-    before the following model call and keeps all randomness on the runner's
-    request-scoped generator.
+    The configured values are raw training indices. High-noise expert outputs
+    predict the boundary latent; low-noise outputs predict x0. The boundary
+    sigma is the nearest point on FastVideo's 1000-step training grid.
     """
 
     DEFAULT_RAW_TIMESTEPS = (1000, 850, 700, 550, 350, 275, 200, 125)
@@ -244,18 +250,22 @@ class FastVideoCausalWanSelfForcingScheduler:
         self,
         *,
         raw_timesteps: tuple[int, ...] = DEFAULT_RAW_TIMESTEPS,
-        shift: float = 5.0,
+        shift: float = 12.0,
+        boundary_ratio: float = 0.875,
         num_train_timesteps: int = 1000,
         timestep_dtype: torch.dtype = torch.float32,
     ) -> None:
         self.raw_timesteps = tuple(int(value) for value in raw_timesteps)
         self.shift = float(shift)
+        self.boundary_ratio = float(boundary_ratio)
         self.num_train_timesteps = int(num_train_timesteps)
         self.timestep_dtype = timestep_dtype
         if self.num_train_timesteps <= 0:
             raise ValueError("num_train_timesteps must be positive")
         if self.shift <= 0:
             raise ValueError("shift must be positive")
+        if not 0.0 < self.boundary_ratio < 1.0:
+            raise ValueError("boundary_ratio must be in (0, 1)")
         if not self.timestep_dtype.is_floating_point:
             raise ValueError("timestep_dtype must be floating point")
         if not self.raw_timesteps:
@@ -292,11 +302,27 @@ class FastVideoCausalWanSelfForcingScheduler:
         )
         sigmas = shift_flow_sigmas(raw / float(self.num_train_timesteps), shift)
         model_timesteps = sigmas * float(self.num_train_timesteps)
+        training_sigmas = shift_flow_sigmas(
+            torch.linspace(
+                1.0,
+                0.0,
+                self.num_train_timesteps + 1,
+                device=device,
+                dtype=self.timestep_dtype,
+            )[:-1],
+            shift,
+        )
+        boundary_index = torch.argmin(
+            (training_sigmas * self.num_train_timesteps
+             - self.boundary_ratio * self.num_train_timesteps).abs()
+        )
+        boundary_sigma = training_sigmas[boundary_index]
         return tuple(
-            SchedulerStep(
+            _CausalWanSchedulerStep(
                 index=index,
                 timestep=model_timesteps[index],
                 next_timestep=model_timesteps[index + 1],
+                boundary_sigma=boundary_sigma,
             )
             for index in range(len(self.raw_timesteps))
         )
@@ -314,9 +340,18 @@ class FastVideoCausalWanSelfForcingScheduler:
         *,
         generator: torch.Generator,
     ) -> Tensor:
+        if not isinstance(step, _CausalWanSchedulerStep):
+            raise TypeError("FastVideo CausalWan requires its own scheduler step")
         sigma = step.timestep.to(device=latents.device, dtype=torch.float64)
         sigma = sigma / float(self.num_train_timesteps)
-        clean = flow_prediction_to_x0(model_output, latents, sigma)
+        boundary_sigma = step.boundary_sigma.to(device=latents.device, dtype=torch.float64)
+        boundary_timestep = self.boundary_ratio * self.num_train_timesteps
+        high_noise = bool(step.timestep >= boundary_timestep)
+        clean = flow_prediction_to_x0(
+            model_output,
+            latents,
+            sigma - boundary_sigma if high_noise else sigma,
+        )
         next_sigma = step.next_timestep.to(device=latents.device, dtype=torch.float64)
         next_sigma = next_sigma / float(self.num_train_timesteps)
         if float(next_sigma.detach().cpu()) == 0.0:
@@ -324,10 +359,19 @@ class FastVideoCausalWanSelfForcingScheduler:
         noise = torch.randn(
             clean.shape,
             generator=generator,
-            device=clean.device,
+            device=generator.device,
             dtype=clean.dtype,
-        )
-        return add_flow_noise(clean, noise, next_sigma)
+        ).to(clean.device)
+        if high_noise and bool(step.next_timestep < boundary_timestep):
+            # Upstream draws and discards this noise on the expert switch.
+            return clean
+        next_sigma32 = next_sigma.to(torch.float32)
+        if high_noise:
+            boundary32 = boundary_sigma.to(torch.float32)
+            alpha = (1.0 - next_sigma32) / (1.0 - boundary32)
+            beta = torch.sqrt(next_sigma32.square() - (alpha * boundary32).square())
+            return (alpha * clean + beta * noise).to(noise.dtype)
+        return ((1.0 - next_sigma32) * clean + next_sigma32 * noise).to(noise.dtype)
 
 
 def build_fastvideo_causal_wan_self_forcing_scheduler(
@@ -342,7 +386,8 @@ def build_fastvideo_causal_wan_self_forcing_scheduler(
                 FastVideoCausalWanSelfForcingScheduler.DEFAULT_RAW_TIMESTEPS,
             )
         ),
-        shift=float(options.get("shift", 5.0)),
+        shift=float(options.get("shift", 12.0)),
+        boundary_ratio=float(options.get("boundary_ratio", 0.875)),
         num_train_timesteps=int(options.get("num_train_timesteps", 1000)),
     )
 

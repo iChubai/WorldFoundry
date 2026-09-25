@@ -2967,7 +2967,7 @@ HUNYUAN_WORLD_VOYAGER_INFERENCE_SPEC = ModelInferenceSpec(
                 _field(
                     "interactions", "Interactions", kind="interaction_tokens", target="params", default=("forward",)
                 ),
-                _field("frames", "Frames", kind="integer", target="params", default=49),
+                _field("frames", "Requested Frames", kind="integer", target="params", default=49),
                 _field("fps", "FPS", kind="integer", target="params", default=24),
                 _field("steps", "Steps", kind="integer", target="params", default=50),
                 _field("seed", "Seed", kind="integer", target="call_kwargs", default=0),
@@ -2984,7 +2984,7 @@ HUNYUAN_WORLD_VOYAGER_INFERENCE_SPEC = ModelInferenceSpec(
             default_call_kwargs=HUNYUAN_WORLD_VOYAGER_OFFICIAL_CALL_KWARGS,
         ),
     ),
-    notes=("The default task emits the same video artifact as the official in-tree runner.",),
+    notes=("The official case1 requests 49 frames and emits 45 after dropping four I2V conditioning frames.",),
 )
 
 HY_WORLDPLAY_INFERENCE_SPEC = ModelInferenceSpec(

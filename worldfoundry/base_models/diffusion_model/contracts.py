@@ -51,8 +51,9 @@ class SamplingConfig:
     """Model-independent settings for one denoising run.
 
     Attributes:
-        num_inference_steps: The scheduler must return exactly this many steps;
-            the runner checks the length.
+        num_inference_steps: Requested inference steps. Schedulers normally
+            return exactly this many updates; model-specific interval-based
+            samplers may declare one extra evaluation point.
         guidance_scale: Classifier-free guidance strength.  In ``standard``
             mode, ``1.0`` skips the negative branch.  In ``positive`` mode,
             ``0.0`` skips it.

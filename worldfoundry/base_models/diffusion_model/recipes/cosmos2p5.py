@@ -7,8 +7,8 @@ until a recipe is actually built.  Recipes do not construct runners.
 Family split
 ------------
 - Predict 2.5 2B / 14B: DiT, Cosmos-Reason1 conditioner, video VAE used
-  as both latent initializer and decoder, Wan UniPC (shift 5.0,
-  no Karras sigmas).  Strategy ``standard`` with
+  as both latent initializer and decoder, Wan UniPC (shift 5.0;
+  the 2B post-trained checkpoint uses Karras sigmas).  Strategy ``standard`` with
   ``guidance_mode="positive"`` (CFG).  Text / image / video-to-world.
 - Transfer 2.5 2B: VACE-style controlled DiT on the same four roles;
   edge-to-world / controlled-video capabilities.
@@ -93,7 +93,9 @@ def _recipe(
     pretrained_checkpoint: CheckpointSpec | None = None,
     minimum_frames: int = 1,
     use_karras_sigma: bool = False,
+    karras_steps_are_intervals: bool = False,
     zero_pad_image: bool = True,
+    conditional_frame_timestep: float = -1.0,
 ) -> NativeDiffusionRecipe:
     """Bind DiT, Reason1 conditioner, VAE-as-initializer, and Wan UniPC CFG."""
 
@@ -141,12 +143,20 @@ def _recipe(
             ),
             ComponentSpec(
                 codec, _build_cosmos25_video_codec, {"weights": "vae"},
-                options={"minimum_frames": minimum_frames, "zero_pad_image": zero_pad_image},
+                options={
+                    "minimum_frames": minimum_frames,
+                    "zero_pad_image": zero_pad_image,
+                    "conditional_frame_timestep": conditional_frame_timestep,
+                },
             ),
             ComponentSpec(
                 scheduler,
                 _build_cosmos25_scheduler,
-                options={"shift": 5.0, "use_karras_sigma": use_karras_sigma},
+                options={
+                    "shift": 5.0,
+                    "use_karras_sigma": use_karras_sigma,
+                    "karras_steps_are_intervals": karras_steps_are_intervals,
+                },
             ),
         ),
         execution=ExecutionSpec(
@@ -180,7 +190,7 @@ def _recipe(
 
 
 def cosmos25_2b_recipe() -> NativeDiffusionRecipe:
-    """Predict 2.5 2B: Reason1 text + UniPC + VAE-as-initializer, CFG."""
+    """Predict 2.5 2B: official post-trained EDM-checkpoint inference setup."""
 
     return _recipe(
         model_id=COSMOS25_2B_MODEL_ID,
@@ -195,6 +205,9 @@ def cosmos25_2b_recipe() -> NativeDiffusionRecipe:
             files=("base/pre-trained/d20b7120-df3e-4911-919d-db6e08bad31c_ema_bf16.pt",),
             allow_patterns=("base/pre-trained/d20b7120-df3e-4911-919d-db6e08bad31c_ema_bf16.pt",),
         ),
+        use_karras_sigma=True,
+        karras_steps_are_intervals=True,
+        conditional_frame_timestep=0.1,
     )
 
 
@@ -239,6 +252,7 @@ def cosmos25_transfer_2b_recipe() -> NativeDiffusionRecipe:
         minimum_frames=93,
         use_karras_sigma=True,
         zero_pad_image=False,
+        conditional_frame_timestep=0.0,
     )
 
 

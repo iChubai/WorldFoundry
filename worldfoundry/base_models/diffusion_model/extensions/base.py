@@ -52,6 +52,7 @@ class DiffusionRunContext:
     request_id: str = field(default_factory=lambda: uuid.uuid4().hex)
     state: dict[str, object] = field(default_factory=dict)
     step: SchedulerStep | None = None
+    total_steps: int | None = None
 
 
 class DiffusionExtension:

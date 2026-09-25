@@ -356,11 +356,13 @@ class WanFlowUniPCScheduler:
         num_train_timesteps: int = 1000,
         shift: float = 5.0,
         use_karras_sigma: bool = False,
+        karras_steps_are_intervals: bool = False,
     ) -> None:
         from .flow_unipc import FlowUniPCMultistepScheduler
 
         self.shift = float(shift)
         self.use_karras_sigma = bool(use_karras_sigma)
+        self.karras_steps_are_intervals = bool(karras_steps_are_intervals)
         self.solver = FlowUniPCMultistepScheduler(
             num_train_timesteps=int(num_train_timesteps),
             shift=1,
@@ -379,16 +381,18 @@ class WanFlowUniPCScheduler:
         if unsupported:
             raise ValueError(f"unsupported WanFlowUniPCScheduler options: {sorted(unsupported)}")
         use_karras_sigma = bool(sampling.scheduler_options.get("use_karras_sigma", self.use_karras_sigma))
-        # The NVIDIA solver's historical Karras branch interprets ``N`` as
-        # intervals and returns N+1 model-evaluation points. The canonical
-        # scheduler contract defines N as evaluations, so translate here. A
-        # one-evaluation schedule cannot represent a Karras interval (passing
-        # zero would divide by zero), so use the equivalent single flow step
-        # from sigma_max to the terminal sigma.
-        effective_karras_sigma = use_karras_sigma and sampling.num_inference_steps > 1
+        # The NVIDIA solver's Karras branch interprets ``N`` as intervals and
+        # returns N+1 model-evaluation points. Most native callers define N as
+        # evaluations, so translate by default. The post-trained Cosmos2.5-2B
+        # recipe opts into NVIDIA's original interval count for exact parity.
+        # A one-evaluation canonical schedule uses the equivalent single flow
+        # step because passing zero Karras intervals would divide by zero.
+        effective_karras_sigma = use_karras_sigma and (
+            self.karras_steps_are_intervals or sampling.num_inference_steps > 1
+        )
         solver_steps = (
             sampling.num_inference_steps - 1
-            if effective_karras_sigma
+            if effective_karras_sigma and not self.karras_steps_are_intervals
             else sampling.num_inference_steps
         )
         self.solver.set_timesteps(
@@ -407,6 +411,12 @@ class WanFlowUniPCScheduler:
             )
             for index, timestep in enumerate(timesteps)
         )
+
+    def expected_step_count(self, sampling: SamplingConfig) -> int:
+        """Account for NVIDIA's 2B convention: N Karras intervals yield N+1 updates."""
+
+        use_karras_sigma = bool(sampling.scheduler_options.get("use_karras_sigma", self.use_karras_sigma))
+        return sampling.num_inference_steps + int(self.karras_steps_are_intervals and use_karras_sigma)
 
     def scale_model_input(self, latents: Tensor, step: SchedulerStep) -> Tensor:
         del step
@@ -436,6 +446,7 @@ def build_wan_flow_unipc_scheduler(context: ComponentBuildContext) -> WanFlowUni
         num_train_timesteps=int(context.component_options.get("num_train_timesteps", 1000)),
         shift=float(context.component_options.get("shift", 5.0)),
         use_karras_sigma=bool(context.component_options.get("use_karras_sigma", False)),
+        karras_steps_are_intervals=bool(context.component_options.get("karras_steps_are_intervals", False)),
     )
 
 

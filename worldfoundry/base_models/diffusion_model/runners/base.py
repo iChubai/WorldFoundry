@@ -217,7 +217,7 @@ class NativeDiffusionRunner:
             next_timestep=step.next_timestep,
             conditioning=conditioning,
             step_index=step.index,
-            total_steps=context.request.sampling.num_inference_steps,
+            total_steps=context.total_steps or context.request.sampling.num_inference_steps,
             branch=branch,
             request_id=context.request_id,
         )
@@ -582,11 +582,20 @@ class NativeDiffusionRunner:
                     dtype=self.dtype,
                 )
             )
-            if len(schedule) != request.sampling.num_inference_steps:
+            expected_step_count = getattr(self.components.scheduler, "expected_step_count", None)
+            expected_steps = (
+                expected_step_count(request.sampling)
+                if callable(expected_step_count)
+                else request.sampling.num_inference_steps
+            )
+            if len(schedule) != expected_steps:
                 raise ValueError(
                     "scheduler returned an unexpected number of steps: "
-                    f"{len(schedule)} != {request.sampling.num_inference_steps}"
+                    f"{len(schedule)} != {expected_steps}"
                 )
+            if expected_steps != request.sampling.num_inference_steps:
+                self._reset_cfg_gate_request(expected_steps)
+            context.total_steps = len(schedule)
             for expected_index, step in enumerate(schedule):
                 if step.index != expected_index:
                     raise ValueError(
@@ -658,6 +667,7 @@ class NativeDiffusionRunner:
                     "model_id": self.model_id,
                     "seed": request.sampling.seed,
                     "num_inference_steps": request.sampling.num_inference_steps,
+                    "model_evaluations": len(schedule),
                     "guidance_scale": request.sampling.guidance_scale,
                     "guidance_mode": self.guidance_mode,
                     "cfg_parallel_degree": self.cfg_parallel_degree,

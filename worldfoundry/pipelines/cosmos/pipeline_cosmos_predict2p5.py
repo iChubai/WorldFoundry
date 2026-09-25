@@ -161,7 +161,7 @@ class CosmosPredict2p5Pipeline(PipelineABC):
         width: int = 1280,
         seed: int = 0,
         num_latent_conditional_frames: int = 1,
-        conditional_frame_timestep: float = -1.0,
+        conditional_frame_timestep: float | None = None,
         output_type: str = "video",
         return_dict: bool = False,
         **kwargs: Any,
@@ -179,8 +179,9 @@ class CosmosPredict2p5Pipeline(PipelineABC):
             "fps": int(fps),
             "return_latent": output_type == "latent",
             "num_latent_conditional_frames": int(num_latent_conditional_frames),
-            "conditional_frame_timestep": float(conditional_frame_timestep),
         }
+        if conditional_frame_timestep is not None:
+            inputs["conditional_frame_timestep"] = float(conditional_frame_timestep)
         if image_value is not None:
             inputs["image"] = image_value
         if video_value is not None:

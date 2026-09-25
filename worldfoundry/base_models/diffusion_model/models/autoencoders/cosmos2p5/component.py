@@ -12,6 +12,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from dataclasses import replace
 
+import numpy as np
 import torch
 import torch.nn.functional as functional
 
@@ -64,6 +65,7 @@ class Cosmos25VideoCodec:
         device: torch.device,
         dtype: torch.dtype | None = None,
         minimum_frames: int = 1,
+        zero_pad_image: bool = True,
         tiled: bool = False,
         tile_size: tuple[int, int] = (34, 34),
         tile_stride: tuple[int, int] = (18, 16),
@@ -72,6 +74,7 @@ class Cosmos25VideoCodec:
         self.device = device
         self.dtype = dtype
         self.minimum_frames = int(minimum_frames)
+        self.zero_pad_image = bool(zero_pad_image)
         if self.minimum_frames < 1 or (self.minimum_frames - 1) % 4:
             raise ValueError("Cosmos minimum_frames must be positive and satisfy 4k + 1")
         self.tiled = bool(tiled)
@@ -155,13 +158,18 @@ class Cosmos25VideoCodec:
         request = replace(request, num_frames=max(self.minimum_frames, request.num_frames))
         latent_frames = (request.num_frames - 1) // 4 + 1
         shape = (request.batch_size, 16, latent_frames, request.height // 8, request.width // 8)
-        noise = torch.randn(shape, generator=generator, device=device, dtype=torch.float32)
+        # The runner seeds this generator from request.sampling.seed. Use its
+        # initial seed so direct initializer callers can still override it,
+        # while matching NVIDIA's NumPy stream instead of torch.randn.
+        noise_seed = int(generator.initial_seed()) & 0xFFFFFFFF
+        noise = torch.from_numpy(np.random.RandomState(noise_seed).standard_normal(shape).astype(np.float32)).to(device)
         pixels, conditioned_frames = prepare_video_conditioning_pixels(
             request,
             device=device,
             dtype=dtype,
             temporal_compression=4,
             owner="Cosmos2.5",
+            zero_pad_image=self.zero_pad_image,
         )
         if pixels is None:
             condition_latents = torch.zeros_like(noise)
@@ -188,7 +196,7 @@ class Cosmos25VideoCodec:
                 device=device,
                 dtype=dtype,
             ),
-            "conditional_frame_timestep": float(request.inputs.get("conditional_frame_timestep", 0.0)),
+            "conditional_frame_timestep": float(request.inputs.get("conditional_frame_timestep", -1.0)),
         }
         control_pixels = self._control_pixels(request, device=device, dtype=dtype)
         if control_pixels is not None:
@@ -248,6 +256,7 @@ def build_cosmos25_video_codec(context: ComponentBuildContext) -> Cosmos25VideoC
         device=context.policy.device,
         dtype=context.policy.dtype,
         minimum_frames=int(context.component_options.get("minimum_frames", 1)),
+        zero_pad_image=bool(context.component_options.get("zero_pad_image", True)),
         tiled=bool(context.component_options.get("tiled", False)),
         tile_size=(int(tile_size[0]), int(tile_size[1])),
         tile_stride=(int(tile_stride[0]), int(tile_stride[1])),

@@ -8,7 +8,7 @@ Family split
 ------------
 - Predict 2.5 2B / 14B: DiT, Cosmos-Reason1 conditioner, video VAE used
   as both latent initializer and decoder, Wan UniPC (shift 5.0,
-  Karras sigmas).  Strategy ``standard`` with
+  no Karras sigmas).  Strategy ``standard`` with
   ``guidance_mode="positive"`` (CFG).  Text / image / video-to-world.
 - Transfer 2.5 2B: VACE-style controlled DiT on the same four roles;
   edge-to-world / controlled-video capabilities.
@@ -92,6 +92,8 @@ def _recipe(
     architecture: str = "cosmos-predict2.5-minimal-v1-lvg-dit",
     pretrained_checkpoint: CheckpointSpec | None = None,
     minimum_frames: int = 1,
+    use_karras_sigma: bool = False,
+    zero_pad_image: bool = True,
 ) -> NativeDiffusionRecipe:
     """Bind DiT, Reason1 conditioner, VAE-as-initializer, and Wan UniPC CFG."""
 
@@ -139,12 +141,12 @@ def _recipe(
             ),
             ComponentSpec(
                 codec, _build_cosmos25_video_codec, {"weights": "vae"},
-                options={"minimum_frames": minimum_frames},
+                options={"minimum_frames": minimum_frames, "zero_pad_image": zero_pad_image},
             ),
             ComponentSpec(
                 scheduler,
                 _build_cosmos25_scheduler,
-                options={"shift": 5.0, "use_karras_sigma": True},
+                options={"shift": 5.0, "use_karras_sigma": use_karras_sigma},
             ),
         ),
         execution=ExecutionSpec(
@@ -197,7 +199,7 @@ def cosmos25_2b_recipe() -> NativeDiffusionRecipe:
 
 
 def cosmos25_14b_recipe() -> NativeDiffusionRecipe:
-    """Predict 2.5 14B; same four-role ``standard`` CFG stack as 2B."""
+    """Predict 2.5 14B; same four-role positive CFG stack as 2B."""
 
     return _recipe(
         model_id=COSMOS25_14B_MODEL_ID,
@@ -235,6 +237,8 @@ def cosmos25_transfer_2b_recipe() -> NativeDiffusionRecipe:
         ),
         architecture="cosmos-transfer2.5-minimal-v4-lvg-vace-dit",
         minimum_frames=93,
+        use_karras_sigma=True,
+        zero_pad_image=False,
     )
 
 

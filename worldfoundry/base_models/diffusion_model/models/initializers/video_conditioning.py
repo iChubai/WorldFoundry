@@ -2,9 +2,10 @@
 
 Normalizes one still or the tail of one video to ``BCTHW`` in ``[-1, 1]``.
 The returned integer is the number of *physical* conditioning frames; the
-remaining slots repeat the last frame so causal VAEs do not see a black
-cut.  The model-owned latent mask (built by the initializer) decides
-which encoded frames stay frozen during denoising.
+remaining slots repeat the last frame by default. Cosmos Predict2.5 uses
+zero padding for still images to match NVIDIA's image input preparation.
+The model-owned latent mask (built by the initializer) decides which encoded
+frames stay frozen during denoising.
 
 Used by Cosmos Predict2 / Predict1 and similar encoded initializers.
 Accepts ``request.inputs[\"image\"]`` / ``images`` or ``video`` / ``videos``,
@@ -31,13 +32,14 @@ def prepare_video_conditioning_pixels(
     temporal_compression: int,
     allowed_latent_frames: tuple[int, ...] = (1, 2),
     owner: str = "video diffusion model",
+    zero_pad_image: bool = False,
 ) -> tuple[torch.Tensor | None, int]:
     """Normalize one image or the tail of one video to ``BCTHW`` pixels.
 
     The returned integer is the number of physical conditioning frames.  The
-    remaining frames repeat the last observation so causal video codecs do not
-    see an artificial black transition; the model-owned latent mask decides
-    which encoded frames are anchored during denoising.
+    remaining frames repeat the last observation by default.  Callers that
+    follow an image-to-video reference implementation can instead zero-pad
+    still images; video input always repeats its last observed frame.
     """
 
     image = request.inputs.get("image", request.inputs.get("images"))
@@ -75,8 +77,14 @@ def prepare_video_conditioning_pixels(
         align_corners=False,
     )
     if len(frames) < request.num_frames:
+        padding_frames = request.num_frames - len(frames)
+        padding = (
+            torch.zeros((padding_frames, *frames.shape[1:]), dtype=frames.dtype, device=frames.device)
+            if image is not None and zero_pad_image
+            else frames[-1:].expand(padding_frames, -1, -1, -1)
+        )
         frames = torch.cat(
-            (frames, frames[-1:].expand(request.num_frames - len(frames), -1, -1, -1))
+            (frames, padding)
         )
     frames = frames[: request.num_frames]
     pixels = frames.permute(1, 0, 2, 3).unsqueeze(0).div(127.5).sub(1.0)

@@ -24,8 +24,12 @@ COSMOS_PREDICT2P5_DEFAULT_FPS = 16
 COSMOS_PREDICT2P5_DEFAULT_NUM_FRAMES = 93
 COSMOS_PREDICT2P5_DEFAULT_NUM_INFERENCE_STEPS = 35
 DEFAULT_NEGATIVE_PROMPT = (
-    "The video captures ugly scenes, static motion, motion blur, over-saturation, shaky footage, low resolution, "
-    "grainy texture, poor lighting, artifacts, unnatural transitions, visual noise, and flickering."
+    "The video captures a series of frames showing ugly scenes, static with no motion, motion blur, "
+    "over-saturation, shaky footage, low resolution, grainy texture, pixelated images, poorly lit areas, "
+    "underexposed and overexposed scenes, poor color balance, washed out colors, choppy sequences, jerky "
+    "movements, low frame rate, artifacting, color banding, unnatural transitions, outdated special effects, "
+    "fake elements, unconvincing visuals, poorly edited content, jump cuts, visual noise, and flickering. "
+    "Overall, the video is of poor quality."
 )
 
 
@@ -157,7 +161,7 @@ class CosmosPredict2p5Pipeline(PipelineABC):
         width: int = 1280,
         seed: int = 0,
         num_latent_conditional_frames: int = 1,
-        conditional_frame_timestep: float = 0.0,
+        conditional_frame_timestep: float = -1.0,
         output_type: str = "video",
         return_dict: bool = False,
         **kwargs: Any,

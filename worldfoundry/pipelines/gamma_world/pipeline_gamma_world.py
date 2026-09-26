@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
+from numbers import Integral
 from pathlib import Path
 from typing import Any
 
@@ -49,6 +50,53 @@ class GammaWorldPipeline(NativeTextToVideoPipeline):
     REQUEST_INPUT_ALIASES = {"action_paths": "actions"}
 
     @classmethod
+    def _validate_num_frames(cls, options: Mapping[str, Any]) -> None:
+        for name in ("num_frames", "frame_num", "frames"):
+            value = options.get(name)
+            if value is not None:
+                break
+        else:
+            value = cls.DEFAULT_NUM_FRAMES
+        integer_value = (
+            isinstance(value, Integral) and not isinstance(value, bool)
+        ) or (
+            isinstance(value, str) and value.strip().lstrip("+-").isdigit()
+        )
+        if not integer_value:
+            raise ValueError(
+                "Gamma-World num_frames must be the integer 189 per view "
+                "(official state_t=48 latent frames); "
+                f"received {value!r}"
+            )
+        if int(value) != 189:
+            raise ValueError(
+                "Gamma-World released checkpoints require num_frames=189 per view "
+                "(official state_t=48 latent frames); "
+                f"received {value!r}"
+            )
+
+    @classmethod
+    def preflight_generation_defaults(
+        cls,
+        generation_defaults: Mapping[str, Any] | None,
+        *,
+        model_path: str | Mapping[str, Any] | None = None,
+    ) -> None:
+        options = dict(model_path) if isinstance(model_path, Mapping) else {}
+        options.update(generation_defaults or {})
+        cls._validate_num_frames(options)
+
+    @classmethod
+    def plan(
+        cls,
+        model_path: str | Mapping[str, Any] | None = None,
+        required_components: Mapping[str, Any] | None = None,
+        **kwargs: Any,
+    ) -> dict[str, Any]:
+        cls._validate_num_frames(cls._options(model_path, required_components, kwargs))
+        return super().plan(model_path, required_components, **kwargs)
+
+    @classmethod
     def _checkpoint_overrides(
         cls,
         model_path: str | Mapping[str, Any] | None,
@@ -70,6 +118,7 @@ class GammaWorldPipeline(NativeTextToVideoPipeline):
         **kwargs: Any,
     ) -> "GammaWorldPipeline":
         options = cls._options(model_path, required_components, kwargs)
+        cls._validate_num_frames(options)
         mode = str(options.pop("mode", "causal_few_step")).strip().lower()
         try:
             recipe_model_id = _MODE_TO_MODEL_ID[mode]
@@ -127,13 +176,7 @@ class GammaWorldPipeline(NativeTextToVideoPipeline):
                     "Gamma-World mode is selected while loading the pipeline; "
                     f"loaded {self.recipe_model_id!r}, received {requested_mode!r} at inference"
                 )
-        if self.recipe_model_id == "gamma-world-bidirectional":
-            num_frames = kwargs.get("num_frames", self.DEFAULT_NUM_FRAMES)
-            if num_frames is not None and num_frames != 189:
-                raise ValueError(
-                    "Gamma-World bidirectional requires num_frames=189 per view "
-                    f"(received {num_frames!r}); causal modes support shorter rollouts"
-                )
+        self._validate_num_frames(kwargs)
         guidance = kwargs.pop("guidance", None)
         if guidance is not None:
             if kwargs.get("guidance_scale") is not None:
@@ -157,9 +200,18 @@ class GammaWorldPipeline(NativeTextToVideoPipeline):
                 if all(path.is_file() for path in paths):
                     kwargs["actions"] = paths
         if interactions not in (None, (), []):
-            if kwargs.get("actions") is not None:
+            if kwargs.get("actions") is not None or kwargs.get("action_paths") is not None:
                 raise ValueError("pass Gamma actions through either interactions or actions, not both")
             kwargs["actions"] = interactions
+        if self.recipe_model_id in {"gamma-world-causal", "gamma-world-causal-few-step"}:
+            actions = kwargs.get("actions")
+            if actions is None:
+                actions = kwargs.get("action_paths")
+            if actions is None or (isinstance(actions, (list, tuple)) and not actions):
+                raise ValueError(
+                    "Gamma-World causal checkpoints require an action track for each view; "
+                    "pass actions/action_paths or use a sample directory with action JSONs"
+                )
         return super().__call__(
             prompt=prompt,
             images=images,

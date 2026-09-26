@@ -31,15 +31,13 @@ catalog 记录的任务包括 multi-agent-world-model、动作条件视频、图
 
 ## 运行时契约
 
-必填 `prompt`；可选 `image`、`video`、`actions` (actions, eval_dir, mode, n_players, num_frames, num_conditional_frames, guidance, num_steps, seed)；产物 `generated_video`、`gamma-world.mp4`。
+必填 `prompt` 和起始图像。因果与四步因果推理还需要每个视角一份动作轨迹，可通过 `actions`/`action_paths` 或 `eval_dir` 中的动作 JSON 提供；这些 checkpoint 不能在缺少动作时运行。其他选项包括 `mode`、`n_players`、`num_frames`、`num_conditional_frames`、`guidance`、`num_steps` 和 `seed`；输出为生成视频。
 
 记录的任务 profile：`multi-agent-world-model`、`action-conditioned-video`、`image-to-video`。绑定的 pipeline 类是 `GammaWorldPipeline`。
 
 起步 variant 是 `gamma-world-causal-few-step`。catalog 登记了 3 个 variant（上方卡片）：`gamma-world-causal-few-step`（`action-conditioned-video`）：Runner 一致性待确认、`gamma-world-causal`（`action-conditioned-video`）：Runner 一致性待确认、`gamma-world-bidirectional`（`action-conditioned-video`）：Runner 一致性待确认。系列状态：**Runner 一致性待确认**。
 
-传入按玩家排列的图像序列与每位玩家一份动作 JSON/映射，或兼容的 eval_dir。请先就位 Gamma-World 与 Reason1 权重。
-
-必填 `prompt`；可选 `image`、`video`；`actions`：actions, eval_dir, mode, n_players, num_frames, num_conditional_frames, guidance, num_steps, seed；产物 `generated_video`、`gamma-world.mp4`。
+传入按玩家排列的图像序列与每位玩家一份动作 JSON/映射，或兼容的 eval_dir。所有已发布变体均要求每个视角 `num_frames=189`（官方 `state_t=48`）；更短的片段不在上游推理约定内。请先就位 Gamma-World 与 Reason1 权重。
 
 ## 在 WorldFoundry 中运行
 

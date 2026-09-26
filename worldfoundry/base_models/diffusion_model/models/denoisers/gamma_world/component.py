@@ -116,7 +116,6 @@ class GammaWorldDenoiser:
         self.block_size = 48 if self.variant == "bidirectional" else 3
         self.denoising_timesteps = (1000, 750, 500, 250)
         self.context_timestep = 128
-        self.max_cache_frames = 24
         if hasattr(self.net, "num_frame_per_block"):
             self.net.num_frame_per_block = self.block_size
         if hasattr(self.net, "disable_context_parallel"):
@@ -132,9 +131,10 @@ class GammaWorldDenoiser:
 
     def cache_spec(self, latent_frames_per_view: int) -> GammaCacheSpec:
         local_attention = int(getattr(self.net, "local_attn_size", -1))
-        local_frames = local_attention if local_attention > 0 else min(
-            int(latent_frames_per_view), self.max_cache_frames
-        )
+        # Global attention retains every earlier latent frame.  A 24-frame
+        # cache only fits the local-attention variant and overflows halfway
+        # through the released 48-latent-frame causal rollout.
+        local_frames = local_attention if local_attention > 0 else int(latent_frames_per_view)
         heads = int(getattr(self.net, "num_heads"))
         channels = int(getattr(self.net, "model_channels"))
         return GammaCacheSpec(

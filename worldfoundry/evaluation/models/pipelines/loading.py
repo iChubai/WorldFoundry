@@ -455,6 +455,11 @@ def load_pipeline_from_spec(spec: PipelineRunnerSpec) -> Any:
     The execution layer owns inference runtime settings.
     """
     pipeline_cls = import_pipeline_target(spec.pipeline_target)
+    preflight = getattr(pipeline_cls, "preflight_generation_defaults", None)
+    if callable(preflight):
+        # Model-owned request contracts can reject configured generation
+        # defaults before from_pretrained starts loading large checkpoints.
+        preflight(spec.generation_defaults, model_path=spec.model_path)
     return call_pipeline_from_pretrained(
         pipeline_cls,
         model_path=spec.model_path,

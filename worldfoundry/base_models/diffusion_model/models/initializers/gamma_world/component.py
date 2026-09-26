@@ -102,8 +102,9 @@ class GammaWorldLatentInitializer:
             raise ValueError("Gamma-World currently supports one multi-player rollout per request")
         if self.required_num_frames is not None and request.num_frames != self.required_num_frames:
             raise ValueError(
-                "Gamma-World bidirectional requires "
-                f"num_frames={self.required_num_frames} per view (received {request.num_frames!r})"
+                "Gamma-World released checkpoints require "
+                f"num_frames={self.required_num_frames} per view "
+                f"(official state_t=48 latent frames; received {request.num_frames!r})"
             )
         if request.height % self.spatial_compression or request.width % self.spatial_compression:
             raise ValueError(

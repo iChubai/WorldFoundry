@@ -31,13 +31,13 @@ Recorded evaluation entry points include [WorldModelBench](/docs/evaluation/benc
 
 ## Runtime contract
 
-Required `prompt`; optional `image`, `video`, and `actions` (actions, eval_dir, mode, n_players, num_frames, num_conditional_frames, guidance, num_steps, seed); artifacts `generated_video` and `gamma-world.mp4`.
+Required `prompt` and start images. Causal and four-step causal inference also require one action track per view, supplied through `actions`/`action_paths` or action JSONs in `eval_dir`; these checkpoints cannot run without actions. Other options include `mode`, `n_players`, `num_frames`, `num_conditional_frames`, `guidance`, `num_steps`, and `seed`. The output is a generated video.
 
 Recorded task profiles: `multi-agent-world-model`, `action-conditioned-video`, and `image-to-video`. WorldFoundry binds `GammaWorldPipeline`.
 
 Start on `gamma-world-causal-few-step`. The family registers 3 catalog variants (cards above): `gamma-world-causal-few-step` (`action-conditioned-video`) — Runner parity pending; `gamma-world-causal` (`action-conditioned-video`) — Runner parity pending; `gamma-world-bidirectional` (`action-conditioned-video`) — Runner parity pending. Family status: **Runner parity pending**.
 
-Pass a sequence of per-player images plus one action JSON/mapping per player, or a compatible eval_dir. Runner status is Runner parity pending — stage the Gamma-World and Reason1 weights first.
+Pass a sequence of per-player images plus one action JSON/mapping per player, or a compatible eval_dir. All released variants require `num_frames=189` per view (official `state_t=48`); shorter clips are outside the upstream inference contract. Runner status is Runner parity pending — stage the Gamma-World and Reason1 weights first.
 
 Gamma-World is a native diffusion recipe and does not require an external source checkout or model-owned runtime.
 

@@ -165,6 +165,7 @@ def gamma_world_causal_few_step_recipe() -> NativeDiffusionRecipe:
             "fixed_timesteps": (1000, 750, 500, 250),
             "context_timestep": 128,
         },
+        required_num_frames=189,
     )
 
 
@@ -180,6 +181,7 @@ def gamma_world_causal_recipe() -> NativeDiffusionRecipe:
         steps=35,
         guidance=5.0,
         execution_options={"prediction_mode": "flow"},
+        required_num_frames=189,
     )
 
 

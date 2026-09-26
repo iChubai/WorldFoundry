@@ -20,7 +20,7 @@ from typing import Any
 from worldfoundry.core.io import artifact_root_path
 from worldfoundry.core.io.paths import checkpoint_root_candidates, conda_envs_root_path, official_runtime_repo_path
 from worldfoundry.pipelines.pipeline_utils import PipelineABC
-from worldfoundry.runtime.assets import expand_worldfoundry_path
+from worldfoundry.runtime.assets import expand_worldfoundry_path, local_file_is_ready
 
 
 _WEIGHT_DEFAULTS = {
@@ -76,11 +76,11 @@ def _complete_hf_weights(directory: Path) -> bool:
                     for index in indexes
                 ))
                 return bool(names) and all(
-                    (directory / name).is_file() and (directory / name).stat().st_size > 0
+                    local_file_is_ready(directory / name)
                     for name in names
                 )
             return not any("-of-" in path.name for path in files) and all(
-                path.stat().st_size > 0 for path in files
+                local_file_is_ready(path) for path in files
             )
         except (OSError, ValueError, KeyError, TypeError):
             return False
@@ -185,7 +185,7 @@ class UniWorldViewPipeline(PipelineABC):
                 else:
                     ok = ok and (target / "config.json").is_file() and _complete_hf_weights(target)
             else:
-                ok = target.is_file() and target.stat().st_size > 0
+                ok = local_file_is_ready(target)
             if not ok:
                 missing.append(f"{key}={target}")
         if missing:
@@ -318,7 +318,11 @@ class UniWorldViewPipeline(PipelineABC):
         target.parent.mkdir(parents=True, exist_ok=True)
         log_path = target.with_suffix(".uniworld-view.log")
         env = os.environ.copy()
-        env.setdefault("PYTHONNOUSERSITE", "1")
+        # The official checkout inserts its own vendored source paths. Keep
+        # WorldFoundry's interpreter paths out of the dedicated environment.
+        env.pop("PYTHONPATH", None)
+        env.pop("PYTHONHOME", None)
+        env["PYTHONNOUSERSITE"] = "1"
         env["UNIWORLD_VIEW_OUTPUT_FPS"] = str(fps)
         with log_path.open("w", encoding="utf-8") as log:
             try:

@@ -19,9 +19,7 @@ input_schema:
   prompt: true
   image: true
   video: false
-  actions:
-  - robot_action
-  - world_action
+  actions: []
 artifact_kind: generated_video
 artifact_filename: genie-envisioner.mp4
 execution:
@@ -34,5 +32,7 @@ integration:
 notes:
 - Genie Envisioner source is vendored in-tree under synthesis/visual_generation/genie_envisioner/genie_envisioner_runtime.
 - The compatibility launcher uses the official GE-base multiview transformer and local LTX tokenizer, T5, and VAE.
-- The default uses synchronized ALOHA high/left-wrist/right-wrist views; synthetic-three-view remains available for smoke tests only.
+- The default three ALOHA high/left-wrist/right-wrist images are repeated across four history slots and are smoke inputs only; synthetic-three-view is also smoke-only.
+- For the released GE-base history contract, pass input_views as three camera directories in head/left-wrist/right-wrist order, each containing exactly 0.png through 3.png.
+- This GE-base video launcher conditions on camera history and text; it does not consume robot/world action arrays.
 - Checkpoint-matched AgiBot or LeRobot trajectories are still required for action-quality parity.

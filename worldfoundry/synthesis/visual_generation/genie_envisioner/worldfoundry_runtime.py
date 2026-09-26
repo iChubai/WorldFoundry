@@ -149,19 +149,46 @@ def missing_requirements(*, options, runtime_root, entrypoint, profile) -> list[
                 {
                     "kind": "asset",
                     "path": "input_views",
-                    "reason": "Genie Envisioner explicit-three-view mode requires exactly three image paths",
+                    "reason": "Genie Envisioner explicit-three-view mode requires three image paths or history directories",
                 }
             )
-        else:
+        elif all(view.is_dir() for view in views):
+            n_previous = int(options.get("n_previous", 4))
+            expected = {f"{index}.png" for index in range(n_previous)}
             for index, view in enumerate(views):
-                if not view.is_file():
+                actual = {path.name for path in view.glob("*.png")}
+                if actual != expected:
                     missing.append(
                         {
                             "kind": "asset",
                             "path": str(view),
-                            "reason": f"Genie Envisioner input view {index} is missing",
+                            "reason": (
+                                f"Genie Envisioner view {index} needs exactly numbered history "
+                                f"{sorted(expected)}; missing={sorted(expected - actual)}, "
+                                f"extra={sorted(actual - expected)}"
+                            ),
                         }
                     )
+                for name in expected:
+                    if not (view / name).is_file() or (view / name).stat().st_size == 0:
+                        missing.append(
+                            {
+                                "kind": "asset",
+                                "path": str(view / name),
+                                "reason": "Genie Envisioner history image is missing or empty",
+                            }
+                        )
+        elif all(view.is_file() for view in views):
+            pass
+        else:
+            for index, view in enumerate(views):
+                missing.append(
+                    {
+                        "kind": "asset",
+                        "path": str(view),
+                        "reason": f"Genie Envisioner input view {index} must match the other view path types",
+                    }
+                )
     else:
         image = _path_option(options, "image_path", "input_image", default=DEFAULT_INPUT_IMAGE)
         if not image.is_file():

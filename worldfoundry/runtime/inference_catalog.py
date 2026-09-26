@@ -3503,12 +3503,12 @@ GENIE_ENVISIONER_INFERENCE_SPEC = ModelInferenceSpec(
         InferenceTaskProfile(
             task_id="robot-multiview-video",
             label="Robot Multiview Video",
-            description="Generate a three-view robot world-video rollout from an initial observation.",
+            description="Generate a three-view robot video from four-frame camera histories; bundled still images are smoke inputs.",
             aliases=("default", "robot-action-video", "synthetic-three-view-smoke"),
             inputs=(
                 _field(
                     "input_path",
-                    "Initial Observation",
+                    "Smoke Preview Image",
                     kind="path",
                     target="input_path",
                     required=True,
@@ -3516,6 +3516,7 @@ GENIE_ENVISIONER_INFERENCE_SPEC = ModelInferenceSpec(
                         "${WORLDFOUNDRY_REPO_ROOT}/worldfoundry/data/test_cases/"
                         "test_vla_case1/aloha/observation_images_cam_high.png"
                     ),
+                    description="Bundled ALOHA still image used by the default smoke configuration.",
                 ),
                 _field(
                     "prompt",
@@ -3545,7 +3546,7 @@ GENIE_ENVISIONER_INFERENCE_SPEC = ModelInferenceSpec(
                 ),
                 _field(
                     "input_views",
-                    "Synchronized Camera Views",
+                    "Camera History Directories or Smoke Images",
                     kind="json",
                     target="call_kwargs",
                     required=True,
@@ -3554,7 +3555,11 @@ GENIE_ENVISIONER_INFERENCE_SPEC = ModelInferenceSpec(
                         "${WORLDFOUNDRY_REPO_ROOT}/worldfoundry/data/test_cases/test_vla_case1/aloha/observation_images_cam_left_wrist.png",
                         "${WORLDFOUNDRY_REPO_ROOT}/worldfoundry/data/test_cases/test_vla_case1/aloha/observation_images_cam_right_wrist.png",
                     ),
-                    description="Three synchronized high, left-wrist, and right-wrist camera images.",
+                    description=(
+                        "For official GE-base history, pass three directories in head, left-wrist, "
+                        "right-wrist order; each needs 0.png through 3.png. The default three "
+                        "ALOHA still images are repeated across four history slots for smoke use."
+                    ),
                 ),
                 _field(
                     "input_mode",
@@ -3563,7 +3568,8 @@ GENIE_ENVISIONER_INFERENCE_SPEC = ModelInferenceSpec(
                     default="explicit-three-view",
                     choices=("explicit-three-view", "synthetic-three-view"),
                     description=(
-                        "Consumes three synchronized camera images by default; synthetic mode is retained for smoke tests."
+                        "Explicit mode accepts three four-frame history directories or three still images; "
+                        "the bundled still images and synthetic mode are smoke configurations."
                     ),
                 ),
                 _field("height", "Height", kind="integer", target="call_kwargs", default=192),

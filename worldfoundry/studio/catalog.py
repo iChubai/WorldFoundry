@@ -6014,7 +6014,9 @@ CURATED_OVERRIDES: Dict[str, Dict[str, Any]] = {
         "aliases": ("genie_envisioner", "genieenvisioner"),
         "tags": ("world-model", "robot-video", "multiview", "official-runtime"),
         "notes": (
-            "The default uses three synchronized ALOHA camera observations without synthetic shifts. "
+            "For official GE-base history, pass input_views as three directories in head, left-wrist, "
+            "right-wrist order, each with 0.png through 3.png. The default three ALOHA still "
+            "images repeat across four history slots and are smoke inputs only. "
             "Use a checkpoint-matched AgiBot or LeRobot trajectory for action-quality parity."
         ),
     },

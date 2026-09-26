@@ -86,10 +86,8 @@ def _validate_args(args: argparse.Namespace) -> None:
             raise FileNotFoundError(f"{label} is missing: {path}")
     if args.input_mode == "explicit-three-view":
         if args.input_views is None:
-            raise ValueError("explicit-three-view mode requires --input-views with exactly three images")
-        for index, path in enumerate(args.input_views):
-            if not path.is_file():
-                raise FileNotFoundError(f"input view {index} is missing: {path}")
+            raise ValueError("explicit-three-view mode requires --input-views with three images or history directories")
+        _validate_view_paths(args.input_views, n_previous=args.n_previous)
     elif args.input_image is None:
         raise ValueError("synthetic-three-view mode requires --input-image")
     elif not args.input_image.is_file():
@@ -136,6 +134,53 @@ def _explicit_three_views(paths: list[Path] | tuple[Path, ...], *, height: int, 
         ],
         axis=0,
     )
+
+
+def _validate_view_paths(paths: list[Path] | tuple[Path, ...], *, n_previous: int) -> bool:
+    """Return whether the views are numbered history directories, rejecting mixed inputs."""
+    if len(paths) != NUM_VIEWS:
+        raise ValueError(f"Genie Envisioner requires exactly {NUM_VIEWS} views, got {len(paths)}")
+    if all(path.is_file() for path in paths):
+        return False
+    if not all(path.is_dir() for path in paths):
+        raise ValueError("input views must all be images or all be history directories")
+    expected = {f"{index}.png" for index in range(n_previous)}
+    for view in paths:
+        actual = {path.name for path in view.glob("*.png")}
+        if actual != expected:
+            raise ValueError(
+                f"history directory {view} needs exactly {sorted(expected)}; "
+                f"missing={sorted(expected - actual)}, extra={sorted(actual - expected)}"
+            )
+        for name in expected:
+            if not (view / name).is_file() or (view / name).stat().st_size == 0:
+                raise ValueError(f"history image is missing or empty: {view / name}")
+    return True
+
+
+def _explicit_three_view_history(paths: list[Path] | tuple[Path, ...], *, n_previous: int, height: int, width: int):
+    """Match official ``load_images``: sorted 0..3 PNGs and OpenCV linear resize."""
+    import cv2
+    import numpy as np
+
+    views = []
+    for view in paths:
+        frames = []
+        original_shape = None
+        for index in range(n_previous):
+            path = view / f"{index}.png"
+            bgr = cv2.imread(str(path), cv2.IMREAD_COLOR)
+            if bgr is None or bgr.ndim != 3 or bgr.shape[0] < 1 or bgr.shape[1] < 1:
+                raise ValueError(f"cannot decode history image: {path}")
+            if original_shape is None:
+                original_shape = bgr.shape[:2]
+            elif bgr.shape[:2] != original_shape:
+                raise ValueError(f"history image size changed within {view}: {path}")
+            rgb = bgr[:, :, ::-1]
+            resized = cv2.resize(rgb, (width, height), interpolation=cv2.INTER_LINEAR)
+            frames.append(np.transpose(resized.astype(np.float32) / 255.0 * 2.0 - 1.0, (2, 0, 1)))
+        views.append(np.stack(frames, axis=1))
+    return np.stack(views, axis=0)
 
 
 def _transformer_config() -> dict[str, object]:
@@ -224,14 +269,24 @@ def run(args: argparse.Namespace) -> Path:
     scheduler = FlowMatchEulerDiscreteScheduler()
     pipe = CustomPipeline(scheduler, vae, text_encoder, tokenizer, transformer)
 
-    views = (
-        _explicit_three_views(args.input_views, height=args.height, width=args.width)
-        if args.input_mode == "explicit-three-view"
-        else _synthetic_three_views(args.input_image, height=args.height, width=args.width)
+    history_dirs = args.input_mode == "explicit-three-view" and _validate_view_paths(
+        args.input_views, n_previous=args.n_previous
     )
-    view_tensor = torch.from_numpy(views.copy()).permute(0, 3, 1, 2).to(device=device, dtype=dtype)
-    view_tensor = view_tensor / 127.5 - 1.0
-    history = view_tensor.unsqueeze(2).repeat(1, 1, args.n_previous, 1, 1)
+    if history_dirs:
+        views = _explicit_three_view_history(
+            args.input_views, n_previous=args.n_previous, height=args.height, width=args.width
+        )
+        # Upstream passes float32 normalized observations to the sampler.
+        history = torch.from_numpy(views.copy()).to(device=device)
+    else:
+        views = (
+            _explicit_three_views(args.input_views, height=args.height, width=args.width)
+            if args.input_mode == "explicit-three-view"
+            else _synthetic_three_views(args.input_image, height=args.height, width=args.width)
+        )
+        view_tensor = torch.from_numpy(views.copy()).permute(0, 3, 1, 2).to(device=device, dtype=dtype)
+        view_tensor = view_tensor / 127.5 - 1.0
+        history = view_tensor.unsqueeze(2).repeat(1, 1, args.n_previous, 1, 1)
     generator = torch.Generator(device=device).manual_seed(args.seed)
     with torch.inference_mode():
         predictions = pipe.infer(

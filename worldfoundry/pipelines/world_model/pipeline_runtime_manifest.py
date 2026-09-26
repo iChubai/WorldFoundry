@@ -406,6 +406,8 @@ class EgoWMPipeline(WorldModelRuntimePipeline):
         "action_scale",
         "conditions_path",
         "egowm_conditions_path",
+        "actions_path",
+        "egowm_actions_path",
         "smoke_synthetic",
         "variant",
         "egowm_variant",

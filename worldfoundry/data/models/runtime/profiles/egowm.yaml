@@ -39,4 +39,5 @@ integration:
 notes:
 - WorldFoundry launches the user-staged official source through a narrow compatibility wrapper; upstream source is not vendored.
 - The wrapper passes the configured SVD base model explicitly, avoiding the workstation-specific default embedded in the upstream builder.
-- The default smoke fixture uses the official CMU real-world image and a neutral normalized 25-DoF navigation action sequence.
+- Paired 25-DoF inference takes physical_initial_state and physical_actions in conditions_path; paired 3-DoF inference takes pre-normalized per-frame actions in actions_path.
+- A constant 3-DoF action_scale or synthetic 25-DoF state/actions is only a generation smoke control.

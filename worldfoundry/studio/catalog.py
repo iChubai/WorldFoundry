@@ -5753,6 +5753,8 @@ CURATED_OVERRIDES: Dict[str, Dict[str, Any]] = {
             "action_scale",
             "conditions_path",
             "egowm_conditions_path",
+            "actions_path",
+            "egowm_actions_path",
             "smoke_synthetic",
             "variant",
             "egowm_variant",
@@ -5780,9 +5782,9 @@ CURATED_OVERRIDES: Dict[str, Dict[str, Any]] = {
         "aliases": ("ego-wm", "egowm-svd-25dof"),
         "tags": ("world-model", "navigation-video", "action-conditioned", "official-runtime"),
         "notes": (
-            "Runs the official 25-DoF navigation checkpoint with an explicit local SVD base model. "
-            "A paired conditions_path JSON with physical_initial_state and physical_actions is required. "
-            "The default image alone is insufficient for a semantic rollout."
+            "Runs the official 25-DoF or 3-DoF navigation checkpoint with an explicit local SVD base model. "
+            "Use paired conditions_path for 25-DoF, or paired normalized actions_path for 3-DoF. "
+            "A constant 3-DoF action_scale is a smoke control, not a paired motion test."
         ),
     },
     "hma": {

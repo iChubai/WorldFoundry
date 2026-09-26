@@ -34,6 +34,11 @@ def _parser() -> argparse.ArgumentParser:
         help="JSON with physical_initial_state (25 numbers) and physical_actions (num_frames x 25).",
     )
     parser.add_argument(
+        "--actions-path",
+        type=Path,
+        help="3-DoF JSON with normalized_actions (num_frames x 3), paired with --input-image.",
+    )
+    parser.add_argument(
         "--smoke-synthetic",
         action="store_true",
         help="Use synthetic actions and a zero initial state for a load/generation smoke test only.",
@@ -58,6 +63,12 @@ def _validate_args(args: argparse.Namespace) -> None:
         raise ValueError("height and width must be divisible by 8")
     if args.conditions_path and args.smoke_synthetic:
         raise ValueError("conditions-path and smoke-synthetic are mutually exclusive")
+    if args.actions_path and args.conditions_path:
+        raise ValueError("actions-path and 25-DoF conditions-path are mutually exclusive")
+    if args.actions_path and args.smoke_synthetic:
+        raise ValueError("actions-path and smoke-synthetic are mutually exclusive")
+    if args.actions_path and args.action_scale != 0.0:
+        raise ValueError("action-scale cannot be combined with actions-path")
     if args.conditions_path and args.action_scale != 0.0:
         raise ValueError("action-scale cannot be combined with 25-DoF conditions-path")
     if args.variant == "25dof" and not args.conditions_path and not args.smoke_synthetic:
@@ -65,8 +76,10 @@ def _validate_args(args: argparse.Namespace) -> None:
             "25-DoF EgoWM requires --conditions-path with paired physical initial state and actions; "
             "use --smoke-synthetic only for a non-semantic smoke test"
         )
+    if args.variant == "25dof" and args.actions_path:
+        raise ValueError("3-DoF actions-path cannot be used with a 25-DoF checkpoint")
     if args.variant == "3dof" and (args.conditions_path or args.smoke_synthetic):
-        raise ValueError("3-DoF EgoWM uses --action-scale; 25-DoF conditions and smoke mode are unsupported")
+        raise ValueError("3-DoF EgoWM uses --actions-path or --action-scale; 25-DoF conditions and smoke mode are unsupported")
     for label, path in (
         ("official source", args.source_dir),
         ("checkpoint", args.checkpoint_path),
@@ -77,6 +90,8 @@ def _validate_args(args: argparse.Namespace) -> None:
             raise FileNotFoundError(f"{label} is missing: {path}")
     if args.conditions_path and not args.conditions_path.is_file():
         raise FileNotFoundError(f"EgoWM conditions file is missing: {args.conditions_path}")
+    if args.actions_path:
+        load_3dof_actions(args.actions_path, args.num_frames)
 
 
 def _numbers(value: object, *, label: str, count: int) -> list[float]:
@@ -137,6 +152,18 @@ def load_25dof_conditions(path: Path, num_frames: int) -> tuple[list[float], lis
     ]
 
 
+def load_3dof_actions(path: Path, num_frames: int) -> list[list[float]]:
+    """Read explicit per-frame actions in the official 3-DoF normalized space."""
+    payload = json.loads(path.read_text(encoding="utf-8"))
+    if not isinstance(payload, dict):
+        raise ValueError("EgoWM 3-DoF actions must be a JSON object")
+    raw_actions = payload.get("normalized_actions")
+    if not isinstance(raw_actions, list) or len(raw_actions) != num_frames:
+        raise ValueError(f"normalized_actions must contain exactly {num_frames} 3D rows")
+    return [_numbers(row, label=f"normalized_actions[{index}]", count=3)
+            for index, row in enumerate(raw_actions)]
+
+
 def checkpoint_action_dims(state_dict: dict) -> int:
     """Identify the checkpoint from its action and state embedding signature."""
     embedding = state_dict.get("add_action_embedding.linear_1.weight")
@@ -168,6 +195,8 @@ def run(args: argparse.Namespace) -> Path:
     output_path = args.output_path.expanduser().resolve()
     if args.variant == "25dof" and args.conditions_path:
         initial_values, action_values = load_25dof_conditions(args.conditions_path, args.num_frames)
+    elif args.variant == "3dof" and args.actions_path:
+        action_values = load_3dof_actions(args.actions_path, args.num_frames)
 
     source_text = str(source_dir)
     inserted_source = source_text not in sys.path
@@ -222,10 +251,13 @@ def run(args: argparse.Namespace) -> Path:
         image = Image.open(input_image).convert("RGB").resize((args.width, args.height))
         actions = torch.zeros((args.num_frames, action_dims), dtype=torch.float32)
         if action_dims == 3:
-            # Official 3-DoF scripts normalize x from [-2.5, 5] to [-1, 1].
-            # Zero displacement is therefore -1/3, not zero. Treat the UI
-            # action scale as an offset from that stationary baseline.
-            actions[:, 0] = -1.0 / 3.0 + float(args.action_scale)
+            if args.actions_path:
+                actions = torch.tensor(action_values, dtype=torch.float32)
+            else:
+                # Official 3-DoF scripts normalize x from [-2.5, 5] to [-1, 1].
+                # Zero displacement is therefore -1/3, not zero. Treat the UI
+                # action scale as an offset from that stationary baseline.
+                actions[:, 0] = -1.0 / 3.0 + float(args.action_scale)
         elif args.conditions_path:
             actions = torch.tensor(action_values, dtype=torch.float32)
             initial_state = torch.tensor(initial_values, dtype=torch.float32)

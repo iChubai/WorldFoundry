@@ -10,6 +10,8 @@ from worldfoundry.core.io.paths import checkpoint_root_path, official_runtime_re
 from worldfoundry.runtime.assets import expand_worldfoundry_path
 from worldfoundry.synthesis.visual_generation.world_model.runtime_manifest import command_settings
 
+from .infer import load_3dof_actions
+
 
 RUNTIME_DIR = Path(__file__).resolve().parent
 OFFICIAL_ENTRYPOINT = RUNTIME_DIR / "infer.py"
@@ -128,12 +130,22 @@ def missing_requirements(*, options, runtime_root, entrypoint, profile) -> list[
                         "reason": "EgoWM 25-DoF requires an explicit initial image paired with conditions_path"})
 
     conditions_path = _option(options, "conditions_path", "egowm_conditions_path")
+    actions_path = _option(options, "actions_path", "egowm_actions_path")
     smoke_synthetic = options.get("smoke_synthetic") is True
     if variant not in ("25dof", "3dof"):
         missing.append({"kind": "condition", "path": "variant", "reason": f"unsupported EgoWM variant {variant!r}"})
     if conditions_path not in (None, "") and smoke_synthetic:
         missing.append({"kind": "condition", "path": "smoke_synthetic",
                         "reason": "EgoWM conditions_path and smoke_synthetic are mutually exclusive"})
+    if actions_path not in (None, "") and conditions_path not in (None, ""):
+        missing.append({"kind": "condition", "path": "actions_path",
+                        "reason": "EgoWM actions_path and conditions_path are mutually exclusive"})
+    if actions_path not in (None, "") and smoke_synthetic:
+        missing.append({"kind": "condition", "path": "actions_path",
+                        "reason": "EgoWM actions_path and smoke_synthetic are mutually exclusive"})
+    if actions_path not in (None, "") and options.get("action_scale") not in (None, "", 0, 0.0, "0", "0.0"):
+        missing.append({"kind": "condition", "path": "action_scale",
+                        "reason": "EgoWM action_scale cannot be combined with actions_path"})
     if conditions_path not in (None, "") and options.get("action_scale") not in (None, "", 0, 0.0, "0", "0.0"):
         missing.append({"kind": "condition", "path": "action_scale",
                         "reason": "EgoWM action_scale cannot be combined with physical conditions"})
@@ -147,7 +159,20 @@ def missing_requirements(*, options, runtime_root, entrypoint, profile) -> list[
             "reason": "EgoWM 25-DoF requires paired physical_initial_state and physical_actions; set conditions_path",
         })
     if variant == "3dof" and (conditions_path not in (None, "") or smoke_synthetic):
-        missing.append({"kind": "condition", "path": "variant", "reason": "3-DoF uses action_scale only"})
+        missing.append({"kind": "condition", "path": "variant", "reason": "3-DoF uses actions_path or action_scale"})
+    if actions_path not in (None, ""):
+        actions = expand_worldfoundry_path(str(actions_path))
+        if variant != "3dof":
+            missing.append({"kind": "condition", "path": "variant",
+                            "reason": "actions_path requires the 3dof variant"})
+        elif not actions.is_file():
+            missing.append({"kind": "asset", "path": str(actions), "reason": "EgoWM 3-DoF actions file is missing"})
+        else:
+            try:
+                load_3dof_actions(actions, int(options.get("num_frames", 8)))
+            except (OSError, UnicodeError, ValueError, TypeError) as exc:
+                missing.append({"kind": "condition", "path": str(actions),
+                                "reason": f"invalid EgoWM 3-DoF actions: {exc}"})
 
     for module_name in ("torch", "diffusers", "transformers", "PIL", "einops", "imageio"):
         if importlib.util.find_spec(module_name) is None:
@@ -208,6 +233,9 @@ def build_command(context: Mapping[str, Any]) -> list[str]:
     conditions_path = _option(settings, "conditions_path", "egowm_conditions_path")
     if conditions_path not in (None, ""):
         command += ["--conditions-path", str(expand_worldfoundry_path(str(conditions_path)))]
+    actions_path = _option(settings, "actions_path", "egowm_actions_path")
+    if actions_path not in (None, ""):
+        command += ["--actions-path", str(expand_worldfoundry_path(str(actions_path)))]
     if settings.get("smoke_synthetic") is True:
         command.append("--smoke-synthetic")
     return command

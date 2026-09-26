@@ -4366,6 +4366,34 @@ EGOWM_INFERENCE_SPEC = ModelInferenceSpec(
                 "${WORLDFOUNDRY_MODEL_SOURCE_DIR}/egowm.",
             ),
         ),
+        InferenceVariantSpec(
+            variant_id="svd-3dof-nav",
+            label="SVD 3-DoF Navigation",
+            status="requires_local_checkpoints",
+            checkpoints=(
+                InferenceCheckpointRef(
+                    role="egowm_checkpoint",
+                    uri="${WORLDFOUNDRY_CKPT_DIR}/anuragba--egowm/svd_3dof_nav.pth",
+                    status="required",
+                ),
+                InferenceCheckpointRef(
+                    role="svd_base_model",
+                    uri="${WORLDFOUNDRY_CKPT_DIR}/stabilityai--stable-video-diffusion-img2vid",
+                    status="required",
+                ),
+            ),
+            load_kwargs={
+                "model_id": "egowm",
+                "checkpoint_path": "${WORLDFOUNDRY_CKPT_DIR}/anuragba--egowm/svd_3dof_nav.pth",
+                "model_path": "${WORLDFOUNDRY_CKPT_DIR}/anuragba--egowm/svd_3dof_nav.pth",
+                "base_model_dir": "${WORLDFOUNDRY_CKPT_DIR}/stabilityai--stable-video-diffusion-img2vid",
+            },
+            call_kwargs={"variant": "3dof"},
+            aliases=("3dof",),
+            notes=(
+                "Pair an initial image with actions_path containing one normalized [x, y, yaw] action per generated frame.",
+            ),
+        ),
     ),
     tasks=(
         InferenceTaskProfile(
@@ -4389,15 +4417,21 @@ EGOWM_INFERENCE_SPEC = ModelInferenceSpec(
                     target="call_kwargs",
                     description="Required for 25dof; omit for 3dof. Contains physical_initial_state and physical_actions.",
                 ),
+                _field(
+                    "actions_path",
+                    "Paired 3-DoF Actions JSON",
+                    kind="path",
+                    target="call_kwargs",
+                    description="For 3dof, supply normalized_actions with one [x, y, yaw] row per generated frame, paired with the initial image.",
+                ),
                 _field("variant", "Checkpoint Variant", kind="string", target="call_kwargs",
-                       default="25dof", choices=("25dof", "3dof")),
+                       choices=("25dof", "3dof")),
                 _field(
                     "checkpoint_path",
                     "EgoWM Checkpoint",
                     kind="path",
                     target="load_kwargs",
                     required=True,
-                    default="${WORLDFOUNDRY_CKPT_DIR}/anuragba--egowm/svd_25dof_nav.pth",
                 ),
                 _field(
                     "base_model_dir",
@@ -4416,7 +4450,7 @@ EGOWM_INFERENCE_SPEC = ModelInferenceSpec(
                 _field("motion_bucket_id", "Motion Bucket", kind="integer", target="call_kwargs", default=180),
                 _field("smoke_synthetic", "Synthetic Smoke Test Only", kind="boolean", target="call_kwargs", default=False),
                 _field("action_scale", "3-DoF Action Offset", kind="number", target="call_kwargs",
-                       description="Normalized x offset for the 3dof variant; 25dof uses conditions_path."),
+                       description="Constant normalized x offset for a 3dof smoke test; paired inference uses actions_path."),
                 _field("plan_only", "Plan Only", kind="boolean", target="call_kwargs", default=False),
                 _field("timeout_seconds", "Timeout Seconds", kind="integer", target="call_kwargs", default=21600),
             ),
@@ -4439,7 +4473,8 @@ EGOWM_INFERENCE_SPEC = ModelInferenceSpec(
         ),
     ),
     notes=(
-        "The compatibility wrapper passes the local SVD base model explicitly and leaves the official checkout unchanged.",
+        "The compatibility wrapper passes the local SVD base model explicitly and leaves the official checkout unchanged. "
+        "Paired 3-DoF actions_path and paired 25-DoF conditions_path use distinct input contracts.",
     ),
 )
 

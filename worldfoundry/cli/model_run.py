@@ -832,11 +832,9 @@ def load_model_run_schema(
         selected_catalog_variant = next(
             (
                 item
+                for requested_variant in requested_variants
                 for item in catalog_entry.variants
-                if any(
-                    _normalise(item.variant_id) == _normalise(requested_variant)
-                    for requested_variant in requested_variants
-                )
+                if _normalise(item.variant_id) == _normalise(requested_variant)
             ),
             None,
         )

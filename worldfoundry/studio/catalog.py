@@ -5838,6 +5838,7 @@ CURATED_OVERRIDES: Dict[str, Dict[str, Any]] = {
             "checkpoint_dir",
             "checkpoint_path",
             "hma_checkpoint_dir",
+            "hma_magvit_checkpoint",
             "base_model_dir",
             "svd_base_model_dir",
             "image_path",

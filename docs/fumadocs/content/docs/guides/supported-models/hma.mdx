@@ -1,50 +1,33 @@
 ---
 title: "HMA"
-description: "HMA from Massachusetts Institute of Technology (MIT): robot-world-model and action-conditioned-video; Runner parity pending; 2 variants."
+description: "Action-conditioned LangTable video rollouts with continuous MAR and discrete MAGVIT checkpoints."
 modelId: "hma"
-pageSource: generated
+pageSource: authored
 ---
 
-HMA (Heterogeneous Masked Autoregression) models robot action-video dynamics across heterogeneous embodiments and datasets, fast enough for real-time interaction. Recorded variants cover a MAGVIT-style 362M discrete model and a 1B MAR continuous model. In this catalog the official generator route is registered; checkpoints and robot assets stay runtime-gated.
+HMA (Heterogeneous Masked Autoregression) predicts robot observations from a short image history and two-dimensional actions. WorldFoundry binds the [official HMA code](https://github.com/liruiw/HMA) and local checkpoints through `HMAPipeline`; it does not bundle the weights. The recorded variants are continuous MAR (`hma-mar-1b`) and discrete MAGVIT (`hma-magvit-362m`). See the [paper](https://arxiv.org/abs/2502.04296) and [project page](https://liruiw.github.io/hma).
 
 <ModelPaperFigures modelId="hma" locale="en" />
 
-The recorded paper is [Learning Real-World Action-Video Dynamics with Heterogeneous Masked Autoregression](https://arxiv.org/abs/2502.04296) (2025).
-
-Project page: [liruiw.github.io/hma](https://liruiw.github.io/hma). Code: [liruiw/HMA](https://github.com/liruiw/HMA).
-
 <ModelCommandBuilder modelId="hma" locale="en" />
 
-## What it is for
+## Runtime inputs
 
-`hma-magvit-362m` is the recorded interactive world line. Start here when the job is stepping a world with actions.
+The default LangTable route repeats one image across the history and applies a constant action. It is useful for a loading and generation smoke test. For a paired rollout, pass `trajectory_path` to a JSON file such as:
 
-Per the paper (arXiv 2502.04296), masked autoregression over video tokens handles heterogeneous action spaces through modality-specific heads; discrete (hma-base-disc) and continuous (hma-base-cont) checkpoints are recorded under liruiw (apache-2.0). Source is pinned at a recorded commit. It is published by Massachusetts Institute of Technology (MIT).
+```json
+{
+  "action_format": "raw_language_table_delta_yx",
+  "prompt_frames": ["frame_000.png", "frame_001.png", "frame_002.png"],
+  "actions": [
+    [0.0, 0.0], [0.0, 0.0], [0.0, 0.0], [0.0, 0.0],
+    [0.0, 0.0], [0.0, 0.0], [0.0, 0.0], [0.0, 0.0]
+  ]
+}
+```
 
-Catalog tasks include robot-world-model, action-conditioned-video, video-dynamics, and robot-action-video. Catalog aliases include `hma-magvit-362m` and `hma-mar-1b`. Also recorded: `hma-mar-1b`.
+The example matches the default three history frames and six generated frames: `prompt_horizon - 1 + generated_frames` gives eight finite `[delta_y, delta_x]` rows. For eight generated frames, provide ten rows instead. Frame paths are relative to the JSON file unless absolute. The checkpoint normalizes these raw actions internally, so do not normalize them before submission. The output begins with the final history frame, followed by the requested generated frames. When using the command builder, set its initial observation to the final history frame; `trajectory_path` provides the actual multi-frame history.
 
-Recorded evaluation entry points include [EWMBench](/docs/evaluation/benchmark-hub/ewmbench) (Embodied world-model video prediction quality).
-
-## Runtime contract
-
-Required `image` and `prompt`; optional `actions` and `video`; artifacts `generated_video` and `hma.mp4`.
-
-Recorded task profiles: `robot-world-model`, `action-conditioned-video`, `video-dynamics`, and `robot-action-video`. WorldFoundry binds `HMAPipeline`.
-
-Start on `hma-magvit-362m`. The family registers 2 catalog variants (cards above): `hma-magvit-362m` (`robot-action-video`) — Runner parity pending; `hma-mar-1b` (`robot-action-video`) — Runner parity pending. Family status: **Runner parity pending**.
-
-Recorded `robot-action-video` defaults: fps=2, seed=42.
-
-Config resolution and pipeline import are expected to pass; real generation emits a runtime plan until required checkpoints/assets are staged. Missing assets are reported by the plan and are not treated as catalog blockers.
-
-## Running in WorldFoundry
-
-Launch `worldfoundry-eval run hma-magvit-362m --pipeline.task-profile robot-action-video` to step the world. The command builder above switches `--pipeline.task-profile` among recorded tasks and still emits `worldfoundry-eval run`.
-
-It runs in the unified environment `worldfoundry-unified-cu128` (Python 3.11, CUDA 12.8).
-
-Recorded weight repositories include `liruiw/hma-base-cont`, `liruiw/hma-base-disc`, and `stabilityai/stable-video-diffusion-img2vid`. Stage assets with `bash scripts/inference/prepare_model_infer.sh hma-magvit-362m`.
-
-Recorded licenses include apache-2.0; status: **Runner parity pending**.
+The continuous checkpoint uses the local Stable Video Diffusion temporal VAE. The discrete checkpoint uses the official MAGVIT2 tokenizer and requires its checkpoint (`hma_magvit_checkpoint`). Both require a staged official checkout and the corresponding HMA checkpoint. The public runtime has completed real GPU inference for both variants on one paired LangTable sequence. In that sequence the discrete model responded visibly to the real action track; the continuous model did not reproduce the late gripper motion. This is a single configuration check, not a general control-quality score.
 
 <ModelRelatedRecipes modelId="hma" locale="en" />

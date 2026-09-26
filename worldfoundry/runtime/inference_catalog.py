@@ -4506,10 +4506,32 @@ HMA_INFERENCE_SPEC = ModelInferenceSpec(
                 "checkpoint_dir": "${WORLDFOUNDRY_CKPT_DIR}/liruiw--hma-base-cont",
                 "base_model_dir": "${WORLDFOUNDRY_CKPT_DIR}/stabilityai--stable-video-diffusion-img2vid",
             },
-            aliases=("default", "official", "base-cont"),
+            aliases=("default", "official", "base-cont", "hma-mar-1b"),
             notes=(
                 "Runs the official STMAR continuous sampler from a checkout staged under "
                 "${WORLDFOUNDRY_MODEL_SOURCE_DIR}/HMA.",
+            ),
+        ),
+        InferenceVariantSpec(
+            variant_id="hma-magvit-362m",
+            label="Base Discrete LangTable",
+            status="requires_local_checkpoints",
+            checkpoints=(
+                InferenceCheckpointRef(
+                    role="hma_discrete_checkpoint",
+                    uri="${WORLDFOUNDRY_CKPT_DIR}/liruiw--hma-base-disc",
+                    status="required",
+                ),
+            ),
+            load_kwargs={
+                "model_id": "hma",
+                "checkpoint_dir": "${WORLDFOUNDRY_CKPT_DIR}/liruiw--hma-base-disc",
+                "model_path": "${WORLDFOUNDRY_CKPT_DIR}/liruiw--hma-base-disc",
+            },
+            aliases=("base-disc",),
+            notes=(
+                "Runs the official STMaskGIT discrete sampler and requires the official MAGVIT2 tokenizer "
+                "under the staged HMA checkout or hma_magvit_checkpoint override.",
             ),
         ),
     ),
@@ -4530,7 +4552,7 @@ HMA_INFERENCE_SPEC = ModelInferenceSpec(
                 ),
                 _field(
                     "checkpoint_dir",
-                    "HMA Continuous Checkpoint",
+                    "HMA Checkpoint",
                     kind="path",
                     target="load_kwargs",
                     required=True,

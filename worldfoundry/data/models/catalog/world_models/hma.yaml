@@ -34,13 +34,13 @@ variants:
   provider: official_repo
   checkpoint: liruiw/hma-base-disc
   integration:
-    status: planned
+    status: integrated
 - id: hma-mar-1b
   task: robot-action-video
   provider: official_repo
   checkpoint: liruiw/hma-base-cont
   integration:
-    status: planned
+    status: integrated
 integration:
   status: runtime_ported
   notes:

@@ -404,6 +404,11 @@ class EgoWMPipeline(WorldModelRuntimePipeline):
         "width",
         "motion_bucket_id",
         "action_scale",
+        "conditions_path",
+        "egowm_conditions_path",
+        "smoke_synthetic",
+        "variant",
+        "egowm_variant",
     )
 
     def _promote_call_options(self, kwargs: dict) -> dict:

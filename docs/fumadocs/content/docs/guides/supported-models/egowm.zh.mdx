@@ -17,9 +17,9 @@ EgoWM 预测移动智能体**第一人称**会看到的视频：一张视角加�
 
 ## 用来做什么
 
-用 CMU fixture 跑第一人称导航世界模型。
+第一人称导航世界模型，包含动作条件 3-DoF 和状态加动作条件 25-DoF 变体。
 
-启动 `worldfoundry-eval run egowm-svd-3dof --pipeline.task-profile navigation-video`。
+默认 25-DoF 路径要求同一轨迹的首帧图像和物理状态／动作条件。
 
 ## 运行时契约
 
@@ -29,19 +29,19 @@ EgoWM 预测移动智能体**第一人称**会看到的视频：一张视角加�
 | --- | --- |
 | 尺寸 | **512×512** |
 | 帧数 | **8** |
-| 步数 | **8** |
+| 步数 | **25** |
 | FPS | **7** |
 | Seed | **42** |
 | `motion_bucket_id` | **180** |
-| `action_scale` | **0.0** |
+| 条件 | 配对的 `conditions_path` JSON（25-DoF 必填） |
 | 学生 | `$WORLDFOUNDRY_CKPT_DIR/anuragba--egowm/svd_25dof_nav.pth` |
 | SVD 基座 | `stabilityai/stable-video-diffusion-img2vid` |
 | 源码 | `$WORLDFOUNDRY_MODEL_SOURCE_DIR/egowm` commit `4a24b6fb` |
 
-记录的 25-DoF SVD 冒烟旋钮：
+默认 `variant=25dof` 需要显式提供首帧图像和 JSON 文件：`physical_initial_state` 是 25 个数，`physical_actions` 每生成一帧对应一行 25 个数。动作是源视频中相隔 6 帧的机器人状态之差；运行器按官方导航统计分别归一化状态和动作。图像必须与这条轨迹配对，默认不提供图像。`smoke_synthetic=true` 只用于检查模型加载和生成；零状态与合成动作不能验证机器人运动语义。使用 3-DoF 权重时，显式设 `variant=3dof`，不传条件文件，另用 `action_scale` 偏移量。
 
 ## 在 WorldFoundry 中运行
 
-状态：**Runner 一致性待验证**。统一环境 `worldfoundry-unified-cu128`（Python 3.11, CUDA 12.8）。先把 `anuragba/egowm`、`stabilityai/stable-video-diffusion-img2vid` 就位到本地，缺文件加载失败，运行时不下载。在该环境执行 `worldfoundry-eval run egowm-svd-3dof --pipeline.task-profile navigation-video`。catalog 未记录 VRAM。
+状态：**一条官方配对 25-DoF 导航样例已在 GPU 验证**。公共 pipeline 使用同一 EVE1x 验证样例的首帧、初始状态和 25D 动作生成输入帧加 8 个预测帧。单样例结果不能证明精确机器人位移或普遍导航质量。先将 `anuragba/egowm` 和 `stabilityai/stable-video-diffusion-img2vid` 就位到本地，缺文件加载失败；25-DoF 任务须提供配对图像与条件 JSON。catalog 未记录 VRAM。
 
 <ModelRelatedRecipes modelId="egowm" locale="zh" />

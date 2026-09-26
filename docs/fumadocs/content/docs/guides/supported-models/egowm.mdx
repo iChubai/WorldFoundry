@@ -17,9 +17,9 @@ Config import should pass. **Real generation emits a runtime plan** until checkp
 
 ## What it is for
 
-Ego-centric navigation world model from the CMU fixture.
+Egocentric navigation world model with action-conditioned 3-DoF and state/action-conditioned 25-DoF variants.
 
-Launch `worldfoundry-eval run egowm-svd-3dof` with `--pipeline.task-profile navigation-video`.
+The default 25-DoF route needs an image and physical conditions from the same trajectory.
 
 ## Runtime contract
 
@@ -29,19 +29,19 @@ Required: `image` and `prompt`; optional: `video`; `actions`: navigation_action,
 | --- | --- |
 | Size | **512×512** |
 | Frames | **8** |
-| Steps | **8** |
+| Steps | **25** |
 | FPS | **7** |
 | Seed | **42** |
 | `motion_bucket_id` | **180** |
-| `action_scale` | **0.0** |
+| Conditions | Paired `conditions_path` JSON (required for 25-DoF) |
 | Student | `$WORLDFOUNDRY_CKPT_DIR/anuragba--egowm/svd_25dof_nav.pth` |
 | SVD base | `stabilityai/stable-video-diffusion-img2vid` |
 | Source | `$WORLDFOUNDRY_MODEL_SOURCE_DIR/egowm` commit `4a24b6fb` |
 
-Recorded 25-DoF SVD smoke knobs:
+The default `variant=25dof` requires an explicit initial image and a JSON file with `physical_initial_state` (25 numbers) and `physical_actions` (one 25-number row per generated frame). Actions are physical differences between robot states sampled six source-video frames apart. The runner applies the official navigation state and action normalization. The image must belong to the same trajectory; no image is supplied by default. Use `smoke_synthetic=true` only to check that the model loads and generates; its zero state and synthetic actions do not validate robot motion. For the 3-DoF checkpoint, set `variant=3dof` and use the separate `action_scale` offset without a conditions file.
 
 ## Run in WorldFoundry
 
-Status: **Runner parity pending**. Unified environment `worldfoundry-unified-cu128` (Python 3.11, CUDA 12.8). Stage `anuragba/egowm` and `stabilityai/stable-video-diffusion-img2vid` locally — missing files fail at load, nothing is downloaded. Run `worldfoundry-eval run egowm-svd-3dof` with `--pipeline.task-profile navigation-video`. Catalog VRAM is unset.
+Status: **One official paired 25-DoF navigation sample verified on GPU**. The public pipeline generated eight future frames plus the input from a matching EVE1x validation image, initial state, and 25D action sequence. That single-sample result does not establish calibrated robot displacement or general navigation accuracy. Stage `anuragba/egowm` and `stabilityai/stable-video-diffusion-img2vid` locally; missing files fail at load. Supply a paired image and conditions JSON to the 25-DoF task. Catalog VRAM is unset.
 
 <ModelRelatedRecipes modelId="egowm" locale="en" />

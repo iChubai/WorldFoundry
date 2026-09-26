@@ -5721,20 +5721,17 @@ CURATED_OVERRIDES: Dict[str, Dict[str, Any]] = {
         "category": "Video Generation",
         "summary": "Official action/state-conditioned SVD egocentric navigation video generation.",
         "default_model_ref": lambda: str(checkpoint_root_path("anuragba--egowm", "svd_25dof_nav.pth")),
-        "default_input_path": lambda: str(
-            official_runtime_repo_path("egowm") / "data" / "cmu_clicks" / "realw_0.png"
-        ),
         "default_task_type": "navigation-video",
         "default_load_kwargs": _egowm_default_load_kwargs,
         "default_call_kwargs": {
+            "variant": "25dof",
             "num_frames": 8,
-            "num_inference_steps": 8,
+            "num_inference_steps": 25,
             "fps": 7,
             "seed": 42,
             "height": 512,
             "width": 512,
             "motion_bucket_id": 180,
-            "action_scale": 0.0,
             "plan_only": False,
             "timeout_seconds": 21600,
         },
@@ -5754,6 +5751,11 @@ CURATED_OVERRIDES: Dict[str, Dict[str, Any]] = {
             "width",
             "motion_bucket_id",
             "action_scale",
+            "conditions_path",
+            "egowm_conditions_path",
+            "smoke_synthetic",
+            "variant",
+            "egowm_variant",
             "plan_only",
             "timeout_seconds",
             "return_dict",
@@ -5778,8 +5780,9 @@ CURATED_OVERRIDES: Dict[str, Dict[str, Any]] = {
         "aliases": ("ego-wm", "egowm-svd-25dof"),
         "tags": ("world-model", "navigation-video", "action-conditioned", "official-runtime"),
         "notes": (
-            "Runs the official 25-DoF navigation checkpoint with an explicit local SVD base model. The default "
-            "fixture is one of the official CMU real-world images."
+            "Runs the official 25-DoF navigation checkpoint with an explicit local SVD base model. "
+            "A paired conditions_path JSON with physical_initial_state and physical_actions is required. "
+            "The default image alone is insufficient for a semantic rollout."
         ),
     },
     "hma": {

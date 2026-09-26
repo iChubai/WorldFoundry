@@ -117,11 +117,37 @@ def missing_requirements(*, options, runtime_root, entrypoint, profile) -> list[
                 {"kind": "checkpoint", "path": str(path), "reason": "Stable Video Diffusion base-model asset is missing or empty"}
             )
 
+    variant = str(_option(options, "variant", "egowm_variant", default="25dof"))
     image_path = _option(options, "image_path", "input_image")
     if image_path not in (None, ""):
         image = expand_worldfoundry_path(str(image_path))
         if not image.is_file():
             missing.append({"kind": "asset", "path": str(image), "reason": "EgoWM input image is missing"})
+    elif variant == "25dof":
+        missing.append({"kind": "condition", "path": "image_path",
+                        "reason": "EgoWM 25-DoF requires an explicit initial image paired with conditions_path"})
+
+    conditions_path = _option(options, "conditions_path", "egowm_conditions_path")
+    smoke_synthetic = options.get("smoke_synthetic") is True
+    if variant not in ("25dof", "3dof"):
+        missing.append({"kind": "condition", "path": "variant", "reason": f"unsupported EgoWM variant {variant!r}"})
+    if conditions_path not in (None, "") and smoke_synthetic:
+        missing.append({"kind": "condition", "path": "smoke_synthetic",
+                        "reason": "EgoWM conditions_path and smoke_synthetic are mutually exclusive"})
+    if conditions_path not in (None, "") and options.get("action_scale") not in (None, "", 0, 0.0, "0", "0.0"):
+        missing.append({"kind": "condition", "path": "action_scale",
+                        "reason": "EgoWM action_scale cannot be combined with physical conditions"})
+    if conditions_path not in (None, ""):
+        conditions = expand_worldfoundry_path(str(conditions_path))
+        if not conditions.is_file():
+            missing.append({"kind": "asset", "path": str(conditions), "reason": "EgoWM 25-DoF conditions file is missing"})
+    elif variant == "25dof" and not smoke_synthetic:
+        missing.append({
+            "kind": "condition", "path": "conditions_path",
+            "reason": "EgoWM 25-DoF requires paired physical_initial_state and physical_actions; set conditions_path",
+        })
+    if variant == "3dof" and (conditions_path not in (None, "") or smoke_synthetic):
+        missing.append({"kind": "condition", "path": "variant", "reason": "3-DoF uses action_scale only"})
 
     for module_name in ("torch", "diffusers", "transformers", "PIL", "einops", "imageio"):
         if importlib.util.find_spec(module_name) is None:
@@ -139,7 +165,12 @@ def build_command(context: Mapping[str, Any]) -> list[str]:
     """Build the compatibility-launcher command for official EgoWM SVD inference."""
     settings = command_settings(context)
     source = Path(str(context["runtime_root"]))
-    image_path = _option(settings, "image_path", "input_image", default=source / "data/cmu_clicks/realw_0.png")
+    variant = str(_option(settings, "variant", "egowm_variant", default="25dof"))
+    image_path = _option(settings, "image_path", "input_image")
+    if image_path in (None, ""):
+        if variant == "25dof":
+            raise ValueError("EgoWM 25-DoF requires an explicit image_path paired with conditions_path")
+        image_path = source / "data/cmu_clicks/realw_0.png"
     command = [
         str(context["python"]),
         str(context["entrypoint"]),
@@ -169,9 +200,16 @@ def build_command(context: Mapping[str, Any]) -> list[str]:
         str(settings.get("width", 512)),
         "--motion-bucket-id",
         str(settings.get("motion_bucket_id", 180)),
+        "--variant",
+        variant,
         "--action-scale",
         str(settings.get("action_scale", 0.0)),
     ]
+    conditions_path = _option(settings, "conditions_path", "egowm_conditions_path")
+    if conditions_path not in (None, ""):
+        command += ["--conditions-path", str(expand_worldfoundry_path(str(conditions_path)))]
+    if settings.get("smoke_synthetic") is True:
+        command.append("--smoke-synthetic")
     return command
 
 

@@ -50,6 +50,7 @@ runner_parity:
   notes:
   - The compatibility wrapper runs STMAR with the SVD temporal VAE for continuous checkpoints, or STMaskGIT with the official MAGVIT2 tokenizer for discrete checkpoints.
   - Real GPU validation evidence is tracked per run rather than embedded as a machine-local catalog path.
+  - The default single-image, constant-action LangTable prompt is smoke-only. A paired trajectory_path supplies true history and raw_language_table_delta_yx action increments; checkpoint normalization remains inside the official backbone.
 runtime_profile: runtime-profile:hma
 output_artifacts:
 - generated_video

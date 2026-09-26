@@ -86,10 +86,10 @@ def missing_requirements(*, options, runtime_root, entrypoint, profile) -> list[
 
     checkpoint = _checkpoint_dir(options)
     discrete = _is_discrete(checkpoint)
-    required_source_files = (
-        "hma/model/st_mask_git.py" if discrete else "hma/model/st_mar.py",
-        "assets/langtable_prompt/frame_00.png",
-    )
+    trajectory_path = _option(options, "trajectory_path", "trajectory_json")
+    required_source_files = ["hma/model/st_mask_git.py" if discrete else "hma/model/st_mar.py"]
+    if trajectory_path in (None, ""):
+        required_source_files.append("assets/langtable_prompt/frame_00.png")
     if not source.is_dir():
         missing.append(
             {
@@ -141,8 +141,12 @@ def missing_requirements(*, options, runtime_root, entrypoint, profile) -> list[
                     {"kind": "checkpoint", "path": str(path), "reason": "SVD temporal VAE asset is missing or empty"}
                 )
 
+    if trajectory_path not in (None, ""):
+        trajectory = expand_worldfoundry_path(str(trajectory_path))
+        if not trajectory.is_file() or trajectory.stat().st_size == 0:
+            missing.append({"kind": "asset", "path": str(trajectory), "reason": "HMA trajectory JSON is missing or empty"})
     image_path = _option(options, "image_path", "input_image")
-    if image_path not in (None, ""):
+    if trajectory_path in (None, "") and image_path not in (None, ""):
         image = expand_worldfoundry_path(str(image_path))
         if not image.is_file():
             missing.append({"kind": "asset", "path": str(image), "reason": "HMA prompt image is missing"})
@@ -163,13 +167,7 @@ def build_command(context: Mapping[str, Any]) -> list[str]:
     """Build the official-model compatibility launcher command."""
     settings = command_settings(context)
     source = Path(str(context["runtime_root"]))
-    image_path = _option(
-        settings,
-        "image_path",
-        "input_image",
-        default=source / "assets/langtable_prompt/frame_00.png",
-    )
-    return [
+    command = [
         str(context["python"]),
         str(context["entrypoint"]),
         "--source-dir",
@@ -180,8 +178,6 @@ def build_command(context: Mapping[str, Any]) -> list[str]:
         str(_base_model_dir(settings)),
         "--magvit-checkpoint",
         str(_magvit_checkpoint(settings, source)),
-        "--input-image",
-        str(expand_worldfoundry_path(str(image_path))),
         "--output-path",
         str(context["output_path"]),
         "--device",
@@ -192,15 +188,32 @@ def build_command(context: Mapping[str, Any]) -> list[str]:
         str(settings.get("prompt_horizon", 3)),
         "--maskgit-steps",
         str(settings.get("maskgit_steps", 2)),
-        "--direction",
-        str(settings.get("direction", "right")),
-        "--action-scale",
-        str(settings.get("action_scale", 0.05)),
         "--fps",
         str(settings.get("fps", 2)),
         "--seed",
         str(settings.get("seed", 42)),
     ]
+    trajectory_path = _option(settings, "trajectory_path", "trajectory_json")
+    if trajectory_path not in (None, ""):
+        command.extend(["--trajectory-json", str(expand_worldfoundry_path(str(trajectory_path)))])
+    else:
+        image_path = _option(
+            settings,
+            "image_path",
+            "input_image",
+            default=source / "assets/langtable_prompt/frame_00.png",
+        )
+        command.extend(
+            [
+                "--input-image",
+                str(expand_worldfoundry_path(str(image_path))),
+                "--direction",
+                str(settings.get("direction", "right")),
+                "--action-scale",
+                str(settings.get("action_scale", 0.05)),
+            ]
+        )
+    return command
 
 
 __all__ = [

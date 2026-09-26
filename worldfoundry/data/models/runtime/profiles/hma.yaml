@@ -38,5 +38,7 @@ integration:
 notes:
 - WorldFoundry launches the user-staged official source through a narrow compatibility wrapper; upstream source is not vendored.
 - The default smoke route follows the official interactive simulator contract with the base continuous model, LangTable prompt image, two-dimensional action, and local SVD temporal VAE.
+- The default repeats one image across prompt_horizon and a constant raw LangTable delta action; it is a smoke configuration, not paired trajectory validation.
+- For a real paired rollout, pass trajectory_path to a JSON object with action_format=raw_language_table_delta_yx, exactly prompt_horizon prompt_frames paths, and prompt_horizon-1+generated_frames finite 2D actions. The first two axes mean vertical then horizontal displacement; the checkpoint normalizes raw actions internally.
 - The discrete checkpoint can be selected with hma_checkpoint_dir and requires the official MAGVIT2 tokenizer at source/data/magvit2.ckpt or hma_magvit_checkpoint.
 - The launcher imports only the model and sampling modules, so dataset-encoding and hosted-Space dependencies are not required for inference.

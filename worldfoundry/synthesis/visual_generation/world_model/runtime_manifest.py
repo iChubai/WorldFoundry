@@ -300,7 +300,7 @@ WORLD_MODEL_RUNTIME_SPECS: Mapping[str, WorldModelRuntimeSpec] = {
         required_assets=(
             "liruiw/hma-base-cont checkpoint",
             "Stable Video Diffusion temporal VAE",
-            "official HMA source checkout and prompt frame",
+            "official HMA source checkout and prompt frame or paired trajectory",
         ),
         input_schema=_ROBOT_INPUTS,
     ),

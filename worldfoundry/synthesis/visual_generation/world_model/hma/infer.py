@@ -23,7 +23,8 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument("--checkpoint-dir", type=Path, required=True)
     parser.add_argument("--base-model-dir", type=Path, required=True)
     parser.add_argument("--magvit-checkpoint", type=Path)
-    parser.add_argument("--input-image", type=Path, required=True)
+    parser.add_argument("--input-image", type=Path)
+    parser.add_argument("--trajectory-json", type=Path)
     parser.add_argument("--output-path", type=Path, required=True)
     parser.add_argument("--device", default="cuda")
     parser.add_argument("--generated-frames", type=int, default=6)
@@ -50,18 +51,22 @@ def _validate_args(args: argparse.Namespace) -> None:
     for label, path in (
         ("official source", args.source_dir),
         ("checkpoint", args.checkpoint_dir),
-        ("input image", args.input_image),
     ):
         if not path.exists():
             raise FileNotFoundError(f"{label} is missing: {path}")
+    if args.trajectory_json is None:
+        if args.input_image is None or not args.input_image.is_file():
+            raise FileNotFoundError(f"HMA smoke input image is missing: {args.input_image}")
+    elif not args.trajectory_json.is_file():
+        raise FileNotFoundError(f"HMA trajectory JSON is missing: {args.trajectory_json}")
 
 
 def _prepare_image(image, *, size: int = 256):
-    """Apply the resize-and-center-crop contract used by HMA's simulator."""
+    """Match HMA simulator reset: normalize, resize/crop, then quantize to uint8."""
     import cv2
     import numpy as np
 
-    array = np.asarray(image.convert("RGB"), dtype=np.uint8)
+    array = np.asarray(image.convert("RGB"), dtype=np.float32) / 255.0
     height, width = array.shape[:2]
     if height < width:
         new_height, new_width = size, int(size * width / height)
@@ -70,7 +75,60 @@ def _prepare_image(image, *, size: int = 256):
     array = cv2.resize(array, (new_width, new_height))
     top = (new_height - size) // 2
     left = (new_width - size) // 2
-    return array[top : top + size, left : left + size]
+    cropped = array[top : top + size, left : left + size]
+    return np.clip(((cropped * 2.0 - 1.0) + 1.0) * 127.5, 0, 255).astype(np.uint8)
+
+
+def _load_trajectory(path: Path, *, prompt_horizon: int, generated_frames: int):
+    """Read an explicit paired prompt/action sequence; action[t] advances frame[t]."""
+    import numpy as np
+    from PIL import Image
+
+    payload = json.loads(path.read_text())
+    if not isinstance(payload, dict):
+        raise ValueError("HMA trajectory JSON must be an object")
+    if payload.get("action_format") != "raw_language_table_delta_yx":
+        raise ValueError("HMA trajectory action_format must be raw_language_table_delta_yx")
+    frame_names = payload.get("prompt_frames")
+    if not isinstance(frame_names, list) or len(frame_names) != prompt_horizon:
+        raise ValueError(f"HMA trajectory needs exactly {prompt_horizon} prompt_frames")
+    frames = []
+    original_shape = None
+    for index, name in enumerate(frame_names):
+        if not isinstance(name, str) or not name:
+            raise ValueError(f"HMA prompt_frames[{index}] must be a path")
+        frame_path = (path.parent / name).expanduser().resolve()
+        if not frame_path.is_file():
+            raise FileNotFoundError(f"HMA prompt frame is missing: {frame_path}")
+        with Image.open(frame_path) as image:
+            if original_shape is None:
+                original_shape = image.size
+            elif image.size != original_shape:
+                raise ValueError(f"HMA prompt frame size changed: {frame_path}")
+            frames.append(_prepare_image(image))
+    actions = np.asarray(payload.get("actions"), dtype=np.float32)
+    expected = prompt_horizon - 1 + generated_frames
+    if actions.shape != (expected, 2) or not np.isfinite(actions).all():
+        raise ValueError(f"HMA trajectory needs {expected} finite 2D actions, got {actions.shape}")
+    return frames, actions
+
+
+def _action_window(cached_actions, action):
+    """Mirror official GenieSimulator.step's trailing placeholder action."""
+    import torch
+
+    return torch.cat([cached_actions, action.view(1, 1, 2), action.view(1, 1, 2)], dim=0).view(1, -1, 2)
+
+
+def _validate_discrete_tokens(tokens, *, vocab_size: int, label: str) -> None:
+    """Keep MAGVIT image tokens inside the checkpoint vocabulary, excluding mask ID."""
+    import torch
+
+    if tokens.numel() == 0 or tokens.dtype not in (torch.int32, torch.int64, torch.long):
+        raise ValueError(f"HMA {label} tokens must be nonempty integer IDs")
+    low, high = int(tokens.min()), int(tokens.max())
+    if low < 0 or high >= vocab_size:
+        raise ValueError(f"HMA {label} token range [{low}, {high}] exceeds [0, {vocab_size - 1}]")
 
 
 def run(args: argparse.Namespace) -> Path:
@@ -86,8 +144,20 @@ def run(args: argparse.Namespace) -> Path:
             raise FileNotFoundError(f"HMA discrete MAGVIT checkpoint is missing: {args.magvit_checkpoint}")
     elif not base_model_dir.is_dir():
         raise FileNotFoundError(f"HMA continuous SVD base model is missing: {base_model_dir}")
-    input_image = args.input_image.expanduser().resolve()
     output_path = args.output_path.expanduser().resolve()
+    if args.trajectory_json is None:
+        from PIL import Image
+
+        with Image.open(args.input_image.expanduser().resolve()) as image:
+            initial_frame = _prepare_image(image)
+        prompt_frames = [initial_frame] * args.prompt_horizon
+        trajectory_actions = None
+    else:
+        prompt_frames, trajectory_actions = _load_trajectory(
+            args.trajectory_json.expanduser().resolve(),
+            prompt_horizon=args.prompt_horizon,
+            generated_frames=args.generated_frames,
+        )
 
     source_text = str(source_dir)
     inserted_source = source_text not in sys.path
@@ -97,7 +167,6 @@ def run(args: argparse.Namespace) -> Path:
         import einops
         import numpy as np
         import torch
-        from PIL import Image
 
         torch.manual_seed(args.seed)
         np.random.seed(args.seed)
@@ -124,36 +193,47 @@ def run(args: argparse.Namespace) -> Path:
             ).to(device=device).eval()
             backbone = STMAR.from_pretrained(str(checkpoint_dir)).to(device=device).eval()
 
-        initial_frame = _prepare_image(Image.open(input_image))
-        normalized = initial_frame.astype(np.float32) / 127.5 - 1.0
-        image_tensor = (
-            torch.from_numpy(normalized.transpose(2, 0, 1))
-            .to(device=device, dtype=torch.bfloat16)
-            .unsqueeze(0)
+        latent_frames = []
+        for frame in prompt_frames:
+            normalized = frame.astype(np.float32) / 127.5 - 1.0
+            image_tensor = (
+                torch.from_numpy(normalized.transpose(2, 0, 1))
+                .to(device=device, dtype=torch.bfloat16)
+                .unsqueeze(0)
+            )
+            if discrete:
+                with image_encoder.ema_scope():
+                    _, _, indices, _ = image_encoder.encode(image_tensor, flip=True)
+                _validate_discrete_tokens(
+                    indices, vocab_size=int(backbone.config.image_vocab_size), label="prompt"
+                )
+                latent = einops.rearrange(indices, "(h w) -> h w", h=16, w=16).long()
+            else:
+                latent = image_encoder.encode(image_tensor).latent_dist.mean * SVD_SCALE
+                latent = einops.rearrange(latent, "b c h w -> b h w c").squeeze(0).to(torch.float32)
+            latent_frames.append(latent)
+        cached_latents = torch.stack(latent_frames)
+        cached_actions = (
+            torch.from_numpy(trajectory_actions[: args.prompt_horizon - 1].copy()).to(device=device).unsqueeze(1)
+            if trajectory_actions is not None
+            else torch.zeros((args.prompt_horizon - 1, 1, 2), device=device, dtype=torch.float32)
         )
-        if discrete:
-            with image_encoder.ema_scope():
-                _, _, indices, _ = image_encoder.encode(image_tensor, flip=True)
-            latent = einops.rearrange(indices, "(h w) -> h w", h=16, w=16).long()
-        else:
-            latent = image_encoder.encode(image_tensor).latent_dist.mean * SVD_SCALE
-            latent = einops.rearrange(latent, "b c h w -> b h w c").squeeze(0).to(torch.float32)
-        cached_latents = torch.stack([latent.clone() for _ in range(args.prompt_horizon)])
-        cached_actions = torch.zeros((args.prompt_horizon - 1, 1, 2), device=device, dtype=torch.float32)
 
         base_action = torch.tensor(ACTION_VECTORS[args.direction], device=device, dtype=torch.float32)
-        action = base_action * float(args.action_scale)
-        frames = [initial_frame]
+        frames = [prompt_frames[-1]]
 
-        for _ in range(args.generated_frames):
+        for step_index in range(args.generated_frames):
+            if trajectory_actions is not None:
+                action = torch.from_numpy(
+                    trajectory_actions[args.prompt_horizon - 1 + step_index].copy()
+                ).to(device=device)
+            else:
+                action = base_action * float(args.action_scale)
             input_latents = torch.cat([cached_latents, torch.zeros_like(cached_latents[[0]])]).unsqueeze(0)
             input_latents = input_latents[:, : args.prompt_horizon + 1]
             input_latents[:, -1] = backbone.mask_token_id if discrete else backbone.mask_token
 
-            input_actions = torch.cat(
-                [cached_actions, action.view(1, 1, 2), action.view(1, 1, 2)],
-                dim=0,
-            ).view(1, -1, 2)
+            input_actions = _action_window(cached_actions, action)
             input_actions = input_actions[:, : args.prompt_horizon + 1]
 
             next_latent = backbone.maskgit_generate(
@@ -166,6 +246,9 @@ def run(args: argparse.Namespace) -> Path:
             )[0].squeeze(0)
 
             if discrete:
+                _validate_discrete_tokens(
+                    next_latent, vocab_size=int(backbone.config.image_vocab_size), label="generated"
+                )
                 token_grid = next_latent.unsqueeze(0)
                 quantized = image_encoder.quantize.get_codebook_entry(
                     einops.rearrange(token_grid, "b h w -> b (h w)"),

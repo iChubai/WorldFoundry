@@ -4517,7 +4517,7 @@ HMA_INFERENCE_SPEC = ModelInferenceSpec(
         InferenceTaskProfile(
             task_id="robot-action-video",
             label="Robot Action Video",
-            description="Generate an action-conditioned LangTable rollout from an initial observation image.",
+            description="Generate a LangTable rollout; the default repeats one image and action for smoke testing.",
             aliases=("default", "official-demo", "langtable"),
             inputs=(
                 _field(
@@ -4548,13 +4548,26 @@ HMA_INFERENCE_SPEC = ModelInferenceSpec(
                 _field("prompt_horizon", "Prompt Horizon", kind="integer", target="call_kwargs", default=3),
                 _field("maskgit_steps", "MaskGIT Steps", kind="integer", target="call_kwargs", default=2),
                 _field(
+                    "trajectory_path",
+                    "Paired LangTable Trajectory JSON",
+                    kind="path",
+                    target="call_kwargs",
+                    description=(
+                        "Optional real-history input: action_format=raw_language_table_delta_yx, "
+                        "prompt_frames has prompt_horizon image paths, and actions has "
+                        "prompt_horizon-1+generated_frames raw 2D increments. "
+                        "The checkpoint normalizes these actions internally."
+                    ),
+                ),
+                _field(
                     "direction",
                     "Action Direction",
                     target="call_kwargs",
                     default="right",
                     choices=("right", "left", "down", "up"),
                 ),
-                _field("action_scale", "Action Scale", kind="number", target="call_kwargs", default=0.05),
+                _field("action_scale", "Smoke Action Scale", kind="number", target="call_kwargs", default=0.05,
+                       description="Repeated raw LangTable 2D delta in the selected direction; ignored for trajectory_path."),
                 _field("fps", "FPS", kind="integer", target="call_kwargs", default=2),
                 _field("seed", "Seed", kind="integer", target="call_kwargs", default=42),
                 _field("plan_only", "Plan Only", kind="boolean", target="call_kwargs", default=False),

@@ -5817,6 +5817,8 @@ CURATED_OVERRIDES: Dict[str, Dict[str, Any]] = {
             "fps",
             "image_path",
             "input_image",
+            "trajectory_path",
+            "trajectory_json",
             "generated_frames",
             "num_frames",
             "prompt_horizon",
@@ -5848,8 +5850,9 @@ CURATED_OVERRIDES: Dict[str, Dict[str, Any]] = {
         "aliases": ("hma-magvit-362m", "hma-continuous"),
         "tags": ("world-model", "robot-video", "action-conditioned", "official-runtime"),
         "notes": (
-            "Runs the official HMA continuous checkpoint with the LangTable prompt image, a two-dimensional "
-            "action, and the local SVD temporal VAE."
+            "The default repeats one LangTable image and one raw two-dimensional action for smoke testing. "
+            "For a paired rollout, pass trajectory_path with prompt_frames and raw_language_table_delta_yx actions; "
+            "the official backbone normalizes actions internally. Continuous uses SVD VAE; discrete uses MAGVIT2."
         ),
     },
     "giga-world-0": {

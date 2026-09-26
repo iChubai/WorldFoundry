@@ -437,6 +437,8 @@ class HMAPipeline(WorldModelRuntimePipeline):
         "svd_base_model_dir",
         "image_path",
         "input_image",
+        "trajectory_path",
+        "trajectory_json",
         "generated_frames",
         "num_frames",
         "prompt_horizon",

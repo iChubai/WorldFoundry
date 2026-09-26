@@ -102,12 +102,14 @@ class SpatiaRuntime:
         intrinsics: Any,
         video_path: Any = None,
         image_path: Any = None,
+        mask_path: Any = None,
         num_frames: int = 121,
         fps: int = 24,
         width: int = 1248,
         height: int = 704,
         num_inference_steps: int = 40,
         seed: int = 20917,
+        force_rebuild_intermediate: bool = False,
         return_dict: bool = True,
         **_: Any,
     ) -> Any:
@@ -119,6 +121,41 @@ class SpatiaRuntime:
             video = require_path(video_path, "Spatia source video", kind="file")
             image = _first_frame(video, input_dir / "first_frame.png")
         trajectory = require_path(w2c_trajectory_file, "Spatia W2C trajectory", kind="file")
+        if mask_path is None:
+            masks: list[Path] = []
+        elif isinstance(mask_path, (str, Path)):
+            masks = [require_path(mask_path, "Spatia foreground mask", kind="file")]
+        elif isinstance(mask_path, (list, tuple)) and mask_path:
+            masks = [
+                require_path(path, "Spatia foreground mask", kind="file")
+                for path in mask_path
+            ]
+        else:
+            raise ValueError("Spatia mask_path must be a file or non-empty sequence of files")
+        if masks:
+            # This adapter starts the official pipeline from one source frame.
+            # MapAnything requires its foreground mask to match that frame's
+            # original size, before the generation-resolution resize.
+            if len(masks) != 1:
+                raise ValueError("Spatia first-frame inference requires exactly one foreground mask")
+            from PIL import Image
+
+            with Image.open(image) as source:
+                source_size = source.size
+            if masks[0].suffix.lower() == ".npy":
+                import numpy as np
+
+                mask_shape = np.load(masks[0], mmap_mode="r", allow_pickle=False).shape
+                valid = mask_shape == (1, source_size[1], source_size[0])
+            else:
+                with Image.open(masks[0]) as foreground:
+                    mask_shape = foreground.size
+                valid = mask_shape == source_size
+            if not valid:
+                raise ValueError(
+                    f"Spatia foreground mask shape {mask_shape} must match "
+                    f"the source frame size {source_size} (or [1,H,W] for .npy)"
+                )
         if not isinstance(intrinsics, list) or not intrinsics:
             raise ValueError("Spatia requires per-frame 3x3 intrinsics")
         matrix = intrinsics[0]
@@ -187,6 +224,10 @@ class SpatiaRuntime:
         ]
         if lora and Path(lora).is_file():
             command.extend(["--lora_path", lora])
+        if masks:
+            command.extend(["--mask_path", *masks])
+        if force_rebuild_intermediate:
+            command.append("--force_rebuild_intermediate")
         runtime_env = {
             "HF_HUB_OFFLINE": "1",
             "TRANSFORMERS_OFFLINE": "1",

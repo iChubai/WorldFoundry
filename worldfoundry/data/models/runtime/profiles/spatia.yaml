@@ -51,3 +51,7 @@ notes:
 - The installed PyTorch3D extension could not load against torch 2.5.1, so this
   run used a Torch nearest-depth point splat fallback. Renderer parity, camera
   adherence and benchmark quality remain unverified.
+- Optional mask_path forwards one foreground mask image or a one-frame [1,H,W]
+  mask array to official reconstruction. Its H/W must match the original source
+  frame, before generation resizing. Use force_rebuild_intermediate when
+  changing cached inputs for an existing output path.

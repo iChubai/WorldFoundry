@@ -929,7 +929,12 @@ def load_model_run_schema(
         default = _default_for_call_key(defaults, key, input_field.default)
         if field_id == "prompt" and default in (None, ""):
             default = entry.default_prompt or None
-        if scope == "input" and field_id != "prompt" and entry.default_input_path:
+        if (
+            scope == "input"
+            and field_id != "prompt"
+            and entry.default_input_path
+            and (task.task_id == spec.default_task_id or input_field.default is None)
+        ):
             default = entry.default_input_path
         inferred_kind = _field_kind(key, default)
         kind = input_field.kind

@@ -5934,6 +5934,54 @@ CURATED_OVERRIDES: Dict[str, Dict[str, Any]] = {
             "Use a checkpoint-matched GR1 observation for dataset parity."
         ),
     },
+    "uniworld-view": {
+        "display_name": "UniWorld-View",
+        "category": "Video Generation",
+        "summary": "Official UniView novel-view synthesis from one image or a monocular video.",
+        "default_model_ref": lambda: str(
+            official_runtime_repo_path("UniWorld-View", specific_env="UNIWORLD_VIEW_REPO")
+        ),
+        "default_input_path": lambda: str(
+            official_runtime_repo_path("UniWorld-View", specific_env="UNIWORLD_VIEW_REPO")
+            / "test" / "images" / "fruit.jpg"
+        ),
+        "default_prompt": "",
+        "default_task_type": "image-to-video",
+        "default_backend": "from_pretrained",
+        "supports_from_pretrained": True,
+        "default_load_kwargs": lambda: {
+            "repo_root": str(official_runtime_repo_path("UniWorld-View", specific_env="UNIWORLD_VIEW_REPO")),
+        },
+        "default_call_kwargs": {
+            "mode": "single_view",
+            "geometry_backend": "stream3r",
+            "render_method": "hybrid",
+            "height": 480,
+            "width": 832,
+            "num_frames": 81,
+            "num_inference_steps": 8,
+            "guidance_scale": 4.0,
+            "fps": 16,
+            "seed": 43,
+            "d_phi": 50.0,
+            "timeout_seconds": 21600,
+        },
+        "input_params": ("image_path", "video_path"),
+        "call_params": (
+            "prompt", "images", "video", "image_path", "video_path", "mode",
+            "geometry_backend", "render_method", "mosca_ws", "height", "width",
+            "num_frames", "num_inference_steps", "guidance_scale", "fps", "seed",
+            "stride", "traj_type", "d_phi", "d_theta", "x_offset", "y_offset",
+            "z_offset", "radius_scale", "low_gpu_memory_mode", "output_path",
+            "timeout_seconds", "plan_only", "return_dict",
+        ),
+        "load_params": (
+            "repo_root", "python_executable", "checkpoint_root", "transformer_path",
+            "model_name", "blip_path", "moge_path", "sam2_checkpoint",
+            "segnet_path", "stream3r_path", "lora_path", "device",
+        ),
+        "tags": ("novel-view", "camera-control", "image-to-video", "video-to-video", "official-runtime"),
+    },
     "genie-envisioner": {
         "display_name": "Genie Envisioner",
         "category": "Video Generation",

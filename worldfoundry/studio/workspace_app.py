@@ -1863,7 +1863,11 @@ def _sync_input_path_to_call_kwargs(
         if target:
             call_kwargs[target] = [input_path] if target == "images" else input_path
         return
-    if workload in {"i2v", "image-video", "image-to-video"} or declared_task_type in {"i2v", "image-video", "image-to-video"}:
+    video_input_task_types = {"v2v", "video-video", "video-to-video", "v2a", "video-to-audio"}
+    if (
+        (workload in {"i2v", "image-video", "image-to-video"} and declared_task_type not in video_input_task_types)
+        or declared_task_type in {"i2v", "image-video", "image-to-video"}
+    ):
         target = _supported_call_param(entry, "image_path", "image", "images")
         if target:
             call_kwargs[target] = input_path if target != "images" else [input_path]
@@ -1873,7 +1877,6 @@ def _sync_input_path_to_call_kwargs(
         if target:
             call_kwargs[target] = input_path if target != "images" else [input_path]
         return
-    video_input_task_types = {"v2v", "video-video", "video-to-video", "v2a", "video-to-audio"}
     if workload in video_input_task_types or declared_task_type in video_input_task_types:
         target = _supported_call_param(entry, "video_path", "video", "videos")
         if target:
@@ -2315,7 +2318,13 @@ def _inference_run_kwargs(payload: JobCreateRequest, *, validate: bool = True) -
         )
         if isinstance(default_interactions, (str, list, tuple)):
             interactions = default_interactions
-    task_type = str(params.get("task_type") or call_kwargs.pop("task_type", "") or entry.default_task_type or "")
+    task_type = str(
+        params.get("task_type")
+        or call_kwargs.pop("task_type", "")
+        or (task.task_id if payload.task_profile_id else "")
+        or entry.default_task_type
+        or ""
+    )
     fps = int(params.get("fps") or call_kwargs.get("fps") or SETTINGS.get("fps", DEFAULT_SETTINGS["fps"]))
     num_frames = int(
         params.get("num_frames")

@@ -39,6 +39,7 @@ from worldfoundry.core.io.paths import (
 )
 from worldfoundry.runtime.hyperflow_inference_spec import HYPERFLOW_INFERENCE_SPEC
 from worldfoundry.runtime.interactive_inference_catalog import INTERACTIVE_INFERENCE_SPECS
+from worldfoundry.runtime.uniworld_view_inference_spec import UNIWORLD_VIEW_INFERENCE_SPEC
 
 LINGBOT_WORLD_MODEL_ID = "lingbot-world"
 LINGBOT_VARIANT_FAST = "fast"
@@ -5186,6 +5187,7 @@ LTX23_V2V_INFERENCE_SPEC = _ltx_ic_lora_v2v_inference_spec(
 
 _MODEL_INFERENCE_SPECS: dict[str, ModelInferenceSpec] = {
     "hyperflow": HYPERFLOW_INFERENCE_SPEC,
+    UNIWORLD_VIEW_INFERENCE_SPEC.model_family_id: UNIWORLD_VIEW_INFERENCE_SPEC,
     **INTERACTIVE_INFERENCE_SPECS,
     LTX2_V2V_INFERENCE_SPEC.model_family_id: LTX2_V2V_INFERENCE_SPEC,
     LTX23_V2V_INFERENCE_SPEC.model_family_id: LTX23_V2V_INFERENCE_SPEC,

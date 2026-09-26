@@ -633,6 +633,9 @@ include-package-data = true
 "worldfoundry.synthesis.visual_generation.lingbot_video" = [
     "default_negative_prompt*.json",
 ]
+"worldfoundry.synthesis.visual_generation.ctrl_world" = [
+    "action_stats.json",
+]
 "worldfoundry.synthesis.visual_generation.evoke" = [
     "evoke_runtime/**/*",
 ]

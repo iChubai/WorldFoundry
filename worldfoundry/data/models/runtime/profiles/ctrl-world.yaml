@@ -29,7 +29,7 @@ artifact_kind: generated_video
 artifact_filename: ctrl-world.mp4
 execution:
   backend_stage: in_tree_runtime_manifest
-  runtime_status: checkpoint_backed_gpu_inference_verified_synthetic_views
+  runtime_status: checkpoint_backed_gpu_inference_verified_real_views
   integration_status: runtime_ported
   pipeline_binding: ctrl-world
 integration:
@@ -37,6 +37,8 @@ integration:
 notes:
 - Ctrl-World source is vendored in-tree under synthesis/visual_generation/ctrl_world/ctrl_world_runtime.
 - The compatibility launcher uses the official action-conditioned model and locally staged SVD/CLIP components.
-- The default uses synchronized ALOHA high/left-wrist/right-wrist views; synthetic-three-view remains available for smoke tests only.
+- Physical action conditioning requires the initial seven-value DROID Cartesian pose corresponding to the synchronized camera views; the official DROID action statistics are bundled in action_stats.json.
+- The default ALOHA high/left-wrist/right-wrist images are demonstration inputs, not checkpoint-matched DROID observations.
+- The old zero-history normalized action input remains available only as explicit synthetic-zero-smoke conditioning.
 - A local five-frame, 25-step synthetic-three-view run retained detail in all three panels; the four-step smoke default blurred the third panel severely.
-- Synchronized checkpoint-matched robot views and actions are still required for action-quality parity.
+- End-to-end physical action-quality parity requires synchronized checkpoint-matched DROID observations and measured pose.

@@ -38,6 +38,7 @@ recursive-include worldfoundry/studio/native/world_explorer *
 recursive-include worldfoundry/data/models/catalog *.yaml
 recursive-include worldfoundry/data/models/runtime *.yaml
 recursive-include worldfoundry/data/models/runtime *.json
+include worldfoundry/synthesis/visual_generation/ctrl_world/action_stats.json
 recursive-include worldfoundry/data/models/bindings *.yaml
 recursive-include worldfoundry/data/models/runtime/configs *.yaml
 recursive-include worldfoundry/data/models/runtime/configs *.yml

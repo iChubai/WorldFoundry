@@ -6038,8 +6038,9 @@ CURATED_OVERRIDES: Dict[str, Dict[str, Any]] = {
                     "observation_images_cam_right_wrist.png",
                 )
             ],
+            "action_mode": "absolute-pose",
             "action_direction": "right",
-            "action_scale": 0.2,
+            "action_distance": 0.08,
             "height": 192,
             "width": 320,
             "num_frames": 5,
@@ -6064,7 +6065,10 @@ CURATED_OVERRIDES: Dict[str, Dict[str, Any]] = {
             "input_views",
             "view_images",
             "input_mode",
+            "action_mode",
+            "initial_pose",
             "action_direction",
+            "action_distance",
             "action_scale",
             "height",
             "width",
@@ -6101,8 +6105,9 @@ CURATED_OVERRIDES: Dict[str, Dict[str, Any]] = {
         "aliases": ("ctrl_world", "ctrlworld"),
         "tags": ("world-model", "robot-video", "action-conditioned", "official-runtime"),
         "notes": (
-            "The default uses three synchronized ALOHA camera observations and normalized actions. "
-            "Use a checkpoint-matched DROID three-camera trajectory for action-quality parity."
+            "Physical action generation requires a seven-value DROID Cartesian initial_pose; the default ALOHA images are demonstration views only. "
+            "Use synchronized DROID cameras and the corresponding physical pose for action-quality evaluation. "
+            "The old zero-pose conditioning is available only with action_mode='synthetic-zero-smoke'."
         ),
     },
     "tesseract": {

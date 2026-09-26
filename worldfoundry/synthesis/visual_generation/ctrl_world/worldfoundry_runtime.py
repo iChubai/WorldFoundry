@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import importlib.util
+import math
 from pathlib import Path
 from typing import Any, Mapping, Sequence
 
@@ -37,6 +38,7 @@ DEFAULT_INPUT_VIEWS = tuple(
     )
 )
 DEFAULT_PROMPT = "Move the robot gripper toward the objects on the workbench."
+ACTION_STATS_PATH = PACKAGE_DIR / "action_stats.json"
 BLOCKED_REASON = ""
 
 
@@ -88,6 +90,17 @@ def _input_views(options: Mapping[str, Any]) -> tuple[Path, ...]:
     return tuple(expand_worldfoundry_path(str(path)) for path in value)
 
 
+def _initial_pose(options: Mapping[str, Any]) -> tuple[float, ...] | None:
+    value = options.get("initial_pose")
+    if value is None or isinstance(value, (str, bytes, bytearray, Mapping)):
+        return None
+    try:
+        pose = tuple(float(part) for part in value)
+    except (TypeError, ValueError):
+        return None
+    return pose if len(pose) == 7 and all(math.isfinite(part) for part in pose) else None
+
+
 def _missing_file(path: Path, reason: str, *, kind: str = "checkpoint") -> dict[str, str] | None:
     try:
         ready = path.is_file() and path.stat().st_size > 0
@@ -112,6 +125,8 @@ def missing_requirements(*, options, runtime_root, entrypoint, profile) -> list[
             missing.append(
                 {"kind": "source_repo", "path": str(path), "reason": "vendored Ctrl-World runtime file is missing"}
             )
+    if not ACTION_STATS_PATH.is_file():
+        missing.append({"kind": "source_repo", "path": str(ACTION_STATS_PATH), "reason": "official DROID action statistics are missing"})
     if entrypoint is None or not Path(str(entrypoint)).is_file():
         missing.append(
             {
@@ -173,6 +188,18 @@ def missing_requirements(*, options, runtime_root, entrypoint, profile) -> list[
         if not image.is_file():
             missing.append({"kind": "asset", "path": str(image), "reason": "Ctrl-World input image is missing"})
 
+    action_mode = str(options.get("action_mode", "absolute-pose"))
+    if action_mode == "absolute-pose":
+        if _initial_pose(options) is None:
+            missing.append({"kind": "input", "path": "initial_pose", "reason": "absolute-pose mode requires seven finite physical Cartesian pose values"})
+        if options.get("action_scale") is not None:
+            missing.append({"kind": "input", "path": "action_scale", "reason": "normalized action_scale is only valid for synthetic-zero-smoke mode"})
+    elif action_mode == "synthetic-zero-smoke":
+        if options.get("initial_pose") is not None:
+            missing.append({"kind": "input", "path": "initial_pose", "reason": "physical initial_pose is only valid for absolute-pose mode"})
+    else:
+        missing.append({"kind": "input", "path": "action_mode", "reason": f"unsupported Ctrl-World action mode: {action_mode}"})
+
     for module_name in ("torch", "diffusers", "transformers", "PIL", "accelerate", "einops", "numpy"):
         if importlib.util.find_spec(module_name) is None:
             missing.append(
@@ -188,6 +215,7 @@ def missing_requirements(*, options, runtime_root, entrypoint, profile) -> list[
 def build_command(context: Mapping[str, Any]) -> list[str]:
     settings = command_settings(context)
     input_mode = str(settings.get("input_mode", "explicit-three-view"))
+    action_mode = str(settings.get("action_mode", "absolute-pose"))
     command = [
         str(context["python"]),
         str(context["entrypoint"]),
@@ -207,8 +235,8 @@ def build_command(context: Mapping[str, Any]) -> list[str]:
         input_mode,
         "--action-direction",
         str(settings.get("action_direction", "right")),
-        "--action-scale",
-        str(settings.get("action_scale", 0.2)),
+        "--action-mode",
+        action_mode,
         "--height",
         str(settings.get("height", 192)),
         "--width",
@@ -236,11 +264,25 @@ def build_command(context: Mapping[str, Any]) -> list[str]:
     else:
         image = _path_option(settings, "image_path", "input_image", default=DEFAULT_INPUT_IMAGE)
         command[6:6] = ["--input-image", str(image)]
+    if action_mode == "absolute-pose":
+        pose = _initial_pose(settings)
+        if pose is None:
+            raise ValueError("Ctrl-World absolute-pose mode requires seven finite initial_pose values")
+        if settings.get("action_scale") is not None:
+            raise ValueError("Ctrl-World normalized action_scale is only valid for synthetic-zero-smoke mode")
+        command.extend(["--initial-pose", *(str(value) for value in pose), "--action-distance", str(settings.get("action_distance", 0.08))])
+    elif action_mode == "synthetic-zero-smoke":
+        if settings.get("initial_pose") is not None:
+            raise ValueError("Ctrl-World physical initial_pose is only valid for absolute-pose mode")
+        command.extend(["--action-scale", str(settings.get("action_scale", 0.2))])
+    else:
+        raise ValueError(f"unsupported Ctrl-World action mode: {action_mode}")
     return command
 
 
 __all__ = [
     "BLOCKED_REASON",
+    "ACTION_STATS_PATH",
     "DEFAULT_BASE_MODEL_DIR",
     "DEFAULT_CHECKPOINT_PATH",
     "DEFAULT_CLIP_MODEL_DIR",

@@ -4,6 +4,8 @@ from __future__ import annotations
 
 import argparse
 import gc
+import json
+import math
 import sys
 from pathlib import Path
 from types import SimpleNamespace
@@ -23,6 +25,17 @@ ACTION_DIRECTIONS = {
     "open": (6, -1.0),
     "close": (6, 1.0),
 }
+OFFICIAL_KEYBOARD_ACTIONS = {
+    "forward": "f",
+    "backward": "b",
+    "left": "l",
+    "right": "r",
+    "up": "u",
+    "down": "d",
+    "open": "o",
+    "close": "c",
+}
+OFFICIAL_ACTION_STATS = Path(__file__).resolve().parent / "action_stats.json"
 
 
 def _clear_conflicting_models_namespace(runtime_root: Path) -> None:
@@ -64,7 +77,15 @@ def _parser() -> argparse.ArgumentParser:
         default="explicit-three-view",
     )
     parser.add_argument("--action-direction", choices=tuple(ACTION_DIRECTIONS), default="right")
-    parser.add_argument("--action-scale", type=float, default=0.2)
+    parser.add_argument(
+        "--action-mode",
+        choices=("absolute-pose", "synthetic-zero-smoke"),
+        default="absolute-pose",
+        help="Use an official physical Cartesian pose, or explicitly opt into the old zero-pose smoke input.",
+    )
+    parser.add_argument("--initial-pose", type=float, nargs=ACTION_DIM, metavar=("X", "Y", "Z", "RX", "RY", "RZ", "GRIPPER"))
+    parser.add_argument("--action-distance", type=float, default=0.08, help="Physical XYZ displacement in metres, as in official key_board_control.")
+    parser.add_argument("--action-scale", type=float, help="Normalized delta for synthetic-zero-smoke only (default 0.2).")
     parser.add_argument("--height", type=int, default=192)
     parser.add_argument("--width", type=int, default=320)
     parser.add_argument("--num-frames", type=int, default=NUM_FRAMES)
@@ -86,7 +107,18 @@ def _validate_args(args: argparse.Namespace) -> None:
         raise ValueError(f"the released Ctrl-World action adapter requires exactly {NUM_FRAMES} generated frames")
     if args.num_inference_steps < 1:
         raise ValueError("num_inference_steps must be at least 1")
-    if not 0.0 <= args.action_scale <= 1.0:
+    if args.action_mode == "absolute-pose":
+        if args.initial_pose is None:
+            raise ValueError("absolute-pose mode requires --initial-pose with seven physical Cartesian pose values")
+        if args.action_scale is not None:
+            raise ValueError("--action-scale is only valid for synthetic-zero-smoke mode")
+        if not all(math.isfinite(value) for value in args.initial_pose):
+            raise ValueError("initial_pose must contain seven finite values")
+    elif args.initial_pose is not None:
+        raise ValueError("--initial-pose is only valid for absolute-pose mode")
+    if not math.isfinite(args.action_distance) or args.action_distance < 0:
+        raise ValueError("action_distance must be a finite nonnegative physical displacement")
+    if args.action_scale is not None and (not math.isfinite(args.action_scale) or not 0.0 <= args.action_scale <= 1.0):
         raise ValueError("action_scale must be between 0 and 1 in normalized action space")
     if args.fps < 1:
         raise ValueError("fps must be at least 1")
@@ -152,6 +184,7 @@ def _explicit_three_views(paths: list[Path] | tuple[Path, ...], *, height: int, 
 
 
 def _normalized_action_rollout(direction: str, scale: float):
+    """Legacy out-of-distribution zero-pose action for explicit smoke tests only."""
     import torch
 
     actions = torch.zeros((1, NUM_HISTORY + NUM_FRAMES, ACTION_DIM), dtype=torch.float32)
@@ -159,6 +192,38 @@ def _normalized_action_rollout(direction: str, scale: float):
     if sign:
         actions[0, NUM_HISTORY:, dimension] = torch.linspace(0.0, float(sign * scale), NUM_FRAMES)
     return actions
+
+
+def _absolute_pose_action_rollout(initial_pose: list[float] | tuple[float, ...], direction: str, distance: float):
+    """Match official cold-start history, keyboard rollout, and DROID normalization."""
+    import numpy as np
+    import torch
+
+    _ensure_vendored_runtime_importable()
+    from models.utils import key_board_control
+
+    pose = np.asarray(initial_pose, dtype=np.float64)
+    if pose.shape != (ACTION_DIM,) or not np.isfinite(pose).all():
+        raise ValueError("initial_pose must contain seven finite physical Cartesian pose values")
+    if not math.isfinite(distance) or distance < 0:
+        raise ValueError("action_distance must be a finite nonnegative physical displacement")
+    if direction not in ACTION_DIRECTIONS:
+        raise ValueError(f"unknown action direction: {direction}")
+
+    # The official helper also clips XYZ and contains task 1799's special up/down paths.
+    keyboard_action = OFFICIAL_KEYBOARD_ACTIONS.get(direction, "r")
+    future = key_board_control(
+        pose[None, :], keyboard_action, distance=0.0 if direction == "stationary" else distance
+    )
+    physical = np.concatenate((np.repeat(pose[None, :], NUM_HISTORY, axis=0), future), axis=0)
+
+    stats = json.loads(OFFICIAL_ACTION_STATS.read_text(encoding="utf-8"))
+    lower = np.asarray(stats["state_01"], dtype=np.float64)
+    upper = np.asarray(stats["state_99"], dtype=np.float64)
+    if lower.shape != (ACTION_DIM,) or upper.shape != (ACTION_DIM,) or not np.all(upper > lower):
+        raise RuntimeError(f"invalid Ctrl-World DROID action statistics: {OFFICIAL_ACTION_STATS}")
+    normalized = np.clip(2 * (physical - lower) / (upper - lower + 1e-8) - 1, -1, 1)
+    return torch.from_numpy(normalized.astype(np.float32)).unsqueeze(0)
 
 
 def _model_args(args: argparse.Namespace, dtype) -> SimpleNamespace:
@@ -230,7 +295,12 @@ def run(args: argparse.Namespace) -> Path:
         if tuple(current_latent.shape) != expected_shape:
             raise RuntimeError(f"Ctrl-World three-view latent shape must be {expected_shape}, got {tuple(current_latent.shape)}")
         history = current_latent.unsqueeze(1).repeat(1, NUM_HISTORY, 1, 1, 1)
-        actions = _normalized_action_rollout(args.action_direction, args.action_scale).to(device=device, dtype=dtype)
+        if args.action_mode == "absolute-pose":
+            actions = _absolute_pose_action_rollout(args.initial_pose, args.action_direction, args.action_distance)
+        else:
+            print("Using synthetic zero-pose actions for smoke testing only; motion direction is not physically validated.")
+            actions = _normalized_action_rollout(args.action_direction, args.action_scale if args.action_scale is not None else 0.2)
+        actions = actions.to(device=device, dtype=dtype)
         text_token = model.action_encoder(
             actions,
             [args.prompt],

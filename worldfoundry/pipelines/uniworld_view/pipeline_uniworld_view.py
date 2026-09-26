@@ -323,7 +323,6 @@ class UniWorldViewPipeline(PipelineABC):
         env.pop("PYTHONPATH", None)
         env.pop("PYTHONHOME", None)
         env["PYTHONNOUSERSITE"] = "1"
-        env["UNIWORLD_VIEW_OUTPUT_FPS"] = str(fps)
         with log_path.open("w", encoding="utf-8") as log:
             try:
                 result = subprocess.run(

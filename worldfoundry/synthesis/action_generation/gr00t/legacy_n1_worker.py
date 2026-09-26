@@ -64,6 +64,27 @@ def _check_model_weights(model: object, checkpoint_dir: Path) -> dict[str, objec
     return record
 
 
+def _load_video_observation(image_paths: dict[str, str], video_keys: list[str]) -> dict[str, object]:
+    import numpy as np
+
+    if "__single__" in image_paths:
+        if len(image_paths) != 1 or len(video_keys) != 1:
+            raise ValueError("Original GR00T-N1 needs a named image for every configured camera.")
+        selected = {video_keys[0]: image_paths["__single__"]}
+    else:
+        missing = sorted(set(video_keys) - image_paths.keys())
+        if missing:
+            raise ValueError(f"Original GR00T-N1 observation is missing cameras: {missing}")
+        selected = {key: image_paths[key] for key in video_keys}
+    observation = {}
+    for key, path in selected.items():
+        image = np.load(path, allow_pickle=False)
+        if image.ndim != 3 or image.shape[-1] != 3 or image.dtype != np.uint8:
+            raise ValueError(f"Invalid original N1 input image {key}: {image.shape}, {image.dtype}")
+        observation[key] = image[None, ...]
+    return observation
+
+
 def run(request_path: Path) -> None:
     import numpy as np
     import torch
@@ -104,13 +125,8 @@ def run(request_path: Path) -> None:
     _write(work / "load-record.json", load_record)
     _write(work / "status.json", {"status": "predicting", "load_record": load_record})
 
-    image = np.load(request["image_path"], allow_pickle=False)
-    if image.ndim != 3 or image.shape[-1] != 3 or image.dtype != np.uint8:
-        raise ValueError(f"Invalid original N1 input image: {image.shape}, {image.dtype}")
-    observation = {
-        data_config.video_keys[0]: image[None, ...],
-        data_config.language_keys[0]: [request["instruction"]],
-    }
+    observation = _load_video_observation(request["image_paths"], data_config.video_keys)
+    observation[data_config.language_keys[0]] = [request["instruction"]]
     supplied_state = request["state"]
     for key in data_config.state_keys:
         if key not in supplied_state:

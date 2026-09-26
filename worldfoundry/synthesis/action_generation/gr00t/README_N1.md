@@ -31,6 +31,11 @@ gr00t_observation={"state": ...}. State arrays may be shaped [D], [1,D],
 or [1,1,D]. The route emits four 16-step action groups. A different official
 data configuration can be selected with n1_data_config_name, provided its
 camera and state keys exist in the checkpoint metadata.
+For named camera input, use `gr00t_observation={"camera_views":
+{"video.ego_view": image, ...}, "state": ...}`. The worker selects the exact
+camera keys required by the official data configuration. An unnamed image is
+accepted only when that configuration requires one camera; multi-camera
+configurations require a separate image for each configured view.
 
 The local GPU probe used a real but out-of-domain LIBERO image and GR1
 metadata-mean state. It established finite

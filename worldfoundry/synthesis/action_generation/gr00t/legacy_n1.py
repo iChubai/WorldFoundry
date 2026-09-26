@@ -90,7 +90,7 @@ def _input_state(observation: Mapping[str, Any] | None) -> dict[str, Any]:
     return result
 
 
-def _input_image(image: Any, observation: Mapping[str, Any] | None) -> Any:
+def _input_images(image: Any, observation: Mapping[str, Any] | None) -> Any:
     if isinstance(observation, Mapping):
         camera_views = observation.get("camera_views")
         if camera_views is None:
@@ -98,12 +98,16 @@ def _input_image(image: Any, observation: Mapping[str, Any] | None) -> Any:
         if camera_views is not None:
             image = camera_views
     if isinstance(image, Mapping):
-        for key in ("video.front_view", "front_view", "video.ego_view", "ego_view"):
-            if key in image:
-                return image[key]
-        if len(image) == 1:
-            return next(iter(image.values()))
-        raise ValueError("Original GR00T-N1 needs an explicit front/ego camera view.")
+        if not image:
+            raise ValueError("Original GR00T-N1 needs at least one named camera view.")
+        views = {}
+        for key, value in image.items():
+            name = str(key)
+            name = name if name.startswith("video.") else f"video.{name}"
+            if name in views:
+                raise ValueError(f"Duplicate original GR00T-N1 camera view: {name}")
+            views[name] = value
+        return views
     return image
 
 
@@ -143,19 +147,27 @@ def predict_n1_action(
         raise FileNotFoundError(f"GR00T-N1 Python executable is missing: {python}")
     checkpoint = Path(checkpoint_dir).expanduser().resolve()
     describe_n1_checkpoint(checkpoint)
-    image_array, image_source = _load_image_array(_input_image(image, observation))
+    image_inputs = _input_images(image, observation)
     state = _input_state(observation)
     work_parent = Path(run_dir).expanduser().resolve()
     work_parent.mkdir(parents=True, exist_ok=True)
     work = Path(tempfile.mkdtemp(prefix="n1-official-", dir=work_parent))
-    image_path = work / "image.npy"
-    np.save(image_path, image_array, allow_pickle=False)
+    image_paths = {}
+    image_sources = {}
+    views = image_inputs if isinstance(image_inputs, Mapping) else {"__single__": image_inputs}
+    for index, (key, value) in enumerate(views.items()):
+        image_array, image_origin = _load_image_array(value)
+        image_path = work / f"image-{index}.npy"
+        np.save(image_path, image_array, allow_pickle=False)
+        image_paths[key] = str(image_path)
+        image_sources[key] = image_origin
+    image_source = image_sources["__single__"] if "__single__" in image_sources else json.dumps(image_sources)
     target = Path(output_path).expanduser().resolve()
     target.parent.mkdir(parents=True, exist_ok=True)
     request = {
         "checkpoint_dir": str(checkpoint),
         "output_path": str(target),
-        "image_path": str(image_path),
+        "image_paths": image_paths,
         "image_source": image_source,
         "state": state,
         "instruction": instruction,

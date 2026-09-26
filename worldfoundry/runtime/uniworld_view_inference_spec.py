@@ -25,6 +25,7 @@ _COMMON = (
     _field("render_method", "Renderer", default="hybrid"),
     _field("height", "Height", "integer", default=480),
     _field("width", "Width", "integer", default=832),
+    _field("keep_aspect_ratio", "Preserve Input Aspect Ratio", "boolean", default=True),
     _field("num_frames", "Frames", "integer", default=81),
     _field("num_inference_steps", "Steps", "integer", default=8),
     _field("guidance_scale", "Guidance", "number", default=4.0),
@@ -95,7 +96,10 @@ UNIWORLD_VIEW_INFERENCE_SPEC = ModelInferenceSpec(
         _task("image-to-video", "Single Image Novel View", "single_view"),
         _task("video-to-video", "Monocular Video Novel View", "dynamic_view"),
     ),
-    notes=("The official CLI ignores a user prompt and generates its own BLIP2 caption.",),
+    notes=(
+        "The official CLI ignores a user prompt and generates its own BLIP2 caption.",
+        "Dynamic view needs at least 13 frames; default aspect-ratio preservation may change the output dimensions.",
+    ),
 )
 
 

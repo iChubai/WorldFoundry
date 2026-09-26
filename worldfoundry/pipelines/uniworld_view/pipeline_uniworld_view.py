@@ -219,6 +219,7 @@ class UniWorldViewPipeline(PipelineABC):
         render_method: str = "hybrid",
         height: int = 480,
         width: int = 832,
+        keep_aspect_ratio: bool = True,
         num_frames: int = 81,
         num_inference_steps: int = 8,
         guidance_scale: float = 4.0,
@@ -268,6 +269,8 @@ class UniWorldViewPipeline(PipelineABC):
             raise ValueError("height and width must be at least 64 and divisible by 16")
         if num_frames < 1 or (num_frames - 1) % 4:
             raise ValueError("num_frames must be 4n+1 for the upstream Wan video VAE")
+        if mode == "dynamic_view" and num_frames < 13:
+            raise ValueError("dynamic_view requires at least 13 frames so UniView stage2 has its 10 reference frames")
         if num_inference_steps < 1 or stride < 1 or fps < 1 or timeout_seconds < 1:
             raise ValueError("frame count, steps, stride, fps and timeout must be positive")
         if mode == "dynamic_view" and geometry_backend == "mosca" and mosca_ws is None:
@@ -299,6 +302,8 @@ class UniWorldViewPipeline(PipelineABC):
             command.extend((f"--{key}", str(value)))
         if mosca_ws is not None:
             command.extend(("--mosca_ws", str(_path(mosca_ws))))
+        if not keep_aspect_ratio:
+            command.append("--no_keep_aspect_ratio")
         if plan_only:
             return {"status": "planned", "command": command, "cwd": str(self.repo_root), "artifact_path": str(target)}
         self._check_weights(mode=mode, geometry_backend=geometry_backend, render_method=render_method)

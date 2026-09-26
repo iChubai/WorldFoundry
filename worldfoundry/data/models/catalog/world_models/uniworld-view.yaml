@@ -34,9 +34,11 @@ runtime_profile: runtime-profile:uniworld-view
 runner_target: worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner
 pipeline_binding: uniworld-view
 runner_parity:
-  status: source_route_verified_checkpoint_pending
+  status: verified_configuration
   notes:
-  - Local route and command construction are covered; no complete checkpoint-backed video inference is claimed yet.
+  - Released-checkpoint H100 inference completed for the official single-image and monocular-video samples at 81 frames, 8 steps and 16 fps.
+  - Single-image and dynamic-video warp, hybrid and mesh each completed short checkpoint-backed runs.
+  - The adapter fixes pinned-upstream dynamic STream3R loading, final single-view fps and the ignored seed argument; a repeated seed produced identical decoded frames.
 catalog_category: world_models
 docs:
   publisher: PKU Yuan Group
@@ -50,7 +52,9 @@ docs:
   usage_notes_zh: 使用固定版本的官方源码及 extern 下的 STream3R、独立的官方环境和本地权重。上游 CLI 使用 BLIP2 自动描述，不读取用户文本提示。
   limitations:
   - The upstream authors recommend at least 60 GB of GPU memory.
-  - Full checkpoint-backed inference and camera adherence have not yet been verified in WorldFoundry.
+  - Validation covers specific official samples and settings; quantitative camera-angle accuracy and other scenes remain unmeasured.
+  - With aspect-ratio preservation enabled, actual output dimensions can differ from the requested height and width.
   limitations_zh:
   - 上游建议显存至少 60 GB。
-  - WorldFoundry 尚未完成真实权重推理与相机轨迹遵循度验证。
+  - 已对官方样例的指定配置完成真实权重推理，其他场景及相机角度精度尚未量化验证。
+  - 默认保持输入宽高比时，实际输出尺寸可能不同于请求的高和宽。

@@ -5958,6 +5958,7 @@ CURATED_OVERRIDES: Dict[str, Dict[str, Any]] = {
             "render_method": "hybrid",
             "height": 480,
             "width": 832,
+            "keep_aspect_ratio": True,
             "num_frames": 81,
             "num_inference_steps": 8,
             "guidance_scale": 4.0,
@@ -5969,7 +5970,7 @@ CURATED_OVERRIDES: Dict[str, Dict[str, Any]] = {
         "input_params": ("image_path", "video_path"),
         "call_params": (
             "prompt", "images", "video", "image_path", "video_path", "mode",
-            "geometry_backend", "render_method", "mosca_ws", "height", "width",
+            "geometry_backend", "render_method", "mosca_ws", "height", "width", "keep_aspect_ratio",
             "num_frames", "num_inference_steps", "guidance_scale", "fps", "seed",
             "stride", "traj_type", "d_phi", "d_theta", "x_offset", "y_offset",
             "z_offset", "radius_scale", "low_gpu_memory_mode", "output_path",

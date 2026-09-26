@@ -49,6 +49,7 @@ notes:
 - Official inference uses BLIP2 captioning; its --prompt flag is ignored by the current upstream inference path.
 - The upstream default hybrid renderer requires PyTorch3D and at least 60 GB GPU memory is recommended.
 - Dynamic view also requires STream3R source and weights; MoSca is an optional precomputed geometry alternative.
+- The official default keeps the source aspect ratio at an approximate height/width token budget; set keep_aspect_ratio=false to request exact output dimensions.
 - The pinned upstream setup_stream3r method is empty; the WorldFoundry entry restores its intended load call for dynamic_view.
 - The pinned upstream single_view final-video save omits fps; the WorldFoundry entry applies the requested rate to that artifact.
 - The pinned upstream diffusion call hard-codes seed 42; the WorldFoundry entry applies the requested seed at the pipeline call.

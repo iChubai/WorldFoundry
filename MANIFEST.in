@@ -1,4 +1,5 @@
 include .pre-commit-config.yaml
+include CODE_OF_CONDUCT.md SECURITY.md
 include THIRD-PARTY-NOTICES
 include worldfoundry/synthesis/visual_generation/dino_wm/datasets/UPSTREAM.md
 include worldfoundry/synthesis/visual_generation/egowm/nav_25dof_stats.json

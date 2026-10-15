@@ -7,6 +7,10 @@ commands over private scripts.
 The detailed maintainer guide lives in
 [`docs/fumadocs/content/docs/maintainers/contributing.mdx`](docs/fumadocs/content/docs/maintainers/contributing.mdx).
 
+Participants follow the [Code of Conduct](CODE_OF_CONDUCT.md). Report potential
+vulnerabilities privately using the [Security Policy](SECURITY.md), rather than
+public issues.
+
 Model demo videos are served from GitHub CDN; docs development does not need `git lfs pull`.
 
 ```bash

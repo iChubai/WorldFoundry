@@ -19,6 +19,9 @@ Day-one workflow:
 
 Join the **WorldFoundry Community** on Slack, [Discord](https://discord.gg/ybUQMDA4x), or WeChat for discussions, announcements, technical support, and the latest project updates.
 
+Participants follow the [Code of Conduct](CODE_OF_CONDUCT.md).
+Report potential vulnerabilities privately using the [Security Policy](SECURITY.md).
+
 <p align="center">
 
 <a href="https://join.slack.com/t/worldfoundrycommunity/shared_invite/zt-43nbi9fw4-okYiELzZHp0_1UPa3dh3bQ">

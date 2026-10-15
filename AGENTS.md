@@ -1,5 +1,14 @@
 # WorldFoundry development guidance
 
+## Task workflows
+
+Task-specific Agent Skills are indexed in [skills/index.md](skills/index.md).
+Load the relevant `SKILL.md` when using a repository skill; it links to the
+current architecture and validation contracts. Client discovery is opt-in.
+`CONTRIBUTING.md` remains the source of truth for contribution rules.
+
+## Scope limits
+
 HERO scope limits, from [HERO-Anti-OverDefense](https://github.com/wanshuiyin/HERO-Anti-OverDefense/blob/main/RULES.md).
 Licensed under [MIT](https://github.com/wanshuiyin/HERO-Anti-OverDefense/blob/main/LICENSE); the license text is included in THIRD-PARTY-NOTICES.
 

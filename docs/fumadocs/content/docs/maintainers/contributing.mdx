@@ -3,6 +3,57 @@ title: Contributing
 description: Maintainer checklist for scoped changes, validation, docs, and release evidence.
 ---
 
+## Agent Skills
+
+Repository-authored [Agent Skills](https://agentskills.io/specification) live in
+[`skills/`](https://github.com/OpenEnvision/WorldFoundry/tree/main/skills).
+The [skill index](https://github.com/OpenEnvision/WorldFoundry/blob/main/skills/index.md)
+covers model integration, benchmark integration, inference optimization,
+inference validation, and repository maintenance. Skills complement
+`AGENTS.md` and CONTRIBUTING.md; the linked architecture and validation pages
+own detailed framework contracts.
+
+Load a relevant `SKILL.md` explicitly, or opt in through your client's local
+skill directory. From the repository root, choose the command for your client:
+
+```bash
+# Clients that discover .agents/skills
+mkdir -p .agents && ln -s ../skills .agents/skills
+# Claude Code
+mkdir -p .claude && ln -s ../skills .claude/skills
+# Cursor
+mkdir -p .cursor && ln -s ../skills .cursor/skills
+```
+
+These client directories are gitignored. To load one skill into an existing
+skill directory, link only that skill:
+
+```bash
+mkdir -p .agents/skills
+ln -s ../../skills/worldfoundry-model-integration .agents/skills/worldfoundry-model-integration
+```
+
+Follow the official [specification](https://agentskills.io/specification) and
+[best practices](https://agentskills.io/skill-creation/best-practices). Each
+`SKILL.md` starts with YAML `name` and `description`; names match their parent
+directory. Repository skills declare `Apache-2.0`, stay below 500 lines, and
+load detailed references only for relevant tasks. Include bundled Markdown
+resources in `MANIFEST.in`.
+
+Once the official
+[skills-ref CLI](https://github.com/agentskills/agentskills/tree/main/skills-ref)
+is installed, validate from the repository root:
+
+```bash
+skills-ref validate skills/worldfoundry-model-integration
+python -m pytest -q tests/core/test_agent_skills.py
+```
+
+Format and link checks do not prove client activation or task quality. Evaluate
+activation and task outcomes separately with clean contexts, representative
+tasks, and a nearby request that should not activate the skill. Keep generated
+evaluation outputs under `tmp/`, outside Git.
+
 ## Before a PR
 
 Before opening a PR, confirm the following:

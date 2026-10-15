@@ -13,6 +13,19 @@ Model demo videos are served from GitHub CDN; docs development does not need `gi
 GIT_LFS_SKIP_SMUDGE=1 git clone https://github.com/OpenEnvision/WorldFoundry.git
 ```
 
+## Agent Skills
+
+Task-specific workflows live in [skills/index.md](skills/index.md), using the
+vendor-neutral `skills/<name>/SKILL.md` format. They complement these rules and
+the maintained architecture and validation docs. Client discovery is opt-in;
+see the [maintainer guide](docs/fumadocs/content/docs/maintainers/contributing.mdx#agent-skills)
+for local setup.
+
+For model and inference work, prepare the unified GPU environment with
+`scripts/setup/bootstrap_worldfoundry.sh`, source `tmp/worldfoundry_unified_env.sh`,
+and install `.[dev,test]` in that environment. Hardware and runtime requirements
+are documented in the [environment reference](docs/fumadocs/content/docs/reference/environments.mdx).
+
 ## Before Opening A Pull Request
 
 - Keep the change scoped to one pipeline, benchmark path, CLI surface, or docs area.

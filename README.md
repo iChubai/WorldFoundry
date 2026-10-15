@@ -15,6 +15,9 @@ Day-one workflow:
 2. **Inference** — generate and inspect artifacts via TUI, CLI, scripts, or Studio.
 3. **Evaluation** — score only after artifacts match the benchmark layout; use scorecards for readiness claims.
 
+Task-specific contributor workflows are indexed in
+[Agent Skills](skills/index.md); client discovery is opt-in.
+
 ## 🤝 Community
 
 Join the **WorldFoundry Community** on Slack, [Discord](https://discord.gg/ybUQMDA4x), or WeChat for discussions, announcements, technical support, and the latest project updates.

@@ -1,5 +1,6 @@
 include .pre-commit-config.yaml
 include THIRD-PARTY-NOTICES
+recursive-include skills *.md
 include worldfoundry/synthesis/visual_generation/dino_wm/datasets/UPSTREAM.md
 include worldfoundry/synthesis/visual_generation/egowm/nav_25dof_stats.json
 include worldfoundry/synthesis/visual_generation/vid2world/csgo_utils/test_split.txt

@@ -3,6 +3,49 @@ title: 贡献规则
 description: 面向维护者的范围、验证、文档和发布证据 checklist。
 ---
 
+## Agent Skills
+
+仓库编写的 [Agent Skills](https://agentskills.io/specification) 位于
+[`skills/`](https://github.com/OpenEnvision/WorldFoundry/tree/main/skills)。
+[技能索引](https://github.com/OpenEnvision/WorldFoundry/blob/main/skills/index.md)
+覆盖模型集成、benchmark 集成、推理优化、推理验证和仓库维护。
+Skills 补充 `AGENTS.md` 与 CONTRIBUTING.md；详细框架契约仍由链接的架构和验证页维护。
+
+显式加载相关 `SKILL.md`，或自行选择客户端本地技能目录。在仓库根目录按客户端运行：
+
+```bash
+# 发现 .agents/skills 的客户端
+mkdir -p .agents && ln -s ../skills .agents/skills
+# Claude Code
+mkdir -p .claude && ln -s ../skills .claude/skills
+# Cursor
+mkdir -p .cursor && ln -s ../skills .cursor/skills
+```
+
+这些客户端目录已被 Git 忽略。如已有技能目录，只链接需要的技能：
+
+```bash
+mkdir -p .agents/skills
+ln -s ../../skills/worldfoundry-model-integration .agents/skills/worldfoundry-model-integration
+```
+
+编写时遵循官方[规范](https://agentskills.io/specification)与
+[最佳实践](https://agentskills.io/skill-creation/best-practices)。每个 `SKILL.md`
+以 YAML `name` 和 `description` 开头，名称与父目录一致。仓库技能声明 `Apache-2.0`，
+保持在500行以内，只按任务需要加载详细参考资料，并在 `MANIFEST.in` 包含随附的 Markdown。
+
+安装官方
+[skills-ref CLI](https://github.com/agentskills/agentskills/tree/main/skills-ref)
+后，在仓库根目录验证：
+
+```bash
+skills-ref validate skills/worldfoundry-model-integration
+python -m pytest -q tests/core/test_agent_skills.py
+```
+
+格式和链接检查不证明客户端激活效果或任务质量。应在干净上下文中，分别验证代表性任务
+及不应激活技能的相近请求，并检查实际激活和产出。生成的评估输出放在 Git 之外的 `tmp/`。
+
 ## PR 前检查
 
 提交 PR 前，请确认：

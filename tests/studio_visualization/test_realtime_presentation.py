@@ -276,8 +276,9 @@ def test_create_answer_selects_real_frame_presentation(monkeypatch: pytest.Monke
             self.localDescription = types.SimpleNamespace(sdp="", type="answer")
             peers_created.append(self)
 
-        def addTrack(self, track: object) -> None:  # noqa: N802 - aiortc compatibility
+        def addTrack(self, track: object) -> object:  # noqa: N802 - aiortc compatibility
             self.tracks.append(track)
+            return types.SimpleNamespace(_next_encoded_frame=lambda codec: None)
 
         def on(self, name: str):
             def register(handler):

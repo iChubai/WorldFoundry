@@ -98,11 +98,11 @@ import re
 import shlex
 import sys
 from collections import Counter
+from contextlib import contextmanager
 from pathlib import Path
-from typing import Any, Iterable
+from typing import Any, Generator, Iterable
 
 import yaml
-
 
 ROOT = Path(__file__).resolve().parents[3]
 DOCS_ROOT = Path(__file__).resolve().parents[1]
@@ -132,8 +132,9 @@ os.environ.update(
 
 sys.path.insert(0, str(ROOT))
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from worldfoundry.cli.model_run import load_model_run_schema  # noqa: E402
 from model_page_mdx import sync_model_pages  # noqa: E402
+
+from worldfoundry.cli.model_run import load_model_run_schema  # noqa: E402
 
 CATALOG_ROOT = ROOT / "worldfoundry/data/models/catalog"
 PROFILE_ROOT = ROOT / "worldfoundry/data/models/runtime/profiles"
@@ -235,8 +236,41 @@ def compact_text(value: Any, limit: int = 420) -> str | None:
     return result[: limit - 1].rstrip() + "…"
 
 
+def _canonical_checkpoint_ref(*repo_dir_names: str, fallback: str = "") -> str:
+    """Use declared checkpoint defaults without inspecting installed weights."""
+    from worldfoundry.core.io.paths import checkpoint_root_path
+
+    if fallback:
+        return fallback
+    name = next((name for name in repo_dir_names if name), "")
+    return str(checkpoint_root_path(*Path(name).parts)) if name else ""
+
+
+def _first_model_ref(*candidates: str) -> str:
+    return next((candidate for candidate in candidates if candidate), "")
+
+
+@contextmanager
+def _canonical_catalog_defaults() -> Generator[None, None, None]:
+    """Keep documentation schemas independent of locally staged checkpoints."""
+    from unittest.mock import patch
+
+    from worldfoundry.studio.inference import catalog
+
+    catalog.discover_catalog.cache_clear()
+    try:
+        with (
+            patch.object(catalog, "_checkpoint_model_ref", _canonical_checkpoint_ref),
+            patch.object(catalog, "_prefer_existing_model_ref", _first_model_ref),
+            patch.object(catalog, "_local_root_with_files", return_value=""),
+        ):
+            yield
+    finally:
+        catalog.discover_catalog.cache_clear()
+
+
 def portable_doc_value(value: Any) -> Any:
-    """Keep checked-in docs independent of the checkout's absolute path."""
+    """Keep checked-in docs independent of the checkout and Python executable."""
 
     if isinstance(value, dict):
         return {key: portable_doc_value(item) for key, item in value.items()}
@@ -245,7 +279,11 @@ def portable_doc_value(value: Any) -> Any:
     if isinstance(value, tuple):
         return tuple(portable_doc_value(item) for item in value)
     if isinstance(value, str):
+        if value == sys.executable:
+            return "python3"
         replacements = (
+            (str(ROOT.parent / "ckpts") + "/", f"{CANONICAL_HOME}/checkpoints/"),
+            (str(ROOT.parent / "ckpt") + "/", f"{CANONICAL_HOME}/checkpoints/"),
             (str(ROOT / "worldfoundry"), CANONICAL_PACKAGE_ROOT),
             (str(ROOT), CANONICAL_PROJECT_ROOT),
             (str(ROOT.parent), ""),
@@ -1620,6 +1658,7 @@ def command_data(model_id: str, runtime_model_id: str, default_task: dict[str, A
     }
 
 
+@_canonical_catalog_defaults()
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(

@@ -21,7 +21,7 @@ from typing import Callable, Mapping, Protocol, runtime_checkable
 from ..components import ComponentKey
 from ..contracts import DiffusionOutput, DiffusionRequest
 from ..extensions import DiffusionExtension, FrozenContextSuffixExtension, FrozenLatentMaskExtension
-from ..optimizations import RuntimePolicy
+from ..optimizations import RuntimePolicy, parse_torch_dtype
 from ..recipes.spec import NativeDiffusionRecipe
 from .autoregressive import AutoregressiveWindowRunner
 from .base import (
@@ -194,6 +194,14 @@ def build_vchitect_strategy(context: ExecutionBuildContext) -> NativeDiffusionRu
     from .vchitect import VchitectGuidanceRunner
 
     return build_standard_strategy(context, runner_type=VchitectGuidanceRunner)
+
+
+def build_compressed_memory_strategy(context: ExecutionBuildContext) -> NativeDiffusionRunner:
+    """Run native dual experts with causal HR/LR memory between temporal chunks."""
+
+    from .compressed_memory import CompressedMemoryRunner
+
+    return build_standard_strategy(context, runner_type=CompressedMemoryRunner)
 
 
 def build_dual_condition_guidance_strategy(
@@ -369,6 +377,24 @@ def build_joint_multistage_strategy(
     )
 
 
+def build_joint_chunked_strategy(context: ExecutionBuildContext) -> DiffusionExecutor:
+    """Reuse joint component binding for chunked clean-context generation."""
+    from .joint_chunked import JointChunkedDiffusionRunner
+
+    bound = build_joint_multistage_strategy(context)
+    options = context.recipe.execution.options
+    return JointChunkedDiffusionRunner(
+        model_id=bound.model_id, components=bound.components, stage_steps=bound.stage_steps,
+        device=bound.device, dtype=bound.dtype,
+        frames_per_chunk=int(options.get("frames_per_chunk", 4)),
+        temporal_compression=int(options.get("temporal_compression", 8)),
+        history_chunks=int(options.get("history_chunks", 3)),
+        prefix_chunks=int(options.get("prefix_chunks", 1)),
+        sampling_seed_offset=int(options.get("sampling_seed_offset", 0)),
+        token_conditions=options.get("token_conditions", {}),
+    )
+
+
 def build_autoregressive_window_strategy(
     context: ExecutionBuildContext,
 ) -> AutoregressiveWindowRunner:
@@ -406,6 +432,7 @@ def build_autoregressive_window_strategy(
         prediction_mode=str(options.get("prediction_mode", "flow")),
         fixed_timesteps=tuple(int(value) for value in options.get("fixed_timesteps", ())),
         context_timestep=int(options.get("context_timestep", 0)),
+        renoise_dtype=(parse_torch_dtype(options["renoise_dtype"]) if "renoise_dtype" in options else None),
         guidance_mode=str(options.get("guidance_mode", "standard")),
     )
 
@@ -508,6 +535,7 @@ def default_execution_strategy_registry() -> ExecutionStrategyRegistry:
 
     registry = ExecutionStrategyRegistry()
     registry.register("standard", build_standard_strategy)
+    registry.register("compressed-memory", build_compressed_memory_strategy)
     registry.register("vchitect-guidance", build_vchitect_strategy)
     from .kandinsky6 import build_kandinsky6_strategy
     registry.register("kandinsky6-joint", build_kandinsky6_strategy)
@@ -516,10 +544,13 @@ def default_execution_strategy_registry() -> ExecutionStrategyRegistry:
     registry.register("frozen-context", build_frozen_context_strategy)
     registry.register("masked-latent", build_masked_latent_strategy)
     registry.register("joint-multistage", build_joint_multistage_strategy)
+    registry.register("joint-chunked", build_joint_chunked_strategy)
     registry.register("autoregressive-window", build_autoregressive_window_strategy)
     registry.register("chunked-kv-cache", build_chunked_kv_cache_strategy)
     registry.register("chunked-additive-cache", build_chunked_kv_cache_strategy)
     registry.register("prefix-recompute", build_prefix_recompute_strategy)
+    from .causal_trigflow import build_causal_trigflow_strategy
+    registry.register("causal-trigflow", build_causal_trigflow_strategy)
     registry.freeze()
     return registry
 

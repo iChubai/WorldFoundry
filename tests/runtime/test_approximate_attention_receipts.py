@@ -86,7 +86,6 @@ _LIGHTX2V_PROVIDER_DENSE_PATHS = {
     ),
 }
 _FASTVIDEO_COMMIT = "1b2b2a0161bc6b3b80158d1fa6380a051c6530c7"
-_FASTVIDEO_SOURCE_FINGERPRINT = hashlib.sha256(b"pinned-fastvideo-sla").hexdigest()
 _FASTVIDEO_PROVIDER_FINGERPRINT = hashlib.sha256(b"fastvideo-sla-provider").hexdigest()
 _FASTVIDEO_GLOBAL_PROJECTION_FINGERPRINT = hashlib.sha256(
     b"fastvideo-sla-projections"
@@ -297,9 +296,6 @@ def _receipt(
                             "reference_fastvideo_commit": _FASTVIDEO_COMMIT,
                             "provider_source_commit": _FASTVIDEO_COMMIT,
                             "provider_source_clean": True,
-                            "provider_source_fingerprint": (
-                                _FASTVIDEO_SOURCE_FINGERPRINT
-                            ),
                             "provider_source_root": "/opt/FastVideo",
                             "provider_source_file": (
                                 "/opt/FastVideo/fastvideo/attention/backends/sla.py"
@@ -462,9 +458,6 @@ def _receipt(
             "reference_fastvideo_commit": _FASTVIDEO_COMMIT,
             "provider_source_commit": _FASTVIDEO_COMMIT,
             "provider_source_commits": [_FASTVIDEO_COMMIT],
-            "provider_source_fingerprints": [
-                _FASTVIDEO_SOURCE_FINGERPRINT
-            ],
             "provider_fingerprints": [_FASTVIDEO_PROVIDER_FINGERPRINT],
             "provider_source_root": "/opt/FastVideo",
             "provider_source_roots": ["/opt/FastVideo"],
@@ -542,7 +535,6 @@ def _audit(
                 "provider_path": fastvideo_sla[0],
                 "provider_family": fastvideo_sla[1],
                 "commit": _FASTVIDEO_COMMIT,
-                "source_fingerprint": _FASTVIDEO_SOURCE_FINGERPRINT,
                 "checkpoint_layout": "fastvideo_diffusers",
                 "projection_fingerprint": (
                     _FASTVIDEO_GLOBAL_PROJECTION_FINGERPRINT
@@ -602,7 +594,6 @@ def test_fastvideo_learned_sla_receipt_requires_checkpoint_and_provider_proof(
         "provider-class",
         "source-commit",
         "dirty-source",
-        "source-fingerprint",
         "test-provider",
         "checkpoint-layout",
         "projection-key",
@@ -632,8 +623,6 @@ def test_fastvideo_learned_sla_receipt_rejects_forged_evidence(
         event["provider_source_commit"] = "0" * 40
     elif mutation == "dirty-source":
         event["provider_source_clean"] = False
-    elif mutation == "source-fingerprint":
-        event["provider_source_fingerprint"] = "0" * 64
     elif mutation == "test-provider":
         event["injected_test_provider"] = True
     elif mutation == "checkpoint-layout":

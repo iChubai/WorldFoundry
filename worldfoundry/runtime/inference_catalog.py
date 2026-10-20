@@ -15,6 +15,7 @@ from __future__ import annotations
 import os
 import sys
 from collections.abc import Mapping, Sequence
+from dataclasses import replace
 from pathlib import Path
 from typing import Any
 
@@ -37,10 +38,13 @@ from worldfoundry.core.io.paths import (
     official_runtime_repo_path,
     project_root,
 )
+from worldfoundry.runtime.dreamdojo_inference_spec import DREAMDOJO_STUDENT_INFERENCE_SPEC
 from worldfoundry.runtime.hyperflow_inference_spec import HYPERFLOW_INFERENCE_SPEC
 from worldfoundry.runtime.interactive_inference_catalog import INTERACTIVE_INFERENCE_SPECS
+from worldfoundry.runtime.matrix_game4_inference_spec import MATRIX_GAME4_EGYPT_INFERENCE_SPEC
 from worldfoundry.runtime.rt1_inference_spec import RT1_INFERENCE_SPEC
 from worldfoundry.runtime.uniworld_view_inference_spec import UNIWORLD_VIEW_INFERENCE_SPEC
+from worldfoundry.runtime.wonderworld_inference_spec import WONDERWORLD_INFERENCE_SPEC
 
 LINGBOT_WORLD_MODEL_ID = "lingbot-world"
 LINGBOT_VARIANT_FAST = "fast"
@@ -556,6 +560,26 @@ LINGBOT_WORLD_V2_INFERENCE_SPEC = ModelInferenceSpec(
         "The required action directory contains poses.npy [F,4,4] and intrinsics.npy [F,4].",
         "The official profile uses 8 GPUs and 361 output frames.",
     ),
+)
+
+_LINGBOT_V2_SMALL_DEFAULTS = {
+    **LINGBOT_WORLD_V2_INFERENCE_SPEC.tasks[0].default_call_kwargs,
+    "frame_num": 317, "sample_shift": 5.0, "nproc_per_node": 1,
+    "t5_fsdp": False, "dit_fsdp": False,
+}
+LINGBOT_WORLD_V2_SMALL_INFERENCE_SPEC = replace(
+    LINGBOT_WORLD_V2_INFERENCE_SPEC,
+    model_family_id="lingbot-world-v2-1.3b", display_name="LingBot-World-V2 1.3B",
+    default_variant_id="causal-fast-1.3b", aliases=("lingbot-v2-1.3b",),
+    variants=(InferenceVariantSpec(
+        variant_id="causal-fast-1.3b", label="Causal Fast 1.3B", status="configured",
+        checkpoints=(InferenceCheckpointRef(role="primary", uri="robbyant/lingbot-world-v2-1.3b-causal-fast", status="configured"),),
+    ),),
+    tasks=(replace(LINGBOT_WORLD_V2_INFERENCE_SPEC.tasks[0],
+                   inputs=tuple(replace(field, default=_LINGBOT_V2_SMALL_DEFAULTS.get(field.field_id, field.default))
+                                for field in LINGBOT_WORLD_V2_INFERENCE_SPEC.tasks[0].inputs),
+                   default_call_kwargs=_LINGBOT_V2_SMALL_DEFAULTS),),
+    notes=("1.3B, four-latent causal-fast runtime with shared Wan T5/tokenizer/VAE assets.",),
 )
 
 WARP_AS_HISTORY_INFERENCE_SPEC = ModelInferenceSpec(
@@ -5265,6 +5289,9 @@ LTX23_V2V_INFERENCE_SPEC = _ltx_ic_lora_v2v_inference_spec(
 _MODEL_INFERENCE_SPECS: dict[str, ModelInferenceSpec] = {
     "hyperflow": HYPERFLOW_INFERENCE_SPEC,
     RT1_INFERENCE_SPEC.model_family_id: RT1_INFERENCE_SPEC,
+    DREAMDOJO_STUDENT_INFERENCE_SPEC.model_family_id: DREAMDOJO_STUDENT_INFERENCE_SPEC,
+    MATRIX_GAME4_EGYPT_INFERENCE_SPEC.model_family_id: MATRIX_GAME4_EGYPT_INFERENCE_SPEC,
+    WONDERWORLD_INFERENCE_SPEC.model_family_id: WONDERWORLD_INFERENCE_SPEC,
     ADAWORLD_INFERENCE_SPEC.model_family_id: ADAWORLD_INFERENCE_SPEC,
     UNIWORLD_VIEW_INFERENCE_SPEC.model_family_id: UNIWORLD_VIEW_INFERENCE_SPEC,
     **INTERACTIVE_INFERENCE_SPECS,
@@ -5282,6 +5309,7 @@ _MODEL_INFERENCE_SPECS: dict[str, ModelInferenceSpec] = {
     SHOTSTREAM_INFERENCE_SPEC.model_family_id: SHOTSTREAM_INFERENCE_SPEC,
     LINGBOT_WORLD_INFERENCE_SPEC.model_family_id: LINGBOT_WORLD_INFERENCE_SPEC,
     LINGBOT_WORLD_V2_INFERENCE_SPEC.model_family_id: LINGBOT_WORLD_V2_INFERENCE_SPEC,
+    LINGBOT_WORLD_V2_SMALL_INFERENCE_SPEC.model_family_id: LINGBOT_WORLD_V2_SMALL_INFERENCE_SPEC,
     ROLLING_FORCING_INFERENCE_SPEC.model_family_id: ROLLING_FORCING_INFERENCE_SPEC,
     STARWM_INFERENCE_SPEC.model_family_id: STARWM_INFERENCE_SPEC,
     WARP_AS_HISTORY_INFERENCE_SPEC.model_family_id: WARP_AS_HISTORY_INFERENCE_SPEC,

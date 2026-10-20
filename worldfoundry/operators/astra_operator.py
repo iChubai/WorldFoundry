@@ -1,14 +1,15 @@
 """Module for the Astra operator implementation."""
 
-import logging
-
-import torch
-import numpy as np
-from PIL import Image
-from einops import rearrange
 import json
-import imageio
+import logging
 from pathlib import Path
+from typing import Any, Callable, cast
+
+import imageio
+import numpy as np
+import torch
+from einops import rearrange
+from PIL import Image
 from torchvision.transforms import v2
 
 from .base_operator import BaseOperator
@@ -58,11 +59,21 @@ class AstraOperator(BaseOperator):
         self.check_interaction(interaction)
         self.current_interaction.append(interaction)
 
-    def process_interaction(self, modality_type="sekai", start_frame=0, initial_condition_frames=1, total_frames_to_generate=8, use_real_poses=False, scene_info_path=None, encoded_data=None):
-        """
-        根据当前的 interaction (direction) 生成对应的 Camera Embedding。
-        """
-        direction = self.current_interaction[-1] if self.current_interaction else "forward"
+    def process_interaction(
+        self,
+        modality_type: str = "sekai",
+        start_frame: int = 0,
+        initial_condition_frames: int = 1,
+        total_frames_to_generate: int = 8,
+        use_real_poses: bool = False,
+        scene_info_path: str | None = None,
+        encoded_data: dict[str, Any] | None = None,
+        *,
+        direction: str | None = None,
+    ) -> torch.Tensor:
+        """Build camera embeddings from an explicit direction or interaction history."""
+        if direction is None:
+            direction = self.current_interaction[-1] if self.current_interaction else "forward"
         model_dtype = torch.bfloat16 
         
         scene_info = None
@@ -114,7 +125,7 @@ class AstraOperator(BaseOperator):
                 
             reader = imageio.get_reader(str(video_path))
             frame_list = []
-            for frame_data in reader:
+            for frame_data in reader.iter_data():
                 frame = Image.fromarray(frame_data)
                 # Crop and Resize
                 frame = self._crop_and_resize(frame)
@@ -142,24 +153,30 @@ class AstraOperator(BaseOperator):
     def _crop_and_resize(image: Image.Image) -> Image.Image:
         """Crop and resize implementation."""
         target_w, target_h = 832, 480
-        return v2.functional.resize(
+        resize = cast(Callable[..., Image.Image], v2.functional.resize)
+        return resize(
             image,
-            (round(target_h), round(target_w)),
+            [round(target_h), round(target_w)],
             interpolation=v2.InterpolationMode.BILINEAR,
         )
 
-    def compute_relative_pose(self, pose_a, pose_b, use_torch=False):
+    @staticmethod
+    def compute_relative_pose(pose_a: Any, pose_b: Any, use_torch: bool = False) -> np.ndarray | torch.Tensor:
         """Compute relative pose matrix of camera B with respect to camera A"""
         assert pose_a.shape == (4, 4), f"Camera A extrinsic matrix should be (4,4), got {pose_a.shape}"
         assert pose_b.shape == (4, 4), f"Camera B extrinsic matrix should be (4,4), got {pose_b.shape}"
         if use_torch:
-            if not isinstance(pose_a, torch.Tensor): pose_a = torch.from_numpy(pose_a).float()
-            if not isinstance(pose_b, torch.Tensor): pose_b = torch.from_numpy(pose_b).float()
+            if not isinstance(pose_a, torch.Tensor):
+                pose_a = torch.from_numpy(pose_a).float()
+            if not isinstance(pose_b, torch.Tensor):
+                pose_b = torch.from_numpy(pose_b).float()
             pose_a_inv = torch.inverse(pose_a)
             relative_pose = torch.matmul(pose_b, pose_a_inv)
         else:
-            if not isinstance(pose_a, np.ndarray): pose_a = np.array(pose_a, dtype=np.float32)
-            if not isinstance(pose_b, np.ndarray): pose_b = np.array(pose_b, dtype=np.float32)
+            if not isinstance(pose_a, np.ndarray):
+                pose_a = np.array(pose_a, dtype=np.float32)
+            if not isinstance(pose_b, np.ndarray):
+                pose_b = np.array(pose_b, dtype=np.float32)
             pose_a_inv = np.linalg.inv(pose_a)
             relative_pose = np.matmul(pose_b, pose_a_inv)
         return relative_pose
@@ -373,8 +390,11 @@ class AstraOperator(BaseOperator):
             logger.info("Using NuScenes synthetic pose data")
             pose_vecs = []
             for i in range(max_needed_frames):
-                angle = i * 0.04; radius = 15.0
-                x = radius * np.sin(angle); y = 0.0; z = radius * (1 - np.cos(angle))
+                angle = i * 0.04
+                radius = 15.0
+                x = radius * np.sin(angle)
+                y = 0.0
+                z = radius * (1 - np.cos(angle))
                 translation = torch.tensor([x, y, z], dtype=torch.float32)
                 yaw = angle + np.pi/2
                 rotation = torch.tensor([np.cos(yaw/2), 0.0, 0.0, np.sin(yaw/2)], dtype=torch.float32)

@@ -260,7 +260,6 @@ def build_run_summary(scorecard: Mapping[str, Any]) -> dict[str, Any]:
             "started_at": run.get("started_at"),
             "finished_at": run.get("finished_at"),
             "worldfoundry_version": run.get("worldfoundry_version"),
-            "run_fingerprint": run.get("run_fingerprint"),
         },
         "benchmark": {
             "benchmark_id": _first_present(benchmark, "benchmark_id", "id", "benchmark_name", "name"),

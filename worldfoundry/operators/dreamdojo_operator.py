@@ -19,7 +19,7 @@ class DreamDojoOperator(BaseOperator):
         "prompt": True,
         "instruction": True,
         "image": True,
-        "video": True,
+        "video": False,
         "actions": [
             "robot_action",
             "unified_384d_action",
@@ -64,6 +64,9 @@ class DreamDojoOperator(BaseOperator):
         """Normalise action item implementation."""
         if isinstance(item, Path):
             return str(item)
+        tolist = getattr(item, "tolist", None)
+        if callable(tolist):
+            return cls._normalise_action_item(tolist())
         if isinstance(item, Mapping):
             return {str(key): value for key, value in item.items()}
         if cls._is_numeric_vector(item):

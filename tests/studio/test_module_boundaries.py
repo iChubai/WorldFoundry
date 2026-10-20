@@ -29,9 +29,10 @@ def test_inference_materialization_and_unload_do_not_import_viewers(tmp_path):
                     raise AssertionError("inference imported a viewer: " + fullname)
 
         sys.meta_path.insert(0, BlockViewers())
-        for name in ("catalog", "config", "paths", "variants", "execution", "dispatch"):
+        for name in ("catalog", "config", "paths", "variants", "execution", "dispatch", "requests"):
             importlib.import_module("worldfoundry.studio.inference." + name)
         importlib.import_module("worldfoundry.studio.runtime_job")
+        importlib.import_module("worldfoundry.studio.workspace_job")
         from worldfoundry.studio.inference.catalog import CatalogEntry
         from worldfoundry.studio.inference.execution import PipelineContext, PreparedInputs, StudioManager
 

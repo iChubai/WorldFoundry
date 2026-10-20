@@ -28,19 +28,19 @@ def test_environment_and_cli_docs_cover_compile_cache_and_logging() -> None:
         assert "WORLDFOUNDRY_LOG_CONTEXT" in text
 
 
-def test_install_docs_keep_cpu_gpu_and_native_boundaries_explicit() -> None:
+def test_install_docs_use_the_unified_gpu_environment() -> None:
     for path in (
         REPO_ROOT / "README.md",
         DOCS_ROOT / "quickstart.mdx",
         DOCS_ROOT / "quickstart.zh.mdx",
     ):
         text = _text(path)
-        assert 'pip install -e ".[tui]"' in text
         assert "bootstrap_worldfoundry.sh" in text
-        assert "CPU" in text and "GPU" in text
+        assert "GPU" in text and "CUDA 12.8" in text
+        assert 'conda activate "${WORLDFOUNDRY_UNIFIED_ENV_PREFIX}"' in text
 
 
-def test_maintainer_docs_name_generated_recipe_and_cpu_eval_gates() -> None:
+def test_maintainer_docs_name_gpu_setup_and_contribution_gates() -> None:
     for path in (
         REPO_ROOT / "CONTRIBUTING.md",
         DOCS_ROOT / "maintainers" / "contributing.mdx",
@@ -51,6 +51,11 @@ def test_maintainer_docs_name_generated_recipe_and_cpu_eval_gates() -> None:
         assert "test-infer" in text
         assert "test-geometry" in text
         assert "models:check" in text
+        assert "bootstrap_worldfoundry.sh" in text
+        assert "git commit --signoff" in text
+        assert "make pr-check" in text
+        assert "CODEOWNERS" in text
+        assert "Ruff" in text and "ty" in text
 
     for name in ("validation.mdx", "validation.zh.mdx"):
         assert "npm run models:check" in _text(DOCS_ROOT / "reference" / name)

@@ -27,6 +27,7 @@ from worldfoundry.core.io.paths import (
 )
 
 from .cuda_tiers import (
+    DEFAULT_CUDA_TIER,
     SUPPORTED_CUDA_TIERS,
     cuda_version_tuple,
     detect_nvidia_driver_cuda,
@@ -463,7 +464,7 @@ def apply_unified_env_override(
         driver_cuda=os.environ.get("WORLDFOUNDRY_DETECTED_DRIVER_CUDA", ""),
         preferred_tier=preferred_unified_tier(),
     )
-    if tier in {"", "cpu", "prepare_only"}:
+    if tier != DEFAULT_CUDA_TIER:
         return spec
 
     return RuntimeCondaEnvSpec(

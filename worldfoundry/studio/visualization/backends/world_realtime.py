@@ -60,12 +60,23 @@ from worldfoundry.studio.serving.realtime.media import (
     ChunkPresentationBuffer,
     FrameQueuePolicy,
     LatestFrameBuffer,
+    QueuedFrame,
     RealtimePresentationMode,
     WebSocketPacingMode,
     realtime_frames_from_result,
 )
 from worldfoundry.studio.serving.realtime.media import encode_jpeg_frames as _encode_jpeg_frames
 from worldfoundry.studio.serving.realtime.media import resize_rgb_frames as _resize_rgb_frames
+from worldfoundry.studio.serving.realtime.sensors import sensor_layout_from_result
+from worldfoundry.studio.serving.realtime.telemetry import (
+    DeliveryTelemetry,
+    FrameContext,
+    PresentationFrame,
+    browser_transport_metrics,
+    frame_context,
+    frame_pixels,
+)
+from worldfoundry.studio.serving.realtime.webrtc import bind_video_sender
 from worldfoundry.studio.ui.launch_config import StudioLaunchConfig
 
 _MIN_OUTPUT_WIDTH = realtime_media.MIN_OUTPUT_WIDTH
@@ -80,6 +91,7 @@ _PROMPT_BOUNDARY_MODEL_IDS = frozenset(
         "helios",
         "lingbot-world",
         "lingbot-world-v2",
+        "lingbot-world-v2-1.3b",
         "matrix-game-3",
         "sana-wm",
     }
@@ -972,6 +984,7 @@ class ResidentWorldRuntime:
         # frontend FPS here made 12/17/24-FPS models play at a hard-coded 16.
         self.fps = self.realtime_spec.fps
         self._postprocess.fps = self.fps
+        self.sensor_layout = sensor_layout_from_result(result)
 
     def _postprocess_frames(
         self,
@@ -1641,6 +1654,7 @@ class _ActivePeer:
     resampler: RealtimeControlResampler
     presentation_mode: RealtimePresentationMode = RealtimePresentationMode.HOLD_LAST
     video_track: Any | None = None
+    telemetry: DeliveryTelemetry | None = None
     generation_task: asyncio.Task[Any] | None = None
     liveness_task: asyncio.Task[Any] | None = None
     input_task: asyncio.Task[Any] | None = None
@@ -1958,6 +1972,27 @@ class RealtimePeerManager:
             summary=None if summary is None else summary.to_payload(),
         )
         window.reset_interval()
+
+    def _send_telemetry(self, active: _ActivePeer, message: Mapping[str, Any]) -> None:
+        """Skip diagnostics when the reliable channel is congested; retain controls."""
+        if not active.closed and getattr(active.channel, "bufferedAmount", 0) < 65_536:
+            self._send(active.channel, message)
+
+    def _record_client_timing(self, active: _ActivePeer, event: str, values: Mapping[str, Any]) -> None:
+        """Persist browser-clock samples separately from server chunk timings."""
+        if self._perf_jsonl_path is None:
+            return
+        try:
+            write_jsonl_event(
+                self._perf_jsonl_path, level="INFO", event=event, message="Realtime browser timing",
+                logger_name=__name__, session_id=active.session_id, transport="webrtc",
+                model_id=getattr(getattr(self.runtime, "entry", None), "model_id", None),
+                warmup=int(values.get("chunk_index", active.chunk_index)) <= self._perf_warmup_chunks,
+                **values,
+            )
+        except (OSError, TypeError, ValueError):
+            logger.warning("Disabling realtime timing JSONL after a write failure", exc_info=True)
+            self._perf_jsonl_path = None
 
     @staticmethod
     def _request_id(payload: Mapping[str, Any]) -> str | None:
@@ -2410,7 +2445,7 @@ class RealtimePeerManager:
                 gpu_id=_realtime_nvenc_device(getattr(getattr(self.runtime, "launch_config", None), "device", None)),
             )
             self.runtime.preserve_cuda_frames = bool(getattr(track, "preserves_cuda_frames", False))
-            pc.addTrack(track)
+            sender = pc.addTrack(track)
             loop = asyncio.get_running_loop()
             active = _ActivePeer(
                 peer=pc,
@@ -2431,6 +2466,10 @@ class RealtimePeerManager:
                 text_events_supported=self.runtime.supports_text_events,
                 output_resolution=output_resolution,
             )
+            active.telemetry = DeliveryTelemetry(
+                lambda message: self._send_telemetry(active, message), warmup_chunks=self._perf_warmup_chunks,
+            )
+            bind_video_sender(sender, track, active.telemetry)
             self._active = active
 
             @pc.on("datachannel")
@@ -2946,6 +2985,7 @@ class RealtimePeerManager:
                         "control_latency_ms": round(control_latency_ms, 1) if control_latency_ms is not None else None,
                         "queue_depth": queue_depth,
                         "dropped_frames": active.dropped_frames,
+                        "sensor_layout": getattr(self.runtime, "sensor_layout", []),
                         "pixel_post_ms": round(pixel_post_ms, 1),
                         "resolution": resolution_snapshot.to_payload(),
                         "resolution_revision": resolution_snapshot.revision,
@@ -3056,8 +3096,23 @@ class RealtimePeerManager:
             return
         if message_type in {"heartbeat", "ping"}:
             return
+        if message_type == "frame_presented" and active.telemetry is not None:
+            sample = active.telemetry.presented(payload)
+            if sample is not None:
+                self._record_client_timing(active, "realtime.frame_presented", sample)
+            return
+        if message_type == "browser_transport":
+            self._record_client_timing(active, "realtime.browser_transport", browser_transport_metrics(payload))
+            return
+        previous_prompt = active.pending_prompt
         acknowledgement = self._handle_session_control(active, payload)
         if acknowledgement is not None:
+            if acknowledgement.get("ok") and active.telemetry is not None:
+                control_id = active.telemetry.control_id(payload)
+                if acknowledgement["type"] == "step_ack":
+                    active.telemetry.step_controls.append(control_id)
+                elif acknowledgement["type"] == "event_ack" or active.pending_prompt != previous_prompt:
+                    active.telemetry.pending_prompt_control = control_id
             self._send(active.channel, acknowledgement)
             return
         if message_type == "prompt_update" and active.prompt_scheduled:
@@ -3068,6 +3123,8 @@ class RealtimePeerManager:
                 active.active_event_id = None
                 active.pending_prompt = prompt
                 active.pending_prompt_dirty = True
+                if active.telemetry is not None:
+                    active.telemetry.pending_prompt_control = active.telemetry.control_id(payload)
                 active.action_arrivals.append(arrival)
                 active.first_action.set()
             return
@@ -3078,6 +3135,8 @@ class RealtimePeerManager:
         key = str(action.get("key") or "")
         arrival = asyncio.get_running_loop().time()
         if active.resampler.on_edge(arrival_time=arrival, event=event, key=key):
+            if active.telemetry is not None:
+                active.telemetry.key_control = active.telemetry.control_id(payload)
             active.action_arrivals.append(arrival)
             active.first_action.set()
 
@@ -3180,6 +3239,9 @@ class RealtimePeerManager:
                         active.first_action.clear()
                         continue
                 action_arrival = active.action_arrivals[0] if active.action_arrivals else None
+                control_ids = () if active.telemetry is None else active.telemetry.sample_controls(
+                    keys=segments is not None, prompt=prompt_changed, step=forced_step,
+                )
                 generation_started = loop.time()
                 frames, generation_ms = await self.runtime.generate(
                     interactions,
@@ -3204,6 +3266,12 @@ class RealtimePeerManager:
                     if resolution_snapshot.revision == active.output_resolution.revision:
                         break
                 pixel_post_ms = (loop.time() - pixel_post_started) * 1000.0
+                if active.telemetry is not None:
+                    queued_at = loop.time()
+                    transport_frames = [
+                        PresentationFrame(frame, FrameContext(active.chunk_index + 1, index, control_ids, queued_at))
+                        for index, frame in enumerate(transport_frames)
+                    ]
                 accepted = await active.frames.put_chunk(transport_frames)
                 active.chunk_index += 1
                 now = loop.time()
@@ -3235,6 +3303,7 @@ class RealtimePeerManager:
                         "control_latency_ms": round(control_latency_ms, 1) if control_latency_ms is not None else None,
                         "queue_depth": queue_depth,
                         "dropped_frames": active.frames.dropped_frames,
+                        "sensor_layout": getattr(self.runtime, "sensor_layout", []),
                         "dropped_chunks": getattr(active.frames, "dropped_chunks", 0),
                         "presented_frames": getattr(active.frames, "presented_frames", None),
                         "presentation_mode": active.presentation_mode.value,
@@ -3327,8 +3396,11 @@ def _build_video_track(
             self._time_base = Fraction(1, fps)
             self._interval = 1.0 / fps
             self._deadline: float | None = None
-            self._last_array: np.ndarray | None = None
+            self._last_array: QueuedFrame | None = None
             self._first_real_frame_at: float | None = None
+            self.delivery_context: FrameContext | None = None
+            self.delivery_started_at = 0.0
+            self.delivery_encode_ms: float | None = None
 
         async def recv(self) -> VideoFrame:
             loop = asyncio.get_running_loop()
@@ -3372,7 +3444,9 @@ def _build_video_track(
             # Frames are already resized in the generation worker. Keep the
             # aiortc cadence path free of synchronous resize/canvas work; a
             # held frame is therefore repeated at zero additional scale cost.
-            frame = VideoFrame.from_ndarray(frame_array, format="rgb24")
+            self.delivery_context = frame_context(frame_array)
+            self.delivery_started_at = loop.time()
+            frame = VideoFrame.from_ndarray(frame_pixels(frame_array), format="rgb24")
             frame.pts = pts
             frame.time_base = self._time_base
             self._pts = pts + 1

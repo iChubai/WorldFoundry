@@ -60,7 +60,6 @@ def pipeline_metadata(
         "plan_path": result.get("plan_path"),
         "run_dir": result.get("run_dir"),
         "metadata_path": result.get("metadata_path"),
-        "artifact_sha256": result.get("artifact_sha256"),
         "blocked_reason": result.get("blocked_reason"),
         "error": result.get("error"),
         "pipeline_metadata": result.get("metadata"),

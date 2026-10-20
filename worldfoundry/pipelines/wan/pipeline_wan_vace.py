@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from typing import Any
 
+from worldfoundry.core.media.types import MediaKind, infer_media_kind
+
 from ..native_diffusion_video import NativeTextToVideoPipeline
 from .pipeline_wan_2p1_t2v import WAN21_NEGATIVE_PROMPT
 
@@ -57,6 +59,27 @@ class Wan2p1VACEPipeline(NativeTextToVideoPipeline):
                 images = [value.strip() for value in src_ref_images.split(",") if value.strip()]
             else:
                 images = src_ref_images
+        for alias in ("ref_image_path", "image_path"):
+            value = kwargs.pop(alias, None)
+            if images is None:
+                images = value
+        if video is None:
+            video = src_video
+        for alias in ("video_path", "videos"):
+            value = kwargs.pop(alias, None)
+            if video is None:
+                video = value
+        input_path = kwargs.pop("input_path", None)
+        if input_path is not None:
+            kind = infer_media_kind(input_path)
+            if kind is MediaKind.IMAGE:
+                if images is None:
+                    images = input_path
+            elif kind is MediaKind.VIDEO:
+                if video is None:
+                    video = input_path
+            else:
+                raise ValueError("Wan VACE input_path must point to an image or video")
         if images is None:
             reference_count = 0
         elif isinstance(images, str):
@@ -68,8 +91,6 @@ class Wan2p1VACEPipeline(NativeTextToVideoPipeline):
         else:
             reference_count = 1
         kwargs.setdefault("vace_reference_count", reference_count)
-        if video is None:
-            video = src_video
         if src_mask is not None:
             kwargs.setdefault("vace_mask", src_mask)
         height = kwargs.pop("height", None)

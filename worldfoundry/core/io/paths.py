@@ -453,18 +453,20 @@ def resolve_local_hf_model_path(
 
     checked: list[Path] = []
     for root in dict.fromkeys(path.expanduser() for path in roots):
+        if not root.is_dir():
+            checked.extend(root / name for name in names)
+            continue
         for name in names:
             candidate = root / name
             checked.append(candidate)
             resolved = usable(candidate)
             if resolved is not None:
                 return resolved
-        if root.is_dir():
-            for candidate in sorted(root.glob(f"*--{leaf}")):
-                checked.append(candidate)
-                resolved = usable(candidate)
-                if resolved is not None:
-                    return resolved
+        for candidate in sorted(root.glob(f"*--{leaf}")):
+            checked.append(candidate)
+            resolved = usable(candidate)
+            if resolved is not None:
+                return resolved
 
     locations = "\n".join(f"  - {path}" for path in checked)
     raise FileNotFoundError(f"Local Hugging Face assets for {value!r} are missing. Checked:\n{locations}")

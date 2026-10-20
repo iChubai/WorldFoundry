@@ -292,7 +292,6 @@ def _index_row_from_summary(
             "started_at": run.get("started_at"),
             "finished_at": run.get("finished_at"),
             "worldfoundry_version": run.get("worldfoundry_version"),
-            "run_fingerprint": run.get("run_fingerprint"),
             "metric_ids": sorted(str(metric_id) for metric_id in metrics),
         }
     )

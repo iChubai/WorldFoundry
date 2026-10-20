@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import hashlib
 import json
 import threading
 import time
@@ -77,11 +76,9 @@ def _source_identity(
     commit: str = PINNED_FASTVIDEO_COMMIT,
     clean: bool = True,
 ) -> FastVideoSLASourceIdentity:
-    fingerprint = hashlib.sha256(f"{commit}:{clean}".encode()).hexdigest()
     return FastVideoSLASourceIdentity(
         commit=commit,
         clean=clean,
-        fingerprint=fingerprint,
         root="/pinned/FastVideo",
         source_file="/pinned/FastVideo/fastvideo/attention/backends/sla.py",
     )
@@ -239,7 +236,6 @@ def test_runtime_expectation_freezes_canonical_provider_identity(
         ),
         "provider_family": family,
         "commit": PINNED_FASTVIDEO_COMMIT,
-        "source_fingerprint": identity.fingerprint,
         "source_root": identity.root,
         "source_file": identity.source_file,
     }
@@ -441,7 +437,7 @@ def test_sagesla_is_a_distinct_fastvideo_provider_family() -> None:
     )
 
 
-def test_injected_provider_seam_is_explicit_and_still_requires_pinned_source() -> None:
+def test_injected_provider_seam_is_explicit_and_records_source_metadata() -> None:
     def factory(spec, _config):
         return _FakeProvider(spec)
 
@@ -461,18 +457,17 @@ def test_injected_provider_seam_is_explicit_and_still_requires_pinned_source() -
             **kwargs,
             allow_non_cuda_for_tests=True,
         )
-    with pytest.raises(FastVideoSLAUnavailableError, match="expected"):
-        FastVideoSLAAdapter(
-            **kwargs,
-            source_identity=_source_identity(commit="0" * 40),
-            allow_non_cuda_for_tests=True,
-        )
-    with pytest.raises(FastVideoSLAUnavailableError, match="clean=False"):
-        FastVideoSLAAdapter(
-            **kwargs,
-            source_identity=_source_identity(clean=False),
-            allow_non_cuda_for_tests=True,
-        )
+    identity = _source_identity(commit="0" * 40, clean=False)
+    adapter = FastVideoSLAAdapter(
+        **kwargs,
+        source_identity=identity,
+        allow_non_cuda_for_tests=True,
+    )
+    q, k, v = _values(batch=1)
+    receipt = adapter(0, q, k, v, current_timestep=0).receipt
+    assert receipt["provider_source_commit"] == identity.commit
+    assert receipt["provider_source_clean"] is False
+    assert receipt["reference_parity_verified"] is False
 
 
 @pytest.mark.parametrize(
@@ -575,6 +570,11 @@ def test_source_identity_is_cached_and_forward_never_runs_subprocess(
         raise AssertionError(args)
 
     monkeypatch.setattr(sla_module.subprocess, "run", fake_run)
+    monkeypatch.setattr(
+        type(source_file),
+        "read_bytes",
+        lambda _path: pytest.fail("source identity scanned file bytes"),
+    )
     sla_module._SOURCE_IDENTITIES.clear()
     first = sla_module._provider_source_identity(module)
     second = sla_module._provider_source_identity(module)

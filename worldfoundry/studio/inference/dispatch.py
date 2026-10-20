@@ -32,7 +32,7 @@ from contextlib import contextmanager
 from dataclasses import dataclass, field, replace
 from functools import lru_cache
 from pathlib import Path
-from typing import Any, Callable, Mapping
+from typing import TYPE_CHECKING, Any, Callable, Mapping
 
 from worldfoundry.core.execution.process import terminate_process_group
 from worldfoundry.core.io.paths import project_root, resolve_worldfoundry_path, worldfoundry_path_tokens
@@ -62,6 +62,11 @@ from worldfoundry.studio.inference.config import (
 )
 from worldfoundry.studio.inference.execution import TORCHRUN_DISTRIBUTED_ENV, RunRecord
 
+if TYPE_CHECKING:
+    from worldfoundry.core.execution.queued_batch import QueuedBatchExecutor
+
+    from .resident_batching import ResidentRequest
+
 # Environment variable set in child processes to prevent recursive dispatch.
 STUDIO_CONDA_CHILD_ENV = "WORLDFOUNDRY_STUDIO_CONDA_CHILD"
 # Comma-separated model IDs (or "all"/"*") that always run in a subprocess.
@@ -87,6 +92,7 @@ DEFAULT_FORCE_SUBPROCESS_MODELS = frozenset(
         "hunyuan-world-voyager",
         "lingbot-world",
         "lingbot-world-v2",
+        "lingbot-world-v2-1.3b",
         "longvie-2",
         "hunyuan-worldplay",
         "wan-2p2",
@@ -99,12 +105,14 @@ DEFAULT_FORCE_SUBPROCESS_MODELS = frozenset(
 )
 LINGBOT_WORLD_MODEL_ID = "lingbot-world"
 LINGBOT_WORLD_V2_MODEL_ID = "lingbot-world-v2"
+LINGBOT_WORLD_V2_SMALL_MODEL_ID = "lingbot-world-v2-1.3b"
 TORCHRUN_LINGBOT_ENV = "WORLDFOUNDRY_STUDIO_TORCHRUN_LINGBOT_FAST"
 TORCHRUN_MODEL_NPROC_KEYS: Mapping[str, tuple[str, ...]] = {
     "dreamx-world-5b-cam": ("torchrun_nproc_per_node", "torchrun_nproc", "nproc_per_node"),
     "helios": ("torchrun_nproc_per_node", "torchrun_nproc", "nproc_per_node"),
     "longvie-2": ("torchrun_nproc_per_node", "torchrun_nproc", "nproc_per_node"),
     "lingbot-world-v2": ("torchrun_nproc_per_node", "torchrun_nproc", "nproc_per_node"),
+    "lingbot-world-v2-1.3b": ("torchrun_nproc_per_node", "torchrun_nproc", "nproc_per_node"),
     MATRIX_GAME3_MODEL_ID: (
         "torchrun_nproc_per_node",
         "torchrun_nproc",
@@ -179,6 +187,7 @@ class _ResidentWorker:
     device_lease: CudaDeviceLease | None = None
     shutdown_lock: threading.Lock = field(default_factory=threading.Lock, repr=False)
     shutdown_complete: bool = False
+    batch_executor: QueuedBatchExecutor[ResidentRequest, RunRecord] | None = field(default=None, repr=False)
 
 
 class _ResidentWorkerUnavailable(RuntimeError):
@@ -648,13 +657,13 @@ def _with_lingbot_world_parallelism(
     """
 
     updated = dict(run_kwargs)
-    if model_id not in {LINGBOT_WORLD_MODEL_ID, LINGBOT_WORLD_V2_MODEL_ID}:
+    if model_id not in {LINGBOT_WORLD_MODEL_ID, LINGBOT_WORLD_V2_MODEL_ID, LINGBOT_WORLD_V2_SMALL_MODEL_ID}:
         return updated
     normalized_world_size = _validate_model_torchrun_nproc(
         model_id,
         max(int(world_size or 1), 1),
     )
-    if model_id == LINGBOT_WORLD_V2_MODEL_ID:
+    if model_id in {LINGBOT_WORLD_V2_MODEL_ID, LINGBOT_WORLD_V2_SMALL_MODEL_ID}:
         call_kwargs = _json_object_from_text(updated.get("call_kwargs_text"))
         call_kwargs["nproc_per_node"] = normalized_world_size
         for key in ("torchrun_nproc_per_node", "torchrun_nproc", "world_size"):
@@ -911,6 +920,10 @@ def _requested_torchrun_nproc(model_id: str, run_kwargs: Mapping[str, Any]) -> i
 def _validate_model_torchrun_nproc(model_id: str, requested: int) -> int:
     """Validate model-specific distributed process-count constraints."""
 
+    if model_id == LINGBOT_WORLD_V2_SMALL_MODEL_ID:
+        if requested not in {1, 2, 3, 4, 6, 12}:
+            raise ValueError("lingbot-world-v2-1.3b requires nproc to divide its 12 heads")
+        return requested
     if model_id in {LINGBOT_WORLD_MODEL_ID, LINGBOT_WORLD_V2_MODEL_ID}:
         supported = (1, 2, 4, 8)
         if requested not in supported:
@@ -1377,6 +1390,8 @@ def _shutdown_resident_worker(worker: _ResidentWorker, *, force: bool = False) -
             worker.device_lease = None
 
         worker.shutdown_complete = True
+        if worker.batch_executor is not None:
+            worker.batch_executor.close(wait=False)
 
 
 def _reap_resident_workers_once(*, now: float | None = None) -> int:
@@ -2275,6 +2290,24 @@ def _wait_for_resident_worker_result(
     deadline: float | None = None,
     request_timeout: float | None = None,
 ) -> RunRecord:
+    return run_record_from_manifest(
+        _wait_for_resident_worker_payload(
+            worker, result_path=result_path, error_path=error_path, log_callback=log_callback,
+            cancel_requested=cancel_requested, deadline=deadline, request_timeout=request_timeout,
+        )
+    )
+
+
+def _wait_for_resident_worker_payload(
+    worker: _ResidentWorker,
+    *,
+    result_path: Path,
+    error_path: Path,
+    log_callback: LogCallback | None,
+    cancel_requested: CancelCallback | None,
+    deadline: float | None = None,
+    request_timeout: float | None = None,
+) -> dict[str, Any]:
     timeout = _resident_worker_request_timeout() if request_timeout is None else max(request_timeout, 0.0)
     if deadline is None and timeout > 0:
         deadline = time.monotonic() + timeout
@@ -2300,7 +2333,7 @@ def _wait_for_resident_worker_result(
         if result_path.is_file():
             worker.last_used_at = time.monotonic()
             _drain_process_output(process=process, decoder=worker.decoder, log_callback=log_callback)
-            return run_record_from_manifest(json.loads(result_path.read_text(encoding="utf-8")))
+            return json.loads(result_path.read_text(encoding="utf-8"))
 
         if error_path.is_file():
             worker.last_used_at = time.monotonic()
@@ -2358,6 +2391,9 @@ def _run_manager_payload_in_resident_conda(
     if deadline is None and request_timeout > 0:
         deadline = dispatch_started_at + request_timeout
     _check_dispatch_interrupt(cancel_requested, deadline)
+    from .resident_batching import ResidentRequest, resident_batch_options, run_queued_resident_request
+
+    batch_size, batch_delay = resident_batch_options()
     context = _prepare_resident_run_context(
         model_id=model_id,
         spec=spec,
@@ -2402,6 +2438,21 @@ def _run_manager_payload_in_resident_conda(
         cancel_requested=cancel_requested,
         deadline=deadline,
     )
+    if batch_size > 1:
+        return run_queued_resident_request(
+            worker,
+            ResidentRequest(
+                payload={
+                    "request_id": request_id,
+                    "run_kwargs": _json_safe(context.payload_run_kwargs),
+                    "result_path": str(result_path),
+                    "error_path": str(error_path),
+                },
+                result_path=result_path, error_path=error_path, deadline=deadline,
+                log_callback=log_callback, cancel_requested=cancel_requested,
+            ),
+            max_batch_size=batch_size, max_delay_seconds=batch_delay,
+        )
     lock_acquired = False
     try:
         _acquire_resident_worker_request_lock(
@@ -2591,7 +2642,7 @@ def _run_manager_payload_one_shot(
     env.update(secret_env)
     _apply_wmfactory_env_hints(model_id, run_kwargs, env)
     if torchrun_nproc > 1:
-        if model_id in {LINGBOT_WORLD_MODEL_ID, LINGBOT_WORLD_V2_MODEL_ID}:
+        if model_id in {LINGBOT_WORLD_MODEL_ID, LINGBOT_WORLD_V2_MODEL_ID, LINGBOT_WORLD_V2_SMALL_MODEL_ID}:
             env[TORCHRUN_LINGBOT_ENV] = "1"
         if model_id in TORCHRUN_DISTRIBUTED_MODELS:
             env[TORCHRUN_DISTRIBUTED_ENV] = "1"

@@ -196,13 +196,23 @@ def build_scorecard(
     if backend_is_mock:
         eligibility_reasons.append(MOCK_BACKEND_BLOCKING_REASON)
     invalid_metrics = [key for key, value in per_metric.items() if value.get("valid") is False]
+    partial_metrics = [
+        key
+        for key, value in per_metric.items()
+        if value.get("n_total") is not None
+        and value.get("n_valid") is not None
+        and value["n_valid"] < value["n_total"]
+    ]
     if not leaderboard:
         eligibility_reasons.append("no valid metric scores")
     if invalid_metrics:
         eligibility_reasons.append(f"invalid metrics: {', '.join(sorted(invalid_metrics))}")
+    if partial_metrics:
+        eligibility_reasons.append(f"incomplete metric coverage: {', '.join(sorted(partial_metrics))}")
     score_valid = failed_samples == 0 and bool(leaderboard) and not invalid_metrics
     leaderboard_valid = (
         score_valid
+        and not partial_metrics
         and bool(evidence_gate["present"])
         and provenance_candidate
         and not backend_is_mock

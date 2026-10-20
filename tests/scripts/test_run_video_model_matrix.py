@@ -226,7 +226,7 @@ def test_model_checkpoint_inspection_exception_becomes_a_checkpoint_error(
     )
 
     error = run_video_model_matrix._model_checkpoint_structure_error(
-        "echo-memory-context-k20",
+        "echo-memory-context-k1",
         str(checkpoint),
     )
 

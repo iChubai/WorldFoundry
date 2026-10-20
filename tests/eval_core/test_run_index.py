@@ -26,7 +26,6 @@ def _summary(*, run_id: str, model_id: str, quality: float, failed_samples: int 
             "started_at": "2026-01-01T00:00:00Z",
             "finished_at": "2026-01-01T00:01:00Z",
             "worldfoundry_version": "test",
-            "run_fingerprint": f"fingerprint-{run_id}",
         },
         "benchmark": {"benchmark_name": "index-benchmark", "task_type": "index-task"},
         "model": {"model_id": model_id, "model_name": model_id},

@@ -498,7 +498,6 @@ def _fastvideo_sla_source_expectation(kind: str) -> dict[str, object]:
         ),
         "provider_family": family,
         "commit": "1b2b2a0161bc6b3b80158d1fa6380a051c6530c7",
-        "source_fingerprint": "a" * 64,
         "source_root": "/opt/FastVideo",
         "source_file": "/opt/FastVideo/fastvideo/attention/backends/sla.py",
     }
@@ -538,7 +537,6 @@ def _fastvideo_sla_optimization_report(
     provider = str(expectation["provider_path"])
     provider_family = str(expectation["provider_family"])
     commit = str(expectation["commit"])
-    source_fingerprint = str(expectation["source_fingerprint"])
     source_root = str(expectation["source_root"])
     source_file = str(expectation["source_file"])
     checkpoint_layout = str(expectation["checkpoint_layout"])
@@ -619,7 +617,6 @@ def _fastvideo_sla_optimization_report(
                             "reference_fastvideo_commit": commit,
                             "provider_source_commit": commit,
                             "provider_source_clean": True,
-                            "provider_source_fingerprint": source_fingerprint,
                             "provider_source_root": source_root,
                             "provider_source_file": source_file,
                             "reference_parity_verified": True,
@@ -717,7 +714,6 @@ def _fastvideo_sla_optimization_report(
             "reference_fastvideo_commit": commit,
             "provider_source_commit": commit,
             "provider_source_commits": [commit],
-            "provider_source_fingerprints": [source_fingerprint],
             "provider_fingerprints": [provider_fingerprint],
             "provider_source_root": source_root,
             "provider_source_roots": [source_root],
@@ -1172,7 +1168,6 @@ def test_fastvideo_sla_expectation_uses_pinned_runtime_source_resolver(
     ("field", "value"),
     (
         ("commit", "0" * 40),
-        ("source_fingerprint", "not-sha256"),
         ("provider_path", ""),
     ),
 )
@@ -2804,7 +2799,6 @@ def test_fastvideo_sla_audit_accepts_complete_projection_receipt(
         ("provider", "receipt.fastvideo_sla.events"),
         ("family", "receipt.fastvideo_sla.events"),
         ("source-commit", "receipt.fastvideo_sla.events"),
-        ("source-fingerprint", "receipt.fastvideo_sla.events"),
         ("source-root", "receipt.fastvideo_sla.events"),
         ("dirty", "receipt.fastvideo_sla.events"),
         ("parity", "receipt.fastvideo_sla.events"),
@@ -2856,8 +2850,6 @@ def test_fastvideo_sla_audit_rejects_mutated_execution_evidence(
         event["provider_family"] = "fastvideo/fake"
     elif mutation == "source-commit":
         event["provider_source_commit"] = "0" * 40
-    elif mutation == "source-fingerprint":
-        event["provider_source_fingerprint"] = "0" * 64
     elif mutation == "source-root":
         event["provider_source_root"] = "/tmp/untrusted"
     elif mutation == "dirty":

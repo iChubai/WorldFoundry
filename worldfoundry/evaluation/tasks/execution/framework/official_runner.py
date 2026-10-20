@@ -29,8 +29,8 @@ from pathlib import Path
 from types import MappingProxyType
 from typing import Any, Callable, Mapping
 
-from worldfoundry.core.observability.logging_setup import configure_logging, get_logger
 from worldfoundry.core.execution.process import run_logged_subprocess
+from worldfoundry.core.observability.logging_setup import configure_logging, get_logger
 from worldfoundry.evaluation.reporting.scorecard import SCORECARD_SCHEMA_VERSION
 from worldfoundry.evaluation.tasks.catalog.zoo_registry import load_benchmark_zoo_registry
 from worldfoundry.evaluation.tasks.execution.framework.io import (
@@ -48,7 +48,6 @@ from worldfoundry.evaluation.tasks.execution.framework.normalizers import (
 )
 from worldfoundry.evaluation.tasks.execution.framework.result_normalizer import OfficialResultsNormalizer
 from worldfoundry.evaluation.utils import BENCHMARK_ZOO_DIR, REPO_ROOT
-
 
 ExtractMetricsFn = Callable[[Any, Path], dict[str, dict[str, Any]]]
 DiscoverResultsFn = Callable[[Path, Path | None], Path | None]
@@ -69,7 +68,7 @@ class BenchRunnerConfig:
     metric_order: tuple[str, ...]
     metric_specs: dict[str, dict[str, Any]]
     metric_aliases: dict[str, str]
-    average_metric_id: str
+    average_metric_id: str | None
     official_entry: str | None = None
     official_output_globs: tuple[str, ...] = ()
     generated_video_envs: tuple[str, ...] = ("WORLDFOUNDRY_GENERATED_ARTIFACT_DIR",)
@@ -417,6 +416,8 @@ def catalog_fallback(
 
 
 def compute_average(config: BenchRunnerConfig, extracted: dict[str, dict[str, Any]]) -> None:
+    if config.average_metric_id is None:
+        return
     existing = extracted.get(config.average_metric_id)
     if existing is not None and existing.get("normalized_score") is not None:
         return
@@ -479,7 +480,7 @@ def merge_metric_id_score_rows(
     for metric_id, values in buckets.items():
         extracted[metric_id] = metric_row(
             metric_id,
-            mean_numeric(values),
+            sum(values) / len(values),
             source=str(results_path),
             sample_count=len(values),
             config=config,

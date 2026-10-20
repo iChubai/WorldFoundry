@@ -831,6 +831,11 @@ def load_model_run_schema(
         )
         if selected_catalog_variant is not None:
             catalog_variant_id = selected_catalog_variant.variant_id
+            if selected_catalog_variant.pipeline_binding:
+                try:
+                    entry = find_entry(selected_catalog_variant.pipeline_binding)
+                except KeyError:
+                    pass
         elif variant_id is None and not catalog_entry.runner_target:
             selected_catalog_variant = select_default_variant(
                 catalog_entry,

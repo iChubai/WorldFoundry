@@ -84,6 +84,9 @@ def _official_summary(*, run_id: str, model_id: str, quality: float, generation:
     payload["metrics"].update(
         {"metric_revision": "metric-rev", "metric_config_hash": "metric-config"}
     )
+    payload["metrics"]["per_metric"]["quality"]["definition"] = {
+        "name": "quality", "version": "1", "parameters": {}, "higher_is_better": True,
+    }
     payload["provenance"] = {
         "fidelity": {"generation": generation, "data": "official", "evaluation": "official"}
     }

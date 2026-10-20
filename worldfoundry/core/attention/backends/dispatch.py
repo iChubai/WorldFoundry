@@ -502,6 +502,7 @@ def _invoke_attention_provider(
     out_pattern: str,
     dims,
     scale,
+    backend_options=None,
 ) -> torch.Tensor:
     """Invoke one qualified non-Torch provider or fail for an unwired name."""
 
@@ -511,6 +512,12 @@ def _invoke_attention_provider(
         q, k, v = rearrange_qkv(q, k, v, q_pattern, k_pattern, v_pattern, "b n s d", dims)
         output = native_cudnn_fp8_sdpa(q, k, v, scale=scale)
         return rearrange_out(output, out_pattern, "b n s d", dims)
+    if selected == "scaled_int8_fp8":
+        from worldfoundry.core.attention.backends.scaled_int8_fp8 import scaled_int8_fp8_attention
+
+        q, k, v = rearrange_qkv(q, k, v, q_pattern, k_pattern, v_pattern, "b s n d", dims)
+        output = scaled_int8_fp8_attention(q, k, v, scale=scale, **(backend_options or {}))
+        return rearrange_out(output, out_pattern, "b s n d", dims)
     if selected == "triton_tma":
         from worldfoundry.core.attention.backends.triton_tma import triton_tma_sdpa
 
@@ -627,8 +634,8 @@ def attention_forward(
         ``clear_attention_dispatch_cache``.
     """
     preferred = ATTENTION_IMPLEMENTATION if backend is None else normalize_attention_backend(backend)
-    if backend_options and preferred != "sol_attn":
-        raise ValueError("backend_options are currently supported only for explicit Sol-Attn")
+    if backend_options and preferred not in {"sol_attn", "scaled_int8_fp8"}:
+        raise ValueError("backend_options require explicit Sol-Attn or scaled_int8_fp8")
     # Validate before compatibility/mask short-circuiting. An explicit sparse
     # request must never look successful merely because it silently took SDPA.
     require_generic_attention_backend(preferred)
@@ -648,13 +655,23 @@ def attention_forward(
         else:
             _record_provider_runtime("sol_attn", attempts=1, successes=1)
         return rearrange_out(output, out_pattern, "b s n d", dims)
-    if preferred in {"cudnn_fp8", "triton_tma"}:
+    if preferred in {"cudnn_fp8", "triton_tma", "scaled_int8_fp8"}:
         if compatibility_mode or attn_mask is not None:
             raise ValueError(f"Explicit {preferred} does not support attention masks or compatibility-mode fallback")
         return _invoke_uncompiled_attention_provider_audited(
             preferred, q, k, v, q_pattern, k_pattern, v_pattern, out_pattern, dims, scale,
+            backend_options=backend_options,
         )
-    if compatibility_mode or (attn_mask is not None):
+    # Native-only dispatch has no external provider to probe or quarantine.
+    # Keep those Python locks and capability probes outside compiled compute.
+    if (
+        compatibility_mode
+        or attn_mask is not None
+        or (
+            torch.compiler.is_compiling()
+            and (preferred == "torch" or (preferred == "auto" and not _auto_attention_backends(q.device)))
+        )
+    ):
         return _invoke_torch_sdpa_audited(
             q,
             k,

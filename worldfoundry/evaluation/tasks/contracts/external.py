@@ -22,7 +22,6 @@ from .registry import (
     register_external_benchmark_contract,
 )
 
-
 ROBOTWIN_BENCHMARK_ID = "robotwin"
 ROBOTWIN_BENCHMARK_NAME = "RoboTwin 2.0"
 ROBOTWIN_ROOT_ENV = "WORLDFOUNDRY_ROBOTWIN_ROOT"
@@ -853,6 +852,33 @@ MiraBenchContract = ExternalBenchmarkContract(
     notes=(
         "Contract covers MiraBench's 17 paper metrics across motion, temporal, 3D, quality, alignment, and distribution families.",
         "Official evaluation requires MiraBench prompt metadata, generated videos, model checkpoints/scorers, and normalized result files.",
+    ),
+)
+
+WorldMemBenchContract = ExternalBenchmarkContract(
+    benchmark_id="worldmembench",
+    display_name="WorldMemBench",
+    input_keys=("generated_video_dir", "official_results_path", "worldmembench_config", "weights_dir"),
+    output_keys=("scorecard", "raw_metric_table", "per_sample_scores", "official_metric_summaries"),
+    metric_ids=(
+        "imaging_quality",
+        "aesthetic_quality",
+        "human_identity",
+        "human_appearance",
+        "object_geometry",
+        "object_appearance",
+        "environment_visible_memory",
+        "environment_depth_fidelity",
+        "environment_scene_reconstruction",
+        "dynamic_memory",
+        "camera_rotation",
+        "camera_translation",
+    ),
+    requires_upstream_runtime=True,
+    notes=(
+        "Imports official per-model summaries or invokes the installed ZJU-REAL/WorldMemBench runtime.",
+        "Scores retain official units, case statuses, and camera-error directions; no composite score is defined.",
+        "Full evaluation needs metric checkpoints, DA3/ViPE environments, and a Dynamic Memory VLM endpoint.",
     ),
 )
 
@@ -1792,6 +1818,7 @@ _BUILTIN_CONTRACT_ITEMS = (
     WorldArenaContract,
     WorldBenchContract,
     WorldInWorldContract,
+    WorldMemBenchContract,
     WorldModelBenchContract,
     HarnessEvalWContract,
     WorldOlympiadContract,

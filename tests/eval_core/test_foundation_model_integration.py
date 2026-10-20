@@ -2298,7 +2298,6 @@ def test_zeroscope_runtime_logic_lives_under_synthesis():
     assert "worldfoundry.synthesis" not in runtime_text
     assert "TextToVideoSDPipeline" in runtime_text
     assert "export_to_video" in runtime_text
-    assert "frames_sha256" in runtime_text
     assert "ZeroScopeRuntime" in synthesis_text
     assert "TextToVideoSDPipeline" not in synthesis_text
     assert "export_to_video" not in synthesis_text

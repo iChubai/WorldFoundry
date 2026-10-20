@@ -15,6 +15,7 @@ from worldfoundry.evaluation.api import (
     align_batch_metric_outputs,
     is_generation_result_successful,
 )
+from worldfoundry.evaluation.api.generation import validate_sample_ids
 from worldfoundry.evaluation.api.metrics import aggregate_mean
 from worldfoundry.evaluation.reporting.run_manifest import redact_secrets
 from worldfoundry.evaluation.utils import jsonable, metric_fingerprint
@@ -94,6 +95,8 @@ def score_samples(
     """Yield scored batches, persisting each metric before starting the next one."""
     if batch_size < 1:
         raise ValueError("metric_batch_size must be positive")
+    validate_sample_ids((row.sample_id for row in requests), source="requests")
+    validate_sample_ids((row.sample_id for row in results), source="generation results")
     previous = {}
     if resume and checkpoint_path.exists():
         for row in iter_jsonl(checkpoint_path):
@@ -174,6 +177,10 @@ def score_samples(
                             for key in metric_ids(metric)
                         ]
                     else:
+                        errors[index].extend(
+                            {"metric_id": row.metric_id, "message": f"nonfinite metric output: {row.diagnostics.get('nonfinite_values', {})}"}
+                            for row in rows if row.skip_reason == "nonfinite_metric_output"
+                        )
                         emitted = {row.metric_id for row in rows}
                         rows.extend(
                             MetricResult(

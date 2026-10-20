@@ -10,9 +10,9 @@ import time
 from pathlib import Path
 from typing import Any, Iterable, Mapping, Sequence
 
-from worldfoundry.core.io import file_sha256
+from worldfoundry.core.execution.process import terminate_process_group
 
-from .jobs import _decode_process_text, _kill_process_group
+from .jobs import _decode_process_text
 
 MEDIA_SUFFIXES = frozenset({".mp4", ".mov", ".webm", ".gif", ".png", ".jpg", ".jpeg"})
 
@@ -162,7 +162,7 @@ def execute_in_tree(
             stdout, stderr = process.communicate(timeout=effective_timeout)
         except subprocess.TimeoutExpired as exc:
             timed_out = True
-            _kill_process_group(process)
+            terminate_process_group(process, grace_seconds=0)
             try:
                 stdout, stderr = process.communicate(timeout=5)
             except subprocess.TimeoutExpired as kill_exc:
@@ -219,7 +219,6 @@ def execute_in_tree(
         "status": "succeeded",
         "video": str(output),
         "artifact_path": str(output),
-        "artifact_sha256": file_sha256(output),
         "backend_quality": "in_tree_official_runtime",
         "metadata": {
             "command": rendered,

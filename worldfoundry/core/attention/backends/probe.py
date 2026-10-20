@@ -91,6 +91,7 @@ _BACKEND_ALIASES: Mapping[str, str] = {
     "cudnn": _TORCH,
     "cudnn_fp8": "cudnn_fp8",
     "triton_tma": "triton_tma",
+    "scaled_int8_fp8": "scaled_int8_fp8",
     "sol": "sol_attn",
     "sol_attn": "sol_attn",
     "sol_attention": "sol_attn",
@@ -141,7 +142,7 @@ _REPORT_PRIORITY = (
     "xformers",
     _TORCH,
 )
-_EXPLICIT_PRIORITY = ("sage_attention_3", "cudnn_fp8", "triton_tma", "sol_attn")
+_EXPLICIT_PRIORITY = ("sage_attention_3", "cudnn_fp8", "triton_tma", "scaled_int8_fp8", "sol_attn")
 _EXPERIMENTAL_PRIORITY = (
     "flex_block_attention",
     "video_sparse_attention",
@@ -338,6 +339,11 @@ def _probe_attention_backends_cached(
         "sol_attn": sol,
         "cudnn_fp8": cudnn_fp8,
         "triton_tma": triton_tma,
+        "scaled_int8_fp8": _package_capability(
+            name="scaled_int8_fp8", package="triton", usable_if=nvidia_cuda and capability[0] >= 9,
+            unavailable_reason="Triton is not installed",
+            unusable_reason="scaled INT8/FP8 attention requires NVIDIA SM90 or newer",
+        ),
         "flash_attention_4": _package_capability(
             name="flash_attention_4",
             package="flash_attn.cute",
@@ -518,7 +524,7 @@ def resolve_attention_backend(
     dense fallback for that explicit request.
     """
     requested = attention_backend_from_env() if preferred is None else normalize_attention_backend(preferred)
-    if requested in {"cudnn_fp8", "triton_tma", "sol_attn"}:
+    if requested in {"cudnn_fp8", "triton_tma", "scaled_int8_fp8", "sol_attn"}:
         capability = probe_attention_backends(device)[requested]
         if not capability.usable:
             raise RuntimeError(f"Explicit {requested} backend is unavailable: {capability.reason}")

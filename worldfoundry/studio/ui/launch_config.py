@@ -13,6 +13,7 @@ from worldfoundry.studio.inference.config import (
     LINGBOT_VARIANT_FAST,
     LINGBOT_WORLD_MODEL_ID,
     LINGBOT_WORLD_V2_MODEL_ID,
+    LINGBOT_WORLD_V2_SMALL_MODEL_ID,
     LONGVIE2_MODEL_ID,
     MATRIX_GAME3_MODEL_ID,
     _torchrun_world_size,
@@ -170,6 +171,10 @@ def launch_uses_lingbot_torchrun_rollout(launch_config: StudioLaunchConfig) -> b
         return world_size == 4
     if world_size <= 1:
         return False
+    if launch_config.model_id == LINGBOT_WORLD_V2_SMALL_MODEL_ID:
+        if world_size not in {2, 3, 4, 6, 12}:
+            raise ValueError("LingBot-World-V2 1.3B torchrun ranks must divide its 12 heads")
+        return True
     if launch_config.model_id == LINGBOT_WORLD_V2_MODEL_ID:
         if world_size not in {4, 8}:
             raise ValueError(

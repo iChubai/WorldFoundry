@@ -1,13 +1,13 @@
 {
-  "modelsTotal": 267,
-  "modelsListed": 257,
-  "benchmarksTotal": 74,
+  "modelsTotal": 275,
+  "modelsListed": 265,
+  "benchmarksTotal": 75,
   "modelFamilies": [
     {
       "id": "video",
       "label": "Video",
       "blurb": "Text-, image-, and video-conditioned generation, editing, and audio-video systems.",
-      "count": 56,
+      "count": 62,
       "entries": [
         {
           "id": "allegro",
@@ -143,6 +143,54 @@
           ]
         },
         {
+          "id": "kandinsky6-lite",
+          "name": "Kandinsky 6.0 lite",
+          "status": "integrated",
+          "aliases": [
+            "kandinsky6-lite"
+          ]
+        },
+        {
+          "id": "kandinsky6-lite-distill",
+          "name": "Kandinsky 6.0 lite-distill",
+          "status": "integrated",
+          "aliases": [
+            "kandinsky6-lite-distill"
+          ]
+        },
+        {
+          "id": "kandinsky6-lite-pretrain",
+          "name": "Kandinsky 6.0 lite-pretrain",
+          "status": "integrated",
+          "aliases": [
+            "kandinsky6-lite-pretrain"
+          ]
+        },
+        {
+          "id": "kandinsky6-pro",
+          "name": "Kandinsky 6.0 pro",
+          "status": "integrated",
+          "aliases": [
+            "kandinsky6-pro"
+          ]
+        },
+        {
+          "id": "kandinsky6-pro-distill",
+          "name": "Kandinsky 6.0 pro-distill",
+          "status": "integrated",
+          "aliases": [
+            "kandinsky6-pro-distill"
+          ]
+        },
+        {
+          "id": "kandinsky6-pro-pretrain",
+          "name": "Kandinsky 6.0 pro-pretrain",
+          "status": "integrated",
+          "aliases": [
+            "kandinsky6-pro-pretrain"
+          ]
+        },
+        {
           "id": "krea-realtime-video",
           "name": "Krea Realtime Video 14B",
           "status": "integrated",
@@ -217,7 +265,7 @@
         {
           "id": "magi2-preview",
           "name": "MAGI-2 Preview",
-          "status": null,
+          "status": "integrated",
           "aliases": [
             "magi2-preview"
           ]
@@ -225,7 +273,7 @@
         {
           "id": "minimax-h3",
           "name": "MiniMax H 3",
-          "status": null,
+          "status": "integrated",
           "aliases": [
             "minimax-h3"
           ]
@@ -469,7 +517,7 @@
       "id": "world_models",
       "label": "World models",
       "blurb": "Interactive worlds, camera/action conditioning, navigation, and simulator-shaped systems.",
-      "count": 104,
+      "count": 106,
       "entries": [
         {
           "id": "abot-world-0-5b-lf",
@@ -533,22 +581,6 @@
           "status": "integrated",
           "aliases": [
             "ati-wan21-14b"
-          ]
-        },
-        {
-          "id": "biwm-wan21",
-          "name": "BiWM Wan 2.1",
-          "status": "integrated_checkpoint_gated",
-          "aliases": [
-            "biwm-wan21"
-          ]
-        },
-        {
-          "id": "biwm-wan22",
-          "name": "BiWM Wan 2.2",
-          "status": "integrated_checkpoint_gated",
-          "aliases": [
-            "biwm-wan22"
           ]
         },
         {
@@ -634,9 +666,17 @@
         {
           "id": "dreamdojo",
           "name": "DreamDojo",
-          "status": "planned",
+          "status": "integrated",
           "aliases": [
             "dreamdojo"
+          ]
+        },
+        {
+          "id": "dreamdojo-student",
+          "name": "DreamDojo Student",
+          "status": "integrated",
+          "aliases": [
+            "dreamdojo-student"
           ]
         },
         {
@@ -738,6 +778,14 @@
           "status": "runtime_ported",
           "aliases": [
             "happyoyster"
+          ]
+        },
+        {
+          "id": "helixworld",
+          "name": "HelixWorld Preview v 1",
+          "status": "integrated",
+          "aliases": [
+            "helixworld"
           ]
         },
         {
@@ -845,14 +893,6 @@
           ]
         },
         {
-          "id": "irasim",
-          "name": "IRASim",
-          "status": "planned",
-          "aliases": [
-            "irasim"
-          ]
-        },
-        {
           "id": "kairos-sensenova",
           "name": "Kairos Sensenova",
           "status": "verified",
@@ -884,9 +924,17 @@
         {
           "id": "lingbot-world-v2",
           "name": "LingBot-World-V 2",
-          "status": "implemented_checkpoint_manifest_validated",
+          "status": "integrated",
           "aliases": [
             "lingbot-world-v2"
+          ]
+        },
+        {
+          "id": "lingbot-world-v2-1.3b",
+          "name": "LingBot-World-V 2 1.3B",
+          "status": "integrated",
+          "aliases": [
+            "lingbot-world-v2-1.3b"
           ]
         },
         {
@@ -940,6 +988,14 @@
           "versions": [
             "First-Person",
             "Third-Person"
+          ]
+        },
+        {
+          "id": "matrix-game-4-egypt",
+          "name": "Matrix-Game 4 Ancient Egypt",
+          "status": "integrated",
+          "aliases": [
+            "matrix-game-4-egypt"
           ]
         },
         {
@@ -1041,14 +1097,6 @@
           "status": "runtime_ported",
           "aliases": [
             "open-dreamer"
-          ]
-        },
-        {
-          "id": "pandora",
-          "name": "Pandora",
-          "status": "planned",
-          "aliases": [
-            "pandora"
           ]
         },
         {
@@ -1248,9 +1296,17 @@
         {
           "id": "worldlabs-marble-1.1",
           "name": "World Labs Marble 1.1",
-          "status": "planned",
+          "status": "integrated",
           "aliases": [
             "worldlabs-marble-1.1"
+          ]
+        },
+        {
+          "id": "world-observer",
+          "name": "World Observer",
+          "status": "blocked",
+          "aliases": [
+            "world-observer"
           ]
         },
         {
@@ -1299,6 +1355,14 @@
           "status": "runtime_ported",
           "aliases": [
             "worldmem"
+          ]
+        },
+        {
+          "id": "worldplay2",
+          "name": "WorldPlay 2",
+          "status": "integrated",
+          "aliases": [
+            "worldplay2"
           ]
         },
         {
@@ -1610,7 +1674,7 @@
         {
           "id": "wonderworld",
           "name": "WonderWorld",
-          "status": "blocked",
+          "status": "integrated",
           "aliases": [
             "wonderworld"
           ]
@@ -1794,7 +1858,7 @@
         {
           "id": "last-r1",
           "name": "LaST-R 1",
-          "status": "planned",
+          "status": "integrated",
           "aliases": [
             "last-r1"
           ]
@@ -2150,7 +2214,7 @@
     {
       "id": "video",
       "label": "Video & world",
-      "count": 52,
+      "count": 53,
       "entries": [
         {
           "id": "4dworldbench",
@@ -2479,6 +2543,13 @@
           "name": "WorldBench",
           "aliases": [
             "worldbench"
+          ]
+        },
+        {
+          "id": "worldmembench",
+          "name": "WorldMemBench",
+          "aliases": [
+            "worldmembench"
           ]
         },
         {

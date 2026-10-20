@@ -217,6 +217,8 @@ def world_frontend_html(entry: CatalogEntry, launch_config: StudioLaunchConfig) 
           <img id="frameImage" alt="" draggable="false">
           <video id="frameVideo" muted playsinline></video>
           <canvas id="frameCanvas" aria-label="Decoded generated world frames"></canvas>
+          <div id="sensorGrid" aria-label="Synchronized sensor views"></div>
+          <div id="sensorControls" aria-label="Sensor presentation controls"></div>
           <div class="screen-noise"></div>
           <div class="floating-state" id="livePill">FROZEN</div>
           <div class="start-overlay is-hidden" id="startOverlay" aria-hidden="true">
@@ -513,6 +515,33 @@ button:disabled,
 #frameCanvas.is-visible {
   display: block;
 }
+
+#sensorGrid {
+  display: none;
+  position: absolute;
+  inset: 0;
+  gap: 4px;
+  background: #050608;
+  z-index: 1;
+}
+#sensorGrid.is-visible { display: grid; }
+.sensor-tile { position: relative; min-width: 0; min-height: 0; }
+.sensor-tile canvas { width: 100%; height: 100%; object-fit: contain; }
+.sensor-tile span { position: absolute; top: 4px; left: 6px; color: #fff; font-size: 11px; }
+#sensorControls {
+  position: absolute;
+  bottom: 8px;
+  left: 8px;
+  z-index: 5;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  background: #050608cc;
+  color: #fff;
+  font-size: 11px;
+}
+#sensorControls:empty { display: none; }
+#sensorControls select { color: #fff; background: #161719; }
 
 .screen-noise {
   position: absolute;

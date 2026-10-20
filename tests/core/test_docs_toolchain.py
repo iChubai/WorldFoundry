@@ -28,6 +28,15 @@ def test_python_backed_npm_scripts_use_portable_launcher() -> None:
         assert scripts[name].startswith("bash scripts/run-python.sh ")
 
 
+def test_type_checks_generate_mdx_before_route_types_without_background_regeneration() -> None:
+    scripts = json.loads((FUMADOCS / "package.json").read_text(encoding="utf-8"))["scripts"]
+    assert scripts["types:check"].split(" && ") == [
+        "fumadocs-mdx",
+        "_FUMADOCS_MDX=1 next typegen",
+        "tsc --noEmit",
+    ]
+
+
 def test_launcher_prefers_wf_docs_python(tmp_path: Path) -> None:
     real_python = shutil.which("python3") or shutil.which("python")
     assert real_python is not None

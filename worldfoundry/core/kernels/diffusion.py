@@ -31,6 +31,11 @@ from functools import lru_cache
 import torch
 import torch.nn.functional as F
 
+from worldfoundry.core.execution.compile_numerics import (
+    compiled_layer_norm_scale_shift,
+    compiled_residual_gate,
+    compiled_residual_gate_inplace,
+)
 from worldfoundry.core.kernels.capabilities import (
     QUALIFIED_TRITON_CAPABILITIES,
     default_kernel_thresholds,
@@ -627,11 +632,9 @@ def _residual_gate_inplace_torch(
 def residual_gate_add(residual: torch.Tensor, update: torch.Tensor, gate: torch.Tensor, *, backend: str | None = None) -> torch.Tensor:
     """Return ``residual + update * gate`` with broadcast-aware fusion."""
 
-    # Inductor already emits one pointwise kernel for this expression and can
-    # fuse it with adjacent compiled work. Keep the explicit Triton kernel for
-    # eager execution, where PyTorch otherwise launches multiply and add
-    # separately. An explicit backend override remains available for profiling.
     requested = _requested_kernel_backend() if backend is None else backend
+    if torch.compiler.is_compiling() and not torch.is_grad_enabled():
+        return compiled_residual_gate(residual, update, gate, requested)
     if (
         torch.compiler.is_compiling()
         or requested in _TORCH_BACKENDS
@@ -667,6 +670,9 @@ def residual_gate_add_(
     """
 
     requested = _requested_kernel_backend()
+    if torch.compiler.is_compiling() and not torch.is_grad_enabled():
+        compiled_residual_gate_inplace(residual, update, gate)
+        return residual
     if (
         torch.compiler.is_compiling()
         or requested in _TORCH_BACKENDS
@@ -883,6 +889,11 @@ def layer_norm_scale_shift(
     """Fuse affine-free LayerNorm with AdaLN scale and shift."""
 
     requested = _requested_kernel_backend() if backend is None else backend
+    if torch.compiler.is_compiling() and not torch.is_grad_enabled():
+        return compiled_layer_norm_scale_shift(
+            x, scale, shift, eps, upcast, requested,
+            torch.is_autocast_enabled(x.device.type), torch.get_autocast_dtype(x.device.type),
+        )
     if (
         torch.compiler.is_compiling()
         or requested in _TORCH_BACKENDS

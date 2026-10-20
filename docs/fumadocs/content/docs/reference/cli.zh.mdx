@@ -65,7 +65,13 @@ python -m worldfoundry zoo models --json
 - **`worldfoundry-studio`** — 独立的 Studio launcher。详见 [Studio 指南](/zh/docs/guides/studio)。
 - **`python -m worldfoundry.studio.workspace_job infer`** — Workspace 视觉冒烟（与 Studio UI 提交的是同一条 job 路径）。不是文档里的第一次推理命令。
 
-**选哪条命令。** 日常可复现 / 模型页命令用 `worldfoundry-eval run <id> --pipeline.task-profile …`。只有 Workspace 视觉冒烟才用 `python -m worldfoundry.studio.workspace_job infer`。状态用词见 [运行状态](/zh/docs/guides/run-status)。
+**选哪条命令。** 日常可复现 / 模型页命令用 `worldfoundry-eval run <id> --pipeline.task-profile …`。只有 Workspace 视觉冒烟才用 `python -m worldfoundry.studio.workspace_job infer`。
+
+同一 Workspace 进程内，`WORLDFOUNDRY_STUDIO_BATCH_MAX_SIZE`（默认 `1`）和
+`WORLDFOUNDRY_STUDIO_BATCH_DELAY_MS`（默认 `5`）控制常驻 worker 对兼容原生
+Wan T2V 与 5B TI2V 任务合批。Workspace 至少配置两个作业槽，并显式使用常驻权重、
+Torch attention；开启编译时须选择 regional scope。具体精度配置与单图输入规则见准入指南。配置在 worker 启动前生效，不跨独立 CLI 进程合批。
+详见[批处理准入、预热与取消契约](/zh/docs/guides/inference-optimization)。
 
 下面统一写 `worldfoundry-eval`，便于 shell history、job script 和问题报告保持一致。
 
@@ -333,6 +339,10 @@ worldfoundry-eval mcp --transport sse
 
 Server 注册 27 个工具：`server_info`；discovery（`list_models`、`get_model_info`、`list_benchmarks`、`get_benchmark_info`、`list_tasks`、`get_task_info`、`list_metrics`、`show_metric`、`check_benchmark_datasets`）；run 生命周期（`preview_run`、`evaluate`、`list_runs`、`get_run_status`、`get_run_result`、`get_run_samples`、`cancel_run`）；以及 Studio workspace（`list_studio_models`、`get_studio_model_info`、`submit_studio_inference`、`list_studio_jobs`、`get_studio_job`、`wait_for_studio_job`、`stop_studio_job`、`get_studio_job_logs`、`list_studio_artifacts`、`get_studio_manifest`）。Studio 工具默认访问 `WORLDFOUNDRY_STUDIO_WORKSPACE_URL`（通常是 `http://127.0.0.1:7870`）。Run 文件写到 `WORLDFOUNDRY_MCP_RUN_ROOT`；未设置时为 `runs/mcp`。
 
+`convert_result_to_openai_format()` 将 MCP 音频转换为 Chat API 的 `input_audio` block，包含 base64 `data` 和 `format="wav"` 或 `"mp3"`。不支持的音频 MIME type 会抛出 `ValueError`；图像与文本 block 保持原有形状。
+
+持久化 command job 在 completion receipt 与恢复状态中保留最初的终止原因。超时保持 `failed` 及其 timeout error；用户取消保持 `cancelled`。POSIX 有界 benchmark command 在完成、超时或中断时清理其持有的进程组，然后才返回或向上传播异常。Timeout payload 通过 `timed_out` 和 `kill_stuck` 报告超时及未完成的清理。
+
 Parser 才是 flag 的事实来源。请使用 `worldfoundry-eval <command> [<subcommand>] --help`，不要从无关模型或 benchmark recipe 复制参数。
 
 ## 常用工作流
@@ -463,6 +473,23 @@ worldfoundry-eval zoo benchmark-run \
 ```
 
 Data root、score directory、prompt manifest、judge credential、metric subset 等 benchmark 专属输入见对应的 [Benchmark Hub](/zh/docs/evaluation/benchmark-hub) 页面。
+
+### 6. 回放原生 Wan 执行路径与请求批处理
+
+在已准备本地 checkpoint 的 checkout 中运行：
+
+```bash
+python -m benchmarks.inference.wan_execution_preparation \
+  --checkpoint /path/to/Wan2.1-T2V-1.3B \
+  --output-dir tmp/wan-execution --request-batching
+```
+
+`--request-batching` 在单请求对照之外增加 A/B、B/A、A/B 批次，支持 Wan1.3B、
+`wan2.2-t2v-a14b`、`wan2.2-ti2v-5b` 与 `wan2.2-i2v-a14b`，由 `--model-id` 选择。
+图像条件回放需加 `--images IMAGE_A IMAGE_B`。Dense 参照必须执行，已有 latent/RGB
+质量阈值保持不变。报告记录预热耗时/显存及同两个请求的诊断性吞吐对比。`report.json` 必须同时满足 `complete` 和 `passed`。计时仅作
+诊断，不是独占设备性能结果。Compile、Graph、精度与批处理兼容范围见
+[推理优化](/docs/guides/inference-optimization)。
 
 ## Benchmark mode
 

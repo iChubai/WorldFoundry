@@ -203,6 +203,12 @@ def test_realtime_session_keeps_causal_state_and_native_cadence(
     assert first["video"].dtype == np.uint8
     assert first["video"].flags.c_contiguous
     assert np.all(first["video"] == 127)
+    for result, count in ((first, 9), (second, 12)):
+        chunk = result["video_chunk"]
+        assert chunk.frames is result["video"]
+        assert chunk.layout == "thwc"
+        assert chunk.value_range == "0,255"
+        assert chunk.frame_count == count
     assert first["realtime_metrics"]["model_ms"] == 12.5
     assert first["realtime_metrics"]["decode_ms"] == 3.25
     assert first["realtime_metrics"]["condition_ms"] >= 0.0

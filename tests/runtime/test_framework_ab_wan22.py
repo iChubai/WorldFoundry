@@ -5263,14 +5263,10 @@ def _fastvideo_sla_contract(kind: str) -> dict[str, object]:
         str(layer): hashlib.sha256(f"projection:{layer}".encode()).hexdigest()
         for layer in range(30)
     }
-    source_fingerprint = hashlib.sha256(
-        b"pinned-fastvideo-sla-source"
-    ).hexdigest()
     return {
         "provider_path": configured["provider_path"],
         "provider_family": configured["provider_family"],
         "commit": framework_ab_wan22.WORLD_FOUNDRY_PINNED_FASTVIDEO_COMMIT,
-        "source_fingerprint": source_fingerprint,
         "checkpoint_layout": framework_ab_wan22.FASTVIDEO_SLA_CHECKPOINT_LAYOUT,
         "projection_fingerprint": (
             framework_ab_wan22._fastvideo_projection_set_fingerprint(
@@ -5292,7 +5288,6 @@ def _live_fastvideo_sla_optimization_report(
     provider = str(contract["provider_path"])
     provider_family = str(contract["provider_family"])
     commit = str(contract["commit"])
-    source_fingerprint = str(contract["source_fingerprint"])
     checkpoint_layout = str(contract["checkpoint_layout"])
     projection_fingerprint = str(contract["projection_fingerprint"])
     layer_fingerprints = dict(contract["layer_projection_fingerprints"])
@@ -5356,7 +5351,6 @@ def _live_fastvideo_sla_optimization_report(
                         "reference_fastvideo_commit": commit,
                         "provider_source_commit": commit,
                         "provider_source_clean": True,
-                        "provider_source_fingerprint": source_fingerprint,
                         "provider_source_root": source_root,
                         "provider_source_file": source_file,
                         "reference_parity_verified": True,
@@ -5456,7 +5450,6 @@ def _live_fastvideo_sla_optimization_report(
             "reference_fastvideo_commit": commit,
             "provider_source_commit": commit,
             "provider_source_commits": [commit],
-            "provider_source_fingerprints": [source_fingerprint],
             "provider_fingerprints": [provider_fingerprint],
             "provider_source_root": source_root,
             "provider_source_roots": [source_root],
@@ -5541,7 +5534,6 @@ def _stub_framework_fastvideo_sla_expectation(
             "provider_path": contract["provider_path"],
             "provider_family": contract["provider_family"],
             "commit": contract["commit"],
-            "source_fingerprint": contract["source_fingerprint"],
             **(
                 checkpoint_expectation
                 if checkpoint_expectation is not None
@@ -6101,7 +6093,6 @@ def test_worldfoundry_fastvideo_sla_gate_accepts_complete_strict_receipt(
     "mutation",
     (
         "provider",
-        "source-fingerprint",
         "global-projection",
         "layer-projection",
         "nested-receipt",
@@ -6121,8 +6112,6 @@ def test_worldfoundry_fastvideo_sla_gate_rejects_forged_receipts(
     event = approximate["events"][0]
     if mutation == "provider":
         event["reference_provider_path"] += ".Fake"
-    elif mutation == "source-fingerprint":
-        event.pop("provider_source_fingerprint")
     elif mutation == "global-projection":
         event["all_projection_weights_fingerprint"] = "0" * 64
     elif mutation == "layer-projection":
@@ -6888,7 +6877,7 @@ def test_fastvideo_sla_capability_resolves_nested_apply_entrypoint(
             "name": "_attention.apply",
             "available": True,
             "callable_identity": (
-                "test_framework_ab_wan22."
+                f"{__name__}."
                 "_fake_capability_module.<locals>.<lambda>"
             ),
         }

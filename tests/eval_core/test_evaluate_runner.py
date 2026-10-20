@@ -22,6 +22,43 @@ def _read_jsonl(path: Path) -> list[dict]:
     ]
 
 
+@pytest.mark.parametrize("source_kind", ["mapping", "json", "file"])
+def test_evaluate_runner_preserves_sample_id_mapping_envelopes(tmp_path: Path, source_kind: str) -> None:
+    payload = {
+        "results": {
+            "sample-ok": {
+                "model_id": "offline-model",
+                "status": "succeeded",
+                "artifacts": {"video": {"uri": "memory://output.mp4", "kind": "video"}},
+                "metadata": {"scores": {"quality": 0.8}},
+            },
+            "sample-failed": {"status": "failed", "error": "generation failed"},
+        }
+    }
+    source = payload
+    if source_kind == "json":
+        source = json.dumps(payload)
+    elif source_kind == "file":
+        source = tmp_path / "results.json"
+        source.write_text(json.dumps(payload), encoding="utf-8")
+
+    result = execute_evaluate_run(
+        output_dir=tmp_path / "run", results=source, metrics=("numeric:quality",), fail_on_sample_error=True,
+    )
+
+    assert result.status == "completed_with_failures"
+    assert result.exit_code == 1
+    assert result.failed_sample_count == 1
+    rows = {row["sample_id"]: row for row in _read_jsonl(result.output_dir / "results.jsonl")}
+    assert rows["sample-failed"]["status"] == "failed"
+    assert rows["sample-failed"]["error"] == "generation failed"
+    assert rows["sample-ok"]["model_id"] == "offline-model"
+    assert rows["sample-ok"]["metadata"]["scores"] == {"quality": 0.8}
+    assert rows["sample-ok"]["artifacts"]["video"]["uri"] == "memory://output.mp4"
+    summary = json.loads((result.output_dir / "metrics" / "summary.json").read_text(encoding="utf-8"))
+    assert summary["leaderboard"]["quality"] == 0.8
+
+
 def test_evaluate_runner_scores_materialized_results_without_requests(tmp_path: Path) -> None:
     results_path = tmp_path / "results.jsonl"
     output_dir = tmp_path / "run"
@@ -30,6 +67,7 @@ def test_evaluate_runner_scores_materialized_results_without_requests(tmp_path: 
             "sample_id": "sample-a",
             "task_name": "offline_t2v",
             "model_id": "offline-video-model",
+            "status": "succeeded",
             "artifacts": {"video": {"uri": "outputs/a.mp4", "kind": "video"}},
             "metrics": {"quality": 0.8},
         },
@@ -37,6 +75,7 @@ def test_evaluate_runner_scores_materialized_results_without_requests(tmp_path: 
             "sample_id": "sample-b",
             "task_name": "offline_t2v",
             "model_id": "offline-video-model",
+            "status": "succeeded",
             "metrics": {"quality": 0.4},
         },
     ]
@@ -145,9 +184,10 @@ def test_evaluate_runner_existing_results_defaults_to_artifact_count(tmp_path: P
         results=[
             {
                 "sample_id": "sample-a",
+                "status": "succeeded",
                 "artifacts": {"video": {"uri": "memory://sample-a.mp4", "kind": "video"}},
             },
-            {"sample_id": "sample-b"},
+            {"sample_id": "sample-b", "status": "succeeded"},
         ],
     )
 

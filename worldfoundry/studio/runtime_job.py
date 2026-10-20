@@ -281,6 +281,22 @@ def _run_manager_worker(args: argparse.Namespace) -> int:
                 pass
 
         try:
+            members = payload.get("requests")
+            if members is not None:
+                if not isinstance(members, list) or not members or any(
+                    not isinstance(member, dict) or not isinstance(member.get("run_kwargs"), dict)
+                    for member in members
+                ):
+                    raise ValueError("payload.requests must contain requests with run_kwargs JSON objects")
+                records = manager.run_batch(tuple(_resolve_secret_refs(member["run_kwargs"]) for member in members))
+                if len(records) != len(members):
+                    raise RuntimeError("resident batch did not return one record per request")
+                manifests = [record.to_manifest() for record in records]
+                for member, manifest in zip(members, manifests):
+                    _write_json_atomic(Path(member["result_path"]), manifest)
+                _write_json_atomic(result_path, {"records": manifests})
+                print(json.dumps({"status": "completed", "request_id": request_id, "request_count": len(records)}, sort_keys=True), flush=True)
+                continue
             run_kwargs = payload.get("run_kwargs")
             if not isinstance(run_kwargs, dict):
                 raise ValueError("payload.run_kwargs must be a JSON object")
@@ -316,6 +332,15 @@ def _run_manager_worker(args: argparse.Namespace) -> int:
                     "traceback": traceback.format_exc(),
                 },
             )
+            members = payload.get("requests")
+            if isinstance(members, list):
+                for member in members:
+                    if isinstance(member, dict) and member.get("error_path"):
+                        _write_json_atomic(Path(member["error_path"]), {
+                            "request_id": member.get("request_id"),
+                            "error": f"{type(exc).__name__}: {exc}",
+                            "traceback": traceback.format_exc(),
+                        })
             traceback.print_exc()
     manager.close()
     return 0

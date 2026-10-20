@@ -2,11 +2,11 @@
 
 from __future__ import annotations
 
-from ...operators.three_d_four_d_runtime_operator import ThreeDFourDRuntimeOperator
-from ...synthesis.visual_generation.memory.runtime import RuntimeMemory
 from ...base_models.three_dimensions.three_d_four_d.runtime import (
     ThreeDFourDRuntimeSynthesis,
 )
+from ...operators.three_d_four_d_runtime_operator import ThreeDFourDRuntimeOperator
+from ...synthesis.visual_generation.memory.runtime import RuntimeMemory
 from ..pipeline_utils import PipelineABC
 
 
@@ -46,11 +46,6 @@ class WonderJourneyPipeline(ThreeDFourDRuntimePipeline):
     MODEL_ID = "wonderjourney"
 
 
-class WonderWorldPipeline(ThreeDFourDRuntimePipeline):
-    """Pipeline implementation for WonderWorld visual generation."""
-    MODEL_ID = "wonderworld"
-
-
 class WorldGenPipeline(ThreeDFourDRuntimePipeline):
     """Pipeline implementation for WorldGen visual generation."""
     MODEL_ID = "worldgen"
@@ -63,6 +58,5 @@ __all__ = [
     "StableVirtualCameraPipeline",
     "ThreeDFourDRuntimePipeline",
     "WonderJourneyPipeline",
-    "WonderWorldPipeline",
     "WorldGenPipeline",
 ]

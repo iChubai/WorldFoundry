@@ -174,12 +174,11 @@ def ensure_repo_root_on_sys_path() -> Path:
 # ── Version / fingerprint capture ──────────────────────────────────────
 
 VERSION_CONTEXT_SCHEMA_VERSION = "worldfoundry-version-context-v2"
-RUN_FINGERPRINT_SCHEMA_VERSION = "worldfoundry-run-fingerprint"
 # Explicit engine revision: bump the numeric suffix when evaluation-engine
 # behavior changes in a way that affects results, so run manifests written by
 # different engine revisions are distinguishable (the package version alone is
 # "unknown" in source checkouts).
-EVALUATION_ENGINE_VERSION = "worldfoundry-eval-engine/1"
+EVALUATION_ENGINE_VERSION = "worldfoundry-eval-engine/2"
 
 
 def _repo_root() -> Path:
@@ -416,27 +415,4 @@ def build_version_context(
         "metrics": [metric_fingerprint(item) for item in metrics],
         "metric_callable": metric_callable_fingerprint(metric),
         "extra": jsonable(extra or {}),
-    }
-
-
-def build_run_fingerprint(
-    *,
-    version_context: Mapping[str, Any],
-    requests: Sequence[Any] = (),
-    results: Sequence[Any] = (),
-    extra: Mapping[str, Any] | None = None,
-) -> dict[str, Any]:
-    """Build a unique run fingerprint dictionary with stable hashes of context, requests, and results."""
-    payload = {
-        "version_context": version_context,
-        "requests": [jsonable(item) for item in requests],
-        "results": [jsonable(item) for item in results],
-        "extra": jsonable(extra or {}),
-    }
-    return {
-        "schema_version": RUN_FINGERPRINT_SCHEMA_VERSION,
-        "hash": stable_hash(payload),
-        "version_context_hash": stable_hash(version_context),
-        "request_count": len(requests),
-        "result_count": len(results),
     }

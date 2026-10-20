@@ -295,9 +295,6 @@ CURATED_FIGURES: dict[str, dict[str, str]] = {
         "teaser": "https://arxiv.org/html/2607.04988v1/teaser.png",
         "overview": "https://arxiv.org/html/2607.04988v1/Model-A1.5.png",
     },
-    "irasim": {
-        "overview": "https://arxiv.org/html/2406.14540/x2.png",
-    },
     "kairos-sensenova": {
         "teaser": "https://arxiv.org/html/2606.16533v3/figures/motivation_v2.png",
         "overview": "https://arxiv.org/html/2606.16533v3/figures/framework_new_v1.png",
@@ -707,9 +704,6 @@ CURATED_FIGURES: dict[str, dict[str, str]] = {
     "nwm": {
         "teaser": "https://arxiv.org/html/2412.03572v2/figure_ood_v2.png",
         "overview": "https://arxiv.org/html/2412.03572v2/CDiTv6.png",
-    },
-    "pandora": {
-        "overview": "https://arxiv.org/html/2406.09455v1/architecture_v2.png",
     },
     "prior-depth-anything": {
         "teaser": "https://arxiv.org/html/2505.10565v1/motivation.png",

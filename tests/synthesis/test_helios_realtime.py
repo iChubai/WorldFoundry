@@ -500,6 +500,12 @@ def test_generate_next_retains_native_ar_state_across_calls() -> None:
 
     assert first["frames"].shape == (33, 2, 2, 3)
     assert second["frames"].shape == (33, 2, 2, 3)
+    for result in (first, second):
+        chunk = result["video_chunk"]
+        assert chunk.frames is result["frames"]
+        assert chunk.layout == "thwc"
+        assert chunk.value_range == "0,255"
+        assert chunk.frame_count == 33
     assert session.pipe.stage_calls == [True, False]
     assert session._state.chunk_index == 2
     assert session._state.history_latents.shape[2] == 19

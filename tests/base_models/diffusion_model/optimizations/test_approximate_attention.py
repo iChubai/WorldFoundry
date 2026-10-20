@@ -669,7 +669,6 @@ class _FakeFastVideoSLAAdapter(torch.nn.Module):
                 "reference_fastvideo_commit": PINNED_FASTVIDEO_COMMIT,
                 "provider_source_commit": PINNED_FASTVIDEO_COMMIT,
                 "provider_source_clean": True,
-                "provider_source_fingerprint": "2" * 64,
                 "provider_source_root": "/test/FastVideo",
                 "provider_source_file": "/test/FastVideo/sla.py",
                 "reference_parity_verified": True,

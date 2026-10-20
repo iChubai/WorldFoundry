@@ -10,6 +10,7 @@ import sys
 import time
 import uuid
 from collections.abc import Mapping
+from dataclasses import replace
 from pathlib import Path
 from types import ModuleType
 from typing import Any
@@ -304,7 +305,10 @@ def _execute_run_plan_file(args: argparse.Namespace):
     from worldfoundry.evaluation.runner import evaluate_request_from_run_plan, execute_evaluate_run, load_run_plan
 
     plan = load_run_plan(args.plan)
-    return execute_evaluate_run(evaluate_request_from_run_plan(plan))
+    request = replace(
+        evaluate_request_from_run_plan(plan), resume=args.resume, metric_batch_size=args.metric_batch_size,
+    )
+    return execute_evaluate_run(request)
 
 
 def _handle_tui(args: argparse.Namespace) -> int:
@@ -545,6 +549,8 @@ def _handle_evaluate(args: argparse.Namespace) -> int:
             model_config=load_json_mapping(args.model_config),
             dataset_id=args.dataset_id,
             run_id=args.run_id,
+            resume=args.resume,
+            metric_batch_size=args.metric_batch_size,
             fail_on_sample_error=args.fail_on_sample_error,
             write_artifacts_index=not args.no_artifacts_index,
             generation_cache_dir=args.generation_cache_dir,
@@ -847,6 +853,7 @@ def _worldfoundry_run_request_from_args(args: argparse.Namespace):
         model_workers=getattr(args, "model_workers", 1),
         worker_cuda_devices=tuple(getattr(args, "model_worker_device", None) or ()),
         resume=args.resume,
+        metric_batch_size=args.metric_batch_size,
         skip_incompatible=args.skip_incompatible,
         fail_on_skipped=args.fail_on_skipped,
         model_runner=args.model_runner,
@@ -1033,6 +1040,8 @@ def _handle_direct_model_run(args: argparse.Namespace) -> int:
             model_config=load_json_mapping(args.model_config),
             dataset_id=args.dataset_id or f"{schema.model_id}:direct",
             run_id=args.run_id,
+            resume=args.resume,
+            metric_batch_size=args.metric_batch_size,
             fail_on_sample_error=bool(args.fail_on_sample_error or args.fail_on_generation_error),
             write_artifacts_index=not args.no_artifacts_index,
             generation_cache_dir=args.generation_cache_dir,
@@ -1180,6 +1189,8 @@ def _handle_run_in_process(args: argparse.Namespace) -> int:
             model_config=load_json_mapping(args.model_config),
             dataset_id=args.dataset_id or args.benchmark_name,
             run_id=args.run_id,
+            resume=args.resume,
+            metric_batch_size=args.metric_batch_size,
             fail_on_sample_error=args.fail_on_sample_error,
             write_artifacts_index=not args.no_artifacts_index,
             generation_cache_dir=args.generation_cache_dir,
@@ -1548,6 +1559,8 @@ def _build_parser(model_run_schema: Any | None = None) -> argparse.ArgumentParse
         default=None,
         help="Artifact name that must be present for required_artifacts_present.",
     )
+    evaluate_parser.add_argument("--resume", action="store_true", help="Reuse matching completed generation and metric checkpoints.")
+    evaluate_parser.add_argument("--metric-batch-size", type=int, default=32, help="Batch size for per-sample scoring (default: 32).")
     evaluate_parser.add_argument("--run-id", help="Stable run id to write into run_manifest.json and scorecard.json.")
     evaluate_parser.add_argument(
         "--fail-on-sample-error",
@@ -1652,6 +1665,7 @@ def _build_parser(model_run_schema: Any | None = None) -> argparse.ArgumentParse
         help="Print the resolved model-specific configuration and exit without loading the model.",
     )
     run_parser.add_argument("--resume", action="store_true", help="Reuse completed generation, metric results, and suite cells when inputs match.")
+    run_parser.add_argument("--metric-batch-size", type=int, default=32, help="Batch size for per-sample scoring (default: 32).")
     run_parser.add_argument("--no-skip-incompatible", dest="skip_incompatible", action="store_false", default=True)
     run_parser.add_argument("--fail-on-skipped", action="store_true")
     _RETIRED_TASK_FLAG_HELP = (

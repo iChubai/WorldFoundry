@@ -4,7 +4,6 @@ from pathlib import Path
 import pytest
 import yaml
 
-
 REPO_ROOT = Path(__file__).resolve().parents[2]
 TRACKED_TEST_CASE_COUNT_BASELINE = 500
 TRACKED_TEST_CASE_BYTES_BASELINE = 352_822_015
@@ -168,9 +167,9 @@ def test_wan_va_runtime_configs_are_yaml_backed_and_training_code_is_removed() -
         name: yaml.safe_load((runtime_config_root / name).read_text(encoding="utf-8"))
         for name in expected_yaml
     }
-    assert payloads["shared.yaml"]["param_dtype"] == "bfloat16"
+    assert payloads["shared.yaml"]["param_dtype"] == "auto"
     for name in ("demo.yaml", "franka.yaml", "libero.yaml", "robotwin.yaml"):
-        assert payloads[name]["wan22_pretrained_model_name_or_path"] is None
+        assert "wan22_pretrained_model_name_or_path" not in payloads[name]
     assert payloads["libero.yaml"]["action_per_frame"] == 4
     assert payloads["robotwin.yaml"]["action_per_frame"] == 16
     assert payloads["franka.yaml"]["used_action_channel_ids"] == [
@@ -193,19 +192,16 @@ def test_wan_va_runtime_configs_are_yaml_backed_and_training_code_is_removed() -
     ]
     assert payloads["robotwin_i2va.yaml"]["infer_mode"] == "i2va"
 
-    for path in config_root.glob("*.py"):
-        if path.name == "__init__.py":
-            continue
-        text = path.read_text(encoding="utf-8")
-        assert "_load_yaml_config" in text
-        assert "runtime", "configs" in text or path.name != "shared_config.py"
-        assert "WAN_VA_TEST_CASE_ROOT" not in text
-        assert "from easydict import EasyDict" not in text
-        assert "/path/to/pretrained/model" not in text
-        assert "dataset_path" not in text
-        assert "enable_wandb" not in text
+    configuration = REPO_ROOT / "worldfoundry/synthesis/action_generation/wan_va/configuration.py"
+    text = configuration.read_text(encoding="utf-8")
+    assert "_load_yaml_config" in text
+    assert "runtime" in text and "configs" in text
+    assert "WAN_VA_TEST_CASE_ROOT" not in text
+    assert "/path/to/pretrained/model" not in text
+    assert "dataset_path" not in text
+    assert "enable_wandb" not in text
 
-    from worldfoundry.synthesis.action_generation.wan_va.wan_va.configs import VA_CONFIGS
+    from worldfoundry.synthesis.action_generation.wan_va.configuration import VA_CONFIGS, va_shared_cfg
 
     assert set(VA_CONFIGS) == {
         "demo",
@@ -216,7 +212,12 @@ def test_wan_va_runtime_configs_are_yaml_backed_and_training_code_is_removed() -
         "libero_i2av",
         "robotwin",
         "robotwin_i2av",
+        "demo_i2va",
+        "franka_i2va",
+        "libero_i2va",
+        "robotwin_i2va",
     }
+    assert va_shared_cfg.param_dtype_request == payloads["shared.yaml"]["param_dtype"]
     assert VA_CONFIGS["libero"].action_per_frame == payloads["libero.yaml"]["action_per_frame"]
     assert VA_CONFIGS["robotwin"].infer_mode == "server"
     assert VA_CONFIGS["robotwin"].inverse_used_action_channel_ids[29] == 15
@@ -238,7 +239,7 @@ def test_wan_va_server_requires_explicit_checkpoint_dir() -> None:
 def test_lingbot_world_runtime_config_is_yaml_backed() -> None:
     runtime_config_root = REPO_ROOT / "worldfoundry/data/models/runtime/configs/lingbot_world"
     test_case_root = REPO_ROOT / "worldfoundry/data/test_cases/lingbot_world"
-    config_root = REPO_ROOT / "worldfoundry/synthesis/visual_generation/lingbot/lingbot_world_runtime/configs"
+    config_root = REPO_ROOT / "worldfoundry/synthesis/visual_generation/lingbot_world/lingbot_world_runtime/configs"
     expected_yaml = {
         "shared.yaml",
         "wan_i2v_A14B.yaml",
@@ -264,13 +265,13 @@ def test_lingbot_world_runtime_config_is_yaml_backed() -> None:
     for path in config_root.glob("*.py"):
         text = path.read_text(encoding="utf-8")
         assert "_load_yaml_config" in text
-        assert "runtime", "configs" in text or path.name != "shared_config.py"
+        if path.name == "shared_config.py":
+            assert "runtime" in text and "configs" in text
         assert "LINGBOT_WORLD_TEST_CASE_ROOT" not in text
-        assert "from easydict import EasyDict" not in text
         assert "lingbot_world_fast" not in text
         assert "sample_steps = 70" not in text
 
-    from worldfoundry.synthesis.visual_generation.lingbot.lingbot_world_runtime.configs import (
+    from worldfoundry.synthesis.visual_generation.lingbot_world.lingbot_world_runtime.configs import (
         SIZE_CONFIGS,
         SUPPORTED_SIZES,
         WAN_CONFIGS,

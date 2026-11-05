@@ -15,6 +15,7 @@ from worldfoundry.base_models.diffusion_model.models.denoisers.hy_nomas import (
     HyNomasDenoiser,
     convert_hy_nomas_checkpoint,
 )
+from worldfoundry.base_models.diffusion_model.models.encoders.hy_nomas import action_windows
 from worldfoundry.base_models.diffusion_model.models.initializers.hy_nomas import HyNomasLatentInitializer
 from worldfoundry.base_models.diffusion_model.models.networks.hy_nomas import HyNomasTransformer3DModel
 from worldfoundry.base_models.diffusion_model.recipes.registry import default_native_diffusion_registry
@@ -23,7 +24,7 @@ from worldfoundry.base_models.diffusion_model.runners.segmented import Segmented
 from worldfoundry.base_models.diffusion_model.schedulers.wan import WanFlowMatchEulerScheduler
 from worldfoundry.core.attention.cache.kv_quantization import QuantizedKVStore
 from worldfoundry.core.nn import DiTModulation, RMSNorm, TransformerMLP
-from worldfoundry.operators.hy_nomas_operator import action_windows, realtime_camera
+from worldfoundry.operators.hy_nomas_operator import realtime_camera
 
 DIT_CONFIG: dict[str, Any] = dict(
     num_layers=1,

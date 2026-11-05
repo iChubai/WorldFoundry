@@ -137,12 +137,12 @@ class SegmentedAutoregressiveRunner(NativeDiffusionRunner):
                 camera = torch.cat((camera, camera[:, -1:].expand(-1, padding, -1, -1)), dim=1)
                 cameras = list(camera.split([length * 4 for length in lengths], dim=1))
             schedule = self.components.scheduler.schedule(request.sampling, device=self.device, dtype=self.dtype)
+            from ..models.encoders.hy_nomas import action_windows
+
             generated = []
             for index, (latents, text, camera) in enumerate(zip(chunks, segments, cameras)):
                 inputs = dict(text)
                 inputs.update(frame_offset=session.frame_offset, camera_extrinsics=camera)
-                from worldfoundry.operators.hy_nomas_operator import action_windows
-
                 prompts = cast(list[str], request_options.get("segments") or list(request.prompts))
                 windows = action_windows(prompts[index], lengths[index], float(request_options.get("fps", 24)))
                 inputs["action_frame_windows"] = windows

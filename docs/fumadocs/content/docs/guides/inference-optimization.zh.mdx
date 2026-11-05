@@ -234,6 +234,10 @@ offload 或分布式执行。
   { name: "vae_parallel", hintLabel: "怎么开", hint: "vae_parallel=True 或显式 degree", description: "Wan VAE tile 按 rank 分片，再 typed all-gather。和 SP/CFG 一起用时，degree 必须等于完整 world size。需要 torchrun WORLD_SIZE>1。", reads: [{ label: "适用范围", value: "官方 Wan VAE，不是 TAEW preview" }] }
 ]} />
 
+原生管线入口中的 `cfg_parallel=True` 使用两个 rank；`False`、`0` 和 `1`
+关闭 CFG 并行。`cfg_parallel_degree` 是其别名；两者同时提供时，归一化后的
+并行度必须一致。
+
 ### Wan VAE 解码
 
 <KvCatalog heading="VAE" vars rows={[
@@ -242,6 +246,15 @@ offload 或分布式执行。
   { name: "vae_temporal_chunk_size", hintLabel: "怎么开", hint: "vae_temporal_chunk_size=4", description: "因果时间 streaming 解码。chunk 之间保留 convolution cache。整段能装进一个 chunk 就不算 streaming。", reads: [{ label: "适用范围", value: "官方 Wan VAE" }] },
   { name: "vae_channels_last_3d", hintLabel: "怎么开", hint: "vae_channels_last_3d=True", description: "把 Conv3d 权重量成 channels-last。VAE 没有 Conv3d 会失败。", reads: [{ label: "适用范围", value: "原生 Wan VAE" }] }
 ]} />
+
+Wan 单 latent 流式解码器在 policy 和 options 相同时跨请求复用编译 wrapper，
+而卷积历史由各请求独立持有。若 chunk 在推进部分历史后失败，只清空该请求的历史，
+并抛出原始异常。恢复时需要从 rollout 开头重新解码，而不是只重试失败的 chunk。
+
+流式回执区分 `compile_requested` 和 `compile_effective`。
+`compiled_decode_calls` 统计成功返回的 chunk 中经所选编译 wrapper 执行的 latent
+步数，不代表 kernel 派发次数或实测加速。`StreamingWanDecoder` 的计数随请求重置；
+原生 Wan 解码组件的成功返回计数则跨请求累计。
 
 HunyuanVideo 和 Cosmos Predict2 只在各自管线上暴露 `vae_tiling`（Cosmos 还有 tile size/stride）。
 
@@ -286,6 +299,12 @@ STA / VSA / VMoBA 的 symbol 来自仓内 `thirdparty/fastvideo-kernel`（或已
   { name: "int4", hintLabel: "怎么开", hint: "quantization=\"int4\"", description: "打包 / groupwise 存储，再反量化 + dense。不是声称的 INT4 GEMM 加速。", reads: [{ label: "会拒绝", value: "block 或 disk offload" }] },
   { name: "gguf", hintLabel: "怎么开", hint: "quantization=\"gguf\" 或 .gguf 文件", description: "真实 GGUF tensor loader 与压缩存储。当前 runtime 没有合格的 GGUF 低比特 GEMM。", reads: [{ label: "适用范围", value: "安装了可选 gguf 包时的原生 loader" }] }
 ]} />
+
+原生管线加载时，`quantization` 或 `quantization_mode` 可以搭配扁平参数
+`quantization_exclude`、`quantization_compute_dtype`、`fp8_min_features`、
+`fp8_scaling` / `scaling`、`keep_dense_fallback` 和 `use_fast_accum`。
+显式非 `None` 值覆盖对应的嵌套量化配置，且不修改调用方配置；同时提供时，
+`fp8_scaling` 优先于 `scaling`。
 
 ### 仅 preview 解码
 

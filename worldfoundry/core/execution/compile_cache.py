@@ -38,7 +38,7 @@ import tempfile
 import threading
 import warnings
 from collections.abc import Mapping, Sequence
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from pathlib import Path
 from typing import Any, MutableMapping
 
@@ -124,6 +124,15 @@ def _freeze_compile_option(value: Any) -> object:
     return ("value", value)
 
 
+def _normalize_compile_policy(policy: CompilePolicy, options: Mapping[str, Any] | None) -> CompilePolicy:
+    """Allow options with the default mode, but reject conflicting explicit modes."""
+    if not options or policy.mode is None:
+        return policy
+    if policy.mode == "default":
+        return replace(policy, mode=None)
+    raise ValueError("Non-default compile mode and compile options are mutually exclusive")
+
+
 def _compile_variant_key(
     policy: CompilePolicy,
     options: Mapping[str, Any] | None,
@@ -144,12 +153,42 @@ def _callable_variant_owner(function: Any) -> tuple[Any, object | None]:
     owner = getattr(function, "__self__", None)
     implementation = getattr(function, "__func__", None)
     if owner is not None and implementation is not None:
-        return owner, (
-            "bound_method",
-            getattr(implementation, "__module__", ""),
-            getattr(implementation, "__qualname__", repr(implementation)),
-        )
+        return owner, ("bound_method", implementation)
     return function, None
+
+
+def _configure_recompile_limits() -> None:
+    """Apply explicit process-wide Dynamo limits without changing torch defaults."""
+    limits: list[tuple[str, str, int]] = []
+    for name, legacy_name in (
+        ("recompile_limit", "cache_size_limit"),
+        ("accumulated_recompile_limit", "accumulated_cache_size_limit"),
+    ):
+        env_name = f"WORLDFOUNDRY_COMPILE_{name.upper()}"
+        raw = os.environ.get(env_name)
+        if raw is None:
+            continue
+        try:
+            value = int(raw)
+        except ValueError:
+            raise ValueError(f"{env_name} must be a positive integer, got {raw!r}") from None
+        if value <= 0:
+            raise ValueError(f"{env_name} must be a positive integer, got {raw!r}")
+        limits.append((name, legacy_name, value))
+    if not limits:
+        return
+
+    config = importlib.import_module("torch._dynamo.config")
+    assignments: list[tuple[str, int]] = []
+    for name, legacy_name, value in limits:
+        # PyTorch 2.5 uses cache_size_limit; newer releases use recompile_limit.
+        attribute = name if hasattr(config, name) else legacy_name
+        if not hasattr(config, attribute):
+            raise RuntimeError(f"This PyTorch does not support the requested Dynamo {name}")
+        assignments.append((attribute, value))
+    # Validate both settings before changing either process-global limit.
+    for attribute, value in assignments:
+        setattr(config, attribute, value)
 
 
 def _compile_target(
@@ -377,25 +416,33 @@ def compile_module_cached(
 
     Compiler options participate in the wrapper identity.  This prevents two
     callers that request different Inductor settings from accidentally sharing
-    the first wrapper attached to a long-lived model instance.
+    the first wrapper attached to a long-lived model instance. Non-empty options
+    replace the default mode; combining them with a non-default mode raises.
+
+    ``WORLDFOUNDRY_COMPILE_RECOMPILE_LIMIT`` and
+    ``WORLDFOUNDRY_COMPILE_ACCUMULATED_RECOMPILE_LIMIT`` optionally set positive
+    process-wide Dynamo limits. Unset values leave torch settings unchanged;
+    invalid explicit values raise even when ``strict`` is false.
     """
 
     selected = CompilePolicy() if policy is None else policy
     if not selected.enabled:
         return module
-    if hasattr(module, "_orig_mod"):
-        return module
+    selected = _normalize_compile_policy(selected, options)
+    module = getattr(module, "_orig_mod", module)
+    # Explicit configuration errors must not be reported as eager fallback.
+    _configure_recompile_limits()
 
     try:
         configure_persistent_compile_cache(namespace=namespace)
         torch = importlib.import_module("torch")
+        compile_fn = getattr(torch, "compile", None)
+        if not callable(compile_fn):
+            raise RuntimeError("torch.compile is unavailable")
     except Exception as exc:
         if strict:
             raise
         _warn_compile_fallback("module", module, exc)
-        return module
-    compile_fn = getattr(torch, "compile", None)
-    if not callable(compile_fn):
         return module
 
     key = _compile_variant_key(selected, options)
@@ -434,21 +481,28 @@ def compile_callable_cached(
     options: Mapping[str, Any] | None = None,
     strict: bool = False,
 ) -> Any:
-    """Compile a callable once without selecting compilation implicitly."""
+    """Compile a callable once without selecting compilation implicitly.
+
+    Uses the same process-wide limits and validation as :func:`compile_module_cached`.
+    """
 
     selected = CompilePolicy() if policy is None else policy
     if not selected.enabled:
         return function
+    selected = _normalize_compile_policy(selected, options)
+    function = getattr(function, "_orig_mod", function)
+    function = getattr(function, "_torchdynamo_orig_callable", function)
+    _configure_recompile_limits()
     try:
         configure_persistent_compile_cache(namespace=namespace)
         torch = importlib.import_module("torch")
+        compile_fn = getattr(torch, "compile", None)
+        if not callable(compile_fn):
+            raise RuntimeError("torch.compile is unavailable")
     except Exception as exc:
         if strict:
             raise
         _warn_compile_fallback("callable", function, exc)
-        return function
-    compile_fn = getattr(torch, "compile", None)
-    if not callable(compile_fn):
         return function
 
     cache_owner, callable_identity = _callable_variant_owner(function)

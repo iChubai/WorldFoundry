@@ -360,6 +360,20 @@ launch win. WorldFoundry defaults to
 `TORCHINDUCTOR_AUTOTUNE_REMOTE_CACHE=0`; opt in to a remote autotune cache only
 when the cluster provides a compatible service.
 
+Dynamo's in-process graph-variant limits are separate from these disk caches.
+The shared module and callable compile helpers accept
+`WORLDFOUNDRY_COMPILE_RECOMPILE_LIMIT` and
+`WORLDFOUNDRY_COMPILE_ACCUMULATED_RECOMPILE_LIMIT` as positive integers.
+Unset variables leave PyTorch's limits unchanged; invalid explicit values raise
+before either limit is changed. The settings apply process-wide, including when
+a compiled wrapper is reused. Set them before worker startup when recompile logs
+show that the workload's shapes exceed the existing limits; larger limits can
+increase compilation time and memory use.
+
+With the shared helpers, non-empty compiler `options` replace the default mode.
+Combining options with an explicit non-default mode is rejected. Wrappers are
+reused only for the same underlying callable, policy, and options.
+
 ## Logging
 
 The CLI flags and environment variables below feed the same opt-in logging

@@ -1,25 +1,23 @@
 import argparse
-import argparse
-import torch
 import os
 from pathlib import Path
-from omegaconf import OmegaConf
-from tqdm import tqdm
-from torchvision import transforms
-from torchvision.io import write_video
-from einops import rearrange
-import torch.distributed as dist
-from torch.utils.data import DataLoader, SequentialSampler
-from torch.utils.data.distributed import DistributedSampler
-import json
 
+import torch
+import torch.distributed as dist
+from einops import rearrange
+from eval_inputs import TextDataset, TextImagePairDataset
+from omegaconf import OmegaConf
 from pipeline import (
     CausalDiffusionInferencePipeline,
     CausalInferencePipeline,
 )
-from eval_inputs import TextDataset, TextImagePairDataset
-from worldfoundry.core.utils.tensors.torch import set_seed_everywhere
+from torch.utils.data import DataLoader, SequentialSampler
+from torch.utils.data.distributed import DistributedSampler
+from torchvision import transforms
+from torchvision.io import write_video
+from tqdm import tqdm
 
+from worldfoundry.core.utils.tensors.torch import set_seed_everywhere
 from worldfoundry.synthesis.visual_generation.forcing.self_forcing_runtime.runtime_utils.memory import (
     DynamicSwapInstaller,
     get_cuda_free_memory_gb,
@@ -32,22 +30,27 @@ parser.add_argument("--default_config_path", type=str, default=None, help="Path 
 parser.add_argument("--checkpoint_path", type=str, help="Path to the checkpoint folder")
 parser.add_argument("--data_path", type=str, help="Path to the dataset")
 parser.add_argument("--output_folder", type=str, help="Output folder")
-parser.add_argument("--num_output_frames", type=int, default=21, help="Number of overlap frames between sliding windows")
+parser.add_argument(
+    "--num_output_frames", type=int, default=21, help="Number of overlap frames between sliding windows"
+)
 parser.add_argument("--use_ema", action="store_true", help="Whether to use EMA parameters")
 parser.add_argument("--seed", type=int, default=0, help="Random seed")
 parser.add_argument("--i2v", action="store_true", help="Whether to perform I2V (or T2V by default)")
-parser.add_argument("--report_timing", action="store_true",
-                    help="Report local latency and throughput for this run. Numbers are hardware-dependent and are not paper-comparable.")
+parser.add_argument(
+    "--report_timing",
+    action="store_true",
+    help="Report local latency and throughput for this run. Numbers are hardware-dependent and are not paper-comparable.",
+)
 args = parser.parse_args()
 
 # Initialize distributed inference
 if "LOCAL_RANK" in os.environ:
-    dist.init_process_group(backend='nccl')
+    dist.init_process_group(backend="nccl")
     local_rank = int(os.environ["LOCAL_RANK"])
     torch.cuda.set_device(local_rank)
     device = torch.device(f"cuda:{local_rank}")
     world_size = dist.get_world_size()
-    
+
 else:
     device = torch.device("cuda")
     local_rank = 0
@@ -55,18 +58,21 @@ else:
 
 set_seed_everywhere(args.seed)
 
-print(f'Free VRAM {get_cuda_free_memory_gb(gpu)} GB')
+print(f"Free VRAM {get_cuda_free_memory_gb(gpu)} GB")
 low_memory = get_cuda_free_memory_gb(gpu) < 40
 
 torch.set_grad_enabled(False)
 
 config = OmegaConf.load(args.config_path)
-default_config_path = args.default_config_path or str(Path(args.config_path).expanduser().resolve().with_name("default_config.yaml"))
+default_config_path = args.default_config_path or str(
+    Path(args.config_path).expanduser().resolve().with_name("default_config.yaml")
+)
 default_config = OmegaConf.load(default_config_path)
 config = OmegaConf.merge(default_config, config)
 
 # Initialize pipeline
-if hasattr(config, 'denoising_step_list'):
+few_step_inference = hasattr(config, "denoising_step_list")
+if few_step_inference:
     # Few-step inference
     pipeline = CausalInferencePipeline(config, device=device)
 else:
@@ -75,7 +81,7 @@ else:
 
 if args.checkpoint_path:
     state_dict = torch.load(args.checkpoint_path, map_location="cpu", weights_only=True)
-    key = 'generator_ema' if args.use_ema else 'generator'
+    key = "generator_ema" if args.use_ema else "generator"
     gen_sd = state_dict[key]
 
     try:
@@ -100,20 +106,20 @@ pipeline.vae.to(device=gpu)
 # Create dataset
 if args.i2v:
     assert not dist.is_initialized(), "I2V does not support distributed inference yet"
-    transform = transforms.Compose([
-        transforms.Resize((480, 832)),
-        transforms.ToTensor(),
-        transforms.Normalize([0.5], [0.5])
-    ])
+    transform = transforms.Compose(
+        [transforms.Resize((480, 832)), transforms.ToTensor(), transforms.Normalize([0.5], [0.5])]
+    )
     dataset = TextImagePairDataset(args.data_path, transform=transform)
 else:
     dataset = TextDataset(prompt_path=args.data_path)
 num_prompts = len(dataset)
 print(f"Number of prompts: {num_prompts}")
 
+if args.report_timing and not few_step_inference:
+    print("[WARN] --report_timing is only supported for few-step inference; timing disabled.")
+
 if args.report_timing and num_prompts < 2:
-    print(f"[WARN] --report_timing requires at least 2 prompts "
-          f"(got {num_prompts}); timing disabled.")
+    print(f"[WARN] --report_timing requires at least 2 prompts (got {num_prompts}); timing disabled.")
     args.report_timing = False
 
 if dist.is_initialized():
@@ -129,21 +135,18 @@ if local_rank == 0:
 if dist.is_initialized():
     dist.barrier()
 
+
 def encode(self, videos: torch.Tensor) -> torch.Tensor:
     device, dtype = videos[0].device, videos[0].dtype
-    scale = [self.mean.to(device=device, dtype=dtype),
-             1.0 / self.std.to(device=device, dtype=dtype)]
-    output = [
-        self.model.encode(u.unsqueeze(0), scale).float().squeeze(0)
-        for u in videos
-    ]
+    scale = [self.mean.to(device=device, dtype=dtype), 1.0 / self.std.to(device=device, dtype=dtype)]
+    output = [self.model.encode(u.unsqueeze(0), scale).float().squeeze(0) for u in videos]
 
     output = torch.stack(output, dim=0)
     return output
 
 
 for i, batch_data in tqdm(enumerate(dataloader), disable=(local_rank != 0)):
-    idx = batch_data['idx'].item()
+    idx = batch_data["idx"].item()
 
     if isinstance(batch_data, dict):
         batch = batch_data
@@ -152,71 +155,64 @@ for i, batch_data in tqdm(enumerate(dataloader), disable=(local_rank != 0)):
 
     all_video = []
     num_generated_frames = 0  # Number of generated (latent) frames
-    
-    
+
     if args.i2v:
         assert config.num_frame_per_block == 1, "Current I2V only supports the frame-wise model."
         # For image-to-video, batch contains image and caption
-        prompt = batch['prompts'][0]  # Get caption from batch
-        output_path = os.path.join(args.output_folder, f'{prompt[:100]}.mp4')
+        prompt = batch["prompts"][0]  # Get caption from batch
+        output_path = os.path.join(args.output_folder, f"{prompt[:100]}.mp4")
         if os.path.exists(output_path):
-            print('Video has been generated. Pass!')
+            print("Video has been generated. Pass!")
             continue
         # Process the image
-        image = batch['image'].squeeze(0).unsqueeze(0).unsqueeze(2).to(device=device, dtype=torch.bfloat16)
+        image = batch["image"].squeeze(0).unsqueeze(0).unsqueeze(2).to(device=device, dtype=torch.bfloat16)
 
         # Encode the input image as the first latent
         initial_latent = pipeline.vae.encode_to_latent(image).to(device=device, dtype=torch.bfloat16)
-        prompts = [prompt] 
-        sampled_noise = torch.randn(
-            [1, args.num_output_frames - 1, 16, 60, 104], device=device, dtype=torch.bfloat16
-        )
+        prompts = [prompt]
+        sampled_noise = torch.randn([1, args.num_output_frames - 1, 16, 60, 104], device=device, dtype=torch.bfloat16)
     else:
         # For text-to-video, batch is just the text prompt
-        prompt = batch['prompts'][0]
-        output_path = os.path.join(args.output_folder, f'{prompt[:100]}.mp4')
+        prompt = batch["prompts"][0]
+        output_path = os.path.join(args.output_folder, f"{prompt[:100]}.mp4")
         if os.path.exists(output_path):
-            print('Video has been generated. Pass!')
+            print("Video has been generated. Pass!")
             continue
-        extended_prompt = batch['extended_prompts'][0] if 'extended_prompts' in batch else None
+        extended_prompt = batch["extended_prompts"][0] if "extended_prompts" in batch else None
         if extended_prompt is not None:
-            prompts = [extended_prompt] 
+            prompts = [extended_prompt]
         else:
-            prompts = [prompt] 
+            prompts = [prompt]
 
         initial_latent = None
-        sampled_noise = torch.randn(
-            [1, args.num_output_frames, 16, 60, 104], device=device, dtype=torch.bfloat16
-        )
+        sampled_noise = torch.randn([1, args.num_output_frames, 16, 60, 104], device=device, dtype=torch.bfloat16)
 
-    sample_report_timing = args.report_timing and i >= 1
+    sample_report_timing = few_step_inference and args.report_timing and i >= 1
+    timing_kwargs = {"report_timing": sample_report_timing} if few_step_inference else {}
     video, latents = pipeline.inference(
         noise=sampled_noise,
         text_prompts=prompts,
         return_latents=True,
         initial_latent=initial_latent,
-        report_timing=sample_report_timing,
+        **timing_kwargs,
     )
     if sample_report_timing:
         latency = pipeline.first_chunk_time
         elapsed = pipeline.last_generation_time
         num_pixel_frames = video.shape[1]
-        fps = num_pixel_frames / elapsed if elapsed > 0 else float('inf')
-        print(f"[Sample {i}] {num_pixel_frames} frames, "
-              f"latency ↓ {latency:.2f}s, FPS ↑ {fps:.2f}")
+        fps = num_pixel_frames / elapsed if elapsed > 0 else float("inf")
+        print(f"[Sample {i}] {num_pixel_frames} frames, latency ↓ {latency:.2f}s, FPS ↑ {fps:.2f}")
         # We do not guarantee that our FPS/latency measurement protocol is identical to that used in the Self Forcing paper.
-    current_video = rearrange(video, 'b t c h w -> b t h w c').cpu()
+    current_video = rearrange(video, "b t c h w -> b t h w c").cpu()
     all_video.append(current_video)
     num_generated_frames += latents.shape[1]
 
     # Final output video
-    clean_latent = latents[0].cpu() 
+    clean_latent = latents[0].cpu()
     video = 255.0 * torch.cat(all_video, dim=1)
 
     # Clear VAE cache
     pipeline.vae.model.clear_cache()
 
-    output_path = os.path.join(args.output_folder, f'{prompt[:100]}.mp4')
+    output_path = os.path.join(args.output_folder, f"{prompt[:100]}.mp4")
     write_video(output_path, video[0], fps=16)
-
-       

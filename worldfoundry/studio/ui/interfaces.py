@@ -292,7 +292,12 @@ def _template_for(entry: CatalogEntry, profile: Any | None) -> tuple[str, str, s
         return "scene-3d", "3D Reconstruction / Viewer", "camera path"
     if entry.category == "Visual Action" or task_family == "visual_action_model":
         return "visual-action", "Visual Action Tokenizer", "latent action stream"
-    if entry.category == "Embodied Action" or task_family in {"vla_policy", "world_action_model", "visuomotor_policy", "action_chunking_policy"}:
+    if entry.category == "Embodied Action" or task_family in {
+        "vla_policy",
+        "world_action_model",
+        "visuomotor_policy",
+        "action_chunking_policy",
+    }:
         return "embodied-policy", "Embodied Policy Console", "robot action stream"
     if "queued-segment-generation" in tags:
         return "interactive-world", "Queued World Segments", "resident segment queue"
@@ -319,7 +324,9 @@ def _input_groups(entry: CatalogEntry, profile: Any | None, template_id: str) ->
     if template_id == "scene-3d":
         return ("Source image / video", "Scene path", "Camera pose", "Intrinsics", "3DGS asset")
     if flags["prompt"] or "prompt" in entry.call_params or entry.default_prompt:
-        groups.append("Instruction / prompt" if "action" in template_id or template_id == "embodied-policy" else "Prompt")
+        groups.append(
+            "Instruction / prompt" if "action" in template_id or template_id == "embodied-policy" else "Prompt"
+        )
     if flags["image"] or {"images", "image", "image_path", "data_path"} & set(entry.call_params):
         groups.append("Observation image" if "action" in template_id or template_id == "embodied-policy" else "Image")
     if flags["video"] or {"video", "videos", "video_path"} & set(entry.call_params):
@@ -374,7 +381,9 @@ def _launch_hints(entry: CatalogEntry, template_id: str, local_repo: LocalRepoEv
     if template_id == "depth-geometry" or entry.runtime_kind in {"pointcloud_nav", "worldfm"}:
         hints.append("Viser native frontend: worldfoundry-studio <model> --frontend points --asset /path/to/scene.ply")
     if template_id == "embodied-policy" or entry.category == "Embodied Action":
-        hints.append("Embodied native frontend: start the simulator, then pass --frontend embodied --simulator-url http://127.0.0.1:<port>")
+        hints.append(
+            "Embodied native frontend: start the simulator, then pass --frontend embodied --simulator-url http://127.0.0.1:<port>"
+        )
     return tuple(hints)
 
 

@@ -1,4 +1,84 @@
 {
+  "hy-nomas-segments-short": {
+    "id": "hy-nomas-segments-short",
+    "model_id": "hy-nomas",
+    "seed": 42,
+    "deterministic": true,
+    "target": "worldfoundry.pipelines.hy_nomas.pipeline_hy_nomas:HyNomasPipeline",
+    "load": {
+      "model_path": "${WORLDFOUNDRY_REGRESSION_CHECKPOINT_ROOT}/Hy-Nomas",
+      "text_encoder_path": "${WORLDFOUNDRY_REGRESSION_CHECKPOINT_ROOT}/Qwen2.5-VL-7B-Instruct",
+      "device": "cuda",
+      "attention_backend": "torch",
+      "offload_mode": "none"
+    },
+    "call": {
+      "prompt": ["A camera explores a forest.", "The path opens into a clearing."],
+      "segment_latent_lengths": [1, 1],
+      "height": 64,
+      "width": 64,
+      "num_frames": 8,
+      "num_inference_steps": 8,
+      "guidance_scale": 1.0,
+      "seed": 42,
+      "fps": 24,
+      "output_path": "${OUTPUT_DIR}/video.mp4",
+      "return_dict": true
+    },
+    "assets": {
+      "checkpoint": "${WORLDFOUNDRY_REGRESSION_CHECKPOINT_ROOT}/Hy-Nomas",
+      "text": "${WORLDFOUNDRY_REGRESSION_CHECKPOINT_ROOT}/Qwen2.5-VL-7B-Instruct"
+    },
+    "required_outputs": ["artifact.video.mp4.frames", "artifact.video.mp4.fps"],
+    "output_arrays": ["video.mp4"],
+    "export_artifacts": ["video.mp4"],
+    "array_contracts": {
+      "artifact.video.mp4.frames": {"shape": [8, 64, 64, 3], "dtype": "uint8"},
+      "artifact.video.mp4.fps": {"values": [24, 1]}
+    },
+    "scope": "Distilled DiT, the released PixelUMM decoder, the declared Qwen2.5-VL-7B text tower, and two autoregressive segments. Fixed-seed RGB and FPS are compared against an accepted reference; this short case is not a quality or throughput benchmark."
+  },
+  "hy-nomas-low-memory-short": {
+    "id": "hy-nomas-low-memory-short",
+    "model_id": "hy-nomas-low-memory",
+    "seed": 42,
+    "deterministic": true,
+    "target": "worldfoundry.pipelines.hy_nomas.pipeline_hy_nomas:HyNomasPipeline",
+    "load": {
+      "model_path": "${WORLDFOUNDRY_REGRESSION_CHECKPOINT_ROOT}/Hy-Nomas",
+      "text_encoder_path": "${WORLDFOUNDRY_REGRESSION_CHECKPOINT_ROOT}/Qwen2.5-VL-7B-Instruct",
+      "low_memory": true,
+      "device": "cuda",
+      "attention_backend": "torch",
+      "offload_mode": "none"
+    },
+    "call": {
+      "prompt": ["A camera explores a forest.", "The path opens into a clearing."],
+      "segment_latent_lengths": [1, 1],
+      "kv_cache_quantization": "int8",
+      "height": 64,
+      "width": 64,
+      "num_frames": 8,
+      "num_inference_steps": 8,
+      "guidance_scale": 1.0,
+      "seed": 42,
+      "fps": 24,
+      "output_path": "${OUTPUT_DIR}/video.mp4",
+      "return_dict": true
+    },
+    "assets": {
+      "checkpoint": "${WORLDFOUNDRY_REGRESSION_CHECKPOINT_ROOT}/Hy-Nomas",
+      "text": "${WORLDFOUNDRY_REGRESSION_CHECKPOINT_ROOT}/Qwen2.5-VL-7B-Instruct"
+    },
+    "required_outputs": ["artifact.video.mp4.frames", "artifact.video.mp4.fps"],
+    "output_arrays": ["video.mp4"],
+    "export_artifacts": ["video.mp4"],
+    "array_contracts": {
+      "artifact.video.mp4.frames": {"shape": [8, 64, 64, 3], "dtype": "uint8"},
+      "artifact.video.mp4.fps": {"values": [24, 1]}
+    },
+    "scope": "Native runtime INT8 DiT, INT8 KV, FP8 PixelUMM and phase-wise offload, using the floating-point checkpoints. Fixed-seed exported RGB is compared with this variant's accepted reference; compressed checkpoint export ABI and performance are outside this case."
+  },
   "cut3r": {
     "id": "cut3r",
     "seed": 42,

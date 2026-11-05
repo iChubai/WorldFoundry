@@ -158,6 +158,11 @@
       "worldfoundry/pipelines/cosmos/pipeline_cosmos_transfer2p5.py",
       "worldfoundry/base_models/diffusion_model/**"
     ],
+    "hy-nomas": [
+      "worldfoundry/pipelines/hy_nomas/**",
+      "worldfoundry/operators/hy_nomas_operator.py",
+      "worldfoundry/base_models/diffusion_model/**"
+    ],
     "gamma-world": [
       "worldfoundry/pipelines/gamma_world/**",
       "worldfoundry/base_models/diffusion_model/**"
@@ -305,6 +310,8 @@
     ]
   },
   "cases": {
+    "hy-nomas-segments-short": ["hy-nomas"],
+    "hy-nomas-low-memory-short": ["hy-nomas"],
     "inspatio-world-1p5-image-short": [
       "inspatio-world-1p5"
     ],

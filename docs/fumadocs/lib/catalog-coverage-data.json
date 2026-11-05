@@ -1,13 +1,13 @@
 {
-  "modelsTotal": 275,
-  "modelsListed": 265,
+  "modelsTotal": 277,
+  "modelsListed": 267,
   "benchmarksTotal": 75,
   "modelFamilies": [
     {
       "id": "video",
       "label": "Video",
       "blurb": "Text-, image-, and video-conditioned generation, editing, and audio-video systems.",
-      "count": 62,
+      "count": 63,
       "entries": [
         {
           "id": "allegro",
@@ -335,6 +335,14 @@
           ]
         },
         {
+          "id": "pika-h3-flex",
+          "name": "Pika H 3 Flex",
+          "status": "integrated",
+          "aliases": [
+            "pika-h3-flex"
+          ]
+        },
+        {
           "id": "pusa-vidgen",
           "name": "Pusa VidGen",
           "status": "integrated",
@@ -517,7 +525,7 @@
       "id": "world_models",
       "label": "World models",
       "blurb": "Interactive worlds, camera/action conditioning, navigation, and simulator-shaped systems.",
-      "count": 106,
+      "count": 107,
       "entries": [
         {
           "id": "abot-world-0-5b-lf",
@@ -826,6 +834,14 @@
           "status": "integrated",
           "aliases": [
             "hunyuanworld-voyager"
+          ]
+        },
+        {
+          "id": "hy-nomas",
+          "name": "Hy-Nomas",
+          "status": "integrated",
+          "aliases": [
+            "hy-nomas"
           ]
         },
         {

@@ -14,6 +14,7 @@ import torch
 from worldfoundry.base_models.diffusion_model import NativeDiffusionPipeline
 from worldfoundry.base_models.diffusion_model.contracts import DiffusionOutput, DiffusionRequest, SamplingConfig
 from worldfoundry.base_models.diffusion_model.optimizations import (
+    QuantizationPolicy,
     RuntimePolicy,
     parse_attention_backend,
     parse_offload_policy,
@@ -252,6 +253,46 @@ class NativeVisualDiffusionPipeline(PipelineABC):
         return resolved
 
     @classmethod
+    def _quantization_policy(cls, options: Mapping[str, Any]) -> QuantizationPolicy:
+        """Apply non-None flat overrides; fp8_scaling takes precedence over scaling."""
+
+        value = options.get("quantization", options.get("quantization_mode"))
+        if isinstance(value, QuantizationPolicy):
+            resolved: dict[str, Any] = {
+                "mode": value.mode.value,
+                "compute_dtype": value.compute_dtype,
+                "exclude": value.exclude,
+                "options": dict(value.options),
+            }
+        elif isinstance(value, Mapping):
+            resolved = dict(value)
+        else:
+            resolved = {"mode": value}
+        for public_name, policy_name in (
+            ("quantization_exclude", "exclude"),
+            ("quantization_compute_dtype", "compute_dtype"),
+            ("fp8_min_features", "min_features"),
+            ("scaling", "scaling"),
+            ("fp8_scaling", "scaling"),
+            ("keep_dense_fallback", "keep_dense_fallback"),
+            ("use_fast_accum", "use_fast_accum"),
+        ):
+            if options.get(public_name) is not None:
+                resolved[policy_name] = options[public_name]
+        return parse_quantization_policy(resolved, owner=cls.OWNER)
+
+    @staticmethod
+    def _cfg_parallel_degree(value: bool | int | str | None) -> int:
+        """Resolve the native two-branch CFG mesh, with false/zero disabling it."""
+
+        if value is True:
+            return 2
+        degree = int(value or 1)
+        if degree not in {1, 2}:
+            raise ValueError("cfg_parallel must be 1 or 2")
+        return degree
+
+    @classmethod
     def from_pretrained(
         cls,
         model_path: str | Mapping[str, Any] | None = None,
@@ -299,10 +340,18 @@ class NativeVisualDiffusionPipeline(PipelineABC):
             "sequence_parallel",
             runtime_policy_options.get("sp_degree", False),
         )
-        cfg_parallel = runtime_policy_options.get(
-            "cfg_parallel",
-            runtime_policy_options.get("cfg_parallel_degree", False),
+        cfg_degree = cls._cfg_parallel_degree(
+            runtime_policy_options.get(
+                "cfg_parallel",
+                runtime_policy_options.get("cfg_parallel_degree", False),
+            )
         )
+        if "cfg_parallel" in runtime_policy_options and "cfg_parallel_degree" in runtime_policy_options:
+            if cls._cfg_parallel_degree(runtime_policy_options["cfg_parallel_degree"]) != cfg_degree:
+                raise ValueError("cfg_parallel and cfg_parallel_degree must match")
+        if "cfg_parallel" in runtime_policy_options or "cfg_parallel_degree" in runtime_policy_options:
+            runtime_policy_options["cfg_parallel"] = cfg_degree
+            runtime_policy_options.pop("cfg_parallel_degree", None)
         raw_vae_parallel = runtime_policy_options.get(
             "vae_parallel",
             runtime_policy_options.get("vae_parallel_degree", False),
@@ -322,15 +371,11 @@ class NativeVisualDiffusionPipeline(PipelineABC):
         ):
             raise ValueError("vae_parallel and vae_parallel_degree must match")
 
-        if sequence_parallel or cfg_parallel or vae_parallel_degree > 1:
+        if sequence_parallel or cfg_degree > 1 or vae_parallel_degree > 1:
             degree = int(sequence_parallel or 1)
-            cfg_degree = int(cfg_parallel or 1)
             if "sequence_parallel" in runtime_policy_options and "sp_degree" in runtime_policy_options:
                 if int(runtime_policy_options["sp_degree"]) != degree:
                     raise ValueError("sequence_parallel and sp_degree must match")
-            if "cfg_parallel" in runtime_policy_options and "cfg_parallel_degree" in runtime_policy_options:
-                if int(runtime_policy_options["cfg_parallel_degree"]) != cfg_degree:
-                    raise ValueError("cfg_parallel and cfg_parallel_degree must match")
             if torch.device(device).type != "cuda":
                 raise ValueError("sequence/CFG/VAE parallelism requires a CUDA pipeline device")
             from worldfoundry.core.distributed.sequence_parallel.runtime import (
@@ -351,10 +396,7 @@ class NativeVisualDiffusionPipeline(PipelineABC):
             device = str(ensure_parallel_runtime(degree, cfg_degree))
             if sequence_parallel:
                 runtime_policy_options["sequence_parallel"] = degree
-            if cfg_parallel:
-                runtime_policy_options["cfg_parallel"] = cfg_degree
             runtime_policy_options.pop("sp_degree", None)
-            runtime_policy_options.pop("cfg_parallel_degree", None)
             if vae_parallel_degree > 1:
                 runtime_policy_options["vae_parallel"] = vae_parallel_degree
             runtime_policy_options.pop("vae_parallel_degree", None)
@@ -378,10 +420,7 @@ class NativeVisualDiffusionPipeline(PipelineABC):
                     allow_disk=False,
                     owner=cls.OWNER,
                 ),
-                quantization=parse_quantization_policy(
-                    options.get("quantization", options.get("quantization_mode")),
-                    owner=cls.OWNER,
-                ),
+                quantization=cls._quantization_policy(options),
                 compile=bool(options.get("compile", options.get("torch_compile", False))),
                 options=runtime_policy_options,
             ),

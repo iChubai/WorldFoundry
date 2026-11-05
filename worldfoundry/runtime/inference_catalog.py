@@ -42,6 +42,7 @@ from worldfoundry.runtime.dreamdojo_inference_spec import DREAMDOJO_STUDENT_INFE
 from worldfoundry.runtime.hyperflow_inference_spec import HYPERFLOW_INFERENCE_SPEC
 from worldfoundry.runtime.interactive_inference_catalog import INTERACTIVE_INFERENCE_SPECS
 from worldfoundry.runtime.matrix_game4_inference_spec import MATRIX_GAME4_EGYPT_INFERENCE_SPEC
+from worldfoundry.runtime.pika_h3_flex_inference_spec import PIKA_H3_FLEX_INFERENCE_SPEC
 from worldfoundry.runtime.rt1_inference_spec import RT1_INFERENCE_SPEC
 from worldfoundry.runtime.uniworld_view_inference_spec import UNIWORLD_VIEW_INFERENCE_SPEC
 from worldfoundry.runtime.wonderworld_inference_spec import WONDERWORLD_INFERENCE_SPEC
@@ -247,7 +248,7 @@ def _field(
     target: str = "call_kwargs",
     required: bool = False,
     default: Any = None,
-    choices: Sequence[str] = (),
+    choices: Sequence[Any] = (),
     description: str = "",
 ) -> InferenceFieldSpec:
     return InferenceFieldSpec(
@@ -257,7 +258,7 @@ def _field(
         target=target,
         required=required,
         default=default,
-        choices=tuple(choices),
+        choices=tuple(str(choice) for choice in choices),
         description=description,
     )
 
@@ -5279,6 +5280,7 @@ LTX23_V2V_INFERENCE_SPEC = _ltx_ic_lora_v2v_inference_spec(
 
 _MODEL_INFERENCE_SPECS: dict[str, ModelInferenceSpec] = {
     "hyperflow": HYPERFLOW_INFERENCE_SPEC,
+    "pika-h3-flex": PIKA_H3_FLEX_INFERENCE_SPEC,
     RT1_INFERENCE_SPEC.model_family_id: RT1_INFERENCE_SPEC,
     DREAMDOJO_STUDENT_INFERENCE_SPEC.model_family_id: DREAMDOJO_STUDENT_INFERENCE_SPEC,
     MATRIX_GAME4_EGYPT_INFERENCE_SPEC.model_family_id: MATRIX_GAME4_EGYPT_INFERENCE_SPEC,

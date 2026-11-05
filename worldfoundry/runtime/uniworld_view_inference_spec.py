@@ -48,14 +48,19 @@ _OUTPUT = (InferenceArtifactSpec("video", "video", required=True, preview=True),
 def _task(task_id: str, label: str, mode: str) -> InferenceTaskProfile:
     fields = (
         _field(
-            "input_path", "Source Video" if mode == "dynamic_view" else "Source Image", "path",
-            target="input_path", required=True,
+            "input_path",
+            "Source Video" if mode == "dynamic_view" else "Source Image",
+            "path",
+            target="input_path",
+            required=True,
             default=f"{_SOURCE}/test/videos/2.mp4" if mode == "dynamic_view" else f"{_SOURCE}/test/images/fruit.jpg",
         ),
         _field("mode", "View Mode", default=mode),
         *_COMMON,
     )
-    defaults = {item.field_id: item.default for item in fields if item.target == "call_kwargs" and item.default is not None}
+    defaults = {
+        item.field_id: item.default for item in fields if item.target == "call_kwargs" and item.default is not None
+    }
     return InferenceTaskProfile(
         task_id=task_id,
         label=label,
@@ -79,17 +84,26 @@ UNIWORLD_VIEW_INFERENCE_SPEC = ModelInferenceSpec(
             status="requires_local_source_and_checkpoints",
             checkpoints=(
                 InferenceCheckpointRef("primary", "${WORLDFOUNDRY_CKPT_DIR}/Drexubery--UniView"),
-                InferenceCheckpointRef("wan_vace_diffusers", "${WORLDFOUNDRY_CKPT_DIR}/Wan-AI--Wan2.1-VACE-14B-diffusers"),
+                InferenceCheckpointRef(
+                    "wan_vace_diffusers", "${WORLDFOUNDRY_CKPT_DIR}/Wan-AI--Wan2.1-VACE-14B-diffusers"
+                ),
                 InferenceCheckpointRef("blip2", "${WORLDFOUNDRY_CKPT_DIR}/Salesforce--blip2-opt-2.7b"),
                 InferenceCheckpointRef("moge", "${WORLDFOUNDRY_CKPT_DIR}/Ruicheng--moge-2-vitl-normal/model.pt"),
-                InferenceCheckpointRef("sam2", "${WORLDFOUNDRY_CKPT_DIR}/facebook--sam2-hiera-large/sam2_hiera_large.pt"),
+                InferenceCheckpointRef(
+                    "sam2", "${WORLDFOUNDRY_CKPT_DIR}/facebook--sam2-hiera-large/sam2_hiera_large.pt"
+                ),
                 InferenceCheckpointRef("tracer", "${WORLDFOUNDRY_CKPT_DIR}/Carve--tracer_b7/tracer_b7.pth"),
-                InferenceCheckpointRef("causvid_lora", "${WORLDFOUNDRY_CKPT_DIR}/Kijai--WanVideo_comfy/Wan21_CausVid_14B_T2V_lora_rank32_v2.safetensors"),
+                InferenceCheckpointRef(
+                    "causvid_lora",
+                    "${WORLDFOUNDRY_CKPT_DIR}/Kijai--WanVideo_comfy/Wan21_CausVid_14B_T2V_lora_rank32_v2.safetensors",
+                ),
                 InferenceCheckpointRef("stream3r", "${WORLDFOUNDRY_CKPT_DIR}/yslan--STream3R", required=False),
             ),
             load_kwargs={"repo_root": _SOURCE},
             aliases=("default",),
-            notes=("Official source, STream3R, an isolated Python environment, and multiple local weight bundles are required.",),
+            notes=(
+                "Official source, STream3R, an isolated Python environment, and multiple local weight bundles are required.",
+            ),
         ),
     ),
     tasks=(

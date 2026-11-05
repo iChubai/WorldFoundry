@@ -80,9 +80,7 @@ def studio_workspace_root(env: EnvMapping | None = None) -> Path:
 
     environ = os.environ if env is None else env
     explicit = first_env_path(
-        (
-            "WORLDFOUNDRY_STUDIO_WORKSPACE_DIR",
-        ),
+        ("WORLDFOUNDRY_STUDIO_WORKSPACE_DIR",),
         environ,
     )
     if explicit is not None:
@@ -106,9 +104,7 @@ def studio_model_roots(env: EnvMapping | None = None, *, repo_root: Path | None 
 
     environ = os.environ if env is None else env
     explicit_root = first_env_path(
-        (
-            "WORLDFOUNDRY_STUDIO_MODEL_ROOT",
-        ),
+        ("WORLDFOUNDRY_STUDIO_MODEL_ROOT",),
         environ,
     )
     model_dir = resolve_model_dir(environ)
@@ -155,9 +151,7 @@ def studio_hfd_cache_roots(
     hf_cache_dir = resolve_hf_cache_dir(environ)
     project_cache_roots = [root / "cache" / "hfd" for root in _mirror_project_roots(project_roots)]
     project_ckpt_roots = [
-        root.parent / directory
-        for root in _mirror_project_roots(project_roots)
-        for directory in ("ckpt", "ckpts")
+        root.parent / directory for root in _mirror_project_roots(project_roots) for directory in ("ckpt", "ckpts")
     ]
     return _dedupe_paths(
         (

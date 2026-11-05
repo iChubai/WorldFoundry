@@ -49,7 +49,6 @@ class StudioVisualizationEvent:
     timestamp: float | None = None
 
 
-
 @dataclass(frozen=True)
 class StudioModelVisualizationProfile:
     """Model-agnostic visualization decision for a catalog entry.
@@ -187,7 +186,9 @@ class StudioVisualizationBackend:
     def render(self, scene: VisualizationScene, request: RenderRequest) -> RenderResult:
         plan = self.can_render(scene)
         if not plan.supported:
-            raise ValueError(f"Visualization backend `{self.mode}` cannot render scene `{scene.scene_id}`: {plan.reason or plan.unsupported_layers}")
+            raise ValueError(
+                f"Visualization backend `{self.mode}` cannot render scene `{scene.scene_id}`: {plan.reason or plan.unsupported_layers}"
+            )
         return RenderResult(backend_id=self.mode, metadata={"scene_id": scene.scene_id})
 
     def shutdown(self) -> None:
@@ -326,13 +327,30 @@ def _visualization_mode_for_artifact(artifact: StudioVisualizationArtifact | Non
     if suffix == ".ply":
         return SPARK_VISUALIZATION if _is_gaussian_splat_ply(path) else VISER_VISUALIZATION
     if kind in {"image", "video", "audio", "optical_flow"} or suffix in {
-        ".png", ".jpg", ".jpeg", ".webp", ".gif", ".bmp",
-        ".mp4", ".mov", ".webm", ".mkv", ".avi",
-        ".wav", ".mp3", ".flac", ".ogg",
+        ".png",
+        ".jpg",
+        ".jpeg",
+        ".webp",
+        ".gif",
+        ".bmp",
+        ".mp4",
+        ".mov",
+        ".webm",
+        ".mkv",
+        ".avi",
+        ".wav",
+        ".mp3",
+        ".flac",
+        ".ogg",
     }:
         return MEDIA_VISUALIZATION
     if kind in {"point_cloud", "mesh", "camera", "trajectory", "depth"} or suffix in {
-        ".pcd", ".xyz", ".npz", ".glb", ".gltf", ".obj",
+        ".pcd",
+        ".xyz",
+        ".npz",
+        ".glb",
+        ".gltf",
+        ".obj",
     }:
         return VISER_VISUALIZATION
     return ""

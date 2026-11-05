@@ -48,11 +48,7 @@ class CapabilitySet:
     def to_dict(self) -> dict[str, Any]:
         return {
             "dtypes": list(self.dtypes),
-            "compute_capability": (
-                list(self.compute_capability)
-                if self.compute_capability is not None
-                else None
-            ),
+            "compute_capability": (list(self.compute_capability) if self.compute_capability is not None else None),
             "supports_compile": self.supports_compile,
             "supports_graphs": self.supports_graphs,
             "supports_async_copy": self.supports_async_copy,

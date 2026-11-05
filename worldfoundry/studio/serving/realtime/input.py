@@ -2,9 +2,8 @@
 
 from __future__ import annotations
 
-import time
 from collections import deque
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 
 SUPPORTED_CONTROL_KEYS = frozenset({"w", "a", "s", "d", "i", "j", "k", "l"})
 KEY_ALIASES = {
@@ -75,56 +74,94 @@ class RealtimeControlResampler:
         self.next_chunk_start = float(start_time)
         self._events: deque[tuple[float, str, str]] = deque()
         self._state = RealtimeControlState()
+        self._live_state = RealtimeControlState()
+        self._event_delay = 0.0
+        self._minimum_state_end = float(start_time)
 
     def on_edge(self, *, arrival_time: float, event: str, key: str) -> bool:
         normalized = normalize_control_key(key)
         if normalized not in SUPPORTED_CONTROL_KEYS or event not in {"keydown", "keyup"}:
             return False
-        self._events.append((float(arrival_time), event, normalized))
+        self._live_state.apply(event, normalized)
+        self._events.append((float(arrival_time) + self._event_delay, event, normalized))
         return True
 
+    def _delay_events(self, delay: float) -> None:
+        self._events = deque((stamp + delay, event, key) for stamp, event, key in self._events)
+        self._event_delay += delay
+
     def sample_chunk(self, num_frames: int, *, wall_time: float) -> list[ControlSegment]:
+        """Consume controls, retaining each new state for a native sampling interval.
+
+        Late releases of consumed holds apply at the chunk boundary. Unsampled
+        taps move onto the next available timeline, together with subsequent
+        edges, so their order and longer durations survive inference latency.
+        """
         if num_frames < 1:
             raise ValueError("num_frames must be >= 1")
         duration = num_frames * self.dt
+        interval = self.dt
         if self.next_chunk_start <= 0.0 or wall_time - self.next_chunk_start > duration:
             self.next_chunk_start = float(wall_time)
         start = self.next_chunk_start
         end = start + duration
-
-        while self._events and self._events[0][0] < start:
-            _, event, key = self._events.popleft()
-            self._state.apply(event, key)
-
         segments: list[ControlSegment] = []
         cursor = start
         effective = self._state.effective()
-        while self._events and self._events[0][0] <= end:
-            event_time, event, key = self._events.popleft()
-            if event_time > cursor:
-                segments.append((cursor, event_time, effective))
-            self._state.apply(event, key)
-            effective = self._state.effective()
-            cursor = max(cursor, event_time)
-        if cursor < end or not segments:
+        while self._events:
+            stamp = self._events[0][0]
+            candidate = replace(self._state, pressed=set(self._state.pressed), _order=dict(self._state._order))
+            count = 0
+            for event_time, event, key in self._events:
+                if event_time != stamp:
+                    break
+                candidate.apply(event, key)
+                count += 1
+            next_effective = candidate.effective()
+            event_time = max(stamp, start)
+            if next_effective != effective:
+                event_time = max(event_time, self._minimum_state_end)
+                # A new active state needs a complete interval: both frame-end
+                # and frame-midpoint consumers must see it before its release.
+                if next_effective and event_time + interval > end + 1e-8:
+                    event_time = max(event_time, end)
+                if event_time > stamp and (next_effective or event_time > start):
+                    self._delay_events(event_time - stamp)
+            if event_time >= end:
+                break
+            for _ in range(count):
+                self._events.popleft()
+            if next_effective != effective:
+                if event_time > cursor:
+                    segments.append((cursor, event_time, effective))
+                cursor = event_time
+                self._minimum_state_end = event_time + interval
+            self._state = candidate
+            effective = next_effective
+        if cursor < end:
             segments.append((cursor, end, effective))
         self.next_chunk_start = end
+        if not self._events:
+            self._event_delay = 0.0
         return segments
 
     def reset(self, *, start_time: float) -> None:
         self._events.clear()
         self._state = RealtimeControlState()
+        self._live_state = RealtimeControlState()
+        self._event_delay = 0.0
+        self._minimum_state_end = float(start_time)
         self.next_chunk_start = float(start_time)
 
     @property
     def effective_keys(self) -> frozenset[str]:
-        # Apply edges that have already arrived so key release can stop the
-        # producer immediately after the in-flight chunk finishes.
-        now = time.monotonic()
-        while self._events and self._events[0][0] <= now:
-            _, event, key = self._events.popleft()
-            self._state.apply(event, key)
-        return self._state.effective()
+        """Current received key state; observing it never consumes model input."""
+        return self._live_state.effective()
+
+    @property
+    def has_pending_input(self) -> bool:
+        """Whether held controls or unsampled edges still need a chunk boundary."""
+        return bool(self._events or self.effective_keys)
 
 
 def interactions_from_keys(keys: frozenset[str]) -> list[str]:

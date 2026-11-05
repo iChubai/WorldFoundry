@@ -114,6 +114,11 @@ in the **Create Job** dialog before submission.
 - **Runtime checks** — Optional memory/compile toggles such as Torch Compile, CPU Offload, VAE Offload, and Text Encoder Offload. These appear only when the selected model advertises support.
 - **Call JSON / Load JSON** — Advanced overrides merged into `call_kwargs` and `load_kwargs`.
 
+The attention selection follows the model's declared loading and inference
+boundaries. A load-only option is not copied into inference kwargs. Explicit
+Load JSON and Call JSON values take precedence at their respective supported
+boundary; unsupported explicit kwargs remain validation errors.
+
 When you open **Create Job** or switch task profiles, the form is prefilled from
 Workspace defaults loaded at startup. Model-specific official demo values from
 the catalog and task profile still take precedence over those shared defaults.
@@ -862,9 +867,19 @@ Arrow keys / IJKL = look
 ```
 
 Keyboard and stick edges are sent immediately over the current realtime channel.
-The resident runtime samples the latest effective control state at model chunk
-boundaries, so input does not create a second inference request or reload the
-pipeline.
+The resident runtime resamples queued transitions into each model chunk without
+creating another inference request or reloading the pipeline. A short tap remains
+pending until its active state spans at least one input-frame sampling interval,
+even if it was released during generation. Sampling may extend a sub-frame tap;
+observing current held keys does not consume queued transitions. The worker stays
+awake until pending input is drained, then resumes its normal idle behavior.
+
+#### Input sampling limits
+
+Input retention guarantees a control sample, not immediate visible motion in the
+same generated chunk. MatrixGame2's stride-4 action encoder may consume the final
+input row in a later chunk. A final-row-only action still needs that subsequent
+chunk; input retention alone does not drain the model's action history.
 
 ### Live text events, idle steps, and output resolution
 

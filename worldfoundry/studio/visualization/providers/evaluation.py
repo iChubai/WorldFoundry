@@ -13,23 +13,30 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import argparse
+import os
 from functools import cache
+from pathlib import Path
+from typing import Optional, Union
+
+import matplotlib.pyplot as plt
+import pandas as pd
+import seaborn as sns
 import torch
+import torch.nn.functional as F
 from einops import reduce
 from jaxtyping import Float
 from lpips import LPIPS
 from skimage.metrics import structural_similarity
 from torch import Tensor
 from torchvision.io import read_video
-import torch.nn.functional as F
-import matplotlib.pyplot as plt
-from typing import Union, Optional
-import os
+
 
 def compute_std(val_sum, val_avg, count):
-    variance = (val_sum / count) - (val_avg ** 2)
+    variance = (val_sum / count) - (val_avg**2)
     std = torch.sqrt(torch.clamp(variance, min=0))
     return std
+
 
 def plot_average_metric_per_frame(
     psnr_avg: Union[torch.Tensor, list],
@@ -61,16 +68,23 @@ def plot_average_metric_per_frame(
 
     if psnr_std is not None:
         plt.errorbar(
-            x, psnr_avg.tolist(), yerr=psnr_std.tolist(),
-            fmt='-o', color='steelblue', ecolor='lightgray', elinewidth=1, capsize=3, linewidth=2
+            x,
+            psnr_avg.tolist(),
+            yerr=psnr_std.tolist(),
+            fmt="-o",
+            color="steelblue",
+            ecolor="lightgray",
+            elinewidth=1,
+            capsize=3,
+            linewidth=2,
         )
     else:
-        plt.plot(x, psnr_avg.tolist(), color='steelblue', linewidth=2)
+        plt.plot(x, psnr_avg.tolist(), color="steelblue", linewidth=2)
 
-    plt.xlabel('Frame Index')
-    plt.ylabel(f'Average {metric_name}')
-    plt.title('Average {metric_name} per Frame across Dataset')
-    plt.grid(True, linestyle='--', alpha=0.5)
+    plt.xlabel("Frame Index")
+    plt.ylabel(f"Average {metric_name}")
+    plt.title("Average {metric_name} per Frame across Dataset")
+    plt.grid(True, linestyle="--", alpha=0.5)
 
     plt.xlim(0, num_frames - 1)
     plt.ylim(bottom=0)
@@ -79,27 +93,26 @@ def plot_average_metric_per_frame(
     plt.savefig(out_path, dpi=300)
     plt.close()
 
+
 def read_mp4_to_tensor(path: str, device: torch.device) -> torch.Tensor:
     """
     Reads an MP4 video file using torchvision and returns a tensor of shape (B, C, H, W),
     with values in [0, 1] as torch.float32.
-    
+
     Args:
         path (str): Path to the MP4 file.
-        
+
     Returns:
         torch.Tensor: Tensor of shape (B, C, H, W) with dtype float32 and values in [0, 1].
     """
-    video, _, _ = read_video(path, pts_unit='sec')  # shape: (B, H, W, C)
+    video, _, _ = read_video(path, pts_unit="sec")  # shape: (B, H, W, C)
     video = video.permute(0, 3, 1, 2)  # (B, C, H, W)
-    video = video.float() / 255.0     # Normalize to [0, 1]
+    video = video.float() / 255.0  # Normalize to [0, 1]
     return video.to(device)
 
+
 def resize_and_crop_video(
-    video: torch.Tensor,
-    target_height: int,
-    target_width: int,
-    direct_crop: bool = False
+    video: torch.Tensor, target_height: int, target_width: int, direct_crop: bool = False
 ) -> torch.Tensor:
     """
     Resize and center-crop a video tensor to the target resolution.
@@ -126,36 +139,39 @@ def resize_and_crop_video(
         new_W = int(round(W * scale))
 
         # Resize using bilinear interpolation
-        video = F.interpolate(video, size=(new_H, new_W), mode='bilinear', align_corners=False)
+        video = F.interpolate(video, size=(new_H, new_W), mode="bilinear", align_corners=False)
 
     # Crop center
     _, _, H_new, W_new = video.shape
     top = (H_new - target_height) // 2
     left = (W_new - target_width) // 2
 
-    cropped = video[:, :, top:top + target_height, left:left + target_width]
+    cropped = video[:, :, top : top + target_height, left : left + target_width]
     return cropped
+
 
 @torch.no_grad()
 def compute_psnr(
-    ground_truth: Float[Tensor, "batch channel height width"],
-    predicted: Float[Tensor, "batch channel height width"],
-) -> Float[Tensor, " batch"]:
+    ground_truth: Float[Tensor, "batch channel height width"],  # noqa: F722
+    predicted: Float[Tensor, "batch channel height width"],  # noqa: F722
+) -> Float[Tensor, " batch"]:  # noqa: F722
     ground_truth = ground_truth.clip(min=0, max=1)
     predicted = predicted.clip(min=0, max=1)
     mse = reduce((ground_truth - predicted) ** 2, "b c h w -> b", "mean")
     return -10 * mse.log10()
 
+
 @cache
 def get_lpips(device: torch.device) -> LPIPS:
     return LPIPS(net="vgg").to(device)
 
+
 @torch.no_grad()
 def compute_lpips(
-    ground_truth: Float[Tensor, "batch channel height width"],
-    predicted: Float[Tensor, "batch channel height width"],
+    ground_truth: Float[Tensor, "batch channel height width"],  # noqa: F722
+    predicted: Float[Tensor, "batch channel height width"],  # noqa: F722
     sub_batch_size: int = 32,
-) -> Float[Tensor, " batch"]:
+) -> Float[Tensor, " batch"]:  # noqa: F722
     lpips_model = get_lpips(predicted.device)
     B = ground_truth.shape[0]
     scores = []
@@ -168,11 +184,12 @@ def compute_lpips(
 
     return torch.cat(scores, dim=0)
 
+
 @torch.no_grad()
 def compute_ssim(
-    ground_truth: Float[Tensor, "batch channel height width"],
-    predicted: Float[Tensor, "batch channel height width"],
-) -> Float[Tensor, " batch"]:
+    ground_truth: Float[Tensor, "batch channel height width"],  # noqa: F722
+    predicted: Float[Tensor, "batch channel height width"],  # noqa: F722
+) -> Float[Tensor, " batch"]:  # noqa: F722
     ssim = [
         structural_similarity(
             gt.detach().cpu().numpy(),
@@ -186,81 +203,81 @@ def compute_ssim(
     ]
     return torch.tensor(ssim, dtype=predicted.dtype, device=predicted.device)
 
-import pandas as pd
-import matplotlib.pyplot as plt
-import seaborn as sns
-import argparse
-import os
-from pathlib import Path
 
 def plot_metrics(csv_files, labels, output_path):
     # Set style
     sns.set_theme(style="whitegrid")
     fig, axes = plt.subplots(2, 2, figsize=(15, 10))
     axes = axes.flatten()
-    
+
     metrics = [
-        ('mse', 'MSE (↓)', False),
-        ('psnr', 'PSNR (↑)', True),
-        ('ssim', 'SSIM (↑)', True),
-        ('lpips', 'LPIPS (↓)', False)
+        ("mse", "MSE (↓)", False),
+        ("psnr", "PSNR (↑)", True),
+        ("ssim", "SSIM (↑)", True),
+        ("lpips", "LPIPS (↓)", False),
     ]
-    
+
     colors = sns.color_palette("husl", len(csv_files))
-    
+
     for i, (csv_file, label) in enumerate(zip(csv_files, labels)):
         df = pd.read_csv(csv_file)
-        
+
         # Determine history length from the first sample
         # history_length is the count of is_context == True for a single sample
-        first_sample_id = df['sample_id'].iloc[0]
-        h_len = df[(df['sample_id'] == first_sample_id) & (df['is_context'] == True)].shape[0]
-        
+        first_sample_id = df["sample_id"].iloc[0]
+        h_len = df[(df["sample_id"] == first_sample_id) & df["is_context"]].shape[0]
+
         # Calculate steps after context: relative_idx = 0 is the first GENERATED frame
-        df['pred_step'] = df['frame_idx'] - h_len
-        
+        df["pred_step"] = df["frame_idx"] - h_len
+
         # Filter to keep only generated frames (where pred_step >= 0)
-        gen_df = df[df['pred_step'] >= 0].copy()
-        
+        gen_df = df[df["pred_step"] >= 0].copy()
+
         # Group by pred_step and average across samples
-        summary = gen_df.groupby('pred_step').mean().reset_index()
-        
+        summary = gen_df.groupby("pred_step").mean().reset_index()
+
         for j, (col, title, higher_better) in enumerate(metrics):
             ax = axes[j]
-            ax.plot(summary['pred_step'], summary[col], marker='o', label=label, color=colors[i], linewidth=2)
-            ax.set_title(title, fontsize=14, fontweight='bold')
-            ax.set_xlabel('Steps After Context (0 = First Generated Frame)', fontsize=12)
+            ax.plot(summary["pred_step"], summary[col], marker="o", label=label, color=colors[i], linewidth=2)
+            ax.set_title(title, fontsize=14, fontweight="bold")
+            ax.set_xlabel("Steps After Context (0 = First Generated Frame)", fontsize=12)
             if i == 0:
-                ax.set_ylabel('Value', fontsize=12)
+                ax.set_ylabel("Value", fontsize=12)
 
     # Add legends and cleanup
     for ax in axes:
         ax.legend()
-        
+
     plt.tight_layout()
-    plt.savefig(output_path, dpi=300, bbox_inches='tight')
+    plt.savefig(output_path, dpi=300, bbox_inches="tight")
     print(f"Plot saved to {output_path}")
+
 
 def main():
     parser = argparse.ArgumentParser(description="Plot metrics from multiple rollout evaluation CSVs.")
-    parser.add_argument("--csvs", type=str, nargs='+', required=True, 
-                        help="Paths to CSV files (e.g., metrics_h1.csv metrics_h2.csv ...)")
-    parser.add_argument("--output", type=str, default="rollout_comparison.png", 
-                        help="Path to save the resulting plot")
-    
+    parser.add_argument(
+        "--csvs",
+        type=str,
+        nargs="+",
+        required=True,
+        help="Paths to CSV files (e.g., metrics_h1.csv metrics_h2.csv ...)",
+    )
+    parser.add_argument("--output", type=str, default="rollout_comparison.png", help="Path to save the resulting plot")
+
     args = parser.parse_args()
-    
+
     # Generate labels from filenames if possible
     labels = []
     for csv in args.csvs:
         name = Path(csv).stem
-        if 'metrics_h' in name:
-            h_val = name.split('_h')[-1]
+        if "metrics_h" in name:
+            h_val = name.split("_h")[-1]
             labels.append(f"History Length: {h_val}")
         else:
             labels.append(name)
-            
+
     plot_metrics(args.csvs, labels, args.output)
+
 
 if __name__ == "__main__":
     main()

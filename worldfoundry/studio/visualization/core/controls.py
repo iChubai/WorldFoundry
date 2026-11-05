@@ -10,7 +10,7 @@ from typing import Any, Mapping
 class VisualizationControl:
     control_id: str
     kind: str
-    label: str = ''
+    label: str = ""
     value: Any | None = None
     options: tuple[Any, ...] = ()
     metadata: Mapping[str, Any] = field(default_factory=dict)

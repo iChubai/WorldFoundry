@@ -23,7 +23,7 @@ from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass, field, replace
 from fractions import Fraction
 from pathlib import Path
-from typing import Any, Callable, Mapping
+from typing import Any, Callable, Mapping, cast
 from urllib.parse import quote
 
 import numpy as np
@@ -681,6 +681,7 @@ def _realtime_postprocess_stream(
         )
 
     from worldfoundry.core.media.processing.rtx import (
+        RTXVideoSuperResolutionQuality,
         require_rtx_vfx_runtime,
         rtx_postprocessor_from_preset,
     )
@@ -691,7 +692,11 @@ def _realtime_postprocess_stream(
         scale=_env_optional_float("WORLDFOUNDRY_REALTIME_RTX_SCALE"),
         output_width=_env_optional_int("WORLDFOUNDRY_REALTIME_RTX_OUTPUT_WIDTH"),
         output_height=_env_optional_int("WORLDFOUNDRY_REALTIME_RTX_OUTPUT_HEIGHT"),
-        quality=(os.getenv("WORLDFOUNDRY_REALTIME_RTX_QUALITY", "").strip().upper() or None),
+        # RTXVideoSuperResolutionConfig rejects names outside the quality literal.
+        quality=cast(
+            RTXVideoSuperResolutionQuality | None,
+            os.getenv("WORLDFOUNDRY_REALTIME_RTX_QUALITY", "").strip().upper() or None,
+        ),
         device=device,
         non_blocking=_env_bool("WORLDFOUNDRY_REALTIME_RTX_NON_BLOCKING", False),
         use_current_stream=_env_bool("WORLDFOUNDRY_REALTIME_RTX_USE_CURRENT_STREAM", True),
@@ -1896,6 +1901,7 @@ class RealtimePeerManager:
         model_id = getattr(getattr(self.runtime, "entry", None), "model_id", None)
         if self._perf_jsonl_path is not None:
             try:
+                timing_fields: dict[str, Any] = timing.to_payload()
                 write_jsonl_event(
                     self._perf_jsonl_path,
                     level="INFO",
@@ -1910,7 +1916,7 @@ class RealtimePeerManager:
                     socket_pacing_mode=(
                         socket_pacing_mode.value if isinstance(socket_pacing_mode, WebSocketPacingMode) else None
                     ),
-                    **timing.to_payload(),
+                    **timing_fields,
                 )
             except (OSError, TypeError, ValueError):
                 logger.warning(
@@ -2189,7 +2195,8 @@ class RealtimePeerManager:
                 "status": "queued" if changed else "unchanged",
                 "applies_at": "next_chunk",
             }
-        action = payload.get("action") if isinstance(payload.get("action"), Mapping) else {}
+        raw_action = payload.get("action")
+        action = raw_action if isinstance(raw_action, Mapping) else {}
         if message_type == "step" or (message_type == "action" and str(action.get("event") or "").lower() == "step"):
             if bool(getattr(active, "queued_segments", False)):
                 return {
@@ -2789,7 +2796,8 @@ class RealtimePeerManager:
             return
         if message_type != "action":
             return
-        action = payload.get("action") if isinstance(payload.get("action"), Mapping) else {}
+        raw_action = payload.get("action")
+        action = raw_action if isinstance(raw_action, Mapping) else {}
         event = str(action.get("event") or "").lower()
         key = str(action.get("key") or "")
         arrival = asyncio.get_running_loop().time()
@@ -2889,7 +2897,8 @@ class RealtimePeerManager:
                         )
                         interactions = interactions_from_segments(segments)
                     if not interactions and not forced_step and not prompt_changed:
-                        active.first_action.clear()
+                        if not active.resampler.has_pending_input:
+                            active.first_action.clear()
                         continue
                 action_arrival = active.action_arrivals[0] if active.action_arrivals else None
                 generation_started = loop.time()
@@ -3042,7 +3051,7 @@ class RealtimePeerManager:
                     active.initial_segment_pending
                     or active.pending_prompt_dirty
                     or active.pending_steps
-                    or active.resampler.effective_keys
+                    or (not active.prompt_scheduled and active.resampler.has_pending_input)
                 ):
                     active.first_action.set()
                 else:
@@ -3158,7 +3167,8 @@ class RealtimePeerManager:
             return
         if message_type != "action":
             return
-        action = payload.get("action") if isinstance(payload.get("action"), Mapping) else {}
+        raw_action = payload.get("action")
+        action = raw_action if isinstance(raw_action, Mapping) else {}
         event = str(action.get("event") or "").lower()
         key = str(action.get("key") or "")
         arrival = asyncio.get_running_loop().time()
@@ -3263,7 +3273,8 @@ class RealtimePeerManager:
                         )
                         interactions = interactions_from_segments(segments)
                     if not interactions and not forced_step and not prompt_changed:
-                        active.first_action.clear()
+                        if not active.resampler.has_pending_input:
+                            active.first_action.clear()
                         continue
                 action_arrival = active.action_arrivals[0] if active.action_arrivals else None
                 control_ids = (
@@ -3359,7 +3370,7 @@ class RealtimePeerManager:
                     active.initial_segment_pending
                     or active.pending_prompt_dirty
                     or active.pending_steps
-                    or active.resampler.effective_keys
+                    or (not active.prompt_scheduled and active.resampler.has_pending_input)
                 ):
                     active.first_action.set()
                 else:
@@ -3754,7 +3765,7 @@ def serve_realtime_world_frontend(
             )
         target = upload_root / f"{uuid.uuid4().hex}{suffix}"
         written = 0
-        handle = await asyncio.to_thread(target.open, "wb")
+        handle = await asyncio.to_thread(lambda: target.open("wb"))
         try:
             try:
                 while chunk := await field.read_chunk(size=1024 * 1024):

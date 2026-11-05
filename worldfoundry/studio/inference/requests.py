@@ -1039,14 +1039,16 @@ def _merge_common_params(
         if negative_key:
             call_kwargs.setdefault(negative_key, payload.negative_prompt)
 
-    attention_backend = param_value("attention_backend")
-    if _supports_attention_backend(entry) and attention_backend not in {"", None, "auto"}:
-        load_kwargs.setdefault("attention_backend", attention_backend)
-        call_kwargs.setdefault("attention_backend", attention_backend)
-    _apply_runtime_options(entry, params=params, load_kwargs=load_kwargs, call_kwargs=call_kwargs)
-
     call_names = {_param_key(name): name for name in (entry.call_params + entry.stream_params)}
     load_names = {_param_key(name): name for name in entry.load_params}
+    attention_backend = param_value("attention_backend")
+    if attention_backend not in {"", None, "auto"}:
+        if "attention_backend" in load_names:
+            load_kwargs.setdefault(load_names["attention_backend"], attention_backend)
+        if "attention_backend" in call_names:
+            call_kwargs.setdefault(call_names["attention_backend"], attention_backend)
+    _apply_runtime_options(entry, params=params, load_kwargs=load_kwargs, call_kwargs=call_kwargs)
+
     for key, value in params.items():
         if _is_missing_param_value(value):
             continue

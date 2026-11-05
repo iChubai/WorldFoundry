@@ -48,6 +48,7 @@ class TestColorizeDepthAffine:
         result = colorize_depth_affine(depth)
         assert result.flags["C_CONTIGUOUS"]
 
+
 class TestColorizeNormal:
     """Tests for colorize_normal function.
 
@@ -104,5 +105,23 @@ class TestColorizeNormal:
         normal = np.ones((4, 4, 3), dtype=np.float32)
         result = colorize_normal(normal)
         assert result[0, 0, 0] == 255  # 1.0 * 255
-        assert result[0, 0, 1] == 0    # 0.0 * 255
-        assert result[0, 0, 2] == 0    # 0.0 * 255
+        assert result[0, 0, 1] == 0  # 0.0 * 255
+        assert result[0, 0, 2] == 0  # 0.0 * 255
+
+
+class TestDepthAnythingV3ColorMap:
+    """DepthAnything v3 tensor colour mapping uses the matplotlib colormap registry."""
+
+    def test_apply_color_map_matches_registered_colormap(self) -> None:
+        torch = pytest.importorskip("torch")
+        import matplotlib
+
+        from worldfoundry.studio.visualization.plugins.scene3d.depth_anything_v3.export_vis import apply_color_map
+
+        values = torch.tensor([[0.0, 0.5], [1.0, 2.0]])
+        mapped = apply_color_map(values, "viridis")
+
+        expected = matplotlib.colormaps["viridis"](values.clip(0, 1).numpy())[..., :3]
+        assert mapped.shape == (2, 2, 3)
+        assert mapped.dtype == torch.float32
+        torch.testing.assert_close(mapped, torch.as_tensor(expected, dtype=torch.float32))

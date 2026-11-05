@@ -40,6 +40,7 @@ import torch
 from worldfoundry.base_models.diffusion_model.schedulers.minimax_h3 import (
     minimax_h3_align_frame_count,
     minimax_h3_audio_latent_t,
+    minimax_h3_sigma_schedule,
     minimax_h3_time_shift_sigmas,
     minimax_h3_video_latent_t,
 )
@@ -68,6 +69,11 @@ _ASPECT_RATIOS: dict[str, tuple[int, int]] = {
     "1:1": (1, 1),
     "3:4": (3, 4),
     "9:16": (9, 16),
+    "3:2": (3, 2),
+    "5:4": (5, 4),
+    "4:5": (4, 5),
+    "2:3": (2, 3),
+    "9:21": (9, 21),
 }
 
 # Video VAE compression: 16x spatial, 4x temporal (see the video VAE config).
@@ -206,8 +212,8 @@ class NativeMiniMaxH3Pipeline(PipelineABC):
         model_path: str | Mapping[str, Any] | None = None,
         required_components: Mapping[str, Any] | None = None,
         device: str = "cuda",
-        component_devices: Mapping[str, str] | None = None,
         model_id: str | None = None,
+        component_devices: Mapping[str, str] | None = None,
         **kwargs: Any,
     ) -> "NativeMiniMaxH3Pipeline":
         """Materialize the DiT / VAEs / Qwen3-VL encoder from a checkpoint root.
@@ -235,6 +241,7 @@ class NativeMiniMaxH3Pipeline(PipelineABC):
             if source is not None
             else dict(component_devices or dict.fromkeys(_COMPONENT_NAMES, device))
         )
+        transformer_subfolder = options.get("transformer_subfolder")
 
         if source is not None and any(
             component is None for component in (transformer, video_vae, audio_vae, text_encoder)
@@ -253,6 +260,7 @@ class NativeMiniMaxH3Pipeline(PipelineABC):
                 audio_vae=audio_vae,
                 text_encoder=text_encoder,
                 tokenizer=tokenizer,
+                transformer_subfolder=transformer_subfolder,
             )
 
         return cls(
@@ -277,6 +285,7 @@ class NativeMiniMaxH3Pipeline(PipelineABC):
         audio_vae: Any,
         text_encoder: Any,
         tokenizer: Any,
+        transformer_subfolder: str | None = None,
     ) -> tuple[Any, Any, Any, Any, Any]:
         """Load real weights for missing components from a checkpoint directory.
 
@@ -288,7 +297,10 @@ class NativeMiniMaxH3Pipeline(PipelineABC):
         """
 
         if transformer is None:
-            transformer = cls._load_transformer(root, device=component_devices["transformer"])
+            transformer_kwargs: dict[str, Any] = {"device": component_devices["transformer"]}
+            if transformer_subfolder is not None:
+                transformer_kwargs["subfolder"] = str(transformer_subfolder)
+            transformer = cls._load_transformer(root, **transformer_kwargs)
         if video_vae is None:
             video_vae = cls._load_video_vae(root, device=component_devices["video_vae"])
         if audio_vae is None:
@@ -310,7 +322,7 @@ class NativeMiniMaxH3Pipeline(PipelineABC):
         return root
 
     @classmethod
-    def _load_transformer(cls, root: Path, *, device: str) -> Any:
+    def _load_transformer(cls, root: Path, *, device: str, subfolder: str = "transformer") -> Any:
         import torch
 
         from worldfoundry.base_models.diffusion_model.models.networks.minimax_h3 import (
@@ -321,7 +333,7 @@ class NativeMiniMaxH3Pipeline(PipelineABC):
             load_minimax_h3_dit_weights,
         )
 
-        tdir = cls._subdir(root, "transformer")
+        tdir = cls._subdir(root, subfolder)
         arch = MiniMaxH3DiTArchConfig()
         if not any(tdir.glob("*.safetensors")):
             raise FileNotFoundError(f"MiniMax H3 DiT weights are missing from {tdir}")
@@ -471,6 +483,10 @@ class NativeMiniMaxH3Pipeline(PipelineABC):
         keyframe_cond_rows: torch.Tensor | None = None,
         ref_blocks: list[dict[str, Any]] | None = None,
         audio_ref_rows: torch.Tensor | None = None,
+        text_token_tags: torch.Tensor | None = None,
+        sigma_knots: tuple[float, ...] | None = None,
+        renoise: bool = False,
+        shared_initial_noise: bool = False,
         return_latent_rows: bool = False,
     ) -> dict[str, Any]:
         """Run the coupled denoise loop and return decoded (or raw) modalities."""
@@ -513,10 +529,16 @@ class NativeMiniMaxH3Pipeline(PipelineABC):
                 frame_count=plan["frame_count"] if include_keyframe else None,
             )
 
+        token_tags = packed["token_tags"].clone()
+        if text_token_tags is not None:
+            supplied_tags = text_token_tags.reshape(-1).to(dtype=token_tags.dtype, device=token_tags.device)
+            if int(supplied_tags.numel()) != text_len:
+                raise ValueError(f"text_token_tags length {int(supplied_tags.numel())} != prompt length {text_len}")
+            token_tags[:text_len] = supplied_tags
         branch = MiniMaxH3DenoiseBranch(
             packed=packed,
             text_embeddings=prompt_embeds,
-            token_tags=packed["token_tags"],
+            token_tags=token_tags,
             device=device,
         )
 
@@ -539,17 +561,21 @@ class NativeMiniMaxH3Pipeline(PipelineABC):
             patch_size=(1, _PATCH_H, _PATCH_W),
         )
         assert initial_video.shape == (n_video_rows, 96)
-        # Audio uses an independently reseeded generator (same seed) — matches the
-        # reference, which draws audio noise from a fresh generator.
-        audio_generator = torch.Generator(device="cpu").manual_seed(int(seed))
+        # The reference H3 recipe uses a fresh generator for audio. Distilled
+        # adapters can opt into one shared stream when their release specifies it.
+        audio_generator = generator if shared_initial_noise else torch.Generator(device="cpu").manual_seed(int(seed))
         initial_audio = torch.randn(
             n_audio_rows, _AUDIO_LATENT_CHANNELS, generator=audio_generator, dtype=torch.float32
         )
 
-        sigmas_video = minimax_h3_time_shift_sigmas(num_steps=num_inference_steps, shift_scale=flow_shift)
-        sigmas_audio = minimax_h3_time_shift_sigmas(num_steps=num_inference_steps, shift_scale=audio_flow_shift)
-        steps = min(len(sigmas_video), len(sigmas_audio))
-        sigmas_video, sigmas_audio = sigmas_video[:steps], sigmas_audio[:steps]
+        if sigma_knots is None:
+            sigmas_video = minimax_h3_time_shift_sigmas(num_steps=num_inference_steps, shift_scale=flow_shift)
+            sigmas_audio = minimax_h3_time_shift_sigmas(num_steps=num_inference_steps, shift_scale=audio_flow_shift)
+        else:
+            sigmas_video = minimax_h3_sigma_schedule(sigma_knots, shift_scale=flow_shift)
+            sigmas_audio = minimax_h3_sigma_schedule(sigma_knots, shift_scale=audio_flow_shift)
+        if len(sigmas_video) != len(sigmas_audio):
+            raise ValueError("video/audio sigma schedules must have equal lengths")
 
         video_rows, audio_rows = minimax_h3_denoise_loop(
             model=self.transformer,
@@ -561,6 +587,8 @@ class NativeMiniMaxH3Pipeline(PipelineABC):
             sigmas_video=sigmas_video,
             sigmas_audio=sigmas_audio,
             device=device,
+            renoise=renoise,
+            noise_generator=torch.Generator(device=device).manual_seed(int(seed) + 1) if renoise else None,
         )
 
         # Target rows are the suffix after any condition/reference rows.

@@ -95,8 +95,8 @@ def apply_color_map(
     x: torch.Tensor,
     color_map: str = "inferno",
 ) -> torch.Tensor:
-    cmap = matplotlib.cm.get_cmap(color_map)
-    mapped = cmap(x.float().detach().clip(min=0, max=1).cpu().numpy())[..., :3]
+    cmap = matplotlib.colormaps[color_map]
+    mapped = np.asarray(cmap(x.float().detach().clip(min=0, max=1).cpu().numpy()))[..., :3]
     return torch.tensor(mapped, device=x.device, dtype=torch.float32)
 
 
@@ -149,9 +149,7 @@ def export_to_feat_vis(
         for idx in tqdm(range(len(feats_vis))):
             img = images[idx]
             feat_vis = (feats_vis[idx] * 255).astype(np.uint8)
-            feat_vis = cv2.resize(
-                feat_vis, (img.shape[1], img.shape[0]), interpolation=cv2.INTER_NEAREST
-            )
+            feat_vis = cv2.resize(feat_vis, (img.shape[1], img.shape[0]), interpolation=cv2.INTER_NEAREST)
             save_path = os.path.join(out_dir, f"{k}/{idx:06d}.jpg")
             save = np.concatenate([img, feat_vis], axis=1)
             imageio.imwrite(save_path, save, quality=95)

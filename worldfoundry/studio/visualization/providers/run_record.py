@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-from pathlib import Path
 import json
+from pathlib import Path
 from typing import Iterable, Sequence
 
 VIDEO_REPLAY_EXTS = {".mp4", ".mov", ".avi", ".webm", ".mkv"}
@@ -192,7 +192,6 @@ def _ordered_named_candidates(
     return [path for _, _, _, path in sorted(candidates)]
 
 
-
 class RunRecordProvider:
     """Convert run records or artifact directories into lightweight scenes."""
 
@@ -200,8 +199,9 @@ class RunRecordProvider:
 
     def discover(self, source):
         from pathlib import Path
-        from worldfoundry.studio.visualization.core.scene import Layer, VisualizationScene
+
         from worldfoundry.studio.visualization.core.artifacts import infer_visualization_artifact
+        from worldfoundry.studio.visualization.core.scene import Layer, VisualizationScene
 
         output_dir = getattr(source, "output_dir", None) or getattr(source, "path", None) or source
         if output_dir is None:
@@ -215,7 +215,16 @@ class RunRecordProvider:
             if artifact.kind == "artifact":
                 continue
             layer_id = path.relative_to(root).as_posix().replace("/", ":")
-            layers.append(Layer(layer_id=layer_id, kind=artifact.kind, uri=path.as_posix(), metadata={"format": artifact.format_hint}))
+            layers.append(
+                Layer(
+                    layer_id=layer_id,
+                    kind=artifact.kind,
+                    uri=path.as_posix(),
+                    metadata={"format": artifact.format_hint},
+                )
+            )
         if not layers:
             return None
-        return VisualizationScene(scene_id=f"run/{root.name}", title=root.name, layers=tuple(layers), metadata={"source": root.as_posix()})
+        return VisualizationScene(
+            scene_id=f"run/{root.name}", title=root.name, layers=tuple(layers), metadata={"source": root.as_posix()}
+        )

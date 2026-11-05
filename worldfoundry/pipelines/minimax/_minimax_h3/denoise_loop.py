@@ -35,14 +35,26 @@ def _minimax_h3_update_target_rows_(
     velocity: torch.Tensor,
     *,
     sigma_t: torch.Tensor,
-    sigma_curr: float,
+    sigma_curr: float | torch.Tensor,
+    sigma_next: float | torch.Tensor,
     sigma_ratio: torch.Tensor,
     one_minus_sigma_ratio: torch.Tensor,
     denoised_scratch: torch.Tensor,
+    renoise: bool = False,
+    noise_generator: torch.Generator | None = None,
 ) -> None:
     torch.mul(sigma_t, velocity, out=denoised_scratch)
     torch.add(state, denoised_scratch, out=denoised_scratch)
-    if sigma_curr == 0.0:
+    if float(sigma_curr) == 0.0:
+        return
+    if renoise:
+        noise = torch.randn(
+            state.shape,
+            device=state.device,
+            dtype=state.dtype,
+            generator=noise_generator,
+        )
+        state.copy_((1.0 - float(sigma_next)) * denoised_scratch + float(sigma_next) * noise)
         return
     torch.mul(one_minus_sigma_ratio, denoised_scratch, out=velocity)
     torch.mul(sigma_ratio, state, out=state)
@@ -301,9 +313,7 @@ class MiniMaxH3DenoiseBranch:
 def minimax_h3_denoise_loop(
     *,
     model: Any,
-    model_forward: (
-        Callable[[Any, dict[str, Any], int], tuple[torch.Tensor, torch.Tensor]] | None
-    ) = None,
+    model_forward: (Callable[[Any, dict[str, Any], int], tuple[torch.Tensor, torch.Tensor]] | None) = None,
     positive: MiniMaxH3DenoiseBranch,
     initial_video_rows: torch.Tensor,
     initial_audio_rows: torch.Tensor,
@@ -313,6 +323,8 @@ def minimax_h3_denoise_loop(
     sigmas_audio: list[float],
     device: torch.device,
     imgvid_cond_noise_aug_for_inference: float = MINIMAX_H3_IMGVID_COND_TIMESTEP,
+    renoise: bool = False,
+    noise_generator: torch.Generator | None = None,
     audio_cond_noise_aug_for_inference: float = MINIMAX_H3_AUDIO_REF_COND_TIMESTEP,
     on_step: Callable[[int, torch.Tensor, torch.Tensor], None] | None = None,
     step_profiler: Callable[[int], AbstractContextManager] | None = None,
@@ -338,9 +350,7 @@ def minimax_h3_denoise_loop(
             raise ValueError(f"layout has {n_cond} cond rows but keyframe_cond_rows is None")
     else:
         if int(keyframe_cond_rows.shape[0]) != n_cond:
-            raise ValueError(
-                f"keyframe_cond_rows {int(keyframe_cond_rows.shape[0])} != layout cond rows {n_cond}"
-            )
+            raise ValueError(f"keyframe_cond_rows {int(keyframe_cond_rows.shape[0])} != layout cond rows {n_cond}")
     video_rows = initial_video_rows.to(device=device, dtype=torch.float32, copy=True)
     audio_rows = initial_audio_rows.to(device=device, dtype=torch.float32, copy=True)
     if int(video_rows.shape[0]) != int(positive.img_pos.shape[0]):
@@ -358,13 +368,9 @@ def minimax_h3_denoise_loop(
         audio_anchor = None
     else:
         if int(audio_ref_rows.shape[0]) != n_audio_ref:
-            raise ValueError(
-                f"audio_ref_rows {int(audio_ref_rows.shape[0])} != layout audio ref rows {n_audio_ref}"
-            )
+            raise ValueError(f"audio_ref_rows {int(audio_ref_rows.shape[0])} != layout audio ref rows {n_audio_ref}")
         audio_anchor = audio_ref_rows.to(device=device, dtype=torch.float32)
-    cond_anchor = (
-        keyframe_cond_rows.to(device=device, dtype=torch.float32) if keyframe_cond_rows is not None else None
-    )
+    cond_anchor = keyframe_cond_rows.to(device=device, dtype=torch.float32) if keyframe_cond_rows is not None else None
     if cond_anchor is not None:
         video_rows.index_copy_(0, positive.cond_row_idx, cond_anchor)
     if audio_anchor is not None:
@@ -418,9 +424,12 @@ def minimax_h3_denoise_loop(
                     mv_video_t,
                     sigma_t=video_sigma_t[step],
                     sigma_curr=s_v,
+                    sigma_next=video_sigmas[step + 1],
                     sigma_ratio=video_sigma_ratios[step],
                     one_minus_sigma_ratio=video_one_minus_sigma_ratios[step],
                     denoised_scratch=video_denoised_scratch,
+                    renoise=renoise and step < num_steps - 1,
+                    noise_generator=noise_generator,
                 )
 
                 audio_target = audio_rows[audio_target_slice]
@@ -429,9 +438,12 @@ def minimax_h3_denoise_loop(
                     mv_audio_t,
                     sigma_t=audio_sigma_t[step],
                     sigma_curr=s_a,
+                    sigma_next=audio_sigmas[step + 1],
                     sigma_ratio=audio_sigma_ratios[step],
                     one_minus_sigma_ratio=audio_one_minus_sigma_ratios[step],
                     denoised_scratch=audio_denoised_scratch,
+                    renoise=renoise and step < num_steps - 1,
+                    noise_generator=noise_generator,
                 )
             if on_step is not None:
                 on_step(step, video_rows, audio_rows)

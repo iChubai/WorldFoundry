@@ -547,6 +547,28 @@ exclude = [
     "worldfoundry/evaluation/tasks/metrics/*/vendor/**",
 ]
 
+[tool.ty.analysis]
+# Optional runtime extras that the light `Python quality` job does not install.
+# Environments that install them still resolve and type-check these imports.
+allowed-unresolved-imports = [
+    "aiohttp.**",
+    "aiortc.**",
+    "av.**",
+    "imageio_ffmpeg.**",
+    "jaxtyping.**",
+    "lpips.**",
+    "matplotlib.**",
+    "omegaconf.**",
+    "pandas.**",
+    "rerun.**",
+    "safetensors.**",
+    "seaborn.**",
+    "skimage.**",
+    "transformers.**",
+    "trimesh.**",
+    "viser.**",
+]
+
 [tool.ruff]
 target-version = "py310"
 line-length = 120

@@ -11,6 +11,7 @@ inference jobs in parallel when enough GPUs are available.
 
 from __future__ import annotations
 
+import builtins
 import math
 import traceback
 from collections.abc import Callable, Mapping, Sequence
@@ -73,9 +74,7 @@ class StudioJob:
     def append_log(self, stream: str, text: str) -> None:
         """Append a timestamped log line from stdout/stderr/system."""
         if text:
-            self.logs.append(
-                {"time": utc_now_iso(), "stream": stream, "text": redact_secret_text(text)}
-            )
+            self.logs.append({"time": utc_now_iso(), "stream": stream, "text": redact_secret_text(text)})
 
     def log_text(self, *, limit: int | None = None) -> str:
         """Render recent log lines as plain text for the UI log panel."""
@@ -233,7 +232,7 @@ class StudioJobStore:
         with self._lock:
             return self._jobs.get(job_id)
 
-    def list(self) -> list[StudioJob]:
+    def list(self) -> builtins.list[StudioJob]:
         """Return all jobs sorted by creation time (newest first)."""
         with self._lock:
             return sorted(self._jobs.values(), key=lambda job: job.created_at, reverse=True)
@@ -272,7 +271,9 @@ class StudioJobStore:
                 job._completed_monotonic = monotonic()
                 job.append_log("system", "cancelled before start\n")
                 return True, "cancelled"
-            job.append_log("system", "cancellation requested; active inference will stop after the current call returns\n")
+            job.append_log(
+                "system", "cancellation requested; active inference will stop after the current call returns\n"
+            )
             return True, "cancellation requested"
 
     def _execute(self, job_id: str, run_callable: RunJobCallable) -> None:
@@ -340,10 +341,7 @@ def format_elapsed(job: StudioJob) -> str:
 
 def format_job_choices(jobs: Sequence[StudioJob]) -> list[tuple[str, str]]:
     """Build dropdown choices mapping label -> job_id."""
-    return [
-        (f"{job.title} · {job.status} · {job.job_id}", job.job_id)
-        for job in jobs
-    ]
+    return [(f"{job.title} · {job.status} · {job.job_id}", job.job_id) for job in jobs]
 
 
 def format_jobs_table(jobs: Sequence[StudioJob]) -> list[list[str]]:
@@ -378,7 +376,7 @@ def job_detail_html(job: StudioJob | None) -> str:
     if not output_dir:
         output_dir = str(metadata.get("output_root") or "")
     output_html = f"<p><strong>Output</strong><br><code>{escape(output_dir)}</code></p>" if output_dir else ""
-    error_html = f"<p class=\"wa-job-error\"><strong>Error</strong><br>{escape(job.error or '')}</p>" if job.error else ""
+    error_html = f'<p class="wa-job-error"><strong>Error</strong><br>{escape(job.error or "")}</p>' if job.error else ""
     return f"""
 <div class="wa-job-detail wa-job-status-{escape(job.status)}">
   <div class="wa-job-detail-head">

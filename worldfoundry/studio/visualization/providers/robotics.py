@@ -18,13 +18,24 @@ class RoboticsProvider:
         layers = []
         for path in _source_paths(source):
             lowered = path.name.lower()
-            if path.suffix.lower() in TRACE_SUFFIXES and any(token in lowered for token in ("action", "policy", "robot", "trajectory", "rollout")):
+            if path.suffix.lower() in TRACE_SUFFIXES and any(
+                token in lowered for token in ("action", "policy", "robot", "trajectory", "rollout")
+            ):
                 layers.append(Layer(layer_id=path.stem, kind="action_trace", uri=path.as_posix()))
-            elif path.suffix.lower() in VIDEO_SUFFIXES and any(token in lowered for token in ("sim", "robot", "rollout", "episode", "replay")):
-                layers.append(Layer(layer_id=path.stem, kind="video", uri=path.as_posix(), metadata={"role": "simulator_replay"}))
+            elif path.suffix.lower() in VIDEO_SUFFIXES and any(
+                token in lowered for token in ("sim", "robot", "rollout", "episode", "replay")
+            ):
+                layers.append(
+                    Layer(layer_id=path.stem, kind="video", uri=path.as_posix(), metadata={"role": "simulator_replay"})
+                )
         if not layers:
             return None
-        return VisualizationScene(scene_id="robotics/artifacts", title="Robotics Artifacts", layers=tuple(layers), recommended_backend="embodied")
+        return VisualizationScene(
+            scene_id="robotics/artifacts",
+            title="Robotics Artifacts",
+            layers=tuple(layers),
+            recommended_backend="embodied",
+        )
 
 
 def _source_paths(source) -> list[Path]:

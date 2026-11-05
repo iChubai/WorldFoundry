@@ -42,6 +42,7 @@ PUBLIC_GATE_CONTRACTS = \
 	tests/studio/test_dispatch_lifecycle.py \
 	tests/studio/test_stream_init.py \
 	tests/studio/test_stream_step.py \
+	tests/studio_visualization/test_viser_initial_camera.py \
 	tests/core/utils/python/test_functional_utils.py \
 	tests/core/utils/python/test_tree_utils.py
 VIDEO_TENSOR_CONTRACTS = \
@@ -62,9 +63,11 @@ STREAMING_CPU_CONTRACTS = \
 	tests/base_models/diffusion_model/test_causal_cache_positions.py \
 	tests/base_models/diffusion_model/optimizations/test_causal_qkv_fusion.py \
 	tests/base_models/diffusion_model/models/autoencoders/test_wan_vae_acceleration_policy.py \
+	tests/base_models/diffusion_model/models/autoencoders/test_wan_streaming_chunk.py \
 	tests/core/acceleration/test_fused_fp8_ffn.py \
 	tests/core/acceleration/test_convolution_layout.py \
 	tests/core/attention/test_native_cudnn_fp8.py \
+	tests/core/attention/test_native_causal_bias.py \
 	tests/core/attention/test_triton_tma.py \
 	tests/core/test_streaming_step_control.py \
 	tests/synthesis/test_matrix_game_2_optimizations.py \
@@ -74,6 +77,8 @@ STREAMING_CPU_CONTRACTS = \
 	tests/studio_visualization/test_realtime_presentation.py \
 	tests/studio_visualization/test_realtime_shutdown_ownership.py \
 	tests/studio_visualization/test_world_realtime.py \
+	tests/studio_visualization/test_realtime_input.py \
+	tests/studio_visualization/test_realtime_input_consumers.py \
 	tests/runtime/test_inference_benchmark_correctness.py \
 	tests/studio_visualization/test_realtime_delivery.py \
 	tests/runtime/test_realtime_replay.py \
@@ -175,8 +180,14 @@ INFER_TENSOR_CONTRACTS = \
 	tests/synthesis/test_dreamx_world_ar_realtime.py \
 	tests/synthesis/test_helios_realtime.py \
 	tests/pipelines/test_native_diffusion_runtime_policy.py \
+	tests/pipelines/test_native_diffusion_policy_normalization.py \
+	tests/base_models/diffusion_model/test_hy_nomas.py \
+	tests/pipelines/test_hy_nomas.py \
+	tests/pipelines/test_forcing_runtime.py \
+	tests/pipelines/test_causal_forcing_dispatch.py \
 	tests/pipelines/test_native_product_batching.py \
 	tests/studio/test_native_request_batching.py \
+	tests/studio/test_inference_requests_attention.py \
 	tests/studio/test_matrix_game3_torchrun_bridge.py \
 	tests/synthesis/test_lingbot_world_realtime.py \
 	tests/synthesis/test_lingbot_realtime_policy.py \
@@ -268,10 +279,14 @@ INFER_CUDA_CONTRACTS = \
 	tests/core/attention/test_kv_arena.py::test_cuda_long_sequence_attention_and_stream_ownership \
 	tests/core/attention/test_kv_arena.py::test_cuda_graph_replay_reads_updated_current_segment \
 	tests/core/attention/test_gqa_storage.py::test_efficient_cuda_gqa_matches_math \
+	tests/core/attention/test_native_causal_bias.py::test_varlen_packed_causal_automatically_uses_symbolic_bias \
+	tests/base_models/diffusion_model/models/autoencoders/test_wan_streaming_chunk.py::test_small_chunk_compile_and_channels_last_match_eager \
+	tests/base_models/diffusion_model/test_hy_nomas_cuda.py \
 	tests/runtime/test_inference_benchmark_correctness.py::test_denoise_benchmark_checks_every_step_before_timing \
 	tests/runtime/test_inference_benchmark_correctness.py::test_full_stack_actual_fp8_cache_or_graph_execution \
 	tests/core/execution/test_cuda_nvenc_transport.py \
 	tests/core/execution/test_cuda_nvenc_generation.py \
+	tests/synthesis/test_lingbot_cuda_frames.py \
 	tests/studio_visualization/test_realtime_nvenc.py::test_abgr_conversion_channel_order_and_alpha \
 	tests/core/acceleration/test_fused_fp8_ffn.py::test_fused_gelu_quantization_matches_materialized_activation \
 	tests/core/acceleration/test_fused_fp8_ffn.py::test_fused_ffn_real_fp8_graph_and_policy_fallback \

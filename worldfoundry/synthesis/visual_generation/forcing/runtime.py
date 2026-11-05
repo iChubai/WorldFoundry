@@ -73,9 +73,7 @@ def _hf_snapshot_file_candidates(repo_id: str, relative_path: str | Path) -> tup
                 candidates.append(snapshots / revision / relative)
         if snapshots.is_dir():
             candidates.extend(
-                snapshot / relative
-                for snapshot in sorted(snapshots.iterdir(), reverse=True)
-                if snapshot.is_dir()
+                snapshot / relative for snapshot in sorted(snapshots.iterdir(), reverse=True) if snapshot.is_dir()
             )
     return tuple(dict.fromkeys(candidates))
 
@@ -91,8 +89,7 @@ def _canonical_model_id(value: Any) -> str:
     if "self" in text:
         return "self-forcing"
     raise ValueError(
-        f"Unsupported forcing model id: {value!r}. "
-        "Expected self-forcing, causal-forcing, or rolling-forcing."
+        f"Unsupported forcing model id: {value!r}. Expected self-forcing, causal-forcing, or rolling-forcing."
     )
 
 
@@ -127,11 +124,7 @@ def _ckpt_root_candidates(model_id: str) -> tuple[Path, ...]:
         if model_id == "causal-forcing"
         else "WORLDFOUNDRY_SELF_FORCING_CKPT_ROOT"
     )
-    owner_layout = (
-        "zhuhz22--Causal-Forcing"
-        if model_id == "causal-forcing"
-        else "gdhe17--Self-Forcing"
-    )
+    owner_layout = "zhuhz22--Causal-Forcing" if model_id == "causal-forcing" else "gdhe17--Self-Forcing"
     return (
         checkpoint_root_path(ckpt_name, specific_env=env_name),
         checkpoint_root_path(owner_layout),
@@ -183,9 +176,7 @@ def _default_checkpoint_path(model_id: str) -> str:
             root / "checkpoints" / "self_forcing_dmd.pt",
             root / "self_forcing_dmd.pt",
             root / "checkpoints" / "self_forcing_sid.pt",
-            checkpoint_root_path("LongSANA_2B_480p_self_forcing")
-            / "checkpoints"
-            / "LongSANA_2B_480p_self_forcing.pt",
+            checkpoint_root_path("LongSANA_2B_480p_self_forcing") / "checkpoints" / "LongSANA_2B_480p_self_forcing.pt",
         )
     return str(_first_existing(candidates) or candidates[0])
 
@@ -281,76 +272,6 @@ def _image_source(images: Any) -> Any:
     return images
 
 
-def _write_torchvision_video_compat(root: Path) -> Path:
-    compat_dir = root / "torchvision_video_compat"
-    compat_dir.mkdir(parents=True, exist_ok=True)
-    (compat_dir / "sitecustomize.py").write_text(
-        '''"""Runtime-only compatibility for official forcing scripts."""
-
-from __future__ import annotations
-
-from pathlib import Path
-from typing import Any
-
-import numpy as np
-
-
-def _to_numpy_video(video_array: Any) -> np.ndarray:
-    if hasattr(video_array, "detach"):
-        video_array = video_array.detach().cpu().numpy()
-    array = np.asarray(video_array)
-    if array.ndim != 4:
-        raise ValueError(f"write_video expects a 4D video array, got shape {array.shape!r}")
-    if array.shape[1] in {1, 3, 4} and array.shape[-1] not in {1, 3, 4}:
-        array = np.moveaxis(array, 1, -1)
-    if np.issubdtype(array.dtype, np.floating):
-        max_value = float(np.nanmax(array)) if array.size else 1.0
-        if max_value <= 1.0:
-            array = array * 255.0
-        array = np.clip(array, 0, 255).astype(np.uint8)
-    elif array.dtype != np.uint8:
-        array = np.clip(array, 0, 255).astype(np.uint8)
-    return array
-
-
-def _install_write_video() -> None:
-    try:
-        import torchvision.io as tv_io
-    except Exception:
-        return
-
-    def write_video(
-        filename: str,
-        video_array: Any,
-        fps: float,
-        video_codec: str = "libx264",
-        options: dict[str, Any] | None = None,
-        audio_array: Any | None = None,
-        audio_fps: float | None = None,
-        audio_codec: str | None = None,
-    ) -> None:
-        del audio_array, audio_fps, audio_codec
-        import imageio.v2 as imageio
-
-        path = Path(filename)
-        path.parent.mkdir(parents=True, exist_ok=True)
-        writer_options = dict(options or {})
-        if video_codec:
-            writer_options.setdefault("codec", video_codec)
-        with imageio.get_writer(str(path), fps=fps, **writer_options) as writer:
-            for frame in _to_numpy_video(video_array):
-                writer.append_data(frame)
-
-    tv_io.write_video = write_video
-
-
-_install_write_video()
-''',
-        encoding="utf-8",
-    )
-    return compat_dir
-
-
 class _ForcingRuntime:
     """Shared in-tree runtime bridge for forcing-family official runners."""
 
@@ -379,18 +300,10 @@ class _ForcingRuntime:
         resolved_runtime_root = str(Path(runtime_root or _default_repo_root(resolved_model_id)).expanduser())
         self.model_id = resolved_model_id
         self.model_name = self.DISPLAY_NAMES[resolved_model_id]
-        self.generation_type = (
-            "text_to_video" if resolved_model_id == "rolling-forcing" else "text_or_image_to_video"
-        )
+        self.generation_type = "text_to_video" if resolved_model_id == "rolling-forcing" else "text_or_image_to_video"
         self.runtime_root = resolved_runtime_root
-        configured_checkpoint = Path(
-            checkpoint_path or _default_checkpoint_path(resolved_model_id)
-        ).expanduser()
-        stale_directory = (
-            "Causal-Forcing"
-            if resolved_model_id == "causal-forcing"
-            else "Self-Forcing"
-        )
+        configured_checkpoint = Path(checkpoint_path or _default_checkpoint_path(resolved_model_id)).expanduser()
+        stale_directory = "Causal-Forcing" if resolved_model_id == "causal-forcing" else "Self-Forcing"
         if not configured_checkpoint.is_file() and stale_directory in configured_checkpoint.parts:
             staged_checkpoint = Path(_default_checkpoint_path(resolved_model_id))
             if staged_checkpoint.is_file():
@@ -426,7 +339,9 @@ class _ForcingRuntime:
         if pretrained_model_path is not None and not isinstance(pretrained_model_path, Mapping):
             options["checkpoint_path"] = str(pretrained_model_path)
         options.update(kwargs)
-        resolved_model_id = _canonical_model_id(options.get("model_id") or options.get("profile_id") or model_id or cls.MODEL_ID)
+        resolved_model_id = _canonical_model_id(
+            options.get("model_id") or options.get("profile_id") or model_id or cls.MODEL_ID
+        )
         defaults = {
             key: options.pop(key)
             for key in tuple(options)
@@ -467,12 +382,8 @@ class _ForcingRuntime:
             "checkpoint_path": self.checkpoint_path,
             "checkpoint_exists": Path(self.checkpoint_path).is_file(),
             "wan_models_root": self.wan_models_root,
-            "wan_1_3b_exists": _wan_model_dir(
-                self.wan_models_root, "Wan2.1-T2V-1.3B"
-            ).is_dir(),
-            "wan_14b_exists": _wan_model_dir(
-                self.wan_models_root, "Wan2.1-T2V-14B"
-            ).is_dir(),
+            "wan_1_3b_exists": _wan_model_dir(self.wan_models_root, "Wan2.1-T2V-1.3B").is_dir(),
+            "wan_14b_exists": _wan_model_dir(self.wan_models_root, "Wan2.1-T2V-14B").is_dir(),
             "python_executable": self.python_executable,
             "i2v": bool(options.get("i2v", False)),
             "license": (
@@ -502,14 +413,16 @@ class _ForcingRuntime:
             env.get("PYTHONPATH", ""),
         ]
         env["PYTHONPATH"] = os.pathsep.join(item for item in pythonpath if item)
-        env["WORLDFOUNDRY_WAN_MODELS_ROOT"] = str(
-            Path(self.wan_models_root).expanduser().resolve()
-        )
+        env["WORLDFOUNDRY_WAN_MODELS_ROOT"] = str(Path(self.wan_models_root).expanduser().resolve())
         env["WORLDFOUNDRY_FORCING_VARIANT"] = self.model_id
         env.setdefault("TOKENIZERS_PARALLELISM", "false")
         env.setdefault("PYTHONUNBUFFERED", "1")
-        if self.device.startswith("cuda:"):
-            env.setdefault("CUDA_VISIBLE_DEVICES", self.device.split(":", 1)[1])
+        if self.device.startswith("cuda:") or (self.device == "cuda" and "CUDA_VISIBLE_DEVICES" not in env):
+            from worldfoundry.core.execution.device import cuda_visible_devices_from_device
+
+            visible_devices = cuda_visible_devices_from_device(self.device, inherited=env.get("CUDA_VISIBLE_DEVICES"))
+            if visible_devices is not None:
+                env["CUDA_VISIBLE_DEVICES"] = visible_devices
         return env
 
     def _write_prompt_file(self, root: Path, prompt: str, extended_prompt: str | None) -> tuple[Path, Path | None]:
@@ -587,9 +500,7 @@ class _ForcingRuntime:
         if self.model_id in {"self-forcing", "rolling-forcing"}:
             command.extend(["--num_samples", str(int(options.get("num_samples", 1)))])
             if self.model_id == "rolling-forcing":
-                command.extend(
-                    ["--wan_models_root", str(Path(self.wan_models_root).expanduser().resolve())]
-                )
+                command.extend(["--wan_models_root", str(Path(self.wan_models_root).expanduser().resolve())])
             if extended_prompt_path is not None:
                 command.extend(["--extended_prompt_path", str(extended_prompt_path)])
             if _as_bool(options.get("save_with_index", True)):
@@ -631,15 +542,32 @@ class _ForcingRuntime:
                 "RollingForcing's released checkpoint and official inference route are text-to-video only."
             )
         if self.model_id in {"self-forcing", "causal-forcing"}:
+            num_frame_per_block = 3
+            independent_first_frame = False
+            if self.model_id == "causal-forcing":
+                from omegaconf import OmegaConf
+
+                # Match the runner's default/selected config merge before loading weights.
+                config_path = Path(self.config_path).expanduser().resolve()
+                config = OmegaConf.merge(
+                    OmegaConf.load(config_path.with_name("default_config.yaml")),
+                    OmegaConf.load(config_path),
+                )
+                num_frame_per_block = int(getattr(config, "num_frame_per_block", 1))
+                independent_first_frame = bool(config.independent_first_frame)
             num_output_frames = int(options.get("num_output_frames", 21))
             generated_latent_frames = num_output_frames - 1 if i2v else num_output_frames
-            if generated_latent_frames <= 0 or generated_latent_frames % 3:
+            first_frame_offset = int(i2v or independent_first_frame)
+            block_latent_frames = num_output_frames - first_frame_offset
+            if generated_latent_frames <= 0 or block_latent_frames % num_frame_per_block:
                 mode = "I2V" if i2v else "T2V"
-                rule = "1 + 3k" if i2v else "3k"
+                rule = f"{num_frame_per_block}k"
+                if first_frame_offset:
+                    rule = f"1 + {rule}"
                 raise ValueError(
                     f"{self.model_name} {mode} num_output_frames must follow {rule}; "
-                    f"got {num_output_frames}. The released causal checkpoint generates "
-                    "three latent frames per block."
+                    f"got {num_output_frames}. Generation requires positive latent frames "
+                    f"with {num_frame_per_block} latent frames per block."
                 )
 
         with tempfile.TemporaryDirectory(prefix=f"worldfoundry_{self.model_id}_") as temp_dir_raw:
@@ -675,9 +603,7 @@ class _ForcingRuntime:
             )
             if completed.returncode != 0:
                 tail = "\n".join((completed.stdout or "").splitlines()[-40:])
-                raise RuntimeError(
-                    f"{self.model_name} command failed with exit code {completed.returncode}.\n{tail}"
-                )
+                raise RuntimeError(f"{self.model_name} command failed with exit code {completed.returncode}.\n{tail}")
             generated = _latest_mp4(output_dir)
             output_target.parent.mkdir(parents=True, exist_ok=True)
             if generated.resolve() != output_target:

@@ -78,7 +78,9 @@ def _geometry_points_and_colors(geometry: Any) -> tuple[np.ndarray, np.ndarray |
     return points, color_array[:, :3]
 
 
-def _scene_points_and_colors(scene_or_geometry: Any, *, max_points: int = 400_000) -> tuple[np.ndarray, np.ndarray | None] | None:
+def _scene_points_and_colors(
+    scene_or_geometry: Any, *, max_points: int = 400_000
+) -> tuple[np.ndarray, np.ndarray | None] | None:
     geometries = []
     if hasattr(scene_or_geometry, "geometry"):
         try:
@@ -127,16 +129,12 @@ def _scene_points_and_colors(scene_or_geometry: Any, *, max_points: int = 400_00
 
 def maybe_build_rerun_rrd(output_dir: str) -> Optional[str]:
     try:
-        import rerun as rr  # type: ignore
-        import rerun.blueprint as rrb  # type: ignore
+        import rerun as rr
+        import rerun.blueprint as rrb
     except Exception:
         return None
 
-    model_candidates = [
-        path
-        for path in collect_artifact_paths(output_dir)
-        if Path(path).suffix.lower() in MODEL_EXTS
-    ]
+    model_candidates = [path for path in collect_artifact_paths(output_dir) if Path(path).suffix.lower() in MODEL_EXTS]
     if not model_candidates:
         return None
     trimesh = _load_trimesh()
@@ -173,19 +171,31 @@ def prepare_run_record(record: RunRecord, entry: CatalogEntry | None = None) -> 
     record.preview_model = convert_model_for_preview(record.preview_model, record.output_dir)
     if not record.rrd_path and _env_flag(RERUN_PREVIEW_ENV):
         record.rrd_path = maybe_build_rerun_rrd(record.output_dir)
-    record.artifacts = sorted(_existing_artifact_paths([
-        *record.artifacts, record.preview_model, record.rrd_path,
-    ]))
+    record.artifacts = sorted(
+        _existing_artifact_paths(
+            [
+                *record.artifacts,
+                record.preview_model,
+                record.rrd_path,
+            ]
+        )
+    )
     converted = time.perf_counter()
     record.metadata["studio_viewports"] = build_studio_viewports_payload(
-        entry=entry, output_dir=record.output_dir,
-        previews={"preview_video": record.preview_video, "preview_image": record.preview_image,
-                  "preview_splat": record.preview_splat, "preview_model": record.preview_model,
-                  "rrd_path": record.rrd_path},
+        entry=entry,
+        output_dir=record.output_dir,
+        previews={
+            "preview_video": record.preview_video,
+            "preview_image": record.preview_image,
+            "preview_splat": record.preview_splat,
+            "preview_model": record.preview_model,
+            "rrd_path": record.rrd_path,
+        },
         artifact_paths=_viewport_artifact_paths(record.artifacts),
         gaussian_ply_predicate=_is_gaussian_splat_ply,
         result_metadata=record.metadata.get("result", {}).get("metadata")
-        if isinstance(record.metadata.get("result"), dict) else None,
+        if isinstance(record.metadata.get("result"), dict)
+        else None,
     )
     finished = time.perf_counter()
     timings = record.metadata.setdefault("studio_performance", {})

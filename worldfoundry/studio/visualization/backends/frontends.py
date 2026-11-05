@@ -90,7 +90,6 @@ def _world_backend(request) -> StudioVisualizationLaunch | None:
     return None
 
 
-
 def _points_backend(request) -> StudioVisualizationLaunch | None:
     serve_points_frontend(request.entry, request.launch_config)
     return None
@@ -134,7 +133,9 @@ STUDIO_VISUALIZATIONS = StudioVisualizationRegistry(
             aliases=("viser", "geometry", "pointcloud", "point-cloud"),
             match=_profile_mode(POINTS_FRONTEND),
             serve=_points_backend,
-            capabilities=BackendCapabilities(frozenset({"point_cloud", "mesh", "camera", "trajectory", "depth"}), score=80),
+            capabilities=BackendCapabilities(
+                frozenset({"point_cloud", "mesh", "camera", "trajectory", "depth"}), score=80
+            ),
         ),
         StudioVisualizationBackend(
             mode=SPARK_FRONTEND,
@@ -161,7 +162,9 @@ STUDIO_VISUALIZATIONS = StudioVisualizationRegistry(
             aliases=("rrd",),
             match=_profile_mode(RERUN_FRONTEND),
             serve=_rerun_backend,
-            capabilities=BackendCapabilities(frozenset({"timeline", "image", "video", "point_cloud", "mesh", "camera", "trajectory"}), score=70),
+            capabilities=BackendCapabilities(
+                frozenset({"timeline", "image", "video", "point_cloud", "mesh", "camera", "trajectory"}), score=70
+            ),
         ),
         StudioVisualizationBackend(
             mode=MEDIA_FRONTEND,
@@ -178,7 +181,23 @@ STUDIO_VISUALIZATIONS = StudioVisualizationRegistry(
 NATIVE_FRONTENDS = STUDIO_VISUALIZATIONS.native_modes
 DEFAULT_FRONTEND_PORTS = STUDIO_VISUALIZATIONS.default_ports
 SPARK_ASSET_EXTS = {".ply", ".spz", ".splat", ".ksplat", ".sog"}
-MEDIA_ASSET_EXTS = {".png", ".jpg", ".jpeg", ".webp", ".gif", ".bmp", ".mp4", ".mov", ".webm", ".mkv", ".avi", ".wav", ".mp3", ".flac", ".ogg"}
+MEDIA_ASSET_EXTS = {
+    ".png",
+    ".jpg",
+    ".jpeg",
+    ".webp",
+    ".gif",
+    ".bmp",
+    ".mp4",
+    ".mov",
+    ".webm",
+    ".mkv",
+    ".avi",
+    ".wav",
+    ".mp3",
+    ".flac",
+    ".ogg",
+}
 STUDIO_ASSET_DIR = VENDOR_ROOT.parent
 VENDOR_DIR = VENDOR_ROOT
 SPARK_VENDOR_DIR = SPARK_MODULE_PATH.parent
@@ -205,11 +224,7 @@ def serve_native_frontend(entry: CatalogEntry, launch_config: StudioLaunchConfig
 def host_for_frontend(launch_config: StudioLaunchConfig) -> str:
     """Return the bind host for standalone frontends."""
 
-    return (
-        launch_config.host
-        or env_first("WORLDFOUNDRY_STUDIO_HOST")
-        or "127.0.0.1"
-    ).strip() or "127.0.0.1"
+    return (launch_config.host or env_first("WORLDFOUNDRY_STUDIO_HOST") or "127.0.0.1").strip() or "127.0.0.1"
 
 
 def port_for_frontend(launch_config: StudioLaunchConfig, mode: str) -> int:
@@ -231,10 +246,7 @@ def port_for_frontend(launch_config: StudioLaunchConfig, mode: str) -> int:
 def print_remote_access(mode: str, host: str, port: int) -> None:
     """Emit concise SSH-tunnel instructions for local browser access."""
 
-    ssh_host = (
-        env_first("WORLDFOUNDRY_STUDIO_SSH_HOST")
-        or "remote-host"
-    )
+    ssh_host = env_first("WORLDFOUNDRY_STUDIO_SSH_HOST") or "remote-host"
     remote_host = "127.0.0.1" if host in {"", "0.0.0.0", "127.0.0.1", "localhost"} else host
     local_url = f"http://127.0.0.1:{port}"
     print(f"WorldFoundry Studio frontend: {mode}", flush=True)
@@ -278,10 +290,7 @@ def serve_points_frontend(entry: CatalogEntry, launch_config: StudioLaunchConfig
 def serve_embodied_frontend(entry: CatalogEntry, launch_config: StudioLaunchConfig) -> None:
     """Keep embodied simulator UX native by advertising its own URL."""
 
-    simulator_url = (
-        launch_config.simulator_url
-        or env_first("WORLDFOUNDRY_STUDIO_SIMULATOR_URL")
-    ).strip()
+    simulator_url = (launch_config.simulator_url or env_first("WORLDFOUNDRY_STUDIO_SIMULATOR_URL")).strip()
     if not simulator_url:
         model = entry.display_name or entry.model_id
         raise SystemExit(
@@ -373,10 +382,7 @@ def serve_rerun_frontend(entry: CatalogEntry, launch_config: StudioLaunchConfig)
 
     host = host_for_frontend(launch_config)
     port = port_for_frontend(launch_config, RERUN_FRONTEND)
-    rerun_url = (
-        launch_config.simulator_url
-        or env_first("WORLDFOUNDRY_STUDIO_RERUN_URL")
-    ).strip()
+    rerun_url = (launch_config.simulator_url or env_first("WORLDFOUNDRY_STUDIO_RERUN_URL")).strip()
     if rerun_url:
         print(f"WorldFoundry Studio frontend: {RERUN_FRONTEND}", flush=True)
         print(f"Rerun URL: {rerun_url}", flush=True)
@@ -492,12 +498,14 @@ class MediaViewerHandler(BaseHTTPRequestHandler):
             if not self.asset_path.exists() or not path_allowed(self.asset_path, self.allowed_roots):
                 self.send_error(HTTPStatus.NOT_FOUND, "Asset not found or not allowed.")
                 return
-            self._send_file(self.asset_path, mimetypes.guess_type(self.asset_path.name)[0] or "application/octet-stream")
+            self._send_file(
+                self.asset_path, mimetypes.guess_type(self.asset_path.name)[0] or "application/octet-stream"
+            )
             return
         self.send_error(HTTPStatus.NOT_FOUND, "Not found.")
 
-    def log_message(self, fmt: str, *args) -> None:
-        print(f"[media] {self.address_string()} - {fmt % args}", flush=True)
+    def log_message(self, format: str, *args) -> None:
+        print(f"[media] {self.address_string()} - {format % args}", flush=True)
 
     def _send_html(self, html: str) -> None:
         send_text_response(self, html, "text/html; charset=utf-8")
@@ -543,9 +551,7 @@ class SparkViewerHandler(BaseHTTPRequestHandler):
 
     def do_GET(self) -> None:  # noqa: N802 - BaseHTTPRequestHandler API.
         parsed = urlparse(self.path)
-        if parsed.path not in self.AUTH_EXEMPT_PATHS and not _handler_request_authorized(
-            self, parsed, self.auth_token
-        ):
+        if parsed.path not in self.AUTH_EXEMPT_PATHS and not _handler_request_authorized(self, parsed, self.auth_token):
             return
         with self.telemetry.track(parsed.path):
             self._handle_get(parsed)
@@ -601,8 +607,8 @@ class SparkViewerHandler(BaseHTTPRequestHandler):
             return
         self.send_error(HTTPStatus.NOT_FOUND, "Not found.")
 
-    def log_message(self, fmt: str, *args) -> None:
-        print(f"[spark] {self.address_string()} - {fmt % args}", flush=True)
+    def log_message(self, format: str, *args) -> None:
+        print(f"[spark] {self.address_string()} - {format % args}", flush=True)
 
     def _send_html(self, html: str) -> None:
         send_text_response(self, html, "text/html; charset=utf-8")
@@ -879,10 +885,7 @@ def _explicit_points_port(launch_config: StudioLaunchConfig) -> int | None:
 
     if launch_config.port is not None:
         return int(launch_config.port)
-    raw_port = (
-        env_first("WORLDFOUNDRY_STUDIO_POINTS_PORT", "WORLDFOUNDRY_STUDIO_VISER_PORT")
-        or ""
-    ).strip()
+    raw_port = (env_first("WORLDFOUNDRY_STUDIO_POINTS_PORT", "WORLDFOUNDRY_STUDIO_VISER_PORT") or "").strip()
     return int(raw_port) if raw_port else None
 
 
@@ -943,10 +946,7 @@ def _print_tunnel_for_url(url: str) -> None:
     parsed = urlparse(url)
     if not parsed.hostname or not parsed.port:
         return
-    ssh_host = (
-        env_first("WORLDFOUNDRY_STUDIO_SSH_HOST")
-        or "remote-host"
-    )
+    ssh_host = env_first("WORLDFOUNDRY_STUDIO_SSH_HOST") or "remote-host"
     remote_host = "127.0.0.1" if parsed.hostname in {"localhost", "127.0.0.1", "0.0.0.0"} else parsed.hostname
     print(f"Local tunnel: ssh -N -L {parsed.port}:{remote_host}:{parsed.port} {ssh_host}", flush=True)
     print(f"Browser URL: http://127.0.0.1:{parsed.port}", flush=True)

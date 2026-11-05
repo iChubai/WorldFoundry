@@ -234,6 +234,7 @@ class LingBotWorldV2Pipeline(PipelineABC):
         seed: int = 42,
         **_: Any,
     ) -> dict[str, Any] | None:
+        """Return a causal chunk whose CUDA RGB frames materialize only at the consumer."""
         session = self._ensure_realtime_session()
         if prompt is not None:
             session.update_prompt(prompt)
@@ -241,6 +242,7 @@ class LingBotWorldV2Pipeline(PipelineABC):
             interactions=list(interactions or ()),
             control_segments=realtime_segments,
             seed=seed,
+            defer_frame_materialization=True,
         )
 
     def realtime_next_output_frames(self) -> int:

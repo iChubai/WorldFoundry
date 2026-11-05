@@ -114,8 +114,7 @@ def resolve_benchmark_repo_root(
         cache_slug = github_repo_cache_slug(repo_url)
     if cache_slug is None:
         raise ValueError(
-            f"cannot resolve benchmark repo root for {benchmark_id!r}; "
-            f"set {env_name} or provide repo_url/slug"
+            f"cannot resolve benchmark repo root for {benchmark_id!r}; set {env_name} or provide repo_url/slug"
         )
 
     candidates: list[Path] = [canonical_benchmark_repo_path(slug=cache_slug, env=env)]

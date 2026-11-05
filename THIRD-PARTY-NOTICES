@@ -16,6 +16,25 @@ Copyright and SPDX notices in source files remain applicable and are retained.
 Separately installed upstream checkouts and downloaded artifacts retain their
 own license bundles and terms. This file is included in wheels and sdists.
 
+Hy-Nomas native inference components
+------------------------------------
+Source: https://github.com/Tencent-Hunyuan/Hy-Nomas
+Source revision: 911cea6458a89c2663513ff7099561ec190dd491
+Component conversion reference: https://github.com/jiaxiangc/diffusers
+Component reference revision: 12722ef11acf8e335f96cfd4faea17de78cd8909
+Copyright: 2026 The Hy-Nomas Team and The HuggingFace Team.
+License: Apache License 2.0; the complete license text is retained in this bundle.
+Files: worldfoundry/base_models/diffusion_model/models/networks/hy_nomas.py,
+       worldfoundry/base_models/diffusion_model/models/autoencoders/pixelumm.py,
+       worldfoundry/base_models/diffusion_model/models/encoders/hy_nomas.py,
+       worldfoundry/operators/hy_nomas_operator.py.
+
+WorldFoundry adapts the released segment-causal transformer, camera conditioning,
+structured-action token windows, and distilled PixelUMM inference decoder.
+Shared attention, normalization, modulation, MLP, scheduling, Qwen2.5-VL loading,
+weight quantization, and KV storage remain canonical WorldFoundry components.
+Model assets retain their separately distributed licenses.
+
 Matrix-Game 4 native inference and optional game source
 -----------------------------------------------------
 Source: https://github.com/SkyworkAI/Matrix-Game
@@ -727,6 +746,18 @@ Permission is hereby granted, free of charge, to any person obtaining a copy of 
 - The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
 
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+
+Pika H3 Flex inference adapter
+------------------------------
+Source: https://github.com/Pika-Labs/Pika-H3-Flex
+Source revision: 0ddf55ad7067ca1e76812253bd7b4600df87f759
+Source license: Apache-2.0
+Model license: MiniMax H3 Community License Agreement
+
+WorldFoundry adapts the released Pika H3 Flex LoRA loading and six-step
+inference contract onto the canonical MiniMax-H3 components. The adapter
+weights and MiniMax-H3 base weights remain separate model assets.
 
 
 Dependencies and Licenses:

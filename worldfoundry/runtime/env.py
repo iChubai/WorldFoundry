@@ -287,7 +287,9 @@ def first_env_value(names: Sequence[str], env: EnvMapping | None = None) -> str 
     return None
 
 
-def first_env_path(names: Sequence[str], env: EnvMapping | None = None, default: str | Path | None = None) -> Path | None:
+def first_env_path(
+    names: Sequence[str], env: EnvMapping | None = None, default: str | Path | None = None
+) -> Path | None:
     """Return the first non-empty environment path from a priority list.
 
     Args:

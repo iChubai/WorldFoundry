@@ -132,8 +132,7 @@ class WanTAEPreviewDecoder:
     def encode(self, images: torch.Tensor) -> torch.Tensor:
         del images
         raise RuntimeError(
-            "TAEW2.2 is a decode-only preview; image-conditioned Wan2.2 "
-            "requires the official VAE encoder"
+            "TAEW2.2 is a decode-only preview; image-conditioned Wan2.2 requires the official VAE encoder"
         )
 
     @torch.no_grad()
@@ -143,17 +142,10 @@ class WanTAEPreviewDecoder:
         request: DiffusionRequest | None = None,
     ) -> torch.Tensor:
         if latents.ndim != 5 or int(latents.shape[1]) != self.latent_ch:
-            raise ValueError(
-                "TAEW2.2 preview expects BCTHW latents with 48 channels, "
-                f"got {tuple(latents.shape)}"
-            )
+            raise ValueError(f"TAEW2.2 preview expects BCTHW latents with 48 channels, got {tuple(latents.shape)}")
         if request is not None and bool(request.inputs.get("return_latent", False)):
             return latents
-        vace_reference_count = (
-            int(request.inputs.get("vace_reference_count", 0))
-            if request is not None
-            else 0
-        )
+        vace_reference_count = int(request.inputs.get("vace_reference_count", 0)) if request is not None else 0
         if vace_reference_count:
             latents = latents[:, :, vace_reference_count:]
         frozen_context = request.inputs.get("frozen_context_latents") if request is not None else None
@@ -163,9 +155,7 @@ class WanTAEPreviewDecoder:
             latents = latents[:, :, : -int(frozen_context.shape[-3])]
         self.clear_cache()
         self._decode_calls += 1
-        preview = self.vae.decode(
-            latents.to(device=self.device, dtype=self.dtype).transpose(1, 2)
-        )
+        preview = self.vae.decode(latents.to(device=self.device, dtype=self.dtype).transpose(1, 2))
         if not isinstance(preview, torch.Tensor) or preview.ndim != 5:
             raise TypeError("TAEW2.2 decode must return one BTCHW tensor")
         return preview.transpose(1, 2).mul(2).sub(1).clamp_(-1, 1)
@@ -180,9 +170,7 @@ class WanTAEPreviewDecoder:
                 "vae_parallel_degree": 1,
             },
             "effective": {
-                "vae_decode": (
-                    "taew2.2-preview" if self._decode_calls else "taew2.2-preview (pending)"
-                ),
+                "vae_decode": ("taew2.2-preview" if self._decode_calls else "taew2.2-preview (pending)"),
                 "vae_preview_decoder": "taew2.2",
                 "vae_decode_autocast": str(self.dtype),
                 "vae_spatial_tiles": 0,
@@ -213,9 +201,13 @@ def _resolve_vae_decode_autocast(policy: RuntimePolicy) -> torch.dtype | None:
         value = policy.dtype if policy.dtype in (torch.float16, torch.bfloat16) else torch.bfloat16
     if isinstance(value, str) and value.strip().lower() == "half":
         value = "fp16"
-    dtype = value if isinstance(value, torch.dtype) else parse_torch_dtype(
-        value,
-        owner="Wan VAE decode autocast",
+    dtype = (
+        value
+        if isinstance(value, torch.dtype)
+        else parse_torch_dtype(
+            value,
+            owner="Wan VAE decode autocast",
+        )
     )
     if dtype not in (torch.float16, torch.bfloat16):
         raise ValueError("Wan VAE decode autocast supports only fp16 or bf16")
@@ -233,9 +225,13 @@ def _resolve_vae_weight_dtype(policy: RuntimePolicy) -> torch.dtype:
     value = policy.options.get("vae_weight_dtype", policy.dtype)
     if value is None or value == "":
         value = torch.float32
-    dtype = value if isinstance(value, torch.dtype) else parse_torch_dtype(
-        value,
-        owner="Wan VAE weight dtype",
+    dtype = (
+        value
+        if isinstance(value, torch.dtype)
+        else parse_torch_dtype(
+            value,
+            owner="Wan VAE weight dtype",
+        )
     )
     if dtype not in (torch.float16, torch.bfloat16, torch.float32):
         raise ValueError("Wan VAE weight dtype supports only fp16, bf16, or fp32")
@@ -269,13 +265,9 @@ def _convert_conv3d_weights_channels_last_3d(
                 continue
             weight = child.weight
             if weight.device.type == "meta":
-                raise RuntimeError(
-                    "cannot apply VAE channels_last_3d to a meta Conv3d weight"
-                )
+                raise RuntimeError("cannot apply VAE channels_last_3d to a meta Conv3d weight")
             total += 1
-            weight.data = weight.data.contiguous(
-                memory_format=torch.channels_last_3d
-            )
+            weight.data = weight.data.contiguous(memory_format=torch.channels_last_3d)
             if weight.is_contiguous(memory_format=torch.channels_last_3d):
                 effective += 1
     return effective, total
@@ -443,10 +435,7 @@ class WanVideoDecoder:
             raise ValueError("Wan VAE tile_size and tile_stride must contain two values")
         if any(value <= 0 for value in (*self.tile_size, *self.tile_stride)):
             raise ValueError("Wan VAE tile sizes and strides must be positive")
-        if any(
-            stride > size
-            for stride, size in zip(self.tile_stride, self.tile_size)
-        ):
+        if any(stride > size for stride, size in zip(self.tile_stride, self.tile_size)):
             raise ValueError("Wan VAE tile stride cannot exceed tile size")
         self.temporal_chunk_size = int(temporal_chunk_size)
         if self.temporal_chunk_size < 0:
@@ -455,9 +444,7 @@ class WanVideoDecoder:
             import torch.distributed as dist
 
             if not dist.is_available() or not dist.is_initialized():
-                raise RuntimeError(
-                    "Wan VAE parallel decode requires an initialized torchrun process group"
-                )
+                raise RuntimeError("Wan VAE parallel decode requires an initialized torchrun process group")
             active_world_size = int(dist.get_world_size())
             if active_world_size != self.parallel_degree:
                 raise RuntimeError(
@@ -478,7 +465,9 @@ class WanVideoDecoder:
         self.conv2d_count = int(conv2d_count)
         self.streaming_compile = bool(streaming_compile)
         self._streaming_decoder = None
+        self._streaming_compile_effective = False
         self._streaming_decode_calls = 0
+        self._streaming_compiled_decode_calls = 0
         self._decode_calls = 0
         self._dense_decode_calls = 0
         self._spatial_tiled_decode_calls = 0
@@ -547,8 +536,7 @@ class WanVideoDecoder:
         from .model import count_conv3d
 
         model = self.vae.model
-        return {"encode": [None] * count_conv3d(model.encoder),
-                "decode": [None] * count_conv3d(model.decoder)}
+        return {"encode": [None] * count_conv3d(model.encoder), "decode": [None] * count_conv3d(model.decoder)}
 
     @torch.no_grad()
     def encode_chunk(self, pixels: torch.Tensor, *, state: dict, is_first_chunk=False) -> torch.Tensor:
@@ -571,7 +559,8 @@ class WanVideoDecoder:
                 start, end = 4 * index, 4 * (index + 1)
             value, updated, _ = model.encoder(
                 pixels[:, :, start:end].contiguous(memory_format=memory_format),
-                feat_cache=list(state["encode"]), feat_idx=[0],
+                feat_cache=list(state["encode"]),
+                feat_idx=[0],
             )
             commit_feature_cache(state["encode"], updated)
             encoded.append(value)
@@ -581,20 +570,30 @@ class WanVideoDecoder:
 
     @torch.no_grad()
     def decode_chunk(self, latents: torch.Tensor, *, state: dict, is_first_chunk=False) -> torch.Tensor:
-        """Continue causal Wan2.1 decode without retaining output frames on GPU."""
+        """Continue causal Wan2.1 decode; a failure clears decode history and requires a rollout restart."""
 
         del is_first_chunk
-        from .streaming import decode_wan_chunk
+        from .streaming import decode_wan_chunk, prepare_wan_chunk_decoder
 
         if self._streaming_decoder is None:
-            self._streaming_decoder = self.vae.model.decoder
-            if self.streaming_compile:
-                self._streaming_decoder = torch.compile(
-                    self._streaming_decoder, dynamic=False, fullgraph=True, options={"triton.cudagraphs": False},
-                )
-        pixels = decode_wan_chunk(self.vae.model, self.vae.scale, latents, state["decode"],
-                                  channels_last_3d=self.channels_last_3d_requested, decoder=self._streaming_decoder)
+            self._streaming_decoder = prepare_wan_chunk_decoder(
+                self.vae.model.decoder,
+                compile_decoder=self.streaming_compile,
+            )
+            self._streaming_compile_effective = self._streaming_decoder is not self.vae.model.decoder or hasattr(
+                self._streaming_decoder, "_orig_mod"
+            )
+        pixels = decode_wan_chunk(
+            self.vae.model,
+            self.vae.scale,
+            latents,
+            state["decode"],
+            channels_last_3d=self.channels_last_3d_requested,
+            decoder=self._streaming_decoder,
+        )
         self._streaming_decode_calls += latents.shape[2]
+        if self._streaming_compile_effective:
+            self._streaming_compiled_decode_calls += latents.shape[2]
         return pixels
 
     def reset_dtype(self) -> None:
@@ -638,16 +637,9 @@ class WanVideoDecoder:
         # every early-return seam as well, otherwise a return-latent request can
         # inherit a previous request's multi-tile/chunk execution receipts.
         self._begin_decode_window()
-        vace_reference_count = (
-            int(request.inputs.get("vace_reference_count", 0))
-            if request is not None
-            else 0
-        )
+        vace_reference_count = int(request.inputs.get("vace_reference_count", 0)) if request is not None else 0
         if vace_reference_count < 0 or vace_reference_count >= int(latents.shape[2]):
-            raise ValueError(
-                "vace_reference_count must be non-negative and smaller than the "
-                "latent sequence"
-            )
+            raise ValueError("vace_reference_count must be non-negative and smaller than the latent sequence")
         if vace_reference_count:
             # VACE prepends one latent-time token per reference image.  These
             # tokens condition the transformer but are not part of the output
@@ -685,27 +677,19 @@ class WanVideoDecoder:
             if len(tasks) <= 1:
                 self._single_spatial_tile_calls += 1
                 self._lifetime_single_spatial_tile_calls += 1
-                fallback = (
-                    "vae_spatial_tiling: requested shape produced one tile; "
-                    "no spatial sharding benefit"
-                )
+                fallback = "vae_spatial_tiling: requested shape produced one tile; no spatial sharding benefit"
                 if fallback not in self._fallbacks:
                     self._fallbacks.append(fallback)
         if self.temporal_chunk_size:
             latent_frames = int(prepared.shape[2])
-            self._last_temporal_chunk_count = (
-                latent_frames + self.temporal_chunk_size - 1
-            ) // self.temporal_chunk_size
+            self._last_temporal_chunk_count = (latent_frames + self.temporal_chunk_size - 1) // self.temporal_chunk_size
             if self._last_temporal_chunk_count > 1:
                 self._temporal_chunked_decode_calls += 1
                 self._lifetime_temporal_chunked_decode_calls += 1
             else:
                 self._single_temporal_chunk_calls += 1
                 self._lifetime_single_temporal_chunk_calls += 1
-                fallback = (
-                    "vae_temporal_chunking: latent sequence fits in one chunk; "
-                    "no multi-chunk streaming benefit"
-                )
+                fallback = "vae_temporal_chunking: latent sequence fits in one chunk; no multi-chunk streaming benefit"
                 if fallback not in self._fallbacks:
                     self._fallbacks.append(fallback)
         if self.parallel_degree > 1:
@@ -740,14 +724,12 @@ class WanVideoDecoder:
         )
 
     def runtime_optimization_report(self) -> dict[str, object]:
-        """Report requested and actually executed Wan VAE decode paths."""
+        """Report executed decode paths; streaming compile counts successful wrapper latent steps."""
 
         autocast_dtype = getattr(self.vae, "decode_autocast_dtype", None)
         autocast_elided = bool(
             autocast_dtype is not None
-            and getattr(self.vae, "_decode_autocast_is_redundant", lambda _dtype: False)(
-                self.dtype
-            )
+            and getattr(self.vae, "_decode_autocast_is_redundant", lambda _dtype: False)(self.dtype)
         )
         requested = {
             "vae_weight_dtype": str(self.weight_dtype_requested),
@@ -778,9 +760,7 @@ class WanVideoDecoder:
             decode_effective += " (single-temporal-chunk)"
         effective = {
             "vae_weight_dtype": str(self.dtype),
-            "vae_channels_last_3d": (
-                "enabled" if self.channels_last_3d_requested else "disabled"
-            ),
+            "vae_channels_last_3d": ("enabled" if self.channels_last_3d_requested else "disabled"),
             "vae_channels_last_3d_conv3d": self.channels_last_3d_effective,
             "vae_conv3d_count": self.conv3d_count,
             "vae_channels_last": "enabled" if self.channels_last_requested else "disabled",
@@ -789,21 +769,13 @@ class WanVideoDecoder:
             "vae_decode": decode_effective,
             "vae_decode_autocast": str(autocast_dtype) if autocast_dtype else "disabled",
             "vae_decode_autocast_context": (
-                "elided-resident-dtype"
-                if autocast_elided
-                else ("enabled" if autocast_dtype else "disabled")
+                "elided-resident-dtype" if autocast_elided else ("enabled" if autocast_dtype else "disabled")
             ),
             "vae_spatial_tiles": self._last_spatial_tile_count,
-            "vae_parallel_degree": (
-                self.parallel_degree if self._parallel_tiled_decode_calls else 1
-            ),
+            "vae_parallel_degree": (self.parallel_degree if self._parallel_tiled_decode_calls else 1),
             "vae_offload": self.offload_effective,
         }
-        approximate = bool(
-            autocast_dtype is not None
-            or self.tiled
-            or self.dtype in (torch.float16, torch.bfloat16)
-        )
+        approximate = bool(autocast_dtype is not None or self.tiled or self.dtype in (torch.float16, torch.bfloat16))
         return {
             "requested": requested,
             "effective": effective,
@@ -812,15 +784,14 @@ class WanVideoDecoder:
             "runtime": {
                 "window_id": self._decode_window,
                 "streaming_latent_decode_calls": self._streaming_decode_calls,
-                "streaming_compiled_decode_calls": self._streaming_decode_calls if self.streaming_compile else 0,
+                "streaming_compile_effective": self._streaming_compile_effective,
+                "streaming_compiled_decode_calls": self._streaming_compiled_decode_calls,
                 "vae_channels_last_3d_conv3d": self.channels_last_3d_effective,
                 "vae_conv3d_count": self.conv3d_count,
                 "vae_channels_last_conv2d": self.channels_last_effective,
                 "vae_conv2d_count": self.conv2d_count,
                 "vae_decode_autocast_context": (
-                    "elided-resident-dtype"
-                    if autocast_elided
-                    else ("enabled" if autocast_dtype else "disabled")
+                    "elided-resident-dtype" if autocast_elided else ("enabled" if autocast_dtype else "disabled")
                 ),
                 "decode_calls": self._decode_calls,
                 "dense_decode_calls": self._dense_decode_calls,
@@ -834,21 +805,11 @@ class WanVideoDecoder:
                 "lifetime": {
                     "decode_calls": self._lifetime_decode_calls,
                     "dense_decode_calls": self._lifetime_dense_decode_calls,
-                    "spatial_tiled_decode_calls": (
-                        self._lifetime_spatial_tiled_decode_calls
-                    ),
-                    "temporal_chunked_decode_calls": (
-                        self._lifetime_temporal_chunked_decode_calls
-                    ),
-                    "parallel_tiled_decode_calls": (
-                        self._lifetime_parallel_tiled_decode_calls
-                    ),
-                    "single_spatial_tile_calls": (
-                        self._lifetime_single_spatial_tile_calls
-                    ),
-                    "single_temporal_chunk_calls": (
-                        self._lifetime_single_temporal_chunk_calls
-                    ),
+                    "spatial_tiled_decode_calls": (self._lifetime_spatial_tiled_decode_calls),
+                    "temporal_chunked_decode_calls": (self._lifetime_temporal_chunked_decode_calls),
+                    "parallel_tiled_decode_calls": (self._lifetime_parallel_tiled_decode_calls),
+                    "single_spatial_tile_calls": (self._lifetime_single_spatial_tile_calls),
+                    "single_temporal_chunk_calls": (self._lifetime_single_temporal_chunk_calls),
                 },
             },
         }
@@ -1005,9 +966,7 @@ def _load_wan_video_decoder(
     if not isinstance(channels_last, bool):
         raise TypeError("vae_channels_last must be a bool")
     vae_policy = replace(policy, dtype=weight_dtype)
-    vae_offload_effective = (
-        "resident" if policy.offload.mode is OffloadMode.NONE else requested_offload
-    )
+    vae_offload_effective = "resident" if policy.offload.mode is OffloadMode.NONE else requested_offload
     if policy.offload.mode is OffloadMode.BLOCK:
         # BLOCK is a two-layer transformer-window contract.  Wan's VAE has no
         # compatible block container; sending it through the generic wrapper
@@ -1098,9 +1057,7 @@ def _build_wan_video_decoder(
             context.policy.options.get("vae_parallel_degree", 1),
         ),
     )
-    parallel_degree = (
-        1 if raw_parallel_degree is None or raw_parallel_degree is False else int(raw_parallel_degree)
-    )
+    parallel_degree = 1 if raw_parallel_degree is None or raw_parallel_degree is False else int(raw_parallel_degree)
     return _load_wan_video_decoder(
         context.require_checkpoint("weights"),
         replace(

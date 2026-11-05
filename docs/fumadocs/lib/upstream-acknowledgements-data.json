@@ -1,6 +1,6 @@
 {
-  "modelsTotal": 222,
-  "benchmarksTotal": 74,
+  "modelsTotal": 224,
+  "benchmarksTotal": 75,
   "infrastructure": [
     {
       "name": "FastVideo",
@@ -26,7 +26,7 @@
       "id": "video",
       "label": "Video",
       "labelZh": "视频",
-      "count": 45,
+      "count": 46,
       "entries": [
         {
           "name": "Allegro",
@@ -149,6 +149,10 @@
           "url": "https://github.com/PKU-YuanGroup/Open-Sora-Plan"
         },
         {
+          "name": "Pika H3 Flex",
+          "url": "https://github.com/Pika-Labs/Pika-H3-Flex"
+        },
+        {
           "name": "Pusa VidGen",
           "url": "https://github.com/Yaofang-Liu/Pusa-VidGen"
         },
@@ -214,7 +218,7 @@
       "id": "world_models",
       "label": "World models",
       "labelZh": "世界模型",
-      "count": 95,
+      "count": 96,
       "entries": [
         {
           "name": "ABot-World-0-5B-LF",
@@ -355,6 +359,10 @@
         {
           "name": "HunyuanWorld-Voyager",
           "url": "https://github.com/Tencent-Hunyuan/HunyuanWorld-Voyager"
+        },
+        {
+          "name": "Hy-Nomas",
+          "url": "https://github.com/Tencent-Hunyuan/Hy-Nomas"
         },
         {
           "name": "HY-World 2.0",
@@ -955,7 +963,7 @@
       "id": "video",
       "label": "Video & world benchmarks",
       "labelZh": "视频与世界模型评测",
-      "count": 52,
+      "count": 53,
       "entries": [
         {
           "name": "4DWorldBench",
@@ -1191,6 +1199,11 @@
           "name": "WorldBench",
           "url": "https://github.com/WorldBenchmark/worldbench_eval",
           "repo": "WorldBenchmark/worldbench_eval"
+        },
+        {
+          "name": "WorldMemBench",
+          "url": "https://github.com/ZJU-REAL/WorldMemBench",
+          "repo": "ZJU-REAL/WorldMemBench"
         },
         {
           "name": "WorldModelBench",

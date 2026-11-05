@@ -636,7 +636,7 @@ def test_generation_worker_uses_split_input_frame_count() -> None:
             self.messages.append(json.loads(raw))
 
     class Resampler:
-        effective_keys = frozenset()
+        has_pending_input = False
 
         def __init__(self) -> None:
             self.sampled: list[int] = []
@@ -699,7 +699,7 @@ def test_generation_worker_uses_split_input_frame_count() -> None:
 
 def test_generation_worker_logs_periodic_perf(caplog: pytest.LogCaptureFixture) -> None:
     class Resampler:
-        effective_keys = frozenset({"w"})
+        has_pending_input = True
 
         def sample_chunk(self, num_frames: int, *, wall_time: float):
             del num_frames

@@ -12,7 +12,11 @@ import threading
 from dataclasses import dataclass
 from html import escape
 from pathlib import Path
-from typing import Any
+from typing import Any, Literal, TypeAlias, cast, get_args
+
+ViserPointShape: TypeAlias = Literal["square", "diamond", "circle", "rounded", "sparkle"]
+ViserUpAxis: TypeAlias = Literal["+x", "+y", "+z", "-x", "-y", "-z"]
+ViserUpDirection: TypeAlias = ViserUpAxis | tuple[float, float, float]
 
 POINT_CLOUD_NODE = "worldfoundry_studio_point_cloud"
 AUXILIARY_MESH_NODE = "worldfoundry_studio_auxiliary_mesh"
@@ -20,12 +24,13 @@ CAMERA_NODE_ROOT = "worldfoundry_studio_cameras"
 DEFAULT_MAX_POINTS = 400_000
 DEFAULT_POINT_SIZE = 0.02
 DEFAULT_CAMERA_SIZE = 0.08
-DEFAULT_POINT_SHAPE = "circle"
+DEFAULT_POINT_SHAPE: ViserPointShape = "circle"
 DEFAULT_VISER_PORT_BASE = 18590
 DEFAULT_VISER_PORT_COUNT = 8
-VISER_POINT_SHAPES = frozenset({"square", "diamond", "circle", "rounded", "sparkle"})
+VISER_POINT_SHAPES = frozenset(get_args(ViserPointShape))
 VISER_COORDINATE_PRESETS = frozenset({"asset-native", "opencv-colmap", "opencv-to-opengl"})
 VISER_ALIGNMENT_PRESETS = frozenset({"auto", "none", "first-camera", "first-camera-opengl"})
+_VISER_UP_AXES = frozenset(get_args(ViserUpAxis))
 
 
 @dataclass(frozen=True)
@@ -155,17 +160,13 @@ def viser_orientation_defaults(model_id: str, geometry_path: str | Path) -> dict
     }
     if model_id in {"vggt", "vggt-omega", "depth-anything-v3"}:
         defaults.update(
-            coordinate_preset=(
-                "opencv-to-opengl" if Path(geometry_path).suffix.lower() == ".npz" else "asset-native"
-            ),
+            coordinate_preset=("opencv-to-opengl" if Path(geometry_path).suffix.lower() == ".npz" else "asset-native"),
             up_direction="+y",
             alignment="none",
         )
     elif model_id in {"unidepth-v2-prior", "unik3d-prior"}:
         defaults.update(
-            coordinate_preset=(
-                "opencv-to-opengl" if Path(geometry_path).suffix.lower() == ".npz" else "asset-native"
-            ),
+            coordinate_preset=("opencv-to-opengl" if Path(geometry_path).suffix.lower() == ".npz" else "asset-native"),
             up_direction="+y",
             alignment="none",
         )
@@ -178,22 +179,32 @@ def viser_orientation_defaults(model_id: str, geometry_path: str | Path) -> dict
     return defaults
 
 
-def _parse_up_direction(value: str | None, *, default: str) -> str | tuple[float, float, float]:
-    """Parse a Viser up-direction string or comma/space-separated vector."""
+def _parse_up_direction(value: str | None, *, default: str) -> ViserUpDirection:
+    """Parse a Viser up-direction axis or comma/space-separated vector, falling back to ``default``."""
 
-    text = (value or default).strip().lower()
-    if text in {"+x", "+y", "+z", "-x", "-y", "-z"}:
-        return text
-    parts = [part for part in text.replace(",", " ").split() if part]
+    for candidate in (value, default):
+        parsed = _parse_up_direction_text(candidate or "")
+        if parsed is not None:
+            return parsed
+    raise ValueError(f"Invalid default Viser up direction: {default!r}")
+
+
+def _parse_up_direction_text(value: str) -> ViserUpDirection | None:
+    """Return a signed axis or a non-zero 3-vector, or ``None`` when ``value`` is neither."""
+
+    text = value.strip().lower()
+    if text in _VISER_UP_AXES:
+        return cast(ViserUpAxis, text)
+    parts = text.replace(",", " ").split()
     if len(parts) != 3:
-        return default
+        return None
     try:
-        vector = tuple(float(part) for part in parts)
+        x, y, z = (float(part) for part in parts)
     except ValueError:
-        return default
-    if sum(abs(part) for part in vector) == 0:
-        return default
-    return vector
+        return None
+    if abs(x) + abs(y) + abs(z) == 0:
+        return None
+    return (x, y, z)
 
 
 def _coordinate_transform_matrix(preset: str) -> Any | None:
@@ -757,6 +768,32 @@ def _initial_camera_pose(points: Any | None, mesh: Any | None, up_direction: Any
     return center + direction * distance, center, up
 
 
+def _set_initial_camera(server: Any, position: Any, look_at: Any, up: Any, *, fov: float) -> None:
+    """Point every new Viser client at the geometry.
+
+    viser>=1.0 configures ``server.initial_camera``. viser 0.2 has no such
+    attribute, so each client's camera is set once its first camera state
+    arrives. Its ``position`` setter moves ``look_at`` by the same offset, so
+    ``look_at`` is assigned last.
+    """
+
+    initial_camera = getattr(server, "initial_camera", None)
+    if initial_camera is not None:
+        initial_camera.position = position
+        initial_camera.look_at = look_at
+        initial_camera.up = up
+        initial_camera.fov = fov
+        return
+
+    def point_client_camera(client: Any) -> None:
+        client.camera.up_direction = up
+        client.camera.position = position
+        client.camera.look_at = look_at
+        client.camera.fov = fov
+
+    server.on_client_connect(point_client_camera)
+
+
 def _add_camera_frustums(server: Any, poses: list[Any], *, scale: float) -> int:
     """Add lightweight sidecar camera frustums to a Viser scene."""
 
@@ -849,20 +886,13 @@ class StudioViserService:
         points = None
         colors = None
         try:
-            host = (
-                host
-                or os.getenv("WORLDFOUNDRY_STUDIO_VISER_HOST")
-                or "127.0.0.1"
-            ).strip() or "127.0.0.1"
+            host = (host or os.getenv("WORLDFOUNDRY_STUDIO_VISER_HOST") or "127.0.0.1").strip() or "127.0.0.1"
             if host not in {"127.0.0.1", "localhost"}:
                 return ViserPresentation(
                     html=_fallback_card("Viser host rejected", "Only loopback hosts are permitted."),
                     caption="Refusing non-loopback Viser bind.",
                 )
-            limit = int(
-                os.getenv("WORLDFOUNDRY_STUDIO_VISER_MAX_POINTS")
-                or str(DEFAULT_MAX_POINTS)
-            )
+            limit = int(os.getenv("WORLDFOUNDRY_STUDIO_VISER_MAX_POINTS") or str(DEFAULT_MAX_POINTS))
             limit = max(limit, 1024)
             point_size_override = os.getenv("WORLDFOUNDRY_STUDIO_VISER_POINT_SIZE")
             point_size = (
@@ -870,22 +900,25 @@ class StudioViserService:
                 if point_size_override is not None
                 else None
             )
-            point_shape = _env_choice("WORLDFOUNDRY_STUDIO_VISER_POINT_SHAPE", DEFAULT_POINT_SHAPE, VISER_POINT_SHAPES)
+            point_shape = cast(
+                ViserPointShape,
+                _env_choice("WORLDFOUNDRY_STUDIO_VISER_POINT_SHAPE", DEFAULT_POINT_SHAPE, VISER_POINT_SHAPES),
+            )
             orientation_defaults = viser_orientation_defaults(model_id, geometry_path)
             coordinate_preset = _normalize_coordinate_preset(
-                os.getenv("WORLDFOUNDRY_STUDIO_VISER_COORDINATE_PRESET")
-                or orientation_defaults["coordinate_preset"]
+                os.getenv("WORLDFOUNDRY_STUDIO_VISER_COORDINATE_PRESET") or orientation_defaults["coordinate_preset"]
             )
             alignment_preset = _normalize_alignment_preset(
-                os.getenv("WORLDFOUNDRY_STUDIO_VISER_ALIGNMENT")
-                or orientation_defaults["alignment"]
+                os.getenv("WORLDFOUNDRY_STUDIO_VISER_ALIGNMENT") or orientation_defaults["alignment"]
             )
             camera_size = _env_float("WORLDFOUNDRY_STUDIO_VISER_CAMERA_SIZE", DEFAULT_CAMERA_SIZE, minimum=0.000001)
             camera_poses = _load_camera_poses(geometry_path)
             effective_alignment = (
-                "first-camera" if alignment_preset == "auto" and camera_poses else
-                "none" if alignment_preset == "auto" else
-                alignment_preset
+                "first-camera"
+                if alignment_preset == "auto" and camera_poses
+                else "none"
+                if alignment_preset == "auto"
+                else alignment_preset
             )
             show_cameras = _env_bool("WORLDFOUNDRY_STUDIO_VISER_SHOW_CAMERAS", bool(camera_poses))
             alignment_matrix = _alignment_transform_matrix(camera_poses, alignment_preset)
@@ -893,9 +926,7 @@ class StudioViserService:
             transformed_camera_poses = _transform_camera_poses(camera_poses, full_transform)
             up_direction = _parse_up_direction(
                 os.getenv("WORLDFOUNDRY_STUDIO_VISER_UP_DIRECTION"),
-                default=orientation_defaults.get(
-                    "up_direction", _default_up_direction_for_preset(coordinate_preset)
-                ),
+                default=orientation_defaults.get("up_direction", _default_up_direction_for_preset(coordinate_preset)),
             )
             has_point_cloud = _has_explicit_point_cloud(geometry_path)
             if geometry_path.suffix.lower() not in {".pcd", ".xyz", ".npz"}:
@@ -928,10 +959,7 @@ class StudioViserService:
             port = int(server.get_port())
             server.scene.set_up_direction(up_direction)
             camera_position, camera_target, camera_up = _initial_camera_pose(points, mesh, up_direction)
-            server.initial_camera.position = camera_position
-            server.initial_camera.look_at = camera_target
-            server.initial_camera.up = camera_up
-            server.initial_camera.fov = math.radians(60.0)
+            _set_initial_camera(server, camera_position, camera_target, camera_up, fov=math.radians(60.0))
             server.scene.remove_by_name(POINT_CLOUD_NODE)
             server.scene.remove_by_name(AUXILIARY_MESH_NODE)
             server.scene.remove_by_name(f"/{CAMERA_NODE_ROOT}")
@@ -960,8 +988,7 @@ class StudioViserService:
 
         url = f"http://{host}:{port}/"
         orientation_caption = (
-            f"coords={coordinate_preset} · alignment={effective_alignment} · "
-            f"up={up_direction} · {camera_caption}"
+            f"coords={coordinate_preset} · alignment={effective_alignment} · up={up_direction} · {camera_caption}"
         )
         if not embed:
             return ViserPresentation(

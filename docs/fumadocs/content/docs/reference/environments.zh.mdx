@@ -350,6 +350,16 @@ Autotune 默认值通过 `setdefault` 应用，因此启动前导出的值优先
 `TORCHINDUCTOR_AUTOTUNE_REMOTE_CACHE=0`；只有集群提供兼容服务时才启用远端
 autotune cache。
 
+Dynamo 的进程内图变体数量限制与上述磁盘缓存相互独立。共享 module 和 callable
+编译入口支持正整数环境变量 `WORLDFOUNDRY_COMPILE_RECOMPILE_LIMIT` 与
+`WORLDFOUNDRY_COMPILE_ACCUMULATED_RECOMPILE_LIMIT`。未设置时保留 PyTorch
+现有值；显式非法值会在修改任一限制前报错。这些设置作用于整个进程，复用已有
+编译 wrapper 时也会应用。只有重编译日志表明实际形状超过现有限制时，才在 worker
+启动前调整；较大的限制可能增加编译时间和内存占用。
+
+共享入口中的非空编译 `options` 会替代默认 mode；与显式非默认 mode 同时使用会
+报错。只有底层 callable、policy 和 options 相同时，才复用同一 wrapper。
+
 ## 日志
 
 下列 CLI 标志和环境变量进入同一套 opt-in 日志管线

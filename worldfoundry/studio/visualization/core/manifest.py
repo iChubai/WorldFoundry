@@ -1,9 +1,18 @@
 """Viewport manifest payload shared by Studio manifests, routing, and viewers."""
 
-
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, Mapping
+from pathlib import Path
+from typing import Any, Callable, Mapping, Sequence
+
+from worldfoundry.studio.inference.catalog import CatalogEntry
+from worldfoundry.studio.visualization.providers.run_record import (
+    first_embodied_trace_candidate,
+    first_episode_metadata_candidate,
+    first_geometry_point_candidate,
+    first_simulator_replay_candidate,
+    first_splat_asset,
+)
 
 
 class ViewportKind(str, Enum):
@@ -195,19 +204,8 @@ def _int_or_default(value: Any, default: int) -> int:
     except (TypeError, ValueError):
         return default
 
+
 # --- studio_viewports payload builder ---
-
-from pathlib import Path
-from typing import Callable, Mapping, Sequence
-
-from worldfoundry.studio.inference.catalog import CatalogEntry
-from worldfoundry.studio.visualization.providers.run_record import (
-    first_embodied_trace_candidate,
-    first_episode_metadata_candidate,
-    first_geometry_point_candidate,
-    first_simulator_replay_candidate,
-    first_splat_asset,
-)
 
 
 def _relative_to_run(path_text: str | None, output_dir: str) -> str | None:
@@ -278,9 +276,9 @@ def build_studio_viewports_payload(
     )
     mesh_rel = _relative_to_run(str(preview_model) if preview_model else None, output_dir)
 
-    coordinate_frame = _str_or_none(
-        result_metadata.get("coordinate_frame") if result_metadata is not None else None
-    ) or "world"
+    coordinate_frame = (
+        _str_or_none(result_metadata.get("coordinate_frame") if result_metadata is not None else None) or "world"
+    )
     points_assets = PointsViewportAssets(
         point_cloud_path=point_rel,
         mesh_path=mesh_rel,

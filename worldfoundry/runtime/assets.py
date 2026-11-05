@@ -203,18 +203,20 @@ def worldfoundry_path_tokens(env: EnvMapping | None = None) -> dict[str, str]:
     environ = os.environ if env is None else env
     repo_root = _repo_root()
     tokens = core_worldfoundry_path_tokens(environ)
-    tokens.update({
-        "WORLDFOUNDRY_BENCH_ROOT": str(Path(environ.get("WORLDFOUNDRY_BENCH_ROOT") or repo_root).expanduser()),
-        "WORLDFOUNDRY_REPO_ROOT": str(Path(environ.get("WORLDFOUNDRY_REPO_ROOT") or repo_root).expanduser()),
-        "WORLDFOUNDRY_CACHE_DIR": str(resolve_cache_dir(environ)),
-        "WORLDFOUNDRY_DATA_DIR": str(resolve_data_dir(environ)),
-        "WORLDFOUNDRY_MODEL_DIR": str(resolve_model_dir(environ)),
-        "WORLDFOUNDRY_ARTIFACT_DIR": str(resolve_artifact_dir(environ)),
-        "WORLDFOUNDRY_CKPT_DIR": str(resolve_ckpt_dir(environ)),
-        "WORLDFOUNDRY_HFD_ROOT": str(resolve_hfd_root(environ)),
-        "WORLDFOUNDRY_HFD_DATASET_ROOT": str(hfd_dataset_root_path(env=environ)),
-        "WORLDFOUNDRY_BENCHMARK_REPO_ROOT": str(benchmark_repo_cache_root(environ)),
-    })
+    tokens.update(
+        {
+            "WORLDFOUNDRY_BENCH_ROOT": str(Path(environ.get("WORLDFOUNDRY_BENCH_ROOT") or repo_root).expanduser()),
+            "WORLDFOUNDRY_REPO_ROOT": str(Path(environ.get("WORLDFOUNDRY_REPO_ROOT") or repo_root).expanduser()),
+            "WORLDFOUNDRY_CACHE_DIR": str(resolve_cache_dir(environ)),
+            "WORLDFOUNDRY_DATA_DIR": str(resolve_data_dir(environ)),
+            "WORLDFOUNDRY_MODEL_DIR": str(resolve_model_dir(environ)),
+            "WORLDFOUNDRY_ARTIFACT_DIR": str(resolve_artifact_dir(environ)),
+            "WORLDFOUNDRY_CKPT_DIR": str(resolve_ckpt_dir(environ)),
+            "WORLDFOUNDRY_HFD_ROOT": str(resolve_hfd_root(environ)),
+            "WORLDFOUNDRY_HFD_DATASET_ROOT": str(hfd_dataset_root_path(env=environ)),
+            "WORLDFOUNDRY_BENCHMARK_REPO_ROOT": str(benchmark_repo_cache_root(environ)),
+        }
+    )
     return tokens
 
 

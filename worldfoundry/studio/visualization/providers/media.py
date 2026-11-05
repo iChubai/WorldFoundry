@@ -21,10 +21,22 @@ class MediaProvider:
             artifact = infer_visualization_artifact(path)
             if artifact.kind not in MEDIA_KINDS:
                 continue
-            layers.append(Layer(layer_id=path.stem, kind=artifact.kind, uri=path.as_posix(), metadata={"format": artifact.format_hint}))
+            layers.append(
+                Layer(
+                    layer_id=path.stem,
+                    kind=artifact.kind,
+                    uri=path.as_posix(),
+                    metadata={"format": artifact.format_hint},
+                )
+            )
         if not layers:
             return None
-        return VisualizationScene(scene_id=f"media/{Path(paths[0]).stem}", title="Media Preview", layers=tuple(layers), recommended_backend="media")
+        return VisualizationScene(
+            scene_id=f"media/{Path(paths[0]).stem}",
+            title="Media Preview",
+            layers=tuple(layers),
+            recommended_backend="media",
+        )
 
 
 def _source_paths(source) -> list[Path]:

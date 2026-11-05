@@ -198,8 +198,7 @@ class RuntimeFingerprint:
         mismatches = self.compatibility_mismatches(other, fields=fields)
         if mismatches:
             details = ", ".join(
-                f"{name}={baseline!r}/{candidate!r}"
-                for name, (baseline, candidate) in mismatches.items()
+                f"{name}={baseline!r}/{candidate!r}" for name, (baseline, candidate) in mismatches.items()
             )
             raise ValueError(f"incompatible runtime fingerprints: {details}")
 
@@ -381,7 +380,7 @@ class SampleDistribution:
             mad_over_median=mad / abs(median) if median else None,
         )
 
-    def to_dict(self) -> dict[str, float | None]:
+    def to_dict(self) -> dict[str, JsonValue]:
         return {
             "median": self.median,
             "p10": self.p10,

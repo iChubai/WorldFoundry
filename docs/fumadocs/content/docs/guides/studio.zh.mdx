@@ -109,6 +109,10 @@ Workspace UI **没有单独的 Settings 页**。每次提交前在 **Create Job*
 - **Runtime checks** — 可选内存/编译开关，例如 Torch Compile、CPU Offload、VAE Offload、Text Encoder Offload；仅在所选模型声明支持时显示。
 - **Call JSON / Load JSON** — 合并进 `call_kwargs` 和 `load_kwargs` 的高级 override。
 
+Attention 选项按模型声明的加载和推理边界传递；仅加载期支持的选项不会复制进
+推理 kwargs。显式 Load JSON / Call JSON 值在各自支持的边界优先，显式传入
+不支持的 kwargs 仍会触发校验错误。
+
 打开 **Create Job** 或切换 task profile 时，表单会先用 Workspace 启动时加载
 的默认值预填。catalog 和 task profile 中的模型专用官方 demo 值仍优先于这些
 共享默认值。
@@ -789,9 +793,17 @@ WASD = move
 Arrow keys / IJKL = look
 ```
 
-键盘和摇杆的按下/释放边沿会立即通过当前实时通道发送。常驻 runtime 在模型
-chunk 边界采样最新的有效控制状态；输入不会创建第二个 inference request，也
-不会重新加载 pipeline。
+键盘和摇杆的按下/释放边沿会立即通过当前实时通道发送。常驻 runtime 将排队的
+状态变化重采样到各模型 chunk，不创建额外 inference request，也不重新加载
+pipeline。即使短按在生成期间已经释放，其有效状态仍会保留至少一个输入帧采样
+间隔；不足一帧的短按可能因此延长。读取当前按键状态不会消费排队的状态变化。
+worker 会继续处理待消费输入，排空后恢复正常 idle 行为。
+
+#### 输入采样限制
+
+输入保留保证控制被采样，不保证同一个生成 chunk 立即出现可见运动。
+MatrixGame2 的 stride-4 action encoder 可能在后续 chunk 才消费最后一行输入。
+仅落在最后一行的动作仍需该后续 chunk；输入保留本身不会排空模型的动作历史。
 
 ### 实时文本事件、Idle step 与输出分辨率
 

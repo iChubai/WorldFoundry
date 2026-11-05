@@ -4431,6 +4431,37 @@ def _hyworld_worldgen_scene_ref() -> str:
 
 
 CURATED_OVERRIDES: Dict[str, Dict[str, Any]] = {
+    "hy-nomas": {
+        "display_name": "Hy-Nomas",
+        "default_backend": "from_pretrained",
+        "default_model_ref": str(checkpoint_root_path("Hy-Nomas")),
+        "default_prompt": "A camera explores a coherent landscape.",
+        "default_task_type": "text-to-video",
+        "supports_from_pretrained": True,
+        "supports_stream": True,
+        "call_params": _native_diffusion_video_call_params()
+        + (
+            "segments",
+            "segment_latent_lengths",
+            "camera_extrinsics",
+            "kv_cache_quantization",
+            "max_cache_segments",
+            "cache_noise_sigma",
+        ),
+        "load_params": _native_diffusion_video_load_params() + ("text_encoder_path", "low_memory"),
+        "init_params": ("prompt", "seed", "height", "width"),
+        "stream_params": ("prompt", "interactions", "realtime_segments"),
+        "default_call_kwargs": {
+            "height": 720,
+            "width": 1280,
+            "num_frames": 120,
+            "num_inference_steps": 8,
+            "guidance_scale": 1.0,
+            "fps": 24,
+        },
+        "aliases": ("hynomas", "tencent/Hy-Nomas"),
+        "tags": ("world-model", "text-to-video", "camera-control", "native-diffusion"),
+    },
     "abot-world-0-5b-lf": {
         "display_name": "ABot-World-0-5B-LF",
         "category": "Video Generation",
@@ -11865,6 +11896,38 @@ CURATED_OVERRIDES: Dict[str, Dict[str, Any]] = {
         "aliases": ("hyperflow-h3", "minimax-h3-hyperflow"),
         "tags": ("text-to-video", "image-to-video", "reference-to-video", "joint-audio-video", "official-runtime"),
         "notes": "Eight-step HyperFlow adapter; local H3 components and the dedicated inference environment are required.",
+    },
+    "pika-h3-flex": {
+        "display_name": "Pika H3 Flex",
+        "category": "Video Generation",
+        "supports_from_pretrained": True,
+        "supports_stream": False,
+        "default_backend": "from_pretrained",
+        "default_task_type": "t2va",
+        "suggested_task_types": ("t2va", "i2va", "l2va", "fl2va", "ref2va"),
+        "default_model_ref": lambda: _checkpoint_model_ref(
+            "pika-h3-flex", "MiniMaxAI--MiniMax-H3", fallback=str(hfd_root_path("MiniMaxAI--MiniMax-H3"))
+        ),
+        "default_load_kwargs": {"adapter_task": "fl2va"},
+        "default_call_kwargs": {"num_frames": 124, "seed": 0, "return_dict": True},
+        "call_params": (
+            "prompt",
+            "images",
+            "references",
+            "task",
+            "output_path",
+            "return_dict",
+            "num_frames",
+            "short_edge",
+            "aspect_ratio",
+            "seed",
+            "fps",
+            "num_inference_steps",
+        ),
+        "load_params": ("base_model_path", "adapter_path", "adapter_task", "device"),
+        "aliases": ("pika-h3", "pika-h3-flex-fl2va", "pika-h3-flex-ref2va"),
+        "tags": ("text-to-video", "image-to-video", "reference-to-video", "joint-audio-video", "native-adapter"),
+        "notes": "Six-step Pika H3 Flex adapter over the shared in-tree MiniMax-H3 runtime; GPU artifact parity is pending.",
     },
     "ltx-2.5": {
         "display_name": "LTX-2.5 Distilled",

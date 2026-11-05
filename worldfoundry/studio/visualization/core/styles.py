@@ -5,7 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Any, Mapping
 
-DEFAULT_COLORMAP = 'viridis'
+DEFAULT_COLORMAP = "viridis"
 
 
 @dataclass(frozen=True)
@@ -22,13 +22,13 @@ class VisualizationStyle:
         return {
             key: value
             for key, value in {
-                'color': self.color,
-                'colormap': self.colormap,
-                'opacity': self.opacity,
-                'point_size': self.point_size,
-                'line_width': self.line_width,
-                'material': self.material,
-                'metadata': dict(self.metadata),
+                "color": self.color,
+                "colormap": self.colormap,
+                "opacity": self.opacity,
+                "point_size": self.point_size,
+                "line_width": self.line_width,
+                "material": self.material,
+                "metadata": dict(self.metadata),
             }.items()
             if value not in (None, {})
         }

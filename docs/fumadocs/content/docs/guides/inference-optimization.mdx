@@ -266,6 +266,10 @@ throughput gains.
   { name: "vae_parallel", hintLabel: "How", hint: "vae_parallel=True or a degree", description: "Rank-parallel Wan VAE tiles with a typed all-gather. Degree must be the full SP×CFG world size when those are on. Needs torchrun WORLD_SIZE>1.", reads: [{ label: "Applies to", value: "official Wan VAE, not TAEW preview" }] }
 ]} />
 
+At the native pipeline boundary, `cfg_parallel=True` selects two ranks;
+`False`, `0`, and `1` disable CFG parallelism. `cfg_parallel_degree` is an alias.
+When both are supplied, their normalized degrees must agree.
+
 ### Wan VAE decode
 
 <KvCatalog heading="VAE" vars rows={[
@@ -274,6 +278,18 @@ throughput gains.
   { name: "vae_temporal_chunk_size", hintLabel: "How", hint: "vae_temporal_chunk_size=4", description: "Causal temporal streaming decode. Convolution cache is kept across chunks. A sequence that fits in one chunk is not streaming.", reads: [{ label: "Applies to", value: "official Wan VAE" }] },
   { name: "vae_channels_last_3d", hintLabel: "How", hint: "vae_channels_last_3d=True", description: "Convert Conv3d weights to channels-last. Fails if the VAE has no Conv3d.", reads: [{ label: "Applies to", value: "native Wan VAE" }] }
 ]} />
+
+Wan's one-latent streaming decoder reuses compiled wrappers with the same policy
+and options across requests, while each request owns its convolution history.
+If a chunk fails after partially advancing that history, only that request's
+history is cleared and the original error is raised. Restart decoding from the
+beginning of the rollout rather than retrying only the failed chunk.
+
+Streaming receipts separate `compile_requested` from `compile_effective`.
+`compiled_decode_calls` counts latent steps in successfully returned chunks
+through the selected compiled wrapper, not kernel dispatches or measured speedup.
+`StreamingWanDecoder` counters reset with its request; the native Wan decoder's
+successful-return counters remain cumulative across requests.
 
 HunyuanVideo and Cosmos Predict2 expose their own `vae_tiling` (and Cosmos tile size/stride) on those pipelines only.
 
@@ -318,6 +334,13 @@ STA / VSA / VMoBA symbols come from the vendored `thirdparty/fastvideo-kernel` t
   { name: "int4", hintLabel: "How", hint: "quantization=\"int4\"", description: "Packed / groupwise storage, then dequantize + dense. Not a claimed INT4 GEMM speedup.", reads: [{ label: "Rejected with", value: "block or disk offload" }] },
   { name: "gguf", hintLabel: "How", hint: "quantization=\"gguf\" or a .gguf file", description: "Real GGUF tensor loader and compressed storage. There is no qualified GGUF low-bit GEMM in this runtime.", reads: [{ label: "Applies to", value: "native loader when the optional gguf package is installed" }] }
 ]} />
+
+Native pipeline loading accepts flat companions alongside `quantization` or
+`quantization_mode`: `quantization_exclude`, `quantization_compute_dtype`,
+`fp8_min_features`, `fp8_scaling` / `scaling`, `keep_dense_fallback`, and
+`use_fast_accum`. Explicit non-`None` values override the corresponding nested
+quantization settings without modifying the caller's configuration.
+`fp8_scaling` takes precedence over `scaling` when both are supplied.
 
 ### Preview decode only
 

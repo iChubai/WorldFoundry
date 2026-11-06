@@ -2,7 +2,8 @@
 
 import json
 import os
-from typing import Any
+from collections.abc import Sequence
+from typing import TYPE_CHECKING, Any
 
 import cv2
 import numpy as np
@@ -22,6 +23,9 @@ from ...base_models.three_dimensions.point_clouds.ply_io import (
 )
 from ...operators.vggt_operator import VGGTOperator
 from ..pipeline_utils import PipelineABC
+
+if TYPE_CHECKING:
+    from worldfoundry.base_models.three_dimensions.point_clouds.vggt_omega.runtime import VGGTOmegaRepresentation
 
 
 def _default_output_dir(name: str = "vggt_output") -> str:
@@ -99,7 +103,7 @@ class VGGTPipeline(PipelineABC):
 
     def __init__(
         self,
-        representation_model: VGGTRepresentation | None = None,
+        representation_model: "VGGTRepresentation | VGGTOmegaRepresentation | None" = None,
         reasoning_model: Any | None = None,
         synthesis_model: Any | None = None,
         operator: VGGTOperator | None = None,
@@ -111,7 +115,7 @@ class VGGTPipeline(PipelineABC):
         self.operator = operator or VGGTOperator()
 
     @classmethod
-    def from_pretrained(
+    def from_pretrained(  # ty: ignore[invalid-method-override]  # model-specific loader arguments, passed by keyword
         cls,
         model_path: str | dict[str, Any] | None = None,
         required_components: dict[str, Any] | None = None,
@@ -148,7 +152,7 @@ class VGGTPipeline(PipelineABC):
     def process(
         self,
         input_: str | np.ndarray | list[str] | list[np.ndarray],
-        interaction: str | dict[str, Any] | None = None,
+        interaction: str | list[str] | dict[str, Any] | None = None,
         **kwargs,
     ) -> VGGTResult:
         """Process and normalize input arguments and conditions for inference."""
@@ -159,6 +163,9 @@ class VGGTPipeline(PipelineABC):
         if not isinstance(images_data, list):
             images_data = [images_data]
 
+        if isinstance(interaction, list):
+            # Template-aligned interaction lists select the latest signal.
+            interaction = interaction[-1] if interaction else None
         if interaction is None:
             interaction_dict = {
                 "predict_cameras": True,
@@ -255,7 +262,7 @@ class VGGTPipeline(PipelineABC):
 
     def _export_video(
         self,
-        frames: list[Image.Image | np.ndarray],
+        frames: Sequence[Image.Image | np.ndarray],
         output_path: str,
         fps: int = 12,
     ) -> str:
@@ -491,9 +498,12 @@ class VGGTPipeline(PipelineABC):
         """
         Thin wrapper: delegate 3DGS rendering to VGGTRepresentation.
         """
-        if self.representation_model is None:
+        representation = self.representation_model
+        if representation is None:
             raise RuntimeError("Representation model not loaded. Use from_pretrained() first.")
-        return self.representation_model.render_with_3dgs(
+        if not isinstance(representation, VGGTRepresentation):
+            raise NotImplementedError(f"{type(representation).__name__} does not implement 3DGS rendering.")
+        return representation.render_with_3dgs(
             ply_path=ply_path,
             camera_config=camera_config,
             image_width=image_width,

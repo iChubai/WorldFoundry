@@ -37,13 +37,14 @@ import os
 import tempfile
 from collections.abc import Generator
 from contextlib import contextmanager
-from typing import Any
+from typing import Any, cast
 from urllib.parse import urlparse
 
-import boto3
-from botocore.exceptions import ClientError
 from torch.distributed.checkpoint import FileSystemReader, FileSystemWriter
 from torch.distributed.checkpoint.filesystem import FileSystemBase
+
+boto3 = __import__("boto3")
+ClientError = __import__("botocore.exceptions", fromlist=["ClientError"]).ClientError
 
 # ──────────────────────────────────────────────────────────────────────────
 # DCP FileSystemBase — 64 MiB memory spool, then disk; not a general S3 client
@@ -97,10 +98,11 @@ class S3FileSystem(FileSystemBase):
             with tempfile.SpooledTemporaryFile(max_size=S3_STREAM_SPOOL_MAX_SIZE, mode="w+b") as stream:
                 self.s3_client.download_fileobj(bucket, key, stream)
                 stream.seek(0)
-                yield stream
+                # SpooledTemporaryFile implements IOBase; its typing.IO stub is structural instead.
+                yield cast(io.IOBase, stream)
         elif mode == "wb":
             with tempfile.SpooledTemporaryFile(max_size=S3_STREAM_SPOOL_MAX_SIZE, mode="w+b") as stream:
-                yield stream
+                yield cast(io.IOBase, stream)
                 stream.seek(0)
                 self.s3_client.upload_fileobj(stream, bucket, key)
         else:

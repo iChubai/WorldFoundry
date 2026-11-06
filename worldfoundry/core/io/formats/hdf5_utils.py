@@ -10,9 +10,10 @@ None fields are dropped on save (``exclude_none=True``). This is not
 a general HDF5 ORM and does not stream video frames.
 """
 
-import h5py
 import numpy as np
 from pydantic import BaseModel
+
+h5py = __import__("h5py")
 
 # ──────────────────────────────────────────────────────────────────────────
 # Nested Pydantic / dict ↔ HDF5 — None dropped; not a video streamer

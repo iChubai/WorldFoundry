@@ -35,14 +35,14 @@ from collections.abc import Callable
 from pathlib import Path
 from urllib.parse import urlsplit
 
-from loguru import logger
-
 from worldfoundry.core.io.filesystem.disk import (
     CACHE_MIN_FREE_ENV,
     cache_min_free_bytes,
     ensure_free_disk,
     raise_if_disk_space_error,
 )
+
+logger = __import__("loguru", fromlist=["logger"]).logger
 
 __all__ = ["download_to_cache"]
 

@@ -19,7 +19,7 @@ from __future__ import annotations
 
 import contextlib
 from collections.abc import Sequence
-from typing import Literal
+from typing import Any, Literal, cast
 
 import cv2
 import numpy as np
@@ -235,7 +235,7 @@ def colorize_depth_map(
 
     # Inverse-depth stretch: linear depth compresses the near field.
     disp = (1 / depth - 1 / far) / (1 / near - 1 / far)
-    colored = np.nan_to_num(matplotlib.colormaps[cmap](1.0 - disp)[..., :3], 0)
+    colored = np.nan_to_num(matplotlib.colormaps[cmap](1.0 - disp)[..., :3], copy=False)
     return np.ascontiguousarray((colored.clip(0, 1) * 255).astype(np.uint8))
 
 
@@ -328,7 +328,7 @@ def download_file_from_url(url: str, filename: str, timeout: float = 60.0) -> st
     import logging
     import os
 
-    import requests
+    requests = __import__("requests")
 
     try:
         with requests.get(url, stream=True, allow_redirects=True, timeout=timeout) as response:
@@ -361,7 +361,8 @@ def apply_color_map(x, color_map: str = "inferno"):
     except AttributeError:
         from matplotlib import cm
 
-        cmap = cm.get_cmap(color_map)
+        # Older Matplotlib releases expose the fallback only; current stubs omit it.
+        cmap = cast(Any, cm).get_cmap(color_map)
     mapped = cmap(x.detach().clip(min=0, max=1).cpu().numpy())[..., :3]
     return torch.tensor(mapped, device=x.device, dtype=torch.float32)
 
@@ -666,6 +667,7 @@ def parse_game_control_config(
     else:
         key = config
         mouse = None
+    mouse_values = cast(Sequence[Sequence[float]], mouse)
 
     for i in range(len(key)):
         if mode == "templerun":
@@ -673,7 +675,7 @@ def parse_game_control_config(
         elif mode == "universal":
             w, s, a, d = key[i]
         else:
-            w, s, a, d = key[i][0], key[i][1], mouse[i][1] < 0, mouse[i][1] > 0
+            w, s, a, d = key[i][0], key[i][1], mouse_values[i][1] < 0, mouse_values[i][1] > 0
 
         key_data[i] = {
             "W": bool(w),
@@ -685,7 +687,7 @@ def parse_game_control_config(
             key_data[i].update({"left": bool(left), "right": bool(right)})
 
         if mode == "universal":
-            mouse_y, mouse_x = mouse[i]
+            mouse_y, mouse_x = mouse_values[i]
             mouse_y = -1 * mouse_y  # recipe Y is inverted relative to image +Y
             if i == 0:
                 # First frame pins the cursor to the 640×352 letterbox center.
@@ -1131,7 +1133,7 @@ def visualize_wasd_and_rotation_ui(
     if wasd_actions is None and c2ws is None:
         raise ValueError("Either wasd_actions or c2ws must be provided.")
     if wasd_actions is None:
-        wasd_actions = extract_translation_wasd(c2ws, translation_threshold)
+        wasd_actions = extract_translation_wasd(cast(np.ndarray, c2ws), translation_threshold)
 
     if ijkl_actions is not None:
         rotation_directions = [ijkl_onehot_to_direction(ijkl) for ijkl in ijkl_actions]
@@ -1209,7 +1211,7 @@ def save_openloop_action_comparison(
         ax.legend()
 
     fig.supxlabel(f"Continuous Timestep (across {n_chunk_action} inferences)")
-    plt.tight_layout(rect=[0, 0, 1, 0.98])
+    plt.tight_layout(rect=(0, 0, 1, 0.98))
     fig.suptitle("Comparison of Ground Truth and Inferred Actions", fontsize=18)
     plt.savefig(save_path, dpi=300, bbox_inches="tight")
     plt.clf()

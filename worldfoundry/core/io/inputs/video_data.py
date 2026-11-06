@@ -33,7 +33,8 @@ class LowMemoryVideo:
     def __len__(self) -> int:
         """Frame count from the container; may be expensive on some codecs."""
 
-        return self.reader.count_frames()
+        # FFmpeg readers supply count_frames beyond ImageIO's generic Reader interface.
+        return self.reader.count_frames()  # ty: ignore[unresolved-attribute]
 
     def __getitem__(self, item: int) -> Image.Image:
         """Decode frame *item* as RGB PIL (drops alpha)."""
@@ -105,19 +106,17 @@ class LowMemoryImageFolder:
 
 def crop_and_resize(image: Image.Image, height: int, width: int) -> Image.Image:
     """Center-crop and resize a PIL image to ``(width, height)``."""
-    image = np.array(image)
-    image_height, image_width, _ = image.shape
+    pixels = np.array(image)
+    image_height, image_width, _ = pixels.shape
     if image_height / image_width < height / width:
         croped_width = int(image_height / height * width)
         left = (image_width - croped_width) // 2
-        image = image[:, left : left + croped_width]
-        image = Image.fromarray(image).resize((width, height))
+        pixels = pixels[:, left : left + croped_width]
     else:
         croped_height = int(image_width / width * height)
         left = (image_height - croped_height) // 2
-        image = image[left : left + croped_height, :]
-        image = Image.fromarray(image).resize((width, height))
-    return image
+        pixels = pixels[left : left + croped_height, :]
+    return Image.fromarray(pixels).resize((width, height))
 
 
 class VideoData:

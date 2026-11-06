@@ -46,8 +46,8 @@ class ParallelHelper:
 
     @staticmethod
     def split_tile_list(
-        tile_numel_dict: OrderedDict[int, int], parallel_group: torch.distributed.ProcessGroup = None
-    ) -> list[int]:
+        tile_numel_dict: OrderedDict[int, int], parallel_group: torch.distributed.ProcessGroup | None = None
+    ) -> tuple[list[int], list[int]]:
         """
         Splits the given tile size into a list of sizes that each rank should handle.
 
@@ -89,7 +89,7 @@ class ParallelHelper:
         tensor: torch.Tensor,
         *,
         world_size: int,
-        parallel_group: torch.distributed.ProcessGroup = None,
+        parallel_group: torch.distributed.ProcessGroup | None = None,
     ) -> torch.Tensor:
         """Gather equal-shaped tensors into ``[world_size, ...]`` storage."""
 
@@ -104,7 +104,9 @@ class ParallelHelper:
 
     @staticmethod
     def gather_frames(
-        frames: list[torch.Tensor], global_tile_idxs: list[int], parallel_group: torch.distributed.ProcessGroup = None
+        frames: list[torch.Tensor],
+        global_tile_idxs: list[int],
+        parallel_group: torch.distributed.ProcessGroup | None = None,
     ) -> list[torch.Tensor]:
         """
         Gathers frame data from all ranks in a distributed environment.
@@ -289,7 +291,7 @@ class TileProcessor:
         temporal_tile_overlap_factor: float = 0,
         sr_ratio=1,
         first_frame_as_image: bool = False,
-        parallel_group: torch.distributed.ProcessGroup = None,
+        parallel_group: torch.distributed.ProcessGroup | None = None,
     ):
         """
         Initializes an instance of the class.

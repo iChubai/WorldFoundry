@@ -25,7 +25,7 @@ from __future__ import annotations
 from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import asdict, dataclass, field
 from math import exp, floor, isfinite, sqrt
-from typing import Any
+from typing import Any, cast
 
 Point2 = tuple[float, float]
 Point3 = tuple[float, float, float]
@@ -847,10 +847,14 @@ def _patch_from_dict(row: Mapping[str, Any]) -> Patch3D:
     pose = payload.get("source_pose")
     if isinstance(pose, Mapping):
         payload["source_pose"] = CameraPose(
-            rotation=tuple(
-                tuple(float(value) for value in item) for item in pose.get("rotation", CameraPose.identity().rotation)
+            rotation=cast(
+                tuple[Point3, Point3, Point3],
+                tuple(
+                    tuple(float(value) for value in item)
+                    for item in pose.get("rotation", CameraPose.identity().rotation)
+                ),
             ),
-            translation=tuple(float(value) for value in pose.get("translation", (0.0, 0.0, 0.0))),
+            translation=cast(Point3, tuple(float(value) for value in pose.get("translation", (0.0, 0.0, 0.0)))),
             timestamp=float(pose.get("timestamp", 0.0)),
         )
     intrinsics = payload.get("source_intrinsics")

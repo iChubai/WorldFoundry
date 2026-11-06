@@ -1024,7 +1024,7 @@ def write_video(
     video_frames,
     output_path: str | Path,
     *,
-    fps: int = 16,
+    fps: float = 16,
     quality: int | None = None,
     format: str | None = None,
     **kwargs,
@@ -1053,8 +1053,8 @@ def write_video(
         write_kwargs = {"fps": fps, "macro_block_size": 1, **kwargs}
         if quality is not None:
             write_kwargs["quality"] = quality
-        # ImageIO v2 accepts THWC arrays and format names; its stub only declares lists and Format objects.
-        imageio.mimsave(str(target), frames, format=format, **write_kwargs)  # ty: ignore[no-matching-overload]
+        # ImageIO v2 accepts ndarray stacks and string formats beyond its declared overloads.
+        cast(Any, imageio.mimsave)(str(target), frames, format=format, **write_kwargs)
         return
 
     import imageio
@@ -1064,8 +1064,7 @@ def write_video(
         write_kwargs["quality"] = quality
     suffix = Path(str(output_path)).suffix or ".mp4"
     with tempfile.NamedTemporaryFile(suffix=suffix, delete=True) as handle:
-        # The same ImageIO v2 array/format contract applies to remote staging.
-        imageio.mimsave(handle.name, frames, format=format, **write_kwargs)  # ty: ignore[no-matching-overload]
+        cast(Any, imageio.mimsave)(handle.name, frames, format=format, **write_kwargs)
         handle.seek(0)
         write_binary_uri(output_path, handle.read())
 

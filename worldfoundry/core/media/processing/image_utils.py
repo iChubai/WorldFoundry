@@ -200,7 +200,7 @@ def resize_and_center_crop(image, target_width, target_height):
     scale_factor = max(target_width / original_width, target_height / original_height)
     resized_width = round(original_width * scale_factor)
     resized_height = round(original_height * scale_factor)
-    resized_image = pil_image.resize((resized_width, resized_height), Image.LANCZOS)
+    resized_image = pil_image.resize((resized_width, resized_height), Image.Resampling.LANCZOS)
     left = (resized_width - target_width) / 2
     top = (resized_height - target_height) / 2
     right = (resized_width + target_width) / 2
@@ -275,7 +275,7 @@ def resize_without_crop(image, target_width, target_height):
         return image
 
     pil_image = Image.fromarray(image)
-    resized_image = pil_image.resize((target_width, target_height), Image.LANCZOS)
+    resized_image = pil_image.resize((target_width, target_height), Image.Resampling.LANCZOS)
     return np.array(resized_image)
 
 
@@ -431,7 +431,7 @@ def basic_image_tensor_preprocess(
     """
     Check for resize, and divide by 255
     """
-    import kornia
+    kornia = __import__("kornia")
 
     assert torch.is_tensor(img)
     assert img.dim() >= 4, any_describe(img)

@@ -35,13 +35,15 @@ from typing import Any
 
 import attr
 import attrs
-from hydra import compose, initialize
-from hydra.core.config_store import ConfigStore
-from hydra.core.global_hydra import GlobalHydra
 from omegaconf import DictConfig, OmegaConf
 
 from worldfoundry.core.configuration.cosmos_config import Config
 from worldfoundry.core.distributed.runtime.logging import log
+
+_hydra_api = __import__("hydra", fromlist=["compose", "initialize"])
+compose, initialize = _hydra_api.compose, _hydra_api.initialize
+ConfigStore = __import__("hydra.core.config_store", fromlist=["ConfigStore"]).ConfigStore
+GlobalHydra = __import__("hydra.core.global_hydra", fromlist=["GlobalHydra"]).GlobalHydra
 
 # ──────────────────────────────────────────────────────────────────────────
 # Process-wide Hydra lock — ConfigStore / GlobalHydra must not leak across jobs

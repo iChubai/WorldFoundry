@@ -12,6 +12,7 @@ import pickle
 import shutil
 import sys
 from collections.abc import Callable
+from typing import Any
 
 from worldfoundry.core.utils.python.functional_utils import is_sequence
 
@@ -137,7 +138,8 @@ def utf_open(fname, mode):
     """
     import codecs
 
-    return codecs.open(fname, mode=mode, encoding="utf-8")
+    # Public contract: codecs.open semantics (binary-backed stream, no newline translation), not builtin open().
+    return codecs.open(fname, mode=mode, encoding="utf-8")  # ty: ignore[deprecated]
 
 
 def f_not_empty(*fpaths):
@@ -710,7 +712,7 @@ def next_available_file_name(
         """Format ``{i}`` / ``{i+1}`` suffix templates without ``eval``."""
         import re
 
-        def _eval_node(node: ast.AST, env: dict) -> object:
+        def _eval_node(node: ast.AST, env: dict[str, Any]) -> Any:
             """Evaluate ``{i}`` / ``{i+1}`` AST fragments; reject names outside *env*."""
 
             if isinstance(node, ast.Name):
@@ -767,7 +769,7 @@ def get_file_lock(*fpath, timeout: int = 15, logging_level="critical"):
     """
     import logging
 
-    from flufl.lock import Lock
+    Lock = __import__("flufl.lock", fromlist=["Lock"]).Lock
 
     logging.getLogger("flufl.lock").setLevel(logging_level.upper())
     return Lock(f_join(*fpath), lifetime=timeout)

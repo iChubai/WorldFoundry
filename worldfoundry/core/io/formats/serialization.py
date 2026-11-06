@@ -21,7 +21,7 @@ import tarfile
 from collections.abc import Iterable, Iterator, Mapping
 from dataclasses import asdict, is_dataclass
 from pathlib import Path
-from typing import IO, Any
+from typing import IO, Any, cast
 from uuid import uuid4
 
 import yaml
@@ -481,8 +481,9 @@ def dump_serialized(
     if fmt in _TEXT_FORMATS:
         return _write_text_or_return(str(obj), file, encoding=encoding)
     if fmt in _JSON_FORMATS:
+        json_options: dict[str, Any] = {**kwargs, "allow_nan": False}
         return _write_text_or_return(
-            json.dumps(obj, **{**kwargs, "allow_nan": False}),
+            json.dumps(obj, **json_options),
             file,
             encoding=encoding,
         )
@@ -491,7 +492,7 @@ def dump_serialized(
         text = dumper(obj, **{"sort_keys": False, **kwargs})
         return _write_text_or_return(text, file, encoding=encoding)
     if fmt in _JSONL_FORMATS:
-        json_kwargs = {**kwargs, "allow_nan": False}
+        json_kwargs: dict[str, Any] = {**kwargs, "allow_nan": False}
         text = "\n".join(json.dumps(item, **json_kwargs) for item in obj)
         if text:
             text += "\n"
@@ -647,7 +648,7 @@ def _load_image(
     raise ValueError(f"Unsupported image output format: {fmt}")
 
 
-def _dump_image(obj: Any, file: str | Path | IO[Any] | None, *, fmt: str, **kwargs: Any) -> str | None:
+def _dump_image(obj: Any, file: str | Path | IO[Any] | None, *, fmt: str, **kwargs: Any) -> bytes | None:
     """Encode a PIL-like object; *file* is required (images have no dumps-to-string form)."""
 
     if file is None:
@@ -663,9 +664,10 @@ def _load_video(file: str | Path | IO[Any], *, fmt: str, mode: str = "rgb", **kw
     import imageio
     import numpy as np
 
-    reader = imageio.get_reader(io.BytesIO(_read_bytes(file)), fmt, **kwargs)
+    # ImageIO accepts format names and yields ndarrays; its v2 stubs omit these forms.
+    reader = imageio.get_reader(io.BytesIO(_read_bytes(file)), cast(Any, fmt), **kwargs)
     frames = []
-    for frame in reader:
+    for frame in cast(Iterable[np.ndarray], reader):
         if mode == "gray":
             import cv2
 
@@ -683,7 +685,7 @@ def _dump_video(
     fps: int = 24,
     quality: int | None = 5,
     **kwargs: Any,
-) -> str | None:
+) -> bytes | None:
     """Encode a frame stack; *file* is required. ``macro_block_size=1`` avoids silent crops."""
 
     if file is None:
@@ -702,7 +704,8 @@ def _dump_video(
     if quality is not None:
         write_kwargs["quality"] = quality
     buffer = io.BytesIO()
-    imageio.mimsave(buffer, obj, fmt, **write_kwargs)
+    # ImageIO v2 accepts ndarray stacks and format names not represented by its overloads.
+    cast(Any, imageio.mimsave)(buffer, obj, fmt, **write_kwargs)
     return _write_bytes_or_return(buffer.getvalue(), file)
 
 

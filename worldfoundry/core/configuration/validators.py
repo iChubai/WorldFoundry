@@ -18,6 +18,7 @@ Public surface
 import itertools
 import json
 from abc import ABC, abstractmethod
+from typing import Any
 
 _UNSET = object()
 
@@ -30,7 +31,7 @@ _UNSET = object()
 class Validator(ABC):
     """Data descriptor that validates on write and stores under ``_<name>``."""
 
-    def __init__(self, default=_UNSET, hidden: bool = False):
+    def __init__(self, default: Any = _UNSET, hidden: bool = False):
         """Keep ``default`` until first set; ``hidden`` is UI-only."""
         self.default = default
         self.hidden = hidden

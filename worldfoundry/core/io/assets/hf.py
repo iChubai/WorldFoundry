@@ -67,7 +67,9 @@ def _hub_cache_dir(cache_dir: str | os.PathLike[str] | None) -> Path:
 
     if cache_dir is not None:
         return Path(cache_dir).expanduser()
-    from huggingface_hub.constants import HUGGINGFACE_HUB_CACHE
+    HUGGINGFACE_HUB_CACHE = __import__(
+        "huggingface_hub.constants", fromlist=["HUGGINGFACE_HUB_CACHE"]
+    ).HUGGINGFACE_HUB_CACHE
 
     return Path(HUGGINGFACE_HUB_CACHE).expanduser()
 
@@ -75,7 +77,7 @@ def _hub_cache_dir(cache_dir: str | os.PathLike[str] | None) -> Path:
 def _snapshot_download(*args, **kwargs) -> str:
     """Lazy-import Hub snapshot so CPU-only processes do not pay the import."""
 
-    from huggingface_hub import snapshot_download
+    snapshot_download = __import__("huggingface_hub", fromlist=["snapshot_download"]).snapshot_download
 
     return snapshot_download(*args, **kwargs)
 

@@ -8,6 +8,7 @@ the five places where a memory method may alter a sampler.
 
 from __future__ import annotations
 
+import builtins
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, field
 from enum import Enum
@@ -69,7 +70,7 @@ class SequenceSegment:
         return self.stop - self.start
 
     @property
-    def slice(self) -> slice:
+    def slice(self) -> builtins.slice:
         """Return the Python slice represented by this segment."""
 
         return slice(self.start, self.stop)

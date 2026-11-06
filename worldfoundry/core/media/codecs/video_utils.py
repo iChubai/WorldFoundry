@@ -18,6 +18,7 @@ Public surface
 
 import json
 import subprocess
+from typing import cast
 
 import av
 import cv2
@@ -33,7 +34,7 @@ except ImportError:
     DECORD_AVAILABLE = False
 
 try:
-    import torchcodec
+    torchcodec = __import__("torchcodec")
 
     TORCHCODEC_AVAILABLE = True
 except (ImportError, RuntimeError):
@@ -514,7 +515,7 @@ def get_all_frames(
         timestamps = []
         for frame in container.decode(video=0):
             frames.append(frame.to_ndarray(format="rgb24"))
-            timestamps.append(frame.pts * stream.time_base)
+            timestamps.append(cast(int, frame.pts) * stream.time_base)
         container.close()
         return np.stack(frames), np.array(timestamps)
 

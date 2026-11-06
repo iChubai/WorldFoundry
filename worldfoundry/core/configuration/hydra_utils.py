@@ -12,13 +12,15 @@ import os
 import sys
 from copy import deepcopy
 from threading import RLock
+from typing import Any
 
-import hydra
-import tree
 from omegaconf import DictConfig, OmegaConf
 
 from worldfoundry.core.observability.formatting import to_scientific_str
 from worldfoundry.core.utils.python.functional_utils import call_once, is_mapping, is_sequence, meta_decorator
+
+hydra = __import__("hydra")
+tree = __import__("tree")
 
 # ──────────────────────────────────────────────────────────────────────────
 # Hydra / OmegaConf — resolvers and run-context queries
@@ -176,7 +178,7 @@ def register_class(cls, alias=None):
 
 def omegaconf_to_dict(cfg, resolve: bool = True, enum_to_str: bool = False):
     """Convert nested OmegaConf containers to plain Python dicts and lists."""
-    kw = {"resolve": resolve, "enum_to_str": enum_to_str}
+    kw: dict[str, Any] = {"resolve": resolve, "enum_to_str": enum_to_str}
     if OmegaConf.is_config(cfg):
         return OmegaConf.to_container(cfg, **kw)
     elif is_sequence(cfg):

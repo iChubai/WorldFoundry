@@ -12,9 +12,9 @@ import os
 import shutil
 import tempfile
 from collections.abc import Generator, Iterable
-from contextlib import contextmanager
+from contextlib import _GeneratorContextManager, contextmanager
 from pathlib import Path
-from typing import BinaryIO, TextIO
+from typing import IO, Any, BinaryIO, Literal, TextIO, overload
 from urllib.parse import unquote, urlparse
 from urllib.request import Request, urlopen
 
@@ -48,6 +48,36 @@ def uri_to_local_path(uri: str | os.PathLike[str]) -> Path:
     return Path(text).expanduser()
 
 
+@overload
+def open_uri(
+    uri: str | os.PathLike[str],
+    mode: Literal["rb", "wb", "ab", "xb", "rb+", "wb+", "ab+", "xb+"] = "rb",
+    *,
+    encoding: str = "utf-8",
+    **storage_options: Any,
+) -> _GeneratorContextManager[BinaryIO, None, None]: ...
+
+
+@overload
+def open_uri(
+    uri: str | os.PathLike[str],
+    mode: Literal["r", "w", "a", "x", "r+", "w+", "a+", "x+"],
+    *,
+    encoding: str = "utf-8",
+    **storage_options: Any,
+) -> _GeneratorContextManager[TextIO, None, None]: ...
+
+
+@overload
+def open_uri(
+    uri: str | os.PathLike[str],
+    mode: str = "rb",
+    *,
+    encoding: str = "utf-8",
+    **storage_options: Any,
+) -> _GeneratorContextManager[IO[Any], None, None]: ...
+
+
 @contextmanager
 def open_uri(
     uri: str | os.PathLike[str],
@@ -55,7 +85,7 @@ def open_uri(
     *,
     encoding: str = "utf-8",
     **storage_options,
-) -> Generator[BinaryIO | TextIO, None, None]:
+) -> Generator[IO[Any], None, None]:
     """Open a local or remote URI.
 
     ``fsspec`` is used when available. Without it, local files are supported for
@@ -293,7 +323,7 @@ def _optional_fsspec():
     """Return the fsspec module or ``None`` so local-only jobs skip the S3 extra."""
 
     try:
-        import fsspec  # type: ignore
+        import fsspec
     except ImportError:
         return None
     return fsspec

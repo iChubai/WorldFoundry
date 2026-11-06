@@ -548,6 +548,10 @@ exclude = [
 ]
 
 [tool.ty.analysis]
+# Triton's JIT DSL (`tl.constexpr` parameters, launch grids and version-gated
+# builtins) has no Python typing, and the light quality job does not install
+# Triton; analyse Triton imports as dynamic in every environment.
+replace-imports-with-any = ["triton.**"]
 # Optional runtime extras that the light `Python quality` job does not install.
 # Environments that install them still resolve and type-check these imports.
 allowed-unresolved-imports = [

@@ -179,7 +179,7 @@ class _GaussianRaster(torch.autograd.Function):
             "BACKGROUND": background,
             "BLOCK": 256,
         }
-        cast(Any, _raster_forward)[(tile_count,)](
+        _raster_forward[(tile_count,)](
             means,
             conics,
             opacities,
@@ -203,7 +203,7 @@ class _GaussianRaster(torch.autograd.Function):
         grad_means, grad_conics, grad_opacities, grad_colors = (
             torch.zeros_like(value) for value in (means, conics, opacities, colors)
         )
-        cast(Any, _raster_backward)[(ctx.configuration["TILE_COUNT"],)](
+        _raster_backward[(ctx.configuration["TILE_COUNT"],)](
             means,
             conics,
             opacities,

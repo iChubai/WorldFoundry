@@ -512,7 +512,7 @@ def is_unitialized() -> bool:
     Deprecated. Use is_initialized instead.
 
     """
-    warnings.warn("is_unitialized is deprecated, use is_initialized instead", DeprecationWarning)
+    warnings.warn("is_unitialized is deprecated, use is_initialized instead", DeprecationWarning, stacklevel=1)
     return not is_initialized()
 
 

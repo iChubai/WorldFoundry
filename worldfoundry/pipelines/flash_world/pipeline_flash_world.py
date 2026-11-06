@@ -168,7 +168,7 @@ class FlashWorldPipeline(PipelineABC):
                 f"Config file '{json_path}' is missing the following keys: {', '.join(missing_keys)}. "
                 f"Using default values for missing keys.",
                 UserWarning,
-                stacklevel=2,
+                stacklevel=1,
             )
 
         # Extract values from config
@@ -495,7 +495,7 @@ class FlashWorldPipeline(PipelineABC):
                     "FlashWorld SPZ export requested but the optional `spz` package is not installed; "
                     "saving PLY/video artifacts only.",
                     RuntimeWarning,
-                    stacklevel=2,
+                    stacklevel=1,
                 )
                 save_spz = False
                 spz_path = None

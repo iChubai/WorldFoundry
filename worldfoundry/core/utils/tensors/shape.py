@@ -150,7 +150,7 @@ def check_shape(
         if mode == "raise":
             raise ValueError(err_msg)
         elif mode == "warning":
-            warnings.warn(err_msg)
+            warnings.warn(err_msg, stacklevel=1)
         return False
 
     for s_a, s_e in zip(actual_shape, expected_shape, strict=False):
@@ -159,7 +159,7 @@ def check_shape(
             if mode == "raise":
                 raise ValueError(err_msg)
             elif mode == "warning":
-                warnings.warn(err_msg)
+                warnings.warn(err_msg, stacklevel=1)
             return False
     return True
 

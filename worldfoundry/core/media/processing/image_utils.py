@@ -406,7 +406,7 @@ def sanity_check_image_tensor(img: torch.Tensor, on_error: Literal["raise", "war
         if on_error == "raise":
             raise ValueError(msg)
         elif on_error == "warn":
-            warnings.warn(msg)
+            warnings.warn(msg, stacklevel=1)
         else:
             return False
     # check if all values in the image are close to an integer
@@ -415,7 +415,7 @@ def sanity_check_image_tensor(img: torch.Tensor, on_error: Literal["raise", "war
         if on_error == "raise":
             raise ValueError(msg)
         elif on_error == "warn":
-            warnings.warn(msg)
+            warnings.warn(msg, stacklevel=1)
         else:
             return False
     return True
@@ -450,6 +450,7 @@ def basic_image_tensor_preprocess(
                 f"{'Down' if shape < input_size else 'Up'}sampling image"
                 f" from original resolution {input_size}x{input_size}"
                 f" to {shape}x{shape}",
+                stacklevel=1,
             )
         img = kornia.geometry.transform.resize(img, shape).clamp(0.0, 255.0)
 

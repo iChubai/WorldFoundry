@@ -205,7 +205,7 @@ def deprecated(func, msg="", action="warning", type=""):
     def _deprecated(*args, **kwargs):
         """Warn / raise / no-op on each call, then forward to ``func``."""
         if action in ["warning", "warn"]:
-            warnings.warn(msg, WarningExceptionCls)
+            warnings.warn(msg, WarningExceptionCls, stacklevel=1)
         elif action == "raise":
             raise WarningExceptionCls(msg)
         return func(*args, **kwargs)
@@ -237,7 +237,7 @@ def call_once(func, on_second_call: Literal["noop", "raise", "warn"] = "noop"):
             if on_second_call == "raise":
                 raise RuntimeError(f"{func.__name__} has already been called. Can only call once.")
             elif on_second_call == "warn":
-                warnings.warn(f"{func.__name__} has already been called. Should only call once.")
+                warnings.warn(f"{func.__name__} has already been called. Should only call once.", stacklevel=1)
         else:
             called = True
             return func(*args, **kwargs)

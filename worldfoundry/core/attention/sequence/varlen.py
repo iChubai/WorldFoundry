@@ -198,9 +198,13 @@ def flash_attention(
     )
     use_fa2 = version == 2 and flash_attn_module is not None and capabilities["flash_attention_2"].usable
     if version == 3 and not use_fa3:
-        warnings.warn("FlashAttention 3 is unavailable on this GPU/runtime; falling back to PyTorch SDPA.")
+        warnings.warn(
+            "FlashAttention 3 is unavailable on this GPU/runtime; falling back to PyTorch SDPA.", stacklevel=1
+        )
     if version == 2 and not use_fa2:
-        warnings.warn("FlashAttention 2 is unavailable on this GPU/runtime; falling back to PyTorch SDPA.")
+        warnings.warn(
+            "FlashAttention 2 is unavailable on this GPU/runtime; falling back to PyTorch SDPA.", stacklevel=1
+        )
 
     if use_fa3:
         output = flash_attn_interface.flash_attn_varlen_func(
@@ -442,9 +446,13 @@ def varlen_scaled_dot_product_attention(
     if version == 3 and (
         flash_attn_varlen_func_v3 is None or not capabilities["flash_attention_3"].usable or dropout_p != 0.0
     ):
-        warnings.warn("FlashAttention 3 is unavailable on this GPU/runtime; falling back to PyTorch SDPA.")
+        warnings.warn(
+            "FlashAttention 3 is unavailable on this GPU/runtime; falling back to PyTorch SDPA.", stacklevel=1
+        )
     if version == 2 and (flash_attn_varlen_func is None or not capabilities["flash_attention_2"].usable):
-        warnings.warn("FlashAttention 2 is unavailable on this GPU/runtime; falling back to PyTorch SDPA.")
+        warnings.warn(
+            "FlashAttention 2 is unavailable on this GPU/runtime; falling back to PyTorch SDPA.", stacklevel=1
+        )
     if flash_attn_varlen_func_v3 is not None and capabilities["flash_attention_3"].usable and dropout_p == 0.0:
         resolved_max_q = _max_from_cumulative(cu_seqlens_q, max_seqlen_q, name="max_seqlen_q")
         resolved_max_k = _max_from_cumulative(cu_seqlens_k, max_seqlen_k, name="max_seqlen_k")

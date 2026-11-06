@@ -118,7 +118,7 @@ def stack_or_pad_tensors(
     if padding_value is None:
         padding_value = False if values[0].dtype == torch.bool else 0
     return torch.nn.utils.rnn.pad_sequence(
-        tuple(values),
+        list(values),
         batch_first=True,
         padding_value=padding_value,
     )

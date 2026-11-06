@@ -865,7 +865,8 @@ class RunningMeanStd:
         if self._var is None:
             self._var = _zeros(batch_var.shape) + 1.0
 
-        delta = batch_mean - self._mean
+        # Moments retain the first batch's backend; numpy and torch are not mixed.
+        delta = batch_mean - cast(Any, self._mean)
         tot_count = self._count + batch_count
         assert tot_count > 0, "count must be > 0"
 

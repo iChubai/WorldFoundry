@@ -28,7 +28,7 @@ from worldfoundry.core.utils.python.functional_utils import (  # noqa: F401 - co
 )
 
 try:
-    import tree as _tree
+    _tree = __import__("tree")
 except ImportError as exc:
     _tree = None
     # Cache a diagnostic cause without retaining the importing caller's frames.
@@ -170,8 +170,8 @@ def stack_sequence_fields(sequence: Iterable[ElementType]) -> ElementType:
     Raises:
       ValueError: If `sequence` is an empty sequence.
     """
-    # Handle empty input sequences.
-    if not sequence:
+    # Leave iterables unconsumed; only falsy containers trigger the empty-input guard.
+    if not sequence:  # ty: ignore[truthiness-test-of-iterable]
         raise ValueError("Input sequence must not be empty")
 
     # Default to asarray when arrays don't have the same shape to be compatible

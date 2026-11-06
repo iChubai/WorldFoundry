@@ -23,7 +23,9 @@ Formulas::
 
 import math
 import warnings
+from collections.abc import Sequence
 from functools import partial
+from typing import cast
 
 import numpy as np
 import torch
@@ -126,10 +128,12 @@ def check_shape(
           - "warning": warnings.warn
     """
     assert mode in ["raise", "return", "warning"]
+    actual_shape: Sequence[int]
+    expected_shape: Sequence[int | None]
     if torch.is_tensor(value):
         actual_shape = value.size()
     elif hasattr(value, "shape"):
-        actual_shape = value.shape
+        actual_shape = cast(np.ndarray, value).shape
     else:
         assert isinstance(value, (list, tuple))
         actual_shape = value
@@ -138,7 +142,7 @@ def check_shape(
     if torch.is_tensor(expected):
         expected_shape = expected.size()
     elif hasattr(expected, "shape"):
-        expected_shape = expected.shape
+        expected_shape = cast(np.ndarray, expected).shape
     else:
         assert isinstance(expected, (list, tuple))
         expected_shape = expected

@@ -15,7 +15,7 @@ Public surface
     Type predicates, ``any_*`` tree ops, :func:`chunk_seq`, :func:`get_batch_size`.
 """
 
-from typing import Any
+from typing import Any, TypeGuard
 
 import numpy as np
 import torch
@@ -33,17 +33,17 @@ from worldfoundry.core.utils.python.tree_utils import (
 # ──────────────────────────────────────────────────────────────────────────
 
 
-def is_array_tensor(obj):
+def is_array_tensor(obj: object) -> TypeGuard[np.ndarray | torch.Tensor]:
     """Return whether ``obj`` is an ``ndarray`` or a torch tensor (not a pytree)."""
     return isinstance(obj, (np.ndarray, torch.Tensor))
 
 
-def is_numpy(obj):
+def is_numpy(obj: object) -> TypeGuard[np.ndarray]:
     """Return whether ``obj`` is a numpy ndarray (scalars and tensors are False)."""
     return isinstance(obj, np.ndarray)
 
 
-def is_tensor(obj):
+def is_tensor(obj: object) -> TypeGuard[torch.Tensor]:
     """Return whether ``obj`` is a torch tensor, including subclasses."""
     return torch.is_tensor(obj)
 

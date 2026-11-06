@@ -22,7 +22,7 @@ import time
 import traceback
 from collections.abc import Callable
 from datetime import datetime
-from typing import Literal
+from typing import Any, Literal, cast
 
 import numpy as np
 
@@ -72,7 +72,7 @@ def print_str(*args, **kwargs):
     return sstream.getvalue()
 
 
-def _eval_simple_format_node(node: ast.AST, env: dict) -> object:
+def _eval_simple_format_node(node: ast.AST, env: dict[str, Any]) -> Any:
     """Evaluate a name or integer arithmetic AST node against *env* only."""
     if isinstance(node, ast.Name):
         if node.id not in env:
@@ -163,7 +163,7 @@ def get_exception_info(to_str: bool = False):
     """
     typ_, value, trace = sys.exc_info()
     return {
-        "type": typ_.__name__ if to_str else typ_,
+        "type": cast(type[BaseException], typ_).__name__ if to_str else typ_,
         "value": str(value) if to_str else value,
         "trace": "".join(traceback.format_exception(typ_, value, trace)),
     }
@@ -226,7 +226,7 @@ def watch(func, seconds: int = 5, max_times: int = 0, keep_returns: bool = False
         keep_returns: if True, will keep the return value from the function
             and return as a list at the end
     """
-    from blessings import Terminal
+    Terminal = __import__("blessings", fromlist=["Terminal"]).Terminal
 
     def _wrapped(*args, **kwargs):
         """Fullscreen refresh loop; ``KeyboardInterrupt`` exits without re-raising."""
@@ -323,7 +323,8 @@ class PrintToFile(PrintRedirection):
                 self.err_file = open(err_path, "w")  # noqa: SIM115  # closed by close()
         super().__init__(stdout=self.out_file, stderr=self.err_file)
 
-    def __exit__(self, *args):
+    # The context-manager protocol supplies positional args; retain this public variadic signature.
+    def __exit__(self, *args: Any) -> None:  # ty: ignore[invalid-method-override]
         """Restore streams, then close file handles (shared out/err is closed once)."""
 
         super().__exit__(*args)

@@ -163,6 +163,14 @@
       "worldfoundry/operators/hy_nomas_operator.py",
       "worldfoundry/base_models/diffusion_model/**"
     ],
+    "pika-h3-flex": [
+      "worldfoundry/pipelines/pika_h3_flex/**",
+      "worldfoundry/pipelines/minimax/**",
+      "worldfoundry/base_models/diffusion_model/models/networks/minimax_h3/**",
+      "worldfoundry/base_models/diffusion_model/models/autoencoders/minimax_h3_*",
+      "worldfoundry/base_models/diffusion_model/models/encoders/minimax_h3_qwen3vl.py",
+      "worldfoundry/base_models/diffusion_model/schedulers/minimax_h3.py"
+    ],
     "gamma-world": [
       "worldfoundry/pipelines/gamma_world/**",
       "worldfoundry/base_models/diffusion_model/**"
@@ -312,6 +320,7 @@
   "cases": {
     "hy-nomas-segments-short": ["hy-nomas"],
     "hy-nomas-low-memory-short": ["hy-nomas"],
+    "pika-h3-flex-t2va-short": ["pika-h3-flex"],
     "inspatio-world-1p5-image-short": [
       "inspatio-world-1p5"
     ],

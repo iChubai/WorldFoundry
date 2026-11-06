@@ -79,6 +79,41 @@
     },
     "scope": "Native runtime INT8 DiT, INT8 KV, FP8 PixelUMM and phase-wise offload, using the floating-point checkpoints. Fixed-seed exported RGB is compared with this variant's accepted reference; compressed checkpoint export ABI and performance are outside this case."
   },
+  "pika-h3-flex-t2va-short": {
+    "id": "pika-h3-flex-t2va-short",
+    "model_id": "pika-h3-flex",
+    "seed": 0,
+    "deterministic": true,
+    "target": "worldfoundry.pipelines.pika_h3_flex.pipeline_pika_h3_flex:PikaH3FlexPipeline",
+    "load": {
+      "model_path": "${WORLDFOUNDRY_REGRESSION_CHECKPOINT_ROOT}/MiniMaxAI--MiniMax-H3",
+      "adapter_path": "${WORLDFOUNDRY_REGRESSION_CHECKPOINT_ROOT}/Pika-Labs--Pika-H3-Flex/fl2va/adapter.safetensors",
+      "adapter_task": "fl2va",
+      "device": "cuda"
+    },
+    "call": {
+      "prompt": "A red kite drifts over a windy beach while waves roll onto the sand.",
+      "task": "t2va",
+      "short_edge": 480,
+      "aspect_ratio": "16:9",
+      "num_frames": 120,
+      "seed": 0,
+      "output_path": "${OUTPUT_DIR}/video.mp4",
+      "return_dict": true
+    },
+    "assets": {
+      "checkpoint": "${WORLDFOUNDRY_REGRESSION_CHECKPOINT_ROOT}/MiniMaxAI--MiniMax-H3",
+      "adapter": "${WORLDFOUNDRY_REGRESSION_CHECKPOINT_ROOT}/Pika-Labs--Pika-H3-Flex/fl2va/adapter.safetensors"
+    },
+    "required_outputs": ["result.video", "result.audio", "artifact.video.mp4.frames", "artifact.video.mp4.fps"],
+    "output_arrays": ["video.mp4"],
+    "export_artifacts": ["video.mp4"],
+    "array_contracts": {
+      "artifact.video.mp4.frames": {"dtype": "uint8"},
+      "artifact.video.mp4.fps": {"values": [24, 1]}
+    },
+    "scope": "MiniMax-H3 FL2VA weights with the released fl2va Pika H3 Flex LoRA merged, Qwen3-VL text conditioning and the six-step re-noising schedule, on the shortest 480p five-second text-to-video+audio request. Fixed-seed decoded video, audio and exported MP4 are compared against an accepted reference; this short case is not a quality or throughput benchmark."
+  },
   "cut3r": {
     "id": "cut3r",
     "seed": 42,

@@ -16,7 +16,10 @@ Public surface:
 
 from __future__ import annotations
 
+from typing import cast
+
 import torch
+from torch import nn
 
 # ──────────────────────────────────────────────────────────────────────────
 # First-tensor probe — meta / DiskMap modules still expose a reference
@@ -37,9 +40,10 @@ class ModuleDeviceDtypeMixin:
             RuntimeError: the mixed-in module owns neither (empty / fully offloaded).
         """
 
-        reference = next(self.parameters(), None)
+        module = cast(nn.Module, self)
+        reference = next(module.parameters(), None)
         if reference is None:
-            reference = next(self.buffers(), None)
+            reference = next(module.buffers(), None)
         if reference is None:
             raise RuntimeError(f"{type(self).__name__} does not own a parameter or buffer")
         return reference

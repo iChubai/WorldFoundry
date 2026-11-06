@@ -19,6 +19,7 @@ silently clones a 100M-parameter block each call.
 import copy
 import logging
 import os
+from typing import Any, cast
 
 import torch
 
@@ -101,14 +102,14 @@ class AutoTorchModule(torch.nn.Module):
 
     def __init__(
         self,
-        offload_dtype: torch.dtype = None,
-        offload_device: str | torch.device = None,
-        onload_dtype: torch.dtype = None,
-        onload_device: str | torch.device = None,
-        preparing_dtype: torch.dtype = None,
-        preparing_device: str | torch.device = None,
-        computation_dtype: torch.dtype = None,
-        computation_device: str | torch.device = None,
+        offload_dtype: torch.dtype | None = None,
+        offload_device: str | torch.device | None = None,
+        onload_dtype: torch.dtype | None = None,
+        onload_device: str | torch.device | None = None,
+        preparing_dtype: torch.dtype | None = None,
+        preparing_device: str | torch.device | None = None,
+        computation_dtype: torch.dtype | None = None,
+        computation_device: str | torch.device | None = None,
         vram_limit: float | None = None,
     ):
         """Configure the dtype and device used at each lifecycle stage.
@@ -144,14 +145,14 @@ class AutoTorchModule(torch.nn.Module):
 
     def set_dtype_and_device(
         self,
-        offload_dtype: torch.dtype = None,
-        offload_device: str | torch.device = None,
-        onload_dtype: torch.dtype = None,
-        onload_device: str | torch.device = None,
-        preparing_dtype: torch.dtype = None,
-        preparing_device: str | torch.device = None,
-        computation_dtype: torch.dtype = None,
-        computation_device: str | torch.device = None,
+        offload_dtype: torch.dtype | None = None,
+        offload_device: str | torch.device | None = None,
+        onload_dtype: torch.dtype | None = None,
+        onload_device: str | torch.device | None = None,
+        preparing_dtype: torch.dtype | None = None,
+        preparing_device: str | torch.device | None = None,
+        computation_dtype: torch.dtype | None = None,
+        computation_device: str | torch.device | None = None,
         vram_limit: float | None = None,
     ):
         """Update lifecycle placement, defaulting omitted stages to computation placement."""
@@ -231,17 +232,17 @@ class AutoWrappedModule(AutoTorchModule):
     def __init__(
         self,
         module: torch.nn.Module,
-        offload_dtype: torch.dtype = None,
-        offload_device: str | torch.device = None,
-        onload_dtype: torch.dtype = None,
-        onload_device: str | torch.device = None,
-        preparing_dtype: torch.dtype = None,
-        preparing_device: str | torch.device = None,
-        computation_dtype: torch.dtype = None,
-        computation_device: str | torch.device = None,
+        offload_dtype: torch.dtype | None = None,
+        offload_device: str | torch.device | None = None,
+        onload_dtype: torch.dtype | None = None,
+        onload_device: str | torch.device | None = None,
+        preparing_dtype: torch.dtype | None = None,
+        preparing_device: str | torch.device | None = None,
+        computation_dtype: torch.dtype | None = None,
+        computation_device: str | torch.device | None = None,
         vram_limit: float | None = None,
         name: str = "",
-        disk_map: DiskMap = None,
+        disk_map: DiskMap | None = None,
         **kwargs,
     ):
         """Wrap ``module`` and bind it to a placement policy.
@@ -353,7 +354,8 @@ class AutoWrappedModule(AutoTorchModule):
                 self.to(dtype=self.preparing_dtype, device=self.preparing_device)
             self.state = 2
 
-    def cast_to(self, module, dtype, device):
+    # Callers pass the source positionally; module wrappers copy a module, not one weight.
+    def cast_to(self, module, dtype, device):  # ty: ignore[invalid-method-override]
         """Deep-copy then move so the stored offload weights are not mutated in place."""
         _warn_deepcopy_once(module)
         return copy.deepcopy(module).to(dtype=dtype, device=device)
@@ -405,17 +407,17 @@ class AutoWrappedNonRecurseModule(AutoWrappedModule):
     def __init__(
         self,
         module: torch.nn.Module,
-        offload_dtype: torch.dtype = None,
-        offload_device: str | torch.device = None,
-        onload_dtype: torch.dtype = None,
-        onload_device: str | torch.device = None,
-        preparing_dtype: torch.dtype = None,
-        preparing_device: str | torch.device = None,
-        computation_dtype: torch.dtype = None,
-        computation_device: str | torch.device = None,
+        offload_dtype: torch.dtype | None = None,
+        offload_device: str | torch.device | None = None,
+        onload_dtype: torch.dtype | None = None,
+        onload_device: str | torch.device | None = None,
+        preparing_dtype: torch.dtype | None = None,
+        preparing_device: str | torch.device | None = None,
+        computation_dtype: torch.dtype | None = None,
+        computation_device: str | torch.device | None = None,
         vram_limit: float | None = None,
         name: str = "",
-        disk_map: DiskMap = None,
+        disk_map: DiskMap | None = None,
         **kwargs,
     ):
         """Wrap *module* and restrict disk keys to direct parameters only.
@@ -513,14 +515,14 @@ class WanAutoCastLayerNorm(torch.nn.LayerNorm, AutoTorchModule):
     def __init__(
         self,
         module: torch.nn.LayerNorm,
-        offload_dtype: torch.dtype = None,
-        offload_device: str | torch.device = None,
-        onload_dtype: torch.dtype = None,
-        onload_device: str | torch.device = None,
-        preparing_dtype: torch.dtype = None,
-        preparing_device: str | torch.device = None,
-        computation_dtype: torch.dtype = None,
-        computation_device: str | torch.device = None,
+        offload_dtype: torch.dtype | None = None,
+        offload_device: str | torch.device | None = None,
+        onload_dtype: torch.dtype | None = None,
+        onload_device: str | torch.device | None = None,
+        preparing_dtype: torch.dtype | None = None,
+        preparing_device: str | torch.device | None = None,
+        computation_dtype: torch.dtype | None = None,
+        computation_device: str | torch.device | None = None,
         vram_limit: float | None = None,
         **kwargs,
     ):
@@ -531,7 +533,7 @@ class WanAutoCastLayerNorm(torch.nn.LayerNorm, AutoTorchModule):
         """
         with init_weights_on_device(device=torch.device("meta")):
             super().__init__(
-                module.normalized_shape,
+                list(module.normalized_shape),
                 eps=module.eps,
                 elementwise_affine=module.elementwise_affine,
                 bias=module.bias is not None,
@@ -596,20 +598,23 @@ class WanAutoCastLayerNorm(torch.nn.LayerNorm, AutoTorchModule):
 class AutoWrappedLinear(torch.nn.Linear, AutoTorchModule):
     """Linear-layer wrapper with staged placement, disk loading, FP8, and LoRA support."""
 
+    # Assigned for disk offload, the only mode that reads it.
+    disk_map: DiskMap
+
     def __init__(
         self,
         module: torch.nn.Linear,
-        offload_dtype: torch.dtype = None,
-        offload_device: str | torch.device = None,
-        onload_dtype: torch.dtype = None,
-        onload_device: str | torch.device = None,
-        preparing_dtype: torch.dtype = None,
-        preparing_device: str | torch.device = None,
-        computation_dtype: torch.dtype = None,
-        computation_device: str | torch.device = None,
+        offload_dtype: torch.dtype | None = None,
+        offload_device: str | torch.device | None = None,
+        onload_dtype: torch.dtype | None = None,
+        onload_device: str | torch.device | None = None,
+        preparing_dtype: torch.dtype | None = None,
+        preparing_device: str | torch.device | None = None,
+        computation_dtype: torch.dtype | None = None,
+        computation_device: str | torch.device | None = None,
         vram_limit: float | None = None,
         name: str = "",
-        disk_map: DiskMap = None,
+        disk_map: DiskMap | None = None,
         **kwargs,
     ):
         """Wrap an existing linear layer with one placement policy.
@@ -666,7 +671,7 @@ class AutoWrappedLinear(torch.nn.Linear, AutoTorchModule):
         self,
         input: torch.Tensor,
         weight: torch.Tensor,
-        bias: torch.Tensor = None,
+        bias: torch.Tensor | None = None,
     ) -> torch.Tensor:
         """Row-wise scaled FP8 matmul via ``torch._scaled_mm``.
 
@@ -1005,7 +1010,7 @@ def enable_vram_management(
             **kwargs,
         )
     # `vram_management_enabled` is a flag that allows the pipeline to determine whether VRAM management is enabled.
-    model.vram_management_enabled = True
+    cast(Any, model).vram_management_enabled = True
     return model
 
 

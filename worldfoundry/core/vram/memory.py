@@ -17,6 +17,7 @@ the module on GPU until the next explicit unload.
 from __future__ import annotations
 
 import logging
+from typing import cast
 
 import torch
 
@@ -149,7 +150,8 @@ def patched_diffusers_current_device(model: torch.nn.Module, target_device: torc
     probe without migrating the whole tree.
     """
     if hasattr(model, "scale_shift_table"):
-        model.scale_shift_table.data = model.scale_shift_table.data.to(target_device)
+        table = cast(torch.Tensor, model.scale_shift_table)
+        table.data = table.data.to(target_device)
         return
 
     for _, module in model.named_modules():

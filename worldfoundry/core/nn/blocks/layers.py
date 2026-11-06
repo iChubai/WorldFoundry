@@ -31,6 +31,7 @@ import collections.abc
 import math
 from collections.abc import Callable, Sequence
 from itertools import repeat
+from typing import overload
 
 import numpy as np
 import torch
@@ -96,6 +97,14 @@ def list_sum(values: list):
     for value in values[1:]:
         result = result + value
     return result
+
+
+@overload
+def get_same_padding(kernel_size: int) -> int: ...
+
+
+@overload
+def get_same_padding(kernel_size: tuple[int, ...]) -> tuple[int, ...]: ...
 
 
 def get_same_padding(kernel_size: int | tuple[int, ...]) -> int | tuple[int, ...]:
@@ -256,7 +265,7 @@ class SamHeadMLP(nn.Module):
         hidden_dim: int,
         output_dim: int,
         num_layers: int,
-        activation: nn.Module = nn.ReLU,
+        activation: type[nn.Module] = nn.ReLU,
         sigmoid_output: bool = False,
     ) -> None:
         """Stack ``num_layers`` linears with activation on every layer except the last."""
@@ -435,6 +444,8 @@ class DomainAwareLinear(nn.Module):
 
 class PositionEmbeddingRandom(nn.Module):
     """Positional encoding using random spatial frequencies."""
+
+    positional_encoding_gaussian_matrix: Tensor
 
     def __init__(self, num_pos_feats: int = 64, scale: float | None = None) -> None:
         """Register a non-learned Gaussian frequency matrix (SAM prompt encoder)."""

@@ -5,6 +5,8 @@ the same device as the source; FSDP2 uses
 ``DTensorFastEmaModelUpdater`` in ``device_mesh_collectives`` instead.
 """
 
+from typing import Any, cast
+
 import torch
 from torch import nn
 
@@ -17,6 +19,9 @@ from worldfoundry.core.distributed.collectives.device_mesh import get_local_tens
 
 class LitEma(nn.Module):
     """Lit ema implementation."""
+
+    decay: torch.Tensor
+    num_updates: torch.Tensor
 
     def __init__(self, model, decay=0.9999, use_num_upates=True):
         """Init.
@@ -85,7 +90,8 @@ class LitEma(nn.Module):
             for (device, dtype), (shadows, parameters) in grouped.items():
                 del dtype
                 weight = one_minus_decay.to(device=device)
-                torch._foreach_lerp_(shadows, parameters, weight)
+                # The runtime accepts a 0-dim tensor weight; the stubs list scalar and per-tensor weights.
+                torch._foreach_lerp_(shadows, parameters, cast(Any, weight))
 
     # ──────────────────────────────────────────────────────────────────────
     # Eval copy / store-restore — swap shadows in without a second optimizer

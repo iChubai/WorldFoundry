@@ -13,10 +13,10 @@ module — those expect resident shards.
 
 from __future__ import annotations
 
-from collections.abc import Iterator
-from contextlib import contextmanager, nullcontext, suppress
+from collections.abc import Generator
+from contextlib import AbstractContextManager, contextmanager, nullcontext, suppress
 from dataclasses import dataclass, field
-from typing import Any
+from typing import Any, cast
 
 import torch
 from torch import nn
@@ -327,12 +327,14 @@ def enable_layerwise_cpu_offload(
                     )
                 )
             layer_hooks.append((layer, state, handles))
-            layer._worldfoundry_layerwise_cpu_offload = True
-            layer._worldfoundry_layerwise_cpu_offload_state = state
+            marked = cast(Any, layer)
+            marked._worldfoundry_layerwise_cpu_offload = True
+            marked._worldfoundry_layerwise_cpu_offload_state = state
         if pool is not None:
-            pool.initialize(states)
+            # A pool is only created for packed offload, whose states are all packed.
+            pool.initialize(cast(list[_PackedLayerwiseOffloadState], states))
             metrics.device_buffer_bytes = pool.nbytes
-        model._worldfoundry_layerwise_cpu_offload = True
+        cast(Any, model)._worldfoundry_layerwise_cpu_offload = True
         # Match the upstream double-buffer lifecycle: the first CUDA buffer is
         # populated before layer 0 is entered, so the first timed forward does not
         # fall back to a synchronous H2D copy.  The pre-hook waits on this stream,
@@ -364,7 +366,7 @@ def enable_layerwise_cpu_offload(
     )
 
 
-def layerwise_offload_mutation_scope(module: nn.Module) -> Iterator[None]:
+def layerwise_offload_mutation_scope(module: nn.Module) -> AbstractContextManager[None]:
     """Temporarily materialize offloaded parameters for in-place mutations."""
 
     state = getattr(module, "_worldfoundry_layerwise_cpu_offload_state", None)
@@ -498,7 +500,7 @@ class _LayerwiseOffloadState:
         self.metrics.count("release_calls")
 
     @contextmanager
-    def mutate_params_scope(self) -> Iterator[None]:
+    def mutate_params_scope(self) -> Generator[None, None, None]:
         """Materialize, yield for in-place writes, then refresh the CPU master.
 
         LoRA / optimizer updates must not race a swap. After the body the GPU
@@ -661,7 +663,7 @@ class _PackedLayerwiseOffloadState(_LayerwiseOffloadState):
         super().release_gpu_params()
 
     @contextmanager
-    def mutate_params_scope(self) -> Iterator[None]:
+    def mutate_params_scope(self) -> Generator[None, None, None]:
         with torch.no_grad():
             self.wait_and_materialize()
         try:

@@ -21,8 +21,13 @@ from __future__ import annotations
 
 import math
 from collections.abc import Iterable
+from typing import TYPE_CHECKING, TypeGuard
 
 import torch
+import torch.utils.checkpoint
+
+if TYPE_CHECKING:
+    from torch.distributed.tensor import DTensor
 
 
 def create_custom_forward(module):
@@ -106,9 +111,9 @@ def clip_grad_norm_(
         if math.isinf(norm_type):
             dist.all_reduce(total_norm, op=dist.ReduceOp.MAX, group=pp_mesh.get_group())
         else:
-            total_norm **= norm_type
+            total_norm.pow_(norm_type)
             dist.all_reduce(total_norm, op=dist.ReduceOp.SUM, group=pp_mesh.get_group())
-            total_norm **= 1.0 / norm_type
+            total_norm.pow_(1.0 / norm_type)
 
     clip_grads_with_norm_(parameters, max_norm, total_norm, foreach)
     return total_norm
@@ -214,7 +219,7 @@ def _device_has_foreach_support(device) -> bool:
     return device_has_support(device)
 
 
-def _is_dtensor(value: object) -> bool:
+def _is_dtensor(value: object) -> TypeGuard[DTensor]:
     """Detect DTensor without importing distributed at module load when torch is CPU-only."""
     try:
         from torch.distributed._tensor.api import DTensor

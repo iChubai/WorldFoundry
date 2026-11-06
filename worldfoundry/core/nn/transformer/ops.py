@@ -24,7 +24,7 @@ Public surface:
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Protocol
+from typing import Any, Protocol, cast
 
 import torch
 from torch import nn
@@ -129,8 +129,10 @@ class PytorchPreAttention:
         """
 
         del mask
-        query = attention_module.q_norm(query)
-        key = attention_module.k_norm(key)
+        # Attention modules contribute model-specific norms and rotary helpers beyond nn.Module.
+        module = cast(Any, attention_module)
+        query = module.q_norm(query)
+        key = module.k_norm(key)
         if query_position is not None:
             apply_rotary = getattr(attention_module, "apply_rotary_embedding", None)
             if not callable(apply_rotary):
@@ -183,14 +185,15 @@ class PytorchGatedAttention:
     ) -> torch.Tensor:
         """``2·σ(to_gate_logits(residual))`` per head; 2× keeps the gate mean near 1."""
 
-        gate_logits = attention_module.to_gate_logits(residual)
+        module = cast(Any, attention_module)
+        gate_logits = module.to_gate_logits(residual)
         batch, tokens, _ = attention_output.shape
-        output = attention_output.view(batch, tokens, attention_module.heads, attention_module.dim_head)
+        output = attention_output.view(batch, tokens, module.heads, module.dim_head)
         gates = 2.0 * torch.sigmoid(gate_logits)
         return (output * gates.unsqueeze(-1)).view(
             batch,
             tokens,
-            attention_module.heads * attention_module.dim_head,
+            module.heads * module.dim_head,
         )
 
 

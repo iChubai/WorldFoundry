@@ -16,6 +16,7 @@ materialized on a single 80GB card.
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import Any, cast
 
 import torch
 from torch import nn
@@ -109,7 +110,7 @@ def enable_balanced_device_map(
     for name, buffer in model.named_buffers(recurse=False):
         if buffer.device != home:
             model._buffers[name] = buffer.to(home)
-    model._worldfoundry_device_map = "balanced"
+    cast(Any, model)._worldfoundry_device_map = "balanced"
     return DeviceMapHandle(
         enabled=True,
         layer_count=len(layers),

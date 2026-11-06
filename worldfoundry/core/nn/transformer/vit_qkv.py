@@ -119,7 +119,8 @@ class QKNormRopeSelfAttention(QKVSelfAttention):
         self.k_norm = norm_layer(head_dim) if qk_norm else nn.Identity()
         self.rope = rope
 
-    def forward(self, x: Tensor, pos: Any = None, attn_mask: Any = None) -> Tensor:
+    # RoPE attention takes token positions where the base class takes an attention bias.
+    def forward(self, x: Tensor, pos: Any = None, attn_mask: Any = None) -> Tensor:  # ty: ignore[invalid-method-override]
         """Self-attend with optional RoPE; ``fused_attn=False`` keeps the matmul path.
 
         The mask is repeated over heads because callers pass a 2-D token

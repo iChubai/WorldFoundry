@@ -230,7 +230,8 @@ def nonlinearity(type="silu"):
 class GroupNormSpecific(nn.GroupNorm):
     """GroupNorm subclass some U-Net checkpoints address by type name."""
 
-    def forward(self, x):
+    # Keyword callers use the upstream ``x`` name; nn.GroupNorm names its input ``input``.
+    def forward(self, x):  # ty: ignore[invalid-method-override]
         """Same as :class:`torch.nn.GroupNorm`; kept for checkpoint type identity."""
         return super().forward(x)
 

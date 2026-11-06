@@ -78,7 +78,7 @@ def add_residual(
         residual = residual.flatten(1)
         return torch.index_add(x_flat, 0, brange, residual.to(dtype=x.dtype), alpha=residual_scale_factor)
 
-    from xformers.ops import scaled_index_add
+    scaled_index_add = __import__("xformers.ops", fromlist=["scaled_index_add"]).scaled_index_add
 
     return scaled_index_add(
         x,

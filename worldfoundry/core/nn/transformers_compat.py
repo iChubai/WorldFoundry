@@ -6,6 +6,8 @@ a utility. Do not add new model logic here.
 
 from __future__ import annotations
 
+from typing import cast
+
 import torch
 
 # ──────────────────────────────────────────────────────────────────────────
@@ -46,4 +48,4 @@ def find_pruneable_heads_and_indices(
         mask[shifted_head] = 0
     keep = mask.view(-1).contiguous().eq(1)
     indices = torch.arange(keep.numel(), dtype=torch.long)[keep]
-    return requested, indices
+    return requested, cast(torch.LongTensor, indices)

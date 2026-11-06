@@ -13,13 +13,14 @@ import os
 import shutil
 from collections.abc import Iterable
 from pathlib import Path
+from typing import ClassVar
 
 from rich.markup import escape
 from rich.syntax import Syntax
 from rich.text import Text
 from textual import events, on, work
 from textual.app import App, ComposeResult
-from textual.binding import Binding
+from textual.binding import Binding, BindingType
 from textual.containers import Grid, Horizontal, Vertical, VerticalScroll
 from textual.css.query import NoMatches
 from textual.message import Message
@@ -183,9 +184,10 @@ class WorldFoundryTui(App[None]):
     TITLE = "WorldFoundry"
     SUB_TITLE = "Inference · Evaluation · Studio"
     ENABLE_COMMAND_PALETTE = True
-    HORIZONTAL_BREAKPOINTS = [(0, "-narrow"), (128, "-wide")]
+    # Textual declares this override point as an instance attribute, so ClassVar would conflict with it.
+    HORIZONTAL_BREAKPOINTS = [(0, "-narrow"), (128, "-wide")]  # noqa: RUF012
 
-    BINDINGS = [
+    BINDINGS: ClassVar[list[BindingType]] = [
         Binding("ctrl+f", "focus_filter", "Filter", priority=True),
         Binding("f", "focus_filter", "Filter", show=False),
         Binding("f2", "focus_models", "Catalog", priority=True),
@@ -412,309 +414,280 @@ class WorldFoundryTui(App[None]):
                     with Collapsible(title=icons["command_preview"], collapsed=True, id="command-preview"):
                         yield Static("", id="command")
                     with TabbedContent(id="config-tabs", initial="tab-general"):
-                        with TabPane(icons["general"], id="tab-general"):
-                            with VerticalScroll(classes="tab-scroll"):
-                                yield Static(icons["prompt_media"], classes="section-title", id="section-prompt-title")
-                                yield Rule(line_style="solid", classes="section-rule", id="section-prompt-rule")
-                                with Vertical(id="prompt-controls", classes="field-group"):
-                                    yield Label("Prompt", id="prompt-label", classes="field-caption")
+                        with TabPane(icons["general"], id="tab-general"), VerticalScroll(classes="tab-scroll"):
+                            yield Static(icons["prompt_media"], classes="section-title", id="section-prompt-title")
+                            yield Rule(line_style="solid", classes="section-rule", id="section-prompt-rule")
+                            with Vertical(id="prompt-controls", classes="field-group"):
+                                yield Label("Prompt", id="prompt-label", classes="field-caption")
+                                yield Input(value=self.prompt, placeholder="Describe the scene or action…", id="prompt")
+                            with Vertical(id="negative-prompt-controls", classes="field-group"):
+                                yield Label("Negative prompt", id="negative-prompt-label", classes="field-caption")
+                                yield Input(
+                                    value=self.negative_prompt,
+                                    placeholder="Optional negative prompt",
+                                    id="negative-prompt",
+                                )
+                            with Grid(id="media-controls", classes="field-grid"):
+                                with Vertical(classes="field-group"):
+                                    yield Label("Input path", id="input-path-label", classes="field-caption")
                                     yield Input(
-                                        value=self.prompt, placeholder="Describe the scene or action…", id="prompt"
+                                        value=self.input_path,
+                                        placeholder="image/video path (drag & drop)",
+                                        id="input-path",
                                     )
-                                with Vertical(id="negative-prompt-controls", classes="field-group"):
-                                    yield Label("Negative prompt", id="negative-prompt-label", classes="field-caption")
+                                with Vertical(classes="field-group"):
+                                    yield Label("Video path", id="video-path-label", classes="field-caption")
                                     yield Input(
-                                        value=self.negative_prompt,
-                                        placeholder="Optional negative prompt",
-                                        id="negative-prompt",
+                                        value=self.video_path,
+                                        placeholder="optional video path (drag & drop)",
+                                        id="video-path",
                                     )
-                                with Grid(id="media-controls", classes="field-grid"):
-                                    with Vertical(classes="field-group"):
-                                        yield Label("Input path", id="input-path-label", classes="field-caption")
-                                        yield Input(
-                                            value=self.input_path,
-                                            placeholder="image/video path (drag & drop)",
-                                            id="input-path",
-                                        )
-                                    with Vertical(classes="field-group"):
-                                        yield Label("Video path", id="video-path-label", classes="field-caption")
-                                        yield Input(
-                                            value=self.video_path,
-                                            placeholder="optional video path (drag & drop)",
-                                            id="video-path",
-                                        )
-                                with Grid(id="flashworld-controls", classes="field-grid"):
-                                    with Vertical(classes="field-group"):
-                                        yield Label("JSON directory", id="input-dir-label", classes="field-caption")
-                                        yield Input(
-                                            value=self.input_dir, placeholder="FlashWorld JSON dir", id="input-dir"
-                                        )
-                                    with Vertical(classes="field-group"):
-                                        yield Label(
-                                            "Output formats", id="output-formats-label", classes="field-caption"
-                                        )
-                                        yield Input(
-                                            value=self.infer_output_formats,
-                                            placeholder="video,spz,ply",
-                                            id="output-formats",
-                                        )
-                                with Grid(id="task-controls", classes="field-grid"):
-                                    with Vertical(classes="field-group"):
-                                        yield Label("Task", id="task-label", classes="field-caption")
-                                        yield Input(value=self.infer_task, placeholder="task override", id="task")
-                                    with Vertical(classes="field-group"):
-                                        yield Label("Mode", id="mode-label", classes="field-caption")
-                                        yield Input(value=self.infer_mode, placeholder="mode override", id="mode")
-                                with Vertical(id="eval-controls", classes="field-group"):
-                                    yield Label("Evaluation intent", classes="field-caption")
+                            with Grid(id="flashworld-controls", classes="field-grid"):
+                                with Vertical(classes="field-group"):
+                                    yield Label("JSON directory", id="input-dir-label", classes="field-caption")
+                                    yield Input(value=self.input_dir, placeholder="FlashWorld JSON dir", id="input-dir")
+                                with Vertical(classes="field-group"):
+                                    yield Label("Output formats", id="output-formats-label", classes="field-caption")
+                                    yield Input(
+                                        value=self.infer_output_formats,
+                                        placeholder="video,spz,ply",
+                                        id="output-formats",
+                                    )
+                            with Grid(id="task-controls", classes="field-grid"):
+                                with Vertical(classes="field-group"):
+                                    yield Label("Task", id="task-label", classes="field-caption")
+                                    yield Input(value=self.infer_task, placeholder="task override", id="task")
+                                with Vertical(classes="field-group"):
+                                    yield Label("Mode", id="mode-label", classes="field-caption")
+                                    yield Input(value=self.infer_mode, placeholder="mode override", id="mode")
+                            with Vertical(id="eval-controls", classes="field-group"):
+                                yield Label("Evaluation intent", classes="field-caption")
+                                yield Select(
+                                    EVALUATION_INTENT_OPTIONS,
+                                    value=self.eval_intent,
+                                    allow_blank=False,
+                                    id="eval-intent",
+                                )
+                                with Vertical(id="eval-artifact-controls", classes="field-group"):
+                                    yield Label("Artifact directory", classes="field-caption")
+                                    yield Input(
+                                        value=self.eval_artifact_dir,
+                                        placeholder="directory containing generated artifacts",
+                                        id="eval-artifact-dir",
+                                    )
+                                with Vertical(id="eval-metrics-controls", classes="field-group"):
+                                    yield Label("Metrics", id="metrics-label", classes="field-caption")
+                                    yield Input(
+                                        value=self.eval_metrics,
+                                        placeholder="artifact_count,required_artifacts_present",
+                                        id="metrics",
+                                    )
+                            yield Static(icons["paths_runtime"], classes="section-title", id="section-paths-title")
+                            yield Rule(line_style="solid", classes="section-rule", id="section-paths-rule")
+                            with Grid(id="path-controls", classes="field-grid"):
+                                with Vertical(classes="field-group"):
+                                    yield Label("Output directory", classes="field-caption")
+                                    yield Input(
+                                        value=str(self._default_output_dir()),
+                                        placeholder="runs/tui/…",
+                                        id="output-dir",
+                                    )
+                                with Vertical(classes="field-group full-width"):
+                                    yield Label(
+                                        "Inference options (JSON)", id="call-json-label", classes="field-caption"
+                                    )
+                                    yield Input(placeholder='{"controls": []}', id="call-json")
+                                with Vertical(classes="field-group full-width"):
+                                    yield Label(
+                                        "Model assets / loading (JSON)",
+                                        id="load-json-label",
+                                        classes="field-caption",
+                                    )
+                                    yield Input(placeholder='{"source_root": "/path/to/source"}', id="load-json")
+                                with Vertical(classes="field-group"):
+                                    yield Label("Artifact path", id="output-path-label", classes="field-caption")
+                                    yield Input(
+                                        value=self.output_path,
+                                        placeholder="optional exact artifact path",
+                                        id="output-path",
+                                    )
+                                with Vertical(id="runtime-controls", classes="field-group full-width"):
+                                    yield Label("Checkpoint root", id="ckpt-root-label", classes="field-caption")
+                                    yield Input(value=self.ckpt_root, placeholder="checkpoint root", id="ckpt-root")
+                                with Vertical(classes="field-group"):
+                                    yield Label("Conda env root", id="conda-envs-root-label", classes="field-caption")
+                                    yield Input(
+                                        value=self.conda_envs_root,
+                                        placeholder="conda envs root",
+                                        id="conda-envs-root",
+                                    )
+                                with Vertical(classes="field-group"):
+                                    yield Label("GPU ids", id="gpu-label", classes="field-caption")
+                                    yield Input(value=self.gpu, placeholder="0 or 0,1", id="gpu")
+                            yield Static(
+                                "No general options for this selection.",
+                                id="tab-general-empty",
+                                classes="tab-empty",
+                            )
+                        with TabPane(icons["sampling"], id="tab-sampling"), VerticalScroll(classes="tab-scroll"):
+                            with Grid(id="sampling-controls", classes="field-grid"):
+                                with Vertical(classes="field-group"):
+                                    yield Label("Size", id="size-label", classes="field-caption")
+                                    yield Input(value=self.infer_size, placeholder="832*480", id="size")
+                                with Vertical(classes="field-group"):
+                                    yield Label("Frames", id="frames-label", classes="field-caption")
+                                    yield Input(value=self.infer_frames, placeholder="frame count", id="frames")
+                                with Vertical(classes="field-group"):
+                                    yield Label("Steps", id="steps-label", classes="field-caption")
+                                    yield Input(value=self.infer_steps, placeholder="sampling steps", id="steps")
+                                with Vertical(classes="field-group"):
+                                    yield Label("Seed", id="seed-label", classes="field-caption")
+                                    yield Input(value=self.infer_seed, placeholder="random seed", id="seed")
+                            with Grid(id="sampling-controls-b", classes="field-grid"):
+                                with Vertical(classes="field-group"):
+                                    yield Label("FPS", id="fps-label", classes="field-caption")
+                                    yield Input(value=self.infer_fps, placeholder="output fps", id="fps")
+                                with Vertical(classes="field-group"):
+                                    yield Label("Guidance scale", id="guidance-scale-label", classes="field-caption")
+                                    yield Input(
+                                        value=self.infer_guidance_scale,
+                                        placeholder="CFG / guidance",
+                                        id="guidance-scale",
+                                    )
+                                with Vertical(classes="field-group"):
+                                    yield Label("Dtype", id="dtype-label", classes="field-caption")
+                                    yield Input(value=self.infer_dtype, placeholder="float16 / bfloat16", id="dtype")
+                                with Vertical(classes="field-group"):
+                                    yield Label("Max sequence", id="max-sequence-length-label", classes="field-caption")
+                                    yield Input(
+                                        value=self.infer_max_sequence_length,
+                                        placeholder="text encoder length",
+                                        id="max-sequence-length",
+                                    )
+                            yield Static(
+                                "No sampling options for this model.", id="tab-sampling-empty", classes="tab-empty"
+                            )
+                        with TabPane(icons["camera"], id="tab-camera"), VerticalScroll(classes="tab-scroll"):
+                            with Grid(id="interaction-controls", classes="field-grid"):
+                                with Vertical(classes="field-group"):
+                                    yield Label("Actions", id="interactions-label", classes="field-caption")
+                                    yield Input(
+                                        value=self.infer_interactions,
+                                        placeholder="forward,camera_l,…",
+                                        id="interactions",
+                                    )
+                                with Vertical(classes="field-group"):
+                                    yield Label("Trajectory", id="trajectory-label", classes="field-caption")
+                                    yield Input(
+                                        value=self.infer_trajectory,
+                                        placeholder="tilt_up / move_right",
+                                        id="trajectory",
+                                    )
+                            with Grid(id="trajectory-file-controls", classes="field-grid"):
+                                with Vertical(classes="field-group"):
+                                    yield Label("Trajectory file", id="trajectory-file-label", classes="field-caption")
+                                    yield Input(
+                                        value=self.trajectory_file,
+                                        placeholder="custom trajectory JSON",
+                                        id="trajectory-file",
+                                    )
+                                with Vertical(classes="field-group"):
+                                    yield Label("Resize mode", id="resize-mode-label", classes="field-caption")
+                                    yield Input(
+                                        value=self.infer_resize_mode, placeholder="center_crop", id="resize-mode"
+                                    )
+                            with Grid(id="astra-controls", classes="field-grid"):
+                                with Vertical(classes="field-group"):
+                                    yield Label("Camera type", id="cam-type-label", classes="field-caption")
                                     yield Select(
-                                        EVALUATION_INTENT_OPTIONS,
-                                        value=self.eval_intent,
+                                        ASTRA_CAM_TYPE_OPTIONS,
+                                        value=self.infer_cam_type
+                                        if self.infer_cam_type in {value for _label, value in ASTRA_CAM_TYPE_OPTIONS}
+                                        else "4",
                                         allow_blank=False,
-                                        id="eval-intent",
+                                        id="cam-type",
                                     )
-                                    with Vertical(id="eval-artifact-controls", classes="field-group"):
-                                        yield Label("Artifact directory", classes="field-caption")
-                                        yield Input(
-                                            value=self.eval_artifact_dir,
-                                            placeholder="directory containing generated artifacts",
-                                            id="eval-artifact-dir",
-                                        )
-                                    with Vertical(id="eval-metrics-controls", classes="field-group"):
-                                        yield Label("Metrics", id="metrics-label", classes="field-caption")
-                                        yield Input(
-                                            value=self.eval_metrics,
-                                            placeholder="artifact_count,required_artifacts_present",
-                                            id="metrics",
-                                        )
-                                yield Static(icons["paths_runtime"], classes="section-title", id="section-paths-title")
-                                yield Rule(line_style="solid", classes="section-rule", id="section-paths-rule")
-                                with Grid(id="path-controls", classes="field-grid"):
-                                    with Vertical(classes="field-group"):
-                                        yield Label("Output directory", classes="field-caption")
-                                        yield Input(
-                                            value=str(self._default_output_dir()),
-                                            placeholder="runs/tui/…",
-                                            id="output-dir",
-                                        )
-                                    with Vertical(classes="field-group full-width"):
-                                        yield Label(
-                                            "Inference options (JSON)", id="call-json-label", classes="field-caption"
-                                        )
-                                        yield Input(placeholder='{"controls": []}', id="call-json")
-                                    with Vertical(classes="field-group full-width"):
-                                        yield Label(
-                                            "Model assets / loading (JSON)",
-                                            id="load-json-label",
-                                            classes="field-caption",
-                                        )
-                                        yield Input(placeholder='{"source_root": "/path/to/source"}', id="load-json")
-                                    with Vertical(classes="field-group"):
-                                        yield Label("Artifact path", id="output-path-label", classes="field-caption")
-                                        yield Input(
-                                            value=self.output_path,
-                                            placeholder="optional exact artifact path",
-                                            id="output-path",
-                                        )
-                                    with Vertical(id="runtime-controls", classes="field-group full-width"):
-                                        yield Label("Checkpoint root", id="ckpt-root-label", classes="field-caption")
-                                        yield Input(value=self.ckpt_root, placeholder="checkpoint root", id="ckpt-root")
-                                    with Vertical(classes="field-group"):
-                                        yield Label(
-                                            "Conda env root", id="conda-envs-root-label", classes="field-caption"
-                                        )
-                                        yield Input(
-                                            value=self.conda_envs_root,
-                                            placeholder="conda envs root",
-                                            id="conda-envs-root",
-                                        )
-                                    with Vertical(classes="field-group"):
-                                        yield Label("GPU ids", id="gpu-label", classes="field-caption")
-                                        yield Input(value=self.gpu, placeholder="0 or 0,1", id="gpu")
-                                yield Static(
-                                    "No general options for this selection.",
-                                    id="tab-general-empty",
-                                    classes="tab-empty",
-                                )
-                        with TabPane(icons["sampling"], id="tab-sampling"):
-                            with VerticalScroll(classes="tab-scroll"):
-                                with Grid(id="sampling-controls", classes="field-grid"):
-                                    with Vertical(classes="field-group"):
-                                        yield Label("Size", id="size-label", classes="field-caption")
-                                        yield Input(value=self.infer_size, placeholder="832*480", id="size")
-                                    with Vertical(classes="field-group"):
-                                        yield Label("Frames", id="frames-label", classes="field-caption")
-                                        yield Input(value=self.infer_frames, placeholder="frame count", id="frames")
-                                    with Vertical(classes="field-group"):
-                                        yield Label("Steps", id="steps-label", classes="field-caption")
-                                        yield Input(value=self.infer_steps, placeholder="sampling steps", id="steps")
-                                    with Vertical(classes="field-group"):
-                                        yield Label("Seed", id="seed-label", classes="field-caption")
-                                        yield Input(value=self.infer_seed, placeholder="random seed", id="seed")
-                                with Grid(id="sampling-controls-b", classes="field-grid"):
-                                    with Vertical(classes="field-group"):
-                                        yield Label("FPS", id="fps-label", classes="field-caption")
-                                        yield Input(value=self.infer_fps, placeholder="output fps", id="fps")
-                                    with Vertical(classes="field-group"):
-                                        yield Label(
-                                            "Guidance scale", id="guidance-scale-label", classes="field-caption"
-                                        )
-                                        yield Input(
-                                            value=self.infer_guidance_scale,
-                                            placeholder="CFG / guidance",
-                                            id="guidance-scale",
-                                        )
-                                    with Vertical(classes="field-group"):
-                                        yield Label("Dtype", id="dtype-label", classes="field-caption")
-                                        yield Input(
-                                            value=self.infer_dtype, placeholder="float16 / bfloat16", id="dtype"
-                                        )
-                                    with Vertical(classes="field-group"):
-                                        yield Label(
-                                            "Max sequence", id="max-sequence-length-label", classes="field-caption"
-                                        )
-                                        yield Input(
-                                            value=self.infer_max_sequence_length,
-                                            placeholder="text encoder length",
-                                            id="max-sequence-length",
-                                        )
-                                yield Static(
-                                    "No sampling options for this model.", id="tab-sampling-empty", classes="tab-empty"
-                                )
-                        with TabPane(icons["camera"], id="tab-camera"):
-                            with VerticalScroll(classes="tab-scroll"):
-                                with Grid(id="interaction-controls", classes="field-grid"):
-                                    with Vertical(classes="field-group"):
-                                        yield Label("Actions", id="interactions-label", classes="field-caption")
-                                        yield Input(
-                                            value=self.infer_interactions,
-                                            placeholder="forward,camera_l,…",
-                                            id="interactions",
-                                        )
-                                    with Vertical(classes="field-group"):
-                                        yield Label("Trajectory", id="trajectory-label", classes="field-caption")
-                                        yield Input(
-                                            value=self.infer_trajectory,
-                                            placeholder="tilt_up / move_right",
-                                            id="trajectory",
-                                        )
-                                with Grid(id="trajectory-file-controls", classes="field-grid"):
-                                    with Vertical(classes="field-group"):
-                                        yield Label(
-                                            "Trajectory file", id="trajectory-file-label", classes="field-caption"
-                                        )
-                                        yield Input(
-                                            value=self.trajectory_file,
-                                            placeholder="custom trajectory JSON",
-                                            id="trajectory-file",
-                                        )
-                                    with Vertical(classes="field-group"):
-                                        yield Label("Resize mode", id="resize-mode-label", classes="field-caption")
-                                        yield Input(
-                                            value=self.infer_resize_mode, placeholder="center_crop", id="resize-mode"
-                                        )
-                                with Grid(id="astra-controls", classes="field-grid"):
-                                    with Vertical(classes="field-group"):
-                                        yield Label("Camera type", id="cam-type-label", classes="field-caption")
-                                        yield Select(
-                                            ASTRA_CAM_TYPE_OPTIONS,
-                                            value=self.infer_cam_type
-                                            if self.infer_cam_type
-                                            in {value for _label, value in ASTRA_CAM_TYPE_OPTIONS}
-                                            else "4",
-                                            allow_blank=False,
-                                            id="cam-type",
-                                        )
-                                    with Vertical(classes="field-group"):
-                                        yield Label(
-                                            "Frame chunk", id="frames-per-generation-label", classes="field-caption"
-                                        )
-                                        yield Input(
-                                            value=self.infer_frames_per_generation,
-                                            placeholder="8",
-                                            id="frames-per-generation",
-                                        )
-                                with Grid(id="camera-controls", classes="field-grid"):
-                                    with Vertical(classes="field-group"):
-                                        yield Label("Angle", id="angle-label", classes="field-caption")
-                                        yield Input(value=self.infer_angle, placeholder="15", id="angle")
-                                    with Vertical(classes="field-group"):
-                                        yield Label("Distance", id="distance-label", classes="field-caption")
-                                        yield Input(value=self.infer_distance, placeholder="0.1", id="distance")
-                                    with Vertical(classes="field-group"):
-                                        yield Label("Orbit radius", id="orbit-radius-label", classes="field-caption")
-                                        yield Input(value=self.infer_orbit_radius, placeholder="1.0", id="orbit-radius")
-                                    with Vertical(classes="field-group"):
-                                        yield Label("Zoom ratio", id="zoom-ratio-label", classes="field-caption")
-                                        yield Input(value=self.infer_zoom_ratio, placeholder="1.0", id="zoom-ratio")
-                                yield Static(
-                                    "No camera options for this model.", id="tab-camera-empty", classes="tab-empty"
-                                )
-                        with TabPane(icons["model"], id="tab-model"):
-                            with VerticalScroll(classes="tab-scroll"):
-                                with Vertical(id="checkpoint-controls", classes="field-group"):
-                                    yield Label("Function / variant", classes="field-caption")
-                                    yield Select(
-                                        self._ckpt_type_options(),
-                                        value=self.ckpt_type,
-                                        allow_blank=False,
-                                        id="ckpt-type",
+                                with Vertical(classes="field-group"):
+                                    yield Label(
+                                        "Frame chunk", id="frames-per-generation-label", classes="field-caption"
                                     )
-                                with Vertical(id="checkpoint-controls-b", classes="field-group"):
-                                    yield Label("Checkpoint override", classes="field-caption")
                                     yield Input(
-                                        value=self.ckpt_path,
-                                        placeholder="optional exact checkpoint path",
-                                        id="ckpt-path",
+                                        value=self.infer_frames_per_generation,
+                                        placeholder="8",
+                                        id="frames-per-generation",
                                     )
-                                yield Static(icons["advanced"], classes="section-title", id="section-model-title")
-                                yield Rule(line_style="solid", classes="section-rule", id="section-model-rule")
-                                with Grid(id="neoverse-controls", classes="field-grid"):
-                                    with Vertical(classes="field-group"):
-                                        yield Label(
-                                            "Alpha threshold", id="alpha-threshold-label", classes="field-caption"
-                                        )
-                                        yield Input(
-                                            value=self.infer_alpha_threshold, placeholder="1.0", id="alpha-threshold"
-                                        )
-                                    with Vertical(classes="field-group"):
-                                        yield Label("Static scene", id="static-scene-label", classes="field-caption")
-                                        yield Input(
-                                            value=self.infer_static_scene, placeholder="1 / 0", id="static-scene"
-                                        )
-                                with Grid(id="neoverse-controls-b", classes="field-grid"):
-                                    with Vertical(classes="field-group"):
-                                        yield Label("Low VRAM", id="low-vram-label", classes="field-caption")
-                                        yield Input(value=self.infer_low_vram, placeholder="1 / 0", id="low-vram")
-                                    with Vertical(classes="field-group"):
-                                        yield Label("Disable LoRA", id="disable-lora-label", classes="field-caption")
-                                        yield Input(
-                                            value=self.infer_disable_lora, placeholder="1 / 0", id="disable-lora"
-                                        )
-                                    with Vertical(classes="field-group"):
-                                        yield Label("Vis rendering", id="vis-rendering-label", classes="field-caption")
-                                        yield Input(
-                                            value=self.infer_vis_rendering, placeholder="1 / 0", id="vis-rendering"
-                                        )
-                                with Grid(id="flashworld-offload-controls", classes="field-grid"):
-                                    with Vertical(classes="field-group"):
-                                        yield Label("Offload T5", id="offload-t5-label", classes="field-caption")
-                                        yield Input(value=self.infer_offload_t5, placeholder="1 / 0", id="offload-t5")
-                                    with Vertical(classes="field-group"):
-                                        yield Label(
-                                            "Offload transformer",
-                                            id="offload-transformer-during-vae-label",
-                                            classes="field-caption",
-                                        )
-                                        yield Input(
-                                            value=self.infer_offload_transformer_during_vae,
-                                            placeholder="1 / 0",
-                                            id="offload-transformer-during-vae",
-                                        )
-                                    with Vertical(classes="field-group"):
-                                        yield Label("Offload VAE", id="offload-vae-label", classes="field-caption")
-                                        yield Input(value=self.infer_offload_vae, placeholder="1 / 0", id="offload-vae")
-                                yield Static("No model-specific options.", id="tab-model-empty", classes="tab-empty")
+                            with Grid(id="camera-controls", classes="field-grid"):
+                                with Vertical(classes="field-group"):
+                                    yield Label("Angle", id="angle-label", classes="field-caption")
+                                    yield Input(value=self.infer_angle, placeholder="15", id="angle")
+                                with Vertical(classes="field-group"):
+                                    yield Label("Distance", id="distance-label", classes="field-caption")
+                                    yield Input(value=self.infer_distance, placeholder="0.1", id="distance")
+                                with Vertical(classes="field-group"):
+                                    yield Label("Orbit radius", id="orbit-radius-label", classes="field-caption")
+                                    yield Input(value=self.infer_orbit_radius, placeholder="1.0", id="orbit-radius")
+                                with Vertical(classes="field-group"):
+                                    yield Label("Zoom ratio", id="zoom-ratio-label", classes="field-caption")
+                                    yield Input(value=self.infer_zoom_ratio, placeholder="1.0", id="zoom-ratio")
+                            yield Static(
+                                "No camera options for this model.", id="tab-camera-empty", classes="tab-empty"
+                            )
+                        with TabPane(icons["model"], id="tab-model"), VerticalScroll(classes="tab-scroll"):
+                            with Vertical(id="checkpoint-controls", classes="field-group"):
+                                yield Label("Function / variant", classes="field-caption")
+                                yield Select(
+                                    self._ckpt_type_options(),
+                                    value=self.ckpt_type,
+                                    allow_blank=False,
+                                    id="ckpt-type",
+                                )
+                            with Vertical(id="checkpoint-controls-b", classes="field-group"):
+                                yield Label("Checkpoint override", classes="field-caption")
+                                yield Input(
+                                    value=self.ckpt_path,
+                                    placeholder="optional exact checkpoint path",
+                                    id="ckpt-path",
+                                )
+                            yield Static(icons["advanced"], classes="section-title", id="section-model-title")
+                            yield Rule(line_style="solid", classes="section-rule", id="section-model-rule")
+                            with Grid(id="neoverse-controls", classes="field-grid"):
+                                with Vertical(classes="field-group"):
+                                    yield Label("Alpha threshold", id="alpha-threshold-label", classes="field-caption")
+                                    yield Input(
+                                        value=self.infer_alpha_threshold, placeholder="1.0", id="alpha-threshold"
+                                    )
+                                with Vertical(classes="field-group"):
+                                    yield Label("Static scene", id="static-scene-label", classes="field-caption")
+                                    yield Input(value=self.infer_static_scene, placeholder="1 / 0", id="static-scene")
+                            with Grid(id="neoverse-controls-b", classes="field-grid"):
+                                with Vertical(classes="field-group"):
+                                    yield Label("Low VRAM", id="low-vram-label", classes="field-caption")
+                                    yield Input(value=self.infer_low_vram, placeholder="1 / 0", id="low-vram")
+                                with Vertical(classes="field-group"):
+                                    yield Label("Disable LoRA", id="disable-lora-label", classes="field-caption")
+                                    yield Input(value=self.infer_disable_lora, placeholder="1 / 0", id="disable-lora")
+                                with Vertical(classes="field-group"):
+                                    yield Label("Vis rendering", id="vis-rendering-label", classes="field-caption")
+                                    yield Input(value=self.infer_vis_rendering, placeholder="1 / 0", id="vis-rendering")
+                            with Grid(id="flashworld-offload-controls", classes="field-grid"):
+                                with Vertical(classes="field-group"):
+                                    yield Label("Offload T5", id="offload-t5-label", classes="field-caption")
+                                    yield Input(value=self.infer_offload_t5, placeholder="1 / 0", id="offload-t5")
+                                with Vertical(classes="field-group"):
+                                    yield Label(
+                                        "Offload transformer",
+                                        id="offload-transformer-during-vae-label",
+                                        classes="field-caption",
+                                    )
+                                    yield Input(
+                                        value=self.infer_offload_transformer_during_vae,
+                                        placeholder="1 / 0",
+                                        id="offload-transformer-during-vae",
+                                    )
+                                with Vertical(classes="field-group"):
+                                    yield Label("Offload VAE", id="offload-vae-label", classes="field-caption")
+                                    yield Input(value=self.infer_offload_vae, placeholder="1 / 0", id="offload-vae")
+                            yield Static("No model-specific options.", id="tab-model-empty", classes="tab-empty")
                     with Vertical(id="studio-panel"):
                         yield Label(icons["studio_title"], id="studio-help-title")
                         yield Static(

@@ -3,10 +3,12 @@
 from __future__ import annotations
 
 from math import ceil
+from typing import ClassVar
 
 from PIL import Image
 from textual import events
 from textual.app import ComposeResult
+from textual.binding import BindingType
 from textual.containers import Vertical
 from textual.screen import ModalScreen
 from textual.widgets import Static
@@ -47,7 +49,7 @@ class BrandLogo(Vertical, can_focus=True):
     }
     """
 
-    BINDINGS = [("enter", "enlarge", "Enlarge logo")]
+    BINDINGS: ClassVar[list[BindingType]] = [("enter", "enlarge", "Enlarge logo")]
 
     def __init__(self, *, width_chars: int, id: str | None = None, zoomable: bool = True) -> None:
         super().__init__(id=id)
@@ -111,7 +113,7 @@ class BrandLogo(Vertical, can_focus=True):
 class LogoPreview(ModalScreen[None]):
     """Convert the original image again at the largest size the screen can hold."""
 
-    BINDINGS = [("escape", "dismiss", "Close"), ("q", "dismiss", "Close")]
+    BINDINGS: ClassVar[list[BindingType]] = [("escape", "dismiss", "Close"), ("q", "dismiss", "Close")]
 
     DEFAULT_CSS = """
     LogoPreview {

@@ -1014,9 +1014,13 @@ def resolve_infer_model_variant(model_id: str, ckpt_type: str | None = None) -> 
         ValueError: When *ckpt_type* is not a valid variant for the model family.
     """
     family_id = _script_infer_family_id(model_id)
-    if model_id in INFER_VARIANT_GROUPS and family_id in INFER_MODEL_VARIANTS and model_id not in INFER_MODEL_VARIANTS:
-        if ckpt_type is None or not str(ckpt_type).strip():
-            return model_id
+    if (
+        model_id in INFER_VARIANT_GROUPS
+        and family_id in INFER_MODEL_VARIANTS
+        and model_id not in INFER_MODEL_VARIANTS
+        and (ckpt_type is None or not str(ckpt_type).strip())
+    ):
+        return model_id
 
     variants = _ordered_script_variants(family_id)
     if variants is not None:

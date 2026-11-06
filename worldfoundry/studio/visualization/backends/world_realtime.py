@@ -1949,43 +1949,24 @@ class RealtimePeerManager:
 
         latency_text = "-" if control_latency_ms is None else f"{control_latency_ms:.1f}"
         message = (
-            "Realtime perf transport=%s chunk=%d interval_chunks=%d measured_chunks=%d frames=%d "
-            "gen_fps=%.1f interval_fps=%.1f playback_fps=%s generation_ms=%.1f "
-            "generation_p50_ms=%s generation_p90_ms=%s model_p50_ms=%s model_p90_ms=%s "
-            "pixel_post_ms=%.1f enqueue_ms=%.1f runtime_ms=%.1f condition_ms=%.1f "
-            "model_ms=%.1f decode_ms=%.1f postprocess_ms=%.1f copy_ms=%.1f cache_ms=%.1f queue_depth=%d "
-            "dropped_delta=%d control_latency_ms=%s cache_frames=%d cache_tokens=%d "
-            "compile_active=%d cuda_graph=%d"
-        ) % (
-            transport,
-            active.chunk_index,
-            window.observed_chunks,
-            measured_chunks,
-            measured_frames,
-            generation_fps,
-            interval_fps,
-            self.fps,
-            generation_ms,
-            stat_text("generation_ms", "p50_ms"),
-            stat_text("generation_ms", "p90_ms"),
-            stat_text("model_ms", "p50_ms"),
-            stat_text("model_ms", "p90_ms"),
-            pixel_post_ms,
-            enqueue_ms,
-            _metric_float(metrics, "runtime_ms", generation_ms),
-            _metric_float(metrics, "condition_ms"),
-            _metric_float(metrics, "model_ms"),
-            _metric_float(metrics, "decode_ms"),
-            _metric_float(metrics, "postprocess_ms"),
-            _metric_float(metrics, "copy_ms"),
-            _metric_float(metrics, "cache_ms"),
-            queue_depth,
-            dropped_delta,
-            latency_text,
-            round(_metric_float(metrics, "cache_frames")),
-            round(_metric_float(metrics, "cache_tokens")),
-            round(_metric_float(metrics, "compile_active")),
-            round(_metric_float(metrics, "cuda_graph")),
+            f"Realtime perf transport={transport} chunk={active.chunk_index} "
+            f"interval_chunks={window.observed_chunks} measured_chunks={measured_chunks} frames={measured_frames} "
+            f"gen_fps={generation_fps:.1f} interval_fps={interval_fps:.1f} playback_fps={self.fps} "
+            f"generation_ms={generation_ms:.1f} "
+            f"generation_p50_ms={stat_text('generation_ms', 'p50_ms')} "
+            f"generation_p90_ms={stat_text('generation_ms', 'p90_ms')} "
+            f"model_p50_ms={stat_text('model_ms', 'p50_ms')} model_p90_ms={stat_text('model_ms', 'p90_ms')} "
+            f"pixel_post_ms={pixel_post_ms:.1f} enqueue_ms={enqueue_ms:.1f} "
+            f"runtime_ms={_metric_float(metrics, 'runtime_ms', generation_ms):.1f} "
+            f"condition_ms={_metric_float(metrics, 'condition_ms'):.1f} "
+            f"model_ms={_metric_float(metrics, 'model_ms'):.1f} decode_ms={_metric_float(metrics, 'decode_ms'):.1f} "
+            f"postprocess_ms={_metric_float(metrics, 'postprocess_ms'):.1f} "
+            f"copy_ms={_metric_float(metrics, 'copy_ms'):.1f} cache_ms={_metric_float(metrics, 'cache_ms'):.1f} "
+            f"queue_depth={queue_depth} dropped_delta={dropped_delta} control_latency_ms={latency_text} "
+            f"cache_frames={round(_metric_float(metrics, 'cache_frames'))} "
+            f"cache_tokens={round(_metric_float(metrics, 'cache_tokens'))} "
+            f"compile_active={round(_metric_float(metrics, 'compile_active'))} "
+            f"cuda_graph={round(_metric_float(metrics, 'cuda_graph'))}"
         )
         event_logger.event(
             "INFO",

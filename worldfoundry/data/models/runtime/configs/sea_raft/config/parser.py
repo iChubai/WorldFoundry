@@ -43,10 +43,7 @@ def parse_args(parser):
         CLI values take precedence over JSON values.
     """
     entry = parser.parse_args()
-    json_path = entry.cfg
-    args = json_to_args(json_path)
-    args_dict = args.__dict__
+    args = json_to_args(entry.cfg)
     # NOTE: CLI arguments override JSON config entries.
-    for _index, (key, value) in enumerate(vars(entry).items()):
-        args_dict[key] = value
+    vars(args).update(vars(entry))
     return args

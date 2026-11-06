@@ -17,7 +17,11 @@ from worldfoundry.base_models.diffusion_model.models.denoisers.hy_nomas import (
 )
 from worldfoundry.base_models.diffusion_model.models.encoders.hy_nomas import action_windows
 from worldfoundry.base_models.diffusion_model.models.initializers.hy_nomas import HyNomasLatentInitializer
-from worldfoundry.base_models.diffusion_model.models.networks.hy_nomas import HyNomasTransformer3DModel
+from worldfoundry.base_models.diffusion_model.models.networks.hy_nomas import (
+    HyNomasCameraAttention,
+    HyNomasTransformer3DModel,
+    HyNomasTransformerBlock,
+)
 from worldfoundry.base_models.diffusion_model.recipes.registry import default_native_diffusion_registry
 from worldfoundry.base_models.diffusion_model.runners.base import RunnerComponents
 from worldfoundry.base_models.diffusion_model.runners.segmented import SegmentedAutoregressiveRunner
@@ -107,7 +111,7 @@ def test_checkpoint_projection_conversion_retains_exact_tensors() -> None:
 
 
 def test_transformer_reuses_canonical_layers(runner: SegmentedAutoregressiveRunner) -> None:
-    block = cast(HyNomasDenoiser, runner.components.denoiser).model.double_blocks[0]
+    block = cast(HyNomasTransformerBlock, cast(HyNomasDenoiser, runner.components.denoiser).model.double_blocks[0])
     assert isinstance(block.img_mod, DiTModulation)
     assert isinstance(block.img_mlp, TransformerMLP)
     assert isinstance(block.attn.img_attn_q_norm, RMSNorm)
@@ -168,7 +172,7 @@ def test_camera_condition_changes_real_dit_forward(runner: SegmentedAutoregressi
     model = cast(HyNomasDenoiser, runner.components.denoiser).model
     with torch.no_grad():
         for action in model.action_modules:
-            action.proj_keyboard.weight.fill_(0.01)
+            cast(HyNomasCameraAttention, action).proj_keyboard.weight.fill_(0.01)
     sample = torch.randn(1, 32, 1, 1, 1)
     text = torch.randn(1, 3, 8)
     poses = torch.eye(4).repeat(1, 4, 1, 1)

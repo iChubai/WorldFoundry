@@ -1,5 +1,7 @@
 """Module for the Base operator implementation."""
 
+from typing import Any
+
 
 class BaseOperator:
     """Operator class for the Base model integration."""
@@ -24,22 +26,22 @@ class BaseOperator:
         if type(self.interaction_template) is not list:
             raise ValueError("interaction_template should be a list")
 
-    def get_interaction(self, interaction):
+    def get_interaction(self, *args: Any, **kwargs: Any) -> Any:
         """
         utilize this function to update the interaction list
         """
 
-    def check_interaction(self, interaction):
+    def check_interaction(self, *args: Any, **kwargs: Any) -> Any:
         """
         utilize this function to check the interaction validity
         """
 
-    def process_interaction(self):
+    def process_interaction(self, *args: Any, **kwargs: Any) -> Any:
         """
         utilize this function to process the interaction
         """
 
-    def process_perception(self):
+    def process_perception(self, *args: Any, **kwargs: Any) -> Any:
         """
         utilize this function to process the visual, audio singal
         This function is different from process_interaction for real-time interactive updates

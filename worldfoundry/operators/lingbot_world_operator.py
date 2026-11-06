@@ -2,6 +2,7 @@
 
 import logging
 import os
+from typing import Any
 
 import numpy as np
 import torch
@@ -269,7 +270,7 @@ class LingBotOperator(BaseOperator):
         # Supported interaction templates: prompt, action_path (file), action_list (commands)
         self.interaction_template = ["prompt", "action_path", "action_list"]
         self.interaction_template_init()
-        self.current_interaction = {}
+        self.current_interaction: dict[str, Any] = {}
 
         # Initialize trajectory generator
         self.traj_generator = TrajectoryGenerator()
@@ -291,7 +292,7 @@ class LingBotOperator(BaseOperator):
 
         if not isinstance(input_image, Image.Image):
             raise ValueError("Input image must be a PIL Image")
-        img = input_image.resize((resize_W, resize_H), Image.BICUBIC)
+        img = input_image.resize((resize_W, resize_H), Image.Resampling.BICUBIC)
         img_tensor = TF.to_tensor(img).sub_(0.5).div_(0.5).to(device)
         return {"image_tensor": img_tensor, "pil_image": img}
 

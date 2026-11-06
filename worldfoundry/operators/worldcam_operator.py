@@ -11,7 +11,7 @@ from PIL import Image
 
 from .base_operator import BaseOperator
 
-_RESAMPLE_BICUBIC = getattr(Image, "Resampling", Image).BICUBIC
+_RESAMPLE_BICUBIC = Image.Resampling.BICUBIC
 
 _ACTION_ALIASES = {
     "forward": "forward",

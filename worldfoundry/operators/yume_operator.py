@@ -92,7 +92,7 @@ class YumeOperator(BaseOperator):
             self.check_interaction(interaction)
         self.current_interaction.append(interactions)
 
-    def process_interaction(self, **kwargs) -> dict[str, Any]:
+    def process_interaction(self, **kwargs) -> list[str]:
         """Process the recorded interactions and return the generated actions."""
         INTERACTION_2_CAPTION_DICT = {
             "forward": "The camera pushes forward (W).",
@@ -127,9 +127,9 @@ class YumeOperator(BaseOperator):
         video_pixel_values = None
 
         if images is not None:
-            images = _to_rgb_array(images)
+            image_array = _to_rgb_array(images)
 
-            images_tensor = torch.from_numpy(images).permute(2, 0, 1).float() / 255.0
+            images_tensor = torch.from_numpy(image_array).permute(2, 0, 1).float() / 255.0
             resized_images = F.interpolate(
                 images_tensor.unsqueeze(0),
                 size=target_size,

@@ -5,10 +5,10 @@ import logging
 import imageio
 import numpy as np
 import torch
-import torchvision
 from einops import rearrange
 from PIL import Image
-from torchvision.transforms import v2
+from torchvision.transforms import InterpolationMode, v2
+from torchvision.transforms import functional as TF
 
 from .base_operator import BaseOperator
 
@@ -59,10 +59,10 @@ class ReCamMasterOperator(BaseOperator):
         """Crop and resize implementation."""
         width, height = image.size
         scale = max(self.width / width, self.height / height)
-        image = torchvision.transforms.functional.resize(
+        image = TF.resize(
             image,
-            (round(height * scale), round(width * scale)),
-            interpolation=torchvision.transforms.InterpolationMode.BILINEAR,
+            [round(height * scale), round(width * scale)],
+            interpolation=InterpolationMode.BILINEAR,
         )
         return image
 
@@ -73,9 +73,11 @@ class ReCamMasterOperator(BaseOperator):
     ):
         """Load frames using imageio implementation."""
         reader = imageio.get_reader(file_path)
+        # The FFmpeg reader that opens these videos defines count_frames; ImageIO's generic Reader stub does not.
+        frame_count = reader.count_frames()  # ty: ignore[unresolved-attribute]
         if (
-            reader.count_frames() < self.max_num_frames
-            or reader.count_frames() - 1 < start_frame_id + (self.num_frames - 1) * self.frame_interval
+            frame_count < self.max_num_frames
+            or frame_count - 1 < start_frame_id + (self.num_frames - 1) * self.frame_interval
         ):
             reader.close()
             logger.warning(

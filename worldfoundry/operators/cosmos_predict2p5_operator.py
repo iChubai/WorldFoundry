@@ -163,7 +163,8 @@ class CosmosPredict2p5Operator(BaseOperator):
             x1 = (new_width - dst_width) // 2
             y1 = (new_height - dst_height) // 2
 
-            input_image = F.resize(input_image, (new_height, new_width), InterpolationMode.BILINEAR)
+            # torchvision resizes PIL images at runtime although its signature names only Tensor.
+            input_image = F.resize(input_image, [new_height, new_width], InterpolationMode.BILINEAR)  # ty: ignore[invalid-argument-type]
             input_image = F.crop(input_image, y1, x1, dst_height, dst_width)
 
         return {

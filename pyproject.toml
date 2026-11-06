@@ -567,6 +567,7 @@ allowed-unresolved-imports = [
     "rerun.**",
     "rich.**",
     "safetensors.**",
+    "scipy.**",
     "seaborn.**",
     "skimage.**",
     "textual.**",

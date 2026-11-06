@@ -89,7 +89,7 @@ class CUT3ROperator(BaseOperator):
     def process_perception(
         self,
         input_signal: str | np.ndarray | torch.Tensor | Image.Image | list[str] | list[np.ndarray] | list[Image.Image],
-    ) -> np.ndarray | list[np.ndarray]:
+    ) -> np.ndarray | list[Any]:
         """
         Process visual signal (image/video) for real-time interactive updates.
         This function handles loading and preprocessing of images from various input types.

@@ -3,6 +3,7 @@
 import math
 import os
 from pathlib import Path
+from typing import cast
 
 import cv2
 import numpy as np
@@ -201,9 +202,9 @@ class Pi3Operator(BaseOperator):
             if len(input_signal) == 0:
                 raise ValueError("Empty input list")
             if isinstance(input_signal[0], str):
-                return [self._load_single_image(p) for p in input_signal]
+                return [self._load_single_image(p) for p in cast(list[str], input_signal)]
             elif isinstance(input_signal[0], np.ndarray):
-                return list(input_signal)
+                return list(cast(list[np.ndarray], input_signal))
             else:
                 raise ValueError(f"Unsupported list element type: {type(input_signal[0])}")
         elif isinstance(input_signal, torch.Tensor):

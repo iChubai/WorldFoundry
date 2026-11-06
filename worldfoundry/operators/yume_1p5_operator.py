@@ -89,7 +89,7 @@ class Yume1p5Operator(BaseOperator):
             self.check_interaction(interaction)
         self.current_interaction.append(interactions)
 
-    def process_interaction(self, **kwargs) -> dict[str, Any]:
+    def process_interaction(self, **kwargs) -> list[str]:
         """Process the recorded interactions and return the generated actions."""
         INTERACTION_2_CAPTION_DICT = {
             # movement
@@ -120,15 +120,15 @@ class Yume1p5Operator(BaseOperator):
         assert size in SUPPORTED_SIZES["ti2v-5B"], (
             f"Unsupported size: {size}. Supported sizes for ti2v-5B are: {SUPPORTED_SIZES['ti2v-5B']}"
         )
-        size = SIZE_CONFIGS[size]
+        target_size = SIZE_CONFIGS[size]
 
         if images is not None:
-            images = _to_rgb_array(images)
+            image_array = _to_rgb_array(images)
 
-            images_tensor = torch.from_numpy(images).permute(2, 0, 1).float() / 255.0
-            resized_images = F.interpolate(images_tensor.unsqueeze(0), size=size, mode="bilinear", align_corners=False)[
-                0
-            ]
+            images_tensor = torch.from_numpy(image_array).permute(2, 0, 1).float() / 255.0
+            resized_images = F.interpolate(
+                images_tensor.unsqueeze(0), size=target_size, mode="bilinear", align_corners=False
+            )[0]
 
         if videos:
             video_transform = transforms.ToTensor()
@@ -139,7 +139,9 @@ class Yume1p5Operator(BaseOperator):
                 normalized_frames.append(video_transform(frame))
             video_pixel_values = torch.stack(normalized_frames, dim=0)
             video_pixel_values = (
-                torch.nn.functional.interpolate(video_pixel_values.sub_(0.5).div_(0.5), size=size, mode="bicubic")
+                torch.nn.functional.interpolate(
+                    video_pixel_values.sub_(0.5).div_(0.5), size=target_size, mode="bicubic"
+                )
             ).clamp_(-1, 1)
 
         return {

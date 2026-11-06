@@ -123,7 +123,7 @@ class LyraOperator(BaseOperator):
             "num_frames": int(sampled["frame_count"]),
         }
 
-    def _normalize_interaction(self, interaction: str | dict[str, Any]) -> dict[str, str]:
+    def _normalize_interaction(self, interaction: str | dict[str, Any]) -> dict[str, Any]:
         """Normalize interaction implementation."""
         if isinstance(interaction, str):
             self.check_interaction(interaction)

@@ -195,7 +195,7 @@ class DepthAnything3Operator(BaseOperator):
         if isinstance(input_signal, (str, Path)):
             input_path = Path(input_signal).expanduser()
             if input_path.is_dir() or input_path.suffix.lower() == ".txt":
-                return self.collect_paths(input_path)
+                return list(self.collect_paths(input_path))
             return [self._coerce_single_image(input_path)]
 
         if isinstance(input_signal, Sequence) and not isinstance(input_signal, (np.ndarray, torch.Tensor, Image.Image)):

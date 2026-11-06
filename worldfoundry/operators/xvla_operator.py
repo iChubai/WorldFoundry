@@ -58,7 +58,9 @@ class XVLAOperator(OfficialPolicyOperator):
         for key in camera_keys:
             if kwargs.get(key) is not None:
                 views[key] = kwargs[key]
-        existing = kwargs.get("observation") if isinstance(kwargs.get("observation"), Mapping) else {}
+        existing = kwargs.get("observation")
+        if not isinstance(existing, Mapping):
+            existing = {}
         observation = _compact_dict(
             {
                 **dict(existing),

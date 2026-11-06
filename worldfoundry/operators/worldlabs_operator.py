@@ -53,7 +53,7 @@ class WorldLabsOperator(BaseOperator):
             self.interaction_history.append(now_interaction)
         return {"processed_prompt": now_interaction or ""}
 
-    def _normalize_content(self, value: Image.Image | str | dict[str, Any]) -> dict[str, Any]:
+    def _normalize_content(self, value: object) -> dict[str, Any]:
         """Normalize content implementation."""
         if isinstance(value, dict):
             return value

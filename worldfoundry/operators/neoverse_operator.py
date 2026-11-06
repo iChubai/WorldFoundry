@@ -12,7 +12,7 @@ from PIL import Image
 
 from .base_operator import BaseOperator
 
-_RESAMPLE_LANCZOS = getattr(Image, "Resampling", Image).LANCZOS
+_RESAMPLE_LANCZOS = Image.Resampling.LANCZOS
 _VIDEO_SUFFIXES = {".avi", ".m4v", ".mkv", ".mov", ".mp4", ".webm"}
 
 _ACTION_ALIASES = {

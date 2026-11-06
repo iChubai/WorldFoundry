@@ -77,7 +77,7 @@ class VGGTOperator(BaseOperator):
                 return images
             else:
                 # Single image path
-                return self._load_single_image(input_signal)
+                return self._load_single_image(str(input_signal))
         elif isinstance(input_signal, list):
             # List of paths
             images = []

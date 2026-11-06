@@ -230,7 +230,7 @@ async def run_evaluation_payload(
     timeout = None if wait == "sync" else max(0, wait_timeout_s)
     completed = await _wait_for_job(job.job_id, ctx, timeout)
     if completed:
-        return ctx.job_store.get(job.job_id).to_result(include_logs=False)  # type: ignore[union-attr]
+        return job.to_result(include_logs=False)
     return _submitted(job.to_summary())
 
 

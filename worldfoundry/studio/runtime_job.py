@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+import contextlib
 import json
 import os
 import sys
@@ -123,10 +124,8 @@ def _run_distributed_manager_payload(
 
     if rank == 0:
         for stale in (prepared_path, error_path):
-            try:
+            with contextlib.suppress(FileNotFoundError):
                 stale.unlink()
-            except FileNotFoundError:
-                pass
         try:
             prepare_kwargs = {key: run_kwargs.get(key) for key in _RUN_PREPARE_KEYS}
             entry, request, perf_segments, wall_t0 = manager._prepare_run_request(**prepare_kwargs)

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import contextlib
 import gc
 import hashlib
 import importlib
@@ -540,14 +541,10 @@ def shutdown_torchrun_lingbot_fast_runtime() -> None:
         if dist is None or not dist.is_available() or not dist.is_initialized():
             return
         if control_group is not None:
-            try:
+            with contextlib.suppress(Exception):
                 dist.destroy_process_group(control_group)
-            except Exception:
-                pass
-        try:
+        with contextlib.suppress(Exception):
             dist.destroy_process_group()
-        except Exception:
-            pass
     finally:
         # Do not reopen creation until both the control and default groups have
         # finished destruction. A future ensure call may then initialize a new
@@ -1699,10 +1696,8 @@ class _LeasedPipelineIterator:
             raise close_error
 
     def __del__(self) -> None:  # pragma: no cover - nondeterministic GC safety net
-        try:
+        with contextlib.suppress(Exception):
             self.close()
-        except Exception:
-            pass
 
 
 class BaseRuntimeDriver:
@@ -2948,10 +2943,8 @@ class StudioManager:
         gc.collect()
         torch = _torch_module()
         if torch is not None and torch.cuda.is_available():
-            try:
+            with contextlib.suppress(Exception):
                 torch.cuda.empty_cache()
-            except Exception:
-                pass
 
     def import_pipeline_class(self, entry: CatalogEntry) -> Any:
         # Pipeline modules frequently resolve Transformers/Diffusers lazy
@@ -3487,10 +3480,8 @@ class StudioManager:
         saved_artifacts.append(result_metadata_path)
 
         if hasattr(result, "save") and not isinstance(result, (dict, str, bytes)):
-            try:
+            with contextlib.suppress(Exception):
                 saved_artifacts.extend(result.save(output_dir))
-            except Exception:
-                pass
 
         if isinstance(result, dict):
             if "scene_params" in result and hasattr(ctx.pipeline, "save_results"):

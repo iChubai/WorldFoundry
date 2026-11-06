@@ -287,7 +287,7 @@ def _infer_field_kind(field_id: str, default: Any = _MISSING_DEFAULT) -> str:
             return "json"
 
     normalized = _normalise_infer_id(field_id)
-    if normalized.endswith("-path") or normalized.endswith("-dir"):
+    if normalized.endswith(("-path", "-dir")):
         return "path"
     if normalized == "grayscale" or normalized.startswith(
         ("allow-", "apply-", "create-", "disable-", "enable-", "force-", "is-", "trim-", "use-", "visualize-")
@@ -5700,7 +5700,7 @@ def generic_model_inference_spec(
         fields = []
         add_common_fields(fields)
         fields.extend(extra_fields())
-        task_inputs = tuple(fields) or (streaming_fallback_fields() if supports_stream else tuple())
+        task_inputs = tuple(fields) or (streaming_fallback_fields() if supports_stream else ())
         artifact_kind = (
             "action_tokens"
             if _normalise_infer_id(model_family_id) == "lapa" or workload == "visual-action"
@@ -5733,7 +5733,7 @@ def generic_model_inference_spec(
         fields = []
         add_common_fields(fields)
         fields.extend(extra_fields())
-        task_inputs = tuple(fields) or (streaming_fallback_fields() if supports_stream else tuple())
+        task_inputs = tuple(fields) or (streaming_fallback_fields() if supports_stream else ())
         if is_asset_gated_world_runtime:
             task_outputs = (
                 _artifact(

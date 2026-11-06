@@ -288,7 +288,7 @@ def render_feature_pca(features: Any, *, output_size: tuple[int, int] | None = N
         flat = array.reshape(-1, channels)
     elif array.ndim == 2:
         token_count, channels = array.shape
-        side = int(round(token_count**0.5))
+        side = round(token_count**0.5)
         if side * side != token_count:
             raise ValueError("Flat feature tokens must form a square grid.")
         height = width = side

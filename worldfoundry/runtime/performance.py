@@ -7,6 +7,7 @@ is performed only when :func:`capture_runtime_fingerprint` is called.
 
 from __future__ import annotations
 
+import contextlib
 import importlib
 import importlib.metadata
 import json
@@ -551,10 +552,8 @@ class PerformanceManifest:
                 os.fsync(handle.fileno())
             os.replace(temporary, destination)
         except BaseException:
-            try:
+            with contextlib.suppress(OSError):
                 os.close(fd)
-            except OSError:
-                pass
             temporary.unlink(missing_ok=True)
             raise
         return destination

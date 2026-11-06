@@ -48,15 +48,9 @@ def visualize_depth(
     valid_mask = depth > 0
     depth[valid_mask] = 1 / depth[valid_mask]
     if depth_min is None:
-        if valid_mask.sum() <= 10:
-            depth_min = 0
-        else:
-            depth_min = np.percentile(depth[valid_mask], percentile)
+        depth_min = 0 if valid_mask.sum() <= 10 else np.percentile(depth[valid_mask], percentile)
     if depth_max is None:
-        if valid_mask.sum() <= 10:
-            depth_max = 0
-        else:
-            depth_max = np.percentile(depth[valid_mask], 100 - percentile)
+        depth_max = 0 if valid_mask.sum() <= 10 else np.percentile(depth[valid_mask], 100 - percentile)
     if depth_min == depth_max:
         depth_min = depth_min - 1e-6
         depth_max = depth_max + 1e-6

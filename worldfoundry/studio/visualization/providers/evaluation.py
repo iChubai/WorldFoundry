@@ -134,8 +134,8 @@ def resize_and_crop_video(
 
         # Scale based on the smaller factor (resize one side to target)
         scale = max(scale_h, scale_w)
-        new_H = int(round(H * scale))
-        new_W = int(round(W * scale))
+        new_H = round(H * scale)
+        new_W = round(W * scale)
 
         # Resize using bilinear interpolation
         video = F.interpolate(video, size=(new_H, new_W), mode="bilinear", align_corners=False)
@@ -235,7 +235,7 @@ def plot_metrics(csv_files, labels, output_path):
         # Group by pred_step and average across samples
         summary = gen_df.groupby("pred_step").mean().reset_index()
 
-        for j, (col, title, higher_better) in enumerate(metrics):
+        for j, (col, title, _higher_better) in enumerate(metrics):
             ax = axes[j]
             ax.plot(summary["pred_step"], summary[col], marker="o", label=label, color=colors[i], linewidth=2)
             ax.set_title(title, fontsize=14, fontweight="bold")

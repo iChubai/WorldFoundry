@@ -7,6 +7,7 @@ a compact Studio-native HTTP API for the original browser UI.
 from __future__ import annotations
 
 import base64
+import contextlib
 import hashlib
 import json
 import mimetypes
@@ -144,10 +145,8 @@ def serve_world_frontend(
         )
     finally:
         if use_torchrun_lingbot:
-            try:
+            with contextlib.suppress(Exception):
                 manager.shutdown_torchrun_workers()
-            except Exception:
-                pass
             shutdown_torchrun_lingbot_fast_runtime()
 
 

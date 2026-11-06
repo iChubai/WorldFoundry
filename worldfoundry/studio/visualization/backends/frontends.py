@@ -954,10 +954,8 @@ def _print_tunnel_for_url(url: str) -> None:
 
 def _wait_forever() -> None:
     stop = threading.Event()
-    try:
+    with contextlib.suppress(KeyboardInterrupt):
         stop.wait()
-    except KeyboardInterrupt:
-        pass
 
 
 def _strip_html(value: str) -> str:

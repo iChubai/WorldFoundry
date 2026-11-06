@@ -7,20 +7,20 @@ prompt_rewriter_path = f"{KAIROS_MODEL_DIR}/Qwen/Qwen3-VL-8B-Instruct/"
 
 tokenizer_path = None
 
-pipeline = dict(
-    type="KairosEmbodiedAPI",
-    pretrained_dit=pretrained_dit,
-    parallel_mode="sp",
-    use_cfg_parallel=False,
-    pipeline_type="KairosEmbodiedPipeline_DMD",
-    pipeline_args=dict(
-        vae_path=vae_path,
-        text_encoder_path=text_encoder_path,
-        load_dit_fn="strict_load",
-        vram_management_enabled=False,
-        selected_sampling_time=[1000, 800, 500, 100],
-        use_unified_sequence_parallel=True,
-        dit_config={
+pipeline = {
+    "type": "KairosEmbodiedAPI",
+    "pretrained_dit": pretrained_dit,
+    "parallel_mode": "sp",
+    "use_cfg_parallel": False,
+    "pipeline_type": "KairosEmbodiedPipeline_DMD",
+    "pipeline_args": {
+        "vae_path": vae_path,
+        "text_encoder_path": text_encoder_path,
+        "load_dit_fn": "strict_load",
+        "vram_management_enabled": False,
+        "selected_sampling_time": [1000, 800, 500, 100],
+        "use_unified_sequence_parallel": True,
+        "dit_config": {
             "dit_type": "KairosDiT",
             "has_image_input": False,
             "patch_size": [1, 2, 2],
@@ -44,5 +44,5 @@ pipeline = dict(
             "use_tp_in_self_attn": True,
             "attend_k0": False,
         },
-    ),
-)
+    },
+}

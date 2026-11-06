@@ -482,10 +482,7 @@ def _visualizer_env_overrides(mode: str, params: Mapping[str, Any]) -> dict[str,
         value = params.get(param_key)
         if value is None:
             continue
-        if isinstance(value, bool):
-            text = "1" if value else "0"
-        else:
-            text = str(value).strip()
+        text = ("1" if value else "0") if isinstance(value, bool) else str(value).strip()
         if text:
             overrides[env_key] = text
     return overrides

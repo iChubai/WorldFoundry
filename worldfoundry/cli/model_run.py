@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import contextlib
 import json
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
@@ -836,10 +837,8 @@ def load_model_run_schema(
         if selected_catalog_variant is not None:
             catalog_variant_id = selected_catalog_variant.variant_id
             if selected_catalog_variant.pipeline_binding:
-                try:
+                with contextlib.suppress(KeyError):
                     entry = find_entry(selected_catalog_variant.pipeline_binding)
-                except KeyError:
-                    pass
         elif variant_id is None and not catalog_entry.runner_target:
             selected_catalog_variant = select_default_variant(
                 catalog_entry,
@@ -1217,7 +1216,7 @@ def model_id_from_run_argv(argv: Sequence[str]) -> str | None:
     for index, item in enumerate(argv[1:]):
         if item in {"--model", "--model-id"} and index + 2 < len(argv):
             values.append(argv[index + 2])
-        elif item.startswith("--model=") or item.startswith("--model-id="):
+        elif item.startswith(("--model=", "--model-id=")):
             values.append(item.split("=", 1)[1])
     unique = tuple(dict.fromkeys(value for value in values if value))
     return unique[0] if len(unique) == 1 else None

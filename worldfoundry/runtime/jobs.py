@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import contextlib
 import json
 import os
 import subprocess
@@ -739,10 +740,8 @@ class AsyncCommandJobStore:
             # Never leave the spawned process group running when the runner
             # itself fails, otherwise the child keeps occupying GPUs while the
             # job is reported as failed.
-            try:
+            with contextlib.suppress(Exception):
                 await self._terminate_process(job)
-            except Exception:
-                pass
             job.status = "failed"
             job.error = str(exc)
             self._append_job_log(job, "stderr", f"{type(exc).__name__}: {exc}\n")

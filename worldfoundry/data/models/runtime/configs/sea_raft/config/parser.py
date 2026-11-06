@@ -47,6 +47,6 @@ def parse_args(parser):
     args = json_to_args(json_path)
     args_dict = args.__dict__
     # NOTE: CLI arguments override JSON config entries.
-    for index, (key, value) in enumerate(vars(entry).items()):
+    for _index, (key, value) in enumerate(vars(entry).items()):
         args_dict[key] = value
     return args

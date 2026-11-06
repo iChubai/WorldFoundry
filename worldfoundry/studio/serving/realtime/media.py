@@ -540,8 +540,8 @@ def resize_rgb_frame(
         )
     scale = min(width / source_width, height / source_height)
     fitted = (
-        max(min(int(round(source_width * scale)), width), 1),
-        max(min(int(round(source_height * scale)), height), 1),
+        max(min(round(source_width * scale), width), 1),
+        max(min(round(source_height * scale), height), 1),
     )
     resized = Image.fromarray(rgb, mode="RGB").resize(
         fitted,

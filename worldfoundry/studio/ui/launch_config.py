@@ -187,13 +187,7 @@ def launch_uses_lingbot_torchrun_rollout(launch_config: StudioLaunchConfig) -> b
                 f"LingBot-World Fast Workspace supports four or eight torchrun ranks; got WORLD_SIZE={world_size}."
             )
         return True
-    if launch_config.model_id in {
-        MATRIX_GAME3_MODEL_ID,
-        HELIOS_MODEL_ID,
-        DREAMX_WORLD_MODEL_ID,
-    }:
-        return True
-    return False
+    return launch_config.model_id in {MATRIX_GAME3_MODEL_ID, HELIOS_MODEL_ID, DREAMX_WORLD_MODEL_ID}
 
 
 def parse_launch_config(

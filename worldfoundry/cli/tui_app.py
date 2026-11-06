@@ -807,10 +807,8 @@ class WorldFoundryTui(App[None]):
         self.sub_title = "Inference · Evaluation · Studio" if width >= 110 else ""
         self.query_one(Footer).compact = width < 100
         self.call_after_refresh(self._refresh_catalog_layout)
-        try:
+        with contextlib.suppress(NoMatches):
             self.query_one("#conda-status", Static).update(self._conda_status_text())
-        except NoMatches:
-            pass
 
     def on_input_changed(self, event: Input.Changed) -> None:
         """Sync internal state and command preview when any input widget changes."""
@@ -1313,10 +1311,8 @@ class WorldFoundryTui(App[None]):
 
     def _refresh_catalog_layout(self) -> None:
         """Fit catalog columns to the available pane width after a reflow."""
-        try:
+        with contextlib.suppress(NoMatches):
             self._populate_tables(self.query_one("#filter", Input).value, preserve_cursor=True)
-        except NoMatches:
-            pass
 
     def _catalog_columns(self, table: DataTable, detail: str) -> tuple[tuple[str, int], ...]:
         available = max(24, (getattr(table, "layout_width", 0) or table.parent.content_size.width) - 2)

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import contextlib
 import json
 import math
 import os
@@ -239,10 +240,8 @@ class RealtimeRegressionManifest:
                 os.fsync(handle.fileno())
             temporary.replace(destination)
         except BaseException:
-            try:
+            with contextlib.suppress(OSError):
                 os.close(fd)
-            except OSError:
-                pass
             temporary.unlink(missing_ok=True)
             raise
         return destination
@@ -487,9 +486,7 @@ def _sample_matches(case: RealtimeRegressionCase, sample: RealtimeTraceSample) -
     if case.transport is not None and sample.transport != case.transport:
         return False
     # Older timing traces did not always bind model_id into the log context.
-    if case.model_id is not None and sample.model_id is not None and sample.model_id != case.model_id:
-        return False
-    return True
+    return not (case.model_id is not None and sample.model_id is not None and sample.model_id != case.model_id)
 
 
 def _summarize(

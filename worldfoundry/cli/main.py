@@ -225,10 +225,7 @@ def _load_json_mapping_or_inline(value: str | Path | None, *, field_name: str) -
         return None
     text = str(value)
     path = Path(text)
-    if path.exists():
-        payload = json.loads(path.read_text(encoding="utf-8"))
-    else:
-        payload = json.loads(text)
+    payload = json.loads(path.read_text(encoding="utf-8")) if path.exists() else json.loads(text)
     if not isinstance(payload, dict):
         raise ValueError(f"{field_name} must be a JSON object")
     return payload
@@ -1137,10 +1134,7 @@ def _handle_run_in_process(args: argparse.Namespace) -> int:
         limit=args.num_samples,
         split=args.split,
     )
-    if args.engine == "existing-results":
-        mode = "existing-results"
-    else:
-        mode = "model"
+    mode = "existing-results" if args.engine == "existing-results" else "model"
     if mode == "existing-results" and args.results_path is None:
         raise CliUsageError("run --engine existing-results requires --results-path")
 
@@ -2034,8 +2028,7 @@ def main(argv: list[str] | None = None) -> int:
         positional_model = len(raw_argv) > 1 and not raw_argv[1].startswith("-")
         wants_model_schema = positional_model or any(
             item in {"-h", "--help", "--print-config", "--model-status"}
-            or item.startswith("--pipeline.")
-            or item.startswith("--runtime.")
+            or item.startswith(("--pipeline.", "--runtime."))
             for item in raw_argv[1:]
         )
         if model_ref and wants_model_schema:

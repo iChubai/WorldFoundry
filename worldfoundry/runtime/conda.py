@@ -489,7 +489,7 @@ def apply_unified_env_override(
         source_requirement_files=spec.source_requirement_files,
         editable_install_dirs=spec.editable_install_dirs,
         pythonpath_dirs=spec.pythonpath_dirs,
-        notes=spec.notes + (f"routed_to_unified_env:{tier}",),
+        notes=(*spec.notes, f"routed_to_unified_env:{tier}"),
         env_root=_resolved_unified_env_root(env_root),
     )
 

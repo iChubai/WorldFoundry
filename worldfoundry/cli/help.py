@@ -240,9 +240,7 @@ def _should_show_default(action: argparse.Action, description: str) -> bool:
         return False
     if action.dest == "help" or action.required:
         return False
-    if isinstance(action, (argparse._StoreTrueAction, argparse._StoreFalseAction)):
-        return False
-    return True
+    return not isinstance(action, (argparse._StoreTrueAction, argparse._StoreFalseAction))
 
 
 def _format_default(value: object) -> str:

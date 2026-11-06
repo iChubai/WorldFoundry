@@ -4444,8 +4444,8 @@ CURATED_OVERRIDES: dict[str, dict[str, Any]] = {
         "default_task_type": "text-to-video",
         "supports_from_pretrained": True,
         "supports_stream": True,
-        "call_params": _native_diffusion_video_call_params()
-        + (
+        "call_params": (
+            *_native_diffusion_video_call_params(),
             "segments",
             "segment_latent_lengths",
             "camera_extrinsics",
@@ -4453,7 +4453,7 @@ CURATED_OVERRIDES: dict[str, dict[str, Any]] = {
             "max_cache_segments",
             "cache_noise_sigma",
         ),
-        "load_params": _native_diffusion_video_load_params() + ("text_encoder_path", "low_memory"),
+        "load_params": (*_native_diffusion_video_load_params(), "text_encoder_path", "low_memory"),
         "init_params": ("prompt", "seed", "height", "width"),
         "stream_params": ("prompt", "interactions", "realtime_segments"),
         "default_call_kwargs": {
@@ -8518,8 +8518,8 @@ CURATED_OVERRIDES: dict[str, dict[str, Any]] = {
             "小女孩欢快地用手轻轻抚摸着蛇的头部，共同享受着这温馨的时刻。"
             "周围五彩斑斓的灯笼和彩带装饰着环境，阳光透过洒在她们身上，营造出一个充满友爱与幸福的新年氛围。"
         ),
-        "call_params": _official_video_call_params()
-        + (
+        "call_params": (
+            *_official_video_call_params(),
             "src_ref_images",
             "src_video",
             "src_mask",
@@ -8968,8 +8968,11 @@ CURATED_OVERRIDES: dict[str, dict[str, Any]] = {
             "fps": 16,
             "seed": 42,
         },
-        "call_params": _native_diffusion_video_call_params()
-        + ("low_noise_guidance_scale", "high_noise_guidance_scale"),
+        "call_params": (
+            *_native_diffusion_video_call_params(),
+            "low_noise_guidance_scale",
+            "high_noise_guidance_scale",
+        ),
         "load_params": _native_diffusion_video_load_params(),
         "aliases": ("wan22-t2v-a14b", "Wan-AI/Wan2.2-T2V-A14B"),
         "tags": ("text-to-video", "wan2.2", "dual-expert", "native-diffusion"),
@@ -8995,8 +8998,11 @@ CURATED_OVERRIDES: dict[str, dict[str, Any]] = {
             "fps": 16,
             "seed": 42,
         },
-        "call_params": _native_diffusion_video_call_params()
-        + ("low_noise_guidance_scale", "high_noise_guidance_scale"),
+        "call_params": (
+            *_native_diffusion_video_call_params(),
+            "low_noise_guidance_scale",
+            "high_noise_guidance_scale",
+        ),
         "load_params": _native_diffusion_video_load_params(),
         "aliases": ("wan22-i2v-a14b", "Wan-AI/Wan2.2-I2V-A14B"),
         "tags": ("image-to-video", "wan2.2", "dual-expert", "native-diffusion"),
@@ -13101,7 +13107,7 @@ def _action_synthesis_file_candidates() -> tuple[Path, ...]:
     """Return first-class action synthesis files used by Studio catalog."""
 
     if not ACTION_SYNTHESIS_ROOT.is_dir():
-        return tuple()
+        return ()
     return tuple(
         sorted(
             path for path in ACTION_SYNTHESIS_ROOT.glob("*/*_synthesis.py") if path.name != "base_action_synthesis.py"
@@ -13123,7 +13129,7 @@ def _literal_keyword(call: ast.Call, name: str) -> Any:
 def _discover_component_pipelines() -> tuple[_AstPipelineInfo, ...]:
     path = PIPELINES_ROOT / "component_pipelines.py"
     if not path.is_file():
-        return tuple()
+        return ()
     rel_path = path.relative_to(_source_root())
     module_path = ".".join(rel_path.with_suffix("").parts)
     source = path.read_text(encoding="utf-8")
@@ -13205,7 +13211,7 @@ def _discover_action_syntheses() -> tuple[_AstPipelineInfo, ...]:
                         "predict",
                         methods.get("__call__", OFFICIAL_ACTION_CALL_PARAMS),
                     ),
-                    stream_params=methods.get("stream", tuple()),
+                    stream_params=methods.get("stream", ()),
                     load_params=methods.get("from_pretrained", OFFICIAL_ACTION_LOAD_PARAMS),
                     supports_stream="stream" in methods,
                     supports_from_pretrained=True,
@@ -13249,10 +13255,10 @@ def _discover_ast_pipelines() -> tuple[_AstPipelineInfo, ...]:
                 node.name,
                 frozenset({"NativeVisualDiffusionPipeline", "NativeTextToVideoPipeline"}),
             )
-            inherited_official_call = _official_video_call_params() if inherits_official_video else tuple()
-            inherited_official_load = _official_video_load_params() if inherits_official_video else tuple()
-            inherited_native_call = _native_diffusion_video_call_params() if inherits_native_diffusion else tuple()
-            inherited_native_load = _native_diffusion_video_load_params() if inherits_native_diffusion else tuple()
+            inherited_official_call = _official_video_call_params() if inherits_official_video else ()
+            inherited_official_load = _official_video_load_params() if inherits_official_video else ()
+            inherited_native_call = _native_diffusion_video_call_params() if inherits_native_diffusion else ()
+            inherited_native_load = _native_diffusion_video_load_params() if inherits_native_diffusion else ()
             discovered.append(
                 _AstPipelineInfo(
                     model_id=slug,
@@ -13321,7 +13327,7 @@ def _build_entry(info: _AstPipelineInfo) -> CatalogEntry:
     default_call_kwargs = _resolve_override_value(override.get("default_call_kwargs", {})) or {}
     extra_variants = _resolve_extra_variants(override.get("extra_variants", ()))
     call_params = tuple(_resolve_override_value(override.get("call_params", info.call_params)) or ())
-    input_params = tuple(_resolve_override_value(override.get("input_params", tuple())) or ())
+    input_params = tuple(_resolve_override_value(override.get("input_params", ())) or ())
     stream_params = tuple(_resolve_override_value(override.get("stream_params", info.stream_params)) or ())
     load_params = tuple(_resolve_override_value(override.get("load_params", info.load_params)) or ())
     if category in {"Embodied Action", "Visual Action"}:
@@ -13351,14 +13357,14 @@ def _build_entry(info: _AstPipelineInfo) -> CatalogEntry:
         default_prompt=default_prompt,
         default_input_path=str(_resolve_override_value(override.get("default_input_path", "")) or ""),
         default_task_type=override.get("default_task_type", ""),
-        default_interactions=tuple(override.get("default_interactions", tuple())),
+        default_interactions=tuple(override.get("default_interactions", ())),
         default_load_kwargs=dict(default_load_kwargs),
         default_call_kwargs=dict(default_call_kwargs),
         extra_variants=extra_variants,
-        suggested_task_types=tuple(override.get("suggested_task_types", tuple())),
-        aliases=_coerce_aliases(*override.get("aliases", tuple())),
-        tags=tuple(override.get("tags", tuple())),
-        env_hints=tuple(override.get("env_hints", tuple())),
+        suggested_task_types=tuple(override.get("suggested_task_types", ())),
+        aliases=_coerce_aliases(*override.get("aliases", ())),
+        tags=tuple(override.get("tags", ())),
+        env_hints=tuple(override.get("env_hints", ())),
         notes=override.get("notes", ""),
     )
 

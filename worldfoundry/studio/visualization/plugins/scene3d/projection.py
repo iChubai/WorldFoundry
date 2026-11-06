@@ -35,7 +35,7 @@ if TYPE_CHECKING:
 
 rng = np.random.RandomState(200)
 _palette = ((rng.random((3 * 255)) * 0.7 + 0.3) * 255).astype(np.uint8).tolist()
-_palette = [0, 0, 0] + _palette
+_palette = [0, 0, 0, *_palette]
 
 POINTS_STENCIL: np.ndarray
 points_stencil_grid = np.meshgrid(np.arange(-2, 3), np.arange(-2, 3))
@@ -161,7 +161,7 @@ def draw_lines_batch(
     lines = np.stack([lines_start, lines_end], axis=1).astype(int)
     return cv2.polylines(
         canvas.copy(),
-        [line for line in lines],
+        list(lines),
         isClosed=False,
         color=color or (0, 255, 0),
         thickness=1,
@@ -207,9 +207,8 @@ def project_points_panorama(
     uv_tensor[:, 1] *= frame_size[0]
     uv = (uv_tensor - 0.5).round().int().cpu().numpy()
 
-    if color is not None:
-        if np.issubdtype(color.dtype, np.floating):
-            color = (color * 255).astype(np.uint8)
+    if color is not None and np.issubdtype(color.dtype, np.floating):
+        color = (color * 255).astype(np.uint8)
 
     return draw_points_batch(canvas, uv, color, stencil=POINTS_STENCIL)
 

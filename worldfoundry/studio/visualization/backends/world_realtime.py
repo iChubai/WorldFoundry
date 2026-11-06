@@ -417,8 +417,8 @@ def _output_resolution_options(
     candidates: list[tuple[int, int]] = []
     if native is not None:
         for scale in (0.75, 0.5):
-            width = max(int(round(native[0] * scale / 2.0)) * 2, _MIN_OUTPUT_WIDTH)
-            height = max(int(round(native[1] * scale / 2.0)) * 2, _MIN_OUTPUT_HEIGHT)
+            width = max(round(native[0] * scale / 2.0) * 2, _MIN_OUTPUT_WIDTH)
+            height = max(round(native[1] * scale / 2.0) * 2, _MIN_OUTPUT_HEIGHT)
             candidates.append((width, height))
     # Without a model-owned native size, guessed presets can accidentally
     # upscale the first generated frame. Keep only native until the runtime
@@ -1982,10 +1982,10 @@ class RealtimePeerManager:
             queue_depth,
             dropped_delta,
             latency_text,
-            int(round(_metric_float(metrics, "cache_frames"))),
-            int(round(_metric_float(metrics, "cache_tokens"))),
-            int(round(_metric_float(metrics, "compile_active"))),
-            int(round(_metric_float(metrics, "cuda_graph"))),
+            round(_metric_float(metrics, "cache_frames")),
+            round(_metric_float(metrics, "cache_tokens")),
+            round(_metric_float(metrics, "compile_active")),
+            round(_metric_float(metrics, "cuda_graph")),
         )
         event_logger.event(
             "INFO",

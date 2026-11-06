@@ -6,6 +6,7 @@ therefore safe in lightweight control-plane processes and CPU-only installs.
 
 from __future__ import annotations
 
+import contextlib
 import importlib
 import os
 import platform as host_platform
@@ -265,14 +266,10 @@ class MpsPlatformProvider(BasePlatformProvider):
         if mps is not None:
             recommended = getattr(mps, "recommended_max_memory", None)
             current = getattr(mps, "current_allocated_memory", None)
-            try:
+            with contextlib.suppress(Exception):
                 total = _safe_int(recommended()) if callable(recommended) else None
-            except Exception:
-                pass
-            try:
+            with contextlib.suppress(Exception):
                 allocated = _safe_int(current()) if callable(current) else None
-            except Exception:
-                pass
         free = max(0, total - allocated) if total is not None and allocated is not None else None
         return [
             AcceleratorDescriptor(

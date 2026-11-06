@@ -232,10 +232,7 @@ ECHO = _spec(
         _field("fps", "integer", 24),
         _field("seed", "integer", 4),
         *(_field(key, "number") for key in ("fov_deg", "translation_speed", "rotation_speed_deg", "pitch_limit_deg")),
-        *(
-            _field(key, "boolean", True if key == "action_overlay" else False)
-            for key in ("auto_fov", "no_audio", "action_overlay")
-        ),
+        *(_field(key, "boolean", key == "action_overlay") for key in ("auto_fov", "no_audio", "action_overlay")),
         *(
             _field(key, kind, description="Base variant only; leave unset for Flash.")
             for key, kind in (

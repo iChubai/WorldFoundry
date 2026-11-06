@@ -140,8 +140,7 @@ def execute_in_tree(
             cwd=workdir,
             env=process_env,
             text=True,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
+            capture_output=True,
             check=False,
         )
         stdout, stderr = completed.stdout, completed.stderr

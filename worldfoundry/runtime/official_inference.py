@@ -6,6 +6,7 @@ failed launches and stale videos cannot be reported as successful generation.
 
 from __future__ import annotations
 
+import contextlib
 import json
 import os
 import shutil
@@ -133,10 +134,8 @@ class OfficialInferenceRuntime:
                 try:
                     code = process.wait(timeout=timeout_seconds)
                 except subprocess.TimeoutExpired:
-                    try:
+                    with contextlib.suppress(ProcessLookupError):
                         os.killpg(process.pid, signal.SIGKILL)
-                    except ProcessLookupError:
-                        pass
                     code = process.wait()
                     error = f"Inference exceeded {timeout_seconds} seconds"
             except OSError as exc:

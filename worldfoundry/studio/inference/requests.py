@@ -1098,9 +1098,7 @@ def _should_use_task_default_input_path(
     if declared_task_type:
         return True
     workload = str(payload.workload_type or _entry_workload(entry) or "").strip().lower().replace("_", "-")
-    if workload in {"t2v", "text-video", "text-to-video"}:
-        return False
-    return True
+    return workload not in {"t2v", "text-video", "text-to-video"}
 
 
 def _validate_runtime_options(entry: CatalogEntry, params: dict[str, Any]) -> None:
@@ -1245,30 +1243,30 @@ def build_inference_run_kwargs(
     if entry.model_id == "matrix-game-1" and input_path:
         call_kwargs.setdefault("image_path", input_path)
     prompt = payload.prompt or str(_task_field_default(task, "prompt", target="prompt") or entry.default_prompt or "")
-    return entry, dict(
-        model_id=entry.model_id,
-        action="run",
-        prompt=prompt,
-        input_path=input_path,
-        image=None,
-        video=None,
-        last_frame=None,
-        reference_files=None,
-        interactions_text=json.dumps(interactions) if interactions is not None else "",
-        camera_view_text=json.dumps(params.get("camera_view")) if params.get("camera_view") is not None else "",
-        task_type=task_type,
-        intrinsics_text=json.dumps(params.get("intrinsics")) if params.get("intrinsics") is not None else "",
-        meta_path=str(params.get("meta_path") or ""),
-        panorama_path=str(params.get("panorama_path") or ""),
-        scene_name=str(params.get("scene_name") or ""),
-        fps=fps,
-        num_frames=num_frames,
-        call_kwargs_text=json.dumps(call_kwargs),
-        load_kwargs_text=json.dumps(load_kwargs),
-        model_ref=model_ref,
-        backend=payload.backend or entry.default_backend,
-        endpoint=payload.endpoint or entry.default_endpoint,
-        api_key=payload.api_key,
-        device=payload.device or str(defaults.get("device") or DEFAULT_SETTINGS["device"]),
-        infer_metadata=contract,
-    )
+    return entry, {
+        "model_id": entry.model_id,
+        "action": "run",
+        "prompt": prompt,
+        "input_path": input_path,
+        "image": None,
+        "video": None,
+        "last_frame": None,
+        "reference_files": None,
+        "interactions_text": json.dumps(interactions) if interactions is not None else "",
+        "camera_view_text": json.dumps(params.get("camera_view")) if params.get("camera_view") is not None else "",
+        "task_type": task_type,
+        "intrinsics_text": json.dumps(params.get("intrinsics")) if params.get("intrinsics") is not None else "",
+        "meta_path": str(params.get("meta_path") or ""),
+        "panorama_path": str(params.get("panorama_path") or ""),
+        "scene_name": str(params.get("scene_name") or ""),
+        "fps": fps,
+        "num_frames": num_frames,
+        "call_kwargs_text": json.dumps(call_kwargs),
+        "load_kwargs_text": json.dumps(load_kwargs),
+        "model_ref": model_ref,
+        "backend": payload.backend or entry.default_backend,
+        "endpoint": payload.endpoint or entry.default_endpoint,
+        "api_key": payload.api_key,
+        "device": payload.device or str(defaults.get("device") or DEFAULT_SETTINGS["device"]),
+        "infer_metadata": contract,
+    }

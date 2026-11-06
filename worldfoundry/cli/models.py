@@ -230,7 +230,7 @@ def _media_frames(path: Path) -> list:
 
     if path.suffix.lower() in {".png", ".jpg", ".jpeg", ".webp", ".bmp"}:
         return [iio.imread(path)]
-    return [frame for frame in iio.imiter(path)]
+    return list(iio.imiter(path))
 
 
 def _write_visualization(output: Path, frames: list, *, fps: float) -> None:

@@ -29,7 +29,7 @@ import tempfile
 import threading
 import time
 from collections.abc import Callable, Mapping
-from contextlib import contextmanager
+from contextlib import contextmanager, suppress
 from dataclasses import dataclass, field, replace
 from functools import cache
 from pathlib import Path
@@ -433,7 +433,7 @@ def _discover_existing_env_spec(spec: RuntimeCondaEnvSpec) -> RuntimeCondaEnvSpe
                     spec,
                     env_name=name,
                     env_root=root,
-                    notes=spec.notes + (f"studio_env_discovery:{candidate}",),
+                    notes=(*spec.notes, f"studio_env_discovery:{candidate}"),
                 )
     return None
 
@@ -464,7 +464,7 @@ def _current_explicit_unified_env_spec(
         spec,
         env_name=env_prefix.name,
         env_root=env_prefix.parent,
-        notes=spec.notes + (f"studio_explicit_active_unified_env:{env_prefix}",),
+        notes=(*spec.notes, f"studio_explicit_active_unified_env:{env_prefix}"),
     )
 
 
@@ -1365,18 +1365,14 @@ def _shutdown_resident_worker(worker: _ResidentWorker, *, force: bool = False) -
                 process.stdin.flush()
             except (AttributeError, BrokenPipeError, OSError, ValueError):
                 pass
-            try:
+            with suppress(subprocess.TimeoutExpired, ChildProcessError, OSError):
                 process.wait(timeout=2)
-            except (subprocess.TimeoutExpired, ChildProcessError, OSError):
-                pass
         # Parent exit alone does not release CUDA: descendants may still hold it.
         terminate_process_group(process, grace_seconds=0 if force else 2)
         for pipe in (process.stdin, process.stdout):
             if pipe is not None:
-                try:
+                with suppress(OSError, ValueError):
                     pipe.close()
-                except (OSError, ValueError):
-                    pass
         if worker.device_lease is not None:
             worker.device_lease.release()
             worker.device_lease = None
@@ -1737,10 +1733,8 @@ def _runtime_cache_dir(spec: RuntimeCondaEnvSpec, name: str) -> str:
         )
     )
     path = root / spec.model_id / name
-    try:
+    with suppress(OSError):
         path.mkdir(parents=True, exist_ok=True)
-    except OSError:
-        pass
     return str(path)
 
 
@@ -1946,15 +1940,15 @@ def _resident_worker_for(
     cancel_requested: CancelCallback | None = None,
     deadline: float | None = None,
 ) -> _ResidentWorker:
-    options = dict(
-        model_id=model_id,
-        spec=spec,
-        workspace_root=workspace_root,
-        context=context,
-        log_callback=log_callback,
-        cancel_requested=cancel_requested,
-        deadline=deadline,
-    )
+    options = {
+        "model_id": model_id,
+        "spec": spec,
+        "workspace_root": workspace_root,
+        "context": context,
+        "log_callback": log_callback,
+        "cancel_requested": cancel_requested,
+        "deadline": deadline,
+    }
     worker = _resident_worker_for_locked(**options, allow_start=False)
     if worker is not None:
         return worker
@@ -2411,10 +2405,8 @@ def _run_manager_payload_in_resident_conda(
     result_path = dispatch_dir / "result.json"
     error_path = dispatch_dir / "error.json"
     for stale_path in (result_path, error_path):
-        try:
+        with suppress(FileNotFoundError):
             stale_path.unlink()
-        except FileNotFoundError:
-            pass
     payload_path.write_text(
         json.dumps(
             {

@@ -24,6 +24,7 @@ from __future__ import annotations
 
 import math
 import os
+from typing import Any, cast
 
 import torch
 import torch.nn.functional as F
@@ -267,6 +268,11 @@ class Float8Linear(nn.Module):
     quantization happens on-device. A dense weight copy is retained by default
     so the same checkpoint remains runnable on V100, T4, A100, ROCm and CPU.
     """
+
+    weight: torch.Tensor | None
+    bias: torch.Tensor | None
+    weight_fp8: torch.Tensor
+    weight_scale: torch.Tensor
 
     def __init__(
         self,
@@ -576,6 +582,11 @@ class WeightOnlyLinear(nn.Module):
     GEMM.
     """
 
+    weight: torch.Tensor | None
+    bias: torch.Tensor | None
+    qweight: torch.Tensor
+    weight_scale: torch.Tensor
+
     def __init__(
         self,
         weight: torch.Tensor,
@@ -711,7 +722,7 @@ class WeightOnlyLinear(nn.Module):
                 )
 
                 try:
-                    from vllm import _custom_ops as vllm_ops
+                    vllm_ops = __import__("vllm", fromlist=["_custom_ops"])._custom_ops
 
                     quantized_input, input_scale, _ = vllm_ops.scaled_int8_quant(
                         input.contiguous(),
@@ -900,7 +911,7 @@ def quantization_runtime_report(module: nn.Module) -> dict[str, object] | None:
     named_modules = getattr(module, "named_modules", None)
     if not callable(named_modules):
         return None
-    layers: list[dict[str, object]] = []
+    layers: list[dict[str, Any]] = []
     for name, child in named_modules():
         if not bool(getattr(child, "_worldfoundry_quantization_layer", False)):
             continue
@@ -986,7 +997,8 @@ def set_low_precision_enabled(module: nn.Module, enabled: bool) -> int:
     updated = 0
     for child in module.modules():
         if hasattr(child, "low_precision_enabled"):
-            child.low_precision_enabled = bool(enabled)
+            # Quantized layers add this bool beyond nn.Module's tensor/module attribute contract.
+            cast(Any, child).low_precision_enabled = bool(enabled)
             updated += 1
     return updated
 

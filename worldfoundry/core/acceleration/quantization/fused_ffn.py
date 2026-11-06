@@ -8,6 +8,7 @@ Like FP8 Linear itself this path needs a checkpoint quality gate before use.
 from __future__ import annotations
 
 from collections import OrderedDict
+from typing import cast
 
 import torch
 from torch import nn
@@ -22,7 +23,7 @@ class FusedFP8GELUFeedForward(nn.Sequential):
         self.fallback_calls = 0
 
     def forward(self, input: torch.Tensor) -> torch.Tensor:
-        up, activation, down = self[0], self[1], self[2]
+        up, activation, down = self[0], self[1], cast(Float8Linear, self[2])
         hidden = up(input)
         eligible = (
             down.low_precision_enabled

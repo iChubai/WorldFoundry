@@ -18,7 +18,9 @@ tied to a specific approximation.
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from dataclasses import asdict, dataclass
+from typing import cast
 
 import torch
 
@@ -76,7 +78,7 @@ def acceleration_technology_report(
 
     resolved = _resolved_device(device)
     profile = kernel_device_profile(resolved)
-    kernels = kernel_dispatch_report().get("operators", {})
+    kernels = cast(Mapping[str, object], kernel_dispatch_report().get("operators", {}))
     fp8_active = resolved.type == "cuda" and profile.supports_fp8 and callable(getattr(torch, "_scaled_mm", None))
     fp4_active = _nvfp4_hardware_eligible(resolved)
     pisa_active = piecewise_attention_available(resolved) if resolved.type == "cuda" else False

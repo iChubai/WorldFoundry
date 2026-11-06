@@ -12,6 +12,7 @@ from __future__ import annotations
 import math
 from collections.abc import Callable, Mapping
 from dataclasses import asdict, dataclass, field
+from typing import cast
 
 import torch
 
@@ -184,15 +185,15 @@ class EasyCache:
             elif self._skips >= self.config.max_skip_steps:
                 reason = "max-skip"
         if reason is None:
-            delta = (probe - self._previous_input).abs().mean(dim=1)
-            norm = self._dense_output.abs().mean(dim=1).clamp_min(self.config.eps)
-            estimate = float((self._factor * delta / norm).max().item())
+            delta = (probe - cast(torch.Tensor, self._previous_input)).abs().mean(dim=1)
+            norm = cast(torch.Tensor, self._dense_output).abs().mean(dim=1).clamp_min(self.config.eps)
+            estimate = float((cast(torch.Tensor, self._factor) * delta / norm).max().item())
             self._accumulator += estimate
             if not math.isfinite(self._accumulator) or self._accumulator >= self.config.threshold:
                 reason = "threshold"
         hit = reason is None
         if hit:
-            output = value + self._residual
+            output = value + cast(torch.Tensor, self._residual)
             self._skips += 1
         else:
             output = value
@@ -205,7 +206,9 @@ class EasyCache:
             if finite and not torch.is_grad_enabled() and output_finite:
                 if self._dense_input is not None:
                     input_delta = (probe - self._dense_input).abs().mean(dim=1).clamp_min(self.config.eps)
-                    self._factor = (output_probe - self._dense_output).abs().mean(dim=1) / input_delta
+                    self._factor = (output_probe - cast(torch.Tensor, self._dense_output)).abs().mean(
+                        dim=1
+                    ) / input_delta
                 self._dense_input, self._dense_output = probe, output_probe
                 self._residual = (output - value).detach().clone()
                 self._layout = layout

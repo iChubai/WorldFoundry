@@ -22,8 +22,11 @@ adaptations of TorchAO. See the third-party notices for the pinned source.
 
 from __future__ import annotations
 
+from typing import Any, cast
+
 import torch
 import torch.nn.functional as F
+import torch.version
 from torch import nn
 
 from worldfoundry.core.kernels.capabilities import kernel_device_profile
@@ -245,6 +248,12 @@ def _nvfp4_hardware_eligible(device: torch.device) -> bool:
 class NVFP4Linear(nn.Module):
     """Dynamic-activation NVFP4 linear with a dense cross-GPU fallback."""
 
+    weight: torch.Tensor | None
+    bias: torch.Tensor | None
+    weight_fp4: torch.Tensor
+    weight_scale: torch.Tensor
+    weight_global_scale: torch.Tensor
+
     def __init__(
         self,
         weight: torch.Tensor,
@@ -361,7 +370,8 @@ class NVFP4Linear(nn.Module):
                 global_scale=input_global_scale,
             )
             input_scale = nvfp4_swizzle_scales(input_raw_scale).contiguous()
-        fp4_dtype = torch.float4_e2m1fn_x2
+        # Hardware eligibility requires a torch build exposing the NVFP4 storage dtype.
+        fp4_dtype = cast(Any, torch).float4_e2m1fn_x2
         try:
             # Call the ATen operator directly: PyTorch 2.10's public Python
             # ``F.scaled_mm`` wrapper is not Dynamo-allowlisted, while the

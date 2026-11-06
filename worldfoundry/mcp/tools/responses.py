@@ -39,7 +39,7 @@ def invoke_tool(fn: Callable[..., _T], /, *args: Any, **kwargs: Any) -> dict[str
 
     try:
         result = fn(*args, **kwargs)
-    except Exception as exc:  # noqa: BLE001 - every tool failure becomes a structured envelope.
+    except Exception as exc:
         return _normalized_error(exc)
     if isinstance(result, dict):
         return success_payload(result)
@@ -56,7 +56,7 @@ async def invoke_tool_async(
 
     try:
         result = await fn(*args, **kwargs)
-    except Exception as exc:  # noqa: BLE001 - every tool failure becomes a structured envelope.
+    except Exception as exc:
         return _normalized_error(exc)
     if isinstance(result, dict):
         return success_payload(result)

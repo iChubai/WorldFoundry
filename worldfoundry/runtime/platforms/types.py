@@ -7,10 +7,11 @@ even when WorldFoundry is installed without an accelerator-enabled PyTorch.
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from dataclasses import dataclass, field
 from enum import Enum
 from types import MappingProxyType
-from typing import Any, Mapping
+from typing import Any
 
 
 class PlatformKind(str, Enum):
@@ -23,7 +24,7 @@ class PlatformKind(str, Enum):
     CPU = "cpu"
 
     @classmethod
-    def parse(cls, value: "PlatformKind | str") -> "PlatformKind":
+    def parse(cls, value: PlatformKind | str) -> PlatformKind:
         if isinstance(value, cls):
             return value
         return cls(str(value).strip().lower())

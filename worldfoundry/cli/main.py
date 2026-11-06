@@ -810,7 +810,7 @@ def _suite_presets_declare_models(args: argparse.Namespace) -> bool:
             bool(get_model_benchmark_suite_preset(suite_id, args.suite_preset_path).get("model_ids"))
             for suite_id in suite_ids
         )
-    except Exception:  # noqa: BLE001 - keep CLI validation conservative for missing/invalid presets.
+    except Exception:
         return False
 
 
@@ -1886,7 +1886,7 @@ def _prepare_cli_run_observability(
     run_id = str(getattr(args, "run_id", None) or _new_run_id())
     # Only some command parsers expose --run-id, but every output-owning CLI
     # operation should still carry a generated ID in its logs and child env.
-    setattr(args, "run_id", run_id)
+    args.run_id = run_id
     _bind_cli_log_context(args, run_id=run_id)
 
     from worldfoundry.core import configure_logging, log_context_environment, write_jsonl_event

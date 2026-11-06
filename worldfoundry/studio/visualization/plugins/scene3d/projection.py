@@ -280,7 +280,7 @@ def image_above_text(img: np.ndarray, text: str = "<TEXT>") -> Image.Image:
         font: ImageFont.ImageFont | ImageFont.FreeTypeFont = ImageFont.truetype(
             "arial.ttf", text_height
         )  # You can change the font size
-    except IOError:
+    except OSError:
         font = ImageFont.load_default()  # Fallback to default font if arial is not available
 
     text_bbox = draw.textbbox((0, 0), text, font=font)
@@ -425,7 +425,7 @@ def save_projection_video(
             yield rgb_img
 
     def get_instance_imgs():
-        for frame_data, rgb_img in zip(video_stream, get_rgb_imgs()):
+        for frame_data, rgb_img in zip(video_stream, get_rgb_imgs(), strict=False):
             assert isinstance(frame_data, VideoFrame)
             if frame_data.instance is None:
                 yield na_img

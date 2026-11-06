@@ -335,7 +335,7 @@ def _handle_models_visualize(args: argparse.Namespace) -> int:
             raise ValueError("Keypoint and media frame counts must match.")
         rendered_frames = [
             render_keypoints(frame, points, edges=edges, normalized=args.normalized)
-            for frame, points in zip(frames, keypoint_frames)
+            for frame, points in zip(frames, keypoint_frames, strict=False)
         ]
         _write_visualization(output, rendered_frames, fps=args.fps)
         frame_count = len(rendered_frames)

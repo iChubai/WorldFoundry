@@ -7,8 +7,9 @@ import os
 import re
 import shlex
 import sys
+from collections.abc import Mapping, Sequence
 from pathlib import Path
-from typing import Any, Mapping, Sequence
+from typing import Any
 
 import yaml
 
@@ -47,8 +48,7 @@ def _load_config(path: Path) -> dict[str, Any]:
         raise ValueError("config command must be a non-empty list of strings")
     if command[0] not in _SUPPORTED_ENTRYPOINTS:
         raise ValueError(
-            "config command must start with one of "
-            f"{', '.join(sorted(_SUPPORTED_ENTRYPOINTS))}; got {command[0]!r}"
+            f"config command must start with one of {', '.join(sorted(_SUPPORTED_ENTRYPOINTS))}; got {command[0]!r}"
         )
     return payload
 
@@ -60,6 +60,7 @@ def _expand_env_token(token: str, env: Mapping[str, str]) -> str:
         token: Raw token potentially containing environment variable references.
         env: Environment mapping used for substitution.
     """
+
     def replace(match: re.Match[str]) -> str:
         braced_name = match.group(1)
         default_value = match.group(2)
@@ -229,7 +230,9 @@ def register_config_subparser(subparsers: argparse._SubParsersAction) -> None:
     run_parser.add_argument("--env", action="append", default=None, metavar="KEY=VALUE")
     run_parser.add_argument("--output-dir", type=Path, help="Override or append the config command's --output-dir.")
     run_parser.add_argument("--plan-only", action="store_true", help="Print the expanded command without executing it.")
-    run_parser.add_argument("--print-command", action="store_true", help="Print the expanded command to stderr before execution.")
+    run_parser.add_argument(
+        "--print-command", action="store_true", help="Print the expanded command to stderr before execution."
+    )
     run_parser.add_argument("--json", action="store_true", help="With --plan-only, print the expanded command as JSON.")
     run_parser.set_defaults(func=_handle_config_run)
 

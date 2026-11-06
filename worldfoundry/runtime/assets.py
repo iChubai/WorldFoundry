@@ -128,7 +128,7 @@ class LocalAsset:
         *,
         benchmark_id: str | None = None,
         env: EnvMapping | None = None,
-    ) -> "LocalAsset":
+    ) -> LocalAsset:
         """Build a local asset view from a manifest item.
 
         Args:

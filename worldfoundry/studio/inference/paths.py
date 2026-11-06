@@ -3,8 +3,8 @@
 from __future__ import annotations
 
 import os
+from collections.abc import Mapping, Sequence
 from pathlib import Path
-from typing import Mapping, Sequence
 
 from worldfoundry.core.io.paths import project_root
 from worldfoundry.runtime.env import (

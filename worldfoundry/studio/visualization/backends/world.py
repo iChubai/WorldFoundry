@@ -17,13 +17,14 @@ import threading
 import time
 import traceback
 import uuid
+from collections.abc import Callable
 from dataclasses import dataclass, field
 from functools import lru_cache
 from http import HTTPStatus
 from http.server import BaseHTTPRequestHandler
 from io import BytesIO
 from pathlib import Path
-from typing import Any, Callable
+from typing import Any
 from urllib.parse import parse_qs, quote, unquote, urlparse
 
 from PIL import Image
@@ -2547,7 +2548,7 @@ class WorldFrontendHandler(BaseHTTPRequestHandler):
         self.state = state
         super().__init__(*args, **kwargs)
 
-    def do_GET(self) -> None:  # noqa: N802 - BaseHTTPRequestHandler API
+    def do_GET(self) -> None:
         parsed = urlparse(self.path)
         if parsed.path == "/api/stream" and self.headers.get("Upgrade", "").lower() == "websocket":
             self._handle_websocket()
@@ -2555,7 +2556,7 @@ class WorldFrontendHandler(BaseHTTPRequestHandler):
         with self.state.telemetry.track(parsed.path):
             self._handle_get(parsed)
 
-    def do_HEAD(self) -> None:  # noqa: N802 - BaseHTTPRequestHandler API
+    def do_HEAD(self) -> None:
         parsed = urlparse(self.path)
         with self.state.telemetry.track(parsed.path):
             self._handle_head(parsed)
@@ -2641,7 +2642,7 @@ class WorldFrontendHandler(BaseHTTPRequestHandler):
             return
         self.send_error(HTTPStatus.NOT_FOUND, "Not found.")
 
-    def do_POST(self) -> None:  # noqa: N802 - BaseHTTPRequestHandler API
+    def do_POST(self) -> None:
         parsed = urlparse(self.path)
         with self.state.telemetry.track(parsed.path):
             try:

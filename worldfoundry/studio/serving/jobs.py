@@ -309,7 +309,7 @@ class StudioJobStore:
                     else:
                         job.status = "completed"
                         job.append_log("system", "completed\n")
-        except Exception as exc:  # noqa: BLE001 - surfaced through local UI.
+        except Exception as exc:
             with self._lock:
                 if job.cancel_requested:
                     job.status = "cancelled"

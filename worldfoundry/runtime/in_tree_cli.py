@@ -7,8 +7,9 @@ import shutil
 import subprocess
 import sys
 import time
+from collections.abc import Iterable, Mapping, Sequence
 from pathlib import Path
-from typing import Any, Iterable, Mapping, Sequence
+from typing import Any
 
 from worldfoundry.core.execution.process import terminate_process_group
 

@@ -5,8 +5,8 @@ command-line arguments parsed via ``argparse``.  CLI overrides take
 precedence over values read from the JSON file.
 """
 
-import json
 import argparse
+import json
 
 
 def json_to_args(json_path):
@@ -19,7 +19,7 @@ def json_to_args(json_path):
         :class:`argparse.Namespace`: Namespace whose attributes correspond
         to the top-level keys in the JSON file.
     """
-    with open(json_path, 'r') as f:
+    with open(json_path) as f:
         data = json.load(f)
     args = argparse.Namespace()
     args_dict = args.__dict__

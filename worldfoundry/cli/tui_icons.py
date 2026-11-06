@@ -124,6 +124,7 @@ _ASCII = {
 
 # ── Icon-mode detection ────────────────────────────────────────────
 
+
 def _remote_dev_host() -> bool:
     """Detect whether the terminal is running on a remote SSH / cloud-dev host."""
     return any(
@@ -140,6 +141,7 @@ def _remote_dev_host() -> bool:
 
 
 # ── Icon resolution ────────────────────────────────────────────────
+
 
 def resolve_icon_mode() -> IconMode:
     """Use Unicode unless an icon mode or configured Nerd Font is requested."""
@@ -164,6 +166,7 @@ def nerd_font_configured() -> bool:
 
 
 # ── TuiIcons dataclass ──────────────────────────────────────────────
+
 
 @dataclass(frozen=True)
 class TuiIcons:

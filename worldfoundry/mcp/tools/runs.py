@@ -248,11 +248,7 @@ def list_runs_payload(
     if limit < 1 or limit > 500:
         raise ValueError("limit must be between 1 and 500")
     ctx = context or get_default_context()
-    matched = [
-        job.to_summary(log_tail=0)
-        for job in ctx.job_store.list()
-        if status is None or job.status == status
-    ]
+    matched = [job.to_summary(log_tail=0) for job in ctx.job_store.list() if status is None or job.status == status]
     return {
         "runs": matched[:limit],
         "total": len(matched),

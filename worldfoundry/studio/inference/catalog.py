@@ -5,11 +5,12 @@ import json
 import os
 import re
 import sys
+from collections.abc import Iterable, Mapping, Sequence
 from contextvars import ContextVar
 from dataclasses import dataclass, field, replace
 from functools import lru_cache
 from pathlib import Path
-from typing import Any, Dict, Iterable, List, Mapping, Sequence
+from typing import Any
 
 from worldfoundry.core.io.paths import (
     checkpoint_root_candidates,
@@ -254,9 +255,13 @@ def _display_name_from_slug(slug: str) -> str:
             continue
         if token.isupper():
             pretty.append(token)
-        elif token.lower() in {"i2v", "t2v", "ti2v", "i2av", "t2av", "api", "vmem", "vggt"}:
-            pretty.append(token.upper())
-        elif token.lower() in {"pi3", "gen3c", "wow", "cut3r", "loger"}:
+        elif token.lower() in {"i2v", "t2v", "ti2v", "i2av", "t2av", "api", "vmem", "vggt"} or token.lower() in {
+            "pi3",
+            "gen3c",
+            "wow",
+            "cut3r",
+            "loger",
+        }:
             pretty.append(token.upper())
         elif token.lower().startswith("2p") and len(token) > 2:
             pretty.append(token.replace("p", "."))
@@ -352,7 +357,7 @@ def _default_backend(supports_api_init: bool, supports_from_pretrained: bool) ->
 
 
 def _coerce_aliases(*values: str) -> tuple[str, ...]:
-    deduped: List[str] = []
+    deduped: list[str] = []
     seen = set()
     for value in values:
         if not value or value in seen:
@@ -374,8 +379,8 @@ def _resolve_override_value(value: Any) -> Any:
     return value() if callable(value) else value
 
 
-def _resolve_extra_variants(value: Any) -> tuple[Dict[str, Any], ...]:
-    rows: list[Dict[str, Any]] = []
+def _resolve_extra_variants(value: Any) -> tuple[dict[str, Any], ...]:
+    rows: list[dict[str, Any]] = []
     for raw_variant in _resolve_override_value(value) or ():
         variant = dict(raw_variant)
         for key in ("load_kwargs", "call_kwargs"):
@@ -456,7 +461,7 @@ def _local_root_with_files(
     return ""
 
 
-def _hunyuanvideo15_default_load_kwargs(*, image_to_video: bool) -> Dict[str, Any]:
+def _hunyuanvideo15_default_load_kwargs(*, image_to_video: bool) -> dict[str, Any]:
     """Compose the complete HunyuanVideo 1.5 demo from staged local roles.
 
     The release checkpoint and the HY-WorldPlay checkout are complementary in
@@ -509,7 +514,7 @@ def _hunyuanvideo15_default_load_kwargs(*, image_to_video: bool) -> Dict[str, An
         ),
     )
 
-    checkpoint_overrides: Dict[str, str] = {}
+    checkpoint_overrides: dict[str, str] = {}
     if weights_root:
         checkpoint_overrides.update({"transformer": weights_root, "vae": weights_root})
     if resources_root:
@@ -530,7 +535,7 @@ def _hunyuanvideo15_default_load_kwargs(*, image_to_video: bool) -> Dict[str, An
             if vision_root:
                 checkpoint_overrides["vision"] = vision_root
 
-    load_kwargs: Dict[str, Any] = {"attention_backend": "flash"}
+    load_kwargs: dict[str, Any] = {"attention_backend": "flash"}
     if checkpoint_overrides:
         load_kwargs["checkpoint_overrides"] = checkpoint_overrides
     return load_kwargs
@@ -759,11 +764,11 @@ def _matrix_game_2_default_config_path() -> str:
     )
 
 
-def _matrix_game_2_default_load_kwargs() -> Dict[str, Any]:
+def _matrix_game_2_default_load_kwargs() -> dict[str, Any]:
     return {"mode": "universal"}
 
 
-def _matrix_game_2_default_call_kwargs() -> Dict[str, Any]:
+def _matrix_game_2_default_call_kwargs() -> dict[str, Any]:
     return {
         "num_frames": 150,
         "size": [352, 640],
@@ -786,7 +791,7 @@ def _matrix_game_3_default_ref() -> str:
 MATRIX_GAME_3_OFFICIAL_PROMPT = "A colorful, animated cityscape with a gas station and various buildings."
 
 
-def _matrix_game_3_default_call_kwargs() -> Dict[str, Any]:
+def _matrix_game_3_default_call_kwargs() -> dict[str, Any]:
     return {
         "num_iterations": 12,
         "num_inference_steps": 3,
@@ -806,7 +811,7 @@ def _matrix_game_3_default_call_kwargs() -> Dict[str, Any]:
     }
 
 
-def _matrix_game_35_third_person_default_camera() -> Dict[str, Any]:
+def _matrix_game_35_third_person_default_camera() -> dict[str, Any]:
     """Return a deterministic one-block c2w dolly trajectory for the Studio demo.
 
     Matrix-Game 3.5 consumes 84 generated poses plus its anchor/padding poses.
@@ -836,7 +841,7 @@ def _matrix_game_35_third_person_default_camera() -> Dict[str, Any]:
     }
 
 
-def _matrix_game_35_third_person_default_call_kwargs() -> Dict[str, Any]:
+def _matrix_game_35_third_person_default_call_kwargs() -> dict[str, Any]:
     return {
         "camera": _matrix_game_35_third_person_default_camera(),
         "num_blocks": 1,
@@ -858,7 +863,7 @@ def _matrix_game_35_default_ref(person: str) -> str:
     )
 
 
-def _matrix_game_35_default_load_kwargs() -> Dict[str, Any]:
+def _matrix_game_35_default_load_kwargs() -> dict[str, Any]:
     return {
         "required_components": {
             "wan_dir": _checkpoint_model_ref(
@@ -876,7 +881,7 @@ def _matrix_game_35_default_load_kwargs() -> Dict[str, Any]:
     }
 
 
-def _matrix_game_3_default_load_kwargs() -> Dict[str, Any]:
+def _matrix_game_3_default_load_kwargs() -> dict[str, Any]:
     return {
         "required_components": {
             "checkpoint_dir": _prefer_existing_model_ref(
@@ -899,7 +904,7 @@ def _matrix_game_1_default_ref() -> str:
     )
 
 
-def _matrix_game_1_default_load_kwargs() -> Dict[str, Any]:
+def _matrix_game_1_default_load_kwargs() -> dict[str, Any]:
     return {
         "conda_dir": _prefer_existing_model_ref(
             os.getenv("WORLDFOUNDRY_MATRIX_GAME_1_CONDA_DIR", ""),
@@ -911,7 +916,7 @@ def _matrix_game_1_default_load_kwargs() -> Dict[str, Any]:
     }
 
 
-def _causal_rcm_default_load_kwargs() -> Dict[str, Any]:
+def _causal_rcm_default_load_kwargs() -> dict[str, Any]:
     checkpoint_dir = checkpoint_root_path("rcm")
     return {
         "checkpoint_dir": str(checkpoint_dir),
@@ -921,7 +926,7 @@ def _causal_rcm_default_load_kwargs() -> Dict[str, Any]:
     }
 
 
-def _causal_rcm_default_call_kwargs() -> Dict[str, Any]:
+def _causal_rcm_default_call_kwargs() -> dict[str, Any]:
     return {
         # Frame-wise c1-1 chunks: the lowest-latency streaming schedule in the
         # Causal-rCM recipe, with the recommended 4-step distilled midpoints.
@@ -942,8 +947,8 @@ def _causal_rcm_default_call_kwargs() -> Dict[str, Any]:
     }
 
 
-def _open_dreamer_default_load_kwargs() -> Dict[str, Any]:
-    load_kwargs: Dict[str, Any] = {"checkpoint_path": str(checkpoint_root_path("open-dreamer"))}
+def _open_dreamer_default_load_kwargs() -> dict[str, Any]:
+    load_kwargs: dict[str, Any] = {"checkpoint_path": str(checkpoint_root_path("open-dreamer"))}
     # Only pin an interpreter once the checkout's uv venv exists. Otherwise leave
     # the key unset so the runtime adapter re-probes at call time.
     venv_python = official_runtime_repo_path("open-dreamer-inference") / ".venv" / "bin" / "python"
@@ -952,7 +957,7 @@ def _open_dreamer_default_load_kwargs() -> Dict[str, Any]:
     return load_kwargs
 
 
-def _open_dreamer_default_call_kwargs() -> Dict[str, Any]:
+def _open_dreamer_default_call_kwargs() -> dict[str, Any]:
     return {
         # Matches the official larger-rollout example in the upstream inference README.
         "context_frames": 16,
@@ -969,7 +974,7 @@ def _open_dreamer_default_call_kwargs() -> Dict[str, Any]:
     }
 
 
-def _lingbot_va_default_call_kwargs() -> Dict[str, Any]:
+def _lingbot_va_default_call_kwargs() -> dict[str, Any]:
     demo_root = _data_path("test_cases", "test_vla_case1", "libero")
     return {
         "operator_kwargs": {
@@ -985,7 +990,7 @@ def _lingbot_va_default_call_kwargs() -> Dict[str, Any]:
     }
 
 
-def _giga_brain_0_default_call_kwargs() -> Dict[str, Any]:
+def _giga_brain_0_default_call_kwargs() -> dict[str, Any]:
     demo_root = _data_path("test_cases", "test_vla_case1", "aloha")
     image_keys = (
         "observation.images.cam_high",
@@ -1017,7 +1022,7 @@ def _openvla_default_ref() -> str:
     )
 
 
-def _openvla_default_call_kwargs() -> Dict[str, Any]:
+def _openvla_default_call_kwargs() -> dict[str, Any]:
     return {
         "checkpoint_dir": _openvla_default_ref(),
         "unnorm_key": "bridge_orig",
@@ -1026,7 +1031,7 @@ def _openvla_default_call_kwargs() -> Dict[str, Any]:
     }
 
 
-def _openvla_oft_default_call_kwargs() -> Dict[str, Any]:
+def _openvla_oft_default_call_kwargs() -> dict[str, Any]:
     libero_root = _data_path("test_cases", "test_vla_case1", "libero")
     return {
         "official_policy_observation": {
@@ -1048,7 +1053,7 @@ def _openvla_oft_variant_call_kwargs(
     *,
     unnorm_key: str,
     task_suite_name: str,
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Return the executable Studio input contract shared by OFT variants."""
 
     values = _openvla_oft_default_call_kwargs()
@@ -1064,7 +1069,7 @@ def _checkpoint_file_if_present(*relative_paths: str) -> str | None:
     return None
 
 
-def _libero_policy_observation(prompt: str) -> Dict[str, Any]:
+def _libero_policy_observation(prompt: str) -> dict[str, Any]:
     libero_root = _data_path("test_cases", "test_vla_case1", "libero")
     return {
         "full_image": str(libero_root / "main_view.png"),
@@ -1093,7 +1098,7 @@ def _last_r1_default_ref() -> str:
     return str(configured)
 
 
-def _last_r1_default_load_kwargs() -> Dict[str, Any]:
+def _last_r1_default_load_kwargs() -> dict[str, Any]:
     source = official_runtime_repo_path("LaST-R1", specific_env="WORLDFOUNDRY_LAST_R1_SOURCE_DIR")
     if not source.is_dir() and not os.environ.get("WORLDFOUNDRY_LAST_R1_SOURCE_DIR"):
         sibling = PIPELINES_ROOT.parents[2] / "model" / "LaST-R1"
@@ -1102,10 +1107,10 @@ def _last_r1_default_load_kwargs() -> Dict[str, Any]:
     return {"source_root": str(source)}
 
 
-def _cogact_default_call_kwargs() -> Dict[str, Any]:
+def _cogact_default_call_kwargs() -> dict[str, Any]:
     prompt = "move sponge near apple"
     image_path = str(_data_path("test_cases", "test_vla_image_case1", "init_frame.png"))
-    kwargs: Dict[str, Any] = {
+    kwargs: dict[str, Any] = {
         "official_policy_observation": {
             "image": image_path,
             "full_image": image_path,
@@ -1139,7 +1144,7 @@ def _db_cogact_default_ref() -> str:
     )
 
 
-def _db_cogact_default_call_kwargs() -> Dict[str, Any]:
+def _db_cogact_default_call_kwargs() -> dict[str, Any]:
     prompt = "put the object on the target area"
     libero_root = _data_path("test_cases", "test_vla_case1", "libero")
     return {
@@ -1165,9 +1170,9 @@ def _vlanext_default_ref() -> str:
     return "DravenALG/VLANeXt"
 
 
-def _vlanext_default_call_kwargs() -> Dict[str, Any]:
+def _vlanext_default_call_kwargs() -> dict[str, Any]:
     prompt = "put the object on the target area"
-    kwargs: Dict[str, Any] = {
+    kwargs: dict[str, Any] = {
         "official_policy_observation": _libero_policy_observation(prompt),
         "task_suite_name": "libero_spatial",
         "diffusion_steps": 10,
@@ -1194,7 +1199,7 @@ def _molmobot_default_ref() -> str:
     return "allenai/MolmoBot-DROID"
 
 
-def _molmobot_default_call_kwargs() -> Dict[str, Any]:
+def _molmobot_default_call_kwargs() -> dict[str, Any]:
     droid_root = _data_path("test_cases", "test_vla_case1", "droid")
     prompt = "put the mug in the bowl"
     return {
@@ -1223,10 +1228,10 @@ def _mme_vla_default_ref() -> str:
     return "Yinpei/perceptual-framesamp-modul"
 
 
-def _mme_vla_default_call_kwargs() -> Dict[str, Any]:
+def _mme_vla_default_call_kwargs() -> dict[str, Any]:
     libero_root = _data_path("test_cases", "test_vla_case1", "libero")
     prompt = "put the object on the target area"
-    kwargs: Dict[str, Any] = {
+    kwargs: dict[str, Any] = {
         "official_policy_observation": {
             "observation/image": str(libero_root / "main_view.png"),
             "observation/wrist_image": str(libero_root / "wrist_view.png"),
@@ -1252,7 +1257,7 @@ def _starvla_default_ref() -> str:
     )
 
 
-def _starvla_default_call_kwargs() -> Dict[str, Any]:
+def _starvla_default_call_kwargs() -> dict[str, Any]:
     in_tree_source = _project_root() / "worldfoundry" / "synthesis" / "action_generation" / "starvla"
     return {
         "checkpoint_dir": _starvla_default_ref(),
@@ -1310,8 +1315,8 @@ def _dualcamctrl_base_default_ref() -> str:
     return repo_id
 
 
-def _dualcamctrl_default_load_kwargs() -> Dict[str, Any]:
-    load_kwargs: Dict[str, Any] = {
+def _dualcamctrl_default_load_kwargs() -> dict[str, Any]:
+    load_kwargs: dict[str, Any] = {
         "base_model_repo": "alibaba-pai/Wan2.1-Fun-V1.1-1.3B-Control-Camera",
         "tokenizer_repo": "Wan-AI/Wan2.1-T2V-1.3B",
         "dualcamctrl_repo": "FayeHongfeiZhang/DualCamCtrl",
@@ -1371,7 +1376,7 @@ def _dualcamctrl_default_load_kwargs() -> Dict[str, Any]:
     return load_kwargs
 
 
-def _dualcamctrl_default_call_kwargs() -> Dict[str, Any]:
+def _dualcamctrl_default_call_kwargs() -> dict[str, Any]:
     demo_root = _data_path("test_cases", "dualcamctrl", "demo_pic")
     return {
         "demo_name": "seaside",
@@ -1416,7 +1421,7 @@ def _wan_2p2_i2v_a14b_default_ref() -> str:
     )
 
 
-def _ltx23_default_load_kwargs() -> Dict[str, Any]:
+def _ltx23_default_load_kwargs() -> dict[str, Any]:
     """Expose every runtime-required LTX-2.3 checkpoint component to Studio."""
 
     return {
@@ -1462,7 +1467,7 @@ def _ltx25_python_executable() -> str:
     )
 
 
-def _ltx25_default_load_kwargs() -> Dict[str, Any]:
+def _ltx25_default_load_kwargs() -> dict[str, Any]:
     """Map Studio directly to the official split LTX-2.5 runtime assets."""
 
     checkpoint_dir = Path(_ltx25_checkpoint_dir())
@@ -1685,7 +1690,7 @@ def _echo_infinity_default_ref() -> str:
     )
 
 
-def _echo_infinity_default_load_kwargs() -> Dict[str, Any]:
+def _echo_infinity_default_load_kwargs() -> dict[str, Any]:
     wan_root = checkpoint_root_path()
     wan_model_name = "Wan2.1-T2V-1.3B"
     found = False
@@ -1725,7 +1730,7 @@ def _echo_memory_context_k1_default_ref() -> str:
     return _echo_memory_default_ref("context_k1/epoch-0.safetensors")
 
 
-def _echo_memory_default_load_kwargs() -> Dict[str, Any]:
+def _echo_memory_default_load_kwargs() -> dict[str, Any]:
     return {
         "wan_base_dir": _checkpoint_model_ref(
             "Wan-AI--Wan2.1-T2V-1.3B",
@@ -1735,7 +1740,7 @@ def _echo_memory_default_load_kwargs() -> Dict[str, Any]:
     }
 
 
-def _echo_memory_context_k1_load_kwargs() -> Dict[str, Any]:
+def _echo_memory_context_k1_load_kwargs() -> dict[str, Any]:
     return _echo_memory_default_load_kwargs()
 
 
@@ -1747,7 +1752,7 @@ def _recammaster_default_ref() -> str:
     )
 
 
-def _recammaster_default_load_kwargs() -> Dict[str, Any]:
+def _recammaster_default_load_kwargs() -> dict[str, Any]:
     return {
         "wan_model_path": _wan_2p1_t2v_default_ref(),
         "recammaster_ckpt_path": _recammaster_default_ref(),
@@ -1778,7 +1783,7 @@ def _t2v_turbo_lora_ref() -> str:
     )
 
 
-def _t2v_turbo_default_load_kwargs() -> Dict[str, Any]:
+def _t2v_turbo_default_load_kwargs() -> dict[str, Any]:
     return {
         "base_checkpoint": _t2v_turbo_base_ref(),
         "lora_checkpoint": _t2v_turbo_lora_ref(),
@@ -1793,7 +1798,7 @@ def _versecrafter_default_ref() -> str:
     )
 
 
-def _versecrafter_default_load_kwargs() -> Dict[str, Any]:
+def _versecrafter_default_load_kwargs() -> dict[str, Any]:
     return {
         "base_model_path": _checkpoint_model_ref(
             "Wan-AI--Wan2.1-T2V-14B",
@@ -1816,7 +1821,7 @@ def _cameractrl_default_ref() -> str:
     )
 
 
-def _cameractrl_default_load_kwargs() -> Dict[str, Any]:
+def _cameractrl_default_load_kwargs() -> dict[str, Any]:
     sd15_path = _checkpoint_model_ref(
         "stable-diffusion-v1-5--stable-diffusion-v1-5",
         "stable-diffusion-v1-5",
@@ -1861,7 +1866,7 @@ def _cosmos_predict2_default_ref() -> str:
     )
 
 
-def _cosmos_predict2_default_load_kwargs() -> Dict[str, Any]:
+def _cosmos_predict2_default_load_kwargs() -> dict[str, Any]:
     model_root = Path(_cosmos_predict2_default_ref())
     return {
         "checkpoint_path": str(model_root),
@@ -1871,7 +1876,7 @@ def _cosmos_predict2_default_load_kwargs() -> Dict[str, Any]:
     }
 
 
-def _cosmos_predict2p5_default_load_kwargs() -> Dict[str, Any]:
+def _cosmos_predict2p5_default_load_kwargs() -> dict[str, Any]:
     model_root = _cosmos_predict2p5_default_ref()
     return {
         "required_components": {
@@ -1886,7 +1891,7 @@ def _cosmos_predict2p5_default_load_kwargs() -> Dict[str, Any]:
     }
 
 
-def _cosmos_predict2p5_default_call_kwargs() -> Dict[str, Any]:
+def _cosmos_predict2p5_default_call_kwargs() -> dict[str, Any]:
     return {
         "fps": 16,
         "guidance_scale": 7.0,
@@ -1907,7 +1912,7 @@ def _cosmos_transfer2p5_default_ref() -> str:
     )
 
 
-def _cosmos_transfer2p5_default_load_kwargs() -> Dict[str, Any]:
+def _cosmos_transfer2p5_default_load_kwargs() -> dict[str, Any]:
     return {
         "required_components": {
             "text_encoder_model_path": _checkpoint_model_ref(
@@ -1919,7 +1924,7 @@ def _cosmos_transfer2p5_default_load_kwargs() -> Dict[str, Any]:
     }
 
 
-def _cosmos_transfer2p5_default_call_kwargs() -> Dict[str, Any]:
+def _cosmos_transfer2p5_default_call_kwargs() -> dict[str, Any]:
     return {
         **_cosmos_predict2p5_default_call_kwargs(),
         "controlnet_variant": "edge",
@@ -1959,7 +1964,7 @@ def _lingbot_world_v2_small_default_ref() -> str:
     )
 
 
-def _lingbot_world_v2_small_default_load_kwargs() -> Dict[str, Any]:
+def _lingbot_world_v2_small_default_load_kwargs() -> dict[str, Any]:
     return {
         "model_id": "lingbot-world-v2-1.3b",
         "nproc_per_node": 1,
@@ -1985,7 +1990,7 @@ def _sana_wm_streaming_default_ref() -> str:
     )
 
 
-def _sana_wm_streaming_default_load_kwargs() -> Dict[str, Any]:
+def _sana_wm_streaming_default_load_kwargs() -> dict[str, Any]:
     streaming_root = _sana_wm_streaming_default_ref()
     gemma_root = _checkpoint_model_ref(
         "Efficient-Large-Model--gemma-2-2b-it",
@@ -2011,7 +2016,7 @@ def _moverse_default_ref() -> str:
     )
 
 
-def _moverse_default_load_kwargs() -> Dict[str, Any]:
+def _moverse_default_load_kwargs() -> dict[str, Any]:
     return {
         "flux_path": _checkpoint_model_ref(
             "black-forest-labs--FLUX.1-Fill-dev",
@@ -2038,7 +2043,7 @@ def _dreamdojo_default_ref() -> str:
     )
 
 
-def _dreamdojo_default_load_kwargs() -> Dict[str, Any]:
+def _dreamdojo_default_load_kwargs() -> dict[str, Any]:
     root = Path(_dreamdojo_default_ref())
     checkpoint_dir = root / "iter_000050000"
     return {
@@ -2065,7 +2070,7 @@ def _dreamx_world_ar_default_ref() -> str:
     )
 
 
-def _dreamx_world_ar_default_load_kwargs() -> Dict[str, Any]:
+def _dreamx_world_ar_default_load_kwargs() -> dict[str, Any]:
     return {
         "wan_model_path": _checkpoint_model_ref(
             "Wan-AI--Wan2.2-TI2V-5B",
@@ -2075,7 +2080,7 @@ def _dreamx_world_ar_default_load_kwargs() -> Dict[str, Any]:
     }
 
 
-def _dreamx_world_default_load_kwargs() -> Dict[str, Any]:
+def _dreamx_world_default_load_kwargs() -> dict[str, Any]:
     return {
         "wan_model_path": _checkpoint_model_ref(
             "Wan-AI--Wan2.2-TI2V-5B",
@@ -2085,7 +2090,7 @@ def _dreamx_world_default_load_kwargs() -> Dict[str, Any]:
     }
 
 
-def _lingbot_world_v2_default_load_kwargs() -> Dict[str, Any]:
+def _lingbot_world_v2_default_load_kwargs() -> dict[str, Any]:
     # Conda dispatch already selects the dedicated in-tree LingBot-V2
     # environment.  Leaving python_executable unset makes any fallback runner
     # use that child interpreter instead of escaping back to the unified env.
@@ -2096,7 +2101,7 @@ def _lingbot_world_v2_default_load_kwargs() -> Dict[str, Any]:
     }
 
 
-def _longcat_video_default_load_kwargs() -> Dict[str, Any]:
+def _longcat_video_default_load_kwargs() -> dict[str, Any]:
     return {
         "python_executable": _current_python_executable(),
     }
@@ -2120,7 +2125,7 @@ def _astra_default_ref() -> str:
     )
 
 
-def _astra_default_load_kwargs() -> Dict[str, Any]:
+def _astra_default_load_kwargs() -> dict[str, Any]:
     return {
         "required_components": {
             "wan_model_path": _checkpoint_model_ref(
@@ -2146,7 +2151,7 @@ ASTRA_OFFICIAL_PROMPT = (
 )
 
 
-def _astra_default_call_kwargs() -> Dict[str, Any]:
+def _astra_default_call_kwargs() -> dict[str, Any]:
     return {
         "frames_per_generation": 8,
         "total_frames_to_generate": 24,
@@ -2166,7 +2171,7 @@ def _pusa_vidgen_default_ref() -> str:
     )
 
 
-def _pusa_vidgen_default_load_kwargs() -> Dict[str, Any]:
+def _pusa_vidgen_default_load_kwargs() -> dict[str, Any]:
     return {
         "base_model_root": _checkpoint_model_ref(
             "Wan2.2-T2V-A14B",
@@ -2217,7 +2222,7 @@ def _sana_image_aliases() -> tuple[str, ...]:
     from worldfoundry.base_models.diffusion_model.recipes.sana_variants import SANA_ALIASES
 
     image_ids = _sana_folded_studio_model_ids()
-    aliases = list(sorted(image_ids))
+    aliases = sorted(image_ids)
     for alias, target in SANA_ALIASES.items():
         if alias != "sana" and target in image_ids:
             aliases.append(alias)
@@ -2249,10 +2254,10 @@ def _sana_image_default_ref() -> str:
     return _sana_variant_checkpoint_ref(_sana_default_image_variant())
 
 
-def _sana_image_workspace_variants() -> tuple[Dict[str, Any], ...]:
+def _sana_image_workspace_variants() -> tuple[dict[str, Any], ...]:
     from worldfoundry.base_models.diffusion_model.recipes.sana_variants import SANA_VARIANTS
 
-    rows: list[Dict[str, Any]] = []
+    rows: list[dict[str, Any]] = []
     for variant in SANA_VARIANTS.values():
         if variant.runner not in _SANA_IMAGE_RUNNERS:
             continue
@@ -2284,7 +2289,7 @@ def _sana_image_workspace_variants() -> tuple[Dict[str, Any], ...]:
     return tuple(rows)
 
 
-def _cogvideox_variant_specs() -> dict[str, Dict[str, Any]]:
+def _cogvideox_variant_specs() -> dict[str, dict[str, Any]]:
     return {
         "cogvideox_2b_t2v": {
             "generation_type": "t2v",
@@ -2361,8 +2366,8 @@ def _cogvideox_aliases() -> tuple[str, ...]:
     return _coerce_aliases(*aliases)
 
 
-def _cogvideox_workspace_variants() -> tuple[Dict[str, Any], ...]:
-    rows: list[Dict[str, Any]] = []
+def _cogvideox_workspace_variants() -> tuple[dict[str, Any], ...]:
+    rows: list[dict[str, Any]] = []
     for variant_id, spec in _cogvideox_variant_specs().items():
         model_ref = str(_resolve_override_value(spec.get("default_model_ref", "")) or "")
         rows.append(
@@ -2423,7 +2428,7 @@ def _sana_streaming_default_ref(*, bidirectional: bool) -> str:
     return _checkpoint_model_ref(repo_dir, fallback=repo_id)
 
 
-def _sana_streaming_default_load_kwargs(*, bidirectional: bool) -> Dict[str, Any]:
+def _sana_streaming_default_load_kwargs(*, bidirectional: bool) -> dict[str, Any]:
     dit_root = _sana_streaming_default_ref(bidirectional=bidirectional)
     gemma_root = _checkpoint_model_ref(
         "Efficient-Large-Model--gemma-2-2b-it",
@@ -2516,7 +2521,7 @@ def _animatediff_default_ref() -> str:
     )
 
 
-def _animatediff_default_load_kwargs() -> Dict[str, Any]:
+def _animatediff_default_load_kwargs() -> dict[str, Any]:
     return {
         "motion_module_path": _animatediff_default_ref(),
         "base_model_path": _checkpoint_model_ref(
@@ -2556,7 +2561,7 @@ def _kairos_sensenova_default_ref() -> str:
     )
 
 
-def _kairos_sensenova_default_load_kwargs() -> Dict[str, Any]:
+def _kairos_sensenova_default_load_kwargs() -> dict[str, Any]:
     model_root = Path(_kairos_sensenova_default_ref())
     return {
         "runtime_root": "",
@@ -2585,7 +2590,7 @@ def _solaris_default_ref() -> str:
     )
 
 
-def _solaris_default_load_kwargs() -> Dict[str, Any]:
+def _solaris_default_load_kwargs() -> dict[str, Any]:
     runtime_root = str(
         _project_root() / "worldfoundry" / "synthesis" / "visual_generation" / "solaris" / "solaris_runtime"
     )
@@ -2620,7 +2625,7 @@ def _minwm_default_ref() -> str:
     return _hf_checkpoint_model_ref("MIN-Lab--minWM", "MIN-Lab/minWM")
 
 
-def _minwm_hy_default_load_kwargs() -> Dict[str, Any]:
+def _minwm_hy_default_load_kwargs() -> dict[str, Any]:
     return {
         "base_model_path": _hf_checkpoint_model_ref(
             "tencent--HunyuanVideo-1.5",
@@ -2629,7 +2634,7 @@ def _minwm_hy_default_load_kwargs() -> Dict[str, Any]:
     }
 
 
-def _minwm_wan_default_load_kwargs() -> Dict[str, Any]:
+def _minwm_wan_default_load_kwargs() -> dict[str, Any]:
     return {
         "base_model_path": _hf_checkpoint_model_ref(
             "Wan-AI--Wan2.1-T2V-1.3B",
@@ -2654,7 +2659,7 @@ def _openpi_default_ref() -> str:
     )
 
 
-def _openpi_default_call_kwargs() -> Dict[str, Any]:
+def _openpi_default_call_kwargs() -> dict[str, Any]:
     return {
         "checkpoint_dir": _openpi_default_ref(),
         "config_name": "pi05_libero",
@@ -2671,7 +2676,7 @@ def _lapa_default_ref() -> str:
     )
 
 
-def _lapa_default_call_kwargs() -> Dict[str, Any]:
+def _lapa_default_call_kwargs() -> dict[str, Any]:
     return {
         "checkpoint_dir": _lapa_default_ref(),
         "dtype": "bf16",
@@ -2690,7 +2695,7 @@ def _octo_default_ref() -> str:
     )
 
 
-def _octo_default_call_kwargs() -> Dict[str, Any]:
+def _octo_default_call_kwargs() -> dict[str, Any]:
     return {
         "checkpoint_dir": _octo_default_ref(),
         "variant": "small",
@@ -2702,7 +2707,7 @@ def _octo_default_call_kwargs() -> Dict[str, Any]:
     }
 
 
-def _diffusion_policy_default_call_kwargs() -> Dict[str, Any]:
+def _diffusion_policy_default_call_kwargs() -> dict[str, Any]:
     # Official low-dimensional PushT checkpoint: n_obs_steps=2, obs_dim=20.
     return {
         "device": "cuda",
@@ -2758,7 +2763,7 @@ def _diffusion_policy_default_call_kwargs() -> Dict[str, Any]:
     }
 
 
-def _molmoact2_default_call_kwargs() -> Dict[str, Any]:
+def _molmoact2_default_call_kwargs() -> dict[str, Any]:
     demo_dir = _data_path("test_cases", "test_vla_case1", "droid")
     state = [0.0] * 8
     operator_kwargs = {
@@ -2777,7 +2782,7 @@ def _molmoact2_default_call_kwargs() -> Dict[str, Any]:
     }
 
 
-def _molmoact2_yam_call_kwargs() -> Dict[str, Any]:
+def _molmoact2_yam_call_kwargs() -> dict[str, Any]:
     demo_dir = _data_path("test_cases", "test_vla_case1")
     state = [0.0] * 14
     operator_kwargs = {
@@ -2798,7 +2803,7 @@ def _molmoact2_yam_call_kwargs() -> Dict[str, Any]:
     }
 
 
-def _molmoact2_so100_call_kwargs() -> Dict[str, Any]:
+def _molmoact2_so100_call_kwargs() -> dict[str, Any]:
     checkpoint_dir = checkpoint_root_path("hfd", "allenai--MolmoAct2-SO100_101")
     state = [
         -0.52734375,
@@ -2825,7 +2830,7 @@ def _molmoact2_so100_call_kwargs() -> Dict[str, Any]:
     }
 
 
-def _molmoact2_libero_call_kwargs() -> Dict[str, Any]:
+def _molmoact2_libero_call_kwargs() -> dict[str, Any]:
     checkpoint_dir = checkpoint_root_path("hfd", "allenai--MolmoAct2-LIBERO")
     state = [
         -0.05338004603981972,
@@ -2856,7 +2861,7 @@ def _molmoact2_libero_call_kwargs() -> Dict[str, Any]:
     }
 
 
-def _molmoact2_think_libero_call_kwargs() -> Dict[str, Any]:
+def _molmoact2_think_libero_call_kwargs() -> dict[str, Any]:
     call_kwargs = _molmoact2_libero_call_kwargs()
     checkpoint_dir = checkpoint_root_path("hfd", "allenai--MolmoAct2-Think-LIBERO")
     operator_kwargs = dict(call_kwargs["operator_kwargs"])
@@ -2910,7 +2915,7 @@ def _inspatio_world_default_ref() -> str:
         return repo_id
 
 
-def _inspatio_world_default_load_kwargs() -> Dict[str, Any]:
+def _inspatio_world_default_load_kwargs() -> dict[str, Any]:
     return {
         "wan_model_path": _wan_2p1_t2v_default_ref(),
         "da3_model_path": _depth_anything_v3_default_ref(),
@@ -2931,7 +2936,7 @@ def _worldcam_default_ref() -> str:
     )
 
 
-def _worldcam_default_load_kwargs() -> Dict[str, Any]:
+def _worldcam_default_load_kwargs() -> dict[str, Any]:
     return {
         "required_components": {
             "wan_model_path": _wan_2p1_t2v_default_ref(),
@@ -2939,8 +2944,8 @@ def _worldcam_default_load_kwargs() -> Dict[str, Any]:
     }
 
 
-def _worldcam_default_call_kwargs() -> Dict[str, Any]:
-    kwargs: Dict[str, Any] = {
+def _worldcam_default_call_kwargs() -> dict[str, Any]:
+    kwargs: dict[str, Any] = {
         "conditioning_frames": 65,
         "num_ar_steps": 50,
         "cfg_scale": 4,
@@ -2981,7 +2986,7 @@ def _neoverse_default_ref() -> str:
 NEOVERSE_OFFICIAL_PROMPT = "A two-arm robot assembles parts in front of a table."
 
 
-def _neoverse_default_call_kwargs() -> Dict[str, Any]:
+def _neoverse_default_call_kwargs() -> dict[str, Any]:
     return {
         "predefined_trajectory": "tilt_up",
         "num_frames": 81,
@@ -2999,7 +3004,7 @@ def _neoverse_default_call_kwargs() -> Dict[str, Any]:
     }
 
 
-def _neoverse_default_load_kwargs() -> Dict[str, Any]:
+def _neoverse_default_load_kwargs() -> dict[str, Any]:
     return {
         "height": 336,
         "width": 560,
@@ -3010,7 +3015,7 @@ def _neoverse_default_load_kwargs() -> Dict[str, Any]:
     }
 
 
-def _lingbot_world_fast_load_kwargs() -> Dict[str, Any]:
+def _lingbot_world_fast_load_kwargs() -> dict[str, Any]:
     fast_ref = _prefer_existing_model_ref(
         *_cache_candidates(
             "robbyant--lingbot-world-fast",
@@ -3024,7 +3029,7 @@ def _lingbot_world_fast_load_kwargs() -> Dict[str, Any]:
     }
 
 
-def _lingbot_world_default_load_kwargs() -> Dict[str, Any]:
+def _lingbot_world_default_load_kwargs() -> dict[str, Any]:
     # FSDP is the trigger for adaptive 8/4-rank Workspace launch.  The
     # dispatcher injects ulysses_size=WORLD_SIZE after selecting visible GPUs.
     return {
@@ -3034,7 +3039,7 @@ def _lingbot_world_default_load_kwargs() -> Dict[str, Any]:
     }
 
 
-def lingbot_world_fast_load_kwargs() -> Dict[str, Any]:
+def lingbot_world_fast_load_kwargs() -> dict[str, Any]:
     return _lingbot_world_fast_load_kwargs()
 
 
@@ -3072,7 +3077,7 @@ def _flash_world_default_ref() -> str:
     )
 
 
-def _flash_world_default_load_kwargs() -> Dict[str, Any]:
+def _flash_world_default_load_kwargs() -> dict[str, Any]:
     return {
         "required_components": {
             "wan_model_path": _prefer_existing_model_ref(
@@ -3103,7 +3108,7 @@ def _fantasy_world_wan22_default_ref() -> str:
     )
 
 
-def _fantasy_world_wan21_load_kwargs() -> Dict[str, Any]:
+def _fantasy_world_wan21_load_kwargs() -> dict[str, Any]:
     return {
         "required_components": {
             "wan_model_path": _checkpoint_model_ref(
@@ -3125,7 +3130,7 @@ def _fantasy_world_wan21_load_kwargs() -> Dict[str, Any]:
     }
 
 
-def _fantasy_world_wan22_load_kwargs() -> Dict[str, Any]:
+def _fantasy_world_wan22_load_kwargs() -> dict[str, Any]:
     return {
         "required_components": {
             "wan_model_path": _checkpoint_model_ref(
@@ -3153,11 +3158,11 @@ def _fantasy_world_wan22_load_kwargs() -> Dict[str, Any]:
     }
 
 
-def _fantasy_world_default_load_kwargs() -> Dict[str, Any]:
+def _fantasy_world_default_load_kwargs() -> dict[str, Any]:
     return _fantasy_world_wan21_load_kwargs()
 
 
-def _fantasy_world_default_call_kwargs(conf_threshold: float = 1.5) -> Dict[str, Any]:
+def _fantasy_world_default_call_kwargs(conf_threshold: float = 1.5) -> dict[str, Any]:
     return {
         "camera_json_path": _fantasy_world_camera_fixture(),
         "fps": 16,
@@ -3408,7 +3413,7 @@ def _worldfm_default_ref() -> str:
     )
 
 
-def _worldfm_default_load_kwargs() -> Dict[str, Any]:
+def _worldfm_default_load_kwargs() -> dict[str, Any]:
     return {
         "required_components": {
             "moge_pretrained": _prefer_existing_model_ref(
@@ -3455,8 +3460,8 @@ def _ac3d_default_video_root_dir() -> str:
     return ""
 
 
-def _ac3d_default_call_kwargs() -> Dict[str, Any]:
-    kwargs: Dict[str, Any] = {
+def _ac3d_default_call_kwargs() -> dict[str, Any]:
+    kwargs: dict[str, Any] = {
         "annotation_json": "annotations/test.json",
         "num_frames": 49,
         "stride_min": 2,
@@ -3480,7 +3485,7 @@ def _gen3c_default_ref() -> str:
     )
 
 
-def _gen3c_default_load_kwargs() -> Dict[str, Any]:
+def _gen3c_default_load_kwargs() -> dict[str, Any]:
     return {
         "required_components": {
             "transformer_model_path": _gen3c_default_ref(),
@@ -3505,7 +3510,7 @@ def _gen3c_default_load_kwargs() -> Dict[str, Any]:
     }
 
 
-def _gen3c_default_call_kwargs() -> Dict[str, Any]:
+def _gen3c_default_call_kwargs() -> dict[str, Any]:
     """Native GEN3C quality defaults; legacy official-subprocess flags are omitted."""
 
     from worldfoundry.pipelines.gen3c.constants import (
@@ -3527,7 +3532,7 @@ def _gen3c_default_call_kwargs() -> Dict[str, Any]:
     }
 
 
-def _lyra1_default_call_kwargs() -> Dict[str, Any]:
+def _lyra1_default_call_kwargs() -> dict[str, Any]:
     return {
         "mode": "static",
         "trajectory": "zoom_in",
@@ -3557,7 +3562,7 @@ def _lyra1_default_call_kwargs() -> Dict[str, Any]:
     }
 
 
-def _lyra2_default_call_kwargs() -> Dict[str, Any]:
+def _lyra2_default_call_kwargs() -> dict[str, Any]:
     return {
         "fps": 16,
         "resolution": (480, 832),
@@ -3569,8 +3574,8 @@ def _lyra2_default_call_kwargs() -> Dict[str, Any]:
     }
 
 
-def _lyra2_default_load_kwargs() -> Dict[str, Any]:
-    required_components: Dict[str, Any] = {"load_runtime": True}
+def _lyra2_default_load_kwargs() -> dict[str, Any]:
+    required_components: dict[str, Any] = {"load_runtime": True}
     checkpoint_root = None
     for candidate in (
         hfd_root_path("Lyra-2.0"),
@@ -3599,7 +3604,7 @@ def _lyra2_default_load_kwargs() -> Dict[str, Any]:
     return {"required_components": required_components}
 
 
-def _alayaworld_default_load_kwargs() -> Dict[str, Any]:
+def _alayaworld_default_load_kwargs() -> dict[str, Any]:
     return {
         "required_components": {
             "checkpoint_path": _checkpoint_model_ref(
@@ -3630,7 +3635,7 @@ def _hunyuan_worldplay_default_ref() -> str:
     )
 
 
-def _hunyuan_worldplay_default_call_kwargs() -> Dict[str, Any]:
+def _hunyuan_worldplay_default_call_kwargs() -> dict[str, Any]:
     return {
         "num_frames": 125,
         "aspect_ratio": "16:9",
@@ -3685,7 +3690,7 @@ def _forcing_wan_default_ref() -> str:
     )
 
 
-def _self_forcing_default_load_kwargs() -> Dict[str, Any]:
+def _self_forcing_default_load_kwargs() -> dict[str, Any]:
     runtime_root = _forcing_in_tree_runtime_root("self-forcing")
     config_path = _data_path("models", "runtime", "configs", "self_forcing", "self_forcing_dmd.yaml")
     return {
@@ -3701,7 +3706,7 @@ def _self_forcing_default_load_kwargs() -> Dict[str, Any]:
     }
 
 
-def _causal_forcing_default_load_kwargs() -> Dict[str, Any]:
+def _causal_forcing_default_load_kwargs() -> dict[str, Any]:
     runtime_root = _forcing_in_tree_runtime_root("causal-forcing")
     config_path = _data_path("models", "runtime", "configs", "causal_forcing", "causal_forcing_dmd_chunkwise.yaml")
     return {
@@ -3715,7 +3720,7 @@ def _causal_forcing_default_load_kwargs() -> Dict[str, Any]:
     }
 
 
-def _self_forcing_default_call_kwargs() -> Dict[str, Any]:
+def _self_forcing_default_call_kwargs() -> dict[str, Any]:
     return {
         "num_output_frames": 21,
         "seed": 0,
@@ -3726,7 +3731,7 @@ def _self_forcing_default_call_kwargs() -> Dict[str, Any]:
     }
 
 
-def _causal_forcing_default_call_kwargs() -> Dict[str, Any]:
+def _causal_forcing_default_call_kwargs() -> dict[str, Any]:
     return {
         "num_output_frames": 21,
         "seed": 0,
@@ -3741,7 +3746,7 @@ def _oasis_500m_default_ref() -> str:
     )
 
 
-def _oasis_500m_default_load_kwargs() -> Dict[str, str]:
+def _oasis_500m_default_load_kwargs() -> dict[str, str]:
     checkpoint_root = Path(
         _checkpoint_model_ref(
             "Etched--oasis-500m",
@@ -3756,7 +3761,7 @@ def _oasis_500m_default_load_kwargs() -> Dict[str, str]:
     }
 
 
-def _multiworld_ittakestwo_default_load_kwargs() -> Dict[str, Any]:
+def _multiworld_ittakestwo_default_load_kwargs() -> dict[str, Any]:
     runtime_root = _project_root() / "worldfoundry" / "synthesis" / "visual_generation" / "multiworld"
     config_path = _data_path(
         "models",
@@ -3807,7 +3812,7 @@ def _multiworld_ittakestwo_default_load_kwargs() -> Dict[str, Any]:
     }
 
 
-def _multiworld_ittakestwo_default_call_kwargs() -> Dict[str, Any]:
+def _multiworld_ittakestwo_default_call_kwargs() -> dict[str, Any]:
     return {
         "action_path": str(_data_path("test_cases", "multiworld_ittakestwo", "action.csv")),
         "num_frames": 81,
@@ -3828,7 +3833,7 @@ def _evoke_default_ref() -> str:
     )
 
 
-def _evoke_default_load_kwargs() -> Dict[str, Any]:
+def _evoke_default_load_kwargs() -> dict[str, Any]:
     return {
         "required_components": {
             "vigeo_path": _checkpoint_model_ref(
@@ -3841,7 +3846,7 @@ def _evoke_default_load_kwargs() -> Dict[str, Any]:
     }
 
 
-def _magi2_default_load_kwargs() -> Dict[str, Any]:
+def _magi2_default_load_kwargs() -> dict[str, Any]:
     return {
         "required_components": {
             "python_executable": _worldfoundry_unified_python_executable(),
@@ -3861,7 +3866,7 @@ def _warp_as_history_default_ref() -> str:
     )
 
 
-def _warp_as_history_default_load_kwargs() -> Dict[str, Any]:
+def _warp_as_history_default_load_kwargs() -> dict[str, Any]:
     return {
         "required_components": {
             "lora_path": _checkpoint_model_ref(
@@ -3913,9 +3918,9 @@ class CatalogEntry:
     default_input_path: str = ""
     default_task_type: str = ""
     default_interactions: tuple[str, ...] = field(default_factory=tuple)
-    default_load_kwargs: Dict[str, Any] = field(default_factory=dict)
-    default_call_kwargs: Dict[str, Any] = field(default_factory=dict)
-    extra_variants: tuple[Dict[str, Any], ...] = field(default_factory=tuple)
+    default_load_kwargs: dict[str, Any] = field(default_factory=dict)
+    default_call_kwargs: dict[str, Any] = field(default_factory=dict)
+    extra_variants: tuple[dict[str, Any], ...] = field(default_factory=tuple)
     suggested_task_types: tuple[str, ...] = field(default_factory=tuple)
     aliases: tuple[str, ...] = field(default_factory=tuple)
     tags: tuple[str, ...] = field(default_factory=tuple)
@@ -4016,7 +4021,7 @@ def _action_checkpoint_variant(
     call_kwargs: Mapping[str, Any],
     aliases: Sequence[str] = (),
     notes: Sequence[str] = (),
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Build one local-first Workspace variant for an in-tree action policy."""
 
     return {
@@ -4036,7 +4041,7 @@ def _action_checkpoint_variant(
     }
 
 
-def _xvla_workspace_variants() -> tuple[Dict[str, Any], ...]:
+def _xvla_workspace_variants() -> tuple[dict[str, Any], ...]:
     common = {
         "state": [0.0] * 20,
         "denoising_steps": 10,
@@ -4072,7 +4077,7 @@ def _xvla_workspace_variants() -> tuple[Dict[str, Any], ...]:
     )
 
 
-def _xiaomi_robotics_0_workspace_variants() -> tuple[Dict[str, Any], ...]:
+def _xiaomi_robotics_0_workspace_variants() -> tuple[dict[str, Any], ...]:
     common = {
         "num_steps": 5,
         "seed": 42,
@@ -4080,7 +4085,7 @@ def _xiaomi_robotics_0_workspace_variants() -> tuple[Dict[str, Any], ...]:
         "attn_implementation": "auto",
         "plan_only": False,
     }
-    specs: tuple[tuple[str, str, str, Dict[str, Any]], ...] = (
+    specs: tuple[tuple[str, str, str, dict[str, Any]], ...] = (
         (
             "libero",
             "LIBERO",
@@ -4148,7 +4153,7 @@ def _xiaomi_robotics_0_workspace_variants() -> tuple[Dict[str, Any], ...]:
     )
 
 
-def _spatial_forcing_workspace_variants() -> tuple[Dict[str, Any], ...]:
+def _spatial_forcing_workspace_variants() -> tuple[dict[str, Any], ...]:
     image = str(_data_path("test_cases", "studio_demo", "00", "image.jpg"))
     specs = (
         (
@@ -4196,7 +4201,7 @@ def _spatial_forcing_workspace_variants() -> tuple[Dict[str, Any], ...]:
     )
 
 
-def _fastwam_workspace_variants() -> tuple[Dict[str, Any], ...]:
+def _fastwam_workspace_variants() -> tuple[dict[str, Any], ...]:
     aloha = _data_path("test_cases", "test_vla_case1", "aloha")
     libero = _data_path("test_cases", "test_vla_case1", "libero")
     common = {
@@ -4233,7 +4238,7 @@ def _fastwam_workspace_variants() -> tuple[Dict[str, Any], ...]:
     )
 
 
-def _x_wam_workspace_variants() -> tuple[Dict[str, Any], ...]:
+def _x_wam_workspace_variants() -> tuple[dict[str, Any], ...]:
     image = str(_data_path("test_cases", "studio_demo", "00", "image.jpg"))
     common = {
         "rgb_views": [image] * 3,
@@ -4262,7 +4267,7 @@ def _x_wam_workspace_variants() -> tuple[Dict[str, Any], ...]:
     )
 
 
-def _leworldmodel_default_load_kwargs() -> Dict[str, Any]:
+def _leworldmodel_default_load_kwargs() -> dict[str, Any]:
     candidates = checkpoint_root_candidates("leworldmodel", "pusht_worldfoundry_smoke.h5")
     dataset_path = next((path for path in candidates if path.is_file()), candidates[0])
     return {
@@ -4278,7 +4283,7 @@ def _leworldmodel_default_load_kwargs() -> Dict[str, Any]:
     }
 
 
-def _shotstream_default_load_kwargs() -> Dict[str, Any]:
+def _shotstream_default_load_kwargs() -> dict[str, Any]:
     return {
         "model_id": "shotstream",
         "checkpoint_dir": str(checkpoint_root_path("KlingTeam--ShotStream")),
@@ -4286,7 +4291,7 @@ def _shotstream_default_load_kwargs() -> Dict[str, Any]:
     }
 
 
-def _egowm_default_load_kwargs() -> Dict[str, Any]:
+def _egowm_default_load_kwargs() -> dict[str, Any]:
     return {
         "model_id": "egowm",
         "checkpoint_path": str(checkpoint_root_path("anuragba--egowm", "svd_25dof_nav.pth")),
@@ -4294,7 +4299,7 @@ def _egowm_default_load_kwargs() -> Dict[str, Any]:
     }
 
 
-def _hma_default_load_kwargs() -> Dict[str, Any]:
+def _hma_default_load_kwargs() -> dict[str, Any]:
     return {
         "model_id": "hma",
         "checkpoint_dir": str(checkpoint_root_path("liruiw--hma-base-cont")),
@@ -4302,7 +4307,7 @@ def _hma_default_load_kwargs() -> Dict[str, Any]:
     }
 
 
-def _tesseract_default_load_kwargs() -> Dict[str, Any]:
+def _tesseract_default_load_kwargs() -> dict[str, Any]:
     return {
         "model_id": "tesseract",
         "checkpoint_dir": str(checkpoint_root_path("anyeZHY--tesseract", "tesseract_v01e_rgbdn_sft")),
@@ -4310,7 +4315,7 @@ def _tesseract_default_load_kwargs() -> Dict[str, Any]:
     }
 
 
-def _ctrl_world_default_load_kwargs() -> Dict[str, Any]:
+def _ctrl_world_default_load_kwargs() -> dict[str, Any]:
     return {
         "model_id": "ctrl-world",
         "checkpoint_path": str(checkpoint_root_path("yjguo--Ctrl-World", "checkpoint-10000.pt")),
@@ -4319,7 +4324,7 @@ def _ctrl_world_default_load_kwargs() -> Dict[str, Any]:
     }
 
 
-def _genie_envisioner_default_load_kwargs() -> Dict[str, Any]:
+def _genie_envisioner_default_load_kwargs() -> dict[str, Any]:
     return {
         "model_id": "genie-envisioner",
         "checkpoint_path": str(checkpoint_root_path("agibot-world--Genie-Envisioner", "GE_base_fast_v0.1.safetensors")),
@@ -4327,7 +4332,7 @@ def _genie_envisioner_default_load_kwargs() -> Dict[str, Any]:
     }
 
 
-def _giga_world_0_default_load_kwargs() -> Dict[str, Any]:
+def _giga_world_0_default_load_kwargs() -> dict[str, Any]:
     return {
         "model_id": "giga-world-0",
         "transformer_model_dir": str(checkpoint_root_path("open-gigaai--GigaWorld-0-Video-GR1-2b", "transformer")),
@@ -4343,7 +4348,7 @@ def _spatia_default_ref() -> str:
     )
 
 
-def _spatia_default_load_kwargs() -> Dict[str, Any]:
+def _spatia_default_load_kwargs() -> dict[str, Any]:
     return {
         "base_model_path": _checkpoint_model_ref(
             "Wan-AI--Wan2.2-TI2V-5B",
@@ -4357,7 +4362,7 @@ def _spatia_default_load_kwargs() -> Dict[str, Any]:
     }
 
 
-def _spatia_default_call_kwargs() -> Dict[str, Any]:
+def _spatia_default_call_kwargs() -> dict[str, Any]:
     return {
         "w2c_trajectory_file": str(_data_path("test_cases", "spatia", "w2c_pan_right_121.jsonl")),
         "intrinsics": [[[768.0, 0.0, 624.0], [0.0, 768.0, 352.0], [0.0, 0.0, 1.0]]],
@@ -4390,7 +4395,7 @@ def _joyai_echo_longvideo_default_ref() -> str:
     )
 
 
-def _joyai_echo_longvideo_default_load_kwargs() -> Dict[str, Any]:
+def _joyai_echo_longvideo_default_load_kwargs() -> dict[str, Any]:
     return {
         "source_root": _joyai_echo_source_root(),
         "checkpoint_dir": _joyai_echo_longvideo_default_ref(),
@@ -4410,7 +4415,7 @@ def _joyai_echo_wm_default_ref() -> str:
     )
 
 
-def _joyai_echo_wm_default_load_kwargs() -> Dict[str, Any]:
+def _joyai_echo_wm_default_load_kwargs() -> dict[str, Any]:
     return {
         "source_root": _joyai_echo_source_root(),
         "checkpoint_dir": _joyai_echo_wm_default_ref(),
@@ -4430,7 +4435,7 @@ def _hyworld_worldgen_scene_ref() -> str:
     return str(_data_path("test_cases", "hyworld_worldgen", "materialized_scene"))
 
 
-CURATED_OVERRIDES: Dict[str, Dict[str, Any]] = {
+CURATED_OVERRIDES: dict[str, dict[str, Any]] = {
     "hy-nomas": {
         "display_name": "Hy-Nomas",
         "default_backend": "from_pretrained",
@@ -12871,7 +12876,7 @@ def _canonical_runtime_entries(model_id: str | None = None) -> Iterable[CatalogE
         if not runtime_specs:
             return
 
-    ast_by_slug: Dict[str, _AstPipelineInfo] = {}
+    ast_by_slug: dict[str, _AstPipelineInfo] = {}
     for info in _discover_ast_pipelines():
         ast_by_slug.setdefault(info.model_id.replace("_", "-"), info)
 
@@ -13162,7 +13167,7 @@ def _discover_component_pipelines() -> tuple[_AstPipelineInfo, ...]:
 
 
 def _discover_action_syntheses() -> tuple[_AstPipelineInfo, ...]:
-    discovered: List[_AstPipelineInfo] = []
+    discovered: list[_AstPipelineInfo] = []
     for path in _action_synthesis_file_candidates():
         rel_path = path.relative_to(_source_root())
         module_path = ".".join(rel_path.with_suffix("").parts)
@@ -13213,7 +13218,7 @@ def _discover_action_syntheses() -> tuple[_AstPipelineInfo, ...]:
 
 @lru_cache(maxsize=1)
 def _discover_ast_pipelines() -> tuple[_AstPipelineInfo, ...]:
-    discovered: List[_AstPipelineInfo] = []
+    discovered: list[_AstPipelineInfo] = []
     for path in _pipeline_file_candidates():
         rel_path = path.relative_to(_source_root())
         module_path = ".".join(rel_path.with_suffix("").parts)
@@ -13379,7 +13384,7 @@ def discover_catalog() -> tuple[CatalogEntry, ...]:
 
 
 def _discover_catalog_entries() -> tuple[CatalogEntry, ...]:
-    by_module: Dict[tuple[str, str], CatalogEntry] = {}
+    by_module: dict[tuple[str, str], CatalogEntry] = {}
     for info in _discover_catalog_infos():
         entry = _build_entry(info)
         if entry.model_id in ABSTRACT_RUNTIME_MODEL_IDS:
@@ -13443,7 +13448,7 @@ def catalog_as_table(entries: Sequence[CatalogEntry] | None = None) -> list[list
     return [entry.to_table_row() for entry in active_entries]
 
 
-def catalog_stats(entries: Sequence[CatalogEntry] | None = None) -> Dict[str, int]:
+def catalog_stats(entries: Sequence[CatalogEntry] | None = None) -> dict[str, int]:
     active_entries = discover_catalog() if entries is None else entries
     return {
         "total": len(active_entries),

@@ -7,8 +7,9 @@ from __future__ import annotations
 
 import math
 from collections import OrderedDict, deque
+from collections.abc import Callable, Mapping
 from dataclasses import dataclass
-from typing import Any, Callable, Mapping
+from typing import Any
 
 from worldfoundry.core.observability.realtime_timing import TimingDistribution
 

@@ -28,11 +28,12 @@ import sys
 import tempfile
 import threading
 import time
+from collections.abc import Callable, Mapping
 from contextlib import contextmanager
 from dataclasses import dataclass, field, replace
-from functools import lru_cache
+from functools import cache
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Callable, Mapping
+from typing import TYPE_CHECKING, Any
 
 from worldfoundry.core.execution.process import terminate_process_group
 from worldfoundry.core.io.paths import project_root, resolve_worldfoundry_path, worldfoundry_path_tokens
@@ -244,7 +245,7 @@ def _automatic_gpu_pool() -> CudaDeviceLeasePool:
     if not devices:
         raise RuntimeError("device=cuda was requested, but no visible CUDA devices were discovered")
     with _AUTO_GPU_POOL_LOCK:
-        if _AUTO_GPU_POOL is None or _AUTO_GPU_POOL_DEVICES != devices:
+        if _AUTO_GPU_POOL is None or devices != _AUTO_GPU_POOL_DEVICES:
             lock_keys: dict[str, str] = {}
             try:
                 result = subprocess.run(
@@ -467,7 +468,7 @@ def _current_explicit_unified_env_spec(
     )
 
 
-@lru_cache(maxsize=None)
+@cache
 def workspace_runtime_spec(model_id: str) -> RuntimeCondaEnvSpec | None:
     """Resolve the Conda runtime spec for a model, with discovery and unified-env fallback."""
     spec = load_runtime_conda_env_spec(model_id)

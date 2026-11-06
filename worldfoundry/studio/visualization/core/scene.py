@@ -2,8 +2,9 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, field
-from typing import Any, Mapping, Sequence
+from typing import Any
 
 LayerKind = str
 
@@ -73,7 +74,7 @@ class Layer:
         return data
 
     @classmethod
-    def fromdict(cls, data: Mapping[str, Any]) -> "Layer":
+    def fromdict(cls, data: Mapping[str, Any]) -> Layer:
         frame_range = data.get("frame_range")
         time_range = data.get("time_range")
         return cls(
@@ -140,7 +141,7 @@ class VisualizationScene:
         return data
 
     @classmethod
-    def fromdict(cls, data: Mapping[str, Any]) -> "VisualizationScene":
+    def fromdict(cls, data: Mapping[str, Any]) -> VisualizationScene:
         timeline_blob = data.get("timeline")
         timeline = None
         if isinstance(timeline_blob, Mapping):

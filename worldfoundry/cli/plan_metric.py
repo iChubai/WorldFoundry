@@ -81,6 +81,7 @@ def _build_run_plan_from_cli_args(args: argparse.Namespace):
         )
     return build_run_plan(output_dir=args.output_dir, **plan_kwargs)
 
+
 def _plan_result_payload(plan) -> dict:
     """Extract a human-readable summary payload from a :class:`RunPlan`.
 
@@ -112,6 +113,7 @@ def _plan_result_payload(plan) -> dict:
         "validation": validation,
     }
 
+
 def _handle_plan_create(args: argparse.Namespace) -> int:
     """Create a run plan and print or write it to disk.
 
@@ -141,6 +143,7 @@ def _handle_plan_create(args: argparse.Namespace) -> int:
             if args.output_json:
                 print(f"wrote: {args.output_json}")
     return 0
+
 
 def _handle_plan_show(args: argparse.Namespace) -> int:
     """Load and display an existing run plan.
@@ -173,6 +176,7 @@ def _handle_plan_show(args: argparse.Namespace) -> int:
     )
     return 0
 
+
 def _handle_plan_validate(args: argparse.Namespace) -> int:
     """Validate a run plan without executing it.
 
@@ -199,6 +203,7 @@ def _handle_plan_validate(args: argparse.Namespace) -> int:
             for issue in payload.get("issues", ()):
                 print(f"issue: {issue}")
     return 0 if payload["ok"] else 1
+
 
 # ── Metric sub-command handlers ─────────────────────────────
 
@@ -243,6 +248,7 @@ def _handle_metric_list(args: argparse.Namespace) -> int:
         print(f"{entry.id}: family={entry.family} aliases={aliases}{parameterized} {entry.description}")
     return 0
 
+
 def _handle_metric_show(args: argparse.Namespace) -> int:
     """Display details for a single metric registry entry.
 
@@ -273,6 +279,7 @@ def _handle_metric_show(args: argparse.Namespace) -> int:
         },
     )
     return 0
+
 
 def _handle_metric_validate(args: argparse.Namespace) -> int:
     """Validate one or more metric IDs against the registry.
@@ -332,11 +339,15 @@ def register_plan_metric_subparsers(subparsers: argparse._SubParsersAction[argpa
     )
     plan_create_parser.add_argument("--task-name")
     plan_create_parser.add_argument("--task-root", action="append", type=Path)
-    plan_create_parser.add_argument("--include-path", "--benchmark-include-path", action="append", type=Path, dest="include_path")
+    plan_create_parser.add_argument(
+        "--include-path", "--benchmark-include-path", action="append", type=Path, dest="include_path"
+    )
     plan_create_parser.add_argument("--root-dir", type=Path)
     plan_create_parser.add_argument("--recursive", action="store_true")
     plan_create_parser.add_argument("--benchmark")
-    plan_create_parser.add_argument("--mode", choices=["existing-results", "existing", "results", "model", "generate"], default="model")
+    plan_create_parser.add_argument(
+        "--mode", choices=["existing-results", "existing", "results", "model", "generate"], default="model"
+    )
     plan_create_parser.add_argument("--data-path", type=Path)
     plan_create_parser.add_argument("--dataset-manifest", type=Path)
     plan_create_parser.add_argument("--requests-path", type=Path)

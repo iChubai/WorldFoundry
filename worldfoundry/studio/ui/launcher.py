@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import os
-from typing import Sequence
+from collections.abc import Sequence
 
 from worldfoundry.studio.inference.catalog import CatalogEntry, discover_catalog, find_entry
 from worldfoundry.studio.inference.variants import resolve_cli_variant_id as _resolve_shared_cli_variant_id

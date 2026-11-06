@@ -17,7 +17,6 @@ import argparse
 import os
 from functools import cache
 from pathlib import Path
-from typing import Optional, Union
 
 import matplotlib.pyplot as plt
 import pandas as pd
@@ -39,9 +38,9 @@ def compute_std(val_sum, val_avg, count):
 
 
 def plot_average_metric_per_frame(
-    psnr_avg: Union[torch.Tensor, list],
+    psnr_avg: torch.Tensor | list,
     out_path: str = "average_psnr_per_frame.png",
-    psnr_std: Optional[Union[torch.Tensor, list]] = None,
+    psnr_std: torch.Tensor | list | None = None,
     metric_name: str = "PSNR",
 ) -> None:
     """
@@ -199,7 +198,7 @@ def compute_ssim(
             channel_axis=0,
             data_range=1.0,
         )
-        for gt, hat in zip(ground_truth, predicted)
+        for gt, hat in zip(ground_truth, predicted, strict=False)
     ]
     return torch.tensor(ssim, dtype=predicted.dtype, device=predicted.device)
 
@@ -219,7 +218,7 @@ def plot_metrics(csv_files, labels, output_path):
 
     colors = sns.color_palette("husl", len(csv_files))
 
-    for i, (csv_file, label) in enumerate(zip(csv_files, labels)):
+    for i, (csv_file, label) in enumerate(zip(csv_files, labels, strict=False)):
         df = pd.read_csv(csv_file)
 
         # Determine history length from the first sample

@@ -19,11 +19,12 @@ import time
 import traceback
 import uuid
 from collections import deque
+from collections.abc import Callable, Mapping
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass, field, replace
 from fractions import Fraction
 from pathlib import Path
-from typing import Any, Callable, Mapping, cast
+from typing import Any, cast
 from urllib.parse import quote
 
 import numpy as np
@@ -258,7 +259,7 @@ class OutputResolutionState:
         *,
         maximum: tuple[int, int] | None = None,
         max_pixels: int | None = None,
-    ) -> "OutputResolutionState":
+    ) -> OutputResolutionState:
         state = cls(
             max_width=maximum[0] if maximum is not None else None,
             max_height=maximum[1] if maximum is not None else None,

@@ -14,10 +14,11 @@ import logging
 import os
 import shutil
 import tempfile
+from collections.abc import Generator, Iterable
 from concurrent.futures import ThreadPoolExecutor
 from contextlib import contextmanager
 from pathlib import Path
-from typing import Any, Generator, Iterable
+from typing import Any
 
 logger = logging.getLogger(__name__)
 

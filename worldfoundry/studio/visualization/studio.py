@@ -9,7 +9,7 @@ from __future__ import annotations
 import importlib
 import time
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
 import numpy as np
 
@@ -35,7 +35,7 @@ def _load_trimesh() -> Any:
         return None
 
 
-def convert_model_for_preview(model_path: Optional[str], output_dir: str) -> Optional[str]:
+def convert_model_for_preview(model_path: str | None, output_dir: str) -> str | None:
     if model_path is None:
         return None
     path = Path(model_path)
@@ -127,7 +127,7 @@ def _scene_points_and_colors(
     return points, colors
 
 
-def maybe_build_rerun_rrd(output_dir: str) -> Optional[str]:
+def maybe_build_rerun_rrd(output_dir: str) -> str | None:
     try:
         import rerun as rr
         import rerun.blueprint as rrb

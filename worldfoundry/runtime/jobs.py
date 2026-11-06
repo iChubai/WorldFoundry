@@ -735,13 +735,13 @@ class AsyncCommandJobStore:
             job.error = job.error or "cancelled"
             self._write_lifecycle_event(job, "WARNING", "job.cancelled", "WorldFoundry job cancelled")
             raise
-        except Exception as exc:  # noqa: BLE001 - surfaced through UI/MCP status.
+        except Exception as exc:
             # Never leave the spawned process group running when the runner
             # itself fails, otherwise the child keeps occupying GPUs while the
             # job is reported as failed.
             try:
                 await self._terminate_process(job)
-            except Exception:  # noqa: BLE001 - cleanup must not mask the original error.
+            except Exception:
                 pass
             job.status = "failed"
             job.error = str(exc)
@@ -879,10 +879,10 @@ def _json_candidates(text: str) -> list[str]:
 
 
 __all__ = [
-    "AsyncCommandJobStore",
-    "CommandJob",
     "JOB_STORE_STATE_SCHEMA_VERSION",
     "TERMINAL_JOB_STATUSES",
+    "AsyncCommandJobStore",
+    "CommandJob",
     "pid_alive",
     "python_module_command",
     "run_bounded_command",

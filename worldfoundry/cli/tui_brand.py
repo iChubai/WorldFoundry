@@ -23,8 +23,11 @@ _BLOCK_MASKS = tuple(
     for char, predicate in (
         *((char, lambda x, y, n=n: y >= 8 - n) for n, char in enumerate("▁▂▃▄▅▆▇", 1)),
         *((char, lambda x, y, n=n: x < n) for n, char in enumerate("▏▎▍▌▋▊▉", 1)),
-        *((char, lambda x, y, bits=bits: bits & (1 << ((y // 4) * 2 + x // 4)))
-          for bits, char in enumerate(" ▘▝▀▖▌▞▛▗▚▐▜▄▙▟█") if bits not in (0, 15)),
+        *(
+            (char, lambda x, y, bits=bits: bits & (1 << ((y // 4) * 2 + x // 4)))
+            for bits, char in enumerate(" ▘▝▀▖▌▞▛▗▚▐▜▄▙▟█")
+            if bits not in (0, 15)
+        ),
     )
 )
 
@@ -54,10 +57,14 @@ def _prepare_logo_image(image: Image.Image) -> Image.Image:
         return rgb
     left, top, right, bottom = bounds
     padding = 6
-    return rgb.crop((
-        max(0, left - padding), max(0, top - padding),
-        min(rgb.width, right + padding), min(rgb.height, bottom + padding),
-    ))
+    return rgb.crop(
+        (
+            max(0, left - padding),
+            max(0, top - padding),
+            min(rgb.width, right + padding),
+            min(rgb.height, bottom + padding),
+        )
+    )
 
 
 @lru_cache(maxsize=1)
@@ -75,8 +82,12 @@ def brand_logo_aspect_ratio() -> float:
 
 
 def _resize_for_cells(
-    image: Image.Image, width_chars: int, *, pixels_per_column: int,
-    pixels_per_row: int, cell_aspect_ratio: float,
+    image: Image.Image,
+    width_chars: int,
+    *,
+    pixels_per_column: int,
+    pixels_per_row: int,
+    cell_aspect_ratio: float,
 ) -> Image.Image:
     if Image is None:
         raise RuntimeError("Pillow is required to render the OpenEnvision logo.")
@@ -106,8 +117,7 @@ def _fit_block(colors: list[tuple[int, int, int]]) -> str:
         foreground = tuple(sum(colors[index][channel] for index in mask) for channel in range(3))
         background = tuple(total[channel] - foreground[channel] for channel in range(3))
         # The omitted squared-pixel term is constant for every glyph in this cell.
-        score = sum(foreground[channel] ** 2 / count + background[channel] ** 2 / (64 - count)
-                    for channel in range(3))
+        score = sum(foreground[channel] ** 2 / count + background[channel] ** 2 / (64 - count) for channel in range(3))
         if score > best_score:
             best_score = score
             best_glyph = glyph
@@ -117,7 +127,10 @@ def _fit_block(colors: list[tuple[int, int, int]]) -> str:
 
 
 def render_logo_blocks(
-    image: Image.Image, *, width_chars: int = 56, cell_aspect_ratio: float = 0.5,
+    image: Image.Image,
+    *,
+    width_chars: int = 56,
+    cell_aspect_ratio: float = 0.5,
 ) -> str:
     """Approximate the original bitmap with continuous blocks and sampled colors.
 
@@ -125,7 +138,11 @@ def render_logo_blocks(
     and lettering. Both foreground and background come from the source image.
     """
     resized = _resize_for_cells(
-        image, width_chars, pixels_per_column=8, pixels_per_row=8, cell_aspect_ratio=cell_aspect_ratio,
+        image,
+        width_chars,
+        pixels_per_column=8,
+        pixels_per_row=8,
+        cell_aspect_ratio=cell_aspect_ratio,
     )
     pixels = resized.load()
     return "\n".join(
@@ -138,12 +155,20 @@ def render_logo_blocks(
 
 
 def render_logo_halfblocks(
-    image: Image.Image, *, width_chars: int = 40, dark: bool = True,
-    background: str | None = None, cell_aspect_ratio: float = 0.5,
+    image: Image.Image,
+    *,
+    width_chars: int = 40,
+    dark: bool = True,
+    background: str | None = None,
+    cell_aspect_ratio: float = 0.5,
 ) -> str:
     """Render sampled source RGB pixels without palette substitution."""
     resized = _resize_for_cells(
-        image, width_chars, pixels_per_column=1, pixels_per_row=2, cell_aspect_ratio=cell_aspect_ratio,
+        image,
+        width_chars,
+        pixels_per_column=1,
+        pixels_per_row=2,
+        cell_aspect_ratio=cell_aspect_ratio,
     )
     pixels = resized.load()
     return "\n".join(
@@ -157,12 +182,17 @@ def render_logo_halfblocks(
 
 @lru_cache(maxsize=8)
 def render_brand_logo(
-    *, width_chars: int = 56, dark: bool = True, background: str | None = None,
+    *,
+    width_chars: int = 56,
+    dark: bool = True,
+    background: str | None = None,
     cell_aspect_ratio: float = 0.5,
 ) -> str:
     """Render the complete official image for terminals with text-only output."""
     return render_logo_blocks(
-        brand_logo_image(), width_chars=width_chars, cell_aspect_ratio=cell_aspect_ratio,
+        brand_logo_image(),
+        width_chars=width_chars,
+        cell_aspect_ratio=cell_aspect_ratio,
     )
 
 

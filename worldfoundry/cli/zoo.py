@@ -5,9 +5,10 @@ from __future__ import annotations
 import argparse
 import json
 import shlex
+from collections.abc import Mapping
 from pathlib import Path
 from types import ModuleType
-from typing import Any, Mapping
+from typing import Any
 
 from worldfoundry.core.io.paths import (
     hfd_root_path,
@@ -38,9 +39,7 @@ _BENCHMARK_RUN_MODE_CHOICES = tuple(sorted(BENCHMARK_RUN_PUBLIC_MODES))
 
 # These catalog entries route through WorldModelRuntimeSynthesis, whose plan is
 # the authority for local source, checkpoint, and dataset readiness.
-_WORLD_MODEL_RUNTIME_READINESS_IDS = frozenset(
-    {"mira", "simworld", "uwm", "vggt-world", "vid2world"}
-)
+_WORLD_MODEL_RUNTIME_READINESS_IDS = frozenset({"mira", "simworld", "uwm", "vggt-world", "vid2world"})
 
 # ── Script path constants ───────────────────────────────────────
 
@@ -64,11 +63,7 @@ def _iter_manifest_files(root: Path) -> list[Path]:
         return [resolved]
     if is_default_benchmark_catalog_root(resolved):
         return list(iter_benchmark_catalog_manifest_paths(resolved))
-    return [
-        path
-        for path in manifest_paths(resolved)
-        if not is_catalog_metadata_manifest(path)
-    ]
+    return [path for path in manifest_paths(resolved) if not is_catalog_metadata_manifest(path)]
 
 
 def _dash(value: object | None) -> str:
@@ -293,7 +288,9 @@ def _model_user_commands(entry) -> dict[str, str]:
         "manifest": f"worldfoundry-eval zoo model-specs --model-id {model_id} --json",
     }
     if entry.hf_repo_ids:
-        commands["checkpoint_check"] = f"worldfoundry-eval zoo model-download --model-id {model_id} --check-local --json"
+        commands["checkpoint_check"] = (
+            f"worldfoundry-eval zoo model-download --model-id {model_id} --check-local --json"
+        )
     if entry.is_runnable_runner_entry:
         commands["run"] = (
             f"worldfoundry-eval run --model {model_id} --benchmark <benchmark-id> "
@@ -520,9 +517,7 @@ def _benchmark_official_evidence_ready(entry) -> bool:
         return True
     asset = _benchmark_verified_official_validation_asset(entry)
     return bool(
-        asset
-        and asset.get("official_benchmark_verified") is True
-        and asset.get("integration_evidence") is True
+        asset and asset.get("official_benchmark_verified") is True and asset.get("integration_evidence") is True
     )
 
 
@@ -644,7 +639,7 @@ def _handle_zoo_models_list(args: argparse.Namespace) -> int:
             ("Model", "Integration", "Runnable", "Needs"),
             [
                 (entry.model_id, entry.integration_status, item["runnable"], item["needs"])
-                for entry, item in zip(entries, payload)
+                for entry, item in zip(entries, payload, strict=False)
             ],
             hint=f"Inspect a model: {cli_prog_name()} zoo model-show --model-id <id>",
         )
@@ -652,7 +647,7 @@ def _handle_zoo_models_list(args: argparse.Namespace) -> int:
 
     manifest_paths = _model_manifest_paths(args.manifest_dir)
     rows = []
-    for entry, item in zip(entries, payload):
+    for entry, item in zip(entries, payload, strict=False):
         rows.append(
             (
                 entry.model_id,
@@ -681,10 +676,7 @@ def _handle_zoo_model_specs(args: argparse.Namespace) -> int:
     for path in _iter_manifest_files(args.manifest_dir):
         entries.extend(load_entries(path))
     if args.model_id:
-        selected = {
-            canonical_model_zoo_id(model_id, args.manifest_dir)
-            for model_id in args.model_id
-        }
+        selected = {canonical_model_zoo_id(model_id, args.manifest_dir) for model_id in args.model_id}
         entries = [entry for entry in entries if entry.model_id in selected]
     if args.integration_status:
         entries = [entry for entry in entries if entry.integration_status == args.integration_status]
@@ -703,10 +695,7 @@ def _handle_zoo_model_specs(args: argparse.Namespace) -> int:
 
     for manifest in manifests:
         checkpoint_count = len(manifest.metadata.get("hf_repo_ids", ()))
-        print(
-            f"{manifest.model_id}: capabilities={len(manifest.capabilities)} "
-            f"checkpoints={checkpoint_count}"
-        )
+        print(f"{manifest.model_id}: capabilities={len(manifest.capabilities)} checkpoints={checkpoint_count}")
     if args.output_json:
         print(f"wrote: {args.output_json}")
     return 0
@@ -830,7 +819,6 @@ def _handle_zoo_embodied_assets(args: argparse.Namespace) -> int:
     return module.main(argv)
 
 
-
 # ── Zoo benchmarks command handlers ─────────────────────────────
 
 
@@ -925,10 +913,7 @@ def _handle_zoo_benchmark_specs(args: argparse.Namespace) -> int:
     for path in _iter_manifest_files(args.manifest_dir):
         entries.extend(load_entries(path))
     if args.benchmark_id:
-        selected = {
-            canonical_benchmark_zoo_id(benchmark_id, args.manifest_dir)
-            for benchmark_id in args.benchmark_id
-        }
+        selected = {canonical_benchmark_zoo_id(benchmark_id, args.manifest_dir) for benchmark_id in args.benchmark_id}
         entries = [entry for entry in entries if entry.benchmark_id in selected]
     if args.integration_status:
         entries = [entry for entry in entries if _benchmark_public_integration_status(entry) == args.integration_status]

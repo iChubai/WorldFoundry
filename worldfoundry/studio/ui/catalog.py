@@ -3,9 +3,10 @@
 from __future__ import annotations
 
 import os
+from collections.abc import Mapping, Sequence
 from functools import lru_cache
 from pathlib import Path
-from typing import Any, Mapping, Sequence
+from typing import Any
 
 from worldfoundry.evaluation.utils import REPO_ROOT
 from worldfoundry.runtime.inference_catalog import ASSET_GATED_WORLD_RUNTIME_MODEL_IDS

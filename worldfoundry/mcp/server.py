@@ -49,6 +49,7 @@ def create_mcp_server() -> Any:
     register_tools(server, context)
     return server
 
+
 # ── Entry point ────────────────────────────────────────────────
 
 

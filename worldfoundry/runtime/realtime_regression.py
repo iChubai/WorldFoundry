@@ -102,7 +102,7 @@ class RealtimeRegressionThresholds:
             object.__setattr__(self, name, _threshold_map(getattr(self, name), name=name))
 
     @classmethod
-    def from_dict(cls, data: Mapping[str, Any]) -> "RealtimeRegressionThresholds":
+    def from_dict(cls, data: Mapping[str, Any]) -> RealtimeRegressionThresholds:
         return cls(
             min_chunks=data.get("min_chunks", 1),
             min_output_frames=data.get("min_output_frames", 1),
@@ -152,7 +152,7 @@ class RealtimeRegressionCase:
         )
 
     @classmethod
-    def from_dict(cls, data: Mapping[str, Any]) -> "RealtimeRegressionCase":
+    def from_dict(cls, data: Mapping[str, Any]) -> RealtimeRegressionCase:
         selectors = data.get("selectors")
         selectors = selectors if isinstance(selectors, Mapping) else {}
         thresholds = data.get("thresholds")
@@ -193,7 +193,7 @@ class RealtimeRegressionManifest:
             raise ValueError("Realtime regression case names must be unique.")
 
     @classmethod
-    def from_dict(cls, data: Mapping[str, Any]) -> "RealtimeRegressionManifest":
+    def from_dict(cls, data: Mapping[str, Any]) -> RealtimeRegressionManifest:
         raw_cases = data.get("cases")
         if not isinstance(raw_cases, Sequence) or isinstance(raw_cases, (str, bytes, bytearray)):
             raise TypeError("Realtime regression manifest 'cases' must be a JSON list.")
@@ -206,14 +206,14 @@ class RealtimeRegressionManifest:
         )
 
     @classmethod
-    def from_json(cls, value: str | bytes | bytearray) -> "RealtimeRegressionManifest":
+    def from_json(cls, value: str | bytes | bytearray) -> RealtimeRegressionManifest:
         payload = json.loads(value)
         if not isinstance(payload, Mapping):
             raise TypeError("Realtime regression manifest JSON must contain an object.")
         return cls.from_dict(payload)
 
     @classmethod
-    def read_json(cls, path: str | Path) -> "RealtimeRegressionManifest":
+    def read_json(cls, path: str | Path) -> RealtimeRegressionManifest:
         return cls.from_json(Path(path).read_bytes())
 
     def to_dict(self) -> dict[str, Any]:
@@ -265,7 +265,7 @@ class RealtimeTraceSample:
     gauges: Mapping[str, float]
 
     @classmethod
-    def from_event(cls, event: Mapping[str, Any]) -> "RealtimeTraceSample":
+    def from_event(cls, event: Mapping[str, Any]) -> RealtimeTraceSample:
         fields = event.get("fields")
         fields = fields if isinstance(fields, Mapping) else event
         stage_ms = fields.get("stage_ms")

@@ -13,11 +13,11 @@ import platform
 import shutil
 import subprocess
 import sys
+from collections.abc import Mapping as TypingMapping
 from collections.abc import MutableMapping, Sequence
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
-from typing import Mapping as TypingMapping
 
 from worldfoundry.core.env_registry import (
     LEGACY_ENV_ALIASES as LEGACY_ENV_ALIASES,
@@ -154,7 +154,7 @@ class WorldFoundryEnv:
     values: EnvMapping
 
     @classmethod
-    def from_os(cls) -> "WorldFoundryEnv":
+    def from_os(cls) -> WorldFoundryEnv:
         """Build an environment view from the current process environment.
 
         Args:

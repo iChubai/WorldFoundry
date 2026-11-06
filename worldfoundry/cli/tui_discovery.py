@@ -11,10 +11,11 @@ import os
 import shlex
 import shutil
 import sys
+from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass, replace
 from functools import lru_cache
 from pathlib import Path
-from typing import Any, Iterable, Mapping, Sequence
+from typing import Any
 
 from worldfoundry.evaluation.utils import (
     BENCHMARK_ZOO_DIR,

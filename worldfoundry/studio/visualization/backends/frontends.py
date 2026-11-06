@@ -474,7 +474,7 @@ class MediaViewerHandler(BaseHTTPRequestHandler):
         self.auth_token = auth_token
         super().__init__(*args, **kwargs)
 
-    def do_GET(self) -> None:  # noqa: N802 - BaseHTTPRequestHandler API.
+    def do_GET(self) -> None:
         parsed = urlparse(self.path)
         if not _handler_request_authorized(self, parsed, self.auth_token):
             return
@@ -549,7 +549,7 @@ class SparkViewerHandler(BaseHTTPRequestHandler):
         self.auth_token = auth_token
         super().__init__(*args, **kwargs)
 
-    def do_GET(self) -> None:  # noqa: N802 - BaseHTTPRequestHandler API.
+    def do_GET(self) -> None:
         parsed = urlparse(self.path)
         if parsed.path not in self.AUTH_EXEMPT_PATHS and not _handler_request_authorized(self, parsed, self.auth_token):
             return

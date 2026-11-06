@@ -3,10 +3,11 @@ from __future__ import annotations
 import configparser
 import os
 import re
+from collections.abc import Mapping
 from dataclasses import dataclass, field
 from functools import lru_cache
 from pathlib import Path
-from typing import Any, Mapping
+from typing import Any
 
 from worldfoundry.core.io.paths import project_root
 from worldfoundry.studio.inference.catalog import CatalogEntry

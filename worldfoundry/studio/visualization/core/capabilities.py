@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, FrozenSet
+from typing import TYPE_CHECKING
 
 from worldfoundry.studio.inference.catalog import CatalogEntry, find_entry
 from worldfoundry.studio.visualization.core.manifest import ViewportCapabilities, ViewportKind
@@ -15,7 +15,7 @@ def available_viewport_kinds(
     *,
     caps: ViewportCapabilities,
     entry: CatalogEntry | None,
-) -> FrozenSet[ViewportKind]:
+) -> frozenset[ViewportKind]:
     """Return viewport tabs that deserve activation for this run/catalog."""
 
     modes: set[ViewportKind] = {ViewportKind.WORLD}
@@ -41,7 +41,7 @@ def recommend_viewport(
     has_preview_video: bool,
     has_preview_image: bool,
     user_viewport_override: str | ViewportKind | None = None,
-    available: FrozenSet[ViewportKind] | None = None,
+    available: frozenset[ViewportKind] | None = None,
 ) -> ViewportKind:
     """Prefer explicit tabs, simulator replay, streaming media, splats, then points."""
 

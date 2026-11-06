@@ -24,6 +24,7 @@ class CliUsageError(ValueError):
     distinguishable from usage mistakes (CM-08).
     """
 
+
 def cli_prog_name() -> str:
     """Match usage/help branding to the console script that was invoked.
 

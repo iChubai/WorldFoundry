@@ -13,10 +13,11 @@ import threading
 import time
 import urllib.parse
 import urllib.request
+from collections.abc import Mapping, Sequence
 from dataclasses import asdict, dataclass, field, replace
 from functools import lru_cache
 from pathlib import Path
-from typing import Any, Mapping, Sequence
+from typing import Any
 
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, Response, StreamingResponse
@@ -1097,7 +1098,7 @@ def _evaluation_catalog_payload() -> dict[str, Any]:
             "examples": _evaluation_examples_payload(),
             "error": "",
         }
-    except Exception as exc:  # noqa: BLE001 - surfaced as catalog diagnostics in the UI.
+    except Exception as exc:
         return {
             "ok": False,
             "modes": [

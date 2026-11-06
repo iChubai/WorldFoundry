@@ -46,7 +46,7 @@ def python_module_probe(
             "python": str(python),
             "ok": False,
             "error": "python_not_found",
-            "modules": {module: False for module in modules},
+            "modules": dict.fromkeys(modules, False),
         }
     code = (
         "import importlib,importlib.util,json;"
@@ -84,7 +84,7 @@ def python_module_probe(
             "python": str(python),
             "ok": False,
             "error": "timeout",
-            "modules": {module: False for module in modules},
+            "modules": dict.fromkeys(modules, False),
         }
     modules_result: dict[str, bool]
     module_errors: dict[str, str]
@@ -93,7 +93,7 @@ def python_module_probe(
         modules_result = parsed.get("modules", {}) if isinstance(parsed, dict) else {}
         module_errors = parsed.get("errors", {}) if isinstance(parsed, dict) else {}
     except json.JSONDecodeError:
-        modules_result = {module: False for module in modules}
+        modules_result = dict.fromkeys(modules, False)
         module_errors = {"__probe__": "json_decode_error"}
     return {
         "python": str(python),

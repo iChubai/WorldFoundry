@@ -10,8 +10,8 @@ from __future__ import annotations
 import argparse
 import json
 import sys
+from collections.abc import Sequence
 from pathlib import Path
-from typing import Sequence
 
 from .help import WorldFoundryArgumentParser
 from .tui_brand import render_fallback_header
@@ -42,10 +42,14 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--suite", action="append", dest="suite_ids", default=None)
     parser.add_argument("--model-id")
     parser.add_argument("--benchmark-id")
-    parser.add_argument("--metric", action="append", default=None, help="Benchmark metric id. Repeatable or comma-separated.")
+    parser.add_argument(
+        "--metric", action="append", default=None, help="Benchmark metric id. Repeatable or comma-separated."
+    )
     parser.add_argument("--output-dir", type=Path, default=Path("runs/tui"))
     parser.add_argument("--input", type=Path, help="Optional input image/video passed to model inference scripts.")
-    parser.add_argument("--input-dir", "--input_dir", dest="input_dir", type=Path, help="FlashWorld JSON input directory/file.")
+    parser.add_argument(
+        "--input-dir", "--input_dir", dest="input_dir", type=Path, help="FlashWorld JSON input directory/file."
+    )
     parser.add_argument("--video", type=Path, help="Optional input video passed to model inference scripts.")
     parser.add_argument("--trajectory-file", type=Path, help="Optional custom camera trajectory JSON file.")
     parser.add_argument("--prompt", help="Prompt override for text/image/video generation inference.")
@@ -56,15 +60,26 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--size", help="Resolution override, e.g. 832*480.")
     parser.add_argument("--frames", help="Frame count override.")
     parser.add_argument("--steps", help="Sampling/inference step override.")
-    parser.add_argument("--frames-per-generation", "--chunk-frames", dest="frames_per_generation", help="Astra frame chunk size.")
+    parser.add_argument(
+        "--frames-per-generation", "--chunk-frames", dest="frames_per_generation", help="Astra frame chunk size."
+    )
     parser.add_argument("--guidance-scale", "--cfg-scale", dest="guidance_scale", help="Guidance/CFG scale override.")
     parser.add_argument("--seed", help="Seed override.")
     parser.add_argument("--fps", help="Output FPS override.")
     parser.add_argument("--dtype", help="Runtime dtype override when supported.")
-    parser.add_argument("--max-sequence-length", dest="max_sequence_length", help="Text encoder max sequence length override.")
+    parser.add_argument(
+        "--max-sequence-length", dest="max_sequence_length", help="Text encoder max sequence length override."
+    )
     parser.add_argument("--cam-type", "--camera-type", dest="cam_type", help="Astra camera preset 1..7.")
-    parser.add_argument("--interactions", "--actions", dest="interactions", help="Comma-separated interaction/action list.")
-    parser.add_argument("--output-formats", "--output_formats", dest="output_formats", help="FlashWorld output formats, e.g. video,spz,ply.")
+    parser.add_argument(
+        "--interactions", "--actions", dest="interactions", help="Comma-separated interaction/action list."
+    )
+    parser.add_argument(
+        "--output-formats",
+        "--output_formats",
+        dest="output_formats",
+        help="FlashWorld output formats, e.g. video,spz,ply.",
+    )
     parser.add_argument("--trajectory", "--camera-trajectory", dest="trajectory", help="Camera trajectory override.")
     parser.add_argument("--angle", help="Camera trajectory angle override when supported.")
     parser.add_argument("--distance", help="Camera trajectory distance override when supported.")
@@ -100,9 +115,13 @@ def build_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument("--offload-vae", "--offload_vae", dest="offload_vae", action="store_true", default=None)
     parser.add_argument("--output-path", type=Path, help="Exact output artifact path when supported.")
-    parser.add_argument("--ckpt-type", "--weight-type", dest="ckpt_type", help="Checkpoint type inside the selected model family.")
+    parser.add_argument(
+        "--ckpt-type", "--weight-type", dest="ckpt_type", help="Checkpoint type inside the selected model family."
+    )
     parser.add_argument("--ckpt-root", type=Path, help="Checkpoint root for model inference scripts.")
-    parser.add_argument("--ckpt-path", type=Path, help="Exact checkpoint/model path override for the selected infer model.")
+    parser.add_argument(
+        "--ckpt-path", type=Path, help="Exact checkpoint/model path override for the selected infer model."
+    )
     parser.add_argument("--conda-envs-root", type=Path, help="Conda env root for model inference scripts.")
     parser.add_argument("--gpu", help="CUDA_VISIBLE_DEVICES value for model inference scripts.")
     parser.add_argument(
@@ -182,7 +201,9 @@ def main(argv: Sequence[str] | None = None) -> int:
             conda_envs_root=args.conda_envs_root,
         )
         model_id, benchmark_id = _resolve_ids(catalog, args.model_id, args.benchmark_id)
-        output_dir = args.output_dir / f"{model_id}__{benchmark_id}" if args.output_dir.name == "tui" else args.output_dir
+        output_dir = (
+            args.output_dir / f"{model_id}__{benchmark_id}" if args.output_dir.name == "tui" else args.output_dir
+        )
         commands = _selected_commands(
             model_id=model_id,
             benchmark_id=benchmark_id,
@@ -218,10 +239,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             _render_fallback_dashboard(
                 catalog,
                 args,
-                notice=(
-                    "Textual is not available; showing the standard-library fallback. "
-                    f"Import error: {exc}"
-                ),
+                notice=(f"Textual is not available; showing the standard-library fallback. Import error: {exc}"),
             )
         )
         return 0
@@ -580,8 +598,7 @@ def _format_rows(rows) -> list[str]:
         return ["  -"]
     widths = [max(len(row[index]) for row in materialized) for index in range(len(materialized[0]))]
     return [
-        "  " + "  ".join(cell.ljust(widths[index]) for index, cell in enumerate(row)).rstrip()
-        for row in materialized
+        "  " + "  ".join(cell.ljust(widths[index]) for index, cell in enumerate(row)).rstrip() for row in materialized
     ]
 
 

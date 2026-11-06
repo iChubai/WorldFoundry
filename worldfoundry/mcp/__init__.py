@@ -23,6 +23,7 @@ def __getattr__(name: str) -> Any:
         return MCPClient
     raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
 
+
 # ── CLI entry point ────────────────────────────────────────────
 
 

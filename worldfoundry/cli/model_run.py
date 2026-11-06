@@ -4,10 +4,11 @@ from __future__ import annotations
 
 import argparse
 import json
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from difflib import get_close_matches
 from functools import lru_cache
-from typing import Any, Mapping, Sequence
+from typing import Any
 
 _SKIPPED_CALL_FIELDS = {"output-path", "return-dict"}
 _SKIPPED_LOAD_FIELDS = {"device", "model_id", "required_components"}
@@ -527,9 +528,15 @@ def _fallback_input_fields(entry: Any, profile: Any | None, display_name: str) -
         choices: tuple[Any, ...] = ()
         if option_name in {"image", "video", "audio", "input-path", "ref-image-path"}:
             kind = "path"
-        elif option_name in {"images", "state", "actions", "action", "interactions", "controls", "proprio"}:
-            kind = "json"
-        elif isinstance(raw_contract, Mapping):
+        elif option_name in {
+            "images",
+            "state",
+            "actions",
+            "action",
+            "interactions",
+            "controls",
+            "proprio",
+        } or isinstance(raw_contract, Mapping):
             kind = "json"
         elif isinstance(raw_contract, Sequence) and not isinstance(raw_contract, (str, bytes)):
             if option_name == "task-type":
@@ -710,7 +717,7 @@ def _fallback_model_run_schema(
     if not output_kinds and any(token in task_text for token in ("geometry", "reconstruction", "3d")):
         output_kinds = ("generated_3d_asset",)
     if not output_kinds and getattr(profile, "artifact_kind", None):
-        output_kinds = (getattr(profile, "artifact_kind"),)
+        output_kinds = (profile.artifact_kind,)
     outputs = tuple(
         {
             "artifact_id": str(kind),

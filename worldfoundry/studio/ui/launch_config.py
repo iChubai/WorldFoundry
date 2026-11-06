@@ -3,8 +3,8 @@
 from __future__ import annotations
 
 import argparse
+from collections.abc import Callable, Sequence
 from dataclasses import dataclass
-from typing import Callable, Sequence
 
 from worldfoundry.studio.inference.catalog import CatalogEntry, find_entry
 from worldfoundry.studio.inference.config import (

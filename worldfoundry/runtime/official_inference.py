@@ -12,9 +12,9 @@ import shutil
 import signal
 import subprocess
 import sys
+from collections.abc import Mapping
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
-from typing import Mapping
 
 from worldfoundry.runtime.assets import expand_worldfoundry_path
 

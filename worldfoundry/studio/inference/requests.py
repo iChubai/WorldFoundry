@@ -4,8 +4,9 @@ from __future__ import annotations
 
 import json
 import os
+from collections.abc import Mapping, Sequence
 from dataclasses import replace
-from typing import Any, Mapping, Sequence
+from typing import Any
 
 from pydantic import BaseModel, Field
 

@@ -11,8 +11,8 @@ import asyncio
 import contextlib
 import os
 import shutil
+from collections.abc import Iterable
 from pathlib import Path
-from typing import Iterable
 
 from rich.markup import escape
 from rich.syntax import Syntax
@@ -151,6 +151,7 @@ EVALUATION_INTENT_OPTIONS = (
 
 DEFAULT_CKPT_ROOT = str(checkpoint_root_path())  # Default checkpoint root directory path.
 DEFAULT_CONDA_ENVS_ROOT = str(conda_envs_root_path())  # Default Conda environments root directory path.
+
 
 class CatalogTable(DataTable):
     """Notify the application after this table's actual width changes."""
@@ -380,11 +381,19 @@ class WorldFoundryTui(App[None]):
                     with Vertical(id="models-pane"):
                         yield Label(icons["models"], classes="pane-title", id="models-pane-title")
                         yield CatalogTable(id="models-table", cursor_type="row", zebra_stripes=True)
-                        yield Static("No models match this filter. Clear the search to see all models.", id="models-empty", classes="catalog-empty")
+                        yield Static(
+                            "No models match this filter. Clear the search to see all models.",
+                            id="models-empty",
+                            classes="catalog-empty",
+                        )
                     with Vertical(id="benchmarks-pane"):
                         yield Label(icons["benchmarks"], classes="pane-title", id="benchmarks-pane-title")
                         yield CatalogTable(id="benchmarks-table", cursor_type="row", zebra_stripes=True)
-                        yield Static("No benchmarks match this filter. Clear the search to see all benchmarks.", id="benchmarks-empty", classes="catalog-empty")
+                        yield Static(
+                            "No benchmarks match this filter. Clear the search to see all benchmarks.",
+                            id="benchmarks-empty",
+                            classes="catalog-empty",
+                        )
 
             with VerticalScroll(id="right-column"):
                 yield Static("", id="selection-summary", markup=True)
@@ -409,24 +418,46 @@ class WorldFoundryTui(App[None]):
                                 yield Rule(line_style="solid", classes="section-rule", id="section-prompt-rule")
                                 with Vertical(id="prompt-controls", classes="field-group"):
                                     yield Label("Prompt", id="prompt-label", classes="field-caption")
-                                    yield Input(value=self.prompt, placeholder="Describe the scene or action…", id="prompt")
+                                    yield Input(
+                                        value=self.prompt, placeholder="Describe the scene or action…", id="prompt"
+                                    )
                                 with Vertical(id="negative-prompt-controls", classes="field-group"):
                                     yield Label("Negative prompt", id="negative-prompt-label", classes="field-caption")
-                                    yield Input(value=self.negative_prompt, placeholder="Optional negative prompt", id="negative-prompt")
+                                    yield Input(
+                                        value=self.negative_prompt,
+                                        placeholder="Optional negative prompt",
+                                        id="negative-prompt",
+                                    )
                                 with Grid(id="media-controls", classes="field-grid"):
                                     with Vertical(classes="field-group"):
                                         yield Label("Input path", id="input-path-label", classes="field-caption")
-                                        yield Input(value=self.input_path, placeholder="image/video path (drag & drop)", id="input-path")
+                                        yield Input(
+                                            value=self.input_path,
+                                            placeholder="image/video path (drag & drop)",
+                                            id="input-path",
+                                        )
                                     with Vertical(classes="field-group"):
                                         yield Label("Video path", id="video-path-label", classes="field-caption")
-                                        yield Input(value=self.video_path, placeholder="optional video path (drag & drop)", id="video-path")
+                                        yield Input(
+                                            value=self.video_path,
+                                            placeholder="optional video path (drag & drop)",
+                                            id="video-path",
+                                        )
                                 with Grid(id="flashworld-controls", classes="field-grid"):
                                     with Vertical(classes="field-group"):
                                         yield Label("JSON directory", id="input-dir-label", classes="field-caption")
-                                        yield Input(value=self.input_dir, placeholder="FlashWorld JSON dir", id="input-dir")
+                                        yield Input(
+                                            value=self.input_dir, placeholder="FlashWorld JSON dir", id="input-dir"
+                                        )
                                     with Vertical(classes="field-group"):
-                                        yield Label("Output formats", id="output-formats-label", classes="field-caption")
-                                        yield Input(value=self.infer_output_formats, placeholder="video,spz,ply", id="output-formats")
+                                        yield Label(
+                                            "Output formats", id="output-formats-label", classes="field-caption"
+                                        )
+                                        yield Input(
+                                            value=self.infer_output_formats,
+                                            placeholder="video,spz,ply",
+                                            id="output-formats",
+                                        )
                                 with Grid(id="task-controls", classes="field-grid"):
                                     with Vertical(classes="field-group"):
                                         yield Label("Task", id="task-label", classes="field-caption")
@@ -467,10 +498,16 @@ class WorldFoundryTui(App[None]):
                                             id="output-dir",
                                         )
                                     with Vertical(classes="field-group full-width"):
-                                        yield Label("Inference options (JSON)", id="call-json-label", classes="field-caption")
+                                        yield Label(
+                                            "Inference options (JSON)", id="call-json-label", classes="field-caption"
+                                        )
                                         yield Input(placeholder='{"controls": []}', id="call-json")
                                     with Vertical(classes="field-group full-width"):
-                                        yield Label("Model assets / loading (JSON)", id="load-json-label", classes="field-caption")
+                                        yield Label(
+                                            "Model assets / loading (JSON)",
+                                            id="load-json-label",
+                                            classes="field-caption",
+                                        )
                                         yield Input(placeholder='{"source_root": "/path/to/source"}', id="load-json")
                                     with Vertical(classes="field-group"):
                                         yield Label("Artifact path", id="output-path-label", classes="field-caption")
@@ -483,8 +520,14 @@ class WorldFoundryTui(App[None]):
                                         yield Label("Checkpoint root", id="ckpt-root-label", classes="field-caption")
                                         yield Input(value=self.ckpt_root, placeholder="checkpoint root", id="ckpt-root")
                                     with Vertical(classes="field-group"):
-                                        yield Label("Conda env root", id="conda-envs-root-label", classes="field-caption")
-                                        yield Input(value=self.conda_envs_root, placeholder="conda envs root", id="conda-envs-root")
+                                        yield Label(
+                                            "Conda env root", id="conda-envs-root-label", classes="field-caption"
+                                        )
+                                        yield Input(
+                                            value=self.conda_envs_root,
+                                            placeholder="conda envs root",
+                                            id="conda-envs-root",
+                                        )
                                     with Vertical(classes="field-group"):
                                         yield Label("GPU ids", id="gpu-label", classes="field-caption")
                                         yield Input(value=self.gpu, placeholder="0 or 0,1", id="gpu")
@@ -513,45 +556,84 @@ class WorldFoundryTui(App[None]):
                                         yield Label("FPS", id="fps-label", classes="field-caption")
                                         yield Input(value=self.infer_fps, placeholder="output fps", id="fps")
                                     with Vertical(classes="field-group"):
-                                        yield Label("Guidance scale", id="guidance-scale-label", classes="field-caption")
-                                        yield Input(value=self.infer_guidance_scale, placeholder="CFG / guidance", id="guidance-scale")
+                                        yield Label(
+                                            "Guidance scale", id="guidance-scale-label", classes="field-caption"
+                                        )
+                                        yield Input(
+                                            value=self.infer_guidance_scale,
+                                            placeholder="CFG / guidance",
+                                            id="guidance-scale",
+                                        )
                                     with Vertical(classes="field-group"):
                                         yield Label("Dtype", id="dtype-label", classes="field-caption")
-                                        yield Input(value=self.infer_dtype, placeholder="float16 / bfloat16", id="dtype")
+                                        yield Input(
+                                            value=self.infer_dtype, placeholder="float16 / bfloat16", id="dtype"
+                                        )
                                     with Vertical(classes="field-group"):
-                                        yield Label("Max sequence", id="max-sequence-length-label", classes="field-caption")
-                                        yield Input(value=self.infer_max_sequence_length, placeholder="text encoder length", id="max-sequence-length")
-                                yield Static("No sampling options for this model.", id="tab-sampling-empty", classes="tab-empty")
+                                        yield Label(
+                                            "Max sequence", id="max-sequence-length-label", classes="field-caption"
+                                        )
+                                        yield Input(
+                                            value=self.infer_max_sequence_length,
+                                            placeholder="text encoder length",
+                                            id="max-sequence-length",
+                                        )
+                                yield Static(
+                                    "No sampling options for this model.", id="tab-sampling-empty", classes="tab-empty"
+                                )
                         with TabPane(icons["camera"], id="tab-camera"):
                             with VerticalScroll(classes="tab-scroll"):
                                 with Grid(id="interaction-controls", classes="field-grid"):
                                     with Vertical(classes="field-group"):
                                         yield Label("Actions", id="interactions-label", classes="field-caption")
-                                        yield Input(value=self.infer_interactions, placeholder="forward,camera_l,…", id="interactions")
+                                        yield Input(
+                                            value=self.infer_interactions,
+                                            placeholder="forward,camera_l,…",
+                                            id="interactions",
+                                        )
                                     with Vertical(classes="field-group"):
                                         yield Label("Trajectory", id="trajectory-label", classes="field-caption")
-                                        yield Input(value=self.infer_trajectory, placeholder="tilt_up / move_right", id="trajectory")
+                                        yield Input(
+                                            value=self.infer_trajectory,
+                                            placeholder="tilt_up / move_right",
+                                            id="trajectory",
+                                        )
                                 with Grid(id="trajectory-file-controls", classes="field-grid"):
                                     with Vertical(classes="field-group"):
-                                        yield Label("Trajectory file", id="trajectory-file-label", classes="field-caption")
-                                        yield Input(value=self.trajectory_file, placeholder="custom trajectory JSON", id="trajectory-file")
+                                        yield Label(
+                                            "Trajectory file", id="trajectory-file-label", classes="field-caption"
+                                        )
+                                        yield Input(
+                                            value=self.trajectory_file,
+                                            placeholder="custom trajectory JSON",
+                                            id="trajectory-file",
+                                        )
                                     with Vertical(classes="field-group"):
                                         yield Label("Resize mode", id="resize-mode-label", classes="field-caption")
-                                        yield Input(value=self.infer_resize_mode, placeholder="center_crop", id="resize-mode")
+                                        yield Input(
+                                            value=self.infer_resize_mode, placeholder="center_crop", id="resize-mode"
+                                        )
                                 with Grid(id="astra-controls", classes="field-grid"):
                                     with Vertical(classes="field-group"):
                                         yield Label("Camera type", id="cam-type-label", classes="field-caption")
                                         yield Select(
                                             ASTRA_CAM_TYPE_OPTIONS,
                                             value=self.infer_cam_type
-                                            if self.infer_cam_type in {value for _label, value in ASTRA_CAM_TYPE_OPTIONS}
+                                            if self.infer_cam_type
+                                            in {value for _label, value in ASTRA_CAM_TYPE_OPTIONS}
                                             else "4",
                                             allow_blank=False,
                                             id="cam-type",
                                         )
                                     with Vertical(classes="field-group"):
-                                        yield Label("Frame chunk", id="frames-per-generation-label", classes="field-caption")
-                                        yield Input(value=self.infer_frames_per_generation, placeholder="8", id="frames-per-generation")
+                                        yield Label(
+                                            "Frame chunk", id="frames-per-generation-label", classes="field-caption"
+                                        )
+                                        yield Input(
+                                            value=self.infer_frames_per_generation,
+                                            placeholder="8",
+                                            id="frames-per-generation",
+                                        )
                                 with Grid(id="camera-controls", classes="field-grid"):
                                     with Vertical(classes="field-group"):
                                         yield Label("Angle", id="angle-label", classes="field-caption")
@@ -565,7 +647,9 @@ class WorldFoundryTui(App[None]):
                                     with Vertical(classes="field-group"):
                                         yield Label("Zoom ratio", id="zoom-ratio-label", classes="field-caption")
                                         yield Input(value=self.infer_zoom_ratio, placeholder="1.0", id="zoom-ratio")
-                                yield Static("No camera options for this model.", id="tab-camera-empty", classes="tab-empty")
+                                yield Static(
+                                    "No camera options for this model.", id="tab-camera-empty", classes="tab-empty"
+                                )
                         with TabPane(icons["model"], id="tab-model"):
                             with VerticalScroll(classes="tab-scroll"):
                                 with Vertical(id="checkpoint-controls", classes="field-group"):
@@ -578,32 +662,50 @@ class WorldFoundryTui(App[None]):
                                     )
                                 with Vertical(id="checkpoint-controls-b", classes="field-group"):
                                     yield Label("Checkpoint override", classes="field-caption")
-                                    yield Input(value=self.ckpt_path, placeholder="optional exact checkpoint path", id="ckpt-path")
+                                    yield Input(
+                                        value=self.ckpt_path,
+                                        placeholder="optional exact checkpoint path",
+                                        id="ckpt-path",
+                                    )
                                 yield Static(icons["advanced"], classes="section-title", id="section-model-title")
                                 yield Rule(line_style="solid", classes="section-rule", id="section-model-rule")
                                 with Grid(id="neoverse-controls", classes="field-grid"):
                                     with Vertical(classes="field-group"):
-                                        yield Label("Alpha threshold", id="alpha-threshold-label", classes="field-caption")
-                                        yield Input(value=self.infer_alpha_threshold, placeholder="1.0", id="alpha-threshold")
+                                        yield Label(
+                                            "Alpha threshold", id="alpha-threshold-label", classes="field-caption"
+                                        )
+                                        yield Input(
+                                            value=self.infer_alpha_threshold, placeholder="1.0", id="alpha-threshold"
+                                        )
                                     with Vertical(classes="field-group"):
                                         yield Label("Static scene", id="static-scene-label", classes="field-caption")
-                                        yield Input(value=self.infer_static_scene, placeholder="1 / 0", id="static-scene")
+                                        yield Input(
+                                            value=self.infer_static_scene, placeholder="1 / 0", id="static-scene"
+                                        )
                                 with Grid(id="neoverse-controls-b", classes="field-grid"):
                                     with Vertical(classes="field-group"):
                                         yield Label("Low VRAM", id="low-vram-label", classes="field-caption")
                                         yield Input(value=self.infer_low_vram, placeholder="1 / 0", id="low-vram")
                                     with Vertical(classes="field-group"):
                                         yield Label("Disable LoRA", id="disable-lora-label", classes="field-caption")
-                                        yield Input(value=self.infer_disable_lora, placeholder="1 / 0", id="disable-lora")
+                                        yield Input(
+                                            value=self.infer_disable_lora, placeholder="1 / 0", id="disable-lora"
+                                        )
                                     with Vertical(classes="field-group"):
                                         yield Label("Vis rendering", id="vis-rendering-label", classes="field-caption")
-                                        yield Input(value=self.infer_vis_rendering, placeholder="1 / 0", id="vis-rendering")
+                                        yield Input(
+                                            value=self.infer_vis_rendering, placeholder="1 / 0", id="vis-rendering"
+                                        )
                                 with Grid(id="flashworld-offload-controls", classes="field-grid"):
                                     with Vertical(classes="field-group"):
                                         yield Label("Offload T5", id="offload-t5-label", classes="field-caption")
                                         yield Input(value=self.infer_offload_t5, placeholder="1 / 0", id="offload-t5")
                                     with Vertical(classes="field-group"):
-                                        yield Label("Offload transformer", id="offload-transformer-during-vae-label", classes="field-caption")
+                                        yield Label(
+                                            "Offload transformer",
+                                            id="offload-transformer-during-vae-label",
+                                            classes="field-caption",
+                                        )
                                         yield Input(
                                             value=self.infer_offload_transformer_during_vae,
                                             placeholder="1 / 0",
@@ -640,20 +742,20 @@ class WorldFoundryTui(App[None]):
         self._sync_responsive_layout()
         self._sync_brand_logo()
         self.theme_changed_signal.subscribe(self, lambda theme: self._on_theme_changed())
-        
+
         # ── Set bpytop-style border titles ──
         self.query_one("#status-pane", Vertical).border_title = " OpenEnvision "
         self.query_one("#catalogs-pane", Vertical).border_title = " Catalogs "
         self.query_one("#run-builder", Vertical).border_title = " Configuration "
         self.query_one("#log-panel", Vertical).border_title = " Execution Log "
-        
+
         self.query_one("#selection-summary", Static).border_title = " Overview "
         # ── Configure DataTables ──
         for table_id in ("models-table", "benchmarks-table"):
             table = self.query_one(f"#{table_id}", DataTable)
             table.fixed_columns = 0
             table.cursor_type = "row"
-        
+
         # ── Sync all UI state ──
         self._sync_action_select()
         self._sync_action_layout()
@@ -862,8 +964,14 @@ class WorldFoundryTui(App[None]):
                 infer_rows = [row for row in self.model_rows if is_infer_model_row(row)]
                 if infer_rows:
                     self.selected_model_id = infer_rows[0].model_id
-            elif self.action == "eval" and selected_row is not None and selected_row.runner_kind in {"infer_script", "studio_runtime"}:
-                eval_rows = [row for row in self.model_rows if row.runner_kind not in {"infer_script", "studio_runtime"}]
+            elif (
+                self.action == "eval"
+                and selected_row is not None
+                and selected_row.runner_kind in {"infer_script", "studio_runtime"}
+            ):
+                eval_rows = [
+                    row for row in self.model_rows if row.runner_kind not in {"infer_script", "studio_runtime"}
+                ]
                 if eval_rows:
                     self.selected_model_id = eval_rows[0].model_id
             self._sync_ckpt_type_for_selected_model()
@@ -1063,7 +1171,7 @@ class WorldFoundryTui(App[None]):
             self._sync_infer_control_layout()
             self._update_command()
             self._write_log("Catalog refreshed.")
-        except Exception as exc:  # noqa: BLE001 - keep the UI available after a refresh failure.
+        except Exception as exc:
             self._write_log(f"Catalog refresh failed: {type(exc).__name__}: {exc}")
             self.notify("Catalog refresh failed; see Logs.", severity="error")
         finally:
@@ -1083,7 +1191,9 @@ class WorldFoundryTui(App[None]):
         elif hasattr(self, "set_clipboard"):
             self.set_clipboard(command)  # type: ignore[attr-defined]
             copied = True
-        self.notify("Command sent to clipboard." if copied else "Clipboard API is not available in this terminal.", timeout=2)
+        self.notify(
+            "Command sent to clipboard." if copied else "Clipboard API is not available in this terminal.", timeout=2
+        )
 
     def action_toggle_command_preview(self) -> None:
         """Toggle visibility of the command-preview collapsible panel."""
@@ -1132,7 +1242,11 @@ class WorldFoundryTui(App[None]):
         if output_dir.is_file():
             self._write_log(f"  {_format_file_artifact(output_dir)}")
             return
-        files = sorted((path for path in output_dir.rglob("*") if path.is_file()), key=lambda path: path.stat().st_mtime, reverse=True)
+        files = sorted(
+            (path for path in output_dir.rglob("*") if path.is_file()),
+            key=lambda path: path.stat().st_mtime,
+            reverse=True,
+        )
         if not files:
             self._write_log("  no files written yet")
             return
@@ -1183,7 +1297,9 @@ class WorldFoundryTui(App[None]):
     def _populate_tables(self, query: str = "", *, preserve_cursor: bool = False) -> None:
         """Filter and repopulate the model / benchmark tables from the catalog."""
         query = query.strip().casefold()
-        models = [row for row in self.model_rows if self._model_visible_for_action(row) and self._matches_model(row, query)]
+        models = [
+            row for row in self.model_rows if self._model_visible_for_action(row) and self._matches_model(row, query)
+        ]
         benchmarks = [row for row in self.benchmark_rows if self._matches_benchmark(row, query)]
         self._populate_model_table(models, preserve_cursor=preserve_cursor)
         if self.action == "eval":
@@ -1206,10 +1322,17 @@ class WorldFoundryTui(App[None]):
         available = max(24, (getattr(table, "layout_width", 0) or table.parent.content_size.width) - 2)
         status_width = 11
         if available < 48:
-            return (("Model" if detail == "Task" else "Benchmark", max(8, available - status_width - 4)), ("Status", status_width))
+            return (
+                ("Model" if detail == "Task" else "Benchmark", max(8, available - status_width - 4)),
+                ("Status", status_width),
+            )
         model_width = min(28, max(18, available // 2 - 4))
         detail_width = max(8, available - model_width - status_width - 6)
-        return (("Model" if detail == "Task" else "Benchmark", model_width), ("Status", status_width), (detail, detail_width))
+        return (
+            ("Model" if detail == "Task" else "Benchmark", model_width),
+            ("Status", status_width),
+            (detail, detail_width),
+        )
 
     def _populate_model_table(self, rows: Iterable[ModelCatalogRow], *, preserve_cursor: bool = False) -> None:
         """Keep selection aligned with the configured model and fit visible columns."""
@@ -1226,10 +1349,14 @@ class WorldFoundryTui(App[None]):
             table.add_column(label, width=width)
         palette = self.get_css_variables()
         for index, row in enumerate(rows):
-            cells = (Text(row.model_id), _format_status(row.integration_status, palette), Text(_short_join(row.tasks, limit=80)))
-            for cell, (_, width) in zip(cells, columns):
+            cells = (
+                Text(row.model_id),
+                _format_status(row.integration_status, palette),
+                Text(_short_join(row.tasks, limit=80)),
+            )
+            for cell, (_, width) in zip(cells, columns, strict=False):
                 cell.truncate(width, overflow="ellipsis")
-            table.add_row(*cells[:len(columns)], key=row.model_id)
+            table.add_row(*cells[: len(columns)], key=row.model_id)
             if row.model_id == cursor_key:
                 table.move_cursor(row=index, animate=False)
         table.display = bool(rows)
@@ -1252,10 +1379,14 @@ class WorldFoundryTui(App[None]):
             table.add_column(label, width=width)
         palette = self.get_css_variables()
         for index, row in enumerate(rows):
-            cells = (Text(row.benchmark_id), _format_status(row.integration_status, palette), Text(_short_join(row.domains, limit=80)))
-            for cell, (_, width) in zip(cells, columns):
+            cells = (
+                Text(row.benchmark_id),
+                _format_status(row.integration_status, palette),
+                Text(_short_join(row.domains, limit=80)),
+            )
+            for cell, (_, width) in zip(cells, columns, strict=False):
                 cell.truncate(width, overflow="ellipsis")
-            table.add_row(*cells[:len(columns)], key=row.benchmark_id)
+            table.add_row(*cells[: len(columns)], key=row.benchmark_id)
             if row.benchmark_id == cursor_key:
                 table.move_cursor(row=index, animate=False)
         table.display = bool(rows)
@@ -1293,16 +1424,10 @@ class WorldFoundryTui(App[None]):
             table = self.query_one("#models-table", DataTable)
             if self.selected_model_id and not any(key.value == self.selected_model_id for key in table.rows):
                 catalog += " · selection outside filter"
-        summary.tooltip = "\n".join(
-            f"{label}: {value}" for label, value in self._selection_details()
-        )
+        summary.tooltip = "\n".join(f"{label}: {value}" for label, value in self._selection_details())
 
         action_label = icons.action_labels().get(self.action, self.action)
-        summary.update(
-            f"[bold]{action_label}[/]\n"
-            f"{body}\n"
-            f"[dim]{catalog}[/]"
-        )
+        summary.update(f"[bold]{action_label}[/]\n{body}\n[dim]{catalog}[/]")
 
     def _selection_details(self) -> tuple[tuple[str, str], ...]:
         row = next((row for row in self.model_rows if row.model_id == self.selected_model_id), None)
@@ -1326,7 +1451,6 @@ class WorldFoundryTui(App[None]):
         except NoMatches:
             return
 
-
     def _update_command(self) -> None:
         """Refresh the command preview, conda status, selection status, and selection summary widgets."""
         try:
@@ -1347,7 +1471,7 @@ class WorldFoundryTui(App[None]):
                         word_wrap=True,
                     )
                 )
-            
+
             conda_status = self.query_one("#conda-status", Static)
             conda_status.update(self._conda_status_text())
             conda_status.tooltip = f"Environment root: {(self.catalog.conda_status or {}).get('env_root') or '-'}"
@@ -1366,7 +1490,9 @@ class WorldFoundryTui(App[None]):
                 self.query_one("#selection-status", Static).update(icons.status_studio())
             filter_value = self.query_one("#filter", Input).value
             models = [
-                row for row in self.model_rows if self._model_visible_for_action(row) and self._matches_model(row, filter_value)
+                row
+                for row in self.model_rows
+                if self._model_visible_for_action(row) and self._matches_model(row, filter_value)
             ]
             benchmarks = [row for row in self.benchmark_rows if self._matches_benchmark(row, filter_value)]
             self._update_selection_summary(len(models), len(benchmarks))
@@ -1409,7 +1535,9 @@ class WorldFoundryTui(App[None]):
                 and video_path is None
             ):
                 raise ValueError("Media files are only valid for models with visible Input or Video controls.")
-            cam_type = _normalize_select_value(self.query_one("#cam-type", Select).value) if "cam_type" in controls else None
+            cam_type = (
+                _normalize_select_value(self.query_one("#cam-type", Select).value) if "cam_type" in controls else None
+            )
             return build_model_infer_command(
                 model_id=self.selected_model_id,
                 output_dir=Path(self.query_one("#output-dir", Input).value or self._default_output_dir()),
@@ -1497,8 +1625,12 @@ class WorldFoundryTui(App[None]):
         status = dict(self.catalog.conda_status or {})
         available = "yes" if status.get("conda_available") else "no"
         if self.size.width < 80 or self.size.height < 32:
-            active = escape(str(status.get('active_env') or '-'))
-            return f"Conda [bold]{active}[/] · {status.get('envs_existing', 0)} envs" if available == "yes" else "Conda unavailable"
+            active = escape(str(status.get("active_env") or "-"))
+            return (
+                f"Conda [bold]{active}[/] · {status.get('envs_existing', 0)} envs"
+                if available == "yes"
+                else "Conda unavailable"
+            )
         return (
             f"Conda [bold]{available}[/] · [dim]active[/] [bold]{escape(str(status.get('active_env') or '-'))}[/]\n"
             f"[dim]Environments[/] [bold]{status.get('envs_existing', 0)}/{status.get('env_specs', 0)}[/]"
@@ -1559,7 +1691,9 @@ class WorldFoundryTui(App[None]):
         if "video" in controls:
             lines.append(_path_status("video", Path(video_path).expanduser() if video_path else None))
         if "trajectory_file" in controls:
-            lines.append(_path_status("trajectory file", Path(trajectory_file).expanduser() if trajectory_file else None))
+            lines.append(
+                _path_status("trajectory file", Path(trajectory_file).expanduser() if trajectory_file else None)
+            )
         gpu = _blank_to_none(self.query_one("#gpu", Input).value)
         lines.append(f"  gpu: {gpu or 'runtime default'}")
         return tuple(lines)
@@ -1624,7 +1758,7 @@ class WorldFoundryTui(App[None]):
             raise
         except OSError as exc:
             self._write_log(f"Unable to start command: {type(exc).__name__}: {exc}")
-        except Exception as exc:  # noqa: BLE001 - report unexpected runner failures without crashing the TUI.
+        except Exception as exc:
             self._write_log(f"Run failed: {type(exc).__name__}: {exc}")
         finally:
             self.running_process = None
@@ -1685,7 +1819,9 @@ class WorldFoundryTui(App[None]):
     @on(Collapsible.Toggled, "#command-preview")
     def _on_command_preview_toggled(self, event: Collapsible.Toggled) -> None:
         self.command_preview_visible = not event.collapsible.collapsed
-        self.query_one("#toggle-command", Button).label = icons["hide_cmd"] if self.command_preview_visible else icons["cmd"]
+        self.query_one("#toggle-command", Button).label = (
+            icons["hide_cmd"] if self.command_preview_visible else icons["cmd"]
+        )
 
     def _sync_infer_control_layout(self) -> None:
         """Show / hide per-model inference fields based on the active variant's control spec."""
@@ -1730,7 +1866,9 @@ class WorldFoundryTui(App[None]):
                 else:
                     self._set_field_visible(field, f"{field}-label", input_id, field in controls)
             self._set_select_visible("cam-type-label", "cam-type", "cam_type" in controls)
-            self._set_field_visible("guidance_scale", "guidance-scale-label", "guidance-scale", "guidance_scale" in controls)
+            self._set_field_visible(
+                "guidance_scale", "guidance-scale-label", "guidance-scale", "guidance_scale" in controls
+            )
             self._set_field_visible("dtype", "dtype-label", "dtype", "dtype" in controls)
             self._set_field_visible(
                 "max_sequence_length",
@@ -2023,15 +2161,15 @@ class WorldFoundryTui(App[None]):
             logo = self.query_one("#brand-logo", BrandLogo)
         except NoMatches:
             return
-        
+
         # NOTE: Cancel any pending logo update before scheduling a new one
         if hasattr(self, "_logo_update_timer"):
             self._logo_update_timer.stop()
-            
+
         def do_update():
             if logo.is_mounted:
                 logo.set_logo_width(self._brand_logo_width())
-            
+
         self._logo_update_timer = self.set_timer(0.05, do_update)
 
     def _sync_action_theme(self) -> None:
@@ -2041,7 +2179,7 @@ class WorldFoundryTui(App[None]):
             # ── Remove old mode classes, add new one ──
             status_pane.remove_class("mode-infer", "mode-eval", "mode-ui")
             status_pane.add_class(f"mode-{self.action}")
-            
+
             # NOTE: Update the status-pane border title dynamically
             mode_names = {"infer": "Inference", "eval": "Evaluation", "ui": "Studio"}
             status_pane.border_title = f" OpenEnvision / {mode_names.get(self.action, '')} "

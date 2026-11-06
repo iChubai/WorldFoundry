@@ -192,11 +192,11 @@ def interactions_from_segments(segments: list[ControlSegment]) -> list[str]:
 
 
 __all__ = [
-    "ControlSegment",
     "KEY_ALIASES",
+    "SUPPORTED_CONTROL_KEYS",
+    "ControlSegment",
     "RealtimeControlResampler",
     "RealtimeControlState",
-    "SUPPORTED_CONTROL_KEYS",
     "interactions_from_keys",
     "interactions_from_segments",
     "normalize_control_key",

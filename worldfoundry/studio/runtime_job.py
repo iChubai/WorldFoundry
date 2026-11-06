@@ -303,7 +303,7 @@ def _run_manager_worker(args: argparse.Namespace) -> int:
                 if len(records) != len(members):
                     raise RuntimeError("resident batch did not return one record per request")
                 manifests = [record.to_manifest() for record in records]
-                for member, manifest in zip(members, manifests):
+                for member, manifest in zip(members, manifests, strict=False):
                     _write_json_atomic(Path(member["result_path"]), manifest)
                 _write_json_atomic(result_path, {"records": manifests})
                 print(
@@ -339,7 +339,7 @@ def _run_manager_worker(args: argparse.Namespace) -> int:
                 ),
                 flush=True,
             )
-        except Exception as exc:  # noqa: BLE001 - surfaced to the parent Studio job.
+        except Exception as exc:
             _write_json_atomic(
                 error_path,
                 {

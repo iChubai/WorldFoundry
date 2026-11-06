@@ -21,11 +21,12 @@ from __future__ import annotations
 import asyncio
 import contextlib
 import threading
+from collections.abc import Callable
 from concurrent.futures import ThreadPoolExecutor
 from fractions import Fraction
 from importlib import import_module
 from importlib.util import find_spec
-from typing import TYPE_CHECKING, Any, Callable
+from typing import TYPE_CHECKING, Any
 
 import numpy as np
 

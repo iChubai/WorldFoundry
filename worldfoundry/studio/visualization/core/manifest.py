@@ -1,9 +1,10 @@
 """Viewport manifest payload shared by Studio manifests, routing, and viewers."""
 
+from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass, field
 from enum import Enum
 from pathlib import Path
-from typing import Any, Callable, Mapping, Sequence
+from typing import Any
 
 from worldfoundry.studio.inference.catalog import CatalogEntry
 from worldfoundry.studio.visualization.providers.run_record import (

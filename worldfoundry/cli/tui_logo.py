@@ -100,9 +100,12 @@ class BrandLogo(Vertical, can_focus=True):
             self._image.image = frame
             self._image.styles.height = rows
         else:
-            self._image.update(render_brand_logo(
-                width_chars=width_chars, cell_aspect_ratio=aspect,
-            ))
+            self._image.update(
+                render_brand_logo(
+                    width_chars=width_chars,
+                    cell_aspect_ratio=aspect,
+                )
+            )
 
 
 class LogoPreview(ModalScreen[None]):

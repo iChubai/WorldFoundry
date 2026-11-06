@@ -140,7 +140,7 @@ def render_normals(normals: Any, *, mask: Any | None = None) -> np.ndarray:
         array = np.moveaxis(array, 0, -1)
     if array.ndim != 3 or array.shape[-1] != 3:
         raise ValueError(f"Expected normals shaped HxWx3, got {array.shape}.")
-    valid = np.isfinite(array).all(axis=-1)
+    valid = np.asarray(np.isfinite(array).all(axis=-1))
     if mask is not None:
         valid &= np.asarray(mask).astype(bool)
     from worldfoundry.studio.visualization.plugins.styles.colormaps import colorize_normal

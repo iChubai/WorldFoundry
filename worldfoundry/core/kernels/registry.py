@@ -30,7 +30,7 @@ import os
 import threading
 import warnings
 from collections import OrderedDict, defaultdict, deque
-from collections.abc import Callable, Iterator, MutableMapping
+from collections.abc import Callable, Generator, MutableMapping
 from contextlib import contextmanager
 from contextvars import ContextVar
 from dataclasses import dataclass
@@ -54,7 +54,7 @@ _KERNEL_DISPATCH_RECEIPT: ContextVar[MutableMapping[str, Any] | None] = ContextV
 @contextmanager
 def kernel_dispatch_receipt_scope(
     receipt: MutableMapping[str, Any],
-) -> Iterator[None]:
+) -> Generator[None, None, None]:
     """Capture the concrete implementation selected by logical kernel calls.
 
     The registry's selection cache is useful diagnostic state, but by itself it

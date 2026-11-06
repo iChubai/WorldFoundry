@@ -126,6 +126,7 @@ def _device_profile(tensor: Any) -> dict[str, Any]:
     """Describe performance-relevant properties without using a device UUID."""
 
     import torch
+    import torch.version
 
     device = tensor.device
     if device.type != "cuda" or not torch.cuda.is_available():
@@ -133,7 +134,7 @@ def _device_profile(tensor: Any) -> dict[str, Any]:
     index = torch.cuda.current_device() if device.index is None else int(device.index)
     properties = torch.cuda.get_device_properties(index)
     try:
-        capability: tuple[int, int] | str = tuple(int(item) for item in torch.cuda.get_device_capability(index))
+        capability: tuple[int, ...] | str = tuple(int(item) for item in torch.cuda.get_device_capability(index))
     except (AssertionError, RuntimeError, TypeError, ValueError):
         capability = "unknown"
     return {
@@ -152,6 +153,7 @@ def _runtime_profile() -> dict[str, Any]:
     """Describe runtime components that can change generated kernel code."""
 
     import torch
+    import torch.version
 
     try:
         triton_version = importlib.metadata.version("triton")

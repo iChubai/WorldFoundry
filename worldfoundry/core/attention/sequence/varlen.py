@@ -181,7 +181,7 @@ def flash_attention(
     flash_attn_module = None
     if version == 3:
         try:
-            import flash_attn_interface
+            flash_attn_interface = __import__("flash_attn_interface")
         except Exception as exc:
             logger.debug("flash_attn_interface import failed: %s", exc)
     elif version == 2:
@@ -439,7 +439,9 @@ def varlen_scaled_dot_product_attention(
             logger.debug("flash_attn import failed: %s", exc)
     elif version == 3:
         try:
-            from flash_attn_interface import flash_attn_varlen_func as flash_attn_varlen_func_v3
+            flash_attn_varlen_func_v3 = __import__(
+                "flash_attn_interface", fromlist=["flash_attn_varlen_func"]
+            ).flash_attn_varlen_func
         except Exception as exc:
             logger.debug("flash_attn_interface import failed: %s", exc)
     capabilities = probe_attention_backends(query.device) if version in {2, 3} else {}

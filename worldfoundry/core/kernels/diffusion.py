@@ -27,9 +27,11 @@ from __future__ import annotations
 
 import os
 from functools import lru_cache
+from typing import Any, cast
 
 import torch
 import torch.nn.functional as F
+import torch.version
 
 from worldfoundry.core.execution.compile_numerics import (
     compiled_layer_norm_scale_shift,
@@ -315,7 +317,8 @@ def _storage_overlaps(first: torch.Tensor, second: torch.Tensor) -> bool:
     """Conservatively detect aliasing before an opaque mutating launch."""
 
     try:
-        return bool(torch._C._overlaps(first, second))
+        # Private ATen helper; torch's stubs do not declare it.
+        return bool(cast(Any, torch._C)._overlaps(first, second))
     except (AttributeError, RuntimeError, TypeError):
         # An unknown overlap relation is unsafe for a fail-closed mutation.
         return True
@@ -1325,7 +1328,7 @@ def hidden_qk_rmsnorm_rope_3d(
         k_weight,
         freqs,
         int(num_heads),
-        tuple(int(value) for value in grid_size),
+        cast(tuple[int, int, int], tuple(int(value) for value in grid_size)),
         float(eps),
         int(sequence_offset),
         int(start_frame),

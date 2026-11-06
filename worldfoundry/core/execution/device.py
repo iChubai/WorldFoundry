@@ -12,11 +12,11 @@ selects bf16 on Ampere/Hopper/Blackwell-or-newer (compute capability >= 8),
 fp16 on older CUDA devices, and fp32 on CPU.
 """
 
-import importlib
+import importlib.util
 import logging
 import os
 import warnings
-from typing import Any
+from typing import Any, cast
 
 import torch
 
@@ -54,8 +54,10 @@ def setup_npu(*, allow_internal_format: bool = False) -> Any:
 
     if not is_npu_available():
         raise RuntimeError("NPU setup was requested, but torch_npu is unavailable")
-    torch.npu.config.allow_internal_format = bool(allow_internal_format)
-    return torch.npu
+    # torch_npu registers ``torch.npu`` at runtime; torch's stubs do not declare it.
+    npu = cast(Any, torch).npu
+    npu.config.allow_internal_format = bool(allow_internal_format)
+    return npu
 
 
 def __getattr__(name: str) -> bool:
@@ -125,7 +127,7 @@ def get_current_torch_device() -> torch.device:
     if is_cuda_available():
         return torch.device("cuda", torch.cuda.current_device())
     if is_npu_available():
-        return torch.device("npu", torch.npu.current_device())
+        return torch.device("npu", cast(Any, torch).npu.current_device())
     return torch.device("cpu")
 
 
@@ -156,8 +158,9 @@ def enable_high_precision_for_bf16() -> None:
         torch.backends.cuda.matmul.allow_bf16_reduced_precision_reduction = False
 
     if is_npu_available():
-        torch.npu.matmul.allow_tf32 = False
-        torch.npu.matmul.allow_bf16_reduced_precision_reduction = False
+        npu_matmul = cast(Any, torch).npu.matmul
+        npu_matmul.allow_tf32 = False
+        npu_matmul.allow_bf16_reduced_precision_reduction = False
 
 
 def parse_device_type(device) -> str:

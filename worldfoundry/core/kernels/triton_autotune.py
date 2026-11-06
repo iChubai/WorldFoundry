@@ -99,7 +99,7 @@ class CustomAutotuner(Autotuner):
                 timings = {config: self._bench(*args, config=config, **kwargs) for config in pruned_configs}
                 bench_end = time.time()
                 self.bench_time = bench_end - bench_start
-                self.cache[key] = builtins.min(timings, key=timings.get)
+                self.cache[key] = builtins.min(timings, key=timings.__getitem__)
                 self.pre_hook(args, reset_only=True)
                 self.configs_timings = timings
                 if not dist.is_initialized() or dist.get_rank() == 0:

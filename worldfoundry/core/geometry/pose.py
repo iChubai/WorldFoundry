@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import random
 from collections.abc import Callable, Sequence
+from typing import cast
 
 import numpy as np
 import torch
@@ -244,7 +245,7 @@ class RealEstate10KPoseProcessor:
             c2w_poses = np.array([cam_param.c2w_mat for cam_param in cam_params], dtype=np.float32)
         c2w = torch.as_tensor(c2w_poses)[None]
         if self.use_flip:
-            flip_flag = self.pixel_transforms[1].get_flip_flag(self.sample_n_frames)
+            flip_flag = cast(RandomHorizontalFlipWithPose, self.pixel_transforms[1]).get_flip_flag(self.sample_n_frames)
         else:
             flip_flag = torch.zeros(self.sample_n_frames, dtype=torch.bool, device=c2w.device)
         return ray_condition(

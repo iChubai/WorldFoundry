@@ -165,7 +165,7 @@ def load_state_dict_from_gguf(file_path, torch_dtype=None, device="cpu"):
     """
 
     try:
-        import gguf
+        gguf = __import__("gguf")
     except ImportError as error:
         raise RuntimeError("loading GGUF checkpoints requires the optional 'gguf' package") from error
 
@@ -459,7 +459,7 @@ def load_keys_dict_from_gguf(file_path):
     """Read GGUF tensor names and logical shapes without dequantizing values."""
 
     try:
-        import gguf
+        gguf = __import__("gguf")
     except ImportError as error:
         raise RuntimeError("reading GGUF checkpoint keys requires the optional 'gguf' package") from error
     keys_dict = {}

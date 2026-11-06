@@ -34,7 +34,7 @@ Public surface
 import hashlib
 import json
 from collections.abc import Callable
-from typing import Any, TypeVar
+from typing import Any, TypeVar, cast
 
 import torch
 
@@ -68,9 +68,13 @@ def _tree_unflatten(values, spec):
     return _torch_pytree.tree_unflatten(values, spec)
 
 
+# Transformer Engine is optional; the ImportError fallback also covers releases without these helpers.
 try:
-    from transformer_engine.pytorch.distributed import get_all_rng_states, graph_safe_rng_available
-    from transformer_engine.pytorch.module.base import TransformerEngineBaseModule
+    from transformer_engine.pytorch.distributed import (  # ty: ignore[unresolved-import]
+        get_all_rng_states,
+        graph_safe_rng_available,
+    )
+    from transformer_engine.pytorch.module.base import TransformerEngineBaseModule  # ty: ignore[unresolved-import]
 except ImportError:
 
     class TransformerEngineBaseModule(torch.nn.Module):
@@ -255,8 +259,12 @@ def _make_graphed_callables(
     if not isinstance(callables, tuple):
         just_one_callable = True
         callables = (callables,)
-        sample_args = (sample_args,)
-        sample_kwargs = (sample_kwargs,)
+        sample_args = (cast(tuple[torch.Tensor, ...], sample_args),)
+        sample_kwargs = (cast(dict[str, Any], sample_kwargs),)
+    else:
+        # A tuple of callables arrives with one positional and one keyword sample per callable.
+        sample_args = cast(tuple[tuple[torch.Tensor, ...], ...], sample_args)
+        sample_kwargs = cast(tuple[dict[str, Any], ...], sample_kwargs)
 
     # Check sizes of args
     assert len(sample_args) == len(callables)
@@ -342,9 +350,11 @@ def _make_graphed_callables(
         for func_idx, func in zip(warmup_func_idx, warmup_func, strict=False):
             args = sample_args[func_idx]
             kwargs = sample_kwargs[func_idx]
+            # Warmup hooks every submodule, so each graphed callable must be a module.
+            module_tree = cast(torch.nn.Module, func)
             for _ in range(num_warmup_iters):
                 hooks = []
-                for module in func.modules():
+                for module in module_tree.modules():
                     hook = module.register_forward_hook(hook_fn)
                     hooks.append(hook)
                 outputs, _ = _tree_flatten(func(*args, **kwargs))
@@ -353,9 +363,9 @@ def _make_graphed_callables(
                 del outputs
             # The following code is added specifically for MCore's special requirements,
             # aimed at preventing warmup from altering the control flow.
-            for module in func.modules():
+            for module in module_tree.modules():
                 if hasattr(module, "is_first_microbatch"):
-                    module.is_first_microbatch = True
+                    cast(Any, module).is_first_microbatch = True
     torch.cuda.synchronize()
 
     # All captures here share a mempool. To avoid replays corrupting each other's memory,
@@ -366,7 +376,8 @@ def _make_graphed_callables(
     for graph_id, (func, args, kwargs, fwd_graph) in enumerate(
         zip(callables, sample_args, sample_kwargs, fwd_graphs, strict=False)
     ):
-        with torch.cuda.graph(fwd_graph, pool=mempool):
+        # Pool handles are opaque tokens from graph_pool_handle(); torch 2.9 stubs name them _POOL_HANDLE.
+        with torch.cuda.graph(fwd_graph, pool=cast(Any, mempool)):
             outputs = func(*args, **kwargs)
         graph_callables[graph_id] = func
 
@@ -553,7 +564,8 @@ def make_graphed_callables_forward(
                 for generator, state in zip(generators, original_rng_states, strict=False):
                     generator.set_state(state)
             else:
-                torch.cuda.set_rng_state(original_rng_states)
+                # Without graph-safe generators only the default CUDA RNG state was saved.
+                torch.cuda.set_rng_state(cast(torch.Tensor, original_rng_states))
     finally:
         set_capture_end()
 

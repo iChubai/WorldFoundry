@@ -19,7 +19,7 @@ import subprocess
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 from time import perf_counter
-from typing import Any
+from typing import Any, cast
 
 import torch
 from safetensors import safe_open
@@ -249,7 +249,8 @@ def load_safetensors_into_model_streaming(
         if old_parameter is not None:
             replacement = torch.nn.Parameter(tensor, requires_grad=old_parameter.requires_grad)
             if hasattr(old_parameter, "_is_hf_initialized"):
-                replacement._is_hf_initialized = old_parameter._is_hf_initialized
+                # Transformers' load marker is a dynamic Parameter attribute.
+                cast(Any, replacement)._is_hf_initialized = old_parameter._is_hf_initialized
             parent._parameters[leaf_name] = replacement
         else:
             parent._buffers[leaf_name] = tensor

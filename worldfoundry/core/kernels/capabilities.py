@@ -30,6 +30,7 @@ from dataclasses import asdict, dataclass
 from functools import lru_cache
 
 import torch
+import torch.version
 
 # Architectures qualified for the small, portable in-tree Triton fusion set.
 # Product names are intentionally absent: A30/A100 share SM80, A10/30-series

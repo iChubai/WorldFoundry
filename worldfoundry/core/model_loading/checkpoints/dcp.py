@@ -252,9 +252,9 @@ class DistributedCheckpointer:
         wrapper = ModelWrapper(model)
         state_dict = wrapper.state_dict()
         planner = DefaultLoadPlanner(allow_partial_load=True)
-        planner.set_partial_channel_weight(
-            getattr(self.config_checkpoint, "dcp_allow_mismatched_size", False)
-        ) if hasattr(planner, "set_partial_channel_weight") else None
+        set_partial_channel_weight = getattr(planner, "set_partial_channel_weight", None)
+        if set_partial_channel_weight is not None:
+            set_partial_channel_weight(getattr(self.config_checkpoint, "dcp_allow_mismatched_size", False))
         dcp_load_state_dict(state_dict, self.get_storage_reader(checkpoint_path), planner)
         wrapper.load_state_dict(state_dict)
         return 0

@@ -27,6 +27,7 @@ from __future__ import annotations
 import os
 
 import torch
+import torch.version
 
 from worldfoundry.core.attention.backends.native import native_sdpa_priority, scaled_dot_product_attention
 

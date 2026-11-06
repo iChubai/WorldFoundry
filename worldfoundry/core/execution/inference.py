@@ -21,11 +21,11 @@ from __future__ import annotations
 import logging
 import os
 import warnings
-from collections.abc import Callable, Iterator, Mapping
+from collections.abc import Callable, Generator, Mapping
 from contextlib import contextmanager, nullcontext
 from dataclasses import dataclass, field
 from functools import wraps
-from typing import Any
+from typing import Any, cast
 
 logger = logging.getLogger(__name__)
 
@@ -338,7 +338,7 @@ def install_worldfoundry_inference_infra(
 
 
 @contextmanager
-def worldfoundry_inference_context() -> Iterator[None]:
+def worldfoundry_inference_context() -> Generator[None, None, None]:
     """Run model inference under the shared WorldFoundry core runtime policy.
 
     Installs process-wide infra if needed, then yields inside
@@ -591,8 +591,9 @@ def _patch_torch_sdpa() -> None:
         """Replacement SDPA: honour the installed backend policy and normalize fully-masked rows."""
         return _call_sdpa_with_backend(query, key, value, *args, **kwargs)
 
-    worldfoundry_core_sdpa._worldfoundry_core_sdpa = True
-    F.scaled_dot_product_attention = worldfoundry_core_sdpa
+    # The process-wide patch marks its wrapper so later installs and restores can recognize it.
+    cast(Any, worldfoundry_core_sdpa)._worldfoundry_core_sdpa = True
+    cast(Any, F).scaled_dot_product_attention = worldfoundry_core_sdpa
     _STATE.sdpa_patched = True
     logger.info(
         "Patched torch.nn.functional.scaled_dot_product_attention process-wide with the "
@@ -614,7 +615,7 @@ def _unpatch_torch_sdpa() -> bool:
     if _ORIGINAL_SDPA is None or not getattr(current, "_worldfoundry_core_sdpa", False):
         _STATE.sdpa_patched = False
         return False
-    F.scaled_dot_product_attention = _ORIGINAL_SDPA
+    cast(Any, F).scaled_dot_product_attention = _ORIGINAL_SDPA
     _STATE.sdpa_patched = False
     logger.info("Restored the original torch.nn.functional.scaled_dot_product_attention.")
     return True
@@ -652,7 +653,7 @@ def uninstall_worldfoundry_inference_infra() -> WorldFoundryInferenceInfraState:
 
 
 @contextmanager
-def worldfoundry_inference_infra_disabled() -> Iterator[None]:
+def worldfoundry_inference_infra_disabled() -> Generator[None, None, None]:
     """Temporarily restore vanilla torch behavior inside the scope.
 
     Useful for A/B numerical comparisons against the unpatched SDPA. On exit

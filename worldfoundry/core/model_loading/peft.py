@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import re
+from typing import Any
 
 from torch import nn
 
@@ -58,7 +59,8 @@ def merge_peft_adapter(model: nn.Module) -> nn.Module:
     if not callable(merge):
         raise TypeError("PEFT adapter model must expose merge_and_unload")
     get_base_model = getattr(model, "get_base_model", None)
-    base_model = get_base_model() if callable(get_base_model) else model
+    # Base models carry PEFT's optional config attribute beyond nn.Module's declared state.
+    base_model: Any = get_base_model() if callable(get_base_model) else model
     had_config = hasattr(base_model, "config")
     original_config = getattr(base_model, "config", None)
     injected_empty_config = original_config is None

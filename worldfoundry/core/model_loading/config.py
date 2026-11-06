@@ -13,6 +13,7 @@ This is placement and download policy, not the file deserializer
 import glob
 import os
 from dataclasses import dataclass
+from typing import cast
 
 import torch
 
@@ -52,7 +53,7 @@ class ModelConfig:
 
     path: str | list[str] | None = None
     model_id: str | None = None
-    origin_file_pattern: str | list[str] | None = None
+    origin_file_pattern: str | None = None
     download_source: str | None = None
     local_model_path: str | None = None
     skip_download: bool | None = None
@@ -117,24 +118,27 @@ class ModelConfig:
     def download(self):
         """Download missing repository files into ``local_model_path``."""
         origin_file_pattern = self.parse_original_file_pattern()
-        downloaded_files = glob.glob(origin_file_pattern, root_dir=os.path.join(self.local_model_path, self.model_id))
+        # download_if_necessary() validates model_id and resolves local_model_path first.
+        model_id = cast(str, self.model_id)
+        local_dir = os.path.join(cast(str, self.local_model_path), model_id)
+        downloaded_files = glob.glob(origin_file_pattern, root_dir=local_dir)
         download_source = self.parse_download_source()
         if download_source.lower() == "modelscope":
-            from modelscope import snapshot_download
+            snapshot_download = __import__("modelscope", fromlist=["snapshot_download"]).snapshot_download
 
             snapshot_download(
-                self.model_id,
-                local_dir=os.path.join(self.local_model_path, self.model_id),
+                model_id,
+                local_dir=local_dir,
                 allow_file_pattern=origin_file_pattern,
                 ignore_file_pattern=downloaded_files,
                 local_files_only=False,
             )
         elif download_source.lower() == "huggingface":
-            from huggingface_hub import snapshot_download as hf_snapshot_download
+            hf_snapshot_download = __import__("huggingface_hub", fromlist=["snapshot_download"]).snapshot_download
 
             hf_snapshot_download(
-                self.model_id,
-                local_dir=os.path.join(self.local_model_path, self.model_id),
+                model_id,
+                local_dir=local_dir,
                 allow_patterns=origin_file_pattern,
                 ignore_patterns=downloaded_files,
                 local_files_only=False,
@@ -185,10 +189,12 @@ class ModelConfig:
             else:
                 dist.barrier()
         if self.path is None:
+            # check_input() guarantees model_id when no path was given.
+            local_dir = os.path.join(cast(str, self.local_model_path), cast(str, self.model_id))
             if self.origin_file_pattern in [None, "", "./"]:
-                self.path = os.path.join(self.local_model_path, self.model_id)
+                self.path = local_dir
             else:
-                self.path = glob.glob(os.path.join(self.local_model_path, self.model_id, self.origin_file_pattern))
+                self.path = glob.glob(os.path.join(local_dir, cast(str, self.origin_file_pattern)))
         if isinstance(self.path, list) and len(self.path) == 1:
             self.path = self.path[0]
 

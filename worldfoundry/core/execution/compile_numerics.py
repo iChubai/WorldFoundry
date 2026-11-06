@@ -10,7 +10,7 @@ Autograd uses the original tensor implementations.
 from __future__ import annotations
 
 from types import MethodType
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any, cast
 
 import torch
 import torch.nn.functional as F
@@ -195,10 +195,11 @@ def preserve_normalization_reductions(region: torch.nn.Module) -> tuple[torch.nn
     for module in region.modules():
         if "forward" in module.__dict__:
             continue
+        # Instance ``forward`` attributes shadow the class methods until deleted.
         if type(module) is torch.nn.LayerNorm:
-            module.forward = MethodType(_layer_norm_forward, module)
+            cast(Any, module).forward = MethodType(_layer_norm_forward, module)
             prepared.append(module)
         elif type(module) is RMSNorm:
-            module.forward = MethodType(_rms_norm_forward, module)
+            cast(Any, module).forward = MethodType(_rms_norm_forward, module)
             prepared.append(module)
     return tuple(prepared)

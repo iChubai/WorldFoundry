@@ -16,6 +16,7 @@ from __future__ import annotations
 
 import logging
 from collections.abc import Iterable, Sequence
+from typing import cast
 
 import torch
 from torch import nn
@@ -396,11 +397,12 @@ def merge_ordered_lora_(
         if cursor >= len(values):
             break
         up, down = values[cursor : cursor + 2]
-        if up.ndim != module.weight.ndim:
+        weight = cast(torch.Tensor, module.weight)
+        if up.ndim != weight.ndim:
             continue
-        delta = _lora_delta(up, down, module.weight)
-        module.weight.add_(
-            delta.to(device=module.weight.device, dtype=module.weight.dtype),
+        delta = _lora_delta(up, down, weight)
+        weight.add_(
+            delta.to(device=weight.device, dtype=weight.dtype),
             alpha=float(scale),
         )
         cursor += 2

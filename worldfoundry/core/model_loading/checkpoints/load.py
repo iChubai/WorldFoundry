@@ -114,7 +114,7 @@ def _is_hf_file_cached(
     still falls through to a fresh download instead of aborting the load.
     """
 
-    from huggingface_hub import try_to_load_from_cache
+    try_to_load_from_cache = __import__("huggingface_hub", fromlist=["try_to_load_from_cache"]).try_to_load_from_cache
 
     try:
         cached = try_to_load_from_cache(
@@ -291,7 +291,7 @@ def _hf_hub_download_shard_task(
     args: tuple[str, str, str | None, str],
 ) -> tuple[str, str]:
     """Download one shard; used by ThreadPoolExecutor."""
-    from huggingface_hub import hf_hub_download
+    hf_hub_download = __import__("huggingface_hub", fromlist=["hf_hub_download"]).hf_hub_download
 
     repo_id, shard_file, subfolder, revision = args
     settings: dict[str, object] = {
@@ -441,7 +441,7 @@ def _load_sharded_safetensors_index_checkpoint(
             _discard_corrupt_cache(cache_path)
 
     if is_hf_url:
-        from huggingface_hub import hf_hub_download
+        hf_hub_download = __import__("huggingface_hub", fromlist=["hf_hub_download"]).hf_hub_download
 
         repo_id, index_filename, subfolder, revision = _parse_huggingface_checkpoint_url(checkpoint_path)
         logger.info(f"Merging sharded safetensors from Hugging Face: {checkpoint_path}")
@@ -568,7 +568,7 @@ def _download_checkpoint_from_huggingface_url(
     checkpoint_min_free_gb: float | None = None,
 ) -> str:
     """Download a checkpoint from Hugging Face and return local cached path."""
-    from huggingface_hub import hf_hub_download
+    hf_hub_download = __import__("huggingface_hub", fromlist=["hf_hub_download"]).hf_hub_download
 
     repo_id, filename, subfolder, revision = _parse_huggingface_checkpoint_url(url)
     logger.info(f"Downloading checkpoint from Hugging Face: {url}")

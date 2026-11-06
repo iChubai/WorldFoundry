@@ -29,7 +29,7 @@ import sys
 import time
 from collections.abc import Mapping, Sequence
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 # ──────────────────────────────────────────────────────────────────────────
 # Teardown — process-group first, then psutil tree fallback
@@ -145,7 +145,7 @@ def terminate_process_tree(process: subprocess.Popen[Any], *, grace_seconds: flo
         return
     descendants: list[Any] = []
     try:
-        import psutil
+        psutil = __import__("psutil")
     except ImportError:
         descendants = []
     else:
@@ -166,7 +166,7 @@ def terminate_process_tree(process: subprocess.Popen[Any], *, grace_seconds: flo
             process.kill()
         process.wait()
     if descendants:
-        import psutil
+        psutil = __import__("psutil")
 
         _, alive = psutil.wait_procs(descendants, timeout=max(float(grace_seconds), 0.0))
         for child in alive:
@@ -269,7 +269,8 @@ def run_logged_subprocess(
                 duration_seconds=round(time.monotonic() - start, 6),
                 timeout_seconds=timeout,
             )
-            raise subprocess.TimeoutExpired(command, timeout) from None
+            # wait() only times out when a timeout was supplied.
+            raise subprocess.TimeoutExpired(command, cast(float, timeout)) from None
         finally:
             # The leader exiting does not imply its descendants have stopped.
             if owns_process_group:

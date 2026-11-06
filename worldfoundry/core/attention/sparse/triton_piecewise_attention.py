@@ -832,12 +832,12 @@ def piecewise_attn_bwd(
 
     # BNC = 64
     # grid = (triton.cdiv(V, BV), triton.cdiv(NT_KV, BNC), B * H)
-    def grid(meta):
+    def approx_dkdv_grid(meta):
         """Autotune grid: ``BN`` is chosen by the kernel config, not the caller."""
 
         return (triton.cdiv(V, BV), triton.cdiv(NT_KV, meta["BN"]), B * H)
 
-    piecewise_attn_bwd_approx_dkdv_kernel[grid](
+    piecewise_attn_bwd_approx_dkdv_kernel[approx_dkdv_grid](
         do_desc,
         q_desc,
         kc,
@@ -994,8 +994,9 @@ class PiecewiseAttentionFunction(torch.autograd.Function):
         ctx.block_size = block_size
         return o
 
+    # Autograd supplies one gradient for this forward's single tensor output.
     @staticmethod
-    def backward(ctx, do):
+    def backward(ctx, do):  # ty: ignore[invalid-method-override]
         """Rebind the TMA allocator, then return ``dQ, dK, dV`` only."""
 
         q, k, v, kc, vc, o, lse, block_indices = ctx.saved_tensors

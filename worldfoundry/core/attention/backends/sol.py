@@ -36,7 +36,7 @@ def _sol_attention_forward(
     kv_splits: int,
     compress_kv: bool,
 ) -> torch.Tensor:
-    from sol_attn import sol_attn
+    sol_attn = __import__("sol_attn", fromlist=["sol_attn"]).sol_attn
 
     # The package's public sink range keeps overlapping KV blocks on its full
     # attention path. Covering the entire sequence disables mean compression;

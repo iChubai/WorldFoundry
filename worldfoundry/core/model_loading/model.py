@@ -15,6 +15,7 @@ Not this module: file deserialization
 """
 
 import contextlib
+from typing import Any, cast
 
 import torch
 
@@ -153,6 +154,8 @@ def load_model(
     # What is `module_map`?
     # This is a module mapping table for VRAM management.
     if module_map is not None:
+        # Wrapped VRAM loading always receives its placement policy with the module map.
+        vram_config = cast(dict[str, Any], vram_config)
         devices = [
             vram_config["offload_device"],
             vram_config["onload_device"],
@@ -275,8 +278,13 @@ def load_model_with_disk_offload(
         "computation_dtype": torch_dtype,
         "computation_device": device,
     }
+    # module_map is required here; its None default only keeps the keyword optional.
     enable_vram_management(
-        model, module_map, vram_config=vram_config, disk_map=disk_map, vram_limit=_disk_offload_vram_limit(device)
+        model,
+        cast(dict[Any, Any], module_map),
+        vram_config=vram_config,
+        disk_map=disk_map,
+        vram_limit=_disk_offload_vram_limit(device),
     )
     return model
 
@@ -308,7 +316,7 @@ def get_init_context(torch_dtype, device):
     random fill of a 10B module that will be overwritten by the checkpoint.
     """
     if is_deepspeed_zero3_enabled():
-        import deepspeed
+        deepspeed = __import__("deepspeed")
         from transformers.modeling_utils import set_zero3_state
 
         # Why do we use "deepspeed.zero.Init"?

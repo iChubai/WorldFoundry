@@ -28,6 +28,7 @@ from worldfoundry.core.model_loading.policy import (
 )
 
 if TYPE_CHECKING:
+    import torch
     from torch import nn
 
 # ──────────────────────────────────────────────────────────────────────────
@@ -88,7 +89,7 @@ def apply_attention_policy(
     model: nn.Module,
     backend: AttentionBackend | str,
     *,
-    device: object = None,
+    device: torch.device | str | int | None = None,
 ) -> AttentionPolicyReport:
     """Bind an attention provider to compatible model seams in ``model``.
 

@@ -240,7 +240,7 @@ def _compile_eval_forward(
             ):
                 raise
             compiled_active = False
-            remembered = set(getattr(owner, "_worldfoundry_eval_compile_failures", ()))
+            remembered: set[tuple[str, str, str]] = set(getattr(owner, "_worldfoundry_eval_compile_failures", ()))
             remembered.add(failure_key)
             with suppress(Exception):
                 owner._worldfoundry_eval_compile_failures = remembered

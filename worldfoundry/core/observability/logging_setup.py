@@ -45,6 +45,7 @@ from contextvars import ContextVar, Token
 from datetime import datetime, timezone
 from logging.handlers import RotatingFileHandler
 from pathlib import Path
+from types import MappingProxyType
 from typing import Any
 
 __all__ = [
@@ -86,7 +87,7 @@ _CONFIGURE_LOCK = threading.Lock()
 # without leaking into concurrent runs in the same process.  The fields are
 # attached by the formatter, which means stdlib and facade call sites receive
 # the same context without every caller having to pass it explicitly.
-_LOG_CONTEXT: ContextVar[dict[str, Any]] = ContextVar("worldfoundry_log_context", default={})
+_LOG_CONTEXT: ContextVar[Mapping[str, Any]] = ContextVar("worldfoundry_log_context", default=MappingProxyType({}))
 _SCHEMA_VERSION = "worldfoundry.log.v1"
 _CONTEXT_FIELDS = (
     "run_id",
@@ -563,10 +564,7 @@ def _loguru_json_format(record: Mapping[str, Any]) -> str:
             if key != "_worldfoundry_fields":
                 fields.setdefault(str(key), value)
     record_time = record.get("time")
-    if isinstance(record_time, datetime):
-        timestamp = record_time
-    else:
-        timestamp = datetime.now(timezone.utc)
+    timestamp = record_time if isinstance(record_time, datetime) else datetime.now(timezone.utc)
     level = record.get("level")
     level_name = getattr(level, "name", str(level))
     process = record.get("process")

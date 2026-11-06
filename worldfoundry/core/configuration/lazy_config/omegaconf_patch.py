@@ -73,7 +73,7 @@ def to_object(cfg: Any) -> dict[DictKeyType, Any] | list[Any] | None | str | Any
         >>> to_object(cfg)
         {'list': [1, 2, 3]}
     """
-    if isinstance(cfg, DictConfig) and "_target_" in cfg.keys():
+    if isinstance(cfg, DictConfig) and "_target_" in cfg.keys():  # noqa: SIM118  # DictConfig membership treats missing ("???") values as absent
         return cfg
 
     return OmegaConf.to_container(

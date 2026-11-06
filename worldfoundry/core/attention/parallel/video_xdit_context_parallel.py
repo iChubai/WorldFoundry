@@ -49,7 +49,7 @@ def usp_dit_forward_vace(self, x, vace_context, seq_len, kwargs):
     c = torch.cat([torch.cat([u, u.new_zeros(1, seq_len - u.size(1), u.size(2))], dim=1) for u in c])
 
     # arguments
-    new_kwargs = dict(x=x)
+    new_kwargs = {"x": x}
     new_kwargs.update(kwargs)
 
     # Context Parallel
@@ -113,9 +113,14 @@ def usp_dit_forward(
         context = torch.concat([context_clip, context], dim=1)
 
     # arguments
-    kwargs = dict(
-        e=e0, seq_lens=seq_lens, grid_sizes=grid_sizes, freqs=self.freqs, context=context, context_lens=context_lens
-    )
+    kwargs = {
+        "e": e0,
+        "seq_lens": seq_lens,
+        "grid_sizes": grid_sizes,
+        "freqs": self.freqs,
+        "context": context,
+        "context_lens": context_lens,
+    }
 
     # Context Parallel
     x = torch.chunk(x, get_sequence_parallel_world_size(), dim=1)[get_sequence_parallel_rank()]

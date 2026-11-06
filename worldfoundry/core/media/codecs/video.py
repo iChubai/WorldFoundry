@@ -114,7 +114,7 @@ def resize_video_tensor_to_resolution(video_tensor, resolution: Iterable[int]):
     target_h, target_w = [int(value) for value in resolution]
     orig_h, orig_w = int(video_tensor.shape[2]), int(video_tensor.shape[3])
     scaling_ratio = max(target_w / orig_w, target_h / orig_h)
-    resizing_shape = [int(math.ceil(scaling_ratio * orig_h)), int(math.ceil(scaling_ratio * orig_w))]
+    resizing_shape = [math.ceil(scaling_ratio * orig_h), math.ceil(scaling_ratio * orig_w)]
     resized = functional.resize(video_tensor, resizing_shape)
     return functional.center_crop(resized, [target_h, target_w])
 
@@ -319,10 +319,7 @@ def coerce_video_frames(video_input, *, max_frames: int | None = None, from_end:
         if max_frames is not None:
             converted = converted[-max_frames:] if from_end else converted[:max_frames]
         if np.issubdtype(converted.dtype, np.floating):
-            if normalized_range:
-                converted = np.clip(converted * 255.0, 0, 255)
-            else:
-                converted = np.clip(converted, 0, 255)
+            converted = np.clip(converted * 255.0, 0, 255) if normalized_range else np.clip(converted, 0, 255)
         else:
             converted = np.clip(converted, 0, 255)
         return converted.astype(np.uint8)
@@ -395,14 +392,13 @@ def read_video_window_rgb(
     if frame_count < 1:
         raise ValueError("frame_count must be positive")
     frames = []
-    with local_path_for_uri(video_path) as local_path:
-        with av.open(str(local_path)) as container:
-            for index, frame in enumerate(container.decode(video=0)):
-                if index < start_frame:
-                    continue
-                frames.append(frame.to_rgb().to_ndarray())
-                if len(frames) == frame_count:
-                    break
+    with local_path_for_uri(video_path) as local_path, av.open(str(local_path)) as container:
+        for index, frame in enumerate(container.decode(video=0)):
+            if index < start_frame:
+                continue
+            frames.append(frame.to_rgb().to_ndarray())
+            if len(frames) == frame_count:
+                break
     if not frames:
         raise ValueError(f"No frames found in video window starting at {start_frame}: {video_path}")
     return np.stack(frames, axis=0)
@@ -465,7 +461,7 @@ def sample_video_frames(
     if force_sample:
         indices = np.linspace(0, total_frames - 1, max_frames, dtype=np.int64)
     else:
-        frame_step = max(int(round(source_fps / requested_fps)), 1)
+        frame_step = max(round(source_fps / requested_fps), 1)
         indices = np.arange(0, total_frames, frame_step, dtype=np.int64)
         if len(indices) > max_frames:
             indices = np.linspace(0, total_frames - 1, max_frames, dtype=np.int64)

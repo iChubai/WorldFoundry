@@ -320,7 +320,7 @@ def int8_gemm_bias_triton(a, b, bias, a_scales, b_scales, fuse_gelu=False, outpu
     assert a.shape[1] == b.shape[0], f"incompatible dimensions {a.shape} and {b.shape}"
     M, K = a.shape
     _, N = b.shape
-    out_shape = a_orig_shape[:-1] + (N,)
+    out_shape = (*a_orig_shape[:-1], N)
     # common type between a and b
     ab_dtype = get_higher_dtype(a.dtype, b.dtype)
 
@@ -545,7 +545,7 @@ def int8_gemm_triton(a, b, a_scales, b_scales, fuse_gelu=False, output_dtype=Non
     assert a.shape[1] == b.shape[0], f"incompatible dimensions {a.shape} and {b.shape}"
     M, K = a.shape
     _, N = b.shape
-    out_shape = a_orig_shape[:-1] + (N,)
+    out_shape = (*a_orig_shape[:-1], N)
     # common type between a and b
     ab_dtype = get_higher_dtype(a.dtype, b.dtype)
 
@@ -771,7 +771,7 @@ def fp8_gemm_bias_triton(a, b, bias, a_scales, b_scales, fuse_gelu=False, output
 
     M, K = a2.shape
     _, N = b2.shape
-    out_shape = a_orig_shape[:-1] + (N,)
+    out_shape = (*a_orig_shape[:-1], N)
 
     if output_dtype is None:
         output_dtype = torch.float16
@@ -961,7 +961,7 @@ def fp8_gemm_triton(a, b, a_scales, b_scales, fuse_gelu=False, output_dtype=None
 
     M, K = a2.shape
     _, N = b2.shape
-    out_shape = a_orig_shape[:-1] + (N,)
+    out_shape = (*a_orig_shape[:-1], N)
 
     if output_dtype is None:
         output_dtype = torch.float16

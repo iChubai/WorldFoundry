@@ -95,10 +95,7 @@ def _coerce_values_and_mask(
     array = np.asarray(values)
     if array.ndim == 0:
         raise ValueError("Action values must have at least one dimension.")
-    if not np.issubdtype(array.dtype, np.floating):
-        array = array.astype(np.float32)
-    else:
-        array = array.copy()
+    array = array.astype(np.float32) if not np.issubdtype(array.dtype, np.floating) else array.copy()
 
     width = array.shape[-1]
     raw_mask = statistics.get("mask")

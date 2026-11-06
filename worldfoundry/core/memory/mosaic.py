@@ -700,8 +700,8 @@ def coverage_mask(patches: Sequence[RetrievedPatch], intrinsics: CameraIntrinsic
     for patch in patches:
         cells = []
         for point in patch.projected_footprint or [patch.target_position]:
-            gx = int(floor(point[0] / max(intrinsics.width, 1) * grid_w))
-            gy = int(floor(point[1] / max(intrinsics.height, 1) * grid_h))
+            gx = floor(point[0] / max(intrinsics.width, 1) * grid_w)
+            gy = floor(point[1] / max(intrinsics.height, 1) * grid_h)
             if 0 <= gx < grid_w and 0 <= gy < grid_h:
                 cells.append((gx, gy))
         if not cells:
@@ -751,8 +751,8 @@ def _sample_depth(depth_map: Sequence[Sequence[float]], coord: Point2) -> float:
     """Safely samples nearest-neighbor depth from a 2D depth map given continuous UV coordinates."""
     if not depth_map or not depth_map[0]:
         return 1.0
-    x = max(0, min(int(round(coord[0])), len(depth_map[0]) - 1))
-    y = max(0, min(int(round(coord[1])), len(depth_map) - 1))
+    x = max(0, min(round(coord[0]), len(depth_map[0]) - 1))
+    y = max(0, min(round(coord[1]), len(depth_map) - 1))
     depth = float(depth_map[y][x])
     return depth if depth > 0.0 and isfinite(depth) else 1.0
 

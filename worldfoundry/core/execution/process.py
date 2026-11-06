@@ -21,6 +21,7 @@ Public surface:
 
 from __future__ import annotations
 
+import contextlib
 import os
 import signal
 import subprocess
@@ -119,19 +120,15 @@ def terminate_process_group(process: subprocess.Popen[Any], *, grace_seconds: fl
         return
     if process.poll() is not None:
         return
-    try:
+    with contextlib.suppress(OSError, ProcessLookupError):
         process.terminate()
-    except (OSError, ProcessLookupError):
-        pass
     try:
         process.wait(timeout=max(float(grace_seconds), 0.0))
         return
     except subprocess.TimeoutExpired:
         pass
-    try:
+    with contextlib.suppress(OSError, ProcessLookupError):
         process.kill()
-    except (OSError, ProcessLookupError):
-        pass
     process.wait()
 
 
@@ -156,33 +153,25 @@ def terminate_process_tree(process: subprocess.Popen[Any], *, grace_seconds: flo
             parent = psutil.Process(process.pid)
             descendants = parent.children(recursive=True)
             for child in reversed(descendants):
-                try:
+                with contextlib.suppress(psutil.NoSuchProcess):
                     child.terminate()
-                except psutil.NoSuchProcess:
-                    pass
         except (OSError, psutil.AccessDenied, psutil.NoSuchProcess):
             descendants = []
-    try:
+    with contextlib.suppress(OSError, ProcessLookupError):
         process.terminate()
-    except (OSError, ProcessLookupError):
-        pass
     try:
         process.wait(timeout=max(float(grace_seconds), 0.0))
     except subprocess.TimeoutExpired:
-        try:
+        with contextlib.suppress(OSError, ProcessLookupError):
             process.kill()
-        except (OSError, ProcessLookupError):
-            pass
         process.wait()
     if descendants:
         import psutil
 
         _, alive = psutil.wait_procs(descendants, timeout=max(float(grace_seconds), 0.0))
         for child in alive:
-            try:
+            with contextlib.suppress(psutil.NoSuchProcess):
                 child.kill()
-            except psutil.NoSuchProcess:
-                pass
         if alive:
             psutil.wait_procs(alive, timeout=max(float(grace_seconds), 0.0))
 

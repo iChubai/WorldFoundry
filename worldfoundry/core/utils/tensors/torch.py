@@ -51,7 +51,7 @@ def weight_init(m):
         nn.init.orthogonal_(m.weight.data)
         if hasattr(m.bias, "data"):
             m.bias.data.fill_(0.0)
-    elif isinstance(m, nn.Conv2d) or isinstance(m, nn.ConvTranspose2d):
+    elif isinstance(m, (nn.Conv2d, nn.ConvTranspose2d)):
         gain = nn.init.calculate_gain("relu")
         nn.init.orthogonal_(m.weight.data, gain)
         if hasattr(m.bias, "data"):
@@ -283,7 +283,7 @@ def load_torch(*fpath: str, map_location="cpu") -> dict:
     try:
         return load_torch_checkpoint(path, map_location=map_location)
     except RuntimeError as e:
-        raise RuntimeError(f"{e}\n\n --- Error loading {path}")
+        raise RuntimeError(f"{e}\n\n --- Error loading {path}") from e
 
 
 def save_torch(D, *fpath):
@@ -359,10 +359,8 @@ def torch_multi_index_select(x: torch.Tensor, indices: torch.Tensor):
     x_shape = x.size()
     assert len(x_shape) >= idx_dim
     remainder_dim = len(x_shape) - idx_dim
-    if remainder_dim == 0:
-        x = torch.flatten(x)
-    else:
-        x = x.view(-1, *x_shape[-remainder_dim:])  # flatten the first M dims
+    # Flatten the first M dims (every dim when none remain).
+    x = torch.flatten(x) if remainder_dim == 0 else x.view(-1, *x_shape[-remainder_dim:])
     # convert indices to a 1D flattened array
     indices = torch_flatten_indices(indices, x_shape[:idx_dim])
     selected = x[indices]
@@ -632,10 +630,7 @@ def torch_normalize(tensor: torch.Tensor, mean, std, inplace=False):
 
 def contains_rnn(net: nn.Module) -> bool:
     """True if any submodule is an ``nn.RNNBase`` (LSTM / GRU / RNN)."""
-    for m in net.modules():
-        if isinstance(m, nn.RNNBase):
-            return True
-    return False
+    return any(isinstance(m, nn.RNNBase) for m in net.modules())
 
 
 def multi_one_hot(x, num_classes: list[int], to_float=True):
@@ -664,7 +659,7 @@ def multi_one_hot(x, num_classes: list[int], to_float=True):
 def _random_derangement(n):
     """Sattolo-style rejection sample of a permutation with no fixed points."""
     while True:
-        v = [i for i in range(n)]
+        v = list(range(n))
         for j in range(n - 1, -1, -1):
             p = random.randint(0, j)
             if v[p] == j:
@@ -899,10 +894,7 @@ def fix_random_seeds(seed=31):
 def has_batchnorms(model):
     """Check whether a model contains any BatchNorm layers."""
     bn_types = (nn.BatchNorm1d, nn.BatchNorm2d, nn.BatchNorm3d, nn.SyncBatchNorm)
-    for _, module in model.named_modules():
-        if isinstance(module, bn_types):
-            return True
-    return False
+    return any(isinstance(module, bn_types) for _, module in model.named_modules())
 
 
 class AverageMeter:
@@ -938,10 +930,7 @@ class AverageMeter:
 
     def __str__(self):
         """Format the current mean; include ``name`` when set."""
-        if self._fmt:
-            s = f"{float(self):{self._fmt}}"
-        else:
-            s = str(float(self))
+        s = f"{float(self):{self._fmt}}" if self._fmt else str(float(self))
         if self._name:
             return f"{self._name}: {s}"
         return s

@@ -34,10 +34,10 @@ from typing import Any
 
 import torch
 
-logger = logging.getLogger(__name__)
-
 from worldfoundry.core.attention.backends.native import native_sdpa_priority, scaled_dot_product_attention
 from worldfoundry.core.attention.backends.probe import probe_attention_backends
+
+logger = logging.getLogger(__name__)
 
 try:
     from torch.nn.attention.bias import causal_lower_right as _causal_lower_right

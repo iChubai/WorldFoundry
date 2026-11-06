@@ -170,15 +170,15 @@ class _GaussianRaster(torch.autograd.Function):
         last = torch.empty_like(alpha, dtype=torch.int32)
         tile_width = triton.cdiv(width, 16)
         tile_count = tile_width * triton.cdiv(height, 16)
-        configuration = dict(
-            WIDTH=width,
-            HEIGHT=height,
-            TILE_WIDTH=tile_width,
-            TILE_COUNT=tile_count,
-            INTERSECTIONS=indices.numel(),
-            BACKGROUND=background,
-            BLOCK=256,
-        )
+        configuration = {
+            "WIDTH": width,
+            "HEIGHT": height,
+            "TILE_WIDTH": tile_width,
+            "TILE_COUNT": tile_count,
+            "INTERSECTIONS": indices.numel(),
+            "BACKGROUND": background,
+            "BLOCK": 256,
+        }
         cast(Any, _raster_forward)[(tile_count,)](
             means,
             conics,

@@ -15,6 +15,7 @@ from __future__ import annotations
 
 import ast
 import builtins
+import contextlib
 import importlib.machinery
 import importlib.util
 import inspect
@@ -227,10 +228,8 @@ class LazyConfig:
 
         path = Path(filename)
         path.parent.mkdir(parents=True, exist_ok=True)
-        try:
+        with contextlib.suppress(Exception):
             config = deepcopy(config)
-        except Exception:
-            pass
         value = _sort_recursive(_plain_config(config))
         yaml.add_representer(
             OrderedDict,

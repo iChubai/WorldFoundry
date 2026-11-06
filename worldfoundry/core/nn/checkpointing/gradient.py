@@ -93,10 +93,7 @@ def clip_grad_norm_(
         The (possibly reduced) total gradient norm.
     """
 
-    if isinstance(parameters, torch.Tensor):
-        parameters = [parameters]
-    else:
-        parameters = list(parameters)
+    parameters = [parameters] if isinstance(parameters, torch.Tensor) else list(parameters)
     grads = [param.grad for param in parameters if param.grad is not None]
     total_norm = get_total_norm(grads, norm_type, error_if_nonfinite, foreach)
 
@@ -132,10 +129,7 @@ def get_total_norm(
     returning NaN/Inf.
     """
 
-    if isinstance(tensors, torch.Tensor):
-        tensors = [tensors]
-    else:
-        tensors = list(tensors)
+    tensors = [tensors] if isinstance(tensors, torch.Tensor) else list(tensors)
     norm_type = float(norm_type)
     if len(tensors) == 0:
         return torch.tensor(0.0)

@@ -124,10 +124,7 @@ def apply_rotary_embedding(
             "cos/sin last dimension must be at least rotary_dim or rotary_dim // 2 "
             f"(got cos={cos_width}, sin={sin_width}, rotary_dim={dim})."
         )
-    if int(passthrough.shape[-1]) == 0:
-        output = rotated
-    else:
-        output = _concat((rotated, passthrough), like=value)
+    output = rotated if int(passthrough.shape[-1]) == 0 else _concat((rotated, passthrough), like=value)
     if isinstance(value, torch.Tensor) and output.dtype != value.dtype:
         output = output.to(dtype=value.dtype)
     return output

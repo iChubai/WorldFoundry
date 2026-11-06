@@ -57,10 +57,7 @@ def rope_apply_mem_sp(x, grid_sizes, freqs, memory_length, memory_latent_idx, pr
         if memory_length > 0:
             grid_sizes_mem = [memory_length, h, w]
 
-            if memory_latent_idx is not None:
-                mem_indices = memory_latent_idx
-            else:
-                mem_indices = list(range(memory_length))
+            mem_indices = memory_latent_idx if memory_latent_idx is not None else list(range(memory_length))
 
             freqs_mem = _get_freqs_chunk(grid_sizes_mem, freqs, mem_indices)
             freqs_i_list.append(freqs_mem)
@@ -110,10 +107,7 @@ def _get_freqs_chunk(grid_sizes, freqs, t_indices):
     f, h, w = grid_sizes
     seq_len = f * h * w
 
-    if torch.is_tensor(t_indices):
-        t_idx = t_indices
-    else:
-        t_idx = torch.tensor(t_indices, device=freqs[0].device)
+    t_idx = t_indices if torch.is_tensor(t_indices) else torch.tensor(t_indices, device=freqs[0].device)
     t_idx = t_idx.to(dtype=torch.long)
 
     if freqs[0].dim() == 3:
@@ -261,23 +255,23 @@ def sp_dit_forward(
     if t.dim() == 2 and t.size(1) == seq_len:
         t = torch.chunk(t, get_world_size(), dim=1)[get_rank()]
 
-    kwargs = dict(
-        e=e0,
-        seq_lens=seq_lens,
-        grid_sizes=grid_sizes,
-        freqs=self.freqs,
-        context=context,
-        context_lens=context_lens,
-        mouse_cond=mouse_cond,
-        keyboard_cond=keyboard_cond,
-        plucker_emb=plucker_emb,
-        mouse_cond_memory=mouse_cond_memory,
-        keyboard_cond_memory=keyboard_cond_memory,
-        memory_length=memory_length,
-        memory_latent_idx=memory_latent_idx,
-        predict_latent_idx=predict_latent_idx,
-        fa_version=fa_version,
-    )
+    kwargs = {
+        "e": e0,
+        "seq_lens": seq_lens,
+        "grid_sizes": grid_sizes,
+        "freqs": self.freqs,
+        "context": context,
+        "context_lens": context_lens,
+        "mouse_cond": mouse_cond,
+        "keyboard_cond": keyboard_cond,
+        "plucker_emb": plucker_emb,
+        "mouse_cond_memory": mouse_cond_memory,
+        "keyboard_cond_memory": keyboard_cond_memory,
+        "memory_length": memory_length,
+        "memory_latent_idx": memory_latent_idx,
+        "predict_latent_idx": predict_latent_idx,
+        "fa_version": fa_version,
+    }
 
     for block in self.blocks:
         x = block(x, **kwargs)

@@ -26,11 +26,8 @@ def hdf5_save(data: BaseModel | dict, group: h5py.Group) -> None:
     scalars are stored as length-1 datasets. Unsupported types raise
     :class:`ValueError`.
     """
-    if isinstance(data, BaseModel):
-        # Convert to dict and exclude None values
-        data_dict = data.model_dump(mode="python", exclude_none=True)
-    else:
-        data_dict = data
+    # Models are converted to a dict without None values.
+    data_dict = data.model_dump(mode="python", exclude_none=True) if isinstance(data, BaseModel) else data
 
     for key, value in data_dict.items():
         if isinstance(value, np.ndarray):
@@ -42,8 +39,8 @@ def hdf5_save(data: BaseModel | dict, group: h5py.Group) -> None:
             # For primitive types, convert to numpy array
             try:
                 group.create_dataset(key, data=np.array(value))
-            except TypeError:
-                raise ValueError(f"Unsupported type: {type(value)} for key: {key}")
+            except TypeError as exc:
+                raise ValueError(f"Unsupported type: {type(value)} for key: {key}") from exc
 
 
 def hdf5_load(group: h5py.Group) -> dict:

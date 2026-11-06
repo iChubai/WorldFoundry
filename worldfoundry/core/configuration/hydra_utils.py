@@ -176,7 +176,7 @@ def register_class(cls, alias=None):
 
 def omegaconf_to_dict(cfg, resolve: bool = True, enum_to_str: bool = False):
     """Convert nested OmegaConf containers to plain Python dicts and lists."""
-    kw = dict(resolve=resolve, enum_to_str=enum_to_str)
+    kw = {"resolve": resolve, "enum_to_str": enum_to_str}
     if OmegaConf.is_config(cfg):
         return OmegaConf.to_container(cfg, **kw)
     elif is_sequence(cfg):
@@ -208,8 +208,8 @@ def get_class(path):
         mod = import_module(module_path)
         try:
             class_type = getattr(mod, class_name)
-        except AttributeError:
-            raise ImportError(f"Class {class_name} is not in module {module_path}")
+        except AttributeError as exc:
+            raise ImportError(f"Class {class_name} is not in module {module_path}") from exc
         return class_type
     except ValueError as e:
         print("Error initializing class " + path, file=sys.stderr)

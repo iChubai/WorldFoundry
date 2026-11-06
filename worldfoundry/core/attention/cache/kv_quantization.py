@@ -283,10 +283,7 @@ class QuantizedKVStore:
     @property
     def length(self) -> int:
         """Cached tokens along the sequence dimension."""
-        return sum(
-            (item.shape[self.seq_dim] if isinstance(item, QuantizedTensor) else item.shape[self.seq_dim])
-            for item in self._keys
-        )
+        return sum(item.shape[self.seq_dim] for item in self._keys)
 
     def nbytes(self) -> int:
         """Bytes held across keys and values."""

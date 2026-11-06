@@ -75,7 +75,7 @@ def _expands(dim, *xs):
             assert len(x) == dim
             return x
 
-    return map(lambda x: _expand(x), xs)
+    return map(_expand, xs)
 
 
 _HELPER_TENSOR = torch.zeros((1,))
@@ -213,10 +213,7 @@ def shape_poolnd(dim, input_shape, kernel_size, stride=None, padding=0, dilation
     """
     The only difference from infer_shape_convnd is that `stride` default is None
     """
-    if has_batch:
-        out_channels = input_shape[1]
-    else:
-        out_channels = input_shape[0]
+    out_channels = input_shape[1] if has_batch else input_shape[0]
     return shape_convnd(
         dim,
         input_shape,

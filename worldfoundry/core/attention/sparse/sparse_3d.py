@@ -758,10 +758,7 @@ def ssta_3d_attention(
 
     if text_len > 0:
         image_o = o[:, :, :-text_target_size, :]
-        if need_pad_text:
-            text_o = o[:, :, -text_target_size:-text_pad_size, :]
-        else:
-            text_o = o[:, :, -text_target_size:, :]
+        text_o = o[:, :, -text_target_size:-text_pad_size, :] if need_pad_text else o[:, :, -text_target_size:, :]
     else:
         image_o = o
 
@@ -778,9 +775,6 @@ def ssta_3d_attention(
             unpad_image_o = unpad_image_o[:, :, :, :, :-pad_w, :]
         image_o = unpad_image_o.reshape(b, hd, -1, d)
 
-    if text_len > 0:
-        o = torch.cat([image_o, text_o], dim=2)
-    else:
-        o = image_o
+    o = torch.cat([image_o, text_o], dim=2) if text_len > 0 else image_o
 
     return o, sparse_ratio

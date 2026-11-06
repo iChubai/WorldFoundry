@@ -221,10 +221,7 @@ def sequence_parallel_attention(
         query = torch.cat([query, encoder_query], dim=1)
         key = torch.cat([key, encoder_key], dim=1)
         value = torch.cat([value, encoder_value], dim=1)
-        if text_mask is not None:
-            attn_mask = F.pad(text_mask, (sequence_length, 0), value=True)
-        else:
-            attn_mask = None
+        attn_mask = F.pad(text_mask, (sequence_length, 0), value=True) if text_mask is not None else None
 
         if attn_mask is not None:
             if attn_mask.dtype != torch.bool and attn_mask.dtype in [torch.int64, torch.int32]:

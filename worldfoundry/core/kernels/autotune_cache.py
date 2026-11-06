@@ -25,6 +25,7 @@ Public surface:
 
 from __future__ import annotations
 
+import contextlib
 import hashlib
 import importlib.metadata
 import json
@@ -329,10 +330,8 @@ def store_persistent_selection(
         return
     finally:
         if temporary is not None:
-            try:
+            with contextlib.suppress(OSError):
                 temporary.unlink(missing_ok=True)
-            except OSError:
-                pass
 
 
 def invalidate_persistent_selection(
@@ -353,10 +352,8 @@ def invalidate_persistent_selection(
         signature=signature,
         tensor=tensor,
     )
-    try:
+    with contextlib.suppress(OSError):
         (directory / f"{key}.json").unlink(missing_ok=True)
-    except OSError:
-        pass
 
 
 __all__ = [

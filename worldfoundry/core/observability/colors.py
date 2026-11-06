@@ -177,7 +177,7 @@ class Color:
 
 
 if __name__ == "__main__":
-    print("Current terminal type: %s" % os.getenv("TERM"))
+    print("Current terminal type: {}".format(os.getenv("TERM")))
     print("Test basic colors:")
     cprint("Grey color", color="grey")
     cprint("Red color", color="red")

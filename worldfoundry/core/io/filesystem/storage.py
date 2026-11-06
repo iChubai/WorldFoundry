@@ -256,9 +256,11 @@ def copy_uri(src: str | os.PathLike[str], dst: str | os.PathLike[str], **storage
         target = uri_to_local_path(dst)
         target.parent.mkdir(parents=True, exist_ok=True)
         return str(shutil.copy(source, target))
-    with open_uri(src, "rb", **storage_options) as source_handle:
-        with open_uri(dst, "wb", **storage_options) as target_handle:
-            shutil.copyfileobj(source_handle, target_handle, length=_COPY_CHUNK_BYTES)
+    with (
+        open_uri(src, "rb", **storage_options) as source_handle,
+        open_uri(dst, "wb", **storage_options) as target_handle,
+    ):
+        shutil.copyfileobj(source_handle, target_handle, length=_COPY_CHUNK_BYTES)
     return str(dst)
 
 

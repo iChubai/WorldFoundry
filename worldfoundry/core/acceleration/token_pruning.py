@@ -63,7 +63,7 @@ def select_token_indices(
         raise ValueError("keep_ratio must be in (0, 1]")
     moved = hidden_states.movedim(seq_dim, -2)
     num_tokens = moved.shape[-2]
-    keep = max(1, min(num_tokens, int(round(num_tokens * float(keep_ratio)))))
+    keep = max(1, min(num_tokens, round(num_tokens * float(keep_ratio))))
     if keep >= num_tokens:
         return torch.arange(num_tokens, device=hidden_states.device, dtype=torch.long)
 

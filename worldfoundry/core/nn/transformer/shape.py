@@ -77,7 +77,7 @@ def mlp_hidden_size(hidden_size: int, *, multiplier: float = 4.0, multiple_of: i
         raise ValueError("hidden_size must be positive.")
     if float(multiplier) <= 0:
         raise ValueError("multiplier must be positive.")
-    width = int(round(int(hidden_size) * float(multiplier)))
+    width = round(int(hidden_size) * float(multiplier))
     if multiple_of is None:
         return max(1, width)
     multiple = int(multiple_of)

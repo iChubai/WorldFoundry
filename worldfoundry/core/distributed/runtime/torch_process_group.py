@@ -468,7 +468,7 @@ def collate_batches(data_batches: list[dict[str, torch.Tensor]]) -> torch.Tensor
     elif isinstance(data_batches[0], collections.abc.Mapping):
         # Recurse per key so a mixed tensor/dict batch stays aligned across ranks.
         data_collate = {}
-        for key in data_batches[0].keys():
+        for key in data_batches[0]:
             data_collate[key] = collate_batches([data[key] for data in data_batches])  # type: ignore[index]
     else:
         raise TypeError(f"Unsupported batch type: {type(data_batches[0])!r}")

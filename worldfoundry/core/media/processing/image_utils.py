@@ -88,9 +88,8 @@ def load_pil_image(image_input, *, first_sequence_item: bool = True) -> Image.Im
         if array.ndim == 3 and array.shape[0] in {1, 3, 4}:
             array = np.transpose(array, (1, 2, 0))
         if array.dtype != np.uint8:
-            if np.issubdtype(array.dtype, np.floating):
-                if array.size and array.min() >= -1.0 and array.max() <= 1.0:
-                    array = (array + 1.0) * 127.5 if array.min() < 0.0 else array * 255.0
+            if np.issubdtype(array.dtype, np.floating) and array.size and array.min() >= -1.0 and array.max() <= 1.0:
+                array = (array + 1.0) * 127.5 if array.min() < 0.0 else array * 255.0
             array = np.clip(array, 0, 255).astype(np.uint8)
         if array.ndim == 3 and array.shape[-1] == 1:
             array = np.repeat(array, 3, axis=-1)
@@ -199,8 +198,8 @@ def resize_and_center_crop(image, target_width, target_height):
     pil_image = Image.fromarray(image)
     original_width, original_height = pil_image.size
     scale_factor = max(target_width / original_width, target_height / original_height)
-    resized_width = int(round(original_width * scale_factor))
-    resized_height = int(round(original_height * scale_factor))
+    resized_width = round(original_width * scale_factor)
+    resized_height = round(original_height * scale_factor)
     resized_image = pil_image.resize((resized_width, resized_height), Image.LANCZOS)
     left = (resized_width - target_width) / 2
     top = (resized_height - target_height) / 2
@@ -256,8 +255,8 @@ def resize_and_center_crop_pytorch(image, target_width, target_height):
         return image
 
     scale_factor = max(target_width / W, target_height / H)
-    resized_width = int(round(W * scale_factor))
-    resized_height = int(round(H * scale_factor))
+    resized_width = round(W * scale_factor)
+    resized_height = round(H * scale_factor)
 
     resized = torch.nn.functional.interpolate(
         image, size=(resized_height, resized_width), mode="bilinear", align_corners=False
@@ -450,7 +449,7 @@ def basic_image_tensor_preprocess(
             warnings.warn(
                 f"{'Down' if shape < input_size else 'Up'}sampling image"
                 f" from original resolution {input_size}x{input_size}"
-                f" to {shape}x{shape}"
+                f" to {shape}x{shape}",
             )
         img = kornia.geometry.transform.resize(img, shape).clamp(0.0, 255.0)
 

@@ -17,6 +17,7 @@ game-control overlays, and open-loop action comparison plots.
 
 from __future__ import annotations
 
+import contextlib
 from collections.abc import Sequence
 from typing import Literal
 
@@ -166,10 +167,7 @@ def prepare_depth_visualization(
     because debug viewers prefer a garbage frame over a crashed job.
     """
 
-    if depth.dtype == np.uint8:
-        depth_uint8 = squeeze_depth_to_2d(depth)
-    else:
-        depth_uint8 = depth_to_uint8(depth)
+    depth_uint8 = squeeze_depth_to_2d(depth) if depth.dtype == np.uint8 else depth_to_uint8(depth)
     if depth_uint8 is None:
         depth_uint8 = np.asarray(depth, dtype=np.uint8)
     if grayscale:
@@ -229,10 +227,7 @@ def colorize_depth_map(
     import matplotlib
 
     assert depth.ndim == 2, "depth should be of shape (H, W)"
-    if mask is None:
-        depth = np.where(depth > 0, depth, np.nan)
-    else:
-        depth = np.where((depth > 0) & mask, depth, np.nan)
+    depth = np.where(depth > 0, depth, np.nan) if mask is None else np.where((depth > 0) & mask, depth, np.nan)
     if near is None:
         near = np.nanquantile(depth, 0.001)
     if far is None:
@@ -258,11 +253,8 @@ def colorize_normal_map(
 
     if mask is not None:
         normal = np.where(mask[..., None], normal, 0)
-    if flip_yz:
-        # OpenGL-style +Y-up / +Z-forward → OpenCV display axes.
-        normal = normal * [0.5, -0.5, -0.5] + 0.5
-    else:
-        normal = normal * 0.5 + 0.5
+    # flip_yz maps OpenGL-style +Y-up / +Z-forward to OpenCV display axes.
+    normal = normal * [0.5, -0.5, -0.5] + 0.5 if flip_yz else normal * 0.5 + 0.5
     return (normal.clip(0, 1) * 255).astype(np.uint8)
 
 
@@ -347,10 +339,8 @@ def download_file_from_url(url: str, filename: str, timeout: float = 60.0) -> st
                         handle.write(chunk)
         return filename
     except requests.exceptions.RequestException as exc:
-        try:
+        with contextlib.suppress(OSError):
             os.remove(filename)
-        except OSError:
-            pass
         logging.getLogger(__name__).warning("Error downloading %s to %s: %s", url, filename, exc)
         return None
 
@@ -624,10 +614,7 @@ def render_point_cloud(
     pts_cam = pts_cam[valid]
     cols = colors[valid]
     if cols.dtype in (np.float64, np.float32):
-        if cols.max() <= 1.0:
-            cols = (cols * 255).clip(0, 255).astype(np.uint8)
-        else:
-            cols = cols.clip(0, 255).astype(np.uint8)
+        cols = (cols * 255).clip(0, 255).astype(np.uint8) if cols.max() <= 1.0 else cols.clip(0, 255).astype(np.uint8)
 
     fx = fy = focal_scale * max(height, width)
     cx_img, cy_img = width / 2.0, height / 2.0

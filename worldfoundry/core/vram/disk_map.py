@@ -140,7 +140,7 @@ class DiskMap(Mapping):
         self.flush_files()
         self.name_map = {}
         for file_id, file in enumerate(self.files):
-            for name in file.keys():
+            for name in file.keys():  # noqa: SIM118  # safetensors handles are not iterable
                 self.name_map[name] = file_id
         self.rename_dict = self.fetch_rename_dict(state_dict_converter)
 
@@ -190,7 +190,7 @@ class DiskMap(Mapping):
             return None
         state_dict = {}
         for file in self.files:
-            for name in file.keys():
+            for name in file.keys():  # noqa: SIM118  # safetensors handles are not iterable
                 state_dict[name] = name
         state_dict = state_dict_converter(state_dict)
         return state_dict

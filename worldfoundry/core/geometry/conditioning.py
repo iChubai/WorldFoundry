@@ -176,7 +176,7 @@ def get_pose_inverse(T):
     t_inv = -torch.matmul(R_inv, t.unsqueeze(-1)).squeeze(-1)  # (..., 3)
 
     # Construct the inverse matrix T_inv
-    T_inv = torch.eye(4, dtype=T.dtype, device=T.device).repeat(T.shape[:-2] + (1, 1))
+    T_inv = torch.eye(4, dtype=T.dtype, device=T.device).repeat((*T.shape[:-2], 1, 1))
     T_inv[..., :3, :3] = R_inv
     T_inv[..., :3, 3] = t_inv
 

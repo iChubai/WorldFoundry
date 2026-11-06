@@ -431,10 +431,7 @@ def _f_copytree(
     Use f_copytree as entry
     """
     names = os.listdir(src)
-    if ignore is not None:
-        ignored_names = ignore(src, names)
-    else:
-        ignored_names = set()
+    ignored_names = ignore(src, names) if ignore is not None else set()
 
     os.makedirs(dst, exist_ok=exist_ok)
     errors = []
@@ -498,8 +495,8 @@ def _include_patterns(*patterns):
 
         import fnmatch
 
-        keep = set(name for pattern in patterns for name in fnmatch.filter(names, pattern))
-        ignore = set(name for name in names if name not in keep and not os.path.isdir(os.path.join(path, name)))
+        keep = {name for pattern in patterns for name in fnmatch.filter(names, pattern)}
+        ignore = {name for name in names if name not in keep and not os.path.isdir(os.path.join(path, name))}
         return ignore
 
     return _ignore_patterns
@@ -661,7 +658,7 @@ def extract_tar(source_tarball, output_dir=".", members=None):
                 if member.islnk() or member.issym():
                     raise ValueError(
                         f"tar member {member.name!r} is a link; refusing to extract without PEP 706 tarfile filters"
-                    )
+                    ) from None
             tar.extractall(output_dir, members=members)
 
 
@@ -754,10 +751,7 @@ def next_available_file_name(
             assert isinstance(suffix, str)
         else:
             raise NotImplementedError(f"Unsupported suffix template {suffix_template}")
-        if before_ext:
-            fpath = insert_before_ext(orig_file_path, suffix)
-        else:
-            fpath = orig_file_path + suffix
+        fpath = insert_before_ext(orig_file_path, suffix) if before_ext else orig_file_path + suffix
         i += 1
     return fpath
 

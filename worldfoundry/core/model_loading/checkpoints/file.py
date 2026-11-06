@@ -142,12 +142,14 @@ def load_state_dict_from_folder(file_path, torch_dtype=None, device="cpu", pin_m
 def load_state_dict_from_safetensors(file_path, torch_dtype=None, device="cpu"):
     """Load one safetensors file, optionally casting tensors to ``torch_dtype``."""
     state_dict = {}
-    with local_path_for_uri(file_path) as local_path:
-        with safe_open(str(local_path), framework="pt", device=str(device)) as f:
-            for k in f.keys():
-                state_dict[k] = f.get_tensor(k)
-                if torch_dtype is not None:
-                    state_dict[k] = state_dict[k].to(torch_dtype)
+    with (
+        local_path_for_uri(file_path) as local_path,
+        safe_open(str(local_path), framework="pt", device=str(device)) as f,
+    ):
+        for k in f.keys():  # noqa: SIM118  # safetensors handles are not iterable
+            state_dict[k] = f.get_tensor(k)
+            if torch_dtype is not None:
+                state_dict[k] = state_dict[k].to(torch_dtype)
     return state_dict
 
 
@@ -448,7 +450,7 @@ def load_keys_dict_from_safetensors(file_path):
     """Read tensor shapes from a safetensors file without materializing values."""
     keys_dict = {}
     with safe_open(file_path, framework="pt", device="cpu") as f:
-        for k in f.keys():
+        for k in f.keys():  # noqa: SIM118  # safetensors handles are not iterable
             keys_dict[k] = f.get_slice(k).get_shape()
     return keys_dict
 

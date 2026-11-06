@@ -19,8 +19,11 @@ import torch
 # ──────────────────────────────────────────────────────────────────────────
 
 
+_META_DEVICE = torch.device("meta")
+
+
 @contextmanager
-def init_weights_on_device(device=torch.device("meta"), include_buffers: bool = False):
+def init_weights_on_device(device=_META_DEVICE, include_buffers: bool = False):
     """Temporarily redirect newly registered module weights to one device.
 
     Args:
@@ -92,7 +95,7 @@ def init_weights_on_device(device=torch.device("meta"), include_buffers: bool = 
                 setattr(torch, name, old_fn)
 
 
-def skip_model_initialization(device=torch.device("meta")):
+def skip_model_initialization(device=_META_DEVICE):
     """Return an allocation-skipping context for constructing checkpoint-backed models."""
     return init_weights_on_device(device=device)
 

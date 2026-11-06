@@ -35,13 +35,11 @@ Public surface: :class:`NCCLLibrary`, :class:`ncclDataTypeEnum`,
 # more flexible. We can easily switch between different versions of NCCL by
 # changing the environment variable `TRAINER_NCCL_SO_PATH`, or the `so_file`
 # variable in the code.
-
 # TODO(will): support TRAINER_NCCL_SO_PATH
-
 import ctypes
 import platform
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, ClassVar
 
 import torch
 from torch.distributed import ReduceOp
@@ -66,7 +64,7 @@ ncclComm_t = ctypes.c_void_p
 class ncclUniqueId(ctypes.Structure):
     """128-byte bootstrap id; rank 0 creates it, others receive the bytes."""
 
-    _fields_ = [("internal", ctypes.c_byte * 128)]
+    _fields_: ClassVar[list[tuple[str, Any]]] = [("internal", ctypes.c_byte * 128)]
 
 
 cudaStream_t = ctypes.c_void_p
@@ -169,7 +167,7 @@ class NCCLLibrary:
     platform is unsupported.
     """
 
-    exported_functions = [
+    exported_functions: ClassVar[list[Any]] = [
         # const char* ncclGetErrorString(ncclResult_t result)
         Function("ncclGetErrorString", ctypes.c_char_p, [ncclResult_t]),
         # ncclResult_t  ncclGetVersion(int *version);
@@ -251,11 +249,11 @@ class NCCLLibrary:
 
     # class attribute to store the mapping from the path to the library
     # to avoid loading the same library multiple times
-    path_to_library_cache: dict[str, Any] = {}
+    path_to_library_cache: ClassVar[dict[str, Any]] = {}
 
     # class attribute to store the mapping from library path
     #  to the corresponding dictionary
-    path_to_dict_mapping: dict[str, dict[str, Any]] = {}
+    path_to_dict_mapping: ClassVar[dict[str, dict[str, Any]]] = {}
 
     def __init__(self, so_file: str | None = None):
         """Load ``so_file`` or :func:`~..cuda_utils.find_nccl_library` and bind symbols."""

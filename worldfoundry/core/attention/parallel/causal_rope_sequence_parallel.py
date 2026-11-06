@@ -173,15 +173,15 @@ def sp_dit_forward(
     e0 = torch.chunk(e0, get_world_size(), dim=1)[get_rank()]
 
     # arguments
-    kwargs = dict(
-        e=e0,
-        seq_lens=seq_lens,
-        grid_sizes=grid_sizes,
-        freqs=self.freqs,
-        context=context,
-        context_lens=context_lens,
-        dit_cond_dict=dit_cond_dict,
-    )
+    kwargs = {
+        "e": e0,
+        "seq_lens": seq_lens,
+        "grid_sizes": grid_sizes,
+        "freqs": self.freqs,
+        "context": context,
+        "context_lens": context_lens,
+        "dit_cond_dict": dit_cond_dict,
+    }
 
     for block in self.blocks:
         x = block(x, **kwargs)
@@ -309,18 +309,18 @@ def sp_dit_forward_causal(
         dit_cond_dict = dict(dit_cond_dict)
         dit_cond_dict["c2ws_plucker_emb"] = c2ws_plucker_emb
 
-    kwargs = dict(
-        e=e0,
-        seq_lens=seq_lens,
-        grid_sizes=grid_sizes,
-        freqs=self.freqs,
-        context=context,
-        context_lens=context_lens,
-        dit_cond_dict=dit_cond_dict,
-        max_attention_size=max_attention_size,
-        frame_seqlen=frame_seqlen,
-        cross_attn_first_call=cross_attn_first_call,
-    )
+    kwargs = {
+        "e": e0,
+        "seq_lens": seq_lens,
+        "grid_sizes": grid_sizes,
+        "freqs": self.freqs,
+        "context": context,
+        "context_lens": context_lens,
+        "dit_cond_dict": dit_cond_dict,
+        "max_attention_size": max_attention_size,
+        "frame_seqlen": frame_seqlen,
+        "cross_attn_first_call": cross_attn_first_call,
+    }
 
     for block_index, block in enumerate(self.blocks):
         kwargs.update(

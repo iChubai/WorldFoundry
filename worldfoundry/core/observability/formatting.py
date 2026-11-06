@@ -114,7 +114,7 @@ def fstring(fmt_str, **kwargs):
 def get_format_keys(fmt_str):
     """Return field names referenced by a :class:`string.Formatter` template."""
     keys = []
-    for literal, field_name, fmt_spec, conversion in string.Formatter().parse(fmt_str):
+    for _literal, field_name, _fmt_spec, _conversion in string.Formatter().parse(fmt_str):
         if field_name:
             keys.append(field_name)
     return keys
@@ -135,10 +135,7 @@ def pretty_repr_str(obj, **kwargs):
     """
     Useful to produce __repr__()
     """
-    if isinstance(obj, str):
-        cls_name = obj
-    else:
-        cls_name = obj.__class__.__name__
+    cls_name = obj if isinstance(obj, str) else obj.__class__.__name__
     kw_strs = [k + "=" + pprint.pformat(v, indent=2, compact=True) for k, v in kwargs.items()]
     new_line = len(cls_name) + sum(len(kw) for kw in kw_strs) > 84
     if new_line:
@@ -317,13 +314,13 @@ class PrintToFile(PrintRedirection):
         out_path = None
         if out_file:
             out_path = os.path.expanduser(out_file)
-            self.out_file = open(out_path, "w")
+            self.out_file = open(out_path, "w")  # noqa: SIM115  # closed by close()
         if err_file:
             err_path = os.path.expanduser(err_file)
             if out_path is not None and err_path == out_path:  # redirect both stdout/err to one file
                 self.err_file = self.out_file
             else:
-                self.err_file = open(err_path, "w")
+                self.err_file = open(err_path, "w")  # noqa: SIM115  # closed by close()
         super().__init__(stdout=self.out_file, stderr=self.err_file)
 
     def __exit__(self, *args):
@@ -396,10 +393,7 @@ class ExcludeLoggingFilter(logging.Filter):
 
     def filter(self, record):
         """Return False when ``record.msg`` matches an exclude pattern."""
-        if match_patterns(record.msg, include=self._patterns):
-            return False
-        else:
-            return True
+        return not match_patterns(record.msg, include=self._patterns)
 
 
 class ReplaceStringLoggingFilter(logging.Filter):

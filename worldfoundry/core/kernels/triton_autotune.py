@@ -59,10 +59,7 @@ class CustomAutotuner(Autotuner):
         """Init."""
         super().__init__(*args, **kwargs)
         # Use device name if CUDA is available, otherwise use a default name
-        if torch.cuda.is_available():
-            device_name = torch.cuda.get_device_name(0).replace(" ", "_")
-        else:
-            device_name = "cpu"
+        device_name = torch.cuda.get_device_name(0).replace(" ", "_") if torch.cuda.is_available() else "cpu"
 
         self.best_config_cache_path = os.path.expanduser(
             os.path.join(

@@ -34,9 +34,11 @@ Public surface
 import hashlib
 import json
 from collections.abc import Callable
-from typing import Any, TypeVar, Union
+from typing import Any, TypeVar
 
 import torch
+
+from worldfoundry.core.distributed.runtime.logging import log
 
 try:
     # PyTorch has not yet promoted pytree to a stable public namespace on all
@@ -83,15 +85,13 @@ except ImportError:
         return {}
 
 
-from worldfoundry.core.distributed.runtime.logging import log
-
 __all__ = ["create_cuda_graph"]
 
 
 _IS_GRAPH_CAPTURING = False
 
 _T = TypeVar("_T")
-SingleOrTuple = Union[_T, tuple[_T, ...]]
+SingleOrTuple = _T | tuple[_T, ...]
 
 
 # ──────────────────────────────────────────────────────────────────────────
@@ -248,10 +248,7 @@ def _make_graphed_callables(
 
     # Default is to pass no kwargs to callables
     if sample_kwargs is None:
-        if isinstance(callables, tuple):
-            sample_kwargs = tuple({} for _ in range(len(sample_args)))
-        else:
-            sample_kwargs = {}
+        sample_kwargs = tuple({} for _ in range(len(sample_args))) if isinstance(callables, tuple) else {}
 
     # Canonicalize args as tuples
     just_one_callable = False
@@ -366,12 +363,12 @@ def _make_graphed_callables(
     # Capture forward graphs
     per_callable_static_outputs = []
     per_callable_output_unflatten_spec = []
-    graph_id = 0
-    for func, args, kwargs, fwd_graph in zip(callables, sample_args, sample_kwargs, fwd_graphs, strict=False):
+    for graph_id, (func, args, kwargs, fwd_graph) in enumerate(
+        zip(callables, sample_args, sample_kwargs, fwd_graphs, strict=False)
+    ):
         with torch.cuda.graph(fwd_graph, pool=mempool):
             outputs = func(*args, **kwargs)
         graph_callables[graph_id] = func
-        graph_id += 1
 
         flatten_outputs, spec = _tree_flatten(outputs)
         per_callable_static_outputs.append(tuple(flatten_outputs))
@@ -527,10 +524,7 @@ def make_graphed_callables_forward(
             assert isinstance(module, torch.nn.Module), f"Graphing for {type(module)} is not supported."
             forward_funcs.append(module)
 
-        if just_one_callable:
-            forward_funcs = forward_funcs[0]
-        else:
-            forward_funcs = tuple(forward_funcs)
+        forward_funcs = forward_funcs[0] if just_one_callable else tuple(forward_funcs)
 
         # Save RNG state so graph warmup never changes subsequent sampling.
         graph_safe_rng = graph_safe_rng_available()

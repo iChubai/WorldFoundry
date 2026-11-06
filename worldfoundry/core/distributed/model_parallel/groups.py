@@ -252,7 +252,7 @@ class RankGenerator:
 
         self.name_to_size = {"tp": self.tp, "pp": self.pp, "dp": self.dp, "cp": self.cp}
         order = order.lower()
-        for name in self.name_to_size.keys():
+        for name in self.name_to_size:
             if name not in order and self.name_to_size[name] != 1:
                 # Use the local ``order``: ``self.order`` is only assigned after
                 # this validation loop, so referencing it here raised an
@@ -386,10 +386,10 @@ def initialize_model_parallel(
     if nccl_communicator_config_path is not None:
         try:
             import yaml
-        except ImportError:
+        except ImportError as exc:
             raise RuntimeError(
                 "Cannot import `yaml`. Setting custom nccl communicator configs requires the yaml package."
-            )
+            ) from exc
 
         with open(nccl_communicator_config_path) as stream:
             nccl_comm_cfgs = yaml.safe_load(stream)
@@ -518,9 +518,11 @@ def is_unitialized() -> bool:
 
 def model_parallel_is_initialized():
     """Check if model and data parallel groups are initialized."""
-    if _TENSOR_MODEL_PARALLEL_GROUP is None or _PIPELINE_MODEL_PARALLEL_GROUP is None or _DATA_PARALLEL_GROUP is None:
-        return False
-    return True
+    return (
+        _TENSOR_MODEL_PARALLEL_GROUP is not None
+        and _PIPELINE_MODEL_PARALLEL_GROUP is not None
+        and _DATA_PARALLEL_GROUP is not None
+    )
 
 
 def get_model_parallel_group():

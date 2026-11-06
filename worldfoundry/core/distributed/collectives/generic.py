@@ -144,7 +144,7 @@ def get_local_proc_group(group_size=8):
     assert world_size % group_size == 0, (
         f"world size ({world_size}) should be evenly divided by group size ({group_size})."
     )
-    process_groups = getattr(get_local_proc_group, "process_groups", dict())
+    process_groups = getattr(get_local_proc_group, "process_groups", {})
     if group_size not in process_groups:
         num_groups = dist.get_world_size() // group_size
         groups = [list(range(i * group_size, (i + 1) * group_size)) for i in range(num_groups)]
@@ -321,7 +321,7 @@ def reduce_dict(input_dict, average=True):
             # only main process gets accumulated, so only divide by
             # world_size in this case
             values /= world_size
-        reduced_dict = {k: v for k, v in zip(names, values, strict=False)}
+        reduced_dict = dict(zip(names, values, strict=False))
     return reduced_dict
 
 

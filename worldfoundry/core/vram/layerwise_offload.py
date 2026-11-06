@@ -14,7 +14,7 @@ module — those expect resident shards.
 from __future__ import annotations
 
 from collections.abc import Iterator
-from contextlib import contextmanager, nullcontext
+from contextlib import contextmanager, nullcontext, suppress
 from dataclasses import dataclass, field
 from typing import Any
 
@@ -417,10 +417,8 @@ class _LayerwiseOffloadState:
         for name, param in self.module.named_parameters(recurse=True):
             cpu_tensor = param.detach().to("cpu")
             if self.pin_memory:
-                try:
+                with suppress(RuntimeError):
                     cpu_tensor = cpu_tensor.pin_memory()
-                except RuntimeError:
-                    pass
             counter = "pinned_cpu_tensors" if cpu_tensor.is_pinned() else "pageable_cpu_tensors"
             # Setup inventory is lifetime evidence.  Request counters are
             # incremented when a copy actually consumes the CPU master.

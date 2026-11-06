@@ -317,7 +317,6 @@ class MetricLogger:
         summary line — callers must pass a non-empty sequence.
         """
 
-        index = 0
         header = header or ""
         start_time = time.time()
         end = time.time()
@@ -336,7 +335,7 @@ class MetricLogger:
             log_msg.append("max mem: {memory:.0f}")
         log_msg = self.delimiter.join(log_msg)
         mb = 1024.0 * 1024.0
-        for obj in iterable:
+        for index, obj in enumerate(iterable):
             data_time.update(time.time() - end)
             yield obj
             iter_time.update(time.time() - end)
@@ -366,7 +365,6 @@ class MetricLogger:
                             data=str(data_time),
                         )
                     )
-            index += 1
             end = time.time()
         total_time = time.time() - start_time
         total_time_str = str(datetime.timedelta(seconds=int(total_time)))

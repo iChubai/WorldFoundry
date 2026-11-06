@@ -14,18 +14,17 @@ This module does not import torch so control-plane code can construct
 memories without an accelerator runtime.
 """
 
-from abc import ABC
 from collections.abc import Iterable, Mapping
 from typing import Any
 
 from .store import MemoryStore
 
 # ──────────────────────────────────────────────────────────────────────────
-# Five-stage ABC — command methods mutate; query methods read
+# Five-stage template — command methods mutate; query methods read
 # ──────────────────────────────────────────────────────────────────────────
 
 
-class BaseMemory(ABC):
+class BaseMemory:
     """Generic multimodal memory template for VLM and generative tasks.
 
     Subclasses implement the five-stage pipeline:

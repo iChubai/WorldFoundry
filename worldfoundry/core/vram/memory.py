@@ -382,7 +382,7 @@ __all__ = [
     "cpu",
     "fake_diffusers_current_device",
     "get_cuda_free_memory_gb",
-    "gpu",
+    "gpu",  # noqa: F822  # resolved lazily by the module __getattr__
     "gpu_complete_modules",
     "load_model_as_complete",
     "log_gpu_memory",

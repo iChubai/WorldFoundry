@@ -960,9 +960,10 @@ def _attention_backend_shape_eligible(
         return False
     if k_heads <= 0 or q_heads % k_heads:
         return False
-    if selected in {"flash_attention_2", "flash_attention_3", "flash_attention_4"}:
-        if int(head_dim) <= 0 or int(head_dim) > 256 or int(head_dim) % 8:
-            return False
+    if selected in {"flash_attention_2", "flash_attention_3", "flash_attention_4"} and (
+        int(head_dim) <= 0 or int(head_dim) > 256 or int(head_dim) % 8
+    ):
+        return False
     if selected == "sage_attention" and int(head_dim) not in {64, 128}:
         return False
     if selected == "sage_attention_3":
@@ -972,11 +973,9 @@ def _attention_backend_shape_eligible(
             return False
         if max(int(_q_seq), int(k_seq)) < 512:
             return False
-    if selected == "xformers" and (q_heads != k_heads or k_heads != v_heads):
-        # Common xFormers releases require explicit 5D grouped layout for
-        # GQA/MQA. Until that layout is built here, keep the safe MHA path.
-        return False
-    return True
+    # Common xFormers releases require explicit 5D grouped layout for
+    # GQA/MQA. Until that layout is built here, keep the safe MHA path.
+    return not (selected == "xformers" and (q_heads != k_heads or k_heads != v_heads))
 
 
 def _remember_failed_attention_signature(key: tuple[object, ...]) -> None:
@@ -1073,11 +1072,9 @@ def _is_backend_load_error(selected: str, exc: ImportError | OSError) -> bool:
         # transitive Python/CUDA module is a provider availability failure too.
         return bool(roots)
     message = str(exc).lower()
-    if not any(marker in message for marker in _DYNAMIC_LIBRARY_ERROR_MARKERS):
-        return False
     # Loader errors commonly mention only a transitive dependency such as
     # libcudart/libtorch rather than the importing backend module.
-    return True
+    return any(marker in message for marker in _DYNAMIC_LIBRARY_ERROR_MARKERS)
 
 
 def _is_unsupported_kernel_error(exc: RuntimeError) -> bool:

@@ -548,7 +548,7 @@ class UlyssesScheduler:
         overlap_degree: int,
         batch_size: int,
         cp_size: int,
-        cp_split_sizes: list[int] = None,
+        cp_split_sizes: list[int] | None = None,
     ):
         """
         Get Q, K, V with communication overlap.
@@ -593,7 +593,7 @@ class UlyssesScheduler:
         overlap_degree: int,
         batch_size: int,
         cp_size: int,
-        cp_split_sizes: list[int] = None,
+        cp_split_sizes: list[int] | None = None,
     ):
         """
         When seq_len is very small, CPU-bound issues are severe. By fusing kv communication,
@@ -618,7 +618,7 @@ class UlyssesScheduler:
         overlap_degree: int,
         batch_size: int,
         cp_size: int,
-        cp_split_sizes: list[int] = None,
+        cp_split_sizes: list[int] | None = None,
     ):
         """
         By fusing the communication of q, k, and v together, further optimize CPU-bound issues.
@@ -640,7 +640,7 @@ class UlyssesScheduler:
         overlap_degree: int,
         batch_size: int,
         cp_size: int,
-        cp_split_sizes: list[int] = None,
+        cp_split_sizes: list[int] | None = None,
     ):
         """Run core attention in ``overlap_degree`` head chunks, then cross-attn.
 
@@ -694,7 +694,7 @@ class UlyssesScheduler:
 
 
 def cso_communication(
-    input: torch.Tensor, cp_world_size: int, cp_split_sizes: list[int], comm_type: str = None
+    input: torch.Tensor, cp_world_size: int, cp_split_sizes: list[int], comm_type: str | None = None
 ) -> tuple[torch.Tensor, torch.distributed.Work]:
     """Launch one context-shuffle-overlap all-to-all operation.
 

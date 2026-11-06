@@ -348,17 +348,16 @@ class InferenceCUDAGraphRunner:
             # CUDA Graph control updates process-owned generator tensors, which
             # compilation may have created in inference mode. Keep those updates
             # inference-safe while preserving the caller's mode for compute.
-            with torch.cuda.device(device), torch.inference_mode(), torch.cuda.graph(graph, pool=self._pool):
-                with (
-                    torch.inference_mode(inference_mode),
-                    torch.no_grad(),
-                    torch.autocast(
-                        "cuda",
-                        enabled=torch.is_autocast_enabled("cuda"),
-                        cache_enabled=False,
-                    ),
-                ):
-                    static_outputs = self._fn(*call_args, **call_kwargs)
+            with (
+                torch.cuda.device(device),
+                torch.inference_mode(),
+                torch.cuda.graph(graph, pool=self._pool),
+                # Inside the capture, compute runs in the caller's inference mode.
+                torch.inference_mode(inference_mode),
+                torch.no_grad(),
+                torch.autocast("cuda", enabled=torch.is_autocast_enabled("cuda"), cache_enabled=False),
+            ):
+                static_outputs = self._fn(*call_args, **call_kwargs)
         except RuntimeError as error:
             if is_accelerator_out_of_memory(error):
                 raise

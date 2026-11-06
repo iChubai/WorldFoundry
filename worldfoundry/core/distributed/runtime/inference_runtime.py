@@ -119,10 +119,7 @@ def get_device(local_rank=None):
 
     backend = torch.distributed.get_backend()
     if backend == "nccl":
-        if local_rank is None:
-            device = torch.device("cuda")
-        else:
-            device = torch.device(f"cuda:{local_rank}")
+        device = torch.device("cuda") if local_rank is None else torch.device(f"cuda:{local_rank}")
     elif backend == "gloo":
         device = torch.device("cpu")
     else:

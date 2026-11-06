@@ -86,7 +86,7 @@ def _get_video_info_ffmpeg(video_path: str) -> dict:
             "duration": duration,
         }
     except (subprocess.CalledProcessError, json.JSONDecodeError, KeyError) as e:
-        raise ValueError(f"Failed to get video info for {video_path}: {e}")
+        raise ValueError(f"Failed to get video info for {video_path}: {e}") from e
 
 
 def _extract_frames_ffmpeg(video_path: str, frame_indices: list[int]) -> np.ndarray:
@@ -271,7 +271,7 @@ def _extract_all_frames_ffmpeg(video_path: str) -> tuple[np.ndarray, np.ndarray]
         return frames, timestamps
 
     except subprocess.CalledProcessError as e:
-        raise ValueError(f"Failed to extract frames from {video_path}: {e}")
+        raise ValueError(f"Failed to extract frames from {video_path}: {e}") from e
 
 
 # ──────────────────────────────────────────────────────────────────────────
@@ -283,7 +283,7 @@ def get_frames_by_indices(
     video_path: str,
     indices: list[int] | np.ndarray,
     video_backend: str = "ffmpeg",
-    video_backend_kwargs: dict = {},
+    video_backend_kwargs: dict | None = None,
 ) -> np.ndarray:
     """Decode selected frames as ``uint8`` ``[N, H, W, C]`` (OpenCV may be BGR).
 
@@ -295,7 +295,7 @@ def get_frames_by_indices(
     if video_backend == "decord":
         if not DECORD_AVAILABLE:
             raise ImportError("decord is not available. Install it with: pip install decord")
-        vr = decord.VideoReader(video_path, **video_backend_kwargs)
+        vr = decord.VideoReader(video_path, **(video_backend_kwargs or {}))
         frames = vr.get_batch(indices)
         return frames.asnumpy()
     elif video_backend == "torchcodec":
@@ -309,7 +309,7 @@ def get_frames_by_indices(
         return _extract_frames_ffmpeg(video_path, list(indices))
     elif video_backend == "opencv":
         frames = []
-        cap = cv2.VideoCapture(video_path, **video_backend_kwargs)
+        cap = cv2.VideoCapture(video_path, **(video_backend_kwargs or {}))
         for idx in indices:
             cap.set(cv2.CAP_PROP_POS_FRAMES, idx)
             ret, frame = cap.read()
@@ -327,7 +327,7 @@ def get_frames_by_timestamps(
     video_path: str,
     timestamps: list[float] | np.ndarray,
     video_backend: str = "ffmpeg",
-    video_backend_kwargs: dict = {},
+    video_backend_kwargs: dict | None = None,
     fps: None | float = None,
 ) -> np.ndarray:
     """Get frames from a video at specified timestamps.
@@ -343,7 +343,7 @@ def get_frames_by_timestamps(
     if video_backend == "decord":
         if not DECORD_AVAILABLE:
             raise ImportError("decord is not available. Install it with: pip install decord")
-        vr = decord.VideoReader(video_path, **video_backend_kwargs)
+        vr = decord.VideoReader(video_path, **(video_backend_kwargs or {}))
         num_frames = len(vr)
         # Retrieve the timestamps for each frame in the video
         frame_ts: np.ndarray = vr.get_frame_timestamp(range(num_frames))
@@ -405,7 +405,7 @@ def get_frames_by_timestamps(
         return _extract_frames_at_timestamps_ffmpeg(video_path, list(timestamps))
     elif video_backend == "opencv":
         # Open the video file
-        cap = cv2.VideoCapture(video_path, **video_backend_kwargs)
+        cap = cv2.VideoCapture(video_path, **(video_backend_kwargs or {}))
         if not cap.isOpened():
             raise ValueError(f"Unable to open video file: {video_path}")
         # Retrieve the total number of frames
@@ -483,7 +483,7 @@ def get_frames_by_timestamps(
 def get_all_frames(
     video_path: str,
     video_backend: str = "ffmpeg",
-    video_backend_kwargs: dict = {},
+    video_backend_kwargs: dict | None = None,
 ) -> tuple[np.ndarray, np.ndarray]:
     """Get all frames from a video.
 
@@ -493,7 +493,7 @@ def get_all_frames(
     if video_backend == "decord":
         if not DECORD_AVAILABLE:
             raise ImportError("decord is not available. Install it with: pip install decord")
-        vr = decord.VideoReader(video_path, **video_backend_kwargs)
+        vr = decord.VideoReader(video_path, **(video_backend_kwargs or {}))
         frames = vr.get_batch(range(len(vr))).asnumpy()
         return frames, vr.get_frame_timestamp(range(len(vr)))[:, 0]
     elif video_backend == "torchcodec":

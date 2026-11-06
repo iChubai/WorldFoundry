@@ -72,7 +72,7 @@ def search_for_images(folder):
     Embedded digit runs are compared numerically, so ``2.png`` sorts before
     ``10.png``. The search is non-recursive.
     """
-    file_list = [i for i in os.listdir(folder) if i.endswith(".jpg") or i.endswith(".png")]
+    file_list = [i for i in os.listdir(folder) if i.endswith((".jpg", ".png"))]
     file_list = [(split_file_name(file_name), file_name) for file_name in file_list]
     file_list = [i[1] for i in sorted(file_list)]
     return [os.path.join(folder, i) for i in file_list]
@@ -177,9 +177,8 @@ class VideoData:
 
         frame = self.data.__getitem__(item)
         width, height = frame.size
-        if self.height is not None and self.width is not None:
-            if self.height != height or self.width != width:
-                frame = crop_and_resize(frame, self.height, self.width)
+        if self.height is not None and self.width is not None and (self.height != height or self.width != width):
+            frame = crop_and_resize(frame, self.height, self.width)
         return frame
 
     def __del__(self):
@@ -248,7 +247,7 @@ def merge_video_audio(video_path: str, audio_path: str) -> None:
             "-shortest",
             temp_output,
         ]
-        result = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+        result = subprocess.run(command, capture_output=True, text=True)
         if result.returncode != 0:
             raise RuntimeError(f"FFmpeg execute failed: {result.stderr}")
         shutil.move(temp_output, video_path)

@@ -94,21 +94,15 @@ class S3FileSystem(FileSystemBase):
         bucket, key = self._parse_s3_uri(path_str)
 
         if mode == "rb":
-            stream = tempfile.SpooledTemporaryFile(max_size=S3_STREAM_SPOOL_MAX_SIZE, mode="w+b")
-            try:
+            with tempfile.SpooledTemporaryFile(max_size=S3_STREAM_SPOOL_MAX_SIZE, mode="w+b") as stream:
                 self.s3_client.download_fileobj(bucket, key, stream)
                 stream.seek(0)
                 yield stream
-            finally:
-                stream.close()
         elif mode == "wb":
-            stream = tempfile.SpooledTemporaryFile(max_size=S3_STREAM_SPOOL_MAX_SIZE, mode="w+b")
-            try:
+            with tempfile.SpooledTemporaryFile(max_size=S3_STREAM_SPOOL_MAX_SIZE, mode="w+b") as stream:
                 yield stream
                 stream.seek(0)
                 self.s3_client.upload_fileobj(stream, bucket, key)
-            finally:
-                stream.close()
         else:
             raise ValueError(f"Unsupported mode: {mode}")
 

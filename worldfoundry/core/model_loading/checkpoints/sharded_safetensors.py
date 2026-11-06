@@ -290,7 +290,7 @@ def load_safetensors_into_model_streaming(
         # accelerator before down-casting it.
         read_device = "cpu" if dtype is not None else str(device)
         with safe_open(str(path), framework="pt", device=read_device) as handle:
-            for key in handle.keys():
+            for key in handle.keys():  # noqa: SIM118  # safetensors handles are not iterable
                 tensor = handle.get_tensor(key)
                 if key in expected_shapes and tuple(tensor.shape) != expected_shapes[key]:
                     mismatched.append((key, tuple(tensor.shape), expected_shapes[key]))

@@ -190,10 +190,7 @@ class MemoryStore:
 
 def _metadata_matches(record_metadata: Mapping[str, Any], query_metadata: Mapping[str, Any]) -> bool:
     """Require every query key to equal the record value; extra record keys are ignored."""
-    for key, value in query_metadata.items():
-        if record_metadata.get(key) != value:
-            return False
-    return True
+    return all(record_metadata.get(key) == value for key, value in query_metadata.items())
 
 
 __all__ = [

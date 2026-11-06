@@ -7,6 +7,7 @@ All participating ranks must construct, call, and close a context together.
 
 from __future__ import annotations
 
+import contextlib
 from dataclasses import dataclass, field
 from datetime import timedelta
 
@@ -227,10 +228,8 @@ def build_inference_parallel_context(
         return context
     except BaseException:
         for group in reversed(owned):
-            try:
+            with contextlib.suppress(Exception):
                 dist.destroy_process_group(group)
-            except Exception:
-                pass
         raise
 
 

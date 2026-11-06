@@ -92,7 +92,7 @@ def create_camera_params_from_batch(extrinsics_np: np.ndarray, intrinsics_np: np
     for i, (ext_mat, int_mat) in enumerate(zip(extrinsics_np, intrinsics_np, strict=False)):
         fx, fy = int_mat[0, 0], int_mat[1, 1]
         cx, cy = int_mat[0, 2], int_mat[1, 2]
-        entry = [i, fx, fy, cx, cy, 0, 0] + ext_mat.flatten().tolist()
+        entry = [i, fx, fy, cx, cy, 0, 0, *ext_mat.flatten().tolist()]
         cam_params.append(Camera(entry))
     return cam_params
 

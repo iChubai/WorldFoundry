@@ -87,9 +87,14 @@ def sp_dit_forward(
     e0 = torch.chunk(e0, get_world_size(), dim=1)[get_rank()]
 
     # arguments
-    kwargs = dict(
-        e=e0, seq_lens=seq_lens, grid_sizes=grid_sizes, freqs=self.freqs, context=context, context_lens=context_lens
-    )
+    kwargs = {
+        "e": e0,
+        "seq_lens": seq_lens,
+        "grid_sizes": grid_sizes,
+        "freqs": self.freqs,
+        "context": context,
+        "context_lens": context_lens,
+    }
 
     for block in self.blocks:
         x = block(x, **kwargs)

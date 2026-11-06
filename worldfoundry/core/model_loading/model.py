@@ -159,14 +159,14 @@ def load_model(
             vram_config["preparing_device"],
             vram_config["computation_device"],
         ]
-        device = [d for d in devices if d != "disk"][0]
+        device = next(d for d in devices if d != "disk")
         dtypes = [
             vram_config["offload_dtype"],
             vram_config["onload_dtype"],
             vram_config["preparing_dtype"],
             vram_config["computation_dtype"],
         ]
-        dtype = [d for d in dtypes if d != "disk"][0]
+        dtype = next(d for d in dtypes if d != "disk")
         if vram_config["offload_device"] != "disk":
             # CPU/GPU offload: materialize once, then wrap. Disk offload cannot
             # run post_load_hook — there is no resident state dict to mutate.

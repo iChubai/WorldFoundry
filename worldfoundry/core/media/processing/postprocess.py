@@ -92,7 +92,7 @@ class VideoChunk:
 class VideoPostProcessorSession(ABC):
     """State owned by one logical output stream."""
 
-    def prepare(self) -> None:
+    def prepare(self) -> None:  # noqa: B027  # optional hook; sessions without setup keep the no-op
         """Prepare expensive state before the first measured chunk."""
 
     @abstractmethod

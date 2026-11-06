@@ -22,7 +22,7 @@ from __future__ import annotations
 import os
 import time
 from collections.abc import Callable, Mapping, Sequence
-from contextlib import contextmanager
+from contextlib import contextmanager, suppress
 from typing import Any
 
 import numpy as np
@@ -242,10 +242,8 @@ def _compile_eval_forward(
             compiled_active = False
             remembered = set(getattr(owner, "_worldfoundry_eval_compile_failures", ()))
             remembered.add(failure_key)
-            try:
+            with suppress(Exception):
                 owner._worldfoundry_eval_compile_failures = remembered
-            except Exception:
-                pass
             return forward(batch)
 
     return compiled_or_eager

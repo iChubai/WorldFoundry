@@ -20,32 +20,32 @@ from worldfoundry.core.io.filesystem.file_utils import f_join
 from worldfoundry.core.utils.tensors.arrays import any_to_primitive
 
 __all__ = [
-    "json_load",
-    "json_loads",
-    "jsonl_load",
-    "yaml_load",
-    "yaml_loads",
-    "json_dump",
-    "json_dumps",
-    "jsonl_dump",
-    "yaml_dump",
-    "yaml_dumps",
-    "json_or_yaml_load",
-    "json_or_yaml_dump",
     "Jsonl",
-    # ---------------- Aliases -----------------
-    "load_json",
-    "loads_json",
-    "load_jsonl",
-    "load_yaml",
-    "loads_yaml",
     "dump_json",
-    "dumps_json",
+    "dump_json_or_yaml",
     "dump_jsonl",
     "dump_yaml",
+    "dumps_json",
     "dumps_yaml",
+    "json_dump",
+    "json_dumps",
+    "json_load",
+    "json_loads",
+    "json_or_yaml_dump",
+    "json_or_yaml_load",
+    "jsonl_dump",
+    "jsonl_load",
+    # ---------------- Aliases -----------------
+    "load_json",
     "load_json_or_yaml",
-    "dump_json_or_yaml",
+    "load_jsonl",
+    "load_yaml",
+    "loads_json",
+    "loads_yaml",
+    "yaml_dump",
+    "yaml_dumps",
+    "yaml_load",
+    "yaml_loads",
 ]
 
 
@@ -74,10 +74,8 @@ def jsonl_load(*file_path, **kwargs):
     """Load every line as JSON; blank lines become parse errors, not skips."""
 
     file_path = f_join(file_path)
-    data = []
-    for line in open(file_path):
-        data.append(json.loads(line, **kwargs))
-    return data
+    with open(file_path) as handle:
+        return [json.loads(line, **kwargs) for line in handle]
 
 
 def json_dump(data, *file_path, convert_to_primitive=False, **kwargs):
@@ -181,7 +179,7 @@ def json_or_yaml_load(*file_path, **loader_kwargs):
     file_path = str(f_join(file_path))
     if file_path.endswith(".json"):
         return json_load(file_path, **loader_kwargs)
-    elif file_path.endswith(".yml") or file_path.endswith(".yaml"):
+    elif file_path.endswith((".yml", ".yaml")):
         return yaml_load(file_path, **loader_kwargs)
     else:
         raise OSError(f'unknown file extension: "{file_path}", loader supports only ".json", ".yml", ".yaml"')
@@ -198,7 +196,7 @@ def json_or_yaml_dump(data, *file_path, **dumper_kwargs):
     file_path = str(f_join(file_path))
     if file_path.endswith(".json"):
         return json_dump(data, file_path, **dumper_kwargs)
-    elif file_path.endswith(".yml") or file_path.endswith(".yaml"):
+    elif file_path.endswith((".yml", ".yaml")):
         return yaml_dump(data, file_path, **dumper_kwargs)
     else:
         raise OSError(f'unknown file extension: "{file_path}", dumper supports only ".json", ".yml", ".yaml"')
@@ -246,7 +244,7 @@ class Jsonl:
             assert path.exists(self._file_path)
             self._fp = None
         else:
-            self._fp = open(self._file_path, mode)
+            self._fp = open(self._file_path, mode)  # noqa: SIM115  # closed by close()
         if path.exists(self._file_path) and mode != "w":
             self.data = jsonl_load(self._file_path)
         else:

@@ -27,6 +27,7 @@ Safe unwrapping lives in :mod:`worldfoundry.core.model_loading.checkpoints.safe_
 DCP planners live in :mod:`worldfoundry.core.model_loading.checkpoints.dcp`.
 """
 
+import contextlib
 import io
 import json
 import os
@@ -948,10 +949,8 @@ def _save_to_local_cache(
         os.replace(tmp_path, path)
         sync_directory(directory)
     except Exception as exc:
-        try:
+        with contextlib.suppress(OSError):
             os.remove(tmp_path)
-        except OSError:
-            pass
         _raise_local_cache_disk_error(
             exc,
             path=path,
@@ -1044,10 +1043,7 @@ def load_checkpoint(
             checkpoint_type = "single"
         else:
             ext = _get_checkpoint_extension(checkpoint_path)
-            if ext in (".pt", ".pth", ".ckpt", ".safetensors"):
-                checkpoint_type = "single"
-            else:
-                checkpoint_type = "distributed"
+            checkpoint_type = "single" if ext in (".pt", ".pth", ".ckpt", ".safetensors") else "distributed"
 
     if checkpoint_type == "single":
         state_dict = load_single_checkpoint(

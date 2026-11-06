@@ -268,7 +268,7 @@ def lift_k(intrinsics: torch.Tensor) -> torch.Tensor:
 
     assert intrinsics.shape[-2:] == (3, 3)
     out = torch.zeros(
-        intrinsics.shape[:-2] + (4, 4),
+        (*intrinsics.shape[:-2], 4, 4),
         device=intrinsics.device,
         dtype=intrinsics.dtype,
     )
@@ -359,7 +359,7 @@ def _apply_rope3_slice(feats, coeffs3, rope_each, inverse=False):
     head, tail = feats[..., : feats.shape[-1] - n], feats[..., feats.shape[-1] - n :]
     blocks = list(tail.split(rope_each, dim=-1))
     rolled = [_rope_apply_coeffs(blocks[i], coeffs3[i], inverse=inverse) for i in range(3)]
-    return torch.cat([head] + rolled, dim=-1)
+    return torch.cat([head, *rolled], dim=-1)
 
 
 def invert_k(intrinsics: torch.Tensor) -> torch.Tensor:

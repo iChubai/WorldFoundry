@@ -22,6 +22,7 @@ Public surface: :class:`RTXVideoSuperResolutionConfig`,
 
 from __future__ import annotations
 
+import contextlib
 import os
 import sys
 from collections.abc import Sequence
@@ -148,8 +149,8 @@ class RTXVideoSuperResolutionConfig:
             output_height = self.output_height
             output_width = self.output_width
         else:
-            output_height = int(round(input_spec.height * self.scale))
-            output_width = int(round(input_spec.width * self.scale))
+            output_height = round(input_spec.height * self.scale)
+            output_width = round(input_spec.width * self.scale)
         if output_height <= 0 or output_width <= 0:  # guarded above, retained for rounded scales
             raise ValueError(f"RTX VSR output dimensions must be positive; got {output_height}x{output_width}.")
         if self.quality in _SAME_RESOLUTION_QUALITIES:
@@ -533,10 +534,8 @@ class _RTXVideoSuperResolutionSession(VideoPostProcessorSession):
             effect.load()
         except Exception as exc:
             if effect is not None:
-                try:
+                with contextlib.suppress(Exception):
                     effect.close()
-                except Exception:
-                    pass
             raise RuntimeError(
                 "Failed to initialize NVIDIA RTX VSR "
                 f"on cuda:{self._config.device} at {self._output_spec.width}x{self._output_spec.height} "

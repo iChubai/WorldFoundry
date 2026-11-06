@@ -146,7 +146,7 @@ def quaternion_xyzw_to_rotation_matrix(quaternions: Tensor) -> Tensor:
         ),
         dim=-1,
     )
-    return matrix.reshape(quaternions.shape[:-1] + (3, 3))
+    return matrix.reshape((*quaternions.shape[:-1], 3, 3))
 
 
 def rotation_matrix_to_quaternion_xyzw(matrix: Tensor) -> Tensor:
@@ -161,7 +161,7 @@ def rotation_matrix_to_quaternion_xyzw(matrix: Tensor) -> Tensor:
 
     batch_shape = matrix.shape[:-2]
     m00, m01, m02, m10, m11, m12, m20, m21, m22 = torch.unbind(
-        matrix.reshape(batch_shape + (9,)),
+        matrix.reshape((*batch_shape, 9)),
         dim=-1,
     )
     q_abs = _sqrt_positive_part(
@@ -186,7 +186,7 @@ def rotation_matrix_to_quaternion_xyzw(matrix: Tensor) -> Tensor:
     )
     floor = torch.tensor(0.1, dtype=q_abs.dtype, device=q_abs.device)
     candidates = quaternion_by_wxyz / (2.0 * q_abs[..., None].max(floor))
-    quaternion_wxyz = candidates[F.one_hot(q_abs.argmax(dim=-1), num_classes=4).bool(), :].reshape(batch_shape + (4,))
+    quaternion_wxyz = candidates[F.one_hot(q_abs.argmax(dim=-1), num_classes=4).bool(), :].reshape((*batch_shape, 4))
     return standardize_quaternion_xyzw(quaternion_wxyz[..., (1, 2, 3, 0)])
 
 
@@ -332,7 +332,7 @@ def render_point_cloud_frames_torch(
     if color_tensor.ndim != 2 or color_tensor.shape != point_tensor.shape:
         raise ValueError(f"colors must match points shape [N,3], got {tuple(color_tensor.shape)}")
 
-    radius_pixels = max(0, int(round(float(radius_ndc) * min(height, width) * 0.5)))
+    radius_pixels = max(0, round(float(radius_ndc) * min(height, width) * 0.5))
     if radius_pixels == 0:
         offsets = torch.zeros((1, 2), device=resolved_device, dtype=torch.long)
     else:

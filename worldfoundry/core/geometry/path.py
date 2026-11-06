@@ -191,7 +191,7 @@ def sample_camera_path(
     elif "frame_count" in path:
         sampled_frame_count = int(path["frame_count"])
     else:
-        sampled_frame_count = max(int(round(path["duration_sec"] * path["fps"])) + 1, 2)
+        sampled_frame_count = max(round(path["duration_sec"] * path["fps"]) + 1, 2)
     if sampled_frame_count < 2:
         raise CameraPathError("sampled camera paths require at least two frames.")
 

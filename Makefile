@@ -46,6 +46,7 @@ PUBLIC_GATE_CONTRACTS = \
 	tests/studio/test_stream_step.py \
 	tests/studio_visualization/test_viser_initial_camera.py \
 	tests/core/utils/python/test_functional_utils.py \
+	tests/core/utils/python/test_pattern_filters.py \
 	tests/core/utils/python/test_tree_utils.py
 VIDEO_TENSOR_CONTRACTS = \
 	tests/core/test_video_tensor_regression.py \

@@ -21,8 +21,8 @@ import hashlib
 import os
 import threading
 from collections import Counter
-from collections.abc import Callable
-from typing import Any, Literal
+from collections.abc import Callable, Iterable
+from typing import Any, Literal, cast
 
 # ──────────────────────────────────────────────────────────────────────────
 # Env / integer helpers — no torch; safe on CPU-only control planes
@@ -67,12 +67,11 @@ def argmax(L):
 # ──────────────────────────────────────────────────────────────────────────
 
 
-def _match_patterns_helper(element, patterns):
+def _match_patterns_helper(element: str, patterns: Iterable[str | Callable]) -> bool:
     """True if any pattern callable or ``fnmatch`` glob matches ``element``."""
-    for p in patterns:
-        if callable(p) and p(element):
-            return True
-        if fnmatch.fnmatch(element, p):
+    for pattern in patterns:
+        matched = pattern(element) if callable(pattern) else fnmatch.fnmatch(element, pattern)
+        if matched:
             return True
     return False
 
@@ -90,23 +89,19 @@ def match_patterns(
         precedence: "include" or "exclude"
     """
     assert precedence in ["include", "exclude"]
-    if exclude is None:
-        exclude = []
-    if isinstance(exclude, (str, Callable)):
-        exclude = [exclude]
-    if isinstance(include, (str, Callable)):
-        include = [include]
+    excluded_patterns: Iterable[str | Callable] = (
+        [] if exclude is None else [exclude] if isinstance(exclude, (str, Callable)) else exclude
+    )
     if include is None:
         # exclude is the sole veto vote
-        return not _match_patterns_helper(item, exclude)
+        return not _match_patterns_helper(item, excluded_patterns)
+    included_patterns: Iterable[str | Callable] = [include] if isinstance(include, (str, Callable)) else include
 
     if precedence == "include":
-        return _match_patterns_helper(item, include)
-    else:
-        if _match_patterns_helper(item, exclude):
-            return False
-        else:
-            return _match_patterns_helper(item, include)
+        return _match_patterns_helper(item, included_patterns)
+    if _match_patterns_helper(item, excluded_patterns):
+        return False
+    return _match_patterns_helper(item, included_patterns)
 
 
 def filter_patterns(
@@ -125,18 +120,18 @@ def filter_patterns(
             - "include": order items by the order of include patterns
     """
     assert ordering in ["original", "include"]
-    if include is None or isinstance(include, str) or ordering == "original":
+    if include is None or isinstance(include, str) or callable(include) or ordering == "original":
         return [x for x in items if match_patterns(x, include=include, exclude=exclude, precedence=precedence)]
     else:
-        items = items.copy()
+        remaining: list[str | None] = [*items]
         ret = []
         for inc in include:
-            for i, item in enumerate(items):
+            for i, item in enumerate(remaining):
                 if item is None:
                     continue
                 if match_patterns(item, include=inc, exclude=exclude, precedence=precedence):
                     ret.append(item)
-                    items[i] = None
+                    remaining[i] = None
         return ret
 
 
@@ -213,7 +208,8 @@ class PeriodicEvent:
         )
         d = self._period
         if new_value is None:
-            new_value = self._last_value + increment
+            # The exclusive-argument assertion above guarantees an increment here.
+            new_value = self._last_value + cast(Any, increment)
         assert new_value >= self._last_value, (
             f"value must be monotonically increasing. Current value {new_value} < last value {self._last_value}"
         )

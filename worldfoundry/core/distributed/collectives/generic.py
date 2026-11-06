@@ -27,6 +27,7 @@ import logging
 import os
 import shutil
 import warnings
+from typing import Any, cast
 
 import torch
 import torch.distributed as dist
@@ -149,10 +150,10 @@ def get_local_proc_group(group_size=8):
         num_groups = dist.get_world_size() // group_size
         groups = [list(range(i * group_size, (i + 1) * group_size)) for i in range(num_groups)]
         process_groups.update({group_size: [torch.distributed.new_group(group) for group in groups]})
-        get_local_proc_group.process_groups = process_groups
+        cast(Any, get_local_proc_group).process_groups = process_groups
 
     group_idx = get_rank() // group_size
-    process_groups = get_local_proc_group.process_groups.get(group_size)[group_idx]
+    process_groups = cast(Any, get_local_proc_group).process_groups.get(group_size)[group_idx]
     return process_groups
 
 
@@ -345,8 +346,8 @@ def all_gather_cpu(result_part, tmpdir=None, collect_by_master=True):
     directory while others still read.
     """
 
-    import mmcv
-    from mmcv.runner import get_dist_info
+    mmcv = __import__("mmcv")
+    get_dist_info = __import__("mmcv.runner", fromlist=["get_dist_info"]).get_dist_info
 
     rank, world_size = get_dist_info()
     if tmpdir is None:

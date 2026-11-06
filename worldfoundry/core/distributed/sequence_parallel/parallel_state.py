@@ -44,7 +44,7 @@ from collections.abc import Callable
 from contextlib import contextmanager
 from dataclasses import dataclass
 from multiprocessing import shared_memory
-from typing import Any, Optional
+from typing import Any, Optional, cast
 from unittest.mock import patch
 
 import torch
@@ -182,8 +182,8 @@ class GroupCoordinator:
     #   3     |   1  |  3   |     1      |       3
     local_rank: int  # local rank used to assign devices
     rank_in_group: int  # rank inside the group
-    cpu_group: ProcessGroup  # group for CPU communication
-    device_group: ProcessGroup  # group for device communication
+    cpu_group: ProcessGroup | None  # group for CPU communication
+    device_group: ProcessGroup | None  # group for device communication
     use_device_communicator: bool  # whether to use device communicator
     device_communicator: DeviceCommunicatorBase  # device communicator
     mq_broadcaster: Any | None  # shared memory broadcaster
@@ -294,12 +294,12 @@ class GroupCoordinator:
 
         curr_stream = torch.cuda.current_stream()
         if curr_stream != stream:
-            stream.wait_stream(curr_stream)
+            cast(torch.cuda.Stream, stream).wait_stream(curr_stream)
 
         with torch.cuda.stream(stream):
             yield graph_capture_context
 
-    def all_reduce(self, input_: torch.Tensor, op: torch.distributed.ReduceOp | None = ReduceOp.SUM) -> torch.Tensor:
+    def all_reduce(self, input_: torch.Tensor, op: ReduceOp.RedOpType | None = ReduceOp.SUM) -> torch.Tensor:
         """
         User-facing all-reduce function before we actually call the
         all-reduce operation.
@@ -323,9 +323,7 @@ class GroupCoordinator:
         else:
             return self._all_reduce_out_place(input_, op=op)
 
-    def _all_reduce_out_place(
-        self, input_: torch.Tensor, op: torch.distributed.ReduceOp | None = ReduceOp.SUM
-    ) -> torch.Tensor:
+    def _all_reduce_out_place(self, input_: torch.Tensor, op: ReduceOp.RedOpType | None = ReduceOp.SUM) -> torch.Tensor:
         """Device-communicator all-reduce; assumes ``world_size > 1``."""
         return self.device_communicator.all_reduce(input_, op=op)
 
@@ -439,8 +437,8 @@ class GroupCoordinator:
         rank_size = torch.distributed.recv(size_tensor, src=self.ranks[src], group=self.cpu_group)
 
         # Tensor to receive serialized objects into.
-        object_tensor = torch.empty(  # type: ignore[call-overload]
-            size_tensor.item(),  # type: ignore[arg-type]
+        object_tensor = torch.empty(
+            cast(int, size_tensor.item()),
             dtype=torch.uint8,
             device="cpu",
         )
@@ -618,9 +616,7 @@ class GroupCoordinator:
                     torch.distributed.recv(tensor, src=self.ranks[src], group=group)
                 if use_all_gather:
                     # do the allgather
-                    tensor = all_gather_group.all_gather(  # type: ignore
-                        tensor, dim=0
-                    )
+                    tensor = all_gather_group.all_gather(tensor, dim=0)
                     tensor = tensor.reshape(orig_shape)
 
                 tensor_dict[key] = tensor
@@ -1029,7 +1025,7 @@ def cleanup_dist_env_and_memory(shutdown_ray: bool = False):
     with contextlib.suppress(AssertionError):
         torch.distributed.destroy_process_group()
     if shutdown_ray:
-        import ray  # Lazy import Ray
+        ray = __import__("ray")
 
         ray.shutdown()
 
@@ -1071,7 +1067,7 @@ def is_the_same_node_as(pg: ProcessGroup | StatelessProcessGroup, source_rank: i
             if rank == source_rank:
                 # create a shared memory segment
                 shm = shared_memory.SharedMemory(create=True, size=128)
-                shm.buf[: len(magic_message)] = magic_message
+                cast(memoryview, shm.buf)[: len(magic_message)] = magic_message
                 if isinstance(pg, ProcessGroup):
                     torch.distributed.broadcast_object_list([shm.name], src=ranks[source_rank], group=pg)
                 else:
@@ -1090,7 +1086,7 @@ def is_the_same_node_as(pg: ProcessGroup | StatelessProcessGroup, source_rank: i
                 # created by the process. The following patch is a workaround.
                 with patch("multiprocessing.resource_tracker.register", lambda *args, **kwargs: None):
                     shm = shared_memory.SharedMemory(name=name)
-                if shm.buf[: len(magic_message)] == magic_message:
+                if cast(memoryview, shm.buf)[: len(magic_message)] == magic_message:
                     is_in_the_same_node[rank] = 1
     except Exception as e:
         logger.error("Error ignored in is_in_the_same_node: %s", e)

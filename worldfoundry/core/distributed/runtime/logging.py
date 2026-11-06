@@ -47,7 +47,7 @@ class DistributedLogger:
 distributed_logger = DistributedLogger.get_logger()
 
 try:  # Keep the shared distributed helpers usable in minimal model environments.
-    from loguru import logger as _backend_logger
+    _backend_logger = __import__("loguru", fromlist=["logger"]).logger
 except ImportError:  # pragma: no cover - exercised in isolated runtime environments.
     _backend_logger = distributed_logger
 

@@ -22,10 +22,10 @@ import pickle
 import time
 from collections import deque
 from collections.abc import Sequence
-from typing import Any
+from typing import Any, cast
 
 import torch
-from torch.distributed import TCPStore
+from torch.distributed import Store, TCPStore
 
 from worldfoundry.core.utils.python.misc_utils import divide
 
@@ -86,7 +86,7 @@ class StatelessProcessGroup:
 
     rank: int
     world_size: int
-    store: torch._C._distributed_c10d.Store
+    store: Store
     data_expiration_seconds: int = 3600  # 1 hour
 
     # dst rank -> counter
@@ -110,7 +110,8 @@ class StatelessProcessGroup:
         """Send an object to a destination rank."""
         self.expire_data()
         key = f"send_to/{dst}/{self.send_dst_counter[dst]}"
-        self.store.set(key, pickle.dumps(obj))
+        # Store.set accepts serialized bytes; the torch stub only names str.
+        cast(Any, self.store.set)(key, pickle.dumps(obj))
         self.send_dst_counter[dst] += 1
         self.entries.append((key, time.perf_counter()))
 
@@ -139,7 +140,7 @@ class StatelessProcessGroup:
         if self.rank == src:
             self.expire_data()
             key = f"broadcast_from/{src}/{self.broadcast_send_counter}"
-            self.store.set(key, pickle.dumps(obj))
+            cast(Any, self.store.set)(key, pickle.dumps(obj))
             self.broadcast_send_counter += 1
             self.entries.append((key, time.perf_counter()))
             return obj

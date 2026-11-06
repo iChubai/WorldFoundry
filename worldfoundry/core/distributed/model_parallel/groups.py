@@ -270,9 +270,9 @@ class RankGenerator:
         """Boolean mask: True for each axis named in hyphen-separated ``token``."""
 
         ordered_token = order.split("-")
-        token = token.split("-")
+        tokens = token.split("-")
         mask = [False] * len(ordered_token)
-        for t in token:
+        for t in tokens:
             mask[ordered_token.index(t)] = True
         return mask
 

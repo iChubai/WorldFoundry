@@ -12,9 +12,10 @@ from __future__ import annotations
 
 import torch
 import torch.distributed as dist
-import xfuser
 
 from worldfoundry.core.execution.device import parse_device_type, parse_nccl_backend
+
+xfuser = __import__("xfuser")
 
 # ──────────────────────────────────────────────────────────────────────────
 # xFuser process-group init — NCCL backend follows device_type (cuda vs npu)

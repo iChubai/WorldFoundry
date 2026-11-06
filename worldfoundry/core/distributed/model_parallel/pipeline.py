@@ -22,6 +22,7 @@ Use ``init_pp_scheduler`` once after ``initialize_model_parallel``.
 
 import queue
 from dataclasses import dataclass
+from typing import cast
 
 import torch
 
@@ -72,7 +73,7 @@ class PPScheduler:
         handle = torch.distributed.isend(
             tensor.contiguous(), dst=mpu.get_pipeline_model_parallel_next_rank(), group=mpu.get_pp_group()
         )
-        return handle
+        return cast(torch.distributed.Work, handle)
 
     def irecv_prev(self, buffer: torch.Tensor) -> torch.distributed.Work:
         """Asynchronously receive a tensor from the previous pipeline and return the receive handle.
@@ -86,7 +87,7 @@ class PPScheduler:
         handle = torch.distributed.irecv(
             buffer, src=mpu.get_pipeline_model_parallel_prev_rank(), group=mpu.get_pp_group()
         )
-        return handle
+        return cast(torch.distributed.Work, handle)
 
     def recv_prev_data(self, shape: torch.Size, dtype: torch.dtype) -> torch.Tensor:
         """Receive data from the previous pipeline and return the received tensor.

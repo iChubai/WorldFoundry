@@ -12,6 +12,7 @@ Do not use this for large activation shards.
 """
 
 import os
+from typing import cast
 
 import torch
 from torch.distributed import ProcessGroup
@@ -38,7 +39,7 @@ class CpuCommunicator(DeviceCommunicatorBase):
         self.dist_module = torch.distributed
 
     def all_reduce(
-        self, input_: torch.Tensor, op: torch.distributed.ReduceOp | None = torch.distributed.ReduceOp.SUM
+        self, input_: torch.Tensor, op: torch.distributed.ReduceOp.RedOpType | None = torch.distributed.ReduceOp.SUM
     ) -> torch.Tensor:
         """In-place gloo all-reduce; no autograd — metadata is not a training tensor."""
         self.dist_module.all_reduce(input_, group=self.device_group, op=op)
@@ -62,7 +63,7 @@ class CpuCommunicator(DeviceCommunicatorBase):
         # Gather.
         self.dist_module.gather(input_, gather_list, dst=self.ranks[dst], group=self.device_group)
 
-        output_tensor = torch.cat(gather_list, dim=dim) if self.rank_in_group == dst else None
+        output_tensor = torch.cat(cast(list[torch.Tensor], gather_list), dim=dim) if self.rank_in_group == dst else None
         return output_tensor
 
     def all_gather(self, input_: torch.Tensor, dim: int = -1) -> torch.Tensor:
@@ -144,7 +145,9 @@ class _CPUSHMDistributed:
     ) -> None:
         """Gather into ``gather_list``; ``dst`` is a *local* group rank, not WORLD."""
         # Note: different from the torch gather, here we use local dst rank.
-        torch.ops._C.shm_gather(self.handle, input, gather_list, torch.distributed.get_group_rank(group, dst))
+        torch.ops._C.shm_gather(
+            self.handle, input, gather_list, torch.distributed.get_group_rank(cast(ProcessGroup, group), dst)
+        )
 
     def all_gather_into_tensor(
         self, output: torch.Tensor, input: torch.Tensor, group: ProcessGroup | None = None

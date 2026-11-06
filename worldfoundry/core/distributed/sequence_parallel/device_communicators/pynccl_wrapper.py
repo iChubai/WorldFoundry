@@ -129,7 +129,7 @@ class ncclRedOpTypeEnum:
     ncclNumOps = 5
 
     @classmethod
-    def from_torch(cls, op: ReduceOp) -> int:
+    def from_torch(cls, op: ReduceOp.RedOpType) -> int:
         """Map a torch :class:`ReduceOp`; PREMUL_SUM and others are unsupported."""
         if op == ReduceOp.SUM:
             return cls.ncclSum

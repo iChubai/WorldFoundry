@@ -17,17 +17,17 @@ import functools
 import logging
 import math
 import os
-from collections.abc import Callable, Container
+from collections.abc import Callable, Container, Sequence
 from contextlib import contextmanager
 from datetime import timedelta
-from typing import Any
+from typing import Any, TypeAlias, cast
 
 import torch
 import torch.distributed as dist
 from torch.distributed import get_process_group_ranks
 
 try:
-    import pynvml
+    pynvml = __import__("pynvml")
 except ModuleNotFoundError:  # pragma: no cover - optional runtime dependency.
     pynvml = None
 
@@ -442,11 +442,15 @@ def ddp_sync_grad(model, enabled):
             model.require_backward_grad_sync = old_require_backward_grad_sync
 
 
-def collate_batches(data_batches: list[dict[str, torch.Tensor]]) -> torch.Tensor | dict[str, torch.Tensor]:
+_BatchedTensors: TypeAlias = torch.Tensor | dict[str, "_BatchedTensors"]
+
+
+def collate_batches(data_batches: Sequence[_BatchedTensors]) -> _BatchedTensors:
     """Gather validation batches from all ranks in original rank order."""
 
+    data_collate: _BatchedTensors
     if isinstance(data_batches[0], torch.Tensor):
-        data_concat = torch.cat(data_batches, dim=0)  # type: ignore[arg-type]
+        data_concat = torch.cat(cast(list[torch.Tensor] | tuple[torch.Tensor, ...], data_batches), dim=0)
         if get_world_size() == 1:
             return data_concat
         max_num_local_samples = torch.tensor(len(data_concat), device=data_concat.device)
@@ -467,9 +471,10 @@ def collate_batches(data_batches: list[dict[str, torch.Tensor]]) -> torch.Tensor
             data_collate = data_collate[:-dummy_count_value]
     elif isinstance(data_batches[0], collections.abc.Mapping):
         # Recurse per key so a mixed tensor/dict batch stays aligned across ranks.
+        mapping_batches = cast(Sequence[dict[str, _BatchedTensors]], data_batches)
         data_collate = {}
-        for key in data_batches[0]:
-            data_collate[key] = collate_batches([data[key] for data in data_batches])  # type: ignore[index]
+        for key in mapping_batches[0]:
+            data_collate[key] = collate_batches([data[key] for data in mapping_batches])
     else:
         raise TypeError(f"Unsupported batch type: {type(data_batches[0])!r}")
     return data_collate
@@ -557,12 +562,11 @@ def sync_model_states(
     ]
 
     memo = set()
-    modules_and_parameters = [
-        (module, parameter)
-        for module, parameter in modules_and_parameters
-        if parameter not in memo and not memo.add(parameter)  # type: ignore[func-returns-value]
-    ]
-    parameters = [parameter for _, parameter in modules_and_parameters]
+    parameters = []
+    for _, parameter in modules_and_parameters:
+        if parameter not in memo:
+            memo.add(parameter)
+            parameters.append(parameter)
     if not parameters:
         return
 

@@ -10,6 +10,7 @@ from __future__ import annotations
 import contextlib
 from dataclasses import dataclass, field
 from datetime import timedelta
+from typing import cast
 
 import torch
 import torch.distributed as dist
@@ -104,7 +105,7 @@ class InferenceParallelContext:
         self._check()
         values = [secrets.randbits(63) if self.is_main and seed < 0 else seed]
         if self.world_size > 1:
-            dist.broadcast_object_list(values, src=0, group=self.control_group)
+            dist.broadcast_object_list(values, src=0, group=cast(dist.ProcessGroup | None, self.control_group))
         return values[0]
 
     @torch.inference_mode(False)

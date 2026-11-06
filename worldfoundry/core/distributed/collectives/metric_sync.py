@@ -14,8 +14,10 @@ import pickle
 import time
 import warnings
 from collections import defaultdict, deque
+from collections.abc import Callable
 from contextlib import contextmanager
 from logging import getLogger
+from typing import Any, cast
 
 import torch
 import torch.distributed as dist
@@ -63,7 +65,9 @@ def setup_for_distributed(is_master) -> None:
     if _ORIGINAL_BUILTINS_PRINT is None:
         _ORIGINAL_BUILTINS_PRINT = builtin_print
 
-    def print(*args, **kwargs):
+    builtin_print = cast(Callable[..., None], builtin_print)
+
+    def print(*args: Any, **kwargs: Any) -> None:
         """Rank-filtered print; ``force`` or ``world_size > 8`` prints on every rank."""
 
         force = kwargs.pop("force", False)
@@ -73,8 +77,8 @@ def setup_for_distributed(is_master) -> None:
             builtin_print(f"[{now}] ", end="")
             builtin_print(*args, **kwargs)
 
-    print._worldfoundry_rank_filtered_print = True
-    builtins.print = print
+    cast(Any, print)._worldfoundry_rank_filtered_print = True
+    cast(Any, builtins).print = print
     logger.info(
         "Patched builtins.print process-wide with a rank-filtered wrapper (is_master=%s); "
         "call worldfoundry.core.distributed.collectives.metric_sync.restore_builtins_print() to undo.",
@@ -389,11 +393,13 @@ def sync_fid_loss_fns(fid_loss_fn, device="cuda"):
     dist.barrier()
     dist.all_gather_object(gathered_fid_loss_fn, serialized_fid_loss_fn)
 
-    from torcheval.metrics import FrechetInceptionDistance
+    FrechetInceptionDistance = __import__(
+        "torcheval.metrics", fromlist=["FrechetInceptionDistance"]
+    ).FrechetInceptionDistance
 
     final_fid_loss_fn = {sec: FrechetInceptionDistance(feature_dim=2048).to(device) for sec in [1, 2, 4, 8, 16]}
     for serialized_rank_metrics in gathered_fid_loss_fn:
-        rank_metrics = pickle.loads(serialized_rank_metrics)
+        rank_metrics = pickle.loads(cast(bytes, serialized_rank_metrics))
         for sec in [1, 2, 4, 8, 16]:
             final_fid_loss_fn[sec].merge_state([rank_metrics[sec]])
 

@@ -34,6 +34,7 @@ PUBLIC_GATE_CONTRACTS = \
 	tests/core/test_agent_skills.py \
 	tests/core/test_inference_validation_guidance.py \
 	tests/cli/test_mcp_content_conversion.py \
+	tests/cli/test_config_run.py \
 	tests/runtime/test_inference_actions_evidence.py \
 	tests/synthesis/test_matrix_game_2_historical_reference.py \
 	tests/studio/test_canonical_catalog_lookup.py \

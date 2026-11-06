@@ -16,7 +16,7 @@ import yaml
 from worldfoundry.evaluation.utils import REPO_ROOT
 
 from .presentation import print_table, terminal_enabled
-from .utils import json_dump, parse_key_value_mapping
+from .utils import json_dump, parse_key_value_strings
 
 # ── Config constants ────────────────────────────────────────────
 
@@ -189,7 +189,7 @@ def _handle_config_list(args: argparse.Namespace) -> int:
 def _handle_config_run(args: argparse.Namespace) -> int:
     """Expand and execute a WorldFoundry YAML workflow template through the CLI."""
     payload = _load_config(args.config)
-    env = {**os.environ, **parse_key_value_mapping(args.env)}
+    env = {**os.environ, **parse_key_value_strings(args.env)}
     command = _with_output_dir(_expanded_command(payload, env), args.output_dir)
     command_payload = _command_payload(args.config, payload, command)
 

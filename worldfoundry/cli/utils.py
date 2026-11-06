@@ -7,6 +7,7 @@ import json
 import os
 import re
 import sys
+from collections.abc import Iterator
 from pathlib import Path
 from typing import Any
 
@@ -101,19 +102,31 @@ def parse_json_value(value: str) -> object:
     return value
 
 
+def _key_value_pairs(values: list[str] | None) -> Iterator[tuple[str, str]]:
+    """Split repeated `KEY=VALUE` flags in order, rejecting items without a key."""
+    for item in values or ():
+        key, separator, value = item.partition("=")
+        if not separator or not key.strip():
+            raise ValueError(f"expected KEY=VALUE, got {item!r}")
+        yield key.strip(), value
+
+
+def parse_key_value_strings(values: list[str] | None) -> dict[str, str]:
+    """Parse repeated `KEY=VALUE` flags, keeping every value as literal text.
+
+    Args:
+        values: Repeated key-value CLI flag values.
+    """
+    return dict(_key_value_pairs(values))
+
+
 def parse_key_value_mapping(values: list[str] | None) -> dict[str, object]:
     """Parse repeated `KEY=VALUE` flags.
 
     Args:
         values: Repeated key-value CLI flag values.
     """
-    payload: dict[str, object] = {}
-    for item in values or ():
-        key, separator, value = item.partition("=")
-        if not separator or not key.strip():
-            raise ValueError(f"expected KEY=VALUE, got {item!r}")
-        payload[key.strip()] = parse_json_value(value)
-    return payload
+    return {key: parse_json_value(value) for key, value in _key_value_pairs(values)}
 
 
 def load_json_mapping(path: Path | None) -> dict[str, Any] | None:

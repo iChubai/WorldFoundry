@@ -38,7 +38,7 @@ class EchoMemoryPipeline(PipelineABC):
         device: str = "cuda",
         lazy: bool = True,
         **kwargs: Any,
-    ) -> "EchoMemoryPipeline":
+    ) -> EchoMemoryPipeline:
         options: dict[str, Any] = {}
         checkpoint_path = model_path
         if isinstance(model_path, Mapping):

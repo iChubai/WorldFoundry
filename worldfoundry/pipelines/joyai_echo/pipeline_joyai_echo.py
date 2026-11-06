@@ -3,8 +3,9 @@
 from __future__ import annotations
 
 import json
+from collections.abc import Mapping
 from pathlib import Path
-from typing import Any, Mapping
+from typing import Any
 
 from worldfoundry.pipelines.pipeline_utils import PipelineABC
 from worldfoundry.synthesis.visual_generation.joyai_echo import (
@@ -131,7 +132,7 @@ class JoyAIEchoLongVideoPipeline(PipelineABC):
         device: str = "cuda",
         model_id: str | None = None,
         **kwargs: Any,
-    ) -> "JoyAIEchoLongVideoPipeline":
+    ) -> JoyAIEchoLongVideoPipeline:
         options = _runtime_options(model_path, required_components, kwargs)
         resolved_model_id = str(options.pop("model_id", model_id or cls.MODEL_ID))
         _pop_runner_metadata(options)
@@ -260,7 +261,7 @@ class JoyAIEchoWMPipeline(PipelineABC):
         device: str = "cuda",
         model_id: str | None = None,
         **kwargs: Any,
-    ) -> "JoyAIEchoWMPipeline":
+    ) -> JoyAIEchoWMPipeline:
         options = _runtime_options(model_path, required_components, kwargs)
         resolved_model_id = str(options.pop("model_id", model_id or cls.MODEL_ID))
         _pop_runner_metadata(options)

@@ -2,11 +2,11 @@
 
 from __future__ import annotations
 
-from typing import Any, Dict, Optional
+from typing import Any
 
-from ...synthesis.visual_generation.memory.video import VideoArtifactMemory
 from ...operators.runtime_video_operator import RuntimeVideoOperator
 from ...synthesis.visual_generation.echo_infinity.synthesis import EchoInfinitySynthesis
+from ...synthesis.visual_generation.memory.video import VideoArtifactMemory
 from ..pipeline_utils import PipelineABC
 
 
@@ -17,9 +17,9 @@ class EchoInfinityPipeline(PipelineABC):
 
     def __init__(
         self,
-        operator: Optional[RuntimeVideoOperator] = None,
-        synthesis_model: Optional[EchoInfinitySynthesis] = None,
-        memory_module: Optional[VideoArtifactMemory] = None,
+        operator: RuntimeVideoOperator | None = None,
+        synthesis_model: EchoInfinitySynthesis | None = None,
+        memory_module: VideoArtifactMemory | None = None,
         device: str = "cuda",
     ) -> None:
         """Initialize the pipeline and configure runtime components."""
@@ -33,12 +33,12 @@ class EchoInfinityPipeline(PipelineABC):
     @classmethod
     def from_pretrained(
         cls,
-        model_path: Optional[str] = None,
-        required_components: Optional[Dict[str, Any]] = None,
+        model_path: str | None = None,
+        required_components: dict[str, Any] | None = None,
         device: str = "cuda",
         lazy: bool = True,
         **kwargs: Any,
-    ) -> "EchoInfinityPipeline":
+    ) -> EchoInfinityPipeline:
         """Load the pipeline from pretrained checkpoints and configurations."""
         runtime_overrides = dict(required_components or {})
         runtime_overrides.update(kwargs)
@@ -69,8 +69,8 @@ class EchoInfinityPipeline(PipelineABC):
     def __call__(
         self,
         prompt: str,
-        output_path: Optional[str] = None,
-        fps: Optional[int] = None,
+        output_path: str | None = None,
+        fps: int | None = None,
         return_dict: bool = False,
         **kwargs: Any,
     ):

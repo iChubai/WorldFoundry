@@ -215,7 +215,7 @@ class NativeMiniMaxH3Pipeline(PipelineABC):
         model_id: str | None = None,
         component_devices: Mapping[str, str] | None = None,
         **kwargs: Any,
-    ) -> "NativeMiniMaxH3Pipeline":
+    ) -> NativeMiniMaxH3Pipeline:
         """Materialize the DiT / VAEs / Qwen3-VL encoder from a checkpoint root.
 
         ``model_path`` (or ``kwargs['checkpoint_path']``) should point at a

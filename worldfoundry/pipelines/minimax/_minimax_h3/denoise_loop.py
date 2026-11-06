@@ -11,8 +11,9 @@ Single-GPU port: SGLang's Ulysses sequence-parallel context collapses to
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from contextlib import AbstractContextManager, nullcontext
-from typing import Any, Callable
+from typing import Any
 
 import torch
 
@@ -306,7 +307,7 @@ class MiniMaxH3DenoiseBranch:
                 inverse_indices_by_pattern=inverse_indices_by_pattern,
                 block_combined_by_pattern=block_combined_by_pattern,
             )
-            for t_video, t_audio in zip(video_timesteps, audio_timesteps)
+            for t_video, t_audio in zip(video_timesteps, audio_timesteps, strict=False)
         ]
 
 

@@ -2,7 +2,6 @@
 
 import shutil
 from pathlib import Path
-from typing import Optional
 
 from worldfoundry.base_models.three_dimensions.point_clouds.lyra.utils import (
     _candidate_lyra1_weights_subdir,
@@ -48,8 +47,8 @@ def _link_or_copy(src: Path, dst: Path):
 
 
 def prepare_lyra1_checkpoint_root(
-    checkpoint_dir: Optional[str],
-    repo_root: Optional[str] = None,
+    checkpoint_dir: str | None,
+    repo_root: str | None = None,
 ) -> str:
     """Prepare lyra1 checkpoint root helper function."""
     from worldfoundry.synthesis.visual_generation.gen3c.runtime_env import (

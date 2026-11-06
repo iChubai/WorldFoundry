@@ -70,7 +70,7 @@ class T2VTurboT2VPipeline(PipelineABC):
         required_components: Mapping[str, Any] | None = None,
         device: str = "cuda",
         **kwargs: Any,
-    ) -> "T2VTurboT2VPipeline":
+    ) -> T2VTurboT2VPipeline:
         options = dict(model_path) if isinstance(model_path, Mapping) else {}
         options.update(required_components or {})
         options.update(kwargs)

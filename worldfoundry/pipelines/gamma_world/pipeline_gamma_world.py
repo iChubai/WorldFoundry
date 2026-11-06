@@ -57,9 +57,7 @@ class GammaWorldPipeline(NativeTextToVideoPipeline):
                 break
         else:
             value = cls.DEFAULT_NUM_FRAMES
-        integer_value = (
-            isinstance(value, Integral) and not isinstance(value, bool)
-        ) or (
+        integer_value = (isinstance(value, Integral) and not isinstance(value, bool)) or (
             isinstance(value, str) and value.strip().lstrip("+-").isdigit()
         )
         if not integer_value:
@@ -116,7 +114,7 @@ class GammaWorldPipeline(NativeTextToVideoPipeline):
         required_components: Mapping[str, Any] | None = None,
         device: str = "cuda",
         **kwargs: Any,
-    ) -> "GammaWorldPipeline":
+    ) -> GammaWorldPipeline:
         options = cls._options(model_path, required_components, kwargs)
         cls._validate_num_frames(options)
         component_options = dict(cls._component_options(options) or {})

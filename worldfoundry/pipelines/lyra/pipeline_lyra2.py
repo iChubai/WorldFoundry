@@ -2,8 +2,9 @@
 
 from __future__ import annotations
 
+from collections.abc import Sequence
 from pathlib import Path
-from typing import Any, Dict, Optional, Sequence, Union, cast
+from typing import Any, cast
 
 import torch
 from PIL import Image
@@ -27,10 +28,10 @@ class Lyra2Pipeline(PipelineABC):
 
     def __init__(
         self,
-        synthesis_model: Optional[Lyra2Synthesis] = None,
-        representation_model: Optional[Lyra2Representation] = None,
-        operator: Optional[LyraOperator] = None,
-        memory_module: Optional[Any] = None,
+        synthesis_model: Lyra2Synthesis | None = None,
+        representation_model: Lyra2Representation | None = None,
+        operator: LyraOperator | None = None,
+        memory_module: Any | None = None,
         device: str = "cuda",
         # Use bfloat16 precision to balance memory efficiency and numeric range
         weight_dtype=torch.bfloat16,
@@ -46,13 +47,13 @@ class Lyra2Pipeline(PipelineABC):
     @classmethod
     def from_pretrained(  # ty: ignore[invalid-method-override]
         cls,
-        model_path: Optional[str] = None,
-        required_components: Optional[Dict[str, Any]] = None,
+        model_path: str | None = None,
+        required_components: dict[str, Any] | None = None,
         device: str = "cuda",
         # Use bfloat16 precision to balance memory efficiency and numeric range
         weight_dtype=torch.bfloat16,
         **kwargs,
-    ) -> "Lyra2Pipeline":
+    ) -> Lyra2Pipeline:
         """Load the pipeline from pretrained checkpoints and configurations."""
         required_components = required_components or {}
         repo_root = required_components.get("repo_root") or model_path
@@ -116,11 +117,11 @@ class Lyra2Pipeline(PipelineABC):
     def process(
         self,
         images,
-        interactions: Optional[Sequence[Union[str, Dict[str, str]]]] = None,
+        interactions: Sequence[str | dict[str, str]] | None = None,
         prompt: str = "",
-        camera_path: Optional[Dict[str, Any]] = None,
+        camera_path: dict[str, Any] | None = None,
         region_hint: str = "",
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Process and normalize input arguments and conditions for inference."""
         if self.synthesis_model is None:
             raise RuntimeError("Synthesis model is not loaded. Use from_pretrained() first.")
@@ -155,14 +156,14 @@ class Lyra2Pipeline(PipelineABC):
     def __call__(
         self,
         images,
-        interactions: Optional[Sequence[Union[str, Dict[str, str]]]] = None,
+        interactions: Sequence[str | dict[str, str]] | None = None,
         prompt: str = "",
-        camera_path: Optional[Dict[str, Any]] = None,
+        camera_path: dict[str, Any] | None = None,
         region_hint: str = "",
         fps: int = 16,
         resolution: Sequence[int] = (480, 832),
         reconstruct_3d: bool = False,
-        output_dir: Optional[str] = None,
+        output_dir: str | None = None,
         seed: int = 1,
         return_dict: bool = False,
         show_progress: bool = True,
@@ -255,15 +256,15 @@ class Lyra2Pipeline(PipelineABC):
 
     def stream(
         self,
-        interactions: Optional[Sequence[Union[str, Dict[str, str]]]] = None,
-        images: Optional[Union[Image.Image, Any]] = None,
+        interactions: Sequence[str | dict[str, str]] | None = None,
+        images: Image.Image | Any | None = None,
         prompt: str = "",
-        camera_path: Optional[Dict[str, Any]] = None,
+        camera_path: dict[str, Any] | None = None,
         region_hint: str = "",
         fps: int = 16,
         resolution: Sequence[int] = (480, 832),
         reconstruct_3d: bool = False,
-        output_dir: Optional[str] = None,
+        output_dir: str | None = None,
         seed: int = 1,
         reset_memory: bool = False,
         return_dict: bool = False,

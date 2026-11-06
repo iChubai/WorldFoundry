@@ -58,7 +58,7 @@ class PikaH3FlexPipeline(NativeMiniMaxH3Pipeline):
         model_id: str | None = None,
         component_devices: Mapping[str, str] | None = None,
         **kwargs: Any,
-    ) -> "PikaH3FlexPipeline":
+    ) -> PikaH3FlexPipeline:
         """Load one Pika adapter and the shared MiniMax-H3 base components."""
 
         options = cls._runtime_options(

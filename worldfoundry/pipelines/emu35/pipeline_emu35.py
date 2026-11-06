@@ -2,8 +2,9 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Mapping
+from typing import TYPE_CHECKING, Any
 
 from worldfoundry.core.io import artifact_root_path
 from worldfoundry.pipelines.pipeline_utils import PipelineABC
@@ -28,7 +29,7 @@ class Emu35Pipeline(PipelineABC):
         required_components: Mapping[str, Any] | None = None,
         device: str = "cuda",
         **kwargs: Any,
-    ) -> "Emu35Pipeline":
+    ) -> Emu35Pipeline:
         options = dict(model_path) if isinstance(model_path, Mapping) else {}
         if model_path is not None and not isinstance(model_path, Mapping):
             options["checkpoint_path"] = model_path

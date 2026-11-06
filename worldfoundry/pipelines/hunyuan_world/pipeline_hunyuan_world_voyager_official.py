@@ -2,8 +2,9 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Mapping
+from typing import TYPE_CHECKING, Any
 
 from worldfoundry.core.io import artifact_root_path
 from worldfoundry.pipelines.pipeline_utils import PipelineABC
@@ -28,7 +29,7 @@ class HunyuanWorldVoyagerOfficialPipeline(PipelineABC):
         required_components: Mapping[str, Any] | None = None,
         device: str = "cuda",
         **kwargs: Any,
-    ) -> "HunyuanWorldVoyagerOfficialPipeline":
+    ) -> HunyuanWorldVoyagerOfficialPipeline:
         options = dict(model_path) if isinstance(model_path, Mapping) else {}
         if model_path is not None and not isinstance(model_path, Mapping):
             options["model_path"] = model_path
@@ -60,7 +61,9 @@ class HunyuanWorldVoyagerOfficialPipeline(PipelineABC):
     ) -> Any:
         if video is not None:
             raise ValueError("Voyager official inference does not accept a video input")
-        if actions is not None and not (isinstance(actions, (str, bytes, tuple, list, dict, set)) and len(actions) == 0):
+        if actions is not None and not (
+            isinstance(actions, (str, bytes, tuple, list, dict, set)) and len(actions) == 0
+        ):
             raise ValueError("Camera actions must be baked into the Voyager condition directory")
         if condition_dir is None and isinstance(images, (str, Path)) and Path(images).is_dir():
             condition_dir = images

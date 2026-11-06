@@ -142,11 +142,7 @@ def minimax_h3_packed_sequence(
     audio_sl = slice(cond_sl.stop, cond_sl.stop + audio_rows)
     video_sl = slice(audio_sl.stop, audio_sl.stop + video_rows)
     target_img_pos = torch.arange(video_sl.start, video_sl.stop)
-    img_pos = (
-        torch.cat([torch.arange(cond_sl.start, cond_sl.stop), target_img_pos])
-        if cond_rows
-        else target_img_pos
-    )
+    img_pos = torch.cat([torch.arange(cond_sl.start, cond_sl.stop), target_img_pos]) if cond_rows else target_img_pos
     update_mask = torch.zeros(img_pos.shape[0], dtype=torch.bool)
     update_mask[cond_rows:] = True
     audio_pos = torch.arange(audio_sl.start, audio_sl.stop)
@@ -175,8 +171,7 @@ def minimax_h3_packed_sequence(
             cond_t = float(text_len) + _temporal_position_span(latent_t) - _FRAME_RESCALE
         else:
             raise ValueError(
-                "fl2va packed layout only supports first/last keyframe anchors, "
-                f"got resolved frame index {pixel_index}"
+                f"fl2va packed layout only supports first/last keyframe anchors, got resolved frame index {pixel_index}"
             )
         g[sl, 0] = cond_t
         g[sl, 1:] = frame

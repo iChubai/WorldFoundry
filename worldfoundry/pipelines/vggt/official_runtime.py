@@ -8,8 +8,9 @@
 from __future__ import annotations
 
 import shutil
+from collections.abc import Sequence
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Sequence, Tuple, Union
+from typing import Any
 
 import cv2
 import matplotlib
@@ -29,22 +30,21 @@ from worldfoundry.base_models.three_dimensions.point_clouds.vggt.vggt.utils.pose
     pose_encoding_to_extri_intri,
 )
 
-
 IMAGE_EXTENSIONS = {".jpg", ".jpeg", ".png", ".webp", ".bmp", ".tif", ".tiff"}
 VIDEO_EXTENSIONS = {".mp4", ".mov", ".avi", ".mkv", ".webm"}
 
 
-def _is_image_path(path: Union[str, Path]) -> bool:
+def _is_image_path(path: str | Path) -> bool:
     """Check if the given value represents a valid image file path."""
     return Path(path).suffix.lower() in IMAGE_EXTENSIONS
 
 
-def _is_video_path(path: Union[str, Path]) -> bool:
+def _is_video_path(path: str | Path) -> bool:
     """Check if the given value represents a valid video file path."""
     return Path(path).suffix.lower() in VIDEO_EXTENSIONS
 
 
-def collect_input_images(input_source: Union[str, Path, Sequence[Union[str, Path]]]) -> List[str]:
+def collect_input_images(input_source: str | Path | Sequence[str | Path]) -> list[str]:
     """Gather and filter input conditioning images."""
     if isinstance(input_source, (list, tuple)):
         paths = [str(Path(p)) for p in input_source]
@@ -63,9 +63,9 @@ def collect_input_images(input_source: Union[str, Path, Sequence[Union[str, Path
 
 
 def prepare_target_images(
-    input_source: Union[str, Path, Sequence[Union[str, Path]]],
-    target_dir: Union[str, Path],
-) -> List[str]:
+    input_source: str | Path | Sequence[str | Path],
+    target_dir: str | Path,
+) -> list[str]:
     """Normalize and scale target images for the runtime."""
     target_dir = Path(target_dir)
     images_dir = target_dir / "images"
@@ -75,7 +75,7 @@ def prepare_target_images(
     images_dir.mkdir(parents=True, exist_ok=True)
 
     source_paths = collect_input_images(input_source)
-    copied_paths: List[str] = []
+    copied_paths: list[str] = []
     for source_path in source_paths:
         source = Path(source_path)
         if _is_image_path(source):
@@ -95,7 +95,7 @@ def prepare_target_images(
     return copied_paths
 
 
-def _extract_video_frames(video_path: Path, images_dir: Path) -> List[str]:
+def _extract_video_frames(video_path: Path, images_dir: Path) -> list[str]:
     """Extract individual frames from a video file."""
     # Initialize video capture stream to extract frame data and FPS properties
     capture = cv2.VideoCapture(str(video_path))
@@ -104,7 +104,7 @@ def _extract_video_frames(video_path: Path, images_dir: Path) -> List[str]:
 
     fps = capture.get(cv2.CAP_PROP_FPS)
     frame_interval = max(int(fps * 1), 1)
-    image_paths: List[str] = []
+    image_paths: list[str] = []
     count = 0
     frame_index = 0
     while True:
@@ -123,12 +123,12 @@ def _extract_video_frames(video_path: Path, images_dir: Path) -> List[str]:
 
 
 def run_model(
-    image_paths: Sequence[Union[str, Path]],
+    image_paths: Sequence[str | Path],
     model: VGGT,
     *,
-    device: Optional[str] = None,
+    device: str | None = None,
     preprocess_mode: str = "crop",
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Run model helper function."""
     device = device or ("cuda" if torch.cuda.is_available() else "cpu")
     device_type = torch.device(device).type
@@ -155,7 +155,7 @@ def run_model(
     predictions["extrinsic"] = extrinsic
     predictions["intrinsic"] = intrinsic
 
-    numpy_predictions: Dict[str, Any] = {}
+    numpy_predictions: dict[str, Any] = {}
     for key, value in predictions.items():
         if isinstance(value, torch.Tensor):
             numpy_predictions[key] = value.detach().cpu().numpy().squeeze(0)
@@ -177,7 +177,7 @@ def run_model(
 
 
 def predictions_to_glb(
-    predictions: Dict[str, Any],
+    predictions: dict[str, Any],
     *,
     conf_thres: float = 50.0,
     filter_by_frames: str = "all",
@@ -196,14 +196,10 @@ def predictions_to_glb(
     if "Pointmap" in prediction_mode:
         if "world_points" in predictions:
             pred_world_points = predictions["world_points"]
-            pred_world_points_conf = predictions.get(
-                "world_points_conf", np.ones_like(pred_world_points[..., 0])
-            )
+            pred_world_points_conf = predictions.get("world_points_conf", np.ones_like(pred_world_points[..., 0]))
         else:
             pred_world_points = predictions["world_points_from_depth"]
-            pred_world_points_conf = predictions.get(
-                "depth_conf", np.ones_like(pred_world_points[..., 0])
-            )
+            pred_world_points_conf = predictions.get("depth_conf", np.ones_like(pred_world_points[..., 0]))
     else:
         pred_world_points = predictions["world_points_from_depth"]
         pred_world_points_conf = predictions.get("depth_conf", np.ones_like(pred_world_points[..., 0]))
@@ -263,7 +259,7 @@ def predictions_to_glb(
     return apply_scene_alignment(scene_3d, extrinsics_matrices)
 
 
-def _parse_frame_filter(filter_by_frames: str) -> Optional[int]:
+def _parse_frame_filter(filter_by_frames: str) -> int | None:
     """Parse frame filter helper function."""
     if filter_by_frames in {"all", "All"}:
         return None
@@ -276,7 +272,7 @@ def _parse_frame_filter(filter_by_frames: str) -> Optional[int]:
 def integrate_camera_into_scene(
     scene: trimesh.Scene,
     transform: np.ndarray,
-    face_colors: Tuple[int, int, int],
+    face_colors: tuple[int, int, int],
     scene_scale: float,
 ) -> None:
     """Integrate camera into scene helper function."""
@@ -323,7 +319,7 @@ def get_opengl_conversion_matrix() -> np.ndarray:
     return matrix
 
 
-def transform_points(transformation: np.ndarray, points: np.ndarray, dim: Optional[int] = None) -> np.ndarray:
+def transform_points(transformation: np.ndarray, points: np.ndarray, dim: int | None = None) -> np.ndarray:
     """Transform points helper function."""
     points = np.asarray(points)
     initial_shape = points.shape[:-1]
@@ -358,11 +354,11 @@ def compute_camera_faces(cone_shape: trimesh.Trimesh) -> np.ndarray:
 
 
 def run_official_scene_export(
-    input_source: Union[str, Path, Sequence[Union[str, Path]]],
+    input_source: str | Path | Sequence[str | Path],
     model: VGGT,
     *,
-    output_dir: Union[str, Path],
-    device: Optional[str] = None,
+    output_dir: str | Path,
+    device: str | None = None,
     preprocess_mode: str = "crop",
     conf_thres: float = 3.0,
     frame_filter: str = "All",
@@ -370,8 +366,8 @@ def run_official_scene_export(
     mask_white_bg: bool = False,
     show_cam: bool = True,
     prediction_mode: str = "Pointmap Regression",
-    output_name: Optional[str] = None,
-) -> Dict[str, str]:
+    output_name: str | None = None,
+) -> dict[str, str]:
     """Run official scene export helper function."""
     output_dir = Path(output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
@@ -418,8 +414,8 @@ def run_official_scene_export(
 
 __all__ = [
     "collect_input_images",
-    "prepare_target_images",
     "predictions_to_glb",
+    "prepare_target_images",
     "run_model",
     "run_official_scene_export",
 ]

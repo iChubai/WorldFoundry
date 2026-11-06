@@ -3,7 +3,8 @@
 import inspect
 import logging
 import os
-from typing import TYPE_CHECKING, Any, List, Mapping, Optional, Sequence, Union, cast
+from collections.abc import Mapping, Sequence
+from typing import TYPE_CHECKING, Any, Optional, cast
 
 import torch
 from PIL import Image
@@ -28,9 +29,9 @@ class MatrixGame2Pipeline(PipelineABC):
 
     def __init__(
         self,
-        operators: Optional[MatrixGame2Operator] = None,
+        operators: MatrixGame2Operator | None = None,
         synthesis_model: Optional["MatrixGame2Synthesis"] = None,
-        memory_module: Optional[Any] = None,
+        memory_module: Any | None = None,
         device: str = "cuda",
         # Use bfloat16 precision to balance memory efficiency and numeric range
         weight_dtype=torch.bfloat16,
@@ -51,7 +52,7 @@ class MatrixGame2Pipeline(PipelineABC):
     def from_pretrained(  # ty: ignore[invalid-method-override]
         cls,
         model_path: Any = None,
-        required_components: Optional[Mapping[str, Any]] = None,
+        required_components: Mapping[str, Any] | None = None,
         device: str = "cuda",
         # Use bfloat16 precision to balance memory efficiency and numeric range
         weight_dtype=torch.bfloat16,
@@ -110,7 +111,7 @@ class MatrixGame2Pipeline(PipelineABC):
         resize_W=640,
         interaction_signal=None,
         official_bench_actions: bool = False,
-        seed: Optional[int] = None,
+        seed: int | None = None,
     ):
         """
         the input_image is PIL image
@@ -160,13 +161,13 @@ class MatrixGame2Pipeline(PipelineABC):
         interactions=None,
         num_frames=None,
         size=(352, 640),
-        seed: Optional[int] = None,
+        seed: int | None = None,
         visualize_ops=True,
         visualize_warning=False,
         official_bench_actions: bool = False,
         return_dict: bool = False,
-        output_path: Optional[Union[str, os.PathLike]] = None,
-        fps: Optional[int] = None,
+        output_path: str | os.PathLike | None = None,
+        fps: int | None = None,
         **kwds: Any,
     ) -> Any:
         """Generate raw unit-range frame lists or an explicitly declared result."""
@@ -257,15 +258,15 @@ class MatrixGame2Pipeline(PipelineABC):
 
     def stream(
         self,
-        images: Optional[Image.Image],
-        interactions: List[str],
+        images: Image.Image | None,
+        interactions: list[str],
         num_frames: int = 15,
         size=(352, 640),
-        seed: Optional[int] = None,
+        seed: int | None = None,
         visualize_ops: bool = False,
         visualize_warning=False,
         return_dict: bool = False,
-        fps: Optional[int] = None,
+        fps: int | None = None,
         **kwds: Any,
     ) -> Any:
         """Stream visual generation outputs chunk by chunk."""

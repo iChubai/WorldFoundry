@@ -62,7 +62,7 @@ class HyNomasPipeline(NativeTextToVideoPipeline):
         device: str = "cuda",
         model_id: str | None = None,
         **kwargs: Any,
-    ) -> "HyNomasPipeline":
+    ) -> HyNomasPipeline:
         options = cls._options(model_path, required_components, kwargs)
         if options.pop("low_memory", False):
             options["variant"] = "hy-nomas-low-memory"

@@ -1,4 +1,5 @@
 """Public JING-Flash-v1 pipeline with the shared WorldFoundry invocation contract."""
+
 from pathlib import Path
 
 from worldfoundry.pipelines.pipeline_utils import PipelineABC

@@ -3,8 +3,9 @@
 from __future__ import annotations
 
 import shutil
+from collections.abc import Mapping, Sequence
 from pathlib import Path
-from typing import Any, Dict, List, Mapping, Optional, Sequence, Union
+from typing import Any
 
 import torch
 from PIL import Image
@@ -25,7 +26,7 @@ DEFAULT_MATRIX_GAME3_COMPONENTS: dict[str, Any] = {
 }
 
 
-def _looks_like_matrix_game3_code_path(path_value: Optional[str]) -> bool:
+def _looks_like_matrix_game3_code_path(path_value: str | None) -> bool:
     """Looks like matrix game3 code path helper function."""
     if path_value is None:
         return False
@@ -42,9 +43,9 @@ class MatrixGame3Pipeline(PipelineABC):
 
     def __init__(
         self,
-        operators: Optional[MatrixGame3Operator] = None,
-        synthesis_model: Optional[MatrixGame3Synthesis] = None,
-        memory_module: Optional[Any] = None,
+        operators: MatrixGame3Operator | None = None,
+        synthesis_model: MatrixGame3Synthesis | None = None,
+        memory_module: Any | None = None,
         device: str = "cuda",
         # Use bfloat16 precision to balance memory efficiency and numeric range
         weight_dtype=torch.bfloat16,
@@ -61,13 +62,13 @@ class MatrixGame3Pipeline(PipelineABC):
     # The public loader retains its positional weight_dtype option.
     def from_pretrained(  # ty: ignore[invalid-method-override]
         cls,
-        model_path: Optional[str] = None,
-        required_components: Optional[dict] = None,
+        model_path: str | None = None,
+        required_components: dict | None = None,
         device: str = "cuda",
         # Use bfloat16 precision to balance memory efficiency and numeric range
         weight_dtype=torch.bfloat16,
         **kwargs,
-    ) -> "MatrixGame3Pipeline":
+    ) -> MatrixGame3Pipeline:
         """Load the pipeline from pretrained checkpoints and configurations."""
         required_components = {**DEFAULT_MATRIX_GAME3_COMPONENTS, **(required_components or {})}
         checkpoint_dir = required_components.get("checkpoint_dir")
@@ -94,9 +95,9 @@ class MatrixGame3Pipeline(PipelineABC):
     def process(
         self,
         input_image,
-        interactions: Sequence[Union[str, Dict[str, Any]]],
-        num_frames: Optional[int] = None,
-        num_iterations: Optional[int] = None,
+        interactions: Sequence[str | dict[str, Any]],
+        num_frames: int | None = None,
+        num_iterations: int | None = None,
     ):
         """Process and normalize input arguments and conditions for inference."""
         image = self.operators.process_perception(input_image)
@@ -114,14 +115,14 @@ class MatrixGame3Pipeline(PipelineABC):
     def __call__(
         self,
         images,
-        interactions: Optional[List[str]] = None,
+        interactions: list[str] | None = None,
         prompt: str = "",
-        num_frames: Optional[int] = None,
-        num_iterations: Optional[int] = None,
+        num_frames: int | None = None,
+        num_iterations: int | None = None,
         size=(704, 1280),
         fps: int = 17,
         output_path: str | Path | None = None,
-        output_dir: Optional[str] = None,
+        output_dir: str | None = None,
         save_name: str = "matrix_game_3",
         visualize_ops: bool = True,
         show_progress: bool = True,
@@ -181,14 +182,14 @@ class MatrixGame3Pipeline(PipelineABC):
 
     def stream(
         self,
-        images: Optional[Union[Image.Image, str, Path]],
-        interactions: List[str],
+        images: Image.Image | str | Path | None,
+        interactions: list[str],
         prompt: str = "",
-        num_frames: Optional[int] = None,
-        num_iterations: Optional[int] = None,
+        num_frames: int | None = None,
+        num_iterations: int | None = None,
         size=(704, 1280),
         fps: int = 17,
-        output_dir: Optional[str] = None,
+        output_dir: str | None = None,
         save_name: str = "matrix_game_3_stream",
         visualize_ops: bool = True,
         show_progress: bool = True,

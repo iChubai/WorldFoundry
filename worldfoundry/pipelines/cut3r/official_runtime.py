@@ -5,9 +5,10 @@ from __future__ import annotations
 import os
 import shutil
 import tempfile
+from collections.abc import Sequence
 from copy import deepcopy
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Sequence, Tuple, Union
+from typing import Any
 
 import cv2
 import imageio.v2 as iio
@@ -23,22 +24,21 @@ from worldfoundry.base_models.three_dimensions.point_clouds.cut3r import (
     pose_encoding_to_camera,
 )
 
-
 IMAGE_EXTENSIONS = {".jpg", ".jpeg", ".png", ".webp", ".bmp", ".tif", ".tiff"}
 VIDEO_EXTENSIONS = {".mp4", ".mov", ".avi", ".mkv", ".webm"}
 
 
-def _is_image_path(path: Union[str, Path]) -> bool:
+def _is_image_path(path: str | Path) -> bool:
     """Check if the given value represents a valid image file path."""
     return Path(path).suffix.lower() in IMAGE_EXTENSIONS
 
 
-def _is_video_path(path: Union[str, Path]) -> bool:
+def _is_video_path(path: str | Path) -> bool:
     """Check if the given value represents a valid video file path."""
     return Path(path).suffix.lower() in VIDEO_EXTENSIONS
 
 
-def parse_seq_path(input_source: Union[str, Path, Sequence[Union[str, Path]]]) -> Tuple[List[str], Optional[str]]:
+def parse_seq_path(input_source: str | Path | Sequence[str | Path]) -> tuple[list[str], str | None]:
     """Parse seq path helper function."""
     if isinstance(input_source, (list, tuple)):
         return sorted(str(Path(p)) for p in input_source), None
@@ -56,7 +56,7 @@ def parse_seq_path(input_source: Union[str, Path, Sequence[Union[str, Path]]]) -
     raise ValueError(f"Unsupported CUT3R input source: {input_source}")
 
 
-def _extract_video_frames(video_path: Path) -> Tuple[List[str], str]:
+def _extract_video_frames(video_path: Path) -> tuple[list[str], str]:
     """Extract individual frames from a video file."""
     # Initialize video capture stream to extract frame data and FPS properties
     capture = cv2.VideoCapture(str(video_path))
@@ -70,7 +70,7 @@ def _extract_video_frames(video_path: Path) -> Tuple[List[str], str]:
 
     frame_indices = list(range(0, total_frames, 1))
     temp_dir = tempfile.mkdtemp()
-    img_paths: List[str] = []
+    img_paths: list[str] = []
     for index in frame_indices:
         capture.set(cv2.CAP_PROP_POS_FRAMES, index)
         ok, frame = capture.read()
@@ -87,14 +87,14 @@ def prepare_input(
     img_paths: Sequence[str],
     img_mask: Sequence[bool],
     size: int,
-    raymaps: Optional[Sequence[torch.Tensor]] = None,
-    raymap_mask: Optional[Sequence[bool]] = None,
+    raymaps: Sequence[torch.Tensor] | None = None,
+    raymap_mask: Sequence[bool] | None = None,
     revisit: int = 1,
     update: bool = True,
-) -> List[Dict[str, Any]]:
+) -> list[dict[str, Any]]:
     """Prepare input helper function."""
     images = load_images(list(img_paths), size=size)
-    views: List[Dict[str, Any]] = []
+    views: list[dict[str, Any]] = []
 
     if raymaps is None and raymap_mask is None:
         for i, image in enumerate(images):
@@ -130,16 +130,8 @@ def prepare_input(
         ray_index = 0
         for i in range(num_views):
             view = {
-                "img": (
-                    images[image_index]["img"]
-                    if img_mask[i]
-                    else torch.full_like(images[0]["img"], torch.nan)
-                ),
-                "ray_map": (
-                    raymaps[ray_index]
-                    if raymap_mask[i]
-                    else torch.full_like(raymaps[0], torch.nan)
-                ),
+                "img": (images[image_index]["img"] if img_mask[i] else torch.full_like(images[0]["img"], torch.nan)),
+                "ray_map": (raymaps[ray_index] if raymap_mask[i] else torch.full_like(raymaps[0], torch.nan)),
                 "true_shape": (
                     torch.from_numpy(images[image_index]["true_shape"])
                     if img_mask[i]
@@ -175,12 +167,12 @@ def prepare_input(
 
 
 def prepare_output(
-    outputs: Dict[str, Any],
-    outdir: Union[str, Path],
+    outputs: dict[str, Any],
+    outdir: str | Path,
     *,
     revisit: int = 1,
     use_pose: bool = True,
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Prepare output helper function."""
     outdir = Path(outdir)
     valid_length = len(outputs["pred"]) // revisit
@@ -199,7 +191,7 @@ def prepare_output(
 
     if use_pose:
         transformed_pts3ds_other = []
-        for pose, pself in zip(pr_poses, pts3ds_self):
+        for pose, pself in zip(pr_poses, pts3ds_self, strict=False):
             transformed_pts3ds_other.append(geotrf(pose, pself.unsqueeze(0)))
         pts3ds_other = transformed_pts3ds_other
         conf_other = conf_self
@@ -248,15 +240,15 @@ def prepare_output(
         "colors": colors_tosave,
         "confidence": conf_other_tosave,
         "camera": cam_dict,
-        "num_frames": int(len(pts3ds_self)),
+        "num_frames": len(pts3ds_self),
     }
 
 
 def build_rerun_recording(
-    output_dir: Union[str, Path],
+    output_dir: str | Path,
     *,
     vis_threshold: float = 1.5,
-) -> Optional[str]:
+) -> str | None:
     """Build the official-style point-cloud, camera, RGB, and depth timeline."""
 
     try:
@@ -290,11 +282,7 @@ def build_rerun_recording(
         depth = np.load(root / "depth" / f"{frame_name}.npy")
         confidence = np.load(root / "conf" / f"{frame_name}.npy")
         world_points = depth_to_world_points(depth, intrinsics, pose)
-        valid = (
-            np.isfinite(world_points).all(axis=-1)
-            & np.isfinite(confidence)
-            & (confidence > vis_threshold)
-        )
+        valid = np.isfinite(world_points).all(axis=-1) & np.isfinite(confidence) & (confidence > vis_threshold)
         frame_root = f"world/frames/{frame_name}"
         rr.log(
             f"{frame_root}/points",
@@ -340,17 +328,17 @@ def build_rerun_recording(
 
 
 def run_official_export(
-    input_source: Union[str, Path, Sequence[Union[str, Path]]],
+    input_source: str | Path | Sequence[str | Path],
     model: ARCroco3DStereo,
     *,
-    output_dir: Union[str, Path],
-    device: Optional[str] = None,
+    output_dir: str | Path,
+    device: str | None = None,
     size: int = 512,
     revisit: int = 1,
     update: bool = True,
     use_pose: bool = True,
     vis_threshold: float = 1.5,
-) -> Dict[str, str]:
+) -> dict[str, str]:
     """Run official export helper function."""
     device = device or ("cuda" if torch.cuda.is_available() else "cpu")
     device_type = torch.device(device).type
@@ -411,9 +399,9 @@ def run_official_export(
 
 
 __all__ = [
+    "build_rerun_recording",
     "parse_seq_path",
     "prepare_input",
     "prepare_output",
-    "build_rerun_recording",
     "run_official_export",
 ]

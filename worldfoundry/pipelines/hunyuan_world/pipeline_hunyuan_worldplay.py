@@ -2,8 +2,9 @@
 
 import logging
 import os
+from collections.abc import Generator, Mapping, Sequence
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Generator, List, Mapping, Optional, Sequence
+from typing import TYPE_CHECKING, Any, Optional
 
 import torch
 from PIL import Image
@@ -39,6 +40,7 @@ def _initialize_worldplay_parallel_runtime() -> None:
 
 class HunyuanWorldPlayPipeline(PipelineABC):
     """Pipeline implementation for HunyuanWorldPlay visual generation."""
+
     def __init__(
         self,
         *,
@@ -46,7 +48,7 @@ class HunyuanWorldPlayPipeline(PipelineABC):
         reasoning_model=None,
         synthesis_model: Optional["HunyuanWorldPlaySynthesis"] = None,
         operators=None,
-        device: str = 'cuda'
+        device: str = "cuda",
     ):
         """Initialize the pipeline and configure runtime components."""
         super().__init__()
@@ -61,26 +63,26 @@ class HunyuanWorldPlayPipeline(PipelineABC):
     def from_pretrained(
         cls,
         *,
-        model_path: Optional[str] = None,
+        model_path: str | None = None,
         required_components=None,
-        mode: Optional[str] = None,
-        device: Optional[str] = None,
-        create_sr_pipeline: Optional[bool] = None,
-        force_sparse_attn: Optional[bool] = None,
+        mode: str | None = None,
+        device: str | None = None,
+        create_sr_pipeline: bool | None = None,
+        force_sparse_attn: bool | None = None,
         transformer_dtype=None,
         enable_offloading: bool = None,
         enable_group_offloading: bool = None,
-        overlap_group_offloading: Optional[bool] = None,
-        init_infer_state: Optional[bool] = None,
-        infer_state_kwargs: Optional[dict] = None,
-        forward_speed: Optional[float] = None,
-        yaw_speed_deg: Optional[float] = None,
-        pitch_speed_deg: Optional[float] = None,
-        **kwargs
-    ) -> 'HunyuanWorldPlayPipeline':
+        overlap_group_offloading: bool | None = None,
+        init_infer_state: bool | None = None,
+        infer_state_kwargs: dict | None = None,
+        forward_speed: float | None = None,
+        yaw_speed_deg: float | None = None,
+        pitch_speed_deg: float | None = None,
+        **kwargs,
+    ) -> "HunyuanWorldPlayPipeline":
         """
         从预训练模型加载 Pipeline
-        
+
         Args:
             device: 设备
             create_sr_pipeline: 是否创建超分辨率 pipeline
@@ -90,7 +92,7 @@ class HunyuanWorldPlayPipeline(PipelineABC):
             enable_group_offloading: 是否启用 group offloading
             overlap_group_offloading: 是否重叠 group offloading
             **kwargs: 其他参数
-            
+
         Returns:
             HunyuanWorldPlayPipeline: Pipeline 实例
         """
@@ -146,7 +148,7 @@ class HunyuanWorldPlayPipeline(PipelineABC):
             enable_group_offloading=enable_group_offloading,
             overlap_group_offloading=overlap_group_offloading,
             action_ckpt=model_path,
-            **kwargs
+            **kwargs,
         )
         operator_defaults = defaults["operator"]
         forward_speed = float(operator_defaults["forward_speed"] if forward_speed is None else forward_speed)
@@ -157,21 +159,17 @@ class HunyuanWorldPlayPipeline(PipelineABC):
             yaw_speed_deg=yaw_speed_deg,
             pitch_speed_deg=pitch_speed_deg,
         )
-        
-        return cls(
-            synthesis_model=synthesis_model,
-            operators=operators,
-            device=device
-        )
+
+        return cls(synthesis_model=synthesis_model, operators=operators, device=device)
 
     def process(self, *, input_, interaction, video_length: int):
         """
         处理输入
-        
+
         Args:
             input_: 输入数据（图片、视频等）
             interaction: 交互信号
-            
+
         Returns:
             处理后的数据
         """
@@ -212,32 +210,32 @@ class HunyuanWorldPlayPipeline(PipelineABC):
         self,
         *,
         prompt: str,
-        images: Optional[Image.Image] = None,
-        image_path: Optional[str] = None,
-        interactions: Optional[str] = None,
+        images: Image.Image | None = None,
+        image_path: str | None = None,
+        interactions: str | None = None,
         num_frames: int = 125,
-        pose: Optional[str] = None,
-        aspect_ratio: str = '16:9',
+        pose: str | None = None,
+        aspect_ratio: str = "16:9",
         num_inference_steps: int = 4,
         negative_prompt: str = "",
         seed: int = 1,
         output_type: str = "pt",
         prompt_rewrite: bool = False,
         enable_sr: bool = False,
-        sr_num_inference_steps: Optional[int] = None,
+        sr_num_inference_steps: int | None = None,
         return_pre_sr_video: bool = False,
         few_step: bool = True,
         chunk_latent_frames: int = 4,
         model_type: str = "ar",
-        user_height: Optional[int] = None,
-        user_width: Optional[int] = None,
-        forward_speed: Optional[float] = None,
-        yaw_speed_deg: Optional[float] = None,
-        pitch_speed_deg: Optional[float] = None,
-        output_path: Optional[str | os.PathLike[str]] = None,
+        user_height: int | None = None,
+        user_width: int | None = None,
+        forward_speed: float | None = None,
+        yaw_speed_deg: float | None = None,
+        pitch_speed_deg: float | None = None,
+        output_path: str | os.PathLike[str] | None = None,
         fps: int = 24,
         return_dict: bool = False,
-        **kwargs
+        **kwargs,
     ):
         """
         Pipeline 调用入口
@@ -301,7 +299,7 @@ class HunyuanWorldPlayPipeline(PipelineABC):
             video_length=video_length,
         )
         operator_condition = processed["operator_condition"]
-        
+
         output = self.synthesis_model(
             enable_sr=enable_sr,
             prompt=prompt,
@@ -323,9 +321,9 @@ class HunyuanWorldPlayPipeline(PipelineABC):
             user_height=user_height,
             user_width=user_width,
             reference_image=processed["reference_image"],
-            **kwargs
+            **kwargs,
         )
-        
+
         if output_path is None:
             return output
 
@@ -341,11 +339,10 @@ class HunyuanWorldPlayPipeline(PipelineABC):
         }
         return result if return_dict or output_path is not None else output
 
-    def stream(self, *args, **kwds) -> Generator[torch.Tensor, List[str], None]:
+    def stream(self, *args, **kwds) -> Generator[torch.Tensor, list[str], None]:
         """
         流式输出
         """
-        pass
 
     def _ensure_realtime_session(self):
         """Create the model-owned resident rollout adapter once."""

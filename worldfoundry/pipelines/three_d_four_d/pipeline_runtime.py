@@ -59,8 +59,8 @@ class WorldGenPipeline(ThreeDFourDRuntimePipeline):
 
 __all__ = [
     "LagrNVSPipeline",
-    "MonST3RPipeline",
     "MVDiffusionPipeline",
+    "MonST3RPipeline",
     "StableVirtualCameraPipeline",
     "ThreeDFourDRuntimePipeline",
     "WonderJourneyPipeline",

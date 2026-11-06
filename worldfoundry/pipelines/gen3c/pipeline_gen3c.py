@@ -145,7 +145,7 @@ class Gen3CPipeline(PipelineABC):
         required_components: Mapping[str, Any] | None = None,
         device: str = "cuda",
         **kwargs: Any,
-    ) -> "Gen3CPipeline":
+    ) -> Gen3CPipeline:
         options = cls._options(model_path, required_components, kwargs)
         native = NativeDiffusionPipeline.from_pretrained(
             "gen3c",

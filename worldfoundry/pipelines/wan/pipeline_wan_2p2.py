@@ -76,9 +76,7 @@ class Wan2p2Pipeline(NativeTextToVideoPipeline):
                 parsed_width, parsed_height = (int(value) for value in size.lower().split(separator, 1))
             except (TypeError, ValueError) as error:
                 raise ValueError("Wan2.2 size must use WIDTH*HEIGHT, for example 1280*704") from error
-            if (width is not None and width != parsed_width) or (
-                height is not None and height != parsed_height
-            ):
+            if (width is not None and width != parsed_width) or (height is not None and height != parsed_height):
                 raise ValueError("Wan2.2 size conflicts with explicit height/width")
             width, height = parsed_width, parsed_height
         return super().__call__(
@@ -88,14 +86,8 @@ class Wan2p2Pipeline(NativeTextToVideoPipeline):
             width=width,
             num_frames=frame_num if frame_num is not None else standard_frames,
             num_inference_steps=sample_steps if sample_steps is not None else standard_steps,
-            guidance_scale=(
-                sample_guide_scale if sample_guide_scale is not None else standard_guidance
-            ),
-            seed=(
-                base_seed
-                if base_seed is not None
-                else (standard_seed if standard_seed is not None else 0)
-            ),
+            guidance_scale=(sample_guide_scale if sample_guide_scale is not None else standard_guidance),
+            seed=(base_seed if base_seed is not None else (standard_seed if standard_seed is not None else 0)),
             shift=sample_shift if sample_shift is not None else standard_shift,
             **kwargs,
         )

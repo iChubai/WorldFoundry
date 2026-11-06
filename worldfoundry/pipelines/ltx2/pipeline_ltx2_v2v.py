@@ -5,8 +5,9 @@ from __future__ import annotations
 import os
 import subprocess
 import sys
+from collections.abc import Mapping
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Mapping
+from typing import TYPE_CHECKING, Any
 
 from worldfoundry.core.io import artifact_root_path
 from worldfoundry.pipelines.pipeline_utils import PipelineABC
@@ -115,7 +116,11 @@ class _LTXICLoRAV2VPipeline(PipelineABC):
             raise ValueError(f"control_type must be one of {sorted(self.CONTROL_TYPES)}")
         if video is not None and video_path is not None:
             raise ValueError("pass either video or video_path")
-        reference = _required_file(video if video is not None else video_path, "control video") if (video is not None or video_path is not None) else None
+        reference = (
+            _required_file(video if video is not None else video_path, "control video")
+            if (video is not None or video_path is not None)
+            else None
+        )
         if reference is None:
             raise ValueError("LTX IC-LoRA V2V requires a control video")
         if height % 64 or width % 64 or height < 128 or width < 128:
@@ -136,17 +141,38 @@ class _LTXICLoRAV2VPipeline(PipelineABC):
         target.parent.mkdir(parents=True, exist_ok=True)
         log_path = target.with_suffix(".ltx.log")
         command = [
-            self.python_executable, "-u", "-m", "ltx_pipelines.ic_lora",
-            "--distilled-checkpoint-path", str(self.checkpoint_path),
-            "--gemma-root", str(self.gemma_root),
-            "--spatial-upsampler-path", str(self.spatial_upsampler_path),
-            "--lora", str(self.ic_lora_path), str(lora_strength),
-            "--video-conditioning", str(reference), str(control_strength),
-            "--prompt", str(prompt),
-            "--height", str(height), "--width", str(width),
-            "--num-frames", str(num_frames), "--frame-rate", str(fps),
-            "--seed", str(seed), "--offload", offload,
-            "--output-path", str(target),
+            self.python_executable,
+            "-u",
+            "-m",
+            "ltx_pipelines.ic_lora",
+            "--distilled-checkpoint-path",
+            str(self.checkpoint_path),
+            "--gemma-root",
+            str(self.gemma_root),
+            "--spatial-upsampler-path",
+            str(self.spatial_upsampler_path),
+            "--lora",
+            str(self.ic_lora_path),
+            str(lora_strength),
+            "--video-conditioning",
+            str(reference),
+            str(control_strength),
+            "--prompt",
+            str(prompt),
+            "--height",
+            str(height),
+            "--width",
+            str(width),
+            "--num-frames",
+            str(num_frames),
+            "--frame-rate",
+            str(fps),
+            "--seed",
+            str(seed),
+            "--offload",
+            offload,
+            "--output-path",
+            str(target),
         ]
         if skip_stage_2:
             command.append("--skip-stage-2")

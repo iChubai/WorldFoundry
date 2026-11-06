@@ -6,7 +6,6 @@ import os
 from collections.abc import Mapping, Sequence
 from typing import Any
 
-
 _PLACEHOLDER_API_KEYS = {"", "your_api_key", "your api key"}
 _PIPELINE_LOADER_METADATA_KEYS = {
     "model_id",

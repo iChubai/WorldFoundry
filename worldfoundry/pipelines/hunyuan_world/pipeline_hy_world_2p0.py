@@ -9,7 +9,7 @@ stage runners are not yet vendored or wrapped here.
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Any
 
 from ...synthesis.visual_generation.hunyuan_world.hy_world_2p0_worldgen_runtime import (
     HYWorld2WorldgenNotIntegratedError,
@@ -96,7 +96,7 @@ def _canonical_key(value: Any) -> str:
     return str(value).strip().lower().replace("_", "-")
 
 
-def _pop_first(mapping: Dict[str, Any], keys, default=None):
+def _pop_first(mapping: dict[str, Any], keys, default=None):
     """Pop first helper function."""
     for key in keys:
         if key in mapping:
@@ -112,7 +112,7 @@ class HYWorld2Pipeline(PipelineABC):
         runtime_pipeline: Any,
         *,
         task: str = "worldrecon",
-        backend: Optional[str] = None,
+        backend: str | None = None,
     ):
         """Initialize the pipeline and configure runtime components."""
         self.runtime_pipeline = runtime_pipeline
@@ -123,14 +123,14 @@ class HYWorld2Pipeline(PipelineABC):
     def from_pretrained(
         cls,
         model_path: str = "tencent/HY-World-2.0",
-        required_components: Optional[Dict[str, Any]] = None,
+        required_components: dict[str, Any] | None = None,
         device: str = "cuda",
-        task: Optional[str] = None,
-        backend: Optional[str] = None,
+        task: str | None = None,
+        backend: str | None = None,
         **kwargs,
-    ) -> "HYWorld2Pipeline":
+    ) -> HYWorld2Pipeline:
         """Load the pipeline from pretrained checkpoints and configurations."""
-        runtime_kwargs: Dict[str, Any] = {}
+        runtime_kwargs: dict[str, Any] = {}
         if required_components:
             runtime_kwargs.update(required_components)
         runtime_kwargs.update(kwargs)
@@ -184,8 +184,8 @@ class HYWorld2Pipeline(PipelineABC):
     def _load_pano_runtime(
         *,
         model_path: str,
-        runtime_kwargs: Dict[str, Any],
-        backend: Optional[str],
+        runtime_kwargs: dict[str, Any],
+        backend: str | None,
         device: str,
     ):
         """Load pano runtime for HYWorld2Pipeline."""
@@ -226,15 +226,12 @@ class HYWorld2Pipeline(PipelineABC):
                 "hunyuan_image_3",
             )
 
-        raise ValueError(
-            f"Unsupported HY-Pano 2.0 backend: {backend!r}. "
-            "Use 'hunyuan_image_3' or 'qwen_image'."
-        )
+        raise ValueError(f"Unsupported HY-Pano 2.0 backend: {backend!r}. Use 'hunyuan_image_3' or 'qwen_image'.")
 
     def __call__(
         self,
-        input_path: Optional[str] = None,
-        output_path: Optional[str] = None,
+        input_path: str | None = None,
+        output_path: str | None = None,
         **kwargs,
     ):
         """Execute the complete pipeline generation flow."""
@@ -261,11 +258,7 @@ class HYWorld2Pipeline(PipelineABC):
                 input_path = images
         if input_path is None:
             input_path = kwargs.pop("image", None)
-        runtime_kwargs = {
-            key: kwargs.pop(key)
-            for key in list(kwargs)
-            if key in _WORLDRECON_PASSTHROUGH_KWARGS
-        }
+        runtime_kwargs = {key: kwargs.pop(key) for key in list(kwargs) if key in _WORLDRECON_PASSTHROUGH_KWARGS}
         return self.runtime_pipeline(
             input_path=input_path,
             output_path=output_path or "inference_output",
@@ -274,8 +267,8 @@ class HYWorld2Pipeline(PipelineABC):
 
     def process(
         self,
-        input_path: Optional[str] = None,
-        output_path: Optional[str] = None,
+        input_path: str | None = None,
+        output_path: str | None = None,
         **kwargs,
     ):
         """Process and normalize input arguments and conditions for inference."""
@@ -286,7 +279,7 @@ class HYWorld2Pipeline(PipelineABC):
         )
 
     @staticmethod
-    def worldgen_plan(repo_path: Optional[str] = None) -> Dict[str, Any]:
+    def worldgen_plan(repo_path: str | None = None) -> dict[str, Any]:
         """Return the current HY-World 2.0 worldgen migration plan."""
         from ...synthesis.visual_generation.hunyuan_world.hy_world_2p0_worldgen_runtime import (
             get_hy_world_2p0_worldgen_plan,
@@ -309,11 +302,11 @@ class HYWorld2PanoPipeline(HYWorld2Pipeline):
     def from_pretrained(
         cls,
         model_path: str = "tencent/HY-World-2.0",
-        required_components: Optional[Dict[str, Any]] = None,
+        required_components: dict[str, Any] | None = None,
         device: str = "cuda",
-        backend: Optional[str] = None,
+        backend: str | None = None,
         **kwargs,
-    ) -> "HYWorld2PanoPipeline":
+    ) -> HYWorld2PanoPipeline:
         """Load the pipeline from pretrained checkpoints and configurations."""
         return super().from_pretrained(
             model_path=model_path,
@@ -326,8 +319,8 @@ class HYWorld2PanoPipeline(HYWorld2Pipeline):
 
 
 __all__ = [
-    "HYWorld2Pipeline",
-    "HYWorldMirror2Pipeline",
     "HYWorld2PanoPipeline",
+    "HYWorld2Pipeline",
     "HYWorld2WorldgenNotIntegratedError",
+    "HYWorldMirror2Pipeline",
 ]

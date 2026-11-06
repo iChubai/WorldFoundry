@@ -73,9 +73,7 @@ class FastVideoCausalWanPipeline(NativeVisualDiffusionPipeline):
         target_height = int(kwargs.get("height") or self.DEFAULT_HEIGHT)
         if target_width <= 0 or target_height <= 0:
             raise ValueError("CausalWan target width and height must be positive")
-        output_width, output_height = _best_output_size(
-            image.width, image.height, target_width * target_height
-        )
+        output_width, output_height = _best_output_size(image.width, image.height, target_width * target_height)
         scale = max(output_width / image.width, output_height / image.height)
         resized = image.resize(
             (round(image.width * scale), round(image.height * scale)),

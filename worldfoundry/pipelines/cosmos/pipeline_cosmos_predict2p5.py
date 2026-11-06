@@ -85,7 +85,7 @@ class CosmosPredict2p5Pipeline(PipelineABC):
         device: str = "cuda",
         model_id: str | None = None,
         **kwargs: Any,
-    ) -> "CosmosPredict2p5Pipeline":
+    ) -> CosmosPredict2p5Pipeline:
         """Load native components with optional Reason1 placement and reuse.
 
         ``text_embedding_cache_size`` counts complete prompt batches (default

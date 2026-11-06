@@ -62,9 +62,7 @@ class WorldModelRuntimePipeline(PipelineABC):
         kwargs = self._promote_call_options(kwargs)
 
         options = getattr(self.synthesis_model, "options", None)
-        overrides = {
-            key: kwargs[key] for key in self.RUNTIME_GATED_OPTION_KEYS if kwargs.get(key) not in (None, "")
-        }
+        overrides = {key: kwargs[key] for key in self.RUNTIME_GATED_OPTION_KEYS if kwargs.get(key) not in (None, "")}
         if not isinstance(options, dict) or not overrides:
             return super().__call__(*args, **kwargs)
 
@@ -84,6 +82,7 @@ class WorldModelRuntimePipeline(PipelineABC):
 
 class AdaWorldPipeline(WorldModelRuntimePipeline):
     """Pipeline implementation for AdaWorld visual generation."""
+
     MODEL_ID = "adaworld"
     RUNTIME_GATED_OPTION_KEYS = (
         "checkpoint",
@@ -162,6 +161,7 @@ class CausalRCMPipeline(WorldModelRuntimePipeline):
 
 class CtrlWorldPipeline(WorldModelRuntimePipeline):
     """Pipeline implementation for CtrlWorld visual generation."""
+
     MODEL_ID = "ctrl-world"
     RUNTIME_GATED_OPTION_KEYS = (
         "checkpoint_path",
@@ -199,6 +199,7 @@ class CtrlWorldPipeline(WorldModelRuntimePipeline):
 
 class DIAMONDPipeline(WorldModelRuntimePipeline):
     """Pipeline implementation for DIAMOND visual generation."""
+
     MODEL_ID = "diamond"
     RUNTIME_GATED_OPTION_KEYS = (
         "variant",
@@ -248,15 +249,27 @@ class DIAMONDCsgoPipeline(DIAMONDPipeline):
 
 class DinoWMPipeline(WorldModelRuntimePipeline):
     """Pipeline implementation for DinoWM visual generation."""
+
     MODEL_ID = "dino-wm"
     RUNTIME_GATED_OPTION_KEYS = (
-        "ckpt_base_path", "checkpoint_dir", "checkpoint_path", "model_name", "run_name",
-        "model_epoch", "config", "config_path", "seed", "n_evals", "goal_source", "goal_H",
+        "ckpt_base_path",
+        "checkpoint_dir",
+        "checkpoint_path",
+        "model_name",
+        "run_name",
+        "model_epoch",
+        "config",
+        "config_path",
+        "seed",
+        "n_evals",
+        "goal_source",
+        "goal_H",
     )
 
 
 class GenieEnvisionerPipeline(WorldModelRuntimePipeline):
     """Pipeline implementation for GenieEnvisioner visual generation."""
+
     MODEL_ID = "genie-envisioner"
     RUNTIME_GATED_OPTION_KEYS = (
         "checkpoint_path",
@@ -289,6 +302,7 @@ class GenieEnvisionerPipeline(WorldModelRuntimePipeline):
 
 class GigaWorld0Pipeline(WorldModelRuntimePipeline):
     """Pipeline implementation for GigaWorld0 visual generation."""
+
     MODEL_ID = "giga-world-0"
     RUNTIME_GATED_OPTION_KEYS = (
         "transformer_model_dir",
@@ -324,6 +338,7 @@ class GigaWorld0Pipeline(WorldModelRuntimePipeline):
 
 class LeWorldModelPipeline(WorldModelRuntimePipeline):
     """Pipeline implementation for LeWorldModel visual generation."""
+
     MODEL_ID = "leworldmodel"
 
 
@@ -336,16 +351,19 @@ class MIRAPipeline(WorldModelRuntimePipeline):
 
 class MineWorldPipeline(WorldModelRuntimePipeline):
     """Pipeline implementation for MineWorld visual generation."""
+
     MODEL_ID = "mineworld"
 
 
 class NWMPipeline(WorldModelRuntimePipeline):
     """Pipeline implementation for NWM visual generation."""
+
     MODEL_ID = "nwm"
 
 
 class Oasis500MPipeline(WorldModelRuntimePipeline):
     """Pipeline implementation for Oasis500M visual generation."""
+
     MODEL_ID = "oasis-500m"
     RUNTIME_GATED_OPTION_KEYS = (
         "oasis_ckpt",
@@ -391,16 +409,19 @@ class OpenDreamerPipeline(WorldModelRuntimePipeline):
 
 class SanaWMPipeline(WorldModelRuntimePipeline):
     """Pipeline implementation for SanaWM visual generation."""
+
     MODEL_ID = "sana-wm"
 
 
 class StarWMPipeline(WorldModelRuntimePipeline):
     """Pipeline implementation for StarWM visual generation."""
+
     MODEL_ID = "starwm"
 
 
 class TesserActPipeline(WorldModelRuntimePipeline):
     """Pipeline implementation for TesserAct visual generation."""
+
     MODEL_ID = "tesseract"
     RUNTIME_GATED_OPTION_KEYS = (
         "checkpoint_dir",
@@ -435,9 +456,9 @@ class TesserActPipeline(WorldModelRuntimePipeline):
         return kwargs
 
 
-
 class EgoWMPipeline(WorldModelRuntimePipeline):
     """Pipeline implementation for EgoWM visual generation."""
+
     MODEL_ID = "egowm"
     RUNTIME_GATED_OPTION_KEYS = (
         "checkpoint_path",
@@ -473,11 +494,13 @@ class EgoWMPipeline(WorldModelRuntimePipeline):
 
 class HappyOysterPipeline(WorldModelRuntimePipeline):
     """Pipeline implementation for HappyOyster visual generation."""
+
     MODEL_ID = "happyoyster"
 
 
 class HMAPipeline(WorldModelRuntimePipeline):
     """Pipeline implementation for HMA visual generation."""
+
     MODEL_ID = "hma"
     RUNTIME_GATED_OPTION_KEYS = (
         "checkpoint_dir",
@@ -509,31 +532,37 @@ class HMAPipeline(WorldModelRuntimePipeline):
 
 class HunyuanWorld1Pipeline(WorldModelRuntimePipeline):
     """Pipeline implementation for HunyuanWorld1 visual generation."""
+
     MODEL_ID = "hunyuanworld-1"
 
 
 class MosaicMemPipeline(WorldModelRuntimePipeline):
     """Pipeline implementation for MosaicMem visual generation."""
+
     MODEL_ID = "mosaicmem"
 
 
 class MotionBricksPipeline(WorldModelRuntimePipeline):
     """Pipeline implementation for MotionBricks visual generation."""
+
     MODEL_ID = "motionbricks"
 
 
 class OmniForcingPipeline(WorldModelRuntimePipeline):
     """Pipeline implementation for OmniForcing visual generation."""
+
     MODEL_ID = "omniforcing"
 
 
 class PointWorldPipeline(WorldModelRuntimePipeline):
     """Pipeline implementation for PointWorld visual generation."""
+
     MODEL_ID = "pointworld"
 
 
 class ShotStreamPipeline(WorldModelRuntimePipeline):
     """Pipeline implementation for ShotStream visual generation."""
+
     MODEL_ID = "shotstream"
     RUNTIME_GATED_OPTION_KEYS = (
         "checkpoint_dir",
@@ -573,45 +602,59 @@ class SolarWMPipeline(WorldModelRuntimePipeline):
 
 class SimWorldPipeline(WorldModelRuntimePipeline):
     """Pipeline implementation for SimWorld visual generation."""
+
     MODEL_ID = "simworld"
 
 
 class UWMPipeline(WorldModelRuntimePipeline):
     """Pipeline implementation for UWM visual generation."""
+
     MODEL_ID = "uwm"
 
 
 class VGGTWorldPipeline(WorldModelRuntimePipeline):
     """Pipeline implementation for VGGTWorld visual generation."""
+
     MODEL_ID = "vggt-world"
 
 
 class Vid2WorldPipeline(WorldModelRuntimePipeline):
     """Pipeline implementation for Vid2World visual generation."""
+
     MODEL_ID = "vid2world"
 
 
 class WildDet3DPipeline(WorldModelRuntimePipeline):
     """Pipeline implementation for WildDet3D visual generation."""
+
     MODEL_ID = "wilddet3d"
     RUNTIME_GATED_OPTION_KEYS = (
-        "image_path", "input_image", "checkpoint_path", "lingbot_config_path",
-        "intrinsics_path", "score_threshold", "score_3d_threshold", "python_executable",
+        "image_path",
+        "input_image",
+        "checkpoint_path",
+        "lingbot_config_path",
+        "intrinsics_path",
+        "score_threshold",
+        "score_3d_threshold",
+        "python_executable",
     )
 
 
 class WildWorldPipeline(WorldModelRuntimePipeline):
     """Pipeline implementation for WildWorld visual generation."""
+
     MODEL_ID = "wildworld"
 
 
 class WorldGrowPipeline(WorldModelRuntimePipeline):
     """Pipeline implementation for WorldGrow visual generation."""
+
     MODEL_ID = "worldgrow"
 
 
 class WorldMemPipeline(WorldModelRuntimePipeline):
     """Pipeline implementation for WorldMem visual generation."""
+
     MODEL_ID = "worldmem"
 
 
@@ -619,8 +662,8 @@ __all__ = [
     "AdaWorldPipeline",
     "CausalRCMPipeline",
     "CtrlWorldPipeline",
-    "DIAMONDPipeline",
     "DIAMONDCsgoPipeline",
+    "DIAMONDPipeline",
     "DinoWMPipeline",
     "EgoWMPipeline",
     "GenieEnvisionerPipeline",
@@ -634,8 +677,8 @@ __all__ = [
     "MosaicMemPipeline",
     "MotionBricksPipeline",
     "NWMPipeline",
-    "OmniForcingPipeline",
     "Oasis500MPipeline",
+    "OmniForcingPipeline",
     "OpenDreamerPipeline",
     "PointWorldPipeline",
     "SanaWMPipeline",
@@ -649,7 +692,7 @@ __all__ = [
     "Vid2WorldPipeline",
     "WildDet3DPipeline",
     "WildWorldPipeline",
-    "WorldModelRuntimePipeline",
     "WorldGrowPipeline",
     "WorldMemPipeline",
+    "WorldModelRuntimePipeline",
 ]

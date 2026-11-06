@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Any
 
 import numpy as np
 from PIL import Image
@@ -28,7 +28,7 @@ def _default_output_dir(name: str = "lingbot_map_output") -> str:
 class LingBotMapResult:
     """Container for LingBot-Map reconstruction outputs."""
 
-    def __init__(self, numpy_data: Dict[str, Any], data_type: str = "image_sequence"):
+    def __init__(self, numpy_data: dict[str, Any], data_type: str = "image_sequence"):
         """Initialize the pipeline and configure runtime components."""
         self.numpy_data = numpy_data
         self.data_type = data_type
@@ -212,10 +212,9 @@ class LingBotMapResult:
             handle.write("property uchar green\n")
             handle.write("property uchar blue\n")
             handle.write("end_header\n")
-            for point, color in zip(points, colors):
+            for point, color in zip(points, colors, strict=False):
                 handle.write(
-                    f"{point[0]:.6f} {point[1]:.6f} {point[2]:.6f} "
-                    f"{int(color[0])} {int(color[1])} {int(color[2])}\n"
+                    f"{point[0]:.6f} {point[1]:.6f} {point[2]:.6f} {int(color[0])} {int(color[1])} {int(color[2])}\n"
                 )
         return str(path)
 
@@ -226,9 +225,7 @@ class LingBotMapResult:
         saved: list[str] = []
 
         npz_payload = {
-            key: value
-            for key, value in self.numpy_data.items()
-            if isinstance(value, np.ndarray) or np.isscalar(value)
+            key: value for key, value in self.numpy_data.items() if isinstance(value, np.ndarray) or np.isscalar(value)
         }
         npz_path = output_path / output_name
         np.savez_compressed(npz_path, **npz_payload)
@@ -260,9 +257,9 @@ class LingBotMapPipeline(PipelineABC):
 
     def __init__(
         self,
-        representation_model: Optional[LingBotMapRepresentation] = None,
-        operator: Optional[LingBotMapOperator] = None,
-        memory_module: Optional[RuntimeMemory] = None,
+        representation_model: LingBotMapRepresentation | None = None,
+        operator: LingBotMapOperator | None = None,
+        memory_module: RuntimeMemory | None = None,
         device: str = "cuda",
         model_id: str | None = None,
     ) -> None:
@@ -270,7 +267,7 @@ class LingBotMapPipeline(PipelineABC):
         self.model_id = model_id or self.MODEL_ID
         self.representation_model = representation_model
         self.operator = operator or LingBotMapOperator()
-        self.memory_module = memory_module or RuntimeMemory(model_id='lingbot-map')
+        self.memory_module = memory_module or RuntimeMemory(model_id="lingbot-map")
         self.device = device
 
     @classmethod
@@ -278,13 +275,13 @@ class LingBotMapPipeline(PipelineABC):
         cls,
         pretrained_model_path: Any = None,
         model_path: Any = None,
-        required_components: Optional[Dict[str, Any]] = None,
+        required_components: dict[str, Any] | None = None,
         device: str = "cuda",
         model_id: str | None = None,
         **kwargs: Any,
-    ) -> "LingBotMapPipeline":
+    ) -> LingBotMapPipeline:
         """Load the pipeline from pretrained checkpoints and configurations."""
-        options: Dict[str, Any] = {}
+        options: dict[str, Any] = {}
         checkpoint_source = pretrained_model_path if pretrained_model_path is not None else model_path
         if isinstance(checkpoint_source, dict):
             options.update(checkpoint_source)
@@ -307,15 +304,17 @@ class LingBotMapPipeline(PipelineABC):
         return cls(
             representation_model=representation_model,
             operator=LingBotMapOperator(),
-            memory_module=RuntimeMemory(model_id='lingbot-map'),
+            memory_module=RuntimeMemory(model_id="lingbot-map"),
             device=device,
             model_id=model_id or cls.MODEL_ID,
         )
 
-    def process(self, images: Any = None, interactions: Any = None, **kwargs: Any) -> Dict[str, Any]:
+    def process(self, images: Any = None, interactions: Any = None, **kwargs: Any) -> dict[str, Any]:
         """Process and normalize input arguments and conditions for inference."""
         if images is None:
-            raise ValueError("LingBotMapPipeline requires images as a directory, list, tensor, PIL image, or numpy array.")
+            raise ValueError(
+                "LingBotMapPipeline requires images as a directory, list, tensor, PIL image, or numpy array."
+            )
         self.operator.get_interaction(interactions)
         try:
             interaction = self.operator.process_interaction(**kwargs)
@@ -355,7 +354,9 @@ class LingBotMapPipeline(PipelineABC):
             return {
                 "model_id": self.model_id,
                 "artifact_path": artifact_path,
-                "point_cloud_path": artifact_path if artifact_path and Path(artifact_path).suffix.lower() == ".ply" else None,
+                "point_cloud_path": artifact_path
+                if artifact_path and Path(artifact_path).suffix.lower() == ".ply"
+                else None,
                 "saved_files": saved_files,
                 "result": result,
                 "numpy_data": result.numpy_data,

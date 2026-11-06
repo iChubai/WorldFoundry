@@ -2,7 +2,8 @@
 
 from __future__ import annotations
 
-from typing import Any, Mapping
+from collections.abc import Mapping
+from typing import Any
 
 from worldfoundry.pipelines.pipeline_utils import PipelineABC
 from worldfoundry.synthesis.visual_generation.minwm import (

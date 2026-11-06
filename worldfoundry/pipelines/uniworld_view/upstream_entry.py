@@ -19,8 +19,9 @@ def main() -> None:
     sys.path.insert(0, str(repo_root))
     # Match inference.py's import order: vendored dependencies imported by
     # demo also expose a top-level `configs` package.
-    from configs.infer_config import get_parser as _get_parser
+    from configs.infer_config import get_parser as _get_parser  # noqa: F401
 
+    # isort: split
     import demo
 
     STream3R = demo.STream3R

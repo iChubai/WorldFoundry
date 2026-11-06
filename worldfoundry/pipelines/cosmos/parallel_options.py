@@ -20,8 +20,16 @@ def build_cosmos_parallel_context(options, policy, *, attention_heads: int):
         return None
     validate_inference_parallel_policy(policy)
     for name in (
-        "quantization", "quantization_mode", "quantization_config", "compile", "torch_compile",
-        "cuda_graph", "device_map", "runtime_options", "teacache", "approximate_attention",
+        "quantization",
+        "quantization_mode",
+        "quantization_config",
+        "compile",
+        "torch_compile",
+        "cuda_graph",
+        "device_map",
+        "runtime_options",
+        "teacache",
+        "approximate_attention",
     ):
         if options.get(name) not in (None, False, "none", "false", 0):
             raise ValueError(f"multi-rank Cosmos inference does not support {name}")
@@ -36,8 +44,12 @@ def _input_signature(value):
 
     if isinstance(value, torch.Tensor):
         copied = value.detach().cpu().contiguous()
-        return ("tensor", tuple(copied.shape), str(copied.dtype),
-                hashlib.sha256(copied.reshape(-1).view(torch.uint8).numpy().tobytes()).hexdigest())
+        return (
+            "tensor",
+            tuple(copied.shape),
+            str(copied.dtype),
+            hashlib.sha256(copied.reshape(-1).view(torch.uint8).numpy().tobytes()).hexdigest(),
+        )
     if value is None or isinstance(value, (str, int, float, bool)):
         return value
     if isinstance(value, Mapping):

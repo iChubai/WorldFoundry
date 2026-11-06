@@ -49,7 +49,7 @@ class MatrixGame35Pipeline(PipelineABC):
         model_id: str | None = None,
         lazy: bool = True,
         **kwargs: Any,
-    ) -> "MatrixGame35Pipeline":
+    ) -> MatrixGame35Pipeline:
         options: dict[str, Any] = {}
         checkpoint_path = model_path
         if isinstance(model_path, Mapping):

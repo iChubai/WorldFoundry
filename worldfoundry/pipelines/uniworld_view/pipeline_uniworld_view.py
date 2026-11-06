@@ -7,8 +7,8 @@ this adapter owns WorldFoundry input validation, paths and artifact handling.
 
 from __future__ import annotations
 
-import os
 import json
+import os
 import shutil
 import subprocess
 import sys
@@ -21,7 +21,6 @@ from worldfoundry.core.io import artifact_root_path
 from worldfoundry.core.io.paths import checkpoint_root_candidates, conda_envs_root_path, official_runtime_repo_path
 from worldfoundry.pipelines.pipeline_utils import PipelineABC
 from worldfoundry.runtime.assets import expand_worldfoundry_path, local_file_is_ready
-
 
 _WEIGHT_DEFAULTS = {
     "transformer_path": ("Drexubery--UniView",),
@@ -71,17 +70,11 @@ def _complete_hf_weights(directory: Path) -> bool:
             continue
         try:
             if indexes:
-                names = set().union(*(
-                    json.loads(index.read_text(encoding="utf-8"))["weight_map"].values()
-                    for index in indexes
-                ))
-                return bool(names) and all(
-                    local_file_is_ready(directory / name)
-                    for name in names
+                names = set().union(
+                    *(json.loads(index.read_text(encoding="utf-8"))["weight_map"].values() for index in indexes)
                 )
-            return not any("-of-" in path.name for path in files) and all(
-                local_file_is_ready(path) for path in files
-            )
+                return bool(names) and all(local_file_is_ready(directory / name) for name in names)
+            return not any("-of-" in path.name for path in files) and all(local_file_is_ready(path) for path in files)
         except (OSError, ValueError, KeyError, TypeError):
             return False
     return False
@@ -113,7 +106,7 @@ class UniWorldViewPipeline(PipelineABC):
         required_components: Mapping[str, Any] | None = None,
         device: str = "cuda:0",
         **kwargs: Any,
-    ) -> "UniWorldViewPipeline":
+    ) -> UniWorldViewPipeline:
         options = dict(model_path) if isinstance(model_path, Mapping) else {}
         if model_path is not None and not isinstance(model_path, Mapping):
             options["repo_root"] = model_path
@@ -128,9 +121,10 @@ class UniWorldViewPipeline(PipelineABC):
         unknown = set(options) - _LOAD_KEYS
         if unknown:
             raise ValueError(f"unsupported UniWorld-View loading options: {sorted(unknown)}")
-        repo_root = _path(options.pop("repo_root", None) or official_runtime_repo_path(
-            "UniWorld-View", specific_env="UNIWORLD_VIEW_REPO"
-        ))
+        repo_root = _path(
+            options.pop("repo_root", None)
+            or official_runtime_repo_path("UniWorld-View", specific_env="UNIWORLD_VIEW_REPO")
+        )
         dedicated_python = conda_envs_root_path() / "uniworld-view-cu124" / "bin" / "python"
         python_executable = (
             options.pop("python_executable", None)
@@ -151,7 +145,9 @@ class UniWorldViewPipeline(PipelineABC):
         return cls(repo_root=repo_root, python_executable=python_executable, weights=weights, device=device)
 
     def _check_source(self) -> None:
-        missing = [str(self.repo_root / relative) for relative in _SOURCE_FILES if not (self.repo_root / relative).is_file()]
+        missing = [
+            str(self.repo_root / relative) for relative in _SOURCE_FILES if not (self.repo_root / relative).is_file()
+        ]
         if missing:
             raise FileNotFoundError(
                 "UniWorld-View official source is incomplete. Clone the pinned upstream repository "
@@ -197,7 +193,11 @@ class UniWorldViewPipeline(PipelineABC):
         if render_method in {"hybrid", "mesh"}:
             check = subprocess.run(
                 [self.python_executable, "-c", "from pytorch3d.renderer import MeshRasterizer"],
-                cwd=self.repo_root, capture_output=True, text=True, check=False, timeout=90,
+                cwd=self.repo_root,
+                capture_output=True,
+                text=True,
+                check=False,
+                timeout=90,
             )
             if check.returncode:
                 tail = "\n".join(check.stderr.splitlines()[-5:])
@@ -241,7 +241,9 @@ class UniWorldViewPipeline(PipelineABC):
         plan_only: bool = False,
     ) -> Any:
         if prompt and str(prompt).strip():
-            raise ValueError("UniWorld-View upstream inference generates its own BLIP2 caption and ignores --prompt; leave prompt empty")
+            raise ValueError(
+                "UniWorld-View upstream inference generates its own BLIP2 caption and ignores --prompt; leave prompt empty"
+            )
         has_image = images is not None or image_path is not None
         has_video = video is not None or video_path is not None
         if has_image == has_video:
@@ -250,8 +252,8 @@ class UniWorldViewPipeline(PipelineABC):
         # Studio supplies the staged input as `images`/`video` and retains the
         # original upload path as `image_path`/`video_path`. Prefer the staged
         # object; the two aliases can legitimately be different file paths.
-        selected = (video if video is not None else video_path) if is_video else (
-            images if images is not None else image_path
+        selected = (
+            (video if video is not None else video_path) if is_video else (images if images is not None else image_path)
         )
         is_path = isinstance(selected, (str, Path))
         if is_video and not is_path:
@@ -286,17 +288,57 @@ class UniWorldViewPipeline(PipelineABC):
         if is_path and not source.is_file():
             raise FileNotFoundError(f"UniWorld-View input does not exist: {source}")
         command = [
-            self.python_executable, "-u", str(_UPSTREAM_ENTRY),
-            "--image_dir", str(source), "--out_dir", str(run_root), "--exp_name", exp_name,
-            "--mode", mode, "--device", self.device, "--geometry_backend", geometry_backend,
-            "--render_method", render_method,
-            "--height", str(height), "--width", str(width), "--video_length", str(num_frames),
-            "--ddim_steps", str(num_inference_steps), "--diffusion_guidance_scale", str(guidance_scale),
-            "--fps", str(fps), "--seed", str(seed), "--stride", str(stride),
-            "--traj_type", traj_type, "--d_phi", str(d_phi), "--d_theta", str(d_theta),
-            "--x_offset", str(x_offset), "--y_offset", str(y_offset), "--z_offset", str(z_offset),
-            "--radius_scale", str(radius_scale), "--prompt", str(prompt or ""),
-            "--low_gpu_memory_mode", str(low_gpu_memory_mode).lower(),
+            self.python_executable,
+            "-u",
+            str(_UPSTREAM_ENTRY),
+            "--image_dir",
+            str(source),
+            "--out_dir",
+            str(run_root),
+            "--exp_name",
+            exp_name,
+            "--mode",
+            mode,
+            "--device",
+            self.device,
+            "--geometry_backend",
+            geometry_backend,
+            "--render_method",
+            render_method,
+            "--height",
+            str(height),
+            "--width",
+            str(width),
+            "--video_length",
+            str(num_frames),
+            "--ddim_steps",
+            str(num_inference_steps),
+            "--diffusion_guidance_scale",
+            str(guidance_scale),
+            "--fps",
+            str(fps),
+            "--seed",
+            str(seed),
+            "--stride",
+            str(stride),
+            "--traj_type",
+            traj_type,
+            "--d_phi",
+            str(d_phi),
+            "--d_theta",
+            str(d_theta),
+            "--x_offset",
+            str(x_offset),
+            "--y_offset",
+            str(y_offset),
+            "--z_offset",
+            str(z_offset),
+            "--radius_scale",
+            str(radius_scale),
+            "--prompt",
+            str(prompt or ""),
+            "--low_gpu_memory_mode",
+            str(low_gpu_memory_mode).lower(),
         ]
         for key, value in self.weights.items():
             command.extend((f"--{key}", str(value)))
@@ -308,8 +350,8 @@ class UniWorldViewPipeline(PipelineABC):
             return {"status": "planned", "command": command, "cwd": str(self.repo_root), "artifact_path": str(target)}
         self._check_weights(mode=mode, geometry_backend=geometry_backend, render_method=render_method)
         if not is_path:
-            from PIL import Image
             import numpy as np
+            from PIL import Image
 
             value = selected
             if isinstance(value, Image.Image):
@@ -331,8 +373,13 @@ class UniWorldViewPipeline(PipelineABC):
         with log_path.open("w", encoding="utf-8") as log:
             try:
                 result = subprocess.run(
-                    command, cwd=self.repo_root, env=env, stdout=log, stderr=subprocess.STDOUT,
-                    check=False, timeout=timeout_seconds,
+                    command,
+                    cwd=self.repo_root,
+                    env=env,
+                    stdout=log,
+                    stderr=subprocess.STDOUT,
+                    check=False,
+                    timeout=timeout_seconds,
                 )
             except subprocess.TimeoutExpired as exc:
                 raise TimeoutError(f"UniWorld-View exceeded {timeout_seconds}s; see {log_path}") from exc
@@ -340,7 +387,13 @@ class UniWorldViewPipeline(PipelineABC):
             tail = "\n".join(log_path.read_text(encoding="utf-8", errors="replace").splitlines()[-25:])
             raise RuntimeError(f"UniWorld-View inference failed (exit {result.returncode}); see {log_path}\n{tail}")
         shutil.copy2(generated, target)
-        record = {"status": "success", "artifact_path": str(target), "video": str(target), "log_path": str(log_path), "run_dir": str(run_root / exp_name)}
+        record = {
+            "status": "success",
+            "artifact_path": str(target),
+            "video": str(target),
+            "log_path": str(log_path),
+            "run_dir": str(run_root / exp_name),
+        }
         return record if return_dict else str(target)
 
     def run_pipeline_invocation(self, invocation: Any) -> Mapping[str, Any]:
@@ -350,13 +403,23 @@ class UniWorldViewPipeline(PipelineABC):
         image = invocation.image
         video = invocation.video
         if input_path is not None and image is None and video is None:
-            if options.get("mode") == "dynamic_view" or Path(str(input_path)).suffix.lower() in {".mp4", ".mov", ".avi", ".webm", ".mkv"}:
+            if options.get("mode") == "dynamic_view" or Path(str(input_path)).suffix.lower() in {
+                ".mp4",
+                ".mov",
+                ".avi",
+                ".webm",
+                ".mkv",
+            }:
                 video = input_path
             else:
                 image = input_path
         return self(
-            prompt=invocation.prompt, images=image, video=video,
-            output_path=invocation.output_path, return_dict=True, **options,
+            prompt=invocation.prompt,
+            images=image,
+            video=video,
+            output_path=invocation.output_path,
+            return_dict=True,
+            **options,
         )
 
 

@@ -11,7 +11,6 @@ from worldfoundry.synthesis.visual_generation.longcat_video.worldfoundry_runtime
     LongCatVideoRuntime,
 )
 
-
 _DEFAULT_NEGATIVE_PROMPT = (
     "Bright tones, overexposed, static, blurred details, subtitles, style, works, paintings, "
     "images, static, overall gray, worst quality, low quality, JPEG compression residue, ugly, "
@@ -83,7 +82,7 @@ class LongCatVideoPipeline(PipelineABC):
         device: str = "cuda",
         model_id: str | None = None,
         **kwargs: Any,
-    ) -> "LongCatVideoPipeline":
+    ) -> LongCatVideoPipeline:
         """Load the pipeline from pretrained checkpoints and configurations."""
         del model_id
         options = cls._normalize_options(model_path, required_components, kwargs)
@@ -172,8 +171,14 @@ class LongCatVideoPipeline(PipelineABC):
                 run_refiner=False,
             )
             for key in (
-                "run_base", "run_distill", "run_refiner", "fps", "cpu_offload",
-                "max_sequence_length", "distill_num_inference_steps", "spatial_refine_only",
+                "run_base",
+                "run_distill",
+                "run_refiner",
+                "fps",
+                "cpu_offload",
+                "max_sequence_length",
+                "distill_num_inference_steps",
+                "spatial_refine_only",
             ):
                 if key in kwargs:
                     request[key] = kwargs[key]
@@ -284,8 +289,12 @@ class LongCatVideoPipeline(PipelineABC):
             )
             if run_result.get("status") == "failed":
                 result["status"] = "failed"
-                result["error"] = run_result.get("error") or run_result.get("blocked_reason") or "LongCat-Video execute failed."
-            report_path.write_text(json.dumps(result, ensure_ascii=False, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+                result["error"] = (
+                    run_result.get("error") or run_result.get("blocked_reason") or "LongCat-Video execute failed."
+                )
+            report_path.write_text(
+                json.dumps(result, ensure_ascii=False, indent=2, sort_keys=True) + "\n", encoding="utf-8"
+            )
             self._record(result)
             if return_dict:
                 return result

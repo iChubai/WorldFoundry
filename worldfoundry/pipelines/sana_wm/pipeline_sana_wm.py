@@ -3,8 +3,9 @@
 from __future__ import annotations
 
 import os
+from collections.abc import Mapping, Sequence
 from pathlib import Path
-from typing import Any, Mapping, Sequence
+from typing import Any
 
 from PIL import Image
 
@@ -233,7 +234,7 @@ class SanaWMStreamingPipeline(SanaWMPipeline):
 
         source_value = str(source)
         if "://" in source_value:
-            return {name: source_value for name in cls.CHECKPOINT_ROLES}
+            return dict.fromkeys(cls.CHECKPOINT_ROLES, source_value)
         streaming_root = Path(source_value).expanduser()
         gemma_source = options.get("gemma_path") or options.get("text_encoder_path")
         gemma_root = (

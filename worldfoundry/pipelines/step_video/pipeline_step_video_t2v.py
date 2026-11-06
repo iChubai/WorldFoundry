@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from worldfoundry.pipelines.native_diffusion_video import NativeTextToVideoPipeline
 
-
 # The released StepVideo pipeline defaults both prompt suffixes to empty.
 # Keep those checkpoint-native defaults: forcing an HDR/surrealism suffix here
 # materially changes the prompt and produces the yellow, over-saturated output

@@ -2,13 +2,13 @@
 input image and interaction signal output rendering video
 load operators, representations, and rendering model
 """
+
 import logging
 import os
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Optional
 
 import numpy as np
-import torch
 from PIL import Image
 
 from worldfoundry.core.io import artifact_root_path
@@ -39,13 +39,16 @@ if TYPE_CHECKING:
 
 class HunyuanWorldVoyagerPipeline(PipelineABC):
     """Pipeline implementation for HunyuanWorldVoyager visual generation."""
-    def __init__(self,
-                 operators: Optional["HunyuanWorldVoyagerOperator"] = None,
-                 represent_model: Optional["HunyuanWorldVoyagerRepresentation"] = None,
-                 rendering_model: Optional["HunyuanWorldVoyagerSynthesis"] = None,
-                 rendering_args = None,
-                 save_representation_video = False,
-                 device: str = 'cuda'):
+
+    def __init__(
+        self,
+        operators: Optional["HunyuanWorldVoyagerOperator"] = None,
+        represent_model: Optional["HunyuanWorldVoyagerRepresentation"] = None,
+        rendering_model: Optional["HunyuanWorldVoyagerSynthesis"] = None,
+        rendering_args=None,
+        save_representation_video=False,
+        device: str = "cuda",
+    ):
         """Initialize the pipeline and configure runtime components."""
         super(HunyuanWorldVoyagerPipeline, self).__init__()
         self.operators = operators
@@ -56,15 +59,17 @@ class HunyuanWorldVoyagerPipeline(PipelineABC):
         self.device = device
 
         os.makedirs(self.rendering_args.input_path, exist_ok=True)
-    
+
     @classmethod
-    def from_pretrained(cls,
-                        model_path: Optional[str | dict[str, Any]] = None,
-                        required_components = None,
-                        device: str = "cuda",
-                        represent_render_dir: Optional[str] = None,
-                        save_representation_video: bool = False,
-                        **kwargs) -> 'HunyuanWorldVoyagerPipeline':
+    def from_pretrained(
+        cls,
+        model_path: str | dict[str, Any] | None = None,
+        required_components=None,
+        device: str = "cuda",
+        represent_render_dir: str | None = None,
+        save_representation_video: bool = False,
+        **kwargs,
+    ) -> "HunyuanWorldVoyagerPipeline":
         """
         Load the complete pipeline from a pretrained model
 
@@ -114,10 +119,7 @@ class HunyuanWorldVoyagerPipeline(PipelineABC):
                 key: value for key, value in component_options.items() if key != "represent_model_path"
             }
             represent_model = HunyuanWorldVoyagerRepresentation.from_pretrained(
-                represent_model_path,
-                device=device,
-                depth_model_name='moge_v1',
-                **representation_kwargs
+                represent_model_path, device=device, depth_model_name="moge_v1", **representation_kwargs
             )
 
         logger.info("Loading rendering model from %s", model_path)
@@ -139,7 +141,7 @@ class HunyuanWorldVoyagerPipeline(PipelineABC):
         )
 
         rendering_model = HunyuanWorldVoyagerSynthesis.from_pretrained(
-            model_path, 
+            model_path,
             rendering_args,
             # **{k: v for k, v in kwargs.items() if k in ['cache_dir', 'force_download', 'resume_download']}
         )
@@ -152,9 +154,9 @@ class HunyuanWorldVoyagerPipeline(PipelineABC):
             rendering_model=rendering_model,
             rendering_args=rendering_args,
             save_representation_video=save_representation_video,
-            device=device
+            device=device,
         )
-        
+
         return pipeline
 
     @staticmethod
@@ -237,22 +239,22 @@ class HunyuanWorldVoyagerPipeline(PipelineABC):
 
             # generate representation (points, colors, depth) based on the input image and camera parameters
             input_data = {
-                'image': input_image,
-                'image_tensor': image_tensor,
-                'intrinsics': intrinsics,
-                'extrinsics': extrinsics
+                "image": input_image,
+                "image_tensor": image_tensor,
+                "intrinsics": intrinsics,
+                "extrinsics": extrinsics,
             }
             points, colors, depth = self.represent_model.get_representation(input_data)
 
             # generate intrinsics and extrinsics for the whole video based on the interaction signal
             intrinsics, extrinsics = self.operators.process_interaction(
-                num_frames=num_frames, Width=Width//2, Height=Height//2, fx=128, fy=128
+                num_frames=num_frames, Width=Width // 2, Height=Height // 2, fx=128, fy=128
             )
             self.operators.delete_last_interaction()
 
             # rendering the video
             render_list, mask_list, depth_list = self.represent_model.render_video(
-                points, colors, extrinsics, intrinsics, height=Height//2, width=Width//2
+                points, colors, extrinsics, intrinsics, height=Height // 2, width=Width // 2
             )
         elif isinstance(interaction_signal, list):
             # 交互序列 - 多轮逻辑
@@ -264,10 +266,10 @@ class HunyuanWorldVoyagerPipeline(PipelineABC):
             )
 
             input_data = {
-                'image': input_image,
-                'image_tensor': image_tensor,
-                'intrinsics': intrinsics_first,
-                'extrinsics': extrinsics_first
+                "image": input_image,
+                "image_tensor": image_tensor,
+                "intrinsics": intrinsics_first,
+                "extrinsics": extrinsics_first,
             }
             points, colors, depth = self.represent_model.get_representation(input_data)
 
@@ -286,11 +288,11 @@ class HunyuanWorldVoyagerPipeline(PipelineABC):
                 intrinsics, extrinsics = camera_list(
                     num_frames=frames_for_this,
                     type=interaction,
-                    Width=Width//2,
-                    Height=Height//2,
+                    Width=Width // 2,
+                    Height=Height // 2,
                     fx=128,
                     fy=128,
-                    prev_extrinsic=prev_extrinsic  # ← input last frame's extrinsic for smooth transition
+                    prev_extrinsic=prev_extrinsic,  # ← input last frame's extrinsic for smooth transition
                 )
                 all_intrinsics.append(intrinsics)
                 all_extrinsics.append(extrinsics)
@@ -302,42 +304,50 @@ class HunyuanWorldVoyagerPipeline(PipelineABC):
 
             # rendering the coarse video
             render_list, mask_list, depth_list = self.represent_model.render_video(
-                points, colors, extrinsics, intrinsics, height=Height//2, width=Width//2
+                points, colors, extrinsics, intrinsics, height=Height // 2, width=Width // 2
             )
         else:
             raise ValueError(f"interaction_signal must be a string or list, got {type(interaction_signal)}")
 
-        hunyuan_video_input = self.rendering_model.create_hunyuan_video_input(render_list, mask_list, depth_list,
-                                                                            Width=Width, Height=Height)
+        hunyuan_video_input = self.rendering_model.create_hunyuan_video_input(
+            render_list, mask_list, depth_list, Width=Width, Height=Height
+        )
         if self.save_representation_video:
             self.represent_model.save_representation_video(
-                render_list, mask_list, depth_list, self.rendering_args.input_path, separate=True, 
-                ref_image=input_image, ref_depth=depth, Width=Width, Height=Height
+                render_list,
+                mask_list,
+                depth_list,
+                self.rendering_args.input_path,
+                separate=True,
+                ref_image=input_image,
+                ref_depth=depth,
+                Width=Width,
+                Height=Height,
             )
 
         return hunyuan_video_input
 
-    def __call__(self,
-                 images,
-                 interactions="forward",
-                 prompt = "",
-                 num_frames = None,
-                 condition_dir: str | os.PathLike[str] | None = None,
-                 output_save_path: Optional[str] = None,
-                 i2v_stability=True,
-                 seed: int | None = None,
-                 infer_steps: int | None = None,
-                 flow_shift: float | None = None,
-                 embedded_cfg_scale: float | None = None,
-                 ulysses_degree: int | None = None,
-                 ring_degree: int | None = None,
-                 height: int | None = None,
-                 width: int | None = None,
-                 **kwargs):
+    def __call__(
+        self,
+        images,
+        interactions="forward",
+        prompt="",
+        num_frames=None,
+        condition_dir: str | os.PathLike[str] | None = None,
+        output_save_path: str | None = None,
+        i2v_stability=True,
+        seed: int | None = None,
+        infer_steps: int | None = None,
+        flow_shift: float | None = None,
+        embedded_cfg_scale: float | None = None,
+        ulysses_degree: int | None = None,
+        ring_degree: int | None = None,
+        height: int | None = None,
+        width: int | None = None,
+        **kwargs,
+    ):
         """inference function of the pipeline"""
-        output_save_path = output_save_path or _default_output_dir(
-            "hunyuan_world_voyager/final_render"
-        )
+        output_save_path = output_save_path or _default_output_dir("hunyuan_world_voyager/final_render")
         if seed is not None:
             self.rendering_args.seed = int(seed)
         if infer_steps is not None:
@@ -357,8 +367,9 @@ class HunyuanWorldVoyagerPipeline(PipelineABC):
         if (video_length - 1) % 4 != 0:
             adjusted = ((video_length - 1) // 4) * 4 + 1
             logger.warning(
-                "video_length must be a multiple of 4 plus 1 (i.e., (n*4)+1). "
-                "Got %s, automatically adjusted to %s.", video_length, adjusted
+                "video_length must be a multiple of 4 plus 1 (i.e., (n*4)+1). Got %s, automatically adjusted to %s.",
+                video_length,
+                adjusted,
             )
             video_length = adjusted
 
@@ -366,8 +377,9 @@ class HunyuanWorldVoyagerPipeline(PipelineABC):
         if condition_dir is not None:
             hunayuan_video_input = self.load_condition_dir(condition_dir, num_frames=video_length)
         else:
-            hunayuan_video_input = self.process(images, num_frames=video_length,
-                                                interaction_signal=interactions, **kwargs)
+            hunayuan_video_input = self.process(
+                images, num_frames=video_length, interaction_signal=interactions, **kwargs
+            )
         outputs = self.rendering_model.predict(
             prompt=prompt,
             height=self.rendering_args.video_size[0],
@@ -388,18 +400,18 @@ class HunyuanWorldVoyagerPipeline(PipelineABC):
             i2v_stability=i2v_stability,
             ulysses_degree=self.rendering_args.ulysses_degree,
             ring_degree=self.rendering_args.ring_degree,
-            ref_image=hunayuan_video_input['ref_image'],
-            ref_depth=hunayuan_video_input['ref_depth'],
-            render_list=hunayuan_video_input['render_list'],
-            depth_list=hunayuan_video_input['depth_list'],
-            mask_list=hunayuan_video_input['mask_list'],
+            ref_image=hunayuan_video_input["ref_image"],
+            ref_depth=hunayuan_video_input["ref_depth"],
+            render_list=hunayuan_video_input["render_list"],
+            depth_list=hunayuan_video_input["depth_list"],
+            mask_list=hunayuan_video_input["mask_list"],
         )
-        samples = outputs['samples']
+        samples = outputs["samples"]
 
         # Save generated videos to disk
         # Only save on the main process in distributed settings
         output_video = None
-        if 'LOCAL_RANK' not in os.environ or int(os.environ['LOCAL_RANK']) == 0:
+        if "LOCAL_RANK" not in os.environ or int(os.environ["LOCAL_RANK"]) == 0:
             from worldfoundry.synthesis.visual_generation.hunyuan_world.hunyuan_world_voyager.utils.file_utils import (
                 video_output,
             )

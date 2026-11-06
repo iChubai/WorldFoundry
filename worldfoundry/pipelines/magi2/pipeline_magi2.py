@@ -113,7 +113,7 @@ class NativeMagi2Pipeline(PipelineABC):
         device: str = "cuda",
         model_id: str | None = None,
         **kwargs: Any,
-    ) -> "NativeMagi2Pipeline":
+    ) -> NativeMagi2Pipeline:
         """Wire the pipeline from a MAGI-2-preview checkpoint root.
 
         ``model_path`` points at the HF ``sand-ai/MAGI-2-preview`` layout with

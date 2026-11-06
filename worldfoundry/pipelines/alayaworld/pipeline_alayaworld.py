@@ -33,7 +33,7 @@ class AlayaWorldPipeline(PipelineABC):
         device: str = "cuda",
         lazy: bool = True,
         **kwargs: Any,
-    ) -> "AlayaWorldPipeline":
+    ) -> AlayaWorldPipeline:
         options: dict[str, Any] = {}
         checkpoint_path = model_path
         if isinstance(model_path, Mapping):

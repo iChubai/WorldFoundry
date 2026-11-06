@@ -2,12 +2,14 @@
 
 from __future__ import annotations
 
-from ..pipeline_utils import PipelineABC
+from collections.abc import Sequence
 from pathlib import Path
-from typing import Any, Optional, Sequence
+from typing import Any
 
-from worldfoundry.synthesis.visual_generation.worldcam import runtime_root as worldcam_runtime_root
 from worldfoundry.runtime.env import resolve_ckpt_dir, resolve_hfd_root
+from worldfoundry.synthesis.visual_generation.worldcam import runtime_root as worldcam_runtime_root
+
+from ..pipeline_utils import PipelineABC
 
 _DEFAULT_CKPT_ROOT = resolve_ckpt_dir()
 _DEFAULT_HFD_ROOT = resolve_hfd_root()
@@ -38,9 +40,9 @@ class WorldCamPipeline(PipelineABC):
 
     def __init__(
         self,
-        operator: Optional[Any] = None,
-        synthesis_model: Optional[Any] = None,
-        memory_module: Optional[Any] = None,
+        operator: Any | None = None,
+        synthesis_model: Any | None = None,
+        memory_module: Any | None = None,
         device: str = "cuda",
         weight_dtype: Any = None,
         checkpoint_root: str | Path = _DEFAULT_CKPT_ROOT,
@@ -58,11 +60,11 @@ class WorldCamPipeline(PipelineABC):
     def from_pretrained(
         cls,
         model_path: Any = None,
-        required_components: Optional[dict] = None,
+        required_components: dict | None = None,
         device: str = "cuda",
         weight_dtype: Any = None,
         **kwargs,
-    ) -> "WorldCamPipeline":
+    ) -> WorldCamPipeline:
         """
         Load WorldCam from local checkpoint roots while keeping module import lightweight.
 
@@ -91,7 +93,10 @@ class WorldCamPipeline(PipelineABC):
             "Wan2.1 base model",
         )
         worldcam_ckpt_path = _resolve_local_path(
-            options.get("worldcam_ckpt_path") or options.get("checkpoint_path") or options.get("ckpt_path") or "worldcam/worldcam",
+            options.get("worldcam_ckpt_path")
+            or options.get("checkpoint_path")
+            or options.get("ckpt_path")
+            or "worldcam/worldcam",
             "worldcam/worldcam",
             _DEFAULT_WORLDCAM_CKPT,
             "WorldCam checkpoint",
@@ -172,9 +177,7 @@ class WorldCamPipeline(PipelineABC):
             tensor = source
         else:
             tensor = torch.as_tensor(source)
-        if tensor.ndim == 2 and tensor.shape[-1] == 4:
-            tensor = tensor.unsqueeze(0)
-        elif tensor.ndim == 3 and tuple(tensor.shape[-2:]) == (4, 4):
+        if (tensor.ndim == 2 and tensor.shape[-1] == 4) or (tensor.ndim == 3 and tuple(tensor.shape[-2:]) == (4, 4)):
             tensor = tensor.unsqueeze(0)
         return tensor
 
@@ -289,7 +292,7 @@ class WorldCamPipeline(PipelineABC):
 
     def stream(
         self,
-        images: Optional[Any],
+        images: Any | None,
         interactions: Sequence[str],
         prompt: str = "",
         reset_memory: bool = False,

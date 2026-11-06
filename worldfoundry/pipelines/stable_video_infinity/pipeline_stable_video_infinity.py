@@ -42,7 +42,7 @@ class StableVideoInfinityPipeline(PipelineABC):
         device: str = "cuda",
         lazy: bool = True,
         **kwargs: Any,
-    ) -> "StableVideoInfinityPipeline":
+    ) -> StableVideoInfinityPipeline:
         options: dict[str, Any] = {}
         pretrained_model_path = model_path
         if isinstance(model_path, Mapping):

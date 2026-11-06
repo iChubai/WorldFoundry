@@ -2,7 +2,8 @@
 
 from __future__ import annotations
 
-from typing import Any, Mapping
+from collections.abc import Mapping
+from typing import Any
 
 from worldfoundry.pipelines.pipeline_utils import PipelineABC
 from worldfoundry.synthesis.visual_generation.hunyuan_world.hy_world_2p0_worldgen_synthesis import (
@@ -25,7 +26,7 @@ class HYWorld2WorldgenPipeline(PipelineABC):
         device: str = "cuda",
         model_id: str | None = None,
         **kwargs: Any,
-    ) -> "HYWorld2WorldgenPipeline":
+    ) -> HYWorld2WorldgenPipeline:
         del model_id
         options = cls._runtime_options(model_path, dict(required_components or {}), kwargs)
         scene = options.pop("scene_path", None)

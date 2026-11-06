@@ -173,7 +173,7 @@ class NativeVisualDiffusionPipeline(PipelineABC):
                     f"{cls.CHECKPOINT_ROLES}, got {cls.PRIMARY_CHECKPOINT_ROLE!r}"
                 )
             return {cls.PRIMARY_CHECKPOINT_ROLE: root}
-        return {name: root for name in cls.CHECKPOINT_ROLES} or None
+        return dict.fromkeys(cls.CHECKPOINT_ROLES, root) or None
 
     @classmethod
     def _requested_model_id(cls, options: Mapping[str, Any]) -> str:
@@ -300,7 +300,7 @@ class NativeVisualDiffusionPipeline(PipelineABC):
         device: str = "cuda",
         model_id: str | None = None,
         **kwargs: Any,
-    ) -> "NativeVisualDiffusionPipeline":
+    ) -> NativeVisualDiffusionPipeline:
         options = cls._options(model_path, required_components, kwargs)
         raw_warmup = options.pop("warmup_requests", None)
         warmup_requests: list[DiffusionRequest | tuple[DiffusionRequest, ...]] | None = None

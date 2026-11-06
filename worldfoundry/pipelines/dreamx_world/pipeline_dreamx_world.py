@@ -2,8 +2,9 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping, Sequence
 from pathlib import Path
-from typing import Any, Mapping, Sequence
+from typing import Any
 
 from PIL import Image
 
@@ -40,16 +41,14 @@ class DreamXWorld5BCamPipeline(PipelineABC):
         device: str = "cuda",
         model_id: str | None = None,
         **kwargs: Any,
-    ) -> "DreamXWorld5BCamPipeline":
+    ) -> DreamXWorld5BCamPipeline:
         options = cls._runtime_options(model_path, required_components, kwargs)
         resolved_model_id = cls._resolve_model_id(options, model_id=model_id)
         checkpoint_source = options.pop(
             "checkpoint_source",
             options.pop("checkpoint_dir", options.pop("model_path", None)),
         )
-        wan_model_path = options.pop(
-            "wan_model_path", options.pop("base_model_path", None)
-        )
+        wan_model_path = options.pop("wan_model_path", options.pop("base_model_path", None))
         cls._strip_framework_loading_options(options)
         return cls(
             checkpoint_source=checkpoint_source,

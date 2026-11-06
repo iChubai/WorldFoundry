@@ -55,9 +55,12 @@ class SanaPipeline(NativeVisualDiffusionPipeline):
             self.DEFAULT_SCHEDULER_OPTIONS = {}
         else:
             self.DEFAULT_SCHEDULER_OPTIONS = {
-                "shift": 8.0 if variant.resolution == "720p" else 7.0
+                "shift": 8.0
+                if variant.resolution == "720p"
+                else 7.0
                 if variant.resolution == "480p"
-                else 4.0 if "600m" in variant.model_id.split("-")
+                else 4.0
+                if "600m" in variant.model_id.split("-")
                 else 3.0
             }
         super().__init__(
@@ -162,22 +165,22 @@ class SanaStreamingBidirectional2b720pPipeline(SanaPipeline):
 
 __all__ = [
     "LongsanaVideo2b480pPipeline",
-    "Sana1600M1024pxBf16Pipeline",
-    "Sana1600M1024pxMultilingPipeline",
-    "Sana1600M1024pxPipeline",
+    "Sana1p51600M1024pxPipeline",
+    "Sana1p54800M1024pxPipeline",
+    "Sana600M512pxPipeline",
+    "Sana600M1024pxPipeline",
     "Sana1600M2kBf16Pipeline",
     "Sana1600M4kBf16Pipeline",
     "Sana1600M512pxMultilingPipeline",
     "Sana1600M512pxPipeline",
-    "Sana1p51600M1024pxPipeline",
-    "Sana1p54800M1024pxPipeline",
-    "Sana600M1024pxPipeline",
-    "Sana600M512pxPipeline",
-    "SanaControlnet1600M1024pxBf16Pipeline",
+    "Sana1600M1024pxBf16Pipeline",
+    "Sana1600M1024pxMultilingPipeline",
+    "Sana1600M1024pxPipeline",
     "SanaControlnet600M1024pxPipeline",
+    "SanaControlnet1600M1024pxBf16Pipeline",
     "SanaPipeline",
-    "SanaSprint1600M1024pxPipeline",
     "SanaSprint600M1024pxPipeline",
+    "SanaSprint1600M1024pxPipeline",
     "SanaStreaming2b720pPipeline",
     "SanaStreamingBidirectional2b720pPipeline",
     "SanaVideo2b480pPipeline",

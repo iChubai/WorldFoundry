@@ -73,9 +73,7 @@ class SkyReelsV3Pipeline(NativeTextToVideoPipeline):
     ) -> Any:
         normalized_task = str(task_type).strip().lower().replace("-", "_")
         if normalized_task != "reference_to_video":
-            raise ValueError(
-                "the native SkyReels-V3 integration currently exposes only reference_to_video"
-            )
+            raise ValueError("the native SkyReels-V3 integration currently exposes only reference_to_video")
         if images is None:
             raise ValueError("SkyReels-V3 reference_to_video requires images")
         if (height is None) != (width is None):

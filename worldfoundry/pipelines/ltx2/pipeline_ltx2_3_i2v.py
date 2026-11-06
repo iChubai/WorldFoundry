@@ -2,12 +2,13 @@
 
 from __future__ import annotations
 
-from ...synthesis.visual_generation.memory.video import VideoArtifactMemory
-from ..pipeline_utils import PipelineABC
-from typing import Any, Dict, Mapping, Optional
+from collections.abc import Mapping
+from typing import Any
 
 from ...operators.runtime_video_operator import RuntimeVideoOperator
 from ...synthesis.visual_generation.ltx2.ltx2_3_i2v_synthesis import LTX23I2VSynthesis
+from ...synthesis.visual_generation.memory.video import VideoArtifactMemory
+from ..pipeline_utils import PipelineABC
 
 
 class LTX23I2VPipeline(PipelineABC):
@@ -18,9 +19,9 @@ class LTX23I2VPipeline(PipelineABC):
 
     def __init__(
         self,
-        operator: Optional[RuntimeVideoOperator] = None,
+        operator: RuntimeVideoOperator | None = None,
         synthesis_model=None,
-        memory_module: Optional[VideoArtifactMemory] = None,
+        memory_module: VideoArtifactMemory | None = None,
         device: str = "cuda",
     ) -> None:
         """Initialize the pipeline and configure runtime components."""
@@ -34,14 +35,14 @@ class LTX23I2VPipeline(PipelineABC):
     @classmethod
     def from_pretrained(
         cls,
-        model_path: Optional[str] = None,
-        required_components: Optional[Dict[str, Any]] = None,
+        model_path: str | None = None,
+        required_components: dict[str, Any] | None = None,
         device: str = "cuda",
         lazy: bool = True,
         **kwargs,
-    ) -> "LTX23I2VPipeline":
+    ) -> LTX23I2VPipeline:
         """Load the pipeline from pretrained checkpoints and configurations."""
-        model_options: Dict[str, Any] = {}
+        model_options: dict[str, Any] = {}
         if isinstance(model_path, Mapping):
             model_options.update(model_path)
             model_path = (
@@ -67,7 +68,7 @@ class LTX23I2VPipeline(PipelineABC):
             device=device,
         )
 
-    def process(self, prompt: str = "", images=None, **kwargs) -> Dict[str, Any]:
+    def process(self, prompt: str = "", images=None, **kwargs) -> dict[str, Any]:
         """Process and normalize input arguments and conditions for inference."""
         del kwargs
         self.operator.get_interaction(prompt)
@@ -91,8 +92,8 @@ class LTX23I2VPipeline(PipelineABC):
         self,
         prompt: str = "",
         images=None,
-        output_path: Optional[str] = None,
-        fps: Optional[int] = None,
+        output_path: str | None = None,
+        fps: int | None = None,
         return_dict: bool = False,
         **kwargs,
     ):
@@ -117,8 +118,8 @@ class LTX23I2VPipeline(PipelineABC):
         self,
         prompt: str = "",
         images=None,
-        output_path: Optional[str] = None,
-        fps: Optional[int] = None,
+        output_path: str | None = None,
+        fps: int | None = None,
         return_dict: bool = False,
         **kwargs,
     ):

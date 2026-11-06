@@ -44,8 +44,10 @@ class CudaCommunicator(DeviceCommunicatorBase):
                 device=self.device,
             )
 
-    def all_reduce(self, input_, op: torch.distributed.ReduceOp | None = None):
+    def all_reduce(self, input_, op: torch.distributed.ReduceOp.RedOpType | None = None):
         """PyNCCL out-of-place reduce; torch clone+reduce if the wrapper is disabled."""
+        if op is None:
+            op = torch.distributed.ReduceOp.SUM
         pynccl_comm = self.pynccl_comm
         assert pynccl_comm is not None
         out = pynccl_comm.all_reduce(input_, op=op)

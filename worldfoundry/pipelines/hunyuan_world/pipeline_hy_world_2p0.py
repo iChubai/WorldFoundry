@@ -9,12 +9,18 @@ stage runners are not yet vendored or wrapped here.
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from ...synthesis.visual_generation.hunyuan_world.hy_world_2p0_worldgen_runtime import (
     HYWorld2WorldgenNotIntegratedError,
 )
 from ..pipeline_utils import PipelineABC
+
+if TYPE_CHECKING:
+    from typing_extensions import Self
+
+if TYPE_CHECKING:
+    from typing_extensions import Self
 
 _WORLDRECON_TASKS = {
     "worldrecon",
@@ -120,7 +126,7 @@ class HYWorld2Pipeline(PipelineABC):
         self.backend = backend
 
     @classmethod
-    def from_pretrained(
+    def from_pretrained(  # ty: ignore[invalid-method-override]  # model-specific loader arguments, passed by keyword
         cls,
         model_path: str = "tencent/HY-World-2.0",
         required_components: dict[str, Any] | None = None,
@@ -128,7 +134,7 @@ class HYWorld2Pipeline(PipelineABC):
         task: str | None = None,
         backend: str | None = None,
         **kwargs,
-    ) -> HYWorld2Pipeline:
+    ) -> Self:
         """Load the pipeline from pretrained checkpoints and configurations."""
         runtime_kwargs: dict[str, Any] = {}
         if required_components:
@@ -296,7 +302,7 @@ class HYWorld2PanoPipeline(HYWorld2Pipeline):
     """Convenience alias for loading HY-Pano 2.0 through HYWorld2Pipeline."""
 
     @classmethod
-    def from_pretrained(
+    def from_pretrained(  # ty: ignore[invalid-method-override]  # model-specific loader arguments, passed by keyword
         cls,
         model_path: str = "tencent/HY-World-2.0",
         required_components: dict[str, Any] | None = None,

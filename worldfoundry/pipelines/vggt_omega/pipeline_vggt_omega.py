@@ -54,9 +54,9 @@ class VGGTOmegaPipeline(PipelineABC):
         self.reasoning_model = reasoning_model
         self.synthesis_model = synthesis_model
         self.base_pipeline = base_pipeline
-        self.operator = operator or self.OPERATOR_CLS()
+        self.operator = operator or self._component("OPERATOR_CLS")()
         self.model_id = model_id or self.MODEL_ID
-        self.memory_module = memory_module or self.MEMORY_CLS(model_id=self.model_id)
+        self.memory_module = memory_module or self._component("MEMORY_CLS")(model_id=self.model_id)
 
     @staticmethod
     def _normalize_image_paths(input_: str | Path | list[str] | list[Path]) -> list[str]:
@@ -109,7 +109,7 @@ class VGGTOmegaPipeline(PipelineABC):
         return "facebook/VGGT-Omega"
 
     @classmethod
-    def from_pretrained(
+    def from_pretrained(  # ty: ignore[invalid-method-override]  # model-specific loader arguments, passed by keyword
         cls,
         representation_path: str | None = None,
         reasoning_path: str | None = None,
@@ -152,8 +152,8 @@ class VGGTOmegaPipeline(PipelineABC):
             reasoning_model=base.reasoning_model,
             synthesis_model=base.synthesis_model,
             base_pipeline=base,
-            operator=cls.OPERATOR_CLS(),
-            memory_module=cls.MEMORY_CLS(model_id=model_id or cls.MODEL_ID),
+            operator=cls._component("OPERATOR_CLS")(),
+            memory_module=cls._component("MEMORY_CLS")(model_id=model_id or cls.MODEL_ID),
             model_id=model_id or cls.MODEL_ID,
         )
 

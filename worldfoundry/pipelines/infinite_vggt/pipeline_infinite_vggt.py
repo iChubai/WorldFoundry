@@ -103,7 +103,7 @@ class InfiniteVGGTResult:
             for i in range(N):
                 d = self.depth_map[i] if self.depth_map.ndim == 3 else self.depth_map[i].squeeze()
                 out_path = output_root / f"depth_{i:04d}.png"
-                if save_depth_colormap(d, out_path) is not None:
+                if save_depth_colormap(d, str(out_path)) is not None:
                     saved.append(str(out_path))
 
         return saved
@@ -149,7 +149,7 @@ class InfiniteVGGTPipeline(PipelineABC):
         self.operator = operator or InfiniteVGGTOperator()
 
     @classmethod
-    def from_pretrained(
+    def from_pretrained(  # ty: ignore[invalid-method-override]  # model-specific loader arguments, passed by keyword
         cls,
         model_path: str | dict[str, Any] | None = None,
         required_components: dict[str, Any] | None = None,
@@ -233,7 +233,9 @@ class InfiniteVGGTPipeline(PipelineABC):
             depth_image = depth_to_colormap_pil(np.asarray(d).squeeze())
             if depth_image is not None:
                 depth_images.append(depth_image)
-        video_frames = [Image.fromarray((np.clip(c, 0, 1) * 255).astype(np.uint8)) for c in rep["colors"]]
+        video_frames: list[np.ndarray | Image.Image] = [
+            Image.fromarray((np.clip(c, 0, 1) * 255).astype(np.uint8)) for c in rep["colors"]
+        ]
 
         return InfiniteVGGTResult(
             point_map=rep["point_map"],

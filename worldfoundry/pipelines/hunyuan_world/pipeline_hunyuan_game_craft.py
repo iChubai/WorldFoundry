@@ -42,7 +42,7 @@ class HunyuanGameCraftPipeline(PipelineABC):
                 self._predict_sig = None
 
     @classmethod
-    def from_pretrained(
+    def from_pretrained(  # ty: ignore[invalid-method-override]  # model-specific loader arguments, passed by keyword
         cls,
         model_path: str | None = None,
         required_components: dict[str, Any] | None = None,

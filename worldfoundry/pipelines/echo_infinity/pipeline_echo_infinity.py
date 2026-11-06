@@ -31,7 +31,7 @@ class EchoInfinityPipeline(PipelineABC):
         self.device = device
 
     @classmethod
-    def from_pretrained(
+    def from_pretrained(  # ty: ignore[invalid-method-override]  # model-specific loader arguments, passed by keyword
         cls,
         model_path: str | None = None,
         required_components: dict[str, Any] | None = None,
@@ -43,7 +43,7 @@ class EchoInfinityPipeline(PipelineABC):
         runtime_overrides = dict(required_components or {})
         runtime_overrides.update(kwargs)
         runtime_overrides.setdefault("device", device)
-        synthesis_model = cls.SYNTHESIS_CLS.from_pretrained(
+        synthesis_model = cls._component("SYNTHESIS_CLS").from_pretrained(
             pretrained_model_path=model_path,
             device=device,
             lazy=lazy,

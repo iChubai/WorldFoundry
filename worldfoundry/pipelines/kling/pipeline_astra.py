@@ -63,7 +63,7 @@ class AstraPipeline(PipelineABC):
         self.device = synthesis.device
 
     @classmethod
-    def from_pretrained(  # ty: ignore[invalid-method-override]
+    def from_pretrained(  # ty: ignore[invalid-method-override]  # model-specific loader arguments, passed by keyword
         cls, model_path: str, required_components: dict, device: str = "cuda", **kwargs: Any
     ) -> "AstraPipeline":
         """

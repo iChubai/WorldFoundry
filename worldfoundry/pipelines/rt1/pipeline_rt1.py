@@ -7,7 +7,7 @@ from pathlib import Path
 from typing import Any
 
 from ...operators.rt1_operator import RT1Operator
-from ...synthesis.action_generation.memory import RT1Memory
+from ...synthesis.action_generation.memory import ActionTraceMemory, RT1Memory
 from ...synthesis.action_generation.rt1 import RT1Synthesis
 from ..pipeline_utils import PipelineABC
 
@@ -27,7 +27,7 @@ class RT1Pipeline(PipelineABC):
         self,
         operators: RT1Operator | None = None,
         synthesis_model: RT1Synthesis | None = None,
-        memory_module: RT1Memory | None = None,
+        memory_module: ActionTraceMemory | None = None,
         device: str = "cuda",
         model_id: str | None = None,
         operator: RT1Operator | None = None,
@@ -38,7 +38,7 @@ class RT1Pipeline(PipelineABC):
         self.synthesis_model = synthesis_model
         self.operators = resolved_operator
         self.operator = resolved_operator
-        self.memory_module = memory_module if memory_module is not None else self.MEMORY_CLS()
+        self.memory_module = memory_module if memory_module is not None else self._component("MEMORY_CLS")()
         self.device = device
 
     @classmethod
@@ -60,17 +60,17 @@ class RT1Pipeline(PipelineABC):
         options.update(kwargs)
 
         resolved_model_id = str(options.get("model_id") or options.get("profile_id") or model_id or cls.MODEL_ID)
-        synthesis_model = cls.SYNTHESIS_CLS.from_pretrained(
+        synthesis_model = cls._component("SYNTHESIS_CLS").from_pretrained(
             {**options, "model_id": resolved_model_id},
             device=device,
         )
         profile = getattr(synthesis_model, "profile", None)
-        operators = cls.OPERATOR_CLS(input_schema=dict(getattr(profile, "input_schema", {}) or {}))
+        operators = cls._component("OPERATOR_CLS")(input_schema=dict(getattr(profile, "input_schema", {}) or {}))
 
         return cls(
             operators=operators,
             synthesis_model=synthesis_model,
-            memory_module=cls.MEMORY_CLS(),
+            memory_module=cls._component("MEMORY_CLS")(),
             device=device,
             model_id=resolved_model_id,
         )

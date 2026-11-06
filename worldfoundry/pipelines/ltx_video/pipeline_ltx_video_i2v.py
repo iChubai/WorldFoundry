@@ -32,7 +32,7 @@ class LTXVideoI2VPipeline(PipelineABC):
         self.device = device
 
     @classmethod
-    def from_pretrained(
+    def from_pretrained(  # ty: ignore[invalid-method-override]  # model-specific loader arguments, passed by keyword
         cls,
         model_path: str | None = None,
         required_components: dict[str, Any] | None = None,
@@ -53,7 +53,7 @@ class LTXVideoI2VPipeline(PipelineABC):
         else:
             resolved_model_path = model_path
 
-        synthesis_model = cls.SYNTHESIS_CLS.from_pretrained(
+        synthesis_model = cls._component("SYNTHESIS_CLS").from_pretrained(
             pretrained_model_path=resolved_model_path,
             device=device,
             lazy=lazy,

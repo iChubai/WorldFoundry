@@ -1,6 +1,7 @@
 """Module for the CUT3R operator implementation."""
 
 import os
+from collections.abc import Iterable
 from pathlib import Path
 from typing import Any
 
@@ -244,7 +245,7 @@ class CUT3ROperator(BaseOperator):
         return result
 
     @staticmethod
-    def normalize_interaction_sequence(interaction: str | list[str] | None) -> list[str]:
+    def normalize_interaction_sequence(interaction: str | Iterable[str] | None) -> list[str]:
         """
         Normalize interaction input to a flat list of strings.
         Supports None, single string, or list of strings.

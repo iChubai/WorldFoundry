@@ -26,7 +26,7 @@ class HelixWorldPipeline(NativeVisualDiffusionPipeline):
     DEFAULT_FPS = 24
     OUTPUT_LAYOUT = "FHWC"
     OUTPUT_VALUE_RANGE = "0,1"
-    REQUEST_INPUT_DEFAULTS: ClassVar[Mapping[str, object]] = {
+    REQUEST_INPUT_DEFAULTS: Mapping[str, object] = {
         "actions": "W",
         "perspective": "first_person",
         "audio_prompt": None,

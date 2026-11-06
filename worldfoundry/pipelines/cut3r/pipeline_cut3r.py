@@ -2,7 +2,7 @@
 
 import logging
 import os
-from collections.abc import Generator
+from collections.abc import Generator, Iterable
 from typing import Any
 
 import numpy as np
@@ -141,7 +141,7 @@ class CUT3RPipeline(PipelineABC):
         self.operator = operator or CUT3ROperator()
 
     @classmethod
-    def from_pretrained(
+    def from_pretrained(  # ty: ignore[invalid-method-override]  # model-specific loader arguments, passed by keyword
         cls,
         model_path: str | dict[str, Any] | None = None,
         required_components: dict[str, Any] | None = None,
@@ -617,7 +617,7 @@ class CUT3RPipeline(PipelineABC):
     def run_two_stage_3dgs_video(
         self,
         image_path: str | Image.Image | np.ndarray | list[str] | list[Image.Image] | list[np.ndarray],
-        interactions: str | list[str] | None = None,
+        interactions: str | Iterable[str] | None = None,
         frames_per_interaction: int = 10,
         size: int | None = None,
         vis_threshold: float = 1.5,

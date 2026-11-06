@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from typing import Any, ClassVar
+from typing import Any
 
 from ..native_diffusion_video import NativeTextToVideoPipeline
 from .pipeline_wan_2p1_t2v import WAN21_NEGATIVE_PROMPT
@@ -30,9 +30,9 @@ class Wan2p2Pipeline(NativeTextToVideoPipeline):
     DEFAULT_NEGATIVE_PROMPT = WAN21_NEGATIVE_PROMPT
     DEFAULT_FPS = 24
     OUTPUT_VALUE_RANGE = "-1,1"
-    DEFAULT_SCHEDULER_OPTIONS: ClassVar[Mapping[str, object]] = {"shift": 5.0}
+    DEFAULT_SCHEDULER_OPTIONS: Mapping[str, object] = {"shift": 5.0}
 
-    def __call__(
+    def __call__(  # ty: ignore[invalid-method-override]  # model-specific call arguments, passed by keyword
         self,
         prompt: str | list[str] = "",
         images: Any = None,
@@ -108,8 +108,8 @@ class Wan2p2T2VA14BPipeline(NativeTextToVideoPipeline):
     DEFAULT_NEGATIVE_PROMPT = WAN21_NEGATIVE_PROMPT
     DEFAULT_FPS = 16
     OUTPUT_VALUE_RANGE = "-1,1"
-    DEFAULT_SCHEDULER_OPTIONS: ClassVar[Mapping[str, object]] = {"shift": 12.0}
-    REQUEST_INPUT_DEFAULTS: ClassVar[Mapping[str, object]] = {
+    DEFAULT_SCHEDULER_OPTIONS: Mapping[str, object] = {"shift": 12.0}
+    REQUEST_INPUT_DEFAULTS: Mapping[str, object] = {
         "low_noise_guidance_scale": 3.0,
         "high_noise_guidance_scale": 4.0,
     }
@@ -132,8 +132,8 @@ class Wan2p2I2VA14BPipeline(NativeTextToVideoPipeline):
     DEFAULT_NEGATIVE_PROMPT = WAN21_NEGATIVE_PROMPT
     DEFAULT_FPS = 16
     OUTPUT_VALUE_RANGE = "-1,1"
-    DEFAULT_SCHEDULER_OPTIONS: ClassVar[Mapping[str, object]] = {"shift": 5.0}
-    REQUEST_INPUT_DEFAULTS: ClassVar[Mapping[str, object]] = {
+    DEFAULT_SCHEDULER_OPTIONS: Mapping[str, object] = {"shift": 5.0}
+    REQUEST_INPUT_DEFAULTS: Mapping[str, object] = {
         "low_noise_guidance_scale": 3.5,
         "high_noise_guidance_scale": 3.5,
     }

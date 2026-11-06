@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from typing import ClassVar
 
 from ..native_diffusion_video import NativeTextToVideoPipeline
 from .pipeline_wan_2p1_t2v import WAN21_NEGATIVE_PROMPT
@@ -25,7 +24,7 @@ class Wan2p1I2VPipeline(NativeTextToVideoPipeline):
     DEFAULT_GUIDANCE_SCALE = 5.0
     DEFAULT_NEGATIVE_PROMPT = "镜头晃动，" + WAN21_NEGATIVE_PROMPT
     DEFAULT_FPS = 16
-    DEFAULT_SCHEDULER_OPTIONS: ClassVar[Mapping[str, object]] = {"shift": 3.0}
+    DEFAULT_SCHEDULER_OPTIONS: Mapping[str, object] = {"shift": 3.0}
 
 
 class Wan2p1I2V720PPipeline(Wan2p1I2VPipeline):
@@ -35,7 +34,7 @@ class Wan2p1I2V720PPipeline(Wan2p1I2VPipeline):
     OWNER = "Wan2.1 I2V 14B 720P"
     DEFAULT_HEIGHT = 720
     DEFAULT_WIDTH = 1280
-    DEFAULT_SCHEDULER_OPTIONS: ClassVar[Mapping[str, object]] = {"shift": 5.0}
+    DEFAULT_SCHEDULER_OPTIONS: Mapping[str, object] = {"shift": 5.0}
 
 
 __all__ = ["Wan2p1I2V720PPipeline", "Wan2p1I2VPipeline"]

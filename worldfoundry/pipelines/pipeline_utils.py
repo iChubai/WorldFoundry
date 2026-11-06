@@ -40,6 +40,12 @@ class PipelineABC:
         {"prompt", "images", "video", "actions", "ref_image_path", "extra_inputs"}
     )
 
+    # Duck-typed components installed by ``__init__``; subclasses narrow them freely.
+    synthesis_model: Any
+    operator: Any
+    operators: Any
+    memory_module: Any
+
     def __init__(
         self,
         model_id: str | None = None,

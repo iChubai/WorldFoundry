@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from pathlib import Path
 from threading import RLock
-from typing import Any, ClassVar, cast
+from typing import Any, cast
 
 from worldfoundry.core.execution.realtime.contracts import RealtimeSpec
 from worldfoundry.pipelines.native_diffusion_video import NativeTextToVideoPipeline
@@ -24,8 +24,8 @@ class HyNomasPipeline(NativeTextToVideoPipeline):
     DEFAULT_NUM_INFERENCE_STEPS = 8
     DEFAULT_GUIDANCE_SCALE = 1.0
     DEFAULT_FPS = 24
-    DEFAULT_SCHEDULER_OPTIONS: ClassVar[Mapping[str, object]] = {"shift": 5.0}
-    REQUEST_INPUT_DEFAULTS: ClassVar[Mapping[str, object]] = {
+    DEFAULT_SCHEDULER_OPTIONS: Mapping[str, object] = {"shift": 5.0}
+    REQUEST_INPUT_DEFAULTS: Mapping[str, object] = {
         "segments": None,
         "segment_latent_lengths": None,
         "camera_extrinsics": None,

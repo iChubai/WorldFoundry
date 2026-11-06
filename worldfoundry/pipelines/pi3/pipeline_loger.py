@@ -193,7 +193,7 @@ class LoGeRPipeline(PipelineABC):
         self._current_camera: np.ndarray | None = None
 
     @classmethod
-    def from_pretrained(
+    def from_pretrained(  # ty: ignore[invalid-method-override]  # model-specific loader arguments, passed by keyword
         cls,
         model_path: str | None = None,
         required_components: dict[str, str] | None = None,
@@ -258,6 +258,8 @@ class LoGeRPipeline(PipelineABC):
             if not isinstance(images_data, list):
                 images_data = [images_data]
 
+            if self.representation_model is None:
+                raise RuntimeError("LoGeR representation model is not loaded. Use from_pretrained() first.")
             device = self.representation_model.device
             imgs_tensor = self.operator.images_to_tensor(images_data, device=device)
             resized_images = [imgs_tensor[0, i].permute(1, 2, 0).cpu().numpy() for i in range(imgs_tensor.shape[1])]
@@ -396,6 +398,8 @@ class LoGeRPipeline(PipelineABC):
         if res is None:
             raise RuntimeError("No result available. Run reconstruction first.")
 
+        if res.input_images is None:
+            raise RuntimeError("No input images in result for coloring.")
         pts_all = res.numpy_data["points"][0]
         masks = res.numpy_data["masks"][0].astype(bool)
         colors_all = np.stack(res.input_images, axis=0)

@@ -23,7 +23,7 @@ class Emu35Pipeline(PipelineABC):
         self.device = device
 
     @classmethod
-    def from_pretrained(
+    def from_pretrained(  # ty: ignore[invalid-method-override]  # model-specific loader arguments, passed by keyword
         cls,
         model_path: Any = None,
         required_components: Mapping[str, Any] | None = None,

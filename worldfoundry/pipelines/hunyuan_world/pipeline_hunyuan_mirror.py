@@ -33,8 +33,8 @@ class HunyuanMirrorPipeline(PipelineABC):
 
     def __init__(
         self,
-        operators: Any | None = None,
-        represent_model: Any | None = None,
+        operators: Any = None,
+        represent_model: Any = None,
         output_path: str | None = None,
         device: str = "cuda",
     ):
@@ -47,7 +47,7 @@ class HunyuanMirrorPipeline(PipelineABC):
         self.device = device
 
     @classmethod
-    def from_pretrained(
+    def from_pretrained(  # ty: ignore[invalid-method-override]  # model-specific loader arguments, passed by keyword
         cls,
         model_path: str | dict[str, Any] | None = "tencent/HunyuanWorld-Mirror",
         required_components: dict[str, Any] | None = None,
@@ -170,11 +170,9 @@ class HunyuanMirrorPipeline(PipelineABC):
 
             final_mask_list.append(final_mask)
 
-        # Stack all frame masks
-        if final_mask_list[0] is not None:
-            final_mask = np.stack(final_mask_list, axis=0)  # [S, H, W]
-        else:
-            final_mask = np.ones(pts3d_conf.shape[:3], dtype=bool)  # [S, H, W]
+        # Stack all frame masks; the enabled filters are the same for every frame.
+        frame_masks = [mask for mask in final_mask_list if mask is not None]
+        final_mask = np.stack(frame_masks, axis=0) if frame_masks else np.ones(pts3d_conf.shape[:3], dtype=bool)
 
         return final_mask
 

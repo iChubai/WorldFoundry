@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from pathlib import Path
-from typing import Any
+from typing import Any, ClassVar
 
 from PIL import Image
 
@@ -105,7 +105,7 @@ class WoWArgs:
 class WoWPipeline(PipelineABC):
     """Public WoW pipeline backed by canonical diffusion runtimes."""
 
-    MODEL_ID = "wow"
+    MODEL_ID: ClassVar[str] = "wow"
 
     def __init__(
         self,
@@ -122,7 +122,7 @@ class WoWPipeline(PipelineABC):
         self.device = device
 
     @classmethod
-    def from_pretrained(
+    def from_pretrained(  # ty: ignore[invalid-method-override]  # model-specific loader arguments, passed by keyword
         cls,
         model_path: str | Mapping[str, Any] | None = None,
         required_components: dict[str, Any] | None = None,

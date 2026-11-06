@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping, Sequence
-from typing import Any, ClassVar
+from typing import Any
 
 from worldfoundry.core import load_pil_image
 from worldfoundry.core.io import load_yaml, resolve_data_path
@@ -25,8 +25,8 @@ class SkyReelsV3Pipeline(NativeTextToVideoPipeline):
     DEFAULT_NUM_INFERENCE_STEPS = 8
     DEFAULT_GUIDANCE_SCALE = 1.0
     DEFAULT_FPS = 24
-    DEFAULT_SCHEDULER_OPTIONS: ClassVar[Mapping[str, object]] = {"shift": 5.0}
-    REQUEST_INPUT_DEFAULTS: ClassVar[Mapping[str, object]] = {"image_guidance_scale": 1.0}
+    DEFAULT_SCHEDULER_OPTIONS: Mapping[str, object] = {"shift": 5.0}
+    REQUEST_INPUT_DEFAULTS: Mapping[str, object] = {"image_guidance_scale": 1.0}
 
     @staticmethod
     def _first_reference(images: Any) -> Any:
@@ -57,7 +57,7 @@ class SkyReelsV3Pipeline(NativeTextToVideoPipeline):
         )
         return int(height) // 16 * 16, int(width) // 16 * 16
 
-    def __call__(
+    def __call__(  # ty: ignore[invalid-method-override]  # model-specific call arguments, passed by keyword
         self,
         prompt: str | list[str] = "",
         images: Any = None,

@@ -38,7 +38,7 @@ def resolve_api_key(api_key: str | None, env_names: Sequence[str], service_name:
 
 
 def load_api_pipeline_from_pretrained(
-    pipeline_cls: type,
+    pipeline_cls: Any,
     *,
     model_path: Any = None,
     required_components: Mapping[str, Any] | None = None,

@@ -30,9 +30,9 @@ class SanaWMPipeline(NativeVisualDiffusionPipeline):
     DEFAULT_GUIDANCE_SCALE = 5.0
     DEFAULT_FPS = 16
     DEFAULT_NEGATIVE_PROMPT = ""
-    DEFAULT_SCHEDULER_OPTIONS: ClassVar[Mapping[str, object]] = {"shift": 9.8}
+    DEFAULT_SCHEDULER_OPTIONS: Mapping[str, object] = {"shift": 9.8}
     NUM_INFERENCE_STEP_ALIASES = ("step", "infer_steps")
-    REQUEST_INPUT_DEFAULTS: ClassVar[Mapping[str, object]] = {
+    REQUEST_INPUT_DEFAULTS: Mapping[str, object] = {
         "camera_to_world": None,
         "camera_actions": None,
         "intrinsics": None,
@@ -148,7 +148,7 @@ class SanaWMPipeline(NativeVisualDiffusionPipeline):
             raise ValueError("use frame-rate interactions or explicit camera_to_world poses")
         if self._realtime_config is None:
             raise RuntimeError("SANA-WM realtime session is not configured")
-        options = {**self._realtime_config, **kwargs}
+        options: dict[str, Any] = {**self._realtime_config, **kwargs}
         if prompt is not None:
             options["prompt"] = prompt
         if seed is not None:
@@ -158,7 +158,7 @@ class SanaWMPipeline(NativeVisualDiffusionPipeline):
     def reset_realtime(self) -> None:
         self._realtime_config = None
 
-    def __call__(
+    def __call__(  # ty: ignore[invalid-method-override]  # model-specific call arguments, passed by keyword
         self,
         images: Any = None,
         prompt: str = "",
@@ -201,8 +201,8 @@ class SanaWMStreamingPipeline(SanaWMPipeline):
     DEFAULT_NUM_FRAMES = 241
     DEFAULT_NUM_INFERENCE_STEPS = 4
     DEFAULT_GUIDANCE_SCALE = 1.0
-    DEFAULT_SCHEDULER_OPTIONS: ClassVar[Mapping[str, object]] = {"shift": 8.0}
-    REQUEST_INPUT_DEFAULTS: ClassVar[Mapping[str, object]] = {
+    DEFAULT_SCHEDULER_OPTIONS: Mapping[str, object] = {"shift": 8.0}
+    REQUEST_INPUT_DEFAULTS: Mapping[str, object] = {
         "camera_to_world": None,
         "camera_actions": None,
         "intrinsics": None,

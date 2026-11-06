@@ -65,7 +65,7 @@ class WarpAsHistoryPipeline(PipelineABC):
         resolved_model_id = str(
             options.get("model_id") or options.get("variant") or options.get("profile_id") or model_id or cls.MODEL_ID
         )
-        synthesis_model = cls.SYNTHESIS_CLS.from_pretrained(
+        synthesis_model = cls._component("SYNTHESIS_CLS").from_pretrained(
             {**options, "model_id": resolved_model_id},
             device=device,
         )

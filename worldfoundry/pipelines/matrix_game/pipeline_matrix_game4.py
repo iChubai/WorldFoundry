@@ -8,7 +8,7 @@ import math
 from collections.abc import Mapping
 from dataclasses import replace
 from pathlib import Path
-from typing import Any, ClassVar, cast
+from typing import Any, cast
 
 from worldfoundry.base_models.diffusion_model.contracts import DiffusionOutput, DiffusionRequest
 from worldfoundry.operators.matrix_game4_operator import MatrixGame4Operator
@@ -29,7 +29,7 @@ class MatrixGame4EgyptPipeline(NativeVisualDiffusionPipeline):
     DEFAULT_NUM_INFERENCE_STEPS = 2
     DEFAULT_GUIDANCE_SCALE = 1.0
     DEFAULT_FPS = 20
-    DEFAULT_SCHEDULER_OPTIONS: ClassVar[Mapping[str, object]] = {"shift": 5.0}
+    DEFAULT_SCHEDULER_OPTIONS: Mapping[str, object] = {"shift": 5.0}
 
     def __init__(self, **kwargs: Any) -> None:
         super().__init__(**kwargs)

@@ -27,8 +27,8 @@ class StepVideoT2VPipeline(NativeTextToVideoPipeline):
     DEFAULT_NUM_INFERENCE_STEPS = 50
     DEFAULT_GUIDANCE_SCALE = 9.0
     DEFAULT_FPS = 25
-    DEFAULT_SCHEDULER_OPTIONS: ClassVar[Mapping[str, object]] = {"time_shift": 13.0}
-    REQUEST_INPUT_DEFAULTS: ClassVar[Mapping[str, object]] = {
+    DEFAULT_SCHEDULER_OPTIONS: Mapping[str, object] = {"time_shift": 13.0}
+    REQUEST_INPUT_DEFAULTS: Mapping[str, object] = {
         "positive_magic": DEFAULT_POSITIVE_MAGIC,
         "negative_magic": DEFAULT_NEGATIVE_MAGIC,
     }

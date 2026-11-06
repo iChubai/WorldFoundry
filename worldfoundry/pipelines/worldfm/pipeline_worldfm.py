@@ -43,7 +43,7 @@ class WorldFMPipeline(PipelineABC):
         self.weight_dtype = weight_dtype
 
     @classmethod
-    def from_pretrained(
+    def from_pretrained(  # ty: ignore[invalid-method-override]  # model-specific loader arguments, passed by keyword
         cls,
         model_path: str = DEFAULT_WORLDFM_REPO,
         required_components: dict[str, Any] | None = None,
@@ -176,6 +176,8 @@ class WorldFMPipeline(PipelineABC):
         output_dir=None,
     ):
         """Build scene context for WorldFMPipeline."""
+        if self.representation_model is None:
+            raise RuntimeError("WorldFM representation model is not loaded. Use from_pretrained() first.")
         perception = self.operator.process_perception(
             images=images,
             K=K,

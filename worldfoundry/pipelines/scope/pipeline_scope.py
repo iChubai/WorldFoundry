@@ -27,7 +27,7 @@ class SCOPEPipeline(PipelineABC):
         self.model_id = model_id or self.MODEL_ID
         self.model_name = "SCOPE"
         self.generation_type = "action_conditioned_i2v"
-        self.synthesis_model = synthesis_model or self.SYNTHESIS_CLS.from_pretrained(device=device)
+        self.synthesis_model = synthesis_model or self._component("SYNTHESIS_CLS").from_pretrained(device=device)
         self.device = device
         self.history: list[dict[str, Any]] = []
 
@@ -50,7 +50,7 @@ class SCOPEPipeline(PipelineABC):
         options.update(required_components or {})
         options.update(kwargs)
         resolved_model_id = str(options.pop("model_id", model_id or cls.MODEL_ID))
-        synthesis_model = cls.SYNTHESIS_CLS.from_pretrained(
+        synthesis_model = cls._component("SYNTHESIS_CLS").from_pretrained(
             {
                 "model_dir": (
                     options.pop("model_dir", None)

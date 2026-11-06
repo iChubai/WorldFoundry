@@ -45,7 +45,7 @@ def load_pil_image(image_input) -> Image.Image:
 
 def materialize_image_input(
     image_input,
-    output_dir: str,
+    output_dir: str | os.PathLike[str],
     filename: str = "input.png",
 ) -> str:
     """Materialize image input helper function."""

@@ -6,7 +6,7 @@ import logging
 import os
 import time
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from PIL import Image
 
@@ -14,6 +14,12 @@ from worldfoundry.core.io import artifact_root_path
 
 from ...operators.worldlabs_operator import WorldLabsOperator
 from ...synthesis.visual_generation.worldlabs.worldlabs_synthesis import WorldLabsSynthesis
+
+if TYPE_CHECKING:
+    from typing_extensions import Self
+
+if TYPE_CHECKING:
+    from typing_extensions import Self
 from ..pipeline_utils import PipelineABC
 
 _DEFAULT_ENDPOINT = "https://api.worldlabs.ai"
@@ -85,7 +91,7 @@ class WorldLabsPipeline(PipelineABC):
         device: str = "cuda",
         model_id: str | None = None,
         **kwargs: Any,
-    ) -> WorldLabsPipeline:
+    ) -> Self:
         """Build the API-only World Labs pipeline without loading a checkpoint.
 
         Args:
@@ -110,9 +116,7 @@ class WorldLabsPipeline(PipelineABC):
         )
 
     @classmethod
-    def api_init(
-        cls, endpoint: str | None = None, api_key: str | None = None, logger=None, **kwargs
-    ) -> WorldLabsPipeline:
+    def api_init(cls, endpoint: str | None = None, api_key: str | None = None, logger=None, **kwargs) -> Self:
         """Initialize API client credentials and runtime endpoints."""
         endpoint = _resolve_endpoint(endpoint)
         api_key = _resolve_api_key(api_key)

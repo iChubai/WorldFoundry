@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 from pathlib import Path
 from typing import Any
 
@@ -49,7 +49,7 @@ def _resolve_local_checkpoint(value: Any, default_path: Path) -> str:
 def _normalise_request(
     interactions: str | list[str] | None,
     interaction_speeds: float | list[float] | None,
-    interaction_distances: float | list[float] | None,
+    interaction_distances: float | Sequence[float | None] | None,
     *,
     task_type: str | None,
     size: str | None,
@@ -77,7 +77,7 @@ def _normalise_request(
         normalised_speeds = [float(value) for value in interaction_speeds]
 
     if isinstance(interaction_distances, (float, int)):
-        normalised_distances: list[float | None] = [float(interaction_distances)] * len(normalised_interactions)
+        normalised_distances: list[float | None] = [float(interaction_distances) for _ in normalised_interactions]
     elif interaction_distances is None:
         normalised_distances = [None if "camera_" in action else 4.0 for action in normalised_interactions]
     else:
@@ -141,7 +141,7 @@ class YumePipeline(PipelineABC):
         self.checkpoint_root = Path(checkpoint_root).expanduser().resolve()
 
     @classmethod
-    def from_pretrained(
+    def from_pretrained(  # ty: ignore[invalid-method-override]  # model-specific loader arguments, passed by keyword
         cls,
         model_path: Any = None,
         required_components: dict[str, Any] | None = None,
@@ -356,7 +356,7 @@ class YumePipeline(PipelineABC):
         prompt: str | None = "",
         interactions: str | list[str] | None = None,
         interaction_speeds: float | list[float] | None = None,
-        interaction_distances: float | list[float] | None = None,
+        interaction_distances: float | Sequence[float | None] | None = None,
         images: Any | None = None,
         videos: list[Any] | None = None,
         size: str | None = "544*960",
@@ -415,7 +415,7 @@ class YumePipeline(PipelineABC):
         prompt: str | None = "",
         interactions: str | list[str] | None = None,
         interaction_speeds: float | list[float] | None = None,
-        interaction_distances: float | list[float] | None = None,
+        interaction_distances: float | Sequence[float | None] | None = None,
         images: Any | None = None,
         videos: list[Any] | None = None,
         size: str | None = "544*960",

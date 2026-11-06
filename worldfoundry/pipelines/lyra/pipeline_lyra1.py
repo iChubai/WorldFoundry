@@ -50,7 +50,7 @@ class Lyra1Pipeline(PipelineABC):
         self.default_mode = str(default_mode).lower()
 
     @classmethod
-    def from_pretrained(  # ty: ignore[invalid-method-override]
+    def from_pretrained(  # ty: ignore[invalid-method-override]  # model-specific loader arguments, passed by keyword
         cls,
         model_path: str | None = None,
         required_components: dict[str, Any] | None = None,

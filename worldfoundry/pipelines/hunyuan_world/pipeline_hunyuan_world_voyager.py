@@ -6,7 +6,7 @@ load operators, representations, and rendering model
 import logging
 import os
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Optional
+from typing import TYPE_CHECKING, Any, Optional, cast
 
 import numpy as np
 from PIL import Image
@@ -45,7 +45,7 @@ class HunyuanWorldVoyagerPipeline(PipelineABC):
         operators: Optional["HunyuanWorldVoyagerOperator"] = None,
         represent_model: Optional["HunyuanWorldVoyagerRepresentation"] = None,
         rendering_model: Optional["HunyuanWorldVoyagerSynthesis"] = None,
-        rendering_args=None,
+        rendering_args: Any = None,
         save_representation_video=False,
         device: str = "cuda",
     ):
@@ -61,7 +61,7 @@ class HunyuanWorldVoyagerPipeline(PipelineABC):
         os.makedirs(self.rendering_args.input_path, exist_ok=True)
 
     @classmethod
-    def from_pretrained(
+    def from_pretrained(  # ty: ignore[invalid-method-override]  # model-specific loader arguments, passed by keyword
         cls,
         model_path: str | dict[str, Any] | None = None,
         required_components=None,
@@ -159,6 +159,11 @@ class HunyuanWorldVoyagerPipeline(PipelineABC):
 
         return pipeline
 
+    def _require_rendering_model(self) -> "HunyuanWorldVoyagerSynthesis":
+        if self.rendering_model is None:
+            raise RuntimeError("Voyager has no rendering model; load it with from_pretrained().")
+        return self.rendering_model
+
     @staticmethod
     def _read_rgb(path: Path) -> np.ndarray:
         """Read rgb for HunyuanWorldVoyagerPipeline."""
@@ -174,7 +179,9 @@ class HunyuanWorldVoyagerPipeline(PipelineABC):
         """Read exr for HunyuanWorldVoyagerPipeline."""
         import pyexr
 
-        return np.asarray(pyexr.read(str(path)).squeeze(), dtype=np.float32)
+        # The default channel group decodes to a single array.
+        depth = cast(np.ndarray, pyexr.read(str(path)))
+        return np.asarray(depth.squeeze(), dtype=np.float32)
 
     def load_condition_dir(self, condition_dir: str | os.PathLike[str], *, num_frames: int) -> dict[str, Any]:
         """Load condition dir for HunyuanWorldVoyagerPipeline."""
@@ -220,6 +227,10 @@ class HunyuanWorldVoyagerPipeline(PipelineABC):
         # transform input image and interaction signal into hunyuan video input
         if isinstance(input_image, (str, os.PathLike)):
             input_image = Image.open(input_image).convert("RGB")
+        represent_model = self.represent_model
+        if represent_model is None:
+            raise RuntimeError("Voyager was loaded with skip_representation_model; pass condition_dir instead.")
+        rendering_model = self._require_rendering_model()
         input_image, image_tensor = self.operators.process_perception(input_image, self.device)
         if hasattr(input_image, "shape"):
             Height, Width = input_image.shape[:2]
@@ -244,7 +255,7 @@ class HunyuanWorldVoyagerPipeline(PipelineABC):
                 "intrinsics": intrinsics,
                 "extrinsics": extrinsics,
             }
-            points, colors, depth = self.represent_model.get_representation(input_data)
+            points, colors, depth = represent_model.get_representation(input_data)
 
             # generate intrinsics and extrinsics for the whole video based on the interaction signal
             intrinsics, extrinsics = self.operators.process_interaction(
@@ -253,7 +264,7 @@ class HunyuanWorldVoyagerPipeline(PipelineABC):
             self.operators.delete_last_interaction()
 
             # rendering the video
-            render_list, mask_list, depth_list = self.represent_model.render_video(
+            render_list, mask_list, depth_list = represent_model.render_video(
                 points, colors, extrinsics, intrinsics, height=Height // 2, width=Width // 2
             )
         elif isinstance(interaction_signal, list):
@@ -271,7 +282,7 @@ class HunyuanWorldVoyagerPipeline(PipelineABC):
                 "intrinsics": intrinsics_first,
                 "extrinsics": extrinsics_first,
             }
-            points, colors, depth = self.represent_model.get_representation(input_data)
+            points, colors, depth = represent_model.get_representation(input_data)
 
             # calculate number of frames for each interaction, distribute remaining frames to the first few interactions
             num_interactions = len(interaction_signal)
@@ -303,17 +314,17 @@ class HunyuanWorldVoyagerPipeline(PipelineABC):
             extrinsics = np.concatenate(all_extrinsics, axis=0)
 
             # rendering the coarse video
-            render_list, mask_list, depth_list = self.represent_model.render_video(
+            render_list, mask_list, depth_list = represent_model.render_video(
                 points, colors, extrinsics, intrinsics, height=Height // 2, width=Width // 2
             )
         else:
             raise ValueError(f"interaction_signal must be a string or list, got {type(interaction_signal)}")
 
-        hunyuan_video_input = self.rendering_model.create_hunyuan_video_input(
+        hunyuan_video_input = rendering_model.create_hunyuan_video_input(
             render_list, mask_list, depth_list, Width=Width, Height=Height
         )
         if self.save_representation_video:
-            self.represent_model.save_representation_video(
+            represent_model.save_representation_video(
                 render_list,
                 mask_list,
                 depth_list,
@@ -380,7 +391,7 @@ class HunyuanWorldVoyagerPipeline(PipelineABC):
             hunayuan_video_input = self.process(
                 images, num_frames=video_length, interaction_signal=interactions, **kwargs
             )
-        outputs = self.rendering_model.predict(
+        outputs = self._require_rendering_model().predict(
             prompt=prompt,
             height=self.rendering_args.video_size[0],
             width=self.rendering_args.video_size[1],

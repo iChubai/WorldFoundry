@@ -87,7 +87,7 @@ class LingBotMapResult:
                 return None
             points, rgb = projected
 
-        finite = np.isfinite(points).all(axis=1)
+        finite = np.asarray(np.isfinite(points).all(axis=1))
         points = points[finite]
         rgb = rgb[finite] if len(rgb) == len(finite) else np.full((len(points), 3), 200, dtype=np.uint8)
         if len(points) == 0:
@@ -224,7 +224,7 @@ class LingBotMapResult:
         output_path.mkdir(parents=True, exist_ok=True)
         saved: list[str] = []
 
-        npz_payload = {
+        npz_payload: dict[str, Any] = {
             key: value for key, value in self.numpy_data.items() if isinstance(value, np.ndarray) or np.isscalar(value)
         }
         npz_path = output_path / output_name
@@ -271,7 +271,7 @@ class LingBotMapPipeline(PipelineABC):
         self.device = device
 
     @classmethod
-    def from_pretrained(
+    def from_pretrained(  # ty: ignore[invalid-method-override]  # model-specific loader arguments, passed by keyword
         cls,
         pretrained_model_path: Any = None,
         model_path: Any = None,

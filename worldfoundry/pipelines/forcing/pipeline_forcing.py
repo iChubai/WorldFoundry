@@ -38,13 +38,13 @@ class _BaseForcingPipeline(PipelineABC):
         resolved_model_id = cls._resolve_model_id(options, model_id=model_id)
         if resolved_model_id != cls.MODEL_ID:
             raise ValueError(f"{cls.__name__} cannot load {resolved_model_id!r}.")
-        synthesis_model = cls.SYNTHESIS_CLS.from_pretrained(
+        synthesis_model = cls._component("SYNTHESIS_CLS").from_pretrained(
             {**options, "model_id": resolved_model_id},
             device=device,
         )
         return cls(
             model_id=resolved_model_id,
-            operators=cls.OPERATOR_CLS(),
+            operators=cls._component("OPERATOR_CLS")(),
             synthesis_model=synthesis_model,
             memory_module=None,
             device=device,

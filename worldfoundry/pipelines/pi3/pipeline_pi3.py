@@ -205,7 +205,7 @@ class Pi3Pipeline(PipelineABC):
         self._current_camera: np.ndarray | None = None
 
     @classmethod
-    def from_pretrained(
+    def from_pretrained(  # ty: ignore[invalid-method-override]  # model-specific loader arguments, passed by keyword
         cls,
         model_path: str | None = None,
         required_components: dict[str, str] | None = None,
@@ -371,6 +371,8 @@ class Pi3Pipeline(PipelineABC):
         if res is None:
             raise RuntimeError("No result available. Run reconstruction first.")
 
+        if res.input_images is None:
+            raise RuntimeError("No input images in result for coloring.")
         pts_all = res.numpy_data["points"][0]
         masks = res.numpy_data["masks"][0].astype(bool)
         colors_all = np.stack(res.input_images, axis=0)
@@ -433,16 +435,20 @@ class Pi3Pipeline(PipelineABC):
                 frames = []
                 if self._current_camera is None and self._cached_result is not None:
                     self._current_camera = np.array(self._cached_result.camera_params[0]["camera_to_world"])
+                camera = self._current_camera
+                if camera is None:
+                    raise RuntimeError("No result available. Run inference first via __call__().")
                 for sig in interactions:
-                    hold_img = self.render_view(camera_to_world=self._current_camera)
+                    hold_img = self.render_view(camera_to_world=camera)
                     for _ in range(n_hold):
                         frames.append(hold_img)
                     delta = self.operator.process_interaction_single(sig)
                     sub_delta = [d / n_move for d in delta]
                     for _ in range(n_move):
-                        self._current_camera = _apply_camera_delta(self._current_camera, sub_delta)
-                        frames.append(self.render_view(camera_to_world=self._current_camera))
-                hold_img = self.render_view(camera_to_world=self._current_camera)
+                        camera = _apply_camera_delta(camera, sub_delta)
+                        self._current_camera = camera
+                        frames.append(self.render_view(camera_to_world=camera))
+                hold_img = self.render_view(camera_to_world=camera)
                 for _ in range(n_hold):
                     frames.append(hold_img)
                 return frames

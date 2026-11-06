@@ -63,7 +63,7 @@ class FlashWorldPipeline(PipelineABC):
         self.operator = operator or _flash_world_operator_cls()()
 
     @classmethod
-    def from_pretrained(
+    def from_pretrained(  # ty: ignore[invalid-method-override]  # model-specific loader arguments, passed by keyword
         cls,
         model_path: str | dict[str, Any] | None = None,
         required_components: dict[str, Any] | None = None,
@@ -225,7 +225,7 @@ class FlashWorldPipeline(PipelineABC):
 
     def process(
         self,
-        input_: str | Image.Image | np.ndarray | torch.Tensor,
+        input_: str | Image.Image | np.ndarray | torch.Tensor | None,
         interaction: dict[str, Any],
         num_frames: int = 16,
         image_height: int = 480,
@@ -350,7 +350,7 @@ class FlashWorldPipeline(PipelineABC):
         images: str | Image.Image | np.ndarray | torch.Tensor | None,
         prompt: str = "",
         interactions: list[str] | None = None,
-        camera_view: torch.Tensor | list[dict[str, Any]] = None,
+        camera_view: torch.Tensor | list[dict[str, Any]] | None = None,
         num_frames: int = 16,
         fps: int = 15,
         image_height: int = 480,
@@ -438,7 +438,7 @@ class FlashWorldPipeline(PipelineABC):
         ply_path: str | None = None,
         spz_path: str | None = None,
         video_path: str | None = None,
-    ) -> dict[str, str]:
+    ) -> dict[str, str | None]:
         """
         Save pipeline results to files (gaussians.ply, gaussians.spz, video.mp4).
 

@@ -99,7 +99,7 @@ class LingBotPipeline(PipelineABC):
 
     @classmethod
     # LingBot's public loader retains its positional mode argument.
-    def from_pretrained(  # ty: ignore[invalid-method-override]
+    def from_pretrained(  # ty: ignore[invalid-method-override]  # model-specific loader arguments, passed by keyword
         cls,
         model_path: str | dict[str, Any] | None = None,
         required_components: dict[str, Any] | None = None,

@@ -275,7 +275,7 @@ def minimax_h3_packed_sequence_ref2va_blocks(
     if not isinstance(ref_blocks, Sequence) or isinstance(ref_blocks, (str, bytes)):
         raise ValueError("ref_blocks must be a sequence")
 
-    parsed: list[dict[str, object]] = []
+    parsed: list[dict[str, Any]] = []
     ref_visual_rows = 0
     ref_audio_rows = 0
     for index, raw in enumerate(ref_blocks):
@@ -337,7 +337,7 @@ def minimax_h3_packed_sequence_ref2va_blocks(
 
     text_sl = slice(0, text_len)
     cursor = text_len
-    block_slices: list[dict[str, object]] = []
+    block_slices: list[dict[str, Any]] = []
     for item in parsed:
         kind = str(item["kind"])
         if kind == "image":

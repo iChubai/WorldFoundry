@@ -8,7 +8,7 @@ import tempfile
 from collections.abc import Sequence
 from copy import deepcopy
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 import cv2
 import imageio.v2 as iio
@@ -40,7 +40,7 @@ def _is_video_path(path: str | Path) -> bool:
 
 def parse_seq_path(input_source: str | Path | Sequence[str | Path]) -> tuple[list[str], str | None]:
     """Parse seq path helper function."""
-    if isinstance(input_source, (list, tuple)):
+    if not isinstance(input_source, (str, os.PathLike)):
         return sorted(str(Path(p)) for p in input_source), None
 
     source = Path(input_source)
@@ -135,7 +135,7 @@ def prepare_input(
                 "true_shape": (
                     torch.from_numpy(images[image_index]["true_shape"])
                     if img_mask[i]
-                    else torch.from_numpy(np.int32([raymaps[ray_index].shape[1:-1][::-1]]))
+                    else torch.from_numpy(np.array([raymaps[ray_index].shape[1:-1][::-1]], dtype=np.int32))
                 ),
                 "idx": i,
                 "instance": str(i),
@@ -362,9 +362,10 @@ def run_official_export(
             update=update,
         )
 
-        model = model.to(device).eval()
+        # PreTrainedModel.to is wrapped with functools.wraps, which type checkers cannot bind as a method.
+        network = cast(torch.nn.Module, model).to(device).eval()
         with torch.no_grad():
-            outputs, state_args = inference(views, model, device)
+            outputs, state_args = inference(views, network, device)
         prepared = prepare_output(outputs, output_dir, revisit=revisit, use_pose=use_pose)
 
         summary_path = output_dir / "official_summary.npz"

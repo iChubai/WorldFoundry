@@ -40,7 +40,7 @@ class DepthAnything3Pipeline(PipelineABC):
         self.default_align_to_input_ext_scale = bool(default_align_to_input_ext_scale)
 
     @classmethod
-    def from_pretrained(
+    def from_pretrained(  # ty: ignore[invalid-method-override]  # model-specific loader arguments, passed by keyword
         cls,
         model_path: str | dict[str, Any] | None = None,
         required_components: dict[str, Any] | None = None,

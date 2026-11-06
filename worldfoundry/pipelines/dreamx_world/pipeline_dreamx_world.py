@@ -191,7 +191,7 @@ class DreamXWorld5BARPipeline(DreamXWorld5BCamPipeline):
             )
         return self._realtime_session
 
-    def configure_realtime(
+    def configure_realtime(  # ty: ignore[invalid-method-override]  # model-specific realtime options, passed by keyword
         self,
         images: Any,
         prompt: str = "",

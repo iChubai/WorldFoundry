@@ -28,6 +28,7 @@ _MODE_TO_MODEL_ID = {
 class GammaWorldPipeline(NativeTextToVideoPipeline):
     """Generate synchronized two-player rollouts through native diffusion infra."""
 
+    recipe_model_id: str
     MODEL_ID = "gamma-world"
     OWNER = "Gamma-World"
     CHECKPOINT_ROLES = ("transformer", "vae")
@@ -41,8 +42,8 @@ class GammaWorldPipeline(NativeTextToVideoPipeline):
     DEFAULT_GUIDANCE_SCALE = 1.0
     DEFAULT_NEGATIVE_PROMPT = gamma_conditioning.DEFAULT_NEGATIVE_PROMPT
     DEFAULT_FPS = 16
-    DEFAULT_SCHEDULER_OPTIONS: ClassVar[Mapping[str, object]] = {"shift": 5.0}
-    REQUEST_INPUT_DEFAULTS: ClassVar[Mapping[str, object]] = {
+    DEFAULT_SCHEDULER_OPTIONS: Mapping[str, object] = {"shift": 5.0}
+    REQUEST_INPUT_DEFAULTS: Mapping[str, object] = {
         "n_players": 2,
         "actions": None,
         "num_conditional_frames": 1,
@@ -108,7 +109,7 @@ class GammaWorldPipeline(NativeTextToVideoPipeline):
         return overrides or None
 
     @classmethod
-    def from_pretrained(
+    def from_pretrained(  # ty: ignore[invalid-method-override]  # model-specific loader arguments, passed by keyword
         cls,
         model_path: str | Mapping[str, Any] | None = None,
         required_components: Mapping[str, Any] | None = None,
@@ -118,7 +119,7 @@ class GammaWorldPipeline(NativeTextToVideoPipeline):
         options = cls._options(model_path, required_components, kwargs)
         cls._validate_num_frames(options)
         component_options = dict(cls._component_options(options) or {})
-        encoder_options = dict(component_options.get("conditioner:main", {}))
+        encoder_options: dict[str, Any] = dict(component_options.get("conditioner:main", {}))
         resolved_encoder_options = reason1_component_options(options)
         for name, value in resolved_encoder_options.items():
             public_name = "text_encoder_run_on_cpu" if name == "run_on_cpu" else f"text_{name}"
@@ -171,7 +172,7 @@ class GammaWorldPipeline(NativeTextToVideoPipeline):
             return root
         return None
 
-    def __call__(
+    def __call__(  # ty: ignore[invalid-method-override]  # model-specific call arguments, passed by keyword
         self,
         prompt: str | list[str] = "",
         images: Any = None,

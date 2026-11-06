@@ -10,6 +10,7 @@ from worldfoundry.pipelines.pipeline_utils import PipelineABC
 
 class Kandinsky6Pipeline(PipelineABC):
     MODEL_ID = "kandinsky6-pro-distill"
+    model_id: str
 
     def __init__(self, native_pipeline, device="cuda"):
         super().__init__(model_id=native_pipeline.model_id, operator=Kandinsky6Operator(), device=device)
@@ -35,6 +36,8 @@ class Kandinsky6Pipeline(PipelineABC):
 
             recipe = default_native_diffusion_registry().resolve(resolved_id)
             repo = recipe.checkpoints["denoiser"].repo_id
+            if repo is None:
+                raise ValueError(f"{resolved_id} declares no denoiser repository to locate under hf_models_root")
             root = Path(options["hf_models_root"]) / repo.replace("/", "--")
         overrides = options.get("checkpoint_overrides")
         if overrides is None and root is not None:

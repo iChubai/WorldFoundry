@@ -5,7 +5,7 @@ from __future__ import annotations
 import logging
 import os
 from pathlib import Path
-from typing import Any
+from typing import Any, Literal, overload
 
 import cv2
 import numpy as np
@@ -48,7 +48,7 @@ class DepthAnything2Pipeline(PipelineABC):
         self.operator = operator or DepthAnythingOperator()
 
     @classmethod
-    def from_pretrained(
+    def from_pretrained(  # ty: ignore[invalid-method-override]  # model-specific loader arguments, passed by keyword
         cls,
         model_path: str | None = None,
         required_components: dict[str, Any] | None = None,
@@ -103,6 +103,26 @@ class DepthAnything2Pipeline(PipelineABC):
             input_image,
             color_order=color_order,
         )
+
+    @overload
+    def process(
+        self,
+        input_image: str | Path | np.ndarray | torch.Tensor,
+        return_visualization: Literal[True],
+        grayscale: bool = False,
+        input_size: int | None = None,
+        color_order: str = "rgb",
+    ) -> np.ndarray: ...
+
+    @overload
+    def process(
+        self,
+        input_image: str | Path | np.ndarray | torch.Tensor,
+        return_visualization: bool = False,
+        grayscale: bool = False,
+        input_size: int | None = None,
+        color_order: str = "rgb",
+    ) -> torch.Tensor | np.ndarray: ...
 
     def process(
         self,

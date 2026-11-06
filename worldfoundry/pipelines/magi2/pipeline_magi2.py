@@ -15,7 +15,7 @@ import sys
 import tempfile
 from collections.abc import Mapping
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 import torch
 
@@ -71,6 +71,7 @@ class NativeMagi2Pipeline(PipelineABC):
     DEFAULT_SHIFT = 7.0
     DEFAULT_VIDEO_GUIDANCE = 5.0
     DEFAULT_AUDIO_GUIDANCE = 7.0
+    _checkpoint_root: Path | None = None
 
     def __init__(
         self,
@@ -95,7 +96,7 @@ class NativeMagi2Pipeline(PipelineABC):
         self.preview_transformer = preview_transformer
         self.refiner_transformer = refiner_transformer
         self.video_vae = video_vae
-        self.turbo_decoder = turbo_decoder
+        self.turbo_decoder: Any = turbo_decoder
         self.audio_vae = audio_vae
         self.text_encoder = text_encoder
         self.data_proxy = data_proxy
@@ -160,7 +161,7 @@ class NativeMagi2Pipeline(PipelineABC):
         offload; the small VAEs/encoder are loaded resident on the device.
         """
 
-        root = getattr(self, "_checkpoint_root", None)
+        root = self._checkpoint_root
         if root is None:
             return
         device = torch.device(self.device)
@@ -209,11 +210,8 @@ class NativeMagi2Pipeline(PipelineABC):
             ckpt = next(iter(_glob.glob(str(root / "turbo_vae" / "*.ckpt"))), None)
             if cfg_files and ckpt:
                 turbo_cfg = __import__("json").loads(Path(cfg_files[0]).read_text())
-                turbo = (
-                    Magi2TurboDecoder.from_config(turbo_cfg)
-                    if hasattr(Magi2TurboDecoder, "from_config")
-                    else Magi2TurboDecoder(**turbo_cfg)
-                )
+                # Typed as a Module: ModelMixin.to is wrapped with functools.wraps, which type checkers cannot bind.
+                turbo = cast(torch.nn.Module, Magi2TurboDecoder.from_config(turbo_cfg))
                 load_magi2_turbo_weights(turbo, ckpt)
                 self.turbo_decoder = turbo.to(device).eval()
 
@@ -481,6 +479,8 @@ class NativeMagi2Pipeline(PipelineABC):
             # text tensor as `context` with ref fields as separate kwargs.
             ctx = context or {}
             txt_feat = ctx.get("txt_feat")
+            if txt_feat is None:
+                raise ValueError("MAGI-2 sampler conditioning must provide txt_feat")
             inputs = proxy.build_model_inputs(
                 latent=x_t,
                 audio_latent=audio_x_t,

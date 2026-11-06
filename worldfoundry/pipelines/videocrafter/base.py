@@ -93,7 +93,7 @@ class VideoCrafterPipelineBase(PipelineABC):
         self.device = device
 
     @classmethod
-    def from_pretrained(
+    def from_pretrained(  # ty: ignore[invalid-method-override]  # model-specific loader arguments, passed by keyword
         cls,
         model_path: Any = None,
         required_components: dict[str, Any] | None = None,
@@ -108,7 +108,7 @@ class VideoCrafterPipelineBase(PipelineABC):
             device,
             kwargs,
         )
-        synthesis_model = cls.SYNTHESIS_CLS.from_pretrained(
+        synthesis_model = cls._component("SYNTHESIS_CLS").from_pretrained(
             pretrained_model_path=checkpoint,
             device=device,
             lazy=lazy,

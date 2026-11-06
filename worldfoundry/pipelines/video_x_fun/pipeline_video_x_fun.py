@@ -36,7 +36,7 @@ class _WanFunCameraPipeline(PipelineABC):
         cls._strip_framework_loading_options(options)
         for key in ("required_components", "runtime_profile", "variant_id", "pipeline_binding", "repo_root"):
             options.pop(key, None)
-        return cls(cls.SYNTHESIS_CLS.from_pretrained(checkpoint, device=device, **options), device=device)
+        return cls(cls._component("SYNTHESIS_CLS").from_pretrained(checkpoint, device=device, **options), device=device)
 
     def __call__(
         self,

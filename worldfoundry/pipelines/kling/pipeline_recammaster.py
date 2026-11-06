@@ -39,7 +39,7 @@ class ReCamMasterPipeline(PipelineABC):
         self.weight_dtype = weight_dtype
 
     @classmethod
-    def from_pretrained(
+    def from_pretrained(  # ty: ignore[invalid-method-override]  # model-specific loader arguments, passed by keyword
         cls,
         model_path="KlingTeam/ReCamMaster-Wan2.1",
         required_components=None,

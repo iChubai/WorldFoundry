@@ -61,7 +61,7 @@ class _LTXICLoRAV2VPipeline(PipelineABC):
         self.python_executable = str(python_executable or os.getenv("LTX_PIPELINES_PYTHON") or sys.executable)
 
     @classmethod
-    def from_pretrained(
+    def from_pretrained(  # ty: ignore[invalid-method-override]  # model-specific loader arguments, passed by keyword
         cls,
         model_path: str | Path | Mapping[str, Any] | None = None,
         required_components: Mapping[str, Any] | None = None,
@@ -116,11 +116,8 @@ class _LTXICLoRAV2VPipeline(PipelineABC):
             raise ValueError(f"control_type must be one of {sorted(self.CONTROL_TYPES)}")
         if video is not None and video_path is not None:
             raise ValueError("pass either video or video_path")
-        reference = (
-            _required_file(video if video is not None else video_path, "control video")
-            if (video is not None or video_path is not None)
-            else None
-        )
+        control = video if video is not None else video_path
+        reference = _required_file(control, "control video") if control is not None else None
         if reference is None:
             raise ValueError("LTX IC-LoRA V2V requires a control video")
         if height % 64 or width % 64 or height < 128 or width < 128:

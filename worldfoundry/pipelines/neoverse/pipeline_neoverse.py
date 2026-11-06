@@ -76,7 +76,7 @@ class NeoVersePipeline(PipelineABC):
         raise ValueError("NeoVerse requires an image or video input.")
 
     @classmethod
-    def from_pretrained(
+    def from_pretrained(  # ty: ignore[invalid-method-override]  # model-specific loader arguments, passed by keyword
         cls,
         model_path: Any = "Yuppie1204/NeoVerse",
         required_components: dict | None = None,
@@ -100,7 +100,7 @@ class NeoVersePipeline(PipelineABC):
         if model_path is None:
             model_path = runtime_options.pop("repo_id", "Yuppie1204/NeoVerse")
 
-        operator_kwargs = {}
+        operator_kwargs: dict[str, Any] = {}
         for key in [
             "height",
             "width",

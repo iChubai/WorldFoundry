@@ -57,7 +57,7 @@ class WorldCamPipeline(PipelineABC):
         self.checkpoint_root = Path(checkpoint_root).expanduser().resolve()
 
     @classmethod
-    def from_pretrained(
+    def from_pretrained(  # ty: ignore[invalid-method-override]  # model-specific loader arguments, passed by keyword
         cls,
         model_path: Any = None,
         required_components: dict | None = None,

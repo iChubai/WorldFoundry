@@ -4,7 +4,7 @@ import logging
 import os
 from collections.abc import Mapping
 from pathlib import Path
-from typing import Any
+from typing import Any, Literal, overload
 
 import cv2
 import numpy as np
@@ -111,7 +111,7 @@ class DepthAnything1Pipeline(PipelineABC):
         self.operator = operator or DepthAnythingOperator()
 
     @classmethod
-    def from_pretrained(
+    def from_pretrained(  # ty: ignore[invalid-method-override]  # model-specific loader arguments, passed by keyword
         cls,
         model_path: str | None = None,
         required_components: dict[str, Any] | None = None,
@@ -151,6 +151,22 @@ class DepthAnything1Pipeline(PipelineABC):
             device=device,
             data_type=data_type,
         )
+
+    @overload
+    def process(
+        self,
+        input_image: str | np.ndarray | torch.Tensor,
+        return_visualization: Literal[True],
+        grayscale: bool = False,
+    ) -> np.ndarray: ...
+
+    @overload
+    def process(
+        self,
+        input_image: str | np.ndarray | torch.Tensor,
+        return_visualization: bool = False,
+        grayscale: bool = False,
+    ) -> torch.Tensor | np.ndarray: ...
 
     def process(
         self,

@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from typing import Any
+from typing import Any, ClassVar
 
 from ...operators.runtime_video_operator import RuntimeVideoOperator
 from ...synthesis.visual_generation.ltx2.ltx2_3_i2v_synthesis import LTX23I2VSynthesis
@@ -15,7 +15,7 @@ class LTX23I2VPipeline(PipelineABC):
     """Independent WorldFoundry pipeline for LTX23I2V."""
 
     SYNTHESIS_CLS = LTX23I2VSynthesis
-    MODEL_ID = "ltx-2.3-i2v"
+    MODEL_ID: ClassVar[str] = "ltx-2.3-i2v"
 
     def __init__(
         self,
@@ -33,7 +33,7 @@ class LTX23I2VPipeline(PipelineABC):
         self.device = device
 
     @classmethod
-    def from_pretrained(
+    def from_pretrained(  # ty: ignore[invalid-method-override]  # model-specific loader arguments, passed by keyword
         cls,
         model_path: str | None = None,
         required_components: dict[str, Any] | None = None,
@@ -55,7 +55,7 @@ class LTX23I2VPipeline(PipelineABC):
         generator_overrides.update(model_options)
         generator_overrides.update(kwargs)
 
-        synthesis_model = cls.SYNTHESIS_CLS.from_pretrained(
+        synthesis_model = cls._component("SYNTHESIS_CLS").from_pretrained(
             pretrained_model_path=model_path,
             device=device,
             lazy=lazy,

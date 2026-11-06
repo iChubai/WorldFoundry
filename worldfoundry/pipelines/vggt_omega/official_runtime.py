@@ -7,10 +7,11 @@
 
 from __future__ import annotations
 
+import os
 import shutil
 from collections.abc import Sequence
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 import cv2
 import numpy as np
@@ -18,6 +19,7 @@ import torch
 import trimesh
 from matplotlib import colormaps
 from scipy.spatial.transform import Rotation
+from trimesh.visual import ColorVisuals
 
 IMAGE_EXTENSIONS = {".jpg", ".jpeg", ".png", ".webp", ".bmp", ".tif", ".tiff"}
 VIDEO_EXTENSIONS = {".mp4", ".mov", ".avi", ".mkv", ".webm"}
@@ -35,7 +37,7 @@ def _is_video_path(path: str | Path) -> bool:
 
 def collect_input_images(input_source: str | Path | Sequence[str | Path]) -> list[str]:
     """Gather and filter input conditioning images."""
-    if isinstance(input_source, (list, tuple)):
+    if not isinstance(input_source, (str, os.PathLike)):
         return sorted(str(Path(p)) for p in input_source)
 
     source = Path(input_source)
@@ -324,7 +326,7 @@ def depth_edge(depth: np.ndarray, rtol: float = 0.03, kernel_size: int = 3) -> n
 def integrate_camera_into_scene(
     scene: trimesh.Scene,
     transform: np.ndarray,
-    face_colors: tuple[int, int, int],
+    face_colors: tuple[int, ...],
     scene_scale: float,
 ) -> None:
     """Integrate camera into scene helper function."""
@@ -350,7 +352,7 @@ def integrate_camera_into_scene(
     vertices = transform_points(complete_transform, vertices)
 
     camera_mesh = trimesh.Trimesh(vertices=vertices, faces=compute_camera_faces(camera_cone_shape))
-    camera_mesh.visual.face_colors[:, :3] = face_colors
+    cast(ColorVisuals, camera_mesh.visual).face_colors[:, :3] = face_colors
     scene.add_geometry(camera_mesh)
 
 

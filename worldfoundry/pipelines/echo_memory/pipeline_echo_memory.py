@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from typing import Any
+from typing import Any, ClassVar
 
 from worldfoundry.pipelines.pipeline_utils import PipelineABC
 from worldfoundry.synthesis.visual_generation.echo_memory import (
@@ -16,7 +16,7 @@ class EchoMemoryPipeline(PipelineABC):
     """Common I2V interface; subclasses pin the model and checkpoint recipe."""
 
     ABSTRACT_PIPELINE = True
-    SYNTHESIS_CLS: type[EchoMemorySynthesis]
+    SYNTHESIS_CLS: ClassVar[type[EchoMemorySynthesis]]
 
     def __init__(
         self,
@@ -31,7 +31,7 @@ class EchoMemoryPipeline(PipelineABC):
         self.generation_type = "i2v"
 
     @classmethod
-    def from_pretrained(
+    def from_pretrained(  # ty: ignore[invalid-method-override]  # model-specific loader arguments, passed by keyword
         cls,
         model_path: Any = None,
         required_components: Mapping[str, Any] | None = None,

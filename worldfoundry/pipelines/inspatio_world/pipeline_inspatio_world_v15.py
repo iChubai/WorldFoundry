@@ -14,7 +14,7 @@ class InspatioWorldV15Pipeline(PipelineABC):
     MODEL_ID = "inspatio-world-1p5"
 
     @classmethod
-    def from_pretrained(
+    def from_pretrained(  # ty: ignore[invalid-method-override]  # model-specific loader arguments, passed by keyword
         cls, model_path=DEFAULT_CHECKPOINT_REPO, required_components=None, device="cuda", weight_dtype=None, **kwargs
     ):
         options = {**(required_components or {}), **kwargs}

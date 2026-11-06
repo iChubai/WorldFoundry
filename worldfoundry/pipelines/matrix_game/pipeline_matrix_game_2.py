@@ -49,7 +49,7 @@ class MatrixGame2Pipeline(PipelineABC):
 
     @classmethod
     # The public loader retains positional weight_dtype and mode options.
-    def from_pretrained(  # ty: ignore[invalid-method-override]
+    def from_pretrained(  # ty: ignore[invalid-method-override]  # model-specific loader arguments, passed by keyword
         cls,
         model_path: Any = None,
         required_components: Mapping[str, Any] | None = None,

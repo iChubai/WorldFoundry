@@ -555,14 +555,21 @@ allowed-unresolved-imports = [
     "aiortc.**",
     "av.**",
     "dashscope.**",
+    "decord.**",
+    "diffusers.**",
     "flash_attn.**",
     "imageio_ffmpeg.**",
     "jaxtyping.**",
     "lpips.**",
     "matplotlib.**",
+    "msgspec.**",
     "omegaconf.**",
+    "onnxruntime.**",
+    "open3d.**",
     "pandas.**",
+    "plyfile.**",
     "pycg.**",
+    "pyexr.**",
     "PyNvVideoCodec.**",
     "rerun.**",
     "rich.**",
@@ -576,6 +583,9 @@ allowed-unresolved-imports = [
     "trimesh.**",
     "viser.**",
     "wan.**",
+    # Official runtime sources that setup fetches into these git-ignored packages.
+    "worldfoundry.synthesis.visual_generation.hunyuan_world.hunyuan_world_voyager.**",
+    "worldfoundry.synthesis.visual_generation.hunyuan_world.hy_world_2p0_panogen_runtime.**",
 ]
 
 [tool.ruff]

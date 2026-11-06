@@ -2,7 +2,7 @@
 
 import logging
 import os
-from collections.abc import Generator, Mapping, Sequence
+from collections.abc import Mapping, Sequence
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Optional
 
@@ -60,7 +60,7 @@ class HunyuanWorldPlayPipeline(PipelineABC):
         self._realtime_session = None
 
     @classmethod
-    def from_pretrained(
+    def from_pretrained(  # ty: ignore[invalid-method-override]  # model-specific loader arguments, passed by keyword
         cls,
         *,
         model_path: str | None = None,
@@ -339,7 +339,7 @@ class HunyuanWorldPlayPipeline(PipelineABC):
         }
         return result if return_dict or output_path is not None else output
 
-    def stream(self, *args, **kwds) -> Generator[torch.Tensor, list[str], None]:
+    def stream(self, *args, **kwds) -> None:
         """
         流式输出
         """

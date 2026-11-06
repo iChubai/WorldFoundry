@@ -17,12 +17,13 @@ from pathlib import Path
 def main() -> None:
     repo_root = Path.cwd()
     sys.path.insert(0, str(repo_root))
-    # Match inference.py's import order: vendored dependencies imported by
-    # demo also expose a top-level `configs` package.
-    from configs.infer_config import get_parser as _get_parser  # noqa: F401
+    # `configs` and `demo` come from the upstream checkout added above. Match
+    # inference.py's import order: vendored dependencies imported by demo also
+    # expose a top-level `configs` package.
+    from configs.infer_config import get_parser as _get_parser  # noqa: F401  # ty: ignore[unresolved-import]
 
     # isort: split
-    import demo
+    import demo  # ty: ignore[unresolved-import]
 
     STream3R = demo.STream3R
     UniScene = demo.UniScene

@@ -32,7 +32,7 @@ class InspatioWorldPipeline(PipelineABC):
         self.weight_dtype = weight_dtype
 
     @classmethod
-    def from_pretrained(
+    def from_pretrained(  # ty: ignore[invalid-method-override]  # model-specific loader arguments, passed by keyword
         cls,
         model_path: str = DEFAULT_CHECKPOINT_REPO,
         required_components: dict[str, Any] | None = None,

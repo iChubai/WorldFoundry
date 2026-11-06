@@ -134,9 +134,13 @@ class WorldFMOperator(BaseOperator):
         if isinstance(interaction, np.ndarray) and interaction.ndim == 3:
             return [_as_pose_matrix(item) for item in interaction]
 
-        if isinstance(interaction, Sequence) and not isinstance(interaction, (str, bytes)):
-            if interaction and isinstance(interaction[0], str):
-                return _navigation_poses(interaction)
+        if (
+            isinstance(interaction, Sequence)
+            and not isinstance(interaction, (str, bytes))
+            and interaction
+            and isinstance(interaction[0], str)
+        ):
+            return _navigation_poses(interaction)
 
         if _looks_like_single_pose(interaction):
             return [_as_pose_matrix(interaction)]

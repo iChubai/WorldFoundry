@@ -56,7 +56,7 @@ class CUT3ROperator(BaseOperator):
                 "camera_zoom_in",
                 "camera_zoom_out",
             ]
-        super(CUT3ROperator, self).__init__(operation_types=operation_types)
+        super().__init__(operation_types=operation_types)
         self.interaction_template = interaction_template
         self.interaction_template_init()
 

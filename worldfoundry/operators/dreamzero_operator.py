@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from pathlib import Path
-from typing import Any
+from typing import Any, ClassVar
 
 from .embodied_action_operator import EmbodiedActionOperator, _compact_dict, _extract_action_signal, _first_present
 
@@ -16,7 +16,7 @@ class DreamZeroOperator(EmbodiedActionOperator):
     POLICY_FAMILY = "world_action_model_zero_shot_policy"
     ACTION_REPRESENTATION = "droid_joint_gripper_action_chunk_plus_predicted_video"
     OBSERVATION_LAYOUT = "droid_three_camera_video_language_state"
-    DEFAULT_INPUT_SCHEMA = {
+    DEFAULT_INPUT_SCHEMA: ClassVar[dict[str, Any]] = {
         "prompt": True,
         "instruction": True,
         "image": True,
@@ -31,12 +31,12 @@ class DreamZeroOperator(EmbodiedActionOperator):
             "video_prediction",
         ],
     }
-    OFFICIAL_CAMERA_KEYS = {
+    OFFICIAL_CAMERA_KEYS: ClassVar[dict[str, str]] = {
         "exterior_image_1_left": "video.exterior_image_1_left",
         "exterior_image_2_left": "video.exterior_image_2_left",
         "wrist_image_left": "video.wrist_image_left",
     }
-    OFFICIAL_ROBOARENA_KEYS = {
+    OFFICIAL_ROBOARENA_KEYS: ClassVar[dict[str, str]] = {
         "exterior_image_1_left": "observation/exterior_image_0_left",
         "exterior_image_2_left": "observation/exterior_image_1_left",
         "wrist_image_left": "observation/wrist_image_left",

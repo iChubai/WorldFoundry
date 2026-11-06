@@ -37,8 +37,8 @@ def get_image_size(
             scale = float(dst_size) / height
         elif mode == "width":
             scale = float(dst_size) / width
-        dst_height = int(round(height * scale))
-        dst_width = int(round(width * scale))
+        dst_height = round(height * scale)
+        dst_width = round(width * scale)
     elif mode in ("fixed", "outer_fit", "inner_fit"):
         if isinstance(dst_size, (list, tuple)):
             dst_width, dst_height = dst_size
@@ -46,14 +46,14 @@ def get_image_size(
             dst_width, dst_height = dst_size, dst_size
         if mode == "outer_fit":
             if float(dst_height) / height > float(dst_width) / width:
-                dst_height = int(round(float(dst_width) / width * height))
+                dst_height = round(float(dst_width) / width * height)
             else:
-                dst_width = int(round(float(dst_height) / height * width))
+                dst_width = round(float(dst_height) / height * width)
         elif mode == "inner_fit":
             if float(dst_height) / height < float(dst_width) / width:
-                dst_height = int(round(float(dst_width) / width * height))
+                dst_height = round(float(dst_width) / width * height)
             else:
-                dst_width = int(round(float(dst_height) / height * width))
+                dst_width = round(float(dst_height) / height * width)
     elif mode == "area":
         if isinstance(dst_size, (list, tuple)):
             dst_width, dst_height = dst_size
@@ -61,20 +61,20 @@ def get_image_size(
             dst_width, dst_height = dst_size, dst_size
         aspect_ratio = float(height) / float(width)
         dst_area = dst_height * dst_width
-        dst_height = int(round(np.sqrt(dst_area * aspect_ratio)))
-        dst_width = int(round(np.sqrt(dst_area / aspect_ratio)))
+        dst_height = round(np.sqrt(dst_area * aspect_ratio))
+        dst_width = round(np.sqrt(dst_area / aspect_ratio))
     else:
-        assert False
+        raise AssertionError(f"unsupported resize mode: {mode!r}")
     if max_size is not None and max(dst_height, dst_width) > max_size:
         if dst_height > dst_width:
-            dst_width = int(round(float(max_size) / dst_height * dst_width))
+            dst_width = round(float(max_size) / dst_height * dst_width)
             dst_height = max_size
         else:
-            dst_height = int(round(float(max_size) / dst_width * dst_height))
+            dst_height = round(float(max_size) / dst_width * dst_height)
             dst_width = max_size
     if multiple is not None:
-        dst_height = int(round(dst_height / multiple)) * multiple
-        dst_width = int(round(dst_width / multiple)) * multiple
+        dst_height = round(dst_height / multiple) * multiple
+        dst_width = round(dst_width / multiple) * multiple
     return dst_width, dst_height
 
 
@@ -155,10 +155,10 @@ class CosmosPredict2p5Operator(BaseOperator):
             # scale then center-crop to (dst_width, dst_height)
             if float(dst_height) / orig_height < float(dst_width) / orig_width:
                 new_width = dst_width
-                new_height = int(round(float(dst_width) / orig_width * orig_height))
+                new_height = round(float(dst_width) / orig_width * orig_height)
             else:
                 new_height = dst_height
-                new_width = int(round(float(dst_height) / orig_height * orig_width))
+                new_width = round(float(dst_height) / orig_height * orig_width)
 
             x1 = (new_width - dst_width) // 2
             y1 = (new_height - dst_height) // 2

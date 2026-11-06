@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from pathlib import Path
-from typing import Any
+from typing import Any, ClassVar
 
 from .embodied_action_operator import EmbodiedActionOperator, _compact_dict, _extract_action_signal, _first_present
 
@@ -16,7 +16,7 @@ class StarVLAOperator(EmbodiedActionOperator):
     POLICY_FAMILY = "vision_language_action_and_world_action_model"
     ACTION_REPRESENTATION = "robot_or_world_action_sequence"
     OBSERVATION_LAYOUT = "visual_language_world_state"
-    DEFAULT_INPUT_SCHEMA = {
+    DEFAULT_INPUT_SCHEMA: ClassVar[dict[str, Any]] = {
         "prompt": True,
         "image": True,
         "video": True,

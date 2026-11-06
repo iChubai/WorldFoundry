@@ -34,7 +34,7 @@ class Wan2p2Operator(BaseOperator):
         """Initialize the operator with specific configurations."""
         if operation_types is None:
             operation_types = ["image_processing", "prompt_processing"]
-        super(Wan2p2Operator, self).__init__(operation_types=operation_types)
+        super().__init__(operation_types=operation_types)
 
         self.interaction_template = ["text_prompt", "image_prompt"]
         self.interaction_template_init()
@@ -126,10 +126,7 @@ class Wan2p2Operator(BaseOperator):
         - ti2v 允许没有参考图像，此时返回的 input_image 为 None
         - 如果提供了 input_path，则加载为 PIL.Image
         """
-        if input_path is None:
-            input_image = None
-        else:
-            input_image = _load_input_image(input_path)
+        input_image = None if input_path is None else _load_input_image(input_path)
 
         return {
             "input_image": input_image,

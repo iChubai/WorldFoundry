@@ -25,12 +25,12 @@ class WorldLabsOperator(BaseOperator):
 
     def __init__(
         self,
-        operation_types: list = None,
+        operation_types: list | None = None,
     ):
         """Initialize the operator with specific configurations."""
         if operation_types is None:
             operation_types = ["prompt_processing", "image_processing", "video_processing"]
-        super(WorldLabsOperator, self).__init__(operation_types)
+        super().__init__(operation_types)
 
         self.interaction_template = ["text_prompt", "image_prompt", "multi_image_prompt", "video_prompt"]
         self.interaction_template_init()

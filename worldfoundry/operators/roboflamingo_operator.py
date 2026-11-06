@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from pathlib import Path
-from typing import Any
+from typing import Any, ClassVar
 
 from .embodied_action_operator import EmbodiedActionOperator, _compact_dict, _extract_action_signal, _first_present
 
@@ -16,7 +16,7 @@ class RoboFlamingoOperator(EmbodiedActionOperator):
     POLICY_FAMILY = "flamingo_vlm_robot_policy"
     ACTION_REPRESENTATION = "continuous_end_effector_action"
     OBSERVATION_LAYOUT = "interleaved_visual_history_language_proprio"
-    DEFAULT_INPUT_SCHEMA = {
+    DEFAULT_INPUT_SCHEMA: ClassVar[dict[str, Any]] = {
         "prompt": True,
         "image": True,
         "video": True,

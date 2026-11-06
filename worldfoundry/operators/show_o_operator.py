@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Iterable
 from pathlib import Path
-from typing import Any
+from typing import Any, ClassVar
 
 from .base_operator import BaseOperator
 
@@ -17,7 +17,7 @@ class ShowOOperator(BaseOperator):
     """
 
     MODEL_ID = "show-o"
-    DEFAULT_INPUT_SCHEMA = {"prompt": True, "image": True, "video": False, "actions": []}
+    DEFAULT_INPUT_SCHEMA: ClassVar[dict[str, Any]] = {"prompt": True, "image": True, "video": False, "actions": []}
 
     def __init__(self, input_schema: dict[str, Any] | None = None):
         """Initialize the operator with specific configurations."""

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Iterable, Mapping
 from pathlib import Path
-from typing import Any
+from typing import Any, ClassVar
 
 from .base_operator import BaseOperator
 
@@ -74,7 +74,7 @@ class EmbodiedActionOperator(BaseOperator):
     POLICY_FAMILY = "generic_embodied_policy"
     ACTION_REPRESENTATION = "generic_action"
     OBSERVATION_LAYOUT = "generic_observation"
-    DEFAULT_INPUT_SCHEMA = {
+    DEFAULT_INPUT_SCHEMA: ClassVar[dict[str, Any]] = {
         "prompt": True,
         "image": True,
         "video": True,

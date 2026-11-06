@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from pathlib import Path
-from typing import Any
+from typing import Any, ClassVar
 
 from .embodied_action_operator import EmbodiedActionOperator, _compact_dict, _extract_action_signal, _first_present
 
@@ -16,7 +16,7 @@ class DiffusionPolicyOperator(EmbodiedActionOperator):
     POLICY_FAMILY = "visuomotor_diffusion_policy"
     ACTION_REPRESENTATION = "denoised_action_trajectory"
     OBSERVATION_LAYOUT = "image_or_low_dim_history"
-    DEFAULT_INPUT_SCHEMA = {
+    DEFAULT_INPUT_SCHEMA: ClassVar[dict[str, Any]] = {
         "prompt": False,
         "image": True,
         "video": True,

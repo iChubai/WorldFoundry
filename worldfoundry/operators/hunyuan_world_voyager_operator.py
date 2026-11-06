@@ -125,7 +125,7 @@ class HunyuanWorldVoyagerOperator(BaseOperator):
                 "turn_left",
                 "turn_right",
             ]
-        super(HunyuanWorldVoyagerOperator, self).__init__(operation_types=operation_types)
+        super().__init__(operation_types=operation_types)
         self.interaction_template = interaction_template
         self.interaction_template_init()
 

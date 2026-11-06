@@ -51,10 +51,7 @@ def _to_uint8_image(array: np.ndarray) -> np.ndarray:
     data = np.asarray(array)
     if data.dtype in (np.float16, np.float32, np.float64):
         if data.min() >= -1.0 and data.max() <= 1.0:
-            if data.min() < 0.0:
-                data = (data + 1.0) * 127.5
-            else:
-                data = data * 255.0
+            data = (data + 1.0) * 127.5 if data.min() < 0.0 else data * 255.0
         data = np.clip(data, 0.0, 255.0).astype(np.uint8)
     elif data.dtype != np.uint8:
         data = np.clip(data, 0, 255).astype(np.uint8)
@@ -68,7 +65,7 @@ def _center_crop(image: Image.Image, resolution: tuple[int, int]) -> Image.Image
 
     scale = max(target_width / width, target_height / height)
     resized = image.resize(
-        (int(round(width * scale)), int(round(height * scale))),
+        (round(width * scale), round(height * scale)),
         resample=_RESAMPLE_LANCZOS,
     )
     left = max((resized.size[0] - target_width) // 2, 0)
@@ -259,12 +256,12 @@ class NeoVerseOperator(BaseOperator):
                 "static_scene": resolved_static_scene,
             }
 
-        if isinstance(images, (list, tuple)) and len(images) > 0:
-            frame_candidates = list(images)
-        elif (isinstance(images, np.ndarray) and images.ndim == 4) or (
-            isinstance(images, torch.Tensor) and images.ndim == 4
+        if (
+            (isinstance(images, (list, tuple)) and len(images) > 0)
+            or (isinstance(images, np.ndarray) and images.ndim == 4)
+            or (isinstance(images, torch.Tensor) and images.ndim == 4)
         ):
-            frame_candidates = [frame for frame in images]
+            frame_candidates = list(images)
         else:
             frame_candidates = [images]
 

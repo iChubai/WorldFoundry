@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from pathlib import Path
-from typing import Any
+from typing import Any, ClassVar
 
 from .embodied_action_operator import EmbodiedActionOperator, _compact_dict, _extract_action_signal, _first_present
 
@@ -61,7 +61,7 @@ class OpenVLAOFTOperator(EmbodiedActionOperator):
     POLICY_FAMILY = "openvla_oft_action_chunk_policy"
     ACTION_REPRESENTATION = "continuous_libero_action_chunk"
     OBSERVATION_LAYOUT = "libero_full_and_wrist_rgb_state_language"
-    DEFAULT_INPUT_SCHEMA = {
+    DEFAULT_INPUT_SCHEMA: ClassVar[dict[str, Any]] = {
         "prompt": True,
         "image": True,
         "video": False,
@@ -130,7 +130,7 @@ class CogACTOperator(EmbodiedActionOperator):
     POLICY_FAMILY = "cogact_dit_action_chunk_policy"
     ACTION_REPRESENTATION = "16x7_continuous_action_chunk"
     OBSERVATION_LAYOUT = "single_rgb_language"
-    DEFAULT_INPUT_SCHEMA = {
+    DEFAULT_INPUT_SCHEMA: ClassVar[dict[str, Any]] = {
         "prompt": True,
         "image": True,
         "video": False,
@@ -192,7 +192,7 @@ class DBCogACTOperator(EmbodiedActionOperator):
     POLICY_FAMILY = "dexbotic_cogact_policy"
     ACTION_REPRESENTATION = "model_declared_relative_or_absolute_action_chunk"
     OBSERVATION_LAYOUT = "dexbotic_numbered_camera_slots_language_optional_state"
-    DEFAULT_INPUT_SCHEMA = {
+    DEFAULT_INPUT_SCHEMA: ClassVar[dict[str, Any]] = {
         "prompt": True,
         "image": True,
         "video": False,
@@ -249,7 +249,7 @@ class VLANeXtOperator(EmbodiedActionOperator):
     POLICY_FAMILY = "vlanext_libero_action_chunk_policy"
     ACTION_REPRESENTATION = "normalized_libero_action_chunk"
     OBSERVATION_LAYOUT = "libero_rgb_wrist_history_state_action_language"
-    DEFAULT_INPUT_SCHEMA = {
+    DEFAULT_INPUT_SCHEMA: ClassVar[dict[str, Any]] = {
         "prompt": True,
         "image": True,
         "video": True,
@@ -318,7 +318,7 @@ class MolmoBotOperator(EmbodiedActionOperator):
     POLICY_FAMILY = "molmobot_action_chunk_policy"
     ACTION_REPRESENTATION = "robot_specific_action_chunk"
     OBSERVATION_LAYOUT = "camera_list_language_optional_qpos"
-    DEFAULT_INPUT_SCHEMA = {
+    DEFAULT_INPUT_SCHEMA: ClassVar[dict[str, Any]] = {
         "prompt": True,
         "image": True,
         "video": False,
@@ -376,7 +376,7 @@ class MMEVLAOperator(EmbodiedActionOperator):
     POLICY_FAMILY = "mme_vla_memory_augmented_openpi_policy"
     ACTION_REPRESENTATION = "8d_robomme_joint_action_chunk"
     OBSERVATION_LAYOUT = "robomme_rgb_wrist_state_optional_memory_language"
-    DEFAULT_INPUT_SCHEMA = {
+    DEFAULT_INPUT_SCHEMA: ClassVar[dict[str, Any]] = {
         "prompt": True,
         "image": True,
         "video": False,

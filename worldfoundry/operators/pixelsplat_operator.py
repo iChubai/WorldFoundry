@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Iterable
 from pathlib import Path
-from typing import Any
+from typing import Any, ClassVar
 
 from .base_operator import BaseOperator
 
@@ -13,7 +13,12 @@ class PixelSplatOperator(BaseOperator):
     """Operator for pixelSplat dataset/index conditioned 3D reconstruction."""
 
     MODEL_ID = "pixelsplat"
-    DEFAULT_INPUT_SCHEMA = {"prompt": False, "image": True, "video": True, "actions": ["view_sequence"]}
+    DEFAULT_INPUT_SCHEMA: ClassVar[dict[str, Any]] = {
+        "prompt": False,
+        "image": True,
+        "video": True,
+        "actions": ["view_sequence"],
+    }
 
     def __init__(self, input_schema: dict[str, Any] | None = None):
         """Initialize the operator with specific configurations."""

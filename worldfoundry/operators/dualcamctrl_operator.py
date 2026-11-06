@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Iterable
 from pathlib import Path
-from typing import Any
+from typing import Any, ClassVar
 
 from .base_operator import BaseOperator
 
@@ -13,7 +13,7 @@ class DualCamCtrlOperator(BaseOperator):
     """Normalize DualCamCtrl prompt, image, depth image, and camera path inputs."""
 
     MODEL_ID = "dualcamctrl"
-    DEFAULT_INPUT_SCHEMA = {
+    DEFAULT_INPUT_SCHEMA: ClassVar[dict[str, Any]] = {
         "prompt": True,
         "image": True,
         "video": False,

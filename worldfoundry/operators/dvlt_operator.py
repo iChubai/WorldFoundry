@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Iterable, Mapping
 from pathlib import Path
-from typing import Any
+from typing import Any, ClassVar
 
 from .base_operator import BaseOperator
 
@@ -13,7 +13,7 @@ class DVLTOperator(BaseOperator):
     """Operator for DVLT multi-view 3D reconstruction inputs."""
 
     MODEL_ID = "dvlt"
-    DEFAULT_INPUT_SCHEMA = {
+    DEFAULT_INPUT_SCHEMA: ClassVar[dict[str, Any]] = {
         "prompt": False,
         "image": True,
         "video": True,

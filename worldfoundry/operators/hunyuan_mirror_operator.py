@@ -35,7 +35,7 @@ class HunyuanMirrorOperator(BaseOperator):
                 "object_move_right",
                 "reset_camera",
             ]
-        super(HunyuanMirrorOperator, self).__init__(operation_types=operation_types)
+        super().__init__(operation_types=operation_types)
         self.interaction_template = interaction_template
         self.interaction_template_init()
 

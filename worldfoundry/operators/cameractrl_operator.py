@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Iterable
 from pathlib import Path
-from typing import Any
+from typing import Any, ClassVar
 
 from .base_operator import BaseOperator
 
@@ -13,7 +13,12 @@ class CameraCtrlOperator(BaseOperator):
     """Operator for CameraCtrl camera-trajectory conditioned video generation."""
 
     MODEL_ID = "cameractrl"
-    DEFAULT_INPUT_SCHEMA = {"prompt": True, "image": True, "video": False, "actions": ["camera_path"]}
+    DEFAULT_INPUT_SCHEMA: ClassVar[dict[str, Any]] = {
+        "prompt": True,
+        "image": True,
+        "video": False,
+        "actions": ["camera_path"],
+    }
 
     def __init__(self, input_schema: dict[str, Any] | None = None):
         """Initialize the operator with specific configurations."""

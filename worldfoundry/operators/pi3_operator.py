@@ -69,7 +69,7 @@ class Pi3Operator(BaseOperator):
             operation_types = ["visual_instruction", "action_instruction"]
         if interaction_template is None:
             interaction_template = list(NAVIGATION_TEMPLATE)
-        super(Pi3Operator, self).__init__(operation_types=operation_types)
+        super().__init__(operation_types=operation_types)
         self.interaction_template = interaction_template
         self.interaction_template_init()
 

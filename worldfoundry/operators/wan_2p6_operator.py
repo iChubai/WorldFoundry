@@ -17,12 +17,12 @@ class Wan2p6Operator(BaseOperator):
 
     def __init__(
         self,
-        operation_types: list = None,
+        operation_types: list | None = None,
     ):
         """Initialize the operator with specific configurations."""
         if operation_types is None:
             operation_types = ["image_processing", "prompt_processing", "reference_processing"]
-        super(Wan2p6Operator, self).__init__(operation_types)
+        super().__init__(operation_types)
 
         self.interaction_template = ["text_prompt", "image_prompt", "reference_prompt"]
         self.interaction_template_init()

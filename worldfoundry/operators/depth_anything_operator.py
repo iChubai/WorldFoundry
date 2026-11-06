@@ -35,7 +35,7 @@ class DepthAnythingOperator(BaseOperator):
             operation_types = ["visual_instruction"]
         if interaction_template is None:
             interaction_template = ["image_depth", "video_depth", "grayscale_depth", "color_depth"]
-        super(DepthAnythingOperator, self).__init__(operation_types=operation_types)
+        super().__init__(operation_types=operation_types)
         self.interaction_template = interaction_template
         self.interaction_template_init()
 

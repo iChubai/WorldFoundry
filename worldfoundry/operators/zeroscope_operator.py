@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Any
+from typing import Any, ClassVar
 
 from .base_operator import BaseOperator
 
@@ -12,7 +12,7 @@ class ZeroScopeOperator(BaseOperator):
     """Operator for ZeroScope text-to-video inference."""
 
     MODEL_ID = "zeroscope"
-    DEFAULT_INPUT_SCHEMA = {"prompt": True, "image": False, "video": False, "actions": []}
+    DEFAULT_INPUT_SCHEMA: ClassVar[dict[str, Any]] = {"prompt": True, "image": False, "video": False, "actions": []}
 
     def __init__(self, input_schema: dict[str, Any] | None = None):
         """Initialize the operator with specific configurations."""

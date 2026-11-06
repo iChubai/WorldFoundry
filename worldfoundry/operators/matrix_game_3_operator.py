@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import math
 from collections.abc import Sequence
-from typing import Any
+from typing import Any, ClassVar
 
 import torch
 from PIL import Image
@@ -27,7 +27,7 @@ class MatrixGame3Operator(BaseOperator):
     KEYBOARD_DIM = 6
     MOUSE_STEP = 0.1
 
-    KEYBOARD_IDX = {
+    KEYBOARD_IDX: ClassVar[dict[str, int]] = {
         "forward": 0,
         "back": 1,
         "left": 2,
@@ -36,7 +36,7 @@ class MatrixGame3Operator(BaseOperator):
         "attack": 5,
     }
 
-    CAMERA_VALUE_MAP = {
+    CAMERA_VALUE_MAP: ClassVar[dict[str, list[Any]]] = {
         "camera_up": [MOUSE_STEP, 0.0],
         "camera_down": [-MOUSE_STEP, 0.0],
         "camera_l": [0.0, -MOUSE_STEP],
@@ -47,7 +47,7 @@ class MatrixGame3Operator(BaseOperator):
         "camera_dr": [-MOUSE_STEP, MOUSE_STEP],
     }
 
-    COMBINATION_MAP = {
+    COMBINATION_MAP: ClassVar[dict[str, Any]] = {
         "forward_left": ["forward", "left"],
         "forward_right": ["forward", "right"],
         "back_left": ["back", "left"],

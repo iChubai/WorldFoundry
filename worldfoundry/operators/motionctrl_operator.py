@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Iterable
 from pathlib import Path
-from typing import Any
+from typing import Any, ClassVar
 
 from .base_operator import BaseOperator
 
@@ -13,7 +13,7 @@ class MotionCtrlOperator(BaseOperator):
     """Operator for MotionCtrl camera/object motion-conditioned generation."""
 
     MODEL_ID = "motionctrl"
-    CAMERA_MOTION_ALIASES = {
+    CAMERA_MOTION_ALIASES: ClassVar[set[str]] = {
         "backward",
         "camera",
         "camera-motion",
@@ -30,7 +30,7 @@ class MotionCtrlOperator(BaseOperator):
         "tilt",
         "up",
     }
-    DEFAULT_INPUT_SCHEMA = {
+    DEFAULT_INPUT_SCHEMA: ClassVar[dict[str, Any]] = {
         "prompt": True,
         "image": True,
         "video": False,

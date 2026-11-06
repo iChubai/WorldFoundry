@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from pathlib import Path
-from typing import Any
+from typing import Any, ClassVar
 
 from .embodied_action_operator import EmbodiedActionOperator, _compact_dict, _extract_action_signal, _first_present
 
@@ -16,7 +16,7 @@ class LingBotVAOperator(EmbodiedActionOperator):
     POLICY_FAMILY = "autoregressive_video_action_world_model"
     ACTION_REPRESENTATION = "continuous_robot_action_chunk_with_video_latents"
     OBSERVATION_LAYOUT = "multi_view_rgb_language_robot_state_video_context"
-    DEFAULT_INPUT_SCHEMA = {
+    DEFAULT_INPUT_SCHEMA: ClassVar[dict[str, Any]] = {
         "prompt": True,
         "instruction": True,
         "image": True,

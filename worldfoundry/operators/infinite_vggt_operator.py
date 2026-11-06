@@ -36,7 +36,7 @@ class InfiniteVGGTOperator(BaseOperator):
                 "zoom_in",
                 "zoom_out",
             ]
-        super(InfiniteVGGTOperator, self).__init__(operation_types=operation_types)
+        super().__init__(operation_types=operation_types)
         self.interaction_template = interaction_template
         self.interaction_template_init()
 

@@ -20,12 +20,12 @@ class LumaRay2Operator(BaseOperator):
 
     def __init__(
         self,
-        operation_types: list = None,
+        operation_types: list | None = None,
     ):
         """Initialize the operator with specific configurations."""
         if operation_types is None:
             operation_types = ["prompt_processing", "keyframe_processing"]
-        super(LumaRay2Operator, self).__init__(operation_types)
+        super().__init__(operation_types)
 
         self.interaction_template = ["text_prompt", "image_prompt", "generation_prompt"]
         self.interaction_template_init()

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from pathlib import Path
-from typing import Any
+from typing import Any, ClassVar
 
 from .embodied_action_operator import EmbodiedActionOperator, _compact_dict, _extract_action_signal, _first_present
 
@@ -16,7 +16,7 @@ class RT1Operator(EmbodiedActionOperator):
     POLICY_FAMILY = "discretized_robotics_transformer_policy"
     ACTION_REPRESENTATION = "discretized_action_tokens"
     OBSERVATION_LAYOUT = "single_rgb_language_token_history"
-    DEFAULT_INPUT_SCHEMA = {
+    DEFAULT_INPUT_SCHEMA: ClassVar[dict[str, Any]] = {
         "prompt": True,
         "image": True,
         "video": False,

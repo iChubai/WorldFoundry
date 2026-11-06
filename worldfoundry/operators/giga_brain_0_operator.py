@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from pathlib import Path
-from typing import Any
+from typing import Any, ClassVar
 
 from .embodied_action_operator import EmbodiedActionOperator, _compact_dict, _extract_action_signal, _first_present
 
@@ -16,7 +16,7 @@ class GigaBrain0Operator(EmbodiedActionOperator):
     POLICY_FAMILY = "world_model_powered_vision_language_action_policy"
     ACTION_REPRESENTATION = "multi_embodiment_continuous_action_chunk_with_optional_subtask_and_2d_traj"
     OBSERVATION_LAYOUT = "multi_view_rgb_optional_depth_language_state"
-    DEFAULT_INPUT_SCHEMA = {
+    DEFAULT_INPUT_SCHEMA: ClassVar[dict[str, Any]] = {
         "prompt": True,
         "instruction": True,
         "image": True,

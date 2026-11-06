@@ -43,7 +43,7 @@ class DepthAnything3Operator(BaseOperator):
                 "point_cloud_generation",
                 "gaussian_estimation",
             ]
-        super(DepthAnything3Operator, self).__init__(operation_types=operation_types)
+        super().__init__(operation_types=operation_types)
         self.interaction_template = interaction_template
         self.interaction_template_init()
 
@@ -154,10 +154,7 @@ class DepthAnything3Operator(BaseOperator):
 
         if np.issubdtype(array.dtype, np.floating):
             if array.min() >= -1.0 and array.max() <= 1.0:
-                if array.min() < 0.0:
-                    array = (array + 1.0) * 127.5
-                else:
-                    array = array * 255.0
+                array = (array + 1.0) * 127.5 if array.min() < 0.0 else array * 255.0
             array = np.clip(array, 0.0, 255.0)
         else:
             array = np.clip(array, 0, 255)

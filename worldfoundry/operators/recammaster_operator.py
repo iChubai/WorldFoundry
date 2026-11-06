@@ -32,7 +32,7 @@ class ReCamMasterOperator(BaseOperator):
         """Initialize the operator with specific configurations."""
         if operation_types is None:
             operation_types = []
-        super(ReCamMasterOperator, self).__init__(operation_types=operation_types)
+        super().__init__(operation_types=operation_types)
         self.camera_init = [[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]]
         self.max_num_frames = max_num_frames
         self.frame_interval = frame_interval
@@ -124,9 +124,9 @@ class ReCamMasterOperator(BaseOperator):
         the input interaction should be a dict:
         {"camera_viewpoint": [dx, dy, dz, theta_x, theta_z], "textual_instruction": str,}
         """
-        if "camera_viewpoint" not in interaction.keys():
+        if "camera_viewpoint" not in interaction:
             raise ValueError("interaction need include camera_viewpoint.")
-        if "textual_instruction" not in interaction.keys():
+        if "textual_instruction" not in interaction:
             raise ValueError("interaction need include textual instruction.")
         if len(interaction["camera_viewpoint"]) != 5:
             raise ValueError("the length of interaction need include dx, dy, dz, theta_x, theta_z.")

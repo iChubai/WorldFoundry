@@ -49,10 +49,7 @@ def _to_uint8_image(array: np.ndarray) -> np.ndarray:
     data = np.asarray(array)
     if data.dtype in (np.float16, np.float32, np.float64):
         if data.min() >= -1.0 and data.max() <= 1.0:
-            if data.min() < 0.0:
-                data = (data + 1.0) * 127.5
-            else:
-                data = data * 255.0
+            data = (data + 1.0) * 127.5 if data.min() < 0.0 else data * 255.0
         data = np.clip(data, 0.0, 255.0).astype(np.uint8)
     elif data.dtype != np.uint8:
         data = np.clip(data, 0, 255).astype(np.uint8)

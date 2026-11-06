@@ -43,7 +43,7 @@ class VGGTOperator(BaseOperator):
                 "camera_zoom_in",
                 "camera_zoom_out",
             ]
-        super(VGGTOperator, self).__init__(operation_types=operation_types)
+        super().__init__(operation_types=operation_types)
         self.interaction_template = interaction_template
         self.interaction_template_init()
 

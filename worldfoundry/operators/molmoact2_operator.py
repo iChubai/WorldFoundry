@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from pathlib import Path
-from typing import Any
+from typing import Any, ClassVar
 
 from .embodied_action_operator import EmbodiedActionOperator, _compact_dict, _extract_action_signal, _first_present
 
@@ -38,7 +38,7 @@ class MolmoAct2Operator(EmbodiedActionOperator):
     POLICY_FAMILY = "flow_matching_action_reasoning_vla"
     ACTION_REPRESENTATION = "continuous_absolute_joint_pose_action_chunk"
     OBSERVATION_LAYOUT = "embodiment_specific_multiview_rgb_language_state"
-    DEFAULT_INPUT_SCHEMA = {
+    DEFAULT_INPUT_SCHEMA: ClassVar[dict[str, Any]] = {
         "prompt": True,
         "instruction": True,
         "image": True,

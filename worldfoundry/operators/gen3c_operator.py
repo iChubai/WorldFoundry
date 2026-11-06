@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Sequence
-from typing import Any
+from typing import Any, ClassVar
 
 from .base_operator import BaseOperator
 
@@ -12,7 +12,7 @@ class Gen3COperator(BaseOperator):
     """Collapse benchmark actions into a single GEN3C camera trajectory."""
 
     DEFAULT_TRAJECTORY = "left"
-    OFFICIAL_TRAJECTORIES = [
+    OFFICIAL_TRAJECTORIES: ClassVar[list[str]] = [
         "left",
         "right",
         "up",
@@ -22,7 +22,7 @@ class Gen3COperator(BaseOperator):
         "clockwise",
         "counterclockwise",
     ]
-    ACTION_TO_TRAJECTORY = {
+    ACTION_TO_TRAJECTORY: ClassVar[dict[str, str]] = {
         "forward": "zoom_in",
         "backward": "zoom_out",
         "left": "left",

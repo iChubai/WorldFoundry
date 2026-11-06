@@ -16,7 +16,7 @@ class Sora2Operator(BaseOperator):
     不涉及模型推理和API调用
     """
 
-    def __init__(self, operation_types: list = None):
+    def __init__(self, operation_types: list | None = None):
         """
         初始化 Sora2Operator
 
@@ -25,7 +25,7 @@ class Sora2Operator(BaseOperator):
         """
         if operation_types is None:
             operation_types = ["image_processing", "prompt_processing"]
-        super(Sora2Operator, self).__init__(operation_types)
+        super().__init__(operation_types)
 
         # 初始化交互模板
         self.interaction_template = ["text_prompt", "image_prompt", "multimodal_prompt"]

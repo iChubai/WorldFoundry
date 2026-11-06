@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from pathlib import Path
-from typing import Any
+from typing import Any, ClassVar
 
 from .embodied_action_operator import EmbodiedActionOperator, _compact_dict, _extract_action_signal, _first_present
 
@@ -16,7 +16,7 @@ class LAPAOperator(EmbodiedActionOperator):
     POLICY_FAMILY = "visual_action_model"
     ACTION_REPRESENTATION = "latent_action_tokens"
     OBSERVATION_LAYOUT = "video_or_frame_sequence"
-    DEFAULT_INPUT_SCHEMA = {
+    DEFAULT_INPUT_SCHEMA: ClassVar[dict[str, Any]] = {
         "prompt": False,
         "image": True,
         "video": True,

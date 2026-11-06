@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from pathlib import Path
-from typing import Any
+from typing import Any, ClassVar
 
 from .embodied_action_operator import EmbodiedActionOperator, _compact_dict, _extract_action_signal, _first_present
 
@@ -16,7 +16,7 @@ class ACTOperator(EmbodiedActionOperator):
     POLICY_FAMILY = "action_chunking_transformer_policy"
     ACTION_REPRESENTATION = "chunked_action_sequence"
     OBSERVATION_LAYOUT = "rgb_proprio_action_chunk_context"
-    DEFAULT_INPUT_SCHEMA = {
+    DEFAULT_INPUT_SCHEMA: ClassVar[dict[str, Any]] = {
         "prompt": False,
         "image": True,
         "video": False,

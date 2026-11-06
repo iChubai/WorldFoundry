@@ -65,7 +65,7 @@ class YumeOperator(BaseOperator):
         """Initialize the operator with specific configurations."""
         if operation_types is None:
             operation_types = []
-        super(YumeOperator, self).__init__(operation_types=operation_types)
+        super().__init__(operation_types=operation_types)
         self.interaction_template = [
             "forward",
             "left",

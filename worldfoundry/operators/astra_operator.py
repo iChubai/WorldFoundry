@@ -157,7 +157,7 @@ class AstraOperator(BaseOperator):
         resize = cast(Callable[..., Image.Image], v2.functional.resize)
         return resize(
             image,
-            [round(target_h), round(target_w)],
+            [target_h, target_w],
             interpolation=v2.InterpolationMode.BILINEAR,
         )
 
@@ -381,7 +381,7 @@ class AstraOperator(BaseOperator):
             if len(keyframe_poses) == 0:
                 pose_sequence = torch.zeros(max_needed_frames, 7, dtype=torch.float32)
                 return self._camera_embedding_from_rows(
-                    [row for row in pose_sequence],
+                    list(pose_sequence),
                     start_frame,
                     start_frame + initial_condition_frames,
                 )

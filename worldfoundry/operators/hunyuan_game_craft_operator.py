@@ -91,7 +91,7 @@ class HunyuanGameCraftOperator(BaseOperator):
             interaction_template.extend(
                 action for action in OPERATION_2_ACTION_DICT.values() if action not in interaction_template
             )
-        super(HunyuanGameCraftOperator, self).__init__(operation_types=operation_types)
+        super().__init__(operation_types=operation_types)
         self.interaction_template = interaction_template
         self.interaction_template_init()
 

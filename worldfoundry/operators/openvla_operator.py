@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from pathlib import Path
-from typing import Any
+from typing import Any, ClassVar
 
 from .embodied_action_operator import EmbodiedActionOperator, _compact_dict, _extract_action_signal, _first_present
 
@@ -16,7 +16,7 @@ class OpenVLAOperator(EmbodiedActionOperator):
     POLICY_FAMILY = "autoregressive_vision_language_action_policy"
     ACTION_REPRESENTATION = "continuous_7d_end_effector_delta"
     OBSERVATION_LAYOUT = "single_rgb_language_proprio"
-    DEFAULT_INPUT_SCHEMA = {
+    DEFAULT_INPUT_SCHEMA: ClassVar[dict[str, Any]] = {
         "prompt": True,
         "image": True,
         "video": False,

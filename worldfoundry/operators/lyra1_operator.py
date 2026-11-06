@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Sequence
-from typing import Any
+from typing import Any, ClassVar
 
 from worldfoundry.core.media.codecs.image import load_pil_image
 
@@ -13,7 +13,7 @@ from .base_operator import BaseOperator
 class Lyra1Operator(BaseOperator):
     """Collapse WorldFoundry actions into a single Lyra-1 trajectory."""
 
-    OFFICIAL_TRAJECTORIES = [
+    OFFICIAL_TRAJECTORIES: ClassVar[list[str]] = [
         "left",
         "right",
         "up",
@@ -24,7 +24,7 @@ class Lyra1Operator(BaseOperator):
         "counterclockwise",
     ]
 
-    ACTION_TO_TRAJECTORY = {
+    ACTION_TO_TRAJECTORY: ClassVar[dict[str, str]] = {
         "forward": "zoom_in",
         "backward": "zoom_out",
         "left": "left",

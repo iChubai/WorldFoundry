@@ -70,10 +70,7 @@ def _look_at_quaternion_wxyz(pos: np.ndarray, target: np.ndarray | None = None) 
     world_up = np.array([0.0, 1.0, 0.0], dtype=np.float64)
     right = np.cross(forward, world_up)
     rn = np.linalg.norm(right)
-    if rn < 1e-8:
-        right = np.array([1.0, 0.0, 0.0], dtype=np.float64)
-    else:
-        right = right / rn
+    right = np.array([1.0, 0.0, 0.0], dtype=np.float64) if rn < 1e-8 else right / rn
     up = np.cross(right, forward)
     backward = -forward
     r_mat = np.stack([right, up, backward], axis=1).astype(np.float32)
@@ -208,7 +205,7 @@ class FlashWorldOperator(BaseOperator):
                 "camera_zoom_in",
                 "camera_zoom_out",
             ]
-        super(FlashWorldOperator, self).__init__(operation_types=operation_types)
+        super().__init__(operation_types=operation_types)
         self.interaction_template = interaction_template
         self.interaction_template_init()
 
@@ -388,10 +385,7 @@ class FlashWorldOperator(BaseOperator):
             _, zoom_seg_end = self._apply_action_end_state(pos_start, zoom_start, action, quat=quat_start)
 
             for j in range(seg_len):
-                if seg_len <= 1:
-                    t = 1.0
-                else:
-                    t = j / (seg_len - 1)
+                t = 1.0 if seg_len <= 1 else j / (seg_len - 1)
 
                 if action in ("camera_l", "camera_r", "camera_up", "camera_down"):
                     p = pos_start.copy()
@@ -499,10 +493,7 @@ class FlashWorldOperator(BaseOperator):
                 return image.convert("RGB")
             elif input_signal.startswith("data:image"):
                 # Base64 encoded image
-                if "," in input_signal:
-                    image_data = input_signal.split(",", 1)[1]
-                else:
-                    image_data = input_signal
+                image_data = input_signal.split(",", 1)[1] if "," in input_signal else input_signal
                 image_bytes = base64.b64decode(image_data)
                 image = Image.open(io.BytesIO(image_bytes))
                 return image.convert("RGB")

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from pathlib import Path
-from typing import Any
+from typing import Any, ClassVar
 
 from .embodied_action_operator import EmbodiedActionOperator, _compact_dict, _extract_action_signal, _first_present
 
@@ -16,7 +16,7 @@ class BeingH05Operator(EmbodiedActionOperator):
     POLICY_FAMILY = "beingh05_cross_embodiment_vla_policy"
     ACTION_REPRESENTATION = "unified_200d_action_space_with_robot_specific_slices"
     OBSERVATION_LAYOUT = "multi_view_rgb_state_language"
-    DEFAULT_INPUT_SCHEMA = {
+    DEFAULT_INPUT_SCHEMA: ClassVar[dict[str, Any]] = {
         "prompt": True,
         "instruction": True,
         "image": True,

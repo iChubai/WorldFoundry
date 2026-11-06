@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from pathlib import Path
-from typing import Any
+from typing import Any, ClassVar
 
 from worldfoundry.operators.embodied_action_operator import (
     _compact_dict,
@@ -21,7 +21,7 @@ class XVLAOperator(OfficialPolicyOperator):
     POLICY_FAMILY = "xvla_cross_embodiment_policy"
     ACTION_REPRESENTATION = "30_step_xvla_action_chunk"
     OBSERVATION_LAYOUT = "up_to_three_rgb_views_language_proprio_domain"
-    DEFAULT_INPUT_SCHEMA = {
+    DEFAULT_INPUT_SCHEMA: ClassVar[dict[str, Any]] = {
         "model_id": "xvla",
         "prompt": True,
         "image": True,

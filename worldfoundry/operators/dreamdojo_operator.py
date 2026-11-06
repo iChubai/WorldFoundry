@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Iterable, Mapping, Sequence
 from pathlib import Path
-from typing import Any
+from typing import Any, ClassVar
 
 from .base_operator import BaseOperator
 
@@ -16,7 +16,7 @@ class DreamDojoOperator(BaseOperator):
     WORLD_MODEL_FAMILY = "action_conditioned_robot_world_model"
     ACTION_REPRESENTATION = "384d_unified_robot_action_or_latent_action_chunk"
     OBSERVATION_LAYOUT = "egocentric_robot_video_or_initial_frame_with_actions"
-    DEFAULT_INPUT_SCHEMA = {
+    DEFAULT_INPUT_SCHEMA: ClassVar[dict[str, Any]] = {
         "prompt": True,
         "instruction": True,
         "image": True,
@@ -30,7 +30,7 @@ class DreamDojoOperator(BaseOperator):
         ],
     }
     ACTION_SPACE_DIM = 384
-    ACTION_SLICES = {
+    ACTION_SLICES: ClassVar[dict[str, list[int]]] = {
         "fourier_gr1": [0, 29],
         "manus_retargeted_gr1": [29, 58],
         "unitree_g1": [58, 101],

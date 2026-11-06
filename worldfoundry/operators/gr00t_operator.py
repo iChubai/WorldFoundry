@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from pathlib import Path
-from typing import Any
+from typing import Any, ClassVar
 
 from .embodied_action_operator import EmbodiedActionOperator, _compact_dict, _extract_action_signal, _first_present
 
@@ -16,7 +16,7 @@ class GR00TOperator(EmbodiedActionOperator):
     POLICY_FAMILY = "humanoid_foundation_policy"
     ACTION_REPRESENTATION = "embodiment_conditioned_joint_or_eef_action"
     OBSERVATION_LAYOUT = "multi_sensor_embodiment_state_language"
-    DEFAULT_INPUT_SCHEMA = {
+    DEFAULT_INPUT_SCHEMA: ClassVar[dict[str, Any]] = {
         "prompt": True,
         "image": True,
         "video": False,

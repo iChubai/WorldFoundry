@@ -5,7 +5,7 @@ from __future__ import annotations
 import argparse
 import json
 import shlex
-from collections.abc import Mapping
+from collections.abc import Iterable, Mapping, Sequence
 from pathlib import Path
 from types import ModuleType
 from typing import Any
@@ -78,11 +78,10 @@ def _compact_list(values: object, *, limit: int = 2) -> str:
         items: list[str] = []
     elif isinstance(values, str):
         items = [values]
+    elif isinstance(values, Iterable):
+        items = [str(item) for item in values if str(item)]
     else:
-        try:
-            items = [str(item) for item in values if str(item)]
-        except TypeError:
-            items = [str(values)]
+        items = [str(values)]
     if not items:
         return "-"
     if len(items) <= limit:
@@ -90,7 +89,7 @@ def _compact_list(values: object, *, limit: int = 2) -> str:
     return ", ".join(items[:limit]) + f" +{len(items) - limit}"
 
 
-def _print_table(headers: tuple[str, ...], rows: list[tuple[str, ...]]) -> None:
+def _print_table(headers: Sequence[str], rows: Sequence[Sequence[str]]) -> None:
     """Print a left-aligned text table with header underline."""
     if terminal_enabled():
         print_table("Catalog", headers, rows)
@@ -950,7 +949,7 @@ def _handle_zoo_benchmark_show(args: argparse.Namespace) -> int:
     payload.pop("contract_validation_command", None)
     payload["integration_status"] = _benchmark_public_integration_status(entry)
     payload["registry_aliases"] = list(registry.aliases_for(args.benchmark_id))
-    discovery = {
+    discovery: dict[str, Any] = {
         "runnable": entry.runner_target is not None and entry.integration_status != "blocked",
         "needs": list(_benchmark_needs(entry)),
         "surface": _benchmark_maturity(entry),
@@ -1099,7 +1098,7 @@ def _handle_zoo_benchmark_run(args: argparse.Namespace) -> int:
 # ── Parser registration ─────────────────────────────────────────
 
 
-def register_zoo_subparser(subparsers: argparse._SubParsersAction[argparse.ArgumentParser]) -> None:
+def register_zoo_subparser(subparsers: argparse._SubParsersAction) -> None:
     """Register model-zoo and benchmark-zoo CLI commands.
 
     Args:

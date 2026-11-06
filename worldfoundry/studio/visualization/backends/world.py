@@ -2686,8 +2686,8 @@ class WorldFrontendHandler(BaseHTTPRequestHandler):
                 return
         self.send_error(HTTPStatus.NOT_FOUND, "Not found.")
 
-    def log_message(self, fmt: str, *args: Any) -> None:
-        print(f"[world] {self.address_string()} - {fmt % args}", flush=True)
+    def log_message(self, format: str, *args: Any) -> None:
+        print(f"[world] {self.address_string()} - {format % args}", flush=True)
 
     def _handle_websocket(self) -> None:
         key = self.headers.get("Sec-WebSocket-Key", "").strip()
@@ -2725,7 +2725,9 @@ class WorldFrontendHandler(BaseHTTPRequestHandler):
     def _handle_ws_request(self, message: dict[str, Any]) -> dict[str, Any] | None:
         request_id = message.get("id")
         request_type = str(message.get("type") or "")
-        payload = message.get("payload") if isinstance(message.get("payload"), dict) else {}
+        payload = message.get("payload")
+        if not isinstance(payload, dict):
+            payload = {}
         started = time.perf_counter()
         track_path = f"ws:{request_type or 'unknown'}"
         try:
@@ -3001,7 +3003,7 @@ class WorldFrontendHandler(BaseHTTPRequestHandler):
         )
         if seed_override is not None:
             call_kwargs_text = _override_call_kwargs_seed(call_kwargs_text, seed_override)
-        return self.state.manager.run(
+        record = self.state.manager.run(
             model_id=self.state.entry.model_id,
             action=action,
             prompt=session.prompt,
@@ -3027,6 +3029,9 @@ class WorldFrontendHandler(BaseHTTPRequestHandler):
             api_key=_api_key(),
             device=self.state.launch_config.device or "cuda",
         )
+        if record is None:
+            raise RuntimeError("Studio manager did not produce a run record")
+        return record
 
     def _image_from_payload(self, payload: dict[str, Any]) -> Image.Image | None:
         raw_data = payload.get("init_image_base64")

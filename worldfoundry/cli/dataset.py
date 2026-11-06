@@ -252,7 +252,7 @@ def _handle_dataset_plan(args: argparse.Namespace) -> int:
     return 0
 
 
-def register_dataset_subparser(subparsers: argparse._SubParsersAction[argparse.ArgumentParser]) -> None:
+def register_dataset_subparser(subparsers: argparse._SubParsersAction) -> None:
     """Register dataset CLI commands.
 
     Args:

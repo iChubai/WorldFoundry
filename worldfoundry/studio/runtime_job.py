@@ -127,7 +127,7 @@ def _run_distributed_manager_payload(
             with contextlib.suppress(FileNotFoundError):
                 stale.unlink()
         try:
-            prepare_kwargs = {key: run_kwargs.get(key) for key in _RUN_PREPARE_KEYS}
+            prepare_kwargs: dict[str, Any] = {key: run_kwargs.get(key) for key in _RUN_PREPARE_KEYS}
             entry, request, perf_segments, wall_t0 = manager._prepare_run_request(**prepare_kwargs)
             _write_json_atomic(
                 prepared_path,

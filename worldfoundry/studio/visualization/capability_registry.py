@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from dataclasses import asdict, dataclass
 from pathlib import Path
+from typing import Any
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
 BASE_MODELS_ROOT = REPO_ROOT / "worldfoundry" / "base_models"
@@ -39,7 +40,7 @@ class ModelVisualizationCapability:
     def family(self) -> str:
         return self.package.split("/", 1)[0]
 
-    def to_dict(self) -> dict[str, object]:
+    def to_dict(self) -> dict[str, Any]:
         payload = asdict(self)
         payload["family"] = self.family
         payload["backends"] = sorted({RENDER_BACKENDS[item] for item in self.renderers})
@@ -419,7 +420,7 @@ def visualization_capabilities(
     )
 
 
-def visualization_inventory(*, family: str | None = None, model_id: str | None = None) -> dict[str, object]:
+def visualization_inventory(*, family: str | None = None, model_id: str | None = None) -> dict[str, Any]:
     entries = visualization_capabilities(family=family, model_id=model_id)
     return {
         "schema_version": 1,

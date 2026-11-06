@@ -482,7 +482,7 @@ def _profile_inputs(profile: Any | None) -> tuple[tuple[str, Any, bool], ...]:
     required = schema.get("required")
     optional = schema.get("optional")
     if isinstance(required, Sequence) and not isinstance(required, (str, bytes)):
-        rows = [(str(key), True, True) for key in required]
+        rows: list[tuple[str, Any, bool]] = [(str(key), True, True) for key in required]
         if isinstance(optional, Sequence) and not isinstance(optional, (str, bytes)):
             rows.extend((str(key), "optional", False) for key in optional)
         return tuple(rows)
@@ -717,8 +717,9 @@ def _fallback_model_run_schema(
         output_kinds = ("action_trace",)
     if not output_kinds and any(token in task_text for token in ("geometry", "reconstruction", "3d")):
         output_kinds = ("generated_3d_asset",)
-    if not output_kinds and getattr(profile, "artifact_kind", None):
-        output_kinds = (profile.artifact_kind,)
+    artifact_kind = getattr(profile, "artifact_kind", None)
+    if not output_kinds and artifact_kind:
+        output_kinds = (artifact_kind,)
     outputs = tuple(
         {
             "artifact_id": str(kind),

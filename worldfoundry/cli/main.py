@@ -123,11 +123,12 @@ def _print_first_run_banner() -> None:
 # ── Module and data loading helpers ─────────────────────────────
 
 
-def _curate_root_subparser_help(subparsers: argparse._SubParsersAction[argparse.ArgumentParser]) -> None:
+def _curate_root_subparser_help(subparsers: argparse._SubParsersAction) -> None:
     """Keep the root help focused on the supported public command surface."""
 
     subparsers.metavar = "{" + ",".join(_PUBLIC_ROOT_COMMANDS) + "}"
-    subparsers.help_groups = {
+    # help.py reads this optional grouping through getattr when rendering terminal help.
+    subparsers.help_groups = {  # ty: ignore[unresolved-attribute]
         "Start here": ("run", "tui", "zoo", "models"),
         "Evaluate": ("evaluate", "score", "generate-score", "reproduce", "embodied"),
         "Catalogs and workflows": ("tasks", "suites", "task", "dataset", "config", "plan", "metric"),
@@ -447,7 +448,12 @@ def _handle_evaluate(args: argparse.Namespace) -> int:
     model_id = args.model_id
     model_runner = args.model_runner
     if args.embodied_spec is not None:
-        from worldfoundry.evaluation.tasks.embodied.contracts import EmbodiedGenerationSpec
+        from worldfoundry.evaluation.api.json_contract import to_plain
+        from worldfoundry.evaluation.tasks.embodied.contracts import (
+            EmbodiedGenerationSpec,
+            EvaluationTrack,
+            RequestKind,
+        )
         from worldfoundry.evaluation.tasks.embodied.materialize import materialize_vla_va_wam_requests
         from worldfoundry.evaluation.tasks.embodied.metrics import metric_suite
 
@@ -455,6 +461,7 @@ def _handle_evaluate(args: argparse.Namespace) -> int:
         if spec_payload is None:
             raise CliUsageError("--embodied-spec is required")
         embodied_spec = EmbodiedGenerationSpec.from_dict(spec_payload)
+        track = EvaluationTrack(embodied_spec.track).value
         if args.requests_path is None:
             samples = _load_samples_or_episodes(args.samples_path, field_name="--samples-path")
             if args.num_samples is not None:
@@ -471,9 +478,9 @@ def _handle_evaluate(args: argparse.Namespace) -> int:
             "benchmark_id": args.benchmark_id or embodied_spec.task_name,
             "task_type": embodied_spec.task_name,
             "evaluation_protocol": "worldfoundry_evaluate_model",
-            "track": embodied_spec.track.value,
-            "request_kind": embodied_spec.kind.value,
-            "action_space": embodied_spec.action_space.to_dict(),
+            "track": track,
+            "request_kind": RequestKind(embodied_spec.kind).value,
+            "action_space": to_plain(embodied_spec.action_space),
             "required_capabilities": list(embodied_spec.required_capabilities),
         }
         dataset_metadata = {
@@ -483,9 +490,9 @@ def _handle_evaluate(args: argparse.Namespace) -> int:
         }
         if requests is not None:
             dataset_metadata["sample_count"] = len(requests)
-        metric_objects = metric_suite(tuple(args.metric or ()), track=embodied_spec.track.value)
+        metric_objects = metric_suite(tuple(args.metric or ()), track=track)
         model_parameters = {
-            "track": embodied_spec.track.value,
+            "track": track,
             "metadata_namespace": "vla_va_wam",
             "capabilities": list(embodied_spec.required_capabilities),
             **model_parameters,

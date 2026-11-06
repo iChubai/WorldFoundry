@@ -140,7 +140,7 @@ def _handle_generate_score(args: argparse.Namespace) -> int:
 
 
 def register_evaluation_intent_subparsers(
-    subparsers: argparse._SubParsersAction[argparse.ArgumentParser],
+    subparsers: argparse._SubParsersAction,
 ) -> None:
     """Register user-oriented scoring and reproduction commands."""
 

@@ -58,10 +58,11 @@ class BrandLogo(Vertical, can_focus=True):
         if zoomable:
             self.tooltip = "Click or press Enter to enlarge"
         self._render_size: tuple[int, float] | None = None
-        self.native_image = TerminalImage is not None and AutoRenderable in (SixelRenderable, TGPRenderable)
-        if self.native_image:
+        if TerminalImage is not None and AutoRenderable in (SixelRenderable, TGPRenderable):
+            self.native_image = True
             self._image = TerminalImage(classes="logo-image")
         else:
+            self.native_image = False
             self._image = Static("", markup=True, classes="logo-image")
         self.set_logo_width(width_chars)
 
@@ -69,7 +70,7 @@ class BrandLogo(Vertical, can_focus=True):
         yield self._image
 
     def on_unmount(self) -> None:
-        if self.native_image:
+        if not isinstance(self._image, Static):
             self._image.image = None
 
     def on_click(self, event: events.Click) -> None:
@@ -88,7 +89,9 @@ class BrandLogo(Vertical, can_focus=True):
             return
         self._render_size = render_size
         self._image.styles.width = width_chars
-        if self.native_image:
+        if isinstance(self._image, Static):
+            self._image.update(render_brand_logo(width_chars=width_chars, cell_aspect_ratio=aspect))
+        else:
             cell = get_cell_size()
             source = brand_logo_image()
             pixel_width = width_chars * cell.width
@@ -101,13 +104,6 @@ class BrandLogo(Vertical, can_focus=True):
             )
             self._image.image = frame
             self._image.styles.height = rows
-        else:
-            self._image.update(
-                render_brand_logo(
-                    width_chars=width_chars,
-                    cell_aspect_ratio=aspect,
-                )
-            )
 
 
 class LogoPreview(ModalScreen[None]):

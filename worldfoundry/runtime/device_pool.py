@@ -178,8 +178,8 @@ class CudaDeviceLeasePool:
                     if self._previous_group_alive(fd):
                         raise BlockingIOError("GPU's previous worker descendants are still alive")
         except BaseException as exc:
-            for descriptors in acquired.values():
-                for fd in descriptors:
+            for opened in acquired.values():
+                for fd in opened:
                     os.close(fd)
             if isinstance(exc, BlockingIOError):
                 return False

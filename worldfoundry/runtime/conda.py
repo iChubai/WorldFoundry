@@ -359,7 +359,9 @@ def _load_runtime_conda_env_specs_uncached(
 ) -> dict[str, RuntimeCondaEnvSpec]:
     resolved_manifest = Path(manifest_path) if manifest_path is not None else DEFAULT_ENV_MANIFEST
     payload = _load_manifest_mapping(resolved_manifest)
-    defaults = payload.get("defaults") if isinstance(payload.get("defaults"), Mapping) else {}
+    defaults = payload.get("defaults")
+    if not isinstance(defaults, Mapping):
+        defaults = {}
     resolved_root = (
         _expand_runtime_path(
             env_root or os.environ.get("WORLDFOUNDRY_CONDA_ENV_ROOT") or defaults.get("env_root") or DEFAULT_ENV_ROOT

@@ -1360,11 +1360,10 @@ def _shutdown_resident_worker(worker: _ResidentWorker, *, force: bool = False) -
             return
         process = worker.process
         if process.poll() is None and not force:
-            try:
-                process.stdin.write(b'{"command":"shutdown"}\n')
-                process.stdin.flush()
-            except (AttributeError, BrokenPipeError, OSError, ValueError):
-                pass
+            if process.stdin is not None:
+                with suppress(OSError, ValueError):
+                    process.stdin.write(b'{"command":"shutdown"}\n')
+                    process.stdin.flush()
             with suppress(subprocess.TimeoutExpired, ChildProcessError, OSError):
                 process.wait(timeout=2)
         # Parent exit alone does not release CUDA: descendants may still hold it.
@@ -1898,7 +1897,7 @@ def _start_resident_worker(
             stderr=subprocess.STDOUT,
             bufsize=0,
             start_new_session=sys.platform != "win32",
-            **({"pass_fds": device_lease.file_descriptors} if os.name == "posix" and device_lease else {}),
+            pass_fds=device_lease.file_descriptors if os.name == "posix" and device_lease else (),
         )
     except OSError as exc:
         raise _ResidentWorkerUnavailable(f"could not start resident worker for {model_id}: {exc}") from exc
@@ -1940,16 +1939,20 @@ def _resident_worker_for(
     cancel_requested: CancelCallback | None = None,
     deadline: float | None = None,
 ) -> _ResidentWorker:
-    options = {
-        "model_id": model_id,
-        "spec": spec,
-        "workspace_root": workspace_root,
-        "context": context,
-        "log_callback": log_callback,
-        "cancel_requested": cancel_requested,
-        "deadline": deadline,
-    }
-    worker = _resident_worker_for_locked(**options, allow_start=False)
+    def locked_worker(*, allow_start: bool, device_lease: CudaDeviceLease | None = None) -> _ResidentWorker | None:
+        return _resident_worker_for_locked(
+            model_id=model_id,
+            spec=spec,
+            workspace_root=workspace_root,
+            context=context,
+            log_callback=log_callback,
+            device_lease=device_lease,
+            allow_start=allow_start,
+            cancel_requested=cancel_requested,
+            deadline=deadline,
+        )
+
+    worker = locked_worker(allow_start=False)
     if worker is not None:
         return worker
     count = context.automatic_cuda_device_count or len(context.requested_cuda_tokens or ())
@@ -1992,10 +1995,10 @@ def _resident_worker_for(
                     )
                     break
                 except _ResidentWorkerReady:
-                    worker = _resident_worker_for_locked(**options, allow_start=False)
+                    worker = locked_worker(allow_start=False)
                     if worker is not None:
                         return worker
-        worker = _resident_worker_for_locked(**options, device_lease=lease)
+        worker = locked_worker(allow_start=True, device_lease=lease)
         assert worker is not None
         return worker
     finally:
@@ -2176,20 +2179,20 @@ def _retire_idle_resident_workers_for_cuda_request(
         with _RESIDENT_WORKERS_LOCK:
             candidates = sorted(
                 (
-                    worker
+                    (worker, worker.device_lease)
                     for worker in _RESIDENT_WORKERS.values()
                     if worker.in_use == 0
                     and worker.device_lease is not None
                     and (tokens is None or set(tokens).intersection(worker.device_lease.tokens))
                 ),
-                key=lambda worker: worker.last_used_at,
+                key=lambda candidate: candidate[0].last_used_at,
             )
-            for worker in candidates:
+            for worker, lease in candidates:
                 if _RESIDENT_WORKERS.get(worker.key) is not worker:
                     continue
                 _RESIDENT_WORKERS.pop(worker.key, None)
                 retired_workers.append(worker)
-                released_capacity += len(worker.device_lease.tokens)
+                released_capacity += len(lease.tokens)
                 if tokens is None and released_capacity >= missing:
                     break
         for worker in retired_workers:
@@ -2667,7 +2670,7 @@ def _run_manager_payload_one_shot(
         stderr=subprocess.STDOUT,
         bufsize=0,
         start_new_session=sys.platform != "win32",
-        **({"pass_fds": device_lease.file_descriptors} if os.name == "posix" and device_lease else {}),
+        pass_fds=device_lease.file_descriptors if os.name == "posix" and device_lease else (),
     )
     try:
         if device_lease is not None:

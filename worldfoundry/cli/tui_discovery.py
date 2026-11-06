@@ -1490,7 +1490,7 @@ class TuiCatalog:
     models: tuple[ModelCatalogRow, ...]
     benchmarks: tuple[BenchmarkCatalogRow, ...]
     runtime_profiles: tuple[RuntimeProfileRow, ...] = ()
-    conda_status: Mapping[str, object] | None = None
+    conda_status: Mapping[str, Any] | None = None
 
     def to_dict(self) -> dict[str, object]:
         return {
@@ -1823,7 +1823,7 @@ def _conda_specs_by_model(
     path: Path,
     *,
     conda_envs_root: str | Path | None = None,
-) -> tuple[dict[str, dict[str, Any]], Path, dict[str, object]]:
+) -> tuple[dict[str, dict[str, Any]], Path, dict[str, Any]]:
     """Load Conda env specs per model from the manifest, computing existence and Python checks.
 
     Returns:
@@ -1845,7 +1845,7 @@ def _conda_specs_by_model(
         specs[str(spec["model_id"])] = spec
 
     conda_executable = os.environ.get("CONDA_EXE") or shutil.which("conda")
-    conda_status: dict[str, object] = {
+    conda_status: dict[str, Any] = {
         "manifest_path": str(path),
         "manifest_found": path.exists(),
         "conda_executable": conda_executable,

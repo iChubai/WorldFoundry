@@ -320,7 +320,7 @@ def _handle_metric_validate(args: argparse.Namespace) -> int:
 # ── Sub-parser registration ─────────────────────────────────
 
 
-def register_plan_metric_subparsers(subparsers: argparse._SubParsersAction[argparse.ArgumentParser]) -> None:
+def register_plan_metric_subparsers(subparsers: argparse._SubParsersAction) -> None:
     """Register ``plan`` and ``metric`` sub-commands on the root CLI parser.
 
     Args:

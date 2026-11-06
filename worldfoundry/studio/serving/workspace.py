@@ -17,7 +17,7 @@ from collections.abc import Mapping, Sequence
 from dataclasses import asdict, dataclass, field, replace
 from functools import lru_cache
 from pathlib import Path
-from typing import Any
+from typing import Any, TypeGuard
 
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, Response, StreamingResponse
@@ -514,7 +514,7 @@ def _visualizer_reusable(
     model_id: str,
     asset_path: str,
     params: Mapping[str, Any],
-) -> bool:
+) -> TypeGuard[ManagedVisualizer]:
     """Return whether a managed viewer already serves this exact target."""
 
     return bool(

@@ -169,6 +169,8 @@ def _run_infer(args: argparse.Namespace) -> int:
             record = manager.run(**run_kwargs, progress_callback=None)
         finally:
             manager.close()
+        if record is None:
+            raise RuntimeError("Studio manager did not produce a run record")
     print(json.dumps(record.to_manifest(), ensure_ascii=False, indent=2, sort_keys=True))
     return 0
 

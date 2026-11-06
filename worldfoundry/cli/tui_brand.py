@@ -5,11 +5,10 @@ from __future__ import annotations
 from functools import lru_cache
 from importlib import resources
 from pathlib import Path
+from typing import TYPE_CHECKING, Protocol, cast
 
-try:
-    from PIL import Image, ImageChops
-except ImportError:
-    Image = None
+if TYPE_CHECKING:
+    from PIL import Image
 
 BRAND_NAME = "OpenEnvision"
 PRODUCT_NAME = "WorldFoundry"
@@ -42,12 +41,20 @@ def logo_asset_path() -> Path:
         return Path(__file__).with_name("assets") / "openenvision_logo.png"
 
 
+class _RgbPixels(Protocol):
+    """Pixel access of an RGB image, whose pixels are ``(red, green, blue)`` tuples."""
+
+    def __getitem__(self, xy: tuple[int, int], /) -> tuple[int, int, int]: ...
+
+
 def _rgb_to_hex(red: int, green: int, blue: int) -> str:
     return f"#{red:02x}{green:02x}{blue:02x}"
 
 
 def _prepare_logo_image(image: Image.Image) -> Image.Image:
     """Remove outer whitespace while retaining the complete swan and wordmark."""
+    from PIL import Image, ImageChops
+
     rgba = Image.alpha_composite(Image.new("RGBA", image.size, "white"), image.convert("RGBA"))
     rgb = rgba.convert("RGB")
     red, green, blue = rgb.split()
@@ -70,8 +77,10 @@ def _prepare_logo_image(image: Image.Image) -> Image.Image:
 @lru_cache(maxsize=1)
 def brand_logo_image() -> Image.Image:
     """Load original logo pixels, including its original lettering."""
-    if Image is None:
-        raise RuntimeError("Pillow is required to render the OpenEnvision logo.")
+    try:
+        from PIL import Image
+    except ImportError as exc:  # The plain-text CLI header renders without Pillow.
+        raise RuntimeError("Pillow is required to render the OpenEnvision logo.") from exc
     with Image.open(logo_asset_path()) as image:
         return _prepare_logo_image(image)
 
@@ -89,8 +98,8 @@ def _resize_for_cells(
     pixels_per_row: int,
     cell_aspect_ratio: float,
 ) -> Image.Image:
-    if Image is None:
-        raise RuntimeError("Pillow is required to render the OpenEnvision logo.")
+    from PIL import Image
+
     if width_chars < 1 or cell_aspect_ratio <= 0:
         raise ValueError("Logo width and cell aspect ratio must be positive.")
     prepared = _prepare_logo_image(image)
@@ -144,7 +153,7 @@ def render_logo_blocks(
         pixels_per_row=8,
         cell_aspect_ratio=cell_aspect_ratio,
     )
-    pixels = resized.load()
+    pixels = cast(_RgbPixels, resized.load())
     return "\n".join(
         "".join(
             _fit_block([pixels[column + dx, row + dy] for dy in range(8) for dx in range(8)])
@@ -170,7 +179,7 @@ def render_logo_halfblocks(
         pixels_per_row=2,
         cell_aspect_ratio=cell_aspect_ratio,
     )
-    pixels = resized.load()
+    pixels = cast(_RgbPixels, resized.load())
     return "\n".join(
         "".join(
             f"[{_rgb_to_hex(*pixels[column, row])} on {_rgb_to_hex(*pixels[column, row + 1])}]▀[/]"

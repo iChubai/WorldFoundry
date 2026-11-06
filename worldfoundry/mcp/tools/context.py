@@ -61,7 +61,8 @@ class MCPToolContext:
     output_root: Path = DEFAULT_MCP_OUTPUT_ROOT
     model_manifest_dir: Path | None = MODEL_ZOO_DIR
     benchmark_manifest_dir: Path = BENCHMARK_ZOO_DIR
-    job_store: AsyncCommandJobStore | None = None
+    # __post_init__ replaces the None default, so a constructed context always has a store.
+    job_store: AsyncCommandJobStore = None  # ty: ignore[invalid-assignment]
 
     def __post_init__(self) -> None:
         if self.job_store is None:

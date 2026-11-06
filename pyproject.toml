@@ -554,12 +554,15 @@ allowed-unresolved-imports = [
     "aiohttp.**",
     "aiortc.**",
     "av.**",
+    "dashscope.**",
+    "flash_attn.**",
     "imageio_ffmpeg.**",
     "jaxtyping.**",
     "lpips.**",
     "matplotlib.**",
     "omegaconf.**",
     "pandas.**",
+    "PyNvVideoCodec.**",
     "rerun.**",
     "safetensors.**",
     "seaborn.**",
@@ -567,6 +570,7 @@ allowed-unresolved-imports = [
     "transformers.**",
     "trimesh.**",
     "viser.**",
+    "wan.**",
 ]
 
 [tool.ruff]

@@ -223,7 +223,7 @@ def parse_launch_config(
 
     raw_model = raw_model_flag or raw_model_positional or env_first("WORLDFOUNDRY_STUDIO_MODEL").strip()
     if not raw_model:
-        catalog = tuple(entries) if entries is not None else studio_catalog()
+        catalog = tuple(entries) if entries is not None else studio_catalog(None)
         fallback_model_id = catalog[0].model_id if catalog else ""
         raw_model = fallback_model_id
     if not raw_model:

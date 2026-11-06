@@ -7,6 +7,7 @@ import os
 import subprocess
 import sys
 from pathlib import Path
+from typing import Any
 
 from worldfoundry.evaluation.utils import write_json
 
@@ -99,12 +100,12 @@ def _handle_models_visualizations(args: argparse.Namespace) -> int:
 # ── Base-model asset management ──────────────────────────────────
 
 
-def _execute_download_commands(commands: list[list[str]]) -> list[dict[str, object]]:
+def _execute_download_commands(commands: list[list[str]]) -> list[dict[str, Any]]:
     """Run a sequence of download commands and capture truncated stdout/stderr."""
     env = os.environ.copy()
     env.setdefault("HF_HUB_DISABLE_XET", "1")
     env.setdefault("HF_HUB_ENABLE_HF_TRANSFER", "0")
-    executed = []
+    executed: list[dict[str, Any]] = []
     for command in commands:
         completed = subprocess.run(
             [str(item) for item in command],
@@ -160,7 +161,7 @@ def _handle_models_assets(args: argparse.Namespace) -> int:
         return 0
 
     plan = base_model_materialization_plan(args.capability)
-    executed = []
+    executed: list[dict[str, Any]] = []
     if args.execute_downloads:
         executed = _execute_download_commands(plan.get("download_command_argvs", []))
         plan = base_model_materialization_plan(args.capability)
@@ -241,7 +242,8 @@ def _write_visualization(output: Path, frames: list, *, fps: float) -> None:
         return
     import imageio.v2 as iio
 
-    with iio.get_writer(output, fps=fps, codec="libx264") as writer:
+    writer = iio.get_writer(output, fps=fps, codec="libx264")
+    with writer:
         for frame in frames:
             writer.append_data(frame)
 
@@ -354,7 +356,8 @@ def _handle_models_visualize(args: argparse.Namespace) -> int:
         rendered = render_tracks(_media_frames(source), tracks, visibility=visibility, trace_length=args.trace_length)
         import imageio.v2 as iio
 
-        with iio.get_writer(output, fps=args.fps, codec="libx264") as writer:
+        writer = iio.get_writer(output, fps=args.fps, codec="libx264")
+        with writer:
             for frame in rendered:
                 writer.append_data(frame)
         frame_count = len(rendered)
@@ -373,7 +376,7 @@ def _handle_models_visualize(args: argparse.Namespace) -> int:
     return 0
 
 
-def register_model_subparsers(subparsers: argparse._SubParsersAction[argparse.ArgumentParser]) -> None:
+def register_model_subparsers(subparsers: argparse._SubParsersAction) -> None:
     from worldfoundry.base_models.capabilities import BASE_MODEL_CAPABILITIES, BASE_MODEL_STACKS
 
     models_parser = subparsers.add_parser("models", help="Inspect model runners, environments, and assets")

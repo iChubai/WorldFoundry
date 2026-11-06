@@ -1194,7 +1194,8 @@ def maybe_extract_video_preview_image(
                 frame = None
                 frame_count = None
                 try:
-                    frame_count = int(reader.count_frames())
+                    # Only the FFmpeg reader counts frames; other readers fall back to get_length().
+                    frame_count = int(reader.count_frames())  # ty: ignore[unresolved-attribute]
                 except Exception:
                     try:
                         length = reader.get_length()

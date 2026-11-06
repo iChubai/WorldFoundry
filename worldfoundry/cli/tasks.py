@@ -497,7 +497,7 @@ def _handle_task_materialize(args: argparse.Namespace) -> int:
 # ── Parser registration ─────────────────────────────────────────
 
 
-def register_task_subparsers(subparsers: argparse._SubParsersAction[argparse.ArgumentParser]) -> None:
+def register_task_subparsers(subparsers: argparse._SubParsersAction) -> None:
     """Register task commands and keep related argument groups contiguous."""
     tasks_parser = subparsers.add_parser("tasks", help="Browse benchmark tasks and evaluation suites")
     tasks_subparsers = tasks_parser.add_subparsers(dest="tasks_command", required=True)

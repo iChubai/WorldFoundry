@@ -79,7 +79,7 @@ def task_roots_from_args(args: argparse.Namespace) -> tuple[Path, ...]:
     """
     from worldfoundry.evaluation.utils import BENCHMARK_TASK_ROOT
 
-    roots = list(args.task_root or ())
+    roots: list[Path] = list(args.task_root or ())
     if not roots:
         roots = [BENCHMARK_TASK_ROOT] if BENCHMARK_TASK_ROOT.exists() else []
     for env_name in ("WORLDFOUNDRY_TASK_ROOTS", "WORLDFOUNDRY_BENCHMARK_INCLUDE_PATH"):
@@ -159,15 +159,13 @@ def canonical_model_zoo_id(value: str | None, manifest_dir: Path | None) -> str 
     return load_model_zoo_registry(manifest_dir).get(value).model_id
 
 
-def canonical_benchmark_zoo_id(value: str | None, manifest_dir: Path | None) -> str | None:
+def canonical_benchmark_zoo_id(value: str, manifest_dir: Path | None) -> str:
     """Resolve a benchmark-zoo id or alias.
 
     Args:
         value: Benchmark id or alias.
         manifest_dir: Optional benchmark-zoo manifest directory or file.
     """
-    if value is None:
-        return None
     if manifest_dir is None or not manifest_dir.exists():
         return value
     from worldfoundry.evaluation.tasks.catalog.schema import load_entries

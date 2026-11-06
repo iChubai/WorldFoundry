@@ -25,6 +25,8 @@ from textual.containers import Grid, Horizontal, Vertical, VerticalScroll
 from textual.css.query import NoMatches
 from textual.message import Message
 from textual.theme import Theme
+from textual.visual import VisualType
+from textual.widget import Widget
 from textual.widgets import (
     Button,
     Collapsible,
@@ -708,7 +710,7 @@ class WorldFoundryTui(App[None]):
             widget.id: widget.content for widget in self.query(Label) if widget.id and widget.has_class("field-caption")
         }
         self._default_field_placeholders = {
-            widget.id: widget.placeholder for widget in self.query("#config-tabs Input") if widget.id
+            widget.id: widget.placeholder for widget in self.query("#config-tabs Input").results(Input) if widget.id
         }
         # ── Apply initial theme ──
         self._sync_action_theme()
@@ -1288,7 +1290,10 @@ class WorldFoundryTui(App[None]):
             self._populate_tables(self.query_one("#filter", Input).value, preserve_cursor=True)
 
     def _catalog_columns(self, table: DataTable, detail: str) -> tuple[tuple[str, int], ...]:
-        available = max(24, (getattr(table, "layout_width", 0) or table.parent.content_size.width) - 2)
+        width = getattr(table, "layout_width", 0)
+        if not width and isinstance(table.parent, Widget):
+            width = table.parent.content_size.width
+        available = max(24, width - 2)
         status_width = 11
         if available < 48:
             return (
@@ -2015,7 +2020,7 @@ class WorldFoundryTui(App[None]):
             if input_id and spec.placeholder:
                 self._update_placeholder(input_id, spec.placeholder)
 
-    def _update_label(self, label_id: str, text: str) -> None:
+    def _update_label(self, label_id: str, text: VisualType) -> None:
         """Update the text of a ``Label`` widget identified by *label_id*."""
         try:
             label = self.query_one(f"#{label_id}", Label)

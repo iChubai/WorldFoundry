@@ -12,7 +12,8 @@ See ``docs/fumadocs/content/docs/guides/tui.mdx`` for setup instructions.
 from __future__ import annotations
 
 import os
-from dataclasses import dataclass
+from collections.abc import Mapping
+from dataclasses import dataclass, field
 from typing import Literal
 
 IconMode = Literal["nerd", "unicode", "ascii"]
@@ -177,6 +178,7 @@ class TuiIcons:
     """
 
     mode: IconMode
+    _glyphs: Mapping[str, str] = field(init=False, repr=False, compare=False)
 
     def __post_init__(self) -> None:
         """Bind the appropriate glyph table based on :attr:`mode`."""

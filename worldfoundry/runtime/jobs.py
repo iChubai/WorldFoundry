@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import builtins
 import contextlib
 import json
 import os
@@ -392,7 +393,8 @@ class AsyncCommandJobStore:
             return False
         receipt = self._read_completion(job)
         if receipt is None and not job.terminal:
-            if self._verified_process(job) and process_group_alive(job.pid):
+            pid = job.pid
+            if pid is not None and self._verified_process(job) and process_group_alive(pid):
                 changed = job.status != "running"
                 job.status = "running"
                 return changed
@@ -515,7 +517,7 @@ class AsyncCommandJobStore:
             self._persist()
         return job
 
-    def list(self) -> list[CommandJob]:
+    def list(self) -> builtins.list[CommandJob]:
         """Return all jobs sorted by creation time (most recent first)."""
         changed = False
         for job in self._jobs.values():
@@ -660,7 +662,7 @@ class AsyncCommandJobStore:
                 )
             )
             try:
-                job._process = await asyncio.shield(spawn)
+                process = await asyncio.shield(spawn)
             except asyncio.CancelledError:
                 # Cancellation during spawn must still capture the child
                 # handle, otherwise fork/exec can finish with no owner left.
@@ -668,26 +670,27 @@ class AsyncCommandJobStore:
                 job.pid = job._process.pid
                 job.process_identity = process_identity(job.pid)
                 raise
-            job.pid = job._process.pid
+            job._process = process
+            job.pid = process.pid
             job.process_identity = process_identity(job.pid)
             self._persist()
 
             async def _pump_and_wait() -> None:
                 readers = [
-                    asyncio.create_task(self._read_stream(job, "stdout", job._process.stdout)),
-                    asyncio.create_task(self._read_stream(job, "stderr", job._process.stderr)),
+                    asyncio.create_task(self._read_stream(job, "stdout", process.stdout)),
+                    asyncio.create_task(self._read_stream(job, "stderr", process.stderr)),
                 ]
                 try:
                     # Process.wait() can wait for inherited pipes to close even
                     # after its leader exits. Stop remaining group members first.
-                    while job._process.returncode is None:
+                    while process.returncode is None:
                         for reader in readers:
                             if reader.done() and not reader.cancelled() and reader.exception() is not None:
                                 reader.result()
                         await asyncio.sleep(0.03)
                     await self._terminate_process(job)
                     await asyncio.gather(*readers)
-                    job.returncode = await job._process.wait()
+                    job.returncode = await process.wait()
                 finally:
                     for reader in readers:
                         if not reader.done():
@@ -710,7 +713,7 @@ class AsyncCommandJobStore:
                         self._append_job_log(job, "stderr", f"TimeoutError: job exceeded {timeout}s\n")
                         self._write_lifecycle_event(job, "ERROR", "job.timeout", "WorldFoundry job timed out")
                     await self._terminate_process(job)
-                    job.returncode = job._process.returncode
+                    job.returncode = process.returncode
                     receipt = self._read_completion(job)
                     if receipt is not None:
                         job.returncode = receipt.get("returncode")
@@ -835,8 +838,9 @@ class AsyncCommandJobStore:
             def stop_restored() -> None:
                 # Recheck in the thread immediately before signalling. Never
                 # manufacture ownership by sampling an unverified saved PID.
-                if self._verified_process(job):
-                    terminate_owned_process_group(job.pid, grace_seconds=5)
+                pid = job.pid
+                if pid is not None and self._verified_process(job):
+                    terminate_owned_process_group(pid, grace_seconds=5)
 
             await asyncio.to_thread(stop_restored)
             return

@@ -15,6 +15,7 @@ from typing import Any, Literal
 
 from worldfoundry.core.observability.realtime_timing import TimingDistribution
 from worldfoundry.runtime.performance import (
+    JsonValue,
     OptimizationSnapshot,
     PerformanceManifest,
     PerformanceMetrics,
@@ -400,10 +401,10 @@ class RealtimeRegressionResult:
         optimization: OptimizationSnapshot | None = None,
     ) -> PerformanceManifest:
         summary = self.summary
-        timings = (
+        timings: dict[str, JsonValue] = (
             {}
             if summary is None
-            else {name: distribution.to_payload() for name, distribution in summary.stages.items()}
+            else {name: dict(distribution.to_payload()) for name, distribution in summary.stages.items()}
         )
         return PerformanceManifest(
             model={"model_id": self.case.model_id or "unknown"},

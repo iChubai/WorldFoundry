@@ -456,7 +456,9 @@ def get_studio_manifest_payload(
         ``artifacts``, and ``metadata`` keys.
     """
     job = get_studio_job_payload(job_id, base_url=base_url, timeout_s=timeout_s)
-    result = job.get("result") if isinstance(job.get("result"), dict) else {}
+    result = job.get("result")
+    if not isinstance(result, dict):
+        result = {}
     return {
         "job_id": job_id,
         "base_url": _normalize_base_url(base_url),

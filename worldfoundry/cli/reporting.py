@@ -19,7 +19,7 @@ def _handle_compare_runs(args: argparse.Namespace) -> int:
         write_run_comparison,
     )
 
-    run_paths = list(args.run or ())
+    run_paths: list[Path] = list(args.run or ())
     positional_labels = list(args.label or ())
     if positional_labels and len(positional_labels) != len(run_paths):
         raise CliUsageError("--label count must match explicit run count")
@@ -151,7 +151,7 @@ def _handle_validate_artifact(args: argparse.Namespace) -> int:
 # ── Parser registration ─────────────────────────────────────────
 
 
-def register_reporting_subparsers(subparsers: argparse._SubParsersAction[argparse.ArgumentParser]) -> None:
+def register_reporting_subparsers(subparsers: argparse._SubParsersAction) -> None:
     """Register ``compare-runs``, ``index-runs``, and ``validate-artifact`` subparsers."""
     compare_runs_parser = subparsers.add_parser(
         "compare-runs",

@@ -7,7 +7,7 @@ import sys
 import tempfile
 from dataclasses import dataclass
 from http import HTTPStatus
-from typing import ClassVar
+from typing import Any, ClassVar
 
 import dashscope
 import numpy as np
@@ -140,7 +140,7 @@ class PromptExpander:
         if seed < 0:
             seed = random.randint(0, sys.maxsize)
         if image is not None and self.is_vl:
-            return self.extend_with_img(prompt, system_prompt, *args, image=image, seed=seed, **kwargs)
+            return self.extend_with_img(prompt, system_prompt, image, seed, *args, **kwargs)
         elif not self.is_vl:
             return self.extend(prompt, system_prompt, seed, *args, **kwargs)
         else:
@@ -178,12 +178,12 @@ class DashScopePromptExpander(PromptExpander):
         self.retry_times = retry_times
 
     def extend(self, prompt, system_prompt, seed=-1, *args, **kwargs):
-        messages = [{"role": "system", "content": system_prompt}, {"role": "user", "content": prompt}]
+        messages: list[Any] = [{"role": "system", "content": system_prompt}, {"role": "user", "content": prompt}]
 
         exception = None
         for _ in range(self.retry_times):
             try:
-                response = dashscope.Generation.call(
+                response: Any = dashscope.Generation.call(
                     self.model,
                     messages=messages,
                     seed=seed,
@@ -202,7 +202,9 @@ class DashScopePromptExpander(PromptExpander):
                 exception = e
         return PromptOutput(status=False, prompt=prompt, seed=seed, system_prompt=system_prompt, message=str(exception))
 
-    def extend_with_img(self, prompt, system_prompt, image: Image.Image | str = None, seed=-1, *args, **kwargs):
+    def extend_with_img(self, prompt, system_prompt, image=None, seed=-1, *args, **kwargs):
+        if image is None:
+            raise ValueError("DashScope image prompt extension requires an image")
         if isinstance(image, str):
             image = Image.open(image).convert("RGB")
         w = image.width
@@ -217,7 +219,7 @@ class DashScopePromptExpander(PromptExpander):
             fname = f.name
             image_path = f"file://{f.name}"
         prompt = f"{prompt}"
-        messages = [
+        messages: list[Any] = [
             {"role": "system", "content": [{"text": system_prompt}]},
             {"role": "user", "content": [{"text": prompt}, {"image": image_path}]},
         ]
@@ -227,7 +229,7 @@ class DashScopePromptExpander(PromptExpander):
         status = False
         for _ in range(self.retry_times):
             try:
-                response = dashscope.MultiModalConversation.call(
+                response: Any = dashscope.MultiModalConversation.call(
                     self.model,
                     messages=messages,
                     seed=seed,
@@ -297,7 +299,8 @@ class QwenPromptExpander(PromptExpander):
             from transformers import AutoProcessor, AutoTokenizer, Qwen2_5_VLForConditionalGeneration
 
             try:
-                from .qwen_vl_utils import process_vision_info
+                # Resolves when this file replaces wan/utils/prompt_extend.py in a Wan2.1 checkout.
+                from .qwen_vl_utils import process_vision_info  # ty: ignore[unresolved-import]
             except ImportError:
                 from worldfoundry.base_models.llm_mllm_core.mllm.qwen.qwen_vl_utils import process_vision_info
             self.process_vision_info = process_vision_info
@@ -306,7 +309,7 @@ class QwenPromptExpander(PromptExpander):
             self.processor = AutoProcessor.from_pretrained(
                 self.model_name, min_pixels=min_pixels, max_pixels=max_pixels, use_fast=True
             )
-            self.model = Qwen2_5_VLForConditionalGeneration.from_pretrained(
+            self.model: Any = Qwen2_5_VLForConditionalGeneration.from_pretrained(
                 self.model_name,
                 torch_dtype=torch.bfloat16 if FLASH_VER == 2 else torch.float16 if "AWQ" in self.model_name else "auto",
                 attn_implementation="flash_attention_2" if FLASH_VER == 2 else None,
@@ -346,7 +349,7 @@ class QwenPromptExpander(PromptExpander):
             message=json.dumps({"content": expanded_prompt}, ensure_ascii=False),
         )
 
-    def extend_with_img(self, prompt, system_prompt, image: Image.Image | str = None, seed=-1, *args, **kwargs):
+    def extend_with_img(self, prompt, system_prompt, image=None, seed=-1, *args, **kwargs):
         self.model = self.model.to(self.device)
         messages = [
             {"role": "system", "content": [{"type": "text", "text": system_prompt}]},

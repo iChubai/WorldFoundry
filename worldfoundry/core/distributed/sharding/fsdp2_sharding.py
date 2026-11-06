@@ -70,7 +70,7 @@ def shard_model(model, param_dtype=torch.bfloat16, reduce_dtype=torch.float32):
         "no",
         "off",
     }:
-        for block, next_block in zip(model.blocks, model.blocks[1:]):
+        for block, next_block in zip(model.blocks, model.blocks[1:], strict=False):
             set_prefetch = getattr(block, "set_modules_to_forward_prefetch", None)
             if callable(set_prefetch):
                 set_prefetch([next_block])

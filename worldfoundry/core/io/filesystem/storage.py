@@ -11,9 +11,10 @@ import io
 import os
 import shutil
 import tempfile
+from collections.abc import Generator, Iterable
 from contextlib import contextmanager
 from pathlib import Path
-from typing import BinaryIO, Generator, Iterable, TextIO
+from typing import BinaryIO, TextIO
 from urllib.parse import unquote, urlparse
 from urllib.request import Request, urlopen
 

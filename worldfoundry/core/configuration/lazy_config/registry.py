@@ -32,7 +32,7 @@ import inspect
 import pydoc
 from typing import Any
 
-__all__ = ["locate", "convert_target_to_string"]
+__all__ = ["convert_target_to_string", "locate"]
 
 # ──────────────────────────────────────────────────────────────────────────
 # Optional fvcore Registry — keep the name for configs that still import it

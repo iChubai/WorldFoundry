@@ -11,7 +11,7 @@ import os
 import pickle
 import shutil
 import sys
-from typing import Callable, Union
+from collections.abc import Callable
 
 from worldfoundry.core.utils.python.functional_utils import is_sequence
 
@@ -21,7 +21,6 @@ __all__ = [
     "dump_text",
     "dump_text_lines",
     "extract_tar",
-    "file_sha256",
     "f_add_ext",
     "f_append_before_ext",
     "f_copy",
@@ -41,6 +40,7 @@ __all__ = [
     "f_size",
     "f_split_path",
     "f_time",
+    "file_sha256",
     "get_dir",
     "get_file_lock",
     "get_package_root",
@@ -660,8 +660,7 @@ def extract_tar(source_tarball, output_dir=".", members=None):
                 safe_relative_path(member.name, field_name="tar member")
                 if member.islnk() or member.issym():
                     raise ValueError(
-                        f"tar member {member.name!r} is a link; refusing to extract "
-                        "without PEP 706 tarfile filters"
+                        f"tar member {member.name!r} is a link; refusing to extract without PEP 706 tarfile filters"
                     )
             tar.extractall(output_dir, members=members)
 
@@ -700,7 +699,7 @@ def timestamp_file_name(fname):
 
 def next_available_file_name(
     *fpath,
-    suffix_template: Union[str, Callable[[int], str]] = "_v{i+1}",
+    suffix_template: str | Callable[[int], str] = "_v{i+1}",
     before_ext: bool = True,
 ):
     """
@@ -783,9 +782,7 @@ def get_file_lock(*fpath, timeout: int = 15, logging_level="critical"):
 def load_pickle(*fpaths, allow_pickle=False):
     """Load a trusted pickle after an explicit unsafe-format opt-in."""
     if not allow_pickle:
-        raise ValueError(
-            "Refusing to unpickle without allow_pickle=True; only opt in for a trusted source"
-        )
+        raise ValueError("Refusing to unpickle without allow_pickle=True; only opt in for a trusted source")
     with open(f_join(*fpaths), "rb") as fp:
         return pickle.load(fp)
 
@@ -800,7 +797,7 @@ def dump_pickle(data, *fpaths):
 def load_text(*fpaths, by_lines=False):
     """Read a local text file; ``by_lines=True`` keeps trailing newlines."""
 
-    with open(f_join(*fpaths), "r") as fp:
+    with open(f_join(*fpaths)) as fp:
         if by_lines:
             return fp.readlines()
         else:

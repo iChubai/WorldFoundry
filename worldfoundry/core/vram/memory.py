@@ -302,10 +302,7 @@ def _uniform_model_device(model: torch.nn.Module) -> torch.device:
         return cpu
     if len(devices) != 1:
         rendered = ", ".join(sorted(str(device) for device in devices))
-        raise RuntimeError(
-            f"Refusing to migrate mixed-device {model.__class__.__name__}; "
-            f"found tensors on: {rendered}"
-        )
+        raise RuntimeError(f"Refusing to migrate mixed-device {model.__class__.__name__}; found tensors on: {rendered}")
     device = next(iter(devices))
     if device.type == "meta":
         raise RuntimeError("Meta-initialized modules require to_empty() and cannot use the VRAM preservation mover")
@@ -314,11 +311,7 @@ def _uniform_model_device(model: torch.nn.Module) -> torch.device:
 
 def _model_transfer_bytes(model: torch.nn.Module, target: torch.device) -> int:
     """Bytes that would be allocated on *target* (already-resident tensors skip)."""
-    return sum(
-        tensor.numel() * tensor.element_size()
-        for tensor in _model_tensors(model)
-        if tensor.device != target
-    )
+    return sum(tensor.numel() * tensor.element_size() for tensor in _model_tensors(model) if tensor.device != target)
 
 
 def _move_model_with_rollback(

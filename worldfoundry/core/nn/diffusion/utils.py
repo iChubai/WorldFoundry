@@ -6,11 +6,11 @@ Shape/cast utilities for U-Net residuals. DiT modulation lives in
 
 import math
 from inspect import isfunction
+
 import torch
+import torch.distributed as dist
 import torch.utils.checkpoint
 from torch import nn
-import torch.distributed as dist
-
 
 # ──────────────────────────────────────────────────────────────────────────
 # Distributed gather and AMP — U-Net residual helpers, not DiT modulation
@@ -18,12 +18,13 @@ import torch.distributed as dist
 
 
 def gather_data(data, return_np=True):
-    ''' gather data from multiple processes to one list '''
+    """gather data from multiple processes to one list"""
     data_list = [torch.zeros_like(data) for _ in range(dist.get_world_size())]
     dist.all_gather(data_list, data)  # gather not supported with NCCL
     if return_np:
         data_list = [data.cpu().numpy() for data in data_list]
     return data_list
+
 
 def autocast(f):
     """Autocast.
@@ -31,6 +32,7 @@ def autocast(f):
     Args:
         f: The f.
     """
+
     def do_autocast(*args, **kwargs):
         """Do autocast."""
         with torch.amp.autocast(
@@ -40,6 +42,7 @@ def autocast(f):
             cache_enabled=torch.is_autocast_cache_enabled(),
         ):
             return f(*args, **kwargs)
+
     return do_autocast
 
 
@@ -105,6 +108,7 @@ def default(val, d):
         return val
     return d() if isfunction(d) else d
 
+
 def exists(val):
     """Exists.
 
@@ -113,9 +117,11 @@ def exists(val):
     """
     return val is not None
 
+
 def identity(*args, **kwargs):
     """Identity."""
     return nn.Identity()
+
 
 def uniq(arr):
     """Uniq.
@@ -123,13 +129,15 @@ def uniq(arr):
     Args:
         arr: The arr.
     """
-    return{el: True for el in arr}.keys()
+    return dict.fromkeys(arr, True).keys()
+
 
 def mean_flat(tensor):
     """
     Take the mean over all non-batch dimensions.
     """
     return tensor.mean(dim=list(range(1, len(tensor.shape))))
+
 
 def ismap(x):
     """Ismap.
@@ -141,15 +149,17 @@ def ismap(x):
         return False
     return (len(x.shape) == 4) and (x.shape[1] > 3)
 
+
 def isimage(x):
     """Isimage.
 
     Args:
         x: The x.
     """
-    if not isinstance(x,torch.Tensor):
+    if not isinstance(x, torch.Tensor):
         return False
     return (len(x.shape) == 4) and (x.shape[1] == 3 or x.shape[1] == 1)
+
 
 def max_neg_value(t):
     """Max neg value.
@@ -159,6 +169,7 @@ def max_neg_value(t):
     """
     return -torch.finfo(t.dtype).max
 
+
 def shape_to_str(x):
     """Shape to str.
 
@@ -167,6 +178,7 @@ def shape_to_str(x):
     """
     shape_str = "x".join([str(x) for x in x.shape])
     return shape_str
+
 
 def init_(tensor):
     """Init.
@@ -180,12 +192,15 @@ def init_(tensor):
     tensor.uniform_(-std, std)
     return tensor
 
+
 # ──────────────────────────────────────────────────────────────────────────
 # Activation checkpoint — flag-gated; use_reentrant=False for current PyTorch
 # ──────────────────────────────────────────────────────────────────────────
 
 
 ckpt = torch.utils.checkpoint.checkpoint
+
+
 def checkpoint(func, inputs, params, flag):
     """
     Evaluate a function without caching intermediate activations, allowing for

@@ -8,9 +8,10 @@ the five places where a memory method may alter a sampler.
 
 from __future__ import annotations
 
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, Mapping, Protocol, Sequence, runtime_checkable
+from typing import Any, Protocol, runtime_checkable
 
 # ──────────────────────────────────────────────────────────────────────────
 # Sequence ownership — who owns a span, how it updates, how CFG applies
@@ -59,9 +60,7 @@ class SequenceSegment:
         if not self.name.strip():
             raise ValueError("sequence segment name must be non-empty")
         if self.start < 0 or self.stop <= self.start:
-            raise ValueError(
-                f"invalid sequence segment {self.name!r}: [{self.start}, {self.stop})"
-            )
+            raise ValueError(f"invalid sequence segment {self.name!r}: [{self.start}, {self.stop})")
 
     @property
     def length(self) -> int:

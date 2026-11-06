@@ -30,7 +30,6 @@ import torch
 
 from worldfoundry.core.attention.backends.native import native_sdpa_priority, scaled_dot_product_attention
 
-
 # ──────────────────────────────────────────────────────────────────────────
 # Eligibility — TMA descriptors are Hopper / data-center Blackwell only
 # ──────────────────────────────────────────────────────────────────────────
@@ -179,10 +178,14 @@ def piecewise_attention(
         ):
             raise
         from_triton = exc.__class__.__module__.startswith("triton")
-        optional_failure = isinstance(exc, (ImportError, OSError)) or any(
-            marker in message
-            for marker in ("triton", "ptxas", "no kernel image", "invalid device function", "out of resource")
-        ) or from_triton
+        optional_failure = (
+            isinstance(exc, (ImportError, OSError))
+            or any(
+                marker in message
+                for marker in ("triton", "ptxas", "no kernel image", "invalid device function", "out of resource")
+            )
+            or from_triton
+        )
         if strict or not optional_failure:
             raise
         return _exact_attention(q, k, v, scale)

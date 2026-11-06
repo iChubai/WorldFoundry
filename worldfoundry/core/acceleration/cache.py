@@ -1015,8 +1015,7 @@ class BlockTaylorSeerCache:
         expected = set(BlockTaylorSeerCache.phase_names)
         if set(outputs) != expected:
             raise ValueError(
-                "BlockTaylorSeer phase callback must return exactly "
-                + ", ".join(BlockTaylorSeerCache.phase_names)
+                "BlockTaylorSeer phase callback must return exactly " + ", ".join(BlockTaylorSeerCache.phase_names)
             )
         parsed: _PhaseOutputs = {}
         for name in BlockTaylorSeerCache.phase_names:
@@ -1048,10 +1047,7 @@ class BlockTaylorSeerCache:
             for state in phases.values():
                 if _tensor_signature(state.value) != root_signature:
                     return False
-                if (
-                    state.derivative is not None
-                    and _tensor_signature(state.derivative) != root_signature
-                ):
+                if state.derivative is not None and _tensor_signature(state.derivative) != root_signature:
                     return False
         return True
 
@@ -1113,9 +1109,14 @@ class BlockTaylorSeerCache:
         count = self.total_steps if total_steps is None else total_steps
         if count is not None and int(count) < 1:
             raise ValueError("BlockTaylorSeer total_steps must be positive")
-        dense_boundary = self.dense_last > 0 and count is not None and step >= max(
-            int(count) - self.dense_last,
-            0,
+        dense_boundary = (
+            self.dense_last > 0
+            and count is not None
+            and step
+            >= max(
+                int(count) - self.dense_last,
+                0,
+            )
         )
         if self.dense_last > 0 and count is None:
             raise ValueError("BlockTaylorSeer dense_last requires total_steps")
@@ -1153,11 +1154,7 @@ class BlockTaylorSeerCache:
 
         previous_blocks = self._blocks
         previous_dense_step = self._last_dense_step
-        dense_gap = (
-            max(step - previous_dense_step, 1)
-            if previous_dense_step is not None
-            else None
-        )
+        dense_gap = max(step - previous_dense_step, 1) if previous_dense_step is not None else None
         next_blocks: dict[int, dict[str, _TaylorPhaseState]] = {}
         hidden = block_input
         for block_id in all_blocks:
@@ -1323,9 +1320,7 @@ class TeaCacheResidualCache:
             and self._accumulated_change < self.threshold
         )
         if can_hit:
-            self.events.append(
-                CacheEvent(step, True, "polynomial-below-threshold", self._accumulated_change)
-            )
+            self.events.append(CacheEvent(step, True, "polynomial-below-threshold", self._accumulated_change))
             return self._residual
 
         residual = compute_residual()
@@ -1435,14 +1430,11 @@ class CustomTaylorResidualCache:
         self._previous_signal = signal.detach().clone()
         non_monotonic = self._last_dense_step is not None and step <= self._last_dense_step
 
-        finite_metric = (
-            relative_change is None
-            or (
-                math.isfinite(relative_change)
-                and scaled_change is not None
-                and math.isfinite(scaled_change)
-                and math.isfinite(self._accumulated_change)
-            )
+        finite_metric = relative_change is None or (
+            math.isfinite(relative_change)
+            and scaled_change is not None
+            and math.isfinite(scaled_change)
+            and math.isfinite(self._accumulated_change)
         )
         can_hit = (
             not dense_boundary
@@ -1601,9 +1593,7 @@ class MagCacheResidualCache:
         if count is None:
             count = len(self.ratios)
         if len(self.ratios) < int(count):
-            raise ValueError(
-                f"MagCache has {len(self.ratios)} calibrated ratios for {count} steps"
-            )
+            raise ValueError(f"MagCache has {len(self.ratios)} calibrated ratios for {count} steps")
         retained_steps = int(int(count) * self.retention_ratio)
         can_consider = step >= retained_steps and self._residual is not None
         skip_error = None
@@ -1612,13 +1602,8 @@ class MagCacheResidualCache:
             self._accumulated_steps += 1
             skip_error = abs(1.0 - self._accumulated_ratio)
             self._accumulated_error += skip_error
-            if (
-                self._accumulated_error < self.threshold
-                and self._accumulated_steps <= self.max_skip_steps
-            ):
-                self.events.append(
-                    CacheEvent(step, True, "calibrated-magnitude", self._accumulated_error)
-                )
+            if self._accumulated_error < self.threshold and self._accumulated_steps <= self.max_skip_steps:
+                self.events.append(CacheEvent(step, True, "calibrated-magnitude", self._accumulated_error))
                 return self._residual
 
         residual = compute_residual()
@@ -1789,10 +1774,7 @@ class TaylorSeerResidualCache:
         dense_boundary = count is not None and step >= max(int(count) - self.dense_last, 0)
         scheduled_dense = step % self.interval == 0
         can_hit = (
-            not torch.is_grad_enabled()
-            and not dense_boundary
-            and not scheduled_dense
-            and self._residual is not None
+            not torch.is_grad_enabled() and not dense_boundary and not scheduled_dense and self._residual is not None
         )
         if can_hit:
             distance = step - int(self._last_dense_step or 0)
@@ -1823,8 +1805,8 @@ class TaylorSeerResidualCache:
 __all__ = [
     "AdaCacheResidualCache",
     "AdaptiveResidualCache",
-    "BlockTaylorSeerCache",
     "BlockCacheEvent",
+    "BlockTaylorSeerCache",
     "CacheEvent",
     "CustomTaylorResidualCache",
     "DualBlockFeatureCache",

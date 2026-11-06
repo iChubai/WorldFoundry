@@ -52,7 +52,6 @@ configure_persistent_compile_cache(namespace="rope-triton")
 import triton  # noqa: E402
 import triton.language as tl  # noqa: E402
 
-
 # ──────────────────────────────────────────────────────────────────────────
 # Triton kernel — one freqs load per (S, H) tile, broadcast across heads
 # ──────────────────────────────────────────────────────────────────────────

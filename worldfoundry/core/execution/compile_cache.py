@@ -37,10 +37,10 @@ import sys
 import tempfile
 import threading
 import warnings
-from collections.abc import Mapping, Sequence
+from collections.abc import Mapping, MutableMapping, Sequence
 from dataclasses import dataclass, replace
 from pathlib import Path
-from typing import Any, MutableMapping
+from typing import Any
 
 from worldfoundry.core.io.paths import cache_root_path
 
@@ -351,7 +351,7 @@ def configure_persistent_compile_cache(
         if (
             cache_default_environment
             and _DEFAULT_CACHE_LAYOUT is not None
-            and _DEFAULT_CACHE_CONTEXT == cache_context
+            and cache_context == _DEFAULT_CACHE_CONTEXT
             and env.get("CUDA_CACHE_PATH") == str(_DEFAULT_CACHE_LAYOUT.cuda)
             and env.get("TORCHINDUCTOR_CACHE_DIR") == str(_DEFAULT_CACHE_LAYOUT.inductor)
             and env.get("TRITON_CACHE_DIR") == str(_DEFAULT_CACHE_LAYOUT.triton)
@@ -451,7 +451,7 @@ def compile_module_cached(
         if not isinstance(variants, dict):
             variants = {}
             try:
-                setattr(module, "_worldfoundry_compiled_variants", variants)
+                module._worldfoundry_compiled_variants = variants
             except Exception:
                 variants = {}
         cached = variants.get(key)
@@ -512,7 +512,7 @@ def compile_callable_cached(
         if not isinstance(variants, dict):
             variants = {}
             try:
-                setattr(cache_owner, "_worldfoundry_compiled_variants", variants)
+                cache_owner._worldfoundry_compiled_variants = variants
             except Exception:
                 # Some extension-backed callables and immutable owners cannot
                 # carry attributes. Compilation remains usable for this call,

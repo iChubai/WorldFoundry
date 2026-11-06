@@ -25,8 +25,8 @@ Public surface:
   tail of ``head_dim``.
 """
 
+from collections.abc import Callable
 from functools import partial
-from typing import Callable, List, Tuple
 
 import torch
 from einops import rearrange
@@ -105,7 +105,7 @@ def _prepare_apply_fns(
     view_change_positions=None,
     rope3_each=None,
     camera_layout="full",
-) -> Tuple[
+) -> tuple[
     Callable[[torch.Tensor], torch.Tensor],
     Callable[[torch.Tensor], torch.Tensor],
     Callable[[torch.Tensor], torch.Tensor],
@@ -185,7 +185,7 @@ def _apply_tiled_projmat(feats: torch.Tensor, matrix: torch.Tensor) -> torch.Ten
 def _apply_contiguous_projmat(
     feats: torch.Tensor,
     matrix: torch.Tensor,
-    subframes: Tuple[int, ...],
+    subframes: tuple[int, ...],
     dims_per_cam: int = 16,
 ) -> torch.Tensor:
     """Contiguous per-sub-frame PRoPE tiling (see ``PROPE_CAMERA_LAYOUTS``).
@@ -225,7 +225,7 @@ def _apply_contiguous_projmat(
 
 def _apply_block_diagonal(
     feats: torch.Tensor,
-    func_size_pairs: List[Tuple[Callable[[torch.Tensor], torch.Tensor], int]],
+    func_size_pairs: list[tuple[Callable[[torch.Tensor], torch.Tensor], int]],
 ) -> torch.Tensor:
     """Split ``head_dim`` into named blocks and apply one transform per block.
 
@@ -234,10 +234,10 @@ def _apply_block_diagonal(
     checkpoint head width have drifted.
     """
 
-    funcs, block_sizes = zip(*func_size_pairs)
+    funcs, block_sizes = zip(*func_size_pairs, strict=False)
     assert feats.shape[-1] == sum(block_sizes)
     x_blocks = torch.split(feats, block_sizes, dim=-1)
-    out = torch.cat([func(x_block) for func, x_block in zip(funcs, x_blocks)], dim=-1)
+    out = torch.cat([func(x_block) for func, x_block in zip(funcs, x_blocks, strict=False)], dim=-1)
     assert out.shape == feats.shape
     return out
 

@@ -124,7 +124,11 @@ class InferenceParallelContext:
             moved = torch.cat((moved, moved.new_zeros((maximum - moved.shape[0], *moved.shape[1:]))))
         gathered = [torch.empty_like(moved) for _ in lengths]
         dist.all_gather(gathered, moved, group=self.cp_group)
-        return torch.cat([part[:length] for part, length in zip(gathered, lengths)]).movedim(0, dim).contiguous()
+        return (
+            torch.cat([part[:length] for part, length in zip(gathered, lengths, strict=False)])
+            .movedim(0, dim)
+            .contiguous()
+        )
 
     @torch.inference_mode(False)
     @torch.no_grad()
@@ -155,7 +159,10 @@ class InferenceParallelContext:
 
 
 def build_inference_parallel_context(
-    *, tensor_parallel: int, context_parallel: int, device: str | torch.device,
+    *,
+    tensor_parallel: int,
+    context_parallel: int,
+    device: str | torch.device,
 ) -> InferenceParallelContext:
     """Reuse a caller-owned world; never initialize or destroy it implicitly."""
 
@@ -207,8 +214,14 @@ def build_inference_parallel_context(
                 if rank in ranks:
                     cp_group = group
         context = InferenceParallelContext(
-            tp_size=tp_size, cp_size=cp_size, tp_rank=rank % tp_size, cp_rank=rank // tp_size,
-            tp_group=tp_group, cp_group=cp_group, control_group=control, device=device,
+            tp_size=tp_size,
+            cp_size=cp_size,
+            tp_rank=rank % tp_size,
+            cp_rank=rank // tp_size,
+            tp_group=tp_group,
+            cp_group=cp_group,
+            control_group=control,
+            device=device,
             _owned_groups=tuple(owned),
         )
         return context
@@ -250,7 +263,8 @@ class ColumnParallelLinear(torch.nn.Module):
         self.weight = torch.nn.Parameter(linear.weight[start:end].detach().clone(), requires_grad=False)
         self.bias = (
             torch.nn.Parameter(linear.bias[start:end].detach().clone(), requires_grad=False)
-            if linear.bias is not None else None
+            if linear.bias is not None
+            else None
         )
         self.train(linear.training)
 
@@ -267,7 +281,12 @@ class RowParallelLinear(torch.nn.Module):
     """
 
     def __init__(
-        self, linear: torch.nn.Linear, *, start: int, end: int, parallel: InferenceParallelContext,
+        self,
+        linear: torch.nn.Linear,
+        *,
+        start: int,
+        end: int,
+        parallel: InferenceParallelContext,
     ) -> None:
         super().__init__()
         if not 0 <= start < end <= linear.in_features:
@@ -294,7 +313,11 @@ class RowParallelLinear(torch.nn.Module):
 
 
 __all__ = [
-    "ColumnParallelLinear", "InferenceParallelContext", "RowParallelLinear", "balanced_ranges",
-    "build_inference_parallel_context", "validate_parallel_degrees",
+    "ColumnParallelLinear",
+    "InferenceParallelContext",
+    "RowParallelLinear",
+    "balanced_ranges",
+    "build_inference_parallel_context",
     "validate_inference_parallel_policy",
+    "validate_parallel_degrees",
 ]

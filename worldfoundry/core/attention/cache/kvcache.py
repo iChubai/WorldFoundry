@@ -190,9 +190,7 @@ class BlockKVCache:
     def _roll_local_window_left(self, shift_size: int) -> None:
         """Shift valid local-window tokens left by ``shift_size`` tokens."""
         total_size = self._k.shape[self.seq_dim]
-        assert 0 < shift_size <= self.chunk_size, (
-            f"shift_size ({shift_size}) must be in (0, {self.chunk_size}]"
-        )
+        assert 0 < shift_size <= self.chunk_size, f"shift_size ({shift_size}) must be in (0, {self.chunk_size}]"
         valid_end = min(self._n_cached, total_size)
         valid_local_size = max(0, valid_end - self.sink_size)
         tokens_to_keep = max(0, valid_local_size - shift_size)
@@ -468,13 +466,10 @@ class CompactingKVCache:
         expected = frame_count * self.frame_tokens
         if keys.shape[self.seq_dim] != expected:
             raise ValueError(
-                f"expected {expected} tokens on seq_dim for frame_count={frame_count}, "
-                f"got {keys.shape[self.seq_dim]}"
+                f"expected {expected} tokens on seq_dim for frame_count={frame_count}, got {keys.shape[self.seq_dim]}"
             )
         if values.shape[self.seq_dim] != expected:
-            raise ValueError(
-                f"values must match keys on seq_dim; got {values.shape[self.seq_dim]} != {expected}"
-            )
+            raise ValueError(f"values must match keys on seq_dim; got {values.shape[self.seq_dim]} != {expected}")
 
         self._store.append(keys, values)
         self._blocks.append(

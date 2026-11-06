@@ -692,7 +692,11 @@ def layer_norm_scale_shift(
     # boundary. Keep the same vendor reduction, dtype, and optional upcast as
     # the eager expression; only combine its following pointwise operations.
     normalized = torch.nn.functional.layer_norm(
-        x.float() if upcast else x, (x.shape[-1],), weight=None, bias=None, eps=eps,
+        x.float() if upcast else x,
+        (x.shape[-1],),
+        weight=None,
+        bias=None,
+        eps=eps,
     )
     if upcast:
         normalized = normalized.to(x.dtype)
@@ -850,9 +854,9 @@ __all__ = [
     "hidden_qk_rmsnorm_rope_3d",
     "layer_norm_scale_shift",
     "qk_rmsnorm_rope",
-    "rms_norm_scale_shift",
     "residual_gate",
     "residual_gate_inplace",
+    "rms_norm_scale_shift",
     "scale_shift",
     "silu_and_mul",
     "silu_mul",

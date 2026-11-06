@@ -433,7 +433,7 @@ def _record_provider_runtime(selected: str, **increments: int) -> None:
     with _PROVIDER_RUNTIME_LOCK:
         counters = _PROVIDER_RUNTIME.setdefault(
             selected,
-            {name: 0 for name in _PROVIDER_RUNTIME_EVENT_NAMES},
+            dict.fromkeys(_PROVIDER_RUNTIME_EVENT_NAMES, 0),
         )
         for event, increment in increments.items():
             counters[event] += int(increment)
@@ -455,7 +455,7 @@ def _record_compiled_provider_graph_trace(selected: str) -> int:
     with _PROVIDER_RUNTIME_LOCK:
         counters = _PROVIDER_RUNTIME.setdefault(
             selected,
-            {name: 0 for name in _PROVIDER_RUNTIME_EVENT_NAMES},
+            dict.fromkeys(_PROVIDER_RUNTIME_EVENT_NAMES, 0),
         )
         counters["compiled_graph_traces"] += 1
         count = counters["compiled_graph_traces"]

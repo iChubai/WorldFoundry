@@ -17,7 +17,8 @@ game-control overlays, and open-loop action comparison plots.
 
 from __future__ import annotations
 
-from typing import List, Literal, Optional, Sequence
+from collections.abc import Sequence
+from typing import Literal
 
 import cv2
 import numpy as np
@@ -48,7 +49,7 @@ def _resolve_colormap(colormap: str) -> int:
     return _CV2_COLORMAPS.get(str(colormap).lower(), cv2.COLORMAP_VIRIDIS)
 
 
-def squeeze_depth_to_2d(depth: np.ndarray) -> Optional[np.ndarray]:
+def squeeze_depth_to_2d(depth: np.ndarray) -> np.ndarray | None:
     """Return ``(H, W)`` depth or ``None`` when leftover axes remain after squeeze."""
 
     arr = np.asarray(depth)
@@ -58,7 +59,7 @@ def squeeze_depth_to_2d(depth: np.ndarray) -> Optional[np.ndarray]:
     return arr
 
 
-def depth_to_uint8(depth: np.ndarray) -> Optional[np.ndarray]:
+def depth_to_uint8(depth: np.ndarray) -> np.ndarray | None:
     """Stretch finite depths onto ``[0, 255]``; all-NaN maps become zeros, not noise.
 
     Non-2D inputs return ``None`` so a batch visualizer can skip a frame.
@@ -100,7 +101,7 @@ def depth_to_colormap_pil(
     depth: np.ndarray,
     colormap: str = COLORMAP_VIRIDIS,
     grayscale: bool = False,
-) -> Optional[Image.Image]:
+) -> Image.Image | None:
     """Build a PIL RGB image; ``None`` when the depth plane cannot be squeezed."""
 
     depth_uint8 = depth_to_uint8(depth)
@@ -117,7 +118,7 @@ def save_depth_colormap(
     depth: np.ndarray,
     output_path: str,
     colormap: str = COLORMAP_VIRIDIS,
-) -> Optional[str]:
+) -> str | None:
     """Write a colormap image; return ``None`` instead of leaving an empty file."""
 
     img = depth_to_colormap_pil(depth, colormap=colormap)
@@ -131,14 +132,14 @@ def depths_to_pil_images(
     depth_maps: np.ndarray,
     mode: Literal["grayscale", "colormap"] = "grayscale",
     colormap: str = COLORMAP_VIRIDIS,
-) -> List[Image.Image]:
+) -> list[Image.Image]:
     """Convert a ``(H, W)`` or ``(N, H, W)`` stack, dropping unsqueezable frames."""
 
     arr = np.asarray(depth_maps)
     if arr.ndim == 2:
         arr = arr[np.newaxis, ...]
 
-    images: List[Image.Image] = []
+    images: list[Image.Image] = []
     for depth in arr:
         if mode == "grayscale":
             depth_uint8 = depth_to_uint8(depth)
@@ -200,7 +201,7 @@ def build_depth_visualizations(
 def create_depth_visualization(
     depth: np.ndarray,
     colormap: str = COLORMAP_VIRIDIS,
-) -> Optional[np.ndarray]:
+) -> np.ndarray | None:
     """Single-map RGB colormap, or ``None`` when *depth* is missing / not 2D."""
 
     if depth is None:
@@ -1007,7 +1008,7 @@ def draw_ijkl_ui(frame: np.ndarray, rotation_direction: str, width: int, height:
 
 
 def draw_rotation_ui(
-    frame: np.ndarray, rotation_direction: str, width: int, height: int,     mode: str = "arrow"
+    frame: np.ndarray, rotation_direction: str, width: int, height: int, mode: str = "arrow"
 ) -> np.ndarray:
     """Draw an edge chevron or IJKL keys; ``\"no\"`` / unknown directions are no-ops."""
 
@@ -1264,8 +1265,8 @@ __all__ = [
     "rotation_matrix_to_euler_angles_opencv",
     "run_skyseg",
     "save_batch_img",
-    "save_openloop_action_comparison",
     "save_depth_colormap",
+    "save_openloop_action_comparison",
     "segment_sky",
     "show_batch_img",
     "squeeze_depth_to_2d",

@@ -321,7 +321,7 @@ def reduce_dict(input_dict, average=True):
             # only main process gets accumulated, so only divide by
             # world_size in this case
             values /= world_size
-        reduced_dict = {k: v for k, v in zip(names, values)}
+        reduced_dict = {k: v for k, v in zip(names, values, strict=False)}
     return reduced_dict
 
 

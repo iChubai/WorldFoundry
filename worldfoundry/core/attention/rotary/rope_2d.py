@@ -19,12 +19,9 @@ Public surface:
 
 from __future__ import annotations
 
-from typing import Dict
-
 import torch
 import torch.nn.functional as F
 from torch import Tensor, nn
-
 
 # ──────────────────────────────────────────────────────────────────────────
 # Patch grid cache — rebuild only when (H, W) or device changes
@@ -37,7 +34,7 @@ class PositionGetter:
     def __init__(self) -> None:
         """Start with an empty ``(height, width) → coordinates`` cache."""
 
-        self.position_cache: Dict[tuple[int, int], Tensor] = {}
+        self.position_cache: dict[tuple[int, int], Tensor] = {}
 
     def __call__(self, batch_size: int, height: int, width: int, device: torch.device) -> Tensor:
         """Return ``[B, H*W, 2]`` integer ``(y, x)`` coords, cloned per caller.
@@ -72,7 +69,7 @@ class RotaryPositionEmbedding2D(nn.Module):
         super().__init__()
         self.base_frequency = float(frequency)
         self.scaling_factor = float(scaling_factor)
-        self.frequency_cache: Dict[tuple[int, int, torch.device, torch.dtype], tuple[Tensor, Tensor]] = {}
+        self.frequency_cache: dict[tuple[int, int, torch.device, torch.dtype], tuple[Tensor, Tensor]] = {}
 
     def forward(self, tokens: Tensor, positions: Tensor) -> Tensor:
         """Apply Y then X RoPE to even-width features.

@@ -21,10 +21,11 @@ from __future__ import annotations
 import logging
 import os
 import warnings
+from collections.abc import Callable, Iterator, Mapping
 from contextlib import contextmanager, nullcontext
 from dataclasses import dataclass, field
 from functools import wraps
-from typing import Any, Callable, Iterator, Mapping
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -441,9 +442,9 @@ def compile_module_if_enabled(
         return module
 
     try:
-        setattr(compiled, "_worldfoundry_core_compiled", True)
+        compiled._worldfoundry_core_compiled = True
         if label is not None:
-            setattr(compiled, "_worldfoundry_core_compile_label", label)
+            compiled._worldfoundry_core_compile_label = label
     except Exception:
         pass
     return compiled
@@ -472,8 +473,8 @@ def wrap_runner_for_worldfoundry_core(runner: Any) -> Any:
             return generate(*args, **kwargs)
 
     try:
-        setattr(runner, "generate", generate_with_worldfoundry_core)
-        setattr(runner, "_worldfoundry_core_infra_wrapped", True)
+        runner.generate = generate_with_worldfoundry_core
+        runner._worldfoundry_core_infra_wrapped = True
     except Exception:
         return runner
     return runner
@@ -513,7 +514,9 @@ def _capture_pre_install_torch_state() -> None:
         snapshot["matmul_precision"] = None
     matmul_backend = getattr(getattr(torch.backends, "cuda", None), "matmul", None)
     snapshot["matmul_allow_tf32"] = (
-        bool(matmul_backend.allow_tf32) if matmul_backend is not None and hasattr(matmul_backend, "allow_tf32") else None
+        bool(matmul_backend.allow_tf32)
+        if matmul_backend is not None and hasattr(matmul_backend, "allow_tf32")
+        else None
     )
     cudnn_backend = getattr(torch.backends, "cudnn", None)
     snapshot["cudnn_allow_tf32"] = (
@@ -547,10 +550,7 @@ def _configure_torch_backends(*, matmul_precision: str, enable_tf32: bool) -> No
         if enable_tf32 and matmul_precision == "highest":
             # An explicit full-precision request wins over the TF32 default;
             # forcing allow_tf32=True would silently demote "highest" to "high".
-            logger.info(
-                "matmul_precision='highest' requested; leaving matmul TF32 disabled "
-                "despite enable_tf32=True."
-            )
+            logger.info("matmul_precision='highest' requested; leaving matmul TF32 disabled despite enable_tf32=True.")
         else:
             previous = bool(matmul_backend.allow_tf32)
             matmul_backend.allow_tf32 = bool(enable_tf32)
@@ -591,7 +591,7 @@ def _patch_torch_sdpa() -> None:
         """Replacement SDPA: honour the installed backend policy and normalize fully-masked rows."""
         return _call_sdpa_with_backend(query, key, value, *args, **kwargs)
 
-    setattr(worldfoundry_core_sdpa, "_worldfoundry_core_sdpa", True)
+    worldfoundry_core_sdpa._worldfoundry_core_sdpa = True
     F.scaled_dot_product_attention = worldfoundry_core_sdpa
     _STATE.sdpa_patched = True
     logger.info(

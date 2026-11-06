@@ -12,21 +12,6 @@ The existing package-level collective and topology APIs are exported below.
 
 from __future__ import annotations
 
-# ──────────────────────────────────────────────────────────────────────────
-# Public re-exports — keep this facade import-light; no eager NCCL init
-# ──────────────────────────────────────────────────────────────────────────
-
-from worldfoundry.core.distributed.model_parallel.context import (
-    broadcast,
-    broadcast_split_tensor,
-    cat_outputs_cp,
-    cat_outputs_cp_object_list,
-    cat_outputs_cp_with_grad,
-    find_split,
-    robust_broadcast,
-    split_inputs_cp,
-    split_inputs_cp_object_list,
-)
 from worldfoundry.core.distributed.collectives.device_mesh import (
     DTensorFastEmaModelUpdater,
     FastEmaModelUpdater,
@@ -43,9 +28,21 @@ from worldfoundry.core.distributed.collectives.generic import (
 from worldfoundry.core.distributed.collectives.generic import (
     is_dist_initialized as is_distributed_initialized,
 )
-from worldfoundry.core.distributed.runtime.inference_runtime import dist_init, is_last_rank, is_last_tp_cp_rank
-from worldfoundry.core.distributed.runtime.inference_runtime import get_device as get_distributed_device
-from worldfoundry.core.distributed.runtime.logging import print_per_rank, print_rank_0
+
+# ──────────────────────────────────────────────────────────────────────────
+# Public re-exports — keep this facade import-light; no eager NCCL init
+# ──────────────────────────────────────────────────────────────────────────
+from worldfoundry.core.distributed.model_parallel.context import (
+    broadcast,
+    broadcast_split_tensor,
+    cat_outputs_cp,
+    cat_outputs_cp_object_list,
+    cat_outputs_cp_with_grad,
+    find_split,
+    robust_broadcast,
+    split_inputs_cp,
+    split_inputs_cp_object_list,
+)
 from worldfoundry.core.distributed.model_parallel.groups import (
     destroy_model_parallel,
     get_cp_group,
@@ -73,6 +70,9 @@ from worldfoundry.core.distributed.model_parallel.groups import (
     model_parallel_is_initialized,
 )
 from worldfoundry.core.distributed.model_parallel.pipeline import PPScheduler, init_pp_scheduler, pp_scheduler
+from worldfoundry.core.distributed.runtime.inference_runtime import dist_init, is_last_rank, is_last_tp_cp_rank
+from worldfoundry.core.distributed.runtime.inference_runtime import get_device as get_distributed_device
+from worldfoundry.core.distributed.runtime.logging import print_per_rank, print_rank_0
 from worldfoundry.core.distributed.runtime.rank_orchestration import (
     DistributedOpSpec,
     PayloadBus,
@@ -86,8 +86,8 @@ from worldfoundry.core.distributed.runtime.rank_orchestration import (
 # ──────────────────────────────────────────────────────────────────────────
 
 __all__ = [
-    "DistributedOpSpec",
     "DTensorFastEmaModelUpdater",
+    "DistributedOpSpec",
     "FastEmaModelUpdater",
     "PPScheduler",
     "PayloadBus",
@@ -112,8 +112,8 @@ __all__ = [
     "get_dp_rank",
     "get_dp_world_size",
     "get_global_rank",
-    "get_local_tensor_if_dtensor",
     "get_local_tensor_if_DTensor",
+    "get_local_tensor_if_dtensor",
     "get_model_parallel_group",
     "get_pipeline_model_parallel_first_rank",
     "get_pipeline_model_parallel_last_rank",

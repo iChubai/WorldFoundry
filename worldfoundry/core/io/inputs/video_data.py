@@ -102,8 +102,6 @@ class LowMemoryImageFolder:
     def __del__(self):
         """No open handles to close; kept for API symmetry with :class:`LowMemoryVideo`."""
 
-        pass
-
 
 def crop_and_resize(image: Image.Image, height: int, width: int) -> Image.Image:
     """Center-crop and resize a PIL image to ``(width, height)``."""
@@ -186,8 +184,6 @@ class VideoData:
 
     def __del__(self):
         """Underlying readers close themselves; this is a no-op hook."""
-
-        pass
 
     def save_images(self, folder):
         """Dump every frame as ``{i}.png`` (0-based) under *folder*."""

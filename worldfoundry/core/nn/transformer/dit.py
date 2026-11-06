@@ -554,8 +554,8 @@ def velocity_to_denoised(
 
 __all__ = [
     "AdaLayerNorm",
-    "ConditioningProjection",
     "ConcatenatedLinear",
+    "ConditioningProjection",
     "DiTFinalLayer",
     "DiTModulation",
     "MLPEmbedder",

@@ -62,13 +62,9 @@ def _f32_to_floatx_unpacked(value: torch.Tensor, exponent_bits: int, mantissa_bi
     max_int = _n_ones(exponent_bits + mantissa_bits)
     sign_mask = 1 << (exponent_bits + mantissa_bits)
     magic_adder = _n_ones(fp32_mantissa_bits - mantissa_bits - 1)
-    max_normal = 2 ** (_n_ones(exponent_bits) - exponent_bias) * (
-        _n_ones(mantissa_bits + 1) / (2**mantissa_bits)
-    )
+    max_normal = 2 ** (_n_ones(exponent_bits) - exponent_bias) * (_n_ones(mantissa_bits + 1) / (2**mantissa_bits))
     min_normal = 2 ** (1 - exponent_bias)
-    denorm_exponent = (
-        fp32_exponent_bias - exponent_bias + fp32_mantissa_bits - mantissa_bits + 1
-    )
+    denorm_exponent = fp32_exponent_bias - exponent_bias + fp32_mantissa_bits - mantissa_bits + 1
     denorm_mask_int = denorm_exponent << fp32_mantissa_bits
     denorm_mask_float = torch.tensor(
         denorm_mask_int,
@@ -88,18 +84,14 @@ def _f32_to_floatx_unpacked(value: torch.Tensor, exponent_bits: int, mantissa_bi
 
     normal_value = magnitude.view(torch.int32)
     mantissa_odd = (normal_value >> (fp32_mantissa_bits - mantissa_bits)) & 1
-    normal_value = normal_value + (
-        ((exponent_bias - fp32_exponent_bias) << fp32_mantissa_bits) + magic_adder
-    )
+    normal_value = normal_value + (((exponent_bias - fp32_exponent_bias) << fp32_mantissa_bits) + magic_adder)
     normal_value = normal_value + mantissa_odd
     normal_value = (normal_value >> (fp32_mantissa_bits - mantissa_bits)).to(torch.uint8)
 
     encoded = torch.full_like(magnitude, max_int, dtype=torch.uint8)
     encoded = torch.where(denormal, denormal_value, encoded)
     encoded = torch.where(normal, normal_value, encoded)
-    encoded_sign = sign >> (
-        fp32_mantissa_bits + fp32_exponent_bits - mantissa_bits - exponent_bits
-    )
+    encoded_sign = sign >> (fp32_mantissa_bits + fp32_exponent_bits - mantissa_bits - exponent_bits)
     encoded_sign = encoded_sign.to(torch.uint8) & sign_mask
     return encoded | encoded_sign
 
@@ -292,7 +284,7 @@ class NVFP4Linear(nn.Module):
         self.last_fallback_reason = None
 
     @classmethod
-    def from_linear(cls, layer: nn.Linear, *, keep_dense_fallback: bool = True) -> "NVFP4Linear":
+    def from_linear(cls, layer: nn.Linear, *, keep_dense_fallback: bool = True) -> NVFP4Linear:
         """Copy weight/bias from a dense ``nn.Linear``; the source layer is not mutated."""
         return cls(layer.weight, layer.bias, keep_dense_fallback=keep_dense_fallback)
 
@@ -315,9 +307,7 @@ class NVFP4Linear(nn.Module):
     def _dense(self, input: torch.Tensor, reason: str) -> torch.Tensor:
         """Exact ``F.linear`` on the retained dense copy; fatal if that copy was dropped."""
         if self.weight is None:
-            raise RuntimeError(
-                "NVFP4 is unavailable and no dense fallback was retained: " + reason
-            )
+            raise RuntimeError("NVFP4 is unavailable and no dense fallback was retained: " + reason)
         if not _is_compiling():
             self.dense_fallback_calls += 1
             self.request_dense_fallback_calls += 1
@@ -411,14 +401,10 @@ class NVFP4Linear(nn.Module):
     def runtime_report(self) -> dict[str, object]:
         """Request-window counters when active; lifetime totals otherwise."""
         low_precision_calls = int(
-            self.request_low_precision_kernel_calls
-            if self._request_window_active
-            else self.low_precision_kernel_calls
+            self.request_low_precision_kernel_calls if self._request_window_active else self.low_precision_kernel_calls
         )
         dense_calls = int(
-            self.request_dense_fallback_calls
-            if self._request_window_active
-            else self.dense_fallback_calls
+            self.request_dense_fallback_calls if self._request_window_active else self.dense_fallback_calls
         )
         if low_precision_calls and dense_calls:
             effective = "mixed-nvfp4-and-dense"

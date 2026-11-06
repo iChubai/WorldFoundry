@@ -71,10 +71,7 @@ class NativeConfigMixin:
             values = dict(vars(config))
         values.update(overrides)
         parameters = inspect.signature(cls.__init__).parameters
-        if not any(
-            parameter.kind is inspect.Parameter.VAR_KEYWORD
-            for parameter in parameters.values()
-        ):
+        if not any(parameter.kind is inspect.Parameter.VAR_KEYWORD for parameter in parameters.values()):
             values = {key: value for key, value in values.items() if key in parameters}
         return cls(**values)
 

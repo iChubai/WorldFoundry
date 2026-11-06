@@ -20,7 +20,7 @@ copying Megatron snippets into each model family.
 from __future__ import annotations
 
 import math
-from typing import Iterable
+from collections.abc import Iterable
 
 import torch
 

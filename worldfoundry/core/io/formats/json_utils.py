@@ -16,8 +16,8 @@ from io import StringIO
 
 import yaml
 
-from worldfoundry.core.utils.tensors.arrays import any_to_primitive
 from worldfoundry.core.io.filesystem.file_utils import f_join
+from worldfoundry.core.utils.tensors.arrays import any_to_primitive
 
 __all__ = [
     "json_load",
@@ -48,9 +48,8 @@ __all__ = [
     "dump_json_or_yaml",
 ]
 
-from typing import Dict, List
 
-from typing_extensions import Literal
+from typing import Literal
 
 # ──────────────────────────────────────────────────────────────────────────
 # JSON / JSONL / YAML — local files only; no URI routing, no NaN ban by default
@@ -61,7 +60,7 @@ def json_load(*file_path, **kwargs):
     """Load JSON from a joined local path; ``**kwargs`` go to :func:`json.load`."""
 
     file_path = f_join(file_path)
-    with open(file_path, "r") as fp:
+    with open(file_path) as fp:
         return json.load(fp, **kwargs)
 
 
@@ -117,7 +116,7 @@ def yaml_load(*file_path, loader=yaml.safe_load, **kwargs):
     """Load YAML with ``safe_load`` by default so tags cannot construct objects."""
 
     file_path = f_join(file_path)
-    with open(file_path, "r") as fp:
+    with open(file_path) as fp:
         return loader(fp, **kwargs)
 
 
@@ -185,7 +184,7 @@ def json_or_yaml_load(*file_path, **loader_kwargs):
     elif file_path.endswith(".yml") or file_path.endswith(".yaml"):
         return yaml_load(file_path, **loader_kwargs)
     else:
-        raise IOError(f'unknown file extension: "{file_path}", loader supports only ".json", ".yml", ".yaml"')
+        raise OSError(f'unknown file extension: "{file_path}", loader supports only ".json", ".yml", ".yaml"')
 
 
 def json_or_yaml_dump(data, *file_path, **dumper_kwargs):
@@ -202,7 +201,7 @@ def json_or_yaml_dump(data, *file_path, **dumper_kwargs):
     elif file_path.endswith(".yml") or file_path.endswith(".yaml"):
         return yaml_dump(data, file_path, **dumper_kwargs)
     else:
-        raise IOError(f'unknown file extension: "{file_path}", dumper supports only ".json", ".yml", ".yaml"')
+        raise OSError(f'unknown file extension: "{file_path}", dumper supports only ".json", ".yml", ".yaml"')
 
 
 # ──────────────────────────────────────────────────────────────────────────
@@ -253,7 +252,7 @@ class Jsonl:
         else:
             self.data = []
 
-    def append(self, data: Dict):
+    def append(self, data: dict):
         """Append one mapping to memory and disk; raises in read mode."""
 
         if self._mode == "r":
@@ -261,7 +260,7 @@ class Jsonl:
         self.data.append(data)
         print(json_dumps(data), file=self._fp, flush=True)
 
-    def extend(self, data_list: List[Dict]):
+    def extend(self, data_list: list[dict]):
         """Append each mapping through :meth:`append` so flush stays per-row."""
 
         for data in data_list:

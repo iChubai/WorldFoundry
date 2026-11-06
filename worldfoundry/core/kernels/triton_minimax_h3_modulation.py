@@ -25,7 +25,6 @@ import torch
 import triton
 import triton.language as tl
 
-
 # ──────────────────────────────────────────────────────────────────────────
 # BF16 rounding — bit-level half-to-even so Triton cannot fuse past eager casts
 # ──────────────────────────────────────────────────────────────────────────

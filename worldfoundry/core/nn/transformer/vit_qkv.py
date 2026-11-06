@@ -29,12 +29,11 @@ Public surface:
 
 from __future__ import annotations
 
-from typing import Any, Optional
+from typing import Any
 
 from torch import Tensor, nn
 
 from worldfoundry.core.attention.backends.native import scaled_dot_product_attention
-
 
 # ──────────────────────────────────────────────────────────────────────────
 # Shared ViT blocks — projections stay here; kernels stay in native SDPA
@@ -101,7 +100,7 @@ class QKNormRopeSelfAttention(QKVSelfAttention):
         norm_layer: type[nn.Module] = nn.LayerNorm,
         qk_norm: bool = False,
         fused_attn: bool = True,
-        rope: Optional[nn.Module] = None,
+        rope: nn.Module | None = None,
     ) -> None:
         """Optionally attach per-head Q/K norm and a 2D RoPE module."""
 
@@ -173,6 +172,6 @@ class QKNormRopeSelfAttention(QKVSelfAttention):
 
 
 __all__ = [
-    "QKVSelfAttention",
     "QKNormRopeSelfAttention",
+    "QKVSelfAttention",
 ]

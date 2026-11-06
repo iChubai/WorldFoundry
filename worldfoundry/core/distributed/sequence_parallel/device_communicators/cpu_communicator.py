@@ -18,7 +18,6 @@ from torch.distributed import ProcessGroup
 
 from .base_device_communicator import DeviceCommunicatorBase
 
-
 # ──────────────────────────────────────────────────────────────────────────
 # gloo path — host tensors; concat-style all-gather for torch.compile
 # ──────────────────────────────────────────────────────────────────────────
@@ -39,7 +38,7 @@ class CpuCommunicator(DeviceCommunicatorBase):
         self.dist_module = torch.distributed
 
     def all_reduce(
-        self, input_: torch.Tensor, op:         torch.distributed.ReduceOp | None = torch.distributed.ReduceOp.SUM
+        self, input_: torch.Tensor, op: torch.distributed.ReduceOp | None = torch.distributed.ReduceOp.SUM
     ) -> torch.Tensor:
         """In-place gloo all-reduce; no autograd — metadata is not a training tensor."""
         self.dist_module.all_reduce(input_, group=self.device_group, op=op)
@@ -154,7 +153,7 @@ class _CPUSHMDistributed:
         torch.ops._C.shm_gather(self.handle, input, gather_list, torch.distributed.get_group_rank(group, dst))
 
     def all_gather_into_tensor(
-        self, output: torch.Tensor, input: torch.Tensor,         group: ProcessGroup | None = None
+        self, output: torch.Tensor, input: torch.Tensor, group: ProcessGroup | None = None
     ) -> None:
         """Fill ``output`` from every rank's ``input`` through the SHM manager."""
         torch.ops._C.shm_all_gather(self.handle, input, output)

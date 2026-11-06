@@ -86,9 +86,7 @@ def all_to_all_tensor(
 
     actual_world_size = dist.get_world_size(group) if dist.is_available() and dist.is_initialized() else 1
     if int(world_size) != int(actual_world_size):
-        raise ValueError(
-            f"configured world size {world_size} does not match process-group size {actual_world_size}"
-        )
+        raise ValueError(f"configured world size {world_size} does not match process-group size {actual_world_size}")
     return all_to_all_concat(
         tensor,
         scatter_dim=scatter_dim,
@@ -114,7 +112,7 @@ class DTensorFastEmaModelUpdater:
         """Overwrite target local shards with source local shards (no broadcast)."""
 
         with torch.no_grad():
-            for tgt_params, src_params in zip(tgt_model.parameters(), src_model.parameters()):
+            for tgt_params, src_params in zip(tgt_model.parameters(), src_model.parameters(), strict=False):
                 get_local_tensor_if_dtensor(tgt_params).data.copy_(get_local_tensor_if_dtensor(src_params).data)
 
     @torch.no_grad()
@@ -127,7 +125,7 @@ class DTensorFastEmaModelUpdater:
 
         target_list = []
         source_list = []
-        for tgt_params, src_params in zip(tgt_model.parameters(), src_model.parameters()):
+        for tgt_params, src_params in zip(tgt_model.parameters(), src_model.parameters(), strict=False):
             local_tgt = get_local_tensor_if_dtensor(tgt_params)
             local_src = get_local_tensor_if_dtensor(src_params)
             assert local_tgt.dtype == torch.float32, f"EMA model only works in FP32 dtype, got {local_tgt.dtype}."
@@ -202,6 +200,6 @@ __all__ = [
     "broadcast",
     "broadcast_dtensor_model_states",
     "broadcast_with_shape_check",
-    "get_local_tensor_if_dtensor",
     "get_local_tensor_if_DTensor",
+    "get_local_tensor_if_dtensor",
 ]

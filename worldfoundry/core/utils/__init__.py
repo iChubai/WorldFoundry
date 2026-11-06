@@ -19,8 +19,8 @@ from typing import Any
 # ──────────────────────────────────────────────────────────────────────────
 
 _SUBMODULES = {
-    'python': 'worldfoundry.core.utils.python',
-    'tensors': 'worldfoundry.core.utils.tensors',
+    "python": "worldfoundry.core.utils.python",
+    "tensors": "worldfoundry.core.utils.tensors",
 }
 
 _EXPORT_MODULES = {

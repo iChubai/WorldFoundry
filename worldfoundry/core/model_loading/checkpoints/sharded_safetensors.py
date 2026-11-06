@@ -58,8 +58,7 @@ def _load_shard(shard_path: str, param_names: list[str], num_threads: int | None
             process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         except FileNotFoundError as exc:
             raise RuntimeError(
-                f"zstd binary not found while decompressing {zstd_path}; "
-                "install zstd or decompress the shard manually"
+                f"zstd binary not found while decompressing {zstd_path}; install zstd or decompress the shard manually"
             ) from exc
         # communicate() drains stdout and stderr concurrently; reading stdout
         # alone can deadlock once zstd fills the stderr pipe buffer.
@@ -73,9 +72,7 @@ def _load_shard(shard_path: str, param_names: list[str], num_threads: int | None
         start_time = perf_counter()
         print_per_rank(f"Loading {shard_path} from zstd file")
         weights = load_from_bytes(decompressed_data)
-        print_per_rank(
-            f"Loaded {shard_path} from zstd file, duration: {perf_counter() - start_time:.3f}s"
-        )
+        print_per_rank(f"Loaded {shard_path} from zstd file, duration: {perf_counter() - start_time:.3f}s")
     else:
         weights = load_file(shard_path)
 
@@ -107,7 +104,7 @@ def load_sharded_safetensors_parallel_with_progress(checkpoint_dir: str):
         model_file_path = os.path.join(checkpoint_dir, "model.safetensors")
         return load_file(model_file_path)
 
-    with open(index_path, "r") as f:
+    with open(index_path) as f:
         index = json.load(f)
 
     state_dict = {}
@@ -179,9 +176,7 @@ def safetensor_checkpoint_files(checkpoint_dir: str | os.PathLike[str]) -> list[
             else:
                 candidates = sorted(root.glob("*.safetensors"))
                 if len(candidates) > 1:
-                    raise ValueError(
-                        f"ambiguous noncanonical safetensors checkpoint in {root}: {candidates}"
-                    )
+                    raise ValueError(f"ambiguous noncanonical safetensors checkpoint in {root}: {candidates}")
                 files = candidates
     if not files:
         raise FileNotFoundError(f"no *.safetensors checkpoint files found in {root}")

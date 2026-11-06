@@ -108,7 +108,7 @@ def sp_dit_forward(
         self.freqs = self.freqs.to(device)
 
     if y is not None:
-        x = [torch.cat([u, v], dim=0) for u, v in zip(x, y)]
+        x = [torch.cat([u, v], dim=0) for u, v in zip(x, y, strict=False)]
 
     # embeddings
     x = [self.patch_embedding(u.unsqueeze(0)) for u in x]
@@ -257,7 +257,7 @@ def sp_dit_forward_causal(
         self.freqs = self.freqs.to(device)
 
     if y is not None:
-        x = [torch.cat([u, v], dim=0) for u, v in zip(x, y)]
+        x = [torch.cat([u, v], dim=0) for u, v in zip(x, y, strict=False)]
 
     # embeddings
     x = [self.patch_embedding(u.unsqueeze(0)) for u in x]
@@ -503,7 +503,7 @@ def sp_dit_forward_causal_chunked(
     if self.freqs.device != device:
         self.freqs = self.freqs.to(device)
     if y is not None:
-        x = [torch.cat([sample, condition], dim=0) for sample, condition in zip(x, y)]
+        x = [torch.cat([sample, condition], dim=0) for sample, condition in zip(x, y, strict=False)]
 
     x = [self.patch_embedding(sample.unsqueeze(0)) for sample in x]
     grid_sizes = torch.stack([torch.tensor(sample.shape[2:], dtype=torch.long) for sample in x])

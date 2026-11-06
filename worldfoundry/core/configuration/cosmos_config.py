@@ -79,14 +79,14 @@ def make_freezable(cls: T) -> T:
         return cls
     original_setattr = cls.__setattr__
 
-    def setattr_override(self, key, value) -> None:  # noqa: ANN001
+    def setattr_override(self, key, value) -> None:
         """Block assignment after ``freeze`` except the freeze flag itself."""
 
         if getattr(self, "_is_frozen", False) and key != "_is_frozen":
             raise AttributeError("Cannot modify frozen instance")
         original_setattr(self, key, value)
 
-    def freeze(self) -> None:  # noqa: ANN001
+    def freeze(self) -> None:
         """Walk nested attrs children first so a parent cannot thaw a child."""
 
         for value in attrs.asdict(self, recurse=False).values():

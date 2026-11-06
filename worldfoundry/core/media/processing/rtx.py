@@ -752,7 +752,7 @@ def _load_video_super_res_class() -> Any:
     """Import ``VideoSuperRes`` only when a session or probe actually needs it."""
 
     try:
-        from nvvfx import VideoSuperRes  # ty: ignore[unresolved-import]  # noqa: PLC0415
+        from nvvfx import VideoSuperRes  # ty: ignore[unresolved-import]
     except Exception as exc:
         raise RuntimeError(
             "RTX video post-processing requires the optional proprietary `nvidia-vfx` package. "
@@ -783,7 +783,7 @@ def _load_quality_level_enum() -> Any:
     """
 
     try:
-        from nvvfx.effects.video_super_res import QualityLevel  # ty: ignore[unresolved-import]  # noqa: PLC0415
+        from nvvfx.effects.video_super_res import QualityLevel  # ty: ignore[unresolved-import]
     except Exception as exc:
         raise RuntimeError("The installed nvidia-vfx package does not expose VideoSuperRes QualityLevel.") from exc
     return QualityLevel
@@ -880,7 +880,7 @@ def _import_torch() -> Any:
     """Import torch at call time so CPU-only processes can import this module."""
 
     try:
-        import torch  # noqa: PLC0415
+        import torch
     except ImportError as exc:
         raise RuntimeError(
             "RTX video post-processing requires PyTorch for DLPack frame exchange. "
@@ -893,7 +893,7 @@ def _import_numpy() -> Any:
     """Import NumPy at call time; required only for ndarray / frame-list-numpy input."""
 
     try:
-        import numpy as np  # noqa: PLC0415
+        import numpy as np
     except ImportError as exc:  # pragma: no cover - Studio and tests require NumPy
         raise RuntimeError("NumPy is required for RTX VSR NumPy frame input.") from exc
     return np

@@ -28,7 +28,11 @@ class ContextAttentionCache:
         return replace(self, write=enabled)
 
     def combine(
-        self, key: object, keys: Tensor, values: Tensor, key_mask: Tensor | None = None,
+        self,
+        key: object,
+        keys: Tensor,
+        values: Tensor,
+        key_mask: Tensor | None = None,
     ) -> tuple[Tensor, Tensor, Tensor | None, int]:
         store = self.stores.get(key)
         history_tokens = 0 if store is None else store.length

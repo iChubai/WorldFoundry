@@ -15,7 +15,6 @@ from __future__ import annotations
 from importlib import import_module
 from typing import Any
 
-
 # ──────────────────────────────────────────────────────────────────────────
 # Lazy export table — resolve symbols only on first attribute access
 # ──────────────────────────────────────────────────────────────────────────

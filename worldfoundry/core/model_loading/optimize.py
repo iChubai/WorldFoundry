@@ -85,7 +85,7 @@ class AttentionPolicyReport:
 
 
 def apply_attention_policy(
-    model: "nn.Module",
+    model: nn.Module,
     backend: AttentionBackend | str,
     *,
     device: object = None,
@@ -165,7 +165,7 @@ def _option(policy: QuantizationPolicy, key: str, default: Any) -> Any:
     return default if value is None else value
 
 
-def apply_quantization_policy(model: "nn.Module", policy: QuantizationPolicy) -> QuantizationReport:
+def apply_quantization_policy(model: nn.Module, policy: QuantizationPolicy) -> QuantizationReport:
     """Apply ``policy`` to ``model`` in place; return what was done.
 
     - ``NONE``: no-op (dense stays dense), reported as not applied.
@@ -254,25 +254,14 @@ def apply_quantization_policy(model: "nn.Module", policy: QuantizationPolicy) ->
                 0 if mode is QuantizationMode.INT8 else 64,
             )
         )
-        use_kernel = bool(
-            _option(policy, "use_kernel", mode is QuantizationMode.INT8)
-        )
+        use_kernel = bool(_option(policy, "use_kernel", mode is QuantizationMode.INT8))
         if "keep_dense_fallback" not in policy.options:
             # Dynamic W8A8 is profitable only for sufficiently large GEMMs.
             # Retain BF16 weights for the calibrated small-shape dispatch, but
             # preserve compressed-only storage for explicit groupwise INT8,
             # INT4, and GGUF modes that have no qualified kernel today.
-            keep_dense = bool(
-                mode is QuantizationMode.INT8
-                and bits == 8
-                and group_size == 0
-                and use_kernel
-            )
-        scaling = (
-            "symmetric-per-output-channel"
-            if group_size == 0
-            else f"symmetric-groupwise-{group_size}"
-        )
+            keep_dense = bool(mode is QuantizationMode.INT8 and bits == 8 and group_size == 0 and use_kernel)
+        scaling = "symmetric-per-output-channel" if group_size == 0 else f"symmetric-groupwise-{group_size}"
         replaced = replace_linear_with_weight_only(
             model,
             bits=bits,
@@ -285,17 +274,10 @@ def apply_quantization_policy(model: "nn.Module", policy: QuantizationPolicy) ->
         if mode is QuantizationMode.GGUF:
             storage = f"gguf-loaded+groupwise-int{bits}"
         else:
-            storage = (
-                "per-channel-int8"
-                if bits == 8 and group_size == 0
-                else f"groupwise-int{bits}"
-            )
+            storage = "per-channel-int8" if bits == 8 and group_size == 0 else f"groupwise-int{bits}"
         execution = (
             "int8-w8a8-wrapper-installed (runtime-pending)"
-            if mode is QuantizationMode.INT8
-            and bits == 8
-            and group_size == 0
-            and use_kernel
+            if mode is QuantizationMode.INT8 and bits == 8 and group_size == 0 and use_kernel
             else f"int{bits}-packed-weight-installed (runtime-pending)"
         )
     return QuantizationReport(
@@ -348,8 +330,7 @@ class AppliedOptimizations:
             self.quality_tier = "numerically-approximate"
         if report.reason:
             self.fallbacks.append(
-                f"attention {report.requested_backend}: {report.reason}; "
-                f"effective={report.effective_backend}"
+                f"attention {report.requested_backend}: {report.reason}; effective={report.effective_backend}"
             )
 
     def record_fusion(
@@ -422,9 +403,7 @@ class AppliedOptimizations:
         self.requested["offload"] = mode
         self.effective["offload"] = str(effective)
         if reason:
-            self.fallbacks.append(
-                f"offload {mode}: {reason}; effective={effective}"
-            )
+            self.fallbacks.append(f"offload {mode}: {reason}; effective={effective}")
 
     def record_compile(
         self,
@@ -441,9 +420,7 @@ class AppliedOptimizations:
         # compile island fell back to eager (e.g. dynamo could not trace the
         # graph). Record what actually happened, not merely what was requested,
         # so the audit snapshot never claims a compile that silently no-op'd.
-        if compiled is None:
-            self.effective["compile"] = "compile-wrapper-installed (lazy)"
-        elif compiled:
+        if compiled is None or compiled:
             self.effective["compile"] = "compile-wrapper-installed (lazy)"
         else:
             self.effective["compile"] = "eager (compile fallback)"
@@ -480,15 +457,10 @@ class AppliedOptimizations:
         # execution.  Keep every other ``exact (...)`` value as a real
         # fallback: those values describe a missing prerequisite or a provider
         # failure rather than a wrapper waiting for its first call.
-        runtime_pending = (
-            installed_blocks > 0
-            and effective_kernel == "exact (sparse provider not executed)"
-        )
+        runtime_pending = installed_blocks > 0 and effective_kernel == "exact (sparse provider not executed)"
         self.effective["approximate_attention_blocks"] = installed_blocks
         self.effective["approximate_attention_kernel"] = (
-            f"{kind}-wrapper-installed (runtime-pending)"
-            if runtime_pending
-            else effective_kernel
+            f"{kind}-wrapper-installed (runtime-pending)" if runtime_pending else effective_kernel
         )
         self.quality_tier = "approximate"
         if installed_blocks == 0:

@@ -10,7 +10,8 @@ and other spatial memories implement their own rankers.
 
 from __future__ import annotations
 
-from typing import Any, Mapping
+from collections.abc import Mapping
+from typing import Any
 
 from .store import MemoryQuery, MemoryRecord
 

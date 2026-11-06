@@ -78,13 +78,9 @@ def _int8_min_gemm_work() -> float:
     try:
         value = _INT8_MIN_GEMM_WORK if raw is None else float(raw)
     except ValueError as error:
-        raise ValueError(
-            "WORLDFOUNDRY_INT8_MIN_GEMM_FLOP must be a non-negative number"
-        ) from error
+        raise ValueError("WORLDFOUNDRY_INT8_MIN_GEMM_FLOP must be a non-negative number") from error
     if not math.isfinite(value) or value < 0:
-        raise ValueError(
-            "WORLDFOUNDRY_INT8_MIN_GEMM_FLOP must be a non-negative finite number"
-        )
+        raise ValueError("WORLDFOUNDRY_INT8_MIN_GEMM_FLOP must be a non-negative finite number")
     _int8_min_gemm_work._cached = value
     return value
 
@@ -96,9 +92,7 @@ def _int8_linear_profitable(
     min_gemm_work: float | None = None,
 ) -> bool:
     """True when ``M*K*N`` meets the calibrated INT8 floor (0 disables the gate)."""
-    threshold = (
-        _int8_min_gemm_work() if min_gemm_work is None else float(min_gemm_work)
-    )
+    threshold = _int8_min_gemm_work() if min_gemm_work is None else float(min_gemm_work)
     return threshold <= 0 or input.numel() * int(out_features) >= threshold
 
 
@@ -164,9 +158,9 @@ def _quantize_rowwise_fp8(
             # Unsupported shapes/toolchains retain the portable Torch path.
             pass
     fp8_max = float(torch.finfo(dtype).max)
-    scale = (
-        value.detach().float().abs().amax(dim=1, keepdim=True) / fp8_max
-    ).clamp_min(torch.finfo(torch.float32).tiny)
+    scale = (value.detach().float().abs().amax(dim=1, keepdim=True) / fp8_max).clamp_min(
+        torch.finfo(torch.float32).tiny
+    )
     quantized = (value.float() / scale).clamp(-fp8_max, fp8_max).to(dtype)
     return quantized, scale.float()
 
@@ -254,11 +248,7 @@ def _autocast_linear_input(input: torch.Tensor) -> torch.Tensor:
     try:
         dtype = torch.get_autocast_dtype(input.device.type)
     except AttributeError:  # PyTorch < 2.4 compatibility
-        dtype = (
-            torch.get_autocast_gpu_dtype()
-            if input.device.type == "cuda"
-            else torch.get_autocast_cpu_dtype()
-        )
+        dtype = torch.get_autocast_gpu_dtype() if input.device.type == "cuda" else torch.get_autocast_cpu_dtype()
     if dtype not in {torch.float16, torch.bfloat16}:
         return input
     return input.to(dtype=dtype)
@@ -299,8 +289,7 @@ class Float8Linear(nn.Module):
             raise ValueError(f"unsupported FP8 scaling mode: {scaling!r}")
         resolved_scaling = (
             "rowwise"
-            if requested_scaling == "rowwise"
-            or (requested_scaling == "auto" and _scaled_mm_supports_rowwise())
+            if requested_scaling == "rowwise" or (requested_scaling == "auto" and _scaled_mm_supports_rowwise())
             else "tensorwise"
         )
         if resolved_scaling == "rowwise":
@@ -346,7 +335,7 @@ class Float8Linear(nn.Module):
         keep_dense_fallback: bool = True,
         scaling: str = "auto",
         use_fast_accum: bool = True,
-    ) -> "Float8Linear":
+    ) -> Float8Linear:
         """Copy weight/bias from a dense ``nn.Linear``; the source layer is not mutated."""
         return cls(
             layer.weight,
@@ -435,14 +424,10 @@ class Float8Linear(nn.Module):
     def runtime_report(self) -> dict[str, object]:
         """Request-window counters when active; lifetime totals otherwise."""
         low_precision_calls = int(
-            self.request_low_precision_kernel_calls
-            if self._request_window_active
-            else self.low_precision_kernel_calls
+            self.request_low_precision_kernel_calls if self._request_window_active else self.low_precision_kernel_calls
         )
         dense_calls = int(
-            self.request_dense_fallback_calls
-            if self._request_window_active
-            else self.dense_fallback_calls
+            self.request_dense_fallback_calls if self._request_window_active else self.dense_fallback_calls
         )
         if low_precision_calls and dense_calls:
             effective = "mixed-fp8-and-dense"
@@ -618,9 +603,7 @@ class WeightOnlyLinear(nn.Module):
         self.group_size = int(group_size) or self.in_features
         self.per_channel = int(group_size) == 0 or self.group_size >= self.in_features
         self.use_kernel = bool(use_kernel)
-        self.padded_in_features = int(
-            math.ceil(self.in_features / self.group_size) * self.group_size
-        )
+        self.padded_in_features = int(math.ceil(self.in_features / self.group_size) * self.group_size)
         if self.bits == 4 and self.padded_in_features % 2:
             self.padded_in_features += self.group_size
 
@@ -629,9 +612,7 @@ class WeightOnlyLinear(nn.Module):
             source = F.pad(source, (0, self.padded_in_features - self.in_features))
         groups = source.reshape(self.out_features, -1, self.group_size)
         qmax = 127 if self.bits == 8 else 7
-        scale = (groups.abs().amax(dim=-1, keepdim=True) / qmax).clamp_min(
-            torch.finfo(torch.float32).tiny
-        )
+        scale = (groups.abs().amax(dim=-1, keepdim=True) / qmax).clamp_min(torch.finfo(torch.float32).tiny)
         quantized = torch.round(groups / scale).clamp(-qmax, qmax).to(torch.int8)
         quantized = quantized.reshape(self.out_features, self.padded_in_features)
         packed = quantized.contiguous() if self.bits == 8 else _pack_int4(quantized)
@@ -677,7 +658,7 @@ class WeightOnlyLinear(nn.Module):
         group_size: int = 0,
         keep_dense_fallback: bool = False,
         use_kernel: bool = True,
-    ) -> "WeightOnlyLinear":
+    ) -> WeightOnlyLinear:
         """Copy weight/bias from a dense ``nn.Linear``; the source layer is not mutated."""
         return cls(
             layer.weight,
@@ -693,9 +674,7 @@ class WeightOnlyLinear(nn.Module):
         codes = self.qweight if self.bits == 8 else _unpack_int4(self.qweight)
         groups = codes.reshape(self.out_features, -1, self.group_size).to(torch.float32)
         weight = groups * self.weight_scale.unsqueeze(-1)
-        return weight.reshape(self.out_features, self.padded_in_features)[
-            :, : self.in_features
-        ].to(dtype=dtype)
+        return weight.reshape(self.out_features, self.padded_in_features)[:, : self.in_features].to(dtype=dtype)
 
     def forward(self, input: torch.Tensor) -> torch.Tensor:
         """W8A8 Triton when eligible; else dequant+dense, or retained dense under policy."""
@@ -706,9 +685,7 @@ class WeightOnlyLinear(nn.Module):
         input = _autocast_linear_input(input)
         if not self.low_precision_enabled:
             if self.weight is None:
-                raise RuntimeError(
-                    f"INT{self.bits} execution was disabled but no dense fallback was retained"
-                )
+                raise RuntimeError(f"INT{self.bits} execution was disabled but no dense fallback was retained")
             if not _is_compiling():
                 self.dense_fallback_calls += 1
                 self.request_dense_fallback_calls += 1
@@ -717,15 +694,8 @@ class WeightOnlyLinear(nn.Module):
             return F.linear(input, self.weight.to(dtype=input.dtype), bias)
 
         kernel_reason = self._int8_kernel_fallback_reason(input)
-        if (
-            kernel_reason is None
-            and self.weight is not None
-            and not _int8_linear_profitable(input, self.out_features)
-        ):
-            reason = (
-                "GEMM work is below the calibrated INT8 threshold "
-                f"({_int8_min_gemm_work():g})"
-            )
+        if kernel_reason is None and self.weight is not None and not _int8_linear_profitable(input, self.out_features):
+            reason = f"GEMM work is below the calibrated INT8 threshold ({_int8_min_gemm_work():g})"
             if not _is_compiling():
                 self.dense_policy_calls += 1
                 self.request_dense_policy_calls += 1
@@ -751,9 +721,7 @@ class WeightOnlyLinear(nn.Module):
                     )
                     provider = "vllm-activation+triton-gemm"
                 except (ImportError, RuntimeError, AttributeError):
-                    quantized_input, input_scale = int8_quantize_triton(
-                        input.contiguous()
-                    )
+                    quantized_input, input_scale = int8_quantize_triton(input.contiguous())
                     provider = "triton-activation+triton-gemm"
                 weight_scale = self.weight_scale.reshape(self.out_features).float()
                 if self.bias is None:
@@ -850,11 +818,7 @@ class WeightOnlyLinear(nn.Module):
             effective = "pending"
         return {
             "format": f"int{self.bits}",
-            "storage": (
-                f"per-channel-int{self.bits}"
-                if self.per_channel
-                else f"groupwise-int{self.bits}"
-            ),
+            "storage": (f"per-channel-int{self.bits}" if self.per_channel else f"groupwise-int{self.bits}"),
             "group_size": self.group_size,
             "effective": effective,
             "hardware_eligible": bool(
@@ -955,19 +919,10 @@ def quantization_runtime_report(module: nn.Module) -> dict[str, object] | None:
     policy_calls = sum(int(layer.get("dense_policy_calls") or 0) for layer in layers)
     dense_calls = sum(int(layer["dense_compute_calls"]) for layer in layers)
     fallback_calls = sum(int(layer["dense_fallback_calls"]) for layer in layers)
-    lifetime_low_precision_calls = sum(
-        int(layer.get("lifetime_low_precision_kernel_calls") or 0)
-        for layer in layers
-    )
-    lifetime_packed_calls = sum(
-        int(layer.get("lifetime_packed_weight_calls") or 0) for layer in layers
-    )
-    lifetime_policy_calls = sum(
-        int(layer.get("lifetime_dense_policy_calls") or 0) for layer in layers
-    )
-    lifetime_fallback_calls = sum(
-        int(layer.get("lifetime_dense_fallback_calls") or 0) for layer in layers
-    )
+    lifetime_low_precision_calls = sum(int(layer.get("lifetime_low_precision_kernel_calls") or 0) for layer in layers)
+    lifetime_packed_calls = sum(int(layer.get("lifetime_packed_weight_calls") or 0) for layer in layers)
+    lifetime_policy_calls = sum(int(layer.get("lifetime_dense_policy_calls") or 0) for layer in layers)
+    lifetime_fallback_calls = sum(int(layer.get("lifetime_dense_fallback_calls") or 0) for layer in layers)
     executed = low_precision_calls + packed_calls + policy_calls + fallback_calls
     if executed == 0:
         effective = "pending"
@@ -986,19 +941,9 @@ def quantization_runtime_report(module: nn.Module) -> dict[str, object] | None:
     else:
         effective = "dense"
     fallback_reasons = sorted(
-        {
-            str(layer["last_fallback_reason"])
-            for layer in layers
-            if layer.get("last_fallback_reason")
-        }
+        {str(layer["last_fallback_reason"]) for layer in layers if layer.get("last_fallback_reason")}
     )
-    policy_reasons = sorted(
-        {
-            str(layer["last_policy_reason"])
-            for layer in layers
-            if layer.get("last_policy_reason")
-        }
-    )
+    policy_reasons = sorted({str(layer["last_policy_reason"]) for layer in layers if layer.get("last_policy_reason")})
     return {
         "formats": formats,
         "effective": effective,
@@ -1050,8 +995,8 @@ __all__ = [
     "Float8Linear",
     "WeightOnlyLinear",
     "quantization_runtime_report",
-    "reset_quantization_runtime_window",
     "replace_linear_with_float8",
     "replace_linear_with_weight_only",
+    "reset_quantization_runtime_window",
     "set_low_precision_enabled",
 ]

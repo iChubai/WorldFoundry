@@ -28,7 +28,6 @@ import torch
 
 from worldfoundry.core.attention.rotary.rope import apply_rotary_embedding
 
-
 # ──────────────────────────────────────────────────────────────────────────
 # Axis helpers — accept a scalar broadcast or an explicit per-axis tuple
 # ──────────────────────────────────────────────────────────────────────────

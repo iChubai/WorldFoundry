@@ -24,12 +24,11 @@ import warnings
 from collections.abc import Sequence, Sized
 from copy import deepcopy
 from importlib import import_module
-from typing import Any, List, Optional, Tuple, Union, cast
+from typing import Any, Literal, cast
 
 import numpy as np
 import torch
 import torch.nn as nn
-from typing_extensions import Literal
 
 from worldfoundry.core.io.filesystem.file_utils import f_join
 from worldfoundry.core.observability.formatting import to_readable_count_str
@@ -60,9 +59,9 @@ def weight_init(m):
 
 
 def get_seed(
-    seed: Union[int, str, None],
+    seed: int | str | None,
     handle_invalid_seed: Literal["none", "system", "raise"] = "none",
-) -> Optional[int]:
+) -> int | None:
     """Resolves and standardizes random seed inputs.
 
     Translates special verbal seed flags like `"system"` into high-entropy,
@@ -141,11 +140,11 @@ def apply_deterministic_from_env() -> bool:
 
 
 def set_seed_everywhere(
-    seed: Optional[Union[int, str]],
+    seed: int | str | None,
     deterministic=False,
     set_tensorflow=False,
     handle_invalid_seed: Literal["none", "system", "raise"] = "none",
-) -> Optional[int]:
+) -> int | None:
     """Inoculates random seeds globally across all standard runtime backends.
 
     Binds random seeds across Python builtin random, NumPy, PyTorch (CPU and CUDA),
@@ -227,7 +226,7 @@ def temporal_feature_consistency(features: torch.Tensor) -> torch.Tensor:
 # ──────────────────────────────────────────────────────────────────────────
 
 
-class eval_mode(object):
+class eval_mode:
     """Temporarily ``train(False)`` one or more modules; restore on exit."""
 
     def __init__(self, *models):
@@ -243,7 +242,7 @@ class eval_mode(object):
 
     def __exit__(self, *args):
         """Restore prior flags; never suppress exceptions."""
-        for model, state in zip(self.models, self.prev_states):
+        for model, state in zip(self.models, self.prev_states, strict=False):
             model.train(state)
         return False
 
@@ -580,7 +579,7 @@ def clone_model(model):
 
 def update_soft_params(net, target_net, tau):
     """Polyak average ``target = tau * net + (1-tau) * target`` in place."""
-    for param, target_param in zip(net.parameters(), target_net.parameters()):
+    for param, target_param in zip(net.parameters(), target_net.parameters(), strict=False):
         target_param.data.copy_(tau * param.data + (1 - tau) * target_param.data)
 
 
@@ -613,7 +612,7 @@ def torch_normalize(tensor: torch.Tensor, mean, std, inplace=False):
         Tensor: Normalized Tensor image.
     """
     if not torch.is_tensor(tensor):
-        raise TypeError("tensor should be a torch tensor. Got {}.".format(type(tensor)))
+        raise TypeError(f"tensor should be a torch tensor. Got {type(tensor)}.")
 
     if not inplace:
         tensor = tensor.clone()
@@ -639,7 +638,7 @@ def contains_rnn(net: nn.Module) -> bool:
     return False
 
 
-def multi_one_hot(x, num_classes: List[int], to_float=True):
+def multi_one_hot(x, num_classes: list[int], to_float=True):
     """
     Concatenates multiple one-hot matrices, useful for embedding MultiDiscrete action space
 
@@ -655,7 +654,7 @@ def multi_one_hot(x, num_classes: List[int], to_float=True):
     assert x.dtype == torch.long
     assert x.dim() >= 2, x.size()
     assert len(num_classes) == x.size(-1), f"{len(num_classes)} != {x.size(1)}"
-    result = torch.cat([one_hot(t, c) for t, c in zip(torch.unbind(x, dim=-1), num_classes)], dim=-1)
+    result = torch.cat([one_hot(t, c) for t, c in zip(torch.unbind(x, dim=-1), num_classes, strict=False)], dim=-1)
     if to_float:
         return result.float()
     else:
@@ -699,7 +698,7 @@ def random_derangement(n, format: Literal["list", "numpy", "torch"] = "torch"):
 def classify_accuracy(
     output,
     target,
-    topk: Union[int, List[int], Tuple[int]] = 1,
+    topk: int | list[int] | tuple[int] = 1,
     mask=None,
     reduction="mean",
     scale_100=False,
@@ -805,7 +804,7 @@ def sequential_split_dataset(
 
     return [
         torch.utils.data.Subset(dataset, indices[offset - length : offset])
-        for offset, length in zip(accumulate(lengths), lengths)
+        for offset, length in zip(accumulate(lengths), lengths, strict=False)
     ]
 
 

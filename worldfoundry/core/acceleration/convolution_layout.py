@@ -34,7 +34,7 @@ def convert_convolution_weight_layouts(
     modules_3d = [child for child in module.modules() if isinstance(child, nn.Conv3d)]
     requested = [(child, torch.channels_last) for child in modules_2d] if conv2d else []
     requested += [(child, torch.channels_last_3d) for child in modules_3d] if conv3d else []
-    if conv2d and not modules_2d or conv3d and not modules_3d:
+    if (conv2d and not modules_2d) or (conv3d and not modules_3d):
         raise ValueError("requested convolution layout has no matching weights")
     if any(child.weight.is_meta for child, _ in requested):
         raise RuntimeError("cannot convert meta convolution weights")

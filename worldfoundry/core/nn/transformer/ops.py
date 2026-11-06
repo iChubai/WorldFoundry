@@ -38,7 +38,6 @@ from worldfoundry.core.attention.backends.model_backends import (
 from worldfoundry.core.kernels import residual_gate_add, rms_norm_scale_shift
 from worldfoundry.core.nn.blocks.normalization import rms_norm
 
-
 # ──────────────────────────────────────────────────────────────────────────
 # Hook protocols — fused kernels must match these signatures
 # ──────────────────────────────────────────────────────────────────────────
@@ -245,9 +244,7 @@ class TransformerOpsConfig:
                 attention_function=attention_callable,
                 masked_attention_function=masked_callable,
                 preattention_function=preattention if preattention is not None else PytorchPreAttention(),
-                gated_attention_function=(
-                    gated_attention if gated_attention is not None else PytorchGatedAttention()
-                ),
+                gated_attention_function=(gated_attention if gated_attention is not None else PytorchGatedAttention()),
             ),
             ada_zero_function=ada_zero if ada_zero is not None else PytorchAdaZeroFunction(),
             post_sa_function=post_sa if post_sa is not None else PytorchPostSAFunction(),
@@ -258,8 +255,8 @@ DEFAULT_TRANSFORMER_OPS = TransformerOpsConfig()
 
 
 __all__ = [
-    "AdaZeroCallable",
     "DEFAULT_TRANSFORMER_OPS",
+    "AdaZeroCallable",
     "GatedAttentionCallable",
     "PostSACallable",
     "PreAttentionCallable",

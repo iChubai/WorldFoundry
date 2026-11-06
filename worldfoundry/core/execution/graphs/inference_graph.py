@@ -112,11 +112,11 @@ def _signature_key(args: Sequence[Any], kwargs: Mapping[str, Any], extra_key: st
 class _CapturedGraph:
     """One captured Graph plus the static buffers replay must copy into."""
 
-    __slots__ = ("graph", "static_inputs", "static_outputs", "input_indices")
+    __slots__ = ("graph", "input_indices", "static_inputs", "static_outputs")
 
     def __init__(
         self,
-        graph: "torch.cuda.CUDAGraph",
+        graph: torch.cuda.CUDAGraph,
         static_inputs: list[torch.Tensor],
         static_outputs: Any,
         input_indices: list[int],
@@ -309,7 +309,7 @@ class InferenceCUDAGraphRunner:
         leaves, spec = tree_flatten((args, {name: kwargs[name] for name in sorted(kwargs)}))
         input_indices = [index for index, leaf in enumerate(leaves) if isinstance(leaf, torch.Tensor)]
         static_inputs = [leaves[index].clone() for index in input_indices]
-        for index, buffer in zip(input_indices, static_inputs):
+        for index, buffer in zip(input_indices, static_inputs, strict=False):
             leaves[index] = buffer
         call_args, call_kwargs = tree_unflatten(leaves, spec)
 
@@ -374,7 +374,7 @@ class InferenceCUDAGraphRunner:
     def _replay(self, captured: _CapturedGraph, args: tuple[Any, ...], kwargs: dict[str, Any]) -> Any:
         """``copy_`` fresh tensor leaves, replay, then materialize owned outputs."""
         leaves, _ = tree_flatten((args, {name: kwargs[name] for name in sorted(kwargs)}))
-        for buf, index in zip(captured.static_inputs, captured.input_indices):
+        for buf, index in zip(captured.static_inputs, captured.input_indices, strict=False):
             buf.copy_(leaves[index])
         with torch.inference_mode():
             captured.graph.replay()

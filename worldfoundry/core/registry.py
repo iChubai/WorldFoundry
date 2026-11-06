@@ -11,9 +11,10 @@ with a close-match hint.
 from __future__ import annotations
 
 import threading
+from collections.abc import Iterable, Iterator, Mapping
 from dataclasses import dataclass, field
 from difflib import get_close_matches
-from typing import Generic, Iterable, Iterator, Mapping, TypeVar
+from typing import Generic, TypeVar
 
 ItemT = TypeVar("ItemT")
 

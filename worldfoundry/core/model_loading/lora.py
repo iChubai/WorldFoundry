@@ -249,8 +249,7 @@ def merge_rank_scaled_lora_(
         delta = up @ down
         if delta.shape != parameter.shape:
             raise ValueError(
-                f"rank-scaled LoRA delta for {name} has shape {tuple(delta.shape)}, "
-                f"expected {tuple(parameter.shape)}"
+                f"rank-scaled LoRA delta for {name} has shape {tuple(delta.shape)}, expected {tuple(parameter.shape)}"
             )
         alpha_key = stem + ".alpha"
         layer_alpha = float(state_dict_lora[alpha_key].item()) if alpha_key in state_dict_lora else float(alpha)
@@ -312,11 +311,7 @@ def merge_flattened_path_lora_(
                 f"expected {tuple(module.weight.shape)}"
             )
         alpha_key = stem + ".alpha"
-        layer_alpha = (
-            float(state_dict_lora[alpha_key].item())
-            if alpha_key in state_dict_lora
-            else float(down.shape[0])
-        )
+        layer_alpha = float(state_dict_lora[alpha_key].item()) if alpha_key in state_dict_lora else float(down.shape[0])
         module.weight.add_(
             delta.to(dtype=module.weight.dtype),
             alpha=float(scale) * layer_alpha / down.shape[0],

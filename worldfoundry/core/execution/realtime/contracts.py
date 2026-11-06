@@ -9,8 +9,9 @@ chunk, and reset without unloading weights.
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from dataclasses import asdict, dataclass
-from typing import Any, Mapping, Protocol, runtime_checkable
+from typing import Any, Protocol, runtime_checkable
 
 DEFAULT_REALTIME_CONTROLS = (
     "forward",
@@ -116,8 +117,8 @@ class RealtimeSpec:
         cls,
         value: Any,
         *,
-        fallback: "RealtimeSpec | None" = None,
-    ) -> "RealtimeSpec":
+        fallback: RealtimeSpec | None = None,
+    ) -> RealtimeSpec:
         """Parse a model result without letting malformed metadata break play."""
 
         default = fallback or cls()
@@ -182,6 +183,6 @@ class InteractiveWorldPipeline(Protocol):
 __all__ = [
     "DEFAULT_REALTIME_CONTROLS",
     "InteractiveWorldPipeline",
-    "RealtimeSpec",
     "RealtimeSensor",
+    "RealtimeSpec",
 ]

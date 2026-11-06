@@ -17,8 +17,8 @@ import hydra
 import tree
 from omegaconf import DictConfig, OmegaConf
 
-from worldfoundry.core.utils.python.functional_utils import call_once, is_mapping, is_sequence, meta_decorator
 from worldfoundry.core.observability.formatting import to_scientific_str
+from worldfoundry.core.utils.python.functional_utils import call_once, is_mapping, is_sequence, meta_decorator
 
 # ──────────────────────────────────────────────────────────────────────────
 # Hydra / OmegaConf — resolvers and run-context queries
@@ -209,7 +209,7 @@ def get_class(path):
         try:
             class_type = getattr(mod, class_name)
         except AttributeError:
-            raise ImportError("Class {} is not in module {}".format(class_name, module_path))
+            raise ImportError(f"Class {class_name} is not in module {module_path}")
         return class_type
     except ValueError as e:
         print("Error initializing class " + path, file=sys.stderr)

@@ -19,7 +19,6 @@ import triton.language as tl
 
 from worldfoundry.core.kernels.capabilities import triton_tensor_eligible
 
-
 # ──────────────────────────────────────────────────────────────────────────
 # Workspace init / pack — atomic counts so experts do not share a token twice
 # ──────────────────────────────────────────────────────────────────────────
@@ -297,9 +296,7 @@ def routed_swiglu_moe_triton(
         BLOCK_K=triton.next_power_of_2(top_k),
         num_warps=1,
     )
-    _moe_gate_up_grouped_kernel[
-        (E, triton.cdiv(max_routes, 16), triton.cdiv(I, 32))
-    ](
+    _moe_gate_up_grouped_kernel[(E, triton.cdiv(max_routes, 16), triton.cdiv(I, 32))](
         hidden_states,
         gate_weight,
         up_weight,
@@ -325,9 +322,7 @@ def routed_swiglu_moe_triton(
         BLOCK=1024,
         num_warps=4,
     )
-    _moe_down_grouped_kernel[
-        (E, triton.cdiv(max_routes, 16), triton.cdiv(D, 64))
-    ](
+    _moe_down_grouped_kernel[(E, triton.cdiv(max_routes, 16), triton.cdiv(D, 64))](
         inter,
         down_weight,
         counts,

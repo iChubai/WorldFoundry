@@ -17,12 +17,12 @@ from importlib import import_module
 from typing import Any
 
 _SUBMODULES = {
-    'assets': 'worldfoundry.core.io.assets',
-    'filesystem': 'worldfoundry.core.io.filesystem',
-    'formats': 'worldfoundry.core.io.formats',
-    'inputs': 'worldfoundry.core.io.inputs',
-    'manifests': 'worldfoundry.core.io.manifests',
-    'paths': 'worldfoundry.core.io.paths',
+    "assets": "worldfoundry.core.io.assets",
+    "filesystem": "worldfoundry.core.io.filesystem",
+    "formats": "worldfoundry.core.io.formats",
+    "inputs": "worldfoundry.core.io.inputs",
+    "manifests": "worldfoundry.core.io.manifests",
+    "paths": "worldfoundry.core.io.paths",
 }
 
 _EXPORT_MODULES = {

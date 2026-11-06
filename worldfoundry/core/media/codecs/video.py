@@ -21,8 +21,9 @@ import shutil
 import subprocess
 import tempfile
 import threading
+from collections.abc import Iterable
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Iterable, cast
+from typing import TYPE_CHECKING, Any, cast
 
 if TYPE_CHECKING:
     import numpy as np
@@ -430,7 +431,7 @@ def sample_video_frames(
     force_sample: bool = False,
     *,
     num_threads: int = 2,
-) -> tuple["object", str, float]:
+) -> tuple[object, str, float]:
     """Decode uniformly bounded RGB frames and their correct source timestamps.
 
     ``fps`` is the requested temporal sampling rate when ``force_sample`` is
@@ -1127,8 +1128,8 @@ def save_videos_grid(videos, path: str, rescale=False, n_rows=6, fps=8):
 __all__ = [
     "VIDEO_EXTENSIONS",
     "coerce_video_frames",
-    "extract_video_frames_to_directory",
     "extract_frames_from_video_url",
+    "extract_video_frames_to_directory",
     "get_video_details",
     "list_numbered_frame_paths",
     "load_frames_from_video",
@@ -1143,8 +1144,8 @@ __all__ = [
     "save_image_or_video_tensor",
     "save_video_frames",
     "save_videos_grid",
-    "video_tensor_to_uint8_frames",
     "video_chunk_to_uint8_frames",
+    "video_tensor_to_uint8_frames",
     "write_video",
     "write_video_torchvision",
 ]

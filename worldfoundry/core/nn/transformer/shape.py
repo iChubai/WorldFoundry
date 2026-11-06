@@ -24,7 +24,6 @@ from typing import Any
 import numpy as np
 import torch
 
-
 # ──────────────────────────────────────────────────────────────────────────
 # Shape spec — hidden / heads / MLP width with divisibility checks
 # ──────────────────────────────────────────────────────────────────────────

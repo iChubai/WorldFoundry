@@ -10,7 +10,6 @@ from torch import nn
 
 from worldfoundry.core.distributed.collectives.device_mesh import get_local_tensor_if_dtensor
 
-
 # ──────────────────────────────────────────────────────────────────────────
 # Shadow buffers — dots stripped from names; decay stays FP32 (BF16 would freeze)
 # ──────────────────────────────────────────────────────────────────────────
@@ -29,25 +28,26 @@ class LitEma(nn.Module):
         """
         super().__init__()
         if decay < 0.0 or decay > 1.0:
-            raise ValueError('Decay must be between 0 and 1')
+            raise ValueError("Decay must be between 0 and 1")
 
         self.m_name2s_name = {}
         # Keep the coefficient in FP32, matching the released LVDM EMA. In
         # BF16, 0.9999 rounds to 1.0 and the long-run average stops updating.
-        self.register_buffer('decay', torch.tensor(decay, dtype=torch.float32))
-        self.register_buffer('num_updates', torch.tensor(0,dtype=torch.int) if use_num_upates
-                             else torch.tensor(-1,dtype=torch.int))
+        self.register_buffer("decay", torch.tensor(decay, dtype=torch.float32))
+        self.register_buffer(
+            "num_updates", torch.tensor(0, dtype=torch.int) if use_num_upates else torch.tensor(-1, dtype=torch.int)
+        )
 
         for name, p in model.named_parameters():
             if p.requires_grad:
-                #remove as '.'-character is not allowed in buffers
-                s_name = name.replace('.','')
-                self.m_name2s_name.update({name:s_name})
-                self.register_buffer(s_name,p.clone().detach().data)
+                # remove as '.'-character is not allowed in buffers
+                s_name = name.replace(".", "")
+                self.m_name2s_name.update({name: s_name})
+                self.register_buffer(s_name, p.clone().detach().data)
 
         self.collected_params = []
 
-    def forward(self,model):
+    def forward(self, model):
         """Forward.
 
         Args:

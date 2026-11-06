@@ -14,7 +14,6 @@ Public surface: :class:`NewLineFormatter`, :func:`setup_for_distributed`.
 
 import logging
 
-
 # ──────────────────────────────────────────────────────────────────────────
 # Continuation-line prefix — wrapped NCCL dumps stay aligned under the rank
 # ──────────────────────────────────────────────────────────────────────────

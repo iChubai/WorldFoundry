@@ -28,11 +28,10 @@ Public surface:
 
 from __future__ import annotations
 
-from abc import ABC, abstractmethod
 import math
+from abc import ABC, abstractmethod
 
 import torch
-
 
 # ──────────────────────────────────────────────────────────────────────────
 # DDPM-style contract — convert x0 / noise / velocity in float64

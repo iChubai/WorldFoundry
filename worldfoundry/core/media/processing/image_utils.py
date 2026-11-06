@@ -235,7 +235,10 @@ def resize_and_letterbox(
 
 
 def center_crop_resize_geometry(
-    source_height: int, source_width: int, target_height: int, target_width: int,
+    source_height: int,
+    source_width: int,
+    target_height: int,
+    target_width: int,
 ) -> tuple[int, int, int, int]:
     """Return floor-sized resize height/width and centered crop top/left."""
     if source_width / source_height > target_width / target_height:
@@ -249,7 +252,7 @@ def resize_and_center_crop_pytorch(image, target_width, target_height):
     """Batched NCHW bilinear resize + center crop; ``align_corners=False``."""
     B, C, H, W = image.shape
 
-    if H == target_height and W == target_width:
+    if target_height == H and target_width == W:
         return image
 
     scale_factor = max(target_width / W, target_height / H)

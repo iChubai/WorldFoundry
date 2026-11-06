@@ -28,7 +28,6 @@ try:
     from megatron.core.tensor_parallel.random import model_parallel_cuda_manual_seed
     from megatron.core.tensor_parallel.utils import VocabUtility
 except Exception:  # pragma: no cover - Megatron is optional for many runtimes.
-
     # ──────────────────────────────────────────────────────────────────────
     # Fallback stubs — TP stays 1×1 so vendored DiT imports do not require megatron-core
     # ──────────────────────────────────────────────────────────────────────

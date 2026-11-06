@@ -189,7 +189,7 @@ class PyNcclCommunicator:
         )
 
     def reduce_scatter(
-        self, output_tensor: torch.Tensor, input_tensor: torch.Tensor,         op: ReduceOp = ReduceOp.SUM, stream=None
+        self, output_tensor: torch.Tensor, input_tensor: torch.Tensor, op: ReduceOp = ReduceOp.SUM, stream=None
     ):
         """Reduce-scatter into ``output_tensor``; count is the *output* numel per rank."""
         if self.disabled:

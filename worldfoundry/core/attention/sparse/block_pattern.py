@@ -19,8 +19,9 @@ them into range lists, or evaluate them on CPU for visualization and tests.
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any, Callable, Literal
+from typing import Any, Literal
 
 import torch
 

@@ -310,9 +310,7 @@ def pack_spatiotemporal_camera_conditioning(
     if values.ndim == 1 and values.numel() == 4:
         values = values[None].expand(poses.shape[0], -1).clone()
     if values.shape != (poses.shape[0], 4):
-        raise ValueError(
-            f"intrinsics must be [F,4] or [F,3,3], got {tuple(values.shape)} for {poses.shape[0]} frames"
-        )
+        raise ValueError(f"intrinsics must be [F,4] or [F,3,3], got {tuple(values.shape)} for {poses.shape[0]} frames")
     if min(image_height, image_width, temporal_stride, spatial_stride) <= 0:
         raise ValueError("camera conditioning geometry must be positive")
 
@@ -335,9 +333,7 @@ def pack_spatiotemporal_camera_conditioning(
         if len(chunk_poses) < temporal_stride:
             missing = int(temporal_stride) - len(chunk_poses)
             chunk_poses = torch.cat((chunk_poses, chunk_poses[-1:].expand(missing, -1, -1)))
-            chunk_intrinsics = torch.cat(
-                (chunk_intrinsics, chunk_intrinsics[-1:].expand(missing, -1))
-            )
+            chunk_intrinsics = torch.cat((chunk_intrinsics, chunk_intrinsics[-1:].expand(missing, -1)))
         plucker = compute_raymap(
             chunk_intrinsics,
             chunk_poses,

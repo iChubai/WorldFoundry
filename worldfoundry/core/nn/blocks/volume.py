@@ -9,7 +9,6 @@ import math
 import torch
 import torch.nn.functional as F
 
-
 # ──────────────────────────────────────────────────────────────────────────
 # Chunked 5-D interpolate — stay under int32 element counts
 # ──────────────────────────────────────────────────────────────────────────
@@ -27,9 +26,9 @@ def chunked_interpolate(x, scale_factor, mode="nearest"):
     Returns:
         torch.Tensor: Interpolated tensor
     """
-    assert (
-        mode == "nearest"
-    ), "Only the nearest mode is supported"  # actually other modes are theoretically supported but not tested
+    assert mode == "nearest", (
+        "Only the nearest mode is supported"
+    )  # actually other modes are theoretically supported but not tested
     if len(x.shape) != 5:
         raise ValueError("Expected 5D input tensor (B, C, D, H, W)")
 

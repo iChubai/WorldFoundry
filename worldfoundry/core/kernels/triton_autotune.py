@@ -30,7 +30,6 @@ import torch.distributed as dist
 import triton.language as tl
 from triton.runtime.autotuner import Autotuner
 
-
 # ──────────────────────────────────────────────────────────────────────────
 # Dtype map — only the three floating types the in-tree GEMM kernels launch
 # ──────────────────────────────────────────────────────────────────────────
@@ -55,6 +54,7 @@ def get_tl_dtype_from_torch_dtype(dtype: torch.dtype) -> tl.dtype:
 
 class CustomAutotuner(Autotuner):
     """Custom autotuner implementation."""
+
     def __init__(self, *args, **kwargs):
         """Init."""
         super().__init__(*args, **kwargs)
@@ -79,7 +79,7 @@ class CustomAutotuner(Autotuner):
 
     def run(self, *args, **kwargs):
         """Run."""
-        self.nargs = dict(zip(self.arg_names, args))
+        self.nargs = dict(zip(self.arg_names, args, strict=False))
         used_cached_result = True
         if len(self.configs) > 1:
             all_args = {**self.nargs, **kwargs}
@@ -162,6 +162,7 @@ def custom_autotune(
         rep: The rep.
         use_cuda_graph: The use cuda graph.
     """
+
     def decorator(fn):
         """Decorator.
 

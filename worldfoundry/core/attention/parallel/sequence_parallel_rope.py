@@ -31,7 +31,6 @@ from torch import Tensor
 
 from worldfoundry.core.kernels import hidden_qk_rmsnorm_rope_3d
 
-
 # ──────────────────────────────────────────────────────────────────────────
 # Frequency pad / apply — global offsets on a contiguous token shard
 # ──────────────────────────────────────────────────────────────────────────

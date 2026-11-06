@@ -86,7 +86,7 @@ def usp_dit_forward(
         self.freqs = self.freqs.to(device)
 
     if self.model_type != "vace" and y is not None:
-        x = [torch.cat([u, v], dim=0) for u, v in zip(x, y)]
+        x = [torch.cat([u, v], dim=0) for u, v in zip(x, y, strict=False)]
 
     # embeddings
     x = [self.patch_embedding(u.unsqueeze(0)) for u in x]

@@ -95,7 +95,7 @@ def enable_balanced_device_map(
         )
 
     placement = balanced_layer_devices(len(layers), targets)
-    for layer, device in zip(layers, placement):
+    for layer, device in zip(layers, placement, strict=False):
         layer.to(device)
     # Embed, norm, and lm_head stay on ``home_device``. Identity compare (not
     # name) so a renamed ModuleList still skips the already-placed layers.
@@ -109,7 +109,7 @@ def enable_balanced_device_map(
     for name, buffer in model.named_buffers(recurse=False):
         if buffer.device != home:
             model._buffers[name] = buffer.to(home)
-    setattr(model, "_worldfoundry_device_map", "balanced")
+    model._worldfoundry_device_map = "balanced"
     return DeviceMapHandle(
         enabled=True,
         layer_count=len(layers),

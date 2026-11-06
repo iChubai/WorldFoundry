@@ -395,12 +395,12 @@ def run_torchrun_module(
 
 
 __all__ = [
-    "process_identity",
     "process_group_alive",
-    "terminate_owned_process_group",
+    "process_identity",
     "read_text_tail",
     "run_logged_subprocess",
     "run_torchrun_module",
+    "terminate_owned_process_group",
     "terminate_process_group",
     "terminate_process_tree",
     "torchrun_module_command",

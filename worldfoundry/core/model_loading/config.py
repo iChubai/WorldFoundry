@@ -13,7 +13,6 @@ This is placement and download policy, not the file deserializer
 import glob
 import os
 from dataclasses import dataclass
-from typing import Dict, Optional, Union
 
 import torch
 
@@ -51,22 +50,22 @@ class ModelConfig:
         state_dict: Optional already-loaded weights, bypassing file loading.
     """
 
-    path: Optional[Union[str, list[str]]] = None
-    model_id: Optional[str] = None
-    origin_file_pattern: Optional[Union[str, list[str]]] = None
-    download_source: Optional[str] = None
-    local_model_path: Optional[str] = None
-    skip_download: Optional[bool] = None
-    offload_device: Optional[Union[str, torch.device]] = None
-    offload_dtype: Optional[torch.dtype] = None
-    onload_device: Optional[Union[str, torch.device]] = None
-    onload_dtype: Optional[torch.dtype] = None
-    preparing_device: Optional[Union[str, torch.device]] = None
-    preparing_dtype: Optional[torch.dtype] = None
-    computation_device: Optional[Union[str, torch.device]] = None
-    computation_dtype: Optional[torch.dtype] = None
+    path: str | list[str] | None = None
+    model_id: str | None = None
+    origin_file_pattern: str | list[str] | None = None
+    download_source: str | None = None
+    local_model_path: str | None = None
+    skip_download: bool | None = None
+    offload_device: str | torch.device | None = None
+    offload_dtype: torch.dtype | None = None
+    onload_device: str | torch.device | None = None
+    onload_dtype: torch.dtype | None = None
+    preparing_device: str | torch.device | None = None
+    preparing_dtype: torch.dtype | None = None
+    computation_device: str | torch.device | None = None
+    computation_dtype: torch.dtype | None = None
     clear_parameters: bool = False
-    state_dict: Optional[Dict[str, torch.Tensor]] = None
+    state_dict: dict[str, torch.Tensor] | None = None
 
     def check_input(self):
         """Require either a concrete path or a model-hub identifier."""
@@ -112,8 +111,7 @@ class ModelConfig:
         if value in {"", "0", "false", "no", "n", "off"}:
             return False
         raise ValueError(
-            "WORLDFOUNDRY_SKIP_MODEL_DOWNLOAD must be a boolean value "
-            f"(true/false, 1/0, yes/no, on/off); got {raw!r}"
+            f"WORLDFOUNDRY_SKIP_MODEL_DOWNLOAD must be a boolean value (true/false, 1/0, yes/no, on/off); got {raw!r}"
         )
 
     def download(self):

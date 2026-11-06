@@ -16,8 +16,8 @@ from operator import index as integer_index
 import torch
 from torch import Tensor
 
-from worldfoundry.core.attention.sparse.block_pattern import BlockPattern
 from worldfoundry.core.attention.cache.kv_cache_policy import CachedBlock, CacheState
+from worldfoundry.core.attention.sparse.block_pattern import BlockPattern
 
 # ──────────────────────────────────────────────────────────────────────────
 # Geometry — validate the raw ABI so graphs cannot drift from BlockPattern

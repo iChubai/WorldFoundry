@@ -113,7 +113,7 @@ def _raster_backward(
     red = tl.full((BLOCK,), BACKGROUND, tl.float32)
     green = tl.full((BLOCK,), BACKGROUND, tl.float32)
     blue = tl.full((BLOCK,), BACKGROUND, tl.float32)
-    for reverse in range(0, end - start):
+    for reverse in range(end - start):
         position = end - reverse - 1
         index = tl.load(indices + position)
         dx = tl.load(means + index * 2) - (x + 0.5)

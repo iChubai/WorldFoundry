@@ -669,6 +669,6 @@ __all__ = [
     "VideoTensorLayout",
     "frame_list_from_chunks",
     "infer_video_spec",
-    "video_frame_count",
     "video_chunk_as_thwc",
+    "video_frame_count",
 ]

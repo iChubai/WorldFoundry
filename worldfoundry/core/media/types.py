@@ -7,9 +7,9 @@ opening the file. Not a codec — see ``video.py`` / ``audio.py``.
 from __future__ import annotations
 
 import mimetypes
+from collections.abc import Mapping
 from enum import Enum
 from pathlib import Path
-from typing import Mapping
 from urllib.parse import unquote, urlparse
 
 # ──────────────────────────────────────────────────────────────────────────

@@ -15,7 +15,8 @@ memories without an accelerator runtime.
 """
 
 from abc import ABC
-from typing import Any, Iterable, Mapping
+from collections.abc import Iterable, Mapping
+from typing import Any
 
 from .store import MemoryStore
 

@@ -13,9 +13,9 @@ from pathlib import Path
 from typing import Any
 from uuid import uuid4
 
-from worldfoundry.core.io.paths import cache_root_path
-from worldfoundry.core.io.formats.serialization import load_serialized
 from worldfoundry.core.io.filesystem.storage import copy_uri, parse_uri_scheme, uri_to_local_path
+from worldfoundry.core.io.formats.serialization import load_serialized
+from worldfoundry.core.io.paths import cache_root_path
 
 # ──────────────────────────────────────────────────────────────────────────
 # Cache slot — S3/HTTP → local path; flock + rank-0 so workers do not stampede

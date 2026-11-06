@@ -159,9 +159,7 @@ def _group_norm_finalize_stats_kernel(
         indices = start + offsets
         mask = indices < chunks_per_row
         sum_value += tl.sum(tl.load(partial_sum_ptr + base + indices, mask=mask, other=0.0), axis=0)
-        sum_square += tl.sum(
-            tl.load(partial_square_ptr + base + indices, mask=mask, other=0.0), axis=0
-        )
+        sum_square += tl.sum(tl.load(partial_square_ptr + base + indices, mask=mask, other=0.0), axis=0)
 
     inverse_group = 1.0 / group_size
     mean = sum_value * inverse_group

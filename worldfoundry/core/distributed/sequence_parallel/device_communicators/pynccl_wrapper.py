@@ -408,10 +408,10 @@ class NCCLLibrary:
 
 __all__ = [
     "NCCLLibrary",
+    "buffer_type",
+    "cudaStream_t",
+    "ncclComm_t",
     "ncclDataTypeEnum",
     "ncclRedOpTypeEnum",
     "ncclUniqueId",
-    "ncclComm_t",
-    "cudaStream_t",
-    "buffer_type",
 ]

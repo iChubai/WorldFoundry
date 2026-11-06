@@ -17,7 +17,6 @@ from __future__ import annotations
 # ──────────────────────────────────────────────────────────────────────────
 # Eval-only encoders — OOM-safe batching; encoder must be shape-stable
 # ──────────────────────────────────────────────────────────────────────────
-
 from collections.abc import Callable, Sequence
 
 import torch

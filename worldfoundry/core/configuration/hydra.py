@@ -31,7 +31,7 @@ import threading
 import uuid
 from dataclasses import fields as dataclass_fields
 from dataclasses import is_dataclass
-from typing import Any, Dict, Optional
+from typing import Any
 
 import attr
 import attrs
@@ -89,7 +89,7 @@ def get_fields(obj):
 # ──────────────────────────────────────────────────────────────────────────
 
 
-def override(config: Config, overrides: Optional[list[str]] = None, remove_defaults: bool = False) -> Config:
+def override(config: Config, overrides: list[str] | None = None, remove_defaults: bool = False) -> Config:
     """
     :param config: the instance of class `Config` (usually from `make_config`)
     :param overrides: list of overrides for config
@@ -167,7 +167,7 @@ def override(config: Config, overrides: Optional[list[str]] = None, remove_defau
                     f"Fields mismatch: {ref_fields} != {keys}. Extra keys found: {extra_keys} \n \t when constructing {type(ref_instance)} with {keys}"
                 )
 
-            resolved_kwargs: Dict[str, Any] = {}
+            resolved_kwargs: dict[str, Any] = {}
             for f in keys:
                 resolved_kwargs[f] = config_from_dict(getattr(ref_instance, f), kwargs[f])
             try:

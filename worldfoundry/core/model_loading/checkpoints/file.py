@@ -165,9 +165,7 @@ def load_state_dict_from_gguf(file_path, torch_dtype=None, device="cpu"):
     try:
         import gguf
     except ImportError as error:
-        raise RuntimeError(
-            "loading GGUF checkpoints requires the optional 'gguf' package"
-        ) from error
+        raise RuntimeError("loading GGUF checkpoints requires the optional 'gguf' package") from error
 
     state_dict = {}
     with local_path_for_uri(file_path) as local_path:
@@ -177,9 +175,7 @@ def load_state_dict_from_gguf(file_path, torch_dtype=None, device="cpu"):
             if not name:
                 raise ValueError(f"GGUF checkpoint {file_path!r} contains an empty tensor name")
             if name in state_dict:
-                raise ValueError(
-                    f"GGUF checkpoint {file_path!r} contains duplicate tensor {name!r}"
-                )
+                raise ValueError(f"GGUF checkpoint {file_path!r} contains duplicate tensor {name!r}")
             try:
                 array = gguf.dequantize(entry.data, entry.tensor_type)
             except NotImplementedError:
@@ -463,9 +459,7 @@ def load_keys_dict_from_gguf(file_path):
     try:
         import gguf
     except ImportError as error:
-        raise RuntimeError(
-            "reading GGUF checkpoint keys requires the optional 'gguf' package"
-        ) from error
+        raise RuntimeError("reading GGUF checkpoint keys requires the optional 'gguf' package") from error
     keys_dict = {}
     with local_path_for_uri(file_path) as local_path:
         reader = gguf.GGUFReader(str(local_path))
@@ -518,6 +512,7 @@ def hash_model_file(path, with_shape=True):
 
 
 __all__ = [
+    "build_rename_dict",
     "convert_keys_dict_to_single_str",
     "convert_state_dict_keys_to_single_str",
     "convert_state_dict_to_keys_dict",
@@ -534,7 +529,6 @@ __all__ = [
     "load_state_dict_from_safetensors",
     "load_torch_checkpoint",
     "load_torch_state_dict",
-    "build_rename_dict",
     "search_for_embeddings",
     "search_for_files",
     "search_parameter",

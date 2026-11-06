@@ -36,8 +36,8 @@ import torch
 
 logger = logging.getLogger(__name__)
 
-from worldfoundry.core.attention.backends.probe import probe_attention_backends
 from worldfoundry.core.attention.backends.native import native_sdpa_priority, scaled_dot_product_attention
+from worldfoundry.core.attention.backends.probe import probe_attention_backends
 
 try:
     from torch.nn.attention.bias import causal_lower_right as _causal_lower_right
@@ -196,19 +196,11 @@ def flash_attention(
         and capabilities["flash_attention_3"].usable
         and dropout_p == 0.0
     )
-    use_fa2 = (
-        version == 2
-        and flash_attn_module is not None
-        and capabilities["flash_attention_2"].usable
-    )
+    use_fa2 = version == 2 and flash_attn_module is not None and capabilities["flash_attention_2"].usable
     if version == 3 and not use_fa3:
-        warnings.warn(
-            "FlashAttention 3 is unavailable on this GPU/runtime; falling back to PyTorch SDPA."
-        )
+        warnings.warn("FlashAttention 3 is unavailable on this GPU/runtime; falling back to PyTorch SDPA.")
     if version == 2 and not use_fa2:
-        warnings.warn(
-            "FlashAttention 2 is unavailable on this GPU/runtime; falling back to PyTorch SDPA."
-        )
+        warnings.warn("FlashAttention 2 is unavailable on this GPU/runtime; falling back to PyTorch SDPA.")
 
     if use_fa3:
         output = flash_attn_interface.flash_attn_varlen_func(
@@ -453,11 +445,7 @@ def varlen_scaled_dot_product_attention(
         warnings.warn("FlashAttention 3 is unavailable on this GPU/runtime; falling back to PyTorch SDPA.")
     if version == 2 and (flash_attn_varlen_func is None or not capabilities["flash_attention_2"].usable):
         warnings.warn("FlashAttention 2 is unavailable on this GPU/runtime; falling back to PyTorch SDPA.")
-    if (
-        flash_attn_varlen_func_v3 is not None
-        and capabilities["flash_attention_3"].usable
-        and dropout_p == 0.0
-    ):
+    if flash_attn_varlen_func_v3 is not None and capabilities["flash_attention_3"].usable and dropout_p == 0.0:
         resolved_max_q = _max_from_cumulative(cu_seqlens_q, max_seqlen_q, name="max_seqlen_q")
         resolved_max_k = _max_from_cumulative(cu_seqlens_k, max_seqlen_k, name="max_seqlen_k")
         output = flash_attn_varlen_func_v3(
@@ -476,10 +464,7 @@ def varlen_scaled_dot_product_attention(
             deterministic=bool(kwargs.pop("deterministic", False)),
         )
         return output[0] if isinstance(output, tuple) else output
-    if (
-        flash_attn_varlen_func is not None
-        and capabilities["flash_attention_2"].usable
-    ):
+    if flash_attn_varlen_func is not None and capabilities["flash_attention_2"].usable:
         resolved_max_q = _max_from_cumulative(cu_seqlens_q, max_seqlen_q, name="max_seqlen_q")
         resolved_max_k = _max_from_cumulative(cu_seqlens_k, max_seqlen_k, name="max_seqlen_k")
         return flash_attn_varlen_func(
@@ -652,11 +637,7 @@ def _varlen_attention_jagged_flash(
     if torch.compiler.is_compiling():
         if max_seqlen_q is None or max_seqlen_k is None:
             return None
-    elif (
-        q_lengths.numel() == 0
-        or int(q_lengths.min().item()) <= 0
-        or int(k_lengths.min().item()) <= 0
-    ):
+    elif q_lengths.numel() == 0 or int(q_lengths.min().item()) <= 0 or int(k_lengths.min().item()) <= 0:
         return None
     q_max = int(max_seqlen_q) if max_seqlen_q is not None else int(q_lengths.max().item())
     k_max = int(max_seqlen_k) if max_seqlen_k is not None else int(k_lengths.max().item())

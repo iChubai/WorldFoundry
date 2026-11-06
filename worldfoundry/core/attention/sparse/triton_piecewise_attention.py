@@ -78,7 +78,7 @@ def chunk_reduce_kv_kernel(
     v,
     kc,
     vc,
-    k_var,   # [B*H, N]
+    k_var,  # [B*H, N]
     T,
     N: tl.constexpr,
     K: tl.constexpr,
@@ -124,7 +124,7 @@ def chunk_reduce_kv_kernel(
 def chunk_reduce_k_kernel(
     k,
     kc,
-    k_var,   # [B*H, N]
+    k_var,  # [B*H, N]
     T,
     N: tl.constexpr,
     K: tl.constexpr,
@@ -200,11 +200,7 @@ def chunk_reduce_qkv(
 
     qc = torch.empty(B, H, N_Q, K, device=q.device, dtype=q.dtype)
     kc = torch.empty(B, H, N_KV, K, device=k.device, dtype=k.dtype)
-    vc = (
-        torch.empty(B, H, N_KV, V, device=v.device, dtype=v.dtype)
-        if include_v_centroid
-        else None
-    )
+    vc = torch.empty(B, H, N_KV, V, device=v.device, dtype=v.dtype) if include_v_centroid else None
 
     # scalar variance proxy per KV block
     k_var = torch.empty(B, H, N_KV, device=k.device, dtype=k.dtype)
@@ -317,7 +313,7 @@ def piecewise_attn_fwd_kernel(
         b_s = tl.dot(b_q, b_k.T) * sm_scale
         b_s += tl.where((kv_start + token_offsets)[None, :] < T_KV, 0, float("-inf"))
 
-        new_m = tl.maximum(m_i, tl.max(b_s,  axis=1))
+        new_m = tl.maximum(m_i, tl.max(b_s, axis=1))
         alpha = tl.math.exp2(m_i - new_m)
         score = tl.math.exp2(b_s - new_m[:, None])
 
@@ -898,9 +894,9 @@ def piecewise_attn_bwd(
 
 @torch.no_grad()
 def taylor_error_block_indices(
-    qc: torch.Tensor,       # [B, H, NT_Q, K]
-    kc: torch.Tensor,       # [B, H, NT_KV, K]
-    k_var: torch.Tensor,    # [B, H, NT_KV]
+    qc: torch.Tensor,  # [B, H, NT_Q, K]
+    kc: torch.Tensor,  # [B, H, NT_KV, K]
+    k_var: torch.Tensor,  # [B, H, NT_KV]
     density: float,
     scale: float,
     eps: float = 1e-8,
@@ -990,14 +986,7 @@ class PiecewiseAttentionFunction(torch.autograd.Function):
                 scale=scale,
             )
             o, lse = piecewise_attn_fwd(
-                q=q,
-                k=k,
-                v=v,
-                kc=kc,
-                vc=vc,
-                block_indices=block_indices,
-                block_size=block_size,
-                scale=scale
+                q=q, k=k, v=v, kc=kc, vc=vc, block_indices=block_indices, block_size=block_size, scale=scale
             )
 
         ctx.save_for_backward(q, k, v, kc, vc, o, lse, block_indices)

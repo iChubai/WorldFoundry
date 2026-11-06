@@ -248,7 +248,7 @@ def int8_gemm_bias_kernel(
     A = A + (ram[:, None] * stride_am + rk[None, :] * stride_ak)
     B = B + (rk[:, None] * stride_bk + rbn[None, :] * stride_bn)
     acc = tl.zeros((BLOCK_M, BLOCK_N), dtype=acc_dtype)
-    for k in range(0, tl.cdiv(K, BLOCK_K * SPLIT_K)):
+    for k in range(tl.cdiv(K, BLOCK_K * SPLIT_K)):
         if EVEN_K:
             a = tl.load(A)
             b = tl.load(B)
@@ -362,7 +362,7 @@ def int8_gemm_bias_triton(a, b, bias, a_scales, b_scales, fuse_gelu=False, outpu
     grid = lambda META: (  # noqa E731
         cdiv(M, META["BLOCK_M"]) * cdiv(N, META["BLOCK_N"]),
         META["SPLIT_K"],
-    )  # noqa E731
+    )
     int8_gemm_bias_kernel[grid](
         a,
         b,
@@ -476,7 +476,7 @@ def int8_gemm_kernel(
     A = A + (ram[:, None] * stride_am + rk[None, :] * stride_ak)
     B = B + (rk[:, None] * stride_bk + rbn[None, :] * stride_bn)
     acc = tl.zeros((BLOCK_M, BLOCK_N), dtype=acc_dtype)
-    for k in range(0, tl.cdiv(K, BLOCK_K * SPLIT_K)):
+    for k in range(tl.cdiv(K, BLOCK_K * SPLIT_K)):
         if EVEN_K:
             a = tl.load(A)
             b = tl.load(B)
@@ -587,7 +587,7 @@ def int8_gemm_triton(a, b, a_scales, b_scales, fuse_gelu=False, output_dtype=Non
     grid = lambda META: (  # noqa E731
         cdiv(M, META["BLOCK_M"]) * cdiv(N, META["BLOCK_N"]),
         META["SPLIT_K"],
-    )  # noqa E731
+    )
     int8_gemm_kernel[grid](
         a,
         b,
@@ -701,7 +701,7 @@ def fp8_gemm_bias_kernel(
 
     acc = tl.zeros((BLOCK_M, BLOCK_N), dtype=tl.float32)
 
-    for k in range(0, tl.cdiv(K, BLOCK_K * SPLIT_K)):
+    for k in range(tl.cdiv(K, BLOCK_K * SPLIT_K)):
         if EVEN_K:
             a = tl.load(A_ptr)
             b = tl.load(B_ptr)
@@ -753,8 +753,12 @@ def fp8_gemm_bias_triton(a, b, bias, a_scales, b_scales, fuse_gelu=False, output
         output_dtype: The output dtype.
     """
     assert a.is_cuda and b.is_cuda, "This kernel is for CUDA"
-    assert a.dtype in (getattr(torch, "float8_e4m3fn", None), getattr(torch, "float8_e4m3fnuz", None)), f"a.dtype={a.dtype} is not FP8 E4M3"
-    assert b.dtype in (getattr(torch, "float8_e4m3fn", None), getattr(torch, "float8_e4m3fnuz", None)), f"b.dtype={b.dtype} is not FP8 E4M3"
+    assert a.dtype in (getattr(torch, "float8_e4m3fn", None), getattr(torch, "float8_e4m3fnuz", None)), (
+        f"a.dtype={a.dtype} is not FP8 E4M3"
+    )
+    assert b.dtype in (getattr(torch, "float8_e4m3fn", None), getattr(torch, "float8_e4m3fnuz", None)), (
+        f"b.dtype={b.dtype} is not FP8 E4M3"
+    )
 
     a_orig_shape = a.shape
     a2 = a.view(-1, a.shape[-1])
@@ -888,7 +892,7 @@ def fp8_gemm_kernel(
 
     acc = tl.zeros((BLOCK_M, BLOCK_N), dtype=tl.float32)
 
-    for k in range(0, tl.cdiv(K, BLOCK_K * SPLIT_K)):
+    for k in range(tl.cdiv(K, BLOCK_K * SPLIT_K)):
         if EVEN_K:
             a = tl.load(A_ptr)
             b = tl.load(B_ptr)
@@ -967,7 +971,7 @@ def fp8_gemm_triton(a, b, a_scales, b_scales, fuse_gelu=False, output_dtype=None
     grid = lambda META: (  # noqa E731
         cdiv(M, META["BLOCK_M"]) * cdiv(N, META["BLOCK_N"]),
         META["SPLIT_K"],
-    )  # noqa E731
+    )
     even_k = K % 128 == 0
 
     fp8_gemm_kernel[grid](

@@ -74,8 +74,7 @@ def _restore_checkpoint_buffers(
             raise TypeError(f"checkpoint buffer {name!r} is not a tensor")
         if current.shape != value.shape:
             raise ValueError(
-                f"checkpoint buffer {name!r} has shape {tuple(value.shape)}, "
-                f"expected {tuple(current.shape)}"
+                f"checkpoint buffer {name!r} has shape {tuple(value.shape)}, expected {tuple(current.shape)}"
             )
         target_dtype = torch_dtype if value.is_floating_point() or value.is_complex() else value.dtype
         target_device = current.device if current.device.type != "meta" else torch.device("cpu")

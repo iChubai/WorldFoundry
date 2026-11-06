@@ -27,7 +27,6 @@ import torch.nn.functional as F
 from worldfoundry.core.kernels.capabilities import triton_tensor_eligible
 from worldfoundry.core.kernels.registry import KERNEL_REGISTRY
 
-
 # ──────────────────────────────────────────────────────────────────────────
 # Portable reference — evaluate only routed tokens so unused experts stay cold
 # ──────────────────────────────────────────────────────────────────────────

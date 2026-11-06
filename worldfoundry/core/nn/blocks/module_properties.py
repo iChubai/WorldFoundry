@@ -18,7 +18,6 @@ from __future__ import annotations
 
 import torch
 
-
 # ──────────────────────────────────────────────────────────────────────────
 # First-tensor probe — meta / DiskMap modules still expose a reference
 # ──────────────────────────────────────────────────────────────────────────
@@ -38,9 +37,9 @@ class ModuleDeviceDtypeMixin:
             RuntimeError: the mixed-in module owns neither (empty / fully offloaded).
         """
 
-        reference = next(getattr(self, "parameters")(), None)
+        reference = next(self.parameters(), None)
         if reference is None:
-            reference = next(getattr(self, "buffers")(), None)
+            reference = next(self.buffers(), None)
         if reference is None:
             raise RuntimeError(f"{type(self).__name__} does not own a parameter or buffer")
         return reference

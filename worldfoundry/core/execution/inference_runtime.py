@@ -29,7 +29,6 @@ import numpy as np
 import torch
 
 from worldfoundry.core.observability.colors import Color
-
 from worldfoundry.core.utils.tensors.torch import set_random_seed
 
 _FALSE_VALUES = {"0", "false", "no", "off", "disable", "disabled", "none"}
@@ -244,7 +243,7 @@ def _compile_eval_forward(
             remembered = set(getattr(owner, "_worldfoundry_eval_compile_failures", ()))
             remembered.add(failure_key)
             try:
-                setattr(owner, "_worldfoundry_eval_compile_failures", remembered)
+                owner._worldfoundry_eval_compile_failures = remembered
             except Exception:
                 pass
             return forward(batch)
@@ -392,11 +391,7 @@ def adaptive_batched_inference(
         should_compile
         and target_device.type == "cuda"
         and torch.cuda.is_available()
-        and (
-            compile_forward is True
-            or bool(persistent_forward)
-            or _has_persistent_compile_owner(forward)
-        )
+        and (compile_forward is True or bool(persistent_forward) or _has_persistent_compile_owner(forward))
     )
     if compile_candidate:
         forward = _compile_eval_forward(
@@ -455,9 +450,7 @@ def adaptive_batched_inference(
                 or final_output.dtype != output.dtype
                 or final_output.device != output.device
             ):
-                raise ValueError(
-                    "forward output shape, dtype, and device must remain stable across batches"
-                )
+                raise ValueError("forward output shape, dtype, and device must remain stable across batches")
             # reduce-overhead may replay a CUDA Graph whose output storage is
             # overwritten by the next call. Copy directly into the final owning
             # buffer before replay; this replaces both the old per-batch clone

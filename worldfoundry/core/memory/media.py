@@ -156,7 +156,7 @@ def extract_last_frame(video_data: Any) -> Image.Image | None:
     """Best-effort last-frame PIL image; returns ``None`` on any failure."""
     try:
         frames = extract_video_frames(video_data)
-    except Exception:  # noqa: BLE001 - selection should degrade gracefully.
+    except Exception:
         return None
     if not frames:
         return None
@@ -181,7 +181,7 @@ def infer_content_type(data: Any) -> str:
         return "text" if isinstance(data, str) else "other"
     try:
         array = to_numpy(data)
-    except Exception:  # noqa: BLE001
+    except Exception:
         return "other"
     if array.ndim >= 4:
         return "video"

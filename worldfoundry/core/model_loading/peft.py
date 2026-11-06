@@ -11,9 +11,7 @@ _WAN_ATTENTION_PATTERN = re.compile(
     r"(?P<role>(?:self|cross)_attn\.(?:q|k|v|o))$"
 )
 _WAN_ATTENTION_ROLES = frozenset(
-    f"{attention}.{projection}"
-    for attention in ("self_attn", "cross_attn")
-    for projection in ("q", "k", "v", "o")
+    f"{attention}.{projection}" for attention in ("self_attn", "cross_attn") for projection in ("q", "k", "v", "o")
 )
 
 

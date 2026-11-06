@@ -33,6 +33,7 @@ class RandomHorizontalFlipWithPose(nn.Module):
     with the flipped pixels. ``p`` is the probability of *not* flipping
     (legacy convention from the RealEstate10K loader).
     """
+
     def __init__(self, p: float = 0.5) -> None:
         """Store the keep-unflipped probability ``p``."""
         super().__init__()
@@ -55,7 +56,7 @@ class RandomHorizontalFlipWithPose(nn.Module):
             flip_flag = self.get_flip_flag(n_image)
 
         ret_images = []
-        for should_flip, img in zip(flip_flag, image):
+        for should_flip, img in zip(flip_flag, image, strict=False):
             if should_flip:
                 ret_images.append(tvF.hflip(img))
             else:
@@ -70,6 +71,7 @@ class RandomHorizontalFlipWithPose(nn.Module):
 
 class Camera:
     """One OpenCV camera: normalized ``fx, fy, cx, cy`` plus 4x4 w2c / c2w."""
+
     def __init__(self, entry: Sequence[float]) -> None:
         """Parse a RealEstate10K-style row: ``[id, fx, fy, cx, cy, _, _, *w2c_3x4]``."""
         fx, fy, cx, cy = entry[1:5]
@@ -87,7 +89,7 @@ class Camera:
 def create_camera_params_from_batch(extrinsics_np: np.ndarray, intrinsics_np: np.ndarray) -> list[Camera]:
     """Build :class:`Camera` rows from batched 3x4 extrinsics and 3x3 intrinsics."""
     cam_params = []
-    for i, (ext_mat, int_mat) in enumerate(zip(extrinsics_np, intrinsics_np)):
+    for i, (ext_mat, int_mat) in enumerate(zip(extrinsics_np, intrinsics_np, strict=False)):
         fx, fy = int_mat[0, 0], int_mat[1, 1]
         cx, cy = int_mat[0, 2], int_mat[1, 2]
         entry = [i, fx, fy, cx, cy, 0, 0] + ext_mat.flatten().tolist()
@@ -102,6 +104,7 @@ def create_camera_params_from_batch(extrinsics_np: np.ndarray, intrinsics_np: np
 
 class RealEstate10KPoseProcessor:
     """Sample RealEstate10K (or pose-encoding) clips into Plücker embeddings."""
+
     def __init__(
         self,
         sample_stride: int = 4,
@@ -168,7 +171,7 @@ class RealEstate10KPoseProcessor:
 
     def load_cameras(self, pose_file: str) -> list[Camera]:
         """Parse a RealEstate10K text pose file; skip the YouTube header when present."""
-        with open(pose_file, "r") as f:
+        with open(pose_file) as f:
             poses = f.readlines()
         if "youtube" in poses[0]:
             poses = [pose.strip().split(" ") for pose in poses[1:]]

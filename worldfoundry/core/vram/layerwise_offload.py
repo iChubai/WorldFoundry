@@ -13,9 +13,10 @@ module — those expect resident shards.
 
 from __future__ import annotations
 
+from collections.abc import Iterator
 from contextlib import contextmanager, nullcontext
 from dataclasses import dataclass, field
-from typing import Any, Iterator
+from typing import Any
 
 import torch
 from torch import nn
@@ -150,8 +151,8 @@ class _LayerwiseOffloadMetrics:
     )
 
     def __post_init__(self) -> None:
-        self.lifetime = {name: 0 for name in self._COUNTERS}
-        self.request = {name: 0 for name in self._COUNTERS}
+        self.lifetime = dict.fromkeys(self._COUNTERS, 0)
+        self.request = dict.fromkeys(self._COUNTERS, 0)
 
     def count(self, name: str, amount: int = 1, *, request: bool = True) -> None:
         self.lifetime[name] = int(self.lifetime.get(name, 0)) + int(amount)
@@ -174,7 +175,7 @@ class _LayerwiseOffloadMetrics:
             self.active_layers.discard(state_id)
 
     def reset_request_window(self) -> None:
-        self.request = {name: 0 for name in self._COUNTERS}
+        self.request = dict.fromkeys(self._COUNTERS, 0)
         # One layer is deliberately kept warm across denoising calls.  The
         # request peak starts at the physical state rather than pretending
         # the cache is empty.
@@ -326,12 +327,12 @@ def enable_layerwise_cpu_offload(
                     )
                 )
             layer_hooks.append((layer, state, handles))
-            setattr(layer, "_worldfoundry_layerwise_cpu_offload", True)
-            setattr(layer, "_worldfoundry_layerwise_cpu_offload_state", state)
+            layer._worldfoundry_layerwise_cpu_offload = True
+            layer._worldfoundry_layerwise_cpu_offload_state = state
         if pool is not None:
             pool.initialize(states)
             metrics.device_buffer_bytes = pool.nbytes
-        setattr(model, "_worldfoundry_layerwise_cpu_offload", True)
+        model._worldfoundry_layerwise_cpu_offload = True
         # Match the upstream double-buffer lifecycle: the first CUDA buffer is
         # populated before layer 0 is entered, so the first timed forward does not
         # fall back to a synchronous H2D copy.  The pre-hook waits on this stream,
@@ -591,7 +592,7 @@ class _PackedLayerwiseOffloadState(_LayerwiseOffloadState):
                     host = torch.empty(size, dtype=dtype, device="cpu", pin_memory=self.pin_memory)
                 except RuntimeError:
                     host = torch.empty(size, dtype=dtype, device="cpu")
-                for (name, parameter), offset in zip(parameters, offsets):
+                for (name, parameter), offset in zip(parameters, offsets, strict=False):
                     view = host[offset : offset + parameter.numel()].view(parameter.shape)
                     view.copy_(parameter.detach())
                     masters[name] = view
@@ -682,9 +683,7 @@ def _reject_packed_serialization(*args, **kwargs) -> None:
 # ──────────────────────────────────────────────────────────────────────────
 
 
-def _find_layer_container(
-    model: nn.Module, layer_container: str | None
-) -> nn.ModuleList | nn.Sequential | None:
+def _find_layer_container(model: nn.Module, layer_container: str | None) -> nn.ModuleList | nn.Sequential | None:
     """Resolve an explicit layer stack, or discover the first ModuleList.
 
     A dotted ``layer_container`` is required when the first ``ModuleList`` is

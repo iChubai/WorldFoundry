@@ -292,8 +292,8 @@ def detected_kernel_device_profiles() -> tuple[KernelDeviceProfile, ...]:
 
 
 __all__ = [
-    "KernelDeviceProfile",
     "QUALIFIED_TRITON_CAPABILITIES",
+    "KernelDeviceProfile",
     "default_kernel_thresholds",
     "detected_kernel_device_profiles",
     "kernel_device_profile",

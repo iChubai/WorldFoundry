@@ -126,9 +126,7 @@ def rollout_wasd_camera_actions(
             per_frame: list[str] = []
             for segment in cleaned.split(","):
                 if "-" not in segment:
-                    raise ValueError(
-                        f"Invalid camera action segment {segment!r}; expected '<keys>-<duration>'"
-                    )
+                    raise ValueError(f"Invalid camera action segment {segment!r}; expected '<keys>-<duration>'")
                 keys, raw_duration = segment.rsplit("-", 1)
                 if not raw_duration.isdigit() or int(raw_duration) <= 0:
                     raise ValueError(f"camera action duration must be positive: {segment!r}")
@@ -137,8 +135,7 @@ def rollout_wasd_camera_actions(
             per_frame = []
     if not isinstance(actions, str):
         per_frame = [
-            _NAMED_WASD_ACTIONS.get(str(value).strip().lower(), str(value).strip().lower())
-            for value in actions
+            _NAMED_WASD_ACTIONS.get(str(value).strip().lower(), str(value).strip().lower()) for value in actions
         ]
 
     target_transitions = None if num_frames is None else max(int(num_frames) - 1, 0)
@@ -158,16 +155,12 @@ def rollout_wasd_camera_actions(
         held = set(keys)
         rotation = current[:3, :3]
         translation = current[:3, 3]
-        pitch_delta = (rotation_step if "i" in held else 0.0) - (
-            rotation_step if "k" in held else 0.0
-        )
+        pitch_delta = (rotation_step if "i" in held else 0.0) - (rotation_step if "k" in held else 0.0)
         if not -pitch_limit <= current_pitch + pitch_delta <= pitch_limit:
             pitch_delta = 0.0
         else:
             current_pitch += pitch_delta
-        yaw_delta = (rotation_step if "l" in held else 0.0) - (
-            rotation_step if "j" in held else 0.0
-        )
+        yaw_delta = (rotation_step if "l" in held else 0.0) - (rotation_step if "j" in held else 0.0)
         next_rotation = _rotation_y(yaw_delta) @ rotation @ _rotation_x(pitch_delta)
         forward = next_rotation[:, 2].copy()
         right = next_rotation[:, 0].copy()
@@ -214,8 +207,7 @@ def rollout_sana_wm_camera_actions(
                 per_frame.extend([keys.lower()] * int(duration))
     else:
         per_frame = [
-            _SANA_WM_NAMED_ACTIONS.get(str(action).strip().lower(), str(action).strip().lower())
-            for action in actions
+            _SANA_WM_NAMED_ACTIONS.get(str(action).strip().lower(), str(action).strip().lower()) for action in actions
         ]
     if num_frames is not None:
         count = max(int(num_frames) - 1, 0)
@@ -506,9 +498,7 @@ def wan_camera_coordinates_to_plucker(
     camera_to_world = np.linalg.inv(world_to_camera)
     target = np.eye(4, dtype=np.float32)
     relative_transform = target @ world_to_camera[0]
-    relative_camera_to_world = np.stack(
-        [target, *[relative_transform @ pose for pose in camera_to_world[1:]]]
-    )
+    relative_camera_to_world = np.stack([target, *[relative_transform @ pose for pose in camera_to_world[1:]]])
     k = torch.as_tensor(intrinsics, device=device).unsqueeze(0)
     c2w = torch.as_tensor(relative_camera_to_world, device=device).unsqueeze(0)
     return ray_condition(k, c2w, height, width, device=device)[0]
@@ -550,9 +540,7 @@ def named_camera_trajectory_tensors(
     if trajectory not in supported:
         raise ValueError(f"unsupported named camera trajectory {trajectory!r}")
     if camera_rotation not in {"center_facing", "no_rotation", "trajectory_aligned"}:
-        raise ValueError(
-            "camera_rotation must be center_facing, no_rotation, or trajectory_aligned"
-        )
+        raise ValueError("camera_rotation must be center_facing, no_rotation, or trajectory_aligned")
 
     world_to_camera = torch.as_tensor(initial_world_to_camera)
     intrinsic = torch.as_tensor(initial_intrinsic, device=world_to_camera.device)
@@ -837,9 +825,9 @@ __all__ = [
     "camera_trajectory_action_labels",
     "camera_trajectory_tensors",
     "camera_trajectory_view_matrices",
+    "discretize_camera_poses_to_actions",
     "generate_planar_camera_coordinates",
     "named_camera_trajectory_tensors",
-    "discretize_camera_poses_to_actions",
     "one_hot_camera_actions_to_labels",
     "parse_camera_trajectory",
     "rollout_sana_wm_camera_actions",

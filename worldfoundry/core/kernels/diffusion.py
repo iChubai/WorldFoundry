@@ -1249,7 +1249,7 @@ def _eligible_hidden_qk_rmsnorm_rope_3d(
         and width > 0
         and int(start_frame) + frames <= freqs.shape[0]
         and max(height, width) <= freqs.shape[0]
-        and 0 <= int(sequence_offset)
+        and int(sequence_offset) >= 0
         and 0 <= int(valid_tokens) <= frames * height * width
         and 0 <= int(head_start) < int(head_end) <= int(num_heads)
     )
@@ -1541,9 +1541,9 @@ __all__ = [
     "kernel_dispatch_report",
     "layer_norm_scale_shift",
     "qk_rmsnorm_rope",
-    "rms_norm_scale_shift",
     "residual_gate_add",
     "residual_gate_add_",
+    "rms_norm_scale_shift",
     "silu_and_mul",
     "silu_mul",
 ]

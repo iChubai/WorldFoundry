@@ -41,7 +41,7 @@ logger = init_logger(__name__)
 
 def ensure_divisibility(numerator, denominator) -> None:
     """Ensure that numerator is divisible by the denominator."""
-    assert numerator % denominator == 0, "{} is not divisible by {}".format(numerator, denominator)
+    assert numerator % denominator == 0, f"{numerator} is not divisible by {denominator}"
 
 
 def split_tensor_along_last_dim(
@@ -102,9 +102,9 @@ class StatelessProcessGroup:
     def __post_init__(self):
         """Zero per-peer counters; ``rank`` must be strictly less than ``world_size``."""
         assert self.rank < self.world_size
-        self.send_dst_counter = {i: 0 for i in range(self.world_size)}
-        self.recv_src_counter = {i: 0 for i in range(self.world_size)}
-        self.broadcast_recv_src_counter = {i: 0 for i in range(self.world_size)}
+        self.send_dst_counter = dict.fromkeys(range(self.world_size), 0)
+        self.recv_src_counter = dict.fromkeys(range(self.world_size), 0)
+        self.broadcast_recv_src_counter = dict.fromkeys(range(self.world_size), 0)
 
     def send_obj(self, obj: Any, dst: int):
         """Send an object to a destination rank."""
@@ -191,7 +191,7 @@ class StatelessProcessGroup:
         used for exchanging metadata. With this function, process A and process B
         can call `StatelessProcessGroup.create` to form a group, and then process A, B,
         C, and D can call `StatelessProcessGroup.create` to form another group.
-        """  # noqa
+        """
         store = TCPStore(
             host_name=host,
             port=port,

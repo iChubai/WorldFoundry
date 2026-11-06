@@ -100,7 +100,11 @@ class _RankAwareLog:
                     args = ()
                 except (IndexError, KeyError, ValueError):
                     pass
-                kwargs = {key: value for key, value in kwargs.items() if key in {"exc_info", "stack_info", "stacklevel", "extra"}}
+                kwargs = {
+                    key: value
+                    for key, value in kwargs.items()
+                    if key in {"exc_info", "stack_info", "stacklevel", "extra"}
+                }
             method(message, *args, **kwargs)
 
     def debug(self, message, *args, **kwargs):

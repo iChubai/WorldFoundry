@@ -12,7 +12,6 @@ from __future__ import annotations
 
 from typing import Any
 
-
 # ──────────────────────────────────────────────────────────────────────────
 # Stateless ops — no registered parameters; pair with fused kernels that own γ
 # ──────────────────────────────────────────────────────────────────────────

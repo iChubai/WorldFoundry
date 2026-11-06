@@ -54,8 +54,8 @@ __all__ = [
     "get_log_context",
     "get_logger",
     "is_configured",
-    "log_context_environment",
     "log_context",
+    "log_context_environment",
     "write_jsonl_event",
 ]
 
@@ -365,7 +365,7 @@ class WorldFoundryLoggerAdapter(logging.LoggerAdapter):
         kwargs["extra"] = extra
         return message, kwargs
 
-    def bind(self, **fields: Any) -> "WorldFoundryLoggerAdapter":
+    def bind(self, **fields: Any) -> WorldFoundryLoggerAdapter:
         """Return a sibling logger with fields attached to every record."""
 
         current = dict(self.extra.get("_worldfoundry_fields", {}))

@@ -87,7 +87,7 @@ class LazyModule(ModuleType):
         """Import ``.<module_name>`` relative to this wrapper's package name."""
         return importlib.import_module("." + module_name, self.__name__)
 
-    def __reduce__(self) -> tuple[type["LazyModule"], tuple[str, str, dict[str, list[str]]]]:
+    def __reduce__(self) -> tuple[type[LazyModule], tuple[str, str, dict[str, list[str]]]]:
         """Reconstruct from name / file / structure; extras are dropped on pickle."""
         return self.__class__, (self._name, self.__file__, self._import_structure)
 

@@ -24,7 +24,6 @@ Public surface:
 """
 
 import os
-from typing import Optional
 
 import torch
 import torch.distributed as dist
@@ -34,7 +33,6 @@ from worldfoundry.core.attention.parallel.sequence_parallel_rope import pad_freq
 from worldfoundry.core.attention.parallel.ulysses_attention import distributed_attention
 from worldfoundry.core.distributed.sequence_parallel.ops import gather_forward
 from worldfoundry.core.nn import sinusoidal_embedding_1d
-
 
 # ──────────────────────────────────────────────────────────────────────────
 # xFuser-free SP queries — same names so monkey-patches stay drop-in
@@ -100,8 +98,8 @@ def usp_dit_forward(
     x: torch.Tensor,
     timestep: torch.Tensor,
     context: torch.Tensor,
-    clip_feature: Optional[torch.Tensor] = None,
-    y: Optional[torch.Tensor] = None,
+    clip_feature: torch.Tensor | None = None,
+    y: torch.Tensor | None = None,
     use_gradient_checkpointing: bool = False,
     use_gradient_checkpointing_offload: bool = False,
     **kwargs,

@@ -190,7 +190,7 @@ def sp_dit_forward(
         self.freqs = self.freqs.to(device)
 
     if y is not None:
-        x = [torch.cat([u, v], dim=0) for u, v in zip(x, y)]
+        x = [torch.cat([u, v], dim=0) for u, v in zip(x, y, strict=False)]
 
     x = [self.patch_embedding(u.unsqueeze(0)) for u in x]
     grid_sizes = torch.stack([torch.tensor(u.shape[2:], dtype=torch.long) for u in x])

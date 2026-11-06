@@ -19,7 +19,6 @@ silently clones a 100M-parameter block each call.
 import copy
 import logging
 import os
-from typing import Union
 
 import torch
 
@@ -103,13 +102,13 @@ class AutoTorchModule(torch.nn.Module):
     def __init__(
         self,
         offload_dtype: torch.dtype = None,
-        offload_device: Union[str, torch.device] = None,
+        offload_device: str | torch.device = None,
         onload_dtype: torch.dtype = None,
-        onload_device: Union[str, torch.device] = None,
+        onload_device: str | torch.device = None,
         preparing_dtype: torch.dtype = None,
-        preparing_device: Union[str, torch.device] = None,
+        preparing_device: str | torch.device = None,
         computation_dtype: torch.dtype = None,
-        computation_device: Union[str, torch.device] = None,
+        computation_device: str | torch.device = None,
         vram_limit: float = None,
     ):
         """Configure the dtype and device used at each lifecycle stage.
@@ -146,13 +145,13 @@ class AutoTorchModule(torch.nn.Module):
     def set_dtype_and_device(
         self,
         offload_dtype: torch.dtype = None,
-        offload_device: Union[str, torch.device] = None,
+        offload_device: str | torch.device = None,
         onload_dtype: torch.dtype = None,
-        onload_device: Union[str, torch.device] = None,
+        onload_device: str | torch.device = None,
         preparing_dtype: torch.dtype = None,
-        preparing_device: Union[str, torch.device] = None,
+        preparing_device: str | torch.device = None,
         computation_dtype: torch.dtype = None,
-        computation_device: Union[str, torch.device] = None,
+        computation_device: str | torch.device = None,
         vram_limit: float = None,
     ):
         """Update lifecycle placement, defaulting omitted stages to computation placement."""
@@ -179,10 +178,7 @@ class AutoTorchModule(torch.nn.Module):
         """Return whether current accelerator usage is below ``vram_limit``."""
         if self.vram_limit is None or self.computation_device_type not in {"cuda", "npu"}:
             return True
-        if (
-            self._cached_vram_decision is not None
-            and self._vram_checks_since_probe < self._vram_check_interval - 1
-        ):
+        if self._cached_vram_decision is not None and self._vram_checks_since_probe < self._vram_check_interval - 1:
             self._vram_checks_since_probe += 1
             return self._cached_vram_decision
         device = self.computation_device if not is_npu_available() else get_device_name()
@@ -236,13 +232,13 @@ class AutoWrappedModule(AutoTorchModule):
         self,
         module: torch.nn.Module,
         offload_dtype: torch.dtype = None,
-        offload_device: Union[str, torch.device] = None,
+        offload_device: str | torch.device = None,
         onload_dtype: torch.dtype = None,
-        onload_device: Union[str, torch.device] = None,
+        onload_device: str | torch.device = None,
         preparing_dtype: torch.dtype = None,
-        preparing_device: Union[str, torch.device] = None,
+        preparing_device: str | torch.device = None,
         computation_dtype: torch.dtype = None,
-        computation_device: Union[str, torch.device] = None,
+        computation_device: str | torch.device = None,
         vram_limit: float = None,
         name: str = "",
         disk_map: DiskMap = None,
@@ -413,13 +409,13 @@ class AutoWrappedNonRecurseModule(AutoWrappedModule):
         self,
         module: torch.nn.Module,
         offload_dtype: torch.dtype = None,
-        offload_device: Union[str, torch.device] = None,
+        offload_device: str | torch.device = None,
         onload_dtype: torch.dtype = None,
-        onload_device: Union[str, torch.device] = None,
+        onload_device: str | torch.device = None,
         preparing_dtype: torch.dtype = None,
-        preparing_device: Union[str, torch.device] = None,
+        preparing_device: str | torch.device = None,
         computation_dtype: torch.dtype = None,
-        computation_device: Union[str, torch.device] = None,
+        computation_device: str | torch.device = None,
         vram_limit: float = None,
         name: str = "",
         disk_map: DiskMap = None,
@@ -524,13 +520,13 @@ class WanAutoCastLayerNorm(torch.nn.LayerNorm, AutoTorchModule):
         self,
         module: torch.nn.LayerNorm,
         offload_dtype: torch.dtype = None,
-        offload_device: Union[str, torch.device] = None,
+        offload_device: str | torch.device = None,
         onload_dtype: torch.dtype = None,
-        onload_device: Union[str, torch.device] = None,
+        onload_device: str | torch.device = None,
         preparing_dtype: torch.dtype = None,
-        preparing_device: Union[str, torch.device] = None,
+        preparing_device: str | torch.device = None,
         computation_dtype: torch.dtype = None,
-        computation_device: Union[str, torch.device] = None,
+        computation_device: str | torch.device = None,
         vram_limit: float = None,
         **kwargs,
     ):
@@ -610,13 +606,13 @@ class AutoWrappedLinear(torch.nn.Linear, AutoTorchModule):
         self,
         module: torch.nn.Linear,
         offload_dtype: torch.dtype = None,
-        offload_device: Union[str, torch.device] = None,
+        offload_device: str | torch.device = None,
         onload_dtype: torch.dtype = None,
-        onload_device: Union[str, torch.device] = None,
+        onload_device: str | torch.device = None,
         preparing_dtype: torch.dtype = None,
-        preparing_device: Union[str, torch.device] = None,
+        preparing_device: str | torch.device = None,
         computation_dtype: torch.dtype = None,
-        computation_device: Union[str, torch.device] = None,
+        computation_device: str | torch.device = None,
         vram_limit: float = None,
         name: str = "",
         disk_map: DiskMap = None,
@@ -806,11 +802,11 @@ class AutoWrappedLinear(torch.nn.Linear, AutoTorchModule):
         multi-adapter blends that are not a simple scale.
         """
         if self.lora_merger is None:
-            for lora_A, lora_B in zip(self.lora_A_weights, self.lora_B_weights):
+            for lora_A, lora_B in zip(self.lora_A_weights, self.lora_B_weights, strict=False):
                 out = out + x @ lora_A.T @ lora_B.T
         else:
             lora_output = []
-            for lora_A, lora_B in zip(self.lora_A_weights, self.lora_B_weights):
+            for lora_A, lora_B in zip(self.lora_A_weights, self.lora_B_weights, strict=False):
                 lora_output.append(x @ lora_A.T @ lora_B.T)
             lora_output = torch.stack(lora_output)
             out = self.lora_merger(out, lora_output)

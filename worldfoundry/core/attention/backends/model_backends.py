@@ -122,7 +122,7 @@ class PytorchAttention(AttentionCallable):
         return f"SDPA[{'>'.join(b.name for b in self._priority)}]"
 
     def __call__(
-        self,         q: torch.Tensor, k: torch.Tensor, v: torch.Tensor, heads: int, mask: torch.Tensor | None = None
+        self, q: torch.Tensor, k: torch.Tensor, v: torch.Tensor, heads: int, mask: torch.Tensor | None = None
     ) -> torch.Tensor:
         """Serve both unmasked and masked protocols with the pinned SDPA order."""
         return flattened_multihead_attention(
@@ -481,7 +481,7 @@ class AttentionFunction(Enum):
     # :func:`automatic_attention`. Default for :class:`AttentionOps`.
     AUTOMATIC = "automatic"
 
-    def to_callable(self) -> AttentionCallable:  # noqa: PLR0911
+    def to_callable(self) -> AttentionCallable:
         """Resolve to a concrete callable. Use this at module init time so that
         torch.compile can trace through the attention call without graph breaks.
         Every non-AUTOMATIC variant raises :class:`RuntimeError` when the backend

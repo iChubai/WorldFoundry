@@ -31,7 +31,6 @@ import torch
 import triton
 import triton.language as tl
 
-
 # ──────────────────────────────────────────────────────────────────────────
 # Exact split reference — used by tests; not the serving hot path
 # ──────────────────────────────────────────────────────────────────────────
@@ -107,8 +106,15 @@ def fused_qknorm_rope(
     k_norm = torch.empty_like(k_flat)
     block = triton.next_power_of_2(head_dim)
     _rmsnorm_rows[(total * num_heads,)](
-        q_flat, k_flat, q_norm, k_norm, q_weight, k_weight,
-        head_dim, float(eps), q_flat.stride(0),
+        q_flat,
+        k_flat,
+        q_norm,
+        k_norm,
+        q_weight,
+        k_weight,
+        head_dim,
+        float(eps),
+        q_flat.stride(0),
         HEAD_DIM=block,
         num_warps=4,
     )

@@ -72,7 +72,7 @@ class _Plan:
             self.graph.tensor(
                 name=name, dim=list(tensor.shape), stride=list(tensor.stride()), data_type=cudnn.data_type.FP8_E4M3
             )
-            for name, tensor in zip(("query", "key", "value"), (query, key, value))
+            for name, tensor in zip(("query", "key", "value"), (query, key, value), strict=False)
         ]
         self.scales = [
             self.graph.tensor(name=name, dim=[1, 1, 1, 1], stride=[1, 1, 1, 1], data_type=cudnn.data_type.FLOAT)
@@ -125,16 +125,16 @@ class _Plan:
         workspace = torch.empty(self.graph.get_workspace_size(), device=self.device, dtype=torch.uint8)
         one = torch.ones((1, 1, 1, 1), device=self.device, dtype=torch.float32)
         amax_s, amax_o = torch.empty_like(one), torch.empty_like(one)
-        pack = dict(zip(self.descriptors, (query, key, value)))
+        pack = dict(zip(self.descriptors, (query, key, value), strict=False))
         pack.update(dict.fromkeys(self.scales, one))
-        for descriptor, factor in zip(self.scales[:3], (descale_q, descale_k, descale_v)):
+        for descriptor, factor in zip(self.scales[:3], (descale_q, descale_k, descale_v), strict=False):
             pack[descriptor] = one * factor
         # Keep probabilities representable for long K/V sequences. The inverse
         # descale restores the original softmax before the value projection.
         pack[self.scales[3]] = one / 128
         pack[self.scales[4]] = one * 128
         pack[self.scales[5]] = one * scale_o
-        pack.update(dict(zip(self.outputs, (output, amax_s, amax_o))))
+        pack.update(dict(zip(self.outputs, (output, amax_s, amax_o), strict=False)))
         stream = torch.cuda.current_stream(self.device).cuda_stream
         self.cudnn.set_stream(self.handle, stream)
         if not torch.cuda.is_current_stream_capturing():

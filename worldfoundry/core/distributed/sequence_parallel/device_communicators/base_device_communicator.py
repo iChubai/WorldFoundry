@@ -19,7 +19,6 @@ import torch.distributed as dist
 from torch import Tensor
 from torch.distributed import ProcessGroup, ReduceOp
 
-
 # ──────────────────────────────────────────────────────────────────────────
 # Autograd Functions — pair each collective with its algebraic inverse
 # ──────────────────────────────────────────────────────────────────────────
@@ -271,4 +270,3 @@ class DeviceCommunicatorBase:
 
     def destroy(self) -> None:
         """Release backend resources; the base class holds none."""
-        pass

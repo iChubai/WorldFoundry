@@ -35,7 +35,6 @@ from worldfoundry.core.distributed.sequence_parallel.runtime import (
     nccl_info,
 )
 
-
 # ──────────────────────────────────────────────────────────────────────────
 # Dual-stream SP — image tokens exchange; encoder heads are rank-narrowed
 # ──────────────────────────────────────────────────────────────────────────

@@ -21,10 +21,8 @@ import hashlib
 import os
 import threading
 from collections import Counter
-from typing import Any, Callable, Dict, List, Optional, Union
-
-from typing_extensions import Literal
-
+from collections.abc import Callable
+from typing import Any, Literal
 
 # ──────────────────────────────────────────────────────────────────────────
 # Env / integer helpers — no torch; safe on CPU-only control planes
@@ -46,7 +44,7 @@ def divide(numerator: int, denominator: int) -> int:
     return numerator // denominator
 
 
-def set_os_envs(envs: Optional[Dict[str, Any]] = None):
+def set_os_envs(envs: dict[str, Any] | None = None):
     """
     Special value __delete__ or None indicates that the ENV_VAR should be removed
     """
@@ -61,7 +59,7 @@ def set_os_envs(envs: Optional[Dict[str, Any]] = None):
 
 def argmax(L):
     """Index of the first maximum; ties keep the earliest index (stable vs numpy)."""
-    return max(zip(L, range(len(L))))[1]
+    return max(zip(L, range(len(L)), strict=False))[1]
 
 
 # ──────────────────────────────────────────────────────────────────────────
@@ -81,8 +79,8 @@ def _match_patterns_helper(element, patterns):
 
 def match_patterns(
     item: str,
-    include: Union[str, List[str], Callable, List[Callable], None] = None,
-    exclude: Union[str, List[str], Callable, List[Callable], None] = None,
+    include: str | list[str] | Callable | list[Callable] | None = None,
+    exclude: str | list[str] | Callable | list[Callable] | None = None,
     *,
     precedence: Literal["include", "exclude"] = "exclude",
 ):
@@ -112,9 +110,9 @@ def match_patterns(
 
 
 def filter_patterns(
-    items: List[str],
-    include: Union[str, List[str], Callable, List[Callable], None] = None,
-    exclude: Union[str, List[str], Callable, List[Callable], None] = None,
+    items: list[str],
+    include: str | list[str] | Callable | list[Callable] | None = None,
+    exclude: str | list[str] | Callable | list[Callable] | None = None,
     *,
     precedence: Literal["include", "exclude"] = "exclude",
     ordering: Literal["original", "include"] = "original",

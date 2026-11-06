@@ -71,11 +71,12 @@ def __getattr__(name: str):
         return routed_swiglu_moe_triton
     raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
 
+
 __all__ = [
+    "KernelDeviceProfile",
     "clear_kernel_dispatch_cache",
     "group_norm_silu",
     "hidden_qk_rmsnorm_rope_3d",
-    "KernelDeviceProfile",
     "kernel_device_profile",
     "kernel_dispatch_report",
     "layer_norm_scale_shift",
@@ -83,10 +84,10 @@ __all__ = [
     "residual_gate_add",
     "residual_gate_add_",
     "rms_norm_scale_shift",
-    "scale_shift",
-    "routed_swiglu_moe_pytorch",
     "routed_swiglu_moe",
+    "routed_swiglu_moe_pytorch",
     "routed_swiglu_moe_triton",
+    "scale_shift",
     "silu_and_mul",
     "silu_mul",
 ]

@@ -25,6 +25,7 @@ from types import MethodType
 from typing import Any, cast
 
 import worldfoundry.core.distributed.sequence_parallel.envs as envs
+
 from .logging_utils import NewLineFormatter
 
 TRAINER_CONFIGURE_LOGGING = envs.TRAINER_CONFIGURE_LOGGING

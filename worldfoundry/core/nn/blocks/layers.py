@@ -29,14 +29,13 @@ from __future__ import annotations
 
 import collections.abc
 import math
+from collections.abc import Callable, Sequence
 from itertools import repeat
-from typing import Callable, Optional, Sequence, Tuple, Type, Union
 
 import numpy as np
 import torch
 import torch.nn.functional as F
 from torch import Tensor, nn
-
 
 # ──────────────────────────────────────────────────────────────────────────
 # Tuple / list helpers — config scalars and pairs share one constructor path
@@ -183,7 +182,7 @@ class LayerScale(nn.Module):
     def __init__(
         self,
         dim: int,
-        init_values: Union[float, Tensor] = 1e-5,
+        init_values: float | Tensor = 1e-5,
         inplace: bool = False,
         device=None,
     ) -> None:
@@ -233,7 +232,7 @@ class SamMLPBlock(nn.Module):
         self,
         embedding_dim: int,
         mlp_dim: int,
-        act: Type[nn.Module] = nn.GELU,
+        act: type[nn.Module] = nn.GELU,
     ) -> None:
         """Build the ``lin1`` / ``lin2`` names expected by SAM checkpoints."""
 
@@ -265,7 +264,7 @@ class SamHeadMLP(nn.Module):
         super().__init__()
         self.num_layers = num_layers
         h = [hidden_dim] * (num_layers - 1)
-        self.layers = nn.ModuleList(nn.Linear(n, k) for n, k in zip([input_dim] + h, h + [output_dim]))
+        self.layers = nn.ModuleList(nn.Linear(n, k) for n, k in zip([input_dim] + h, h + [output_dim], strict=False))
         self.sigmoid_output = sigmoid_output
         self.act = activation()
 
@@ -285,8 +284,8 @@ class Mlp(nn.Module):
     def __init__(
         self,
         in_features: int,
-        hidden_features: Optional[int] = None,
-        out_features: Optional[int] = None,
+        hidden_features: int | None = None,
+        out_features: int | None = None,
         act_layer: Callable[..., nn.Module] = nn.GELU,
         drop: float | tuple[float, float] = 0.0,
         bias: bool | tuple[bool, bool] = True,
@@ -437,7 +436,7 @@ class DomainAwareLinear(nn.Module):
 class PositionEmbeddingRandom(nn.Module):
     """Positional encoding using random spatial frequencies."""
 
-    def __init__(self, num_pos_feats: int = 64, scale: Optional[float] = None) -> None:
+    def __init__(self, num_pos_feats: int = 64, scale: float | None = None) -> None:
         """Register a non-learned Gaussian frequency matrix (SAM prompt encoder)."""
 
         super().__init__()
@@ -456,7 +455,7 @@ class PositionEmbeddingRandom(nn.Module):
         coords = 2 * np.pi * coords
         return torch.cat([torch.sin(coords), torch.cos(coords)], dim=-1)
 
-    def forward(self, size: Tuple[int, int]) -> Tensor:
+    def forward(self, size: tuple[int, int]) -> Tensor:
         """Dense ``[C, H, W]`` encoding for a regular grid of size ``(H, W)``."""
 
         h, w = size
@@ -470,7 +469,7 @@ class PositionEmbeddingRandom(nn.Module):
         pe = self._pe_encoding(torch.stack([x_embed, y_embed], dim=-1))
         return pe.permute(2, 0, 1)
 
-    def forward_with_coords(self, coords_input: Tensor, image_size: Tuple[int, int]) -> Tensor:
+    def forward_with_coords(self, coords_input: Tensor, image_size: tuple[int, int]) -> Tensor:
         """Encode sparse ``[B, N, 2]`` xy coords normalized by ``image_size`` (W, H)."""
 
         coords = coords_input.clone()
@@ -489,11 +488,11 @@ class PatchEmbed(nn.Module):
 
     def __init__(
         self,
-        img_size: Union[int, tuple[int, int]] = 224,
-        patch_size: Union[int, tuple[int, int]] = 16,
+        img_size: int | tuple[int, int] = 224,
+        patch_size: int | tuple[int, int] = 16,
         in_chans: int = 3,
         embed_dim: int = 768,
-        norm_layer: Optional[Callable[..., nn.Module]] = None,
+        norm_layer: Callable[..., nn.Module] | None = None,
         flatten_embedding: bool = True,
     ) -> None:
         """Configure convolutional image-to-token projection.
@@ -568,11 +567,11 @@ class PatchEmbed_Mlp(PatchEmbed):
 
     def __init__(
         self,
-        img_size: Union[int, tuple[int, int]] = 224,
-        patch_size: Union[int, tuple[int, int]] = 16,
+        img_size: int | tuple[int, int] = 224,
+        patch_size: int | tuple[int, int] = 16,
         in_chans: int = 3,
         embed_dim: int = 768,
-        norm_layer: Optional[Callable[..., nn.Module]] = None,
+        norm_layer: Callable[..., nn.Module] | None = None,
         flatten_embedding: bool = True,
     ) -> None:
         """Replace the conv ``proj`` with unshuffle + MLP; requires a square patch.
@@ -652,8 +651,8 @@ class SwiGLUFFN(nn.Module):
     def __init__(
         self,
         in_features: int,
-        hidden_features: Optional[int] = None,
-        out_features: Optional[int] = None,
+        hidden_features: int | None = None,
+        out_features: int | None = None,
         act_layer: Callable[..., nn.Module] | None = None,
         drop: float = 0.0,
         bias: bool = True,
@@ -686,8 +685,8 @@ class SwiGLUFFNFused(SwiGLU):
     def __init__(
         self,
         in_features: int,
-        hidden_features: Optional[int] = None,
-        out_features: Optional[int] = None,
+        hidden_features: int | None = None,
+        out_features: int | None = None,
         act_layer: Callable[..., nn.Module] | None = None,
         drop: float = 0.0,
         bias: bool = True,
@@ -731,30 +730,30 @@ def _ntuple(n: int):
 
 
 __all__ = [
+    "XFORMERS_AVAILABLE",
+    "XFORMERS_ENABLED",
     "DropPath",
     "LayerNorm2d",
     "LayerScale",
-    "SamHeadMLP",
-    "SamMLPBlock",
     "Mlp",
-    "VisionAttention",
     "PatchEmbed",
     "PatchEmbed_Mlp",
     "Permute",
     "PixelUnshuffle",
     "PositionEmbeddingRandom",
+    "SamHeadMLP",
+    "SamMLPBlock",
     "SwiGLU",
     "SwiGLUFFN",
     "SwiGLUFFNFused",
-    "XFORMERS_AVAILABLE",
-    "XFORMERS_ENABLED",
+    "VisionAttention",
     "drop_path",
+    "get_same_padding",
+    "list_sum",
     "make_2tuple",
     "to_2tuple",
     "to_3tuple",
-    "val2tuple",
-    "get_same_padding",
-    "list_sum",
     "val2list",
+    "val2tuple",
     "zero_module",
 ]

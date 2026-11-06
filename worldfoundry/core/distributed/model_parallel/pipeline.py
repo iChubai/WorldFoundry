@@ -22,12 +22,10 @@ Use ``init_pp_scheduler`` once after ``initialize_model_parallel``.
 
 import queue
 from dataclasses import dataclass
-from typing import Optional
 
 import torch
 
 import worldfoundry.core.distributed.model_parallel.groups as mpu
-
 
 # ──────────────────────────────────────────────────────────────────────────
 # Async P2P queue — pair the recv buffer with its Work so wait() is explicit
@@ -130,7 +128,7 @@ class PPScheduler:
 # Process-wide scheduler — one instance after initialize_model_parallel
 # ──────────────────────────────────────────────────────────────────────────
 
-_PP_SCHEDULER: Optional[PPScheduler] = None
+_PP_SCHEDULER: PPScheduler | None = None
 
 
 def init_pp_scheduler():

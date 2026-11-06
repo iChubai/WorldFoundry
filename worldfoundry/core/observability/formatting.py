@@ -20,11 +20,11 @@ import sys
 import textwrap
 import time
 import traceback
+from collections.abc import Callable
 from datetime import datetime
-from typing import Callable, Union
+from typing import Literal
 
 import numpy as np
-from typing_extensions import Literal
 
 from worldfoundry.core.utils.python.functional_utils import meta_decorator
 from worldfoundry.core.utils.python.misc_utils import match_patterns
@@ -246,7 +246,7 @@ def watch(func, seconds: int = 5, max_times: int = 0, keep_returns: bool = False
                         if keep_returns:
                             returns.append(ret)
                     N += 1
-                    if max_times > 0 and N >= max_times:
+                    if max_times > 0 and max_times <= N:
                         break
                     time.sleep(seconds)
                 except KeyboardInterrupt:
@@ -261,7 +261,7 @@ def watch(func, seconds: int = 5, max_times: int = 0, keep_returns: bool = False
 # ──────────────────────────────────────────────────────────────────────────
 
 
-class PrintRedirection(object):
+class PrintRedirection:
     """
     Context manager: temporarily redirects stdout and stderr
     """
@@ -421,7 +421,7 @@ class ReplaceStringLoggingFilter(logging.Filter):
 
 def logging_exclude_pattern(
     logger_name,
-    patterns: Union[str, list[str], Callable, list[Callable], None],
+    patterns: str | list[str] | Callable | list[Callable] | None,
 ):
     """
     Args:
@@ -432,7 +432,7 @@ def logging_exclude_pattern(
 
 def logging_replace_string(
     logger_name,
-    patterns: Union[str, list[str], Callable, list[Callable], None],
+    patterns: str | list[str] | Callable | list[Callable] | None,
     replacer: Callable,
 ):
     """

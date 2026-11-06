@@ -6,11 +6,11 @@ full-batch mask. Training only; inference is a no-op add.
 
 from __future__ import annotations
 
-from typing import Any, Callable, Optional
+from collections.abc import Callable
+from typing import Any
 
 import torch
 from torch import Tensor
-
 
 # ──────────────────────────────────────────────────────────────────────────
 # Subset-batch residual — cheaper than a full-batch DropPath mask at high p
@@ -21,7 +21,7 @@ def drop_add_residual_stochastic_depth(
     x: Tensor,
     residual_func: Callable[..., Tensor],
     sample_drop_ratio: float = 0.0,
-    pos: Optional[Tensor] = None,
+    pos: Tensor | None = None,
     **residual_kwargs: Any,
 ) -> Tensor:
     """Apply a residual branch on a random batch subset and scale back to full batch size."""
@@ -69,7 +69,7 @@ def add_residual(
     brange: Tensor,
     residual: Tensor,
     residual_scale_factor: float,
-    scaling_vector: Optional[Tensor] = None,
+    scaling_vector: Tensor | None = None,
 ) -> Tensor:
     """Scatter-add a residual onto selected batch rows, optionally with layer-scale."""
 

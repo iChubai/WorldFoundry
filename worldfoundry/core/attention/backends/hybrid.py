@@ -14,8 +14,8 @@ from collections.abc import Callable
 
 import torch
 
-from worldfoundry.core.attention.backends.probe import resolve_attention_backend
 from worldfoundry.core.attention.backends.native import scaled_dot_product_attention
+from worldfoundry.core.attention.backends.probe import resolve_attention_backend
 from worldfoundry.core.attention.sequence.varlen import flash_attention, varlen_scaled_dot_product_attention
 
 # ──────────────────────────────────────────────────────────────────────────

@@ -29,7 +29,7 @@ process-wide patch; :func:`instantiate` also calls it directly so
 structured-config conversion stays correct even without the monkey-patch.
 """
 
-from typing import Any, Dict, List, Union
+from typing import Any
 
 from omegaconf import OmegaConf
 from omegaconf.base import DictKeyType, SCMode
@@ -40,7 +40,7 @@ from omegaconf.dictconfig import DictConfig  # pragma: no cover
 # ──────────────────────────────────────────────────────────────────────────
 
 
-def to_object(cfg: Any) -> Union[Dict[DictKeyType, Any], List[Any], None, str, Any]:
+def to_object(cfg: Any) -> dict[DictKeyType, Any] | list[Any] | None | str | Any:
     """
     Converts an OmegaConf configuration object to a native Python container (dict or list), unless
     the configuration is specifically created by LazyCall, in which case the original configuration

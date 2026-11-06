@@ -21,7 +21,6 @@ import torch
 import torch.distributed as dist
 
 import worldfoundry.core.distributed.runtime.torch_process_group as _torch_process_group
-
 from worldfoundry.core.distributed.collectives.generic import (
     get_collective_device,
     get_rank,
@@ -64,7 +63,7 @@ def setup_for_distributed(is_master) -> None:
     if _ORIGINAL_BUILTINS_PRINT is None:
         _ORIGINAL_BUILTINS_PRINT = builtin_print
 
-    def print(*args, **kwargs):  # noqa: A001
+    def print(*args, **kwargs):
         """Rank-filtered print; ``force`` or ``world_size > 8`` prints on every rank."""
 
         force = kwargs.pop("force", False)
@@ -74,7 +73,7 @@ def setup_for_distributed(is_master) -> None:
             builtin_print(f"[{now}] ", end="")
             builtin_print(*args, **kwargs)
 
-    setattr(print, "_worldfoundry_rank_filtered_print", True)
+    print._worldfoundry_rank_filtered_print = True
     builtins.print = print
     logger.info(
         "Patched builtins.print process-wide with a rank-filtered wrapper (is_master=%s); "

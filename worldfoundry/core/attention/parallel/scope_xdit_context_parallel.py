@@ -19,15 +19,15 @@ Public surface:
   targets for xfuser-enabled Wan DiT blocks.
 """
 
-from typing import Optional
-
 import torch
 from einops import rearrange
 from xfuser.core.distributed import get_sequence_parallel_rank, get_sequence_parallel_world_size, get_sp_group
 from xfuser.core.long_ctx_attention import xFuserLongContextAttention
 from yunchang.kernels import AttnType
 
-from worldfoundry.core.distributed.sequence_parallel.xfuser_parallel import initialize_usp  # noqa: F401 - public compatibility export
+from worldfoundry.core.distributed.sequence_parallel.xfuser_parallel import (
+    initialize_usp,  # noqa: F401 - public compatibility export
+)
 from worldfoundry.core.execution.device import is_npu_available
 from worldfoundry.core.nn import sinusoidal_embedding_1d
 from worldfoundry.core.nn.checkpointing.gradient import gradient_checkpoint_forward
@@ -82,8 +82,8 @@ def usp_dit_forward(
     x: torch.Tensor,
     timestep: torch.Tensor,
     context: torch.Tensor,
-    clip_feature: Optional[torch.Tensor] = None,
-    y: Optional[torch.Tensor] = None,
+    clip_feature: torch.Tensor | None = None,
+    y: torch.Tensor | None = None,
     use_gradient_checkpointing: bool = False,
     use_gradient_checkpointing_offload: bool = False,
     **kwargs,

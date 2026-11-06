@@ -186,9 +186,7 @@ def rotation_matrix_to_quaternion_xyzw(matrix: Tensor) -> Tensor:
     )
     floor = torch.tensor(0.1, dtype=q_abs.dtype, device=q_abs.device)
     candidates = quaternion_by_wxyz / (2.0 * q_abs[..., None].max(floor))
-    quaternion_wxyz = candidates[F.one_hot(q_abs.argmax(dim=-1), num_classes=4).bool(), :].reshape(
-        batch_shape + (4,)
-    )
+    quaternion_wxyz = candidates[F.one_hot(q_abs.argmax(dim=-1), num_classes=4).bool(), :].reshape(batch_shape + (4,))
     return standardize_quaternion_xyzw(quaternion_wxyz[..., (1, 2, 3, 0)])
 
 
@@ -320,9 +318,7 @@ def render_point_cloud_frames_torch(
     if intrinsics.ndim != 3 or tuple(intrinsics.shape[-2:]) != (3, 3):
         raise ValueError(f"intrinsics must have shape [F,3,3], got {tuple(intrinsics.shape)}")
     if world_to_camera.ndim != 3 or tuple(world_to_camera.shape[-2:]) != (4, 4):
-        raise ValueError(
-            f"world_to_camera must have shape [F,4,4], got {tuple(world_to_camera.shape)}"
-        )
+        raise ValueError(f"world_to_camera must have shape [F,4,4], got {tuple(world_to_camera.shape)}")
     if intrinsics.shape[0] != world_to_camera.shape[0]:
         raise ValueError("intrinsics and world_to_camera must have the same frame count")
 
@@ -334,9 +330,7 @@ def render_point_cloud_frames_torch(
     if point_tensor.ndim != 2 or point_tensor.shape[1] != 3:
         raise ValueError(f"points must have shape [N,3], got {tuple(point_tensor.shape)}")
     if color_tensor.ndim != 2 or color_tensor.shape != point_tensor.shape:
-        raise ValueError(
-            f"colors must match points shape [N,3], got {tuple(color_tensor.shape)}"
-        )
+        raise ValueError(f"colors must match points shape [N,3], got {tuple(color_tensor.shape)}")
 
     radius_pixels = max(0, int(round(float(radius_ndc) * min(height, width) * 0.5)))
     if radius_pixels == 0:
@@ -410,10 +404,9 @@ def render_point_cloud_frames_torch(
             if not closest.any():
                 continue
             expanded_colors = frame_colors[start:stop, None, :].expand(-1, offsets_per_point, -1)
-            distance_squared = (
-                (u[start:stop, None] - pixel_u.to(u.dtype)).square()
-                + (v[start:stop, None] - pixel_v.to(v.dtype)).square()
-            )
+            distance_squared = (u[start:stop, None] - pixel_u.to(u.dtype)).square() + (
+                v[start:stop, None] - pixel_v.to(v.dtype)
+            ).square()
             weights = (1.0 - distance_squared / (radius_for_weight * radius_for_weight)).clamp_min(1.0e-6)
             selected_indices = indices[closest]
             selected_weights = weights[inside][closest].to(torch.float32)

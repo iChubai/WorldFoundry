@@ -26,26 +26,23 @@ Do not import FlashAttention here — backend probing stays in
 :mod:`worldfoundry.core.attention.backends.probe`.
 """
 
-from typing import Optional
-
 import einops
 import numpy as np
 import torch
 import torch.nn.functional as F
 
+from worldfoundry.core.attention.backends.native import scaled_dot_product_attention
 from worldfoundry.core.attention.backends.probe import (
     normalize_attention_backend,
     resolve_attention_backend,
 )
-from worldfoundry.core.attention.backends.native import scaled_dot_product_attention
 from worldfoundry.core.attention.sequence.varlen import masked_attention
+from worldfoundry.core.attention.sparse.sparse_3d import ssta_3d_attention
 from worldfoundry.core.distributed.model_parallel.sequence_mesh_state import get_parallel_state
 from worldfoundry.core.distributed.sequence_parallel.runtime import (
     all_gather,
     all_to_all_4D,
 )
-
-from worldfoundry.core.attention.sparse.sparse_3d import ssta_3d_attention
 
 # ──────────────────────────────────────────────────────────────────────────
 # Dense / masked path — shared backends; no FlashAttention import here
@@ -58,7 +55,7 @@ def attention(
     k: torch.Tensor,
     v: torch.Tensor,
     drop_rate: float = 0.0,
-    attn_mask: Optional[torch.Tensor] = None,
+    attn_mask: torch.Tensor | None = None,
     causal: bool = False,
     attn_mode: str = "flash",
 ) -> torch.Tensor:
@@ -82,22 +79,26 @@ def attention(
     if attn_mode == "torch":
         # transpose q,k,v dim to fit scaled_dot_product_attention
         query = q.transpose(1, 2)  # B * H * L * D
-        key = k.transpose(1, 2)    # B * H * L * D
+        key = k.transpose(1, 2)  # B * H * L * D
         value = v.transpose(1, 2)  # B * H * L * D
-        
+
         if attn_mask is not None:
             if attn_mask.dtype != torch.bool and attn_mask.dtype in [torch.int64, torch.int32]:
-                assert attn_mask.max() <= 1 and attn_mask.min() >= 0, 'Integer attention mask must be between 0 and 1 for torch attention.'
+                assert attn_mask.max() <= 1 and attn_mask.min() >= 0, (
+                    "Integer attention mask must be between 0 and 1 for torch attention."
+                )
                 attn_mask = attn_mask.to(torch.bool)
             elif attn_mask.dtype != torch.bool:
                 attn_mask = attn_mask.to(query.dtype)
-                raise NotImplementedError('Float attention mask is not implemented for torch attention.')
-            attn_mask1 = einops.rearrange(attn_mask, 'b l -> b 1 l 1')
-            attn_mask2 = einops.rearrange(attn_mask1, 'b 1 l 1 -> b 1 1 l')
+                raise NotImplementedError("Float attention mask is not implemented for torch attention.")
+            attn_mask1 = einops.rearrange(attn_mask, "b l -> b 1 l 1")
+            attn_mask2 = einops.rearrange(attn_mask1, "b 1 l 1 -> b 1 1 l")
             attn_mask = attn_mask1 & attn_mask2
-        
-        x = F.scaled_dot_product_attention(query, key, value, attn_mask=attn_mask, dropout_p=drop_rate, is_causal=causal)
-        
+
+        x = F.scaled_dot_product_attention(
+            query, key, value, attn_mask=attn_mask, dropout_p=drop_rate, is_causal=causal
+        )
+
         # transpose back
         x = x.transpose(1, 2)  # B * L * H * D
         b, s, h, d = x.shape
@@ -127,25 +128,38 @@ def attention(
 
 
 @torch.compiler.disable
-def parallel_attention(q, k, v, img_q_len, img_kv_len, 
-                       attn_mode=None, text_mask=None, 
-                       attn_param=None,
-                       block_idx=None,
-                       ):
+def parallel_attention(
+    q,
+    k,
+    v,
+    img_q_len,
+    img_kv_len,
+    attn_mode=None,
+    text_mask=None,
+    attn_param=None,
+    block_idx=None,
+):
     """Hunyuan-style alias for :func:`sequence_parallel_attention`.
 
     Checkpoint blocks call this name; the implementation lives in
     :func:`sequence_parallel_attention` so the backend ladder is not forked.
     """
-    return sequence_parallel_attention(q, k, v, img_q_len, img_kv_len, attn_mode, text_mask, attn_param=attn_param, block_idx=block_idx)
+    return sequence_parallel_attention(
+        q, k, v, img_q_len, img_kv_len, attn_mode, text_mask, attn_param=attn_param, block_idx=block_idx
+    )
 
 
-def sequence_parallel_attention(q, k, v, 
-                                img_q_len, img_kv_len, 
-                                attn_mode=None, text_mask=None,
-                                attn_param=None,
-                                block_idx=None,
-                                ):
+def sequence_parallel_attention(
+    q,
+    k,
+    v,
+    img_q_len,
+    img_kv_len,
+    attn_mode=None,
+    text_mask=None,
+    attn_param=None,
+    block_idx=None,
+):
     """Join packed video and text streams, optionally under sequence parallel.
 
     ``q``/``k``/``v`` are ``(video, text)`` pairs. When SP is on, video
@@ -168,7 +182,7 @@ def sequence_parallel_attention(q, k, v,
         sp_group = parallel_dims.sp_group
         sp_size = parallel_dims.sp
         sp_rank = parallel_dims.sp_rank
-    
+
     if enable_sp:
         # batch_size, seq_len, attn_heads, head_dim
         query = all_to_all_4D(query, sp_group, scatter_dim=2, gather_dim=1)
@@ -178,9 +192,7 @@ def sequence_parallel_attention(q, k, v,
         def shrink_head(encoder_state, dim):
             """Keep this rank's head slice; text is not all-to-alled."""
             local_heads = encoder_state.shape[dim] // sp_size
-            return encoder_state.narrow(
-                dim, sp_rank * local_heads, local_heads
-            )
+            return encoder_state.narrow(dim, sp_rank * local_heads, local_heads)
 
         encoder_query = shrink_head(encoder_query, dim=2)
         encoder_key = shrink_head(encoder_key, dim=2)
@@ -197,9 +209,10 @@ def sequence_parallel_attention(q, k, v,
         # geometry below. No other model-specific backend is accepted here.
         allow_model_specific=normalized_attn_mode == "flex_block_attention",
     )
-    
+
     if attn_mode == "sage_attention":
         from sageattention import sageattn
+
         query = torch.cat([query, encoder_query], dim=1)
         key = torch.cat([key, encoder_key], dim=1)
         value = torch.cat([value, encoder_value], dim=1)
@@ -215,15 +228,17 @@ def sequence_parallel_attention(q, k, v,
 
         if attn_mask is not None:
             if attn_mask.dtype != torch.bool and attn_mask.dtype in [torch.int64, torch.int32]:
-                assert attn_mask.max() <= 1 and attn_mask.min() >= 0, 'Integer attention mask must be between 0 and 1 for torch attention.'
+                assert attn_mask.max() <= 1 and attn_mask.min() >= 0, (
+                    "Integer attention mask must be between 0 and 1 for torch attention."
+                )
                 attn_mask = attn_mask.to(torch.bool)
             elif attn_mask.dtype != torch.bool:
                 attn_mask = attn_mask.to(query.dtype)
-                raise NotImplementedError('Float attention mask is not implemented for torch attention.')
-            
+                raise NotImplementedError("Float attention mask is not implemented for torch attention.")
+
         # transpose q,k,v dim to fit scaled_dot_product_attention
         query = query.transpose(1, 2)  # B * Head_num * length * dim
-        key = key.transpose(1, 2)      # B * Head_num * length * dim
+        key = key.transpose(1, 2)  # B * Head_num * length * dim
         value = value.transpose(1, 2)  # B * Head_num * length * dim
 
         pair_mask = None
@@ -235,10 +250,10 @@ def sequence_parallel_attention(q, k, v,
             value,
             attn_mask=pair_mask,
         )
-        
+
         # transpose back
         hidden_states = hidden_states.transpose(1, 2)
-        
+
     elif attn_mode == "flash_attention_2":
         query = torch.cat([query, encoder_query], dim=1)
         key = torch.cat([key, encoder_key], dim=1)
@@ -252,7 +267,7 @@ def sequence_parallel_attention(q, k, v,
             key_mask=attn_mask,
             version=2,
         )
-        
+
     elif attn_mode == "flash_attention_3":
         query = torch.cat([query, encoder_query], dim=1)
         key = torch.cat([key, encoder_key], dim=1)
@@ -301,7 +316,7 @@ def sequence_parallel_attention(q, k, v,
         if thw[0] == 1:
             tile_size = get_image_tile(tile_size)
             win_size = [1, 1, 1]
-        elif thw[0] <= 31: # 16fps: 5 * 16 / 4 + 1 = 21; 24fps: 5 * 24 / 4 + 1 = 31
+        elif thw[0] <= 31:  # 16fps: 5 * 16 / 4 + 1 = 21; 24fps: 5 * 24 / 4 + 1 = 31
             ssta_topk = ssta_topk // 2
 
         # Concatenate and permute query, key, value to (B, H, S, D)
@@ -309,9 +324,7 @@ def sequence_parallel_attention(q, k, v,
         key = torch.cat([key, encoder_key], dim=1).permute(0, 2, 1, 3)
         value = torch.cat([value, encoder_value], dim=1).permute(0, 2, 1, 3)
 
-        assert (
-            query.shape[-1] == 128
-        ), "The last dimension of query, key and value must be 128 for FlexBlockAttention."
+        assert query.shape[-1] == 128, "The last dimension of query, key and value must be 128 for FlexBlockAttention."
 
         hidden_states = ssta_3d_attention(
             query,
@@ -335,13 +348,12 @@ def sequence_parallel_attention(q, k, v,
         hidden_states = hidden_states.permute(0, 2, 1, 3)
 
     else:
-        raise NotImplementedError(
-            f"Unsupported attention mode: {attn_mode}"
-        )
-
+        raise NotImplementedError(f"Unsupported attention mode: {attn_mode}")
 
     if enable_sp:
-        hidden_states, encoder_hidden_states = hidden_states.split_with_sizes((sequence_length, encoder_sequence_length), dim=1)
+        hidden_states, encoder_hidden_states = hidden_states.split_with_sizes(
+            (sequence_length, encoder_sequence_length), dim=1
+        )
         hidden_states = all_to_all_4D(hidden_states, sp_group, scatter_dim=1, gather_dim=2)
         encoder_hidden_states = all_gather(encoder_hidden_states, dim=2, group=sp_group).contiguous()
         hidden_states = hidden_states.to(query.dtype)

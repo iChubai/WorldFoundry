@@ -25,7 +25,6 @@ init; leftover groups break NCCL.
 
 import warnings
 from datetime import timedelta
-from typing import List, Optional
 
 import torch
 
@@ -123,8 +122,8 @@ def get_nccl_options(pg_name, nccl_comm_cfgs):
 
 
 def generate_masked_orthogonal_rank_groups(
-    world_size: int, parallel_size: List[int], mask: List[bool]
-) -> List[List[int]]:
+    world_size: int, parallel_size: list[int], mask: list[bool]
+) -> list[list[int]]:
     """Generate orthogonal parallel groups based on the parallel size and mask.
 
     Arguments:
@@ -175,7 +174,7 @@ def generate_masked_orthogonal_rank_groups(
         dp_group[7] = 1 + range(0, 3) * 2 + 3 * 2 * 3 = [19, 21, 23]
     """
 
-    def prefix_product(a: List[int], init=1) -> List[int]:
+    def prefix_product(a: list[int], init=1) -> list[int]:
         """Exclusive scan of products: strides for a mixed-radix rank encoding."""
 
         r = [init]
@@ -184,10 +183,10 @@ def generate_masked_orthogonal_rank_groups(
             r.append(init)
         return r
 
-    def inner_product(a: List[int], b: List[int]) -> int:
+    def inner_product(a: list[int], b: list[int]) -> int:
         """Dot product used to reassemble a global rank from per-axis indices."""
 
-        return sum([x * y for x, y in zip(a, b)])
+        return sum([x * y for x, y in zip(a, b, strict=False)])
 
     def decompose(index, shape, stride=None):
         """
@@ -201,20 +200,20 @@ def generate_masked_orthogonal_rank_groups(
         """
         if stride is None:
             stride = prefix_product(shape)
-        idx = [(index // d) % s for s, d in zip(shape, stride)]
+        idx = [(index // d) % s for s, d in zip(shape, stride, strict=False)]
         # stride is a prefix_product result. And the value of stride[-1]
         # is not used.
-        assert sum([x * y for x, y in zip(idx, stride[:-1])]) == index, (
-            "idx {} with shape {} mismatch the return idx {}".format(index, shape, idx)
+        assert sum([x * y for x, y in zip(idx, stride[:-1], strict=False)]) == index, (
+            f"idx {index} with shape {shape} mismatch the return idx {idx}"
         )
         return idx
 
-    masked_shape = [s for s, m in zip(parallel_size, mask) if m]
-    unmasked_shape = [s for s, m in zip(parallel_size, mask) if not m]
+    masked_shape = [s for s, m in zip(parallel_size, mask, strict=False) if m]
+    unmasked_shape = [s for s, m in zip(parallel_size, mask, strict=False) if not m]
 
     global_stride = prefix_product(parallel_size)
-    masked_stride = [d for d, m in zip(global_stride, mask) if m]
-    unmasked_stride = [d for d, m in zip(global_stride, mask) if not m]
+    masked_stride = [d for d, m in zip(global_stride, mask, strict=False) if m]
+    unmasked_stride = [d for d, m in zip(global_stride, mask, strict=False) if not m]
 
     group_size = prefix_product(masked_shape)[-1]
     num_of_group = world_size // group_size
@@ -234,7 +233,7 @@ def generate_masked_orthogonal_rank_groups(
     return ranks
 
 
-class RankGenerator(object):
+class RankGenerator:
     """Expand ``tp/dp/pp/cp`` sizes plus an axis ``order`` into rank lists.
 
     Axes omitted from ``order`` are appended only when their size is 1;
@@ -301,7 +300,7 @@ def initialize_model_parallel(
     tp_size: int = 1,
     pp_size: int = 1,
     cp_size: int = 1,
-    nccl_communicator_config_path: Optional[str] = None,
+    nccl_communicator_config_path: str | None = None,
     distributed_timeout_minutes: int = 30,
     order: str = "tp-cp-pp-dp",
 ) -> None:
@@ -392,7 +391,7 @@ def initialize_model_parallel(
                 "Cannot import `yaml`. Setting custom nccl communicator configs requires the yaml package."
             )
 
-        with open(nccl_communicator_config_path, "r") as stream:
+        with open(nccl_communicator_config_path) as stream:
             nccl_comm_cfgs = yaml.safe_load(stream)
 
     dp_size: int = world_size // (tp_size * pp_size * cp_size)

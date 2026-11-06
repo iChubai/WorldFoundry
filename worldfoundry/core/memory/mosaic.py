@@ -22,9 +22,10 @@ when callers pass tensors.
 
 from __future__ import annotations
 
+from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import asdict, dataclass, field
 from math import exp, floor, isfinite, sqrt
-from typing import Any, Iterable, Mapping, Sequence
+from typing import Any
 
 Point2 = tuple[float, float]
 Point3 = tuple[float, float, float]
@@ -55,7 +56,7 @@ class CameraIntrinsics:
     cy: float
 
     @classmethod
-    def from_size(cls, width: int, height: int, focal: float | None = None) -> "CameraIntrinsics":
+    def from_size(cls, width: int, height: int, focal: float | None = None) -> CameraIntrinsics:
         """Factory creating symmetric intrinsics with principal point set to image centers."""
         focal_value = float(focal or max(width, height))
         return cls(
@@ -107,7 +108,7 @@ class CameraPose:
     timestamp: float = 0.0
 
     @classmethod
-    def identity(cls, timestamp: float = 0.0) -> "CameraPose":
+    def identity(cls, timestamp: float = 0.0) -> CameraPose:
         """Factory producing a zero-translation, identity-rotation pose."""
         return cls(timestamp=float(timestamp))
 
@@ -231,7 +232,7 @@ class LatentCanvas:
     channels: int
 
     @classmethod
-    def empty(cls, frames: int, height: int, width: int, channels: int) -> "LatentCanvas":
+    def empty(cls, frames: int, height: int, width: int, channels: int) -> LatentCanvas:
         """Zero-filled canvas; negative extents clamp to zero so size cannot go negative."""
         size = max(frames, 0) * max(height, 0) * max(width, 0) * max(channels, 0)
         return cls(
@@ -239,7 +240,7 @@ class LatentCanvas:
         )
 
     @classmethod
-    def stack(cls, canvases: Sequence["LatentCanvas"]) -> "LatentCanvas":
+    def stack(cls, canvases: Sequence[LatentCanvas]) -> LatentCanvas:
         """Concatenate along time; :exc:`ValueError` if H/W/C disagree."""
         if not canvases:
             return cls.empty(0, 0, 0, 0)
@@ -413,7 +414,7 @@ class MosaicMemoryStore:
         }
 
     @classmethod
-    def from_snapshot(cls, snapshot: Mapping[str, Any]) -> "MosaicMemoryStore":
+    def from_snapshot(cls, snapshot: Mapping[str, Any]) -> MosaicMemoryStore:
         """Deserializes and reconstructs the memory store from a saved snapshot."""
         store = cls(MosaicMemoryConfig(**dict(snapshot.get("config") or {})))
         store._next_id = int(snapshot.get("next_id", 0))
@@ -675,7 +676,7 @@ def project_patch_footprint(patch: Patch3D, target_pose: CameraPose, intrinsics:
     )
     depths = patch.depth_tile or [patch.source_depth] * len(coords)
     footprint: list[Point2] = []
-    for coord, depth in zip(coords, depths):
+    for coord, depth in zip(coords, depths, strict=False):
         if depth <= 0.0 or not isfinite(depth):
             continue
         source_camera = source_intrinsics.unproject(coord, depth)

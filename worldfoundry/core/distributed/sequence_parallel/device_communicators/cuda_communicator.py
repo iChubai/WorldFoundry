@@ -17,7 +17,6 @@ from torch.distributed import ProcessGroup
 
 from .base_device_communicator import DeviceCommunicatorBase
 
-
 # ──────────────────────────────────────────────────────────────────────────
 # CUDA path — PyNCCL for Graph-safe all-reduce / P2P; torch as test fallback
 # ──────────────────────────────────────────────────────────────────────────

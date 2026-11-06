@@ -264,7 +264,9 @@ class QuantizedKVStore:
     coarser settings.
     """
 
-    def __init__(self, key_config: KVQuantConfig, value_config: KVQuantConfig | None = None, *, seq_dim: int = 1) -> None:
+    def __init__(
+        self, key_config: KVQuantConfig, value_config: KVQuantConfig | None = None, *, seq_dim: int = 1
+    ) -> None:
         """Configure per-tensor quantization and the sequence dimension.
 
         Args:

@@ -21,6 +21,7 @@ from contextlib import contextmanager
 import torch
 
 import worldfoundry.core.distributed.sequence_parallel.envs as envs
+
 from .logger import init_logger
 
 logger = init_logger(__name__)
@@ -99,7 +100,7 @@ def install_torch_set_stream_patch() -> None:
         if stream is not None:
             prev_set_stream(stream)
 
-    setattr(_patched_set_stream, "_worldfoundry_sp_set_stream_patch", True)
+    _patched_set_stream._worldfoundry_sp_set_stream_patch = True
     torch.cuda.set_stream = _patched_set_stream
     logger.info(
         "Patched torch.cuda.set_stream process-wide to track the current stream for "

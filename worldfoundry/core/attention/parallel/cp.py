@@ -22,8 +22,9 @@ causal video windows stay aligned with RoPE CP splits in
 :mod:`worldfoundry.core.attention.rotary.rope`.
 """
 
+from collections.abc import Callable
 from contextlib import nullcontext
-from typing import Any, Callable, ContextManager, Literal, cast
+from typing import Any, ContextManager, Literal, cast
 
 import torch
 import torch.distributed._functional_collectives as funcol

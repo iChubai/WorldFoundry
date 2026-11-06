@@ -17,9 +17,10 @@ import functools
 import logging
 import math
 import os
+from collections.abc import Callable, Container
 from contextlib import contextmanager
 from datetime import timedelta
-from typing import Any, Callable, Container, Optional
+from typing import Any
 
 import torch
 import torch.distributed as dist
@@ -43,6 +44,7 @@ except Exception:  # pragma: no cover - optional training dependency.
 
     class _NoParallelState:
         """Stub when ``megatron_compat.parallel_state`` cannot be imported."""
+
         @staticmethod
         def is_initialized() -> bool:
             """Always false — Megatron parallel_state is not importable here."""
@@ -206,7 +208,7 @@ def init() -> int | None:
     return init_torch_distributed()
 
 
-def get_rank(group: Optional[dist.ProcessGroup] = None) -> int:
+def get_rank(group: dist.ProcessGroup | None = None) -> int:
     """Return this worker's rank, or 0 outside distributed execution.
 
     Canonical rank query for ``worldfoundry.core.distributed``. Other
@@ -218,7 +220,7 @@ def get_rank(group: Optional[dist.ProcessGroup] = None) -> int:
     return 0
 
 
-def get_world_size(group: Optional[dist.ProcessGroup] = None) -> int:
+def get_world_size(group: dist.ProcessGroup | None = None) -> int:
     """Return the process-group size, or 1 outside distributed execution.
 
     Canonical world-size query for ``worldfoundry.core.distributed``. Other
@@ -297,7 +299,7 @@ def rank0_only(func: Callable) -> Callable:
     """Run ``func`` only on global rank 0."""
 
     @functools.wraps(func)
-    def wrapper(*args, **kwargs):  # noqa: ANN202
+    def wrapper(*args, **kwargs):
         """Call ``func`` only when :func:`is_rank0`; otherwise return ``None``."""
 
         if is_rank0():
@@ -326,7 +328,7 @@ def rank0_first(func: Callable) -> Callable:
     """
 
     @functools.wraps(func)
-    def wrapper(*args, **kwargs):  # noqa: ANN202
+    def wrapper(*args, **kwargs):
         """Run ``func`` on rank 0, barrier, then on other ranks if rank 0 succeeded."""
 
         distributed = dist.is_available() and dist.is_initialized() and get_world_size() > 1
@@ -409,7 +411,7 @@ class DistributedDataParallel(torch.nn.parallel.DistributedDataParallel):
 
         original_forward = self.module.forward
 
-        def wrapped_training_step(*_args, **_kwargs):  # noqa: ANN202
+        def wrapped_training_step(*_args, **_kwargs):
             """Restore ``forward`` before the real ``training_step`` to avoid recursion."""
 
             self.module.forward = original_forward
@@ -524,9 +526,9 @@ def dist_reduce_tensor(tensor, rank=0, reduce="mean"):
 
 def sync_model_states(
     model: torch.nn.Module,
-    process_group: Optional[dist.ProcessGroup] = None,
+    process_group: dist.ProcessGroup | None = None,
     src: int = 0,
-    params_and_buffers_to_ignore: Optional[Container[str]] = None,
+    params_and_buffers_to_ignore: Container[str] | None = None,
     broadcast_buffers: bool = True,
 ) -> None:
     """Broadcast model parameters and buffers from ``src`` to the process group."""
@@ -568,7 +570,7 @@ def sync_model_states(
     _sync_module_states(
         module=model,
         process_group=process_group,
-        broadcast_bucket_size=int(250 * 1024 * 1024),
+        broadcast_bucket_size=(250 * 1024 * 1024),
         src=src,
         params_and_buffers_to_ignore=params_and_buffers_to_ignore,
         broadcast_buffers=broadcast_buffers,

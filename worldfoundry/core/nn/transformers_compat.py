@@ -8,7 +8,6 @@ from __future__ import annotations
 
 import torch
 
-
 # ──────────────────────────────────────────────────────────────────────────
 # Head mask / prune indices — keep older from_pretrained graphs loading
 # ──────────────────────────────────────────────────────────────────────────
@@ -23,9 +22,7 @@ def prepare_head_mask(
     if head_mask is None:
         return [None] * num_hidden_layers
     if head_mask.dim() == 1:
-        head_mask = head_mask[None, None, :, None, None].expand(
-            num_hidden_layers, -1, -1, -1, -1
-        )
+        head_mask = head_mask[None, None, :, None, None].expand(num_hidden_layers, -1, -1, -1, -1)
     elif head_mask.dim() == 2:
         head_mask = head_mask[:, None, :, None, None]
     else:

@@ -10,7 +10,7 @@ Autograd uses the original tensor implementations.
 from __future__ import annotations
 
 from types import MethodType
-from typing import TYPE_CHECKING, List, Optional
+from typing import TYPE_CHECKING
 
 import torch
 import torch.nn.functional as F
@@ -27,9 +27,9 @@ if TYPE_CHECKING:
 )
 def _layer_norm(
     value: torch.Tensor,
-    normalized_shape: List[int],
-    weight: Optional[torch.Tensor],
-    bias: Optional[torch.Tensor],
+    normalized_shape: list[int],
+    weight: torch.Tensor | None,
+    bias: torch.Tensor | None,
     eps: float,
     amp_enabled: bool,
     amp_dtype: torch.dtype,
@@ -41,9 +41,9 @@ def _layer_norm(
 @_layer_norm.register_fake
 def _layer_norm_fake(
     value: torch.Tensor,
-    normalized_shape: List[int],
-    weight: Optional[torch.Tensor],
-    bias: Optional[torch.Tensor],
+    normalized_shape: list[int],
+    weight: torch.Tensor | None,
+    bias: torch.Tensor | None,
     eps: float,
     amp_enabled: bool,
     amp_dtype: torch.dtype,
@@ -59,7 +59,7 @@ def _layer_norm_fake(
 )
 def _rms_norm(
     value: torch.Tensor,
-    weight: Optional[torch.Tensor],
+    weight: torch.Tensor | None,
     eps: float,
     compute_mode: str,
 ) -> torch.Tensor:
@@ -71,7 +71,7 @@ def _rms_norm(
 @_rms_norm.register_fake
 def _rms_norm_fake(
     value: torch.Tensor,
-    weight: Optional[torch.Tensor],
+    weight: torch.Tensor | None,
     eps: float,
     compute_mode: str,
 ) -> torch.Tensor:
@@ -196,9 +196,9 @@ def preserve_normalization_reductions(region: torch.nn.Module) -> tuple[torch.nn
         if "forward" in module.__dict__:
             continue
         if type(module) is torch.nn.LayerNorm:
-            setattr(module, "forward", MethodType(_layer_norm_forward, module))
+            module.forward = MethodType(_layer_norm_forward, module)
             prepared.append(module)
         elif type(module) is RMSNorm:
-            setattr(module, "forward", MethodType(_rms_norm_forward, module))
+            module.forward = MethodType(_rms_norm_forward, module)
             prepared.append(module)
     return tuple(prepared)

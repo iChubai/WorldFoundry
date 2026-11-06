@@ -252,10 +252,7 @@ class HYWorld2Pipeline(PipelineABC):
         input_path = input_path or kwargs.pop("image_path", None)
         images = kwargs.pop("images", None)
         if input_path is None and images:
-            if isinstance(images, (list, tuple)):
-                input_path = images[0] if images else None
-            else:
-                input_path = images
+            input_path = images[0] if isinstance(images, (list, tuple)) else images
         if input_path is None:
             input_path = kwargs.pop("image", None)
         runtime_kwargs = {key: kwargs.pop(key) for key in list(kwargs) if key in _WORLDRECON_PASSTHROUGH_KWARGS}

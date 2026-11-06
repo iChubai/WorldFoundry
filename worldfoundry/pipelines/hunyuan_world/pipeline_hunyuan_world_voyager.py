@@ -50,7 +50,7 @@ class HunyuanWorldVoyagerPipeline(PipelineABC):
         device: str = "cuda",
     ):
         """Initialize the pipeline and configure runtime components."""
-        super(HunyuanWorldVoyagerPipeline, self).__init__()
+        super().__init__()
         self.operators = operators
         self.represent_model = represent_model
         self.rendering_model = rendering_model

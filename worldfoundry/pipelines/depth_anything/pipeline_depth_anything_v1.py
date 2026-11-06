@@ -68,7 +68,7 @@ class DepthResult:
         else:  # video
             for result in self.results:
                 output_path = os.path.join(output_dir, f"{result['stem']}_depth.mp4")
-                write_video(result["frames"], output_path, fps=int(round(result["frame_rate"])))
+                write_video(result["frames"], output_path, fps=round(result["frame_rate"]))
                 saved_files.append(output_path)
 
         return saved_files

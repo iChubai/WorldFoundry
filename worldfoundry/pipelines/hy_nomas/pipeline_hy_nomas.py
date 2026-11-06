@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from pathlib import Path
 from threading import RLock
-from typing import Any, cast
+from typing import Any, ClassVar, cast
 
 from worldfoundry.core.execution.realtime.contracts import RealtimeSpec
 from worldfoundry.pipelines.native_diffusion_video import NativeTextToVideoPipeline
@@ -24,8 +24,8 @@ class HyNomasPipeline(NativeTextToVideoPipeline):
     DEFAULT_NUM_INFERENCE_STEPS = 8
     DEFAULT_GUIDANCE_SCALE = 1.0
     DEFAULT_FPS = 24
-    DEFAULT_SCHEDULER_OPTIONS = {"shift": 5.0}
-    REQUEST_INPUT_DEFAULTS = {
+    DEFAULT_SCHEDULER_OPTIONS: ClassVar[Mapping[str, object]] = {"shift": 5.0}
+    REQUEST_INPUT_DEFAULTS: ClassVar[Mapping[str, object]] = {
         "segments": None,
         "segment_latent_lengths": None,
         "camera_extrinsics": None,
@@ -110,7 +110,7 @@ class HyNomasPipeline(NativeTextToVideoPipeline):
             raise ValueError("Hy-Nomas realtime starts from text, not a reference image")
         with self._realtime_lock:
             self.reset_realtime()
-            self._realtime_options = dict(prompt=prompt, seed=seed, height=height, width=width)
+            self._realtime_options = {"prompt": prompt, "seed": seed, "height": height, "width": width}
             if self.native_pipeline.model_id == "hy-nomas-low-memory":
                 self._realtime_options["kv_cache_quantization"] = "int8"
             spec = RealtimeSpec.from_payload(self.prepare_realtime()["realtime_spec"])

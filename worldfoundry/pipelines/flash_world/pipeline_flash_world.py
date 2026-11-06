@@ -470,7 +470,6 @@ class FlashWorldPipeline(PipelineABC):
         os.makedirs(output_dir, exist_ok=True)
 
         scene_params = results["scene_params"]
-        ref_w2c = results["ref_w2c"]
         T_norm = results["T_norm"]
 
         saved_paths = {}
@@ -496,6 +495,7 @@ class FlashWorldPipeline(PipelineABC):
                     "FlashWorld SPZ export requested but the optional `spz` package is not installed; "
                     "saving PLY/video artifacts only.",
                     RuntimeWarning,
+                    stacklevel=2,
                 )
                 save_spz = False
                 spz_path = None

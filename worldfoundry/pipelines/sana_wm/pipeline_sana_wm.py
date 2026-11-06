@@ -5,7 +5,7 @@ from __future__ import annotations
 import os
 from collections.abc import Mapping, Sequence
 from pathlib import Path
-from typing import Any
+from typing import Any, ClassVar
 
 from PIL import Image
 
@@ -30,14 +30,14 @@ class SanaWMPipeline(NativeVisualDiffusionPipeline):
     DEFAULT_GUIDANCE_SCALE = 5.0
     DEFAULT_FPS = 16
     DEFAULT_NEGATIVE_PROMPT = ""
-    DEFAULT_SCHEDULER_OPTIONS = {"shift": 9.8}
+    DEFAULT_SCHEDULER_OPTIONS: ClassVar[Mapping[str, object]] = {"shift": 9.8}
     NUM_INFERENCE_STEP_ALIASES = ("step", "infer_steps")
-    REQUEST_INPUT_DEFAULTS = {
+    REQUEST_INPUT_DEFAULTS: ClassVar[Mapping[str, object]] = {
         "camera_to_world": None,
         "camera_actions": None,
         "intrinsics": None,
     }
-    REQUEST_INPUT_ALIASES = {
+    REQUEST_INPUT_ALIASES: ClassVar[Mapping[str, str]] = {
         "camera_poses": "camera_to_world",
         "action": "camera_actions",
         "camera_action": "camera_actions",
@@ -201,8 +201,8 @@ class SanaWMStreamingPipeline(SanaWMPipeline):
     DEFAULT_NUM_FRAMES = 241
     DEFAULT_NUM_INFERENCE_STEPS = 4
     DEFAULT_GUIDANCE_SCALE = 1.0
-    DEFAULT_SCHEDULER_OPTIONS = {"shift": 8.0}
-    REQUEST_INPUT_DEFAULTS = {
+    DEFAULT_SCHEDULER_OPTIONS: ClassVar[Mapping[str, object]] = {"shift": 8.0}
+    REQUEST_INPUT_DEFAULTS: ClassVar[Mapping[str, object]] = {
         "camera_to_world": None,
         "camera_actions": None,
         "intrinsics": None,

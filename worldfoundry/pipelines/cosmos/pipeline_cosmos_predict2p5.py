@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import contextlib
 import secrets
 from collections.abc import Mapping
 from pathlib import Path
@@ -179,10 +180,8 @@ class CosmosPredict2p5Pipeline(PipelineABC):
             )
         except BaseException:
             if parallel is not None:
-                try:
+                with contextlib.suppress(Exception):
                     parallel.close()
-                except Exception:
-                    pass
             raise
         return cls(native_pipeline=native, device=device, model_id=resolved_model_id, parallel_context=parallel)
 

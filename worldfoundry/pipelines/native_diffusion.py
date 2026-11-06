@@ -346,9 +346,12 @@ class NativeVisualDiffusionPipeline(PipelineABC):
                 runtime_policy_options.get("cfg_parallel_degree", False),
             )
         )
-        if "cfg_parallel" in runtime_policy_options and "cfg_parallel_degree" in runtime_policy_options:
-            if cls._cfg_parallel_degree(runtime_policy_options["cfg_parallel_degree"]) != cfg_degree:
-                raise ValueError("cfg_parallel and cfg_parallel_degree must match")
+        if (
+            "cfg_parallel" in runtime_policy_options
+            and "cfg_parallel_degree" in runtime_policy_options
+            and cls._cfg_parallel_degree(runtime_policy_options["cfg_parallel_degree"]) != cfg_degree
+        ):
+            raise ValueError("cfg_parallel and cfg_parallel_degree must match")
         if "cfg_parallel" in runtime_policy_options or "cfg_parallel_degree" in runtime_policy_options:
             runtime_policy_options["cfg_parallel"] = cfg_degree
             runtime_policy_options.pop("cfg_parallel_degree", None)
@@ -373,9 +376,12 @@ class NativeVisualDiffusionPipeline(PipelineABC):
 
         if sequence_parallel or cfg_degree > 1 or vae_parallel_degree > 1:
             degree = int(sequence_parallel or 1)
-            if "sequence_parallel" in runtime_policy_options and "sp_degree" in runtime_policy_options:
-                if int(runtime_policy_options["sp_degree"]) != degree:
-                    raise ValueError("sequence_parallel and sp_degree must match")
+            if (
+                "sequence_parallel" in runtime_policy_options
+                and "sp_degree" in runtime_policy_options
+                and int(runtime_policy_options["sp_degree"]) != degree
+            ):
+                raise ValueError("sequence_parallel and sp_degree must match")
             if torch.device(device).type != "cuda":
                 raise ValueError("sequence/CFG/VAE parallelism requires a CUDA pipeline device")
             from worldfoundry.core.distributed.sequence_parallel.runtime import (

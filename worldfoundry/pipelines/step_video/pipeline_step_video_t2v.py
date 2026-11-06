@@ -2,6 +2,9 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
+from typing import ClassVar
+
 from worldfoundry.pipelines.native_diffusion_video import NativeTextToVideoPipeline
 
 # The released StepVideo pipeline defaults both prompt suffixes to empty.
@@ -24,12 +27,12 @@ class StepVideoT2VPipeline(NativeTextToVideoPipeline):
     DEFAULT_NUM_INFERENCE_STEPS = 50
     DEFAULT_GUIDANCE_SCALE = 9.0
     DEFAULT_FPS = 25
-    DEFAULT_SCHEDULER_OPTIONS = {"time_shift": 13.0}
-    REQUEST_INPUT_DEFAULTS = {
+    DEFAULT_SCHEDULER_OPTIONS: ClassVar[Mapping[str, object]] = {"time_shift": 13.0}
+    REQUEST_INPUT_DEFAULTS: ClassVar[Mapping[str, object]] = {
         "positive_magic": DEFAULT_POSITIVE_MAGIC,
         "negative_magic": DEFAULT_NEGATIVE_MAGIC,
     }
-    REQUEST_INPUT_ALIASES = {
+    REQUEST_INPUT_ALIASES: ClassVar[Mapping[str, str]] = {
         "pos_magic": "positive_magic",
         "neg_magic": "negative_magic",
     }

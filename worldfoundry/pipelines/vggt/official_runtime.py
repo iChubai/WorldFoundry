@@ -147,9 +147,8 @@ def run_model(
     else:
         dtype = torch.float32
 
-    with torch.no_grad():
-        with torch.amp.autocast(device_type=device_type, dtype=dtype, enabled=(device_type == "cuda")):
-            predictions = model(images)
+    with torch.no_grad(), torch.amp.autocast(device_type=device_type, dtype=dtype, enabled=(device_type == "cuda")):
+        predictions = model(images)
 
     extrinsic, intrinsic = pose_encoding_to_extri_intri(predictions["pose_enc"], images.shape[-2:])
     predictions["extrinsic"] = extrinsic

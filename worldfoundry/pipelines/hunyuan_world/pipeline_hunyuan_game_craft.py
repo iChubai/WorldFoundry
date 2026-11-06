@@ -70,10 +70,7 @@ class HunyuanGameCraftPipeline(PipelineABC):
 
         initialize_distributed(args.seed)
 
-        if model_path is not None:
-            synthesis_model_path = model_path
-        else:
-            synthesis_model_path = "tencent/Hunyuan-GameCraft-1.0"
+        synthesis_model_path = model_path if model_path is not None else "tencent/Hunyuan-GameCraft-1.0"
 
         from ...synthesis.visual_generation.hunyuan_world.hunyuan_game_craft_synthesis import HunyuanGameCraftSynthesis
 
@@ -272,9 +269,8 @@ class HunyuanGameCraftPipeline(PipelineABC):
 
         prompt = prompt or ""
         positive_prompt = interaction_positive_prompt or ""
-        if not self._has_predict_arg("positive_prompt"):
-            if positive_prompt.strip():
-                prompt = (prompt + " " + positive_prompt).strip()
+        if not self._has_predict_arg("positive_prompt") and positive_prompt.strip():
+            prompt = (prompt + " " + positive_prompt).strip()
 
         out = self._predict_call(
             ref_images=ctx.get("ref_images"),

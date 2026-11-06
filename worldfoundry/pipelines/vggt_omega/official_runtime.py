@@ -93,7 +93,7 @@ def _extract_video_frames(video_path: Path, images_dir: Path, *, video_sample_fp
 
     fps = video.get(cv2.CAP_PROP_FPS)
     video_sample_fps = max(float(video_sample_fps), 0.1)
-    frame_interval = max(int(round((fps if fps and fps > 0 else 1) / video_sample_fps)), 1)
+    frame_interval = max(round((fps if fps and fps > 0 else 1) / video_sample_fps), 1)
 
     image_paths: list[str] = []
     frame_idx = 0

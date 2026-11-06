@@ -231,10 +231,7 @@ class CUT3RPipeline(PipelineABC):
         # CUT3R's operator only consumes the latest interaction token, so we
         # treat list inputs by taking the last non-empty token.
         if isinstance(interaction, list):
-            if len(interaction) == 0:
-                interaction = None
-            else:
-                interaction = str(interaction[-1])
+            interaction = None if len(interaction) == 0 else str(interaction[-1])
 
         if interaction is None:
             interaction_dict = {"data_type": "image", "output_type": "all"}
@@ -341,10 +338,7 @@ class CUT3RPipeline(PipelineABC):
             images_data = [images_data]
 
         if size is None:
-            if self.representation_model is not None:
-                size = getattr(self.representation_model, "size", 224)
-            else:
-                size = 224
+            size = getattr(self.representation_model, "size", 224) if self.representation_model is not None else 224
 
         data = {
             "images": images_data,

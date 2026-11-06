@@ -78,10 +78,7 @@ class HunyuanMirrorPipeline(PipelineABC):
         kwargs = cls._strip_framework_loading_options({**component_options, **kwargs})
 
         # Set model path
-        if local_model_path:
-            actual_model_path = local_model_path
-        else:
-            actual_model_path = model_path or "tencent/HunyuanWorld-Mirror"
+        actual_model_path = local_model_path or model_path or "tencent/HunyuanWorld-Mirror"
 
         # Load representation model
         logger.info("Loading HunyuanWorld-Mirror model from %s", actual_model_path)
@@ -149,10 +146,7 @@ class HunyuanMirrorPipeline(PipelineABC):
                 confidences = pts3d_conf[i, :, :]  # [H, W]
                 percentile_threshold = np.quantile(confidences, confidence_percentile / 100.0)
                 conf_mask = confidences >= percentile_threshold
-                if final_mask is None:
-                    final_mask = conf_mask
-                else:
-                    final_mask = final_mask & conf_mask
+                final_mask = conf_mask if final_mask is None else final_mask & conf_mask
 
             if apply_edge_mask:
                 from worldfoundry.base_models.three_dimensions.point_clouds.hunyuan_mirror.utils.geometry import (
@@ -167,18 +161,12 @@ class HunyuanMirrorPipeline(PipelineABC):
                 depth_pred = depth_preds[i, :, :, 0]  # [H, W]
                 depth_edges = depth_edge(depth_pred, rtol=edge_depth_threshold, mask=final_mask)
                 edge_mask = ~(depth_edges & normal_edges)
-                if final_mask is None:
-                    final_mask = edge_mask
-                else:
-                    final_mask = final_mask & edge_mask
+                final_mask = edge_mask if final_mask is None else final_mask & edge_mask
 
             if apply_sky_mask:
                 # Apply sky mask filtering (sky_mask is already inverted: True = non-sky)
                 sky_mask_frame = sky_mask[i]  # [H, W]
-                if final_mask is None:
-                    final_mask = sky_mask_frame
-                else:
-                    final_mask = final_mask & sky_mask_frame
+                final_mask = sky_mask_frame if final_mask is None else final_mask & sky_mask_frame
 
             final_mask_list.append(final_mask)
 
@@ -237,10 +225,9 @@ class HunyuanMirrorPipeline(PipelineABC):
         # Use bfloat16 precision to balance memory efficiency and numeric range
         amp_dtype = torch.bfloat16 if use_amp else torch.float32
 
-        with torch.no_grad():
-            with torch.amp.autocast("cuda", enabled=bool(use_amp), dtype=amp_dtype):
-                views = {"img": imgs}
-                predictions = self.represent_model(views=views, cond_flags=cond_flags)
+        with torch.no_grad(), torch.amp.autocast("cuda", enabled=bool(use_amp), dtype=amp_dtype):
+            views = {"img": imgs}
+            predictions = self.represent_model(views=views, cond_flags=cond_flags)
 
         logger.info("Inference time: %.3f seconds", time.time() - start_time)
 
@@ -266,7 +253,7 @@ class HunyuanMirrorPipeline(PipelineABC):
                 )
             skyseg_session = onnxruntime.InferenceSession(str(skyseg_path))
             sky_mask_list = []
-            for i, img_path in enumerate(image_paths or [f"image_{i}" for i in range(S)]):
+            for img_path in image_paths or [f"image_{i}" for i in range(S)]:
                 sky_mask_frame = segment_sky(img_path, skyseg_session)
                 # Resize mask to match H×W if needed
                 if sky_mask_frame.shape[0] != H or sky_mask_frame.shape[1] != W:

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import contextlib
 from collections.abc import Mapping
 from typing import Any
 
@@ -185,10 +186,8 @@ class VideoCrafterPipelineBase(PipelineABC):
             if saved_generator_attrs and getattr(self.synthesis_model, "generator", None) is generator:
                 for key, value in saved_generator_attrs.items():
                     if value is _missing:
-                        try:
+                        with contextlib.suppress(AttributeError):
                             delattr(generator, key)
-                        except AttributeError:
-                            pass
                     else:
                         setattr(generator, key, value)
             if saved_runtime_kwargs is not None:

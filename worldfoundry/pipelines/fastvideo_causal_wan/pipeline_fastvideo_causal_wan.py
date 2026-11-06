@@ -2,7 +2,8 @@
 
 from __future__ import annotations
 
-from typing import Any
+from collections.abc import Mapping
+from typing import Any, ClassVar
 
 from PIL import Image
 
@@ -49,7 +50,7 @@ class FastVideoCausalWanPipeline(NativeVisualDiffusionPipeline):
     DEFAULT_GUIDANCE_SCALE = 1.0
     DEFAULT_FPS = 16
     DEFAULT_NEGATIVE_PROMPT = ""
-    DEFAULT_SCHEDULER_OPTIONS = {"shift": 12.0}
+    DEFAULT_SCHEDULER_OPTIONS: ClassVar[Mapping[str, object]] = {"shift": 12.0}
 
     def __call__(
         self,

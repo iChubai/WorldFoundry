@@ -260,9 +260,9 @@ class NativeMagi2Pipeline(PipelineABC):
             raise ValueError("MAGI-2 duration_seconds must be positive and finite")
         aw, ah = ratios[aspect_ratio]
         if aw >= ah:
-            height, width = short_edge, int(round(short_edge * aw / ah))
+            height, width = short_edge, round(short_edge * aw / ah)
         else:
-            width, height = short_edge, int(round(short_edge * ah / aw))
+            width, height = short_edge, round(short_edge * ah / aw)
         unit = _VAE_STRIDE[1]  # spatial 16
         # Match the released 896x512 preview preset for the default 16:9 shape.
         height, width = _floor_to_multiple(height, unit), _floor_to_multiple(width, unit)

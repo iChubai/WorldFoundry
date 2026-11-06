@@ -149,9 +149,10 @@ class WorldCrafterPipeline(PipelineABC):
             raise ValueError("Select model_type when loading the pipeline")
         if int(kwargs.get("fps", 16)) < 1:
             raise ValueError("fps must be positive")
-        if self.model_type == "fast":
-            if kwargs.get("num_inference_steps", 6) != 6 or kwargs.get("guidance_scale", 1.0) != 1.0:
-                raise ValueError("Fast requires six contract-owned steps and CFG=1")
+        if self.model_type == "fast" and (
+            kwargs.get("num_inference_steps", 6) != 6 or kwargs.get("guidance_scale", 1.0) != 1.0
+        ):
+            raise ValueError("Fast requires six contract-owned steps and CFG=1")
         import inspect
 
         allowed = set(inspect.signature(WorldCrafter.generate).parameters) - {

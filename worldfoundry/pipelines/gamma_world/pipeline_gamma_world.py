@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from numbers import Integral
 from pathlib import Path
-from typing import Any
+from typing import Any, ClassVar
 
 from worldfoundry.base_models.diffusion_model import NativeDiffusionPipeline
 from worldfoundry.base_models.diffusion_model.models.encoders.gamma_world import component as gamma_conditioning
@@ -41,13 +41,13 @@ class GammaWorldPipeline(NativeTextToVideoPipeline):
     DEFAULT_GUIDANCE_SCALE = 1.0
     DEFAULT_NEGATIVE_PROMPT = gamma_conditioning.DEFAULT_NEGATIVE_PROMPT
     DEFAULT_FPS = 16
-    DEFAULT_SCHEDULER_OPTIONS = {"shift": 5.0}
-    REQUEST_INPUT_DEFAULTS = {
+    DEFAULT_SCHEDULER_OPTIONS: ClassVar[Mapping[str, object]] = {"shift": 5.0}
+    REQUEST_INPUT_DEFAULTS: ClassVar[Mapping[str, object]] = {
         "n_players": 2,
         "actions": None,
         "num_conditional_frames": 1,
     }
-    REQUEST_INPUT_ALIASES = {"action_paths": "actions"}
+    REQUEST_INPUT_ALIASES: ClassVar[Mapping[str, str]] = {"action_paths": "actions"}
 
     @classmethod
     def _validate_num_frames(cls, options: Mapping[str, Any]) -> None:

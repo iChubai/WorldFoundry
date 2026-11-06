@@ -88,7 +88,7 @@ _COMPONENT_NAMES = ("transformer", "text_encoder", "video_vae", "audio_vae")
 
 
 def _round_to_multiple(value: int, multiple: int) -> int:
-    return max(multiple, int(round(value / multiple)) * multiple)
+    return max(multiple, round(value / multiple) * multiple)
 
 
 def _is_module(value: Any) -> bool:
@@ -160,10 +160,10 @@ def _resolve_canvas(short_edge: int, aspect_ratio: str) -> tuple[int, int]:
     aw, ah = _ASPECT_RATIOS[aspect_ratio]
     if aw >= ah:  # landscape or square: height is the short edge
         height = int(short_edge)
-        width = int(round(short_edge * aw / ah))
+        width = round(short_edge * aw / ah)
     else:  # portrait: width is the short edge
         width = int(short_edge)
-        height = int(round(short_edge * ah / aw))
+        height = round(short_edge * ah / aw)
     # Latent grid must be divisible by (spatial_compression * patch) on each axis.
     unit_h = _SPATIAL_COMPRESSION * _PATCH_H
     unit_w = _SPATIAL_COMPRESSION * _PATCH_W
@@ -448,7 +448,7 @@ class NativeMiniMaxH3Pipeline(PipelineABC):
                 f"{MINIMAX_H3_MAX_DURATION_SECONDS}], got {duration_seconds}"
             )
         height, width = _resolve_canvas(short_edge, aspect_ratio)
-        frame_count = minimax_h3_align_frame_count(int(round(duration_seconds * self.DEFAULT_FPS)))
+        frame_count = minimax_h3_align_frame_count(round(duration_seconds * self.DEFAULT_FPS))
         latent_t = minimax_h3_video_latent_t(frame_count)
         latent_h = height // _SPATIAL_COMPRESSION
         latent_w = width // _SPATIAL_COMPRESSION
@@ -629,10 +629,7 @@ class NativeMiniMaxH3Pipeline(PipelineABC):
         arch = self.video_vae.sglang_config.arch_config
         latent = _reverse_normalize_latents(latent, mean_values=arch.latents_mean, std_values=arch.latents_std)
         decode_base = getattr(self.video_vae, "decode_base", None)
-        if callable(decode_base):
-            decoded = decode_base(latent)
-        else:
-            decoded = self.video_vae.decode(latent)
+        decoded = decode_base(latent) if callable(decode_base) else self.video_vae.decode(latent)
         # The released VAE decodes into ImageNet-normalized pixel space. The
         # official processor reverses that normalization before video export.
         return self.video_vae.processor.revert_tensor(decoded)

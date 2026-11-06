@@ -1,18 +1,12 @@
-"""Infinite Vggt visual generation pipeline module."""
+"""Infinite Vggt visual generation pipeline module.
 
-from ..pipeline_utils import PipelineABC
-
-"""
 InfiniteVGGT pipeline: operators + representation / reasoning / synthesis.
 Output is saveable (PIL.Image, video frame list); pipeline does not save — user saves in test.
 """
 
 from collections.abc import Generator
 from pathlib import Path
-from typing import TYPE_CHECKING, Any
-
-if TYPE_CHECKING:
-    pass
+from typing import Any
 
 import numpy as np
 from PIL import Image
@@ -27,6 +21,7 @@ from worldfoundry.core.media.artifacts import (
 )
 
 from ...operators.infinite_vggt_operator import InfiniteVGGTOperator
+from ..pipeline_utils import PipelineABC
 
 
 def _default_output_dir(name: str = "infinite_vggt_output") -> str:

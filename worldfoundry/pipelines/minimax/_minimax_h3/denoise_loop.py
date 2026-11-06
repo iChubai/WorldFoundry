@@ -137,7 +137,7 @@ class MiniMaxH3DenoiseBranch:
         self.audio_target_slice = slice(self.audio_target_start, None)
         text_pos = packed["text_pos"].view(-1).to(torch.long)
         text_len = int(text_pos.shape[0])
-        if list(text_embeddings.shape)[0] != text_len:
+        if text_embeddings.shape[0] != text_len:
             raise ValueError(f"text_embeddings rows {list(text_embeddings.shape)} != packed text_len {text_len}")
         if int(token_tags.view(-1).shape[0]) != seq_len:
             raise ValueError(f"token_tags length {int(token_tags.view(-1).shape[0])} != seq_len {seq_len}")

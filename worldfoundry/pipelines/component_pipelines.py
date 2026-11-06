@@ -19,8 +19,8 @@ def _load_target(target: str) -> type[Any]:
 class _ComponentPipelineMeta(type):
     """Metaclass for ComponentPipeline that dynamically resolves and loads target components on access."""
 
-    _COMPONENT_ATTRIBUTES = {"OPERATOR_CLS", "MEMORY_CLS", "SYNTHESIS_CLS"}
-    _TARGET_ATTRIBUTES = {
+    _COMPONENT_ATTRIBUTES: ClassVar[set[str]] = {"OPERATOR_CLS", "MEMORY_CLS", "SYNTHESIS_CLS"}
+    _TARGET_ATTRIBUTES: ClassVar[dict[str, str]] = {
         "OPERATOR_CLS": "OPERATOR_TARGET",
         "MEMORY_CLS": "MEMORY_TARGET",
         "SYNTHESIS_CLS": "SYNTHESIS_TARGET",

@@ -441,8 +441,8 @@ def minimax_h3_packed_sequence_ref2va_blocks(
 
     target_img_pos = _range_for_slice(video_sl)
     target_audio_pos = _range_for_slice(audio_sl)
-    img_pos = _cat_ranges(ref_img_pos_parts + [target_img_pos])
-    audio_pos = _cat_ranges(ref_audio_pos_parts + [target_audio_pos])
+    img_pos = _cat_ranges([*ref_img_pos_parts, target_img_pos])
+    audio_pos = _cat_ranges([*ref_audio_pos_parts, target_audio_pos])
 
     update_mask = torch.zeros(img_pos.shape[0], dtype=torch.bool)
     update_mask[ref_visual_rows:] = True

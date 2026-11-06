@@ -7,6 +7,7 @@ self-attn uses :mod:`worldfoundry.core.attention.parallel.rope_sequence_parallel
 """
 
 import math
+from typing import Any, cast
 
 import torch
 import torch.nn.functional as torch_F
@@ -322,6 +323,8 @@ def sp_dit_forward_causal(
         "cross_attn_first_call": cross_attn_first_call,
     }
 
+    kv_cache = cast(list[dict[str, Any]], kv_cache)
+    crossattn_cache = cast(list[dict[str, Any]], crossattn_cache)
     for block_index, block in enumerate(self.blocks):
         kwargs.update(
             {
@@ -386,7 +389,7 @@ def sp_attn_forward_causal(
     v = self.v(x).view(b, s, n, d)
     rope_is_fused = self.qk_norm and b == 1
     if rope_is_fused:
-        grid_size = tuple(int(value) for value in grid_sizes[0].tolist())
+        grid_size = cast(tuple[int, int, int], tuple(int(value) for value in grid_sizes[0].tolist()))
         q, k = hidden_qk_rmsnorm_rope_3d(
             q,
             k,
@@ -418,6 +421,7 @@ def sp_attn_forward_causal(
         key = causal_rope_apply(k_local, grid_sizes, freqs, start_frame=current_start_frame).type_as(v_local)
 
     current_end = current_start + seq_lens
+    kv_cache = cast(dict[str, torch.Tensor], kv_cache)
     kv_cache_size = kv_cache["k"].shape[1]
     if (
         self.local_attn_size != -1
@@ -574,6 +578,8 @@ def sp_dit_forward_causal_chunked(
         "cross_attn_first_call": cross_attn_first_call,
         "seq_lens_int": seq_lens_int,
     }
+    kv_cache = cast(list[dict[str, Any]], kv_cache)
+    crossattn_cache = cast(list[dict[str, Any]], crossattn_cache)
     for block_index, block in enumerate(self.blocks):
         x = block(
             x,
@@ -616,7 +622,7 @@ def sp_attn_forward_causal_chunked(
     value = self.v(x).view(batch_size, local_seq_len, num_heads, head_dim)
     rope_is_fused = self.qk_norm and batch_size == 1
     if rope_is_fused:
-        grid_size = tuple(int(item) for item in grid_sizes[0].tolist())
+        grid_size = cast(tuple[int, int, int], tuple(int(item) for item in grid_sizes[0].tolist()))
         query, key = hidden_qk_rmsnorm_rope_3d(
             query,
             key,
@@ -654,6 +660,7 @@ def sp_attn_forward_causal_chunked(
     value = value[:, :seq_lens_int]
 
     current_end = current_start + seq_lens_int
+    kv_cache = cast(dict[str, torch.Tensor], kv_cache)
     cache_end = int(kv_cache["local_end_index"].item())
     global_end = int(kv_cache["global_end_index"].item())
     cache_size = kv_cache["k"].shape[1]

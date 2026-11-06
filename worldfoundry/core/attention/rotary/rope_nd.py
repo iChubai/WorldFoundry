@@ -24,6 +24,8 @@ Public surface:
 
 from __future__ import annotations
 
+from typing import cast
+
 import torch
 
 from worldfoundry.core.attention.rotary.rope import apply_rotary_embedding
@@ -170,7 +172,9 @@ def apply_nd_rotary_embedding(
         return query_out, key_out
 
     query_complex = torch.view_as_complex(query.float().reshape(*query.shape[:-1], -1, 2))
-    freqs = reshape_rotary_for_broadcast(freqs_cis, query_complex, head_first=head_first).to(query.device)
+    freqs = cast(torch.Tensor, reshape_rotary_for_broadcast(freqs_cis, query_complex, head_first=head_first)).to(
+        query.device
+    )
     query_freqs = _slice_freqs_for_value(freqs, query_complex, head_first=head_first, start_offset=start_offset)
     query_out = torch.view_as_real(query_complex * query_freqs).flatten(3).type_as(query)
 
@@ -236,7 +240,7 @@ def get_nd_rotary_pos_embed(
             torch.cat([embedding[0] for embedding in embeddings], dim=1),
             torch.cat([embedding[1] for embedding in embeddings], dim=1),
         )
-    return torch.cat(embeddings, dim=1)
+    return torch.cat(cast(list[torch.Tensor], embeddings), dim=1)
 
 
 def get_1d_rotary_pos_embed(

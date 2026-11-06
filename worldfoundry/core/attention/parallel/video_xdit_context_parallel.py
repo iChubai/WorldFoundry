@@ -18,16 +18,20 @@ Public surface:
 """
 
 import torch
-import torch.cuda.amp as amp
-from xfuser.core.distributed import (
-    get_sequence_parallel_rank,
-    get_sequence_parallel_world_size,
-    get_sp_group,
-)
-from xfuser.core.long_ctx_attention import xFuserLongContextAttention
 
 from worldfoundry.core.attention.parallel.sequence_parallel_rope import make_sequence_parallel_rope_apply
 from worldfoundry.core.nn import sinusoidal_embedding_1d
+
+_xfuser_distributed = __import__(
+    "xfuser.core.distributed",
+    fromlist=["get_sequence_parallel_rank", "get_sequence_parallel_world_size", "get_sp_group"],
+)
+get_sequence_parallel_rank = _xfuser_distributed.get_sequence_parallel_rank
+get_sequence_parallel_world_size = _xfuser_distributed.get_sequence_parallel_world_size
+get_sp_group = _xfuser_distributed.get_sp_group
+xFuserLongContextAttention = __import__(
+    "xfuser.core.long_ctx_attention", fromlist=["xFuserLongContextAttention"]
+).xFuserLongContextAttention
 
 rope_apply = make_sequence_parallel_rope_apply(
     get_sequence_parallel_world_size,
@@ -97,7 +101,7 @@ def usp_dit_forward(
     x = torch.cat([torch.cat([u, u.new_zeros(1, seq_len - u.size(1), u.size(2))], dim=1) for u in x])
 
     # time embeddings
-    with amp.autocast(dtype=torch.float32):
+    with torch.amp.autocast("cuda", dtype=torch.float32):
         e = self.time_embedding(sinusoidal_embedding_1d(self.freq_dim, t).float())
         e0 = self.time_projection(e).unflatten(1, (6, self.dim))
         assert e.dtype == torch.float32 and e0.dtype == torch.float32

@@ -14,6 +14,8 @@ window. This module pads RoPE and uses
 all-to-all unequal sequence tails without dropping the sink block.
 """
 
+from typing import cast
+
 import torch
 import torch.nn.functional as torch_F
 from einops import rearrange
@@ -174,7 +176,7 @@ def sp_dit_forward(
     if x_memory is not None:
         memory_length = x_memory.shape[2]
         x = torch.cat([x_memory, x], dim=2)
-        t = torch.cat([timestep_memory, t], dim=1)
+        t = torch.cat([cast(torch.Tensor, timestep_memory), t], dim=1)
 
     if self.model_type == "i2v":
         assert y is not None

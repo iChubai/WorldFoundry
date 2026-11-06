@@ -26,6 +26,8 @@ Do not import FlashAttention here — backend probing stays in
 :mod:`worldfoundry.core.attention.backends.probe`.
 """
 
+from typing import Any, cast
+
 import einops
 import numpy as np
 import torch
@@ -211,7 +213,7 @@ def sequence_parallel_attention(
     )
 
     if attn_mode == "sage_attention":
-        from sageattention import sageattn
+        sageattn = __import__("sageattention", fromlist=["sageattn"]).sageattn
 
         query = torch.cat([query, encoder_query], dim=1)
         key = torch.cat([key, encoder_key], dim=1)
@@ -252,6 +254,7 @@ def sequence_parallel_attention(
         hidden_states = hidden_states.transpose(1, 2)
 
     elif attn_mode == "flash_attention_2":
+        text_mask = cast(torch.Tensor, text_mask)
         query = torch.cat([query, encoder_query], dim=1)
         key = torch.cat([key, encoder_key], dim=1)
         value = torch.cat([value, encoder_value], dim=1)
@@ -266,6 +269,7 @@ def sequence_parallel_attention(
         )
 
     elif attn_mode == "flash_attention_3":
+        text_mask = cast(torch.Tensor, text_mask)
         query = torch.cat([query, encoder_query], dim=1)
         key = torch.cat([key, encoder_key], dim=1)
         value = torch.cat([value, encoder_value], dim=1)
@@ -280,6 +284,7 @@ def sequence_parallel_attention(
         )
 
     elif attn_mode == "flex_block_attention":
+        attn_param = cast(dict[str, Any], attn_param)
         sparse_type = attn_param["attn_sparse_type"]  # sta/block_attn/ssta
         ssta_threshold = attn_param["ssta_threshold"]
         ssta_lambda = attn_param["ssta_lambda"]

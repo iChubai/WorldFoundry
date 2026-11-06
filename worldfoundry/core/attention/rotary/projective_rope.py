@@ -25,8 +25,9 @@ Public surface:
   tail of ``head_dim``.
 """
 
-from collections.abc import Callable
+from collections.abc import Callable, Sequence
 from functools import partial
+from typing import Any, TypedDict, cast
 
 import torch
 from einops import rearrange
@@ -36,6 +37,7 @@ from worldfoundry.core.attention import scaled_dot_product_attention
 # ──────────────────────────────────────────────────────────────────────────
 # Camera tiling — choose a head_dim subspace that does not fight x/y-RoPE
 # ──────────────────────────────────────────────────────────────────────────
+
 
 # Camera tiling layouts (consumed by ``_prepare_apply_fns``).
 #
@@ -49,7 +51,12 @@ from worldfoundry.core.attention import scaled_dot_product_attention
 #   that matrix. The tail is left identity. Under ``prope_disable_t_rope`` the
 #   front of head_dim is rope-free, so the camera lives in a clean subspace
 #   disjoint from x/y-RoPE (no conjugation entanglement).
-PROPE_CAMERA_LAYOUTS = {
+class _CameraLayoutSpec(TypedDict):
+    subframes: tuple[int, ...]
+    dims_per_cam: int
+
+
+PROPE_CAMERA_LAYOUTS: dict[str, _CameraLayoutSpec | None] = {
     "full": None,
     "sf13": {"subframes": (1, 3), "dims_per_cam": 16},
 }
@@ -225,7 +232,7 @@ def _apply_contiguous_projmat(
 
 def _apply_block_diagonal(
     feats: torch.Tensor,
-    func_size_pairs: list[tuple[Callable[[torch.Tensor], torch.Tensor], int]],
+    func_size_pairs: Sequence[tuple[Callable[[torch.Tensor], torch.Tensor], int]],
 ) -> torch.Tensor:
     """Split ``head_dim`` into named blocks and apply one transform per block.
 
@@ -236,7 +243,8 @@ def _apply_block_diagonal(
 
     funcs, block_sizes = zip(*func_size_pairs, strict=False)
     assert feats.shape[-1] == sum(block_sizes)
-    x_blocks = torch.split(feats, block_sizes, dim=-1)
+    # torch.split accepts tuple sizes; the supported torch stubs only declare list sizes.
+    x_blocks = torch.split(feats, cast(Any, block_sizes), dim=-1)
     out = torch.cat([func(x_block) for func, x_block in zip(funcs, x_blocks, strict=False)], dim=-1)
     assert out.shape == feats.shape
     return out

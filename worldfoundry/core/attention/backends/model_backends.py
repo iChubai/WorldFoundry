@@ -156,7 +156,9 @@ class XFormersAttention(AttentionCallable):
     ) -> torch.Tensor:
         """Run xFormers attention; bool masks become additive so they actually mask."""
         try:
-            from xformers.ops import memory_efficient_attention
+            memory_efficient_attention = __import__(
+                "xformers.ops", fromlist=["memory_efficient_attention"]
+            ).memory_efficient_attention
         except (ImportError, OSError) as exc:
             raise RuntimeError("XFormersAttention was selected but `xformers` is unavailable.") from exc
 
@@ -219,7 +221,7 @@ class FlashAttention3(AttentionCallable):
     ) -> torch.Tensor:
         """Run Hopper FA3; there is no mask kernel on this path."""
         try:
-            import flash_attn_interface
+            flash_attn_interface = __import__("flash_attn_interface")
         except (ImportError, OSError) as exc:
             raise RuntimeError("FlashAttention3 was selected but `FlashAttention3` is unavailable.") from exc
 
@@ -409,13 +411,13 @@ class _DeviceAwarePytorchAttention(AttentionCallable):
         return implementation(q, k, v, heads, mask)
 
 
-def _select_primary_attention() -> AttentionCallable:
+def _select_primary_attention() -> _DeviceAwarePytorchAttention:
     """Use bundled device-aware exact SDPA; optional packages remain explicit."""
 
     return _DeviceAwarePytorchAttention(with_mask=False)
 
 
-def _select_masked_attention() -> MaskedAttentionCallable:
+def _select_masked_attention() -> _DeviceAwarePytorchAttention:
     """Use bundled mask-aware SDPA with cuDNN preference on modern CUDA."""
 
     return _DeviceAwarePytorchAttention(with_mask=True)

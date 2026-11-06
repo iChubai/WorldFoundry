@@ -16,8 +16,9 @@ import threading
 import weakref
 
 import torch
+import torch.version
 
-_PLANS: dict[tuple, object] = {}
+_PLANS: dict[tuple, _Plan] = {}
 _PLAN_LOCK = threading.Lock()
 _MAX_PLANS = 64
 

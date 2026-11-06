@@ -19,11 +19,10 @@ Public surface:
   targets for xfuser-enabled Wan DiT blocks.
 """
 
+from typing import cast
+
 import torch
 from einops import rearrange
-from xfuser.core.distributed import get_sequence_parallel_rank, get_sequence_parallel_world_size, get_sp_group
-from xfuser.core.long_ctx_attention import xFuserLongContextAttention
-from yunchang.kernels import AttnType
 
 from worldfoundry.core.distributed.sequence_parallel.xfuser_parallel import (
     initialize_usp,  # noqa: F401 - public compatibility export
@@ -31,6 +30,18 @@ from worldfoundry.core.distributed.sequence_parallel.xfuser_parallel import (
 from worldfoundry.core.execution.device import is_npu_available
 from worldfoundry.core.nn import sinusoidal_embedding_1d
 from worldfoundry.core.nn.checkpointing.gradient import gradient_checkpoint_forward
+
+_xfuser_distributed = __import__(
+    "xfuser.core.distributed",
+    fromlist=["get_sequence_parallel_rank", "get_sequence_parallel_world_size", "get_sp_group"],
+)
+get_sequence_parallel_rank = _xfuser_distributed.get_sequence_parallel_rank
+get_sequence_parallel_world_size = _xfuser_distributed.get_sequence_parallel_world_size
+get_sp_group = _xfuser_distributed.get_sp_group
+xFuserLongContextAttention = __import__(
+    "xfuser.core.long_ctx_attention", fromlist=["xFuserLongContextAttention"]
+).xFuserLongContextAttention
+AttnType = __import__("yunchang.kernels", fromlist=["AttnType"]).AttnType
 
 # ──────────────────────────────────────────────────────────────────────────
 # RoPE pad/apply — NPU host pad, then slice the rank's global offsets
@@ -101,7 +112,7 @@ def usp_dit_forward(
     context = self.text_embedding(context)
 
     if self.has_image_input:
-        x = torch.cat([x, y], dim=1)  # (b, c_x + c_y, f, h, w)
+        x = torch.cat([x, cast(torch.Tensor, y)], dim=1)  # (b, c_x + c_y, f, h, w)
         clip_embdding = self.img_emb(clip_feature)
         context = torch.cat([clip_embdding, context], dim=1)
 

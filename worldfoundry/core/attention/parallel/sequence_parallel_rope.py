@@ -24,7 +24,7 @@ Public surface:
 
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, cast
 
 import torch
 from torch import Tensor
@@ -140,7 +140,7 @@ def sequence_parallel_attention_forward(
     v = module.v(x).view(batch, sequence_len, num_heads, head_dim)
     rope_is_fused = bool(getattr(module, "qk_norm", False)) and batch == 1
     if rope_is_fused:
-        grid_size = tuple(int(value) for value in grid_sizes[0].tolist())
+        grid_size = cast(tuple[int, int, int], tuple(int(value) for value in grid_sizes[0].tolist()))
         q, k = hidden_qk_rmsnorm_rope_3d(
             q,
             k,

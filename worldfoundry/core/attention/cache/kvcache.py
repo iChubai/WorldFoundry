@@ -30,6 +30,7 @@ Two shapes, deliberately kept separate:
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from typing import cast
 
 import torch
 from torch import Tensor
@@ -480,7 +481,7 @@ class CompactingKVCache:
 
         decision = self.policy.decide(self.state())
         if decision.evicts:
-            self._store.compact(decision.keep_indices)
+            self._store.compact(cast(Tensor, decision.keep_indices))
             self._blocks = self._surviving_blocks(decision)
         self._frame_positions = decision.frame_positions
         return decision
@@ -492,7 +493,7 @@ class CompactingKVCache:
 
         # A token-level policy may have split blocks apart, so the surviving
         # tokens collapse into one synthetic block covering what is left.
-        kept_tokens = int(decision.keep_indices.numel())
+        kept_tokens = int(cast(Tensor, decision.keep_indices).numel())
         frames = max(1, kept_tokens // self.frame_tokens)
         newest = self._blocks[-1]
         return [CachedBlock(block_idx=newest.block_idx, frame_start=newest.frame_end - frames, frame_count=frames)]

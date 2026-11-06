@@ -39,6 +39,7 @@ Public surface:
 
 import math
 from functools import lru_cache
+from typing import cast
 
 import numpy as np
 import torch
@@ -522,7 +523,7 @@ def create_ssta_3d_mask(
         seq_len = q.size(2)
         block_num = int(seq_len / block_size)
         text_mask_index = torch.ceil(text_mask.sum() / block_size).long()
-        text_mask_index = text_mask_index.clamp(min=1).item()
+        text_mask_index = cast(int, text_mask_index.clamp(min=1).item())
         assert ssta_3d_mask.shape[-1] == ssta_3d_mask.shape[-2], "ssta_3d_mask should be square"
 
         pad_start_index = block_num + text_mask_index
@@ -586,7 +587,7 @@ def ssta_3d_attention(
             - sparse_ratio: Ratio of non-zero attention weights
     """
     try:
-        from flex_block_attn import flex_block_attn_func
+        flex_block_attn_func = __import__("flex_block_attn", fromlist=["flex_block_attn_func"]).flex_block_attn_func
     except ImportError as e:
         raise Exception(
             "Could not load flex-block-attn. Please install the flex-block-attn package. You can install it via 'pip install flex-block-attn'."

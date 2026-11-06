@@ -24,9 +24,11 @@ Public surface:
 """
 
 import os
+from typing import cast
 
 import torch
 import torch.distributed as dist
+import torch.utils.checkpoint
 from einops import rearrange
 
 from worldfoundry.core.attention.parallel.sequence_parallel_rope import pad_freqs
@@ -117,7 +119,7 @@ def usp_dit_forward(
     context = self.text_embedding(context)
 
     if self.has_image_input:
-        x = torch.cat([x, y], dim=1)  # (b, c_x + c_y, f, h, w)
+        x = torch.cat([x, cast(torch.Tensor, y)], dim=1)  # (b, c_x + c_y, f, h, w)
         clip_embdding = self.img_emb(clip_feature)
         context = torch.cat([clip_embdding, context], dim=1)
 

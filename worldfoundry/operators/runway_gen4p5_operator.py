@@ -1,11 +1,11 @@
 """Module for the RunwayGen4p5 operator implementation."""
 
-from typing import Optional, Dict, Any, List, Union
+from typing import Any
 
 from PIL import Image
 
-from .base_operator import BaseOperator
 from ._media import image_or_string_to_png_data_url
+from .base_operator import BaseOperator
 
 
 class RunwayGen4p5Operator(BaseOperator):
@@ -36,24 +36,22 @@ class RunwayGen4p5Operator(BaseOperator):
             raise TypeError(f"Interaction must be a string, got {type(interaction)}")
         return True
 
-    def process_interaction(self, **kwargs) -> Dict[str, Any]:
+    def process_interaction(self, **kwargs) -> dict[str, Any]:
         """Process the recorded interactions and return the generated actions."""
         if len(self.current_interaction) == 0:
             raise ValueError("No interaction to process")
         now_interaction = self.current_interaction[-1]
         self.interaction_history.append(now_interaction)
-        return {
-            "processed_prompt": now_interaction
-        }
+        return {"processed_prompt": now_interaction}
 
     def process_perception(
         self,
-        images: Optional[Union[Image.Image, str]] = None,
-        last_frame: Optional[Union[Image.Image, str]] = None,
-        **kwargs
-    ) -> Dict[str, Any]:
+        images: Image.Image | str | None = None,
+        last_frame: Image.Image | str | None = None,
+        **kwargs,
+    ) -> dict[str, Any]:
         """Process perception inputs like images, videos, and reference frames."""
-        prompt_image: Optional[Union[str, List[Dict[str, str]]]] = None
+        prompt_image: str | list[dict[str, str]] | None = None
 
         if images is not None and last_frame is not None:
             prompt_image = [

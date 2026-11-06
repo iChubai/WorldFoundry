@@ -1,15 +1,15 @@
 """Module for the Wan2p2 operator implementation."""
 
-from typing import Any, Dict, Optional, Union
-from pathlib import Path
 import logging
+from pathlib import Path
+from typing import Any
 
 from PIL import Image
 
 from .base_operator import BaseOperator
 
 
-def _load_input_image(input_path: Union[str, Path, Image.Image]) -> Image.Image:
+def _load_input_image(input_path: str | Path | Image.Image) -> Image.Image:
     """Load input image implementation."""
     if isinstance(input_path, Image.Image):
         return input_path.convert("RGB")
@@ -39,7 +39,6 @@ class Wan2p2Operator(BaseOperator):
         self.interaction_template = ["text_prompt", "image_prompt"]
         self.interaction_template_init()
 
-
     def get_interaction(self, interaction):
         """Process and append the interaction to the current sequence."""
         if self.check_interaction(interaction):
@@ -55,19 +54,17 @@ class Wan2p2Operator(BaseOperator):
         self,
         *,
         mode: str,
-        images: Optional[Image.Image] = None,
+        images: Image.Image | None = None,
         # prompt 扩写相关参数（只在 ti2v 任务下生效）
         use_prompt_extend: bool = False,
         prompt_extend_method: str = "local_qwen",
-        prompt_extend_model: Optional[str] = None,
+        prompt_extend_model: str | None = None,
         prompt_extend_target_lang: str = "zh",
         # 由调用方注入 prompt 扩写模型所用的设备，避免钉死 cuda:0。
-        prompt_extend_device: Union[int, str] = 0,
+        prompt_extend_device: int | str = 0,
         base_seed: int = -1,
         **kwargs,
-    ) -> Dict[str, Any]:
-
-
+    ) -> dict[str, Any]:
         """Process the recorded interactions and return the generated actions."""
         if len(self.current_interaction) == 0:
             raise ValueError("No interaction to process")
@@ -98,9 +95,7 @@ class Wan2p2Operator(BaseOperator):
                     device=prompt_extend_device,
                 )
             else:
-                raise NotImplementedError(
-                    f"Unsupport prompt_extend_method: {prompt_extend_method}"
-                )
+                raise NotImplementedError(f"Unsupport prompt_extend_method: {prompt_extend_method}")
 
             prompt_output = prompt_expander(
                 prompt,
@@ -109,9 +104,7 @@ class Wan2p2Operator(BaseOperator):
                 seed=base_seed,
             )
             if prompt_output.status is False:
-                logging.info(
-                    f"Extending prompt failed: {prompt_output.message}"
-                )
+                logging.info(f"Extending prompt failed: {prompt_output.message}")
                 logging.info("Falling back to original prompt.")
             else:
                 prompt = prompt_output.prompt
@@ -122,13 +115,12 @@ class Wan2p2Operator(BaseOperator):
             "processed_prompt": prompt,
         }
 
-
     def process_perception(
         self,
         *,
-        input_path: Optional[Union[str, Path, Image.Image]] = None,
+        input_path: str | Path | Image.Image | None = None,
         **kwargs,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         处理图像输入：
         - ti2v 允许没有参考图像，此时返回的 input_image 为 None

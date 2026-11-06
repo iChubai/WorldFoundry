@@ -1,23 +1,25 @@
 """Module for the HunyuanWorldPlay operator implementation."""
 
 import os
-from typing import Any, Dict
+from typing import Any
 
 import numpy as np
 
-from .base_operator import BaseOperator
 from worldfoundry.synthesis.visual_generation.hunyuan_world.hunyuan_worldplay.commons.pose_utils import (
     parse_pose_string,
-    pose_to_latent_num,
     pose_to_input,
+    pose_to_latent_num,
 )
 from worldfoundry.synthesis.visual_generation.hunyuan_world.hunyuan_worldplay.generate_custom_trajectory import (
     generate_camera_trajectory_local,
 )
 
+from .base_operator import BaseOperator
+
 
 class HunyuanWorldPlayOperator(BaseOperator):
     """Operator class for the HunyuanWorldPlay model integration."""
+
     def __init__(
         self,
         operation_types=None,
@@ -98,7 +100,7 @@ class HunyuanWorldPlayOperator(BaseOperator):
             self.check_interaction(item)
         self.current_interaction.append(interaction)
 
-    def process_interaction(self, latent_frames: int) -> Dict[str, Any]:
+    def process_interaction(self, latent_frames: int) -> dict[str, Any]:
         """Process the recorded interactions and return the generated actions."""
         if len(self.current_interaction) == 0:
             raise ValueError("No interaction to process")

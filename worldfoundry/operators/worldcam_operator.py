@@ -2,14 +2,14 @@
 
 from __future__ import annotations
 
-from typing import Any, Dict, List, Sequence
+from collections.abc import Sequence
+from typing import Any
 
 import numpy as np
 import torch
 from PIL import Image
 
 from .base_operator import BaseOperator
-
 
 _RESAMPLE_BICUBIC = getattr(Image, "Resampling", Image).BICUBIC
 
@@ -104,8 +104,7 @@ class WorldCamOperator(BaseOperator):
     ):
         """Initialize the operator with specific configurations."""
         super().__init__(
-            operation_types=operation_types
-            or ["textual_instruction", "action_instruction", "visual_instruction"]
+            operation_types=operation_types or ["textual_instruction", "action_instruction", "visual_instruction"]
         )
         self.interaction_template = interaction_template or [
             "forward",
@@ -162,14 +161,14 @@ class WorldCamOperator(BaseOperator):
             "conditioning_frames": self.conditioning_frames,
         }
 
-    def process_interaction(self) -> Dict[str, Any]:
+    def process_interaction(self) -> dict[str, Any]:
         """Process the recorded interactions and return the generated actions."""
         if len(self.current_interaction) == 0:
             raise ValueError("No interaction registered. Use get_interaction() first.")
 
         actions = list(self.current_interaction[-1])
         self.interaction_history.extend(actions)
-        expanded_actions: List[str] = []
+        expanded_actions: list[str] = []
         for action in actions:
             expanded_actions.extend([action] * self.latent_steps_per_action)
 
@@ -185,7 +184,7 @@ class WorldCamOperator(BaseOperator):
             "extrinsics": torch.from_numpy(np.stack(poses, axis=0)).unsqueeze(0),
         }
 
-    def _build_pose_sequence(self, expanded_actions: Sequence[str]) -> List[np.ndarray]:
+    def _build_pose_sequence(self, expanded_actions: Sequence[str]) -> list[np.ndarray]:
         """Build pose sequence implementation."""
         position = np.zeros(3, dtype=np.float32)
         yaw = 0.0

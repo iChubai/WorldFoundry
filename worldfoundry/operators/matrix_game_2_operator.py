@@ -45,8 +45,7 @@ def _combine_official_action_data(data, num_frames=57, keyboard_dim=6, mouse=Tru
             rd_frame = min(_OFFICIAL_SEGMENT_FRAMES, num_frames - current_frame)
             samples_per_action = k.shape[0]
             assert rd_frame % samples_per_action == 0, (
-                f"segment length {rd_frame} is not a multiple of the "
-                f"{samples_per_action} samples per action"
+                f"segment length {rd_frame} is not a multiple of the {samples_per_action} samples per action"
             )
             repeat_time = rd_frame // samples_per_action
             keyboard_condition[current_frame : current_frame + rd_frame] = k.repeat(repeat_time, 1)
@@ -183,7 +182,7 @@ def encode_actions(action_list, mode):
     """
     COMBINATION_MAP = {}
     if mode == "universal":
-        KEYBOARD_IDX = {"forward":0, "back":1, "left":2, "right":3}
+        KEYBOARD_IDX = {"forward": 0, "back": 1, "left": 2, "right": 3}
         CAM_MAP = {
             "camera_up": [0.1, 0],
             "camera_down": [-0.1, 0],
@@ -195,19 +194,23 @@ def encode_actions(action_list, mode):
         COMBINATION_MAP = {
             "forward_left": ["forward", "left"],
             "forward_right": ["forward", "right"],
-            "back_left": ["back", "left"], 
-            "back_right": ["back", "right"]
+            "back_left": ["back", "left"],
+            "back_right": ["back", "right"],
         }
     elif mode == "gta_drive":
-        KEYBOARD_IDX = {"forward":0, "back":1}
-        CAM_MAP = {"camera_l":[0,-0.1], "camera_r":[0,0.1]}
+        KEYBOARD_IDX = {"forward": 0, "back": 1}
+        CAM_MAP = {"camera_l": [0, -0.1], "camera_r": [0, 0.1]}
         keyboard_dim = 2
         mouse = True
-    else: # templerun
+    else:  # templerun
         KEYBOARD_IDX = {
-            "nomove":0,"jump":1,"slide":2,
-            "turnleft":3,"turnright":4,
-            "leftside":5,"rightside":6,
+            "nomove": 0,
+            "jump": 1,
+            "slide": 2,
+            "turnleft": 3,
+            "turnright": 4,
+            "leftside": 5,
+            "rightside": 6,
         }
         CAM_MAP = {}
         keyboard_dim = 7
@@ -250,8 +253,8 @@ def resizecrop(image, th, tw):
 
 
 class MatrixGame2Operator(BaseOperator):
-
     """Operator class for the MatrixGame2 model integration."""
+
     def __init__(self, operation_types=None, mode="universal", interaction_template=None):
         """Initialize the operator with specific configurations."""
         if operation_types is None:
@@ -260,14 +263,12 @@ class MatrixGame2Operator(BaseOperator):
             interaction_template = []
         super().__init__(operation_types=operation_types)
         self.mode = mode
-        if mode == 'universal':
-            interaction_template = ["forward", "left", "right", "forward_left", "forward_right",
-                                    "camera_l", "camera_r"]
-        elif mode == 'gta_drive':
+        if mode == "universal":
+            interaction_template = ["forward", "left", "right", "forward_left", "forward_right", "camera_l", "camera_r"]
+        elif mode == "gta_drive":
             interaction_template = ["forward", "back", "camera_l", "camera_r"]
-        elif mode == 'templerun':
-            interaction_template = ["jump","slide","leftside","rightside",
-                                    "turnleft","turnright","nomove"]
+        elif mode == "templerun":
+            interaction_template = ["jump", "slide", "leftside", "rightside", "turnleft", "turnright", "nomove"]
         self.interaction_template = interaction_template
         self.interaction_template_init()
 
@@ -298,7 +299,7 @@ class MatrixGame2Operator(BaseOperator):
         total_actions = len(cur_interaction)
         available_frames = num_frames
         frames_per_action = max(frames_per_action, available_frames // total_actions)
-        
+
         if frames_per_action < 1:
             frames_per_action = 1
 
@@ -313,22 +314,19 @@ class MatrixGame2Operator(BaseOperator):
 
         keyboard_list = []
         mouse_list = []
-        mouse_enabled = (self.mode != "templerun")
-        
+        mouse_enabled = self.mode != "templerun"
+
         for action in padded_actions:
             kb, ms = encode_actions([action], self.mode)
             keyboard_list.append(kb)
             if mouse_enabled:
                 mouse_list.append(ms)
-        
+
         keyboard_tensor = torch.stack(keyboard_list)
         if mouse_enabled:
             mouse_tensor = torch.stack(mouse_list)
-            return {
-                "keyboard_condition": keyboard_tensor,
-                "mouse_condition": mouse_tensor
-            }
-        
+            return {"keyboard_condition": keyboard_tensor, "mouse_condition": mouse_tensor}
+
         return {"keyboard_condition": keyboard_tensor}
 
     # multi_turn 不用额外修改，外部调整num_frames以及输入interaction即可
@@ -343,7 +341,7 @@ class MatrixGame2Operator(BaseOperator):
     def process_action_templerun(self, num_frames):
         """Process action templerun implementation."""
         return self._build_sequence(num_frames)
-    
+
     def process_interaction(self, num_frames):
         """Process the recorded interactions and return the generated actions."""
         if self.mode == "universal":
@@ -369,31 +367,35 @@ class MatrixGame2Operator(BaseOperator):
             return official_bench_actions_templerun(num_frames, seed=seed)
         raise ValueError(f"Unknown mode {self.mode}")
 
-    def process_perception(self,
-                           input_image,
-                           num_output_frames,
-                           resize_H=352,
-                           resize_W=640,
-                           device: str = "cuda",
-                           weight_dtype = torch.bfloat16,):
+    def process_perception(
+        self,
+        input_image,
+        num_output_frames,
+        resize_H=352,
+        resize_W=640,
+        device: str = "cuda",
+        weight_dtype=torch.bfloat16,
+    ):
         """Process perception inputs like images, videos, and reference frames."""
         from torchvision.transforms import v2
 
         if self.frame_process is None:
-            self.frame_process = v2.Compose([
-                v2.ToTensor(),
-                v2.Normalize(mean=[0.5, 0.5, 0.5], std=[0.5, 0.5, 0.5]),
-            ])
+            self.frame_process = v2.Compose(
+                [
+                    v2.ToTensor(),
+                    v2.Normalize(mean=[0.5, 0.5, 0.5], std=[0.5, 0.5, 0.5]),
+                ]
+            )
         image = resizecrop(input_image, resize_H, resize_W)
         image = v2.Resize(size=(resize_H, resize_W), antialias=True)(image)
         image = self.frame_process(image)[None, :, None, :, :].to(dtype=weight_dtype, device=device)
 
         padding_video = torch.zeros_like(image).repeat(1, 1, 4 * (num_output_frames - 1), 1, 1)
         img_cond = torch.concat([image, padding_video], dim=2)
-        tiler_kwargs={"tiled": True, "tile_size": [resize_H//8, resize_W//8], "tile_stride": [resize_H//16+1, resize_W//16-2]}
-
-        return {
-            "image": image,
-            "img_cond": img_cond,
-            "tiler_kwargs": tiler_kwargs
+        tiler_kwargs = {
+            "tiled": True,
+            "tile_size": [resize_H // 8, resize_W // 8],
+            "tile_stride": [resize_H // 16 + 1, resize_W // 16 - 2],
         }
+
+        return {"image": image, "img_cond": img_cond, "tiler_kwargs": tiler_kwargs}

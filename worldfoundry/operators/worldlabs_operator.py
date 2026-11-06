@@ -3,12 +3,12 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Union
+from typing import Any
 
 from PIL import Image
 
-from .base_operator import BaseOperator
 from ._media import pil_to_png_base64
+from .base_operator import BaseOperator
 
 
 def _image_to_data_base64(image_input: Image.Image) -> str:
@@ -46,16 +46,14 @@ class WorldLabsOperator(BaseOperator):
             raise TypeError(f"Interaction must be a string or None, got {type(interaction)}")
         return True
 
-    def process_interaction(self, **kwargs) -> Dict[str, Any]:
+    def process_interaction(self, **kwargs) -> dict[str, Any]:
         """Process the recorded interactions and return the generated actions."""
         now_interaction = self.current_interaction[-1] if self.current_interaction else ""
         if now_interaction is not None:
             self.interaction_history.append(now_interaction)
-        return {
-            "processed_prompt": now_interaction or ""
-        }
+        return {"processed_prompt": now_interaction or ""}
 
-    def _normalize_content(self, value: Union[Image.Image, str, Dict[str, Any]]) -> Dict[str, Any]:
+    def _normalize_content(self, value: Image.Image | str | dict[str, Any]) -> dict[str, Any]:
         """Normalize content implementation."""
         if isinstance(value, dict):
             return value
@@ -79,17 +77,15 @@ class WorldLabsOperator(BaseOperator):
                     "source": "local_file",
                     "path": str(path.resolve()),
                 }
-            raise ValueError(
-                "String image/video input must be a public URL or an existing local path."
-            )
+            raise ValueError("String image/video input must be a public URL or an existing local path.")
 
         raise TypeError(f"Unsupported content type: {type(value)}")
 
     def _build_multi_image_prompt(
         self,
-        images: List[Union[Image.Image, str, Dict[str, Any]]],
-        image_azimuths: Optional[List[float]],
-    ) -> List[Dict[str, Any]]:
+        images: list[Image.Image | str | dict[str, Any]],
+        image_azimuths: list[float] | None,
+    ) -> list[dict[str, Any]]:
         """Build multi image prompt implementation."""
         if image_azimuths is not None and len(image_azimuths) != len(images):
             raise ValueError("image_azimuths length must match images length.")
@@ -107,15 +103,15 @@ class WorldLabsOperator(BaseOperator):
 
     def process_perception(
         self,
-        images: Optional[Union[Image.Image, str, Dict[str, Any], List[Union[Image.Image, str, Dict[str, Any]]]]] = None,
-        video: Optional[Union[str, Dict[str, Any]]] = None,
+        images: Image.Image | str | dict[str, Any] | list[Image.Image | str | dict[str, Any]] | None = None,
+        video: str | dict[str, Any] | None = None,
         prompt_type: str = "auto",
-        image_azimuths: Optional[List[float]] = None,
-        disable_recaption: Optional[bool] = None,
-        **kwargs
-    ) -> Dict[str, Any]:
+        image_azimuths: list[float] | None = None,
+        disable_recaption: bool | None = None,
+        **kwargs,
+    ) -> dict[str, Any]:
         """Process perception inputs like images, videos, and reference frames."""
-        result: Dict[str, Any] = {
+        result: dict[str, Any] = {
             "world_prompt": None,
             "prompt_type": prompt_type,
             "images": images,
@@ -139,7 +135,7 @@ class WorldLabsOperator(BaseOperator):
         elif prompt_type == "image":
             if images is None:
                 raise ValueError("image prompt_type requires images input.")
-            prompt_data: Dict[str, Any] = {
+            prompt_data: dict[str, Any] = {
                 "type": "image",
                 "image_prompt": self._normalize_content(images),
             }

@@ -2,8 +2,9 @@
 
 from __future__ import annotations
 
+from collections.abc import Sequence
 from pathlib import Path
-from typing import Any, Dict, Optional, Sequence
+from typing import Any
 
 import numpy as np
 import torch
@@ -55,9 +56,7 @@ class FantasyWorldOperator(BaseOperator):
 
     def __init__(self, operation_types=None, interaction_template=None):
         """Initialize the operator with specific configurations."""
-        super().__init__(
-            operation_types=operation_types or ["visual_instruction", "action_instruction"]
-        )
+        super().__init__(operation_types=operation_types or ["visual_instruction", "action_instruction"])
         self.interaction_template = interaction_template or ["camera_trajectory"]
         self.interaction_template_init()
 
@@ -65,9 +64,9 @@ class FantasyWorldOperator(BaseOperator):
         self,
         *,
         interactions=None,
-        camera_json_path: Optional[str | Path] = None,
-        camera_data: Optional[Dict[str, Any]] = None,
-        camera_poses: Optional[Sequence] = None,
+        camera_json_path: str | Path | None = None,
+        camera_data: dict[str, Any] | None = None,
+        camera_poses: Sequence | None = None,
     ):
         """Resolve the source or sequence of interaction inputs."""
         explicit = [value for value in (camera_json_path, camera_data, camera_poses) if value is not None]
@@ -115,7 +114,7 @@ class FantasyWorldOperator(BaseOperator):
         self,
         images=None,
         end_image=None,
-        scene_name: Optional[str] = None,
+        scene_name: str | None = None,
     ):
         """Process perception inputs like images, videos, and reference frames."""
         if images is None:

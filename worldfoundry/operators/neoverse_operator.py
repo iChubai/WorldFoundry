@@ -2,15 +2,15 @@
 
 from __future__ import annotations
 
+from collections.abc import Sequence
 from pathlib import Path
-from typing import Any, Dict, List, Sequence
+from typing import Any
 
 import numpy as np
 import torch
 from PIL import Image
 
 from .base_operator import BaseOperator
-
 
 _RESAMPLE_LANCZOS = getattr(Image, "Resampling", Image).LANCZOS
 _VIDEO_SUFFIXES = {".avi", ".m4v", ".mkv", ".mov", ".mp4", ".webm"}
@@ -142,7 +142,7 @@ def _load_official_input_frames(
     resolution: tuple[int, int],
     resize_mode: str,
     static_scene: bool,
-) -> List[Image.Image]:
+) -> list[Image.Image]:
     """Load official input frames implementation."""
     from worldfoundry.synthesis.visual_generation.neoverse.native.auxiliary import (
         load_video,
@@ -185,8 +185,7 @@ class NeoVerseOperator(BaseOperator):
     ):
         """Initialize the operator with specific configurations."""
         super().__init__(
-            operation_types=operation_types
-            or ["textual_instruction", "action_instruction", "visual_instruction"]
+            operation_types=operation_types or ["textual_instruction", "action_instruction", "visual_instruction"]
         )
         self.interaction_template = interaction_template or sorted(set(_ACTION_ALIASES.values()))
         self.interaction_template_init()
@@ -262,14 +261,14 @@ class NeoVerseOperator(BaseOperator):
 
         if isinstance(images, (list, tuple)) and len(images) > 0:
             frame_candidates = list(images)
-        elif isinstance(images, np.ndarray) and images.ndim == 4:
-            frame_candidates = [frame for frame in images]
-        elif isinstance(images, torch.Tensor) and images.ndim == 4:
+        elif (isinstance(images, np.ndarray) and images.ndim == 4) or (
+            isinstance(images, torch.Tensor) and images.ndim == 4
+        ):
             frame_candidates = [frame for frame in images]
         else:
             frame_candidates = [images]
 
-        processed_frames: List[Image.Image] = []
+        processed_frames: list[Image.Image] = []
         for frame in frame_candidates:
             image = _to_pil_image(frame)
             if mode == "resize":
@@ -335,7 +334,7 @@ class NeoVerseOperator(BaseOperator):
             return [{"static": {}}]
         raise ValueError(f"Unsupported NeoVerse action: {action}")
 
-    def process_interaction(self) -> Dict[str, Any]:
+    def process_interaction(self) -> dict[str, Any]:
         """Process the recorded interactions and return the generated actions."""
         if len(self.current_interaction) == 0:
             raise ValueError("No interaction registered. Use get_interaction() first.")

@@ -2,7 +2,8 @@
 
 from __future__ import annotations
 
-from typing import Any, Dict, Sequence, Union
+from collections.abc import Sequence
+from typing import Any
 
 import numpy as np
 import torch
@@ -28,7 +29,8 @@ class LyraOperator(BaseOperator):
     ):
         """Initialize the operator with specific configurations."""
         super().__init__(
-            operation_types=operation_types or [
+            operation_types=operation_types
+            or [
                 "textual_instruction",
                 "action_instruction",
                 "visual_instruction",
@@ -57,11 +59,7 @@ class LyraOperator(BaseOperator):
         """Validate the given interaction sequence or parameters."""
         action = interaction
         if isinstance(interaction, dict):
-            action = (
-                interaction.get("action")
-                or interaction.get("signal")
-                or interaction.get("interaction")
-            )
+            action = interaction.get("action") or interaction.get("signal") or interaction.get("interaction")
         if action not in self.interaction_template:
             raise ValueError(f"{action} not in template. Available: {self.interaction_template}")
         return True
@@ -77,7 +75,7 @@ class LyraOperator(BaseOperator):
     def process_interaction(
         self,
         prompt: str = "",
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Process the recorded interactions and return the generated actions."""
         if len(self.current_interaction) == 0:
             raise ValueError("No interaction to process. Use get_interaction() first.")
@@ -104,11 +102,11 @@ class LyraOperator(BaseOperator):
 
     def process_camera_path(
         self,
-        camera_path: Dict[str, Any],
+        camera_path: dict[str, Any],
         *,
         prompt: str = "",
         region_hint: str = "",
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Convert the shared camera-path schema into the Lyra trajectory."""
 
         sampled = sample_camera_path(camera_path, frame_stride=self.chunk_stride)
@@ -125,7 +123,7 @@ class LyraOperator(BaseOperator):
             "num_frames": int(sampled["frame_count"]),
         }
 
-    def _normalize_interaction(self, interaction: Union[str, Dict[str, Any]]) -> Dict[str, str]:
+    def _normalize_interaction(self, interaction: str | dict[str, Any]) -> dict[str, str]:
         """Normalize interaction implementation."""
         if isinstance(interaction, str):
             self.check_interaction(interaction)
@@ -133,9 +131,7 @@ class LyraOperator(BaseOperator):
         if isinstance(interaction, dict):
             self.check_interaction(interaction)
             return {
-                "action": interaction.get("action")
-                or interaction.get("signal")
-                or interaction.get("interaction"),
+                "action": interaction.get("action") or interaction.get("signal") or interaction.get("interaction"),
                 "caption": interaction.get("caption")
                 or interaction.get("prompt")
                 or interaction.get("text_prompt")
@@ -143,9 +139,9 @@ class LyraOperator(BaseOperator):
             }
         raise TypeError(f"Unsupported interaction type: {type(interaction)}")
 
-    def _build_chunk_captions(self, prompts: Sequence[str]) -> Dict[str, str]:
+    def _build_chunk_captions(self, prompts: Sequence[str]) -> dict[str, str]:
         """Build chunk captions implementation."""
-        captions: Dict[str, str] = {}
+        captions: dict[str, str] = {}
         for index, prompt in enumerate(prompts):
             frame_index = 0 if index == 0 else 1 + index * self.chunk_stride
             captions[str(frame_index)] = prompt

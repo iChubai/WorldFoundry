@@ -2,7 +2,8 @@
 
 import os
 import re
-from typing import Any, Dict, List, Sequence, Union
+from collections.abc import Sequence
+from typing import Any
 
 import cv2
 import numpy as np
@@ -11,7 +12,6 @@ from PIL import Image
 from torchvision.transforms import functional as TF
 
 from .base_operator import BaseOperator
-
 
 MOVE_ACTION_MAP = {
     "no-op": 0,
@@ -177,7 +177,7 @@ def _tensor_to_video_tensor(tensor: torch.Tensor) -> torch.Tensor:
     raise ValueError("Unsupported tensor input for Infinite-World operator.")
 
 
-def _select_target_size(bucket_config: Dict[str, Any], frame: np.ndarray):
+def _select_target_size(bucket_config: dict[str, Any], frame: np.ndarray):
     """Select target size implementation."""
     aspect_ratio = frame.shape[0] / frame.shape[1]
     closest_bucket = min(bucket_config, key=lambda key: abs(float(key) - aspect_ratio))
@@ -185,7 +185,7 @@ def _select_target_size(bucket_config: Dict[str, Any], frame: np.ndarray):
     return int(target_h), int(target_w)
 
 
-def _load_frames_from_path(path: str) -> List[np.ndarray]:
+def _load_frames_from_path(path: str) -> list[np.ndarray]:
     """Load frames from path implementation."""
     path = os.path.abspath(path)
     if not os.path.exists(path):
@@ -222,7 +222,9 @@ class InfiniteWorldOperator(BaseOperator):
         interaction_template=None,
     ):
         """Initialize the operator with specific configurations."""
-        super().__init__(operation_types=operation_types or ["textual_instruction", "visual_instruction", "action_instruction"])
+        super().__init__(
+            operation_types=operation_types or ["textual_instruction", "visual_instruction", "action_instruction"]
+        )
         self.interaction_template = interaction_template or [
             "no-op",
             "forward",
@@ -245,7 +247,7 @@ class InfiniteWorldOperator(BaseOperator):
         ]
         self.interaction_template_init()
 
-    def _normalize_interaction(self, interaction: Union[str, Dict[str, str]]) -> Dict[str, str]:
+    def _normalize_interaction(self, interaction: str | dict[str, str]) -> dict[str, str]:
         """Normalize interaction implementation."""
         if isinstance(interaction, dict):
             move = interaction.get("move", "no-op")
@@ -342,7 +344,7 @@ class InfiniteWorldOperator(BaseOperator):
                 "target_size": tuple(video_tensor.shape[-2:]),
             }
 
-        frames: List[np.ndarray] = []
+        frames: list[np.ndarray] = []
         if isinstance(input_data, str):
             frames.extend(_load_frames_from_path(input_data))
         elif isinstance(input_data, Image.Image):

@@ -27,6 +27,7 @@ def realtime_camera(
         zip(
             ("forward", "backward", "left", "right", "camera_up", "camera_down", "camera_l", "camera_r"),
             "wsad ikjl".replace(" ", ""),
+            strict=False,
         )
     )
 

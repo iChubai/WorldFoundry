@@ -1,9 +1,9 @@
 """Module for the LumaRay2 operator implementation."""
 
-from typing import Optional, Dict, Any
+from typing import Any
 
-from .base_operator import BaseOperator
 from ._media import require_public_url
+from .base_operator import BaseOperator
 
 
 def _validate_public_url(url: str, field_name: str) -> str:
@@ -41,31 +41,29 @@ class LumaRay2Operator(BaseOperator):
             raise TypeError(f"Interaction must be a string, got {type(interaction)}")
         return True
 
-    def process_interaction(self, **kwargs) -> Dict[str, Any]:
+    def process_interaction(self, **kwargs) -> dict[str, Any]:
         """Process the recorded interactions and return the generated actions."""
         if len(self.current_interaction) == 0:
             raise ValueError("No interaction to process")
         now_interaction = self.current_interaction[-1]
         self.interaction_history.append(now_interaction)
-        return {
-            "processed_prompt": now_interaction
-        }
+        return {"processed_prompt": now_interaction}
 
     def process_perception(
         self,
-        images: Optional[str] = None,
-        last_frame: Optional[str] = None,
-        start_generation_id: Optional[str] = None,
-        end_generation_id: Optional[str] = None,
-        **kwargs
-    ) -> Dict[str, Any]:
+        images: str | None = None,
+        last_frame: str | None = None,
+        start_generation_id: str | None = None,
+        end_generation_id: str | None = None,
+        **kwargs,
+    ) -> dict[str, Any]:
         """Process perception inputs like images, videos, and reference frames."""
         if images is not None and start_generation_id is not None:
             raise ValueError("Luma frame0 accepts either images or start_generation_id, not both.")
         if last_frame is not None and end_generation_id is not None:
             raise ValueError("Luma frame1 accepts either last_frame or end_generation_id, not both.")
 
-        keyframes: Dict[str, Any] = {}
+        keyframes: dict[str, Any] = {}
 
         if images is not None:
             keyframes["frame0"] = {
@@ -74,9 +72,7 @@ class LumaRay2Operator(BaseOperator):
             }
         elif start_generation_id is not None:
             if not isinstance(start_generation_id, str):
-                raise TypeError(
-                    f"start_generation_id must be a string, got {type(start_generation_id)}"
-                )
+                raise TypeError(f"start_generation_id must be a string, got {type(start_generation_id)}")
             keyframes["frame0"] = {
                 "type": "generation",
                 "id": start_generation_id,
@@ -89,9 +85,7 @@ class LumaRay2Operator(BaseOperator):
             }
         elif end_generation_id is not None:
             if not isinstance(end_generation_id, str):
-                raise TypeError(
-                    f"end_generation_id must be a string, got {type(end_generation_id)}"
-                )
+                raise TypeError(f"end_generation_id must be a string, got {type(end_generation_id)}")
             keyframes["frame1"] = {
                 "type": "generation",
                 "id": end_generation_id,

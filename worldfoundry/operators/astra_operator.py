@@ -2,8 +2,9 @@
 
 import json
 import logging
+from collections.abc import Callable
 from pathlib import Path
-from typing import Any, Callable, cast
+from typing import Any, cast
 
 import imageio
 import numpy as np

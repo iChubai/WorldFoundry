@@ -1,15 +1,17 @@
 """Module for the CosmosPredict2p5 operator implementation."""
 
-from PIL import Image
 from pathlib import Path
-from typing import Any, Dict, Optional, Union
+from typing import Any
 
 import numpy as np
+from PIL import Image
 
 from .base_operator import BaseOperator
 
 
-def get_image_size(src_size: tuple[int, int], dst_size: Any, mode: str, max_size: int | None = None, multiple: int | None = None):
+def get_image_size(
+    src_size: tuple[int, int], dst_size: Any, mode: str, max_size: int | None = None, multiple: int | None = None
+):
     """Compute destination size given mode and constraints.
 
     Args:
@@ -23,36 +25,36 @@ def get_image_size(src_size: tuple[int, int], dst_size: Any, mode: str, max_size
         (W, H) destination size.
     """
     width, height = src_size
-    if mode in ('long', 'short', 'height', 'width'):
+    if mode in ("long", "short", "height", "width"):
         if isinstance(dst_size, (list, tuple)):
             assert dst_size[0] == dst_size[1]
             dst_size = dst_size[0]
-        if mode == 'long':
+        if mode == "long":
             scale = float(dst_size) / max(height, width)
-        elif mode == 'short':
+        elif mode == "short":
             scale = float(dst_size) / min(height, width)
-        elif mode == 'height':
+        elif mode == "height":
             scale = float(dst_size) / height
-        elif mode == 'width':
+        elif mode == "width":
             scale = float(dst_size) / width
         dst_height = int(round(height * scale))
         dst_width = int(round(width * scale))
-    elif mode in ('fixed', 'outer_fit', 'inner_fit'):
+    elif mode in ("fixed", "outer_fit", "inner_fit"):
         if isinstance(dst_size, (list, tuple)):
             dst_width, dst_height = dst_size
         else:
             dst_width, dst_height = dst_size, dst_size
-        if mode == 'outer_fit':
+        if mode == "outer_fit":
             if float(dst_height) / height > float(dst_width) / width:
                 dst_height = int(round(float(dst_width) / width * height))
             else:
                 dst_width = int(round(float(dst_height) / height * width))
-        elif mode == 'inner_fit':
+        elif mode == "inner_fit":
             if float(dst_height) / height < float(dst_width) / width:
                 dst_height = int(round(float(dst_width) / width * height))
             else:
                 dst_width = int(round(float(dst_height) / height * width))
-    elif mode == 'area':
+    elif mode == "area":
         if isinstance(dst_size, (list, tuple)):
             dst_width, dst_height = dst_size
         else:
@@ -76,7 +78,7 @@ def get_image_size(src_size: tuple[int, int], dst_size: Any, mode: str, max_size
     return dst_width, dst_height
 
 
-def _load_input_image(input_path: Union[str, Path, Image.Image]) -> Image.Image:
+def _load_input_image(input_path: str | Path | Image.Image) -> Image.Image:
     """Load input image implementation."""
     if isinstance(input_path, Image.Image):
         return input_path.convert("RGB")
@@ -115,7 +117,7 @@ class CosmosPredict2p5Operator(BaseOperator):
             raise TypeError(f"Interaction must be a string, got {type(interaction)}")
         return True
 
-    def process_interaction(self, **kwargs) -> Dict[str, Any]:
+    def process_interaction(self, **kwargs) -> dict[str, Any]:
         """Process the recorded interactions and return the generated actions."""
         if len(self.current_interaction) == 0:
             raise ValueError("No interaction to process")
@@ -125,11 +127,11 @@ class CosmosPredict2p5Operator(BaseOperator):
 
     def process_perception(
         self,
-        input_path: Optional[Union[str, Path, Image.Image]] = None,
+        input_path: str | Path | Image.Image | None = None,
         height: int = 704,
         width: int = 1280,
         **kwargs,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Path to the conditioning image (for `img2world` task), Optional."""
         input_image = None
         orig_width = orig_height = None

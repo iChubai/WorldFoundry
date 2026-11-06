@@ -76,7 +76,7 @@ class GeometryPriorOperator(BaseOperator):
     ) -> dict[str, Any]:
         """Collects multimodal inputs (images, videos) without applying restrictive tensor transforms.
 
-        Maintains paths and native arrays for pipelines that handle their own explicit 
+        Maintains paths and native arrays for pipelines that handle their own explicit
         computer-vision transforms (e.g. OpenCV, explicit resizes).
         """
         return {

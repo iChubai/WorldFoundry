@@ -2,7 +2,8 @@
 
 from __future__ import annotations
 
-from typing import Any, Dict, Optional, Sequence, Union
+from collections.abc import Sequence
+from typing import Any
 
 from .base_operator import BaseOperator
 
@@ -37,8 +38,7 @@ class Gen3COperator(BaseOperator):
     def __init__(self, operation_types=None, interaction_template=None):
         """Initialize the operator with specific configurations."""
         super().__init__(
-            operation_types=operation_types
-            or ["textual_instruction", "action_instruction", "visual_instruction"]
+            operation_types=operation_types or ["textual_instruction", "action_instruction", "visual_instruction"]
         )
         self.interaction_template = interaction_template or sorted(
             set(self.OFFICIAL_TRAJECTORIES) | set(self.ACTION_TO_TRAJECTORY.keys())
@@ -49,9 +49,7 @@ class Gen3COperator(BaseOperator):
         """Validate the given interaction sequence or parameters."""
         candidate = self._normalize_interaction_candidate(interaction)
         if candidate["trajectory"] is None:
-            raise ValueError(
-                f"{candidate['action']} not in template. Available: {self.interaction_template}"
-            )
+            raise ValueError(f"{candidate['action']} not in template. Available: {self.interaction_template}")
         return True
 
     def get_interaction(self, interaction):
@@ -64,7 +62,7 @@ class Gen3COperator(BaseOperator):
             normalized = [self._normalize_interaction(interaction)]
         self.current_interaction.append(normalized)
 
-    def process_interaction(self, prompt: str = "") -> Dict[str, Any]:
+    def process_interaction(self, prompt: str = "") -> dict[str, Any]:
         """Process the recorded interactions and return the generated actions."""
         if len(self.current_interaction) == 0:
             raise ValueError("No interaction to process. Use get_interaction() first.")
@@ -78,11 +76,7 @@ class Gen3COperator(BaseOperator):
         actions = [item["action"] for item in latest_interaction]
         mapped_trajectories = [item["trajectory"] for item in latest_interaction]
 
-        captions = [
-            item["caption"]
-            for item in latest_interaction
-            if item["caption"] and item["caption"].strip()
-        ]
+        captions = [item["caption"] for item in latest_interaction if item["caption"] and item["caption"].strip()]
         selected_caption = captions[-1] if captions else (prompt or "")
 
         return {
@@ -100,16 +94,12 @@ class Gen3COperator(BaseOperator):
 
         return load_pil_image(images)
 
-    def _normalize_interaction_candidate(
-        self, interaction: Union[str, Dict[str, Any]]
-    ) -> Dict[str, Any]:
+    def _normalize_interaction_candidate(self, interaction: str | dict[str, Any]) -> dict[str, Any]:
         """Normalize interaction candidate implementation."""
         if isinstance(interaction, str):
             action = interaction
             caption = ""
-            explicit_trajectory = (
-                action if action in self.OFFICIAL_TRAJECTORIES else None
-            )
+            explicit_trajectory = action if action in self.OFFICIAL_TRAJECTORIES else None
         elif isinstance(interaction, dict):
             explicit_trajectory = interaction.get("trajectory")
             action = (
@@ -118,18 +108,11 @@ class Gen3COperator(BaseOperator):
                 or interaction.get("interaction")
                 or explicit_trajectory
             )
-            caption = (
-                interaction.get("caption")
-                or interaction.get("prompt")
-                or interaction.get("text_prompt")
-                or ""
-            )
+            caption = interaction.get("caption") or interaction.get("prompt") or interaction.get("text_prompt") or ""
         else:
             raise TypeError(f"Unsupported interaction type: {type(interaction)}")
 
-        explicit_trajectory = (
-            explicit_trajectory if explicit_trajectory in self.OFFICIAL_TRAJECTORIES else None
-        )
+        explicit_trajectory = explicit_trajectory if explicit_trajectory in self.OFFICIAL_TRAJECTORIES else None
         trajectory = explicit_trajectory or self.ACTION_TO_TRAJECTORY.get(action)
         return {
             "action": action,
@@ -138,20 +121,20 @@ class Gen3COperator(BaseOperator):
             "explicit": explicit_trajectory is not None,
         }
 
-    def _normalize_interaction(self, interaction: Union[str, Dict[str, Any]]) -> Dict[str, Any]:
+    def _normalize_interaction(self, interaction: str | dict[str, Any]) -> dict[str, Any]:
         """Normalize interaction implementation."""
         candidate = self._normalize_interaction_candidate(interaction)
         self.check_interaction(interaction)
         return candidate
 
-    def _select_trajectory(self, items: Sequence[Dict[str, Any]]) -> str:
+    def _select_trajectory(self, items: Sequence[dict[str, Any]]) -> str:
         """Select trajectory implementation."""
         explicit = [item["trajectory"] for item in items if item["explicit"]]
         if explicit:
             return explicit[0]
 
-        counts: Dict[str, int] = {}
-        first_seen: Dict[str, int] = {}
+        counts: dict[str, int] = {}
+        first_seen: dict[str, int] = {}
         for idx, item in enumerate(items):
             trajectory = item["trajectory"]
             counts[trajectory] = counts.get(trajectory, 0) + 1

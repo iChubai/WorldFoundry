@@ -1,17 +1,17 @@
 """Module for the Yume operator implementation."""
 
 from pathlib import Path
-from typing import Any, Dict, Optional, List
+from typing import Any
 
-from PIL import Image
+import numpy as np
 import torch
 import torch.nn.functional as F
+from PIL import Image
 from torchvision import transforms
-import numpy as np
 
-from .base_operator import BaseOperator
 from worldfoundry.synthesis.visual_generation.yume.yume_runtime.yume import YUME_SIZE_CONFIGS
 
+from .base_operator import BaseOperator
 
 YUME_SUPPORTED_SIZES = tuple(YUME_SIZE_CONFIGS.keys())
 
@@ -92,7 +92,7 @@ class YumeOperator(BaseOperator):
             self.check_interaction(interaction)
         self.current_interaction.append(interactions)
 
-    def process_interaction(self, **kwargs) -> Dict[str, Any]:
+    def process_interaction(self, **kwargs) -> dict[str, Any]:
         """Process the recorded interactions and return the generated actions."""
         INTERACTION_2_CAPTION_DICT = {
             "forward": "The camera pushes forward (W).",
@@ -113,15 +113,13 @@ class YumeOperator(BaseOperator):
 
     def process_perception(
         self,
-        size: Optional[str] = None,
-        images: Optional[Image.Image] = None,
-        videos: Optional[List[Image.Image]] = None,
-    ) -> Dict[str, Any]:
-
+        size: str | None = None,
+        images: Image.Image | None = None,
+        videos: list[Image.Image] | None = None,
+    ) -> dict[str, Any]:
         """Process perception inputs like images, videos, and reference frames."""
         assert size in YUME_SUPPORTED_SIZES, (
-            f"Unsupported size: {size}. "
-            f"Supported sizes for yume are: {YUME_SUPPORTED_SIZES}"
+            f"Unsupported size: {size}. Supported sizes for yume are: {YUME_SUPPORTED_SIZES}"
         )
         target_size = YUME_SIZE_CONFIGS[size]
 

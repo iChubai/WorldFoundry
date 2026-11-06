@@ -2,8 +2,9 @@
 
 from __future__ import annotations
 
+from collections.abc import Iterable, Mapping
 from pathlib import Path
-from typing import Any, Dict, Iterable, Mapping
+from typing import Any
 
 from .base_operator import BaseOperator
 
@@ -19,7 +20,7 @@ class DVLTOperator(BaseOperator):
         "actions": ["view_sequence", "reference_frame", "reconstruction_options"],
     }
 
-    def __init__(self, input_schema: Dict[str, Any] | None = None):
+    def __init__(self, input_schema: dict[str, Any] | None = None):
         """Initialize the operator with specific configurations."""
         super().__init__(operation_types=["visual_instruction", "action_instruction"])
         self.input_schema = {**self.DEFAULT_INPUT_SCHEMA, **dict(input_schema or {})}
@@ -41,8 +42,7 @@ class DVLTOperator(BaseOperator):
         if isinstance(interaction, Iterable):
             return [str(item) if isinstance(item, Path) else item for item in interaction]
         raise TypeError(
-            "DVLT interaction must be a sequence, mapping, path, or string; "
-            f"got {type(interaction).__name__}."
+            f"DVLT interaction must be a sequence, mapping, path, or string; got {type(interaction).__name__}."
         )
 
     def check_interaction(self, interaction):
@@ -55,7 +55,7 @@ class DVLTOperator(BaseOperator):
         self.check_interaction(interaction)
         self.current_interaction.append(interaction)
 
-    def process_interaction(self) -> Dict[str, Any]:
+    def process_interaction(self) -> dict[str, Any]:
         """Process the recorded interactions and return the generated actions."""
         actions = self._normalise_actions(self.current_interaction[-1] if self.current_interaction else None)
         self.interaction_history.append(actions)
@@ -69,7 +69,7 @@ class DVLTOperator(BaseOperator):
             },
         }
 
-    def process_prompt(self, prompt: str | None = None, **kwargs: Any) -> Dict[str, Any]:
+    def process_prompt(self, prompt: str | None = None, **kwargs: Any) -> dict[str, Any]:
         """Process the input prompt or caption to ensure compatibility."""
         del kwargs
         return {"prompt": "" if prompt is None else str(prompt)}
@@ -80,7 +80,7 @@ class DVLTOperator(BaseOperator):
         video: Any = None,
         ref_image_path: str | Path | None = None,
         **kwargs: Any,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Process perception inputs like images, videos, and reference frames."""
         return {
             "images": images,

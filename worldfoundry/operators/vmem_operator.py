@@ -2,14 +2,14 @@
 
 from __future__ import annotations
 
-from typing import Any, Dict, List, Sequence
+from collections.abc import Sequence
+from typing import Any
 
 import numpy as np
 import torch
 from PIL import Image
 
 from .base_operator import BaseOperator
-
 
 _ACTION_ALIASES = {
     "forward": "forward",
@@ -86,8 +86,7 @@ class VMemOperator(BaseOperator):
     def __init__(self, operation_types=None, interaction_template=None):
         """Initialize the operator with specific configurations."""
         super().__init__(
-            operation_types=operation_types
-            or ["textual_instruction", "action_instruction", "visual_instruction"]
+            operation_types=operation_types or ["textual_instruction", "action_instruction", "visual_instruction"]
         )
         self.interaction_template = interaction_template or list(_ACTION_TO_VMEM_COMMANDS)
         self.interaction_template_init()
@@ -110,14 +109,14 @@ class VMemOperator(BaseOperator):
         """Process perception inputs like images, videos, and reference frames."""
         return {"image": _to_pil_image(images)}
 
-    def process_interaction(self) -> Dict[str, List[str]]:
+    def process_interaction(self) -> dict[str, list[str]]:
         """Process the recorded interactions and return the generated actions."""
         if len(self.current_interaction) == 0:
             raise ValueError("No interaction registered. Use get_interaction() first.")
 
         actions = list(self.current_interaction[-1])
         self.interaction_history.extend(actions)
-        commands: List[str] = []
+        commands: list[str] = []
         for action in actions:
             commands.extend(_ACTION_TO_VMEM_COMMANDS[action])
 

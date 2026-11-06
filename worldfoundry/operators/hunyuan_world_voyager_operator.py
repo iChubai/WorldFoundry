@@ -1,11 +1,10 @@
 """Module for the HunyuanWorldVoyager operator implementation."""
 
 import numpy as np
-from PIL import Image
 import torch
+from PIL import Image
 
 from .base_operator import BaseOperator
-
 
 _INTERACTION_ALIASES = {
     "turn_left": "camera_l",
@@ -85,7 +84,7 @@ def camera_list(
         target_points = camera_centers + cam_forward[np.newaxis, :] * 100
 
     extrinsics = []
-    for t, target_point in zip(camera_centers, target_points):
+    for t, target_point in zip(camera_centers, target_points, strict=False):
         z = target_point - t
         z = z / np.linalg.norm(z)
 
@@ -110,6 +109,7 @@ def camera_list(
 
 class HunyuanWorldVoyagerOperator(BaseOperator):
     """Operator class for the HunyuanWorldVoyager model integration."""
+
     def __init__(self, operation_types=None, interaction_template=None):
         """Initialize the operator with specific configurations."""
         if operation_types is None:

@@ -5,13 +5,18 @@ This operator handles user interactions for the HunyuanMirror pipeline.
 It processes user commands like camera control, object manipulation, etc.
 """
 
-import numpy as np
 import torch
+
+from worldfoundry.base_models.three_dimensions.point_clouds.hunyuan_mirror.models.utils.camera_utils import (
+    vector_to_camera_matrices,
+)
+
 from .base_operator import BaseOperator
-from worldfoundry.base_models.three_dimensions.point_clouds.hunyuan_mirror.models.utils.camera_utils import vector_to_camera_matrices
+
 
 class HunyuanMirrorOperator(BaseOperator):
     """Operator class for the HunyuanMirror model integration."""
+
     def __init__(self, operation_types=None, interaction_template=None):
         """Initialize the operator with specific configurations."""
         if operation_types is None:
@@ -43,7 +48,7 @@ class HunyuanMirrorOperator(BaseOperator):
         if interaction not in self.interaction_template:
             raise ValueError(f"{interaction} not in interaction template: {self.interaction_template}")
         return True
-    
+
     def get_interaction(self, interaction):
         """
         获得用户的交互指令
@@ -54,33 +59,40 @@ class HunyuanMirrorOperator(BaseOperator):
     def process_interaction(self, num_frames, image_hw=(518, 518)):
         """
         处理用户交互指令，将其转换为representation和synthesis可以处理的形式
-        
+
         Args:
             num_frames: 生成的帧数
             image_hw: 图像的高度和宽度
-            
+
         Returns:
             dict: 包含处理后的相机参数或其他控制信息
         """
         if len(self.current_interaction) == 0:
             raise ValueError("No interaction to process")
-        
+
         # 处理最近的交互指令
         latest_interaction = self.current_interaction[-1]
-        
+
         # 将交互记录到历史
         self.interaction_history.append(latest_interaction)
-        
+
         # 根据不同的交互指令生成相机参数
         h, w = image_hw
-        
+
         # 默认相机参数
-        default_cam_vec = torch.tensor([
-            0.0, 0.0, 0.0,  # 位置 (x, y, z)
-            0.0, 0.0, 0.0, 1.0,  # 旋转 (quaternion: x, y, z, w; scalar-last)
-            torch.pi / 3,  # 垂直FOV
-            torch.pi / 3   # 水平FOV
-        ])
+        default_cam_vec = torch.tensor(
+            [
+                0.0,
+                0.0,
+                0.0,  # 位置 (x, y, z)
+                0.0,
+                0.0,
+                0.0,
+                1.0,  # 旋转 (quaternion: x, y, z, w; scalar-last)
+                torch.pi / 3,  # 垂直FOV
+                torch.pi / 3,  # 水平FOV
+            ]
+        )
 
         def with_axis_angle(vec, axis, angle):
             """Return ``vec`` with a normalized scalar-last axis-angle quaternion."""
@@ -91,7 +103,7 @@ class HunyuanMirrorOperator(BaseOperator):
             adjusted = vec.clone()
             adjusted[3:7] = quaternion
             return adjusted
-        
+
         # 相机参数调整量
         cam_adjustments = {
             "camera_look_up": lambda vec: with_axis_angle(vec, (1.0, 0.0, 0.0), 0.2),
@@ -107,20 +119,20 @@ class HunyuanMirrorOperator(BaseOperator):
             "object_move_left": lambda vec: vec,
             "object_move_right": lambda vec: vec,
         }
-        
+
         # 应用相机调整
         if latest_interaction in cam_adjustments:
             adjusted_cam_vec = cam_adjustments[latest_interaction](default_cam_vec)
         else:
             adjusted_cam_vec = default_cam_vec.clone()
-        
+
         # 生成相机矩阵
         ext, intr = vector_to_camera_matrices(adjusted_cam_vec, image_hw=image_hw)
-        
+
         # 重复参数以匹配帧数
         ext = ext.unsqueeze(0).repeat(num_frames, 1, 1)
         intr = intr.unsqueeze(0).repeat(num_frames, 1, 1)
-        
+
         # 返回处理后的相机参数
         return {
             "interaction": latest_interaction,

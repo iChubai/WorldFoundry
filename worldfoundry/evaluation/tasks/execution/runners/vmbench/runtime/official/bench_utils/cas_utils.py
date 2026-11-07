@@ -1,27 +1,12 @@
-import datetime
-import io
 import json
-import math
 import os
-import random
-import subprocess
 import sys
-import time
-from collections import defaultdict, deque
-from collections.abc import Iterable
 from multiprocessing import Pool
-from pathlib import Path
-from typing import Optional
 
 import numpy as np
 import torch
-import torch.distributed as dist
 from scipy.special import softmax
-from tensorboardX import SummaryWriter
-from timm.data import Mixup
-from timm.utils import ModelEma, accuracy, get_state_dict
-from torch import inf
-from torch.utils.data._utils.collate import default_collate
+from timm.utils import accuracy
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(__file__)), "VideoMAEv2"))
 
@@ -94,7 +79,8 @@ def final_merge(eval_path, num_tasks, meta_info_path, method="prob"):
 
     for x in range(num_tasks):
         file = os.path.join(eval_path, str(x) + ".txt")
-        lines = open(file).readlines()[1:]
+        with open(file) as stream:
+            lines = stream.readlines()[1:]
         for line in lines:
             line = line.strip()
             name = line.split("[")[0]
@@ -143,7 +129,7 @@ def final_merge(eval_path, num_tasks, meta_info_path, method="prob"):
 
 def compute_video(lst):
     i, video_id, data, label = lst
-    feat = [x for x in data]
+    feat = list(data)
     feat = np.mean(feat, axis=0)
     pred = np.argmax(feat)
     top1 = (int(pred) == int(label)) * 1.0

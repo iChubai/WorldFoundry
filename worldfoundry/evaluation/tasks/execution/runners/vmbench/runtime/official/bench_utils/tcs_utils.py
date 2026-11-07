@@ -1,20 +1,7 @@
-import json
-import math
-import os
-import sys
-
-import cv2
 import numpy as np
 import torch
-from PIL import Image
 
 from worldfoundry.base_models.perception_core.detection.grounding_dino.models import build_model
-from worldfoundry.base_models.perception_core.detection.grounding_dino.paths import (
-    checkpoint_path as grounding_dino_checkpoint_path,
-)
-from worldfoundry.base_models.perception_core.detection.grounding_dino.paths import (
-    config_path as grounding_dino_config_path,
-)
 
 # Grounding DINO
 from worldfoundry.base_models.perception_core.detection.grounding_dino.util import transforms as T
@@ -75,7 +62,7 @@ def get_grounding_output(model, image, caption, box_threshold, text_threshold, w
     tokenized = tokenlizer(caption)
     # build pred
     pred_phrases = []
-    for logit, box in zip(logits_filt, boxes_filt, strict=False):
+    for logit, _box in zip(logits_filt, boxes_filt, strict=False):
         pred_phrase = get_phrases_from_posmap(logit > text_threshold, tokenized, tokenlizer)
         if with_logits:
             pred_phrases.append(pred_phrase + f"({str(logit.max().item())[:4]})")
@@ -138,12 +125,9 @@ def is_edge_vanish(pred_tracks, pred_visibility, start, width=720, height=480, v
     valid_frames_mask = out_of_screen_ratio >= point_ratio
     # get all valid frames indices
     vanish_indices = indices[valid_frames_mask]
-    if len(vanish_indices) > 0:
-        edge_vanish = True
-        # print("Normal disappearance from screen edge")
-    else:
-        edge_vanish = False
-        # print("Not disappearing from screen edge")
+    edge_vanish = len(vanish_indices) > 0
+    # print("Normal disappearance from screen edge")
+    # print("Not disappearing from screen edge")
     return edge_vanish
 
 
@@ -188,12 +172,9 @@ def is_small_vanish(
             if object_size < size_threshold:
                 small_object_frames.append(i)
 
-    if len(small_object_frames) > 0:
-        small_vanish = True
-        # print("Normal disappearance due to being too small")
-    else:
-        small_vanish = False
-        # print("Not disappearing due to being too small")
+    small_vanish = len(small_object_frames) > 0
+    # print("Normal disappearance due to being too small")
+    # print("Not disappearing due to being too small")
     return small_vanish
 
 
@@ -204,12 +185,9 @@ def is_vanish_detect_error(pred_tracks, pred_visibility, start, visibility_ratio
     indices = torch.where(false_ratio >= visibility_ratio)[0]
     # filter frames after tracking start frame
     indices = indices[indices > start]
-    if len(indices) == 0:
-        detect_error = True
-        # print("Error due to detection mistake")
-    else:
-        detect_error = False
-        # print("No error due to detection mistake")
+    detect_error = len(indices) == 0
+    # print("Error due to detection mistake")
+    # print("No error due to detection mistake")
     return detect_error
 
 
@@ -267,12 +245,9 @@ def is_edge_emerge(pred_tracks, pred_visibility, start, width=720, height=480, v
     # get all valid frames indices
     emerge_indices = indices[valid_frames_mask]
 
-    if len(emerge_indices) > 0:
-        edge_emerge = True
-        # print("Normal appearance from screen edge")
-    else:
-        edge_emerge = False
-        # print("Not appearing from screen edge")
+    edge_emerge = len(emerge_indices) > 0
+    # print("Normal appearance from screen edge")
+    # print("Not appearing from screen edge")
 
     return edge_emerge
 
@@ -315,12 +290,9 @@ def is_small_emerge(
             if object_size < size_threshold:
                 small_object_frames.append(i)
 
-    if len(small_object_frames) > 0:
-        small_emerge = True
-        # print("Normal appearance from being too small")
-    else:
-        small_emerge = False
-        # print("Not appearing from being too small")
+    small_emerge = len(small_object_frames) > 0
+    # print("Normal appearance from being too small")
+    # print("Not appearing from being too small")
 
     return small_emerge
 
@@ -333,10 +305,7 @@ def is_emerge_detect_error(pred_tracks, pred_visibility, start, visibility_ratio
     # filter frames before tracking start frame
     indices = indices[indices < start]
 
-    if len(indices) == 0:
-        detect_error = True
-        # print("Error due to detection mistake")
-    else:
-        detect_error = False
-        # print("No error due to detection mistake")
+    detect_error = len(indices) == 0
+    # print("Error due to detection mistake")
+    # print("No error due to detection mistake")
     return detect_error

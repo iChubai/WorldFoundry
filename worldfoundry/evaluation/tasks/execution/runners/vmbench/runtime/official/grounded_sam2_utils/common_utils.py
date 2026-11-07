@@ -1,7 +1,6 @@
 import json
 import os
 import random
-from dataclasses import dataclass
 
 import cv2
 import numpy as np
@@ -66,7 +65,7 @@ class CommonUtils:
             object_id_to_name = {}
             with open(file_path) as file:
                 json_data = json.load(file)
-                for obj_id, obj_item in json_data["labels"].items():
+                for _obj_id, obj_item in json_data["labels"].items():
                     # box id
                     instance_id = obj_item["instance_id"]
                     if instance_id not in unique_ids:  # not a valid box
@@ -142,7 +141,7 @@ class CommonUtils:
             with open(file_path) as file:
                 json_data = json.load(file)
                 # Draw bounding boxes and labels
-                for obj_id, obj_item in json_data["labels"].items():
+                for _obj_id, obj_item in json_data["labels"].items():
                     # Extract data from JSON
                     x1, y1, x2, y2 = obj_item["x1"], obj_item["y1"], obj_item["x2"], obj_item["y2"]
                     instance_id = obj_item["instance_id"]

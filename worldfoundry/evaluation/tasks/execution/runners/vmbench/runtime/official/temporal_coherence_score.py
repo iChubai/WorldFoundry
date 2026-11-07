@@ -1,12 +1,9 @@
 import copy
 import json
-import math
 import os
-import sys
 
 import cv2
 import numpy as np
-import supervision as sv
 import torch
 from bench_utils.tcs_utils import (
     get_appear_objects,
@@ -21,10 +18,7 @@ from bench_utils.tcs_utils import (
     load_model,
     transform_pil,
 )
-from grounded_sam2_utils.common_utils import CommonUtils
 from grounded_sam2_utils.mask_dictionary_model import MaskDictionaryModel, ObjectInfo
-from grounded_sam2_utils.track_utils import sample_points_from_masks
-from grounded_sam2_utils.video_utils import create_video_from_images
 from PIL import Image
 from tqdm import tqdm
 
@@ -42,7 +36,7 @@ from worldfoundry.base_models.perception_core.segment.sam2 import (
 )
 from worldfoundry.base_models.perception_core.segment.sam2.build_sam import build_sam2, build_sam2_video_predictor
 from worldfoundry.base_models.perception_core.segment.sam2.sam2_image_predictor import SAM2ImagePredictor
-from worldfoundry.base_models.perception_core.tracking.cotracker import CoTrackerPredictor, Visualizer
+from worldfoundry.base_models.perception_core.tracking.cotracker import CoTrackerPredictor
 from worldfoundry.base_models.perception_core.tracking.cotracker.paths import (
     checkpoint_path as cotracker_checkpoint_path,
 )
@@ -187,7 +181,7 @@ if __name__ == "__main__":
         # get frames and frame names from the video
         try:
             frames, frame_names = extract_frames_from_video(video_path)
-        except:
+        except BaseException:
             print("read video error, sikp this video")
             continue
 
@@ -361,18 +355,18 @@ if __name__ == "__main__":
         else:
             # get disappear object masks
             disappear_mask_list = []
-            query_frame = []
-            for idx, obj_info in enumerate(disappear_objects):
+            query_frames = []
+            for _idx, obj_info in enumerate(disappear_objects):
                 mask = obj_info["mask"]
                 frame = obj_info["first_appearance"]
                 if mask.ndim != 2:
                     continue
                 image = Image.fromarray((mask * 255).astype(np.uint8), mode="L")
                 disappear_mask_list.append(image)
-                query_frame.append(frame)
+                query_frames.append(frame)
 
             disappear_objects_count = 0
-            for disappear_mask, query_frame in zip(disappear_mask_list, query_frame, strict=False):
+            for disappear_mask, query_frame in zip(disappear_mask_list, query_frames, strict=False):
                 # load the mask from PIL image
                 disappear_mask = torch.from_numpy(np.array(disappear_mask))[None, None]
 
@@ -409,8 +403,8 @@ if __name__ == "__main__":
         else:
             # get appear object masks
             appear_mask_list = []
-            query_frame = []
-            for idx, obj_info in enumerate(appear_objects):
+            query_frames = []
+            for _idx, obj_info in enumerate(appear_objects):
                 mask = obj_info["mask"]
                 frame = obj_info["first_appearance"]
                 # 确保 mask 是二维数组
@@ -419,10 +413,10 @@ if __name__ == "__main__":
                 # 将 mask 转换为 PIL Image
                 image = Image.fromarray((mask * 255).astype(np.uint8), mode="L")
                 appear_mask_list.append(image)
-                query_frame.append(frame)
+                query_frames.append(frame)
 
             appear_objects_count = 0
-            for appear_mask, query_frame in zip(appear_mask_list, query_frame, strict=False):
+            for appear_mask, query_frame in zip(appear_mask_list, query_frames, strict=False):
                 # load the mask from PIL image
                 appear_mask = torch.from_numpy(np.array(appear_mask))[None, None]
 

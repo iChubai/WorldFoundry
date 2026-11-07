@@ -8,24 +8,17 @@
 
 import argparse
 import csv
-import datetime
 import json
 import os
 import random
 import sys
-import time
-from collections import OrderedDict
-from functools import partial
 from pathlib import Path
 
 import deepspeed
 import numpy as np
 import torch
 import torch.backends.cudnn as cudnn
-from timm.data.mixup import Mixup
-from timm.loss import LabelSmoothingCrossEntropy, SoftTargetCrossEntropy
 from timm.models import create_model
-from timm.utils import ModelEma
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "VideoMAEv2"))
 
@@ -34,14 +27,6 @@ import models  # noqa: F401
 import utils
 from bench_utils.cas_utils import final_merge, final_test
 from dataset import build_dataset
-from engine_for_finetuning import merge, train_one_epoch, validation_one_epoch
-from optim_factory import (
-    LayerDecayValueAssigner,
-    create_optimizer,
-    get_parameter_groups,
-)
-from utils import NativeScalerWithGradNormCount as NativeScaler
-from utils import multiple_samples_collate
 
 
 def get_args():
@@ -357,7 +342,7 @@ def main(args, ds_init):
     )
 
     patch_size = model.patch_embed.patch_size
-    print("Patch size = %s" % str(patch_size))
+    print(f"Patch size = {patch_size!s}")
 
     args.window_size = (
         args.num_frames // args.tubelet_size,
@@ -372,16 +357,16 @@ def main(args, ds_init):
     model_without_ddp = model
     n_parameters = sum(p.numel() for p in model.parameters() if p.requires_grad)
 
-    print("Model = %s" % str(model_without_ddp))
+    print(f"Model = {model_without_ddp!s}")
     print("number of params:", n_parameters)
 
     total_batch_size = args.batch_size * args.update_freq * num_tasks
-    print("Batch size = %d" % total_batch_size)
-    print("Update frequent = %d" % args.update_freq)
+    print(f"Batch size = {total_batch_size:d}")
+    print(f"Update frequent = {args.update_freq:d}")
 
     if args.eval:
         preds_file = os.path.join(args.output_dir, str(global_rank) + ".txt")
-        test_stats = final_test(data_loader_test, model, device, preds_file)
+        _test_stats = final_test(data_loader_test, model, device, preds_file)
         torch.distributed.barrier()
         if global_rank == 0:
             print("Start merging results...")

@@ -1,11 +1,8 @@
 import argparse
 import json
-import math
 import os
-import sys
 
 import cv2
-import matplotlib.pyplot as plt
 import numpy as np
 import torch
 from PIL import Image
@@ -32,11 +29,10 @@ from worldfoundry.base_models.perception_core.segment.sam_v1 import SamPredictor
 from worldfoundry.base_models.perception_core.segment.sam_v1.paths import checkpoint_path as sam_checkpoint_path
 
 # Co-Tracker
-from worldfoundry.base_models.perception_core.tracking.cotracker import CoTrackerPredictor, Visualizer
+from worldfoundry.base_models.perception_core.tracking.cotracker import CoTrackerPredictor
 from worldfoundry.base_models.perception_core.tracking.cotracker.paths import (
     checkpoint_path as cotracker_checkpoint_path,
 )
-from worldfoundry.base_models.perception_core.tracking.cotracker.visualizer import read_video_from_path
 
 
 def load_video(video_path):
@@ -112,7 +108,7 @@ def get_grounding_output(model, image, caption, box_threshold, text_threshold, w
     tokenized = tokenlizer(caption)
     # build pred
     pred_phrases = []
-    for logit, box in zip(logits_filt, boxes_filt, strict=False):
+    for logit, _box in zip(logits_filt, boxes_filt, strict=False):
         pred_phrase = get_phrases_from_posmap(logit > text_threshold, tokenized, tokenlizer)
         if with_logits:
             pred_phrases.append(pred_phrase + f"({str(logit.max().item())[:4]})")

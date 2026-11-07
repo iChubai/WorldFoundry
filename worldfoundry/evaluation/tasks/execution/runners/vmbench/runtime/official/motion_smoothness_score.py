@@ -1,19 +1,14 @@
-import glob
 import json
 import os
-from typing import List
 
-import matplotlib.pyplot as plt
 import numpy as np
-import pandas as pd
 import torch
 import torch.nn as nn
 from decord import VideoReader
 from PIL import Image
-from q_align.constants import DEFAULT_IMAGE_TOKEN, IMAGE_TOKEN_INDEX
-from q_align.mm_utils import KeywordsStoppingCriteria, get_model_name_from_path, process_images, tokenizer_image_token
+from q_align.constants import IMAGE_TOKEN_INDEX
+from q_align.mm_utils import tokenizer_image_token
 from q_align.model.builder import load_pretrained_model
-from scipy.signal import find_peaks
 from tqdm import tqdm
 
 

@@ -1,9 +1,5 @@
-import json
-
 import numpy as np
-from scipy.signal import medfilt
 from scipy.spatial import distance
-from scipy.stats import ttest_ind
 
 
 def analyze_lengths_over_time(instance_info, threshold=0.45, min_length=1e-6, confidence_threshold=0.3, window_size=1):
@@ -70,9 +66,9 @@ def analyze_lengths_over_time(instance_info, threshold=0.45, min_length=1e-6, co
 
     for part_name in lengths:
         valid_lengths = [
-            l
-            for l, v in zip(lengths[part_name], valid_measurements[part_name], strict=False)
-            if v and l is not None and l > min_length
+            length
+            for length, is_valid in zip(lengths[part_name], valid_measurements[part_name], strict=False)
+            if is_valid and length is not None and length > min_length
         ]
 
         if len(valid_lengths) < num_frames // 2:

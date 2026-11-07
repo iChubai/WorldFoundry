@@ -1,5 +1,3 @@
-import json
-import logging
 import mimetypes
 import os
 import time
@@ -25,14 +23,14 @@ def safe_register(self, *args, **kwargs):
 # replace register method
 mmengine.registry.Registry.register_module = safe_register
 
-import numpy as np
-from mmengine.logging import print_log
-from mmpose.apis import inference_topdown
-from mmpose.apis import init_model as init_pose_estimator
-from mmpose.evaluation.functional import nms
-from mmpose.registry import VISUALIZERS
-from mmpose.structures import merge_data_samples, split_instances
-from mmpose.utils import adapt_mmdet_pipeline
+# Provider imports require the MMEngine registry policy above.
+import numpy as np  # noqa: E402
+from mmpose.apis import inference_topdown  # noqa: E402
+from mmpose.apis import init_model as init_pose_estimator  # noqa: E402
+from mmpose.evaluation.functional import nms  # noqa: E402
+from mmpose.registry import VISUALIZERS  # noqa: E402
+from mmpose.structures import merge_data_samples, split_instances  # noqa: E402
+from mmpose.utils import adapt_mmdet_pipeline  # noqa: E402
 
 try:
     from mmdet.apis import inference_detector, init_detector
@@ -41,8 +39,8 @@ try:
 except (ImportError, ModuleNotFoundError):
     has_mmdet = False
 
-from bench_utils.pose_utils import analyze_joint_angles, analyze_lengths_over_time
-from tqdm import tqdm
+from bench_utils.pose_utils import analyze_joint_angles, analyze_lengths_over_time  # noqa: E402
+from tqdm import tqdm  # noqa: E402
 
 RUNTIME_ROOT = os.path.dirname(__file__)
 
@@ -162,7 +160,7 @@ def main():
         args.pose_config,
         args.pose_checkpoint,
         device=args.device,
-        cfg_options=dict(model=dict(test_cfg=dict(output_heatmaps=args.draw_heatmap))),
+        cfg_options={"model": {"test_cfg": {"output_heatmaps": args.draw_heatmap}}},
     )
 
     # build visualizer
@@ -187,10 +185,7 @@ def main():
             if args.input == "webcam":
                 output_file += ".mp4"
 
-        if args.input == "webcam":
-            input_type = "webcam"
-        else:
-            input_type = mimetypes.guess_type(args.input)[0].split("/")[0]
+        input_type = "webcam" if args.input == "webcam" else mimetypes.guess_type(args.input)[0].split("/")[0]
 
         if input_type == "image":
             # inference
@@ -204,10 +199,7 @@ def main():
                 mmcv.imwrite(mmcv.rgb2bgr(img_vis), output_file)
 
         elif input_type in ["webcam", "video"]:
-            if args.input == "webcam":
-                cap = cv2.VideoCapture(0)
-            else:
-                cap = cv2.VideoCapture(args.input)
+            cap = cv2.VideoCapture(0) if args.input == "webcam" else cv2.VideoCapture(args.input)
 
             video_writer = None
             pred_instances_list = []
@@ -225,7 +217,7 @@ def main():
 
                 if args.save_predictions:
                     # save prediction results
-                    pred_instances_list.append(dict(frame_id=frame_idx, instances=split_instances(pred_instances)))
+                    pred_instances_list.append({"frame_id": frame_idx, "instances": split_instances(pred_instances)})
 
                 # output videos
                 if output_file:

@@ -1,9 +1,7 @@
-import copy
 import json
 import os
 from dataclasses import dataclass, field
 
-import cv2
 import numpy as np
 import torch
 
@@ -25,7 +23,7 @@ class MaskDictionaryModel:
             if mask.shape[0] != mask_img.shape[0] or mask.shape[1] != mask_img.shape[1]:
                 raise ValueError("The mask shape should be the same as the mask_img shape.")
             # mask = mask
-            mask_img[mask == True] = final_index
+            mask_img[mask == True] = final_index  # noqa: E712 - Select tensor elements equal to True, not nonzero indices.
             # print("label", label)
             name = label
             box = box  # .numpy().tolist()
@@ -42,13 +40,13 @@ class MaskDictionaryModel:
     def update_masks(self, tracking_annotation_dict, iou_threshold=0.8, objects_count=0):
         updated_masks = {}
 
-        for seg_obj_id, seg_mask in self.labels.items():  # tracking_masks
+        for _seg_obj_id, seg_mask in self.labels.items():  # tracking_masks
             flag = 0
             new_mask_copy = ObjectInfo()
             if seg_mask.mask.sum() == 0:
                 continue
 
-            for object_id, object_info in tracking_annotation_dict.labels.items():  # grounded_sam masks
+            for _object_id, object_info in tracking_annotation_dict.labels.items():  # grounded_sam masks
                 iou = self.calculate_iou(seg_mask.mask, object_info.mask)  # tensor, numpy
                 # print("iou", iou)
                 if iou > iou_threshold:

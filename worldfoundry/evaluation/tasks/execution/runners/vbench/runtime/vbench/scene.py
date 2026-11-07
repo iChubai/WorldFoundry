@@ -42,7 +42,7 @@ def scene(model, video_dict, device):
     transform = tag2text_transform(384)
     for info in tqdm(video_dict, disable=get_rank() > 0):
         if "auxiliary_info" not in info:
-            raise "Auxiliary info is not in json, please check your json."
+            raise ValueError("Auxiliary info is not in json, please check your json.")
         scene_info = info["auxiliary_info"]["scene"]
         for video_path in info["video_list"]:
             video_array = load_video(video_path, num_frames=16, return_tensor=False, width=384, height=384)

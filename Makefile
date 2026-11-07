@@ -23,6 +23,7 @@ INFER_TENSOR_MANIFEST ?= tmp/inference-cpu-selection.json
 INFER_TENSOR_JUNIT ?= tmp/inference-cpu-contracts.xml
 STRICT_TEST_RUNNER = $(PYTHON) tests/manual/validate_junit_contract.py run
 PUBLIC_GATE_CONTRACTS = \
+	tests/evaluation/execution/test_vbench_metadata_errors.py \
 	tests/evaluation/metrics/test_nexus_configuration.py \
 	tests/evaluation/metrics/test_vendi_dispatch.py \
 	tests/evaluation/metrics/test_fvd_spatial_squeeze.py \
@@ -244,6 +245,7 @@ INFER_TENSOR_CONTRACTS = \
 	tests/eval_core/test_catalog_integration_status.py \
 	$(EVALUATION_CPU_CONTRACTS)
 EVALUATION_CPU_CONTRACTS = \
+	tests/evaluation/execution/test_vbench_metadata_errors.py \
 	tests/evaluation/metrics/test_nexus_configuration.py \
 	tests/evaluation/metrics/test_vendi_dispatch.py \
 	tests/eval_core/test_worldmembench_official_runner.py \

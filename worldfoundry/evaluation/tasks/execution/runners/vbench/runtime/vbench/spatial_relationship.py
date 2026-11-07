@@ -122,7 +122,7 @@ def spatial_relationship(model, video_dict, device):
     frame_score_overall = []
     for info in tqdm(video_dict, disable=get_rank() > 0):
         if "auxiliary_info" not in info:
-            raise "Auxiliary info is not in json, please check your json."
+            raise ValueError("Auxiliary info is not in json, please check your json.")
         object_info = info["auxiliary_info"]["spatial_relationship"]
         for video_path in info["video_list"]:
             video_tensor = load_video(video_path, num_frames=16)

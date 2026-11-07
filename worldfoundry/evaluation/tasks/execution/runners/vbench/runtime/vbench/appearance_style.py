@@ -55,7 +55,7 @@ def appearance_style(clip_model, video_dict, device, sample="rand"):
     image_transform = clip_transform_Image(224)
     for info in tqdm(video_dict, disable=get_rank() > 0):
         if "auxiliary_info" not in info:
-            raise "Auxiliary info is not in json, please check your json."
+            raise ValueError("Auxiliary info is not in json, please check your json.")
         query = info["auxiliary_info"]["appearance_style"]
         text = clip.tokenize([query]).to(device)
         video_list = info["video_list"]

@@ -52,7 +52,7 @@ def multiple_objects(model, video_dict, device):
     video_results = []
     for info in tqdm(video_dict, disable=get_rank() > 0):
         if "auxiliary_info" not in info:
-            raise "Auxiliary info is not in json, please check your json."
+            raise ValueError("Auxiliary info is not in json, please check your json.")
         object_info = info["auxiliary_info"]["object"]
         for video_path in info["video_list"]:
             video_tensor = load_video(video_path, num_frames=16)

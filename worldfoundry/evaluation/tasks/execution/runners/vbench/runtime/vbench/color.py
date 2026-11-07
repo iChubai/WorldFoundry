@@ -75,7 +75,7 @@ def color(model, video_dict, device):
     video_results = []
     for info in tqdm(video_dict, disable=get_rank() > 0):
         if "auxiliary_info" not in info:
-            raise "Auxiliary info is not in json, please check your json."
+            raise ValueError("Auxiliary info is not in json, please check your json.")
         # print(info)
         color_info = info["auxiliary_info"]["color"]
         object_info = info["prompt"]

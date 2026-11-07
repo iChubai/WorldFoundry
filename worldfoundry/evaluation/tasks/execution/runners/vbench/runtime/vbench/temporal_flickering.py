@@ -4,8 +4,6 @@ from tqdm import tqdm
 from vbench.utils import load_dimension_info
 
 from worldfoundry.core.distributed.collectives.evaluation import (
-    all_gather,
-    barrier,
     distribute_list_to_rank,
     gather_list_of_dict,
     get_rank,

@@ -1,17 +1,13 @@
-import json
 import logging
-import os
 
 import cv2
 import numpy as np
 import torch
 from tqdm import tqdm
-from vbench.utils import load_dimension_info, load_video, read_frames_decord_by_fps
+from vbench.utils import load_dimension_info, load_video
 
 from worldfoundry.base_models.perception_core.captioning.grit.model import DenseCaptioning
 from worldfoundry.core.distributed.collectives.evaluation import (
-    all_gather,
-    barrier,
     distribute_list_to_rank,
     gather_list_of_dict,
     get_rank,
@@ -33,7 +29,7 @@ def get_dect_from_grit(model, image_arrays):
             if len(ret[0]) < 1:
                 cur_pred.append(["", ""])
             else:
-                for idx, cap_det in enumerate(ret[0]):
+                for _idx, cap_det in enumerate(ret[0]):
                     cur_pred.append([cap_det[0], cap_det[2][0]])
             pred.append(cur_pred)
     return pred

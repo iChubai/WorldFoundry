@@ -1,16 +1,11 @@
-import json
 import logging
-import os
 
-import numpy as np
 import torch
 from tqdm import tqdm
 from vbench.utils import load_dimension_info, load_video, tag2text_transform
 
 from worldfoundry.base_models.perception_core.captioning.tag2text.tag2text import tag2text_caption
 from worldfoundry.core.distributed.collectives.evaluation import (
-    all_gather,
-    barrier,
     distribute_list_to_rank,
     gather_list_of_dict,
     get_rank,

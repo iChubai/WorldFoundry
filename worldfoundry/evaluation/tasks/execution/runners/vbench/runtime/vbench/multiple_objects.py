@@ -1,8 +1,5 @@
-import json
 import logging
-import os
 
-import numpy as np
 import torch
 from torchvision import transforms
 from tqdm import tqdm
@@ -10,8 +7,6 @@ from vbench.utils import load_dimension_info, load_video
 
 from worldfoundry.base_models.perception_core.captioning.grit.model import DenseCaptioning
 from worldfoundry.core.distributed.collectives.evaluation import (
-    all_gather,
-    barrier,
     distribute_list_to_rank,
     gather_list_of_dict,
     get_rank,
@@ -32,7 +27,7 @@ def get_dect_from_grit(model, image_arrays):
             if len(ret[0]) > 0:
                 pred.append(set(ret[0][0][2]))
             else:
-                pred.append(set([]))
+                pred.append(set())
     return pred
 
 

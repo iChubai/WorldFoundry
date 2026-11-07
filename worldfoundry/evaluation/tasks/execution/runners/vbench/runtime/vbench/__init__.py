@@ -1,15 +1,15 @@
+import importlib
 import os
 import sys
-
-sys.modules.setdefault("vbench", sys.modules[__name__])
-
-import importlib
 from itertools import chain
 from pathlib import Path
 
 from worldfoundry.core.distributed.collectives.evaluation import get_rank, print0
 
-from .utils import get_prompt_from_filename, init_submodules, load_json, save_json
+# Runtime modules resolve imports through the upstream package name.
+sys.modules.setdefault("vbench", sys.modules[__name__])
+
+from .utils import get_prompt_from_filename, init_submodules, load_json, save_json  # noqa: E402
 
 
 class VBench:
@@ -42,9 +42,14 @@ class VBench:
         ]
 
     def check_dimension_requires_extra_info(self, dimension_list):
-        dim_custom_not_supported = set(dimension_list) & set(
-            ["object_class", "multiple_objects", "scene", "appearance_style", "color", "spatial_relationship"]
-        )
+        dim_custom_not_supported = set(dimension_list) & {
+            "object_class",
+            "multiple_objects",
+            "scene",
+            "appearance_style",
+            "color",
+            "spatial_relationship",
+        }
 
         assert len(dim_custom_not_supported) == 0, (
             f"dimensions : {dim_custom_not_supported} not supported for custom input"
@@ -70,7 +75,7 @@ class VBench:
         videos_path,
         name,
         dimension_list,
-        prompt_list=[],
+        prompt_list=[],  # noqa: B006 - Read-only upstream prompt-list default.
         special_str="",
         verbose=False,
         custom_image_folder=None,
@@ -151,11 +156,9 @@ class VBench:
                         for file in list(chain.from_iterable(vid["video_list"] for vid in cur_full_info_list))
                     ]
                     backslash = "\n"
-                    assert (
-                        len(set(all_video_path) - set([os.path.abspath(path_key) for path_key in prompt_list])) == 0
-                    ), f"""
+                    assert len(set(all_video_path) - {os.path.abspath(path_key) for path_key in prompt_list}) == 0, f"""
                     The prompts for the following videos are not found in the prompt file: \n
-                    {backslash.join(set(all_video_path) - set([os.path.abspath(path_key) for path_key in prompt_list]))}
+                    {backslash.join(set(all_video_path) - {os.path.abspath(path_key) for path_key in prompt_list})}
                     """
 
                     video_map = {}
@@ -173,10 +176,7 @@ class VBench:
             )
             category_dir = prompts_root / "prompts_per_category"
             category_supported = [Path(category).stem for category in os.listdir(category_dir)]
-            if "category" not in kwargs:
-                category = category_supported
-            else:
-                category = kwargs["category"]
+            category = kwargs.get("category", category_supported)
 
             assert category is not None, "Please specify the category to be evaluated with --category"
             assert category in category_supported, f"""
@@ -248,7 +248,7 @@ class VBench:
         self,
         videos_path,
         name,
-        prompt_list=[],
+        prompt_list=[],  # noqa: B006 - Preserve the public prompt-list default.
         dimension_list=None,
         local=False,
         read_frame=False,
@@ -269,7 +269,8 @@ class VBench:
                 dimension_module = importlib.import_module(f"vbench.{dimension}")
                 evaluate_func = getattr(dimension_module, f"compute_{dimension}")
             except Exception as e:
-                raise NotImplementedError(f"UnImplemented dimension {dimension}!, {e}")
+                # Keep the upstream import failure as implicit exception context.
+                raise NotImplementedError(f"UnImplemented dimension {dimension}!, {e}")  # noqa: B904
             submodules_list = submodules_dict[dimension]
             print0(f"cur_full_info_path: {cur_full_info_path}")  # TODO: to delete
             results = evaluate_func(cur_full_info_path, self.device, submodules_list, **kwargs)

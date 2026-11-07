@@ -1,6 +1,4 @@
-import json
 import logging
-import os
 
 import numpy as np
 import torch
@@ -10,8 +8,6 @@ from vbench.utils import load_dimension_info, load_video
 
 from worldfoundry.base_models.perception_core.captioning.grit.model import DenseCaptioning
 from worldfoundry.core.distributed.collectives.evaluation import (
-    all_gather,
-    barrier,
     distribute_list_to_rank,
     gather_list_of_dict,
     get_rank,
@@ -61,8 +57,8 @@ def get_position_score(locality, obj1, obj2, iou_threshold=0.1):
     iou = intersection / union
 
     # get max object width and max object height
-    max_width = max(box1["width"], box2["width"])
-    max_height = max(box1["height"], box2["height"])
+    _max_width = max(box1["width"], box2["width"])
+    _max_height = max(box1["height"], box2["height"])
 
     score = 0
     if locality in "on the right of" or locality in "on the left of":

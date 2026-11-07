@@ -37,10 +37,7 @@ def transform(images, preprocess_mode="shorter"):
 
 
 def technical_quality(model, video_list, device, **kwargs):
-    if "imaging_quality_preprocessing_mode" not in kwargs:
-        preprocess_mode = "longer"
-    else:
-        preprocess_mode = kwargs["imaging_quality_preprocessing_mode"]
+    preprocess_mode = kwargs.get("imaging_quality_preprocessing_mode", "longer")
     model.eval()
     batch_size = resolve_inference_batch_size(8, device=device, scope="vbench_musiq")
     video_results = []

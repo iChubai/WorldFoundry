@@ -1,16 +1,11 @@
-import json
-import os
-
 import numpy as np
 import torch
 from tqdm import tqdm
-from vbench.utils import clip_transform, load_dimension_info, load_video, read_frames_decord_by_fps
+from vbench.utils import clip_transform, load_dimension_info, read_frames_decord_by_fps
 
 from worldfoundry.base_models.perception_core.video_text.viclip.simple_tokenizer import SimpleTokenizer
 from worldfoundry.base_models.perception_core.video_text.viclip.viclip import ViCLIP
 from worldfoundry.core.distributed.collectives.evaluation import (
-    all_gather,
-    barrier,
     distribute_list_to_rank,
     gather_list_of_dict,
     get_rank,
@@ -18,7 +13,8 @@ from worldfoundry.core.distributed.collectives.evaluation import (
 )
 
 
-def get_text_features(model, input_text, tokenizer, text_feature_dict={}):
+# The upstream text-feature cache persists between calls.
+def get_text_features(model, input_text, tokenizer, text_feature_dict={}):  # noqa: B006
     if input_text in text_feature_dict:
         return text_feature_dict[input_text]
     text_template = f"{input_text}"
@@ -51,7 +47,7 @@ def temporal_style(clip_model, video_dict, tokenizer, device, sample="middle"):
         # text = clip.tokenize([query]).to(device)
         video_list = info["video_list"]
         for video_path in video_list:
-            cur_video = []
+            _cur_video = []
             with torch.no_grad():
                 # images = load_video(video_path, num_frames=8)
                 images = read_frames_decord_by_fps(video_path, num_frames=8, sample=sample)

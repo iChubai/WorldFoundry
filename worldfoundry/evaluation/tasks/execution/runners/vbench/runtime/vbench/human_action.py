@@ -1,11 +1,4 @@
-import json
-import os
-
-import numpy as np
 import torch
-import torch.nn as nn
-import torch.nn.functional as F
-from PIL import Image
 from timm.models import create_model
 from tqdm import tqdm
 from vbench.utils import load_dimension_info, load_video
@@ -16,21 +9,14 @@ from worldfoundry.base_models.perception_core.action_recognition.umt.datasets.vi
     Compose,
     Normalize,
     Resize,
-    create_random_augment,
-    horizontal_flip,
-    random_crop,
-    random_resized_crop,
-    random_resized_crop_with_shift,
-    random_short_side_scale_jitter,
-    uniform_crop,
 )
 from worldfoundry.base_models.perception_core.action_recognition.umt.datasets.volume_transforms import ClipToTensor
+
+# Importing the model registers its factory with timm.create_model.
 from worldfoundry.base_models.perception_core.action_recognition.umt.models.modeling_finetune import (
-    vit_large_patch16_224,
+    vit_large_patch16_224 as vit_large_patch16_224,
 )
 from worldfoundry.core.distributed.collectives.evaluation import (
-    all_gather,
-    barrier,
     distribute_list_to_rank,
     gather_list_of_dict,
     get_rank,

@@ -26,6 +26,7 @@ PUBLIC_GATE_CONTRACTS = \
 	tests/evaluation/metrics/test_nexus_configuration.py \
 	tests/evaluation/metrics/test_vendi_dispatch.py \
 	tests/evaluation/metrics/test_fvd_spatial_squeeze.py \
+	tests/evaluation/test_source_cache.py \
 	tests/eval_core/test_videoverse_local_vlm.py \
 	tests/eval_core/test_vendi_molecule_kernel.py \
 	tests/eval_core/test_libero_mem_recording.py \
@@ -42,6 +43,7 @@ PUBLIC_GATE_CONTRACTS = \
 	tests/cli/test_mcp_content_conversion.py \
 	tests/cli/test_config_run.py \
 	tests/cli/test_mcp_run_results.py \
+	tests/cli/test_zoo_benchmark_fetch.py \
 	tests/runtime/test_inference_actions_evidence.py \
 	tests/synthesis/test_matrix_game_2_historical_reference.py \
 	tests/studio/test_canonical_catalog_lookup.py \

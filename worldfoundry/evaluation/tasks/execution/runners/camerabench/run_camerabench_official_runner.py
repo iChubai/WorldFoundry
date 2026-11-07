@@ -23,13 +23,13 @@ from worldfoundry.evaluation.tasks.execution.framework.io import (
     write_json,
     write_jsonl,
 )
+from worldfoundry.evaluation.tasks.execution.framework.official_sources import resolve_benchmark_source
 from worldfoundry.evaluation.tasks.execution.framework.runner_common import SCORECARD_SCHEMA_VERSION
 from worldfoundry.evaluation.tasks.execution.runners.camerabench.camerabench_metrics import (
     evaluate_camerabench_from_score_dir,
 )
 
-DEFAULT_CAMERABENCH_RUNTIME_ROOT = Path(__file__).resolve().parent / "runtime" / "camerabench"
-VENDORED_TASK_SCRIPTS = {
+OFFICIAL_TASK_SCRIPTS = {
     "binary": "binary_classification_evaluation.py",
     "vqa_retrieval": "vqa_and_retrieval_evaluation.py",
     "caption": "caption_evaluation.py",
@@ -153,15 +153,11 @@ def _score_dir_report(score_dir: Path | None) -> dict[str, Any]:
 
 
 def _camerabench_runtime_root(explicit: Path | None = None) -> Path:
-    if explicit is not None:
-        return explicit.expanduser().resolve()
-    env_root = env_path("WORLDFOUNDRY_CAMERABENCH_RUNTIME_ROOT")
-    if env_root is not None:
-        return env_root
-    return DEFAULT_CAMERABENCH_RUNTIME_ROOT
+    """Return the official ``t2v_metrics/camerabench`` sources pinned by the catalog."""
+    return resolve_benchmark_source("camerabench", explicit=explicit)
 
 
-def run_vendored_official_scripts(
+def run_official_scripts(
     *,
     score_dir: Path,
     output_dir: Path,
@@ -172,21 +168,21 @@ def run_vendored_official_scripts(
     openai_api_key: str | None = None,
     timeout: int = 7200,
 ) -> tuple[dict[str, dict[str, Any]], list[list[str]], str, str]:
-    """Execute the vendored official CameraBench evaluation scripts.
+    """Execute the official CameraBench evaluation scripts.
 
-    Runs the byte-vendored ``t2v_metrics/camerabench`` evaluators as
+    Runs the pinned upstream ``t2v_metrics/camerabench`` evaluators as
     subprocesses against a prepared score directory and returns the parsed
     per-task result payloads plus the executed commands and captured output.
     """
 
     if task not in {"binary", "vqa_retrieval", "caption", "all"}:
         raise ValueError(f"unknown CameraBench task: {task}")
-    selected = tuple(VENDORED_TASK_SCRIPTS) if task == "all" else (task,)
-    missing = [name for name in selected if not (runtime_root / VENDORED_TASK_SCRIPTS[name]).is_file()]
+    selected = tuple(OFFICIAL_TASK_SCRIPTS) if task == "all" else (task,)
+    missing = [name for name in selected if not (runtime_root / OFFICIAL_TASK_SCRIPTS[name]).is_file()]
     if missing:
         raise FileNotFoundError(
-            f"vendored CameraBench runtime scripts not found under {runtime_root}: "
-            + ", ".join(VENDORED_TASK_SCRIPTS[name] for name in missing)
+            f"official CameraBench scripts not found under {runtime_root}: "
+            + ", ".join(OFFICIAL_TASK_SCRIPTS[name] for name in missing)
         )
 
     output_dir.mkdir(parents=True, exist_ok=True)
@@ -195,9 +191,19 @@ def run_vendored_official_scripts(
     stdout_chunks: list[str] = []
     stderr_chunks: list[str] = []
     for item in selected:
-        script = runtime_root / VENDORED_TASK_SCRIPTS[item]
+        script = runtime_root / OFFICIAL_TASK_SCRIPTS[item]
         output_file = output_dir / f"camerabench_{item}_results.json"
-        command = [sys.executable, str(script), "--score_dir", str(score_dir), "--output_file", str(output_file)]
+        # --output_dir keeps the scripts' default evaluation_results/ out of the shared source tree.
+        command = [
+            sys.executable,
+            str(script),
+            "--score_dir",
+            str(score_dir),
+            "--output_dir",
+            str(output_dir),
+            "--output_file",
+            str(output_file),
+        ]
         if item == "vqa_retrieval":
             command.extend(["--mode", mode])
         if item == "caption" and no_gpt:
@@ -222,7 +228,7 @@ def run_vendored_official_scripts(
         commands.append(command)
         if completed.returncode != 0:
             raise RuntimeError(
-                f"vendored CameraBench {item} evaluation failed with exit code {completed.returncode}: "
+                f"official CameraBench {item} evaluation failed with exit code {completed.returncode}: "
                 f"{completed.stderr.strip()[-2000:]}"
             )
         if output_file.is_file():
@@ -438,8 +444,8 @@ def normalize_camerabench_results(
     )
     strict_failed = strict and not full_suite_valid
     normalization_ok = returncode == 0 and available_count > 0 and not strict_failed
-    # Running the score-directory aggregator (in-tree port or vendored
-    # official scripts) is not the complete CameraBench evaluation protocol:
+    # Running the score-directory aggregator (in-tree port or the official
+    # scripts) is not the complete CameraBench evaluation protocol:
     # the upstream per-sample score generation still has to happen outside
     # this runner.  Keep all imported/aggregated evidence fail-closed until
     # that end-to-end path is implemented and audited.
@@ -580,7 +586,7 @@ def run_official_camerabench(args: argparse.Namespace) -> dict[str, Any]:
     start = time.monotonic()
     if args.run_official:
         runtime_root = _camerabench_runtime_root(args.camerabench_runtime_root)
-        task_results, commands, upstream_stdout, upstream_stderr = run_vendored_official_scripts(
+        task_results, commands, upstream_stdout, upstream_stderr = run_official_scripts(
             score_dir=args.score_dir,
             output_dir=upstream_output_dir,
             runtime_root=runtime_root,
@@ -654,13 +660,16 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--run-official",
         action="store_true",
-        help="Execute the vendored official t2v_metrics/camerabench evaluation scripts instead of the in-tree port.",
+        help=(
+            "Execute the official t2v_metrics/camerabench evaluation scripts at the catalog-pinned revision "
+            "(fetched into the WorldFoundry source cache on first use) instead of the in-tree port."
+        ),
     )
     parser.add_argument(
         "--camerabench-runtime-root",
         type=Path,
         default=env_path("WORLDFOUNDRY_CAMERABENCH_RUNTIME_ROOT"),
-        help="Override the vendored CameraBench runtime directory (defaults to the in-tree runtime/camerabench).",
+        help="Use an existing local checkout of t2v_metrics/camerabench instead of the cached pinned revision.",
     )
     parser.add_argument("--timeout", type=int, default=int(os.environ.get("WORLDFOUNDRY_BENCHMARK_TIMEOUT", "7200")))
     parser.add_argument("--no-gpt", action="store_true")

@@ -133,7 +133,6 @@ runner:
   - OPENAI_API_KEY only when explicitly enabling caption GPT judging
   runtime:
     kind: in_tree_official_source
-    root: worldfoundry/evaluation/tasks/execution/runners/camerabench/runtime/camerabench
     repo_url: https://github.com/linzhiqiu/t2v_metrics.git
     repo_revision: 0bd9bfc68032ce4f9d5da80d646fa5ceb3b9bb1b
     repo_subdir: camerabench
@@ -168,9 +167,10 @@ runner:
   - Contract runner exposes generated videos and camera prompts for camera-motion scoring.
   - In-tree metric aggregation validates CameraBench score-dir binary, VQA/retrieval, caption, and aggregate score 
     families from a prepared CameraBench score_dir.
-  - --run-official executes the vendored official t2v_metrics/camerabench evaluation scripts 
-    (runtime/camerabench, pinned to the upstream revision above) on a prepared score_dir; per-sample VLM score 
-    generation remains an explicit external stage.
+  - --run-official executes the official t2v_metrics/camerabench evaluation scripts at repo_revision on a prepared
+    score_dir. The pinned sources are fetched into ${WORLDFOUNDRY_CACHE_DIR}/sources on first use;
+    WORLDFOUNDRY_CAMERABENCH_RUNTIME_ROOT can point at the camerabench/ directory of an existing checkout instead.
+    Per-sample VLM score generation remains an explicit external stage.
 integration:
   status: integrated
   tier: model_backed
@@ -228,8 +228,6 @@ data_refs:
   - cache/worldfoundry/data/hfd_datasets/syCen/CameraBench
   task_yaml: worldfoundry/data/benchmarks/tasks/external/camerabench.yaml
   bundled_assets: worldfoundry/data/benchmarks/assets/camerabench
-  in_tree_runtime_paths:
-  - worldfoundry/evaluation/tasks/execution/runners/camerabench/runtime/camerabench
 runner_availability:
   available: true
   runner_target: worldfoundry.evaluation.tasks.contracts.external:CameraBenchContract

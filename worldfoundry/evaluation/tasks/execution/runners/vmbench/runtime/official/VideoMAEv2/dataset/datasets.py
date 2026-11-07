@@ -108,7 +108,7 @@ class VideoClsDataset(Dataset):
             buffer = self.load_video(sample, sample_rate_scale=scale_t)
             if len(buffer) == 0:
                 while len(buffer) == 0:
-                    warnings.warn(f"video {sample} not correctly loaded during training")
+                    warnings.warn(f"video {sample} not correctly loaded during training", stacklevel=1)
                     index = np.random.randint(self.__len__())
                     sample = self.dataset_samples[index]
                     buffer = self.load_video(sample, sample_rate_scale=scale_t)
@@ -134,7 +134,7 @@ class VideoClsDataset(Dataset):
             buffer = self.load_video(sample)
             if len(buffer) == 0:
                 while len(buffer) == 0:
-                    warnings.warn(f"video {sample} not correctly loaded during validation")
+                    warnings.warn(f"video {sample} not correctly loaded during validation", stacklevel=1)
                     index = np.random.randint(self.__len__())
                     sample = self.dataset_samples[index]
                     buffer = self.load_video(sample)
@@ -148,7 +148,8 @@ class VideoClsDataset(Dataset):
 
             while len(buffer) == 0:
                 warnings.warn(
-                    f"video {self.test_dataset[index]!s}, temporal {chunk_nb}, spatial {split_nb} not found during testing"
+                    f"video {self.test_dataset[index]!s}, temporal {chunk_nb}, spatial {split_nb} not found during testing",
+                    stacklevel=1,
                 )
                 index = np.random.randint(self.__len__())
                 sample = self.test_dataset[index]
@@ -240,7 +241,7 @@ class VideoClsDataset(Dataset):
             max_scale=320,
             # crop_size=224,
             crop_size=args.input_size,
-            random_horizontal_flip=False if args.data_set == "SSV2" else True,
+            random_horizontal_flip=args.data_set != "SSV2",
             inverse_uniform_sampling=False,
             aspect_ratio=asp,
             scale=scl,
@@ -281,7 +282,7 @@ class VideoClsDataset(Dataset):
                     all_index.extend(tmp_index)
                 all_index = list(np.sort(np.array(all_index)))
             else:
-                all_index = [x for x in range(0, length, self.frame_sample_rate)]
+                all_index = list(range(0, length, self.frame_sample_rate))
                 while len(all_index) < self.clip_len:
                     all_index.append(all_index[-1])
 
@@ -419,7 +420,7 @@ class RawFrameClsDataset(Dataset):
             buffer = self.load_frame(sample, total_frame, sample_rate_scale=scale_t)  # T H W C
             if len(buffer) == 0:
                 while len(buffer) == 0:
-                    warnings.warn(f"video {sample} not correctly loaded during training")
+                    warnings.warn(f"video {sample} not correctly loaded during training", stacklevel=1)
                     index = np.random.randint(self.__len__())
                     sample = self.dataset_samples[index]
                     total_frame = self.total_frames[index]
@@ -447,7 +448,7 @@ class RawFrameClsDataset(Dataset):
             buffer = self.load_frame(sample, total_frame)
             if len(buffer) == 0:
                 while len(buffer) == 0:
-                    warnings.warn(f"video {sample} not correctly loaded during validation")
+                    warnings.warn(f"video {sample} not correctly loaded during validation", stacklevel=1)
                     index = np.random.randint(self.__len__())
                     sample = self.dataset_samples[index]
                     buffer = self.load_frame(sample, total_frame)
@@ -462,7 +463,8 @@ class RawFrameClsDataset(Dataset):
 
             while len(buffer) == 0:
                 warnings.warn(
-                    f"video {self.test_dataset[index]!s}, temporal {chunk_nb}, spatial {split_nb} not found during testing"
+                    f"video {self.test_dataset[index]!s}, temporal {chunk_nb}, spatial {split_nb} not found during testing",
+                    stacklevel=1,
                 )
                 index = np.random.randint(self.__len__())
                 sample = self.test_dataset[index]
@@ -524,7 +526,7 @@ class RawFrameClsDataset(Dataset):
             min_scale=256,
             max_scale=320,
             crop_size=self.crop_size,
-            random_horizontal_flip=False if args.data_set == "SSV2" else True,
+            random_horizontal_flip=args.data_set != "SSV2",
             inverse_uniform_sampling=False,
             aspect_ratio=asp,
             scale=scl,
@@ -684,9 +686,9 @@ def tensor_normalize(tensor, mean, std):
     if tensor.dtype == torch.uint8:
         tensor = tensor.float()
         tensor = tensor / 255.0
-    if type(mean) == list:
+    if type(mean) is list:
         mean = torch.tensor(mean)
-    if type(std) == list:
+    if type(std) is list:
         std = torch.tensor(std)
     tensor = tensor - mean
     tensor = tensor / std

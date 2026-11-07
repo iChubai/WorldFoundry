@@ -124,7 +124,6 @@ class MetricLogger:
         self.meters[name] = meter
 
     def log_every(self, iterable, print_freq, header=None):
-        i = 0
         if not header:
             header = ""
         start_time = time.time()
@@ -137,7 +136,7 @@ class MetricLogger:
             log_msg.append("max mem: {memory:.0f}")
         log_msg = self.delimiter.join(log_msg)
         MB = 1024.0 * 1024.0
-        for obj in iterable:
+        for i, obj in enumerate(iterable):
             data_time.update(time.time() - end)
             yield obj
             iter_time.update(time.time() - end)
@@ -162,7 +161,6 @@ class MetricLogger:
                             i, len(iterable), eta=eta_string, meters=str(self), time=str(iter_time), data=str(data_time)
                         )
                     )
-            i += 1
             end = time.time()
         total_time = time.time() - start_time
         total_time_str = str(datetime.timedelta(seconds=int(total_time)))
@@ -228,9 +226,7 @@ def setup_for_distributed(is_master):
 def is_dist_avail_and_initialized():
     if not dist.is_available():
         return False
-    if not dist.is_initialized():
-        return False
-    return True
+    return dist.is_initialized()
 
 
 def get_world_size():
@@ -259,7 +255,7 @@ def init_distributed_mode(args):
         args.rank = int(os.environ["OMPI_COMM_WORLD_RANK"])
         args.world_size = int(os.environ["OMPI_COMM_WORLD_SIZE"])
         args.gpu = int(os.environ["OMPI_COMM_WORLD_LOCAL_RANK"])
-        args.dist_url = "tcp://%s:%s" % (os.environ["MASTER_ADDR"], os.environ["MASTER_PORT"])
+        args.dist_url = "tcp://{}:{}".format(os.environ["MASTER_ADDR"], os.environ["MASTER_PORT"])
         os.environ["LOCAL_RANK"] = str(args.gpu)
         os.environ["RANK"] = str(args.rank)
         os.environ["WORLD_SIZE"] = str(args.world_size)
@@ -400,7 +396,7 @@ def cosine_scheduler(
     warmup_iters = warmup_epochs * niter_per_ep
     if warmup_steps > 0:
         warmup_iters = warmup_steps
-    print("Set warmup steps = %d" % warmup_iters)
+    print(f"Set warmup steps = {warmup_iters:d}")
     if warmup_epochs > 0:
         warmup_schedule = np.linspace(start_warmup_value, base_value, warmup_iters)
 
@@ -419,7 +415,7 @@ def save_model(args, epoch, model, model_without_ddp, optimizer, loss_scaler, mo
     output_dir = Path(args.output_dir)
     epoch_name = str(epoch)
     if loss_scaler is not None:
-        checkpoint_paths = [output_dir / ("checkpoint-%s.pth" % epoch_name)]
+        checkpoint_paths = [output_dir / (f"checkpoint-{epoch_name}.pth")]
         for checkpoint_path in checkpoint_paths:
             to_save = {
                 "model": model_without_ddp.state_dict(),
@@ -437,7 +433,7 @@ def save_model(args, epoch, model, model_without_ddp, optimizer, loss_scaler, mo
         client_state = {"epoch": epoch}
         if model_ema is not None:
             client_state["model_ema"] = get_state_dict(model_ema)
-        model.save_checkpoint(save_dir=args.output_dir, tag="checkpoint-%s" % epoch_name, client_state=client_state)
+        model.save_checkpoint(save_dir=args.output_dir, tag=f"checkpoint-{epoch_name}", client_state=client_state)
 
 
 def auto_load_model(args, model, model_without_ddp, optimizer, loss_scaler, model_ema=None):
@@ -454,8 +450,8 @@ def auto_load_model(args, model, model_without_ddp, optimizer, loss_scaler, mode
                 if t.isdigit():
                     latest_ckpt = max(int(t), latest_ckpt)
             if latest_ckpt >= 0:
-                args.resume = os.path.join(output_dir, "checkpoint-%d.pth" % latest_ckpt)
-            print("Auto resume checkpoint: %s" % args.resume)
+                args.resume = os.path.join(output_dir, f"checkpoint-{latest_ckpt:d}.pth")
+            print(f"Auto resume checkpoint: {args.resume}")
 
         if args.resume:
             if args.resume.startswith("https"):
@@ -463,7 +459,7 @@ def auto_load_model(args, model, model_without_ddp, optimizer, loss_scaler, mode
             else:
                 checkpoint = torch.load(args.resume, map_location="cpu")
             model_without_ddp.load_state_dict(checkpoint["model"])
-            print("Resume checkpoint %s" % args.resume)
+            print(f"Resume checkpoint {args.resume}")
             if "optimizer" in checkpoint and "epoch" in checkpoint:
                 optimizer.load_state_dict(checkpoint["optimizer"])
                 args.start_epoch = checkpoint["epoch"] + 1
@@ -484,14 +480,13 @@ def auto_load_model(args, model, model_without_ddp, optimizer, loss_scaler, mode
                 if t.isdigit():
                     latest_ckpt = max(int(t), latest_ckpt)
             if latest_ckpt >= 0:
-                args.resume = os.path.join(output_dir, "checkpoint-%d" % latest_ckpt)
-                print("Auto resume checkpoint: %d" % latest_ckpt)
-                _, client_states = model.load_checkpoint(args.output_dir, tag="checkpoint-%d" % latest_ckpt)
+                args.resume = os.path.join(output_dir, f"checkpoint-{latest_ckpt:d}")
+                print(f"Auto resume checkpoint: {latest_ckpt:d}")
+                _, client_states = model.load_checkpoint(args.output_dir, tag=f"checkpoint-{latest_ckpt:d}")
                 if "epoch" in client_states:
                     args.start_epoch = client_states["epoch"] + 1
-                if model_ema is not None:
-                    if args.model_ema:
-                        _load_checkpoint_for_ema(model_ema, client_states["model_ema"])
+                if model_ema is not None and args.model_ema:
+                    _load_checkpoint_for_ema(model_ema, client_states["model_ema"])
 
 
 def create_ds_config(args):

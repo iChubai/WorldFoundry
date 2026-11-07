@@ -49,15 +49,8 @@ _pil_interpolation_to_str = {
 
 
 def _pil_interp(method):
-    if method == "bicubic":
-        return Image.BICUBIC
-    elif method == "lanczos":
-        return Image.LANCZOS
-    elif method == "hamming":
-        return Image.HAMMING
-    else:
-        # default bilinear, do we want to allow nearest?
-        return Image.BILINEAR
+    # default bilinear, do we want to allow nearest?
+    return {"bicubic": Image.BICUBIC, "lanczos": Image.LANCZOS, "hamming": Image.HAMMING}.get(method, Image.BILINEAR)
 
 
 _RANDOM_INTERPOLATION = (Image.BILINEAR, Image.BICUBIC)
@@ -99,7 +92,7 @@ class RandomResizedCropAndInterpolationWithTwoPic:
         else:
             self.second_size = None
         if (scale[0] > scale[1]) or (ratio[0] > ratio[1]):
-            warnings.warn("range should be of kind (min, max)")
+            warnings.warn("range should be of kind (min, max)", stacklevel=1)
 
         if interpolation == "random":
             self.interpolation = _RANDOM_INTERPOLATION
@@ -124,13 +117,13 @@ class RandomResizedCropAndInterpolationWithTwoPic:
         """
         area = img.size[0] * img.size[1]
 
-        for attempt in range(10):
+        for _attempt in range(10):
             target_area = random.uniform(*scale) * area
             log_ratio = (math.log(ratio[0]), math.log(ratio[1]))
             aspect_ratio = math.exp(random.uniform(*log_ratio))
 
-            w = int(round(math.sqrt(target_area * aspect_ratio)))
-            h = int(round(math.sqrt(target_area / aspect_ratio)))
+            w = round(math.sqrt(target_area * aspect_ratio))
+            h = round(math.sqrt(target_area / aspect_ratio))
 
             if w <= img.size[0] and h <= img.size[1]:
                 i = random.randint(0, img.size[1] - h)
@@ -141,10 +134,10 @@ class RandomResizedCropAndInterpolationWithTwoPic:
         in_ratio = img.size[0] / img.size[1]
         if in_ratio < min(ratio):
             w = img.size[0]
-            h = int(round(w / min(ratio)))
+            h = round(w / min(ratio))
         elif in_ratio > max(ratio):
             h = img.size[1]
-            w = int(round(h * max(ratio)))
+            w = round(h * max(ratio))
         else:  # whole image
             w = img.size[0]
             h = img.size[1]
@@ -201,7 +194,7 @@ class GroupRandomCrop:
         w, h = img_group[0].size
         th, tw = self.size
 
-        out_images = list()
+        out_images = []
 
         x1 = random.randint(0, w - tw)
         y1 = random.randint(0, h - th)
@@ -307,10 +300,10 @@ class GroupOverSample:
         crop_w, crop_h = self.crop_size
 
         offsets = GroupMultiScaleCrop.fill_fix_offset(False, image_w, image_h, crop_w, crop_h)
-        oversample_group = list()
+        oversample_group = []
         for o_w, o_h in offsets:
-            normal_group = list()
-            flip_group = list()
+            normal_group = []
+            flip_group = []
             for i, img in enumerate(img_group):
                 crop = img.crop((o_w, o_h, o_w + crop_w, o_h + crop_h))
                 normal_group.append(crop)
@@ -347,15 +340,15 @@ class GroupFullResSample:
         w_step = (image_w - crop_w) // 4
         h_step = (image_h - crop_h) // 4
 
-        offsets = list()
+        offsets = []
         offsets.append((0 * w_step, 2 * h_step))  # left
         offsets.append((4 * w_step, 2 * h_step))  # right
         offsets.append((2 * w_step, 2 * h_step))  # center
 
-        oversample_group = list()
+        oversample_group = []
         for o_w, o_h in offsets:
-            normal_group = list()
-            flip_group = list()
+            normal_group = []
+            flip_group = []
             for i, img in enumerate(img_group):
                 crop = img.crop((o_w, o_h, o_w + crop_w, o_h + crop_h))
                 normal_group.append(crop)
@@ -426,7 +419,7 @@ class GroupMultiScaleCrop:
         w_step = (image_w - crop_w) // 4
         h_step = (image_h - crop_h) // 4
 
-        ret = list()
+        ret = []
         ret.append((0, 0))  # upper left
         ret.append((4 * w_step, 0))  # upper right
         ret.append((0, 4 * h_step))  # lower left
@@ -462,13 +455,13 @@ class GroupRandomSizedCrop:
     def __call__(self, img_tuple):
         img_group, label = img_tuple
 
-        for attempt in range(10):
+        for _attempt in range(10):
             area = img_group[0].size[0] * img_group[0].size[1]
             target_area = random.uniform(0.08, 1.0) * area
             aspect_ratio = random.uniform(3.0 / 4, 4.0 / 3)
 
-            w = int(round(math.sqrt(target_area * aspect_ratio)))
-            h = int(round(math.sqrt(target_area / aspect_ratio)))
+            w = round(math.sqrt(target_area * aspect_ratio))
+            h = round(math.sqrt(target_area / aspect_ratio))
 
             if random.random() < 0.5:
                 w, h = h, w
@@ -484,7 +477,7 @@ class GroupRandomSizedCrop:
             y1 = 0
 
         if found:
-            out_group = list()
+            out_group = []
             for img in img_group:
                 img = img.crop((x1, y1, x1 + w, y1 + h))
                 assert img.size == (w, h)

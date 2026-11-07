@@ -58,7 +58,7 @@ def get_parameter_groups(model, weight_decay=1e-5, skip_list=(), get_num_layer=N
     for name, param in model.named_parameters():
         if not param.requires_grad:
             continue  # frozen weights
-        if len(param.shape) == 1 or name.endswith(".bias") or name.endswith(".scale") or name in skip_list:
+        if len(param.shape) == 1 or name.endswith((".bias", ".scale")) or name in skip_list:
             group_name = "no_decay"
             this_weight_decay = 0.0
         else:
@@ -66,22 +66,19 @@ def get_parameter_groups(model, weight_decay=1e-5, skip_list=(), get_num_layer=N
             this_weight_decay = weight_decay
         if get_num_layer is not None:
             layer_id = get_num_layer(name)
-            group_name = "layer_%d_%s" % (layer_id, group_name)
+            group_name = f"layer_{layer_id:d}_{group_name}"
         else:
             layer_id = None
 
         if group_name not in parameter_group_names:
-            if get_layer_scale is not None:
-                scale = get_layer_scale(layer_id)
-            else:
-                scale = 1.0
+            scale = get_layer_scale(layer_id) if get_layer_scale is not None else 1.0
 
             parameter_group_names[group_name] = {"weight_decay": this_weight_decay, "params": [], "lr_scale": scale}
             parameter_group_vars[group_name] = {"weight_decay": this_weight_decay, "params": [], "lr_scale": scale}
 
         parameter_group_vars[group_name]["params"].append(param)
         parameter_group_names[group_name]["params"].append(name)
-    print("Param groups = %s" % json.dumps(parameter_group_names, indent=2))
+    print(f"Param groups = {json.dumps(parameter_group_names, indent=2)}")
     return list(parameter_group_vars.values())
 
 
@@ -102,7 +99,7 @@ def create_optimizer(args, model, get_num_layer=None, get_layer_scale=None, filt
     if "fused" in opt_lower:
         assert has_apex and torch.cuda.is_available(), "APEX and CUDA required for fused optimizers"
 
-    opt_args = dict(lr=args.lr, weight_decay=weight_decay)
+    opt_args = {"lr": args.lr, "weight_decay": weight_decay}
     if hasattr(args, "opt_eps") and args.opt_eps is not None:
         opt_args["eps"] = args.opt_eps
     if hasattr(args, "opt_betas") and args.opt_betas is not None:
@@ -162,11 +159,10 @@ def create_optimizer(args, model, get_num_layer=None, get_layer_scale=None, filt
         opt_args.setdefault("betas", (0.95, 0.98))
         optimizer = FusedNovoGrad(parameters, **opt_args)
     else:
-        assert False and "Invalid optimizer"
+        assert False  # noqa: B011 - Optimized Python retains the upstream ValueError fallback.
         raise ValueError
 
-    if len(opt_split) > 1:
-        if opt_split[0] == "lookahead":
-            optimizer = Lookahead(optimizer)
+    if len(opt_split) > 1 and opt_split[0] == "lookahead":
+        optimizer = Lookahead(optimizer)
 
     return optimizer

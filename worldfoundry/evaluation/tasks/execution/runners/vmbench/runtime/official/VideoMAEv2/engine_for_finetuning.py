@@ -10,7 +10,6 @@ import os
 import sys
 from collections.abc import Iterable
 from multiprocessing import Pool
-from typing import Optional
 
 import numpy as np
 import torch
@@ -69,7 +68,7 @@ def train_one_epoch(
         it = start_steps + step  # global training iteration
         # Update LR & WD for the first acc
         if lr_schedule_values is not None or (wd_schedule_values is not None and data_iter_step % update_freq == 0):
-            for i, param_group in enumerate(optimizer.param_groups):
+            for _i, param_group in enumerate(optimizer.param_groups):
                 if lr_schedule_values is not None:
                     param_group["lr"] = lr_schedule_values[it] * param_group["lr_scale"]
                 if wd_schedule_values is not None and param_group["weight_decay"] > 0:
@@ -105,10 +104,9 @@ def train_one_epoch(
 
             model.step()
 
-            if (data_iter_step + 1) % update_freq == 0:
-                # Deepspeed will call step() & model.zero_grad() automatic
-                if model_ema is not None:
-                    model_ema.update(model)
+            # Deepspeed will call step() & model.zero_grad() automatic
+            if (data_iter_step + 1) % update_freq == 0 and model_ema is not None:
+                model_ema.update(model)
             loss_scale_value = get_loss_scale_for_deepspeed(model)
         else:
             # this attribute is added by timm on one optimizer (adahessian)
@@ -130,10 +128,7 @@ def train_one_epoch(
 
         torch.cuda.synchronize()
 
-        if mixup_fn is None:
-            class_acc = (output.max(-1)[-1] == targets).float().mean()
-        else:
-            class_acc = None
+        class_acc = (output.max(-1)[-1] == targets).float().mean() if mixup_fn is None else None
         metric_logger.update(loss=loss_value)
         metric_logger.update(class_acc=class_acc)
         metric_logger.update(loss_scale=loss_scale_value)
@@ -265,7 +260,8 @@ def merge(eval_path, num_tasks, method="prob"):
 
     for x in range(num_tasks):
         file = os.path.join(eval_path, str(x) + ".txt")
-        lines = open(file).readlines()[1:]
+        with open(file) as stream:
+            lines = stream.readlines()[1:]
         for line in lines:
             line = line.strip()
             name = line.split("[")[0]
@@ -303,7 +299,7 @@ def merge(eval_path, num_tasks, method="prob"):
 
 def compute_video(lst):
     i, video_id, data, label = lst
-    feat = [x for x in data]
+    feat = list(data)
     feat = np.mean(feat, axis=0)
     pred = np.argmax(feat)
     top1 = (int(pred) == int(label)) * 1.0

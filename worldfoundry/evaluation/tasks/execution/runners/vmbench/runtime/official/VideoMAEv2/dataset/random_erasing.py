@@ -90,8 +90,8 @@ class RandomErasing:
             for _ in range(10):
                 target_area = random.uniform(self.min_area, self.max_area) * area / count
                 aspect_ratio = math.exp(random.uniform(*self.log_aspect_ratio))
-                h = int(round(math.sqrt(target_area * aspect_ratio)))
-                w = int(round(math.sqrt(target_area / aspect_ratio)))
+                h = round(math.sqrt(target_area * aspect_ratio))
+                w = round(math.sqrt(target_area / aspect_ratio))
                 if w < img_w and h < img_h:
                     top = random.randint(0, img_h - h)
                     left = random.randint(0, img_w - w)
@@ -122,8 +122,8 @@ class RandomErasing:
             for _ in range(100):
                 target_area = random.uniform(self.min_area, self.max_area) * area / count
                 aspect_ratio = math.exp(random.uniform(*self.log_aspect_ratio))
-                h = int(round(math.sqrt(target_area * aspect_ratio)))
-                w = int(round(math.sqrt(target_area / aspect_ratio)))
+                h = round(math.sqrt(target_area * aspect_ratio))
+                w = round(math.sqrt(target_area / aspect_ratio))
                 if w < img_w and h < img_h:
                     top = random.randint(0, img_h - h)
                     left = random.randint(0, img_w - w)

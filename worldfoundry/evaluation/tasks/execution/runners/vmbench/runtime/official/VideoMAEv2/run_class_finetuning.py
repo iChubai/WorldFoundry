@@ -307,7 +307,7 @@ def main(args, ds_init):
     sampler_train = torch.utils.data.DistributedSampler(
         dataset_train, num_replicas=num_tasks, rank=global_rank, shuffle=True
     )
-    print("Sampler_train = %s" % str(sampler_train))
+    print(f"Sampler_train = {sampler_train!s}")
     if args.dist_eval:
         if len(dataset_val) % num_tasks != 0:
             print(
@@ -330,10 +330,7 @@ def main(args, ds_init):
     else:
         log_writer = None
 
-    if args.num_sample > 1:
-        collate_func = partial(multiple_samples_collate, fold=False)
-    else:
-        collate_func = None
+    collate_func = partial(multiple_samples_collate, fold=False) if args.num_sample > 1 else None
 
     data_loader_train = torch.utils.data.DataLoader(
         dataset_train,
@@ -405,7 +402,7 @@ def main(args, ds_init):
     )
 
     patch_size = model.patch_embed.patch_size
-    print("Patch size = %s" % str(patch_size))
+    print(f"Patch size = {patch_size!s}")
 
     args.window_size = (
         args.num_frames // args.tubelet_size,
@@ -421,12 +418,12 @@ def main(args, ds_init):
         else:
             checkpoint = torch.load(args.finetune, map_location="cpu")
 
-        print("Load ckpt from %s" % args.finetune)
+        print(f"Load ckpt from {args.finetune}")
         checkpoint_model = None
         for model_key in args.model_key.split("|"):
             if model_key in checkpoint:
                 checkpoint_model = checkpoint[model_key]
-                print("Load state_dict by model_key = %s" % model_key)
+                print(f"Load state_dict by model_key = {model_key}")
                 break
         if checkpoint_model is None:
             checkpoint_model = checkpoint
@@ -447,7 +444,8 @@ def main(args, ds_init):
                     elif args.data_set == "Kinetics-700":
                         label_map_path = "misc/label_710to700.json"
 
-                    label_map = json.load(open(label_map_path))
+                    with open(label_map_path) as file:
+                        label_map = json.load(file)
                     checkpoint_model[k] = checkpoint_model[k][label_map]
                 else:
                     print(f"Removing key {k} from pretrained checkpoint")
@@ -483,7 +481,7 @@ def main(args, ds_init):
             new_size = int((num_patches // (args.num_frames // model.patch_embed.tubelet_size)) ** 0.5)
             # class_token and dist_token are kept unchanged
             if orig_size != new_size:
-                print("Position interpolate from %dx%d to %dx%d" % (orig_size, orig_size, new_size, new_size))
+                print(f"Position interpolate from {orig_size:d}x{orig_size:d} to {new_size:d}x{new_size:d}")
                 extra_tokens = pos_embed_checkpoint[:, :num_extra_tokens]
                 # only the position tokens are interpolated
                 pos_tokens = pos_embed_checkpoint[:, num_extra_tokens:]
@@ -543,12 +541,12 @@ def main(args, ds_init):
         model_ema = ModelEma(
             model, decay=args.model_ema_decay, device="cpu" if args.model_ema_force_cpu else "", resume=""
         )
-        print("Using EMA with decay = %.8f" % args.model_ema_decay)
+        print(f"Using EMA with decay = {args.model_ema_decay:.8f}")
 
     model_without_ddp = model
     n_parameters = sum(p.numel() for p in model.parameters() if p.requires_grad)
 
-    print("Model = %s" % str(model_without_ddp))
+    print(f"Model = {model_without_ddp!s}")
     print("number of params:", n_parameters)
 
     total_batch_size = args.batch_size * args.update_freq * num_tasks
@@ -558,22 +556,20 @@ def main(args, ds_init):
     args.min_lr = args.min_lr * total_batch_size / 256
     args.warmup_lr = args.warmup_lr * total_batch_size / 256
     #########scale the lr#############
-    print("LR = %.8f" % args.lr)
-    print("Batch size = %d" % total_batch_size)
-    print("Update frequent = %d" % args.update_freq)
-    print("Number of training examples = %d" % len(dataset_train))
-    print("Number of training training per epoch = %d" % num_training_steps_per_epoch)
+    print(f"LR = {args.lr:.8f}")
+    print(f"Batch size = {total_batch_size:d}")
+    print(f"Update frequent = {args.update_freq:d}")
+    print(f"Number of training examples = {len(dataset_train):d}")
+    print(f"Number of training training per epoch = {num_training_steps_per_epoch:d}")
 
     num_layers = model_without_ddp.get_num_layers()
     if args.layer_decay < 1.0:
-        assigner = LayerDecayValueAssigner(
-            list(args.layer_decay ** (num_layers + 1 - i) for i in range(num_layers + 2))
-        )
+        assigner = LayerDecayValueAssigner([args.layer_decay ** (num_layers + 1 - i) for i in range(num_layers + 2)])
     else:
         assigner = None
 
     if assigner is not None:
-        print("Assigned values = %s" % str(assigner.values))
+        print(f"Assigned values = {assigner.values!s}")
 
     skip_weight_decay_list = model.no_weight_decay()
     print("Skip weight decay list: ", skip_weight_decay_list)
@@ -594,7 +590,7 @@ def main(args, ds_init):
             dist_init_required=not args.distributed,
         )
 
-        print("model.gradient_accumulation_steps() = %d" % model.gradient_accumulation_steps())
+        print(f"model.gradient_accumulation_steps() = {model.gradient_accumulation_steps():d}")
         assert model.gradient_accumulation_steps() == args.update_freq
     else:
         if args.distributed:
@@ -626,7 +622,7 @@ def main(args, ds_init):
     wd_schedule_values = utils.cosine_scheduler(
         args.weight_decay, args.weight_decay_end, args.epochs, num_training_steps_per_epoch
     )
-    print("Max WD = %.7f, Min WD = %.7f" % (max(wd_schedule_values), min(wd_schedule_values)))
+    print(f"Max WD = {max(wd_schedule_values):.7f}, Min WD = {min(wd_schedule_values):.7f}")
 
     if mixup_fn is not None:
         # smoothing is handled with mixup label transform
@@ -636,7 +632,7 @@ def main(args, ds_init):
     else:
         criterion = torch.nn.CrossEntropyLoss()
 
-    print("criterion = %s" % str(criterion))
+    print(f"criterion = {criterion!s}")
 
     utils.auto_load_model(
         args=args,

@@ -35,7 +35,7 @@ def build_pretraining_dataset(args):
         lazy_init=False,
         num_sample=args.num_sample,
     )
-    print("Data Aug = %s" % str(transform))
+    print(f"Data Aug = {transform!s}")
     return dataset
 
 
@@ -316,6 +316,6 @@ def build_dataset(is_train, test_mode, args):
         raise NotImplementedError("Unsupported Dataset")
 
     assert nb_classes == args.nb_classes
-    print("Number of the class = %d" % args.nb_classes)
+    print(f"Number of the class = {args.nb_classes:d}")
 
     return dataset, nb_classes

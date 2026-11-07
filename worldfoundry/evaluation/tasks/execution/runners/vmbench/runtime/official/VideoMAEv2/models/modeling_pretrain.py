@@ -131,10 +131,7 @@ class PretrainVisionTransformerEncoder(nn.Module):
         x_vis = x[~mask].reshape(B, -1, C)  # ~mask means visible
 
         for blk in self.blocks:
-            if self.with_cp:
-                x_vis = cp.checkpoint(blk, x_vis)
-            else:
-                x_vis = blk(x_vis)
+            x_vis = cp.checkpoint(blk, x_vis) if self.with_cp else blk(x_vis)
 
         x_vis = self.norm(x_vis)
         return x_vis
@@ -225,12 +222,9 @@ class PretrainVisionTransformerDecoder(nn.Module):
 
     def forward(self, x, return_token_num):
         for blk in self.blocks:
-            if self.with_cp:
-                x = cp.checkpoint(blk, x)
-            else:
-                x = blk(x)
+            x = cp.checkpoint(blk, x) if self.with_cp else blk(x)
 
-        if return_token_num > 0:
+        if return_token_num > 0:  # noqa: SIM108 - Keep the two output-shape contracts explicit.
             # only return the mask tokens predict pixels
             x = self.head(self.norm(x[:, -return_token_num:]))
         else:

@@ -56,10 +56,10 @@ class DataAugmentationForVideoMAEv2:
 
     def __repr__(self):
         repr = "(DataAugmentationForVideoMAEv2,\n"
-        repr += "  transform = %s,\n" % str(self.transform)
-        repr += "  Encoder Masking Generator = %s,\n" % str(self.encoder_mask_map_generator)
+        repr += f"  transform = {self.transform!s},\n"
+        repr += f"  Encoder Masking Generator = {self.encoder_mask_map_generator!s},\n"
         if hasattr(self, "decoder_mask_map_generator"):
-            repr += "  Decoder Masking Generator = %s,\n" % str(self.decoder_mask_map_generator)
+            repr += f"  Decoder Masking Generator = {self.decoder_mask_map_generator!s},\n"
         else:
             repr += "  Do not use decoder masking,\n"
         repr += ")"
@@ -137,7 +137,7 @@ class HybridVideoMAE(torch.utils.data.Dataset):
         lazy_init=False,
         num_sample=1,
     ):
-        super(HybridVideoMAE, self).__init__()
+        super().__init__()
         self.root = root
         self.setting = setting
         self.train = train
@@ -232,7 +232,7 @@ class HybridVideoMAE(torch.utils.data.Dataset):
             decoder_mask_list = []
             for _ in range(self.num_sample):
                 process_data, encoder_mask, decoder_mask = self.transform((images, None))
-                process_data = process_data.view((self.new_length, 3) + process_data.size()[-2:]).transpose(0, 1)
+                process_data = process_data.view((self.new_length, 3, *process_data.size()[-2:])).transpose(0, 1)
                 process_data_list.append(process_data)
                 encoder_mask_list.append(encoder_mask)
                 decoder_mask_list.append(decoder_mask)
@@ -240,7 +240,7 @@ class HybridVideoMAE(torch.utils.data.Dataset):
         else:
             process_data, encoder_mask, decoder_mask = self.transform((images, None))
             # T*C,H,W -> T,C,H,W -> C,T,H,W
-            process_data = process_data.view((self.new_length, 3) + process_data.size()[-2:]).transpose(0, 1)
+            process_data = process_data.view((self.new_length, 3, *process_data.size()[-2:])).transpose(0, 1)
             return process_data, encoder_mask, decoder_mask
 
     def __len__(self):
@@ -248,7 +248,7 @@ class HybridVideoMAE(torch.utils.data.Dataset):
 
     def _make_dataset(self, root, setting):
         if not os.path.exists(setting):
-            raise (RuntimeError("Setting file %s doesn't exist. Check opt.train-list and opt.val-list. " % (setting)))
+            raise (RuntimeError(f"Setting file {setting} doesn't exist. Check opt.train-list and opt.val-list. "))
         clips = []
         with open(setting) as split_f:
             data = split_f.readlines()
@@ -256,7 +256,7 @@ class HybridVideoMAE(torch.utils.data.Dataset):
                 line_info = line.split(" ")
                 # line format: video_path, video_duration, video_label
                 if len(line_info) < 2:
-                    raise (RuntimeError("Video input format is not correct, missing one or more element. %s" % line))
+                    raise (RuntimeError(f"Video input format is not correct, missing one or more element. {line}"))
                 clip_path = os.path.join(root, line_info[0])
                 start_idx = int(line_info[1])
                 total_frame = int(line_info[2])
@@ -285,10 +285,7 @@ class HybridVideoMAE(torch.utils.data.Dataset):
         for seg_ind in indices:
             offset = int(seg_ind)
             for i, _ in enumerate(range(0, self.skip_length, self.new_step)):
-                if offset + skip_offsets[i] <= duration:
-                    frame_id = offset + skip_offsets[i] - 1
-                else:
-                    frame_id = offset - 1
+                frame_id = offset + skip_offsets[i] - 1 if offset + skip_offsets[i] <= duration else offset - 1
                 frame_id_list.append(frame_id)
                 if offset + self.new_step < duration:
                     offset += self.new_step
@@ -366,7 +363,7 @@ class VideoMAE(torch.utils.data.Dataset):
         lazy_init=False,
         num_sample=1,
     ):
-        super(VideoMAE, self).__init__()
+        super().__init__()
         self.root = root
         self.setting = setting
         self.train = train
@@ -432,7 +429,7 @@ class VideoMAE(torch.utils.data.Dataset):
             decoder_mask_list = []
             for _ in range(self.num_sample):
                 process_data, encoder_mask, decoder_mask = self.transform((images, None))
-                process_data = process_data.view((self.new_length, 3) + process_data.size()[-2:]).transpose(0, 1)
+                process_data = process_data.view((self.new_length, 3, *process_data.size()[-2:])).transpose(0, 1)
                 process_data_list.append(process_data)
                 encoder_mask_list.append(encoder_mask)
                 decoder_mask_list.append(decoder_mask)
@@ -440,7 +437,7 @@ class VideoMAE(torch.utils.data.Dataset):
         else:
             process_data, encoder_mask, decoder_mask = self.transform((images, None))
             # T*C,H,W -> T,C,H,W -> C,T,H,W
-            process_data = process_data.view((self.new_length, 3) + process_data.size()[-2:]).transpose(0, 1)
+            process_data = process_data.view((self.new_length, 3, *process_data.size()[-2:])).transpose(0, 1)
             return process_data, encoder_mask, decoder_mask
 
     def __len__(self):
@@ -448,7 +445,7 @@ class VideoMAE(torch.utils.data.Dataset):
 
     def _make_dataset(self, root, setting):
         if not os.path.exists(setting):
-            raise (RuntimeError("Setting file %s doesn't exist. Check opt.train-list and opt.val-list. " % (setting)))
+            raise (RuntimeError(f"Setting file {setting} doesn't exist. Check opt.train-list and opt.val-list. "))
         clips = []
         with open(setting) as split_f:
             data = split_f.readlines()
@@ -456,7 +453,7 @@ class VideoMAE(torch.utils.data.Dataset):
                 line_info = line.split(" ")
                 # line format: video_path, start_idx, total_frames
                 if len(line_info) < 3:
-                    raise (RuntimeError("Video input format is not correct, missing one or more element. %s" % line))
+                    raise (RuntimeError(f"Video input format is not correct, missing one or more element. {line}"))
                 clip_path = os.path.join(root, line_info[0])
                 start_idx = int(line_info[1])
                 total_frame = int(line_info[2])
@@ -485,10 +482,7 @@ class VideoMAE(torch.utils.data.Dataset):
         for seg_ind in indices:
             offset = int(seg_ind)
             for i, _ in enumerate(range(0, self.skip_length, self.new_step)):
-                if offset + skip_offsets[i] <= duration:
-                    frame_id = offset + skip_offsets[i] - 1
-                else:
-                    frame_id = offset - 1
+                frame_id = offset + skip_offsets[i] - 1 if offset + skip_offsets[i] <= duration else offset - 1
                 frame_id_list.append(frame_id)
                 if offset + self.new_step < duration:
                     offset += self.new_step

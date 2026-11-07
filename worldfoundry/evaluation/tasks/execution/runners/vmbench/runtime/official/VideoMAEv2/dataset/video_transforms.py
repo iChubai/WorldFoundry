@@ -30,14 +30,7 @@ _RANDOM_INTERPOLATION = (Image.BILINEAR, Image.BICUBIC)
 
 
 def _pil_interp(method):
-    if method == "bicubic":
-        return Image.BICUBIC
-    elif method == "lanczos":
-        return Image.LANCZOS
-    elif method == "hamming":
-        return Image.HAMMING
-    else:
-        return Image.BILINEAR
+    return {"bicubic": Image.BICUBIC, "lanczos": Image.LANCZOS, "hamming": Image.HAMMING}.get(method, Image.BILINEAR)
 
 
 def random_short_side_scale_jitter(images, min_size, max_size, boxes=None, inverse_uniform_sampling=False):
@@ -61,9 +54,9 @@ def random_short_side_scale_jitter(images, min_size, max_size, boxes=None, inver
             `num boxes` x 4.
     """
     if inverse_uniform_sampling:
-        size = int(round(1.0 / np.random.uniform(1.0 / max_size, 1.0 / min_size)))
+        size = round(1.0 / np.random.uniform(1.0 / max_size, 1.0 / min_size))
     else:
-        size = int(round(np.random.uniform(min_size, max_size)))
+        size = round(np.random.uniform(min_size, max_size))
 
     height = images.shape[2]
     width = images.shape[3]
@@ -72,11 +65,11 @@ def random_short_side_scale_jitter(images, min_size, max_size, boxes=None, inver
     new_width = size
     new_height = size
     if width < height:
-        new_height = int(math.floor((float(height) / width) * size))
+        new_height = math.floor((float(height) / width) * size)
         if boxes is not None:
             boxes = boxes * float(new_height) / height
     else:
-        new_width = int(math.floor((float(width) / height) * size))
+        new_width = math.floor((float(width) / height) * size)
         if boxes is not None:
             boxes = boxes * float(new_width) / width
 
@@ -157,10 +150,7 @@ def horizontal_flip(prob, images, boxes=None):
         flipped_boxes (ndarray or None): the flipped boxes with dimension of
             `num boxes` x 4.
     """
-    if boxes is None:
-        flipped_boxes = None
-    else:
-        flipped_boxes = boxes.copy()
+    flipped_boxes = None if boxes is None else boxes.copy()
 
     if np.random.uniform() < prob:
         images = images.flip(-1)
@@ -216,8 +206,8 @@ def uniform_crop(images, size, spatial_idx, boxes=None, scale_size=None):
             align_corners=False,
         )
 
-    y_offset = int(math.ceil((height - size) / 2))
-    x_offset = int(math.ceil((width - size) / 2))
+    y_offset = math.ceil((height - size) / 2)
+    x_offset = math.ceil((width - size) / 2)
 
     if height > width:
         if spatial_idx == 0:
@@ -476,8 +466,8 @@ def _get_param_spatial_crop(scale, ratio, height, width, num_repeat=10, log_scal
         else:
             aspect_ratio = random.uniform(*ratio)
 
-        w = int(round(math.sqrt(target_area * aspect_ratio)))
-        h = int(round(math.sqrt(target_area / aspect_ratio)))
+        w = round(math.sqrt(target_area * aspect_ratio))
+        h = round(math.sqrt(target_area / aspect_ratio))
 
         if np.random.uniform() < 0.5 and switch_hw:
             w, h = h, w
@@ -491,10 +481,10 @@ def _get_param_spatial_crop(scale, ratio, height, width, num_repeat=10, log_scal
     in_ratio = float(width) / float(height)
     if in_ratio < min(ratio):
         w = width
-        h = int(round(w / min(ratio)))
+        h = round(w / min(ratio))
     elif in_ratio > max(ratio):
         h = height
-        w = int(round(h * max(ratio)))
+        w = round(h * max(ratio))
     else:  # whole image
         w = width
         h = height
@@ -598,17 +588,11 @@ def create_random_augment(
             of operations to apply).
         interpolation: Interpolation method.
     """
-    if isinstance(input_size, tuple):
-        img_size = input_size[-2:]
-    else:
-        img_size = input_size
+    img_size = input_size[-2:] if isinstance(input_size, tuple) else input_size
 
     if auto_augment:
         assert isinstance(auto_augment, str)
-        if isinstance(img_size, tuple):
-            img_size_min = min(img_size)
-        else:
-            img_size_min = img_size
+        img_size_min = min(img_size) if isinstance(img_size, tuple) else img_size
         aa_params = {"translate_const": int(img_size_min * 0.45)}
         if interpolation and interpolation != "random":
             aa_params["interpolation"] = _pil_interp(interpolation)
@@ -702,8 +686,8 @@ class RandomResizedCropAndInterpolation:
             log_ratio = (math.log(ratio[0]), math.log(ratio[1]))
             aspect_ratio = math.exp(random.uniform(*log_ratio))
 
-            w = int(round(math.sqrt(target_area * aspect_ratio)))
-            h = int(round(math.sqrt(target_area / aspect_ratio)))
+            w = round(math.sqrt(target_area * aspect_ratio))
+            h = round(math.sqrt(target_area / aspect_ratio))
 
             if w <= img.size[0] and h <= img.size[1]:
                 i = random.randint(0, img.size[1] - h)
@@ -714,10 +698,10 @@ class RandomResizedCropAndInterpolation:
         in_ratio = img.size[0] / img.size[1]
         if in_ratio < min(ratio):
             w = img.size[0]
-            h = int(round(w / min(ratio)))
+            h = round(w / min(ratio))
         elif in_ratio > max(ratio):
             h = img.size[1]
-            w = int(round(h * max(ratio)))
+            w = round(h * max(ratio))
         else:  # whole image
             w = img.size[0]
             h = img.size[1]
@@ -776,10 +760,7 @@ def transforms_imagenet_train(
      * a portion of the data through the secondary transform
      * normalizes and converts the branches above with the third, final transform
     """
-    if isinstance(img_size, tuple):
-        img_size = img_size[-2:]
-    else:
-        img_size = img_size
+    img_size = img_size[-2:] if isinstance(img_size, tuple) else img_size
 
     scale = tuple(scale or (0.08, 1.0))  # default imagenet scale range
     ratio = tuple(ratio or (3.0 / 4.0, 4.0 / 3.0))  # default imagenet ratio range
@@ -792,14 +773,11 @@ def transforms_imagenet_train(
     secondary_tfl = []
     if auto_augment:
         assert isinstance(auto_augment, str)
-        if isinstance(img_size, tuple):
-            img_size_min = min(img_size)
-        else:
-            img_size_min = img_size
-        aa_params = dict(
-            translate_const=int(img_size_min * 0.45),
-            img_mean=tuple([min(255, round(255 * x)) for x in mean]),
-        )
+        img_size_min = min(img_size) if isinstance(img_size, tuple) else img_size
+        aa_params = {
+            "translate_const": int(img_size_min * 0.45),
+            "img_mean": tuple([min(255, round(255 * x)) for x in mean]),
+        }
         if interpolation and interpolation != "random":
             aa_params["interpolation"] = _pil_interp(interpolation)
         if auto_augment.startswith("rand"):
@@ -1103,8 +1081,8 @@ class CenterCrop:
             )
             raise ValueError(error_msg)
 
-        x1 = int(round((im_w - w) / 2.0))
-        y1 = int(round((im_h - h) / 2.0))
+        x1 = round((im_w - w) / 2.0)
+        y1 = round((im_h - h) / 2.0)
         cropped = FF.crop_clip(clip, y1, x1, h, w)
 
         return cropped
@@ -1130,25 +1108,13 @@ class ColorJitter:
         self.hue = hue
 
     def get_params(self, brightness, contrast, saturation, hue):
-        if brightness > 0:
-            brightness_factor = random.uniform(max(0, 1 - brightness), 1 + brightness)
-        else:
-            brightness_factor = None
+        brightness_factor = random.uniform(max(0, 1 - brightness), 1 + brightness) if brightness > 0 else None
 
-        if contrast > 0:
-            contrast_factor = random.uniform(max(0, 1 - contrast), 1 + contrast)
-        else:
-            contrast_factor = None
+        contrast_factor = random.uniform(max(0, 1 - contrast), 1 + contrast) if contrast > 0 else None
 
-        if saturation > 0:
-            saturation_factor = random.uniform(max(0, 1 - saturation), 1 + saturation)
-        else:
-            saturation_factor = None
+        saturation_factor = random.uniform(max(0, 1 - saturation), 1 + saturation) if saturation > 0 else None
 
-        if hue > 0:
-            hue_factor = random.uniform(-hue, hue)
-        else:
-            hue_factor = None
+        hue_factor = random.uniform(-hue, hue) if hue > 0 else None
         return brightness_factor, contrast_factor, saturation_factor, hue_factor
 
     def __call__(self, clip):

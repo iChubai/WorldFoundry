@@ -12,7 +12,7 @@ except (ImportError, ModuleNotFoundError):
     petrel_backend_imported = False
 
 
-def get_video_loader(use_petrel_backend: bool = True, enable_mc: bool = True, conf_path: str = None):
+def get_video_loader(use_petrel_backend: bool = True, enable_mc: bool = True, conf_path: str | None = None):
     if petrel_backend_imported and use_petrel_backend:
         _client = Client(conf_path=conf_path, enable_mc=enable_mc)
     else:
@@ -28,7 +28,7 @@ def get_video_loader(use_petrel_backend: bool = True, enable_mc: bool = True, co
     return _loader
 
 
-def get_image_loader(use_petrel_backend: bool = True, enable_mc: bool = True, conf_path: str = None):
+def get_image_loader(use_petrel_backend: bool = True, enable_mc: bool = True, conf_path: str | None = None):
     if petrel_backend_imported and use_petrel_backend:
         _client = Client(conf_path=conf_path, enable_mc=enable_mc)
     else:
